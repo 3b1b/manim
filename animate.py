@@ -17,10 +17,8 @@ import displayer as disp
 class Animation(object):
     def __init__(self, 
                  mobject,
+                 run_time = DEFAULT_ANIMATION_RUN_TIME,
                  alpha_func = high_inflection_0_to_1,
-                 run_time = DEFAULT_ANIMATION_RUN_TIME, 
-                 pause_time = DEFAULT_ANIMATION_PAUSE_TIME,
-                 dither_time = DEFAULT_DITHER_TIME,
                  name = None):
         if isinstance(mobject, type) and issubclass(mobject, Mobject):
             self.mobject = mobject()
@@ -34,24 +32,14 @@ class Animation(object):
         self.reference_mobjects = [self.starting_mobject]
         self.alpha_func = alpha_func or (lambda x : x)
         self.run_time = run_time
-        self.pause_time = pause_time
-        self.dither_time = dither_time
-        self.nframes, self.ndither_frames = self.get_frame_count()
-        self.nframes_past = 0
-        self.frames = []
-        self.concurrent_animations = []
-        self.following_animations = []
-        self.reference_animations = []
-        self.background_mobjects = []
         self.filter_functions = []
         self.restricted_height = SPACE_HEIGHT
         self.restricted_width  = SPACE_WIDTH
         self.spacial_center = np.zeros(3)
-        self.name = self.__class__.__name__ + str(self.mobject)
-        self.inputted_name = name
+        self.name = name or self.__class__.__name__ + str(self.mobject)
 
     def __str__(self):
-        return self.inputted_name or self.name
+        return self.name
 
     def get_points_and_rgbs(self):
         """
@@ -59,24 +47,10 @@ class Animation(object):
         the space.  Returns np array of points and corresponding np array 
         of rgbs
         """
-        points = np.zeros(0)
-        rgbs = np.zeros(0)
-        for mobject in self.background_mobjects + [self.mobject]:
-            points = np.append(points, mobject.points)
-            rgbs   = np.append(rgbs, mobject.rgbs)
-            #Kind of hacky
-            if mobject.SHOULD_BUFF_POINTS: #TODO, think about this.
-                up_nudge = np.array(
-                    (2.0 * SPACE_HEIGHT / HEIGHT, 0, 0)
-                )
-                side_nudge = np.array(
-                    (0, 2.0 * SPACE_WIDTH / WIDTH, 0)
-                )
-                for nudge in up_nudge, side_nudge, up_nudge + side_nudge:
-                    points = np.append(points, mobject.points + nudge)
-                    rgbs = np.append(rgbs, mobject.rgbs)
-        points = points.reshape((points.size/3, 3))
-        rgbs = rgbs.reshape((rgbs.size/3, 3))
+        #TODO, I don't think this should be necessary.  This should happen 
+        #under the individual mobjects.  
+        points = self.mobject.points
+        rgbs   = self.mobject.rgbs
         #Filters out what is out of bounds.
         admissibles = (abs(points[:,0]) < self.restricted_width) * \
                       (abs(points[:,1]) < self.restricted_height)
@@ -93,91 +67,27 @@ class Animation(object):
             admissibles = admissibles[:rgbs.shape[0]]
         return points[admissibles, :], rgbs[admissibles, :]
 
-    def update(self):
-        if self.nframes_past > self.nframes:
-            return False
-        self.nframes_past += 1
-        for anim in self.concurrent_animations + self.reference_animations:
-            anim.update()
-        self.update_mobject(self.alpha_func(self.get_fraction_complete()))
-        return True
+    def update(self, alpha):
+        if alpha < 0:
+            alpha = 0
+        if alpha > 1:
+            alpha = 1
+        self.update_mobject(self.alpha_func(alpha))
 
-    def while_also(self, action, display = True, *args, **kwargs):
-        if isinstance(action, type) and issubclass(action, Animation):
-            self.reference_animations += [
-                action(mobject, *args, **kwargs)
-                for mobject in self.reference_mobjects + [self.mobject]
-            ]
-            self.name += action.__name__
-            return self
-        if action.mobject == self.mobject: 
-            #This is just for a weird edge case
-            action.mobject = self.starting_mobject    
-        new_home = self.concurrent_animations if display else \
-                   self.reference_animations
-        new_home.append(action)
-        self.name += str(action)
-        return self
+    # def generate_frames(self):
+    #     print "Generating " + str(self) + "..."
+    #     progress_bar = progressbar.ProgressBar(maxval=self.nframes)
+    #     progress_bar.start()
 
-    def with_background(self, *mobjects):
-        for anim in [self] + self.following_animations:
-            anim.background_mobjects.append(CompoundMobject(*mobjects))
-        return self
-
-    def then(self, action, carry_over_background = False, *args, **kwargs):
-        if isinstance(action, type) and issubclass(action, Animation):
-            action = action(mobject = self.mobject, *args, **kwargs)
-        if carry_over_background:
-            action.background_mobjects += self.background_mobjects
-        self.following_animations.append(action)
-        if self.frames:
-            self.frames += action.get_frames()
-        self.name += "Then" + str(action)
-        return self
-
-    def get_image(self):
-        all_points, all_rgbs = self.get_points_and_rgbs()
-        for anim in self.concurrent_animations:
-            new_points, new_rgbs = anim.get_points_and_rgbs()
-            all_points = np.append(all_points, new_points)
-            all_rgbs   = np.append(all_rgbs, new_rgbs)
-        all_points = all_points.reshape((all_points.size/3, 3))
-        all_rgbs = all_rgbs.reshape((all_rgbs.size/3, 3))
-        return disp.get_image(all_points, all_rgbs)
-
-    def generate_frames(self):
-        print "Generating " + str(self) + "..."
-        progress_bar = progressbar.ProgressBar(maxval=self.nframes)
-        progress_bar.start()
-
-        self.frames = []
-        while self.update():
-            self.frames.append(self.get_image())
-            progress_bar.update(self.nframes_past - 1)
-        self.clean_up()
-        for anim in self.following_animations:
-            self.frames += anim.get_frames()
-        progress_bar.finish()
-        return self
-
-    def get_fraction_complete(self):
-        result = float(self.nframes_past - self.ndither_frames) / (
-                       self.nframes - 2 * self.ndither_frames)
-        if result <= 0:
-            return 0
-        elif result >= 1:
-            return 1
-        return result
-
-    def get_frames(self):
-        if not self.frames:
-            self.generate_frames()
-        return self.frames
-
-    def get_frame_count(self):
-        nframes = int((self.run_time + 2*self.dither_time)/ self.pause_time)
-        ndither_frames = int(self.dither_time / self.pause_time)
-        return nframes, ndither_frames
+    #     self.frames = []
+    #     while self.update():
+    #         self.frames.append(self.get_image())
+    #         progress_bar.update(self.nframes_past - 1)
+    #     self.clean_up()
+    #     for anim in self.following_animations:
+    #         self.frames += anim.get_frames()
+    #     progress_bar.finish()
+    #     return self
 
     def filter_out(self, *filter_functions):
         self.filter_functions += filter_functions
@@ -193,22 +103,10 @@ class Animation(object):
 
     def shift(self, vector):
         self.spacial_center += vector
-        for anim in self.following_animations:
-            anim.shift(vector)
         return self
 
-    def set_dither(self, time, apply_to_concurrent = False):
-        self.dither_time = time
-        if apply_to_concurrent:
-            for anim in self.concurrent_animations + self.reference_animations:
-                anim.set_dither(time)
-        return self.reload()
-
-    def set_run_time(self, time, apply_to_concurrent = False):
+    def set_run_time(self, time):
         self.run_time = time
-        if apply_to_concurrent:
-            for anim in self.concurrent_animations + self.reference_animations:
-                anim.set_run_time(time)
         return self.reload()
 
     def set_alpha_func(self, alpha_func):
@@ -218,39 +116,23 @@ class Animation(object):
         return self
 
     def set_name(self, name):
-        self.inputted_name = name
+        self.name = name
         return self
 
-    def reload(self):
-        self.nframes, self.ndither_frames = self.get_frame_count()
-        if self.frames:
-            self.nframes_past = 0
-            self.generate_frames()
-        return self
+    # def drag_pixels(self):
+    #     self.frames = drag_pixels(self.get_frames())
+    #     return self
 
-    def drag_pixels(self):
-        self.frames = drag_pixels(self.get_frames())
-        return self
-
-    def reverse(self):
-        self.get_frames().reverse()
-        self.name = 'Reversed' + str(self)
-        return self
-
-    def write_to_gif(self, name = None):
-        disp.write_to_gif(self, name or str(self))
-
-    def write_to_movie(self, name = None):
-        disp.write_to_movie(self, name or str(self))
+    # def reverse(self):
+    #     self.get_frames().reverse()
+    #     self.name = 'Reversed' + str(self)
+    #     return self
 
     def update_mobject(self, alpha):
         #Typically ipmlemented by subclass
         pass
 
     def clean_up(self):
-        pass
-
-    def dither(self):
         pass
         
 
@@ -263,12 +145,11 @@ class Rotating(Animation):
                  axes = [[0, 0, 1], [0, 1, 0]], 
                  radians = 2 * np.pi,
                  run_time = 20.0,
-                 dither_time = 0.0,
                  alpha_func = None,
                  *args, **kwargs):
         Animation.__init__(
             self, mobject,
-            run_time = run_time, dither_time = dither_time,
+            run_time = run_time,
             alpha_func = alpha_func,
             *args, **kwargs
         )
@@ -282,19 +163,20 @@ class Rotating(Animation):
                 self.radians * alpha,
                 axis
             )
+
 class RotationAsTransform(Rotating):
-    def __init__(self, mobject, radians, 
+    def __init__(self, mobject, radians, axis = (0, 0, 1), axes = None,
                  run_time = DEFAULT_ANIMATION_RUN_TIME,
-                 dither_time = DEFAULT_DITHER_TIME, 
+                 alpha_func = high_inflection_0_to_1,
                  *args, **kwargs):
         Rotating.__init__(
             self,
             mobject,
-            axis = (0, 0, 1), 
+            axis = axis,
+            axes = axes,
             run_time = run_time,
-            dither_time = dither_time,
             radians = radians,
-            alpha_func = high_inflection_0_to_1,
+            alpha_func = alpha_func,
         )
 
 class FadeOut(Animation):
@@ -309,7 +191,8 @@ class Reveal(Animation):
             #TODO, Why do you need to do this? Shouldn't points always align?
 
 class Transform(Animation):
-    def __init__(self, mobject1, mobject2, run_time = DEFAULT_TRANSFORM_RUN_TIME,
+    def __init__(self, mobject1, mobject2, 
+                 run_time = DEFAULT_TRANSFORM_RUN_TIME,
                  *args, **kwargs):
         count1, count2 = mobject1.get_num_points(), mobject2.get_num_points()
         Mobject.align_data(mobject1, mobject2)
@@ -353,7 +236,7 @@ class Transform(Animation):
 class ApplyMethod(Transform):
     def __init__(self, method, mobject, *args, **kwargs):
         """
-        method is a method of Mobject
+        Method is a method of Mobject
         """
         method_args = ()
         if isinstance(method, tuple):
@@ -434,6 +317,7 @@ class ComplexHomotopy(Homotopy):
 
 class ShowCreation(Animation):
     def update_mobject(self, alpha):
+        #TODO, shoudl I make this more efficient?
         new_num_points = int(alpha * self.starting_mobject.points.shape[0])
         for attr in ["points", "rgbs"]:
             setattr(
@@ -444,10 +328,9 @@ class ShowCreation(Animation):
 
 class Flash(Animation):
     def __init__(self, mobject, color = "white", slow_factor = 0.01,
-                 run_time = 0.1, dither_time = 0, alpha_func = None,
+                 run_time = 0.1, alpha_func = None,
                  *args, **kwargs):
         Animation.__init__(self, mobject, run_time = run_time, 
-                           dither_time = dither_time,
                            alpha_func = alpha_func,
                            *args, **kwargs)
         self.intermediate = Mobject(color = color)

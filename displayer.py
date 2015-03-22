@@ -36,20 +36,21 @@ def get_pixels(points, rgbs):
     pixels[indices] = rgbs
     return pixels.reshape((HEIGHT, WIDTH, 3)).astype('uint8')
 
-def write_to_gif(animation, name):
+def write_to_gif(scene, name):
     #TODO, find better means of compression
     if not name.endswith(".gif"):
         name += ".gif"
     filepath = os.path.join(GIF_DIR, name)
     temppath = os.path.join(GIF_DIR, "Temp.gif")
     print "Writing " + name + "..."
-    writeGif(temppath, animation.get_frames(), animation.pause_time)
+    writeGif(temppath, scene.frames, scene.frame_duration)
     print "Compressing..."
     os.system("gifsicle -O " + temppath + " > " + filepath)
     os.system("rm " + temppath)
 
-def write_to_movie(animation, name):
-    frames = animation.get_frames()
+def write_to_movie(scene, name):
+    #TODO, incorporate pause time
+    frames = scene.frames
     progress_bar = progressbar.ProgressBar(maxval=len(frames))
     progress_bar.start()
     print "writing " + name + "..."
@@ -75,7 +76,7 @@ def write_to_movie(animation, name):
         "-c:v",
         "libx264",
         "-vf",
-        "fps=%d,format=yuv420p"%int(1/animation.pause_time),
+        "fps=%d,format=yuv420p"%int(1/scene.frame_duration),
         filepath
     ]
     os.system(" ".join(commands))
@@ -87,7 +88,7 @@ def write_to_movie(animation, name):
     # filepath = os.path.join(MOVIE_DIR, name + ".mov")
     # fourcc = cv2.cv.FOURCC(*"8bps")
     # out = cv2.VideoWriter(
-    #     filepath, fourcc, 1.0/animation.pause_time, (WIDTH, HEIGHT), True
+    #     filepath, fourcc, 1.0/animation.frame_duration, (WIDTH, HEIGHT), True
     # )
     # progress = 0
     # for frame in frames:
