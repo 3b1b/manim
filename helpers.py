@@ -1,0 +1,140 @@
+import numpy as np
+import itertools as it
+from PIL import Image
+from colour import Color
+from random import random
+import string
+from constants import *
+
+def hash_args(args):
+    args = map(lambda arg : arg.__name__ if type(arg) == type(hash_args) else arg, args)
+    return str(hash(str(args))%1000) if args else ""
+
+def random_color():
+    color = Color()
+    color.set_rgb([1 - 0.5 * random() for x in range(3)])
+    return color
+
+def to_cammel_case(name):
+    parts = name.split("_")
+    parts = [
+        filter(
+            lambda c : c not in string.punctuation + string.whitespace, part
+        ).capitalize()
+        for part in parts
+    ]
+    return "".join(parts)
+
+def drag_pixels(images):
+    curr = np.array(images[0])
+    new_images = []
+    for image in images:
+        curr += (curr == 0) * np.array(image)
+        new_images.append(Image.fromarray(curr))
+    return new_images
+
+def invert_image(image):
+    arr = np.array(image)
+    arr = (255 * np.ones(arr.shape)).astype(arr.dtype) - arr
+    return Image.fromarray(arr)
+
+def make_even(iterable_1, iterable_2):
+    list_1, list_2 = list(iterable_1), list(iterable_2)
+    length = max(len(list_1), len(list_2))
+    return (
+        [list_1[(n * len(list_1)) / length] for n in xrange(length)],
+        [list_2[(n * len(list_2)) / length] for n in xrange(length)]
+    )
+
+def make_even_by_cycling(iterable_1, iterable_2):
+    length = max(len(iterable_1), len(iterable_2))
+    cycle1 = it.cycle(iterable_1)
+    cycle2 = it.cycle(iterable_2)
+    return (
+        [cycle1.next() for x in range(length)],
+        [cycle2.next() for x in range(length)]
+    )
+
+def sigmoid(x):
+    return 1.0/(1 + np.exp(-x))
+
+def high_inflection_0_to_1(t, inflection = 10.0):
+    error = sigmoid(-inflection / 2)
+    return (sigmoid(inflection*(t - 0.5)) - error) / (1 - 2*error)
+
+def there_and_back(t, inflection = 10.0):
+    new_t = 2*t if t < 0.5 else 2*(1 - t)
+    return high_inflection_0_to_1(new_t, inflection)
+
+
+def composition(func_list):
+    """
+    func_list should contain elements of the form (f, args)
+    """
+    return reduce(
+        lambda (f1, args1), (f2, args2) : (lambda x : f1(f2(x, *args2), *args1)), 
+        func_list,
+        lambda x : x
+    )
+
+def remove_nones(sequence):
+    return filter(lambda x : x, sequence)
+
+#Matrix operations
+def rotation_matrix(angle, axis):
+    """
+    Rotation in R^3 about a specified axess of rotation.
+    """
+    about_z = rotation_about_z(angle)
+    z_to_axis = z_to_vector(axis)
+    axis_to_z = np.linalg.inv(z_to_axis)
+    return reduce(np.dot, [z_to_axis, about_z, axis_to_z])
+
+def rotation_about_z(angle):
+    return [
+        [np.cos(angle), -np.sin(angle), 0],
+        [np.sin(angle),  np.cos(angle), 0],
+        [0, 0, 1]
+    ]
+
+def z_to_vector(vector):
+    """
+    Returns some matrix in SO(3) which takes the z-axis to the 
+    (normalized) vector provided as an argument
+    """
+    norm = np.linalg.norm(vector)
+    if norm == 0:
+        return np.identity(3)
+    v = np.array(vector) / norm
+    phi = np.arccos(v[2])
+    if any(v[:2]):
+        #projection of vector to {x^2 + y^2 = 1}
+        axis_proj = v[:2] / np.linalg.norm(v[:2])
+        theta = np.arccos(axis_proj[0])
+        if axis_proj[1] < 0:
+            theta = -theta
+    else:
+        theta = 0
+    phi_down = np.array([
+        [np.cos(phi), 0, np.sin(phi)],
+        [0, 1, 0],
+        [-np.sin(phi), 0, np.cos(phi)]
+    ])
+    return np.dot(rotation_about_z(theta), phi_down)
+
+def rotate_vector(vector, angle, axis):
+    #Slightly hacky, changes vector in place
+    vector[:3] = np.dot(rotation_matrix(angle, axis), vector)
+
+def angle_between(v1, v2):
+    return np.arccos(np.dot(
+        v1 / np.linalg.norm(v1), 
+        v2 / np.linalg.norm(v2)
+    ))
+
+
+
+
+
+
+
