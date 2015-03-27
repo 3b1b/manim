@@ -16,19 +16,19 @@ import displayer as disp
 
 class Animation(object):
     def __init__(self, 
-                 mobject,
+                 mobject_or_animation,
                  run_time = DEFAULT_ANIMATION_RUN_TIME,
                  alpha_func = high_inflection_0_to_1,
                  name = None):
-        if isinstance(mobject, type) and issubclass(mobject, Mobject):
-            self.mobject = mobject()
-            self.starting_mobject = mobject()
-        elif isinstance(mobject, Mobject):
-            self.mobject = mobject
-            self.starting_mobject = copy.deepcopy(mobject)
+        self.embedded_animation = None
+        if isinstance(mobject_or_animation, type) and issubclass(mobject_or_animation, Mobject):
+            self.mobject = mobject_or_animation()
+        elif isinstance(mobject_or_animation, Mobject):
+            self.mobject = mobject_or_animation
         else:
-            raise Exception("Invalid mobject parameter, must be \
+            raise Exception("Invalid mobject_or_animation parameter, must be \
                              subclass or instance of Mobject")
+        self.starting_mobject = copy.deepcopy(self.mobject)
         self.reference_mobjects = [self.starting_mobject]
         self.alpha_func = alpha_func or (lambda x : x)
         self.run_time = run_time

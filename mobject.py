@@ -5,8 +5,9 @@ from PIL import Image
 from random import random
 
 from animate import *
-from tex_image_utils import NAME_TO_IMAGE_FILE
+from tex_utils import *
 import displayer as disp
+
 
 class Mobject(object):
     """
@@ -40,10 +41,10 @@ class Mobject(object):
         return self.name
 
     def display(self):
-        disp.get_image(self.points, self.rgbs).show()
+        Image.fromarray(disp.paint_mobject(self)).show()
 
     def save_image(self, name = None):
-        disp.get_image(self.points, self.rgbs).save(
+        Image.fromarray(disp.paint_mobject(self)).save(
             os.path.join(MOVIE_DIR, (name or str(self)) + ".png")
         )
 
@@ -286,7 +287,7 @@ class Line(Mobject1D):
         ])
 
 
-class Cube(Mobject2D):
+class CubeWithFaces(Mobject2D):
     def generate_points(self):
         self.add_points([
             sgn * np.array(coords)
@@ -300,7 +301,7 @@ class Cube(Mobject2D):
     def unit_normal(self, coords):
         return np.array(map(lambda x : 1 if abs(x) == 1 else 0, coords))
 
-class CubeShell(Mobject1D):
+class Cube(Mobject1D):
     DEFAULT_COLOR = "yellow"
     def generate_points(self):
         self.add_points([
@@ -449,24 +450,15 @@ class NumberLine(Mobject1D):
             for x in np.arange(-self.radius, self.radius, self.interval_size)
             for y in np.arange(-self.tick_size, self.tick_size, self.epsilon)
         ])
-        if self.with_numbers: #TODO, make these numbers a separate object
+        if self.with_numbers: 
+            #TODO, test
             vertical_displacement = -0.3
-            max_explicit_num = 3
-            num_to_name = dict(
-                (x, str(x)) 
-                for x in range(-max_explicit_num, max_explicit_num + 1)
-            )
-            num_to_name[max_explicit_num + 1] = "cdots"
-            num_to_name[-max_explicit_num - 1] = "cdots"
-            nums = CompoundMobject(*[
-                ImageMobject(
-                    NAME_TO_IMAGE_FILE[num_to_name[x]]
-                ).scale(0.6).center().shift(
-                    [x * self.interval_size, vertical_displacement, 0]
-                )
-                for x in range(-max_explicit_num - 1, max_explicit_num + 2)
-            ])
-            self.add_points(nums.points, nums.rgbs)
+            nums = range(-self.radius, self.radius)
+            nums = map(lambda x : x / self.interval_size, nums)
+            mobs = tex_mobjects(*[str(num) for num in nums])
+            for num, mob in zip(nums, mobs):
+                mob.center().shift([num, vertical_displacement, 0])
+            self.add(*mobs)
 
 # class ComplexPlane(Grid):
 #     def __init__(self, *args, **kwargs):
@@ -529,15 +521,20 @@ class ImageMobject(Mobject2D):
             for i in indices
         ], dtype = 'float64')
         height, width = map(float, (height, width))
-        if height / width > float(HEIGHT) / WIDTH:
+        if height / width > float(DEFAULT_HEIGHT) / DEFAULT_WIDTH:
             points *= 2 * SPACE_HEIGHT / height
         else:
             points *= 2 * SPACE_WIDTH / width
         self.add_points(points, rgbs = rgbs)
 
 
-
-
+def tex_mobjects(expression, size = "\HUGE"):
+    images = tex_to_image(expression, size)
+    if isinstance(images, list):
+        #TODO, is checking listiness really the best here?
+        return [ImageMobject(im) for im in images]
+    else:
+        return ImageMobject(images)
 
 
 
