@@ -14,24 +14,24 @@ from helpers import *
 from mobject import *
 import displayer as disp
 
-class Animation(object):
+class MobjectMovement(object):
     def __init__(self, 
-                 mobject_or_animation,
+                 mobject,
                  run_time = DEFAULT_ANIMATION_RUN_TIME,
                  alpha_func = high_inflection_0_to_1,
                  name = None):
-        self.embedded_animation = None
-        if isinstance(mobject_or_animation, type) and issubclass(mobject_or_animation, Mobject):
-            self.mobject = mobject_or_animation()
-        elif isinstance(mobject_or_animation, Mobject):
-            self.mobject = mobject_or_animation
+        if isinstance(mobject, type) and issubclass(mobject, Mobject):
+            self.mobject = mobject()
+        elif isinstance(mobject, Mobject):
+            self.mobject = mobject
         else:
-            raise Exception("Invalid mobject_or_animation parameter, must be \
+            raise Exception("Invalid mobject parameter, must be \
                              subclass or instance of Mobject")
         self.starting_mobject = copy.deepcopy(self.mobject)
         self.reference_mobjects = [self.starting_mobject]
         self.alpha_func = alpha_func or (lambda x : x)
         self.run_time = run_time
+        #TODO, Adress the idea of filtering the mobmov
         self.filter_functions = []
         self.restricted_height = SPACE_HEIGHT
         self.restricted_width  = SPACE_WIDTH
@@ -73,21 +73,6 @@ class Animation(object):
         if alpha > 1:
             alpha = 1
         self.update_mobject(self.alpha_func(alpha))
-
-    # def generate_frames(self):
-    #     print "Generating " + str(self) + "..."
-    #     progress_bar = progressbar.ProgressBar(maxval=self.nframes)
-    #     progress_bar.start()
-
-    #     self.frames = []
-    #     while self.update():
-    #         self.frames.append(self.get_image())
-    #         progress_bar.update(self.nframes_past - 1)
-    #     self.clean_up()
-    #     for anim in self.following_animations:
-    #         self.frames += anim.get_frames()
-    #     progress_bar.finish()
-    #     return self
 
     def filter_out(self, *filter_functions):
         self.filter_functions += filter_functions
@@ -136,9 +121,9 @@ class Animation(object):
         pass
         
 
-###### Concrete Animations ########
+###### Concrete MobjectMovement ########
 
-class Rotating(Animation):
+class Rotating(MobjectMovement):
     def __init__(self,
                  mobject,
                  axis = None,
@@ -147,7 +132,7 @@ class Rotating(Animation):
                  run_time = 20.0,
                  alpha_func = None,
                  *args, **kwargs):
-        Animation.__init__(
+        MobjectMovement.__init__(
             self, mobject,
             run_time = run_time,
             alpha_func = alpha_func,
@@ -179,24 +164,24 @@ class RotationAsTransform(Rotating):
             alpha_func = alpha_func,
         )
 
-class FadeOut(Animation):
+class FadeOut(MobjectMovement):
     def update_mobject(self, alpha):
         self.mobject.rgbs = self.starting_mobject.rgbs * (1 - alpha)
 
-class Reveal(Animation):
+class Reveal(MobjectMovement):
     def update_mobject(self, alpha):
         self.mobject.rgbs = self.starting_mobject.rgbs * alpha
         if self.mobject.points.shape != self.starting_mobject.points.shape:
             self.mobject.points = self.starting_mobject.points
             #TODO, Why do you need to do this? Shouldn't points always align?
 
-class Transform(Animation):
+class Transform(MobjectMovement):
     def __init__(self, mobject1, mobject2, 
                  run_time = DEFAULT_TRANSFORM_RUN_TIME,
                  *args, **kwargs):
         count1, count2 = mobject1.get_num_points(), mobject2.get_num_points()
         Mobject.align_data(mobject1, mobject2)
-        Animation.__init__(self, mobject1, run_time = run_time, *args, **kwargs)
+        MobjectMovement.__init__(self, mobject1, run_time = run_time, *args, **kwargs)
         self.ending_mobject = mobject2
         self.mobject.SHOULD_BUFF_POINTS = \
             mobject1.SHOULD_BUFF_POINTS and mobject2.SHOULD_BUFF_POINTS
@@ -281,13 +266,13 @@ class ComplexFunction(ApplyFunction):
         self.name = "ComplexFunction" + to_cammel_case(function.__name__)
         #Todo, abstract away function naming'
 
-class Homotopy(Animation):
+class Homotopy(MobjectMovement):
     def __init__(self, homotopy, *args, **kwargs):
         """
         Homotopy a function from (x, y, z, t) to (x', y', z')
         """
         self.homotopy = homotopy
-        Animation.__init__(self, *args, **kwargs)
+        MobjectMovement.__init__(self, *args, **kwargs)
 
     def update_mobject(self, alpha):
         self.mobject.points = np.array([
@@ -315,7 +300,7 @@ class ComplexHomotopy(Homotopy):
             to_cammel_case(complex_homotopy.__name__)
 
 
-class ShowCreation(Animation):
+class ShowCreation(MobjectMovement):
     def update_mobject(self, alpha):
         #TODO, shoudl I make this more efficient?
         new_num_points = int(alpha * self.starting_mobject.points.shape[0])
@@ -326,11 +311,11 @@ class ShowCreation(Animation):
                 getattr(self.starting_mobject, attr)[:new_num_points, :]
             )
 
-class Flash(Animation):
+class Flash(MobjectMovement):
     def __init__(self, mobject, color = "white", slow_factor = 0.01,
                  run_time = 0.1, alpha_func = None,
                  *args, **kwargs):
-        Animation.__init__(self, mobject, run_time = run_time, 
+        MobjectMovement.__init__(self, mobject, run_time = run_time, 
                            alpha_func = alpha_func,
                            *args, **kwargs)
         self.intermediate = Mobject(color = color)

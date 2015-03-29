@@ -30,7 +30,7 @@ class Scene(object):
             #TODO, Error checking?
         else:
             self.background = np.zeros((height, width, 3))
-        self.shape = self.background.shape[:2]
+        self.shape = self.background.shape[:2]mobmov
         self.name = name
 
     def __str__(self):
@@ -52,26 +52,26 @@ class Scene(object):
             while mobject in self.mobjects:
                 self.mobjects.remove(mobject)
 
-    def animate(self, *animations):
-        #Runtime is determined by the first animation
-        run_time = animations[0].run_time
-        moving_mobjects = [a.mobject for a in animations]
+    def animate(self, *mobmovs):
+        #Runtime is determined by the first mobmov
+        run_time = mobmovs[0].run_time
+        moving_mobjects = [a.mobject for a in mobmovs]
         self.remove(*moving_mobjects)
         background = self.get_frame()
 
-        print "Generating animations..."
+        print "Generating mobject movements..."
         progress_bar = progressbar.ProgressBar(maxval=run_time)
         progress_bar.start()
 
         for t in np.arange(0, run_time, self.frame_duration):
             progress_bar.update(t)
             new_frame = background
-            for anim in animations:
-                anim.update(t / anim.run_time)
-                new_frame = disp.paint_mobject(anim.mobject, new_frame)
+            for mobmov in mobmovs:
+                mobmov.update(t / mobmov.run_time)
+                new_frame = disp.paint_mobject(mobmov.mobject, new_frame)
             self.frames.append(new_frame)
-        for anim in animations:
-            anim.clean_up()
+        for mobmov in mobmovs:
+            mobmov.clean_up()
         self.add(*moving_mobjects)
         progress_bar.finish()
 
