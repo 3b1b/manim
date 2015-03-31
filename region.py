@@ -2,13 +2,15 @@ import numpy as np
 import itertools as it
 from PIL import Image
 import cv2
+from copy import deepcopy
 
 from constants import *
+import displayer as disp
 
 class Region(object):
     def __init__(self, 
                  condition = lambda x, y : True, 
-                 size = (DEFAULT_HEIGHT, DEFAULT_WIDTH)
+                 shape = (DEFAULT_HEIGHT, DEFAULT_WIDTH)
                  ):
         """
         Condition must be a function which takes in two real
@@ -17,7 +19,10 @@ class Region(object):
         a function from R^2 to {True, False}, but & and | must be
         used in place of "and" and "or"
         """
-        self.size = (h, w) = size
+        #TODO, maybe I want this to be flexible to resizing
+        self.shape = shape
+        # self.condition = condition
+        (h, w) = self.shape
         scalar = 2*SPACE_HEIGHT / h
         xs =  scalar*np.arange(-w/2, w/2)
         ys = -scalar*np.arange(-h/2, h/2)
@@ -31,9 +36,76 @@ class Region(object):
         )
         self.bool_grid = condition(self.xs, self.ys)
 
-    def union(self, region):
-        self.bool_grid |= region.bool_grid
+    def show(self, color = None):
+        Image.fromarray(disp.paint_region(self, color = color)).show()
 
-    def intersection(self, region):
-        self.bool_grid &= region.bool_grid
+    def _combine(self, region, op):
+        assert region.shape == self.shape
+        self.bool_grid = op(self.bool_grid, region.bool_grid)
+
+    def union(self, region):
+        self._combine(region, lambda bg1, bg2 : bg1 | bg2)
+        return self
+
+    def intersect(self, region):
+        self._combine(region, lambda bg1, bg2 : bg1 & bg2)
+        return self
+
+    def complement(self):
+        self.bool_grid = ~self.bool_grid
+        return self
+
+class HalfPlane(Region):
+    def __init__(self, point_pair, upper_left = True, *args, **kwargs):
+        """
+        point_pair of the form [(x_0, y_0), (x_1, y_1)]
+
+        Pf upper_left is True, the side of the region will be
+        everything on the upper left side of the line through
+        the point pair
+        """
+        if not upper_left:
+            point_pair = list(point_pair)
+            point_pair.reverse()
+        (x0, y0), (x1, y1) = point_pair
+        def condition(x, y):
+            return (x1 - x0)*(y - y0) > (y1 - y0)*(x - x0)
+        Region.__init__(self, condition, *args, **kwargs)
+
+def plane_partition(*lines):
+    """
+    A 'line' is a pair of points [(x0, y0), (x1, y1)]
+
+    Returns the list of regions of the plane cut out by
+    these lines
+    """
+    result = []
+    half_planes = [HalfPlane(line) for line in lines]
+    complements = [deepcopy(hp).complement() for hp in half_planes]
+    num_lines = len(lines)
+    for bool_list in it.product(*[[True, False]]*num_lines):
+        reg = Region()
+        for i in range(num_lines):
+            if bool_list[i]:
+                reg.intersect(half_planes[i])
+            else:
+                reg.intersect(complements[i])
+        if reg.bool_grid.any():
+            result.append(reg)
+    return result
+
+def plane_partition_from_points(*points):
+    """
+    Returns list of regions cut out by the complete graph
+    with points from the argument as vertices.  
+
+    Each point comes in the form (x, y)
+    """
+    lines = [[p1, p2] for (p1, p2) in it.combinations(points, 2)]
+    return plane_partition(*lines)
+
+
+
+
+
 

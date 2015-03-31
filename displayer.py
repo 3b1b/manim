@@ -4,15 +4,33 @@ import os
 from PIL import Image
 import subprocess
 import cv2
+from colour import Color
 
-from animate import *
+from mobject_movement import *
+
+def get_pixels(image_array):
+    if image_array is None:
+        return np.zeros(
+            (DEFAULT_HEIGHT, DEFAULT_WIDTH, 3), 
+            dtype = 'uint8'
+        )
+    else:
+        pixels = np.array(image_array).astype('uint8')
+        assert len(pixels.shape) == 3 and pixels.shape[2] == 3
+        return pixels
+
+def paint_region(region, image_array = None, color = None):
+    pixels = get_pixels(image_array)
+    # assert region.shape == pixels.shape[:2]
+    if color is None:
+        rgb = np.random.random(3)        
+    else:
+        rgb = np.array(Color(color).get_rgb()) 
+    pixels[region.bool_grid] = (255*rgb).astype('uint8')
+    return pixels
 
 def paint_mobject(mobject, image_array = None):
-    if image_array is None:
-        pixels = np.zeros((DEFAULT_HEIGHT, DEFAULT_WIDTH, 3))
-    else:
-        pixels = np.array(image_array)
-        assert len(pixels.shape) == 3 and pixels.shape[2] == 3
+    pixels = get_pixels(image_array)
     height = pixels.shape[0]
     width  = pixels.shape[1]
     space_height = SPACE_HEIGHT

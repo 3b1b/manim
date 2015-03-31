@@ -4,7 +4,7 @@ import os
 from PIL import Image
 from random import random
 
-from animate import *
+from mobject_movement import *
 from tex_utils import *
 import displayer as disp
 
@@ -40,7 +40,7 @@ class Mobject(object):
     def __str__(self):
         return self.name
 
-    def display(self):
+    def show(self):
         Image.fromarray(disp.paint_mobject(self)).show()
 
     def save_image(self, name = None):

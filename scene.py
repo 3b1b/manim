@@ -12,7 +12,7 @@ import inspect
 
 from helpers import *
 from mobject import *
-from animate import *
+from mobject_movement import *
 import displayer as disp
 
 class Scene(object):
@@ -26,11 +26,12 @@ class Scene(object):
         self.frames = []
         self.mobjects = []
         if background:
-            self.background = np.array(background)
+            self.original_background = np.array(background)
             #TODO, Error checking?
         else:
-            self.background = np.zeros((height, width, 3))
-        self.shape = self.background.shape[:2]mobmov
+            self.original_background = np.zeros((height, width, 3))
+        self.background = self.original_background
+        self.shape = self.background.shape[:2]
         self.name = name
 
     def __str__(self):
@@ -51,6 +52,16 @@ class Scene(object):
         for mobject in mobjects:
             while mobject in self.mobjects:
                 self.mobjects.remove(mobject)
+
+    def highlight_region(self, region, color = None):
+        self.background = disp.paint_region(
+            region, 
+            image_array = self.background, 
+            color = color,
+        )
+
+    def reset_background(self):
+        self.background = self.original_background
 
     def animate(self, *mobmovs):
         #Runtime is determined by the first mobmov
