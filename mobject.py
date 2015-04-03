@@ -3,9 +3,10 @@ import itertools as it
 import os
 from PIL import Image
 from random import random
+from copy import deepcopy
 
-from mobject_movement import *
-from tex_utils import *
+from constants import *
+from helpers import *
 import displayer as disp
 
 
@@ -99,6 +100,13 @@ class Mobject(object):
             self.add_points(mobject.points, mobject.rgbs)
         return self
 
+    def repeat(self, count):
+        #Can make transition animations nicer
+        points, rgbs = deepcopy(self.points), deepcopy(self.rgbs)
+        for x in range(count - 1):
+            self.add_points(points, rgbs)
+        return self
+
     def get_num_points(self):
         return self.points.shape[0]
 
@@ -135,6 +143,10 @@ class Mobject(object):
         self.points = self.points[to_eliminate]
         self.rgbs   = self.rgbs[to_eliminate]
         return self
+
+    def should_buffer_points(self):
+        # potentially changed in subclasses
+        return GENERALLY_BUFF_POINTS
 
     def generate_points(self):
         #Typically implemented in subclass, unless purposefully left blank
@@ -249,7 +261,7 @@ class Vector(Arrow):
                        length = length, tip_length = 0.2 * length, 
                        *args, **kwargs)
 
-class Dot(Mobject1D):
+class Dot(Mobject1D): #Use 1D density, even though 2D
     DEFAULT_COLOR = "white"
     def __init__(self, center = (0, 0, 0), radius = 0.05, *args, **kwargs):
         self.center = center
@@ -334,12 +346,6 @@ class Circle(Mobject1D):
             (np.cos(theta), np.sin(theta), 0)
             for theta in np.arange(0, 2 * np.pi, self.epsilon)
         ])
-
-    def repeat(self, count):
-        #Can make transition animations quite pretty
-        for x in range(count - 1):
-            self.add_points(self.points)
-        return self
 
 class FunctionGraph(Mobject1D):
     DEFAULT_COLOR = "lightblue"
@@ -465,81 +471,6 @@ class NumberLine(Mobject1D):
 #         Grid.__init__(self, *args, **kwargs)
 #         self.add(Dot())
     
-        
-
-
-class ImageMobject(Mobject2D):
-    """
-    Automatically filters out black pixels
-    """
-#    SHOULD_BUFF_POINTS = False
-    def __init__(self, 
-                 image, 
-                 filter_color = "black", 
-                 invert = True,
-                 *args, **kwargs):
-        #TODO, Make sure you always convert to RGB
-        self.filter_rgb = 255 * np.array(Color(filter_color).get_rgb()).astype('uint8')
-        if isinstance(image, str):
-            self.name = to_cammel_case(
-                os.path.split(image)[-1].split(".")[0]
-            )
-            possible_paths = [
-                image,
-                os.path.join(IMAGE_DIR, image),
-                os.path.join(IMAGE_DIR, image + ".jpg"),
-                os.path.join(IMAGE_DIR, image + ".png"),
-            ]
-            found = False
-            for path in possible_paths:
-                if os.path.exists(path):
-                    image = Image.open(path).convert('RGB')
-                    found = True
-            if not found:
-                raise IOError("File not Found")
-        if invert:
-            image = invert_image(image)
-        self.image_array = np.array(image)
-        Mobject2D.__init__(self, *args, **kwargs)
-                
-    def generate_points(self):
-        height, width = self.image_array.shape[:2]
-        #Flatten array, and find indices where rgb is not filter_rgb
-        array = self.image_array.reshape((height * width, 3))
-        ones = np.ones(height * width, dtype = 'bool')
-        for i in range(3):
-            ones *= (array[:,i] != self.filter_rgb[i])
-        indices = np.arange(height * width, dtype = 'int')[ones]
-        rgbs = array[indices, :].astype('float') / 255.0
-
-        points = np.array([
-            (
-                i%width - (width / 2.0),
-                -i/width + (height / 2.0), #flip y-axis
-                0
-            )
-            for i in indices
-        ], dtype = 'float64')
-        height, width = map(float, (height, width))
-        if height / width > float(DEFAULT_HEIGHT) / DEFAULT_WIDTH:
-            points *= 2 * SPACE_HEIGHT / height
-        else:
-            points *= 2 * SPACE_WIDTH / width
-        self.add_points(points, rgbs = rgbs)
-
-
-def tex_mobjects(expression, size = "\HUGE"):
-    images = tex_to_image(expression, size)
-    if isinstance(images, list):
-        #TODO, is checking listiness really the best here?
-        return [ImageMobject(im) for im in images]
-    else:
-        return ImageMobject(images)
-
-
-
-
-
 
 
 

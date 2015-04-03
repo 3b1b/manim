@@ -9,7 +9,7 @@ import displayer as disp
 
 class Region(object):
     def __init__(self, 
-                 condition = lambda x, y : True, 
+                 condition = None, 
                  shape = (DEFAULT_HEIGHT, DEFAULT_WIDTH)
                  ):
         """
@@ -26,6 +26,7 @@ class Region(object):
         scalar = 2*SPACE_HEIGHT / h
         xs =  scalar*np.arange(-w/2, w/2)
         ys = -scalar*np.arange(-h/2, h/2)
+        #TODO, do xs and ys really need to be saved in self?
         self.xs = np.dot(
             np.ones((h, 1)),
             xs.reshape((1, w))
@@ -34,7 +35,10 @@ class Region(object):
             ys.reshape(h, 1), 
             np.ones((1, w))
         )
-        self.bool_grid = condition(self.xs, self.ys)
+        if condition:
+            self.bool_grid = condition(self.xs, self.ys)
+        else:
+            self.bool_grid = np.ones(self.shape, dtype = 'bool')
 
     def show(self, color = None):
         Image.fromarray(disp.paint_region(self, color = color)).show()
@@ -58,7 +62,7 @@ class Region(object):
 class HalfPlane(Region):
     def __init__(self, point_pair, upper_left = True, *args, **kwargs):
         """
-        point_pair of the form [(x_0, y_0), (x_1, y_1)]
+        point_pair of the form [(x_0, y_0,...), (x_1, y_1,...)]
 
         Pf upper_left is True, the side of the region will be
         everything on the upper left side of the line through
@@ -67,14 +71,14 @@ class HalfPlane(Region):
         if not upper_left:
             point_pair = list(point_pair)
             point_pair.reverse()
-        (x0, y0), (x1, y1) = point_pair
+        (x0, y0), (x1, y1) = point_pair[0][:2], point_pair[1][:2]
         def condition(x, y):
             return (x1 - x0)*(y - y0) > (y1 - y0)*(x - x0)
         Region.__init__(self, condition, *args, **kwargs)
 
 def plane_partition(*lines):
     """
-    A 'line' is a pair of points [(x0, y0), (x1, y1)]
+    A 'line' is a pair of points [(x0, y0,...), (x1, y1,...)]
 
     Returns the list of regions of the plane cut out by
     these lines

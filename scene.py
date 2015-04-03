@@ -12,7 +12,7 @@ import inspect
 
 from helpers import *
 from mobject import *
-from mobject_movement import *
+from animation import *
 import displayer as disp
 
 class Scene(object):
@@ -21,7 +21,8 @@ class Scene(object):
                  frame_duration = DEFAULT_FRAME_DURATION,
                  background = None,
                  height = DEFAULT_HEIGHT,
-                 width = DEFAULT_WIDTH,):
+                 width = DEFAULT_WIDTH,
+                 start_dither_time = DEFAULT_DITHER_TIME):
         self.frame_duration = frame_duration
         self.frames = []
         self.mobjects = []
@@ -29,13 +30,19 @@ class Scene(object):
             self.original_background = np.array(background)
             #TODO, Error checking?
         else:
-            self.original_background = np.zeros((height, width, 3))
+            self.original_background = np.zeros(
+                (height, width, 3),
+                dtype = 'uint8'
+            )
         self.background = self.original_background
         self.shape = self.background.shape[:2]
         self.name = name
 
     def __str__(self):
         return self.name or "Babadinook" #TODO
+
+    def set_name(self, name):
+        self.name = name
 
     def add(self, *mobjects):
         """
@@ -63,26 +70,30 @@ class Scene(object):
     def reset_background(self):
         self.background = self.original_background
 
-    def animate(self, *mobmovs):
-        #Runtime is determined by the first mobmov
-        run_time = mobmovs[0].run_time
-        moving_mobjects = [a.mobject for a in mobmovs]
+    def animate(self, *animations, **kwargs):
+        if "run_time" in kwargs:
+            run_time = kwargs["run_time"]
+        else:
+            run_time = animations[0].run_time
+        for animation in animations:
+            animation.set_run_time(run_time)
+        moving_mobjects = [anim.mobject for anim in animations]
         self.remove(*moving_mobjects)
         background = self.get_frame()
 
-        print "Generating mobject movements..."
+        print "Generating " + ", ".join(map(str, animations))
         progress_bar = progressbar.ProgressBar(maxval=run_time)
         progress_bar.start()
 
         for t in np.arange(0, run_time, self.frame_duration):
             progress_bar.update(t)
             new_frame = background
-            for mobmov in mobmovs:
-                mobmov.update(t / mobmov.run_time)
-                new_frame = disp.paint_mobject(mobmov.mobject, new_frame)
+            for animation in animations:
+                animation.update(t / animation.run_time)
+                new_frame = disp.paint_mobject(animation.mobject, new_frame)
             self.frames.append(new_frame)
-        for mobmov in mobmovs:
-            mobmov.clean_up()
+        for animation in animations:
+            animation.clean_up()
         self.add(*moving_mobjects)
         progress_bar.finish()
 
@@ -102,6 +113,9 @@ class Scene(object):
     def write_to_movie(self, name = None, end_dither_time = DEFAULT_DITHER_TIME):
         self.dither(end_dither_time)
         disp.write_to_movie(self, name or str(self))
+
+    def show_frame(self):
+        Image.fromarray(self.get_frame()).show()
 
 
 

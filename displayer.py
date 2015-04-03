@@ -5,8 +5,9 @@ from PIL import Image
 import subprocess
 import cv2
 from colour import Color
+import progressbar
 
-from mobject_movement import *
+from mobject import *
 
 def get_pixels(image_array):
     if image_array is None:
@@ -38,6 +39,7 @@ def paint_mobject(mobject, image_array = None):
 
     #TODO, Let z add a depth componenet?
     points = np.array(mobject.points[:, :2])
+    rgbs   = np.array(mobject.rgbs)
     #Flips y-axis
     points[:,1] *= -1
     #Map points to pixel space, then create pixel array first in terms
@@ -53,12 +55,20 @@ def paint_mobject(mobject, image_array = None):
     flattener = np.array([1, width], dtype = 'int').reshape((2, 1))
     indices = np.dot(points, flattener)
     indices = indices.reshape(indices.size)
+    if mobject.should_buffer_points():#Is this alright?
+        for tweak in [
+            indices + 1, 
+            indices + width, 
+            indices + width + 1
+            ]:
+            indices = np.append(indices, tweak)
+        rgbs = np.array(list(rgbs) * 4)
     admissibles = (indices < height * width) * (indices > 0)
     indices = indices[admissibles]
-    rgbs = mobject.rgbs[admissibles]
+    rgbs = rgbs[admissibles]
     rgbs = (rgbs * 255).astype(int)
     pixels = pixels.reshape((height * width, 3))
-    pixels[indices] = rgbs
+    pixels[indices] = rgbs.reshape((rgbs.size/3), 3)#WHY?
     pixels = pixels.reshape((height, width, 3)).astype('uint8')
     return pixels
 
