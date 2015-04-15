@@ -17,27 +17,15 @@ RADIUS = SPACE_HEIGHT - 0.1
 CIRCLE_DENSITY = DEFAULT_POINT_DENSITY_1D*RADIUS
 
 
-####
-def moser_function(n):
-    return choose(n, 4) + choose(n, 2) + 1
-
-def choose(n, r):
-    if n < r: return 0
-    r = min(r, n-r)
-    if r == 0: return 1
-    numer = reduce(op.mul, xrange(n, n-r, -1), 1)
-    denom = reduce(op.mul, xrange(1, r+1), 1)
-    return numer//denom
-####
-
-
 def logo_to_circle():
-    from generate_logo import LIGHT_BROWN
+    from generate_logo import DARK_BROWN, LOGO_RADIUS
     sc = Scene()
     small_circle = Circle(
         density = CIRCLE_DENSITY,
         color = 'skyblue'
-    ).highlight(LIGHT_BROWN, lambda (x, y, z) : x < 0 and y > 0)
+    ).scale(LOGO_RADIUS).highlight(
+        DARK_BROWN, lambda (x, y, z) : x < 0 and y > 0
+    )
     big_circle = Circle(density = CIRCLE_DENSITY).scale(RADIUS)
     sc.add(small_circle)
     sc.dither()
@@ -102,7 +90,7 @@ def summarize_pattern(*radians):
         new_lines = CompoundMobject(*[
             Line(points[x], points[y]) for y in xrange(x)
         ])
-        num = tex_mobject(str(moser_function(x + 1)))
+        num = tex_mobject(str(moser_function(x + 1))).center()
         sc.animate(
             Transform(last_num, num) if last_num else ShowCreation(num),
             FadeIn(new_lines),
@@ -270,6 +258,7 @@ def next_few_videos(*radians):
     return sc
 
 
+
 if __name__ == '__main__':
     radians = [1, 3, 5, 2, 4, 6]
     more_radians = radians + [10, 13, 20, 17, 15, 21, 18.5]
@@ -282,13 +271,20 @@ if __name__ == '__main__':
     # connect_points(*radians).write_to_movie("moser/ConnectPoints")
     # response_invitation().write_to_movie("moser/ResponseInvitation")
     # different_points(radians, different_radians).write_to_movie("moser/DifferentPoints")
-    next_few_videos(*radians).write_to_movie("moser/NextFewVideos")
-
+    # next_few_videos(*radians).write_to_movie("moser/NextFewVideos")
+    # summarize_pattern(*different_radians).write_to_movie("moser/PatternWithDifferentPoints")
 
     #Images
     # tex_mobject(r"""
     #     \underbrace{1, 2, 4, 8, 16, 31, \dots}_\text{What?}
-    # """).save_image("moser/NumberList")
+    # """).save_image("moser/NumberList31")
+    # tex_mobject("""
+    #     1, 2, 4, 8, 16, 32, 63, \dots
+    # """).save_image("moser/NumberList63")
+    # tex_mobject("""
+    #     1, 2, 4, 8, 15, \dots
+    # """).save_image("moser/NumberList15")
+    
 
 
 

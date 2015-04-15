@@ -36,6 +36,7 @@ class Scene(object):
             )
         self.background = self.original_background
         self.shape = self.background.shape[:2]
+        #TODO, space shape
         self.name = name
 
     def __str__(self):

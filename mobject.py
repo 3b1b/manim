@@ -4,6 +4,7 @@ import os
 from PIL import Image
 from random import random
 from copy import deepcopy
+from colour import Color
 
 from constants import *
 from helpers import *
@@ -264,6 +265,11 @@ class Vector(Arrow):
 class Dot(Mobject1D): #Use 1D density, even though 2D
     DEFAULT_COLOR = "white"
     def __init__(self, center = (0, 0, 0), radius = 0.05, *args, **kwargs):
+        center = np.array(center)
+        if center.size == 1:
+            raise Exception("Center must have 2 or 3 coordinates!")
+        elif center.size == 2:
+            center = np.append(center, [0])
         self.center = center
         self.radius = radius
         Mobject1D.__init__(self, *args, **kwargs)

@@ -10,6 +10,7 @@ import inspect
 from images2gif import writeGif
 
 from helpers import *
+from constants import *
 from mobject import Mobject
 
 class Animation(object):

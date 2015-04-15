@@ -4,6 +4,7 @@ from PIL import Image
 from colour import Color
 from random import random
 import string
+
 from constants import *
 
 def hash_args(args):
@@ -25,13 +26,13 @@ def to_cammel_case(name):
     ]
     return "".join(parts)
 
-def drag_pixels(images):
-    curr = np.array(images[0])
-    new_images = []
-    for image in images:
-        curr += (curr == 0) * np.array(image)
-        new_images.append(Image.fromarray(curr))
-    return new_images
+def drag_pixels(frames):
+    curr = frames[0]
+    new_frames = []
+    for frame in frames:
+        curr += (curr == 0) * np.array(frame)
+        new_frames.append(np.array(curr))
+    return new_frames
 
 def invert_image(image):
     arr = np.array(image)
