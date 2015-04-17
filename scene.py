@@ -12,6 +12,7 @@ import inspect
 
 from helpers import *
 from mobject import *
+from image_mobject import *
 from animation import *
 import displayer as disp
 
@@ -97,6 +98,37 @@ class Scene(object):
             animation.clean_up()
         self.add(*moving_mobjects)
         progress_bar.finish()
+
+    def count(self, mobjects, mode = "highlight",
+              color = "red", 
+              num_offset = (SPACE_WIDTH - 1, SPACE_HEIGHT - 1, 0),
+              run_time = 5.0):
+        """
+        Note: Leaves scene with a "number" attribute 
+        for the final number mobject
+        """
+        if len(mobjects) > 50: #TODO
+            raise Exception("I don't know if you should be counting \
+                             too many mobjects...")
+        if mode not in ["highlight", "show_creation"]:
+            raise Exception("Invalid mode")
+        frame_time = run_time / len(mobjects)
+        if mode == "highlight":
+            self.add(*mobjects)
+        for mob, num in zip(mobjects, it.count(1)):
+            num_mob = tex_mobject(str(num))
+            num_mob.center().shift(num_offset)
+            self.add(num_mob)
+            if mode == "highlight":
+                original_color = mob.color
+                mob.highlight(color)
+                self.dither(frame_time)
+                mob.highlight(original_color)
+            if mode == "show_creation":
+                self.animate(ShowCreation(mob, run_time = frame_time))
+            self.remove(num_mob)
+        self.add(num_mob)
+        self.number = num_mob
 
     def get_frame(self):
         frame = self.background

@@ -130,6 +130,7 @@ class Mobject(object):
         """
         Condition is function which takes in one arguments, (x, y, z).
         """
+        #TODO, Should self.color change?
         to_change = np.apply_along_axis(condition, 1, self.points)
         self.rgbs[to_change, :] *= 0
         self.rgbs[to_change, :] += Color(color).get_rgb()

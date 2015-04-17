@@ -14,7 +14,7 @@ from constants import *
 from mobject import Mobject
 
 class Animation(object):
-    def __init__(self, 
+    def __init__(self,
                  mobject,
                  run_time = DEFAULT_ANIMATION_RUN_TIME,
                  alpha_func = high_inflection_0_to_1,
@@ -217,6 +217,18 @@ class Transform(Animation):
                         )[self.non_redundant_m2_indices]
                     )
 
+class FadeToColor(Transform):
+    def __init__(self, mobject, color, *args, **kwargs):
+        target = copy.deepcopy(mobject).highlight(color)
+        Transform.__init__(self, mobject, target, *args, **kwargs)
+
+class ScaleInPlace(Transform):
+    def __init__(self, mobject, scale_factor, *args, **kwargs):
+        target = copy.deepcopy(mobject)
+        center = mobject.get_center()
+        target.shift(-center).scale(scale_factor).shift(center)
+        Transform.__init__(self, mobject, target, *args, **kwargs)
+
 class ApplyMethod(Transform):
     def __init__(self, method, mobject, *args, **kwargs):
         """
@@ -232,7 +244,7 @@ class ApplyMethod(Transform):
             mobject, 
             method(copy.deepcopy(mobject), *method_args),
             *args, **kwargs
-        )        
+        )
 
 class ApplyFunction(Transform):
     def __init__(self, function, mobject, run_time = DEFAULT_ANIMATION_RUN_TIME,

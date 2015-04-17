@@ -2,6 +2,9 @@ import numpy as np
 import operator as op
 import itertools as it
 
+from constants import *
+from image_mobject import *
+
 def choose(n, r):
     if n < r: return 0
     if r == 0: return 1
@@ -32,3 +35,6 @@ def intersection(line1, line2):
     result = np.dot(transform, [[x_intercept], [0]])
     result = result.reshape((2,)) + p0
     return result
+
+
+
