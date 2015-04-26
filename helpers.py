@@ -59,6 +59,8 @@ def make_even_by_cycling(iterable_1, iterable_2):
 def sigmoid(x):
     return 1.0/(1 + np.exp(-x))
 
+### Alpha Functions ###
+
 def high_inflection_0_to_1(t, inflection = 10.0):
     error = sigmoid(-inflection / 2)
     return (sigmoid(inflection*(t - 0.5)) - error) / (1 - 2*error)
@@ -67,6 +69,10 @@ def there_and_back(t, inflection = 10.0):
     new_t = 2*t if t < 0.5 else 2*(1 - t)
     return high_inflection_0_to_1(new_t, inflection)
 
+def not_quite_there(t, proportion = 0.7):
+    return proportion*high_inflection_0_to_1(t)
+
+### Functional Functions ###
 
 def composition(func_list):
     """
@@ -124,8 +130,7 @@ def z_to_vector(vector):
     return np.dot(rotation_about_z(theta), phi_down)
 
 def rotate_vector(vector, angle, axis):
-    #Slightly hacky, changes vector in place
-    vector[:3] = np.dot(rotation_matrix(angle, axis), vector)
+    return np.dot(rotation_matrix(angle, axis), vector)
 
 def angle_between(v1, v2):
     return np.arccos(np.dot(

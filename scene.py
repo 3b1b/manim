@@ -16,6 +16,9 @@ from image_mobject import *
 from animation import *
 import displayer as disp
 
+DEFAULT_COUNT_NUM_OFFSET = (SPACE_WIDTH - 1, SPACE_HEIGHT - 1, 0)
+DEFAULT_COUNT_RUN_TIME   = 5.0
+
 class Scene(object):
     def __init__(self, 
                  name = None,
@@ -99,19 +102,29 @@ class Scene(object):
         self.add(*moving_mobjects)
         progress_bar.finish()
 
-    def count(self, mobjects, mode = "highlight",
-              color = "red", 
-              num_offset = (SPACE_WIDTH - 1, SPACE_HEIGHT - 1, 0),
-              run_time = 5.0):
+    def count(self, items, item_type = "mobject", *args, **kwargs):
+        if item_type == "mobject":
+            self.count_mobjects(items, *args, **kwargs)
+        elif item_type == "region":
+            self.count_regions(items, *args, **kwargs)
+
+    def count_mobjects(
+        self, mobjects, mode = "highlight",
+        color = "red", 
+        num_offset = DEFAULT_COUNT_NUM_OFFSET,
+        run_time   = DEFAULT_COUNT_RUN_TIME):
         """
         Note: Leaves scene with a "number" attribute 
-        for the final number mobject
+        for the final number mobject.
+
+        mode can be "highlight", "show_creation" or "show", otherwise
+        a warning is given and nothing is animating during the count
         """
         if len(mobjects) > 50: #TODO
             raise Exception("I don't know if you should be counting \
                              too many mobjects...")
-        if mode not in ["highlight", "show_creation"]:
-            raise Exception("Invalid mode")
+        if mode not in ["highlight", "show_creation", "show"]:
+            raise Warning("Unknown mode")
         frame_time = run_time / len(mobjects)
         if mode == "highlight":
             self.add(*mobjects)
@@ -126,9 +139,33 @@ class Scene(object):
                 mob.highlight(original_color)
             if mode == "show_creation":
                 self.animate(ShowCreation(mob, run_time = frame_time))
+            if mode == "show":
+                self.add(mob)
+                self.dither(frame_time)
             self.remove(num_mob)
         self.add(num_mob)
         self.number = num_mob
+
+    def count_regions(self, regions, 
+                      mode = "one_at_a_time",
+                      num_offset = DEFAULT_COUNT_NUM_OFFSET,
+                      run_time   = DEFAULT_COUNT_RUN_TIME,
+                      **unused_kwargsn):
+        if mode not in ["one_at_a_time", "show_all"]:
+            raise Warning("Unknown mode")
+        frame_time = run_time / (len(regions))
+        for region, count in zip(regions, it.count(1)):
+            num_mob = tex_mobject(str(count))
+            num_mob.center().shift(num_offset)
+            self.add(num_mob)
+            self.highlight_region(region)
+            self.dither(frame_time)
+            if mode == "one_at_a_time":
+                self.reset_background()
+            self.remove(num_mob)
+        self.add(num_mob)
+        self.number = num_mob
+
 
     def get_frame(self):
         frame = self.background
@@ -147,7 +184,7 @@ class Scene(object):
         self.dither(end_dither_time)
         disp.write_to_movie(self, name or str(self))
 
-    def show_frame(self):
+    def show(self):
         Image.fromarray(self.get_frame()).show()
 
 

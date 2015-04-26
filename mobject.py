@@ -89,12 +89,13 @@ class Mobject(object):
         self.shift(-self.get_center())
         return self
 
-    def get_center(self):
-        return np.apply_along_axis(np.mean, 0, self.points)
-
     def scale(self, scale_factor):
         self.points *= scale_factor
         return self
+
+    def scale_in_place(self, scale_factor):
+        center = self.get_center()
+        return self.center().scale(scale_factor).shift(center)
 
     def add(self, *mobjects):
         for mobject in mobjects:
@@ -146,6 +147,17 @@ class Mobject(object):
         self.rgbs   = self.rgbs[to_eliminate]
         return self
 
+    ### Getters ###
+    def get_center(self):
+        return np.apply_along_axis(np.mean, 0, self.points)
+
+    def get_width(self):
+        return np.max(self.points[:, 0]) - np.min(self.points[:, 0])
+
+    def get_height(self):
+        return np.max(self.points[:, 1]) - np.min(self.points[:, 1])
+
+    ### Stuff subclasses should deal with ###
     def should_buffer_points(self):
         # potentially changed in subclasses
         return GENERALLY_BUFF_POINTS
@@ -228,6 +240,7 @@ class Point(Mobject):
         self.rgbs = np.array(self.color.get_rgb()).reshape(1, 3)
 
 class Arrow(Mobject1D):
+    DEFAULT_COLOR = "white"
     NUNGE_DISTANCE = 0.1
     def __init__(self, point = (0, 0, 0), direction = (-1, 1, 0), 
                  length = 1, tip_length = 0.25,
@@ -246,7 +259,7 @@ class Arrow(Mobject1D):
         ])
         tips_dir = np.array(-self.direction), np.array(-self.direction)
         for i, sgn in zip([0, 1], [-1, 1]):
-            rotate_vector(tips_dir[i], sgn * np.pi / 4, self.normal)
+            tips_dir[i] = rotate_vector(tips_dir[i], sgn * np.pi / 4, self.normal)
         self.add_points([
             [x, x, x] * tips_dir[i] + self.point
             for x in np.arange(0, self.tip_length, self.epsilon)
@@ -271,13 +284,13 @@ class Dot(Mobject1D): #Use 1D density, even though 2D
             raise Exception("Center must have 2 or 3 coordinates!")
         elif center.size == 2:
             center = np.append(center, [0])
-        self.center = center
+        self.center_point = center
         self.radius = radius
         Mobject1D.__init__(self, *args, **kwargs)
 
     def generate_points(self):
         self.add_points([
-            np.array((t*np.cos(theta), t*np.sin(theta), 0)) + self.center
+            np.array((t*np.cos(theta), t*np.sin(theta), 0)) + self.center_point
             for t in np.arange(0, self.radius, self.epsilon)
             for theta in np.arange(0, 2 * np.pi, self.epsilon)
         ])
@@ -305,6 +318,18 @@ class Line(Mobject1D):
             for t in np.arange(0, 1, self.epsilon)
         ])
 
+class CurvedLine(Line):
+    def generate_points(self):
+        equidistant_point = rotate_vector(
+            self.end - self.start, 
+            np.pi/3, [0,0,1]
+        ) + self.start
+        self.add_points([
+            (1 - t*(1-t))*(t*self.end + (1-t)*self.start) \
+            +    t*(1-t)*equidistant_point
+            for t in np.arange(0, 1, self.epsilon)
+        ])
+        self.ep = equidistant_point
 
 class CubeWithFaces(Mobject2D):
     def generate_points(self):

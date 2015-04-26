@@ -76,6 +76,12 @@ class HalfPlane(Region):
             return (x1 - x0)*(y - y0) > (y1 - y0)*(x - x0)
         Region.__init__(self, condition, *args, **kwargs)
 
+def region_from_line_boundary(*lines):
+    reg = Region()
+    for line in lines:
+        reg.intersect(HalfPlane(line))
+    return reg
+
 def plane_partition(*lines):
     """
     A 'line' is a pair of points [(x0, y0,...), (x1, y1,...)]

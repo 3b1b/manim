@@ -86,7 +86,7 @@ class VideoIcon(ImageMobject):
         ImageMobject.__init__(self, "video_icon", *args, **kwargs)
         self.scale(0.3)
 
-
+#Purely redundant function to make singulars and plurals sensible
 def tex_mobject(expression, size = "\HUGE"):
     return tex_mobjects(expression, size)
 

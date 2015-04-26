@@ -11,7 +11,7 @@ from images2gif import writeGif
 
 from helpers import *
 from constants import *
-from mobject import Mobject
+from mobject import Mobject, Point
 
 class Animation(object):
     def __init__(self,
@@ -179,6 +179,9 @@ class Transform(Animation):
                  run_time = DEFAULT_TRANSFORM_RUN_TIME,
                  *args, **kwargs):
         count1, count2 = mobject1.get_num_points(), mobject2.get_num_points()
+        if count2 == 0:
+            mobject2 = Point((SPACE_WIDTH, SPACE_HEIGHT, 0))
+            count2 = mobject2.get_num_points()
         Mobject.align_data(mobject1, mobject2)
         Animation.__init__(self, mobject1, run_time = run_time, *args, **kwargs)
         self.ending_mobject = mobject2
@@ -189,11 +192,13 @@ class Transform(Animation):
 
         if count2 < count1:
             #Ensure redundant pixels fade to black
-            indices = self.non_redundant_m2_indices = \
-                np.arange(0, count1-1, float(count1) / count2).astype('int')
+            indices = np.arange(
+                0, count1-1, float(count1) / count2
+            ).astype('int')
             temp = np.zeros(mobject2.points.shape)
             temp[indices] = mobject2.rgbs[indices]
             mobject2.rgbs = temp
+            self.non_redundant_m2_indices = indices
 
     def update_mobject(self, alpha):
         Mobject.interpolate(
@@ -221,6 +226,17 @@ class FadeToColor(Transform):
     def __init__(self, mobject, color, *args, **kwargs):
         target = copy.deepcopy(mobject).highlight(color)
         Transform.__init__(self, mobject, target, *args, **kwargs)
+
+class Highlight(FadeToColor):
+    def __init__(self, mobject, color = "red",
+                 run_time = DEFAULT_ANIMATION_RUN_TIME, 
+                 alpha_func = there_and_back, *args, **kwargs):
+        FadeToColor.__init__(
+            self, mobject, color, 
+            run_time = run_time, 
+            alpha_func = alpha_func, 
+            *args, **kwargs
+        )
 
 class ScaleInPlace(Transform):
     def __init__(self, mobject, scale_factor, *args, **kwargs):
