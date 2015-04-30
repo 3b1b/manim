@@ -3,7 +3,9 @@ import itertools as it
 from PIL import Image
 from constants import *
 
-def tex_to_image(expression, size = "\HUGE"):
+def tex_to_image(expression, 
+                 size = "\HUGE",
+                 template_tex_file = TEMPLATE_TEX_FILE):
     """
     Returns list of images for correpsonding with a list of expressions
     """
@@ -27,7 +29,7 @@ def tex_to_image(expression, size = "\HUGE"):
                 "at size %s to "%(size),
                 filestem,
             ])
-            with open(TEMPLATE_TEX_FILE, "r") as infile:
+            with open(template_tex_file, "r") as infile:
                 body = infile.read()
                 body = body.replace(SIZE_TO_REPLACE, size)
                 body = body.replace(TEX_TEXT_TO_REPLACE, expression)

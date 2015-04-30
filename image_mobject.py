@@ -86,11 +86,16 @@ class VideoIcon(ImageMobject):
         ImageMobject.__init__(self, "video_icon", *args, **kwargs)
         self.scale(0.3)
 
+def text_mobject(text, size = r"\Large"):
+    image = tex_to_image(text, size, TEMPLATE_TEXT_FILE)
+    assert(not isinstance(image, list))
+    return ImageMobject(image)
+
 #Purely redundant function to make singulars and plurals sensible
-def tex_mobject(expression, size = "\HUGE"):
+def tex_mobject(expression, size = r"\HUGE"):
     return tex_mobjects(expression, size)
 
-def tex_mobjects(expression, size = "\HUGE"):
+def tex_mobjects(expression, size = r"\HUGE"):
     images = tex_to_image(expression, size)
     if isinstance(images, list):
         #TODO, is checking listiness really the best here?

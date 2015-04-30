@@ -34,7 +34,8 @@ for folder in [IMAGE_DIR, GIF_DIR, MOVIE_DIR, TEX_DIR, TMP_IMAGE_DIR, TEX_IMAGE_
 PDF_DENSITY = 800
 SIZE_TO_REPLACE = "SizeHere"
 TEX_TEXT_TO_REPLACE = "YourTextHere"
-TEMPLATE_TEX_FILE = os.path.join(TEX_DIR, "template.tex")
+TEMPLATE_TEX_FILE  = os.path.join(TEX_DIR, "template.tex")
+TEMPLATE_TEXT_FILE = os.path.join(TEX_DIR, "text_template.tex")
 
 LOGO_PATH = os.path.join(IMAGE_DIR, "logo.png")
 

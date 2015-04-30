@@ -17,56 +17,8 @@ from scene import Scene
 from moser_helpers import *
 from graphs import *
 
-RADIUS = SPACE_HEIGHT - 0.1
-CIRCLE_DENSITY = DEFAULT_POINT_DENSITY_1D*RADIUS
 
 movie_prefix = "moser/"
-
-############################################
-
-class CircleScene(Scene):
-    def __init__(self, radians, *args, **kwargs):
-        Scene.__init__(self, *args, **kwargs)
-        self.radius = RADIUS
-        self.circle = Circle(density = CIRCLE_DENSITY).scale(self.radius)
-        self.points = [
-            (self.radius * np.cos(angle), self.radius * np.sin(angle), 0)
-            for angle in radians
-        ]
-        self.dots = [Dot(point) for point in self.points]
-        self.lines = [Line(p1, p2) for p1, p2 in it.combinations(self.points, 2)]
-        self.add(self.circle, *self.dots + self.lines)
-
-class GraphScene(Scene):
-    #Note, the placement of vertices in this is pretty hard coded, be
-    #warned if you want to change it.
-    def __init__(self, graph, *args, **kwargs):
-        Scene.__init__(self, *args, **kwargs)
-        #See CUBE_GRAPH above for format of graph
-        self.graph = graph
-        self.points = map(np.array, graph["vertices"])
-        self.vertices = self.dots = [Dot(p) for p in self.points]
-        self.edges = [
-            Line(self.points[i], self.points[j])
-            for i, j in graph["edges"]
-        ]
-        self.add(*self.dots + self.edges)
-
-    def generate_regions(self):
-        regions = [
-            region_from_line_boundary(*[
-                [
-                    self.points[rc[i]], 
-                    self.points[rc[(i+1)%len(rc)]]
-                ]
-                for i in range(len(rc))
-            ])
-            for rc in self.graph["region_cycles"]
-        ]
-        regions[-1].complement()#Outer region painted outwardly...
-        self.regions = regions
-
-##################################################
 
 def count_lines(*radians):
     #TODO, Count things explicitly?
@@ -378,7 +330,7 @@ def quadruplets_to_intersections(*radians):
         ))
         # sc.remove(arrows)
 
-    name = "QuadrupletsToIntersections" + len(radians)
+    name = "QuadrupletsToIntersections%d"%len(radians)
     sc.write_to_movie(movie_prefix + name)
 
 def defining_graph(graph):
@@ -447,7 +399,7 @@ def eulers_formula(graph):
     ])
     for mob in form.values():
         mob.shift((0, SPACE_HEIGHT-1.5, 0))
-    formula = CompoundMobject(*form.values())
+    formula = CompoundMobject(*[form[k] for k in form.keys() if k != "=2"])
     new_form = dict([
         (key, deepcopy(mob).shift((0, -0.7, 0)))
         for key, mob in zip(form.keys(), form.values())
@@ -486,6 +438,81 @@ def eulers_formula(graph):
     name = "EulersFormula" + graph["name"]
     gs.write_to_movie(movie_prefix + name)
 
+def apply_euler_to_moser(*radians):
+    cs = CircleScene(radians)
+    cs.remove(cs.n_equals)
+    n_equals, intersection_count = tex_mobjects([
+        r"&n = %d\\"%len(radians),
+        r"&{%d \choose 4} = %d"%(len(radians), choose(len(radians), 4))
+    ])
+    shift_val = cs.n_equals.get_center() - n_equals.get_center()
+    for mob in n_equals, intersection_count:
+        mob.shift(shift_val)
+    cs.add(n_equals)
+    yellow_dots  = [d.highlight("yellow") for d in deepcopy(cs.dots)]
+    yellow_lines = [l.highlight("yellow") for l in deepcopy(cs.lines)]
+    cs.animate(*[
+        ShowCreation(dot) for dot in yellow_dots
+    ], run_time = 1.0)
+    cs.dither()
+    cs.remove(*yellow_dots)
+    cs.animate(*[
+        ShowCreation(line) for line in yellow_lines
+    ], run_time = 1.0)
+    cs.dither()
+    cs.remove(yellow_lines)
+    cannot_intersect = text_mobject(r"""
+        Euler's formula does not apply to \\
+        graphs whose edges intersect!
+        """
+    )
+    cannot_intersect.center()
+    for mob in cs.mobjects:
+        mob.fade(0.3)
+    cs.add(cannot_intersect)
+    cs.dither()
+    cs.remove(cannot_intersect)
+    for mob in cs.mobjects:
+        mob.fade(1/0.3)
+    cs.generate_intersection_dots()
+    cs.animate(FadeIn(intersection_count), *[
+        ShowCreation(dot) for dot in cs.intersection_dots
+    ])
+
+
+    name = "ApplyEulerToMoser%d"%len(radians)
+    cs.write_to_movie(movie_prefix + name)
+
+def show_moser_graph_lines(*radians):
+    radians = list(set(map(lambda x : x%(2*np.pi), radians)))
+    radians.sort()
+
+    cs = CircleScene(radians)
+    cs.chop_lines_at_intersection_points()
+    cs.add(*cs.intersection_dots)
+    small_lines = [
+        deepcopy(line).scale_in_place(0.5) 
+        for line in cs.lines
+    ]
+    cs.animate(*[
+        Transform(line, small_line, run_time = 3.0)
+        for line, small_line in zip(cs.lines, small_lines)
+    ])
+    cs.count(cs.lines, color = "yellow", 
+             run_time = 9.0, num_offset = (0, 0, 0))
+    cs.dither()
+    cs.remove(cs.number)
+    cs.chop_circle_at_points()
+    cs.animate(*[
+        Transform(p, sp, run_time = 3.0)
+        for p, sp in zip(cs.circle_pieces, cs.smaller_circle_pieces)
+    ])
+    cs.count(cs.circle_pieces, color = "yellow", 
+             run_time = 2.0, num_offset = (0, 0, 0))
+    name = "ShowMoserGraphLines%d"%len(radians)
+    cs.write_to_movie(movie_prefix + name)
+
+    
 
 ##################################################
 
@@ -503,13 +530,14 @@ if __name__ == '__main__':
     # illustrate_n_choose_k(6, 4)
     # intersection_point_correspondances(radians, range(0, 7, 2))
     # lines_intersect_outside(radians, [2, 4, 5, 6])
-    quadruplets_to_intersections(*radians[:6])
+    # quadruplets_to_intersections(*radians[:6]) 
     # defining_graph(SAMPLE_GRAPH)
     # doubled_edges(CUBE_GRAPH)
     # eulers_formula(CUBE_GRAPH)
     # eulers_formula(SAMPLE_GRAPH)
     # eulers_formula(OCTOHEDRON_GRAPH)
-
+    # apply_euler_to_moser(*radians)
+    show_moser_graph_lines(*radians[:6])
 
 
 

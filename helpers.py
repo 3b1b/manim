@@ -72,6 +72,9 @@ def there_and_back(t, inflection = 10.0):
 def not_quite_there(t, proportion = 0.7):
     return proportion*high_inflection_0_to_1(t)
 
+def wiggle(t, wiggles = 2):
+    return there_and_back(t) * np.sin(wiggles*np.pi*t)
+
 ### Functional Functions ###
 
 def composition(func_list):
