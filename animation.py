@@ -177,6 +177,7 @@ class FadeIn(Animation):
 class Transform(Animation):
     def __init__(self, mobject1, mobject2, 
                  run_time = DEFAULT_TRANSFORM_RUN_TIME,
+                 black_out_extra_points = True,
                  *args, **kwargs):
         count1, count2 = mobject1.get_num_points(), mobject2.get_num_points()
         if count2 == 0:
@@ -190,7 +191,7 @@ class Transform(Animation):
         self.reference_mobjects.append(mobject2)
         self.name += "To" + str(mobject2)
 
-        if count2 < count1:
+        if black_out_extra_points and count2 < count1:
             #Ensure redundant pixels fade to black
             indices = np.arange(
                 0, count1-1, float(count1) / count2
@@ -221,6 +222,21 @@ class Transform(Animation):
                             attr
                         )[self.non_redundant_m2_indices]
                     )
+
+class SemiCircleTransform(Transform):
+    def update_mobject(self, alpha):
+        sm, em = self.starting_mobject, self.ending_mobject
+        midpoints = (sm.points + em.points) / 2
+        angle = alpha * np.pi
+        rotation_matrix = np.matrix([
+            [np.cos(angle), np.sin(angle), 0],
+            [-np.sin(angle), np.cos(angle), 0],
+            [0, 0, 1],
+        ])
+        self.mobject.points = np.dot(
+            sm.points - midpoints, 
+            np.transpose(rotation_matrix)
+        ) + midpoints
 
 class FadeToColor(Transform):
     def __init__(self, mobject, color, *args, **kwargs):

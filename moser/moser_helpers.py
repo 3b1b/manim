@@ -4,6 +4,7 @@ import itertools as it
 
 from constants import *
 from image_mobject import *
+from region import *
 from scene import Scene
 
 RADIUS = SPACE_HEIGHT - 0.1
@@ -121,6 +122,68 @@ class GraphScene(Scene):
         ]
         regions[-1].complement()#Outer region painted outwardly...
         self.regions = regions
+
+class PascalsTriangleScene(Scene): 
+    def __init__(self, nrows, *args, **kwargs):
+        Scene.__init__(self, *args, **kwargs)
+        diagram_height   = 2*SPACE_HEIGHT - 1
+        diagram_width    = 1.5*SPACE_WIDTH
+        cell_height      = diagram_height / nrows
+        cell_width       = diagram_width / nrows
+        portion_to_fill  = 0.7
+        bottom_left      = np.array(
+            (-cell_width * nrows / 2.0, -cell_height * nrows / 2.0, 0)
+        )
+        num_to_num_mob   = {} 
+        coords_to_mobs   = {}
+        coords = [(n, k) for n in range(nrows) for k in range(n+1)]    
+        for n, k in coords:
+            num = choose(n, k)              
+            center = bottom_left + (
+                cell_width * (k+nrows/2.0 - n/2.0), 
+                cell_height * (nrows - n), 
+                0
+            )
+            if num not in num_to_num_mob:
+                num_to_num_mob[num] = tex_mobject(str(num))
+            num_mob = deepcopy(num_to_num_mob[num])  
+            scale_factor = min(
+                1,
+                portion_to_fill * cell_height / num_mob.get_height(),
+                portion_to_fill * cell_width / num_mob.get_width(),
+            )
+            num_mob.center().scale(scale_factor).shift(center)
+            if n not in coords_to_mobs:
+                coords_to_mobs[n] = {}
+            coords_to_mobs[n][k] = num_mob
+        self.add(*[coords_to_mobs[n][k] for n, k in coords])
+        #Add attributes
+        self.nrows          = nrows
+        self.coords         = coords
+        self.diagram_height = diagram_height
+        self.diagram_width  = diagram_width
+        self.cell_height    = cell_height
+        self.cell_width     = cell_width
+        self.portion_to_fill= portion_to_fill
+        self.coords_to_mobs = coords_to_mobs
+
+
+    def generate_n_choose_k_mobs(self):
+        self.coords_to_n_choose_k = {}
+        for n, k in self.coords:
+            nck_mob = tex_mobject(r"{%d \choose %d}"%(n, k)) 
+            scale_factor = min(
+                1,
+                self.portion_to_fill * self.cell_height / nck_mob.get_height(),
+                self.portion_to_fill * self.cell_width / nck_mob.get_width(),
+            )
+            center = self.coords_to_mobs[n][k].get_center()
+            nck_mob.center().scale(scale_factor).shift(center)
+            if n not in self.coords_to_n_choose_k:
+                self.coords_to_n_choose_k[n] = {}
+            self.coords_to_n_choose_k[n][k] = nck_mob
+
+
 
 ##################################################
 

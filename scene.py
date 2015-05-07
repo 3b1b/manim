@@ -62,6 +62,8 @@ class Scene(object):
 
     def remove(self, *mobjects):
         for mobject in mobjects:
+            if not isinstance(mobject, Mobject):
+                raise Exception("Removing something which is not a mobject")
             while mobject in self.mobjects:
                 self.mobjects.remove(mobject)
 

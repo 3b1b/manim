@@ -4,27 +4,31 @@ from PIL import Image
 from colour import Color
 from random import random
 import string
+import re
 
 from constants import *
-
-def hash_args(args):
-    args = map(lambda arg : arg.__name__ if type(arg) == type(hash_args) else arg, args)
-    return str(hash(str(args))%1000) if args else ""
 
 def random_color():
     color = Color()
     color.set_rgb([1 - 0.5 * random() for x in range(3)])
     return color
 
+################################################
+
 def to_cammel_case(name):
-    parts = name.split("_")
-    parts = [
+    return "".join([
         filter(
             lambda c : c not in string.punctuation + string.whitespace, part
         ).capitalize()
-        for part in parts
-    ]
-    return "".join(parts)
+        for part in name.split("_")
+    ])
+
+def initials(name, sep_values = [" ", "_"]):
+    return "".join([
+        s[0] for s in re.split("|".join(sep_values), name)
+    ])
+
+################################################
 
 def drag_pixels(frames):
     curr = frames[0]
