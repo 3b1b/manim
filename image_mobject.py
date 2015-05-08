@@ -99,9 +99,13 @@ def tex_mobjects(expression, size = r"\HUGE"):
     images = tex_to_image(expression, size)
     if isinstance(images, list):
         #TODO, is checking listiness really the best here?
-        return [ImageMobject(im).scale(2) for im in images]
+        result = [ImageMobject(im).scale(2) for im in images]
+        center = CompoundMobject(*result).get_center()
+        for mob in result:
+            mob.shift(-center)
+        return result
     else:
-        return ImageMobject(images).scale(2)
+        return ImageMobject(images).center().scale(2)
 
 
 

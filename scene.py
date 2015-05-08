@@ -20,14 +20,12 @@ DEFAULT_COUNT_NUM_OFFSET = (SPACE_WIDTH - 1, SPACE_HEIGHT - 1, 0)
 DEFAULT_COUNT_RUN_TIME   = 5.0
 
 class Scene(object):
-    def __init__(self, 
-                 name = None,
-                 frame_duration = DEFAULT_FRAME_DURATION,
+    def __init__(self,
+                 display_config = PRODUCTION_QUALITY_DISPLAY_CONFIG,
                  background = None,
-                 height = DEFAULT_HEIGHT,
-                 width = DEFAULT_WIDTH,
                  start_dither_time = DEFAULT_DITHER_TIME):
-        self.frame_duration = frame_duration
+        self.display_config = display_config
+        self.frame_duration = display_config["frame_duration"]
         self.frames = []
         self.mobjects = []
         if background:
@@ -35,16 +33,15 @@ class Scene(object):
             #TODO, Error checking?
         else:
             self.original_background = np.zeros(
-                (height, width, 3),
+                (display_config["height"], display_config["width"], 3),
                 dtype = 'uint8'
             )
         self.background = self.original_background
         self.shape = self.background.shape[:2]
         #TODO, space shape
-        self.name = name
 
     def __str__(self):
-        return self.name or "Babadinook" #TODO
+        return self.__class__.__name__
 
     def set_name(self, name):
         self.name = name
@@ -178,17 +175,28 @@ class Scene(object):
     def dither(self, duration = DEFAULT_DITHER_TIME):
         self.frames += [self.get_frame()]*int(duration / self.frame_duration)
 
-    def write_to_gif(self, name = None, end_dither_time = DEFAULT_DITHER_TIME):
+    def write_to_gif(self, name = None, 
+                     end_dither_time = DEFAULT_DITHER_TIME):
         self.dither(end_dither_time)
         disp.write_to_gif(self, name or str(self))
 
-    def write_to_movie(self, name = None, end_dither_time = DEFAULT_DITHER_TIME):
+    def write_to_movie(self, name = None, 
+                       end_dither_time = DEFAULT_DITHER_TIME):
         self.dither(end_dither_time)
         disp.write_to_movie(self, name or str(self))
 
     def show(self):
         Image.fromarray(self.get_frame()).show()
 
+    # To list possible args that subclasses have
+    # Elements should always be a tuple
+    args_list = []
+
+    # For subclasses to turn args in the above  
+    # list into stings which can be appended to the name
+    @staticmethod
+    def args_to_string(*args):
+        return ""
 
 
 

@@ -2,72 +2,100 @@ import sys
 import getopt
 import imp
 import itertools as it
-from helpers import initials, to_cammel_case
+from helpers import cammel_case_initials
 
-def print_help_message():
-   print '<script name> -f <function name or initials>'
+from constants import *
 
-def get_scene_and_name(function_string, args_string, 
-                       function_tuples):
-   possible_func_args = []
-   for func, args_list, args_to_string in function_tuples:
-      if function_string in ("", func.__name__, initials(func.__name__)):
-         for args in args_list:
-            if not isinstance(args, tuple):
-               args = (args,)
-            if not args_to_string:
-               args_to_string = lambda x : ""
-            this_args_string = args_to_string(args)
-            if args_string in ("", this_args_string):
-               possible_func_args.append(
-                  (func, args, this_args_string)
-               )
-   if len(possible_func_args) == 0:
-      print "No function_string arg_string pair \
-             matching \"%s\" and \"%s\""%(function_string, args_string)
+HELP_MESSAGE = """
+   <script name> [-s <scene name or initials> -a <arg_string>]
+"""
+SCENE_NOT_FOUND_MESSAGE = """
+   No scene name or ititials \"%s\" and arg string \"%s\"
+"""
+MULTIPE_SCENES_FOUND_MESSAGE = """
+   Multiple Scene/arg pairs satisfying this
+   description, choose from the following list:
+"""
+CHOOSE_NUMBER_MESSAGE = "Choose a number from above: "
+INVALID_NUMBER_MESSAGE = "Invalid number!"
+
+def find_scene_class_and_args(scene_string, args_extension, 
+                              scene_classes):
+   possible_results = []
+   for SceneClass in scene_classes:
+      possible_names = map(str.lower, (
+         "", 
+         SceneClass.__name__, 
+         cammel_case_initials(SceneClass.__name__)
+      ))
+      if scene_string.lower() in possible_names:
+         if len(SceneClass.args_list) == 0:
+            possible_results.append((SceneClass, ()))
+         for args in SceneClass.args_list:
+            assert(isinstance(args, tuple))
+            this_args_extension = SceneClass.args_to_string(*args)
+            if args_extension.lower() in ("", this_args_extension.lower()):
+               possible_results.append((SceneClass, args))
+   num_matches = len(possible_results)
+   if num_matches == 0:
+      print SCENE_NOT_FOUND_MESSAGE%(scene_string, args_extension)
       sys.exit(0)
-   elif len(possible_func_args) == 1:
+   elif num_matches == 1:
       index = 0
-
    else:
-      print "Multiple functions/arg pairs satisfying this " + \
-            "description, choose from the following list:"
+      print MULTIPE_SCENES_FOUND_MESSAGE
       count = 0
-      for func, args, args_string in possible_func_args:
-         print "%d: %s%s"%(
+      for SceneClass, args in possible_results:
+         print "%d: %s%s"%( 
             count, 
-            to_cammel_case(func.__name__), 
-            args_string
+            SceneClass.__name__,
+            SceneClass.args_to_string(*args),
          )
          count += 1
-      index = int(raw_input("Choose a number from above: "))
-   function, args, args_string = possible_func_args[index]
-   scene_name = to_cammel_case(function.__name__) + args_string
-   print "Writing %s..."%scene_name
-   scene = function(*args)
-   return scene, scene_name
+      try:
+         index = input(CHOOSE_NUMBER_MESSAGE)
+         assert(type(index) == int)
+         assert(index in range(num_matches))
+      except:
+         print INVALID_NUMBER_MESSAGE
+         sys.exit(0)
+   return possible_results[index]
 
-
-def create_scene(sys_argv, function_tuples, movie_prefix = ""):
+def command_line_create_scene(sys_argv, scene_classes, movie_prefix = ""):
    try:
-      opts, args = getopt.getopt(sys_argv, "ho:vf:v")#TODO, Learn about this
+      opts, args = getopt.getopt(sys_argv, "ho:s:a:l")
    except getopt.GetoptError as err:
       print str(err)
       sys.exit(2)
-   function_string = ""
+   scene_string = ""
    args_extension = ""
+   display_config = PRODUCTION_QUALITY_DISPLAY_CONFIG
    for opt, arg in opts:
       if opt == '-h':
-         print_help_message()
+         print HELP_MESSAGE
          return
-      elif opt == '-f':
-         function_string = arg
-      elif opt == "-a":
+      elif opt == '-s':
+         scene_string = arg
+      elif opt == '-a':
          args_extension = arg
-   scene, name = get_scene_and_name(
-      function_string,
+      elif opt == '-l':
+         display_config = LOW_QUALITY_DISPLAY_CONFIG
+   SceneClass, args = find_scene_class_and_args(
+      scene_string,
       args_extension,
-      function_tuples
+      scene_classes
    )
-   print name
+   name = SceneClass.__name__ + SceneClass.args_to_string(*args)
+   print "Writing %s..."%name
+   scene = SceneClass(*args, display_config = display_config)
+   scene.write_to_movie(movie_prefix + name)
+
+
+
+
+
+
+
+
+
 

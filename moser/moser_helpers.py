@@ -7,12 +7,26 @@ from image_mobject import *
 from region import *
 from scene import Scene
 
-RADIUS = SPACE_HEIGHT - 0.1
-CIRCLE_DENSITY = DEFAULT_POINT_DENSITY_1D*RADIUS
+from graphs import *
+
+RADIUS            = SPACE_HEIGHT - 0.1
+CIRCLE_DENSITY    = DEFAULT_POINT_DENSITY_1D*RADIUS
+MOVIE_PREFIX      = "moser/"
+RADIANS           = np.arange(0, 6, 6.0/7)
+N_PASCAL_ROWS     = 7
+BIG_N_PASCAL_ROWS = 11
 
 ############################################
 
 class CircleScene(Scene):
+    args_list = [
+        (RADIANS[:x],)
+        for x in range(1, len(RADIANS)+1)
+    ]
+    @staticmethod
+    def args_to_string(*args):
+        return str(len(args[0])) #Length of radians
+
     def __init__(self, radians, *args, **kwargs):
         Scene.__init__(self, *args, **kwargs)
         self.radius = RADIUS
@@ -28,6 +42,7 @@ class CircleScene(Scene):
             size = r"\small"
         ).shift((-SPACE_WIDTH+1, SPACE_HEIGHT-1.5, 0))
         self.add(self.circle, self.n_equals, *self.dots + self.lines)
+
 
     def generate_intersection_dots(self):
         """
@@ -95,8 +110,15 @@ class CircleScene(Scene):
         self.add(*self.circle_pieces)
 
 class GraphScene(Scene):
-    #Note, the placement of vertices in this is pretty hard coded, be
-    #warned if you want to change it.
+    args_list = [
+        (CUBE_GRAPH,),
+        (SAMPLE_GRAPH,),
+        (OCTOHEDRON_GRAPH,),
+    ]
+    @staticmethod
+    def args_to_string(*args):
+        return args[0]["name"]
+
     def __init__(self, graph, *args, **kwargs):
         Scene.__init__(self, *args, **kwargs)
         #See CUBE_GRAPH above for format of graph
@@ -123,7 +145,15 @@ class GraphScene(Scene):
         regions[-1].complement()#Outer region painted outwardly...
         self.regions = regions
 
-class PascalsTriangleScene(Scene): 
+class PascalsTriangleScene(Scene):
+    args_list = [
+        (N_PASCAL_ROWS,),
+        (BIG_N_PASCAL_ROWS,),
+    ]
+    @staticmethod
+    def args_to_string(*args):
+        return str(args[0])
+
     def __init__(self, nrows, *args, **kwargs):
         Scene.__init__(self, *args, **kwargs)
         diagram_height   = 2*SPACE_HEIGHT - 1
@@ -167,7 +197,6 @@ class PascalsTriangleScene(Scene):
         self.portion_to_fill= portion_to_fill
         self.coords_to_mobs = coords_to_mobs
 
-
     def generate_n_choose_k_mobs(self):
         self.coords_to_n_choose_k = {}
         for n, k in self.coords:
@@ -186,6 +215,9 @@ class PascalsTriangleScene(Scene):
 
 
 ##################################################
+
+def int_list_to_string(int_list):
+    return "-".join(map(str, int_list))
 
 def choose(n, r):
     if n < r: return 0

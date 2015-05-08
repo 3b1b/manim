@@ -264,7 +264,7 @@ class Arrow(Mobject1D):
             [x, x, x] * self.direction + self.point
             for x in np.arange(-self.length, 0, self.epsilon)
         ])
-        tips_dir = np.array(-self.direction), np.array(-self.direction)
+        tips_dir = [np.array(-self.direction), np.array(-self.direction)]
         for i, sgn in zip([0, 1], [-1, 1]):
             tips_dir[i] = rotate_vector(tips_dir[i], sgn * np.pi / 4, self.normal)
         self.add_points([

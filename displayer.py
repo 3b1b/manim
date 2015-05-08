@@ -80,7 +80,7 @@ def write_to_gif(scene, name):
     temppath = os.path.join(GIF_DIR, "Temp.gif")
     print "Writing " + name + "..."
     images = [Image.fromarray(frame) for frame in scene.frames]
-    writeGif(temppath, images, scene.frame_duration)
+    writeGif(temppath, images, scene.display_config["frame_duration"])
     print "Compressing..."
     os.system("gifsicle -O " + temppath + " > " + filepath)
     os.system("rm " + temppath)
@@ -95,7 +95,7 @@ def write_to_movie(scene, name):
     filedir = "/".join(filepath.split("/")[:-1])
     if not os.path.exists(filedir):
         os.makedirs(filedir)
-    rate = int(1/scene.frame_duration)
+    rate = int(1/scene.display_config["frame_duration"])
 
     tmp_stem = os.path.join(TMP_IMAGE_DIR, name.replace("/", "_"))
     suffix = "-%04d.png"
@@ -114,7 +114,7 @@ def write_to_movie(scene, name):
         "-c:v",
         "libx264",
         "-vf",
-        "fps=%d,format=yuv420p"%int(1/scene.frame_duration),
+        "fps=%d,format=yuv420p"%rate,
         filepath + ".mp4"
     ]
     os.system(" ".join(commands))
@@ -148,35 +148,35 @@ def write_to_movie(scene, name):
     # progress_bar.finish()
 
 
-class VideoSink(object):
-    def __init__(self, size, filename="output", rate=10, byteorder="bgra") :
-            self.size = size
-            cmdstring  = [
-                'mencoder',
-                '/dev/stdin',
-                '-demuxer', 'rawvideo',
-                '-rawvideo', 'w=%i:h=%i'%size[::-1]+":fps=%i:format=%s"%(rate,byteorder),
-                '-o', filename+'.mp4',
-                '-ovc', 'lavc',
-            ]
-            self.p = subprocess.Popen(cmdstring, stdin=subprocess.PIPE, shell=False)
+# class VideoSink(object):
+#     def __init__(self, size, filename="output", rate=10, byteorder="bgra") :
+#             self.size = size
+#             cmdstring  = [
+#                 'mencoder',
+#                 '/dev/stdin',
+#                 '-demuxer', 'rawvideo',
+#                 '-rawvideo', 'w=%i:h=%i'%size[::-1]+":fps=%i:format=%s"%(rate,byteorder),
+#                 '-o', filename+'.mp4',
+#                 '-ovc', 'lavc',
+#             ]
+#             self.p = subprocess.Popen(cmdstring, stdin=subprocess.PIPE, shell=False)
 
-    def run(self, image):
-        """
-        Image comes in as HEIGHTxWIDTHx3 numpy array, order rgb
-        """
-        assert image.shape == self.size + (3,)
-        r, g, b = [image[:,:,i].astype('uint32') for i in range(3)]
-        a = np.ones(image.shape[:2], dtype = 'uint32')
-        #hacky
-        image = sum([
-            arr << 8**i 
-            for arr, i in zip(range(4), [a, r, g, b])
-        ])
-        self.p.stdin.write(image.tostring())
+#     def run(self, image):
+#         """
+#         Image comes in as HEIGHTxWIDTHx3 numpy array, order rgb
+#         """
+#         assert image.shape == self.size + (3,)
+#         r, g, b = [image[:,:,i].astype('uint32') for i in range(3)]
+#         a = np.ones(image.shape[:2], dtype = 'uint32')
+#         #hacky
+#         image = sum([
+#             arr << 8**i 
+#             for arr, i in zip(range(4), [a, r, g, b])
+#         ])
+#         self.p.stdin.write(image.tostring())
 
-    def close(self):
-        self.p.stdin.close()
+#     def close(self):
+#         self.p.stdin.close()
 
 
 

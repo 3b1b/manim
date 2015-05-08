@@ -28,6 +28,9 @@ def initials(name, sep_values = [" ", "_"]):
         s[0] for s in re.split("|".join(sep_values), name)
     ])
 
+def cammel_case_initials(name):
+    return filter(lambda c : c.isupper(), name)
+
 ################################################
 
 def drag_pixels(frames):
