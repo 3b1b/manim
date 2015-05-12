@@ -629,6 +629,66 @@ class PascalsTriangleWithNChooseK(PascalsTriangleScene):
             self.remove(*self.mobjects)
             self.add(*[mob_dicts[1-i][n][k] for n, k in self.coords])
 
+class PascalsTriangleNChooseKExample(PascalsTriangleScene):
+    args_list = [
+        (N_PASCAL_ROWS, 5, 3),
+    ]
+    @staticmethod
+    def args_to_string(nrows, n, k):
+        return "%d_n=%d_k=%d"%(nrows, n, k)
+
+    def __init__(self, nrows, n, k, *args, **kwargs):
+        PascalsTriangleScene.__init__(self, nrows, *args, **kwargs)
+        dither_time = 0.5
+        triangle_terms = [self.coords_to_mobs[a][b] for a, b in self.coords]
+        formula_terms = left, n_mob, k_mob, right = tex_mobject([
+            r"\left(", str(n), r"\atop %d"%k, r"\right)"
+        ])
+        formula_center = (SPACE_WIDTH - 1, SPACE_HEIGHT - 1, 0)
+        self.remove(*triangle_terms)
+        self.add(*formula_terms)
+        self.dither()
+        self.animate(*
+            [
+                ShowCreation(mob) for mob in triangle_terms
+            ]+[
+                ApplyMethod((Mobject.shift, formula_center), mob)
+                for mob in formula_terms
+            ], 
+            run_time = 1.0
+        )
+        self.remove(n_mob, k_mob)
+        for a in range(n+1):
+            row = [self.coords_to_mobs[a][b] for b in range(a+1)]
+            a_mob = tex_mobject(str(a))
+            a_mob.shift(n_mob.get_center())
+            a_mob.highlight("green")
+            self.add(a_mob)
+            for mob in row:
+                mob.highlight("green")
+            self.dither(dither_time)
+            if a < n:
+                for mob in row:
+                    mob.highlight("white")
+                self.remove(a_mob)
+        self.dither()
+        for b in range(k+1):
+            b_mob = tex_mobject(str(b))
+            b_mob.shift(k_mob.get_center())
+            b_mob.highlight("yellow")
+            self.add(b_mob)
+            self.coords_to_mobs[n][b].highlight("yellow")
+            self.dither(dither_time)
+            if b < k:
+                self.coords_to_mobs[n][b].highlight("green")
+                self.remove(b_mob)
+        self.animate(*[
+            ApplyMethod((Mobject.fade, 0.2), mob)
+            for mob in triangle_terms
+            if mob != self.coords_to_mobs[n][k]
+        ])
+        self.dither()
+
 class PascalsTriangleSumRows(PascalsTriangleScene):
     def __init__(self, *args, **kwargs):
         PascalsTriangleScene.__init__(self, *args, **kwargs)
@@ -689,6 +749,91 @@ class PascalsTriangleSumRows(PascalsTriangleScene):
             self.remove(powers_of_two[n])
             self.add(powers_of_two_symbols[n])
     
+
+class MoserSolutionInPascal(PascalsTriangleScene):
+    args_list = [
+        (N_PASCAL_ROWS, n)
+        for n in range(3, 8)
+    ] + [
+        (BIG_N_PASCAL_ROWS, 10)
+    ]
+    @staticmethod
+    def args_to_string(nrows, n):
+        return "%d_n=%d"%(nrows,n)
+
+    def __init__(self, nrows, n, *args, **kwargs):
+        PascalsTriangleScene.__init__(self, nrows, *args, **kwargs)
+        term_color = "green"
+        self.generate_n_choose_k_mobs()
+        self.remove(*[self.coords_to_mobs[n0][k0] for n0, k0 in self.coords])
+        terms = one, plus0, n_choose_2, plus1, n_choose_4 = tex_mobjects([
+            "1", "+", r"{%d \choose 2}"%n, "+", r"{%d \choose 4}"%n
+        ])
+        target_terms = []
+        for k in range(len(terms)):
+            if k%2 == 0 and k <= n:
+                new_term = deepcopy(self.coords_to_n_choose_k[n][k])
+                new_term.highlight(term_color)
+            else:
+                new_term = Point(
+                    self.coords_to_center(n, k)
+                )
+            target_terms.append(new_term)
+        self.add(*terms)
+        self.dither()
+        self.animate(*
+            [
+                FadeIn(self.coords_to_n_choose_k[n0][k0])
+                for n0, k0 in self.coords
+                if (n0, k0) not in [(n, 0), (n, 2), (n, 4)]
+            ]+[
+                Transform(term, target_term)
+                for term, target_term in zip(terms, target_terms)
+            ]
+        )
+        self.dither()
+        term_range = range(0, min(4, n)+1, 2)
+        target_terms = dict([
+            (k, deepcopy(self.coords_to_mobs[n][k]).highlight(term_color))
+            for k in term_range
+        ])
+        self.animate(*
+            [
+                SemiCircleTransform(
+                    self.coords_to_n_choose_k[n0][k0],
+                    self.coords_to_mobs[n0][k0]
+                )
+                for n0, k0 in self.coords
+                if (n0, k0) not in [(n, k) for k in term_range]
+            ]+[
+                SemiCircleTransform(terms[k], target_terms[k])
+                for k in term_range
+            ]
+        )
+        self.dither()
+        for k in term_range:
+            if k == 0:
+                above_terms = [self.coords_to_n_choose_k[n-1][k]]
+            elif k == n:
+                above_terms = [self.coords_to_n_choose_k[n-1][k-1]]
+            else:
+                above_terms = [
+                    self.coords_to_n_choose_k[n-1][k-1],
+                    self.coords_to_n_choose_k[n-1][k],
+                ]
+            self.add(self.coords_to_mobs[n][k])
+            self.animate(Transform(
+                terms[k], 
+                CompoundMobject(*above_terms).highlight(term_color)
+            ))
+            self.remove(*above_terms)
+        self.dither()
+        terms_sum = tex_mobject(str(moser_function(n)))
+        terms_sum.shift((SPACE_WIDTH-1, terms[0].get_center()[1], 0))
+        terms_sum.highlight(term_color)
+        self.animate(Transform(CompoundMobject(*terms), terms_sum))
+
+
 
 ##################################################
 

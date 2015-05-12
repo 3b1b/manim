@@ -86,7 +86,7 @@ def command_line_create_scene(sys_argv, scene_classes, movie_prefix = ""):
       scene_classes
    )
    name = SceneClass.__name__ + SceneClass.args_to_string(*args)
-   print "Writing %s..."%name
+   print "Constructing %s..."%name
    scene = SceneClass(*args, display_config = display_config)
    scene.write_to_movie(movie_prefix + name)
 
