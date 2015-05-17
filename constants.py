@@ -33,6 +33,7 @@ DEFAULT_NUM_STARS = 1000
 
 SPACE_HEIGHT = 4.0
 SPACE_WIDTH = SPACE_HEIGHT * DEFAULT_WIDTH / DEFAULT_HEIGHT
+ORIGIN = (0, 0, 0)
 
 THIS_DIR  = os.path.dirname(os.path.realpath(__file__))
 IMAGE_DIR = os.path.join(THIS_DIR, "images")

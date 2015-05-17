@@ -24,7 +24,8 @@ def paint_region(region, image_array = None, color = None):
     pixels = get_pixels(image_array)
     assert region.shape == pixels.shape[:2]
     if color is None:
-        rgb = 0.5 * np.random.random(3) #Random darker colors
+        #Random dark color
+        rgb = 0.5 * np.random.random(3)
     else:
         rgb = np.array(Color(color).get_rgb()) 
     pixels[region.bool_grid] = (255*rgb).astype('uint8')

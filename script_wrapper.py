@@ -80,6 +80,10 @@ def command_line_create_scene(sys_argv, scene_classes, movie_prefix = ""):
          args_extension = arg
       elif opt == '-l':
          display_config = LOW_QUALITY_DISPLAY_CONFIG
+   if len(args) > 0:
+      scene_string = args[0]
+   if len(args) > 1:
+      args_extension = args[1]
    SceneClass, args = find_scene_class_and_args(
       scene_string,
       args_extension,

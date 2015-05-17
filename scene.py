@@ -106,6 +106,8 @@ class Scene(object):
             self.count_mobjects(items, *args, **kwargs)
         elif item_type == "region":
             self.count_regions(items, *args, **kwargs)
+        else:
+            raise Exception("Unknown item_type, should be mobject or region")
 
     def count_mobjects(
         self, mobjects, mode = "highlight",
@@ -113,8 +115,7 @@ class Scene(object):
         num_offset = DEFAULT_COUNT_NUM_OFFSET,
         run_time   = DEFAULT_COUNT_RUN_TIME):
         """
-        Note: Leaves scene with a "number" attribute 
-        for the final number mobject.
+        Note, leaves final number mobject as "number" attribute
 
         mode can be "highlight", "show_creation" or "show", otherwise
         a warning is given and nothing is animating during the count
@@ -122,6 +123,8 @@ class Scene(object):
         if len(mobjects) > 50: #TODO
             raise Exception("I don't know if you should be counting \
                              too many mobjects...")
+        if len(mobjects) == 0:
+            raise Exception("Counting mobject list of length 0")
         if mode not in ["highlight", "show_creation", "show"]:
             raise Warning("Unknown mode")
         frame_time = run_time / len(mobjects)
@@ -187,6 +190,10 @@ class Scene(object):
 
     def show(self):
         Image.fromarray(self.get_frame()).show()
+
+    def save_image(self, path):
+        path = os.path.join(MOVIE_DIR, path) + ".png"
+        Image.fromarray(self.get_frame()).save(path)
 
     # To list possible args that subclasses have
     # Elements should always be a tuple

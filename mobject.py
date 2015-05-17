@@ -211,9 +211,21 @@ class Mobject2D(Mobject):
 class CompoundMobject(Mobject):
     def __init__(self, *mobjects):
         Mobject.__init__(self)
+        self.original_mobs_num_points = []
         for mobject in mobjects:
+            self.original_mobs_num_points.append(mobject.points.shape[0])
             self.add_points(mobject.points, mobject.rgbs)
 
+    def split(self):
+        result = []
+        curr = 0
+        for num_points in self.original_mobs_num_points:
+            result.append(Mobject().add_points(
+                self.points[curr:curr+num_points, :],
+                self.rgbs[curr:curr+num_points, :]
+            ))
+            curr += num_points
+        return result
 
 ###### Concrete Mobjects ########
 
@@ -285,7 +297,8 @@ class Vector(Arrow):
 
 class Dot(Mobject1D): #Use 1D density, even though 2D
     DEFAULT_COLOR = "white"
-    def __init__(self, center = (0, 0, 0), radius = 0.05, *args, **kwargs):
+    DEFAULT_RADIUS = 0.05
+    def __init__(self, center = (0, 0, 0), radius = DEFAULT_RADIUS, *args, **kwargs):
         center = np.array(center)
         if center.size == 1:
             raise Exception("Center must have 2 or 3 coordinates!")
@@ -298,8 +311,9 @@ class Dot(Mobject1D): #Use 1D density, even though 2D
     def generate_points(self):
         self.add_points([
             np.array((t*np.cos(theta), t*np.sin(theta), 0)) + self.center_point
-            for t in np.arange(0, self.radius, self.epsilon)
-            for theta in np.arange(0, 2 * np.pi, self.epsilon)
+            for t in np.arange(self.epsilon, self.radius, self.epsilon)
+            for new_epsilon in [2*np.pi*self.epsilon*self.radius/t]
+            for theta in np.arange(0, 2 * np.pi, new_epsilon)
         ])
 
 class Cross(Mobject1D):
@@ -405,7 +419,7 @@ class FunctionGraph(Mobject1D):
 
 
 class ParametricFunction(Mobject):
-    DEFAULT_COLOR = "lightblue"
+    DEFAULT_COLOR = "white"
     def __init__(self, 
                  function, 
                  dim = 1, 

@@ -3,10 +3,10 @@ import numpy as np
 
 CUBE_GRAPH = {
     "name" : "CubeGraph",
-                        # 6  4
-                        #  20 
-                        #  31 
-                        # 7  5
+                        # 5  7
+                        #  12 
+                        #  03 
+                        # 4  6
     "vertices" : [
         (x, y, 0)
         for r in (1, 2)

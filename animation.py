@@ -237,6 +237,7 @@ class SemiCircleTransform(Transform):
             sm.points - midpoints, 
             np.transpose(rotation_matrix)
         ) + midpoints
+        self.mobject.rgbs = (1-alpha)*sm.rgbs + alpha*em.rgbs
 
 class FadeToColor(Transform):
     def __init__(self, mobject, color, *args, **kwargs):

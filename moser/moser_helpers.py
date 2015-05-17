@@ -13,6 +13,7 @@ RADIUS            = SPACE_HEIGHT - 0.1
 CIRCLE_DENSITY    = DEFAULT_POINT_DENSITY_1D*RADIUS
 MOVIE_PREFIX      = "moser/"
 RADIANS           = np.arange(0, 6, 6.0/7)
+MORE_RADIANS      = np.append(RADIANS, RADIANS + 0.5)
 N_PASCAL_ROWS     = 7
 BIG_N_PASCAL_ROWS = 11
 
