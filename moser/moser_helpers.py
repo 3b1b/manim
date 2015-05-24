@@ -28,9 +28,9 @@ class CircleScene(Scene):
     def args_to_string(*args):
         return str(len(args[0])) #Length of radians
 
-    def __init__(self, radians, *args, **kwargs):
+    def __init__(self, radians, radius = RADIUS, *args, **kwargs):
         Scene.__init__(self, *args, **kwargs)
-        self.radius = RADIUS
+        self.radius = radius
         self.circle = Circle(density = CIRCLE_DENSITY).scale(self.radius)
         self.points = [
             (self.radius * np.cos(angle), self.radius * np.sin(angle), 0)
@@ -39,8 +39,7 @@ class CircleScene(Scene):
         self.dots = [Dot(point) for point in self.points]
         self.lines = [Line(p1, p2) for p1, p2 in it.combinations(self.points, 2)]
         self.n_equals = tex_mobject(
-            "n=%d"%len(radians), 
-            size = r"\small"
+            "n=%d"%len(radians),
         ).shift((-SPACE_WIDTH+1, SPACE_HEIGHT-1.5, 0))
         self.add(self.circle, self.n_equals, *self.dots + self.lines)
 
@@ -109,6 +108,12 @@ class CircleScene(Scene):
             self.circle_pieces.append(circle)
             self.smaller_circle_pieces.append(smaller_circle)
         self.add(*self.circle_pieces)
+
+    def generate_regions(self):
+        self.regions = plane_partition_from_points(*self.points)
+        interior = Region(lambda x, y : x**2 + y**2 < self.radius**2)
+        map(lambda r : r.intersect(interior), self.regions)
+        self.exterior = interior.complement()
 
 class GraphScene(Scene):
     args_list = [

@@ -168,8 +168,6 @@ class HardProblemsSimplerQuestions(Scene):
             )
         )
 
-
-
 class CountLines(CircleScene):
     def __init__(self, radians, *args, **kwargs):
         CircleScene.__init__(self, radians, *args, **kwargs)
@@ -281,6 +279,62 @@ class NonGeneralPosition(CircleScene):
             for mob1, mob2 in zip(self.mobjects, new_self.mobjects)
         ])
 
+class GeneralPositionRule(Scene):
+    def __init__(self, *args, **kwargs):
+        Scene.__init__(self, *args, **kwargs)
+        tuples = [
+            (
+                np.arange(0, 2*np.pi, np.pi/3), 
+                "Not okay", 
+                zip(range(3), range(3, 6))
+            ),
+            (
+                RADIANS,
+                "Okay",
+                [],
+            ),
+            (
+                np.arange(0, 2*np.pi, np.pi/4),
+                "Not okay",
+                zip(range(4), range(4, 8))
+            ),
+            (
+                [2*np.pi*random() for x in range(5)],
+                "Okay",
+                [],
+            ),
+        ]
+        first_time = True
+        for radians, words, pairs in tuples:
+            cs = CircleScene(radians)
+            self.add(*cs.mobjects)
+            words_mob = text_mobject(words).scale(2).shift((5, 3, 0))
+            if not first_time:
+                self.add(words_mob)
+            if words == "Okay":
+                words_mob.highlight("green")
+                self.dither(2)                
+            else:
+                words_mob.highlight()
+                intersecting_lines = [
+                    line.scale_in_place(0.3).highlight()
+                    for i, j in pairs                    
+                    for line in [Line(cs.points[i], cs.points[j])]
+                ]
+                self.animate(*[
+                    ShowCreation(line, run_time = 1.0)
+                    for line in intersecting_lines                    
+                ])
+                if first_time:
+                    self.animate(Transform(
+                        CompoundMobject(*intersecting_lines),
+                        words_mob
+                    ))
+                    first_time = False
+                self.dither()
+            self.remove(*self.mobjects)
+
+
 class LineCorrespondsWithPair(CircleScene):
     args_list = [
         (RADIANS, 2, 5),
@@ -303,7 +357,7 @@ class LineCorrespondsWithPair(CircleScene):
         self.dots.remove(dot1)
         self.dither()
         self.animate(*[
-            ApplyMethod((Mobject.fade, 0.2), mob)
+            ApplyMethod(mob.fade, 0.2)
             for mob in self.lines + self.dots
         ])
         self.animate(*[
@@ -334,9 +388,9 @@ class IllustrateNChooseK(Scene):
             [
                 (r'\\&' if c%(20//k) == 0 else r'\;\;') + str(p)
                 for p, c in zip(tuples, it.count())
-            ], 
-            size = r"\small"
-        )
+            ],
+            size = r"\small",
+        )#TODO, scale these up!
         tuple_terms = {
             2 : "pairs", 
             3 : "triplets",
@@ -357,9 +411,9 @@ class IllustrateNChooseK(Scene):
             "%d"%choose(n, k),
             r" \text{ total %s}"%tuple_term
         ])
-        # pronunciation = text_mobject(
-        #     "(pronounced ``%d choose %d\'\')"%(n, k)
-        # )
+        pronunciation = text_mobject(
+            "(pronounced ``%d choose %d\'\')"%(n, k)
+        )
         for mob in nrange_mobs:
             mob.shift((0, 2, 0))
         for mob in form1, count, form2:
@@ -367,7 +421,9 @@ class IllustrateNChooseK(Scene):
         count_center = count.get_center()
         for mob in tuple_mobs:
             mob.scale(0.6)
-        # pronunciation.shift(form1.get_center() + (-1, 1, 0))
+        pronunciation.shift(
+            form1.get_center() + (0, 1, 0)
+        )
 
         self.add(*nrange_mobs)
         self.dither()
@@ -385,7 +441,7 @@ class IllustrateNChooseK(Scene):
             self.remove(count_mob)
             self.remove(tuple_copy)
         self.add(count_mob)
-        self.animate(FadeIn(CompoundMobject(form1, form2)))
+        self.animate(FadeIn(CompoundMobject(form1, form2, pronunciation)))
 
 class IntersectionPointCorrespondances(CircleScene):
     args_list = [
@@ -825,12 +881,18 @@ class HowIntersectionChopsLine(CircleScene):
         ])
 
 
-class ApplyEulerToMoser(Scene):
+class ApplyEulerToMoser(CircleScene):
     def __init__(self, *args, **kwargs):
-        #Boy is this an ugly implementation..., maybe you should
-        #make a generic formula manipuating module
-        Scene.__init__(self, *args, **kwargs)
-        
+        radius = 2
+        CircleScene.__init__(self, *args, radius = radius, **kwargs)
+        self.generate_intersection_dots()
+        self.chop_lines_at_intersection_points()
+        self.chop_circle_at_points()
+        self.generate_regions()
+        for dot in self.dots + self.intersection_dots:
+            dot.scale_in_place(radius / RADIUS)
+        self.remove(*self.mobjects)
+
         V      = {}
         minus  = {}
         minus1 = {}
@@ -864,10 +926,13 @@ class ApplyEulerToMoser(Scene):
             tex_mobjects(["F", "=", r"{n \choose 2}", "+", r"{n \choose 4}", "+", "2"])
         F[7], equals[7], two[7], plus[7], nc2[7], plus1[7], nc4[7] = \
             tex_mobjects(["F", "=", "2", "+", r"{n \choose 2}", "+", r"{n \choose 4}"])
+        shift_val = (0, 3, 0)
         for d in dicts:
             if not d:
                 continue
             main_key = d.keys()[0]
+            for key in d.keys():
+                d[key].shift(shift_val)
             main_center = d[main_key].get_center()
             for key in d.keys():
                 d[key] = deepcopy(d[main_key]).shift(
@@ -879,9 +944,59 @@ class ApplyEulerToMoser(Scene):
             for d in [V, minus, E, plus, F, equals, two]
         ])
         self.dither()
-        self.remove(*self.mobjects)
+        F[1].highlight()
+        self.add(*self.lines + self.circle_pieces)
+        for region in self.regions:
+            self.highlight_region(region)
+        self.highlight_region(self.exterior, "blue")
+        self.dither()
+        self.reset_background()
+        F[1].highlight("white")
+        E[1].highlight()
+        self.remove(*self.lines + self.circle_pieces)
+        self.animate(*[
+            Transform(
+                deepcopy(line),
+                deepcopy(line).scale_in_place(0.5),
+                run_time = 2.0,
+            )
+            for line in self.lines
+        ] + [
+            Transform(
+                deepcopy(cp), scp,
+                run_time = 2.0
+            )
+            for cp, scp in zip(self.circle_pieces, self.smaller_circle_pieces)
+        ])
+        self.dither()
+        E[1].highlight("white")
+        V[1].highlight()
+        self.add(*self.dots + self.intersection_dots)
+        self.remove(*self.lines + self.circle_pieces)
+        self.animate(*[
+            Transform(
+                deepcopy(dot), 
+                deepcopy(dot).scale_in_place(1.4).highlight("yellow")
+            )
+            for dot in self.dots + self.intersection_dots
+        ] + [
+            Transform(
+                deepcopy(line),
+                deepcopy(line).fade(0.4)
+            )
+            for line in self.lines + self.circle_pieces
+        ])
+        self.dither()
+        all_mobs = [mob for mob in self.mobjects]
+        self.remove(*all_mobs)
+        self.add(*[d[1] for d in [V, minus, E, plus, F, equals, two]])
+        V[1].highlight("white")
+        two[1].highlight()
+        self.dither()
+        self.add(*all_mobs)
+        self.remove(*[d[1] for d in [V, minus, E, plus, F, equals, two]])
         self.animate(
-            Transform(V[2], CompoundMobject(n[3], minus1[3], nc4[3])),
+            Transform(V[2].repeat(2), CompoundMobject(n[3], minus1[3], nc4[3])),
             *[
                 Transform(d[2], d[3])
                 for d in [F, equals, E, minus, plus, two]
@@ -896,7 +1011,17 @@ class ApplyEulerToMoser(Scene):
             *[
                 Transform(d[3], d[4])
                 for d in [F, equals, minus, n, minus1, nc4, plus, two]
-            ]
+            ] + [
+                Transform(
+                    deepcopy(line),
+                    deepcopy(line).scale_in_place(0.5),
+                )
+                for line in self.lines
+            ] + [
+                Transform(deepcopy(cp), scp)
+                for cp, scp in zip(self.circle_pieces, self.smaller_circle_pieces)
+            ],
+            run_time = 2.0
         )
         self.dither()
         self.remove(*self.mobjects)
@@ -932,12 +1057,18 @@ class ApplyEulerToMoser(Scene):
             ]
         )
         self.dither()
+        self.add(*self.lines + self.circle_pieces)        
+        for region in self.regions:
+            self.highlight_region(region)
+        self.dither()
+        self.highlight_region(self.exterior, "blue")
+        self.dither()
+        self.highlight_region(self.exterior, "black")
         self.remove(two[6])
         two = two[7]
         one = tex_mobject("1").shift(two.get_center())
         two.highlight("red")
         self.add(two)
-        self.dither()
         self.animate(SemiCircleTransform(two, one))
 
 class FormulaRelatesToPowersOfTwo(Scene):
@@ -1063,7 +1194,7 @@ class PascalsTriangleNChooseKExample(PascalsTriangleScene):
             [
                 ShowCreation(mob) for mob in triangle_terms
             ]+[
-                ApplyMethod((Mobject.shift, formula_center), mob)
+                ApplyMethod(mob.shift, formula_center)
                 for mob in formula_terms
             ], 
             run_time = 1.0
@@ -1094,7 +1225,7 @@ class PascalsTriangleNChooseKExample(PascalsTriangleScene):
                 self.coords_to_mobs[n][b].highlight("green")
                 self.remove(b_mob)
         self.animate(*[
-            ApplyMethod((Mobject.fade, 0.2), mob)
+            ApplyMethod(mob.fade, 0.2)
             for mob in triangle_terms
             if mob != self.coords_to_mobs[n][k]
         ])
@@ -1243,6 +1374,214 @@ class MoserSolutionInPascal(PascalsTriangleScene):
         terms_sum.shift((SPACE_WIDTH-1, terms[0].get_center()[1], 0))
         terms_sum.highlight(term_color)
         self.animate(Transform(CompoundMobject(*terms), terms_sum))
+
+class RotatingPolyhedra(Scene):
+    args_list = [
+        ([Cube, Dodecahedron],)
+    ]
+    @staticmethod
+    def args_to_string(class_list):
+        return "".join([c.__name__ for c in class_list])
+
+    def __init__(self, polyhedra_classes, *args, **kwargs):
+        Scene.__init__(self, *args, **kwargs)
+        rot_kwargs = {
+            "radians"  : np.pi / 2,
+            "run_time" : 5.0,
+            "axis"     : [0, 1, 0]
+        }
+        polyhedra = [
+            Class().scale(1.5).shift((1, 0, 0))
+            for Class in polyhedra_classes
+        ]
+        curr_mob = polyhedra.pop()
+        for mob in polyhedra:
+            self.animate(TransformAnimations(
+                Rotating(curr_mob, **rot_kwargs),
+                Rotating(mob, **rot_kwargs)
+            ))
+            for m in polyhedra:
+                m.rotate(rot_kwargs["radians"], rot_kwargs["axis"])
+        self.animate(Rotating(curr_mob, **rot_kwargs))
+
+class ExplainNChoose2Formula(Scene):
+    args_list = [(7,2,6)]
+    @staticmethod
+    def args_to_string(n, a, b):
+        return "n=%d_a=%d_b=%d"%(n, a, b)
+
+    def __init__(self, n, a, b, *args, **kwargs):
+        Scene.__init__(self, *args, **kwargs)
+        r_paren, a_mob, comma, b_mob, l_paren = tex_mobjects(
+            ("( %d , %d )"%(a, b)).split(" ")
+        )
+        parens = CompoundMobject(r_paren, comma, l_paren)
+        nums = [tex_mobject(str(k)) for k in range(1, n+1)]
+        height = 1.5*nums[0].get_height()
+        for x in range(n):
+            nums[x].shift((0, x*height, 0))
+        nums_compound = CompoundMobject(*nums)
+        nums_compound.shift(a_mob.get_center() - nums[0].get_center())
+        n_mob, n_minus_1, over_2 = tex_mobjects([
+            str(n), "(%d-1)"%n, r"\over{2}"
+        ])
+        for part in n_mob, n_minus_1, over_2:
+            part.shift((SPACE_WIDTH-1.5, SPACE_HEIGHT-1, 0))
+
+        self.add(parens, n_mob)
+        up_unit = np.array((0, height, 0))
+        self.animate(ApplyMethod(nums_compound.shift, -(n-1)*up_unit))
+        self.animate(ApplyMethod(nums_compound.shift, (n-a)*up_unit))
+        self.remove(nums_compound)
+        nums = nums_compound.split()
+        a_mob = nums.pop(a-1)
+        nums_compound = CompoundMobject(*nums)
+        self.add(a_mob, nums_compound)
+        self.dither()        
+        right_shift = b_mob.get_center() - a_mob.get_center()
+        right_shift[1] = 0
+        self.animate(
+            ApplyMethod(nums_compound.shift, right_shift),
+            FadeIn(n_minus_1)
+        )
+        self.animate(ApplyMethod(nums_compound.shift, (a-b)*up_unit))
+        self.remove(nums_compound)
+        nums = nums_compound.split()
+        b_mob = nums.pop(b-2 if a < b else b-1)
+        self.add(b_mob)
+        self.animate(*[
+            SemiCircleTransform(
+                mob, 
+                Point(mob.get_center()).highlight("black")
+            )
+            for mob in nums
+        ])
+        self.animate(*[
+            ApplyMethod(mob.shift, (0, 1, 0))
+            for mob in parens, a_mob, b_mob
+        ])
+        parens_copy = deepcopy(parens).shift((0, -2, 0))
+        a_center = a_mob.get_center()
+        b_center = b_mob.get_center()
+        a_copy = deepcopy(a_mob).center().shift(b_center - (0, 2, 0))
+        b_copy = deepcopy(b_mob).center().shift(a_center - (0, 2, 0))
+        self.add(over_2, deepcopy(a_mob), deepcopy(b_mob))
+        self.animate(
+            SemiCircleTransform(a_mob, a_copy),
+            SemiCircleTransform(b_mob, b_copy),
+            FadeIn(parens_copy),
+            FadeIn(text_mobject("is considered the same as"))
+        )
+
+class ExplainNChoose4Formula(Scene):
+    args_list = [(7,)]
+    @staticmethod
+    def args_to_string(n):
+        return "n=%d"%n
+
+    def __init__(self, n, *args, **kwargs):
+        Scene.__init__(self, *args, **kwargs)
+        # quad = list(it.combinations(range(1,n+1), 4))[randint(0, choose(n, 4)-1)]
+        quad = (4, 2, 5, 1)
+        tuple_mobs = tex_mobjects(
+            ("( %d , %d , %d , %d )"%quad).split(" ")
+        )
+        quad_mobs = tuple_mobs[1::2]
+        parens = CompoundMobject(*tuple_mobs[0::2])
+        form_mobs = tex_mobjects([
+            str(n), "(%d-1)"%n, "(%d-2)"%n,"(%d-3)"%n,
+            r"\over {4 \cdot 3 \cdot 2 \cdot 1}"
+        ])
+        form_mobs = CompoundMobject(*form_mobs).scale(0.7).shift((4, 3, 0)).split()
+        nums = [tex_mobject(str(k)) for k in range(1, n+1)]
+        height = 1.5*nums[0].get_height()
+        for x in range(n):
+            nums[x].shift((0, x*height, 0))
+        nums_compound = CompoundMobject(*nums)
+        nums_compound.shift(quad_mobs[0].get_center() - nums[0].get_center())
+        curr_num = 1 
+        self.add(parens)
+        up_unit = np.array((0, height, 0))
+        for i in range(4):
+            self.add(form_mobs[i])
+            self.animate(ApplyMethod(
+                nums_compound.shift, (curr_num-quad[i])*up_unit))
+            self.remove(nums_compound)
+            nums = nums_compound.split()
+            chosen = nums[quad[i]-1]
+            nums[quad[i]-1] = Point(chosen.get_center()).highlight("black")
+            nums_compound = CompoundMobject(*nums)
+            self.add(chosen)
+            if i < 3:
+                right_shift = quad_mobs[i+1].get_center() - chosen.get_center()
+                right_shift[1] = 0
+                self.animate(
+                    ApplyMethod(nums_compound.shift, right_shift)
+                )
+            else:
+                self.animate(*[
+                    SemiCircleTransform(
+                        mob, 
+                        Point(mob.get_center()).highlight("black")
+                    )
+                    for mob in nums
+                ])
+            curr_num = quad[i]
+        self.remove(*self.mobjects)
+        num_perms_explain = text_mobject(
+            r"There are $(4 \cdot 3 \cdot 2 \cdot 1)$ total permutations"
+        ).shift((0, -2, 0))
+        self.add(parens, num_perms_explain, *form_mobs)
+        perms = list(it.permutations(range(4)))        
+        for count in range(6):
+            perm = perms[randint(0, 23)]
+            new_quad_mobs = [
+                deepcopy(quad_mobs[i]).shift(
+                    quad_mobs[perm[i]].get_center() - \
+                    quad_mobs[i].get_center()
+                )
+                for i in range(4)
+            ]
+            compound_quad = CompoundMobject(*quad_mobs)
+            self.animate(SemiCircleTransform(
+                compound_quad,
+                CompoundMobject(*new_quad_mobs)
+            ))
+            self.remove(compound_quad)
+            quad_mobs = new_quad_mobs
+
+class IntersectionChoppingExamples(Scene):
+    def __init__(self, *args, **kwargs):
+        Scene.__init__(self, *args, **kwargs)
+        pairs1 = [
+            ((-1,-1, 0), (-1, 0, 0)),
+            ((-1, 0, 0), (-1, 1, 0)),
+            ((-2, 0, 0), (-1, 0, 0)),
+            ((-1, 0, 0), ( 1, 0, 0)),
+            (( 1, 0, 0), ( 2, 0, 0)),
+            (( 1,-1, 0), ( 1, 0, 0)),
+            (( 1, 0, 0), ( 1, 1, 0)),
+        ]
+        pairs2 = pairs1 + [
+            (( 1, 1, 0), ( 1, 2, 0)),
+            (( 0, 1, 0), ( 1, 1, 0)),
+            (( 1, 1, 0), ( 2, 1, 0)),
+        ]
+        for pairs, exp in [(pairs1, "3 + 2(2) = 7"), 
+                           (pairs2, "4 + 2(3) = 10")]:
+            lines = [Line(*pair).scale(2) for pair in pairs]
+            self.add(tex_mobject(exp).shift((0, SPACE_HEIGHT-1, 0)))
+            self.add(*lines)
+            self.dither()
+            self.animate(*[
+                Transform(line, deepcopy(line).scale(1.2).scale_in_place(1/1.2))
+                for line in lines
+            ])
+            self.count(lines, run_time = 3.0, num_offset = ORIGIN)
+            self.dither()
+            self.remove(*self.mobjects)
+
+
 
 
 

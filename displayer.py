@@ -36,10 +36,12 @@ def paint_mobject(mobject, image_array = None):
     height = pixels.shape[0]
     width  = pixels.shape[1]
     space_height = SPACE_HEIGHT
-    space_width = SPACE_HEIGHT * width / height
+    space_width  = SPACE_HEIGHT * width / height
+    # camera_distance = 10
 
-    #TODO, Let z add a depth componenet?
     points = np.array(mobject.points[:, :2])
+    # for i in range(2):
+    #     points[:,i] *= camera_distance/(camera_distance-mobject.points[:,2])
     rgbs   = np.array(mobject.rgbs)
     #Flips y-axis
     points[:,1] *= -1

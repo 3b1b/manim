@@ -82,6 +82,16 @@ def not_quite_there(t, proportion = 0.7):
 def wiggle(t, wiggles = 2):
     return there_and_back(t) * np.sin(wiggles*np.pi*t)
 
+def squish_alpha_func(func, a = 0.4, b = 0.6):
+    def result(t):
+        if t < a:
+            return 0
+        elif t > b:
+            return 1
+        else:
+            return func((t-a)/(b-a))
+    return result
+
 ### Functional Functions ###
 
 def composition(func_list):

@@ -263,20 +263,21 @@ class ScaleInPlace(Transform):
         Transform.__init__(self, mobject, target, *args, **kwargs)
 
 class ApplyMethod(Transform):
-    def __init__(self, method, mobject, *args, **kwargs):
+    def __init__(self, method, *args, **kwargs):
         """
-        Method is a method of Mobject
+        Method is a method of Mobject.  *args is for the method,
+        **kwargs is for the transform itself.
+
+        Relies on the fact that mobject methods return the mobject
         """
-        method_args = ()
-        if isinstance(method, tuple):
-            method, method_args = method[0], method[1:]
-        if not inspect.ismethod(method):
+        if not inspect.ismethod(method) or \
+           not isinstance(method.im_self, Mobject):
             raise "Not a valid Mobject method"
         Transform.__init__(
             self,
-            mobject, 
-            method(copy.deepcopy(mobject), *method_args),
-            *args, **kwargs
+            method.im_self,
+            copy.deepcopy(method)(*args),
+            **kwargs
         )
 
 class ApplyFunction(Transform):
@@ -382,8 +383,28 @@ class Flash(Animation):
             alpha
         )
 
+#Fuck this is cool!
+class TransformAnimations(Transform):
+    def __init__(self, start_anim, end_anim, 
+                 alpha_func = squish_alpha_func(high_inflection_0_to_1),
+                 **kwargs):
+        self.start_anim, self.end_anim = start_anim, end_anim
+        Transform.__init__(
+            self,
+            start_anim.mobject,
+            end_anim.mobject,
+            run_time = max(start_anim.run_time, end_anim.run_time),
+            alpha_func = alpha_func,
+            **kwargs
+        )
+        #Rewire starting and ending mobjects
+        start_anim.mobject = self.starting_mobject
+        end_anim.mobject = self.ending_mobject
 
-
+    def update(self, alpha):
+        self.start_anim.update(alpha)
+        self.end_anim.update(alpha)
+        Transform.update(self, alpha)
 
 
 
