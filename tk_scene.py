@@ -1,6 +1,8 @@
 from scene import *
 import Tkinter
 from PIL import ImageTk, Image
+import itertools as it
+import time
 
 class TkSceneRoot(Tkinter.Tk):
     def __init__(self, scene):
@@ -17,23 +19,19 @@ class TkSceneRoot(Tkinter.Tk):
         self.canvas.configure(background='black')        
         self.canvas.place(x=-2,y=-2)
 
-        self.frame_index = 0
-        self.num_frames = len(self.scene.frames)
-        self.frame_duration_in_ms = int(1000*scene.frame_duration)
-        # self.after(0,self.show_new_image)
-        while(1):
-            self.frame_index = 0
-            self.show_new_image()
+        last_time = time.time()
+        for frame in it.cycle(self.scene.frames):
+            try:
+                self.show_new_image(frame)
+            except:
+                break
+            sleep_time = self.scene.frame_duration
+            sleep_time -= time.time() - last_time
+            time.sleep(max(0, sleep_time))
+            last_time = time.time()
         self.mainloop()
 
-
-
-    def show_new_image(self):
-        self.frame_index += 1
-        if self.frame_index >= self.num_frames:
-            return
-        frame = self.scene.frames[self.frame_index]
-
+    def show_new_image(self, frame):
         image = Image.fromarray(frame).convert('RGB')
         image.resize(self.frame.size())
         photo = ImageTk.PhotoImage(image)
@@ -42,5 +40,5 @@ class TkSceneRoot(Tkinter.Tk):
             0, 0,
             image = photo, anchor = Tkinter.NW
         )
-        self.after(self.frame_duration_in_ms, self.show_new_image)
+        # self.after(self.frame_duration_in_ms, self.show_new_image)
         self.update()

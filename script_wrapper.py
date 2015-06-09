@@ -63,13 +63,14 @@ def find_scene_class_and_args(scene_string, args_extension,
 
 def command_line_create_scene(sys_argv, scene_classes, movie_prefix = ""):
    try:
-      opts, args = getopt.getopt(sys_argv, "ho:s:a:l")
+      opts, args = getopt.getopt(sys_argv, "h:s:a:l:p")
    except getopt.GetoptError as err:
       print str(err)
       sys.exit(2)
    scene_string = ""
    args_extension = ""
    display_config = PRODUCTION_QUALITY_DISPLAY_CONFIG
+   preview = False
    for opt, arg in opts:
       if opt == '-h':
          print HELP_MESSAGE
@@ -80,6 +81,9 @@ def command_line_create_scene(sys_argv, scene_classes, movie_prefix = ""):
          args_extension = arg
       elif opt == '-l':
          display_config = LOW_QUALITY_DISPLAY_CONFIG
+      elif opt == '-p':
+         display_config = LOW_QUALITY_DISPLAY_CONFIG
+         preview = True
    if len(args) > 0:
       scene_string = args[0]
    if len(args) > 1:
@@ -92,7 +96,10 @@ def command_line_create_scene(sys_argv, scene_classes, movie_prefix = ""):
    name = SceneClass.__name__ + SceneClass.args_to_string(*args)
    print "Constructing %s..."%name
    scene = SceneClass(*args, display_config = display_config)
-   scene.write_to_movie(movie_prefix + name)
+   if preview:
+      scene.preview()
+   else:
+      scene.write_to_movie(movie_prefix + name)
 
 
 
