@@ -21,7 +21,7 @@ LOGO_RADIUS = 1.5
 
 if __name__ == '__main__':
     circle = Circle(density = 100, color = 'skyblue').repeat(5).scale(LOGO_RADIUS)
-    sphere = Sphere(density = 100, color = DARK_BLUE).scale(LOGO_RADIUS)
+    sphere = Sphere(density = 50, color = DARK_BLUE).scale(LOGO_RADIUS)
     sphere.rotate(-np.pi / 7, [1, 0, 0])
     sphere.rotate(-np.pi / 7)
     alpha = 0.3

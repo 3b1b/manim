@@ -1582,9 +1582,6 @@ class IntersectionChoppingExamples(Scene):
             self.remove(*self.mobjects)
 
 
-
-
-
 ##################################################
 
 if __name__ == "__main__":

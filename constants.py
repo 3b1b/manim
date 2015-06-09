@@ -12,7 +12,7 @@ PRODUCTION_QUALITY_DISPLAY_CONFIG = {
 LOW_QUALITY_DISPLAY_CONFIG = {
     "height"         : 480,
     "width"          : 840,
-    "frame_duration" : 0.15,
+    "frame_duration" : 0.04,
 }
 
 

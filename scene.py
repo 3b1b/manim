@@ -15,6 +15,7 @@ from mobject import *
 from image_mobject import *
 from animation import *
 import displayer as disp
+from tk_scene import TkSceneRoot
 
 DEFAULT_COUNT_NUM_OFFSET = (SPACE_WIDTH - 1, SPACE_HEIGHT - 1, 0)
 DEFAULT_COUNT_RUN_TIME   = 5.0
@@ -45,6 +46,7 @@ class Scene(object):
 
     def set_name(self, name):
         self.name = name
+        return self
 
     def add(self, *mobjects):
         """
@@ -56,6 +58,7 @@ class Scene(object):
             #now be closer to the foreground.
             self.remove(mobject)
             self.mobjects.append(mobject)
+        return self
 
     def remove(self, *mobjects):
         for mobject in mobjects:
@@ -63,6 +66,8 @@ class Scene(object):
                 raise Exception("Removing something which is not a mobject")
             while mobject in self.mobjects:
                 self.mobjects.remove(mobject)
+        return self
+
 
     def highlight_region(self, region, color = None):
         self.background = disp.paint_region(
@@ -70,6 +75,7 @@ class Scene(object):
             image_array = self.background, 
             color = color,
         )
+        return self
 
     def reset_background(self):
         self.background = self.original_background
@@ -100,6 +106,7 @@ class Scene(object):
             animation.clean_up()
         self.add(*moving_mobjects)
         progress_bar.finish()
+        return self
 
     def count(self, items, item_type = "mobject", *args, **kwargs):
         if item_type == "mobject":
@@ -108,6 +115,7 @@ class Scene(object):
             self.count_regions(items, *args, **kwargs)
         else:
             raise Exception("Unknown item_type, should be mobject or region")
+        return self
 
     def count_mobjects(
         self, mobjects, mode = "highlight",
@@ -147,6 +155,7 @@ class Scene(object):
             self.remove(num_mob)
         self.add(num_mob)
         self.number = num_mob
+        return self
 
     def count_regions(self, regions, 
                       mode = "one_at_a_time",
@@ -167,6 +176,7 @@ class Scene(object):
             self.remove(num_mob)
         self.add(num_mob)
         self.number = num_mob
+        return self
 
 
     def get_frame(self):
@@ -177,6 +187,7 @@ class Scene(object):
 
     def dither(self, duration = DEFAULT_DITHER_TIME):
         self.frames += [self.get_frame()]*int(duration / self.frame_duration)
+        return self
 
     def write_to_gif(self, name = None, 
                      end_dither_time = DEFAULT_DITHER_TIME):
@@ -188,8 +199,12 @@ class Scene(object):
         self.dither(end_dither_time)
         disp.write_to_movie(self, name or str(self))
 
-    def show(self):
+    def show_frame(self):
         Image.fromarray(self.get_frame()).show()
+
+    def preview(self):
+        self.dither()
+        TkSceneRoot(self)
 
     def save_image(self, path):
         path = os.path.join(MOVIE_DIR, path) + ".png"
