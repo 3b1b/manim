@@ -2,12 +2,14 @@ import sys
 import getopt
 import imp
 import itertools as it
+import inspect
 from helpers import cammel_case_initials
+from scene import Scene
 
 from constants import *
 
 HELP_MESSAGE = """
-   <script name> [-s <scene name or initials> -a <arg_string>]
+   <script name> [<scene name or initials>] [<arg_string>]
 """
 SCENE_NOT_FOUND_MESSAGE = """
    No scene name or ititials \"%s\" and arg string \"%s\"
@@ -61,24 +63,31 @@ def find_scene_class_and_args(scene_string, args_extension,
          sys.exit(0)
    return possible_results[index]
 
-def command_line_create_scene(sys_argv, scene_classes, movie_prefix = ""):
+def command_line_create_scene(sys_argv, movie_prefix = ""):
+   scene_classes = [
+        pair[1]
+        for pair in inspect.getmembers(
+            sys.modules["__main__"], 
+            lambda obj : inspect.isclass(obj) and \
+                         issubclass(obj, Scene) and \
+                         obj != Scene
+        )
+   ]
    try:
-      opts, args = getopt.getopt(sys_argv, "h:s:a:l:p")
+      opts, args = getopt.getopt(sys_argv, "h:l:p")
    except getopt.GetoptError as err:
       print str(err)
       sys.exit(2)
+
    scene_string = ""
    args_extension = ""
    display_config = PRODUCTION_QUALITY_DISPLAY_CONFIG
    preview = False
+
    for opt, arg in opts:
       if opt == '-h':
          print HELP_MESSAGE
          return
-      elif opt == '-s':
-         scene_string = arg
-      elif opt == '-a':
-         args_extension = arg
       elif opt == '-l':
          display_config = LOW_QUALITY_DISPLAY_CONFIG
       elif opt == '-p':

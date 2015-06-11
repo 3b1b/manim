@@ -1,8 +1,8 @@
 import numpy as np
-import operator as op
 import itertools as it
 
 from constants import *
+from helpers import *
 from image_mobject import *
 from region import *
 from scene import Scene
@@ -115,163 +115,14 @@ class CircleScene(Scene):
         map(lambda r : r.intersect(interior), self.regions)
         self.exterior = interior.complement()
 
-class GraphScene(Scene):
-    args_list = [
-        (CUBE_GRAPH,),
-        (SAMPLE_GRAPH,),
-        (OCTOHEDRON_GRAPH,),
-    ]
-    @staticmethod
-    def args_to_string(*args):
-        return args[0]["name"]
-
-    def __init__(self, graph, *args, **kwargs):
-        Scene.__init__(self, *args, **kwargs)
-        #See CUBE_GRAPH above for format of graph
-        self.graph = graph
-        self.points = map(np.array, graph["vertices"])
-        self.vertices = self.dots = [Dot(p) for p in self.points]
-        self.edges = [
-            Line(self.points[i], self.points[j])
-            for i, j in graph["edges"]
-        ]
-        self.add(*self.dots + self.edges)
-
-    def generate_regions(self):
-        regions = [
-            region_from_line_boundary(*[
-                [
-                    self.points[rc[i]], 
-                    self.points[rc[(i+1)%len(rc)]]
-                ]
-                for i in range(len(rc))
-            ])
-            for rc in self.graph["region_cycles"]
-        ]
-        regions[-1].complement()#Outer region painted outwardly...
-        self.regions = regions
-
-class PascalsTriangleScene(Scene):
-    args_list = [
-        (N_PASCAL_ROWS,),
-        (BIG_N_PASCAL_ROWS,),
-    ]
-    @staticmethod
-    def args_to_string(*args):
-        return str(args[0])
-
-    def __init__(self, nrows, *args, **kwargs):
-        Scene.__init__(self, *args, **kwargs)
-        self.nrows            = nrows
-        self.diagram_height   = 2*SPACE_HEIGHT - 1
-        self.diagram_width    = 1.5*SPACE_WIDTH
-        self.cell_height      = self.diagram_height / nrows
-        self.cell_width       = self.diagram_width / nrows
-        self.portion_to_fill  = 0.7
-        self.bottom_left      = np.array(
-            (-self.cell_width * nrows / 2.0, -self.cell_height * nrows / 2.0, 0)
-        )
-        num_to_num_mob   = {} 
-        self.coords_to_mobs   = {}
-        self.coords = [(n, k) for n in range(nrows) for k in range(n+1)]    
-        for n, k in self.coords:
-            num = choose(n, k)              
-            center = self.coords_to_center(n, k)
-            if num not in num_to_num_mob:
-                num_to_num_mob[num] = tex_mobject(str(num))
-            num_mob = deepcopy(num_to_num_mob[num])  
-            scale_factor = min(
-                1,
-                self.portion_to_fill * self.cell_height / num_mob.get_height(),
-                self.portion_to_fill * self.cell_width / num_mob.get_width(),
-            )
-            num_mob.center().scale(scale_factor).shift(center)
-            if n not in self.coords_to_mobs:
-                self.coords_to_mobs[n] = {}
-            self.coords_to_mobs[n][k] = num_mob
-        self.add(*[self.coords_to_mobs[n][k] for n, k in self.coords])
-
-    def coords_to_center(self, n, k):
-        return self.bottom_left + (
-                self.cell_width * (k+self.nrows/2.0 - n/2.0), 
-                self.cell_height * (self.nrows - n), 
-                0
-            )
-
-    def generate_n_choose_k_mobs(self):
-        self.coords_to_n_choose_k = {}
-        for n, k in self.coords:
-            nck_mob = tex_mobject(r"{%d \choose %d}"%(n, k)) 
-            scale_factor = min(
-                1,
-                self.portion_to_fill * self.cell_height / nck_mob.get_height(),
-                self.portion_to_fill * self.cell_width / nck_mob.get_width(),
-            )
-            center = self.coords_to_mobs[n][k].get_center()
-            nck_mob.center().scale(scale_factor).shift(center)
-            if n not in self.coords_to_n_choose_k:
-                self.coords_to_n_choose_k[n] = {}
-            self.coords_to_n_choose_k[n][k] = nck_mob
-
-    def generate_sea_of_zeros(self):
-        zero = tex_mobject("0")
-        self.sea_of_zeros = []
-        for n in range(self.nrows):
-            for a in range((self.nrows - n)/2 + 1):
-                for k in (n + a + 1, -a -1):
-                    self.coords.append((n, k))
-                    mob = deepcopy(zero)
-                    mob.shift(self.coords_to_center(n, k))
-                    self.coords_to_mobs[n][k] = mob
-                    self.add(mob)
-
-
 
 ##################################################
 
 def int_list_to_string(int_list):
     return "-".join(map(str, int_list))
 
-def choose(n, r):
-    if n < r: return 0
-    if r == 0: return 1
-    denom = reduce(op.mul, xrange(1, r+1), 1)
-    numer = reduce(op.mul, xrange(n, n-r, -1), 1)
-    return numer//denom
-
 def moser_function(n):
     return choose(n, 4) + choose(n, 2) + 1
-
-def is_on_line(p0, p1, p2, threshold = 0.01):
-    """
-    Returns true of p0 is on the line between p1 and p2
-    """
-    p0, p1, p2 = map(lambda tup : np.array(tup[:2]), [p0, p1, p2])
-    p1 -= p0
-    p2 -= p0
-    return abs((p1[0] / p1[1]) - (p2[0] / p2[1])) < threshold
-
-
-def intersection(line1, line2):
-    """
-    A "line" should come in the form [(x0, y0), (x1, y1)] for two
-    points it runs through
-    """
-    p0, p1, p2, p3 = map(
-        lambda tup : np.array(tup[:2]),
-        [line1[0], line1[1], line2[0], line2[1]]
-    )
-    p1, p2, p3 = map(lambda x : x - p0, [p1, p2, p3])
-    transform = np.zeros((2, 2))
-    transform[:,0], transform[:,1] = p1, p2
-    if np.linalg.det(transform) == 0: return
-    inv = np.linalg.inv(transform)
-    new_p3 = np.dot(inv, p3.reshape((2, 1)))
-    #Where does line connecting (0, 1) to new_p3 hit x axis
-    x_intercept = new_p3[0] / (1 - new_p3[1]) 
-    result = np.dot(transform, [[x_intercept], [0]])
-    result = result.reshape((2,)) + p0
-    return result
 
 
 

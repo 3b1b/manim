@@ -3,10 +3,10 @@ import numpy as np
 
 CUBE_GRAPH = {
     "name" : "CubeGraph",
-                        # 5  7
-                        #  12 
-                        #  03 
-                        # 4  6
+    # 5  7
+    #  12 
+    #  03 
+    # 4  6
     "vertices" : [
         (x, y, 0)
         for r in (1, 2)
@@ -38,10 +38,10 @@ CUBE_GRAPH = {
 
 SAMPLE_GRAPH = {
     "name" : "SampleGraph",
-                     #  4 2  3
-                     #   0 1
-                     #       
-                     # 5 
+    #  4 2  3
+    #   0 1
+    #       
+    # 5 
     "vertices" :[
         ( 0, 0, 0),
         ( 2, 0, 0),
@@ -75,11 +75,11 @@ SAMPLE_GRAPH = {
 
 OCTOHEDRON_GRAPH = {
     "name" : "OctohedronGraph",
-                    #       3
-                    #
-                    #     1   0
-                    #       2
-                    #4             5
+    #       3
+    #
+    #     1   0
+    #       2
+    #4             5
     "vertices" : [
         (r*np.cos(angle), r*np.sin(angle)-1, 0)
         for r, s in [(1, 0), (3, 3)]

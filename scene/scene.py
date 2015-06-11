@@ -9,10 +9,8 @@ import copy
 import progressbar
 import inspect
 
-
 from helpers import *
 from mobject import *
-from image_mobject import *
 from animation import *
 import displayer as disp
 from tk_scene import TkSceneRoot
@@ -40,6 +38,10 @@ class Scene(object):
         self.background = self.original_background
         self.shape = self.background.shape[:2]
         #TODO, space shape
+        self.construct()
+
+    def construct(self):
+        pass #To be implemented in subclasses
 
     def __str__(self):
         return self.__class__.__name__
@@ -68,6 +70,10 @@ class Scene(object):
                 self.mobjects.remove(mobject)
         return self
 
+    def clear(self):
+        self.reset_background()
+        self.remove(*self.mobjects)
+        return self
 
     def highlight_region(self, region, color = None):
         self.background = disp.paint_region(
@@ -79,6 +85,7 @@ class Scene(object):
 
     def reset_background(self):
         self.background = self.original_background
+        return self
 
     def animate(self, *animations, **kwargs):
         if "run_time" in kwargs:
@@ -203,7 +210,6 @@ class Scene(object):
         Image.fromarray(self.get_frame()).show()
 
     def preview(self):
-        self.dither()
         TkSceneRoot(self)
 
     def save_image(self, path):

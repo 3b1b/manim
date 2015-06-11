@@ -1585,14 +1585,7 @@ class IntersectionChoppingExamples(Scene):
 ##################################################
 
 if __name__ == "__main__":
-    scene_classes = [
-        pair[1]
-        for pair in inspect.getmembers(
-            sys.modules[__name__], 
-            lambda obj : inspect.isclass(obj) and issubclass(obj, Scene)
-        )
-    ]
-    command_line_create_scene(sys.argv[1:], scene_classes, MOVIE_PREFIX)
+    command_line_create_scene(sys.argv[1:], MOVIE_PREFIX)
 
 
 

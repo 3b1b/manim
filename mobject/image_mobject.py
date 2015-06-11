@@ -86,24 +86,21 @@ class VideoIcon(ImageMobject):
         ImageMobject.__init__(self, "video_icon", *args, **kwargs)
         self.scale(0.3)
 
-def text_mobject(text, size = r"\Large"):
+def text_mobject(text, size = "\\Large"):
     image = tex_to_image(text, size, TEMPLATE_TEXT_FILE)
     assert(not isinstance(image, list))
     return ImageMobject(image).center()
 
 #Purely redundant function to make singulars and plurals sensible
-def tex_mobject(expression, size = r"\Huge"):
+def tex_mobject(expression, size = "\\Huge"):
     return tex_mobjects(expression, size)
 
-def tex_mobjects(expression, size = r"\Huge"):
+def tex_mobjects(expression, size = "\\Huge"):
     images = tex_to_image(expression, size)
     if isinstance(images, list):
         #TODO, is checking listiness really the best here?
         result = [ImageMobject(im) for im in images]
-        center = CompoundMobject(*result).get_center()
-        for mob in result:
-            mob.shift(-center)
-        return result
+        return CompoundMobject(*result).center().split()
     else:
         return ImageMobject(images).center()
 

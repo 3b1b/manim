@@ -8,6 +8,7 @@ from colour import Color
 import progressbar
 
 from mobject import *
+from constants import *
 
 def get_pixels(image_array):
     if image_array is None:

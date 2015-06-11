@@ -36,10 +36,11 @@ SPACE_WIDTH = SPACE_HEIGHT * DEFAULT_WIDTH / DEFAULT_HEIGHT
 ORIGIN = (0, 0, 0)
 
 THIS_DIR  = os.path.dirname(os.path.realpath(__file__))
-IMAGE_DIR = os.path.join(THIS_DIR, "images")
-GIF_DIR   = os.path.join(THIS_DIR, "gifs")
-MOVIE_DIR = os.path.join(THIS_DIR, "movies")
-TEX_DIR   = os.path.join(THIS_DIR, "Tex")
+FILE_DIR  = os.path.join(THIS_DIR, "files")
+IMAGE_DIR = os.path.join(FILE_DIR, "images")
+GIF_DIR   = os.path.join(FILE_DIR, "gifs")
+MOVIE_DIR = os.path.join(FILE_DIR, "movies")
+TEX_DIR   = os.path.join(FILE_DIR, "Tex")
 TEX_IMAGE_DIR = os.path.join(IMAGE_DIR, "Tex")
 TMP_IMAGE_DIR = "/tmp/animation_images/"
 for folder in [IMAGE_DIR, GIF_DIR, MOVIE_DIR, TEX_DIR, TMP_IMAGE_DIR, TEX_IMAGE_DIR]:
