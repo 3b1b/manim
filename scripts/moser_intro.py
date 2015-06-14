@@ -8,7 +8,6 @@ from copy import deepcopy
 
 from animation import *
 from mobject import *
-from image_mobject import *
 from constants import *
 from region import *
 from scene import Scene

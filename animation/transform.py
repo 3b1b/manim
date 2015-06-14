@@ -59,19 +59,21 @@ class Transform(Animation):
                     )
 
 class SemiCircleTransform(Transform):
+    def __init__(self, mobject1, mobject2, counterclockwise = True,
+                 *args, **kwargs):
+        Transform.__init__(self, mobject1, mobject2, *args, **kwargs)
+        self.axis = (0, 0, 1) if counterclockwise else (0, 0, -1)
+
     def update_mobject(self, alpha):
         sm, em = self.starting_mobject, self.ending_mobject
         midpoints = (sm.points + em.points) / 2
         angle = alpha * np.pi
-        rotation_matrix = np.matrix([
-            [np.cos(angle), np.sin(angle), 0],
-            [-np.sin(angle), np.cos(angle), 0],
-            [0, 0, 1],
-        ])
-        self.mobject.points = np.dot(
-            sm.points - midpoints, 
-            np.transpose(rotation_matrix)
-        ) + midpoints
+        rot_matrix = rotation_matrix(angle, self.axis)[:2, :2]
+        self.mobject.points[:,:2] = np.dot(
+            (sm.points - midpoints)[:,:2], 
+            np.transpose(rot_matrix)
+        ) + midpoints[:,:2]
+        self.mobject.points[:,2] = (1-alpha)*sm.points[:,2] + alpha*em.points[:,2]
         self.mobject.rgbs = (1-alpha)*sm.rgbs + alpha*em.rgbs
 
 class FadeToColor(Transform):

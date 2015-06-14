@@ -1,23 +1,18 @@
 #!/usr/bin/env python
 
 from PIL import Image
+import numpy as np
+
 from animation import *
 from mobject import *
 from constants import *
 from helpers import *
 from scene import *
-from image_mobject import *
 import itertools as it
 import os
 
 
-import numpy as np
-
-DARK_BLUE = "#236B8E"
-DARK_BROWN = "#8B4513"
-LIGHT_BROWN = "#CD853F"
 LOGO_RADIUS = 1.5
-
 
 if __name__ == '__main__':
     circle = Circle(density = 100, color = 'skyblue').repeat(5).scale(LOGO_RADIUS)

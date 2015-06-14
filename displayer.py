@@ -33,7 +33,9 @@ def paint_region(region, image_array = None, color = None):
     return pixels
 
 def paint_mobject(mobject, image_array = None):
-    pixels = get_pixels(image_array)
+    pixels = get_pixels(image_array)    
+    if mobject.get_num_points() == 0:
+        return pixels
     height = pixels.shape[0]
     width  = pixels.shape[1]
     space_height = SPACE_HEIGHT
@@ -48,9 +50,12 @@ def paint_mobject(mobject, image_array = None):
     points[:,1] *= -1
     #Map points to pixel space, then create pixel array first in terms
     #of its flattened version
-    points += np.array(
-        [space_width, space_height]*points.shape[0]
-    ).reshape(points.shape)
+    try:
+        points += np.array(
+            [space_width, space_height]*points.shape[0]
+        ).reshape(points.shape)
+    except:
+        print points.shape, mobject.points.shape
     points *= np.array(
         [width / (2.0 * space_width), height / (2.0 * space_height)]*\
         points.shape[0]

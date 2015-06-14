@@ -83,7 +83,7 @@ class Line(Mobject1D):
     def __init__(self, start, end, density = DEFAULT_POINT_DENSITY_1D, *args, **kwargs):
         self.start = np.array(start)
         self.end = np.array(end)
-        density *= np.linalg.norm(self.start - self.end)
+        density *= self.get_length()
         Mobject1D.__init__(self, density = density, *args, **kwargs)
 
     def generate_points(self):
@@ -91,6 +91,16 @@ class Line(Mobject1D):
             t * self.end + (1 - t) * self.start
             for t in np.arange(0, 1, self.epsilon)
         ])
+
+    def get_length(self):
+        return np.linalg.norm(self.start - self.end)
+
+    def get_slope(self):
+        rise, run = [
+            float(self.end[i] - self.start[i])
+            for i in [1, 0]
+        ]
+        return rise/run
 
 class CurvedLine(Line):
     def generate_points(self):

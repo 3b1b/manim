@@ -6,6 +6,7 @@ from graphs import *
 
 from mobject import *
 from animation import *
+from region import *
 from constants import *
 from helpers import *
 
@@ -20,14 +21,16 @@ class GraphScene(Scene):
         return args[0]["name"]
 
     def __init__(self, graph, *args, **kwargs):
-        Scene.__init__(self, *args, **kwargs)
         #See CUBE_GRAPH above for format of graph
         self.graph = graph
-        self.points = map(np.array, graph["vertices"])
+        Scene.__init__(self, *args, **kwargs)
+
+    def construct(self):
+        self.points = map(np.array, self.graph["vertices"])
         self.vertices = self.dots = [Dot(p) for p in self.points]
         self.edges = [
             Line(self.points[i], self.points[j])
-            for i, j in graph["edges"]
+            for i, j in self.graph["edges"]
         ]
         self.add(*self.dots + self.edges)
 
@@ -44,6 +47,50 @@ class GraphScene(Scene):
         ]
         regions[-1].complement()#Outer region painted outwardly...
         self.regions = regions
+
+    def generate_spanning_tree(self):
+       pass
+
+    def draw_vertices(self):
+        self.clear()
+        self.animate(ShowCreation(CompoundMobject(*self.vertices)))
+
+    def draw_edges(self):
+        self.animate(*[
+            ShowCreation(edge, run_time = 1.0)
+            for edge in self.edges
+        ])
+
+    def replace_vertices_with(self, mobject):
+        mobject.center()
+        diameter = max(mobject.get_height(), mobject.get_width())
+        self.animate(*[
+            SemiCircleTransform(
+                vertex,
+                deepcopy(mobject).shift(vertex.get_center())
+            )
+            for vertex in self.vertices
+        ] + [
+            ApplyMethod(
+                edge.scale_in_place,
+                (edge.get_length() - diameter) / edge.get_length()
+            )
+            for edge in self.edges
+        ])
+
+    def annotate_edges(self, mobject):
+        angles = map(np.arctan, map(Line.get_slope, self.edges))
+        self.edge_annotations = [
+            deepcopy(mobject).rotate(angle).shift(edge.get_center())
+            for angle, edge in zip(angles, self.edges)
+        ]
+        self.animate(*[
+            FadeIn(ann)
+            for ann in self.edge_annotations
+        ])
+
+
+
 
 BIG_N_PASCAL_ROWS = 11
 N_PASCAL_ROWS = 7

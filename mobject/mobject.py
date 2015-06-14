@@ -88,8 +88,21 @@ class Mobject(object):
 
     def shift(self, vector):
         cycle = it.cycle(vector)
-        v = np.array([cycle.next() for x in range(self.points.size)]).reshape(self.points.shape)
+        v = np.array([
+            cycle.next() 
+            for x in range(self.points.size)
+        ]).reshape(self.points.shape)
         self.points += v
+        return self
+
+    def wag(self, wag_direction = [0, 1, 0], wag_axis = [-1, 0, 0]):
+        alphas = np.dot(self.points, np.transpose(wag_axis))
+        alphas -= min(alphas)
+        alphas /= max(alphas)
+        self.points += np.dot(
+            alphas.reshape((len(alphas), 1)),
+            np.array(wag_direction).reshape((1, 3))
+        )
         return self
 
     def center(self):
@@ -115,9 +128,6 @@ class Mobject(object):
         for x in range(count - 1):
             self.add_points(points, rgbs)
         return self
-
-    def get_num_points(self):
-        return self.points.shape[0]
 
     def pose_at_angle(self):
         self.rotate(np.pi / 7)
@@ -155,6 +165,10 @@ class Mobject(object):
         return self
 
     ### Getters ###
+
+    def get_num_points(self):
+        return self.points.shape[0]
+
     def get_center(self):
         return np.apply_along_axis(np.mean, 0, self.points)
 

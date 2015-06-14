@@ -63,7 +63,7 @@ def find_scene_class_and_args(scene_string, args_extension,
          sys.exit(0)
    return possible_results[index]
 
-def command_line_create_scene(sys_argv, movie_prefix = ""):
+def command_line_create_scene(movie_prefix = ""):
    scene_classes = [
         pair[1]
         for pair in inspect.getmembers(
@@ -74,7 +74,7 @@ def command_line_create_scene(sys_argv, movie_prefix = ""):
         )
    ]
    try:
-      opts, args = getopt.getopt(sys_argv, "h:l:p")
+      opts, args = getopt.getopt(sys.argv[1:], 'hlps')
    except getopt.GetoptError as err:
       print str(err)
       sys.exit(2)
@@ -82,7 +82,7 @@ def command_line_create_scene(sys_argv, movie_prefix = ""):
    scene_string = ""
    args_extension = ""
    display_config = PRODUCTION_QUALITY_DISPLAY_CONFIG
-   preview = False
+   action = "write"
 
    for opt, arg in opts:
       if opt == '-h':
@@ -92,7 +92,9 @@ def command_line_create_scene(sys_argv, movie_prefix = ""):
          display_config = LOW_QUALITY_DISPLAY_CONFIG
       elif opt == '-p':
          display_config = LOW_QUALITY_DISPLAY_CONFIG
-         preview = True
+         action = "preview"
+      elif opt == '-s':
+         action = "show_frame"
    if len(args) > 0:
       scene_string = args[0]
    if len(args) > 1:
@@ -105,10 +107,14 @@ def command_line_create_scene(sys_argv, movie_prefix = ""):
    name = SceneClass.__name__ + SceneClass.args_to_string(*args)
    print "Constructing %s..."%name
    scene = SceneClass(*args, display_config = display_config)
-   if preview:
-      scene.preview()
-   else:
+   if action == "write":
       scene.write_to_movie(movie_prefix + name)
+   elif action == "preview":
+      scene.preview()
+   elif action == "show_frame":
+      scene.show_frame()
+
+      
 
 
 

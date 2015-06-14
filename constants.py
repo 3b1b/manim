@@ -55,3 +55,9 @@ TEMPLATE_TEXT_FILE = os.path.join(TEX_DIR, "text_template.tex")
 
 LOGO_PATH = os.path.join(IMAGE_DIR, "logo.png")
 
+DARK_BLUE = "#236B8E"
+DARK_BROWN = "#8B4513"
+LIGHT_BROWN = "#CD853F"
+
+
+
