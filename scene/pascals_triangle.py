@@ -2,7 +2,6 @@ import numpy as np
 import itertools as it
 
 from scene import Scene
-from graphs import *
 
 from mobject import *
 from animation import *

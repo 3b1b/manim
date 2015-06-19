@@ -12,7 +12,7 @@ from helpers import *
 class Transform(Animation):
     def __init__(self, mobject1, mobject2, 
                  run_time = DEFAULT_TRANSFORM_RUN_TIME,
-                 black_out_extra_points = True,
+                 black_out_extra_points = False,
                  *args, **kwargs):
         count1, count2 = mobject1.get_num_points(), mobject2.get_num_points()
         if count2 == 0:
@@ -45,6 +45,7 @@ class Transform(Animation):
         )
 
     def clean_up(self):
+        Animation.clean_up(self)
         if hasattr(self, "non_redundant_m2_indices"):
             #Reduce mobject (which has become identical to mobject2), as
             #well as mobject2 itself
@@ -149,7 +150,28 @@ class ComplexFunction(ApplyFunction):
         #Todo, abstract away function naming'
 
 
+#Fuck this is cool!
+class TransformAnimations(Transform):
+    def __init__(self, start_anim, end_anim, 
+                 alpha_func = squish_alpha_func(high_inflection_0_to_1),
+                 **kwargs):
+        self.start_anim, self.end_anim = start_anim, end_anim
+        Transform.__init__(
+            self,
+            start_anim.mobject,
+            end_anim.mobject,
+            run_time = max(start_anim.run_time, end_anim.run_time),
+            alpha_func = alpha_func,
+            **kwargs
+        )
+        #Rewire starting and ending mobjects
+        start_anim.mobject = self.starting_mobject
+        end_anim.mobject = self.ending_mobject
 
+    def update(self, alpha):
+        self.start_anim.update(alpha)
+        self.end_anim.update(alpha)
+        Transform.update(self, alpha)
 
 
 

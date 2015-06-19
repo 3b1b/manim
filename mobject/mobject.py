@@ -79,7 +79,7 @@ class Mobject(object):
             self.unit_normals = np.dot(self.unit_normals, t_rotation_matrix)
         return self
 
-    def rotate_in_place(self, angle, axis = [0, 0, 1]):
+    def rotate_in_place(self, angle, axis = (0, 0, 1)):
         center = self.get_center()
         self.shift(-center)
         self.rotate(angle, axis)
@@ -95,7 +95,7 @@ class Mobject(object):
         self.points += v
         return self
 
-    def wag(self, wag_direction = [0, 1, 0], wag_axis = [-1, 0, 0]):
+    def wag(self, wag_direction = (0, 1, 0), wag_axis = (-1, 0, 0)):
         alphas = np.dot(self.points, np.transpose(wag_axis))
         alphas -= min(alphas)
         alphas /= max(alphas)
@@ -108,6 +108,31 @@ class Mobject(object):
     def center(self):
         self.shift(-self.get_center())
         return self
+
+    #To wrapper functions for better naming
+    def to_corner(self, corner = (-1, 1, 0), buff = 0.5):
+        return self.align_on_border(corner, buff)
+
+    def to_edge(self, edge = (-1, 0, 0), buff = 0.5):
+        return self.align_on_border(edge, buff)
+
+    def align_on_border(self, direction, buff = 0.5):
+        """
+        Direction just needs to be a vector pointing towards side or
+        corner in the 2d plane.
+        """
+        shift_val = [0, 0, 0]
+        space_dim = (SPACE_WIDTH, SPACE_HEIGHT)
+        for i in [0, 1]:
+            if direction[i] == 0:
+                continue
+            elif direction[i] > 0:
+                shift_val[i] = space_dim[i]-buff-max(self.points[:,i])
+            else:
+                shift_val[i] = -space_dim[i]+buff-min(self.points[:,i])
+        self.shift(shift_val)
+        return self
+
 
     def scale(self, scale_factor):
         self.points *= scale_factor
@@ -154,8 +179,8 @@ class Mobject(object):
         self.rgbs[to_change, :] += Color(color).get_rgb()
         return self
 
-    def fade(self, amount = 0.5):
-        self.rgbs *= amount
+    def fade(self, brightness = 0.5):
+        self.rgbs *= brightness
         return self
 
     def filter_out(self, condition):
@@ -177,6 +202,11 @@ class Mobject(object):
 
     def get_height(self):
         return np.max(self.points[:, 1]) - np.min(self.points[:, 1])
+
+    def get_color(self):
+        color = Color()
+        color.set_rgb(self.rgbs[0, :]) 
+        return color
 
     ### Stuff subclasses should deal with ###
     def should_buffer_points(self):

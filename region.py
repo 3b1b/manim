@@ -10,7 +10,7 @@ import displayer as disp
 class Region(object):
     def __init__(self, 
                  condition = None, 
-                 shape = (DEFAULT_HEIGHT, DEFAULT_WIDTH)
+                 shape = None,
                  ):
         """
         Condition must be a function which takes in two real
@@ -19,8 +19,10 @@ class Region(object):
         a function from R^2 to {True, False}, but & and | must be
         used in place of "and" and "or"
         """
-        #TODO, maybe I want this to be flexible to resizing
-        self.shape = shape
+        if shape == None:
+            self.shape = (DEFAULT_HEIGHT, DEFAULT_WIDTH)
+        else:
+            self.shape = shape
         # self.condition = condition
         (h, w) = self.shape
         scalar = 2*SPACE_HEIGHT / h
@@ -76,13 +78,13 @@ class HalfPlane(Region):
             return (x1 - x0)*(y - y0) > (y1 - y0)*(x - x0)
         Region.__init__(self, condition, *args, **kwargs)
 
-def region_from_line_boundary(*lines):
-    reg = Region()
+def region_from_line_boundary(*lines, **kwargs):
+    reg = Region(**kwargs)
     for line in lines:
-        reg.intersect(HalfPlane(line))
+        reg.intersect(HalfPlane(line, **kwargs))
     return reg
 
-def plane_partition(*lines):
+def plane_partition(*lines, **kwargs):
     """
     A 'line' is a pair of points [(x0, y0,...), (x1, y1,...)]
 
@@ -90,11 +92,11 @@ def plane_partition(*lines):
     these lines
     """
     result = []
-    half_planes = [HalfPlane(line) for line in lines]
+    half_planes = [HalfPlane(line, **kwargs) for line in lines]
     complements = [deepcopy(hp).complement() for hp in half_planes]
     num_lines = len(lines)
     for bool_list in it.product(*[[True, False]]*num_lines):
-        reg = Region()
+        reg = Region(**kwargs)
         for i in range(num_lines):
             if bool_list[i]:
                 reg.intersect(half_planes[i])
@@ -104,7 +106,7 @@ def plane_partition(*lines):
             result.append(reg)
     return result
 
-def plane_partition_from_points(*points):
+def plane_partition_from_points(*points, **kwargs):
     """
     Returns list of regions cut out by the complete graph
     with points from the argument as vertices.  
@@ -112,7 +114,7 @@ def plane_partition_from_points(*points):
     Each point comes in the form (x, y)
     """
     lines = [[p1, p2] for (p1, p2) in it.combinations(points, 2)]
-    return plane_partition(*lines)
+    return plane_partition(*lines, **kwargs)
 
 
 

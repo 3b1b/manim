@@ -10,7 +10,7 @@ import progressbar
 from mobject import *
 from constants import *
 
-def get_pixels(image_array):
+def get_pixels(image_array): #TODO, FIX WIDTH/HEIGHT PROBLEM HERE
     if image_array is None:
         return np.zeros(
             (DEFAULT_HEIGHT, DEFAULT_WIDTH, 3), 
@@ -48,6 +48,11 @@ def paint_mobject(mobject, image_array = None):
     rgbs   = np.array(mobject.rgbs)
     #Flips y-axis
     points[:,1] *= -1
+    #Removes points out of space
+    points = points[
+        (abs(points[:,0]) < SPACE_WIDTH) & 
+        (abs(points[:,1]) < SPACE_HEIGHT)
+    ]
     #Map points to pixel space, then create pixel array first in terms
     #of its flattened version
     try:

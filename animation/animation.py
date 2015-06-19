@@ -108,31 +108,7 @@ class Animation(object):
         pass
 
     def clean_up(self):
-        pass
-        
-
-#Fuck this is cool!
-# class TransformAnimations(Transform):
-#     def __init__(self, start_anim, end_anim, 
-#                  alpha_func = squish_alpha_func(high_inflection_0_to_1),
-#                  **kwargs):
-#         self.start_anim, self.end_anim = start_anim, end_anim
-#         Transform.__init__(
-#             self,
-#             start_anim.mobject,
-#             end_anim.mobject,
-#             run_time = max(start_anim.run_time, end_anim.run_time),
-#             alpha_func = alpha_func,
-#             **kwargs
-#         )
-#         #Rewire starting and ending mobjects
-#         start_anim.mobject = self.starting_mobject
-#         end_anim.mobject = self.ending_mobject
-
-#     def update(self, alpha):
-#         self.start_anim.update(alpha)
-#         self.end_anim.update(alpha)
-#         Transform.update(self, alpha)
+        self.update(1)
 
 
 

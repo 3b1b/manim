@@ -2,33 +2,32 @@
 
 import numpy as np
 import itertools as it
-import operator as op
 from copy import deepcopy
-from random import random, randint
 import sys
-import inspect
 
 
 from animation import *
 from mobject import *
 from constants import *
 from region import *
-from scene import Scene
+from scene import Scene, GraphScene
 from script_wrapper import command_line_create_scene
 
 
-class SampleScene(Scene):
+class SampleScene(GraphScene):
     def construct(self):
-        mob = Mobject()
-        circle9 = Circle().repeat(9).scale(3)
-        Mobject.interpolate(Circle().scale(3), circle9, mob, 0.8)
-        self.animate(Transform(
-            mob, 
-            circle9, 
-            run_time = 3.0,
-            alpha_func = there_and_back,
-        ))
+        GraphScene.construct(self)
+        self.generate_regions()
+        self.generate_dual_graph()
+        self.generate_spanning_tree()
+        self.add(self.spanning_tree)
+        for count in range(len(self.regions)):
+            self.add(tex_mobject(str(count)).shift(self.dual_points[count]))
+        for count in range(len(self.edges)):
+            self.add(tex_mobject(str(count)).shift(self.edges[count].get_center()))
+
+
 
 
 if __name__ == "__main__":
-    command_line_create_scene(sys.argv[1:])
+    command_line_create_scene()

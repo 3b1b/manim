@@ -94,7 +94,7 @@ def command_line_create_scene(movie_prefix = ""):
          display_config = LOW_QUALITY_DISPLAY_CONFIG
          action = "preview"
       elif opt == '-s':
-         action = "show_frame"
+         action = "save_image"
    if len(args) > 0:
       scene_string = args[0]
    if len(args) > 1:
@@ -111,8 +111,12 @@ def command_line_create_scene(movie_prefix = ""):
       scene.write_to_movie(movie_prefix + name)
    elif action == "preview":
       scene.preview()
-   elif action == "show_frame":
+   elif action == "save_image":
       scene.show_frame()
+      path = os.path.join(MOVIE_DIR, movie_prefix, "images")
+      if not os.path.exists(path):
+         os.mkdir(path)
+      scene.save_image(path, name)
 
       
 

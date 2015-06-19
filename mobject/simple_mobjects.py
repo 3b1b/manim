@@ -15,12 +15,16 @@ class Arrow(Mobject1D):
     DEFAULT_COLOR = "white"
     NUNGE_DISTANCE = 0.1
     def __init__(self, point = (0, 0, 0), direction = (-1, 1, 0), 
-                 length = 1, tip_length = 0.25,
+                 tail = None, length = 1, tip_length = 0.25,
                  normal = (0, 0, 1), *args, **kwargs):
         self.point = np.array(point)
-        self.direction = np.array(direction) / np.linalg.norm(direction)
+        if tail == None:
+            self.direction = np.array(direction) / np.linalg.norm(direction)
+            self.length = length
+        else:
+            self.direction = self.point - tail
+            self.length = np.linalg.norm(self.direction)
         self.normal = np.array(normal)
-        self.length = length
         self.tip_length = tip_length
         Mobject1D.__init__(self, *args, **kwargs)
 
@@ -103,17 +107,21 @@ class Line(Mobject1D):
         return rise/run
 
 class CurvedLine(Line):
+    def __init__(self, start, end, via = None, *args, **kwargs):
+        if via == None:
+            via = rotate_vector(
+                end - start, 
+                np.pi/3, [0,0,1]
+            ) + start
+        self.via = via
+        Line.__init__(self, start, end, *args, **kwargs)
+
     def generate_points(self):
-        equidistant_point = rotate_vector(
-            self.end - self.start, 
-            np.pi/3, [0,0,1]
-        ) + self.start
         self.add_points([
-            (1 - t*(1-t))*(t*self.end + (1-t)*self.start) \
-            +    t*(1-t)*equidistant_point
+            4*(0.25-t*(1-t))*(t*self.end + (1-t)*self.start) + 
+            4*t*(1-t)*self.via
             for t in np.arange(0, 1, self.epsilon)
         ])
-        self.ep = equidistant_point
 
 class Circle(Mobject1D):
     DEFAULT_COLOR = "red"

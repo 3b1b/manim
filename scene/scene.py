@@ -127,6 +127,7 @@ class Scene(object):
     def count_mobjects(
         self, mobjects, mode = "highlight",
         color = "red", 
+        display_numbers = True,
         num_offset = DEFAULT_COUNT_NUM_OFFSET,
         run_time   = DEFAULT_COUNT_RUN_TIME):
         """
@@ -146,9 +147,10 @@ class Scene(object):
         if mode == "highlight":
             self.add(*mobjects)
         for mob, num in zip(mobjects, it.count(1)):
-            num_mob = tex_mobject(str(num))
-            num_mob.center().shift(num_offset)
-            self.add(num_mob)
+            if display_numbers:
+                num_mob = tex_mobject(str(num))
+                num_mob.center().shift(num_offset)
+                self.add(num_mob)
             if mode == "highlight":
                 original_color = mob.color
                 mob.highlight(color)
@@ -159,9 +161,11 @@ class Scene(object):
             if mode == "show":
                 self.add(mob)
                 self.dither(frame_time)
-            self.remove(num_mob)
-        self.add(num_mob)
-        self.number = num_mob
+            if display_numbers:
+                self.remove(num_mob)
+        if display_numbers:
+            self.add(num_mob)
+            self.number = num_mob
         return self
 
     def count_regions(self, regions, 
@@ -212,8 +216,8 @@ class Scene(object):
     def preview(self):
         TkSceneRoot(self)
 
-    def save_image(self, path):
-        path = os.path.join(MOVIE_DIR, path) + ".png"
+    def save_image(self, directory = MOVIE_DIR, name = None):
+        path = os.path.join(directory, name or str(self)) + ".png"
         Image.fromarray(self.get_frame()).save(path)
 
     # To list possible args that subclasses have

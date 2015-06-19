@@ -1,7 +1,10 @@
 import numpy as np
 import itertools as it
+from copy import deepcopy
 
 from animation import Animation
+from transform import Transform
+from mobject import *
 from constants import *
 from helpers import *
 
@@ -129,7 +132,36 @@ class ComplexHomotopy(Homotopy):
             to_cammel_case(complex_homotopy.__name__)
 
 
+class WalkPiCreature(Animation):
+    def __init__(self, pi_creature, destination, *args, **kwargs):
+        self.final = deepcopy(pi_creature).move_to(destination)
+        self.middle = pi_creature.get_step_intermediate(self.final)
+        Animation.__init__(self, pi_creature, *args, **kwargs)
 
+    def update_mobject(self, alpha):
+        if alpha < 0.5:
+            Mobject.interpolate(
+                self.starting_mobject,
+                self.middle,
+                self.mobject,
+                2*alpha
+            )
+        else:
+            Mobject.interpolate(
+                self.middle,
+                self.final,
+                self.mobject,
+                2*alpha - 1
+            )
+            
+
+
+###### Something different ###############
+def pi_creature_step(scene, pi_creature, destination):
+    final = deepcopy(pi_creature).move_to(destination)
+    intermediate = pi_creature.get_step_intermediate(final)
+    scene.animate(Transform(pi_creature, intermediate))
+    scene.animate(Transform(pi_creature, final))
 
 
 
