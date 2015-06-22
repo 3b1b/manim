@@ -18,12 +18,11 @@ class Arrow(Mobject1D):
                  tail = None, length = 1, tip_length = 0.25,
                  normal = (0, 0, 1), *args, **kwargs):
         self.point = np.array(point)
-        if tail == None:
-            self.direction = np.array(direction) / np.linalg.norm(direction)
-            self.length = length
-        else:
-            self.direction = self.point - tail
-            self.length = np.linalg.norm(self.direction)
+        if tail is not None:
+            direction = self.point - tail
+            length = np.linalg.norm(direction)
+        self.direction = np.array(direction) / np.linalg.norm(direction)
+        self.length = length
         self.normal = np.array(normal)
         self.tip_length = tip_length
         Mobject1D.__init__(self, *args, **kwargs)

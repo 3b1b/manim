@@ -21,7 +21,139 @@ RANDOLPH_SCALE_VAL = 0.3
 EDGE_ANNOTATION_SCALE_VAL = 0.7
 DUAL_CYCLE = [3, 4, 5, 6, 1, 0, 2, 3]
 
-class IntroduceGraphs(GraphScene):
+class EulersFormulaWords(Scene):
+    def construct(self):
+        self.add(tex_mobject("V-E+F=2"))
+
+class TheTheoremWords(Scene):
+    def construct(self):
+        self.add(text_mobject("The Theorem:"))
+
+class ProofAtLastWords(Scene):
+    def construct(self):
+        self.add(text_mobject("The Proof At Last..."))
+
+class DualSpanningTreeWords(Scene):
+    def construct(self):
+        self.add(text_mobject("Spanning trees have duals too!"))
+
+class PreferOtherProofDialogue(Scene):
+    def construct(self):
+        teacher = Face("talking").shift(2*LEFT)
+        student = Face("straight").shift(2*RIGHT)
+        teacher_bubble = SpeechBubble(LEFT).speak_from(teacher)
+        student_bubble = SpeechBubble(RIGHT).speak_from(student)
+        teacher_bubble.write("Look at this \\\\ elegant proof!")
+        student_bubble.write("I prefer the \\\\ other proof.")
+
+        self.add(student, teacher, teacher_bubble, teacher_bubble.text)
+        self.dither(2)
+        self.animate(Transform(
+            Dot(student_bubble.tip).highlight("black"),
+            CompoundMobject(student_bubble, student_bubble.text)
+        ))
+        self.dither(2)
+        self.remove(teacher_bubble.text)
+        teacher_bubble.write("Does that make this \\\\ any less elegant?")
+        self.add(teacher_bubble.text)
+        self.dither(2)
+
+class IllustrateDuality(GraphScene):
+    def construct(self):
+        GraphScene.construct(self)
+        self.generate_dual_graph()
+
+        self.add(text_mobject("Duality").to_edge(UP))
+        self.remove(*self.vertices)
+        def special_alpha(t):
+            if t > 0.5:
+                t = 1 - t
+            if t < 0.25:
+                return high_inflection_0_to_1(4*t)
+            else:
+                return 1
+        kwargs = {
+            "run_time" : 5.0,
+            "alpha_func" : special_alpha
+        }
+        self.animate(*[
+            Transform(*edge_pair, **kwargs)
+            for edge_pair in zip(self.edges, self.dual_edges)
+        ] + [
+            Transform(
+                CompoundMobject(*[
+                    self.vertices[index]
+                    for index in cycle
+                ]),
+                dv,
+                **kwargs
+            )
+            for cycle, dv in zip(
+                self.graph.region_cycles, 
+                self.dual_vertices
+            )
+        ])
+        self.dither()
+
+class IntroduceGraph(GraphScene):
+    def construct(self):
+        GraphScene.construct(self)
+        tweaked_graph = deepcopy(self.graph)
+        for index in 2, 4:
+            tweaked_graph.vertices[index] += 2.8*RIGHT + 1.8*DOWN
+        tweaked_self = GraphScene(tweaked_graph)
+        edges_to_remove = [
+            self.edges[self.graph.edges.index(pair)]
+            for pair in [(4, 5), (0, 5), (1, 5), (7, 1), (8, 3)]
+        ]
+
+        connected, planar, graph = CompoundMobject(*text_mobject([
+            "Connected ", "Planar ", "Graph"
+        ])).to_edge(UP).split()
+        not_okay = text_mobject("Not Okay").highlight("red")
+        planar_explanation = text_mobject("""
+            (``Planar'' just means we can draw it without
+             intersecting lines)
+        """, size = "\\small")
+        planar_explanation.shift(planar.get_center() + 0.5*DOWN)
+
+        self.draw_vertices()
+        self.draw_edges()
+        self.clear()
+        self.add(*self.vertices + self.edges)
+        self.dither()
+        self.add(graph)
+        self.dither()
+        kwargs = {
+            "alpha_func" : there_and_back,
+            "run_time"   : 5.0
+        }
+        self.add(not_okay)
+        self.animate(*[
+            Transform(*pair, **kwargs)
+            for pair in zip(
+                self.edges + self.vertices, 
+                tweaked_self.edges + tweaked_self.vertices,
+            )
+        ])
+        self.remove(not_okay)
+        self.add(planar, planar_explanation)
+        self.dither(2)
+        self.remove(planar_explanation)
+        self.add(not_okay)
+        self.remove(*edges_to_remove)
+        self.animate(ShowCreation(
+            CompoundMobject(*edges_to_remove),
+            alpha_func = lambda t : 1 - t,
+            run_time = 1.0
+        ))
+        self.dither(2)
+        self.remove(not_okay)
+        self.add(connected, *edges_to_remove)
+        self.dither()
+
+
+class OldIntroduceGraphs(GraphScene):
     def construct(self):
         GraphScene.construct(self)
         self.draw_vertices()        
@@ -29,7 +161,7 @@ class IntroduceGraphs(GraphScene):
         self.dither()
         self.clear()
         self.add(*self.edges)
-        self.replace_vertices_with(SimpleFace().scale(0.4))
+        self.replace_vertices_with(Face().scale(0.4))
         friends = text_mobject("Friends").scale(EDGE_ANNOTATION_SCALE_VAL)
         self.annotate_edges(friends.shift((0, friends.get_height()/2, 0)))
         self.animate(*[
@@ -55,9 +187,9 @@ class PlanarGraphDefinition(Scene):
         graphs = [
             CompoundMobject(*GraphScene(g).mobjects)
             for g in [
-                CUBE_GRAPH, 
-                complete_graph(5), 
-                OCTOHEDRON_GRAPH
+                CubeGraph(), 
+                CompleteGraph(5),
+                OctohedronGraph()
             ]
         ]
 
@@ -84,7 +216,7 @@ class PlanarGraphDefinition(Scene):
 
 
 class TerminologyFromPolyhedra(GraphScene):
-    args_list = [(CUBE_GRAPH,)]
+    args_list = [(CubeGraph(),)]
     def construct(self):
         GraphScene.construct(self)
         rot_kwargs = {
@@ -97,7 +229,7 @@ class TerminologyFromPolyhedra(GraphScene):
         ]
         cube = CompoundMobject(*[
             Line(vertices[edge[0]], vertices[edge[1]])
-            for edge in self.graph["edges"]
+            for edge in self.graph.edges
         ])
         cube.rotate(-np.pi/3, [0, 0, 1])
         cube.rotate(-np.pi/3, [0, 1, 0])
@@ -106,10 +238,11 @@ class TerminologyFromPolyhedra(GraphScene):
         regions_to_faces = text_mobject("Regions $\\to$ Faces").to_corner()
         
         self.clear()
-        self.animate(TransformAnimations(
-            Rotating(Dodecahedron(), **rot_kwargs),
-            Rotating(cube, **rot_kwargs),
-        ))
+        # self.animate(TransformAnimations(
+        #     Rotating(Dodecahedron(), **rot_kwargs),
+        #     Rotating(cube, **rot_kwargs)  
+        # ))
+        self.animate(Rotating(cube, **rot_kwargs))
         self.clear()
         self.animate(*[
             Transform(l1, l2)
@@ -185,11 +318,11 @@ class ThreePiecesOfTerminology(GraphScene):
 
 class WalkingRandolph(GraphScene):
     args_list = [
-        (SAMPLE_GRAPH, [0, 1, 7, 8]),
+        (SampleGraph(), [0, 1, 7, 8]),
     ]
     @staticmethod
     def args_to_string(graph, path):
-        return graph["name"] + "".join(map(str, path))
+        return str(graph) + "".join(map(str, path))
 
     def __init__(self, graph, path, *args, **kwargs):
         self.path = path
@@ -211,7 +344,7 @@ class WalkingRandolph(GraphScene):
 
 
 class PathExamples(GraphScene):
-    args_list = [(SAMPLE_GRAPH,)]
+    args_list = [(SampleGraph(),)]
     def construct(self):
         GraphScene.construct(self)
         paths = [
@@ -257,14 +390,14 @@ class PathExamples(GraphScene):
 
 class IntroduceCycle(WalkingRandolph):
     args_list = [
-        (SAMPLE_GRAPH, [0, 1, 3, 2, 0])
+        (SampleGraph(), [0, 1, 3, 2, 0])
     ]
     def construct(self):
         WalkingRandolph.construct(self)
         self.remove(self.randy)
         encompassed_cycles = filter(
             lambda c : set(c).issubset(self.path),
-            self.graph["region_cycles"]
+            self.graph.region_cycles
         )
         regions = [
             self.region_from_cycle(cycle)
@@ -339,7 +472,7 @@ class DefineSpanningTree(GraphScene):
             ))
         self.dither(2)
 
-        unneeded_edges = filter(out_of_spanning_set, self.graph["edges"])
+        unneeded_edges = filter(out_of_spanning_set, self.graph.edges)
         for edge, limit in zip(unneeded_edges, range(5)):
             line = Line(self.points[edge[0]], self.points[edge[1]])
             line.highlight("red")
@@ -453,11 +586,15 @@ class FacebookGraphAsAbstractSet(Scene):
             (1, 3),
             (1, 2),
         ]
-        names_mob = text_mobject("\\\\".join(names)).shift(3*LEFT)
-        friends_mob = tex_mobject("\\\\".join([
+        names_string = "\\\\".join(names + ["$\\vdots$"])
+        friends_string = "\\\\".join([
             "\\text{%s}&\\leftrightarrow\\text{%s}"%(names[i],names[j])
             for i, j in friend_pairs
-        ]), size = "\\Large").shift(3*RIGHT)
+        ] + ["\\vdots"])
+        names_mob = text_mobject(names_string).shift(3*LEFT)
+        friends_mob = tex_mobject(
+            friends_string, size = "\\Large"
+        ).shift(3*RIGHT)
         accounts = text_mobject("\\textbf{Accounts}")
         accounts.shift(3*LEFT).to_edge(UP)
         friendships = text_mobject("\\textbf{Friendships}")
@@ -479,68 +616,147 @@ class FacebookGraphAsAbstractSet(Scene):
 class ExamplesOfGraphs(GraphScene):
     def construct(self):
         buff = 0.5
-        self.graph["vertices"] = map(
+        self.graph.vertices = map(
             lambda v : v + DOWN + RIGHT,
-            self.graph["vertices"]
+            self.graph.vertices
         )
-        GraphScene.construct(self)        
-        objects, notion = CompoundMobject(*text_mobject(
+        GraphScene.construct(self)
+        self.generate_regions()
+        objects, notions = CompoundMobject(*text_mobject(
             ["Objects \\quad\\quad ", "Thing that connects objects"]
         )).to_corner().shift(0.5*RIGHT).split()
         horizontal_line = Line(
             (-SPACE_WIDTH, SPACE_HEIGHT-1, 0),
-            (max(notion.points[:,0]), SPACE_HEIGHT-1, 0)
+            (max(notions.points[:,0]), SPACE_HEIGHT-1, 0)
         )
-        vert_line_x_val = min(notion.points[:,0]) - buff
+        vert_line_x_val = min(notions.points[:,0]) - buff
         vertical_line = Line(
             (vert_line_x_val, SPACE_HEIGHT, 0),
             (vert_line_x_val,-SPACE_HEIGHT, 0)
         )
-        objects_and_notion_strings = [
+        objects_and_notions = [
             ("Facebook accounts", "Friendship"),
-            ("Cities", "Roads between them"),
-            ("Wikipedia pages", "Links"),
+            ("English Words", "Differ by One Letter"),
+            ("Mathematicians", "Coauthorship"),
             ("Neurons", "Synapses"),
             (
                 "Regions our graph \\\\ cuts the plane into",
-                "Shareed edges"
+                "Shared edges"
             )
-        ]
-        objects_and_notions = [
-            (
-                text_mobject(obj, size = "\\small").to_edge(LEFT),
-                text_mobject(no, size = "\\small").to_edge(LEFT).shift(
-                    (vert_line_x_val + SPACE_WIDTH)*RIGHT
-                )
-            )
-            for obj, no in objects_and_notion_strings
         ]
 
+
         self.clear()
-        self.add(objects, notion, horizontal_line, vertical_line)
+        self.add(objects, notions, horizontal_line, vertical_line)
         for (obj, notion), height in zip(objects_and_notions, it.count(2, -1)):
-            if obj == objects_and_notions[-1][0]:
-                obj.highlight("yellow")
-                notion.highlight("yellow")
-                self.animate(*[
-                    ShowCreation(mob, run_time = 1.0)
-                    for mob in self.edges + self.vertices
-                ])
-                self.dither()
-                self.generate_regions()
-                for region in self.regions:
-                    self.highlight_region(region)
-            self.add(obj.shift(height*UP))
-            self.dither(1)
-            self.add(notion.shift(height*UP))
-            if obj == objects_and_notions[-1][0]:
-                self.animate(*[
-                    ShowCreation(deepcopy(e).highlight(), run_time = 1)
-                    for e in self.edges
-                ])
-                self.dither()
+            obj_mob = text_mobject(obj, size = "\\small").to_edge(LEFT)
+            not_mob = text_mobject(notion, size = "\\small").to_edge(LEFT)
+            not_mob.shift((vert_line_x_val + SPACE_WIDTH)*RIGHT)
+            obj_mob.shift(height*UP)
+            not_mob.shift(height*UP)
+
+            if obj.startswith("Regions"):
+                self.handle_dual_graph(obj_mob, not_mob)
+            elif obj.startswith("English"):
+                self.handle_english_words(obj_mob, not_mob)
             else:
+                self.add(obj_mob)
+                self.dither()
+                self.add(not_mob)
+                self.dither()
+
+    def handle_english_words(self, words1, words2):
+        words = map(text_mobject, ["graph", "grape", "gape", "gripe"])
+        words[0].shift(RIGHT)
+        words[1].shift(3*RIGHT)
+        words[2].shift(3*RIGHT + 2*UP)
+        words[3].shift(3*RIGHT + 2*DOWN)
+        lines = [
+            Line(*pair)
+            for pair in [
+                (
+                    words[0].get_center() + RIGHT*words[0].get_width()/2,
+                    words[1].get_center() + LEFT*words[1].get_width()/2
+                ),(
+                    words[1].get_center() + UP*words[1].get_height()/2,
+                    words[2].get_center() + DOWN*words[2].get_height()/2
+                ),(
+                    words[1].get_center() + DOWN*words[1].get_height()/2,
+                    words[3].get_center() + UP*words[3].get_height()/2
+                )
+            ]
+        ]
+
+        comp_words = CompoundMobject(*words)
+        comp_lines = CompoundMobject(*lines)
+        self.add(words1)
+        self.animate(ShowCreation(comp_words, run_time = 1.0))
+        self.dither()
+        self.add(words2)
+        self.animate(ShowCreation(comp_lines, run_time = 1.0))
+        self.dither()
+        self.remove(comp_words, comp_lines)
+
+
+    def handle_dual_graph(self, words1, words2):
+        words1.highlight("yellow")
+        words2.highlight("yellow")
+        connected = text_mobject("Connected")
+        connected.highlight("lightgreen")
+        not_connected = text_mobject("Not Connected")
+        not_connected.highlight("red")
+        for mob in connected, not_connected:
+            mob.shift(self.points[3] + UP)
+
+        self.animate(*[
+            ShowCreation(mob, run_time = 1.0)
+            for mob in self.edges + self.vertices
+        ])
+        self.dither()
+        for region in self.regions:
+            self.highlight_region(region)
+        self.add(words1)
+        self.dither()
+        self.reset_background()
+        self.add(words2)
+
+        region_pairs = it.combinations(self.graph.region_cycles, 2)
+        for x in range(6):
+            want_matching = (x%2 == 0)
+            found = False
+            while True:
+                try:
+                    cycle1, cycle2 = region_pairs.next()
+                except:
+                    return
+                shared = set(cycle1).intersection(cycle2)
+                if len(shared) == 2 and want_matching:
+                    break
+                if len(shared) != 2 and not want_matching:
+                    break
+            for cycle in cycle1, cycle2:
+                index = self.graph.region_cycles.index(cycle)
+                self.highlight_region(self.regions[index])
+            if want_matching:
+                self.remove(not_connected)
+                self.add(connected)
+                tup = tuple(shared)
+                if tup not in self.graph.edges:
+                    tup = tuple(reversed(tup))
+                edge = deepcopy(self.edges[self.graph.edges.index(tup)])
+                edge.highlight("red")
+                self.animate(ShowCreation(edge), run_time = 1.0)
+                self.dither()
+                self.remove(edge)
+            else:
+                self.remove(connected)
+                self.add(not_connected)
                 self.dither(2)
+            self.reset_background()
+
+
+
+
 
 class DrawDualGraph(GraphScene):
     def construct(self):
@@ -647,7 +863,7 @@ class ListOfCorrespondances(Scene):
 
 
 class CyclesCorrespondWithConnectedComponents(GraphScene):
-    args_list = [(SAMPLE_GRAPH,)]
+    args_list = [(SampleGraph(),)]
     def construct(self):
         GraphScene.construct(self)
         self.generate_regions()
@@ -694,7 +910,7 @@ class CyclesCorrespondWithConnectedComponents(GraphScene):
 
         
 class IntroduceMortimer(GraphScene):
-    args_list = [(SAMPLE_GRAPH,)]
+    args_list = [(SampleGraph(),)]
     def construct(self):
         GraphScene.construct(self)
         self.generate_dual_graph()
@@ -756,7 +972,7 @@ class IntroduceMortimer(GraphScene):
         self.dither()
 
 class RandolphMortimerSpanningTreeGame(GraphScene):
-    args_list = [(SAMPLE_GRAPH,)]
+    args_list = [(SampleGraph(),)]
     def construct(self):
         GraphScene.construct(self)
         self.generate_spanning_tree()
@@ -781,23 +997,23 @@ class RandolphMortimerSpanningTreeGame(GraphScene):
         ))
         self.dither()
         for index in range(len(self.regions)):
-            if index > 0:
-                edge = self.edges[dual_edges[index-1]]
-                midpoint = edge.get_center()
-                self.animate(*[
-                    ShowCreation(Line(
-                        midpoint,
-                        tip
-                    ).highlight("red"))
-                    for tip in edge.start, edge.end
-                ], run_time = time_per_dual_edge)
+            # if index > 0:
+            #     edge = self.edges[dual_edges[index-1]]
+            #     midpoint = edge.get_center()
+            #     self.animate(*[
+            #         ShowCreation(Line(
+            #             midpoint,
+            #             tip
+            #         ).highlight("red"))
+            #         for tip in edge.start, edge.end
+            #     ], run_time = time_per_dual_edge)
             self.highlight_region(self.regions[region_ordering[index]])
             self.dither(time_per_dual_edge)
         self.dither()
 
 
         cycle_index = region_ordering[-1]
-        cycle = self.graph["region_cycles"][cycle_index]
+        cycle = self.graph.region_cycles[cycle_index]
         self.highlight_region(self.regions[cycle_index], "black")
         self.animate(ShowCreation(CompoundMobject(*[
             Line(self.points[last], self.points[next]).highlight("green")
@@ -806,7 +1022,7 @@ class RandolphMortimerSpanningTreeGame(GraphScene):
         self.dither()
 
 class MortimerCannotTraverseCycle(GraphScene):
-    args_list = [(SAMPLE_GRAPH,)]
+    args_list = [(SampleGraph(),)]
     def construct(self):
         GraphScene.construct(self)
         self.generate_dual_graph()
@@ -855,24 +1071,86 @@ class MortimerCannotTraverseCycle(GraphScene):
         ])
         self.dither()
 
+class TwoPropertiesOfSpanningTree(Scene):
+    def construct(self):
+        spanning, tree = text_mobject(["Spanning ", "Tree"], size = "\\Huge")
+        spanning_explanation = text_mobject("""
+            Touches every vertex
+        """).shift(spanning.get_center() + 2*DOWN)
+        tree_explanation = text_mobject("""
+            No Cycles
+        """).shift(tree.get_center() + 2*UP)
+
+        self.add(spanning, tree)
+        self.dither()
+        for word, explanation, vect in [
+            (spanning, spanning_explanation, 0.5*UP),
+            (tree, tree_explanation, 0.5*DOWN)
+            ]:
+            self.add(explanation)
+            self.add(Arrow(
+                explanation.get_center() + vect,
+                tail = word.get_center() - vect,
+            ))
+            self.animate(ApplyMethod(word.highlight, "yellow"))
+            self.dither()
+
+
+class DualSpanningTree(GraphScene):
+    def construct(self):
+        GraphScene.construct(self)
+        self.generate_dual_graph()
+        self.generate_spanning_tree()
+        randy = Randolph()
+        randy.scale(RANDOLPH_SCALE_VAL)
+        randy.move_to(self.points[0])
+        morty = Mortimer()
+        morty.scale(RANDOLPH_SCALE_VAL)
+        morty.move_to(self.dual_points[0])
+        dual_edges = [1, 3, 4, 7, 11, 9, 13]
+        words = text_mobject("""
+            The red edges form a spanning tree of the dual graph!
+        """).to_edge(UP)
+
+        self.add(self.spanning_tree, randy, morty)
+        self.animate(ShowCreation(CompoundMobject(
+            *np.array(self.edges)[dual_edges]
+        ).highlight("red")))
+        self.add(words)
+        self.dither()
+
 class TreeCountFormula(Scene):
     def construct(self):
         time_per_branch = 0.5
-        self.add(text_mobject("""
+        text = text_mobject("""
             In any tree:
             $$E + 1 = V$$
-        """))
-        gs = GraphScene(SAMPLE_GRAPH)
+        """)
+        gs = GraphScene(SampleGraph())
         gs.generate_treeified_spanning_tree()
         branches = gs.treeified_spanning_tree.to_edge(LEFT).split()
-        self.add(Dot(branches[0].points[0]))
+
+        all_dots = [Dot(branches[0].points[0])]
+        self.add(text, all_dots[0])
         for branch in branches:
             self.animate(
                 ShowCreation(branch), 
                 run_time = time_per_branch
             )
-            self.add(Dot(branch.points[-1]))
+            dot = Dot(branch.points[-1])
+            self.add(dot)
+            all_dots.append(dot)
         self.dither()
+        self.remove(*all_dots)
+        self.animate(
+            FadeOut(text), 
+            FadeIn(CompoundMobject(*gs.edges + gs.vertices)),
+            *[
+                Transform(*pair)
+                for pair in zip(branches,gs.spanning_tree.split())
+            ]
+        )
+
 
 class FinalSum(Scene):
     def construct(self):

@@ -723,9 +723,9 @@ class DefiningGraph(GraphScene):
 
         #Move to new graph
         # new_graph = deepcopy(self.graph)
-        # new_graph["vertices"] = [
+        # new_graph.vertices = [
         #     (v[0] + 3*random(), v[1] + 3*random(), 0)
-        #     for v in new_graph["vertices"]
+        #     for v in new_graph.vertices
         # ]
         # new_graph_scene = GraphScene(new_graph)
         # self.animate(*[
@@ -739,7 +739,7 @@ class IntersectCubeGraphEdges(GraphScene):
     def args_to_string(*args):
         return ""
     def __init__(self, *args, **kwargs):
-        GraphScene.__init__(self, CUBE_GRAPH, *args, **kwargs)
+        GraphScene.__init__(self, CubeGraph(), *args, **kwargs)
         self.remove(self.edges[0], self.edges[4])
         self.animate(*[
             Transform(
@@ -803,7 +803,7 @@ class EulersFormula(GraphScene):
             ).highlight("red")
             for e in self.edges
             for start, end, midpoint in [
-                (e.start, e.end, (e.start + e.end)/2)
+                (e.start, e.end, (e.start + e.end)/2.0)
             ]
         ]
         frame_time = 0.3
@@ -811,7 +811,7 @@ class EulersFormula(GraphScene):
         self.generate_regions()
         parameters = [
             (colored_dots,  "V", "mobject", "-", "show"),
-            (colored_edges, "E", "mobject", "+", "show_creation"),
+            (colored_edges, "E", "mobject", "+", "show"),
             (self.regions,  "F", "region", "=2", "show_all")
         ]
         for items, letter, item_type, symbol, mode in parameters:
@@ -877,7 +877,7 @@ class ShowMoserGraphLines(CircleScene):
         radians = list(set(map(lambda x : x%(2*np.pi), radians)))
         radians.sort()
         CircleScene.__init__(self, radians, *args, **kwargs)
-        n, plus_n_choose_4 = tex_mobjects(["n", r"+{n \choose 4}"])
+        n, plus_n_choose_4 = tex_mobjects(["n", "+{n \\choose 4}"])
         n_choose_2, plus_2_n_choose_4, plus_n = tex_mobjects([
             r"{n \choose 2}",r"&+2{n \choose 4}\\",r"&+n"
         ])

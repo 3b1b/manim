@@ -95,10 +95,12 @@ class Mobject(object):
         self.points += v
         return self
 
-    def wag(self, wag_direction = (0, 1, 0), wag_axis = (-1, 0, 0)):
+    def wag(self, wag_direction = RIGHT, wag_axis = DOWN,
+            wag_factor = 1.0):
         alphas = np.dot(self.points, np.transpose(wag_axis))
         alphas -= min(alphas)
         alphas /= max(alphas)
+        alphas = alphas**wag_factor
         self.points += np.dot(
             alphas.reshape((len(alphas), 1)),
             np.array(wag_direction).reshape((1, 3))

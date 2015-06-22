@@ -10,22 +10,19 @@ from animation import *
 from mobject import *
 from constants import *
 from region import *
-from scene import Scene, GraphScene
+from scene import Scene
 from script_wrapper import command_line_create_scene
 
 
-class SampleScene(GraphScene):
+class SampleScene(Scene):
     def construct(self):
-        GraphScene.construct(self)
-        self.generate_regions()
-        self.generate_dual_graph()
-        self.generate_spanning_tree()
-        self.add(self.spanning_tree)
-        for count in range(len(self.regions)):
-            self.add(tex_mobject(str(count)).shift(self.dual_points[count]))
-        for count in range(len(self.edges)):
-            self.add(tex_mobject(str(count)).shift(self.edges[count].get_center()))
-
+        randy = Randolph()
+        self.add(randy)
+        self.dither()
+        self.animate(BlinkPiCreature(randy))
+        self.dither()
+        self.animate(WaveArm(randy))
+        self.dither()
 
 
 

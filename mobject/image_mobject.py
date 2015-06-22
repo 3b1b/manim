@@ -67,24 +67,54 @@ class ImageMobject(Mobject2D):
         return False
 
 class SpeechBubble(ImageMobject):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, direction = LEFT, *args, **kwargs):
         ImageMobject.__init__(self, "speech_bubble", *args, **kwargs)
-        self.scale(0.25)
+        self.direction = direction
+        self.scale(0.4)
+        self.center()
+        if direction[0] > 0:
+            self.rotate(np.pi, UP)
+        self.reload_tip()
+
+    def reload_tip(self):
+        #TODO, perhaps make this resiliant to different point orderings
+        self.tip = self.points[-1]
+
+    def speak_from(self, mobject):
+        dest = mobject.get_center()
+        dest += self.direction * mobject.get_width()/2
+        dest += UP * mobject.get_height()/2
+        self.shift(dest - self.tip)
+        self.reload_tip()
+        return self
+
+    def write(self, text):
+        smidgeon = 0.1*UP + 0.2*self.direction
+        self.text = text_mobject(text)
+        self.text.scale(0.75*self.get_width() / self.text.get_width())
+        self.text.shift(self.get_center() + smidgeon)
+
 
 class ThoughtBubble(ImageMobject):
     def __init__(self, *args, **kwargs):
         ImageMobject.__init__(self, "thought_bubble", *args, **kwargs)
         self.scale(0.5)
+        self.center()
 
-class SimpleFace(ImageMobject):
-    def __init__(self, *args, **kwargs):
-        ImageMobject.__init__(self, "simple_face", *args, **kwargs)
+class Face(ImageMobject):
+    def __init__(self, mode = "simple", *args, **kwargs):
+        """
+        Mode can be "simple", "talking", "straight"
+        """
+        ImageMobject.__init__(self, mode + "_face", *args, **kwargs)
         self.scale(0.5)
+        self.center()
 
 class VideoIcon(ImageMobject):
     def __init__(self, *args, **kwargs):
         ImageMobject.__init__(self, "video_icon", *args, **kwargs)
         self.scale(0.3)
+        self.center()
 
 def text_mobject(text, size = "\\Large"):
     return tex_mobjects(text, size, TEMPLATE_TEXT_FILE)

@@ -132,6 +132,8 @@ class ComplexHomotopy(Homotopy):
             to_cammel_case(complex_homotopy.__name__)
 
 
+####### Pi Creature Stuff #############
+
 class WalkPiCreature(Animation):
     def __init__(self, pi_creature, destination, *args, **kwargs):
         self.final = deepcopy(pi_creature).move_to(destination)
@@ -153,15 +155,35 @@ class WalkPiCreature(Animation):
                 self.mobject,
                 2*alpha - 1
             )
+
+
+class BlinkPiCreature(Transform):
+    def __init__(self, pi_creature, run_time = 0.2, *args, **kwargs):
+        blinked = deepcopy(pi_creature).blink()
+        Transform.__init__(
+            self, pi_creature, blinked,
+            alpha_func = there_and_back,
+            run_time = run_time,
+            *args, **kwargs
+        )
             
 
+class WaveArm(Transform):
+    def __init__(self, pi_creature, *args, **kwargs):
+        final = deepcopy(pi_creature)
+        body_to_arm = pi_creature.arm.get_center()-pi_creature.get_center()
+        if body_to_arm[0] < 0:
+            wag_direction = LEFT
+        else:
+            wag_direction = RIGHT
+        final.arm.wag(0.7*UP, wag_direction, 2.0)
+        final.rewire_part_attributes(self_from_parts = True)
+        Transform.__init__(
+            self, pi_creature, final,
+            alpha_func = there_and_back,
+            *args, **kwargs
+        )
 
-###### Something different ###############
-def pi_creature_step(scene, pi_creature, destination):
-    final = deepcopy(pi_creature).move_to(destination)
-    intermediate = pi_creature.get_step_intermediate(final)
-    scene.animate(Transform(pi_creature, intermediate))
-    scene.animate(Transform(pi_creature, final))
 
 
 

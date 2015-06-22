@@ -104,13 +104,27 @@ class PiCreature(Mobject):
         vect = pi_creature.get_center() - self.get_center()
         result = deepcopy(self).shift(vect / 2.0)
         result.rewire_part_attributes()
-        if vect[0] < 0:
-            result.right_leg.wag(-vect/2.0, DOWN)
+        left_forward = vect[0] > 0
+        if self.right_leg.get_center()[0] < self.left_leg.get_center()[0]:
+            #For Mortimer's case
+            left_forward = not left_forward
+        if left_forward:
             result.left_leg.wag(vect/2.0, DOWN)
+            result.right_leg.wag(-vect/2.0, DOWN)
         else:
-            result.left_leg.wag(-vect/2.0, DOWN)
             result.right_leg.wag(vect/2.0, DOWN)
+            result.left_leg.wag(-vect/2.0, DOWN)
         return result
+
+    def blink(self):
+        for eye in self.left_eye, self.right_eye:
+            bottom = min(eye.points[:,1])
+            eye.apply_function(
+                lambda (x, y, z) : (x, bottom, z)
+            )
+        self.rewire_part_attributes(self_from_parts = True)
+        return self
+
 
 
 class Randolph(PiCreature):

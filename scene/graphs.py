@@ -11,165 +11,197 @@ from region import *
 from constants import *
 from helpers import *
 
-CUBE_GRAPH = {
-    "name" : "CubeGraph",
-    # 5  7
-    #  12 
-    #  03 
-    # 4  6
-    "vertices" : [
-        (x, y, 0)
-        for r in (1, 2)
-        for x, y in it.product([-r,r], [-r, r])
-    ],
-    "edges" : [
-        (0, 1),
-        (0, 2),
-        (3, 1),
-        (3, 2),
-        (4, 5),
-        (4, 6),
-        (7, 5),
-        (7, 6),
-        (0, 4),
-        (1, 5),
-        (2, 6),
-        (3, 7),
-    ], 
-    "region_cycles" : [
-        [0, 2, 3, 1],
-        [4, 0, 1, 5],
-        [4, 6, 2, 0],
-        [6, 7, 3, 2],
-        [7, 5, 1, 3],
-        [4, 6, 7, 5],#By convention, last region will be "outside"
-    ]
-}
+class Graph():
+    def __init__(self):
+        #List of points in R^3
+        vertices = [] 
+        #List of pairs of indices of vertices
+        edges = [] 
+        #List of tuples of indices of vertices.  The last should
+        #be a cycle whose interior is the entire graph, and when
+        #regions are computed its complement will be taken.
+        region_cycles = [] 
 
-SAMPLE_GRAPH = {
-    "name" : "SampleGraph",
-    #  4 2  3     8
-    #   0 1
-    #          7
-    # 5   6
-    "vertices" :[
-        ( 0, 0, 0),
-        ( 2, 0, 0),
-        ( 1, 2, 0),
-        ( 3, 2, 0),
-        (-1, 2, 0),
-        (-2,-2, 0),
-        ( 2,-2, 0),
-        ( 4,-1, 0),
-        ( 6, 2, 0),
-    ],
-    "edges" : [
-        (0, 1),
-        (1, 2),
-        (1, 3),
-        (3, 2),
-        (2, 4),
-        (4, 0),
-        (2, 0),
-        (4, 5),
-        (0, 5),
-        (1, 5),
-        (5, 6),
-        (6, 7),
-        (7, 1),
-        (7, 8),
-        (8, 3),
-    ],
-    "region_cycles" : [
-        (0, 1, 2),
-        (1, 3, 2),
-        (2, 4, 0),
-        (4, 5, 0),
-        (0, 5, 1),
-        (1, 5, 6, 7),
-        (1, 7, 8, 3),
-        (4, 5, 6, 7, 8, 3, 2),
-    ]
+        self.construct()
 
-}
+    def construct(self):
+        pass
 
-OCTOHEDRON_GRAPH = {
-    "name" : "OctohedronGraph",
-    #       3
-    #
-    #     1   0
-    #       2
-    #4             5
-    "vertices" : [
-        (r*np.cos(angle), r*np.sin(angle)-1, 0)
-        for r, s in [(1, 0), (3, 3)]
-        for angle in (np.pi/6) * np.array([s, 4 + s, 8 + s])
-    ],
-    "edges" : [
-        (0, 1),
-        (1, 2),
-        (2, 0),
-        (5, 0),
-        (0, 3),
-        (3, 5),
-        (3, 1),
-        (3, 4),
-        (1, 4),
-        (4, 2),
-        (4, 5),
-        (5, 2),
-    ],
-    "region_cycles" : [
-        (0, 1, 2),
-        (0, 5, 3),
-        (3, 1, 0),
-        (3, 4, 1),
-        (1, 4, 2),
-        (2, 4, 5),
-        (5, 0, 2),
-        (3, 4, 5),
-    ]
-}
+    def __str__(self):
+        return self.__class__.__name__
 
-def complete_graph(n, radius = 3):
-    return {
-        "name" : "Complete%d"%n,
-        "vertices" : [
-            (radius*np.cos(theta), radius*np.sin(theta), 0)
-            for x in range(n)
-            for theta in [2*np.pi*x / n]
-        ],
-        "edges" : it.combinations(range(n), 2)
-    }
+
+class CubeGraph(Graph):
+    """
+     5  7
+      12 
+      03 
+     4  6
+    """
+    def construct(self):
+        self.vertices = [
+            (x, y, 0)
+            for r in (1, 2)
+            for x, y in it.product([-r,r], [-r, r])
+        ]
+        self.edges = [
+            (0, 1),
+            (0, 2),
+            (3, 1),
+            (3, 2),
+            (4, 5),
+            (4, 6),
+            (7, 5),
+            (7, 6),
+            (0, 4),
+            (1, 5),
+            (2, 6),
+            (3, 7),
+        ]
+        self.region_cycles = [
+            [0, 2, 3, 1],
+            [4, 0, 1, 5],
+            [4, 6, 2, 0],
+            [6, 7, 3, 2],
+            [7, 5, 1, 3],
+            [4, 6, 7, 5],#By convention, last region will be "outside"
+        ]
+
+
+class SampleGraph(Graph):
+    """
+      4 2  3     8
+       0 1
+              7
+     5   6
+    """
+    def construct(self):
+        self.vertices = [
+            ( 0, 0, 0),
+            ( 2, 0, 0),
+            ( 1, 2, 0),
+            ( 3, 2, 0),
+            (-1, 2, 0),
+            (-2,-2, 0),
+            ( 2,-2, 0),
+            ( 4,-1, 0),
+            ( 6, 2, 0),
+        ]
+        self.edges = [
+            (0, 1),
+            (1, 2),
+            (1, 3),
+            (3, 2),
+            (2, 4),
+            (4, 0),
+            (2, 0),
+            (4, 5),
+            (0, 5),
+            (1, 5),
+            (5, 6),
+            (6, 7),
+            (7, 1),
+            (7, 8),
+            (8, 3),
+        ]
+        self.region_cycles = [
+            (0, 1, 2),
+            (1, 3, 2),
+            (2, 4, 0),
+            (4, 5, 0),
+            (0, 5, 1),
+            (1, 5, 6, 7),
+            (1, 7, 8, 3),
+            (4, 5, 6, 7, 8, 3, 2),
+        ]
+
+
+class OctohedronGraph(Graph):
+    """
+           3
+    
+         1   0
+           2
+    4             5
+    """
+    def construct(self):
+        self.vertices = [
+            (r*np.cos(angle), r*np.sin(angle)-1, 0)
+            for r, s in [(1, 0), (3, 3)]
+            for angle in (np.pi/6) * np.array([s, 4 + s, 8 + s])
+        ]
+        self.edges = [
+            (0, 1),
+            (1, 2),
+            (2, 0),
+            (5, 0),
+            (0, 3),
+            (3, 5),
+            (3, 1),
+            (3, 4),
+            (1, 4),
+            (4, 2),
+            (4, 5),
+            (5, 2),
+        ]
+        self.region_cycles = [
+            (0, 1, 2),
+            (0, 5, 3),
+            (3, 1, 0),
+            (3, 4, 1),
+            (1, 4, 2),
+            (2, 4, 5),
+            (5, 0, 2),
+            (3, 4, 5),
+        ]
+
+
+class CompleteGraph(Graph):
+    def __init__(self, num_vertices, radius = 3):
+        self.num_vertices = num_vertices
+        self.radius = radius
+        Graph.__init__(self)
+
+    def construct(self):
+        self.vertices = [
+            (self.radius*np.cos(theta), self.radius*np.sin(theta), 0)
+            for x in range(self.num_vertices)
+            for theta in [2*np.pi*x / self.num_vertices]
+        ]
+        self.edges = it.combinations(range(self.num_vertices), 2)
+
+    def __str__(self):
+        return Graph.__str__(self) + str(self.num_vertices)
+
 
 class GraphScene(Scene):
     args_list = [
-        (CUBE_GRAPH,),
-        (SAMPLE_GRAPH,),
-        (OCTOHEDRON_GRAPH,),
+        (CubeGraph(),),
+        (SampleGraph(),),
+        (OctohedronGraph(),),
     ]
     @staticmethod
     def args_to_string(*args):
-        return args[0]["name"]
+        return str(args[0])
 
     def __init__(self, graph, *args, **kwargs):
-        #See CUBE_GRAPH above for format of graph
+        #See CubeGraph() above for format of graph
         self.graph = graph
         Scene.__init__(self, *args, **kwargs)
 
     def construct(self):
-        self.points = map(np.array, self.graph["vertices"])
+        self.points = map(np.array, self.graph.vertices)
         self.vertices = self.dots = [Dot(p) for p in self.points]
         self.edges = self.lines = [
             Line(self.points[i], self.points[j])
-            for i, j in self.graph["edges"]
+            for i, j in self.graph.edges
         ]
         self.add(*self.dots + self.edges)
 
     def generate_regions(self):
         regions = [
             self.region_from_cycle(cycle)
-            for cycle in self.graph["region_cycles"]
+            for cycle in self.graph.region_cycles
         ]
         regions[-1].complement()#Outer region painted outwardly...
         self.regions = regions
@@ -242,7 +274,7 @@ class GraphScene(Scene):
 
     def trace_cycle(self, cycle = None, color = "yellow", run_time = 2.0):
         if cycle == None:
-            cycle = self.graph["region_cycles"][0]
+            cycle = self.graph.region_cycles[0]
         time_per_edge = run_time / len(cycle)
         next_in_cycle = it.cycle(cycle)
         next_in_cycle.next()#jump one ahead
@@ -257,7 +289,7 @@ class GraphScene(Scene):
 
     def generate_spanning_tree(self, root = 0, color = "yellow"):
         self.spanning_tree_root = 0
-        pairs = deepcopy(self.graph["edges"])
+        pairs = deepcopy(self.graph.edges)
         pairs += [tuple(reversed(pair)) for pair in pairs]
         self.spanning_tree_index_pairs = []
         curr = root
@@ -339,7 +371,7 @@ class GraphScene(Scene):
 
     def generate_dual_graph(self):
         point_at_infinity = np.array([np.inf]*3)
-        cycles = self.graph["region_cycles"]
+        cycles = self.graph.region_cycles
         self.dual_points = [
             center_of_mass([
                 self.points[index]
@@ -355,7 +387,7 @@ class GraphScene(Scene):
         self.dual_points[-1] = point_at_infinity
 
         self.dual_edges = []
-        for pair in self.graph["edges"]:
+        for pair in self.graph.edges:
             dual_point_pair = []
             for cycle in cycles:
                 if not (pair[0] in cycle and pair[1] in cycle):
