@@ -150,11 +150,14 @@ class ComplexFunction(ApplyFunction):
         #Todo, abstract away function naming'
 
 
-#Fuck this is cool!
 class TransformAnimations(Transform):
     def __init__(self, start_anim, end_anim, 
                  alpha_func = squish_alpha_func(high_inflection_0_to_1),
                  **kwargs):
+        if "run_time" in kwargs:
+            run_time = kwargs.pop("run_time")
+            for anim in start_anim, end_anim:
+                anim.set_run_time(run_time)
         self.start_anim, self.end_anim = start_anim, end_anim
         Transform.__init__(
             self,

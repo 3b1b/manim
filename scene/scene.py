@@ -115,6 +115,29 @@ class Scene(object):
         progress_bar.finish()
         return self
 
+    def animate_over_time_range(self, t0, t1, animation):
+        needed_scene_time = max(abs(t0), abs(t1))
+        existing_scene_time = len(self.frames)*self.frame_duration
+        if existing_scene_time < needed_scene_time:
+            self.dither(needed_scene_time - existing_scene_time)
+            existing_scene_time = needed_scene_time
+        #So negative values may be used
+        if t0 < 0:
+            t0 = float(t0)%existing_scene_time
+        if t1 < 0:
+            t1 = float(t1)%existing_scene_time
+        t0, t1 = min(t0, t1), max(t0, t1)    
+
+        for t in np.arange(t0, t1, self.frame_duration):
+            animation.update((t-t0)/(t1 - t0))
+            index = int(t/self.frame_duration)
+            self.frames[index] = disp.paint_mobject(
+                animation.mobject, self.frames[index]
+            )
+        animation.clean_up()
+        return self
+
+
     def count(self, items, item_type = "mobject", *args, **kwargs):
         if item_type == "mobject":
             self.count_mobjects(items, *args, **kwargs)
@@ -205,9 +228,7 @@ class Scene(object):
         self.dither(end_dither_time)
         disp.write_to_gif(self, name or str(self))
 
-    def write_to_movie(self, name = None, 
-                       end_dither_time = DEFAULT_DITHER_TIME):
-        self.dither(end_dither_time)
+    def write_to_movie(self, name = None):
         disp.write_to_movie(self, name or str(self))
 
     def show_frame(self):

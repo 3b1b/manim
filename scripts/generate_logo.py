@@ -1,44 +1,64 @@
 #!/usr/bin/env python
 
-from PIL import Image
 import numpy as np
+import itertools as it
+from copy import deepcopy
+import sys
+
 
 from animation import *
 from mobject import *
 from constants import *
-from helpers import *
-from scene import *
-import itertools as it
-import os
+from region import *
+from scene import Scene
+from script_wrapper import command_line_create_scene
+
+class LogoGeneration(Scene):
+    LOGO_RADIUS = 1.5
+    INNER_RADIUS_RATIO = 0.55
+    CIRCLE_DENSITY = 100
+    CIRCLE_BLUE = "skyblue"
+    SPHERE_DENSITY = 50
+    SPHERE_BLUE = DARK_BLUE
+    CIRCLE_SPHERE_INTERPOLATION = 0.3
+
+    def construct(self):
+        circle = Circle(
+            density = self.CIRCLE_DENSITY, 
+            color = self.CIRCLE_BLUE
+        ).repeat(5).scale(self.LOGO_RADIUS)
+        sphere = Sphere(
+            density = self.SPHERE_DENSITY, 
+            color = self.SPHERE_BLUE
+        ).scale(self.LOGO_RADIUS)
+        sphere.rotate(-np.pi / 7, [1, 0, 0])
+        sphere.rotate(-np.pi / 7)
+        alpha = 0.3
+        iris = Mobject()
+        Mobject.interpolate(
+            circle, sphere, iris, 
+            self.CIRCLE_SPHERE_INTERPOLATION
+        )
+        for mob, color in [(iris, LIGHT_BROWN), (circle, DARK_BROWN)]:
+            mob.highlight(color, lambda (x, y, z) : x < 0 and y > 0)
+            mob.highlight(
+                "black", 
+                lambda point: np.linalg.norm(point) < \
+                              self.INNER_RADIUS_RATIO*self.LOGO_RADIUS
+            )
+        name = text_mobject("3Blue1Brown").center()
+        name.highlight("grey")
+        name.shift(2*DOWN)
+
+        self.animate(Transform(
+            circle, iris, 
+            run_time = DEFAULT_ANIMATION_RUN_TIME
+        ))
+        self.add(name)
+        self.dither()
+        print "Dragging pixels..."
+        self.frames = drag_pixels(self.frames)
 
 
-LOGO_RADIUS = 1.5
-
-if __name__ == '__main__':
-    circle = Circle(density = 100, color = 'skyblue').repeat(5).scale(LOGO_RADIUS)
-    sphere = Sphere(density = 50, color = DARK_BLUE).scale(LOGO_RADIUS)
-    sphere.rotate(-np.pi / 7, [1, 0, 0])
-    sphere.rotate(-np.pi / 7)
-    alpha = 0.3
-    iris = Mobject()
-    Mobject.interpolate(circle, sphere, iris, alpha)
-    for mob, color in [(iris, LIGHT_BROWN), (circle, DARK_BROWN)]:
-        mob.highlight(color, lambda (x, y, z) : x < 0 and y > 0)
-        mob.highlight("black", lambda point: np.linalg.norm(point) < 0.55*LOGO_RADIUS)
-
-    name = tex_mobject(r"\text{3Blue1Brown}").center()
-    name.highlight("gray")
-    name.shift((0, -2, 0))
-    sc = Scene()
-    sc.animate(Transform(
-        circle, iris, 
-        run_time = DEFAULT_ANIMATION_RUN_TIME
-    ))
-    sc.add(name)
-    sc.dither()
-    sc.frames = drag_pixels(sc.frames)
-    sc.write_to_movie("LogoGeneration", end_dither_time = 0)
-
-
-    # index = int(DEFAULT_ANIMATION_RUN_TIME / DEFAULT_ANIMATION_PAUSE_TIME)
-    # create_eye.frames[index].save(LOGO_PATH)
+if __name__ == "__main__":
+    command_line_create_scene()

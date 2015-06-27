@@ -106,14 +106,20 @@ def make_even_by_cycling(iterable_1, iterable_2):
         [cycle2.next() for x in range(length)]
     )
 
+### Alpha Functions ###
+
 def sigmoid(x):
     return 1.0/(1 + np.exp(-x))
-
-### Alpha Functions ###
 
 def high_inflection_0_to_1(t, inflection = 10.0):
     error = sigmoid(-inflection / 2)
     return (sigmoid(inflection*(t - 0.5)) - error) / (1 - 2*error)
+
+def rush_into(t):
+    return 2*high_inflection_0_to_1(t/2)
+
+def rush_from(t):
+    return 2*high_inflection_0_to_1(t/2+0.5) - 1
 
 def there_and_back(t, inflection = 10.0):
     new_t = 2*t if t < 0.5 else 2*(1 - t)
@@ -128,9 +134,9 @@ def wiggle(t, wiggles = 2):
 def squish_alpha_func(func, a = 0.4, b = 0.6):
     def result(t):
         if t < a:
-            return 0
+            return func(0)
         elif t > b:
-            return 1
+            return func(1)
         else:
             return func((t-a)/(b-a))
     return result

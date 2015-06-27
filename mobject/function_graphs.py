@@ -114,5 +114,18 @@ class NumberLine(Mobject1D):
             for y in np.arange(-self.tick_size, self.tick_size, self.epsilon)
         ])
 
+class Axes(CompoundMobject):
+    def __init__(self, *args, **kwargs):
+        x_axis = NumberLine(*args, **kwargs)
+        y_axis = NumberLine(*args, **kwargs).rotate(np.pi/2, OUT)
+        CompoundMobject.__init__(self, x_axis, y_axis)
+
+
+
+
+
+
+
+
 
 

@@ -158,12 +158,11 @@ class WalkPiCreature(Animation):
 
 
 class BlinkPiCreature(Transform):
-    def __init__(self, pi_creature, run_time = 0.2, *args, **kwargs):
+    def __init__(self, pi_creature, *args, **kwargs):
         blinked = deepcopy(pi_creature).blink()
         Transform.__init__(
             self, pi_creature, blinked,
-            alpha_func = there_and_back,
-            run_time = run_time,
+            alpha_func = squish_alpha_func(there_and_back),
             *args, **kwargs
         )
             

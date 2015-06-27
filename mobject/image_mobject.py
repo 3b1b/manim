@@ -90,10 +90,19 @@ class SpeechBubble(ImageMobject):
 
     def write(self, text):
         smidgeon = 0.1*UP + 0.2*self.direction
+        self.clear()
         self.text = text_mobject(text)
         self.text.scale(0.75*self.get_width() / self.text.get_width())
         self.text.shift(self.get_center() + smidgeon)
+        self.add(self.text)
 
+    def clear(self):
+        if not hasattr(self, "text"):
+            return
+        num_text_points = self.text.points.shape[0]
+        self.points = self.points[:num_text_points]
+        self.rgbs = self.rgbs[:num_text_points]
+        self.text = Mobject()
 
 class ThoughtBubble(ImageMobject):
     def __init__(self, *args, **kwargs):
@@ -117,19 +126,15 @@ class VideoIcon(ImageMobject):
         self.center()
 
 def text_mobject(text, size = "\\Large"):
-    return tex_mobjects(text, size, TEMPLATE_TEXT_FILE)
+    return tex_mobject(text, size, TEMPLATE_TEXT_FILE)
 
-#Purely redundant function to make singulars and plurals sensible
-def tex_mobject(expression, size = "\\Huge"):
-    return tex_mobjects(expression, size)
-
-def tex_mobjects(expression, 
-                 size = "\\Huge", 
-                 template_tex_file = TEMPLATE_TEX_FILE):
+def tex_mobject(expression, 
+                size = "\\Huge", 
+                template_tex_file = TEMPLATE_TEX_FILE):
     images = tex_to_image(expression, size, template_tex_file)
     if isinstance(images, list):
         #TODO, is checking listiness really the best here?
-        return CompoundMobject(*map(ImageMobject, images)).center().split()
+        return CompoundMobject(*map(ImageMobject, images)).center()
     else:
         return ImageMobject(images).center()
 

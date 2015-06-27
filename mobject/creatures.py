@@ -9,8 +9,9 @@ from simple_mobjects import *
 
 class PiCreature(Mobject):
     DEFAULT_COLOR = "blue"
-    def __init__(self, color = DEFAULT_COLOR, **kwargs):
-        Mobject.__init__(self, color = color, **kwargs)
+    def __init__(self, **kwargs):
+        Mobject.__init__(self, **kwargs)
+        color = self.DEFAULT_COLOR
         scale_val = 0.5
         mouth_to_eyes_distance = 0.25
         part_names = [
@@ -43,7 +44,8 @@ class PiCreature(Mobject):
             self.right_eye.get_center()/2 -
             (0, mouth_to_eyes_distance, 0)
         )
-
+        self.eyes = [self.left_eye, self.right_eye]
+        self.legs = [self.left_leg, self.right_leg]
         for part in parts:
             self.add(part)
         self.parts = parts
@@ -64,11 +66,16 @@ class PiCreature(Mobject):
                 part.rgbs = self.rgbs[curr:curr+n_points,:]
             curr += n_points
 
+    def reload_from_parts(self):
+       self.rewire_part_attributes(self_from_parts = True)
 
-    def highlight(self, color):
+    def highlight(self, color, condition = None):
+        if condition is not None:
+            Mobject.highlight(self, color, condition)
+            return self
         for part in set(self.parts).difference(self.white_parts):
             part.highlight(color)
-        self.rewire_part_attributes(self_from_parts = True)
+        self.reload_from_parts()
         return self
 
     def move_to(self, destination):
@@ -78,6 +85,7 @@ class PiCreature(Mobject):
             0
         ))
         self.shift(destination-bottom)
+        self.rewire_part_attributes()
         return self
 
     def give_frown(self):
@@ -85,7 +93,7 @@ class PiCreature(Mobject):
         self.mouth.center()
         self.mouth.apply_function(lambda (x, y, z) : (x, -y, z))
         self.mouth.shift(center)
-        self.rewire_part_attributes(self_from_parts = True)
+        self.reload_from_parts()
         return self
 
     def give_straight_face(self):
@@ -97,7 +105,33 @@ class PiCreature(Mobject):
         self.parts[self.parts.index(self.mouth)] = new_mouth
         self.white_parts[self.white_parts.index(self.mouth)] = new_mouth
         self.mouth = new_mouth
-        self.rewire_part_attributes(self_from_parts = True)
+        self.reload_from_parts()
+        return self
+
+    def get_eye_center(self):
+        return center_of_mass([
+            self.left_eye.get_center(), 
+            self.right_eye.get_center()
+        ]) + 0.04*RIGHT + 0.02*UP
+
+    def make_mean(self):
+        eye_x, eye_y = self.get_eye_center()[:2]
+        def should_delete((x, y, z)):
+            return y - eye_y > 0.3*abs(x - eye_x)
+        for eye in self.left_eye, self.right_eye:
+            eye.highlight("black", should_delete)
+        self.give_straight_face()
+        return self
+
+    def make_sad(self):
+        eye_x, eye_y = self.get_eye_center()[:2]
+        eye_y += 0.15
+        def should_delete((x, y, z)):
+            return y - eye_y > -0.3*abs(x - eye_x)
+        for eye in self.left_eye, self.right_eye:
+            eye.highlight("black", should_delete)
+        self.give_frown()
+        self.reload_from_parts()
         return self
 
     def get_step_intermediate(self, pi_creature):
@@ -122,21 +156,47 @@ class PiCreature(Mobject):
             eye.apply_function(
                 lambda (x, y, z) : (x, bottom, z)
             )
-        self.rewire_part_attributes(self_from_parts = True)
+        self.reload_from_parts()
         return self
 
+    def shift_eyes(self):
+        for eye in self.left_eye, self.right_eye:
+            center = eye.get_center()
+            eye.center()
+            eye.rotate(np.pi, UP)
+            eye.shift(center)
+        self.reload_from_parts()
+        return self
+
+    def to_symbol(self):
+        for white_part in self.white_parts:
+            self.parts.remove(white_part)
+        self.reload_from_parts()
+        return self
 
 
 class Randolph(PiCreature):
     pass #Nothing more than an alternative name
 
 class Mortimer(PiCreature):
+    DEFAULT_COLOR = DARK_BROWN
     def __init__(self, *args, **kwargs):
         PiCreature.__init__(self, *args, **kwargs)
-        self.highlight(DARK_BROWN)
+        # self.highlight(DARK_BROWN)
         self.give_straight_face()
         self.rotate(np.pi, UP)
         self.rewire_part_attributes()
+
+class TauCreature(PiCreature):
+    def __init__(self, **kwargs):
+        leg_shift_val = 0.25
+        leg_wag_val = 0.2
+        PiCreature.__init__(self, **kwargs)
+        self.parts.remove(self.right_leg)
+        self.left_leg.shift(leg_shift_val*RIGHT)
+        self.left_leg.wag(leg_wag_val*RIGHT, DOWN)
+        self.leg = self.left_leg
+        self.reload_from_parts()
 
 
 

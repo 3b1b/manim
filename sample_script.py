@@ -16,13 +16,8 @@ from script_wrapper import command_line_create_scene
 
 class SampleScene(Scene):
     def construct(self):
-        randy = Randolph()
-        self.add(randy)
-        self.dither()
-        self.animate(BlinkPiCreature(randy))
-        self.dither()
-        self.animate(WaveArm(randy))
-        self.dither()
+        tauy = TauCreature()
+        self.animate(ApplyMethod(tauy.make_sad))
 
 
 

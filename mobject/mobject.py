@@ -171,14 +171,16 @@ class Mobject(object):
             return (result.real, result.imag, 0)
         return self.apply_function(point_map)
 
-    def highlight(self, color = "red", condition = lambda x : True):
+    def highlight(self, color = "red", condition = None):
         """
         Condition is function which takes in one arguments, (x, y, z).
         """
-        #TODO, Should self.color change?
-        to_change = np.apply_along_axis(condition, 1, self.points)
-        self.rgbs[to_change, :] *= 0
-        self.rgbs[to_change, :] += Color(color).get_rgb()
+        rgb = Color(color).get_rgb()
+        if condition:
+            to_change = np.apply_along_axis(condition, 1, self.points)
+            self.rgbs[to_change, :] = rgb
+        else:
+            self.rgbs[:,:] = rgb
         return self
 
     def fade(self, brightness = 0.5):
@@ -190,6 +192,15 @@ class Mobject(object):
         self.points = self.points[to_eliminate]
         self.rgbs   = self.rgbs[to_eliminate]
         return self
+
+    def sort_points(self, function = lambda p : p[0]):
+        """
+        function is any map from R^3 to R
+        """
+        self.points = np.array(sorted(
+            self.points,
+            lambda *points : cmp(*map(function, points))
+        ))
 
     ### Getters ###
 

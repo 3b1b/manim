@@ -107,9 +107,9 @@ class IntroduceGraph(GraphScene):
             for pair in [(4, 5), (0, 5), (1, 5), (7, 1), (8, 3)]
         ]
 
-        connected, planar, graph = CompoundMobject(*text_mobject([
+        connected, planar, graph = text_mobject([
             "Connected ", "Planar ", "Graph"
-        ])).to_edge(UP).split()
+        ]).to_edge(UP).split()
         not_okay = text_mobject("Not Okay").highlight("red")
         planar_explanation = text_mobject("""
             (``Planar'' just means we can draw it without
@@ -181,7 +181,7 @@ class PlanarGraphDefinition(Scene):
         Not, quote, planar, end_quote = text_mobject([
             "Not \\\\", "``", "Planar", "''",
             # "no matter how \\\\ hard you try"
-        ])
+        ]).split()
         shift_val = CompoundMobject(Not, planar).to_corner().get_center()
         Not.highlight("red").shift(shift_val)
         graphs = [
@@ -1073,7 +1073,10 @@ class MortimerCannotTraverseCycle(GraphScene):
 
 class TwoPropertiesOfSpanningTree(Scene):
     def construct(self):
-        spanning, tree = text_mobject(["Spanning ", "Tree"], size = "\\Huge")
+        spanning, tree = text_mobject(
+            ["Spanning ", "Tree"], 
+            size = "\\Huge"
+        ).split()
         spanning_explanation = text_mobject("""
             Touches every vertex
         """).shift(spanning.get_center() + 2*DOWN)
@@ -1158,7 +1161,7 @@ class FinalSum(Scene):
             "(\\text{Number of Randolph's Edges}) + 1 &= V \\\\ \n",
             "(\\text{Number of Mortimer's Edges}) + 1 &= F \\\\ \n",
             " \\Downarrow \\\\", "E","+","2","&=","V","+","F",
-        ], size = "\\large")
+        ], size = "\\large").split()
         for line in lines[:2] + [CompoundMobject(*lines[2:])]:
             self.add(line)
             self.dither()
