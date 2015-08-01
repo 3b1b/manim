@@ -18,7 +18,7 @@ class PiCreature(Mobject):
             'arm', 
             'body', 
             'left_eye', 
-            'right_eye',             
+            'right_eye',
             'left_leg',
             'right_leg',            
             'mouth', 
@@ -70,6 +70,7 @@ class PiCreature(Mobject):
        self.rewire_part_attributes(self_from_parts = True)
 
     def highlight(self, color, condition = None):
+        self.rewire_part_attributes()
         if condition is not None:
             Mobject.highlight(self, color, condition)
             return self

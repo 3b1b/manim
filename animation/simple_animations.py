@@ -12,7 +12,7 @@ class Rotating(Animation):
     def __init__(self,
                  mobject,
                  axis = None,
-                 axes = [[0, 0, 1], [0, 1, 0]], 
+                 axes = [RIGHT, UP], 
                  radians = 2 * np.pi,
                  run_time = 20.0,
                  alpha_func = None,
@@ -35,7 +35,7 @@ class Rotating(Animation):
             )
 
 class RotationAsTransform(Rotating):
-    def __init__(self, mobject, radians, axis = (0, 0, 1), axes = None,
+    def __init__(self, mobject, radians, axis = IN, axes = None,
                  run_time = DEFAULT_ANIMATION_RUN_TIME,
                  alpha_func = high_inflection_0_to_1,
                  *args, **kwargs):

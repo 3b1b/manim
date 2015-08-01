@@ -119,7 +119,7 @@ class ApplyMethod(Transform):
         )
 
 class ApplyFunction(Transform):
-    def __init__(self, function, mobject, run_time = DEFAULT_ANIMATION_RUN_TIME,
+    def __init__(self, mobject, function, run_time = DEFAULT_ANIMATION_RUN_TIME,
                  *args, **kwargs):
         map_image = copy.deepcopy(mobject)
         map_image.points = np.array(map(function, map_image.points))

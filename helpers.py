@@ -116,10 +116,10 @@ def high_inflection_0_to_1(t, inflection = 10.0):
     return (sigmoid(inflection*(t - 0.5)) - error) / (1 - 2*error)
 
 def rush_into(t):
-    return 2*high_inflection_0_to_1(t/2)
+    return 2*high_inflection_0_to_1(t/2.0)
 
 def rush_from(t):
-    return 2*high_inflection_0_to_1(t/2+0.5) - 1
+    return 2*high_inflection_0_to_1(t/2.0+0.5) - 1
 
 def there_and_back(t, inflection = 10.0):
     new_t = 2*t if t < 0.5 else 2*(1 - t)

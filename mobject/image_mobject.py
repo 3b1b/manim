@@ -66,50 +66,6 @@ class ImageMobject(Mobject2D):
         # potentially changed in subclasses
         return False
 
-class SpeechBubble(ImageMobject):
-    def __init__(self, direction = LEFT, *args, **kwargs):
-        ImageMobject.__init__(self, "speech_bubble", *args, **kwargs)
-        self.direction = direction
-        self.scale(0.4)
-        self.center()
-        if direction[0] > 0:
-            self.rotate(np.pi, UP)
-        self.reload_tip()
-
-    def reload_tip(self):
-        #TODO, perhaps make this resiliant to different point orderings
-        self.tip = self.points[-1]
-
-    def speak_from(self, mobject):
-        dest = mobject.get_center()
-        dest += self.direction * mobject.get_width()/2
-        dest += UP * mobject.get_height()/2
-        self.shift(dest - self.tip)
-        self.reload_tip()
-        return self
-
-    def write(self, text):
-        smidgeon = 0.1*UP + 0.2*self.direction
-        self.clear()
-        self.text = text_mobject(text)
-        self.text.scale(0.75*self.get_width() / self.text.get_width())
-        self.text.shift(self.get_center() + smidgeon)
-        self.add(self.text)
-
-    def clear(self):
-        if not hasattr(self, "text"):
-            return
-        num_text_points = self.text.points.shape[0]
-        self.points = self.points[:num_text_points]
-        self.rgbs = self.rgbs[:num_text_points]
-        self.text = Mobject()
-
-class ThoughtBubble(ImageMobject):
-    def __init__(self, *args, **kwargs):
-        ImageMobject.__init__(self, "thought_bubble", *args, **kwargs)
-        self.scale(0.5)
-        self.center()
-
 class Face(ImageMobject):
     def __init__(self, mode = "simple", *args, **kwargs):
         """

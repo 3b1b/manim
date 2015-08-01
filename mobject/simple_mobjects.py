@@ -13,10 +13,15 @@ class Point(Mobject):
 
 class Arrow(Mobject1D):
     DEFAULT_COLOR = "white"
-    NUNGE_DISTANCE = 0.1
-    def __init__(self, point = (0, 0, 0), direction = (-1, 1, 0), 
-                 tail = None, length = 1, tip_length = 0.25,
-                 normal = (0, 0, 1), *args, **kwargs):
+    DEFAULT_NUDGE_DISTANCE = 0.1
+    def __init__(self, 
+                 point = (0, 0, 0), 
+                 direction = (-1, 1, 0), 
+                 tail = None, 
+                 length = 1, 
+                 tip_length = 0.25,
+                 normal = (0, 0, 1), 
+                 *args, **kwargs):
         self.point = np.array(point)
         if tail is not None:
             direction = self.point - tail
@@ -41,8 +46,10 @@ class Arrow(Mobject1D):
             for i in [0, 1]
         ])
 
-    def nudge(self):
-        return self.shift(-self.direction * self.NUNGE_DISTANCE)
+    def nudge(self, distance = None):
+        if distance is None:
+            distance = self.DEFAULT_NUDGE_DISTANCE
+        return self.shift(-self.direction * distance)
 
 class Vector(Arrow):
     def __init__(self, point = (1, 0, 0), *args, **kwargs):
@@ -129,6 +136,82 @@ class Circle(Mobject1D):
             (np.cos(theta), np.sin(theta), 0)
             for theta in np.arange(0, 2 * np.pi, self.epsilon)
         ])
+
+
+class Bubble(Mobject):
+    def __init__(self, direction = LEFT, index_of_tip = -1, center = ORIGIN):
+        self.direction = direction
+        self.content = Mobject()
+        self.index_of_tip = index_of_tip
+        self.center_offset = center - Mobject.get_center(self)
+        if direction[0] > 0:
+            self.rotate(np.pi, UP)
+
+    def get_tip(self):
+        return self.points[self.index_of_tip]
+
+    def get_bubble_center(self):
+        return Mobject.get_center(self)+self.center_offset
+
+    def move_tip_to(self, point):
+        self.shift(point - self.get_tip())
+        return self
+
+    def pin_to(self, mobject):
+        self.move_tip_to(sum([
+            mobject.get_center(),
+            -self.direction * mobject.get_width()/2,
+            UP * mobject.get_height()/2,
+        ]))
+        return self
+
+    def add_content(self, mobject):
+        mobject.scale(0.75*self.get_width() / mobject.get_width())
+        mobject.shift(self.get_bubble_center())
+        self.content = CompoundMobject(self.content, mobject)
+        self.add(self.content)
+        return self
+
+    def write(self, text):
+        self.add_content(text_mobject(text))
+        return self
+
+    def clear(self):
+        num_content_points = self.content.points.shape[0]
+        self.points = self.points[:-num_content_points]
+        self.rgbs = self.rgbs[:-num_content_points]
+        self.contents = Mobject()
+        return self
+
+class SpeechBubble(Bubble):
+    def __init__(self, *args, **kwargs):
+        #TODO
+        pass
+
+class ThoughtBubble(Bubble):
+    NUM_BULGES = 7
+    INITIAL_INNER_RADIUS = 1.8
+    INITIAL_WIDTH = 6
+    def __init__(self, *args, **kwargs):
+        Mobject.__init__(self, *args, **kwargs)
+        self.add(Circle().scale(0.15).shift(2.5*DOWN+2*LEFT))
+        self.add(Circle().scale(0.3).shift(2*DOWN+1.5*LEFT))
+        for n in range(self.NUM_BULGES):
+            theta = 2*np.pi*n/self.NUM_BULGES
+            self.add(Circle().shift((np.cos(theta), np.sin(theta), 0)))
+        self.filter_out(lambda p : np.linalg.norm(p) < self.INITIAL_INNER_RADIUS)
+        self.stretch_to_fit_width(self.INITIAL_WIDTH)
+        self.highlight("white")
+        Bubble.__init__(
+            self, 
+            index_of_tip = np.argmin(self.points[:,1]),
+            **kwargs
+        )
+
+
+
+
+
 
 
 

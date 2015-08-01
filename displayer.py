@@ -49,10 +49,10 @@ def paint_mobject(mobject, image_array = None):
     #Flips y-axis
     points[:,1] *= -1
     #Removes points out of space
-    points = points[
-        (abs(points[:,0]) < SPACE_WIDTH) & 
-        (abs(points[:,1]) < SPACE_HEIGHT)
-    ]
+    to_remove = (abs(points[:,0]) < SPACE_WIDTH) & \
+                (abs(points[:,1]) < SPACE_HEIGHT)
+    points = points[to_remove]
+    rgbs = rgbs[to_remove]
     #Map points to pixel space, then create pixel array first in terms
     #of its flattened version
     try:

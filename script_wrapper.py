@@ -108,7 +108,7 @@ def command_line_create_scene(movie_prefix = ""):
    print "Constructing %s..."%name
    scene = SceneClass(*args, display_config = display_config)
    if action == "write":
-      scene.write_to_movie(movie_prefix + name)
+      scene.write_to_movie(os.path.join(movie_prefix, name))
    elif action == "preview":
       scene.preview()
    elif action == "save_image":

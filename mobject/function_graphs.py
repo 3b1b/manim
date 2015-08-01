@@ -2,6 +2,7 @@ import numpy as np
 import itertools as it
 
 from mobject import Mobject, Mobject1D, Mobject2D, CompoundMobject
+from image_mobject import tex_mobject
 from constants import *
 from helpers import *
 
@@ -91,10 +92,10 @@ class Grid(Mobject1D):
 
 class NumberLine(Mobject1D):
     def __init__(self, 
-                 radius = SPACE_WIDTH,
+                 radius = SPACE_WIDTH+1,
                  interval_size = 0.5, tick_size = 0.1, 
                  *args, **kwargs):
-        self.radius = int(radius) + 1
+        self.radius = int(radius)
         self.interval_size = interval_size
         self.tick_size = tick_size
         Mobject1D.__init__(self, *args, **kwargs)
@@ -105,14 +106,33 @@ class NumberLine(Mobject1D):
             for x in np.arange(-self.radius, self.radius, self.epsilon)
         ])
         self.add_points([
-            (0, y, 0)
-            for y in np.arange(-2*self.tick_size, 2*self.tick_size, self.epsilon)
-        ])
-        self.add_points([
             (x, y, 0)
             for x in np.arange(-self.radius, self.radius, self.interval_size)
             for y in np.arange(-self.tick_size, self.tick_size, self.epsilon)
         ])
+        self.elongate_tick_at(0)
+
+    def elongate_tick_at(self, x, multiple = 2):
+        self.add_points([
+            [x, y, 0]
+            for y in np.arange(
+                -multiple*self.tick_size, 
+                multiple*self.tick_size,
+                self.epsilon
+            )
+        ])
+        return self
+
+    def add_numbers(self, intervals_per_number = 2):
+        max_val = int(self.radius/self.interval_size/intervals_per_number)
+        for x in range(-max_val, max_val+1):
+            num = tex_mobject(str(x)).scale(0.5)
+            num.shift(
+                DOWN*4*self.tick_size + \
+                RIGHT*x*self.interval_size*intervals_per_number
+            )
+            self.add(num)
+        return self
 
 class Axes(CompoundMobject):
     def __init__(self, *args, **kwargs):

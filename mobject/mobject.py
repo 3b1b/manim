@@ -26,6 +26,7 @@ class Mobject(object):
                  color = None,
                  name = None,
                  center = None,
+                 **kwargs
                  ):
         self.color = Color(color) if color else Color(self.DEFAULT_COLOR)
         if not hasattr(self, "name"):
@@ -64,7 +65,8 @@ class Mobject(object):
         else:
             if rgbs.shape != points.shape:
                 raise Exception("points and rgbs must have same shape")
-        self.rgbs = np.append(self.rgbs, rgbs).reshape(self.points.shape)
+        self.rgbs = np.append(self.rgbs, rgbs)
+        self.rgbs = self.rgbs.reshape((self.rgbs.size / 3, 3))
         if self.has_normals:
             self.unit_normals = np.append(
                 self.unit_normals,
@@ -111,7 +113,7 @@ class Mobject(object):
         self.shift(-self.get_center())
         return self
 
-    #To wrapper functions for better naming
+    #Wrapper functions for better naming
     def to_corner(self, corner = (-1, 1, 0), buff = 0.5):
         return self.align_on_border(corner, buff)
 
@@ -144,6 +146,20 @@ class Mobject(object):
         center = self.get_center()
         return self.center().scale(scale_factor).shift(center)
 
+    def stretch_to_fit(self, length, dim):
+        center = self.get_center()
+        old_length = max(self.points[:,dim]) - min(self.points[:,dim])
+        self.center()
+        self.points[:,dim] *= length/old_length
+        self.shift(center)
+        return self
+
+    def stretch_to_fit_width(self, width):
+        return self.stretch_to_fit(width, 0)
+
+    def stretch_to_fit_height(self, height):
+        return self.stretch_to_fit(height, 1)
+
     def add(self, *mobjects):
         for mobject in mobjects:
             self.add_points(mobject.points, mobject.rgbs)
@@ -159,6 +175,11 @@ class Mobject(object):
     def pose_at_angle(self):
         self.rotate(np.pi / 7)
         self.rotate(np.pi / 7, [1, 0, 0])
+        return self
+
+    def replace(self, other_mobject):
+        self.scale(other_mobject.get_width()/self.get_width())
+        self.center().shift(other_mobject.get_center())
         return self
 
     def apply_function(self, function):
@@ -201,6 +222,7 @@ class Mobject(object):
             self.points,
             lambda *points : cmp(*map(function, points))
         ))
+        return self
 
     ### Getters ###
 
