@@ -121,6 +121,9 @@ def rush_into(t):
 def rush_from(t):
     return 2*high_inflection_0_to_1(t/2.0+0.5) - 1
 
+def slow_into(t):
+    return np.sqrt(1-(1-t)*(1-t))
+
 def there_and_back(t, inflection = 10.0):
     new_t = 2*t if t < 0.5 else 2*(1 - t)
     return high_inflection_0_to_1(new_t, inflection)

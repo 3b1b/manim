@@ -21,6 +21,7 @@ DEFAULT_COUNT_RUN_TIME   = 5.0
 class Scene(object):
     def __init__(self,
                  display_config = PRODUCTION_QUALITY_DISPLAY_CONFIG,
+                 construct_args = [],
                  background = None,
                  start_dither_time = DEFAULT_DITHER_TIME):
         self.display_config = display_config
@@ -38,7 +39,7 @@ class Scene(object):
         self.background = self.original_background
         self.shape = self.background.shape[:2]
         #TODO, space shape
-        self.construct()
+        self.construct(*construct_args)
 
     def construct(self):
         pass #To be implemented in subclasses

@@ -5,7 +5,7 @@ import copy
 import warnings
 
 from animation import Animation
-from mobject import Mobject
+from mobject import Mobject, Point
 from constants import *
 from helpers import *
 

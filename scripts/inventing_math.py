@@ -4,6 +4,7 @@ import numpy as np
 import itertools as it
 from copy import deepcopy
 import sys
+import operator as op
 
 
 from animation import *
@@ -18,7 +19,8 @@ DIVERGENT_SUM_TEXT = [
     "1", 
     "+2", 
     "+4", 
-    "+8", "+\\cdots",
+    "+8", 
+    "+\\cdots",
     "+2^n",
     "+\\cdots", 
     "= -1",
@@ -29,14 +31,46 @@ CONVERGENT_SUM_TEXT = [
     "+\\frac{1}{4}",
     "+\\frac{1}{8}",
     "+\\frac{1}{16}",
-    "+\\cdots+",
-    "\\frac{1}{2^n}",
+    "+\\cdots",
+    "+\\frac{1}{2^n}",
     "+\\cdots",
     "=1",
 ]
+
+CONVERGENT_SUM_TERMS = [
+    "\\frac{1}{2}",
+    "\\frac{1}{4}",
+    "\\frac{1}{8}",
+    "\\frac{1}{16}",
+]
+
+PARTIAL_CONVERGENT_SUMS_TEXT = [
+    "\\frac{1}{2}",
+    "", "", ",\\quad",
+    "\\frac{1}{2} + \\frac{1}{4}",
+    "=", "\\frac{3}{4}", ",\\quad",
+    "\\frac{1}{2} + \\frac{1}{4} + \\frac{1}{8}",
+    "=", "\\frac{7}{8}", ",\\quad",
+    "\\frac{1}{2} + \\frac{1}{4} + \\frac{1}{8} + \\frac{1}{16}",
+    "=", "\\frac{15}{16}", ",\\dots"
+]
+
+def partial_sum(n):
+    return sum([1.0/2**(k+1) for k in range(n)])
+
+ALT_PARTIAL_SUM_TEXT = reduce(op.add, [
+    [str(partial_sum(n)), "&=", "+".join(CONVERGENT_SUM_TERMS[:n])+"\\\\"]
+    for n in range(1, len(CONVERGENT_SUM_TERMS)+1)
+])+ [
+    "\\vdots", "&", "\\\\",
+    "1.0", "&=", "+".join(CONVERGENT_SUM_TERMS)+"+\\cdots+\\frac{1}{2^n}+\\cdots"
+]
+
+
 NUM_WRITTEN_TERMS = 4
 INTERVAL_RADIUS = 5
 NUM_INTERVAL_TICKS = 16
+
 
 def divergent_sum():
     return tex_mobject(DIVERGENT_SUM_TEXT, size = "\\large").scale(2)
@@ -216,6 +250,26 @@ class ReasonsForMakingVideo(Scene):
         self.add(line_two)
         self.dither()
 
+class DiscoverAndDefine(Scene):
+    def construct(self):
+        sum_mob = tex_mobject("\\sum_{n = 1}^\\infty a_n")
+        discover = text_mobject("What does it feel like to discover these?")
+        define = text_mobject([
+            "What does it feel like to", 
+            "\\emph{define} ",
+            "them?"
+        ])
+        sum_mob.shift(2*UP)
+        define.shift(2*DOWN)
+        define_parts = define.split()
+        define_parts[1].highlight("skyblue")
+
+        self.add(sum_mob)
+        self.animate(FadeIn(discover))
+        self.dither()
+        self.animate(FadeIn(CompoundMobject(*define_parts)))
+        self.dither()
+
 class YouAsMathematician(Scene):
     def construct(self):
         you = draw_you()
@@ -323,13 +377,17 @@ class ZoomInOnInterval(Scene):
 
 class DanceDotOnInterval(Scene):
     def construct(self):
+        num_height = 1.3*DOWN
         interval = zero_to_one_interval()
         dots = [
             Dot(radius = 3*Dot.DEFAULT_RADIUS).shift(INTERVAL_RADIUS*x+UP)
             for x in LEFT, RIGHT
         ]
-        color_range = Color("green").range_to("grey", NUM_WRITTEN_TERMS)
+        color_range = Color("green").range_to("yellow", NUM_WRITTEN_TERMS)
         conv_sum = convergent_sum().split()
+        partial_sums = tex_mobject(PARTIAL_CONVERGENT_SUMS_TEXT, size = "\\small")
+        partial_sums.scale(1.5).to_edge(UP)
+        partial_sum_parts = partial_sums.split()
 
         self.add(interval)
         self.animate(*[
@@ -346,17 +404,219 @@ class DanceDotOnInterval(Scene):
                 ApplyMethod(dots[0].shift, shift_val),
                 ShowCreation(line)
             )
-            num = conv_sum[count]
+            num = conv_sum[count].scale(0.75)
             num.shift(RIGHT*(line.get_center()[0]-num.get_center()[0]))
             if num.get_width() > line.get_length():
                 num.stretch_to_fit_width(line.get_length())
-            num.shift(3*DOWN)
+            num.shift(num_height)
             self.animate(
                 ApplyMethod(line.shift, 2*DOWN),
                 FadeIn(num)
             )
             self.dither()
-        self.animate(FadeIn(conv_sum[NUM_WRITTEN_TERMS]))
+        partial_sum_parts[0].highlight("yellow")
+        for x in range(0, len(partial_sum_parts), 4):
+            partial_sum_parts[x+2].highlight("yellow")
+            self.animate(*[
+                FadeIn(partial_sum_parts[y])
+                for y in range(x, x+4)
+            ])
+        self.dither(2)
+
+class OrganizePartialSums(Scene):
+    def construct(self):
+        partial_sums = tex_mobject(PARTIAL_CONVERGENT_SUMS_TEXT, size = "\\small")
+        partial_sums.scale(1.5).to_edge(UP)
+        partial_sum_parts = partial_sums.split()
+        for x in [0] + range(2, len(partial_sum_parts), 4):
+            partial_sum_parts[x].highlight("yellow")
+        pure_sums = [
+            partial_sum_parts[x] 
+            for x in range(0, len(partial_sum_parts), 4)
+        ]
+        new_pure_sums = deepcopy(pure_sums)
+        for pure_sum, count in zip(new_pure_sums, it.count(3, -1.2)):
+            pure_sum.center().scale(1/1.25).highlight("white")
+            pure_sum.to_edge(LEFT).shift(2*RIGHT+count*UP)
+
+        self.add(*partial_sum_parts)
+        self.dither()
+        self.animate(*[
+            SemiCircleTransform(*pair, counterclockwise=False)
+            for pair in zip(pure_sums, new_pure_sums)
+        ]+[
+            FadeOut(mob)
+            for mob in partial_sum_parts
+            if mob not in pure_sums
+        ])
+        self.dither()
+        down_arrow = tex_mobject("\\downarrow")
+        down_arrow.to_edge(LEFT).shift(2*RIGHT+2*DOWN)
+        infinite_sum = tex_mobject("".join(CONVERGENT_SUM_TEXT[:-1]), size = "\\samll")
+        infinite_sum.scale(1.5/1.25)
+        infinite_sum.to_corner(DOWN+LEFT).shift(2*RIGHT)
+        self.animate(FadeIn(CompoundMobject(down_arrow, infinite_sum)))
+
+        self.dither()
+
+class SeeNumbersApproachOne(Scene):
+    def construct(self):
+        interval = zero_to_one_interval()
+        arrow = Arrow(INTERVAL_RADIUS*RIGHT, tail=ORIGIN).nudge()
+        arrow.shift(DOWN).highlight("yellow")
+        num_dots = 6
+        colors = Color("green").range_to("yellow", num_dots)
+        dots = CompoundMobject(*[
+            Dot(
+                density = 2*DEFAULT_POINT_DENSITY_1D
+            ).scale(1+1.0/2.0**x).shift(
+                INTERVAL_RADIUS*RIGHT +\
+                (INTERVAL_RADIUS/2.0**x)*LEFT
+            ).highlight(colors.next())
+            for x in range(num_dots)
+        ])
+
+        self.add(interval)
+        self.animate(
+            ShowCreation(arrow),
+            ShowCreation(dots),
+            run_time = 2.0
+        )
+        self.dither()
+
+class HowDoYouDefineInfiniteSums(Scene):
+    def construct(self):
+        you = draw_you().center().rewire_part_attributes()
+        text = text_mobject(
+            ["How", " do", " you,\\\\", "\\emph{define}"],
+            size = "\\Huge"
+        ).shift(UP).split()
+        text[-1].shift(3*DOWN).highlight("skyblue")
+        sum_mob = tex_mobject("\\sum_{n=0}^\\infty{a_n}")
+        text[-1].shift(LEFT)
+        sum_mob.shift(text[-1].get_center()+2*RIGHT)
+
+        self.add(you)
+        self.dither()
+        for mob in text[:-1]:
+            self.add(mob)
+            self.dither(0.1)
+        self.animate(BlinkPiCreature(you))
+        self.dither()
+        self.add(text[-1])
+        self.dither()
+        self.add(sum_mob)
+        self.dither()
+
+class LessAboutNewThoughts(Scene):
+    def construct(self):
+        words = generating, new, thoughts, to, definitions = text_mobject([
+            "Generating", " new", " thoughts", "$\\rightarrow$",
+            "useful definitions"
+        ], size = "\\large").split()
+        gen_cross = ImageMobject("cross").highlight("red")
+        new_cross = deepcopy(gen_cross)
+        for cross, mob in [(gen_cross, generating), (new_cross, new)]:
+            cross.replace(mob, stretch = True)
+        disecting = text_mobject("Disecting")
+        disecting.shift(generating.get_center() + 0.7*UP)
+        old = text_mobject("old")
+        old.shift(new.get_center()+0.7*DOWN)
+
+        kwargs = {"run_time" : 0.25}
+        self.add(*words)
+        self.dither()
+        self.animate(ShowCreation(gen_cross, **kwargs))
+        self.animate(ShowCreation(new_cross, **kwargs))
+        self.dither()        
+        self.add(disecting)
+        self.dither(0.25)
+        self.add(old)
+        self.dither()
+
+class ListOfPartialSums(Scene):
+    def construct(self):
+        all_terms = np.array(tex_mobject(
+            ALT_PARTIAL_SUM_TEXT,
+            size = "\\large"
+        ).split())
+        numbers, equals, sums = [
+            all_terms[range(k, 12, 3)]
+            for k in 0, 1, 2
+        ]
+        dots = all_terms[12]
+        one = all_terms[-3]
+        last_equal = all_terms[-2]
+        infinite_sum = all_terms[-1]
+
+        self.count(
+            numbers, 
+            mode = "show",
+            display_numbers = False, 
+            run_time = 1.0
+        )
+        self.animate(ShowCreation(dots))
+        self.dither()
+        self.animate(
+            FadeIn(CompoundMobject(*equals)),
+            *[
+                Transform(deepcopy(number), finite_sum)
+                for number, finite_sum in zip(numbers, sums)
+            ]
+        )
+        self.animate(*[
+            ApplyMethod(s.highlight, "yellow", alpha_func = there_and_back)
+            for s in sums
+        ])
+        self.dither()
+        self.add(one.highlight("green"))
+        self.dither()
+
+
+class ShowDecreasingDistance(Scene):
+    args_list = [(1,), (2,)]
+    @staticmethod
+    def args_to_string(num):
+        return str(num)
+
+    def construct(self, num):
+        number_line = NumberLine(interval_size = 1).add_numbers()
+        vert_line0 = Line(0.5*UP, UP)
+        vert_line1 = Line(0.5*UP+num*RIGHT, UP+num*RIGHT)
+        horiz_line = Line(UP, UP+num*RIGHT)
+        lines = [vert_line0, vert_line1, horiz_line]
+        for line in lines:
+            line.highlight("green")
+
+        self.add(number_line, *lines)
+        self.dither()
+        self.animate(
+            ApplyMethod(vert_line0.shift, RIGHT),
+            Transform(
+                horiz_line, 
+                Line(vert_line0.end+RIGHT, vert_line1.end).highlight("green")
+            ),
+            run_time = 2.5
+        )
+        self.dither()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

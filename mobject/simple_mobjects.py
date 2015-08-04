@@ -93,7 +93,7 @@ class Line(Mobject1D):
     def __init__(self, start, end, density = DEFAULT_POINT_DENSITY_1D, *args, **kwargs):
         self.start = np.array(start)
         self.end = np.array(end)
-        density *= self.get_length()
+        density *= max(self.get_length(), 0.1)
         Mobject1D.__init__(self, density = density, *args, **kwargs)
 
     def generate_points(self):

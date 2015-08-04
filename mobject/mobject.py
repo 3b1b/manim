@@ -177,9 +177,13 @@ class Mobject(object):
         self.rotate(np.pi / 7, [1, 0, 0])
         return self
 
-    def replace(self, other_mobject):
-        self.scale(other_mobject.get_width()/self.get_width())
-        self.center().shift(other_mobject.get_center())
+    def replace(self, mobject, stretch = False):
+        if stretch:
+            self.stretch_to_fit_width(mobject.get_width())
+            self.stretch_to_fit_height(mobject.get_height())
+        else:
+            self.scale(mobject.get_width()/self.get_width())
+        self.center().shift(mobject.get_center())
         return self
 
     def apply_function(self, function):

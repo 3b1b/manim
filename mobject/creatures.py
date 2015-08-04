@@ -65,6 +65,7 @@ class PiCreature(Mobject):
                 part.points = self.points[curr:curr+n_points,:]
                 part.rgbs = self.rgbs[curr:curr+n_points,:]
             curr += n_points
+        return self
 
     def reload_from_parts(self):
        self.rewire_part_attributes(self_from_parts = True)

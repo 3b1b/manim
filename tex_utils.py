@@ -20,7 +20,10 @@ def tex_to_image(expression,
     if os.path.exists(image_dir):
         result = [
             Image.open(os.path.join(image_dir, png_file)).convert('RGB')
-            for png_file in os.listdir(image_dir)
+            for png_file in sorted(
+                os.listdir(image_dir), 
+                cmp_enumerated_files
+            )
         ]
     else:
         filestem = os.path.join(TEX_DIR, exp_hash)
