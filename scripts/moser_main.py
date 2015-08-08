@@ -226,7 +226,7 @@ class HardProblemsSimplerQuestions(Scene):
         self.remove(*self.mobjects)
         self.add(fermat["n"])
         self.animate(*[
-            SemiCircleTransform(mobs[0], mobs[1])
+            CounterclockwiseTransform(mobs[0], mobs[1])
             for f_copy, sym in zip(copies, ["3", "2"])            
             for mobs in zip(f_copy.split(), fermat[sym].split())
         ])
@@ -260,7 +260,7 @@ class HardProblemsSimplerQuestions(Scene):
         self.animate(
             FadeIn(fermat2_jargon),
             FadeIn(fermat3_jargon),
-            SemiCircleTransform(start_line, end_line),
+            CounterclockwiseTransform(start_line, end_line),
             ShowCreation(dots)
         )
         self.dither()
@@ -686,17 +686,17 @@ class GraphsAndEulersFormulaJoke(Scene):
         self.add(axes)
         self.animate(ShowCreation(graph), run_time = 1.0)
         eulers = tex_mobject("e^{\pi i} = -1").shift((0, 3, 0))
-        self.animate(SemiCircleTransform(
+        self.animate(CounterclockwiseTransform(
             deepcopy(graph), eulers
         ))
         self.dither()
         self.remove(*self.mobjects)
         self.add(eulers)
-        self.animate(SemiCircleTransform(
+        self.animate(CounterclockwiseTransform(
             CompoundMobject(axes, graph),
             Point((-SPACE_WIDTH, SPACE_HEIGHT, 0))
         ))
-        self.animate(SemiCircleTransform(
+        self.animate(CounterclockwiseTransform(
             eulers,
             Point((SPACE_WIDTH, SPACE_HEIGHT, 0))
         ))
@@ -899,7 +899,7 @@ class ShowMoserGraphLines(CircleScene):
             compound = CompoundMobject(*mobs)            
             if mobs in (self.dots, self.intersection_dots):
                 self.remove(*mobs)
-                self.animate(SemiCircleTransform(
+                self.animate(CounterclockwiseTransform(
                     compound,
                     deepcopy(compound).scale(1.05),
                     alpha_func = there_and_back,
@@ -1055,7 +1055,7 @@ class ApplyEulerToMoser(CircleScene):
                 )
 
         self.animate(*[
-            SemiCircleTransform(d[1], d[2], run_time = 2.0)
+            CounterclockwiseTransform(d[1], d[2], run_time = 2.0)
             for d in [V, minus, E, plus, F, equals, two]
         ])
         self.dither()
@@ -1164,8 +1164,8 @@ class ApplyEulerToMoser(CircleScene):
         self.dither()
         self.remove(*self.mobjects)
         self.animate(
-            SemiCircleTransform(two[6], two[7]),
-            SemiCircleTransform(plus[6], plus[7]),
+            CounterclockwiseTransform(two[6], two[7]),
+            CounterclockwiseTransform(plus[6], plus[7]),
             *[
                 Transform(d[6], d[7])
                 for d in [F, equals, nc2, plus1, nc4]
@@ -1184,7 +1184,7 @@ class ApplyEulerToMoser(CircleScene):
         one = tex_mobject("1").shift(two.get_center())
         two.highlight("red")
         self.add(two)
-        self.animate(SemiCircleTransform(two, one))
+        self.animate(CounterclockwiseTransform(two, one))
 
 class FormulaRelatesToPowersOfTwo(Scene):
     def __init__(self, *args, **kwargs):
@@ -1226,7 +1226,7 @@ class FormulaRelatesToPowersOfTwo(Scene):
         self.remove(*self.mobjects)
         self.add(*forms + sums + results)
         self.animate(*[
-            SemiCircleTransform(result, pof2)
+            CounterclockwiseTransform(result, pof2)
             for result, pof2 in zip(results, powers_of_two)
         ])        
 
@@ -1277,7 +1277,7 @@ class PascalsTriangleWithNChooseK(PascalsTriangleScene):
             self.dither()
             self.remove(*self.mobjects)
             self.animate(*[
-                SemiCircleTransform(
+                CounterclockwiseTransform(
                     deepcopy(mob_dicts[i][n][k]), 
                     mob_dicts[1-i][n][k]
                 )
@@ -1399,7 +1399,7 @@ class PascalsTriangleSumRows(PascalsTriangleScene):
         self.remove(*to_remove)
         self.add(*powers_of_two)
         for n in range(self.nrows):
-            self.animate(SemiCircleTransform(
+            self.animate(CounterclockwiseTransform(
                 powers_of_two[n], powers_of_two_symbols[n], 
                 run_time = run_time
             ))
@@ -1456,14 +1456,14 @@ class MoserSolutionInPascal(PascalsTriangleScene):
         ])
         self.animate(*
             [
-                SemiCircleTransform(
+                CounterclockwiseTransform(
                     self.coords_to_n_choose_k[n0][k0],
                     self.coords_to_mobs[n0][k0]
                 )
                 for n0, k0 in self.coords
                 if (n0, k0) not in [(n, k) for k in term_range]
             ]+[
-                SemiCircleTransform(terms[k], target_terms[k])
+                CounterclockwiseTransform(terms[k], target_terms[k])
                 for k in term_range
             ]
         )
@@ -1565,7 +1565,7 @@ class ExplainNChoose2Formula(Scene):
         b_mob = nums.pop(b-2 if a < b else b-1)
         self.add(b_mob)
         self.animate(*[
-            SemiCircleTransform(
+            CounterclockwiseTransform(
                 mob, 
                 Point(mob.get_center()).highlight("black")
             )
@@ -1582,8 +1582,8 @@ class ExplainNChoose2Formula(Scene):
         b_copy = deepcopy(b_mob).center().shift(a_center - (0, 2, 0))
         self.add(over_2, deepcopy(a_mob), deepcopy(b_mob))
         self.animate(
-            SemiCircleTransform(a_mob, a_copy),
-            SemiCircleTransform(b_mob, b_copy),
+            CounterclockwiseTransform(a_mob, a_copy),
+            CounterclockwiseTransform(b_mob, b_copy),
             FadeIn(parens_copy),
             FadeIn(text_mobject("is considered the same as"))
         )
@@ -1635,7 +1635,7 @@ class ExplainNChoose4Formula(Scene):
                 )
             else:
                 self.animate(*[
-                    SemiCircleTransform(
+                    CounterclockwiseTransform(
                         mob, 
                         Point(mob.get_center()).highlight("black")
                     )
@@ -1658,7 +1658,7 @@ class ExplainNChoose4Formula(Scene):
                 for i in range(4)
             ]
             compound_quad = CompoundMobject(*quad_mobs)
-            self.animate(SemiCircleTransform(
+            self.animate(CounterclockwiseTransform(
                 compound_quad,
                 CompoundMobject(*new_quad_mobs)
             ))

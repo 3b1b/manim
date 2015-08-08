@@ -146,11 +146,15 @@ class Mobject(object):
         center = self.get_center()
         return self.center().scale(scale_factor).shift(center)
 
+    def stretch(self, factor, dim):
+        self.points[:,dim] *= factor
+        return self
+
     def stretch_to_fit(self, length, dim):
         center = self.get_center()
         old_length = max(self.points[:,dim]) - min(self.points[:,dim])
         self.center()
-        self.points[:,dim] *= length/old_length
+        self.stretch(length/old_length, dim)
         self.shift(center)
         return self
 
@@ -178,6 +182,9 @@ class Mobject(object):
         return self
 
     def replace(self, mobject, stretch = False):
+        if mobject.get_num_points() == 0:
+            raise Warning("Attempting to replace mobject with no points")
+            return self
         if stretch:
             self.stretch_to_fit_width(mobject.get_width())
             self.stretch_to_fit_height(mobject.get_height())
@@ -231,10 +238,33 @@ class Mobject(object):
     ### Getters ###
 
     def get_num_points(self):
-        return self.points.shape[0]
+        return len(self.points)
 
     def get_center(self):
+        return (np.max(self.points, 0) + np.min(self.points, 0))/2.0
+
+    def get_center_of_mass(self):
         return np.apply_along_axis(np.mean, 0, self.points)
+
+    def get_border_point(self, direction):
+        return self.points[np.argmax(np.dot(self.points, direction))]
+
+    def get_edge_center(self, dim, max_or_min_func):
+        result = self.get_center()
+        result[dim] = max_or_min_func(self.points[:,dim])
+        return result
+
+    def get_top(self):
+        return self.get_edge_center(1, np.max)
+
+    def get_bottom(self):
+        return self.get_edge_center(1, np.min)
+
+    def get_right(self):
+        return self.get_edge_center(0, np.max)
+
+    def get_left(self):
+        return self.get_edge_center(0, np.min)
 
     def get_width(self):
         return np.max(self.points[:, 0]) - np.min(self.points[:, 0])

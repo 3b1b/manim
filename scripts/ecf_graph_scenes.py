@@ -165,7 +165,7 @@ class OldIntroduceGraphs(GraphScene):
         friends = text_mobject("Friends").scale(EDGE_ANNOTATION_SCALE_VAL)
         self.annotate_edges(friends.shift((0, friends.get_height()/2, 0)))
         self.animate(*[
-            SemiCircleTransform(vertex, Dot(point))
+            CounterclockwiseTransform(vertex, Dot(point))
             for vertex, point in zip(self.vertices, self.points)
         ]+[
             Transform(ann, line)
@@ -558,7 +558,7 @@ class FacebookGraph(GraphScene):
         self.annotate_edges(friends)
         self.dither()
         self.animate(*[
-            SemiCircleTransform(account, vertex)
+            CounterclockwiseTransform(account, vertex)
             for account, vertex in zip(accounts, self.vertices)
         ])
         self.dither()
@@ -1176,7 +1176,7 @@ class FinalSum(Scene):
             copy = plus if index == -2 else deepcopy(mob)
             copy.center().shift(lines[index].get_center())
             copy.scale_in_place(lines[index].get_width()/mob.get_width())
-            anims.append(SemiCircleTransform(copy, mob))
+            anims.append(CounterclockwiseTransform(copy, mob))
         self.clear()
         self.animate(*anims, run_time = 2.0)
         self.dither()

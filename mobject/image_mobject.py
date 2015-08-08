@@ -81,18 +81,26 @@ class VideoIcon(ImageMobject):
         self.scale(0.3)
         self.center()
 
-def text_mobject(text, size = "\\Large"):
+def text_mobject(text, size = None):
+    size = size or "\\Large" #TODO, auto-adjust?
     return tex_mobject(text, size, TEMPLATE_TEXT_FILE)
 
 def tex_mobject(expression, 
-                size = "\\Huge", 
+                size = None, 
                 template_tex_file = TEMPLATE_TEX_FILE):
+    if size == None:
+        if len("".join(expression)) < MAX_LEN_FOR_HUGE_TEX_FONT:
+            size = "\\Huge"
+        else:
+            size = "\\large"
+        #Todo, make this more sophisticated.
     images = tex_to_image(expression, size, template_tex_file)
     if isinstance(images, list):
         #TODO, is checking listiness really the best here?
-        return CompoundMobject(*map(ImageMobject, images)).center()
+        result = CompoundMobject(*map(ImageMobject, images))
     else:
-        return ImageMobject(images).center()
+        result = ImageMobject(images)
+    return result.highlight("white").center()
 
 
 

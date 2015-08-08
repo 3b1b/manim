@@ -41,8 +41,8 @@ UP     = np.array(( 0, 1, 0))
 DOWN   = np.array(( 0,-1, 0))
 RIGHT  = np.array(( 1, 0, 0))
 LEFT   = np.array((-1, 0, 0))
-IN     = np.array(( 0, 0, 1))
-OUT    = np.array(( 0, 0,-1))
+IN     = np.array(( 0, 0,-1))
+OUT    = np.array(( 0, 0, 1))
 
 THIS_DIR  = os.path.dirname(os.path.realpath(__file__))
 FILE_DIR  = os.path.join(THIS_DIR, "files")
@@ -61,6 +61,7 @@ SIZE_TO_REPLACE = "SizeHere"
 TEX_TEXT_TO_REPLACE = "YourTextHere"
 TEMPLATE_TEX_FILE  = os.path.join(TEX_DIR, "template.tex")
 TEMPLATE_TEXT_FILE = os.path.join(TEX_DIR, "text_template.tex")
+MAX_LEN_FOR_HUGE_TEX_FONT = 25
 
 LOGO_PATH = os.path.join(IMAGE_DIR, "logo.png")
 

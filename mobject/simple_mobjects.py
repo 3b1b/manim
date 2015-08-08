@@ -6,6 +6,7 @@ from constants import *
 from helpers import *
 
 class Point(Mobject):
+    DEFAULT_COLOR = "black"
     def __init__(self, point = (0, 0, 0), *args, **kwargs):
         Mobject.__init__(self, *args, **kwargs)
         self.points = np.array(point).reshape(1, 3)
@@ -21,16 +22,18 @@ class Arrow(Mobject1D):
                  length = 1, 
                  tip_length = 0.25,
                  normal = (0, 0, 1), 
+                 density = DEFAULT_POINT_DENSITY_1D,
                  *args, **kwargs):
         self.point = np.array(point)
         if tail is not None:
             direction = self.point - tail
             length = np.linalg.norm(direction)
         self.direction = np.array(direction) / np.linalg.norm(direction)
+        density *= max(length, 0.1)
         self.length = length
         self.normal = np.array(normal)
         self.tip_length = tip_length
-        Mobject1D.__init__(self, *args, **kwargs)
+        Mobject1D.__init__(self, density = density, **kwargs)
 
     def generate_points(self):
         self.add_points([
@@ -131,12 +134,34 @@ class CurvedLine(Line):
 
 class Circle(Mobject1D):
     DEFAULT_COLOR = "red"
+    def __init__(self, radius = 1.0, **kwargs):
+        self.radius = radius
+        Mobject1D.__init__(self, **kwargs)
+
     def generate_points(self):
         self.add_points([
-            (np.cos(theta), np.sin(theta), 0)
-            for theta in np.arange(0, 2 * np.pi, self.epsilon)
+            (self.radius*np.cos(theta), self.radius*np.sin(theta), 0)
+            for theta in np.arange(0, 2 * np.pi, self.epsilon/self.radius)
         ])
 
+class Rectangle(Mobject1D):
+    DEFAULT_COLOR = "yellow"
+    def __init__(self, height = 2.0, width = 2.0, **kwargs):
+        self.height, self.width = height, width
+        Mobject1D.__init__(self, **kwargs)
+
+    def generate_points(self):
+        wh = [self.width/2.0, self.height/2.0]
+        self.add_points([
+            (x, u, 0) if dim==0 else (u, x, 0)
+            for dim in 0, 1
+            for u in wh[1-dim], -wh[1-dim]
+            for x in np.arange(-wh[dim], wh[dim], self.epsilon)
+        ])
+
+class Square(Rectangle):
+    def __init__(self, side_length = 2.0, **kwargs):
+        Rectangle.__init__(self, side_length, side_length, **kwargs)
 
 class Bubble(Mobject):
     def __init__(self, direction = LEFT, index_of_tip = -1, center = ORIGIN):
@@ -151,7 +176,7 @@ class Bubble(Mobject):
         return self.points[self.index_of_tip]
 
     def get_bubble_center(self):
-        return Mobject.get_center(self)+self.center_offset
+        return self.get_center()+self.center_offset
 
     def move_tip_to(self, point):
         self.shift(point - self.get_tip())
@@ -168,8 +193,7 @@ class Bubble(Mobject):
     def add_content(self, mobject):
         mobject.scale(0.75*self.get_width() / mobject.get_width())
         mobject.shift(self.get_bubble_center())
-        self.content = CompoundMobject(self.content, mobject)
-        self.add(self.content)
+        self.content = mobject
         return self
 
     def write(self, text):
@@ -177,10 +201,7 @@ class Bubble(Mobject):
         return self
 
     def clear(self):
-        num_content_points = self.content.points.shape[0]
-        self.points = self.points[:-num_content_points]
-        self.rgbs = self.rgbs[:-num_content_points]
-        self.contents = Mobject()
+        self.content = Mobject()
         return self
 
 class SpeechBubble(Bubble):

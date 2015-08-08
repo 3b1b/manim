@@ -10,14 +10,24 @@ from animation import *
 from mobject import *
 from constants import *
 from region import *
-from scene import Scene
+from scene import Scene, RearrangeEquation
 from script_wrapper import command_line_create_scene
 
 
-class SampleScene(Scene):
+class SampleScene(RearrangeEquation):
     def construct(self):
-        tauy = TauCreature()
-        self.animate(ApplyMethod(tauy.make_sad))
+        start_terms = "a + b = c".split(" ")
+        end_terms = "a = c - b + 0".split(" ")
+        index_map = {
+            0 : 0,
+            1 : 3,
+            2 : 4,
+            3 : 1,
+            4 : 2,
+        }
+        RearrangeEquation.construct(
+            self, start_terms, end_terms, index_map
+        )
 
 
 

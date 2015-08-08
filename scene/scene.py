@@ -213,7 +213,6 @@ class Scene(object):
         self.number = num_mob
         return self
 
-
     def get_frame(self):
         frame = self.background
         for mob in self.mobjects:
@@ -222,6 +221,10 @@ class Scene(object):
 
     def dither(self, duration = DEFAULT_DITHER_TIME):
         self.frames += [self.get_frame()]*int(duration / self.frame_duration)
+        return self
+
+    def repeat(self, num):
+        self.frames = self.frames*num
         return self
 
     def write_to_gif(self, name = None, 

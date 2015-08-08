@@ -9,11 +9,34 @@ from mobject import Mobject, Point
 from constants import *
 from helpers import *
 
+def straight_path(start_points, end_points, alpha):
+    return (1-alpha)*start_points + alpha*end_points
+
+def semi_circular_path(start_points, end_points, alpha, axis):
+    midpoints = (start_points + end_points) / 2
+    angle = alpha * np.pi
+    rot_matrix = rotation_matrix(angle, axis)[:2, :2]
+    result = np.zeros(start_points.shape)
+    result[:,:2] = np.dot(
+        (start_points - midpoints)[:,:2], 
+        np.transpose(rot_matrix)
+    ) + midpoints[:,:2]
+    result[:,2] = (1-alpha)*start_points[:,2] + alpha*end_points[:,2]
+    return result
+
+def clockwise_path(start_points, end_points, alpha):
+    return semi_circular_path(start_points, end_points, alpha, IN)
+
+def counterclockwise_path(start_points, end_points, alpha):
+    return semi_circular_path(start_points, end_points, alpha, OUT)
+
 class Transform(Animation):
     def __init__(self, mobject1, mobject2, 
                  run_time = DEFAULT_TRANSFORM_RUN_TIME,
+                 interpolation_function = straight_path,
                  black_out_extra_points = False,
                  *args, **kwargs):
+        self.interpolation_function = interpolation_function
         count1, count2 = mobject1.get_num_points(), mobject2.get_num_points()
         if count2 == 0:
             mobject2 = Point((SPACE_WIDTH, SPACE_HEIGHT, 0))
@@ -37,10 +60,14 @@ class Transform(Animation):
             self.non_redundant_m2_indices = indices
 
     def update_mobject(self, alpha):
-        Mobject.interpolate(
-            self.starting_mobject, 
-            self.ending_mobject,
-            self.mobject,
+        self.mobject.points = self.interpolation_function(
+            self.starting_mobject.points,
+            self.ending_mobject.points,
+            alpha
+        )
+        self.mobject.rgbs = straight_path(
+            self.starting_mobject.rgbs,
+            self.ending_mobject.rgbs,
             alpha
         )
 
@@ -59,23 +86,19 @@ class Transform(Animation):
                         )[self.non_redundant_m2_indices]
                     )
 
-class SemiCircleTransform(Transform):
-    def __init__(self, mobject1, mobject2, counterclockwise = True,
-                 *args, **kwargs):
-        Transform.__init__(self, mobject1, mobject2, *args, **kwargs)
-        self.axis = (0, 0, 1) if counterclockwise else (0, 0, -1)
+class ClockwiseTransform(Transform):
+    def __init__(self, mobject1, mobject2, **kwargs):
+        Transform.__init__(
+            self, mobject1, mobject2, 
+            interpolation_function = clockwise_path, **kwargs
+        )
 
-    def update_mobject(self, alpha):
-        sm, em = self.starting_mobject, self.ending_mobject
-        midpoints = (sm.points + em.points) / 2
-        angle = alpha * np.pi
-        rot_matrix = rotation_matrix(angle, self.axis)[:2, :2]
-        self.mobject.points[:,:2] = np.dot(
-            (sm.points - midpoints)[:,:2], 
-            np.transpose(rot_matrix)
-        ) + midpoints[:,:2]
-        self.mobject.points[:,2] = (1-alpha)*sm.points[:,2] + alpha*em.points[:,2]
-        self.mobject.rgbs = (1-alpha)*sm.rgbs + alpha*em.rgbs
+class CounterclockwiseTransform(Transform):
+    def __init__(self, mobject1, mobject2, **kwargs):
+        Transform.__init__(
+            self, mobject1, mobject2, 
+            interpolation_function = counterclockwise_path, **kwargs
+        )
 
 class FadeToColor(Transform):
     def __init__(self, mobject, color, *args, **kwargs):
@@ -119,12 +142,25 @@ class ApplyMethod(Transform):
         )
 
 class ApplyFunction(Transform):
-    def __init__(self, mobject, function, run_time = DEFAULT_ANIMATION_RUN_TIME,
-                 *args, **kwargs):
+    def __init__(self, function, mobject, **kwargs):
+        Transform.__init__(
+            self, 
+            mobject, 
+            function(copy.deepcopy(mobject)),
+            **kwargs
+        )
+        self.name = "ApplyFunctionTo"+str(mobject)
+
+
+class ApplyPointwiseFunction(Transform):
+    def __init__(self, mobject, function, 
+                 run_time = DEFAULT_ANIMATION_RUN_TIME, **kwargs):
         map_image = copy.deepcopy(mobject)
         map_image.points = np.array(map(function, map_image.points))
-        Transform.__init__(self, mobject, map_image, run_time = run_time, 
-                           *args, **kwargs)
+        Transform.__init__(
+            self, mobject, map_image, 
+            run_time = run_time, **kwargs
+        )
         self.name = "".join([
             "Apply",
             "".join([s.capitalize() for s in function.__name__.split("_")]),

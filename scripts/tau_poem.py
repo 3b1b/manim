@@ -203,12 +203,12 @@ class TauPoem(Scene):
         )
         self.add(two_pi)
         self.dither()
-        self.animate(SemiCircleTransform(
+        self.animate(CounterclockwiseTransform(
             two_pi, sphere,
             alpha_func = lambda t : 2*high_inflection_0_to_1(t/2)
         ))
         self.remove(two_pi)
-        self.animate(SemiCircleTransform(
+        self.animate(CounterclockwiseTransform(
             sphere, tau,
             alpha_func = lambda t : 2*(high_inflection_0_to_1(t/2+0.5)-0.5)
         ))
@@ -302,10 +302,10 @@ class TauPoem(Scene):
         self.dither()
         self.remove(bubble)
         bubble_copy = deepcopy(bubble)
-        self.animate(SemiCircleTransform(bubble_copy, heart))
+        self.animate(CounterclockwiseTransform(bubble_copy, heart))
         self.dither()
         self.remove(bubble_copy)
-        self.animate(SemiCircleTransform(heart, bubble))
+        self.animate(CounterclockwiseTransform(heart, bubble))
         self.dither()
 
 
@@ -323,7 +323,7 @@ class TauPoem(Scene):
                 Point(pi.right_leg.points[0,:]).highlight("black")
             ),
             Transform(pi.mouth, tau.mouth),
-            SemiCircleTransform(
+            CounterclockwiseTransform(
                 two, 
                 Dot(two.get_center()).highlight("black")
             )
@@ -412,8 +412,8 @@ class TauPoem(Scene):
             ShowCreation(circle)
         )
         self.animate(
-            SemiCircleTransform(sine_period, tau_line),
-            SemiCircleTransform(circle, deepcopy(tau_line)),
+            CounterclockwiseTransform(sine_period, tau_line),
+            CounterclockwiseTransform(circle, deepcopy(tau_line)),
             FadeOut(axes),
             FadeOut(grid),
             FadeOut(sine),
@@ -435,7 +435,7 @@ class TauPoem(Scene):
 
         self.add(*formula)
         self.dither()
-        self.animate(SemiCircleTransform(two_pi, tau))
+        self.animate(CounterclockwiseTransform(two_pi, tau))
         self.remove(two_pi)
         self.animate(BlinkPiCreature(tau))
         self.dither()

@@ -247,7 +247,7 @@ class GraphScene(Scene):
         mobject.center()
         diameter = max(mobject.get_height(), mobject.get_width())
         self.animate(*[
-            SemiCircleTransform(
+            CounterclockwiseTransform(
                 vertex,
                 deepcopy(mobject).shift(vertex.get_center())
             )
