@@ -15,6 +15,8 @@ from region import *
 from scene import Scene, RearrangeEquation
 from script_wrapper import command_line_create_scene
 
+from inventing_math_images import *
+
 MOVIE_PREFIX = "inventing_math/"
 DIVERGENT_SUM_TEXT = [
     "1", 
@@ -152,7 +154,10 @@ class IntroduceDivergentSum(Scene):
     def construct(self):
         equation = divergent_sum().split()
         sum_value = None
-        brace = underbrace().shift(0.75*DOWN)
+        brace = underbrace(
+            equation[0].get_border_point(DOWN+LEFT),
+            equation[1].get_border_point(DOWN+RIGHT)
+        ).shift(0.2*DOWN)
         min_x_coord = min(equation[0].points[:,0])
         for x in range(NUM_WRITTEN_TERMS):
             self.add(equation[x])
@@ -180,7 +185,7 @@ class IntroduceDivergentSum(Scene):
         flip_through = FlipThroughNumbers(
             lambda x : 2**(x+1)-1,
             start = NUM_WRITTEN_TERMS-1,
-            end = 40,
+            end = 50,
             start_center = brace.get_center() + 0.5*DOWN,
             end_center = end_brace.get_center() + 0.5*DOWN,
             **kwargs
@@ -190,17 +195,8 @@ class IntroduceDivergentSum(Scene):
             Transform(brace, end_brace, **kwargs),
             flip_through,
         )
-        kwargs = {"run_time" : 0.5, "alpha_func" : rush_from}
         self.clear()
-        self.add(CompoundMobject(*equation[:-1]))
-        self.animate(
-            Transform(
-                flip_through.mobject,
-                equation[-1],
-                **kwargs
-            ),
-            FadeOut(brace, **kwargs),
-        )
+        self.add(*equation)
         self.dither()
 
 class ClearlyNonsense(Scene):
@@ -237,57 +233,110 @@ class ClearlyNonsense(Scene):
         self.animate(ShowCreation(right_arrow))
         self.dither()
 
-class ReasonsForMakingVideo(Scene):
+class OutlineOfVideo(Scene):
     def construct(self):
-        text = text_mobject([
-            """
-            \\begin{itemize}
-            \\item Understand what ``$
-            """,
-            "".join(DIVERGENT_SUM_TEXT),
-            """
-            $'' is saying.
-            """,
-            """
-            \\item Nonsense-Driven Construction
-            \\end{itemize}
-            """
-        ], size = "\\Small")
-        text.scale(1.5).to_edge(LEFT).shift(UP).highlight("white")
-        text.highlight("green", lambda (x, y, z) : x < -SPACE_WIDTH + 1)
-        line_one_first, equation, line_one_last, line_two = text.split()
-        line_two.shift(2*DOWN)
-        div_sum = divergent_sum().scale(0.5).shift(3*UP)
-
-        self.add(div_sum)
-        self.animate(
-            ApplyMethod(div_sum.replace, equation),
-            FadeIn(line_one_first),
-            FadeIn(line_one_last)
+        conv_sum = convergent_sum().scale(0.5)
+        div_sum = divergent_sum().scale(0.5)
+        overbrace = underbrace(
+            conv_sum.get_left(),
+            conv_sum.get_right()
+        ).rotate(np.pi, RIGHT).shift(0.75*UP*conv_sum.get_height())
+        dots = conv_sum.split()[-2].highlight("green")
+        dots.sort_points()
+        arrow = Arrow(
+            dots.get_bottom(),
+            direction = UP+LEFT
         )
-        self.dither()
-        self.add(line_two)
-        self.dither()
+        u_brace = underbrace(div_sum.get_left(), div_sum.get_right())
+        u_brace.shift(1.5*div_sum.get_bottom())
+        for mob in conv_sum, overbrace, arrow, dots:
+            mob.shift(2*UP)
+        for mob in div_sum, u_brace:
+            mob.shift(DOWN)
+        texts = [
+            text_mobject(words).highlight("yellow")
+            for words in [
+                "1. Discover this",
+                "2. Clarify what this means",
+                "3. Discover this",
+                ["4. Invent ", "\\textbf{new math}"]
+            ]
+        ]
+        last_one_split = texts[-1].split()
+        last_one_split[1].highlight("skyblue")
+        texts[-1] = CompoundMobject(*last_one_split)
+        texts[0].shift(overbrace.get_top()+texts[0].get_height()*UP)
+        texts[1].shift(sum([
+            arrow.get_border_point(DOWN+RIGHT),
+            texts[1].get_height()*DOWN
+        ]))
+        texts[2].shift(u_brace.get_bottom()+texts[3].get_height()*DOWN)
+        texts[3].to_edge(DOWN)
 
-class DiscoverAndDefine(Scene):
-    def construct(self):
-        sum_mob = tex_mobject("\\sum_{n = 1}^\\infty a_n")
-        discover = text_mobject("What does it feel like to discover these?")
-        define = text_mobject([
-            "What does it feel like to", 
-            "\\emph{define} ",
-            "them?"
-        ])
-        sum_mob.shift(2*UP)
-        define.shift(2*DOWN)
-        define_parts = define.split()
-        define_parts[1].highlight("skyblue")
+        groups = [
+            [texts[0], overbrace, conv_sum],
+            [texts[1], arrow, dots],
+            [texts[2], u_brace, div_sum],
+            [texts[3]]
+        ]
+        for group in groups:
+            self.animate(*[
+                DelayByOrder(FadeIn(element))
+                for element in group
+            ])
+            self.dither()
 
-        self.add(sum_mob)
-        self.animate(FadeIn(discover))
-        self.dither()
-        self.animate(FadeIn(CompoundMobject(*define_parts)))
-        self.dither()
+# # class ReasonsForMakingVideo(Scene):
+# #     def construct(self):
+# #         text = text_mobject([
+# #             """
+# #             \\begin{itemize}
+# #             \\item Understand what ``$
+# #             """,
+# #             "".join(DIVERGENT_SUM_TEXT),
+# #             """
+# #             $'' is saying.
+# #             """,
+# #             """
+# #             \\item Nonsense-Driven Construction
+# #             \\end{itemize}
+# #             """
+# #         ], size = "\\Small")
+# #         text.scale(1.5).to_edge(LEFT).shift(UP).highlight("white")
+# #         text.highlight("green", lambda (x, y, z) : x < -SPACE_WIDTH + 1)
+# #         line_one_first, equation, line_one_last, line_two = text.split()
+# #         line_two.shift(2*DOWN)
+# #         div_sum = divergent_sum().scale(0.5).shift(3*UP)
+
+# #         self.add(div_sum)
+# #         self.animate(
+# #             ApplyMethod(div_sum.replace, equation),
+# #             FadeIn(line_one_first),
+# #             FadeIn(line_one_last)
+# #         )
+# #         self.dither()
+# #         self.add(line_two)
+# #         self.dither()
+
+# class DiscoverAndDefine(Scene):
+#     def construct(self):
+#         sum_mob = tex_mobject("\\sum_{n = 1}^\\infty a_n")
+#         discover = text_mobject("What does it feel like to discover these?")
+#         define = text_mobject([
+#             "What does it feel like to", 
+#             "\\emph{define} ",
+#             "them?"
+#         ])
+#         sum_mob.shift(2*UP)
+#         define.shift(2*DOWN)
+#         define_parts = define.split()
+#         define_parts[1].highlight("skyblue")
+
+#         self.add(sum_mob)
+#         self.animate(FadeIn(discover))
+#         self.dither()
+#         self.animate(FadeIn(CompoundMobject(*define_parts)))
+#         self.dither()
 
 class YouAsMathematician(Scene):
     def construct(self):

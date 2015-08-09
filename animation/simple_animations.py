@@ -8,6 +8,35 @@ from mobject import *
 from constants import *
 from helpers import *
 
+
+class DelayByOrder(Animation):
+    """
+    Modifier of animation.
+
+    Warning: This will not work on all animation types, but 
+    when it does, it will be pretty cool
+    """
+    def __init__(self, animation, max_power = 5, **kwargs):
+        self.animation = animation
+        self.max_power = max_power
+        kwargs = dict([
+            (attr, getattr(animation, attr))
+            for attr in "run_time", "alpha_func"
+        ])
+        self.num_mobject_points = animation.mobject.get_num_points()
+        Animation.__init__(self, animation.mobject, **kwargs)
+        self.name = self.__class__.__name__ + str(self.animation)
+
+    def update_mobject(self, alpha):
+        dim = self.mobject.DIM
+        alpha_array = np.array([
+            [alpha**power]*dim
+            for n in range(self.num_mobject_points)
+            for prop in [(n+1.0)/self.num_mobject_points]
+            for power in [1+prop*(self.max_power-1)]
+        ])
+        self.animation.update_mobject(alpha_array)
+
 class Rotating(Animation):
     def __init__(self,
                  mobject,
@@ -59,6 +88,7 @@ class FadeIn(Animation):
         if self.mobject.points.shape != self.starting_mobject.points.shape:
             self.mobject.points = self.starting_mobject.points
             #TODO, Why do you need to do this? Shouldn't points always align?
+
 
 class ShowCreation(Animation):
     def update_mobject(self, alpha):
@@ -130,6 +160,27 @@ class ComplexHomotopy(Homotopy):
         Homotopy.__init__(self, homotopy, mobject, *args, **kwargs)
         self.name = "ComplexHomotopy" + \
             to_cammel_case(complex_homotopy.__name__)
+
+class Succession(Animation):
+    def __init__(self, *animations, **kwargs):
+        if "run_time" in kwargs:
+            run_time = kwargs.pop("run_time")
+        else:
+            run_time = sum([anim.run_time for anim in animations])
+        self.num_anims = len(animations)
+        self.anims = animations
+        mobject = animations[0].mobject
+        Animation.__init__(self, mobject, run_time = run_time, **kwargs)
+
+    def __str__(self):
+        return self.__class__.__name__ + \
+               "".join(map(str, self.anims))
+
+    def update(self, alpha):
+        scaled_alpha = alpha*self.num_anims
+        self.mobject = self.anims
+        for index in range(len(self.anims)):
+            self.anims[index].update(scaled_alpha - index)
 
 
 ####### Pi Creature Stuff #############

@@ -111,27 +111,6 @@ class Animation(object):
         self.update(1)
 
 
-class Succession(Animation):
-    def __init__(self, *animations, **kwargs):
-        if "run_time" in kwargs:
-            run_time = kwargs.pop("run_time")
-        else:
-            run_time = sum([anim.run_time for anim in animations])
-        self.num_anims = len(animations)
-        self.anims = animations
-        mobject = animations[0].mobject
-        Animation.__init__(self, mobject, run_time = run_time, **kwargs)
-
-    def __str__(self):
-        return self.__class__.__name__ + \
-               "".join(map(str, self.anims))
-
-    def update(self, alpha):
-        scaled_alpha = alpha*self.num_anims
-        self.mobject = self.anims
-        for index in range(len(self.anims)):
-            self.anims[index].update(scaled_alpha - index)
-
 
 
 
