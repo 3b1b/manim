@@ -69,7 +69,7 @@ class IllustrateDuality(GraphScene):
             if t > 0.5:
                 t = 1 - t
             if t < 0.25:
-                return high_inflection_0_to_1(4*t)
+                return smooth(4*t)
             else:
                 return 1
         kwargs = {

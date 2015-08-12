@@ -12,9 +12,105 @@ from constants import *
 from region import *
 from scene import Scene
 from script_wrapper import command_line_create_scene
+from inventing_math import divergent_sum, draw_you
 
 
-class BuildFromTheStart(Scene):
+
+class SimpleText(Scene):
+    args_list = [
+         ("Build from the start...",),
+         ("What would that feel like?",),
+         ("Arbitrary decisions hinder generality",),
+         ("Section 1: Discovering and Defining Infinite Sums",),
+         ("Section 2: Seeking Generality",),
+         ("Section 3: Redefining Distance",),
+         ("``Approach''?",),
+         ("Rigor would dicate you ignore these",),
+         ("dist($A$, $B$) = dist($A+x$, $B+x$) \\quad for all $x$",),
+         ("How does a useful distance function differ from a random function?",),
+         ("Pause now, if you like, and see if you can invent your own distance function from this.",),
+         ("$p$-adic metrics \\\\ ($p$ is any prime number)",),
+         ("This does not meant to match the history of discoveries",),
+    ]
+    @staticmethod
+    def args_to_string(text):
+        return initials(filter(lambda c : c in string.letters + " ", text))
+
+    def construct(self, text):
+        self.add(text_mobject(text))
+
+
+class SimpleTex(Scene):
+    args_list = [
+        (
+            "\\frac{9}{10}+\\frac{9}{100}+\\frac{9}{1000}+\\cdots = 1",
+            "SumOf9s"
+        ),
+        (
+            "0 < p < 1",
+            "PBetween0And1"
+        ),
+    ]
+    @staticmethod
+    def args_to_string(expression, words):
+        return words
+
+    def construct(self, expression, words):
+        self.add(tex_mobject(expression))
+
+
+class OneMinusOnePoem(Scene):
     def construct(self):
-        self.add(text_mobject("Build from the start..."))
+        verse1 = text_mobject("""
+            \\begin{flushleft}
+            When one takes one from one  \\\\
+            plus one from one plus one \\\\
+            and on and on but ends  \\\\
+            anon then starts again, \\\\
+            then some sums sum to one, \\\\
+            to zero other ones. \\\\
+            One wonders who'd have won \\\\
+            had stopping not been done; \\\\
+            had he summed every bit \\\\
+            until the infinite. \\\\
+            \\end{flushleft}
+        """).scale(0.5).to_corner(UP+LEFT)
+        verse2 = text_mobject("""
+            \\begin{flushleft}
+            Lest you should think that such \\\\
+            less well-known sums are much \\\\
+            ado about nonsense \\\\
+            I do give these two cents: \\\\
+            The universe has got \\\\
+            an answer which is not \\\\
+            what most would first surmise, \\\\
+            it is a compromise, \\\\
+            and though it seems a laugh \\\\
+            the universe gives ``half''. \\\\
+            \\end{flushleft}
+        """).scale(0.5).to_corner(DOWN+LEFT)
+        equation = tex_mobject(
+            "1-1+1-1+\\cdots = \\frac{1}{2}"
+        )
+        self.add(verse1, verse2, equation)
+        
+class DivergentSum(Scene):
+    def construct(self):
+        self.add(divergent_sum().scale(0.75))
+
+
+class PowersOfTwoSmall(Scene):
+    def construct(self):
+        you, bubble = draw_you(with_bubble=True)
+        bubble.write(
+            "Is there any way in which apparently \
+            large powers of two can be considered small?"
+        )
+        self.add(you, bubble, bubble.content)
+
+
+
+
+
+
 

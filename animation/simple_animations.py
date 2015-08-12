@@ -66,7 +66,7 @@ class Rotating(Animation):
 class RotationAsTransform(Rotating):
     def __init__(self, mobject, radians, axis = IN, axes = None,
                  run_time = DEFAULT_ANIMATION_RUN_TIME,
-                 alpha_func = high_inflection_0_to_1,
+                 alpha_func = smooth,
                  *args, **kwargs):
         Rotating.__init__(
             self,
@@ -88,6 +88,11 @@ class FadeIn(Animation):
         if self.mobject.points.shape != self.starting_mobject.points.shape:
             self.mobject.points = self.starting_mobject.points
             #TODO, Why do you need to do this? Shouldn't points always align?
+
+class ShimmerIn(DelayByOrder):
+    def __init__(self, mobject, *args, **kwargs):
+        mobject.sort_points(lambda p : np.dot(p, DOWN+RIGHT))
+        DelayByOrder.__init__(self, FadeIn(mobject, *args, **kwargs))
 
 
 class ShowCreation(Animation):

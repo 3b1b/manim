@@ -246,7 +246,7 @@ class Mobject(object):
     def get_center_of_mass(self):
         return np.apply_along_axis(np.mean, 0, self.points)
 
-    def get_border_point(self, direction):
+    def get_boundary_point(self, direction):
         return self.points[np.argmax(np.dot(self.points, direction))]
 
     def get_edge_center(self, dim, max_or_min_func):

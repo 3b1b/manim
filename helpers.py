@@ -68,7 +68,8 @@ def to_cammel_case(name):
 
 def initials(name, sep_values = [" ", "_"]):
     return "".join([
-        s[0] for s in re.split("|".join(sep_values), name)
+        (s[0] if s else "") 
+        for s in re.split("|".join(sep_values), name)
     ])
 
 def cammel_case_initials(name):
@@ -111,25 +112,25 @@ def make_even_by_cycling(iterable_1, iterable_2):
 def sigmoid(x):
     return 1.0/(1 + np.exp(-x))
 
-def high_inflection_0_to_1(t, inflection = 10.0):
+def smooth(t, inflection = 10.0):
     error = sigmoid(-inflection / 2)
     return (sigmoid(inflection*(t - 0.5)) - error) / (1 - 2*error)
 
 def rush_into(t):
-    return 2*high_inflection_0_to_1(t/2.0)
+    return 2*smooth(t/2.0)
 
 def rush_from(t):
-    return 2*high_inflection_0_to_1(t/2.0+0.5) - 1
+    return 2*smooth(t/2.0+0.5) - 1
 
 def slow_into(t):
     return np.sqrt(1-(1-t)*(1-t))
 
 def there_and_back(t, inflection = 10.0):
     new_t = 2*t if t < 0.5 else 2*(1 - t)
-    return high_inflection_0_to_1(new_t, inflection)
+    return smooth(new_t, inflection)
 
 def not_quite_there(t, proportion = 0.7):
-    return proportion*high_inflection_0_to_1(t)
+    return proportion*smooth(t)
 
 def wiggle(t, wiggles = 2):
     return there_and_back(t) * np.sin(wiggles*np.pi*t)

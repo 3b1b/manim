@@ -165,7 +165,7 @@ class MoserPattern(CircleScene):
             self.remove(*tex_stuffs)
 
 def hpsq_taylored_alpha(t):
-    return 0.3*np.sin(5*t-5)*np.exp(-20*(t-0.6)**2) + high_inflection_0_to_1(t)
+    return 0.3*np.sin(5*t-5)*np.exp(-20*(t-0.6)**2) + smooth(t)
 
 class HardProblemsSimplerQuestions(Scene):
     def __init__(self, *args, **kwargs):

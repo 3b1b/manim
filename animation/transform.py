@@ -153,7 +153,7 @@ class ApplyFunction(Transform):
 
 
 class ApplyPointwiseFunction(Transform):
-    def __init__(self, mobject, function, 
+    def __init__(self, function, mobject, 
                  run_time = DEFAULT_ANIMATION_RUN_TIME, **kwargs):
         map_image = copy.deepcopy(mobject)
         map_image.points = np.array(map(function, map_image.points))
@@ -167,7 +167,7 @@ class ApplyPointwiseFunction(Transform):
             "To" + str(mobject)
         ])
 
-class ComplexFunction(ApplyFunction):
+class ComplexFunction(ApplyPointwiseFunction):
     def __init__(self, function, *args, **kwargs):
         def point_map(point):
             x, y, z = point
@@ -181,14 +181,14 @@ class ComplexFunction(ApplyFunction):
             mobject = kwargs.pop("mobject")
         else:
             mobject = Grid()
-        ApplyFunction.__init__(self, point_map, mobject, *args, **kwargs)
+        ApplyPointwiseFunction.__init__(self, point_map, mobject, *args, **kwargs)
         self.name = "ComplexFunction" + to_cammel_case(function.__name__)
         #Todo, abstract away function naming'
 
 
 class TransformAnimations(Transform):
     def __init__(self, start_anim, end_anim, 
-                 alpha_func = squish_alpha_func(high_inflection_0_to_1),
+                 alpha_func = squish_alpha_func(smooth),
                  **kwargs):
         if "run_time" in kwargs:
             run_time = kwargs.pop("run_time")

@@ -17,7 +17,7 @@ class Animation(object):
     def __init__(self,
                  mobject,
                  run_time = DEFAULT_ANIMATION_RUN_TIME,
-                 alpha_func = high_inflection_0_to_1,
+                 alpha_func = smooth,
                  name = None):
         if isinstance(mobject, type) and issubclass(mobject, Mobject):
             self.mobject = mobject()

@@ -2,6 +2,7 @@ import numpy as np
 import itertools as it
 
 from mobject import Mobject, Mobject1D, Mobject2D, CompoundMobject
+from image_mobject import text_mobject
 from constants import *
 from helpers import *
 
@@ -115,6 +116,20 @@ class Line(Mobject1D):
         ]
         return rise/run
 
+class NewArrow(Line):
+    DEFAULT_COLOR = "white"
+    DEFAULT_TIP_LENGTH = 0.25
+    def __init__(self, *args, **kwargs):
+        if "tip_length" in kwargs:
+            tip_length = kwargs.pop("tip_length")
+        else:
+            tip_length = self.DEFAULT_TIP_LENGTH
+        Line.__init__(self, *args, **kwargs)
+        self.add_tip(tip_length)
+
+    def add_tip(self, tip_length):
+        pass
+
 class CurvedLine(Line):
     def __init__(self, start, end, via = None, *args, **kwargs):
         if via == None:
@@ -182,16 +197,24 @@ class Bubble(Mobject):
         self.shift(point - self.get_tip())
         return self
 
+    def flip(self):
+        self.direction = -np.array(self.direction)
+        self.rotate(np.pi, UP)
+        return self
+
     def pin_to(self, mobject):
-        self.move_tip_to(sum([
-            mobject.get_center(),
-            -self.direction * mobject.get_width()/2,
-            UP * mobject.get_height()/2,
-        ]))
+        mob_center = mobject.get_center()
+        if (mob_center[0] > 0) != (self.direction[0] > 0):
+            self.flip()
+        boundary_point = mobject.get_boundary_point(UP-self.direction)
+        vector_from_center = 1.5*(boundary_point-mob_center)
+        self.move_tip_to(mob_center+vector_from_center)
         return self
 
     def add_content(self, mobject):
-        mobject.scale(0.75*self.get_width() / mobject.get_width())
+        scaled_width = 0.75*self.get_width()
+        if mobject.get_width() > scaled_width:
+            mobject.scale(scaled_width / mobject.get_width())
         mobject.shift(self.get_bubble_center())
         self.content = mobject
         return self
@@ -205,9 +228,34 @@ class Bubble(Mobject):
         return self
 
 class SpeechBubble(Bubble):
+    INITIAL_WIDTH = 6
+    INITIAL_HEIGHT = 4
     def __init__(self, *args, **kwargs):
-        #TODO
-        pass
+        Mobject.__init__(self, *args, **kwargs)
+        complex_power = 0.9
+        radius = self.INITIAL_WIDTH/2
+        circle = Circle(density = radius*DEFAULT_POINT_DENSITY_1D)
+        circle.apply_complex_function(lambda z : z**complex_power)
+        circle.scale(radius)
+        boundary_point_as_complex = radius*complex(-1)**complex_power
+        boundary_points = [
+            [
+                boundary_point_as_complex.real,
+                unit*boundary_point_as_complex.imag,
+                0
+            ]
+            for unit in -1, 1
+        ]
+        tip = radius*(1.5*LEFT+UP)
+        self.add(
+            circle,
+            Line(boundary_points[0], tip),
+            Line(boundary_points[1], tip)
+        )
+        self.highlight("white")
+        self.rotate(np.pi/2)
+        self.points[:,1] *= float(self.INITIAL_HEIGHT)/self.INITIAL_WIDTH
+        Bubble.__init__(self, direction = LEFT)
 
 class ThoughtBubble(Bubble):
     NUM_BULGES = 7

@@ -149,7 +149,7 @@ class TauPoem(Scene):
         number_word.shift(BUFF * UP / 2)
 
         kwargs = {
-            "alpha_func" : squish_alpha_func(high_inflection_0_to_1),
+            "alpha_func" : squish_alpha_func(smooth),
         }
         self.add(first_word, rest_of_line, self.first_digits)
         self.first_word  = first_word
@@ -167,13 +167,13 @@ class TauPoem(Scene):
         self.animate_over_time_range(0, 2,
             Transform(
                 deepcopy(self.first_word), self.number_word,
-                alpha_func = squish_alpha_func(high_inflection_0_to_1)
+                alpha_func = squish_alpha_func(smooth)
             )
         )
         self.animate_over_time_range(2, 4,
             Transform(
                 self.number_word, self.new_digit,
-                alpha_func = squish_alpha_func(high_inflection_0_to_1)                
+                alpha_func = squish_alpha_func(smooth)                
             )
         )
 
@@ -205,12 +205,12 @@ class TauPoem(Scene):
         self.dither()
         self.animate(CounterclockwiseTransform(
             two_pi, sphere,
-            alpha_func = lambda t : 2*high_inflection_0_to_1(t/2)
+            alpha_func = lambda t : 2*smooth(t/2)
         ))
         self.remove(two_pi)
         self.animate(CounterclockwiseTransform(
             sphere, tau,
-            alpha_func = lambda t : 2*(high_inflection_0_to_1(t/2+0.5)-0.5)
+            alpha_func = lambda t : 2*(smooth(t/2+0.5)-0.5)
         ))
         self.remove(sphere)
         self.add(tau)
@@ -407,7 +407,7 @@ class TauPoem(Scene):
                 ShowCreation(sine),
                 ShowCreation(deepcopy(sine).shift(2*np.pi*interval_size*RIGHT)),
                 run_time = 2.0,
-                alpha_func = high_inflection_0_to_1
+                alpha_func = smooth
             ),
             ShowCreation(circle)
         )

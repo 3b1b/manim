@@ -16,13 +16,10 @@ from script_wrapper import command_line_create_scene
 
 class SampleScene(RearrangeEquation):
     def construct(self):
-        dot = Dot().shift(UP)
-        self.add(dot)
-        self.dither()
-        self.animate(DelayByOrder(Transform(
-            dot,
-            Line(DOWN, UP)
-        )))
+        three = tex_mobject("3")
+        three.sort_points(np.linalg.norm)
+        self.animate(DelayByOrder(ApplyMethod(three.scale, 3)))
+
         self.dither()
 
 
