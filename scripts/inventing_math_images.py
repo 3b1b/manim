@@ -18,19 +18,19 @@ from inventing_math import divergent_sum, draw_you
 
 class SimpleText(Scene):
     args_list = [
-         ("Build from the start...",),
+         ("Build the foundation of what we know",),
          ("What would that feel like?",),
          ("Arbitrary decisions hinder generality",),
          ("Section 1: Discovering and Defining Infinite Sums",),
          ("Section 2: Seeking Generality",),
          ("Section 3: Redefining Distance",),
          ("``Approach''?",),
-         ("Rigor would dicate you ignore these",),
+         ("Rigor would dictate you ignore these",),
          ("dist($A$, $B$) = dist($A+x$, $B+x$) \\quad for all $x$",),
          ("How does a useful distance function differ from a random function?",),
          ("Pause now, if you like, and see if you can invent your own distance function from this.",),
          ("$p$-adic metrics \\\\ ($p$ is any prime number)",),
-         ("This does not meant to match the history of discoveries",),
+         ("This is not meant to match the history of discoveries",),
     ]
     @staticmethod
     def args_to_string(text):
@@ -109,7 +109,27 @@ class PowersOfTwoSmall(Scene):
         self.add(you, bubble, bubble.content)
 
 
-
+class FinalSlide(Scene):
+    def construct(self):
+        self.add(text_mobject("""
+            \\begin{flushleft}
+            Needless to say, what I said here only scratches the 
+            surface of the tip of the iceberg of the p-adic metric.  
+            What is this new form of number I referred to?
+            Why were distances in the 2-adic metric all powers of 
+            $\\frac{1}{2}$ and not some other base?
+            Why does it only work for prime numbers? \\\\
+            \\quad \\\\
+            I highly encourage anyone who has not seen p-adic numbers
+            to look them up and learn more, but even more edifying than
+            looking them up will be to explore this idea for yourself directly.
+            What properties make a distance function useful, and why?
+            What do I mean by ``useful''?  Useful for what purpose?
+            Can you find infinite sums or sequences which feel like
+            they should converge in the 2-adic metric, but don't converge 
+            to a rational number? Go on!  Search!  Invent!
+            \\end{flushleft}
+        """, size = "\\small"))
 
 
 

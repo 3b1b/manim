@@ -935,13 +935,18 @@ class YouJustInventedSomeMath(Scene):
             mob.shift(UP)
         for mob in text[3:]:
             mob.shift(1.3*DOWN)
-        you = draw_you().center().rewire_part_attributes()
+        # you = draw_you().center().rewire_part_attributes()
+        # smile = PiCreature().mouth.center().shift(you.mouth.get_center())
+        you = PiCreature().highlight("grey")
+        you.center().rewire_part_attributes()
 
         self.add(you)
         for mob in text:
             self.add(mob)
             self.dither(0.2)
+        self.animate(WaveArm(you))
         self.animate(BlinkPiCreature(you))
+
 
 
 class SeekMoreGeneralTruths(Scene):
@@ -987,17 +992,19 @@ class ChopIntervalInProportions(Scene):
         if mode == "p":
             num_terms = 4         
             prop = 0.7
-            left_terms = map(tex_mobject, ["(1-p)", "p(1-p)"]+[
-                "p^%d(1-p)"%(count)
+            left_terms = map(tex_mobject, ["(1-p)", ["p","(1-p)"]]+[
+                ["p^%d"%(count), "(1-p)"]
                 for count in range(2, num_terms)
             ])
             right_terms = map(tex_mobject, ["p"] + [
-                "p^%d"%(count+1)
+                ["p", "^%d"%(count+1)]
                 for count in range(1, num_terms)
             ])
         interval = zero_to_one_interval()
         left = INTERVAL_RADIUS*LEFT
         right = INTERVAL_RADIUS*RIGHT
+        left_paren = tex_mobject("(")
+        right_paren = tex_mobject(")").shift(right + 1.1*UP)
         curr = left.astype("float")
         brace_to_replace = None
         term_to_replace = None
@@ -1023,17 +1030,63 @@ class ChopIntervalInProportions(Scene):
                     arrow.points = np.array(list(reversed(arrow.points)))
                     additional_anims = [ShowCreation(arrow)]
             if brace_to_replace is not None:
-                self.animate(
-                    Transform(
-                        brace_to_replace.repeat(2), 
-                        CompoundMobject(*braces)
-                    ),
-                    Transform(
-                        term_to_replace,
-                        CompoundMobject(lt, rt)
-                    ),
-                    *additional_anims
-                )
+                if mode == "p":
+                    lt, rt = lt.split(), rt.split()                    
+                    if count == 1:
+                        new_term_to_replace = deepcopy(term_to_replace)
+                        new_term_to_replace.center().shift(last+UP+0.3*LEFT)
+                        left_paren.center().shift(last+1.1*UP)
+                        self.animate(
+                            FadeIn(lt[1]),
+                            FadeIn(rt[0]),
+                            Transform(
+                                brace_to_replace.repeat(2),
+                                CompoundMobject(*braces)
+                            ),
+                            FadeIn(left_paren), 
+                            FadeIn(right_paren),
+                            Transform(term_to_replace, new_term_to_replace),
+                            *additional_anims
+                        )
+                        self.dither()
+                        self.animate(
+                            Transform(
+                                term_to_replace,
+                                CompoundMobject(lt[0], rt[1])
+                            ),
+                            FadeOut(left_paren),
+                            FadeOut(right_paren)
+                        )
+                        self.remove(left_paren, right_paren)
+                    else:
+                        self.animate(
+                            FadeIn(lt[1]),
+                            FadeIn(rt[0]),
+                            Transform(
+                                brace_to_replace.repeat(2),
+                                CompoundMobject(*braces)
+                            ),
+                            Transform(
+                                term_to_replace,
+                                CompoundMobject(lt[0], rt[1])
+                            ),
+                            *additional_anims
+                        )
+                    self.remove(*lt+rt)
+                    lt, rt = CompoundMobject(*lt), CompoundMobject(*rt)
+                    self.add(lt, rt)
+                else:
+                    self.animate(
+                        Transform(
+                            brace_to_replace.repeat(2), 
+                            CompoundMobject(*braces)
+                        ),
+                        Transform(
+                            term_to_replace,
+                            CompoundMobject(lt, rt)
+                        ),
+                        *additional_anims
+                    )
                 self.remove(brace_to_replace, term_to_replace)
                 self.add(lt, rt, *braces)
             else:
@@ -1390,21 +1443,35 @@ class SumPowersOfTwoAnimation(Scene):
         
 class PretendTheyDoApproachNegativeOne(RearrangeEquation):
     def construct(self):
-        you, bubble = draw_you(with_bubble = True)
-        start_terms = "1 , 3 , 7 , 15 , 31 , \\cdots\\rightarrow -1".split(" ")
-        end_terms   = "2 , 4 , 8 , 16 , 32 , \\cdots\\rightarrow 0".split(" ")
-        def transform(mob):
-            bubble.add_content(mob)
-            return mob
-        index_map = dict([(a, a) for a in range(len(start_terms))])
-
-        self.add(you, bubble)
-        RearrangeEquation.construct(
-            self, start_terms, end_terms, index_map, 
-            size = "\\Huge", 
-            start_transform = transform,
-            end_transform = transform
+        num_lines = 6
+        da = "\\downarrow"
+        columns = [
+            tex_mobject("\\\\".join([
+                n_func(n)
+                for n in range(num_lines)
+            ]+last_bits), size = "\\Large").to_corner(UP+LEFT)
+            for n_func, last_bits in [
+               (lambda n : str(2**(n+1)-1), ["\\vdots", da, "-1"]),
+               (lambda n : "+1", ["", "", "+1"]),
+               (lambda n : "=", ["", "", "="]),
+               (lambda n : str(2**(n+1)), ["\\vdots", da, "0"]),
+            ]
+        ]
+        columns[-1].highlight()
+        columns[2].shift(0.2*DOWN)
+        shift_val = 3*RIGHT
+        for column in columns:
+            column.shift(shift_val)
+            shift_val = shift_val + (column.get_width()+0.2)*RIGHT            
+        self.animate(ShimmerIn(columns[0]))
+        self.dither()
+        self.add(columns[1])
+        self.dither()
+        self.animate(
+            DelayByOrder(Transform(deepcopy(columns[0]), columns[-1])),
+            FadeIn(columns[2])
         )
+        self.dither()
 
 class DistanceBetweenRationalNumbers(Scene):
     def construct(self):
@@ -1521,7 +1588,7 @@ class ShiftInvarianceNumberLine(Scene):
             \\begin{flushleft}
             *yeah yeah, I know I'm still drawing them on a line,
             but until a few minutes from now I have no other way
-            to draw them"
+            to draw them
             \\end{flushright}
         """).scale(0.5).to_corner(DOWN+RIGHT)
 

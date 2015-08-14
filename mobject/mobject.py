@@ -203,7 +203,7 @@ class Mobject(object):
             return (result.real, result.imag, 0)
         return self.apply_function(point_map)
 
-    def highlight(self, color = "red", condition = None):
+    def highlight(self, color = "yellow", condition = None):
         """
         Condition is function which takes in one arguments, (x, y, z).
         """
