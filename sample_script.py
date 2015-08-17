@@ -10,20 +10,14 @@ from animation import *
 from mobject import *
 from constants import *
 from region import *
-from scene import Scene, RearrangeEquation
+from scene import Scene
 from script_wrapper import command_line_create_scene
 
 
-class SampleScene(RearrangeEquation):
+class SampleScene(Scene):
     def construct(self):
         three = tex_mobject("3")
-        three.sort_points(np.linalg.norm)
-        self.animate(DelayByOrder(ApplyMethod(three.scale, 3)))
-
-        self.dither()
-
-
-
+        self.add(three)
 
 if __name__ == "__main__":
     command_line_create_scene()

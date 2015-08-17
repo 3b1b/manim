@@ -6,66 +6,22 @@ from image_mobject import text_mobject
 from constants import *
 from helpers import *
 
+
 class Point(Mobject):
     DEFAULT_COLOR = "black"
-    def __init__(self, point = (0, 0, 0), *args, **kwargs):
+    def __init__(self, location = ORIGIN, *args, **kwargs):
+        self.location = np.array(location)
         Mobject.__init__(self, *args, **kwargs)
-        self.points = np.array(point).reshape(1, 3)
-        self.rgbs = np.array(self.color.get_rgb()).reshape(1, 3)
-
-class Arrow(Mobject1D):
-    DEFAULT_COLOR = "white"
-    DEFAULT_NUDGE_DISTANCE = 0.1
-    def __init__(self, 
-                 point = (0, 0, 0), 
-                 direction = (-1, 1, 0), 
-                 tail = None, 
-                 length = 1, 
-                 tip_length = 0.25,
-                 normal = (0, 0, 1), 
-                 density = DEFAULT_POINT_DENSITY_1D,
-                 *args, **kwargs):
-        self.point = np.array(point)
-        if tail is not None:
-            direction = self.point - tail
-            length = np.linalg.norm(direction)
-        self.direction = np.array(direction) / np.linalg.norm(direction)
-        density *= max(length, 0.1)
-        self.length = length
-        self.normal = np.array(normal)
-        self.tip_length = tip_length
-        Mobject1D.__init__(self, density = density, **kwargs)
 
     def generate_points(self):
-        self.add_points([
-            [x, x, x] * self.direction + self.point
-            for x in np.arange(-self.length, 0, self.epsilon)
-        ])
-        tips_dir = [np.array(-self.direction), np.array(-self.direction)]
-        for i, sgn in zip([0, 1], [-1, 1]):
-            tips_dir[i] = rotate_vector(tips_dir[i], sgn * np.pi / 4, self.normal)
-        self.add_points([
-            [x, x, x] * tips_dir[i] + self.point
-            for x in np.arange(0, self.tip_length, self.epsilon)
-            for i in [0, 1]
-        ])
+        self.add_points(self.location.reshape((1, 3)))
 
-    def nudge(self, distance = None):
-        if distance is None:
-            distance = self.DEFAULT_NUDGE_DISTANCE
-        return self.shift(-self.direction * distance)
-
-class Vector(Arrow):
-    def __init__(self, point = (1, 0, 0), *args, **kwargs):
-        length = np.linalg.norm(point)
-        Arrow.__init__(self, point = point, direction = point, 
-                       length = length, tip_length = 0.2 * length, 
-                       *args, **kwargs)
 
 class Dot(Mobject1D): #Use 1D density, even though 2D
     DEFAULT_COLOR = "white"
     DEFAULT_RADIUS = 0.05
-    def __init__(self, center = (0, 0, 0), radius = DEFAULT_RADIUS, *args, **kwargs):
+    def __init__(self, center = ORIGIN, radius = DEFAULT_RADIUS, 
+                 *args, **kwargs):
         center = np.array(center)
         if center.size == 1:
             raise Exception("Center must have 2 or 3 coordinates!")
@@ -94,15 +50,32 @@ class Cross(Mobject1D):
         ])
 
 class Line(Mobject1D):
-    def __init__(self, start, end, density = DEFAULT_POINT_DENSITY_1D, *args, **kwargs):
-        self.start = np.array(start)
-        self.end = np.array(end)
-        density *= max(self.get_length(), 0.1)
+    MIN_DENSITY = 0.1
+    def __init__(self, start, end, density = DEFAULT_POINT_DENSITY_1D, 
+                 *args, **kwargs):
+        self.set_start_and_end(start, end)
+        density *= max(self.get_length(), self.MIN_DENSITY)
         Mobject1D.__init__(self, density = density, *args, **kwargs)
+
+    def set_start_and_end(self, start, end):
+        preliminary_start, preliminary_end = [
+            arg.get_center() 
+            if isinstance(arg, Mobject) 
+            else np.array(arg)
+            for arg in start, end
+        ]
+        start_to_end = preliminary_end - preliminary_start
+        longer_dim = np.argmax(map(abs, start_to_end))
+        self.start, self.end = [
+            arg.get_edge_center(unit*start_to_end)
+            if isinstance(arg, Mobject)
+            else np.array(arg)
+            for arg, unit in zip([start, end], [1, -1])
+        ]
 
     def generate_points(self):
         self.add_points([
-            t * self.end + (1 - t) * self.start
+            interpolate(self.start, self.end, t)
             for t in np.arange(0, 1, self.epsilon)
         ])
 
@@ -116,7 +89,7 @@ class Line(Mobject1D):
         ]
         return rise/run
 
-class NewArrow(Line):
+class Arrow(Line):
     DEFAULT_COLOR = "white"
     DEFAULT_TIP_LENGTH = 0.25
     def __init__(self, *args, **kwargs):
@@ -128,22 +101,38 @@ class NewArrow(Line):
         self.add_tip(tip_length)
 
     def add_tip(self, tip_length):
-        pass
+        vect = self.start-self.end
+        vect *= tip_length/np.linalg.norm(vect)
+        self.add_points([
+            interpolate(self.end, self.end+v, t)
+            for t in np.arange(0, 1, tip_length*self.epsilon)
+            for v in [
+                rotate_vector(vect, np.pi/4, axis)
+                for axis in IN, OUT
+            ]
+        ])
 
 class CurvedLine(Line):
     def __init__(self, start, end, via = None, *args, **kwargs):
+        self.set_start_and_end(start, end)
         if via == None:
-            via = rotate_vector(
-                end - start, 
+            self.via = rotate_vector(
+                self.end - self.start, 
                 np.pi/3, [0,0,1]
-            ) + start
-        self.via = via
+            ) + self.start
+        elif isinstance(via, Mobject):
+            self.via = via.get_center()
+        else:
+            self.via = via
         Line.__init__(self, start, end, *args, **kwargs)
 
     def generate_points(self):
         self.add_points([
-            4*(0.25-t*(1-t))*(t*self.end + (1-t)*self.start) + 
-            4*t*(1-t)*self.via
+            interpolate(
+                interpolate(self.start, self.end, t),
+                self.via,
+                t*(1-t)
+            )
             for t in np.arange(0, 1, self.epsilon)
         ])
 

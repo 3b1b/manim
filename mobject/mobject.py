@@ -5,6 +5,7 @@ from PIL import Image
 from random import random
 from copy import deepcopy
 from colour import Color
+import inspect
 
 from constants import *
 from helpers import *
@@ -17,10 +18,9 @@ class Mobject(object):
     """
     #Number of numbers used to describe a point (3 for pos, 3 for normal vector)
     DIM = 3
-
     DEFAULT_COLOR = Color("skyblue")
-
     SHOULD_BUFF_POINTS = GENERALLY_BUFF_POINTS
+    EDGE_BUFFER = 0.5
 
     def __init__(self, 
                  color = None,
@@ -74,14 +74,26 @@ class Mobject(object):
             ).reshape(self.points.shape)
         return self
 
-    def rotate(self, angle, axis = [0, 0, 1]):
+    def add(self, *mobjects):
+        for mobject in mobjects:
+            self.add_points(mobject.points, mobject.rgbs)
+        return self
+
+    def repeat(self, count):
+        #Can make transition animations nicer
+        points, rgbs = deepcopy(self.points), deepcopy(self.rgbs)
+        for x in range(count - 1):
+            self.add_points(points, rgbs)
+        return self
+
+    def rotate(self, angle, axis = OUT):
         t_rotation_matrix = np.transpose(rotation_matrix(angle, axis))
         self.points = np.dot(self.points, t_rotation_matrix)
         if self.has_normals:
             self.unit_normals = np.dot(self.unit_normals, t_rotation_matrix)
         return self
 
-    def rotate_in_place(self, angle, axis = (0, 0, 1)):
+    def rotate_in_place(self, angle, axis = OUT):
         center = self.get_center()
         self.shift(-center)
         self.rotate(angle, axis)
@@ -89,12 +101,7 @@ class Mobject(object):
         return self
 
     def shift(self, vector):
-        cycle = it.cycle(vector)
-        v = np.array([
-            cycle.next() 
-            for x in range(self.points.size)
-        ]).reshape(self.points.shape)
-        self.points += v
+        self.points += vector
         return self
 
     def wag(self, wag_direction = RIGHT, wag_axis = DOWN,
@@ -105,7 +112,7 @@ class Mobject(object):
         alphas = alphas**wag_factor
         self.points += np.dot(
             alphas.reshape((len(alphas), 1)),
-            np.array(wag_direction).reshape((1, 3))
+            np.array(wag_direction).reshape((1, self.DIM))
         )
         return self
 
@@ -114,18 +121,18 @@ class Mobject(object):
         return self
 
     #Wrapper functions for better naming
-    def to_corner(self, corner = (-1, 1, 0), buff = 0.5):
+    def to_corner(self, corner = LEFT+DOWN, buff = EDGE_BUFFER):
         return self.align_on_border(corner, buff)
 
-    def to_edge(self, edge = (-1, 0, 0), buff = 0.5):
+    def to_edge(self, edge = LEFT, buff = EDGE_BUFFER):
         return self.align_on_border(edge, buff)
 
-    def align_on_border(self, direction, buff = 0.5):
+    def align_on_border(self, direction, buff = EDGE_BUFFER):
         """
         Direction just needs to be a vector pointing towards side or
         corner in the 2d plane.
         """
-        shift_val = [0, 0, 0]
+        shift_val = ORIGIN
         space_dim = (SPACE_WIDTH, SPACE_HEIGHT)
         for i in [0, 1]:
             if direction[i] == 0:
@@ -136,7 +143,6 @@ class Mobject(object):
                 shift_val[i] = -space_dim[i]+buff-min(self.points[:,i])
         self.shift(shift_val)
         return self
-
 
     def scale(self, scale_factor):
         self.points *= scale_factor
@@ -163,18 +169,6 @@ class Mobject(object):
 
     def stretch_to_fit_height(self, height):
         return self.stretch_to_fit(height, 1)
-
-    def add(self, *mobjects):
-        for mobject in mobjects:
-            self.add_points(mobject.points, mobject.rgbs)
-        return self
-
-    def repeat(self, count):
-        #Can make transition animations nicer
-        points, rgbs = deepcopy(self.points), deepcopy(self.rgbs)
-        for x in range(count - 1):
-            self.add_points(points, rgbs)
-        return self
 
     def pose_at_angle(self):
         self.rotate(np.pi / 7)
@@ -229,10 +223,12 @@ class Mobject(object):
         """
         function is any map from R^3 to R
         """
-        self.points = np.array(sorted(
-            self.points,
-            lambda *points : cmp(*map(function, points))
-        ))
+        indices = range(self.get_num_points())
+        indices.sort(
+            lambda *pair : cmp(*map(function, self.points[pair, :]))
+        )
+        self.points = self.points[indices]
+        self.rgbs   = self.rgbs[indices]
         return self
 
     ### Getters ###
@@ -249,22 +245,24 @@ class Mobject(object):
     def get_boundary_point(self, direction):
         return self.points[np.argmax(np.dot(self.points, direction))]
 
-    def get_edge_center(self, dim, max_or_min_func):
+    def get_edge_center(self, direction):
+        dim = np.argmax(map(abs, direction))
+        max_or_min_func = np.max if direction[dim] > 0 else np.min
         result = self.get_center()
         result[dim] = max_or_min_func(self.points[:,dim])
         return result
 
     def get_top(self):
-        return self.get_edge_center(1, np.max)
+        return self.get_edge_center(UP)
 
     def get_bottom(self):
-        return self.get_edge_center(1, np.min)
+        return self.get_edge_center(DOWN)
 
     def get_right(self):
-        return self.get_edge_center(0, np.max)
+        return self.get_edge_center(RIGHT)
 
     def get_left(self):
-        return self.get_edge_center(0, np.min)
+        return self.get_edge_center(LEFT)
 
     def get_width(self):
         return np.max(self.points[:, 0]) - np.min(self.points[:, 0])
@@ -340,5 +338,61 @@ class CompoundMobject(Mobject):
             ))
             curr += num_points
         return result
+
+# class CompoundMobject(Mobject):
+#     """
+#     Treats a collection of mobjects as if they were one.
+
+#     A weird form of inhertance is at play here...
+#     """
+#     def __init__(self, *mobjects):
+#         Mobject.__init__(self)
+#         self.mobjects = mobjects
+#         name_to_method = dict(
+#             inspect.getmembers(Mobject, predicate = inspect.ismethod)
+#         )
+#         names = name_to_method.keys()
+#         #Most reductions take the form of mapping a given method across
+#         #all constituent mobjects, then just returning self.
+#         name_to_reduce = dict([
+#             (name, lambda list : self)
+#             for name in names
+#         ])
+#         name_to_reduce.update(self.get_special_reduce_functions())
+#         def make_pseudo_method(name):
+#             return lambda *args, **kwargs : name_to_reduce[name]([
+#                 name_to_method[name](mob, *args, **kwargs)
+#                 for mob in self.mobjects
+#             ])
+#         for name in names:
+#             setattr(self, name, make_pseudo_method(name))
+
+#     def show(self):
+
+
+#     def get_special_reduce_functions(self):
+#         return {}
+
+#     def handle_method(self, method_name, *args, **kwargs):
+#         pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

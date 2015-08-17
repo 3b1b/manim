@@ -13,42 +13,56 @@ class ImageMobject(Mobject2D):
     """
 #    SHOULD_BUFF_POINTS = False
     def __init__(self, 
-                 image, 
+                 image_file, 
                  filter_color = "black", 
                  invert = True,
                  *args, **kwargs):
-        #TODO, Make sure you always convert to RGB
-        self.filter_rgb = 255 * np.array(Color(filter_color).get_rgb()).astype('uint8')
-        if isinstance(image, str):
-            self.name = to_cammel_case(
-                os.path.split(image)[-1].split(".")[0]
-            )
-            possible_paths = [
-                image,
-                os.path.join(IMAGE_DIR, image),
-                os.path.join(IMAGE_DIR, image + ".jpg"),
-                os.path.join(IMAGE_DIR, image + ".png"),
-            ]
-            found = False
-            for path in possible_paths:
-                if os.path.exists(path):
-                    image = Image.open(path).convert('RGB')
-                    found = True
-            if not found:
-                raise IOError("File not Found")
-        if invert:
-            image = invert_image(image)
-        self.image_array = np.array(image)
         Mobject2D.__init__(self, *args, **kwargs)
+        self.filter_rgb = 255 * np.array(Color(filter_color).get_rgb()).astype('uint8')
+        self.name = to_cammel_case(
+            os.path.split(image_file)[-1].split(".")[0]
+        )
+        possible_paths = [
+            image_file,
+            os.path.join(IMAGE_DIR, image_file),
+            os.path.join(IMAGE_DIR, image_file + ".jpg"),
+            os.path.join(IMAGE_DIR, image_file + ".png"),
+        ]
+        for path in possible_paths:
+            if os.path.exists(path):
+                self.generate_points_from_file(path, invert)
+                return
+        raise IOError("File not Found")
                 
-    def generate_points(self):
-        height, width = self.image_array.shape[:2]
+    def generate_points_from_file(self, path, invert):
+        #Hash should be unique to (path, invert) pair
+        dtype = 'float'
+        unique_hash = str(hash(path+str(invert)))
+        cached_points, cached_rgbs = [
+            os.path.join(IMAGE_MOBJECT_DIR, unique_hash)+extension
+            for extension in ".points", ".rgbs"
+        ]
+        if os.path.exists(cached_points) and os.path.exists(cached_rgbs):
+            self.points = np.fromfile(cached_points, dtype = dtype)
+            self.rgbs = np.fromfile(cached_rgbs, dtype = dtype)
+            n_points = self.points.size/self.DIM
+            self.points = self.points.reshape(n_points, self.DIM)
+            self.rgbs = self.rgbs.reshape(n_points, 3)
+        else:
+            image = Image.open(path).convert('RGB')
+            if invert:
+                image = invert_image(image)
+            self.generate_points_from_image_array(np.array(image))
+            self.points.astype(dtype).tofile(cached_points)
+            self.rgbs.astype(dtype).tofile(cached_rgbs)
+
+    def generate_points_from_image_array(self, image_array):
+        height, width = image_array.shape[:2]
         #Flatten array, and find indices where rgb is not filter_rgb
-        array = self.image_array.reshape((height * width, 3))
-        ones = np.ones(height * width, dtype = 'bool')
-        for i in range(3):
-            ones *= (array[:,i] != self.filter_rgb[i])
-        indices = np.arange(height * width, dtype = 'int')[ones]
+        array = image_array.reshape((height * width, 3))
+        bools = array == self.filter_rgb
+        bools = bools[:,0]*bools[:,1]*bools[:,2]
+        indices = np.arange(height * width, dtype = 'int')[~bools]
         rgbs = array[indices, :].astype('float') / 255.0
 
         points = np.zeros((indices.size, 3), dtype = 'float64')
@@ -94,12 +108,12 @@ def tex_mobject(expression,
         else:
             size = "\\large"
         #Todo, make this more sophisticated.
-    images = tex_to_image(expression, size, template_tex_file)
-    if isinstance(images, list):
+    image_files = tex_to_image(expression, size, template_tex_file)
+    if isinstance(image_files, list):
         #TODO, is checking listiness really the best here?
-        result = CompoundMobject(*map(ImageMobject, images))
+        result = CompoundMobject(*map(ImageMobject, image_files))
     else:
-        result = ImageMobject(images)
+        result = ImageMobject(image_files)
     return result.highlight("white").center()
 
 

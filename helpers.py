@@ -9,6 +9,9 @@ import operator as op
 
 from constants import *
 
+def interpolate(start, end, alpha):
+    return (1-alpha)*start + alpha*end
+
 def center_of_mass(points):
     points = [np.array(point).astype("float") for point in points]
     return sum(points) / len(points)

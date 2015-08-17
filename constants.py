@@ -51,8 +51,12 @@ GIF_DIR   = os.path.join(FILE_DIR, "gifs")
 MOVIE_DIR = os.path.join(FILE_DIR, "movies")
 TEX_DIR   = os.path.join(FILE_DIR, "Tex")
 TEX_IMAGE_DIR = os.path.join(IMAGE_DIR, "Tex")
+MOBJECT_DIR = os.path.join(FILE_DIR, "mobjects")
+IMAGE_MOBJECT_DIR = os.path.join(MOBJECT_DIR, "image")
 TMP_IMAGE_DIR = "/tmp/animation_images/"
-for folder in [IMAGE_DIR, GIF_DIR, MOVIE_DIR, TEX_DIR, TMP_IMAGE_DIR, TEX_IMAGE_DIR]:
+
+for folder in [IMAGE_DIR, GIF_DIR, MOVIE_DIR, TEX_DIR, TMP_IMAGE_DIR, 
+               TEX_IMAGE_DIR, MOBJECT_DIR, IMAGE_MOBJECT_DIR]:
     if not os.path.exists(folder):
         os.mkdir(folder)
 
@@ -68,6 +72,26 @@ LOGO_PATH = os.path.join(IMAGE_DIR, "logo.png")
 DARK_BLUE = "#236B8E"
 DARK_BROWN = "#8B4513"
 LIGHT_BROWN = "#CD853F"
+
+PI_CREATURE_DIR = os.path.join(IMAGE_DIR, "PiCreature")
+PI_CREATURE_PART_NAME_TO_DIR = lambda name : os.path.join(PI_CREATURE_DIR, "pi_creature_"+name) + ".png"
+PI_CREATURE_SCALE_VAL = 0.5
+PI_CREATURE_MOUTH_TO_EYES_DISTANCE = 0.25
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

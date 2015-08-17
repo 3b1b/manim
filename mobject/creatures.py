@@ -7,108 +7,95 @@ from mobject import *
 from simple_mobjects import *
 
 
-class PiCreature(Mobject):
+class PiCreature(CompoundMobject):
     DEFAULT_COLOR = "blue"
-    def __init__(self, **kwargs):
-        Mobject.__init__(self, **kwargs)
-        color = self.DEFAULT_COLOR
-        scale_val = 0.5
-        mouth_to_eyes_distance = 0.25
-        part_names = [
-            'arm', 
-            'body', 
-            'left_eye', 
-            'right_eye',
-            'left_leg',
-            'right_leg',            
-            'mouth', 
-        ]
-        white_part_names = ['left_eye', 'right_eye', 'mouth']
-        directory = os.path.join(IMAGE_DIR, "PiCreature")
+    PART_NAMES = [
+        'arm', 
+        'body', 
+        'left_eye', 
+        'right_eye',
+        'left_leg',
+        'right_leg',            
+        'mouth', 
+    ]
+    WHITE_PART_NAMES = ['left_eye', 'right_eye', 'mouth']
+    MOUTH_NAMES = ["smile", "frown", "straight_mouth"]
 
-        parts = []
-        self.white_parts = []
-        for part_name in part_names:
-            path = os.path.join(directory, "pi_creature_"+part_name)
-            path += ".png"
-            mob = ImageMobject(path)
-            mob.scale(scale_val)
-            if part_name in white_part_names:
-                self.white_parts.append(mob)
-            else:
+    def __init__(self, **kwargs):
+        color = self.DEFAULT_COLOR if "color" not in kwargs else kwargs.pop("color")
+        for part_name in self.PART_NAMES:
+            mob = ImageMobject(
+                PI_CREATURE_PART_NAME_TO_DIR(part_name)
+            )
+            if part_name not in self.WHITE_PART_NAMES:
                 mob.highlight(color)
+            mob.scale(PI_CREATURE_SCALE_VAL)
             setattr(self, part_name, mob)
-            parts.append(mob)
-        self.mouth.center().shift(
-            self.left_eye.get_center()/2 + 
-            self.right_eye.get_center()/2 -
-            (0, mouth_to_eyes_distance, 0)
-        )
         self.eyes = [self.left_eye, self.right_eye]
         self.legs = [self.left_leg, self.right_leg]
-        for part in parts:
-            self.add(part)
-        self.parts = parts
+        mouth_center = self.get_mouth_center()
+        self.mouth.center()
+        self.smile = deepcopy(self.mouth)
+        self.frown = deepcopy(self.mouth).rotate(np.pi, RIGHT)
+        self.straight_mouth = tex_mobject("-").scale(0.5)
+        for mouth_name in ["mouth"] + self.MOUTH_NAMES:
+            mouth = getattr(self, mouth_name)
+            mouth.sort_points(lambda p : p[0])
+            mouth.shift(mouth_center)
+        #Ordering matters here, so hidden mouths are behind body
+        self.part_names = self.MOUTH_NAMES + self.PART_NAMES
+        self.white_parts = self.MOUTH_NAMES + self.WHITE_PART_NAMES
+        CompoundMobject.__init__(
+            self,
+            *self.get_parts(),
+            **kwargs
+        )
 
-    def rewire_part_attributes(self, self_from_parts = False):
-        if self_from_parts:
-            total_num_points = sum(map(Mobject.get_num_points, self.parts))
-            self.points = np.zeros((total_num_points, Mobject.DIM))
-            self.rgbs   = np.zeros((total_num_points, Mobject.DIM))
-        curr = 0
-        for part in self.parts:
-            n_points = part.get_num_points()
-            if self_from_parts:
-                self.points[curr:curr+n_points,:] = part.points
-                self.rgbs[curr:curr+n_points,:] = part.rgbs
-            else:
-                part.points = self.points[curr:curr+n_points,:]
-                part.rgbs = self.rgbs[curr:curr+n_points,:]
-            curr += n_points
+    def sync_parts(self):
+        CompoundMobject.__init__(self, *self.get_parts())
         return self
 
-    def reload_from_parts(self):
-       self.rewire_part_attributes(self_from_parts = True)
+    def TODO_what_should_I_do_with_this(self):
+        for part_name, mob in zip(self.part_names, self.split()):
+            setattr(self, part_name, mob)
+
+
+    def get_parts(self):
+        return [getattr(self, pn) for pn in self.part_names]
+
+    def get_white_parts(self):
+        return [getattr(self, pn) for pn in self.white_parts]
+
+    def get_mouth_center(self):
+        left_center  = self.left_eye.get_center()
+        right_center = self.right_eye.get_center()
+        l_to_r = right_center-left_center
+        eyes_to_mouth = rotate_vector(l_to_r, -np.pi/2, OUT)
+        eyes_to_mouth /= np.linalg.norm(eyes_to_mouth)
+        return left_center/2 + right_center/2 + \
+               PI_CREATURE_MOUTH_TO_EYES_DISTANCE*eyes_to_mouth
 
     def highlight(self, color, condition = None):
-        self.rewire_part_attributes()
-        if condition is not None:
-            Mobject.highlight(self, color, condition)
-            return self
-        for part in set(self.parts).difference(self.white_parts):
-            part.highlight(color)
-        self.reload_from_parts()
-        return self
+        for part in set(self.get_parts()).difference(self.get_white_parts()):
+            part.highlight(color, condition)
+        return self.sync_parts()
 
     def move_to(self, destination):
-        bottom = np.array((
-            np.mean(self.points[:,0]),
-            min(self.points[:,1]),
-            0
-        ))
-        self.shift(destination-bottom)
-        self.rewire_part_attributes()
-        return self
+        self.shift(destination-self.get_bottom())
+        return self.sync_parts()
+
+    def change_mouth_to(self, mouth_name):
+        self.mouth = getattr(self, mouth_name)
+        return self.sync_parts()
+
+    def give_smile(self):
+        return self.change_mouth_to("smile")
 
     def give_frown(self):
-        center = self.mouth.get_center()
-        self.mouth.center()
-        self.mouth.apply_function(lambda (x, y, z) : (x, -y, z))
-        self.mouth.shift(center)
-        self.reload_from_parts()
-        return self
+        return self.change_mouth_to("frown")
 
     def give_straight_face(self):
-        center = self.mouth.get_center()
-        self.mouth.center()
-        new_mouth = tex_mobject("-").scale(0.5)
-        new_mouth.center().shift(self.mouth.get_center())
-        new_mouth.shift(center)
-        self.parts[self.parts.index(self.mouth)] = new_mouth
-        self.white_parts[self.white_parts.index(self.mouth)] = new_mouth
-        self.mouth = new_mouth
-        self.reload_from_parts()
-        return self
+        return self.change_mouth_to("straight_mouth")
 
     def get_eye_center(self):
         return center_of_mass([
@@ -123,7 +110,7 @@ class PiCreature(Mobject):
         for eye in self.left_eye, self.right_eye:
             eye.highlight("black", should_delete)
         self.give_straight_face()
-        return self
+        return self.sync_parts()
 
     def make_sad(self):
         eye_x, eye_y = self.get_eye_center()[:2]
@@ -133,13 +120,11 @@ class PiCreature(Mobject):
         for eye in self.left_eye, self.right_eye:
             eye.highlight("black", should_delete)
         self.give_frown()
-        self.reload_from_parts()
-        return self
+        return self.sync_parts()
 
     def get_step_intermediate(self, pi_creature):
         vect = pi_creature.get_center() - self.get_center()
         result = deepcopy(self).shift(vect / 2.0)
-        result.rewire_part_attributes()
         left_forward = vect[0] > 0
         if self.right_leg.get_center()[0] < self.left_leg.get_center()[0]:
             #For Mortimer's case
@@ -150,31 +135,26 @@ class PiCreature(Mobject):
         else:
             result.right_leg.wag(vect/2.0, DOWN)
             result.left_leg.wag(-vect/2.0, DOWN)
-        return result
+        return result.sync_parts()
 
     def blink(self):
         for eye in self.left_eye, self.right_eye:
-            bottom = min(eye.points[:,1])
+            bottom = eye.get_bottom()
             eye.apply_function(
-                lambda (x, y, z) : (x, bottom, z)
+                lambda (x, y, z) : (x, bottom[1], z)
             )
-        self.reload_from_parts()
-        return self
+        return self.sync_parts()
 
     def shift_eyes(self):
         for eye in self.left_eye, self.right_eye:
-            center = eye.get_center()
-            eye.center()
-            eye.rotate(np.pi, UP)
-            eye.shift(center)
-        self.reload_from_parts()
-        return self
+            eye.rotate_in_place(np.pi, UP)
+        return self.sync_parts()
 
     def to_symbol(self):
-        for white_part in self.white_parts:
-            self.parts.remove(white_part)
-        self.reload_from_parts()
-        return self
+        CompoundMobject.__init__(
+            self,
+            *list(set(self.get_parts()).difference(self.get_white_parts()))
+        )
 
 
 class Randolph(PiCreature):
@@ -187,18 +167,6 @@ class Mortimer(PiCreature):
         # self.highlight(DARK_BROWN)
         self.give_straight_face()
         self.rotate(np.pi, UP)
-        self.rewire_part_attributes()
-
-class TauCreature(PiCreature):
-    def __init__(self, **kwargs):
-        leg_shift_val = 0.25
-        leg_wag_val = 0.2
-        PiCreature.__init__(self, **kwargs)
-        self.parts.remove(self.right_leg)
-        self.left_leg.shift(leg_shift_val*RIGHT)
-        self.left_leg.wag(leg_wag_val*RIGHT, DOWN)
-        self.leg = self.left_leg
-        self.reload_from_parts()
 
 
 

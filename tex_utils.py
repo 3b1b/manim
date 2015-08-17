@@ -19,7 +19,7 @@ def tex_to_image(expression,
     image_dir = os.path.join(TEX_IMAGE_DIR, exp_hash)
     if os.path.exists(image_dir):
         result = [
-            Image.open(os.path.join(image_dir, png_file)).convert('RGB')
+            os.path.join(image_dir, png_file)
             for png_file in sorted(
                 os.listdir(image_dir), 
                 cmp_enumerated_files
@@ -92,7 +92,7 @@ def dvi_to_png(filename, regen_if_exists = False):
                 if name.endswith(".png")
             ]
             image_paths.sort(cmp_enumerated_files)
-            return [Image.open(path).convert('RGB') for path in image_paths]
+            return image_paths
     raise IOError("File not Found")
 
 def cmp_enumerated_files(name1, name2):
