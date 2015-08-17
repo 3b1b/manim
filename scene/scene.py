@@ -8,6 +8,7 @@ import os
 import copy
 import progressbar
 import inspect
+import cv2
 
 from helpers import *
 from mobject import *
@@ -33,7 +34,7 @@ class Scene(object):
             #TODO, Error checking?
         else:
             self.original_background = np.zeros(
-                (display_config["height"], display_config["width"], 3),
+                (self.display_config["height"], self.display_config["width"], 3),
                 dtype = 'uint8'
             )
         self.background = self.original_background
@@ -105,10 +106,11 @@ class Scene(object):
 
         for t in np.arange(0, run_time, self.frame_duration):
             progress_bar.update(t)
-            new_frame = background
             for animation in animations:
                 animation.update(t / animation.run_time)
-                new_frame = disp.paint_mobject(animation.mobject, new_frame)
+            new_frame = disp.paint_mobject(
+                CompoundMobject(*moving_mobjects), background
+            )
             self.frames.append(new_frame)
         for animation in animations:
             animation.clean_up()
@@ -116,7 +118,7 @@ class Scene(object):
         progress_bar.finish()
         return self
 
-    def animate_over_time_range(self, t0, t1, animation):
+    def animate_over_time_range(self, t0, t1, *animations):
         needed_scene_time = max(abs(t0), abs(t1))
         existing_scene_time = len(self.frames)*self.frame_duration
         if existing_scene_time < needed_scene_time:
@@ -129,95 +131,22 @@ class Scene(object):
             t1 = float(t1)%existing_scene_time
         t0, t1 = min(t0, t1), max(t0, t1)    
 
+        moving_mobjects = [anim.mobject for anim in animations]
         for t in np.arange(t0, t1, self.frame_duration):
-            animation.update((t-t0)/(t1 - t0))
+            for animation in animations:
+                animation.update((t-t0)/(t1 - t0))
             index = int(t/self.frame_duration)
             self.frames[index] = disp.paint_mobject(
-                animation.mobject, self.frames[index]
+                CompoundMobject(*moving_mobjects), self.frames[index]
             )
-        animation.clean_up()
-        return self
-
-
-    def count(self, items, item_type = "mobject", *args, **kwargs):
-        if item_type == "mobject":
-            self.count_mobjects(items, *args, **kwargs)
-        elif item_type == "region":
-            self.count_regions(items, *args, **kwargs)
-        else:
-            raise Exception("Unknown item_type, should be mobject or region")
-        return self
-
-    def count_mobjects(
-        self, mobjects, mode = "highlight",
-        color = "red", 
-        display_numbers = True,
-        num_offset = DEFAULT_COUNT_NUM_OFFSET,
-        run_time   = DEFAULT_COUNT_RUN_TIME):
-        """
-        Note, leaves final number mobject as "number" attribute
-
-        mode can be "highlight", "show_creation" or "show", otherwise
-        a warning is given and nothing is animating during the count
-        """
-        if len(mobjects) > 50: #TODO
-            raise Exception("I don't know if you should be counting \
-                             too many mobjects...")
-        if len(mobjects) == 0:
-            raise Exception("Counting mobject list of length 0")
-        if mode not in ["highlight", "show_creation", "show"]:
-            raise Warning("Unknown mode")
-        frame_time = run_time / len(mobjects)
-        if mode == "highlight":
-            self.add(*mobjects)
-        for mob, num in zip(mobjects, it.count(1)):
-            if display_numbers:
-                num_mob = tex_mobject(str(num))
-                num_mob.center().shift(num_offset)
-                self.add(num_mob)
-            if mode == "highlight":
-                original_color = mob.color
-                mob.highlight(color)
-                self.dither(frame_time)
-                mob.highlight(original_color)
-            if mode == "show_creation":
-                self.animate(ShowCreation(mob, run_time = frame_time))
-            if mode == "show":
-                self.add(mob)
-                self.dither(frame_time)
-            if display_numbers:
-                self.remove(num_mob)
-        if display_numbers:
-            self.add(num_mob)
-            self.number = num_mob
-        return self
-
-    def count_regions(self, regions, 
-                      mode = "one_at_a_time",
-                      num_offset = DEFAULT_COUNT_NUM_OFFSET,
-                      run_time   = DEFAULT_COUNT_RUN_TIME,
-                      **unused_kwargsn):
-        if mode not in ["one_at_a_time", "show_all"]:
-            raise Warning("Unknown mode")
-        frame_time = run_time / (len(regions))
-        for region, count in zip(regions, it.count(1)):
-            num_mob = tex_mobject(str(count))
-            num_mob.center().shift(num_offset)
-            self.add(num_mob)
-            self.highlight_region(region)
-            self.dither(frame_time)
-            if mode == "one_at_a_time":
-                self.reset_background()
-            self.remove(num_mob)
-        self.add(num_mob)
-        self.number = num_mob
+        for animation in animations:
+            animation.clean_up()
         return self
 
     def get_frame(self):
-        frame = self.background
-        for mob in self.mobjects:
-            frame = disp.paint_mobject(mob, frame)
-        return frame
+        return disp.paint_mobject(
+            CompoundMobject(*self.mobjects), self.background
+        )
 
     def dither(self, duration = DEFAULT_DITHER_TIME):
         self.frames += [self.get_frame()]*int(duration / self.frame_duration)
@@ -254,6 +183,54 @@ class Scene(object):
     @staticmethod
     def args_to_string(*args):
         return ""
+
+
+
+class SceneFromVideo(Scene):
+    def construct(self, file_name, freeze_last_frame = True):
+        cap = cv2.VideoCapture(file_name)
+        self.shape = (
+            int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)),
+            int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
+        )
+        self.frame_duration = 1.0/cap.get(cv2.cv.CV_CAP_PROP_FPS)
+        frame_count = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+
+        print "Reading in " + file_name + "..."
+        progress_bar = progressbar.ProgressBar(maxval=frame_count)
+        progress_bar.start()
+        while(cap.isOpened()):
+            returned, frame = cap.read()
+            if not returned:
+                break
+            b, g, r = cv2.split(frame)
+            self.frames.append(cv2.merge([r, g, b]))
+            progress_bar.update(len(self.frames))
+        cap.release()
+        progress_bar.finish()
+
+        if freeze_last_frame and len(self.frames) > 0:
+            self.original_background = self.background = self.frames[-1]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

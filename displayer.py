@@ -94,7 +94,7 @@ def write_to_gif(scene, name):
     temppath = os.path.join(GIF_DIR, "Temp.gif")
     print "Writing " + name + "..."
     images = [Image.fromarray(frame) for frame in scene.frames]
-    writeGif(temppath, images, scene.display_config["frame_duration"])
+    writeGif(temppath, images, scene.frame_duration)
     print "Compressing..."
     os.system("gifsicle -O " + temppath + " > " + filepath)
     os.system("rm " + temppath)
@@ -109,7 +109,7 @@ def write_to_movie(scene, name):
     filedir = "/".join(filepath.split("/")[:-1])
     if not os.path.exists(filedir):
         os.makedirs(filedir)
-    rate = int(1/scene.display_config["frame_duration"])
+    rate = int(1/scene.frame_duration)
 
     tmp_stem = os.path.join(TMP_IMAGE_DIR, name.replace("/", "_"))
     suffix = "-%04d.png"
