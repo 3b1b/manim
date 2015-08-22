@@ -164,6 +164,11 @@ def remove_nones(sequence):
     return filter(lambda x : x, sequence)
 
 #Matrix operations
+def thick_diagonal(dim, thickness = 2):
+    row_indices = np.arange(dim).repeat(dim).reshape((dim, dim))
+    col_indices = np.transpose(row_indices)
+    return (np.abs(row_indices - col_indices)<thickness).astype('uint8')
+
 def rotation_matrix(angle, axis):
     """
     Rotation in R^3 about a specified axess of rotation.

@@ -6,6 +6,8 @@ from region import *
 from constants import *
 from helpers import *
 
+DEFAULT_COUNT_NUM_OFFSET = (SPACE_WIDTH - 1, SPACE_HEIGHT - 1, 0)
+DEFAULT_COUNT_RUN_TIME   = 5.0
 
 class CountingScene(Scene):
     def count(self, items, item_type = "mobject", *args, **kwargs):

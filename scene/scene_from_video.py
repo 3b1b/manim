@@ -1,0 +1,62 @@
+import numpy as np
+import cv2
+import itertools as it
+
+from scene import *
+
+
+class SceneFromVideo(Scene):
+    def construct(self, file_name, 
+                  freeze_last_frame = True,
+                  time_range = None):
+        cap = cv2.VideoCapture(file_name)
+        self.shape = (
+            int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)),
+            int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
+        )
+        fps = cap.get(cv2.cv.CV_CAP_PROP_FPS)
+        self.frame_duration = 1.0/fps
+        frame_count = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+        if time_range is None:
+            start_frame = 0
+            end_frame = frame_count
+        else:
+            start_frame, end_frame = map(lambda t : fps*t, time_range)
+
+        frame_count = end_frame - start_frame
+        print "Reading in " + file_name + "..."
+        progress_bar = progressbar.ProgressBar(maxval=frame_count)
+        progress_bar.start()
+        for count in it.count():
+            returned, frame = cap.read()
+            if count < start_frame:
+                continue
+            if not returned or count > end_frame:
+                break
+            # b, g, r = cv2.split(frame)
+            # self.frames.append(cv2.merge([r, g, b]))
+            self.frames.append(frame)
+            progress_bar.update(min(len(self.frames), frame_count))
+        cap.release()
+        progress_bar.finish()
+
+        if freeze_last_frame and len(self.frames) > 0:
+            self.original_background = self.background = self.frames[-1]
+
+    def apply_gaussian_blur(self, ksize = (5, 5), sigmaX = 5):
+        self.frames = [
+            cv2.GaussianBlur(frame, ksize, sigmaX)
+            for frame in self.frames
+        ]
+
+    def apply_edge_detection(self, threshold1 = 50, threshold2 = 100):
+        edged_frames = [
+            cv2.Canny(frame, threshold1, threshold2)
+            for frame in self.frames
+        ]
+        for index in range(len(self.frames)):
+            for i in range(3):
+                self.frames[index][:,:,i] = edged_frames[index]
+
+        
+            

@@ -35,26 +35,41 @@ class ImageMobject(Mobject2D):
         raise IOError("File not Found")
                 
     def generate_points_from_file(self, path, invert):
+        if self.read_in_cached_attrs(path, invert):
+            return
+        image = Image.open(path).convert('RGB')
+        if invert:
+            image = invert_image(image)
+        self.generate_points_from_image_array(np.array(image))
+        self.cache_attrs(path, invert)
+
+    def get_cached_attr_files(self, path, invert, attrs):
         #Hash should be unique to (path, invert) pair
-        dtype = 'float'
         unique_hash = str(hash(path+str(invert)))
-        cached_points, cached_rgbs = [
-            os.path.join(IMAGE_MOBJECT_DIR, unique_hash)+extension
-            for extension in ".points", ".rgbs"
+        return [
+            os.path.join(IMAGE_MOBJECT_DIR, unique_hash)+"."+attr
+            for attr in attrs
         ]
-        if os.path.exists(cached_points) and os.path.exists(cached_rgbs):
-            self.points = np.fromfile(cached_points, dtype = dtype)
-            self.rgbs = np.fromfile(cached_rgbs, dtype = dtype)
-            n_points = self.points.size/self.DIM
-            self.points = self.points.reshape(n_points, self.DIM)
-            self.rgbs = self.rgbs.reshape(n_points, 3)
-        else:
-            image = Image.open(path).convert('RGB')
-            if invert:
-                image = invert_image(image)
-            self.generate_points_from_image_array(np.array(image))
-            self.points.astype(dtype).tofile(cached_points)
-            self.rgbs.astype(dtype).tofile(cached_rgbs)
+
+    def read_in_cached_attrs(self, path, invert, 
+                             attrs = ("points", "rgbs"), 
+                             dtype = "float64"):
+        cached_attr_files = self.get_cached_attr_files(path, invert, attrs)
+        if all(map(os.path.exists, cached_attr_files)):
+            for attr, cache_file in zip(attrs, cached_attr_files):
+                arr = np.fromfile(cache_file, dtype = dtype)
+                arr = arr.reshape(arr.size/self.DIM, self.DIM)
+                setattr(self, attr, arr)
+            return True
+        return False
+
+    def cache_attrs(self, path, invert, 
+                    attrs = ("points", "rgbs"),
+                    dtype = "float64"):
+        cached_attr_files = self.get_cached_attr_files(path, invert, attrs)
+        for attr, cache_file in zip(attrs, cached_attr_files): 
+            getattr(self, attr).astype(dtype).tofile(cache_file)
+
 
     def generate_points_from_image_array(self, image_array):
         height, width = image_array.shape[:2]

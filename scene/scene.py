@@ -7,17 +7,12 @@ import time
 import os
 import copy
 import progressbar
-import inspect
-import cv2
 
 from helpers import *
 from mobject import *
 from animation import *
 import displayer as disp
 from tk_scene import TkSceneRoot
-
-DEFAULT_COUNT_NUM_OFFSET = (SPACE_WIDTH - 1, SPACE_HEIGHT - 1, 0)
-DEFAULT_COUNT_RUN_TIME   = 5.0
 
 class Scene(object):
     def __init__(self,
@@ -84,6 +79,20 @@ class Scene(object):
             color = color,
         )
         return self
+
+    def highlight_region_over_time_range(self, region, time_range = None, color = "black"):
+        if time_range:
+            frame_range = map(lambda t : t / self.frame_duration, time_range)
+            frame_range[0] = max(frame_range[0], 0)
+            frame_range[1] = min(frame_range[1], len(self.frames))
+        else:
+            frame_range = (0, len(self.frames))
+        for index in range(frame_range[0], frame_range[1]):
+            self.frames[index] = disp.paint_region(
+                region,
+                image_array = self.frames[index],
+                color = color
+            )
 
     def reset_background(self):
         self.background = self.original_background
@@ -183,34 +192,6 @@ class Scene(object):
     @staticmethod
     def args_to_string(*args):
         return ""
-
-
-
-class SceneFromVideo(Scene):
-    def construct(self, file_name, freeze_last_frame = True):
-        cap = cv2.VideoCapture(file_name)
-        self.shape = (
-            int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)),
-            int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-        )
-        self.frame_duration = 1.0/cap.get(cv2.cv.CV_CAP_PROP_FPS)
-        frame_count = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-
-        print "Reading in " + file_name + "..."
-        progress_bar = progressbar.ProgressBar(maxval=frame_count)
-        progress_bar.start()
-        while(cap.isOpened()):
-            returned, frame = cap.read()
-            if not returned:
-                break
-            b, g, r = cv2.split(frame)
-            self.frames.append(cv2.merge([r, g, b]))
-            progress_bar.update(len(self.frames))
-        cap.release()
-        progress_bar.finish()
-
-        if freeze_last_frame and len(self.frames) > 0:
-            self.original_background = self.background = self.frames[-1]
 
 
 
