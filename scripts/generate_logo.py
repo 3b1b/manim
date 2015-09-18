@@ -21,8 +21,10 @@ class LogoGeneration(Scene):
     SPHERE_DENSITY = 50
     SPHERE_BLUE = DARK_BLUE
     CIRCLE_SPHERE_INTERPOLATION = 0.3
+    FRAME_DURATION = 0.01
 
     def construct(self):
+        self.frame_duration = FRAME_DURATION
         circle = Circle(
             density = self.CIRCLE_DENSITY, 
             color = self.CIRCLE_BLUE

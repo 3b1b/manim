@@ -132,7 +132,7 @@ class Mobject(object):
         Direction just needs to be a vector pointing towards side or
         corner in the 2d plane.
         """
-        shift_val = np.array(ORIGIN)
+        shift_val = np.zeros(3)
         space_dim = (SPACE_WIDTH, SPACE_HEIGHT)
         for i in [0, 1]:
             if direction[i] == 0:

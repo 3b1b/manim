@@ -100,6 +100,18 @@ class CounterclockwiseTransform(Transform):
             interpolation_function = counterclockwise_path, **kwargs
         )
 
+class SpinInFromNothing(Transform):
+    def __init__(self, mob, **kwargs):
+        name = "interpolation_function"
+        interp_func = kwargs[name] if name in kwargs else counterclockwise_path
+        dot = Point(mob.get_center(), color = "black")
+        Transform.__init__(
+            self, dot, mob, 
+            interpolation_function = interp_func, 
+            **kwargs
+        )
+        
+
 class FadeToColor(Transform):
     def __init__(self, mobject, color, *args, **kwargs):
         target = copy.deepcopy(mobject).highlight(color)
