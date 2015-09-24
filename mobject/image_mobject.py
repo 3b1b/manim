@@ -16,12 +16,14 @@ class ImageMobject(Mobject2D):
                  image_file, 
                  filter_color = "black", 
                  invert = True,
+                 use_cache = True,
                  *args, **kwargs):
         Mobject2D.__init__(self, *args, **kwargs)
         self.filter_rgb = 255 * np.array(Color(filter_color).get_rgb()).astype('uint8')
         self.name = to_cammel_case(
             os.path.split(image_file)[-1].split(".")[0]
         )
+        self.use_cache = use_cache
         possible_paths = [
             image_file,
             os.path.join(IMAGE_DIR, image_file),
@@ -35,7 +37,7 @@ class ImageMobject(Mobject2D):
         raise IOError("File not Found")
                 
     def generate_points_from_file(self, path, invert):
-        if self.read_in_cached_attrs(path, invert):
+        if self.use_cache and self.read_in_cached_attrs(path, invert):
             return
         image = Image.open(path).convert('RGB')
         if invert:

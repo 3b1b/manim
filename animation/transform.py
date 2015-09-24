@@ -39,7 +39,7 @@ class Transform(Animation):
         self.interpolation_function = interpolation_function
         count1, count2 = mobject1.get_num_points(), mobject2.get_num_points()
         if count2 == 0:
-            mobject2 = Point((SPACE_WIDTH, SPACE_HEIGHT, 0))
+            mobject2.add_points([(SPACE_WIDTH, SPACE_HEIGHT, 0)])
             count2 = mobject2.get_num_points()
         Mobject.align_data(mobject1, mobject2)
         Animation.__init__(self, mobject1, run_time = run_time, *args, **kwargs)

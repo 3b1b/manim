@@ -32,13 +32,16 @@ class Mobject(object):
         if not hasattr(self, "name"):
             self.name = name or self.__class__.__name__
         self.has_normals = hasattr(self, 'unit_normal')
+        self.init_points()
+        self.generate_points()
+        if center:
+            self.center().shift(center)
+
+    def init_points(self):
         self.points = np.zeros((0, 3))
         self.rgbs   = np.zeros((0, 3))
         if self.has_normals:
             self.unit_normals = np.zeros((0, 3))
-        self.generate_points()
-        if center:
-            self.center().shift(center)
 
     def __str__(self):
         return self.name
@@ -79,11 +82,19 @@ class Mobject(object):
             self.add_points(mobject.points, mobject.rgbs)
         return self
 
+
     def repeat(self, count):
         #Can make transition animations nicer
         points, rgbs = deepcopy(self.points), deepcopy(self.rgbs)
         for x in range(count - 1):
             self.add_points(points, rgbs)
+        return self
+
+    def do_in_place(self, method, *args, **kwargs):
+        center = self.get_center()
+        self.shift(-center)
+        method(*args, **kwargs)
+        self.shift(center)
         return self
 
     def rotate(self, angle, axis = OUT):
@@ -94,10 +105,7 @@ class Mobject(object):
         return self
 
     def rotate_in_place(self, angle, axis = OUT):
-        center = self.get_center()
-        self.shift(-center)
-        self.rotate(angle, axis)
-        self.shift(center)
+        self.do_in_place(self.rotate, angle, axis)
         return self
 
     def shift(self, vector):
@@ -144,13 +152,21 @@ class Mobject(object):
         self.shift(shift_val)
         return self
 
+    def next_to(self, mobject, direction = RIGHT, buff = EDGE_BUFFER):
+        self.shift(
+            mobject.get_edge_center(direction) - \
+            self.get_edge_center(-direction) + \
+            buff * direction
+        )
+        return self
+
     def scale(self, scale_factor):
         self.points *= scale_factor
         return self
 
     def scale_in_place(self, scale_factor):
-        center = self.get_center()
-        return self.center().scale(scale_factor).shift(center)
+        self.do_in_place(self.scale, scale_factor)
+        return self
 
     def stretch(self, factor, dim):
         self.points[:,dim] *= factor

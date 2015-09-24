@@ -9,9 +9,12 @@ from helpers import *
 class Stars(Mobject):
     DEFAULT_COLOR = "white"
     SHOULD_BUFF_POINTS = False
-    def __init__(self, num_points = DEFAULT_NUM_STARS, 
+    def __init__(self,
+                 radius = SPACE_WIDTH,
+                 num_points = DEFAULT_NUM_STARS, 
                  *args, **kwargs):
         self.num_points = num_points
+        self.radius = radius
         Mobject.__init__(self, *args, **kwargs)
 
     def generate_points(self):
@@ -23,7 +26,7 @@ class Stars(Mobject):
             )
             for x in range(self.num_points)
             for r, phi, theta in [[
-                max(SPACE_HEIGHT, SPACE_WIDTH) * random(),
+                self.radius * random(),
                 np.pi * random(),
                 2 * np.pi * random(),
             ]]

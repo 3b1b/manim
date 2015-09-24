@@ -52,7 +52,7 @@ class Rotating(Animation):
             alpha_func = alpha_func,
             *args, **kwargs
         )
-        self.axes = [axis] if axis else axes
+        self.axes = [axis] if axis is not None else axes
         self.radians = radians
 
     def update_mobject(self, alpha):
