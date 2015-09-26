@@ -102,7 +102,7 @@ class Arrow(Line):
 
     def add_tip(self, tip_length):
         vect = self.start-self.end
-        vect *= tip_length/np.linalg.norm(vect)
+        vect = vect*tip_length/np.linalg.norm(vect)
         self.add_points([
             interpolate(self.end, self.end+v, t)
             for t in np.arange(0, 1, tip_length*self.epsilon)
@@ -217,8 +217,8 @@ class Bubble(Mobject):
         return self
 
 class SpeechBubble(Bubble):
-    INITIAL_WIDTH = 6
-    INITIAL_HEIGHT = 4
+    INITIAL_WIDTH = 4
+    INITIAL_HEIGHT = 2
     def __init__(self, *args, **kwargs):
         Mobject.__init__(self, *args, **kwargs)
         complex_power = 0.9

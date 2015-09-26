@@ -15,7 +15,7 @@ from region import *
 from scene import Scene, RearrangeEquation
 from script_wrapper import command_line_create_scene
 
-from inventing_math_images import *
+# from inventing_math_images import *
 
 MOVIE_PREFIX = "inventing_math/"
 DIVERGENT_SUM_TEXT = [
@@ -191,7 +191,7 @@ class IntroduceDivergentSum(Scene):
             **kwargs
         )
         self.add(ellipses)
-        self.animate(
+        self.play(
             Transform(brace, end_brace, **kwargs),
             flip_through,
         )
@@ -220,17 +220,17 @@ class ClearlyNonsense(Scene):
         this_way.highlight("yellow")
         right_arrow.highlight("yellow")
 
-        self.animate(Transform(
+        self.play(Transform(
             div_sum, 
             deepcopy(div_sum).scale(0.5).shift(3*UP)
         ))
-        self.animate(ShowCreation(number_line))
+        self.play(ShowCreation(number_line))
         self.dither()
         self.add(how_here)
-        self.animate(ShowCreation(neg_1_arrow))
+        self.play(ShowCreation(neg_1_arrow))
         self.dither()
         self.add(this_way)
-        self.animate(ShowCreation(right_arrow))
+        self.play(ShowCreation(right_arrow))
         self.dither()
 
 class OutlineOfVideo(Scene):
@@ -280,7 +280,7 @@ class OutlineOfVideo(Scene):
             [texts[3]]
         ]
         for group in groups:
-            self.animate(*[
+            self.play(*[
                 DelayByOrder(FadeIn(element))
                 for element in group
             ])
@@ -309,7 +309,7 @@ class OutlineOfVideo(Scene):
 # #         div_sum = divergent_sum().scale(0.5).shift(3*UP)
 
 # #         self.add(div_sum)
-# #         self.animate(
+# #         self.play(
 # #             ApplyMethod(div_sum.replace, equation),
 # #             FadeIn(line_one_first),
 # #             FadeIn(line_one_last)
@@ -333,9 +333,9 @@ class OutlineOfVideo(Scene):
 #         define_parts[1].highlight("skyblue")
 
 #         self.add(sum_mob)
-#         self.animate(FadeIn(discover))
+#         self.play(FadeIn(discover))
 #         self.dither()
-#         self.animate(FadeIn(CompoundMobject(*define_parts)))
+#         self.play(FadeIn(CompoundMobject(*define_parts)))
 #         self.dither()
 
 class YouAsMathematician(Scene):
@@ -359,16 +359,16 @@ class YouAsMathematician(Scene):
             for x in LEFT, RIGHT
         ]
         self.add(you, explanation)
-        self.animate(
+        self.play(
             ShowCreation(arrow),
             BlinkPiCreature(you)
         )
         self.dither()
-        self.animate(ShowCreation(bubble))
+        self.play(ShowCreation(bubble))
         for part in equation_parts:
-            self.animate(DelayByOrder(FadeIn(part)), run_time = 0.5)
+            self.play(DelayByOrder(FadeIn(part)), run_time = 0.5)
         self.dither()
-        self.animate(
+        self.play(
             BlinkPiCreature(you),
             FadeOut(explanation),
             FadeOut(arrow)
@@ -376,19 +376,19 @@ class YouAsMathematician(Scene):
         self.remove(bubble, *equation_parts)
         self.disapproving_friend()
         self.add(bubble, equation)
-        self.animate(Transform(equation, CompoundMobject(*dot_pair)))
+        self.play(Transform(equation, CompoundMobject(*dot_pair)))
         self.remove(equation)
         self.add(*dot_pair)
         two_arrows = [
             Arrow(x, direction = x).shift(UP).nudge()
             for x in LEFT, RIGHT
         ]
-        self.animate(*[ShowCreation(a) for a in two_arrows])
-        self.animate(BlinkPiCreature(you))
+        self.play(*[ShowCreation(a) for a in two_arrows])
+        self.play(BlinkPiCreature(you))
         self.remove(*dot_pair+two_arrows)
         everything = CompoundMobject(*self.mobjects)
         self.clear()
-        self.animate(
+        self.play(
             ApplyPointwiseFunction(
                 lambda p : 3*SPACE_WIDTH*p/np.linalg.norm(p),                
                 everything
@@ -408,7 +408,7 @@ class YouAsMathematician(Scene):
         bubble.content.sort_points(lambda p : np.dot(p, DOWN+RIGHT))
 
         self.add(friend, bubble)
-        self.animate(DelayByOrder(FadeIn(bubble.content)))
+        self.play(DelayByOrder(FadeIn(bubble.content)))
         self.dither()
         self.remove(friend, bubble, bubble.content)
 
@@ -423,7 +423,7 @@ class DotsGettingCloser(Scene):
         self.dither()
         for x in range(10):
             distance = min(dots[1].points[:,0])-max(dots[0].points[:,0])
-            self.animate(ApplyMethod(dots[0].shift, 0.5*distance*RIGHT))
+            self.play(ApplyMethod(dots[0].shift, 0.5*distance*RIGHT))
 
 
 class ZoomInOnInterval(Scene):
@@ -441,10 +441,10 @@ class ZoomInOnInterval(Scene):
 
         self.add(number_line)
         self.dither()
-        self.animate(Transform(number_line, new_line))
+        self.play(Transform(number_line, new_line))
         self.clear()
         squish = lambda p : (p[0], 0, 0)
-        self.animate(
+        self.play(
             ApplyMethod(new_line.apply_function, squish),
             ApplyMethod(
                 interval[0].apply_function, squish,
@@ -476,7 +476,7 @@ class DanceDotOnInterval(Scene):
         conv_sum = tex_mobject(sum_terms, size = "\\large").split()
 
         self.add(interval)
-        self.animate(*[
+        self.play(*[
             ApplyMethod(dot.shift, DOWN)
             for dot in dots
         ])
@@ -486,7 +486,7 @@ class DanceDotOnInterval(Scene):
             start = dots[0].get_center()
             line = Line(start, start + shift_val*RIGHT)
             line.highlight(color_range.next())
-            self.animate(
+            self.play(
                 ApplyMethod(dots[0].shift, shift_val),
                 ShowCreation(line)
             )
@@ -500,7 +500,7 @@ class DanceDotOnInterval(Scene):
                     line.get_center()+2*DOWN,
                     tail = num.get_center()+0.5*num.get_height()*UP
                 )
-            self.animate(
+            self.play(
                 ApplyMethod(line.shift, 2*DOWN),
                 FadeIn(num),
                 FadeIn(arrow),
@@ -517,7 +517,7 @@ class DanceDotOnInterval(Scene):
 
         for x in range(0, len(partial_sum_parts), 4):
             partial_sum_parts[x+2].highlight("yellow")
-            self.animate(*[
+            self.play(*[
                 FadeIn(partial_sum_parts[y])
                 for y in range(x, x+4)
             ])
@@ -541,7 +541,7 @@ class OrganizePartialSums(Scene):
 
         self.add(*partial_sum_parts)
         self.dither()
-        self.animate(*[
+        self.play(*[
             ClockwiseTransform(*pair)
             for pair in zip(pure_sums, new_pure_sums)
         ]+[
@@ -557,9 +557,9 @@ class OrganizePartialSums(Scene):
         infinite_sum.scale(1.5/1.25)
         infinite_sum.to_corner(DOWN+LEFT).shift(2*RIGHT)
 
-        self.animate(ShowCreation(dots))
+        self.play(ShowCreation(dots))
         self.dither()
-        self.animate(FadeIn(CompoundMobject(down_arrow, infinite_sum)))
+        self.play(FadeIn(CompoundMobject(down_arrow, infinite_sum)))
         self.dither()
 
 class SeeNumbersApproachOne(Scene):
@@ -580,7 +580,7 @@ class SeeNumbersApproachOne(Scene):
         ])
 
         self.add(interval)
-        self.animate(
+        self.play(
             ShowCreation(arrow),
             ShowCreation(dots),
             run_time = 2.0
@@ -598,7 +598,7 @@ class OneAndInfiniteSumAreTheSameThing(Scene):
         self.dither()
         self.add(inf_sum.shift(RIGHT))
         self.dither()
-        self.animate(
+        self.play(
             ApplyMethod(one.shift, RIGHT),
             ApplyMethod(inf_sum.shift, LEFT),
             CounterclockwiseTransform(point, equals)
@@ -623,7 +623,7 @@ class HowDoYouDefineInfiniteSums(Scene):
         for mob in text[:-1]:
             self.add(mob)
             self.dither(0.1)
-        self.animate(BlinkPiCreature(you))
+        self.play(BlinkPiCreature(you))
         self.dither()
         self.add(text[-1])
         self.dither()
@@ -650,8 +650,8 @@ class LessAboutNewThoughts(Scene):
         kwargs = {"run_time" : 0.25}
         self.add(*words)
         self.dither()
-        self.animate(ShowCreation(gen_cross, **kwargs))
-        self.animate(ShowCreation(new_cross, **kwargs))
+        self.play(ShowCreation(gen_cross, **kwargs))
+        self.play(ShowCreation(new_cross, **kwargs))
         self.dither()        
         self.add(disecting)
         self.dither(0.5)
@@ -679,9 +679,9 @@ class ListOfPartialSums(Scene):
             display_numbers = False, 
             run_time = 1.0
         )
-        self.animate(ShowCreation(dots))
+        self.play(ShowCreation(dots))
         self.dither()
-        self.animate(
+        self.play(
             FadeIn(CompoundMobject(*equals)),
             *[
                 Transform(deepcopy(number), finite_sum)
@@ -689,7 +689,7 @@ class ListOfPartialSums(Scene):
             ]
         )
         self.dither()
-        self.animate(*[
+        self.play(*[
             ApplyMethod(s.highlight, "yellow", alpha_func = there_and_back)
             for s in sums
         ])
@@ -720,7 +720,7 @@ class ShowDecreasingDistance(Scene):
         self.add(dots.split()[0])
         self.add(number_line, *lines)
         self.dither()
-        self.animate(
+        self.play(
             ApplyMethod(vert_line0.shift, RIGHT),
             Transform(
                 horiz_line, 
@@ -753,19 +753,19 @@ class CircleZoomInOnOne(Scene):
         arrow = Arrow(2*RIGHT, direction = 1.5*(DOWN+RIGHT)).nudge()
 
         self.add(number_line, dots)
-        self.animate(
+        self.play(
             Transform(circle, Point(2*RIGHT).highlight("white")),
             run_time = 5.0
         )
 
-        self.animate(*[
+        self.play(*[
             DelayByOrder(FadeIn(mob))
             for mob in arrow, curr_num
         ])
         self.dither()
         for num in numbers[1:] + [text]:
             curr_num.points = np.array(list(reversed(curr_num.points)))
-            self.animate(
+            self.play(
                 ShowCreation(
                     curr_num, 
                     alpha_func = lambda t : smooth(1-t)
@@ -782,12 +782,12 @@ class ZoomInOnOne(Scene):
         number_line = NumberLine(interval_size = 1, radius = SPACE_WIDTH+2)
         number_line.filter_out(lambda (x, y, z):abs(y)>0.1)
         nl_with_nums = deepcopy(number_line).add_numbers()
-        self.animate(ApplyMethod(nl_with_nums.shift, 2*LEFT))
+        self.play(ApplyMethod(nl_with_nums.shift, 2*LEFT))
         zero, one, two = [
             tex_mobject(str(n)).scale(0.5).shift(0.4*DOWN+2*(-1+n)*RIGHT)
             for n in 0, 1, 2
         ]
-        self.animate(
+        self.play(
             FadeOut(nl_with_nums),
             *[Animation(mob) for mob in zero, one, two, number_line]
         )
@@ -817,7 +817,7 @@ class ZoomInOnOne(Scene):
             for x in range(num_levels)
         ]
         kwargs = {"alpha_func" : None}
-        self.animate(*[
+        self.play(*[
             ApplyMethod(number_lines[x].scale, scale_val, **kwargs)
             for x in range(1, num_levels)
         ]+[
@@ -853,7 +853,7 @@ class DefineInfiniteSum(Scene):
 
         self.add(expression)
         self.dither()
-        self.animate(ApplyFunction(
+        self.play(ApplyFunction(
             lambda mob : mob.scale(0.5).to_corner(UP+LEFT, buff = buff),
             expression            
         ))
@@ -863,7 +863,7 @@ class DefineInfiniteSum(Scene):
             Line(SPACE_WIDTH*LEFT+bottom, side+bottom),
             Line(SPACE_HEIGHT*UP+side, side+bottom)
         ]
-        self.animate(*[
+        self.play(*[
             ShowCreation(line.highlight("white"))
             for line in lines
         ])
@@ -893,7 +893,7 @@ class DefineInfiniteSum(Scene):
         self.dither()
         esses = np.array(terms)[range(0, len(terms), 3)]
         other_terms = filter(lambda m : m not in esses, terms)
-        self.animate(*[
+        self.play(*[
             ApplyMethod(ess.highlight, "yellow")
             for ess in esses
         ])
@@ -903,7 +903,7 @@ class DefineInfiniteSum(Scene):
             s.scale(1.0/(n+1))
             s.shift(ex_point-RIGHT*2.0/2**n)
             return s
-        self.animate(*[
+        self.play(*[
             FadeOut(term)
             for term in other_terms
         ]+[
@@ -920,7 +920,7 @@ class DefineInfiniteSum(Scene):
             for y in [-1, -0.01, 1, 0.01]
             for x in [ex_point+y*RIGHT]
         ]
-        self.animate(*[
+        self.play(*[
             Transform(lines[x], lines[x+1], run_time = 3.0)
             for x in 0, 2
         ])
@@ -944,8 +944,8 @@ class YouJustInventedSomeMath(Scene):
         for mob in text:
             self.add(mob)
             self.dither(0.2)
-        self.animate(WaveArm(you))
-        self.animate(BlinkPiCreature(you))
+        self.play(WaveArm(you))
+        self.play(BlinkPiCreature(you))
 
 
 
@@ -968,7 +968,7 @@ class SeekMoreGeneralTruths(Scene):
 
         for qsum in sums.split():
             qsum.sort_points(lambda p : np.dot(p, DOWN+RIGHT))
-            self.animate(DelayByOrder(FadeIn(qsum)))
+            self.play(DelayByOrder(FadeIn(qsum)))
             self.dither(0.5)
         self.dither()
 
@@ -1036,7 +1036,7 @@ class ChopIntervalInProportions(Scene):
                         new_term_to_replace = deepcopy(term_to_replace)
                         new_term_to_replace.center().shift(last+UP+0.3*LEFT)
                         left_paren.center().shift(last+1.1*UP)
-                        self.animate(
+                        self.play(
                             FadeIn(lt[1]),
                             FadeIn(rt[0]),
                             Transform(
@@ -1049,7 +1049,7 @@ class ChopIntervalInProportions(Scene):
                             *additional_anims
                         )
                         self.dither()
-                        self.animate(
+                        self.play(
                             Transform(
                                 term_to_replace,
                                 CompoundMobject(lt[0], rt[1])
@@ -1059,7 +1059,7 @@ class ChopIntervalInProportions(Scene):
                         )
                         self.remove(left_paren, right_paren)
                     else:
-                        self.animate(
+                        self.play(
                             FadeIn(lt[1]),
                             FadeIn(rt[0]),
                             Transform(
@@ -1076,7 +1076,7 @@ class ChopIntervalInProportions(Scene):
                     lt, rt = CompoundMobject(*lt), CompoundMobject(*rt)
                     self.add(lt, rt)
                 else:
-                    self.animate(
+                    self.play(
                         Transform(
                             brace_to_replace.repeat(2), 
                             CompoundMobject(*braces)
@@ -1090,7 +1090,7 @@ class ChopIntervalInProportions(Scene):
                 self.remove(brace_to_replace, term_to_replace)
                 self.add(lt, rt, *braces)
             else:
-                self.animate(*[
+                self.play(*[
                     FadeIn(mob)
                     for mob in braces + [lt, rt]
                 ] + additional_anims)
@@ -1104,7 +1104,7 @@ class ChopIntervalInProportions(Scene):
             split_100.to_edge(RIGHT)
             split_100.sort_points()
             right_terms[-1].sort_points()
-            self.animate(Transform(
+            self.play(Transform(
                 right_terms[-1], split_100
             ))
         self.dither()
@@ -1225,13 +1225,13 @@ class PlugNumbersIntoRightside(Scene):
 
         self.add(lhs, *rhs)
         self.dither()
-        self.animate(FadeIn(right_words))
+        self.play(FadeIn(right_words))
         curr = rhs[1]
         for num, count in zip(nums, it.count()):
-            self.animate(CounterclockwiseTransform(curr, num))
+            self.play(CounterclockwiseTransform(curr, num))
             self.dither()
             if count == 2:
-                self.animate(FadeIn(left_words))
+                self.play(FadeIn(left_words))
 
 
 class PlugInNegativeOne(RearrangeEquation):
@@ -1327,10 +1327,10 @@ class ListPartialDivergentSums(Scene):
         arrow = Arrow(3*DOWN+2*LEFT, direction = DOWN, length = 6)
 
         for x in range(0, len(terms), 2):
-            self.animate(FadeIn(terms[x]), FadeIn(terms[x+1]))
-        self.animate(FadeIn(words), ShowCreation(arrow))
+            self.play(FadeIn(terms[x]), FadeIn(terms[x+1]))
+        self.play(FadeIn(words), ShowCreation(arrow))
         for x in range(0, len(terms), 2):
-            self.animate(
+            self.play(
                 ApplyMethod(terms[x].highlight, "green"),
                 run_time = 0.1
             )
@@ -1345,8 +1345,8 @@ class NotARobot(Scene):
         low_words.shift(1.5*DOWN)
         
         self.add(you)
-        self.animate(ShimmerIn(top_words))
-        self.animate(ShimmerIn(low_words))
+        self.play(ShimmerIn(top_words))
+        self.play(ShimmerIn(low_words))
 
 
 class SumPowersOfTwoAnimation(Scene):
@@ -1412,7 +1412,7 @@ class SumPowersOfTwoAnimation(Scene):
             new_top_sum_end = new_top_sum[-1]
 
             self.dither()            
-            self.animate(*[
+            self.play(*[
                 FadeIn(mob)
                 for mob in [
                     new_dots, 
@@ -1423,7 +1423,7 @@ class SumPowersOfTwoAnimation(Scene):
                 ]
             ])
             self.dither()
-            self.animate(
+            self.play(
                 Transform(topbrace, new_topbrace),
                 Transform(alt_topbrace, new_topbrace),
                 Transform(bottombrace, new_bottombrace),
@@ -1463,11 +1463,11 @@ class PretendTheyDoApproachNegativeOne(RearrangeEquation):
         for column in columns:
             column.shift(shift_val)
             shift_val = shift_val + (column.get_width()+0.2)*RIGHT            
-        self.animate(ShimmerIn(columns[0]))
+        self.play(ShimmerIn(columns[0]))
         self.dither()
         self.add(columns[1])
         self.dither()
-        self.animate(
+        self.play(
             DelayByOrder(Transform(deepcopy(columns[0]), columns[-1])),
             FadeIn(columns[2])
         )
@@ -1488,16 +1488,16 @@ class DistanceBetweenRationalNumbers(Scene):
         text = text_mobject("How we define distance between rational numbers")
         text.to_edge(UP)
         self.add(text, *nums)
-        self.animate(*[ShowCreation(arrow) for arrow in arrows])
-        self.animate(ShimmerIn(dist))
+        self.play(*[ShowCreation(arrow) for arrow in arrows])
+        self.play(ShimmerIn(dist))
         self.dither()
 
 class NotTheOnlyWayToOrganize(Scene):
     def construct(self):
-        self.animate(ShowCreation(NumberLine().add_numbers()))
+        self.play(ShowCreation(NumberLine().add_numbers()))
         self.dither()
         words = "Is there any other reasonable way to organize numbers?"
-        self.animate(FadeIn(text_mobject(words).shift(2*UP)))
+        self.play(FadeIn(text_mobject(words).shift(2*UP)))
         self.dither()
 
 class DistanceIsAFunction(Scene):
@@ -1563,11 +1563,11 @@ class DistanceIsAFunction(Scene):
         kwargs = {"run_time" : 0.5}
         for mobs in example_mobs:
             if previous:
-                self.animate(*[
+                self.play(*[
                     DelayByOrder(Transform(prev, mob, **kwargs))
                     for prev, mob in zip(previous, mobs)[:-1]
                 ])
-                self.animate(DelayByOrder(Transform(
+                self.play(DelayByOrder(Transform(
                     previous[-1], mobs[-1], **kwargs
                 )))
                 self.remove(*previous)
@@ -1595,7 +1595,7 @@ class ShiftInvarianceNumberLine(Scene):
         self.add(number_line, topbrace, dist0, footnote)
         self.dither()
         self.remove(dist0)
-        self.animate(
+        self.play(
             ApplyMethod(topbrace.shift, 2*RIGHT),
             *[
                 Transform(*pair)
@@ -1624,9 +1624,9 @@ class NameShiftInvarianceProperty(Scene):
             mob.highlight("yellow")
 
         self.add(prop)
-        self.animate(ShimmerIn(label), ShimmerIn(u_brace))
+        self.play(ShimmerIn(label), ShimmerIn(u_brace))
         self.dither()
-        self.animate(ShimmerIn(name))
+        self.play(ShimmerIn(name))
         self.dither()
 
 
@@ -1657,15 +1657,15 @@ class TriangleInequality(Scene):
         ]
         for symbol, loc in zip(symbols, locations):
             self.add(tex_mobject(symbol).shift(loc))
-        self.animate(ShowCreation(ac_line), FadeIn(ac_copy))
+        self.play(ShowCreation(ac_line), FadeIn(ac_copy))
         self.dither()
-        self.animate(*[
+        self.play(*[
             ShowCreation(line) for line in ab_line, bc_line
         ]+[
             FadeIn(dist) for dist in ab_copy, bc_copy
         ])
         self.dither()
-        self.animate(*[
+        self.play(*[
             Transform(*pair)
             for pair in zip(all_copies, all_dists)
         ]+[
@@ -1696,7 +1696,7 @@ class StruggleToFindFrameOfMind(Scene):
             bubble.add_content(mob)
             for first, second in [(curr, questions), (questions, mob)]:
                 copy = deepcopy(first)
-                self.animate(DelayByOrder(Transform(
+                self.play(DelayByOrder(Transform(
                     copy, second, **kwargs
                 )))
                 self.remove(copy)
@@ -1732,7 +1732,7 @@ class RoomsAndSubrooms(Scene):
         for group in rectangle_groups:
             mob = CompoundMobject(*group)
             mob.sort_points(np.linalg.norm)
-            self.animate(ShowCreation(mob))
+            self.play(ShowCreation(mob))
 
         self.dither()
 
@@ -1771,7 +1771,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
                 LEFT*0.05*n+\
                 (0.4*RIGHT if n == 0 else ORIGIN) #Stupid
             )
-            self.animate(FadeIn(num, run_time = 0.5))
+            self.play(FadeIn(num, run_time = 0.5))
             nums.append(num)
         return zero, nums
 
@@ -1790,7 +1790,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
             rect.highlight(colors[n])
             rectangles.append(rect)
         for rect in rectangles:
-            self.animate(ShowCreation(rect))
+            self.play(ShowCreation(rect))
             self.dither()
         return rectangles
 
@@ -1810,7 +1810,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
                 )
             clusters.append(cluster)
             for rect in cluster[1:]:
-                self.animate(FadeIn(rect, run_time = 0.6**(count-1)))
+                self.play(FadeIn(rect, run_time = 0.6**(count-1)))
         return clusters
 
     def adjust_power_mobs(self, zero, power_mobs, small_rects):
@@ -1822,7 +1822,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
         new_power_mobs[-1].shift(DOWN)
         dots = tex_mobject("\\vdots")
         dots.scale(0.5).shift(new_zero.get_center()+0.5*DOWN)
-        self.animate(
+        self.play(
             Transform(zero, new_zero),
             FadeIn(dots),
             *[
@@ -1847,7 +1847,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
                 self.center_in_closest_rect(mob, small_rects)
                 mob.shift(UP)
                 return mob
-            self.animate(*[
+            self.play(*[
                 ApplyFunction(transform, mob)
                 for mob in zero_copy, power_mob_copy
             ])
@@ -1855,7 +1855,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
             for n in range(power+1, 2*power):
                 left_mob = num_mobs[n-power]
                 shift_val = left_mob.get_center()-last_left_mob.get_center()
-                self.animate(*[
+                self.play(*[
                     ApplyMethod(mob.shift, shift_val)
                     for mob in zero_copy, power_mob_copy
                 ])
@@ -1867,7 +1867,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
                 num_mobs[n].shift(power_mob_copy.get_center()+DOWN)
                 self.center_in_closest_rect(num_mobs[n], small_rects)
                 point = Point(power_mob_copy.get_center())
-                self.animate(Transform(point, num_mobs[n]))
+                self.play(Transform(point, num_mobs[n]))
                 self.remove(point)
                 self.add(num_mobs[n])
                 last_left_mob = left_mob
@@ -1885,7 +1885,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
         neg_one = tex_mobject("-1").scale(0.5)
         shift_val = num_mobs[15].get_center()-neg_one.get_center()
         neg_one.shift(UP)
-        self.animate(ApplyMethod(neg_one.shift, shift_val))
+        self.play(ApplyMethod(neg_one.shift, shift_val))
 
     def show_distances(self, num_mobs, rect_clusters):
         self.remove(*[r for c in rect_clusters for r in c])
@@ -1912,7 +1912,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
             for pair in sample(pairs, min(10, len(pairs))):
                 for index in pair:
                     num_mobs[index].highlight("green")
-                self.animate(*[
+                self.play(*[
                     ApplyMethod(
                         num_mobs[index].rotate_in_place, np.pi/10, 
                         alpha_func = wiggle
@@ -1967,7 +1967,7 @@ class DeduceWhereNegativeOneFalls(Scene):
             for new_arg, old_arg in zip(new_args, last_args):
                 new_arg.shift(old_arg.get_center())
             if last_args != [arg0, arg1]:
-                self.animate(*[
+                self.play(*[
                     DelayByOrder(Transform(*pair, run_time = 0.5*rest_time))
                     for pair in zip(last_args, new_args)
                 ])
@@ -2003,7 +2003,7 @@ class OtherRationalNumbers(Scene):
         ]
         for pair, locus in zip(pairs, locii):
             fraction = tex_mobject("\\frac{%d}{%d}"%pair).shift(locus)
-            self.animate(ShimmerIn(fraction))
+            self.play(ShimmerIn(fraction))
         self.dither()
 
 class PAdicMetric(Scene):
@@ -2022,18 +2022,18 @@ class PAdicMetric(Scene):
         for prime, count in zip(primes, it.count()):
             prime.scale(1.0).highlight(colors.next())
             prime.shift(center_of_mass([p_str.get_top(), p_str.get_center()]))
-            self.animate(DelayByOrder(Transform(curr, prime)))
+            self.play(DelayByOrder(Transform(curr, prime)))
             self.dither()
             if count == 2:
                 self.spill(CompoundMobject(curr, text), arrow, new_numbers)
             self.remove(curr)
             curr = prime
-        self.animate(DelayByOrder(Transform(curr, p_str)))
+        self.play(DelayByOrder(Transform(curr, p_str)))
         self.dither()
 
     def spill(self, start, arrow, end):
         start.sort_points(lambda p : p[1])
-        self.animate(
+        self.play(
             ShowCreation(
                 arrow,
                 alpha_func = squish_alpha_func(smooth, 0.5, 1.0)
@@ -2043,7 +2043,7 @@ class PAdicMetric(Scene):
                 Point(arrow.points[0]).highlight("white")
             ))
         )
-        self.animate(ShimmerIn(end))
+        self.play(ShimmerIn(end))
 
 
 class FuzzyDiscoveryToNewMath(Scene):
@@ -2098,12 +2098,12 @@ class FuzzyDiscoveryToNewMath(Scene):
             midpoints.append(count*UP)
 
         self.add(fuzzy, lines)
-        self.animate(*map(ShimmerIn, fuzzy_discoveries))
+        self.play(*map(ShimmerIn, fuzzy_discoveries))
         self.dither()
-        self.animate(DelayByOrder(Transform(
+        self.play(DelayByOrder(Transform(
             deepcopy(fuzzy), new_math
         )))
-        self.animate(*[
+        self.play(*[
             DelayByOrder(Transform(deepcopy(disc), math))
             for disc, math in zip(fuzzy_discoveries, new_maths)
         ])
@@ -2129,7 +2129,7 @@ class DiscoveryAndInvention(Scene):
             nrd.get_bottom(),
             tail = discovery.get_top()
         )
-        self.animate(
+        self.play(
             FadeIn(nrd),
             ShowCreation(arrow)
         )
@@ -2139,14 +2139,14 @@ class DiscoveryAndInvention(Scene):
             invention.get_top(),
             tail = nrd.get_bottom()
         )
-        self.animate(ShowCreation(arrow))
+        self.play(ShowCreation(arrow))
         arrows.append(arrow)
         self.dither()
         arrow = Arrow(
             rt.get_top(),
             tail = invention.get_bottom()
         )
-        self.animate(
+        self.play(
             FadeIn(rt),
             ShowCreation(arrow)
         )
@@ -2156,12 +2156,12 @@ class DiscoveryAndInvention(Scene):
             discovery.get_bottom(),
             tail = rt.get_top()
         )
-        self.animate(ShowCreation(arrow))
+        self.play(ShowCreation(arrow))
         self.dither()
         arrows.append(arrow)
         for color in Color("yellow").range_to("red", 4):
             for arrow in arrows:
-                self.animate(
+                self.play(
                     ShowCreation(deepcopy(arrow).highlight(color)),
                     run_time = 0.25
                 )

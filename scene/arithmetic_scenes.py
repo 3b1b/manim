@@ -56,7 +56,7 @@ class RearrangeEquation(Scene):
         if leave_start_terms:
             self.add(CompoundMobject(*start_mobs))
         self.dither()
-        self.animate(*[
+        self.play(*[
             Transform(*pair, **transform_kwargs)
             for pair in mobject_pairs
         ])

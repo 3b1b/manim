@@ -98,7 +98,7 @@ class Scene(object):
         self.background = self.original_background
         return self
 
-    def animate(self, *animations, **kwargs):
+    def play(self, *animations, **kwargs):
         if "run_time" in kwargs:
             run_time = kwargs["run_time"]
         else:
@@ -127,7 +127,7 @@ class Scene(object):
         progress_bar.finish()
         return self
 
-    def animate_over_time_range(self, t0, t1, *animations):
+    def play_over_time_range(self, t0, t1, *animations):
         needed_scene_time = max(abs(t0), abs(t1))
         existing_scene_time = len(self.frames)*self.frame_duration
         if existing_scene_time < needed_scene_time:

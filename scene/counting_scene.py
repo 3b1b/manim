@@ -52,7 +52,7 @@ class CountingScene(Scene):
                 self.dither(frame_time)
                 mob.highlight(original_color)
             if mode == "show_creation":
-                self.animate(ShowCreation(mob, run_time = frame_time))
+                self.play(ShowCreation(mob, run_time = frame_time))
             if mode == "show":
                 self.add(mob)
                 self.dither(frame_time)

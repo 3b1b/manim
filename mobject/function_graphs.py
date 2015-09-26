@@ -92,27 +92,48 @@ class Grid(Mobject1D):
 
 class NumberLine(Mobject1D):
     def __init__(self, 
-                 radius = SPACE_WIDTH+1,
-                 interval_size = 0.5, tick_size = 0.1, 
-                 *args, **kwargs):
-        self.radius = int(radius)
-        self.interval_size = interval_size
+                 radius = SPACE_WIDTH,
+                 unit_length_to_spacial_width = 1,
+                 tick_size = 0.1,
+                 tick_frequency = 0.5,
+                 number_at_center = 0,                 
+                 numbers_with_elongated_ticks = [0],
+                 longer_tick_multiple = 2,
+                 **kwargs):
+        #TODO, There must be better (but still safe) way to add all
+        #these config arguments as attributes.
+        self.radius = radius
+        self.unit_length_to_spacial_width = unit_length_to_spacial_width
         self.tick_size = tick_size
-        Mobject1D.__init__(self, *args, **kwargs)
+        self.tick_frequency = tick_frequency
+        self.numbers_with_elongated_ticks = numbers_with_elongated_ticks
+        self.number_at_center = number_at_center
+        self.longer_tick_multiple = longer_tick_multiple
+        numerical_radius = float(radius) / unit_length_to_spacial_width
+        self.left_num  = number_at_center - numerical_radius
+        self.right_num = number_at_center + numerical_radius
+        Mobject1D.__init__(self, **kwargs)
 
     def generate_points(self):
         self.add_points([
-            (x, 0, 0)
-            for x in np.arange(-self.radius, self.radius, self.epsilon)
+            (b*x, 0, 0)
+            for x in np.arange(0, self.radius, self.epsilon)
+            for b in [-1, 1]
         ])
+        self.index_of_left  = np.argmin(self.points[:,0])
+        self.index_of_right = np.argmax(self.points[:,0])
+        spacial_tick_frequency = self.tick_frequency*self.unit_length_to_spacial_width
         self.add_points([
-            (x, y, 0)
-            for x in np.arange(-self.radius, self.radius, self.interval_size)
+            (b*x, y, 0)
+            for x in np.arange(0, self.radius, spacial_tick_frequency)
             for y in np.arange(-self.tick_size, self.tick_size, self.epsilon)
+            for b in ([1, -1] if x > 0 else [1])
         ])
-        self.elongate_tick_at(0)
+        for number in self.numbers_with_elongated_ticks:
+            self.elongate_tick_at(number, self.longer_tick_multiple)
 
-    def elongate_tick_at(self, x, multiple = 2):
+    def elongate_tick_at(self, number, multiple = 2):
+        x = self.number_to_point(number)[0]
         self.add_points([
             [x, y, 0]
             for y in np.arange(
@@ -123,16 +144,36 @@ class NumberLine(Mobject1D):
         ])
         return self
 
-    def add_numbers(self, intervals_per_number = 2):
-        max_val = int(self.radius/self.interval_size/intervals_per_number)
-        for x in range(-max_val, max_val+1):
-            num = tex_mobject(str(x)).scale(0.5)
-            num.shift(
-                DOWN*4*self.tick_size + \
-                RIGHT*x*self.interval_size*intervals_per_number
-            )
-            self.add(num)
+    def number_to_point(self, number):
+        return interpolate(
+            self.points[self.index_of_left],
+            self.points[self.index_of_right],
+            float(number-self.left_num)/(self.right_num - self.left_num)
+        )
+
+    def add_numbers(self, *numbers):
+        if len(numbers) == 0:
+            numbers = range(int(self.left_num), int(self.right_num+1))
+        for number in numbers:
+            mob = tex_mobject(str(number)).scale(0.5)
+            mob.shift(self.number_to_point(number))
+            mob.shift(DOWN*4*self.tick_size)
+            self.add(mob)
         return self
+
+class UnitInterval(NumberLine):
+    DEFAULT_CONFIG = {
+        "radius" : SPACE_WIDTH-1,
+        "unit_length_to_spacial_width" : 2*(SPACE_WIDTH-1),
+        "tick_frequency" : 0.1,
+        "number_at_center" : 0.5,                 
+        "numbers_with_elongated_ticks" : [0, 1],
+    }
+    def __init__(self, **kwargs):
+        config = self.DEFAULT_CONFIG
+        config.update(kwargs)
+        NumberLine.__init__(self, **config)
+
 
 class Axes(CompoundMobject):
     def __init__(self, *args, **kwargs):

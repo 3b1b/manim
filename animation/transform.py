@@ -39,25 +39,27 @@ class Transform(Animation):
         self.interpolation_function = interpolation_function
         count1, count2 = mobject1.get_num_points(), mobject2.get_num_points()
         if count2 == 0:
-            mobject2.add_points([(SPACE_WIDTH, SPACE_HEIGHT, 0)])
+            mobject2.add_points([SPACE_WIDTH*RIGHT+SPACE_HEIGHT*UP])
             count2 = mobject2.get_num_points()
         Mobject.align_data(mobject1, mobject2)
-        Animation.__init__(self, mobject1, run_time = run_time, *args, **kwargs)
         self.ending_mobject = mobject2
+        if black_out_extra_points and count2 < count1:
+            self.black_out_extra_points(count1, count2)
+
+        Animation.__init__(self, mobject1, run_time = run_time, *args, **kwargs)                
+        self.name += "To" + str(mobject2)  
         self.mobject.SHOULD_BUFF_POINTS = \
             mobject1.SHOULD_BUFF_POINTS and mobject2.SHOULD_BUFF_POINTS
-        self.reference_mobjects.append(mobject2)
-        self.name += "To" + str(mobject2)
 
-        if black_out_extra_points and count2 < count1:
-            #Ensure redundant pixels fade to black
-            indices = np.arange(
-                0, count1-1, float(count1) / count2
-            ).astype('int')
-            temp = np.zeros(mobject2.points.shape)
-            temp[indices] = mobject2.rgbs[indices]
-            mobject2.rgbs = temp
-            self.non_redundant_m2_indices = indices
+    def black_out_extra_points(self, count1, count2):
+        #Ensure redundant pixels fade to black
+        indices = np.arange(
+            0, count1-1, float(count1) / count2
+        ).astype('int')
+        temp = np.zeros(self.ending_mobject.points.shape)
+        temp[indices] = self.ending_mobject.rgbs[indices]
+        self.ending_mobject.rgbs = temp
+        self.non_redundant_m2_indices = indices
 
     def update_mobject(self, alpha):
         self.mobject.points = self.interpolation_function(

@@ -21,6 +21,7 @@ class Mobject(object):
     DEFAULT_COLOR = Color("skyblue")
     SHOULD_BUFF_POINTS = GENERALLY_BUFF_POINTS
     EDGE_BUFFER = 0.5
+    NEXT_TO_BUFFER = 0.2
 
     def __init__(self, 
                  color = None,
@@ -152,12 +153,17 @@ class Mobject(object):
         self.shift(shift_val)
         return self
 
-    def next_to(self, mobject, direction = RIGHT, buff = EDGE_BUFFER):
-        self.shift(
-            mobject.get_edge_center(direction) - \
-            self.get_edge_center(-direction) + \
-            buff * direction
-        )
+    def next_to(self, mobject, 
+                direction = RIGHT, 
+                buff = NEXT_TO_BUFFER,
+                aligned_edge = None):
+        if aligned_edge is not None:
+            anchor_point = self.get_corner(aligned_edge-direction)
+            target_point = mobject.get_corner(aligned_edge+direction)
+        else:
+            anchor_point = self.get_edge_center(-direction)
+            target_point = mobject.get_edge_center(direction)
+        self.shift(target_point - anchor_point + buff*direction)
         return self
 
     def scale(self, scale_factor):
@@ -225,8 +231,16 @@ class Mobject(object):
             self.rgbs[:,:] = rgb
         return self
 
+    def to_original_color(self):
+        self.highlight(self.color)
+        return self
+
+    def fade_to(self, color, alpha):
+        self.rgbs = interpolate(self.rgbs, Color(color).rgb, alpha)
+        return self
+
     def fade(self, brightness = 0.5):
-        self.rgbs *= brightness
+        self.fade_to("black", brightness)
         return self
 
     def filter_out(self, condition):
@@ -267,6 +281,13 @@ class Mobject(object):
         result = self.get_center()
         result[dim] = max_or_min_func(self.points[:,dim])
         return result
+
+    def get_corner(self, direction):
+        return sum([
+            self.get_edge_center(RIGHT*direction[0]),
+            self.get_edge_center(UP*direction[1]),
+            -self.get_center()
+        ])
 
     def get_top(self):
         return self.get_edge_center(UP)

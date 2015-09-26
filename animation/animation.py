@@ -27,7 +27,6 @@ class Animation(object):
             raise Exception("Invalid mobject parameter, must be \
                              subclass or instance of Mobject")
         self.starting_mobject = copy.deepcopy(self.mobject)
-        self.reference_mobjects = [self.starting_mobject]
         self.alpha_func = alpha_func or (lambda x : x)
         self.run_time = run_time
         #TODO, Adress the idea of filtering the animation
@@ -36,6 +35,7 @@ class Animation(object):
         self.restricted_width  = SPACE_WIDTH
         self.spacial_center = np.zeros(3)
         self.name = name or self.__class__.__name__ + str(self.mobject)
+        self.update(0)
 
     def __str__(self):
         return self.name

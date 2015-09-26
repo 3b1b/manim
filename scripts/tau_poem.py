@@ -84,8 +84,8 @@ class HappyTauDayWords(Scene):
         pi.highlight("red")
         self.add(words, tau, pi)
         self.dither()
-        self.animate(BlinkPiCreature(tau))
-        self.animate(BlinkPiCreature(pi))
+        self.play(BlinkPiCreature(tau))
+        self.play(BlinkPiCreature(pi))
 
 class TauPoem(Scene):
     args_list = map(lambda x : (x,), range(len(POEM_LINES)))
@@ -160,17 +160,17 @@ class TauPoem(Scene):
         if self.line_num == 19:
             shift_val = SPACE_HEIGHT*DOWN
             self.new_digit.shift(shift_val)
-            self.animate(ApplyMethod(
+            self.play(ApplyMethod(
                 self.first_digits.shift, shift_val, run_time = 2.0
             ))
             self.dither(2)
-        self.animate_over_time_range(0, 2,
+        self.play_over_time_range(0, 2,
             Transform(
                 deepcopy(self.first_word), self.number_word,
                 alpha_func = squish_alpha_func(smooth)
             )
         )
-        self.animate_over_time_range(2, 4,
+        self.play_over_time_range(2, 4,
             Transform(
                 self.number_word, self.new_digit,
                 alpha_func = squish_alpha_func(smooth)                
@@ -181,7 +181,7 @@ class TauPoem(Scene):
         two, pi = tex_mobject(["2", "\\pi"]).scale(2).split()
         self.add(two, pi)
         two_copy = deepcopy(two).rotate(np.pi/10).highlight("yellow")
-        self.animate(Transform(
+        self.play(Transform(
             two, two_copy,
             alpha_func = squish_alpha_func(
                 lambda t : wiggle(t),
@@ -203,12 +203,12 @@ class TauPoem(Scene):
         )
         self.add(two_pi)
         self.dither()
-        self.animate(CounterclockwiseTransform(
+        self.play(CounterclockwiseTransform(
             two_pi, sphere,
             alpha_func = lambda t : 2*smooth(t/2)
         ))
         self.remove(two_pi)
-        self.animate(CounterclockwiseTransform(
+        self.play(CounterclockwiseTransform(
             sphere, tau,
             alpha_func = lambda t : 2*(smooth(t/2+0.5)-0.5)
         ))
@@ -227,11 +227,11 @@ class TauPoem(Scene):
         for eye in blinked.eyes:
             eye.highlight("black")
         self.add(*set(tau.parts).difference(tau.white_parts))
-        self.animate(*[
+        self.play(*[
             Transform(*eyes)
             for eyes in zip(blinked.eyes, tau.eyes)
         ])
-        self.animate(ShowCreation(tau.mouth))
+        self.play(ShowCreation(tau.mouth))
         self.dither(2)
 
     def line3(self):
@@ -239,17 +239,17 @@ class TauPoem(Scene):
         pi = PiCreature()
         self.add(*tau.parts)
         self.dither()
-        self.animate(
+        self.play(
             Transform(tau.leg, pi.left_leg),
             ShowCreation(pi.right_leg),
             run_time = 1.0,
         )
-        self.animate(*[
+        self.play(*[
             Transform(*parts)
             for parts in zip(tau.white_parts, pi.white_parts)
         ])
         self.remove(*tau.parts + pi.parts)
-        self.animate(BlinkPiCreature(pi))
+        self.play(BlinkPiCreature(pi))
 
     def pi_speaking(self, text):
         pi = PiCreature()
@@ -263,7 +263,7 @@ class TauPoem(Scene):
         pi, bubble = self.pi_speaking("Conventions matter \\\\ not!")
         self.add(pi)
         self.dither()
-        self.animate(Transform(
+        self.play(Transform(
             Point(bubble.tip).highlight("black"),
             bubble
         ))
@@ -280,11 +280,11 @@ class TauPoem(Scene):
         formulae = tex_mobject(FORMULAE, size = "\\small")
         formulae.scale(1.25)
         formulae.to_corner([1, -1, 0])
-        self.animate(FadeIn(formulae))
+        self.play(FadeIn(formulae))
 
     def line6(self):
         bubble = ThoughtBubble()
-        self.animate(ApplyFunction(
+        self.play(ApplyFunction(
             lambda p : 2 * p /  np.linalg.norm(p),
             bubble,
             alpha_func = wiggle,
@@ -302,10 +302,10 @@ class TauPoem(Scene):
         self.dither()
         self.remove(bubble)
         bubble_copy = deepcopy(bubble)
-        self.animate(CounterclockwiseTransform(bubble_copy, heart))
+        self.play(CounterclockwiseTransform(bubble_copy, heart))
         self.dither()
         self.remove(bubble_copy)
-        self.animate(CounterclockwiseTransform(heart, bubble))
+        self.play(CounterclockwiseTransform(heart, bubble))
         self.dither()
 
 
@@ -316,7 +316,7 @@ class TauPoem(Scene):
 
         self.add(two, *pi.parts)
         self.dither()
-        self.animate(
+        self.play(
             Transform(pi.left_leg, tau.leg),
             Transform(
                 pi.right_leg, 
@@ -343,10 +343,10 @@ class TauPoem(Scene):
 
         self.add(tau)
         self.dither()
-        self.animate(Transform(point, pi))
+        self.play(Transform(point, pi))
         self.remove(point)
         self.add(pi)
-        self.animate(WaveArm(tau),Transform(pi, new_pi))
+        self.play(WaveArm(tau),Transform(pi, new_pi))
 
     def line10(self):
         formulae = tex_mobject(FORMULAE, "\\small")
@@ -363,7 +363,7 @@ class TauPoem(Scene):
                 mob.to_edge(LEFT).shift(RIGHT*(SPACE_WIDTH-1))
             else:
                 mob.shift(2*SPACE_WIDTH*RIGHT)
-        self.animate(*[
+        self.play(*[
             Transform(*mobs, run_time = 2.0)
             for mobs in zip(formulae, f_copy)
         ])
@@ -402,7 +402,7 @@ class TauPoem(Scene):
         tau.shift(tau_line.get_center() + 0.5*UP)
 
         self.add(axes, grid)
-        self.animate(
+        self.play(
             TransformAnimations(
                 ShowCreation(sine),
                 ShowCreation(deepcopy(sine).shift(2*np.pi*interval_size*RIGHT)),
@@ -411,7 +411,7 @@ class TauPoem(Scene):
             ),
             ShowCreation(circle)
         )
-        self.animate(
+        self.play(
             CounterclockwiseTransform(sine_period, tau_line),
             CounterclockwiseTransform(circle, deepcopy(tau_line)),
             FadeOut(axes),
@@ -435,9 +435,9 @@ class TauPoem(Scene):
 
         self.add(*formula)
         self.dither()
-        self.animate(CounterclockwiseTransform(two_pi, tau))
+        self.play(CounterclockwiseTransform(two_pi, tau))
         self.remove(two_pi)
-        self.animate(BlinkPiCreature(tau))
+        self.play(BlinkPiCreature(tau))
         self.dither()
 
     def line14(self):
@@ -445,7 +445,7 @@ class TauPoem(Scene):
             "Wait! Area \\\\ of circles"
         )
         self.add(pi)
-        self.animate(
+        self.play(
             Transform(Point(bubble.tip).highlight("black"), bubble)
         )
 
@@ -461,7 +461,7 @@ class TauPoem(Scene):
 
         self.add(pi, bubble, *formula)
         self.dither(2)
-        self.animate(ApplyMethod(half.highlight, "yellow"))
+        self.play(ApplyMethod(half.highlight, "yellow"))
 
     def line16(self):
         self.add(tex_mobject(
@@ -498,9 +498,9 @@ class TauPoem(Scene):
         for line in lines:
             line.highlight("red")
 
-        self.animate(ApplyFunction(trianglify, circle, run_time = 2.0))
+        self.play(ApplyFunction(trianglify, circle, run_time = 2.0))
         self.add(tau_r, r)
-        self.animate(*[
+        self.play(*[
             ShowCreation(line, run_time = 1.0)
             for line in lines
         ])
@@ -521,7 +521,7 @@ class TauPoem(Scene):
 
         self.add(*pi.parts + tau.parts)
         self.dither(0.8)
-        self.animate(*[
+        self.play(*[
             Transform(*eyes, run_time = 0.2, alpha_func = rush_into)
             for eyes in [
                 (tau.left_eye, blinked_tau.left_eye),
@@ -529,7 +529,7 @@ class TauPoem(Scene):
             ]
         ])
         self.remove(tau.left_eye, tau.right_eye)
-        self.animate(*[
+        self.play(*[
             Transform(*eyes, run_time = 0.2, alpha_func = rush_from)
             for eyes in [
                 (blinked_tau.left_eye, mad_tau.left_eye),
@@ -538,7 +538,7 @@ class TauPoem(Scene):
         ])
         self.remove(blinked_tau.left_eye, blinked_tau.right_eye)
         self.add(mad_tau.left_eye, mad_tau.right_eye)
-        self.animate(
+        self.play(
             Transform(tau.arm, mad_tau.arm),
             Transform(tau.mouth, mad_tau.mouth),
             run_time = 0.5
@@ -546,7 +546,7 @@ class TauPoem(Scene):
         self.remove(*tau.parts + blinked_tau.parts)
         self.add(*mad_tau.parts)
 
-        self.animate(*[
+        self.play(*[
             Transform(*eyes, run_time = 0.2, alpha_func = rush_into)
             for eyes in [
                 (pi.left_eye, blinked_pi.left_eye),
@@ -554,7 +554,7 @@ class TauPoem(Scene):
             ]
         ])
         self.remove(pi.left_eye, pi.right_eye)
-        self.animate(*[
+        self.play(*[
             Transform(*eyes, run_time = 0.2, alpha_func = rush_from)
             for eyes in [
                 (blinked_pi.left_eye, sad_pi.left_eye),
@@ -564,7 +564,7 @@ class TauPoem(Scene):
             Transform(pi.mouth, sad_pi.mouth, run_time = 0.2)
         ])
         self.remove(*blinked_pi.parts + pi.parts + sad_pi.parts)
-        self.animate(
+        self.play(
             WalkPiCreature(sad_pi, DOWN+4*LEFT),
             run_time = 1.0
         )

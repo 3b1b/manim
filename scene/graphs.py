@@ -220,10 +220,10 @@ class GraphScene(Scene):
 
     def draw_vertices(self, **kwargs):
         self.clear()
-        self.animate(ShowCreation(CompoundMobject(*self.vertices), **kwargs))
+        self.play(ShowCreation(CompoundMobject(*self.vertices), **kwargs))
 
     def draw_edges(self):
-        self.animate(*[
+        self.play(*[
             ShowCreation(edge, run_time = 1.0)
             for edge in self.edges
         ])
@@ -235,7 +235,7 @@ class GraphScene(Scene):
             Dot(point, radius = 3*Dot.DEFAULT_RADIUS, color = "lightgreen")
             for point in self.points
         ])
-        self.animate(Transform(
+        self.play(Transform(
             start, end, alpha_func = there_and_back,
             **kwargs
         ))
@@ -246,7 +246,7 @@ class GraphScene(Scene):
     def replace_vertices_with(self, mobject):
         mobject.center()
         diameter = max(mobject.get_height(), mobject.get_width())
-        self.animate(*[
+        self.play(*[
             CounterclockwiseTransform(
                 vertex,
                 deepcopy(mobject).shift(vertex.get_center())
@@ -267,7 +267,7 @@ class GraphScene(Scene):
             for angle, edge in zip(angles, self.edges)
         ]
         if fade_in:
-            self.animate(*[
+            self.play(*[
                 FadeIn(ann, **kwargs)
                 for ann in self.edge_annotations
             ])
@@ -282,7 +282,7 @@ class GraphScene(Scene):
             Line(self.points[i], self.points[j]).highlight(color)
             for i, j in zip(cycle, next_in_cycle)
         ])
-        self.animate(
+        self.play(
             ShowCreation(self.traced_cycle), 
             run_time = run_time
         )

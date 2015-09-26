@@ -55,9 +55,9 @@ class PiCreature(CompoundMobject):
         CompoundMobject.__init__(self, *self.get_parts())
         return self
 
-    def TODO_what_should_I_do_with_this(self):
-        for part_name, mob in zip(self.part_names, self.split()):
-            setattr(self, part_name, mob)
+    # def TODO_what_should_I_do_with_this(self):
+    #     for part_name, mob in zip(self.part_names, self.split()):
+    #         setattr(self, part_name, mob)
 
 
     def get_parts(self):

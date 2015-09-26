@@ -235,7 +235,7 @@ class Introduction(Scene):
 
         self.add(words)
         self.dither()
-        self.animate(DelayByOrder(Transform(words, hand)))
+        self.play(DelayByOrder(Transform(words, hand)))
         self.dither()
 
 
@@ -261,9 +261,9 @@ class ShowReadingRule(Scene):
         self.add(answer[0])
         counts = map(finger_tip_power_of_2, range(5))
         for count in counts:
-            self.animate(SpinInFromNothing(count, run_time = 0.3))
+            self.play(SpinInFromNothing(count, run_time = 0.3))
         self.dither()
-        self.animate(ShimmerIn(answer[1]))
+        self.play(ShimmerIn(answer[1]))
         for count in sample_counts:
             self.clear()
             self.add(*answer)
@@ -283,7 +283,7 @@ class ShowReadingRule(Scene):
         ).to_corner(UP+RIGHT).split()
         self.add(hand, *count_mobs)
         self.dither()
-        self.animate(*[
+        self.play(*[
             Transform(count_mobs[n/2], sum_mobs[n]) 
             if n%2 == 0 and n/2 < len(counts)
             else FadeIn(sum_mobs[n])
@@ -325,7 +325,7 @@ class ShowIncrementRule(Scene):
             if pause:
                 self.background = oh.frames[COUNT_TO_FRAME_NUM[start]]
                 self.add(phrase)
-                self.animate(ShimmerIn(self.get_arrow_set(start)))
+                self.play(ShimmerIn(self.get_arrow_set(start)))
                 self.dither()
                 self.clear()
                 self.reset_background()
@@ -391,7 +391,7 @@ class MindFindsShortcuts(Scene):
             seven
         )
         self.dither()
-        self.animate(
+        self.play(
             Transform(compound, Arrow(hand, seven).highlight("yellow")),
             ShimmerIn(text_mobject("Directly recognize").shift(1.5*DOWN+2*RIGHT))
         )
@@ -413,7 +413,7 @@ class MindFindsShortcuts(Scene):
 
         self.add(words2, hands[23])
         self.dither()
-        self.animate(
+        self.play(
             Transform(
                 deepcopy(hands[16]).highlight("black").center().shift(hands[23].get_center()), 
                 hands[16]
@@ -427,7 +427,7 @@ class MindFindsShortcuts(Scene):
             FadeIn(plus)
         )
         self.dither()
-        self.animate(ShimmerIn(equals23))
+        self.play(ShimmerIn(equals23))
         self.dither()
 
 
@@ -452,7 +452,7 @@ class FinishCountingExampleSentence(Scene):
         comp = CompoundMobject(sixteen, two)
         self.add(hand, comp, words)
         self.dither()
-        self.animate(Transform(comp, eightteen))
+        self.play(Transform(comp, eightteen))
         self.dither()
 
 class Question(Scene):
@@ -474,7 +474,7 @@ class WithToes(Scene):
         ]).split()
         self.add(words[0])
         self.dither()
-        self.animate(ShimmerIn(words[1]))
+        self.play(ShimmerIn(words[1]))
         self.dither()
 
 

@@ -187,7 +187,6 @@ class Succession(Animation):
         for index in range(len(self.anims)):
             self.anims[index].update(scaled_alpha - index)
 
-
 ####### Pi Creature Stuff #############
 
 class WalkPiCreature(Animation):

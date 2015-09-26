@@ -52,7 +52,7 @@ class LogoGeneration(Scene):
         name.highlight("grey")
         name.shift(2*DOWN)
 
-        self.animate(Transform(
+        self.play(Transform(
             circle, iris, 
             run_time = DEFAULT_ANIMATION_RUN_TIME
         ))

@@ -48,7 +48,7 @@ class PreferOtherProofDialogue(Scene):
 
         self.add(student, teacher, teacher_bubble, teacher_bubble.text)
         self.dither(2)
-        self.animate(Transform(
+        self.play(Transform(
             Dot(student_bubble.tip).highlight("black"),
             CompoundMobject(student_bubble, student_bubble.text)
         ))
@@ -76,7 +76,7 @@ class IllustrateDuality(GraphScene):
             "run_time" : 5.0,
             "alpha_func" : special_alpha
         }
-        self.animate(*[
+        self.play(*[
             Transform(*edge_pair, **kwargs)
             for edge_pair in zip(self.edges, self.dual_edges)
         ] + [
@@ -129,7 +129,7 @@ class IntroduceGraph(GraphScene):
             "run_time"   : 5.0
         }
         self.add(not_okay)
-        self.animate(*[
+        self.play(*[
             Transform(*pair, **kwargs)
             for pair in zip(
                 self.edges + self.vertices, 
@@ -142,7 +142,7 @@ class IntroduceGraph(GraphScene):
         self.remove(planar_explanation)
         self.add(not_okay)
         self.remove(*edges_to_remove)
-        self.animate(ShowCreation(
+        self.play(ShowCreation(
             CompoundMobject(*edges_to_remove),
             alpha_func = lambda t : 1 - t,
             run_time = 1.0
@@ -164,7 +164,7 @@ class OldIntroduceGraphs(GraphScene):
         self.replace_vertices_with(Face().scale(0.4))
         friends = text_mobject("Friends").scale(EDGE_ANNOTATION_SCALE_VAL)
         self.annotate_edges(friends.shift((0, friends.get_height()/2, 0)))
-        self.animate(*[
+        self.play(*[
             CounterclockwiseTransform(vertex, Dot(point))
             for vertex, point in zip(self.vertices, self.points)
         ]+[
@@ -195,7 +195,7 @@ class PlanarGraphDefinition(Scene):
 
         self.add(quote, planar, end_quote)
         self.dither()
-        self.animate(
+        self.play(
             FadeOut(quote),
             FadeOut(end_quote),
             ApplyMethod(planar.shift, shift_val),
@@ -238,26 +238,26 @@ class TerminologyFromPolyhedra(GraphScene):
         regions_to_faces = text_mobject("Regions $\\to$ Faces").to_corner()
         
         self.clear()
-        # self.animate(TransformAnimations(
+        # self.play(TransformAnimations(
         #     Rotating(Dodecahedron(), **rot_kwargs),
         #     Rotating(cube, **rot_kwargs)  
         # ))
-        self.animate(Rotating(cube, **rot_kwargs))
+        self.play(Rotating(cube, **rot_kwargs))
         self.clear()
-        self.animate(*[
+        self.play(*[
             Transform(l1, l2)
             for l1, l2 in zip(cube.split(), self.edges)
         ])
         self.dither()
         self.add(dots_to_vertices)
-        self.animate(*[
+        self.play(*[
             ShowCreation(dot, run_time = 1.0)
             for dot in self.vertices
         ])
         self.dither(2)
         self.remove(dots_to_vertices, *self.vertices)
         self.add(lines_to_edges)
-        self.animate(ApplyMethod(
+        self.play(ApplyMethod(
             CompoundMobject(*self.edges).highlight, "yellow"
         ))
         self.dither(2)
@@ -295,7 +295,7 @@ class ThreePiecesOfTerminology(GraphScene):
         self.remove(self.traced_cycle)
 
         self.add(accent(spanning_trees))
-        self.animate(ShowCreation(self.spanning_tree), run_time = 1.0)
+        self.play(ShowCreation(self.spanning_tree), run_time = 1.0)
         self.dither()
         tone_down(spanning_trees)
         self.remove(self.spanning_tree)
@@ -304,14 +304,14 @@ class ThreePiecesOfTerminology(GraphScene):
         self.generate_dual_graph()
         for mob in self.mobjects:
             mob.fade
-        self.animate(*[
+        self.play(*[
             ShowCreation(mob, run_time = 1.0)
             for mob in self.dual_vertices + self.dual_edges
         ])
         self.dither()
 
         self.clear()
-        self.animate(ApplyMethod(
+        self.play(ApplyMethod(
             CompoundMobject(*terms).center
         ))
         self.dither()
@@ -335,7 +335,7 @@ class WalkingRandolph(GraphScene):
         randy.scale(RANDOLPH_SCALE_VAL)
         randy.move_to(point_path[0])
         for next, last in zip(point_path[1:], point_path):
-            self.animate(
+            self.play(
                 WalkPiCreature(randy, next),
                 ShowCreation(Line(last, next).highlight("yellow")),
                 run_time = 2.0
@@ -378,13 +378,13 @@ class PathExamples(GraphScene):
 
             self.remove(not_a_path)
             self.add(valid_path)
-            self.animate(ShowCreation(path_lines, **kwargs))
+            self.play(ShowCreation(path_lines, **kwargs))
             self.dither(2)
             self.remove(path_lines)
 
             self.remove(valid_path)
             self.add(not_a_path)
-            self.animate(ShowCreation(non_path_lines, **kwargs))
+            self.play(ShowCreation(non_path_lines, **kwargs))
             self.dither(2)
             self.remove(non_path_lines)
 
@@ -414,7 +414,7 @@ class IntroduceRandolph(GraphScene):
         GraphScene.construct(self)
         randy = Randolph().move_to((-3, 0, 0))
         name = text_mobject("Randolph")
-        self.animate(Transform(
+        self.play(Transform(
             randy,
             deepcopy(randy).scale(RANDOLPH_SCALE_VAL).move_to(self.points[0]),
         ))
@@ -454,19 +454,19 @@ class DefineSpanningTree(GraphScene):
         self.dither(2)
         self.remove(dollar_signs)
         run_time_per_branch = 0.5        
-        self.animate(
+        self.play(
             ShowCreation(green_dot_at_index(0)),
             run_time = run_time_per_branch
         )
         for pair in self.spanning_tree_index_pairs:
-            self.animate(ShowCreation(
+            self.play(ShowCreation(
                 Line(
                     self.points[pair[0]], 
                     self.points[pair[1]]
                 ).highlight("yellow"),
                 run_time = run_time_per_branch
             ))
-            self.animate(ShowCreation(
+            self.play(ShowCreation(
                 green_dot_at_index(pair[1]),
                 run_time = run_time_per_branch
             ))
@@ -476,7 +476,7 @@ class DefineSpanningTree(GraphScene):
         for edge, limit in zip(unneeded_edges, range(5)):
             line = Line(self.points[edge[0]], self.points[edge[1]])
             line.highlight("red")
-            self.animate(ShowCreation(line, run_time = 1.0))
+            self.play(ShowCreation(line, run_time = 1.0))
             self.add(unneeded.center().shift(line.get_center() + 0.2*UP))
             self.dither()
             self.remove(line, unneeded)
@@ -493,19 +493,19 @@ class NamingTree(GraphScene):
         spanning_tree = text_mobject("``Spanning Tree''").to_edge(UP)
 
         self.add(*branches)
-        self.animate(
+        self.play(
             FadeOut(CompoundMobject(*self.edges + self.vertices)),
             Animation(CompoundMobject(*branches)),
         )
         self.clear()
         self.add(tree, *branches)
         self.dither()
-        self.animate(*[
+        self.play(*[
             Transform(b1, b2, run_time = 2)
             for b1, b2 in zip(branches, treeified_branches)
         ])
         self.dither()
-        self.animate(*[
+        self.play(*[
             FadeIn(mob)
             for mob in self.edges + self.vertices
         ] + [
@@ -522,7 +522,7 @@ class DualGraph(GraphScene):
         GraphScene.construct(self)
         self.generate_dual_graph()
         self.add(text_mobject("Dual Graph").to_edge(UP).shift(2*LEFT))
-        self.animate(*[
+        self.play(*[
             ShowCreation(mob)
             for mob in self.dual_edges + self.dual_vertices
         ])
@@ -557,12 +557,12 @@ class FacebookGraph(GraphScene):
         self.dither()
         self.annotate_edges(friends)
         self.dither()
-        self.animate(*[
+        self.play(*[
             CounterclockwiseTransform(account, vertex)
             for account, vertex in zip(accounts, self.vertices)
         ])
         self.dither()
-        self.animate(*[
+        self.play(*[
             Transform(ann, edge)
             for ann, edge in zip(self.edge_annotations, self.edges)
         ])
@@ -607,7 +607,7 @@ class FacebookGraphAsAbstractSet(Scene):
         self.add(accounts, friendships, lines)
         self.dither()
         for mob in names_mob, friends_mob:
-            self.animate(ShowCreation(
+            self.play(ShowCreation(
                 mob, run_time = 1.0
             ))
         self.dither()
@@ -690,10 +690,10 @@ class ExamplesOfGraphs(GraphScene):
         comp_words = CompoundMobject(*words)
         comp_lines = CompoundMobject(*lines)
         self.add(words1)
-        self.animate(ShowCreation(comp_words, run_time = 1.0))
+        self.play(ShowCreation(comp_words, run_time = 1.0))
         self.dither()
         self.add(words2)
-        self.animate(ShowCreation(comp_lines, run_time = 1.0))
+        self.play(ShowCreation(comp_lines, run_time = 1.0))
         self.dither()
         self.remove(comp_words, comp_lines)
 
@@ -708,7 +708,7 @@ class ExamplesOfGraphs(GraphScene):
         for mob in connected, not_connected:
             mob.shift(self.points[3] + UP)
 
-        self.animate(*[
+        self.play(*[
             ShowCreation(mob, run_time = 1.0)
             for mob in self.edges + self.vertices
         ])
@@ -745,7 +745,7 @@ class ExamplesOfGraphs(GraphScene):
                     tup = tuple(reversed(tup))
                 edge = deepcopy(self.edges[self.graph.edges.index(tup)])
                 edge.highlight("red")
-                self.animate(ShowCreation(edge), run_time = 1.0)
+                self.play(ShowCreation(edge), run_time = 1.0)
                 self.dither()
                 self.remove(edge)
             else:
@@ -787,19 +787,19 @@ class DrawDualGraph(GraphScene):
         self.dither()
         self.reset_background()
         self.highlight_region(outer_region, outer_region_mob.get_color())
-        self.animate(*[
+        self.play(*[
             Transform(reg_mob, dot)
             for reg_mob, dot in zip(region_mobs, self.dual_vertices)
         ])
         self.dither()
         self.reset_background()
-        self.animate(ApplyFunction(
+        self.play(ApplyFunction(
             lambda p : (SPACE_WIDTH + SPACE_HEIGHT)*p/np.linalg.norm(p),
             outer_region_mob
         ))
         self.dither()
         for edges in internal_edges, external_edges:
-            self.animate(*[
+            self.play(*[
                 ShowCreation(edge, run_time = 2.0)
                 for edge in edges
             ])
@@ -812,7 +812,7 @@ class EdgesAreTheSame(GraphScene):
         self.remove(*self.vertices)
         self.add(*self.dual_edges)
         self.dither()
-        self.animate(*[
+        self.play(*[
             Transform(*pair, run_time = 2.0)
             for pair in zip(self.dual_edges, self.edges)
         ])
@@ -880,7 +880,7 @@ class CyclesCorrespondWithConnectedComponents(GraphScene):
         for last, next in zip(cycle, cycle[1:]):
             line = Line(self.points[last], self.points[next])
             line.highlight("yellow")
-            self.animate(
+            self.play(
                 ShowCreation(line),
                 WalkPiCreature(randy, self.points[next]),
                 run_time = 1.0
@@ -896,8 +896,8 @@ class CyclesCorrespondWithConnectedComponents(GraphScene):
             Line(self.dual_points[last], self.dual_points[next])
             for last, next in zip(dual_cycle, dual_cycle[1:])
         ]).highlight("red")
-        self.animate(ShowCreation(lines))
-        self.animate(*[
+        self.play(ShowCreation(lines))
+        self.play(*[
             Transform(v, Dot(
                 v.get_center(), 
                 radius = 3*Dot.DEFAULT_RADIUS
@@ -937,7 +937,7 @@ class IntroduceMortimer(GraphScene):
         small_morty = deepcopy(morty).scale(RANDOLPH_SCALE_VAL)
         small_randy.move_to(self.points[randy_path[0]])
         small_morty.move_to(self.dual_points[morty_path[0]])
-        self.animate(*[
+        self.play(*[
             FadeIn(mob)
             for mob in self.vertices + self.edges
         ] + [
@@ -949,19 +949,19 @@ class IntroduceMortimer(GraphScene):
 
         self.highlight_region(self.regions[morty_path[0]])
         for last, next in zip(morty_path, morty_path[1:]):
-            self.animate(WalkPiCreature(morty, self.dual_points[next]),**kwargs)
+            self.play(WalkPiCreature(morty, self.dual_points[next]),**kwargs)
             self.highlight_region(self.regions[next])
         self.dither()
         for last, next in zip(randy_path, randy_path[1:]):
             line = Line(self.points[last], self.points[next])
             line.highlight("yellow")
-            self.animate(
+            self.play(
                 WalkPiCreature(randy, self.points[next]),
                 ShowCreation(line),
                 **kwargs
             )
         self.dither()
-        self.animate(*[
+        self.play(*[
             ApplyMethod(
                 line.rotate_in_place, 
                 np.pi/10, 
@@ -988,9 +988,9 @@ class RandolphMortimerSpanningTreeGame(GraphScene):
         time_per_dual_edge = 0.5
 
         self.add(randy, morty)
-        self.animate(ShowCreation(self.spanning_tree))
+        self.play(ShowCreation(self.spanning_tree))
         self.dither()
-        self.animate(WalkPiCreature(
+        self.play(WalkPiCreature(
             morty, self.dual_points[attempted_dual_point_index],
             alpha_func = lambda t : 0.3 * there_and_back(t),
             run_time = 2.0,
@@ -1000,7 +1000,7 @@ class RandolphMortimerSpanningTreeGame(GraphScene):
             # if index > 0:
             #     edge = self.edges[dual_edges[index-1]]
             #     midpoint = edge.get_center()
-            #     self.animate(*[
+            #     self.play(*[
             #         ShowCreation(Line(
             #             midpoint,
             #             tip
@@ -1015,7 +1015,7 @@ class RandolphMortimerSpanningTreeGame(GraphScene):
         cycle_index = region_ordering[-1]
         cycle = self.graph.region_cycles[cycle_index]
         self.highlight_region(self.regions[cycle_index], "black")
-        self.animate(ShowCreation(CompoundMobject(*[
+        self.play(ShowCreation(CompoundMobject(*[
             Line(self.points[last], self.points[next]).highlight("green")
             for last, next in zip(cycle, list(cycle)[1:] + [cycle[0]])
         ])))
@@ -1043,7 +1043,7 @@ class MortimerCannotTraverseCycle(GraphScene):
         for last, next in zip(dual_cycle, dual_cycle[1:]):
             line = Line(self.dual_points[last], self.dual_points[next])
             line.highlight("red")
-            self.animate(
+            self.play(
                 WalkPiCreature(morty, self.dual_points[next], **kwargs),
                 ShowCreation(line, **kwargs),
             )
@@ -1056,7 +1056,7 @@ class MortimerCannotTraverseCycle(GraphScene):
             matching_edges.append(
                 self.edges[distances.index(min(distances))]
             )
-        self.animate(*[
+        self.play(*[
             Transform(v, Dot(
                 v.get_center(), 
                 radius = 3*Dot.DEFAULT_RADIUS,
@@ -1065,7 +1065,7 @@ class MortimerCannotTraverseCycle(GraphScene):
             for v in np.array(self.vertices)[trapped_points]
         ])
         self.add(text)
-        self.animate(*[
+        self.play(*[
             Transform(line, deepcopy(edge).highlight(line.get_color()))
             for line, edge in zip(all_lines, matching_edges)
         ])
@@ -1095,7 +1095,7 @@ class TwoPropertiesOfSpanningTree(Scene):
                 explanation.get_center() + vect,
                 tail = word.get_center() - vect,
             ))
-            self.animate(ApplyMethod(word.highlight, "yellow"))
+            self.play(ApplyMethod(word.highlight, "yellow"))
             self.dither()
 
 
@@ -1116,7 +1116,7 @@ class DualSpanningTree(GraphScene):
         """).to_edge(UP)
 
         self.add(self.spanning_tree, randy, morty)
-        self.animate(ShowCreation(CompoundMobject(
+        self.play(ShowCreation(CompoundMobject(
             *np.array(self.edges)[dual_edges]
         ).highlight("red")))
         self.add(words)
@@ -1136,7 +1136,7 @@ class TreeCountFormula(Scene):
         all_dots = [Dot(branches[0].points[0])]
         self.add(text, all_dots[0])
         for branch in branches:
-            self.animate(
+            self.play(
                 ShowCreation(branch), 
                 run_time = time_per_branch
             )
@@ -1145,7 +1145,7 @@ class TreeCountFormula(Scene):
             all_dots.append(dot)
         self.dither()
         self.remove(*all_dots)
-        self.animate(
+        self.play(
             FadeOut(text), 
             FadeIn(CompoundMobject(*gs.edges + gs.vertices)),
             *[
@@ -1178,7 +1178,7 @@ class FinalSum(Scene):
             copy.scale_in_place(lines[index].get_width()/mob.get_width())
             anims.append(CounterclockwiseTransform(copy, mob))
         self.clear()
-        self.animate(*anims, run_time = 2.0)
+        self.play(*anims, run_time = 2.0)
         self.dither()
 
 
