@@ -15,16 +15,18 @@ import displayer as disp
 from tk_scene import TkSceneRoot
 
 class Scene(object):
-    def __init__(self,
-                 display_config = PRODUCTION_QUALITY_DISPLAY_CONFIG,
-                 construct_args = [],
-                 background = None,
-                 start_dither_time = DEFAULT_DITHER_TIME):
-        self.display_config = display_config
-        self.frame_duration = display_config["frame_duration"]
+    DEFAULT_CONFIG = {
+        "display_config" : PRODUCTION_QUALITY_DISPLAY_CONFIG,
+        "construct_args" : [],
+        "background" : None,
+        "start_dither_time" : DEFAULT_DITHER_TIME
+    }
+    def __init__(self, **kwargs):
+        digest_config(self, Scene, kwargs)
+        self.frame_duration = self.display_config["frame_duration"]
         self.frames = []
         self.mobjects = []
-        if background:
+        if self.background:
             self.original_background = np.array(background)
             #TODO, Error checking?
         else:
@@ -35,7 +37,7 @@ class Scene(object):
         self.background = self.original_background
         self.shape = self.background.shape[:2]
         #TODO, space shape
-        self.construct(*construct_args)
+        self.construct(*self.construct_args)
 
     def construct(self):
         pass #To be implemented in subclasses

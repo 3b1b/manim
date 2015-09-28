@@ -7,41 +7,42 @@ from constants import *
 from helpers import *
 
 class FunctionGraph(Mobject1D):
-    DEFAULT_COLOR = "lightblue"
-    def __init__(self, function, x_range = [-10, 10], *args, **kwargs):
-        self.function = function
-        self.x_min = x_range[0] / SPACE_WIDTH
-        self.x_max = x_range[1] / SPACE_WIDTH
-        Mobject1D.__init__(self, *args, **kwargs)
+    DEFAULT_CONFIG = {
+        "color" : "lightblue",
+        "x_min" : -10,
+        "x_max" : 10,
+        "spacial_radius" : SPACE_WIDTH,
+    }
+    def __init__(self, function, **kwargs):
+        digest_config(self, FunctionGraph, kwargs, locals())
+        Mobject1D.__init__(self, **kwargs)
 
     def generate_points(self):
-        scale_factor = 2.0 * SPACE_WIDTH / (self.x_max - self.x_min)
-        self.epsilon /= scale_factor
+        numerical_radius = (self.x_max - self.x_min)/2
+        numerical_center = (self.x_max + self.x_min)/2
+        ratio = numerical_radius / self.spacial_radius
+        epsilon = self.epsilon * ratio
         self.add_points([
-            np.array([x, self.function(x), 0])
+            np.array([(x-numerical_center)/ratio, self.function(x), 0])
             for x in np.arange(self.x_min, self.x_max, self.epsilon)
         ])
-        self.scale(scale_factor)
 
 
 class ParametricFunction(Mobject):
-    DEFAULT_COLOR = "white"
-    def __init__(self, 
-                 function, 
-                 dim = 1, 
-                 expected_measure = 10.0, 
-                 density = None,
-                 *args, 
-                 **kwargs):
-        self.function = function
-        self.dim = dim
-        self.expected_measure = expected_measure
-        if density:
-            self.epsilon = 1.0 / density
+    DEFAULT_CONFIG = {
+        "color" : "white",
+        "dim" : 1,
+        "expected_measure" : 10.0,
+        "density" : None
+    }
+    def __init__(self, function, **kwargs):
+        digest_config(self, ParametricFunction, kwargs, locals())
+        if self.density:
+            self.epsilon = 1.0 / self.density
         elif self.dim == 1:
-            self.epsilon = 1.0 / expected_measure / DEFAULT_POINT_DENSITY_1D
+            self.epsilon = 1.0 / self.expected_measure / DEFAULT_POINT_DENSITY_1D
         else:
-            self.epsilon = 1.0 / np.sqrt(expected_measure) / DEFAULT_POINT_DENSITY_2D
+            self.epsilon = 1.0 / np.sqrt(self.expected_measure) / DEFAULT_POINT_DENSITY_2D
         Mobject.__init__(self, *args, **kwargs)
 
     def generate_points(self):
@@ -58,16 +59,15 @@ class ParametricFunction(Mobject):
             ])
 
 class Grid(Mobject1D):
-    DEFAULT_COLOR = "green"
-    def __init__(self, 
-                 radius = max(SPACE_HEIGHT, SPACE_WIDTH), 
-                 interval_size = 1.0,
-                 subinterval_size = 0.5,
-                 *args, **kwargs):
-        self.radius = radius
-        self.interval_size = interval_size
-        self.subinterval_size = subinterval_size
-        Mobject1D.__init__(self, *args, **kwargs)
+    DEFAULT_CONFIG = {
+        "color" : "green",
+        "radius" : max(SPACE_HEIGHT, SPACE_WIDTH), 
+        "interval_size" : 1.0,
+        "subinterval_size" : 0.5,
+    }
+    def __init__(self, **kwargs):
+        digest_config(self, Grid, kwargs)
+        Mobject1D.__init__(self, **kwargs)
 
     def generate_points(self):
         self.add_points([
@@ -91,27 +91,20 @@ class Grid(Mobject1D):
             ], color = color)
 
 class NumberLine(Mobject1D):
-    def __init__(self, 
-                 radius = SPACE_WIDTH,
-                 unit_length_to_spacial_width = 1,
-                 tick_size = 0.1,
-                 tick_frequency = 0.5,
-                 number_at_center = 0,                 
-                 numbers_with_elongated_ticks = [0],
-                 longer_tick_multiple = 2,
-                 **kwargs):
-        #TODO, There must be better (but still safe) way to add all
-        #these config arguments as attributes.
-        self.radius = radius
-        self.unit_length_to_spacial_width = unit_length_to_spacial_width
-        self.tick_size = tick_size
-        self.tick_frequency = tick_frequency
-        self.numbers_with_elongated_ticks = numbers_with_elongated_ticks
-        self.number_at_center = number_at_center
-        self.longer_tick_multiple = longer_tick_multiple
-        numerical_radius = float(radius) / unit_length_to_spacial_width
-        self.left_num  = number_at_center - numerical_radius
-        self.right_num = number_at_center + numerical_radius
+    DEFAULT_CONFIG = {
+        "radius" : SPACE_WIDTH,
+        "unit_length_to_spacial_width" : 1,
+        "tick_size" : 0.1,
+        "tick_frequency" : 0.5,
+        "number_at_center" : 0,                 
+        "numbers_with_elongated_ticks" : [0],
+        "longer_tick_multiple" : 2,
+    }
+    def __init__(self, **kwargs):
+        digest_config(self, NumberLine, kwargs)
+        numerical_radius = float(self.radius) / self.unit_length_to_spacial_width
+        self.left_num  = self.number_at_center - numerical_radius
+        self.right_num = self.number_at_center + numerical_radius
         Mobject1D.__init__(self, **kwargs)
 
     def generate_points(self):
@@ -170,15 +163,14 @@ class UnitInterval(NumberLine):
         "numbers_with_elongated_ticks" : [0, 1],
     }
     def __init__(self, **kwargs):
-        config = self.DEFAULT_CONFIG
-        config.update(kwargs)
-        NumberLine.__init__(self, **config)
+        digest_config(self, UnitInterval, kwargs)
+        NumberLine.__init__(self, **kwargs)
 
 
 class Axes(CompoundMobject):
-    def __init__(self, *args, **kwargs):
-        x_axis = NumberLine(*args, **kwargs)
-        y_axis = NumberLine(*args, **kwargs).rotate(np.pi/2, OUT)
+    def __init__(self, **kwargs):
+        x_axis = NumberLine(**kwargs)
+        y_axis = NumberLine(**kwargs).rotate(np.pi/2, OUT)
         CompoundMobject.__init__(self, x_axis, y_axis)
 
 

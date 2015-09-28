@@ -8,28 +8,24 @@ from helpers import *
 
 
 class Point(Mobject):
-    DEFAULT_COLOR = "black"
-    def __init__(self, location = ORIGIN, *args, **kwargs):
-        self.location = np.array(location)
-        Mobject.__init__(self, *args, **kwargs)
+    DEFAULT_CONFIG = {
+        "color" : "black",
+    }
+    def __init__(self, location = ORIGIN, **kwargs):
+        digest_config(self, Point, kwargs, locals())
+        Mobject.__init__(self, **kwargs)
 
     def generate_points(self):
-        self.add_points(self.location.reshape((1, 3)))
+        self.add_points(self.location)
 
 
 class Dot(Mobject1D): #Use 1D density, even though 2D
-    DEFAULT_COLOR = "white"
-    DEFAULT_RADIUS = 0.05
-    def __init__(self, center = ORIGIN, radius = DEFAULT_RADIUS, 
-                 *args, **kwargs):
-        center = np.array(center)
-        if center.size == 1:
-            raise Exception("Center must have 2 or 3 coordinates!")
-        elif center.size == 2:
-            center = np.append(center, [0])
-        self.center_point = center
-        self.radius = radius
-        Mobject1D.__init__(self, *args, **kwargs)
+    DEFAULT_CONFIG = {
+        "radius" : 0.05
+    }
+    def __init__(self, center_point = ORIGIN, **kwargs):
+        digest_config(self, Dot, kwargs, locals())
+        Mobject1D.__init__(self, **kwargs)
 
     def generate_points(self):
         self.add_points([
@@ -40,22 +36,30 @@ class Dot(Mobject1D): #Use 1D density, even though 2D
         ])
 
 class Cross(Mobject1D):
-    RADIUS = 0.3
-    DEFAULT_COLOR = "white"
+    DEFAULT_CONFIG = {
+        "color" : "yellow",
+        "radius" : 0.3
+    }
+    def __init__(self, center_point = ORIGIN, **kwargs):
+        digest_config(self, Cross, kwargs, locals())
+        Mobject1D.__init__(self, **kwargs)
+
     def generate_points(self):
         self.add_points([
             (sgn * x, x, 0)
-            for x in np.arange(-self.RADIUS / 2, self.RADIUS/2, self.epsilon)
+            for x in np.arange(-self.radius / 2, self.radius/2, self.epsilon)
             for sgn in [-1, 1]
         ])
+        self.shift(self.center_point)
 
 class Line(Mobject1D):
-    MIN_DENSITY = 0.1
-    def __init__(self, start, end, density = DEFAULT_POINT_DENSITY_1D, 
-                 *args, **kwargs):
+    DEFAULT_CONFIG = {
+        "min_density" : 0.1
+    }
+    def __init__(self, start, end, **kwargs):
+        digest_config(self, Line, kwargs)
         self.set_start_and_end(start, end)
-        density *= max(self.get_length(), self.MIN_DENSITY)
-        Mobject1D.__init__(self, density = density, *args, **kwargs)
+        Mobject1D.__init__(self, **kwargs)
 
     def set_start_and_end(self, start, end):
         preliminary_start, preliminary_end = [
@@ -74,9 +78,11 @@ class Line(Mobject1D):
         ]
 
     def generate_points(self):
+        length = np.linalg.norm(self.end - self.start)
+        epsilon = self.epsilon / max(length, self.min_density)
         self.add_points([
             interpolate(self.start, self.end, t)
-            for t in np.arange(0, 1, self.epsilon)
+            for t in np.arange(0, 1, epsilon)
         ])
 
     def get_length(self):
@@ -90,22 +96,21 @@ class Line(Mobject1D):
         return rise/run
 
 class Arrow(Line):
-    DEFAULT_COLOR = "white"
-    DEFAULT_TIP_LENGTH = 0.25
+    DEFAULT_CONFIG = {
+        "color" : "white",
+        "tip_length" : 0.25
+    }
     def __init__(self, *args, **kwargs):
-        if "tip_length" in kwargs:
-            tip_length = kwargs.pop("tip_length")
-        else:
-            tip_length = self.DEFAULT_TIP_LENGTH
+        digest_config(self, Arrow, kwargs)
         Line.__init__(self, *args, **kwargs)
-        self.add_tip(tip_length)
+        self.add_tip()
 
-    def add_tip(self, tip_length):
+    def add_tip(self):
         vect = self.start-self.end
-        vect = vect*tip_length/np.linalg.norm(vect)
+        vect = vect*self.tip_length/np.linalg.norm(vect)
         self.add_points([
             interpolate(self.end, self.end+v, t)
-            for t in np.arange(0, 1, tip_length*self.epsilon)
+            for t in np.arange(0, 1, self.tip_length*self.epsilon)
             for v in [
                 rotate_vector(vect, np.pi/4, axis)
                 for axis in IN, OUT
@@ -113,7 +118,7 @@ class Arrow(Line):
         ])
 
 class CurvedLine(Line):
-    def __init__(self, start, end, via = None, *args, **kwargs):
+    def __init__(self, start, end, via = None, **kwargs):
         self.set_start_and_end(start, end)
         if via == None:
             self.via = rotate_vector(
@@ -124,7 +129,7 @@ class CurvedLine(Line):
             self.via = via.get_center()
         else:
             self.via = via
-        Line.__init__(self, start, end, *args, **kwargs)
+        Line.__init__(self, start, end, **kwargs)
 
     def generate_points(self):
         self.add_points([
@@ -137,9 +142,12 @@ class CurvedLine(Line):
         ])
 
 class Circle(Mobject1D):
-    DEFAULT_COLOR = "red"
-    def __init__(self, radius = 1.0, **kwargs):
-        self.radius = radius
+    DEFAULT_CONFIG = {
+        "color" : "red",
+        "radius" : 1.0
+    }
+    def __init__(self, **kwargs):
+        digest_config(self, Circle, kwargs)
         Mobject1D.__init__(self, **kwargs)
 
     def generate_points(self):
@@ -149,9 +157,13 @@ class Circle(Mobject1D):
         ])
 
 class Rectangle(Mobject1D):
-    DEFAULT_COLOR = "yellow"
-    def __init__(self, height = 2.0, width = 2.0, **kwargs):
-        self.height, self.width = height, width
+    DEFAULT_CONFIG = {
+        "color" : "yellow",
+        "height" : 2.0,
+        "width" : 4.0
+    }
+    def __init__(self, **kwargs):
+        digest_config(self, Rectangle, kwargs)
         Mobject1D.__init__(self, **kwargs)
 
     def generate_points(self):
@@ -164,17 +176,27 @@ class Rectangle(Mobject1D):
         ])
 
 class Square(Rectangle):
-    def __init__(self, side_length = 2.0, **kwargs):
-        Rectangle.__init__(self, side_length, side_length, **kwargs)
+    DEFAULT_CONFIG = {
+        "height" : 2.0,
+        "width" : 2.0,
+    }
+    def __init__(self, **kwargs):
+        digest_config(self, Square, kwargs)
+        Rectangle.__init__(self, **kwargs)
 
 class Bubble(Mobject):
-    def __init__(self, direction = LEFT, index_of_tip = -1, center = ORIGIN):
-        self.direction = direction
-        self.content = Mobject()
-        self.index_of_tip = index_of_tip
-        self.center_offset = center - Mobject.get_center(self)
-        if direction[0] > 0:
+    DEFAULT_CONFIG = {
+        "direction" : LEFT,
+        "index_of_tip" : -1,
+        "center_point" : ORIGIN,
+    }
+    def __init__(self, **kwargs):
+        digest_config(self, Bubble, kwargs)
+        Mobject.__init__(self, **kwargs)
+        self.center_offset = self.center_point - Mobject.get_center(self)
+        if self.direction[0] > 0:
             self.rotate(np.pi, UP)
+        self.content = Mobject()
 
     def get_tip(self):
         return self.points[self.index_of_tip]
@@ -217,13 +239,19 @@ class Bubble(Mobject):
         return self
 
 class SpeechBubble(Bubble):
-    INITIAL_WIDTH = 4
-    INITIAL_HEIGHT = 2
-    def __init__(self, *args, **kwargs):
-        Mobject.__init__(self, *args, **kwargs)
+    DEFAULT_CONFIG = {
+        "initial_width" : 4,
+        "initial_height" : 2,
+    }
+    def __init__(self, **kwargs):
+        digest_config(self, SpeechBubble, kwargs)
+        Bubble.__init__(self, **kwargs)
+
+    def generate_points(self):
         complex_power = 0.9
-        radius = self.INITIAL_WIDTH/2
-        circle = Circle(density = radius*DEFAULT_POINT_DENSITY_1D)
+        radius = self.initial_width/2
+        circle = Circle(radius = radius)
+        circle.scale(1.0/radius)
         circle.apply_complex_function(lambda z : z**complex_power)
         circle.scale(radius)
         boundary_point_as_complex = radius*complex(-1)**complex_power
@@ -243,28 +271,28 @@ class SpeechBubble(Bubble):
         )
         self.highlight("white")
         self.rotate(np.pi/2)
-        self.points[:,1] *= float(self.INITIAL_HEIGHT)/self.INITIAL_WIDTH
-        Bubble.__init__(self, direction = LEFT)
+        self.points[:,1] *= float(self.initial_height)/self.initial_width
 
 class ThoughtBubble(Bubble):
-    NUM_BULGES = 7
-    INITIAL_INNER_RADIUS = 1.8
-    INITIAL_WIDTH = 6
-    def __init__(self, *args, **kwargs):
-        Mobject.__init__(self, *args, **kwargs)
+    DEFAULT_CONFIG = {
+        "num_bulges" : 7,
+        "initial_inner_radius" : 1.8,
+        "initial_width" : 6
+    }
+    def __init__(self, **kwargs):
+        digest_config(self, ThoughtBubble, kwargs)
+        Bubble.__init__(self, **kwargs)
+        self.index_of_tip = np.argmin(self.points[:,1])
+
+    def generate_points(self):
         self.add(Circle().scale(0.15).shift(2.5*DOWN+2*LEFT))
         self.add(Circle().scale(0.3).shift(2*DOWN+1.5*LEFT))
-        for n in range(self.NUM_BULGES):
-            theta = 2*np.pi*n/self.NUM_BULGES
+        for n in range(self.num_bulges):
+            theta = 2*np.pi*n/self.num_bulges
             self.add(Circle().shift((np.cos(theta), np.sin(theta), 0)))
-        self.filter_out(lambda p : np.linalg.norm(p) < self.INITIAL_INNER_RADIUS)
-        self.stretch_to_fit_width(self.INITIAL_WIDTH)
+        self.filter_out(lambda p : np.linalg.norm(p) < self.initial_inner_radius)
+        self.stretch_to_fit_width(self.initial_width)
         self.highlight("white")
-        Bubble.__init__(
-            self, 
-            index_of_tip = np.argmin(self.points[:,1]),
-            **kwargs
-        )
 
 
 

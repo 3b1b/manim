@@ -16,13 +16,15 @@ class DelayByOrder(Animation):
     Warning: This will not work on all animation types, but 
     when it does, it will be pretty cool
     """
-    def __init__(self, animation, max_power = 5, **kwargs):
-        self.animation = animation
-        self.max_power = max_power
-        kwargs = dict([
+    DEFAULT_CONFIG = {
+        "max_power" : 5
+    }
+    def __init__(self, animation, **kwargs):
+        digest_config(self, DelayByOrder, kwargs, locals())
+        kwargs.update(dict([
             (attr, getattr(animation, attr))
-            for attr in "run_time", "alpha_func"
-        ])
+            for attr in Animation.DEFAULT_CONFIG
+        ]))
         self.num_mobject_points = animation.mobject.get_num_points()
         Animation.__init__(self, animation.mobject, **kwargs)
         self.name = self.__class__.__name__ + str(self.animation)
@@ -38,45 +40,31 @@ class DelayByOrder(Animation):
         self.animation.update_mobject(alpha_array)
 
 class Rotating(Animation):
-    def __init__(self,
-                 mobject,
-                 axis = None,
-                 axes = [RIGHT, UP], 
-                 radians = 2 * np.pi,
-                 run_time = 20.0,
-                 alpha_func = None,
-                 *args, **kwargs):
-        Animation.__init__(
-            self, mobject,
-            run_time = run_time,
-            alpha_func = alpha_func,
-            *args, **kwargs
-        )
-        self.axes = [axis] if axis is not None else axes
-        self.radians = radians
+    DEFAULT_CONFIG = {
+        "axes" : [RIGHT, UP],
+        "radians" : 2*np.pi,
+        "run_time" : 20.0,
+        "alpha_func" : None,
+    }
+    def __init__(self, mobject, **kwargs):
+        digest_config(self, Rotating, kwargs, locals())
+        Animation.__init__(self, mobject, **kwargs)
 
     def update_mobject(self, alpha):
         self.mobject.points = self.starting_mobject.points
         for axis in self.axes:
-            self.mobject.rotate(
-                self.radians * alpha,
-                axis
-            )
+            self.mobject.rotate(self.radians * alpha, axis)
 
 class RotationAsTransform(Rotating):
-    def __init__(self, mobject, radians, axis = IN, axes = None,
-                 run_time = DEFAULT_ANIMATION_RUN_TIME,
-                 alpha_func = smooth,
-                 *args, **kwargs):
-        Rotating.__init__(
-            self,
-            mobject,
-            axis = axis,
-            axes = axes,
-            run_time = run_time,
-            radians = radians,
-            alpha_func = alpha_func,
-        )
+    DEFAULT_CONFIG = {
+        "axes" : [IN],
+        "radians" : np.pi / 2,
+        "run_time" : DEFAULT_ANIMATION_RUN_TIME,
+        "alpha_func" : smooth,
+    }
+    def __init__(self, mobject, **kwargs):
+        digest_config(self, RotationAsTransform, kwargs, locals())
+        Rotating.__init__(self, mobject, **kwargs)
 
 class FadeOut(Animation):
     def update_mobject(self, alpha):
@@ -90,9 +78,9 @@ class FadeIn(Animation):
             #TODO, Why do you need to do this? Shouldn't points always align?
 
 class ShimmerIn(DelayByOrder):
-    def __init__(self, mobject, *args, **kwargs):
+    def __init__(self, mobject, **kwargs):
         mobject.sort_points(lambda p : np.dot(p, DOWN+RIGHT))
-        DelayByOrder.__init__(self, FadeIn(mobject, *args, **kwargs))
+        DelayByOrder.__init__(self, FadeIn(mobject, **kwargs))
 
 
 class ShowCreation(Animation):
@@ -107,21 +95,22 @@ class ShowCreation(Animation):
             )
 
 class Flash(Animation):
-    def __init__(self, mobject, color = "white", slow_factor = 0.01,
-                 run_time = 0.1, alpha_func = None,
-                 *args, **kwargs):
-        Animation.__init__(self, mobject, run_time = run_time, 
-                           alpha_func = alpha_func,
-                           *args, **kwargs)
-        self.intermediate = Mobject(color = color)
+    DEFAULT_CONFIG = {
+        "color" : "white",
+        "slow_factor" : 0.01,
+        "run_time" : 0.1,
+        "alpha_func" : None,
+    }
+    def __init__(self, mobject, **kwargs):
+        digest_config(self, Flash, kwargs, locals())
+        self.intermediate = Mobject(color = self.color)
         self.intermediate.add_points([
             point + (x, y, 0)
             for point in self.mobject.points
             for x in [-1, 1]
             for y in [-1, 1]
         ])
-        self.reference_mobjects.append(self.intermediate)
-        self.slow_factor = slow_factor
+        Animation.__init__(self, mobject, **kwargs)        
 
     def update_mobject(self, alpha):
         #Makes alpha go from 0 to slow_factor to 0 instead of 0 to 1
@@ -134,12 +123,12 @@ class Flash(Animation):
         )
 
 class Homotopy(Animation):
-    def __init__(self, homotopy, *args, **kwargs):
+    def __init__(self, homotopy, **kwargs):
         """
         Homotopy a function from (x, y, z, t) to (x', y', z')
         """
-        self.homotopy = homotopy
-        Animation.__init__(self, *args, **kwargs)
+        digest_config(self, Homotopy, kwargs, locals())
+        Animation.__init__(self, **kwargs)
 
     def update_mobject(self, alpha):
         self.mobject.points = np.array([
@@ -148,7 +137,7 @@ class Homotopy(Animation):
         ])
 
 class ComplexHomotopy(Homotopy):
-    def __init__(self, complex_homotopy, *args, **kwargs):
+    def __init__(self, complex_homotopy, **kwargs):
         """
         Complex Hootopy a function (z, t) to z'
         """

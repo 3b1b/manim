@@ -9,6 +9,25 @@ import operator as op
 
 from constants import *
 
+def digest_config(obj, Class, kwargs, local_args = {}):
+    """
+    To be used in initializing most-to-all objects.
+    Sets key word args as local variables
+    """
+    if hasattr(Class, "DEFAULT_CONFIG"):
+        config = Class.DEFAULT_CONFIG.copy()
+    else:
+        config = {}
+    for key in config.keys():
+        if hasattr(obj, key):
+            config.pop(key)
+        if key in kwargs:
+            config[key] = kwargs.pop(key)
+    for key in local_args:
+        if key not in ["self", "kwargs"]:
+            config[key] = local_args[key]
+    obj.__dict__.update(config)
+
 def interpolate(start, end, alpha):
     return (1-alpha)*start + alpha*end
 

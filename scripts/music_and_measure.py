@@ -65,21 +65,27 @@ def zero_to_one_interval():
     return interval
 
 class OpenInterval(Mobject):
-    def __init__(self, center = ORIGIN, width = 2, **kwargs):
+    def __init__(self, center_point = ORIGIN, width = 2, **kwargs):
+        digest_config(self, OpenInterval, kwargs, locals())
         Mobject.__init__(self, **kwargs)
         self.add(tex_mobject("(").shift(LEFT))
         self.add(tex_mobject(")").shift(RIGHT))
         scale_factor = width / 2.0
         self.stretch(scale_factor, 0)
         self.stretch(0.5+0.5*scale_factor, 1)
-        self.shift(center)
+        self.shift(center_point)
 
 class Piano(ImageMobject):
-    SHOULD_BUFF_POINTS = False
+    DEFAULT_CONFIG = {
+        "should_buffer_points" : False,
+        "invert" : False, 
+        "scale_value" : 0.5
+    }
     def __init__(self, **kwargs):
-        ImageMobject.__init__(self, "piano_keyboard", invert = False)
+        digest_config(self, Piano, kwargs)
+        ImageMobject.__init__(self, "piano_keyboard")
         jump = self.get_width()/24        
-        self.scale(0.5).center()
+        self.center()
         self.half_note_jump = self.get_width()/24
         self.ivory_jump = self.get_width()/14
 
@@ -100,28 +106,26 @@ class Piano(ImageMobject):
 
 
 class VibratingString(Animation):
-    def __init__(self, 
-                 num_periods = 1,
-                 overtones = 4,
-                 amplitude = 0.5,
-                 radius = INTERVAL_RADIUS, 
-                 center = ORIGIN,
-                 color = "white",
-                 run_time = 3.0, 
-                 alpha_func = None,
-                 **kwargs):
-        self.radius = radius
-        self.center = center
+    DEFAULT_CONFIG = {
+        "num_periods" : 1,
+        "overtones" : 4,
+        "amplitude" : 0.5,
+        "radius" : INTERVAL_RADIUS,
+        "center" : ORIGIN,
+        "color" : "white",
+        "run_time" : 3.0,
+        "alpha_func" : None
+    }
+    def __init__(self, **kwargs):
+        digest_config(self, VibratingString, kwargs)
         def func(x, t):
             return sum([
-                (amplitude/((k+1)**2.5))*np.sin(2*mult*t)*np.sin(k*mult*x)
-                for k in range(overtones)
-                for mult in [(num_periods+k)*np.pi]
+                (self.amplitude/((k+1)**2.5))*np.sin(2*mult*t)*np.sin(k*mult*x)
+                for k in range(self.overtones)
+                for mult in [(self.num_periods+k)*np.pi]
             ])
         self.func = func
-        kwargs["run_time"] = run_time
-        kwargs["alpha_func"] = alpha_func
-        Animation.__init__(self, Mobject1D(color = color), **kwargs)
+        Animation.__init__(self, Mobject1D(color = self.color), **kwargs)
 
     def update_mobject(self, alpha):
         self.mobject.init_points()

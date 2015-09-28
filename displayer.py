@@ -69,7 +69,7 @@ def paint_mobject(mobject, image_array = None):
     flattener = np.array([1, width], dtype = 'int').reshape((2, 1))
     indices = np.dot(points, flattener)
     indices = indices.reshape(indices.size)
-    if mobject.should_buffer_points():#Is this alright?
+    if mobject.should_buffer_points:#Is this alright?
         for tweak in [
             indices + 1, 
             indices + width, 

@@ -17,26 +17,20 @@ class Mobject(object):
     Mathematical Object
     """
     #Number of numbers used to describe a point (3 for pos, 3 for normal vector)
+    DEFAULT_CONFIG = {
+        "color" : "white",
+        "should_buffer_points" : GENERALLY_BUFFER_POINTS,
+        "name" : None,
+    }
     DIM = 3
-    DEFAULT_COLOR = Color("skyblue")
-    SHOULD_BUFF_POINTS = GENERALLY_BUFF_POINTS
-    EDGE_BUFFER = 0.5
-    NEXT_TO_BUFFER = 0.2
-
-    def __init__(self, 
-                 color = None,
-                 name = None,
-                 center = None,
-                 **kwargs
-                 ):
-        self.color = Color(color) if color else Color(self.DEFAULT_COLOR)
-        if not hasattr(self, "name"):
-            self.name = name or self.__class__.__name__
+    def __init__(self, **kwargs):
+        digest_config(self, Mobject, kwargs)
+        self.color = Color(self.color)
+        if self.name is None:
+            self.name = self.__class__.__name__
         self.has_normals = hasattr(self, 'unit_normal')
         self.init_points()
         self.generate_points()
-        if center:
-            self.center().shift(center)
 
     def init_points(self):
         self.points = np.zeros((0, 3))
@@ -130,13 +124,13 @@ class Mobject(object):
         return self
 
     #Wrapper functions for better naming
-    def to_corner(self, corner = LEFT+DOWN, buff = EDGE_BUFFER):
+    def to_corner(self, corner = LEFT+DOWN, buff = DEFAULT_MOBJECT_TO_EDGE_BUFFER):
         return self.align_on_border(corner, buff)
 
-    def to_edge(self, edge = LEFT, buff = EDGE_BUFFER):
+    def to_edge(self, edge = LEFT, buff = DEFAULT_MOBJECT_TO_EDGE_BUFFER):
         return self.align_on_border(edge, buff)
 
-    def align_on_border(self, direction, buff = EDGE_BUFFER):
+    def align_on_border(self, direction, buff = DEFAULT_MOBJECT_TO_EDGE_BUFFER):
         """
         Direction just needs to be a vector pointing towards side or
         corner in the 2d plane.
@@ -155,7 +149,7 @@ class Mobject(object):
 
     def next_to(self, mobject, 
                 direction = RIGHT, 
-                buff = NEXT_TO_BUFFER,
+                buff = DEFAULT_MOBJECT_TO_MOBJECT_BUFFER,
                 aligned_edge = None):
         if aligned_edge is not None:
             anchor_point = self.get_corner(aligned_edge-direction)
@@ -229,6 +223,11 @@ class Mobject(object):
             self.rgbs[to_change, :] = rgb
         else:
             self.rgbs[:,:] = rgb
+        return self
+
+    def set_color(self, color):
+        self.highlight(color)
+        self.color = Color(color)
         return self
 
     def to_original_color(self):
@@ -315,7 +314,7 @@ class Mobject(object):
     ### Stuff subclasses should deal with ###
     def should_buffer_points(self):
         # potentially changed in subclasses
-        return GENERALLY_BUFF_POINTS
+        return GENERALLY_BUFFER_POINTS
 
     def generate_points(self):
         #Typically implemented in subclass, unless purposefully left blank
@@ -346,16 +345,24 @@ class Mobject(object):
                               alpha * getattr(mobject2, attr)
             setattr(target_mobject, attr, new_array)
 
+#TODO, Make the two implementations bellow not redundant
 class Mobject1D(Mobject):
-    def __init__(self, density = DEFAULT_POINT_DENSITY_1D, *args, **kwargs):
-        self.epsilon = 1.0 / density
-
-        Mobject.__init__(self, *args, **kwargs)
+    DEFAULT_CONFIG = {
+        "density" : DEFAULT_POINT_DENSITY_1D,
+    }
+    def __init__(self, **kwargs):
+        digest_config(self, Mobject1D, kwargs)
+        self.epsilon = 1.0 / self.density
+        Mobject.__init__(self, **kwargs)
 
 class Mobject2D(Mobject):
-    def __init__(self, density = DEFAULT_POINT_DENSITY_2D, *args, **kwargs):
-        self.epsilon = 1.0 / density
-        Mobject.__init__(self, *args, **kwargs)
+    DEFAULT_CONFIG = {
+        "density" : DEFAULT_POINT_DENSITY_2D,
+    }
+    def __init__(self, **kwargs):
+        digest_config(self, Mobject1D, kwargs)
+        self.epsilon = 1.0 / self.density
+        Mobject.__init__(self, **kwargs)
 
 class CompoundMobject(Mobject):
     def __init__(self, *mobjects):

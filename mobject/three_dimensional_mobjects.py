@@ -7,15 +7,14 @@ from constants import *
 from helpers import *
 
 class Stars(Mobject):
-    DEFAULT_COLOR = "white"
-    SHOULD_BUFF_POINTS = False
-    def __init__(self,
-                 radius = SPACE_WIDTH,
-                 num_points = DEFAULT_NUM_STARS, 
-                 *args, **kwargs):
-        self.num_points = num_points
-        self.radius = radius
-        Mobject.__init__(self, *args, **kwargs)
+    DEFAULT_CONFIG = {
+        "should_buffer_points" : False,
+        "radius" : SPACE_WIDTH,
+        "num_points" : 1000,
+    }
+    def __init__(self, **kwargs):
+        digest_config(self, Stars, kwargs)
+        Mobject.__init__(self, **kwargs)
 
     def generate_points(self):
         self.add_points([
@@ -42,12 +41,12 @@ class CubeWithFaces(Mobject2D):
             for sgn in [-1, 1]
         ])
         self.pose_at_angle()
+        self.set_color("skyblue")
 
     def unit_normal(self, coords):
         return np.array(map(lambda x : 1 if abs(x) == 1 else 0, coords))
 
 class Cube(Mobject1D):
-    DEFAULT_COLOR = "yellow"
     def generate_points(self):
         self.add_points([
             ([a, b, c][p[0]], [a, b, c][p[1]], [a, b, c][p[2]])
@@ -55,9 +54,9 @@ class Cube(Mobject1D):
             for a, b, c in it.product([-1, 1], [-1, 1], np.arange(-1, 1, self.epsilon))
         ])
         self.pose_at_angle()
+        self.set_color("yellow")
 
 class Octohedron(Mobject1D):
-    DEFAULT_COLOR = "pink"
     def generate_points(self):
         x = np.array([1, 0, 0])
         y = np.array([0, 1, 0])
@@ -72,9 +71,9 @@ class Octohedron(Mobject1D):
                 Line(pair[0], pair[1], density = 1/self.epsilon).points
             )
         self.pose_at_angle()
+        self.set_color("pink")
 
 class Dodecahedron(Mobject1D):
-    DEFAULT_COLOR = "limegreen"
     def generate_points(self):
         phi = (1 + np.sqrt(5)) / 2
         x = np.array([1, 0, 0])
@@ -99,6 +98,7 @@ class Dodecahedron(Mobject1D):
                 matrix = b*np.array([x[perm], y[perm], z[perm]])
                 self.add_points(np.dot(five_lines_points, matrix))
         self.pose_at_angle()
+        self.set_color("limegreen")
 
 class Sphere(Mobject2D):
     def generate_points(self):
@@ -111,6 +111,9 @@ class Sphere(Mobject2D):
             for phi in np.arange(self.epsilon, np.pi, self.epsilon)
             for theta in np.arange(0, 2 * np.pi, 2 * self.epsilon / np.sin(phi)) 
         ])
+        self.set_color("blue")
 
     def unit_normal(self, coords):
         return np.array(coords) / np.linalg.norm(coords)
+
+        

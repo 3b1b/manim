@@ -7,23 +7,24 @@ from random import random
 from tex_utils import *
 from mobject import *
 
-class ImageMobject(Mobject2D):
+class ImageMobject(Mobject):
     """
     Automatically filters out black pixels
     """
-#    SHOULD_BUFF_POINTS = False
-    def __init__(self, 
-                 image_file, 
-                 filter_color = "black", 
-                 invert = True,
-                 use_cache = True,
-                 *args, **kwargs):
-        Mobject2D.__init__(self, *args, **kwargs)
-        self.filter_rgb = 255 * np.array(Color(filter_color).get_rgb()).astype('uint8')
+    DEFAULT_CONFIG = {
+        "filter_color" : "black",
+        "invert" : True,
+        "use_cache" : True,
+        "should_buffer_points" : False,
+        "scale_value" : 1.0
+    }
+    def __init__(self, image_file, **kwargs):
+        digest_config(self, ImageMobject, kwargs, locals())
+        Mobject.__init__(self, **kwargs)
+        self.filter_rgb = 255 * np.array(Color(self.filter_color).get_rgb()).astype('uint8')
         self.name = to_cammel_case(
             os.path.split(image_file)[-1].split(".")[0]
         )
-        self.use_cache = use_cache
         possible_paths = [
             image_file,
             os.path.join(IMAGE_DIR, image_file),
@@ -32,31 +33,33 @@ class ImageMobject(Mobject2D):
         ]
         for path in possible_paths:
             if os.path.exists(path):
-                self.generate_points_from_file(path, invert)
+                self.generate_points_from_file(path)
+                self.scale(self.scale_value)
+                self.center()
                 return
         raise IOError("File not Found")
                 
-    def generate_points_from_file(self, path, invert):
-        if self.use_cache and self.read_in_cached_attrs(path, invert):
+    def generate_points_from_file(self, path):
+        if self.use_cache and self.read_in_cached_attrs(path):
             return
         image = Image.open(path).convert('RGB')
-        if invert:
+        if self.invert:
             image = invert_image(image)
         self.generate_points_from_image_array(np.array(image))
-        self.cache_attrs(path, invert)
+        self.cache_attrs(path)
 
-    def get_cached_attr_files(self, path, invert, attrs):
+    def get_cached_attr_files(self, path, attrs):
         #Hash should be unique to (path, invert) pair
-        unique_hash = str(hash(path+str(invert)))
+        unique_hash = str(hash(path+str(self.invert)))
         return [
             os.path.join(IMAGE_MOBJECT_DIR, unique_hash)+"."+attr
             for attr in attrs
         ]
 
-    def read_in_cached_attrs(self, path, invert, 
+    def read_in_cached_attrs(self, path, 
                              attrs = ("points", "rgbs"), 
                              dtype = "float64"):
-        cached_attr_files = self.get_cached_attr_files(path, invert, attrs)
+        cached_attr_files = self.get_cached_attr_files(path, attrs)
         if all(map(os.path.exists, cached_attr_files)):
             for attr, cache_file in zip(attrs, cached_attr_files):
                 arr = np.fromfile(cache_file, dtype = dtype)
@@ -65,10 +68,10 @@ class ImageMobject(Mobject2D):
             return True
         return False
 
-    def cache_attrs(self, path, invert, 
+    def cache_attrs(self, path, 
                     attrs = ("points", "rgbs"),
                     dtype = "float64"):
-        cached_attr_files = self.get_cached_attr_files(path, invert, attrs)
+        cached_attr_files = self.get_cached_attr_files(path, attrs)
         for attr, cache_file in zip(attrs, cached_attr_files): 
             getattr(self, attr).astype(dtype).tofile(cache_file)
 
@@ -98,20 +101,26 @@ class ImageMobject(Mobject2D):
         return False
 
 class Face(ImageMobject):
-    def __init__(self, mode = "simple", *args, **kwargs):
+    DEFAULT_CONFIG = {
+        "mode" : "simple",
+        "scale_value" : 0.5
+    }
+    def __init__(self, **kwargs):
         """
         Mode can be "simple", "talking", "straight"
         """
-        ImageMobject.__init__(self, mode + "_face", *args, **kwargs)
-        self.scale(0.5)
-        self.center()
+        digest_config(self, Face, kwargs)
+        ImageMobject.__init__(self, self.mode + "_face", **kwargs)
 
 class VideoIcon(ImageMobject):
-    def __init__(self, *args, **kwargs):
-        ImageMobject.__init__(self, "video_icon", *args, **kwargs)
-        self.scale(0.3)
-        self.center()
+    DEFAULT_CONFIG = {
+        "scale_value" : 0.3
+    }
+    def __init__(self, **kwargs):
+        digest_config(self, VideoIcon, kwargs)
+        ImageMobject.__init__(self, "video_icon", **kwargs)
 
+#TODO, Make both of these proper mobject classes
 def text_mobject(text, size = None):
     size = size or "\\Large" #TODO, auto-adjust?
     return tex_mobject(text, size, TEMPLATE_TEXT_FILE)
@@ -130,8 +139,8 @@ def tex_mobject(expression,
         #TODO, is checking listiness really the best here?
         result = CompoundMobject(*map(ImageMobject, image_files))
     else:
-        result = ImageMobject(image_files)
-    return result.highlight("white").center()
+        result = ImageMobject(image_files, should_buffer_points = True)
+    return result.highlight("white")
 
 
 

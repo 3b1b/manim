@@ -14,27 +14,23 @@ from constants import *
 from mobject import Mobject, Point
 
 class Animation(object):
-    def __init__(self,
-                 mobject,
-                 run_time = DEFAULT_ANIMATION_RUN_TIME,
-                 alpha_func = smooth,
-                 name = None):
+    DEFAULT_CONFIG = {
+        "run_time" : DEFAULT_ANIMATION_RUN_TIME,
+        "alpha_func" : smooth,
+        "name" : None,
+    }
+    def __init__(self, mobject, **kwargs):
         if isinstance(mobject, type) and issubclass(mobject, Mobject):
-            self.mobject = mobject()
-        elif isinstance(mobject, Mobject):
-            self.mobject = mobject
-        else:
+            mobject = mobject()
+        elif not isinstance(mobject, Mobject):
             raise Exception("Invalid mobject parameter, must be \
                              subclass or instance of Mobject")
+        digest_config(self, Animation, kwargs, locals())
         self.starting_mobject = copy.deepcopy(self.mobject)
-        self.alpha_func = alpha_func or (lambda x : x)
-        self.run_time = run_time
-        #TODO, Adress the idea of filtering the animation
-        self.filter_functions = []
-        self.restricted_height = SPACE_HEIGHT
-        self.restricted_width  = SPACE_WIDTH
-        self.spacial_center = np.zeros(3)
-        self.name = name or self.__class__.__name__ + str(self.mobject)
+        if self.alpha_func is None:
+            self.alpha_func = (lambda x : x)
+        if self.name is None:
+            self.name = self.__class__.__name__ + str(self.mobject)
         self.update(0)
 
     def __str__(self):

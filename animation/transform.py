@@ -5,7 +5,7 @@ import copy
 import warnings
 
 from animation import Animation
-from mobject import Mobject, Point
+from mobject import Mobject, Point, Grid
 from constants import *
 from helpers import *
 
@@ -31,25 +31,25 @@ def counterclockwise_path(start_points, end_points, alpha):
     return semi_circular_path(start_points, end_points, alpha, OUT)
 
 class Transform(Animation):
-    def __init__(self, mobject1, mobject2, 
-                 run_time = DEFAULT_TRANSFORM_RUN_TIME,
-                 interpolation_function = straight_path,
-                 black_out_extra_points = False,
-                 *args, **kwargs):
-        self.interpolation_function = interpolation_function
-        count1, count2 = mobject1.get_num_points(), mobject2.get_num_points()
+    DEFAULT_CONFIG = {
+        "run_time" : DEFAULT_TRANSFORM_RUN_TIME,
+        "interpolation_function" : straight_path,
+        "should_black_out_extra_points" : False
+    }
+    def __init__(self, mobject, ending_mobject, **kwargs):
+        digest_config(self, Transform, kwargs, locals())
+        count1, count2 = mobject.get_num_points(), ending_mobject.get_num_points()
         if count2 == 0:
-            mobject2.add_points([SPACE_WIDTH*RIGHT+SPACE_HEIGHT*UP])
-            count2 = mobject2.get_num_points()
-        Mobject.align_data(mobject1, mobject2)
-        self.ending_mobject = mobject2
-        if black_out_extra_points and count2 < count1:
+            ending_mobject.add_points([SPACE_WIDTH*RIGHT+SPACE_HEIGHT*UP])
+            count2 = ending_mobject.get_num_points()
+        Mobject.align_data(mobject, ending_mobject)
+        if self.should_black_out_extra_points and count2 < count1:
             self.black_out_extra_points(count1, count2)
 
-        Animation.__init__(self, mobject1, run_time = run_time, *args, **kwargs)                
-        self.name += "To" + str(mobject2)  
-        self.mobject.SHOULD_BUFF_POINTS = \
-            mobject1.SHOULD_BUFF_POINTS and mobject2.SHOULD_BUFF_POINTS
+        Animation.__init__(self, mobject, **kwargs)
+        self.name += "To" + str(ending_mobject)  
+        self.mobject.should_buffer_points = \
+            mobject.should_buffer_points and ending_mobject.should_buffer_points
 
     def black_out_extra_points(self, count1, count2):
         #Ensure redundant pixels fade to black
@@ -89,53 +89,28 @@ class Transform(Animation):
                     )
 
 class ClockwiseTransform(Transform):
-    def __init__(self, mobject1, mobject2, **kwargs):
-        Transform.__init__(
-            self, mobject1, mobject2, 
-            interpolation_function = clockwise_path, **kwargs
-        )
+    DEFAULT_CONFIG = {
+        "interpolation_function" : clockwise_path
+    }
+    def __init__(self, *args, **kwargs):
+        digest_config(self, ClockwiseTransform, kwargs)
+        Transform.__init__(self, *args, **kwargs)
 
 class CounterclockwiseTransform(Transform):
-    def __init__(self, mobject1, mobject2, **kwargs):
-        Transform.__init__(
-            self, mobject1, mobject2, 
-            interpolation_function = counterclockwise_path, **kwargs
-        )
+    DEFAULT_CONFIG = {
+        "interpolation_function" : counterclockwise_path
+    }
+    def __init__(self, *args, **kwargs):
+        digest_config(self, ClockwiseTransform, kwargs)
+        Transform.__init__(self, *args, **kwargs)
 
 class SpinInFromNothing(Transform):
+    DEFAULT_CONFIG = {
+        "interpolation_function" : counterclockwise_path
+    }
     def __init__(self, mob, **kwargs):
-        name = "interpolation_function"
-        interp_func = kwargs[name] if name in kwargs else counterclockwise_path
-        dot = Point(mob.get_center(), color = "black")
-        Transform.__init__(
-            self, dot, mob, 
-            interpolation_function = interp_func, 
-            **kwargs
-        )
-        
-
-class FadeToColor(Transform):
-    def __init__(self, mobject, color, *args, **kwargs):
-        target = copy.deepcopy(mobject).highlight(color)
-        Transform.__init__(self, mobject, target, *args, **kwargs)
-
-class Highlight(FadeToColor):
-    def __init__(self, mobject, color = "red",
-                 run_time = DEFAULT_ANIMATION_RUN_TIME, 
-                 alpha_func = there_and_back, *args, **kwargs):
-        FadeToColor.__init__(
-            self, mobject, color, 
-            run_time = run_time, 
-            alpha_func = alpha_func, 
-            *args, **kwargs
-        )
-
-class ScaleInPlace(Transform):
-    def __init__(self, mobject, scale_factor, *args, **kwargs):
-        target = copy.deepcopy(mobject)
-        center = mobject.get_center()
-        target.shift(-center).scale(scale_factor).shift(center)
-        Transform.__init__(self, mobject, target, *args, **kwargs)
+        digest_config(self, SpinInFromNothing, kwargs)
+        Transform.__init__(self, Point(mob.get_center()), mob, **kwargs)
 
 class ApplyMethod(Transform):
     def __init__(self, method, *args, **kwargs):
@@ -155,6 +130,14 @@ class ApplyMethod(Transform):
             **kwargs
         )
 
+class FadeToColor(ApplyMethod):
+    def __init__(self, mobject, color, **kwargs):
+        ApplyMethod.__init__(self, mobject.highlight, color, **kwargs)
+
+class ScaleInPlace(ApplyMethod):
+    def __init__(self, mobject, scale_factor, **kwargs):
+        ApplyMethod.__init__(self, mobject.scale_in_place, scale_factor, **kwargs)
+
 class ApplyFunction(Transform):
     def __init__(self, function, mobject, **kwargs):
         Transform.__init__(
@@ -165,16 +148,15 @@ class ApplyFunction(Transform):
         )
         self.name = "ApplyFunctionTo"+str(mobject)
 
-
 class ApplyPointwiseFunction(Transform):
-    def __init__(self, function, mobject, 
-                 run_time = DEFAULT_ANIMATION_RUN_TIME, **kwargs):
+    DEFAULT_CONFIG = {
+        "run_time" : DEFAULT_ANIMATION_RUN_TIME
+    }
+    def __init__(self, function, mobject, **kwargs):
+        digest_config(self, ApplyPointwiseFunction, kwargs)
         map_image = copy.deepcopy(mobject)
         map_image.points = np.array(map(function, map_image.points))
-        Transform.__init__(
-            self, mobject, map_image, 
-            run_time = run_time, **kwargs
-        )
+        Transform.__init__(self, mobject, map_image, **kwargs)
         self.name = "".join([
             "Apply",
             "".join([s.capitalize() for s in function.__name__.split("_")]),
@@ -201,22 +183,25 @@ class ComplexFunction(ApplyPointwiseFunction):
 
 
 class TransformAnimations(Transform):
-    def __init__(self, start_anim, end_anim, 
-                 alpha_func = squish_alpha_func(smooth),
-                 **kwargs):
+    DEFAULT_CONFIG = {
+        "alpha_func" : squish_alpha_func(smooth)
+    }
+    def __init__(self, start_anim, end_anim, **kwargs):
+        digest_config(self, TransformAnimations, kwargs, locals())
         if "run_time" in kwargs:
-            run_time = kwargs.pop("run_time")
+            self.run_time = kwargs.pop("run_time")
+        else:
+            self.run_time = max(start_anim.run_time, end_anim.run_time)
+        for anim in start_anim, end_anim:
+            anim.set_run_time(self.run_time)
+
+        if start_anim.starting_mobject.get_num_points() != end_anim.starting_mobject.get_num_points():
+            Mobject.align_data(start_anim.starting_mobject, end_anim.starting_mobject)
             for anim in start_anim, end_anim:
-                anim.set_run_time(run_time)
-        self.start_anim, self.end_anim = start_anim, end_anim
-        Transform.__init__(
-            self,
-            start_anim.mobject,
-            end_anim.mobject,
-            run_time = max(start_anim.run_time, end_anim.run_time),
-            alpha_func = alpha_func,
-            **kwargs
-        )
+                if hasattr(anim, "ending_mobject"):
+                    Mobject.align_data(anim.starting_mobject, anim.ending_mobject)
+
+        Transform.__init__(self, start_anim.mobject, end_anim.mobject, **kwargs)
         #Rewire starting and ending mobjects
         start_anim.mobject = self.starting_mobject
         end_anim.mobject = self.ending_mobject

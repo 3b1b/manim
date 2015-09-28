@@ -16,7 +16,10 @@ from script_wrapper import command_line_create_scene
 
 class SampleScene(Scene):
     def construct(self):
-        pass
+        square = Square()
+        self.add(square)
+        self.dither()
+        self.play(Flash(square))
 
 if __name__ == "__main__":
     command_line_create_scene()
