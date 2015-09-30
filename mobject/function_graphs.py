@@ -92,38 +92,44 @@ class Grid(Mobject1D):
 
 class NumberLine(Mobject1D):
     DEFAULT_CONFIG = {
-        "radius" : SPACE_WIDTH,
+        "color" : "skyblue",
+        "numerical_radius" : SPACE_WIDTH,
         "unit_length_to_spacial_width" : 1,
         "tick_size" : 0.1,
         "tick_frequency" : 0.5,
+        "leftmost_tick" : -int(SPACE_WIDTH),
         "number_at_center" : 0,                 
         "numbers_with_elongated_ticks" : [0],
         "longer_tick_multiple" : 2,
     }
     def __init__(self, **kwargs):
         digest_config(self, NumberLine, kwargs)
-        numerical_radius = float(self.radius) / self.unit_length_to_spacial_width
-        self.left_num  = self.number_at_center - numerical_radius
-        self.right_num = self.number_at_center + numerical_radius
+        self.left_num  = self.number_at_center - self.numerical_radius
+        self.right_num = self.number_at_center + self.numerical_radius
         Mobject1D.__init__(self, **kwargs)
 
     def generate_points(self):
+        spacial_radius = self.numerical_radius*self.unit_length_to_spacial_width
         self.add_points([
             (b*x, 0, 0)
-            for x in np.arange(0, self.radius, self.epsilon)
+            for x in np.arange(0, spacial_radius, self.epsilon)
             for b in [-1, 1]
         ])
         self.index_of_left  = np.argmin(self.points[:,0])
         self.index_of_right = np.argmax(self.points[:,0])
         spacial_tick_frequency = self.tick_frequency*self.unit_length_to_spacial_width
         self.add_points([
-            (b*x, y, 0)
-            for x in np.arange(0, self.radius, spacial_tick_frequency)
+            (x, y, 0)
+            for num in self.get_tick_numbers()
             for y in np.arange(-self.tick_size, self.tick_size, self.epsilon)
-            for b in ([1, -1] if x > 0 else [1])
+            for x in [self.number_to_point(num)[0]]
         ])
         for number in self.numbers_with_elongated_ticks:
             self.elongate_tick_at(number, self.longer_tick_multiple)
+        self.number_of_points_without_numbers = self.get_num_points()
+
+    def get_tick_numbers(self):
+        return np.arange(self.leftmost_tick, self.right_num, self.tick_frequency)
 
     def elongate_tick_at(self, number, multiple = 2):
         x = self.number_to_point(number)[0]
@@ -144,21 +150,51 @@ class NumberLine(Mobject1D):
             float(number-self.left_num)/(self.right_num - self.left_num)
         )
 
-    def add_numbers(self, *numbers):
+    def point_to_number(self, point):
+        return self.number_at_center + point[0]/self.unit_length_to_spacial_width
+
+    def default_numbers_to_display(self):
+        return self.get_tick_numbers()[::2]
+
+    def get_vertical_number_offset(self):
+        return 4*DOWN*self.tick_size
+
+    def get_number_mobjects(self, *numbers):
         if len(numbers) == 0:
-            numbers = range(int(self.left_num), int(self.right_num+1))
+            numbers = self.default_numbers_to_display()
+        log_spacing = int(np.log10(self.tick_frequency))
+        if log_spacing < 0:
+            num_decimal_places = 2-log_spacing
+        else:
+            num_decimal_places = 1+log_spacing
+        result = []
         for number in numbers:
-            mob = tex_mobject(str(number)).scale(0.5)
+            if number < 0:
+                num_string = str(number)[:num_decimal_places+1]
+            else:
+                num_string = str(number)[:num_decimal_places]
+            mob = tex_mobject(num_string)
+            vert_scale = 2*self.tick_size/mob.get_height()
+            hori_scale = self.tick_frequency*self.unit_length_to_spacial_width/mob.get_width()
+            mob.scale(min(vert_scale, hori_scale))
             mob.shift(self.number_to_point(number))
-            mob.shift(DOWN*4*self.tick_size)
-            self.add(mob)
-        return self
+            mob.shift(self.get_vertical_number_offset())
+            result.append(mob)
+        return result
+
+    def add_numbers(self, *numbers):
+        self.add(*self.get_number_mobjects(*numbers))
+
+    def remove_numbers(self):
+        self.points = self.points[:self.number_of_points_without_numbers]
+        self.rgbs = self.rgbs[:self.number_of_points_without_numbers]
 
 class UnitInterval(NumberLine):
     DEFAULT_CONFIG = {
-        "radius" : SPACE_WIDTH-1,
+        "numerical_radius" : 0.5,
         "unit_length_to_spacial_width" : 2*(SPACE_WIDTH-1),
         "tick_frequency" : 0.1,
+        "leftmost_tick" : 0,
         "number_at_center" : 0.5,                 
         "numbers_with_elongated_ticks" : [0, 1],
     }

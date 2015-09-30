@@ -16,7 +16,8 @@ class ImageMobject(Mobject):
         "invert" : True,
         "use_cache" : True,
         "should_buffer_points" : False,
-        "scale_value" : 1.0
+        "scale_value" : 1.0,
+        "should_center" : True
     }
     def __init__(self, image_file, **kwargs):
         digest_config(self, ImageMobject, kwargs, locals())
@@ -35,7 +36,8 @@ class ImageMobject(Mobject):
             if os.path.exists(path):
                 self.generate_points_from_file(path)
                 self.scale(self.scale_value)
-                self.center()
+                if self.should_center:
+                    self.center()
                 return
         raise IOError("File not Found")
                 
@@ -135,12 +137,19 @@ def tex_mobject(expression,
             size = "\\large"
         #Todo, make this more sophisticated.
     image_files = tex_to_image(expression, size, template_tex_file)
+    config = {
+        "should_buffer_points" : True,
+        "should_center" : False,
+    }
     if isinstance(image_files, list):
         #TODO, is checking listiness really the best here?
-        result = CompoundMobject(*map(ImageMobject, image_files))
+        result = CompoundMobject(*[
+            ImageMobject(f, **config) 
+            for f in image_files
+        ])
     else:
-        result = ImageMobject(image_files, should_buffer_points = True)
-    return result.highlight("white")
+        result = ImageMobject(image_files, **config)
+    return result.center().highlight("white")
 
 
 

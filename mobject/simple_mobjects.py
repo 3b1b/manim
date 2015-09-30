@@ -16,7 +16,7 @@ class Point(Mobject):
         Mobject.__init__(self, **kwargs)
 
     def generate_points(self):
-        self.add_points(self.location)
+        self.add_points([self.location])
 
 
 class Dot(Mobject1D): #Use 1D density, even though 2D
