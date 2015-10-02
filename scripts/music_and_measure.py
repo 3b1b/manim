@@ -110,7 +110,10 @@ class Piano(ImageMobject):
         left = self.get_left()[0]
         keys = []
         for count in range(14):
-            key = Mobject(color = "white")
+            key = Mobject(
+                color = "white",
+                should_buffer_points = False
+            )
             x0 = left + count*self.ivory_jump
             x1 = x0 + self.ivory_jump
             key.add_points(
@@ -380,7 +383,32 @@ class ChallengeOne(Scene):
         )
         for vib in vibrations:
             vib.set_run_time(3.0)
-        self.play(bottom_vibration, top_vib_1) 
+        self.play(bottom_vibration, top_vib_1)
+
+class JustByAnalyzingTheNumber(Scene):
+    def construct(self):
+        nums = [
+            1.5,
+            np.sqrt(2),
+            2**(5/12.),
+            4/3.,
+            1.2020569031595942,
+        ]
+        last = None
+        r_equals = tex_mobject("r=").shift(2*LEFT)
+        self.add(r_equals)
+        for num in nums:
+            mob = tex_mobject(str(num)).next_to(r_equals)
+            mob.highlight()
+            mob.sort_points()
+            if last:
+                self.play(DelayByOrder(Transform(last, mob, run_time = 0.5)))
+                self.remove(last)
+                self.add(mob)
+            else:
+                self.add(mob)
+            self.dither()
+            last = mob
 
 class QuestionAndAnswer(Scene):
     def construct(self):
@@ -430,6 +458,7 @@ class PlaySimpleRatio(Scene):
         (Fraction(8, 5), "skyblue"),
         (Fraction(211, 198), "orange"),
         (Fraction(1093, 826), "red"),
+        ((np.exp(np.pi)-np.pi)/15, "#7e008e")
     ]
     @staticmethod
     def args_to_string(fraction, color):
@@ -444,8 +473,17 @@ class PlaySimpleRatio(Scene):
             num_periods = fraction, run_time = 5.0,
             center = 2*UP, color = color
         )
-        self.add(fraction_mobject(fraction).shift(0.5*UP))
+        if isinstance(fraction, Fraction):
+            mob = fraction_mobject(fraction).shift(0.5*UP)
+        else:
+            mob = tex_mobject("\\frac{e^\\pi - \\pi}{15} \\approx \\frac{4}{3}")
+            mob.shift(0.5*UP)
+        self.add(mob)
         self.play(string1, string2)
+
+class MostRationalsSoundBad(Scene):
+    def construct(self):
+        self.add(text_mobject("Most rational numbers sound bad!"))
 
 class FlashOnXProximity(Animation):
     def __init__(self, mobject, x_val, *close_mobjects, **kwargs):
@@ -572,6 +610,26 @@ class IrrationalGang(Scene):
         self.play(BlinkPiCreature(randy))
 
 
+class ConstructPiano(Scene):
+    def construct(self):
+        piano = Piano()
+        keys = piano.split()
+        anims = []
+        askew = deepcopy(keys[-1])
+        keys[-1].rotate_in_place(np.pi/5)
+        for key in keys:
+            key.should_buffer_points = False
+            key_copy = deepcopy(key).to_corner(DOWN+LEFT)
+            key_copy.scale_in_place(0.25)
+            key_copy.shift(1.8*random.random()*SPACE_WIDTH*RIGHT)
+            key_copy.shift(1.8*random.random()*SPACE_HEIGHT*UP)
+            key_copy.rotate(2*np.pi*random.random())
+            anims.append(Transform(key_copy, key))
+        self.play(*anims, run_time = 3.0)
+        self.dither()
+        self.play(Transform(anims[-1].mobject, askew))
+        self.dither()
+
 
 class PianoTuning(Scene):
     def construct(self):
@@ -629,12 +687,22 @@ class PianoTuning(Scene):
         approximate_form = tex_mobject("\\approx"+str(2**(float(half_steps)/12)))
         approximate_form.scale(0.75)
         approximate_form.next_to(ratio)
+        if interval == 5:
+            num_den = (3, 2)
+        elif interval == 4:
+            num_den = (4, 3)
+        should_be = text_mobject("Should be $\\frac{%d}{%d}$"%num_den)
+        should_be.next_to(u_brace, DOWN)
 
         self.play(ApplyMethod(low.highlight, colors[0]))
         self.play(
             ApplyMethod(high.highlight, colors[interval]),
             Transform(Point(u_brace.get_left()), u_brace),
         )
+        self.dither()
+        self.play(ShimmerIn(should_be))
+        self.dither()
+        self.remove(should_be)
         terms = product.split()
         for term, semicircle in zip(terms, semicircles):
             self.add(term, semicircle)
@@ -702,14 +770,15 @@ class PowersOfTwelfthRoot(Scene):
 class SupposeThereIsASavant(Scene):
     def construct(self):
         words = "Suppose there is a musical savant " + \
-                "who find pleasure in all pairs of " + \
+                "who finds pleasure in all pairs of " + \
                 "notes whose frequencies have a rational ratio"
-        words = text_mobject(words.split(" ")).split()
-        words[4].highlight()
-        words[5].highlight()
-        for word in words:
-            self.add(word)
-            self.dither(0.2)
+        words = words.split(" ")
+        word_mobs = text_mobject(words).split()
+        word_mobs[4].highlight()
+        word_mobs[5].highlight()
+        for word, word_mob in zip(words, word_mobs):
+            self.add(word_mob)
+            self.dither(0.1*len(word))
 
 class AllValuesBetween1And2(NumberLineScene):
     def construct(self):
@@ -771,6 +840,10 @@ class AllValuesBetween1And2(NumberLineScene):
             self.dither(0.5)
 
 
+class ChallengeTwo(Scene):
+    def construct(self):
+        self.add(text_mobject("Challenge #2"))
+
 class CoveringSetsWithOpenIntervals(IntervalScene):
     def construct(self):
         IntervalScene.construct(self)
@@ -804,12 +877,12 @@ class CoveringSetsWithOpenIntervals(IntervalScene):
 class DefineOpenInterval(IntervalScene):
     def construct(self):
         IntervalScene.construct(self)
-        open_interval, line = self.add_open_interval(0.5, 0.05, run_time = 1.0)
+        open_interval, line = self.add_open_interval(0.5, 0.75, run_time = 1.0)
         left, right = open_interval.get_left(), open_interval.get_right()
         a, less_than1, x, less_than2, b = \
             tex_mobject(["a", "<", "x", "<", "b"]).shift(UP).split()
-        left_arrow = Arrow(a, left)
-        right_arrow = Arrow(b, right)
+        left_arrow = Arrow(a.get_corner(DOWN+LEFT), left)
+        right_arrow = Arrow(b.get_corner(DOWN+RIGHT), right)
 
         self.play(*[ShimmerIn(mob) for mob in a, less_than1, x])
         self.play(ShowCreation(left_arrow))
@@ -931,11 +1004,14 @@ class RationalsAreDense(IntervalScene):
         self.dither()
 
 
+class SurelyItsImpossible(Scene):
+    def construct(self):
+        self.add(text_mobject("Surely it's impossible!"))
 
 class HowCanYouNotCoverEntireInterval(IntervalScene):
     def construct(self):
         IntervalScene.construct(self)
-        words = text_mobject("""
+        small_words = text_mobject("""
             In case you are wondering, it is indeed true 
             that if you cover all real numbers between 0 
             and 1 with a set of open intervals, the sum 
@@ -944,7 +1020,14 @@ class HowCanYouNotCoverEntireInterval(IntervalScene):
             as obvious as it might seem, just try to prove 
             it for yourself!
         """)
-        words.scale(0.5).to_corner(UP+RIGHT)
+        small_words.scale(0.5).to_corner(UP+RIGHT)        
+        big_words = text_mobject("""
+            Covering all numbers from 0 to 1 \\emph{will}
+            force the sum of the lengths of your intervals
+            to be at least 1.
+        """)
+        big_words.next_to(self.number_line, DOWN, buff = 0.5)
+
         ticks = self.add_fraction_ticks()
         left  = self.number_line.number_to_point(0)
         right = self.number_line.number_to_point(1)
@@ -963,10 +1046,22 @@ class HowCanYouNotCoverEntireInterval(IntervalScene):
             Transform(tick, full_line)
             for tick in ticks.split()
         ])
+        self.play(ShimmerIn(big_words))
+        self.dither()
         # self.play(DelayByOrder(FadeToColor(full_line, "red")))
-        self.play(ShimmerIn(words))
+        self.play(ShimmerIn(small_words))
         self.dither()
 
+class PauseNow(Scene):
+    def construct(self):
+        top_words = text_mobject("Try for yourself!").scale(2).shift(3*UP)
+        bot_words = text_mobject("""
+            If you've never seen this before, you will get 
+            the most out of the solution and the intuitions
+            I illustrate only after pulling out a pencil and
+            paper and taking a wack at it yourself.
+        """).next_to(top_words, DOWN, buff = 0.5)
+        self.add(top_words, bot_words)
 
 class StepsToSolution(IntervalScene):
     def construct(self):
@@ -975,11 +1070,13 @@ class StepsToSolution(IntervalScene):
         steps = map(text_mobject, [
             "Enumerate all rationals in (0, 1)",
             "Assign one interval to each rational",
-            "Choose sum of the form $\\sum_{n=1}^\\infty a_n = 1$",
+            "Choose sum of the form $\\mathlarger{\\sum}_{n=1}^\\infty a_n = 1$",
             "Pick any $\\epsilon$ such that $0 < \\epsilon < 1$",
             "Stretch the $n$th interval to have length $\\epsilon/2^n$",
         ])
         for step in steps:
+            step.shift(DOWN)
+        for step in steps[2:]:
             step.shift(DOWN)
         for step, count in zip(steps, it.count()):
             self.add(step)
@@ -1036,11 +1133,21 @@ class StepsToSolution(IntervalScene):
     def assign_intervals_to_rationals(self):
         anims = []
         for tick in self.ticks:
-            interval = OpenInterval(tick.get_center(), self.spacing/2)
+            interval = OpenInterval(tick.get_center(), self.spacing)
+            interval.scale_in_place(0.5)
             squished = deepcopy(interval).stretch_to_fit_width(0)
             anims.append(Transform(squished, interval))
         self.play(*anims)
+        self.show_frame()
         self.dither()
+        to_remove = [self.number_line] + self.number_mobs
+        self.play(*[
+            ApplyMethod(mob.shift, 2*SPACE_WIDTH*RIGHT)
+            for mob in to_remove
+        ])
+        self.remove(*to_remove)
+        self.dither()
+
         self.intervals = [a.mobject for a in anims]
         kwargs = {
             "run_time" : 2.0,
@@ -1054,16 +1161,22 @@ class StepsToSolution(IntervalScene):
 
     def add_terms(self):
         self.ones = []
-        scale_val = 0.3
+        scale_val = 0.6
+        plus = None
         for count in range(1, 10):
             frac_bottom = tex_mobject("\\over %d"%(2**count))
             frac_bottom.scale(scale_val)
-            frac_bottom.shift(0.5*UP + (-SPACE_WIDTH+self.spacing*count)*RIGHT)
             one = tex_mobject("1").scale(scale_val)
             one.next_to(frac_bottom, UP, buff = 0.1)
-            self.ones.append(one)
+            compound = CompoundMobject(frac_bottom, one)
+            if plus:
+                compound.next_to(plus)
+            else:
+                compound.to_edge(LEFT)
             plus = tex_mobject("+").scale(scale_val)
-            plus.next_to(frac_bottom, buff = self.spacing/4)
+            plus.next_to(compound)
+            frac_bottom, one = compound.split()
+            self.ones.append(one)
             self.add(frac_bottom, one, plus)
             self.dither(0.2)
         dots = tex_mobject("\\dots").scale(scale_val).next_to(plus)
@@ -1117,6 +1230,9 @@ class OurSumCanBeArbitrarilySmall(Scene):
         self.play(ShimmerIn(words[1].highlight()))
         self.dither()
 
+class ProofDoesNotEqualIntuition(Scene):
+    def construct(self):
+        self.add(text_mobject("Proof $\\ne$ Intuition"))
 
 class StillFeelsCounterintuitive(IntervalScene):
     def construct(self):
@@ -1134,6 +1250,9 @@ class StillFeelsCounterintuitive(IntervalScene):
         self.play(ShowCreation(ticks))
         self.dither()
 
+class VisualIntuition(Scene):
+    def construct(self):
+        self.add(text_mobject("Visual Intuition:"))
 
 class ZoomInOnSqrt2Over2(IntervalScene):
     def construct(self):
@@ -1192,19 +1311,31 @@ class ShiftSetupByOne(IntervalScene):
         self.add(epsilon_mob)
         fraction_ticks = self.add_fraction_ticks()
         self.remove(fraction_ticks)
-        all_intervals, all_lines = self.cover_fractions(
+        intervals, lines = self.cover_fractions(
             epsilon = 0.01,
             num_fractions = 150,
             run_time_per_interval = 0,
         )
-        self.remove(*all_intervals+all_lines)
+        self.remove(*intervals+lines)        
+        for interval, frac in zip(intervals, rationals()):
+            interval.scale_in_place(2.0/frac.denominator)
 
-        intervals, lines = self.cover_fractions(epsilon = 0.01)
+
+        for interval in intervals[:10]:
+            squished = deepcopy(interval).stretch_to_fit_width(0)
+            self.play(Transform(squished, interval), run_time = 0.2)
+            self.remove(squished)
+            self.add(interval)
+        for interval in intervals[10:50]:
+            self.add(interval)
+            self.dither(0.1)
+        for interval in intervals[50:]:
+            self.add(interval)
         self.dither()
         mobs_shifts = [
-            (intervals+lines, UP),
+            (intervals, UP),
             ([self.number_line, new_interval], side_shift_val*LEFT),
-            (intervals+lines, DOWN)
+            (intervals, DOWN)
         ]
         for mobs, shift_val in mobs_shifts:
             self.play(*[
@@ -1245,7 +1376,7 @@ class ShiftSetupByOne(IntervalScene):
 
         self.add(words)
         self.dither()
-        self.remove(*intervals+lines)
+        self.remove(*intervals)
         self.add(answer1)
         self.play(ShowCreation(fraction_ticks, run_time = 5.0))
         self.add(answer2)
@@ -1259,13 +1390,11 @@ class ShiftSetupByOne(IntervalScene):
         words[1].highlight()
         words[3].highlight()
         self.add(*words)
-        for interval, frac in zip(all_intervals, rationals()):
-            interval.scale_in_place(2.0/frac.denominator)
-            self.add(interval)
-            self.dither(0.1)
+        self.play(ShowCreation(
+            CompoundMobject(*intervals),
+            run_time = 5.0
+        ))
         self.dither()
-
-
 
 
 

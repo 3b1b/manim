@@ -98,10 +98,6 @@ class ImageMobject(Mobject):
             points *= 2 * SPACE_WIDTH / width
         self.add_points(points, rgbs = rgbs)
 
-    def should_buffer_points(self):
-        # potentially changed in subclasses
-        return False
-
 class Face(ImageMobject):
     DEFAULT_CONFIG = {
         "mode" : "simple",

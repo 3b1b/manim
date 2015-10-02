@@ -1,11 +1,13 @@
 import numpy as np
 import itertools as it
+import operator as op
 import os
 from PIL import Image
 from random import random
 from copy import deepcopy
 from colour import Color
 import inspect
+
 
 from constants import *
 from helpers import *
@@ -312,10 +314,6 @@ class Mobject(object):
         return color
 
     ### Stuff subclasses should deal with ###
-    def should_buffer_points(self):
-        # potentially changed in subclasses
-        return GENERALLY_BUFFER_POINTS
-
     def generate_points(self):
         #Typically implemented in subclass, unless purposefully left blank
         pass
@@ -371,6 +369,11 @@ class CompoundMobject(Mobject):
         for mobject in mobjects:
             self.original_mobs_num_points.append(mobject.points.shape[0])
             self.add_points(mobject.points, mobject.rgbs)
+        self.should_buffer_points = reduce(
+            op.and_, 
+            [m.should_buffer_points for m in mobjects],
+            GENERALLY_BUFFER_POINTS
+        )
 
     def split(self):
         result = []
