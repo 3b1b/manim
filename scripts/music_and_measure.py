@@ -481,6 +481,51 @@ class PlaySimpleRatio(Scene):
         self.add(mob)
         self.play(string1, string2)
 
+class LongSine(Mobject1D):
+    def generate_points(self):
+        self.add_points([
+            (x, np.sin(2*np.pi*x), 0)
+            for x in np.arange(0, 100, self.epsilon/10)
+        ])
+
+class DecomposeMusicalNote(Scene):
+    def construct(self):
+        line = Line(SPACE_HEIGHT*DOWN, SPACE_HEIGHT*UP)
+        sine = LongSine()
+        kwargs = {
+            "run_time" : 4.0,
+            "alpha_func" : None
+        }
+        words = text_mobject("Imagine 220 per second...")
+        words.shift(2*UP)
+
+        self.add(line)
+        self.play(ApplyMethod(sine.shift, 4*LEFT, **kwargs))
+        self.add(words)
+        kwargs["alpha_func"] = rush_into
+        self.play(ApplyMethod(sine.shift, 80*LEFT, **kwargs))
+        kwargs["alpha_func"] = None
+        kwargs["run_time"] = 1.0
+        sine.to_edge(LEFT, buff = 0)
+        for x in range(5):
+            self.play(ApplyMethod(sine.shift, 85*LEFT, **kwargs))
+
+class DecomposeTwoFrequencies(Scene):
+    def construct(self):
+        line = Line(SPACE_HEIGHT*DOWN, SPACE_HEIGHT*UP)
+        sine1 = LongSine().shift(2*UP).highlight("yellow")
+        sine2 = LongSine().shift(DOWN).highlight("lightgreen")
+        sine1.stretch(2.0/3, 0)
+        comp = CompoundMobject(sine1, sine2)
+
+        self.add(line)
+        self.play(ApplyMethod(
+            comp.shift, 15*LEFT,
+            run_time = 7.5,
+            alpha_func = None
+        ))
+
+
 class MostRationalsSoundBad(Scene):
     def construct(self):
         self.add(text_mobject("Most rational numbers sound bad!"))
@@ -765,6 +810,12 @@ class PowersOfTwelfthRoot(Scene):
                 term, approx_copy, approx_form, words, frac_mob, error_string
             ]))
         self.play(ShimmerIn(CompoundMobject(*mob_list), run_time = 3.0))
+
+class InterestingQuestion(Scene):
+    def construct(self):
+        words = text_mobject("Interesting Question:", size = "\\Huge")
+        words.scale(2.0)
+        self.add(words)
 
 
 class SupposeThereIsASavant(Scene):
@@ -1254,6 +1305,49 @@ class VisualIntuition(Scene):
     def construct(self):
         self.add(text_mobject("Visual Intuition:"))
 
+class SideNote(Scene):
+    def construct(self):
+        self.add(text_mobject("(Brief Sidenote)"))
+
+class TroubleDrawingSmallInterval(IntervalScene):
+    def construct(self):
+        IntervalScene.construct(self)
+        interval, line = self.add_open_interval(0.5, 0.5)
+        big = CompoundMobject(interval, line)
+        small_int, small_line = self.add_open_interval(0.5, 0.01)
+        small = CompoundMobject(small_int, line.scale_in_place(0.01/0.5))
+        shrunk = deepcopy(big).scale_in_place(0.01/0.5)
+        self.clear()
+        IntervalScene.construct(self)
+        words = text_mobject("This tiny stretch")
+        words.shift(2*UP+2*LEFT)
+        arrow = Arrow(words, line)
+
+        for target in shrunk, small:
+            mob = deepcopy(big)
+            self.play(Transform(
+                mob, target,
+                run_time = 2.0
+            ))
+            self.dither()
+            self.play(Transform(mob, big))
+            self.dither()
+            self.remove(mob)
+        self.play(Transform(big, small))
+        self.play(ShimmerIn(words), ShowCreation(arrow))
+        self.play(Transform(
+            line, deepcopy(line).scale(10).shift(DOWN),
+            run_time = 2.0,
+            alpha_func = there_and_back
+        ))
+        self.dither()
+
+class WhatDoesItLookLikeToBeOutside(Scene):
+    def construct(self):
+        self.add(text_mobject(
+            "What does it look like for a number to be outside a dense set of intervals?"
+        ))
+
 class ZoomInOnSqrt2Over2(IntervalScene):
     def construct(self):
         IntervalScene.construct(self)
@@ -1395,6 +1489,45 @@ class ShiftSetupByOne(IntervalScene):
             run_time = 5.0
         ))
         self.dither()
+
+class FinalEquivalence(IntervalScene):
+    def construct(self):
+        IntervalScene.construct(self)
+        ticks = self.add_fraction_ticks()
+        intervals, lines = self.cover_fractions(
+            epsilon = 0.01,
+            num_fractions = 150,
+            run_time_per_interval = 0,
+        )
+        for interval, frac in zip(intervals, rationals()):
+            interval.scale_in_place(2.0/frac.denominator)
+        self.remove(*intervals+lines)
+        intervals = CompoundMobject(*intervals)
+        arrow = tex_mobject("\\Leftrightarrow")
+        top_words = text_mobject("Harmonious numbers are rare,")
+        bot_words = text_mobject("even for the savant")
+        bot_words.highlight().next_to(top_words, DOWN)
+        words = CompoundMobject(top_words, bot_words)
+        words.next_to(arrow)
+
+        self.play(
+            ShowCreation(ticks),
+            Transform(
+                deepcopy(intervals).stretch_to_fit_height(0),
+                intervals
+            )
+        )
+        everything = CompoundMobject(*self.mobjects)
+        self.clear()
+        self.play(Transform(
+            everything,
+            deepcopy(everything).scale(0.5).to_edge(LEFT)
+        ))
+        self.add(arrow)
+        self.play(ShimmerIn(words))
+        self.dither()
+
+
 
 
 
