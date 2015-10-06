@@ -5,7 +5,7 @@ import copy
 import warnings
 
 from animation import Animation
-from mobject import Mobject, Point
+from mobject import Mobject, Point, ComplexPlane
 from constants import *
 from helpers import *
 
@@ -139,7 +139,7 @@ class ScaleInPlace(ApplyMethod):
         ApplyMethod.__init__(self, mobject.scale_in_place, scale_factor, **kwargs)
 
 class ApplyFunction(Transform):
-    def __init__(self, mobject, function, **kwargs):
+    def __init__(self, function, mobject, **kwargs):
         Transform.__init__(
             self, 
             mobject, 
@@ -152,7 +152,7 @@ class ApplyPointwiseFunction(Transform):
     DEFAULT_CONFIG = {
         "run_time" : DEFAULT_ANIMATION_RUN_TIME
     }
-    def __init__(self, mobject, function, **kwargs):
+    def __init__(self, function, mobject, **kwargs):
         digest_config(self, ApplyPointwiseFunction, kwargs)
         map_image = copy.deepcopy(mobject)
         map_image.points = np.array(map(function, map_image.points))
@@ -164,7 +164,7 @@ class ApplyPointwiseFunction(Transform):
         ])
 
 class ComplexFunction(ApplyPointwiseFunction):
-    def __init__(self, mobject, function, **kwargs):
+    def __init__(self, function, mobject = ComplexPlane, **kwargs):
         def point_map(point):
             x, y, z = point
             c = np.complex(x, y)

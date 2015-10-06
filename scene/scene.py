@@ -163,9 +163,9 @@ class Scene(object):
             animation.clean_up()
         return self
 
-    def apply(self, AnimationClass, *args, **kwargs):
+    def apply(self, mob_to_anim_func, **kwargs):
         self.play(*[
-            AnimationClass(mobject, *args, **kwargs)
+            mob_to_anim_func(mobject)
             for mobject in self.mobjects
         ])
 
