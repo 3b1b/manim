@@ -154,6 +154,12 @@ class Scene(object):
             animation.clean_up()
         return self
 
+    def apply(self, AnimationClass, *args, **kwargs):
+        self.play(*[
+            AnimationClass(mobject, *args, **kwargs)
+            for mobject in self.mobjects
+        ])
+
     def get_frame(self):
         return disp.paint_mobject(
             CompoundMobject(*self.mobjects), self.background

@@ -139,7 +139,7 @@ class ScaleInPlace(ApplyMethod):
         ApplyMethod.__init__(self, mobject.scale_in_place, scale_factor, **kwargs)
 
 class ApplyFunction(Transform):
-    def __init__(self, function, mobject, **kwargs):
+    def __init__(self, mobject, function, **kwargs):
         Transform.__init__(
             self, 
             mobject, 
@@ -152,7 +152,7 @@ class ApplyPointwiseFunction(Transform):
     DEFAULT_CONFIG = {
         "run_time" : DEFAULT_ANIMATION_RUN_TIME
     }
-    def __init__(self, function, mobject, **kwargs):
+    def __init__(self, mobject, function, **kwargs):
         digest_config(self, ApplyPointwiseFunction, kwargs)
         map_image = copy.deepcopy(mobject)
         map_image.points = np.array(map(function, map_image.points))
@@ -164,20 +164,13 @@ class ApplyPointwiseFunction(Transform):
         ])
 
 class ComplexFunction(ApplyPointwiseFunction):
-    def __init__(self, function, *args, **kwargs):
+    def __init__(self, mobject, function, **kwargs):
         def point_map(point):
             x, y, z = point
             c = np.complex(x, y)
             c = function(c)
             return c.real, c.imag, z
-        if len(args) > 0:
-            args = list(args)
-            mobject = args.pop(0)
-        elif "mobject" in kwargs:
-            mobject = kwargs.pop("mobject")
-        else:
-            mobject = Grid()
-        ApplyPointwiseFunction.__init__(self, point_map, mobject, *args, **kwargs)
+        ApplyPointwiseFunction.__init__(self, mobject, point_map, *args, **kwargs)
         self.name = "ComplexFunction" + to_cammel_case(function.__name__)
         #Todo, abstract away function naming'
 
