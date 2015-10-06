@@ -100,6 +100,15 @@ class Scene(object):
         self.background = self.original_background
         return self
 
+    def paint_into_background(self, *mobjects):
+        #This way current mobjects don't have to be redrawn with
+        #every change, and one can later call "apply" without worrying
+        #about it applying to these mobjects
+        self.background = disp.paint_mobject(
+            CompoundMobject(*mobjects), self.background
+        )
+        return self
+
     def play(self, *animations, **kwargs):
         if "run_time" in kwargs:
             run_time = kwargs["run_time"]
