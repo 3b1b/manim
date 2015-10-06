@@ -18,13 +18,13 @@ class NumberLineScene(Scene):
         self.add(self.number_line, *self.number_mobs)
 
     def zoom_in_on(self, number, zoom_factor, run_time = 2.0):
-        unit_length_to_spacial_width = self.number_line.unit_length_to_spacial_width*zoom_factor
-        radius = SPACE_WIDTH/unit_length_to_spacial_width
+        unit_length_to_spatial_width = self.number_line.unit_length_to_spatial_width*zoom_factor
+        radius = SPACE_WIDTH/unit_length_to_spatial_width
         tick_frequency = 10**(np.floor(np.log10(radius)))
         left_tick = tick_frequency*(np.ceil((number-radius)/tick_frequency))
         new_number_line = NumberLine(
             numerical_radius = radius,
-            unit_length_to_spacial_width = unit_length_to_spacial_width,
+            unit_length_to_spatial_width = unit_length_to_spatial_width,
             tick_frequency = tick_frequency,
             leftmost_tick = left_tick,
             number_at_center = number

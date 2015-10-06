@@ -51,8 +51,8 @@ class Animation(object):
                       (abs(points[:,1]) < self.restricted_height)
         for filter_function in self.filter_functions:
             admissibles *= ~filter_function(points)
-        if any(self.spacial_center):
-            points += self.spacial_center
+        if any(self.spatial_center):
+            points += self.spatial_center
             #Filter out points pushed off the edge
             admissibles *= (abs(points[:,0]) < SPACE_WIDTH) * \
                            (abs(points[:,1]) < SPACE_HEIGHT)
@@ -82,7 +82,7 @@ class Animation(object):
         return self
 
     def shift(self, vector):
-        self.spacial_center += vector
+        self.spatial_center += vector
         return self
 
     def set_run_time(self, time):

@@ -234,13 +234,13 @@ class IntervalScene(NumberLineScene):
         return intervals, lines
 
     def add_open_interval(self, num, width, color = None, run_time = 0):
-        spacial_width = width*self.number_line.unit_length_to_spacial_width
+        spatial_width = width*self.number_line.unit_length_to_spatial_width
         center_point = self.number_line.number_to_point(num)
-        open_interval = OpenInterval(center_point, spacial_width)
+        open_interval = OpenInterval(center_point, spatial_width)
         color = color or "yellow"
         interval_line = Line(
-            center_point+spacial_width*LEFT/2,
-            center_point+spacial_width*RIGHT/2
+            center_point+spatial_width*LEFT/2,
+            center_point+spatial_width*RIGHT/2
         )
         interval_line.do_in_place(interval_line.sort_points, np.linalg.norm)
         interval_line.highlight(color)
