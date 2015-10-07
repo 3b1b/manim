@@ -106,6 +106,7 @@ class Arrow(Line):
         self.add_tip()
 
     def add_tip(self):
+        num_points = self.get_num_points()
         vect = self.start-self.end
         vect = vect*self.tip_length/np.linalg.norm(vect)
         self.add_points([
@@ -116,6 +117,14 @@ class Arrow(Line):
                 for axis in IN, OUT
             ]
         ])
+        self.num_tip_points = self.get_num_points()-num_points
+
+    def remove_tip(self):
+        if not hasattr(self, "num_tip_points"):
+            return self
+        for attr in "points", "rgbs":
+            setattr(self, attr, getattr(self, attr)[:-self.num_tip_points])
+        return self
 
 class CurvedLine(Line):
     def __init__(self, start, end, via = None, **kwargs):
