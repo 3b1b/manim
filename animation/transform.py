@@ -148,6 +148,26 @@ class ApplyFunction(Transform):
         )
         self.name = "ApplyFunctionTo"+str(mobject)
 
+class ApplyMatrix(Animation):
+    #Truth be told, I'm not sure if this is useful.
+    def __init__(self, matrix, mobject, **kwargs):
+        matrix = np.array(matrix)
+        if matrix.shape == (2, 2):
+            self.matrix = np.identity(3)
+            self.matrix[:2, :2] = matrix
+        elif matrix.shape == (3, 3):
+            self.matrix = matrix
+        else:
+            raise "Matrix has bad dimensions"
+        Animation.__init__(self, mobject, **kwargs)
+
+    def update_mobject(self, alpha):
+        matrix = interpolate(np.identity(3), self.matrix, alpha)
+        self.mobject.points = np.dot(
+            self.starting_mobject.points, 
+            np.transpose(matrix)
+        )
+
 class ApplyPointwiseFunction(Transform):
     DEFAULT_CONFIG = {
         "run_time" : DEFAULT_ANIMATION_RUN_TIME
