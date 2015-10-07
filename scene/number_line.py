@@ -11,8 +11,8 @@ from helpers import *
 
 
 class NumberLineScene(Scene):
-    def construct(self):
-        self.number_line = NumberLine()
+    def construct(self, **number_line_config):
+        self.number_line = NumberLine(**number_line_config)
         self.displayed_numbers = self.number_line.default_numbers_to_display()
         self.number_mobs = self.number_line.get_number_mobjects(*self.displayed_numbers)
         self.add(self.number_line, *self.number_mobs)

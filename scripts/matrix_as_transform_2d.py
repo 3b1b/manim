@@ -10,7 +10,7 @@ from animation import *
 from mobject import *
 from constants import *
 from region import *
-from scene import Scene
+from scene import Scene, NumberLineScene
 from script_wrapper import command_line_create_scene
 
 MOVIE_PREFIX = "matrix_as_transform_2d/"
@@ -18,7 +18,70 @@ MOVIE_PREFIX = "matrix_as_transform_2d/"
 def matrix_to_string(matrix):
     return "--".join(["-".join(map(str, row)) for row in matrix])
 
+def matrix_mobject(matrix):
+    return text_mobject(
+        """
+        \\left(
+            \\begin{array}{%s}
+                %d & %d \\\\
+                %d & %d
+            \\end{array}
+        \\right)
+        """%tuple(["c"*matrix.shape[1]] + list(matrix.flatten())),
+        size = "\\Huge"
+    )
 
+class ShowMultiplication(NumberLineScene):
+    args_list = [
+        (2, False),
+        (0.5, False),
+        (-3, False),
+        (-3, True),
+        (2, True),
+    ]
+    @staticmethod
+    def args_to_string(num, show_original_line):
+        end_string = "WithCopiedOriginalLine" if show_original_line else ""
+        return str(num) + end_string
+
+    def construct(self, num, show_original_line):
+        NumberLineScene.construct(self, density = abs(num)*DEFAULT_POINT_DENSITY_1D)
+        if show_original_line:
+            self.copy_original_line()
+        kwargs = {
+            "run_time" : 2.0,
+            "interpolation_function" : straight_path if num > 0 else counterclockwise_path
+        }
+        self.dither()
+        new_number_line = deepcopy(self.number_line)
+        new_number_line.stretch(num, 0)
+        self.play(
+            Transform(self.number_line, new_number_line, **kwargs),
+            *[
+                ApplyFunction(
+                    lambda m : m.do_in_place(m.stretch, 1.0/num, 0).stretch(num, 0),
+                    mobject,
+                    **kwargs
+                )
+                for mobject in self.number_mobs
+            ]
+        )
+        self.dither()
+
+
+    def copy_original_line(self):
+        copied_line = deepcopy(self.number_line)
+        copied_num_mobs = deepcopy(self.number_mobs)
+        self.play(
+            ApplyFunction(
+                lambda m : m.shift(DOWN).highlight("green"), 
+                copied_line
+            ), *[
+                ApplyMethod(mob.shift, DOWN)
+                for mob in copied_num_mobs
+            ]
+        )
+        self.dither()
 
 
 
@@ -58,28 +121,31 @@ class TransformScene2D(Scene):
         )
         self.add(self.x_arrow, self.y_arrow)
         self.number_plane.filter_out(
-            lambda (x, y, z) : (0 < x) and (x < 1) and (y < 0.1)
+            lambda (x, y, z) : (0 < x) and (x < 1) and (abs(y) < 0.1)
         )
         self.number_plane.filter_out(
-            lambda (x, y, z) : (0 < y) and (y < 1) and (x < 0.1)
+            lambda (x, y, z) : (0 < y) and (y < 1) and (abs(x) < 0.1)
         )
         return self
 
 
 class ShowMatrixTransform(TransformScene2D):
     args_list = [
-        ([[1, 2], [3, 4]], True),
-        ([[1, 3], [-2, 0]], False),
-        ([[1, 3], [-2, 0]], True),
-        ([[0, -1], [1, 0]], True),
-        ([[0, -1], [1, 0]], False),
+        ([[1, 2], [3, 4]], True, False),
+        ([[1, 3], [-2, 0]], False, False),
+        ([[1, 3], [-2, 0]], True, True),
+        ([[0, -1], [1, 0]], True, False),
+        ([[0, -1], [1, 0]], False, False),
+        ([[-1, 0], [0, -1]], True, False),
+        ([[-1, 0], [0, -1]], False, False),
     ]
     @staticmethod
-    def args_to_string(matrix, with_background):
+    def args_to_string(matrix, with_background, show_matrix):
         background_string = "WithBackground" if with_background else "WithoutBackground"
-        return matrix_to_string(matrix) + background_string
+        show_string = "ShowingMatrix" if show_matrix else ""
+        return matrix_to_string(matrix) + background_string + show_string
 
-    def construct(self, matrix, with_background):
+    def construct(self, matrix, with_background, show_matrix):
         matrix = np.array(matrix)
         number_plane_config = {
             "density_factor" : self.get_density_factor(matrix)
@@ -87,13 +153,16 @@ class ShowMatrixTransform(TransformScene2D):
         if with_background:
             self.add_background()
             number_plane_config["use_faded_lines"] = False
-        self.add_number_plane(**number_plane_config)
-        if with_background:
+            self.add_number_plane(**number_plane_config)
             self.add_x_y_arrows()
+        else:
+            self.add_number_plane(**number_plane_config)
+        if show_matrix:
+            self.add(matrix_mobject(matrix).to_corner(UP+LEFT))
         def func(mobject):
             mobject.points[:, :2] = np.dot(mobject.points[:, :2], np.transpose(matrix))
             return mobject
-        TransformScene2D.construct(self)
+
         self.dither()
         kwargs = {
             "run_time" : 2.0,
@@ -112,7 +181,7 @@ class ShowMatrixTransform(TransformScene2D):
                 Mobject.align_data(arrow, new_arrow)
                 arrow.add_tip()
                 new_arrow.add_tip()
-                anims.append(Transform(arrow, new_arrow))
+                anims.append(Transform(arrow, new_arrow, **kwargs))
         self.play(*anims)
         self.dither()
 
@@ -136,7 +205,6 @@ class ShowMatrixTransform(TransformScene2D):
             return counterclockwise_path
         else:
             return clockwise_path
-
 
 
 
