@@ -200,23 +200,33 @@ class NumberPlane(Mobject1D):
     def generate_points(self):
         color = self.color
         faded = Color(rgb = self.fade_factor*np.array(color.get_rgb()))
-        colors = iter([faded, color])
-        for freq in self.x_faded_line_frequency, self.x_line_frequency:
+        freq_color_pairs = [
+            (self.x_faded_line_frequency, faded),
+            (self.x_line_frequency, color)
+        ]
+        for freq, color in freq_color_pairs:
+            if not freq:
+                continue
             self.add_points([
                 (sgns[0]*self.x_unit_to_spatial_width*x, sgns[1]*y, 0)
                 for x in np.arange(0, self.x_radius, freq)
                 for y in np.arange(0, self.y_radius, self.epsilon)
                 for sgns in it.product([-1, 1], [-1, 1])
-            ], color = colors.next())
+            ], color = color)
         #Horizontal lines
-        colors = iter([faded, color])        
-        for freq in self.y_faded_line_frequency, self.y_line_frequency:
+        freq_color_pairs = [
+            (self.y_faded_line_frequency, faded),
+            (self.y_line_frequency, color)
+        ]
+        for freq, color in freq_color_pairs:
+            if not freq:
+                continue
             self.add_points([
                 (sgns[0]*x, sgns[1]*self.y_uint_to_spatial_height*y, 0)
                 for x in np.arange(0, self.x_radius, self.epsilon)
                 for y in np.arange(0, self.y_radius, freq)
                 for sgns in it.product([-1, 1], [-1, 1])
-            ], color = colors.next())
+            ], color = color)
         self.shift(self.get_center_point())
 
     def get_center_point(self):
