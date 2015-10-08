@@ -43,6 +43,8 @@ class Scene(object):
         pass #To be implemented in subclasses
 
     def __str__(self):
+        if hasattr(self, "name"):
+            return self.name
         return self.__class__.__name__
 
     def set_name(self, name):

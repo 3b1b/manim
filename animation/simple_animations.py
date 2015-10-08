@@ -57,7 +57,7 @@ class Rotating(Animation):
 
 class RotationAsTransform(Rotating):
     DEFAULT_CONFIG = {
-        "axes" : [IN],
+        "axes" : [OUT],
         "radians" : np.pi / 2,
         "run_time" : DEFAULT_ANIMATION_RUN_TIME,
         "alpha_func" : smooth,

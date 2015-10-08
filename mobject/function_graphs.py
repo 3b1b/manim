@@ -65,13 +65,15 @@ class NumberLine(Mobject1D):
         "unit_length_to_spatial_width" : 1,
         "tick_size" : 0.1,
         "tick_frequency" : 0.5,
-        "leftmost_tick" : -int(SPACE_WIDTH),
+        "leftmost_tick" : None,
         "number_at_center" : 0,                 
         "numbers_with_elongated_ticks" : [0],
         "longer_tick_multiple" : 2,
     }
     def __init__(self, **kwargs):
         digest_config(self, NumberLine, kwargs)
+        if self.leftmost_tick is None:
+            self.leftmost_tick = -int(self.numerical_radius)
         self.left_num  = self.number_at_center - self.numerical_radius
         self.right_num = self.number_at_center + self.numerical_radius
         Mobject1D.__init__(self, **kwargs)
@@ -128,20 +130,12 @@ class NumberLine(Mobject1D):
         return 4*DOWN*self.tick_size
 
     def get_number_mobjects(self, *numbers):
+        #TODO, handle decimals
         if len(numbers) == 0:
             numbers = self.default_numbers_to_display()
-        log_spacing = int(np.log10(self.tick_frequency))
-        if log_spacing < 0:
-            num_decimal_places = 2-log_spacing
-        else:
-            num_decimal_places = 1+log_spacing
         result = []
         for number in numbers:
-            if number < 0:
-                num_string = str(number)[:num_decimal_places+1]
-            else:
-                num_string = str(number)[:num_decimal_places]
-            mob = tex_mobject(num_string)
+            mob = tex_mobject(str(int(number)))
             vert_scale = 2*self.tick_size/mob.get_height()
             hori_scale = self.tick_frequency*self.unit_length_to_spatial_width/mob.get_width()
             mob.scale(min(vert_scale, hori_scale))
@@ -152,10 +146,12 @@ class NumberLine(Mobject1D):
 
     def add_numbers(self, *numbers):
         self.add(*self.get_number_mobjects(*numbers))
+        return self
 
     def remove_numbers(self):
         self.points = self.points[:self.number_of_points_without_numbers]
         self.rgbs = self.rgbs[:self.number_of_points_without_numbers]
+        return self
 
 class UnitInterval(NumberLine):
     DEFAULT_CONFIG = {

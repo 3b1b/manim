@@ -10,18 +10,16 @@ from animation import *
 from mobject import *
 from constants import *
 from region import *
-from scene import Scene, NumberLineScene
+from scene import Scene
 from script_wrapper import command_line_create_scene
 
 
-class SampleScene(NumberLineScene):
+class SampleScene(Scene):
     def construct(self):
-        NumberLineScene.construct(self)
-        arrow = Arrow(2*RIGHT+UP, 2*RIGHT)
-        self.add(arrow)
-        self.dither(2)
-        self.zoom_in_on(2.4, zoom_factor = 10)
-        self.dither(2)
+        plane = NumberPlane(density = 400)
+        arrow1 = Arrow(ORIGIN, UP, color = "green")
+        arrow2 = Arrow(ORIGIN, LEFT, color = "Red")
+        self.add(plane, arrow1, arrow2)
 
 if __name__ == "__main__":
     command_line_create_scene()

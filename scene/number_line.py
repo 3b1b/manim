@@ -73,6 +73,20 @@ class NumberLineScene(Scene):
         self.add(self.number_line, *self.number_mobs)
         self.add(*additional_mobjects)
 
+    def show_multiplication(self, num, **kwargs):
+        if "interpolation_function" not in kwargs:
+            if num > 0:
+                kwargs["interpolation_function"] = straight_path
+            else:
+                kwargs["interpolation_function"] = counterclockwise_path
+        self.play(*[
+            ApplyMethod(self.number_line.stretch, num, 0, **kwargs)
+        ]+[
+            ApplyMethod(mob.shift, (num-1)*mob.get_center()[0]*RIGHT, **kwargs)
+            for mob in self.number_mobs
+        ])
+
+
 
 
 
