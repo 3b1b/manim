@@ -78,12 +78,7 @@ class Line(Mobject1D):
         ]
 
     def generate_points(self):
-        length = np.linalg.norm(self.end - self.start)
-        epsilon = self.epsilon / max(length, self.min_density)
-        self.add_points([
-            interpolate(self.start, self.end, t)
-            for t in np.arange(0, 1, epsilon)
-        ])
+        self.add_line(self.start, self.end, self.min_density)
 
     def get_length(self):
         return np.linalg.norm(self.start - self.end)
@@ -164,6 +159,22 @@ class Circle(Mobject1D):
             (self.radius*np.cos(theta), self.radius*np.sin(theta), 0)
             for theta in np.arange(0, 2 * np.pi, self.epsilon/self.radius)
         ])
+
+class Polygon(Mobject1D):
+    DEFAULT_CONFIG = {
+        "color" : "limegreen",
+    }
+    def __init__(self, *points, **kwargs):
+        assert len(points) > 1
+        digest_config(self, Polygon, kwargs)
+        self.vertices = points
+        Mobject1D.__init__(self, **kwargs)
+
+    def generate_points(self):
+        points = list(self.vertices) + [self.vertices[0]]
+        for start, end in zip(points, points[1:]):
+            self.add_line(start, end)
+
 
 class Rectangle(Mobject1D):
     DEFAULT_CONFIG = {

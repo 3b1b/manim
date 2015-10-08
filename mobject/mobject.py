@@ -353,6 +353,14 @@ class Mobject1D(Mobject):
         self.epsilon = 1.0 / self.density
         Mobject.__init__(self, **kwargs)
 
+    def add_line(self, start, end, min_density = 0.1):
+        length = np.linalg.norm(end - start)
+        epsilon = self.epsilon / max(length, min_density)
+        self.add_points([
+            interpolate(start, end, t)
+            for t in np.arange(0, 1, epsilon)
+        ])
+
 class Mobject2D(Mobject):
     DEFAULT_CONFIG = {
         "density" : DEFAULT_POINT_DENSITY_2D,
