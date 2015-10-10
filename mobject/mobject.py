@@ -21,7 +21,7 @@ class Mobject(object):
     #Number of numbers used to describe a point (3 for pos, 3 for normal vector)
     DEFAULT_CONFIG = {
         "color" : "white",
-        "point_thickness" : 2,
+        "point_thickness" : 4,
         "name" : None,
     }
     DIM = 3

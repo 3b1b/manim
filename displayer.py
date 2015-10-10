@@ -60,8 +60,8 @@ def paint_mobjects(mobjects, image_array = None):
         )
 
         flattener = np.array([[1], [width]], dtype = 'int')
-        indices = np.dot(points, flattener)
-        pixels[indices[:,0]] = (255*rgbs).astype(int)
+        indices = np.dot(points, flattener)[:,0]
+        pixels[indices] = (255*rgbs).astype('uint8')
 
     pixels = pixels.reshape((height, width, 3)).astype('uint8')
     return pixels
@@ -71,24 +71,21 @@ def add_thickness(pixel_indices, rgbs, thickness, width, height):
     Imagine dragging each pixel around like a paintbrush in
     a square of pixels tickness x thickness big surrounding it
     """
-    nudge_values = range(-thickness/2+1, thickness/2+1)
     original = np.array(pixel_indices)
     original_rgbs = np.array(rgbs)
-    for x, y in it.product(nudge_values, nudge_values):
-        if x == 0 and y == 0:
-            continue
-        pixel_indices = np.append(
-            pixel_indices, 
-            original+[x, y], 
-            axis = 0
-        )
-        rgbs = np.append(rgbs, original_rgbs, axis = 0)
+    for nudge in range(-thickness/2+1, thickness/2+1):
+        for x, y in [[nudge, 0], [0, nudge]]:
+            pixel_indices = np.append(
+                pixel_indices, 
+                original+[x, y], 
+                axis = 0
+            )
+            rgbs = np.append(rgbs, original_rgbs, axis = 0)
     admissibles = (pixel_indices[:,0] >= 0) & \
                   (pixel_indices[:,0] < width) & \
                   (pixel_indices[:,1] >= 0) & \
                   (pixel_indices[:,1] < height)
     return pixel_indices[admissibles], rgbs[admissibles]
-
     
 
 def place_on_screen(points, rgbs, space_width, space_height):

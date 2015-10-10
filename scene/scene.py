@@ -165,9 +165,7 @@ class Scene(object):
             for animation in animations:
                 animation.update((t-t0)/(t1 - t0))
             index = int(t/self.frame_duration)
-            self.frames[index] = disp.paint_mobject(
-                CompoundMobject(*moving_mobjects), self.frames[index]
-            )
+            self.frames[index] = disp.paint_mobjects(moving_mobjects, self.frames[index])
         for animation in animations:
             animation.clean_up()
         return self
