@@ -84,6 +84,12 @@ def region_from_line_boundary(*lines, **kwargs):
         reg.intersect(HalfPlane(line, **kwargs))
     return reg
 
+def region_from_polygon_vertices(*vertices, **kwargs):
+    points = list(vertices)
+    points.append(points[0])
+    return region_from_line_boundary(*zip(points, points[1:]), **kwargs)
+
+
 def plane_partition(*lines, **kwargs):
     """
     A 'line' is a pair of points [(x0, y0,...), (x1, y1,...)]

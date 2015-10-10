@@ -48,8 +48,8 @@ class Transform(Animation):
 
         Animation.__init__(self, mobject, **kwargs)
         self.name += "To" + str(ending_mobject)  
-        self.mobject.should_buffer_points = \
-            mobject.should_buffer_points and ending_mobject.should_buffer_points
+        self.mobject.point_thickness = ending_mobject.point_thickness
+
 
     def black_out_extra_points(self, count1, count2):
         #Ensure redundant pixels fade to black

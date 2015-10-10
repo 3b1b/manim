@@ -46,6 +46,11 @@ LEFT   = np.array((-1, 0, 0))
 IN     = np.array(( 0, 0,-1))
 OUT    = np.array(( 0, 0, 1))
 
+TOP        = SPACE_HEIGHT*UP
+BOTTOM     = SPACE_HEIGHT*DOWN
+LEFT_SIDE  = SPACE_WIDTH*LEFT
+RIGHT_SIDE = SPACE_WIDTH*RIGHT
+
 THIS_DIR  = os.path.dirname(os.path.realpath(__file__))
 FILE_DIR  = os.path.join(THIS_DIR, "files")
 IMAGE_DIR = os.path.join(FILE_DIR, "images")

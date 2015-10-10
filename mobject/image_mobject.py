@@ -15,7 +15,7 @@ class ImageMobject(Mobject):
         "filter_color" : "black",
         "invert" : True,
         "use_cache" : True,
-        "should_buffer_points" : False,
+        "point_thickness" : 1,
         "scale_value" : 1.0,
         "should_center" : True
     }
@@ -134,7 +134,7 @@ def tex_mobject(expression,
         #Todo, make this more sophisticated.
     image_files = tex_to_image(expression, size, template_tex_file)
     config = {
-        "should_buffer_points" : True,
+        "point_thickness" : 1,
         "should_center" : False,
     }
     if isinstance(image_files, list):
@@ -148,6 +148,10 @@ def tex_mobject(expression,
     return result.center().highlight("white")
 
 
-
+def underbrace(left, right):
+    result = tex_mobject("\\underbrace{%s}"%(14*"\\quad"))
+    result.stretch_to_fit_width(right[0]-left[0])
+    result.shift(left - result.points[0])
+    return result
 
 

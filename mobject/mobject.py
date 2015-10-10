@@ -21,7 +21,7 @@ class Mobject(object):
     #Number of numbers used to describe a point (3 for pos, 3 for normal vector)
     DEFAULT_CONFIG = {
         "color" : "white",
-        "should_buffer_points" : GENERALLY_BUFFER_POINTS,
+        "point_thickness" : 2,
         "name" : None,
     }
     DIM = 3
@@ -156,9 +156,12 @@ class Mobject(object):
         if aligned_edge is not None:
             anchor_point = self.get_corner(aligned_edge-direction)
             target_point = mobject.get_corner(aligned_edge+direction)
-        else:
+        elif list(direction) in map(list, [LEFT, RIGHT, UP, DOWN]):
             anchor_point = self.get_edge_center(-direction)
             target_point = mobject.get_edge_center(direction)
+        else:
+            anchor_point = self.get_boundary_point(-direction)
+            target_point = mobject.get_boundary_point(direction)
         self.shift(target_point - anchor_point + buff*direction)
         return self
 
@@ -353,13 +356,13 @@ class Mobject1D(Mobject):
         self.epsilon = 1.0 / self.density
         Mobject.__init__(self, **kwargs)
 
-    def add_line(self, start, end, min_density = 0.1):
+    def add_line(self, start, end, min_density = 0.1, color = None):
         length = np.linalg.norm(end - start)
         epsilon = self.epsilon / max(length, min_density)
         self.add_points([
             interpolate(start, end, t)
             for t in np.arange(0, 1, epsilon)
-        ])
+        ], color = color)
 
 class Mobject2D(Mobject):
     DEFAULT_CONFIG = {
@@ -377,11 +380,10 @@ class CompoundMobject(Mobject):
         for mobject in mobjects:
             self.original_mobs_num_points.append(mobject.points.shape[0])
             self.add_points(mobject.points, mobject.rgbs)
-        self.should_buffer_points = reduce(
-            op.and_, 
-            [m.should_buffer_points for m in mobjects],
-            GENERALLY_BUFFER_POINTS
-        )
+        self.point_thickness = max([
+            m.point_thickness 
+            for m in mobjects
+        ])
 
     def split(self):
         result = []

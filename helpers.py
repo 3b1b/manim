@@ -238,8 +238,11 @@ def angle_between(v1, v2):
         v2 / np.linalg.norm(v2)
     ))
 
-
-
+def angle_of_vector(vector):
+    """
+    Returns polar coordinate theta when vector is project on xy plane
+    """
+    return np.log(complex(*vector[:2])).imag
 
 
 

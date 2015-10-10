@@ -7,6 +7,7 @@ import time
 import os
 import copy
 import progressbar
+import inspect
 
 from helpers import *
 from mobject import *
@@ -63,6 +64,16 @@ class Scene(object):
             self.mobjects.append(mobject)
         return self
 
+    def add_local_mobjects(self):
+        """
+        So a scene can just add all mobjects it's defined up to that point
+        """
+        caller_locals = inspect.currentframe().f_back.f_locals
+        self.add(*filter(
+            lambda m : isinstance(m, Mobject), 
+            caller_locals.values()
+        ))
+
     def remove(self, *mobjects):
         for mobject in mobjects:
             if not isinstance(mobject, Mobject):
@@ -106,9 +117,7 @@ class Scene(object):
         #This way current mobjects don't have to be redrawn with
         #every change, and one can later call "apply" without worrying
         #about it applying to these mobjects
-        self.background = disp.paint_mobject(
-            CompoundMobject(*mobjects), self.background
-        )
+        self.background = disp.paint_mobjects(mobjects, self.background)
         return self
 
     def play(self, *animations, **kwargs):
@@ -130,9 +139,7 @@ class Scene(object):
             progress_bar.update(t)
             for animation in animations:
                 animation.update(t / animation.run_time)
-            new_frame = disp.paint_mobject(
-                CompoundMobject(*moving_mobjects), background
-            )
+            new_frame = disp.paint_mobjects(moving_mobjects, background)
             self.frames.append(new_frame)
         for animation in animations:
             animation.clean_up()
@@ -172,9 +179,7 @@ class Scene(object):
         ])
 
     def get_frame(self):
-        return disp.paint_mobject(
-            CompoundMobject(*self.mobjects), self.background
-        )
+        return disp.paint_mobjects(self.mobjects, self.background)
 
     def dither(self, duration = DEFAULT_DITHER_TIME):
         self.frames += [self.get_frame()]*int(duration / self.frame_duration)

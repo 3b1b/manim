@@ -163,17 +163,29 @@ class Circle(Mobject1D):
 class Polygon(Mobject1D):
     DEFAULT_CONFIG = {
         "color" : "limegreen",
+        "edge_colors" : None
     }
     def __init__(self, *points, **kwargs):
         assert len(points) > 1
         digest_config(self, Polygon, kwargs)
-        self.vertices = points
+        self.original_points = points
         Mobject1D.__init__(self, **kwargs)
 
     def generate_points(self):
-        points = list(self.vertices) + [self.vertices[0]]
+        if self.edge_colors:
+            colors = it.cycle(self.edge_colors)
+        else:
+            colors = it.cycle([self.color])
+        self.indices_of_vertices = []
+        points = list(self.original_points)
+        points.append(points[0])
         for start, end in zip(points, points[1:]):
-            self.add_line(start, end)
+            self.indices_of_vertices.append(self.get_num_points())
+            self.add_line(start, end, color = colors.next())
+
+
+    def get_vertices(self):
+        return self.points[self.indices_of_vertices]
 
 
 class Rectangle(Mobject1D):
@@ -197,11 +209,12 @@ class Rectangle(Mobject1D):
 
 class Square(Rectangle):
     DEFAULT_CONFIG = {
-        "height" : 2.0,
-        "width" : 2.0,
+        "side_length" : 2.0,
     }
     def __init__(self, **kwargs):
         digest_config(self, Square, kwargs)
+        for arg in ["height", "width"]:
+            kwargs[arg] = self.side_length
         Rectangle.__init__(self, **kwargs)
 
 class Bubble(Mobject):

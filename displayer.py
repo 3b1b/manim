@@ -33,58 +33,79 @@ def paint_region(region, image_array = None, color = None):
     return pixels
 
 def paint_mobject(mobject, image_array = None):
-    pixels = get_pixels(image_array)    
-    if mobject.get_num_points() == 0:
-        return pixels
+    return paint_mobjects([mobject], image_array)
+
+def paint_mobjects(mobjects, image_array = None):
+    pixels = get_pixels(image_array)
     height = pixels.shape[0]
     width  = pixels.shape[1]
     space_height = SPACE_HEIGHT
     space_width  = SPACE_HEIGHT * width / height
-    # camera_distance = 10
+    pixels = pixels.reshape((pixels.size/3, 3))
 
-    points = np.array(mobject.points[:, :2])
-    # for i in range(2):
-    #     points[:,i] *= camera_distance/(camera_distance-mobject.points[:,2])
-    rgbs   = np.array(mobject.rgbs)
-    #Flips y-axis
-    points[:,1] *= -1
-    #Removes points out of space
-    to_remove = (abs(points[:,0]) < SPACE_WIDTH) & \
-                (abs(points[:,1]) < SPACE_HEIGHT)
-    points = points[to_remove]
-    rgbs = rgbs[to_remove]
-    #Map points to pixel space, then create pixel array first in terms
-    #of its flattened version
-    try:
-        points += np.array(
-            [space_width, space_height]*points.shape[0]
-        ).reshape(points.shape)
-    except:
-        print points.shape, mobject.points.shape
-    points *= np.array(
-        [width / (2.0 * space_width), height / (2.0 * space_height)]*\
-        points.shape[0]
-    ).reshape(points.shape)
-    points = points.astype('int')
-    flattener = np.array([1, width], dtype = 'int').reshape((2, 1))
-    indices = np.dot(points, flattener)
-    indices = indices.reshape(indices.size)
-    if mobject.should_buffer_points:#Is this alright?
-        for tweak in [
-            indices + 1, 
-            indices + width, 
-            indices + width + 1
-            ]:
-            indices = np.append(indices, tweak)
-        rgbs = np.array(list(rgbs) * 4)
-    admissibles = (indices < height * width) * (indices > 0)
-    indices = indices[admissibles]
-    rgbs = rgbs[admissibles]
-    rgbs = (rgbs * 255).astype(int)
-    pixels = pixels.reshape((height * width, 3))
-    pixels[indices] = rgbs.reshape((rgbs.size/3), 3)#WHY?
+    for mobject in mobjects:
+        if mobject.get_num_points() == 0:
+            continue
+        points, rgbs = place_on_screen(mobject.points, mobject.rgbs, 
+                                       space_width, space_height)
+        #Map points to pixel space, which requires rescaling and shifting
+        #Remember, 2*space_height -> height
+        points[:,0] = points[:,0]*width/space_width/2 + width/2
+        #Flip on y-axis as you go
+        points[:,1] = -1*points[:,1]*height/space_height/2 + height/2
+        points, rgbs = add_thickness(
+            points.astype('int'), rgbs, 
+            mobject.point_thickness, 
+            width, height
+        )
+
+        flattener = np.array([[1], [width]], dtype = 'int')
+        indices = np.dot(points, flattener)
+        pixels[indices[:,0]] = (255*rgbs).astype(int)
+
     pixels = pixels.reshape((height, width, 3)).astype('uint8')
     return pixels
+
+def add_thickness(pixel_indices, rgbs, thickness, width, height):
+    """
+    Imagine dragging each pixel around like a paintbrush in
+    a square of pixels tickness x thickness big surrounding it
+    """
+    nudge_values = range(-thickness/2+1, thickness/2+1)
+    original = np.array(pixel_indices)
+    original_rgbs = np.array(rgbs)
+    for x, y in it.product(nudge_values, nudge_values):
+        if x == 0 and y == 0:
+            continue
+        pixel_indices = np.append(
+            pixel_indices, 
+            original+[x, y], 
+            axis = 0
+        )
+        rgbs = np.append(rgbs, original_rgbs, axis = 0)
+    admissibles = (pixel_indices[:,0] >= 0) & \
+                  (pixel_indices[:,0] < width) & \
+                  (pixel_indices[:,1] >= 0) & \
+                  (pixel_indices[:,1] < height)
+    return pixel_indices[admissibles], rgbs[admissibles]
+
+    
+
+def place_on_screen(points, rgbs, space_width, space_height):
+    """
+    Projects points to 2d space and remove those outside a
+    the space constraints
+    """
+    # camera_distance = 10
+    points = np.array(points[:, :2])
+    # for i in range(2):
+    #     points[:,i] *= camera_distance/(camera_distance-mobject.points[:,2])
+    rgbs   = np.array(rgbs)
+    
+    #Removes points out of space
+    to_keep = (abs(points[:,0]) < space_width) & \
+              (abs(points[:,1]) < space_height)
+    return points[to_keep], rgbs[to_keep]
 
 def write_to_gif(scene, name):
     #TODO, find better means of compression
