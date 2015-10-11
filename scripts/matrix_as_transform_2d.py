@@ -15,6 +15,9 @@ from script_wrapper import command_line_create_scene
 
 MOVIE_PREFIX = "matrix_as_transform_2d/"
 
+ARROW_CONFIG = {"point_thickness" : 2*DEFAULT_POINT_THICKNESS}
+LIGHT_RED = "#F40"
+
 def matrix_to_string(matrix):
     return "--".join(["-".join(map(str, row)) for row in matrix])
 
@@ -44,9 +47,21 @@ class ShowMultiplication(NumberLineScene):
     def args_to_string(num, show_original_line):
         end_string = "WithCopiedOriginalLine" if show_original_line else ""
         return str(num) + end_string
+    @staticmethod
+    def string_to_args(string):
+        parts = string.split()
+        if len(parts) == 2:
+            num, original_line = parts
+            show_original_line = original_line == "WithCopiedOriginalLine"
+            return float(num), False
+        else:
+            return float(parts[0]), False
 
     def construct(self, num, show_original_line):
-        config = {"density" : abs(num)*DEFAULT_POINT_DENSITY_1D}
+        config = {
+            "density" : abs(num)*DEFAULT_POINT_DENSITY_1D,
+            "point_thickness" : 2*DEFAULT_POINT_THICKNESS
+        }
         if abs(num) < 1:
             config["numerical_radius"] = SPACE_WIDTH/num
 
@@ -54,7 +69,7 @@ class ShowMultiplication(NumberLineScene):
         if show_original_line:
             self.copy_original_line()
         self.dither()
-        self.show_multiplication(num, run_time = 2.0)
+        self.show_multiplication(num, run_time = 1.5)
         self.dither()
 
     def copy_original_line(self):
@@ -62,7 +77,7 @@ class ShowMultiplication(NumberLineScene):
         copied_num_mobs = deepcopy(self.number_mobs)
         self.play(
             ApplyFunction(
-                lambda m : m.shift(DOWN).highlight("green"), 
+                lambda m : m.shift(DOWN).highlight("lightgreen"), 
                 copied_line
             ), *[
                 ApplyMethod(mob.shift, DOWN)
@@ -90,7 +105,7 @@ class ExamplesOfNonlinearOneDimensionalTransforms(NumberLineScene):
         def shift_zero((x, y, z)):
             return (2*x+4, y, z)
         self.nonlinear = text_mobject("Not a Linear Transform")
-        self.nonlinear.highlight("red").to_edge(UP)
+        self.nonlinear.highlight(LIGHT_RED).to_edge(UP, buff = 1.5)
         pairs = [
             (sinx_plux_x, "numbers don't remain evenly spaced"),
             (shift_zero, "zero does not remain fixed")
@@ -104,7 +119,7 @@ class ExamplesOfNonlinearOneDimensionalTransforms(NumberLineScene):
         self.clear()
         self.add(self.nonlinear)
         NumberLineScene.construct(self)
-        words = text_mobject(explanation).highlight("red")
+        words = text_mobject(explanation).highlight(LIGHT_RED)
         words.next_to(self.nonlinear, DOWN, buff = 0.5)
         self.add(words)
 
@@ -136,7 +151,6 @@ class ShowTwoThenThree(ShowMultiplication):
         self.dither()
 
 
-
 ########################################################
 
 class TransformScene2D(Scene):
@@ -144,7 +158,8 @@ class TransformScene2D(Scene):
         config = {
             "x_radius" : 2*SPACE_WIDTH,
             "y_radius" : 2*SPACE_HEIGHT,
-            "density" : DEFAULT_POINT_DENSITY_1D*density_factor
+            "density" : DEFAULT_POINT_DENSITY_1D*density_factor,
+            "point_thickness" : 2*DEFAULT_POINT_THICKNESS
         }
         if not use_faded_lines:
             config["x_faded_line_frequency"] = None
@@ -153,20 +168,22 @@ class TransformScene2D(Scene):
         self.add(self.number_plane)
 
     def add_background(self):
-        self.paint_into_background(
-            NumberPlane(color = "grey").add_coordinates()
-        )
+        grey_plane = NumberPlane(color = "grey")
+        num_mobs = grey_plane.get_coordinate_labels()
+        self.paint_into_background(grey_plane, *num_mobs)
 
     def add_x_y_arrows(self):
         self.x_arrow = Arrow(
             ORIGIN, 
             self.number_plane.num_pair_to_point((1, 0)),
-            color = "green"
+            color = "lightgreen",
+            **ARROW_CONFIG
         )
         self.y_arrow = Arrow(
             ORIGIN,
             self.number_plane.num_pair_to_point((0, 1)),
-            color = "red"
+            color = LIGHT_RED,
+            **ARROW_CONFIG
         )
         self.add(self.x_arrow, self.y_arrow)
         self.number_plane.filter_out(
@@ -180,6 +197,8 @@ class TransformScene2D(Scene):
 
 class ShowMatrixTransform(TransformScene2D):
     args_list = [
+        ([[1, 3], [-2, 0]], False, False),
+        ([[1, 3], [-2, 0]], True, False),
         ([[1, 0.5], [0.5, 1]], True, False),
         ([[2, 0], [0, 2]], True, False),
         ([[0.5, 0], [0, 0.5]], True, False),
@@ -223,7 +242,8 @@ class ShowMatrixTransform(TransformScene2D):
                 new_arrow = Arrow(
                     ORIGIN,
                     self.number_plane.num_pair_to_point(matrix[:,index]),
-                    color = arrow.get_color()
+                    color = arrow.get_color(),
+                    **ARROW_CONFIG
                 )
                 arrow.remove_tip()
                 new_arrow.remove_tip()
@@ -233,8 +253,6 @@ class ShowMatrixTransform(TransformScene2D):
                 anims.append(Transform(arrow, new_arrow, **kwargs))
         self.play(*anims)
         self.dither()
-        self.set_name(str(self) + self.args_to_string(matrix, with_background, show_matrix))
-        self.save_image(os.path.join(MOVIE_DIR, MOVIE_PREFIX, "images"))
 
     def get_density_factor(self, matrix):
         max_norm = max([
@@ -288,7 +306,7 @@ class ExamplesOfNonlinearTwoDimensionalTransformations(Scene):
         def shift_zero((x, y, z)):
             return (2*x + 3*y + 4, -1*x+y+2, z)
         self.nonlinear = text_mobject("Nonlinear Transform")
-        self.nonlinear.highlight("red").to_edge(UP)
+        self.nonlinear.highlight(LIGHT_RED).to_edge(UP, buff = 1.5)
         pairs = [
             (squiggle, "lines to not remain straight"),
             (shift_zero, "the origin does not remain fixed")
@@ -305,7 +323,7 @@ class ExamplesOfNonlinearTwoDimensionalTransformations(Scene):
             density = 3*DEFAULT_POINT_DENSITY_1D,
         )
         numbers = number_plane.get_coordinate_labels()
-        words = text_mobject(explanation).highlight("red")
+        words = text_mobject(explanation).highlight(LIGHT_RED)
         words.next_to(self.nonlinear, DOWN, buff = 0.5)
 
         self.add(number_plane, self.nonlinear, words, *numbers)
@@ -330,8 +348,8 @@ class TrickyExamplesOfNonlinearTwoDimensionalTransformations(Scene):
         phrase1, phrase2 = text_mobject([
             "These might look like they keep lines straight...",
             "but diagonal lines get curved"
-        ]).to_edge(UP).split()
-        phrase2.highlight("red")
+        ]).to_edge(UP, buff = 1.5).split()
+        phrase2.highlight(LIGHT_RED)
         diagonal = Line(
             DOWN*SPACE_HEIGHT+LEFT*SPACE_WIDTH,
             UP*SPACE_HEIGHT+RIGHT*SPACE_WIDTH
@@ -363,7 +381,7 @@ class TrickyExamplesOfNonlinearTwoDimensionalTransformations(Scene):
 
 
 ############# HORRIBLE! ##########################
-class ShowMatrixTransformHack(TransformScene2D):
+class ShowMatrixTransformWithDot(TransformScene2D):
     args_list = [
         ([[1, 3], [-2, 0]], True, False),
     ]
@@ -392,7 +410,7 @@ class ShowMatrixTransformHack(TransformScene2D):
             return mobject
         dot = Dot((-1, 2, 0), color = "yellow")
         x_arrow_copy = deepcopy(self.x_arrow)
-        y_arrow_copy = Arrow(LEFT, LEFT+2*UP, color = "red")
+        y_arrow_copy = Arrow(LEFT, LEFT+2*UP, color = LIGHT_RED, **ARROW_CONFIG)
 
         self.number_plane.add(dot)
         self.play(ApplyMethod(x_arrow_copy.rotate, np.pi))
@@ -409,7 +427,8 @@ class ShowMatrixTransformHack(TransformScene2D):
                 new_arrow = Arrow(
                     ORIGIN,
                     self.number_plane.num_pair_to_point(matrix[:,index]),
-                    color = arrow.get_color()
+                    color = arrow.get_color(),
+                    **ARROW_CONFIG
                 )
                 arrow.remove_tip()
                 new_arrow.remove_tip()
@@ -421,7 +440,7 @@ class ShowMatrixTransformHack(TransformScene2D):
         self.dither()
 
         x_arrow_copy = deepcopy(self.x_arrow)
-        y_arrow_copy = Arrow(LEFT+2*UP, 5*RIGHT+2*UP, color = "red")
+        y_arrow_copy = Arrow(LEFT+2*UP, 5*RIGHT+2*UP, color = LIGHT_RED, **ARROW_CONFIG)
         self.play(ApplyMethod(x_arrow_copy.rotate, np.pi))
         self.play(ShowCreation(y_arrow_copy))
         self.remove(x_arrow_copy, y_arrow_copy)

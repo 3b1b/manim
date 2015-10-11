@@ -3,6 +3,7 @@ import getopt
 import imp
 import itertools as it
 import inspect
+import traceback
 from helpers import cammel_case_initials
 from scene import Scene
 
@@ -58,8 +59,8 @@ def get_configuration(sys_argv):
          config["write_all"] = True
          config["quiet"] = True
    #By default, write to file
-   actions = set(["write", "preview", "save_image"])
-   if len(actions.intersection(config)) == 0:
+   actions = ["write", "preview", "save_image"]
+   if not any([config[key] for key in actions]):
       config["write"] = True
 
    if len(args) > 0:
@@ -78,13 +79,15 @@ def handle_scene(scene, **config):
    if config["write"]:
       scene.write_to_movie(os.path.join(config["movie_prefix"], name))
    if config["save_image"]:
-      scene.show_frame()
+      if not config["write_all"]:
+         scene.show_frame()
       path = os.path.join(MOVIE_DIR, config["movie_prefix"], "images")
       if not os.path.exists(path):
          os.mkdir(path)
       scene.save_image(path, name)
 
    if config["quiet"]:
+      sys.stdout.close()
       sys.stdout = curr_stdout
 
 def prompt_user_for_args(SceneClass):
@@ -143,7 +146,14 @@ def command_line_create_scene(movie_prefix = ""):
          if type(args) is not tuple:
             args = (args,)
          scene_kwargs["construct_args"] = args
-         handle_scene(SceneClass(**scene_kwargs), **config)
+         try:
+            handle_scene(SceneClass(**scene_kwargs), **config)
+         except:
+            print "\n\n"
+            traceback.print_exc()
+            print "\n\n"
+
+
 
 
 

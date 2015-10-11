@@ -59,7 +59,6 @@ TEX_DIR   = os.path.join(FILE_DIR, "Tex")
 TEX_IMAGE_DIR = os.path.join(IMAGE_DIR, "Tex")
 MOBJECT_DIR = os.path.join(FILE_DIR, "mobjects")
 IMAGE_MOBJECT_DIR = os.path.join(MOBJECT_DIR, "image")
-TMP_IMAGE_DIR = "/tmp/animation_images/"
 
 for folder in [IMAGE_DIR, GIF_DIR, MOVIE_DIR, TEX_DIR, TMP_IMAGE_DIR, 
                TEX_IMAGE_DIR, MOBJECT_DIR, IMAGE_MOBJECT_DIR]:

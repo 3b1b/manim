@@ -16,10 +16,10 @@ from script_wrapper import command_line_create_scene
 
 class SampleScene(Scene):
     def construct(self):
-        plane = NumberPlane()
-        arrow1 = Arrow(ORIGIN, UP, color = "green", point_thickness = 5)
-        arrow2 = Arrow(ORIGIN, LEFT, color = "Red")
-        self.add(plane, arrow1, arrow2)
+        circle = Circle().repeat(6)
+        self.play(Transform(circle, Square(), run_time = 3))
+        self.dither()
+
 
 if __name__ == "__main__":
     command_line_create_scene()

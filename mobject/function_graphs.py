@@ -196,6 +196,7 @@ class NumberPlane(Mobject1D):
     def generate_points(self):
         color = self.color
         faded = Color(rgb = self.fade_factor*np.array(color.get_rgb()))
+        #Vertical Lines
         freq_color_pairs = [
             (self.x_faded_line_frequency, faded),
             (self.x_line_frequency, color)

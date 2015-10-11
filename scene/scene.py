@@ -51,6 +51,7 @@ class Scene(object):
             return self.name
         return self.__class__.__name__ + \
                self.args_to_string(*self.construct_args)
+               
     def set_name(self, name):
         self.name = name
         return self

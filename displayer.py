@@ -1,14 +1,17 @@
 import numpy as np
 import itertools as it
+import subprocess as sp
 import os
+import sys
 from PIL import Image
-import subprocess
 import cv2
 from colour import Color
 import progressbar
 
 from mobject import *
 from constants import *
+
+FFMPEG_BIN = "ffmpeg"
 
 def get_pixels(image_array): #TODO, FIX WIDTH/HEIGHT PROBLEM HERE
     if image_array is None:
@@ -126,97 +129,34 @@ def write_to_gif(scene, name):
     os.system("rm " + temppath)
 
 def write_to_movie(scene, name):
-    frames = scene.frames
-    progress_bar = progressbar.ProgressBar(maxval=len(frames))
-    progress_bar.start()
-    print "writing " + name + "..."
+    filepath = os.path.join(MOVIE_DIR, name) + ".mp4"    
+    print "Writing to %s"%filepath
 
-    filepath = os.path.join(MOVIE_DIR, name)
-    filedir = "/".join(filepath.split("/")[:-1])
-    if not os.path.exists(filedir):
-        os.makedirs(filedir)
-    rate = int(1/scene.frame_duration)
+    fps = int(1/scene.display_config["frame_duration"])
+    dim = (scene.display_config["width"], scene.display_config["height"])
 
-    tmp_stem = os.path.join(TMP_IMAGE_DIR, name.replace("/", "_"))
-    suffix = "-%04d.png"
-    image_files = []
-    for frame, count in zip(frames, it.count()):
-        progress_bar.update(int(0.9 * count))
-        Image.fromarray(frame).save(tmp_stem + suffix%count)
-        image_files.append(tmp_stem + suffix%count)
-    commands = [
-        "ffmpeg",
-        "-y",
-        "-loglevel",
-        "error",
-        "-i",
-        tmp_stem + suffix,
-        "-c:v",
-        "libx264",
-        "-vf",
-        "fps=%d,format=yuv420p"%rate,
-        filepath + ".mp4"
+    command = [ 
+        FFMPEG_BIN,
+        '-y',                 # overwrite output file if it exists
+        '-f', 'rawvideo',
+        '-vcodec','rawvideo',
+        '-s', '%dx%d'%dim,    # size of one frame
+        '-pix_fmt', 'rgb24',
+        '-r', str(fps),       # frames per second
+        '-i', '-',            # The imput comes from a pipe
+        '-an',                # Tells FFMPEG not to expect any audio
+        '-vcodec', 'mpeg',
+        '-c:v', 'libx264',
+        '-pix_fmt', 'yuv420p',
+        '-loglevel', 'error',
+        filepath,
     ]
-    os.system(" ".join(commands))
-    for image_file in image_files:
-        os.remove(image_file)
-    progress_bar.finish()
+    process = sp.Popen(command, stdin=sp.PIPE)
+    for frame in scene.frames:
+        process.stdin.write(frame.tostring())
 
-
-    # vs = VideoSink(scene.shape, filepath, rate)
-    # for frame in frames:
-    #     vs.run(frame)
-    # vs.close()
-    # progress_bar.finish()
-
-
-    # filepath = os.path.join(MOVIE_DIR, name + ".mov")
-    # fourcc = cv2.cv.FOURCC(*"8bps")
-    # out = cv2.VideoWriter(
-    #     filepath, fourcc, 1.0/scene.frame_duration, (DEFAULT_WIDTH, DEFAULT_HEIGHT), True
-    # )
-    # progress = 0
-    # for frame in frames:
-    #     if progress == 0:
-    #         print "Writing movie"
-    #     progress_bar.update(progress)
-    #     r, g, b = cv2.split(np.array(frame))
-    #     bgr_frame = cv2.merge([b, g, r])
-    #     out.write(bgr_frame)
-    #     progress += 1
-    # out.release()
-    # progress_bar.finish()
-
-
-# class VideoSink(object):
-#     def __init__(self, size, filename="output", rate=10, byteorder="bgra") :
-#             self.size = size
-#             cmdstring  = [
-#                 'mencoder',
-#                 '/dev/stdin',
-#                 '-demuxer', 'rawvideo',
-#                 '-rawvideo', 'w=%i:h=%i'%size[::-1]+":fps=%i:format=%s"%(rate,byteorder),
-#                 '-o', filename+'.mp4',
-#                 '-ovc', 'lavc',
-#             ]
-#             self.p = subprocess.Popen(cmdstring, stdin=subprocess.PIPE, shell=False)
-
-#     def run(self, image):
-#         """
-#         Image comes in as HEIGHTxWIDTHx3 numpy array, order rgb
-#         """
-#         assert image.shape == self.size + (3,)
-#         r, g, b = [image[:,:,i].astype('uint32') for i in range(3)]
-#         a = np.ones(image.shape[:2], dtype = 'uint32')
-#         #hacky
-#         image = sum([
-#             arr << 8**i 
-#             for arr, i in zip(range(4), [a, r, g, b])
-#         ])
-#         self.p.stdin.write(image.tostring())
-
-#     def close(self):
-#         self.p.stdin.close()
+    process.stdin.close()
+    process.wait()
 
 
 
