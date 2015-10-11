@@ -21,7 +21,7 @@ class Mobject(object):
     #Number of numbers used to describe a point (3 for pos, 3 for normal vector)
     DEFAULT_CONFIG = {
         "color" : "white",
-        "point_thickness" : 4,
+        "point_thickness" : DEFAULT_POINT_THICKNESS,
         "name" : None,
     }
     DIM = 3
@@ -369,7 +369,7 @@ class Mobject2D(Mobject):
         "density" : DEFAULT_POINT_DENSITY_2D,
     }
     def __init__(self, **kwargs):
-        digest_config(self, Mobject1D, kwargs)
+        digest_config(self, Mobject2D, kwargs)
         self.epsilon = 1.0 / self.density
         Mobject.__init__(self, **kwargs)
 

@@ -1,9 +1,6 @@
 import os
 import numpy as np
 
-
-GENERALLY_BUFFER_POINTS = True
-
 PRODUCTION_QUALITY_DISPLAY_CONFIG = {
     "height"         : 1440,
     "width"          : 2560,
@@ -19,6 +16,8 @@ LOW_QUALITY_DISPLAY_CONFIG = {
 
 DEFAULT_POINT_DENSITY_2D = 25 
 DEFAULT_POINT_DENSITY_1D = 200
+
+DEFAULT_POINT_THICKNESS = 4
 
 #TODO, Make sure these are not needd
 DEFAULT_HEIGHT = PRODUCTION_QUALITY_DISPLAY_CONFIG["height"] 

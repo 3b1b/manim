@@ -55,7 +55,7 @@ def paint_mobjects(mobjects, image_array = None):
         points[:,1] = -1*points[:,1]*height/space_height/2 + height/2
         points, rgbs = add_thickness(
             points.astype('int'), rgbs, 
-            mobject.point_thickness, 
+            mobject.point_thickness,
             width, height
         )
 
@@ -69,11 +69,14 @@ def paint_mobjects(mobjects, image_array = None):
 def add_thickness(pixel_indices, rgbs, thickness, width, height):
     """
     Imagine dragging each pixel around like a paintbrush in
-    a square of pixels tickness x thickness big surrounding it
+    a plus-sign-shaped pixel arrangement surrounding it
     """
+    thickness = adjusted_thickness(thickness, width, height)
     original = np.array(pixel_indices)
     original_rgbs = np.array(rgbs)
     for nudge in range(-thickness/2+1, thickness/2+1):
+        if nudge == 0:
+            continue
         for x, y in [[nudge, 0], [0, nudge]]:
             pixel_indices = np.append(
                 pixel_indices, 
@@ -86,7 +89,12 @@ def add_thickness(pixel_indices, rgbs, thickness, width, height):
                   (pixel_indices[:,1] >= 0) & \
                   (pixel_indices[:,1] < height)
     return pixel_indices[admissibles], rgbs[admissibles]
-    
+
+def adjusted_thickness(thickness, width, height):
+    big_width = PRODUCTION_QUALITY_DISPLAY_CONFIG["width"]
+    big_height = PRODUCTION_QUALITY_DISPLAY_CONFIG["height"]
+    factor = (big_width + big_height) / (width + height)
+    return 1 + (thickness-1)/factor
 
 def place_on_screen(points, rgbs, space_width, space_height):
     """
