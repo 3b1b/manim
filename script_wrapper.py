@@ -10,123 +10,140 @@ from constants import *
 
 HELP_MESSAGE = """
    <script name> [<scene name or initials>] [<arg_string>]
+   -p preview in low quality
+   -s show and save picture of last frame
+   -l use low quality
+   -a run and save every scene in the script
+   -q don't pring progress
 """
 SCENE_NOT_FOUND_MESSAGE = """
-   No scene name or ititials \"%s\" and arg string \"%s\"
+   That scene is not in the script
 """
-MULTIPE_SCENES_FOUND_MESSAGE = """
-   Multiple Scene/arg pairs satisfying this
-   description, choose from the following list:
-"""
-CHOOSE_NUMBER_MESSAGE = "Choose a number from above: "
-INVALID_NUMBER_MESSAGE = "Invalid number!"
+CHOOSE_NUMBER_MESSAGE = "Choose number corresponding to desired scene arguments: "
+INVALID_NUMBER_MESSAGE = "Fine then, if you don't want to give a valid number I'll just quit"
 
-def find_scene_class_and_args(scene_string, args_extension, 
-                              scene_classes):
-   possible_results = []
-   for SceneClass in scene_classes:
-      possible_names = map(str.lower, (
-         "", 
-         SceneClass.__name__, 
-         cammel_case_initials(SceneClass.__name__)
-      ))
-      if scene_string.lower() in possible_names:
-         if len(SceneClass.args_list) == 0:
-            possible_results.append((SceneClass, ()))
-         for args in SceneClass.args_list:
-            assert(isinstance(args, tuple))
-            this_args_extension = SceneClass.args_to_string(*args)
-            if args_extension.lower() in ("", this_args_extension.lower()):
-               possible_results.append((SceneClass, args))
-   num_matches = len(possible_results)
-   if num_matches == 0:
-      print SCENE_NOT_FOUND_MESSAGE%(scene_string, args_extension)
-      sys.exit(0)
-   elif num_matches == 1:
-      index = 0
-   else:
-      print MULTIPE_SCENES_FOUND_MESSAGE
-      count = 0
-      for SceneClass, args in possible_results:
-         print "%d: %s%s"%( 
-            count, 
-            SceneClass.__name__,
-            SceneClass.args_to_string(*args),
-         )
-         count += 1
-      try:
-         index = input(CHOOSE_NUMBER_MESSAGE)
-         assert(type(index) == int)
-         assert(index in range(num_matches))
-      except:
-         print INVALID_NUMBER_MESSAGE
-         sys.exit(0)
-   return possible_results[index]
 
-def command_line_create_scene(movie_prefix = ""):
-   scene_classes = [
-        pair[1]
-        for pair in inspect.getmembers(
-            sys.modules["__main__"], 
-            lambda obj : inspect.isclass(obj) and \
-                         issubclass(obj, Scene) and \
-                         obj != Scene
-        )
-   ]
+def get_configuration(sys_argv):
    try:
-      opts, args = getopt.getopt(sys.argv[1:], 'hlps')
+      opts, args = getopt.getopt(sys_argv[1:], 'hlpwsqa')
    except getopt.GetoptError as err:
       print str(err)
       sys.exit(2)
-
-   scene_string = ""
-   args_extension = ""
-   display_config = PRODUCTION_QUALITY_DISPLAY_CONFIG
-   action = "write"
-
+   config = {
+      "scene_name"     : "",
+      "args_extension" : "",
+      "display_config" : PRODUCTION_QUALITY_DISPLAY_CONFIG,
+      "preview"        : False,
+      "write"          : False,
+      "save_image"     : False,
+      "quiet"          : False,
+      "write_all"      : False,
+   }
    for opt, arg in opts:
       if opt == '-h':
          print HELP_MESSAGE
          return
       elif opt == '-l':
-         display_config = LOW_QUALITY_DISPLAY_CONFIG
+         config["display_config"] = LOW_QUALITY_DISPLAY_CONFIG
       elif opt == '-p':
-         display_config = LOW_QUALITY_DISPLAY_CONFIG
-         action = "preview"
+         config["display_config"] = LOW_QUALITY_DISPLAY_CONFIG
+         config["preview"] = True
+      elif opt == '-w':
+         config["write"] = True
       elif opt == '-s':
-         action = "save_image"
+         config["save_image"] = True
+      elif opt == '-q':
+         config["quiet"] = True
+      elif opt == '-a':
+         config["write_all"] = True
+         config["quiet"] = True
+   #By default, write to file
+   actions = set(["write", "preview", "save_image"])
+   if len(actions.intersection(config)) == 0:
+      config["write"] = True
+
    if len(args) > 0:
-      scene_string = args[0]
+      config["scene_name"] = args[0]
    if len(args) > 1:
-      args_extension = args[1]
-   SceneClass, args = find_scene_class_and_args(
-      scene_string,
-      args_extension,
-      scene_classes
-   )
-   name = SceneClass.__name__ + SceneClass.args_to_string(*args)
-   print "Constructing %s..."%name
-   scene = SceneClass(
-      display_config = display_config,
-      construct_args = args
-   )
-   if action == "write":
-      scene.write_to_movie(os.path.join(movie_prefix, name))
-   elif action == "preview":
+      config["args_extension"] = args[1]
+   return config
+
+def handle_scene(scene, **config):
+   name = str(scene)
+   if config["quiet"]:
+      curr_stdout = sys.stdout
+      sys.stdout = open(os.devnull, "w")
+   if config["preview"]:
       scene.preview()
-   elif action == "save_image":
+   if config["write"]:
+      scene.write_to_movie(os.path.join(config["movie_prefix"], name))
+   if config["save_image"]:
       scene.show_frame()
-      path = os.path.join(MOVIE_DIR, movie_prefix, "images")
+      path = os.path.join(MOVIE_DIR, config["movie_prefix"], "images")
       if not os.path.exists(path):
          os.mkdir(path)
       scene.save_image(path, name)
 
-      
+   if config["quiet"]:
+      sys.stdout = curr_stdout
 
+def prompt_user_for_args(SceneClass):
+   num_to_args = {}
+   for count, args in zip(it.count(1), SceneClass.args_list):
+      print "%d: %s"%(count, SceneClass.args_to_string(*args))
+      num_to_args[count] = args
+   try:
+      return num_to_args[input(CHOOSE_NUMBER_MESSAGE)]
+   except:
+      print INVALID_NUMBER_MESSAGE
+      sys.exit()
 
+def is_scene(obj):
+   if not inspect.isclass(obj):
+      return False
+   if not issubclass(obj, Scene):
+      return False
+   if obj == Scene:
+      return False
+   return True
 
+def command_line_create_scene(movie_prefix = ""):
+   script = sys.modules["__main__"]
+   scene_names_to_classes = dict(inspect.getmembers(script, is_scene))
+   config = get_configuration(sys.argv)
+   config["movie_prefix"] = movie_prefix
+   if config["scene_name"] in scene_names_to_classes:
+      scene_classes = [scene_names_to_classes[config["scene_name"]] ]
+   elif config["scene_name"] == "" and config["write_all"]:
+      scene_classes = scene_names_to_classes.values()
+   else:
+      print SCENE_NOT_FOUND_MESSAGE
+      return
 
-
+   scene_kwargs = {
+      "display_config" : config["display_config"],
+      "announce_construction" : True
+   }
+   for SceneClass in scene_classes:
+      args_list = SceneClass.args_list or [()]
+      preset_extensions = [
+         SceneClass.args_to_string(*args)
+         for args in args_list
+      ]
+      if config["write_all"]:
+         args_to_run = args_list
+      elif config["args_extension"] in preset_extensions:
+         index = preset_extensions.index(config["args_extension"])
+         args_to_run = [args_list[index]]
+      elif config["args_extension"] == "":
+         args_to_run = [prompt_user_for_args(SceneClass)]
+      else:
+         args_to_run = [SceneClass.string_to_args(config["args_extension"])]
+      for args in args_to_run:
+         if type(args) is not tuple:
+            args = (args,)
+         scene_kwargs["construct_args"] = args
+         handle_scene(SceneClass(**scene_kwargs), **config)
 
 
 

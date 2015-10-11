@@ -20,10 +20,13 @@ class Scene(object):
         "display_config" : PRODUCTION_QUALITY_DISPLAY_CONFIG,
         "construct_args" : [],
         "background" : None,
-        "start_dither_time" : DEFAULT_DITHER_TIME
+        "start_dither_time" : DEFAULT_DITHER_TIME,
+        "announce_construction" : False,
     }
     def __init__(self, **kwargs):
         digest_config(self, Scene, kwargs)
+        if self.announce_construction:
+            print "Constructing %s..."%str(self)
         self.frame_duration = self.display_config["frame_duration"]
         self.frames = []
         self.mobjects = []
@@ -46,8 +49,8 @@ class Scene(object):
     def __str__(self):
         if hasattr(self, "name"):
             return self.name
-        return self.__class__.__name__
-
+        return self.__class__.__name__ + \
+               self.args_to_string(*self.construct_args)
     def set_name(self, name):
         self.name = name
         return self
@@ -193,6 +196,11 @@ class Scene(object):
         disp.write_to_gif(self, name or str(self))
 
     def write_to_movie(self, name = None):
+        if len(self.frames) == 0:
+            print "No frames, I'll just save an image instead"
+            self.show_frame()
+            self.save_image(name = name)
+            return
         disp.write_to_movie(self, name or str(self))
 
     def show_frame(self):
@@ -214,7 +222,9 @@ class Scene(object):
     @staticmethod
     def args_to_string(*args):
         return ""
-
+    @staticmethod
+    def string_to_args(string):
+        raise Exception("string_to_args Not Implemented!")
 
 
 
