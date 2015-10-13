@@ -51,7 +51,7 @@ class Scene(object):
             return self.name
         return self.__class__.__name__ + \
                self.args_to_string(*self.construct_args)
-               
+
     def set_name(self, name):
         self.name = name
         return self
@@ -62,6 +62,8 @@ class Scene(object):
         in the order with which they are entered.
         """
         for mobject in mobjects:
+            if not isinstance(mobject, Mobject):
+                raise Exception("Adding something which is not a mobject")
             #In case it's already in there, it should 
             #now be closer to the foreground.
             self.remove(mobject)
@@ -84,6 +86,15 @@ class Scene(object):
                 raise Exception("Removing something which is not a mobject")
             while mobject in self.mobjects:
                 self.mobjects.remove(mobject)
+        return self
+
+    def bring_to_front(self, mobject):
+        self.add(mobject)
+        return self
+
+    def bring_to_back(self, mobject):
+        self.remove(mobject)
+        self.mobjects = [mobject] + self.mobjects
         return self
 
     def clear(self):
@@ -174,11 +185,8 @@ class Scene(object):
             animation.clean_up()
         return self
 
-    def apply(self, mob_to_anim_func, **kwargs):
-        self.play(*[
-            mob_to_anim_func(mobject)
-            for mobject in self.mobjects
-        ])
+    def apply(self, mobject_method, *args, **kwargs):
+        self.play(ApplyMethod(mobject_method, *args, **kwargs))
 
     def get_frame(self):
         return disp.paint_mobjects(self.mobjects, self.background)

@@ -30,6 +30,15 @@ def clockwise_path(start_points, end_points, alpha):
 def counterclockwise_path(start_points, end_points, alpha):
     return semi_circular_path(start_points, end_points, alpha, OUT)
 
+def get_best_interpolation_function(angle):
+    angle = (angle + np.pi)%(2*np.pi) - np.pi
+    if abs(angle) < np.pi/2:
+        return straight_path
+    elif angle > 0:
+        return counterclockwise_path
+    else:
+        return clockwise_path
+
 class Transform(Animation):
     DEFAULT_CONFIG = {
         "run_time" : DEFAULT_TRANSFORM_RUN_TIME,

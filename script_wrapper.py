@@ -66,7 +66,7 @@ def get_configuration(sys_argv):
    if len(args) > 0:
       config["scene_name"] = args[0]
    if len(args) > 1:
-      config["args_extension"] = args[1]
+      config["args_extension"] = " ".join(args[1:])
    return config
 
 def handle_scene(scene, **config):
@@ -128,13 +128,13 @@ def command_line_create_scene(movie_prefix = ""):
       "announce_construction" : True
    }
    for SceneClass in scene_classes:
-      args_list = SceneClass.args_list or [()]
+      args_list = SceneClass.args_list
       preset_extensions = [
          SceneClass.args_to_string(*args)
          for args in args_list
       ]
       if config["write_all"]:
-         args_to_run = args_list
+         args_to_run = args_list or [()]
       elif config["args_extension"] in preset_extensions:
          index = preset_extensions.index(config["args_extension"])
          args_to_run = [args_list[index]]

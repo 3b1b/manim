@@ -49,49 +49,58 @@ def paint_mobjects(mobjects, image_array = None):
     for mobject in mobjects:
         if mobject.get_num_points() == 0:
             continue
-        points, rgbs = place_on_screen(mobject.points, mobject.rgbs, 
-                                       space_width, space_height)
+        points_and_rgbs = np.append(
+            mobject.points,
+            255*mobject.rgbs,
+            axis = 1
+        )
+        points_and_rgbs = place_on_screen(
+            points_and_rgbs,
+            space_width, space_height
+        )
         #Map points to pixel space, which requires rescaling and shifting
         #Remember, 2*space_height -> height
-        points[:,0] = points[:,0]*width/space_width/2 + width/2
+        points_and_rgbs[:,0] = points_and_rgbs[:,0]*width/space_width/2 + width/2
         #Flip on y-axis as you go
-        points[:,1] = -1*points[:,1]*height/space_height/2 + height/2
-        points, rgbs = add_thickness(
-            points.astype('int'), rgbs, 
+        points_and_rgbs[:,1] = -1*points_and_rgbs[:,1]*height/space_height/2 + height/2
+        points_and_rgbs = add_thickness(
+            points_and_rgbs.astype('int'),
             mobject.point_thickness,
             width, height
         )
 
+        points, rgbs = points_and_rgbs[:,:2], points_and_rgbs[:,2:]
         flattener = np.array([[1], [width]], dtype = 'int')
         indices = np.dot(points, flattener)[:,0]
-        pixels[indices] = (255*rgbs).astype('uint8')
+        pixels[indices] = rgbs.astype('uint8')
 
     pixels = pixels.reshape((height, width, 3)).astype('uint8')
     return pixels
 
-def add_thickness(pixel_indices, rgbs, thickness, width, height):
+def add_thickness(pixel_indices_and_rgbs, thickness, width, height):
     """
     Imagine dragging each pixel around like a paintbrush in
-    a plus-sign-shaped pixel arrangement surrounding it
+    a plus-sign-shaped pixel arrangement surrounding it.
+
+    Pass rgb = None to do nothing to them
     """
     thickness = adjusted_thickness(thickness, width, height)
-    original = np.array(pixel_indices)
-    original_rgbs = np.array(rgbs)
+    original = np.array(pixel_indices_and_rgbs)
+    n_extra_columns = pixel_indices_and_rgbs.shape[1] - 2
     for nudge in range(-thickness/2+1, thickness/2+1):
         if nudge == 0:
             continue
         for x, y in [[nudge, 0], [0, nudge]]:
-            pixel_indices = np.append(
-                pixel_indices, 
-                original+[x, y], 
+            pixel_indices_and_rgbs = np.append(
+                pixel_indices_and_rgbs, 
+                original+([x, y] + [0]*n_extra_columns),
                 axis = 0
             )
-            rgbs = np.append(rgbs, original_rgbs, axis = 0)
-    admissibles = (pixel_indices[:,0] >= 0) & \
-                  (pixel_indices[:,0] < width) & \
-                  (pixel_indices[:,1] >= 0) & \
-                  (pixel_indices[:,1] < height)
-    return pixel_indices[admissibles], rgbs[admissibles]
+    admissibles = (pixel_indices_and_rgbs[:,0] >= 0) & \
+                  (pixel_indices_and_rgbs[:,0] < width) & \
+                  (pixel_indices_and_rgbs[:,1] >= 0) & \
+                  (pixel_indices_and_rgbs[:,1] < height)
+    return pixel_indices_and_rgbs[admissibles]
 
 def adjusted_thickness(thickness, width, height):
     big_width = PRODUCTION_QUALITY_DISPLAY_CONFIG["width"]
@@ -99,38 +108,50 @@ def adjusted_thickness(thickness, width, height):
     factor = (big_width + big_height) / (width + height)
     return 1 + (thickness-1)/factor
 
-def place_on_screen(points, rgbs, space_width, space_height):
+def place_on_screen(points_and_rgbs, space_width, space_height):
     """
     Projects points to 2d space and remove those outside a
-    the space constraints
+    the space constraints.
+
+    Pass rbgs = None to do nothing to them.
     """
-    # camera_distance = 10
-    points = np.array(points[:, :2])
-    # for i in range(2):
-    #     points[:,i] *= camera_distance/(camera_distance-mobject.points[:,2])
-    rgbs   = np.array(rgbs)
+    # Remove 3rd column
+    points_and_rgbs = np.append(
+        points_and_rgbs[:, :2], 
+        points_and_rgbs[:, 3:], 
+        axis = 1
+    )
     
     #Removes points out of space
-    to_keep = (abs(points[:,0]) < space_width) & \
-              (abs(points[:,1]) < space_height)
-    return points[to_keep], rgbs[to_keep]
+    to_keep = (abs(points_and_rgbs[:,0]) < space_width) & \
+              (abs(points_and_rgbs[:,1]) < space_height)
+    return points_and_rgbs[to_keep]
+
+def get_file_path(name, extension):
+    file_path = os.path.join(MOVIE_DIR, name)
+    if not file_path.endswith(".mp4"):
+        file_path += ".mp4"
+    directory = os.path.split(file_path)[0]
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    return file_path
 
 def write_to_gif(scene, name):
     #TODO, find better means of compression
     if not name.endswith(".gif"):
         name += ".gif"
-    filepath = os.path.join(GIF_DIR, name)
+    file_path = os.path.join(GIF_DIR, name)
     temppath = os.path.join(GIF_DIR, "Temp.gif")
     print "Writing " + name + "..."
     images = [Image.fromarray(frame) for frame in scene.frames]
     writeGif(temppath, images, scene.frame_duration)
     print "Compressing..."
-    os.system("gifsicle -O " + temppath + " > " + filepath)
+    os.system("gifsicle -O " + temppath + " > " + file_path)
     os.system("rm " + temppath)
 
 def write_to_movie(scene, name):
-    filepath = os.path.join(MOVIE_DIR, name) + ".mp4"    
-    print "Writing to %s"%filepath
+    file_path = get_file_path(name, ".mp4")
+    print "Writing to %s"%file_path
 
     fps = int(1/scene.display_config["frame_duration"])
     dim = (scene.display_config["width"], scene.display_config["height"])
@@ -149,12 +170,11 @@ def write_to_movie(scene, name):
         '-c:v', 'libx264',
         '-pix_fmt', 'yuv420p',
         '-loglevel', 'error',
-        filepath,
+        file_path,
     ]
     process = sp.Popen(command, stdin=sp.PIPE)
     for frame in scene.frames:
         process.stdin.write(frame.tostring())
-
     process.stdin.close()
     process.wait()
 

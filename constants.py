@@ -60,7 +60,7 @@ TEX_IMAGE_DIR = os.path.join(IMAGE_DIR, "Tex")
 MOBJECT_DIR = os.path.join(FILE_DIR, "mobjects")
 IMAGE_MOBJECT_DIR = os.path.join(MOBJECT_DIR, "image")
 
-for folder in [IMAGE_DIR, GIF_DIR, MOVIE_DIR, TEX_DIR, TMP_IMAGE_DIR, 
+for folder in [IMAGE_DIR, GIF_DIR, MOVIE_DIR, TEX_DIR, 
                TEX_IMAGE_DIR, MOBJECT_DIR, IMAGE_MOBJECT_DIR]:
     if not os.path.exists(folder):
         os.mkdir(folder)

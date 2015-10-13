@@ -224,7 +224,6 @@ class ShowMatrixTransform(TransformScene2D):
             self.add_x_y_arrows()
         else:
             self.add_number_plane(**number_plane_config)
-        self.save_image()
         if show_matrix:
             self.add(matrix_mobject(matrix).to_corner(UP+LEFT))
         def func(mobject):

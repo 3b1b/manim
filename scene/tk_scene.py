@@ -7,7 +7,7 @@ import time
 class TkSceneRoot(Tkinter.Tk):
     def __init__(self, scene):
         if scene.frames == []:
-            raise str(scene) + " has no frames!"
+            raise Exception(str(scene) + " has no frames!")
         Tkinter.Tk.__init__(self)
 
         height, width = scene.shape

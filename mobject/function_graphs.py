@@ -2,6 +2,7 @@ import numpy as np
 import itertools as it
 
 from mobject import Mobject, Mobject1D, Mobject2D, CompoundMobject
+from simple_mobjects import Arrow, Line
 from image_mobject import tex_mobject
 from constants import *
 from helpers import *
@@ -255,9 +256,65 @@ class NumberPlane(Mobject1D):
         self.add(*self.get_coordinate_labels(x_vals, y_vals))
         return self
 
+    def get_vector(self, coords, **kwargs):
+        if len(coords) == 2:
+            coords = tuple(list(coords) + [0])
+        arrow = Arrow(ORIGIN, coords, **kwargs)
+        arrow.remove_tip()
+        arrow.align_data(Line(ORIGIN, SPACE_WIDTH*LEFT))
+        arrow.add_tip()
+        return arrow
+
 class ComplexPlane(NumberPlane):
-    #TODO
-    pass
+    DEFAULT_CONFIG = {
+        "color" : "lightgreen",
+        "unit_to_spatial_width" : 1,
+        "line_frequency" : 1,
+        "faded_line_frequency" : 0.5,
+        "number_at_center" : complex(0),
+    }
+    def __init__(self, **kwargs):
+        digest_config(self, ComplexPlane, kwargs)
+        kwargs.update({
+            "x_unit_to_spatial_width" : self.unit_to_spatial_width,
+            "y_uint_to_spatial_height" : self.unit_to_spatial_width,
+            "x_line_frequency" : self.line_frequency,
+            "x_faded_line_frequency" : self.faded_line_frequency,
+            "y_line_frequency" : self.line_frequency,
+            "y_faded_line_frequency" : self.faded_line_frequency,
+            "num_pair_at_center" : (self.number_at_center.real, self.number_at_center.imag),
+        })
+        NumberPlane.__init__(self, **kwargs)
+
+    def number_to_point(self, number):
+        number = complex(number)
+        return self.num_pair_to_point((number.real, number.imag))
+
+    def get_coordinate_labels(self, *numbers):
+        result = []
+        nudge = 0.1*(DOWN+RIGHT)
+        if len(numbers) == 0:
+            numbers = range(-int(self.x_radius), int(self.x_radius))
+            numbers += [
+                complex(0, y)
+                for y in range(-int(self.y_radius), int(self.y_radius))
+            ]
+        for number in numbers:
+            point = self.number_to_point(number)
+            if number == 0:
+                num_str = "0"
+            else:
+                num_str = str(number).replace("j", "i")
+            num = tex_mobject(num_str)
+            num.scale(self.number_scale_factor)
+            num.shift(point-num.get_corner(UP+LEFT)+nudge)
+            result.append(num)
+        return result
+
+    def add_coordinates(self, *numbers):
+        self.add(*self.get_coordinate_labels(*numbers))
+        return self
+
 
 
 

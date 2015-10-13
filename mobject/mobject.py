@@ -321,18 +321,17 @@ class Mobject(object):
         #Typically implemented in subclass, unless purposefully left blank
         pass
 
-    ### Static Methods ###
-    def align_data(mobject1, mobject2):
-        count1, count2 = mobject1.get_num_points(), mobject2.get_num_points()
+    def align_data(self, mobject):
+        count1, count2 = self.get_num_points(), mobject.get_num_points()
         if count1 == 0:
-            mobject1.add_points([(0, 0, 0)])
+            self.add_points([(0, 0, 0)])
         if count2 == 0:
-            mobject2.add_points([(0, 0, 0)])
+            mobject.add_points([(0, 0, 0)])
         if count1 == count2:
             return
         for attr in ['points', 'rgbs']:
-            new_arrays = make_even(getattr(mobject1, attr), getattr(mobject2, attr))
-            for array, mobject in zip(new_arrays, [mobject1, mobject2]):
+            new_arrays = make_even(getattr(self, attr), getattr(mobject, attr))
+            for array, mobject in zip(new_arrays, [self, mobject]):
                 setattr(mobject, attr, np.array(array))
 
     def interpolate(mobject1, mobject2, target_mobject, alpha):
@@ -342,9 +341,10 @@ class Mobject(object):
         """
         Mobject.align_data(mobject1, mobject2)
         for attr in ['points', 'rgbs']:
-            new_array = (1 - alpha) * getattr(mobject1, attr) + \
-                              alpha * getattr(mobject2, attr)
-            setattr(target_mobject, attr, new_array)
+            setattr(target_mobject, attr, interpolate(
+                getattr(mobject1, attr), 
+                getattr(mobject2, attr), 
+            alpha))
 
 #TODO, Make the two implementations bellow not redundant
 class Mobject1D(Mobject):

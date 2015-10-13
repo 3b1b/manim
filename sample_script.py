@@ -16,9 +16,10 @@ from script_wrapper import command_line_create_scene
 
 class SampleScene(Scene):
     def construct(self):
-        circle = Circle().repeat(6)
-        self.play(Transform(circle, Square(), run_time = 3))
-        self.dither()
+        c = ComplexPlane().add_coordinates()
+
+        self.add_local_mobjects()
+
 
 
 if __name__ == "__main__":
