@@ -20,13 +20,17 @@ HELP_MESSAGE = """
 SCENE_NOT_FOUND_MESSAGE = """
    That scene is not in the script
 """
-CHOOSE_NUMBER_MESSAGE = "Choose number corresponding to desired scene arguments: "
+CHOOSE_NUMBER_MESSAGE = """
+Choose number corresponding to desired scene arguments.
+(Use comma separated list for multiple entries)
+
+Choice(s):"""
 INVALID_NUMBER_MESSAGE = "Fine then, if you don't want to give a valid number I'll just quit"
 
 
 def get_configuration(sys_argv):
    try:
-      opts, args = getopt.getopt(sys_argv[1:], 'hlpwsqa')
+      opts, args = getopt.getopt(sys_argv[1:], 'hlmpwsqa')
    except getopt.GetoptError as err:
       print str(err)
       sys.exit(2)
@@ -46,6 +50,8 @@ def get_configuration(sys_argv):
          return
       elif opt == '-l':
          config["display_config"] = LOW_QUALITY_DISPLAY_CONFIG
+      elif opt == '-m':
+         config["display_config"] = MEDIUM_QUALITY_DISPLAY_CONFIG
       elif opt == '-p':
          config["display_config"] = LOW_QUALITY_DISPLAY_CONFIG
          config["preview"] = True
@@ -90,17 +96,6 @@ def handle_scene(scene, **config):
       sys.stdout.close()
       sys.stdout = curr_stdout
 
-def prompt_user_for_args(SceneClass):
-   num_to_args = {}
-   for count, args in zip(it.count(1), SceneClass.args_list):
-      print "%d: %s"%(count, SceneClass.args_to_string(*args))
-      num_to_args[count] = args
-   try:
-      return num_to_args[input(CHOOSE_NUMBER_MESSAGE)]
-   except:
-      print INVALID_NUMBER_MESSAGE
-      sys.exit()
-
 def is_scene(obj):
    if not inspect.isclass(obj):
       return False
@@ -109,6 +104,47 @@ def is_scene(obj):
    if obj == Scene:
       return False
    return True
+
+def prompt_user_for_args(args_list, args_to_string):
+   num_to_args = {}
+   for count, args in zip(it.count(1), args_list):
+      print "%d: %s"%(count, args_to_string(*args))
+      num_to_args[count] = args
+   try:
+      choice = raw_input(CHOOSE_NUMBER_MESSAGE)
+      return [
+         num_to_args[int(num_str)]
+         for num_str in choice.split(",")
+      ]
+   except:
+      print INVALID_NUMBER_MESSAGE
+      sys.exit()
+
+def get_args(SceneClass, config):
+   tuplify = lambda x : x if type(x) == tuple else (x,)
+   args_list = map(tuplify, SceneClass.args_list)
+   preset_extensions = [
+      SceneClass.args_to_string(*args)
+      for args in args_list
+   ]
+   if len(args_list) > 0:
+      num_args = len(args_list[0])
+   else:
+      num_args = len(inspect.getargspec(SceneClass.construct).args) - 1
+
+   if num_args == 0:
+      return [()]
+   elif config["write_all"]:
+      return args_list
+   elif config["args_extension"] in preset_extensions:
+      index = preset_extensions.index(config["args_extension"])
+      return [args_list[index]]
+   elif len(args_list) == 1:
+      return [args_list[0]]
+   elif config["args_extension"] == "" :
+      return prompt_user_for_args(args_list, SceneClass.args_to_string)
+   else:
+      return [SceneClass.string_to_args(config["args_extension"])]
 
 def command_line_create_scene(movie_prefix = ""):
    script = sys.modules["__main__"]
@@ -128,23 +164,7 @@ def command_line_create_scene(movie_prefix = ""):
       "announce_construction" : True
    }
    for SceneClass in scene_classes:
-      args_list = SceneClass.args_list
-      preset_extensions = [
-         SceneClass.args_to_string(*args)
-         for args in args_list
-      ]
-      if config["write_all"]:
-         args_to_run = args_list or [()]
-      elif config["args_extension"] in preset_extensions:
-         index = preset_extensions.index(config["args_extension"])
-         args_to_run = [args_list[index]]
-      elif config["args_extension"] == "":
-         args_to_run = [prompt_user_for_args(SceneClass)]
-      else:
-         args_to_run = [SceneClass.string_to_args(config["args_extension"])]
-      for args in args_to_run:
-         if type(args) is not tuple:
-            args = (args,)
+      for args in get_args(SceneClass, config):
          scene_kwargs["construct_args"] = args
          try:
             handle_scene(SceneClass(**scene_kwargs), **config)

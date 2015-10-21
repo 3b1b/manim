@@ -9,7 +9,7 @@ from helpers import *
 
 class Point(Mobject):
     DEFAULT_CONFIG = {
-        "color" : "black",
+        "color" : BLACK,
     }
     def __init__(self, location = ORIGIN, **kwargs):
         digest_config(self, Point, kwargs, locals())
@@ -37,7 +37,7 @@ class Dot(Mobject1D): #Use 1D density, even though 2D
 
 class Cross(Mobject1D):
     DEFAULT_CONFIG = {
-        "color" : "yellow",
+        "color" : YELLOW,
         "radius" : 0.3
     }
     def __init__(self, center_point = ORIGIN, **kwargs):
@@ -92,7 +92,7 @@ class Line(Mobject1D):
 
 class Arrow(Line):
     DEFAULT_CONFIG = {
-        "color" : "white",
+        "color" : WHITE,
         "tip_length" : 0.25
     }
     def __init__(self, *args, **kwargs):
@@ -145,24 +145,39 @@ class CurvedLine(Line):
             for t in np.arange(0, 1, self.epsilon)
         ])
 
-class Circle(Mobject1D):
+
+
+class PartialCircle(Mobject1D):
     DEFAULT_CONFIG = {
-        "color" : "red",
-        "radius" : 1.0
+        "radius" : 1.0,
+        "start_angle" : 0
     }
-    def __init__(self, **kwargs):
-        digest_config(self, Circle, kwargs)
+    def __init__(self, angle, **kwargs):
+        digest_config(self, PartialCircle, kwargs, locals())
         Mobject1D.__init__(self, **kwargs)
 
     def generate_points(self):
+        sign = 1 if self.angle >= 0 else -1
         self.add_points([
             (self.radius*np.cos(theta), self.radius*np.sin(theta), 0)
-            for theta in np.arange(0, 2 * np.pi, self.epsilon/self.radius)
+            for theta in np.arange(
+                self.start_angle, 
+                self.start_angle+self.angle, 
+                sign*self.epsilon/self.radius
+            )
         ])
+
+class Circle(PartialCircle):
+    DEFAULT_CONFIG = {
+        "color" : RED,
+    }
+    def __init__(self, **kwargs):
+        digest_config(self, Circle, kwargs)
+        PartialCircle.__init__(self, angle = 2*np.pi, **kwargs)
 
 class Polygon(Mobject1D):
     DEFAULT_CONFIG = {
-        "color" : "limegreen",
+        "color" : GREEN_D,
         "edge_colors" : None
     }
     def __init__(self, *points, **kwargs):
@@ -190,7 +205,7 @@ class Polygon(Mobject1D):
 
 class Rectangle(Mobject1D):
     DEFAULT_CONFIG = {
-        "color" : "yellow",
+        "color" : YELLOW,
         "height" : 2.0,
         "width" : 4.0
     }

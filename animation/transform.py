@@ -12,40 +12,39 @@ from helpers import *
 def straight_path(start_points, end_points, alpha):
     return (1-alpha)*start_points + alpha*end_points
 
-def semi_circular_path(start_points, end_points, alpha, axis):
-    midpoints = (start_points + end_points) / 2
-    angle = alpha * np.pi
-    rot_matrix = rotation_matrix(angle, axis)[:2, :2]
-    result = np.zeros(start_points.shape)
-    result[:,:2] = np.dot(
-        (start_points - midpoints)[:,:2], 
-        np.transpose(rot_matrix)
-    ) + midpoints[:,:2]
-    result[:,2] = (1-alpha)*start_points[:,2] + alpha*end_points[:,2]
-    return result
-
-def clockwise_path(start_points, end_points, alpha):
-    return semi_circular_path(start_points, end_points, alpha, IN)
-
-def counterclockwise_path(start_points, end_points, alpha):
-    return semi_circular_path(start_points, end_points, alpha, OUT)
-
-def get_best_interpolation_function(angle):
-    angle = (angle + np.pi)%(2*np.pi) - np.pi
-    if abs(angle) < np.pi/2:
+def path_along_arc(arc_angle):
+    """
+    If vect is vector from start to end, [vect[:,1], -vect[:,0]] is 
+    perpendicualr to vect in the left direction.
+    """
+    if arc_angle == 0:
         return straight_path
-    elif angle > 0:
-        return counterclockwise_path
-    else:
-        return clockwise_path
+    def path(start_points, end_points, alpha):
+        vects = end_points - start_points
+        centers = start_points + 0.5*vects
+        if arc_angle != np.pi:
+            for i, b in [(0, -1), (1, 1)]:
+                centers[:,i] += 0.5*b*vects[:,1-i]/np.tan(arc_angle/2)
+        return centers + np.dot(
+            start_points-centers, 
+            np.transpose(rotation_about_z(alpha*arc_angle))
+        )
+    return path
+
+def clockwise_path():
+    return path_along_arc(np.pi)
+
+def counterclockwise_path():
+    return path_along_arc(-np.pi)
+
 
 class Transform(Animation):
     DEFAULT_CONFIG = {
-        "run_time" : DEFAULT_TRANSFORM_RUN_TIME,
         "interpolation_function" : straight_path,
         "should_black_out_extra_points" : False
     }
     def __init__(self, mobject, ending_mobject, **kwargs):
+        mobject, ending_mobject = map(instantiate, [mobject, ending_mobject])
         digest_config(self, Transform, kwargs, locals())
         count1, count2 = mobject.get_num_points(), ending_mobject.get_num_points()
         if count2 == 0:
@@ -99,7 +98,7 @@ class Transform(Animation):
 
 class ClockwiseTransform(Transform):
     DEFAULT_CONFIG = {
-        "interpolation_function" : clockwise_path
+        "interpolation_function" : clockwise_path()
     }
     def __init__(self, *args, **kwargs):
         digest_config(self, ClockwiseTransform, kwargs)
@@ -107,7 +106,7 @@ class ClockwiseTransform(Transform):
 
 class CounterclockwiseTransform(Transform):
     DEFAULT_CONFIG = {
-        "interpolation_function" : counterclockwise_path
+        "interpolation_function" : counterclockwise_path()
     }
     def __init__(self, *args, **kwargs):
         digest_config(self, ClockwiseTransform, kwargs)
@@ -115,7 +114,7 @@ class CounterclockwiseTransform(Transform):
 
 class SpinInFromNothing(Transform):
     DEFAULT_CONFIG = {
-        "interpolation_function" : counterclockwise_path
+        "interpolation_function" : counterclockwise_path()
     }
     def __init__(self, mob, **kwargs):
         digest_config(self, SpinInFromNothing, kwargs)
@@ -129,13 +128,36 @@ class ApplyMethod(Transform):
 
         Relies on the fact that mobject methods return the mobject
         """
-        if not inspect.ismethod(method) or \
-           not isinstance(method.im_self, Mobject):
-            raise "Not a valid Mobject method"
+        assert(inspect.ismethod(method))
+        assert(isinstance(method.im_self, Mobject))
         Transform.__init__(
             self,
             method.im_self,
             copy.deepcopy(method)(*args),
+            **kwargs
+        )
+
+class ApplyPointwiseFunction(ApplyMethod):
+    DEFAULT_CONFIG = {
+        "run_time" : DEFAULT_POINTWISE_FUNCTION_RUN_TIME
+    }
+    def __init__(self, function, mobject, **kwargs):
+        digest_config(self, ApplyPointwiseFunction, kwargs)
+        ApplyMethod.__init__(
+            self, mobject.apply_function, function, **kwargs
+        )
+
+
+class ComplexFunction(ApplyPointwiseFunction):
+    def __init__(self, function, mobject = ComplexPlane, **kwargs):
+        if "interpolation_function" not in kwargs:
+            self.interpolation_function = path_along_arc(
+                np.log(function(complex(1))).imag
+            )
+        ApplyPointwiseFunction.__init__(
+            self,
+            lambda (x, y, z) : complex_to_R3(function(complex(x, y))),
+            instantiate(mobject),
             **kwargs
         )
 
@@ -176,32 +198,6 @@ class ApplyMatrix(Animation):
             self.starting_mobject.points, 
             np.transpose(matrix)
         )
-
-class ApplyPointwiseFunction(Transform):
-    DEFAULT_CONFIG = {
-        "run_time" : DEFAULT_ANIMATION_RUN_TIME
-    }
-    def __init__(self, function, mobject, **kwargs):
-        digest_config(self, ApplyPointwiseFunction, kwargs)
-        map_image = copy.deepcopy(mobject)
-        map_image.points = np.array(map(function, map_image.points))
-        Transform.__init__(self, mobject, map_image, **kwargs)
-        self.name = "".join([
-            "Apply",
-            "".join([s.capitalize() for s in function.__name__.split("_")]),
-            "To" + str(mobject)
-        ])
-
-class ComplexFunction(ApplyPointwiseFunction):
-    def __init__(self, function, mobject = ComplexPlane, **kwargs):
-        def point_map(point):
-            x, y, z = point
-            c = np.complex(x, y)
-            c = function(c)
-            return c.real, c.imag, z
-        ApplyPointwiseFunction.__init__(self, mobject, point_map, *args, **kwargs)
-        self.name = "ComplexFunction" + to_cammel_case(function.__name__)
-        #Todo, abstract away function naming'
 
 
 class TransformAnimations(Transform):

@@ -41,7 +41,7 @@ class CubeWithFaces(Mobject2D):
             for sgn in [-1, 1]
         ])
         self.pose_at_angle()
-        self.set_color("skyblue")
+        self.set_color(BLUE)
 
     def unit_normal(self, coords):
         return np.array(map(lambda x : 1 if abs(x) == 1 else 0, coords))
@@ -54,7 +54,7 @@ class Cube(Mobject1D):
             for a, b, c in it.product([-1, 1], [-1, 1], np.arange(-1, 1, self.epsilon))
         ])
         self.pose_at_angle()
-        self.set_color("yellow")
+        self.set_color(YELLOW)
 
 class Octohedron(Mobject1D):
     def generate_points(self):
@@ -71,7 +71,7 @@ class Octohedron(Mobject1D):
                 Line(pair[0], pair[1], density = 1/self.epsilon).points
             )
         self.pose_at_angle()
-        self.set_color("pink")
+        self.set_color(MAROON_D)
 
 class Dodecahedron(Mobject1D):
     def generate_points(self):
@@ -98,7 +98,7 @@ class Dodecahedron(Mobject1D):
                 matrix = b*np.array([x[perm], y[perm], z[perm]])
                 self.add_points(np.dot(five_lines_points, matrix))
         self.pose_at_angle()
-        self.set_color("limegreen")
+        self.set_color(GREEN)
 
 class Sphere(Mobject2D):
     def generate_points(self):
@@ -111,7 +111,7 @@ class Sphere(Mobject2D):
             for phi in np.arange(self.epsilon, np.pi, self.epsilon)
             for theta in np.arange(0, 2 * np.pi, 2 * self.epsilon / np.sin(phi)) 
         ])
-        self.set_color("blue")
+        self.set_color(BLUE)
 
     def unit_normal(self, coords):
         return np.array(coords) / np.linalg.norm(coords)

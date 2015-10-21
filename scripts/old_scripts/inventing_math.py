@@ -1141,7 +1141,7 @@ class GeometricSum(RearrangeEquation):
             self, 
             start_terms.split(" "), end_terms.split(" "), 
             index_map, size = "\\large", 
-            path = counterclockwise_path,
+            path = counterclockwise_path(),
             start_transform = start_transform,
             end_transform = end_transform,
             leave_start_terms = True,

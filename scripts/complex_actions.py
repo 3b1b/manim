@@ -15,58 +15,105 @@ from script_wrapper import command_line_create_scene
 
 MOVIE_PREFIX = "complex_actions/"
 
+DEFAULT_PLANE_CONFIG = {
+    "point_thickness" : 2*DEFAULT_POINT_THICKNESS
+}
+
+def complex_string(complex_num):
+    return filter(lambda c : c not in "()", str(complex_num))
+
 class ComplexMultiplication(Scene):
+    args_list = [
+        complex(np.sqrt(3), 1),
+        complex(1,-1)/3,
+        complex(-2, 0),
+        (complex(np.sqrt(3), 1), True),
+        (complex(1,-1)/3, True),
+        (complex(-2, 0), True),
+    ]
     @staticmethod
-    def args_to_string(multiplier):
-        return filter(lambda c : c not in "()", str(multiplier))
+    def args_to_string(multiplier, mark_one = False):
+        num_str = complex_string(multiplier)
+        arrow_str = "MarkOne" if mark_one else ""
+        return num_str + arrow_str
 
     @staticmethod
-    def string_to_args(num_string):
-        return complex(num_string)
+    def string_to_args(arg_string):
+        parts = arg_string.split()
+        multiplier = complex(parts[0])
+        mark_one = len(parts) > 1 and parts[1] == "MarkOne"
+        return (multiplier, mark_one)
 
-    def construct(self, multiplier):
+    def construct(self, multiplier, mark_one = False, **plane_config):
         norm = np.linalg.norm(multiplier)
         arg  = np.log(multiplier).imag
-        plane_config = {
-            "faded_line_frequency" : 0
-        }
-        if norm > 1:
+        plane_config["faded_line_frequency"] = 0
+        plane_config.update(DEFAULT_PLANE_CONFIG)
+        if norm > 1 and "density" not in plane_config:
             plane_config["density"] = norm*DEFAULT_POINT_DENSITY_1D
-        radius = SPACE_WIDTH
-        if norm > 0 and norm < 1:
-            radius /= norm
-        plane_config["x_radius"] = plane_config["y_radius"] = radius
+        if "radius" not in plane_config:
+            radius = SPACE_WIDTH
+            if norm > 0 and norm < 1:
+                radius /= norm
+        else:
+            radius = plane_config["radius"]
+        plane_config["x_radius"] = plane_config["y_radius"] = radius            
         plane = ComplexPlane(**plane_config)
+        self.plane = plane
+        self.add(plane)
+        # plane.add_spider_web()
         self.anim_config = {
             "run_time" : 2.0,
-            "interpolation_function" : get_best_interpolation_function(arg)
+            "interpolation_function" : path_along_arc(arg)
         }
 
-        background = ComplexPlane(color = "grey")            
+        plane_config["faded_line_frequency"] = 0.5
+        background = ComplexPlane(color = "grey", **plane_config)
+        # background.add_spider_web()
         labels = background.get_coordinate_labels()
         self.paint_into_background(background, *labels)
-        arrow, new_arrow = [
-            plane.get_vector(plane.number_to_point(z), color = "skyblue")
-            for z in [1, multiplier]
-        ]
-        self.add(arrow)
-        self.additional_animations = [Transform(
-            arrow, new_arrow, **self.anim_config
-        )]
+        self.mobjects_to_move_without_molding = []
+        if mark_one:
+            self.draw_dot("1", 1, True)
+            self.draw_dot("z", multiplier)
+
 
         self.mobjects_to_multiply = [plane]
-        self.mobjects_to_move_without_molding = []
+
+        self.additional_animations = []        
         self.multiplier = multiplier
-        self.plane = plane
         if self.__class__ == ComplexMultiplication:
             self.apply_multiplication()
+
+    def draw_dot(self, tex_string, value, move_dot = False):
+        dot = Dot(
+            self.plane.number_to_point(value),
+            radius = 0.1*self.plane.unit_to_spatial_width, 
+            color = BLUE if value == 1 else YELLOW
+        )
+        label = tex_mobject(tex_string)
+        label.shift(dot.get_center()+1.5*UP+RIGHT)
+        arrow = Arrow(label, dot)
+        self.add(label)
+        self.play(ShowCreation(arrow))
+        self.play(ShowCreation(dot))
+        self.dither()
+
+        self.remove(label, arrow)
+        if move_dot:
+            self.mobjects_to_move_without_molding.append(dot)
+        return dot
+
 
     def apply_multiplication(self):
         def func((x, y, z)):
             complex_num = self.multiplier*complex(x, y)
             return (complex_num.real, complex_num.imag, z)
-        mobjects = self.mobjects_to_multiply+self.mobjects_to_move_without_molding
-        mobjects += [anim.mobject for anim in self.additional_animations]
+        mobjects = self.mobjects_to_multiply
+        mobjects += self.mobjects_to_move_without_molding
+        mobjects += [anim.mobject for anim in self.additional_animations]                    
+
+
         self.add(*mobjects)
         full_multiplications = [
             ApplyMethod(mobject.apply_function, func, **self.anim_config)
@@ -88,31 +135,65 @@ class ComplexMultiplication(Scene):
         ]))
         self.dither()
 
-class MultiplicationWithDot(ComplexMultiplication):
+
+class SuccessiveComplexMultiplications(ComplexMultiplication):
+    args_list = [
+        (complex(1, 2), complex(1, -2)),
+        (complex(-2, 1), complex(-2, -1)),
+    ]
+
     @staticmethod
-    def args_to_string(multiplier, dot_coords):
-        start = ComplexMultiplication.args_to_string(multiplier)
-        return start + "WithDotAt%d-%d"%dot_coords[:2]
+    def args_to_string(*multipliers):
+        return "_".join([str(m)[1:-1] for m in  multipliers])
 
     @staticmethod
     def string_to_args(arg_string):
-        parts = arg_string.split()
-        if len(parts) < 2 or len(parts) > 3:
-            raise Exception("Invalid arguments")
-        multiplier = complex(parts[0])
-        tup_string = filter(lambda c : c not in "()", parts[1])
-        nums = tuple(map(int, tup_string.split(",")))[:2]
-        return multiplier, nums
+        args_string.replac("i", "j")
+        return map(copmlex, arg_string.split())
 
-    def construct(self, multiplier, dot_coords):
-        ComplexMultiplication.construct(self, multiplier)
-        self.mobjects_to_move_without_molding.append(
-            Dot().shift(dot_coords)
-        )
-        self.apply_multiplication()
+    def construct(self, *multipliers):
+        norm = abs(reduce(op.mul, multipliers, 1))
+        shrink_factor = SPACE_WIDTH/max(SPACE_WIDTH, norm)
+        plane_config = {
+            "density" : norm*DEFAULT_POINT_DENSITY_1D,
+            "unit_to_spatial_width" : shrink_factor,
+            "x_radius" : shrink_factor*SPACE_WIDTH,
+            "y_radius" : shrink_factor*SPACE_HEIGHT,
+        }
+        ComplexMultiplication.construct(self, multipliers[0], **plane_config)
+
+        one_dot = self.draw_dot("1", 1, True)
+        one_dot_copy = deepcopy(one_dot)
+
+        for multiplier, count in zip(multipliers, it.count()):
+            if multiplier == multipliers[0]:
+                tex = "z"
+            elif np.conj(multiplier) == multipliers[0]:
+                tex = "\\bar z"
+            else:
+                tex = "z_%d"%count
+            self.draw_dot(tex, multiplier)
+
+        for multiplier in multipliers:
+            self.multiplier = multiplier
+            self.apply_multiplication()
+            new_one = deepcopy(one_dot_copy)
+            self.mobjects_to_move_without_molding.append(new_one)
 
 
-class ShowComplexPower(ComplexMultiplication):
+
+class ShowComplexPower(SuccessiveComplexMultiplications):
+    args_list = [
+        (complex(0, 1), 1),
+        (complex(0, 1), 2),
+        (np.exp(complex(0, 2*np.pi/5)), 1),
+        (np.exp(complex(0, 2*np.pi/5)), 5),
+        (np.exp(complex(0, 4*np.pi/5)), 5),
+        (np.exp(complex(0, -2*np.pi/5)), 5),
+        (complex(1, np.sqrt(3)), 1),
+        (complex(1, np.sqrt(3)), 3),
+    ]
+
     @staticmethod
     def args_to_string(multiplier, num_repeats):
         start = ComplexMultiplication.args_to_string(multiplier)
@@ -128,20 +209,174 @@ class ShowComplexPower(ComplexMultiplication):
         return multiplier, num_repeats
 
     def construct(self, multiplier, num_repeats):
-        ComplexMultiplication.construct(self, multiplier)
-        for x in range(num_repeats):
-            arrow_transform = Transform(*[
-                self.plane.get_vector(point, color = "skyblue")
-                for z in [multiplier**(x), multiplier**(x+1)]
-                for point in [self.plane.number_to_point(z)]
-            ], **self.anim_config)
-            self.remove(*[anim.mobject for anim in self.additional_animations])
-            self.additional_animations = [arrow_transform]
-            self.apply_multiplication()
+        SuccessiveComplexMultiplications.construct(
+            [multiplier]*num_repeats
+        )
+
+
+class ComplexDivision(ComplexMultiplication):
+    args_list = [
+        complex(np.sqrt(3), 1),
+        complex(1./3, -1./3),
+        complex(1, 2),
+    ]
+
+    def construct(self, num):
+        ComplexMultiplication.construct(self, 1./num)
+        self.draw_dot("1", 1, False),
+        self.draw_dot("z", num, True)
+        self.apply_multiplication()
+
+class ConjugateDivisionExample(ComplexMultiplication):
+    args_list = [
+        complex(1, 2),
+    ]
+
+    def construct(self, num):
+        ComplexMultiplication.construct(self, np.conj(num), radius = 2.5*SPACE_WIDTH)
+        self.draw_dot("1", 1, True)
+        self.draw_dot("\\bar z", self.multiplier)
+        self.apply_multiplication()
+        self.multiplier = 1./(abs(num)**2)
+        self.anim_config["interpolation_function"] = straight_path
+        self.apply_multiplication()
+        self.dither()
+
+class DrawSolutionsToZToTheNEqualsW(Scene):
+    @staticmethod
+    def args_to_string(n, w):
+        return str(n) + "_" + complex_string(w)
+
+    @staticmethod
+    def string_to_args(args_string):
+        parts = args_string.split()
+        return int(parts[0]), complex(parts[1])
+
+    def construct(self, n, w):
+        w = complex(w)
+        plane_config = DEFAULT_PLANE_CONFIG.copy()
+        norm = abs(w)
+        theta = np.log(w).imag
+        radius = norm**(1./n)
+        zoom_value = (SPACE_HEIGHT-0.5)/radius
+        plane_config["unit_to_spatial_width"] = zoom_value
+        plane = ComplexPlane(**plane_config)
+        circle = Circle(
+            radius = radius*zoom_value,
+            point_thickness = plane.point_thickness
+        )
+        solutions = [
+            radius*np.exp(complex(0, 1)*(2*np.pi*k + theta)/n)
+            for k in range(n)
+        ]
+        points = map(plane.number_to_point, solutions)
+        dots = [
+            Dot(point, color = BLUE_B, radius = 0.1)
+            for point in points
+        ]
+        lines = [Line(*pair) for pair in adjascent_pairs(points)]
+
+        self.add(plane, circle, *dots+lines)
+        self.add(*plane.get_coordinate_labels())
 
 
 
 
+
+
+
+
+
+class DrawComplexAngleAndMagnitude(Scene):
+    args_list = [
+        (
+            ("1+i\\sqrt{3}", complex(1, np.sqrt(3)) ),
+            ("\\frac{\\sqrt{3}}{2} - \\frac{1}{2}i", complex(np.sqrt(3)/2, -1./2)),
+        ),
+        (("1+i", complex(1, 1)),),
+    ]
+    @staticmethod
+    def args_to_string(*reps_and_nums):
+        return "--".join([
+            complex_string(num) 
+            for rep, num in reps_and_nums
+        ])
+
+    def construct(self, *reps_and_nums):
+        radius = max([abs(n.imag) for r, n in reps_and_nums]) + 1
+        plane_config = {
+            "color" : "grey",
+            "unit_to_spatial_width" : SPACE_HEIGHT / radius,
+        }
+        plane_config.update(DEFAULT_PLANE_CONFIG)
+        self.plane = ComplexPlane(**plane_config)
+        coordinates = self.plane.get_coordinate_labels()
+        # self.plane.add_spider_web()
+        self.add(self.plane, *coordinates)
+        for rep, num in reps_and_nums:
+            self.draw_number(rep, num)
+            self.add_angle_label(num)
+            self.add_lines(rep, num)
+
+    def draw_number(self, tex_representation, number):
+        point = self.plane.number_to_point(number)
+        dot = Dot(point)
+        label = tex_mobject(tex_representation)
+        max_width = 0.8*self.plane.unit_to_spatial_width
+        if label.get_width() > max_width:
+            label.scale_to_fit_width(max_width)
+        dot_to_label_dir = RIGHT if point[0] > 0 else LEFT
+        edge = label.get_edge_center(-dot_to_label_dir)
+        buff = 0.1
+        label.shift(point - edge + buff*dot_to_label_dir)
+        label.highlight(YELLOW)
+
+        self.add_local_mobjects()
+
+
+    def add_angle_label(self, number):
+        arc = PartialCircle(
+            np.log(number).imag, 
+            radius = 0.2
+        )
+
+        self.add_local_mobjects()
+
+    def add_lines(self, tex_representation, number):
+        point = self.plane.number_to_point(number)
+        x_line, y_line, num_line = [
+            Line(
+                start, end,
+                color = color, 
+                point_thickness = self.plane.point_thickness
+            )
+            for start, end, color in zip(
+                [ORIGIN, point[0]*RIGHT, ORIGIN],
+                [point[0]*RIGHT, point, point],
+                [BLUE_D, GOLD_E, WHITE]
+            )
+        ]
+        # tex_representation.replace("i", "")
+        # if "+" in tex_representation:
+        #     tex_parts = tex_representation.split("+")
+        # elif "-" in tex_representation:
+        #     tex_parts = tex_representation.split("-")
+        # x_label, y_label = map(tex_mobject, tex_parts)
+        # for label in x_label, y_label:
+        #     label.scale_to_fit_height(0.5)
+        # x_label.next_to(x_line, point[1]*DOWN/abs(point[1]))
+        # y_label.next_to(y_line, point[0]*RIGHT/abs(point[0]))
+        norm = np.linalg.norm(point)
+        brace = underbrace(ORIGIN, ORIGIN+norm*RIGHT)
+        if point[1] > 0:
+            brace.rotate(np.pi, RIGHT)
+        brace.rotate(np.log(number).imag)
+        norm_label = tex_mobject("%.1f"%abs(number))
+        norm_label.scale(0.5)
+        axis = OUT if point[1] > 0 else IN
+        norm_label.next_to(brace, rotate_vector(point, np.pi/2, axis))
+
+        self.add_local_mobjects()
 
 
 

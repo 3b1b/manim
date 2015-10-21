@@ -20,11 +20,8 @@ class Animation(object):
         "name" : None,
     }
     def __init__(self, mobject, **kwargs):
-        if isinstance(mobject, type) and issubclass(mobject, Mobject):
-            mobject = mobject()
-        elif not isinstance(mobject, Mobject):
-            raise Exception("Invalid mobject parameter, must be \
-                             subclass or instance of Mobject")
+        mobject = instantiate(mobject)
+        assert(isinstance(mobject, Mobject))
         digest_config(self, Animation, kwargs, locals())
         self.starting_mobject = copy.deepcopy(self.mobject)
         if self.alpha_func is None:

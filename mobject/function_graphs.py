@@ -2,14 +2,14 @@ import numpy as np
 import itertools as it
 
 from mobject import Mobject, Mobject1D, Mobject2D, CompoundMobject
-from simple_mobjects import Arrow, Line
+from simple_mobjects import Arrow, Line, Circle
 from image_mobject import tex_mobject
 from constants import *
 from helpers import *
 
 class FunctionGraph(Mobject1D):
     DEFAULT_CONFIG = {
-        "color" : "lightblue",
+        "color" : BLUE,
         "x_min" : -10,
         "x_max" : 10,
         "spatial_radius" : SPACE_WIDTH,
@@ -31,7 +31,7 @@ class FunctionGraph(Mobject1D):
 
 class ParametricFunction(Mobject):
     DEFAULT_CONFIG = {
-        "color" : "white",
+        "color" : WHITE,
         "dim" : 1,
         "expected_measure" : 10.0,
         "density" : None
@@ -61,7 +61,7 @@ class ParametricFunction(Mobject):
 
 class NumberLine(Mobject1D):
     DEFAULT_CONFIG = {
-        "color" : "skyblue",
+        "color" : BLUE,
         "numerical_radius" : SPACE_WIDTH,
         "unit_length_to_spatial_width" : 1,
         "tick_size" : 0.1,
@@ -177,7 +177,7 @@ class Axes(CompoundMobject):
 
 class NumberPlane(Mobject1D):
     DEFAULT_CONFIG = {
-        "color" : "skyblue",
+        "color" : BLUE,
         "x_radius" : SPACE_WIDTH,
         "y_radius" : SPACE_HEIGHT,
         "x_unit_to_spatial_width" : 1,
@@ -195,45 +195,55 @@ class NumberPlane(Mobject1D):
         Mobject1D.__init__(self, **kwargs)
 
     def generate_points(self):
+        #TODO, clean this
         color = self.color
         faded = Color(rgb = self.fade_factor*np.array(color.get_rgb()))
-        #Vertical Lines
-        freq_color_pairs = [
-            (self.x_faded_line_frequency, faded),
-            (self.x_line_frequency, color)
+
+        freq_color_tuples = [
+            (self.x_line_frequency, self.y_line_frequency, color),
+            (self.x_faded_line_frequency, self.y_faded_line_frequency, faded),
         ]
-        for freq, color in freq_color_pairs:
-            if not freq:
+        x_vals = []
+        y_vals = []
+        for x_freq, y_freq, color in freq_color_tuples:
+            if not x_freq or not y_freq:
                 continue
-            self.add_points([
-                (sgns[0]*self.x_unit_to_spatial_width*x, sgns[1]*y, 0)
-                for x in np.arange(0, self.x_radius, freq)
-                for y in np.arange(0, self.y_radius, self.epsilon)
-                for sgns in it.product([-1, 1], [-1, 1])
-            ], color = color)
-        #Horizontal lines
-        freq_color_pairs = [
-            (self.y_faded_line_frequency, faded),
-            (self.y_line_frequency, color)
-        ]
-        for freq, color in freq_color_pairs:
-            if not freq:
-                continue
-            self.add_points([
-                (sgns[0]*x, sgns[1]*self.y_uint_to_spatial_height*y, 0)
-                for x in np.arange(0, self.x_radius, self.epsilon)
-                for y in np.arange(0, self.y_radius, freq)
-                for sgns in it.product([-1, 1], [-1, 1])
-            ], color = color)
+            x_vals = np.array(filter(lambda x : x not in x_vals, np.arange(
+                0, self.x_radius,
+                self.x_unit_to_spatial_width*x_freq
+            )))
+            y_vals = np.array(filter(lambda y : y not in y_vals, np.arange(
+                0, self.y_radius,
+                self.y_uint_to_spatial_height*y_freq
+            )))
+            x_cont_vals = np.arange(
+                0, self.x_radius,
+                self.epsilon/self.x_unit_to_spatial_width
+            )
+            y_cont_vals = np.arange(
+                0, self.y_radius,
+                self.epsilon/self.y_uint_to_spatial_height
+            )
+            for x_sgn, y_sgn in it.product([-1, 1], [-1, 1]):
+                self.add_points(
+                    list(it.product(x_sgn*x_vals, y_sgn*y_cont_vals, [0])) + \
+                    list(it.product(x_sgn*x_cont_vals, y_sgn*y_vals, [0])),
+                    color = color
+                )
         self.shift(self.get_center_point())
+
+
 
     def get_center_point(self):
         return self.num_pair_to_point(self.num_pair_at_center)
 
     def num_pair_to_point(self, pair):
         pair = pair + self.num_pair_at_center
-        return pair[0]*self.x_unit_to_spatial_width*RIGHT + \
-               pair[1]*self.y_uint_to_spatial_height*UP
+        return np.array([
+            pair[0]*self.x_unit_to_spatial_width,
+            pair[1]*self.y_uint_to_spatial_height,
+            0
+        ])
 
     def get_coordinate_labels(self, x_vals = None, y_vals = None):
         result = []
@@ -267,7 +277,7 @@ class NumberPlane(Mobject1D):
 
 class ComplexPlane(NumberPlane):
     DEFAULT_CONFIG = {
-        "color" : "lightgreen",
+        "color" : GREEN,
         "unit_to_spatial_width" : 1,
         "line_frequency" : 1,
         "faded_line_frequency" : 0.5,
@@ -313,6 +323,20 @@ class ComplexPlane(NumberPlane):
 
     def add_coordinates(self, *numbers):
         self.add(*self.get_coordinate_labels(*numbers))
+        return self
+
+    def add_spider_web(self, circle_freq = 1, angle_freq = np.pi/6):
+        self.fade(self.fade_factor)
+        config = {
+            "color" : self.color,
+            "density" : self.density,
+        }
+        for radius in np.arange(circle_freq, SPACE_WIDTH, circle_freq):
+            self.add(Circle(radius = radius, **config))
+        for angle in np.arange(0, 2*np.pi, angle_freq):
+            end_point = np.cos(angle)*RIGHT + np.sin(angle)*UP
+            end_point *= SPACE_WIDTH
+            self.add(Line(ORIGIN, end_point, **config))
         return self
 
 

@@ -8,7 +8,7 @@ from simple_mobjects import *
 
 
 class PiCreature(CompoundMobject):
-    DEFAULT_COLOR = "blue"
+    DEFAULT_COLOR = BLUE
     PART_NAMES = [
         'arm', 
         'body', 

@@ -20,7 +20,7 @@ class Mobject(object):
     """
     #Number of numbers used to describe a point (3 for pos, 3 for normal vector)
     DEFAULT_CONFIG = {
-        "color" : "white",
+        "color" : WHITE,
         "point_thickness" : DEFAULT_POINT_THICKNESS,
         "name" : None,
     }
@@ -153,6 +153,7 @@ class Mobject(object):
                 direction = RIGHT, 
                 buff = DEFAULT_MOBJECT_TO_MOBJECT_BUFFER,
                 aligned_edge = None):
+        direction = direction / np.linalg.norm(direction)
         if aligned_edge is not None:
             anchor_point = self.get_corner(aligned_edge-direction)
             target_point = mobject.get_corner(aligned_edge+direction)
@@ -191,6 +192,12 @@ class Mobject(object):
     def stretch_to_fit_height(self, height):
         return self.stretch_to_fit(height, 1)
 
+    def scale_to_fit_width(self, width):
+        return self.scale(width/self.get_width())
+
+    def scale_to_fit_height(self, height):
+        return self.scale(height/self.get_height())
+
     def pose_at_angle(self):
         self.rotate(np.pi / 7)
         self.rotate(np.pi / 7, [1, 0, 0])
@@ -213,10 +220,9 @@ class Mobject(object):
         return self
 
     def apply_complex_function(self, function):
-        def point_map((x, y, z)):
-            result = function(complex(x, y))
-            return (result.real, result.imag, 0)
-        return self.apply_function(point_map)
+        return self.apply_function(
+            lambda (x, y, z) : complex_to_R3(function(complex(x, y)))
+        )
 
     def highlight(self, color = "yellow", condition = None):
         """
@@ -244,7 +250,7 @@ class Mobject(object):
         return self
 
     def fade(self, brightness = 0.5):
-        self.fade_to("black", brightness)
+        self.rgbs *= brightness
         return self
 
     def filter_out(self, condition):
@@ -271,6 +277,8 @@ class Mobject(object):
         return len(self.points)
 
     def get_center(self):
+        if self.get_num_points() == 0:
+            return ORIGIN
         return (np.max(self.points, 0) + np.min(self.points, 0))/2.0
 
     def get_center_of_mass(self):

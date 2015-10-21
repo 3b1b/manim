@@ -17,7 +17,7 @@ class RearrangeEquation(Scene):
         end_terms, 
         index_map,
         size = None,
-        path = counterclockwise_path,
+        path = counterclockwise_path(),
         start_transform = None,
         end_transform = None,
         leave_start_terms = False,

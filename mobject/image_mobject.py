@@ -148,10 +148,10 @@ def tex_mobject(expression,
     return result.center().highlight("white")
 
 
-def underbrace(left, right):
+def underbrace(left, right, buff = 0.2):
     result = tex_mobject("\\underbrace{%s}"%(14*"\\quad"))
     result.stretch_to_fit_width(right[0]-left[0])
-    result.shift(left - result.points[0])
+    result.shift(left - result.points[0] + buff*DOWN)
     return result
 
 

@@ -9,6 +9,21 @@ import operator as op
 
 from constants import *
 
+def adjascent_pairs(objects):
+    return zip(objects, list(objects[1:])+[objects[0]])
+
+def complex_to_R3(complex_num):
+    return np.array((complex_num.real, complex_num.imag, 0))
+
+def instantiate(obj):
+    """
+    Useful so that classes or instance of those classes can be 
+    included in configuration, which can prevent defaults from
+    getting created during compilation/importing
+    """
+    return obj() if isinstance(obj, type) else obj
+
+
 def digest_config(obj, Class, kwargs, local_args = {}):
     """
     To be used in initializing most-to-all objects.

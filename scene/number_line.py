@@ -78,7 +78,7 @@ class NumberLineScene(Scene):
             if num > 0:
                 kwargs["interpolation_function"] = straight_path
             else:
-                kwargs["interpolation_function"] = counterclockwise_path
+                kwargs["interpolation_function"] = counterclockwise_path()
         self.play(*[
             ApplyMethod(self.number_line.stretch, num, 0, **kwargs)
         ]+[

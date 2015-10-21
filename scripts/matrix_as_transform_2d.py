@@ -16,7 +16,7 @@ from script_wrapper import command_line_create_scene
 MOVIE_PREFIX = "matrix_as_transform_2d/"
 
 ARROW_CONFIG = {"point_thickness" : 2*DEFAULT_POINT_THICKNESS}
-LIGHT_RED = "#F40"
+LIGHT_RED = RED_E
 
 def matrix_to_string(matrix):
     return "--".join(["-".join(map(str, row)) for row in matrix])
@@ -36,9 +36,9 @@ def matrix_mobject(matrix):
 
 class ShowMultiplication(NumberLineScene):
     args_list = [
-        (2, False),
-        (0.5, False),
-        (-3, False),
+        (2, True),
+        (0.5, True),
+        (-3, True),
         (-3, True),
         (2, True),
         (6, True),
@@ -59,7 +59,7 @@ class ShowMultiplication(NumberLineScene):
 
     def construct(self, num, show_original_line):
         config = {
-            "density" : abs(num)*DEFAULT_POINT_DENSITY_1D,
+            "density" : max(abs(num), 1)*DEFAULT_POINT_DENSITY_1D,
             "point_thickness" : 2*DEFAULT_POINT_THICKNESS
         }
         if abs(num) < 1:
@@ -94,8 +94,9 @@ class ExamplesOfOneDimensionalLinearTransforms(ShowMultiplication):
 
     def construct(self):
         for num in [2, 0.5, -3]:
+            self.clear()            
             ShowMultiplication.construct(self, num, False)
-            self.clear()
+
 
 
 class ExamplesOfNonlinearOneDimensionalTransforms(NumberLineScene):
@@ -111,14 +112,17 @@ class ExamplesOfNonlinearOneDimensionalTransforms(NumberLineScene):
             (shift_zero, "zero does not remain fixed")
         ]
         for func, explanation in pairs:
-            self.dither()
             self.run_function(func, explanation)
-            self.dither()
+            self.dither(3)
 
     def run_function(self, function, explanation):
         self.clear()
         self.add(self.nonlinear)
-        NumberLineScene.construct(self)
+        config = {
+            "point_thickness" : 2*DEFAULT_POINT_THICKNESS,
+            "density" : 5*DEFAULT_POINT_DENSITY_1D,
+        }
+        NumberLineScene.construct(self, **config)
         words = text_mobject(explanation).highlight(LIGHT_RED)
         words.next_to(self.nonlinear, DOWN, buff = 0.5)
         self.add(words)
@@ -143,7 +147,11 @@ class ShowTwoThenThree(ShowMultiplication):
         return ""
 
     def construct(self):
-        NumberLineScene.construct(self, density = 10*DEFAULT_POINT_DENSITY_1D)
+        config = {
+            "point_thickness" : 2*DEFAULT_POINT_THICKNESS,
+            "density" : 6*DEFAULT_POINT_DENSITY_1D,
+        }
+        NumberLineScene.construct(self, **config)
         self.copy_original_line()
         self.show_multiplication(2)
         self.dither()
@@ -157,7 +165,7 @@ class TransformScene2D(Scene):
     def add_number_plane(self, density_factor = 1, use_faded_lines = True):
         config = {
             "x_radius" : 2*SPACE_WIDTH,
-            "y_radius" : 2*SPACE_HEIGHT,
+            "y_radius" : 2*SPACE_WIDTH,
             "density" : DEFAULT_POINT_DENSITY_1D*density_factor,
             "point_thickness" : 2*DEFAULT_POINT_THICKNESS
         }
@@ -205,6 +213,7 @@ class ShowMatrixTransform(TransformScene2D):
         ([[-1, 0], [0, -1]], True, False),
         ([[0, 1], [1, 0]], True, False),
         ([[-2, 0], [-1, -1]], True, False),
+        ([[0, -1], [1, 0]], True, False),
     ]
     @staticmethod
     def args_to_string(matrix, with_background, show_matrix):
@@ -261,20 +270,12 @@ class ShowMatrixTransform(TransformScene2D):
         return max(max_norm, 1)
 
     def get_interpolation_function(self, matrix):
-        def toggled_sign(n, i):
-            return int(i%2 == 0)^int(n >= 0)
-        rotational_components = [
-            sign*np.arccos(matrix[i,i]/np.linalg.norm(matrix[:,i]))
-            for i in [0, 1]
-            for sign in [toggled_sign(matrix[1-i, i], i)]
-        ]
-        average_rotation = sum(rotational_components)/2
-        if abs(average_rotation) < np.pi / 2:
-            return straight_path
-        elif average_rotation > 0:
-            return counterclockwise_path
-        else:
-            return clockwise_path
+        rotational_components = np.array([
+            np.log(multiplier*complex(*matrix[:,i])).imag
+            for i, multiplier in [(0, 1), (1, complex(0, -1))]
+        ])
+        rotational_components[rotational_components == -np.pi] = np.pi
+        return path_along_arc(np.mean(rotational_components))
 
 
 class ExamplesOfTwoDimensionalLinearTransformations(ShowMatrixTransform):
@@ -305,27 +306,33 @@ class ExamplesOfNonlinearTwoDimensionalTransformations(Scene):
         def shift_zero((x, y, z)):
             return (2*x + 3*y + 4, -1*x+y+2, z)
         self.nonlinear = text_mobject("Nonlinear Transform")
-        self.nonlinear.highlight(LIGHT_RED).to_edge(UP, buff = 1.5)
+        self.nonlinear.highlight(LIGHT_RED)
+        self.nonlinear.to_edge(UP, buff = 1.5)
         pairs = [
-            (squiggle, "lines to not remain straight"),
+            (squiggle, "lines do not remain straight"),
             (shift_zero, "the origin does not remain fixed")
         ]
+        self.get_blackness()
         for function, explanation in pairs:
             self.apply_function(function, explanation)
 
 
     def apply_function(self, function, explanation):
         self.clear()
-        number_plane = NumberPlane(
-            x_radius = 1.5*SPACE_WIDTH,
-            y_radius = 1.5*SPACE_HEIGHT,
-            density = 3*DEFAULT_POINT_DENSITY_1D,
-        )
+        config = {
+            "x_radius" : 2*SPACE_WIDTH,
+            "y_radius" : 2*SPACE_WIDTH,
+            "density" : 3*DEFAULT_POINT_DENSITY_1D,
+            "point_thickness" : 2*DEFAULT_POINT_THICKNESS
+        }
+        number_plane = NumberPlane(**config)
         numbers = number_plane.get_coordinate_labels()
-        words = text_mobject(explanation).highlight(LIGHT_RED)
+        words = text_mobject(explanation)
+        words.highlight(LIGHT_RED)
         words.next_to(self.nonlinear, DOWN, buff = 0.5)
 
-        self.add(number_plane, self.nonlinear, words, *numbers)
+        self.add(number_plane, *numbers)
+        self.add(self.blackness, self.nonlinear, words)
         self.dither()
         self.play(
             ApplyPointwiseFunction(function, number_plane),
@@ -335,15 +342,44 @@ class ExamplesOfNonlinearTwoDimensionalTransformations(Scene):
                     function(mob.get_center())-mob.get_center()
                 )
                 for mob in numbers
+            ] + [
+                Animation(self.blackness),
+                Animation(words),
+                Animation(self.nonlinear)
             ],
             run_time = 2.0
         )
-        self.dither(2)
+        self.dither(3)
+
+    def get_blackness(self):
+        vertices = [
+            3.5*LEFT+1.05*UP,
+            3.5*RIGHT+1.05*UP,
+            3.5*RIGHT+2.75*UP,
+            3.5*LEFT+2.75*UP,
+        ]
+
+        region = region_from_polygon_vertices(*vertices)
+        image = disp.paint_region(region, color = WHITE)
+        self.blackness = text_mobject("")
+        ImageMobject.generate_points_from_image_array(self.blackness, image)
+        self.blackness.highlight(BLACK)
+        rectangle = Rectangle(width = 7, height=1.7)
+        rectangle.highlight(WHITE)
+        rectangle.shift(self.blackness.get_center())
+        self.blackness.add(rectangle)
+        self.blackness.scale_in_place(0.95)
 
 
 class TrickyExamplesOfNonlinearTwoDimensionalTransformations(Scene):
     def construct(self):
-        number_plane = NumberPlane()
+        config = {
+            "x_radius" : 1.2*SPACE_WIDTH,
+            "y_radius" : 1.2*SPACE_WIDTH,
+            "density" : 10*DEFAULT_POINT_DENSITY_1D,
+            "point_thickness" : 2*DEFAULT_POINT_THICKNESS
+        }
+        number_plane = NumberPlane(**config)
         phrase1, phrase2 = text_mobject([
             "These might look like they keep lines straight...",
             "but diagonal lines get curved"
@@ -351,7 +387,8 @@ class TrickyExamplesOfNonlinearTwoDimensionalTransformations(Scene):
         phrase2.highlight(LIGHT_RED)
         diagonal = Line(
             DOWN*SPACE_HEIGHT+LEFT*SPACE_WIDTH,
-            UP*SPACE_HEIGHT+RIGHT*SPACE_WIDTH
+            UP*SPACE_HEIGHT+RIGHT*SPACE_WIDTH,
+            density = 10*DEFAULT_POINT_DENSITY_1D
         )
         def sunrise((x, y, z)):
             return ((SPACE_HEIGHT+y)*x, y, z)
@@ -359,24 +396,50 @@ class TrickyExamplesOfNonlinearTwoDimensionalTransformations(Scene):
         def squished((x, y, z)):
             return (x + np.sin(x), y+np.sin(y), z)
 
+        self.get_blackness()
+
+        self.run_function(sunrise, number_plane, phrase1)
+        self.run_function(squished, number_plane, phrase1)
+        phrase1.add(phrase2)
         self.add(phrase1)
-        self.run_function(sunrise, number_plane)
-        self.run_function(squished, number_plane)
-        self.add(phrase2)
         self.play(ShowCreation(diagonal))
         self.remove(diagonal)
         number_plane.add(diagonal)
-        self.run_function(sunrise, number_plane)
-        self.run_function(squished, number_plane)
+        self.run_function(sunrise, number_plane, phrase1)
+        self.run_function(squished, number_plane, phrase1, False)
 
 
-    def run_function(self, function, plane):
+    def run_function(self, function, plane, phrase, remove_plane = True):
         number_plane = deepcopy(plane)
-        self.add(number_plane)
+        self.add(number_plane, self.blackness, phrase)
         self.dither()
-        self.play(ApplyPointwiseFunction(function, number_plane, run_time = 2.0))
+        self.play(
+            ApplyPointwiseFunction(function, number_plane, run_time = 2.0),
+            Animation(self.blackness),            
+            Animation(phrase),
+        )
         self.dither(3)
-        self.remove(number_plane)
+        if remove_plane:
+            self.remove(number_plane)
+
+    def get_blackness(self):
+        vertices = [
+            4.5*LEFT+1.25*UP,
+            4.5*RIGHT+1.25*UP,
+            4.5*RIGHT+2.75*UP,
+            4.5*LEFT+2.75*UP,
+        ]
+
+        region = region_from_polygon_vertices(*vertices)
+        image = disp.paint_region(region, color = WHITE)
+        self.blackness = text_mobject("")
+        ImageMobject.generate_points_from_image_array(self.blackness, image)
+        self.blackness.highlight(BLACK)
+        rectangle = Rectangle(width = 9, height=1.5)
+        rectangle.highlight(WHITE)
+        rectangle.shift(self.blackness.get_center())
+        self.blackness.add(rectangle)
+        self.blackness.scale_in_place(0.95)
 
 
 ############# HORRIBLE! ##########################
@@ -393,7 +456,7 @@ class ShowMatrixTransformWithDot(TransformScene2D):
     def construct(self, matrix, with_background, show_matrix):
         matrix = np.array(matrix)
         number_plane_config = {
-            "density_factor" : self.get_density_factor(matrix)
+            "density_factor" : self.get_density_factor(matrix),
         }
         if with_background:
             self.add_background()
@@ -408,10 +471,10 @@ class ShowMatrixTransformWithDot(TransformScene2D):
             mobject.points[:, :2] = np.dot(mobject.points[:, :2], np.transpose(matrix))
             return mobject
         dot = Dot((-1, 2, 0), color = "yellow")
+        self.add(dot)
         x_arrow_copy = deepcopy(self.x_arrow)
         y_arrow_copy = Arrow(LEFT, LEFT+2*UP, color = LIGHT_RED, **ARROW_CONFIG)
 
-        self.number_plane.add(dot)
         self.play(ApplyMethod(x_arrow_copy.rotate, np.pi))
         self.play(ShowCreation(y_arrow_copy))
         self.dither()
@@ -420,7 +483,10 @@ class ShowMatrixTransformWithDot(TransformScene2D):
             "run_time" : 2.0,
             "interpolation_function" : self.get_interpolation_function(matrix)
         }
-        anims = [ApplyFunction(func, self.number_plane, **kwargs)]
+        anims = [
+            ApplyFunction(func, self.number_plane, **kwargs),
+            ApplyMethod(dot.shift, func(deepcopy(dot)).get_center()-dot.get_center(), **kwargs),
+        ]
         if hasattr(self, "x_arrow") and hasattr(self, "y_arrow"):
             for arrow, index in (self.x_arrow, 0), (self.y_arrow, 1):
                 new_arrow = Arrow(
@@ -442,8 +508,8 @@ class ShowMatrixTransformWithDot(TransformScene2D):
         y_arrow_copy = Arrow(LEFT+2*UP, 5*RIGHT+2*UP, color = LIGHT_RED, **ARROW_CONFIG)
         self.play(ApplyMethod(x_arrow_copy.rotate, np.pi))
         self.play(ShowCreation(y_arrow_copy))
-        self.remove(x_arrow_copy, y_arrow_copy)
         self.dither(3)
+        self.remove(x_arrow_copy, y_arrow_copy)        
 
     def get_density_factor(self, matrix):
         max_norm = max([
@@ -462,9 +528,9 @@ class ShowMatrixTransformWithDot(TransformScene2D):
         if abs(average_rotation) < np.pi / 2:
             return straight_path
         elif average_rotation > 0:
-            return counterclockwise_path
+            return counterclockwise_path()
         else:
-            return clockwise_path
+            return clockwise_path()
 
 
 class Show90DegreeRotation(TransformScene2D):

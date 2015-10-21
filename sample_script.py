@@ -16,9 +16,11 @@ from script_wrapper import command_line_create_scene
 
 class SampleScene(Scene):
     def construct(self):
-        c = ComplexPlane().add_coordinates()
+        words = text_mobject("Hi There")
+        self.paint_into_background(words.shift(UP).highlight(RED_A))
+        self.paint_into_background(words.shift(DOWN).highlight(RED_E))
 
-        self.add_local_mobjects()
+
 
 
 

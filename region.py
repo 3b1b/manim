@@ -5,6 +5,7 @@ import cv2
 from copy import deepcopy
 
 from constants import *
+from helpers import *
 import displayer as disp
 
 class Region(object):
@@ -85,9 +86,7 @@ def region_from_line_boundary(*lines, **kwargs):
     return reg
 
 def region_from_polygon_vertices(*vertices, **kwargs):
-    points = list(vertices)
-    points.append(points[0])
-    return region_from_line_boundary(*zip(points, points[1:]), **kwargs)
+    return region_from_line_boundary(*adjascent_pairs(vertices), **kwargs)
 
 
 def plane_partition(*lines, **kwargs):

@@ -15,9 +15,10 @@ from script_wrapper import command_line_create_scene
 
 MOVIE_PREFIX = "pythagorean_proof"
 
-A_COLOR = "skyblue"
-B_COLOR = "pink"
-C_COLOR = "yellow"
+A_COLOR = BLUE
+B_COLOR = MAROON_D
+C_COLOR = YELLOW
+
 TEX_MOB_SCALE_VAL = 0.5
 POINTS = np.array([
     DOWN,
@@ -43,7 +44,7 @@ class Triangle(Polygon):
         nudge = 0.2
         target = POINTS[0]+nudge*(UP+RIGHT)
         for direction in UP, RIGHT:
-            self.add_line(POINTS[0]+nudge*direction, target, color = "white")
+            self.add_line(POINTS[0]+nudge*direction, target, color = WHITE)
 
 
     def add_all_letters(self):
@@ -51,7 +52,7 @@ class Triangle(Polygon):
             self.add_letter(char)
         return self
 
-    def add_letter(self, char, nudge = 0.2):
+    def add_letter(self, char, nudge = 0.3):
         mob = tex_mobject(char).scale(TEX_MOB_SCALE_VAL)
         if char == "a":
             points = self.get_vertices()[[0, 2, 1]]
@@ -61,7 +62,9 @@ class Triangle(Polygon):
             points = self.get_vertices()[[2, 1, 0]]
         center = 0.5*sum(points[:2]) #average of first two points
         mob.shift(center) 
-        normal_dir = center-points[2]
+        normal_dir = rotate_vector(points[1] - points[0], np.pi/2, OUT)
+        if np.dot(normal_dir, points[2]-center) > 0:
+            normal_dir = -normal_dir
         normal_dir /= np.linalg.norm(normal_dir)
         mob.shift(nudge*normal_dir)
         self.add(mob)
@@ -131,9 +134,9 @@ class AddParallelLines(DrawAllThreeSquares):
             (3*LEFT, 2*DOWN)
         ]
         for side_shift, vert_shift in shift_pairs[:num]:
-            line1 = Line(BOTTOM, TOP, color = "white")
+            line1 = Line(BOTTOM, TOP, color = WHITE)
             line1.shift(side_shift)
-            line2 = Line(LEFT_SIDE, RIGHT_SIDE, color = "white")
+            line2 = Line(LEFT_SIDE, RIGHT_SIDE, color = WHITE)
             line2.shift(vert_shift)
             self.add(line1, line2)
         if trim:
@@ -156,7 +159,7 @@ class HighlightEmergentTriangles(AddParallelLines):
         for triplet in triplets:
             self.highlight_region(
                 region_from_polygon_vertices(*triplet),
-                color = "green"
+                color = "DARK_BLUE"
             )
 
 class IndicateTroublePointFromParallelLines(AddParallelLines):
@@ -216,14 +219,14 @@ class DrawAllThreeSquaresWithMoreTriangles(DrawAllThreeSquares):
             if fill:
                 self.highlight_region(
                     region_from_polygon_vertices(*vertices),
-                    color = "green"
+                    color = DARK_BLUE
                 )
 
 class IndicateBigRectangleTroublePoint(DrawAllThreeSquaresWithMoreTriangles):
     args_list = [(10, False)]
     def construct(self, *args):
         DrawAllThreeSquaresWithMoreTriangles.construct(self, *args)
-        circle = Circle(radius = 0.25, color = "white")
+        circle = Circle(radius = 0.25, color = WHITE)
         circle.shift(4*RIGHT)
         vect = DOWN+RIGHT
         arrow = Arrow(circle.get_center()+vect, circle.get_boundary_point(vect))
@@ -288,7 +291,7 @@ class AddTriangleCopyToABSquares(DrawOnlyABSquares):
                 for x in range(2):
                     self.highlight_region(region_from_polygon_vertices(
                         *vertices
-                    ), color = "green")
+                    ), color = DARK_BLUE)
                     vertices.reverse()#silly hack
 
 class AddAllTrianglesToABSquares(AddTriangleCopyToABSquares):
@@ -351,12 +354,12 @@ class HighlightCSquareInBigSquare(DrawCSquareWithAllTraingles):
         DrawCSquareWithAllTraingles.construct(self, *args)
         self.highlight_region(region_from_polygon_vertices(
             *c_square().center().get_vertices()
-        ), color = "yellow")
+        ), color = YELLOW)
 
 class IndicateCSquareTroublePoint(DrawCSquareWithAllTraingles):
     def construct(self, *toggle_vector):
         DrawCSquareWithAllTraingles.construct(self, *toggle_vector)
-        circle = Circle(color = "white")
+        circle = Circle(color = WHITE)
         circle.scale(0.25)
         vertex = self.c_square.get_vertices()[1]
         circle.shift(vertex)
@@ -385,9 +388,9 @@ class ZoomInOnTroublePoint(Scene):
             triangle = Triangle(density = density)
             triangle.place_hypotenuse_on(vertices[index], vertices[index+1])
             self.add(triangle)
-        circle = Circle(radius = 2.5, color = "white")
-        angle1_arc = Circle(color = "white")
-        angle2_arc = Circle(color = "white").scale(0.5)
+        circle = Circle(radius = 2.5, color = WHITE)
+        angle1_arc = Circle(color = WHITE)
+        angle2_arc = Circle(color = WHITE).scale(0.5)
         angle1_arc.filter_out(lambda (x, y, z) : not (x > 0 and y > 0 and y < x/3))
         angle2_arc.filter_out(lambda (x, y, z) : not (x < 0 and y > 0 and y < -3*x))
 
@@ -414,8 +417,8 @@ class ZoomInOnTroublePoint(Scene):
         p1 = c*LEFT + 3*c*UP
         p2 = 3*c*RIGHT + c*UP
         p3 = 2*c*RIGHT + 4*c*UP
-        self.add(Line(p1, p3, color = "white"))
-        self.add(Line(p2, p3, color = "white"))
+        self.add(Line(p1, p3, color = WHITE))
+        self.add(Line(p2, p3, color = WHITE))
 
 
 class DrawTriangleWithAngles(Scene):
@@ -423,7 +426,7 @@ class DrawTriangleWithAngles(Scene):
         triangle = Triangle(density = 2*DEFAULT_POINT_DENSITY_1D)
         triangle.scale(2).center().add_all_letters()
         vertices = triangle.get_vertices()
-        kwargs = {"color" : "white"}
+        kwargs = {"color" : WHITE}
         angle1_arc = Circle(radius = 0.4, **kwargs).filter_out(
             lambda (x, y, z) : not(x > 0 and y < 0 and y < -3*x)
         ).shift(vertices[1])
@@ -460,7 +463,7 @@ class CompletelyFillLargeSquare(LabelLargeSquare):
         vertices = [2*(DOWN+LEFT), 2*(DOWN+RIGHT), 2*(UP+RIGHT), 2*(UP+LEFT)]
         vertices.append(vertices[0])
         pairs = zip(vertices, vertices[1:])
-        self.highlight_region(region_from_line_boundary(*pairs), color = "blue")
+        self.highlight_region(region_from_line_boundary(*pairs), color = BLUE)
 
 
 class FillComponentsOfLargeSquare(LabelLargeSquare):
@@ -481,17 +484,17 @@ class FillComponentsOfLargeSquare(LabelLargeSquare):
             self.highlight_region(region_from_line_boundary(*[
                 [points[i], points[j]]
                 for i, j in zip(triplet, triplet[1:])
-            ]), color = "green")
+            ]), color = DARK_BLUE)
         vertices = points[[1, 3, 5, 7, 1]]
         self.highlight_region(region_from_line_boundary(*[
             [p1, p2]
             for p1, p2 in zip(vertices, vertices[1:])
-        ]), color = "yellow")
+        ]), color = YELLOW)
 
 class ShowRearrangementInBigSquare(DrawCSquareWithAllTraingles):
     args_list = []
     def construct(self):
-        self.add(Square(side_length = 4, color = "white"))        
+        self.add(Square(side_length = 4, color = WHITE))        
         DrawCSquareWithAllTraingles.construct(self)
         self.remove(self.c_square)
         self.triangles[1].shift(LEFT)

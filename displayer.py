@@ -44,11 +44,12 @@ def paint_mobjects(mobjects, image_array = None):
     width  = pixels.shape[1]
     space_height = SPACE_HEIGHT
     space_width  = SPACE_HEIGHT * width / height
-    pixels = pixels.reshape((pixels.size/3, 3))
+    pixels = pixels.reshape((pixels.size/3, 3)).astype('uint8')
 
     for mobject in mobjects:
         if mobject.get_num_points() == 0:
             continue
+        #bunch these together so rgbs never get lost from points
         points_and_rgbs = np.append(
             mobject.points,
             255*mobject.rgbs,
@@ -74,8 +75,7 @@ def paint_mobjects(mobjects, image_array = None):
         indices = np.dot(points, flattener)[:,0]
         pixels[indices] = rgbs.astype('uint8')
 
-    pixels = pixels.reshape((height, width, 3)).astype('uint8')
-    return pixels
+    return pixels.reshape((height, width, 3))
 
 def add_thickness(pixel_indices_and_rgbs, thickness, width, height):
     """
