@@ -1,7 +1,8 @@
 import os
 import itertools as it
 from PIL import Image
-from constants import *
+
+from helpers import *
 
 #TODO, Cleanup and refactor this file.
 

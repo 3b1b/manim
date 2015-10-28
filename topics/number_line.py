@@ -1,63 +1,7 @@
-import numpy as np
-import itertools as it
-
-from mobject import Mobject, Mobject1D, Mobject2D, CompoundMobject
-from simple_mobjects import Arrow, Line, Circle
-from image_mobject import tex_mobject
-from constants import *
 from helpers import *
 
-class FunctionGraph(Mobject1D):
-    DEFAULT_CONFIG = {
-        "color" : BLUE,
-        "x_min" : -10,
-        "x_max" : 10,
-        "spatial_radius" : SPACE_WIDTH,
-    }
-    def __init__(self, function, **kwargs):
-        digest_config(self, FunctionGraph, kwargs, locals())
-        Mobject1D.__init__(self, **kwargs)
-
-    def generate_points(self):
-        numerical_radius = (self.x_max - self.x_min)/2
-        numerical_center = (self.x_max + self.x_min)/2
-        ratio = numerical_radius / self.spatial_radius
-        epsilon = self.epsilon * ratio
-        self.add_points([
-            np.array([(x-numerical_center)/ratio, self.function(x), 0])
-            for x in np.arange(self.x_min, self.x_max, self.epsilon)
-        ])
-
-
-class ParametricFunction(Mobject):
-    DEFAULT_CONFIG = {
-        "color" : WHITE,
-        "dim" : 1,
-        "expected_measure" : 10.0,
-        "density" : None
-    }
-    def __init__(self, function, **kwargs):
-        digest_config(self, ParametricFunction, kwargs, locals())
-        if self.density:
-            self.epsilon = 1.0 / self.density
-        elif self.dim == 1:
-            self.epsilon = 1.0 / self.expected_measure / DEFAULT_POINT_DENSITY_1D
-        else:
-            self.epsilon = 1.0 / np.sqrt(self.expected_measure) / DEFAULT_POINT_DENSITY_2D
-        Mobject.__init__(self, *args, **kwargs)
-
-    def generate_points(self):
-        if self.dim == 1:
-            self.add_points([
-                self.function(t)
-                for t in np.arange(-1, 1, self.epsilon)
-            ])
-        if self.dim == 2:
-            self.add_points([
-                self.function(s, t)
-                for t in np.arange(-1, 1, self.epsilon)
-                for s in np.arange(-1, 1, self.epsilon)
-            ])
+from mobject import Mobject1D
+from scene import Scene
 
 class NumberLine(Mobject1D):
     DEFAULT_CONFIG = {
@@ -67,7 +11,7 @@ class NumberLine(Mobject1D):
         "tick_size" : 0.1,
         "tick_frequency" : 0.5,
         "leftmost_tick" : None,
-        "number_at_center" : 0,                 
+        "number_at_center" : 0,         
         "numbers_with_elongated_ticks" : [0],
         "longer_tick_multiple" : 2,
     }
@@ -166,13 +110,6 @@ class UnitInterval(NumberLine):
     def __init__(self, **kwargs):
         digest_config(self, UnitInterval, kwargs)
         NumberLine.__init__(self, **kwargs)
-
-
-class Axes(CompoundMobject):
-    def __init__(self, **kwargs):
-        x_axis = NumberLine(**kwargs)
-        y_axis = NumberLine(**kwargs).rotate(np.pi/2, OUT)
-        CompoundMobject.__init__(self, x_axis, y_axis)
 
 
 class NumberPlane(Mobject1D):
@@ -275,69 +212,94 @@ class NumberPlane(Mobject1D):
         arrow.add_tip()
         return arrow
 
-class ComplexPlane(NumberPlane):
-    DEFAULT_CONFIG = {
-        "color" : GREEN,
-        "unit_to_spatial_width" : 1,
-        "line_frequency" : 1,
-        "faded_line_frequency" : 0.5,
-        "number_at_center" : complex(0),
-    }
-    def __init__(self, **kwargs):
-        digest_config(self, ComplexPlane, kwargs)
-        kwargs.update({
-            "x_unit_to_spatial_width" : self.unit_to_spatial_width,
-            "y_uint_to_spatial_height" : self.unit_to_spatial_width,
-            "x_line_frequency" : self.line_frequency,
-            "x_faded_line_frequency" : self.faded_line_frequency,
-            "y_line_frequency" : self.line_frequency,
-            "y_faded_line_frequency" : self.faded_line_frequency,
-            "num_pair_at_center" : (self.number_at_center.real, self.number_at_center.imag),
-        })
-        NumberPlane.__init__(self, **kwargs)
 
-    def number_to_point(self, number):
-        number = complex(number)
-        return self.num_pair_to_point((number.real, number.imag))
+class NumberLineScene(Scene):
+    def construct(self, **number_line_config):
+        self.number_line = NumberLine(**number_line_config)
+        self.displayed_numbers = self.number_line.default_numbers_to_display()
+        self.number_mobs = self.number_line.get_number_mobjects(*self.displayed_numbers)
+        self.add(self.number_line, *self.number_mobs)
 
-    def get_coordinate_labels(self, *numbers):
-        result = []
-        nudge = 0.1*(DOWN+RIGHT)
-        if len(numbers) == 0:
-            numbers = range(-int(self.x_radius), int(self.x_radius))
-            numbers += [
-                complex(0, y)
-                for y in range(-int(self.y_radius), int(self.y_radius))
-            ]
-        for number in numbers:
-            point = self.number_to_point(number)
-            if number == 0:
-                num_str = "0"
+    def zoom_in_on(self, number, zoom_factor, run_time = 2.0):
+        unit_length_to_spatial_width = self.number_line.unit_length_to_spatial_width*zoom_factor
+        radius = SPACE_WIDTH/unit_length_to_spatial_width
+        tick_frequency = 10**(np.floor(np.log10(radius)))
+        left_tick = tick_frequency*(np.ceil((number-radius)/tick_frequency))
+        new_number_line = NumberLine(
+            numerical_radius = radius,
+            unit_length_to_spatial_width = unit_length_to_spatial_width,
+            tick_frequency = tick_frequency,
+            leftmost_tick = left_tick,
+            number_at_center = number
+        )
+        new_displayed_numbers = new_number_line.default_numbers_to_display()
+        new_number_mobs = new_number_line.get_number_mobjects(*new_displayed_numbers)        
+
+        transforms = []
+        additional_mobjects = []
+        squished_new_line = deepcopy(new_number_line)
+        squished_new_line.scale(1.0/zoom_factor)
+        squished_new_line.shift(self.number_line.number_to_point(number))
+        squished_new_line.points[:,1] = self.number_line.number_to_point(0)[1]
+        transforms.append(Transform(squished_new_line, new_number_line))
+        for mob, num in zip(new_number_mobs, new_displayed_numbers):
+            point = Point(self.number_line.number_to_point(num))
+            point.shift(new_number_line.get_vertical_number_offset())
+            transforms.append(Transform(point, mob))
+        for mob in self.mobjects:
+            if mob == self.number_line:
+                new_mob = deepcopy(mob)
+                new_mob.shift(-self.number_line.number_to_point(number))
+                new_mob.stretch(zoom_factor, 0)
+                transforms.append(Transform(mob, new_mob))
+                continue
+            mob_center = mob.get_center()
+            number_under_center = self.number_line.point_to_number(mob_center)
+            new_point = new_number_line.number_to_point(number_under_center)
+            new_point += mob_center[1]*UP
+            if mob in self.number_mobs:
+                transforms.append(Transform(mob, Point(new_point)))
             else:
-                num_str = str(number).replace("j", "i")
-            num = tex_mobject(num_str)
-            num.scale(self.number_scale_factor)
-            num.shift(point-num.get_corner(UP+LEFT)+nudge)
-            result.append(num)
-        return result
+                transforms.append(ApplyMethod(mob.shift, new_point - mob_center))
+                additional_mobjects.append(mob)
+        line_to_hide_pixelation = Line(
+            self.number_line.get_left(),
+            self.number_line.get_right(),
+            color = self.number_line.get_color()
+        )
+        self.add(line_to_hide_pixelation)
+        self.play(*transforms, run_time = run_time)
+        self.clear()
+        self.number_line = new_number_line
+        self.displayed_numbers = new_displayed_numbers
+        self.number_mobs = new_number_mobs
+        self.add(self.number_line, *self.number_mobs)
+        self.add(*additional_mobjects)
 
-    def add_coordinates(self, *numbers):
-        self.add(*self.get_coordinate_labels(*numbers))
-        return self
+    def show_multiplication(self, num, **kwargs):
+        if "interpolation_function" not in kwargs:
+            if num > 0:
+                kwargs["interpolation_function"] = straight_path
+            else:
+                kwargs["interpolation_function"] = counterclockwise_path()
+        self.play(*[
+            ApplyMethod(self.number_line.stretch, num, 0, **kwargs)
+        ]+[
+            ApplyMethod(mob.shift, (num-1)*mob.get_center()[0]*RIGHT, **kwargs)
+            for mob in self.number_mobs
+        ])
 
-    def add_spider_web(self, circle_freq = 1, angle_freq = np.pi/6):
-        self.fade(self.fade_factor)
-        config = {
-            "color" : self.color,
-            "density" : self.density,
-        }
-        for radius in np.arange(circle_freq, SPACE_WIDTH, circle_freq):
-            self.add(Circle(radius = radius, **config))
-        for angle in np.arange(0, 2*np.pi, angle_freq):
-            end_point = np.cos(angle)*RIGHT + np.sin(angle)*UP
-            end_point *= SPACE_WIDTH
-            self.add(Line(ORIGIN, end_point, **config))
-        return self
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -11,129 +11,10 @@ from mobject import *
 from constants import *
 from region import *
 from scene import Scene
-from script_wrapper import command_line_create_scene
-
-MOVIE_PREFIX = "complex_actions/"
+from topics.complex_numbers import *
 
 DEFAULT_PLANE_CONFIG = {
     "point_thickness" : 2*DEFAULT_POINT_THICKNESS
-}
-
-def complex_string(complex_num):
-    return filter(lambda c : c not in "()", str(complex_num))
-
-class ComplexMultiplication(Scene):
-    args_list = [
-        complex(np.sqrt(3), 1),
-        complex(1,-1)/3,
-        complex(-2, 0),
-        (complex(np.sqrt(3), 1), True),
-        (complex(1,-1)/3, True),
-        (complex(-2, 0), True),
-    ]
-    @staticmethod
-    def args_to_string(multiplier, mark_one = False):
-        num_str = complex_string(multiplier)
-        arrow_str = "MarkOne" if mark_one else ""
-        return num_str + arrow_str
-
-    @staticmethod
-    def string_to_args(arg_string):
-        parts = arg_string.split()
-        multiplier = complex(parts[0])
-        mark_one = len(parts) > 1 and parts[1] == "MarkOne"
-        return (multiplier, mark_one)
-
-    def construct(self, multiplier, mark_one = False, **plane_config):
-        norm = np.linalg.norm(multiplier)
-        arg  = np.log(multiplier).imag
-        plane_config["faded_line_frequency"] = 0
-        plane_config.update(DEFAULT_PLANE_CONFIG)
-        if norm > 1 and "density" not in plane_config:
-            plane_config["density"] = norm*DEFAULT_POINT_DENSITY_1D
-        if "radius" not in plane_config:
-            radius = SPACE_WIDTH
-            if norm > 0 and norm < 1:
-                radius /= norm
-        else:
-            radius = plane_config["radius"]
-        plane_config["x_radius"] = plane_config["y_radius"] = radius            
-        plane = ComplexPlane(**plane_config)
-        self.plane = plane
-        self.add(plane)
-        # plane.add_spider_web()
-        self.anim_config = {
-            "run_time" : 2.0,
-            "interpolation_function" : path_along_arc(arg)
-        }
-
-        plane_config["faded_line_frequency"] = 0.5
-        background = ComplexPlane(color = "grey", **plane_config)
-        # background.add_spider_web()
-        labels = background.get_coordinate_labels()
-        self.paint_into_background(background, *labels)
-        self.mobjects_to_move_without_molding = []
-        if mark_one:
-            self.draw_dot("1", 1, True)
-            self.draw_dot("z", multiplier)
-
-
-        self.mobjects_to_multiply = [plane]
-
-        self.additional_animations = []        
-        self.multiplier = multiplier
-        if self.__class__ == ComplexMultiplication:
-            self.apply_multiplication()
-
-    def draw_dot(self, tex_string, value, move_dot = False):
-        dot = Dot(
-            self.plane.number_to_point(value),
-            radius = 0.1*self.plane.unit_to_spatial_width, 
-            color = BLUE if value == 1 else YELLOW
-        )
-        label = tex_mobject(tex_string)
-        label.shift(dot.get_center()+1.5*UP+RIGHT)
-        arrow = Arrow(label, dot)
-        self.add(label)
-        self.play(ShowCreation(arrow))
-        self.play(ShowCreation(dot))
-        self.dither()
-
-        self.remove(label, arrow)
-        if move_dot:
-            self.mobjects_to_move_without_molding.append(dot)
-        return dot
-
-
-    def apply_multiplication(self):
-        def func((x, y, z)):
-            complex_num = self.multiplier*complex(x, y)
-            return (complex_num.real, complex_num.imag, z)
-        mobjects = self.mobjects_to_multiply
-        mobjects += self.mobjects_to_move_without_molding
-        mobjects += [anim.mobject for anim in self.additional_animations]                    
-
-
-        self.add(*mobjects)
-        full_multiplications = [
-            ApplyMethod(mobject.apply_function, func, **self.anim_config)
-            for mobject in self.mobjects_to_multiply
-        ]
-        movements_with_plane = [
-            ApplyMethod(
-                mobject.shift, 
-                func(mobject.get_center())-mobject.get_center(),
-                **self.anim_config            
-            )
-            for mobject in self.mobjects_to_move_without_molding
-        ]
-        self.dither()
-        self.play(*reduce(op.add, [
-            full_multiplications,
-            movements_with_plane,
-            self.additional_animations
-        ]))
-        self.dither()
 
 
 class SuccessiveComplexMultiplications(ComplexMultiplication):
@@ -280,13 +161,6 @@ class DrawSolutionsToZToTheNEqualsW(Scene):
         self.add(*plane.get_coordinate_labels())
 
 
-
-
-
-
-
-
-
 class DrawComplexAngleAndMagnitude(Scene):
     args_list = [
         (
@@ -378,15 +252,3 @@ class DrawComplexAngleAndMagnitude(Scene):
 
         self.add_local_mobjects()
 
-
-
-
-
-
-
-
-
-
-
-if __name__ == "__main__":
-    command_line_create_scene(MOVIE_PREFIX)

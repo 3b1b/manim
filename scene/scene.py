@@ -10,8 +10,7 @@ import progressbar
 import inspect
 
 from helpers import *
-from mobject import *
-from animation import *
+
 import displayer as disp
 from tk_scene import TkSceneRoot
 
@@ -198,11 +197,6 @@ class Scene(object):
     def repeat(self, num):
         self.frames = self.frames*num
         return self
-
-    def write_to_gif(self, name = None, 
-                     end_dither_time = DEFAULT_DITHER_TIME):
-        self.dither(end_dither_time)
-        disp.write_to_gif(self, name or str(self))
 
     def write_to_movie(self, name = None):
         if len(self.frames) == 0:

@@ -1,13 +1,15 @@
+#!/usr/bin/env python
+
 import sys
 import getopt
 import imp
 import itertools as it
 import inspect
 import traceback
-from helpers import cammel_case_initials
-from scene import Scene
+import imp
 
-from constants import *
+from helpers import *
+from scene import Scene
 
 HELP_MESSAGE = """
    <script name> [<scene name or initials>] [<arg_string>]
@@ -35,6 +37,7 @@ def get_configuration(sys_argv):
       print str(err)
       sys.exit(2)
    config = {
+      "module"         : None,
       "scene_name"     : "",
       "args_extension" : "",
       "display_config" : PRODUCTION_QUALITY_DISPLAY_CONFIG,
@@ -70,9 +73,11 @@ def get_configuration(sys_argv):
       config["write"] = True
 
    if len(args) > 0:
-      config["scene_name"] = args[0]
+      config["module"] = args[0]
    if len(args) > 1:
-      config["args_extension"] = " ".join(args[1:])
+      config["scene_name"] = args[1]
+   if len(args) > 2:
+      config["args_extension"] = " ".join(args[2:])
    return config
 
 def handle_scene(scene, **config):
@@ -120,7 +125,7 @@ def prompt_user_for_args(args_list, args_to_string):
       print INVALID_NUMBER_MESSAGE
       sys.exit()
 
-def get_args(SceneClass, config):
+def get_scene_args(SceneClass, config):
    tuplify = lambda x : x if type(x) == tuple else (x,)
    args_list = map(tuplify, SceneClass.args_list)
    preset_extensions = [
@@ -146,11 +151,13 @@ def get_args(SceneClass, config):
    else:
       return [SceneClass.string_to_args(config["args_extension"])]
 
-def command_line_create_scene(movie_prefix = ""):
-   script = sys.modules["__main__"]
-   scene_names_to_classes = dict(inspect.getmembers(script, is_scene))
+def main():
    config = get_configuration(sys.argv)
-   config["movie_prefix"] = movie_prefix
+   module = imp.load_source(config["module_name"], ".")
+   scene_names_to_classes = dict(
+      inspect.getmembers(module, is_scene)
+   )
+   config["movie_prefix"] = config["module_name"].split(".py")[0]
    if config["scene_name"] in scene_names_to_classes:
       scene_classes = [scene_names_to_classes[config["scene_name"]] ]
    elif config["scene_name"] == "" and config["write_all"]:
@@ -164,7 +171,7 @@ def command_line_create_scene(movie_prefix = ""):
       "announce_construction" : True
    }
    for SceneClass in scene_classes:
-      for args in get_args(SceneClass, config):
+      for args in get_scene_args(SceneClass, config):
          scene_kwargs["construct_args"] = args
          try:
             handle_scene(SceneClass(**scene_kwargs), **config)
@@ -174,7 +181,8 @@ def command_line_create_scene(movie_prefix = ""):
             print "\n\n"
 
 
-
+if __name__ == "__main__":
+   main()
 
 
 

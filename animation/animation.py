@@ -7,11 +7,10 @@ import os
 import copy
 import progressbar
 import inspect
-from images2gif import writeGif
 
 from helpers import *
-from constants import *
-from mobject import Mobject, Point
+from mobject import Mobject
+from topics.geometry import Point
 
 class Animation(object):
     DEFAULT_CONFIG = {
@@ -102,7 +101,6 @@ class Animation(object):
 
     def clean_up(self):
         self.update(1)
-
 
 
 

@@ -1,3 +1,4 @@
 from animation import *
-from transform import *
+from meta_animations import *
 from simple_animations import *
+from transform import *

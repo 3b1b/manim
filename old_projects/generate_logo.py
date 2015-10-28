@@ -11,7 +11,6 @@ from mobject import *
 from constants import *
 from region import *
 from scene import Scene
-from script_wrapper import command_line_create_scene
 
 class LogoGeneration(Scene):
     LOGO_RADIUS = 1.5
@@ -61,6 +60,3 @@ class LogoGeneration(Scene):
         print "Dragging pixels..."
         self.frames = drag_pixels(self.frames)
 
-
-if __name__ == "__main__":
-    command_line_create_scene()

@@ -4,39 +4,12 @@ import inspect
 import copy
 import warnings
 
-from animation import Animation
-from mobject import Mobject, Point, ComplexPlane
-from constants import *
 from helpers import *
 
-def straight_path(start_points, end_points, alpha):
-    return (1-alpha)*start_points + alpha*end_points
-
-def path_along_arc(arc_angle):
-    """
-    If vect is vector from start to end, [vect[:,1], -vect[:,0]] is 
-    perpendicualr to vect in the left direction.
-    """
-    if arc_angle == 0:
-        return straight_path
-    def path(start_points, end_points, alpha):
-        vects = end_points - start_points
-        centers = start_points + 0.5*vects
-        if arc_angle != np.pi:
-            for i, b in [(0, -1), (1, 1)]:
-                centers[:,i] += 0.5*b*vects[:,1-i]/np.tan(arc_angle/2)
-        return centers + np.dot(
-            start_points-centers, 
-            np.transpose(rotation_about_z(alpha*arc_angle))
-        )
-    return path
-
-def clockwise_path():
-    return path_along_arc(np.pi)
-
-def counterclockwise_path():
-    return path_along_arc(-np.pi)
-
+from animation import Animation
+from mobject import Mobject
+from topics.geometry import Point
+from topics.complex_numbers import ComplexPlane
 
 class Transform(Animation):
     DEFAULT_CONFIG = {
@@ -137,6 +110,12 @@ class ApplyMethod(Transform):
             **kwargs
         )
 
+class Rotate(ApplyMethod):
+    def __init__(self, mobject, angle = np.pi, **kwargs):
+        kwargs["interpolation_function"] = path_along_arc(angle)
+        ApplyMethod.__init__(self, mobject.rotate, angle, **kwargs)
+
+
 class ApplyPointwiseFunction(ApplyMethod):
     DEFAULT_CONFIG = {
         "run_time" : DEFAULT_POINTWISE_FUNCTION_RUN_TIME
@@ -145,20 +124,6 @@ class ApplyPointwiseFunction(ApplyMethod):
         digest_config(self, ApplyPointwiseFunction, kwargs)
         ApplyMethod.__init__(
             self, mobject.apply_function, function, **kwargs
-        )
-
-
-class ComplexFunction(ApplyPointwiseFunction):
-    def __init__(self, function, mobject = ComplexPlane, **kwargs):
-        if "interpolation_function" not in kwargs:
-            self.interpolation_function = path_along_arc(
-                np.log(function(complex(1))).imag
-            )
-        ApplyPointwiseFunction.__init__(
-            self,
-            lambda (x, y, z) : complex_to_R3(function(complex(x, y))),
-            instantiate(mobject),
-            **kwargs
         )
 
 class FadeToColor(ApplyMethod):
@@ -199,35 +164,6 @@ class ApplyMatrix(Animation):
             np.transpose(matrix)
         )
 
-
-class TransformAnimations(Transform):
-    DEFAULT_CONFIG = {
-        "alpha_func" : squish_alpha_func(smooth)
-    }
-    def __init__(self, start_anim, end_anim, **kwargs):
-        digest_config(self, TransformAnimations, kwargs, locals())
-        if "run_time" in kwargs:
-            self.run_time = kwargs.pop("run_time")
-        else:
-            self.run_time = max(start_anim.run_time, end_anim.run_time)
-        for anim in start_anim, end_anim:
-            anim.set_run_time(self.run_time)
-
-        if start_anim.starting_mobject.get_num_points() != end_anim.starting_mobject.get_num_points():
-            Mobject.align_data(start_anim.starting_mobject, end_anim.starting_mobject)
-            for anim in start_anim, end_anim:
-                if hasattr(anim, "ending_mobject"):
-                    Mobject.align_data(anim.starting_mobject, anim.ending_mobject)
-
-        Transform.__init__(self, start_anim.mobject, end_anim.mobject, **kwargs)
-        #Rewire starting and ending mobjects
-        start_anim.mobject = self.starting_mobject
-        end_anim.mobject = self.ending_mobject
-
-    def update(self, alpha):
-        self.start_anim.update(alpha)
-        self.end_anim.update(alpha)
-        Transform.update(self, alpha)
 
 
 

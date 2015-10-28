@@ -8,8 +8,7 @@ import cv2
 from colour import Color
 import progressbar
 
-from mobject import *
-from constants import *
+from helpers import *
 
 FFMPEG_BIN = "ffmpeg"
 
@@ -135,19 +134,6 @@ def get_file_path(name, extension):
     if not os.path.exists(directory):
         os.makedirs(directory)
     return file_path
-
-def write_to_gif(scene, name):
-    #TODO, find better means of compression
-    if not name.endswith(".gif"):
-        name += ".gif"
-    file_path = os.path.join(GIF_DIR, name)
-    temppath = os.path.join(GIF_DIR, "Temp.gif")
-    print "Writing " + name + "..."
-    images = [Image.fromarray(frame) for frame in scene.frames]
-    writeGif(temppath, images, scene.frame_duration)
-    print "Compressing..."
-    os.system("gifsicle -O " + temppath + " > " + file_path)
-    os.system("rm " + temppath)
 
 def write_to_movie(scene, name):
     file_path = get_file_path(name, ".mp4")

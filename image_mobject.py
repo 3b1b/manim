@@ -4,8 +4,8 @@ import os
 from PIL import Image
 from random import random
 
-from tex_utils import *
-from mobject import *
+from tex_utils import tex_to_image
+from mobject import Mobject
 
 class ImageMobject(Mobject):
     """
@@ -97,26 +97,6 @@ class ImageMobject(Mobject):
         else:
             points *= 2 * SPACE_WIDTH / width
         self.add_points(points, rgbs = rgbs)
-
-class Face(ImageMobject):
-    DEFAULT_CONFIG = {
-        "mode" : "simple",
-        "scale_value" : 0.5
-    }
-    def __init__(self, **kwargs):
-        """
-        Mode can be "simple", "talking", "straight"
-        """
-        digest_config(self, Face, kwargs)
-        ImageMobject.__init__(self, self.mode + "_face", **kwargs)
-
-class VideoIcon(ImageMobject):
-    DEFAULT_CONFIG = {
-        "scale_value" : 0.3
-    }
-    def __init__(self, **kwargs):
-        digest_config(self, VideoIcon, kwargs)
-        ImageMobject.__init__(self, "video_icon", **kwargs)
 
 #TODO, Make both of these proper mobject classes
 def text_mobject(text, size = None):

@@ -8,10 +8,8 @@ from copy import deepcopy
 from colour import Color
 import inspect
 
-
-from constants import *
-from helpers import *
 import displayer as disp
+from helpers import *
 
 
 class Mobject(object):

@@ -2,13 +2,7 @@ import numpy as np
 import itertools as it
 
 from scene import Scene
-from graphs import *
-
-from mobject import *
-from animation import *
-from region import *
-from constants import *
-from helpers import *
+from animation import Animation
 
 class RearrangeEquation(Scene):
     def construct(
@@ -87,7 +81,27 @@ class RearrangeEquation(Scene):
         return all_mobs[:num_start_terms], all_mobs[num_start_terms:]
 
 
+class FlipThroughSymbols(Animation):
+    DEFAULT_CONFIG = {
+        "start_center" : ORIGIN,
+        "end_center" : ORIGIN,
+    }
+    def __init__(self, tex_list, **kwargs):
+        digest_config(self, FlipThroughSymbols, kwargs, locals())
+        self.curr_tex = self.tex_list[0]
+        mobject = tex_mobject(self.curr_tex).shift(start_center)
+        Animation.__init__(self, mobject, **kwargs)
 
+    def update_mobject(self, alpha):
+        new_tex = self.tex_list[np.ceil(alpha*len(self.tex_list))-1]
+
+        if new_tex != self.curr_tex:
+            self.curr_tex = new_tex
+            self.mobject = tex_mobject(new_tex).shift(self.start_center)
+        if not all(self.start_center == self.end_center):
+            self.mobject.center().shift(
+                (1-alpha)*self.start_center + alpha*self.end_center
+            )
 
 
 

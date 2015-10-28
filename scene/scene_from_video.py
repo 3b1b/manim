@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 import itertools as it
 
-from scene import *
+from scene import Scene
 
 
 class SceneFromVideo(Scene):

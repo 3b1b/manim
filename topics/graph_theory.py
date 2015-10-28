@@ -3,13 +3,10 @@ import numpy as np
 import operator as op
 from random import random
 
+from helpers import *
+
 from scene import Scene
 
-from mobject import *
-from animation import *
-from region import *
-from constants import *
-from helpers import *
 
 class Graph():
     def __init__(self):

@@ -4,9 +4,9 @@ from PIL import Image
 import cv2
 from copy import deepcopy
 
-from constants import *
-from helpers import *
+
 import displayer as disp
+from helpers import *
 
 class Region(object):
     def __init__(self, 

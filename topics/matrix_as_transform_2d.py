@@ -5,13 +5,10 @@ import itertools as it
 from copy import deepcopy
 import sys
 
+from helpers import *
 
-from animation import *
-from mobject import *
-from constants import *
-from region import *
-from scene import Scene, NumberLineScene
-from script_wrapper import command_line_create_scene
+from scene import Scene
+from number_line import NumberLineScene
 
 MOVIE_PREFIX = "matrix_as_transform_2d/"
 

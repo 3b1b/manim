@@ -1,10 +1,6 @@
-import numpy as np
-import itertools as it
-
-from mobject import Mobject, Mobject1D, Mobject2D, CompoundMobject
-from image_mobject import text_mobject
-from constants import *
 from helpers import *
+
+from mobject import Mobject, Mobject1D
 
 
 class Point(Mobject):
@@ -51,6 +47,7 @@ class Cross(Mobject1D):
             for sgn in [-1, 1]
         ])
         self.shift(self.center_point)
+
 
 class Line(Mobject1D):
     DEFAULT_CONFIG = {
@@ -231,128 +228,3 @@ class Square(Rectangle):
         for arg in ["height", "width"]:
             kwargs[arg] = self.side_length
         Rectangle.__init__(self, **kwargs)
-
-class Bubble(Mobject):
-    DEFAULT_CONFIG = {
-        "direction" : LEFT,
-        "index_of_tip" : -1,
-        "center_point" : ORIGIN,
-    }
-    def __init__(self, **kwargs):
-        digest_config(self, Bubble, kwargs)
-        Mobject.__init__(self, **kwargs)
-        self.center_offset = self.center_point - Mobject.get_center(self)
-        if self.direction[0] > 0:
-            self.rotate(np.pi, UP)
-        self.content = Mobject()
-
-    def get_tip(self):
-        return self.points[self.index_of_tip]
-
-    def get_bubble_center(self):
-        return self.get_center()+self.center_offset
-
-    def move_tip_to(self, point):
-        self.shift(point - self.get_tip())
-        return self
-
-    def flip(self):
-        self.direction = -np.array(self.direction)
-        self.rotate(np.pi, UP)
-        return self
-
-    def pin_to(self, mobject):
-        mob_center = mobject.get_center()
-        if (mob_center[0] > 0) != (self.direction[0] > 0):
-            self.flip()
-        boundary_point = mobject.get_boundary_point(UP-self.direction)
-        vector_from_center = 1.5*(boundary_point-mob_center)
-        self.move_tip_to(mob_center+vector_from_center)
-        return self
-
-    def add_content(self, mobject):
-        scaled_width = 0.75*self.get_width()
-        if mobject.get_width() > scaled_width:
-            mobject.scale(scaled_width / mobject.get_width())
-        mobject.shift(self.get_bubble_center())
-        self.content = mobject
-        return self
-
-    def write(self, text):
-        self.add_content(text_mobject(text))
-        return self
-
-    def clear(self):
-        self.content = Mobject()
-        return self
-
-class SpeechBubble(Bubble):
-    DEFAULT_CONFIG = {
-        "initial_width" : 4,
-        "initial_height" : 2,
-    }
-    def __init__(self, **kwargs):
-        digest_config(self, SpeechBubble, kwargs)
-        Bubble.__init__(self, **kwargs)
-
-    def generate_points(self):
-        complex_power = 0.9
-        radius = self.initial_width/2
-        circle = Circle(radius = radius)
-        circle.scale(1.0/radius)
-        circle.apply_complex_function(lambda z : z**complex_power)
-        circle.scale(radius)
-        boundary_point_as_complex = radius*complex(-1)**complex_power
-        boundary_points = [
-            [
-                boundary_point_as_complex.real,
-                unit*boundary_point_as_complex.imag,
-                0
-            ]
-            for unit in -1, 1
-        ]
-        tip = radius*(1.5*LEFT+UP)
-        self.add(
-            circle,
-            Line(boundary_points[0], tip),
-            Line(boundary_points[1], tip)
-        )
-        self.highlight("white")
-        self.rotate(np.pi/2)
-        self.points[:,1] *= float(self.initial_height)/self.initial_width
-
-class ThoughtBubble(Bubble):
-    DEFAULT_CONFIG = {
-        "num_bulges" : 7,
-        "initial_inner_radius" : 1.8,
-        "initial_width" : 6
-    }
-    def __init__(self, **kwargs):
-        digest_config(self, ThoughtBubble, kwargs)
-        Bubble.__init__(self, **kwargs)
-        self.index_of_tip = np.argmin(self.points[:,1])
-
-    def generate_points(self):
-        self.add(Circle().scale(0.15).shift(2.5*DOWN+2*LEFT))
-        self.add(Circle().scale(0.3).shift(2*DOWN+1.5*LEFT))
-        for n in range(self.num_bulges):
-            theta = 2*np.pi*n/self.num_bulges
-            self.add(Circle().shift((np.cos(theta), np.sin(theta), 0)))
-        self.filter_out(lambda p : np.linalg.norm(p) < self.initial_inner_radius)
-        self.stretch_to_fit_width(self.initial_width)
-        self.highlight("white")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-       

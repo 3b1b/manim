@@ -2,9 +2,9 @@ import numpy as np
 import itertools as it
 
 from mobject import Mobject, Mobject1D, Mobject2D, CompoundMobject
-from simple_mobjects import Line
-from constants import *
+from geometry import Line
 from helpers import *
+
 
 class Stars(Mobject):
     DEFAULT_CONFIG = {

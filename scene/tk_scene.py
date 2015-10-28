@@ -1,8 +1,8 @@
-from scene import *
 import Tkinter
 from PIL import ImageTk, Image
 import itertools as it
 import time
+
 
 class TkSceneRoot(Tkinter.Tk):
     def __init__(self, scene):

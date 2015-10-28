@@ -1697,10 +1697,5 @@ class IntersectionChoppingExamples(Scene):
             self.remove(*self.mobjects)
 
 
-##################################################
-
-if __name__ == "__main__":
-    command_line_create_scene(MOVIE_PREFIX)
-
 
 

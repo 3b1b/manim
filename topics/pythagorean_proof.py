@@ -1,17 +1,13 @@
-#!/usr/bin/env python
-
 import numpy as np
 import itertools as it
 from copy import deepcopy
 import sys
 
+from helpers import *
 
-from animation import *
-from mobject import *
-from constants import *
-from region import *
 from scene import Scene
-from script_wrapper import command_line_create_scene
+from geometry import Polygon
+from region import region_from_polygon_vertices, region_from_line_boundary
 
 MOVIE_PREFIX = "pythagorean_proof"
 
@@ -513,14 +509,3 @@ class ShowRearrangementInBigSquareWithRegions(ShowRearrangementInBigSquare):
         self.highlight_region(region_from_polygon_vertices(
             RIGHT+DOWN, RIGHT+2*DOWN, 2*RIGHT+2*DOWN, 2*RIGHT+DOWN
         ), color = A_COLOR)
-
-
-
-
-
-
-
-
-
-if __name__ == "__main__":
-    command_line_create_scene(MOVIE_PREFIX)
