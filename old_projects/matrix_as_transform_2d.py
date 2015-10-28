@@ -10,8 +10,6 @@ from helpers import *
 from scene import Scene
 from number_line import NumberLineScene
 
-MOVIE_PREFIX = "matrix_as_transform_2d/"
-
 ARROW_CONFIG = {"point_thickness" : 2*DEFAULT_POINT_THICKNESS}
 LIGHT_RED = RED_E
 
@@ -543,9 +541,3 @@ class Show90DegreeRotation(TransformScene2D):
         ])
         self.dither()
 
-
-
-
-
-if __name__ == "__main__":
-    command_line_create_scene(MOVIE_PREFIX)

@@ -16,7 +16,7 @@ class NumberLine(Mobject1D):
         "longer_tick_multiple" : 2,
     }
     def __init__(self, **kwargs):
-        digest_config(self, NumberLine, kwargs)
+        digest_config(self, kwargs)
         if self.leftmost_tick is None:
             self.leftmost_tick = -int(self.numerical_radius)
         self.left_num  = self.number_at_center - self.numerical_radius
@@ -107,9 +107,6 @@ class UnitInterval(NumberLine):
         "number_at_center" : 0.5,                 
         "numbers_with_elongated_ticks" : [0, 1],
     }
-    def __init__(self, **kwargs):
-        digest_config(self, UnitInterval, kwargs)
-        NumberLine.__init__(self, **kwargs)
 
 
 class NumberPlane(Mobject1D):
@@ -127,10 +124,7 @@ class NumberPlane(Mobject1D):
         "number_scale_factor" : 0.25,
         "num_pair_at_center" : np.array((0, 0)),
     }
-    def __init__(self, **kwargs):
-        digest_config(self, NumberPlane, kwargs)
-        Mobject1D.__init__(self, **kwargs)
-
+    
     def generate_points(self):
         #TODO, clean this
         color = self.color

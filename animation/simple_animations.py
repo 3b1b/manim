@@ -16,10 +16,6 @@ class Rotating(Animation):
         "run_time" : 20.0,
         "alpha_func" : None,
     }
-    def __init__(self, mobject, **kwargs):
-        digest_config(self, Rotating, kwargs, locals())
-        Animation.__init__(self, mobject, **kwargs)
-
     def update_mobject(self, alpha):
         self.mobject.points = self.starting_mobject.points
         for axis in self.axes:
@@ -61,7 +57,6 @@ class Flash(Animation):
         "alpha_func" : None,
     }
     def __init__(self, mobject, **kwargs):
-        digest_config(self, Flash, kwargs, locals())
         self.intermediate = Mobject(color = self.color)
         self.intermediate.add_points([
             point + (x, y, 0)
@@ -82,12 +77,12 @@ class Flash(Animation):
         )
 
 class Homotopy(Animation):
-    def __init__(self, homotopy, **kwargs):
+    def __init__(self, homotopy, mobject, **kwargs):
         """
         Homotopy a function from (x, y, z, t) to (x', y', z')
         """
-        digest_config(self, Homotopy, kwargs, locals())
-        Animation.__init__(self, **kwargs)
+        digest_locals(self)
+        Animation.__init__(self, mobject, **kwargs)
 
     def update_mobject(self, alpha):
         self.mobject.points = np.array([

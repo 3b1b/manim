@@ -7,9 +7,7 @@ import warnings
 from helpers import *
 
 from animation import Animation
-from mobject import Mobject
-from topics.geometry import Point
-from topics.complex_numbers import ComplexPlane
+from mobject import Mobject, Point
 
 class Transform(Animation):
     DEFAULT_CONFIG = {
@@ -18,7 +16,7 @@ class Transform(Animation):
     }
     def __init__(self, mobject, ending_mobject, **kwargs):
         mobject, ending_mobject = map(instantiate, [mobject, ending_mobject])
-        digest_config(self, Transform, kwargs, locals())
+        digest_config(self, kwargs, locals())
         count1, count2 = mobject.get_num_points(), ending_mobject.get_num_points()
         if count2 == 0:
             ending_mobject.add_points([SPACE_WIDTH*RIGHT+SPACE_HEIGHT*UP])
@@ -73,24 +71,17 @@ class ClockwiseTransform(Transform):
     DEFAULT_CONFIG = {
         "interpolation_function" : clockwise_path()
     }
-    def __init__(self, *args, **kwargs):
-        digest_config(self, ClockwiseTransform, kwargs)
-        Transform.__init__(self, *args, **kwargs)
 
 class CounterclockwiseTransform(Transform):
     DEFAULT_CONFIG = {
         "interpolation_function" : counterclockwise_path()
     }
-    def __init__(self, *args, **kwargs):
-        digest_config(self, ClockwiseTransform, kwargs)
-        Transform.__init__(self, *args, **kwargs)
 
 class SpinInFromNothing(Transform):
     DEFAULT_CONFIG = {
         "interpolation_function" : counterclockwise_path()
     }
     def __init__(self, mob, **kwargs):
-        digest_config(self, SpinInFromNothing, kwargs)
         Transform.__init__(self, Point(mob.get_center()), mob, **kwargs)
 
 class ApplyMethod(Transform):
@@ -121,7 +112,6 @@ class ApplyPointwiseFunction(ApplyMethod):
         "run_time" : DEFAULT_POINTWISE_FUNCTION_RUN_TIME
     }
     def __init__(self, function, mobject, **kwargs):
-        digest_config(self, ApplyPointwiseFunction, kwargs)
         ApplyMethod.__init__(
             self, mobject.apply_function, function, **kwargs
         )

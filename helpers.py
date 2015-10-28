@@ -1,11 +1,13 @@
 import numpy as np
 import itertools as it
+import operator as op
 from PIL import Image
 from colour import Color
 from random import random
+import inspect
 import string
 import re
-import operator as op
+
 
 from constants import *
 
@@ -24,24 +26,37 @@ def instantiate(obj):
     return obj() if isinstance(obj, type) else obj
 
 
-def digest_config(obj, Class, kwargs, local_args = {}):
+def filtered_locals(local_args):
+    result = local_args.copy()
+    ignored_local_args = ["self", "kwargs"]
+    for arg in ignored_local_args:
+        result.pop(arg, local_args)
+    return result
+
+
+def digest_config(obj, kwargs, local_args = {}):
     """
-    To be used in initializing most-to-all objects.
-    Sets key word args as local variables
+    Sets init args and DEFAULT_CONFIG values as local variables
     """
-    if hasattr(Class, "DEFAULT_CONFIG"):
-        config = Class.DEFAULT_CONFIG.copy()
-    else:
-        config = {}
-    for key in config.keys():
-        if hasattr(obj, key):
-            config.pop(key)
-        if key in kwargs:
-            config[key] = kwargs.pop(key)
-    for key in local_args:
-        if key not in ["self", "kwargs"]:
-            config[key] = local_args[key]
-    obj.__dict__.update(config)
+    ### Assemble list of DEFAULT_CONFIGs from all super classes
+    classes_in_heirarchy = [obj.__class__]
+    default_configs = []
+    while len(classes_in_heirarchy) > 0:
+        Class = classes_in_heirarchy.pop()
+        classes_in_heirarchy += Class.__bases__
+        if hasattr(Class, "DEFAULT_CONFIG"):
+            default_configs.append(Class.DEFAULT_CONFIG)    
+
+    #Order matters a lot here, first dicts have higher priority
+    all_dicts = [kwargs, filtered_locals(local_args), obj.__dict__]
+    all_dicts += default_configs
+    item_lists = reversed([d.items() for d in all_dicts])
+    obj.__dict__ = dict(reduce(op.add, item_lists))
+
+def digest_locals(obj):
+    caller_locals = inspect.currentframe().f_back.f_locals
+    obj.__dict__.update(filtered_locals(caller_locals))
+
 
 def interpolate(start, end, alpha):
     return (1-alpha)*start + alpha*end

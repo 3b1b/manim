@@ -5,7 +5,5 @@ from complex_numbers import *
 from functions import *
 from geometry import *
 from graph_theory import *
-from matrix_as_transform_2d import *
 from number_line import *
-from pythagorean_proof import *
 from three_dimensions import *

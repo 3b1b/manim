@@ -12,22 +12,30 @@ from helpers import *
 from scene import Scene
 
 HELP_MESSAGE = """
-   <script name> [<scene name or initials>] [<arg_string>]
+   Usage: 
+   python extract_scene.py <module> [<scene name>] [<arg_string>]
+
    -p preview in low quality
    -s show and save picture of last frame
+   -w write result to file [this is default if nothing else is stated]
    -l use low quality
-   -a run and save every scene in the script
+   -m use medium quality
+   -a run and save every scene in the script, or all args for the given scene
    -q don't pring progress
 """
 SCENE_NOT_FOUND_MESSAGE = """
    That scene is not in the script
 """
 CHOOSE_NUMBER_MESSAGE = """
-Choose number corresponding to desired scene arguments.
+Choose number corresponding to desired scene/arguments.
 (Use comma separated list for multiple entries)
 
-Choice(s):"""
+Choice(s): """
 INVALID_NUMBER_MESSAGE = "Fine then, if you don't want to give a valid number I'll just quit"
+
+NO_SCENE_MESSAGE = """
+   There are no scenes inside that module
+"""
 
 
 def get_configuration(sys_argv):
@@ -72,8 +80,10 @@ def get_configuration(sys_argv):
    if not any([config[key] for key in actions]):
       config["write"] = True
 
-   if len(args) > 0:
-      config["module"] = args[0]
+   if len(args) == 0:
+      print HELP_MESSAGE
+      sys.exit()
+   config["module"] = args[0].replace(".py", "")
    if len(args) > 1:
       config["scene_name"] = args[1]
    if len(args) > 2:
@@ -110,16 +120,16 @@ def is_scene(obj):
       return False
    return True
 
-def prompt_user_for_args(args_list, args_to_string):
-   num_to_args = {}
-   for count, args in zip(it.count(1), args_list):
-      print "%d: %s"%(count, args_to_string(*args))
-      num_to_args[count] = args
+def prompt_user_for_choice(name_to_obj):
+   num_to_name = {}
+   for count, name in zip(it.count(1), name_to_obj):
+      print "%d: %s"%(count, name)
+      num_to_name[count] = name
    try:
-      choice = raw_input(CHOOSE_NUMBER_MESSAGE)
+      user_input = raw_input(CHOOSE_NUMBER_MESSAGE)
       return [
-         num_to_args[int(num_str)]
-         for num_str in choice.split(",")
+         name_to_obj[num_to_name[int(num_str)]]
+         for num_str in user_input.split(",")
       ]
    except:
       print INVALID_NUMBER_MESSAGE
@@ -139,38 +149,49 @@ def get_scene_args(SceneClass, config):
 
    if num_args == 0:
       return [()]
-   elif config["write_all"]:
+   if config["write_all"]:
       return args_list
-   elif config["args_extension"] in preset_extensions:
+   if config["args_extension"] in preset_extensions:
       index = preset_extensions.index(config["args_extension"])
       return [args_list[index]]
-   elif len(args_list) == 1:
-      return [args_list[0]]
-   elif config["args_extension"] == "" :
-      return prompt_user_for_args(args_list, SceneClass.args_to_string)
-   else:
-      return [SceneClass.string_to_args(config["args_extension"])]
+   if config["args_extension"] == "" :
+      name_to_args = dict(zip(preset_extensions, args_list))
+      return prompt_user_for_choice(name_to_args)
+   if len(args_list) == 1:
+      return args_list
+   return [SceneClass.string_to_args(config["args_extension"])]
+
+def get_scene_classes(scene_names_to_classes, config):
+   if len(scene_names_to_classes) == 0:
+      print NO_SCENE_MESSAGE
+      return []
+   if len(scene_names_to_classes) == 1:
+      return scene_names_to_classes.values()
+   if config["scene_name"] in scene_names_to_classes:
+      return [scene_names_to_classes[config["scene_name"]] ]
+   if config["scene_name"] != "":
+      print SCENE_NOT_FOUND_MESSAGE
+      return []
+   if config["write_all"]:
+      return scene_names_to_classes.values()
+   return prompt_user_for_choice(scene_names_to_classes)
+
 
 def main():
    config = get_configuration(sys.argv)
-   module = imp.load_source(config["module_name"], ".")
+   module = imp.load_module(
+      config["module"],
+      *imp.find_module(config["module"])
+   )
    scene_names_to_classes = dict(
       inspect.getmembers(module, is_scene)
    )
-   config["movie_prefix"] = config["module_name"].split(".py")[0]
-   if config["scene_name"] in scene_names_to_classes:
-      scene_classes = [scene_names_to_classes[config["scene_name"]] ]
-   elif config["scene_name"] == "" and config["write_all"]:
-      scene_classes = scene_names_to_classes.values()
-   else:
-      print SCENE_NOT_FOUND_MESSAGE
-      return
-
+   config["movie_prefix"] = config["module"]
    scene_kwargs = {
       "display_config" : config["display_config"],
       "announce_construction" : True
    }
-   for SceneClass in scene_classes:
+   for SceneClass in get_scene_classes(scene_names_to_classes, config):
       for args in get_scene_args(SceneClass, config):
          scene_kwargs["construct_args"] = args
          try:

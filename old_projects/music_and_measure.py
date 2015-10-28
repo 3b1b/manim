@@ -83,7 +83,7 @@ class RightParen(Mobject):
 
 class OpenInterval(CompoundMobject):
     def __init__(self, center_point = ORIGIN, width = 2, **kwargs):
-        digest_config(self, OpenInterval, kwargs, locals())
+        digest_config(self, kwargs, locals())
         left = LeftParen().shift(LEFT*width/2)
         right = RightParen().shift(RIGHT*width/2)
         CompoundMobject.__init__(self, left, right, **kwargs)
@@ -99,7 +99,7 @@ class Piano(ImageMobject):
         "scale_value" : 0.5
     }
     def __init__(self, **kwargs):
-        digest_config(self, Piano, kwargs)
+        digest_config(self, kwargs)
         ImageMobject.__init__(self, "piano_keyboard")
         jump = self.get_width()/24        
         self.center()
@@ -137,7 +137,7 @@ class VibratingString(Animation):
         "alpha_func" : None
     }
     def __init__(self, **kwargs):
-        digest_config(self, VibratingString, kwargs)
+        digest_config(self, kwargs)
         def func(x, t):
             return sum([
                 (self.amplitude/((k+1)**2.5))*np.sin(2*mult*t)*np.sin(k*mult*x)

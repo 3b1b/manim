@@ -4,6 +4,7 @@ import os
 from PIL import Image
 from random import random
 
+from helpers import *
 from tex_utils import tex_to_image
 from mobject import Mobject
 
@@ -20,7 +21,7 @@ class ImageMobject(Mobject):
         "should_center" : True
     }
     def __init__(self, image_file, **kwargs):
-        digest_config(self, ImageMobject, kwargs, locals())
+        digest_locals(self)
         Mobject.__init__(self, **kwargs)
         self.filter_rgb = 255 * np.array(Color(self.filter_color).get_rgb()).astype('uint8')
         self.name = to_cammel_case(
@@ -97,41 +98,4 @@ class ImageMobject(Mobject):
         else:
             points *= 2 * SPACE_WIDTH / width
         self.add_points(points, rgbs = rgbs)
-
-#TODO, Make both of these proper mobject classes
-def text_mobject(text, size = None):
-    size = size or "\\Large" #TODO, auto-adjust?
-    return tex_mobject(text, size, TEMPLATE_TEXT_FILE)
-
-def tex_mobject(expression, 
-                size = None, 
-                template_tex_file = TEMPLATE_TEX_FILE):
-    if size == None:
-        if len("".join(expression)) < MAX_LEN_FOR_HUGE_TEX_FONT:
-            size = "\\Huge"
-        else:
-            size = "\\large"
-        #Todo, make this more sophisticated.
-    image_files = tex_to_image(expression, size, template_tex_file)
-    config = {
-        "point_thickness" : 1,
-        "should_center" : False,
-    }
-    if isinstance(image_files, list):
-        #TODO, is checking listiness really the best here?
-        result = CompoundMobject(*[
-            ImageMobject(f, **config) 
-            for f in image_files
-        ])
-    else:
-        result = ImageMobject(image_files, **config)
-    return result.center().highlight("white")
-
-
-def underbrace(left, right, buff = 0.2):
-    result = tex_mobject("\\underbrace{%s}"%(14*"\\quad"))
-    result.stretch_to_fit_width(right[0]-left[0])
-    result.shift(left - result.points[0] + buff*DOWN)
-    return result
-
 

@@ -172,7 +172,6 @@ class Bubble(Mobject):
         "center_point" : ORIGIN,
     }
     def __init__(self, **kwargs):
-        digest_config(self, Bubble, kwargs)
         Mobject.__init__(self, **kwargs)
         self.center_offset = self.center_point - Mobject.get_center(self)
         if self.direction[0] > 0:
@@ -224,9 +223,6 @@ class SpeechBubble(Bubble):
         "initial_width" : 4,
         "initial_height" : 2,
     }
-    def __init__(self, **kwargs):
-        digest_config(self, SpeechBubble, kwargs)
-        Bubble.__init__(self, **kwargs)
 
     def generate_points(self):
         complex_power = 0.9
@@ -261,7 +257,6 @@ class ThoughtBubble(Bubble):
         "initial_width" : 6
     }
     def __init__(self, **kwargs):
-        digest_config(self, ThoughtBubble, kwargs)
         Bubble.__init__(self, **kwargs)
         self.index_of_tip = np.argmin(self.points[:,1])
 

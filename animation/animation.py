@@ -9,8 +9,7 @@ import progressbar
 import inspect
 
 from helpers import *
-from mobject import Mobject
-from topics.geometry import Point
+from mobject import Mobject, Point
 
 class Animation(object):
     DEFAULT_CONFIG = {
@@ -21,7 +20,7 @@ class Animation(object):
     def __init__(self, mobject, **kwargs):
         mobject = instantiate(mobject)
         assert(isinstance(mobject, Mobject))
-        digest_config(self, Animation, kwargs, locals())
+        digest_config(self, kwargs, locals())
         self.starting_mobject = copy.deepcopy(self.mobject)
         if self.alpha_func is None:
             self.alpha_func = (lambda x : x)

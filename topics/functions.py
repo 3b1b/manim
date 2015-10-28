@@ -13,7 +13,7 @@ class FunctionGraph(Mobject1D):
         "spatial_radius" : SPACE_WIDTH,
     }
     def __init__(self, function, **kwargs):
-        digest_config(self, FunctionGraph, kwargs, locals())
+        self.function = function
         Mobject1D.__init__(self, **kwargs)
 
     def generate_points(self):
@@ -35,14 +35,14 @@ class ParametricFunction(Mobject):
         "density" : None
     }
     def __init__(self, function, **kwargs):
-        digest_config(self, ParametricFunction, kwargs, locals())
+        self.function = function
         if self.density:
             self.epsilon = 1.0 / self.density
         elif self.dim == 1:
             self.epsilon = 1.0 / self.expected_measure / DEFAULT_POINT_DENSITY_1D
         else:
             self.epsilon = 1.0 / np.sqrt(self.expected_measure) / DEFAULT_POINT_DENSITY_2D
-        Mobject.__init__(self, *args, **kwargs)
+        Mobject.__init__(self, **kwargs)
 
     def generate_points(self):
         if self.dim == 1:
@@ -63,3 +63,6 @@ class Axes(CompoundMobject):
         x_axis = NumberLine(**kwargs)
         y_axis = NumberLine(**kwargs).rotate(np.pi/2, OUT)
         CompoundMobject.__init__(self, x_axis, y_axis)
+
+
+        

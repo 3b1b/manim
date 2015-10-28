@@ -18,12 +18,12 @@ class DelayByOrder(Animation):
         "max_power" : 5
     }
     def __init__(self, animation, **kwargs):
-        digest_config(self, DelayByOrder, kwargs, locals())
+        digest_locals(self)
+        self.num_mobject_points = animation.mobject.get_num_points()        
         kwargs.update(dict([
             (attr, getattr(animation, attr))
             for attr in Animation.DEFAULT_CONFIG
         ]))
-        self.num_mobject_points = animation.mobject.get_num_points()
         Animation.__init__(self, animation.mobject, **kwargs)
         self.name = self.__class__.__name__ + str(self.animation)
 
@@ -44,14 +44,13 @@ class TransformAnimations(Transform):
         "alpha_func" : squish_alpha_func(smooth)
     }
     def __init__(self, start_anim, end_anim, **kwargs):
-        digest_config(self, TransformAnimations, kwargs, locals())
         if "run_time" in kwargs:
             self.run_time = kwargs.pop("run_time")
         else:
             self.run_time = max(start_anim.run_time, end_anim.run_time)
         for anim in start_anim, end_anim:
             anim.set_run_time(self.run_time)
-
+            
         if start_anim.starting_mobject.get_num_points() != end_anim.starting_mobject.get_num_points():
             Mobject.align_data(start_anim.starting_mobject, end_anim.starting_mobject)
             for anim in start_anim, end_anim:

@@ -1,6 +1,7 @@
 import numpy as np
 import itertools as it
 
+from helpers import *
 from scene import Scene
 from animation import Animation
 
@@ -87,8 +88,6 @@ class FlipThroughSymbols(Animation):
         "end_center" : ORIGIN,
     }
     def __init__(self, tex_list, **kwargs):
-        digest_config(self, FlipThroughSymbols, kwargs, locals())
-        self.curr_tex = self.tex_list[0]
         mobject = tex_mobject(self.curr_tex).shift(start_center)
         Animation.__init__(self, mobject, **kwargs)
 

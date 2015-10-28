@@ -24,7 +24,7 @@ class Mobject(object):
     }
     DIM = 3
     def __init__(self, **kwargs):
-        digest_config(self, Mobject, kwargs)
+        digest_config(self, kwargs)
         self.color = Color(self.color)
         if self.name is None:
             self.name = self.__class__.__name__
@@ -358,9 +358,10 @@ class Mobject1D(Mobject):
         "density" : DEFAULT_POINT_DENSITY_1D,
     }
     def __init__(self, **kwargs):
-        digest_config(self, Mobject1D, kwargs)
-        self.epsilon = 1.0 / self.density
+        digest_config(self, kwargs)
+        self.epsilon = 1.0 / self.density        
         Mobject.__init__(self, **kwargs)
+
 
     def add_line(self, start, end, min_density = 0.1, color = None):
         length = np.linalg.norm(end - start)
@@ -375,8 +376,8 @@ class Mobject2D(Mobject):
         "density" : DEFAULT_POINT_DENSITY_2D,
     }
     def __init__(self, **kwargs):
-        digest_config(self, Mobject2D, kwargs)
-        self.epsilon = 1.0 / self.density
+        digest_config(self, kwargs)
+        self.epsilon = 1.0 / self.density  
         Mobject.__init__(self, **kwargs)
 
 class CompoundMobject(Mobject):
@@ -401,6 +402,18 @@ class CompoundMobject(Mobject):
             ))
             curr += num_points
         return result
+
+
+class Point(Mobject):
+    DEFAULT_CONFIG = {
+        "color" : BLACK,
+    }
+    def __init__(self, location = ORIGIN, **kwargs):
+        digest_locals(self)        
+        Mobject.__init__(self, **kwargs)
+
+    def generate_points(self):
+        self.add_points([self.location])
 
 # class CompoundMobject(Mobject):
 #     """

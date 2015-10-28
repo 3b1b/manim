@@ -3,24 +3,12 @@ from helpers import *
 from mobject import Mobject, Mobject1D
 
 
-class Point(Mobject):
-    DEFAULT_CONFIG = {
-        "color" : BLACK,
-    }
-    def __init__(self, location = ORIGIN, **kwargs):
-        digest_config(self, Point, kwargs, locals())
-        Mobject.__init__(self, **kwargs)
-
-    def generate_points(self):
-        self.add_points([self.location])
-
-
 class Dot(Mobject1D): #Use 1D density, even though 2D
     DEFAULT_CONFIG = {
         "radius" : 0.05
     }
     def __init__(self, center_point = ORIGIN, **kwargs):
-        digest_config(self, Dot, kwargs, locals())
+        digest_locals(self)
         Mobject1D.__init__(self, **kwargs)
 
     def generate_points(self):
@@ -37,7 +25,7 @@ class Cross(Mobject1D):
         "radius" : 0.3
     }
     def __init__(self, center_point = ORIGIN, **kwargs):
-        digest_config(self, Cross, kwargs, locals())
+        digest_locals(self)
         Mobject1D.__init__(self, **kwargs)
 
     def generate_points(self):
@@ -54,7 +42,6 @@ class Line(Mobject1D):
         "min_density" : 0.1
     }
     def __init__(self, start, end, **kwargs):
-        digest_config(self, Line, kwargs)
         self.set_start_and_end(start, end)
         Mobject1D.__init__(self, **kwargs)
 
@@ -93,7 +80,6 @@ class Arrow(Line):
         "tip_length" : 0.25
     }
     def __init__(self, *args, **kwargs):
-        digest_config(self, Arrow, kwargs)
         Line.__init__(self, *args, **kwargs)
         self.add_tip()
 
@@ -150,7 +136,7 @@ class PartialCircle(Mobject1D):
         "start_angle" : 0
     }
     def __init__(self, angle, **kwargs):
-        digest_config(self, PartialCircle, kwargs, locals())
+        digest_locals(self)
         Mobject1D.__init__(self, **kwargs)
 
     def generate_points(self):
@@ -169,7 +155,6 @@ class Circle(PartialCircle):
         "color" : RED,
     }
     def __init__(self, **kwargs):
-        digest_config(self, Circle, kwargs)
         PartialCircle.__init__(self, angle = 2*np.pi, **kwargs)
 
 class Polygon(Mobject1D):
@@ -179,8 +164,7 @@ class Polygon(Mobject1D):
     }
     def __init__(self, *points, **kwargs):
         assert len(points) > 1
-        digest_config(self, Polygon, kwargs)
-        self.original_points = points
+        digest_locals(self)
         Mobject1D.__init__(self, **kwargs)
 
     def generate_points(self):
@@ -189,9 +173,7 @@ class Polygon(Mobject1D):
         else:
             colors = it.cycle([self.color])
         self.indices_of_vertices = []
-        points = list(self.original_points)
-        points.append(points[0])
-        for start, end in zip(points, points[1:]):
+        for start, end in adjascent_pairs(self.points):
             self.indices_of_vertices.append(self.get_num_points())
             self.add_line(start, end, color = colors.next())
 
@@ -206,10 +188,6 @@ class Rectangle(Mobject1D):
         "height" : 2.0,
         "width" : 4.0
     }
-    def __init__(self, **kwargs):
-        digest_config(self, Rectangle, kwargs)
-        Mobject1D.__init__(self, **kwargs)
-
     def generate_points(self):
         wh = [self.width/2.0, self.height/2.0]
         self.add_points([
@@ -224,7 +202,13 @@ class Square(Rectangle):
         "side_length" : 2.0,
     }
     def __init__(self, **kwargs):
-        digest_config(self, Square, kwargs)
+        digest_config(self, kwargs)
         for arg in ["height", "width"]:
             kwargs[arg] = self.side_length
         Rectangle.__init__(self, **kwargs)
+
+
+
+
+
+

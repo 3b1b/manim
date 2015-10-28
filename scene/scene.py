@@ -13,6 +13,7 @@ from helpers import *
 
 import displayer as disp
 from tk_scene import TkSceneRoot
+from mobject import Mobject
 
 class Scene(object):
     DEFAULT_CONFIG = {
@@ -23,7 +24,7 @@ class Scene(object):
         "announce_construction" : False,
     }
     def __init__(self, **kwargs):
-        digest_config(self, Scene, kwargs)
+        digest_config(self, kwargs)
         if self.announce_construction:
             print "Constructing %s..."%str(self)
         self.frame_duration = self.display_config["frame_duration"]

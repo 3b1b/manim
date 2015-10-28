@@ -2,7 +2,7 @@ from helpers import *
 
 from number_line import NumberPlane
 from animation.transform import ApplyPointwiseFunction
-from animation.animation import Homotopy
+from animation.simple_animations import Homotopy
 from scene import Scene
 
 
@@ -18,7 +18,7 @@ class ComplexPlane(NumberPlane):
         "number_at_center" : complex(0),
     }
     def __init__(self, **kwargs):
-        digest_config(self, ComplexPlane, kwargs)
+        digest_config(self, kwargs)
         kwargs.update({
             "x_unit_to_spatial_width" : self.unit_to_spatial_width,
             "y_uint_to_spatial_height" : self.unit_to_spatial_width,
