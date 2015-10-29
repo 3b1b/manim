@@ -49,7 +49,7 @@ class ComplexPlane(NumberPlane):
                 num_str = "0"
             else:
                 num_str = str(number).replace("j", "i")
-            num = tex_mobject(num_str)
+            num = TexMobject(num_str)
             num.scale(self.number_scale_factor)
             num.shift(point-num.get_corner(UP+LEFT)+nudge)
             result.append(num)
@@ -167,7 +167,7 @@ class ComplexMultiplication(Scene):
             radius = 0.1*self.plane.unit_to_spatial_width, 
             color = BLUE if value == 1 else YELLOW
         )
-        label = tex_mobject(tex_string)
+        label = TexMobject(tex_string)
         label.shift(dot.get_center()+1.5*UP+RIGHT)
         arrow = Arrow(label, dot)
         self.add(label)

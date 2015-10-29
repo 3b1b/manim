@@ -33,7 +33,7 @@ class PiCreature(CompoundMobject):
         self.mouth.center()
         self.smile = deepcopy(self.mouth)
         self.frown = deepcopy(self.mouth).rotate(np.pi, RIGHT)
-        self.straight_mouth = tex_mobject("-").scale(0.5)
+        self.straight_mouth = TexMobject("-").scale(0.5)
         for mouth_name in ["mouth"] + self.MOUTH_NAMES:
             mouth = getattr(self, mouth_name)
             mouth.sort_points(lambda p : p[0])
@@ -211,7 +211,7 @@ class Bubble(Mobject):
         return self
 
     def write(self, text):
-        self.add_content(text_mobject(text))
+        self.add_content(TextMobject(text))
         return self
 
     def clear(self):

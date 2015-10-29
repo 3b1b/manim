@@ -76,13 +76,13 @@ NUM_INTERVAL_TICKS = 16
 
 
 def divergent_sum():
-    return tex_mobject(DIVERGENT_SUM_TEXT, size = "\\large").scale(2)
+    return TexMobject(DIVERGENT_SUM_TEXT, size = "\\large").scale(2)
 
 def convergent_sum():
-    return tex_mobject(CONVERGENT_SUM_TEXT, size = "\\large").scale(2)
+    return TexMobject(CONVERGENT_SUM_TEXT, size = "\\large").scale(2)
 
-def underbrace(left, right):
-    result = tex_mobject("\\underbrace{%s}"%(14*"\\quad"))
+def Underbrace(left, right):
+    result = TexMobject("\\Underbrace{%s}"%(14*"\\quad"))
     result.stretch_to_fit_width(right[0]-left[0])
     result.shift(left - result.points[0])
     return result
@@ -94,8 +94,8 @@ def zero_to_one_interval():
     )
     interval.elongate_tick_at(-INTERVAL_RADIUS, 4)
     interval.elongate_tick_at(INTERVAL_RADIUS, 4)
-    zero = tex_mobject("0").shift(INTERVAL_RADIUS*LEFT+DOWN)
-    one = tex_mobject("1").shift(INTERVAL_RADIUS*RIGHT+DOWN)
+    zero = TexMobject("0").shift(INTERVAL_RADIUS*LEFT+DOWN)
+    one = TexMobject("1").shift(INTERVAL_RADIUS*RIGHT+DOWN)
     return CompoundMobject(interval, zero, one)
 
 def draw_you(with_bubble = False):
@@ -132,7 +132,7 @@ class FlipThroughNumbers(Animation):
         self.start_center = start_center
         self.end_center = end_center
         self.current_number = function(start)
-        mobject = tex_mobject(str(self.current_number)).shift(start_center)
+        mobject = TexMobject(str(self.current_number)).shift(start_center)
         Animation.__init__(self, mobject, **kwargs)
 
     def update_mobject(self, alpha):
@@ -141,7 +141,7 @@ class FlipThroughNumbers(Animation):
         )
         if new_number != self.current_number:
             self.current_number = new_number
-            self.mobject = tex_mobject(str(new_number)).shift(self.start_center)
+            self.mobject = TexMobject(str(new_number)).shift(self.start_center)
         if not all(self.start_center == self.end_center):
             self.mobject.center().shift(
                 (1-alpha)*self.start_center + alpha*self.end_center
@@ -154,7 +154,7 @@ class IntroduceDivergentSum(Scene):
     def construct(self):
         equation = divergent_sum().split()
         sum_value = None
-        brace = underbrace(
+        brace = Underbrace(
             equation[0].get_boundary_point(DOWN+LEFT),
             equation[1].get_boundary_point(DOWN+RIGHT)
         ).shift(0.2*DOWN)
@@ -170,7 +170,7 @@ class IntroduceDivergentSum(Scene):
             brace.to_edge(LEFT, buff = SPACE_WIDTH+min_x_coord)
             if sum_value:
                 self.remove(sum_value)
-            sum_value = tex_mobject(str(2**(x+1) - 1))
+            sum_value = TexMobject(str(2**(x+1) - 1))
             sum_value.shift(brace.get_center() + 0.5*DOWN)
             self.add(brace, sum_value)
             self.dither(0.75)
@@ -203,9 +203,9 @@ class ClearlyNonsense(Scene):
     def construct(self):
         number_line = NumberLine().add_numbers()
         div_sum = divergent_sum()
-        this_way = text_mobject("Sum goes this way...")
+        this_way = TextMobject("Sum goes this way...")
         this_way.to_edge(LEFT).shift(RIGHT*(SPACE_WIDTH+1) + DOWN)
-        how_here = text_mobject("How does it end up here?")
+        how_here = TextMobject("How does it end up here?")
         how_here.shift(1.5*UP+LEFT)
         neg_1_arrow = Arrow(
             (-1, 0.3, 0), 
@@ -237,7 +237,7 @@ class OutlineOfVideo(Scene):
     def construct(self):
         conv_sum = convergent_sum().scale(0.5)
         div_sum = divergent_sum().scale(0.5)
-        overbrace = underbrace(
+        overbrace = Underbrace(
             conv_sum.get_left(),
             conv_sum.get_right()
         ).rotate(np.pi, RIGHT).shift(0.75*UP*conv_sum.get_height())
@@ -247,14 +247,14 @@ class OutlineOfVideo(Scene):
             dots.get_bottom(),
             direction = UP+LEFT
         )
-        u_brace = underbrace(div_sum.get_left(), div_sum.get_right())
+        u_brace = Underbrace(div_sum.get_left(), div_sum.get_right())
         u_brace.shift(1.5*div_sum.get_bottom())
         for mob in conv_sum, overbrace, arrow, dots:
             mob.shift(2*UP)
         for mob in div_sum, u_brace:
             mob.shift(DOWN)
         texts = [
-            text_mobject(words).highlight("yellow")
+            TextMobject(words).highlight("yellow")
             for words in [
                 "1. Discover this",
                 "2. Clarify what this means",
@@ -288,7 +288,7 @@ class OutlineOfVideo(Scene):
 
 # # class ReasonsForMakingVideo(Scene):
 # #     def construct(self):
-# #         text = text_mobject([
+# #         text = TextMobject([
 # #             """
 # #             \\begin{itemize}
 # #             \\item Understand what ``$
@@ -320,9 +320,9 @@ class OutlineOfVideo(Scene):
 
 # class DiscoverAndDefine(Scene):
 #     def construct(self):
-#         sum_mob = tex_mobject("\\sum_{n = 1}^\\infty a_n")
-#         discover = text_mobject("What does it feel like to discover these?")
-#         define = text_mobject([
+#         sum_mob = TexMobject("\\sum_{n = 1}^\\infty a_n")
+#         discover = TextMobject("What does it feel like to discover these?")
+#         define = TextMobject([
 #             "What does it feel like to", 
 #             "\\emph{define} ",
 #             "them?"
@@ -341,7 +341,7 @@ class OutlineOfVideo(Scene):
 class YouAsMathematician(Scene):
     def construct(self):
         you, bubble = draw_you(with_bubble = True)
-        explanation = text_mobject(
+        explanation = TextMobject(
             "You as a (questionably accurate portrayal of a) mathematician.",
             size = "\\small"
         ).shift([2, you.get_center()[1], 0])
@@ -473,7 +473,7 @@ class DanceDotOnInterval(Scene):
             for x in LEFT, RIGHT
         ]
         color_range = Color("green").range_to("yellow", num_written_terms)
-        conv_sum = tex_mobject(sum_terms, size = "\\large").split()
+        conv_sum = TexMobject(sum_terms, size = "\\large").split()
 
         self.add(interval)
         self.play(*[
@@ -510,7 +510,7 @@ class DanceDotOnInterval(Scene):
         self.dither()
 
     def write_partial_sums(self):
-        partial_sums = tex_mobject(PARTIAL_CONVERGENT_SUMS_TEXT, size = "\\small")
+        partial_sums = TexMobject(PARTIAL_CONVERGENT_SUMS_TEXT, size = "\\small")
         partial_sums.scale(1.5).to_edge(UP)
         partial_sum_parts = partial_sums.split()
         partial_sum_parts[0].highlight("yellow")
@@ -525,7 +525,7 @@ class DanceDotOnInterval(Scene):
 
 class OrganizePartialSums(Scene):
     def construct(self):
-        partial_sums = tex_mobject(PARTIAL_CONVERGENT_SUMS_TEXT, size = "\\small")
+        partial_sums = TexMobject(PARTIAL_CONVERGENT_SUMS_TEXT, size = "\\small")
         partial_sums.scale(1.5).to_edge(UP)
         partial_sum_parts = partial_sums.split()
         for x in [0] + range(2, len(partial_sum_parts), 4):
@@ -549,11 +549,11 @@ class OrganizePartialSums(Scene):
             for mob in partial_sum_parts
             if mob not in pure_sums
         ])
-        down_arrow = tex_mobject("\\downarrow")
+        down_arrow = TexMobject("\\downarrow")
         down_arrow.to_edge(LEFT).shift(2*RIGHT+2*DOWN)
-        dots = tex_mobject("\\vdots")
+        dots = TexMobject("\\vdots")
         dots.shift(down_arrow.get_center()+down_arrow.get_height()*UP)
-        infinite_sum = tex_mobject("".join(CONVERGENT_SUM_TEXT[:-1]), size = "\\samll")
+        infinite_sum = TexMobject("".join(CONVERGENT_SUM_TEXT[:-1]), size = "\\samll")
         infinite_sum.scale(1.5/1.25)
         infinite_sum.to_corner(DOWN+LEFT).shift(2*RIGHT)
 
@@ -589,7 +589,7 @@ class SeeNumbersApproachOne(Scene):
 
 class OneAndInfiniteSumAreTheSameThing(Scene):
     def construct(self):
-        one, equals, inf_sum = tex_mobject([
+        one, equals, inf_sum = TexMobject([
             "1", "=", "\\sum_{n=1}^\\infty \\frac{1}{2^n}"
         ]).split()
         point = Point(equals.get_center()).highlight("black")
@@ -609,12 +609,12 @@ class OneAndInfiniteSumAreTheSameThing(Scene):
 class HowDoYouDefineInfiniteSums(Scene):
     def construct(self):
         you = draw_you().center().rewire_part_attributes()
-        text = text_mobject(
+        text = TextMobject(
             ["How", " do", " you,\\\\", "\\emph{define}"],
             size = "\\Huge"
         ).shift(UP).split()
         text[-1].shift(3*DOWN).highlight("skyblue")
-        sum_mob = tex_mobject("\\sum_{n=0}^\\infty{a_n}")
+        sum_mob = TexMobject("\\sum_{n=0}^\\infty{a_n}")
         text[-1].shift(LEFT)
         sum_mob.shift(text[-1].get_center()+2*RIGHT)
 
@@ -633,18 +633,18 @@ class HowDoYouDefineInfiniteSums(Scene):
 
 class LessAboutNewThoughts(Scene):
     def construct(self):
-        words = generating, new, thoughts, to, definitions = text_mobject([
+        words = generating, new, thoughts, to, definitions = TextMobject([
             "Generating", " new", " thoughts", "$\\rightarrow$",
             "useful definitions"
         ], size = "\\large").split()
-        gen_cross = tex_mobject("\\hline").highlight("red")
+        gen_cross = TexMobject("\\hline").highlight("red")
         new_cross = deepcopy(gen_cross)
         for cross, mob in [(gen_cross, generating), (new_cross, new)]:
             cross.replace(mob)
             cross.stretch_to_fit_height(0.03)
-        disecting = text_mobject("Disecting").highlight("green")
+        disecting = TextMobject("Disecting").highlight("green")
         disecting.shift(generating.get_center() + 0.6*UP)
-        old = text_mobject("old").highlight("green")
+        old = TextMobject("old").highlight("green")
         old.shift(new.get_center()+0.6*UP)
 
         kwargs = {"run_time" : 0.25}
@@ -660,7 +660,7 @@ class LessAboutNewThoughts(Scene):
 
 class ListOfPartialSums(Scene):
     def construct(self):
-        all_terms = np.array(tex_mobject(
+        all_terms = np.array(TexMobject(
             ALT_PARTIAL_SUM_TEXT,
             size = "\\large"
         ).split())
@@ -739,11 +739,11 @@ class CircleZoomInOnOne(Scene):
             for n in range(10)
         ])
         circle = Circle().shift(2*RIGHT)
-        text = text_mobject(
+        text = TextMobject(
             "All but finitely many dots fall inside even the tiniest circle."
         )
         numbers = map(
-            lambda s : tex_mobject("\\frac{1}{%s}"%s),
+            lambda s : TexMobject("\\frac{1}{%s}"%s),
             ["100", "1,000,000", "g_{g_{64}}"]
         )
         for num in numbers + [text]:
@@ -784,7 +784,7 @@ class ZoomInOnOne(Scene):
         nl_with_nums = deepcopy(number_line).add_numbers()
         self.play(ApplyMethod(nl_with_nums.shift, 2*LEFT))
         zero, one, two = [
-            tex_mobject(str(n)).scale(0.5).shift(0.4*DOWN+2*(-1+n)*RIGHT)
+            TexMobject(str(n)).scale(0.5).shift(0.4*DOWN+2*(-1+n)*RIGHT)
             for n in 0, 1, 2
         ]
         self.play(
@@ -801,7 +801,7 @@ class ZoomInOnOne(Scene):
 
     def zoom_with_numbers(self, numbers, next_numbers):
         all_numbers = map(
-            lambda (n, u): tex_mobject(str(n)).scale(0.5).shift(0.4*DOWN+2*u*RIGHT),
+            lambda (n, u): TexMobject(str(n)).scale(0.5).shift(0.4*DOWN+2*u*RIGHT),
             zip(numbers+next_numbers, it.cycle([-1, 1]))
         )
 
@@ -844,7 +844,7 @@ class DefineInfiniteSum(Scene):
 
     def put_expression_in_corner(self):
         buff = 0.24
-        define, infinite_sum = tex_mobject([
+        define, infinite_sum = TexMobject([
             "\\text{\\emph{Define} }",
             "\\sum_{n = 0}^\\infty a_n = X"
         ]).split()
@@ -879,10 +879,10 @@ class DefineInfiniteSum(Scene):
             ]
             for n in range(num_terms)
         ])
-        terms = tex_mobject(term_strings, size = "\\large").split()
+        terms = TexMobject(term_strings, size = "\\large").split()
         number_line = NumberLine()
         ex_point = 2*RIGHT
-        ex = tex_mobject("X").shift(ex_point + LEFT + UP)
+        ex = TexMobject("X").shift(ex_point + LEFT + UP)
         arrow = Arrow(ex_point, tail = ex.points[-1]).nudge()
 
         for term, count in zip(terms, it.count()):
@@ -928,7 +928,7 @@ class DefineInfiniteSum(Scene):
 
 class YouJustInventedSomeMath(Scene):
     def construct(self):
-        text = text_mobject([
+        text = TextMobject([
             "You ", "just ", "invented\\\\", "some ", "math"
         ]).split()
         for mob in text[:3]:
@@ -959,7 +959,7 @@ class SeekMoreGeneralTruths(Scene):
             "\\frac{(-1)^n}{(2n)!}",
             "\\frac{2\sqrt{2}}{99^2}\\frac{(4n)!}{(n!)^4} \\cdot \\frac{26390n + 1103}{396^{4k}}",            
         ]
-        sums = tex_mobject([
+        sums = TexMobject([
             "&\\sum_{n = 0}^\\infty" + summand + "= ? \\\\"
             for summand in summands
         ], size = "")
@@ -984,7 +984,7 @@ class ChopIntervalInProportions(Scene):
             num_terms = 2
             left_terms, right_terms = [
                 [
-                    tex_mobject("\\frac{%d}{%d}"%(k, (10**(count+1))))
+                    TexMobject("\\frac{%d}{%d}"%(k, (10**(count+1))))
                     for count in range(num_terms)
                 ]
                 for k in 9, 1
@@ -992,19 +992,19 @@ class ChopIntervalInProportions(Scene):
         if mode == "p":
             num_terms = 4         
             prop = 0.7
-            left_terms = map(tex_mobject, ["(1-p)", ["p","(1-p)"]]+[
+            left_terms = map(TexMobject, ["(1-p)", ["p","(1-p)"]]+[
                 ["p^%d"%(count), "(1-p)"]
                 for count in range(2, num_terms)
             ])
-            right_terms = map(tex_mobject, ["p"] + [
+            right_terms = map(TexMobject, ["p"] + [
                 ["p", "^%d"%(count+1)]
                 for count in range(1, num_terms)
             ])
         interval = zero_to_one_interval()
         left = INTERVAL_RADIUS*LEFT
         right = INTERVAL_RADIUS*RIGHT
-        left_paren = tex_mobject("(")
-        right_paren = tex_mobject(")").shift(right + 1.1*UP)
+        left_paren = TexMobject("(")
+        right_paren = TexMobject(")").shift(right + 1.1*UP)
         curr = left.astype("float")
         brace_to_replace = None
         term_to_replace = None
@@ -1015,7 +1015,7 @@ class ChopIntervalInProportions(Scene):
             last = deepcopy(curr)
             curr += 2*RIGHT*INTERVAL_RADIUS*(1-prop)*(prop**count)
             braces = [
-                underbrace(a, b).rotate(np.pi, RIGHT)
+                Underbrace(a, b).rotate(np.pi, RIGHT)
                 for a, b in [(last, curr), (curr, right)]
             ]
             for term, brace, count2 in zip([lt, rt], braces, it.count()):
@@ -1098,7 +1098,7 @@ class ChopIntervalInProportions(Scene):
             brace_to_replace = braces[1]
             term_to_replace = rt
         if mode == "9":
-            split_100 = tex_mobject("\\frac{9}{1000}+\\frac{1}{1000}")
+            split_100 = TexMobject("\\frac{9}{1000}+\\frac{1}{1000}")
             split_100.scale(0.5)
             split_100.shift(right_terms[-1].get_center())
             split_100.to_edge(RIGHT)
@@ -1166,7 +1166,7 @@ class PointNineRepeating(RearrangeEquation):
             4 : 4,
             6 : 5,
         }
-        for term in tex_mobject(start_terms).split():
+        for term in TexMobject(start_terms).split():
             self.add(term)
             self.dither(0.5)
         self.clear()
@@ -1182,11 +1182,11 @@ class PointNineRepeating(RearrangeEquation):
 class PlugNumbersIntoRightside(Scene):
     def construct(self):
         scale_factor = 1.5
-        lhs, rhs = tex_mobject(
+        lhs, rhs = TexMobject(
             ["1 + p + p^2 + p^3 + \\cdots = ", "\\frac{1}{1-p}"],
             size = "\\large"
         ).scale(scale_factor).split()
-        rhs = tex_mobject(
+        rhs = TexMobject(
             ["1 \\over 1 - ", "p"], 
             size = "\\large"
         ).replace(rhs).split()
@@ -1195,7 +1195,7 @@ class PlugNumbersIntoRightside(Scene):
             "0.2", "27", "i"
         ] 
         nums = [
-            tex_mobject(num_string, size="\\large")
+            TexMobject(num_string, size="\\large")
             for num_string in num_strings
         ]
         for num, num_string in zip(nums, num_strings):
@@ -1205,10 +1205,10 @@ class PlugNumbersIntoRightside(Scene):
             num.highlight("green")
             if num_string == "(-1)":
                 num.shift(0.3*RIGHT)
-        right_words = text_mobject(
+        right_words = TextMobject(
             "This side makes sense for almost any value of $p$,"
         ).shift(2*UP)
-        left_words = text_mobject(
+        left_words = TextMobject(
             "even if it seems like this side will not."
         ).shift(2*DOWN)
         right_words.add(Arrow(
@@ -1318,11 +1318,11 @@ class ListPartialDivergentSums(Scene):
             "\\\\"
             for n in range(num_lines)
         ]
-        terms = tex_mobject(
+        terms = TexMobject(
             list(it.chain.from_iterable(zip(rhss, lhss))) + ["\\vdots&", ""],
             size = "\\large"
         ).shift(RIGHT).split()
-        words = text_mobject("These numbers don't \\\\ approach anything")
+        words = TextMobject("These numbers don't \\\\ approach anything")
         words.to_edge(LEFT)
         arrow = Arrow(3*DOWN+2*LEFT, direction = DOWN, length = 6)
 
@@ -1339,8 +1339,8 @@ class ListPartialDivergentSums(Scene):
 class NotARobot(Scene):
     def construct(self):
         you = draw_you().center()
-        top_words = text_mobject("You are a mathematician,")
-        low_words = text_mobject("not a robot.")
+        top_words = TextMobject("You are a mathematician,")
+        low_words = TextMobject("not a robot.")
         top_words.shift(1.5*UP)
         low_words.shift(1.5*DOWN)
         
@@ -1361,22 +1361,22 @@ class SumPowersOfTwoAnimation(Scene):
         bottom_brace_left = left + 0.3*DOWN
         circle = Circle().scale(dot_width[0]/2).shift(left+dot_width/2)
         curr_dots = deepcopy(dot).shift(left+1.5*dot_width+dot_buff)
-        topbrace = underbrace(top_brace_left, right).rotate(np.pi, RIGHT)
-        bottombrace = underbrace(bottom_brace_left, right)
+        topbrace = Underbrace(top_brace_left, right).rotate(np.pi, RIGHT)
+        bottombrace = Underbrace(bottom_brace_left, right)
         colors = Color("yellow").range_to("purple", iterations)
         curr_dots.highlight(colors.next())
-        equation = tex_mobject(
+        equation = TexMobject(
             "1+2+4+\\cdots+2^n=2^{n+1} - 1",
             size = "\\Huge"
         ).shift(3*UP)
-        full_top_sum = tex_mobject(["1", "+2", "+4", "+8", "+16"]).split()
+        full_top_sum = TexMobject(["1", "+2", "+4", "+8", "+16"]).split()
 
         self.add(equation)
         self.dither()
         self.add(circle, curr_dots, topbrace, bottombrace)
         for n in range(1,iterations):
-            bottom_num = tex_mobject(str(2**n))
-            new_bottom_num = tex_mobject(str(2**(n+1)))            
+            bottom_num = TexMobject(str(2**n))
+            new_bottom_num = TexMobject(str(2**(n+1)))            
             bottom_num.shift(bottombrace.get_center()+0.5*DOWN)
 
             top_sum = CompoundMobject(*full_top_sum[:n]).center()
@@ -1396,8 +1396,8 @@ class SumPowersOfTwoAnimation(Scene):
             alt_bottom_num = deepcopy(bottom_num).shift(shift_val)
             alt_topbrace = deepcopy(alt_bottombrace).rotate(np.pi, RIGHT)
             top_sum_end.shift(alt_topbrace.get_center()+0.5*UP)
-            new_topbrace = underbrace(top_brace_left, right).rotate(np.pi, RIGHT)
-            new_bottombrace = underbrace(bottom_brace_left, right)
+            new_topbrace = Underbrace(top_brace_left, right).rotate(np.pi, RIGHT)
+            new_bottombrace = Underbrace(bottom_brace_left, right)
             new_bottom_num.shift(new_bottombrace.get_center()+0.5*DOWN)
             new_top_sum.shift(new_topbrace.get_center()+0.5*UP)
             for exp, brace in [
@@ -1446,7 +1446,7 @@ class PretendTheyDoApproachNegativeOne(RearrangeEquation):
         num_lines = 6
         da = "\\downarrow"
         columns = [
-            tex_mobject("\\\\".join([
+            TexMobject("\\\\".join([
                 n_func(n)
                 for n in range(num_lines)
             ]+last_bits), size = "\\Large").to_corner(UP+LEFT)
@@ -1477,15 +1477,15 @@ class DistanceBetweenRationalNumbers(Scene):
     def construct(self):
         locii = [2*LEFT, 2*RIGHT]
         nums = [
-            tex_mobject(s).shift(1.3*d)
+            TexMobject(s).shift(1.3*d)
             for s, d in zip(["\\frac{1}{2}", "3"], locii)
         ]            
         arrows = [
             Arrow(direction, tail = ORIGIN)
             for direction in locii
         ]
-        dist = tex_mobject("\\frac{5}{2}").scale(0.5).shift(0.5*UP)
-        text = text_mobject("How we define distance between rational numbers")
+        dist = TexMobject("\\frac{5}{2}").scale(0.5).shift(0.5*UP)
+        text = TextMobject("How we define distance between rational numbers")
         text.to_edge(UP)
         self.add(text, *nums)
         self.play(*[ShowCreation(arrow) for arrow in arrows])
@@ -1497,7 +1497,7 @@ class NotTheOnlyWayToOrganize(Scene):
         self.play(ShowCreation(NumberLine().add_numbers()))
         self.dither()
         words = "Is there any other reasonable way to organize numbers?"
-        self.play(FadeIn(text_mobject(words).shift(2*UP)))
+        self.play(FadeIn(TextMobject(words).shift(2*UP)))
         self.dither()
 
 class DistanceIsAFunction(Scene):
@@ -1517,7 +1517,7 @@ class DistanceIsAFunction(Scene):
             dist_text = "random\\_dist"
         elif mode == "2adic":
             dist_text = "2\\_adic\\_dist"
-        dist, r_paren, arg0, comma, arg1, l_paren, equals, result = text_mobject([
+        dist, r_paren, arg0, comma, arg1, l_paren, equals, result = TextMobject([
             dist_text, "(", "000", ",", "000", ")", "=", "000"
         ]).split()
         point_origin = comma.get_center()+0.2*UP
@@ -1551,9 +1551,9 @@ class DistanceIsAFunction(Scene):
             self.dither()
         example_mobs = [
             (
-                tex_mobject(tup[0]).shift(arg0.get_center()),
-                tex_mobject(tup[1]).shift(arg1.get_center()),
-                tex_mobject(tup[2]).shift(result.get_center())
+                TexMobject(tup[0]).shift(arg0.get_center()),
+                TexMobject(tup[1]).shift(arg1.get_center()),
+                TexMobject(tup[2]).shift(result.get_center())
             )
             for tup in examples
         ]
@@ -1578,13 +1578,13 @@ class DistanceIsAFunction(Scene):
 class ShiftInvarianceNumberLine(Scene):
     def construct(self):
         number_line = NumberLine().add_numbers()
-        topbrace = underbrace(ORIGIN, 2*RIGHT).rotate(np.pi, RIGHT)
-        dist0 = text_mobject(["dist(", "$0$", ",", "$2$",")"])
-        dist1 = text_mobject(["dist(", "$2$", ",", "$4$",")"])
+        topbrace = Underbrace(ORIGIN, 2*RIGHT).rotate(np.pi, RIGHT)
+        dist0 = TextMobject(["dist(", "$0$", ",", "$2$",")"])
+        dist1 = TextMobject(["dist(", "$2$", ",", "$4$",")"])
         for dist in dist0, dist1:
             dist.shift(topbrace.get_center()+0.3*UP)
         dist1.shift(2*RIGHT)
-        footnote = text_mobject("""
+        footnote = TextMobject("""
             \\begin{flushleft}
             *yeah yeah, I know I'm still drawing them on a line,
             but until a few minutes from now I have no other way
@@ -1606,19 +1606,19 @@ class ShiftInvarianceNumberLine(Scene):
 
 class NameShiftInvarianceProperty(Scene):
     def construct(self):
-        prop = text_mobject([
+        prop = TextMobject([
             "dist($A$, $B$) = dist(",
             "$A+x$, $B+x$",
             ") \\quad for all $x$"
         ])
         mid_part = prop.split()[1]
-        u_brace = underbrace(
+        u_brace = Underbrace(
             mid_part.get_boundary_point(DOWN+LEFT),
             mid_part.get_boundary_point(DOWN+RIGHT)
         ).shift(0.3*DOWN)
-        label = text_mobject("Shifted values")
+        label = TextMobject("Shifted values")
         label.shift(u_brace.get_center()+0.5*DOWN)
-        name = text_mobject("``Shift Invariance''")
+        name = TextMobject("``Shift Invariance''")
         name.highlight("green").to_edge(UP)
         for mob in u_brace, label:
             mob.highlight("yellow")
@@ -1634,7 +1634,7 @@ class TriangleInequality(Scene):
     def construct(self):
         symbols = ["A", "B", "C"]
         locations = [2*(DOWN+LEFT), UP, 4*RIGHT]
-        ab, plus, bc, greater_than, ac = text_mobject([
+        ab, plus, bc, greater_than, ac = TextMobject([
             "dist($A$, $B$)",
             "$+$",
             "dist($B$, $C$)",
@@ -1656,7 +1656,7 @@ class TriangleInequality(Scene):
             for dist, line in zip(all_dists, all_lines)
         ]
         for symbol, loc in zip(symbols, locations):
-            self.add(tex_mobject(symbol).shift(loc))
+            self.add(TexMobject(symbol).shift(loc))
         self.play(ShowCreation(ac_line), FadeIn(ac_copy))
         self.dither()
         self.play(*[
@@ -1679,12 +1679,12 @@ class TriangleInequality(Scene):
 class StruggleToFindFrameOfMind(Scene):
     def construct(self):
         you, bubble = draw_you(with_bubble = True)
-        questions = text_mobject("???", size = "\\Huge").scale(1.5)
+        questions = TextMobject("???", size = "\\Huge").scale(1.5)
         contents = [
-            tex_mobject("2, 4, 8, 16, 32, \\dots \\rightarrow 0"),
-            text_mobject("dist(0, 2) $<$ dist(0, 64)"),
+            TexMobject("2, 4, 8, 16, 32, \\dots \\rightarrow 0"),
+            TextMobject("dist(0, 2) $<$ dist(0, 64)"),
             NumberLine().sort_points(lambda p : -p[1]).add(
-                text_mobject("Not on a line?").shift(UP)
+                TextMobject("Not on a line?").shift(UP)
             ),
         ]
         kwargs = {"run_time" : 0.5}
@@ -1759,11 +1759,11 @@ class RoomsAndSubroomsWithNumbers(Scene):
 
     def draw_numbers(self, zero_local, zero_one_width):
         num_numbers = 5
-        zero = tex_mobject("0").shift(zero_local)
+        zero = TexMobject("0").shift(zero_local)
         self.add(zero)
         nums = []
         for n in range(num_numbers):
-            num = tex_mobject(str(2**n))
+            num = TexMobject(str(2**n))
             num.scale(1.0/(n+1))
             num.shift(
                 zero_local+\
@@ -1820,7 +1820,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
         for mob, count in zip(new_power_mobs, it.count(1)):
             self.center_in_closest_rect(mob, small_rects)
         new_power_mobs[-1].shift(DOWN)
-        dots = tex_mobject("\\vdots")
+        dots = TexMobject("\\vdots")
         dots.scale(0.5).shift(new_zero.get_center()+0.5*DOWN)
         self.play(
             Transform(zero, new_zero),
@@ -1859,7 +1859,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
                     ApplyMethod(mob.shift, shift_val)
                     for mob in zero_copy, power_mob_copy
                 ])
-                num_mobs[n] = tex_mobject(str(n))
+                num_mobs[n] = TexMobject(str(n))
                 num_mobs[n].scale(1.0/(power_of_divisor(n, 2)+1))
                 width_ratio = max_width / num_mobs[n].get_width()
                 if width_ratio < 1: 
@@ -1882,7 +1882,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
         mobject.shift(diffs[np.argmin(map(np.linalg.norm, diffs))])
 
     def add_negative_one(self, num_mobs):
-        neg_one = tex_mobject("-1").scale(0.5)
+        neg_one = TexMobject("-1").scale(0.5)
         shift_val = num_mobs[15].get_center()-neg_one.get_center()
         neg_one.shift(UP)
         self.play(ApplyMethod(neg_one.shift, shift_val))
@@ -1897,7 +1897,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
                 dist_string = "1"
             else:
                 dist_string = "$\\frac{1}{%d}$"%(2**count)
-            text = text_mobject(
+            text = TextMobject(
                 "Any of these pairs are considered to be a distance " +\
                 dist_string +\
                 " away from each other"
@@ -1934,10 +1934,10 @@ class RoomsAndSubroomsWithNumbers(Scene):
 
 class DeduceWhereNegativeOneFalls(Scene):
     def construct(self):
-        part0, arg0, part1, part2, arg1, part3 = text_mobject([
+        part0, arg0, part1, part2, arg1, part3 = TextMobject([
             "dist(-1, ", "0000", ") = ", "dist(0, ", "0000", ")"
         ]).scale(1.5).split()
-        u_brace = underbrace(
+        u_brace = Underbrace(
             part2.get_boundary_point(DOWN+LEFT),
             part3.get_boundary_point(DOWN+RIGHT)
         ).shift(0.3+DOWN)
@@ -1947,7 +1947,7 @@ class DeduceWhereNegativeOneFalls(Scene):
         texts = [
             CompoundMobject(parts[0], parts[1].highlight(color))
             for count, color in zip(it.count(), colors)
-            for parts in [text_mobject([
+            for parts in [TextMobject([
                 "Represented (heuristically) \\\\ by being in the same \\\\", 
                 (count*"sub-")+"room"
             ]).split()]
@@ -1961,7 +1961,7 @@ class DeduceWhereNegativeOneFalls(Scene):
         for n in range(1, 15):
             rest_time = 0.3 + 1.0/(n+1)
             new_args = [
-                text_mobject("$%d$"%k).scale(1.5)
+                TextMobject("$%d$"%k).scale(1.5)
                 for k in 2**n-1, 2**n
             ]
             for new_arg, old_arg in zip(new_args, last_args):
@@ -1986,7 +1986,7 @@ class DeduceWhereNegativeOneFalls(Scene):
 class OtherRationalNumbers(Scene):
     def construct(self):
         import random
-        self.add(text_mobject("Where do other \\\\ rational numbers fall?"))
+        self.add(TextMobject("Where do other \\\\ rational numbers fall?"))
         pairs = [
             (1, 2),
             (1, 3),
@@ -2002,17 +2002,17 @@ class OtherRationalNumbers(Scene):
             3*DOWN,
         ]
         for pair, locus in zip(pairs, locii):
-            fraction = tex_mobject("\\frac{%d}{%d}"%pair).shift(locus)
+            fraction = TexMobject("\\frac{%d}{%d}"%pair).shift(locus)
             self.play(ShimmerIn(fraction))
         self.dither()
 
 class PAdicMetric(Scene):
     def construct(self):
-        p_str, text = text_mobject(["$p$", "-adic metric"]).shift(2*UP).split()
-        primes = [tex_mobject(str(p)) for p in [2, 3, 5, 7, 11, 13, 17, 19, 23]]
+        p_str, text = TextMobject(["$p$", "-adic metric"]).shift(2*UP).split()
+        primes = [TexMobject(str(p)) for p in [2, 3, 5, 7, 11, 13, 17, 19, 23]]
         p_str.highlight("yellow")
         colors = Color("green").range_to("skyblue", len(primes))
-        new_numbers = text_mobject("Completely new types of numbers!")
+        new_numbers = TextMobject("Completely new types of numbers!")
         new_numbers.highlight("skyblue").shift(2.3*DOWN)
         arrow = Arrow(2*DOWN, tail = 1.7*UP)
 
@@ -2048,19 +2048,19 @@ class PAdicMetric(Scene):
 
 class FuzzyDiscoveryToNewMath(Scene):
     def construct(self):
-        fuzzy = text_mobject("Fuzzy Discovery")
+        fuzzy = TextMobject("Fuzzy Discovery")
         fuzzy.to_edge(UP).shift(SPACE_WIDTH*LEFT/2)
-        new_math = text_mobject("New Math")
+        new_math = TextMobject("New Math")
         new_math.to_edge(UP).shift(SPACE_WIDTH*RIGHT/2)
         lines = CompoundMobject(
             Line(DOWN*SPACE_HEIGHT, UP*SPACE_HEIGHT),
             Line(3*UP+LEFT*SPACE_WIDTH, 3*UP+RIGHT*SPACE_WIDTH)
         )
         fuzzy_discoveries = [
-            tex_mobject("a^2 + b^2 = c^2"),
-            tex_mobject("".join(CONVERGENT_SUM_TEXT)),            
-            tex_mobject("".join(DIVERGENT_SUM_TEXT)),
-            tex_mobject("e^{\pi i} = -1"),
+            TexMobject("a^2 + b^2 = c^2"),
+            TexMobject("".join(CONVERGENT_SUM_TEXT)),            
+            TexMobject("".join(DIVERGENT_SUM_TEXT)),
+            TexMobject("e^{\pi i} = -1"),
         ]
         triangle_lines = [
             Line(ORIGIN, LEFT),
@@ -2069,21 +2069,21 @@ class FuzzyDiscoveryToNewMath(Scene):
         ]
         for line, char in zip(triangle_lines, ["a", "c", "b"]):
             line.highlight("blue")
-            char_mob = tex_mobject(char).scale(0.25)
+            char_mob = TexMobject(char).scale(0.25)
             line.add(char_mob.shift(line.get_center()))
         triangle = CompoundMobject(*triangle_lines)
         triangle.center().shift(1.5*fuzzy_discoveries[0].get_right())
-        how_length = text_mobject("But how is length defined?").scale(0.5)
+        how_length = TextMobject("But how is length defined?").scale(0.5)
         how_length.shift(0.75*DOWN)
         fuzzy_discoveries[0].add(triangle, how_length)
         new_maths = [
-            text_mobject("""
+            TextMobject("""
                 Define distance between points $(x_0, y_0)$ and
                 $(x_1, y_1)$ as $\\sqrt{(x_1-x_0)^2 + (y_1-y_0)^2}$
             """),
-            text_mobject("Define ``approach'' and infinite sums"),
-            text_mobject("Discover $2$-adic numbers"),
-            text_mobject(
+            TextMobject("Define ``approach'' and infinite sums"),
+            TextMobject("Discover $2$-adic numbers"),
+            TextMobject(
                 "Realize exponentiation is doing something much \
                 different from repeated multiplication"
             )
@@ -2112,13 +2112,13 @@ class FuzzyDiscoveryToNewMath(Scene):
 
 class DiscoveryAndInvention(Scene):
     def construct(self):
-        invention, vs, discovery = text_mobject([
+        invention, vs, discovery = TextMobject([
             "Invention ", "vs. ", "Discovery"
         ]).split()
-        nrd = text_mobject(
+        nrd = TextMobject(
             "Non-rigorous truths"
         ).shift(2*UP)
-        rt = text_mobject(
+        rt = TextMobject(
             "Rigorous terms"
         ).shift(2*DOWN)
         

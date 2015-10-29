@@ -47,7 +47,7 @@ class Triangle(Polygon):
         return self
 
     def add_letter(self, char, nudge = 0.3):
-        mob = tex_mobject(char).scale(TEX_MOB_SCALE_VAL)
+        mob = TexMobject(char).scale(TEX_MOB_SCALE_VAL)
         if char == "a":
             points = self.get_vertices()[[0, 2, 1]]
         elif char == "b":
@@ -89,7 +89,7 @@ def c_square(**kwargs):
 class DrawPointsReference(Scene):
     def construct(self):
         for point, count in zip(POINTS, it.count()):
-            mob = tex_mobject(str(count)).scale(TEX_MOB_SCALE_VAL)
+            mob = TexMobject(str(count)).scale(TEX_MOB_SCALE_VAL)
             mob.shift(POINTS[count])
             self.add(mob)
 
@@ -104,7 +104,7 @@ class DrawAllThreeSquares(Scene):
         c = c_square()
         self.add(Triangle(), a, b, c)
         for letter, mob in zip("abc", [a, b, c]):
-            char_mob = tex_mobject(letter+"^2").scale(TEX_MOB_SCALE_VAL)
+            char_mob = TexMobject(letter+"^2").scale(TEX_MOB_SCALE_VAL)
             char_mob.shift(mob.get_center())
             self.add(char_mob)
 
@@ -230,13 +230,13 @@ class ShowBigRectangleDimensions(DrawAllThreeSquaresWithMoreTriangles):
     args_list = [(10, False)]
     def construct(self, num, fill):
         DrawAllThreeSquaresWithMoreTriangles.construct(self, num, fill)
-        u_brace = underbrace((-3, -2, 0), (4, -2, 0))
-        side_brace = underbrace((-3, -3, 0), (2, -3, 0))
+        u_brace = Underbrace((-3, -2, 0), (4, -2, 0))
+        side_brace = Underbrace((-3, -3, 0), (2, -3, 0))
         for brace in u_brace, side_brace:
             brace.shift(0.2*DOWN)
         side_brace.rotate(-np.pi/2)
-        a_plus_2b = tex_mobject("a+2b").scale(TEX_MOB_SCALE_VAL)
-        b_plus_2a = tex_mobject("b+2a").scale(TEX_MOB_SCALE_VAL)
+        a_plus_2b = TexMobject("a+2b").scale(TEX_MOB_SCALE_VAL)
+        b_plus_2a = TexMobject("b+2a").scale(TEX_MOB_SCALE_VAL)
         a_plus_2b.next_to(u_brace, DOWN)
         b_plus_2a.next_to(side_brace, LEFT)
         self.add_local_mobjects()
@@ -263,7 +263,7 @@ class DrawOnlyABSquares(Scene):
         a = a_square()
         b = b_square()
         for char, mob in zip("ab", [a, b]):
-            symobl = tex_mobject(char+"^2").scale(TEX_MOB_SCALE_VAL)
+            symobl = TexMobject(char+"^2").scale(TEX_MOB_SCALE_VAL)
             symobl.shift(mob.get_center())
             self.add(symobl)
         triangle = Triangle()
@@ -394,8 +394,8 @@ class ZoomInOnTroublePoint(Scene):
             for mob in self.mobjects:
                 mob.rotate(np.pi/2)
         if with_labels:
-            alpha = tex_mobject("\\alpha").scale(TEX_MOB_SCALE_VAL)
-            beta = tex_mobject("90-\\alpha").scale(TEX_MOB_SCALE_VAL)
+            alpha = TexMobject("\\alpha").scale(TEX_MOB_SCALE_VAL)
+            beta = TexMobject("90-\\alpha").scale(TEX_MOB_SCALE_VAL)
             if rotate:
                 alpha.next_to(angle1_arc, UP+0.1*LEFT)
                 beta.next_to(angle2_arc, DOWN+0.5*LEFT)
@@ -427,8 +427,8 @@ class DrawTriangleWithAngles(Scene):
         angle2_arc = Circle(radius = 0.2, **kwargs).filter_out(
             lambda (x, y, z) : not(x < 0 and y > 0 and y < -3*x)
         ).shift(vertices[2])
-        alpha = tex_mobject("\\alpha")
-        beta = tex_mobject("90-\\alpha")
+        alpha = TexMobject("\\alpha")
+        beta = TexMobject("90-\\alpha")
         alpha.shift(vertices[1]+3*RIGHT+DOWN)
         beta.shift(vertices[2]+3*RIGHT+UP)
         arrow1 = Arrow(alpha, angle1_arc)
@@ -442,11 +442,11 @@ class LabelLargeSquare(DrawCSquareWithAllTraingles):
     def construct(self):
         DrawCSquareWithAllTraingles.construct(self)
         everything = CompoundMobject(*self.mobjects)
-        u_brace = underbrace(2*(DOWN+LEFT), 2*(DOWN+RIGHT))
+        u_brace = Underbrace(2*(DOWN+LEFT), 2*(DOWN+RIGHT))
         u_brace.shift(0.2*DOWN)
         side_brace = deepcopy(u_brace).rotate(np.pi/2)
         upper_brace = deepcopy(u_brace).rotate(np.pi)
-        a_plus_b = tex_mobject("a+b").scale(TEX_MOB_SCALE_VAL)
+        a_plus_b = TexMobject("a+b").scale(TEX_MOB_SCALE_VAL)
         upper_brace.add(a_plus_b.next_to(upper_brace, UP))
         side_brace.add(a_plus_b.next_to(side_brace, RIGHT))
         self.add(upper_brace, side_brace)

@@ -187,7 +187,7 @@ class ShowCounting(SceneFromVideo):
         total_time = len(self.frames)*self.frame_duration
         for count in range(32):
             print count
-            mob = tex_mobject(str(count)).scale(1.5)
+            mob = TexMobject(str(count)).scale(1.5)
             mob.shift(0.3*LEFT).to_edge(UP, buff = 0.1)
             index_range = range(
                 max(COUNT_TO_FRAME_NUM[count]-10, 0),
@@ -212,7 +212,7 @@ class ShowFrameNum(SceneFromVideo):
         for frame, count in zip(self.frames, it.count()):
             print count, "of", len(self.frames)
             mob = CompoundMobject(*[
-                tex_mobject(char).shift(0.3*x*RIGHT)
+                TexMobject(char).shift(0.3*x*RIGHT)
                 for char, x, in zip(str(count), it.count())
             ])
             self.frames[count] = disp.paint_mobject(

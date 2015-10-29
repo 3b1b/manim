@@ -4,6 +4,7 @@ import itertools as it
 from helpers import *
 from scene import Scene
 from animation import Animation
+from mobject import TexMobject
 
 class RearrangeEquation(Scene):
     def construct(
@@ -67,8 +68,8 @@ class RearrangeEquation(Scene):
         """
         num_start_terms = len(start_terms)
         all_mobs = np.array(
-            tex_mobject(start_terms, size = size).split() + \
-            tex_mobject(end_terms, size = size).split()
+            TexMobject(start_terms, size = size).split() + \
+            TexMobject(end_terms, size = size).split()
         )
         all_terms = np.array(start_terms+end_terms)
         for term in set(all_terms):
@@ -88,7 +89,7 @@ class FlipThroughSymbols(Animation):
         "end_center" : ORIGIN,
     }
     def __init__(self, tex_list, **kwargs):
-        mobject = tex_mobject(self.curr_tex).shift(start_center)
+        mobject = TexMobject(self.curr_tex).shift(start_center)
         Animation.__init__(self, mobject, **kwargs)
 
     def update_mobject(self, alpha):
@@ -96,7 +97,7 @@ class FlipThroughSymbols(Animation):
 
         if new_tex != self.curr_tex:
             self.curr_tex = new_tex
-            self.mobject = tex_mobject(new_tex).shift(self.start_center)
+            self.mobject = TexMobject(new_tex).shift(self.start_center)
         if not all(self.start_center == self.end_center):
             self.mobject.center().shift(
                 (1-alpha)*self.start_center + alpha*self.end_center

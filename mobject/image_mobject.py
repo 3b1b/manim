@@ -5,7 +5,6 @@ from PIL import Image
 from random import random
 
 from helpers import *
-from tex_utils import tex_to_image
 from mobject import Mobject
 
 class ImageMobject(Mobject):

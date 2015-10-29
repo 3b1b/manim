@@ -1,6 +1,6 @@
 from helpers import *
 
-from mobject import Mobject1D
+from mobject import Mobject1D, TexMobject
 from scene import Scene
 
 class NumberLine(Mobject1D):
@@ -80,7 +80,7 @@ class NumberLine(Mobject1D):
             numbers = self.default_numbers_to_display()
         result = []
         for number in numbers:
-            mob = tex_mobject(str(int(number)))
+            mob = TexMobject(str(int(number)))
             vert_scale = 2*self.tick_size/mob.get_height()
             hori_scale = self.tick_frequency*self.unit_length_to_spatial_width/mob.get_width()
             mob.scale(min(vert_scale, hori_scale))
@@ -187,7 +187,7 @@ class NumberPlane(Mobject1D):
             for val in vals:
                 num_pair[index] = val
                 point = self.num_pair_to_point(num_pair)
-                num = tex_mobject(str(val))
+                num = TexMobject(str(val))
                 num.scale(self.number_scale_factor)
                 num.shift(point-num.get_corner(UP+LEFT)+nudge)
                 result.append(num)

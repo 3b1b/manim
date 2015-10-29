@@ -47,7 +47,7 @@ class LogoGeneration(Scene):
                 lambda point: np.linalg.norm(point) < \
                               self.INNER_RADIUS_RATIO*self.LOGO_RADIUS
             )
-        name = text_mobject("3Blue1Brown").center()
+        name = TextMobject("3Blue1Brown").center()
         name.highlight("grey")
         name.shift(2*DOWN)
 

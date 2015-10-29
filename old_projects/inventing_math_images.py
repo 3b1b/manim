@@ -37,7 +37,7 @@ class SimpleText(Scene):
         return initials(filter(lambda c : c in string.letters + " ", text))
 
     def construct(self, text):
-        self.add(text_mobject(text))
+        self.add(TextMobject(text))
 
 
 class SimpleTex(Scene):
@@ -56,12 +56,12 @@ class SimpleTex(Scene):
         return words
 
     def construct(self, expression, words):
-        self.add(tex_mobject(expression))
+        self.add(TexMobject(expression))
 
 
 class OneMinusOnePoem(Scene):
     def construct(self):
-        verse1 = text_mobject("""
+        verse1 = TextMobject("""
             \\begin{flushleft}
             When one takes one from one  \\\\
             plus one from one plus one \\\\
@@ -75,7 +75,7 @@ class OneMinusOnePoem(Scene):
             until the infinite. \\\\
             \\end{flushleft}
         """).scale(0.5).to_corner(UP+LEFT)
-        verse2 = text_mobject("""
+        verse2 = TextMobject("""
             \\begin{flushleft}
             Lest you should think that such \\\\
             less well-known sums are much \\\\
@@ -89,7 +89,7 @@ class OneMinusOnePoem(Scene):
             the universe gives ``half''. \\\\
             \\end{flushleft}
         """).scale(0.5).to_corner(DOWN+LEFT)
-        equation = tex_mobject(
+        equation = TexMobject(
             "1-1+1-1+\\cdots = \\frac{1}{2}"
         )
         self.add(verse1, verse2, equation)
@@ -111,7 +111,7 @@ class PowersOfTwoSmall(Scene):
 
 class FinalSlide(Scene):
     def construct(self):
-        self.add(text_mobject("""
+        self.add(TextMobject("""
             \\begin{flushleft}
             Needless to say, what I said here only scratches the 
             surface of the tip of the iceberg of the p-adic metric.  

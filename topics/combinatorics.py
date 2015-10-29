@@ -40,7 +40,7 @@ class CountingScene(Scene):
             self.add(*mobjects)
         for mob, num in zip(mobjects, it.count(1)):
             if display_numbers:
-                num_mob = tex_mobject(str(num))
+                num_mob = TexMobject(str(num))
                 num_mob.center().shift(num_offset)
                 self.add(num_mob)
             if mode == "highlight":
@@ -69,7 +69,7 @@ class CountingScene(Scene):
             raise Warning("Unknown mode")
         frame_time = run_time / (len(regions))
         for region, count in zip(regions, it.count(1)):
-            num_mob = tex_mobject(str(count))
+            num_mob = TexMobject(str(count))
             num_mob.center().shift(num_offset)
             self.add(num_mob)
             self.highlight_region(region)
@@ -112,7 +112,7 @@ class PascalsTriangleScene(Scene):
             num = choose(n, k)              
             center = self.coords_to_center(n, k)
             if num not in num_to_num_mob:
-                num_to_num_mob[num] = tex_mobject(str(num))
+                num_to_num_mob[num] = TexMobject(str(num))
             num_mob = deepcopy(num_to_num_mob[num])  
             scale_factor = min(
                 1,
@@ -135,7 +135,7 @@ class PascalsTriangleScene(Scene):
     def generate_n_choose_k_mobs(self):
         self.coords_to_n_choose_k = {}
         for n, k in self.coords:
-            nck_mob = tex_mobject(r"{%d \choose %d}"%(n, k)) 
+            nck_mob = TexMobject(r"{%d \choose %d}"%(n, k)) 
             scale_factor = min(
                 1,
                 self.portion_to_fill * self.cell_height / nck_mob.get_height(),
@@ -148,7 +148,7 @@ class PascalsTriangleScene(Scene):
             self.coords_to_n_choose_k[n][k] = nck_mob
 
     def generate_sea_of_zeros(self):
-        zero = tex_mobject("0")
+        zero = TexMobject("0")
         self.sea_of_zeros = []
         for n in range(self.nrows):
             for a in range((self.nrows - n)/2 + 1):

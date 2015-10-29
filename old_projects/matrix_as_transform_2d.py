@@ -17,7 +17,7 @@ def matrix_to_string(matrix):
     return "--".join(["-".join(map(str, row)) for row in matrix])
 
 def matrix_mobject(matrix):
-    return text_mobject(
+    return TextMobject(
         """
         \\left(
             \\begin{array}{%s}
@@ -100,7 +100,7 @@ class ExamplesOfNonlinearOneDimensionalTransforms(NumberLineScene):
             return (np.sin(x) + 1.2*x, y, z)
         def shift_zero((x, y, z)):
             return (2*x+4, y, z)
-        self.nonlinear = text_mobject("Not a Linear Transform")
+        self.nonlinear = TextMobject("Not a Linear Transform")
         self.nonlinear.highlight(LIGHT_RED).to_edge(UP, buff = 1.5)
         pairs = [
             (sinx_plux_x, "numbers don't remain evenly spaced"),
@@ -118,7 +118,7 @@ class ExamplesOfNonlinearOneDimensionalTransforms(NumberLineScene):
             "density" : 5*DEFAULT_POINT_DENSITY_1D,
         }
         NumberLineScene.construct(self, **config)
-        words = text_mobject(explanation).highlight(LIGHT_RED)
+        words = TextMobject(explanation).highlight(LIGHT_RED)
         words.next_to(self.nonlinear, DOWN, buff = 0.5)
         self.add(words)
 
@@ -300,7 +300,7 @@ class ExamplesOfNonlinearTwoDimensionalTransformations(Scene):
             return (x+np.sin(y), y+np.cos(x), z)
         def shift_zero((x, y, z)):
             return (2*x + 3*y + 4, -1*x+y+2, z)
-        self.nonlinear = text_mobject("Nonlinear Transform")
+        self.nonlinear = TextMobject("Nonlinear Transform")
         self.nonlinear.highlight(LIGHT_RED)
         self.nonlinear.to_edge(UP, buff = 1.5)
         pairs = [
@@ -322,7 +322,7 @@ class ExamplesOfNonlinearTwoDimensionalTransformations(Scene):
         }
         number_plane = NumberPlane(**config)
         numbers = number_plane.get_coordinate_labels()
-        words = text_mobject(explanation)
+        words = TextMobject(explanation)
         words.highlight(LIGHT_RED)
         words.next_to(self.nonlinear, DOWN, buff = 0.5)
 
@@ -356,7 +356,7 @@ class ExamplesOfNonlinearTwoDimensionalTransformations(Scene):
 
         region = region_from_polygon_vertices(*vertices)
         image = disp.paint_region(region, color = WHITE)
-        self.blackness = text_mobject("")
+        self.blackness = TextMobject("")
         ImageMobject.generate_points_from_image_array(self.blackness, image)
         self.blackness.highlight(BLACK)
         rectangle = Rectangle(width = 7, height=1.7)
@@ -375,7 +375,7 @@ class TrickyExamplesOfNonlinearTwoDimensionalTransformations(Scene):
             "point_thickness" : 2*DEFAULT_POINT_THICKNESS
         }
         number_plane = NumberPlane(**config)
-        phrase1, phrase2 = text_mobject([
+        phrase1, phrase2 = TextMobject([
             "These might look like they keep lines straight...",
             "but diagonal lines get curved"
         ]).to_edge(UP, buff = 1.5).split()
@@ -427,7 +427,7 @@ class TrickyExamplesOfNonlinearTwoDimensionalTransformations(Scene):
 
         region = region_from_polygon_vertices(*vertices)
         image = disp.paint_region(region, color = WHITE)
-        self.blackness = text_mobject("")
+        self.blackness = TextMobject("")
         ImageMobject.generate_points_from_image_array(self.blackness, image)
         self.blackness.highlight(BLACK)
         rectangle = Rectangle(width = 9, height=1.5)

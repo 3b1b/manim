@@ -57,7 +57,7 @@ LEFT_SIDE  = SPACE_WIDTH*LEFT
 RIGHT_SIDE = SPACE_WIDTH*RIGHT
 
 THIS_DIR  = os.path.dirname(os.path.realpath(__file__))
-FILE_DIR  = os.path.join(THIS_DIR, "files")
+FILE_DIR  = os.path.join(THIS_DIR, os.pardir, "animation_files")
 IMAGE_DIR = os.path.join(FILE_DIR, "images")
 GIF_DIR   = os.path.join(FILE_DIR, "gifs")
 MOVIE_DIR = os.path.join(FILE_DIR, "movies")

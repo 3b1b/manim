@@ -23,19 +23,19 @@ DUAL_CYCLE = [3, 4, 5, 6, 1, 0, 2, 3]
 
 class EulersFormulaWords(Scene):
     def construct(self):
-        self.add(tex_mobject("V-E+F=2"))
+        self.add(TexMobject("V-E+F=2"))
 
 class TheTheoremWords(Scene):
     def construct(self):
-        self.add(text_mobject("The Theorem:"))
+        self.add(TextMobject("The Theorem:"))
 
 class ProofAtLastWords(Scene):
     def construct(self):
-        self.add(text_mobject("The Proof At Last..."))
+        self.add(TextMobject("The Proof At Last..."))
 
 class DualSpanningTreeWords(Scene):
     def construct(self):
-        self.add(text_mobject("Spanning trees have duals too!"))
+        self.add(TextMobject("Spanning trees have duals too!"))
 
 class PreferOtherProofDialogue(Scene):
     def construct(self):
@@ -63,7 +63,7 @@ class IllustrateDuality(GraphScene):
         GraphScene.construct(self)
         self.generate_dual_graph()
 
-        self.add(text_mobject("Duality").to_edge(UP))
+        self.add(TextMobject("Duality").to_edge(UP))
         self.remove(*self.vertices)
         def special_alpha(t):
             if t > 0.5:
@@ -107,11 +107,11 @@ class IntroduceGraph(GraphScene):
             for pair in [(4, 5), (0, 5), (1, 5), (7, 1), (8, 3)]
         ]
 
-        connected, planar, graph = text_mobject([
+        connected, planar, graph = TextMobject([
             "Connected ", "Planar ", "Graph"
         ]).to_edge(UP).split()
-        not_okay = text_mobject("Not Okay").highlight("red")
-        planar_explanation = text_mobject("""
+        not_okay = TextMobject("Not Okay").highlight("red")
+        planar_explanation = TextMobject("""
             (``Planar'' just means we can draw it without
              intersecting lines)
         """, size = "\\small")
@@ -162,7 +162,7 @@ class OldIntroduceGraphs(GraphScene):
         self.clear()
         self.add(*self.edges)
         self.replace_vertices_with(Face().scale(0.4))
-        friends = text_mobject("Friends").scale(EDGE_ANNOTATION_SCALE_VAL)
+        friends = TextMobject("Friends").scale(EDGE_ANNOTATION_SCALE_VAL)
         self.annotate_edges(friends.shift((0, friends.get_height()/2, 0)))
         self.play(*[
             CounterclockwiseTransform(vertex, Dot(point))
@@ -178,7 +178,7 @@ class OldIntroduceGraphs(GraphScene):
 
 class PlanarGraphDefinition(Scene):
     def construct(self):
-        Not, quote, planar, end_quote = text_mobject([
+        Not, quote, planar, end_quote = TextMobject([
             "Not \\\\", "``", "Planar", "''",
             # "no matter how \\\\ hard you try"
         ]).split()
@@ -233,9 +233,9 @@ class TerminologyFromPolyhedra(GraphScene):
         ])
         cube.rotate(-np.pi/3, [0, 0, 1])
         cube.rotate(-np.pi/3, [0, 1, 0])
-        dots_to_vertices = text_mobject("Dots $\\to$ Vertices").to_corner()
-        lines_to_edges = text_mobject("Lines $\\to$ Edges").to_corner()
-        regions_to_faces = text_mobject("Regions $\\to$ Faces").to_corner()
+        dots_to_vertices = TextMobject("Dots $\\to$ Vertices").to_corner()
+        lines_to_edges = TextMobject("Lines $\\to$ Edges").to_corner()
+        regions_to_faces = TextMobject("Regions $\\to$ Faces").to_corner()
         
         self.clear()
         # self.play(TransformAnimations(
@@ -274,7 +274,7 @@ class ThreePiecesOfTerminology(GraphScene):
     def construct(self):
         GraphScene.construct(self)
         terms = cycles, spanning_trees, dual_graphs = [
-            text_mobject(phrase).shift(y*UP).to_edge()
+            TextMobject(phrase).shift(y*UP).to_edge()
             for phrase, y in [
                 ("Cycles", 3),
                 ("Spanning Trees", 1),
@@ -355,8 +355,8 @@ class PathExamples(GraphScene):
             [(0, 1), (7, 8), (5, 6),],
             [(5, 0), (0, 2), (0, 1)],
         ]
-        valid_path = text_mobject("Valid \\\\ Path").highlight("green")
-        not_a_path = text_mobject("Not a \\\\ Path").highlight("red")
+        valid_path = TextMobject("Valid \\\\ Path").highlight("green")
+        not_a_path = TextMobject("Not a \\\\ Path").highlight("red")
         for mob in valid_path, not_a_path:
             mob.to_edge(UP)
         kwargs = {"run_time" : 1.0}
@@ -413,7 +413,7 @@ class IntroduceRandolph(GraphScene):
     def construct(self):
         GraphScene.construct(self)
         randy = Randolph().move_to((-3, 0, 0))
-        name = text_mobject("Randolph")
+        name = TextMobject("Randolph")
         self.play(Transform(
             randy,
             deepcopy(randy).scale(RANDOLPH_SCALE_VAL).move_to(self.points[0]),
@@ -428,13 +428,13 @@ class DefineSpanningTree(GraphScene):
         GraphScene.construct(self)
         randy = Randolph()
         randy.scale(RANDOLPH_SCALE_VAL).move_to(self.points[0])
-        dollar_signs = text_mobject("\\$\\$")
+        dollar_signs = TextMobject("\\$\\$")
         dollar_signs.scale(EDGE_ANNOTATION_SCALE_VAL)
         dollar_signs = CompoundMobject(*[
             deepcopy(dollar_signs).shift(edge.get_center())
             for edge in self.edges
         ])
-        unneeded = text_mobject("unneeded!")
+        unneeded = TextMobject("unneeded!")
         unneeded.scale(EDGE_ANNOTATION_SCALE_VAL)
         self.generate_spanning_tree()
         def green_dot_at_index(index):
@@ -489,8 +489,8 @@ class NamingTree(GraphScene):
         branches = self.spanning_tree.split()
         branches_copy = deepcopy(branches)
         treeified_branches = self.treeified_spanning_tree.split()
-        tree = text_mobject("``Tree''").to_edge(UP)
-        spanning_tree = text_mobject("``Spanning Tree''").to_edge(UP)
+        tree = TextMobject("``Tree''").to_edge(UP)
+        spanning_tree = TextMobject("``Spanning Tree''").to_edge(UP)
 
         self.add(*branches)
         self.play(
@@ -521,7 +521,7 @@ class DualGraph(GraphScene):
     def construct(self):
         GraphScene.construct(self)
         self.generate_dual_graph()
-        self.add(text_mobject("Dual Graph").to_edge(UP).shift(2*LEFT))
+        self.add(TextMobject("Dual Graph").to_edge(UP).shift(2*LEFT))
         self.play(*[
             ShowCreation(mob)
             for mob in self.dual_edges + self.dual_vertices
@@ -544,7 +544,7 @@ class FacebookGraph(GraphScene):
         logo.shift(0.2*LEFT + 0.1*UP)
         account.add(logo).center()
         account.shift(0.2*LEFT + 0.1*UP)
-        friends = tex_mobject(
+        friends = TexMobject(
             "\\leftarrow \\text{friends} \\rightarrow"
         ).scale(0.5*EDGE_ANNOTATION_SCALE_VAL)
 
@@ -591,13 +591,13 @@ class FacebookGraphAsAbstractSet(Scene):
             "\\text{%s}&\\leftrightarrow\\text{%s}"%(names[i],names[j])
             for i, j in friend_pairs
         ] + ["\\vdots"])
-        names_mob = text_mobject(names_string).shift(3*LEFT)
-        friends_mob = tex_mobject(
+        names_mob = TextMobject(names_string).shift(3*LEFT)
+        friends_mob = TexMobject(
             friends_string, size = "\\Large"
         ).shift(3*RIGHT)
-        accounts = text_mobject("\\textbf{Accounts}")
+        accounts = TextMobject("\\textbf{Accounts}")
         accounts.shift(3*LEFT).to_edge(UP)
-        friendships = text_mobject("\\textbf{Friendships}")
+        friendships = TextMobject("\\textbf{Friendships}")
         friendships.shift(3*RIGHT).to_edge(UP)
         lines = CompoundMobject(
             Line(UP*SPACE_HEIGHT, DOWN*SPACE_HEIGHT),
@@ -622,7 +622,7 @@ class ExamplesOfGraphs(GraphScene):
         )
         GraphScene.construct(self)
         self.generate_regions()
-        objects, notions = CompoundMobject(*text_mobject(
+        objects, notions = CompoundMobject(*TextMobject(
             ["Objects \\quad\\quad ", "Thing that connects objects"]
         )).to_corner().shift(0.5*RIGHT).split()
         horizontal_line = Line(
@@ -649,8 +649,8 @@ class ExamplesOfGraphs(GraphScene):
         self.clear()
         self.add(objects, notions, horizontal_line, vertical_line)
         for (obj, notion), height in zip(objects_and_notions, it.count(2, -1)):
-            obj_mob = text_mobject(obj, size = "\\small").to_edge(LEFT)
-            not_mob = text_mobject(notion, size = "\\small").to_edge(LEFT)
+            obj_mob = TextMobject(obj, size = "\\small").to_edge(LEFT)
+            not_mob = TextMobject(notion, size = "\\small").to_edge(LEFT)
             not_mob.shift((vert_line_x_val + SPACE_WIDTH)*RIGHT)
             obj_mob.shift(height*UP)
             not_mob.shift(height*UP)
@@ -666,7 +666,7 @@ class ExamplesOfGraphs(GraphScene):
                 self.dither()
 
     def handle_english_words(self, words1, words2):
-        words = map(text_mobject, ["graph", "grape", "gape", "gripe"])
+        words = map(TextMobject, ["graph", "grape", "gape", "gripe"])
         words[0].shift(RIGHT)
         words[1].shift(3*RIGHT)
         words[2].shift(3*RIGHT + 2*UP)
@@ -701,9 +701,9 @@ class ExamplesOfGraphs(GraphScene):
     def handle_dual_graph(self, words1, words2):
         words1.highlight("yellow")
         words2.highlight("yellow")
-        connected = text_mobject("Connected")
+        connected = TextMobject("Connected")
         connected.highlight("lightgreen")
-        not_connected = text_mobject("Not Connected")
+        not_connected = TextMobject("Not Connected")
         not_connected.highlight("red")
         for mob in connected, not_connected:
             mob.shift(self.points[3] + UP)
@@ -818,7 +818,7 @@ class EdgesAreTheSame(GraphScene):
         ])
         self.dither()
         self.add(
-            text_mobject("""
+            TextMobject("""
                 (Or at least I would argue they should \\\\
                 be thought of as the same thing.)
             """, size = "\\small").to_edge(UP)
@@ -839,11 +839,11 @@ class ListOfCorrespondances(Scene):
         for corr in correspondances:
             corr[0] += " original graph"
             corr[1] += " dual graph"
-        arrow = tex_mobject("\\leftrightarrow", size = "\\large")
+        arrow = TexMobject("\\leftrightarrow", size = "\\large")
         lines = []
         for corr, height in zip(correspondances, it.count(3, -1)):
-            left  = text_mobject(corr[0], size = "\\small")
-            right = text_mobject(corr[1], size = "\\small")
+            left  = TextMobject(corr[0], size = "\\small")
+            right = TextMobject(corr[1], size = "\\small")
             this_arrow = deepcopy(arrow)
             for mob in left, right, this_arrow:
                 mob.shift(height*UP)
@@ -917,7 +917,7 @@ class IntroduceMortimer(GraphScene):
         self.generate_regions()
         randy = Randolph().shift(LEFT)
         morty = Mortimer().shift(RIGHT)
-        name = text_mobject("Mortimer")
+        name = TextMobject("Mortimer")
         name.shift(morty.get_center() + 1.2*UP)
         randy_path = (0, 1, 3)
         morty_path = (-2, -3, -4)
@@ -1031,7 +1031,7 @@ class MortimerCannotTraverseCycle(GraphScene):
         morty = Mortimer().scale(RANDOLPH_SCALE_VAL)
         morty.move_to(self.dual_points[dual_cycle[0]])
         time_per_edge = 0.5
-        text = text_mobject("""
+        text = TextMobject("""
             One of these lines must be included
             in the spanning tree if those two inner
             vertices are to be reached.
@@ -1073,14 +1073,14 @@ class MortimerCannotTraverseCycle(GraphScene):
 
 class TwoPropertiesOfSpanningTree(Scene):
     def construct(self):
-        spanning, tree = text_mobject(
+        spanning, tree = TextMobject(
             ["Spanning ", "Tree"], 
             size = "\\Huge"
         ).split()
-        spanning_explanation = text_mobject("""
+        spanning_explanation = TextMobject("""
             Touches every vertex
         """).shift(spanning.get_center() + 2*DOWN)
-        tree_explanation = text_mobject("""
+        tree_explanation = TextMobject("""
             No Cycles
         """).shift(tree.get_center() + 2*UP)
 
@@ -1111,7 +1111,7 @@ class DualSpanningTree(GraphScene):
         morty.scale(RANDOLPH_SCALE_VAL)
         morty.move_to(self.dual_points[0])
         dual_edges = [1, 3, 4, 7, 11, 9, 13]
-        words = text_mobject("""
+        words = TextMobject("""
             The red edges form a spanning tree of the dual graph!
         """).to_edge(UP)
 
@@ -1125,7 +1125,7 @@ class DualSpanningTree(GraphScene):
 class TreeCountFormula(Scene):
     def construct(self):
         time_per_branch = 0.5
-        text = text_mobject("""
+        text = TextMobject("""
             In any tree:
             $$E + 1 = V$$
         """)
@@ -1157,7 +1157,7 @@ class TreeCountFormula(Scene):
 
 class FinalSum(Scene):
     def construct(self):
-        lines = tex_mobject([
+        lines = TexMobject([
             "(\\text{Number of Randolph's Edges}) + 1 &= V \\\\ \n",
             "(\\text{Number of Mortimer's Edges}) + 1 &= F \\\\ \n",
             " \\Downarrow \\\\", "E","+","2","&=","V","+","F",
@@ -1167,10 +1167,10 @@ class FinalSum(Scene):
             self.dither()
         self.dither()
 
-        symbols = V, minus, E, plus, F, equals, two = tex_mobject(
+        symbols = V, minus, E, plus, F, equals, two = TexMobject(
             "V - E + F = 2".split(" ")
         )
-        plus = tex_mobject("+")
+        plus = TexMobject("+")
         anims = []
         for mob, index in zip(symbols, [-3, -2, -7, -6, -1, -4, -5]):
             copy = plus if index == -2 else deepcopy(mob)

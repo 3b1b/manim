@@ -61,7 +61,7 @@ def count_sections(*radians):
 
         last_num = None
         for reg, count in zip(regions, it.count(1)):
-            number = tex_mobject(str(count)).shift((RADIUS, 3, 0))
+            number = TexMobject(str(count)).shift((RADIUS, 3, 0))
             sc.highlight_region(reg)
             rt = 1.0 / (x**0.8)
             sc.add(number)
@@ -89,7 +89,7 @@ def summarize_pattern(*radians):
         new_lines = CompoundMobject(*[
             Line(points[x], points[y]) for y in xrange(x)
         ])
-        num = tex_mobject(str(moser_function(x + 1))).center()
+        num = TexMobject(str(moser_function(x + 1))).center()
         sc.animate(
             Transform(last_num, num) if last_num else ShowCreation(num),
             FadeIn(new_lines),
@@ -127,7 +127,7 @@ def connect_points(*radians):
 def interesting_problems():
     sc = Scene()
     locales = [(6, 2, 0), (6, -2, 0), (-5, -2, 0)]
-    fermat = CompoundMobject(*tex_mobjects(["x^n","+","y^n","=","z^n"]))
+    fermat = CompoundMobject(*TexMobjects(["x^n","+","y^n","=","z^n"]))
     fermat.scale(0.5).shift((-2.5, 0.7, 0))
     face = SimpleFace()
     tb = ThoughtBubble().shift((-1.5, 1, 0))
@@ -274,13 +274,13 @@ if __name__ == '__main__':
     # summarize_pattern(*different_radians).write_to_movie("moser/PatternWithDifferentPoints")
 
     #Images
-    # tex_mobject(r"""
-    #     \underbrace{1, 2, 4, 8, 16, 31, \dots}_\text{What?}
+    # TexMobject(r"""
+    #     \Underbrace{1, 2, 4, 8, 16, 31, \dots}_\text{What?}
     # """).save_image("moser/NumberList31")
-    # tex_mobject("""
+    # TexMobject("""
     #     1, 2, 4, 8, 16, 32, 63, \dots
     # """).save_image("moser/NumberList63")
-    # tex_mobject("""
+    # TexMobject("""
     #     1, 2, 4, 8, 15, \dots
     # """).save_image("moser/NumberList15")
     

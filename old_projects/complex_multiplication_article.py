@@ -195,7 +195,7 @@ class DrawComplexAngleAndMagnitude(Scene):
     def draw_number(self, tex_representation, number):
         point = self.plane.number_to_point(number)
         dot = Dot(point)
-        label = tex_mobject(tex_representation)
+        label = TexMobject(tex_representation)
         max_width = 0.8*self.plane.unit_to_spatial_width
         if label.get_width() > max_width:
             label.scale_to_fit_width(max_width)
@@ -235,17 +235,17 @@ class DrawComplexAngleAndMagnitude(Scene):
         #     tex_parts = tex_representation.split("+")
         # elif "-" in tex_representation:
         #     tex_parts = tex_representation.split("-")
-        # x_label, y_label = map(tex_mobject, tex_parts)
+        # x_label, y_label = map(TexMobject, tex_parts)
         # for label in x_label, y_label:
         #     label.scale_to_fit_height(0.5)
         # x_label.next_to(x_line, point[1]*DOWN/abs(point[1]))
         # y_label.next_to(y_line, point[0]*RIGHT/abs(point[0]))
         norm = np.linalg.norm(point)
-        brace = underbrace(ORIGIN, ORIGIN+norm*RIGHT)
+        brace = Underbrace(ORIGIN, ORIGIN+norm*RIGHT)
         if point[1] > 0:
             brace.rotate(np.pi, RIGHT)
         brace.rotate(np.log(number).imag)
-        norm_label = tex_mobject("%.1f"%abs(number))
+        norm_label = TexMobject("%.1f"%abs(number))
         norm_label.scale(0.5)
         axis = OUT if point[1] > 0 else IN
         norm_label.next_to(brace, rotate_vector(point, np.pi/2, axis))
