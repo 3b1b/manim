@@ -11,6 +11,12 @@ import re
 
 from constants import *
 
+def list_update(l1, l2):
+    return filter(lambda e : e not in l2, l1) + l2
+
+def all_elements_are_instances(iterable, Class):
+    return all(map(lambda e : isinstance(e, Class), iterable))
+
 def adjascent_pairs(objects):
     return zip(objects, list(objects[1:])+[objects[0]])
 

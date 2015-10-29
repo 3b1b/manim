@@ -87,7 +87,7 @@ def generate_tex_file(expression, size, template_tex_file):
 
 def tex_to_dvi(tex_file):
     result = tex_file.replace(".tex", ".dvi")
-    if not os.path.exists(filestem + ".dvi"):
+    if not os.path.exists(result):
         commands = [
             "latex", 
             "-interaction=batchmode", 
@@ -122,7 +122,7 @@ def dvi_to_png(dvi_file, regen_if_exists = False):
             "convert",
             "-density",
             str(PDF_DENSITY),
-            path,
+            dvi_file,
             "-size",
             str(DEFAULT_WIDTH) + "x" + str(DEFAULT_HEIGHT),
             os.path.join(images_dir, name + ".png")

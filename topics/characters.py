@@ -3,6 +3,11 @@ from helpers import *
 from mobject import Mobject, CompoundMobject
 from image_mobject import ImageMobject
 
+PI_CREATURE_DIR = os.path.join(IMAGE_DIR, "PiCreature")
+PI_CREATURE_PART_NAME_TO_DIR = lambda name : os.path.join(PI_CREATURE_DIR, "pi_creature_"+name) + ".png"
+PI_CREATURE_SCALE_VAL = 0.5
+PI_CREATURE_MOUTH_TO_EYES_DISTANCE = 0.25
+
 class PiCreature(CompoundMobject):
     DEFAULT_COLOR = BLUE
     PART_NAMES = [

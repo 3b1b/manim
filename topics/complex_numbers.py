@@ -11,22 +11,23 @@ def complex_string(complex_num):
 
 class ComplexPlane(NumberPlane):
     DEFAULT_CONFIG = {
-        "color" : GREEN,
+        "color"                 : GREEN,
         "unit_to_spatial_width" : 1,
-        "line_frequency" : 1,
-        "faded_line_frequency" : 0.5,
-        "number_at_center" : complex(0),
+        "line_frequency"        : 1,
+        "faded_line_frequency"  : 0.5,
+        "number_at_center"      : complex(0),
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
         kwargs.update({
-            "x_unit_to_spatial_width" : self.unit_to_spatial_width,
+            "x_unit_to_spatial_width"  : self.unit_to_spatial_width,
             "y_uint_to_spatial_height" : self.unit_to_spatial_width,
-            "x_line_frequency" : self.line_frequency,
-            "x_faded_line_frequency" : self.faded_line_frequency,
-            "y_line_frequency" : self.line_frequency,
-            "y_faded_line_frequency" : self.faded_line_frequency,
-            "num_pair_at_center" : (self.number_at_center.real, self.number_at_center.imag),
+            "x_line_frequency"         : self.line_frequency,
+            "x_faded_line_frequency"   : self.faded_line_frequency,
+            "y_line_frequency"         : self.line_frequency,
+            "y_faded_line_frequency"   : self.faded_line_frequency,
+            "num_pair_at_center"       : (self.number_at_center.real, 
+                                          self.number_at_center.imag),
         })
         NumberPlane.__init__(self, **kwargs)
 
@@ -88,23 +89,15 @@ class ComplexFunction(ApplyPointwiseFunction):
         )
 
 class ComplexHomotopy(Homotopy):
-    def __init__(self, complex_homotopy, **kwargs):
+    def __init__(self, complex_homotopy, mobject = ComplexPlane, **kwargs):
         """
-        Complex Hootopy a function (z, t) to z'
+        Complex Hootopy a function Cx[0, 1] to C
         """
         def homotopy((x, y, z, t)):
             c = complex_homotopy((complex(x, y), t))
             return (c.real, c.imag, z)
-        if len(args) > 0:
-            args = list(args)
-            mobject = args.pop(0)
-        elif "mobject" in kwargs:
-            mobject = kwargs["mobject"]
-        else:
-            mobject = Grid()
         Homotopy.__init__(self, homotopy, mobject, *args, **kwargs)
-        self.name = "ComplexHomotopy" + \
-            to_cammel_case(complex_homotopy.__name__)
+
 
 class ComplexMultiplication(Scene):
     @staticmethod

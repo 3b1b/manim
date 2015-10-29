@@ -5,15 +5,15 @@ from scene import Scene
 
 class NumberLine(Mobject1D):
     DEFAULT_CONFIG = {
-        "color" : BLUE,
-        "numerical_radius" : SPACE_WIDTH,
+        "color"                        : BLUE,
+        "numerical_radius"             : SPACE_WIDTH,
         "unit_length_to_spatial_width" : 1,
-        "tick_size" : 0.1,
-        "tick_frequency" : 0.5,
-        "leftmost_tick" : None,
-        "number_at_center" : 0,         
+        "tick_size"                    : 0.1,
+        "tick_frequency"               : 0.5,
+        "leftmost_tick"                : None,
+        "number_at_center"             : 0,         
         "numbers_with_elongated_ticks" : [0],
-        "longer_tick_multiple" : 2,
+        "longer_tick_multiple"         : 2,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
@@ -100,29 +100,29 @@ class NumberLine(Mobject1D):
 
 class UnitInterval(NumberLine):
     DEFAULT_CONFIG = {
-        "numerical_radius" : 0.5,
+        "numerical_radius"             : 0.5,
         "unit_length_to_spatial_width" : 2*(SPACE_WIDTH-1),
-        "tick_frequency" : 0.1,
-        "leftmost_tick" : 0,
-        "number_at_center" : 0.5,                 
+        "tick_frequency"               : 0.1,
+        "leftmost_tick"                : 0,
+        "number_at_center"             : 0.5,                 
         "numbers_with_elongated_ticks" : [0, 1],
     }
 
 
 class NumberPlane(Mobject1D):
     DEFAULT_CONFIG = {
-        "color" : BLUE,
-        "x_radius" : SPACE_WIDTH,
-        "y_radius" : SPACE_HEIGHT,
-        "x_unit_to_spatial_width" : 1,
+        "color"                    : BLUE,
+        "x_radius"                 : SPACE_WIDTH,
+        "y_radius"                 : SPACE_HEIGHT,
+        "x_unit_to_spatial_width"  : 1,
         "y_uint_to_spatial_height" : 1,
-        "x_line_frequency" : 1,
-        "x_faded_line_frequency" : 0.5,
-        "y_line_frequency" : 1,
-        "y_faded_line_frequency" : 0.5,
-        "fade_factor" : 0.3,
-        "number_scale_factor" : 0.25,
-        "num_pair_at_center" : np.array((0, 0)),
+        "x_line_frequency"         : 1,
+        "x_faded_line_frequency"   : 0.5,
+        "y_line_frequency"         : 1,
+        "y_faded_line_frequency"   : 0.5,
+        "fade_factor"              : 0.3,
+        "number_scale_factor"      : 0.25,
+        "num_pair_at_center"       : np.array((0, 0)),
     }
     
     def generate_points(self):

@@ -14,33 +14,34 @@ from helpers import *
 import displayer as disp
 from tk_scene import TkSceneRoot
 from mobject import Mobject
+from animation.transform import ApplyMethod
 
 class Scene(object):
     DEFAULT_CONFIG = {
-        "display_config" : PRODUCTION_QUALITY_DISPLAY_CONFIG,
-        "construct_args" : [],
-        "background" : None,
-        "start_dither_time" : DEFAULT_DITHER_TIME,
+        "height"                : DEFAULT_HEIGHT,
+        "width"                 : DEFAULT_WIDTH ,
+        "frame_duration"        : DEFAULT_FRAME_DURATION,
+        "construct_args"        : [],
+        "background"            : None,
+        "start_dither_time"     : DEFAULT_DITHER_TIME,
         "announce_construction" : False,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
         if self.announce_construction:
             print "Constructing %s..."%str(self)
-        self.frame_duration = self.display_config["frame_duration"]
-        self.frames = []
-        self.mobjects = []
         if self.background:
             self.original_background = np.array(background)
             #TODO, Error checking?
         else:
             self.original_background = np.zeros(
-                (self.display_config["height"], self.display_config["width"], 3),
+                (self.height, self.width, 3),
                 dtype = 'uint8'
             )
-        self.background = self.original_background
-        self.shape = self.background.shape[:2]
-        #TODO, space shape
+        self.background = self.original_background            
+        self.frames = [self.background]
+        self.mobjects = []
+
         self.construct(*self.construct_args)
 
     def construct(self):
@@ -56,18 +57,23 @@ class Scene(object):
         self.name = name
         return self
 
+    def get_frame(self):
+        return self.frames[-1]
+
+    def set_frame(self, frame):
+        self.frames[-1] = frame
+        return self
+
     def add(self, *mobjects):
         """
         Mobjects will be displayed, from background to foreground,
         in the order with which they are entered.
         """
-        for mobject in mobjects:
-            if not isinstance(mobject, Mobject):
-                raise Exception("Adding something which is not a mobject")
-            #In case it's already in there, it should 
-            #now be closer to the foreground.
-            self.remove(mobject)
-            self.mobjects.append(mobject)
+        if not all_elements_are_instances(mobjects, Mobject):
+            raise Exception("Adding something which is not a mobject")
+        self.set_frame(disp.paint_mobjects(mobjects, self.get_frame()))
+        old_mobjects = filter(lambda m : m not in mobjects, self.mobjects)
+        self.mobjects = old_mobjects + list(mobjects)
         return self
 
     def add_local_mobjects(self):
@@ -81,11 +87,13 @@ class Scene(object):
         ))
 
     def remove(self, *mobjects):
-        for mobject in mobjects:
-            if not isinstance(mobject, Mobject):
-                raise Exception("Removing something which is not a mobject")
-            while mobject in self.mobjects:
-                self.mobjects.remove(mobject)
+        if not all_elements_are_instances(mobjects, Mobject):
+            raise Exception("Removing something which is not a mobject")
+        mobjects = filter(lambda m : m in self.mobjects, mobjects)
+        if len(mobjects):
+            return
+        self.mobjects = filter(lambda m : m not in mobjects, self.mobjects)
+        self.repaint_mojects()
         return self
 
     def bring_to_front(self, mobject):
@@ -95,11 +103,13 @@ class Scene(object):
     def bring_to_back(self, mobject):
         self.remove(mobject)
         self.mobjects = [mobject] + self.mobjects
+        self.repaint_mojects()
         return self
 
     def clear(self):
         self.reset_background()
-        self.remove(*self.mobjects)
+        self.mobjects = []
+        self.set_frame(self.background)
         return self
 
     def highlight_region(self, region, color = None):
@@ -108,6 +118,7 @@ class Scene(object):
             image_array = self.background, 
             color = color,
         )
+        self.repaint_mojects()
         return self
 
     def highlight_region_over_time_range(self, region, time_range = None, color = "black"):
@@ -128,12 +139,19 @@ class Scene(object):
         self.background = self.original_background
         return self
 
+    def repaint_mojects(self):
+        self.set_frame(disp.paint_mobjects(self.mobjects, self.background))
+        return self
+
     def paint_into_background(self, *mobjects):
         #This way current mobjects don't have to be redrawn with
         #every change, and one can later call "apply" without worrying
         #about it applying to these mobjects
         self.background = disp.paint_mobjects(mobjects, self.background)
         return self
+
+    def set_frame_as_background(self):
+        self.background = self.get_frame()
 
     def play(self, *animations, **kwargs):
         if "run_time" in kwargs:
@@ -187,9 +205,6 @@ class Scene(object):
 
     def apply(self, mobject_method, *args, **kwargs):
         self.play(ApplyMethod(mobject_method, *args, **kwargs))
-
-    def get_frame(self):
-        return disp.paint_mobjects(self.mobjects, self.background)
 
     def dither(self, duration = DEFAULT_DITHER_TIME):
         self.frames += [self.get_frame()]*int(duration / self.frame_duration)

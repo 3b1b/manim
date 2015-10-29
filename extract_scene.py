@@ -187,10 +187,8 @@ def main():
       inspect.getmembers(module, is_scene)
    )
    config["movie_prefix"] = config["module"]
-   scene_kwargs = {
-      "display_config" : config["display_config"],
-      "announce_construction" : True
-   }
+   scene_kwargs = config["display_config"]
+   scene_kwargs["announce_construction"] = True
    for SceneClass in get_scene_classes(scene_names_to_classes, config):
       for args in get_scene_args(SceneClass, config):
          scene_kwargs["construct_args"] = args

@@ -139,10 +139,10 @@ def write_to_movie(scene, name):
     file_path = get_file_path(name, ".mp4")
     print "Writing to %s"%file_path
 
-    fps = int(1/scene.display_config["frame_duration"])
-    dim = (scene.display_config["width"], scene.display_config["height"])
+    fps = int(1/scene.frame_duration)
+    dim = (scene.width, scene.height)
 
-    command = [ 
+    command = [
         FFMPEG_BIN,
         '-y',                 # overwrite output file if it exists
         '-f', 'rawvideo',

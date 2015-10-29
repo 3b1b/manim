@@ -21,7 +21,7 @@ class Dot(Mobject1D): #Use 1D density, even though 2D
 
 class Cross(Mobject1D):
     DEFAULT_CONFIG = {
-        "color" : YELLOW,
+        "color"  : YELLOW,
         "radius" : 0.3
     }
     def __init__(self, center_point = ORIGIN, **kwargs):
@@ -76,7 +76,7 @@ class Line(Mobject1D):
 
 class Arrow(Line):
     DEFAULT_CONFIG = {
-        "color" : WHITE,
+        "color"      : WHITE,
         "tip_length" : 0.25
     }
     def __init__(self, *args, **kwargs):
@@ -132,8 +132,8 @@ class CurvedLine(Line):
 
 class PartialCircle(Mobject1D):
     DEFAULT_CONFIG = {
-        "radius" : 1.0,
-        "start_angle" : 0
+        "radius"      : 1.0,
+        "start_angle" : 0,
     }
     def __init__(self, angle, **kwargs):
         digest_locals(self)
@@ -159,7 +159,7 @@ class Circle(PartialCircle):
 
 class Polygon(Mobject1D):
     DEFAULT_CONFIG = {
-        "color" : GREEN_D,
+        "color"       : GREEN_D,
         "edge_colors" : None
     }
     def __init__(self, *points, **kwargs):
@@ -184,9 +184,9 @@ class Polygon(Mobject1D):
 
 class Rectangle(Mobject1D):
     DEFAULT_CONFIG = {
-        "color" : YELLOW,
+        "color"  : YELLOW,
         "height" : 2.0,
-        "width" : 4.0
+        "width"  : 4.0
     }
     def generate_points(self):
         wh = [self.width/2.0, self.height/2.0]
