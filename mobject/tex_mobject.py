@@ -7,9 +7,9 @@ from helpers import *
 class TexMobject(Mobject):
     DEFAULT_CONFIG = {
         "template_tex_file" : TEMPLATE_TEX_FILE,
-        "color" : WHITE,
-        "point_thickness" : 1,
-        "should_center" : False,
+        "color"             : WHITE,
+        "point_thickness"   : 1,
+        "should_center"     : False,
     }
     def __init__(self, expression, **kwargs):
         if "size" not in kwargs:

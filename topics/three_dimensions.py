@@ -9,8 +9,8 @@ from helpers import *
 class Stars(Mobject):
     DEFAULT_CONFIG = {
         "point_thickness" : 1,
-        "radius" : SPACE_WIDTH,
-        "num_points" : 1000,
+        "radius"          : SPACE_WIDTH,
+        "num_points"      : 1000,
     }
     def __init__(self, **kwargs):
         digest_config(self, Stars, kwargs)

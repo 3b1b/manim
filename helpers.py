@@ -118,7 +118,7 @@ def random_color():
 ################################################
 
 def straight_path(start_points, end_points, alpha):
-    return (1-alpha)*start_points + alpha*end_points
+    return interpolate(start_points, end_points, alpha)
 
 def path_along_arc(arc_angle):
     """

@@ -225,7 +225,7 @@ class Bubble(Mobject):
 
 class SpeechBubble(Bubble):
     DEFAULT_CONFIG = {
-        "initial_width" : 4,
+        "initial_width"  : 4,
         "initial_height" : 2,
     }
 
@@ -257,9 +257,9 @@ class SpeechBubble(Bubble):
 
 class ThoughtBubble(Bubble):
     DEFAULT_CONFIG = {
-        "num_bulges" : 7,
+        "num_bulges"           : 7,
         "initial_inner_radius" : 1.8,
-        "initial_width" : 6
+        "initial_width"        : 6,
     }
     def __init__(self, **kwargs):
         Bubble.__init__(self, **kwargs)

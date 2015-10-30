@@ -29,10 +29,10 @@ class FunctionGraph(Mobject1D):
 
 class ParametricFunction(Mobject):
     DEFAULT_CONFIG = {
-        "color" : WHITE,
-        "dim" : 1,
+        "color"            : WHITE,
+        "dim"              : 1,
         "expected_measure" : 10.0,
-        "density" : None
+        "density"          : None
     }
     def __init__(self, function, **kwargs):
         self.function = function

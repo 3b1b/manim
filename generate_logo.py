@@ -23,10 +23,14 @@ class LogoGeneration(Scene):
         "sphere_blue"          : DARK_BLUE,
         "sphere_brown"         : LIGHT_BROWN,
         "interpolation_factor" : 0.3,
-        "frame_duration"       : 0.01,
+        "frame_duration"       : 0.03,
+        "run_time"             : 3,
     }
-
     def construct(self):
+        digest_config(self, {})
+        ## Usually shouldn't need this...
+        self.frame_duration = self.DEFAULT_CONFIG["frame_duration"]
+        ##
         digest_config(self, {})
         circle = Circle(
             density = self.circle_density, 
@@ -59,11 +63,11 @@ class LogoGeneration(Scene):
 
         self.play(Transform(
             circle, iris, 
-            run_time = DEFAULT_ANIMATION_RUN_TIME
+            run_time = self.run_time
         ))
         self.frames = drag_pixels(self.frames)
-        self.set_frame_as_background()
-        self.save_image()
+        self.save_image(IMAGE_DIR)
+        self.show_frame()
         self.add(name)
         self.dither()
         print "Dragging pixels..."

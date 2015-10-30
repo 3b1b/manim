@@ -241,6 +241,7 @@ class Scene(object):
     @staticmethod
     def args_to_string(*args):
         return ""
+        
     @staticmethod
     def string_to_args(string):
         raise Exception("string_to_args Not Implemented!")
