@@ -28,7 +28,7 @@ LOW_QUALITY_DISPLAY_CONFIG = {
 DEFAULT_POINT_DENSITY_2D = 25 
 DEFAULT_POINT_DENSITY_1D = 200
 
-DEFAULT_POINT_THICKNESS = 3
+DEFAULT_POINT_THICKNESS = 6
 
 #TODO, Make sure these are not needd
 SPACE_HEIGHT = 4.0
@@ -90,46 +90,46 @@ COLOR_MAP = {
     "DARK_BLUE"   : "#236B8E",
     "DARK_BROWN"  : "#8B4513",
     "LIGHT_BROWN" : "#CD853F",
-    "BLUE_A"      : "#1C758A",
-    "BLUE_B"      : "#29ABCA",
+    "BLUE_E"      : "#1C758A",
+    "BLUE_D"      : "#29ABCA",
     "BLUE_C"      : "#58C4DD",
-    "BLUE_D"      : "#9CDCEB",
-    "BLUE_E"      : "#C7E9F1",
-    "TEAL_A"      : "#49A88F",
-    "TEAL_B"      : "#55C1A7",
+    "BLUE_B"      : "#9CDCEB",
+    "BLUE_A"      : "#C7E9F1",
+    "TEAL_E"      : "#49A88F",
+    "TEAL_D"      : "#55C1A7",
     "TEAL_C"      : "#5CD0B3",
-    "TEAL_D"      : "#76DDC0",
-    "TEAL_E"      : "#ACEAD7",
-    "GREEN_A"     : "#699C52",
-    "GREEN_B"     : "#77B05D",
+    "TEAL_B"      : "#76DDC0",
+    "TEAL_A"      : "#ACEAD7",
+    "GREEN_E"     : "#699C52",
+    "GREEN_D"     : "#77B05D",
     "GREEN_C"     : "#83C167",
-    "GREEN_D"     : "#A6CF8C",
-    "GREEN_E"     : "#C9E2AE",
-    "YELLOW_A"    : "#E8C11C",
-    "YELLOW_B"    : "#F4D345",
+    "GREEN_B"     : "#A6CF8C",
+    "GREEN_A"     : "#C9E2AE",
+    "YELLOW_E"    : "#E8C11C",
+    "YELLOW_D"    : "#F4D345",
     "YELLOW_C"    : "#FCE15B",
-    "YELLOW_D"    : "#FFEA94",
-    "YELLOW_E"    : "#FFF1B6",
-    "GOLD_A"      : "#C78D46",
-    "GOLD_B"      : "#E1A158",
+    "YELLOW_B"    : "#FFEA94",
+    "YELLOW_A"    : "#FFF1B6",
+    "GOLD_E"      : "#C78D46",
+    "GOLD_D"      : "#E1A158",
     "GOLD_C"      : "#F0AC5F",
-    "GOLD_D"      : "#F9B775",
-    "GOLD_E"      : "#F7C797",
-    "RED_A"       : "#CF5044",
-    "RED_B"       : "#E65A4C",
+    "GOLD_B"      : "#F9B775",
+    "GOLD_A"      : "#F7C797",
+    "RED_E"       : "#CF5044",
+    "RED_D"       : "#E65A4C",
     "RED_C"       : "#FC6255",
-    "RED_D"       : "#FF8080",
-    "RED_E"       : "#F7A1A3",
-    "MAROON_A"    : "#94424F",
-    "MAROON_B"    : "#A24D61",
+    "RED_B"       : "#FF8080",
+    "RED_A"       : "#F7A1A3",
+    "MAROON_E"    : "#94424F",
+    "MAROON_D"    : "#A24D61",
     "MAROON_C"    : "#C55F73",
-    "MAROON_D"    : "#EC92AB",
-    "MAROON_E"    : "#ECABC1",
-    "PURPLE_A"    : "#644172",
-    "PURPLE_B"    : "#715582",
+    "MAROON_B"    : "#EC92AB",
+    "MAROON_A"    : "#ECABC1",
+    "PURPLE_E"    : "#644172",
+    "PURPLE_D"    : "#715582",
     "PURPLE_C"    : "#9A72AC",
-    "PURPLE_D"    : "#B189C6",
-    "PURPLE_E"    : "#CAA3E8",
+    "PURPLE_B"    : "#B189C6",
+    "PURPLE_A"    : "#CAA3E8",
     "WHITE"       : "#FFFFFF",
     "BLACK"       : "#000000",
 }
@@ -137,6 +137,7 @@ PALETTE = COLOR_MAP.values()
 globals().update(COLOR_MAP)
 for name in filter(lambda s : s.endswith("_C"), COLOR_MAP.keys()):
     globals()[name.replace("_C", "")] = globals()[name]
+
 
 
 
