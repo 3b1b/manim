@@ -95,10 +95,9 @@ def handle_scene(scene, **config):
    if config["quiet"]:
       curr_stdout = sys.stdout
       sys.stdout = open(os.devnull, "w")
+      
    if config["preview"]:
       scene.preview()
-   if config["write"]:
-      scene.write_to_movie(os.path.join(config["movie_prefix"], name))
    if config["save_image"]:
       if not config["write_all"]:
          scene.show_frame()
@@ -106,6 +105,8 @@ def handle_scene(scene, **config):
       if not os.path.exists(path):
          os.mkdir(path)
       scene.save_image(path, name)
+   if config["write"]:
+      scene.write_to_movie(os.path.join(config["movie_prefix"], name))
 
    if config["quiet"]:
       sys.stdout.close()
