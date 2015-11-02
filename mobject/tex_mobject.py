@@ -28,7 +28,10 @@ class TexMobject(Mobject):
             self.template_tex_file
         )
         for image_file in image_files:
-            self.add(ImageMobject(image_file))
+            self.add(ImageMobject(image_file, should_center = False))
+        if len(image_files) == 1:
+            ## Single image should be the mobject, not a sub_mobject
+            self.ingest_sub_mobjects()
         if self.should_center:
             self.center()
         self.highlight(self.color)
@@ -55,7 +58,7 @@ class Underbrace(TexMobject):
     
 
 def tex_hash(expression, size):
-    return str(hash(expression + size))
+    return str(hash("".join(expression) + size))
 
 def tex_to_image_files(expression, size, template_tex_file):
     """
@@ -139,8 +142,12 @@ def get_sorted_image_list(images_dir):
     ], cmp_enumerated_files)
 
 def cmp_enumerated_files(name1, name2):
+    name1, name2 = [
+        os.path.split(name)[1].replace(".png", "")
+        for name in name1, name2
+    ]
     num1, num2 = [
-        int(name.split(".")[0].split("-")[-1]) 
+        int(name.split("-")[-1])
         for name in (name1, name2)
     ]
     return num1 - num2

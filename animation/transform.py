@@ -41,16 +41,16 @@ class Transform(Animation):
         self.non_redundant_m2_indices = indices
 
     def update_mobject(self, alpha):
-        self.mobject.points = self.interpolation_function(
-            self.starting_mobject.points,
-            self.ending_mobject.points,
-            alpha
+        families = map(
+            Mobject.get_full_submobject_family,
+            [self.mobject, self.starting_mobject, self.ending_mobject]
         )
-        self.mobject.rgbs = straight_path(
-            self.starting_mobject.rgbs,
-            self.ending_mobject.rgbs,
-            alpha
-        )
+        for m, start, end in zip(*families):
+            m.points = self.interpolation_function(
+                start.points, end.points, alpha
+            )
+            m.rgbs = straight_path(start.rgbs, end.rgbs, alpha)
+
 
     def clean_up(self):
         Animation.clean_up(self)

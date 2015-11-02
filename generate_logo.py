@@ -46,8 +46,8 @@ class LogoGeneration(Scene):
         sphere.rotate(-np.pi / 7, [1, 0, 0])
         sphere.rotate(-np.pi / 7)
         iris = Mobject()
-        Mobject.interpolate(
-            circle, sphere, iris, 
+        iris.interpolate(
+            circle, sphere,
             self.interpolation_factor
         )
         for mob, color in [(iris, self.sphere_brown), (circle, self.circle_brown)]:

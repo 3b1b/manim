@@ -190,6 +190,13 @@ def invert_image(image):
     arr = (255 * np.ones(arr.shape)).astype(arr.dtype) - arr
     return Image.fromarray(arr)
 
+def streth_array_to_length(nparray, length):
+    curr_len = len(nparray)
+    if curr_len > length:
+        raise Warning("Trying to stretch array to a length shorter than its own")
+    indices = np.arange(length)/ (float(length)/curr_len)
+    return nparray[indices.astype('int')]
+
 def make_even(iterable_1, iterable_2):
     list_1, list_2 = list(iterable_1), list(iterable_2)
     length = max(len(list_1), len(list_2))

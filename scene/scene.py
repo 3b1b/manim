@@ -183,6 +183,7 @@ class Scene(object):
             self.frames.append(new_frame)
         for animation in animations:
             animation.clean_up()
+        self.add(*moving_mobjects)
         self.repaint_mojects()
         progress_bar.finish()
         return self

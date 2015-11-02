@@ -69,10 +69,9 @@ class Flash(Animation):
     def update_mobject(self, alpha):
         #Makes alpha go from 0 to slow_factor to 0 instead of 0 to 1
         alpha = self.slow_factor * (1.0 - 4 * (alpha - 0.5)**2)
-        Mobject.interpolate(
+        self.mobject.interpolate(
             self.starting_mobject, 
             self.intermediate, 
-            self.mobject, 
             alpha
         )
 

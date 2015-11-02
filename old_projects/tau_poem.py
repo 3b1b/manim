@@ -195,10 +195,9 @@ class TauPoem(Scene):
         tau = TauCreature()
         tau.to_symbol()
         sphere = Mobject()
-        Mobject.interpolate(
+        sphere.interpolate(
             two_pi, 
             Sphere().highlight("yellow"),
-            sphere,
             0.8
         )
         self.add(two_pi)

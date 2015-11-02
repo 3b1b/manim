@@ -92,7 +92,7 @@ class Mobject(object):
 
 
     def apply_over_attr_arrays(self, func):
-        for attr in self.get_array_attrs(self):
+        for attr in self.get_array_attrs():
             setattr(self, attr, func(getattr(self, attr)))
         return self
 
@@ -325,7 +325,7 @@ class Mobject(object):
 
     def ingest_sub_mobjects(self):
         for attr in self.get_array_attrs():
-            setattr(self, attr, get_merged_array(attr))
+            setattr(self, attr, self.get_merged_array(attr))
         self.sub_mobjects = []
         return self
 
@@ -411,24 +411,51 @@ class Mobject(object):
         #Typically implemented in subclass, unless purposefully left blank
         pass
 
-    def align_data(self, mobject):
-        count1, count2 = self.get_num_points(), mobject.get_num_points()
-        if count1 == 0:
-            self.add_points([(0, 0, 0)])
-        if count2 == 0:
-            mobject.add_points([(0, 0, 0)])
-        if count1 == count2:
-            return
-        for attr in ['points', 'rgbs']:
-            new_arrays = make_even(getattr(self, attr), getattr(mobject, attr))
-            for array, mobject in zip(new_arrays, [self, mobject]):
-                setattr(mobject, attr, np.array(array))
+    @staticmethod
+    def align_data(mobject1, mobject2):
+        count1 = len(mobject1.points)
+        count2 = len(mobject2.points)
+        if count1 != count2:
+            if count1 < count2:
+                smaller = mobject1
+                target_size = count2
+            else:
+                smaller = mobject2
+                target_size = count1
+            if len(smaller.points) == 0:
+                smaller.add_points([np.zeros(smaller.DIM)])
+            smaller.apply_over_attr_arrays(
+                lambda a : streth_array_to_length(a, target_size)
+            )
 
-    def interpolate(mobject1, mobject2, target_mobject, alpha):
+        num_sub_mobjects1 = len(mobject1.sub_mobjects)
+        num_sub_mobjects2 = len(mobject2.sub_mobjects)
+        if num_sub_mobjects1 != num_sub_mobjects2:
+            diff = abs(num_sub_mobjects1 - num_sub_mobjects2)
+            if num_sub_mobjects1 < num_sub_mobjects2:
+                larger, smaller = mobject2, mobject1
+            else:
+                larger, smaller = mobject1, mobject2
+            for sub_mob in larger.sub_mobjects[-diff:]:
+                center = sub_mob.get_center()
+                point_distances = np.apply_along_axis(
+                    lambda p : np.linalg.norm(p - center),
+                    1, larger.points
+                )
+                index = np.argmin(point_distances)
+                smaller.add(Point(
+                    smaller.points[index],
+                    color = Color(rgb = smaller.rgbs[index])
+                ))
+        for m1, m2 in zip(mobject1.sub_mobjects, mobject2.sub_mobjects):
+            Mobject.align_data(m1, m2)
+
+    def interpolate(self, mobject1, mobject2, alpha):
         """
         Turns target_mobject into an interpolation between mobject1 
         and mobject2.
         """
+        #TODO
         Mobject.align_data(mobject1, mobject2)
         for attr in self.get_array_attrs():
             setattr(target_mobject, attr, interpolate(
