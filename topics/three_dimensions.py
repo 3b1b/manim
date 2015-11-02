@@ -1,7 +1,7 @@
 import numpy as np
 import itertools as it
 
-from mobject import Mobject, Mobject1D, Mobject2D, CompoundMobject
+from mobject import Mobject, Mobject1D, Mobject2D, Mobject
 from geometry import Line
 from helpers import *
 
@@ -87,7 +87,7 @@ class Dodecahedron(Mobject1D):
             (x-y+z, v2),
             (x-y-z, v2),
         ]
-        five_lines_points = CompoundMobject(*[
+        five_lines_points = Mobject(*[
             Line(pair[0], pair[1], density = 1.0/self.epsilon)
             for pair in vertex_pairs
         ]).points

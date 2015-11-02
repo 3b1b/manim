@@ -10,8 +10,7 @@ class TkSceneRoot(Tkinter.Tk):
             raise Exception(str(scene) + " has no frames!")
         Tkinter.Tk.__init__(self)
 
-        height, width = scene.shape
-        kwargs = {"height" : height, "width" : width}
+        kwargs = {"height" : scene.height, "width" : scene.width}
         self.frame = Tkinter.Frame(self, **kwargs)
         self.frame.pack()
         self.canvas = Tkinter.Canvas(self.frame, **kwargs)

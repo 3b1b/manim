@@ -441,7 +441,7 @@ class LabelLargeSquare(DrawCSquareWithAllTraingles):
     args_list = []
     def construct(self):
         DrawCSquareWithAllTraingles.construct(self)
-        everything = CompoundMobject(*self.mobjects)
+        everything = Mobject(*self.mobjects)
         u_brace = Underbrace(2*(DOWN+LEFT), 2*(DOWN+RIGHT))
         u_brace.shift(0.2*DOWN)
         side_brace = deepcopy(u_brace).rotate(np.pi/2)

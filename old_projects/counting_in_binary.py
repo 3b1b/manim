@@ -198,7 +198,7 @@ class ShowFrameNum(OverHand):
         OverHand.construct(self)
         for frame, count in zip(self.frames, it.count()):
             print count, "of", len(self.frames)
-            mob = CompoundMobject(*[
+            mob = Mobject(*[
                 TexMobject(char).shift(0.3*x*RIGHT)
                 for char, x, in zip(str(count), it.count())
             ])
@@ -212,12 +212,12 @@ class CountTo1023(Scene):
         rh_map = get_hand_map("right")
         lh_map = get_hand_map("left")
         def get_num(count):
-            return CompoundMobject(*[
+            return Mobject(*[
                 TexMobject(char).shift(0.35*x*RIGHT)
                 for char, x, in zip(str(count), it.count())
             ]).center().to_edge(UP)
         self.frames = [
-            disp.paint_mobject(CompoundMobject(
+            disp.paint_mobject(Mobject(
                 rh_map[count%32], lh_map[count//32], get_num(count)
             ))
             for count in range(2**10)
@@ -360,7 +360,7 @@ class ShowIncrementRule(Scene):
                 (2.25, 3.5, 0),
                 (1.5, 0.75, 0),
             ]
-        return CompoundMobject(*[
+        return Mobject(*[
             deepcopy(arrow).shift(tip)
             for tip in tips
         ])
@@ -379,7 +379,7 @@ class MindFindsShortcuts(Scene):
         hand = Hand(7).scale(0.5).center().shift(DOWN+2*LEFT)
         sum421 = TexMobject("4+2+1").shift(DOWN+2*RIGHT)
         seven = TexMobject("7").shift(DOWN+6*RIGHT)
-        compound = CompoundMobject(
+        compound = Mobject(
             Arrow(hand, sum421), 
             sum421,
             Arrow(sum421, seven)
@@ -438,7 +438,7 @@ class CountingExampleSentence(ShowCounting):
         ShowCounting.construct(self)
 
     def get_counting_mob(self, num):
-        return CompoundMobject(*self.words[:num])
+        return Mobject(*self.words[:num])
 
 class FinishCountingExampleSentence(Scene):
     def construct(self):
@@ -449,7 +449,7 @@ class FinishCountingExampleSentence(Scene):
         two = TexMobject("2").shift([3, 3.65, 0])
         eightteen = TexMobject("18").shift([1.5, 2.5, 0])
         eightteen.sort_points()
-        comp = CompoundMobject(sixteen, two)
+        comp = Mobject(sixteen, two)
         self.add(hand, comp, words)
         self.dither()
         self.play(Transform(comp, eightteen))

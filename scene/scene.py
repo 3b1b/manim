@@ -80,11 +80,9 @@ class Scene(object):
         """
         So a scene can just add all mobjects it's defined up to that point
         """
-        caller_locals = inspect.currentframe().f_back.f_locals
-        self.add(*filter(
-            lambda m : isinstance(m, Mobject), 
-            caller_locals.values()
-        ))
+        name_to_mob = get_caller_locals(lambda x : isinstance(x, Mobject))
+        self.add(*name_to_mob.values())
+        return self
 
     def remove(self, *mobjects):
         if not all_elements_are_instances(mobjects, Mobject):
@@ -161,8 +159,17 @@ class Scene(object):
         for animation in animations:
             animation.set_run_time(run_time)
         moving_mobjects = [anim.mobject for anim in animations]
-        self.remove(*moving_mobjects)
-        background = self.get_frame()
+
+        bundle = Mobject(*self.mobjects)
+        static_mobjects = filter(
+            lambda m : m not in moving_mobjects, 
+            bundle.get_full_submobject_family()
+        )
+        background = disp.paint_mobjects(
+            static_mobjects,
+            self.background,
+            include_sub_mobjects = False
+        )
 
         print "Generating " + ", ".join(map(str, animations))
         progress_bar = progressbar.ProgressBar(maxval=run_time)
@@ -176,7 +183,7 @@ class Scene(object):
             self.frames.append(new_frame)
         for animation in animations:
             animation.clean_up()
-        self.add(*moving_mobjects)
+        self.repaint_mojects()
         progress_bar.finish()
         return self
 

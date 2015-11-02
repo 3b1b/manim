@@ -81,12 +81,12 @@ class RightParen(Mobject):
         return Mobject.get_center(self) + 0.04*RIGHT
 
 
-class OpenInterval(CompoundMobject):
+class OpenInterval(Mobject):
     def __init__(self, center_point = ORIGIN, width = 2, **kwargs):
         digest_config(self, kwargs, locals())
         left = LeftParen().shift(LEFT*width/2)
         right = RightParen().shift(RIGHT*width/2)
-        CompoundMobject.__init__(self, left, right, **kwargs)
+        Mobject.__init__(self, left, right, **kwargs)
          # scale_factor = width / 2.0
         # self.stretch(scale_factor, 0)
         # self.stretch(0.5+0.5*scale_factor, 1)
@@ -199,7 +199,7 @@ class IntervalScene(NumberLineScene):
             tick = Line(point+tick_rad*DOWN, point+tick_rad*UP)
             tick.highlight("yellow")
             all_ticks.append(tick)
-        all_ticks = CompoundMobject(*all_ticks)
+        all_ticks = Mobject(*all_ticks)
         if run_time > 0:
             self.play(ShowCreation(all_ticks))
         else:
@@ -294,7 +294,7 @@ class MeasureTheoryToHarmony(IntervalScene):
         IntervalScene.construct(self)
         self.cover_fractions()
         self.dither()
-        all_mobs = CompoundMobject(*self.mobjects)
+        all_mobs = Mobject(*self.mobjects)
         all_mobs.sort_points()
         self.clear()
         radius = self.interval.radius
@@ -516,7 +516,7 @@ class DecomposeTwoFrequencies(Scene):
         sine1 = LongSine().shift(2*UP).highlight("yellow")
         sine2 = LongSine().shift(DOWN).highlight("lightgreen")
         sine1.stretch(2.0/3, 0)
-        comp = CompoundMobject(sine1, sine2)
+        comp = Mobject(sine1, sine2)
 
         self.add(line)
         self.play(ApplyMethod(
@@ -562,12 +562,12 @@ class PatternInFrequencies(Scene):
         setup_width = 2*SPACE_WIDTH
         num_top_lines = int(setup_width)
         num_bot_lines = int(setup_width*num1/num2)
-        top_lines = CompoundMobject(*[
+        top_lines = Mobject(*[
             deepcopy(line_template).shift(k*(float(num1)/num2)*RIGHT)
             for k in range(num_top_lines)
         ])
         line_template.shift(4*DOWN)
-        bottom_lines = CompoundMobject(*[
+        bottom_lines = Mobject(*[
             deepcopy(line_template).shift(k*RIGHT)
             for k in range(num_bot_lines)
         ])
@@ -601,7 +601,7 @@ class CompareFractionComplexity(Scene):
         for num, den in [(4, 3), (1093,826)]:
             top = TexMobject("%d \\over"%num)
             bottom = TexMobject(str(den)).next_to(top, DOWN, buff = 0.3)
-            fractions.append(CompoundMobject(top, bottom))
+            fractions.append(Mobject(top, bottom))
         frac0 = fractions[0].shift(3*LEFT).split()
         frac1 = fractions[1].shift(3*RIGHT).split()
         arrow1 = Arrow(UP, ORIGIN).next_to(frac0[0], UP)
@@ -642,7 +642,7 @@ class IrrationalGang(Scene):
         sqrt13.highlight("green")
         zeta3 = TexMobject("\\zeta(3)").shift(2*RIGHT)
         zeta3.highlight("grey")
-        eyes = CompoundMobject(*randy.eyes)
+        eyes = Mobject(*randy.eyes)
         eyes.scale(0.5)
         sqrt13.add(eyes.next_to(sqrt13, UP, buff = 0).shift(0.25*RIGHT))
         eyes.scale(0.5)
@@ -682,7 +682,7 @@ class PianoTuning(Scene):
         jump = piano.half_note_jump
         semicircle = Circle().filter_out(lambda p : p[1] < 0)
         semicircle.scale(jump/semicircle.get_width())
-        semicircles = CompoundMobject(*[
+        semicircles = Mobject(*[
             deepcopy(semicircle).shift(jump*k*RIGHT)
             for k in range(23)
         ])
@@ -802,14 +802,14 @@ class PowersOfTwelfthRoot(Scene):
             ])
             error_string = error_string.split()
             error_string[1].highlight()
-            error_string = CompoundMobject(*error_string)
+            error_string = Mobject(*error_string)
             error_string.scale(approx_form.get_height()/error_string.get_height())
             error_string.next_to(frac_mob)
 
-            mob_list.append(CompoundMobject(*[
+            mob_list.append(Mobject(*[
                 term, approx_copy, approx_form, words, frac_mob, error_string
             ]))
-        self.play(ShimmerIn(CompoundMobject(*mob_list), run_time = 3.0))
+        self.play(ShimmerIn(Mobject(*mob_list), run_time = 3.0))
 
 class InterestingQuestion(Scene):
     def construct(self):
@@ -898,7 +898,7 @@ class ChallengeTwo(Scene):
 class CoveringSetsWithOpenIntervals(IntervalScene):
     def construct(self):
         IntervalScene.construct(self)
-        dots = CompoundMobject(*[
+        dots = Mobject(*[
             Dot().shift(self.number_line.number_to_point(num)+UP)
             for num in set([0.2, 0.25, 0.45, 0.6, 0.65])
         ])
@@ -1168,7 +1168,7 @@ class StepsToSolution(IntervalScene):
             tick_copy = deepcopy(tick).center().shift(1.6*UP)
             tick_copy.shift((-SPACE_WIDTH+self.spacing*count)*RIGHT)
             new_ticks.append(tick_copy)
-        new_ticks = CompoundMobject(*new_ticks)
+        new_ticks = Mobject(*new_ticks)
         anims.append(DelayByOrder(Transform(ticks, new_ticks)))
         self.dither()
         self.play(*anims)
@@ -1219,7 +1219,7 @@ class StepsToSolution(IntervalScene):
             frac_bottom.scale(scale_val)
             one = TexMobject("1").scale(scale_val)
             one.next_to(frac_bottom, UP, buff = 0.1)
-            compound = CompoundMobject(frac_bottom, one)
+            compound = Mobject(frac_bottom, one)
             if plus:
                 compound.next_to(plus)
             else:
@@ -1313,9 +1313,9 @@ class TroubleDrawingSmallInterval(IntervalScene):
     def construct(self):
         IntervalScene.construct(self)
         interval, line = self.add_open_interval(0.5, 0.5)
-        big = CompoundMobject(interval, line)
+        big = Mobject(interval, line)
         small_int, small_line = self.add_open_interval(0.5, 0.01)
-        small = CompoundMobject(small_int, line.scale_in_place(0.01/0.5))
+        small = Mobject(small_int, line.scale_in_place(0.01/0.5))
         shrunk = deepcopy(big).scale_in_place(0.01/0.5)
         self.clear()
         IntervalScene.construct(self)
@@ -1354,7 +1354,7 @@ class ZoomInOnSqrt2Over2(IntervalScene):
         epsilon, equals, num = map(TexMobject, ["\\epsilon", "=", "0.3"])
         equals.next_to(epsilon)
         num.next_to(equals)
-        self.add(CompoundMobject(epsilon, equals, num).center().shift(2*UP))
+        self.add(Mobject(epsilon, equals, num).center().shift(2*UP))
         intervals, lines = self.cover_fractions()
         self.remove(*lines)
         irr = TexMobject("\\frac{\\sqrt{2}}{2}")
@@ -1464,7 +1464,7 @@ class ShiftSetupByOne(IntervalScene):
             "real numbers \\emph{very very very} close to them",
             size = "\\small"
         )
-        compound = CompoundMobject(answer1, answer2.next_to(answer1))
+        compound = Mobject(answer1, answer2.next_to(answer1))
         compound.next_to(words, DOWN)
         answer1, answer2 = compound.split()
 
@@ -1485,7 +1485,7 @@ class ShiftSetupByOne(IntervalScene):
         words[3].highlight()
         self.add(*words)
         self.play(ShowCreation(
-            CompoundMobject(*intervals),
+            Mobject(*intervals),
             run_time = 5.0
         ))
         self.dither()
@@ -1502,12 +1502,12 @@ class FinalEquivalence(IntervalScene):
         for interval, frac in zip(intervals, rationals()):
             interval.scale_in_place(2.0/frac.denominator)
         self.remove(*intervals+lines)
-        intervals = CompoundMobject(*intervals)
+        intervals = Mobject(*intervals)
         arrow = TexMobject("\\Leftrightarrow")
         top_words = TextMobject("Harmonious numbers are rare,")
         bot_words = TextMobject("even for the savant")
         bot_words.highlight().next_to(top_words, DOWN)
-        words = CompoundMobject(top_words, bot_words)
+        words = Mobject(top_words, bot_words)
         words.next_to(arrow)
 
         self.play(
@@ -1517,7 +1517,7 @@ class FinalEquivalence(IntervalScene):
                 intervals
             )
         )
-        everything = CompoundMobject(*self.mobjects)
+        everything = Mobject(*self.mobjects)
         self.clear()
         self.play(Transform(
             everything,

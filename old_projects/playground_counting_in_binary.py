@@ -211,7 +211,7 @@ class ShowFrameNum(SceneFromVideo):
         SceneFromVideo.construct(self, path)
         for frame, count in zip(self.frames, it.count()):
             print count, "of", len(self.frames)
-            mob = CompoundMobject(*[
+            mob = Mobject(*[
                 TexMobject(char).shift(0.3*x*RIGHT)
                 for char, x, in zip(str(count), it.count())
             ])

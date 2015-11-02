@@ -37,7 +37,7 @@ def paint_region(region, image_array = None, color = None):
 def paint_mobject(mobject, image_array = None):
     return paint_mobjects([mobject], image_array)
 
-def paint_mobjects(mobjects, image_array = None):
+def paint_mobjects(mobjects, image_array = None, include_sub_mobjects = True):
     pixels = get_pixels(image_array)
     height = pixels.shape[0]
     width  = pixels.shape[1]
@@ -45,6 +45,13 @@ def paint_mobjects(mobjects, image_array = None):
     space_width  = SPACE_HEIGHT * width / height
     pixels = pixels.reshape((pixels.size/3, 3)).astype('uint8')
 
+    if include_sub_mobjects:
+        all_families = [
+            mob.get_full_submobject_family() 
+            for mob in mobjects
+        ]
+        mobjects = reduce(op.add, all_families, [])
+        
     for mobject in mobjects:
         if mobject.get_num_points() == 0:
             continue
@@ -73,7 +80,6 @@ def paint_mobjects(mobjects, image_array = None):
         flattener = np.array([[1], [width]], dtype = 'int')
         indices = np.dot(points, flattener)[:,0]
         pixels[indices] = rgbs.astype('uint8')
-
     return pixels.reshape((height, width, 3))
 
 def add_thickness(pixel_indices_and_rgbs, thickness, width, height):

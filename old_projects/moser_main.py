@@ -176,7 +176,7 @@ class HardProblemsSimplerQuestions(Scene):
         fermat = dict([
             (
                 sym, 
-                CompoundMobject(*TexMobjects(
+                Mobject(*TexMobjects(
                     ["x","^"+sym,"+","y","^"+sym,"=","z","^"+sym]
                 ))
             )
@@ -234,7 +234,7 @@ class HardProblemsSimplerQuestions(Scene):
         self.add(fermat["n"], fermat2, fermat3)
         self.dither()
 
-        circle_grid = CompoundMobject(
+        circle_grid = Mobject(
             Circle(), 
             Grid(radius = 2),
             TexMobject(r"\mathds{R}^2").shift((2, -2, 0))
@@ -244,12 +244,12 @@ class HardProblemsSimplerQuestions(Scene):
         for mob in circle_grid, start_line, end_line:
             mob.scale(0.5).shift(right_center + (0, 2, 0))
 
-        other_grid = CompoundMobject(
+        other_grid = Mobject(
             Grid(radius = 2),
             TexMobject(r"\mathds{C}").shift((2, -2, 0))
         )
         omega = np.array((0.5, 0.5*np.sqrt(3), 0))
-        dots = CompoundMobject(*[
+        dots = Mobject(*[
             Dot(t*np.array((1, 0, 0)) + s * omega)
             for t, s in it.product(range(-2, 3), range(-2, 3))
         ])
@@ -264,7 +264,7 @@ class HardProblemsSimplerQuestions(Scene):
             ShowCreation(dots)
         )
         self.dither()
-        all_mobjects = CompoundMobject(*self.mobjects)
+        all_mobjects = Mobject(*self.mobjects)
         self.remove(*self.mobjects)
         self.play(
             Transform(
@@ -273,7 +273,7 @@ class HardProblemsSimplerQuestions(Scene):
             ),
             Transform(
                 Point((-SPACE_WIDTH, 0, 0)), 
-                CompoundMobject(*CircleScene(RADIANS).mobjects)
+                Mobject(*CircleScene(RADIANS).mobjects)
             )
         )
 
@@ -436,7 +436,7 @@ class GeneralPositionRule(Scene):
                 ])
                 if first_time:
                     self.play(Transform(
-                        CompoundMobject(*intersecting_lines),
+                        Mobject(*intersecting_lines),
                         words_mob
                     ))
                     first_time = False
@@ -542,7 +542,7 @@ class IllustrateNChooseK(Scene):
             count_mob = TexMobject(str(count+1))
             count_mob.center().shift(count_center)
             self.add(count_mob)
-            tuple_copy = CompoundMobject(*[nrange_mobs[index-1] for index in tup])
+            tuple_copy = Mobject(*[nrange_mobs[index-1] for index in tup])
             tuple_copy.highlight()
             self.add(tuple_copy)
             self.add(tuple_mobs[count])
@@ -550,7 +550,7 @@ class IllustrateNChooseK(Scene):
             self.remove(count_mob)
             self.remove(tuple_copy)
         self.add(count_mob)
-        self.play(FadeIn(CompoundMobject(form1, form2, pronunciation)))
+        self.play(FadeIn(Mobject(form1, form2, pronunciation)))
 
 class IntersectionPointCorrespondances(CircleScene):
     args_list = [
@@ -661,7 +661,7 @@ class QuadrupletsToIntersections(CircleScene):
             dot_quad = [deepcopy(self.dots[i]) for i in quad]
             for dot in dot_quad:
                 dot.scale_in_place(2)
-            dot_quad = CompoundMobject(*dot_quad)
+            dot_quad = Mobject(*dot_quad)
             dot_quad.highlight()
             self.add(dot_quad)
             self.dither(frame_time / 3)
@@ -674,7 +674,7 @@ class QuadrupletsToIntersections(CircleScene):
 class GraphsAndEulersFormulaJoke(Scene):
     def __init__(self, *args, **kwargs):
         Scene.__init__(self, *args, **kwargs)
-        axes = CompoundMobject(
+        axes = Mobject(
             NumberLine(),
             NumberLine().rotate(np.pi / 2)
         )
@@ -693,7 +693,7 @@ class GraphsAndEulersFormulaJoke(Scene):
         self.remove(*self.mobjects)
         self.add(eulers)
         self.play(CounterclockwiseTransform(
-            CompoundMobject(axes, graph),
+            Mobject(axes, graph),
             Point((-SPACE_WIDTH, SPACE_HEIGHT, 0))
         ))
         self.play(CounterclockwiseTransform(
@@ -709,7 +709,7 @@ class DefiningGraph(GraphScene):
         edges_word = TextMobject("``Edges\"").shift(word_center)
         dots, lines = self.vertices, self.edges
         self.remove(*dots + lines)
-        all_dots = CompoundMobject(*dots)
+        all_dots = Mobject(*dots)
         self.play(ShowCreation(all_dots))
         self.remove(all_dots)
         self.add(*dots)
@@ -786,7 +786,7 @@ class EulersFormula(GraphScene):
         ])
         for mob in form.values():
             mob.shift((0, SPACE_HEIGHT-0.7, 0))
-        formula = CompoundMobject(*[form[k] for k in form.keys() if k != "=2"])
+        formula = Mobject(*[form[k] for k in form.keys() if k != "=2"])
         new_form = dict([
             (key, deepcopy(mob).shift((0, -0.7, 0)))
             for key, mob in zip(form.keys(), form.values())
@@ -797,7 +797,7 @@ class EulersFormula(GraphScene):
             for d in self.dots
         ]
         colored_edges = [
-            CompoundMobject(
+            Mobject(
                 Line(midpoint, start),
                 Line(midpoint, end),
             ).highlight("red")
@@ -843,7 +843,7 @@ class CannotDirectlyApplyEulerToMoser(CircleScene):
             d.highlight("yellow").scale_in_place(2)
             for d in deepcopy(self.dots)
         ]
-        yellow_lines = CompoundMobject(*[
+        yellow_lines = Mobject(*[
             l.highlight("yellow") for l in deepcopy(self.lines)
         ])
         self.play(*[
@@ -896,7 +896,7 @@ class ShowMoserGraphLines(CircleScene):
             (self.lines, n_choose_2)
             ]:
             self.add(symbol)
-            compound = CompoundMobject(*mobs)            
+            compound = Mobject(*mobs)            
             if mobs in (self.dots, self.intersection_dots):
                 self.remove(*mobs)
                 self.play(CounterclockwiseTransform(
@@ -916,7 +916,7 @@ class ShowMoserGraphLines(CircleScene):
             Transform(line, small_line, run_time = 3.0)
             for line, small_line in zip(self.lines, small_lines)
         ])
-        yellow_lines = CompoundMobject(*[
+        yellow_lines = Mobject(*[
             line.highlight("yellow") for line in small_lines
         ])
         self.add(plus_2_n_choose_4)
@@ -929,7 +929,7 @@ class ShowMoserGraphLines(CircleScene):
             for p, sp in zip(self.circle_pieces, self.smaller_circle_pieces)
         ])
         self.add(plus_n)
-        self.play(ShowCreation(CompoundMobject(*[
+        self.play(ShowCreation(Mobject(*[
             mob.highlight("yellow") for mob in self.circle_pieces
         ])))
 
@@ -1111,7 +1111,7 @@ class ApplyEulerToMoser(CircleScene):
         self.add(*all_mobs)
         self.remove(*[d[1] for d in [V, minus, E, plus, F, equals, two]])
         self.play(
-            Transform(V[2].repeat(2), CompoundMobject(n[3], minus1[3], nc4[3])),
+            Transform(V[2].repeat(2), Mobject(n[3], minus1[3], nc4[3])),
             *[
                 Transform(d[2], d[3])
                 for d in [F, equals, E, minus, plus, two]
@@ -1120,7 +1120,7 @@ class ApplyEulerToMoser(CircleScene):
         self.dither()
         self.remove(*self.mobjects)
         self.play(
-            Transform(E[3], CompoundMobject(
+            Transform(E[3], Mobject(
                 nc2[4], plus1[4], two1[4], nc41[4], plus2[4], n1[4]
             )),
             *[
@@ -1142,7 +1142,7 @@ class ApplyEulerToMoser(CircleScene):
         self.remove(*self.mobjects)
         self.play(
             Transform(
-                CompoundMobject(plus2[4], n1[4], minus[4], n[4]),
+                Mobject(plus2[4], n1[4], minus[4], n[4]),
                 Point((SPACE_WIDTH, SPACE_HEIGHT, 0))
             ),
             *[
@@ -1202,7 +1202,7 @@ class FormulaRelatesToPowersOfTwo(Scene):
         scale_factor = 1
         for mob in everything:
             mob.scale(scale_factor)
-        CompoundMobject(*everything).show()
+        Mobject(*everything).show()
         forms   = everything[0::3]
         sums    = everything[1::3]
         results = everything[2::3]
@@ -1238,7 +1238,7 @@ class DrawPascalsTriangle(PascalsTriangleScene):
         for n in range(1, nrows):
             starts  = [deepcopy(self.coords_to_mobs[n-1][0])]
             starts += [
-                CompoundMobject(
+                Mobject(
                     self.coords_to_mobs[n-1][k-1],
                     self.coords_to_mobs[n-1][k]
                 )
@@ -1384,11 +1384,11 @@ class PascalsTriangleSumRows(PascalsTriangleScene):
             powers_of_two.append(pof2)
             equalses.append(new_equals)
             powers_of_two_symbols.append(symbol)
-        self.play(FadeIn(CompoundMobject(*pluses)))
+        self.play(FadeIn(Mobject(*pluses)))
         run_time = 0.5
         to_remove = []
         for n in range(self.nrows):
-            start = CompoundMobject(*[self.coords_to_mobs[n][k] for k in range(n+1)])
+            start = Mobject(*[self.coords_to_mobs[n][k] for k in range(n+1)])
             to_remove.append(start)
             self.play(
                 Transform(start, powers_of_two[n]),
@@ -1481,14 +1481,14 @@ class MoserSolutionInPascal(PascalsTriangleScene):
             self.add(self.coords_to_mobs[n][k])
             self.play(Transform(
                 terms[k], 
-                CompoundMobject(*above_terms).highlight(term_color)
+                Mobject(*above_terms).highlight(term_color)
             ))
             self.remove(*above_terms)
         self.dither()
         terms_sum = TexMobject(str(moser_function(n)))
         terms_sum.shift((SPACE_WIDTH-1, terms[0].get_center()[1], 0))
         terms_sum.highlight(term_color)
-        self.play(Transform(CompoundMobject(*terms), terms_sum))
+        self.play(Transform(Mobject(*terms), terms_sum))
 
 class RotatingPolyhedra(Scene):
     args_list = [
@@ -1530,12 +1530,12 @@ class ExplainNChoose2Formula(Scene):
         r_paren, a_mob, comma, b_mob, l_paren = TexMobjects(
             ("( %d , %d )"%(a, b)).split(" ")
         )
-        parens = CompoundMobject(r_paren, comma, l_paren)
+        parens = Mobject(r_paren, comma, l_paren)
         nums = [TexMobject(str(k)) for k in range(1, n+1)]
         height = 1.5*nums[0].get_height()
         for x in range(n):
             nums[x].shift((0, x*height, 0))
-        nums_compound = CompoundMobject(*nums)
+        nums_compound = Mobject(*nums)
         nums_compound.shift(a_mob.get_center() - nums[0].get_center())
         n_mob, n_minus_1, over_2 = TexMobject([
             str(n), "(%d-1)"%n, r"\over{2}"
@@ -1550,7 +1550,7 @@ class ExplainNChoose2Formula(Scene):
         self.remove(nums_compound)
         nums = nums_compound.split()
         a_mob = nums.pop(a-1)
-        nums_compound = CompoundMobject(*nums)
+        nums_compound = Mobject(*nums)
         self.add(a_mob, nums_compound)
         self.dither()        
         right_shift = b_mob.get_center() - a_mob.get_center()
@@ -1602,17 +1602,17 @@ class ExplainNChoose4Formula(Scene):
             ("( %d , %d , %d , %d )"%quad).split(" ")
         )
         quad_mobs = tuple_mobs[1::2]
-        parens = CompoundMobject(*tuple_mobs[0::2])
+        parens = Mobject(*tuple_mobs[0::2])
         form_mobs = TexMobject([
             str(n), "(%d-1)"%n, "(%d-2)"%n,"(%d-3)"%n,
             r"\over {4 \cdot 3 \cdot 2 \cdot 1}"
         ]).split()
-        form_mobs = CompoundMobject(*form_mobs).scale(0.7).shift((4, 3, 0)).split()
+        form_mobs = Mobject(*form_mobs).scale(0.7).shift((4, 3, 0)).split()
         nums = [TexMobject(str(k)) for k in range(1, n+1)]
         height = 1.5*nums[0].get_height()
         for x in range(n):
             nums[x].shift((0, x*height, 0))
-        nums_compound = CompoundMobject(*nums)
+        nums_compound = Mobject(*nums)
         nums_compound.shift(quad_mobs[0].get_center() - nums[0].get_center())
         curr_num = 1 
         self.add(parens)
@@ -1625,7 +1625,7 @@ class ExplainNChoose4Formula(Scene):
             nums = nums_compound.split()
             chosen = nums[quad[i]-1]
             nums[quad[i]-1] = Point(chosen.get_center()).highlight("black")
-            nums_compound = CompoundMobject(*nums)
+            nums_compound = Mobject(*nums)
             self.add(chosen)
             if i < 3:
                 right_shift = quad_mobs[i+1].get_center() - chosen.get_center()
@@ -1657,10 +1657,10 @@ class ExplainNChoose4Formula(Scene):
                 )
                 for i in range(4)
             ]
-            compound_quad = CompoundMobject(*quad_mobs)
+            compound_quad = Mobject(*quad_mobs)
             self.play(CounterclockwiseTransform(
                 compound_quad,
-                CompoundMobject(*new_quad_mobs)
+                Mobject(*new_quad_mobs)
             ))
             self.remove(compound_quad)
             quad_mobs = new_quad_mobs

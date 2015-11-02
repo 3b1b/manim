@@ -23,23 +23,78 @@ class Mobject(object):
         "name" : None,
     }
     DIM = 3
-    def __init__(self, **kwargs):
+    def __init__(self, *sub_mobjects, **kwargs):
         digest_config(self, kwargs)
+        self.sub_mobjects = list(sub_mobjects)
         self.color = Color(self.color)
         if self.name is None:
             self.name = self.__class__.__name__
         self.has_normals = hasattr(self, 'unit_normal')
         self.init_points()
         self.generate_points()
+        if self.has_normals:
+            self.unit_normals = np.apply_along_axis(
+                self.unit_normal,
+                1,
+                self.points,
+            )
 
     def init_points(self):
-        self.points = np.zeros((0, 3))
-        self.rgbs   = np.zeros((0, 3))
-        if self.has_normals:
-            self.unit_normals = np.zeros((0, 3))
+        for attr in self.get_array_attrs():
+            setattr(self, attr, np.zeros((0, 3)))
 
     def __str__(self):
         return self.name
+
+    def add_points(self, points, rgbs = None, color = None):
+        """
+        points must be a Nx3 numpy array, as must rgbs if it is not None
+        """
+        if not isinstance(points, np.ndarray):
+            points = np.array(points)
+        num_new_points = points.shape[0]
+        self.points = np.append(self.points, points, axis = 0)
+        if rgbs is None:
+            color = Color(color) if color else self.color
+            rgbs = np.array([color.get_rgb()] * num_new_points)
+        elif rgbs.shape != points.shape:
+            raise Exception("points and rgbs must have same shape")
+        self.rgbs = np.append(self.rgbs, rgbs, axis = 0)
+        if self.has_normals:
+            self.unit_normals = np.append(
+                self.unit_normals,
+                np.apply_along_axis(self.unit_normal, 1, points),
+                axis = 0
+            )
+        return self
+
+    def add(self, *mobjects):
+        self.sub_mobjects = list_update(self.sub_mobjects, mobjects)
+        return self
+
+    def get_array_attrs(self):
+        result = ["points", "rgbs"]
+        if self.has_normals:
+            result.append("unit_normals")
+        return result
+
+    def digest_mobject_attrs(self):
+        """
+        Ensures all attributes which are mobjects are included
+        in the sub_mobjects list.
+        """
+        mobject_attrs = filter(
+            lambda x : isinstance(x, Mobject),
+            self.__dict__.values()
+        )
+        self.sub_mobjects = list_update(self.sub_mobjects, mobject_attrs)
+        return self
+
+
+    def apply_over_attr_arrays(self, func):
+        for attr in self.get_array_attrs(self):
+            setattr(self, attr, func(getattr(self, attr)))
+        return self
 
     def show(self):
         Image.fromarray(disp.paint_mobject(self)).show()
@@ -49,41 +104,97 @@ class Mobject(object):
             os.path.join(MOVIE_DIR, (name or str(self)) + ".png")
         )
 
-    def add_points(self, points, rgbs = None, color = None):
-        """
-        points must be a Nx3 numpy array, as must rgbs if it is not None
-        """
-        points = np.array(points)
-        num_new_points = points.shape[0]
-        self.points = np.append(self.points, points)
-        self.points = self.points.reshape((self.points.size / 3, 3))
-        if rgbs is None:
-            color = Color(color) if color else self.color
-            rgbs = np.array([color.get_rgb()] * num_new_points)
-        else:
-            if rgbs.shape != points.shape:
-                raise Exception("points and rgbs must have same shape")
-        self.rgbs = np.append(self.rgbs, rgbs)
-        self.rgbs = self.rgbs.reshape((self.rgbs.size / 3, 3))
-        if self.has_normals:
-            self.unit_normals = np.append(
-                self.unit_normals,
-                np.array([self.unit_normal(point) for point in points])
-            ).reshape(self.points.shape)
+
+    #### Fundamental operations ######
+
+    def shift(self, *vectors):
+        total_vector = reduce(op.add, vectors)
+        for mob in self.get_full_submobject_family():        
+            mob.points += total_vector
         return self
 
-    def add(self, *mobjects):
-        for mobject in mobjects:
-            self.add_points(mobject.points, mobject.rgbs)
+    def scale(self, scale_factor):
+        for mob in self.get_full_submobject_family():
+            mob.points *= scale_factor
         return self
 
+    def rotate(self, angle, axis = OUT):
+        t_rotation_matrix = np.transpose(rotation_matrix(angle, axis))
+        for mob in self.get_full_submobject_family():
+            mob.points = np.dot(mob.points, t_rotation_matrix)
+            if mob.has_normals:
+                mob.unit_normals = np.dot(mob.unit_normals, t_rotation_matrix)
+        return self
+
+    def stretch(self, factor, dim):
+        for mob in self.get_full_submobject_family():
+            mob.points[:,dim] *= factor
+        return self
+
+    def apply_function(self, function):
+        for mob in self.get_full_submobject_family():
+            mob.points = np.apply_along_axis(function, 1, mob.points)
+        return self
+
+    def wag(self, direction = RIGHT, axis = DOWN, wag_factor = 1.0):
+        for mob in self.get_full_submobject_family():
+            alphas = np.dot(mob.points, np.transpose(axis))
+            alphas -= min(alphas)
+            alphas /= max(alphas)
+            alphas = alphas**wag_factor
+            mob.points += np.dot(
+                alphas.reshape((len(alphas), 1)),
+                np.array(direction).reshape((1, mob.DIM))
+            )
+        return self
+
+    def highlight(self, color = "yellow", condition = None):
+        """
+        Condition is function which takes in one arguments, (x, y, z).
+        """
+        rgb = Color(color).get_rgb()
+        for mob in self.get_full_submobject_family():
+            if condition:
+                to_change = np.apply_along_axis(condition, 1, mob.points)
+                mob.rgbs[to_change, :] = rgb
+            else:
+                mob.rgbs[:,:] = rgb
+        return self
+
+    def filter_out(self, condition):
+        for mob in self.get_full_submobject_family():
+            to_eliminate = ~np.apply_along_axis(condition, 1, mob.points)
+            mob.points = mob.points[to_eliminate]
+            mob.rgbs = mob.rgbs[to_eliminate]
+        return self
+
+    def sort_points(self, function = lambda p : p[0]):
+        """
+        function is any map from R^3 to R
+        """
+        for mob in self.get_full_submobject_family():
+            indices = range(len(mob.points))
+            indices.sort(
+                lambda *pair : cmp(*map(function, mob.points[pair, :]))
+            )
+            mob.points = mob.points[indices]
+            mob.rgbs   = mob.rgbs[indices]
+        return self
 
     def repeat(self, count):
-        #Can make transition animations nicer
-        points, rgbs = deepcopy(self.points), deepcopy(self.rgbs)
-        for x in range(count - 1):
-            self.add_points(points, rgbs)
+        """
+        This can make transition animations nicer
+        """
+        def repeat_array(array):
+            return reduce(
+                lambda a1, a2 : np.append(a1, a2, axis = 0),
+                [array]*count
+            )
+        for mob in self.get_full_submobject_family():
+            mob.apply_over_attr_arrays(repeat_array)
         return self
+
+    #### In place operations ######
 
     def do_in_place(self, method, *args, **kwargs):
         center = self.get_center()
@@ -92,96 +203,50 @@ class Mobject(object):
         self.shift(center)
         return self
 
-    def rotate(self, angle, axis = OUT):
-        t_rotation_matrix = np.transpose(rotation_matrix(angle, axis))
-        self.points = np.dot(self.points, t_rotation_matrix)
-        if self.has_normals:
-            self.unit_normals = np.dot(self.unit_normals, t_rotation_matrix)
-        return self
-
     def rotate_in_place(self, angle, axis = OUT):
         self.do_in_place(self.rotate, angle, axis)
-        return self
-
-    def shift(self, vector):
-        self.points += vector
-        return self
-
-    def wag(self, wag_direction = RIGHT, wag_axis = DOWN,
-            wag_factor = 1.0):
-        alphas = np.dot(self.points, np.transpose(wag_axis))
-        alphas -= min(alphas)
-        alphas /= max(alphas)
-        alphas = alphas**wag_factor
-        self.points += np.dot(
-            alphas.reshape((len(alphas), 1)),
-            np.array(wag_direction).reshape((1, self.DIM))
-        )
-        return self
-
-    def center(self):
-        self.shift(-self.get_center())
-        return self
-
-    #Wrapper functions for better naming
-    def to_corner(self, corner = LEFT+DOWN, buff = DEFAULT_MOBJECT_TO_EDGE_BUFFER):
-        return self.align_on_border(corner, buff)
-
-    def to_edge(self, edge = LEFT, buff = DEFAULT_MOBJECT_TO_EDGE_BUFFER):
-        return self.align_on_border(edge, buff)
-
-    def align_on_border(self, direction, buff = DEFAULT_MOBJECT_TO_EDGE_BUFFER):
-        """
-        Direction just needs to be a vector pointing towards side or
-        corner in the 2d plane.
-        """
-        shift_val = np.zeros(3)
-        space_dim = (SPACE_WIDTH, SPACE_HEIGHT)
-        for i in [0, 1]:
-            if direction[i] == 0:
-                continue
-            elif direction[i] > 0:
-                shift_val[i] = space_dim[i]-buff-max(self.points[:,i])
-            else:
-                shift_val[i] = -space_dim[i]+buff-min(self.points[:,i])
-        self.shift(shift_val)
-        return self
-
-    def next_to(self, mobject, 
-                direction = RIGHT, 
-                buff = DEFAULT_MOBJECT_TO_MOBJECT_BUFFER,
-                aligned_edge = None):
-        direction = direction / np.linalg.norm(direction)
-        if aligned_edge is not None:
-            anchor_point = self.get_corner(aligned_edge-direction)
-            target_point = mobject.get_corner(aligned_edge+direction)
-        elif list(direction) in map(list, [LEFT, RIGHT, UP, DOWN]):
-            anchor_point = self.get_edge_center(-direction)
-            target_point = mobject.get_edge_center(direction)
-        else:
-            anchor_point = self.get_boundary_point(-direction)
-            target_point = mobject.get_boundary_point(direction)
-        self.shift(target_point - anchor_point + buff*direction)
-        return self
-
-    def scale(self, scale_factor):
-        self.points *= scale_factor
         return self
 
     def scale_in_place(self, scale_factor):
         self.do_in_place(self.scale, scale_factor)
         return self
 
-    def stretch(self, factor, dim):
-        self.points[:,dim] *= factor
+    def pose_at_angle(self):
+        self.rotate_in_place(np.pi / 7, RIGHT+UP)
+        return self
+
+    def center(self):
+        self.shift(-self.get_center())
+        return self
+
+    def align_on_border(self, direction, buff = DEFAULT_MOBJECT_TO_EDGE_BUFFER):
+        """
+        Direction just needs to be a vector pointing towards side or
+        corner in the 2d plane.
+        """
+        target_point = np.sign(direction) * (SPACE_WIDTH, SPACE_HEIGHT, 0)
+        anchor_point = self.get_critical_point(direction)
+        self.shift(target - anchor_point - buff * np.array(direction))
+        return self
+
+    def to_corner(self, corner = LEFT+DOWN, buff = DEFAULT_MOBJECT_TO_EDGE_BUFFER):
+        return self.align_on_border(corner, buff)
+
+    def to_edge(self, edge = LEFT, buff = DEFAULT_MOBJECT_TO_EDGE_BUFFER):
+        return self.align_on_border(edge, buff)
+
+    def next_to(self, mobject, 
+                direction = RIGHT, 
+                buff = DEFAULT_MOBJECT_TO_MOBJECT_BUFFER,
+                aligned_edge = ORIGIN):
+        anchor_point = self.get_critical_point(aligned_edge-direction)
+        target_point = mobject.get_critical_point(aligned_edge+direction)
+        self.shift(target_point - anchor_point + buff*direction)
         return self
 
     def stretch_to_fit(self, length, dim):
-        center = self.get_center()
-        old_length = max(self.points[:,dim]) - min(self.points[:,dim])
-        self.center()
-        self.stretch(length/old_length, dim)
-        self.shift(center)
+        old_length = self.length_over_dim(dim)
+        self.do_in_place(self.stretch, length/old_length, dim)
         return self
 
     def stretch_to_fit_width(self, width):
@@ -196,11 +261,6 @@ class Mobject(object):
     def scale_to_fit_height(self, height):
         return self.scale(height/self.get_height())
 
-    def pose_at_angle(self):
-        self.rotate(np.pi / 7)
-        self.rotate(np.pi / 7, [1, 0, 0])
-        return self
-
     def replace(self, mobject, stretch = False):
         if mobject.get_num_points() == 0:
             raise Warning("Attempting to replace mobject with no points")
@@ -213,26 +273,10 @@ class Mobject(object):
         self.center().shift(mobject.get_center())
         return self
 
-    def apply_function(self, function):
-        self.points = np.apply_along_axis(function, 1, self.points)
-        return self
-
     def apply_complex_function(self, function):
         return self.apply_function(
             lambda (x, y, z) : complex_to_R3(function(complex(x, y)))
         )
-
-    def highlight(self, color = "yellow", condition = None):
-        """
-        Condition is function which takes in one arguments, (x, y, z).
-        """
-        rgb = Color(color).get_rgb()
-        if condition:
-            to_change = np.apply_along_axis(condition, 1, self.points)
-            self.rgbs[to_change, :] = rgb
-        else:
-            self.rgbs[:,:] = rgb
-        return self
 
     def set_color(self, color):
         self.highlight(color)
@@ -245,59 +289,92 @@ class Mobject(object):
 
     def fade_to(self, color, alpha):
         self.rgbs = interpolate(self.rgbs, Color(color).rgb, alpha)
+        for mob in self.sub_mobjects:
+            mob.fade_to(color, alpha)
         return self
 
     def fade(self, brightness = 0.5):
-        self.rgbs *= brightness
+        self.fade_to(BLACK, brightness)
         return self
 
-    def filter_out(self, condition):
-        to_eliminate = ~np.apply_along_axis(condition, 1, self.points)
-        self.points = self.points[to_eliminate]
-        self.rgbs   = self.rgbs[to_eliminate]
-        return self
+    def reduce_across_dimension(self, points_func, reduce_func, dim):
+        try:
+            values = [points_func(self.points[:, dim])]
+        except:
+            values = []
+        values += [
+            mob.reduce_across_dimension(points_func, reduce_func, dim)
+            for mob in self.sub_mobjects
+        ]
+        try:
+            return reduce_func(values)
+        except:
+            return 0
 
-    def sort_points(self, function = lambda p : p[0]):
-        """
-        function is any map from R^3 to R
-        """
-        indices = range(self.get_num_points())
-        indices.sort(
-            lambda *pair : cmp(*map(function, self.points[pair, :]))
+    def get_merged_array(self, array_attr):
+        return reduce(
+            lambda a1, a2 : np.append(a1, a2, axis = 0),
+            [getattr(self, array_attr)] + [
+                mob.get_merged_array(array_attr) 
+                for mob in self.sub_mobjects
+            ]
         )
-        self.points = self.points[indices]
-        self.rgbs   = self.rgbs[indices]
+
+    def get_all_points(self):
+        return self.get_merged_array("points")
+
+    def ingest_sub_mobjects(self):
+        for attr in self.get_array_attrs():
+            setattr(self, attr, get_merged_array(attr))
+        self.sub_mobjects = []
         return self
+
+    def split(self):
+        result = [self] if len(self.points) > 0 else []
+        return result + self.sub_mobjects
+
+    def get_full_submobject_family(self):
+        sub_families = map(Mobject.get_full_submobject_family, self.sub_mobjects)
+        all_mobjects = [self] + reduce(op.add, sub_families, [])
+        return remove_list_redundancies(all_mobjects)
 
     ### Getters ###
 
-    def get_num_points(self):
-        return len(self.points)
+    def get_num_points(self, including_submobjects = False):
+        return self.reduce_across_dimension(len, sum, 0)
 
-    def get_center(self):
-        if self.get_num_points() == 0:
-            return ORIGIN
-        return (np.max(self.points, 0) + np.min(self.points, 0))/2.0
+    def get_critical_point(self, direction):
+        result = np.zeros(self.DIM)
+        for dim in [0, 1]:
+            if direction[dim] <= 0:
+                min_point = self.reduce_across_dimension(np.min, np.min, dim)
+            if direction[dim] >= 0:
+                max_point = self.reduce_across_dimension(np.max, np.max, dim)
 
-    def get_center_of_mass(self):
-        return np.apply_along_axis(np.mean, 0, self.points)
-
-    def get_boundary_point(self, direction):
-        return self.points[np.argmax(np.dot(self.points, direction))]
-
-    def get_edge_center(self, direction):
-        dim = np.argmax(map(abs, direction))
-        max_or_min_func = np.max if direction[dim] > 0 else np.min
-        result = self.get_center()
-        result[dim] = max_or_min_func(self.points[:,dim])
+            if direction[dim] == 0:
+                result[dim] = (max_point+min_point)/2
+            elif direction[dim] < 0:
+                result[dim] = min_point
+            else:
+                result[dim] = max_point
         return result
 
+    # Pseudonyms for more general get_critical_point method
+    def get_edge_center(self, direction):
+        return self.get_critical_point(direction)
+
     def get_corner(self, direction):
-        return sum([
-            self.get_edge_center(RIGHT*direction[0]),
-            self.get_edge_center(UP*direction[1]),
-            -self.get_center()
-        ])
+        return self.get_critical_point(direction)
+
+    def get_center(self):
+        return self.get_critical_point(np.zeros(self.DIM))
+
+    def get_center_of_mass(self):
+        return np.apply_along_axis(np.mean, 0, self.get_all_points())
+
+    def get_boundary_point(self, direction):
+        all_points = self.get_all_points()
+        return all_points[np.argmax(np.dot(all_points, direction))]
 
     def get_top(self):
         return self.get_edge_center(UP)
@@ -311,11 +388,18 @@ class Mobject(object):
     def get_left(self):
         return self.get_edge_center(LEFT)
 
+    def length_over_dim(self, dim):
+        return (
+            self.reduce_across_dimension(np.max, np.max, dim) - 
+            self.reduce_across_dimension(np.min, np.min, dim)
+        )
+
     def get_width(self):
-        return np.max(self.points[:, 0]) - np.min(self.points[:, 0])
+        return self.length_over_dim(0)
 
     def get_height(self):
-        return np.max(self.points[:, 1]) - np.min(self.points[:, 1])
+        return self.length_over_dim(1)
+
 
     def get_color(self):
         color = Color()
@@ -346,7 +430,7 @@ class Mobject(object):
         and mobject2.
         """
         Mobject.align_data(mobject1, mobject2)
-        for attr in ['points', 'rgbs']:
+        for attr in self.get_array_attrs():
             setattr(target_mobject, attr, interpolate(
                 getattr(mobject1, attr), 
                 getattr(mobject2, attr), 
@@ -380,29 +464,6 @@ class Mobject2D(Mobject):
         self.epsilon = 1.0 / self.density  
         Mobject.__init__(self, **kwargs)
 
-class CompoundMobject(Mobject):
-    def __init__(self, *mobjects):
-        Mobject.__init__(self)
-        self.original_mobs_num_points = []
-        for mobject in mobjects:
-            self.original_mobs_num_points.append(mobject.points.shape[0])
-            self.add_points(mobject.points, mobject.rgbs)
-        self.point_thickness = max([
-            m.point_thickness 
-            for m in mobjects
-        ])
-
-    def split(self):
-        result = []
-        curr = 0
-        for num_points in self.original_mobs_num_points:
-            result.append(Mobject().add_points(
-                self.points[curr:curr+num_points, :],
-                self.rgbs[curr:curr+num_points, :]
-            ))
-            curr += num_points
-        return result
-
 
 class Point(Mobject):
     DEFAULT_CONFIG = {
@@ -414,47 +475,6 @@ class Point(Mobject):
 
     def generate_points(self):
         self.add_points([self.location])
-
-# class CompoundMobject(Mobject):
-#     """
-#     Treats a collection of mobjects as if they were one.
-
-#     A weird form of inhertance is at play here...
-#     """
-#     def __init__(self, *mobjects):
-#         Mobject.__init__(self)
-#         self.mobjects = mobjects
-#         name_to_method = dict(
-#             inspect.getmembers(Mobject, predicate = inspect.ismethod)
-#         )
-#         names = name_to_method.keys()
-#         #Most reductions take the form of mapping a given method across
-#         #all constituent mobjects, then just returning self.
-#         name_to_reduce = dict([
-#             (name, lambda list : self)
-#             for name in names
-#         ])
-#         name_to_reduce.update(self.get_special_reduce_functions())
-#         def make_pseudo_method(name):
-#             return lambda *args, **kwargs : name_to_reduce[name]([
-#                 name_to_method[name](mob, *args, **kwargs)
-#                 for mob in self.mobjects
-#             ])
-#         for name in names:
-#             setattr(self, name, make_pseudo_method(name))
-
-#     def show(self):
-
-
-#     def get_special_reduce_functions(self):
-#         return {}
-
-#     def handle_method(self, method_name, *args, **kwargs):
-#         pass
-
-
-
-
 
 
 

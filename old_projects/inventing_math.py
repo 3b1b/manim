@@ -96,7 +96,7 @@ def zero_to_one_interval():
     interval.elongate_tick_at(INTERVAL_RADIUS, 4)
     zero = TexMobject("0").shift(INTERVAL_RADIUS*LEFT+DOWN)
     one = TexMobject("1").shift(INTERVAL_RADIUS*RIGHT+DOWN)
-    return CompoundMobject(interval, zero, one)
+    return Mobject(interval, zero, one)
 
 def draw_you(with_bubble = False):
     result = PiCreature()
@@ -175,7 +175,7 @@ class IntroduceDivergentSum(Scene):
             self.add(brace, sum_value)
             self.dither(0.75)
         self.remove(sum_value)
-        ellipses = CompoundMobject(
+        ellipses = Mobject(
             *[equation[NUM_WRITTEN_TERMS + i] for i in range(3)]
         )
         end_brace = deepcopy(brace).stretch_to_fit_width(
@@ -264,7 +264,7 @@ class OutlineOfVideo(Scene):
         ]
         last_one_split = texts[-1].split()
         last_one_split[1].highlight("skyblue")
-        texts[-1] = CompoundMobject(*last_one_split)
+        texts[-1] = Mobject(*last_one_split)
         texts[0].shift(overbrace.get_top()+texts[0].get_height()*UP)
         texts[1].shift(sum([
             arrow.get_boundary_point(DOWN+RIGHT),
@@ -335,7 +335,7 @@ class OutlineOfVideo(Scene):
 #         self.add(sum_mob)
 #         self.play(FadeIn(discover))
 #         self.dither()
-#         self.play(FadeIn(CompoundMobject(*define_parts)))
+#         self.play(FadeIn(Mobject(*define_parts)))
 #         self.dither()
 
 class YouAsMathematician(Scene):
@@ -376,7 +376,7 @@ class YouAsMathematician(Scene):
         self.remove(bubble, *equation_parts)
         self.disapproving_friend()
         self.add(bubble, equation)
-        self.play(Transform(equation, CompoundMobject(*dot_pair)))
+        self.play(Transform(equation, Mobject(*dot_pair)))
         self.remove(equation)
         self.add(*dot_pair)
         two_arrows = [
@@ -386,7 +386,7 @@ class YouAsMathematician(Scene):
         self.play(*[ShowCreation(a) for a in two_arrows])
         self.play(BlinkPiCreature(you))
         self.remove(*dot_pair+two_arrows)
-        everything = CompoundMobject(*self.mobjects)
+        everything = Mobject(*self.mobjects)
         self.clear()
         self.play(
             ApplyPointwiseFunction(
@@ -559,7 +559,7 @@ class OrganizePartialSums(Scene):
 
         self.play(ShowCreation(dots))
         self.dither()
-        self.play(FadeIn(CompoundMobject(down_arrow, infinite_sum)))
+        self.play(FadeIn(Mobject(down_arrow, infinite_sum)))
         self.dither()
 
 class SeeNumbersApproachOne(Scene):
@@ -569,7 +569,7 @@ class SeeNumbersApproachOne(Scene):
         arrow.shift(DOWN).highlight("yellow")
         num_dots = 6
         colors = Color("green").range_to("yellow", num_dots)
-        dots = CompoundMobject(*[
+        dots = Mobject(*[
             Dot(
                 density = 2*DEFAULT_POINT_DENSITY_1D
             ).scale(1+1.0/2.0**x).shift(
@@ -682,7 +682,7 @@ class ListOfPartialSums(Scene):
         self.play(ShowCreation(dots))
         self.dither()
         self.play(
-            FadeIn(CompoundMobject(*equals)),
+            FadeIn(Mobject(*equals)),
             *[
                 Transform(deepcopy(number), finite_sum)
                 for number, finite_sum in zip(numbers, sums)
@@ -712,7 +712,7 @@ class ShowDecreasingDistance(Scene):
         lines = [vert_line0, vert_line1, horiz_line]
         for line in lines:
             line.highlight("green")
-        dots = CompoundMobject(*[
+        dots = Mobject(*[
             Dot().scale(1.0/(n+1)).shift((1+partial_sum(n))*RIGHT)
             for n in range(10)
         ])
@@ -734,7 +734,7 @@ class ShowDecreasingDistance(Scene):
 class CircleZoomInOnOne(Scene):
     def construct(self):
         number_line = NumberLine(interval_size = 1).add_numbers()
-        dots = CompoundMobject(*[
+        dots = Mobject(*[
             Dot().scale(1.0/(n+1)).shift((1+partial_sum(n))*RIGHT)
             for n in range(10)
         ])
@@ -849,7 +849,7 @@ class DefineInfiniteSum(Scene):
             "\\sum_{n = 0}^\\infty a_n = X"
         ]).split()
         define.highlight("skyblue")
-        expression = CompoundMobject(define, infinite_sum)
+        expression = Mobject(define, infinite_sum)
 
         self.add(expression)
         self.dither()
@@ -1041,7 +1041,7 @@ class ChopIntervalInProportions(Scene):
                             FadeIn(rt[0]),
                             Transform(
                                 brace_to_replace.repeat(2),
-                                CompoundMobject(*braces)
+                                Mobject(*braces)
                             ),
                             FadeIn(left_paren), 
                             FadeIn(right_paren),
@@ -1052,7 +1052,7 @@ class ChopIntervalInProportions(Scene):
                         self.play(
                             Transform(
                                 term_to_replace,
-                                CompoundMobject(lt[0], rt[1])
+                                Mobject(lt[0], rt[1])
                             ),
                             FadeOut(left_paren),
                             FadeOut(right_paren)
@@ -1064,26 +1064,26 @@ class ChopIntervalInProportions(Scene):
                             FadeIn(rt[0]),
                             Transform(
                                 brace_to_replace.repeat(2),
-                                CompoundMobject(*braces)
+                                Mobject(*braces)
                             ),
                             Transform(
                                 term_to_replace,
-                                CompoundMobject(lt[0], rt[1])
+                                Mobject(lt[0], rt[1])
                             ),
                             *additional_anims
                         )
                     self.remove(*lt+rt)
-                    lt, rt = CompoundMobject(*lt), CompoundMobject(*rt)
+                    lt, rt = Mobject(*lt), Mobject(*rt)
                     self.add(lt, rt)
                 else:
                     self.play(
                         Transform(
                             brace_to_replace.repeat(2), 
-                            CompoundMobject(*braces)
+                            Mobject(*braces)
                         ),
                         Transform(
                             term_to_replace,
-                            CompoundMobject(lt, rt)
+                            Mobject(lt, rt)
                         ),
                         *additional_anims
                     )
@@ -1379,10 +1379,10 @@ class SumPowersOfTwoAnimation(Scene):
             new_bottom_num = TexMobject(str(2**(n+1)))            
             bottom_num.shift(bottombrace.get_center()+0.5*DOWN)
 
-            top_sum = CompoundMobject(*full_top_sum[:n]).center()
+            top_sum = Mobject(*full_top_sum[:n]).center()
             top_sum_end = deepcopy(full_top_sum[n]).center()
             top_sum.shift(topbrace.get_center()+0.5*UP)
-            new_top_sum = CompoundMobject(*full_top_sum[:(n+1)]).center()
+            new_top_sum = Mobject(*full_top_sum[:(n+1)]).center()
             self.add(top_sum, bottom_num)
 
             if n == iterations:
@@ -1390,7 +1390,7 @@ class SumPowersOfTwoAnimation(Scene):
             new_dot = deepcopy(dot).shift(circle.get_center())
             shift_val = (2**n)*(dot_width+dot_buff)
             right += shift_val
-            new_dots = CompoundMobject(new_dot, curr_dots)
+            new_dots = Mobject(new_dot, curr_dots)
             new_dots.highlight(colors.next()).shift(shift_val)
             alt_bottombrace = deepcopy(bottombrace).shift(shift_val)
             alt_bottom_num = deepcopy(bottom_num).shift(shift_val)
@@ -1408,7 +1408,7 @@ class SumPowersOfTwoAnimation(Scene):
                 if exp.get_width() > brace.get_width():
                     exp.stretch_to_fit_width(brace.get_width())
             new_top_sum = new_top_sum.split()
-            new_top_sum_start = CompoundMobject(*new_top_sum[:-1])
+            new_top_sum_start = Mobject(*new_top_sum[:-1])
             new_top_sum_end = new_top_sum[-1]
 
             self.dither()            
@@ -1438,7 +1438,7 @@ class SumPowersOfTwoAnimation(Scene):
                 top_sum_end, new_top_sum_end,
                 alt_topbrace, alt_bottombrace
             )
-            curr_dots = CompoundMobject(curr_dots, new_dots)
+            curr_dots = Mobject(curr_dots, new_dots)
 
         
 class PretendTheyDoApproachNegativeOne(RearrangeEquation):
@@ -1730,7 +1730,7 @@ class RoomsAndSubrooms(Scene):
         ]
 
         for group in rectangle_groups:
-            mob = CompoundMobject(*group)
+            mob = Mobject(*group)
             mob.sort_points(np.linalg.norm)
             self.play(ShowCreation(mob))
 
@@ -1945,7 +1945,7 @@ class DeduceWhereNegativeOneFalls(Scene):
         colors = list(get_room_colors())
         num_labels = len(colors)
         texts = [
-            CompoundMobject(parts[0], parts[1].highlight(color))
+            Mobject(parts[0], parts[1].highlight(color))
             for count, color in zip(it.count(), colors)
             for parts in [TextMobject([
                 "Represented (heuristically) \\\\ by being in the same \\\\", 
@@ -2025,7 +2025,7 @@ class PAdicMetric(Scene):
             self.play(DelayByOrder(Transform(curr, prime)))
             self.dither()
             if count == 2:
-                self.spill(CompoundMobject(curr, text), arrow, new_numbers)
+                self.spill(Mobject(curr, text), arrow, new_numbers)
             self.remove(curr)
             curr = prime
         self.play(DelayByOrder(Transform(curr, p_str)))
@@ -2052,7 +2052,7 @@ class FuzzyDiscoveryToNewMath(Scene):
         fuzzy.to_edge(UP).shift(SPACE_WIDTH*LEFT/2)
         new_math = TextMobject("New Math")
         new_math.to_edge(UP).shift(SPACE_WIDTH*RIGHT/2)
-        lines = CompoundMobject(
+        lines = Mobject(
             Line(DOWN*SPACE_HEIGHT, UP*SPACE_HEIGHT),
             Line(3*UP+LEFT*SPACE_WIDTH, 3*UP+RIGHT*SPACE_WIDTH)
         )
@@ -2071,7 +2071,7 @@ class FuzzyDiscoveryToNewMath(Scene):
             line.highlight("blue")
             char_mob = TexMobject(char).scale(0.25)
             line.add(char_mob.shift(line.get_center()))
-        triangle = CompoundMobject(*triangle_lines)
+        triangle = Mobject(*triangle_lines)
         triangle.center().shift(1.5*fuzzy_discoveries[0].get_right())
         how_length = TextMobject("But how is length defined?").scale(0.5)
         how_length.shift(0.75*DOWN)

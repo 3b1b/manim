@@ -2,7 +2,7 @@ from helpers import *
 
 from helpers import *
 
-from mobject import Mobject, Mobject1D, CompoundMobject
+from mobject import Mobject, Mobject1D, Mobject
 
 
 class FunctionGraph(Mobject1D):
@@ -58,11 +58,11 @@ class ParametricFunction(Mobject):
             ])
 
 
-class Axes(CompoundMobject):
+class Axes(Mobject):
     def __init__(self, **kwargs):
         x_axis = NumberLine(**kwargs)
         y_axis = NumberLine(**kwargs).rotate(np.pi/2, OUT)
-        CompoundMobject.__init__(self, x_axis, y_axis)
+        Mobject.__init__(self, x_axis, y_axis)
 
 
         

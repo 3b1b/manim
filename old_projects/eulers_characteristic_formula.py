@@ -50,7 +50,7 @@ class PreferOtherProofDialogue(Scene):
         self.dither(2)
         self.play(Transform(
             Dot(student_bubble.tip).highlight("black"),
-            CompoundMobject(student_bubble, student_bubble.text)
+            Mobject(student_bubble, student_bubble.text)
         ))
         self.dither(2)
         self.remove(teacher_bubble.text)
@@ -81,7 +81,7 @@ class IllustrateDuality(GraphScene):
             for edge_pair in zip(self.edges, self.dual_edges)
         ] + [
             Transform(
-                CompoundMobject(*[
+                Mobject(*[
                     self.vertices[index]
                     for index in cycle
                 ]),
@@ -143,7 +143,7 @@ class IntroduceGraph(GraphScene):
         self.add(not_okay)
         self.remove(*edges_to_remove)
         self.play(ShowCreation(
-            CompoundMobject(*edges_to_remove),
+            Mobject(*edges_to_remove),
             alpha_func = lambda t : 1 - t,
             run_time = 1.0
         ))
@@ -182,10 +182,10 @@ class PlanarGraphDefinition(Scene):
             "Not \\\\", "``", "Planar", "''",
             # "no matter how \\\\ hard you try"
         ]).split()
-        shift_val = CompoundMobject(Not, planar).to_corner().get_center()
+        shift_val = Mobject(Not, planar).to_corner().get_center()
         Not.highlight("red").shift(shift_val)
         graphs = [
-            CompoundMobject(*GraphScene(g).mobjects)
+            Mobject(*GraphScene(g).mobjects)
             for g in [
                 CubeGraph(), 
                 CompleteGraph(5),
@@ -227,7 +227,7 @@ class TerminologyFromPolyhedra(GraphScene):
             point / 2 + OUT if abs(point[0]) == 2 else point + IN
             for point in self.points
         ]
-        cube = CompoundMobject(*[
+        cube = Mobject(*[
             Line(vertices[edge[0]], vertices[edge[1]])
             for edge in self.graph.edges
         ])
@@ -258,7 +258,7 @@ class TerminologyFromPolyhedra(GraphScene):
         self.remove(dots_to_vertices, *self.vertices)
         self.add(lines_to_edges)
         self.play(ApplyMethod(
-            CompoundMobject(*self.edges).highlight, "yellow"
+            Mobject(*self.edges).highlight, "yellow"
         ))
         self.dither(2)
         self.clear()
@@ -312,7 +312,7 @@ class ThreePiecesOfTerminology(GraphScene):
 
         self.clear()
         self.play(ApplyMethod(
-            CompoundMobject(*terms).center
+            Mobject(*terms).center
         ))
         self.dither()
 
@@ -361,14 +361,14 @@ class PathExamples(GraphScene):
             mob.to_edge(UP)
         kwargs = {"run_time" : 1.0}
         for path, non_path in zip(paths, non_paths):
-            path_lines = CompoundMobject(*[
+            path_lines = Mobject(*[
                 Line(
                     self.points[path[i]], 
                     self.points[path[i+1]]
                 ).highlight("yellow")
                 for i in range(len(path) - 1)
             ])
-            non_path_lines = CompoundMobject(*[
+            non_path_lines = Mobject(*[
                 Line(
                     self.points[pp[0]],
                     self.points[pp[1]],
@@ -430,7 +430,7 @@ class DefineSpanningTree(GraphScene):
         randy.scale(RANDOLPH_SCALE_VAL).move_to(self.points[0])
         dollar_signs = TextMobject("\\$\\$")
         dollar_signs.scale(EDGE_ANNOTATION_SCALE_VAL)
-        dollar_signs = CompoundMobject(*[
+        dollar_signs = Mobject(*[
             deepcopy(dollar_signs).shift(edge.get_center())
             for edge in self.edges
         ])
@@ -494,8 +494,8 @@ class NamingTree(GraphScene):
 
         self.add(*branches)
         self.play(
-            FadeOut(CompoundMobject(*self.edges + self.vertices)),
-            Animation(CompoundMobject(*branches)),
+            FadeOut(Mobject(*self.edges + self.vertices)),
+            Animation(Mobject(*branches)),
         )
         self.clear()
         self.add(tree, *branches)
@@ -599,7 +599,7 @@ class FacebookGraphAsAbstractSet(Scene):
         accounts.shift(3*LEFT).to_edge(UP)
         friendships = TextMobject("\\textbf{Friendships}")
         friendships.shift(3*RIGHT).to_edge(UP)
-        lines = CompoundMobject(
+        lines = Mobject(
             Line(UP*SPACE_HEIGHT, DOWN*SPACE_HEIGHT),
             Line(LEFT*SPACE_WIDTH + 3*UP, RIGHT*SPACE_WIDTH + 3*UP)
         ).highlight("white")
@@ -622,7 +622,7 @@ class ExamplesOfGraphs(GraphScene):
         )
         GraphScene.construct(self)
         self.generate_regions()
-        objects, notions = CompoundMobject(*TextMobject(
+        objects, notions = Mobject(*TextMobject(
             ["Objects \\quad\\quad ", "Thing that connects objects"]
         )).to_corner().shift(0.5*RIGHT).split()
         horizontal_line = Line(
@@ -687,8 +687,8 @@ class ExamplesOfGraphs(GraphScene):
             ]
         ]
 
-        comp_words = CompoundMobject(*words)
-        comp_lines = CompoundMobject(*lines)
+        comp_words = Mobject(*words)
+        comp_lines = Mobject(*lines)
         self.add(words1)
         self.play(ShowCreation(comp_words, run_time = 1.0))
         self.dither()
@@ -852,7 +852,7 @@ class ListOfCorrespondances(Scene):
             left.shift((min(arrow_xs) - SPACE_WIDTH, 0, 0))
             right.to_edge(LEFT)
             right.shift((max(arrow_xs) + SPACE_WIDTH, 0, 0))
-            lines.append(CompoundMobject(left, right, this_arrow))
+            lines.append(Mobject(left, right, this_arrow))
         last = None
         for line in lines:
             self.add(line.highlight("yellow"))
@@ -892,7 +892,7 @@ class CyclesCorrespondWithConnectedComponents(GraphScene):
             self.highlight_region(region)
         self.dither(2)
         self.reset_background()
-        lines = CompoundMobject(*[
+        lines = Mobject(*[
             Line(self.dual_points[last], self.dual_points[next])
             for last, next in zip(dual_cycle, dual_cycle[1:])
         ]).highlight("red")
@@ -1015,7 +1015,7 @@ class RandolphMortimerSpanningTreeGame(GraphScene):
         cycle_index = region_ordering[-1]
         cycle = self.graph.region_cycles[cycle_index]
         self.highlight_region(self.regions[cycle_index], "black")
-        self.play(ShowCreation(CompoundMobject(*[
+        self.play(ShowCreation(Mobject(*[
             Line(self.points[last], self.points[next]).highlight("green")
             for last, next in zip(cycle, list(cycle)[1:] + [cycle[0]])
         ])))
@@ -1116,7 +1116,7 @@ class DualSpanningTree(GraphScene):
         """).to_edge(UP)
 
         self.add(self.spanning_tree, randy, morty)
-        self.play(ShowCreation(CompoundMobject(
+        self.play(ShowCreation(Mobject(
             *np.array(self.edges)[dual_edges]
         ).highlight("red")))
         self.add(words)
@@ -1147,7 +1147,7 @@ class TreeCountFormula(Scene):
         self.remove(*all_dots)
         self.play(
             FadeOut(text), 
-            FadeIn(CompoundMobject(*gs.edges + gs.vertices)),
+            FadeIn(Mobject(*gs.edges + gs.vertices)),
             *[
                 Transform(*pair)
                 for pair in zip(branches,gs.spanning_tree.split())
@@ -1162,7 +1162,7 @@ class FinalSum(Scene):
             "(\\text{Number of Mortimer's Edges}) + 1 &= F \\\\ \n",
             " \\Downarrow \\\\", "E","+","2","&=","V","+","F",
         ], size = "\\large").split()
-        for line in lines[:2] + [CompoundMobject(*lines[2:])]:
+        for line in lines[:2] + [Mobject(*lines[2:])]:
             self.add(line)
             self.dither()
         self.dither()

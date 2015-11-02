@@ -24,9 +24,9 @@ class RearrangeEquation(Scene):
             start_terms, end_terms, size
         )
         if start_transform:
-            start_mobs = start_transform(CompoundMobject(*start_mobs)).split()
+            start_mobs = start_transform(Mobject(*start_mobs)).split()
         if end_transform:
-            end_mobs = end_transform(CompoundMobject(*end_mobs)).split()
+            end_mobs = end_transform(Mobject(*end_mobs)).split()
         unmatched_start_indices = set(range(len(start_mobs)))
         unmatched_end_indices   = set(range(len(end_mobs)))
         unmatched_start_indices.difference_update(
@@ -50,7 +50,7 @@ class RearrangeEquation(Scene):
 
         self.add(*start_mobs)
         if leave_start_terms:
-            self.add(CompoundMobject(*start_mobs))
+            self.add(Mobject(*start_mobs))
         self.dither()
         self.play(*[
             Transform(*pair, **transform_kwargs)

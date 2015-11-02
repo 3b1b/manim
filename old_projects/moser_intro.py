@@ -48,7 +48,7 @@ def count_sections(*radians):
         else:
             sc.animate(ShowCreation(dots[x]))
             sc.add(dots[x])
-        new_lines = CompoundMobject(*[
+        new_lines = Mobject(*[
             Line(points[x], points[y]) for y in xrange(x)
         ])
         sc.animate(Transform(deepcopy(dots[x]), new_lines, run_time = 2.0))
@@ -86,7 +86,7 @@ def summarize_pattern(*radians):
     dots = [Dot(point) for point in points]
     last_num = None
     for x in xrange(len(points)):
-        new_lines = CompoundMobject(*[
+        new_lines = Mobject(*[
             Line(points[x], points[y]) for y in xrange(x)
         ])
         num = TexMobject(str(moser_function(x + 1))).center()
@@ -116,7 +116,7 @@ def connect_points(*radians):
     all_lines = []
     for x in xrange(len(points)):
         lines = [Line(points[x], points[y]) for y in range(len(points))]
-        lines = CompoundMobject(*lines)
+        lines = Mobject(*lines)
         anims.append(Transform(deepcopy(dots[x]), lines, run_time = 3.0))
         all_lines.append(lines)
     sc.animate(*anims)
@@ -127,13 +127,13 @@ def connect_points(*radians):
 def interesting_problems():
     sc = Scene()
     locales = [(6, 2, 0), (6, -2, 0), (-5, -2, 0)]
-    fermat = CompoundMobject(*TexMobjects(["x^n","+","y^n","=","z^n"]))
+    fermat = Mobject(*TexMobjects(["x^n","+","y^n","=","z^n"]))
     fermat.scale(0.5).shift((-2.5, 0.7, 0))
     face = SimpleFace()
     tb = ThoughtBubble().shift((-1.5, 1, 0))
     sb = SpeechBubble().shift((-2.4, 1.3, 0))
     fermat_copies, face_copies, tb_copies, sb_copies = (
-        CompoundMobject(*[
+        Mobject(*[
             deepcopy(mob).scale(0.5).shift(locale)
             for locale in locales
         ])
@@ -162,11 +162,11 @@ def interesting_problems():
 def response_invitation():
     sc = Scene()
     video_icon = VideoIcon()
-    mini_videos = CompoundMobject(*[
+    mini_videos = Mobject(*[
         deepcopy(video_icon).scale(0.5).shift((3, y, 0))
         for y in [-2, 0, 2]
     ])
-    comments = CompoundMobject(*[
+    comments = Mobject(*[
         Line((-1.2, y, 0), (1.2, y, 0), color = 'white')
         for y in [-1.5, -1.75, -2]
     ])
@@ -191,7 +191,7 @@ def different_points(radians1, radians2):
         for radians in (radians1, radians2)
     )
     dots1, dots2 = (
-        CompoundMobject(*[Dot(point) for point in points])
+        Mobject(*[Dot(point) for point in points])
         for points in (points1, points2)
     )
     lines1, lines2 = (
@@ -219,14 +219,14 @@ def next_few_videos(*radians):
         (RADIUS * np.cos(angle), RADIUS * np.sin(angle), 0)
         for angle in radians
     ]
-    dots = CompoundMobject(*[
+    dots = Mobject(*[
         Dot(point) for point in points
     ])
-    lines = CompoundMobject(*[
+    lines = Mobject(*[
         Line(point1, point2)
         for point1, point2 in it.combinations(points, 2)
     ])
-    thumbnail = CompoundMobject(circle, dots, lines)
+    thumbnail = Mobject(circle, dots, lines)
     frame = VideoIcon().highlight(
         "black",
         lambda point : np.linalg.norm(point) < 0.5

@@ -217,7 +217,7 @@ class GraphScene(Scene):
 
     def draw_vertices(self, **kwargs):
         self.clear()
-        self.play(ShowCreation(CompoundMobject(*self.vertices), **kwargs))
+        self.play(ShowCreation(Mobject(*self.vertices), **kwargs))
 
     def draw_edges(self):
         self.play(*[
@@ -227,8 +227,8 @@ class GraphScene(Scene):
 
     def accent_vertices(self, **kwargs):
         self.remove(*self.vertices)
-        start = CompoundMobject(*self.vertices)
-        end = CompoundMobject(*[
+        start = Mobject(*self.vertices)
+        end = Mobject(*[
             Dot(point, radius = 3*Dot.DEFAULT_RADIUS, color = "lightgreen")
             for point in self.points
         ])
@@ -275,7 +275,7 @@ class GraphScene(Scene):
         time_per_edge = run_time / len(cycle)
         next_in_cycle = it.cycle(cycle)
         next_in_cycle.next()#jump one ahead
-        self.traced_cycle = CompoundMobject(*[
+        self.traced_cycle = Mobject(*[
             Line(self.points[i], self.points[j]).highlight(color)
             for i, j in zip(cycle, next_in_cycle)
         ])
@@ -299,7 +299,7 @@ class GraphScene(Scene):
                     self.spanning_tree_index_pairs.append(pair)
                     spanned_vertices.add(pair[1])
                     to_check.add(pair[1])
-        self.spanning_tree = CompoundMobject(*[
+        self.spanning_tree = Mobject(*[
             Line(
                 self.points[pair[0]],
                 self.points[pair[1]]
@@ -361,7 +361,7 @@ class GraphScene(Scene):
             ])
             for index in indices
         ]
-        self.treeified_spanning_tree = CompoundMobject(*[
+        self.treeified_spanning_tree = Mobject(*[
             Line(new_points[i], new_points[j]).highlight(color)
             for i, j in self.spanning_tree_index_pairs
         ])

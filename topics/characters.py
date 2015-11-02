@@ -1,15 +1,21 @@
+from copy import deepcopy
+
 from helpers import *
 
-from mobject import Mobject, CompoundMobject
-from image_mobject import ImageMobject
+from mobject import Mobject, Mobject, ImageMobject, TexMobject
+
 
 PI_CREATURE_DIR = os.path.join(IMAGE_DIR, "PiCreature")
-PI_CREATURE_PART_NAME_TO_DIR = lambda name : os.path.join(PI_CREATURE_DIR, "pi_creature_"+name) + ".png"
 PI_CREATURE_SCALE_VAL = 0.5
 PI_CREATURE_MOUTH_TO_EYES_DISTANCE = 0.25
 
-class PiCreature(CompoundMobject):
-    DEFAULT_COLOR = BLUE
+def part_name_to_directory(name):
+    return os.path.join(PI_CREATURE_DIR, "pi_creature_"+name) + ".png"
+
+class PiCreature(Mobject):
+    DEFAULT_CONFIG = {
+        "color" : BLUE_E
+    }
     PART_NAMES = [
         'arm', 
         'body', 
@@ -23,42 +29,30 @@ class PiCreature(CompoundMobject):
     MOUTH_NAMES = ["smile", "frown", "straight_mouth"]
 
     def __init__(self, **kwargs):
-        color = self.DEFAULT_COLOR if "color" not in kwargs else kwargs.pop("color")
+        Mobject.__init__(self, **kwargs)
         for part_name in self.PART_NAMES:
             mob = ImageMobject(
-                PI_CREATURE_PART_NAME_TO_DIR(part_name)
+                part_name_to_directory(part_name),
+                should_center = False
             )
             if part_name not in self.WHITE_PART_NAMES:
-                mob.highlight(color)
-            mob.scale(PI_CREATURE_SCALE_VAL)
+                mob.highlight(self.color)
             setattr(self, part_name, mob)
-        self.eyes = [self.left_eye, self.right_eye]
-        self.legs = [self.left_leg, self.right_leg]
+        self.eyes = Mobject(self.left_eye, self.right_eye)
+        self.legs = Mobject(self.left_leg, self.right_leg)
         mouth_center = self.get_mouth_center()
         self.mouth.center()
-        self.smile = deepcopy(self.mouth)
+        self.smile = self.mouth
         self.frown = deepcopy(self.mouth).rotate(np.pi, RIGHT)
         self.straight_mouth = TexMobject("-").scale(0.5)
-        for mouth_name in ["mouth"] + self.MOUTH_NAMES:
-            mouth = getattr(self, mouth_name)
+        for mouth in self.smile, self.frown, self.straight_mouth:
             mouth.sort_points(lambda p : p[0])
+            mouth.highlight(self.color) ##to blend into background
             mouth.shift(mouth_center)
-        #Ordering matters here, so hidden mouths are behind body
-        self.part_names = self.MOUTH_NAMES + self.PART_NAMES
-        self.white_parts = self.MOUTH_NAMES + self.WHITE_PART_NAMES
-        CompoundMobject.__init__(
-            self,
-            *self.get_parts(),
-            **kwargs
-        )
-
-    def sync_parts(self):
-        CompoundMobject.__init__(self, *self.get_parts())
-        return self
-
-    # def TODO_what_should_I_do_with_this(self):
-    #     for part_name, mob in zip(self.part_names, self.split()):
-    #         setattr(self, part_name, mob)
+        self.digest_mobject_attrs()
+        self.give_smile()
+        self.add(self.mouth)
+        self.scale(PI_CREATURE_SCALE_VAL)
 
 
     def get_parts(self):
@@ -68,26 +62,30 @@ class PiCreature(CompoundMobject):
         return [getattr(self, pn) for pn in self.white_parts]
 
     def get_mouth_center(self):
-        left_center  = self.left_eye.get_center()
-        right_center = self.right_eye.get_center()
-        l_to_r = right_center-left_center
-        eyes_to_mouth = rotate_vector(l_to_r, -np.pi/2, OUT)
-        eyes_to_mouth /= np.linalg.norm(eyes_to_mouth)
-        return left_center/2 + right_center/2 + \
-               PI_CREATURE_MOUTH_TO_EYES_DISTANCE*eyes_to_mouth
+        result = self.body.get_center()
+        result[0] = self.eyes.get_center()[0]
+        return result
+        # left_center  = self.left_eye.get_center()
+        # right_center = self.right_eye.get_center()
+        # l_to_r = right_center-left_center
+        # eyes_to_mouth = rotate_vector(l_to_r, -np.pi/2, OUT)
+        # eyes_to_mouth /= np.linalg.norm(eyes_to_mouth)
+        # return left_center/2 + right_center/2 + \
+        #        PI_CREATURE_MOUTH_TO_EYES_DISTANCE*eyes_to_mouth
 
     def highlight(self, color, condition = None):
         for part in set(self.get_parts()).difference(self.get_white_parts()):
             part.highlight(color, condition)
-        return self.sync_parts()
+        return self
 
     def move_to(self, destination):
         self.shift(destination-self.get_bottom())
-        return self.sync_parts()
+        return self
 
     def change_mouth_to(self, mouth_name):
-        self.mouth = getattr(self, mouth_name)
-        return self.sync_parts()
+        self.mouth.points = getattr(self, mouth_name).points
+        self.mouth.highlight(WHITE)
+        return self
 
     def give_smile(self):
         return self.change_mouth_to("smile")
@@ -99,29 +97,24 @@ class PiCreature(CompoundMobject):
         return self.change_mouth_to("straight_mouth")
 
     def get_eye_center(self):
-        return center_of_mass([
-            self.left_eye.get_center(), 
-            self.right_eye.get_center()
-        ]) + 0.04*RIGHT + 0.02*UP
+        return self.eyes.get_center()
 
     def make_mean(self):
         eye_x, eye_y = self.get_eye_center()[:2]
         def should_delete((x, y, z)):
             return y - eye_y > 0.3*abs(x - eye_x)
-        for eye in self.left_eye, self.right_eye:
-            eye.highlight("black", should_delete)
+        self.eyes.highlight("black", should_delete)
         self.give_straight_face()
-        return self.sync_parts()
+        return self
 
     def make_sad(self):
         eye_x, eye_y = self.get_eye_center()[:2]
         eye_y += 0.15
         def should_delete((x, y, z)):
             return y - eye_y > -0.3*abs(x - eye_x)
-        for eye in self.left_eye, self.right_eye:
-            eye.highlight("black", should_delete)
+        self.eyey.highlight("black", should_delete)
         self.give_frown()
-        return self.sync_parts()
+        return self
 
     def get_step_intermediate(self, pi_creature):
         vect = pi_creature.get_center() - self.get_center()
@@ -136,23 +129,22 @@ class PiCreature(CompoundMobject):
         else:
             result.right_leg.wag(vect/2.0, DOWN)
             result.left_leg.wag(-vect/2.0, DOWN)
-        return result.sync_parts()
+        return result
 
     def blink(self):
-        for eye in self.left_eye, self.right_eye:
-            bottom = eye.get_bottom()
-            eye.apply_function(
-                lambda (x, y, z) : (x, bottom[1], z)
-            )
-        return self.sync_parts()
+        bottom = self.eyes.get_bottom()
+        self.eyes.apply_function(
+            lambda (x, y, z) : (x, bottom[1], z)
+        )
+        return self
 
     def shift_eyes(self):
         for eye in self.left_eye, self.right_eye:
             eye.rotate_in_place(np.pi, UP)
-        return self.sync_parts()
+        return self
 
     def to_symbol(self):
-        CompoundMobject.__init__(
+        Mobject.__init__(
             self,
             *list(set(self.get_parts()).difference(self.get_white_parts()))
         )

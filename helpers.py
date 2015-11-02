@@ -11,8 +11,18 @@ import re
 
 from constants import *
 
+def remove_list_redundancies(l):
+    """
+    Used instead of lsit(set(l)) to maintain order
+    """
+    return sorted(list(set(l)), lambda a, b : l.index(a) - l.index(b))
+
 def list_update(l1, l2):
-    return filter(lambda e : e not in l2, l1) + l2
+    """
+    Used instead of list(set(l1).update(l2)) to maintain order,
+    making sure duplicates are removed from l1, not l2.
+    """
+    return filter(lambda e : e not in l2, l1) + list(l2)
 
 def all_elements_are_instances(iterable, Class):
     return all(map(lambda e : isinstance(e, Class), iterable))
