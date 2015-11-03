@@ -76,19 +76,20 @@ class Scene(object):
         self.mobjects = old_mobjects + list(mobjects)
         return self
 
-    def add_local_mobjects(self):
+    def add_mobjects_among(self, values):
         """
         So a scene can just add all mobjects it's defined up to that point
+        by calling add_mobjects_among(locals().values())
         """
-        name_to_mob = get_caller_locals(lambda x : isinstance(x, Mobject))
-        self.add(*name_to_mob.values())
+        mobjects = filter(lambda x : isinstance(x, Mobject), values)
+        self.add(*mobjects)
         return self
 
     def remove(self, *mobjects):
         if not all_elements_are_instances(mobjects, Mobject):
             raise Exception("Removing something which is not a mobject")
         mobjects = filter(lambda m : m in self.mobjects, mobjects)
-        if len(mobjects):
+        if len(mobjects) == 0:
             return
         self.mobjects = filter(lambda m : m not in mobjects, self.mobjects)
         self.repaint_mojects()
@@ -158,7 +159,11 @@ class Scene(object):
             run_time = animations[0].run_time
         for animation in animations:
             animation.set_run_time(run_time)
-        moving_mobjects = [anim.mobject for anim in animations]
+        moving_mobjects = [
+            mobject
+            for anim in animations
+            for mobject in anim.mobject.get_full_submobject_family()
+        ]
 
         bundle = Mobject(*self.mobjects)
         static_mobjects = filter(

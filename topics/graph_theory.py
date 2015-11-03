@@ -246,7 +246,7 @@ class GraphScene(Scene):
         self.play(*[
             CounterclockwiseTransform(
                 vertex,
-                deepcopy(mobject).shift(vertex.get_center())
+                mobject.copy().shift(vertex.get_center())
             )
             for vertex in self.vertices
         ] + [
@@ -260,7 +260,7 @@ class GraphScene(Scene):
     def annotate_edges(self, mobject, fade_in = True, **kwargs):
         angles = map(np.arctan, map(Line.get_slope, self.edges))
         self.edge_annotations = [
-            deepcopy(mobject).rotate(angle).shift(edge.get_center())
+            mobject.copy().rotate(angle).shift(edge.get_center())
             for angle, edge in zip(angles, self.edges)
         ]
         if fade_in:

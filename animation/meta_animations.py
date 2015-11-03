@@ -1,6 +1,5 @@
 import numpy as np
 import itertools as it
-from copy import deepcopy
 
 from helpers import *
 from animation import Animation

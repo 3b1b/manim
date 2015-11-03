@@ -77,7 +77,7 @@ class RearrangeEquation(Scene):
             if sum(matches) > 1:
                 base_mob = all_mobs[list(all_terms).index(term)]
                 all_mobs[matches] = [
-                    deepcopy(base_mob).replace(target_mob)
+                    base_mob.copy().replace(target_mob)
                     for target_mob in all_mobs[matches]
                 ]
         return all_mobs[:num_start_terms], all_mobs[num_start_terms:]

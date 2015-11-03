@@ -18,7 +18,7 @@ class NumberLine(Mobject1D):
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
         if self.leftmost_tick is None:
-            self.leftmost_tick = -int(self.numerical_radius)
+            self.leftmost_tick = -int(self.numerical_radius-self.number_at_center)
         self.left_num  = self.number_at_center - self.numerical_radius
         self.right_num = self.number_at_center + self.numerical_radius
         Mobject1D.__init__(self, **kwargs)
@@ -66,7 +66,8 @@ class NumberLine(Mobject1D):
         )
 
     def point_to_number(self, point):
-        return self.number_at_center + point[0]/self.unit_length_to_spatial_width
+        new_point = point-self.get_center()
+        return self.number_at_center + new_point[0]/self.unit_length_to_spatial_width
 
     def default_numbers_to_display(self):
         return self.get_tick_numbers()[::2]
@@ -115,7 +116,7 @@ class NumberPlane(Mobject1D):
         "x_radius"                 : SPACE_WIDTH,
         "y_radius"                 : SPACE_HEIGHT,
         "x_unit_to_spatial_width"  : 1,
-        "y_uint_to_spatial_height" : 1,
+        "y_unit_to_spatial_height" : 1,
         "x_line_frequency"         : 1,
         "x_faded_line_frequency"   : 0.5,
         "y_line_frequency"         : 1,
@@ -145,7 +146,7 @@ class NumberPlane(Mobject1D):
             )))
             y_vals = np.array(filter(lambda y : y not in y_vals, np.arange(
                 0, self.y_radius,
-                self.y_uint_to_spatial_height*y_freq
+                self.y_unit_to_spatial_height*y_freq
             )))
             x_cont_vals = np.arange(
                 0, self.x_radius,
@@ -153,7 +154,7 @@ class NumberPlane(Mobject1D):
             )
             y_cont_vals = np.arange(
                 0, self.y_radius,
-                self.epsilon/self.y_uint_to_spatial_height
+                self.epsilon/self.y_unit_to_spatial_height
             )
             for x_sgn, y_sgn in it.product([-1, 1], [-1, 1]):
                 self.add_points(
@@ -170,11 +171,17 @@ class NumberPlane(Mobject1D):
 
     def num_pair_to_point(self, pair):
         pair = pair + self.num_pair_at_center
-        return np.array([
-            pair[0]*self.x_unit_to_spatial_width,
-            pair[1]*self.y_uint_to_spatial_height,
-            0
-        ])
+        result = self.get_center()
+        result[0] += pair[0]*self.x_unit_to_spatial_width
+        result[1] += pair[1]*self.y_unit_to_spatial_height
+        return result
+
+    def point_to_num_pair(self, point):
+        new_point = point-self.get_center()
+        center_x, center_y = self.num_pair_at_center
+        x = center_x + point[0]/self.x_unit_to_spatial_width
+        y = center_y + point[1]/self.y_unit_to_spatial_height
+        return x, y
 
     def get_coordinate_labels(self, x_vals = None, y_vals = None):
         result = []
@@ -207,6 +214,41 @@ class NumberPlane(Mobject1D):
         return arrow
 
 
+class XYZAxes(Mobject1D):
+    DEFAULT_CONFIG = {
+        "color"          : TEAL,
+        "radius"         : SPACE_HEIGHT,
+        "tick_frequency" : 1,
+    }
+    def generate_points(self):
+        self.x_axis = NumberLine(
+            numerical_radius = self.radius,
+            tick_frequency = self.tick_frequency
+        )
+        self.y_axis = self.x_axis.copy().rotate(np.pi/2, OUT)
+        self.z_axis = self.x_axis.copy().rotate(np.pi/2, DOWN)
+
+        self.digest_mobject_attrs()
+
+
+class SpaceGrid(Mobject1D):
+    DEFAULT_CONFIG = {
+        "color"                  : GREEN,
+        "radius"                 : SPACE_HEIGHT,
+        "unit_to_spatial_length" : 1,
+        "line_frequency"         : 2,
+    }
+    def generate_points(self):
+        line_range = range(-int(self.radius), int(self.radius)+1, self.line_frequency)
+        for i in range(3):
+            perm = np.arange(i, i+3) % 3
+            for a, b in it.product(line_range, line_range):
+                start = np.array([a, b, -self.radius])[perm]
+                end   = np.array([a, b, self.radius])[perm]
+                self.add_line(start, end)
+
+
+
 class NumberLineScene(Scene):
     def construct(self, **number_line_config):
         self.number_line = NumberLine(**number_line_config)
@@ -231,7 +273,7 @@ class NumberLineScene(Scene):
 
         transforms = []
         additional_mobjects = []
-        squished_new_line = deepcopy(new_number_line)
+        squished_new_line = new_number_line.copy()
         squished_new_line.scale(1.0/zoom_factor)
         squished_new_line.shift(self.number_line.number_to_point(number))
         squished_new_line.points[:,1] = self.number_line.number_to_point(0)[1]
@@ -242,7 +284,7 @@ class NumberLineScene(Scene):
             transforms.append(Transform(point, mob))
         for mob in self.mobjects:
             if mob == self.number_line:
-                new_mob = deepcopy(mob)
+                new_mob = mob.copy()
                 new_mob.shift(-self.number_line.number_to_point(number))
                 new_mob.stretch(zoom_factor, 0)
                 transforms.append(Transform(mob, new_mob))

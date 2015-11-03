@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 from helpers import *
 
 from mobject import Mobject, Mobject, ImageMobject, TexMobject
@@ -43,7 +41,7 @@ class PiCreature(Mobject):
         mouth_center = self.get_mouth_center()
         self.mouth.center()
         self.smile = self.mouth
-        self.frown = deepcopy(self.mouth).rotate(np.pi, RIGHT)
+        self.frown = self.mouth.copy().rotate(np.pi, RIGHT)
         self.straight_mouth = TexMobject("-").scale(0.5)
         for mouth in self.smile, self.frown, self.straight_mouth:
             mouth.sort_points(lambda p : p[0])
@@ -118,7 +116,7 @@ class PiCreature(Mobject):
 
     def get_step_intermediate(self, pi_creature):
         vect = pi_creature.get_center() - self.get_center()
-        result = deepcopy(self).shift(vect / 2.0)
+        result = self.copy().shift(vect / 2.0)
         left_forward = vect[0] > 0
         if self.right_leg.get_center()[0] < self.left_leg.get_center()[0]:
             #For Mortimer's case

@@ -113,7 +113,7 @@ class PascalsTriangleScene(Scene):
             center = self.coords_to_center(n, k)
             if num not in num_to_num_mob:
                 num_to_num_mob[num] = TexMobject(str(num))
-            num_mob = deepcopy(num_to_num_mob[num])  
+            num_mob = num_to_num_mob[num].copy()
             scale_factor = min(
                 1,
                 self.portion_to_fill * self.cell_height / num_mob.get_height(),
@@ -154,7 +154,7 @@ class PascalsTriangleScene(Scene):
             for a in range((self.nrows - n)/2 + 1):
                 for k in (n + a + 1, -a -1):
                     self.coords.append((n, k))
-                    mob = deepcopy(zero)
+                    mob = zero.copy()
                     mob.shift(self.coords_to_center(n, k))
                     self.coords_to_mobs[n][k] = mob
                     self.add(mob)

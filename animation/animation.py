@@ -4,7 +4,6 @@ import numpy as np
 import warnings
 import time
 import os
-import copy
 import progressbar
 import inspect
 
@@ -21,7 +20,7 @@ class Animation(object):
         mobject = instantiate(mobject)
         assert(isinstance(mobject, Mobject))
         digest_config(self, kwargs, locals())
-        self.starting_mobject = copy.deepcopy(self.mobject)
+        self.starting_mobject = self.mobject.copy()
         if self.alpha_func is None:
             self.alpha_func = (lambda x : x)
         if self.name is None:

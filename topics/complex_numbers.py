@@ -21,7 +21,7 @@ class ComplexPlane(NumberPlane):
         digest_config(self, kwargs)
         kwargs.update({
             "x_unit_to_spatial_width"  : self.unit_to_spatial_width,
-            "y_uint_to_spatial_height" : self.unit_to_spatial_width,
+            "y_unit_to_spatial_height" : self.unit_to_spatial_width,
             "x_line_frequency"         : self.line_frequency,
             "x_faded_line_frequency"   : self.faded_line_frequency,
             "y_line_frequency"         : self.line_frequency,

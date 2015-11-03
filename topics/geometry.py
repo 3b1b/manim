@@ -53,9 +53,11 @@ class Line(Mobject1D):
             for arg in start, end
         ]
         start_to_end = preliminary_end - preliminary_start
+        vect = np.zeros(len(start_to_end))
         longer_dim = np.argmax(map(abs, start_to_end))
+        vect[longer_dim] = start_to_end[longer_dim]
         self.start, self.end = [
-            arg.get_edge_center(unit*start_to_end)
+            arg.get_edge_center(unit*vect)
             if isinstance(arg, Mobject)
             else np.array(arg)
             for arg, unit in zip([start, end], [1, -1])

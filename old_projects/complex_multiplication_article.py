@@ -205,7 +205,7 @@ class DrawComplexAngleAndMagnitude(Scene):
         label.shift(point - edge + buff*dot_to_label_dir)
         label.highlight(YELLOW)
 
-        self.add_local_mobjects()
+        self.add_mobjects_among(locals().values())
 
 
     def add_angle_label(self, number):
@@ -214,7 +214,7 @@ class DrawComplexAngleAndMagnitude(Scene):
             radius = 0.2
         )
 
-        self.add_local_mobjects()
+        self.add_mobjects_among(locals().values())
 
     def add_lines(self, tex_representation, number):
         point = self.plane.number_to_point(number)
@@ -250,5 +250,5 @@ class DrawComplexAngleAndMagnitude(Scene):
         axis = OUT if point[1] > 0 else IN
         norm_label.next_to(brace, rotate_vector(point, np.pi/2, axis))
 
-        self.add_local_mobjects()
+        self.add_mobjects_among(locals().values())
 

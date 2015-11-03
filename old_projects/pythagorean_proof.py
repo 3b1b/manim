@@ -165,7 +165,7 @@ class IndicateTroublePointFromParallelLines(AddParallelLines):
         vect = DOWN+RIGHT
         arrow = Arrow(circle.get_center()+2*vect, circle.get_boundary_point(vect))
         arrow.highlight(circle.get_color())
-        self.add_local_mobjects()
+        self.add_mobjects_among(locals().values())
 
 
 class DrawAllThreeSquaresWithMoreTriangles(DrawAllThreeSquares):
@@ -224,7 +224,7 @@ class IndicateBigRectangleTroublePoint(DrawAllThreeSquaresWithMoreTriangles):
         circle.shift(4*RIGHT)
         vect = DOWN+RIGHT
         arrow = Arrow(circle.get_center()+vect, circle.get_boundary_point(vect))
-        self.add_local_mobjects()
+        self.add_mobjects_among(locals().values())
 
 class ShowBigRectangleDimensions(DrawAllThreeSquaresWithMoreTriangles):
     args_list = [(10, False)]
@@ -239,7 +239,7 @@ class ShowBigRectangleDimensions(DrawAllThreeSquaresWithMoreTriangles):
         b_plus_2a = TexMobject("b+2a").scale(TEX_MOB_SCALE_VAL)
         a_plus_2b.next_to(u_brace, DOWN)
         b_plus_2a.next_to(side_brace, LEFT)
-        self.add_local_mobjects()
+        self.add_mobjects_among(locals().values())
 
 class FillInAreaOfBigRectangle(DrawAllThreeSquaresWithMoreTriangles):
     args_list = [(10, False)]
@@ -267,7 +267,7 @@ class DrawOnlyABSquares(Scene):
             symobl.shift(mob.get_center())
             self.add(symobl)
         triangle = Triangle()
-        self.add_local_mobjects()
+        self.add_mobjects_among(locals().values())
 
 class AddTriangleCopyToABSquares(DrawOnlyABSquares):
     def construct(self):
@@ -388,7 +388,7 @@ class ZoomInOnTroublePoint(Scene):
         angle1_arc.filter_out(lambda (x, y, z) : not (x > 0 and y > 0 and y < x/3))
         angle2_arc.filter_out(lambda (x, y, z) : not (x < 0 and y > 0 and y < -3*x))
 
-        self.add_local_mobjects()
+        self.add_mobjects_among(locals().values())
         self.add_elbow()        
         if rotate:
             for mob in self.mobjects:

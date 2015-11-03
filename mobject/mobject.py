@@ -104,6 +104,8 @@ class Mobject(object):
             os.path.join(MOVIE_DIR, (name or str(self)) + ".png")
         )
 
+    def copy(self):
+        return deepcopy(self)
 
     #### Fundamental operations ######
 
@@ -226,7 +228,7 @@ class Mobject(object):
         """
         target_point = np.sign(direction) * (SPACE_WIDTH, SPACE_HEIGHT, 0)
         anchor_point = self.get_critical_point(direction)
-        self.shift(target - anchor_point - buff * np.array(direction))
+        self.shift(target_point - anchor_point - buff * np.array(direction))
         return self
 
     def to_corner(self, corner = LEFT+DOWN, buff = DEFAULT_MOBJECT_TO_EDGE_BUFFER):
@@ -437,16 +439,7 @@ class Mobject(object):
             else:
                 larger, smaller = mobject1, mobject2
             for sub_mob in larger.sub_mobjects[-diff:]:
-                center = sub_mob.get_center()
-                point_distances = np.apply_along_axis(
-                    lambda p : np.linalg.norm(p - center),
-                    1, larger.points
-                )
-                index = np.argmin(point_distances)
-                smaller.add(Point(
-                    smaller.points[index],
-                    color = Color(rgb = smaller.rgbs[index])
-                ))
+                smaller.add(Point(sub_mob.get_center()))
         for m1, m2 in zip(mobject1.sub_mobjects, mobject2.sub_mobjects):
             Mobject.align_data(m1, m2)
 

@@ -46,6 +46,7 @@ class Transform(Animation):
             [self.mobject, self.starting_mobject, self.ending_mobject]
         )
         for m, start, end in zip(*families):
+            # print m, start, end
             m.points = self.interpolation_function(
                 start.points, end.points, alpha
             )
@@ -129,7 +130,7 @@ class ApplyFunction(Transform):
         Transform.__init__(
             self, 
             mobject, 
-            function(copy.deepcopy(mobject)),
+            function(mobject.copy()),
             **kwargs
         )
         self.name = "ApplyFunctionTo"+str(mobject)

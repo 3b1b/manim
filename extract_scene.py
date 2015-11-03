@@ -103,7 +103,7 @@ def handle_scene(scene, **config):
          scene.show_frame()
       path = os.path.join(MOVIE_DIR, config["movie_prefix"], "images")
       if not os.path.exists(path):
-         os.mkdir(path)
+         os.makedirs(path)
       scene.save_image(path, name)
    if config["write"]:
       scene.write_to_movie(os.path.join(config["movie_prefix"], name))
@@ -156,10 +156,10 @@ def get_scene_args(SceneClass, config):
       index = preset_extensions.index(config["args_extension"])
       return [args_list[index]]
    if config["args_extension"] == "" :
+      if len(args_list) == 1:
+         return args_list
       name_to_args = dict(zip(preset_extensions, args_list))
       return prompt_user_for_choice(name_to_args)
-   if len(args_list) == 1:
-      return args_list
    return [SceneClass.string_to_args(config["args_extension"])]
 
 def get_scene_classes(scene_names_to_classes, config):
