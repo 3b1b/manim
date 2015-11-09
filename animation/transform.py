@@ -103,9 +103,17 @@ class ApplyMethod(Transform):
         )
 
 class Rotate(ApplyMethod):
-    def __init__(self, mobject, angle = np.pi, **kwargs):
+    DEFAULT_CONFIG = {
+        "in_place" : False,
+    }
+    def __init__(self, mobject, angle = np.pi, axis = OUT, **kwargs):
         kwargs["interpolation_function"] = path_along_arc(angle)
-        ApplyMethod.__init__(self, mobject.rotate, angle, **kwargs)
+        digest_config(self, kwargs, locals())
+        if self.in_place:
+            method = mobject.rotate_in_place
+        else:
+            method = mobject.rotate
+        ApplyMethod.__init__(self, method, angle, axis, **kwargs)
 
 
 class ApplyPointwiseFunction(ApplyMethod):

@@ -120,12 +120,17 @@ class Mobject(object):
             mob.points *= scale_factor
         return self
 
-    def rotate(self, angle, axis = OUT):
-        t_rotation_matrix = np.transpose(rotation_matrix(angle, axis))
+    def rotate(self, angle, axis = OUT, axes = []):
+        if len(axes) == 0:
+            axes = [axis]
+        rot_matrix = np.identity(self.DIM)
+        for axis in axes:
+            rot_matrix = np.dot(rot_matrix, rotation_matrix(angle, axis))
+        t_rot_matrix = np.transpose(rot_matrix)
         for mob in self.get_full_submobject_family():
-            mob.points = np.dot(mob.points, t_rotation_matrix)
+            mob.points = np.dot(mob.points, t_rot_matrix)
             if mob.has_normals:
-                mob.unit_normals = np.dot(mob.unit_normals, t_rotation_matrix)
+                mob.unit_normals = np.dot(mob.unit_normals, t_rot_matrix)
         return self
 
     def stretch(self, factor, dim):
@@ -165,6 +170,8 @@ class Mobject(object):
 
     def filter_out(self, condition):
         for mob in self.get_full_submobject_family():
+            if len(mob.points) == 0:
+                continue
             to_eliminate = ~np.apply_along_axis(condition, 1, mob.points)
             mob.points = mob.points[to_eliminate]
             mob.rgbs = mob.rgbs[to_eliminate]
@@ -205,8 +212,8 @@ class Mobject(object):
         self.shift(center)
         return self
 
-    def rotate_in_place(self, angle, axis = OUT):
-        self.do_in_place(self.rotate, angle, axis)
+    def rotate_in_place(self, angle, axis = OUT, axes = []):
+        self.do_in_place(self.rotate, angle, axis, axes)
         return self
 
     def scale_in_place(self, scale_factor):
@@ -237,7 +244,7 @@ class Mobject(object):
     def to_edge(self, edge = LEFT, buff = DEFAULT_MOBJECT_TO_EDGE_BUFFER):
         return self.align_on_border(edge, buff)
 
-    def next_to(self, mobject, 
+    def next_to(self, mobject,
                 direction = RIGHT, 
                 buff = DEFAULT_MOBJECT_TO_MOBJECT_BUFFER,
                 aligned_edge = ORIGIN):
@@ -314,13 +321,10 @@ class Mobject(object):
             return 0
 
     def get_merged_array(self, array_attr):
-        return reduce(
-            lambda a1, a2 : np.append(a1, a2, axis = 0),
-            [getattr(self, array_attr)] + [
-                mob.get_merged_array(array_attr) 
-                for mob in self.sub_mobjects
-            ]
-        )
+        result = np.zeros((0, self.DIM))
+        for mob in self.get_full_submobject_family():
+            result = np.append(result, getattr(mob, array_attr), 0)
+        return result
 
     def get_all_points(self):
         return self.get_merged_array("points")

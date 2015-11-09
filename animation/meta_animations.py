@@ -4,6 +4,7 @@ import itertools as it
 from helpers import *
 from animation import Animation
 from transform import Transform
+from mobject import Mobject
 
 
 class DelayByOrder(Animation):
@@ -43,6 +44,7 @@ class TransformAnimations(Transform):
         "alpha_func" : squish_alpha_func(smooth)
     }
     def __init__(self, start_anim, end_anim, **kwargs):
+        digest_config(self, kwargs, locals())
         if "run_time" in kwargs:
             self.run_time = kwargs.pop("run_time")
         else:

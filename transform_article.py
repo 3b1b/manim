@@ -7,7 +7,9 @@ def half_plane():
         x_radius = SPACE_WIDTH/2,
         x_unit_to_spatial_width  = 0.5,
         y_unit_to_spatial_height = 0.5,
-        density = 2*DEFAULT_POINT_DENSITY_1D,
+        x_faded_line_frequency = 0,
+        y_faded_line_frequency = 0,
+        density = 4*DEFAULT_POINT_DENSITY_1D,
     )
     plane.add_coordinates(
         x_vals = range(-6, 7, 2),
@@ -71,12 +73,12 @@ class SingleVariableFunction(Scene):
 
 class LineToPlaneFunction(Scene):
     args_list = [
-        (lambda x : (np.cos(x), 0.5*x*np.sin(x)), "Swirl", {}),
-        (lambda x : (np.cos(x), 0.5*x*np.sin(x)), "Swirl", {
-            "0" : 0, 
-            "\\frac{\\pi}{2}" : np.pi/2, 
-            "\\pi" : np.pi
-        })        
+        (lambda x : (np.cos(x), 0.5*x*np.sin(x)), "Swirl", []),
+        (lambda x : (np.cos(x), 0.5*x*np.sin(x)), "Swirl", [
+            ("0", "(1, 0)", 0),
+            ("\\frac{\\pi}{2}",  "(0, \\pi / 4)", np.pi/2),
+            ("\\pi", "(-1, 0)", np.pi),
+        ])        
     ]
 
     @staticmethod
@@ -97,6 +99,10 @@ class LineToPlaneFunction(Scene):
         line.add_numbers(*range(0, 14, 2))
         divider = Line(SPACE_HEIGHT*UP, SPACE_HEIGHT*DOWN)
         plane = half_plane()
+        plane.sub_mobjects = []
+        plane.filter_out(
+            lambda (x, y, z) : abs(x) > 0.1 and abs(y) > 0.1
+        )
         plane.shift(0.5*SPACE_WIDTH*RIGHT)
         self.add(line, divider, plane)
 
@@ -110,7 +116,7 @@ class LineToPlaneFunction(Scene):
         anims = [Transform(line_copy, target, **anim_config)]
 
         colors = iter([BLUE_B, GREEN_D, RED_D])
-        for tex, number in numbers_to_follow.items():
+        for input_tex, output_tex, number in numbers_to_follow:
             center = line.number_to_point(number)
             dot = Dot(center, color = colors.next())
             anims.append(ApplyMethod(
@@ -118,7 +124,7 @@ class LineToPlaneFunction(Scene):
                 point_function(center) - center, 
                 **anim_config 
             ))
-            label = TexMobject(tex)
+            label = TexMobject(input_tex)
             label.shift(center + 2*UP)
             arrow = Arrow(label, dot)
             self.add(label)
@@ -130,6 +136,17 @@ class LineToPlaneFunction(Scene):
         self.dither(2)
         self.play(*anims)
         self.dither()
+
+        for input_tex, output_tex, number in numbers_to_follow:
+            point = plane.num_pair_to_point(func(number))
+            label = TexMobject(output_tex)
+            side_shift = LEFT if number == np.pi else RIGHT
+            label.shift(point, 2*UP, side_shift)
+            arrow = Arrow(label, point)
+            self.add(label)
+            self.play(ShowCreation(arrow))
+            self.dither(2)
+            self.remove(arrow, label)
 
 class PlaneToPlaneFunctionSeparatePlanes(Scene):
     args_list = [
@@ -185,9 +202,119 @@ class PlaneToPlaneFunction(Scene):
         self.play(ApplyPointwiseFunction(point_function, plane, **anim_config))
         self.dither(3)
 
+class PlaneToLineFunction(Scene):
+    args_list = [
+        (lambda (x, y) : x**2 + y**2, "Bowl"),
+    ]
+
+    @staticmethod
+    def args_to_string(func, name):
+        return name
+
+    def construct(self, func, name):
+        line = NumberLine(
+            color = GREEN,
+            unit_length_to_spatial_width = 0.5,
+            tick_frequency = 1,
+            number_at_center = 6,
+            numerical_radius = 6,
+            numbers_with_elongated_ticks = [0, 12],
+        ).to_edge(RIGHT)
+        line.add_numbers()
+        plane = half_plane().to_edge(LEFT, buff = 0)
+
+        divider = Line(SPACE_HEIGHT*UP, SPACE_HEIGHT*DOWN)
+        line_left = line.number_to_point(0)
+        def point_function(point):
+            shifter = 0.5*SPACE_WIDTH*RIGHT
+            return func((point+shifter)[:2])*RIGHT + line_left
+
+        self.add(line, plane, divider)
+        self.dither()
+        plane.sub_mobjects = []
+        self.play(ApplyPointwiseFunction(point_function, plane))
+        self.dither()
 
 
 
+class PlaneToSpaceFunction(Scene):
+    args_list = [
+        (lambda (x, y) : (x*x, x*y, y*y), "Quadratic"),
+    ]
+
+    @staticmethod
+    def args_to_string(func, name):
+        return name
+
+    def construct(self, func, name):
+        plane = half_plane().shift(0.5*SPACE_WIDTH*LEFT)
+        divider = Line(SPACE_HEIGHT*UP, SPACE_HEIGHT*DOWN)
+        axes = XYZAxes()
+        axes.filter_out(lambda p : np.linalg.norm(p) > 3)
+        rot_kwargs = {
+            "run_time" : 3,
+            "radians"  : 0.3*np.pi,
+            "axis"     : [0.1, 1, 0.1],
+        }
+        axes.to_edge(RIGHT).shift(DOWN)        
+        dampening_factor = 0.1
+        def point_function((x, y, z)):
+            return dampening_factor*np.array(func((x, y)))
+        target = NumberPlane().apply_function(point_function)
+        target.highlight("yellow")
+        target.shift(axes.get_center())
+
+        self.add(plane, divider, axes)
+        self.play(Rotating(axes, **rot_kwargs))
+
+        target.rotate_in_place(rot_kwargs["radians"])
+        self.play(
+            TransformAnimations(
+                Animation(plane.copy()),
+                Rotating(target, **rot_kwargs),
+                alpha_func = smooth
+            ),
+            Rotating(axes, **rot_kwargs)
+        )
+        axes.add(target)
+        self.clear()
+        self.add(plane, divider, axes)
+        self.play(Rotating(axes, **rot_kwargs))
+        self.clear()
+        for i in range(5):
+            self.play(Rotating(axes, **rot_kwargs))
+
+
+class SpaceToSpaceFunction(Scene):
+    args_list = [
+        (lambda (x, y, z) : (y*z, x*z, x*y), "Quadratic"),
+    ]
+
+    @staticmethod
+    def args_to_string(func, name):
+        return name
+
+    def construct(self, func, name):
+        space = SpaceGrid()
+        rot_kwargs = {
+            "run_time" : 10,
+            "radians"  : 2*np.pi/5,
+            "axis"     : [0.1, 1, 0.1],
+            "in_place" : False,
+        }
+        axes = XYZAxes()
+        target = space.copy().apply_function(func)
+
+        self.play(
+            TransformAnimations(
+                Rotating(space, **rot_kwargs),
+                Rotating(target, **rot_kwargs),
+                alpha_func = squish_alpha_func(smooth, 0.3, 0.7)
+            ),
+            Rotating(axes, **rot_kwargs)
+        )
+        axes.add(space)
+        self.play(Rotating(axes, **rot_kwargs))
 
 
 

@@ -229,6 +229,7 @@ class XYZAxes(Mobject1D):
         self.z_axis = self.x_axis.copy().rotate(np.pi/2, DOWN)
 
         self.digest_mobject_attrs()
+        self.pose_at_angle()
 
 
 class SpaceGrid(Mobject1D):
@@ -246,6 +247,7 @@ class SpaceGrid(Mobject1D):
                 start = np.array([a, b, -self.radius])[perm]
                 end   = np.array([a, b, self.radius])[perm]
                 self.add_line(start, end)
+        self.pose_at_angle()
 
 
 

@@ -10,15 +10,27 @@ from transform import Transform
 
 class Rotating(Animation):
     DEFAULT_CONFIG = {
-        "axes" : [RIGHT, UP],
-        "radians" : 2*np.pi,
-        "run_time" : 20.0,
+        "axes"       : [RIGHT, UP],
+        "axis"       : None,
+        "radians"    : 2*np.pi,
+        "run_time"   : 20.0,
         "alpha_func" : None,
+        "in_place"   : True,
     }
     def update_mobject(self, alpha):
-        self.mobject.points = self.starting_mobject.points
-        for axis in self.axes:
-            self.mobject.rotate(self.radians * alpha, axis)
+        axes = [self.axis] if self.axis is not None else self.axes
+        families = [
+            self.mobject.get_full_submobject_family(),
+            self.starting_mobject.get_full_submobject_family()
+        ]
+        for mob, start in zip(*families):
+            mob.points = np.array(start.points)
+        if self.in_place:
+            method = self.mobject.rotate_in_place
+        else:
+            method = self.mobject.rotate           
+        method(alpha*self.radians, axes = axes)      
+
 
 class FadeOut(Animation):
     def update_mobject(self, alpha):

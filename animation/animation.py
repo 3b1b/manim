@@ -30,32 +30,6 @@ class Animation(object):
     def __str__(self):
         return self.name
 
-    def get_points_and_rgbs(self):
-        """
-        It is the responsibility of this class to only emit points within
-        the space.  Returns np array of points and corresponding np array 
-        of rgbs
-        """
-        #TODO, I don't think this should be necessary.  This should happen 
-        #under the individual mobjects.  
-        points = self.mobject.points
-        rgbs   = self.mobject.rgbs
-        #Filters out what is out of bounds.
-        admissibles = (abs(points[:,0]) < self.restricted_width) * \
-                      (abs(points[:,1]) < self.restricted_height)
-        for filter_function in self.filter_functions:
-            admissibles *= ~filter_function(points)
-        if any(self.spatial_center):
-            points += self.spatial_center
-            #Filter out points pushed off the edge
-            admissibles *= (abs(points[:,0]) < SPACE_WIDTH) * \
-                           (abs(points[:,1]) < SPACE_HEIGHT)
-        if rgbs.shape[0] < points.shape[0]:
-            #TODO, this shouldn't be necessary, find what's happening.
-            points = points[:rgbs.shape[0], :]
-            admissibles = admissibles[:rgbs.shape[0]]
-        return points[admissibles, :], rgbs[admissibles, :]
-
     def update(self, alpha):
         if alpha < 0:
             alpha = 0.0
