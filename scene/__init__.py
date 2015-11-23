@@ -1,1 +1,5 @@
-from scene import *
+__all__ = [
+    "scene"
+]
+
+from scene import Scene

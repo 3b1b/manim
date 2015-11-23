@@ -3,6 +3,17 @@ from helpers import *
 from mobject import Mobject, Mobject1D
 
 
+class Point(Mobject):
+    DEFAULT_CONFIG = {
+        "color" : BLACK,
+    }
+    def __init__(self, location = ORIGIN, **kwargs):
+        digest_locals(self)        
+        Mobject.__init__(self, **kwargs)
+
+    def generate_points(self):
+        self.add_points([self.location])
+
 class Dot(Mobject1D): #Use 1D density, even though 2D
     DEFAULT_CONFIG = {
         "radius" : 0.05

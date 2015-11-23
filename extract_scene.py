@@ -137,6 +137,9 @@ def prompt_user_for_choice(name_to_obj):
       sys.exit()
 
 def get_scene_args(SceneClass, config):
+   """
+   Return arguments as a sequence
+   """
    tuplify = lambda x : x if type(x) == tuple else (x,)
    args_list = map(tuplify, SceneClass.args_list)
    preset_extensions = [
@@ -192,7 +195,7 @@ def main():
    scene_kwargs["announce_construction"] = True
    for SceneClass in get_scene_classes(scene_names_to_classes, config):
       for args in get_scene_args(SceneClass, config):
-         scene_kwargs["construct_args"] = args
+         scene_kwargs["construct_args"] = tuplify(args)
          try:
             handle_scene(SceneClass(**scene_kwargs), **config)
          except:

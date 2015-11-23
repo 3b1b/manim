@@ -1,13 +1,1 @@
-from animation import *
-from scene import *
-from topics import *
-from constants import *
-from displayer import *
-from extract_scene import *
-from helpers import *
-from image_mobject import *
-from mobject import *
-from old_proje import *
-from playground import *
-from region import *
-from tex_utils import *
+

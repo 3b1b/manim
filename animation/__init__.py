@@ -1,4 +1,8 @@
-from animation import *
-from meta_animations import *
-from simple_animations import *
-from transform import *
+__all__ = [
+    "animation",
+    "meta_animations",
+    "simple_animations",
+    "transform"
+]
+
+from animation import Animation

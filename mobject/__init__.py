@@ -1,3 +1,7 @@
-from mobject import *
-from image_mobject import *
-from tex_mobject import *
+__all__ = [
+    "mobject",
+    "image_mobject",
+    "tex_mobject",
+]
+
+from mobject import Mobject, Mobject1D, Mobject2D

@@ -3,13 +3,21 @@ import itertools as it
 import operator as op
 from PIL import Image
 from colour import Color
-from random import random
+import random
 import inspect
 import string
 import re
 
 
 from constants import *
+
+
+def bezier(points):
+    n = len(points) - 1
+    return lambda t : sum([
+        ((1-t)**(n-k))*(t**k)*choose(n, k)*point
+        for point, k in zip(points, it.count())
+    ])
 
 def remove_list_redundancies(l):
     """
@@ -32,6 +40,12 @@ def adjascent_pairs(objects):
 
 def complex_to_R3(complex_num):
     return np.array((complex_num.real, complex_num.imag, 0))
+
+def tuplify(obj):
+    try:
+        return tuple(obj)
+    except:
+        return (obj,)
 
 def instantiate(obj):
     """
@@ -120,9 +134,7 @@ def intersection(line1, line2):
     return result
 
 def random_color():
-    color = Color()
-    color.set_rgb([1 - 0.5 * random() for x in range(3)])
-    return color
+    return random.choice(PALETTE)
 
 
 ################################################
@@ -314,7 +326,7 @@ def z_to_vector(vector):
     ])
     return np.dot(rotation_about_z(theta), phi_down)
 
-def rotate_vector(vector, angle, axis):
+def rotate_vector(vector, angle, axis = OUT):
     return np.dot(rotation_matrix(angle, axis), vector)
 
 def angle_between(v1, v2):

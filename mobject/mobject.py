@@ -6,7 +6,6 @@ from PIL import Image
 from random import random
 from copy import deepcopy
 from colour import Color
-import inspect
 
 import displayer as disp
 from helpers import *
@@ -166,6 +165,19 @@ class Mobject(object):
                 mob.rgbs[to_change, :] = rgb
             else:
                 mob.rgbs[:,:] = rgb
+        return self
+
+    def gradient_highlight(self, start_color, end_color):
+        start_rgb, end_rgb = [
+            np.array(Color(color).get_rgb())
+            for color in start_color, end_color
+        ]
+        for mob in self.get_full_submobject_family():
+            num_points = len(mob.points)
+            mob.rgbs = np.array([
+                interpolate(start_rgb, end_rgb, alpha)
+                for alpha in np.arange(num_points)/float(num_points)
+            ])
         return self
 
     def filter_out(self, condition):
@@ -329,9 +341,14 @@ class Mobject(object):
     def get_all_points(self):
         return self.get_merged_array("points")
 
+    def get_all_rgbs(self):
+        return self.get_merged_array("rgbs")
+
     def ingest_sub_mobjects(self):
-        for attr in self.get_array_attrs():
-            setattr(self, attr, self.get_merged_array(attr))
+        attrs = self.get_array_attrs()
+        arrays = map(self.get_merged_array, attrs)
+        for attr, array in zip(attrs, arrays):
+            setattr(self, attr, array)
         self.sub_mobjects = []
         return self
 
@@ -460,7 +477,7 @@ class Mobject(object):
                 getattr(mobject2, attr), 
             alpha))
 
-#TODO, Make the two implementations bellow not redundant
+#TODO, Make the two implementations bellow non-redundant
 class Mobject1D(Mobject):
     DEFAULT_CONFIG = {
         "density" : DEFAULT_POINT_DENSITY_1D,
@@ -487,18 +504,6 @@ class Mobject2D(Mobject):
         digest_config(self, kwargs)
         self.epsilon = 1.0 / self.density  
         Mobject.__init__(self, **kwargs)
-
-
-class Point(Mobject):
-    DEFAULT_CONFIG = {
-        "color" : BLACK,
-    }
-    def __init__(self, location = ORIGIN, **kwargs):
-        digest_locals(self)        
-        Mobject.__init__(self, **kwargs)
-
-    def generate_points(self):
-        self.add_points([self.location])
 
 
 

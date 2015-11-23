@@ -8,7 +8,7 @@ import progressbar
 import inspect
 
 from helpers import *
-from mobject import Mobject, Point
+from mobject import Mobject
 
 class Animation(object):
     DEFAULT_CONFIG = {

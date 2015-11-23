@@ -1,9 +1,11 @@
-from arithmetic import *
-from characters import *
-from combinatorics import *
-from complex_numbers import *
-from functions import *
-from geometry import *
-from graph_theory import *
-from number_line import *
-from three_dimensions import *
+__all__ = [
+    "arithmetic",
+    "characters",
+    "combinatorics",
+    "complex_numbers",
+    "functions",
+    "geometry",
+    "graph_theory",
+    "number_line",
+    "three_dimensions",
+]

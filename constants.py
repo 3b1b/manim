@@ -30,7 +30,7 @@ DEFAULT_POINT_DENSITY_1D = 200
 
 DEFAULT_POINT_THICKNESS = 6
 
-#TODO, Make sure these are not needd
+#TODO, Make sure these are not needed
 SPACE_HEIGHT = 4.0
 SPACE_WIDTH = SPACE_HEIGHT * DEFAULT_WIDTH / DEFAULT_HEIGHT
 
