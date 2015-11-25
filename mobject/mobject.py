@@ -480,7 +480,7 @@ class Mobject(object):
 #TODO, Make the two implementations bellow non-redundant
 class Mobject1D(Mobject):
     DEFAULT_CONFIG = {
-        "density" : DEFAULT_POINT_DENSITY_1D,
+        "density"     : DEFAULT_POINT_DENSITY_1D,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
@@ -488,13 +488,17 @@ class Mobject1D(Mobject):
         Mobject.__init__(self, **kwargs)
 
 
-    def add_line(self, start, end, min_density = 0.1, color = None):
+    def add_line(self, start, end, color = None):
         length = np.linalg.norm(end - start)
-        epsilon = self.epsilon / max(length, min_density)
-        self.add_points([
-            interpolate(start, end, t)
-            for t in np.arange(0, 1, epsilon)
-        ], color = color)
+        if length == 0:
+            points = [start]
+        else:
+            epsilon = self.epsilon/length
+            points = [
+                interpolate(start, end, t)
+                for t in np.arange(0, 1, epsilon)
+            ]
+        self.add_points(points, color = color)
 
 class Mobject2D(Mobject):
     DEFAULT_CONFIG = {

@@ -55,6 +55,14 @@ def instantiate(obj):
     """
     return obj() if isinstance(obj, type) else obj
 
+def get_all_descendent_classes(Class):
+    awaiting_review = [Class]
+    result = []
+    while awaiting_review:
+        Child = awaiting_review.pop()
+        awaiting_review += Child.__subclasses__()
+        result.append(Child)
+    return result
 
 def filtered_locals(local_args):
     result = local_args.copy()

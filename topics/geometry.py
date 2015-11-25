@@ -49,9 +49,6 @@ class Cross(Mobject1D):
 
 
 class Line(Mobject1D):
-    DEFAULT_CONFIG = {
-        "min_density" : 0.1
-    }
     def __init__(self, start, end, **kwargs):
         self.set_start_and_end(start, end)
         Mobject1D.__init__(self, **kwargs)
@@ -75,7 +72,7 @@ class Line(Mobject1D):
         ]
 
     def generate_points(self):
-        self.add_line(self.start, self.end, self.min_density)
+        self.add_line(self.start, self.end)
 
     def get_length(self):
         return np.linalg.norm(self.start - self.end)
