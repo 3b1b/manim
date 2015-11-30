@@ -8,16 +8,11 @@ from topics.geometry import Line, Point
 
 from helpers import *
 
-def flip(points, axis, angle = np.pi):
+def rotate(points, angle = np.pi, axis = OUT):
     if axis is None:
         return points
-    if isinstance(axis, tuple):
-        axes = axis
-    else:
-        axes = [axis]
-    for ax in axes:
-        matrix = rotation_matrix(angle, ax)
-        points = np.dot(points, np.transpose(matrix))
+    matrix = rotation_matrix(angle, axis)
+    points = np.dot(points, np.transpose(matrix))
     return points
 
 
@@ -38,72 +33,139 @@ class SpaceFillingCurve(Mobject1D):
     def get_anchor_points(self):
         raise Exception("Not implemented")
 
+class LindenmayerCurve(SpaceFillingCurve):
+    DEFAULT_CONFIG = {
+        "axiom"        : "A",
+        "rule"         : {},
+        "scale_factor" : 2,
+        "radius"       : 3,
+        "start_step"   : RIGHT,
+        "angle"        : np.pi/2,
+    }
+
+    def expand_command_string(self, command):
+        result = ""
+        for letter in command:
+            if letter in self.rule:
+                result += self.rule[letter]
+            else:
+                result += letter
+        return result
+
+    def get_command_string(self):
+        result = self.axiom
+        for x in range(self.order):
+            result = self.expand_command_string(result)
+        return result
+
+    def get_anchor_points(self):
+        step = float(self.radius) * self.start_step 
+        step /= (self.scale_factor**self.order)
+        curr = np.zeros(3)
+        result = [curr]
+        for letter in self.get_command_string():
+            if letter is "+":
+                step = rotate(step, self.angle)
+            elif letter is "-":
+                step = rotate(step, -self.angle)
+            else:
+                curr = curr + step
+                result.append(curr)
+        return np.array(result) - center_of_mass(result)
+
+
 class SelfSimilarSpaceFillingCurve(SpaceFillingCurve):
     DEFAULT_CONFIG = {
-        "axis_offset_pairs" : [],
+        "offsets" : [],
+        "offset_index_to_rotation_axis" : {},
         "scale_factor" : 2,
         "radius_scale_factor" : 0.5,
     }
+    def transform(self, points, offset):
+        """
+        How to transform the copy of points shifted by
+        offset.  Generally meant to be extended in subclasses
+        """
+        if offset in self.offset_index_to_rotation_axis:
+            return rotate(
+                points, 
+                axis = self.offset_index_to_rotation_axis[offset]
+            )
+        points /= self.scale_factor,
+        points += offset*self.radius*self.radius_scale_factor
+        return points
+
     def refine_into_subparts(self, points):
         transformed_copies = [
-            flip(points/self.scale_factor, axis) + \
-            offset*self.radius*self.radius_scale_factor
-            for axis, offset in self.axis_offset_pairs
+            self.transform(points, offset)
+            for offset in self.offsets
         ]
         return reduce(
-            lambda a, b : np.append(a, b, axis = 0), 
+            lambda a, b : np.append(a, b, axis = 0),
             transformed_copies
         )
+
 
     def get_anchor_points(self):
         points = np.zeros((1, 3))
         for count in range(self.order):
-            points = self.refine_into_subparts(
-                points
-            )
+            points = self.refine_into_subparts(points)
         return points
 
 
 
 class HilbertCurve(SelfSimilarSpaceFillingCurve):
     DEFAULT_CONFIG = {
-        "axis_offset_pairs" : [
-            (RIGHT+UP,   LEFT+DOWN ),
-            (None,       LEFT+UP   ),
-            (None,       RIGHT+UP  ),
-            (RIGHT+DOWN, RIGHT+DOWN),
+        "offsets" : [
+            LEFT+DOWN,
+            LEFT+UP,
+            RIGHT+UP,
+            RIGHT+DOWN,
         ],
-    }
+        "offset_index_to_rotation_axis" : {
+            0 : RIGHT+UP,
+            3 : RIGHT+DOWN,
+        },
+     }
+
 
 class HilbertCurve3D(SelfSimilarSpaceFillingCurve):
     DEFAULT_CONFIG = {
-        "axis_offset_pairs" : [ #TODO
-           (None, LEFT+DOWN+OUT),
-           (None, LEFT+UP+OUT),
-           (None, LEFT+UP+IN),
-           (None, LEFT+DOWN+IN),
-           (None, RIGHT+DOWN+IN),                                                
-           (None, RIGHT+UP+IN),
-           (None, RIGHT+UP+OUT),
-           (None, RIGHT+DOWN+OUT),
+        "offsets" : [ 
+           LEFT+DOWN+OUT,
+           LEFT+UP+OUT,
+           LEFT+UP+IN,
+           LEFT+DOWN+IN,
+           RIGHT+DOWN+IN,                                               
+           RIGHT+UP+IN,
+           RIGHT+UP+OUT,
+           RIGHT+DOWN+OUT,
         ],
+        "offset_index_to_rotation_axis" : {}#TODO
     }
 
 class PeanoCurve(SelfSimilarSpaceFillingCurve):
     DEFAULT_CONFIG = {
         "start_color" : PURPLE,
         "end_color"   : TEAL,
-        "axis_offset_pairs" : [
-            (None,     LEFT+DOWN ),
-            (UP,       LEFT      ),
-            (None,     LEFT+UP   ),
-            (RIGHT,    UP        ),
-            (LEFT+UP,  ORIGIN    ),
-            (RIGHT,    DOWN      ),
-            (None,     RIGHT+DOWN),
-            (UP,       RIGHT     ),
-            (None,     RIGHT+UP  ),
+        "offsets" : [
+            LEFT+DOWN,
+            LEFT,
+            LEFT+UP,
+            UP,
+            ORIGIN,
+            DOWN,
+            RIGHT+DOWN,
+            RIGHT,
+            RIGHT+UP,
         ],
+        "offset_index_to_rotation_axis" : {
+            1 : UP,       
+            3 : RIGHT,    
+            4 : LEFT+UP,  
+            5 : RIGHT,    
+            6 : UP,       
+        },
         "scale_factor" : 3,
         "radius_scale_factor" : 2.0/3,
     }
@@ -112,54 +174,87 @@ class TriangleFillingCurve(SelfSimilarSpaceFillingCurve):
     DEFAULT_CONFIG = {
         "start_color" : MAROON,
         "end_color"   : YELLOW,
-        "axis_offset_pairs" : [
-            (None,  LEFT/4.+DOWN/6.),
-            (RIGHT, ORIGIN),
-            (None,  RIGHT/4.+DOWN/6.),            
-            (UP,    UP/3.),
+        "offsets" : [
+            LEFT/4.+DOWN/6.,
+            ORIGIN,
+            RIGHT/4.+DOWN/6.,
+            UP/3.,
         ],
+        "offset_index_to_rotation_axis" : {
+            1 : RIGHT,
+            3 : UP,
+        },
         "scale_factor" : 2,
         "radius_scale_factor" : 1.5,
     }
 
-class HexagonFillingCurve(SelfSimilarSpaceFillingCurve):
-    DEFAULT_CONFIG = {
-        "start_color" : WHITE,
-        "end_color"   : BLUE_D,
-        "axis_offset_pairs" : [
-            (None,                1.5*DOWN + 0.5*np.sqrt(3)*LEFT),
-            (UP+np.sqrt(3)*RIGHT, 1.5*DOWN + 0.5*np.sqrt(3)*RIGHT),
-            (np.sqrt(3)*UP+RIGHT, ORIGIN),            
-            ((UP, RIGHT),         np.sqrt(3)*LEFT),
-            (None,                1.5*UP + 0.5*np.sqrt(3)*LEFT),
-            (None,                1.5*UP + 0.5*np.sqrt(3)*RIGHT),
-            (RIGHT,               np.sqrt(3)*RIGHT),
-        ],
-        "scale_factor" : 3,
-        "radius_scale_factor" : 2/(3*np.sqrt(3)),
-    }
+# class HexagonFillingCurve(SelfSimilarSpaceFillingCurve):
+#     DEFAULT_CONFIG = {
+#         "start_color" : WHITE,
+#         "end_color"   : BLUE_D,
+#         "axis_offset_pairs" : [
+#             (None,                1.5*DOWN + 0.5*np.sqrt(3)*LEFT),
+#             (UP+np.sqrt(3)*RIGHT, 1.5*DOWN + 0.5*np.sqrt(3)*RIGHT),
+#             (np.sqrt(3)*UP+RIGHT, ORIGIN),            
+#             ((UP, RIGHT),         np.sqrt(3)*LEFT),
+#             (None,                1.5*UP + 0.5*np.sqrt(3)*LEFT),
+#             (None,                1.5*UP + 0.5*np.sqrt(3)*RIGHT),
+#             (RIGHT,               np.sqrt(3)*RIGHT),
+#         ],
+#         "scale_factor" : 3,
+#         "radius_scale_factor" : 2/(3*np.sqrt(3)),
+#     }
 
-    def refine_into_subparts(self, points):
-        return SelfSimilarSpaceFillingCurve.refine_into_subparts(
-            self,
-            flip(points, IN, np.pi/6)
-        )
+#     def refine_into_subparts(self, points):
+#         return SelfSimilarSpaceFillingCurve.refine_into_subparts(
+#             self,
+#             rotate(points, np.pi/6, IN)
+#         )
+
 
 class UtahFillingCurve(SelfSimilarSpaceFillingCurve):
     DEFAULT_CONFIG = {
         "start_color" : WHITE,
         "end_color"   : BLUE_D,
         "axis_offset_pairs" : [
-            (None,                1.5*DOWN + 0.5*np.sqrt(3)*LEFT),
-            (UP+np.sqrt(3)*RIGHT, 1.5*DOWN + 0.5*np.sqrt(3)*RIGHT),
-            (np.sqrt(3)*UP+RIGHT, ORIGIN),            
-            ((UP, RIGHT),         np.sqrt(3)*LEFT),
-            (None,                1.5*UP + 0.5*np.sqrt(3)*LEFT),
-            (None,                1.5*UP + 0.5*np.sqrt(3)*RIGHT),
-            (RIGHT,               np.sqrt(3)*RIGHT),
+
         ],
         "scale_factor" : 3,
         "radius_scale_factor" : 2/(3*np.sqrt(3)),
+    }
+
+
+class FlowSnake(LindenmayerCurve):
+    DEFAULT_CONFIG = {
+        "start_color" : YELLOW,
+        "end_color"   : GREEN,
+        "axiom"       : "A",
+        "rule" : {
+            "A" : "A-B--B+A++AA+B-",
+            "B" : "+A-BB--B-A++A+B",
+        },
+        "radius"       : 6, #TODO, this is innaccurate
+        "scale_factor" : np.sqrt(7),
+        "start_step"   : RIGHT,
+        "angle"        : -np.pi/3,
+    }
+    def __init__(self, **kwargs):
+        LindenmayerCurve.__init__(self, **kwargs)
+        self.rotate(-self.order*np.pi/9)
+
+class Sierpinski(LindenmayerCurve):
+    DEFAULT_CONFIG = {
+        "start_color" : RED,
+        "end_color"   : WHITE,
+        "axiom"       : "A",
+        "rule" : {
+            "A" : "+B-A-B+",
+            "B" : "-A+B+A-",
+        },
+        "radius"       : 6, #TODO, this is innaccurate
+        "scale_factor" : 2,
+        "start_step"   : RIGHT,
+        "angle"        : -np.pi/3,
     }
 
 
