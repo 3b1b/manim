@@ -45,7 +45,7 @@ def get_configuration(sys_argv):
       print str(err)
       sys.exit(2)
    config = {
-      "module"         : None,
+      "file"           : None,
       "scene_name"     : "",
       "args_extension" : "",
       "display_config" : PRODUCTION_QUALITY_DISPLAY_CONFIG,
@@ -83,7 +83,7 @@ def get_configuration(sys_argv):
    if len(args) == 0:
       print HELP_MESSAGE
       sys.exit()
-   config["module"] = args[0].replace(".py", "")
+   config["file"] = args[0]
    if len(args) > 1:
       config["scene_name"] = args[1]
    if len(args) > 2:
@@ -180,17 +180,22 @@ def get_scene_classes(scene_names_to_classes, config):
       return scene_names_to_classes.values()
    return prompt_user_for_choice(scene_names_to_classes)
 
+def get_module(file_name):
+   module_name = file_name.replace(".py", "")
+   last_module = imp.load_module(".", *imp.find_module("."))
+   for part in module_name.split(os.sep):
+      load_args = imp.find_module(part, last_module.__path__)
+      last_module = imp.load_module(part, *load_args)
+   return last_module
+
 
 def main():
    config = get_configuration(sys.argv)
-   module = imp.load_module(
-      config["module"],
-      *imp.find_module(config["module"])
-   )
+   module = get_module(config["file"])
    scene_names_to_classes = dict(
       inspect.getmembers(module, is_scene)
    )
-   config["movie_prefix"] = config["module"]
+   config["movie_prefix"] = config["file"].replace(".py", "")
    scene_kwargs = config["display_config"]
    scene_kwargs["announce_construction"] = True
    for SceneClass in get_scene_classes(scene_names_to_classes, config):

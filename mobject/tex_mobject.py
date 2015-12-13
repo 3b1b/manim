@@ -9,7 +9,7 @@ class TexMobject(Mobject):
         "template_tex_file" : TEMPLATE_TEX_FILE,
         "color"             : WHITE,
         "point_thickness"   : 1,
-        "should_center"     : False,
+        "should_center"     : True,
     }
     def __init__(self, expression, **kwargs):
         if "size" not in kwargs:

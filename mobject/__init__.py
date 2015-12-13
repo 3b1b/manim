@@ -4,4 +4,4 @@ __all__ = [
     "tex_mobject",
 ]
 
-from mobject import Mobject, Mobject1D, Mobject2D
+from mobject import Mobject, Point, Mobject1D, Mobject2D

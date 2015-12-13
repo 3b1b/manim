@@ -214,7 +214,8 @@ def streth_array_to_length(nparray, length):
     curr_len = len(nparray)
     if curr_len > length:
         raise Warning("Trying to stretch array to a length shorter than its own")
-    indices = np.arange(length)/ (float(length)/curr_len)
+    indices = np.arange(length)/ float(length)
+    indices *= curr_len
     return nparray[indices.astype('int')]
 
 def make_even(iterable_1, iterable_2):

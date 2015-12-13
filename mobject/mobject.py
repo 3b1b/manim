@@ -450,16 +450,15 @@ class Mobject(object):
             smaller.apply_over_attr_arrays(
                 lambda a : streth_array_to_length(a, target_size)
             )
-
-        num_sub_mobjects1 = len(mobject1.sub_mobjects)
-        num_sub_mobjects2 = len(mobject2.sub_mobjects)
-        if num_sub_mobjects1 != num_sub_mobjects2:
-            diff = abs(num_sub_mobjects1 - num_sub_mobjects2)
-            if num_sub_mobjects1 < num_sub_mobjects2:
-                larger, smaller = mobject2, mobject1
-            else:
-                larger, smaller = mobject1, mobject2
-            for sub_mob in larger.sub_mobjects[-diff:]:
+        #Recurse
+        diff = len(mobject1.sub_mobjects) - len(mobject2.sub_mobjects)
+        
+        if diff < 0:
+            larger, smaller = mobject2, mobject1
+        elif diff > 0:
+            larger, smaller = mobject1, mobject2
+        if diff != 0:            
+            for sub_mob in larger.sub_mobjects[-abs(diff):]:
                 smaller.add(Point(sub_mob.get_center()))
         for m1, m2 in zip(mobject1.sub_mobjects, mobject2.sub_mobjects):
             Mobject.align_data(m1, m2)
@@ -476,6 +475,18 @@ class Mobject(object):
                 getattr(mobject1, attr), 
                 getattr(mobject2, attr), 
             alpha))
+
+
+class Point(Mobject):
+    DEFAULT_CONFIG = {
+        "color" : BLACK,
+    }
+    def __init__(self, location = ORIGIN, **kwargs):
+        digest_locals(self)        
+        Mobject.__init__(self, **kwargs)
+
+    def generate_points(self):
+        self.add_points([self.location])            
 
 #TODO, Make the two implementations bellow non-redundant
 class Mobject1D(Mobject):

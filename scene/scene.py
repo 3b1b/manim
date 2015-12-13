@@ -38,8 +38,9 @@ class Scene(object):
                 (self.height, self.width, 3),
                 dtype = 'uint8'
             )
-        self.background = self.original_background            
-        self.frames = [self.background]
+        self.background = self.original_background
+        self.curr_frame = self.background         
+        self.frames = [self.curr_frame]
         self.mobjects = []
 
         self.construct(*self.construct_args)
@@ -58,10 +59,10 @@ class Scene(object):
         return self
 
     def get_frame(self):
-        return self.frames[-1]
+        return self.curr_frame
 
     def set_frame(self, frame):
-        self.frames[-1] = frame
+        self.curr_frame = frame
         return self
 
     def add(self, *mobjects):

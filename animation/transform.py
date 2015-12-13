@@ -7,8 +7,7 @@ import warnings
 from helpers import *
 
 from animation import Animation
-from mobject import Mobject
-from topics.geometry import Point
+from mobject import Mobject, Point
 
 class Transform(Animation):
     DEFAULT_CONFIG = {

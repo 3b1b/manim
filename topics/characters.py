@@ -1,6 +1,9 @@
 from helpers import *
 
-from mobject import Mobject, Mobject, ImageMobject, TexMobject
+from mobject import Mobject
+from mobject.image_mobject import ImageMobject
+from mobject.tex_mobject import TexMobject
+from topics.geometry import Circle
 
 
 PI_CREATURE_DIR = os.path.join(IMAGE_DIR, "PiCreature")
@@ -163,7 +166,6 @@ class Mortimer(PiCreature):
 class Bubble(Mobject):
     DEFAULT_CONFIG = {
         "direction" : LEFT,
-        "index_of_tip" : -1,
         "center_point" : ORIGIN,
     }
     def __init__(self, **kwargs):
@@ -174,7 +176,7 @@ class Bubble(Mobject):
         self.content = Mobject()
 
     def get_tip(self):
-        return self.points[self.index_of_tip]
+        raise Exception("Not implemented")
 
     def get_bubble_center(self):
         return self.get_center()+self.center_offset
@@ -245,6 +247,9 @@ class SpeechBubble(Bubble):
         self.rotate(np.pi/2)
         self.points[:,1] *= float(self.initial_height)/self.initial_width
 
+    def get_tip(self):
+        pass
+
 class ThoughtBubble(Bubble):
     DEFAULT_CONFIG = {
         "num_bulges"           : 7,
@@ -253,10 +258,14 @@ class ThoughtBubble(Bubble):
     }
     def __init__(self, **kwargs):
         Bubble.__init__(self, **kwargs)
-        self.index_of_tip = np.argmin(self.points[:,1])
+
+    def get_tip(self):
+        return self.small_circle.get_bottom()
 
     def generate_points(self):
-        self.add(Circle().scale(0.15).shift(2.5*DOWN+2*LEFT))
+        self.small_circle = Circle().scale(0.15)
+        self.small_circle.shift(2.5*DOWN+2*LEFT)
+        self.add(self.small_circle)
         self.add(Circle().scale(0.3).shift(2*DOWN+1.5*LEFT))
         for n in range(self.num_bulges):
             theta = 2*np.pi*n/self.num_bulges
