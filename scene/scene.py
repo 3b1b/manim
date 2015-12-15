@@ -40,7 +40,7 @@ class Scene(object):
             )
         self.background = self.original_background
         self.curr_frame = self.background         
-        self.frames = [self.curr_frame]
+        self.frames = []
         self.mobjects = []
 
         self.construct(*self.construct_args)

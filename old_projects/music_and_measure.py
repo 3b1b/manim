@@ -10,9 +10,10 @@ from animation import *
 from mobject import *
 from constants import *
 from region import *
-from scene import Scene, NumberLineScene
-from script_wrapper import command_line_create_scene
+from scene import Scene
 from inventing_math import Underbrace
+
+from topics.number_line import NumberLineScene
 
 import random
 
