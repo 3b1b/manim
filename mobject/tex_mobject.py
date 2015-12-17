@@ -45,15 +45,21 @@ class TextMobject(TexMobject):
     }
 
 
-class Underbrace(TexMobject):
+class Brace(TexMobject):
     DEFAULT_CONFIG = {
         "buff" : 0.2,
     }
-    def __init__(self, left, right, **kwargs):
-        expression = "\\underbrace{%s}"%(14*"\\quad")
-        TexMobject.__init__(self, expression, **kwargs)
-        result.stretch_to_fit_width(right[0]-left[0])
-        result.shift(left - result.points[0] + buff*DOWN)
+    TEX_STRING = "\\underbrace{%s}"%(14*"\\quad")
+    def __init__(self, mobject, direction = DOWN, **kwargs):
+        TexMobject.__init__(self, self.TEX_STRING, **kwargs)
+        angle = -np.arctan2(*direction[:2]) + np.pi
+        mobject.rotate(-angle)
+        left  = mobject.get_corner(DOWN+LEFT)
+        right = mobject.get_corner(DOWN+RIGHT)
+        self.stretch_to_fit_width(right[0]-left[0])
+        self.shift(left - self.points[0] + self.buff*DOWN)
+        for mob in mobject, self:
+            mob.rotate(angle)
 
     
 
