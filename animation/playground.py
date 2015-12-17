@@ -9,13 +9,13 @@ from helpers import *
 class VibratingString(Animation):
     DEFAULT_CONFIG = {
         "num_periods" : 1,
-        "overtones" : 4,
-        "amplitude" : 0.5,
-        "radius" : SPACE_WIDTH/2,
-        "center" : ORIGIN,
-        "color" : "white",
-        "run_time" : 3.0,
-        "alpha_func" : None
+        "overtones"   : 4,
+        "amplitude"   : 0.5,
+        "radius"      : SPACE_WIDTH/2,
+        "center"      : ORIGIN,
+        "color"       : "white",
+        "run_time"    : 3.0,
+        "alpha_func"  : None
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)

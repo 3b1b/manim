@@ -6,6 +6,7 @@ import time
 import os
 import progressbar
 import inspect
+from copy import deepcopy
 
 from helpers import *
 from mobject import Mobject
@@ -29,6 +30,9 @@ class Animation(object):
 
     def __str__(self):
         return self.name
+
+    def copy(self):
+        return deepcopy(self)
 
     def update(self, alpha):
         if alpha < 0:
