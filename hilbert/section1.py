@@ -1,5 +1,5 @@
 from mobject import Mobject, Point
-from mobject.tex_mobject import TexMobject, TextMobject
+from mobject.tex_mobject import TexMobject, TextMobject, Brace
 from mobject.image_mobject import ImageMobject
 
 from scene import Scene
@@ -16,6 +16,7 @@ from topics.characters import ThoughtBubble
 
 from helpers import *
 from hilbert.curves import TransformOverIncreasingOrders, FlowSnake
+
 
 
 class AboutSpaceFillingCurves(TransformOverIncreasingOrders):
@@ -130,7 +131,8 @@ class ImageToSound(Scene):
     def construct(self):
         string = VibratingString(color = BLUE_D, run_time = 5)
         picture = ImageMobject("lion", invert = False)
-        picture.scale(0.5)
+        picture.scale(0.8)
+        picture_copy = picture.copy()
         picture.sort_points(np.linalg.norm)
         string.mobject.sort_points(lambda p : -np.linalg.norm(p))
 
@@ -143,6 +145,77 @@ class ImageToSound(Scene):
         ))
         self.remove(picture)
         self.play(string)
+
+        for mob in picture_copy, string.mobject:
+            mob.sort_points(lambda p : np.linalg.norm(p)%1)
+
+        self.play(Transform(
+            string.mobject, picture_copy,
+            run_time = 5,
+            alpha_func = rush_from
+        ))
+
+
+class ImageDataIsTwoDimensional(Scene):
+    def construct(self):
+        image = ImageMobject("lion", invert = False)
+        image.scale(0.5)
+        image.shift(2*LEFT)
+
+        self.add(image)
+        for vect, num in zip([DOWN, RIGHT], [1, 2]):
+            brace = Brace(image, vect)
+            words_mob = TextMobject("Dimension %d"%num)
+            words_mob.next_to(image, vect, buff = 1)
+            self.play(
+                Transform(Point(brace.get_center()), brace),
+                ShimmerIn(words_mob), 
+                run_time = 2
+            )
+        self.dither()
+
+
+class SoundDataIsOneDimensional(Scene):
+    def construct(self):
+        overtones = 5
+        main_string = VibratingString(color = BLUE_D)
+        component_strings = [
+            VibratingString(
+                num_periods = k+1,
+                color = color,
+                center = 2*DOWN + UP*k
+            )
+            for k, color in zip(
+                range(overtones),
+                Color(BLUE_E).range_to(WHITE, overtones)
+            )
+        ]
+
+        self.play(main_string)
+        self.remove(main_string.mobject)
+        self.play(*[
+            TransformAnimations(
+                main_string.copy(),
+                string
+            )
+            for string in component_strings
+        ])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
