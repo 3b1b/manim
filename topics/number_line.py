@@ -1,6 +1,7 @@
 from helpers import *
 
-from mobject import Mobject1D, TexMobject
+from mobject import Mobject1D
+from mobject.tex_mobject import TexMobject
 from scene import Scene
 
 class NumberLine(Mobject1D):

@@ -500,6 +500,7 @@ class Mobject1D(Mobject):
 
 
     def add_line(self, start, end, color = None):
+        start, end = map(np.array, [start, end])
         length = np.linalg.norm(end - start)
         if length == 0:
             points = [start]

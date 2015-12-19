@@ -209,7 +209,7 @@ class DrawComplexAngleAndMagnitude(Scene):
 
 
     def add_angle_label(self, number):
-        arc = PartialCircle(
+        arc = Arc(
             np.log(number).imag, 
             radius = 0.2
         )

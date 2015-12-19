@@ -78,12 +78,19 @@ class CounterclockwiseTransform(Transform):
         "interpolation_function" : counterclockwise_path()
     }
 
-class SpinInFromNothing(Transform):
+class GrowFromCenter(Transform):
+    def __init__(self, mobject, **kwargs):
+        Transform.__init__(
+            self,
+            Point(mobject.get_center()),
+            mobject,
+            **kwargs
+        )
+
+class SpinInFromNothing(GrowFromCenter):
     DEFAULT_CONFIG = {
         "interpolation_function" : counterclockwise_path()
     }
-    def __init__(self, mob, **kwargs):
-        Transform.__init__(self, Point(mob.get_center()), mob, **kwargs)
 
 class ApplyMethod(Transform):
     def __init__(self, method, *args, **kwargs):

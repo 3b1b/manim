@@ -37,7 +37,11 @@ class Cross(Mobject1D):
 
 
 class Line(Mobject1D):
+    DEFAULT_CONFIG = {
+        "buffer" : 0
+    }
     def __init__(self, start, end, **kwargs):
+        digest_config(self, kwargs)
         self.set_start_and_end(start, end)
         Mobject1D.__init__(self, **kwargs)
 
@@ -58,6 +62,10 @@ class Line(Mobject1D):
             else np.array(arg)
             for arg, unit in zip([start, end], [1, -1])
         ]
+        start_to_end = self.end - self.start
+        start_to_end /= np.linalg.norm(start_to_end)
+        self.start += self.buffer*start_to_end
+        self.end += self.buffer*(-start_to_end)
 
     def generate_points(self):
         self.add_line(self.start, self.end)
@@ -75,7 +83,8 @@ class Line(Mobject1D):
 class Arrow(Line):
     DEFAULT_CONFIG = {
         "color"      : WHITE,
-        "tip_length" : 0.25
+        "tip_length" : 0.25,
+        "buffer"     : 0.3,
     }
     def __init__(self, *args, **kwargs):
         Line.__init__(self, *args, **kwargs)
@@ -127,8 +136,7 @@ class CurvedLine(Line):
         ])
 
 
-
-class PartialCircle(Mobject1D):
+class Arc(Mobject1D):
     DEFAULT_CONFIG = {
         "radius"      : 1.0,
         "start_angle" : 0,
@@ -148,12 +156,12 @@ class PartialCircle(Mobject1D):
             )
         ])
 
-class Circle(PartialCircle):
+class Circle(Arc):
     DEFAULT_CONFIG = {
         "color" : RED,
     }
     def __init__(self, **kwargs):
-        PartialCircle.__init__(self, angle = 2*np.pi, **kwargs)
+        Arc.__init__(self, angle = 2*np.pi, **kwargs)
 
 class Polygon(Mobject1D):
     DEFAULT_CONFIG = {
@@ -180,12 +188,40 @@ class Polygon(Mobject1D):
         return self.points[self.indices_of_vertices]
 
 
-class Rectangle(Mobject1D):
+
+class Grid(Mobject1D):
+    DEFAULT_CONFIG = {
+        "height" : 6.0,
+        "width"  : 6.0,
+    }
+    def __init__(self, rows, columns, **kwargs):
+        digest_config(self, kwargs, locals())
+        Mobject1D.__init__(self, **kwargs)
+
+    def generate_points(self):
+        x_step = self.width / self.columns
+        y_step = self.height / self.rows
+
+        for x in np.arange(0, self.width+x_step, x_step):
+            self.add_line(
+                [x-self.width/2., -self.height/2., 0],
+                [x-self.width/2., self.height/2., 0],
+            )
+        for y in np.arange(0, self.height+y_step, y_step):
+            self.add_line(
+                [-self.width/2., y-self.height/2., 0],
+                [self.width/2., y-self.height/2., 0]
+            )
+
+class Rectangle(Grid):
     DEFAULT_CONFIG = {
         "color"  : YELLOW,
         "height" : 2.0,
-        "width"  : 4.0
+        "width"  : 4.0,
     }
+    def __init__(self, **kwargs):
+        Grid.__init__(self, 1, 1, **kwargs)
+
     def generate_points(self):
         wh = [self.width/2.0, self.height/2.0]
         self.add_points([
@@ -204,7 +240,6 @@ class Square(Rectangle):
         for arg in ["height", "width"]:
             kwargs[arg] = self.side_length
         Rectangle.__init__(self, **kwargs)
-
 
 
 

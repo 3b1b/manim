@@ -5,13 +5,15 @@ from mobject.image_mobject import ImageMobject
 from scene import Scene
 
 from animation import Animation
-from animation.transform import Transform, CounterclockwiseTransform, ApplyMethod
+from animation.transform import Transform, CounterclockwiseTransform, \
+                                ApplyMethod, GrowFromCenter
 from animation.simple_animations import ShowCreation, ShimmerIn
 from animation.meta_animations import DelayByOrder, TransformAnimations
 from animation.playground import VibratingString
 
-from topics.geometry import Line
+from topics.geometry import Line, Dot, Arrow
 from topics.characters import ThoughtBubble
+from topics.number_line import UnitInterval
 
 
 from helpers import *
@@ -178,10 +180,12 @@ class ImageDataIsTwoDimensional(Scene):
 class SoundDataIsOneDimensional(Scene):
     def construct(self):
         overtones = 5
+        floor = 2*DOWN
         main_string = VibratingString(color = BLUE_D)
         component_strings = [
             VibratingString(
                 num_periods = k+1,
+                overtones = 2,
                 color = color,
                 center = 2*DOWN + UP*k
             )
@@ -190,17 +194,53 @@ class SoundDataIsOneDimensional(Scene):
                 Color(BLUE_E).range_to(WHITE, overtones)
             )
         ]
+        dots = [
+            Dot(
+                string.mobject.get_center(),
+                color = string.mobject.get_color()
+            )
+            for string in component_strings
+        ]
 
-        self.play(main_string)
-        self.remove(main_string.mobject)
+        freq_line = UnitInterval()
+        freq_line.shift(floor)
+        freq_line.sort_points(np.linalg.norm)
+        brace = Brace(freq_line, UP)
+        words = TextMobject("Range of frequency values")
+        words.next_to(brace, UP)
+
+
         self.play(*[
             TransformAnimations(
                 main_string.copy(),
-                string
+                string,
+                run_time = 5
             )
             for string in component_strings
         ])
-
+        self.clear()
+        self.play(*[
+            TransformAnimations(
+                string,
+                Animation(dot)
+            )
+            for string, dot in zip(component_strings, dots)
+        ])
+        self.clear()
+        self.play(
+            ShowCreation(freq_line),
+            GrowFromCenter(brace),
+            ShimmerIn(words),
+            *[
+                Transform(
+                    dot,
+                    dot.copy().scale(2).rotate(-np.pi/2).shift(floor),
+                    interpolation_function = path_along_arc(np.pi/3)
+                )
+                for dot in dots
+            ]
+        )
+        self.dither(0.5)
 
 
 

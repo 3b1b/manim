@@ -170,10 +170,10 @@ def path_along_arc(arc_angle):
     return path
 
 def clockwise_path():
-    return path_along_arc(np.pi)
+    return path_along_arc(-np.pi)
 
 def counterclockwise_path():
-    return path_along_arc(-np.pi)
+    return path_along_arc(np.pi)
 
 
 ################################################

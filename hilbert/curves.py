@@ -31,6 +31,7 @@ class SpaceFillingCurve(Mobject1D):
     def get_anchor_points(self):
         raise Exception("Not implemented")
 
+
 class LindenmayerCurve(SpaceFillingCurve):
     DEFAULT_CONFIG = {
         "axiom"        : "A",
@@ -111,6 +112,9 @@ class SelfSimilarSpaceFillingCurve(SpaceFillingCurve):
         for count in range(self.order):
             points = self.refine_into_subparts(points)
         return points
+
+    def generate_grid(self):
+        raise Exception("Not implemented")
 
 
 
