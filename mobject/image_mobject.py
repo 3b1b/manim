@@ -6,6 +6,7 @@ from random import random
 
 from helpers import *
 from mobject import Mobject
+import displayer as disp
 
 class ImageMobject(Mobject):
     """
@@ -22,7 +23,6 @@ class ImageMobject(Mobject):
     def __init__(self, image_file, **kwargs):
         digest_locals(self)
         Mobject.__init__(self, **kwargs)
-        self.filter_rgb = 255 * np.array(Color(self.filter_color).get_rgb()).astype('uint8')
         self.name = to_cammel_case(
             os.path.split(image_file)[-1].split(".")[0]
         )
@@ -82,7 +82,9 @@ class ImageMobject(Mobject):
         height, width = image_array.shape[:2]
         #Flatten array, and find indices where rgb is not filter_rgb
         array = image_array.reshape((height * width, 3))
-        bools = array == self.filter_rgb
+        filter_rgb = np.array(Color(self.filter_color).get_rgb())
+        filter_rgb = 255*filter_rgb.astype('uint8')
+        bools = array == filter_rgb
         bools = bools[:,0]*bools[:,1]*bools[:,2]
         indices = np.arange(height * width, dtype = 'int')[~bools]
         rgbs = array[indices, :].astype('float') / 255.0
@@ -97,4 +99,23 @@ class ImageMobject(Mobject):
         else:
             points *= 2 * SPACE_WIDTH / width
         self.add_points(points, rgbs = rgbs)
+
+
+class MobjectFromPixelArray(ImageMobject):
+    def __init__(self, image_array, **kwargs):
+        Mobject.__init__(self, **kwargs)
+        self.generate_points_from_image_array(image_array)
+
+
+
+class MobjectFromRegion(MobjectFromPixelArray):
+    def __init__(self, region, **kwargs):
+        MobjectFromPixelArray.__init__(
+            self,
+            disp.paint_region(region),
+            **kwargs
+        )
+
+
+
 
