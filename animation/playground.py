@@ -1,42 +1,50 @@
 import numpy as np
+import operator as op
 
 from animation import Animation
 from transform import Transform
-from mobject import Mobject1D
+from mobject import Mobject1D, Mobject
+from topics.geometry import Line
 
 from helpers import *
 
-class VibratingString(Animation):
+class Vibrate(Animation):
     DEFAULT_CONFIG = {
-        "num_periods" : 1,
-        "overtones"   : 4,
-        "amplitude"   : 0.5,
-        "radius"      : SPACE_WIDTH/2,
-        "center"      : ORIGIN,
-        "color"       : "white",
-        "run_time"    : 3.0,
-        "alpha_func"  : None
+        "spatial_period"  : 6,
+        "temporal_period" : 1,
+        "overtones"       : 4,
+        "amplitude"       : 0.5,
+        "radius"          : SPACE_WIDTH/2,
+        "run_time"        : 3.0,
+        "alpha_func"      : None
     }
-    def __init__(self, **kwargs):
-        digest_config(self, kwargs)
-        def func(x, t):
-            return sum([
-                (self.amplitude/((k+1)**2.5))*np.sin(2*mult*t)*np.sin(k*mult*x)
-                for k in range(self.overtones)
-                for mult in [(self.num_periods+k)*np.pi]
+    def __init__(self, mobject = None, **kwargs):
+        if mobject is None:
+            mobject = Line(3*LEFT, 3*RIGHT)
+        Animation.__init__(self, mobject, **kwargs)
+
+    def wave_function(self, x, t):
+        return sum([
+            reduce(op.mul, [
+                self.amplitude/(k**2), #Amplitude
+                np.sin(2*np.pi*(k**1.5)*t/self.temporal_period), #Frequency
+                np.sin(2*np.pi*k*x/self.spatial_period) #Number of waves
             ])
-        self.func = func
-        Animation.__init__(self, Mobject1D(color = self.color), **kwargs)
+            for k in range(1, self.overtones+1)
+        ])
+
 
     def update_mobject(self, alpha):
-        self.mobject.init_points()
-        epsilon = self.mobject.epsilon
-        self.mobject.add_points([
-            [x*self.radius, self.func(x, alpha*self.run_time)+y, 0]
-            for x in np.arange(-1, 1, epsilon/self.radius)
-            for y in epsilon*np.arange(3)
-        ])
-        self.mobject.shift(self.center)
+        time = alpha*self.run_time
+        families = map(
+            Mobject.get_full_submobject_family,
+            [self.mobject, self.starting_mobject]
+        )
+        for mob, start in zip(*families):
+            mob.points = np.apply_along_axis(
+                lambda (x, y, z) : (x, y + self.wave_function(x, time), z),
+                1, start.points
+            )
 
 
 class TurnInsideOut(Transform):

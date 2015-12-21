@@ -126,7 +126,7 @@ class Piano(ImageMobject):
         return keys
 
 
-class VibratingString(Animation):
+class Vibrate(Animation):
     DEFAULT_CONFIG = {
         "num_periods" : 1,
         "overtones" : 4,
@@ -302,7 +302,7 @@ class MeasureTheoryToHarmony(IntervalScene):
         line = Line(radius*LEFT, radius*RIGHT).highlight("white")
         self.play(DelayByOrder(Transform(all_mobs, line)))
         self.clear()
-        self.play(VibratingString(alpha_func = smooth))
+        self.play(Vibrate(alpha_func = smooth))
         self.clear()
         self.add(line)
         self.dither()
@@ -313,12 +313,12 @@ class ChallengeOne(Scene):
         title = TextMobject("Challenge #1").to_edge(UP)
         start_color = Color("blue")
         colors = start_color.range_to("white", 6)
-        self.bottom_vibration = VibratingString(
+        self.bottom_vibration = Vibrate(
             num_periods = 1, run_time = 3.0, 
             center = DOWN, color = start_color
         )
         top_vibrations = [
-            VibratingString(
+            Vibrate(
                 num_periods = freq, run_time = 3.0,
                 center = 2*UP, color = colors.next()
             )
@@ -415,8 +415,8 @@ class QuestionAndAnswer(Scene):
     def construct(self):
         Q = TextMobject("Q:").shift(UP).to_edge(LEFT)
         A = TextMobject("A:").shift(DOWN).to_edge(LEFT)
-        string1 = VibratingString(center = 3*UP, color = "blue")
-        string2 = VibratingString(num_periods = 2, center = 3.5*UP, color = "green")
+        string1 = Vibrate(center = 3*UP, color = "blue")
+        string2 = Vibrate(num_periods = 2, center = 3.5*UP, color = "green")
         twotwenty = TexMobject("220").scale(0.25).next_to(string1.mobject, LEFT)
         r220 = TexMobject("r\\times220").scale(0.25).next_to(string2.mobject, LEFT)
         question = TextMobject(
@@ -466,11 +466,11 @@ class PlaySimpleRatio(Scene):
         return str(fraction).replace("/", "_to_")
 
     def construct(self, fraction, color):
-        string1 = VibratingString(
+        string1 = Vibrate(
             num_periods = 1, run_time = 5.0, 
             center = DOWN, color = "blue"
         )
-        string2 = VibratingString(
+        string2 = Vibrate(
             num_periods = fraction, run_time = 5.0,
             center = 2*UP, color = color
         )
