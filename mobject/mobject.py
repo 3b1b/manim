@@ -309,7 +309,7 @@ class Mobject(object):
         return self
 
     def fade_to(self, color, alpha):
-        self.rgbs = interpolate(self.rgbs, Color(color).rgb, alpha)
+        self.rgbs = interpolate(self.rgbs, np.array(Color(color).rgb), alpha)
         for mob in self.sub_mobjects:
             mob.fade_to(color, alpha)
         return self
