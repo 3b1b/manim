@@ -194,12 +194,10 @@ class Mobject(object):
         function is any map from R^3 to R
         """
         for mob in self.get_full_submobject_family():
-            indices = range(len(mob.points))
-            indices.sort(
-                lambda *pair : cmp(*map(function, mob.points[pair, :]))
+            indices = np.argsort(
+                np.apply_along_axis(function, 1, mob.points)
             )
-            mob.points = mob.points[indices]
-            mob.rgbs   = mob.rgbs[indices]
+            mob.apply_over_attr_arrays(lambda arr : arr[indices])
         return self
 
     def repeat(self, count):
@@ -309,7 +307,7 @@ class Mobject(object):
         return self
 
     def fade_to(self, color, alpha):
-        self.rgbs = interpolate(self.rgbs, np.array(Color(color).rgb), alpha)
+        self.rgbs = interpolate(self.rgbs, np.array(Color(color).rgb), 1-alpha)
         for mob in self.sub_mobjects:
             mob.fade_to(color, alpha)
         return self
