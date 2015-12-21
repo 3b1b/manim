@@ -257,8 +257,11 @@ def there_and_back(t, inflection = 10.0):
     new_t = 2*t if t < 0.5 else 2*(1 - t)
     return smooth(new_t, inflection)
 
-def not_quite_there(t, proportion = 0.7):
-    return proportion*smooth(t)
+
+def not_quite_there(func = smooth, proportion = 0.7):
+    def result(t):
+        return proportion*func(t)
+    return result
 
 def wiggle(t, wiggles = 2):
     return there_and_back(t) * np.sin(wiggles*np.pi*t)
