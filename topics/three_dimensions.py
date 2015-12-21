@@ -12,23 +12,18 @@ class Stars(Mobject):
         "radius"          : SPACE_WIDTH,
         "num_points"      : 1000,
     }
-    def __init__(self, **kwargs):
-        digest_config(self, Stars, kwargs)
-        Mobject.__init__(self, **kwargs)
-
     def generate_points(self):
+        radii, phis, thetas = [
+            scalar*np.random.random(self.num_points)
+            for scalar in [self.radius, np.pi, 2*np.pi]
+        ]
         self.add_points([
             (
                 r * np.sin(phi)*np.cos(theta), 
                 r * np.sin(phi)*np.sin(theta), 
                 r * np.cos(phi)
             )
-            for x in range(self.num_points)
-            for r, phi, theta in [[
-                self.radius * random(),
-                np.pi * random(),
-                2 * np.pi * random(),
-            ]]
+            for r, phi, theta in zip(radii, phis, thetas)
         ])
 
 class CubeWithFaces(Mobject2D):

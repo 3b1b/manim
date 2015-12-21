@@ -1,6 +1,6 @@
 from helpers import *
 
-from mobject import Mobject, Mobject1D
+from mobject import Mobject, Mobject1D, Point
 
 class Dot(Mobject1D): #Use 1D density, even though 2D
     DEFAULT_CONFIG = {
