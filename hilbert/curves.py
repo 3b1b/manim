@@ -270,10 +270,11 @@ class SnakeCurve(SpaceFillingCurve):
     def get_anchor_points(self):
         result = []
         resolution = 2**self.order
+        step = 2.0*self.radius / resolution
         lower_left = ORIGIN + \
-                     LEFT*self.radius + \
-                     DOWN*self.radius
-        step = 2.0*self.radius / (resolution-1)
+                     LEFT*(self.radius - step/2) + \
+                     DOWN*(self.radius - step/2)
+
         for y in range(resolution):
             x_range = range(resolution)
             if y%2 == 0:
