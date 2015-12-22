@@ -82,7 +82,7 @@ class Line(Mobject1D):
 
 class Arrow(Line):
     DEFAULT_CONFIG = {
-        "color"      : WHITE,
+        "color"      : YELLOW_C,
         "tip_length" : 0.25,
         "buffer"     : 0.3,
     }
