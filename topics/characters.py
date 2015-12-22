@@ -2,8 +2,8 @@ from helpers import *
 
 from mobject import Mobject
 from mobject.image_mobject import ImageMobject
-from mobject.tex_mobject import TexMobject
-from topics.geometry import Circle
+from mobject.tex_mobject import TexMobject, TextMobject
+from topics.geometry import Circle, Line
 
 
 PI_CREATURE_DIR = os.path.join(IMAGE_DIR, "PiCreature")
@@ -45,7 +45,7 @@ class PiCreature(Mobject):
         self.mouth.center()
         self.smile = self.mouth
         self.frown = self.mouth.copy().rotate(np.pi, RIGHT)
-        self.straight_mouth = TexMobject("-").scale(0.5)
+        self.straight_mouth = TexMobject("-").scale(0.7)
         for mouth in self.smile, self.frown, self.straight_mouth:
             mouth.sort_points(lambda p : p[0])
             mouth.highlight(self.color) ##to blend into background
@@ -57,10 +57,13 @@ class PiCreature(Mobject):
 
 
     def get_parts(self):
-        return [getattr(self, pn) for pn in self.part_names]
+        return [getattr(self, pn) for pn in self.PART_NAMES]
 
     def get_white_parts(self):
-        return [getattr(self, pn) for pn in self.white_parts]
+        return [
+            getattr(self, pn) 
+            for pn in self.WHITE_PART_NAMES+self.MOUTH_NAMES
+        ]
 
     def get_mouth_center(self):
         result = self.body.get_center()
@@ -84,7 +87,12 @@ class PiCreature(Mobject):
         return self
 
     def change_mouth_to(self, mouth_name):
-        self.mouth.points = getattr(self, mouth_name).points
+        #TODO, This is poorly implemented
+        self.mouth = getattr(self, mouth_name) 
+        self.sub_mobjects = list_update(
+            self.sub_mobjects, 
+            self.get_parts()
+        )
         self.mouth.highlight(WHITE)
         return self
 
@@ -155,12 +163,23 @@ class Randolph(PiCreature):
     pass #Nothing more than an alternative name
 
 class Mortimer(PiCreature):
-    DEFAULT_COLOR = DARK_BROWN
-    def __init__(self, *args, **kwargs):
+    DEFAULT_CONFIG = {
+        "color" : DARK_BROWN
+    }
+    def __init__(self, **kwargs):
         PiCreature.__init__(self, *args, **kwargs)
         # self.highlight(DARK_BROWN)
         self.give_straight_face()
         self.rotate(np.pi, UP)
+
+
+class Mathematician(PiCreature):
+    DEFAULT_CONFIG = {
+        "color" : GREY,
+    }
+    def __init__(self, **kwargs):
+        PiCreature.__init__(self, **kwargs)
+        self.give_straight_face()
 
 
 class Bubble(Mobject):
@@ -217,8 +236,8 @@ class Bubble(Mobject):
 
 class SpeechBubble(Bubble):
     DEFAULT_CONFIG = {
-        "initial_width"  : 4,
-        "initial_height" : 2,
+        "initial_width"  : 6,
+        "initial_height" : 4,
     }
 
     def generate_points(self):
@@ -238,17 +257,22 @@ class SpeechBubble(Bubble):
             for unit in -1, 1
         ]
         tip = radius*(1.5*LEFT+UP)
+        self.little_line = Line(boundary_points[0], tip)
+        self.circle = circle
         self.add(
             circle,
-            Line(boundary_points[0], tip),
+            self.little_line,
             Line(boundary_points[1], tip)
         )
         self.highlight("white")
         self.rotate(np.pi/2)
-        self.points[:,1] *= float(self.initial_height)/self.initial_width
+        self.stretch_to_fit_height(self.initial_height)
 
     def get_tip(self):
-        pass
+        return self.little_line.points[-1]
+
+    def get_bubble_center(self):
+        return self.circle.get_center()
 
 class ThoughtBubble(Bubble):
     DEFAULT_CONFIG = {
