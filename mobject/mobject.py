@@ -110,12 +110,12 @@ class Mobject(object):
 
     def shift(self, *vectors):
         total_vector = reduce(op.add, vectors)
-        for mob in self.get_full_submobject_family():        
+        for mob in self.nonempty_family_members():        
             mob.points += total_vector
         return self
 
     def scale(self, scale_factor):
-        for mob in self.get_full_submobject_family():
+        for mob in self.nonempty_family_members():
             mob.points *= scale_factor
         return self
 
@@ -126,24 +126,24 @@ class Mobject(object):
         for axis in axes:
             rot_matrix = np.dot(rot_matrix, rotation_matrix(angle, axis))
         t_rot_matrix = np.transpose(rot_matrix)
-        for mob in self.get_full_submobject_family():
+        for mob in self.nonempty_family_members():
             mob.points = np.dot(mob.points, t_rot_matrix)
             if mob.has_normals:
                 mob.unit_normals = np.dot(mob.unit_normals, t_rot_matrix)
         return self
 
     def stretch(self, factor, dim):
-        for mob in self.get_full_submobject_family():
+        for mob in self.nonempty_family_members():
             mob.points[:,dim] *= factor
         return self
 
     def apply_function(self, function):
-        for mob in self.get_full_submobject_family():
+        for mob in self.nonempty_family_members():
             mob.points = np.apply_along_axis(function, 1, mob.points)
         return self
 
     def wag(self, direction = RIGHT, axis = DOWN, wag_factor = 1.0):
-        for mob in self.get_full_submobject_family():
+        for mob in self.nonempty_family_members():
             alphas = np.dot(mob.points, np.transpose(axis))
             alphas -= min(alphas)
             alphas /= max(alphas)
@@ -159,7 +159,7 @@ class Mobject(object):
         Condition is function which takes in one arguments, (x, y, z).
         """
         rgb = Color(color).get_rgb()
-        for mob in self.get_full_submobject_family():
+        for mob in self.nonempty_family_members():
             if condition:
                 to_change = np.apply_along_axis(condition, 1, mob.points)
                 mob.rgbs[to_change, :] = rgb
@@ -172,8 +172,8 @@ class Mobject(object):
             np.array(Color(color).get_rgb())
             for color in start_color, end_color
         ]
-        for mob in self.get_full_submobject_family():
-            num_points = len(mob.points)
+        for mob in self.nonempty_family_members():
+            num_points = mob.get_num_points()
             mob.rgbs = np.array([
                 interpolate(start_rgb, end_rgb, alpha)
                 for alpha in np.arange(num_points)/float(num_points)
@@ -181,9 +181,7 @@ class Mobject(object):
         return self
 
     def filter_out(self, condition):
-        for mob in self.get_full_submobject_family():
-            if len(mob.points) == 0:
-                continue
+        for mob in self.nonempty_family_members():
             to_eliminate = ~np.apply_along_axis(condition, 1, mob.points)
             mob.points = mob.points[to_eliminate]
             mob.rgbs = mob.rgbs[to_eliminate]
@@ -193,7 +191,7 @@ class Mobject(object):
         """
         function is any map from R^3 to R
         """
-        for mob in self.get_full_submobject_family():
+        for mob in self.nonempty_family_members():
             indices = np.argsort(
                 np.apply_along_axis(function, 1, mob.points)
             )
@@ -209,7 +207,7 @@ class Mobject(object):
                 lambda a1, a2 : np.append(a1, a2, axis = 0),
                 [array]*count
             )
-        for mob in self.get_full_submobject_family():
+        for mob in self.nonempty_family_members():
             mob.apply_over_attr_arrays(repeat_array)
         return self
 
@@ -332,7 +330,7 @@ class Mobject(object):
 
     def get_merged_array(self, array_attr):
         result = np.zeros((0, self.DIM))
-        for mob in self.get_full_submobject_family():
+        for mob in self.nonempty_family_members():
             result = np.append(result, getattr(mob, array_attr), 0)
         return result
 
@@ -354,15 +352,24 @@ class Mobject(object):
         result = [self] if len(self.points) > 0 else []
         return result + self.sub_mobjects
 
-    def get_full_submobject_family(self):
-        sub_families = map(Mobject.get_full_submobject_family, self.sub_mobjects)
+    def submobject_family(self):
+        sub_families = map(Mobject.submobject_family, self.sub_mobjects)
         all_mobjects = [self] + reduce(op.add, sub_families, [])
         return remove_list_redundancies(all_mobjects)
+
+    def nonempty_family_members(self):
+        return filter(
+            lambda m : m.get_num_points() > 0, 
+            self.submobject_family()
+        )
 
     ### Getters ###
 
     def get_num_points(self, including_submobjects = False):
-        return self.reduce_across_dimension(len, sum, 0)
+        if including_submobjects:
+            return self.reduce_across_dimension(len, sum, 0)
+        else:
+            return len(self.points)
 
     def get_critical_point(self, direction):
         result = np.zeros(self.DIM)

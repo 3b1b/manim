@@ -47,7 +47,7 @@ def paint_mobjects(mobjects, image_array = None, include_sub_mobjects = True):
 
     if include_sub_mobjects:
         all_families = [
-            mob.get_full_submobject_family() 
+            mob.submobject_family() 
             for mob in mobjects
         ]
         mobjects = reduce(op.add, all_families, [])

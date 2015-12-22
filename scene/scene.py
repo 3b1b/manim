@@ -163,13 +163,13 @@ class Scene(object):
         moving_mobjects = [
             mobject
             for anim in animations
-            for mobject in anim.mobject.get_full_submobject_family()
+            for mobject in anim.mobject.submobject_family()
         ]
 
         bundle = Mobject(*self.mobjects)
         static_mobjects = filter(
             lambda m : m not in moving_mobjects, 
-            bundle.get_full_submobject_family()
+            bundle.submobject_family()
         )
         background = disp.paint_mobjects(
             static_mobjects,

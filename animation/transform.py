@@ -42,7 +42,7 @@ class Transform(Animation):
 
     def update_mobject(self, alpha):
         families = map(
-            Mobject.get_full_submobject_family,
+            Mobject.submobject_family,
             [self.mobject, self.starting_mobject, self.ending_mobject]
         )
         for m, start, end in zip(*families):
