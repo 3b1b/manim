@@ -27,7 +27,8 @@ from region import region_from_polygon_vertices
 import displayer as disp
 
 from hilbert.curves import \
-    TransformOverIncreasingOrders, FlowSnake
+    TransformOverIncreasingOrders, FlowSnake, HilbertCurve, \
+    SnakeCurve
 
 
 from helpers import *
@@ -126,7 +127,6 @@ class AboutSpaceFillingCurves(TransformOverIncreasingOrders):
 
 
 
-
 class PostponePhilosophizing(Scene):
     def construct(self):
         abstract, arrow, concrete = TextMobject([
@@ -142,6 +142,12 @@ class PostponePhilosophizing(Scene):
             )
             for word1, word2 in it.permutations([abstract, concrete])
         ])
+        self.dither()
+
+
+class SectionOne(Scene):
+    def construct(self):
+        self.add(TextMobject("Section 1: Seeing with your ears"))
         self.dither()
 
 class WriteSomeSoftware(Scene):
@@ -266,13 +272,11 @@ class GridOfPixels(Scene):
     def construct(self):
         low_res = ImageMobject("low_resolution_lion", invert = False)
         high_res = ImageMobject("Lion", invert = False)
-        grid = get_grid()
+        grid = get_grid().scale(0.8)
         for mob in low_res, high_res:
             mob.replace(grid, stretch = True)
-        for mob in low_res, high_res, grid:
-            mob.sort_points(np.linalg.norm)
-        side_brace = Brace(grid, LEFT)
-        top_brace = Brace(grid, UP)
+        side_brace = Brace(low_res, LEFT)
+        top_brace = Brace(low_res, UP)
         top_words = TextMobject("256 Px", size = "\\normal")
         side_words = top_words.copy().rotate(np.pi/2)
         top_words.next_to(top_brace, UP)
@@ -282,15 +286,16 @@ class GridOfPixels(Scene):
         self.dither()
         self.play(DelayByOrder(Transform(high_res, low_res)))
         self.dither()
-        self.play(DelayByOrder(Transform(high_res, grid)))
-        self.clear()
-        self.add(grid)
         self.play(
             GrowFromCenter(top_brace),
             GrowFromCenter(side_brace),
             ShimmerIn(top_words),
             ShimmerIn(side_words)
         )
+        self.dither()
+        for mob in grid, high_res:
+            mob.sort_points(np.linalg.norm)
+        self.play(DelayByOrder(Transform(high_res, grid)))
         self.dither()
 
 
@@ -373,7 +378,7 @@ class AssociatePixelWithFrequency(Scene):
         self.play(loud_vibration)
         self.play(
             TransformAnimations(loud_vibration, quiet_vibration),            
-            ApplyMethod(dot.fade, 0.1)
+            ApplyMethod(dot.fade, 0.9)
         )
         self.clear()
         self.add(freq_line, dot, arrow)
@@ -503,12 +508,135 @@ class LeverageExistingIntuitions(Scene):
 
 
 
+class ThinkInTermsOfReverseMapping(Scene):
+    def construct(self):
+        grid = get_grid()
+        grid.scale_to_fit_width(6)
+        grid.to_edge(LEFT)
+        freq_line = get_freq_line()
+        freq_line.scale_to_fit_width(6)
+        freq_line.center().to_edge(RIGHT)
+        arrow =  Arrow(grid, freq_line)
+
+        color1, color2 = YELLOW_C, RED
+        square_length = 0.01
+        dot1 = Dot(color = color1)
+        dot1.shift(3*RIGHT)
+        dot2 = Dot(color = color2)
+        dot2.shift(3.1*RIGHT)
+        arrow1 = Arrow(2*RIGHT+UP, dot1, color = color1, buffer = 0.1)
+        arrow2 = Arrow(4*RIGHT+UP, dot2, color = color2, buffer = 0.1)
+        dot3, arrow3 = [
+            mob.copy().shift(5*LEFT+UP)
+            for mob in dot1, arrow1
+        ]
+        dot4, arrow4 = [
+            mob.copy().shift(5*LEFT+0.9*UP)
+            for mob in dot2, arrow2
+        ]
+
+        self.add(grid, freq_line, arrow)
+        self.dither()
+        self.play(ApplyMethod(
+            arrow.rotate, np.pi, 
+            interpolation_function = clockwise_path()
+        ))
+        self.dither()
+        self.play(ShowCreation(arrow1))
+        self.add(dot1)
+        self.play(ShowCreation(arrow2))
+        self.add(dot2)
+        self.dither()
+        self.remove(arrow1, arrow2)
+        self.play(
+            Transform(dot1, dot3),
+            Transform(dot2, dot4)
+        )
+        self.play(
+            ApplyMethod(grid.fade, 0.8),
+            Animation(Mobject(dot3, dot4))
+        )
+        self.play(ShowCreation(arrow3))
+        self.play(ShowCreation(arrow4))
+        self.dither()
 
 
+class WeaveLineThroughPixels(Scene):
+    def construct(self):
+        start_color, end_color = RED, GREEN
+        curve = HilbertCurve(order = 2)
+        line = Line(5*LEFT, 5*RIGHT)
+        for mob in curve, line:
+            mob.gradient_highlight(start_color, end_color)
+        freq_line = get_freq_line()
+        freq_line.replace(line, stretch = True)
+
+        unit = 6./4 #sidelength of pixel
+        up = unit*UP
+        right = unit*RIGHT
+        lower_left = 3*(LEFT+DOWN)
+        squares = Mobject(*[
+            Square(
+                side_length = unit, 
+                color = WHITE
+            ).shift(x*right+y*up)
+            for x, y in it.product(range(4), range(4))
+        ])
+        squares.center()
+        targets = Mobject()
+        for square in squares.sub_mobjects:
+            center = square.get_center()
+            distances = np.apply_along_axis(
+                lambda p : np.linalg.norm(p-center),
+                1,
+                curve.points
+            )
+            index_along_curve = np.argmin(distances)
+            fraction_along_curve = index_along_curve/float(curve.get_num_points())
+            target = square.copy().center().scale(0.2)
+            line_index = int(fraction_along_curve*line.get_num_points())
+            target.shift(line.points[line_index])
+            targets.add(target)
 
 
+        self.add(squares)
+        self.play(ShowCreation(
+            curve,
+            run_time = 5, 
+            alpha_func = None
+        ))
+        self.dither()
+        self.play(
+            Transform(curve, line),
+            Transform(squares, targets),
+            run_time = 3
+        )
+        self.dither()
+        self.play(ShowCreation(freq_line))
+        self.dither()
 
 
+class WellPlayedGameOfSnake(Scene):
+    def construct(self):
+        grid = Grid(16, 16).fade()
+        snake_curve = SnakeCurve(order = 4)
+        words = TextMobject("``Snake Curve''")
+        words.next_to(grid, UP)
+
+        self.add(grid)
+        self.play(ShowCreation(
+            snake_curve,
+            run_time = 7, 
+            alpha_func = None
+        ))
+        self.dither()
+        self.play(ShimmerIn(words))
+        self.dither()
+
+
+class TellMathematicianFriend(Scene):
+    def construct(self):
+        pass
 
 
 
