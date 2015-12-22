@@ -9,7 +9,7 @@ from scene import Scene
 from animation import Animation
 from animation.transform import \
     Transform, CounterclockwiseTransform, ApplyMethod,\
-    GrowFromCenter, ClockwiseTransform
+    GrowFromCenter, ClockwiseTransform, ApplyPointwiseFunction
 from animation.simple_animations import \
     ShowCreation, ShimmerIn, FadeOut, FadeIn
 from animation.meta_animations import \
@@ -18,7 +18,8 @@ from animation.playground import Vibrate
 
 from topics.geometry import \
     Line, Dot, Arrow, Grid, Square, Point
-from topics.characters import ThoughtBubble
+from topics.characters import \
+    ThoughtBubble, SpeechBubble, Mathematician
 from topics.number_line import UnitInterval
 from topics.three_dimensions import Stars
 
@@ -636,11 +637,73 @@ class WellPlayedGameOfSnake(Scene):
 
 class TellMathematicianFriend(Scene):
     def construct(self):
+        mathy = Mathematician()
+        mathy.to_edge(DOWN).shift(4*LEFT)
+        squiggle_mouth = mathy.mouth.copy()
+        squiggle_mouth.apply_function(
+            lambda (x, y, z) : (x, y+0.02*np.sin(50*x), z)
+        )
+        bubble = SpeechBubble(initial_width = 8)
+        bubble.pin_to(mathy)
+        bubble.ingest_sub_mobjects()        
+        bubble.write("Why not use a Hilbert curve \\textinterrobang ")
+        words1 = bubble.content
+        bubble.write("So, it's not one curve but an infinite family of curves \\dots")
+        words2 = bubble.content
+        bubble.write("Well, no, it \\emph{is} just one thing, but I need \\\\ \
+                      to tell you about a certain infinite family first.")
+        words3 =  bubble.content
+        description = TextMobject("Mathematician friend", size = "\\small")
+        description.next_to(mathy, buff = 2)
+        arrow = Arrow(description, mathy)
+
+        self.add(mathy)
+        self.play(
+            ShowCreation(arrow),
+            ShimmerIn(description)
+        )
+        self.dither()
+        point = Point(bubble.get_tip())
+        self.play(
+            Transform(point, bubble),
+        )
+        self.remove(point)
+        self.add(bubble)
+        self.play(ShimmerIn(words1))
+        self.dither()
+        self.remove(description, arrow)
+        self.play(
+            Transform(mathy.mouth, squiggle_mouth),
+            ApplyMethod(mathy.arm.wag, 0.2*RIGHT, LEFT),
+        )
+        self.remove(words1)
+        self.add(words2)
+        self.dither(2)
+        self.remove(words2)
+        self.add(words3)
+        self.dither(2)
+        self.play(
+            ApplyPointwiseFunction(
+                lambda p : 15*p/np.linalg.norm(p),
+                bubble
+            ),
+            ApplyMethod(mathy.shift, 5*(DOWN+LEFT)),
+            FadeOut(words3),
+            run_time = 3
+        )
+
+
+class PseudoHilbertCurves(Scene):
+    @staticmethod
+    def args_to_string(order):
+        return "Order%d"%order
+        
+    @staticmethod
+    def string_to_args(order_str):
+        return int(order_str)
+
+    def construct(self, order):
         pass
-
-
-
-
 
 
 
