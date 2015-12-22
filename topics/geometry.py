@@ -49,7 +49,7 @@ class Line(Mobject1D):
         preliminary_start, preliminary_end = [
             arg.get_center() 
             if isinstance(arg, Mobject) 
-            else np.array(arg)
+            else np.array(arg).astype('float')
             for arg in start, end
         ]
         start_to_end = preliminary_end - preliminary_start
@@ -64,8 +64,8 @@ class Line(Mobject1D):
         ]
         start_to_end = self.end - self.start
         start_to_end /= np.linalg.norm(start_to_end)
-        self.start += self.buffer*start_to_end
-        self.end += self.buffer*(-start_to_end)
+        self.start = self.start + self.buffer*start_to_end
+        self.end = self.end - self.buffer*start_to_end
 
     def generate_points(self):
         self.add_line(self.start, self.end)
