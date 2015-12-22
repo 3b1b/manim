@@ -20,8 +20,8 @@ class Rotating(Animation):
     def update_mobject(self, alpha):
         axes = [self.axis] if self.axis is not None else self.axes
         families = [
-            self.mobject.get_full_submobject_family(),
-            self.starting_mobject.get_full_submobject_family()
+            self.mobject.submobject_family(),
+            self.starting_mobject.submobject_family()
         ]
         for mob, start in zip(*families):
             mob.points = np.array(start.points)
@@ -51,14 +51,12 @@ class ShimmerIn(DelayByOrder):
 
 class ShowCreation(Animation):
     def update_mobject(self, alpha):
-        #TODO, shoudl I make this more efficient?
-        new_num_points = int(alpha * self.starting_mobject.points.shape[0])
-        for attr in ["points", "rgbs"]:
-            setattr(
-                self.mobject, 
-                attr, 
-                getattr(self.starting_mobject, attr)[:new_num_points, :]
-            )
+        new_num_points = int(alpha * self.starting_mobject.get_num_points())
+        for attr in self.mobject.get_array_attrs():
+            full_array = getattr(self.starting_mobject, attr)
+            partial_array = full_array[:new_num_points]
+            setattr(self.mobject, attr, partial_array)
+
 
 class Flash(Animation):
     DEFAULT_CONFIG = {
