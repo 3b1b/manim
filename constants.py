@@ -133,6 +133,7 @@ COLOR_MAP = {
     "WHITE"       : "#FFFFFF",
     "BLACK"       : "#000000",
     "GRAY"        : "#888888",
+    "GREY"        : "#888888",
 }
 PALETTE = COLOR_MAP.values()
 globals().update(COLOR_MAP)
