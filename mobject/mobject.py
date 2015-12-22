@@ -307,13 +307,13 @@ class Mobject(object):
         return self
 
     def fade_to(self, color, alpha):
-        self.rgbs = interpolate(self.rgbs, np.array(Color(color).rgb), 1-alpha)
+        self.rgbs = interpolate(self.rgbs, np.array(Color(color).rgb), alpha)
         for mob in self.sub_mobjects:
             mob.fade_to(color, alpha)
         return self
 
-    def fade(self, brightness = 0.5):
-        self.fade_to(BLACK, brightness)
+    def fade(self, darkness = 0.5):
+        self.fade_to(BLACK, darkness)
         return self
 
     def reduce_across_dimension(self, points_func, reduce_func, dim):
