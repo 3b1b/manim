@@ -243,8 +243,12 @@ class Scene(object):
         TkSceneRoot(self)
 
     def save_image(self, directory = MOVIE_DIR, name = None):
-        path = os.path.join(directory, name or str(self)) + ".png"
-        Image.fromarray(self.get_frame()).save(path)
+        path = os.path.join(directory, "images")
+        file_name = (name or str(self)) + ".png"
+        full_path = os.path.join(path, file_name)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        Image.fromarray(self.get_frame()).save(full_path)
 
     # To list possible args that subclasses have
     # Elements should always be a tuple

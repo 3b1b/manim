@@ -101,9 +101,7 @@ def handle_scene(scene, **config):
    if config["save_image"]:
       if not config["write_all"]:
          scene.show_frame()
-      path = os.path.join(MOVIE_DIR, config["movie_prefix"], "images")
-      if not os.path.exists(path):
-         os.makedirs(path)
+      path = os.path.join(MOVIE_DIR, config["movie_prefix"])
       scene.save_image(path, name)
    if config["write"]:
       scene.write_to_movie(os.path.join(config["movie_prefix"], name))
