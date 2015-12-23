@@ -187,6 +187,19 @@ class Mobject(object):
             mob.rgbs = mob.rgbs[to_eliminate]
         return self
 
+    def thin_out(self, factor = 5):
+        """
+        Removes all but every nth point for n = factor
+        """
+        for mob in self.nonempty_family_members():
+            num_points = self.get_num_points()
+            mob.apply_over_attr_arrays(
+                lambda arr : arr[
+                    np.arange(0, num_points, factor)
+                ]
+            )
+        return self
+
     def sort_points(self, function = lambda p : p[0]):
         """
         function is any map from R^3 to R
