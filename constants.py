@@ -107,7 +107,7 @@ COLOR_MAP = {
     "GREEN_A"     : "#C9E2AE",
     "YELLOW_E"    : "#E8C11C",
     "YELLOW_D"    : "#F4D345",
-    "YELLOW_C"    : "#FCE15B",
+    "YELLOW_C"    : "#FFFF00",
     "YELLOW_B"    : "#FFEA94",
     "YELLOW_A"    : "#FFF1B6",
     "GOLD_E"      : "#C78D46",
