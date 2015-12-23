@@ -451,7 +451,10 @@ class Mobject(object):
                 smaller = mobject2
                 target_size = count1
             if len(smaller.points) == 0:
-                smaller.add_points([np.zeros(smaller.DIM)])
+                smaller.add_points(
+                    [np.zeros(smaller.DIM)],
+                    color = BLACK
+                )
             smaller.apply_over_attr_arrays(
                 lambda a : streth_array_to_length(a, target_size)
             )
