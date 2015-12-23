@@ -42,6 +42,12 @@ def get_grid():
 def get_freq_line():
     return UnitInterval().shift(2*DOWN) ##Change?
 
+def get_mathy_and_bubble():
+    mathy = Mathematician()
+    mathy.to_edge(DOWN).shift(4*LEFT)
+    bubble = SpeechBubble(initial_width = 8)
+    bubble.pin_to(mathy)
+    return mathy, bubble
 
 class AboutSpaceFillingCurves(TransformOverIncreasingOrders):
     @staticmethod
@@ -346,10 +352,7 @@ class AssociatePixelWithFrequency(Scene):
         dot = Dot()
         dot.shift(freq_line.get_center() + 2*RIGHT)
         string = Line(LEFT, RIGHT, color = GREEN)
-        arrow = Arrow(
-            dot, string.get_center(),
-            color = YELLOW_C
-        )
+        arrow = Arrow(dot, string.get_center())
         vibration_config = {
             "overtones"      : 1,
             "spatial_period" : 2,
@@ -563,16 +566,24 @@ class ThinkInTermsOfReverseMapping(Scene):
 
 
 class WeaveLineThroughPixels(Scene):
-    def construct(self):
+    @staticmethod
+    def args_to_string(order):
+        return str(order)
+        
+    @staticmethod
+    def string_to_args(order_str):
+        return int(order_str)
+
+    def construct(self, order):
         start_color, end_color = RED, GREEN
-        curve = HilbertCurve(order = 2)
+        curve = HilbertCurve(order = order)
         line = Line(5*LEFT, 5*RIGHT)
         for mob in curve, line:
             mob.gradient_highlight(start_color, end_color)
         freq_line = get_freq_line()
         freq_line.replace(line, stretch = True)
 
-        unit = 6./4 #sidelength of pixel
+        unit = 6./(2**order) #sidelength of pixel
         up = unit*UP
         right = unit*RIGHT
         lower_left = 3*(LEFT+DOWN)
@@ -581,7 +592,7 @@ class WeaveLineThroughPixels(Scene):
                 side_length = unit, 
                 color = WHITE
             ).shift(x*right+y*up)
-            for x, y in it.product(range(4), range(4))
+            for x, y in it.product(range(2**order), range(2**order))
         ])
         squares.center()
         targets = Mobject()
@@ -594,7 +605,7 @@ class WeaveLineThroughPixels(Scene):
             )
             index_along_curve = np.argmin(distances)
             fraction_along_curve = index_along_curve/float(curve.get_num_points())
-            target = square.copy().center().scale(0.2)
+            target = square.copy().center().scale(0.8/(2**order))
             line_index = int(fraction_along_curve*line.get_num_points())
             target.shift(line.points[line_index])
             targets.add(target)
@@ -637,14 +648,11 @@ class WellPlayedGameOfSnake(Scene):
 
 class TellMathematicianFriend(Scene):
     def construct(self):
-        mathy = Mathematician()
-        mathy.to_edge(DOWN).shift(4*LEFT)
+        mathy, bubble = get_mathy_and_bubble()
         squiggle_mouth = mathy.mouth.copy()
         squiggle_mouth.apply_function(
             lambda (x, y, z) : (x, y+0.02*np.sin(50*x), z)
         )
-        bubble = SpeechBubble(initial_width = 8)
-        bubble.pin_to(mathy)
         bubble.ingest_sub_mobjects()        
         bubble.write("Why not use a Hilbert curve \\textinterrobang ")
         words1 = bubble.content
@@ -693,17 +701,341 @@ class TellMathematicianFriend(Scene):
         )
 
 
-class PseudoHilbertCurves(Scene):
-    @staticmethod
-    def args_to_string(order):
-        return "Order%d"%order
-        
-    @staticmethod
-    def string_to_args(order_str):
-        return int(order_str)
+class Order1PseudoHilbertCurve(Scene):
+    def construct(self):
+        words, s = TextMobject(["Pseudo-Hilbert Curve", "s"]).split()
+        pre_words = TextMobject("Order 1")
+        pre_words.next_to(words, LEFT, buff = 0.5)
+        s.next_to(words, RIGHT, buff = 0.05, aligned_edge = DOWN)
+        cluster = Mobject(pre_words, words, s)
+        cluster.center()
+        cluster.scale(0.7)
+        cluster.to_edge(UP, buff = 0.3)
+        cluster.highlight(GREEN)
+        grid1 = Grid(1, 1)
+        grid2 = Grid(2, 2)
+        curve = HilbertCurve(order = 1)
 
-    def construct(self, order):
-        pass
+        self.add(words, s)
+        self.dither()
+        self.play(Transform(
+            s, pre_words, 
+            interpolation_function = path_along_arc(-np.pi/3)
+        ))
+        self.dither()
+        self.play(ShowCreation(grid1))
+        self.dither()
+        self.play(ShowCreation(grid2))
+        self.dither()
+        kwargs = {
+            "run_time" : 5,
+            "alpha_func" : None
+        }
+        self.play(ShowCreation(curve, **kwargs))
+        self.dither()
+
+class Order2PseudoHilbertCurve(Scene):
+    def construct(self):
+        words = TextMobject("Order 2 Pseudo-Hilbert Curve")
+        words.to_edge(UP, buff = 0.3)
+        words.highlight(GREEN)
+        grid2 = Grid(2, 2)
+        grid4 = Grid(4, 4, point_thickness = 2)
+        # order_1_curve = HilbertCurve(order = 1)
+        # squaggle_curve = order_1_curve.copy().apply_function(
+        #     lambda (x, y, z) : (x + np.cos(3*y), y + np.sin(3*x), z)
+        # )
+        # squaggle_curve.show()
+        mini_curves = [
+            HilbertCurve(order = 1).scale(0.5).shift(1.5*vect)
+            for vect in [
+                LEFT+DOWN,
+                LEFT+UP,
+                RIGHT+UP,
+                RIGHT+DOWN
+            ]
+        ]
+        last_curve = mini_curves[0]
+        naive_curve = Mobject(last_curve)
+        for mini_curve in mini_curves[1:]:
+            line = Line(last_curve.points[-1], mini_curve.points[0])
+            naive_curve.add(line, mini_curve)
+            last_curve = mini_curve
+        naive_curve.ingest_sub_mobjects()
+        naive_curve.gradient_highlight(RED, GREEN)
+        order_2_curve = HilbertCurve(order = 2)
+
+        self.add(words, grid2)
+        self.dither()
+        self.play(ShowCreation(grid4))
+        self.play(*[
+            ShowCreation(mini_curve)
+            for mini_curve in mini_curves
+        ])
+        self.dither()
+        self.play(ShowCreation(naive_curve, run_time = 5))
+        self.remove(*mini_curves)
+        self.dither()
+        self.play(Transform(naive_curve, order_2_curve))
+        self.dither()
+
+
+class Order3PseudoHilbertCurve(Scene):
+    def construct(self):
+        words = TextMobject("Order 3 Pseudo-Hilbert Curve")
+        words.highlight(GREEN)
+        words.to_edge(UP)
+        grid4 = Mobject(
+            Grid(2, 2),
+            Grid(4, 4, point_thickness = 2)
+        )
+        grid8 = Grid(8, 8, point_thickness = 1)
+        order_3_curve = HilbertCurve(order = 3)
+        mini_curves = [
+            HilbertCurve(order = 2).scale(0.5).shift(1.5*vect)
+            for vect in [
+                LEFT+DOWN,
+                LEFT+UP,
+                RIGHT+UP,
+                RIGHT+DOWN
+            ]
+        ]
+
+        self.add(words, grid4)
+        self.dither()
+        self.play(ShowCreation(grid8))
+        self.dither()
+        self.play(*map(GrowFromCenter, mini_curves))
+        self.dither()
+        self.clear()
+        self.add(words, grid8, *mini_curves)
+        self.play(*[
+            ApplyMethod(curve.rotate_in_place, np.pi, axis)
+            for curve, axis in [
+                (mini_curves[0], UP+RIGHT),
+                (mini_curves[3], UP+LEFT)
+            ]
+        ])
+        self.play(ShowCreation(order_3_curve, run_time = 5))
+        self.dither()
+
+class GrowToOrder8PseudoHilbertCurve(Scene):
+    def construct(self):
+        self.curve = HilbertCurve(order = 1)
+        self.add(self.curve)
+        self.dither()
+        while self.curve.order < 8:
+            self.increase_order()
+
+
+    def increase_order(self):
+        mini_curves = [
+            self.curve.copy().scale(0.5).shift(1.5*vect)
+            for vect in [
+                LEFT+DOWN,
+                LEFT+UP,
+                RIGHT+UP,
+                RIGHT+DOWN
+            ]
+        ]
+        self.remove(self.curve)
+        self.play(
+            Transform(self.curve.copy(), mini_curves[0])
+        )
+        self.play(*[
+            GrowFromCenter(mini_curve)
+            for mini_curve in mini_curves[1:]
+        ])
+        self.dither()
+        self.clear()
+        self.add(*mini_curves)
+        self.play(*[
+            ApplyMethod(curve.rotate_in_place, np.pi, axis)
+            for curve, axis in [
+                (mini_curves[0], UP+RIGHT),
+                (mini_curves[3], UP+LEFT)
+            ]
+        ])
+        self.curve = HilbertCurve(order = self.curve.order+1)
+        self.play(ShowCreation(self.curve, run_time = 2))
+        self.remove(*mini_curves)
+        self.dither()
+
+
+class UseOrder8(Scene):
+    def construct(self):
+        mathy, bubble = get_mathy_and_bubble()
+        bubble.write("For a 256x256 pixel array...")
+        words = TextMobject("Order 8 Pseudo-Hilbert Curve")
+        words.highlight(GREEN)
+        words.to_edge(UP, buff = 0.3)
+        curve = HilbertCurve(order = 8)
+
+        self.add(mathy, bubble)
+        self.play(ShimmerIn(bubble.content))
+        self.dither()
+        self.clear()
+        self.add(words)
+        self.play(ShowCreation(
+            curve, run_time = 7, alpha_func = None
+        ))
+        self.dither()
+
+
+
+class HilbertBetterThanSnakeQ(Scene):
+    def construct(self):
+        hilbert_curves, snake_curves = [
+            [
+                CurveClass(order = n)
+                for n in range(2, 7)
+            ]
+            for CurveClass in HilbertCurve, SnakeCurve
+        ]
+        for curve in hilbert_curves+snake_curves:
+            curve.scale(0.8)
+        for curve in hilbert_curves:
+            curve.to_edge(LEFT)
+        for curve in snake_curves:
+            curve.to_edge(RIGHT)
+        greater_than = TexMobject(">")
+        question_mark = TextMobject("?")
+        question_mark.next_to(greater_than, UP)
+
+        self.add(greater_than, question_mark)
+        hilbert_curve = hilbert_curves[0]
+        snake_curve = snake_curves[0]
+        for new_hc, new_sc in zip(hilbert_curves[1:], snake_curves[1:]):
+            self.play(*[
+                Transform(hilbert_curve, new_hc),
+                Transform(snake_curve, new_sc)
+            ])
+            self.dither()
+
+
+class ImagineItWorks(Scene):
+    def construct(self):
+        self.add(TextMobject("Image your project succeeds..."))
+        self.dither()
+
+class IncreaseResolution(Scene):
+    def construct(self):
+        grids = [
+            Grid(
+                2**order, 2**order,
+                point_thickness = 1
+            ).shift(0.3*DOWN)
+            for order in 6, 7
+        ]
+        grid = grids[0]
+        side_brace = Brace(grid, LEFT)
+        top_brace = Brace(grid, UP)
+        top_words = TextMobject("256")
+        new_top_words = TextMobject("512")
+        side_words = top_words.copy()
+        new_side_words = new_top_words.copy()
+        for words in top_words, new_top_words:
+            words.next_to(top_brace, UP, buff = 0.1)
+        for words in side_words, new_side_words:
+            words.next_to(side_brace, LEFT)
+
+        self.add(grid)
+        self.play(
+            GrowFromCenter(side_brace),
+            GrowFromCenter(top_brace),
+            ShimmerIn(top_words),
+            ShimmerIn(side_words)
+        )
+        self.dither()
+        self.play(
+            DelayByOrder(Transform(*grids)),
+            Transform(top_words, new_top_words),
+            Transform(side_words, new_side_words)
+        )
+        self.dither()
+
+
+class IncreasingResolutionWithSnakeCurve(Scene):
+    def construct(self):
+        start_curve = SnakeCurve(order = 6)
+        end_curve = SnakeCurve(order = 7)
+        start_dots, end_dots = [
+            Mobject(*[
+                Dot(
+                    curve.points[int(x*curve.get_num_points())],
+                    color = color
+                )
+                for x, color in [
+                    (0.202, GREEN),
+                    (0.48, BLUE),
+                    (0.7, RED)
+                ]
+            ])
+            for curve in start_curve, end_curve
+        ]
+        self.add(start_curve)
+        self.dither()
+        self.play(
+            ShowCreation(start_dots, run_time = 2),
+            ApplyMethod(start_curve.fade)
+        )
+        end_curve.fade()
+        self.play(
+            Transform(start_curve, end_curve),
+            Transform(start_dots, end_dots)
+        )
+        self.dither()
+
+
+class TrackSpecificCurvePoint(Scene):
+    CURVE_CLASS = None #Fillin
+    def construct(self):
+        line = get_freq_line().center()
+        line.sort_points(lambda p : p[0])
+        curves = [
+            self.CURVE_CLASS(order = order)
+            for order in range(3, 10)
+        ]
+        alpha = 0.48
+        dot = Dot(UP)
+        start_dot = Dot(0.1*LEFT)
+        dots = [
+            Dot(curve.points[alpha*curve.get_num_points()])
+            for curve in curves
+        ]
+
+        self.play(ShowCreation(line))
+        self.play(Transform(dot, start_dot))
+        self.dither()
+        for new_dot, curve in zip(dots, curves):
+            self.play(
+                Transform(line, curve),
+                Transform(dot, new_dot)
+            )
+            self.dither()
+
+
+class TrackSpecificSnakeCurvePoint(TrackSpecificCurvePoint):
+    CURVE_CLASS = SnakeCurve
+
+
+class NeedToRelearn(Scene):
+    def construct(self):
+        top_words = TextMobject("Different pixel-frequency association")
+        bottom_words = TextMobject("Need to relearn synesthesia")
+        top_words.shift(UP)
+        bottom_words.shift(DOWN)
+        arrow = Arrow(top_words, bottom_words)
+
+        self.play(ShimmerIn(top_words))
+        self.dither()
+        self.play(ShowCreation(arrow))
+        self.play(ShimmerIn(bottom_words))
+        self.dither()
+
+
+class TrackSpecificHilbertCurvePoint(TrackSpecificCurvePoint):
+    CURVE_CLASS = HilbertCurve
 
 
 

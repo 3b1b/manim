@@ -19,7 +19,10 @@ class Transform(Animation):
         digest_config(self, kwargs, locals())
         count1, count2 = mobject.get_num_points(), ending_mobject.get_num_points()
         if count2 == 0:
-            ending_mobject.add_points([SPACE_WIDTH*RIGHT+SPACE_HEIGHT*UP])
+            ending_mobject.add_points(
+                [mobject.get_center()],
+                color = BLACK
+            )
             count2 = ending_mobject.get_num_points()
         Mobject.align_data(mobject, ending_mobject)
         if self.should_black_out_extra_points and count2 < count1:
