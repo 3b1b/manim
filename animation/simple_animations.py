@@ -51,11 +51,16 @@ class ShimmerIn(DelayByOrder):
 
 class ShowCreation(Animation):
     def update_mobject(self, alpha):
-        new_num_points = int(alpha * self.starting_mobject.get_num_points())
-        for attr in self.mobject.get_array_attrs():
-            full_array = getattr(self.starting_mobject, attr)
-            partial_array = full_array[:new_num_points]
-            setattr(self.mobject, attr, partial_array)
+        pairs = zip(
+            self.starting_mobject.submobject_family(),
+            self.mobject.submobject_family()
+        )
+        for start, mob in pairs:
+            new_num_points = int(alpha * start.get_num_points())
+            for attr in mob.get_array_attrs():
+                full_array = getattr(start, attr)
+                partial_array = full_array[:new_num_points]
+                setattr(mob, attr, partial_array)
 
 
 class Flash(Animation):
