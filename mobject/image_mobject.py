@@ -13,12 +13,12 @@ class ImageMobject(Mobject):
     Automatically filters out black pixels
     """
     DEFAULT_CONFIG = {
-        "filter_color" : "black",
-        "invert" : True,
-        "use_cache" : True,
+        "filter_color"    : "black",
+        "invert"          : True,
+        "use_cache"       : True,
         "point_thickness" : 1,
-        "scale_value" : 1.0,
-        "should_center" : True
+        "scale_value"     : 1.0,
+        "should_center"   : True,
     }
     def __init__(self, image_file, **kwargs):
         digest_locals(self)
@@ -109,10 +109,10 @@ class MobjectFromPixelArray(ImageMobject):
 
 
 class MobjectFromRegion(MobjectFromPixelArray):
-    def __init__(self, region, **kwargs):
+    def __init__(self, region, color = None, **kwargs):
         MobjectFromPixelArray.__init__(
             self,
-            disp.paint_region(region),
+            disp.paint_region(region, color = color),
             **kwargs
         )
 
