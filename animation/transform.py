@@ -95,6 +95,14 @@ class SpinInFromNothing(GrowFromCenter):
         "interpolation_function" : counterclockwise_path()
     }
 
+class ShrinkToCenter(Transform):
+    def __init__(self, mobject, **kwargs):
+        Transform.__init__(
+            self, mobject,
+            Point(mobject.get_center()), 
+            **kwargs
+        )
+
 class ApplyMethod(Transform):
     def __init__(self, method, *args, **kwargs):
         """
