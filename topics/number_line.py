@@ -61,8 +61,8 @@ class NumberLine(Mobject1D):
 
     def number_to_point(self, number):
         return interpolate(
-            self.points[self.index_of_left],
-            self.points[self.index_of_right],
+            self.get_left(),
+            self.get_right(),
             float(number-self.left_num)/(self.right_num - self.left_num)
         )
 
