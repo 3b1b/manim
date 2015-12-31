@@ -38,7 +38,7 @@ class Cross(Mobject1D):
 
 class Line(Mobject1D):
     DEFAULT_CONFIG = {
-        "buffer" : 0
+        "buff" : 0
     }
     def __init__(self, start, end, **kwargs):
         digest_config(self, kwargs)
@@ -64,8 +64,8 @@ class Line(Mobject1D):
         ]
         start_to_end = self.end - self.start
         start_to_end /= np.linalg.norm(start_to_end)
-        self.start = self.start + self.buffer*start_to_end
-        self.end = self.end - self.buffer*start_to_end
+        self.start = self.start + self.buff*start_to_end
+        self.end = self.end - self.buff*start_to_end
 
     def generate_points(self):
         self.add_line(self.start, self.end)
@@ -84,9 +84,16 @@ class Arrow(Line):
     DEFAULT_CONFIG = {
         "color"      : YELLOW_C,
         "tip_length" : 0.25,
-        "buffer"     : 0.3,
+        "buff"       : 0.3,
     }
     def __init__(self, *args, **kwargs):
+        if len(args) == 1:
+            target = args[0]
+            if isinstance(target, Mobject):
+                point = target.get_center()
+            else:
+                point = target
+            args = (point+UP+LEFT, target)
         Line.__init__(self, *args, **kwargs)
         self.add_tip()
 
