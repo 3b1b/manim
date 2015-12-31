@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import itertools as it
+from tqdm import tqdm as show_progress
 
 from scene import Scene
 
@@ -25,20 +26,14 @@ class SceneFromVideo(Scene):
 
         frame_count = end_frame - start_frame
         print "Reading in " + file_name + "..."
-        progress_bar = progressbar.ProgressBar(maxval=frame_count)
-        progress_bar.start()
-        for count in it.count():
+        for count in show_progress(range(start_frame, end_frame+1)):
             returned, frame = cap.read()
-            if count < start_frame:
-                continue
-            if not returned or count > end_frame:
+            if not returned
                 break
             # b, g, r = cv2.split(frame)
             # self.frames.append(cv2.merge([r, g, b]))
             self.frames.append(frame)
-            progress_bar.update(min(len(self.frames), frame_count))
         cap.release()
-        progress_bar.finish()
 
         if freeze_last_frame and len(self.frames) > 0:
             self.original_background = self.background = self.frames[-1]

@@ -6,7 +6,7 @@ import warnings
 import time
 import os
 import copy
-import progressbar
+from tqdm import tqdm as ProgressDisplay
 import inspect
 
 from helpers import *
@@ -24,12 +24,9 @@ class Scene(object):
         "construct_args"        : [],
         "background"            : None,
         "start_dither_time"     : DEFAULT_DITHER_TIME,
-        "announce_construction" : False,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
-        if self.announce_construction:
-            print "Constructing %s..."%str(self)
         if self.background:
             self.original_background = np.array(background)
             #TODO, Error checking?
@@ -42,6 +39,7 @@ class Scene(object):
         self.curr_frame = self.background         
         self.frames = []
         self.mobjects = []
+        self.num_animations = 0
 
         self.construct(*self.construct_args)
 
@@ -154,6 +152,7 @@ class Scene(object):
         self.background = self.get_frame()
 
     def play(self, *animations, **kwargs):
+        self.num_animations += 1
         if "run_time" in kwargs:
             run_time = kwargs["run_time"]
         else:
@@ -177,12 +176,13 @@ class Scene(object):
             include_sub_mobjects = False
         )
 
-        print "Generating " + ", ".join(map(str, animations))
-        progress_bar = progressbar.ProgressBar(maxval=run_time)
-        progress_bar.start()
-
-        for t in np.arange(0, run_time, self.frame_duration):
-            progress_bar.update(t)
+        times = np.arange(0, run_time, self.frame_duration)
+        time_progression = ProgressDisplay(times)
+        time_progression.set_description(
+            "Animation %d: "%self.num_animations + \
+            ", ".join(map(str, animations))
+        )
+        for t in time_progression:
             for animation in animations:
                 animation.update(t / animation.run_time)
             new_frame = disp.paint_mobjects(moving_mobjects, background)
@@ -191,7 +191,6 @@ class Scene(object):
             animation.clean_up()
         self.add(*moving_mobjects)
         self.repaint_mojects()
-        progress_bar.finish()
         return self
 
     def play_over_time_range(self, t0, t1, *animations):

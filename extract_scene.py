@@ -195,7 +195,6 @@ def main():
    )
    config["movie_prefix"] = config["file"].replace(".py", "")
    scene_kwargs = config["display_config"]
-   scene_kwargs["announce_construction"] = True
    for SceneClass in get_scene_classes(scene_names_to_classes, config):
       for args in get_scene_args(SceneClass, config):
          scene_kwargs["construct_args"] = tuplify(args)
