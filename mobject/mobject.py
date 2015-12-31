@@ -154,7 +154,7 @@ class Mobject(object):
             )
         return self
 
-    def highlight(self, color = "yellow", condition = None):
+    def highlight(self, color = YELLOW_C, condition = None):
         """
         Condition is function which takes in one arguments, (x, y, z).
         """
@@ -178,6 +178,11 @@ class Mobject(object):
                 interpolate(start_rgb, end_rgb, alpha)
                 for alpha in np.arange(num_points)/float(num_points)
             ])
+        return self
+
+    def match_colors(self, mobject):
+        Mobject.align_data(self, mobject)
+        self.rgbs = np.array(mobject.rgbs)
         return self
 
     def filter_out(self, condition):

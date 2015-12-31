@@ -262,6 +262,18 @@ class Sierpinski(LindenmayerCurve):
     }
 
 
+class StellarCurve(LindenmayerCurve):
+    DEFAULT_CONFIG = {
+        "start_color" : RED,
+        "end_color"   : BLUE_E,
+        "rule" : {
+            "A" : "+B-A-B+A-B+",
+            "B" : "-A+B+A-B+A-",
+        },
+        "scale_factor" : 3,
+        "angle" : 2*np.pi/5,
+    }
+
 class SnakeCurve(SpaceFillingCurve):
     DEFAULT_CONFIG = {
         "start_color" : BLUE,

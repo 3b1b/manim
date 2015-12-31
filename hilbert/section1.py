@@ -528,8 +528,8 @@ class ThinkInTermsOfReverseMapping(Scene):
         dot1.shift(3*RIGHT)
         dot2 = Dot(color = color2)
         dot2.shift(3.1*RIGHT)
-        arrow1 = Arrow(2*RIGHT+UP, dot1, color = color1, buffer = 0.1)
-        arrow2 = Arrow(4*RIGHT+UP, dot2, color = color2, buffer = 0.1)
+        arrow1 = Arrow(2*RIGHT+UP, dot1, color = color1, buff = 0.1)
+        arrow2 = Arrow(4*RIGHT+UP, dot2, color = color2, buff = 0.1)
         dot3, arrow3 = [
             mob.copy().shift(5*LEFT+UP)
             for mob in dot1, arrow1
