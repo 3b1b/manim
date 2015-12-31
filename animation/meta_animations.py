@@ -11,8 +11,7 @@ class DelayByOrder(Animation):
     """
     Modifier of animation.
 
-    Warning: This will not work on all animation types, but 
-    when it does, it will be pretty cool
+    Warning: This will not work on all animation types.
     """
     DEFAULT_CONFIG = {
         "max_power" : 5
