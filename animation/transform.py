@@ -11,7 +11,7 @@ from mobject import Mobject, Point
 
 class Transform(Animation):
     DEFAULT_CONFIG = {
-        "interpolation_function" : straight_path,
+        "path_func" : straight_path,
         "should_black_out_extra_points" : False
     }
     def __init__(self, mobject, ending_mobject, **kwargs):
@@ -50,7 +50,7 @@ class Transform(Animation):
         )
         for m, start, end in zip(*families):
             # print m, start, end
-            m.points = self.interpolation_function(
+            m.points = self.path_func(
                 start.points, end.points, alpha
             )
             m.rgbs = straight_path(start.rgbs, end.rgbs, alpha)
@@ -73,12 +73,12 @@ class Transform(Animation):
 
 class ClockwiseTransform(Transform):
     DEFAULT_CONFIG = {
-        "interpolation_function" : clockwise_path()
+        "path_func" : clockwise_path()
     }
 
 class CounterclockwiseTransform(Transform):
     DEFAULT_CONFIG = {
-        "interpolation_function" : counterclockwise_path()
+        "path_func" : counterclockwise_path()
     }
 
 class GrowFromCenter(Transform):
@@ -92,7 +92,7 @@ class GrowFromCenter(Transform):
 
 class SpinInFromNothing(GrowFromCenter):
     DEFAULT_CONFIG = {
-        "interpolation_function" : counterclockwise_path()
+        "path_func" : counterclockwise_path()
     }
 
 class ShrinkToCenter(Transform):
@@ -125,7 +125,7 @@ class Rotate(ApplyMethod):
         "in_place" : False,
     }
     def __init__(self, mobject, angle = np.pi, axis = OUT, **kwargs):
-        kwargs["interpolation_function"] = path_along_arc(angle)
+        kwargs["path_func"] = path_along_arc(angle)
         digest_config(self, kwargs, locals())
         if self.in_place:
             method = mobject.rotate_in_place

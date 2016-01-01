@@ -316,11 +316,11 @@ class NumberLineScene(Scene):
         self.add(*additional_mobjects)
 
     def show_multiplication(self, num, **kwargs):
-        if "interpolation_function" not in kwargs:
+        if "path_func" not in kwargs:
             if num > 0:
-                kwargs["interpolation_function"] = straight_path
+                kwargs["path_func"] = straight_path
             else:
-                kwargs["interpolation_function"] = counterclockwise_path()
+                kwargs["path_func"] = counterclockwise_path()
         self.play(*[
             ApplyMethod(self.number_line.stretch, num, 0, **kwargs)
         ]+[

@@ -74,7 +74,7 @@ class IllustrateDuality(GraphScene):
                 return 1
         kwargs = {
             "run_time" : 5.0,
-            "alpha_func" : special_alpha
+            "rate_func" : special_alpha
         }
         self.play(*[
             Transform(*edge_pair, **kwargs)
@@ -125,7 +125,7 @@ class IntroduceGraph(GraphScene):
         self.add(graph)
         self.dither()
         kwargs = {
-            "alpha_func" : there_and_back,
+            "rate_func" : there_and_back,
             "run_time"   : 5.0
         }
         self.add(not_okay)
@@ -144,7 +144,7 @@ class IntroduceGraph(GraphScene):
         self.remove(*edges_to_remove)
         self.play(ShowCreation(
             Mobject(*edges_to_remove),
-            alpha_func = lambda t : 1 - t,
+            rate_func = lambda t : 1 - t,
             run_time = 1.0
         ))
         self.dither(2)
@@ -965,7 +965,7 @@ class IntroduceMortimer(GraphScene):
             ApplyMethod(
                 line.rotate_in_place, 
                 np.pi/10, 
-                alpha_func = wiggle) 
+                rate_func = wiggle) 
             for line in morty_crossed_lines
         ], **kwargs)
         
@@ -992,7 +992,7 @@ class RandolphMortimerSpanningTreeGame(GraphScene):
         self.dither()
         self.play(WalkPiCreature(
             morty, self.dual_points[attempted_dual_point_index],
-            alpha_func = lambda t : 0.3 * there_and_back(t),
+            rate_func = lambda t : 0.3 * there_and_back(t),
             run_time = 2.0,
         ))
         self.dither()
@@ -1039,7 +1039,7 @@ class MortimerCannotTraverseCycle(GraphScene):
 
         all_lines = []
         matching_edges = []
-        kwargs = {"run_time" : time_per_edge, "alpha_func" : None}
+        kwargs = {"run_time" : time_per_edge, "rate_func" : None}
         for last, next in zip(dual_cycle, dual_cycle[1:]):
             line = Line(self.dual_points[last], self.dual_points[next])
             line.highlight("red")

@@ -149,7 +149,7 @@ class TauPoem(Scene):
         number_word.shift(BUFF * UP / 2)
 
         kwargs = {
-            "alpha_func" : squish_alpha_func(smooth),
+            "rate_func" : squish_rate_func(smooth),
         }
         self.add(first_word, rest_of_line, self.first_digits)
         self.first_word  = first_word
@@ -167,13 +167,13 @@ class TauPoem(Scene):
         self.play_over_time_range(0, 2,
             Transform(
                 deepcopy(self.first_word), self.number_word,
-                alpha_func = squish_alpha_func(smooth)
+                rate_func = squish_rate_func(smooth)
             )
         )
         self.play_over_time_range(2, 4,
             Transform(
                 self.number_word, self.new_digit,
-                alpha_func = squish_alpha_func(smooth)                
+                rate_func = squish_rate_func(smooth)                
             )
         )
 
@@ -183,7 +183,7 @@ class TauPoem(Scene):
         two_copy = deepcopy(two).rotate(np.pi/10).highlight("yellow")
         self.play(Transform(
             two, two_copy,
-            alpha_func = squish_alpha_func(
+            rate_func = squish_rate_func(
                 lambda t : wiggle(t),
                 0.4, 0.9,
             ),
@@ -204,12 +204,12 @@ class TauPoem(Scene):
         self.dither()
         self.play(CounterclockwiseTransform(
             two_pi, sphere,
-            alpha_func = lambda t : 2*smooth(t/2)
+            rate_func = lambda t : 2*smooth(t/2)
         ))
         self.remove(two_pi)
         self.play(CounterclockwiseTransform(
             sphere, tau,
-            alpha_func = lambda t : 2*(smooth(t/2+0.5)-0.5)
+            rate_func = lambda t : 2*(smooth(t/2+0.5)-0.5)
         ))
         self.remove(sphere)
         self.add(tau)
@@ -286,7 +286,7 @@ class TauPoem(Scene):
         self.play(ApplyFunction(
             lambda p : 2 * p /  np.linalg.norm(p),
             bubble,
-            alpha_func = wiggle,
+            rate_func = wiggle,
             run_time = 3.0,
         ))
 
@@ -406,7 +406,7 @@ class TauPoem(Scene):
                 ShowCreation(sine),
                 ShowCreation(deepcopy(sine).shift(2*np.pi*interval_size*RIGHT)),
                 run_time = 2.0,
-                alpha_func = smooth
+                rate_func = smooth
             ),
             ShowCreation(circle)
         )
@@ -521,7 +521,7 @@ class TauPoem(Scene):
         self.add(*pi.parts + tau.parts)
         self.dither(0.8)
         self.play(*[
-            Transform(*eyes, run_time = 0.2, alpha_func = rush_into)
+            Transform(*eyes, run_time = 0.2, rate_func = rush_into)
             for eyes in [
                 (tau.left_eye, blinked_tau.left_eye),
                 (tau.right_eye, blinked_tau.right_eye),
@@ -529,7 +529,7 @@ class TauPoem(Scene):
         ])
         self.remove(tau.left_eye, tau.right_eye)
         self.play(*[
-            Transform(*eyes, run_time = 0.2, alpha_func = rush_from)
+            Transform(*eyes, run_time = 0.2, rate_func = rush_from)
             for eyes in [
                 (blinked_tau.left_eye, mad_tau.left_eye),
                 (blinked_tau.right_eye, mad_tau.right_eye),
@@ -546,7 +546,7 @@ class TauPoem(Scene):
         self.add(*mad_tau.parts)
 
         self.play(*[
-            Transform(*eyes, run_time = 0.2, alpha_func = rush_into)
+            Transform(*eyes, run_time = 0.2, rate_func = rush_into)
             for eyes in [
                 (pi.left_eye, blinked_pi.left_eye),
                 (pi.right_eye, blinked_pi.right_eye),
@@ -554,7 +554,7 @@ class TauPoem(Scene):
         ])
         self.remove(pi.left_eye, pi.right_eye)
         self.play(*[
-            Transform(*eyes, run_time = 0.2, alpha_func = rush_from)
+            Transform(*eyes, run_time = 0.2, rate_func = rush_from)
             for eyes in [
                 (blinked_pi.left_eye, sad_pi.left_eye),
                 (blinked_pi.right_eye, sad_pi.right_eye),

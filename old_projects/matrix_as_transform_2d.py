@@ -237,7 +237,7 @@ class ShowMatrixTransform(TransformScene2D):
         self.dither()
         kwargs = {
             "run_time" : 2.0,
-            "interpolation_function" : self.get_interpolation_function(matrix)
+            "path_func" : self.get_path_func(matrix)
         }
         anims = [ApplyFunction(func, self.number_plane, **kwargs)]
         if hasattr(self, "x_arrow") and hasattr(self, "y_arrow"):
@@ -264,7 +264,7 @@ class ShowMatrixTransform(TransformScene2D):
         ])
         return max(max_norm, 1)
 
-    def get_interpolation_function(self, matrix):
+    def get_path_func(self, matrix):
         rotational_components = np.array([
             np.log(multiplier*complex(*matrix[:,i])).imag
             for i, multiplier in [(0, 1), (1, complex(0, -1))]
@@ -476,7 +476,7 @@ class ShowMatrixTransformWithDot(TransformScene2D):
         self.remove(x_arrow_copy, y_arrow_copy)
         kwargs = {
             "run_time" : 2.0,
-            "interpolation_function" : self.get_interpolation_function(matrix)
+            "path_func" : self.get_path_func(matrix)
         }
         anims = [
             ApplyFunction(func, self.number_plane, **kwargs),
@@ -513,7 +513,7 @@ class ShowMatrixTransformWithDot(TransformScene2D):
         ])
         return max(max_norm, 1)
 
-    def get_interpolation_function(self, matrix):
+    def get_path_func(self, matrix):
         rotational_components = [
             sign*np.arccos(matrix[i,i]/np.linalg.norm(matrix[:,i]))
             for i in [0, 1]

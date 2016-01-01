@@ -77,8 +77,8 @@ class ComplexPlane(NumberPlane):
 
 class ComplexFunction(ApplyPointwiseFunction):
     def __init__(self, function, mobject = ComplexPlane, **kwargs):
-        if "interpolation_function" not in kwargs:
-            self.interpolation_function = path_along_arc(
+        if "path_func" not in kwargs:
+            self.path_func = path_along_arc(
                 np.log(function(complex(1))).imag
             )
         ApplyPointwiseFunction.__init__(
@@ -133,7 +133,7 @@ class ComplexMultiplication(Scene):
         # plane.add_spider_web()
         self.anim_config = {
             "run_time" : 2.0,
-            "interpolation_function" : path_along_arc(arg)
+            "path_func" : path_along_arc(arg)
         }
 
         plane_config["faded_line_frequency"] = 0.5

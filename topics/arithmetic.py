@@ -19,7 +19,7 @@ class RearrangeEquation(Scene):
         leave_start_terms = False,
         transform_kwargs = {},
         ):
-        transform_kwargs["interpolation_function"] = path
+        transform_kwargs["path_func"] = path
         start_mobs, end_mobs = self.get_mobs_from_terms(
             start_terms, end_terms, size
         )

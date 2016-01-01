@@ -105,7 +105,7 @@ class AskMathematicianFriend(Scene):
         self.dither()
         self.play(ApplyMethod(
             mathy.blink, 
-            alpha_func = squish_alpha_func(there_and_back)
+            rate_func = squish_rate_func(there_and_back)
         ))
         self.dither()
         self.play(ShowCreation(bubble))
@@ -163,7 +163,7 @@ class TimeLineAboutSpaceFilling(Scene):
         self.play(ShowCreation(
             curve, 
             run_time = 5,
-            alpha_func = None
+            rate_func = None
         ))
         self.dither()
 

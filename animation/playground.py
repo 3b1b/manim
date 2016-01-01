@@ -16,7 +16,7 @@ class Vibrate(Animation):
         "amplitude"       : 0.5,
         "radius"          : SPACE_WIDTH/2,
         "run_time"        : 3.0,
-        "alpha_func"      : None
+        "rate_func"      : None
     }
     def __init__(self, mobject = None, **kwargs):
         if mobject is None:
@@ -49,7 +49,7 @@ class Vibrate(Animation):
 
 class TurnInsideOut(Transform):
     DEFAULT_CONFIG = {
-        "interpolation_function" : path_along_arc(np.pi/2)
+        "path_func" : path_along_arc(np.pi/2)
     }
     def __init__(self, mobject, **kwargs):
         mobject.sort_points(np.linalg.norm)

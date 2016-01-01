@@ -14,7 +14,7 @@ class Rotating(Animation):
         "axis"       : None,
         "radians"    : 2*np.pi,
         "run_time"   : 20.0,
-        "alpha_func" : None,
+        "rate_func" : None,
         "in_place"   : True,
     }
     def update_mobject(self, alpha):
@@ -68,7 +68,7 @@ class Flash(Animation):
         "color" : "white",
         "slow_factor" : 0.01,
         "run_time" : 0.1,
-        "alpha_func" : None,
+        "rate_func" : None,
     }
     def __init__(self, mobject, **kwargs):
         self.intermediate = Mobject(color = self.color)

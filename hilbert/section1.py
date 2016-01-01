@@ -145,7 +145,7 @@ class PostponePhilosophizing(Scene):
         self.play(*[
             ApplyMethod(
                 word1.replace, word2,
-                interpolation_function = path_along_arc(np.pi/2)
+                path_func = path_along_arc(np.pi/2)
             )
             for word1, word2 in it.permutations([abstract, concrete])
         ])
@@ -176,7 +176,7 @@ class ImageToSound(Scene):
         self.play(Transform(
             picture, string.mobject,
             run_time = 3,
-            alpha_func = rush_into
+            rate_func = rush_into
         ))
         self.remove(picture)
         self.play(string)
@@ -187,7 +187,7 @@ class ImageToSound(Scene):
         self.play(Transform(
             string.mobject, picture_copy,
             run_time = 5,
-            alpha_func = rush_from
+            rate_func = rush_from
         ))
 
 
@@ -268,7 +268,7 @@ class SoundDataIsOneDimensional(Scene):
                 Transform(
                     dot,
                     dot.copy().scale(2).rotate(-np.pi/2).shift(floor),
-                    interpolation_function = path_along_arc(np.pi/3)
+                    path_func = path_along_arc(np.pi/3)
                 )
                 for dot in dots
             ]
@@ -433,7 +433,7 @@ class ListenToAllPixels(Scene):
         self.play(
             ShimmerIn(
                 words,
-                alpha_func = squish_alpha_func(smooth, 0, 0.2)
+                rate_func = squish_rate_func(smooth, 0, 0.2)
             ),
             *sub_vibrations,
             run_time = 5
@@ -493,12 +493,12 @@ class RandomMapping(Scene):
         self.add(grid)
         targets = [stars, freq_line]
         alphas = [not_quite_there(rush_into), rush_from]
-        for target, alpha_func in zip(targets, alphas):
+        for target, rate_func in zip(targets, alphas):
             self.play(Transform(
                 grid, target,
                 run_time = 3,
-                alpha_func = alpha_func,
-                interpolation_function = path_along_arc(-np.pi/2)
+                rate_func = rate_func,
+                path_func = path_along_arc(-np.pi/2)
             ))
         self.dither()
         
@@ -543,7 +543,7 @@ class ThinkInTermsOfReverseMapping(Scene):
         self.dither()
         self.play(ApplyMethod(
             arrow.rotate, np.pi, 
-            interpolation_function = clockwise_path()
+            path_func = clockwise_path()
         ))
         self.dither()
         self.play(ShowCreation(arrow1))
@@ -615,7 +615,7 @@ class WeaveLineThroughPixels(Scene):
         self.play(ShowCreation(
             curve,
             run_time = 5, 
-            alpha_func = None
+            rate_func = None
         ))
         self.dither()
         self.play(
@@ -639,7 +639,7 @@ class WellPlayedGameOfSnake(Scene):
         self.play(ShowCreation(
             snake_curve,
             run_time = 7, 
-            alpha_func = None
+            rate_func = None
         ))
         self.dither()
         self.play(ShimmerIn(words))
@@ -720,7 +720,7 @@ class Order1PseudoHilbertCurve(Scene):
         self.dither()
         self.play(Transform(
             s, pre_words, 
-            interpolation_function = path_along_arc(-np.pi/3)
+            path_func = path_along_arc(-np.pi/3)
         ))
         self.dither()
         self.play(ShowCreation(grid1))
@@ -729,7 +729,7 @@ class Order1PseudoHilbertCurve(Scene):
         self.dither()
         kwargs = {
             "run_time" : 5,
-            "alpha_func" : None
+            "rate_func" : None
         }
         self.play(ShowCreation(curve, **kwargs))
         self.dither()
@@ -877,7 +877,7 @@ class UseOrder8(Scene):
         self.clear()
         self.add(words)
         self.play(ShowCreation(
-            curve, run_time = 7, alpha_func = None
+            curve, run_time = 7, rate_func = None
         ))
         self.dither()
 

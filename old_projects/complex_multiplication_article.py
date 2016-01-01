@@ -119,7 +119,7 @@ class ConjugateDivisionExample(ComplexMultiplication):
         self.draw_dot("\\bar z", self.multiplier)
         self.apply_multiplication()
         self.multiplier = 1./(abs(num)**2)
-        self.anim_config["interpolation_function"] = straight_path
+        self.anim_config["path_func"] = straight_path
         self.apply_multiplication()
         self.dither()
 

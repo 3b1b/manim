@@ -14,7 +14,7 @@ from mobject import Mobject
 class Animation(object):
     DEFAULT_CONFIG = {
         "run_time" : DEFAULT_ANIMATION_RUN_TIME,
-        "alpha_func" : smooth,
+        "rate_func" : smooth,
         "name" : None,
     }
     def __init__(self, mobject, **kwargs):
@@ -22,8 +22,8 @@ class Animation(object):
         assert(isinstance(mobject, Mobject))
         digest_config(self, kwargs, locals())
         self.starting_mobject = self.mobject.copy()
-        if self.alpha_func is None:
-            self.alpha_func = (lambda x : x)
+        if self.rate_func is None:
+            self.rate_func = (lambda x : x)
         if self.name is None:
             self.name = self.__class__.__name__ + str(self.mobject)
         self.update(0)
@@ -39,7 +39,7 @@ class Animation(object):
             alpha = 0.0
         if alpha > 1:
             alpha = 1.0
-        self.update_mobject(self.alpha_func(alpha))
+        self.update_mobject(self.rate_func(alpha))
 
     def filter_out(self, *filter_functions):
         self.filter_functions += filter_functions
@@ -61,10 +61,10 @@ class Animation(object):
         self.run_time = time
         return self
 
-    def set_alpha_func(self, alpha_func):
-        if alpha_func is None:
-            alpha_func = lambda x : x
-        self.alpha_func = alpha_func
+    def set_rate_func(self, rate_func):
+        if rate_func is None:
+            rate_func = lambda x : x
+        self.rate_func = rate_func
         return self
 
     def set_name(self, name):

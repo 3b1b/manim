@@ -40,7 +40,7 @@ class DelayByOrder(Animation):
 
 class TransformAnimations(Transform):
     DEFAULT_CONFIG = {
-        "alpha_func" : squish_alpha_func(smooth)
+        "rate_func" : squish_rate_func(smooth)
     }
     def __init__(self, start_anim, end_anim, **kwargs):
         digest_config(self, kwargs, locals())

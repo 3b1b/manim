@@ -181,7 +181,7 @@ class IntroduceDivergentSum(Scene):
         end_brace = deepcopy(brace).stretch_to_fit_width(
             max(ellipses.points[:,0])-min_x_coord
         ).to_edge(LEFT, buff = SPACE_WIDTH+min_x_coord)
-        kwargs = {"run_time" : 5.0, "alpha_func" : rush_into}        
+        kwargs = {"run_time" : 5.0, "rate_func" : rush_into}        
         flip_through = FlipThroughNumbers(
             lambda x : 2**(x+1)-1,
             start = NUM_WRITTEN_TERMS-1,
@@ -448,7 +448,7 @@ class ZoomInOnInterval(Scene):
             ApplyMethod(new_line.apply_function, squish),
             ApplyMethod(
                 interval[0].apply_function, squish,
-                alpha_func = lambda t : 1-t
+                rate_func = lambda t : 1-t
             ),
             *[FadeIn(interval[x]) for x in [1, 2]]
         )
@@ -690,7 +690,7 @@ class ListOfPartialSums(Scene):
         )
         self.dither()
         self.play(*[
-            ApplyMethod(s.highlight, "yellow", alpha_func = there_and_back)
+            ApplyMethod(s.highlight, "yellow", rate_func = there_and_back)
             for s in sums
         ])
         self.dither()
@@ -768,7 +768,7 @@ class CircleZoomInOnOne(Scene):
             self.play(
                 ShowCreation(
                     curr_num, 
-                    alpha_func = lambda t : smooth(1-t)
+                    rate_func = lambda t : smooth(1-t)
                 ),
                 ShowCreation(num)
             )
@@ -816,7 +816,7 @@ class ZoomInOnOne(Scene):
             ).scale(1.0/scale_val**x)
             for x in range(num_levels)
         ]
-        kwargs = {"alpha_func" : None}
+        kwargs = {"rate_func" : None}
         self.play(*[
             ApplyMethod(number_lines[x].scale, scale_val, **kwargs)
             for x in range(1, num_levels)
@@ -1915,7 +1915,7 @@ class RoomsAndSubroomsWithNumbers(Scene):
                 self.play(*[
                     ApplyMethod(
                         num_mobs[index].rotate_in_place, np.pi/10, 
-                        alpha_func = wiggle
+                        rate_func = wiggle
                     )
                     for index in pair
                 ])
@@ -2036,7 +2036,7 @@ class PAdicMetric(Scene):
         self.play(
             ShowCreation(
                 arrow,
-                alpha_func = squish_alpha_func(smooth, 0.5, 1.0)
+                rate_func = squish_rate_func(smooth, 0.5, 1.0)
             ),
             DelayByOrder(Transform(
                 start,

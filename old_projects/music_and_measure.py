@@ -135,7 +135,7 @@ class Vibrate(Animation):
         "center" : ORIGIN,
         "color" : "white",
         "run_time" : 3.0,
-        "alpha_func" : None
+        "rate_func" : None
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
@@ -302,7 +302,7 @@ class MeasureTheoryToHarmony(IntervalScene):
         line = Line(radius*LEFT, radius*RIGHT).highlight("white")
         self.play(DelayByOrder(Transform(all_mobs, line)))
         self.clear()
-        self.play(Vibrate(alpha_func = smooth))
+        self.play(Vibrate(rate_func = smooth))
         self.clear()
         self.add(line)
         self.dither()
@@ -367,7 +367,7 @@ class ChallengeOne(Scene):
         r2 = TexMobject("r").next_to(arrow2, UP)
         kwargs = {
             "run_time" : 5.0,
-            "alpha_func" : there_and_back
+            "rate_func" : there_and_back
         }
         run_time = 3.0
         vibrations = [self.bottom_vibration, top_vib_1, top_vib_2]
@@ -495,7 +495,7 @@ class DecomposeMusicalNote(Scene):
         sine = LongSine()
         kwargs = {
             "run_time" : 4.0,
-            "alpha_func" : None
+            "rate_func" : None
         }
         words = TextMobject("Imagine 220 per second...")
         words.shift(2*UP)
@@ -503,9 +503,9 @@ class DecomposeMusicalNote(Scene):
         self.add(line)
         self.play(ApplyMethod(sine.shift, 4*LEFT, **kwargs))
         self.add(words)
-        kwargs["alpha_func"] = rush_into
+        kwargs["rate_func"] = rush_into
         self.play(ApplyMethod(sine.shift, 80*LEFT, **kwargs))
-        kwargs["alpha_func"] = None
+        kwargs["rate_func"] = None
         kwargs["run_time"] = 1.0
         sine.to_edge(LEFT, buff = 0)
         for x in range(5):
@@ -523,7 +523,7 @@ class DecomposeTwoFrequencies(Scene):
         self.play(ApplyMethod(
             comp.shift, 15*LEFT,
             run_time = 7.5,
-            alpha_func = None
+            rate_func = None
         ))
 
 
@@ -576,7 +576,7 @@ class PatternInFrequencies(Scene):
         top_lines.highlight(color)
         kwargs = {
             "run_time" : 10,
-            "alpha_func" : None
+            "rate_func" : None
         }
 
         self.add(big_line)
@@ -706,7 +706,7 @@ class PianoTuning(Scene):
             FadeIn(twelfth_root)
         )
         self.dither()
-        self.play(ShowCreation(semicircles, alpha_func = None))
+        self.play(ShowCreation(semicircles, rate_func = None))
         self.dither()
 
         self.show_interval(5, 7)
@@ -853,7 +853,7 @@ class AllValuesBetween1And2(NumberLineScene):
 
         kwargs = {
             "run_time" : 3.0,
-            "alpha_func" : there_and_back
+            "rate_func" : there_and_back
         }
         self.play(*[
             ApplyMethod(mob.shift, RIGHT, **kwargs)
@@ -922,7 +922,7 @@ class CoveringSetsWithOpenIntervals(IntervalScene):
         self.dither()
         for x in range(2*len(theorems)):
             self.play(*[
-                ApplyMethod(th.shift, UP, alpha_func = None)
+                ApplyMethod(th.shift, UP, rate_func = None)
                 for th in theorems[:x+1]
             ])
 
@@ -972,17 +972,17 @@ class NaiveFractionCover(IntervalScene):
             if count == 0:
                 kwargs = {
                     "run_time" : 1.0,
-                    "alpha_func" : rush_into
+                    "rate_func" : rush_into
                 }
             elif count == 10:
                 kwargs = {
                     "run_time" : 1.0,
-                    "alpha_func" : rush_from
+                    "rate_func" : rush_from
                 }
             else:
                 kwargs = {
                     "run_time" : 0.25,
-                    "alpha_func" : None
+                    "rate_func" : None
                 }
             open_interval, line = self.add_open_interval(num, 0.1)
             open_interval.shift(UP)
@@ -1203,7 +1203,7 @@ class StepsToSolution(IntervalScene):
         self.intervals = [a.mobject for a in anims]
         kwargs = {
             "run_time" : 2.0,
-            "alpha_func" : there_and_back
+            "rate_func" : there_and_back
         }
         self.play(*[
             ApplyMethod(mob.scale_in_place, 0.5*random.random(), **kwargs)
@@ -1339,7 +1339,7 @@ class TroubleDrawingSmallInterval(IntervalScene):
         self.play(Transform(
             line, deepcopy(line).scale(10).shift(DOWN),
             run_time = 2.0,
-            alpha_func = there_and_back
+            rate_func = there_and_back
         ))
         self.dither()
 

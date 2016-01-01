@@ -40,7 +40,7 @@ class SingleVariableFunction(Scene):
 
         transform_config = {
             "run_time" : 3,
-            "interpolation_function" : path_along_arc(np.pi/4)
+            "path_func" : path_along_arc(np.pi/4)
         }
 
         if separate_lines:
@@ -272,7 +272,7 @@ class PlaneToSpaceFunction(Scene):
             TransformAnimations(
                 Animation(plane.copy()),
                 Rotating(target, **rot_kwargs),
-                alpha_func = smooth
+                rate_func = smooth
             ),
             Rotating(axes, **rot_kwargs)
         )
@@ -309,7 +309,7 @@ class SpaceToSpaceFunction(Scene):
             TransformAnimations(
                 Rotating(space, **rot_kwargs),
                 Rotating(target, **rot_kwargs),
-                alpha_func = squish_alpha_func(smooth, 0.3, 0.7)
+                rate_func = squish_rate_func(smooth, 0.3, 0.7)
             ),
             Rotating(axes, **rot_kwargs)
         )

@@ -472,7 +472,7 @@ class LineCorrespondsWithPair(CircleScene):
         self.play(*[
             Transform(
                 dot, Dot(dot.get_center(), 3*dot.radius),
-                alpha_func = there_and_back
+                rate_func = there_and_back
             )
             for dot in (dot0, dot1)
         ])
@@ -599,7 +599,7 @@ class IntersectionPointCorrespondances(CircleScene):
                 dot_highlights.append(Highlight(mob))
                 dot_pointers.append(Arrow(mob.get_center()).nudge())
             elif mob != intersection_dot:
-                fade_outs.append(FadeOut(mob, alpha_func = not_quite_there))
+                fade_outs.append(FadeOut(mob, rate_func = not_quite_there))
 
         self.add(intersection_dot_arrow)
         self.play(Highlight(intersection_dot))
@@ -638,7 +638,7 @@ class LinesIntersectOutside(CircleScene):
             for p0, p1 in [(0, 1), (2, 3)]
         ]
         self.play(*[
-            FadeOut(mob, alpha_func = not_quite_there)
+            FadeOut(mob, rate_func = not_quite_there)
             for mob in self.mobjects if mob not in lines_to_save
         ])
         self.play(*[
@@ -902,7 +902,7 @@ class ShowMoserGraphLines(CircleScene):
                 self.play(CounterclockwiseTransform(
                     compound,
                     deepcopy(compound).scale(1.05),
-                    alpha_func = there_and_back,
+                    rate_func = there_and_back,
                     run_time = 2.0,
                 ))
             else:
@@ -980,7 +980,7 @@ class HowIntersectionChopsLine(CircleScene):
                     (-3, h, 0),
                     (3, h, 0)
                 ), 
-                alpha_func = there_and_back, 
+                rate_func = there_and_back, 
                 run_time = 3.0
             )
             for line, h in zip(lines, (-1, 1))

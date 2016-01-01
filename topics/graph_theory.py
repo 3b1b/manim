@@ -233,7 +233,7 @@ class GraphScene(Scene):
             for point in self.points
         ])
         self.play(Transform(
-            start, end, alpha_func = there_and_back,
+            start, end, rate_func = there_and_back,
             **kwargs
         ))
         self.remove(start)
