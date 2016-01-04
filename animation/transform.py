@@ -83,12 +83,11 @@ class CounterclockwiseTransform(Transform):
 
 class GrowFromCenter(Transform):
     def __init__(self, mobject, **kwargs):
-        Transform.__init__(
-            self,
-            Point(mobject.get_center()),
-            mobject,
-            **kwargs
-        )
+        target = mobject.copy()
+        point = Point(mobject.get_center())
+        mobject.replace(point)
+        mobject.highlight(point.get_color())
+        Transform.__init__(self, mobject, target, **kwargs)
 
 class SpinInFromNothing(GrowFromCenter):
     DEFAULT_CONFIG = {
