@@ -109,7 +109,7 @@ def tex_to_dvi(tex_file):
     return result
 
 def tex_expression_list_as_string(expression):
-    return "\n".join([
+    return "".join([
         "\onslide<%d>{"%count + exp + "}"
         for count, exp in zip(it.count(1), expression)
     ])
