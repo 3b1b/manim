@@ -1,9 +1,8 @@
-from helpers import *
-
-from helpers import *
+from scipy import integrate
 
 from mobject import Mobject, Mobject1D, Mobject
 
+from helpers import *
 
 class FunctionGraph(Mobject1D):
     DEFAULT_CONFIG = {
@@ -27,35 +26,24 @@ class FunctionGraph(Mobject1D):
         ])
 
 
-class ParametricFunction(Mobject):
+class ParametricFunction(Mobject1D):
     DEFAULT_CONFIG = {
-        "color"            : WHITE,
-        "dim"              : 1,
-        "expected_measure" : 10.0,
-        "density"          : None
+        "start" : 0,
+        "end"   : 1,
     }
     def __init__(self, function, **kwargs):
         self.function = function
-        if self.density:
-            self.epsilon = 1.0 / self.density
-        elif self.dim == 1:
-            self.epsilon = 1.0 / self.expected_measure / DEFAULT_POINT_DENSITY_1D
-        else:
-            self.epsilon = 1.0 / np.sqrt(self.expected_measure) / DEFAULT_POINT_DENSITY_2D
-        Mobject.__init__(self, **kwargs)
+        Mobject1D.__init__(self, **kwargs)
 
     def generate_points(self):
-        if self.dim == 1:
-            self.add_points([
-                self.function(t)
-                for t in np.arange(-1, 1, self.epsilon)
-            ])
-        if self.dim == 2:
-            self.add_points([
-                self.function(s, t)
-                for t in np.arange(-1, 1, self.epsilon)
-                for s in np.arange(-1, 1, self.epsilon)
-            ])
+        integral = integrate.quad(
+            lambda t : np.linalg.norm(self.function(t)),
+            self.start, self.end
+        )
+        length = np.linalg.norm(integral)
+        epsilon = self.epsilon / length        
+        t_range = np.arange(self.start, self.end, epsilon)
+        self.add_points([self.function(t) for t in t_range])
 
 
 class Axes(Mobject):
