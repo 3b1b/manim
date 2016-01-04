@@ -216,6 +216,14 @@ class Mobject(object):
             mob.apply_over_attr_arrays(lambda arr : arr[indices])
         return self
 
+    def reverse_points(self):
+        for mob in self.nonempty_family_members():
+            mob.apply_over_attr_arrays(
+                lambda arr : np.array(list(reversed(arr)))
+            )
+        return self
+
+
     def repeat(self, count):
         """
         This can make transition animations nicer
@@ -261,7 +269,9 @@ class Mobject(object):
         """
         target_point = np.sign(direction) * (SPACE_WIDTH, SPACE_HEIGHT, 0)
         anchor_point = self.get_critical_point(direction)
-        self.shift(target_point - anchor_point - buff * np.array(direction))
+        shift_val = target_point - anchor_point - buff * np.array(direction) 
+        shift_val = shift_val * abs(np.sign(direction))
+        self.shift(shift_val)
         return self
 
     def to_corner(self, corner = LEFT+DOWN, buff = DEFAULT_MOBJECT_TO_EDGE_BUFFER):
@@ -517,7 +527,7 @@ class Point(Mobject):
 #TODO, Make the two implementations bellow non-redundant
 class Mobject1D(Mobject):
     DEFAULT_CONFIG = {
-        "density"     : DEFAULT_POINT_DENSITY_1D,
+        "density" : DEFAULT_POINT_DENSITY_1D,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)

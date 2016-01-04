@@ -12,17 +12,18 @@ from animation.transform import \
     GrowFromCenter, ClockwiseTransform, ApplyPointwiseFunction, \
     ShrinkToCenter
 from animation.simple_animations import \
-    ShowCreation, ShimmerIn, FadeOut, FadeIn
+    ShowCreation, ShimmerIn, FadeOut, FadeIn, Homotopy
 from animation.meta_animations import \
     DelayByOrder, TransformAnimations
 from animation.playground import Vibrate
 
 from topics.geometry import \
-    Line, Dot, Arrow, Grid, Square, Point
+    Line, Dot, Arrow, Grid, Square, Point, Circle
 from topics.characters import \
     ThoughtBubble, SpeechBubble, Mathematician
 from topics.number_line import UnitInterval, NumberLine
 from topics.three_dimensions import Stars
+from topics.functions import ParametricFunction
 
 from region import region_from_polygon_vertices, Region
 
@@ -494,18 +495,348 @@ class ContinuityRequired(Scene):
 
 class FormalDefinitionOfContinuity(Scene):
     def construct(self):
-        self.play(ShimmerIn(TextMobject(" ".join([
-            "$f : A \\to B$  is continuous if: \\\\ \n\n", 
-            "$\\forall x \\in A$,",
-            "$\\forall \\epsilon > 0$,",
-            "$\\exists \\delta > 0$ such that",
-            "$|f(y) - f(x)| < \\epsilon$",
-            "for all $y \\in A$  satisfying $|x-y|<\\delta$.",
-        ]))))
+        self.setup()
+        self.label_spaces()
+        self.move_dot()
+        self.label_jump()
+        self.draw_circles()
+        self.vary_circle_sizes()
+        self.discontinuous_point()
+
+
+    def setup(self):
+        self.input_color = YELLOW_C
+        self.output_color = RED
+        def spiril(t):
+            theta = 2*np.pi*t
+            return t*np.cos(theta)*RIGHT+t*np.sin(theta)*UP
+
+        self.spiril1 = ParametricFunction(
+            lambda t : 1.5*RIGHT + DOWN + 2*spiril(t),
+            density = 5*DEFAULT_POINT_DENSITY_1D,
+        )
+        self.spiril2 = ParametricFunction(
+            lambda t : 5.5*RIGHT + UP - 2*spiril(1-t),
+            density = 5*DEFAULT_POINT_DENSITY_1D,
+        )
+        Mobject.align_data(self.spiril1, self.spiril2)
+        self.output = Mobject(self.spiril1, self.spiril2)
+        self.output.ingest_sub_mobjects()
+        self.output.highlight(GREEN_A)
+
+        self.interval = UnitInterval()
+        self.interval.scale_to_fit_width(SPACE_WIDTH-1)
+        self.interval.to_edge(LEFT)
+
+        self.input_dot = Dot(color = self.input_color)
+        self.output_dot = self.input_dot.copy().highlight(self.output_color)
+        left, right = self.interval.get_left(), self.interval.get_right()
+        self.input_homotopy = lambda (x, y, z, t) : (x, y, t) + interpolate(left, right, t)
+        output_size = self.output.get_num_points()-1
+        output_points = self.output.points        
+        self.output_homotopy = lambda (x, y, z, t) : (x, y, z) + output_points[int(t*output_size)]
+
+    def get_circles_and_points(self, min_input, max_input):
+        input_left, input_right = [
+            self.interval.number_to_point(num)
+            for num in min_input, max_input
+        ]
+        input_circle = Circle(
+            radius = np.linalg.norm(input_left-input_right)/2,
+            color = WHITE
+        )
+        input_circle.shift((input_left+input_right)/2)
+
+        input_points = Line(
+            input_left, input_right, 
+            color = self.input_color
+        )
+        output_points = Mobject(color = self.output_color)
+        n = self.output.get_num_points()
+        output_points.add_points(
+            self.output.points[int(min_input*n):int(max_input*n)]
+        )
+        output_center = output_points.points[int(0.5*output_points.get_num_points())]
+        max_distance = np.linalg.norm(output_center-output_points.points[-1])
+        output_circle = Circle(
+            radius = max_distance, 
+            color = WHITE
+        )
+        output_circle.shift(output_center)
+        return (
+            input_circle, 
+            input_points, 
+            output_circle, 
+            output_points
+        )
+
+
+    def label_spaces(self):
+        input_space = TextMobject("Input Space")
+        input_space.to_edge(UP)        
+        input_space.shift(LEFT*SPACE_WIDTH/2)
+        output_space = TextMobject("Output Space")
+        output_space.to_edge(UP)
+        output_space.shift(RIGHT*SPACE_WIDTH/2)
+        line = Line(
+            UP*SPACE_HEIGHT, DOWN*SPACE_HEIGHT, 
+            color = WHITE
+        )
+        self.play(
+            ShimmerIn(input_space),
+            ShimmerIn(output_space),
+            ShowCreation(line),
+            ShowCreation(self.interval),
+        )
+        self.dither()
+
+    def move_dot(self):
+        kwargs = {
+            "rate_func" : None,
+            "run_time"  : 3
+        }
+        self.play(
+            Homotopy(self.input_homotopy, self.input_dot, **kwargs),
+            Homotopy(self.output_homotopy, self.output_dot, **kwargs),
+            ShowCreation(self.output, **kwargs)
+        )
+        self.dither()
+
+    def label_jump(self):
+        jump_points = Mobject(
+            Point(self.spiril1.points[-1]),
+            Point(self.spiril2.points[0])
+        )
+        self.brace = Brace(jump_points, RIGHT)
+        self.jump = TextMobject("Jump")
+        self.jump.next_to(self.brace, RIGHT)
+        self.play(
+            GrowFromCenter(self.brace),
+            ShimmerIn(self.jump)
+        )
+        self.dither()
+        self.remove(self.brace, self.jump)
+
+
+    def draw_circles(self):
+        input_value = 0.45
+        input_radius = 0.04
+        for dot in self.input_dot, self.output_dot:
+            dot.center()
+        kwargs = {
+            "rate_func" : lambda t : interpolate(1, input_value, smooth(t))
+        }
+        self.play(
+            Homotopy(self.input_homotopy, self.input_dot, **kwargs),
+            Homotopy(self.output_homotopy, self.output_dot, **kwargs)
+        )
+
+        A, B = map(Mobject.get_center, [self.input_dot, self.output_dot])
+        A_text = TextMobject("A")
+        A_text.shift(A+2*(LEFT+UP))
+        A_arrow = Arrow(
+            A_text, self.input_dot,
+            color = self.input_color
+        )
+        B_text = TextMobject("B")
+        B_text.shift(B+2*RIGHT+DOWN)
+        B_arrow = Arrow(
+            B_text, self.output_dot,
+            color = self.output_color
+        )
+        tup = self.get_circles_and_points(
+            input_value-input_radius, 
+            input_value+input_radius
+        )
+        input_circle, input_points, output_circle, output_points = tup
+
+        for text, arrow in [(A_text, A_arrow), (B_text, B_arrow)]:
+            self.play(
+                ShimmerIn(text),
+                ShowCreation(arrow)
+            )
+            self.dither()
+        self.remove(A_text, A_arrow, B_text, B_arrow)
+        self.play(ShowCreation(input_circle))
+        self.dither()
+        self.play(ShowCreation(input_points))
+        self.dither()
+        input_points_copy = input_points.copy()
+        self.play(
+            Transform(input_points_copy, output_points),
+            run_time = 2
+        )
+        self.dither()
+        self.play(ShowCreation(output_circle))
+        self.dither()
+        self.dither()
+        self.remove(*[
+            input_circle, input_points, 
+            output_circle, input_points_copy
+        ])
+
+
+    def vary_circle_sizes(self):
+        input_value = 0.45
+        radius = 0.04
+        vary_circles = VaryCircles(
+            self, input_value, radius, 
+            run_time = 5,
+        )
+        self.play(vary_circles)
+        self.dither()
+        text = TextMobject("Function is ``Continuous at A''")
+        text.shift(2*UP).to_edge(LEFT)
+        arrow = Arrow(text, self.input_dot)
+        self.play(
+            ShimmerIn(text),
+            ShowCreation(arrow)
+        )
+        self.dither()
+        self.remove(vary_circles.mobject, text, arrow)
+
+    def discontinuous_point(self):
+        point_description = TextMobject(
+            "Point where the function jumps"
+        )
+        point_description.shift(3*RIGHT)
+        text = TextMobject("""
+            Circle around ouput \\\\ 
+            points can never \\\\
+            be smaller than \\\\
+            the jump
+        """)
+        text.scale(0.75)
+        text.shift(3.5*RIGHT)
+
+        input_value = 0.5
+        input_radius = 0.04
+        vary_circles = VaryCircles(
+            self, input_value, input_radius, 
+            run_time = 5,
+        )
+        for dot in self.input_dot, self.output_dot:
+            dot.center()
+        kwargs = {
+            "rate_func" : lambda t : interpolate(0.45, input_value, smooth(t))
+        }
+        self.play(
+            Homotopy(self.input_homotopy, self.input_dot, **kwargs),
+            Homotopy(self.output_homotopy, self.output_dot, **kwargs)
+        )
+        arrow = Arrow(
+            point_description, self.output_dot,
+            buff = 0.05,
+            color = self.output_color
+        )
+        self.play(
+            ShimmerIn(point_description),
+            ShowCreation(arrow)
+        )
+        self.dither()
+        self.remove(point_description, arrow)
+
+        tup = self.get_circles_and_points(
+            input_value-input_radius, 
+            input_value+input_radius
+        )
+        input_circle, input_points, output_circle, output_points = tup
+        input_points_copy = input_points.copy()
+        self.play(ShowCreation(input_circle))
+        self.play(ShowCreation(input_points))
+        self.play(
+            Transform(input_points_copy, output_points),
+            run_time = 2
+        )
+        self.play(ShowCreation(output_circle))
+        self.dither()
+        self.play(ShimmerIn(text))
+        self.remove(input_circle, input_points, output_circle, input_points_copy)
+        self.play(vary_circles)
+        self.dither()
+        self.remove(vary_circles.mobject)
+
+    def continuous_point(self):
+        pass
+
+
+
+class VaryCircles(Animation):
+    def __init__(self, scene, input_value, radius, **kwargs):
+        digest_locals(self)
+        Animation.__init__(self, Mobject(), **kwargs)
+
+    def update_mobject(self, alpha):
+        radius = self.radius + 0.9*self.radius*np.sin(1.5*np.pi*alpha)
+        self.mobject = Mobject(*self.scene.get_circles_and_points(
+            self.input_value-radius,
+            self.input_value+radius
+        )).ingest_sub_mobjects()
+
+
+class FunctionIsContinuousText(Scene):
+    def construct(self):
+        all_points = TextMobject("$f$ is continuous at every input point")
+        continuous = TextMobject("$f$ is continuous")
+        all_points.shift(UP)
+        continuous.shift(DOWN)
+        arrow = Arrow(all_points, continuous)
+
+        self.play(ShimmerIn(all_points))
+        self.play(ShowCreation(arrow))
+        self.play(ShimmerIn(continuous))
+        self.dither()
+
+
+class DefineActualHilbertCurveText(Scene):
+    def construct(self):
+        self.add(TextMobject("""
+            Finally define a Hilbert Curve\\dots
+        """))
         self.dither()
 
 
 
+class WonderfulPropertyOfPseudoHilbertCurves(Scene):
+    def construct(self):
+        val = 0.3
+        text = TextMobject([
+            "PHC", "$_n", "(", "%3.1f"%val, ")$", 
+            " has a limit point $n \\to \\infty$"
+        ])
+        func_parts = text.split()[:5]
+        Mobject(*func_parts).center().to_edge(UP)
+        num_str, val_str = func_parts[1], func_parts[3]
+        curve = UnitInterval()
+        curve.sort_points(lambda p : p[0])
+        dot = Dot().shift(curve.number_to_point(val))
+        arrow = Arrow(val_str, dot, buff = 0.1)
+
+        self.play(ShowCreation(curve))
+        self.play(
+            ShimmerIn(val_str),
+            ShowCreation(arrow),
+            ShowCreation(dot)
+        )
+        self.dither()
+        self.play(
+            FadeOut(arrow),
+            *[
+                FadeIn(func_parts[i])
+                for i in 0, 1, 2, 4
+            ]
+        )
+        for num in range(2,7):
+            new_curve = HilbertCurve(order = num)
+            new_curve.scale(0.8)
+            new_dot = Dot(new_curve.points[int(val*new_curve.get_num_points())])
+            new_num_str = TexMobject(str(num)).replace(num_str)
+            self.play(
+                Transform(curve, new_curve),
+                Transform(dot, new_dot),
+                Transform(num_str, new_num_str)
+            )
+            self.dither()
 
 
 
