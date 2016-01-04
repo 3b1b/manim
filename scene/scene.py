@@ -185,11 +185,14 @@ class Scene(object):
         for t in time_progression:
             for animation in animations:
                 animation.update(t / animation.run_time)
-            new_frame = disp.paint_mobjects(moving_mobjects, background)
+            new_frame = disp.paint_mobjects(
+                [anim.mobject for anim in animations], 
+                background
+            )
             self.frames.append(new_frame)
         for animation in animations:
             animation.clean_up()
-        self.add(*moving_mobjects)
+        self.add(*[anim.mobject for anim in animations])
         self.repaint_mojects()
         return self
 
