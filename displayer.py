@@ -134,8 +134,8 @@ def place_on_screen(points_and_rgbs, space_width, space_height):
 
 def get_file_path(name, extension):
     file_path = os.path.join(MOVIE_DIR, name)
-    if not file_path.endswith(".mp4"):
-        file_path += ".mp4"
+    if not file_path.endswith(extension):
+        file_path += extension
     directory = os.path.split(file_path)[0]
     if not os.path.exists(directory):
         os.makedirs(directory)
