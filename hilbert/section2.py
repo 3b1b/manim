@@ -802,15 +802,16 @@ class WonderfulPropertyOfPseudoHilbertCurves(Scene):
         val = 0.3
         text = TextMobject([
             "PHC", "$_n", "(", "%3.1f"%val, ")$", 
-            " has a limit point $n \\to \\infty$"
+            " has a ", "limit point ", "as $n \\to \\infty$"
         ])
-        func_parts = text.split()[:5]
+        func_parts = text.copy().split()[:5]
         Mobject(*func_parts).center().to_edge(UP)
         num_str, val_str = func_parts[1], func_parts[3]
         curve = UnitInterval()
         curve.sort_points(lambda p : p[0])
         dot = Dot().shift(curve.number_to_point(val))
         arrow = Arrow(val_str, dot, buff = 0.1)
+        curve.add_numbers(0, 1)
 
         self.play(ShowCreation(curve))
         self.play(
@@ -826,7 +827,7 @@ class WonderfulPropertyOfPseudoHilbertCurves(Scene):
                 for i in 0, 1, 2, 4
             ]
         )
-        for num in range(2,7):
+        for num in range(2,9):
             new_curve = HilbertCurve(order = num)
             new_curve.scale(0.8)
             new_dot = Dot(new_curve.points[int(val*new_curve.get_num_points())])
@@ -838,12 +839,118 @@ class WonderfulPropertyOfPseudoHilbertCurves(Scene):
             )
             self.dither()
 
+        text.to_edge(UP)
+        text_parts = text.split()
+        for index in 1, -1:
+            text_parts[index].highlight()
+        starters = Mobject(*func_parts + [
+            Point(mob.get_center(), point_thickness=1)
+            for mob in text_parts[5:]
+        ])
+        self.play(Transform(starters, text))
+        arrow = Arrow(text_parts[-2].get_bottom(), dot, buff = 0.1)
+        self.play(ShowCreation(arrow))
+        self.dither()
+
+class FollowManyPoints(Scene):
+    def construct(self):
+        text = TextMobject([
+            "PHC", "_n", "(", "x", ")$", 
+            " has a limit point ", "as $n \\to \\infty$",
+            "\\\\ for all $x$"
+        ])
+        parts = text.split()
+        parts[-1].next_to(Mobject(*parts[:-1]), DOWN)
+        parts[-1].highlight(BLUE)
+        parts[3].highlight(BLUE)
+        parts[1].highlight()
+        parts[-2].highlight()
+        text.to_edge(UP)
+        curve = UnitInterval()
+        curve.sort_points(lambda p : p[0])
+        vals = np.arange(0.1, 1, 0.1)
+        dots = Mobject(*[
+            Dot(curve.number_to_point(val))
+            for val in vals
+        ])
+        curve.add_numbers(0, 1)
+        starter_dots = dots.copy().ingest_sub_mobjects()
+        starter_dots.shift(2*UP)
+
+        self.add(curve, text)
+        self.dither()
+        self.play(DelayByOrder(ApplyMethod(starter_dots.shift, 2*DOWN)))
+        self.dither()
+        self.remove(starter_dots)
+        self.add(dots)
+        for num in range(1, 10):
+            new_curve = HilbertCurve(order = num)
+            new_curve.scale(0.8)
+            new_dots = Mobject(*[
+                Dot(new_curve.points[int(val*new_curve.get_num_points())])
+                for val in vals
+            ])
+            self.play(
+                Transform(curve, new_curve),
+                Transform(dots, new_dots),
+            )
+            # self.dither()
 
 
+class FormalDefinitionOfHilbertCurve(Scene):
+    def construct(self):
+        val = 0.7
+        text = TexMobject([
+            "\\text{HC}(", "x", ")",
+            "=\\lim_{n \\to \\infty}\\text{PHC}_n(", "x", ")"
+        ])
+        text.to_edge(UP)
+        x1 = text.split()[1]
+        x2 = text.split()[-2]
+        x2.highlight(BLUE)
+        explanation = TextMobject("Actual Hilbert curve function")
+        exp_arrow = Arrow(explanation, text.split()[0])
+        curve = UnitInterval()
+        dot = Dot(curve.number_to_point(val))
+        x_arrow = Arrow(x1.get_bottom(), dot, buff = 0)
+        curve.sort_points(lambda p : p[0])
+        curve.add_numbers(0, 1)
 
+        self.add(*text.split()[:3])
+        self.play(
+            ShimmerIn(explanation),
+            ShowCreation(exp_arrow)
+        )
+        self.dither()
+        self.remove(explanation, exp_arrow)
+        self.play(ShowCreation(curve))
+        self.play(
+            ApplyMethod(x1.highlight, BLUE),
+            ShowCreation(x_arrow), 
+            ShowCreation(dot)
+        )
+        self.dither()
+        self.remove(x_arrow)
+        limit = Mobject(*text.split()[3:]).ingest_sub_mobjects()
+        limit.point_thickness = 1
+        self.play(ShimmerIn(limit))
+        for num in range(1, 9):
+            new_curve = HilbertCurve(order = num)
+            new_curve.scale(0.8)
+            new_dot = Dot(new_curve.points[int(val*new_curve.get_num_points())])
+            self.play(
+                Transform(curve, new_curve),
+                Transform(dot, new_dot),
+            )
 
-
-
-
-
+class ThreeThingsToProve(Scene):
+    def construct(self):
+        intro = TextMobject("Three things need to be proven")
+        items = TextMobject([
+            "\\begin{enumerate}",
+            "\\item Points on Pseudo-Hilbert-curves really do converge",
+            "\\item Limit function HC is continuous",
+            "\\item Limit function HC touches all points in the unit square"
+            "\\end{enumerate}",
+        ])
 
