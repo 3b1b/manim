@@ -10,9 +10,9 @@ from animation import Animation
 from animation.transform import \
     Transform, CounterclockwiseTransform, ApplyMethod,\
     GrowFromCenter, ClockwiseTransform, ApplyPointwiseFunction, \
-    ShrinkToCenter
+    ShrinkToCenter, ShimmerIn, FadeOut, FadeIn
 from animation.simple_animations import \
-    ShowCreation, ShimmerIn, FadeOut, FadeIn, Homotopy
+    ShowCreation, Homotopy
 from animation.meta_animations import \
     DelayByOrder, TransformAnimations
 from animation.playground import Vibrate
@@ -945,12 +945,66 @@ class FormalDefinitionOfHilbertCurve(Scene):
 
 class ThreeThingsToProve(Scene):
     def construct(self):
+        definition = TexMobject([
+            "\\text{HC}(", "x", ")",
+            "=\\lim_{n \\to \\infty}\\text{PHC}_n(", "x", ")"
+        ])
+        definition.to_edge(UP)
+        definition.split()[1].highlight(BLUE)
+        definition.split()[-2].highlight(BLUE)
         intro = TextMobject("Three things need to be proven")
+        prove_that = TextMobject("Prove that HC is $\\dots$")
+        prove_that.scale(0.7)
+        prove_that.to_edge(LEFT)
         items = TextMobject([
             "\\begin{enumerate}",
-            "\\item Points on Pseudo-Hilbert-curves really do converge",
-            "\\item Limit function HC is continuous",
-            "\\item Limit function HC touches all points in the unit square"
+            "\\item Well-define: ",
+            "Points on Pseudo-Hilbert-curves really do converge",
+            "\\item A Curve: ",
+            "HC is continuous",
+            "\\item Space-filling: ",
+            "Each point in the unit square is an output of HC",
             "\\end{enumerate}",
-        ])
+        ]).split()
+        items[1].highlight(GREEN)
+        items[3].highlight(YELLOW_C)
+        items[5].highlight(MAROON)
+        Mobject(*items).to_edge(RIGHT)
+
+        self.add(definition)
+        self.play(ShimmerIn(intro))
+        self.dither()
+        self.play(Transform(intro, prove_that))
+        for item in items[1:-1]:
+            self.play(ShimmerIn(item))
+            self.dither()
+
+
+
+class TilingSpace(Scene):
+    def construct(self):
+        coords_set = [ORIGIN]
+        for n in range(int(2*SPACE_WIDTH)):
+            for vect in UP, RIGHT:
+                for k in range(n):
+                    new_coords = coords_set[-1]+((-1)**n)*vect
+                    coords_set.append(new_coords)
+        square = Square(side_length = 1, color = WHITE)
+        squares = Mobject(*[
+            square.copy().shift(coords)
+            for coords in coords_set
+        ]).ingest_sub_mobjects()
+        self.play(
+            DelayByOrder(FadeIn(squares)),
+            run_time = 3
+        )
+        curve = HilbertCurve(order = 6).scale(1./6)
+        for coords in coords_set:
+            self.play(ShowCreation(
+                curve.copy().shift(coords)
+            ))
+
+
+
+
 
