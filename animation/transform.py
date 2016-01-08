@@ -7,6 +7,7 @@ import warnings
 from helpers import *
 
 from animation import Animation
+from simple_animations import DelayByOrder
 from mobject import Mobject, Point
 
 class Transform(Animation):
@@ -119,6 +120,26 @@ class ApplyMethod(Transform):
             **kwargs
         )
 
+class FadeOut(ApplyMethod):
+    def __init__(self, mobject, **kwargs):
+        ApplyMethod.__init__(self, mobject.fade, 1, **kwargs)
+
+class FadeIn(Transform):
+    def __init__(self, mobject, **kwargs):
+        target = mobject.copy()
+        mobject.fade(1)
+        Transform.__init__(self, mobject, target, **kwargs)
+        # self.mobject.rgbs = self.starting_mobject.rgbs * alpha
+        # if self.mobject.points.shape != self.starting_mobject.points.shape:
+        #     self.mobject.points = self.starting_mobject.points
+        #     #TODO, Why do you need to do this? Shouldn't points always align?
+
+class ShimmerIn(DelayByOrder):
+    def __init__(self, mobject, **kwargs):
+        mobject.sort_points(lambda p : np.dot(p, DOWN+RIGHT))
+        DelayByOrder.__init__(self, FadeIn(mobject, **kwargs))
+
+
 class Rotate(ApplyMethod):
     DEFAULT_CONFIG = {
         "in_place" : False,
@@ -182,6 +203,34 @@ class ApplyMatrix(Animation):
 
 
 
+class TransformAnimations(Transform):
+    DEFAULT_CONFIG = {
+        "rate_func" : squish_rate_func(smooth)
+    }
+    def __init__(self, start_anim, end_anim, **kwargs):
+        digest_config(self, kwargs, locals())
+        if "run_time" in kwargs:
+            self.run_time = kwargs.pop("run_time")
+        else:
+            self.run_time = max(start_anim.run_time, end_anim.run_time)
+        for anim in start_anim, end_anim:
+            anim.set_run_time(self.run_time)
+            
+        if start_anim.starting_mobject.get_num_points() != end_anim.starting_mobject.get_num_points():
+            Mobject.align_data(start_anim.starting_mobject, end_anim.starting_mobject)
+            for anim in start_anim, end_anim:
+                if hasattr(anim, "ending_mobject"):
+                    Mobject.align_data(anim.starting_mobject, anim.ending_mobject)
+
+        Transform.__init__(self, start_anim.mobject, end_anim.mobject, **kwargs)
+        #Rewire starting and ending mobjects
+        start_anim.mobject = self.starting_mobject
+        end_anim.mobject = self.ending_mobject
+
+    def update(self, alpha):
+        self.start_anim.update(alpha)
+        self.end_anim.update(alpha)
+        Transform.update(self, alpha)
 
 
 
