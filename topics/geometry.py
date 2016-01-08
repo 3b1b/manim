@@ -63,9 +63,11 @@ class Line(Mobject1D):
             for arg, unit in zip([start, end], [1, -1])
         ]
         start_to_end = self.end - self.start
-        start_to_end /= np.linalg.norm(start_to_end)
-        self.start = self.start + self.buff*start_to_end
-        self.end = self.end - self.buff*start_to_end
+        length = np.linalg.norm(start_to_end)
+        if length > 2*self.buff:
+            start_to_end /= np.linalg.norm(start_to_end)
+            self.start = self.start + self.buff*start_to_end
+            self.end = self.end - self.buff*start_to_end
 
     def generate_points(self):
         self.add_line(self.start, self.end)
@@ -100,7 +102,8 @@ class Arrow(Line):
     def add_tip(self):
         num_points = self.get_num_points()
         vect = self.start-self.end
-        vect = vect*self.tip_length/np.linalg.norm(vect)
+        length = np.linalg.norm(vect)
+        vect = vect*self.tip_length/length
         self.add_points([
             interpolate(self.end, self.end+v, t)
             for t in np.arange(0, 1, self.tip_length*self.epsilon)
