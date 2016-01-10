@@ -16,7 +16,9 @@ class Transform(Animation):
         "should_black_out_extra_points" : False
     }
     def __init__(self, mobject, ending_mobject, **kwargs):
-        mobject, ending_mobject = map(instantiate, [mobject, ending_mobject])
+        mobject = instantiate(mobject)
+        #Copy ending_mobject so as to not mess with caller
+        ending_mobject = instantiate(ending_mobject).copy()
         digest_config(self, kwargs, locals())
         count1, count2 = mobject.get_num_points(), ending_mobject.get_num_points()
         if count2 == 0:
