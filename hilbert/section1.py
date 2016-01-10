@@ -9,11 +9,10 @@ from scene import Scene
 from animation import Animation
 from animation.transform import \
     Transform, CounterclockwiseTransform, ApplyMethod,\
-    GrowFromCenter, ClockwiseTransform, ApplyPointwiseFunction
+    GrowFromCenter, ClockwiseTransform, ApplyPointwiseFunction,\
+    TransformAnimations, ShimmerIn, FadeOut, FadeIn
 from animation.simple_animations import \
-    ShowCreation, ShimmerIn, FadeOut, FadeIn
-from animation.meta_animations import \
-    DelayByOrder, TransformAnimations
+    ShowCreation, DelayByOrder
 from animation.playground import Vibrate
 
 from topics.geometry import \

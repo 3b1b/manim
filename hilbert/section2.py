@@ -999,10 +999,16 @@ class TilingSpace(Scene):
             run_time = 3
         )
         curve = HilbertCurve(order = 6).scale(1./6)
-        for coords in coords_set:
-            self.play(ShowCreation(
-                curve.copy().shift(coords)
-            ))
+        all_curves = Mobject(*[
+            curve.copy().shift(coords)
+            for coords in coords_set
+        ]).ingest_sub_mobjects()
+        all_curves.thin_out(10)
+        self.play(ShowCreation(
+            all_curves,
+            rate_func = None,
+            run_time = 15
+        ))
 
 
 
