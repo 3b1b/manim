@@ -178,8 +178,8 @@ class Polygon(Mobject1D):
         "color"       : GREEN_D,
         "edge_colors" : None
     }
-    def __init__(self, *points, **kwargs):
-        assert len(points) > 1
+    def __init__(self, *vertices, **kwargs):
+        assert len(vertices) > 1
         digest_locals(self)
         Mobject1D.__init__(self, **kwargs)
 
@@ -189,13 +189,13 @@ class Polygon(Mobject1D):
         else:
             colors = it.cycle([self.color])
         self.indices_of_vertices = []
-        for start, end in adjascent_pairs(self.points):
+        for start, end in adjascent_pairs(self.vertices):
             self.indices_of_vertices.append(self.get_num_points())
             self.add_line(start, end, color = colors.next())
 
 
     def get_vertices(self):
-        return self.points[self.indices_of_vertices]
+        return self.vertices[self.indices_of_vertices]
 
 
 
