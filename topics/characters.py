@@ -167,7 +167,7 @@ class Mortimer(PiCreature):
         "color" : DARK_BROWN
     }
     def __init__(self, **kwargs):
-        PiCreature.__init__(self, *args, **kwargs)
+        PiCreature.__init__(self, **kwargs)
         # self.highlight(DARK_BROWN)
         self.give_straight_face()
         self.rotate(np.pi, UP)
