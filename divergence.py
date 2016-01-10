@@ -18,6 +18,8 @@ class DivergenceFlow(Scene):
         "dot_color" : RED,
         "text_color" : WHITE,
         "arrow_color" : GREEN,
+        "points_height" : SPACE_HEIGHT,
+        "points_width" : SPACE_WIDTH,
     }
     def use_function(self, function):
         # def normalized_func(point):
@@ -32,7 +34,7 @@ class DivergenceFlow(Scene):
     def get_points(self, spacing):
         x_radius, y_radius = [
             val-val%spacing
-            for val in SPACE_WIDTH, SPACE_HEIGHT
+            for val in self.points_width, self.points_height
         ]
         return map(np.array, it.product(
             np.arange(-x_radius, x_radius+spacing, spacing),
@@ -75,18 +77,18 @@ class DivergenceFlow(Scene):
         self.dither()
 
 
-    def flow(self):
+    def flow(self, **kwargs):
         if not hasattr(self, "function"):
             raise Exception("Must run use_function first")
-        points = self.get_points(self.dot_spacing)
-        end_dots = Mobject(*[
-            Dot(point+self.function(point))
-            for point in points
-        ])
-        end_dots.highlight(self.dot_color)
 
-        self.play(Transform(self.dots, end_dots))
-        self.dither()
+        self.play(*[
+            ApplyMethod(
+                dot.shift, 
+                self.function(dot.get_center()),
+                **kwargs
+            )
+            for dot in self.dots.split()
+        ])
 
     def label(self, text, time = 5):
         mob = TextMobject(text)
@@ -178,7 +180,7 @@ class OutwardFlow(DivergenceFlow):
 class ArticleExample(DivergenceFlow):
     def construct(self):
         def raw_function((x, y, z)):
-            return (2*x-y, x*x, 0)
+            return (2*x-y, y*y, 0)
         def normalized_function(p):
             result = raw_function(p)
             return result/(np.linalg.norm(result)+0.01)
@@ -190,5 +192,79 @@ class ArticleExample(DivergenceFlow):
         self.flow()
         self.remove(self.arrows)
         self.dither()
+
+
+
+class IncompressibleFluid(DivergenceFlow):
+    def construct(self):
+        self.use_function(
+            lambda (x, y, z) : (1, np.sin(x), 0)
+        )
+        self.add_plane()
+        self.add_arrows()
+        self.add_dots()
+        self.flow()
+        self.remove(self.arrows)
+        self.dither()
+
+
+
+class ConstantInwardFlow(DivergenceFlow):
+    def construct(self):
+        self.use_function(
+            lambda p : -p/(2*np.linalg.norm(0.5*p)**0.5+0.01)
+        )
+        self.add_plane()
+        self.add_arrows()
+        self.add_dots()
+        for x in range(4):
+            dots = self.dots.split()
+            dot = dots[0].copy().center()
+            for x in np.arange(7.5, 9.5, 0.5):
+                for y in np.arange(-4, 4.5, 0.5):
+                    dots.append(dot.copy().shift(
+                        x*RIGHT + y*UP
+                    ))
+                    dots.append(dot.copy().shift(
+                        x*LEFT + y*UP
+                    ))
+            for x in np.arange(-9.5, 10, 0.5):
+                for y in np.arange(4.5, 6.5, 0.5):
+                    dots.append(dot.copy().shift(
+                        x*RIGHT + y*UP
+                    ))
+                    dots.append(dot.copy().shift(
+                        x*RIGHT + y*DOWN
+                    ))
+            self.dots = Mobject(*dots)
+            self.flow(rate_func = None)
+
+
+
+
+class ConstantOutwardFlow(DivergenceFlow):
+    def construct(self):
+        self.use_function(
+            lambda p : p/(2*np.linalg.norm(0.5*p)**0.5+0.01)
+        )
+        self.add_plane()
+        self.add_arrows()
+        self.add_dots()
+        for x in range(4):
+            self.flow(rate_func = None)
+            dot = self.dots.split()[0].copy()
+            dot.center()
+            new_dots = [
+                dot.copy().shift(0.5*vect)
+                for vect in [
+                    UP, DOWN, LEFT, RIGHT, 
+                    UP+RIGHT, UP+LEFT, DOWN+RIGHT, DOWN+LEFT
+                ]
+            ]
+            self.dots.add(*new_dots)
+
+
+
+
 
 
