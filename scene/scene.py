@@ -27,8 +27,8 @@ class Scene(object):
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
-        if self.background:
-            self.original_background = np.array(background)
+        if self.background is not None:
+            self.original_background = np.array(self.background)
             #TODO, Error checking?
         else:
             self.original_background = np.zeros(
@@ -180,7 +180,8 @@ class Scene(object):
         time_progression = ProgressDisplay(times)
         time_progression.set_description(
             "Animation %d: "%self.num_animations + \
-            ", ".join(map(str, animations))
+            str(animations[0]) + \
+            (", etc." if len(animations) > 1 else "")
         )
         for t in time_progression:
             for animation in animations:
