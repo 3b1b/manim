@@ -5,19 +5,19 @@ from region import region_from_polygon_vertices
 from topics.geometry import Arrow, Dot, Circle
 from topics.number_line import NumberPlane
 from scene import Scene
-from animation.simple_animations import ShowCreation
+from animation.simple_animations import ShowCreation, Rotating
 from animation.transform import Transform, ApplyMethod, FadeOut
 
 from helpers import *
 
 
-class DivergenceFlow(Scene):
+class FluidFlow(Scene):
     DEFAULT_CONFIG = {
         "arrow_spacing" : 1,
         "dot_spacing" : 0.5,
-        "dot_color" : RED,
+        "dot_color" : BLUE_B,
         "text_color" : WHITE,
-        "arrow_color" : GREEN,
+        "arrow_color" : GREEN_A,
         "points_height" : SPACE_HEIGHT,
         "points_width" : SPACE_WIDTH,
     }
@@ -53,7 +53,7 @@ class DivergenceFlow(Scene):
         self.play(ShowCreation(self.dots))
         self.dither()
 
-    def add_arrows(self):
+    def add_arrows(self, true_length = False):
         if not hasattr(self, "function"):
             raise Exception("Must run use_function first")
         points = self.get_points(self.arrow_spacing)
@@ -68,10 +68,16 @@ class DivergenceFlow(Scene):
             tip_length = 0.1,
             buff = 0
         )
-        self.arrows = Mobject(*[
-            prototype.copy().rotate(angle).shift(point)
-            for point, angle in zip(points, angles)
-        ])
+        arrows = []
+        for point in points:
+            arrow = prototype.copy()
+            output = self.function(point)
+            if true_length:
+                arrow.scale(np.linalg.norm(output))
+            arrow.rotate(angle_of_vector(output))
+            arrow.shift(point)
+            arrows.append(arrow)
+        self.arrows = Mobject(*arrows)
 
         self.play(ShowCreation(self.arrows))
         self.dither()
@@ -112,7 +118,7 @@ class DivergenceFlow(Scene):
 
 
 
-class InwardFlow(DivergenceFlow):
+class InwardFlow(FluidFlow):
     def construct(self):
         circle = Circle(color = YELLOW_C)
         self.use_function(
@@ -144,10 +150,10 @@ class InwardFlow(DivergenceFlow):
             is negative at the origin:
             $\\nabla \\cdot \\vec{\\textbf{v}}(0, 0) < 0$
         """)
-        self.dither()
+        self.dither(3)
 
 
-class OutwardFlow(DivergenceFlow):
+class OutwardFlow(FluidFlow):
     def construct(self):
         circle = Circle(color = YELLOW_C, radius = 2)
         self.use_function(
@@ -175,9 +181,9 @@ class OutwardFlow(DivergenceFlow):
             is positive at the origin:
             $\\nabla \\cdot \\vec{\\textbf{v}}(0, 0) > 0$
         """)
-        self.dither()
+        self.dither(3)
 
-class ArticleExample(DivergenceFlow):
+class ArticleExample(FluidFlow):
     def construct(self):
         def raw_function((x, y, z)):
             return (2*x-y, y*y, 0)
@@ -191,11 +197,11 @@ class ArticleExample(DivergenceFlow):
         self.add_dots()
         self.flow()
         self.remove(self.arrows)
-        self.dither()
+        self.dither(3)
 
 
 
-class IncompressibleFluid(DivergenceFlow):
+class IncompressibleFluid(FluidFlow):
     def construct(self):
         self.use_function(
             lambda (x, y, z) : (1, np.sin(x), 0)
@@ -205,11 +211,11 @@ class IncompressibleFluid(DivergenceFlow):
         self.add_dots()
         self.flow()
         self.remove(self.arrows)
-        self.dither()
+        self.dither(3)
 
 
 
-class ConstantInwardFlow(DivergenceFlow):
+class ConstantInwardFlow(FluidFlow):
     def construct(self):
         self.use_function(
             lambda p : -p/(2*np.linalg.norm(0.5*p)**0.5+0.01)
@@ -242,7 +248,7 @@ class ConstantInwardFlow(DivergenceFlow):
 
 
 
-class ConstantOutwardFlow(DivergenceFlow):
+class ConstantOutwardFlow(FluidFlow):
     def construct(self):
         self.use_function(
             lambda p : p/(2*np.linalg.norm(0.5*p)**0.5+0.01)
@@ -264,7 +270,15 @@ class ConstantOutwardFlow(DivergenceFlow):
             self.dots.add(*new_dots)
 
 
-
+class ConstantPositiveCurl(FluidFlow):
+    def construct(self):
+        self.use_function(
+            lambda p : 0.5*(-p[1]*RIGHT+p[0]*UP)
+        )
+        self.add_plane()
+        self.add_arrows(true_length = True)
+        self.add_dots()
+        self.play(Rotating(self.dots, run_time = 10))
 
 
 
