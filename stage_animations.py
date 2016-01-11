@@ -2,6 +2,7 @@ import sys
 import inspect
 import os
 import shutil
+import itertools as it
 from extract_scene import is_scene, get_module
 from constants import MOVIE_DIR, STAGED_SCENES_DIR
 
@@ -33,8 +34,12 @@ def stage_animaions(module_name):
             )
     for f in os.listdir(STAGED_SCENES_DIR):
         os.remove(os.path.join(STAGED_SCENES_DIR, f))
-    for f in sorted_files:
-        shutil.copy(f, STAGED_SCENES_DIR)
+    for f, count in zip(sorted_files, it.count()):
+        symlink_name = os.path.join(
+            STAGED_SCENES_DIR,
+            "Scene_%03d"%count + f.split(os.sep)[-1]
+        )
+        os.symlink(f, symlink_name)
 
 
 

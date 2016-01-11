@@ -796,6 +796,14 @@ class DefineActualHilbertCurveText(Scene):
         self.dither()
 
 
+class ReliesOnWonderfulProperty(Scene):
+    def construct(self):
+        self.add(TextMobject("""
+            \\dots which relies on a certain property
+            of Pseudo-Hilbert-curves.
+        """))
+        self.dither()
+
 
 class WonderfulPropertyOfPseudoHilbertCurves(Scene):
     def construct(self):
@@ -943,6 +951,15 @@ class FormalDefinitionOfHilbertCurve(Scene):
                 Transform(dot, new_dot),
             )
 
+
+class CouldNotDefineForSnakeCurve(Scene):
+    def construct(self):
+        self.add(TextMobject("""
+            You could not define a limit curve from
+            snake curves.
+        """))
+        self.dither()
+
 class ThreeThingsToProve(Scene):
     def construct(self):
         definition = TexMobject([
@@ -958,7 +975,7 @@ class ThreeThingsToProve(Scene):
         prove_that.to_edge(LEFT)
         items = TextMobject([
             "\\begin{enumerate}",
-            "\\item Well-define: ",
+            "\\item Well-defined: ",
             "Points on Pseudo-Hilbert-curves really do converge",
             "\\item A Curve: ",
             "HC is continuous",

@@ -503,6 +503,12 @@ class RandomMapping(Scene):
         
 
 
+class DataScrambledAnyway(Scene):
+    def construct(self):
+        self.add(TextMobject("Data is scrambled anyway, right?"))
+        self.dither()
+        
+
 class LeverageExistingIntuitions(Scene):
     def construct(self):
         self.add(TextMobject("Leverage existing intuitions"))
