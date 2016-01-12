@@ -3,6 +3,7 @@ import itertools as it
 
 from helpers import *
 
+from mobject import Mobject
 from animation import Animation
 
 
@@ -12,7 +13,7 @@ class Rotating(Animation):
         "axis"       : None,
         "radians"    : 2*np.pi,
         "run_time"   : 20.0,
-        "rate_func" : None,
+        "rate_func"  : None,
         "in_place"   : True,
     }
     def update_mobject(self, alpha):
@@ -75,7 +76,7 @@ class Homotopy(Animation):
         """
         Homotopy a function from (x, y, z, t) to (x', y', z')
         """
-        digest_locals(self)
+        digest_config(self, kwargs, locals())
         Animation.__init__(self, mobject, **kwargs)
 
     def update_mobject(self, alpha):
@@ -83,6 +84,39 @@ class Homotopy(Animation):
             self.homotopy((x, y, z, alpha))
             for x, y, z in self.starting_mobject.points
         ])
+
+class PhaseFlow(Animation):
+    def __init__(self, function, mobject, **kwargs):
+        self.get_nudge_func = lambda alpha_diff : \
+            lambda point : point + alpha_diff*function(point)
+        digest_config(self, kwargs, locals())
+        Animation.__init__(self, mobject, **kwargs)
+
+    def update_mobject(self, alpha):
+        if hasattr(self, "last_alpha"):
+            self.mobject.apply_function(
+                self.get_nudge_func(alpha-self.last_alpha)
+            )
+        self.last_alpha = alpha
+
+### Animation modifiers ###
+
+class ApplyToCenters(Animation):
+    def __init__(self, AnimationClass, mobjects, **kwargs):
+        centers = [mob.get_center() for mob in mobjects]
+        kwargs["mobject"] = Mobject().add_points(centers)
+        self.centers_container = AnimationClass(**kwargs)
+        kwargs.pop("mobject")
+        Animation.__init__(self, Mobject(*mobjects), **kwargs)
+        self.name = str(self) + AnimationClass.__name__
+
+    def update_mobject(self, alpha):
+        self.centers_container.update_mobject(alpha)
+        points = self.centers_container.mobject.points
+        mobjects = self.mobject.split()        
+        for point, mobject in zip(points, mobjects):
+            mobject.center().shift(point)
+
 
 
 class DelayByOrder(Animation):
@@ -102,7 +136,7 @@ class DelayByOrder(Animation):
             for attr in Animation.DEFAULT_CONFIG
         ]))
         Animation.__init__(self, animation.mobject, **kwargs)
-        self.name = self.__class__.__name__ + str(self.animation)
+        self.name = str(self) + str(self.animation)
 
     def update_mobject(self, alpha):
         dim = self.mobject.DIM
