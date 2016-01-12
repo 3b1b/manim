@@ -12,6 +12,13 @@ import re
 from constants import *
 
 
+def compass_directions(n = 4, start_vect = UP):
+    angle = 2*np.pi/n
+    return [
+        rotate_vector(start_vect, k*angle)
+        for k in range(n)
+    ]
+
 def bezier(points):
     n = len(points) - 1
     return lambda t : sum([
