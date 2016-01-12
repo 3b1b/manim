@@ -5,7 +5,8 @@ from region import region_from_polygon_vertices
 from topics.geometry import Arrow, Dot, Circle
 from topics.number_line import NumberPlane
 from scene import Scene
-from animation.simple_animations import ShowCreation, Rotating
+from animation.simple_animations import \
+    ShowCreation, Rotating, PhaseFlow, ApplyToCenters
 from animation.transform import Transform, ApplyMethod, FadeOut
 
 from helpers import *
@@ -82,19 +83,18 @@ class FluidFlow(Scene):
         self.play(ShowCreation(self.arrows))
         self.dither()
 
+    def add_paddle(self):
+        pass
 
     def flow(self, **kwargs):
         if not hasattr(self, "function"):
             raise Exception("Must run use_function first")
-
-        self.play(*[
-            ApplyMethod(
-                dot.shift, 
-                self.function(dot.get_center()),
-                **kwargs
-            )
-            for dot in self.dots.split()
-        ])
+        self.play(ApplyToCenters(
+            PhaseFlow,
+            self.dots.split(),
+            function = self.function,
+            **kwargs
+        ))
 
     def label(self, text, time = 5):
         mob = TextMobject(text)
@@ -183,7 +183,7 @@ class OutwardFlow(FluidFlow):
         """)
         self.dither(3)
 
-class ArticleExample(FluidFlow):
+class DivergenceArticleExample(FluidFlow):
     def construct(self):
         def raw_function((x, y, z)):
             return (2*x-y, y*y, 0)
@@ -202,48 +202,42 @@ class ArticleExample(FluidFlow):
 
 
 class IncompressibleFluid(FluidFlow):
+    DEFAULT_CONFIG = {
+        "points_width" : 2*SPACE_WIDTH,
+        "points_height" : 1.4*SPACE_HEIGHT
+    }
     def construct(self):
         self.use_function(
-            lambda (x, y, z) : (1, np.sin(x), 0)
+            lambda (x, y, z) : RIGHT+np.sin(x)*UP
         )
         self.add_plane()
         self.add_arrows()
         self.add_dots()
-        self.flow()
-        self.remove(self.arrows)
-        self.dither(3)
+        for x in range(8):
+            self.flow(
+                run_time = 1,
+                rate_func = None,
+            )
 
 
 
 class ConstantInwardFlow(FluidFlow):
+    DEFAULT_CONFIG = {
+        "points_height" : 3*SPACE_HEIGHT,
+        "points_width" : 3*SPACE_WIDTH,
+    }
     def construct(self):
         self.use_function(
-            lambda p : -p/(2*np.linalg.norm(0.5*p)**0.5+0.01)
+            lambda p : -3*p/(np.linalg.norm(p)+0.1)
         )
         self.add_plane()
         self.add_arrows()
         self.add_dots()
         for x in range(4):
-            dots = self.dots.split()
-            dot = dots[0].copy().center()
-            for x in np.arange(7.5, 9.5, 0.5):
-                for y in np.arange(-4, 4.5, 0.5):
-                    dots.append(dot.copy().shift(
-                        x*RIGHT + y*UP
-                    ))
-                    dots.append(dot.copy().shift(
-                        x*LEFT + y*UP
-                    ))
-            for x in np.arange(-9.5, 10, 0.5):
-                for y in np.arange(4.5, 6.5, 0.5):
-                    dots.append(dot.copy().shift(
-                        x*RIGHT + y*UP
-                    ))
-                    dots.append(dot.copy().shift(
-                        x*RIGHT + y*DOWN
-                    ))
-            self.dots = Mobject(*dots)
-            self.flow(rate_func = None)
+            self.flow(
+                run_time = 5,
+                rate_func = None,
+            )
 
 
 
@@ -271,6 +265,9 @@ class ConstantOutwardFlow(FluidFlow):
 
 
 class ConstantPositiveCurl(FluidFlow):
+    DEFAULT_CONFIG = {
+        "points_height" : SPACE_WIDTH,
+    }
     def construct(self):
         self.use_function(
             lambda p : 0.5*(-p[1]*RIGHT+p[0]*UP)
@@ -278,7 +275,63 @@ class ConstantPositiveCurl(FluidFlow):
         self.add_plane()
         self.add_arrows(true_length = True)
         self.add_dots()
-        self.play(Rotating(self.dots, run_time = 10))
+        for x in range(10):
+            self.flow(
+                rate_func = None
+            )
+
+
+
+class ComplexCurlExample(FluidFlow):
+    def construct(self):
+        self.use_function(
+            lambda (x, y, z) : np.cos(x+y)*RIGHT+np.sin(x*y)*UP
+        )
+        self.add_plane()
+        self.add_arrows(true_length = True)
+        self.add_dots()
+        for x in range(4):
+            self.flow(
+                run_time = 5,
+                rate_func = None,
+            )
+
+
+class FourSwirls(FluidFlow):
+    DEFAULT_CONFIG = {
+        "points_height" :SPACE_WIDTH,
+        "points_width" : SPACE_WIDTH,
+    }
+    def construct(self):
+        circles = [
+            Circle().shift(3*vect)
+            for vect in compass_directions()
+        ]
+        self.use_function(
+            lambda (x, y, z) : 0.5*(y**3-9*y)*RIGHT+(x**3-9*x)*UP
+        )
+        self.add_plane()
+        self.add_arrows()
+
+        Mobject(*circles).show()
+
+        for circle in circles:
+            self.play(ShowCreation(circle))
+        self.add_dots()
+        for x in range(4):
+            self.flow(
+                run_time = 5,
+                rate_func = None,
+            )
+
+
+
+
+
+
+
+
+
 
 
 
