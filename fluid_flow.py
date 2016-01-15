@@ -2,12 +2,14 @@ from mobject import Mobject
 from mobject.image_mobject import MobjectFromRegion
 from mobject.tex_mobject import TextMobject
 from region import region_from_polygon_vertices
-from topics.geometry import Arrow, Dot, Circle
-from topics.number_line import NumberPlane
+from topics.geometry import Arrow, Dot, Circle, Line
+from topics.number_line import NumberPlane, XYZAxes
+from topics.three_dimensions import Sphere
 from scene import Scene
 from animation.simple_animations import \
     ShowCreation, Rotating, PhaseFlow, ApplyToCenters
-from animation.transform import Transform, ApplyMethod, FadeOut
+from animation.transform import \
+    Transform, ApplyMethod, FadeOut, ApplyFunction
 
 from helpers import *
 
@@ -23,13 +25,6 @@ class FluidFlow(Scene):
         "points_width" : SPACE_WIDTH,
     }
     def use_function(self, function):
-        # def normalized_func(point):
-            # result = function(point)
-            # length = np.linalg.norm(result)
-            # if length > 0:
-            #     result /= length
-            #     # result *= self.arrow_spacing/2.
-            # return result
         self.function = function
 
     def get_points(self, spacing):
@@ -118,70 +113,36 @@ class FluidFlow(Scene):
 
 
 
-class InwardFlow(FluidFlow):
+class NegativeDivergenceExamlpe(FluidFlow):
+    DEFAULT_CONFIG = {
+        "points_width" : 2*SPACE_WIDTH,
+        "points_height" : 2*SPACE_HEIGHT,
+    }
     def construct(self):
         circle = Circle(color = YELLOW_C)
         self.use_function(
             lambda p : -p/(2*np.linalg.norm(0.5*p)**0.5+0.01)
         )
         self.add_plane()
-        self.add_arrows()  
-        self.play(ShowCreation(circle))
-        self.label("""
-            Notice that arrows point inward around the origin
-        """)
-        self.label("""
-            Watch what that means as we let particles in \\\\
-            space flow along the arrows
-        """)
-        self.remove(circle)
-        circle.scale(0.5)
+        self.add(circle)
+        self.add_arrows()
         self.add_dots()        
-        self.flow()
-        self.remove(self.arrows)
-        self.play(ShowCreation(circle))
-        self.label("""
-            The density of points around \\\\
-            the origin has become greater
-        """)
-
-        self.label("""
-            This means the divergence of the vector field \\\\
-            is negative at the origin:
-            $\\nabla \\cdot \\vec{\\textbf{v}}(0, 0) < 0$
-        """)
-        self.dither(3)
+        self.flow(run_time = 2, virtual_time = 2)
+        self.dither(2)
 
 
-class OutwardFlow(FluidFlow):
+class PositiveDivergenceExample(FluidFlow):
     def construct(self):
-        circle = Circle(color = YELLOW_C, radius = 2)
+        circle = Circle(color = YELLOW_C)
         self.use_function(
             lambda p : p/(2*np.linalg.norm(0.5*p)**0.5+0.01)
         )
         self.add_plane()
+        self.add(circle)
         self.add_arrows()  
-        self.play(ShowCreation(circle))
-        self.label("""
-            On the other hand, when arrows \\\\
-            indicate an outward flow\\dots 
-        """)
-        self.remove(circle)
-        circle.scale(0.5)
         self.add_dots()        
-        self.flow()
-        self.remove(self.arrows)
-        self.play(ShowCreation(circle))
-        self.label("""
-            The density of points near \\\\
-            the origin becomes smaller
-        """)
-        self.label("""
-            This means the divergence of the vector field \\\\
-            is positive at the origin:
-            $\\nabla \\cdot \\vec{\\textbf{v}}(0, 0) > 0$
-        """)
-        self.dither(3)
+        self.flow(run_time = 2, virtual_time = 2)
+        self.dither(2)
 
 class DivergenceArticleExample(FluidFlow):
     def construct(self):
@@ -195,10 +156,24 @@ class DivergenceArticleExample(FluidFlow):
         self.add_plane()
         self.add_arrows()
         self.add_dots()
-        self.flow()
-        self.remove(self.arrows)
-        self.dither(3)
+        self.flow(
+            virtual_time = 4,
+            run_time = 5
+        )
 
+class QuadraticField(FluidFlow):
+    def construct(self):
+        self.use_function(
+            lambda (x, y, z) : 0.25*((x*x-y*y)*RIGHT+x*y*UP)
+        )
+        self.add_plane()
+        self.add_arrows()
+        self.add_dots()
+        self.flow(
+            virtual_time = 10,
+            run_time = 20,
+            rate_func = None
+        )
 
 
 class IncompressibleFluid(FluidFlow):
@@ -296,11 +271,43 @@ class ComplexCurlExample(FluidFlow):
                 rate_func = None,
             )
 
-
-class FourSwirls(FluidFlow):
+class SingleSwirl(FluidFlow):
     DEFAULT_CONFIG = {
-        "points_height" :SPACE_WIDTH,
-        "points_width" : SPACE_WIDTH,
+        "points_height" : SPACE_WIDTH,
+    }
+    def construct(self):
+        self.use_function(
+            lambda p : (-p[1]*RIGHT+p[0]*UP)/np.linalg.norm(p)
+        )
+        self.add_plane()
+        self.add_arrows()
+        self.add_dots()
+        for x in range(10):
+            self.flow(rate_func = None)
+
+
+class CurlArticleExample(FluidFlow):
+    DEFAULT_CONFIG = {
+        "points_height" : 3*SPACE_HEIGHT,
+        "points_width" : 3*SPACE_WIDTH
+    }
+    def construct(self):
+        self.use_function(
+            lambda (x, y, z) : np.cos(0.5*(x+y))*RIGHT + np.sin(0.25*x*y)*UP
+        )
+        self.add_plane()
+        self.add_arrows()
+        self.add_dots()
+        self.flow(
+            rate_func = None,
+            run_time = 15,
+            virtual_time = 10
+        )
+
+
+class FourSwirlsWithoutCircles(FluidFlow):
+    DEFAULT_CONFIG = {
+        "points_height" : SPACE_WIDTH,
     }
     def construct(self):
         circles = [
@@ -312,17 +319,80 @@ class FourSwirls(FluidFlow):
         )
         self.add_plane()
         self.add_arrows()
-
-        Mobject(*circles).show()
-
-        for circle in circles:
-            self.play(ShowCreation(circle))
+        # for circle in circles:
+        #     self.play(ShowCreation(circle))
         self.add_dots()
-        for x in range(4):
-            self.flow(
-                run_time = 5,
-                rate_func = None,
-            )
+        self.add_extra_dots()
+        self.flow(
+            virtual_time = 4,
+            run_time = 20,
+            rate_func = None
+        )
+
+    def add_extra_dots(self):
+        dots = self.dots.split()
+        for vect in UP+LEFT, DOWN+RIGHT:
+            for n in range(5, 15):
+                dots.append(
+                    dots[0].copy().center().shift(n*vect)
+                )
+        self.dots = Mobject(*dots)
+
+
+class CopyPlane(Scene):
+    def construct(self):
+        def special_rotate(mob):
+            mob.rotate(0.9*np.pi/2, RIGHT)
+            mob.rotate(-np.pi/4, UP)
+            return mob
+        plane = NumberPlane()
+        copies = [
+            special_rotate(plane.copy().shift(u*n*OUT))
+            for n in range(1, 3)
+            for u in -1, 1
+        ]
+        line = Line(4*IN, 4*OUT)
+
+
+        self.add(plane)
+        self.play(*[
+            ApplyFunction(special_rotate, mob, run_time = 3)
+            for mob in plane, line
+        ])
+        self.dither()
+        for copy in copies:
+            self.play(Transform(plane.copy(), copy))
+        self.dither()
+
+
+class Test3DMovement(Scene):
+    def construct(self):
+        axes = XYZAxes()
+        axes.highlight(WHITE)
+        plane = NumberPlane()
+        vects = [
+            Arrow(point, point+(3./27)*(3*x**2-3*y**2)*OUT, color = MAROON_D)
+            for x in range(-4, 5, 2)
+            for y in range(-5, 5, 2)
+            for point in [x*RIGHT + y*UP]
+        ]
+        everybody = Mobject(axes, plane, *vects)
+
+        self.play(ApplyMethod(
+            everybody.rotate, 0.9*np.pi/2, RIGHT
+        ))
+        self.dither()
+        self.play(ApplyMethod(
+            everybody.rotate,
+            np.pi/2,
+            run_time = 5
+        ))
+
+
+
+
+
+
 
 
 
