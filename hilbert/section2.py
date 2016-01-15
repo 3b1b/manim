@@ -699,7 +699,12 @@ class FormalDefinitionOfContinuity(Scene):
         point_description = TextMobject(
             "Point where the function jumps"
         )
-        point_description.shift(3*RIGHT)
+        point_description.shift(3*RIGHT)        
+        discontinuous_at_A = TextMobject(
+            "``Discontinuous at A''",
+            size = "\\Large"
+        )
+        discontinuous_at_A.shift(2*UP).to_edge(LEFT)
         text = TextMobject("""
             Circle around ouput \\\\ 
             points can never \\\\
@@ -724,6 +729,7 @@ class FormalDefinitionOfContinuity(Scene):
             Homotopy(self.input_homotopy, self.input_dot, **kwargs),
             Homotopy(self.output_homotopy, self.output_dot, **kwargs)
         )
+        discontinuous_arrow = Arrow(discontinuous_at_A, self.input_dot)
         arrow = Arrow(
             point_description, self.output_dot,
             buff = 0.05,
@@ -754,7 +760,12 @@ class FormalDefinitionOfContinuity(Scene):
         self.remove(input_circle, input_points, output_circle, input_points_copy)
         self.play(vary_circles)
         self.dither()
-        self.remove(vary_circles.mobject)
+        self.play(
+            ShimmerIn(discontinuous_at_A),
+            ShowCreation(discontinuous_arrow)
+        )
+        self.dither(3)
+        self.remove(vary_circles.mobject, discontinuous_at_A, discontinuous_arrow)
 
     def continuous_point(self):
         pass

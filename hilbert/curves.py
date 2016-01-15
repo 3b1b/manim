@@ -261,6 +261,25 @@ class Sierpinski(LindenmayerCurve):
         "angle"        : -np.pi/3,
     }
 
+class KochCurve(LindenmayerCurve):
+    DEFAULT_CONFIG = {
+        "start_color"  : BLUE_D,
+        "end_color"    : WHITE,
+        "axiom"        : "A--A--A--",
+        "rule"         : {
+            "A" : "A+A--A+A"
+        },
+        "radius"       : 4,
+        "scale_factor" : 3,
+        "start_step"   : RIGHT,
+        "angle"        : np.pi/3
+    }
+
+    def __init__(self, **kwargs):
+        digest_config(self, kwargs)
+        self.scale_factor = 2*(1+np.cos(self.angle))
+        LindenmayerCurve.__init__(self, **kwargs)
+
 
 class StellarCurve(LindenmayerCurve):
     DEFAULT_CONFIG = {
@@ -319,20 +338,30 @@ class SpaceFillingCurveScene(Scene):
         return CurveClass, int(order_str)
 
 class TransformOverIncreasingOrders(SpaceFillingCurveScene):
-    def construct(self, CurveClass, max_order):
+    def setup(self, CurveClass):
         sample = CurveClass(order = 1)
-        self.curve = Line(sample.radius*LEFT, sample.radius*RIGHT)
+        self.curve = Line(3*LEFT, 3*RIGHT)
         self.curve.gradient_highlight(
             sample.start_color, 
             sample.end_color
         )
-        for order in range(1, max_order):
-            new_curve = CurveClass(order = order)
-            self.play(
-                Transform(self.curve, new_curve),
-                run_time = 3/np.sqrt(order),
-            )
+        self.CurveClass = CurveClass
+        self.order = 0
+
+    def construct(self, CurveClass, max_order):
+        self.setup(CurveClass)
+        while self.order < max_order:
+            self.increase_order()
         self.dither()
+
+    def increase_order(self, *other_anims):
+        self.order += 1
+        new_curve = self.CurveClass(order = self.order)
+        self.play(
+            Transform(self.curve, new_curve),
+            *other_anims,
+            run_time = 3/np.sqrt(self.order)
+        )
 
 
 class DrawSpaceFillingCurve(SpaceFillingCurveScene):

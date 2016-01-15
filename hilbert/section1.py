@@ -18,7 +18,7 @@ from animation.playground import Vibrate
 from topics.geometry import \
     Line, Dot, Arrow, Grid, Square, Point
 from topics.characters import \
-    ThoughtBubble, SpeechBubble, Mathematician
+    ThoughtBubble, SpeechBubble, Mathematician, Randolph
 from topics.number_line import UnitInterval
 from topics.three_dimensions import Stars
 
@@ -151,6 +151,23 @@ class PostponePhilosophizing(Scene):
         self.dither()
 
 
+class GrowHilbertWithName(Scene):
+    def construct(self):
+        curve = HilbertCurve(order = 1)
+        words = TextMobject("``Hilbert Curve''")
+        words.to_edge(UP, buff = 0.2)
+        self.play(
+            ShimmerIn(words),
+            Transform(curve, HilbertCurve(order = 2)),
+            run_time = 2
+        )
+        for n in range(3, 8):
+            self.play(
+                Transform(curve, HilbertCurve(order = n)),
+                run_time = 5. /n
+            )
+
+
 class SectionOne(Scene):
     def construct(self):
         self.add(TextMobject("Section 1: Seeing with your ears"))
@@ -188,6 +205,16 @@ class ImageToSound(Scene):
             run_time = 5,
             rate_func = rush_from
         ))
+
+class LinksInDescription(Scene):
+    def construct(self):
+        text = TextMobject("""
+            See links in the description for more on
+            sight via sound.
+        """)
+        self.play(ShimmerIn(text))
+        self.play(ShowCreation(Arrow(text, 3*DOWN)))
+        self.dither(2)
 
 
 class ImageDataIsTwoDimensional(Scene):
@@ -923,6 +950,22 @@ class ImagineItWorks(Scene):
         self.add(TextMobject("Image your project succeeds..."))
         self.dither()
 
+
+class RandyWithHeadphones(Scene):
+    def construct(self):
+        headphones = ImageMobject("Headphones.png")
+        headphones.scale(0.1)
+        headphones.stretch(2, 0)
+        headphones.shift(1.2*UP+0.05*LEFT)
+        headphones.highlight(GREY)
+        randy = Randolph()
+
+        self.add(randy, headphones)
+        self.dither(2)
+        self.play(ApplyMethod(randy.blink))
+        self.dither(4)
+
+
 class IncreaseResolution(Scene):
     def construct(self):
         grids = [
@@ -1027,7 +1070,7 @@ class TrackSpecificSnakeCurvePoint(TrackSpecificCurvePoint):
 class NeedToRelearn(Scene):
     def construct(self):
         top_words = TextMobject("Different pixel-frequency association")
-        bottom_words = TextMobject("Need to relearn synesthesia")
+        bottom_words = TextMobject("Need to relearn sight-via-sound")
         top_words.shift(UP)
         bottom_words.shift(DOWN)
         arrow = Arrow(top_words, bottom_words)

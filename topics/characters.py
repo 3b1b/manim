@@ -164,7 +164,7 @@ class Randolph(PiCreature):
 
 class Mortimer(PiCreature):
     DEFAULT_CONFIG = {
-        "color" : DARK_BROWN
+        "color" : MAROON_E
     }
     def __init__(self, **kwargs):
         PiCreature.__init__(self, **kwargs)
