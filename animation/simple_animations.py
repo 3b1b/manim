@@ -86,16 +86,20 @@ class Homotopy(Animation):
         ])
 
 class PhaseFlow(Animation):
+    DEFAULT_CONFIG = {
+        "virtual_time" : 1
+    }
     def __init__(self, function, mobject, **kwargs):
+        digest_config(self, kwargs, locals())        
         self.get_nudge_func = lambda alpha_diff : \
             lambda point : point + alpha_diff*function(point)
-        digest_config(self, kwargs, locals())
         Animation.__init__(self, mobject, **kwargs)
 
     def update_mobject(self, alpha):
         if hasattr(self, "last_alpha"):
+            nudge = self.virtual_time*(alpha-self.last_alpha)
             self.mobject.apply_function(
-                self.get_nudge_func(alpha-self.last_alpha)
+                self.get_nudge_func(nudge)
             )
         self.last_alpha = alpha
 
