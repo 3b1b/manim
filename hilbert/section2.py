@@ -1039,6 +1039,57 @@ class TilingSpace(Scene):
         ))
 
 
+class ColorIntervals(Scene):
+    def construct(self):
+        number_line = NumberLine(
+            numerical_radius = 5,
+            number_at_center = 5,
+            leftmost_tick = 0,
+            density = 2*DEFAULT_POINT_DENSITY_1D
+        )
+        number_line.shift(2*RIGHT)
+        number_line.add_numbers()
+        number_line.scale(2)
+        brace = Brace(Mobject(
+            *number_line.sub_mobjects[:2]
+        ))
+
+        self.add(number_line)
+        for n in range(0, 10, 2):
+            if n == 0:
+                brace_anim = GrowFromCenter(brace)
+            else:
+                brace_anim = ApplyMethod(brace.shift, 2*RIGHT)
+            self.play(
+                ApplyMethod(
+                    number_line.highlight,
+                    RED,
+                    lambda p : p[0] > n-6.2 and p[0] < n-4 and p[1] > -0.4
+                ),
+                brace_anim
+            )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

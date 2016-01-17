@@ -947,7 +947,7 @@ class HilbertBetterThanSnakeQ(Scene):
 
 class ImagineItWorks(Scene):
     def construct(self):
-        self.add(TextMobject("Image your project succeeds..."))
+        self.add(TextMobject("Imagine your project succeeds..."))
         self.dither()
 
 
