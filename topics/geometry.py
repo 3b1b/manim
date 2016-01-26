@@ -253,5 +253,18 @@ class Square(Rectangle):
 
 
 
+class FilledRectangle(Mobject1D):
+    DEFAULT_CONFIG = {
+        "color"  : GREY,
+        "height" : 2.0,
+        "width"  : 4.0,
+    }
+    def generate_points(self):
+        self.add_points([
+            (x, y, 0)
+            for x in np.arange(-self.width, self.width, self.epsilon)
+            for y in np.arange(-self.height, self.height, self.epsilon)
+        ])
+
 
 
