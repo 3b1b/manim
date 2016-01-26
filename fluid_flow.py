@@ -2,7 +2,7 @@ from mobject import Mobject
 from mobject.image_mobject import MobjectFromRegion
 from mobject.tex_mobject import TextMobject
 from region import region_from_polygon_vertices
-from topics.geometry import Arrow, Dot, Circle, Line
+from topics.geometry import Arrow, Dot, Circle, Line, FilledRectangle
 from topics.number_line import NumberPlane, XYZAxes
 from topics.three_dimensions import Sphere
 from scene import Scene
@@ -295,9 +295,12 @@ class CurlArticleExample(FluidFlow):
         self.use_function(
             lambda (x, y, z) : np.cos(0.5*(x+y))*RIGHT + np.sin(0.25*x*y)*UP
         )
+        circle = Circle().shift(3*UP)
         self.add_plane()
         self.add_arrows()
+        self.play(ShowCreation(circle))
         self.add_dots()
+        self.show_frame()
         self.flow(
             rate_func = None,
             run_time = 15,
@@ -390,7 +393,30 @@ class Test3DMovement(Scene):
 
 
 
-
+class DropletFlow(FluidFlow):
+    def construct(self):
+        seconds = 20
+        droplets = Mobject(*[
+            Dot(x*RIGHT+y*UP, color = BLUE_D)
+            for x in range(-7, 9)
+            for y in range(-3, 4)
+        ])
+        self.use_function(
+            lambda (x, y, z) : 0.5*(y**3-9*y)*RIGHT+(x**3-9*x)*UP,
+        )
+        self.add_arrows()
+        self.play(ShowCreation(droplets))
+        for x in range(seconds):
+            self.play(PhaseFlow(
+                self.function,    
+                droplets,
+                virtual_time = 1./10,
+                rate_func = None,
+            ))
+            droplets.add(*[
+                Dot(5*vect, color = BLUE_D)
+                for vect in UP+LEFT, DOWN+RIGHT
+            ])
 
 
 
