@@ -18,7 +18,7 @@ class FluidFlow(Scene):
     DEFAULT_CONFIG = {
         "arrow_spacing" : 1,
         "dot_spacing" : 0.5,
-        "dot_color" : BLUE_B,
+        "dot_color" : BLUE_C,
         "text_color" : WHITE,
         "arrow_color" : GREEN_A,
         "points_height" : SPACE_HEIGHT,
@@ -418,6 +418,18 @@ class DropletFlow(FluidFlow):
                 for vect in UP+LEFT, DOWN+RIGHT
             ])
 
+class AltDropletFlow(FluidFlow):
+    def construct(self):
+        self.use_function(lambda (x, y, z):
+            (np.sin(x)+np.sin(y))*RIGHT+\
+            (np.sin(x)-np.sin(y))*UP
+        )
+        self.add_dots()
+        self.flow(
+            rate_func = None,
+            run_time = 10,
+            virtual_time = 2
+        )
 
 
 
