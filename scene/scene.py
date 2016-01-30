@@ -227,8 +227,20 @@ class Scene(object):
         self.frames += [self.get_frame()]*int(duration / self.frame_duration)
         return self
 
-    def repeat(self, num):
+    def repeat_frames(self, num):
         self.frames = self.frames*num
+        return self
+
+    def reverse_frames(self):
+        self.frames.reverse()
+        return self
+
+    def invert_colors(self):
+        white_frame = 255*np.ones(self.get_frame().shape, dtype = 'uint8')
+        self.frames = [
+            white_frame-frame
+            for frame in self.frames
+        ]
         return self
 
     def write_to_movie(self, name = None):
