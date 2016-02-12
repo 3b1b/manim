@@ -38,12 +38,16 @@ class Mobject(object):
                 self.points,
             )
 
+    def __str__(self):
+        return self.name
+
     def init_points(self):
         for attr in self.get_array_attrs():
             setattr(self, attr, np.zeros((0, 3)))
 
-    def __str__(self):
-        return self.name
+    def generate_points(self):
+        #Typically implemented in subclass, unless purposefully left blank
+        pass
 
     def add_points(self, points, rgbs = None, color = None):
         """
@@ -461,11 +465,6 @@ class Mobject(object):
         color = Color()
         color.set_rgb(self.rgbs[0, :]) 
         return color
-
-    ### Stuff subclasses should deal with ###
-    def generate_points(self):
-        #Typically implemented in subclass, unless purposefully left blank
-        pass
 
     @staticmethod
     def align_data(mobject1, mobject2):

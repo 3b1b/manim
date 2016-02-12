@@ -99,6 +99,7 @@ class ImageMobject(Mobject):
         else:
             points *= 2 * SPACE_WIDTH / width
         self.add_points(points, rgbs = rgbs)
+        return self
 
 
 class MobjectFromPixelArray(ImageMobject):
