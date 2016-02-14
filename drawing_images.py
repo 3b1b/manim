@@ -152,9 +152,10 @@ class TracePicture(Scene):
         image_array = get_image_array(name)
         edge_mobject = self.get_edge_mobject(image_array)
         full_picture = MobjectFromPixelArray(image_array)
-        full_picture.point_thickness = 4        
         for mob in edge_mobject, full_picture:
+            # mob.point_thickness = 4
             mob.scale(scale_factor)
+            mob.show()
 
         self.play(
             DelayByOrder(FadeIn(
@@ -168,6 +169,7 @@ class TracePicture(Scene):
                 rate_func = None
             )
         )
+        self.remove(edge_mobject)
         self.dither()
 
 
