@@ -49,6 +49,8 @@ def complex_to_R3(complex_num):
     return np.array((complex_num.real, complex_num.imag, 0))
 
 def tuplify(obj):
+    if isinstance(obj, str):
+        return (obj,)
     try:
         return tuple(obj)
     except:
