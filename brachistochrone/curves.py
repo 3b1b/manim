@@ -1,33 +1,26 @@
-#!/usr/bin/env python
-
 import numpy as np
 import itertools as it
-import operator as op
-import sys
-import inspect
-from PIL import Image
-import cv2
-import random
-from scipy.spatial.distance import cdist
-from scipy import ndimage
 
 from helpers import *
 
-from mobject.tex_mobject import TexMobject, TextMobject
+from mobject.tex_mobject import TexMobject, TextMobject, Brace
 from mobject import Mobject
 from mobject.image_mobject import \
     MobjectFromRegion, ImageMobject, MobjectFromPixelArray
+from topics.three_dimensions import Stars
 
+from animation import Animation
 from animation.transform import \
     Transform, CounterclockwiseTransform, ApplyPointwiseFunction,\
     FadeIn, FadeOut, GrowFromCenter, ApplyFunction, ApplyMethod, \
     ShimmerIn
 from animation.simple_animations import \
-    ShowCreation, Homotopy, PhaseFlow, ApplyToCenters, DelayByOrder
+    ShowCreation, Homotopy, PhaseFlow, ApplyToCenters, DelayByOrder, \
+    ShowPassingFlash
 from animation.playground import TurnInsideOut, Vibrate
 from topics.geometry import \
     Line, Circle, Square, Grid, Rectangle, Arrow, Dot, Point, \
-    Arc
+    Arc, FilledRectangle
 from topics.characters import Randolph, Mathematician
 from topics.functions import ParametricFunction, FunctionGraph
 from topics.number_line import NumberPlane
@@ -36,28 +29,7 @@ from scene import Scene
 
 RANDY_SCALE_VAL = 0.3
 
-###########
 
-def wavify(mobject):
-    tangent_vectors = mobject.points[1:]-mobject.points[:-1]
-    lengths = np.apply_along_axis(
-        np.linalg.norm, 1, tangent_vectors
-    )
-    thick_lengths = lengths.repeat(3).reshape((len(lengths), 3))
-    unit_tangent_vectors = tangent_vectors/thick_lengths
-    rot_matrix = np.transpose(rotation_matrix(np.pi/2, OUT))
-    normal_vectors = np.dot(unit_tangent_vectors, rot_matrix)
-    # total_length = np.sum(lengths)
-    times = np.cumsum(lengths)
-    nudge_sizes = 0.1*np.sin(2*np.pi*times)
-    thick_nudge_sizes = nudge_sizes.repeat(3).reshape((len(nudge_sizes), 3))
-    nudges = thick_nudge_sizes*normal_vectors
-    result = mobject.copy()
-    result.points[1:] += nudges
-    return result
-
-
-###########
 
 class Cycloid(ParametricFunction):
     DEFAULT_CONFIG = {
@@ -96,6 +68,84 @@ class LoopTheLoop(ParametricFunction):
             lambda t : pre_func(4*t-2),
             **kwargs
         )
+
+
+class SlideWordDownCycloid(Animation):
+    DEFAULT_CONFIG = { 
+        "rate_func" : None,
+        "run_time"  : 8
+    }
+    def __init__(self, word, **kwargs):
+        self.path = Cycloid(end_theta = np.pi)        
+        word_mob = TextMobject(list(word))
+        end_word = word_mob.copy()
+        end_word.shift(-end_word.get_bottom())
+        end_word.shift(self.path.get_corner(DOWN+RIGHT))
+        end_word.shift(3*RIGHT)
+        self.end_letters = end_word.split()
+        for letter in word_mob.split():
+            letter.center()
+            letter.angle = 0
+        unit_interval = np.arange(0, 1, 1./len(word))
+        self.start_times = 0.5*(1-(unit_interval))
+        Animation.__init__(self, word_mob, **kwargs)
+
+    def update_mobject(self, alpha):
+        virtual_times = 2*(alpha - self.start_times)
+        cut_offs = [
+            0.1,
+            0.3,
+            0.7,
+        ]
+        for letter, time, end_letter in zip(
+            self.mobject.split(), virtual_times, self.end_letters
+            ):
+            time = max(time, 0)
+            time = min(time, 1)
+            if time < cut_offs[0]:
+                brightness = time/cut_offs[0]
+                letter.rgbs = brightness*np.ones(letter.rgbs.shape)
+                position = self.path.points[0]
+                angle = 0
+            elif time < cut_offs[1]:
+                alpha = (time-cut_offs[0])/(cut_offs[1]-cut_offs[0])
+                angle = -rush_into(alpha)*np.pi/2
+                position = self.path.points[0]
+            elif time < cut_offs[2]:
+                alpha = (time-cut_offs[1])/(cut_offs[2]-cut_offs[1])
+                index = int(alpha*self.path.get_num_points())
+                position = self.path.points[index]
+                try:
+                    angle = angle_of_vector(
+                        self.path.points[index+1] - \
+                        self.path.points[index]
+                    )
+                except:
+                    angle = letter.angle
+            else:
+                alpha = (time-cut_offs[2])/(1-cut_offs[2])
+                start = self.path.points[-1]
+                end = end_letter.get_bottom()
+                position = interpolate(start, end, rush_from(alpha))
+                angle = 0
+
+            letter.shift(position-letter.get_bottom())
+            letter.rotate_in_place(angle-letter.angle)
+            letter.angle = angle
+
+
+class BrachistochroneWordSliding(Scene):
+    def construct(self):
+        anim = SlideWordDownCycloid("Brachistochrone")
+        anim.path.gradient_highlight(WHITE, BLUE_E)
+        self.play(ShowCreation(anim.path))
+        self.play(anim)
+        self.dither()
+        self.play(
+            FadeOut(anim.path),
+            ApplyMethod(anim.mobject.center)
+        )
+
 
 
 class PathSlidingScene(Scene):
@@ -273,22 +323,38 @@ class RollingRandolph(PathSlidingScene):
 
 
 
-class SimplePhoton(Scene):
+class OceanScene(Scene):
     def construct(self):
-        photon = wavify(Cycloid())
-        photon.highlight(YELLOW)
-        shaddow = photon.copy().highlight(BLACK)
+        self.rolling_waves()
 
-        self.play(
-            ShowCreation(photon, rate_func = None),
-            ShowCreation(
-                shaddow,
-                rate_func = lambda t : max(0, t-0.1)
+    def rolling_waves(self):
+        if not hasattr(self, "ocean"):
+            self.setup_ocean()
+        for state in self.ocean_states:
+            self.play(Transform(self.ocean, state))
+
+
+    def setup_ocean(self):
+        def func(points):
+            result = np.zeros(points.shape)
+            result[:,1] = 0.25 * np.sin(points[:,0]) * np.sin(points[:,1])
+            return result
+
+        self.ocean_states = []
+        for unit in -1, 1:
+            ocean = FilledRectangle(
+                color = BLUE_D, 
+                density = 25
             )
-        )
-        self.dither()
-
-
+            nudges = unit*func(ocean.points)
+            ocean.points += nudges
+            alphas = nudges[:,1]
+            alphas -= np.min(alphas)
+            whites = np.ones(ocean.rgbs.shape)
+            thick_alphas = alphas.repeat(3).reshape((len(alphas), 3))
+            ocean.rgbs = interpolate(ocean.rgbs, whites, thick_alphas)
+            self.ocean_states.append(ocean)
+        self.ocean = self.ocean_states[1].copy()
 
 
 
