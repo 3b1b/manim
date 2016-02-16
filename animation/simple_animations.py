@@ -31,18 +31,43 @@ class Rotating(Animation):
         method(alpha*self.radians, axes = axes)     
 
 
-class ShowCreation(Animation):
+class ShowPartial(Animation):
     def update_mobject(self, alpha):
         pairs = zip(
             self.starting_mobject.submobject_family(),
             self.mobject.submobject_family()
         )
         for start, mob in pairs:
-            new_num_points = int(alpha * start.get_num_points())
+            lower_alpha, upper_alpha = self.get_bounds(alpha)
+            lower_index, upper_index = [
+                int(a * start.get_num_points())
+                for a in lower_alpha, upper_alpha
+            ]
             for attr in mob.get_array_attrs():
                 full_array = getattr(start, attr)
-                partial_array = full_array[:new_num_points]
+                partial_array = full_array[lower_index:upper_index]
                 setattr(mob, attr, partial_array)
+
+    def get_bounds(self, alpha):
+        raise Exception("Not Implemented")
+
+
+class ShowCreation(ShowPartial):
+    def get_bounds(self, alpha):
+        return (0, alpha)
+
+class ShowPassingFlash(ShowPartial):
+    DEFAULT_CONFIG = {
+        "time_width" : 0.1
+    }
+    def get_bounds(self, alpha):
+        alpha *= (1+self.time_width)
+        alpha -= self.time_width/2
+        lower = max(0, alpha - self.time_width/2)
+        upper = min(1, alpha + self.time_width/2)
+        return (lower, upper)
+
+
 
 
 class Flash(Animation):
