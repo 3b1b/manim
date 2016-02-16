@@ -323,39 +323,6 @@ class RollingRandolph(PathSlidingScene):
 
 
 
-class OceanScene(Scene):
-    def construct(self):
-        self.rolling_waves()
-
-    def rolling_waves(self):
-        if not hasattr(self, "ocean"):
-            self.setup_ocean()
-        for state in self.ocean_states:
-            self.play(Transform(self.ocean, state))
-
-
-    def setup_ocean(self):
-        def func(points):
-            result = np.zeros(points.shape)
-            result[:,1] = 0.25 * np.sin(points[:,0]) * np.sin(points[:,1])
-            return result
-
-        self.ocean_states = []
-        for unit in -1, 1:
-            ocean = FilledRectangle(
-                color = BLUE_D, 
-                density = 25
-            )
-            nudges = unit*func(ocean.points)
-            ocean.points += nudges
-            alphas = nudges[:,1]
-            alphas -= np.min(alphas)
-            whites = np.ones(ocean.rgbs.shape)
-            thick_alphas = alphas.repeat(3).reshape((len(alphas), 3))
-            ocean.rgbs = interpolate(ocean.rgbs, whites, thick_alphas)
-            self.ocean_states.append(ocean)
-        self.ocean = self.ocean_states[1].copy()
-
 
 
 

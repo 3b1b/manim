@@ -460,6 +460,9 @@ class Mobject(object):
     def get_height(self):
         return self.length_over_dim(1)
 
+    def point_from_interval(self, alpha):
+        index = alpha*(self.get_num_points()-1)
+        return self.points[index]
 
     def get_color(self):
         color = Color()
