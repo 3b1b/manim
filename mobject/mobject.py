@@ -322,6 +322,20 @@ class Mobject(object):
         self.center().shift(mobject.get_center())
         return self
 
+    def position_endpoints_on(self, start, end):
+        curr_vect = self.points[-1] - self.points[0]
+        if np.all(curr_vect == 0):
+            raise Exception("Cannot position endpoints of closed loop")
+        target_vect = end - start
+        self.scale(np.linalg.norm(target_vect)/np.linalg.norm(curr_vect))
+        self.rotate(
+            angle_of_vector(target_vect) - \
+            angle_of_vector(curr_vect)
+        )
+        self.shift(start-self.points[0])
+        return self
+
+
     def apply_complex_function(self, function):
         return self.apply_function(
             lambda (x, y, z) : complex_to_R3(function(complex(x, y)))
@@ -509,7 +523,7 @@ class Mobject(object):
         #TODO
         Mobject.align_data(mobject1, mobject2)
         for attr in self.get_array_attrs():
-            setattr(target_mobject, attr, interpolate(
+            setattr(self, attr, interpolate(
                 getattr(mobject1, attr), 
                 getattr(mobject2, attr), 
             alpha))
