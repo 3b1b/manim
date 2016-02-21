@@ -1,9 +1,8 @@
 
-
-
 from animation.transform import Transform
 from mobject import Mobject
 from mobject.tex_mobject import TextMobject
+from mobject.image_mobject import MobjectFromPixelArray
 from topics.geometry import Circle
 from topics.three_dimensions import Sphere
 from scene import Scene
@@ -57,9 +56,9 @@ class LogoGeneration(Scene):
                 lambda point: np.linalg.norm(point) < \
                               self.inner_radius_ratio*self.radius
             )
-        name = TextMobject("3Blue1Brown").center()
-        name.highlight("grey")
-        name.shift(2*DOWN)
+        self.name_mob = TextMobject("3Blue1Brown").center()
+        self.name_mob.highlight("grey")
+        self.name_mob.shift(2*DOWN)
 
         self.play(Transform(
             circle, iris, 
@@ -67,9 +66,8 @@ class LogoGeneration(Scene):
         ))
         self.frames = drag_pixels(self.frames)
         self.save_image(IMAGE_DIR)
-        self.show_frame()
-        self.add(name)
+        self.logo = MobjectFromPixelArray(self.frames[-1])
+        self.add(self.name_mob)
         self.dither()
-        print "Dragging pixels..."
 
 
