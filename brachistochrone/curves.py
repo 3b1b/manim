@@ -153,29 +153,6 @@ class PathSlidingScene(Scene):
         "gravity" : 3,
         "delta_t" : 0.05
     }
-    def get_time_slices(self, points):
-        dt_list = np.zeros(len(points))
-        ds_list = np.apply_along_axis(
-            np.linalg.norm,
-            1,
-            points[1:]-points[:-1]
-        )
-        delta_y_list = np.abs(points[0, 1] - points[1:,1])
-        delta_y_list += 0.001*(delta_y_list == 0)
-        v_list = self.gravity*np.sqrt(delta_y_list)
-        dt_list[1:] = ds_list / v_list
-        return np.cumsum(dt_list)
-
-    def adjust_mobject_to_index(self, mobject, index, points):
-        point_a, point_b = points[index-1], points[index]
-        while np.all(point_a == point_b):
-            index += 1
-            point_b = points[index]
-        theta = angle_of_vector(point_b - point_a)
-        mobject.rotate(theta)
-        mobject.shift(points[index])
-        return mobject
-
     def slide(self, mobject, path, roll = False):
         points = path.points
         time_slices = self.get_time_slices(points)
@@ -208,6 +185,29 @@ class PathSlidingScene(Scene):
         self.add(self.slider)
         self.dither()
 
+    def get_time_slices(self, points):
+        dt_list = np.zeros(len(points))
+        ds_list = np.apply_along_axis(
+            np.linalg.norm,
+            1,
+            points[1:]-points[:-1]
+        )
+        delta_y_list = np.abs(points[0, 1] - points[1:,1])
+        delta_y_list += 0.001*(delta_y_list == 0)
+        v_list = self.gravity*np.sqrt(delta_y_list)
+        dt_list[1:] = ds_list / v_list
+        return np.cumsum(dt_list)
+
+    def adjust_mobject_to_index(self, mobject, index, points):
+        point_a, point_b = points[index-1], points[index]
+        while np.all(point_a == point_b):
+            index += 1
+            point_b = points[index]
+        theta = angle_of_vector(point_b - point_a)
+        mobject.rotate(theta)
+        mobject.shift(points[index])
+        return mobject
+
     def write_time(self, time):
         if hasattr(self, "time_mob"):
             self.remove(self.time_mob)
@@ -222,6 +222,16 @@ class PathSlidingScene(Scene):
         radius = mobject.get_width()/2
         theta = arc_length / radius
         mobject.rotate_in_place(-theta)
+
+    def add_cycloid_end_points(self):
+        cycloid = Cycloid()
+        point_a = Dot(cycloid.points[0])
+        point_b = Dot(cycloid.points[-1])
+        A = TexMobject("A").next_to(point_a, LEFT)
+        B = TexMobject("B").next_to(point_b, RIGHT)
+        self.add(point_a, point_b, A, B)
+        digest_locals(self)
+
 
 class TryManyPaths(PathSlidingScene):
     def construct(self):
@@ -271,17 +281,17 @@ class TryManyPaths(PathSlidingScene):
             Line(DOWN, DOWN+3*RIGHT)
         ).ingest_sub_mobjects().highlight(GREEN)
         paths = [
-            Line(7*LEFT, 7*RIGHT, color = RED_D),
-            LoopTheLoop(),
-            FunctionGraph(
-                lambda x : 0.05*(x**2)+0.1*np.sin(2*x)
-            ),
             Arc(
                 angle = np.pi/2, 
                 radius = 3, 
                 start_angle = 4
             ),
+            LoopTheLoop(),            
+            Line(7*LEFT, 7*RIGHT, color = RED_D),
             sharp_corner,
+            FunctionGraph(
+                lambda x : 0.05*(x**2)+0.1*np.sin(2*x)
+            ),
             FunctionGraph(
                 lambda x : x**2, 
                 x_min = -3, 
@@ -294,40 +304,60 @@ class TryManyPaths(PathSlidingScene):
         return paths + [cycloid]
 
     def align_paths(self, paths, target_path):
-        def path_displacement(path):
-            return path.points[-1]-path.points[0]
-        target = path_displacement(target_path)
+        start = target_path.points[0]
+        end = target_path.point[-1]
         for path in paths:
-            vect = path_displacement(path)
-            path.scale(np.linalg.norm(target)/np.linalg.norm(vect))
-            path.rotate(
-                angle_of_vector(target) - \
-                angle_of_vector(vect)
-            )
-            path.shift(target_path.points[0]-path.points[0])
+            path.position_endpoints_on(start, end)
 
 
 class RollingRandolph(PathSlidingScene):
     def construct(self):
-        cycloid = Cycloid()
-        point_a = Dot(cycloid.points[0])
-        point_b = Dot(cycloid.points[-1])
-        A = TexMobject("A").next_to(point_a, LEFT)
-        B = TexMobject("B").next_to(point_b, RIGHT)
         randy = Randolph()
         randy.scale(RANDY_SCALE_VAL)
         randy.shift(-randy.get_bottom())
-
-        self.add(point_a, point_b, A, B, cycloid)
-        self.slide(randy, cycloid, roll = True)
-
+        self.add_cycloid_end_points()        
+        self.slide(randy, self.cycloid, roll = True)
 
 
 
+class NotTheCircle(PathSlidingScene):
+    def construct(self):
+        self.add_cycloid_end_points()
+        start = self.point_a.get_center()
+        end   = self.point_b.get_center()
+        angle = 2*np.pi/3
+        path = Arc(angle, radius = 3)
+        path.gradient_highlight(RED_D, WHITE)
+        radius = Line(ORIGIN, path.points[0])
+        randy = Randolph()
+        randy.scale(RANDY_SCALE_VAL)
+        randy.shift(-randy.get_bottom())
+        randy_copy = randy.copy()
+        words = TextMobject("Circular paths are good, \\\\ but still not the best")
+        words.shift(UP)
 
-
-
-
+        self.play(
+            ShowCreation(path),
+            ApplyMethod(
+                radius.rotate, 
+                angle,
+                path_func = path_along_arc(angle)
+            )
+        )
+        self.play(FadeOut(radius))
+        self.play(
+            ApplyMethod(
+                path.position_endpoints_on, start, end,
+                path_func = path_along_arc(-angle)
+            ),
+            run_time = 3
+        )
+        self.adjust_mobject_to_index(randy_copy, 1, path.points)
+        self.play(FadeIn(randy_copy))
+        self.remove(randy_copy)
+        self.slide(randy, path)
+        self.play(ShimmerIn(words))
+        self.dither()
 
 
 

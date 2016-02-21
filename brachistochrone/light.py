@@ -4,7 +4,7 @@ import itertools as it
 from helpers import *
 
 from mobject.tex_mobject import TexMobject, TextMobject, Brace
-from mobject import Mobject
+from mobject import Mobject, Mobject1D
 from mobject.image_mobject import \
     MobjectFromRegion, ImageMobject, MobjectFromPixelArray
 from topics.three_dimensions import Stars
@@ -237,7 +237,7 @@ class ShowMultiplePathsThroughLens(ShowMultiplePathsScene):
         self.end_point = 2*RIGHT
 
     def get_paths(self):
-        alphas = [0.2, 0.45, 0.55, 0.8]
+        alphas = [0.25, 0.4, 0.58, 0.75]
         lower_right, upper_right, upper_left, lower_left = map(
             self.lens.point_from_proportion, alphas
         )
@@ -304,6 +304,219 @@ class ShowMultiplePathsInGlass(ShowMultiplePathsScene):
                 Color(YELLOW).range_to(WHITE, 2)
             )
         ]
+
+
+class MultilayeredGlass(PhotonScene):
+    DEFAULT_CONFIG = {
+        "num_discrete_layers" : 5,
+        "num_variables" : 3,
+        "top_color" : BLUE_E,
+        "bottom_color" : BLUE_A,
+    }
+    def construct(self):
+        self.cycloid = Cycloid(end_theta = np.pi)
+        self.top = self.cycloid.get_top()[1]
+        self.bottom = self.cycloid.get_bottom()[1]-1
+        self.generate_layer_regions()
+        self.generate_discrete_path()
+        photon_run = self.photon_run_along_path(
+            self.augmented_path,
+            run_time = 1,
+            rate_func = rush_into
+        )
+
+        # self.continuous_to_smooth()
+        self.paint_layers()
+        self.show_layer_variables()
+        self.play(photon_run)
+        self.play(ShowCreation(self.discrete_path))
+        self.isolate_bend_points()
+        # self.dither()
+
+    def continuous_to_smooth(self):
+        continuous = self.get_continuous_background()
+        layers = Mobject(*[
+            MobjectFromRegion(region, color)
+            for region, color in zip(
+                self.layer_regions, self.layer_colors
+            )
+        ])
+        layers.ingest_sub_mobjects()
+
+        self.play(FadeIn(continuous))
+        self.play(Transform(continuous, layers))
+        self.remove(continuous)
+        self.paint_layers()
+        self.dither()
+
+    def paint_layers(self):
+        # for region, color in zip(self.layer_regions, self.layer_colors):
+        #     self.highlight_region(region, color)
+        for top, color in zip(self.layer_tops, self.layer_colors):
+            self.add(Line(
+                SPACE_WIDTH*LEFT+top*UP, SPACE_WIDTH*RIGHT+top*UP, 
+                color = color
+            ))
+
+    def get_continuous_background(self):
+        glass = MobjectFromRegion(Region(
+            lambda x, y : (y < self.top) & (y > self.bottom)
+        ))
+        glass.gradient_highlight(self.top_color, self.bottom_color)
+        glass.scale_in_place(0.99)
+        return glass
+
+    def generate_layer_info(self):
+        self.layer_thickness = float(self.top-self.bottom)/self.num_discrete_layers
+        self.layer_tops = np.arange(
+            self.top, self.bottom, -self.layer_thickness
+        )
+        top_rgb, bottom_rgb = [
+            np.array(Color(color).get_rgb())
+            for color in self.top_color, self.bottom_color
+        ]
+        epsilon = 1./(self.num_discrete_layers-1)
+        self.layer_colors = [
+            Color(rgb = interpolate(top_rgb, bottom_rgb, alpha))
+            for alpha in np.arange(0, 1+epsilon, epsilon)
+        ]
+
+    def generate_layer_regions(self):
+        self.generate_layer_info()
+        self.layer_regions =  [
+            Region(lambda x, y : (y < top) & (y > top-self.layer_thickness))
+            for top in self.layer_tops
+        ]
+
+    def generate_discrete_path(self):
+        points = self.cycloid.points
+        indices = [
+            np.argmin(np.abs(points[:, 1]-top))
+            for top in self.layer_tops
+        ]
+        self.bend_points = points[indices[1:-1]]
+        self.discrete_path = Mobject1D(color = YELLOW)
+        for start, end in zip(indices, indices[1:]):
+            self.discrete_path.add_line(
+                points[start], points[end]
+            )
+        self.augmented_path = self.discrete_path.copy()
+        self.augmented_path.add_line(
+            points[end], SPACE_WIDTH*RIGHT+(self.layer_tops[-1]-1)*UP
+        )
+
+    def show_layer_variables(self):
+        layer_top_pairs = zip(
+            self.layer_tops[:self.num_variables], 
+            self.layer_tops[1:]
+        )
+        v_equations = []
+        start_ys = []
+        end_ys = []
+        center_paths = []
+        braces = []
+        for (top1, top2), x in zip(layer_top_pairs, it.count(1)):
+            eq_mob = TexMobject(
+                ["v_%d"%x, "=", "\sqrt{\phantom{y_1}}"],
+                size = "\\Large"
+            )
+            midpoint = UP*(top1+top2)/2
+            eq_mob.shift(midpoint)
+            v_eq = eq_mob.split()
+            center_paths.append(Line(
+                midpoint+SPACE_WIDTH*LEFT, 
+                midpoint+SPACE_WIDTH*RIGHT
+            ))            
+            brace_endpoints = Mobject(
+                Point(self.top*UP+x*RIGHT),
+                Point(top2*UP+x*RIGHT)
+            )
+            brace = Brace(brace_endpoints, RIGHT)
+
+            start_y = TexMobject("y_%d"%x, size = "\\Large")
+            end_y = start_y.copy()            
+            start_y.next_to(brace, RIGHT)
+            end_y.shift(v_eq[-1].get_center())
+            end_y.shift(0.2*RIGHT)
+
+            v_equations.append(v_eq)
+            start_ys.append(start_y)
+            end_ys.append(end_y)
+            braces.append(brace)
+        for v_eq, path, time in zip(v_equations, center_paths, [2, 1, 0.5]):
+            photon_run = self.photon_run_along_path(
+                path,
+                rate_func = None
+            )
+            self.play(
+                ShimmerIn(v_eq[0]),
+                photon_run,
+                run_time = time
+            )
+        self.dither()
+        for start_y, brace in zip(start_ys, braces):
+            start_y.highlight(BLACK)            
+            self.add(start_y)            
+            self.play(GrowFromCenter(brace))
+        self.dither()
+        quads = zip(v_equations, start_ys, end_ys, braces)
+        self.equations = []
+        for v_eq, start_y, end_y, brace in quads:
+            self.remove(brace)
+            self.play(
+                ShowCreation(v_eq[1]),
+                ShowCreation(v_eq[2]),
+                Transform(start_y, end_y)
+            )
+
+            v_eq.append(start_y)
+            self.equations.append(Mobject(*v_eq))
+
+    def isolate_bend_points(self):
+        little_square = Square(side_length = 4, color = WHITE)
+        little_square.scale(0.25)
+        little_square.shift(self.bend_points[0])
+        big_square = little_square.copy()
+        big_square.scale(4)
+        big_square.to_corner(UP+RIGHT)
+
+
+        first_time = True
+        for bend_point in self.bend_points:
+            if first_time:
+                self.play(ShowCreation(little_square))
+                first_time = False
+            else:
+                self.remove(lines, big_square)                
+                self.play(ApplyMethod(
+                    little_square.shift,
+                    bend_point - little_square.get_center()
+                ))
+            lines = self.lines_connecting_squares(little_square, big_square)
+            self.play(
+                ShowCreation(lines),
+                ShowCreation(big_square)
+            )
+            self.dither(2)
+
+
+
+    def lines_connecting_squares(self, square1, square2):
+        return Mobject(*[
+            Line(
+                square1.get_corner(vect),
+                square2.get_corner(vect),
+            )
+            for vect in [UP+LEFT, DOWN+LEFT]
+        ]).highlight(square1.get_color())
+
+
+
+
+        
+class MultilayeredGlassZoomIn(Scene):
+    def construct(self, layer_number):
+        pass
 
 
 

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import numpy as np
 import itertools as it
 import operator as op
@@ -17,16 +15,17 @@ from mobject.tex_mobject import TexMobject
 from mobject import Mobject
 from mobject.image_mobject import \
     MobjectFromRegion, ImageMobject, MobjectFromPixelArray
+from mobject.tex_mobject import TextMobject, TexMobject    
 
 from animation.transform import \
     Transform, CounterclockwiseTransform, ApplyPointwiseFunction,\
-    FadeIn, FadeOut, GrowFromCenter
+    FadeIn, FadeOut, GrowFromCenter, ShimmerIn, ApplyMethod
 from animation.simple_animations import \
     ShowCreation, Homotopy, PhaseFlow, ApplyToCenters, DelayByOrder
 from animation.playground import TurnInsideOut, Vibrate
 from topics.geometry import \
     Line, Circle, Square, Grid, Rectangle, Arrow, Dot, Point
-from topics.characters import Randolph, Mathematician
+from topics.characters import Randolph, Mathematician, ThoughtBubble
 from topics.functions import ParametricFunction
 from topics.number_line import NumberPlane
 from region import Region, region_from_polygon_vertices
@@ -134,7 +133,7 @@ class TracePicture(Scene):
         ("Steven_Strogatz",),
         ("Pierre_de_Fermat",),
         ("Galileo_Galilei",),
-        ("Jakob_Bernoulli",),
+        ("Jacob_Bernoulli",),
         ("Johann_Bernoulli2",),
     ]
 
@@ -191,16 +190,110 @@ class TracePicture(Scene):
 
 
 
+class JohannThinksHeIsBetter(Scene):
+    def construct(self):
+        names = [
+            "Johann_Bernoulli2",
+            "Jacob_Bernoulli",
+            "Gottfried_Wilhelm_von_Leibniz",
+        ]
+        guys = [
+            ImageMobject(name, invert = False)
+            for name in names
+        ]
+        johann = guys[0]
+        johann.scale(0.8)
+        pensive_johann = johann.copy()
+        pensive_johann.scale(0.25)
+        pensive_johann.to_corner(DOWN+LEFT)
+        comparitive_johann = johann.copy()
+        template = Square(side_length = 2)
+        comparitive_johann.replace(template)
+        comparitive_johann.shift(UP+LEFT)
+        greater_than = TexMobject(">")
+        greater_than.next_to(comparitive_johann)
+        for guy, name in zip(guys, names)[1:]:
+            guy.replace(template)
+            guy.next_to(greater_than)
+            name_mob = TextMobject(name.replace("_", " "))
+            name_mob.scale(0.5)
+            name_mob.next_to(guy, DOWN)
+            guy.name_mob = name_mob
+            guy.sort_points(lambda p : np.dot(p, DOWN+RIGHT))
+        bubble = ThoughtBubble(initial_width = 12)
+        bubble.stretch_to_fit_height(6)
+        bubble.ingest_sub_mobjects()
+        bubble.pin_to(pensive_johann)
+        bubble.shift(DOWN)
+        point = Point(johann.get_corner(UP+RIGHT))
+
+        self.add(johann)
+        self.dither()
+        self.play(
+            Transform(johann, pensive_johann),
+            Transform(point, bubble),
+            run_time = 2
+        )
+        self.remove(point)
+        self.add(bubble)
+        weakling = guys[1]        
+        self.play(
+            FadeIn(comparitive_johann),
+            ShowCreation(greater_than),
+            FadeIn(weakling)
+        )
+        self.dither(2)
+        for guy in guys[2:]:
+            self.play(
+                DelayByOrder(Transform(weakling, guy)),
+                ShimmerIn(guy.name_mob)
+            )
+            self.dither(3)
+            self.remove(guy.name_mob)
 
 
+class NewtonVsJohann(Scene):
+    def construct(self):
+        newton, johann = [
+            ImageMobject(name, invert = False).scale(0.5)
+            for name in "Newton", "Johann_Bernoulli2"
+        ]
+        greater_than = TexMobject(">")
+        newton.next_to(greater_than, RIGHT)
+        johann.next_to(greater_than, LEFT)
+        self.add(johann, greater_than, newton)
+        for i in range(2):
+            kwargs = {
+                "path_func" : counterclockwise_path(),
+                "run_time"  : 2 
+            }
+            self.play(
+                ApplyMethod(newton.replace, johann, **kwargs),
+                ApplyMethod(johann.replace, newton, **kwargs),
+            )
+            self.dither()
 
 
+class JohannThinksOfFermat(Scene):
+    def construct(self):
+        johann, fermat = [
+            ImageMobject(name, invert = False)
+            for name in "Johann_Bernoulli2", "Pierre_de_Fermat"
+        ]
+        johann.scale(0.2)
+        johann.to_corner(DOWN+LEFT)
+        bubble = ThoughtBubble(initial_width = 12)
+        bubble.stretch_to_fit_height(6)
+        bubble.pin_to(johann)
+        bubble.shift(DOWN)
+        bubble.add_content(fermat)
+        fermat.scale_in_place(0.4)
 
 
-
-
-
-
+        self.add(johann, bubble)
+        self.dither()
+        self.play(FadeIn(fermat))
+        self.dither()
 
 
 

@@ -31,6 +31,7 @@ class ImageMobject(Mobject):
             os.path.join(IMAGE_DIR, image_file),
             os.path.join(IMAGE_DIR, image_file + ".jpg"),
             os.path.join(IMAGE_DIR, image_file + ".png"),
+            os.path.join(IMAGE_DIR, image_file + ".gif"),
         ]
         for path in possible_paths:
             if os.path.exists(path):
