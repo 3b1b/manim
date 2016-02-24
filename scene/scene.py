@@ -8,13 +8,13 @@ import os
 import copy
 from tqdm import tqdm as ProgressDisplay
 import inspect
+import subprocess as sp
 
 from helpers import *
 
-import displayer as disp
+from camera import Camera
 from tk_scene import TkSceneRoot
 from mobject import Mobject
-from animation.transform import ApplyMethod
 
 class Scene(object):
     DEFAULT_CONFIG = {
@@ -27,16 +27,11 @@ class Scene(object):
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
-        if self.background is not None:
-            self.original_background = np.array(self.background)
-            #TODO, Error checking?
-        else:
-            self.original_background = np.zeros(
-                (self.height, self.width, 3),
-                dtype = 'uint8'
-            )
-        self.background = self.original_background
-        self.curr_frame = self.background         
+        self.camera = Camera(
+            pixel_width = self.width,
+            pixel_height = self.height,
+            background = self.background
+        )
         self.frames = []
         self.mobjects = []
         self.num_animations = 0
@@ -57,11 +52,7 @@ class Scene(object):
         return self
 
     def get_frame(self):
-        return self.curr_frame
-
-    def set_frame(self, frame):
-        self.curr_frame = frame
-        return self
+        return self.camera.get_image()
 
     def add(self, *mobjects):
         """
@@ -70,9 +61,9 @@ class Scene(object):
         """
         if not all_elements_are_instances(mobjects, Mobject):
             raise Exception("Adding something which is not a mobject")
-        self.set_frame(disp.paint_mobjects(mobjects, self.get_frame()))
         old_mobjects = filter(lambda m : m not in mobjects, self.mobjects)
         self.mobjects = old_mobjects + list(mobjects)
+        self.camera.capture_mobjects(mobjects)
         return self
 
     def add_mobjects_among(self, values):
@@ -101,55 +92,16 @@ class Scene(object):
     def bring_to_back(self, mobject):
         self.remove(mobject)
         self.mobjects = [mobject] + self.mobjects
-        self.repaint_mojects()
         return self
 
     def clear(self):
-        self.reset_background()
         self.mobjects = []
-        self.set_frame(self.background)
-        return self
-
-    def highlight_region(self, region, color = None):
-        self.background = disp.paint_region(
-            region, 
-            image_array = self.background, 
-            color = color,
-        )
-        self.repaint_mojects()
-        return self
-
-    def highlight_region_over_time_range(self, region, time_range = None, color = "black"):
-        if time_range:
-            frame_range = map(lambda t : t / self.frame_duration, time_range)
-            frame_range[0] = max(frame_range[0], 0)
-            frame_range[1] = min(frame_range[1], len(self.frames))
-        else:
-            frame_range = (0, len(self.frames))
-        for index in range(frame_range[0], frame_range[1]):
-            self.frames[index] = disp.paint_region(
-                region,
-                image_array = self.frames[index],
-                color = color
-            )
-
-    def reset_background(self):
-        self.background = self.original_background
         return self
 
     def repaint_mojects(self):
-        self.set_frame(disp.paint_mobjects(self.mobjects, self.background))
+        self.camera.reset()
+        self.camera.capture_mobjects(self.mobjects)
         return self
-
-    def paint_into_background(self, *mobjects):
-        #This way current mobjects don't have to be redrawn with
-        #every change, and one can later call "apply" without worrying
-        #about it applying to these mobjects
-        self.background = disp.paint_mobjects(mobjects, self.background)
-        return self
-
-    def set_frame_as_background(self):
-        self.background = self.get_frame()
 
     def play(self, *animations, **kwargs):
         self.num_animations += 1
@@ -170,11 +122,12 @@ class Scene(object):
             lambda m : m not in moving_mobjects, 
             bundle.submobject_family()
         )
-        background = disp.paint_mobjects(
+        self.camera.reset()
+        self.camera.capture_mobjects(
             static_mobjects,
-            self.background,
             include_sub_mobjects = False
         )
+        static_image = self.camera.get_image()
 
         times = np.arange(0, run_time, self.frame_duration)
         time_progression = ProgressDisplay(times)
@@ -186,15 +139,15 @@ class Scene(object):
         for t in time_progression:
             for animation in animations:
                 animation.update(t / animation.run_time)
-            new_frame = disp.paint_mobjects(
-                [anim.mobject for anim in animations], 
-                background
-            )
-            self.frames.append(new_frame)
+            self.camera.capture_mobjects([
+                anim.mobject 
+                for anim in animations 
+            ])
+            self.frames.append(self.camera.get_image())
+            self.camera.set_image(static_image)
         for animation in animations:
             animation.clean_up()
         self.add(*[anim.mobject for anim in animations])
-        self.repaint_mojects()
         return self
 
     def play_over_time_range(self, t0, t1, *animations):
@@ -215,13 +168,13 @@ class Scene(object):
             for animation in animations:
                 animation.update((t-t0)/(t1 - t0))
             index = int(t/self.frame_duration)
-            self.frames[index] = disp.paint_mobjects(moving_mobjects, self.frames[index])
+            self.camera.set_image(self.frames[index])
+            self.camera.capture_mobjects(moving_mobjects)
+            self.frames[index] = self.camera.get_image()
         for animation in animations:
             animation.clean_up()
+        self.repaint_mojects()
         return self
-
-    def apply(self, mobject_method, *args, **kwargs):
-        self.play(ApplyMethod(mobject_method, *args, **kwargs))
 
     def dither(self, duration = DEFAULT_DITHER_TIME):
         self.frames += [self.get_frame()]*int(duration / self.frame_duration)
@@ -243,14 +196,6 @@ class Scene(object):
         ]
         return self
 
-    def write_to_movie(self, name = None):
-        if len(self.frames) == 0:
-            print "No frames, I'll just save an image instead"
-            self.show_frame()
-            self.save_image(name = name)
-            return
-        disp.write_to_movie(self, name or str(self))
-
     def show_frame(self):
         Image.fromarray(self.get_frame()).show()
 
@@ -264,6 +209,52 @@ class Scene(object):
         if not os.path.exists(path):
             os.makedirs(path)
         Image.fromarray(self.get_frame()).save(full_path)
+
+    def get_movie_file_path(self, name, extension):
+        file_path = os.path.join(MOVIE_DIR, name)
+        if not file_path.endswith(extension):
+            file_path += extension
+        directory = os.path.split(file_path)[0]
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        return file_path
+
+    def write_to_movie(self, name = None):
+        if len(self.frames) == 0:
+            print "No frames, I'll just save an image instead"
+            self.show_frame()
+            self.save_image(name = name)
+            return
+        if name is None:
+            name = str(self)
+
+        file_path = self.get_movie_file_path(name, ".mp4")
+        print "Writing to %s"%file_path
+
+        fps = int(1/self.frame_duration)
+        dim = (self.width, self.height)
+
+        command = [
+            FFMPEG_BIN,
+            '-y',                 # overwrite output file if it exists
+            '-f', 'rawvideo',
+            '-vcodec','rawvideo',
+            '-s', '%dx%d'%dim,    # size of one frame
+            '-pix_fmt', 'rgb24',
+            '-r', str(fps),       # frames per second
+            '-i', '-',            # The imput comes from a pipe
+            '-an',                # Tells FFMPEG not to expect any audio
+            '-vcodec', 'mpeg',
+            '-c:v', 'libx264',
+            '-pix_fmt', 'yuv420p',
+            '-loglevel', 'error',
+            file_path,
+        ]
+        process = sp.Popen(command, stdin=sp.PIPE)
+        for frame in self.frames:
+            process.stdin.write(frame.tostring())
+        process.stdin.close()
+        process.wait()        
 
     # To list possible args that subclasses have
     # Elements should always be a tuple

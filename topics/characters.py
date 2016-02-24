@@ -27,8 +27,6 @@ class PiCreature(Mobject):
         'mouth', 
     ]
     WHITE_PART_NAMES = ['left_eye', 'right_eye', 'mouth']
-    MOUTH_NAMES = ["smile", "frown", "straight_mouth"]
-
     def __init__(self, **kwargs):
         Mobject.__init__(self, **kwargs)
         for part_name in self.PART_NAMES:
@@ -39,22 +37,12 @@ class PiCreature(Mobject):
             if part_name not in self.WHITE_PART_NAMES:
                 mob.highlight(self.color)
             setattr(self, part_name, mob)
+            self.add(mob)
         self.eyes = Mobject(self.left_eye, self.right_eye)
         self.legs = Mobject(self.left_leg, self.right_leg)
-        mouth_center = self.get_mouth_center()
-        self.mouth.center()
-        self.smile = self.mouth
-        self.frown = self.mouth.copy().rotate(np.pi, RIGHT)
-        self.straight_mouth = TexMobject("-").scale(0.7)
-        for mouth in self.smile, self.frown, self.straight_mouth:
-            mouth.sort_points(lambda p : p[0])
-            mouth.highlight(self.color) ##to blend into background
-            mouth.shift(mouth_center)
-        self.digest_mobject_attrs()
-        self.give_smile()
+        self.mouth.center().shift(self.get_mouth_center())
         self.add(self.mouth)
         self.scale(PI_CREATURE_SCALE_VAL)
-
 
     def get_parts(self):
         return [getattr(self, pn) for pn in self.PART_NAMES]
@@ -62,20 +50,13 @@ class PiCreature(Mobject):
     def get_white_parts(self):
         return [
             getattr(self, pn) 
-            for pn in self.WHITE_PART_NAMES+self.MOUTH_NAMES
+            for pn in self.WHITE_PART_NAMES
         ]
 
     def get_mouth_center(self):
         result = self.body.get_center()
         result[0] = self.eyes.get_center()[0]
         return result
-        # left_center  = self.left_eye.get_center()
-        # right_center = self.right_eye.get_center()
-        # l_to_r = right_center-left_center
-        # eyes_to_mouth = rotate_vector(l_to_r, -np.pi/2, OUT)
-        # eyes_to_mouth /= np.linalg.norm(eyes_to_mouth)
-        # return left_center/2 + right_center/2 + \
-        #        PI_CREATURE_MOUTH_TO_EYES_DISTANCE*eyes_to_mouth
 
     def highlight(self, color, condition = None):
         for part in set(self.get_parts()).difference(self.get_white_parts()):
@@ -85,25 +66,6 @@ class PiCreature(Mobject):
     def move_to(self, destination):
         self.shift(destination-self.get_bottom())
         return self
-
-    def change_mouth_to(self, mouth_name):
-        #TODO, This is poorly implemented
-        self.mouth = getattr(self, mouth_name) 
-        self.sub_mobjects = list_update(
-            self.sub_mobjects, 
-            self.get_parts()
-        )
-        self.mouth.highlight(WHITE)
-        return self
-
-    def give_smile(self):
-        return self.change_mouth_to("smile")
-
-    def give_frown(self):
-        return self.change_mouth_to("frown")
-
-    def give_straight_face(self):
-        return self.change_mouth_to("straight_mouth")
 
     def get_eye_center(self):
         return self.eyes.get_center()

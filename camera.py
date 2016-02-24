@@ -11,11 +11,13 @@ from helpers import *
 
 class Camera(object):
     DEFAULT_CONFIG = {
+        #background of a different shape will overwrite these
         "pixel_width"      : DEFAULT_WIDTH,
         "pixel_height"     : DEFAULT_HEIGHT,
+        "background_color" : BLACK,
+        #
         "space_height"     : SPACE_HEIGHT,
         "space_center"     : ORIGIN,
-        "background_color" : BLACK,
     }
 
     def __init__(self, background = None, **kwargs):
@@ -32,7 +34,9 @@ class Camera(object):
             self.pixel_height, self.pixel_width = shape
         else:
             background_color = Color(self.background_color)
-            background_rgb = np.array(background_color.get_rgb())
+            background_rgb = (255*np.array(
+                background_color.get_rgb()
+            )).astype('uint8')
             ones = np.ones(
                 (self.pixel_height, self.pixel_width, 1),
                 dtype = 'uint8'
@@ -42,21 +46,13 @@ class Camera(object):
             )
 
     def get_image(self):
-        return self.pixel_array
+        return np.array(self.pixel_array)
+
+    def set_image(self, pixel_array):
+        self.pixel_array = np.array(pixel_array)
 
     def reset(self):
-        self.pixel_array = np.array(self.background)
-
-    # def get_pixels(image_array): #TODO, FIX WIDTH/HEIGHT PROBLEM HERE
-    #     if image_array is None:
-    #         return np.zeros(
-    #             (DEFAULT_HEIGHT, DEFAULT_WIDTH, 3), 
-    #             dtype = 'uint8'
-    #         )
-    #     else:
-    #         pixels = np.array(image_array).astype('uint8')
-    #         assert len(pixels.shape) == 3 and pixels.shape[2] == 3
-    #         return pixels
+        self.set_image(np.array(self.background))
 
     # def paint_region(region, image_array = None, color = None):
     #     pixels = get_pixels(image_array)
@@ -73,13 +69,6 @@ class Camera(object):
         return self.capture_mobjects([mobject])
 
     def capture_mobjects(self, mobjects, include_sub_mobjects = True):
-        # pixels = get_pixels(image_array)
-        # height = pixels.shape[0]
-        # width  = pixels.shape[1]
-        # space_height = SPACE_HEIGHT
-        # space_width  = SPACE_HEIGHT * width / height
-        # pixels = pixels.reshape((pixels.size/3, 3)).astype('uint8')
-
         if include_sub_mobjects:
             all_families = [
                 mob.submobject_family() 
@@ -90,31 +79,45 @@ class Camera(object):
         for mobject in mobjects:
             self.display_points(
                 mobject.points, mobject.rgbs, 
-                mobject.point_thickness
+                self.adjusted_thickness(mobject.point_thickness)
             )
 
     def display_points(self, points, rgbs, thickness):
-        points = self.project_onto_screen(points)
-        pixel_coordinates = self.pixel_coordinates_of_points(points)
+        if len(points) == 0:
+            return
+        points = self.align_points_to_camera(points)
+        pixel_coords = self.points_to_pixel_coords(points)
+        pixel_coords = self.thickened_coordinates(
+            pixel_coords, thickness
+        )
+
         rgbs = (255*rgbs).astype('uint8')
-        on_screen_indices = self.on_screen_pixels(pixel_coordinates)
-        pixel_coordinates = pixel_coordinates[on_screen_indices]
+        target_len = len(pixel_coords)
+        factor = target_len/len(rgbs)
+        rgbs = np.array([rgbs]*factor).reshape((target_len, 3))
+
+        on_screen_indices = self.on_screen_pixels(pixel_coords)        
+        pixel_coords = pixel_coords[on_screen_indices]        
         rgbs = rgbs[on_screen_indices]
 
-        flattener = np.array([1, self.width], dtype = 'int')
+        flattener = np.array([1, self.pixel_width], dtype = 'int')
         flattener = flattener.reshape((2, 1))
-        indices = np.dot(pixel_coordinates, flattener)[:,0]
+        indices = np.dot(pixel_coords, flattener)[:,0]
+        indices = indices.astype('int')
 
         pw, ph = self.pixel_width, self.pixel_height
-        self.pixel_array.reshape((pw*ph, 3))
-        self.pixel_array[indices] = rgbs.astype('uint8')
-        self.pixel_array.reshape((ph, pw, 3))
+        # new_array = np.zeros((pw*ph, 3), dtype = 'uint8')
+        # new_array[indices, :] = rgbs
+        new_pa = self.pixel_array.reshape((ph*pw, 3))
+        new_pa[indices] = rgbs
+        self.pixel_array = new_pa.reshape((ph, pw, 3))
 
-    def project_onto_screen(points):
-        ## TODO
-        points[:,2] = 0
 
-    def pixel_coordinates_of_points(self, points):
+    def align_points_to_camera(self, points):
+        ## This is where projection should live
+        return points - self.space_center
+
+    def points_to_pixel_coords(self, points):
         result = np.zeros((len(points), 2))
         width_mult  = self.pixel_width/self.space_width/2
         width_add   = self.pixel_width/2        
@@ -125,14 +128,15 @@ class Camera(object):
 
         result[:,0] = points[:,0]*width_mult + width_add
         result[:,1] = points[:,1]*height_mult + height_add
-        return result
+        return result.astype('int')
 
-    def on_screen_pixels(self, pixel_coordinates):
-        return (pixel_coordinates[:,0] < 0) | \
-               (pixel_coordinates[:,0] >= width) | \
-               (pixel_coordinates[:,1] < 0) | \
-               (pixel_coordinates[:,1] >= height)
-
+    def on_screen_pixels(self, pixel_coords):
+        return reduce(op.and_, [
+            pixel_coords[:,0] >= 0,
+            pixel_coords[:,0] < self.pixel_width,
+            pixel_coords[:,1] >= 0,
+            pixel_coords[:,1] < self.pixel_height,
+        ])
 
     # def add_thickness(pixel_indices_and_rgbs, thickness, width, height):
     #     """
@@ -159,14 +163,25 @@ class Camera(object):
     #                   (pixel_indices_and_rgbs[:,1] < height)
     #     return pixel_indices_and_rgbs[admissibles]
 
-    def adjusted_thickness(thickness, width, height):
+    def adjusted_thickness(self, thickness):
         big_width = PRODUCTION_QUALITY_DISPLAY_CONFIG["width"]
         big_height = PRODUCTION_QUALITY_DISPLAY_CONFIG["height"]
-        factor = (big_width + big_height) / (width + height)
-        return 1 + (thickness-1)/facto
+        factor = (big_width + big_height) / \
+                 (self.pixel_width + self.pixel_height)
+        return 1 + (thickness-1)/factor
 
+    def get_thickening_nudges(self, thickness):
+        _range = range(-thickness/2+1, thickness/2+1)
+        return np.array(list(it.product(*[_range]*2)))
 
-
+    def thickened_coordinates(self, pixel_coords, thickness):
+        nudges = self.get_thickening_nudges(thickness)
+        pixel_coords = np.array([
+            pixel_coords + nudge
+            for nudge in nudges
+        ])
+        size = pixel_coords.size
+        return pixel_coords.reshape((size/2, 2))
 
 
 

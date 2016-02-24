@@ -84,6 +84,8 @@ MAX_LEN_FOR_HUGE_TEX_FONT = 25
 
 LOGO_PATH = os.path.join(IMAGE_DIR, "logo.png")
 
+FFMPEG_BIN = "ffmpeg"
+
 
 ### Colors ###
 
