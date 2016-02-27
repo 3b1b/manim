@@ -11,39 +11,45 @@ from helpers import *
 
 class Camera(object):
     DEFAULT_CONFIG = {
-        #background of a different shape will overwrite these
-        "pixel_width"      : DEFAULT_WIDTH,
-        "pixel_height"     : DEFAULT_HEIGHT,
+        #background of a different shape will overwrite this
+        "pixel_shape" : (DEFAULT_HEIGHT, DEFAULT_WIDTH),
+        #this will be resized to match pixel_shape
+        "space_shape" : (SPACE_HEIGHT, SPACE_WIDTH),
+        "space_center" : ORIGIN,
         "background_color" : BLACK,
-        #
-        "space_height"     : SPACE_HEIGHT,
-        "space_center"     : ORIGIN,
     }
 
     def __init__(self, background = None, **kwargs):
         digest_config(self, kwargs, locals())
         self.init_background()
+        self.resize_space_shape()
         self.reset()
 
-        width_to_height = float(self.pixel_width) / self.pixel_height
-        self.space_width = self.space_height * width_to_height
+    def resize_space_shape(self, fixed_dimension = 0):
+        """
+        Changes space_shape to match the aspect ratio 
+        of pixel_shape, where fixed_dimension determines
+        whether space_shape[0] (height) or space_shape[1] (width)
+        remains fixed while the other changes accordingly.
+        """
+        aspect_ratio = float(self.pixel_shape[1])/self.pixel_shape[0]
+        space_height, space_width = self.space_shape
+        if fixed_dimension == 0:
+            space_width = aspect_ratio*space_height
+        else:
+            space_height = space_width/aspect_ratio
+        self.space_shape = (space_height, space_width)
 
     def init_background(self):
         if self.background:
-            shape = self.background.shape[:2]
-            self.pixel_height, self.pixel_width = shape
+            self.pixel_shape = self.background.shape[:2]
         else:
-            background_color = Color(self.background_color)
-            background_rgb = (255*np.array(
-                background_color.get_rgb()
-            )).astype('uint8')
-            ones = np.ones(
-                (self.pixel_height, self.pixel_width, 1),
+            background_rgb = color_to_int_rgb(self.background_color)
+            self.background = np.zeros(
+                list(self.pixel_shape)+[3],
                 dtype = 'uint8'
             )
-            self.background = np.dot(
-                ones, background_rgb.reshape((1, 3))
-            )
+            self.background[:,:] = background_rgb
 
     def get_image(self):
         return np.array(self.pixel_array)
@@ -77,8 +83,8 @@ class Camera(object):
                 raise Exception("Invalid display mode")
 
     def display_region(self, region):
-        (h, w) = self.pixel_height, self.pixel_width
-        scalar = 2*self.space_height / h
+        (h, w) = self.pixel_shape
+        scalar = 2*self.space_shape[0] / h
         xs =  scalar*np.arange(-w/2, w/2)
         ys = -scalar*np.arange(-h/2, h/2)
         x_array = np.dot(np.ones((h, 1)), xs.reshape((1, w)))
@@ -106,18 +112,18 @@ class Camera(object):
         pixel_coords = pixel_coords[on_screen_indices]        
         rgbs = rgbs[on_screen_indices]
 
-        flattener = np.array([1, self.pixel_width], dtype = 'int')
+        ph, pw = self.pixel_shape
+
+        flattener = np.array([1, pw], dtype = 'int')
         flattener = flattener.reshape((2, 1))
         indices = np.dot(pixel_coords, flattener)[:,0]
         indices = indices.astype('int')
-
-        pw, ph = self.pixel_width, self.pixel_height
+        
         # new_array = np.zeros((pw*ph, 3), dtype = 'uint8')
         # new_array[indices, :] = rgbs
         new_pa = self.pixel_array.reshape((ph*pw, 3))
         new_pa[indices] = rgbs
         self.pixel_array = new_pa.reshape((ph, pw, 3))
-
 
     def align_points_to_camera(self, points):
         ## This is where projection should live
@@ -125,10 +131,12 @@ class Camera(object):
 
     def points_to_pixel_coords(self, points):
         result = np.zeros((len(points), 2))
-        width_mult  = self.pixel_width/self.space_width/2
-        width_add   = self.pixel_width/2        
-        height_mult = self.pixel_height/self.space_height/2
-        height_add  = self.pixel_height/2
+        ph, pw = self.pixel_shape
+        sh, sw = self.space_shape
+        width_mult  = pw/sw/2
+        width_add   = pw/2        
+        height_mult = ph/sh/2
+        height_add  = ph/2
         #Flip on y-axis as you go
         height_mult *= -1
 
@@ -139,16 +147,14 @@ class Camera(object):
     def on_screen_pixels(self, pixel_coords):
         return reduce(op.and_, [
             pixel_coords[:,0] >= 0,
-            pixel_coords[:,0] < self.pixel_width,
+            pixel_coords[:,0] < self.pixel_shape[1],
             pixel_coords[:,1] >= 0,
-            pixel_coords[:,1] < self.pixel_height,
+            pixel_coords[:,1] < self.pixel_shape[0],
         ])
 
     def adjusted_thickness(self, thickness):
-        big_width = PRODUCTION_QUALITY_DISPLAY_CONFIG["width"]
-        big_height = PRODUCTION_QUALITY_DISPLAY_CONFIG["height"]
-        factor = (big_width + big_height) / \
-                 (self.pixel_width + self.pixel_height)
+        big_shape = PRODUCTION_QUALITY_DISPLAY_CONFIG["shape"]
+        factor = sum(big_shape)/sum(self.pixel_shape)
         return 1 + (thickness-1)/factor
 
     def get_thickening_nudges(self, thickness):
@@ -171,13 +177,17 @@ class MovingCamera(Camera):
     Stays in line with the height, width and position
     of a given mobject
     """
+    DEFAULT_CONFIG = {
+        "aligned_dimension" : "height" #or "width"
+    }
     def __init__(self, mobject, **kwargs):
         digest_locals(self)
         Camera.__init__(self, **kwargs)
 
     def capture_mobjects(self, *args, **kwargs):
-        self.space_height = self.mobject.get_height()
         self.space_center = self.mobject.get_center()
+        #TODO
+
 
 
 

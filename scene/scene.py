@@ -18,18 +18,15 @@ from mobject import Mobject
 
 class Scene(object):
     DEFAULT_CONFIG = {
-        "height"                : DEFAULT_HEIGHT,
-        "width"                 : DEFAULT_WIDTH ,
-        "frame_duration"        : DEFAULT_FRAME_DURATION,
-        "construct_args"        : [],
-        "background"            : None,
-        "start_dither_time"     : DEFAULT_DITHER_TIME,
+        "shape"          : (DEFAULT_HEIGHT, DEFAULT_WIDTH),
+        "frame_duration" : DEFAULT_FRAME_DURATION,
+        "construct_args" : [],
+        "background"     : None,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
         self.camera = Camera(
-            pixel_width = self.width,
-            pixel_height = self.height,
+            pixel_shape = self.shape,
             background = self.background
         )
         self.frames = []
@@ -154,11 +151,10 @@ class Scene(object):
         for t in self.get_time_progression(animations):
             for animation in animations:
                 animation.update(t / animation.run_time)
-            self.camera.capture_mobjects([
-                anim.mobject 
-                for anim in animations 
-            ])
-            self.frames.append(self.camera.get_image())
+            self.camera.capture_mobjects(moving_mobjects)
+            frame = self.camera.get_image()
+
+            self.frames.append(frame)
             self.camera.set_image(static_image)
         for animation in animations:
             animation.clean_up()
@@ -247,7 +243,7 @@ class Scene(object):
         print "Writing to %s"%file_path
 
         fps = int(1/self.frame_duration)
-        dim = (self.width, self.height)
+        dim = tuple(reversed(self.shape))
 
         command = [
             FFMPEG_BIN,

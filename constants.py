@@ -7,20 +7,17 @@ DEFAULT_WIDTH  = 2560
 DEFAULT_FRAME_DURATION = 0.04
 
 PRODUCTION_QUALITY_DISPLAY_CONFIG = {
-    "height"         : DEFAULT_HEIGHT,
-    "width"          : DEFAULT_WIDTH ,
+    "shape"          : (DEFAULT_HEIGHT, DEFAULT_WIDTH),
     "frame_duration" : DEFAULT_FRAME_DURATION,
 }
 
 MEDIUM_QUALITY_DISPLAY_CONFIG = {
-    "height"         : 720,
-    "width"          : 1280,
+    "shape"          : (720, 1280),
     "frame_duration" : 0.04,
 }
 
 LOW_QUALITY_DISPLAY_CONFIG = {
-    "height"         : 600,#480,
-    "width"          : 1000,#840,
+    "shape"          : (480, 640),
     "frame_duration" : 0.04,
 }
 
