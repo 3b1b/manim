@@ -7,7 +7,6 @@ from random import random
 from copy import deepcopy
 from colour import Color
 
-import displayer as disp
 from helpers import *
 
 
@@ -20,6 +19,7 @@ class Mobject(object):
         "color" : WHITE,
         "point_thickness" : DEFAULT_POINT_THICKNESS,
         "name" : None,
+        "display_mode" : "points"
     }
     DIM = 3
     def __init__(self, *sub_mobjects, **kwargs):
@@ -100,7 +100,10 @@ class Mobject(object):
         return self
 
     def show(self):
-        Image.fromarray(disp.paint_mobject(self)).show()
+        from camera import Camera
+        camera = Camera()
+        camera.capture_mobject(self)
+        Image.fromarray(camera.get_image()).show()
 
     def save_image(self, name = None):
         Image.fromarray(disp.paint_mobject(self)).save(

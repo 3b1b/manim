@@ -9,7 +9,7 @@ from fractions import Fraction, gcd
 from animation import *
 from mobject import *
 from constants import *
-from region import *
+from mobject.region import  *
 from scene import Scene
 from inventing_math import Underbrace
 

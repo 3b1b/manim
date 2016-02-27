@@ -1,7 +1,7 @@
 from mobject import Mobject
 from mobject.image_mobject import MobjectFromRegion
 from mobject.tex_mobject import TextMobject
-from region import region_from_polygon_vertices
+from mobject.region import  region_from_polygon_vertices
 from topics.geometry import Arrow, Dot, Circle, Line, FilledRectangle
 from topics.number_line import NumberPlane, XYZAxes
 from topics.three_dimensions import Sphere

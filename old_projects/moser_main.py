@@ -12,7 +12,7 @@ import inspect
 from animation import *
 from mobject import *
 from constants import *
-from region import *
+from mobject.region import  *
 from scene import Scene, GraphScene, PascalsTriangleScene
 from script_wrapper import command_line_create_scene
 

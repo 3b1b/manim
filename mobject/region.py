@@ -4,15 +4,16 @@ from PIL import Image
 import cv2
 from copy import deepcopy
 
+from mobject import Mobject
 
-import displayer as disp
 from helpers import *
 
-class Region(object):
-    def __init__(self, 
-                 condition = None, 
-                 shape = None,
-                 ):
+#TODO, this whole class should be something vectorized.
+class Region(Mobject):
+    DEFAULT_CONFIG = {
+        "display_mode" : "region"
+    }
+    def __init__(self, condition = (lambda x, y : True), **kwargs):
         """
         Condition must be a function which takes in two real
         arrays (representing x and y values of space respectively)
@@ -20,35 +21,14 @@ class Region(object):
         a function from R^2 to {True, False}, but & and | must be
         used in place of "and" and "or"
         """
-        if shape == None:
-            self.shape = (DEFAULT_HEIGHT, DEFAULT_WIDTH)
-        else:
-            self.shape = shape
-        # self.condition = condition
-        (h, w) = self.shape
-        scalar = 2*SPACE_HEIGHT / h
-        xs =  scalar*np.arange(-w/2, w/2)
-        ys = -scalar*np.arange(-h/2, h/2)
-        #TODO, do xs and ys really need to be saved in self?
-        self.xs = np.dot(
-            np.ones((h, 1)),
-            xs.reshape((1, w))
-        )
-        self.ys = np.dot(
-            ys.reshape(h, 1), 
-            np.ones((1, w))
-        )
-        if condition:
-            self.bool_grid = condition(self.xs, self.ys)
-        else:
-            self.bool_grid = np.ones(self.shape, dtype = 'bool')
-
-    def show(self, color = None):
-        Image.fromarray(disp.paint_region(self, color = color)).show()
+        Mobject.__init__(self, **kwargs)
+        self.condition = condition
 
     def _combine(self, region, op):
-        assert region.shape == self.shape
-        self.bool_grid = op(self.bool_grid, region.bool_grid)
+        self.condition = lambda x, y : op(
+            self.condition(x, y),
+            region.condition(x, y)
+        )
 
     def union(self, region):
         self._combine(region, lambda bg1, bg2 : bg1 | bg2)

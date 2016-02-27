@@ -9,7 +9,7 @@ import sys
 from animation import *
 from mobject import *
 from constants import *
-from region import *
+from mobject.region import  *
 import displayer as disp
 from scene import Scene, GraphScene
 from scene.graphs import *

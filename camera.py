@@ -54,17 +54,6 @@ class Camera(object):
     def reset(self):
         self.set_image(np.array(self.background))
 
-    # def paint_region(region, image_array = None, color = None):
-    #     pixels = get_pixels(image_array)
-    #     assert region.shape == pixels.shape[:2]
-    #     if color is None:
-    #         #Random dark color
-    #         rgb = 0.5 * np.random.random(3)
-    #     else:
-    #         rgb = np.array(Color(color).get_rgb()) 
-    #     pixels[region.bool_grid] = (255*rgb).astype('uint8')
-    #     return pixels
-
     def capture_mobject(self, mobject):
         return self.capture_mobjects([mobject])
 
@@ -77,10 +66,27 @@ class Camera(object):
             mobjects = reduce(op.add, all_families, [])
             
         for mobject in mobjects:
-            self.display_points(
-                mobject.points, mobject.rgbs, 
-                self.adjusted_thickness(mobject.point_thickness)
-            )
+            if mobject.display_mode == "region":
+                self.display_region(mobject)
+            elif mobject.display_mode == "points":
+                self.display_points(
+                    mobject.points, mobject.rgbs, 
+                    self.adjusted_thickness(mobject.point_thickness)
+                )
+            else:
+                raise Exception("Invalid display mode")
+
+    def display_region(self, region):
+        (h, w) = self.pixel_height, self.pixel_width
+        scalar = 2*self.space_height / h
+        xs =  scalar*np.arange(-w/2, w/2)
+        ys = -scalar*np.arange(-h/2, h/2)
+        x_array = np.dot(np.ones((h, 1)), xs.reshape((1, w)))
+        y_array = np.dot(ys.reshape(h, 1), np.ones((1, w)))
+        covered = region.condition(x_array, y_array)
+        rgb = np.array(Color(region.color).get_rgb())
+        rgb = (255*rgb).astype('uint8')
+        self.pixel_array[covered] = rgb
 
     def display_points(self, points, rgbs, thickness):
         if len(points) == 0:
@@ -138,31 +144,6 @@ class Camera(object):
             pixel_coords[:,1] < self.pixel_height,
         ])
 
-    # def add_thickness(pixel_indices_and_rgbs, thickness, width, height):
-    #     """
-    #     Imagine dragging each pixel around like a paintbrush in
-    #     a plus-sign-shaped pixel arrangement surrounding it.
-
-    #     Pass rgb = None to do nothing to them
-    #     """
-    #     thickness = adjusted_thickness(thickness, width, height)
-    #     original = np.array(pixel_indices_and_rgbs)
-    #     n_extra_columns = pixel_indices_and_rgbs.shape[1] - 2
-    #     for nudge in range(-thickness/2+1, thickness/2+1):
-    #         if nudge == 0:
-    #             continue
-    #         for x, y in [[nudge, 0], [0, nudge]]:
-    #             pixel_indices_and_rgbs = np.append(
-    #                 pixel_indices_and_rgbs, 
-    #                 original+([x, y] + [0]*n_extra_columns),
-    #                 axis = 0
-    #             )
-    #     admissibles = (pixel_indices_and_rgbs[:,0] >= 0) & \
-    #                   (pixel_indices_and_rgbs[:,0] < width) & \
-    #                   (pixel_indices_and_rgbs[:,1] >= 0) & \
-    #                   (pixel_indices_and_rgbs[:,1] < height)
-    #     return pixel_indices_and_rgbs[admissibles]
-
     def adjusted_thickness(self, thickness):
         big_width = PRODUCTION_QUALITY_DISPLAY_CONFIG["width"]
         big_height = PRODUCTION_QUALITY_DISPLAY_CONFIG["height"]
@@ -185,7 +166,18 @@ class Camera(object):
 
 
 
+class MovingCamera(Camera):
+    """
+    Stays in line with the height, width and position
+    of a given mobject
+    """
+    def __init__(self, mobject, **kwargs):
+        digest_locals(self)
+        Camera.__init__(self, **kwargs)
 
+    def capture_mobjects(self, *args, **kwargs):
+        self.space_height = self.mobject.get_height()
+        self.space_center = self.mobject.get_center()
 
 
 

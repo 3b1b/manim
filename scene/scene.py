@@ -103,32 +103,30 @@ class Scene(object):
         self.camera.capture_mobjects(self.mobjects)
         return self
 
-    def play(self, *animations, **kwargs):
-        self.num_animations += 1
+    def align_run_times(self, *animations, **kwargs):
         if "run_time" in kwargs:
             run_time = kwargs["run_time"]
         else:
             run_time = animations[0].run_time
         for animation in animations:
             animation.set_run_time(run_time)
+        return animations
+
+    def separate_static_and_moving_mobjects(self, *animations):
         moving_mobjects = [
             mobject
             for anim in animations
             for mobject in anim.mobject.submobject_family()
         ]
-
         bundle = Mobject(*self.mobjects)
         static_mobjects = filter(
             lambda m : m not in moving_mobjects, 
             bundle.submobject_family()
         )
-        self.camera.reset()
-        self.camera.capture_mobjects(
-            static_mobjects,
-            include_sub_mobjects = False
-        )
-        static_image = self.camera.get_image()
+        return moving_mobjects, static_mobjects
 
+    def get_time_progression(self, animations):
+        run_time = animations[0].run_time
         times = np.arange(0, run_time, self.frame_duration)
         time_progression = ProgressDisplay(times)
         time_progression.set_description(
@@ -136,7 +134,24 @@ class Scene(object):
             str(animations[0]) + \
             (", etc." if len(animations) > 1 else "")
         )
-        for t in time_progression:
+        return time_progression
+
+    def play(self, *animations, **kwargs):
+        if len(animations) == 0:
+            raise Warning("Called Scene.play with no animations")
+            return
+        self.num_animations += 1
+        animations = self.align_run_times(*animations, **kwargs)
+        moving_mobjects, static_mobjects = \
+            self.separate_static_and_moving_mobjects(*animations)
+        self.camera.reset()
+        self.camera.capture_mobjects(
+            static_mobjects,
+            include_sub_mobjects = False
+        )
+        static_image = self.camera.get_image()
+
+        for t in self.get_time_progression(animations):
             for animation in animations:
                 animation.update(t / animation.run_time)
             self.camera.capture_mobjects([

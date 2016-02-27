@@ -7,7 +7,7 @@ from helpers import *
 
 from scene import Scene
 from geometry import Polygon
-from region import region_from_polygon_vertices, region_from_line_boundary
+from mobject.region import  region_from_polygon_vertices, region_from_line_boundary
 
 A_COLOR = BLUE
 B_COLOR = MAROON_D

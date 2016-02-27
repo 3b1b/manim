@@ -9,7 +9,7 @@ import sys
 from animation import *
 from mobject import *
 from constants import *
-from region import *
+from mobject.region import  *
 from scene import Scene
 from topics.complex_numbers import *
 

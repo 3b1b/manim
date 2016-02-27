@@ -24,7 +24,7 @@ from topics.geometry import \
 from topics.characters import Randolph, Mathematician
 from topics.functions import ParametricFunction, FunctionGraph
 from topics.number_line import NumberPlane
-from region import Region, region_from_polygon_vertices
+from mobject.region import  Region, region_from_polygon_vertices
 from scene import Scene
 
 RANDY_SCALE_VAL = 0.3
