@@ -1,24 +1,21 @@
 import os
 import numpy as np
 
-
 DEFAULT_HEIGHT = 1440
 DEFAULT_WIDTH  = 2560
 DEFAULT_FRAME_DURATION = 0.04
 
+#There might be other configuration than pixel_shape later...
 PRODUCTION_QUALITY_DISPLAY_CONFIG = {
-    "shape"          : (DEFAULT_HEIGHT, DEFAULT_WIDTH),
-    "frame_duration" : DEFAULT_FRAME_DURATION,
+    "pixel_shape" : (DEFAULT_HEIGHT, DEFAULT_WIDTH),
 }
 
 MEDIUM_QUALITY_DISPLAY_CONFIG = {
-    "shape"          : (720, 1280),
-    "frame_duration" : 0.04,
+    "pixel_shape" : (720, 1280),
 }
 
 LOW_QUALITY_DISPLAY_CONFIG = {
-    "shape"          : (480, 640),
-    "frame_duration" : 0.04,
+    "pixel_shape" : (480, 640),
 }
 
 

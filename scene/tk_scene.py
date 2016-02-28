@@ -11,8 +11,8 @@ class TkSceneRoot(Tkinter.Tk):
         Tkinter.Tk.__init__(self)
 
         kwargs = {
-            "height" : scene.shape[0],        
-            "width" : scene.shape[1],
+            "height" : scene.camera.pixel_shape[0],        
+            "width" : scene.camera.pixel_shape[1],
         }
         self.frame = Tkinter.Frame(self, **kwargs)
         self.frame.pack()

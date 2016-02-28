@@ -85,8 +85,8 @@ class Camera(object):
     def display_region(self, region):
         (h, w) = self.pixel_shape
         scalar = 2*self.space_shape[0] / h
-        xs =  scalar*np.arange(-w/2, w/2)
-        ys = -scalar*np.arange(-h/2, h/2)
+        xs =  scalar*np.arange(-w/2, w/2)+self.space_center[0]
+        ys = -scalar*np.arange(-h/2, h/2)+self.space_center[1]
         x_array = np.dot(np.ones((h, 1)), xs.reshape((1, w)))
         y_array = np.dot(ys.reshape(h, 1), np.ones((1, w)))
         covered = region.condition(x_array, y_array)
@@ -153,7 +153,7 @@ class Camera(object):
         ])
 
     def adjusted_thickness(self, thickness):
-        big_shape = PRODUCTION_QUALITY_DISPLAY_CONFIG["shape"]
+        big_shape = PRODUCTION_QUALITY_DISPLAY_CONFIG["pixel_shape"]
         factor = sum(big_shape)/sum(self.pixel_shape)
         return 1 + (thickness-1)/factor
 
@@ -178,7 +178,7 @@ class MovingCamera(Camera):
     of a given mobject
     """
     DEFAULT_CONFIG = {
-        "aligned_dimension" : "height" #or "width"
+        "aligned_dimension" : "width" #or height
     }
     def __init__(self, mobject, **kwargs):
         digest_locals(self)
@@ -186,7 +186,19 @@ class MovingCamera(Camera):
 
     def capture_mobjects(self, *args, **kwargs):
         self.space_center = self.mobject.get_center()
-        #TODO
+        self.realign_space_shape()        
+        Camera.capture_mobjects(self, *args, **kwargs)
+
+    def realign_space_shape(self):
+        height, width = self.space_shape
+        if self.aligned_dimension == "height":
+            self.space_shape = (self.mobject.get_height()/2, width)
+        else:
+            self.space_shape = (height, self.mobject.get_width()/2)
+        self.resize_space_shape(
+            0 if self.aligned_dimension == "height" else 1
+        )
+        
 
 
 

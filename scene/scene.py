@@ -18,17 +18,14 @@ from mobject import Mobject
 
 class Scene(object):
     DEFAULT_CONFIG = {
-        "shape"          : (DEFAULT_HEIGHT, DEFAULT_WIDTH),
+        "camera"         : None,
         "frame_duration" : DEFAULT_FRAME_DURATION,
         "construct_args" : [],
-        "background"     : None,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
-        self.camera = Camera(
-            pixel_shape = self.shape,
-            background = self.background
-        )
+        if not self.camera:
+            self.camera = Camera()
         self.frames = []
         self.mobjects = []
         self.num_animations = 0
@@ -47,6 +44,9 @@ class Scene(object):
     def set_name(self, name):
         self.name = name
         return self
+
+    def set_camera(self, camera):
+        self.camera = camera
 
     def get_frame(self):
         return self.camera.get_image()
