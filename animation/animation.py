@@ -12,7 +12,7 @@ from helpers import *
 from mobject import Mobject
 
 class Animation(object):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "run_time" : DEFAULT_ANIMATION_RUN_TIME,
         "rate_func" : smooth,
         "name" : None,

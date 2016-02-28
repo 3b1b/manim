@@ -30,7 +30,7 @@ from scene import Scene
 from brachistochrone.curves import Cycloid
 
 class Lens(Arc):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "radius" : 2,
         "angle" : np.pi/2,
         "color" : BLUE_B,
@@ -86,7 +86,7 @@ class SimplePhoton(PhotonScene):
 
 
 class MultipathPhotonScene(PhotonScene):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "num_paths" : 5
     }
     def run_along_paths(self):
@@ -307,7 +307,7 @@ class ShowMultiplePathsInGlass(ShowMultiplePathsScene):
 
 
 class MultilayeredGlass(PhotonScene):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "num_discrete_layers" : 5,
         "num_variables" : 3,
         "top_color" : BLUE_E,

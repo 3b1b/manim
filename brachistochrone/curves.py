@@ -32,7 +32,7 @@ RANDY_SCALE_VAL = 0.3
 
 
 class Cycloid(ParametricFunction):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "point_a"       : 6*LEFT+3*UP,
         "radius"        : 2,
         "end_theta"     : 3*np.pi/2,
@@ -52,7 +52,7 @@ class Cycloid(ParametricFunction):
         ])
 
 class LoopTheLoop(ParametricFunction):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "color" : YELLOW_D,
         "density" : 20*DEFAULT_POINT_DENSITY_1D
     }
@@ -71,7 +71,7 @@ class LoopTheLoop(ParametricFunction):
 
 
 class SlideWordDownCycloid(Animation):
-    DEFAULT_CONFIG = { 
+    CONFIG = { 
         "rate_func" : None,
         "run_time"  : 8
     }
@@ -149,7 +149,7 @@ class BrachistochroneWordSliding(Scene):
 
 
 class PathSlidingScene(Scene):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "gravity" : 3,
         "delta_t" : 0.05
     }

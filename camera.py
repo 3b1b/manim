@@ -10,7 +10,7 @@ import progressbar
 from helpers import *
 
 class Camera(object):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         #background of a different shape will overwrite this
         "pixel_shape" : (DEFAULT_HEIGHT, DEFAULT_WIDTH),
         #this will be resized to match pixel_shape
@@ -177,7 +177,7 @@ class MovingCamera(Camera):
     Stays in line with the height, width and position
     of a given mobject
     """
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "aligned_dimension" : "width" #or height
     }
     def __init__(self, mobject, **kwargs):

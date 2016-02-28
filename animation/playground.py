@@ -9,7 +9,7 @@ from topics.geometry import Line
 from helpers import *
 
 class Vibrate(Animation):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "spatial_period"  : 6,
         "temporal_period" : 1,
         "overtones"       : 4,
@@ -48,7 +48,7 @@ class Vibrate(Animation):
 
 
 class TurnInsideOut(Transform):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "path_func" : path_along_arc(np.pi/2)
     }
     def __init__(self, mobject, **kwargs):

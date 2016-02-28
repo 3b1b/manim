@@ -3,7 +3,7 @@ from helpers import *
 from mobject import Mobject, Mobject1D, Point
 
 class Dot(Mobject1D): #Use 1D density, even though 2D
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "radius" : 0.05
     }
     def __init__(self, center_point = ORIGIN, **kwargs):
@@ -19,7 +19,7 @@ class Dot(Mobject1D): #Use 1D density, even though 2D
         ])
 
 class Cross(Mobject1D):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "color"  : YELLOW,
         "radius" : 0.3
     }
@@ -37,7 +37,7 @@ class Cross(Mobject1D):
 
 
 class Line(Mobject1D):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "buff" : 0
     }
     def __init__(self, start, end, **kwargs):
@@ -83,7 +83,7 @@ class Line(Mobject1D):
         return rise/run
 
 class Arrow(Line):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "color"      : YELLOW_C,
         "tip_length" : 0.25,
         "buff"       : 0.3,
@@ -147,7 +147,7 @@ class CurvedLine(Line):
 
 
 class Arc(Mobject1D):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "radius"      : 1.0,
         "start_angle" : 0,
     }
@@ -167,14 +167,14 @@ class Arc(Mobject1D):
         ])
 
 class Circle(Arc):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "color" : RED,
     }
     def __init__(self, **kwargs):
         Arc.__init__(self, angle = 2*np.pi, **kwargs)
 
 class Polygon(Mobject1D):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "color"       : GREEN_D,
         "edge_colors" : None
     }
@@ -200,7 +200,7 @@ class Polygon(Mobject1D):
 
 
 class Grid(Mobject1D):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "height" : 6.0,
         "width"  : 6.0,
     }
@@ -224,7 +224,7 @@ class Grid(Mobject1D):
             )
 
 class Rectangle(Grid):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "color"  : YELLOW,
         "height" : 2.0,
         "width"  : 4.0,
@@ -242,7 +242,7 @@ class Rectangle(Grid):
         ])
 
 class Square(Rectangle):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "side_length" : 2.0,
     }
     def __init__(self, **kwargs):
@@ -254,7 +254,7 @@ class Square(Rectangle):
 
 
 class FilledRectangle(Mobject1D):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "color"  : GREY,
         "height" : 2.0,
         "width"  : 4.0,

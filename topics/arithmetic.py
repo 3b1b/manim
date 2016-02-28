@@ -84,7 +84,7 @@ class RearrangeEquation(Scene):
 
 
 class FlipThroughSymbols(Animation):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "start_center" : ORIGIN,
         "end_center" : ORIGIN,
     }

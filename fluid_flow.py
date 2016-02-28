@@ -15,7 +15,7 @@ from helpers import *
 
 
 class FluidFlow(Scene):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "arrow_spacing" : 1,
         "dot_spacing" : 0.5,
         "dot_color" : BLUE_C,
@@ -114,7 +114,7 @@ class FluidFlow(Scene):
 
 
 class NegativeDivergenceExamlpe(FluidFlow):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "points_width" : 2*SPACE_WIDTH,
         "points_height" : 2*SPACE_HEIGHT,
     }
@@ -177,7 +177,7 @@ class QuadraticField(FluidFlow):
 
 
 class IncompressibleFluid(FluidFlow):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "points_width" : 2*SPACE_WIDTH,
         "points_height" : 1.4*SPACE_HEIGHT
     }
@@ -197,7 +197,7 @@ class IncompressibleFluid(FluidFlow):
 
 
 class ConstantInwardFlow(FluidFlow):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "points_height" : 3*SPACE_HEIGHT,
         "points_width" : 3*SPACE_WIDTH,
     }
@@ -240,7 +240,7 @@ class ConstantOutwardFlow(FluidFlow):
 
 
 class ConstantPositiveCurl(FluidFlow):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "points_height" : SPACE_WIDTH,
     }
     def construct(self):
@@ -272,7 +272,7 @@ class ComplexCurlExample(FluidFlow):
             )
 
 class SingleSwirl(FluidFlow):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "points_height" : SPACE_WIDTH,
     }
     def construct(self):
@@ -287,7 +287,7 @@ class SingleSwirl(FluidFlow):
 
 
 class CurlArticleExample(FluidFlow):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "points_height" : 3*SPACE_HEIGHT,
         "points_width" : 3*SPACE_WIDTH
     }
@@ -309,7 +309,7 @@ class CurlArticleExample(FluidFlow):
 
 
 class FourSwirlsWithoutCircles(FluidFlow):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "points_height" : SPACE_WIDTH,
     }
     def construct(self):

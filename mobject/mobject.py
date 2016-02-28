@@ -15,7 +15,7 @@ class Mobject(object):
     Mathematical Object
     """
     #Number of numbers used to describe a point (3 for pos, 3 for normal vector)
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "color" : WHITE,
         "point_thickness" : DEFAULT_POINT_THICKNESS,
         "name" : None,
@@ -533,7 +533,7 @@ class Mobject(object):
 
 
 class Point(Mobject):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "color" : BLACK,
     }
     def __init__(self, location = ORIGIN, **kwargs):
@@ -545,7 +545,7 @@ class Point(Mobject):
 
 #TODO, Make the two implementations bellow non-redundant
 class Mobject1D(Mobject):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "density" : DEFAULT_POINT_DENSITY_1D,
     }
     def __init__(self, **kwargs):
@@ -568,7 +568,7 @@ class Mobject1D(Mobject):
         self.add_points(points, color = color)
 
 class Mobject2D(Mobject):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "density" : DEFAULT_POINT_DENSITY_2D,
     }
     def __init__(self, **kwargs):

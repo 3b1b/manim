@@ -5,7 +5,7 @@ from helpers import *
 #TODO, Cleanup and refactor this file.
 
 class TexMobject(Mobject):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "template_tex_file" : TEMPLATE_TEX_FILE,
         "color"             : WHITE,
         "point_thickness"   : 1,
@@ -39,14 +39,14 @@ class TexMobject(Mobject):
 
 
 class TextMobject(TexMobject):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "template_tex_file" : TEMPLATE_TEXT_FILE,
         "size" : "\\Large", #TODO, auto-adjust?
     }
 
 
 class Brace(TexMobject):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "buff" : 0.2,
     }
     TEX_STRING = "\\underbrace{%s}"%(14*"\\quad")

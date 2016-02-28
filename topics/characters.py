@@ -14,7 +14,7 @@ def part_name_to_directory(name):
     return os.path.join(PI_CREATURE_DIR, "pi_creature_"+name) + ".png"
 
 class PiCreature(Mobject):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "color" : BLUE_E
     }
     PART_NAMES = [
@@ -125,7 +125,7 @@ class Randolph(PiCreature):
     pass #Nothing more than an alternative name
 
 class Mortimer(PiCreature):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "color" : MAROON_E
     }
     def __init__(self, **kwargs):
@@ -136,7 +136,7 @@ class Mortimer(PiCreature):
 
 
 class Mathematician(PiCreature):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "color" : GREY,
     }
     def __init__(self, **kwargs):
@@ -145,7 +145,7 @@ class Mathematician(PiCreature):
 
 
 class Bubble(Mobject):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "direction" : LEFT,
         "center_point" : ORIGIN,
     }
@@ -197,7 +197,7 @@ class Bubble(Mobject):
         return self
 
 class SpeechBubble(Bubble):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "initial_width"  : 6,
         "initial_height" : 4,
     }
@@ -237,7 +237,7 @@ class SpeechBubble(Bubble):
         return self.circle.get_center()
 
 class ThoughtBubble(Bubble):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "num_bulges"           : 7,
         "initial_inner_radius" : 1.8,
         "initial_width"        : 6,

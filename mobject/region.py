@@ -10,7 +10,7 @@ from helpers import *
 
 #TODO, this whole class should be something vectorized.
 class Region(Mobject):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "display_mode" : "region"
     }
     def __init__(self, condition = (lambda x, y : True), **kwargs):

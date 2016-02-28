@@ -5,7 +5,7 @@ from mobject import Mobject, Mobject1D, Mobject
 from helpers import *
 
 class FunctionGraph(Mobject1D):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "color" : BLUE,
         "x_min" : -10,
         "x_max" : 10,
@@ -27,7 +27,7 @@ class FunctionGraph(Mobject1D):
 
 
 class ParametricFunction(Mobject1D):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "start" : 0,
         "end"   : 1,
     }

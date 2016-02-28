@@ -11,7 +11,7 @@ from simple_animations import DelayByOrder
 from mobject import Mobject, Point
 
 class Transform(Animation):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "path_func" : straight_path,
         "should_black_out_extra_points" : False
     }
@@ -75,12 +75,12 @@ class Transform(Animation):
                     )
 
 class ClockwiseTransform(Transform):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "path_func" : clockwise_path()
     }
 
 class CounterclockwiseTransform(Transform):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "path_func" : counterclockwise_path()
     }
 
@@ -93,7 +93,7 @@ class GrowFromCenter(Transform):
         Transform.__init__(self, mobject, target, **kwargs)
 
 class SpinInFromNothing(GrowFromCenter):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "path_func" : counterclockwise_path()
     }
 
@@ -143,7 +143,7 @@ class ShimmerIn(DelayByOrder):
 
 
 class Rotate(ApplyMethod):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "in_place" : False,
     }
     def __init__(self, mobject, angle = np.pi, axis = OUT, **kwargs):
@@ -157,7 +157,7 @@ class Rotate(ApplyMethod):
 
 
 class ApplyPointwiseFunction(ApplyMethod):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "run_time" : DEFAULT_POINTWISE_FUNCTION_RUN_TIME
     }
     def __init__(self, function, mobject, **kwargs):
@@ -206,7 +206,7 @@ class ApplyMatrix(Animation):
 
 
 class TransformAnimations(Transform):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "rate_func" : squish_rate_func(smooth)
     }
     def __init__(self, start_anim, end_anim, **kwargs):

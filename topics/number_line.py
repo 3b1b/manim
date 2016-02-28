@@ -5,7 +5,7 @@ from mobject.tex_mobject import TexMobject
 from scene import Scene
 
 class NumberLine(Mobject1D):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "color"                        : BLUE,
         "numerical_radius"             : SPACE_WIDTH,
         "unit_length_to_spatial_width" : 1,
@@ -101,7 +101,7 @@ class NumberLine(Mobject1D):
         return self
 
 class UnitInterval(NumberLine):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "numerical_radius"             : 0.5,
         "unit_length_to_spatial_width" : 2*(SPACE_WIDTH-1),
         "tick_frequency"               : 0.1,
@@ -112,7 +112,7 @@ class UnitInterval(NumberLine):
 
 
 class NumberPlane(Mobject1D):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "color"                    : BLUE,
         "x_radius"                 : SPACE_WIDTH,
         "y_radius"                 : SPACE_HEIGHT,
@@ -216,7 +216,7 @@ class NumberPlane(Mobject1D):
 
 
 class XYZAxes(Mobject1D):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "color"          : TEAL,
         "radius"         : SPACE_HEIGHT,
         "tick_frequency" : 1,
@@ -233,7 +233,7 @@ class XYZAxes(Mobject1D):
 
 
 class SpaceGrid(Mobject1D):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "color"                  : GREEN,
         "radius"                 : SPACE_HEIGHT,
         "unit_to_spatial_length" : 1,

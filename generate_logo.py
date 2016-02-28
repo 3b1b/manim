@@ -11,7 +11,7 @@ from helpers import *
 
 
 class LogoGeneration(Scene):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "radius"               : 1.5,
         "inner_radius_ratio"   : 0.55,
         "circle_density"       : 100,

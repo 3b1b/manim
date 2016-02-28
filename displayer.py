@@ -10,7 +10,7 @@ import progressbar
 from helpers import *
 
 class Camera(object):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "pixel_width"      : DEFAULT_WIDTH,
         "pixel_height"     : DEFAULT_HEIGHT,
         "space_height"     : SPACE_HEIGHT,

@@ -15,7 +15,7 @@ def rotate(points, angle = np.pi, axis = OUT):
 
 
 class SpaceFillingCurve(Mobject1D):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "radius"      : 3,
         "order"       : 5,
         "start_color" : RED,
@@ -33,7 +33,7 @@ class SpaceFillingCurve(Mobject1D):
 
 
 class LindenmayerCurve(SpaceFillingCurve):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "axiom"        : "A",
         "rule"         : {},
         "scale_factor" : 2,
@@ -74,7 +74,7 @@ class LindenmayerCurve(SpaceFillingCurve):
 
 
 class SelfSimilarSpaceFillingCurve(SpaceFillingCurve):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "offsets" : [],
         #keys must awkwardly be in string form...
         "offset_to_rotation_axis" : {},
@@ -119,7 +119,7 @@ class SelfSimilarSpaceFillingCurve(SpaceFillingCurve):
 
 
 class HilbertCurve(SelfSimilarSpaceFillingCurve):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "offsets" : [
             LEFT+DOWN,
             LEFT+UP,
@@ -134,7 +134,7 @@ class HilbertCurve(SelfSimilarSpaceFillingCurve):
 
 
 class HilbertCurve3D(SelfSimilarSpaceFillingCurve):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "offsets" : [ 
            LEFT+DOWN+OUT,
            LEFT+UP+OUT,
@@ -149,7 +149,7 @@ class HilbertCurve3D(SelfSimilarSpaceFillingCurve):
     }
 
 class PeanoCurve(SelfSimilarSpaceFillingCurve):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "start_color" : PURPLE,
         "end_color"   : TEAL,
         "offsets" : [
@@ -175,7 +175,7 @@ class PeanoCurve(SelfSimilarSpaceFillingCurve):
     }
 
 class TriangleFillingCurve(SelfSimilarSpaceFillingCurve):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "start_color" : MAROON,
         "end_color"   : YELLOW,
         "offsets" : [
@@ -193,7 +193,7 @@ class TriangleFillingCurve(SelfSimilarSpaceFillingCurve):
     }
 
 # class HexagonFillingCurve(SelfSimilarSpaceFillingCurve):
-#     DEFAULT_CONFIG = {
+#     CONFIG = {
 #         "start_color" : WHITE,
 #         "end_color"   : BLUE_D,
 #         "axis_offset_pairs" : [
@@ -217,7 +217,7 @@ class TriangleFillingCurve(SelfSimilarSpaceFillingCurve):
 
 
 class UtahFillingCurve(SelfSimilarSpaceFillingCurve):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "start_color" : WHITE,
         "end_color"   : BLUE_D,
         "axis_offset_pairs" : [
@@ -229,7 +229,7 @@ class UtahFillingCurve(SelfSimilarSpaceFillingCurve):
 
 
 class FlowSnake(LindenmayerCurve):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "start_color" : YELLOW,
         "end_color"   : GREEN,
         "axiom"       : "A",
@@ -247,7 +247,7 @@ class FlowSnake(LindenmayerCurve):
         self.rotate(-self.order*np.pi/9)
 
 class Sierpinski(LindenmayerCurve):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "start_color" : RED,
         "end_color"   : WHITE,
         "axiom"       : "A",
@@ -262,7 +262,7 @@ class Sierpinski(LindenmayerCurve):
     }
 
 class KochCurve(LindenmayerCurve):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "start_color"  : BLUE_D,
         "end_color"    : WHITE,
         "axiom"        : "A--A--A--",
@@ -282,7 +282,7 @@ class KochCurve(LindenmayerCurve):
 
 
 class StellarCurve(LindenmayerCurve):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "start_color" : RED,
         "end_color"   : BLUE_E,
         "rule" : {
@@ -294,7 +294,7 @@ class StellarCurve(LindenmayerCurve):
     }
 
 class SnakeCurve(SpaceFillingCurve):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "start_color" : BLUE,
         "end_color"   : YELLOW,
     }

@@ -10,7 +10,7 @@ def complex_string(complex_num):
     return filter(lambda c : c not in "()", str(complex_num))
 
 class ComplexPlane(NumberPlane):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "color"                 : GREEN,
         "unit_to_spatial_width" : 1,
         "line_frequency"        : 1,

@@ -17,7 +17,7 @@ from tk_scene import TkSceneRoot
 from mobject import Mobject
 
 class Scene(object):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "camera"         : None,
         "frame_duration" : DEFAULT_FRAME_DURATION,
         "construct_args" : [],

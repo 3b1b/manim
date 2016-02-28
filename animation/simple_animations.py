@@ -8,7 +8,7 @@ from animation import Animation
 
 
 class Rotating(Animation):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "axes"       : [RIGHT, UP],
         "axis"       : None,
         "radians"    : 2*np.pi,
@@ -57,7 +57,7 @@ class ShowCreation(ShowPartial):
         return (0, alpha)
 
 class ShowPassingFlash(ShowPartial):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "time_width" : 0.1
     }
     def get_bounds(self, alpha):
@@ -71,7 +71,7 @@ class ShowPassingFlash(ShowPartial):
 
 
 class Flash(Animation):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "color" : "white",
         "slow_factor" : 0.01,
         "run_time" : 0.1,
@@ -111,7 +111,7 @@ class Homotopy(Animation):
         ])
 
 class PhaseFlow(Animation):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "virtual_time" : 1
     }
     def __init__(self, function, mobject, **kwargs):
@@ -154,7 +154,7 @@ class DelayByOrder(Animation):
 
     Warning: This will not work on all animation types.
     """
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "max_power" : 5
     }
     def __init__(self, animation, **kwargs):

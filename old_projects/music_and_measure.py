@@ -94,7 +94,7 @@ class OpenInterval(Mobject):
         self.shift(center_point)
 
 class Piano(ImageMobject):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "point_thickness" : 1,
         "invert" : False, 
         "scale_value" : 0.5
@@ -127,7 +127,7 @@ class Piano(ImageMobject):
 
 
 class Vibrate(Animation):
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "num_periods" : 1,
         "overtones" : 4,
         "amplitude" : 0.5,

@@ -12,7 +12,7 @@ class ImageMobject(Mobject):
     """
     Automatically filters out black pixels
     """
-    DEFAULT_CONFIG = {
+    CONFIG = {
         "filter_color"    : "black",
         "invert"          : True,
         "use_cache"       : True,
