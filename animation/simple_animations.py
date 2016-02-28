@@ -162,7 +162,7 @@ class DelayByOrder(Animation):
         self.num_mobject_points = animation.mobject.get_num_points()        
         kwargs.update(dict([
             (attr, getattr(animation, attr))
-            for attr in Animation.DEFAULT_CONFIG
+            for attr in Animation.CONFIG
         ]))
         Animation.__init__(self, animation.mobject, **kwargs)
         self.name = str(self) + str(self.animation)

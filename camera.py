@@ -65,12 +65,10 @@ class Camera(object):
 
     def capture_mobjects(self, mobjects, include_sub_mobjects = True):
         if include_sub_mobjects:
-            all_families = [
+            mobjects = it.chain(*[
                 mob.submobject_family() 
                 for mob in mobjects
-            ]
-            mobjects = reduce(op.add, all_families, [])
-            
+            ])
         for mobject in mobjects:
             if mobject.display_mode == "region":
                 self.display_region(mobject)
@@ -153,9 +151,10 @@ class Camera(object):
         ])
 
     def adjusted_thickness(self, thickness):
-        big_shape = PRODUCTION_QUALITY_DISPLAY_CONFIG["pixel_shape"]
-        factor = sum(big_shape)/sum(self.pixel_shape)
-        return 1 + (thickness-1)/factor
+        # big_shape = PRODUCTION_QUALITY_DISPLAY_CONFIG["pixel_shape"]
+        # factor = sum(big_shape)/sum(self.pixel_shape)
+        # return 1 + (thickness-1)/factor
+        return thickness
 
     def get_thickening_nudges(self, thickness):
         _range = range(-thickness/2+1, thickness/2+1)

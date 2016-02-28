@@ -28,7 +28,7 @@ class LogoGeneration(Scene):
     def construct(self):
         digest_config(self, {})
         ## Usually shouldn't need this...
-        self.frame_duration = self.DEFAULT_CONFIG["frame_duration"]
+        self.frame_duration = self.CONFIG["frame_duration"]
         ##
         digest_config(self, {})
         circle = Circle(

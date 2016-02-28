@@ -109,12 +109,11 @@ class Scene(object):
             animation.set_run_time(run_time)
         return animations
 
-    def separate_static_and_moving_mobjects(self, *animations):
-        moving_mobjects = [
-            mobject
+    def separate_moving_and_static_mobjects(self, *animations):
+        moving_mobjects = list(it.chain(*[
+            anim.mobject.submobject_family()
             for anim in animations
-            for mobject in anim.mobject.submobject_family()
-        ]
+        ]))
         bundle = Mobject(*self.mobjects)
         static_mobjects = filter(
             lambda m : m not in moving_mobjects, 
@@ -126,21 +125,30 @@ class Scene(object):
         run_time = animations[0].run_time
         times = np.arange(0, run_time, self.frame_duration)
         time_progression = ProgressDisplay(times)
-        time_progression.set_description(
-            "Animation %d: "%self.num_animations + \
-            str(animations[0]) + \
-            (", etc." if len(animations) > 1 else "")
-        )
+        time_progression.set_description("".join([
+            "Animation %d: "%self.num_animations,
+            str(animations[0]),
+            (", etc." if len(animations) > 1 else ""),
+        ]))
         return time_progression
+
+    def update_frame(self, moving_mobjects, static_image = None):
+        if static_image is not None:
+            self.camera.set_image(static_image)
+        else:
+            self.camera.reset()
+        self.camera.capture_mobjects(moving_mobjects)
+
 
     def play(self, *animations, **kwargs):
         if len(animations) == 0:
             raise Warning("Called Scene.play with no animations")
             return
         self.num_animations += 1
+        self.add(*[anim.mobject for anim in animations])
         animations = self.align_run_times(*animations, **kwargs)
         moving_mobjects, static_mobjects = \
-            self.separate_static_and_moving_mobjects(*animations)
+            self.separate_moving_and_static_mobjects(*animations)
         self.camera.reset()
         self.camera.capture_mobjects(
             static_mobjects,
@@ -151,14 +159,10 @@ class Scene(object):
         for t in self.get_time_progression(animations):
             for animation in animations:
                 animation.update(t / animation.run_time)
-            self.camera.capture_mobjects(moving_mobjects)
-            frame = self.camera.get_image()
-
-            self.frames.append(frame)
-            self.camera.set_image(static_image)
+            self.update_frame(moving_mobjects, static_image)
+            self.frames.append(self.get_frame())
         for animation in animations:
             animation.clean_up()
-        self.add(*[anim.mobject for anim in animations])
         return self
 
     def play_over_time_range(self, t0, t1, *animations):
@@ -243,14 +247,14 @@ class Scene(object):
         print "Writing to %s"%file_path
 
         fps = int(1/self.frame_duration)
-        dim = tuple(reversed(self.shape))
+        height, width = self.camera.pixel_shape
 
         command = [
             FFMPEG_BIN,
             '-y',                 # overwrite output file if it exists
             '-f', 'rawvideo',
             '-vcodec','rawvideo',
-            '-s', '%dx%d'%dim,    # size of one frame
+            '-s', '%dx%d'%(width, height), # size of one frame
             '-pix_fmt', 'rgb24',
             '-r', str(fps),       # frames per second
             '-i', '-',            # The imput comes from a pipe

@@ -86,20 +86,25 @@ def filtered_locals(local_args):
 
 def digest_config(obj, kwargs, local_args = {}):
     """
-    Sets init args and DEFAULT_CONFIG values as local variables
+    Sets init args and CONFIG values as local variables
+
+    The purpose of this function is to ensure that all 
+    configuration of any object is inheritable, able to 
+    be easily passed into instantiation, and is attached
+    as an attribute of the object.
     """
-    ### Assemble list of DEFAULT_CONFIGs from all super classes
+    ### Assemble list of CONFIGs from all super classes
     classes_in_heirarchy = [obj.__class__]
-    default_configs = []
+    configs = []
     while len(classes_in_heirarchy) > 0:
         Class = classes_in_heirarchy.pop()
         classes_in_heirarchy += Class.__bases__
-        if hasattr(Class, "DEFAULT_CONFIG"):
-            default_configs.append(Class.DEFAULT_CONFIG)    
+        if hasattr(Class, "CONFIG"):
+            configs.append(Class.CONFIG)    
 
     #Order matters a lot here, first dicts have higher priority
     all_dicts = [kwargs, filtered_locals(local_args), obj.__dict__]
-    all_dicts += default_configs
+    all_dicts += configs
     item_lists = reversed([d.items() for d in all_dicts])
     obj.__dict__ = dict(reduce(op.add, item_lists))
 
