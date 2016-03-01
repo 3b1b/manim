@@ -233,12 +233,12 @@ class Rectangle(Grid):
         Grid.__init__(self, 1, 1, **kwargs)
 
     def generate_points(self):
-        wh = [self.width/2.0, self.height/2.0]
+        hw = [self.width/2.0, self.height/2.0]
         self.add_points([
-            (x, u, 0) if dim==0 else (u, x, 0)
+            (x, u, 0) if dim==1 else (u, x, 0)
             for dim in 0, 1
-            for u in wh[1-dim], -wh[1-dim]
-            for x in np.arange(-wh[dim], wh[dim], self.epsilon)
+            for u in hw[1-dim], -hw[1-dim]
+            for x in np.arange(-hw[dim], hw[dim], self.epsilon)
         ])
 
 class Square(Rectangle):
