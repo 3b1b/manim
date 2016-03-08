@@ -151,10 +151,9 @@ class Camera(object):
         ])
 
     def adjusted_thickness(self, thickness):
-        # big_shape = PRODUCTION_QUALITY_DISPLAY_CONFIG["pixel_shape"]
-        # factor = sum(big_shape)/sum(self.pixel_shape)
-        # return 1 + (thickness-1)/factor
-        return thickness
+        big_shape = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_shape"]
+        factor = sum(big_shape)/sum(self.pixel_shape)
+        return 1 + (thickness-1)/factor
 
     def get_thickening_nudges(self, thickness):
         _range = range(-thickness/2+1, thickness/2+1)

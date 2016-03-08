@@ -83,7 +83,7 @@ def generate_tex_file(expression, size, template_tex_file):
         expression = tex_expression_list_as_string(expression)
     result = os.path.join(TEX_DIR, tex_hash(expression, size))+".tex"
     if not os.path.exists(result):
-        print "Writing %s at size %s to %s"%(
+        print "Writing \"%s\" at size %s to %s"%(
             "".join(expression), size, result
         )
         with open(template_tex_file, "r") as infile:

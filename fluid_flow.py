@@ -1,5 +1,4 @@
 from mobject import Mobject
-from mobject.image_mobject import MobjectFromRegion
 from mobject.tex_mobject import TextMobject
 from mobject.region import  region_from_polygon_vertices
 from topics.geometry import Arrow, Dot, Circle, Line, FilledRectangle
@@ -21,6 +20,7 @@ class FluidFlow(Scene):
         "dot_color" : BLUE_C,
         "text_color" : WHITE,
         "arrow_color" : GREEN_A,
+        "arrow_length" : 0.5,
         "points_height" : SPACE_HEIGHT,
         "points_width" : SPACE_WIDTH,
     }
@@ -59,7 +59,7 @@ class FluidFlow(Scene):
         )
         angles = map(angle_of_vector, map(self.function, points))
         prototype = Arrow(
-            ORIGIN, RIGHT*self.arrow_spacing/2.,
+            ORIGIN, RIGHT*self.arrow_length,
             color = self.arrow_color, 
             tip_length = 0.1,
             buff = 0
@@ -112,6 +112,23 @@ class FluidFlow(Scene):
         self.remove(mob, rectangle)
 
 
+class FluxArticleExample(FluidFlow):
+    CONFIG = {
+        "arrow_length" : 0.4,
+        "arrow_color" : BLUE_D,
+        "points_height" : SPACE_HEIGHT,
+        "points_width" : SPACE_WIDTH,
+    }
+    def construct(self):
+        self.use_function(
+            lambda (x, y, z) : (x**2+y**2)*((np.sin(x)**2)*RIGHT + np.cos(y)*UP)
+        )
+        # self.add_plane()
+        self.add_arrows()
+        self.show_frame()
+        self.add_dots()        
+        self.flow(run_time = 2, virtual_time = 0.1)
+        self.dither(2)
 
 class NegativeDivergenceExamlpe(FluidFlow):
     CONFIG = {

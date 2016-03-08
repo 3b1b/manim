@@ -18,14 +18,13 @@ from mobject import Mobject
 
 class Scene(object):
     CONFIG = {
-        "camera"         : None,
+        "camera_config"  : {},
         "frame_duration" : DEFAULT_FRAME_DURATION,
         "construct_args" : [],
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
-        if not self.camera:
-            self.camera = Camera()
+        self.camera = Camera(**self.camera_config)
         self.frames = []
         self.mobjects = []
         self.num_animations = 0
@@ -45,11 +44,21 @@ class Scene(object):
         self.name = name
         return self
 
+    ### Only these methods should touch the camera
+
     def set_camera(self, camera):
         self.camera = camera
 
     def get_frame(self):
         return self.camera.get_image()
+
+    def update_frame(self, mobjects, background = None, **kwargs):
+        if background is not None:
+            self.camera.set_image(background)
+        else:
+            self.camera.reset()
+        self.camera.capture_mobjects(mobjects, **kwargs)
+    ###
 
     def add(self, *mobjects):
         """
@@ -60,7 +69,6 @@ class Scene(object):
             raise Exception("Adding something which is not a mobject")
         old_mobjects = filter(lambda m : m not in mobjects, self.mobjects)
         self.mobjects = old_mobjects + list(mobjects)
-        self.camera.capture_mobjects(mobjects)
         return self
 
     def add_mobjects_among(self, values):
@@ -79,7 +87,6 @@ class Scene(object):
         if len(mobjects) == 0:
             return
         self.mobjects = filter(lambda m : m not in mobjects, self.mobjects)
-        self.repaint_mojects()
         return self
 
     def bring_to_front(self, mobject):
@@ -93,11 +100,6 @@ class Scene(object):
 
     def clear(self):
         self.mobjects = []
-        return self
-
-    def repaint_mojects(self):
-        self.camera.reset()
-        self.camera.capture_mobjects(self.mobjects)
         return self
 
     def align_run_times(self, *animations, **kwargs):
@@ -132,13 +134,6 @@ class Scene(object):
         ]))
         return time_progression
 
-    def update_frame(self, moving_mobjects, static_image = None):
-        if static_image is not None:
-            self.camera.set_image(static_image)
-        else:
-            self.camera.reset()
-        self.camera.capture_mobjects(moving_mobjects)
-
 
     def play(self, *animations, **kwargs):
         if len(animations) == 0:
@@ -149,12 +144,11 @@ class Scene(object):
         animations = self.align_run_times(*animations, **kwargs)
         moving_mobjects, static_mobjects = \
             self.separate_moving_and_static_mobjects(*animations)
-        self.camera.reset()
-        self.camera.capture_mobjects(
+        self.update_frame(
             static_mobjects,
             include_sub_mobjects = False
         )
-        static_image = self.camera.get_image()
+        static_image = self.get_frame()
 
         for t in self.get_time_progression(animations):
             for animation in animations:
@@ -183,15 +177,15 @@ class Scene(object):
             for animation in animations:
                 animation.update((t-t0)/(t1 - t0))
             index = int(t/self.frame_duration)
-            self.camera.set_image(self.frames[index])
-            self.camera.capture_mobjects(moving_mobjects)
-            self.frames[index] = self.camera.get_image()
+            self.update_frame(moving_mobjects, self.frames[index])
+            self.frames[index] = self.get_frame()
         for animation in animations:
             animation.clean_up()
         self.repaint_mojects()
         return self
 
     def dither(self, duration = DEFAULT_DITHER_TIME):
+        self.update_frame(self.mobjects)
         self.frames += [self.get_frame()]*int(duration / self.frame_duration)
         return self
 

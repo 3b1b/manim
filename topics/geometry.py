@@ -246,10 +246,13 @@ class Square(Rectangle):
         "side_length" : 2.0,
     }
     def __init__(self, **kwargs):
-        digest_config(self, kwargs)
-        for arg in ["height", "width"]:
-            kwargs[arg] = self.side_length
-        Rectangle.__init__(self, **kwargs)
+        side_length = kwargs.pop("side_length")
+        Rectangle.__init__(
+            self, 
+            height = side_length,
+            width = side_length,
+            **kwargs
+        )
 
 
 
@@ -262,8 +265,8 @@ class FilledRectangle(Mobject1D):
     def generate_points(self):
         self.add_points([
             (x, y, 0)
-            for x in np.arange(-self.width, self.width, self.epsilon)
-            for y in np.arange(-self.height, self.height, self.epsilon)
+            for x in np.arange(-self.width/2, self.width/2, self.epsilon)
+            for y in np.arange(-self.height/2, self.height/2, self.epsilon)                        
         ])
 
 

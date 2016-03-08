@@ -30,6 +30,9 @@ class ZoomedScene(Scene):
     def get_zoomed_camera_mobject(self):
         return self.little_rectangle
 
+    def get_zoomed_screen(self):
+        return self.big_rectangle
+
     def generate_big_rectangle(self):
         height, width = self.zoomed_canvas_space_shape
         self.big_rectangle = Rectangle(
@@ -67,6 +70,8 @@ class ZoomedScene(Scene):
             background = self.zoomed_camera_background
         )
         self.add(self.little_rectangle)
+        #TODO, is there a better way to hanld this?
+        self.zoomed_camera.adjusted_thickness = lambda x : x
 
     def get_frame(self):
         frame = Scene.get_frame(self)

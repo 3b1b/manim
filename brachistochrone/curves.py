@@ -6,7 +6,7 @@ from helpers import *
 from mobject.tex_mobject import TexMobject, TextMobject, Brace
 from mobject import Mobject
 from mobject.image_mobject import \
-    MobjectFromRegion, ImageMobject, MobjectFromPixelArray
+    ImageMobject, MobjectFromPixelArray
 from topics.three_dimensions import Stars
 
 from animation import Animation

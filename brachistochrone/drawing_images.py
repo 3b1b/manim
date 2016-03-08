@@ -14,7 +14,7 @@ from helpers import *
 from mobject.tex_mobject import TexMobject
 from mobject import Mobject
 from mobject.image_mobject import \
-    MobjectFromRegion, ImageMobject, MobjectFromPixelArray
+    ImageMobject, MobjectFromPixelArray
 from mobject.tex_mobject import TextMobject, TexMobject    
 
 from animation.transform import \

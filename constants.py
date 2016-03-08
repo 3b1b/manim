@@ -6,15 +6,15 @@ DEFAULT_WIDTH  = 2560
 DEFAULT_FRAME_DURATION = 0.04
 
 #There might be other configuration than pixel_shape later...
-PRODUCTION_QUALITY_DISPLAY_CONFIG = {
+PRODUCTION_QUALITY_CAMERA_CONFIG = {
     "pixel_shape" : (DEFAULT_HEIGHT, DEFAULT_WIDTH),
 }
 
-MEDIUM_QUALITY_DISPLAY_CONFIG = {
+MEDIUM_QUALITY_CAMERA_CONFIG = {
     "pixel_shape" : (720, 1280),
 }
 
-LOW_QUALITY_DISPLAY_CONFIG = {
+LOW_QUALITY_CAMERA_CONFIG = {
     "pixel_shape" : (576, 1024),
 }
 

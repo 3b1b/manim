@@ -68,8 +68,6 @@ class ShowPassingFlash(ShowPartial):
         return (lower, upper)
 
 
-
-
 class Flash(Animation):
     CONFIG = {
         "color" : "white",

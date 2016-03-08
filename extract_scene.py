@@ -49,7 +49,7 @@ def get_configuration(sys_argv):
       "file"           : None,
       "scene_name"     : "",
       "args_extension" : "",
-      "display_config" : PRODUCTION_QUALITY_DISPLAY_CONFIG,
+      "camera_config"  : PRODUCTION_QUALITY_CAMERA_CONFIG,
       "preview"        : False,
       "write"          : False,
       "save_image"     : False,
@@ -61,11 +61,11 @@ def get_configuration(sys_argv):
          print HELP_MESSAGE
          return
       elif opt == '-l':
-         config["display_config"] = LOW_QUALITY_DISPLAY_CONFIG
+         config["camera_config"] = LOW_QUALITY_CAMERA_CONFIG
       elif opt == '-m':
-         config["display_config"] = MEDIUM_QUALITY_DISPLAY_CONFIG
+         config["camera_config"] = MEDIUM_QUALITY_CAMERA_CONFIG
       elif opt == '-p':
-         config["display_config"] = LOW_QUALITY_DISPLAY_CONFIG
+         config["camera_config"] = LOW_QUALITY_CAMERA_CONFIG
          config["preview"] = True
       elif opt == '-w':
          config["write"] = True
@@ -196,7 +196,7 @@ def main():
    )
    config["movie_prefix"] = config["file"].replace(".py", "")
    scene_kwargs = {
-      "camera" : Camera(**config["display_config"])
+      "camera_config" : config["camera_config"]
    }
    for SceneClass in get_scene_classes(scene_names_to_classes, config):
       for args in get_scene_args(SceneClass, config):

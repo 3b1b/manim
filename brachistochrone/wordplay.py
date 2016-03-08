@@ -7,7 +7,7 @@ from helpers import *
 from mobject.tex_mobject import TexMobject, TextMobject, Brace
 from mobject import Mobject
 from mobject.image_mobject import \
-    MobjectFromRegion, ImageMobject, MobjectFromPixelArray
+    ImageMobject, MobjectFromPixelArray
 from topics.three_dimensions import Stars
 
 from animation import Animation
@@ -100,17 +100,43 @@ class IntroduceSteve(Scene):
         cornell.replace(sample_size)
         cornell.next_to(name, DOWN)
 
-        Mobject(*logos+books+[cornell]).show()
-
         self.add(name)
         self.play(FadeIn(cornell))
-        self.play(ShimmerIn(contributions))
-        for logo in logos:
-            self.play(FadeIn(logo))
         self.play(ShimmerIn(books_word))
         for book in books:
             book.shift(5*LEFT)
             self.play(ApplyMethod(book.shift, 5*RIGHT))
+        self.play(ShimmerIn(contributions))
+        for logo in logos:
+            self.play(FadeIn(logo))
+        self.dither()
+
+class ShowTweets(Scene):
+    def construct(self):
+        tweets = [
+            ImageMobject("tweet%d"%x, invert = False)
+            for x in range(1, 4)
+        ]
+        for tweet in tweets:
+            tweet.scale(0.4)
+        tweets[0].to_corner(UP+LEFT)
+        tweets[1].next_to(tweets[0], RIGHT, aligned_edge = UP)
+        tweets[2].next_to(tweets[1], DOWN)
+
+        self.play(GrowFromCenter(tweets[0]))
+        for x in 1, 2:
+            self.play(
+                Transform(Point(tweets[x-1].get_center()), tweets[x]),
+                Animation(tweets[x-1])
+            )
+        self.dither()
+
+class LetsBeHonest(Scene):
+    def construct(self):
+        self.play(ShimmerIn(TextMobject("""
+            Let's be honest about who benefits 
+            from this collaboration...
+        """)))
         self.dither()
 
 
@@ -200,6 +226,85 @@ class DisectBrachistochroneWord(Scene):
                 ShimmerIn(ex)
             )
         self.dither()
+
+class OneSolutionTwoInsights(Scene):
+    def construct(self):
+        one_solution = TextMobject(["One ", "solution"])
+        two_insights = TextMobject(["Two ", " insights"])
+        two, insights = two_insights.split()        
+        johann = ImageMobject("Johann_Bernoulli2", invert = False)
+        mark = ImageMobject("Mark_Levi", invert = False)
+        for mob in johann, mark:
+            mob.scale(0.4)
+        johann.next_to(insights, LEFT)
+        mark.next_to(johann, RIGHT)
+        name = TextMobject("Mark Levi").to_edge(UP)
+
+        self.play(*map(ShimmerIn, one_solution.split()))
+        self.dither()
+        for pair in zip(one_solution.split(), two_insights.split()):
+            self.play(Transform(*pair, path_func = path_along_arc(np.pi)))
+        self.dither()
+        self.clear()
+        self.add(two, insights)
+        for word, man in [(two, johann), (insights, mark)]:
+            self.play(
+                Transform(word, Point(word.get_left())),                
+                GrowFromCenter(man)
+            )
+            self.dither()
+        self.clear()
+        self.play(ApplyMethod(mark.center))
+        self.play(ShimmerIn(name))
+        self.dither()
+
+class CircleOfIdeas(Scene):
+    def construct(self):
+        words = map(TextMobject, [
+            "optics", "calculus", "mechanics", "geometry", "history"
+        ])
+        words[0].highlight(YELLOW)
+        words[1].highlight(BLUE_D)
+        words[2].highlight(GREY)
+        words[3].highlight(GREEN)
+        words[4].highlight(MAROON)
+        brachistochrone = TextMobject("Brachistochrone")
+        displayed_words = []
+        for word in words:
+            anims = self.get_spinning_anims(displayed_words)
+            word.shift(3*RIGHT)
+            point = Point()
+            anims.append(Transform(point, word))
+            self.play(*anims)
+            self.remove(point)
+            self.add(word)
+            displayed_words.append(word)
+        self.play(*self.get_spinning_anims(displayed_words))
+        self.play(*[
+            Transform(
+                word, word.copy().highlight(BLACK).center().scale(0.1),
+                path_func = path_along_arc(np.pi),
+                rate_func = None,
+                run_time = 2
+            )
+            for word in displayed_words
+        ]+[
+            GrowFromCenter(brachistochrone)
+        ])
+        self.dither()
+
+    def get_spinning_anims(self, words, angle = np.pi/6):
+        anims = []
+        for word in words:
+            old_center = word.get_center()
+            new_center = rotate_vector(old_center, angle)
+            vect = new_center-old_center
+            anims.append(ApplyMethod(
+                word.shift, vect,
+                path_func = path_along_arc(angle), 
+                rate_func = None
+            ))
+        return anims
 
 
 class FermatsPrincipleStatement(Scene):
@@ -299,6 +404,10 @@ class VideoProgression(Scene):
 
 
 
+class BalanceCompetingFactors(Scene):
+    def construct(self):
+        factor1 = TextMobject("Factor 1")
+        factor2 = TextMobject("Factor 2")
 
 
 

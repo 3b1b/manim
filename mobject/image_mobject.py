@@ -6,7 +6,6 @@ from random import random
 
 from helpers import *
 from mobject import Mobject
-import displayer as disp
 
 class ImageMobject(Mobject):
     """
@@ -107,16 +106,6 @@ class MobjectFromPixelArray(ImageMobject):
     def __init__(self, image_array, **kwargs):
         Mobject.__init__(self, **kwargs)
         self.generate_points_from_image_array(image_array)
-
-
-
-class MobjectFromRegion(MobjectFromPixelArray):
-    def __init__(self, region, color = None, **kwargs):
-        MobjectFromPixelArray.__init__(
-            self,
-            disp.paint_region(region, color = color),
-            **kwargs
-        )
 
 
 
