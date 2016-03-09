@@ -11,17 +11,10 @@ from mobject.image_mobject import \
 from topics.three_dimensions import Stars
 
 from animation import Animation
-from animation.transform import \
-    Transform, CounterclockwiseTransform, ApplyPointwiseFunction,\
-    FadeIn, FadeOut, GrowFromCenter, ApplyFunction, ApplyMethod, \
-    ShimmerIn
-from animation.simple_animations import \
-    ShowCreation, Homotopy, PhaseFlow, ApplyToCenters, DelayByOrder, \
-    ShowPassingFlash
+from animation.transform import *
+from animation.simple_animations import *
 from animation.playground import TurnInsideOut, Vibrate
-from topics.geometry import \
-    Line, Circle, Square, Grid, Rectangle, Arrow, Dot, Point, \
-    Arc, FilledRectangle
+from topics.geometry import *
 from topics.characters import Randolph, Mathematician
 from topics.functions import ParametricFunction, FunctionGraph
 from topics.number_line import NumberPlane
@@ -405,9 +398,75 @@ class VideoProgression(Scene):
 
 
 class BalanceCompetingFactors(Scene):
-    def construct(self):
-        factor1 = TextMobject("Factor 1")
-        factor2 = TextMobject("Factor 2")
+    args_list = [
+        ("Short", "Steep"),
+        ("Minimal time \\\\ in water", "Short path")
+    ]
+
+    # For subclasses to turn args in the above  
+    # list into stings which can be appended to the name
+    @staticmethod
+    def args_to_string(*words):
+        return "".join([word.split(" ")[0] for word in words])
+        
+    @staticmethod
+    def string_to_args(string):
+        raise Exception("string_to_args Not Implemented!")
+
+    def construct(self, *words):
+        factor1, factor2 = [
+            TextMobject("Factor %d"%x).highlight(c)
+            for x, c in [
+                (1, RED_D),
+                (2, BLUE_D)
+            ]
+        ]
+        real_factor1, real_factor2 = map(TextMobject, words)  
+        for word in factor1, factor2, real_factor1, real_factor2:
+            word.shift(0.2*UP-word.get_bottom())
+        for f1 in factor1, real_factor1:
+            f1.highlight(RED_D)
+            f1.shift(2*LEFT)
+        for f2 in factor2, real_factor2:
+            f2.highlight(BLUE_D)
+            f2.shift(2*RIGHT)      
+        line = Line(
+            factor1.get_left(),
+            factor2.get_right()
+        )
+        line.center()
+        self.balancers = Mobject(factor1, factor2, line)
+        self.hidden_balancers = Mobject(real_factor1, real_factor2)
+
+        triangle = Polygon(RIGHT, np.sqrt(3)*UP, LEFT)
+        triangle.next_to(line, DOWN, buff = 0)
+
+        self.add(triangle, self.balancers)
+        self.rotate(1)
+        self.rotate(-2)
+        self.dither()
+        self.play(Transform(
+            factor1, real_factor1, 
+            path_func = path_along_arc(np.pi/4)
+        ))
+        self.rotate(2)
+        self.dither()
+        self.play(Transform(
+            factor2, real_factor2,
+            path_func = path_along_arc(np.pi/4)
+        ))
+        self.rotate(-2)
+        self.dither()
+        self.rotate(1)
+
+    def rotate(self, factor):
+        angle = np.pi/11
+        self.play(Rotate(
+            self.balancers, 
+            factor*angle,
+            run_time = abs(factor)
+        ))
+        self.hidden_balancers.rotate(factor*angle)
 
 
 

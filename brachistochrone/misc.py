@@ -9,20 +9,13 @@ from mobject.image_mobject import ImageMobject
 from topics.three_dimensions import Stars
 
 from animation import Animation
-from animation.transform import \
-    Transform, CounterclockwiseTransform, ApplyPointwiseFunction,\
-    FadeIn, FadeOut, GrowFromCenter, ApplyFunction, ApplyMethod, \
-    ShimmerIn
-from animation.simple_animations import \
-    ShowCreation, Homotopy, PhaseFlow, ApplyToCenters, DelayByOrder, \
-    ShowPassingFlash
+from animation.transform import *
+from animation.simple_animations import *
 from animation.playground import TurnInsideOut, Vibrate
-from topics.geometry import \
-    Line, Circle, Square, Grid, Rectangle, Arrow, Dot, Point, \
-    Arc, FilledRectangle
+from topics.geometry import *
 from topics.characters import Randolph, Mathematician
 from topics.functions import ParametricFunction, FunctionGraph
-from topics.number_line import NumberLine, NumberPlane
+from topics.number_line import *
 from mobject.region import  Region, region_from_polygon_vertices
 from scene import Scene
 
@@ -71,7 +64,59 @@ class PhysicalIntuition(Scene):
 
 
 
+class TimeLine(Scene):
+    def construct(self):
+        dated_events = [
+            {
+                "date" : 1696, 
+                "text": "Johann Bernoulli poses Brachistochrone problem",
+                "picture" : "Johann_Bernoulli2"
+            },
+            {
+                "date" : 1662, 
+                "text" : "Fermat states his principle of least time",
+                "picture" : "Pierre_de_Fermat"
+            }
+        ]
+        speical_dates = [2016] + [
+            obj["date"] for obj in dated_events
+        ]
+        centuries = range(1600, 2100, 100)
+        timeline = NumberLine(
+            numerical_radius = 300,
+            number_at_center = 1800,
+            unit_length_to_spatial_width = SPACE_WIDTH/100,
+            tick_frequency = 10,
+            numbers_with_elongated_ticks = centuries
+        )
+        timeline.add_numbers(*centuries)
+        centers = [
+            Point(timeline.number_to_point(year))
+            for year in speical_dates
+        ]
+        timeline.add(*centers)
+        timeline.shift(-centers[0].get_center())
 
+        self.add(timeline)
+        self.dither()
+        for point, event in zip(centers[1:], dated_events):
+            self.play(ApplyMethod(
+                timeline.shift, -point.get_center(), 
+                run_time = 3
+            ))
+            picture = ImageMobject(event["picture"], invert = False)
+            picture.scale_to_fit_width(2)
+            picture.to_corner(UP+RIGHT)
+            event_mob = TextMobject(event["text"])
+            event_mob.shift(2*LEFT+2*UP)
+            arrow = Arrow(event_mob.get_bottom(), ORIGIN)
+            self.play(
+                ShimmerIn(event_mob),
+                ShowCreation(arrow)
+            )
+            self.play(FadeIn(picture))
+            self.dither()
+            self.play(*map(FadeOut, [event_mob, arrow, picture]))
 
 
 

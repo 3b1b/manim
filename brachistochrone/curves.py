@@ -360,6 +360,29 @@ class NotTheCircle(PathSlidingScene):
         self.dither()
 
 
+class TransitionAwayFromSlide(PathSlidingScene):
+    def construct(self):
+        randy = Randolph()
+        randy.scale(RANDY_SCALE_VAL)
+        randy.shift(-randy.get_bottom())
+        self.add_cycloid_end_points()
+        arrow = Arrow(ORIGIN, 2*RIGHT)
+        arrows = Mobject(*[
+            arrow.copy().shift(vect)
+            for vect in 3*LEFT, ORIGIN, 3*RIGHT
+        ])
+        arrows.shift(2*SPACE_WIDTH*RIGHT)
+        self.add(arrows)
+
+        self.add(self.cycloid)
+        self.slide(randy, self.cycloid)
+        everything = Mobject(*self.mobjects)
+        self.play(ApplyMethod(
+            everything.shift, 4*SPACE_WIDTH*LEFT,
+            run_time = 2,
+            rate_func = rush_into
+        ))
+        
 
 
 

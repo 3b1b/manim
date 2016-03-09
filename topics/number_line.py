@@ -8,11 +8,11 @@ class NumberLine(Mobject1D):
     CONFIG = {
         "color"                        : BLUE,
         "numerical_radius"             : SPACE_WIDTH,
+        "number_at_center"             : 0,
         "unit_length_to_spatial_width" : 1,
         "tick_size"                    : 0.1,
         "tick_frequency"               : 0.5,
         "leftmost_tick"                : None,
-        "number_at_center"             : 0,         
         "numbers_with_elongated_ticks" : [0],
         "longer_tick_multiple"         : 2,
     }
@@ -73,10 +73,10 @@ class NumberLine(Mobject1D):
     def default_numbers_to_display(self):
         return self.get_tick_numbers()[::2]
 
-    def get_vertical_number_offset(self):
-        return 4*DOWN*self.tick_size
+    def get_vertical_number_offset(self, direction = DOWN):
+        return 4*direction*self.tick_size
 
-    def get_number_mobjects(self, *numbers):
+    def get_number_mobjects(self, *numbers, **kwargs):
         #TODO, handle decimals
         if len(numbers) == 0:
             numbers = self.default_numbers_to_display()
@@ -87,17 +87,15 @@ class NumberLine(Mobject1D):
             hori_scale = self.tick_frequency*self.unit_length_to_spatial_width/mob.get_width()
             mob.scale(min(vert_scale, hori_scale))
             mob.shift(self.number_to_point(number))
-            mob.shift(self.get_vertical_number_offset())
+            mob.shift(self.get_vertical_number_offset(**kwargs))
             result.append(mob)
         return result
 
-    def add_numbers(self, *numbers):
-        self.add(*self.get_number_mobjects(*numbers))
-        return self
-
-    def remove_numbers(self):
-        self.points = self.points[:self.number_of_points_without_numbers]
-        self.rgbs = self.rgbs[:self.number_of_points_without_numbers]
+    def add_numbers(self, *numbers, **kwargs):
+        self.numbers = self.get_number_mobjects(
+            *numbers, **kwargs
+        )
+        self.add(*self.numbers)
         return self
 
 class UnitInterval(NumberLine):

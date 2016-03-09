@@ -70,6 +70,8 @@ class PhotonScene(Scene):
 
 
     def photon_run_along_path(self, path, color = YELLOW, **kwargs):
+        if "rate_func" not in kwargs:
+            kwargs["rate_func"] = None
         photon = self.wavify(path)
         photon.highlight(color)
         return ShowPassingFlash(photon, **kwargs)
@@ -143,6 +145,26 @@ class PhotonThroughLens(MultipathPhotonScene):
             for fc, sc in zip(first_contact, second_contact)
         ]
 
+class TransitionToOptics(PhotonThroughLens):
+    def construct(self):
+        optics = TextMobject("Optics")
+        optics.to_edge(UP)
+        self.add(optics)
+        self.has_started = False
+        PhotonThroughLens.construct(self)
+
+    def play(self, *args, **kwargs):
+        if not self.has_started:
+            self.has_started = True
+            everything = Mobject(*self.mobjects)
+            vect = 2*SPACE_WIDTH*RIGHT
+            everything.shift(vect)
+            self.play(ApplyMethod(
+                everything.shift, -vect,
+                rate_func = rush_from
+            ))
+        Scene.play(self, *args, **kwargs)
+
 
 class PhotonOffMirror(MultipathPhotonScene):
     def construct(self):
@@ -172,10 +194,10 @@ class PhotonOffMirror(MultipathPhotonScene):
             for anchor_point, end_point in zip(anchor_points, end_points)
         ]
 
-class PhotonsInGlass(MultipathPhotonScene):
+class PhotonsInWater(MultipathPhotonScene):
     def construct(self):
-        glass = Region(lambda x, y : y < 0)
-        self.highlight_region(glass, BLUE_E)
+        water = Region(lambda x, y : y < 0, color = BLUE_E)
+        self.add(water)
         self.run_along_paths()
 
     def get_paths(self):
@@ -639,11 +661,14 @@ class StraightLinesFastestInConstantMedium(PhotonScene):
 
         self.play(*map(ShimmerIn, [left, arrow, right]))
         self.play(ShowCreation(squaggle))
+        self.play(self.photon_run_along_path(
+            squaggle, run_time = 2, rate_func = None
+        ))
         self.play(Transform(
             squaggle, line, 
             path_func = path_along_arc(np.pi)
         ))
-        self.play(self.photon_run_along_path(line))
+        self.play(self.photon_run_along_path(line, rate_func = None))
         self.dither()
 
 
@@ -661,8 +686,9 @@ class StraightLinesFastestInConstantMedium(PhotonScene):
             mob.highlight(BLUE_D)
         return result
 
-class GlassAndAir(PhotonScene):
+class PhtonBendsInWater(PhotonScene, ZoomedScene):
     def construct(self):
+        #TODO
         pass
 
 

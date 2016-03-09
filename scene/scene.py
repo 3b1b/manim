@@ -52,7 +52,9 @@ class Scene(object):
     def get_frame(self):
         return self.camera.get_image()
 
-    def update_frame(self, mobjects, background = None, **kwargs):
+    def update_frame(self, mobjects = None, background = None, **kwargs):
+        if mobjects is None:
+            mobjects = self.mobjects
         if background is not None:
             self.camera.set_image(background)
         else:
@@ -185,7 +187,7 @@ class Scene(object):
         return self
 
     def dither(self, duration = DEFAULT_DITHER_TIME):
-        self.update_frame(self.mobjects)
+        self.update_frame()
         self.frames += [self.get_frame()]*int(duration / self.frame_duration)
         return self
 
@@ -206,6 +208,7 @@ class Scene(object):
         return self
 
     def show_frame(self):
+        self.update_frame()
         Image.fromarray(self.get_frame()).show()
 
     def preview(self):

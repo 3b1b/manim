@@ -196,6 +196,7 @@ class JohannThinksHeIsBetter(Scene):
             "Johann_Bernoulli2",
             "Jacob_Bernoulli",
             "Gottfried_Wilhelm_von_Leibniz",
+            "Newton"
         ]
         guys = [
             ImageMobject(name, invert = False)
@@ -226,6 +227,11 @@ class JohannThinksHeIsBetter(Scene):
         bubble.pin_to(pensive_johann)
         bubble.shift(DOWN)
         point = Point(johann.get_corner(UP+RIGHT))
+        upper_point = Point(comparitive_johann.get_corner(UP+RIGHT))
+        lightbulb = ImageMobject("Lightbulb", invert = False)
+        lightbulb.scale(0.1)
+        lightbulb.sort_points(np.linalg.norm)
+        lightbulb.next_to(upper_point, RIGHT)
 
         self.add(johann)
         self.dither()
@@ -244,12 +250,24 @@ class JohannThinksHeIsBetter(Scene):
         )
         self.dither(2)
         for guy in guys[2:]:
+            self.play(DelayByOrder(Transform(
+                weakling, upper_point
+            )))
             self.play(
-                DelayByOrder(Transform(weakling, guy)),
+                FadeIn(guy),
                 ShimmerIn(guy.name_mob)
             )
             self.dither(3)
             self.remove(guy.name_mob)
+            weakling = guy
+        self.play(FadeOut(weakling), FadeOut(greater_than))
+        self.play(ShowCreation(lightbulb))
+        self.dither()
+        self.play(FadeOut(comparitive_johann), FadeOut(lightbulb))
+        self.play(ApplyMethod(
+            Mobject(johann, bubble).scale, 10,
+            run_time = 3
+        ))
 
 
 class NewtonVsJohann(Scene):
