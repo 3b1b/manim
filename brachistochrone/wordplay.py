@@ -339,61 +339,57 @@ class FermatsPrincipleStatement(Scene):
 
 class VideoProgression(Scene):
     def construct(self):
-        all_topics = [
-            TextMobject(word, size = "\\Huge")
-            for word in [
-                "Brachistochrone",
-                "Light through \\\\ multilayered glass",
-                "Light from \\\\ air into glass",
-                "Lifeguard problem",
-                "Springs and rod",
+        spacing = 2*UP
+        brachy, optics, light_in_two, snells, multi = words = [
+            TextMobject(text)
+            for text in [
+                "Brachistochrone", 
+                "Optics",
+                "Light in two media",
                 "Snell's Law",
-                "Cycloid",
-                "Mark Levi's cleverness",
+                "Multilayered glass",
             ]
         ]
-        brachy, multi_glass, bi_glass, lifeguard, springs, \
-        snell, cycloid, levi = all_topics
-        positions = [
-            (multi_glass, brachy, DOWN, "both"),
-            (bi_glass, multi_glass, LEFT, "to"),
-            (lifeguard, bi_glass, UP, "both"),
-            (springs, bi_glass, DOWN, "both"),
-            (snell, springs, RIGHT, "from"),
-            (cycloid, multi_glass, RIGHT, "from"),
-            (cycloid, snell, UP+RIGHT, "from"),
-            (levi, cycloid, UP, "to"),
-        ]
-        arrows = []
-        for mob1, mob2, direction, arrow_type in positions:
-            hasarrow = hasattr(mob1, "arrow")
-            if not hasarrow:
-                mob1.next_to(mob2, direction, buff = 3)
-            arrow = Arrow(mob1, mob2)
-            if arrow_type in ["to", "from"]:
-                arrow.highlight(GREEN)
-            if arrow_type == "from":
-                arrow.rotate_in_place(np.pi)
-            elif arrow_type == "both":
-                arrow.highlight(BLUE_D)
-                arrow.add(arrow.copy().rotate_in_place(np.pi))
-            arrows.append(arrow)
-            if hasarrow:
-                mob1.arrow.add(arrow)
-            else:
-                mob1.arrow = arrow
-        everything = Mobject(*all_topics+arrows)
-        everything.scale(0.7)
-        everything.center()
-        everything.to_edge(UP)
-        everything.show()
+        for mob in light_in_two, snells:
+            mob.shift(-spacing)
+        arrow1 = Arrow(brachy, optics)
+        arrow2 = Arrow(optics, snells)
+        point = Point(DOWN)
 
-        self.add(brachy)
-        for mob in all_topics[1:]:
-            self.play(ApplyMethod(mob.highlight, YELLOW))
-            self.play(ShowCreation(mob.arrow))
-            self.dither()
-            mob.highlight(WHITE)
+        self.play(ShimmerIn(brachy))
+        self.dither()
+        self.play(
+            ApplyMethod(brachy.shift, spacing),
+            Transform(point, optics)
+        )
+        optics = point
+        arrow1 = Arrow(optics, brachy)
+        self.play(ShowCreation(arrow1))
+        self.dither()
+        arrow2 = Arrow(light_in_two, optics)        
+        self.play(
+            ShowCreation(arrow2),
+            ShimmerIn(light_in_two)
+        )
+        self.dither()
+        self.play(
+            FadeOut(light_in_two),
+            GrowFromCenter(snells),
+            DelayByOrder(
+                ApplyMethod(arrow2.highlight, BLUE_D)
+            )
+        )
+        self.dither()
+        self.play(
+            FadeOut(optics),
+            GrowFromCenter(multi),
+            DelayByOrder(
+                ApplyMethod(arrow1.highlight, BLUE_D)
+            )
+        )
+        self.dither()
+
+
 
 
 
@@ -403,16 +399,10 @@ class BalanceCompetingFactors(Scene):
         ("Minimal time \\\\ in water", "Short path")
     ]
 
-    # For subclasses to turn args in the above  
-    # list into stings which can be appended to the name
     @staticmethod
     def args_to_string(*words):
         return "".join([word.split(" ")[0] for word in words])
         
-    @staticmethod
-    def string_to_args(string):
-        raise Exception("string_to_args Not Implemented!")
-
     def construct(self, *words):
         factor1, factor2 = [
             TextMobject("Factor %d"%x).highlight(c)

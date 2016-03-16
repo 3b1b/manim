@@ -10,20 +10,13 @@ from mobject.image_mobject import \
 from topics.three_dimensions import Stars
 
 from animation import Animation
-from animation.transform import \
-    Transform, CounterclockwiseTransform, ApplyPointwiseFunction,\
-    FadeIn, FadeOut, GrowFromCenter, ApplyFunction, ApplyMethod, \
-    ShimmerIn
-from animation.simple_animations import \
-    ShowCreation, Homotopy, PhaseFlow, ApplyToCenters, DelayByOrder, \
-    ShowPassingFlash
+from animation.transform import *
+from animation.simple_animations import *
 from animation.playground import TurnInsideOut, Vibrate
-from topics.geometry import \
-    Line, Circle, Square, Grid, Rectangle, Arrow, Dot, Point, \
-    Arc, FilledRectangle
+from topics.geometry import *
 from topics.characters import Randolph, Mathematician
-from topics.functions import ParametricFunction, FunctionGraph
-from topics.number_line import NumberPlane
+from topics.functions import *
+from topics.number_line import *
 from mobject.region import  Region, region_from_polygon_vertices
 from scene import Scene
 from scene.zoomed_scene import ZoomedScene
@@ -242,6 +235,7 @@ class ShowMultiplePathsScene(PhotonScene):
         for path in paths[1:] + [paths[0]]:
             self.play(Transform(curr_path, path, run_time = 4))
         self.dither()
+        self.path = curr_path.ingest_sub_mobjects()
 
     def generate_start_and_end_points(self):
         raise Exception("Not Implemented")
@@ -307,18 +301,46 @@ class ShowMultiplePathsOffMirror(ShowMultiplePathsScene):
         ]
 
 
-class ShowMultiplePathsInGlass(ShowMultiplePathsScene):
+class ShowMultiplePathsInWater(ShowMultiplePathsScene):
     def construct(self):
-        glass = Region(lambda x, y : y < 0)
-        self.highlight_region(glass, BLUE_E)
+        glass = Region(lambda x, y : y < 0, color = BLUE_E)
+        self.generate_start_and_end_points()
+        straight = Line(self.start_point, self.end_point)
+        slow = TextMobject("Slow")
+        slow.rotate(np.arctan(straight.get_slope()))
+        slow.shift(straight.points[int(0.7*straight.get_num_points())])
+        slow.shift(0.5*DOWN)
+        too_long = TextMobject("Too long")
+        too_long.shift(UP)
+        air = TextMobject("Air").shift(2*UP)
+        water = TextMobject("Water").shift(2*DOWN)
+
+        self.add(glass)
+        self.play(GrowFromCenter(air))
+        self.play(GrowFromCenter(water))
+        self.dither()
+        self.remove(air, water)
         ShowMultiplePathsScene.construct(self)
+        self.play(
+            Transform(self.path, straight)
+        )
+        self.dither()
+        self.play(GrowFromCenter(slow))
+        self.dither()
+        self.remove(slow)
+        self.leftmost.ingest_sub_mobjects()
+        self.play(Transform(self.path, self.leftmost, run_time = 3))
+        self.dither()
+        self.play(ShimmerIn(too_long))
+        self.dither()
+
 
     def generate_start_and_end_points(self):
         self.start_point = 3*LEFT + 2*UP
         self.end_point = 3*RIGHT + 2*DOWN
 
     def get_paths(self):
-        return [
+        self.leftmost, self.rightmost = result = [
             Mobject(
                 Line(self.start_point, midpoint),
                 Line(midpoint, self.end_point)
@@ -328,6 +350,7 @@ class ShowMultiplePathsInGlass(ShowMultiplePathsScene):
                 Color(YELLOW).range_to(WHITE, 2)
             )
         ]
+        return result
 
 
 class MultilayeredGlass(PhotonScene, ZoomedScene):
@@ -688,10 +711,384 @@ class StraightLinesFastestInConstantMedium(PhotonScene):
 
 class PhtonBendsInWater(PhotonScene, ZoomedScene):
     def construct(self):
-        #TODO
-        pass
+        glass = Region(lambda x, y : y < 0, color = BLUE_E)
+        kwargs = {
+            "density" : self.zoom_factor*DEFAULT_POINT_DENSITY_1D
+        }
+        top_line = Line(SPACE_HEIGHT*UP+2*LEFT, ORIGIN, **kwargs)
+        extension = Line(ORIGIN, SPACE_HEIGHT*DOWN+2*RIGHT, **kwargs)
+        bottom_line = Line(ORIGIN, SPACE_HEIGHT*DOWN+RIGHT, **kwargs)
+        path1 = Mobject(top_line, extension)
+        path2 = Mobject(top_line, bottom_line)
+        for mob in path1, path2:
+            mob.ingest_sub_mobjects()
+        extension.highlight(RED)
+        theta1 = np.arctan(bottom_line.get_slope())
+        theta2 = np.arctan(extension.get_slope())
+        arc = Arc(theta2-theta1, start_angle = theta1, radius = 2)
+        question_mark = TextMobject("$\\theta$?")
+        question_mark.shift(arc.get_center()+0.5*DOWN+0.25*RIGHT)
+        wave = self.wavify(path2)
+        wave.highlight(YELLOW)
+        wave.scale(0.5)
+
+        self.add(glass)
+        self.play(ShowCreation(path1))
+        self.play(Transform(path1, path2))
+        self.dither()
+        # self.activate_zooming()
+        self.dither()        
+        self.play(ShowPassingFlash(
+            wave, run_time = 3, rate_func = None
+        ))
+        self.dither()
+        self.play(ShowCreation(extension))
+        self.play(
+            ShowCreation(arc),
+            ShimmerIn(question_mark)
+        )
+
+class GeometryOfGlassSituation(ShowMultiplePathsInWater):
+    def construct(self):
+        glass = Region(lambda x, y : y < 0, color = BLUE_E)
+        self.generate_start_and_end_points()
+        left = self.start_point[0]*RIGHT
+        right = self.end_point[0]*RIGHT
+        start_x = interpolate(left, right, 0.2)
+        end_x = interpolate(left, right, 1.0)
+        left_line = Line(self.start_point, left, color = RED_D)
+        right_line = Line(self.end_point, right, color = RED_D)
+        h_1, h_2 = map(TexMobject, ["h_1", "h_2"])
+        h_1.next_to(left_line, LEFT)
+        h_2.next_to(right_line, RIGHT)
+        point_a = Dot(self.start_point)
+        point_b = Dot(self.end_point)
+        A = TextMobject("A").next_to(point_a, UP)
+        B = TextMobject("B").next_to(point_b, DOWN)
+
+        x = start_x
+        left_brace = Brace(Mobject(Point(left), Point(x)))
+        right_brace = Brace(Mobject(Point(x), Point(right)), UP)
+        x_mob = TexMobject("x")
+        x_mob.next_to(left_brace, DOWN)
+        w_minus_x = TexMobject("w-x")
+        w_minus_x.next_to(right_brace, UP)
+        top_line = Line(self.start_point, x)
+        bottom_line = Line(x, self.end_point)
+        top_dist = TexMobject("\\sqrt{h_1^2+x^2}")
+        top_dist.scale(0.5)
+        a = 0.3
+        n = top_line.get_num_points()
+        point = top_line.points[int(a*n)]
+        top_dist.next_to(Point(point), RIGHT, buff = 0.3)
+        bottom_dist = TexMobject("\\sqrt{h_2^2+(w-x)^2}")
+        bottom_dist.scale(0.5)
+        n = bottom_line.get_num_points()
+        point = bottom_line.points[int((1-a)*n)]
+        bottom_dist.next_to(Point(point), LEFT, buff = 1)
+
+        end_top_line = Line(self.start_point, end_x)
+        end_bottom_line = Line(end_x, self.end_point)
+        end_brace = Brace(Mobject(Point(left), Point(end_x)))
+        end_x_mob = TexMobject("x").next_to(end_brace, DOWN)
+
+        axes = Mobject(
+            NumberLine(),
+            NumberLine().rotate(np.pi/2).shift(7*LEFT)
+        )
+        graph = FunctionGraph(
+            lambda x : 0.4*(x+1)*(x-3)+4,
+            x_min = -2,
+            x_max = 4
+        )
+        graph.highlight(YELLOW)
+        Mobject(axes, graph).scale(0.2).to_corner(UP+RIGHT, buff = 1)
+        axes.add(TexMobject("x", size = "\\small").next_to(axes, RIGHT))
+        axes.add(TextMobject("Travel time", size = "\\small").next_to(
+            axes, UP
+        ))
+        new_graph = graph.copy()
+        midpoint = new_graph.points[new_graph.get_num_points()/2]
+        new_graph.filter_out(lambda p : p[0] < midpoint[0])
+        new_graph.reverse_points()
+        pairs_for_end_transform = [
+            (mob, mob.copy())
+            for mob in top_line, bottom_line, left_brace, x_mob
+        ]
+
+        self.add(glass, point_a, point_b, A, B)
+        line = Mobject(top_line, bottom_line).ingest_sub_mobjects()
+        self.play(ShowCreation(line))
+        self.dither()
+        self.play(
+            GrowFromCenter(left_brace), 
+            GrowFromCenter(x_mob)
+        )
+        self.play(
+            GrowFromCenter(right_brace), 
+            GrowFromCenter(w_minus_x)
+        )
+        self.play(ShowCreation(left_line), ShimmerIn(h_1))
+        self.play(ShowCreation(right_line), GrowFromCenter(h_2))
+        self.play(ShimmerIn(top_dist))
+        self.play(GrowFromCenter(bottom_dist))
+        self.dither(3)
+        self.clear()
+        self.add(glass, point_a, point_b, A, B, 
+                 top_line, bottom_line, left_brace, x_mob)
+        self.play(ShowCreation(axes))
+        kwargs = {
+            "run_time" : 4,
+        }
+        self.play(*[
+            Transform(*pair, **kwargs)
+            for pair in [
+                (top_line, end_top_line),
+                (bottom_line, end_bottom_line),
+                (left_brace, end_brace),
+                (x_mob, end_x_mob)
+            ]
+        ]+[ShowCreation(graph, **kwargs)])
+        self.dither()
+        self.show_derivatives(graph)
+        line = self.show_derivatives(new_graph)
+        self.add(line)
+        self.play(*[
+            Transform(*pair, rate_func = lambda x : 0.3*smooth(x))
+            for pair in pairs_for_end_transform
+        ])
+        self.dither()
+
+    def show_derivatives(self, graph, run_time = 2):
+        step = self.frame_duration/run_time
+        for a in smooth(np.arange(0, 1-step, step)):
+            index = int(a*graph.get_num_points())
+            p1, p2 = graph.points[index], graph.points[index+1]
+            line = Line(LEFT, RIGHT)
+            line.rotate(angle_of_vector(p2-p1))
+            line.shift(p1)
+            self.add(line)
+            self.dither(self.frame_duration)
+            self.remove(line)
+        return line
 
 
+class Spring(Line):
+    CONFIG = {
+        "num_loops" : 5,
+        "loop_radius" : 0.3,
+        "color" : GREY
+    }
+
+    def generate_points(self):
+        ## self.start, self.end
+        length = np.linalg.norm(self.end-self.start)
+        angle = angle_of_vector(self.end-self.start)
+        micro_radius = self.loop_radius/length
+        m = 2*np.pi*(self.num_loops+0.5)
+        def loop(t):
+            return micro_radius*(
+                RIGHT + np.cos(m*t)*LEFT + np.sin(m*t)*UP
+            )
+        new_epsilon = self.epsilon/(m*micro_radius)/length
+
+        self.add_points([
+            t*RIGHT + loop(t)
+            for t in np.arange(0, 1, new_epsilon)
+        ])
+        self.scale(length/(1+2*micro_radius))
+        self.rotate(angle)
+        self.shift(self.start)
+
+
+class SpringSetup(ShowMultiplePathsInWater):
+    def construct(self):
+        self.ring_shift_val = 6*RIGHT
+        self.slide_kwargs = {
+            "rate_func" : there_and_back,
+            "run_time" : 5
+        }
+
+        self.setup_background()
+        rod = Region(
+            lambda x, y : (abs(x) < 5) & (abs(y) < 0.05),
+            color = GOLD_E
+        )
+        ring = Arc(
+            angle = 11*np.pi/6,
+            start_angle = -11*np.pi/12,
+            radius = 0.2,
+            color = YELLOW
+        )
+        ring.shift(-self.ring_shift_val/2)
+        self.generate_springs(ring)                
+
+
+        self.add_rod_and_ring(rod, ring)
+        self.slide_ring(ring)
+        self.dither()
+        self.add_springs()
+        self.slide_system(ring)
+        self.balance_forces(ring)
+        self.show_equation()
+
+
+    def setup_background(self):
+        glass = Region(lambda x, y : y < 0, color = BLUE_E)
+        self.generate_start_and_end_points()
+        point_a = Dot(self.start_point)
+        point_b = Dot(self.end_point)
+        A = TextMobject("A").next_to(point_a, UP)
+        B = TextMobject("B").next_to(point_b, DOWN)
+        self.add(glass, point_a, point_b, A, B)
+
+    def generate_springs(self, ring):
+        self.start_springs, self.end_springs = [
+            Mobject(
+                Spring(self.start_point, r.get_top()),
+                Spring(self.end_point, r.get_bottom())
+            )
+            for r in ring, ring.copy().shift(self.ring_shift_val)
+        ]
+        
+    def add_rod_and_ring(self, rod, ring):
+        rod_word = TextMobject("Rod")
+        rod_word.next_to(Point(), UP)
+        ring_word = TextMobject("Ring")
+        ring_word.next_to(ring, UP)
+        self.dither()
+        self.add(rod)
+        self.play(ShimmerIn(rod_word))
+        self.dither()
+        self.remove(rod_word)
+        self.play(ShowCreation(ring))
+        self.play(ShimmerIn(ring_word))
+        self.dither()
+        self.remove(ring_word)
+
+    def slide_ring(self, ring):
+        self.play(ApplyMethod(
+            ring.shift, self.ring_shift_val,
+            **self.slide_kwargs
+        ))
+
+    def add_springs(self):
+        top_force = TexMobject("F_1 = \\dfrac{1}{v_{\\text{air}}}")
+        bottom_force = TexMobject("F_2 = \\dfrac{1}{v_{\\text{water}}}")
+        top_spring, bottom_spring = self.start_springs.split()
+        top_force.next_to(top_spring)
+        bottom_force.next_to(bottom_spring, DOWN, buff = -0.5)
+        
+        colors = iter([BLACK, BLUE_E])
+        for spring in top_spring, bottom_spring:
+            circle = Circle(color = colors.next())
+            circle.reverse_points()
+            circle.scale(spring.loop_radius)
+            circle.shift(spring.points[0])
+
+            self.play(Transform(circle, spring))
+            self.remove(circle)
+            self.add(spring)
+            self.dither()
+
+        for force in top_force, bottom_force:
+            self.play(GrowFromCenter(force))
+            self.dither()
+        self.remove(top_force, bottom_force)
+
+
+    def slide_system(self, ring):
+        equilibrium_slide_kwargs = dict(self.slide_kwargs)
+        def jiggle_to_equilibrium(t):
+            return 0.6*(1+((1-t)**2)*(-np.cos(10*np.pi*t)))
+        equilibrium_slide_kwargs = {
+            "rate_func" : jiggle_to_equilibrium,
+            "run_time" : 3
+        }
+        start = Mobject(ring, self.start_springs)
+        end = Mobject(
+            ring.copy().shift(self.ring_shift_val),
+            self.end_springs
+        )
+        for kwargs in self.slide_kwargs, equilibrium_slide_kwargs:
+            self.play(Transform(start, end, **kwargs))
+            self.dither()
+
+    def balance_forces(self, ring):
+        ring_center = ring.get_center()
+        lines, arcs, thetas = [], [], []
+        counter = it.count(1)
+        for point in self.start_point, self.end_point:
+            line = Line(point, ring_center, color = GREY)
+            angle = np.pi/2-np.abs(np.arctan(line.get_slope()))
+            arc = Arc(angle, radius = 0.5).rotate(np.pi/2)
+            if point is self.end_point:
+                arc.rotate(np.pi)
+            theta = TexMobject("\\theta_%d"%counter.next())
+            theta.scale(0.5)
+            theta.shift(2*arc.get_center())
+            arc.shift(ring_center)
+            theta.shift(ring_center)
+
+            lines.append(line)
+            arcs.append(arc)
+            thetas.append(theta)
+        vert_line = Line(SPACE_HEIGHT*UP, SPACE_HEIGHT*DOWN)
+        vert_line.shift(ring_center)
+        top_spring, bottom_spring = self.start_springs.split()
+
+        self.play(
+            Transform(ring, Point(ring_center)),
+            Transform(top_spring, lines[0]),
+            Transform(bottom_spring, lines[1])
+        )
+        self.play(ShowCreation(vert_line))
+        self.dither()
+        for arc, theta in zip(arcs, thetas):
+            self.play(ShowCreation(arc))
+            self.play(GrowFromCenter(theta))
+            self.dither()
+
+    def show_equation(self):
+        equation = TexMobject([
+            "F_1", "\\sin(\\theta_1)", "=", 
+            "F_2", "\\sin(\\theta_2)"
+        ])
+        equation.shift(3*RIGHT+2*UP)
+        f1, sin1, equals, f2, sin2 = equation.split()
+        bar1 = TexMobject("\\dfrac{\\qquad}{\\qquad}")
+        bar2 = bar1.copy()
+        v_air, v_water = [
+            TexMobject("v_{\\text{%s}}"%s, size = "\\Large")
+            for s in "air", "water"
+        ]
+        bar1.next_to(sin1, DOWN)
+        v_air.next_to(bar1, DOWN)
+        bar2.next_to(sin2, DOWN)
+        v_water.next_to(bar2, DOWN)
+        bars = Mobject(bar1, bar2)
+        new_eq = equals.copy().center().shift(bars.get_center())
+        snells = TextMobject("Snell's Law")
+        snells.highlight(YELLOW)
+        snells.shift(new_eq.get_center())
+        snells.to_edge(UP)
+
+
+        for mob  in equation.split():
+            self.play(GrowFromCenter(mob, run_time = 0.5))
+        self.dither()
+        self.play(
+            Transform(f1, v_air),
+            Transform(f2, v_water),
+            ShowCreation(bars),
+            Transform(equals, new_eq)
+        )
+        self.dither()
+        self.play(ShimmerIn(snells))
+        self.dither()
+
+
+        
 
 
 

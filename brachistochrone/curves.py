@@ -10,20 +10,13 @@ from mobject.image_mobject import \
 from topics.three_dimensions import Stars
 
 from animation import Animation
-from animation.transform import \
-    Transform, CounterclockwiseTransform, ApplyPointwiseFunction,\
-    FadeIn, FadeOut, GrowFromCenter, ApplyFunction, ApplyMethod, \
-    ShimmerIn
-from animation.simple_animations import \
-    ShowCreation, Homotopy, PhaseFlow, ApplyToCenters, DelayByOrder, \
-    ShowPassingFlash
+from animation.transform import *
+from animation.simple_animations import * 
 from animation.playground import TurnInsideOut, Vibrate
-from topics.geometry import \
-    Line, Circle, Square, Grid, Rectangle, Arrow, Dot, Point, \
-    Arc, FilledRectangle
+from topics.geometry import *
 from topics.characters import Randolph, Mathematician
 from topics.functions import ParametricFunction, FunctionGraph
-from topics.number_line import NumberPlane
+from topics.number_line import *
 from mobject.region import  Region, region_from_polygon_vertices
 from scene import Scene
 
@@ -383,6 +376,95 @@ class TransitionAwayFromSlide(PathSlidingScene):
             rate_func = rush_into
         ))
         
+
+class MinimalPotentialEnergy(Scene):
+    def construct(self):
+        horiz_radius = 5
+        vert_radius = 3
+
+        vert_axis = NumberLine(numerical_radius = vert_radius)
+        vert_axis.rotate(np.pi/2)
+        vert_axis.shift(horiz_radius*LEFT)
+        horiz_axis = NumberLine(
+            numerical_radius = 5,
+            numbers_with_elongated_ticks = []
+        )
+        axes = Mobject(horiz_axis, vert_axis)
+        graph = FunctionGraph(
+            lambda x : 0.4*(x-2)*(x+2)+3,
+            x_min = -2,
+            x_max = 2,
+            density = 3*DEFAULT_POINT_DENSITY_1D
+        )
+        graph.stretch_to_fit_width(2*horiz_radius)
+        graph.highlight(YELLOW)
+        min_point = Dot(graph.get_bottom())
+        nature_finds = TextMobject("Nature finds this point")
+        nature_finds.scale(0.5)
+        nature_finds.highlight(GREEN)
+        nature_finds.shift(2*RIGHT+3*UP)
+        arrow = Arrow(
+            nature_finds.get_bottom(), min_point, 
+            color = GREEN
+        )
+
+        side_words_start = TextMobject("Parameter describing")
+        top_words, last_side_words = [
+            map(TextMobject, pair)
+            for pair in [
+                ("Light's travel time", "Potential energy"),
+                ("path", "mechanical state")
+            ]
+        ]
+        for word in top_words + last_side_words + [side_words_start]:
+            word.scale(0.7)
+        side_words_start.next_to(horiz_axis, DOWN)
+        side_words_start.to_edge(RIGHT)
+        for words in top_words:
+            words.next_to(vert_axis, UP)
+            words.to_edge(LEFT)
+        for words in last_side_words:
+            words.next_to(side_words_start, DOWN)
+        for words in top_words[1], last_side_words[1]:
+            words.highlight(RED)
+
+        self.add(
+            axes, top_words[0], side_words_start, 
+            last_side_words[0]
+        )
+        self.play(ShowCreation(graph))
+        self.play(
+            ShimmerIn(nature_finds),
+            ShowCreation(arrow),
+            ShowCreation(min_point)
+        )
+        self.dither()
+        self.play(
+            FadeOut(top_words[0]), 
+            FadeOut(last_side_words[0]),
+            GrowFromCenter(top_words[1]), 
+            GrowFromCenter(last_side_words[1])
+        )
+        self.dither(3)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
