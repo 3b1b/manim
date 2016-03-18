@@ -41,7 +41,7 @@ class Camera(object):
         self.space_shape = (space_height, space_width)
 
     def init_background(self):
-        if self.background:
+        if self.background is not None:
             self.pixel_shape = self.background.shape[:2]
         else:
             background_rgb = color_to_int_rgb(self.background_color)

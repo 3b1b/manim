@@ -60,6 +60,11 @@ class Scene(object):
         else:
             self.camera.reset()
         self.camera.capture_mobjects(mobjects, **kwargs)
+
+    def freeze_background(self):
+        self.update_frame()
+        self.set_camera(Camera(self.get_frame()))
+        self.clear()
     ###
 
     def add(self, *mobjects):
