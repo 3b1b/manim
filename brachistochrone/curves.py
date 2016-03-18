@@ -144,17 +144,20 @@ class BrachistochroneWordSliding(Scene):
 class PathSlidingScene(Scene):
     CONFIG = {
         "gravity" : 3,
-        "delta_t" : 0.05
+        "delta_t" : 0.05,
+        "dither_and_add" : True,
+        "show_time" : True,
     }
-    def slide(self, mobject, path, roll = False):
+    def slide(self, mobject, path, roll = False, ceiling = None):
         points = path.points
-        time_slices = self.get_time_slices(points)
+        time_slices = self.get_time_slices(points, ceiling = ceiling)
         curr_t = 0
         last_index = 0
         curr_index = 1
-        self.t_equals = TexMobject("t = ")
-        self.t_equals.shift(3.5*UP+4*RIGHT)
-        self.add(self.t_equals)
+        if self.show_time:
+            self.t_equals = TexMobject("t = ")
+            self.t_equals.shift(3.5*UP+4*RIGHT)
+            self.add(self.t_equals)
         while curr_index < len(points):
             self.slider = mobject.copy()
             self.adjust_mobject_to_index(
@@ -166,7 +169,8 @@ class PathSlidingScene(Scene):
                 )
                 self.roll(mobject, distance)
             self.add(self.slider)
-            self.write_time(curr_t)
+            if self.show_time:
+                self.write_time(curr_t)
             self.dither(self.frame_duration)
             self.remove(self.slider)
             curr_t += self.delta_t
@@ -175,17 +179,22 @@ class PathSlidingScene(Scene):
                 curr_index += 1
                 if curr_index == len(points):
                     break
-        self.add(self.slider)
-        self.dither()
+        if self.dither_and_add:
+            self.add(self.slider)
+            self.dither()
+        else:
+            return self.slider
 
-    def get_time_slices(self, points):
+    def get_time_slices(self, points, ceiling = None):
         dt_list = np.zeros(len(points))
         ds_list = np.apply_along_axis(
             np.linalg.norm,
             1,
             points[1:]-points[:-1]
         )
-        delta_y_list = np.abs(points[0, 1] - points[1:,1])
+        if ceiling is None:
+            ceiling = points[0, 1]
+        delta_y_list = np.abs(ceiling - points[1:,1])
         delta_y_list += 0.001*(delta_y_list == 0)
         v_list = self.gravity*np.sqrt(delta_y_list)
         dt_list[1:] = ds_list / v_list
@@ -257,7 +266,7 @@ class TryManyPaths(PathSlidingScene):
             self.slide(randy, curr_path)
         self.clear()
         self.add(point_a, point_b, A, B, curr_path)
-        text = TextMobject("Which path is fastest?")
+        text = self.get_text()
         text.to_edge(UP)
         self.play(ShimmerIn(text))
         for path in paths:
@@ -266,6 +275,9 @@ class TryManyPaths(PathSlidingScene):
                 path_func = path_along_arc(np.pi/2),
                 run_time = 3
             ))
+
+    def get_text(self):
+        return TextMobject("Which path is fastest?")
 
     def get_paths(self):
         sharp_corner = Mobject(
@@ -298,7 +310,7 @@ class TryManyPaths(PathSlidingScene):
 
     def align_paths(self, paths, target_path):
         start = target_path.points[0]
-        end = target_path.point[-1]
+        end = target_path.points[-1]
         for path in paths:
             path.position_endpoints_on(start, end)
 
@@ -449,6 +461,140 @@ class MinimalPotentialEnergy(Scene):
 
 
 
+
+class WhatGovernsSpeed(PathSlidingScene):
+    CONFIG = {
+        "num_pieces" : 6,
+        "dither_and_add" : False,
+        "show_time" : False,
+    }
+    def construct(self):
+        randy = Randolph()
+        randy.scale(RANDY_SCALE_VAL)
+        randy.shift(-randy.get_bottom())
+        self.add_cycloid_end_points()
+        points = self.cycloid.points
+        ceiling = points[0, 1]
+        n = len(points)
+        broken_points = [
+            points[k*n/self.num_pieces:(k+1)*n/self.num_pieces]
+            for k in range(self.num_pieces)
+        ]
+        words = TextMobject("""
+            What determines the speed\\\\
+            at each point?
+        """)
+        words.to_edge(UP)
+
+        self.add(self.cycloid)
+        sliders, vectors = [], []
+        for points in broken_points:
+            path = Mobject().add_points(points)
+            vect = points[-1] - points[-2]
+            magnitude = np.sqrt(ceiling - points[-1, 1])
+            vect = magnitude*vect/np.linalg.norm(vect)
+            slider = self.slide(randy, path, ceiling = ceiling)
+            vector = Vector(slider.get_center(), vect)
+            self.add(slider, vector)
+            sliders.append(slider)
+            vectors.append(vector)
+        self.dither()
+        self.play(ShimmerIn(words))
+        self.dither(3)
+        slider = sliders.pop(1)
+        vector = vectors.pop(1)
+        faders = sliders+vectors+[words]
+        self.play(*map(FadeOut, faders))
+        self.remove(*faders)
+        self.show_geometry(slider, vector)
+
+    def show_geometry(self, slider, vector):
+        point_a = self.point_a.get_center()
+        horiz_line = Line(point_a, point_a + 6*RIGHT)
+        ceil_point = point_a
+        ceil_point[0] = slider.get_center()[0]
+        vert_brace = Brace(
+            Mobject(Point(ceil_point), Point(slider.get_center())),
+            RIGHT,
+            buff = 0.5
+        )
+        vect_brace = Brace(slider)
+        vect_brace.stretch_to_fit_width(vector.get_length())
+        vect_brace.rotate(np.arctan(vector.get_slope()))
+        vect_brace.center().shift(vector.get_center())
+        nudge = 0.2*(DOWN+LEFT)
+        vect_brace.shift(nudge)
+        y_mob = TexMobject("y")
+        y_mob.next_to(vert_brace)
+        sqrt_y = TexMobject("k\\sqrt{y}")
+        sqrt_y.scale(0.5)
+        sqrt_y.shift(vect_brace.get_center())
+        sqrt_y.shift(3*nudge)
+
+        self.play(ShowCreation(horiz_line))
+        self.play(
+            GrowFromCenter(vert_brace),
+            ShimmerIn(y_mob)
+        )
+        self.play(
+            GrowFromCenter(vect_brace),
+            ShimmerIn(sqrt_y)
+        )
+        self.dither(3)
+        self.solve_energy()
+
+    def solve_energy(self):
+        loss_in_potential = TextMobject("Loss in potential: ")
+        loss_in_potential.shift(2*UP)
+        potential = TexMobject("m g y".split())
+        potential.next_to(loss_in_potential)
+        kinetic = TexMobject([
+            "\\dfrac{1}{2}","m","v","^2","="
+        ])
+        kinetic.next_to(potential, LEFT)
+        nudge = 0.1*UP
+        kinetic.shift(nudge)
+        loss_in_potential.shift(nudge)
+        ms = Mobject(kinetic.split()[1], potential.split()[0])
+        two = TexMobject("2")
+        two.shift(ms.split()[1].get_center())
+        half = kinetic.split()[0]
+        sqrt = TexMobject("\\sqrt{\\phantom{2mg}}")
+        sqrt.shift(potential.get_center())
+        nudge = 0.2*LEFT
+        sqrt.shift(nudge)
+        squared = kinetic.split()[3]
+        equals = kinetic.split()[-1]
+        new_eq = equals.copy().next_to(kinetic.split()[2])
+
+        self.play(
+            Transform(
+                Point(loss_in_potential.get_left()),
+                loss_in_potential
+            ),
+            *map(GrowFromCenter, potential.split())
+        )
+        self.dither(2)
+        self.play(
+            FadeOut(loss_in_potential),
+            GrowFromCenter(kinetic)
+        )
+        self.dither(2)
+        self.play(ApplyMethod(ms.shift, 5*UP))
+        self.dither()
+        self.play(Transform(
+            half, two, 
+            path_func = counterclockwise_path()
+        ))
+        self.dither()
+        self.play(
+            Transform(
+                squared, sqrt, 
+                path_func = clockwise_path()
+            ),
+            Transform(equals, new_eq)
+        )
+        self.dither(2)
 
 
 

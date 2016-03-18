@@ -21,7 +21,9 @@ from mobject.region import  Region, region_from_polygon_vertices
 from scene import Scene
 from scene.zoomed_scene import ZoomedScene
 
-from brachistochrone.curves import Cycloid
+from brachistochrone.curves import \
+    Cycloid, PathSlidingScene, RANDY_SCALE_VAL, TryManyPaths
+
 
 class Lens(Arc):
     CONFIG = {
@@ -353,325 +355,6 @@ class ShowMultiplePathsInWater(ShowMultiplePathsScene):
         return result
 
 
-class MultilayeredGlass(PhotonScene, ZoomedScene):
-    CONFIG = {
-        "num_discrete_layers" : 5,
-        "num_variables" : 3,
-        "top_color" : BLUE_E,
-        "bottom_color" : BLUE_A,
-        "zoomed_canvas_space_shape" : (5, 5),
-        "square_color" : GREEN_B,
-    }
-    def construct(self):
-        self.cycloid = Cycloid(end_theta = np.pi)
-        self.cycloid.highlight(YELLOW)
-        self.top = self.cycloid.get_top()[1]
-        self.bottom = self.cycloid.get_bottom()[1]-1
-        self.generate_layers()
-        self.generate_discrete_path()
-        photon_run = self.photon_run_along_path(
-            self.discrete_path,
-            run_time = 1,
-            rate_func = rush_into
-        )
-
-        self.continuous_to_smooth()
-        self.add(*self.layers)
-        self.show_layer_variables()
-        self.play(photon_run)
-        self.play(ShowCreation(self.discrete_path))
-        self.isolate_bend_points()
-        self.clear()
-        self.add(*self.layers)
-        self.show_main_equation()
-        self.ask_continuous_question()
-
-    def continuous_to_smooth(self):
-        self.add(*self.layers)
-        continuous = self.get_continuous_background()
-        self.add(continuous)
-        self.dither()
-        self.play(ShowCreation(
-            continuous,
-            rate_func = lambda t : smooth(1-t)
-        ))
-        self.remove(continuous)
-        self.dither()
-        
-    def get_continuous_background(self):
-        glass = FilledRectangle(
-            height = self.top-self.bottom,
-            width = 2*SPACE_WIDTH,
-        )
-        glass.sort_points(lambda p : -p[1])
-        glass.shift((self.top-glass.get_top()[1])*UP)
-        glass.gradient_highlight(self.top_color, self.bottom_color)
-        return glass
-
-    def generate_layer_info(self):
-        self.layer_thickness = float(self.top-self.bottom)/self.num_discrete_layers
-        self.layer_tops = np.arange(
-            self.top, self.bottom, -self.layer_thickness
-        )
-        top_rgb, bottom_rgb = [
-            np.array(Color(color).get_rgb())
-            for color in self.top_color, self.bottom_color
-        ]
-        epsilon = 1./(self.num_discrete_layers-1)
-        self.layer_colors = [
-            Color(rgb = interpolate(top_rgb, bottom_rgb, alpha))
-            for alpha in np.arange(0, 1+epsilon, epsilon)
-        ]
-
-    def generate_layers(self):
-        self.generate_layer_info()
-        def create_region(top, color):
-            return Region(
-                lambda x, y : (y < top) & (y > top-self.layer_thickness),
-                color = color
-            )
-        self.layers = [
-            create_region(top, color)
-            for top, color in zip(self.layer_tops, self.layer_colors)
-        ]
-
-
-    def generate_discrete_path(self):
-        points = self.cycloid.points
-        tops = list(self.layer_tops)
-        tops.append(tops[-1]-self.layer_thickness)
-        indices = [
-            np.argmin(np.abs(points[:, 1]-top))
-            for top in tops
-        ]
-        self.bend_points = points[indices[1:-1]]
-        self.path_angles = []
-        self.discrete_path = Mobject1D(
-            color = YELLOW,
-            density = 3*DEFAULT_POINT_DENSITY_1D
-        )
-        for start, end in zip(indices, indices[1:]):
-            start_point, end_point = points[start], points[end]
-            self.discrete_path.add_line(
-                start_point, end_point
-            )
-            self.path_angles.append(
-                angle_of_vector(start_point-end_point)-np.pi/2
-            )
-        self.discrete_path.add_line(
-            points[end], SPACE_WIDTH*RIGHT+(self.layer_tops[-1]-1)*UP
-        )
-
-    def show_layer_variables(self):
-        layer_top_pairs = zip(
-            self.layer_tops[:self.num_variables], 
-            self.layer_tops[1:]
-        )
-        v_equations = []
-        start_ys = []
-        end_ys = []
-        center_paths = []
-        braces = []
-        for (top1, top2), x in zip(layer_top_pairs, it.count(1)):
-            eq_mob = TexMobject(
-                ["v_%d"%x, "=", "\sqrt{\phantom{y_1}}"],
-                size = "\\Large"
-            )
-            midpoint = UP*(top1+top2)/2
-            eq_mob.shift(midpoint)
-            v_eq = eq_mob.split()
-            center_paths.append(Line(
-                midpoint+SPACE_WIDTH*LEFT, 
-                midpoint+SPACE_WIDTH*RIGHT
-            ))            
-            brace_endpoints = Mobject(
-                Point(self.top*UP+x*RIGHT),
-                Point(top2*UP+x*RIGHT)
-            )
-            brace = Brace(brace_endpoints, RIGHT)
-
-            start_y = TexMobject("y_%d"%x, size = "\\Large")
-            end_y = start_y.copy()            
-            start_y.next_to(brace, RIGHT)
-            end_y.shift(v_eq[-1].get_center())
-            end_y.shift(0.2*RIGHT)
-
-            v_equations.append(v_eq)
-            start_ys.append(start_y)
-            end_ys.append(end_y)
-            braces.append(brace)
-
-        for v_eq, path, time in zip(v_equations, center_paths, [2, 1, 0.5]):
-            photon_run = self.photon_run_along_path(
-                path,
-                rate_func = None
-            )
-            self.play(
-                ShimmerIn(v_eq[0]),
-                photon_run,
-                run_time = time
-            )
-        self.dither()
-        for start_y, brace in zip(start_ys, braces):
-            self.add(start_y)            
-            self.play(GrowFromCenter(brace))
-        self.dither()
-        quads = zip(v_equations, start_ys, end_ys, braces)
-        self.equations = []
-        for v_eq, start_y, end_y, brace in quads:
-            self.remove(brace)
-            self.play(
-                ShowCreation(v_eq[1]),
-                ShowCreation(v_eq[2]),
-                Transform(start_y, end_y)
-            )
-
-            v_eq.append(start_y)
-            self.equations.append(Mobject(*v_eq))
-
-    def isolate_bend_points(self):
-        arc_radius = 0.1
-        self.activate_zooming()
-        little_square = self.get_zoomed_camera_mobject()
-
-        for index in range(3):
-            bend_point = self.bend_points[index]
-            line = Line(
-                bend_point+DOWN, 
-                bend_point+UP,
-                color = WHITE,
-                density = self.zoom_factor*DEFAULT_POINT_DENSITY_1D
-            )
-            angle_arcs = []
-            for i, rotation in [(index, np.pi/2), (index+1, -np.pi/2)]:
-                arc = Arc(angle = self.path_angles[i])
-                arc.scale(arc_radius)
-                arc.rotate(rotation)
-                arc.shift(bend_point)
-                angle_arcs.append(arc)
-            thetas = []
-            for i in [index+1, index+2]:
-                theta = TexMobject("\\theta_%d"%i)
-                theta.scale(0.5/self.zoom_factor)
-                vert = UP if i == index+1 else DOWN
-                horiz = rotate_vector(vert, np.pi/2)
-                theta.next_to(
-                    Point(bend_point), 
-                    horiz, 
-                    buff = 0.01
-                )
-                theta.shift(1.5*arc_radius*vert)
-                thetas.append(theta)
-            figure_marks = [line] + angle_arcs + thetas                
-
-            self.play(ApplyMethod(
-                little_square.shift,
-                bend_point - little_square.get_center(),
-                run_time = 2
-            ))
-            self.play(*map(ShowCreation, figure_marks))
-            self.dither()
-            equation_frame = little_square.copy()
-            equation_frame.scale(0.5)
-            equation_frame.shift(
-                little_square.get_corner(UP+RIGHT) - \
-                equation_frame.get_corner(UP+RIGHT)
-            )
-            equation_frame.scale_in_place(0.9)
-            self.show_snells(index+1, equation_frame)
-            self.remove(*figure_marks)
-        self.disactivate_zooming()
-
-    def show_snells(self, index, frame):
-        left_text, right_text = [
-            "\\dfrac{\\sin(\\theta_%d)}{\\phantom{\\sqrt{y_1}}}"%x
-            for x in index, index+1
-        ]
-        left, equals, right = TexMobject(
-            [left_text, "=", right_text]
-        ).split()
-        vs = []
-        sqrt_ys = []
-        for x, numerator in [(index, left), (index+1, right)]:
-            v, sqrt_y = [
-                TexMobject(
-                    text, size = "\\Large"
-                ).next_to(numerator, DOWN)
-                for text in "v_%d"%x, "\\sqrt{y_%d}"%x
-            ]
-            vs.append(v)
-            sqrt_ys.append(sqrt_y)
-        start, end = [
-            Mobject(
-                left.copy(), mobs[0], equals.copy(), right.copy(), mobs[1]
-            ).replace(frame)
-            for mobs in vs, sqrt_ys
-        ]
-
-        self.add(start)
-        self.dither(2)
-        self.play(Transform(
-            start, end, 
-            path_func = counterclockwise_path()
-        ))
-        self.dither(2)
-        self.remove(start, end)
-
-    def show_main_equation(self):
-        self.equation = TexMobject("""
-            \\dfrac{\\sin(\\theta)}{\\sqrt{y}} = 
-            \\text{constant}
-        """)
-        self.equation.shift(LEFT)
-        self.equation.shift(
-            (self.layer_tops[0]-self.equation.get_top())*UP
-        )
-        self.add(self.equation)
-        self.dither()
-
-    def ask_continuous_question(self):
-        continuous = self.get_continuous_background()
-        line = Line(
-            UP, DOWN,
-            density = self.zoom_factor*DEFAULT_POINT_DENSITY_1D
-        )
-        theta = TexMobject("\\theta")
-        theta.scale(0.5/self.zoom_factor)
-
-        self.play(
-            ShowCreation(continuous),
-            Animation(self.equation)
-        )
-        self.remove(*self.layers)
-        self.play(ShowCreation(self.cycloid))
-        self.activate_zooming()
-        little_square = self.get_zoomed_camera_mobject()
-
-        self.add(line)
-        indices = np.arange(
-            0, self.cycloid.get_num_points()-1, 10
-        )
-        for index in indices:
-            point = self.cycloid.points[index]
-            next_point = self.cycloid.points[index+1]
-            angle = angle_of_vector(point - next_point)
-            for mob in little_square, line:
-                mob.shift(point - mob.get_center())
-            arc = Arc(angle-np.pi/2, start_angle = np.pi/2)
-            arc.scale(0.1)
-            arc.shift(point)
-            self.add(arc)
-            if angle > np.pi/2 + np.pi/6:
-                vect_angle = interpolate(np.pi/2, angle, 0.5)
-                vect = rotate_vector(RIGHT, vect_angle)
-                theta.center()
-                theta.shift(point)
-                theta.shift(0.15*vect)
-                self.add(theta)
-            self.dither(self.frame_duration)
-            self.remove(arc)
-
-
 class StraightLinesFastestInConstantMedium(PhotonScene):
     def construct(self):
         kwargs = {"size" : "\\Large"}
@@ -928,8 +611,10 @@ class SpringSetup(ShowMultiplePathsInWater):
         self.slide_ring(ring)
         self.dither()
         self.add_springs()
+        self.add_force_definitions()
         self.slide_system(ring)
-        self.balance_forces(ring)
+        self.show_horizontal_component(ring)
+        self.show_angles(ring)
         self.show_equation()
 
 
@@ -973,14 +658,8 @@ class SpringSetup(ShowMultiplePathsInWater):
         ))
 
     def add_springs(self):
-        top_force = TexMobject("F_1 = \\dfrac{1}{v_{\\text{air}}}")
-        bottom_force = TexMobject("F_2 = \\dfrac{1}{v_{\\text{water}}}")
-        top_spring, bottom_spring = self.start_springs.split()
-        top_force.next_to(top_spring)
-        bottom_force.next_to(bottom_spring, DOWN, buff = -0.5)
-        
         colors = iter([BLACK, BLUE_E])
-        for spring in top_spring, bottom_spring:
+        for spring in self.start_springs.split():
             circle = Circle(color = colors.next())
             circle.reverse_points()
             circle.scale(spring.loop_radius)
@@ -991,16 +670,28 @@ class SpringSetup(ShowMultiplePathsInWater):
             self.add(spring)
             self.dither()
 
+    def add_force_definitions(self):
+        top_force = TexMobject("F_1 = \\dfrac{1}{v_{\\text{air}}}")
+        bottom_force = TexMobject("F_2 = \\dfrac{1}{v_{\\text{water}}}")
+        top_spring, bottom_spring = self.start_springs.split()
+        top_force.next_to(top_spring)
+        bottom_force.next_to(bottom_spring, DOWN, buff = -0.5)
+        words = TextMobject("""
+            The force in a real spring is 
+            proportional to that spring's length
+        """)
+        words.to_corner(UP+RIGHT)
         for force in top_force, bottom_force:
             self.play(GrowFromCenter(force))
             self.dither()
-        self.remove(top_force, bottom_force)
-
+        self.play(ShimmerIn(words))
+        self.dither(3)
+        self.remove(top_force, bottom_force, words)
 
     def slide_system(self, ring):
         equilibrium_slide_kwargs = dict(self.slide_kwargs)
         def jiggle_to_equilibrium(t):
-            return 0.6*(1+((1-t)**2)*(-np.cos(10*np.pi*t)))
+            return 0.7*(1+((1-t)**2)*(-np.cos(10*np.pi*t)))
         equilibrium_slide_kwargs = {
             "rate_func" : jiggle_to_equilibrium,
             "run_time" : 3
@@ -1013,8 +704,15 @@ class SpringSetup(ShowMultiplePathsInWater):
         for kwargs in self.slide_kwargs, equilibrium_slide_kwargs:
             self.play(Transform(start, end, **kwargs))
             self.dither()
+    
+    def show_horizontal_component(self, ring):
+        v_right = Vector(ring.get_top(), RIGHT)
+        v_left = Vector(ring.get_bottom(), LEFT)
+        self.play(*map(ShowCreation, [v_right, v_left]))
+        self.dither()
+        self.remove(v_right, v_left)
 
-    def balance_forces(self, ring):
+    def show_angles(self, ring):
         ring_center = ring.get_center()
         lines, arcs, thetas = [], [], []
         counter = it.count(1)
@@ -1033,7 +731,7 @@ class SpringSetup(ShowMultiplePathsInWater):
             lines.append(line)
             arcs.append(arc)
             thetas.append(theta)
-        vert_line = Line(SPACE_HEIGHT*UP, SPACE_HEIGHT*DOWN)
+        vert_line = Line(2*UP, 2*DOWN)
         vert_line.shift(ring_center)
         top_spring, bottom_spring = self.start_springs.split()
 
@@ -1043,49 +741,121 @@ class SpringSetup(ShowMultiplePathsInWater):
             Transform(bottom_spring, lines[1])
         )
         self.play(ShowCreation(vert_line))
-        self.dither()
+        anims = []
         for arc, theta in zip(arcs, thetas):
-            self.play(ShowCreation(arc))
-            self.play(GrowFromCenter(theta))
-            self.dither()
+            anims += [
+                ShowCreation(arc),
+                GrowFromCenter(theta)
+            ]
+        self.play(*anims)
+        self.dither()
 
     def show_equation(self):
         equation = TexMobject([
-            "F_1", "\\sin(\\theta_1)", "=", 
-            "F_2", "\\sin(\\theta_2)"
+            "\\left(\\dfrac{1}{\\phantom{v_air}}\\right)",
+            "\\sin(\\theta_1)", 
+            "=", 
+            "\\left(\\dfrac{1}{\\phantom{v_water}}\\right)",
+            "\\sin(\\theta_2)"
         ])
-        equation.shift(3*RIGHT+2*UP)
-        f1, sin1, equals, f2, sin2 = equation.split()
-        bar1 = TexMobject("\\dfrac{\\qquad}{\\qquad}")
-        bar2 = bar1.copy()
+        equation.to_corner(UP+RIGHT)
+        frac1, sin1, equals, frac2, sin2 = equation.split()
         v_air, v_water = [
             TexMobject("v_{\\text{%s}}"%s, size = "\\Large")
             for s in "air", "water"
         ]
+        v_air.next_to(Point(frac1.get_center()), DOWN)
+        v_water.next_to(Point(frac2.get_center()), DOWN)
+        frac1.add(v_air)
+        frac2.add(v_water)
+        f1, f2 = [
+            TexMobject("F_%d"%d, size = "\\Large") 
+            for d in 1, 2
+        ]
+        f1.next_to(sin1, LEFT)
+        f2.next_to(equals, RIGHT)
+        sin2_start = sin2.copy().next_to(f2, RIGHT)
+        bar1 = TexMobject("\\dfrac{\\qquad}{\\qquad}")
+        bar2 = bar1.copy()
         bar1.next_to(sin1, DOWN)
-        v_air.next_to(bar1, DOWN)
-        bar2.next_to(sin2, DOWN)
-        v_water.next_to(bar2, DOWN)
+        bar2.next_to(sin2, DOWN)        
+        v_air_copy = v_air.copy().next_to(bar1, DOWN)
+        v_water_copy = v_water.copy().next_to(bar2, DOWN)
         bars = Mobject(bar1, bar2)
         new_eq = equals.copy().center().shift(bars.get_center())
         snells = TextMobject("Snell's Law")
         snells.highlight(YELLOW)
-        snells.shift(new_eq.get_center())
-        snells.to_edge(UP)
+        snells.shift(new_eq.get_center()[0]*RIGHT)
+        snells.shift(UP)
 
-
-        for mob  in equation.split():
-            self.play(GrowFromCenter(mob, run_time = 0.5))
+        anims = []
+        for mob in f1, sin1, equals, f2, sin2_start:
+            anims.append(ShimmerIn(mob))
+        self.play(*anims)
+        self.dither()
+        for f, frac in (f1, frac1), (f2, frac2):
+            target = frac.copy().ingest_sub_mobjects()
+            also = []
+            if f is f2:
+                also.append(Transform(sin2_start, sin2))
+                sin2 = sin2_start
+            self.play(Transform(f, target), *also)
+            self.remove(f)
+            self.add(frac)
         self.dither()
         self.play(
-            Transform(f1, v_air),
-            Transform(f2, v_water),
+            FadeOut(frac1),
+            FadeOut(frac2),
+            Transform(v_air, v_air_copy),
+            Transform(v_water, v_water_copy),
             ShowCreation(bars),
             Transform(equals, new_eq)
         )
         self.dither()
+        frac1 = Mobject(sin1, bar1, v_air)
+        frac2 = Mobject(sin2, bar2, v_water)
+        for frac, vect in (frac1, LEFT), (frac2, RIGHT):
+            self.play(ApplyMethod(
+                frac.next_to, equals, vect
+            ))
+        self.dither()
         self.play(ShimmerIn(snells))
         self.dither()
+
+class WhatGovernsTheSpeedOfLight(PhotonScene, PathSlidingScene):
+    def construct(self):
+        randy = Randolph()
+        randy.scale(RANDY_SCALE_VAL)
+        randy.shift(-randy.get_bottom())
+        self.add_cycloid_end_points()   
+
+        self.add(self.cycloid)
+        self.slide(randy, self.cycloid)
+        self.play(self.photon_run_along_path(self.cycloid))
+
+        self.dither()
+
+class WhichPathWouldLightTake(PhotonScene, TryManyPaths):
+    def construct(self):
+        words = TextMobject(
+            ["Which path ", "would \\emph{light} take", "?"]
+        )
+        words.split()[1].highlight(YELLOW)
+        words.to_corner(UP+RIGHT)
+        self.add_cycloid_end_points()
+
+        anims = [
+            self.photon_run_along_path(
+                path, 
+                rate_func = smooth
+            )
+            for path in  self.get_paths()
+        ]
+        self.play(anims[0], ShimmerIn(words))
+        for anim in anims[1:]:
+            self.play(anim)
+
+
 
 
         

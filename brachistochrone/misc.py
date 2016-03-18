@@ -99,24 +99,29 @@ class TimeLine(Scene):
 
         self.add(timeline)
         self.dither()
+        run_times = iter([3, 1])
         for point, event in zip(centers[1:], dated_events):
             self.play(ApplyMethod(
                 timeline.shift, -point.get_center(), 
-                run_time = 3
+                run_time = run_times.next()
             ))
             picture = ImageMobject(event["picture"], invert = False)
             picture.scale_to_fit_width(2)
             picture.to_corner(UP+RIGHT)
             event_mob = TextMobject(event["text"])
             event_mob.shift(2*LEFT+2*UP)
-            arrow = Arrow(event_mob.get_bottom(), ORIGIN)
+            date_mob = TexMobject(str(event["date"]))
+            date_mob.scale(0.5)
+            date_mob.shift(0.6*UP)
+            line = Line(event_mob.get_bottom(), 0.2*UP)
             self.play(
                 ShimmerIn(event_mob),
-                ShowCreation(arrow)
+                ShowCreation(line),
+                ShimmerIn(date_mob)
             )
             self.play(FadeIn(picture))
-            self.dither()
-            self.play(*map(FadeOut, [event_mob, arrow, picture]))
+            self.dither(3)
+            self.play(*map(FadeOut, [event_mob, date_mob, line, picture]))
 
 
 

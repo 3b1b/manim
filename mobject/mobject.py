@@ -1,9 +1,7 @@
 import numpy as np
-import itertools as it
 import operator as op
 import os
 from PIL import Image
-from random import random
 from copy import deepcopy
 from colour import Color
 
