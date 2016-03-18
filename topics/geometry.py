@@ -121,6 +121,18 @@ class Arrow(Line):
             setattr(self, attr, getattr(self, attr)[:-self.num_tip_points])
         return self
 
+class Vector(Arrow):
+    CONFIG = {
+        "color" : WHITE,
+        "buff"  : 0,
+    }
+    def __init__(self, start, direction, **kwargs):
+        if isinstance(start, Mobject):
+            end = start.get_center()+direction
+        else:
+            end = start + direction
+        Arrow.__init__(self, start, end, **kwargs)
+
 class CurvedLine(Line):
     def __init__(self, start, end, via = None, **kwargs):
         self.set_start_and_end(start, end)
@@ -233,7 +245,7 @@ class Rectangle(Grid):
         Grid.__init__(self, 1, 1, **kwargs)
 
     def generate_points(self):
-        hw = [self.width/2.0, self.height/2.0]
+        hw = [self.height/2.0, self.width/2.0]
         self.add_points([
             (x, u, 0) if dim==1 else (u, x, 0)
             for dim in 0, 1
