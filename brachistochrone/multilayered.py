@@ -30,8 +30,8 @@ from brachistochrone.curves import *
 #v_1, v_2, v_3
 #proportional to sqrt y_1, y_2, y_3
 #limiting process
-
 #show sliding object and light
+
 #which path is fastest
 #instantaneously obey snell's law
 
@@ -264,22 +264,140 @@ class LimitingProcess(MultilayeredScene):
             self.get_layers((2**x)*self.n_layers)
             for x in range(num_iterations)
         ]
-        aligned_layer_sets = [
+        glass_sets = [
             Mobject(*[
                 Mobject(
                     *layer_sets[x][(2**x)*index:(2**x)*(index+1)]
-                ).ingest_sub_mobjects()
+                )
                 for index in range(self.n_layers)
-            ])
+            ]).ingest_sub_mobjects()
             for x in range(num_iterations)
         ]
-        aligned_layer_sets.append(self.get_continuous_glass())
-        curr_set = aligned_layer_sets[0]
+        glass_sets.append(self.get_continuous_glass())
+        for glass_set in glass_sets:
+            glass_set.sort_points(lambda p : p[1])
+        curr_set = glass_sets[0]
         self.add(curr_set)
-        for layer_set in aligned_layer_sets[1:]:
+        for layer_set in glass_sets[1:]:
             self.dither()
             self.play(Transform(curr_set, layer_set))
         self.dither()
+
+
+
+class ShowLightAndSlidingObject(MultilayeredScene, TryManyPaths, PhotonScene):
+    CONFIG = {
+        "show_time" : False,
+        "dither_and_add" : False,
+        "RectClass" : FilledRectangle
+    }
+    def construct(self):
+        glass = self.get_continuous_glass()
+        self.play(ApplyMethod(glass.fade, 0.3))
+        self.freeze_background()
+
+        paths = self.get_paths()
+        for path in paths:
+            if path.get_height() > self.total_glass_height:
+                path.stretch(0.7, 1)
+                path.shift(self.top - path.get_top())
+            path.rgbs[:2] = 0
+        loop = paths.pop(1) ##Bad!
+        randy = Randolph()
+        randy.scale(RANDY_SCALE_VAL)
+        randy.shift(-randy.get_bottom())
+        photon_run = self.photon_run_along_path(
+            loop, 
+            rate_func = lambda t : smooth(t, 3),
+            run_time = 4.1
+        )
+        text = self.get_text().to_edge(UP, buff = 0.2)
+
+        self.play(ShowCreation(loop))
+        self.dither()
+        self.play(photon_run)
+        self.remove(photon_run.mobject)
+        randy = self.slide(randy, loop)
+        self.add(randy)
+        self.dither()
+        self.remove(randy)
+        self.play(ShimmerIn(text))
+        for path in paths:
+            self.play(Transform(
+                loop, path,
+                path_func = path_along_arc(np.pi/2),
+                run_time = 2
+            ))
+
+
+class ContinuouslyObeyingSnellsLaw(MultilayeredScene, ZoomedScene):
+    CONFIG = {
+        "arc_radius" : 0.1,
+        "RectClass" : FilledRectangle
+    }
+    def construct(self):
+        glass = self.get_continuous_glass()
+        self.add(glass)
+
+        line = Line(
+            UP, DOWN,
+            density = self.zoom_factor*DEFAULT_POINT_DENSITY_1D
+        )
+        theta = TexMobject("\\theta")
+        theta.scale(0.5/self.zoom_factor)
+        equation = TexMobject([
+            "\\dfrac{\\sin(\\theta)}",
+            "{\\sqrt{y}}",
+            " = \\text{constant}"
+        ])
+        equation.next_to(Point(self.top), DOWN)
+        equation.shift(LEFT)
+        cycloid = Cycloid(end_theta = np.pi)
+        cycloid.highlight(YELLOW)
+
+        for mob in equation.split():
+            self.play(GrowFromCenter(mob), run_time = 0.5)
+        self.play(ShowCreation(cycloid))
+        self.activate_zooming()
+        little_square = self.get_zoomed_camera_mobject()
+
+        self.add(line)
+        indices = np.arange(
+            0, cycloid.get_num_points()-1, 10
+        )
+        for index in indices:
+            point = cycloid.points[index]
+            next_point = cycloid.points[index+1]
+            angle = angle_of_vector(point - next_point)-np.pi/2
+            for mob in little_square, line:
+                mob.shift(point - mob.get_center())
+            arc = Arc(angle, start_angle = np.pi/2)
+            arc.scale(self.arc_radius)
+            arc.shift(point)
+            color = Color()
+            height = (self.top-self.point)[1]
+            color.set_rgb([height/self.total_glass_height]*3)
+            for mob in arc, theta, line:
+                mob.highlight(color)
+            if angle > np.pi/15:
+                self.add(arc)
+            if angle > np.pi/6:
+                vect_angle = angle/2 + np.pi/2
+                vect = rotate_vector(RIGHT, vect_angle)
+                theta.center()
+                theta.shift(point)
+                theta.shift(1.5*self.arc_radius*vect)
+                self.add(theta)
+            self.dither(self.frame_duration)
+            self.remove(arc)
+
+
+
+
+
+
+
+
 
 
 
