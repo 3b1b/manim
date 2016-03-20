@@ -258,14 +258,13 @@ class Square(Rectangle):
         "side_length" : 2.0,
     }
     def __init__(self, **kwargs):
-        side_length = kwargs.pop("side_length")
+        digest_config(self, kwargs)
         Rectangle.__init__(
             self, 
-            height = side_length,
-            width = side_length,
+            height = self.side_length,
+            width = self.side_length,
             **kwargs
         )
-
 
 
 class FilledRectangle(Mobject1D):
