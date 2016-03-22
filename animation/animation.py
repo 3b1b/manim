@@ -45,18 +45,6 @@ class Animation(object):
         self.filter_functions += filter_functions
         return self
 
-    def restrict_height(self, height):
-        self.restricted_height = min(height, SPACE_HEIGHT)
-        return self
-
-    def restrict_width(self, width):
-        self.restricted_width = min(width, SPACE_WIDTH)   
-        return self
-
-    def shift(self, vector):
-        self.spatial_center += vector
-        return self
-
     def set_run_time(self, time):
         self.run_time = time
         return self
