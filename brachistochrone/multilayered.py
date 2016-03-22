@@ -329,7 +329,7 @@ class ContinuouslyObeyingSnellsLaw(MultilayeredScene):
         self.add(glass)
         self.freeze_background()
 
-        cycloid = Cycloid()
+        cycloid = Cycloid(end_theta = np.pi)
         cycloid.highlight(YELLOW)
         chopped_cycloid = cycloid.copy()
         n = cycloid.get_num_points()
@@ -337,28 +337,40 @@ class ContinuouslyObeyingSnellsLaw(MultilayeredScene):
         chopped_cycloid.reverse_points()
 
 
-        self.play(ShowCreation(cycloid))
-        self.snells_law_at_every_point(cycloid, chopped_cycloid)
-        self.show_equation(chopped_cycloid)
+        # self.play(ShowCreation(cycloid))
+        # ref_mob = self.snells_law_at_every_point(cycloid, chopped_cycloid)
+        ref_mob = Point()
+        self.show_equation(chopped_cycloid, ref_mob)
 
     def snells_law_at_every_point(self, cycloid, chopped_cycloid):
         square = Square(side_length = 0.2, color = WHITE)
-        words = TextMobject("Snell's law at every point")
+        words = TextMobject(["Snell's law", " at every point"], use_cache = False)
+        words.show()
+        snells, rest = words.split()
+        colon = TextMobject(":")
         words.next_to(square)
         words.shift(0.3*UP)
         combo = Mobject(square, words)
         combo.get_center = lambda : square.get_center()
+        new_snells = snells.copy().center().to_edge(UP, buff = 1.3)
+        colon.next_to(new_snells)
+            
         self.play(MoveAlongPath(
             combo, cycloid,
-            run_time = 3
+            run_time = 5
         ))
         self.play(MoveAlongPath(
             combo, chopped_cycloid,
-            run_time = 2
+            run_time = 4
         ))
         dot = Dot(combo.get_center())
-        self.play(Transform(combo.ingest_sub_mobjects(), dot))
+        self.play(Transform(square, dot))
+        self.play(
+            Transform(snells, new_snells),
+            Transform(rest, colon)
+        )
         self.dither()
+        return colon
 
     def get_marks(self, point1, point2):
         vert_line = Line(2*DOWN, 2*UP)
@@ -375,7 +387,6 @@ class ContinuouslyObeyingSnellsLaw(MultilayeredScene):
         arc = Arc(angle_from_vert, start_angle = np.pi/2)
         arc.scale(self.arc_radius)
         arc.shift(point1)
-        self.add(arc)
         vect_angle = angle_from_vert/2 + np.pi/2
         vect = rotate_vector(RIGHT, vect_angle)
         theta.center()
@@ -384,24 +395,23 @@ class ContinuouslyObeyingSnellsLaw(MultilayeredScene):
         return arc, theta, vert_line, tangent_line
 
 
-    def show_equation(self, chopped_cycloid):
-        point1, point2 = chopped_cycloid.points[-2:]
+    def show_equation(self, chopped_cycloid, ref_mob):
+        point2, point1 = chopped_cycloid.points[-2:]
         arc, theta, vert_line, tangent_line = self.get_marks(
             point1, point2
         )
-        sin, sqrt_y = TexMobject([
+        equation = TexMobject([
             "\\sin(\\theta)",
             "\\over \\sqrt{y}",            
-        ]).split()
-        equation = Mobject(sin, sqrt_y)
-        equation.next_to(Point(self.top), DOWN)
-        equation.shift(LEFT)
+        ])
+        sin, sqrt_y = equation.split()
+        equation.next_to(ref_mob)
         const = TexMobject(" = \\text{constant}")
         const.next_to(equation)
-        ceil_point = np.array(point)
+        ceil_point = np.array(point1)
         ceil_point[1] = self.top[1]
         brace = Brace(
-            Mobject(Point(point), Point(ceil_point)),
+            Mobject(Point(point1), Point(ceil_point)),
             RIGHT
         )
         y_mob = TexMobject("y").next_to(brace)
@@ -417,7 +427,9 @@ class ContinuouslyObeyingSnellsLaw(MultilayeredScene):
             GrowFromCenter(y_mob)
         )
         self.dither()
-        self.play(ShimmerIn(const))
+        self.play(Transform(
+            Point(const.get_left()), const
+        ))
         self.dither()
 
 

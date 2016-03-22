@@ -30,7 +30,7 @@ class Cycloid(ParametricFunction):
         "radius"        : 2,
         "end_theta"     : 3*np.pi/2,
         "density"       : 5*DEFAULT_POINT_DENSITY_1D,
-        "color"         : BLUE_D
+        "color"         : YELLOW
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
