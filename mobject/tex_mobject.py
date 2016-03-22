@@ -13,11 +13,7 @@ class TexMobject(Mobject):
     }
     def __init__(self, expression, **kwargs):
         if "size" not in kwargs:
-            #Todo, make this more sophisticated.
-            if len("".join(expression)) < MAX_LEN_FOR_HUGE_TEX_FONT:
-                size = "\\Huge"
-            else:
-                size = "\\large"
+            size = "\\Large"
         digest_locals(self)
         Mobject.__init__(self, **kwargs)
 
