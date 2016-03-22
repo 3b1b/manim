@@ -75,12 +75,20 @@ class Line(Mobject1D):
     def get_length(self):
         return np.linalg.norm(self.start - self.end)
 
+    def get_start_and_end(self):
+        return self.points[0], self.points[-1]
+
     def get_slope(self):
+        start, end = self.get_start_and_end()
         rise, run = [
-            float(self.end[i] - self.start[i])
+            float(end[i] - start[i])
             for i in [1, 0]
         ]
-        return rise/run
+        return np.inf if run == 0 else rise/run
+
+    def get_angle(self):
+        start, end = self.get_start_and_end()
+        return angle_of_vector(start-end)
 
 class Arrow(Line):
     CONFIG = {
