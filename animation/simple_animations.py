@@ -126,6 +126,16 @@ class PhaseFlow(Animation):
             )
         self.last_alpha = alpha
 
+class MoveAlongPath(Animation):
+    def __init__(self, mobject, path, **kwargs):
+        digest_config(self, kwargs, locals())
+        Animation.__init__(self, mobject, **kwargs)
+
+    def update_mobject(self, alpha):
+        n = self.path.get_num_points()-1
+        point = self.path.points[int(alpha*n)]
+        self.mobject.shift(point-self.mobject.get_center())
+
 ### Animation modifiers ###
 
 class ApplyToCenters(Animation):
