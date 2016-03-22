@@ -47,20 +47,15 @@ class Cycloid(ParametricFunction):
 class LoopTheLoop(ParametricFunction):
     CONFIG = {
         "color" : YELLOW_D,
-        "density" : 20*DEFAULT_POINT_DENSITY_1D
+        "density" : 10*DEFAULT_POINT_DENSITY_1D
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
-        pre_func = lambda t : [
-            t**3 - 1.5*t,
-            t**2 + 0.6*(t**2 - 4)*(t**2 - 1),
-            0
-        ]
-        ParametricFunction.__init__(
-            self,
-            lambda t : pre_func(4*t-2),
-            **kwargs
-        )
+        def func(t):
+            t = (6*np.pi/2)*(t-0.5)
+            return (t/2-np.sin(t))*RIGHT + \
+                   (np.cos(t)+(t**2)/10)*UP
+        ParametricFunction.__init__(self, func, **kwargs)
 
 
 class SlideWordDownCycloid(Animation):

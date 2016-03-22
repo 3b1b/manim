@@ -24,17 +24,6 @@ from brachistochrone.light import PhotonScene
 from brachistochrone.curves import *
 
 
-#Two to many
-#race light in each
-#n layers
-#v_1, v_2, v_3
-#proportional to sqrt y_1, y_2, y_3
-#limiting process
-#show sliding object and light
-
-#which path is fastest
-#instantaneously obey snell's law
-
 class MultilayeredScene(Scene):
     CONFIG = {
         "n_layers" : 5,
@@ -293,7 +282,7 @@ class ShowLightAndSlidingObject(MultilayeredScene, TryManyPaths, PhotonScene):
     }
     def construct(self):
         glass = self.get_continuous_glass()
-        self.play(ApplyMethod(glass.fade, 0.3))
+        self.play(ApplyMethod(glass.fade, 0.8))
         self.freeze_background()
 
         paths = self.get_paths()
@@ -301,14 +290,14 @@ class ShowLightAndSlidingObject(MultilayeredScene, TryManyPaths, PhotonScene):
             if path.get_height() > self.total_glass_height:
                 path.stretch(0.7, 1)
                 path.shift(self.top - path.get_top())
-            path.rgbs[:2] = 0
+            path.rgbs[:,2] = 0
         loop = paths.pop(1) ##Bad!
         randy = Randolph()
         randy.scale(RANDY_SCALE_VAL)
         randy.shift(-randy.get_bottom())
         photon_run = self.photon_run_along_path(
             loop, 
-            rate_func = lambda t : smooth(t, 3),
+            rate_func = lambda t : smooth(1.2*t, 2),
             run_time = 4.1
         )
         text = self.get_text().to_edge(UP, buff = 0.2)
@@ -330,66 +319,106 @@ class ShowLightAndSlidingObject(MultilayeredScene, TryManyPaths, PhotonScene):
             ))
 
 
-class ContinuouslyObeyingSnellsLaw(MultilayeredScene, ZoomedScene):
+class ContinuouslyObeyingSnellsLaw(MultilayeredScene):
     CONFIG = {
-        "arc_radius" : 0.1,
+        "arc_radius" : 0.5,
         "RectClass" : FilledRectangle
     }
     def construct(self):
         glass = self.get_continuous_glass()
         self.add(glass)
+        self.freeze_background()
 
-        line = Line(
-            UP, DOWN,
-            density = self.zoom_factor*DEFAULT_POINT_DENSITY_1D
-        )
+        cycloid = Cycloid()
+        cycloid.highlight(YELLOW)
+        chopped_cycloid = cycloid.copy()
+        n = cycloid.get_num_points()
+        chopped_cycloid.filter_out(lambda p : p[1] > 1 and p[0] < 0)
+        chopped_cycloid.reverse_points()
+
+
+        self.play(ShowCreation(cycloid))
+        self.snells_law_at_every_point(cycloid, chopped_cycloid)
+        self.show_equation(chopped_cycloid)
+
+    def snells_law_at_every_point(self, cycloid, chopped_cycloid):
+        square = Square(side_length = 0.2, color = WHITE)
+        words = TextMobject("Snell's law at every point")
+        words.next_to(square)
+        words.shift(0.3*UP)
+        combo = Mobject(square, words)
+        combo.get_center = lambda : square.get_center()
+        self.play(MoveAlongPath(
+            combo, cycloid,
+            run_time = 3
+        ))
+        self.play(MoveAlongPath(
+            combo, chopped_cycloid,
+            run_time = 2
+        ))
+        dot = Dot(combo.get_center())
+        self.play(Transform(combo.ingest_sub_mobjects(), dot))
+        self.dither()
+
+    def get_marks(self, point1, point2):
+        vert_line = Line(2*DOWN, 2*UP)
+        tangent_line = vert_line.copy()
         theta = TexMobject("\\theta")
-        theta.scale(0.5/self.zoom_factor)
-        equation = TexMobject([
-            "\\dfrac{\\sin(\\theta)}",
-            "{\\sqrt{y}}",
-            " = \\text{constant}"
-        ])
+        theta.scale(0.5)
+        angle = angle_of_vector(point1 - point2)
+        tangent_line.rotate(
+            angle - tangent_line.get_angle()
+        )
+        angle_from_vert = angle - np.pi/2
+        for mob in vert_line, tangent_line:
+            mob.shift(point1 - mob.get_center())
+        arc = Arc(angle_from_vert, start_angle = np.pi/2)
+        arc.scale(self.arc_radius)
+        arc.shift(point1)
+        self.add(arc)
+        vect_angle = angle_from_vert/2 + np.pi/2
+        vect = rotate_vector(RIGHT, vect_angle)
+        theta.center()
+        theta.shift(point1)
+        theta.shift(1.5*self.arc_radius*vect)
+        return arc, theta, vert_line, tangent_line
+
+
+    def show_equation(self, chopped_cycloid):
+        point1, point2 = chopped_cycloid.points[-2:]
+        arc, theta, vert_line, tangent_line = self.get_marks(
+            point1, point2
+        )
+        sin, sqrt_y = TexMobject([
+            "\\sin(\\theta)",
+            "\\over \\sqrt{y}",            
+        ]).split()
+        equation = Mobject(sin, sqrt_y)
         equation.next_to(Point(self.top), DOWN)
         equation.shift(LEFT)
-        cycloid = Cycloid(end_theta = np.pi)
-        cycloid.highlight(YELLOW)
-
-        for mob in equation.split():
-            self.play(GrowFromCenter(mob), run_time = 0.5)
-        self.play(ShowCreation(cycloid))
-        self.activate_zooming()
-        little_square = self.get_zoomed_camera_mobject()
-
-        self.add(line)
-        indices = np.arange(
-            0, cycloid.get_num_points()-1, 10
+        const = TexMobject(" = \\text{constant}")
+        const.next_to(equation)
+        ceil_point = np.array(point)
+        ceil_point[1] = self.top[1]
+        brace = Brace(
+            Mobject(Point(point), Point(ceil_point)),
+            RIGHT
         )
-        for index in indices:
-            point = cycloid.points[index]
-            next_point = cycloid.points[index+1]
-            angle = angle_of_vector(point - next_point)-np.pi/2
-            for mob in little_square, line:
-                mob.shift(point - mob.get_center())
-            arc = Arc(angle, start_angle = np.pi/2)
-            arc.scale(self.arc_radius)
-            arc.shift(point)
-            color = Color()
-            height = (self.top-self.point)[1]
-            color.set_rgb([height/self.total_glass_height]*3)
-            for mob in arc, theta, line:
-                mob.highlight(color)
-            if angle > np.pi/15:
-                self.add(arc)
-            if angle > np.pi/6:
-                vect_angle = angle/2 + np.pi/2
-                vect = rotate_vector(RIGHT, vect_angle)
-                theta.center()
-                theta.shift(point)
-                theta.shift(1.5*self.arc_radius*vect)
-                self.add(theta)
-            self.dither(self.frame_duration)
-            self.remove(arc)
+        y_mob = TexMobject("y").next_to(brace)
+
+        self.play(GrowFromCenter(sin))
+        self.play(ShowCreation(vert_line))
+        self.play(ShowCreation(tangent_line))
+        self.play(ShowCreation(arc), GrowFromCenter(theta))
+        self.dither()
+        self.play(
+            GrowFromCenter(sqrt_y),
+            GrowFromCenter(brace),
+            GrowFromCenter(y_mob)
+        )
+        self.dither()
+        self.play(ShimmerIn(const))
+        self.dither()
 
 
 
