@@ -34,13 +34,13 @@ from scene import Scene
 
 DEFAULT_GAUSS_BLUR_CONFIG = {
     "ksize"  : (5, 5), 
-    "sigmaX" : 10, 
-    "sigmaY" : 10,
+    "sigmaX" : 6, 
+    "sigmaY" : 6,
 }
 
 DEFAULT_CANNY_CONFIG = {
-    "threshold1" : 75,
-    "threshold2" : 150,
+    "threshold1" : 50,
+    "threshold2" : 100,
 }
 
 DEFAULT_BLUR_RADIUS = 0.5
@@ -135,6 +135,7 @@ class TracePicture(Scene):
         ("Galileo_Galilei",),
         ("Jacob_Bernoulli",),
         ("Johann_Bernoulli2",),
+        ("Old_Newton",)
     ]
 
     @staticmethod
@@ -312,6 +313,109 @@ class JohannThinksOfFermat(Scene):
         self.dither()
         self.play(FadeIn(fermat))
         self.dither()
+
+
+class MathematiciansOfEurope(Scene):
+    def construct(self):
+        europe = ImageMobject("1700_Europe", invert = False)
+        self.add(europe)
+        self.freeze_background()
+
+        mathematicians = [
+            ("Newton", [-1.6, 0.6, 0]),
+            ("Jacob_Bernoulli",[-1, -0.75, 0]),
+            ("Ehrenfried_von_Tschirnhaus",[-0.5, 0.2, 0]),
+            ("Gottfried_Wilhelm_von_Leibniz",[-0.1, -0.75, 0]),
+            ("Guillaume_de_L'Hopital", [-1.5, -0.5, 0]),
+        ]
+
+        for name, point in mathematicians:
+            man = ImageMobject(name, invert = False)
+            name_mob = TextMobject(name.replace("_", " "))
+            name_mob.to_corner(UP+LEFT, buff=0.75)
+            man.scale_to_fit_height(4)
+            mobject = Point(man.get_corner(UP+LEFT))
+            self.play(
+                DelayByOrder(Transform(mobject, man)),
+                ShimmerIn(name_mob)
+            )
+            man.scale(0.2)
+            man.shift(point)
+            self.play(Transform(mobject, man))
+            self.remove(name_mob)
+
+class OldNewtonIsDispleased(Scene):
+    def construct(self):
+        old_newton = ImageMobject("Old_Newton", invert = False)
+        old_newton.scale(0.8)
+        self.add(old_newton)
+        self.freeze_background()
+
+        words = TextMobject("Note the displeasure")
+        words.to_corner(UP+RIGHT)
+        face_point = 1.8*UP+0.5*LEFT
+        arrow = Arrow(words.get_bottom(), face_point)
+
+
+        self.play(ShimmerIn(words))
+        self.play(ShowCreation(arrow))
+        self.dither()
+
+
+class NewtonConsideredEveryoneBeneathHim(Scene):
+    def construct(self):
+        mathematicians = [
+            ImageMobject(name, invert = False)
+            for name in [
+                "Old_Newton",
+                "Johann_Bernoulli2",
+                "Jacob_Bernoulli",
+                "Ehrenfried_von_Tschirnhaus",
+                "Gottfried_Wilhelm_von_Leibniz",
+                "Guillaume_de_L'Hopital",
+            ]
+        ]
+        newton = mathematicians.pop(0)
+        newton.scale(0.8)
+        new_newton = newton.copy()
+        new_newton.scale_to_fit_height(3)
+        new_newton.to_edge(UP)
+        for man in mathematicians:
+            man.scale_to_fit_width(1.7)
+        johann = mathematicians.pop(0)
+        johann.next_to(new_newton, DOWN)
+        last_left, last_right = johann, johann
+        for man, count in zip(mathematicians, it.count()):
+            if count%2 == 0:
+                man.next_to(last_left, LEFT)
+                last_left = man
+            else:
+                man.next_to(last_right, RIGHT)
+                last_right = man
+
+        self.play(
+            Transform(newton, new_newton),
+            GrowFromCenter(johann)
+        )
+        self.dither()
+        self.play(FadeIn(Mobject(*mathematicians)))
+        self.dither()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -88,7 +88,7 @@ class Line(Mobject1D):
 
     def get_angle(self):
         start, end = self.get_start_and_end()
-        return angle_of_vector(start-end)
+        return angle_of_vector(end-start)
 
 class Arrow(Line):
     CONFIG = {

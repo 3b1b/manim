@@ -20,7 +20,7 @@ class TexMobject(Mobject):
     def generate_points(self):
         image_files = tex_to_image_files(
             self.expression, 
-            self.size, 
+            self.size,
             self.template_tex_file
         )
         for image_file in image_files:
@@ -56,7 +56,6 @@ class Brace(TexMobject):
         self.shift(left - self.points[0] + self.buff*DOWN)
         for mob in mobject, self:
             mob.rotate(angle)
-
     
 
 def tex_hash(expression, size):

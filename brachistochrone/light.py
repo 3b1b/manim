@@ -431,6 +431,27 @@ class PhtonBendsInWater(PhotonScene, ZoomedScene):
             ShimmerIn(question_mark)
         )
 
+class LightIsFasterInAirThanWater(ShowMultiplePathsInWater):
+    def construct(self):
+        glass = Region(lambda x, y : y < 0, color = BLUE_E)
+        equation = TexMobject("v_{\\text{air}} > v_{\\text{water}}")
+        equation.to_edge(UP)
+        path = Line(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        path1 = path.copy().shift(2*UP)
+        path2 = path.copy().shift(2*DOWN)
+
+        self.add(glass)
+        self.play(ShimmerIn(equation))
+        self.dither()
+        photon_runs = []
+        photon_runs.append(self.photon_run_along_path(
+            path1, rate_func = lambda t : min(1, 1.2*t)
+        ))
+        photon_runs.append(self.photon_run_along_path(path2))
+        self.play(*photon_runs, **{"run_time" : 2})
+        self.dither()
+
+
 class GeometryOfGlassSituation(ShowMultiplePathsInWater):
     def construct(self):
         glass = Region(lambda x, y : y < 0, color = BLUE_E)

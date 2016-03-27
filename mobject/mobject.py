@@ -312,7 +312,7 @@ class Mobject(object):
         return self.scale(height/self.get_height())
 
     def replace(self, mobject, stretch = False):
-        if mobject.get_num_points() == 0:
+        if not mobject.get_num_points() and not mobject.sub_mobjects:
             raise Warning("Attempting to replace mobject with no points")
             return self
         if stretch:

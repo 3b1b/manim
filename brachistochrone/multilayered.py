@@ -137,6 +137,50 @@ class RaceLightInLayers(MultilayeredScene, PhotonScene):
             for line, rate in zip(lines, rates)
         ])
 
+class ShowDiscretePath(MultilayeredScene, PhotonScene):
+    CONFIG = {
+        "RectClass" : FilledRectangle
+    }
+    def construct(self):
+        self.add_layers()
+        self.cycloid = Cycloid(end_theta = np.pi)
+
+        self.generate_discrete_path()
+        self.play(ShowCreation(self.discrete_path))
+        self.dither()
+        self.play(self.photon_run_along_path(
+            self.discrete_path,
+            rate_func = rush_into,
+            run_time = 3
+        ))
+        self.dither()
+
+
+    def generate_discrete_path(self):
+        points = self.cycloid.points
+        tops = [mob.get_top()[1] for mob in self.layers]
+        tops.append(tops[-1]-self.layers[0].get_height())
+        indices = [
+            np.argmin(np.abs(points[:, 1]-top))
+            for top in tops
+        ]
+        self.bend_points = points[indices[1:-1]]
+        self.path_angles = []
+        self.discrete_path = Mobject1D(
+            color = WHITE,
+            density = 3*DEFAULT_POINT_DENSITY_1D
+        )
+        for start, end in zip(indices, indices[1:]):
+            start_point, end_point = points[start], points[end]
+            self.discrete_path.add_line(
+                start_point, end_point
+            )
+            self.path_angles.append(
+                angle_of_vector(start_point-end_point)-np.pi/2
+            )
+        self.discrete_path.add_line(
+            points[end], SPACE_WIDTH*RIGHT+(tops[-1]-0.5)*UP
+        )
 
 class NLayers(MultilayeredScene):
     CONFIG = {
@@ -337,23 +381,22 @@ class ContinuouslyObeyingSnellsLaw(MultilayeredScene):
         chopped_cycloid.reverse_points()
 
 
-        # self.play(ShowCreation(cycloid))
-        # ref_mob = self.snells_law_at_every_point(cycloid, chopped_cycloid)
-        ref_mob = Point()
+        self.play(ShowCreation(cycloid))
+        ref_mob = self.snells_law_at_every_point(cycloid, chopped_cycloid)
         self.show_equation(chopped_cycloid, ref_mob)
 
     def snells_law_at_every_point(self, cycloid, chopped_cycloid):
         square = Square(side_length = 0.2, color = WHITE)
-        words = TextMobject(["Snell's law", " at every point"], use_cache = False)
-        words.show()
+        words = TextMobject(["Snell's law ", " at every point"])
         snells, rest = words.split()
         colon = TextMobject(":")
         words.next_to(square)
         words.shift(0.3*UP)
         combo = Mobject(square, words)
         combo.get_center = lambda : square.get_center()
-        new_snells = snells.copy().center().to_edge(UP, buff = 1.3)
+        new_snells = snells.copy().center().to_edge(UP, buff = 1.5)
         colon.next_to(new_snells)
+        colon.shift(0.05*DOWN)
             
         self.play(MoveAlongPath(
             combo, cycloid,
@@ -416,10 +459,13 @@ class ContinuouslyObeyingSnellsLaw(MultilayeredScene):
         )
         y_mob = TexMobject("y").next_to(brace)
 
-        self.play(GrowFromCenter(sin))
+        self.play(
+            GrowFromCenter(sin),
+            ShowCreation(arc), 
+            GrowFromCenter(theta)
+        )
         self.play(ShowCreation(vert_line))
         self.play(ShowCreation(tangent_line))
-        self.play(ShowCreation(arc), GrowFromCenter(theta))
         self.dither()
         self.play(
             GrowFromCenter(sqrt_y),

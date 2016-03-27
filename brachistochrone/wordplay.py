@@ -133,6 +133,14 @@ class LetsBeHonest(Scene):
         self.dither()
 
 
+class WhatIsTheBrachistochrone(Scene):
+    def construct(self):
+        self.play(ShimmerIn(TextMobject("""
+            So \\dots what is the Brachistochrone?
+        """)))
+        self.dither()
+
+
 class DisectBrachistochroneWord(Scene):
     def construct(self):
         word = TextMobject(["Bra", "chis", "to", "chrone"])

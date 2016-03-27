@@ -13,7 +13,7 @@ from animation.transform import *
 from animation.simple_animations import *
 from animation.playground import TurnInsideOut, Vibrate
 from topics.geometry import *
-from topics.characters import Randolph, Mathematician
+from topics.characters import *
 from topics.functions import ParametricFunction, FunctionGraph
 from topics.number_line import *
 from mobject.region import  Region, region_from_polygon_vertices
@@ -124,10 +124,132 @@ class TimeLine(Scene):
             self.play(*map(FadeOut, [event_mob, date_mob, line, picture]))
 
 
+class StayedUpAllNight(Scene):
+    def construct(self):
+        clock = Circle(radius = 2, color = WHITE)
+        clock.add(Dot(ORIGIN))
+        ticks = Mobject(*[
+            Line(1.8*vect, 2*vect, color = GREY)
+            for vect in compass_directions(12)
+        ])
+        clock.add(ticks)
+        hour_hand = Line(ORIGIN, UP)
+        minute_hand = Line(ORIGIN, 1.5*UP)
+        clock.add(hour_hand, minute_hand)
+        clock.to_corner(UP+RIGHT)
+        hour_hand.get_center = lambda : clock.get_center()
+        minute_hand.get_center = lambda : clock.get_center()
+ 
+        solution = ImageMobject(
+            "Newton_brachistochrone_solution2",
+            use_cache = False
+        )
+        solution.point_thickness = 3
+        solution.highlight(GREY)
+        solution.scale_to_fit_width(5)
+        solution.to_corner(UP+RIGHT)
+        newton = ImageMobject("Old_Newton", invert = False)
+        newton.scale(0.8)
+        phil_trans = TextMobject("Philosophical Transactions")
+        rect = Rectangle(height = 6, width = 4.5, color = WHITE)
+        rect.to_corner(UP+RIGHT)
+        rect.shift(DOWN)
+        phil_trans.scale_to_fit_width(0.8*rect.get_width())
+        phil_trans.next_to(Point(rect.get_top()), DOWN)
+        new_solution = solution.copy()
+        new_solution.scale_to_fit_width(phil_trans.get_width())
+        new_solution.next_to(phil_trans, DOWN, buff = 1)
+        not_newton = TextMobject("-Totally not by Newton")
+        not_newton.scale_to_fit_width(2.5)
+        not_newton.next_to(new_solution, DOWN, aligned_edge = RIGHT)
+        phil_trans.add(rect)
+
+        newton_complaint = TextMobject([
+            "``I do not love to be",
+            " \\emph{dunned} ",
+            "and teased by foreigners''"
+        ], size = "\\small")
+        newton_complaint.to_edge(UP, buff = 0.2)
+        dunned = newton_complaint.split()[1]
+        dunned.highlight()
+        dunned_def = TextMobject("(old timey term for making \\\\ demands on someone)")
+        dunned_def.scale(0.7)
+        dunned_def.next_to(phil_trans, LEFT)
+        dunned_def.shift(2*UP)
+        dunned_arrow = Arrow(dunned_def, dunned)
+
+        johann = ImageMobject("Johann_Bernoulli2", invert = False)
+        johann.scale(0.4)
+        johann.to_edge(LEFT)
+        johann.shift(DOWN)
+        johann_quote = TextMobject("``I recognize the lion by his claw''")
+        johann_quote.next_to(johann, UP, aligned_edge = LEFT)
+
+        self.play(ApplyMethod(newton.to_edge, LEFT))
+        self.play(ShowCreation(clock))
+        kwargs = {
+            "axis" : OUT,
+            "rate_func" : smooth
+        }
+        self.play(
+            Rotating(hour_hand, radians = -2*np.pi, **kwargs),
+            Rotating(minute_hand, radians = -12*2*np.pi, **kwargs),
+            run_time = 5
+        )
+        self.dither()
+        self.clear()
+        self.add(newton)
+        clock.ingest_sub_mobjects()
+        self.play(Transform(clock, solution))
+        self.remove(clock)
+        self.add(solution)
+        self.dither()
+        self.play(
+            FadeIn(phil_trans),
+            Transform(solution, new_solution)
+        )
+        self.dither()
+        self.play(ShimmerIn(not_newton))
+        phil_trans.add(solution, not_newton)
+        self.dither()
+        self.play(*map(ShimmerIn, newton_complaint.split()))
+        self.dither()
+        self.play(
+            ShimmerIn(dunned_def),
+            ShowCreation(dunned_arrow)
+        )
+        self.dither()
+        self.remove(dunned_def, dunned_arrow)
+        self.play(FadeOut(newton_complaint))
+        self.remove(newton_complaint)
+        self.play(
+            FadeOut(newton),
+            GrowFromCenter(johann)
+        )
+        self.remove(newton)        
+        self.dither()
+        self.play(ShimmerIn(johann_quote))
+        self.dither()
+
+
+class ThetaTSigmoidGraph(Scene):
+    def construct(self):
+        pass
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+        
 
 
 
