@@ -317,28 +317,28 @@ class JohannThinksOfFermat(Scene):
 
 class MathematiciansOfEurope(Scene):
     def construct(self):
-        europe = ImageMobject("1700_Europe", invert = False)
+        europe = ImageMobject("Europe", use_cache = False)
         self.add(europe)
         self.freeze_background()
 
         mathematicians = [
-            ("Newton", [-1.6, 0.6, 0]),
-            ("Jacob_Bernoulli",[-1, -0.75, 0]),
-            ("Ehrenfried_von_Tschirnhaus",[-0.5, 0.2, 0]),
-            ("Gottfried_Wilhelm_von_Leibniz",[-0.1, -0.75, 0]),
-            ("Guillaume_de_L'Hopital", [-1.5, -0.5, 0]),
+            ("Newton", [-1.75, -0.75, 0]),
+            ("Jacob_Bernoulli",[-0.75, -1.75, 0]),
+            ("Ehrenfried_von_Tschirnhaus",[0.5, -0.5, 0]),
+            ("Gottfried_Wilhelm_von_Leibniz",[0.2, -1.75, 0]),
+            ("Guillaume_de_L'Hopital", [-1.75, -1.25, 0]),
         ]
 
         for name, point in mathematicians:
             man = ImageMobject(name, invert = False)
+            if name == "Newton":
+                name = "Isaac_Newton"
             name_mob = TextMobject(name.replace("_", " "))
             name_mob.to_corner(UP+LEFT, buff=0.75)
+            self.add(name_mob)
             man.scale_to_fit_height(4)
             mobject = Point(man.get_corner(UP+LEFT))
-            self.play(
-                DelayByOrder(Transform(mobject, man)),
-                ShimmerIn(name_mob)
-            )
+            self.play(Transform(mobject, man))
             man.scale(0.2)
             man.shift(point)
             self.play(Transform(mobject, man))

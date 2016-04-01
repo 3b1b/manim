@@ -502,34 +502,61 @@ class LeviSolution(CycloidScene):
 class EquationsForCycloid(CycloidScene):
     def construct(self):
         CycloidScene.construct(self)
-        equations = TexMobject("""
-            x(t) &= Rt - R\\sin(t) \\\\
-            y(t) &= -R + R\\cos(t)
-        """)
-        equations.shift(2*UP)
+        equations = TexMobject([
+            "x(t) = Rt - R\\sin(t)",
+            "y(t) = -R + R\\cos(t)"
+        ])
+        top, bottom = equations.split()
+        bottom.next_to(top, DOWN)
+        equations.center()
+        equations.to_edge(UP, buff = 1.3)
 
         self.play(ShimmerIn(equations))
         self.grow_parts()
         self.draw_cycloid(rate_func = None, run_time = 5)
         self.dither()
 
-
 class SlidingObject(CycloidScene, PathSlidingScene):
     CONFIG = {
         "show_time" : False,
+        "dither_and_add" : False
     }
-    def construct(self):
+
+    args_list = [(True,), (False,)]
+
+    @staticmethod
+    def args_to_string(with_words):
+        return "WithWords" if with_words else "WithoutWords"
+        
+    @staticmethod
+    def string_to_args(string):
+        return string == "WithWords"
+
+    def construct(self, with_words):
         CycloidScene.construct(self)
 
         randy = Randolph()
         randy.scale(RANDY_SCALE_VAL)
         randy.shift(-randy.get_bottom())
+        central_randy = randy.copy()
         start_randy = self.adjust_mobject_to_index(
             randy.copy(), 1, self.cycloid.points
         )
 
-        self.play(ShowCreation(self.cycloid))
+        if with_words:
+            words1 = TextMobject("Trajectory due to gravity")
+            arrow = TexMobject("\\leftrightarrow")
+            words2 = TextMobject("Trajectory due \\emph{constantly} rotating wheel")
+            words1.next_to(arrow, LEFT)
+            words2.next_to(arrow, RIGHT)
+            words = Mobject(words1, arrow, words2)
+            words.scale_to_fit_width(2*SPACE_WIDTH-1)
+            words.to_edge(UP, buff = 0.2)
+            words.to_edge(LEFT)
+
+        self.play(ShowCreation(self.cycloid.copy()))
         self.slide(randy, self.cycloid)
+        self.add(self.slider)
         self.dither()
         self.grow_parts()
         self.draw_cycloid()
@@ -538,12 +565,26 @@ class SlidingObject(CycloidScene, PathSlidingScene):
         self.dither()
         self.roll_back()
         self.dither()
-        radial_line = self.circle.sub_mobjects[0]
-        self.circle.add(self.slider)
-        self.circle.get_center = lambda : radial_line.get_start_and_end()[0]
-        self.draw_cycloid()
+        if with_words:
+            self.play(*map(ShimmerIn, [words1, arrow, words2]))
         self.dither()
-
+        self.remove(self.circle)
+        start_time = len(self.frames)*self.frame_duration
+        self.remove(self.slider)        
+        self.slide(central_randy, self.cycloid)
+        end_time = len(self.frames)*self.frame_duration
+        self.play_over_time_range(
+            start_time,
+            end_time,
+            RollAlongVector(
+                self.circle, 
+                self.cycloid.points[-1]-self.cycloid.points[0],
+                run_time = end_time-start_time,
+                rate_func = None
+            )
+        )
+        self.add(self.circle, self.slider)
+        self.dither()
 
 
 

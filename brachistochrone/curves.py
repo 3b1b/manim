@@ -203,7 +203,11 @@ class PathSlidingScene(Scene):
         theta = angle_of_vector(point_b - point_a)
         mobject.rotate(theta)
         mobject.shift(points[index])
+        self.midslide_action(point_a, theta)
         return mobject
+
+    def midslide_action(self, point, angle):
+        pass
 
     def write_time(self, time):
         if hasattr(self, "time_mob"):
@@ -594,10 +598,112 @@ class WhatGovernsSpeed(PathSlidingScene):
 
 
 
+class ThetaTInsteadOfXY(Scene):
+    def construct(self):
+        cycloid = Cycloid()
+        index = cycloid.get_num_points()/3
+        point = cycloid.points[index]
+        vect = cycloid.points[index+1]-point
+        vect /= np.linalg.norm(vect)
+        vect *= 3
+        vect_mob = Vector(point, vect)
+        dot = Dot(point)
+        xy = TexMobject("\\big( x(t), y(t) \\big)")
+        xy.next_to(dot, UP+RIGHT, buff = 0.1)
+        vert_line = Line(2*DOWN, 2*UP)
+        vert_line.shift(point)
+        angle = vect_mob.get_angle() + np.pi/2
+        arc = Arc(angle, radius = 1, start_angle = -np.pi/2)
+        arc.shift(point)
+        theta = TexMobject("\\theta(t)")
+        theta.next_to(arc, DOWN, buff = 0.1, aligned_edge = LEFT)
+        theta.shift(0.2*RIGHT)
+
+        self.play(ShowCreation(cycloid))
+        self.play(ShowCreation(dot))
+        self.play(ShimmerIn(xy))
+        self.dither()
+        self.play(
+            FadeOut(xy),
+            ShowCreation(vect_mob)
+        )
+        self.play(
+            ShowCreation(arc),
+            ShowCreation(vert_line),
+            ShimmerIn(theta)
+        )
+        self.dither()
+
+
+class DefineCurveWithKnob(PathSlidingScene):
+    def construct(self):
+        self.knob = Circle(color = BLUE_D)
+        self.knob.add_line(UP, DOWN)
+        self.knob.to_corner(UP+RIGHT)
+        self.knob.shift(0.5*DOWN)
+        self.last_angle = np.pi/2
+        arrow = Vector(ORIGIN, RIGHT)
+        arrow.next_to(self.knob, LEFT)
+        words = TextMobject("Turn this knob over time to define the curve")
+        words.next_to(arrow, LEFT)
+        self.path = self.get_path()
+        self.path.shift(1.5*DOWN)
+        self.path.show()
+        self.path.highlight(BLACK)        
+
+        randy = Randolph()
+        randy.scale(RANDY_SCALE_VAL)
+        randy.shift(-randy.get_bottom())
+
+        self.play(ShimmerIn(words))
+        self.play(ShowCreation(arrow))
+        self.play(ShowCreation(self.knob))
+        self.dither()
+        self.add(self.path)
+
+        self.slide(randy, self.path)
+        self.dither()
+
+
+    def get_path(self):
+        return Cycloid(end_theta = 2*np.pi)
+
+    def midslide_action(self, point, angle):
+        d_angle = angle-self.last_angle
+        self.knob.rotate_in_place(d_angle)
+        self.last_angle = angle
+        self.path.highlight(BLUE_D, lambda p : p[0] < point[0])
 
 
 
+class WonkyDefineCurveWithKnob(DefineCurveWithKnob):
+    def get_path(self):
+        return ParametricFunction(
+            lambda t : t*RIGHT + (-0.2*t-np.sin(2*np.pi*t/6))*UP,
+            start = -7, 
+            end = 10
+        )
 
+
+class SlowDefineCurveWithKnob(DefineCurveWithKnob):
+    def get_path(self):
+        return ParametricFunction(
+            lambda t : t*RIGHT + (np.exp(-(t+2)**2)-0.2*np.exp(t-2)),
+            start = -4, 
+            end = 4
+        )
+
+
+class BumpyDefineCurveWithKnob(DefineCurveWithKnob):
+    def get_path(self):
+
+        result = FunctionGraph(
+            lambda x : 0.05*(x**2)+0.1*np.sin(2*x)
+        )
+        result.rotate(-np.pi/20)
+        result.scale(0.7)
+        result.shift(DOWN)
+        return result
 
 
 

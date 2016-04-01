@@ -17,8 +17,10 @@ from topics.characters import *
 from topics.functions import ParametricFunction, FunctionGraph
 from topics.number_line import *
 from mobject.region import  Region, region_from_polygon_vertices
+from topics.three_dimensions import Stars
 from scene import Scene
 
+from brachistochrone.curves import Cycloid
 
 class PhysicalIntuition(Scene):
     def construct(self):
@@ -232,9 +234,266 @@ class StayedUpAllNight(Scene):
         self.dither()
 
 
-class ThetaTSigmoidGraph(Scene):
+class ThetaTGraph(Scene):
     def construct(self):
-        pass
+        t_axis = NumberLine()
+        theta_axis = NumberLine().rotate(np.pi/2)
+        theta_mob = TexMobject("\\theta(t)")
+        t_mob = TexMobject("t")
+        theta_mob.next_to(theta_axis, RIGHT)
+        theta_mob.to_edge(UP)
+        t_mob.next_to(t_axis, UP)
+        t_mob.to_edge(RIGHT)
+        graph = ParametricFunction(
+            lambda t : 4*t*RIGHT + 2*smooth(t)*UP
+        )
+        line = Line(graph.points[0], graph.points[-1], color = WHITE)
+        q_mark = TextMobject("?")
+        q_mark.next_to(Point(graph.get_center()), LEFT)
+        stars = Stars(color = BLACK)
+        stars.scale(0.1).shift(q_mark.get_center())
+
+
+        squiggle = ParametricFunction(
+            lambda t : t*RIGHT + 0.2*t*(5-t)*(np.sin(t)**2)*UP,
+            start = 0,
+            end = 5
+        )
+
+        self.play(
+            ShowCreation(t_axis),
+            ShowCreation(theta_axis),
+            ShimmerIn(theta_mob),
+            ShimmerIn(t_mob)
+        )
+        self.play(
+            ShimmerIn(q_mark),
+            ShowCreation(graph)
+        )
+        self.dither()
+        self.play(
+            Transform(q_mark, stars),
+            Transform(graph, line)
+        )
+        self.dither()
+        self.play(Transform(graph, squiggle))
+        self.dither()
+
+
+class SolutionsToTheBrachistochrone(Scene):
+    def construct(self):
+        r_range = np.arange(0.5, 2, 0.25)
+        cycloids = Mobject(*[
+            Cycloid(radius = r, end_theta=2*np.pi)
+            for r in r_range
+        ])
+        lower_left = 2*DOWN+6*LEFT
+        lines = Mobject(*[
+            Line(
+                lower_left, 
+                lower_left+5*r*np.cos(np.arctan(r))*RIGHT+2*r*np.sin(np.arctan(r))*UP
+            )
+            for r in r_range
+        ])
+        nl = NumberLine(numbers_with_elongated_ticks = [])
+        x_axis = nl.copy().shift(3*UP)
+        y_axis = nl.copy().rotate(np.pi/2).shift(6*LEFT)
+        t_axis = nl.copy().shift(2*DOWN)
+        x_label = TexMobject("x")
+        x_label.next_to(x_axis, DOWN)
+        x_label.to_edge(RIGHT)
+        y_label = TexMobject("y")
+        y_label.next_to(y_axis, RIGHT)
+        y_label.shift(2*DOWN)
+        t_label = TexMobject("t")
+        t_label.next_to(t_axis, UP)
+        t_label.to_edge(RIGHT)
+        theta_label = TexMobject("\\theta")
+        theta_label.next_to(y_axis, RIGHT)
+        theta_label.to_edge(UP)
+        words = TextMobject("Boundary conditions?")
+        words.next_to(lines, RIGHT)
+        words.shift(2*UP)
+
+        self.play(ShowCreation(x_axis), ShimmerIn(x_label))
+        self.play(ShowCreation(y_axis), ShimmerIn(y_label))
+        self.play(ShowCreation(cycloids))
+        self.dither()
+        self.play(
+            Transform(cycloids, lines),
+            Transform(x_axis, t_axis),
+            Transform(x_label, t_label),
+            Transform(y_label, theta_label),
+            run_time = 2
+        )
+        self.dither()
+        self.play(ShimmerIn(words))
+        self.dither()
+
+
+class VideoLayout(Scene):
+    def construct(self):
+        left, right = 5*LEFT, 5*RIGHT
+        top_words = TextMobject("The next 15 minutes of your life:")
+        top_words.to_edge(UP)
+        line = Line(left, right, color = BLUE_D)
+        for a in np.arange(0, 4./3, 1./3):
+            vect = interpolate(left, right, a)
+            line.add_line(vect+0.2*DOWN, vect+0.2*UP)
+        left_brace = Brace(
+            Mobject(
+                Point(left), 
+                Point(interpolate(left, right, 2./3))
+            ),
+            DOWN
+        )
+        right_brace = Brace(
+            Mobject(
+                Point(interpolate(left, right, 2./3)),
+                Point(right)
+            ),
+            UP
+        )
+        left_brace.words = map(TextMobject, [
+            "Problem statement", 
+            "History",
+            "Johann Bernoulli's cleverness"
+        ])
+        curr = left_brace
+        right_brace.words = map(TextMobject, [
+            "Challenge",
+            "Mark Levi's cleverness",            
+        ])
+        for brace in left_brace, right_brace:
+            curr = brace
+            direction = DOWN if brace is left_brace else UP
+            for word in brace.words:
+                word.next_to(curr, direction)
+                curr = word
+        right_brace.words.reverse()
+
+        self.play(ShimmerIn(top_words))
+        self.play(ShowCreation(line))
+        for brace in left_brace, right_brace:
+            self.play(GrowFromCenter(brace))
+            self.dither()
+            for word in brace.words:
+                self.play(ShimmerIn(word))
+                self.dither()
+
+
+
+
+class ShortestPathProblem(Scene):
+    def construct(self):
+        point_a, point_b = 3*LEFT, 3*RIGHT
+        dots = []
+        for point, char in [(point_a, "A"), (point_b, "B")]:
+            dot = Dot(point)
+            letter = TexMobject(char)
+            letter.next_to(dot, UP+LEFT)
+            dot.add(letter)
+            dots.append(dot)
+
+        path = ParametricFunction(
+            lambda t : (t/2 + np.cos(t))*RIGHT + np.sin(t)*UP,
+            start = -2*np.pi,
+            end = 2*np.pi
+        )
+        path.scale(6/(2*np.pi))
+        path.shift(point_a - path.points[0])
+        path.highlight(RED)
+        line = Line(point_a, point_b)
+        words = TextMobject("Shortest path from $A$ to $B$")
+        words.to_edge(UP)
+
+        self.play(
+            ShimmerIn(words),
+            *map(GrowFromCenter, dots)
+        )
+        self.play(ShowCreation(path))
+        self.play(Transform(
+            path, line,
+            path_func = path_along_arc(np.pi)
+        ))
+        self.dither()
+
+
+class MathBetterThanTalking(Scene):
+    def construct(self):
+        mathy = Mathematician()
+        mathy.to_corner(DOWN+LEFT)
+        bubble = ThoughtBubble()
+        bubble.pin_to(mathy)
+        bubble.write("Math $>$ Talking about math")
+
+        self.add(mathy)
+        self.play(ShowCreation(bubble))
+        self.play(ShimmerIn(bubble.content))
+        self.dither()
+        self.play(ApplyMethod(
+            mathy.blink, 
+            rate_func = squish_rate_func(there_and_back, 0.4, 0.6)
+        ))
+
+
+class DetailsOfProofBox(Scene):
+    def construct(self):
+        rect = Rectangle(height = 4, width = 6, color = WHITE)
+        words = TextMobject("Details of proof")
+        words.to_edge(UP)
+
+        self.play(
+            ShowCreation(rect),
+            ShimmerIn(words)
+        )
+        self.dither()
+
+
+
+class TalkedAboutSnellsLaw(Scene):
+    def construct(self):
+        randy = Randolph()
+        randy.to_corner(DOWN+LEFT)
+        morty = Mortimer()
+        morty.to_edge(DOWN+RIGHT)
+        randy.bubble = SpeechBubble().pin_to(randy)
+        morty.bubble = SpeechBubble().pin_to(morty)
+
+        phrases = [
+            "Let's talk about Snell's law",
+            "I love Snell's law",
+            "It's like running from \\\\ a beach into the ocean",
+            "It's like two constant \\\\ tension springs",
+        ]
+
+        self.add(randy, morty)
+        talkers = it.cycle([randy, morty])
+        for talker, phrase in zip(talkers, phrases):
+            talker.bubble.write(phrase)
+            self.play(
+                FadeIn(talker.bubble),
+                ShimmerIn(talker.bubble.content)
+            )
+            self.play(ApplyMethod(
+                talker.blink, 
+                rate_func = squish_rate_func(there_and_back)
+            ))
+            self.dither()
+            self.remove(talker.bubble, talker.bubble.content)
+
+
+class YetAnotherMarkLevi(Scene):
+    def construct(self):
+        words = TextMobject("Yet another bit of Mark Levi cleverness")
+        words.to_edge(UP)
+        levi = ImageMobject("Mark_Levi", invert = False)
+        levi.scale_to_fit_width(6)
+        levi.show()
+
+        self.add(levi)
+        self.play(ShimmerIn(words))
+        self.dither(2)
 
 
 
@@ -248,8 +507,6 @@ class ThetaTSigmoidGraph(Scene):
 
 
 
-
-        
 
 
 

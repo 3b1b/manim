@@ -188,7 +188,6 @@ class Scene(object):
             self.frames[index] = self.get_frame()
         for animation in animations:
             animation.clean_up()
-        self.repaint_mojects()
         return self
 
     def dither(self, duration = DEFAULT_DITHER_TIME):

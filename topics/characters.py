@@ -130,8 +130,6 @@ class Mortimer(PiCreature):
     }
     def __init__(self, **kwargs):
         PiCreature.__init__(self, **kwargs)
-        # self.highlight(DARK_BROWN)
-        self.give_straight_face()
         self.rotate(np.pi, UP)
 
 
@@ -139,10 +137,6 @@ class Mathematician(PiCreature):
     CONFIG = {
         "color" : GREY,
     }
-    def __init__(self, **kwargs):
-        PiCreature.__init__(self, **kwargs)
-        self.give_straight_face()
-
 
 class Bubble(Mobject):
     CONFIG = {

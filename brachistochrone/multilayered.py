@@ -387,7 +387,7 @@ class ContinuouslyObeyingSnellsLaw(MultilayeredScene):
 
     def snells_law_at_every_point(self, cycloid, chopped_cycloid):
         square = Square(side_length = 0.2, color = WHITE)
-        words = TextMobject(["Snell's law ", " at every point"])
+        words = TextMobject(["Snell's law ", "everywhere"])
         snells, rest = words.split()
         colon = TextMobject(":")
         words.next_to(square)

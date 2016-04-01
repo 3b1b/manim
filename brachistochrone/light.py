@@ -878,7 +878,59 @@ class WhichPathWouldLightTake(PhotonScene, TryManyPaths):
 
 
 
+class StateSnellsLaw(PhotonScene):
+    def construct(self):
+        point_a = 3*LEFT+3*UP
+        point_b = 1.5*RIGHT+3*DOWN
+        midpoint = ORIGIN
 
+        lines, arcs, thetas = [], [], []
+        counter = it.count(1)
+        for point in point_a, point_b:
+            line = Line(point, midpoint, color = RED_D)
+            angle = np.pi/2-np.abs(np.arctan(line.get_slope()))
+            arc = Arc(angle, radius = 0.5).rotate(np.pi/2)
+            if point is point_b:
+                arc.rotate(np.pi)
+                line.reverse_points()
+            theta = TexMobject("\\theta_%d"%counter.next())
+            theta.scale(0.5)
+            theta.shift(2*arc.get_center())
+            arc.shift(midpoint)
+            theta.shift(midpoint)
+
+            lines.append(line)
+            arcs.append(arc)
+            thetas.append(theta)
+        vert_line = Line(2*UP, 2*DOWN)
+        vert_line.shift(midpoint)
+        path = Mobject(*lines).ingest_sub_mobjects()
+        glass = Region(lambda x, y : y < 0, color = BLUE_E)
+        self.add(glass)
+        equation = TexMobject([
+            "\\dfrac{\\sin(\\theta_1)}{v_{\\text{air}}}",
+            "=",            
+            "\\dfrac{\\sin(\\theta_2)}{v_{\\text{water}}}",
+        ])
+        equation.to_corner(UP+RIGHT)
+        exp1, equals, exp2 = equation.split()
+        snells_law = TextMobject("Snell's Law:")
+        snells_law.highlight(YELLOW)
+        snells_law.to_edge(UP)
+
+        self.play(ShimmerIn(snells_law))
+        self.dither()
+        self.play(ShowCreation(path))
+        self.play(self.photon_run_along_path(path))
+        self.dither()
+        self.play(ShowCreation(vert_line))
+        self.play(*map(ShowCreation, arcs))
+        self.play(*map(GrowFromCenter, thetas))
+        self.dither()
+        self.play(ShimmerIn(exp1))
+        self.dither()
+        self.play(*map(ShimmerIn, [equals, exp2]))
+        self.dither()
         
 
 

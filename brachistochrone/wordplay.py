@@ -469,6 +469,100 @@ class BalanceCompetingFactors(Scene):
 
 
 
+class Challenge(Scene):
+    def construct(self):
+        self.add(TextMobject("""
+            Can you find a new solution to the 
+            Brachistochrone problem by finding 
+            an intuitive reason that time-minimizing
+            curves look like straight lines in 
+            $t$-$\\theta$ space?
+        """))
+        self.dither()
+
+
+
+class Section1(Scene):
+    def construct(self):
+        self.add(TextMobject("Section 1: Johann Bernoulli's insight"))
+        self.dither()
+
+class Section2(Scene):
+    def construct(self):
+        self.add(TextMobject(
+            "Section 2: Mark Levi's insight, and a challenge",
+            size = "\\large"
+        ))
+        self.dither()
+
+
+
+class NarratorInterjection(Scene):
+    def construct(self):
+        words1 = TexMobject("<\\text{Narrator interjection}>")
+        words2 = TexMobject("<\\!/\\text{Narrator interjection}>")
+        self.add(words1)
+        self.dither()
+        self.clear()
+        self.add(words2)
+        self.dither()
+
+
+class ThisCouldBeTheEnd(Scene):
+    def construct(self):
+        words = TextMobject([
+            "This could be the end\\dots",
+            "but\\dots"
+        ])
+        for part in words.split():
+            self.play(ShimmerIn(part))
+            self.dither()
+
+
+class MyOwnChallenge(Scene):
+    def construct(self):
+        self.add(TextMobject("My own challenge:"))
+        self.dither()
+
+
+class WarmupChallenge(Scene):
+    def construct(self):
+        self.add(TextMobject("\\large Warm-up challenge: Confirm this for yourself"))
+        self.dither()
+
+class FindAnotherSolution(Scene):
+    def construct(self):
+        self.add(TextMobject("Find another brachistochrone solution\\dots"))
+        self.dither()
+
+
+class ProofOfSnellsLaw(Scene):
+    def construct(self):
+        self.add(TextMobject("Proof of Snell's law:"))
+        self.dither()
+
+
+class CondensedVersion(Scene):
+    def construct(self):
+        snells = TextMobject("Snell's")
+        snells.shift(-snells.get_left())
+        snells.to_edge(UP)
+        for vect in [RIGHT, RIGHT, LEFT, DOWN, DOWN, DOWN]:
+            snells.add(snells.copy().next_to(snells, vect))
+        snells.ingest_sub_mobjects()
+        snells.show()
+        condensed = TextMobject("condensed")
+
+        self.add(snells)
+        self.dither()
+        self.play(DelayByOrder(
+            Transform(snells, condensed, run_time = 2)
+        ))
+        self.dither()
+
+
+
+
 
 
 
