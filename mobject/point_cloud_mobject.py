@@ -110,6 +110,23 @@ class PointCloudMobject(Mobject):
         index = alpha*(self.get_num_points()-1)
         return self.points[index]
 
+    # Alignment
+    def align_points_with_larger(self, larger_mobject):
+        assert(isinstance(larger_mobject, PointCloudMobject))
+        self.apply_over_attr_arrays(
+            lambda a : streth_array_to_length(
+                a, larger_mobject.get_num_points()
+            )
+        )
+
+    def get_point_mobject(self):
+        return Point(self.get_center())
+
+    def interpolate_color(self, mobject1, mobject2, alpha):
+        self.rgbs = interpolate(
+            mobject1.rgbs, mobject2.rgbs, alpha
+        )
+
 
 #TODO, Make the two implementations bellow non-redundant
 class Mobject1D(PointCloudMobject):
@@ -146,13 +163,11 @@ class Mobject2D(PointCloudMobject):
 
 
 
-class Point(Mobject):
+class Point(PointCloudMobject):
     CONFIG = {
         "color" : BLACK,
     }
     def __init__(self, location = ORIGIN, **kwargs):
-        digest_locals(self)        
-        Mobject.__init__(self, **kwargs)
+        PointCloudMobject.__init__(self, **kwargs)
+        self.add_points([location])
 
-    def generate_points(self):
-        self.add_points([self.location])        

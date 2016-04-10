@@ -71,19 +71,18 @@ class Camera(object):
                 mob.nonempty_family_members() 
                 for mob in mobjects
             ])
-        vect_mobjects = []
         for mobject in mobjects:
             if isinstance(mobject, VectorizedMobject):
-                vect_mobjects.append(mobject)
+                self.display_vectorized(mobject)
             elif isinstance(mobject, PointCloudMobject):
                 self.display_point_cloud(
                     mobject.points, mobject.rgbs, 
-                    self.adjusted_thickness(mobject.point_thickness)
+                    self.adjusted_thickness(mobject.stroke_width)
                 )
             else:
-                raise Exception("I don't know how to display that")
-        if vect_mobjects:
-            self.display_vectorized(vect_mobjects)
+                #TODO
+                print mobject
+                # raise Exception("I don't know how to display that")
 
     # def display_region(self, region):
     #     (h, w) = self.pixel_shape
@@ -98,33 +97,29 @@ class Camera(object):
     #     self.pixel_array[covered] = rgb
 
 
-    def display_vectorized(self, vect_mobjects):
+    def display_vectorized(self, vect_mobject):
         im = Image.fromarray(self.pixel_array, mode = "RGB")
         canvas = aggdraw.Draw(im)
-        for mob in vect_mobjects:
-            pen, fill = self.get_pen_and_fill(mob)
-            #TODO, fill
-            pathstring = self.get_pathstring(
-                self.points_to_pixel_coords(mob.points),
-                closed = mob.is_closed()
-            )
-            symbol = aggdraw.Symbol(pathstring)
-            canvas.symbol((0, 0), symbol, pen, fill)
+        pen, fill = self.get_pen_and_fill(vect_mobject)
+        pathstring = self.get_pathstring(
+            self.points_to_pixel_coords(vect_mobject.points),
+            closed = vect_mobject.is_closed()
+        )
+        symbol = aggdraw.Symbol(pathstring)
+        canvas.symbol((0, 0), symbol, pen, fill)
         canvas.flush()
-        self.pixel_array = np.array(im)
+        self.pixel_array[:,:] = np.array(im)
 
     def get_pen_and_fill(self, vect_mobject):
         pen = aggdraw.Pen(
-            vect_mobject.get_color().get_web(),
-            vect_mobject.point_thickness
+            vect_mobject.get_stroke_color().get_web(),
+            vect_mobject.stroke_width
         )
         fill = aggdraw.Brush(
             vect_mobject.get_fill_color().get_web(),
             opacity = int(255*vect_mobject.get_fill_opacity())
         )
         return (pen, fill)
-
-
 
     def get_pathstring(self, cubic_bezier_points, closed = False):
         start = "m%d,%d"%tuple(cubic_bezier_points[0])

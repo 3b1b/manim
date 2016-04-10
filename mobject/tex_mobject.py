@@ -8,7 +8,7 @@ class TexMobject(Mobject):
     CONFIG = {
         "template_tex_file" : TEMPLATE_TEX_FILE,
         "color"             : WHITE,
-        "point_thickness"   : 1,
+        "stroke_width"   : 1,
         "should_center"     : True,
     }
     def __init__(self, expression, **kwargs):

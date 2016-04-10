@@ -14,7 +14,7 @@ from scene import Scene
 from topics.complex_numbers import *
 
 DEFAULT_PLANE_CONFIG = {
-    "point_thickness" : 2*DEFAULT_POINT_THICKNESS
+    "stroke_width" : 2*DEFAULT_POINT_THICKNESS
 
 
 class SuccessiveComplexMultiplications(ComplexMultiplication):
@@ -144,7 +144,7 @@ class DrawSolutionsToZToTheNEqualsW(Scene):
         plane = ComplexPlane(**plane_config)
         circle = Circle(
             radius = radius*zoom_value,
-            point_thickness = plane.point_thickness
+            stroke_width = plane.stroke_width
         )
         solutions = [
             radius*np.exp(complex(0, 1)*(2*np.pi*k + theta)/n)
@@ -222,7 +222,7 @@ class DrawComplexAngleAndMagnitude(Scene):
             Line(
                 start, end,
                 color = color, 
-                point_thickness = self.plane.point_thickness
+                stroke_width = self.plane.stroke_width
             )
             for start, end, color in zip(
                 [ORIGIN, point[0]*RIGHT, ORIGIN],

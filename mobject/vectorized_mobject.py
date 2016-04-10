@@ -35,7 +35,7 @@ class VectorizedMobject(Mobject):
     def get_fill_opacity(self):
         return self.fill_opacity
 
-    def get_storke_color(self):
+    def get_stroke_color(self):
         return Color(rgb = self.stroke_rgb)
 
     #TODO, get color?  Specify if stroke or fill
@@ -88,23 +88,23 @@ class VectorizedMobject(Mobject):
         ]
 
     def set_points_as_corners(self, points):
+        if len(points) <= 1:
+            return self
+        points = self.close_if_needed(points)
         handles1 = points[:-1]
         handles2 = points[1:]
         self.set_anchors_and_handles(points, handles1, handles2)
         return self
 
     def set_points_smoothly(self, points):
-        if self.is_closed():
-            points = np.append(
-                points,
-                [points[0], points[1]],
-                axis = 0
-            )
+        if len(points) <= 1:
+            return self
+        points = self.close_if_needed(points)
         num_handles = len(points) - 1
         #Must solve 2*num_handles equations to get the handles.
         #l and u are the number of lower an upper diagonal rows
         #in the matrix to solve.
-        l, u = 2, 1        
+        l, u = 2, 1    
         #diag is a representation of the matrix in diagonal form
         #See https://www.particleincell.com/2012/bezier-splines/
         #for how to arive at these equations
@@ -115,6 +115,8 @@ class VectorizedMobject(Mobject):
         diag[1,1::2] = 1
         diag[2,1:-2:2] = -2
         diag[3,0:-3:2] = 1
+        diag[2,-2] = 1
+        diag[1,-1] = -2
         #This is the b as in Ax = b, where we are solving for x,
         #and A is represented using diag.  However, think of entries
         #to x and b as being points in space, not numbers
@@ -122,25 +124,36 @@ class VectorizedMobject(Mobject):
         b[1::2] = 2*points[1:]
         b[0] = points[0]
         b[-1] = points[-1]
-
+        solve_func = lambda b : linalg.solve_banded(
+            (l, u), diag, b
+        )
+        if self.is_closed():
+            #Get equations to relate first and last points
+            matrix = diag_to_matrix((l, u), diag)
+            #last row handles second derivative
+            matrix[-1, [0, 1]] = matrix[0, [0, 1]]
+            #first row handles first derivative
+            matrix[0,:] = np.zeros(matrix.shape[1])
+            matrix[0,[0, -1]] = [1, 1]
+            b[0] = 2*points[0]
+            b[-1] = np.zeros(self.dim)
+            solve_func = lambda b : linalg.solve(matrix, b)
         handle_pairs = np.zeros((2*num_handles, self.dim))
         for i in range(self.dim):
-            handle_pairs[:,i] = linalg.solve_banded(
-                (l, u), diag, b[:,i]
-            )
+            handle_pairs[:,i] = solve_func(b[:,i])
         handles1 = handle_pairs[0::2]
         handles2 = handle_pairs[1::2]
-        if self.is_closed():
-            #Ignore last point that was artificially added
-            #to smooth out the closing.
-            #TODO, is the the best say to handle this?
-            handles1[0] = handles1[-1]
-            points = points[:-1]
-            handles1 = handles1[:-1]
-            handles2 = handles2[:-1]
-
         self.set_anchors_and_handles(points, handles1, handles2)
+        return self
 
+    def close_if_needed(self, points):
+        if self.is_closed() and not np.all(points[0] == points[-1]):
+            points = np.append(
+                points,
+                [points[0]],
+                axis = 0
+            )
+        return points
 
     def set_points(self, points, mode = "smooth"):
         points = np.array(points)
@@ -157,17 +170,63 @@ class VectorizedMobject(Mobject):
     ## Information about line
 
     def get_num_points(self):
-        pass
+        return (len(self.points) - 1)/3 + 1
 
     def point_from_proportion(self, alpha):
-        pass
+        num_cubics = self.get_num_points()-1
+        interpoint_alpha = num_cubics*(alpha % (1./num_cubics))
+        index = 3*int(alpha*num_cubics)
+        cubic = bezier(self.points[index:index+4])
+        return cubic(interpoint_alpha)
+
+
+    ## Alignment
+    def align_points_with_larger(self, larger_mobject):
+        assert(isinstance(larger_mobject, VectorizedMobject))
+        anchors, handles1, handles2 = self.get_anchors_and_handles()
+        old_n = len(anchors)
+        new_n = larger_mobject.get_num_points()
+        #Buff up list of anchor points to appropriate length
+        new_anchors = anchors[old_n*np.arange(new_n)/new_n]
+        #At first, handles are on anchor points 
+        #the [2:] is because start has no handles
+        new_points = new_anchors.repeat(3, axis = 0)[2:]
+        #These indices indicate the spots between genuinely
+        #different anchor points in new_points list
+        indices = 3*(np.arange(old_n) * new_n / old_n)[1:]
+        new_points[indices+1] = handles1
+        new_points[indices+2] = handles2
+        self.set_points(new_points, mode = "handles_included")
+        return self
+
+
+    def get_point_mobject(self):
+        return VectorizedPoint(self.get_center())
+
+    def interpolate_color(self, mobject1, mobject2, alpha):
+        attrs = [
+            "stroke_rgb", 
+            "stroke_width",            
+            "fill_rgb", 
+            "fill_opacity",
+        ]
+        for attr in attrs:
+            setattr(self, attr, interpolate(
+                getattr(mobject1, attr),
+                getattr(mobject2, attr),
+                alpha
+            ))
 
 
 
 
-
-
-
+class VectorizedPoint(VectorizedMobject):
+    CONFIG = {
+        "color" : BLACK,
+    }
+    def __init__(self, location = ORIGIN, **kwargs):
+        VectorizedMobject.__init__(self, **kwargs)
+        self.set_points([location])
 
 
 

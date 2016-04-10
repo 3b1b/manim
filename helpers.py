@@ -25,6 +25,23 @@ def compass_directions(n = 4, start_vect = UP):
         for k in range(n)
     ]
 
+def diag_to_matrix(l_and_u, diag):
+    """
+    Converts array whose rows represent diagonal 
+    entries of a matrix into the matrix itself.
+    See scipy.linalg.solve_banded
+    """
+    l, u = l_and_u
+    dim = diag.shape[1]
+    matrix = np.zeros((dim, dim))
+    for i in range(l+u+1):
+        np.fill_diagonal(
+            matrix[max(0,i-u):,max(0,u-i):],
+            diag[i,max(0,u-i):]
+        )
+    return matrix
+
+
 def bezier(points):
     n = len(points) - 1
     return lambda t : sum([

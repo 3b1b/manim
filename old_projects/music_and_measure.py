@@ -95,7 +95,7 @@ class OpenInterval(Mobject):
 
 class Piano(ImageMobject):
     CONFIG = {
-        "point_thickness" : 1,
+        "stroke_width" : 1,
         "invert" : False, 
         "scale_value" : 0.5
     }
@@ -113,7 +113,7 @@ class Piano(ImageMobject):
         for count in range(14):
             key = Mobject(
                 color = "white",
-                point_thickness = 1
+                stroke_width = 1
             )
             x0 = left + count*self.ivory_jump
             x1 = x0 + self.ivory_jump
@@ -664,7 +664,7 @@ class ConstructPiano(Scene):
         askew = deepcopy(keys[-1])
         keys[-1].rotate_in_place(np.pi/5)
         for key in keys:
-            key.point_thickness = 1
+            key.stroke_width = 1
             key_copy = deepcopy(key).to_corner(DOWN+LEFT)
             key_copy.scale_in_place(0.25)
             key_copy.shift(1.8*random.random()*SPACE_WIDTH*RIGHT)

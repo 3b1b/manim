@@ -15,7 +15,7 @@ class ImageMobject(Mobject):
         "filter_color"    : "black",
         "invert"          : True,
         "use_cache"       : True,
-        "point_thickness" : 1,
+        "stroke_width" : 1,
         "scale_value"     : 1.0,
         "should_center"   : True,
     }

@@ -10,7 +10,7 @@ from helpers import *
 from scene import Scene
 from number_line import NumberLineScene
 
-ARROW_CONFIG = {"point_thickness" : 2*DEFAULT_POINT_THICKNESS}
+ARROW_CONFIG = {"stroke_width" : 2*DEFAULT_POINT_THICKNESS}
 LIGHT_RED = RED_E
 
 def matrix_to_string(matrix):
@@ -55,7 +55,7 @@ class ShowMultiplication(NumberLineScene):
     def construct(self, num, show_original_line):
         config = {
             "density" : max(abs(num), 1)*DEFAULT_POINT_DENSITY_1D,
-            "point_thickness" : 2*DEFAULT_POINT_THICKNESS
+            "stroke_width" : 2*DEFAULT_POINT_THICKNESS
         }
         if abs(num) < 1:
             config["numerical_radius"] = SPACE_WIDTH/num
@@ -114,7 +114,7 @@ class ExamplesOfNonlinearOneDimensionalTransforms(NumberLineScene):
         self.clear()
         self.add(self.nonlinear)
         config = {
-            "point_thickness" : 2*DEFAULT_POINT_THICKNESS,
+            "stroke_width" : 2*DEFAULT_POINT_THICKNESS,
             "density" : 5*DEFAULT_POINT_DENSITY_1D,
         }
         NumberLineScene.construct(self, **config)
@@ -143,7 +143,7 @@ class ShowTwoThenThree(ShowMultiplication):
 
     def construct(self):
         config = {
-            "point_thickness" : 2*DEFAULT_POINT_THICKNESS,
+            "stroke_width" : 2*DEFAULT_POINT_THICKNESS,
             "density" : 6*DEFAULT_POINT_DENSITY_1D,
         }
         NumberLineScene.construct(self, **config)
@@ -162,7 +162,7 @@ class TransformScene2D(Scene):
             "x_radius" : 2*SPACE_WIDTH,
             "y_radius" : 2*SPACE_WIDTH,
             "density" : DEFAULT_POINT_DENSITY_1D*density_factor,
-            "point_thickness" : 2*DEFAULT_POINT_THICKNESS
+            "stroke_width" : 2*DEFAULT_POINT_THICKNESS
         }
         if not use_faded_lines:
             config["x_faded_line_frequency"] = None
@@ -318,7 +318,7 @@ class ExamplesOfNonlinearTwoDimensionalTransformations(Scene):
             "x_radius" : 2*SPACE_WIDTH,
             "y_radius" : 2*SPACE_WIDTH,
             "density" : 3*DEFAULT_POINT_DENSITY_1D,
-            "point_thickness" : 2*DEFAULT_POINT_THICKNESS
+            "stroke_width" : 2*DEFAULT_POINT_THICKNESS
         }
         number_plane = NumberPlane(**config)
         numbers = number_plane.get_coordinate_labels()
@@ -372,7 +372,7 @@ class TrickyExamplesOfNonlinearTwoDimensionalTransformations(Scene):
             "x_radius" : 1.2*SPACE_WIDTH,
             "y_radius" : 1.2*SPACE_WIDTH,
             "density" : 10*DEFAULT_POINT_DENSITY_1D,
-            "point_thickness" : 2*DEFAULT_POINT_THICKNESS
+            "stroke_width" : 2*DEFAULT_POINT_THICKNESS
         }
         number_plane = NumberPlane(**config)
         phrase1, phrase2 = TextMobject([
