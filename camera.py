@@ -6,8 +6,10 @@ from PIL import Image
 import cv2
 from colour import Color
 import progressbar
+import aggdraw
 
 from helpers import *
+from mobject import PointCloudMobject, VectorizedMobject
 
 class Camera(object):
     CONFIG = {
@@ -66,33 +68,79 @@ class Camera(object):
     def capture_mobjects(self, mobjects, include_sub_mobjects = True):
         if include_sub_mobjects:
             mobjects = it.chain(*[
-                mob.submobject_family() 
+                mob.nonempty_family_members() 
                 for mob in mobjects
             ])
+        vect_mobjects = []
         for mobject in mobjects:
-            if mobject.display_mode == "region":
-                self.display_region(mobject)
-            elif mobject.display_mode == "points":
-                self.display_points(
+            if isinstance(mobject, VectorizedMobject):
+                vect_mobjects.append(mobject)
+            elif isinstance(mobject, PointCloudMobject):
+                self.display_point_cloud(
                     mobject.points, mobject.rgbs, 
                     self.adjusted_thickness(mobject.point_thickness)
                 )
             else:
-                raise Exception("Invalid display mode")
+                raise Exception("I don't know how to display that")
+        if vect_mobjects:
+            self.display_vectorized(vect_mobjects)
 
-    def display_region(self, region):
-        (h, w) = self.pixel_shape
-        scalar = 2*self.space_shape[0] / h
-        xs =  scalar*np.arange(-w/2, w/2)+self.space_center[0]
-        ys = -scalar*np.arange(-h/2, h/2)+self.space_center[1]
-        x_array = np.dot(np.ones((h, 1)), xs.reshape((1, w)))
-        y_array = np.dot(ys.reshape(h, 1), np.ones((1, w)))
-        covered = region.condition(x_array, y_array)
-        rgb = np.array(Color(region.color).get_rgb())
-        rgb = (255*rgb).astype('uint8')
-        self.pixel_array[covered] = rgb
+    # def display_region(self, region):
+    #     (h, w) = self.pixel_shape
+    #     scalar = 2*self.space_shape[0] / h
+    #     xs =  scalar*np.arange(-w/2, w/2)+self.space_center[0]
+    #     ys = -scalar*np.arange(-h/2, h/2)+self.space_center[1]
+    #     x_array = np.dot(np.ones((h, 1)), xs.reshape((1, w)))
+    #     y_array = np.dot(ys.reshape(h, 1), np.ones((1, w)))
+    #     covered = region.condition(x_array, y_array)
+    #     rgb = np.array(Color(region.color).get_rgb())
+    #     rgb = (255*rgb).astype('uint8')
+    #     self.pixel_array[covered] = rgb
 
-    def display_points(self, points, rgbs, thickness):
+
+    def display_vectorized(self, vect_mobjects):
+        im = Image.fromarray(self.pixel_array, mode = "RGB")
+        canvas = aggdraw.Draw(im)
+        for mob in vect_mobjects:
+            pen, fill = self.get_pen_and_fill(mob)
+            #TODO, fill
+            pathstring = self.get_pathstring(
+                self.points_to_pixel_coords(mob.points),
+                closed = mob.is_closed()
+            )
+            symbol = aggdraw.Symbol(pathstring)
+            canvas.symbol((0, 0), symbol, pen, fill)
+        canvas.flush()
+        self.pixel_array = np.array(im)
+
+    def get_pen_and_fill(self, vect_mobject):
+        pen = aggdraw.Pen(
+            vect_mobject.get_color().get_web(),
+            vect_mobject.point_thickness
+        )
+        fill = aggdraw.Brush(
+            vect_mobject.get_fill_color().get_web(),
+            opacity = int(255*vect_mobject.get_fill_opacity())
+        )
+        return (pen, fill)
+
+
+
+    def get_pathstring(self, cubic_bezier_points, closed = False):
+        start = "m%d,%d"%tuple(cubic_bezier_points[0])
+        #(handle1, handle2, anchor) tripletes
+        triplets = zip(*[
+            cubic_bezier_points[i+1::3]
+            for i in range(3)
+        ])
+        cubics = [
+            "C" + ",".join(map(str, it.chain(*triplet)))
+            for triplet in triplets
+        ]
+        end = "z" if closed else ""
+        return " ".join([start] + cubics + [end])
+
+    def display_point_cloud(self, points, rgbs, thickness):
         if len(points) == 0:
             return
         points = self.align_points_to_camera(points)

@@ -12,8 +12,11 @@ import re
 from constants import *
 
 
+def color_to_rgb(color):
+    return np.array(Color(color).get_rgb())
+
 def color_to_int_rgb(color):
-    return (255*np.array(Color(color).get_rgb())).astype('uint8')
+    return (255*color_to_rgb(color)).astype('uint8')
 
 def compass_directions(n = 4, start_vect = UP):
     angle = 2*np.pi/n
