@@ -7,23 +7,56 @@ import random
 import inspect
 import string
 import re
+from scipy import linalg
 
 
-from constants import *
-
-
-def color_to_rgb(color):
-    return np.array(Color(color).get_rgb())
-
-def color_to_int_rgb(color):
-    return (255*color_to_rgb(color)).astype('uint8')
-
-def compass_directions(n = 4, start_vect = UP):
-    angle = 2*np.pi/n
-    return [
-        rotate_vector(start_vect, k*angle)
-        for k in range(n)
-    ]
+def get_smooth_handle_points(points, closed = False):
+    num_handles = len(points) - 1
+    dim = points.shape[1]    
+    if num_handles < 1:
+        return np.zeros((0, dim)), np.zeros((0, dim))
+    #Must solve 2*num_handles equations to get the handles.
+    #l and u are the number of lower an upper diagonal rows
+    #in the matrix to solve.
+    l, u = 2, 1    
+    #diag is a representation of the matrix in diagonal form
+    #See https://www.particleincell.com/2012/bezier-splines/
+    #for how to arive at these equations
+    diag = np.zeros((l+u+1, 2*num_handles))
+    diag[0,1::2] = -1
+    diag[0,2::2] = 1
+    diag[1,0::2] = 2
+    diag[1,1::2] = 1
+    diag[2,1:-2:2] = -2
+    diag[3,0:-3:2] = 1
+    #last
+    diag[2,-2] = 2
+    diag[1,-1] = -1
+    #This is the b as in Ax = b, where we are solving for x,
+    #and A is represented using diag.  However, think of entries
+    #to x and b as being points in space, not numbers
+    b = np.zeros((2*num_handles, dim))
+    b[1::2] = 2*points[1:]
+    b[0] = points[0]
+    b[-1] = points[-1]
+    solve_func = lambda b : linalg.solve_banded(
+        (l, u), diag, b
+    )
+    if closed:
+        #Get equations to relate first and last points
+        matrix = diag_to_matrix((l, u), diag)
+        #last row handles second derivative
+        matrix[-1, [0, 1, -2, -1]] = [2, -1, 1, -2]
+        #first row handles first derivative
+        matrix[0,:] = np.zeros(matrix.shape[1])
+        matrix[0,[0, -1]] = [1, 1]
+        b[0] = 2*points[0]
+        b[-1] = np.zeros(dim)
+        solve_func = lambda b : linalg.solve(matrix, b)
+    handle_pairs = np.zeros((2*num_handles, dim))
+    for i in range(dim):
+        handle_pairs[:,i] = solve_func(b[:,i])
+    return handle_pairs[0::2], handle_pairs[1::2]
 
 def diag_to_matrix(l_and_u, diag):
     """
@@ -41,6 +74,21 @@ def diag_to_matrix(l_and_u, diag):
         )
     return matrix
 
+from constants import *
+
+
+def color_to_rgb(color):
+    return np.array(Color(color).get_rgb())
+
+def color_to_int_rgb(color):
+    return (255*color_to_rgb(color)).astype('uint8')
+
+def compass_directions(n = 4, start_vect = UP):
+    angle = 2*np.pi/n
+    return [
+        rotate_vector(start_vect, k*angle)
+        for k in range(n)
+    ]
 
 def bezier(points):
     n = len(points) - 1

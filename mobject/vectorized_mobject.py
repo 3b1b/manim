@@ -1,4 +1,4 @@
-from scipy import linalg
+
 
 from .mobject import Mobject
 
@@ -77,15 +77,9 @@ class VectorizedMobject(Mobject):
         self.points = np.zeros((total_len, self.dim))
         self.points[0] = anchors[0]
         arrays = [handles1, handles2, anchors[1:]]
-        for index, array in zip(it.count(1), arrays):
-            self.points[index::3] = array
+        for index, array in enumerate(arrays):
+            self.points[index+1::3] = array
         return self.points
-
-    def get_anchors_and_handles(self):
-        return [
-            self.points[i::3]
-            for i in range(3)
-        ]
 
     def set_points_as_corners(self, points):
         if len(points) <= 1:
@@ -100,50 +94,8 @@ class VectorizedMobject(Mobject):
         if len(points) <= 1:
             return self
         points = self.close_if_needed(points)
-        num_handles = len(points) - 1
-        #Must solve 2*num_handles equations to get the handles.
-        #l and u are the number of lower an upper diagonal rows
-        #in the matrix to solve.
-        l, u = 2, 1    
-        #diag is a representation of the matrix in diagonal form
-        #See https://www.particleincell.com/2012/bezier-splines/
-        #for how to arive at these equations
-        diag = np.zeros((l+u+1, 2*num_handles))
-        diag[0,1::2] = -1
-        diag[0,2::2] = 1
-        diag[1,0::2] = 2
-        diag[1,1::2] = 1
-        diag[2,1:-2:2] = -2
-        diag[3,0:-3:2] = 1
-        diag[2,-2] = 1
-        diag[1,-1] = -2
-        #This is the b as in Ax = b, where we are solving for x,
-        #and A is represented using diag.  However, think of entries
-        #to x and b as being points in space, not numbers
-        b = np.zeros((2*num_handles, self.dim))
-        b[1::2] = 2*points[1:]
-        b[0] = points[0]
-        b[-1] = points[-1]
-        solve_func = lambda b : linalg.solve_banded(
-            (l, u), diag, b
-        )
-        if self.is_closed():
-            #Get equations to relate first and last points
-            matrix = diag_to_matrix((l, u), diag)
-            #last row handles second derivative
-            matrix[-1, [0, 1]] = matrix[0, [0, 1]]
-            #first row handles first derivative
-            matrix[0,:] = np.zeros(matrix.shape[1])
-            matrix[0,[0, -1]] = [1, 1]
-            b[0] = 2*points[0]
-            b[-1] = np.zeros(self.dim)
-            solve_func = lambda b : linalg.solve(matrix, b)
-        handle_pairs = np.zeros((2*num_handles, self.dim))
-        for i in range(self.dim):
-            handle_pairs[:,i] = solve_func(b[:,i])
-        handles1 = handle_pairs[0::2]
-        handles2 = handle_pairs[1::2]
-        self.set_anchors_and_handles(points, handles1, handles2)
+        h1, h2 = get_smooth_handle_points(points, self.is_closed())
+        self.set_anchors_and_handles(points, h1, h2)
         return self
 
     def close_if_needed(self, points):
@@ -167,7 +119,22 @@ class VectorizedMobject(Mobject):
             raise Exception("Unknown mode")
         return self
 
+    def change_mode(self, mode):
+        anchors, h1, h2 = self.get_anchors_and_handles()
+        self.set_points(anchors, mode = mode)
+        return self
+
+    def make_smooth(self):
+        return self.change_mode("smooth")
+
+    def make_jagged(self):
+        return self.change_mode("corners")
+
     ## Information about line
+
+    def component_curves_iter(self):
+        for i in range(0, len(self.points)-1, 3):
+            yield bezier(self.points[i:i+4])
 
     def get_num_points(self):
         return (len(self.points) - 1)/3 + 1
@@ -179,26 +146,52 @@ class VectorizedMobject(Mobject):
         cubic = bezier(self.points[index:index+4])
         return cubic(interpoint_alpha)
 
+    def get_anchors_and_handles(self):
+        return [
+            self.points[i::3]
+            for i in range(3)
+        ]
 
     ## Alignment
+    # def align_points_with_larger(self, larger_mobject):
+    #     assert(isinstance(larger_mobject, VectorizedMobject))
+    #     anchors, handles1, handles2 = self.get_anchors_and_handles()
+    #     old_n = len(anchors)
+    #     new_n = larger_mobject.get_num_points()
+    #     #Buff up list of anchor points to appropriate length
+    #     new_anchors = anchors[old_n*np.arange(new_n)/new_n]
+    #     #At first, handles are on anchor points 
+    #     #the [2:] is because start has no handles
+    #     new_points = new_anchors.repeat(3, axis = 0)[2:]
+    #     #These indices indicate the spots between genuinely
+    #     #different anchor points in new_points list
+    #     indices = 3*(np.arange(old_n) * new_n / old_n)[1:]
+    #     new_points[indices+1] = handles1
+    #     new_points[indices+2] = handles2
+    #     self.set_points(new_points, mode = "handles_included")
+    #     return self
+
     def align_points_with_larger(self, larger_mobject):
         assert(isinstance(larger_mobject, VectorizedMobject))
-        anchors, handles1, handles2 = self.get_anchors_and_handles()
-        old_n = len(anchors)
-        new_n = larger_mobject.get_num_points()
-        #Buff up list of anchor points to appropriate length
-        new_anchors = anchors[old_n*np.arange(new_n)/new_n]
-        #At first, handles are on anchor points 
-        #the [2:] is because start has no handles
-        new_points = new_anchors.repeat(3, axis = 0)[2:]
-        #These indices indicate the spots between genuinely
-        #different anchor points in new_points list
-        indices = 3*(np.arange(old_n) * new_n / old_n)[1:]
-        new_points[indices+1] = handles1
-        new_points[indices+2] = handles2
-        self.set_points(new_points, mode = "handles_included")
+        points = np.array([self.points[0]])
+        target_len = larger_mobject.get_num_points()-1
+        num_curves = self.get_num_points()-1
+        #curves are buckets, and we need to know how many new
+        #anchor points to put into each one
+        index_allocation = (np.arange(target_len) * num_curves)/target_len
+        for index, curve in enumerate(self.component_curves_iter()):
+            num_inter_points = sum(index_allocation == index)
+            step = 1./num_inter_points
+            alphas = np.arange(0, 1+step, step)
+            new_anchors = np.array(map(curve, alphas))
+            h1, h2 = get_smooth_handle_points(new_anchors)
+            new_points = np.array(
+                zip(h1, h2, new_anchors[1:])
+            )
+            new_points = new_points.reshape((new_points.size/3, 3))
+            points = np.append(points, new_points, 0)
+        self.set_points(points, "handles_included")
         return self
-
 
     def get_point_mobject(self):
         return VectorizedPoint(self.get_center())
@@ -216,8 +209,6 @@ class VectorizedMobject(Mobject):
                 getattr(mobject2, attr),
                 alpha
             ))
-
-
 
 
 class VectorizedPoint(VectorizedMobject):
