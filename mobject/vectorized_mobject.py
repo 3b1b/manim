@@ -132,9 +132,12 @@ class VectorizedMobject(Mobject):
 
     ## Information about line
 
-    def component_curves_iter(self):
-        for i in range(0, len(self.points)-1, 3):
-            yield bezier(self.points[i:i+4])
+    def component_curves(self):
+        for n in range(self.get_num_points()-1):
+            yield self.get_nth_curve(n)
+
+    def get_nth_curve(self, n):
+        return bezier(self.points[3*n:3*n+4])
 
     def get_num_points(self):
         return (len(self.points) - 1)/3 + 1
@@ -153,6 +156,7 @@ class VectorizedMobject(Mobject):
         ]
 
     ## Alignment
+
     # def align_points_with_larger(self, larger_mobject):
     #     assert(isinstance(larger_mobject, VectorizedMobject))
     #     anchors, handles1, handles2 = self.get_anchors_and_handles()
@@ -179,7 +183,7 @@ class VectorizedMobject(Mobject):
         #curves are buckets, and we need to know how many new
         #anchor points to put into each one
         index_allocation = (np.arange(target_len) * num_curves)/target_len
-        for index, curve in enumerate(self.component_curves_iter()):
+        for index, curve in enumerate(self.component_curves()):
             num_inter_points = sum(index_allocation == index)
             step = 1./num_inter_points
             alphas = np.arange(0, 1+step, step)
@@ -209,6 +213,77 @@ class VectorizedMobject(Mobject):
                 getattr(mobject2, attr),
                 alpha
             ))
+
+
+    def get_partial_bezier_points(self, x, pre_x = True):
+        """
+        Input is a number number 0 <= x <= 1, which
+        corresponds to some point along the curve.
+        This point lies on some cubic.  This function
+        return the four bezeir points giving a partial 
+        version of that cubic.  Either the part before x,
+        if pre_x == True, otherwise the part after x
+        """
+        if x >= 1.0:
+            return np.array(4*[self.points[-1]])
+        num_cubics = self.get_num_points()-1
+        which_curve = int(x*num_cubics)
+        alpha = num_cubics*(x%(1./num_cubics))
+        cubic = self.get_nth_curve(which_curve)
+        new_anchor = cubic(alpha)
+        a1, h1, h2, a2 = self.points[3*which_curve:3*which_curve+4]
+        if pre_x:
+            return np.array([
+                a1,
+                interpolate(cubic(alpha/3), h1, alpha),
+                interpolate(cubic(2*alpha/3), h2, alpha),
+                new_anchor
+            ])
+        else:
+            return np.array([
+                new_anchor,
+                interpolate(h1, cubic((1-alpha)/3), alpha),
+                interpolate(h2, cubic(2*(1-alpha/3), alpha)),
+                a2
+            ])
+
+
+    def become_partial(self, mobject, a, b):
+        assert(isinstance(mobject, VectorizedMobject))        
+        #Partial curve includes three portions:
+        #-A middle section, which matches the curve exactly
+        #-A start, which is some ending portion of an inner cubic
+        #-An end, which is the starting portion of a later inner cubic
+        self.open()
+        if a <= 0 and b >= 1 and mobject.is_closed():
+            self.close()
+        num_cubics = mobject.get_num_points()-1
+        if a <= 0:
+            lower_index = 0
+            start_points = np.zeros((0, 3))
+        else:
+            lower_index = 3*int(a*num_cubics)+4
+            start_points = mobject.get_partial_bezier_points(
+                a, pre_x = False
+            )
+        if b >= 1:
+            upper_index = len(mobject.points)+1
+            end_points = np.zeros((0, 3))
+        else:
+            upper_index = 3*int(b*num_cubics)
+            end_points = mobject.get_partial_bezier_points(
+                b, pre_x = True
+            )
+        new_points = reduce(
+            lambda a, b : np.append(a, b, axis = 0),
+            [
+                start_points, 
+                mobject.points[lower_index:upper_index],
+                end_points
+            ]
+        )
+        self.set_points(new_points, "handles_included")
+        return self
 
 
 class VectorizedPoint(VectorizedMobject):

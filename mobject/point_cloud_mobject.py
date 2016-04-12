@@ -127,6 +127,16 @@ class PointCloudMobject(Mobject):
             mobject1.rgbs, mobject2.rgbs, alpha
         )
 
+    def become_partial(self, mobject, a, b):
+        lower_index, upper_index = [
+            int(x * mobject.get_num_points())
+            for x in a, b
+        ]
+        for attr in self.get_array_attrs():
+            full_array = getattr(mobject, attr)
+            partial_array = full_array[lower_index:upper_index]
+            setattr(self, attr, partial_array) 
+
 
 #TODO, Make the two implementations bellow non-redundant
 class Mobject1D(PointCloudMobject):

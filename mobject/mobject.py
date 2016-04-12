@@ -451,6 +451,14 @@ class Mobject(object):
     def interpolate_color(self, mobject1, mobject2, alpha):
         raise Exception("Not implemented")
 
+    def become_partial(self, mobject, a, b):
+        """
+        Set points in such a way as to become only
+        part of mobject.  
+        Inputs 0 <= a < b <= 1 determine what portion
+        of mobject to become.
+        """
+        raise Exception("Not implemented")
 
 
 

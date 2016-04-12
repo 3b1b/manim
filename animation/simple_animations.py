@@ -38,15 +38,7 @@ class ShowPartial(Animation):
             self.mobject.submobject_family()
         )
         for start, mob in pairs:
-            lower_alpha, upper_alpha = self.get_bounds(alpha)
-            lower_index, upper_index = [
-                int(a * start.get_num_points())
-                for a in lower_alpha, upper_alpha
-            ]
-            for attr in mob.get_array_attrs():
-                full_array = getattr(start, attr)
-                partial_array = full_array[lower_index:upper_index]
-                setattr(mob, attr, partial_array)
+            mob.become_partial(start, *self.get_bounds(alpha))
 
     def get_bounds(self, alpha):
         raise Exception("Not Implemented")
