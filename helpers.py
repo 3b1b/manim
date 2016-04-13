@@ -9,8 +9,10 @@ import string
 import re
 from scipy import linalg
 
+from constants import *
 
-def get_smooth_handle_points(points, closed = False):
+
+def get_smooth_handle_points(points):
     num_handles = len(points) - 1
     dim = points.shape[1]    
     if num_handles < 1:
@@ -30,8 +32,8 @@ def get_smooth_handle_points(points, closed = False):
     diag[2,1:-2:2] = -2
     diag[3,0:-3:2] = 1
     #last
-    diag[2,-2] = 2
-    diag[1,-1] = -1
+    diag[2,-2] = -1
+    diag[1,-1] = 2
     #This is the b as in Ax = b, where we are solving for x,
     #and A is represented using diag.  However, think of entries
     #to x and b as being points in space, not numbers
@@ -42,7 +44,7 @@ def get_smooth_handle_points(points, closed = False):
     solve_func = lambda b : linalg.solve_banded(
         (l, u), diag, b
     )
-    if closed:
+    if is_closed(points):
         #Get equations to relate first and last points
         matrix = diag_to_matrix((l, u), diag)
         #last row handles second derivative
@@ -74,8 +76,8 @@ def diag_to_matrix(l_and_u, diag):
         )
     return matrix
 
-from constants import *
-
+def is_closed(points):
+    return np.all(points[0] == points[-1])
 
 def color_to_rgb(color):
     return np.array(Color(color).get_rgb())

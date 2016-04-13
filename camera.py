@@ -84,27 +84,28 @@ class Camera(object):
                 print mobject
                 # raise Exception("I don't know how to display that")
 
-    # def display_region(self, region):
-    #     (h, w) = self.pixel_shape
-    #     scalar = 2*self.space_shape[0] / h
-    #     xs =  scalar*np.arange(-w/2, w/2)+self.space_center[0]
-    #     ys = -scalar*np.arange(-h/2, h/2)+self.space_center[1]
-    #     x_array = np.dot(np.ones((h, 1)), xs.reshape((1, w)))
-    #     y_array = np.dot(ys.reshape(h, 1), np.ones((1, w)))
-    #     covered = region.condition(x_array, y_array)
-    #     rgb = np.array(Color(region.color).get_rgb())
-    #     rgb = (255*rgb).astype('uint8')
-    #     self.pixel_array[covered] = rgb
+    def display_region(self, region):
+        (h, w) = self.pixel_shape
+        scalar = 2*self.space_shape[0] / h
+        xs =  scalar*np.arange(-w/2, w/2)+self.space_center[0]
+        ys = -scalar*np.arange(-h/2, h/2)+self.space_center[1]
+        x_array = np.dot(np.ones((h, 1)), xs.reshape((1, w)))
+        y_array = np.dot(ys.reshape(h, 1), np.ones((1, w)))
+        covered = region.condition(x_array, y_array)
+        rgb = np.array(Color(region.color).get_rgb())
+        rgb = (255*rgb).astype('uint8')
+        self.pixel_array[covered] = rgb
 
 
     def display_vectorized(self, vect_mobject):
+        if vect_mobject.is_subpath:
+            #Subpath vectorized mobjects are taken care
+            #of by their parent
+            return
         im = Image.fromarray(self.pixel_array, mode = "RGB")
         canvas = aggdraw.Draw(im)
         pen, fill = self.get_pen_and_fill(vect_mobject)
-        pathstring = self.get_pathstring(
-            self.points_to_pixel_coords(vect_mobject.points),
-            closed = vect_mobject.is_closed()
-        )
+        pathstring = self.get_pathstring(vect_mobject)
         symbol = aggdraw.Symbol(pathstring)
         canvas.symbol((0, 0), symbol, pen, fill)
         canvas.flush()
@@ -121,19 +122,23 @@ class Camera(object):
         )
         return (pen, fill)
 
-    def get_pathstring(self, cubic_bezier_points, closed = False):
-        start = "m%d,%d"%tuple(cubic_bezier_points[0])
-        #(handle1, handle2, anchor) tripletes
-        triplets = zip(*[
-            cubic_bezier_points[i+1::3]
-            for i in range(3)
-        ])
-        cubics = [
-            "C" + ",".join(map(str, it.chain(*triplet)))
-            for triplet in triplets
-        ]
-        end = "z" if closed else ""
-        return " ".join([start] + cubics + [end])
+    def get_pathstring(self, vect_mobject):
+        result = ""        
+        for mob in [vect_mobject]+vect_mobject.subpath_mobjects:
+            points = mob.points
+            coords = self.points_to_pixel_coords(points)
+            start = "M%d %d"%tuple(coords[0])
+            #(handle1, handle2, anchor) tripletes
+            triplets = zip(*[
+                coords[i+1::3]
+                for i in range(3)
+            ])
+            cubics = [
+                "C" + " ".join(map(str, it.chain(*triplet)))
+                for triplet in triplets
+            ]
+            result += " ".join([start] + cubics)
+        return result
 
     def display_point_cloud(self, points, rgbs, thickness):
         if len(points) == 0:
