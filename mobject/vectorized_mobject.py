@@ -18,20 +18,30 @@ class VectorizedMobject(Mobject):
 
     ## Colors
     def init_colors(self):
-        self.set_stroke_color(self.color)
-        self.set_fill_color(self.fill_color)
+        self.set_stroke(color = self.color)
+        self.set_fill(color = self.fill_color)
         return self
 
-    def set_fill_color(self, color):
-        self.fill_rgb = color_to_rgb(color)
+    def set_family_attr(self, attr, value):
+        for mob in self.submobject_family():
+            setattr(mob, attr, value)
+
+    def set_fill(self, color = None, opacity = 1.0):
+        if color is not None:
+            self.set_family_attr("fill_rgb", color_to_rgb(color))
+        self.set_family_attr("fill_opacity", opacity)
         return self
 
-    def set_stroke_color(self, color):
-        self.stroke_rgb = color_to_rgb(color)
+    def set_stroke(self, color = None, width = None):
+        if color is not None:
+            self.set_family_attr("stroke_rgb", color_to_rgb(color))
+        if width is not None:
+            self.set_family_attr("stroke_width", width)
+        return self
 
     def highlight(self, color):
-        self.set_fill_color(color)
-        self.set_stroke_color(color)
+        self.set_fill(color = color)
+        self.set_stroke(color = color)
         return self
 
     def get_fill_color(self):
@@ -47,19 +57,17 @@ class VectorizedMobject(Mobject):
     #is the predominant color attribute?
 
     ## Drawing
-    def init_points(self):
-        ##Default to starting at origin
-        self.points = np.zeros((1, self.dim))
-        return self
-    
     def start_at(self, point):
+        if len(self.points) == 0:
+            self.points = np.zeros((1, 3))
         self.points[0] = point
         return self
 
-    def add_point(self, handle1, handle2, point):
+    def add_control_points(self, control_points):
+        assert(len(control_points) % 3 == 0)
         self.points = np.append(
             self.points,
-            [handle1, handle2, point],
+            control_points,
             axis = 0
         )
         return self
@@ -143,17 +151,17 @@ class VectorizedMobject(Mobject):
     ## Information about line
 
     def component_curves(self):
-        for n in range(self.get_num_points()-1):
+        for n in range(self.get_num_anchor_points()-1):
             yield self.get_nth_curve(n)
 
     def get_nth_curve(self, n):
         return bezier(self.points[3*n:3*n+4])
 
-    def get_num_points(self):
+    def get_num_anchor_points(self):
         return (len(self.points) - 1)/3 + 1
 
     def point_from_proportion(self, alpha):
-        num_cubics = self.get_num_points()-1
+        num_cubics = self.get_num_anchor_points()-1
         interpoint_alpha = num_cubics*(alpha % (1./num_cubics))
         index = 3*int(alpha*num_cubics)
         cubic = bezier(self.points[index:index+4])
@@ -170,27 +178,31 @@ class VectorizedMobject(Mobject):
     def align_points_with_larger(self, larger_mobject):
         assert(isinstance(larger_mobject, VectorizedMobject))
         points = np.array([self.points[0]])
-        target_len = larger_mobject.get_num_points()-1
-        num_curves = self.get_num_points()-1
-        #curves are buckets, and we need to know how many new
-        #anchor points to put into each one
+        target_len = larger_mobject.get_num_anchor_points()-1
+        num_curves = self.get_num_anchor_points()-1
+        #Curves in self are buckets, and we need to know 
+        #how many new anchor points to put into each one.  
+        #Each element of index_allocation is like a bucket, 
+        #and its value tells you the appropriate index of 
+        #the smaller curve.
         index_allocation = (np.arange(target_len) * num_curves)/target_len
-        for index, curve in enumerate(self.component_curves()):
-            num_inter_points = sum(index_allocation == index)
-            step = 1./num_inter_points
+        for index in range(num_curves):
+            curr_bezier_points = self.points[3*index:3*index+4]
+            num_inter_curves = sum(index_allocation == index)
+            step = 1./num_inter_curves
             alphas = np.arange(0, 1+step, step)
-            new_anchors = np.array(map(curve, alphas))
-            h1, h2 = get_smooth_handle_points(new_anchors)
-            new_points = np.array(
-                zip(h1, h2, new_anchors[1:])
-            )
-            new_points = new_points.reshape((new_points.size/3, 3))
-            points = np.append(points, new_points, 0)
-        self.set_points(points, "handles_included")
+            for a, b in zip(alphas, alphas[1:]):
+                new_points = partial_bezier_points(curr_bezier_points, a, b)
+                points = np.append(
+                    points, new_points[1:], axis = 0
+                )
+        self.set_points(points)
         return self
 
-    def get_point_mobject(self):
-        return VectorizedPoint(self.get_center())
+    def get_point_mobject(self, center):
+        if center is None:
+            center = self.get_center()
+        return VectorizedPoint(center)
 
     def interpolate_color(self, mobject1, mobject2, alpha):
         attrs = [
@@ -205,8 +217,6 @@ class VectorizedMobject(Mobject):
                 getattr(mobject2, attr),
                 alpha
             ))
-        self.closed = mobject1.is_closed() and mobject2.is_closed()
-
 
     def become_partial(self, mobject, a, b):
         assert(isinstance(mobject, VectorizedMobject))        
@@ -214,32 +224,25 @@ class VectorizedMobject(Mobject):
         #-A middle section, which matches the curve exactly
         #-A start, which is some ending portion of an inner cubic
         #-An end, which is the starting portion of a later inner cubic
-        self.open()
         if a <= 0 and b >= 1:
-            if mobject.is_closed():
-                self.close()
-            self.set_points(mobject.points, "handles_included")
+            self.set_points(mobject.points)
             return self
-        num_cubics = mobject.get_num_points()-1
+        num_cubics = mobject.get_num_anchor_points()-1
         lower_index = int(a*num_cubics)
         upper_index = int(b*num_cubics)
         points = np.array(
             mobject.points[3*lower_index:3*upper_index+4]
         )
         if len(points) > 1:
-            #This is a kind of neat-but-dense algorithm 
-            #for how to interpolate the handle points
             a_residue = (num_cubics*a)%1
-            points[:4] = [
-                bezier(points[i:4])(a_residue)
-                for i in range(4)
-            ]
             b_residue = (num_cubics*b)%1
-            points[-4:] = [
-                bezier(points[-4:len(points)-3+i])(b_residue)
-                for i in range(4)
-            ]
-        self.set_points(points, "handles_included")
+            points[:4] = partial_bezier_points(
+                points[:4], a_residue, 1
+            )
+            points[-4:] = partial_bezier_points(
+                points[-4:], 0, b_residue
+            )
+        self.set_points(points)
         return self
 
 
@@ -256,8 +259,8 @@ class VectorizedMobjectFromSVGPathstring(VectorizedMobject):
         digest_locals(self)
         VectorizedMobject.__init__(self, **kwargs)
 
-    def generate_points(self):
-        path_commands = [
+    def get_path_commands(self):
+        return [
             "M", #moveto
             "L", #lineto
             "H", #horizontal lineto
@@ -269,15 +272,67 @@ class VectorizedMobjectFromSVGPathstring(VectorizedMobject):
             "A", #elliptical Arc
             "Z", #closepath
         ]
-        pattern = "[%s]"%("".join(path_commands))
-        pairs = zip(
-            re.findall(pattern, self.pathstring),
-            re.split(pattern, self.path_string)
-        )
-        for command, coord_string in pairs:
-            pass
-            #TODO
 
+    def generate_points(self):
+        pattern = "[%s]"%("".join(self.get_path_commands()))
+        pairs = zip(
+            re.findall(pattern, self.path_string),
+            re.split(pattern, self.path_string)[1:]
+        )
+        #Which mobject should new points be added to
+        self.growing_path = self
+        for command, coord_string in pairs:
+            self.handle_command(command, coord_string)
+        #people treat y-coordinate differently
+        self.rotate(np.pi, RIGHT)
+
+    def handle_command(self, command, coord_string):
+        #new_points are the points that will be added to the curr_points
+        #list. This variable may get modified in the conditionals below.
+        points = self.growing_path.points
+        new_points = self.string_to_points(coord_string)
+        if command == "M": #moveto
+            if len(points) > 0:
+                self.add_subpath(new_points)
+                self.growing_path = self.subpath_mobjects[-1]
+            else:
+                self.growing_path.start_at(new_points[0])
+            return
+        elif command in ["L", "H", "V"]: #lineto
+            if command == "H":
+                new_points[0,1] = points[-1,1]
+            elif command == "V":
+                new_points[0,1] = new_points[0,0]
+                new_points[0,0] = points[-1,0]
+            new_points = new_points[[0, 0, 0]]
+        elif command == "C": #curveto
+            pass #Yay! No action required
+        elif command in ["S", "T"]: #smooth curveto
+            handle1 = points[-1]+(points[-1]-points[-2])
+            new_points = np.append([handle1], new_points, axis = 0)
+        if command in ["Q", "T"]: #quadratic Bezier curve
+            #TODO, this is a suboptimal approximation
+            new_points = np.append([new_points[0]], new_points, axis = 0)
+        elif command == "A": #elliptical Arc
+            raise Exception("Not implemented")
+        elif command == "Z": #closepath
+            if not is_closed(points):
+                #Both handles and new anchor are the start
+                new_points = points[[0, 0, 0]]
+        self.growing_path.add_control_points(new_points)
+
+    def string_to_points(self, coord_string):
+        numbers = [
+            float(s)
+            for s in coord_string.split(" ")
+            if s is not ""
+        ]
+        if len(numbers)%2 == 1:
+            numbers.append(0)
+        num_points = len(numbers)/2
+        result = np.zeros((num_points, self.dim))
+        result[:,:2] = np.array(numbers).reshape((num_points, 2))
+        return result
 
 
 

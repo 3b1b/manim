@@ -415,16 +415,20 @@ class Mobject(object):
             elif diff > 0:
                 larger, smaller = self, mobject
             for sub_mob in larger.sub_mobjects[-abs(diff):]:
-                smaller.add(sub_mob.get_point_mobject())
+                point_mob = sub_mob.get_point_mobject(
+                    smaller.get_center()
+                )
+                smaller.add(point_mob)
         for m1, m2 in zip(self.sub_mobjects, mobject.sub_mobjects):
             m1.align_data(m2)
 
-    def get_point_mobject(self):
+    def get_point_mobject(self, center):
         """
         The simplest mobject to be transformed to or from self.
         Should by a point of the appropriate type
         """
         raise Exception("Not implemented")
+
 
     def align_points(self, mobject):
         count1 = self.get_num_points()

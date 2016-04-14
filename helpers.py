@@ -92,6 +92,25 @@ def compass_directions(n = 4, start_vect = UP):
         for k in range(n)
     ]
 
+def partial_bezier_points(points, a, b):
+    """
+    Given an array of points which define 
+    a bezier curve, and two numbres 0<=a<b<=1,
+    return an array of the same size, which 
+    describes the portion of the original bezier
+    curve on the interval [a, b].
+
+    This algorithm is pretty nifty, and pretty dense.
+    """
+    a_to_1 = np.array([
+        bezier(points[i:])(a)
+        for i in range(len(points))
+    ])
+    return np.array([
+        bezier(a_to_1[:i+1])(b)
+        for i in range(len(points))
+    ])
+
 def bezier(points):
     n = len(points) - 1
     return lambda t : sum([
@@ -101,7 +120,7 @@ def bezier(points):
 
 def remove_list_redundancies(l):
     """
-    Used instead of lsit(set(l)) to maintain order
+    Used instead of list(set(l)) to maintain order
     """
     return sorted(list(set(l)), lambda a, b : l.index(a) - l.index(b))
 

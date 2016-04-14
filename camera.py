@@ -79,10 +79,8 @@ class Camera(object):
                     mobject.points, mobject.rgbs, 
                     self.adjusted_thickness(mobject.stroke_width)
                 )
-            else:
-                #TODO
-                print mobject
-                # raise Exception("I don't know how to display that")
+            #TODO, more?  Call out if it's unknown?
+
 
     def display_region(self, region):
         (h, w) = self.pixel_shape
@@ -113,11 +111,11 @@ class Camera(object):
 
     def get_pen_and_fill(self, vect_mobject):
         pen = aggdraw.Pen(
-            vect_mobject.get_stroke_color().get_web(),
+            vect_mobject.get_stroke_color().get_hex_l(),
             vect_mobject.stroke_width
         )
         fill = aggdraw.Brush(
-            vect_mobject.get_fill_color().get_web(),
+            vect_mobject.get_fill_color().get_hex_l(),
             opacity = int(255*vect_mobject.get_fill_opacity())
         )
         return (pen, fill)
@@ -126,6 +124,8 @@ class Camera(object):
         result = ""        
         for mob in [vect_mobject]+vect_mobject.subpath_mobjects:
             points = mob.points
+            if len(points) == 0:
+                continue
             coords = self.points_to_pixel_coords(points)
             start = "M%d %d"%tuple(coords[0])
             #(handle1, handle2, anchor) tripletes

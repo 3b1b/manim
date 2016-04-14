@@ -119,8 +119,10 @@ class PointCloudMobject(Mobject):
             )
         )
 
-    def get_point_mobject(self):
-        return Point(self.get_center())
+    def get_point_mobject(self, center):
+        if center is None:
+            center = self.get_center()
+        return Point(center)
 
     def interpolate_color(self, mobject1, mobject2, alpha):
         self.rgbs = interpolate(
