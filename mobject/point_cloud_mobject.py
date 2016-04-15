@@ -1,7 +1,7 @@
 from .mobject import Mobject
 from helpers import *
 
-class PointCloudMobject(Mobject):
+class PMobject(Mobject):
     def init_colors(self):
         self.rgbs = np.zeros((0, 3))
         return self
@@ -112,14 +112,14 @@ class PointCloudMobject(Mobject):
 
     # Alignment
     def align_points_with_larger(self, larger_mobject):
-        assert(isinstance(larger_mobject, PointCloudMobject))
+        assert(isinstance(larger_mobject, PMobject))
         self.apply_over_attr_arrays(
             lambda a : streth_array_to_length(
                 a, larger_mobject.get_num_points()
             )
         )
 
-    def get_point_mobject(self, center):
+    def get_point_mobject(self, center = None):
         if center is None:
             center = self.get_center()
         return Point(center)
@@ -141,7 +141,7 @@ class PointCloudMobject(Mobject):
 
 
 #TODO, Make the two implementations bellow non-redundant
-class Mobject1D(PointCloudMobject):
+class Mobject1D(PMobject):
     CONFIG = {
         "density" : DEFAULT_POINT_DENSITY_1D,
     }
@@ -164,7 +164,7 @@ class Mobject1D(PointCloudMobject):
             ]
         self.add_points(points, color = color)
 
-class Mobject2D(PointCloudMobject):
+class Mobject2D(PMobject):
     CONFIG = {
         "density" : DEFAULT_POINT_DENSITY_2D,
     }
@@ -175,11 +175,11 @@ class Mobject2D(PointCloudMobject):
 
 
 
-class Point(PointCloudMobject):
+class Point(PMobject):
     CONFIG = {
         "color" : BLACK,
     }
     def __init__(self, location = ORIGIN, **kwargs):
-        PointCloudMobject.__init__(self, **kwargs)
+        PMobject.__init__(self, **kwargs)
         self.add_points([location])
 

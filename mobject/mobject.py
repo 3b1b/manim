@@ -17,11 +17,11 @@ class Mobject(object):
     """
     #Number of numbers used to describe a point (3 for pos, 3 for normal vector)
     CONFIG = {
-        "color" : WHITE,
+        "color"        : WHITE,
         "stroke_width" : DEFAULT_POINT_THICKNESS,
-        "name" : None,
-        "display_mode" : "points", #TODO, REMOVE
-        "dim" : 3,
+        "name"         : None,
+        "dim"          : 3,
+        "target"       : None
     }
     def __init__(self, *sub_mobjects, **kwargs):
         digest_config(self, kwargs)
@@ -320,11 +320,8 @@ class Mobject(object):
 
     ### Getters ###
 
-    def get_num_points(self, including_submobjects = False):
-        if including_submobjects:
-            return self.reduce_across_dimension(len, sum, 0)
-        else:
-            return len(self.points)
+    def get_num_points(self):
+        return len(self.points)
 
     def get_critical_point(self, direction):
         result = np.zeros(self.dim)
@@ -406,23 +403,13 @@ class Mobject(object):
 
     ## Alignment  
     def align_data(self, mobject):
+        self.align_sub_mobjects(mobject)        
         self.align_points(mobject)
         #Recurse
-        diff = len(self.sub_mobjects) - len(mobject.sub_mobjects)
-        if diff != 0:
-            if diff < 0:
-                larger, smaller = mobject, self
-            elif diff > 0:
-                larger, smaller = self, mobject
-            for sub_mob in larger.sub_mobjects[-abs(diff):]:
-                point_mob = sub_mob.get_point_mobject(
-                    smaller.get_center()
-                )
-                smaller.add(point_mob)
         for m1, m2 in zip(self.sub_mobjects, mobject.sub_mobjects):
             m1.align_data(m2)
 
-    def get_point_mobject(self, center):
+    def get_point_mobject(self, center = None):
         """
         The simplest mobject to be transformed to or from self.
         Should by a point of the appropriate type
@@ -441,6 +428,40 @@ class Mobject(object):
 
     def align_points_with_larger(self, larger_mobject):
         raise Exception("Not implemented")
+
+    def align_sub_mobjects(self, mobject):
+        #If one is empty, and the other is not,
+        #push it into its submobject list
+        self_has_points, mob_has_points = [
+            mob.get_num_points() > 0
+            for mob in self, mobject
+        ]
+        if self_has_points and not mob_has_points:
+            self.push_self_into_sub_mobjects()
+        elif mob_has_points and not self_has_points:
+            mob.push_self_into_sub_mobjects()
+        self_count = len(self.sub_mobjects)
+        mob_count = len(mobject.sub_mobjects)
+        diff = abs(self_count-mob_count)
+        if self_count < mob_count:
+            self.add_n_more_sub_mobjects(diff)
+        elif mob_count < self_count:
+            mobject.add_n_more_sub_mobjects(diff)
+        return self
+
+    def push_self_into_sub_mobjects(self):
+        copy = self.copy()
+        copy.sub_mobjects = []
+        self.points = np.zeros((0, self.dim))
+        self.add(copy)
+        return self
+
+    def add_n_more_sub_mobjects(self, n):
+        if n > 0 and len(self.sub_mobjects) == 0:
+            self.add(self.copy())
+        for i in range(n):
+            self.add(self.sub_mobjects[i].copy())
+        return self
 
     def interpolate(self, mobject1, mobject2, alpha, path_func):
         """

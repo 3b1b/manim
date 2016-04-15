@@ -4,13 +4,14 @@ from .mobject import Mobject
 
 from helpers import *
 
-class VectorizedMobject(Mobject):
+class VMobject(Mobject):
     CONFIG = {
         "fill_color"   : BLACK,
         "fill_opacity" : 0.0,
         #Indicates that it will not be displayed, but
         #that it should count in parent mobject's path
         "is_subpath"   : False, 
+        "closed"       : True,
     }
     def __init__(self, *args, **kwargs):
         self.subpath_mobjects = []
@@ -18,8 +19,8 @@ class VectorizedMobject(Mobject):
 
     ## Colors
     def init_colors(self):
-        self.set_stroke(color = self.color)
-        self.set_fill(color = self.fill_color)
+        self.set_stroke(self.color, self.stroke_width)
+        self.set_fill(self.fill_color, self.fill_opacity)
         return self
 
     def set_family_attr(self, attr, value):
@@ -102,7 +103,7 @@ class VectorizedMobject(Mobject):
         return self
 
     def set_points(self, points):
-        self.points = points
+        self.points = np.array(points)
         return self
 
     def set_anchor_points(self, points, mode = "smooth"):
@@ -120,7 +121,7 @@ class VectorizedMobject(Mobject):
 
     def change_mode(self, mode):
         anchors, h1, h2 = self.get_anchors_and_handles()
-        self.set_points(anchors, mode = mode)
+        self.set_anchor_points(anchors, mode = mode)
         return self
 
     def make_smooth(self):
@@ -131,7 +132,7 @@ class VectorizedMobject(Mobject):
 
     def add_subpath(self, points):
         """
-        A VectorizedMobject is meant to represnt
+        A VMobject is meant to represnt
         a single "path", in the svg sense of the word.
         However, one such path may really consit of separate
         continuous components if there is a move_to command.
@@ -140,7 +141,7 @@ class VectorizedMobject(Mobject):
         but will be tracked in a separate special list for when
         it comes time to display.
         """
-        subpath_mobject = VectorizedMobject(
+        subpath_mobject = VMobject(
             is_subpath = True
         )
         subpath_mobject.set_points(points)
@@ -176,7 +177,13 @@ class VectorizedMobject(Mobject):
     ## Alignment
 
     def align_points_with_larger(self, larger_mobject):
-        assert(isinstance(larger_mobject, VectorizedMobject))
+        assert(isinstance(larger_mobject, VMobject))
+        num_anchors = self.get_num_anchor_points()
+        if num_anchors <= 1:
+            point = self.points[0] if len(self.points) else np.zeros(3)
+            self.points = np.zeros(larger_mobject.points.shape)
+            self.points[:,:] = point
+            return self
         points = np.array([self.points[0]])
         target_len = larger_mobject.get_num_anchor_points()-1
         num_curves = self.get_num_anchor_points()-1
@@ -199,7 +206,7 @@ class VectorizedMobject(Mobject):
         self.set_points(points)
         return self
 
-    def get_point_mobject(self, center):
+    def get_point_mobject(self, center = None):
         if center is None:
             center = self.get_center()
         return VectorizedPoint(center)
@@ -219,7 +226,7 @@ class VectorizedMobject(Mobject):
             ))
 
     def become_partial(self, mobject, a, b):
-        assert(isinstance(mobject, VectorizedMobject))        
+        assert(isinstance(mobject, VMobject))        
         #Partial curve includes three portions:
         #-A middle section, which matches the curve exactly
         #-A start, which is some ending portion of an inner cubic
@@ -246,18 +253,18 @@ class VectorizedMobject(Mobject):
         return self
 
 
-class VectorizedPoint(VectorizedMobject):
+class VectorizedPoint(VMobject):
     CONFIG = {
         "color" : BLACK,
     }
     def __init__(self, location = ORIGIN, **kwargs):
-        VectorizedMobject.__init__(self, **kwargs)
+        VMobject.__init__(self, **kwargs)
         self.set_points([location])
 
-class VectorizedMobjectFromSVGPathstring(VectorizedMobject):
+class VMobjectFromSVGPathstring(VMobject):
     def __init__(self, path_string, **kwargs):
         digest_locals(self)
-        VectorizedMobject.__init__(self, **kwargs)
+        VMobject.__init__(self, **kwargs)
 
     def get_path_commands(self):
         return [

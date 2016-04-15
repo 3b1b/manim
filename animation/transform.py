@@ -15,9 +15,9 @@ class Transform(Animation):
         "path_func" : straight_path
     }
     def __init__(self, mobject, ending_mobject, **kwargs):
-        mobject = instantiate(mobject)
+        mobject =mobject
         #Copy ending_mobject so as to not mess with caller
-        ending_mobject = instantiate(ending_mobject).copy()
+        ending_mobject = ending_mobject.copy()
         digest_config(self, kwargs, locals())
         count1, count2 = mobject.get_num_points(), ending_mobject.get_num_points()
         if count2 == 0:

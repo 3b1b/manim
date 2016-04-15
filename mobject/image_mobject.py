@@ -6,9 +6,9 @@ from random import random
 
 from helpers import *
 from mobject import Mobject
-from point_cloud_mobject import PointCloudMobject
+from point_cloud_mobject import PMobject
 
-class ImageMobject(PointCloudMobject):
+class ImageMobject(PMobject):
     """
     Automatically filters out black pixels
     """

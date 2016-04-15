@@ -9,7 +9,7 @@ import progressbar
 import aggdraw
 
 from helpers import *
-from mobject import PointCloudMobject, VectorizedMobject
+from mobject import PMobject, VMobject
 
 class Camera(object):
     CONFIG = {
@@ -72,9 +72,9 @@ class Camera(object):
                 for mob in mobjects
             ])
         for mobject in mobjects:
-            if isinstance(mobject, VectorizedMobject):
+            if isinstance(mobject, VMobject):
                 self.display_vectorized(mobject)
-            elif isinstance(mobject, PointCloudMobject):
+            elif isinstance(mobject, PMobject):
                 self.display_point_cloud(
                     mobject.points, mobject.rgbs, 
                     self.adjusted_thickness(mobject.stroke_width)
@@ -95,34 +95,34 @@ class Camera(object):
         self.pixel_array[covered] = rgb
 
 
-    def display_vectorized(self, vect_mobject):
-        if vect_mobject.is_subpath:
+    def display_vectorized(self, vmobject):
+        if vmobject.is_subpath:
             #Subpath vectorized mobjects are taken care
             #of by their parent
             return
         im = Image.fromarray(self.pixel_array, mode = "RGB")
         canvas = aggdraw.Draw(im)
-        pen, fill = self.get_pen_and_fill(vect_mobject)
-        pathstring = self.get_pathstring(vect_mobject)
+        pen, fill = self.get_pen_and_fill(vmobject)
+        pathstring = self.get_pathstring(vmobject)
         symbol = aggdraw.Symbol(pathstring)
         canvas.symbol((0, 0), symbol, pen, fill)
         canvas.flush()
         self.pixel_array[:,:] = np.array(im)
 
-    def get_pen_and_fill(self, vect_mobject):
+    def get_pen_and_fill(self, vmobject):
         pen = aggdraw.Pen(
-            vect_mobject.get_stroke_color().get_hex_l(),
-            vect_mobject.stroke_width
+            vmobject.get_stroke_color().get_hex_l(),
+            vmobject.stroke_width
         )
         fill = aggdraw.Brush(
-            vect_mobject.get_fill_color().get_hex_l(),
-            opacity = int(255*vect_mobject.get_fill_opacity())
+            vmobject.get_fill_color().get_hex_l(),
+            opacity = int(255*vmobject.get_fill_opacity())
         )
         return (pen, fill)
 
-    def get_pathstring(self, vect_mobject):
+    def get_pathstring(self, vmobject):
         result = ""        
-        for mob in [vect_mobject]+vect_mobject.subpath_mobjects:
+        for mob in [vmobject]+vmobject.subpath_mobjects:
             points = mob.points
             if len(points) == 0:
                 continue

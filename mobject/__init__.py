@@ -5,5 +5,5 @@ __all__ = [
 ]
 
 from mobject import Mobject
-from point_cloud_mobject import Point, Mobject1D, Mobject2D, PointCloudMobject
-from vectorized_mobject import VectorizedMobject
+from point_cloud_mobject import Point, Mobject1D, Mobject2D, PMobject
+from vectorized_mobject import VMobject

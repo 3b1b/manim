@@ -1,11 +1,11 @@
 from mobject import Mobject
-from point_cloud_mobject import PointCloudMobject
+from point_cloud_mobject import PMobject
 from image_mobject import ImageMobject
 from helpers import *
 
 #TODO, Cleanup and refactor this file.
 
-class TexMobject(PointCloudMobject):
+class TexMobject(PMobject):
     CONFIG = {
         "template_tex_file" : TEMPLATE_TEX_FILE,
         "color"             : WHITE,
