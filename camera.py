@@ -65,8 +65,8 @@ class Camera(object):
     def capture_mobject(self, mobject):
         return self.capture_mobjects([mobject])
 
-    def capture_mobjects(self, mobjects, include_sub_mobjects = True):
-        if include_sub_mobjects:
+    def capture_mobjects(self, mobjects, include_submobjects = True):
+        if include_submobjects:
             mobjects = it.chain(*[
                 mob.nonempty_family_members() 
                 for mob in mobjects
@@ -137,7 +137,8 @@ class Camera(object):
                 "C" + " ".join(map(str, it.chain(*triplet)))
                 for triplet in triplets
             ]
-            result += " ".join([start] + cubics)
+            end = "Z" if vmobject.mark_paths_closed else ""
+            result += " ".join([start] + cubics + [end])
         return result
 
     def display_point_cloud(self, points, rgbs, thickness):

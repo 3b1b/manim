@@ -88,19 +88,19 @@ class PMobject(Mobject):
 
     def fade_to(self, color, alpha):
         self.rgbs = interpolate(self.rgbs, np.array(Color(color).rgb), alpha)
-        for mob in self.sub_mobjects:
+        for mob in self.submobjects:
             mob.fade_to(color, alpha)
         return self
 
     def get_all_rgbs(self):
         return self.get_merged_array("rgbs")
 
-    def ingest_sub_mobjects(self):
+    def ingest_submobjects(self):
         attrs = self.get_array_attrs()
         arrays = map(self.get_merged_array, attrs)
         for attr, array in zip(attrs, arrays):
             setattr(self, attr, array)
-        self.sub_mobjects = []
+        self.submobjects = []
         return self
 
     def get_color(self):

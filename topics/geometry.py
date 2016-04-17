@@ -1,58 +1,69 @@
 from helpers import *
 
 from mobject import Mobject, Mobject1D, Point
+from mobject.vectorized_mobject import VMobject
 
-class Dot(Mobject1D): #Use 1D density, even though 2D
+class Arc(VMobject):
     CONFIG = {
-        "radius" : 0.05
+        "radius"           : 1.0,
+        "start_angle"      : 0,
+        "close_new_points" : False,
+        "num_anchors"      : 8,
+        "anchors_span_full_range" : True
     }
-    def __init__(self, center_point = ORIGIN, **kwargs):
+    def __init__(self, angle, **kwargs):
         digest_locals(self)
-        Mobject1D.__init__(self, **kwargs)
+        VMobject.__init__(self, **kwargs)
 
     def generate_points(self):
-        self.add_points([
-            np.array((t*np.cos(theta), t*np.sin(theta), 0)) + self.center_point
-            for t in np.arange(self.epsilon, self.radius, self.epsilon)
-            for new_epsilon in [2*np.pi*self.epsilon*self.radius/t]
-            for theta in np.arange(0, 2 * np.pi, new_epsilon)
-        ])
+        self.set_anchor_points(
+            self.get_unscaled_anchor_points(),
+            mode = "smooth"
+        )
+        self.scale(self.radius)
 
-class Cross(Mobject1D):
+    def get_unscaled_anchor_points(self):
+        step = self.angle/self.num_anchors
+        end_angle = self.start_angle + self.angle 
+        if self.anchors_span_full_range:
+            end_angle += step
+        return [
+            np.cos(a)*RIGHT+np.sin(a)*UP
+            for a in np.arange(
+                self.start_angle, end_angle, step
+            )
+        ]
+
+class Circle(Arc):
     CONFIG = {
-        "color"  : YELLOW,
-        "radius" : 0.3
+        "color" : RED,
+        "close_new_points" : True,
+        "anchors_span_full_range" : False
     }
-    def __init__(self, center_point = ORIGIN, **kwargs):
-        digest_locals(self)
-        Mobject1D.__init__(self, **kwargs)
+    def __init__(self, **kwargs):
+        Arc.__init__(self, 2*np.pi, **kwargs)
 
-    def generate_points(self):
-        self.add_points([
-            (sgn * x, x, 0)
-            for x in np.arange(-self.radius / 2, self.radius/2, self.epsilon)
-            for sgn in [-1, 1]
-        ])
-        self.shift(self.center_point)
-
-
-class Line(Mobject1D):
+class Dot(Circle): #Use 1D density, even though 2D
     CONFIG = {
-        "buff" : 0
+        "radius"       : 0.05,
+        "stroke_width" : 0,
+        "fill_color"   : WHITE,
+        "fill_opacity" : 1.0
+    }
+
+
+class Line(VMobject):
+    CONFIG = {
+        "buff" : 0,
+        "close_new_points" : False,
     }
     def __init__(self, start, end, **kwargs):
         digest_config(self, kwargs)
         self.set_start_and_end(start, end)
-        Mobject1D.__init__(self, **kwargs)
+        VMobject.__init__(self, **kwargs)
 
     def set_start_and_end(self, start, end):
-        preliminary_start, preliminary_end = [
-            arg.get_center() 
-            if isinstance(arg, Mobject) 
-            else np.array(arg).astype('float')
-            for arg in start, end
-        ]
-        start_to_end = preliminary_end - preliminary_start
+        start_to_end = self.pointify(end) - self.pointify(start)
         vect = np.zeros(len(start_to_end))
         longer_dim = np.argmax(map(abs, start_to_end))
         vect[longer_dim] = start_to_end[longer_dim]
@@ -69,8 +80,14 @@ class Line(Mobject1D):
             self.start = self.start + self.buff*start_to_end
             self.end = self.end - self.buff*start_to_end
 
+    def pointify(self, mob_or_point):
+        if isinstance(mob_or_point, Mobject):
+            return mob_or_point.get_center()
+        else:
+            return np.array(mob_or_point)
+
     def generate_points(self):
-        self.add_line(self.start, self.end)
+        self.set_points_as_corners([self.start, self.end])
 
     def get_length(self):
         return np.linalg.norm(self.start - self.end)
@@ -98,36 +115,26 @@ class Arrow(Line):
     }
     def __init__(self, *args, **kwargs):
         if len(args) == 1:
-            target = args[0]
-            if isinstance(target, Mobject):
-                point = target.get_center()
-            else:
-                point = target
+            point = self.pointify(args[0])
             args = (point+UP+LEFT, target)
         Line.__init__(self, *args, **kwargs)
         self.add_tip()
 
     def add_tip(self):
-        num_points = self.get_num_points()
         vect = self.start-self.end
         length = np.linalg.norm(vect)
-        vect = vect*self.tip_length/length
-        self.add_points([
-            interpolate(self.end, self.end+v, t)
-            for t in np.arange(0, 1, self.tip_length*self.epsilon)
-            for v in [
-                rotate_vector(vect, np.pi/4, axis)
-                for axis in IN, OUT
-            ]
-        ])
-        self.num_tip_points = self.get_num_points()-num_points
-
-    def remove_tip(self):
-        if not hasattr(self, "num_tip_points"):
-            return self
-        for attr in "points", "rgbs":
-            setattr(self, attr, getattr(self, attr)[:-self.num_tip_points])
-        return self
+        vect *= self.tip_length/length
+        tip_points = [
+            self.end+rotate_vector(vect, u*np.pi/5)
+            for u in 1, -1
+        ]
+        self.tip = VMobject(close_new_points = False)
+        self.tip.set_anchor_points(
+            [tip_points[0], self.end, tip_points[1]],
+            mode = "corners"
+        )
+        self.add(self.tip)
+        self.init_colors()
 
 class Vector(Arrow):
     CONFIG = {
@@ -135,131 +142,60 @@ class Vector(Arrow):
         "buff"  : 0,
     }
     def __init__(self, start, direction, **kwargs):
-        if isinstance(start, Mobject):
-            end = start.get_center()+direction
-        else:
-            end = start + direction
         Arrow.__init__(self, start, end, **kwargs)
 
-class CurvedLine(Line):
-    def __init__(self, start, end, via = None, **kwargs):
-        self.set_start_and_end(start, end)
-        if via == None:
-            self.via = rotate_vector(
-                self.end - self.start, 
-                np.pi/3, [0,0,1]
-            ) + self.start
-        elif isinstance(via, Mobject):
-            self.via = via.get_center()
-        else:
-            self.via = via
-        Line.__init__(self, start, end, **kwargs)
-
-    def generate_points(self):
-        self.add_points([
-            interpolate(
-                interpolate(self.start, self.end, t),
-                self.via,
-                t*(1-t)
-            )
-            for t in np.arange(0, 1, self.epsilon)
-        ])
-
-
-class Arc(Mobject1D):
+class Cross(VMobject):
     CONFIG = {
-        "radius"      : 1.0,
-        "start_angle" : 0,
+        "color"  : YELLOW,
+        "radius" : 0.3
     }
-    def __init__(self, angle, **kwargs):
-        digest_locals(self)
-        Mobject1D.__init__(self, **kwargs)
-
     def generate_points(self):
-        sign = 1 if self.angle >= 0 else -1
-        self.add_points([
-            (self.radius*np.cos(theta), self.radius*np.sin(theta), 0)
-            for theta in np.arange(
-                self.start_angle, 
-                self.start_angle+self.angle, 
-                sign*self.epsilon/self.radius
-            )
+        p1, p2, p3, p4 = self.radius * np.array([
+            UP+LEFT, 
+            DOWN+RIGHT,
+            UP+RIGHT, 
+            DOWN+LEFT,
         ])
+        self.add(Line(p1, p2), Line(p3, p4))
+        self.init_colors()
 
-class Circle(Arc):
-    CONFIG = {
-        "color" : RED,
-    }
-    def __init__(self, **kwargs):
-        Arc.__init__(self, angle = 2*np.pi, **kwargs)
+class CubicBezier(VMobject):
+    def __init__(self, points, **kwargs):
+        VMobject.__init__(self, **kwargs)
+        self.set_points(points)
 
-class Polygon(Mobject1D):
+class Polygon(VMobject):
     CONFIG = {
-        "color"       : GREEN_D,
-        "edge_colors" : None
+        "color" : GREEN_D,
+        "mark_paths_closed" : True
     }
     def __init__(self, *vertices, **kwargs):
         assert len(vertices) > 1
         digest_locals(self)
-        Mobject1D.__init__(self, **kwargs)
+        VMobject.__init__(self, **kwargs)
 
     def generate_points(self):
-        if self.edge_colors:
-            colors = it.cycle(self.edge_colors)
-        else:
-            colors = it.cycle([self.color])
-        self.indices_of_vertices = []
-        for start, end in adjascent_pairs(self.vertices):
-            self.indices_of_vertices.append(self.get_num_points())
-            self.add_line(start, end, color = colors.next())
-
+        self.set_anchor_points(self.vertices, mode = "corners")
 
     def get_vertices(self):
-        return self.vertices[self.indices_of_vertices]
+        return self.get_anchors_and_handles()[0]
 
 
-
-class Grid(Mobject1D):
-    CONFIG = {
-        "height" : 6.0,
-        "width"  : 6.0,
-    }
-    def __init__(self, rows, columns, **kwargs):
-        digest_config(self, kwargs, locals())
-        Mobject1D.__init__(self, **kwargs)
-
-    def generate_points(self):
-        x_step = self.width / self.columns
-        y_step = self.height / self.rows
-
-        for x in np.arange(0, self.width+x_step, x_step):
-            self.add_line(
-                [x-self.width/2., -self.height/2., 0],
-                [x-self.width/2., self.height/2., 0],
-            )
-        for y in np.arange(0, self.height+y_step, y_step):
-            self.add_line(
-                [-self.width/2., y-self.height/2., 0],
-                [self.width/2., y-self.height/2., 0]
-            )
-
-class Rectangle(Grid):
+class Rectangle(VMobject):
     CONFIG = {
         "color"  : YELLOW,
         "height" : 2.0,
         "width"  : 4.0,
+        "mark_paths_closed" : True
     }
-    def __init__(self, **kwargs):
-        Grid.__init__(self, 1, 1, **kwargs)
-
     def generate_points(self):
-        hw = [self.height/2.0, self.width/2.0]
-        self.add_points([
-            (x, u, 0) if dim==1 else (u, x, 0)
-            for dim in 0, 1
-            for u in hw[1-dim], -hw[1-dim]
-            for x in np.arange(-hw[dim], hw[dim], self.epsilon)
-        ])
+        y, x = self.height/2, self.width/2
+        self.set_anchor_points([
+            x*LEFT+y*UP,
+            x*RIGHT+y*UP,
+            x*RIGHT+y*DOWN,
+            x*LEFT+y*DOWN
+        ], mode = "corners")
 
 class Square(Rectangle):
     CONFIG = {
@@ -275,18 +211,29 @@ class Square(Rectangle):
         )
 
 
-class FilledRectangle(Mobject1D):
+class Grid(VMobject):
     CONFIG = {
-        "color"  : GREY,
-        "height" : 2.0,
-        "width"  : 4.0,
+        "height" : 6.0,
+        "width"  : 6.0,
     }
+    def __init__(self, rows, columns, **kwargs):
+        digest_config(self, kwargs, locals())
+        VMobject.__init__(self, **kwargs)
+
     def generate_points(self):
-        self.add_points([
-            (x, y, 0)
-            for x in np.arange(-self.width/2, self.width/2, self.epsilon)
-            for y in np.arange(-self.height/2, self.height/2, self.epsilon)                        
-        ])
+        x_step = self.width / self.columns
+        y_step = self.height / self.rows
+
+        for x in np.arange(0, self.width+x_step, x_step):
+            self.add(Line(
+                [x-self.width/2., -self.height/2., 0],
+                [x-self.width/2., self.height/2., 0],
+            ))
+        for y in np.arange(0, self.height+y_step, y_step):
+            self.add(Line(
+                [-self.width/2., y-self.height/2., 0],
+                [self.width/2., y-self.height/2., 0]
+            ))
 
 
 

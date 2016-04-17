@@ -153,7 +153,7 @@ class Scene(object):
             self.separate_moving_and_static_mobjects(*animations)
         self.update_frame(
             static_mobjects,
-            include_sub_mobjects = False
+            include_submobjects = False
         )
         static_image = self.get_frame()
 

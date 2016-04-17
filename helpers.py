@@ -87,10 +87,10 @@ def color_to_int_rgb(color):
 
 def compass_directions(n = 4, start_vect = UP):
     angle = 2*np.pi/n
-    return [
+    return np.array([
         rotate_vector(start_vect, k*angle)
         for k in range(n)
-    ]
+    ])
 
 def partial_bezier_points(points, a, b):
     """

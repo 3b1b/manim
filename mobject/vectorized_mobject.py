@@ -6,12 +6,13 @@ from helpers import *
 
 class VMobject(Mobject):
     CONFIG = {
-        "fill_color"   : BLACK,
-        "fill_opacity" : 0.0,
+        "fill_color"       : BLACK,
+        "fill_opacity"     : 0.0,
         #Indicates that it will not be displayed, but
         #that it should count in parent mobject's path
-        "is_subpath"   : False, 
-        "closed"       : True,
+        "is_subpath"       : False,
+        "close_new_points" : True,
+        "mark_paths_closed" : False,
     }
     def __init__(self, *args, **kwargs):
         self.subpath_mobjects = []
@@ -90,9 +91,11 @@ class VMobject(Mobject):
     def set_points_as_corners(self, points):
         if len(points) <= 1:
             return self
-        handles1 = points[:-1]
-        handles2 = points[1:]
-        self.set_anchors_and_handles(points, handles1, handles2)
+        points = np.array(points)
+        self.set_anchors_and_handles(points, *[
+            interpolate(points[:-1], points[1:], alpha)
+            for alpha in 1./3, 2./3
+        ])
         return self
 
     def set_points_smoothly(self, points):
@@ -109,7 +112,7 @@ class VMobject(Mobject):
     def set_anchor_points(self, points, mode = "smooth"):
         if not isinstance(points, np.ndarray):
             points = np.array(points)
-        if self.closed and not is_closed(points):
+        if self.close_new_points and not is_closed(points):
             points = np.append(points, [points[0]], axis = 0)
         if mode == "smooth":
             self.set_points_smoothly(points)
@@ -260,86 +263,6 @@ class VectorizedPoint(VMobject):
     def __init__(self, location = ORIGIN, **kwargs):
         VMobject.__init__(self, **kwargs)
         self.set_points([location])
-
-class VMobjectFromSVGPathstring(VMobject):
-    def __init__(self, path_string, **kwargs):
-        digest_locals(self)
-        VMobject.__init__(self, **kwargs)
-
-    def get_path_commands(self):
-        return [
-            "M", #moveto
-            "L", #lineto
-            "H", #horizontal lineto
-            "V", #vertical lineto
-            "C", #curveto
-            "S", #smooth curveto
-            "Q", #quadratic Bezier curve
-            "T", #smooth quadratic Bezier curveto
-            "A", #elliptical Arc
-            "Z", #closepath
-        ]
-
-    def generate_points(self):
-        pattern = "[%s]"%("".join(self.get_path_commands()))
-        pairs = zip(
-            re.findall(pattern, self.path_string),
-            re.split(pattern, self.path_string)[1:]
-        )
-        #Which mobject should new points be added to
-        self.growing_path = self
-        for command, coord_string in pairs:
-            self.handle_command(command, coord_string)
-        #people treat y-coordinate differently
-        self.rotate(np.pi, RIGHT)
-
-    def handle_command(self, command, coord_string):
-        #new_points are the points that will be added to the curr_points
-        #list. This variable may get modified in the conditionals below.
-        points = self.growing_path.points
-        new_points = self.string_to_points(coord_string)
-        if command == "M": #moveto
-            if len(points) > 0:
-                self.add_subpath(new_points)
-                self.growing_path = self.subpath_mobjects[-1]
-            else:
-                self.growing_path.start_at(new_points[0])
-            return
-        elif command in ["L", "H", "V"]: #lineto
-            if command == "H":
-                new_points[0,1] = points[-1,1]
-            elif command == "V":
-                new_points[0,1] = new_points[0,0]
-                new_points[0,0] = points[-1,0]
-            new_points = new_points[[0, 0, 0]]
-        elif command == "C": #curveto
-            pass #Yay! No action required
-        elif command in ["S", "T"]: #smooth curveto
-            handle1 = points[-1]+(points[-1]-points[-2])
-            new_points = np.append([handle1], new_points, axis = 0)
-        if command in ["Q", "T"]: #quadratic Bezier curve
-            #TODO, this is a suboptimal approximation
-            new_points = np.append([new_points[0]], new_points, axis = 0)
-        elif command == "A": #elliptical Arc
-            raise Exception("Not implemented")
-        elif command == "Z": #closepath
-            if not is_closed(points):
-                #Both handles and new anchor are the start
-                new_points = points[[0, 0, 0]]
-        self.growing_path.add_control_points(new_points)
-
-    def string_to_points(self, coord_string):
-        numbers = [
-            float(s)
-            for s in coord_string.split(" ")
-            if s is not ""
-        ]
-        if len(numbers)%2 == 1:
-            numbers.append(0)
-        num_points = len(numbers)/2
-        result = np.zeros((num_points, self.dim))
-        result[:,:2] = np.array(numbers).reshape((num_points, 2))
-        return result
 
 
 

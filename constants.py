@@ -69,12 +69,10 @@ for folder in [IMAGE_DIR, GIF_DIR, MOVIE_DIR, TEX_DIR,
     if not os.path.exists(folder):
         os.mkdir(folder)
 
-PDF_DENSITY = 800
-SIZE_TO_REPLACE = "SizeHere"
 TEX_TEXT_TO_REPLACE = "YourTextHere"
 TEMPLATE_TEX_FILE  = os.path.join(THIS_DIR, "template.tex")
 TEMPLATE_TEXT_FILE = os.path.join(THIS_DIR, "text_template.tex")
-MAX_LEN_FOR_HUGE_TEX_FONT = 25
+
 
 LOGO_PATH = os.path.join(IMAGE_DIR, "logo.png")
 
