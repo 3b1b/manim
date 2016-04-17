@@ -452,16 +452,24 @@ class Mobject(object):
     def push_self_into_submobjects(self):
         copy = self.copy()
         copy.submobjects = []
-        self.points = np.zeros((0, self.dim))
+        self.init_points()
         self.add(copy)
         return self
 
     def add_n_more_submobjects(self, n):
-        if n > 0 and len(self.submobjects) == 0:
+        curr = len(self.submobjects)
+        if n > 0 and curr == 0:
             self.add(self.copy())
-            n = n-1
-        for i in range(n):
-            self.add(self.submobjects[i].copy())
+            n -= 1
+            curr += 1
+        indices = curr*np.arange(curr+n)/(curr+n)
+        new_submobjects = []
+        for index in indices:
+            submob = self.submobjects[index]
+            if submob in new_submobjects:
+                submob = submob.copy()
+            new_submobjects.append(submob)
+        self.submobjects = new_submobjects
         return self
 
     def interpolate(self, mobject1, mobject2, alpha, path_func):

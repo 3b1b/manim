@@ -15,7 +15,6 @@ class VMobject(Mobject):
         "mark_paths_closed" : False,
     }
     def __init__(self, *args, **kwargs):
-        self.subpath_mobjects = []
         Mobject.__init__(self, *args, **kwargs)
 
     ## Colors
@@ -53,7 +52,10 @@ class VMobject(Mobject):
         return self.fill_opacity
 
     def get_stroke_color(self):
-        return Color(rgb = self.stroke_rgb)
+        try:
+            return Color(rgb = self.stroke_rgb)
+        except:
+            return Color(rgb = 0.99*self.stroke_rgb)
 
     #TODO, get color?  Specify if stroke or fill
     #is the predominant color attribute?
@@ -148,9 +150,14 @@ class VMobject(Mobject):
             is_subpath = True
         )
         subpath_mobject.set_points(points)
-        self.subpath_mobjects.append(subpath_mobject)
         self.add(subpath_mobject)
-        return self
+        return subpath_mobject
+
+    def get_subpath_mobjects(self):
+        return filter(
+            lambda m : m.is_subpath,
+            self.submobjects
+        )
 
     ## Information about line
 
@@ -181,28 +188,40 @@ class VMobject(Mobject):
 
     def align_points_with_larger(self, larger_mobject):
         assert(isinstance(larger_mobject, VMobject))
-        num_anchors = self.get_num_anchor_points()
-        if num_anchors <= 1:
-            point = self.points[0] if len(self.points) else np.zeros(3)
-            self.points = np.zeros(larger_mobject.points.shape)
-            self.points[:,:] = point
+        self.insert_n_anchor_points(
+            larger_mobject.get_num_anchor_points()-\
+            self.get_num_anchor_points()
+        )
+        is_subpath = self.is_subpath or larger_mobject.is_subpath
+        self.is_subpath = larger_mobject.is_subpath = is_subpath
+        mark_closed  = self.mark_paths_closed and larger_mobject.mark_paths_closed
+        self.mark_paths_closed = larger_mobject.mark_paths_closed = mark_closed
+        return self
+
+    def insert_n_anchor_points(self, n):
+        curr = self.get_num_anchor_points()
+        if curr == 0:
+            self.points = np.zeros((1, 3))
+            n = n-1
+        if curr == 1:
+            self.points = np.repeat(self.points, n+1)
             return self
         points = np.array([self.points[0]])
-        target_len = larger_mobject.get_num_anchor_points()-1
-        num_curves = self.get_num_anchor_points()-1
+        num_curves = curr-1
         #Curves in self are buckets, and we need to know 
         #how many new anchor points to put into each one.  
         #Each element of index_allocation is like a bucket, 
         #and its value tells you the appropriate index of 
         #the smaller curve.
-        index_allocation = (np.arange(target_len) * num_curves)/target_len
+        index_allocation = (np.arange(curr+n-1) * num_curves)/(curr+n-1)
         for index in range(num_curves):
             curr_bezier_points = self.points[3*index:3*index+4]
             num_inter_curves = sum(index_allocation == index)
-            step = 1./num_inter_curves
-            alphas = np.arange(0, 1+step, step)
+            alphas = np.arange(0, num_inter_curves+1)/float(num_inter_curves)
             for a, b in zip(alphas, alphas[1:]):
-                new_points = partial_bezier_points(curr_bezier_points, a, b)
+                new_points = partial_bezier_points(
+                    curr_bezier_points, a, b
+                )
                 points = np.append(
                     points, new_points[1:], axis = 0
                 )
@@ -229,7 +248,7 @@ class VMobject(Mobject):
             ))
 
     def become_partial(self, mobject, a, b):
-        assert(isinstance(mobject, VMobject))        
+        assert(isinstance(mobject, VMobject))
         #Partial curve includes three portions:
         #-A middle section, which matches the curve exactly
         #-A start, which is some ending portion of an inner cubic

@@ -1,11 +1,9 @@
 import numpy as np
 import itertools as it
 import os
-import sys
+
 from PIL import Image
-import cv2
 from colour import Color
-import progressbar
 import aggdraw
 
 from helpers import *
@@ -71,15 +69,22 @@ class Camera(object):
                 mob.nonempty_family_members() 
                 for mob in mobjects
             ])
+        vmobjects = []
         for mobject in mobjects:
             if isinstance(mobject, VMobject):
-                self.display_vectorized(mobject)
+                vmobjects.append(mobject)
             elif isinstance(mobject, PMobject):
                 self.display_point_cloud(
                     mobject.points, mobject.rgbs, 
                     self.adjusted_thickness(mobject.stroke_width)
                 )
             #TODO, more?  Call out if it's unknown?
+        image = Image.fromarray(self.pixel_array, mode = "RGB")
+        canvas = aggdraw.Draw(image)
+        for vmobject in vmobjects:
+            self.display_vectorized(vmobject, canvas)
+        canvas.flush()            
+        self.pixel_array[:,:] = np.array(image)
 
 
     def display_region(self, region):
@@ -95,19 +100,16 @@ class Camera(object):
         self.pixel_array[covered] = rgb
 
 
-    def display_vectorized(self, vmobject):
+    def display_vectorized(self, vmobject, canvas):
         if vmobject.is_subpath:
             #Subpath vectorized mobjects are taken care
             #of by their parent
             return
-        im = Image.fromarray(self.pixel_array, mode = "RGB")
-        canvas = aggdraw.Draw(im)
         pen, fill = self.get_pen_and_fill(vmobject)
         pathstring = self.get_pathstring(vmobject)
         symbol = aggdraw.Symbol(pathstring)
         canvas.symbol((0, 0), symbol, pen, fill)
-        canvas.flush()
-        self.pixel_array[:,:] = np.array(im)
+
 
     def get_pen_and_fill(self, vmobject):
         pen = aggdraw.Pen(
@@ -122,7 +124,7 @@ class Camera(object):
 
     def get_pathstring(self, vmobject):
         result = ""        
-        for mob in [vmobject]+vmobject.subpath_mobjects:
+        for mob in [vmobject]+vmobject.get_subpath_mobjects():
             points = mob.points
             if len(points) == 0:
                 continue
@@ -166,11 +168,10 @@ class Camera(object):
         indices = np.dot(pixel_coords, flattener)[:,0]
         indices = indices.astype('int')
         
-        # new_array = np.zeros((pw*ph, 3), dtype = 'uint8')
-        # new_array[indices, :] = rgbs
         new_pa = self.pixel_array.reshape((ph*pw, 3))
         new_pa[indices] = rgbs
         self.pixel_array = new_pa.reshape((ph, pw, 3))
+
 
     def align_points_to_camera(self, points):
         ## This is where projection should live

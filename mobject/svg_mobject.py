@@ -5,7 +5,7 @@ from vectorized_mobject import VMobject
 from topics.geometry import Rectangle, Circle
 from helpers import *
 
-SVG_SCALE_VALUE = 0.1
+SVG_SCALE_VALUE = 0.05
 
 class SVGMobject(VMobject):
     CONFIG = {
@@ -150,8 +150,7 @@ class VMobjectFromSVGPathstring(VMobject):
         new_points = self.string_to_points(coord_string)
         if command == "M": #moveto
             if len(points) > 0:
-                self.add_subpath(new_points)
-                self.growing_path = self.subpath_mobjects[-1]
+                self.growing_path = self.add_subpath(new_points)
             else:
                 self.growing_path.start_at(new_points[0])
             return
