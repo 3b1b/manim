@@ -124,16 +124,16 @@ class VMobject(Mobject):
             raise Exception("Unknown mode")
         return self
 
-    def change_mode(self, mode):
+    def change_anchor_mode(self, mode):
         anchors, h1, h2 = self.get_anchors_and_handles()
         self.set_anchor_points(anchors, mode = mode)
         return self
 
     def make_smooth(self):
-        return self.change_mode("smooth")
+        return self.change_anchor_mode("smooth")
 
     def make_jagged(self):
-        return self.change_mode("corners")
+        return self.change_anchor_mode("corners")
 
     def add_subpath(self, points):
         """
@@ -186,16 +186,20 @@ class VMobject(Mobject):
 
     ## Alignment
 
+    def align_points(self, mobject):
+        Mobject.align_points(self, mobject)
+        is_subpath = self.is_subpath or mobject.is_subpath
+        self.is_subpath = mobject.is_subpath = is_subpath
+        mark_closed  = self.mark_paths_closed and mobject.mark_paths_closed
+        self.mark_paths_closed = mobject.mark_paths_closed = mark_closed
+        return self        
+
     def align_points_with_larger(self, larger_mobject):
         assert(isinstance(larger_mobject, VMobject))
         self.insert_n_anchor_points(
             larger_mobject.get_num_anchor_points()-\
             self.get_num_anchor_points()
         )
-        is_subpath = self.is_subpath or larger_mobject.is_subpath
-        self.is_subpath = larger_mobject.is_subpath = is_subpath
-        mark_closed  = self.mark_paths_closed and larger_mobject.mark_paths_closed
-        self.mark_paths_closed = larger_mobject.mark_paths_closed = mark_closed
         return self
 
     def insert_n_anchor_points(self, n):

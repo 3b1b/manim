@@ -2,13 +2,13 @@ from .mobject import Mobject
 from helpers import *
 
 class PMobject(Mobject):
-    def init_colors(self):
+    def init_points(self):
         self.rgbs = np.zeros((0, 3))
+        self.points = np.zeros((0, 3))
         return self
 
     def get_array_attrs(self):
         return Mobject.get_array_attrs(self) + ["rgbs"]
-
 
     def add_points(self, points, rgbs = None, color = None):
         """

@@ -12,17 +12,27 @@ from mobject import Mobject, Point
 
 class Transform(Animation):
     CONFIG = {
-        "path_func" : straight_path
+        "path_arc" : 0,
+        "path_func" : None,
     }
     def __init__(self, mobject, ending_mobject, **kwargs):
         #Copy ending_mobject so as to not mess with caller
         ending_mobject = ending_mobject.copy()
         digest_config(self, kwargs, locals())
         mobject.align_data(ending_mobject)
+        self.init_path_func()
 
         Animation.__init__(self, mobject, **kwargs)
         self.name += "To" + str(ending_mobject)  
         self.mobject.stroke_width = ending_mobject.stroke_width
+
+    def init_path_func(self):
+        if self.path_func is not None:
+            return
+        if self.path_arc == 0:
+            self.path_func = straight_path
+        else:
+            self.path_func = path_along_arc(self.path_arc)
 
 
     def update_mobject(self, alpha):
@@ -36,12 +46,12 @@ class Transform(Animation):
 
 class ClockwiseTransform(Transform):
     CONFIG = {
-        "path_func" : clockwise_path()
+        "path_arc" : -np.pi
     }
 
 class CounterclockwiseTransform(Transform):
     CONFIG = {
-        "path_func" : counterclockwise_path()
+        "path_arc" : np.pi
     }
 
 class GrowFromCenter(Transform):

@@ -2,11 +2,14 @@ from vectorized_mobject import VMobject
 from svg_mobject import SVGMobject
 from helpers import *
 
+TEX_MOB_SCALE_VAL = 0.05
+
 class TexMobject(SVGMobject):
     CONFIG = {
         "template_tex_file" : TEMPLATE_TEX_FILE,
-        "color"             : WHITE,
         "stroke_width"      : 0,
+        "fill_opacity"      : 1.0,
+        "fill_color"        : WHITE,
         "should_center"     : True,
         "next_to_direction" : RIGHT,
         "next_to_buff"      : 0.2,
@@ -14,8 +17,8 @@ class TexMobject(SVGMobject):
     def __init__(self, expression, **kwargs):
         digest_config(self, kwargs, locals())
         VMobject.__init__(self, **kwargs)
-        if self.should_center:
-            self.center()
+        self.move_into_position()
+        self.organize_submobjects()
 
     def generate_points(self): 
         if isinstance(self.expression, list):
@@ -26,7 +29,6 @@ class TexMobject(SVGMobject):
                 self.template_tex_file
             )
             SVGMobject.generate_points(self)
-        self.init_colors()
 
 
     def handle_list_expression(self):
@@ -44,6 +46,15 @@ class TexMobject(SVGMobject):
         self.submobjects = subs
         return self
 
+    def organize_submobjects(self):
+        self.submobjects.sort(
+            lambda m1, m2 : int((m1.get_left()-m2.get_left())[0])
+        )
+
+    def move_into_position(self):
+        self.center()
+        self.scale(TEX_MOB_SCALE_VAL)
+        self.init_colors()
 
 
 class TextMobject(TexMobject):
@@ -128,45 +139,6 @@ def dvi_to_svg(dvi_file, regen_if_exists = False):
         ]
         os.system(" ".join(commands))
     return result
-
-
-    # directory, filename = os.path.split(dvi_file)
-    # name = filename.replace(".dvi", "")
-    # images_dir = os.path.join(TEX_IMAGE_DIR, name)
-    # if not os.path.exists(images_dir):
-    #     os.mkdir(images_dir)
-    # if os.listdir(images_dir) == [] or regen_if_exists:
-    #     commands = [
-    #         "convert",
-    #         "-density",
-    #         str(PDF_DENSITY),
-    #         dvi_file,
-    #         "-size",
-    #         str(DEFAULT_WIDTH) + "x" + str(DEFAULT_HEIGHT),
-    #         os.path.join(images_dir, name + ".png")
-    #     ]
-    #     os.system(" ".join(commands))
-    # return get_sorted_image_list(images_dir)
-    
-
-def get_sorted_image_list(images_dir):
-    return sorted([
-        os.path.join(images_dir, name)
-        for name in os.listdir(images_dir)
-        if name.endswith(".png")
-    ], cmp_enumerated_files)
-
-def cmp_enumerated_files(name1, name2):
-    name1, name2 = [
-        os.path.split(name)[1].replace(".png", "")
-        for name in name1, name2
-    ]
-    num1, num2 = [
-        int(name.split("-")[-1])
-        for name in (name1, name2)
-    ]
-    return num1 - num2
-
 
 
 

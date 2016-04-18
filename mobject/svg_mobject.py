@@ -5,59 +5,77 @@ from vectorized_mobject import VMobject
 from topics.geometry import Rectangle, Circle
 from helpers import *
 
-SVG_SCALE_VALUE = 0.05
-
 class SVGMobject(VMobject):
-    CONFIG = {
-        "stroke_width" : 0,
-        "fill_opacity" : 1.0,
-        "fill_color"   : WHITE, #TODO...
-    }    
     def __init__(self, svg_file, **kwargs):
         digest_config(self, kwargs, locals())
         VMobject.__init__(self, **kwargs)
+        self.move_into_position()
 
     def generate_points(self):
         doc = minidom.parse(self.svg_file)
-        defs = doc.getElementsByTagName("defs")[0]
-        g = doc.getElementsByTagName("g")[0]        
-        ref_to_mob = self.get_ref_to_mobject_map(defs)
-        for element in g.childNodes:
-            if not isinstance(element, minidom.Element):
-                continue
-            mob = None
-            if element.tagName == 'use':
-                mob = self.use_to_mobject(element, ref_to_mob)
-            elif element.tagName == 'rect':
-                mob = self.rect_to_mobject(element)
-            elif element.tagName == 'circle':
-                mob = self.circle_to_mobject(element)
-            else:
-                warnings.warn("Unknown element type: " + element.tagName)
-            if mob is not None:
-                self.add(mob)
+        self.ref_to_element = {}
+        for svg in doc.getElementsByTagName("svg"):
+            self.add(*self.get_mobjects_from(svg))
         doc.unlink()
-        self.move_into_position()
-        self.organize_submobjects()
 
-    def use_to_mobject(self, use_element, ref_to_mob):
+    def get_mobjects_from(self, element):
+        result = []
+        if not isinstance(element, minidom.Element):
+            return result
+        if element.tagName == 'defs':
+            self.update_ref_to_element(element)
+        elif element.tagName == 'style':
+            pass #TODO, handle style
+        elif element.tagName in ['g', 'svg']:
+            result += it.chain(*[
+                self.get_mobjects_from(child)
+                for child in element.childNodes
+            ])
+        elif element.tagName == 'path':
+            result.append(self.path_to_mobject(element))
+        elif element.tagName == 'use':
+            result += self.use_to_mobjects(element)
+        elif element.tagName == 'rect':
+            result.append(self.rect_to_mobject(element))
+        elif element.tagName == 'circle':
+            result.append(self.circle_to_mobject(element))
+        else:
+            warnings.warn("Unknown element type: " + element.tagName)
+        result = filter(lambda m : m is not None, result)
+        self.handle_transforms(element, VMobject(*result))
+        return result
+
+    def g_to_mobjects(self, g_element):
+        mob = VMobject(*self.get_mobjects_from(g_element))
+        self.handle_transforms(g_element, mob)
+        return mob.submobjects
+
+    def path_to_mobject(self, path_element):
+        return VMobjectFromSVGPathstring(
+            path_element.getAttribute('d')
+        )
+
+    def use_to_mobjects(self, use_element):
         #Remove initial "#" character
         ref = use_element.getAttribute("xlink:href")[1:]
         try:
-            mob = ref_to_mob[ref]
+            return self.get_mobjects_from(
+                self.ref_to_element[ref]
+            )
         except:
             warnings.warn("%s not recognized"%ref)
             return
-        if mob in self.submobjects:
-            mob = VMobjectFromSVGPathstring(
-                mob.get_original_path_string()
-            )
-        self.handle_transform(use_element, mob)
-        self.handle_shift(use_element, mob)
-        return mob
+
+    # <circle class="st1" cx="143.8" cy="268" r="22.6"/>
 
     def circle_to_mobject(self, circle_element):
-        pass
+        x, y, r = [
+            float(circle_element.getAttribute(key))
+            if circle_element.hasAttribute(key)
+            else 0.0
+            for key in "cx", "cy", "r"
+        ]
+        return Circle(radius = r).shift(x*RIGHT+y*DOWN)
 
     def rect_to_mobject(self, rect_element):
         if rect_element.hasAttribute("fill"):
@@ -70,45 +88,30 @@ class SVGMobject(VMobject):
             fill_color = WHITE,
             fill_opacity = 1.0
         )
-        self.handle_shift(rect_element, mob)
         mob.shift(mob.get_center()-mob.get_corner(DOWN+LEFT))        
         return mob
 
-    def handle_shift(self, element, mobject):
+    def handle_transforms(self, element, mobject):
         x, y = 0, 0
-        if element.hasAttribute('x'):
+        try:
             x = float(element.getAttribute('x'))
-        if element.hasAttribute('y'):
             #Flip y
             y = -float(element.getAttribute('y'))
+        except:
+            pass
         mobject.shift(x*RIGHT+y*UP)
+        #TODO, transforms
 
-    def handle_transform(self, element, mobject):
-        pass
+    def update_ref_to_element(self, defs):
+        new_refs = dict([
+            (element.getAttribute('id'), element)
+            for element in defs.childNodes
+            if isinstance(element, minidom.Element) and element.hasAttribute('id')
+        ])
+        self.ref_to_element.update(new_refs)
 
     def move_into_position(self):
-        self.center()
-        self.scale(SVG_SCALE_VALUE)
-        self.init_colors()
-
-    def organize_submobjects(self):
-        self.submobjects.sort(
-            lambda m1, m2 : int((m1.get_left()-m2.get_left())[0])
-        )
-
-    def get_ref_to_mobject_map(self, defs):
-        ref_to_mob = {}
-        for element in defs.childNodes:
-            if not isinstance(element, minidom.Element):
-                continue
-            ref = element.getAttribute('id')
-            if element.tagName == "path":
-                path_string = element.getAttribute('d')
-                mob = VMobjectFromSVGPathstring(path_string)
-                ref_to_mob[ref] = mob
-            if element.tagName == "use":
-                ref_to_mob[ref] = self.use_to_mobject(element, ref_to_mob)
-        return ref_to_mob
+        pass #subclasses should tweak as needed
 
 
 class VMobjectFromSVGPathstring(VMobject):
@@ -117,7 +120,7 @@ class VMobjectFromSVGPathstring(VMobject):
         VMobject.__init__(self, **kwargs)
 
     def get_path_commands(self):
-        return [
+        result = [
             "M", #moveto
             "L", #lineto
             "H", #horizontal lineto
@@ -129,6 +132,8 @@ class VMobjectFromSVGPathstring(VMobject):
             "A", #elliptical Arc
             "Z", #closepath
         ]
+        result += map(lambda s : s.lower(), result)
+        return result
 
     def generate_points(self):
         pattern = "[%s]"%("".join(self.get_path_commands()))
@@ -144,10 +149,14 @@ class VMobjectFromSVGPathstring(VMobject):
         self.rotate(np.pi, RIGHT)
 
     def handle_command(self, command, coord_string):
+        isLower = command.islower()
+        command = command.upper()
         #new_points are the points that will be added to the curr_points
         #list. This variable may get modified in the conditionals below.
         points = self.growing_path.points
         new_points = self.string_to_points(coord_string)
+        if isLower:
+            new_points += points[-1]
         if command == "M": #moveto
             if len(points) > 0:
                 self.growing_path = self.add_subpath(new_points)
@@ -178,9 +187,10 @@ class VMobjectFromSVGPathstring(VMobject):
         self.growing_path.add_control_points(new_points)
 
     def string_to_points(self, coord_string):
+        coord_string = coord_string.replace("-",",-")
         numbers = [
             float(s)
-            for s in coord_string.split(" ")
+            for s in re.split("[ ,]", coord_string)
             if s != ""
         ]
         if len(numbers)%2 == 1:

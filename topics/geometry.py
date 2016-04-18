@@ -50,6 +50,10 @@ class Dot(Circle): #Use 1D density, even though 2D
         "fill_color"   : WHITE,
         "fill_opacity" : 1.0
     }
+    def __init__(self, point = ORIGIN, **kwargs):
+        Circle.__init__(self, **kwargs)
+        self.shift(point)
+        self.init_colors()
 
 
 class Line(VMobject):

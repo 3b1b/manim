@@ -4,7 +4,7 @@ import itertools as it
 from helpers import *
 from scene import Scene
 from animation import Animation
-from mobject import TexMobject
+from mobject.tex_mobject import TexMobject
 
 class RearrangeEquation(Scene):
     def construct(
@@ -12,8 +12,7 @@ class RearrangeEquation(Scene):
         start_terms, 
         end_terms, 
         index_map,
-        size = None,
-        path = counterclockwise_path(),
+        path_arc = np.pi,
         start_transform = None,
         end_transform = None,
         leave_start_terms = False,
@@ -21,7 +20,7 @@ class RearrangeEquation(Scene):
         ):
         transform_kwargs["path_func"] = path
         start_mobs, end_mobs = self.get_mobs_from_terms(
-            start_terms, end_terms, size
+            start_terms, end_terms
         )
         if start_transform:
             start_mobs = start_transform(Mobject(*start_mobs)).split()
@@ -59,7 +58,7 @@ class RearrangeEquation(Scene):
         self.dither()
 
 
-    def get_mobs_from_terms(self, start_terms, end_terms, size):
+    def get_mobs_from_terms(self, start_terms, end_terms):
         """
         Need to ensure that all image mobjects for a tex expression
         stemming from the same string are point-for-point copies of one
@@ -68,8 +67,8 @@ class RearrangeEquation(Scene):
         """
         num_start_terms = len(start_terms)
         all_mobs = np.array(
-            TexMobject(start_terms, size = size).split() + \
-            TexMobject(end_terms, size = size).split()
+            TexMobject(start_terms).split() + \
+            TexMobject(end_terms).split()
         )
         all_terms = np.array(start_terms+end_terms)
         for term in set(all_terms):

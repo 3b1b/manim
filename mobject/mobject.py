@@ -30,8 +30,8 @@ class Mobject(object):
         if self.name is None:
             self.name = self.__class__.__name__
         self.init_points()
-        self.init_colors()
         self.generate_points()
+        self.init_colors()
 
     def __str__(self):
         return self.name
@@ -171,6 +171,9 @@ class Mobject(object):
     def rotate_in_place(self, angle, axis = OUT, axes = []):
         self.do_in_place(self.rotate, angle, axis, axes)
         return self
+
+    def flip(self, axis = UP):
+        self.rotate_in_place(np.pi, axis)
 
     def scale_in_place(self, scale_factor):
         self.do_in_place(self.scale, scale_factor)

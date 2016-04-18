@@ -1,124 +1,101 @@
 from helpers import *
 
 from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.tex_mobject import TexMobject, TextMobject
-from topics.geometry import Circle, Line
+from mobject.svg_mobject import SVGMobject
+from mobject.vectorized_mobject import VMobject
+from mobject.tex_mobject import TextMobject
 
 
 PI_CREATURE_DIR = os.path.join(IMAGE_DIR, "PiCreature")
 PI_CREATURE_SCALE_VAL = 0.5
-PI_CREATURE_MOUTH_TO_EYES_DISTANCE = 0.25
 
-def part_name_to_directory(name):
-    return os.path.join(PI_CREATURE_DIR, "pi_creature_"+name) + ".png"
+MOUTH_INDEX       = 5
+BODY_INDEX        = 4
+RIGHT_PUPIL_INDEX = 3
+LEFT_PUPIL_INDEX  = 2
+RIGHT_EYE_INDEX   = 1
+LEFT_EYE_INDEX    = 0
 
-class PiCreature(Mobject):
+
+class PiCreature(SVGMobject):
     CONFIG = {
-        "color" : BLUE_E
+        "color" : BLUE_E,
+        "stroke_width" : 0,
+        "fill_opacity" : 1.0,
     }
-    PART_NAMES = [
-        'arm', 
-        'body', 
-        'left_eye', 
-        'right_eye',
-        'left_leg',
-        'right_leg',            
-        'mouth', 
-    ]
-    WHITE_PART_NAMES = ['left_eye', 'right_eye', 'mouth']
-    def __init__(self, **kwargs):
-        Mobject.__init__(self, **kwargs)
-        for part_name in self.PART_NAMES:
-            mob = ImageMobject(
-                part_name_to_directory(part_name),
-                should_center = False
-            )
-            if part_name not in self.WHITE_PART_NAMES:
-                mob.highlight(self.color)
-            setattr(self, part_name, mob)
-            self.add(mob)
-        self.eyes = Mobject(self.left_eye, self.right_eye)
-        self.legs = Mobject(self.left_leg, self.right_leg)
-        self.mouth.center().shift(self.get_mouth_center())
-        self.add(self.mouth)
-        self.scale(PI_CREATURE_SCALE_VAL)
+    def __init__(self, mode = "plain", **kwargs):
+        self.parts_named = False
+        svg_file = os.path.join(
+            PI_CREATURE_DIR, 
+            "PiCreatures_%s.svg"%mode
+        )
+        digest_config(self, kwargs, locals())
+        SVGMobject.__init__(self, svg_file, **kwargs)
+        self.init_colors()
 
-    def get_parts(self):
-        return [getattr(self, pn) for pn in self.PART_NAMES]
+    def move_into_position(self):
+        self.scale_to_fit_height(4)
+        self.center()
 
-    def get_white_parts(self):
-        return [
-            getattr(self, pn) 
-            for pn in self.WHITE_PART_NAMES
-        ]
+    def name_parts(self):
+        self.mouth = self.submobjects[MOUTH_INDEX]
+        self.body = self.submobjects[BODY_INDEX]
+        self.pupils = VMobject(*[
+            self.submobjects[LEFT_PUPIL_INDEX],
+            self.submobjects[RIGHT_PUPIL_INDEX]
+        ])
+        self.eyes = VMobject(*[
+            self.submobjects[LEFT_EYE_INDEX],
+            self.submobjects[RIGHT_EYE_INDEX]
+        ])
+        self.submobjects = []
+        self.add(self.body, self.mouth, self.eyes, self.pupils)
+        self.parts_named = True
 
-    def get_mouth_center(self):
-        result = self.body.get_center()
-        result[0] = self.eyes.get_center()[0]
-        return result
+    def init_colors(self):
+        VMobject.init_colors(self)
+        if not self.parts_named:
+            self.name_parts()
+        self.mouth.set_fill(BLACK)
+        self.body.set_fill(self.color)
+        self.pupils.set_fill(BLACK)
+        self.eyes.set_fill(WHITE)
 
-    def highlight(self, color, condition = None):
-        for part in set(self.get_parts()).difference(self.get_white_parts()):
-            part.highlight(color, condition)
+
+    def highlight(self, color):
+        self.body.set_fill(color)
         return self
 
     def move_to(self, destination):
         self.shift(destination-self.get_bottom())
         return self
 
-    def get_eye_center(self):
-        return self.eyes.get_center()
-
-    def make_mean(self):
-        eye_x, eye_y = self.get_eye_center()[:2]
-        def should_delete((x, y, z)):
-            return y - eye_y > 0.3*abs(x - eye_x)
-        self.eyes.highlight("black", should_delete)
-        self.give_straight_face()
+    def change_mode(self, mode):
+        curr_center = self.get_center()
+        curr_height = self.get_height()
+        flip = self.is_flipped()
+        self.__class__.__init__(self, mode)
+        self.scale_to_fit_height(curr_height)
+        self.shift(curr_center)
+        if flip:
+            self.flip()
         return self
 
-    def make_sad(self):
-        eye_x, eye_y = self.get_eye_center()[:2]
-        eye_y += 0.15
-        def should_delete((x, y, z)):
-            return y - eye_y > -0.3*abs(x - eye_x)
-        self.eyey.highlight("black", should_delete)
-        self.give_frown()
+    def look_left(self):
+        self.change_mode(self.mode + "_looking_left")
         return self
 
-    def get_step_intermediate(self, pi_creature):
-        vect = pi_creature.get_center() - self.get_center()
-        result = self.copy().shift(vect / 2.0)
-        left_forward = vect[0] > 0
-        if self.right_leg.get_center()[0] < self.left_leg.get_center()[0]:
-            #For Mortimer's case
-            left_forward = not left_forward
-        if left_forward:
-            result.left_leg.wag(vect/2.0, DOWN)
-            result.right_leg.wag(-vect/2.0, DOWN)
-        else:
-            result.right_leg.wag(vect/2.0, DOWN)
-            result.left_leg.wag(-vect/2.0, DOWN)
-        return result
+    def is_flipped(self):
+        return self.eyes.submobjects[0].get_center()[0] > \
+               self.eyes.submobjects[1].get_center()[0]
 
     def blink(self):
-        bottom = self.eyes.get_bottom()
-        self.eyes.apply_function(
-            lambda (x, y, z) : (x, bottom[1], z)
-        )
+        eye_bottom_y = self.eyes.get_bottom()[1]
+        for mob in self.eyes, self.pupils:
+            mob.apply_function(
+                lambda p : [p[0], eye_bottom_y, p[2]]
+            )
         return self
-
-    def shift_eyes(self):
-        for eye in self.left_eye, self.right_eye:
-            eye.rotate_in_place(np.pi, UP)
-        return self
-
-    def to_symbol(self):
-        Mobject.__init__(
-            self,
-            *list(set(self.get_parts()).difference(self.get_white_parts()))
-        )
 
 
 class Randolph(PiCreature):
@@ -126,11 +103,11 @@ class Randolph(PiCreature):
 
 class Mortimer(PiCreature):
     CONFIG = {
-        "color" : MAROON_E
+        "color" : "#be2612"
     }
-    def __init__(self, **kwargs):
-        PiCreature.__init__(self, **kwargs)
-        self.rotate(np.pi, UP)
+    def __init__(self, *args, **kwargs):
+        PiCreature.__init__(self, *args, **kwargs)
+        self.flip()
 
 
 class Mathematician(PiCreature):
@@ -138,31 +115,43 @@ class Mathematician(PiCreature):
         "color" : GREY,
     }
 
-class Bubble(Mobject):
+class Bubble(SVGMobject):
     CONFIG = {
         "direction" : LEFT,
         "center_point" : ORIGIN,
+        "content_scale_factor" : 0.75, 
+        "height" : 4,
+        "width"  : 6,
+        "file_name" : None,
     }
     def __init__(self, **kwargs):
-        Mobject.__init__(self, **kwargs)
-        self.center_offset = self.center_point - Mobject.get_center(self)
+        digest_config(self, kwargs, locals())
+        if self.file_name is None:
+            raise Exception("Must invoke Bubble subclass")
+        svg_file = os.path.join(
+            IMAGE_DIR, self.file_name
+        )
+        SVGMobject.__init__(self, svg_file, **kwargs)
+        self.center()
+        self.stretch_to_fit_height(self.height)
+        self.stretch_to_fit_width(self.width)
         if self.direction[0] > 0:
-            self.rotate(np.pi, UP)
+            Mobject.flip(self)
         self.content = Mobject()
 
     def get_tip(self):
-        raise Exception("Not implemented")
+        return self.get_corner(DOWN+self.direction)
 
     def get_bubble_center(self):
-        return self.get_center()+self.center_offset
+        return self.get_center() + self.get_height()*UP/8.0
 
     def move_tip_to(self, point):
         self.shift(point - self.get_tip())
         return self
 
     def flip(self):
+        Mobject.flip(self)        
         self.direction = -np.array(self.direction)
-        self.rotate(np.pi, UP)
         return self
 
     def pin_to(self, mobject):
@@ -175,11 +164,14 @@ class Bubble(Mobject):
         return self
 
     def add_content(self, mobject):
-        scaled_width = 0.75*self.get_width()
+        if self.content in self.submobjects:
+            self.submobjects.remove(self.content)
+        scaled_width = self.content_scale_factor*self.get_width()
         if mobject.get_width() > scaled_width:
             mobject.scale(scaled_width / mobject.get_width())
         mobject.shift(self.get_bubble_center())
         self.content = mobject
+        self.add(self.content)
         return self
 
     def write(self, text):
@@ -187,69 +179,16 @@ class Bubble(Mobject):
         return self
 
     def clear(self):
-        self.content = Mobject()
+        self.add_content(Mobject())
         return self
 
 class SpeechBubble(Bubble):
     CONFIG = {
-        "initial_width"  : 6,
-        "initial_height" : 4,
+        "file_name" : "Bubbles_speech.svg",
     }
-
-    def generate_points(self):
-        complex_power = 0.9
-        radius = self.initial_width/2
-        circle = Circle(radius = radius)
-        circle.scale(1.0/radius)
-        circle.apply_complex_function(lambda z : z**complex_power)
-        circle.scale(radius)
-        boundary_point_as_complex = radius*complex(-1)**complex_power
-        boundary_points = [
-            [
-                boundary_point_as_complex.real,
-                unit*boundary_point_as_complex.imag,
-                0
-            ]
-            for unit in -1, 1
-        ]
-        tip = radius*(1.5*LEFT+UP)
-        self.little_line = Line(boundary_points[0], tip)
-        self.circle = circle
-        self.add(
-            circle,
-            self.little_line,
-            Line(boundary_points[1], tip)
-        )
-        self.highlight("white")
-        self.rotate(np.pi/2)
-        self.stretch_to_fit_height(self.initial_height)
-
-    def get_tip(self):
-        return self.little_line.points[-1]
-
-    def get_bubble_center(self):
-        return self.circle.get_center()
 
 class ThoughtBubble(Bubble):
     CONFIG = {
-        "num_bulges"           : 7,
-        "initial_inner_radius" : 1.8,
-        "initial_width"        : 6,
+        "file_name" : "Bubbles_thought.svg",
     }
-    def __init__(self, **kwargs):
-        Bubble.__init__(self, **kwargs)
 
-    def get_tip(self):
-        return self.small_circle.get_bottom()
-
-    def generate_points(self):
-        self.small_circle = Circle().scale(0.15)
-        self.small_circle.shift(2.5*DOWN+2*LEFT)
-        self.add(self.small_circle)
-        self.add(Circle().scale(0.3).shift(2*DOWN+1.5*LEFT))
-        for n in range(self.num_bulges):
-            theta = 2*np.pi*n/self.num_bulges
-            self.add(Circle().shift((np.cos(theta), np.sin(theta), 0)))
-        self.filter_out(lambda p : np.linalg.norm(p) < self.initial_inner_radius)
-        self.stretch_to_fit_width(self.initial_width)
-        self.highlight("white")
