@@ -1,13 +1,12 @@
 from helpers import *
 
-from mobject import Mobject, Mobject1D, Point
+from mobject import Mobject
 from mobject.vectorized_mobject import VMobject
 
 class Arc(VMobject):
     CONFIG = {
         "radius"           : 1.0,
         "start_angle"      : 0,
-        "close_new_points" : False,
         "num_anchors"      : 8,
         "anchors_span_full_range" : True
     }
@@ -59,7 +58,6 @@ class Dot(Circle): #Use 1D density, even though 2D
 class Line(VMobject):
     CONFIG = {
         "buff" : 0,
-        "close_new_points" : False,
     }
     def __init__(self, start, end, **kwargs):
         digest_config(self, kwargs)
@@ -171,7 +169,8 @@ class CubicBezier(VMobject):
 class Polygon(VMobject):
     CONFIG = {
         "color" : GREEN_D,
-        "mark_paths_closed" : True
+        "mark_paths_closed" : True,
+        "close_new_points" : True,
     }
     def __init__(self, *vertices, **kwargs):
         assert len(vertices) > 1
@@ -190,7 +189,8 @@ class Rectangle(VMobject):
         "color"  : YELLOW,
         "height" : 2.0,
         "width"  : 4.0,
-        "mark_paths_closed" : True
+        "mark_paths_closed" : True,
+        "close_new_points" : True,
     }
     def generate_points(self):
         y, x = self.height/2, self.width/2

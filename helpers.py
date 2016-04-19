@@ -11,7 +11,6 @@ from scipy import linalg
 
 from constants import *
 
-
 def get_smooth_handle_points(points):
     num_handles = len(points) - 1
     dim = points.shape[1]    

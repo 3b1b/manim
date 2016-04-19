@@ -11,7 +11,7 @@ class VMobject(Mobject):
         #Indicates that it will not be displayed, but
         #that it should count in parent mobject's path
         "is_subpath"       : False,
-        "close_new_points" : True,
+        "close_new_points" : False,
         "mark_paths_closed" : False,
     }
     def __init__(self, *args, **kwargs):

@@ -1,56 +1,51 @@
 from scipy import integrate
 
-from mobject import Mobject, Mobject1D, Mobject
+from mobject.vectorized_mobject import VMobject
 
 from helpers import *
 
-class FunctionGraph(Mobject1D):
+class FunctionGraph(VMobject):
     CONFIG = {
-        "color" : BLUE,
-        "x_min" : -10,
-        "x_max" : 10,
-        "spatial_radius" : SPACE_WIDTH,
+        "color" : BLUE_D,
+        "x_min" : -SPACE_WIDTH,
+        "x_max" : SPACE_WIDTH,
+        "space_unit_to_num" : 1,
+        "epsilon" : 0.5,
     }
     def __init__(self, function, **kwargs):
         self.function = function
-        Mobject1D.__init__(self, **kwargs)
+        VMobject.__init__(self, **kwargs)
 
     def generate_points(self):
-        numerical_radius = (self.x_max - self.x_min)/2
-        numerical_center = (self.x_max + self.x_min)/2
-        ratio = numerical_radius / self.spatial_radius
-        epsilon = self.epsilon * ratio
-        self.add_points([
-            np.array([(x-numerical_center)/ratio, self.function(x), 0])
-            for x in np.arange(self.x_min, self.x_max, self.epsilon)
-        ])
+        self.set_anchor_points([
+            x*RIGHT + self.function(x)*UP
+            for pre_x in np.arange(self.x_min, self.x_max, self.epsilon)
+            for x in [self.space_unit_to_num*pre_x]
+        ], mode = "smooth")
 
 
-class ParametricFunction(Mobject1D):
+class ParametricFunction(VMobject):
     CONFIG = {
-        "start" : 0,
-        "end"   : 1,
+        "t_min" : 0,
+        "t_max" : 1,
+        "epsilon" : 0.1,
     }
     def __init__(self, function, **kwargs):
         self.function = function
-        Mobject1D.__init__(self, **kwargs)
+        VMobject.__init__(self, **kwargs)
 
     def generate_points(self):
-        integral = integrate.quad(
-            lambda t : np.linalg.norm(self.function(t)),
-            self.start, self.end
-        )
-        length = np.linalg.norm(integral)
-        epsilon = self.epsilon / length        
-        t_range = np.arange(self.start, self.end, epsilon)
-        self.add_points([self.function(t) for t in t_range])
+        self.set_anchor_points([
+            self.function(t)
+            for t in np.arange(self.t_min, self.t_max, self.epsilon)
+        ], mode = "smooth")
 
 
-class Axes(Mobject):
-    def __init__(self, **kwargs):
-        x_axis = NumberLine(**kwargs)
-        y_axis = NumberLine(**kwargs).rotate(np.pi/2, OUT)
-        Mobject.__init__(self, x_axis, y_axis)
+class Axes(VMobject):
+    def generate_points(self):
+        self.x_axis = NumberLine(**kwargs)
+        self.y_axis = NumberLine(**kwargs).rotate(np.pi/2)
+        self.add(self.x_axis, self.y_axis)
 
 
         

@@ -184,6 +184,7 @@ class VMobjectFromSVGPathstring(VMobject):
             if not is_closed(points):
                 #Both handles and new anchor are the start
                 new_points = points[[0, 0, 0]]
+            self.mark_paths_closed = True
         self.growing_path.add_control_points(new_points)
 
     def string_to_points(self, coord_string):

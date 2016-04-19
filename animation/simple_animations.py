@@ -32,13 +32,24 @@ class Rotating(Animation):
 
 
 class ShowPartial(Animation):
+    CONFIG = {
+        "one_submobject_at_a_time" : False
+    }
     def update_mobject(self, alpha):
         pairs = zip(
             self.starting_mobject.submobject_family(),
             self.mobject.submobject_family()
         )
-        for start, mob in pairs:
-            mob.become_partial(start, *self.get_bounds(alpha))
+        for i, (start, mob) in enumerate(pairs):
+            if self.one_submobject_at_a_time:
+                lower = float(i)/len(pairs)
+                upper = float(i+1)/len(pairs)
+                sub_alpha = (alpha-lower)/(upper-lower)
+                sub_alpha = max(0, sub_alpha)
+                sub_alpha = min(1, sub_alpha)
+            else:
+                sub_alpha = alpha
+            mob.become_partial(start, *self.get_bounds(sub_alpha))
 
     def get_bounds(self, alpha):
         raise Exception("Not Implemented")
@@ -47,6 +58,12 @@ class ShowPartial(Animation):
 class ShowCreation(ShowPartial):
     def get_bounds(self, alpha):
         return (0, alpha)
+
+class ShowCreationPerSubmobject(ShowCreation):
+    CONFIG = {
+        "one_submobject_at_a_time" : True,
+        "run_time" : 3
+    }
 
 class ShowPassingFlash(ShowPartial):
     CONFIG = {
