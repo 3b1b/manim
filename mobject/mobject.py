@@ -470,10 +470,13 @@ class Mobject(object):
         for index in indices:
             submob = self.submobjects[index]
             if submob in new_submobjects:
-                submob = submob.copy()
+                submob = self.repeat_submobject(submob)
             new_submobjects.append(submob)
         self.submobjects = new_submobjects
         return self
+
+    def repeat_submobject(self, submob):
+        return submob.copy()
 
     def interpolate(self, mobject1, mobject2, alpha, path_func):
         """

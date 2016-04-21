@@ -1,8 +1,28 @@
 from vectorized_mobject import VMobject
-from svg_mobject import SVGMobject
+from svg_mobject import SVGMobject, VMobjectFromSVGPathstring
 from helpers import *
 
-TEX_MOB_SCALE_VAL = 0.05
+TEX_MOB_SCALE_VAL = 0.1
+TEXT_MOB_SCALE_VAL = 0.2
+
+
+class TexSymbol(VMobjectFromSVGPathstring):
+    def become_partial(self, mobject, a, b):
+        #TODO, this assumes a = 0
+        if b < 0.5:
+            b = 2*b 
+            width = 1
+            opacity = 0
+        else:
+            width = 2 - 2*b
+            opacity = 2*b - 1
+            b = 1
+        VMobjectFromSVGPathstring.become_partial(
+            self, mobject, 0, b
+        )
+        self.set_stroke(width = width)
+        self.set_fill(opacity = opacity)
+
 
 class TexMobject(SVGMobject):
     CONFIG = {
@@ -13,12 +33,19 @@ class TexMobject(SVGMobject):
         "should_center"     : True,
         "next_to_direction" : RIGHT,
         "next_to_buff"      : 0.2,
+        "initial_scale_val" : TEX_MOB_SCALE_VAL,
     }
     def __init__(self, expression, **kwargs):
         digest_config(self, kwargs, locals())
         VMobject.__init__(self, **kwargs)
         self.move_into_position()
         self.organize_submobjects()
+
+    def path_string_to_mobject(self, path_string):
+        #Overwrite superclass default to use
+        #specialized path_string mobject
+        return TexSymbol(path_string)
+
 
     def generate_points(self): 
         if isinstance(self.expression, list):
@@ -34,7 +61,8 @@ class TexMobject(SVGMobject):
     def handle_list_expression(self):
         #TODO, next_to not sufficient?
         subs = [
-            TexMobject(expr)
+            # TexMobject(expr)
+            self.__class__(expr)
             for expr in self.expression
         ]
         for sm1, sm2 in zip(subs, subs[1:]):
@@ -53,13 +81,15 @@ class TexMobject(SVGMobject):
 
     def move_into_position(self):
         self.center()
-        self.scale(TEX_MOB_SCALE_VAL)
+        self.scale(self.initial_scale_val)
         self.init_colors()
+
 
 
 class TextMobject(TexMobject):
     CONFIG = {
         "template_tex_file" : TEMPLATE_TEXT_FILE,
+        "initial_scale_val" : TEXT_MOB_SCALE_VAL,
     }
 
 

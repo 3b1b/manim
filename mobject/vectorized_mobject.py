@@ -146,9 +146,8 @@ class VMobject(Mobject):
         but will be tracked in a separate special list for when
         it comes time to display.
         """
-        subpath_mobject = VMobject(
-            is_subpath = True
-        )
+        subpath_mobject = self.copy()#TODO, better way?
+        subpath_mobject.is_subpath = True
         subpath_mobject.set_points(points)
         self.add(subpath_mobject)
         return subpath_mobject
@@ -190,9 +189,9 @@ class VMobject(Mobject):
         Mobject.align_points(self, mobject)
         is_subpath = self.is_subpath or mobject.is_subpath
         self.is_subpath = mobject.is_subpath = is_subpath
-        mark_closed  = self.mark_paths_closed and mobject.mark_paths_closed
+        mark_closed = self.mark_paths_closed and mobject.mark_paths_closed
         self.mark_paths_closed = mobject.mark_paths_closed = mark_closed
-        return self        
+        return self
 
     def align_points_with_larger(self, larger_mobject):
         assert(isinstance(larger_mobject, VMobject))
@@ -208,7 +207,7 @@ class VMobject(Mobject):
             self.points = np.zeros((1, 3))
             n = n-1
         if curr == 1:
-            self.points = np.repeat(self.points, n+1)
+            self.points = np.repeat(self.points, 3*n+1, axis = 0)
             return self
         points = np.array([self.points[0]])
         num_curves = curr-1
@@ -236,6 +235,11 @@ class VMobject(Mobject):
         if center is None:
             center = self.get_center()
         return VectorizedPoint(center)
+
+    def repeat_submobject(self, submobject):
+        if submobject.is_subpath:
+            return VectorizedPoint(submobject.points[0])
+        return submobject.copy()
 
     def interpolate_color(self, mobject1, mobject2, alpha):
         attrs = [
@@ -285,7 +289,7 @@ class VectorizedPoint(VMobject):
     }
     def __init__(self, location = ORIGIN, **kwargs):
         VMobject.__init__(self, **kwargs)
-        self.set_points([location])
+        self.set_points(np.array([location]))
 
 
 

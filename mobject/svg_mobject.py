@@ -32,7 +32,9 @@ class SVGMobject(VMobject):
                 for child in element.childNodes
             ])
         elif element.tagName == 'path':
-            result.append(self.path_to_mobject(element))
+            result.append(self.path_string_to_mobject(
+                element.getAttribute('d')
+            ))
         elif element.tagName == 'use':
             result += self.use_to_mobjects(element)
         elif element.tagName == 'rect':
@@ -50,21 +52,18 @@ class SVGMobject(VMobject):
         self.handle_transforms(g_element, mob)
         return mob.submobjects
 
-    def path_to_mobject(self, path_element):
-        return VMobjectFromSVGPathstring(
-            path_element.getAttribute('d')
-        )
+    def path_string_to_mobject(self, path_string):
+        return VMobjectFromSVGPathstring(path_string)
 
     def use_to_mobjects(self, use_element):
         #Remove initial "#" character
         ref = use_element.getAttribute("xlink:href")[1:]
-        try:
-            return self.get_mobjects_from(
-                self.ref_to_element[ref]
-            )
-        except:
+        if ref not in self.ref_to_element:
             warnings.warn("%s not recognized"%ref)
-            return
+            return VMobject()
+        return self.get_mobjects_from(
+            self.ref_to_element[ref]
+        )
 
     # <circle class="st1" cx="143.8" cy="268" r="22.6"/>
 
@@ -184,7 +183,7 @@ class VMobjectFromSVGPathstring(VMobject):
             if not is_closed(points):
                 #Both handles and new anchor are the start
                 new_points = points[[0, 0, 0]]
-            self.mark_paths_closed = True
+            # self.mark_paths_closed = True
         self.growing_path.add_control_points(new_points)
 
     def string_to_points(self, coord_string):

@@ -85,8 +85,7 @@ class Line(VMobject):
     def pointify(self, mob_or_point):
         if isinstance(mob_or_point, Mobject):
             return mob_or_point.get_center()
-        else:
-            return np.array(mob_or_point)
+        return np.array(mob_or_point)
 
     def generate_points(self):
         self.set_points_as_corners([self.start, self.end])

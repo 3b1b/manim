@@ -33,7 +33,7 @@ class Rotating(Animation):
 
 class ShowPartial(Animation):
     CONFIG = {
-        "one_submobject_at_a_time" : False
+        "submobject_mode" : None
     }
     def update_mobject(self, alpha):
         pairs = zip(
@@ -41,7 +41,11 @@ class ShowPartial(Animation):
             self.mobject.submobject_family()
         )
         for i, (start, mob) in enumerate(pairs):
-            if self.one_submobject_at_a_time:
+            if self.submobject_mode == "lagged_start":
+                sub_alpha = 2*alpha - float(i)/len(pairs)
+                sub_alpha = max(0, sub_alpha)
+                sub_alpha = min(1, sub_alpha)
+            elif self.submobject_mode == "one_at_a_time":
                 lower = float(i)/len(pairs)
                 upper = float(i+1)/len(pairs)
                 sub_alpha = (alpha-lower)/(upper-lower)
@@ -61,8 +65,15 @@ class ShowCreation(ShowPartial):
 
 class ShowCreationPerSubmobject(ShowCreation):
     CONFIG = {
-        "one_submobject_at_a_time" : True,
+        "submobject_mode" : "one_at_a_time",
         "run_time" : 3
+    }
+
+class Write(ShowCreation):
+    CONFIG = {
+        "run_time" : 3,
+        "rate_func" : None,
+        "submobject_mode" : "lagged_start",
     }
 
 class ShowPassingFlash(ShowPartial):
