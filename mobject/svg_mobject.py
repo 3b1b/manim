@@ -6,6 +6,10 @@ from topics.geometry import Rectangle, Circle
 from helpers import *
 
 class SVGMobject(VMobject):
+    CONFIG = {
+        "initial_scale_val" : 1,
+        "should_center" : True,
+    }
     def __init__(self, svg_file, **kwargs):
         digest_config(self, kwargs, locals())
         VMobject.__init__(self, **kwargs)
@@ -87,7 +91,7 @@ class SVGMobject(VMobject):
             fill_color = WHITE,
             fill_opacity = 1.0
         )
-        mob.shift(mob.get_center()-mob.get_corner(DOWN+LEFT))        
+        mob.shift(mob.get_center()-mob.get_corner(UP+LEFT))        
         return mob
 
     def handle_transforms(self, element, mobject):
@@ -110,7 +114,11 @@ class SVGMobject(VMobject):
         self.ref_to_element.update(new_refs)
 
     def move_into_position(self):
-        pass #subclasses should tweak as needed
+        if self.should_center:
+            self.center()
+        self.scale_in_place(self.initial_scale_val)
+
+
 
 
 class VMobjectFromSVGPathstring(VMobject):

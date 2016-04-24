@@ -440,9 +440,9 @@ class Mobject(object):
             for mob in self, mobject
         ]
         if self_has_points and not mob_has_points:
-            self.push_self_into_submobjects()
+            mobject.null_point_align(self)
         elif mob_has_points and not self_has_points:
-            mob.push_self_into_submobjects()
+            self.null_point_align(mobject)
         self_count = len(self.submobjects)
         mob_count = len(mobject.submobjects)
         diff = abs(self_count-mob_count)
@@ -451,6 +451,18 @@ class Mobject(object):
         elif mob_count < self_count:
             mobject.add_n_more_submobjects(diff)
         return self
+
+    def null_point_align(self, mobject):
+        """
+        If self has no points, but needs to align 
+        with mobject, which has points
+        """
+        if self.submobjects:
+            mobject.push_self_into_submobjects()
+        else:
+            self.points = np.array([mobject.points[0]])
+        return self
+
 
     def push_self_into_submobjects(self):
         copy = self.copy()

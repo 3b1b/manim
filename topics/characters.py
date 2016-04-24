@@ -22,6 +22,7 @@ class PiCreature(SVGMobject):
         "color" : BLUE_E,
         "stroke_width" : 0,
         "fill_opacity" : 1.0,
+        "initial_scale_val" : 0.01,
     }
     def __init__(self, mode = "plain", **kwargs):
         self.parts_named = False
@@ -32,10 +33,6 @@ class PiCreature(SVGMobject):
         digest_config(self, kwargs, locals())
         SVGMobject.__init__(self, svg_file, **kwargs)
         self.init_colors()
-
-    def move_into_position(self):
-        self.scale_to_fit_height(4)
-        self.center()
 
     def name_parts(self):
         self.mouth = self.submobjects[MOUTH_INDEX]
@@ -53,7 +50,7 @@ class PiCreature(SVGMobject):
         self.parts_named = True
 
     def init_colors(self):
-        VMobject.init_colors(self)
+        self.set_stroke(color = BLACK, width = self.stroke_width)
         if not self.parts_named:
             self.name_parts()
         self.mouth.set_fill(BLACK)

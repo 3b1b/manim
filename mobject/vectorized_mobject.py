@@ -13,32 +13,61 @@ class VMobject(Mobject):
         "is_subpath"       : False,
         "close_new_points" : False,
         "mark_paths_closed" : False,
+        "propogate_style_to_family" : False,
     }
     def __init__(self, *args, **kwargs):
         Mobject.__init__(self, *args, **kwargs)
+        VMobject.init_colors(self)
 
     ## Colors
     def init_colors(self):
-        self.set_stroke(self.color, self.stroke_width)
-        self.set_fill(self.fill_color, self.fill_opacity)
+        self.set_style_data(
+           stroke_color = self.color,
+           stroke_width = self.stroke_width,
+           fill_color = self.fill_color, 
+           fill_opacity = self.fill_opacity,
+           family = self.propogate_style_to_family
+        )
         return self
 
     def set_family_attr(self, attr, value):
         for mob in self.submobject_family():
             setattr(mob, attr, value)
 
-    def set_fill(self, color = None, opacity = 1.0):
-        if color is not None:
-            self.set_family_attr("fill_rgb", color_to_rgb(color))
-        self.set_family_attr("fill_opacity", opacity)
+    def set_style_data(self, 
+                       stroke_color = None, 
+                       stroke_width = None,
+                       fill_color = None, 
+                       fill_opacity = None,
+                       family = True):
+        if family:
+            change_func = self.set_family_attr
+        else:
+            change_func = lambda attr, value : setattr(self, attr, value)
+
+        if stroke_color is not None:
+            change_func("stroke_rgb", color_to_rgb(stroke_color))
+        if stroke_width is not None:
+            change_func("stroke_width", stroke_width)
+        if fill_color is not None:
+            change_func("fill_rgb", color_to_rgb(fill_color))
+        if fill_opacity is not None:
+            change_func("fill_opacity", fill_opacity)
         return self
 
-    def set_stroke(self, color = None, width = None):
-        if color is not None:
-            self.set_family_attr("stroke_rgb", color_to_rgb(color))
-        if width is not None:
-            self.set_family_attr("stroke_width", width)
-        return self
+    def set_fill(self, color = None, opacity = 1.0, family = True):
+        return self.set_style_data(
+            fill_color = color, 
+            fill_opacity = opacity, 
+            family = family
+        )
+
+    def set_stroke(self, color = None, width = None, family = True):
+        return self.set_style_data(
+            stroke_color = color, 
+            stroke_width = width, 
+            family = family
+        )
 
     def highlight(self, color):
         self.set_fill(color = color)
@@ -254,6 +283,9 @@ class VMobject(Mobject):
                 getattr(mobject2, attr),
                 alpha
             ))
+            if alpha == 1.0:
+                # print getattr(mobject2, attr)
+                setattr(self, attr, getattr(mobject2, attr))
 
     def become_partial(self, mobject, a, b):
         assert(isinstance(mobject, VMobject))

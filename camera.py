@@ -114,7 +114,7 @@ class Camera(object):
     def get_pen_and_fill(self, vmobject):
         pen = aggdraw.Pen(
             vmobject.get_stroke_color().get_hex_l(),
-            vmobject.stroke_width
+            max(vmobject.stroke_width, 0)
         )
         fill = aggdraw.Brush(
             vmobject.get_fill_color().get_hex_l(),

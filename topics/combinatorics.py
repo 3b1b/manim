@@ -1,5 +1,8 @@
 from helpers import *
 
+from mobject.vectorized_mobject import VMobject
+from mobject.tex_mobject import TexMobject
+
 from scene import Scene
 
 
@@ -81,39 +84,29 @@ class CountingScene(Scene):
         self.number = num_mob
         return self
 
-
-BIG_N_PASCAL_ROWS = 11
-N_PASCAL_ROWS = 7
-
-class PascalsTriangleScene(Scene):
-    args_list = [
-        (N_PASCAL_ROWS,),
-        (BIG_N_PASCAL_ROWS,),
-    ]
-    @staticmethod
-    def args_to_string(*args):
-        return str(args[0])
-
-    def __init__(self, nrows, *args, **kwargs):
-        Scene.__init__(self, *args, **kwargs)
-        self.nrows            = nrows
-        self.diagram_height   = 2*SPACE_HEIGHT - 1
-        self.diagram_width    = 1.5*SPACE_WIDTH
-        self.cell_height      = self.diagram_height / nrows
-        self.cell_width       = self.diagram_width / nrows
-        self.portion_to_fill  = 0.7
-        self.bottom_left      = np.array(
-            (-self.cell_width * nrows / 2.0, -self.cell_height * nrows / 2.0, 0)
-        )
+class PascalsTriangle(VMobject):
+    CONFIG = {
+        "nrows" : 7,
+        "height" : 2*SPACE_HEIGHT - 1,
+        "width" : 1.5*SPACE_WIDTH,
+        "portion_to_fill" : 0.7
+    }    
+    def generate_points(self):
+        self.cell_height = self.height / self.nrows
+        self.cell_width = self.width / self.nrows
+        self.bottom_left = (self.cell_width * self.nrows / 2.0)*LEFT + \
+                           (self.cell_height * self.nrows / 2.0)*DOWN
         num_to_num_mob   = {} 
         self.coords_to_mobs   = {}
-        self.coords = [(n, k) for n in range(nrows) for k in range(n+1)]    
+        self.coords = [
+            (n, k) 
+            for n in range(self.nrows) 
+            for k in range(n+1)
+        ]
         for n, k in self.coords:
             num = choose(n, k)              
             center = self.coords_to_center(n, k)
-            if num not in num_to_num_mob:
-                num_to_num_mob[num] = TexMobject(str(num))
-            num_mob = num_to_num_mob[num].copy()
+            num_mob = TexMobject(str(num))
             scale_factor = min(
                 1,
                 self.portion_to_fill * self.cell_height / num_mob.get_height(),
@@ -123,14 +116,16 @@ class PascalsTriangleScene(Scene):
             if n not in self.coords_to_mobs:
                 self.coords_to_mobs[n] = {}
             self.coords_to_mobs[n][k] = num_mob
-        self.add(*[self.coords_to_mobs[n][k] for n, k in self.coords])
+        self.add(*[
+            self.coords_to_mobs[n][k] 
+            for n, k in self.coords
+        ])
+        return self
 
     def coords_to_center(self, n, k):
-        return self.bottom_left + (
-                self.cell_width * (k+self.nrows/2.0 - n/2.0), 
-                self.cell_height * (self.nrows - n), 
-                0
-            )
+        x_offset = self.cell_width * (k+self.nrows/2.0 - n/2.0)
+        y_offset = self.cell_height * (self.nrows - n)
+        return self.bottom_left + x_offset*RIGHT + y_offset*UP
 
     def generate_n_choose_k_mobs(self):
         self.coords_to_n_choose_k = {}
@@ -146,6 +141,17 @@ class PascalsTriangleScene(Scene):
             if n not in self.coords_to_n_choose_k:
                 self.coords_to_n_choose_k[n] = {}
             self.coords_to_n_choose_k[n][k] = nck_mob
+        return self
+
+    def fill_with_n_choose_k(self):
+        if not hasattr(self, "coords_to_n_choose_k"):
+            self.generate_n_choose_k_mobs()
+        self.submobjects = []
+        self.add(*[
+            self.coords_to_n_choose_k[n][k]
+            for n, k in self.coords
+        ])
+        return self
 
     def generate_sea_of_zeros(self):
         zero = TexMobject("0")
@@ -158,7 +164,7 @@ class PascalsTriangleScene(Scene):
                     mob.shift(self.coords_to_center(n, k))
                     self.coords_to_mobs[n][k] = mob
                     self.add(mob)
-
+        return self
 
 
 

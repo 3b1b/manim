@@ -113,6 +113,7 @@ class Arrow(Line):
         "color"      : YELLOW_C,
         "tip_length" : 0.25,
         "buff"       : 0.3,
+        "propogate_style_to_family" : True,
     }
     def __init__(self, *args, **kwargs):
         if len(args) == 1:
@@ -144,6 +145,13 @@ class Vector(Arrow):
     }
     def __init__(self, start, direction, **kwargs):
         Arrow.__init__(self, start, end, **kwargs)
+
+class DoubleArrow(Arrow):
+    def __init__(self, *args, **kwargs):
+        Arrow.__init__(self, *args, **kwargs)
+        self.start, self.end = self.end, self.start
+        self.add_tip()
+        self.start, self.end = self.end, self.start
 
 class Cross(VMobject):
     CONFIG = {

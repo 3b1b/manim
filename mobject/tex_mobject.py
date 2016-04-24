@@ -3,7 +3,7 @@ from svg_mobject import SVGMobject, VMobjectFromSVGPathstring
 from helpers import *
 
 TEX_MOB_SCALE_VAL = 0.1
-TEXT_MOB_SCALE_VAL = 0.2
+TEXT_MOB_SCALE_VAL = 0.05
 
 
 class TexSymbol(VMobjectFromSVGPathstring):
@@ -32,8 +32,9 @@ class TexMobject(SVGMobject):
         "fill_color"        : WHITE,
         "should_center"     : True,
         "next_to_direction" : RIGHT,
-        "next_to_buff"      : 0.2,
+        "next_to_buff"      : 0.25,
         "initial_scale_val" : TEX_MOB_SCALE_VAL,
+        "propogate_style_to_family" : True,
     }
     def __init__(self, expression, **kwargs):
         digest_config(self, kwargs, locals())
@@ -62,14 +63,17 @@ class TexMobject(SVGMobject):
         #TODO, next_to not sufficient?
         subs = [
             # TexMobject(expr)
-            self.__class__(expr)
+            self.__class__(
+                expr
+            )
             for expr in self.expression
         ]
+        self.initial_scale_val = 1
         for sm1, sm2 in zip(subs, subs[1:]):
             sm2.next_to(
                 sm1,
                 self.next_to_direction, 
-                self.next_to_buff
+                buff = self.next_to_buff
             )
         self.submobjects = subs
         return self
@@ -79,17 +83,12 @@ class TexMobject(SVGMobject):
             lambda m1, m2 : int((m1.get_left()-m2.get_left())[0])
         )
 
-    def move_into_position(self):
-        self.center()
-        self.scale(self.initial_scale_val)
-        self.init_colors()
-
 
 
 class TextMobject(TexMobject):
     CONFIG = {
         "template_tex_file" : TEMPLATE_TEXT_FILE,
-        "initial_scale_val" : TEXT_MOB_SCALE_VAL,
+        "initial_scale_val" : TEXT_MOB_SCALE_VAL
     }
 
 
@@ -97,7 +96,7 @@ class Brace(TexMobject):
     CONFIG = {
         "buff" : 0.2,
     }
-    TEX_STRING = "\\underbrace{%s}"%(14*"\\quad")
+    TEX_STRING = "\\underbrace{%s}"%(3*"\\qquad")
     def __init__(self, mobject, direction = DOWN, **kwargs):
         TexMobject.__init__(self, self.TEX_STRING, **kwargs)
         angle = -np.arctan2(*direction[:2]) + np.pi
@@ -105,7 +104,7 @@ class Brace(TexMobject):
         left  = mobject.get_corner(DOWN+LEFT)
         right = mobject.get_corner(DOWN+RIGHT)
         self.stretch_to_fit_width(right[0]-left[0])
-        self.shift(left - self.points[0] + self.buff*DOWN)
+        self.shift(left - self.get_corner(UP+LEFT) + self.buff*DOWN)
         for mob in mobject, self:
             mob.rotate(angle)
     

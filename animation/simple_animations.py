@@ -66,7 +66,7 @@ class ShowCreation(ShowPartial):
 class ShowCreationPerSubmobject(ShowCreation):
     CONFIG = {
         "submobject_mode" : "one_at_a_time",
-        "run_time" : 3
+        "run_time" : 1
     }
 
 class Write(ShowCreation):

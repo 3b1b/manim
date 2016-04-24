@@ -1,0 +1,446 @@
+from helpers import *
+
+from mobject.tex_mobject import TexMobject
+from mobject import Mobject
+
+from animation.animation import Animation
+from animation.transform import *
+from animation.simple_animations import *
+from animation.playground import *
+from topics.geometry import *
+from topics.characters import *
+from topics.functions import *
+from topics.number_line import *
+from topics.combinatorics import PascalsTriangle
+from scene import Scene
+# from scene.zoomed_scene import ZoomedScene
+from camera import Camera, MovingCamera
+from mobject.svg_mobject import *
+
+from mobject.tex_mobject import *
+
+
+class TrigAnimation(Animation):
+    CONFIG = {
+        "rate_func" : None,
+        "run_time"  : 5,
+        "sin_color" : BLUE,
+        "cos_color" : RED,
+        "tan_color" : GREEN
+    }
+    def __init__(self, **kwargs):
+        digest_config(self, kwargs)
+        x_axis = NumberLine(
+            x_min = -3, 
+            x_max = 3,
+            color = BLUE_E
+        )
+        y_axis = x_axis.copy().rotate(np.pi/2)
+        circle = Circle(color = WHITE)
+        self.trig_lines = [
+            Line(ORIGIN, RIGHT, color = color)
+            for color in self.sin_color, self.cos_color, self.tan_color
+        ]
+        mobject = VMobject(
+            x_axis, y_axis, circle, 
+            *self.trig_lines
+        )
+        mobject.to_edge(RIGHT)
+        self.center = mobject.get_center()
+        Animation.__init__(self, mobject, **kwargs)
+
+    def update_mobject(self, alpha):
+        theta = 2*np.pi*alpha
+        circle_point = np.cos(theta)*RIGHT+np.sin(theta)*UP+self.center
+        points = [
+            circle_point[0]*RIGHT,
+            circle_point[1]*UP+self.center,
+            (
+                np.sign(np.cos(theta))*np.sqrt(
+                    np.tan(theta)**2 - np.sin(theta)**2
+                ) + np.cos(theta)
+            )*RIGHT + self.center,
+        ]
+        for line, point in zip(self.trig_lines, points):
+            line.set_anchor_points(
+                [circle_point, point], 
+                mode = "corners"
+            )
+
+
+
+class Notation(Scene):
+    def construct(self):
+        self.introduce_notation()
+        self.shift_to_good_and_back()
+        self.shift_to_visuals()
+        self.swipe_left()
+
+
+    def introduce_notation(self):
+        notation = TextMobject("Notation")
+        notation.to_edge(UP)
+
+        self.sum1 = TexMobject("\\sum_{n=1}^\\infty \\dfrac{1}{n}")
+        self.prod1 = TexMobject("\\prod_{p\\text{ prime}}\\left(1-p^{-s}\\right)")
+        self.trigs1 = TexMobject([
+            ["\\sin", "(x)"],
+            ["\\cos", "(x)"],
+            ["\\tan", "(x)"],
+        ], next_to_direction = DOWN)
+        self.func1 = TexMobject("f(x) = y")
+        symbols = [self.sum1, self.prod1, self.trigs1, self.func1]
+        for sym, vect in zip(symbols, compass_directions(4, UP+LEFT)):
+            sym.scale(0.5)
+            vect[0] *= 2
+            sym.shift(vect)
+        self.symbols = VMobject(*symbols)
+
+        self.play(Write(notation))
+        self.play(Write(self.symbols))
+        self.dither()
+        self.add(notation, self.symbols)
+
+
+
+    def shift_to_good_and_back(self):
+        sum2 = self.sum1.copy()
+        sigma = sum2.submobjects[1]
+        plus = TexMobject("+").replace(sigma)
+        sum2.submobjects[1] = plus
+
+        prod2 = self.prod1.copy()
+        pi = prod2.submobjects[0]
+        times = TexMobject("\\times").replace(pi)
+        prod2.submobjects[0] = times
+
+        new_sin, new_cos, new_tan = [
+            VMobject().set_anchor_points(
+                corners, mode = "corners"
+            ).replace(trig_part.split()[0])
+            for corners, trig_part in zip(
+                [
+                    [RIGHT, RIGHT+UP, LEFT],
+                    [RIGHT+UP, LEFT, RIGHT],
+                    [RIGHT+UP, RIGHT, LEFT],
+                ],
+                self.trigs1.split()
+            )
+        ]
+        x1, x2, x3 = [
+            trig_part.split()[1]
+            for trig_part in self.trigs1.split()
+        ]
+        trigs2 = VMobject(
+            VMobject(new_sin, x1),
+            VMobject(new_cos, x2),
+            VMobject(new_tan, x3),
+        )
+
+        x, arrow, y = TexMobject("x \\rightarrow y").split()
+        f = TexMobject("f")
+        f.next_to(arrow, UP)
+        func2 = VMobject(f, VMobject(), x, VMobject(), arrow, y)
+        func2.scale(0.5)
+        func2.shift(self.func1.get_center())
+
+        good_symbols = VMobject(sum2, prod2, trigs2, func2)
+        bad_symbols = self.symbols.copy()
+        self.play(Transform(
+            self.symbols, good_symbols, 
+            path_arc = np.pi
+        ))
+        self.dither(3)
+        self.play(Transform(
+            self.symbols, bad_symbols,
+            path_arc = np.pi
+        ))
+        self.dither()
+
+
+    def shift_to_visuals(self):
+        sigma, prod, trig, func = self.symbols.split()
+        new_trig = trig.copy()        
+        sin, cos, tan = [
+            trig_part.split()[0]
+            for trig_part in new_trig.split()
+        ]
+        trig_anim = TrigAnimation()
+        sin.highlight(trig_anim.sin_color)
+        cos.highlight(trig_anim.cos_color)
+        tan.highlight(trig_anim.tan_color)
+        new_trig.to_corner(UP+RIGHT)
+        sum_lines = self.get_harmonic_sum_lines()
+
+        self.play(
+            Transform(trig, new_trig),
+            *it.starmap(ApplyMethod, [
+                (sigma.to_corner, UP+LEFT),
+                (prod.shift, 15*LEFT),
+                (func.shift, 5*UP),
+            ])
+        )
+        sum_lines.next_to(sigma, DOWN)        
+        self.remove(prod, func)
+        self.play(
+            trig_anim,
+            Write(sum_lines)
+        )
+        self.play(trig_anim)
+        self.dither()
+
+    def get_harmonic_sum_lines(self):
+        result = VMobject()
+        for n in range(1, 8):
+            big_line = NumberLine(
+                x_min = 0,
+                x_max = 1.01,
+                tick_frequency = 1./n,
+                numbers_with_elongated_ticks = [],
+                color = WHITE
+            )
+            little_line = Line(
+                big_line.number_to_point(0),
+                big_line.number_to_point(1./n),
+                color = RED
+            )
+            big_line.add(little_line)
+            big_line.shift(0.5*n*DOWN)
+            result.add(big_line)
+        return result
+
+
+    def swipe_left(self):
+        everyone = VMobject(*self.mobjects)
+        self.play(ApplyMethod(everyone.shift, 20*LEFT))
+
+
+class ButDots(Scene):
+    def construct(self):
+        but = TextMobject("but")
+        dots = TexMobject("\\dots")
+        dots.next_to(but, aligned_edge = DOWN)
+        but.shift(20*RIGHT)
+        self.play(ApplyMethod(but.shift, 20*LEFT))
+        self.play(Write(dots, run_time = 5))
+        self.dither()
+
+
+class ThreesomeOfNotation(Scene):
+    def construct(self):
+        exp = TexMobject("x^y = z")
+        log = TexMobject("\\log_x(z) = y")
+        rad = TexMobject("\\sqrt[y]{z} = x")
+        exp.to_edge(LEFT).shift(2*UP)
+        rad.to_edge(RIGHT).shift(2*DOWN)
+        x1, y1, eq, z1 = exp.split()
+        l, o, g, x2, p, z2, p, eq, y2 = log.split()
+        y3, r, r, z3, eq, x3 = rad.split()
+        vars1 = VMobject(x1, y1, z1).copy()
+        vars2 = VMobject(x2, y2, z2)
+        vars3 = VMobject(x3, y3, z3)
+
+        self.play(Write(exp))
+        self.play(Transform(vars1, vars2, path_arc = -np.pi))
+        self.play(Write(log))
+        self.play(Transform(vars1, vars3, path_arc = -np.pi))
+        self.play(Write(rad))
+        self.dither()
+
+
+class TwoThreeEightExample(Scene):
+    def construct(self):
+        start = TexMobject("2 \\cdot 2 \\cdot 2 = 8")
+        two1, dot1, two2, dot2, two3, eq, eight = start.split()
+        brace = Brace(VMobject(two1, two3), DOWN)
+        three = TexMobject("3").next_to(brace, DOWN, buff = 0.2)
+        rogue_two = two1.copy()
+
+        self.add(two1)
+        self.play(
+            Transform(rogue_two, two2),
+            Write(dot1),
+            run_time = 0.5
+        )
+        self.add(two2)
+        self.play(
+            Transform(rogue_two, two3),
+            Write(dot2),
+            run_time = 0.5
+        )
+        self.add(two3)
+        self.remove(rogue_two)
+        self.play(
+            Write(eq), Write(eight), 
+            GrowFromCenter(brace),
+            Write(three),
+            run_time = 1
+        )
+        self.dither()
+
+        exp = TexMobject("2^3")
+        exp.next_to(eq, LEFT)
+        exp.shift(0.2*UP)
+        base_two, exp_three = exp.split()
+        self.play(
+            Transform(
+                VMobject(two1, dot1, two2, dot2, brace, three),
+                exp_three,
+                path_arc = -np.pi/2
+            ),
+            Transform(two3, base_two)
+        )
+        self.clear()
+        self.add(base_two, exp_three, eq, eight)
+        self.dither(3)
+
+        rad_three, rad1, rad2, rad_eight, rad_eq, rad_two = \
+            TexMobject("\\sqrt[3]{8} = 2").split()
+        self.play(*[
+            Transform(*pair, path_arc = np.pi/2)
+            for pair in [
+                (exp_three, rad_three),
+                (VMobject(), rad1),
+                (VMobject(), rad2),
+                (eight, rad_eight),
+                (eq, rad_eq),
+                (base_two, rad_two)
+            ]
+        ])
+        self.dither()
+        self.play(ApplyMethod(
+            VMobject(rad1, rad2).highlight, RED,
+            rate_func = there_and_back,
+            run_time = 2
+        ))
+        self.remove(rad1, rad2)
+        self.dither()
+
+        l, o, g, log_two, p1, log_eight, p2, log_eq, log_three = \
+            TexMobject("\\log_2(8) = 3").split()
+        self.clear()
+        self.play(*[
+            Transform(*pair, path_arc = np.pi/2)
+            for pair in [
+                (rad1, l),
+                (rad2, o),
+                (rad2.copy(), g),
+                (rad_two, log_two),
+                (VMobject(), p1),
+                (rad_eight, log_eight),
+                (VMobject(), p2),
+                (rad_eq, log_eq),
+                (rad_three, log_three)
+            ]
+        ])
+        self.dither()
+        self.play(ApplyMethod(
+            VMobject(l, o, g).highlight, RED,
+            rate_func = there_and_back,
+            run_time = 2
+        ))
+        self.dither()
+
+class WhatTheHell(Scene):
+    def construct(self):
+        randy = Randolph()
+        randy.to_corner(DOWN+LEFT)
+        exp, rad, log = map(TexMobject,[
+            "2^3 = 8",
+            "\\sqrt[3]{8} = 2",
+            "\\log_2(8) = 3",
+        ])
+        # exp.highlight(BLUE_D)
+        # rad.highlight(RED_D)
+        # log.highlight(GREEN_D)
+        arrow1 = DoubleArrow(DOWN, UP)
+        arrow2 = arrow1.copy()
+        last = exp
+        for mob in arrow1, rad, arrow2, log:
+            mob.next_to(last, DOWN)
+            last = mob
+        q_marks = VMobject(*[
+            TexMobject("?!").next_to(arrow, RIGHT)
+            for arrow in arrow1, arrow2
+        ])
+        q_marks.highlight(RED_D)
+        everyone = VMobject(exp, rad, log, arrow1, arrow2, q_marks)
+        everyone.scale(0.7)
+        everyone.to_corner(UP+RIGHT)
+        phrases = [
+            TextMobject(
+                ["Communicate with", words]
+            ).next_to(mob, LEFT, buff = 1)
+            for words, mob in [
+                ("position", exp),
+                ("a new symbol", rad),
+                ("a word", log)
+            ]
+        ]
+        for phrase, color in zip(phrases, [BLUE, RED, GREEN]):
+            phrase.split()[1].highlight(color)
+
+        self.play(ApplyMethod(randy.change_mode, "angry"))
+        self.play(FadeIn(VMobject(exp, rad, log)))
+        self.play(
+            ShowCreationPerSubmobject(arrow1),
+            ShowCreationPerSubmobject(arrow2)
+        )
+        self.play(Write(q_marks))
+        self.dither()
+        self.remove(randy)
+        self.play(Write(VMobject(*phrases)))
+        self.dither()
+
+class Countermathematical(Scene):
+    def construct(self):
+        counterintuitive = TextMobject("Counterintuitive")
+        mathematical = TextMobject("mathematical")
+        intuitive = VMobject(*counterintuitive.split()[7:])
+        mathematical.shift(intuitive.get_left()-mathematical.get_left())
+
+        self.add(counterintuitive)
+        self.dither()
+        self.play(Transform(intuitive, mathematical))
+        self.dither()
+
+
+class PascalsCollision(Scene):
+    def construct(self):
+        pascals_triangle = PascalsTriangle()
+        pascals_triangle.scale(0.5)
+        final_triangle = PascalsTriangle()
+        final_triangle.fill_with_n_choose_k()
+        pascals_triangle.to_corner(UP+LEFT)
+        final_triangle.scale(0.7)
+        final_triangle.to_edge(UP)
+        equation = TexMobject([
+            "{n \\choose k}",
+            " = \\dfrac{n!}{(n-k)!k!}"
+        ])
+        equation.scale(0.5)
+        equation.to_corner(UP+RIGHT)
+        n_choose_k, formula = equation.split()
+        words = TextMobject("Seemingly unrelated")
+        words.shift(2*DOWN)
+        to_remove = VMobject(*words.split()[:-7])
+
+        self.add(pascals_triangle, n_choose_k, formula)
+        self.play(Write(words))
+        self.dither()
+        self.play(
+            Transform(pascals_triangle, final_triangle),
+            Transform(n_choose_k, final_triangle),
+            FadeOut(formula),
+            ApplyMethod(to_remove.shift, 5*DOWN)
+        )
+        self.dither()
+
+
+
+
+
+
+
+
+

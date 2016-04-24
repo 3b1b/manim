@@ -18,6 +18,7 @@ class NumberLine(VMobject):
         "numbers_with_elongated_ticks" : [0],
         "longer_tick_multiple" : 2,
         "number_at_center" : 0,
+        "propogate_style_to_family" : True
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
