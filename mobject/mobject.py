@@ -51,6 +51,11 @@ class Mobject(object):
         self.submobjects = list_update(self.submobjects, mobjects)
         return self
 
+    def remove(self, *mobjects):
+        for mobject in mobjects:
+            if mobject in self.submobjects:
+                self.submobjects.remove(mobject)
+
     def get_array_attrs(self):
         return ["points"]
 

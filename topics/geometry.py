@@ -91,13 +91,20 @@ class Line(VMobject):
         self.set_points_as_corners([self.start, self.end])
 
     def get_length(self):
-        return np.linalg.norm(self.start - self.end)
+        start, end = self.get_start_and_end()
+        return np.linalg.norm(start - end)
 
     def get_start_and_end(self):
-        return self.points[0], self.points[-1]
+        return self.get_start(), self.get_end()
+
+    def get_start(self):
+        return self.points[0]
+
+    def get_end(self):
+        return self.points[-1]
 
     def get_slope(self):
-        start, end = self.get_start_and_end()
+        end = self.get_end()
         rise, run = [
             float(end[i] - start[i])
             for i in [1, 0]
@@ -108,12 +115,25 @@ class Line(VMobject):
         start, end = self.get_start_and_end()
         return angle_of_vector(end-start)
 
+    def put_start_and_end_on(self, new_start, new_end):
+        if self.get_length() == 0:
+            #TODO, this is hacky
+            self.points[0] += 0.01*LEFT
+        new_length = np.linalg.norm(new_end - new_start)
+        new_angle = angle_of_vector(new_end - new_start)
+        self.scale(new_length / self.get_length())
+        self.rotate(new_angle - self.get_angle())
+        self.shift(new_start - self.get_start())
+        return self
+
+
 class Arrow(Line):
     CONFIG = {
         "color"      : YELLOW_C,
         "tip_length" : 0.25,
         "buff"       : 0.3,
         "propogate_style_to_family" : True,
+        "preserve_tip_size_when_scaling" : True,
     }
     def __init__(self, *args, **kwargs):
         if len(args) == 1:
@@ -123,28 +143,34 @@ class Arrow(Line):
         self.add_tip()
 
     def add_tip(self):
-        vect = self.start-self.end
-        length = np.linalg.norm(vect)
-        vect *= self.tip_length/length
+        vect = self.tip_length*RIGHT
+        vect = rotate_vector(vect, self.get_angle()+np.pi)
+        start, end = self.get_start_and_end()
         tip_points = [
-            self.end+rotate_vector(vect, u*np.pi/5)
+            end+rotate_vector(vect, u*np.pi/5)
             for u in 1, -1
         ]
         self.tip = VMobject(close_new_points = False)
         self.tip.set_anchor_points(
-            [tip_points[0], self.end, tip_points[1]],
+            [tip_points[0], end, tip_points[1]],
             mode = "corners"
         )
         self.add(self.tip)
         self.init_colors()
+
+    def scale(self, scale_factor):
+        Line.scale(self, scale_factor)
+        if self.preserve_tip_size_when_scaling:
+            self.remove(self.tip)
+            self.add_tip()
 
 class Vector(Arrow):
     CONFIG = {
         "color" : WHITE,
         "buff"  : 0,
     }
-    def __init__(self, start, direction, **kwargs):
-        Arrow.__init__(self, start, end, **kwargs)
+    def __init__(self, direction, **kwargs):
+        Arrow.__init__(self, ORIGIN, direction, **kwargs)
 
 class DoubleArrow(Arrow):
     def __init__(self, *args, **kwargs):
@@ -189,6 +215,16 @@ class Polygon(VMobject):
 
     def get_vertices(self):
         return self.get_anchors_and_handles()[0]
+
+class RegularPolygon(VMobject):
+    CONFIG = {
+        "start_angle" : 0
+    }
+    def __init__(self, n = 3, **kwargs):
+        digest_config(self, kwargs, locals())
+        start_vect = rotate_vector(RIGHT, self.start_angle)
+        vertices = compass_directions(n, start_angle)
+        Polygon.__init__(self, *vertices, **kwargs)
 
 
 class Rectangle(VMobject):

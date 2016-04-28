@@ -13,8 +13,6 @@ from topics.functions import *
 from topics.number_line import *
 from topics.combinatorics import PascalsTriangle
 from scene import Scene
-# from scene.zoomed_scene import ZoomedScene
-from camera import Camera, MovingCamera
 from mobject.svg_mobject import *
 
 from mobject.tex_mobject import *
@@ -247,6 +245,12 @@ class ThreesomeOfNotation(Scene):
         self.play(Write(rad))
         self.dither()
 
+        words = TextMobject("Artificially unrelated")
+        words.to_corner(UP+RIGHT)
+        words.highlight(YELLOW)
+        self.play(Write(words))
+        self.dither()
+
 
 class TwoThreeEightExample(Scene):
     def construct(self):
@@ -434,6 +438,65 @@ class PascalsCollision(Scene):
             FadeOut(formula),
             ApplyMethod(to_remove.shift, 5*DOWN)
         )
+        self.dither()
+
+
+class LogarithmProperties(Scene):
+    def construct(self):
+        randy = Randolph()
+        randy.to_corner()
+        bubble = ThoughtBubble().pin_to(randy)
+        props = [
+            TexMobject("\\log_a(x) = \\dfrac{\\log_b(a)}{\\log_b(x)}"),        
+            TexMobject("\\log_a(x) = \\dfrac{\\log_b(x)}{\\log_b(a)}"),
+            TexMobject("\\log_a(x) = \\log_b(x) - \\log_b(a)"),
+            TexMobject("\\log_a(x) = \\log_b(x) + \\log_b(a)"),
+            TexMobject("\\log_a(x) = \\dfrac{\\log_b(x)}{\\log_b(a)}"),            
+        ]
+        bubble.add_content(props[0])
+        words = TextMobject("What was it again?")
+        words.highlight(YELLOW)
+        words.scale(0.5)
+        words.next_to(props[0], UP)
+
+        self.play(
+            ApplyMethod(randy.change_mode, "confused"),
+            ShowCreation(bubble),
+            Write(words)
+        )
+        self.show_frame()
+        for i, prop in enumerate(props[1:]):
+            self.play(ApplyMethod(bubble.add_content, prop))
+            if i%2 == 0:
+                self.play(Blink(randy))
+            else:
+                self.dither()
+
+
+class HaveToShare(Scene):
+    def construct(self):
+        words = map(TextMobject, [
+            "Lovely", "Symmetrical", "Utterly Reasonable"
+        ])
+        for w1, w2 in zip(words, words[1:]):
+            w2.next_to(w1, DOWN)
+        VMobject(*words).center()
+        left_dot, top_dot, bottom_dot = [
+            Dot(point, radius = 0.1)
+            for point in ORIGIN, RIGHT+0.5*UP, RIGHT+0.5*DOWN
+        ]
+        line1, line2 = [
+            Line(left_dot.get_center(), dot.get_center(), buff = 0)
+            for dot in top_dot, bottom_dot
+        ]
+        share = VMobject(left_dot, top_dot, bottom_dot, line1, line2)
+        share.next_to(words[1], RIGHT, buff = 1)
+        share.highlight(RED)
+
+        for word in words:
+            self.play(FadeIn(word))
+        self.dither()
+        self.play(Write(share, run_time = 1))
         self.dither()
 
 

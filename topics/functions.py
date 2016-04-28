@@ -37,15 +37,13 @@ class ParametricFunction(VMobject):
     def generate_points(self):
         self.set_anchor_points([
             self.function(t)
-            for t in np.arange(self.t_min, self.t_max, self.epsilon)
+            for t in np.arange(
+                self.t_min, 
+                self.t_max+self.epsilon, 
+                self.epsilon
+            )
         ], mode = "smooth")
 
-
-class Axes(VMobject):
-    def generate_points(self):
-        self.x_axis = NumberLine(**kwargs)
-        self.y_axis = NumberLine(**kwargs).rotate(np.pi/2)
-        self.add(self.x_axis, self.y_axis)
 
 
         

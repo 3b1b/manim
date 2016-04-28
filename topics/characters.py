@@ -5,6 +5,8 @@ from mobject.svg_mobject import SVGMobject
 from mobject.vectorized_mobject import VMobject
 from mobject.tex_mobject import TextMobject
 
+from animation.transform import ApplyMethod
+
 
 PI_CREATURE_DIR = os.path.join(IMAGE_DIR, "PiCreature")
 PI_CREATURE_SCALE_VAL = 0.5
@@ -23,6 +25,7 @@ class PiCreature(SVGMobject):
         "stroke_width" : 0,
         "fill_opacity" : 1.0,
         "initial_scale_val" : 0.01,
+        "corner_scale_factor" : 0.75,
     }
     def __init__(self, mode = "plain", **kwargs):
         self.parts_named = False
@@ -57,6 +60,7 @@ class PiCreature(SVGMobject):
         self.body.set_fill(self.color)
         self.pupils.set_fill(BLACK)
         self.eyes.set_fill(WHITE)
+        return self
 
 
     def highlight(self, color):
@@ -94,6 +98,14 @@ class PiCreature(SVGMobject):
             )
         return self
 
+    def to_corner(self, vect = None):
+        if vect is not None:
+            SVGMobject.to_corner(self, vect)
+        else:
+            self.scale(self.corner_scale_factor)
+            self.to_corner(DOWN+LEFT)
+        return self
+
 
 class Randolph(PiCreature):
     pass #Nothing more than an alternative name
@@ -112,14 +124,22 @@ class Mathematician(PiCreature):
         "color" : GREY,
     }
 
+class Blink(ApplyMethod):
+    CONFIG = {
+        "rate_func" : squish_rate_func(there_and_back)
+    }
+    def __init__(self, pi_creature, **kwargs):
+        ApplyMethod.__init__(self, pi_creature.blink, **kwargs)
+
 class Bubble(SVGMobject):
     CONFIG = {
         "direction" : LEFT,
         "center_point" : ORIGIN,
-        "content_scale_factor" : 0.75, 
-        "height" : 4,
-        "width"  : 6,
+        "content_scale_factor" : 0.75,
+        "height" : 5,
+        "width"  : 8,
         "file_name" : None,
+        "propogate_style_to_family" : True,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs, locals())
@@ -176,7 +196,7 @@ class Bubble(SVGMobject):
         return self
 
     def clear(self):
-        self.add_content(Mobject())
+        self.add_content(VMobject())
         return self
 
 class SpeechBubble(Bubble):

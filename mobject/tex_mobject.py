@@ -2,7 +2,7 @@ from vectorized_mobject import VMobject
 from svg_mobject import SVGMobject, VMobjectFromSVGPathstring
 from helpers import *
 
-TEX_MOB_SCALE_VAL = 0.1
+TEX_MOB_SCALE_VAL = 0.05
 TEXT_MOB_SCALE_VAL = 0.05
 
 

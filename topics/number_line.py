@@ -97,6 +97,13 @@ class UnitInterval(NumberLine):
     }
 
 
+class Axes(VMobject):
+    def generate_points(self, **kwargs):
+        self.x_axis = NumberLine(**kwargs)
+        self.y_axis = NumberLine(**kwargs).rotate(np.pi/2)
+        self.add(self.x_axis, self.y_axis)
+
+
 class NumberPlane(VMobject):
     CONFIG = {
         "color" : BLUE_D,

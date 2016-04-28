@@ -40,22 +40,22 @@ class VMobject(Mobject):
                        fill_color = None, 
                        fill_opacity = None,
                        family = True):
-        if family:
-            change_func = self.set_family_attr
-        else:
-            change_func = lambda attr, value : setattr(self, attr, value)
-
         if stroke_color is not None:
-            change_func("stroke_rgb", color_to_rgb(stroke_color))
+            setattr(self, "stroke_rgb", color_to_rgb(stroke_color))
         if stroke_width is not None:
-            change_func("stroke_width", stroke_width)
+            setattr(self, "stroke_width", stroke_width)
         if fill_color is not None:
-            change_func("fill_rgb", color_to_rgb(fill_color))
+            setattr(self, "fill_rgb", color_to_rgb(fill_color))
         if fill_opacity is not None:
-            change_func("fill_opacity", fill_opacity)
+            setattr(self, "fill_opacity", fill_opacity)
+        if family:
+            kwargs = locals()
+            kwargs.pop("self")
+            for mob in self.submobjects:
+                mob.set_style_data(**kwargs)
         return self
 
-    def set_fill(self, color = None, opacity = 1.0, family = True):
+    def set_fill(self, color = None, opacity = None, family = True):
         return self.set_style_data(
             fill_color = color, 
             fill_opacity = opacity, 
@@ -75,7 +75,12 @@ class VMobject(Mobject):
         return self
 
     def get_fill_color(self):
-        return Color(rgb = self.fill_rgb)
+        try:
+            self.fill_rgb[self.fill_rgb<0] = 0
+            self.fill_rgb[self.fill_rgb>1] = 1
+            return Color(rgb = self.fill_rgb)
+        except:
+            return Color(WHITE)
 
     def get_fill_opacity(self):
         return self.fill_opacity
@@ -295,7 +300,9 @@ class VMobject(Mobject):
         #-An end, which is the starting portion of a later inner cubic
         if a <= 0 and b >= 1:
             self.set_points(mobject.points)
+            self.mark_paths_closed = mobject.mark_paths_closed
             return self
+        self.mark_paths_closed = False
         num_cubics = mobject.get_num_anchor_points()-1
         lower_index = int(a*num_cubics)
         upper_index = int(b*num_cubics)
@@ -318,10 +325,18 @@ class VMobject(Mobject):
 class VectorizedPoint(VMobject):
     CONFIG = {
         "color" : BLACK,
+        "artificial_width" : 0.01,
+        "artificial_height" : 0.01,
     }
     def __init__(self, location = ORIGIN, **kwargs):
         VMobject.__init__(self, **kwargs)
         self.set_points(np.array([location]))
+
+    def get_width(self):
+        return self.artificial_width
+
+    def get_height(self):
+        return self.artificial_height
 
 
 

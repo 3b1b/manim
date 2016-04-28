@@ -84,7 +84,7 @@ def color_to_rgb(color):
 def color_to_int_rgb(color):
     return (255*color_to_rgb(color)).astype('uint8')
 
-def compass_directions(n = 4, start_vect = UP):
+def compass_directions(n = 4, start_vect = RIGHT):
     angle = 2*np.pi/n
     return np.array([
         rotate_vector(start_vect, k*angle)
@@ -456,6 +456,9 @@ def angle_of_vector(vector):
     """
     Returns polar coordinate theta when vector is project on xy plane
     """
+    z = complex(*vector[:2])
+    if z == 0:
+        return 0
     return np.log(complex(*vector[:2])).imag
 
 
