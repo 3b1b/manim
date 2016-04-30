@@ -56,10 +56,10 @@ class PiCreature(SVGMobject):
         self.set_stroke(color = BLACK, width = self.stroke_width)
         if not self.parts_named:
             self.name_parts()
-        self.mouth.set_fill(BLACK)
-        self.body.set_fill(self.color)
-        self.pupils.set_fill(BLACK)
-        self.eyes.set_fill(WHITE)
+        self.mouth.set_fill(BLACK, opacity = 1)
+        self.body.set_fill(self.color, opacity = 1)
+        self.pupils.set_fill(BLACK, opacity = 1)
+        self.eyes.set_fill(WHITE, opacity = 1)
         return self
 
 

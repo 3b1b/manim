@@ -87,9 +87,11 @@ class VMobject(Mobject):
 
     def get_stroke_color(self):
         try:
+            self.stroke_rgb[self.stroke_rgb<0] = 0
+            self.stroke_rgb[self.stroke_rgb>1] = 1
             return Color(rgb = self.stroke_rgb)
         except:
-            return Color(rgb = 0.99*self.stroke_rgb)
+            return Color(WHITE)
 
     #TODO, get color?  Specify if stroke or fill
     #is the predominant color attribute?
@@ -191,6 +193,16 @@ class VMobject(Mobject):
             lambda m : m.is_subpath,
             self.submobjects
         )
+
+    def arrange_submobjects(self, 
+                            direction = RIGHT, 
+                            buff = DEFAULT_MOBJECT_TO_MOBJECT_BUFFER, 
+                            center = True):
+        for m1, m2 in zip(self.submobjects, self.submobjects[1:]):
+            m2.next_to(m1, direction, buff = buff)
+        if center:
+            self.center()
+        return self
 
     ## Information about line
 

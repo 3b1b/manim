@@ -98,6 +98,9 @@ class UnitInterval(NumberLine):
 
 
 class Axes(VMobject):
+    CONFIG = {
+        "propogate_style_to_family" : True
+    }
     def generate_points(self, **kwargs):
         self.x_axis = NumberLine(**kwargs)
         self.y_axis = NumberLine(**kwargs).rotate(np.pi/2)
@@ -116,9 +119,10 @@ class NumberPlane(VMobject):
         "x_line_frequency" : 1,
         "y_line_frequency" : 1,
         "secondary_line_ratio" : 1,
-        "written_coordinate_height" : 0.5,
+        "written_coordinate_height" : 0.2,
         "written_coordinate_nudge" : 0.1*(DOWN+RIGHT),
         "num_pair_at_center" : (0, 0),
+        "propogate_style_to_family" : False,
     }
     
     def generate_points(self):
@@ -160,7 +164,7 @@ class NumberPlane(VMobject):
     def init_colors(self):
         VMobject.init_colors(self)
         self.axes.set_stroke(self.axes_color)
-        # self.main_lines.set_stroke(self.color)
+        self.main_lines.set_stroke(self.color)
         self.secondary_lines.set_stroke(self.secondary_color, 1)
         return self
 

@@ -130,19 +130,18 @@ class Homotopy(Animation):
 
 class PhaseFlow(Animation):
     CONFIG = {
-        "virtual_time" : 1
+        "virtual_time" : 1,
+        "rate_func" : None,
     }
     def __init__(self, function, mobject, **kwargs):
         digest_config(self, kwargs, locals())        
-        self.get_nudge_func = lambda alpha_diff : \
-            lambda point : point + alpha_diff*function(point)
         Animation.__init__(self, mobject, **kwargs)
 
     def update_mobject(self, alpha):
         if hasattr(self, "last_alpha"):
-            nudge = self.virtual_time*(alpha-self.last_alpha)
+            dt = self.virtual_time*(alpha-self.last_alpha)
             self.mobject.apply_function(
-                self.get_nudge_func(nudge)
+                lambda p : p + dt*self.function(p)
             )
         self.last_alpha = alpha
 
@@ -160,19 +159,25 @@ class MoveAlongPath(Animation):
 
 class ApplyToCenters(Animation):
     def __init__(self, AnimationClass, mobjects, **kwargs):
-        centers = [mob.get_center() for mob in mobjects]
-        kwargs["mobject"] = Mobject().add_points(centers)
-        self.centers_container = AnimationClass(**kwargs)
-        kwargs.pop("mobject")
-        Animation.__init__(self, Mobject(*mobjects), **kwargs)
+        full_kwargs = AnimationClass.CONFIG
+        full_kwargs.update(kwargs)
+        full_kwargs["mobject"] = Mobject(*[
+            mob.get_point_mobject()
+            for mob in mobjects
+        ])
+        self.centers_container = AnimationClass(**full_kwargs)
+        full_kwargs.pop("mobject")
+        Animation.__init__(self, Mobject(*mobjects), **full_kwargs)
         self.name = str(self) + AnimationClass.__name__
 
     def update_mobject(self, alpha):
         self.centers_container.update_mobject(alpha)
-        points = self.centers_container.mobject.points
+        center_mobs = self.centers_container.mobject.split()
         mobjects = self.mobject.split()        
-        for point, mobject in zip(points, mobjects):
-            mobject.center().shift(point)
+        for center_mob, mobject in zip(center_mobs, mobjects):
+            mobject.shift(
+                center_mob.get_center()-mobject.get_center()
+            )
 
 
 

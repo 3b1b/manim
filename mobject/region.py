@@ -1,7 +1,6 @@
 import numpy as np
 import itertools as it
 from PIL import Image
-import cv2
 from copy import deepcopy
 
 from mobject import Mobject

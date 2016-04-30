@@ -82,7 +82,7 @@ def get_top_inverse(i, j):
 class TOP(VMobject):
     CONFIG = {
         "triangle_height_to_number_height" : 3,
-        "offset_multiple" : 1.2,
+        "offset_multiple" : 1.5,
         "radius" : 1.5,
         "propogate_style_to_family" : False,
     }
@@ -121,7 +121,7 @@ class TOP(VMobject):
             value = TexMobject(value)
         if isinstance(value, TOP):
             return self.put_top_on_vertix(index, value)
-        value.scale_to_fit_height(self.get_value_height())
+        self.rescale_corner_mobject(value)
         value.center()
         if index == 0:
             offset = -value.get_corner(UP+RIGHT)
@@ -134,6 +134,26 @@ class TOP(VMobject):
         value.shift(anchors[index])
         return value
 
+    def put_top_on_vertix(self, index, top):
+        top.scale_to_fit_height(2*self.get_value_height())
+        vertices = top.get_vertices()
+        vertices[index] = 0
+        start = reduce(op.add, vertices)/2
+        end = self.triangle.get_anchors_and_handles()[0][index]
+        top.shift(end-start)
+        return top
+
+    def put_in_vertex(self, index, mobject):
+        self.rescale_corner_mobject(mobject)
+        mobject.center()
+        mobject.shift(interpolate(
+            self.get_center(),
+            self.get_vertices()[index],
+            0.7
+        ))
+        return mobject
+
+
     def get_surrounding_circle(self, color = YELLOW):
         return Circle(
             radius = 1.7*self.radius,
@@ -143,19 +163,19 @@ class TOP(VMobject):
             (self.triangle.get_height()/6)*DOWN
         )
 
-    def put_top_on_vertix(self, index, top):
-        top.scale_to_fit_height(2*self.get_value_height())
-        top_anchors = list(
-            top.triangle.get_anchors_and_handles()[0][:3]
-        )
-        top_anchors[index] = 0
-        start = reduce(op.add, top_anchors)/2
-        end = self.triangle.get_anchors_and_handles()[0][index]
-        top.shift(end-start)
-        return top
+    def rescale_corner_mobject(self, mobject):
+        if mobject.get_height() > self.get_value_height():
+            mobject.scale_to_fit_height(self.get_value_height())
+        return self
 
     def get_value_height(self):
         return self.triangle.get_height()/self.triangle_height_to_number_height
+
+    def get_center(self):
+        return center_of_mass(self.get_vertices())
+
+    def get_vertices(self):
+        return self.triangle.get_anchors_and_handles()[0][:3]
 
     def reset_submobjects(self):
         self.submobjects = [self.triangle] + self.values
@@ -500,6 +520,251 @@ class AdditiveProperty(Scene):
             self.dither()
             self.remove(copies)
 
+
+class DrawInsideTriangle(Scene):
+    def construct(self):
+        top = TOP()
+        top.scale(2)
+        dot = top.put_in_vertex(0, Dot())
+        plus = top.put_in_vertex(1, TexMobject("+"))
+        times = top.put_in_vertex(2, TexMobject("\\times"))
+        plus.highlight(GREEN)
+        times.highlight(YELLOW)
+
+        self.add(top)
+        self.dither()
+        for mob in dot, plus, times:
+            self.play(Write(mob, run_time = 1))
+            self.dither()
+
+class ConstantOnTop(Scene):
+    def construct(self):
+        top = TOP()
+        dot = top.put_in_vertex(1, Dot())
+        times1 = top.put_in_vertex(0, TexMobject("\\times"))
+        times2 = top.put_in_vertex(2, TexMobject("\\times"))
+        times1.highlight(YELLOW)
+        times2.highlight(YELLOW)
+        three = top.put_on_vertex(1, "3")
+        lower_left_x = top.put_on_vertex(0, "x")
+        lower_right_x = top.put_on_vertex(2, "x")
+        x_cubed = TexMobject("x^3").to_edge(UP)
+        x_cubed.submobjects.reverse() #To align better        
+        cube_root_x = TexMobject("\\sqrt[3]{x}").to_edge(UP)
+
+        self.add(top)
+        self.play(ShowCreation(three))
+        self.play(
+            FadeIn(lower_left_x),
+            Write(x_cubed),
+            run_time = 1
+        )
+        self.dither()
+        self.play(*[
+            Transform(*pair, path_arc = np.pi)
+            for pair in [
+                (lower_left_x, lower_right_x),
+                (x_cubed, cube_root_x),
+            ]
+        ])
+        self.dither(2)
+        for mob in dot, times1, times2:
+            self.play(ShowCreation(mob))
+            self.dither()
+
+def get_const_top_TOP(*args):
+        top = TOP(*args)
+        dot = top.put_in_vertex(1, Dot())
+        times1 = top.put_in_vertex(0, TexMobject("\\times"))
+        times2 = top.put_in_vertex(2, TexMobject("\\times"))
+        times1.highlight(YELLOW)
+        times2.highlight(YELLOW)
+        top.add(dot, times1, times2)
+        return top
+
+
+class MultiplyWithConstantTop(Scene):
+    def construct(self):
+        top1 = get_const_top_TOP("x", "3")
+        top2 = get_const_top_TOP("y", "3")
+        top3 = get_const_top_TOP("xy", "3")
+        times = TexMobject("\\times")
+        equals = TexMobject("=")
+        top_exp_equation = VMobject(
+            top1, times, top2, equals, top3
+        )
+        top_exp_equation.arrange_submobjects()
+        old_style_exp = TexMobject("(x^3)(y^3) = (xy)^3")
+        old_style_exp.to_edge(UP)
+        old_style_exp.highlight(GREEN)
+        old_style_rad = TexMobject("\\sqrt[3]{x} \\sqrt[3]{y} = \\sqrt[3]{xy}")
+        old_style_rad.to_edge(UP)
+        old_style_rad.highlight(RED)
+
+        self.add(top_exp_equation, old_style_exp)
+        self.dither(3)
+
+        old_tops = [top1, top2, top3]
+        new_tops = []
+        for top in old_tops:
+            new_top = top.copy()
+            new_top.put_on_vertex(2, new_top.values[0])
+            new_top.shift(0.5*LEFT)
+            new_tops.append(new_top)
+        self.play(
+            Transform(old_style_exp, old_style_rad),
+            Transform(
+                VMobject(*old_tops),
+                VMobject(*new_tops),
+                path_arc = np.pi/2
+            )
+        )
+        self.dither(3)
+
+class RightStaysConstantQ(Scene):
+    def construct(self):
+        top1, top2, top3 = old_tops = [
+            TOP(None, s, "8")
+            for s in "x", "y", TexMobject("x?y")
+        ]
+        q_mark = TexMobject("?").scale(2)
+        equation = VMobject(
+            top1, q_mark, top2, TexMobject("="), top3
+        )
+        equation.arrange_submobjects(buff = 0.7)
+        symbols_at_top = VMobject(*[
+            top.values[1]
+            for top in top1, top2, top3
+        ])
+        symbols_at_lower_right = VMobject(*[
+            top.put_on_vertex(0, top.values[1].copy())
+            for top in top1, top2, top3
+        ])
+        old_style_eq1 = TexMobject("\\sqrt[x]{8} ? \\sqrt[y]{8} = \\sqrt[x?y]{8}")
+        old_style_eq1.highlight(BLUE)
+        old_style_eq2 = TexMobject("\\log_x(8) ? \\log_y(8) = \\log_{x?y}(8)")
+        old_style_eq2.highlight(YELLOW)
+        for eq in old_style_eq1, old_style_eq2:
+            eq.to_edge(UP)
+
+        randy = Randolph()
+        randy.to_corner()
+        bubble = ThoughtBubble().pin_to(randy)
+        bubble.add_content(TOP(None, None, "8"))
+
+        self.add(randy, bubble)
+        self.play(ApplyMethod(randy.change_mode, "pondering"))
+        self.dither(3)
+        triangle = bubble.content.triangle
+        eight = bubble.content.values[2]
+        bubble.clear()
+        self.play(
+            Transform(triangle, equation),
+            FadeOut(eight),
+            ApplyPointwiseFunction(
+                lambda p : (p+2*DOWN)*15/np.linalg.norm(p+2*DOWN),
+                bubble
+            ),
+            FadeIn(old_style_eq1),
+            ApplyMethod(randy.shift, 3*DOWN + 3*LEFT),
+            run_time = 2
+        )
+        self.remove(triangle)
+        self.add(equation)
+        self.dither(4)
+        self.play(
+            Transform(
+                symbols_at_top, symbols_at_lower_right, 
+                path_arc = np.pi/2
+            ),
+            Transform(old_style_eq1, old_style_eq2)
+        )
+        self.dither(2)
+
+
+class AOplusB(Scene):
+    def construct(self):
+        self.add(TexMobject(
+            "a \\oplus b = \\dfrac{1}{\\frac{1}{a} + \\frac{1}{b}}"
+        ).scale(2))
+        self.dither()
+
+
+class ConstantLowerRight(Scene):
+    def construct(self):
+        top = TOP()
+        times = top.put_in_vertex(0, TexMobject("\\times"))
+        times.highlight(YELLOW)
+        oplus = top.put_in_vertex(1, TexMobject("\\oplus"))
+        oplus.highlight(BLUE)
+        dot = top.put_in_vertex(2, Dot())
+        eight = top.put_on_vertex(2, TexMobject("8"))
+
+        self.add(top)
+        self.play(ShowCreation(eight))
+        for mob in dot, oplus, times:
+            self.play(ShowCreation(mob))
+            self.dither()
+
+        top.add(eight)
+        top.add(times, oplus, dot)
+        top1, top2, top3 = tops = [
+            top.copy() for i in range(3)
+        ]
+        big_oplus = TexMobject("\\oplus").scale(2).highlight(BLUE)
+        equals = TexMobject("=")
+        equation = VMobject(
+            top1, big_oplus, top2, equals, top3
+        )
+        equation.arrange_submobjects()
+        top3.shift(0.5*RIGHT)
+        x, y, xy = [
+            t.put_on_vertex(0, s)
+            for t, s in zip(tops, ["x", "y", "xy"])
+        ]
+        old_style_eq = TexMobject(
+            "\\dfrac{1}{\\frac{1}{\\log_x(8)} + \\frac{1}{\\log_y(8)}} = \\log_{xy}(8)"
+        )
+        old_style_eq.to_edge(UP).highlight(RED)
+
+        triple_top_copy = VMobject(*[
+            top.copy() for i in range(3)
+        ])
+        self.clear()
+        self.play(
+            Transform(triple_top_copy, VMobject(*tops)),
+            FadeIn(VMobject(x, y, xy, big_oplus, equals))
+        )
+        self.remove(triple_top_copy)
+        self.add(*tops)
+        self.play(Write(old_style_eq))
+        self.dither(3)
+
+        syms = VMobject(x, y, xy)
+        new_syms = VMobject(*[
+            t.put_on_vertex(1, s)
+            for t, s in zip(tops, ["x", "y", "x \\oplus y"])
+        ])
+        new_old_style_eq = TexMobject(
+            "\\sqrt[x]{8} \\sqrt[y]{8} = \\sqrt[X]{8}"
+        )
+        X = new_old_style_eq.split()[-4]
+        frac = TexMobject("\\frac{1}{\\frac{1}{x} + \\frac{1}{y}}")
+        frac.replace(X)
+        frac_lower_right = frac.get_corner(DOWN+RIGHT)
+        frac.scale(2)
+        frac.shift(frac_lower_right - frac.get_corner(DOWN+RIGHT))
+        new_old_style_eq.submobjects[-4] = frac
+        new_old_style_eq.to_edge(UP)
+        new_old_style_eq.highlight(RED)
+        big_times = TexMobject("\\times").highlight(YELLOW)
+        big_times.shift(big_oplus.get_center())
+        self.play(
+            Transform(old_style_eq, new_old_style_eq),
+            Transform(syms, new_syms, path_arc = np.pi/2),
+            Transform(big_oplus, big_times)
+        )
+        self.dither(4)
 
 
 
