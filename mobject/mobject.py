@@ -408,6 +408,16 @@ class Mobject(object):
             lambda m : m.get_num_points() > 0, 
             self.submobject_family()
         )
+        
+    def arrange_submobjects(self, 
+                            direction = RIGHT, 
+                            buff = DEFAULT_MOBJECT_TO_MOBJECT_BUFFER, 
+                            center = True):
+        for m1, m2 in zip(self.submobjects, self.submobjects[1:]):
+            m2.next_to(m1, direction, buff = buff)
+        if center:
+            self.center()
+        return self
 
     ## Alignment  
     def align_data(self, mobject):

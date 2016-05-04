@@ -45,6 +45,6 @@ def stage_animaions(module_name):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        raise Exception("No module give.")
+        raise Exception("No module given.")
     module_name = sys.argv[1]
     stage_animaions(module_name)

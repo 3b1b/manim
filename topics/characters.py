@@ -106,14 +106,25 @@ class PiCreature(SVGMobject):
             self.to_corner(DOWN+LEFT)
         return self
 
+    def get_bubble(self, bubble_type = "thought"):
+        if bubble_type == "thought":
+            bubble = ThoughtBubble()
+        elif bubble_type == "speech":
+            bubble = SpeechBubble()
+        else:
+            raise Exception("%s is an invalid bubble type"%bubble_type)
+        bubble.pin_to(self)
+        return bubble
+
 
 class Randolph(PiCreature):
     pass #Nothing more than an alternative name
 
 class Mortimer(PiCreature):
     CONFIG = {
-        "color" : "#be2612"
+        "color" : "#736357"
     }
+    
     def __init__(self, *args, **kwargs):
         PiCreature.__init__(self, *args, **kwargs)
         self.flip()
@@ -176,7 +187,7 @@ class Bubble(SVGMobject):
         if (mob_center[0] > 0) != (self.direction[0] > 0):
             self.flip()
         boundary_point = mobject.get_boundary_point(UP-self.direction)
-        vector_from_center = 1.5*(boundary_point-mob_center)
+        vector_from_center = 1.2*(boundary_point-mob_center)
         self.move_tip_to(mob_center+vector_from_center)
         return self
 
@@ -185,7 +196,7 @@ class Bubble(SVGMobject):
             self.submobjects.remove(self.content)
         scaled_width = self.content_scale_factor*self.get_width()
         if mobject.get_width() > scaled_width:
-            mobject.scale(scaled_width / mobject.get_width())
+            mobject.scale_to_fit_width(scaled_width)
         mobject.shift(self.get_bubble_center())
         self.content = mobject
         self.add(self.content)

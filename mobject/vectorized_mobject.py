@@ -194,16 +194,6 @@ class VMobject(Mobject):
             self.submobjects
         )
 
-    def arrange_submobjects(self, 
-                            direction = RIGHT, 
-                            buff = DEFAULT_MOBJECT_TO_MOBJECT_BUFFER, 
-                            center = True):
-        for m1, m2 in zip(self.submobjects, self.submobjects[1:]):
-            m2.next_to(m1, direction, buff = buff)
-        if center:
-            self.center()
-        return self
-
     ## Information about line
 
     def component_curves(self):

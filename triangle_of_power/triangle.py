@@ -19,7 +19,7 @@ from mobject.svg_mobject import *
 from mobject.vectorized_mobject import *
 from mobject.tex_mobject import *
 
-OPERATION_COLORS = [YELLOW, GREEN, BLUE]
+OPERATION_COLORS = [YELLOW, GREEN, RED]
 
 def get_equation(index, x = 2, y = 3, z = 8, expression_only = False):
     assert(index in [0, 1, 2])
@@ -136,7 +136,7 @@ class TOP(VMobject):
 
     def put_top_on_vertix(self, index, top):
         top.scale_to_fit_height(2*self.get_value_height())
-        vertices = top.get_vertices()
+        vertices = np.array(top.get_vertices())
         vertices[index] = 0
         start = reduce(op.add, vertices)/2
         end = self.triangle.get_anchors_and_handles()[0][index]
@@ -767,15 +767,70 @@ class ConstantLowerRight(Scene):
         self.dither(4)
 
 
-
-class Test(Scene):
+class TowerExponentFrame(Scene):
     def construct(self):
-        TOP(2, 3, 8).highlight(BLUE).show()
+        words = TextMobject("""
+            Consider an expression like $3^{3^3}$.  It's 
+            ambiguous whether this means $27^3$ or $3^{27}$,
+            which is the difference between $19{,}683$ and
+            $7{,}625{,}597{,}484{,}987$.  But with the triangle
+            of power, the difference is crystal clear:
+        """)
+        words.scale_to_fit_width(2*SPACE_WIDTH-1)
+        words.to_edge(UP)
+        top1 = TOP(TOP(3, 3), 3)
+        top2 = TOP(3, (TOP(3, 3)))
+        for top in top1, top2:
+            top.next_to(words, DOWN)
+        top1.shift(3*LEFT)
+        top2.shift(3*RIGHT)
+
+        self.add(words, top1, top2)
+        self.dither()        
+
+
+class ExponentialGrowth(Scene):
+    def construct(self):
+        words = TextMobject("""
+            Let's say you are studying a certain growth rate, 
+            and you come across an expression like $T^a$.  It
+            matters a lot whether you consider $T$ or $a$
+            to be the variable, since exponential growth and 
+            polynomial growth have very different flavors.  The 
+            nice thing about having a triangle that you can write 
+            inside is that you can clarify this kind of ambiguity
+            by writing a little dot next to the constant and 
+            a ``$\\sim$'' next to the variable.
+        """)
+        words.scale(0.75)
+        words.to_edge(UP)
+        top = TOP("T", "a")
+        top.next_to(words, DOWN)
+        dot = top.put_in_vertex(0, TexMobject("\\cdot"))
+        sim = top.put_in_vertex(1, TexMobject("\\sim"))
+
+        self.add(words, top, dot, sim)
+        self.show_frame()
+        self.dither()
 
 
 
 
+class GoExplore(Scene):
+    def construct(self):
+        explore = TextMobject("Go explore!")
+        by_the_way = TextMobject("by the way \\dots")
+        by_the_way.shift(20*RIGHT)
 
+        self.play(Write(explore))
+        self.dither(4)
+        self.play(
+            ApplyMethod(
+                VMobject(explore, by_the_way).shift,
+                20*LEFT
+            )
+        )
+        self.dither(3)
 
 
 

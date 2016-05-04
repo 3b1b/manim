@@ -108,11 +108,14 @@ class Brace(TexMobject):
         for mob in mobject, self:
             mob.rotate(angle)
     
-def tex_hash(expression):
-    return str(hash(expression))
+def tex_hash(expression, template_tex_file):
+    return str(hash(expression + template_tex_file))
 
 def tex_to_svg_file(expression, template_tex_file):
-    image_dir = os.path.join(TEX_IMAGE_DIR, tex_hash(expression))
+    image_dir = os.path.join(
+        TEX_IMAGE_DIR, 
+        tex_hash(expression, template_tex_file)
+    )
     if os.path.exists(image_dir):
         return get_sorted_image_list(image_dir)
     tex_file = generate_tex_file(expression, template_tex_file)
@@ -121,7 +124,10 @@ def tex_to_svg_file(expression, template_tex_file):
 
 
 def generate_tex_file(expression, template_tex_file):
-    result = os.path.join(TEX_DIR, tex_hash(expression))+".tex"
+    result = os.path.join(
+        TEX_DIR, 
+        tex_hash(expression, template_tex_file)
+    )+".tex"
     if not os.path.exists(result):
         print "Writing \"%s\" to %s"%(
             "".join(expression), result
