@@ -25,7 +25,7 @@ from mobject.vectorized_mobject import *
 
 
 ## To watch one of these scenes, run the following:
-## python extract_scene.py -p <SceneName>
+## python extract_scenes.py -p <SceneName>
 
 class SquareToCircle(Scene):
     def construct(self):
@@ -35,8 +35,18 @@ class SquareToCircle(Scene):
         self.play(Transform(square, circle))
         self.dither()
 
+class WarpSquare(Scene):
+    def construct(self):
+        square = Square()
+        self.play(ApplyPointwiseFunction(
+            lambda (x, y, z) : complex_to_R3(np.exp(complex(x, y))),
+            square
+        ))
+        self.dither()
 
 
-
+class WriteStuff(Scene):
+    def construct(self):
+        self.play(Write(TextMobject("Stuff").scale(3)))
 
 

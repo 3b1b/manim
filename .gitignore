@@ -1,2 +1,7 @@
 *.pyc
 animation_files/
+.DS_Store
+homeless.py
+ka_playgrounds/
+playground.py
+prettiness_hall_of_fame.py

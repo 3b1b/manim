@@ -27,16 +27,6 @@ cd aggdraw-64bits
 ```
 
 ## How to Use
-Not exactly sure. I think I'm supposed to run `python extract_scene.py
-generate_logo.py`, but that fails with the following error.
+Try running the following:
+python extract_scene.py -p example_scenes.py SquareToCircle
 
-```
-Traceback (most recent call last):
-  File "extract_scene.py", line 205, in main
-    handle_scene(SceneClass(**scene_kwargs), **config)
-  File "/Users/scott/scratch/manim/scene/scene.py", line 32, in __init__
-    self.construct(*self.construct_args)
-  File "/Users/scott/scratch/manim/./generate_logo.py", line 50, in construct
-    self.interpolation_factor
-TypeError: interpolate() takes exactly 5 arguments (4 given)
-```
