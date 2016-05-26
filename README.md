@@ -17,10 +17,7 @@ This doesn't install freetype, but I don't think its required for this project
 
 ```
 cd $TMPDIR
-# or hg clone https://stefanfoulis@bitbucket.org/2degrees/aggdraw-64bits
-# instead of the next 2 commands
-wget https://bitbucket.org/2degrees/aggdraw-64bits/get/a95a86958b68.zip
-unzip a95a86958b68.zip -d aggdraw-64bits
+git clone https://github.com/scottopell/aggdraw-64bits
 cd aggdraw-64bits
 /usr/local/bin/python setup.py build_ext -i
 /usr/local/bin/python setup.py install
@@ -29,4 +26,3 @@ cd aggdraw-64bits
 ## How to Use
 Try running the following:
 python extract_scene.py -p example_scenes.py SquareToCircle
-
