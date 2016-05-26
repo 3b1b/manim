@@ -1,0 +1,7 @@
+aggdraw===1.1-64bits
+colour==0.1.2
+numpy==1.11.0
+Pillow==3.2.0
+progressbar==2.3
+scipy==0.17.1
+tqdm==4.7.1
