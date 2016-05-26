@@ -9,6 +9,8 @@ from scene import Scene
 
 from helpers import *
 
+## Warning, much of what is in this class
+## likely not supported anymore.
 
 class LogoGeneration(Scene):
     CONFIG = {
