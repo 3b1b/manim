@@ -53,7 +53,7 @@ LEFT_SIDE  = SPACE_WIDTH*LEFT
 RIGHT_SIDE = SPACE_WIDTH*RIGHT
 
 THIS_DIR          = os.path.dirname(os.path.realpath(__file__))
-FILE_DIR          = os.path.join(THIS_DIR, os.pardir, "animation_files")
+FILE_DIR          = os.path.join(THIS_DIR, "animation_files")
 IMAGE_DIR         = os.path.join(FILE_DIR, "images")
 GIF_DIR           = os.path.join(FILE_DIR, "gifs")
 MOVIE_DIR         = os.path.join(FILE_DIR, "movies")
@@ -63,7 +63,7 @@ TEX_IMAGE_DIR     = os.path.join(IMAGE_DIR, "Tex")
 MOBJECT_DIR       = os.path.join(FILE_DIR, "mobjects")
 IMAGE_MOBJECT_DIR = os.path.join(MOBJECT_DIR, "image")
 
-for folder in [IMAGE_DIR, GIF_DIR, MOVIE_DIR, TEX_DIR, 
+for folder in [FILE_DIR, IMAGE_DIR, GIF_DIR, MOVIE_DIR, TEX_DIR,
                TEX_IMAGE_DIR, MOBJECT_DIR, IMAGE_MOBJECT_DIR,
                STAGED_SCENES_DIR]:
     if not os.path.exists(folder):
