@@ -1,8 +1,8 @@
 import os
 import numpy as np
 
-DEFAULT_HEIGHT = 1440
-DEFAULT_WIDTH  = 2560
+DEFAULT_HEIGHT = 1080
+DEFAULT_WIDTH  = 1920
 DEFAULT_FRAME_DURATION = 0.04
 
 #There might be other configuration than pixel_shape later...
@@ -15,7 +15,7 @@ MEDIUM_QUALITY_CAMERA_CONFIG = {
 }
 
 LOW_QUALITY_CAMERA_CONFIG = {
-    "pixel_shape" : (576, 1024),
+    "pixel_shape" : (480, 720),
 }
 
 

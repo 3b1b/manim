@@ -408,7 +408,7 @@ class Mobject(object):
             lambda m : m.get_num_points() > 0, 
             self.submobject_family()
         )
-        
+
     def arrange_submobjects(self, 
                             direction = RIGHT, 
                             buff = DEFAULT_MOBJECT_TO_MOBJECT_BUFFER, 
@@ -505,7 +505,8 @@ class Mobject(object):
     def repeat_submobject(self, submob):
         return submob.copy()
 
-    def interpolate(self, mobject1, mobject2, alpha, path_func):
+    def interpolate(self, mobject1, mobject2, 
+                    alpha, path_func = straight_path):
         """
         Turns target_mobject into an interpolation between mobject1 
         and mobject2.
