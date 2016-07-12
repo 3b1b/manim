@@ -142,10 +142,13 @@ class Arrow(Line):
         Line.__init__(self, *args, **kwargs)
         self.add_tip()
 
-    def add_tip(self):
+    def add_tip(self, add_at_end = True):
         vect = self.tip_length*RIGHT
         vect = rotate_vector(vect, self.get_angle()+np.pi)
         start, end = self.get_start_and_end()
+        if not add_at_end:
+            start, end = end, start
+            vect = -vect
         tip_points = [
             end+rotate_vector(vect, u*np.pi/5)
             for u in 1, -1
@@ -175,9 +178,8 @@ class Vector(Arrow):
 class DoubleArrow(Arrow):
     def __init__(self, *args, **kwargs):
         Arrow.__init__(self, *args, **kwargs)
-        self.start, self.end = self.end, self.start
-        self.add_tip()
-        self.start, self.end = self.end, self.start
+        self.add_tip(add_at_end = False)
+
 
 class Cross(VMobject):
     CONFIG = {

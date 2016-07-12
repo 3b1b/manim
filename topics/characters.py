@@ -106,11 +106,11 @@ class PiCreature(SVGMobject):
             self.to_corner(DOWN+LEFT)
         return self
 
-    def get_bubble(self, bubble_type = "thought"):
+    def get_bubble(self, bubble_type = "thought", **kwargs):
         if bubble_type == "thought":
-            bubble = ThoughtBubble()
+            bubble = ThoughtBubble(**kwargs)
         elif bubble_type == "speech":
-            bubble = SpeechBubble()
+            bubble = SpeechBubble(**kwargs)
         else:
             raise Exception("%s is an invalid bubble type"%bubble_type)
         bubble.pin_to(self)
@@ -191,13 +191,19 @@ class Bubble(SVGMobject):
         self.move_tip_to(mob_center+vector_from_center)
         return self
 
-    def add_content(self, mobject):
-        if self.content in self.submobjects:
-            self.submobjects.remove(self.content)
+    def position_mobject_inside(self, mobject):
         scaled_width = self.content_scale_factor*self.get_width()
         if mobject.get_width() > scaled_width:
             mobject.scale_to_fit_width(scaled_width)
-        mobject.shift(self.get_bubble_center())
+        mobject.shift(
+            self.get_bubble_center() - mobject.get_center()
+        )
+        return mobject
+
+    def add_content(self, mobject):
+        if self.content in self.submobjects:
+            self.submobjects.remove(self.content)
+        self.position_mobject_inside(mobject)
         self.content = mobject
         self.add(self.content)
         return self

@@ -15,7 +15,7 @@ MEDIUM_QUALITY_CAMERA_CONFIG = {
 }
 
 LOW_QUALITY_CAMERA_CONFIG = {
-    "pixel_shape" : (480, 720),
+    "pixel_shape" : (480, 853),
 }
 
 
@@ -53,7 +53,7 @@ LEFT_SIDE  = SPACE_WIDTH*LEFT
 RIGHT_SIDE = SPACE_WIDTH*RIGHT
 
 THIS_DIR          = os.path.dirname(os.path.realpath(__file__))
-FILE_DIR          = os.path.join(THIS_DIR, "animation_files")
+FILE_DIR          = os.path.join(THIS_DIR, "files")
 IMAGE_DIR         = os.path.join(FILE_DIR, "images")
 GIF_DIR           = os.path.join(FILE_DIR, "gifs")
 MOVIE_DIR         = os.path.join(FILE_DIR, "movies")

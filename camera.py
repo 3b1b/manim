@@ -129,8 +129,6 @@ class Camera(object):
             if len(points) == 0:
                 continue
             coords = self.points_to_pixel_coords(points)
-            if np.all(~self.on_screen_pixels(coords)):
-                return result
             start = "M%d %d"%tuple(coords[0])
             #(handle1, handle2, anchor) tripletes
             triplets = zip(*[

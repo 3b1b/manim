@@ -12,8 +12,21 @@ class SVGMobject(VMobject):
     }
     def __init__(self, svg_file, **kwargs):
         digest_config(self, kwargs, locals())
+        self.ensure_valid_file()
         VMobject.__init__(self, **kwargs)
         self.move_into_position()
+
+    def ensure_valid_file(self):
+        possible_paths = [
+            self.svg_file,
+            os.path.join(IMAGE_DIR, self.svg_file),
+            os.path.join(IMAGE_DIR, self.svg_file + ".svg"),
+        ]
+        for path in possible_paths:
+            if os.path.exists(path):
+                self.svg_file = path
+                return
+        raise IOError("No file matching %s in image directory"%self.svg_file)
 
     def generate_points(self):
         doc = minidom.parse(self.svg_file)

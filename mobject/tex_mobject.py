@@ -34,13 +34,15 @@ class TexMobject(SVGMobject):
         "next_to_direction" : RIGHT,
         "next_to_buff"      : 0.25,
         "initial_scale_val" : TEX_MOB_SCALE_VAL,
+        "organize_left_to_right" : True,        
         "propogate_style_to_family" : True,
     }
     def __init__(self, expression, **kwargs):
         digest_config(self, kwargs, locals())
         VMobject.__init__(self, **kwargs)
         self.move_into_position()
-        self.organize_submobjects()
+        if self.organize_left_to_right:
+            self.organize_submobjects_left_to_right()
 
     def path_string_to_mobject(self, path_string):
         #Overwrite superclass default to use
@@ -78,7 +80,7 @@ class TexMobject(SVGMobject):
         self.submobjects = subs
         return self
 
-    def organize_submobjects(self):
+    def organize_submobjects_left_to_right(self):
         self.submobjects.sort(
             lambda m1, m2 : int((m1.get_left()-m2.get_left())[0])
         )
