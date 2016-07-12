@@ -70,15 +70,15 @@ class NotationReflectsMath(Scene):
         )
         self.dither(2)
 
-class AssymetriesInTheMath(Scene):
+class AsymmetriesInTheMath(Scene):
     def construct(self):
         assyms_of_top = VMobject(
-            TextMobject("Assymetries of "),
+            TextMobject("Asymmetries of "),
             TOP("a", "b", "c", radius = 0.75).highlight(BLUE)
         ).arrange_submobjects()
         assyms_of_top.to_edge(UP)
         assyms_of_math = TextMobject("""
-            Assymetries of 
+            Asymmetries of 
             $\\underbrace{a \\cdot a \\cdots a}_{\\text{$b$ times}} = c$
         """)
         VMobject(*assyms_of_math.split()[13:]).highlight(YELLOW)

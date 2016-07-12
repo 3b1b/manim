@@ -19,7 +19,7 @@ from mobject.svg_mobject import *
 from mobject.vectorized_mobject import *
 from mobject.tex_mobject import *
 
-OPERATION_COLORS = [YELLOW, GREEN, RED]
+OPERATION_COLORS = [YELLOW, GREEN, BLUE_B]
 
 def get_equation(index, x = 2, y = 3, z = 8, expression_only = False):
     assert(index in [0, 1, 2])
@@ -69,14 +69,14 @@ def get_top_inverse_rules():
         result.append(VMobject(top, eq))
     return result
 
-
 def get_top_inverse(i, j):
     args = [None]*3
+    k = set([0, 1, 2]).difference([i, j]).pop()
     args[i] = ["x", "y", "z"][i]
     big_top = TOP(*args)
     args[j] = ["x", "y", "z"][j]
-    lil_top = TOP(*args)
-    big_top.set_value(j, lil_top)
+    lil_top = TOP(*args, triangle_height_to_number_height = 1.5)
+    big_top.set_value(k, lil_top)
     return big_top
 
 class TOP(VMobject):
@@ -164,8 +164,7 @@ class TOP(VMobject):
         )
 
     def rescale_corner_mobject(self, mobject):
-        if mobject.get_height() > self.get_value_height():
-            mobject.scale_to_fit_height(self.get_value_height())
+        mobject.scale_to_fit_height(self.get_value_height())
         return self
 
     def get_value_height(self):
@@ -254,22 +253,22 @@ class AllThree(Scene):
         for i in 2, 1, 0:
             new_args = list(args)
             new_args[i] = None
-            top = TOP(*new_args)
+            top = TOP(*new_args, triangle_height_to_number_height = 2)
             # top.highlight(OPERATION_COLORS[i])
-            top.shift(i*5*LEFT)
+            top.shift(i*4.5*LEFT)
             equation = get_equation(i, expression_only = True)
-            equation.scale(2)
+            equation.scale(3)
             equation.next_to(top, DOWN, buff = 0.7)
             tops.append(top)
             equations.append(equation)
         VMobject(*tops+equations).center()
-        name = TextMobject("Triangle of Power")
-        name.to_edge(UP)
+        # name = TextMobject("Triangle of Power")
+        # name.to_edge(UP)
 
         for top, eq in zip(tops, equations):
             self.play(FadeIn(top), FadeIn(eq))
         self.dither(3)
-        self.play(Write(name))
+        # self.play(Write(name))
         self.dither()
 
 class SixDifferentInverses(Scene):
@@ -299,6 +298,7 @@ class SixDifferentInverses(Scene):
         top_rules = get_top_inverse_rules()
         for rule, top_rule in zip(rules, top_rules):
             top_rule.scale_to_fit_height(1.5)
+            top_rule.center()
             top_rule.shift(rule.get_center())
         self.play(*map(FadeOut, rules))
         self.remove(*rules)
@@ -325,13 +325,14 @@ class SixDifferentInverses(Scene):
         lil_top, lil_symbol, symbol_index = None, None, None
         big_top = top_rule.submobjects[0]
         equals, right_symbol = top_rule.submobjects[1].split()
-        for value in big_top.values:
+        for i, value in enumerate(big_top.values):
             if isinstance(value, TOP):
                 lil_top = value
-                i = big_top.values.index(lil_top)
-                lil_symbol = lil_top.values[i]
             elif isinstance(value, TexMobject):
-                symbol_index = big_top.values.index(value)
+                symbol_index = i
+            else: 
+                lil_symbol_index = i
+        lil_symbol = lil_top.values[lil_symbol_index]
                 
         assert(lil_top is not None and lil_symbol is not None)
         cancel_parts = [
