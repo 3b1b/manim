@@ -74,11 +74,11 @@ class PiCreature(SVGMobject):
     def change_mode(self, mode):
         curr_center = self.get_center()
         curr_height = self.get_height()
-        flip = self.is_flipped()
-        self.__class__.__init__(self, mode)
+        should_be_flipped = self.is_flipped()
+        self.__init__(mode)
         self.scale_to_fit_height(curr_height)
         self.shift(curr_center)
-        if flip:
+        if should_be_flipped^self.is_flipped():
             self.flip()
         return self
 
@@ -129,7 +129,7 @@ class Mortimer(PiCreature):
         PiCreature.__init__(self, *args, **kwargs)
         self.flip()
 
-
+        
 class Mathematician(PiCreature):
     CONFIG = {
         "color" : GREY,

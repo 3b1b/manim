@@ -9,8 +9,7 @@ class FunctionGraph(VMobject):
         "color" : BLUE_D,
         "x_min" : -SPACE_WIDTH,
         "x_max" : SPACE_WIDTH,
-        "space_unit_to_num" : 1,
-        "epsilon" : 0.5,
+        "num_steps" : 20,
     }
     def __init__(self, function, **kwargs):
         self.function = function
@@ -19,8 +18,7 @@ class FunctionGraph(VMobject):
     def generate_points(self):
         self.set_anchor_points([
             x*RIGHT + self.function(x)*UP
-            for pre_x in np.arange(self.x_min, self.x_max, self.epsilon)
-            for x in [self.space_unit_to_num*pre_x]
+            for x in np.linspace(self.x_min, self.x_max, self.num_steps)
         ], mode = "smooth")
 
 

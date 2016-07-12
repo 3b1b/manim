@@ -114,6 +114,17 @@ class Flash(Animation):
             alpha
         )
 
+class MoveAlongPath(Animation):
+    def __init__(self, mobject, vmobject, **kwargs):
+        digest_config(self, kwargs, locals())
+        Animation.__init__(self, mobject, **kwargs)
+
+    def update_mobject(self, alpha):
+        self.mobject.shift(
+            self.vmobject.point_from_proportion(alpha) - \
+            self.mobject.get_center()
+        )
+
 class Homotopy(Animation):
     def __init__(self, homotopy, mobject, **kwargs):
         """

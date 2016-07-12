@@ -34,7 +34,7 @@ class TexMobject(SVGMobject):
         "next_to_direction" : RIGHT,
         "next_to_buff"      : 0.25,
         "initial_scale_val" : TEX_MOB_SCALE_VAL,
-        "organize_left_to_right" : True,        
+        "organize_left_to_right" : False,
         "propogate_style_to_family" : True,
     }
     def __init__(self, expression, **kwargs):

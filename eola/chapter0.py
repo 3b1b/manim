@@ -16,6 +16,7 @@ from scene import Scene
 from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
+from mobject.vectorized_mobject import *
 
 from eola.utils import *
 
@@ -37,22 +38,20 @@ class OpeningQuote(Scene):
         words.to_edge(UP)        
         for mob in words.submobjects[48:49+13]:
             mob.highlight(GREEN)
-        words.show()
         author = TextMobject("-Hermann Weyl")
         author.highlight(YELLOW)
         author.next_to(words, DOWN)
 
-        self.play(Write(words))
-        self.dither()
-        self.play(FadeIn(author))
+        self.play(FadeIn(words))
+        self.dither(3)
+        self.play(Write(author))
         self.dither()
 
 
 class AboutLinearAlgebra(Scene):
     def construct(self):
         self.show_dependencies()
-        self.linalg_is_confusing()
-        self.ask_questions()
+        self.to_thought_bubble()
 
     def show_dependencies(self):
         linalg = TextMobject("Linear Algebra")
@@ -86,7 +85,7 @@ class AboutLinearAlgebra(Scene):
         self.dither()
         self.linalg = linalg
 
-    def linalg_is_confusing(self):
+    def to_thought_bubble(self):
         linalg = self.linalg
         all_else = list(self.mobjects)
         all_else.remove(linalg)
@@ -94,6 +93,7 @@ class AboutLinearAlgebra(Scene):
         randy.to_corner()
         bubble = randy.get_bubble(width = 10)
         new_linalg = bubble.position_mobject_inside(linalg.copy())
+        q_marks = TextMobject("???").next_to(randy, UP)
 
         self.play(*map(FadeOut, all_else))
         self.remove(*all_else)
@@ -102,17 +102,44 @@ class AboutLinearAlgebra(Scene):
             Write(bubble),
             FadeIn(randy)
         )
-        self.play(ApplyMethod(randy.change_mode, "confused"))
         self.dither()
-        self.play(Blink(randy))
-        self.play(FadeOut(linalg))
-        self.remove(linalg)
 
-        self.randy, self.bubble = randy, bubble
+        topics = [
+            self.get_matrix_multiplication(),
+            self.get_determinant(),
+            self.get_cross_product(),
+            self.get_eigenvalue(),
+        ]
+        questions = [
+            self.get_matrix_multiplication_question(),
+            self.get_cross_product_question(),
+            self.get_eigen_question(),
+        ]
+        for count, topic in enumerate(topics + questions):
+            bubble.position_mobject_inside(topic)            
+            if count == len(topics):
+                self.play(FadeOut(linalg))
+                self.play(
+                    ApplyMethod(randy.change_mode, "confused"),
+                    Write(q_marks, run_time = 1)
+                )
+                linalg = VectorizedPoint(linalg.get_center())
+            if count > len(topics):
+                self.remove(linalg)
+                self.play(FadeIn(topic))
+                linalg = topic
+            else:
+                self.play(Transform(linalg, topic))
 
-    def ask_questions(self):
-        randy, bubble = self.randy, self.bubble
-        matrix_multiplication = TexMobject("""
+            if count %3 == 0:
+                self.play(Blink(randy))
+                self.dither()
+            else:
+                self.dither(2)
+
+
+    def get_matrix_multiplication(self):
+        return TexMobject("""
             \\left[
                 \\begin{array}{cc}
                     a & b \\\\
@@ -134,6 +161,44 @@ class AboutLinearAlgebra(Scene):
             \\right]
         """)
 
+    def get_determinant(self):
+        return TexMobject("""
+            \\text{Det}\\left(
+                \\begin{array}{cc}
+                    a & b \\\\
+                    c & d
+                \\end{array}
+            \\right)
+            = 
+            ac - bc
+        """)
+
+    def get_cross_product(self):
+        return TexMobject("""
+            \\vec\\textbf{v} \\times \\textbf{w} = 
+            \\text{Det}\\left(
+                \\begin{array}{ccc}
+                    \\hat{\imath} & \\hat{\jmath} & \\hat{k} \\\\
+                    v_1 & v_2 & v_3 \\\\
+                    w_1 & w_2 & w_3 \\\\
+                \\end{array}
+            \\right)
+        """)
+
+    def get_eigenvalue(self):
+        result = TextMobject("\\Text{Det}\\left(A - \\lambda I \\right) = 0")
+        result.submobjects[-5].highlight(YELLOW)
+        return result
+
+    def get_matrix_multiplication_question(self):
+        why = TextMobject("Why?").highlight(BLUE) 
+        mult = self.get_matrix_multiplication()
+        why.next_to(mult, UP)
+        result = VMobject(why, mult)
+        result.get_center = lambda : mult.get_center()
+        return result
+
+    def get_cross_product_question(self):
         cross = TexMobject("\\vec{v} \\times \\vec{w}")
         left_right_arrow = DoubleArrow(Point(LEFT), Point(RIGHT))
         det = TextMobject("Det")
@@ -143,19 +208,16 @@ class AboutLinearAlgebra(Scene):
         q_mark.next_to(left_right_arrow, UP)
         cross_question = VMobject(cross, left_right_arrow, q_mark, det)
         cross_question.get_center = lambda : left_right_arrow.get_center()
+        return cross_question
 
-        eigen_q = TextMobject("Eigen?")
+    def get_eigen_question(self):
+        result = TextMobject(
+            "What the heck \\\\ does ``eigen'' mean?",
 
-        for mob in matrix_multiplication, cross_question, eigen_q:
-            bubble.position_mobject_inside(mob)
-            self.play(FadeIn(mob))
-            if randy.mode is not "pondering":
-                self.play(ApplyMethod(randy.change_mode, "pondering"))
-                self.dither()
-            else:
-                self.dither(2)
-            self.remove(mob)
-
+        )
+        for mob in result.submobjects[-11:-6]:
+            mob.highlight(YELLOW)
+        return result
 
 
 class NumericVsGeometric(Scene):
@@ -265,9 +327,9 @@ class NumericVsGeometric(Scene):
 class ExampleTransformation(LinearTransformationScene):
     def construct(self):
         self.setup()
+        self.add_vector(np.array(TRANFORMED_VECTOR).flatten())
         self.apply_matrix(EXAMPLE_TRANFORM)
         self.dither()
-
 
 
 class NumericToComputations(Scene):
@@ -284,6 +346,273 @@ class NumericToComputations(Scene):
         self.dither()
 
 
+
+class LinAlgPyramid(Scene):
+    def construct(self):
+        rects = self.get_rects()
+        words = self.place_words_in_rects([
+            "Geometric understanding",
+            "Computations",
+            "Uses"
+        ], rects)
+        for word, rect in zip(words, rects):
+            self.play(
+                Write(word),
+                ShowCreation(rect),
+                run_time = 1
+            )
+        self.dither()
+        self.play(*[
+            ApplyMethod(m.highlight, DARK_GREY)
+            for m in words[0], rects[0]
+        ])
+        self.dither()
+        self.list_applications(rects[-1])
+
+    def get_rects(self):
+        height = 1
+        rects = [
+            Rectangle(height = height, width = width)
+            for width in 8, 5, 2
+        ]
+        rects[0].shift(2*DOWN)
+        for i in 1, 2:
+            rects[i].next_to(rects[i-1], UP, buff = 0)
+        return rects
+
+    def place_words_in_rects(self, words, rects):
+        result = []
+        for word, rect in zip(words, rects):
+            tex_mob = TextMobject(word)
+            tex_mob.shift(rect.get_center())
+            result.append(tex_mob)
+        return result
+
+    def list_applications(self, top_mob):
+        subjects = [
+            TextMobject(word).to_corner(UP+RIGHT)
+            for word in [
+                "computer science", 
+                "engineering", 
+                "statistics", 
+                "economics", 
+                "pure math",
+            ]
+        ]
+        arrow = Arrow(top_mob, subjects[0].get_bottom(), color = RED)
+
+        self.play(ShowCreation(arrow))
+        curr_subject = None
+        for subject in subjects:
+            if curr_subject:
+                subject.shift(curr_subject.get_center()-subject.get_center())
+                self.play(Transform(curr_subject, subject, run_time = 0.5))
+            else:
+                curr_subject = subject
+                self.play(FadeIn(curr_subject, run_time = 0.5))
+            self.dither()
+
+
+class IndimidatingProf(Scene):
+    def construct(self):
+        randy = Randolph().to_corner()
+        morty = Mortimer().to_corner(DOWN+RIGHT)
+        morty.shift(3*LEFT)
+        speech_bubble = SpeechBubble(height = 3).flip()
+        speech_bubble.pin_to(morty)
+        speech_bubble.shift(RIGHT)
+        speech_bubble.write("And of course $B^{-1}AB$ will \\\\ also have positive eigenvalues...")
+        thought_bubble = ThoughtBubble(width = 4, height = 4)
+        thought_bubble.next_to(morty, UP)
+        thought_bubble.to_edge(RIGHT)
+        q_marks = TextMobject("???")
+        q_marks.next_to(randy, UP)
+
+        self.add(randy, morty)
+        self.play(
+            FadeIn(speech_bubble),
+            ApplyMethod(morty.change_mode, "speaking")
+        )
+        self.play(FadeIn(thought_bubble))
+        self.dither()
+        self.play(
+            ApplyMethod(randy.change_mode, "confused"),
+            Write(q_marks, run_time = 1)
+        )
+        self.dither()
+
+
+class ThoughtBubbleTransformation(LinearTransformationScene):
+    def construct(self):
+        self.setup()
+        rotation = rotation_about_z(np.pi/3)
+        self.apply_matrix(
+            np.linalg.inv(rotation), 
+            path_arc = -np.pi/3,
+        )
+        self.apply_matrix(EXAMPLE_TRANFORM)
+        self.apply_matrix(
+            rotation, 
+            path_arc = np.pi/3,
+        )
+        self.dither()
+
+
+class SineApproximations(Scene):
+    def construct(self):
+        series = self.get_series()
+        one_approx = self.get_approx_series("1", 1)
+        one_approx.highlight(YELLOW)
+        pi_sixts_approx = self.get_approx_series("\\pi/6", np.pi/6)
+        pi_sixts_approx.highlight(RED)
+        words = TextMobject("(How calculators compute sine)")
+        words.highlight(GREEN)
+
+        series.to_edge(UP)
+        one_approx.next_to(series, DOWN, buff = 1.5)
+        pi_sixts_approx.next_to(one_approx, DOWN, buff = 1.5)
+
+        self.play(Write(series))
+        self.dither()
+        self.play(FadeIn(words))
+        self.dither(2)
+        self.play(FadeOut(words))
+        self.remove(words)
+        self.dither()
+        self.play(Write(one_approx))
+        self.play(Write(pi_sixts_approx))
+        self.dither()
+
+    def get_series(self):
+        return TexMobject("""
+            \\sin(x) = x - \\dfrac{x^3}{3!} + \\dfrac{x^5}{5!}
+            + \\cdots + (-1)^n \\dfrac{x^{2n+1}}{(2n+1)!} + \\cdots
+        """)
+
+    def get_approx_series(self, val_str, val):
+        #Default to 3 terms
+        approximation = val - (val**3)/6. + (val**5)/120.
+        return TexMobject("""
+            \\sin(%s) \\approx 
+            %s - \\dfrac{(%s)^3}{3!} + \\dfrac{(%s)^5}{5!} \\approx
+            %.04f
+        """%(val_str, val_str, val_str, val_str, approximation))
+
+
+class LooseConnectionToTriangles(Scene):
+    def construct(self):
+        sine = TexMobject("\\sin(x)")
+        triangle = Polygon(ORIGIN, 2*RIGHT, 2*RIGHT+UP)
+        arrow = DoubleArrow(LEFT, RIGHT)        
+        sine.next_to(arrow, LEFT)
+        triangle.next_to(arrow, RIGHT)
+
+        q_mark = TextMobject("?").scale(1.5)
+        q_mark.next_to(arrow, UP)
+
+        self.add(sine)
+        self.play(ShowCreation(arrow))
+        self.play(ShowCreation(triangle))
+        self.play(Write(q_mark))
+        self.dither()
+
+
+class PhysicsExample(Scene):
+    def construct(self):
+        title = TextMobject("Physics")
+        title.to_corner(UP+LEFT)
+        parabola = FunctionGraph(
+            lambda x : (3-x)*(3+x)/4,
+            x_min = -4, 
+            x_max = 4
+        )
+
+        self.play(Write(title))
+        self.projectile(parabola)
+        self.velocity_vector(parabola)
+        self.approximate_sine()
+
+    def projectile(self, parabola):
+        dot = Dot(radius = 0.15)
+        kwargs = {
+            "run_time" : 3,
+            "rate_func" : None
+        }
+        self.play(
+            MoveAlongPath(dot, parabola.copy(), **kwargs),
+            ShowCreation(parabola, **kwargs)
+        )
+        self.dither()
+
+
+    def velocity_vector(self, parabola):
+        alpha = 0.7
+        d_alpha = 0.01
+        vector_length = 3
+
+        p1 = parabola.point_from_proportion(alpha)
+        p2 = parabola.point_from_proportion(alpha + d_alpha)
+        vector = vector_length*(p2-p1)/np.linalg.norm(p2-p1)
+        v_mob = Vector(vector, color = YELLOW)
+        vx = Vector(vector[0]*RIGHT, color = GREEN_B)
+        vy = Vector(vector[1]*UP, color = RED)
+        v_mob.shift(p1)
+        vx.shift(p1)
+        vy.shift(vx.get_end())
+
+        arc = Arc(
+            angle_of_vector(vector), 
+            radius = vector_length / 4.
+        )
+        arc.shift(p1)
+        theta = TexMobject("\\theta").scale(0.75)
+        theta.next_to(arc, RIGHT, buff = 0.1)
+
+        v_label = TexMobject("\\vec{v}")
+        v_label.shift(p1 + RIGHT*vector[0]/4 + UP*vector[1]/2)
+        v_label.highlight(v_mob.get_color())
+        vx_label = TexMobject("\\vec{v} \\cos(\\theta)")
+        vx_label.next_to(vx, UP)
+        vx_label.highlight(vx.get_color())
+        vy_label = TexMobject("\\vec{v} \\sin(\\theta)")
+        vy_label.next_to(vy, RIGHT)
+        vy_label.highlight(vy.get_color())
+
+        kwargs = {"submobject_mode" : "one_at_a_time"}
+        for v in v_mob, vx, vy:
+            self.play(
+                ShowCreation(v, submobject_mode = "one_at_a_time")
+            )
+        self.play(
+            ShowCreation(arc),
+            Write(theta, run_time = 1)
+        )
+        for label in v_label, vx_label, vy_label:
+            self.play(Write(label, run_time = 1))
+        self.dither()
+
+    def approximate_sine(self):
+        approx = TexMobject("\\sin(\\theta) \\approx 0.7\\text{-ish}")
+        morty = Mortimer(mode = "speaking")
+        morty.flip()
+        morty.to_corner()
+        bubble = SpeechBubble(width = 4, height = 3)
+        bubble.set_fill(BLACK, opacity = 1)
+        bubble.pin_to(morty)
+        bubble.position_mobject_inside(approx)
+
+        self.play(
+            FadeIn(morty),
+            ShowCreation(bubble),
+            Write(approx),
+            run_time = 2
+        )
+        self.dither()
+
+
+class LinearAlgebraIntuitions(Scene):
+    def construct(self):
+        pass
 
 
 

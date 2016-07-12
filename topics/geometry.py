@@ -22,14 +22,12 @@ class Arc(VMobject):
         self.scale(self.radius)
 
     def get_unscaled_anchor_points(self):
-        step = self.angle/self.num_anchors
-        end_angle = self.start_angle + self.angle 
-        if self.anchors_span_full_range:
-            end_angle += step
         return [
             np.cos(a)*RIGHT+np.sin(a)*UP
-            for a in np.arange(
-                self.start_angle, end_angle, step
+            for a in np.linspace(
+                self.start_angle, 
+                self.start_angle + self.angle, 
+                self.num_anchors
             )
         ]
 
@@ -238,7 +236,7 @@ class Rectangle(VMobject):
         "close_new_points" : True,
     }
     def generate_points(self):
-        y, x = self.height/2, self.width/2
+        y, x = self.height/2., self.width/2.
         self.set_anchor_points([
             x*LEFT+y*UP,
             x*RIGHT+y*UP,

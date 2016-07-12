@@ -237,13 +237,10 @@ class Scene(object):
 
     def write_to_movie(self, name = None):
         if len(self.frames) == 0:
-            print "No frames, I'll just save an image instead"
-            self.show_frame()
-            self.save_image(name = name)
+            print "No frames, so I'm not writing anything"
             return
         if name is None:
             name = str(self)
-
         file_path = self.get_movie_file_path(name, ".mp4")
         print "Writing to %s"%file_path
 
