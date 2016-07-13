@@ -11,6 +11,8 @@ from scipy import linalg
 
 from constants import *
 
+CLOSED_THRESHOLD = 0.01
+
 def get_smooth_handle_points(points):
     num_handles = len(points) - 1
     dim = points.shape[1]    
@@ -76,7 +78,7 @@ def diag_to_matrix(l_and_u, diag):
     return matrix
 
 def is_closed(points):
-    return np.all(points[0] == points[-1])
+    return np.linalg.norm(points[0] - points[-1]) < CLOSED_THRESHOLD
 
 def color_to_rgb(color):
     return np.array(Color(color).get_rgb())

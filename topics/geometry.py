@@ -8,7 +8,7 @@ class Arc(VMobject):
         "radius"           : 1.0,
         "start_angle"      : 0,
         "num_anchors"      : 8,
-        "anchors_span_full_range" : True
+        "anchors_span_full_range" : True,
     }
     def __init__(self, angle, **kwargs):
         digest_locals(self)
@@ -164,6 +164,7 @@ class Arrow(Line):
         if self.preserve_tip_size_when_scaling:
             self.remove(self.tip)
             self.add_tip()
+        return self
 
 class Vector(Arrow):
     CONFIG = {

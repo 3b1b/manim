@@ -26,6 +26,7 @@ class PiCreature(SVGMobject):
         "fill_opacity" : 1.0,
         "initial_scale_val" : 0.01,
         "corner_scale_factor" : 0.75,
+        "flip_at_start" : False,
     }
     def __init__(self, mode = "plain", **kwargs):
         self.parts_named = False
@@ -36,6 +37,8 @@ class PiCreature(SVGMobject):
         digest_config(self, kwargs, locals())
         SVGMobject.__init__(self, svg_file, **kwargs)
         self.init_colors()
+        if self.flip_at_start:
+            self.flip()
 
     def name_parts(self):
         self.mouth = self.submobjects[MOUTH_INDEX]
@@ -122,14 +125,11 @@ class Randolph(PiCreature):
 
 class Mortimer(PiCreature):
     CONFIG = {
-        "color" : "#736357"
+        "color" : "#736357",
+        "flip_at_start" : True,
     }
     
-    def __init__(self, *args, **kwargs):
-        PiCreature.__init__(self, *args, **kwargs)
-        self.flip()
 
-        
 class Mathematician(PiCreature):
     CONFIG = {
         "color" : GREY,
@@ -219,10 +219,18 @@ class Bubble(SVGMobject):
 class SpeechBubble(Bubble):
     CONFIG = {
         "file_name" : "Bubbles_speech.svg",
+        "height" : 4
     }
 
 class ThoughtBubble(Bubble):
     CONFIG = {
         "file_name" : "Bubbles_thought.svg",
     }
+
+    def __init__(self, **kwargs):
+        Bubble.__init__(self, **kwargs)
+        self.submobjects.sort(
+            lambda m1, m2 : int((m1.get_bottom()-m2.get_bottom())[1])
+        )
+
 

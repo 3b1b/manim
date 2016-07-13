@@ -38,13 +38,47 @@ class OpeningQuote(Scene):
         words.to_edge(UP)        
         for mob in words.submobjects[48:49+13]:
             mob.highlight(GREEN)
-        author = TextMobject("-Hermann Weyl")
+        author = TextMobject("-Jean Dieudonn\\'e")
         author.highlight(YELLOW)
         author.next_to(words, DOWN)
 
         self.play(FadeIn(words))
         self.dither(3)
-        self.play(Write(author))
+        self.play(Write(author, run_time = 5))
+        self.dither()
+
+class VideoIcon(SVGMobject):
+    def __init__(self, **kwargs):
+        SVGMobject.__init__(self, "video_icon", **kwargs)
+        self.center()
+        self.scale_to_fit_width(2*SPACE_WIDTH/12.)
+        self.set_stroke(color = WHITE, width = 0)
+        self.set_fill(color = WHITE, opacity = 1)
+
+
+
+class UpcomingSeriesOfVidoes(Scene):
+    def construct(self):
+        icons = [VideoIcon() for x in range(10)]
+        colors = Color(BLUE_A).range_to(BLUE_D, len(icons))
+        for icon, color in zip(icons, colors):
+            icon.set_fill(color, opacity = 1)
+        icons = VMobject(*icons)
+        icons.arrange_submobjects(RIGHT)
+        icons.to_edge(LEFT)
+        icons.shift(UP)
+        icons = icons.split()
+
+        def rate_func_creator(offset):
+            return lambda a : min(max(2*(a-offset), 0), 1)
+        self.play(*[
+            FadeIn(
+                icon, 
+                run_time = 5,
+                rate_func = rate_func_creator(offset)
+            )
+            for icon, offset in zip(icons, np.linspace(0, 0.5, len(icons)))
+        ])
         self.dither()
 
 
@@ -612,12 +646,300 @@ class PhysicsExample(Scene):
 
 class LinearAlgebraIntuitions(Scene):
     def construct(self):
-        pass
+        title = TextMobject("Preview of core visual intuitions")
+        title.to_edge(UP)
+        h_line = Line(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        h_line.next_to(title, DOWN)
+        h_line.highlight(BLUE_E)
+        intuitions = [
+            "Matrices transform space",
+            "Matrix multiplication corresponds to applying " + 
+            "one transformation after another",
+            "The determinant gives the factor by which areas change",
+        ]
+
+        self.play(
+            Write(title),
+            ShowCreation(h_line),
+            run_time = 2
+        )
+
+        for count, intuition in enumerate(intuitions, 3):
+            intuition += " (details coming in chapter %d)"%count
+            mob = TextMobject(intuition)
+            mob.scale(0.7)
+            mob.next_to(h_line, DOWN)
+            self.play(FadeIn(mob))
+            self.dither(4)
+            self.play(FadeOut(mob))
+            self.remove(mob)
+        self.dither()
+
+class MatricesAre(Scene):
+    def construct(self):
+        matrix = matrix_to_mobject([[1, -1], [1, 2]])
+        matrix.scale_to_fit_height(6)
+        arrow = Arrow(LEFT, RIGHT, stroke_width = 8, preserve_tip_size_when_scaling = False)
+        arrow.scale(2)
+        arrow.to_edge(RIGHT)
+        matrix.next_to(arrow, LEFT)
+
+        self.play(Write(matrix, run_time = 1))
+        self.play(ShowCreation(arrow, submobject_mode = "one_at_a_time"))
+        self.dither()
+
+class ExampleTransformationForIntuitionList(LinearTransformationScene):
+    def construct(self):
+        self.setup()
+        self.apply_matrix([[1, -1], [1, 2]])
+        self.dither()
+
+class MatrixMultiplicationIs(Scene):
+    def construct(self):
+        matrix1 = matrix_to_mobject([[1, -1], [1, 2]])
+        matrix1.highlight(BLUE)
+        matrix2 = matrix_to_mobject([[2, 1], [1, 2]])
+        matrix2.highlight(GREEN)
+        for m in matrix1, matrix2:
+            m.scale_to_fit_height(3)
+        arrow = Arrow(LEFT, RIGHT, stroke_width = 6, preserve_tip_size_when_scaling = False)
+        arrow.scale(2)
+        arrow.to_edge(RIGHT)
+        matrix1.next_to(arrow, LEFT)
+        matrix2.next_to(matrix1, LEFT)
+        brace1 = Brace(matrix1, UP)
+        apply_first = TextMobject("Apply first").next_to(brace1, UP)
+        brace2 = Brace(matrix2, DOWN)
+        apply_second = TextMobject("Apply second").next_to(brace2, DOWN)
+
+        self.play(
+            Write(matrix1), 
+            ShowCreation(arrow),
+            GrowFromCenter(brace1),
+            Write(apply_first),
+            run_time = 1
+        )
+        self.dither()
+        self.play(
+            Write(matrix2),
+            GrowFromCenter(brace2),
+            Write(apply_second),
+            run_time = 1
+        )
+        self.dither()
+
+class ComposedTransformsForIntuitionList(LinearTransformationScene):
+    def construct(self):
+        self.setup()
+        self.apply_matrix([[1, -1], [1, 2]])
+        self.dither()
+        self.apply_matrix([[2, 1], [1, 2]])
+        self.dither()
+
+class DeterminantsAre(Scene):
+    def construct(self):
+        tex_mob = TexMobject("""
+            \\text{Det}\\left(\\left[
+                \\begin{array}{cc}
+                    1 & -1 \\\\
+                    1 & 2
+                \\end{array}
+            \\right]\\right)
+        """)
+        tex_mob.scale_to_fit_height(4)
+        arrow = Arrow(LEFT, RIGHT, stroke_width = 8, preserve_tip_size_when_scaling = False)
+        arrow.scale(2)
+        arrow.to_edge(RIGHT)
+        tex_mob.next_to(arrow, LEFT)
+
+        self.play(
+            Write(tex_mob),
+            ShowCreation(arrow, submobject_mode = "one_at_a_time"),
+            run_time = 1
+        )
+
+class TransformationForDeterminant(LinearTransformationScene):
+    def construct(self):
+        self.setup()
+        square = Square(side_length = 1)
+        square.shift(-square.get_corner(DOWN+LEFT))
+        square.set_fill(YELLOW_A, 0.5)
+        self.add_transformable_mobject(square)
+        self.apply_matrix([[1, -1], [1, 2]])
+
+class ProfessorsTry(Scene):
+    def construct(self):
+        morty = Mortimer()
+        morty.to_corner(DOWN+RIGHT)
+        morty.shift(3*LEFT)
+        speech_bubble = morty.get_bubble("speech", height = 4, width = 8)
+        speech_bubble.shift(RIGHT)
+        words = TextMobject(
+            "It really is beautiful!  I want you to \\\\" + \
+            "see it the way I do...",
+        )
+        speech_bubble.position_mobject_inside(words)
+        thought_bubble = ThoughtBubble(width = 4, height = 3.5)
+        thought_bubble.next_to(morty, UP)
+        thought_bubble.to_edge(RIGHT)
+        randy = Randolph()
+        randy.scale(0.8)
+        randy.to_corner()
+
+        self.add(randy, morty)
+        self.play(
+            ApplyMethod(morty.change_mode, "speaking"),
+            FadeIn(speech_bubble),
+            FadeIn(words)
+        )
+        self.play(Blink(randy))
+        self.play(FadeIn(thought_bubble ))
+        self.play(Blink(morty))
 
 
+class ExampleMatrixMultiplication(NumericalMatrixMultiplication):
+    CONFIG = {
+        "left_matrix" : [[-3, 1], [2, 5]],
+        "right_matrix" : [[5, 3], [7, -3]]
+    }
+
+class TableOfContents(Scene):
+    def construct(self):
+        title = TextMobject("Essence of Linear Algebra")
+        title.highlight(BLUE)
+        title.to_corner(UP+LEFT)
+        h_line = Line(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        h_line.next_to(title, DOWN)
+        h_line.to_edge(LEFT, buff = 0)
+        chapters = VMobject(*map(TextMobject, [
+            "Chapter 1: Vectors, what even are they?",
+            "Chapter 2: Linear combinations, span and bases",
+            "Chapter 3: Matrices as linear transformations",
+            "Chapter 4: Matrix multiplication as composition",
+            "Chapter 5: The determinant",
+            "Chapter 6: Inverse matrices, column space and null space",
+            "Chapter 7: Dot products and cross products",
+            "Chapter 8: Change of basis",
+            "Chapter 9: Eigenvectors and eigenvalues",
+            "Chapter 10: Abstract vector spaces",
+        ]))
+        chapters.arrange_submobjects(DOWN)
+        chapters.scale(0.7)
+        chapters.next_to(h_line, DOWN)
+
+        self.play(
+            Write(title),
+            ShowCreation(h_line)
+        )
+        for chapter in chapters.split():
+            chapter.to_edge(LEFT, buff = 1)
+            self.play(FadeIn(chapter))
+        self.dither(2)
+
+        entry3 = chapters.split()[2]
+        added_words = TextMobject("(Personally, I'm most excited \\\\ to do this one)")
+        added_words.scale(0.5)
+        added_words.highlight(YELLOW)
+        added_words.next_to(h_line, DOWN)
+        added_words.to_edge(RIGHT)
+        arrow = Arrow(added_words.get_bottom(), entry3)
+
+        self.play(
+            ApplyMethod(entry3.highlight, YELLOW),
+            ShowCreation(arrow, submobject_mode = "one_at_a_time"),
+            Write(added_words),
+            run_time = 1
+        )
+        self.dither()
+        removeable = VMobject(added_words, arrow, h_line, title)
+        self.play(FadeOut(removeable))
+        self.remove(removeable)
+
+        self.series_of_videos(chapters)
+
+    def series_of_videos(self, chapters):
+        icon = SVGMobject("video_icon")
+        icon.center()
+        icon.scale_to_fit_width(2*SPACE_WIDTH/12.)
+        icon.set_stroke(color = WHITE, width = 0)
+        icons = [icon.copy() for chapter in chapters.split()]
+        colors = Color(BLUE_A).range_to(BLUE_D, len(icons))
+        for icon, color in zip(icons, colors):
+            icon.set_fill(color, opacity = 1)
+        icons = VMobject(*icons)
+        icons.arrange_submobjects(RIGHT)
+        icons.to_edge(LEFT)
+        icons.shift(UP)
+
+        randy = Randolph()
+        randy.to_corner()
+        bubble = randy.get_bubble()
+        new_icons = icons.copy().scale(0.2)
+        bubble.position_mobject_inside(new_icons)
+
+        self.play(Transform(
+            chapters, icons,
+            path_arc = np.pi/2,
+        ))
+        self.clear()
+        self.add(icons)
+        self.play(FadeIn(randy))
+        self.play(Blink(randy))
+        self.dither()
+        self.play(
+            ShowCreation(bubble),
+            Transform(icons, new_icons)
+        )
+        self.dither()
 
 
+class ResourceForTeachers(Scene):
+    def construct(self):
+        morty = Mortimer(mode = "speaking")
+        morty.to_corner(DOWN + RIGHT)
+        bubble = morty.get_bubble("speech")
+        bubble.write("I'm assuming you \\\\ know linear algebra\\dots")
+        words = bubble.content
+        bubble.clear()
+        randys = VMobject(*[
+            Randolph(color = c)
+            for c in BLUE_D, BLUE_C, BLUE_E
+        ])
+        randys.arrange_submobjects(RIGHT)
+        randys.scale(0.8)
+        randys.to_corner(DOWN+LEFT)
 
+        self.add(randys, morty)
+        self.play(FadeIn(bubble), Write(words), run_time = 3)
+        for randy in np.array(randys.split())[[2,0,1]]:
+            self.play(Blink(randy))
+        self.dither()
+
+class PauseAndPonder(Scene):
+    def construct(self):
+        pause = TexMobject("=").rotate(np.pi/2)
+        pause.stretch(0.5, 1)
+        pause.scale_to_fit_height(1.5)
+        bubble = ThoughtBubble().scale_to_fit_height(2)
+        pause.shift(LEFT)
+        bubble.next_to(pause, RIGHT, buff = 1)
+
+        self.play(FadeIn(pause))
+        self.play(ShowCreation(bubble))
+        self.dither()
+
+
+class NextVideo(Scene):
+    def construct(self):
+        title = TextMobject("Next video: Vectors, what even are they?")
+        title.to_edge(UP)
+        rect = Rectangle(width = 16, height = 9, color = BLUE)
+        rect.scale_to_fit_height(6)
+        rect.next_to(title, DOWN)
+
+        self.add(title)
+        self.play(ShowCreation(rect))
+        self.dither()
 
 
 
