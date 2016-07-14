@@ -23,6 +23,29 @@ from eola.utils import *
 EXAMPLE_TRANFORM = [[0, 1], [-1, 1]]
 TRANFORMED_VECTOR = [[1], [2]]
 
+def matrix_multiplication():
+    return TexMobject("""
+        \\left[
+            \\begin{array}{cc}
+                a & b \\\\
+                c & d
+            \\end{array}
+        \\right]
+        \\left[
+            \\begin{array}{cc}
+                e & f \\\\
+                g & h
+            \\end{array}
+        \\right]
+        = 
+        \\left[
+            \\begin{array}{cc}
+                ae + bg & af + bh \\\\
+                ce + dg & cf + dh
+            \\end{array}
+        \\right]
+    """)
+
 class OpeningQuote(Scene):
     def construct(self):
         words = TextMobject(
@@ -173,27 +196,7 @@ class AboutLinearAlgebra(Scene):
 
 
     def get_matrix_multiplication(self):
-        return TexMobject("""
-            \\left[
-                \\begin{array}{cc}
-                    a & b \\\\
-                    c & d
-                \\end{array}
-            \\right]
-            \\left[
-                \\begin{array}{cc}
-                    e & f \\\\
-                    g & h
-                \\end{array}
-            \\right]
-            = 
-            \\left[
-                \\begin{array}{cc}
-                    ae + bg & af + bh \\\\
-                    ce + dg & cf + dh
-                \\end{array}
-            \\right]
-        """)
+        return matrix_multiplication()
 
     def get_determinant(self):
         return TexMobject("""
@@ -447,22 +450,38 @@ class LinAlgPyramid(Scene):
             self.dither()
 
 
-class IndimidatingProf(Scene):
+class IntimidatingProf(Scene):
     def construct(self):
         randy = Randolph().to_corner()
         morty = Mortimer().to_corner(DOWN+RIGHT)
         morty.shift(3*LEFT)
+        morty_name1 = TextMobject("Professor")
+        morty_name2 = TextMobject("Coworker")
+        for name in morty_name1, morty_name2:
+            name.to_edge(RIGHT)
+            name.shift(2*UP)
+        arrow = Arrow(morty_name1.get_bottom(), morty)
         speech_bubble = SpeechBubble(height = 3).flip()
         speech_bubble.pin_to(morty)
         speech_bubble.shift(RIGHT)
         speech_bubble.write("And of course $B^{-1}AB$ will \\\\ also have positive eigenvalues...")
-        thought_bubble = ThoughtBubble(width = 4, height = 4)
+        thought_bubble = ThoughtBubble(width = 6, height = 5)
         thought_bubble.next_to(morty, UP)
-        thought_bubble.to_edge(RIGHT)
+        thought_bubble.to_edge(RIGHT, buff = -1)
+        thought_bubble.make_green_screen()
         q_marks = TextMobject("???")
         q_marks.next_to(randy, UP)
+        randy_bubble = randy.get_bubble()
+        randy_bubble.add_content(matrix_multiplication())
 
         self.add(randy, morty)
+        self.play(
+            FadeIn(morty_name1),
+            ShowCreation(arrow, submobject_mode = "one_at_a_time")
+        )
+        self.play(Transform(morty_name1, morty_name2))
+        self.dither()
+        self.play(FadeOut(morty_name1), FadeOut(arrow))
         self.play(
             FadeIn(speech_bubble),
             ApplyMethod(morty.change_mode, "speaking")
@@ -473,6 +492,8 @@ class IndimidatingProf(Scene):
             ApplyMethod(randy.change_mode, "confused"),
             Write(q_marks, run_time = 1)
         )
+        self.play(FadeOut(VMobject(speech_bubble, thought_bubble)))
+        self.play(FadeIn(randy_bubble))
         self.dither()
 
 
@@ -605,10 +626,10 @@ class PhysicsExample(Scene):
         v_label = TexMobject("\\vec{v}")
         v_label.shift(p1 + RIGHT*vector[0]/4 + UP*vector[1]/2)
         v_label.highlight(v_mob.get_color())
-        vx_label = TexMobject("\\vec{v} \\cos(\\theta)")
+        vx_label = TexMobject("||\\vec{v}|| \\cos(\\theta)")
         vx_label.next_to(vx, UP)
         vx_label.highlight(vx.get_color())
-        vy_label = TexMobject("\\vec{v} \\sin(\\theta)")
+        vy_label = TexMobject("||\\vec{v}|| \\sin(\\theta)")
         vy_label.next_to(vy, RIGHT)
         vy_label.highlight(vy.get_color())
 
@@ -782,6 +803,7 @@ class ProfessorsTry(Scene):
         thought_bubble = ThoughtBubble(width = 4, height = 3.5)
         thought_bubble.next_to(morty, UP)
         thought_bubble.to_edge(RIGHT)
+        thought_bubble.make_green_screen()
         randy = Randolph()
         randy.scale(0.8)
         randy.to_corner()
@@ -793,7 +815,7 @@ class ProfessorsTry(Scene):
             FadeIn(words)
         )
         self.play(Blink(randy))
-        self.play(FadeIn(thought_bubble ))
+        self.play(FadeIn(thought_bubble))
         self.play(Blink(morty))
 
 
@@ -890,6 +912,8 @@ class TableOfContents(Scene):
             ShowCreation(bubble),
             Transform(icons, new_icons)
         )
+        self.remove(icons)
+        bubble.make_green_screen()
         self.dither()
 
 
@@ -914,6 +938,53 @@ class ResourceForTeachers(Scene):
         for randy in np.array(randys.split())[[2,0,1]]:
             self.play(Blink(randy))
         self.dither()
+
+class AboutPacing(Scene):
+    def construct(self):
+        words = TextMobject("About pacing...")
+        dots = words.split()[-3:]
+        words.remove(*dots)
+        self.play(FadeIn(words))
+        self.play(Write(VMobject(*dots)))
+        self.dither()
+
+class DifferingBackgrounds(Scene):
+    def construct(self):
+        words = map(TextMobject, [
+            "Just brushing up",
+            "Has yet to take the course",
+            "Supplementing course concurrently",
+        ])
+        students = VMobject(*[
+            Randolph(color = c)
+            for c in BLUE_D, BLUE_C, BLUE_E
+        ])
+        modes = ["pondering", "speaking_looking_left", "sassy"]
+        students.arrange_submobjects(RIGHT)
+        students.scale(0.8)
+        students.center().to_edge(DOWN)
+
+        last_word, last_arrow = None, None
+        for word, student, mode in zip(words, students.split(), modes):
+            word.shift(2*UP)
+            arrow = Arrow(word, student)
+            if last_word:
+                word_anim = Transform(last_word, word)
+                arrow_anim = Transform(last_arrow, arrow)
+            else:
+                word_anim = Write(word, run_time = 1)
+                arrow_anim = ShowCreation(arrow, submobject_mode = "one_at_a_time")
+                last_word = word
+                last_arrow = arrow
+            self.play(
+                word_anim, arrow_anim,
+                ApplyMethod(student.change_mode, mode)
+            )
+            self.play(Blink(student))
+            self.dither()
+        self.dither()
+
+
 
 class PauseAndPonder(Scene):
     def construct(self):

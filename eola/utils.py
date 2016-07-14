@@ -10,8 +10,9 @@ from animation.simple_animations import ShowCreation
 from topics.number_line import NumberPlane
 from topics.geometry import Vector, Line, Circle
 
-
 from helpers import *
+
+VECTOR_LABEL_SCALE_VAL = 0.7
 
 def matrix_to_tex_string(matrix):
     matrix = np.array(matrix).astype("string")
@@ -27,6 +28,24 @@ def matrix_to_tex_string(matrix):
 
 def matrix_to_mobject(matrix):
     return TexMobject(matrix_to_tex_string(matrix))
+
+def vector_coordinate_label(vector_mob, integer_labels = True, n_dim = 2):
+    vect = np.array(vector_mob.get_end())
+    if integer_labels:
+        vect = vect.astype(int)
+    vect = vect[:n_dim]
+    vect = vect.reshape((n_dim, 1))
+    label = matrix_to_mobject(vect)
+    label.scale(VECTOR_LABEL_SCALE_VAL)
+
+    shift_dir = np.array(vector_mob.get_end())
+    if shift_dir[0] > 0: #Pointing right
+        shift_dir -= label.get_left() + DEFAULT_MOBJECT_TO_MOBJECT_BUFFER*LEFT
+    else: #Pointing left
+        shift_dir -= label.get_right() + DEFAULT_MOBJECT_TO_MOBJECT_BUFFER*RIGHT
+    label.shift(shift_dir)
+    return label
+
 
 class LinearTransformationScene(Scene):
     CONFIG = {

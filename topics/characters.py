@@ -125,7 +125,7 @@ class Randolph(PiCreature):
 
 class Mortimer(PiCreature):
     CONFIG = {
-        "color" : "#736357",
+        "color" : GREY_BROWN,
         "flip_at_start" : True,
     }
     
@@ -232,5 +232,14 @@ class ThoughtBubble(Bubble):
         self.submobjects.sort(
             lambda m1, m2 : int((m1.get_bottom()-m2.get_bottom())[1])
         )
+
+    def make_green_screen(self):
+        self.submobjects[-1].set_fill(GREEN_SCREEN, opacity = 1)
+        return self
+
+
+
+
+
 
 

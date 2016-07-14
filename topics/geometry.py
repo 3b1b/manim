@@ -168,7 +168,7 @@ class Arrow(Line):
 
 class Vector(Arrow):
     CONFIG = {
-        "color" : WHITE,
+        "color" : YELLOW,
         "buff"  : 0,
     }
     def __init__(self, direction, **kwargs):
