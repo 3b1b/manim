@@ -21,8 +21,10 @@ class VMobject(Mobject):
 
     ## Colors
     def init_colors(self):
+        if not hasattr(self, "stroke_color"):
+            self.stroke_color = self.color
         self.set_style_data(
-           stroke_color = self.color,
+           stroke_color = self.stroke_color,
            stroke_width = self.stroke_width,
            fill_color = self.fill_color, 
            fill_opacity = self.fill_opacity,

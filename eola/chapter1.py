@@ -386,6 +386,9 @@ class DifferentConceptions(Scene):
         ])
 
 
+class ThreeDVectorField(Scene):
+    pass
+
 
 class HelpsToHaveOneThought(Scene):
     def construct(self):
@@ -515,7 +518,7 @@ class ListsOfNumbersAddOn(Scene):
         self.dither(2)
 
 
-class CoordinateSystemWalkthrough(VectorCoordinateScene):
+class CoordinateSystemWalkthrough(VectorScene):
     def construct(self):
         self.introduce_coordinate_plane()
         self.show_vector_coordinates()
@@ -626,17 +629,113 @@ class CoordinateSystemWalkthrough(VectorCoordinateScene):
         self.clear()
         self.add(*starting_mobjects)
 
+class LabeledThreeDVector(Scene):
+    pass
 
-class ThreeAxisLabels(Scene):
+class WriteZ(Scene):
     def construct(self):
-        z = TexMobject("z").scale(2)
-        z.show()
-        self.play(Write(z, run_time = 1))
+        z = TexMobject("z").highlight(Z_COLOR)
+        z.scale_to_fit_height(4)
+        self.play(Write(z, run_time = 2))
+        self.dither(3)
+
+
+class Write3DVector(Scene):
+    def construct(self):
+        array = Matrix([2, 1, 3]).scale(2)
+        x, y, z = array.get_mob_matrix().flatten()
+        brackets = array.get_brackets()
+        x.highlight(X_COLOR)
+        y.highlight(Y_COLOR)
+        z.highlight(Z_COLOR)
+
+        self.add(brackets)
+        for mob in x, y, z:
+            self.play(Write(mob), run_time = 2)
+        self.dither()
+
+
+class VectorAddition(VectorScene):
+    def construct(self):
+        self.add_plane()
+        self.define_addition()
+        self.answer_why()
+
+    def define_addition(self):
+        v1 = self.add_vector([1, 2])
+        v2 = self.add_vector([3, -1], color = MAROON_B)
+        l1 = self.label_vector(v1, "v")
+        l2 = self.label_vector(v2, "w")
+        self.dither()
+        self.play(ApplyMethod(v2.shift, v1.get_end()))
+        self.dither()
+        v_sum = self.add_vector(v2.get_end(), color = PINK)
+        sum_tex = "\\vec{\\textbf{v}} + \\vec{\\textbf{w}}"
+        self.label_vector(v_sum, sum_tex, rotate = True)
+        self.dither(3)
+
+    def answer_why(self):
+        pass
+
+
+class ItDoesntMatterWhich(Scene):
+    def construct(self):
+        physy = Physicist()
+        compy = ComputerScientist()
+        physy.title = TextMobject("Physics student").to_corner(DOWN+LEFT)
+        compy.title = TextMobject("CS student").to_corner(DOWN+RIGHT)
+        for pi in physy, compy:
+            pi.next_to(pi.title, UP)
+            self.add(pi, pi.title)
+        compy_speech = compy.get_bubble("speech")
+        physy_speech = physy.get_bubble("speech")
+        arrow = Vector([2, 1])
+        array = matrix_to_mobject([2, 1])
+        goes_to = TexMobject("\\Rightarrow")
+        physy_statement = VMobject(arrow, goes_to, array)
+        physy_statement.arrange_submobjects(RIGHT)
+        compy_statement = physy_statement.copy()
+        compy_statement.arrange_submobjects(LEFT)
+        physy_speech.position_mobject_inside(physy_statement)
+        compy_speech.position_mobject_inside(compy_statement)
+
+        new_arrow = Vector([2, 1])
+        x_line = Line(ORIGIN, 2*RIGHT, color = X_COLOR)
+        y_line = Line(2*RIGHT, 2*RIGHT+UP, color = Y_COLOR)
+        x_mob = TexMobject("2").next_to(x_line, DOWN)
+        y_mob = TexMobject("1").next_to(y_line, RIGHT)
+        new_arrow.add(x_line, y_line, x_mob, y_mob)
+        back_and_forth = VMobject(
+            new_arrow,
+            TexMobject("\\Leftrightarrow"),
+            matrix_to_mobject([2, 1])
+        )
+        back_and_forth.arrange_submobjects(LEFT).center()
+
+
+        self.dither()
+        self.play(
+            ApplyMethod(physy.change_mode, "speaking"),
+            ShowCreation(physy_speech),
+            Write(physy_statement),
+            run_time = 1
+        )
+        self.play(Blink(compy))
+        self.play(
+            ApplyMethod(physy.change_mode, "sassy"),
+            ApplyMethod(compy.change_mode, "speaking"),
+            FadeOut(physy_speech),
+            ShowCreation(compy_speech),
+            Transform(physy_statement, compy_statement, path_arc = np.pi)
+        )
         self.dither(2)
-
-
-
-
+        self.play(
+            ApplyMethod(physy.change_mode, "pondering"),
+            ApplyMethod(compy.change_mode, "pondering"),
+            Transform(compy_speech, VectorizedPoint(compy_speech.get_tip())),
+            Transform(physy_statement, back_and_forth)
+        )
+        self.dither()
 
 
 

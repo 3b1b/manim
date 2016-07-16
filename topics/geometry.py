@@ -129,8 +129,9 @@ class Arrow(Line):
     CONFIG = {
         "color"      : YELLOW_C,
         "tip_length" : 0.25,
+        "tip_angle"  : np.pi/6,
         "buff"       : 0.3,
-        "propogate_style_to_family" : True,
+        "propogate_style_to_family" : False,
         "preserve_tip_size_when_scaling" : True,
     }
     def __init__(self, *args, **kwargs):
@@ -148,10 +149,16 @@ class Arrow(Line):
             start, end = end, start
             vect = -vect
         tip_points = [
-            end+rotate_vector(vect, u*np.pi/5)
+            end+rotate_vector(vect, u*self.tip_angle)
             for u in 1, -1
         ]
-        self.tip = VMobject(close_new_points = False)
+        self.tip = VMobject(
+            close_new_points = True,
+            mark_paths_closed = True,
+            fill_color = self.color,
+            fill_opacity = 1,
+            stroke_color = self.color,
+        )
         self.tip.set_anchor_points(
             [tip_points[0], end, tip_points[1]],
             mode = "corners"

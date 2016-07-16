@@ -16,6 +16,7 @@ VECTOR_LABEL_SCALE_VAL = 0.7
 
 X_COLOR = GREEN_C
 Y_COLOR = RED_C
+Z_COLOR = BLUE_D
 
 def matrix_to_tex_string(matrix):
     matrix = np.array(matrix).astype("string")
@@ -326,7 +327,50 @@ class NumericalMatrixMultiplication(Scene):
 
 
 
-class VectorCoordinateScene(Scene):
+class VectorScene(Scene):
+    def add_plane(self, animate = False, **kwargs):
+        plane = NumberPlane(**kwargs)
+        if animate:
+            self.play(ShowCreation(plane, submobject_mode = "lagged_start"))
+        self.add(plane)
+        return plane
+
+    def add_vector(self, vector, animate = True, color = YELLOW):
+        arrow = Vector(vector, color = color)
+        if animate:
+            self.play(ShowCreation(arrow, submobject_mode = "one_at_a_time"))
+        self.add(arrow)
+        return arrow
+
+    def label_vector(self, vector, label, animate = True, 
+                     direction = "left", rotate = False,
+                     color = WHITE, add_to_vector = True,
+                     buff_factor = 1.5):
+        if len(label) == 1:
+            label = "\\vec{\\textbf{%s}}"%label
+        label = TexMobject(label)
+        label.highlight(color)        
+        label.scale(VECTOR_LABEL_SCALE_VAL)
+        if rotate:
+            label.rotate(vector.get_angle())
+
+        vector_vect = vector.get_end() - vector.get_start()
+        if direction is "left":
+            rot_angle = -np.pi/2
+        else:
+            rot_angle = np.pi/2
+        label.shift(-buff_factor*label.get_boundary_point(
+            rotate_vector(vector_vect, rot_angle)
+        ))
+        label.shift(vector.get_center())
+
+        if add_to_vector:
+            vector.add(label)
+        if animate:
+            self.play(Write(label, run_time = 1))
+        self.add(label)
+        return label
+
     def position_x_coordinate(self, x_coord, x_line, vector):
         x_coord.next_to(x_line, -vector[1]*UP)
         x_coord.highlight(X_COLOR)
