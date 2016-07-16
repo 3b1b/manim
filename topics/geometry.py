@@ -172,6 +172,8 @@ class Vector(Arrow):
         "buff"  : 0,
     }
     def __init__(self, direction, **kwargs):
+        if len(direction) == 2:
+            direction = np.append(np.array(direction), 0)
         Arrow.__init__(self, ORIGIN, direction, **kwargs)
 
 class DoubleArrow(Arrow):

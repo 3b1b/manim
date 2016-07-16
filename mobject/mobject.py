@@ -219,9 +219,14 @@ class Mobject(object):
         self.shift(target_point - anchor_point + buff*direction)
         return self
 
-    def stretch_to_fit(self, length, dim):
+    def stretch_to_fit(self, length, dim, stretch = True):
         old_length = self.length_over_dim(dim)
-        self.do_in_place(self.stretch, length/old_length, dim)
+        if old_length == 0:
+            return self
+        if stretch:
+            self.do_in_place(self.stretch, length/old_length, dim)
+        else:
+            self.do_in_place(self.scale, length/old_length)
         return self
 
     def stretch_to_fit_width(self, width):
@@ -231,10 +236,19 @@ class Mobject(object):
         return self.stretch_to_fit(height, 1)
 
     def scale_to_fit_width(self, width):
-        return self.scale(width/self.get_width())
+        return self.stretch_to_fit(width, 0, stretch = False)
 
     def scale_to_fit_height(self, height):
-        return self.scale(height/self.get_height())
+        return self.stretch_to_fit(height, 1, stretch = False)
+
+    def move_to(self, point_or_mobject, side_to_align = ORIGIN):
+        if isinstance(point_or_mobject, Mobject):
+            target = point_or_mobject.get_critical_point(side_to_align)
+        else:
+            target = point_or_mobject
+        anchor_point = self.get_critical_point(side_to_align)
+        self.shift(target - anchor_point)
+        return self
 
     def replace(self, mobject, stretch = False):
         if not mobject.get_num_points() and not mobject.submobjects:
@@ -244,8 +258,8 @@ class Mobject(object):
             self.stretch_to_fit_width(mobject.get_width())
             self.stretch_to_fit_height(mobject.get_height())
         else:
-            self.scale(mobject.get_width()/self.get_width())
-        self.center().shift(mobject.get_center())
+            self.scale_to_fit_width(mobject.get_width())
+        self.shift(mobject.get_center() - self.get_center())
         return self
 
     def position_endpoints_on(self, start, end):

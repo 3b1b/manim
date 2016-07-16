@@ -77,17 +77,35 @@ class PiCreature(SVGMobject):
     def change_mode(self, mode):
         curr_center = self.get_center()
         curr_height = self.get_height()
+        looking_direction = None
+        looking_direction = self.get_looking_direction()
         should_be_flipped = self.is_flipped()
         self.__init__(mode)
         self.scale_to_fit_height(curr_height)
         self.shift(curr_center)
-        if should_be_flipped^self.is_flipped():
+        self.look(looking_direction)
+        if should_be_flipped ^ self.is_flipped():
             self.flip()
         return self
 
-    def look_left(self):
-        self.change_mode(self.mode + "_looking_left")
+    def look(self, direction):
+        x, y = direction[:2]        
+        for pupil, eye in zip(self.pupils.split(), self.eyes.split()):
+            pupil.move_to(eye, side_to_align = direction)
+            if y > 0 and x != 0: # Look up and to a side
+                nudge_size = pupil.get_height()/4.
+                if x > 0: 
+                    nudge = nudge_size*(DOWN+LEFT)
+                else:
+                    nudge = nudge_size*(DOWN+RIGHT)
+                pupil.shift(nudge)
         return self
+
+    def get_looking_direction(self):
+        return np.sign(np.round(
+            self.pupils.get_center() - self.eyes.get_center(),
+            decimals = 1
+        ))
 
     def is_flipped(self):
         return self.eyes.submobjects[0].get_center()[0] > \

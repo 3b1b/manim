@@ -28,7 +28,8 @@ class NumberLine(VMobject):
 
     def generate_points(self):
         self.main_line = Line(self.x_min*RIGHT, self.x_max*RIGHT)
-        self.add(self.main_line)
+        self.tick_marks = VMobject()
+        self.add(self.main_line, self.tick_marks)
         for x in self.get_tick_numbers():
             self.add_tick(x, self.tick_size)
         for x in self.numbers_with_elongated_ticks:
@@ -37,11 +38,14 @@ class NumberLine(VMobject):
         self.shift(-self.number_to_point(self.number_at_center))
 
     def add_tick(self, x, size):
-        self.add(Line(
+        self.tick_marks.add(Line(
             x*RIGHT+size*DOWN,
             x*RIGHT+size*UP,
         ))
         return self
+
+    def get_tick_marks(self):
+        return self.tick_marks
 
     def get_tick_numbers(self):
         return np.arange(self.leftmost_tick, self.x_max, self.tick_frequency)
@@ -160,6 +164,9 @@ class NumberPlane(VMobject):
         self.add(self.axes, self.main_lines, self.secondary_lines)
         self.stretch(self.space_unit_to_x_unit, 0)
         self.stretch(self.space_unit_to_y_unit, 1)
+        #Put x_axis before y_axis
+        y_axis, x_axis = self.axes.split()
+        self.axes = VMobject(x_axis, y_axis)
 
     def init_colors(self):
         VMobject.init_colors(self)
@@ -205,6 +212,20 @@ class NumberPlane(VMobject):
                 )
                 result.append(num)
         return result
+
+    def get_axes(self):
+        return self.axes
+
+    def get_axis_labels(self, x_label = "x", y_label = "y"):
+        x_axis, y_axis = self.get_axes().split()
+        x_label_mob = TexMobject(x_label)
+        y_label_mob = TexMobject(y_label)
+        x_label_mob.next_to(x_axis, DOWN)
+        x_label_mob.to_edge(RIGHT)
+        y_label_mob.next_to(y_axis, RIGHT)
+        y_label_mob.to_edge(UP)
+        return VMobject(x_label_mob, y_label_mob)
+
 
     def add_coordinates(self, x_vals = None, y_vals = None):
         self.add(*self.get_coordinate_labels(x_vals, y_vals))

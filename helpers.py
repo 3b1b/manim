@@ -431,7 +431,7 @@ def z_to_vector(vector):
     v = np.array(vector) / norm
     phi = np.arccos(v[2])
     if any(v[:2]):
-        #projection of vector to {x^2 + y^2 = 1}
+        #projection of vector to unit circle
         axis_proj = v[:2] / np.linalg.norm(v[:2])
         theta = np.arccos(axis_proj[0])
         if axis_proj[1] < 0:

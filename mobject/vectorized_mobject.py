@@ -74,6 +74,11 @@ class VMobject(Mobject):
         self.set_stroke(color = color)
         return self
 
+    def fade(self, darkness = 0.5):
+        self.set_fill(opacity = 1-darkness)
+        Mobject.fade(self, darkness)
+        return self
+
     def get_fill_color(self):
         try:
             self.fill_rgb[self.fill_rgb<0] = 0

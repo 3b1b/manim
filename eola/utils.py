@@ -5,17 +5,22 @@ from mobject import Mobject
 from mobject.vectorized_mobject import VMobject
 from mobject.tex_mobject import TexMobject, TextMobject
 from animation.transform import ApplyPointwiseFunction, Transform, \
-    ApplyMethod, FadeOut
-from animation.simple_animations import ShowCreation
+    ApplyMethod, FadeOut, ApplyFunction
+from animation.simple_animations import ShowCreation, Write
 from topics.number_line import NumberPlane
-from topics.geometry import Vector, Line, Circle
+from topics.geometry import Vector, Line, Circle, Arrow
 
 from helpers import *
 
 VECTOR_LABEL_SCALE_VAL = 0.7
 
+X_COLOR = GREEN_C
+Y_COLOR = RED_C
+
 def matrix_to_tex_string(matrix):
     matrix = np.array(matrix).astype("string")
+    if matrix.ndim == 1:
+        matrix = matrix.reshape((matrix.size, 1))
     n_rows, n_cols = matrix.shape
     prefix = "\\left[ \\begin{array}{%s}"%("c"*n_cols)
     suffix = "\\end{array} \\right]"
@@ -35,7 +40,7 @@ def vector_coordinate_label(vector_mob, integer_labels = True, n_dim = 2):
         vect = vect.astype(int)
     vect = vect[:n_dim]
     vect = vect.reshape((n_dim, 1))
-    label = matrix_to_mobject(vect)
+    label = Matrix(vect)
     label.scale(VECTOR_LABEL_SCALE_VAL)
 
     shift_dir = np.array(vector_mob.get_end())
@@ -146,7 +151,8 @@ class Matrix(VMobject):
         """
         VMobject.__init__(self, **kwargs)
         matrix = np.array(matrix)
-        assert(matrix.ndim == 2)
+        if matrix.ndim == 1:
+            matrix = matrix.reshape((matrix.size, 1))
         if not isinstance(matrix[0][0], Mobject):
             matrix = matrix.astype("string")
             matrix = self.string_matrix_to_mob_matrix(matrix)
@@ -174,9 +180,6 @@ class Matrix(VMobject):
                     mob.next_to(matrix[i-1][j], DOWN, self.v_buff)
         return self
 
-    def get_mob_matrix(self):
-        return self.mob_matrix
-
     def add_brackets(self):
         bracket_pair = TexMobject("\\big[ \\big]")
         bracket_pair.scale(2)
@@ -185,7 +188,14 @@ class Matrix(VMobject):
         l_bracket.next_to(self, LEFT)
         r_bracket.next_to(self, RIGHT)
         self.add(l_bracket, r_bracket)
+        self.brackets = VMobject(l_bracket, r_bracket)
         return self
+
+    def get_mob_matrix(self):
+        return self.mob_matrix
+
+    def get_brackets(self):
+        return self.brackets
 
 
 class NumericalMatrixMultiplication(Scene):
@@ -314,6 +324,100 @@ class NumericalMatrixMultiplication(Scene):
         self.play(FadeOut(circles), *lagging_anims)
         self.dither()
 
+
+
+class VectorCoordinateScene(Scene):
+    def position_x_coordinate(self, x_coord, x_line, vector):
+        x_coord.next_to(x_line, -vector[1]*UP)
+        x_coord.highlight(X_COLOR)
+        return x_coord
+
+    def position_y_coordinate(self, y_coord, y_line, vector):
+        y_coord.next_to(y_line, vector[0]*RIGHT)
+        y_coord.highlight(Y_COLOR)
+        return y_coord
+
+    def coords_to_vector(self, vector, coords_start = 2*RIGHT+2*UP, cleanup = True):
+        starting_mobjects = list(self.mobjects)
+        array = Matrix(vector)
+        array.shift(coords_start)
+        arrow = Vector(vector)
+        x_line = Line(ORIGIN, vector[0]*RIGHT)
+        y_line = Line(x_line.get_end(), arrow.get_end())
+        x_line.highlight(X_COLOR)
+        y_line.highlight(Y_COLOR)
+        x_coord, y_coord = array.get_mob_matrix().flatten()
+
+        self.play(Write(array, run_time = 1))
+        self.dither()
+        self.play(ApplyFunction(
+            lambda x : self.position_x_coordinate(x, x_line, vector),
+            x_coord
+        ))
+        self.play(ShowCreation(x_line))
+        self.play(
+            ApplyFunction(
+                lambda y : self.position_y_coordinate(y, y_line, vector),
+                y_coord
+            ),
+            FadeOut(array.get_brackets())
+        )
+        self.play(ShowCreation(y_line))
+        self.play(ShowCreation(arrow, submobject_mode = "one_at_a_time"))
+        self.dither()
+        if cleanup:
+            self.clear()
+            self.add(*starting_mobjects)
+
+    def vector_to_coords(self, vector, integer_labels = True, cleanup = True):
+        starting_mobjects = list(self.mobjects)
+        show_creation = False
+        if isinstance(vector, Arrow):
+            arrow = vector
+            vector = arrow.get_end()[:2]
+        else:
+            arrow = Vector(vector)
+            show_creation = True
+        array = vector_coordinate_label(arrow, integer_labels = integer_labels)
+        x_line = Line(ORIGIN, vector[0]*RIGHT)
+        y_line = Line(x_line.get_end(), arrow.get_end())
+        x_line.highlight(X_COLOR)
+        y_line.highlight(Y_COLOR)
+        x_coord, y_coord = array.get_mob_matrix().flatten()
+        x_coord_start = self.position_x_coordinate(
+            x_coord.copy(), x_line, vector
+        )
+        y_coord_start = self.position_y_coordinate(
+            y_coord.copy(), y_line, vector
+        )
+        brackets = array.get_brackets()
+
+        if show_creation:
+            self.play(ShowCreation(arrow, submobject_mode = "one_at_a_time"))
+        self.play(
+            ShowCreation(x_line),
+            Write(x_coord_start),
+            run_time = 1
+        )
+        self.play(
+            ShowCreation(y_line),
+            Write(y_coord_start),
+            run_time = 1
+        )
+        self.dither()
+        self.play(
+            Transform(x_coord_start, x_coord),
+            Transform(y_coord_start, y_coord),
+            Write(brackets),
+            run_time = 1
+        )
+        self.dither()
+
+        self.remove(x_coord_start, y_coord_start)
+        self.add(x_coord, y_coord)
+        if cleanup:
+            self.clear()
+            self.add(*starting_mobjects)
 
 
 
