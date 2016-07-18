@@ -28,7 +28,7 @@ class PMobject(Mobject):
 
     def highlight(self, color = YELLOW_C, condition = None):
         rgb = Color(color).get_rgb()
-        for mob in self.nonempty_family_members():
+        for mob in self.family_members_with_points():
             if condition:
                 to_change = np.apply_along_axis(condition, 1, mob.points)
                 mob.rgbs[to_change, :] = rgb
@@ -41,7 +41,7 @@ class PMobject(Mobject):
             np.array(Color(color).get_rgb())
             for color in start_color, end_color
         ]
-        for mob in self.nonempty_family_members():
+        for mob in self.family_members_with_points():
             num_points = mob.get_num_points()
             mob.rgbs = np.array([
                 interpolate(start_rgb, end_rgb, alpha)
@@ -56,7 +56,7 @@ class PMobject(Mobject):
         return self
 
     def filter_out(self, condition):
-        for mob in self.nonempty_family_members():
+        for mob in self.family_members_with_points():
             to_eliminate = ~np.apply_along_axis(condition, 1, mob.points)
             mob.points = mob.points[to_eliminate]
             mob.rgbs = mob.rgbs[to_eliminate]
@@ -66,7 +66,7 @@ class PMobject(Mobject):
         """
         Removes all but every nth point for n = factor
         """
-        for mob in self.nonempty_family_members():
+        for mob in self.family_members_with_points():
             num_points = self.get_num_points()
             mob.apply_over_attr_arrays(
                 lambda arr : arr[
@@ -79,7 +79,7 @@ class PMobject(Mobject):
         """
         function is any map from R^3 to R
         """
-        for mob in self.nonempty_family_members():
+        for mob in self.family_members_with_points():
             indices = np.argsort(
                 np.apply_along_axis(function, 1, mob.points)
             )

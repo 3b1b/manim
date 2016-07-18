@@ -96,18 +96,18 @@ class Mobject(object):
     #### Transforming operations ######
 
     def apply_to_family(self, func):
-        for mob in self.nonempty_family_members():
+        for mob in self.family_members_with_points():
             func(mob)
 
     def shift(self, *vectors):
         total_vector = reduce(op.add, vectors)
-        for mob in self.nonempty_family_members():        
+        for mob in self.family_members_with_points():        
            mob.points += total_vector
         return self        
 
 
     def scale(self, scale_factor):
-        for mob in self.nonempty_family_members():
+        for mob in self.family_members_with_points():
             mob.points *= scale_factor
         return self
 
@@ -118,22 +118,22 @@ class Mobject(object):
         for axis in axes:
             rot_matrix = np.dot(rot_matrix, rotation_matrix(angle, axis))
         t_rot_matrix = np.transpose(rot_matrix)
-        for mob in self.nonempty_family_members():
+        for mob in self.family_members_with_points():
             mob.points = np.dot(mob.points, t_rot_matrix)
         return self
 
     def stretch(self, factor, dim):
-        for mob in self.nonempty_family_members():
+        for mob in self.family_members_with_points():
             mob.points[:,dim] *= factor
         return self
 
     def apply_function(self, function):
-        for mob in self.nonempty_family_members():
+        for mob in self.family_members_with_points():
             mob.points = np.apply_along_axis(function, 1, mob.points)
         return self
 
     def wag(self, direction = RIGHT, axis = DOWN, wag_factor = 1.0):
-        for mob in self.nonempty_family_members():
+        for mob in self.family_members_with_points():
             alphas = np.dot(mob.points, np.transpose(axis))
             alphas -= min(alphas)
             alphas /= max(alphas)
@@ -145,7 +145,7 @@ class Mobject(object):
         return self
 
     def reverse_points(self):
-        for mob in self.nonempty_family_members():
+        for mob in self.family_members_with_points():
             mob.apply_over_attr_arrays(
                 lambda arr : np.array(list(reversed(arr)))
             )
@@ -160,7 +160,7 @@ class Mobject(object):
                 lambda a1, a2 : np.append(a1, a2, axis = 0),
                 [array]*count
             )
-        for mob in self.nonempty_family_members():
+        for mob in self.family_members_with_points():
             mob.apply_over_attr_arrays(repeat_array)
         return self
 
@@ -299,7 +299,7 @@ class Mobject(object):
         start = color_to_rgb(self.get_color())
         end = color_to_rgb(color)
         new_rgb = interpolate(start, end, alpha)
-        for mob in self.nonempty_family_members():
+        for mob in self.family_members_with_points():
             mob.highlight(Color(rgb = new_rgb))
         return self
 
@@ -333,7 +333,7 @@ class Mobject(object):
 
     def get_merged_array(self, array_attr):
         result = np.zeros((0, self.dim))
-        for mob in self.nonempty_family_members():
+        for mob in self.family_members_with_points():
             result = np.append(result, getattr(mob, array_attr), 0)
         return result
 
@@ -417,7 +417,7 @@ class Mobject(object):
         all_mobjects = [self] + reduce(op.add, sub_families, [])
         return remove_list_redundancies(all_mobjects)
 
-    def nonempty_family_members(self):
+    def family_members_with_points(self):
         return filter(
             lambda m : m.get_num_points() > 0, 
             self.submobject_family()

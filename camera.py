@@ -66,7 +66,7 @@ class Camera(object):
     def capture_mobjects(self, mobjects, include_submobjects = True):
         if include_submobjects:
             mobjects = it.chain(*[
-                mob.nonempty_family_members() 
+                mob.family_members_with_points() 
                 for mob in mobjects
             ])
         vmobjects = []

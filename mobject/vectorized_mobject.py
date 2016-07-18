@@ -77,7 +77,6 @@ class VMobject(Mobject):
         return self
 
     def fade(self, darkness = 0.5):
-        self.set_fill(opacity = 1-darkness)
         Mobject.fade(self, darkness)
         return self
 

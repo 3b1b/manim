@@ -67,13 +67,24 @@ class Scene(object):
         self.clear()
     ###
 
+    def extract_mobjects_with_points(self, *mobjects):
+        return list(it.chain(*[
+            m.family_members_with_points()
+            for m in mobjects
+        ]))
+        
+
     def add(self, *mobjects):
         """
         Mobjects will be displayed, from background to foreground,
         in the order with which they are entered.
+
+        Scene class only keeps track of pointful monjects, all 
+        grouping structure is forgotten as far as Scene is concerned
         """
         if not all_elements_are_instances(mobjects, Mobject):
             raise Exception("Adding something which is not a mobject")
+        mobjects = self.extract_mobjects_with_points(*mobjects)
         old_mobjects = filter(lambda m : m not in mobjects, self.mobjects)
         self.mobjects = old_mobjects + list(mobjects)
         return self
@@ -84,14 +95,15 @@ class Scene(object):
         by calling add_mobjects_among(locals().values())
         """
         mobjects = filter(lambda x : isinstance(x, Mobject), values)
+        mobjects = self.extract_mobjects_with_points(*mobjects)
         self.add(*mobjects)
         return self
 
     def remove(self, *mobjects):
         if not all_elements_are_instances(mobjects, Mobject):
             raise Exception("Removing something which is not a mobject")
-        mobjects = it.chain(*[m.submobject_family() for m in mobjects])
-        mobjects = filter(lambda m : m in self.mobjects, mobjects)
+        mobjects = self.extract_mobjects_with_points(*mobjects)
+        # mobjects = filter(lambda m : m in self.mobjects, mobjects)
         if len(mobjects) == 0:
             return
         self.mobjects = filter(lambda m : m not in mobjects, self.mobjects)
@@ -126,14 +138,12 @@ class Scene(object):
         return animations
 
     def separate_moving_and_static_mobjects(self, *animations):
-        moving_mobjects = list(it.chain(*[
-            anim.mobject.submobject_family()
-            for anim in animations
-        ]))
-        bundle = Mobject(*self.mobjects)
+        moving_mobjects = self.extract_mobjects_with_points(
+            *[anim.mobject for anim in animations]
+        )
         static_mobjects = filter(
             lambda m : m not in moving_mobjects, 
-            bundle.submobject_family()
+            self.mobjects
         )
         return moving_mobjects, static_mobjects
 
@@ -186,7 +196,8 @@ class Scene(object):
             t1 = float(t1)%existing_scene_time
         t0, t1 = min(t0, t1), max(t0, t1)    
 
-        moving_mobjects = [anim.mobject for anim in animations]
+        moving_mobjects, static_mobjects = \
+            self.separate_moving_and_static_mobjects(*animations)
         for t in np.arange(t0, t1, self.frame_duration):
             for animation in animations:
                 animation.update((t-t0)/(t1 - t0))

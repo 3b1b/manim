@@ -118,18 +118,19 @@ class VectorScene(Scene):
         return plane
 
     def add_axes(self, animate = False, color = WHITE, **kwargs):
-        axes = Axes(color = color)
+        axes = Axes(color = color, tick_frequency = 1)
         if animate:
             self.play(ShowCreation(axes, submobject_mode = "one_at_a_time"))
         self.add(axes)
         return axes
 
     def add_vector(self, vector, animate = True, color = YELLOW):
-        arrow = Vector(vector, color = color)
+        if not isinstance(vector, Arrow):
+            vector = Vector(vector, color = color)
         if animate:
-            self.play(ShowCreation(arrow, submobject_mode = "one_at_a_time"))
-        self.add(arrow)
-        return arrow
+            self.play(ShowCreation(vector, submobject_mode = "one_at_a_time"))
+        self.add(vector)
+        return vector
 
     def get_basis_vectors(self):
         i_hat = Vector([1, 0], color = X_COLOR)
@@ -139,12 +140,13 @@ class VectorScene(Scene):
     def label_vector(self, vector, label, animate = True, 
                      direction = "left", rotate = False,
                      color = WHITE, add_to_vector = True,
-                     buff_factor = 1.5):
+                     buff_factor = 2, 
+                     label_scale_val = VECTOR_LABEL_SCALE_VAL):
         if len(label) == 1:
             label = "\\vec{\\textbf{%s}}"%label
         label = TexMobject(label)
         label.highlight(color)        
-        label.scale(VECTOR_LABEL_SCALE_VAL)
+        label.scale(label_scale_val)
         if rotate:
             label.rotate(vector.get_angle())
 
@@ -153,10 +155,10 @@ class VectorScene(Scene):
             rot_angle = -np.pi/2
         else:
             rot_angle = np.pi/2
-        label.shift(-buff_factor*label.get_boundary_point(
+        label.shift(-buff_factor*label.get_critical_point(
             rotate_vector(vector_vect, rot_angle)
         ))
-        label.shift(vector.get_center())
+        label.shift(vector_vect/2)
 
         if add_to_vector:
             vector.add(label)
