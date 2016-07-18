@@ -8,7 +8,7 @@ from helpers import *
 
 from animation import Animation
 from simple_animations import DelayByOrder
-from mobject import Mobject, Point
+from mobject import Mobject, Point, VMobject
 
 class Transform(Animation):
     CONFIG = {
@@ -100,6 +100,8 @@ class FadeIn(Transform):
     def __init__(self, mobject, **kwargs):
         target = mobject.copy()
         mobject.fade(1)
+        if isinstance(mobject, VMobject):
+            mobject.set_stroke(width = 0)
         Transform.__init__(self, mobject, target, **kwargs)
         # self.mobject.rgbs = self.starting_mobject.rgbs * alpha
         # if self.mobject.points.shape != self.starting_mobject.points.shape:

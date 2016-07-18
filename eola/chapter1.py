@@ -18,7 +18,9 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from mobject.vectorized_mobject import *
 
-from eola.utils import *
+from eola.matrix import *
+from eola.two_d_space import *
+from eola.chapter0 import UpcomingSeriesOfVidoes
 
 import random
 
@@ -326,6 +328,14 @@ class DifferentConceptions(Scene):
         syms.arrange_submobjects(RIGHT)
         syms.center().shift(2*UP)
 
+        statement = TextMobject("We'll ignore him \\\\ for now")
+        statement.highlight(PINK)
+        statement.scale_to_fit_width(arrays.get_width())
+        statement.next_to(arrays, DOWN, buff = 2)
+        arrow_to_mathy = Arrow(statement, mathy, color = PINK, buff = 0)
+        circle = Circle()
+        circle.shift(syms.get_bottom())
+
         VMobject(v_arrow, v_array, v_sym).highlight(v_color)
         VMobject(w_arrow, w_array, w_sym).highlight(w_color)
         VMobject(sum_arrow, sum_array).highlight(sum_color)
@@ -338,6 +348,16 @@ class DifferentConceptions(Scene):
         )
         self.play(Blink(mathy))
         self.add_scaling(arrows, syms, arrays)
+        self.play(Write(statement))
+        self.play(ShowCreation(arrow_to_mathy, submobject_mode = "one_at_a_time"))
+        self.play(ApplyMethod(mathy.change_mode, "sad"))
+        self.dither()
+        self.play(
+            ShowCreation(circle),
+            ApplyMethod(mathy.change_mode, "plain")
+        )
+        self.dither()
+
 
     def add_scaling(self, arrows, syms, arrays):
         s_arrows = VMobject(
@@ -658,8 +678,10 @@ class Write3DVector(Scene):
 class VectorAddition(VectorScene):
     def construct(self):
         self.add_plane()
-        self.define_addition()
-        self.answer_why()
+        vects = self.define_addition()
+        # vects = map(Vector, [[1, 2], [3, -1], [4, 1]])
+        self.ask_why(*vects)
+        self.answer_why(*vects)
 
     def define_addition(self):
         v1 = self.add_vector([1, 2])
@@ -673,9 +695,415 @@ class VectorAddition(VectorScene):
         sum_tex = "\\vec{\\textbf{v}} + \\vec{\\textbf{w}}"
         self.label_vector(v_sum, sum_tex, rotate = True)
         self.dither(3)
+        return v1, v2, v_sum
 
-    def answer_why(self):
-        pass
+    def ask_why(self, v1, v2, v_sum):
+        why = TextMobject("Why?")
+        why_not_this = TextMobject("Why not \\\\ this?")
+        new_v2 = v2.copy().shift(-v2.get_start())
+        new_v_sum = v_sum.copy()
+        alt_vect_sum = new_v2.get_end() - v1.get_end()
+        new_v_sum.shift(-new_v_sum.get_start())
+        new_v_sum.rotate(
+            angle_of_vector(alt_vect_sum) - new_v_sum.get_angle()
+        )
+        new_v_sum.scale(np.linalg.norm(alt_vect_sum)/new_v_sum.get_length())
+        new_v_sum.shift(v1.get_end())
+        new_v_sum.submobjects.reverse()#No idea why I have to do this
+        original_v_sum = v_sum.copy()
+
+        why.next_to(v2, RIGHT)
+        why_not_this.next_to(new_v_sum, RIGHT)
+        why_not_this.shift(0.5*UP)
+
+        self.play(Write(why, run_time = 1))
+        self.dither(2)
+        self.play(
+            Transform(v2, new_v2),
+            Transform(v_sum, new_v_sum),            
+            Transform(why, why_not_this)
+        )
+        self.dither(2)
+        self.play(
+            FadeOut(why),
+            Transform(v_sum, original_v_sum)
+        )
+        self.remove(why)
+        self.dither()
+
+    def answer_why(self, v1, v2, v_sum):
+        randy = Randolph(color = PINK)
+        randy.shift(-randy.get_bottom())
+        self.remove(v1, v2, v_sum)
+        for v in v1, v2, v_sum:
+            self.add(v)
+            self.show_ghost_movement(v)
+            self.remove(v)
+        self.add(v1, v2 )
+        self.dither()
+        self.play(ApplyMethod(randy.scale, 0.3))
+        self.play(ApplyMethod(randy.shift, v1.get_end()))
+        self.dither()
+        self.play(ApplyMethod(v2.shift, v1.get_end()))
+        self.play(ApplyMethod(randy.move_to, v2.get_end()))
+        self.dither()
+        self.remove(randy)
+        randy.move_to(ORIGIN)
+        self.play(FadeIn(v_sum))
+        self.play(ApplyMethod(randy.shift, v_sum.get_end()))
+        self.dither()
+
+
+class AddingNumbersOnNumberLine(Scene):
+    def construct(self):
+        number_line = NumberLine()
+        number_line.add_numbers()
+        two_vect = Vector([2, 0])
+        five_vect = Vector([5, 0], color = MAROON_B)
+        seven_vect = Vector([7, 0], color = PINK)
+        five_vect.shift(two_vect.get_end())
+        seven_vect.shift(0.5*DOWN)
+        vects = [two_vect, five_vect, seven_vect]
+
+        two, five, seven = map(TexMobject, ["2", "5", "7"])
+        two.next_to(two_vect, UP)
+        five.next_to(five_vect, UP)
+        seven.next_to(seven_vect, DOWN)
+        nums = [two, five, seven]
+
+        sum_mob = TexMobject("2 + 5").shift(3*UP)
+
+        self.play(ShowCreation(number_line, submobject_mode = "one_at_a_time"))
+        self.dither()
+        self.play(Write(sum_mob, run_time = 2))
+        self.dither()
+        for vect, num in zip(vects, nums):
+            self.play(
+                ShowCreation(vect, submobject_mode = "one_at_a_time"),
+                Write(num, run_time = 1)
+            )
+            self.dither()
+
+
+class VectorAdditionNumerically(VectorScene):
+    def construct(self):
+        plus = TexMobject("+")
+        equals = TexMobject("=")
+        randy = Randolph()
+        randy.scale_to_fit_height(1)
+        randy.shift(-randy.get_bottom())
+
+        axes = self.add_axes()
+        x_axis, y_axis = axes.split()
+
+        v1 = self.add_vector([1, 2])
+        coords1, x_line1, y_line1 = self.vector_to_coords(v1, cleanup = False)
+        self.play(ApplyFunction(
+            lambda m : m.next_to(y_axis, RIGHT).to_edge(UP),
+            coords1
+        ))
+        plus.next_to(coords1, RIGHT)
+
+        v2 = self.add_vector([3, -1], color = MAROON_B)
+        coords2, x_line2, y_line2 = self.vector_to_coords(v2, cleanup = False)
+        self.dither()
+        self.play(
+            ApplyMethod(coords2.next_to, plus, RIGHT),
+            Write(plus, run_time = 1), 
+            *[
+                ApplyMethod(mob.shift, v1.get_end())
+                for mob in v2, x_line2, y_line2
+            ]
+        )
+        equals.next_to(coords2, RIGHT)
+        self.dither()
+
+        self.play(FadeIn(randy))
+        for step in [RIGHT, 2*UP, 3*RIGHT, DOWN]:
+            self.play(ApplyMethod(randy.shift, step, run_time = 1.5))
+        self.dither()
+        self.play(ApplyMethod(randy.shift, -randy.get_bottom()))
+
+        self.play(ApplyMethod(x_line2.shift, 2*DOWN))
+        self.play(ApplyMethod(y_line1.shift, 3*RIGHT))
+        for step in [4*RIGHT, 2*UP, DOWN]:
+            self.play(ApplyMethod(randy.shift, step))
+        self.play(FadeOut(randy))
+        self.remove(randy)
+        one_brace = Brace(x_line1)
+        three_brace = Brace(x_line2)
+        one = TexMobject("1").next_to(one_brace, DOWN)
+        three = TexMobject("3").next_to(three_brace, DOWN)
+        self.play(
+            GrowFromCenter(one_brace),
+            GrowFromCenter(three_brace),
+            Write(one),
+            Write(three),
+            run_time = 1
+        )
+        self.dither()
+
+        two_brace = Brace(y_line1, RIGHT)
+        two = TexMobject("2").next_to(two_brace, RIGHT)
+        new_y_line = Line(4*RIGHT, 4*RIGHT+UP, color = Y_COLOR)
+        two_minus_one_brace = Brace(new_y_line, RIGHT)
+        two_minus_one = TexMobject("2+(-1)").next_to(two_minus_one_brace, RIGHT)
+        self.play(
+            GrowFromCenter(two_brace),
+            Write(two, run_time = 1)
+        )
+        self.dither()
+        self.play(
+            Transform(two_brace, two_minus_one_brace),
+            Transform(two, two_minus_one),
+            Transform(y_line1, new_y_line),
+            Transform(y_line2, new_y_line)
+        )
+        self.dither()
+        self.add_vector(v2.get_end(), color = PINK )
+
+        sum_coords = Matrix(["1+3", "2+(-1)"])
+        sum_coords.scale_to_fit_height(coords1.get_height())
+        sum_coords.next_to(equals, RIGHT)
+        brackets = sum_coords.get_brackets()
+        x1, y1 = coords1.get_mob_matrix().flatten()
+        x2, y2 = coords2.get_mob_matrix().flatten()
+        sum_x, sum_y = sum_coords.get_mob_matrix().flatten()
+        sum_x_start = VMobject(x1, x2).copy()
+        sum_y_start = VMobject(y1, y2).copy()
+        self.play(
+            Write(brackets),
+            Write(equals),
+            Transform(sum_x_start, sum_x),
+            run_time = 1
+        )
+        self.play(Transform(sum_y_start, sum_y))
+        self.dither(2)
+
+        starters = [x1, y1, x2, y2, sum_x_start, sum_y_start]
+        variables = map(TexMobject, [
+            "x_1", "y_1", "x_2", "y_2", "x_1+y_1", "x_2+y_2"
+        ])
+        for i, (var, starter) in enumerate(zip(variables, starters)):
+            if i%2 == 0:
+                var.highlight(X_COLOR)
+            else:
+                var.highlight(Y_COLOR)
+            var.scale(VECTOR_LABEL_SCALE_VAL)
+            var.move_to(starter)
+        self.play(
+            Transform(
+                VMobject(*starters[:4]), 
+                VMobject(*variables[:4])
+            ),
+            FadeOut(sum_x_start), 
+            FadeOut(sum_y_start)
+        )
+        sum_x_end, sum_y_end = variables[-2:]
+        self.dither(2)
+        self.play(
+            Transform(VMobject(x1, x2).copy(), sum_x_end)
+        )
+        self.play(
+            Transform(VMobject(y1, y2).copy(), sum_y_end)
+        )
+        self.dither(3)
+
+class MultiplicationByANumberIntro(Scene):
+    def construct(self):
+        v = TexMobject("\\vec{\\textbf{v}}")
+        v.highlight(YELLOW)
+        nums = map(TexMobject, ["2", "\\dfrac{1}{3}", "-1.8"])
+        for mob in [v] + nums:
+            mob.scale(1.5)
+
+        self.play(Write(v, run_time = 1))
+        last = None
+        for num in nums:
+            num.next_to(v, LEFT)
+            if last:
+                self.play(Transform(last, num))
+            else:
+                self.play(FadeIn(num))
+                last = num
+            self.dither()
+
+class ShowScalarMultiplication(VectorScene):
+    def construct(self):
+        plane = self.add_plane()
+        v = self.add_vector([3, 1])
+        label = self.label_vector(v, "v", add_to_vector = False)
+
+        self.scale_vector(v, 2, label)
+        self.scale_vector(v, 1./3, label, factor_tex = "\\dfrac{1}{3}")
+        self.scale_vector(v, -1.8, label)
+        self.remove(label)
+        self.describe_scalars(v, plane)
+
+
+    def scale_vector(self, v, factor, v_label, 
+                     v_name = "v", factor_tex = None):
+        starting_mobjects = list(self.mobjects)
+
+        if factor_tex is None:
+            factor_tex = str(factor)
+        scaled_vector = self.add_vector(
+            factor*v.get_end(), animate = False
+        )
+        self.remove(scaled_vector)
+        label_tex = "%s\\vec{\\textbf{%s}}"%(factor_tex, v_name)
+        label = self.label_vector(
+            scaled_vector, label_tex, animate = False,
+            add_to_vector = False
+        )
+        self.remove(label)
+        factor_mob = TexMobject(factor_tex)
+        if factor_mob.get_height() > 1:
+            factor_mob.scale_to_fit_height(0.9)
+        if factor_mob.get_width() > 1:
+            factor_mob.scale_to_fit_width(0.9)
+        factor_mob.shift(1.5*RIGHT+2.5*UP)
+
+        num_factor_parts = len(factor_mob.split())
+        factor_mob_parts_in_label = label.split()[:num_factor_parts]
+        label_remainder_parts = label.split()[num_factor_parts:]
+        factor_in_label = VMobject(*factor_mob_parts_in_label)
+        label_remainder = VMobject(*label_remainder_parts)
+
+
+        self.play(Write(factor_mob, run_time = 1))
+        self.dither()
+        self.play(
+            ApplyMethod(v.copy().highlight, DARK_GREY),
+            ApplyMethod(v_label.copy().highlight, DARK_GREY),
+            Transform(factor_mob, factor_in_label),
+            Transform(v.copy(), scaled_vector),
+            Transform(v_label.copy(), label_remainder),
+        )
+        self.dither(2)
+
+        self.clear()
+        self.add(*starting_mobjects)
+
+    def describe_scalars(self, v, plane):
+        axes = plane.get_axes()
+        long_v = Vector(2*v.get_end())
+        long_minus_v = Vector(-2*v.get_end())
+        original_v = v.copy()
+        scaling_word = TextMobject("``Scaling''").to_corner(UP+LEFT)
+        scaling_word.shift(2*RIGHT)
+        scalars = VMobject(*map(TexMobject, [
+            "2,", "\\dfrac{1}{3},", "-1.8,", "\\dots"
+        ]))
+        scalars.arrange_submobjects(RIGHT, buff = 0.4)
+        scalars.next_to(scaling_word, DOWN, aligned_edge = LEFT)
+        scalars_word = TextMobject("``Scalars''")
+        scalars_word.next_to(scalars, DOWN, aligned_edge = LEFT)
+
+        self.remove(plane)
+        self.add(axes)
+        self.play(
+            Write(scaling_word),
+            Transform(v, long_v),
+            run_time = 1.5
+        )
+        self.play(Transform(v, long_minus_v, run_time = 3))
+        self.play(Write(scalars))
+        self.dither()
+        self.play(Write(scalars_word))
+        self.play(Transform(v, original_v), run_time = 3)
+        self.dither(2)
+
+class ScalingNumerically(VectorScene):
+    def construct(self):
+        two_dot = TexMobject("2\\cdot")
+        equals = TexMobject("=")
+        self.add_axes()
+        v = self.add_vector([3, 1])
+        v_coords, vx_line, vy_line = self.vector_to_coords(v, cleanup = False)
+        self.play(ApplyMethod(v_coords.to_edge, UP))
+        two_dot.next_to(v_coords, LEFT)
+        equals.next_to(v_coords, RIGHT)
+        two_v = self.add_vector([6, 2], animate = False)
+        self.remove(two_v)
+        self.play(
+            Transform(v.copy(), two_v), 
+            Write(two_dot, run_time = 1)
+        )
+        two_v_coords, two_v_x_line, two_v_y_line = self.vector_to_coords(
+            two_v, cleanup = False
+        )
+        self.play(
+            ApplyMethod(two_v_coords.next_to, equals, RIGHT),
+            Write(equals, run_time = 1)
+        )
+        self.dither(2)
+
+        x, y = v_coords.get_mob_matrix().flatten()
+        two_v_elems = two_v_coords.get_mob_matrix().flatten()
+        x_sym, y_sym = map(TexMobject, ["x", "y"])
+        two_x_sym, two_y_sym = map(TexMobject, ["2x", "2y"])
+        VMobject(x_sym, two_x_sym).highlight(X_COLOR)
+        VMobject(y_sym, two_y_sym).highlight(Y_COLOR)
+        syms = [x_sym, y_sym, two_x_sym, two_y_sym]
+        VMobject(*syms).scale(VECTOR_LABEL_SCALE_VAL)
+        for sym, num in zip(syms, [x, y] + list(two_v_elems)):
+            sym.move_to(num)
+        self.play(
+            Transform(x, x_sym),
+            Transform(y, y_sym),
+            FadeOut(VMobject(*two_v_elems))
+        )
+        self.dither()
+        self.play(
+            Transform(
+                VMobject(two_dot.copy(), x.copy()),
+                two_x_sym
+            ),
+            Transform(
+                VMobject(two_dot.copy(), y.copy() ),
+                two_y_sym
+            )
+        )
+        self.dither(2)
+
+
+
+class FollowingVideos(UpcomingSeriesOfVidoes):
+    def construct(self):
+        v_sum = VMobject(
+            Vector([1, 1], color = YELLOW),
+            Vector([3, 1], color = BLUE).shift(RIGHT+UP),
+            Vector([4, 2], color = GREEN),
+        )
+        scalar_multiplication = VMobject(
+            TexMobject("2 \\cdot "),
+            Vector([1, 1]),
+            TexMobject("="),
+            Vector([2, 2], color = WHITE)
+        )
+        scalar_multiplication.arrange_submobjects(RIGHT)
+        both = VMobject(v_sum, scalar_multiplication)
+        both.arrange_submobjects(RIGHT, buff = 1)
+        both.shift(2*DOWN)
+        self.add(both)
+
+        UpcomingSeriesOfVidoes.construct(self)
+        last_video = self.mobjects[-1]
+        self.play(ApplyMethod(last_video.highlight, YELLOW))
+        self.dither()
+        everything = VMobject(*self.mobjects)
+        everything.remove(last_video)
+        big_last_video = last_video.copy()
+        big_last_video.center()
+        big_last_video.scale_to_fit_height(2.5*SPACE_HEIGHT)
+        big_last_video.set_fill(opacity = 0)
+        self.play(
+            ApplyMethod(everything.shift, 2*SPACE_WIDTH*LEFT),
+            Transform(last_video, big_last_video),
+            run_time = 2
+        )
+
 
 
 class ItDoesntMatterWhich(Scene):
@@ -736,6 +1164,137 @@ class ItDoesntMatterWhich(Scene):
             Transform(physy_statement, back_and_forth)
         )
         self.dither()
+
+
+class DataAnalyst(Scene):
+    def construct(self):
+        plane = NumberPlane()
+        ellipse = ParametricFunction(
+            lambda x : 2*np.cos(x)*(UP+RIGHT) + np.sin(x)*(UP+LEFT),
+            color = PINK, 
+            t_max = 2*np.pi
+        )
+        ellipse_points = [
+            ellipse.point_from_proportion(x)
+            for x in np.arange(0, 1, 1./20)
+        ]
+        string_vects = [
+            matrix_to_mobject(("%.02f %.02f"%tuple(ep[:2])).split())
+            for ep in ellipse_points
+        ]
+        string_vects_matrix = Matrix(
+            np.array(string_vects).reshape((4, 5))
+        )
+        string_vects = string_vects_matrix.get_mob_matrix().flatten()
+        string_vects = VMobject(*string_vects)
+
+        vects = VMobject(*map(Vector, ellipse_points))
+
+        self.play(Write(string_vects))
+        self.dither(2)
+        self.play(
+            FadeIn(plane),
+            Transform(string_vects, vects)
+        )
+        self.remove(string_vects)
+        self.add(vects)
+        self.dither()
+        self.play(
+            ApplyMethod(plane.fade, 0.7),
+            ApplyMethod(vects.highlight, DARK_GREY),
+            ShowCreation(ellipse)
+        )
+        self.dither(3)
+
+
+class ManipulateSpace(LinearTransformationScene):
+    CONFIG = {
+        "include_background_plane" : False,
+        "show_basis_vectors" : False,
+    }
+
+    def construct(self):
+        matrix_rule = TexMobject("""
+            \\left[
+                \\begin{array}{c}
+                    x \\\\ y
+                \\end{array}
+            \\right]
+            \\rightarrow
+            \\left[
+                \\begin{array}{c}
+                    2x + y \\\\ y + 2x
+                \\end{array}
+            \\right]
+        """)
+
+        self.setup()
+        pi_creature = PiCreature(color = PINK).scale(0.5)
+        pi_creature.shift(-pi_creature.get_corner(DOWN+LEFT))
+        self.plane.prepare_for_nonlinear_transform()
+
+        def homotopy(x, y, z, t):
+            norm = np.linalg.norm([x, y])
+            tau = interpolate(5, -5, t) + norm/SPACE_WIDTH
+            alpha = sigmoid(tau)
+            return [x, y + 0.5*np.sin(2*np.pi*alpha), z]
+
+        self.play(ShowCreation(
+            self.plane, 
+            submobject_mode = "one_at_a_time",
+            run_time = 2
+        ))
+        self.play(FadeIn(pi_creature))
+        self.play(Blink(pi_creature))
+        self.plane.add(pi_creature)
+        self.play(Homotopy(homotopy, self.plane, run_time = 3))
+        self.dither(2)
+        self.apply_matrix([[2, 1], [1, 2]])
+        self.dither()
+        self.play(
+            FadeOut(self.plane),
+            Write(matrix_rule),
+            run_time = 2
+        )
+        self.dither()
+
+class CodingMathyAnimation(Scene):
+    pass
+
+class NextVideo(Scene):
+    def construct(self):
+        title = TextMobject("Next video: Linear combinations, span, and bases")
+        title.to_edge(UP)
+        rect = Rectangle(width = 16, height = 9, color = BLUE)
+        rect.scale_to_fit_height(6)
+        rect.next_to(title, DOWN)
+
+        self.add(title)
+        self.play(ShowCreation(rect))
+        self.dither()    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

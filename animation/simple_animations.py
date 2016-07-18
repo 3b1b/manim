@@ -130,14 +130,23 @@ class Homotopy(Animation):
         """
         Homotopy a function from (x, y, z, t) to (x', y', z')
         """
-        digest_config(self, kwargs, locals())
+        def function_at_time_t(t):
+            return lambda p : homotopy(p[0], p[1], p[2], t)
+        self.function_at_time_t = function_at_time_t
+        digest_config(self, kwargs)
         Animation.__init__(self, mobject, **kwargs)
 
     def update_mobject(self, alpha):
-        self.mobject.points = np.array([
-            self.homotopy((x, y, z, alpha))
-            for x, y, z in self.starting_mobject.points
-        ])
+        pairs = zip(
+            self.mobject.submobject_family(),
+            self.starting_mobject.submobject_family()
+        )
+        for mob, start_mob in pairs:
+            mob.become_partial(start_mob, 0, 1)
+        self.mobject.apply_function(
+            self.function_at_time_t(alpha)
+        )
+
 
 class PhaseFlow(Animation):
     CONFIG = {

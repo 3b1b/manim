@@ -5,7 +5,9 @@ from mobject.svg_mobject import SVGMobject
 from mobject.vectorized_mobject import VMobject
 from mobject.tex_mobject import TextMobject
 
-from animation.transform import ApplyMethod
+from animation.transform import ApplyMethod, FadeOut, FadeIn
+from animation.simple_animations import Write
+from scene import Scene
 
 
 PI_CREATURE_DIR = os.path.join(IMAGE_DIR, "PiCreature")
@@ -92,6 +94,7 @@ class PiCreature(SVGMobject):
         x, y = direction[:2]        
         for pupil, eye in zip(self.pupils.split(), self.eyes.split()):
             pupil.move_to(eye, side_to_align = direction)
+            #Some hacky nudging is required here
             if y > 0 and x != 0: # Look up and to a side
                 nudge_size = pupil.get_height()/4.
                 if x > 0: 
@@ -99,6 +102,9 @@ class PiCreature(SVGMobject):
                 else:
                     nudge = nudge_size*(DOWN+RIGHT)
                 pupil.shift(nudge)
+            elif y < 0:
+                nudge_size = pupil.get_height()/8.
+                pupil.shift(nudge_size*UP)
         return self
 
     def get_looking_direction(self):
@@ -186,7 +192,8 @@ class Bubble(SVGMobject):
         self.content = Mobject()
 
     def get_tip(self):
-        return self.get_corner(DOWN+self.direction)
+        #TODO, find a better way
+        return self.get_corner(DOWN+self.direction)-0.6*self.direction
 
     def get_bubble_center(self):
         return self.get_center() + self.get_height()*UP/8.0
@@ -204,8 +211,8 @@ class Bubble(SVGMobject):
         mob_center = mobject.get_center()
         if (mob_center[0] > 0) != (self.direction[0] > 0):
             self.flip()
-        boundary_point = mobject.get_boundary_point(UP-self.direction)
-        vector_from_center = 1.2*(boundary_point-mob_center)
+        boundary_point = mobject.get_critical_point(UP-self.direction)
+        vector_from_center = 1.0*(boundary_point-mob_center)
         self.move_tip_to(mob_center+vector_from_center)
         return self
 
@@ -254,6 +261,107 @@ class ThoughtBubble(Bubble):
     def make_green_screen(self):
         self.submobjects[-1].set_fill(GREEN_SCREEN, opacity = 1)
         return self
+
+
+class TeacherStudentsScene(Scene):
+    def setup(self):
+        self.teacher = Mortimer()
+        self.teacher.to_corner(DOWN + RIGHT)
+        self.teacher.look(DOWN+LEFT)
+        self.students = VMobject(*[
+            Randolph(color = c)
+            for c in BLUE_D, BLUE_C, BLUE_E
+        ])
+        self.students.arrange_submobjects(RIGHT)
+        self.students.scale(0.8)
+        self.students.to_corner(DOWN+LEFT)
+
+        for pi_creature in self.get_everyone():
+            pi_creature.bubble = None
+        self.add(*self.get_everyone())
+
+    def get_teacher(self):
+        return self.teacher
+
+    def get_students(self):
+        return self.students.split()
+
+    def get_everyone(self):
+        return [self.get_teacher()] + self.get_students()
+
+    def introduce_bubble(self, content, bubble_type, pi_creature,
+                         content_intro_anim = None,
+                         pi_creature_target_mode = None,
+                         added_anims = []):
+        bubble = pi_creature.get_bubble(bubble_type)
+        if isinstance(content, str):
+            content = TextMobject(content)
+        bubble.position_mobject_inside(content)
+        pi_creature.bubble = bubble        
+
+        content_intro_anim = content_intro_anim or Write(content)
+        run_time = content_intro_anim.run_time
+        one_sec_rate_func = squish_rate_func(
+            smooth, 0, 1./run_time
+        )
+        if not pi_creature_target_mode:
+            if bubble_type is "speech":
+                pi_creature_target_mode = "speaking"
+            else:
+                pi_creature_target_mode = "pondering"
+
+        faders = []
+        to_plains = []
+        for p in self.get_everyone():
+            if p.bubble and p is not pi_creature:
+                faders.append(FadeOut(
+                    p.bubble, rate_func = one_sec_rate_func
+                ))
+                p.bubble = None
+                to_plains.append(ApplyMethod(
+                    p.change_mode, "plain", 
+                    rate_func = one_sec_rate_func
+                ))
+
+        anims = faders + to_plains + added_anims + [
+            content_intro_anim,
+            FadeIn(bubble, rate_func = one_sec_rate_func),
+            ApplyMethod(
+                pi_creature.change_mode, 
+                pi_creature_target_mode,
+                rate_func = one_sec_rate_func
+            ),
+        ]
+        self.play(*anims, run_time = run_time)
+        bubble.add_content(content)
+
+    def teacher_says(self, content, **kwargs):
+        self.introduce_bubble(
+            content, "speech", self.get_teacher(), **kwargs
+        )
+
+    def student_says(self, content, student_index = 1, **kwargs):
+        student = self.get_students()[student_index]
+        self.introduce_bubble(content, "speech", student, **kwargs)
+
+    def teacher_thinks(self, content):
+        self.introduce_bubble(
+            content, "thought", self.get_teacher(), **kwargs
+        )
+
+    def student_thinks(self, content, student_index = 1, **kwargs):
+        student = self.get_students()[student_index]
+        self.introduce_bubble(content, "thought", student, **kwargs)
+
+    def random_blink(self):
+        pi_creature = random.choice(self.get_everyone())
+        self.play(Blink(pi_creature))
+
+
+
+
+
+
 
 
 

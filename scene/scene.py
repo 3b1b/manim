@@ -90,6 +90,7 @@ class Scene(object):
     def remove(self, *mobjects):
         if not all_elements_are_instances(mobjects, Mobject):
             raise Exception("Removing something which is not a mobject")
+        mobjects = it.chain(*[m.submobject_family() for m in mobjects])
         mobjects = filter(lambda m : m in self.mobjects, mobjects)
         if len(mobjects) == 0:
             return
@@ -108,6 +109,12 @@ class Scene(object):
     def clear(self):
         self.mobjects = []
         return self
+
+    def get_mobjects(self):
+        return list(self.mobjects)
+
+    def get_mobject_copies(self):
+        return [m.copy() for m in self.mobjects]
 
     def align_run_times(self, *animations, **kwargs):
         if "run_time" in kwargs:
