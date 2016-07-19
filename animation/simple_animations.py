@@ -4,6 +4,8 @@ import itertools as it
 from helpers import *
 
 from mobject import Mobject
+from mobject.vectorized_mobject import VMobject
+from mobject.tex_mobject import DecimalNumber
 from animation import Animation
 
 
@@ -36,24 +38,11 @@ class ShowPartial(Animation):
         "submobject_mode" : None
     }
     def update_mobject(self, alpha):
-        pairs = zip(
-            self.starting_mobject.submobject_family(),
-            self.mobject.submobject_family()
+        self.mobject.become_partial(
+            self.starting_mobject, 
+            *self.get_bounds(alpha),
+            submobject_partial_creation_mode = self.submobject_mode
         )
-        for i, (start, mob) in enumerate(pairs):
-            if self.submobject_mode == "lagged_start":
-                sub_alpha = 2*alpha - float(i)/len(pairs)
-                sub_alpha = max(0, sub_alpha)
-                sub_alpha = min(1, sub_alpha)
-            elif self.submobject_mode == "one_at_a_time":
-                lower = float(i)/len(pairs)
-                upper = float(i+1)/len(pairs)
-                sub_alpha = (alpha-lower)/(upper-lower)
-                sub_alpha = max(0, sub_alpha)
-                sub_alpha = min(1, sub_alpha)
-            else:
-                sub_alpha = alpha
-            mob.become_partial(start, *self.get_bounds(sub_alpha))
 
     def get_bounds(self, alpha):
         raise Exception("Not Implemented")
@@ -174,6 +163,55 @@ class MoveAlongPath(Animation):
         n = self.path.get_num_points()-1
         point = self.path.points[int(alpha*n)]
         self.mobject.shift(point-self.mobject.get_center())
+
+class RangingValues(Animation):
+    CONFIG = {
+        "num_decimal_points" : 2,
+        "rate_func" : None,
+        "tracking_function" : None,
+        "tracked_mobject" : None,
+        "tracked_mobject_next_to_kwargs" : {},
+    }
+    def __init__(self, start_val, end_val, **kwargs):
+        digest_config(self, kwargs, locals())
+        Animation.__init__(self, self.get_mobject_at_alpha(0), **kwargs)
+
+    def update_mobject(self, alpha):
+        pairs = zip(
+            self.mobject.family_members_with_points(),
+            self.get_mobject_at_alpha(alpha).family_members_with_points()
+        )
+        for old, new in pairs:
+            ##TODO, figure out a better way
+            old.__dict__.update(new.__dict__)
+
+    def get_number(self, alpha):
+        return interpolate(self.start_val, self.end_val, alpha)
+
+    def get_mobject_at_alpha(self, alpha):
+        mob = DecimalNumber(
+            self.get_number(alpha), 
+            num_decimal_points=self.num_decimal_points
+        )
+        if self.tracking_function:
+            self.tracking_function(alpha, mob)
+        elif self.tracked_mobject:
+            mob.next_to(
+                self.tracked_mobject,
+                **self.tracked_mobject_next_to_kwargs
+            )
+        return mob
+
+    def set_tracking_function(self, func):
+        """
+        func shoudl be of the form func(alpha, mobject), and
+        should dictate where to place running number during an 
+        animation
+        """
+        self.tracking_function = func
+
+
+
 
 ### Animation modifiers ###
 

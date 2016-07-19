@@ -129,7 +129,7 @@ class PMobject(Mobject):
             mobject1.rgbs, mobject2.rgbs, alpha
         )
 
-    def become_partial(self, mobject, a, b):
+    def pointwise_become_partial(self, mobject, a, b):
         lower_index, upper_index = [
             int(x * mobject.get_num_points())
             for x in a, b

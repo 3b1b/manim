@@ -21,7 +21,9 @@ class Mobject(object):
         "stroke_width" : DEFAULT_POINT_THICKNESS,
         "name"         : None,
         "dim"          : 3,
-        "target"       : None
+        "target"       : None,
+        #Options are lagged_start, one_at_a_time, all_at_once
+        "submobject_partial_creation_mode" : "lagged_start",
     }
     def __init__(self, *submobjects, **kwargs):
         digest_config(self, kwargs)
@@ -218,6 +220,13 @@ class Mobject(object):
         target_point = mobject.get_critical_point(aligned_edge+direction)
         self.shift(target_point - anchor_point + buff*direction)
         return self
+
+    def shift_onto_screen(self):
+        space_lengths = [SPACE_WIDTH, SPACE_HEIGHT]
+        for vect in UP, DOWN, LEFT, RIGHT:
+            dim = np.argmax(np.abs(vect))
+            if abs(self.get_edge_center(vect)[dim]) > space_lengths[dim]:
+                self.to_edge(vect)
 
     def stretch_to_fit(self, length, dim, stretch = True):
         old_length = self.length_over_dim(dim)
@@ -423,12 +432,9 @@ class Mobject(object):
             self.submobject_family()
         )
 
-    def arrange_submobjects(self, 
-                            direction = RIGHT, 
-                            buff = DEFAULT_MOBJECT_TO_MOBJECT_BUFFER, 
-                            center = True):
+    def arrange_submobjects(self, direction = RIGHT, center = True, **kwargs):
         for m1, m2 in zip(self.submobjects, self.submobjects[1:]):
-            m2.next_to(m1, direction, buff = buff)
+            m2.next_to(m1, direction, **kwargs)
         if center:
             self.center()
         return self
@@ -533,14 +539,39 @@ class Mobject(object):
     def interpolate_color(self, mobject1, mobject2, alpha):
         raise Exception("Not implemented")
 
-    def become_partial(self, mobject, a, b):
+    def become_partial(self, mobject, a, b, submobject_partial_creation_mode = None):
         """
         Set points in such a way as to become only
         part of mobject.  
         Inputs 0 <= a < b <= 1 determine what portion
         of mobject to become.
         """
+        self.pointwise_become_partial(mobject, a, b)
+        #TODO, color        
+        # self.interpolate_color(self, mobject, b)
+
+        spcm = submobject_partial_creation_mode or self.submobject_partial_creation_mode
+        pairs = zip(self.submobjects, mobject.submobjects)
+        for i, (self_sub, mob_sub) in enumerate(pairs):
+            if spcm == "lagged_start":
+                prop = float(i)/len(pairs)
+                sub_a = np.clip(2*a - prop, 0, 1)
+                sub_b = np.clip(2*b - prop, 0, 1)
+            elif spcm == "one_at_a_time":
+                lower = float(i)/len(pairs)
+                upper = float(i+1)/len(pairs)
+                sub_a = np.clip((a-lower)/(upper-lower), 0, 1)
+                sub_b = np.clip((b-lower)/(upper-lower), 0, 1)
+            elif spcm == "all_at_once":
+                sub_a, sub_b = a, b
+            else:
+                raise Exception("Invalid submobject partial creation mode")
+            self_sub.become_partial(mob_sub, sub_a, sub_b)
+        return self
+
+    def pointwise_become_partial(self, mobject, a, b):
         raise Exception("Not implemented")
+
 
 
 

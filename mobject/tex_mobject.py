@@ -7,7 +7,7 @@ TEXT_MOB_SCALE_VAL = 0.05
 
 
 class TexSymbol(VMobjectFromSVGPathstring):
-    def become_partial(self, mobject, a, b):
+    def pointwise_become_partial(self, mobject, a, b):
         #TODO, this assumes a = 0
         if b < 0.5:
             b = 2*b 
@@ -17,7 +17,7 @@ class TexSymbol(VMobjectFromSVGPathstring):
             width = 2 - 2*b
             opacity = 2*b - 1
             b = 1
-        VMobjectFromSVGPathstring.become_partial(
+        VMobjectFromSVGPathstring.pointwise_become_partial(
             self, mobject, 0, b
         )
         self.set_stroke(width = width)
@@ -64,10 +64,7 @@ class TexMobject(SVGMobject):
     def handle_list_expression(self):
         #TODO, next_to not sufficient?
         subs = [
-            # TexMobject(expr)
-            self.__class__(
-                expr
-            )
+            TexMobject(expr)
             for expr in self.expression
         ]
         self.initial_scale_val = 1
@@ -109,6 +106,27 @@ class Brace(TexMobject):
         self.shift(left - self.get_corner(UP+LEFT) + self.buff*DOWN)
         for mob in mobject, self:
             mob.rotate(angle)
+
+class DecimalNumber(TexMobject):
+    CONFIG = {
+        "num_decimal_points" : 2,
+        "digit_to_digit_buff" : 0.05
+    }
+    def __init__(self, float_num, **kwargs):
+        digest_config(self, kwargs)
+        num_string = '%.*f' % (self.num_decimal_points, float_num)
+        TexMobject.__init__(self, list(num_string))
+        self.arrange_submobjects(
+            buff = self.digit_to_digit_buff,
+            aligned_edge = DOWN
+        )
+        if float_num < 0:
+            minus = self.submobjects[0]
+            minus.next_to(
+                self.submobjects[1], LEFT,
+                buff = self.digit_to_digit_buff
+            )
+
     
 def tex_hash(expression, template_tex_file):
     return str(hash(expression + template_tex_file))

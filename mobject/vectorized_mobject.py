@@ -300,7 +300,7 @@ class VMobject(Mobject):
                 # print getattr(mobject2, attr)
                 setattr(self, attr, getattr(mobject2, attr))
 
-    def become_partial(self, mobject, a, b):
+    def pointwise_become_partial(self, mobject, a, b):
         assert(isinstance(mobject, VMobject))
         #Partial curve includes three portions:
         #-A middle section, which matches the curve exactly
