@@ -101,7 +101,7 @@ class Scene(object):
     def remove(self, *mobjects):
         if not all_elements_are_instances(mobjects, Mobject):
             raise Exception("Removing something which is not a mobject")
-        # mobjects = filter(lambda m : m in self.mobjects, mobjects)
+        mobjects = list(it.chain(*[m.submobject_family() for m in mobjects]))
         if len(mobjects) == 0:
             return
         self.mobjects = filter(lambda m : m not in mobjects, self.mobjects)
@@ -137,16 +137,11 @@ class Scene(object):
 
     def separate_moving_and_static_mobjects(self, *animations):
         """
-        During an animation, the only mobjects directly influencing
-        display are those with points.  This allows for the case
-        where you might have intersections between the families of
-        animated mobjects and static mobjects
         """
-        moving_mobjects = self.extract_mobjects_with_points(
-            *[anim.mobject for anim in animations]
-        )
+        moving_mobjects = [anim.mobject for anim in animations]
+        moving_parts = self.extract_mobjects_with_points(*moving_mobjects)
         static_mobjects = filter(
-            lambda m : m not in moving_mobjects,
+            lambda m : m not in moving_parts,
             self.extract_mobjects_with_points(*self.mobjects)
         )
         return moving_mobjects, static_mobjects

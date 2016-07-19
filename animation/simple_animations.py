@@ -5,7 +5,7 @@ from helpers import *
 
 from mobject import Mobject
 from mobject.vectorized_mobject import VMobject
-from mobject.tex_mobject import DecimalNumber
+from mobject.tex_mobject import TextMobject
 from animation import Animation
 
 
@@ -64,6 +64,12 @@ class Write(ShowCreation):
         "rate_func" : None,
         "submobject_mode" : "lagged_start",
     }
+    def __init__(self, mob_or_text, **kwargs):
+        if isinstance(mob_or_text, str):
+            mobject = TextMobject(mob_or_text)
+        else:
+            mobject = mob_or_text
+        ShowCreation.__init__(self, mobject, **kwargs)
 
 class ShowPassingFlash(ShowPartial):
     CONFIG = {
@@ -164,53 +170,37 @@ class MoveAlongPath(Animation):
         point = self.path.points[int(alpha*n)]
         self.mobject.shift(point-self.mobject.get_center())
 
-class RangingValues(Animation):
-    CONFIG = {
-        "num_decimal_points" : 2,
-        "rate_func" : None,
-        "tracking_function" : None,
-        "tracked_mobject" : None,
-        "tracked_mobject_next_to_kwargs" : {},
-    }
-    def __init__(self, start_val, end_val, **kwargs):
+class UpdateFromFunc(Animation):
+    """
+    update_function of the form func(mobject), presumably
+    to be used when the state of one mobject is dependent
+    on another simultaneously animated mobject
+    """
+    def __init__(self, mobject, update_function, **kwargs):
         digest_config(self, kwargs, locals())
-        Animation.__init__(self, self.get_mobject_at_alpha(0), **kwargs)
+        Animation.__init__(self, mobject, **kwargs)
 
     def update_mobject(self, alpha):
-        pairs = zip(
-            self.mobject.family_members_with_points(),
-            self.get_mobject_at_alpha(alpha).family_members_with_points()
+        self.update_function(self.mobject)
+
+
+class MaintainPositionRelativeTo(Animation):
+    CONFIG = {
+        "tracked_critical_point" : ORIGIN
+    }
+    def __init__(self, mobject, tracked_mobject, **kwargs):
+        digest_config(self, kwargs, locals())
+        tcp = self.tracked_critical_point
+        self.diff = mobject.get_critical_point(tcp) - \
+                    tracked_mobject.get_critical_point(tcp)
+        Animation.__init__(self, mobject, **kwargs)
+
+    def update_mobject(self, alpha):
+        self.mobject.shift(
+            self.tracked_mobject.get_critical_point(self.tracked_critical_point) - \
+            self.mobject.get_critical_point(self.tracked_critical_point) + \
+            self.diff
         )
-        for old, new in pairs:
-            ##TODO, figure out a better way
-            old.__dict__.update(new.__dict__)
-
-    def get_number(self, alpha):
-        return interpolate(self.start_val, self.end_val, alpha)
-
-    def get_mobject_at_alpha(self, alpha):
-        mob = DecimalNumber(
-            self.get_number(alpha), 
-            num_decimal_points=self.num_decimal_points
-        )
-        if self.tracking_function:
-            self.tracking_function(alpha, mob)
-        elif self.tracked_mobject:
-            mob.next_to(
-                self.tracked_mobject,
-                **self.tracked_mobject_next_to_kwargs
-            )
-        return mob
-
-    def set_tracking_function(self, func):
-        """
-        func shoudl be of the form func(alpha, mobject), and
-        should dictate where to place running number during an 
-        animation
-        """
-        self.tracking_function = func
-
-
 
 
 ### Animation modifiers ###

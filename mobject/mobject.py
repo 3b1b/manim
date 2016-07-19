@@ -546,12 +546,13 @@ class Mobject(object):
         Inputs 0 <= a < b <= 1 determine what portion
         of mobject to become.
         """
-        self.pointwise_become_partial(mobject, a, b)
-        #TODO, color        
-        # self.interpolate_color(self, mobject, b)
 
+        #TODO, color?
         spcm = submobject_partial_creation_mode or self.submobject_partial_creation_mode
-        pairs = zip(self.submobjects, mobject.submobjects)
+        pairs = zip(
+            self.family_members_with_points(), 
+            mobject.family_members_with_points()
+        )
         for i, (self_sub, mob_sub) in enumerate(pairs):
             if spcm == "lagged_start":
                 prop = float(i)/len(pairs)
@@ -566,7 +567,7 @@ class Mobject(object):
                 sub_a, sub_b = a, b
             else:
                 raise Exception("Invalid submobject partial creation mode")
-            self_sub.become_partial(mob_sub, sub_a, sub_b)
+            self_sub.pointwise_become_partial(mob_sub, sub_a, sub_b)
         return self
 
     def pointwise_become_partial(self, mobject, a, b):

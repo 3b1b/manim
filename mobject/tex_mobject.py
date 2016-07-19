@@ -107,26 +107,6 @@ class Brace(TexMobject):
         for mob in mobject, self:
             mob.rotate(angle)
 
-class DecimalNumber(TexMobject):
-    CONFIG = {
-        "num_decimal_points" : 2,
-        "digit_to_digit_buff" : 0.05
-    }
-    def __init__(self, float_num, **kwargs):
-        digest_config(self, kwargs)
-        num_string = '%.*f' % (self.num_decimal_points, float_num)
-        TexMobject.__init__(self, list(num_string))
-        self.arrange_submobjects(
-            buff = self.digit_to_digit_buff,
-            aligned_edge = DOWN
-        )
-        if float_num < 0:
-            minus = self.submobjects[0]
-            minus.next_to(
-                self.submobjects[1], LEFT,
-                buff = self.digit_to_digit_buff
-            )
-
     
 def tex_hash(expression, template_tex_file):
     return str(hash(expression + template_tex_file))

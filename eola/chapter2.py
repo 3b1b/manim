@@ -6,12 +6,11 @@ from mobject.vectorized_mobject import VMobject
 from animation.animation import Animation
 from animation.transform import *
 from animation.simple_animations import *
-from animation.playground import *
 from topics.geometry import *
 from topics.characters import *
 from topics.functions import *
 from topics.number_line import *
-from topics.combinatorics import *
+from topics.numerals import *
 from scene import Scene
 from camera import Camera
 from mobject.svg_mobject import *
@@ -212,6 +211,177 @@ class CoordinatesAsScalarsExample2(CoordinatesAsScalars):
         self.dither(2)
         self.remove(*basis_vectors + labels)
         CoordinatesAsScalars.construct(self)
+
+
+class WhatIfWeChoseADifferentBasis(Scene):
+    def construct(self):
+        self.play(Write(
+            "What if we chose different basis vectors?",
+            run_time = 2
+        ))
+        self.dither(2)
+
+class ShowVaryingLinearCombinations(VectorScene):
+    CONFIG = {
+        "vector1" : [1, 2],
+        "vector2" : [3, -1],
+        "vector1_color" : MAROON_C,
+        "vector2_color" : BLUE,
+        "vector1_label" : "v",
+        "vector2_label" : "w",
+        "sum_color" : PINK,
+        "scalar_pairs" : [
+            (1.5, 0.6),
+            (0.7, 1.3),
+            (-1, -1.5),
+            (1, -1.13),
+            (1.25, 0.5),
+            (-0.6, 1.3),
+        ], 
+        "finish_with_standard_basis_comparison" : True
+    }
+    def construct(self):
+        # self.add_axes()
+        v1 = self.add_vector(self.vector1, color = self.vector1_color)
+        v2 = self.add_vector(self.vector2, color = self.vector2_color)
+        v1_label = self.label_vector(
+            v1, self.vector1_label, color = self.vector1_color, 
+            buff_factor = 3
+        )
+        v2_label = self.label_vector(
+            v2, self.vector2_label, color = self.vector2_color, 
+            buff_factor = 3
+        )
+        label_anims = [
+            MaintainPositionRelativeTo(label, v)
+            for v, label in (v1, v1_label), (v2, v2_label)
+        ]
+        scalar_anims = self.get_scalar_anims(v1, v2, v1_label, v2_label)
+
+        self.initial_scaling(v1, v2, label_anims, scalar_anims)
+        self.show_sum(v1, v2, label_anims, scalar_anims)
+        self.scale_with_sum(v1, v2, label_anims, scalar_anims)
+        if self.finish_with_standard_basis_comparison:
+            self.standard_basis_comparison(scalar_anims)
+
+    def get_scalar_anims(self, v1, v2, v1_label, v2_label):
+        def get_val_func(vect):
+            original_vect = np.array(vect.get_end()-vect.get_start())
+            square_norm = np.linalg.norm(original_vect)**2
+            return lambda a : np.dot(
+                original_vect, vect.get_end()-vect.get_start()
+            )/square_norm
+        return [
+            RangingValues(
+                tracked_mobject = label,
+                tracked_mobject_next_to_kwargs = {
+                    "direction" : LEFT,
+                    "buff" : 0.1
+                },
+                scale_val = 0.75,
+                value_function = get_val_func(v)
+            )
+            for v, label in (v1, v1_label), (v2, v2_label)
+        ]
+
+    def get_rate_func_pair(self):
+        return [
+            squish_rate_func(smooth, a, b) 
+            for a, b in (0, 0.7), (0.3, 1)
+        ] 
+
+    def initial_scaling(self, v1, v2, label_anims, scalar_anims):
+        scalar_pair = self.scalar_pairs.pop(0)
+        anims = [
+            ApplyMethod(v.scale, s, rate_func = rf)
+            for v, s, rf in zip(
+                [v1, v2],
+                scalar_pair,
+                self.get_rate_func_pair()
+            )
+        ]
+        anims += [
+            ApplyMethod(v.copy().fade, 0.7)
+            for v in v1, v2
+        ]
+        anims += label_anims + scalar_anims
+        self.play(*anims, **{"run_time" : 2})
+        self.dither()
+        self.last_scalar_pair = scalar_pair
+
+    def show_sum(self, v1, v2, label_anims, scalar_anims):
+        self.play(
+            ApplyMethod(v2.shift, v1.get_end()),
+            *label_anims + scalar_anims
+        )
+        self.sum_vector = self.add_vector(
+            v2.get_end(), color = self.sum_color
+        )
+        self.dither()
+
+    def scale_with_sum(self, v1, v2, label_anims, scalar_anims):
+        v2_anim = UpdateFromFunc(
+            v2, lambda m : m.shift(v1.get_end()-m.get_start())
+        )
+        sum_anim = UpdateFromFunc(
+            self.sum_vector, 
+            lambda v : v.put_start_and_end_on(v1.get_start(), v2.get_end())
+        )
+        while self.scalar_pairs:
+            scalar_pair = self.scalar_pairs.pop(0)
+            anims = [
+                ApplyMethod(v.scale, s/s_old, rate_func = rf)
+                for v, s, s_old, rf in zip(
+                    [v1, v2], 
+                    scalar_pair, 
+                    self.last_scalar_pair,
+                    self.get_rate_func_pair()
+                )
+            ]
+            anims += [v2_anim, sum_anim] + label_anims + scalar_anims
+            self.play(*anims, **{"run_time" : 2})
+            self.dither()
+            self.last_scalar_pair = scalar_pair
+
+    def standard_basis_comparison(self, scalar_anims):
+        everything = VMobject(*self.get_mobjects())
+        alt_coords = [a.mobject for a in scalar_anims]
+        array = Matrix([m.copy() for m in alt_coords])
+        array.scale(VECTOR_LABEL_SCALE_VAL)
+        array.to_edge(UP)
+        array.shift(RIGHT)
+        brackets = array.get_brackets()
+
+        self.play(*[
+            Transform(*pair)
+            for pair in zip(alt_coords, array.get_mob_matrix().flatten())
+        ] + [Write(brackets)])
+        self.dither()
+        self.remove(brackets, *alt_coords)
+        self.add(array)
+        self.play(FadeOut(everything), Animation(self.sum_vector))
+
+        self.add_axes(animate = True)
+        ij_array, x_line, y_line = self.vector_to_coords(
+            self.sum_vector, integer_labels = False
+        )
+        neq = TexMobject("\\neq")
+        neq.next_to(array)
+        self.play(
+            ApplyMethod(ij_array.next_to, neq),
+            Write(neq)
+        )
+        self.dither()
+
+
+
+
+
+
+
+
+
+
 
 
 
