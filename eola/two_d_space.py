@@ -110,6 +110,9 @@ class LinearTransformationScene(Scene):
 
 
 class VectorScene(Scene):
+    CONFIG = {
+        "basis_vector_stroke_width" : 6
+    }
     def add_plane(self, animate = False, **kwargs):
         plane = NumberPlane(**kwargs)
         if animate:
@@ -133,13 +136,35 @@ class VectorScene(Scene):
         return vector
 
     def get_basis_vectors(self):
-        i_hat = Vector([1, 0], color = X_COLOR)
-        j_hat = Vector([0, 1], color = Y_COLOR)
-        return i_hat, j_hat
+        return [
+            Vector(
+                vect, color = color, 
+                stroke_width = self.basis_vector_stroke_width
+            )
+            for vect, color in [
+                ([1, 0], X_COLOR), 
+                ([0, 1], Y_COLOR)
+            ]
+        ]
+
+    def get_basis_vector_labels(self, animate = False, **kwargs):
+        i_hat, j_hat = self.get_basis_vectors()
+        return [
+            self.label_vector(
+                vect, label, color = color, 
+                animate = animate, 
+                label_scale_val = 1,
+                **kwargs
+            )
+            for vect, label , color in [
+                (i_hat, "\\hat{\\imath}", X_COLOR),
+                (j_hat, "\\hat{\\jmath}", Y_COLOR),
+            ]
+        ]
 
     def label_vector(self, vector, label, animate = True, 
                      direction = "left", rotate = False,
-                     color = WHITE, add_to_vector = True,
+                     color = WHITE, add_to_vector = False,
                      buff_factor = 2, 
                      label_scale_val = VECTOR_LABEL_SCALE_VAL):
         if len(label) == 1:
@@ -155,10 +180,10 @@ class VectorScene(Scene):
             rot_angle = -np.pi/2
         else:
             rot_angle = np.pi/2
-        label.shift(-buff_factor*label.get_critical_point(
-            rotate_vector(vector_vect, rot_angle)
-        ))
-        label.shift(vector_vect/2)
+        boundary_dir = -np.round(rotate_vector(vector_vect, rot_angle))
+        boundary_point = label.get_critical_point(boundary_dir)
+        label.shift(buff_factor*boundary_point)
+        label.shift(vector_vect/2.)
 
         if add_to_vector:
             vector.add(label)
@@ -202,8 +227,9 @@ class VectorScene(Scene):
             ),
             FadeOut(array.get_brackets())
         )
+        y_coord, brackets = self.get_mobjects_from_last_animation()
         self.play(ShowCreation(y_line))
-        self.play(ShowCreation(arrow, submobject_mode = "one_at_a_time"))
+        self.play(ShowCreation(arrow))
         self.dither()
         if cleanup:
             self.clear()
@@ -253,8 +279,8 @@ class VectorScene(Scene):
         )
         self.dither()
 
-        self.remove(x_coord_start, y_coord_start)
-        self.add(x_coord, y_coord)
+        self.remove(x_coord_start, y_coord_start, brackets)
+        self.add(array)
         if cleanup:
             self.clear()
             self.add(*starting_mobjects)

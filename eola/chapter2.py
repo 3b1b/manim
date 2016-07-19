@@ -31,7 +31,6 @@ class OpeningQuote(Scene):
         words.to_edge(UP)    
         for mob in words.submobjects[49:49+18]:
             mob.highlight(GREEN)
-        words.show()
         author = TextMobject("-Angus K. Rodgers")
         author.highlight(YELLOW)
         author.next_to(words, DOWN, buff = 0.5)
@@ -53,17 +52,21 @@ class CoordinatesWereFamiliar(TeacherStudentsScene):
 
 
 class CoordinatesAsScalars(VectorScene):
+    CONFIG = {
+        "vector_coords" : [3, -2]
+    }
+
     def construct(self):
         self.axes = self.add_axes()
-        vector = self.add_vector([3, -2])
+        vector = self.add_vector(self.vector_coords)
         array, x_line, y_line = self.vector_to_coords(vector)
         self.add(array)
         self.dither()
-        new_array = self.general_idea_of_scalars(array)
+        new_array = self.general_idea_of_scalars(array, vector)
         self.scale_basis_vectors(new_array)
         self.show_symbolic_sum(new_array, vector)
 
-    def general_idea_of_scalars(self, array):
+    def general_idea_of_scalars(self, array, vector):
         starting_mobjects = self.get_mobjects()
 
         title = TextMobject("Think of each coordinate as a scalar")
@@ -76,14 +79,23 @@ class CoordinatesAsScalars(VectorScene):
         new_y.move_to(3*RIGHT+2*UP)
 
         i_hat, j_hat = self.get_basis_vectors()
-        new_i_hat = Vector(3*i_hat.get_end(), color = X_COLOR)
-        new_j_hat = Vector(-2*j_hat.get_end(), color = Y_COLOR)
+        new_i_hat = Vector(
+            self.vector_coords[0]*i_hat.get_end(), 
+            color = X_COLOR
+        )
+        new_j_hat = Vector(
+            self.vector_coords[1]*j_hat.get_end(), 
+            color = Y_COLOR
+        )
         VMobject(i_hat, new_i_hat).shift(3*LEFT)
         VMobject(j_hat, new_j_hat).shift(3*RIGHT)
 
         new_array = Matrix([new_x.copy(), new_y.copy()])
-        new_array.replace(array)
-        new_array.shift(0.5*DOWN)
+        new_array.scale(0.5)
+        new_array.shift(
+            -new_array.get_boundary_point(-vector.get_end()) + \
+            1.1*vector.get_end()
+        )
 
         self.remove(*starting_mobjects)
         self.play(
@@ -95,15 +107,16 @@ class CoordinatesAsScalars(VectorScene):
         self.dither()
         self.play(
             Transform(i_hat, new_i_hat),
-            Transform(j_hat, new_j_hat)
+            Transform(j_hat, new_j_hat),
+            run_time = 3
         )
         self.dither()
         starting_mobjects.remove(array)
+
+        new_x, new_y = new_array.get_mob_matrix().flatten()
         self.play(
-            Transform(
-                VMobject(x, y),
-                VMobject(*new_array.get_mob_matrix().flatten())
-            ),
+            Transform(x, new_x),
+            Transform(y, new_y),
             FadeOut(i_hat),
             FadeOut(j_hat),
             Write(new_array.get_brackets()),
@@ -117,8 +130,6 @@ class CoordinatesAsScalars(VectorScene):
     def scale_basis_vectors(self, new_array):
         self.play(ApplyMethod(self.axes.highlight, GREY))
         i_hat, j_hat = self.get_basis_vectors()
-        for mob in i_hat, j_hat:
-            mob.set_stroke(width = 6)
         self.add_vector(i_hat)
         i_hat_label = self.label_vector(
             i_hat, "\\hat{\\imath}", 
@@ -131,19 +142,20 @@ class CoordinatesAsScalars(VectorScene):
             color = Y_COLOR, 
             label_scale_val = 1
         )
+        self.dither()
 
         x, y = new_array.get_mob_matrix().flatten()
         for coord, v, label, factor, shift_right in [
-            (x, i_hat, i_hat_label, 3, False), 
-            (y, j_hat, j_hat_label, -2, True)
+            (x, i_hat, i_hat_label, self.vector_coords[0], False), 
+            (y, j_hat, j_hat_label, self.vector_coords[1], True)
             ]:
-            faded_v = v.copy().fade(0.5)
+            faded_v = v.copy().fade(0.7)
             scaled_v = Vector(factor*v.get_end(), color = v.get_color())
 
             scaled_label = VMobject(coord.copy(), label.copy())
             scaled_label.arrange_submobjects(RIGHT, buff = 0.1)
             scaled_label.move_to(label, DOWN+RIGHT)
-            scaled_label.shift(scaled_v.get_center()-v.get_center())
+            scaled_label.shift((scaled_v.get_end()-v.get_end())/2)
             coord_copy = coord.copy()
             self.play(
                 Transform(v.copy(), faded_v),
@@ -153,15 +165,20 @@ class CoordinatesAsScalars(VectorScene):
             self.dither()
             if shift_right:
                 group = VMobject(v, coord_copy, label)
-                self.play(ApplyMethod(group.shift, 3*RIGHT))
+                self.play(ApplyMethod(
+                    group.shift, self.vector_coords[0]*RIGHT
+                ))
         self.dither()
 
 
     def show_symbolic_sum(self, new_array, vector):
         new_mob = TexMobject([
-            "3\\hat{\\imath}", "+", "(-2)\\hat{\\jmath}"
+            "(%d)\\hat{\\imath}"%self.vector_coords[0], 
+            "+", 
+            "(%d)\\hat{\\jmath}"%self.vector_coords[1]
         ])
-        new_mob.shift(vector.get_end()-new_mob.get_corner(UP+LEFT))
+        new_mob.move_to(new_array)
+        new_mob.shift_onto_screen()
         i_hat, plus, j_hat = new_mob.split()
         i_hat.highlight(X_COLOR)
         j_hat.highlight(Y_COLOR)
@@ -171,13 +188,30 @@ class CoordinatesAsScalars(VectorScene):
         
 
 
+class CoordinatesAsScalarsExample2(CoordinatesAsScalars):
+    CONFIG = {
+        "vector_coords" : [-5, 2]
+    }
 
-
-
-
-
-
-
+    def construct(self):
+        self.add_axes()
+        basis_vectors = self.get_basis_vectors()
+        labels = self.get_basis_vector_labels()
+        self.add(*basis_vectors)
+        self.add(*labels)
+        text = TextMobject("""
+            $\\hat{\\imath}$ and $\\hat{\\jmath}$ 
+            are the ``basis vectors'' \\\\
+            of the $xy$ coordinate system
+        """)
+        text.scale_to_fit_width(SPACE_WIDTH-1)
+        text.to_corner(UP+RIGHT)
+        VMobject(*text.split()[:2]).highlight(X_COLOR)
+        VMobject(*text.split()[5:7]).highlight(Y_COLOR)
+        self.play(Write(text))
+        self.dither(2)
+        self.remove(*basis_vectors + labels)
+        CoordinatesAsScalars.construct(self)
 
 
 
