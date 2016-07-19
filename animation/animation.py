@@ -16,6 +16,8 @@ class Animation(object):
         "run_time" : DEFAULT_ANIMATION_RUN_TIME,
         "rate_func" : smooth,
         "name" : None,
+        #Does this animation add or remove a mobject form the screen
+        "remover" : False, 
     }
     def __init__(self, mobject, **kwargs):
         mobject = instantiate(mobject)
@@ -62,6 +64,9 @@ class Animation(object):
     def update_mobject(self, alpha):
         #Typically ipmlemented by subclass
         pass
+
+    def is_remover(self):
+        return self.remover
 
     def clean_up(self):
         self.update(1)

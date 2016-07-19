@@ -79,12 +79,12 @@ class Scene(object):
         Mobjects will be displayed, from background to foreground,
         in the order with which they are entered.
 
-        Scene class only keeps track of pointful monjects, all 
-        grouping structure is forgotten as far as Scene is concerned
+        Scene class only keeps track of top-level monjects, all 
+        concerns with submobjects is left to animations and subclass
+        implementations of the construct method.
         """
         if not all_elements_are_instances(mobjects, Mobject):
             raise Exception("Adding something which is not a mobject")
-        mobjects = self.extract_mobjects_with_points(*mobjects)
         old_mobjects = filter(lambda m : m not in mobjects, self.mobjects)
         self.mobjects = old_mobjects + list(mobjects)
         return self
@@ -95,14 +95,12 @@ class Scene(object):
         by calling add_mobjects_among(locals().values())
         """
         mobjects = filter(lambda x : isinstance(x, Mobject), values)
-        mobjects = self.extract_mobjects_with_points(*mobjects)
         self.add(*mobjects)
         return self
 
     def remove(self, *mobjects):
         if not all_elements_are_instances(mobjects, Mobject):
             raise Exception("Removing something which is not a mobject")
-        mobjects = self.extract_mobjects_with_points(*mobjects)
         # mobjects = filter(lambda m : m in self.mobjects, mobjects)
         if len(mobjects) == 0:
             return
@@ -138,12 +136,18 @@ class Scene(object):
         return animations
 
     def separate_moving_and_static_mobjects(self, *animations):
+        """
+        During an animation, the only mobjects directly influencing
+        display are those with points.  This allows for the case
+        where you might have intersections between the families of
+        animated mobjects and static mobjects
+        """
         moving_mobjects = self.extract_mobjects_with_points(
             *[anim.mobject for anim in animations]
         )
         static_mobjects = filter(
-            lambda m : m not in moving_mobjects, 
-            self.mobjects
+            lambda m : m not in moving_mobjects,
+            self.extract_mobjects_with_points(*self.mobjects)
         )
         return moving_mobjects, static_mobjects
 
@@ -164,14 +168,12 @@ class Scene(object):
             raise Warning("Called Scene.play with no animations")
             return
         self.num_animations += 1
-        self.add(*[anim.mobject for anim in animations])
+        self.mobjects_from_last_animation = []
+
         animations = self.align_run_times(*animations, **kwargs)
         moving_mobjects, static_mobjects = \
             self.separate_moving_and_static_mobjects(*animations)
-        self.update_frame(
-            static_mobjects,
-            include_submobjects = False
-        )
+        self.update_frame(static_mobjects)
         static_image = self.get_frame()
 
         for t in self.get_time_progression(animations):
@@ -179,9 +181,24 @@ class Scene(object):
                 animation.update(t / animation.run_time)
             self.update_frame(moving_mobjects, static_image)
             self.frames.append(self.get_frame())
+
+        self.clean_up_animations(*animations)
+        return self
+
+    def clean_up_animations(self, *animations):
         for animation in animations:
             animation.clean_up()
+            if animation.is_remover():
+                self.remove(animation.mobject)
+            else:
+                self.add(animation.mobject)
+            self.mobjects_from_last_animation.append(animation.mobject)
         return self
+
+    def get_mobjects_from_last_animation(self):
+        if hasattr(self, "mobjects_from_last_animation"):
+            return self.mobjects_from_last_animation
+        return []
 
     def play_over_time_range(self, t0, t1, *animations):
         needed_scene_time = max(abs(t0), abs(t1))
