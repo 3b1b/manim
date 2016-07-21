@@ -31,8 +31,7 @@ class TexMobject(SVGMobject):
         "fill_opacity"      : 1.0,
         "fill_color"        : WHITE,
         "should_center"     : True,
-        "next_to_direction" : RIGHT,
-        "next_to_buff"      : 0.25,
+        "separate_list_arg_with_spaces" : True,
         "initial_scale_val" : TEX_MOB_SCALE_VAL,
         "organize_left_to_right" : False,
         "propogate_style_to_family" : True,
@@ -50,31 +49,29 @@ class TexMobject(SVGMobject):
         return TexSymbol(path_string)
 
 
-    def generate_points(self): 
-        if isinstance(self.expression, list):
-            self.handle_list_expression()
-        else:
-            self.svg_file = tex_to_svg_file(
-                "".join(self.expression),
-                self.template_tex_file
-            )
-            SVGMobject.generate_points(self)
+    def generate_points(self):
+        is_list = isinstance(self.expression, list)
+        separator = ""
+        if is_list and self.separate_list_arg_with_spaces:
+            separator = " "
+        expression = separator.join(self.expression)
+        self.svg_file = tex_to_svg_file(expression, self.template_tex_file)
+        SVGMobject.generate_points(self)
+        if is_list:
+            self.handle_list_expression(self.expression)
 
 
-    def handle_list_expression(self):
-        #TODO, next_to not sufficient?
-        subs = [
-            TexMobject(expr)
-            for expr in self.expression
-        ]
-        self.initial_scale_val = 1
-        for sm1, sm2 in zip(subs, subs[1:]):
-            sm2.next_to(
-                sm1,
-                self.next_to_direction, 
-                buff = self.next_to_buff
-            )
-        self.submobjects = subs
+    def handle_list_expression(self, list_expression):
+        new_submobjects = []
+        curr_index = 0
+        for expr in list_expression:
+            model = TexMobject(expr, **self.CONFIG)
+            new_index = curr_index + len(model.submobjects)
+            new_submobjects.append(VMobject(
+                *self.submobjects[curr_index:new_index]
+            ))
+            curr_index = new_index
+        self.submobjects = new_submobjects
         return self
 
     def organize_submobjects_left_to_right(self):

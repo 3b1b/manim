@@ -1,12 +1,13 @@
 
 
+from mobject.vectorized_mobject import VMobject
 from mobject.tex_mobject import TexMobject
 from animation import Animation
 from helpers import *
 
 
 
-class DecimalNumber(TexMobject):
+class DecimalNumber(VMobject):
     CONFIG = {
         "num_decimal_points" : 2,
         "digit_to_digit_buff" : 0.05
@@ -14,7 +15,10 @@ class DecimalNumber(TexMobject):
     def __init__(self, float_num, **kwargs):
         digest_config(self, kwargs)
         num_string = '%.*f' % (self.num_decimal_points, float_num)
-        TexMobject.__init__(self, list(num_string))
+        VMobject.__init__(self, *[
+            TexMobject(char)
+            for char in num_string
+        ], **kwargs)
         self.arrange_submobjects(
             buff = self.digit_to_digit_buff,
             aligned_edge = DOWN

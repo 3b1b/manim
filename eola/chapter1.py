@@ -25,6 +25,12 @@ from eola.chapter0 import UpcomingSeriesOfVidoes
 import random
 
 
+def plane_wave_homotopy(x, y, z, t):
+    norm = np.linalg.norm([x, y])
+    tau = interpolate(5, -5, t) + norm/SPACE_WIDTH
+    alpha = sigmoid(tau)
+    return [x, y + 0.5*np.sin(2*np.pi*alpha), z]
+
 class Physicist(PiCreature):
     CONFIG = {
         "color" : PINK,
@@ -319,7 +325,7 @@ class DifferentConceptions(Scene):
             v_array, TexMobject("+"), w_array, TexMobject("="), sum_array
         )
         arrays.arrange_submobjects(RIGHT)
-        arrays.scale(0.5)
+        arrays.scale(0.75)
         arrays.to_edge(RIGHT).shift(UP)
 
         v_sym = TexMobject("\\vec{\\textbf{v}}")
@@ -331,8 +337,7 @@ class DifferentConceptions(Scene):
         statement = TextMobject("We'll ignore him \\\\ for now")
         statement.highlight(PINK)
         statement.scale_to_fit_width(arrays.get_width())
-        statement.next_to(arrays, DOWN, buff = 2)
-        arrow_to_mathy = Arrow(statement, mathy, color = PINK, buff = 0)
+        statement.next_to(arrays, DOWN, buff = 1.5)
         circle = Circle()
         circle.shift(syms.get_bottom())
 
@@ -349,7 +354,6 @@ class DifferentConceptions(Scene):
         self.play(Blink(mathy))
         self.add_scaling(arrows, syms, arrays)
         self.play(Write(statement))
-        self.play(ShowCreation(arrow_to_mathy, submobject_mode = "one_at_a_time"))
         self.play(ApplyMethod(mathy.change_mode, "sad"))
         self.dither()
         self.play(
@@ -375,7 +379,7 @@ class DifferentConceptions(Scene):
             matrix_to_mobject(["2(3)", "2(-5)"])
         )
         s_arrays.arrange_submobjects(RIGHT)
-        s_arrays.scale(0.5)
+        s_arrays.scale(0.75)
         s_arrays.next_to(arrays, DOWN)
 
         s_syms = TexMobject(["2", "\\vec{\\textbf{v}}"])
@@ -797,7 +801,7 @@ class VectorAdditionNumerically(VectorScene):
         x_axis, y_axis = axes.split()
 
         v1 = self.add_vector([1, 2])
-        coords1, x_line1, y_line1 = self.vector_to_coords(v1, cleanup = False)
+        coords1, x_line1, y_line1 = self.vector_to_coords(v1, clean_up = False)
         self.play(ApplyFunction(
             lambda m : m.next_to(y_axis, RIGHT).to_edge(UP),
             coords1
@@ -805,7 +809,7 @@ class VectorAdditionNumerically(VectorScene):
         plus.next_to(coords1, RIGHT)
 
         v2 = self.add_vector([3, -1], color = MAROON_B)
-        coords2, x_line2, y_line2 = self.vector_to_coords(v2, cleanup = False)
+        coords2, x_line2, y_line2 = self.vector_to_coords(v2, clean_up = False)
         self.dither()
         self.play(
             ApplyMethod(coords2.next_to, plus, RIGHT),
@@ -1020,7 +1024,7 @@ class ScalingNumerically(VectorScene):
         equals = TexMobject("=")
         self.add_axes()
         v = self.add_vector([3, 1])
-        v_coords, vx_line, vy_line = self.vector_to_coords(v, cleanup = False)
+        v_coords, vx_line, vy_line = self.vector_to_coords(v, clean_up = False)
         self.play(ApplyMethod(v_coords.to_edge, UP))
         two_dot.next_to(v_coords, LEFT)
         equals.next_to(v_coords, RIGHT)
@@ -1031,7 +1035,7 @@ class ScalingNumerically(VectorScene):
             Write(two_dot, run_time = 1)
         )
         two_v_coords, two_v_x_line, two_v_y_line = self.vector_to_coords(
-            two_v, cleanup = False
+            two_v, clean_up = False
         )
         self.play(
             ApplyMethod(two_v_coords.next_to, equals, RIGHT),
@@ -1233,12 +1237,6 @@ class ManipulateSpace(LinearTransformationScene):
         pi_creature.shift(-pi_creature.get_corner(DOWN+LEFT))
         self.plane.prepare_for_nonlinear_transform()
 
-        def homotopy(x, y, z, t):
-            norm = np.linalg.norm([x, y])
-            tau = interpolate(5, -5, t) + norm/SPACE_WIDTH
-            alpha = sigmoid(tau)
-            return [x, y + 0.5*np.sin(2*np.pi*alpha), z]
-
         self.play(ShowCreation(
             self.plane, 
             submobject_mode = "one_at_a_time",
@@ -1247,7 +1245,7 @@ class ManipulateSpace(LinearTransformationScene):
         self.play(FadeIn(pi_creature))
         self.play(Blink(pi_creature))
         self.plane.add(pi_creature)
-        self.play(Homotopy(homotopy, self.plane, run_time = 3))
+        self.play(Homotopy(plane_wave_homotopy, self.plane, run_time = 3))
         self.dither(2)
         self.apply_matrix([[2, 1], [1, 2]])
         self.dither()

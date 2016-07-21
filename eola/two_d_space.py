@@ -127,6 +127,15 @@ class VectorScene(Scene):
         self.add(axes)
         return axes
 
+    def lock_in_dim_grid(self, dimness = 0.7, axes_dimness = 0.5):
+        plane = self.add_plane()
+        axes = plane.get_axes()
+        plane.fade(dimness)
+        axes.highlight(WHITE)
+        axes.fade(axes_dimness)
+        self.add(axes)
+        self.freeze_background()
+
     def add_vector(self, vector, animate = True, color = YELLOW):
         if not isinstance(vector, Arrow):
             vector = Vector(vector, color = color)
@@ -202,7 +211,7 @@ class VectorScene(Scene):
         y_coord.highlight(Y_COLOR)
         return y_coord
 
-    def coords_to_vector(self, vector, coords_start = 2*RIGHT+2*UP, cleanup = True):
+    def coords_to_vector(self, vector, coords_start = 2*RIGHT+2*UP, clean_up = True):
         starting_mobjects = list(self.mobjects)
         array = Matrix(vector)
         array.shift(coords_start)
@@ -231,11 +240,11 @@ class VectorScene(Scene):
         self.play(ShowCreation(y_line))
         self.play(ShowCreation(arrow))
         self.dither()
-        if cleanup:
+        if clean_up:
             self.clear()
             self.add(*starting_mobjects)
 
-    def vector_to_coords(self, vector, integer_labels = True, cleanup = True):
+    def vector_to_coords(self, vector, integer_labels = True, clean_up = True):
         starting_mobjects = list(self.mobjects)
         show_creation = False
         if isinstance(vector, Arrow):
@@ -281,7 +290,7 @@ class VectorScene(Scene):
 
         self.remove(x_coord_start, y_coord_start, brackets)
         self.add(array)
-        if cleanup:
+        if clean_up:
             self.clear()
             self.add(*starting_mobjects)
         return array, x_line, y_line

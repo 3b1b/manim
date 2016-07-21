@@ -93,8 +93,7 @@ class VMobject(Mobject):
 
     def get_stroke_color(self):
         try:
-            self.stroke_rgb[self.stroke_rgb<0] = 0
-            self.stroke_rgb[self.stroke_rgb>1] = 1
+            self.stroke_rgb = np.clip(self.stroke_rgb, 0, 1)
             return Color(rgb = self.stroke_rgb)
         except:
             return Color(WHITE)

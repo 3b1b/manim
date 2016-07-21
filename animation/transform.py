@@ -92,14 +92,19 @@ class ApplyMethod(Transform):
             **kwargs
         )
 
-class FadeOut(ApplyMethod):
+class FadeOut(Transform):
     CONFIG = {
         "remover" : True, 
     }
     def __init__(self, mobject, **kwargs):
-        ApplyMethod.__init__(self, mobject.fade, 1, **kwargs)
+        target = mobject.copy()
+        target.fade(1)
+        if isinstance(mobject, VMobject):
+            target.set_stroke(width = 0)
+            target.set_fill(opacity = 0)
+        Transform.__init__(self, mobject, target, **kwargs)
 
-    def cleanup(self):
+    def clean_up(self):
         self.update(0)
 
 class FadeIn(Transform):

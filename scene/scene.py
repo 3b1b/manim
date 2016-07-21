@@ -104,7 +104,12 @@ class Scene(object):
         mobjects = list(it.chain(*[m.submobject_family() for m in mobjects]))
         if len(mobjects) == 0:
             return
-        self.mobjects = filter(lambda m : m not in mobjects, self.mobjects)
+        self.mobjects = filter(
+            lambda m : not set(
+                m.family_members_with_points()
+            ).issubset(mobjects),
+            self.mobjects
+        )
         return self
 
     def bring_to_front(self, mobject):
