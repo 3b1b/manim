@@ -134,10 +134,18 @@ class Scene(object):
     def align_run_times(self, *animations, **kwargs):
         if "run_time" in kwargs:
             run_time = kwargs["run_time"]
+            for animation in animations:
+                animation.set_run_time(run_time)
         else:
-            run_time = animations[0].run_time
-        for animation in animations:
-            animation.set_run_time(run_time)
+            max_run_time = max([a.run_time for a in animations])
+            for animation in animations:
+                if animation.run_time != max_run_time:
+                    new_rate_func = squish_rate_func(
+                        animation.get_rate_func(),
+                        0, 1./max_run_time
+                    )
+                    animation.set_rate_func(new_rate_func)
+                    animation.set_run_time(max_run_time)
         return animations
 
     def separate_moving_and_static_mobjects(self, *animations):
@@ -168,7 +176,6 @@ class Scene(object):
             raise Warning("Called Scene.play with no animations")
             return
         self.num_animations += 1
-        self.mobjects_from_last_animation = []
 
         animations = self.align_run_times(*animations, **kwargs)
         moving_mobjects, static_mobjects = \
@@ -186,6 +193,7 @@ class Scene(object):
         return self
 
     def clean_up_animations(self, *animations):
+        self.mobjects_from_last_animation = []        
         for animation in animations:
             animation.clean_up()
             if animation.is_remover():

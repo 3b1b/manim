@@ -51,11 +51,17 @@ class Animation(object):
         self.run_time = time
         return self
 
+    def get_run_time(self):
+        return self.run_time
+
     def set_rate_func(self, rate_func):
         if rate_func is None:
             rate_func = lambda x : x
         self.rate_func = rate_func
         return self
+
+    def get_rate_func(self):
+        return self.rate_func
 
     def set_name(self, name):
         self.name = name
