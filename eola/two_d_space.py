@@ -106,6 +106,9 @@ class LinearTransformationScene(Scene):
             )
         )
 
+    def apply_nonlinear_transformation(self, function, **kwargs):
+        pass #TODO
+
 
 
 

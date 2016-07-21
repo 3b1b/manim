@@ -5,7 +5,7 @@ from mobject.svg_mobject import SVGMobject
 from mobject.vectorized_mobject import VMobject
 from mobject.tex_mobject import TextMobject
 
-from animation.transform import ApplyMethod, FadeOut, FadeIn
+from animation.transform import Transform, ApplyMethod, FadeOut, FadeIn
 from animation.simple_animations import Write
 from scene import Scene
 
@@ -289,51 +289,52 @@ class TeacherStudentsScene(Scene):
     def get_everyone(self):
         return [self.get_teacher()] + self.get_students()
 
-    def introduce_bubble(self, content, bubble_type, pi_creature,
-                         content_intro_anim = None,
-                         pi_creature_target_mode = None,
-                         added_anims = []):
-        bubble = pi_creature.get_bubble(bubble_type)
-        if isinstance(content, str):
-            content = TextMobject(content)
-        bubble.position_mobject_inside(content)
-        pi_creature.bubble = bubble        
+    def get_bubble_intro_animation(self, content, bubble_type,
+                                   pi_creature,
+                                   **bubble_kwargs):
+        bubble = pi_creature.get_bubble(bubble_type, **bubble_kwargs)
+        bubble.add_content(content)
+        if pi_creature.bubble:
+            content_intro_anims = [
+                Transform(pi_creature.bubble, bubble)
+            ]
+        else:
+            content_intro_anims = [
+                FadeIn(bubble.split()[0]),
+                Write(content),
+            ]
+            pi_creature.bubble = bubble 
+        return content_intro_anims
 
-        content_intro_anim = content_intro_anim or Write(content)
-        run_time = content_intro_anim.run_time
-        one_sec_rate_func = squish_rate_func(
-            smooth, 0, 1./run_time
+    def introduce_bubble(self, content, bubble_type, pi_creature,
+                         pi_creature_target_mode = None,
+                         added_anims = [],
+                         **bubble_kwargs):
+        if isinstance(content, str):
+            content = TextMobject(content)     
+        content_intro_anims = self.get_bubble_intro_animation(
+            content, bubble_type, pi_creature, **bubble_kwargs
         )
+
         if not pi_creature_target_mode:
             if bubble_type is "speech":
                 pi_creature_target_mode = "speaking"
             else:
                 pi_creature_target_mode = "pondering"
 
-        faders = []
-        to_plains = []
         for p in self.get_everyone():
             if p.bubble and p is not pi_creature:
-                faders.append(FadeOut(
-                    p.bubble, rate_func = one_sec_rate_func
-                ))
+                added_anims.append(FadeOut(p.bubble))
                 p.bubble = None
-                to_plains.append(ApplyMethod(
-                    p.change_mode, "plain", 
-                    rate_func = one_sec_rate_func
-                ))
+                added_anims.append(ApplyMethod(p.change_mode, "plain"))
 
-        anims = faders + to_plains + added_anims + [
-            content_intro_anim,
-            FadeIn(bubble, rate_func = one_sec_rate_func),
+        anims = added_anims + content_intro_anims + [
             ApplyMethod(
                 pi_creature.change_mode, 
                 pi_creature_target_mode,
-                rate_func = one_sec_rate_func
             ),
         ]
-        self.play(*anims, run_time = run_time)
-        bubble.add_content(content)
+        self.play(*anims)
 
     def teacher_says(self, content, **kwargs):
         self.introduce_bubble(
@@ -344,7 +345,7 @@ class TeacherStudentsScene(Scene):
         student = self.get_students()[student_index]
         self.introduce_bubble(content, "speech", student, **kwargs)
 
-    def teacher_thinks(self, content):
+    def teacher_thinks(self, content, **kwargs):
         self.introduce_bubble(
             content, "thought", self.get_teacher(), **kwargs
         )
@@ -353,9 +354,11 @@ class TeacherStudentsScene(Scene):
         student = self.get_students()[student_index]
         self.introduce_bubble(content, "thought", student, **kwargs)
 
-    def random_blink(self):
-        pi_creature = random.choice(self.get_everyone())
-        self.play(Blink(pi_creature))
+    def random_blink(self, num_times = 1):
+        for x in range(num_times):
+            pi_creature = random.choice(self.get_everyone())
+            self.play(Blink(pi_creature))
+            self.dither()
 
 
 

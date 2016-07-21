@@ -24,8 +24,8 @@ from eola.two_d_space import *
 class OpeningQuote(Scene):
     def construct(self):
         words = TextMobject("""
-            Mathematics requires a small dose, not of genius, \\\\
-            but of an imaginative freedom which, in a larger \\\\
+            Mathematics requires a small dose, not of genius, 
+            but of an imaginative freedom which, in a larger 
             dose, would be insanity.
         """)
         words.to_edge(UP)    
@@ -553,8 +553,8 @@ class LinearDependentVectors(ShowVaryingLinearCombinations):
 
 class WhenVectorsLineUp(LinearDependentVectors):
     CONFIG = {
-        "vector1" : [2, 1],
-        "vector2" : [1, 0.5],
+        "vector1" : [3, 2],
+        "vector2" : [1.5, 1],
         "scalar_pairs" : [
             (1.5, 0.6),
             (0.7, 1.3),

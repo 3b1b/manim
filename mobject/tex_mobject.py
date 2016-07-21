@@ -1,6 +1,7 @@
 from vectorized_mobject import VMobject
 from svg_mobject import SVGMobject, VMobjectFromSVGPathstring
 from helpers import *
+import collections
 
 TEX_MOB_SCALE_VAL = 0.05
 TEXT_MOB_SCALE_VAL = 0.05
@@ -32,16 +33,31 @@ class TexMobject(SVGMobject):
         "fill_color"        : WHITE,
         "should_center"     : True,
         "separate_list_arg_with_spaces" : True,
+        "enforce_new_line_structure" : False,
         "initial_scale_val" : TEX_MOB_SCALE_VAL,
         "organize_left_to_right" : False,
         "propogate_style_to_family" : True,
     }
     def __init__(self, expression, **kwargs):
         digest_config(self, kwargs, locals())
+        self.is_input_a_list = isinstance(expression, list)
         VMobject.__init__(self, **kwargs)
         self.move_into_position()
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
+
+    def handle_input_type(self):
+        if isinstance(self.expression, str):
+            self.is_input_a_list = False
+        elif isinstance(self.expression, collections.Iterable):
+            self.is_input_a_list = True
+            self.expression = list(self.expression)
+        else:
+            raise Exception(
+                "TexMobject was expecting string or list, got " + \
+                str(type(self.expression)) + \
+                " instead."
+            )
 
     def path_string_to_mobject(self, path_string):
         #Overwrite superclass default to use
@@ -50,16 +66,22 @@ class TexMobject(SVGMobject):
 
 
     def generate_points(self):
-        is_list = isinstance(self.expression, list)
-        separator = ""
-        if is_list and self.separate_list_arg_with_spaces:
-            separator = " "
-        expression = separator.join(self.expression)
-        self.svg_file = tex_to_svg_file(expression, self.template_tex_file)
+        self.svg_file = tex_to_svg_file(
+            self.get_modified_expression(),
+            self.template_tex_file
+        )
         SVGMobject.generate_points(self)
-        if is_list:
+        if self.is_input_a_list:
             self.handle_list_expression(self.expression)
 
+    def get_modified_expression(self):
+        separator = ""
+        if self.is_input_a_list and self.separate_list_arg_with_spaces:
+            separator = " "
+        result = separator.join(self.expression)
+        if self.enforce_new_line_structure:
+            result = result.replace("\n", " \\\\ \n ")
+        return result
 
     def handle_list_expression(self, list_expression):
         new_submobjects = []
@@ -84,8 +106,10 @@ class TexMobject(SVGMobject):
 class TextMobject(TexMobject):
     CONFIG = {
         "template_tex_file" : TEMPLATE_TEXT_FILE,
-        "initial_scale_val" : TEXT_MOB_SCALE_VAL
+        "initial_scale_val" : TEXT_MOB_SCALE_VAL,
+        "enforce_new_line_structure" : True,
     }
+
 
 
 class Brace(TexMobject):
