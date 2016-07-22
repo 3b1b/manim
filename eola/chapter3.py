@@ -288,13 +288,141 @@ class RotateIHat(LinearTransformationScene):
         self.setup()
         i_hat, j_hat = self.get_basis_vectors()
         i_label, j_label = self.get_basis_vector_labels()
-        self.play(ShowCreation(i_hat))
+        self.add_vector(i_hat)
         self.play(Write(i_label, run_time = 1))
         self.dither()
         self.play(FadeOut(i_label))
         self.apply_transposed_matrix([[0, 1], [-1, 0]])
+        self.dither()
         self.play(Write(j_label, run_time = 1))
         self.dither()
+
+
+
+class TransformationsAreFunctions(Scene):
+    def construct(self):
+        title = TextMobject([
+            """Linear transformations are a
+            special kind of""",
+            "function"
+        ])
+        title_start, function = title.split()
+        function.highlight(YELLOW)
+        title.to_edge(UP)
+
+        equation = TexMobject([
+            "L",
+            "(",
+            "\\vec{\\textbf{v}}",
+            ") = ",
+            "\\vec{\\textbf{w}}",
+        ])
+        L, lp, _input, equals, _output = equation.split()
+        L.highlight(YELLOW)
+        _input.highlight(MAROON_C)
+        _output.highlight(BLUE)
+        equation.scale(2)
+        equation.next_to(title, DOWN, buff = 1)
+
+        starting_vector = TextMobject("Starting vector")
+        starting_vector.shift(DOWN+3*LEFT)
+        starting_vector.highlight(MAROON_C)
+        ending_vector = TextMobject("The vector where it lands")
+        ending_vector.shift(DOWN).to_edge(RIGHT)
+        ending_vector.highlight(BLUE)
+
+        func_arrow = Arrow(function.get_bottom(), L.get_top(), color = YELLOW)
+        start_arrow = Arrow(starting_vector.get_top(), _input.get_bottom(), color = MAROON_C)
+        ending_arrow = Arrow(ending_vector, _output, color = BLUE)
+
+
+        self.add(title)
+        self.play(
+            Write(equation),
+            ShowCreation(func_arrow)
+        )
+        for v, a in [(starting_vector, start_arrow), (ending_vector, ending_arrow)]:
+            self.play(Write(v), ShowCreation(a), run_time = 1)
+        self.dither()
+
+
+class UsedToThinkinfOfFunctionsAsGraphs(VectorScene):
+    def construct(self):
+        self.show_graph()
+        self.show_inputs_and_output()
+
+    def show_graph(self):
+        axes = self.add_axes()
+        graph = FunctionGraph(lambda x : x**2, x_min = -2, x_max = 2)
+        name = TexMobject("f(x) = x^2")
+        name.next_to(graph, RIGHT).to_edge(UP)
+        point = Dot(graph.point_from_proportion(0.8))
+        point_label = TexMobject("(x, x^2)")
+        point_label.next_to(point, DOWN+RIGHT, buff = 0.1)
+
+        self.play(ShowCreation(graph))
+        self.play(Write(name, run_time = 1))
+        self.play(
+            ShowCreation(point),
+            Write(point_label),
+            run_time = 1
+        )
+        self.dither()
+
+        def collapse_func(p):
+            return np.dot(p, [RIGHT, RIGHT, OUT]) + (SPACE_HEIGHT+1)*DOWN
+        self.play(
+            ApplyPointwiseFunction(
+                collapse_func, axes, 
+                submobject_mode = "all_at_once",
+            ),
+            ApplyPointwiseFunction(collapse_func, graph),
+            ApplyMethod(point.shift, 10*DOWN),
+            ApplyMethod(point_label.shift, 10*DOWN),
+            ApplyFunction(lambda m : m.center().to_edge(UP), name),
+            run_time = 1
+        )
+        self.clear()
+        self.add(name)
+        self.dither()
+
+    def show_inputs_and_output(self):
+        numbers = range(-3, 4)
+        inputs = VMobject(*map(TexMobject, map(str, numbers)))
+        inputs.arrange_submobjects(DOWN, buff = 0.5, aligned_edge = RIGHT)
+        arrows = VMobject(*[
+            Arrow(LEFT, RIGHT).next_to(mob)
+            for mob in inputs.split()
+        ])
+        outputs = VMobject(*[
+            TexMobject(str(num**2)).next_to(arrow)
+            for num, arrow in zip(numbers, arrows.split())
+        ])
+        everyone = VMobject(inputs, arrows, outputs)
+        everyone.center().to_edge(UP, buff = 1.5)
+
+        self.play(Write(inputs, run_time = 1))
+        self.dither()
+        self.play(
+            Transform(inputs.copy(), outputs),
+            ShowCreation(arrows)
+        )
+        self.dither()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

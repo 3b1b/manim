@@ -133,7 +133,6 @@ class Arrow(Line):
         "buff"       : 0.3,
         "propogate_style_to_family" : False,
         "preserve_tip_size_when_scaling" : True,
-        "submobject_partial_creation_mode" : "one_at_a_time",
     }
     def __init__(self, *args, **kwargs):
         if len(args) == 1:

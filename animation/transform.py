@@ -39,14 +39,15 @@ class Transform(Animation):
         else:
             self.path_func = path_along_arc(self.path_arc)
 
-
-    def update_mobject(self, alpha):
-        families = map(
+    def get_all_families_zipped(self):
+        return zip(*map(
             Mobject.submobject_family,
             [self.mobject, self.starting_mobject, self.ending_mobject]
-        )
-        for m, start, end in zip(*families):
-            m.interpolate(start, end, alpha, self.path_func)
+        ))
+
+    def update_submobject(self, submob, start, end, alpha):
+        submob.interpolate(start, end, alpha, self.path_func)
+        return self
 
 
 class ClockwiseTransform(Transform):
@@ -81,6 +82,9 @@ class ShrinkToCenter(Transform):
         )
 
 class ApplyMethod(Transform):
+    CONFIG = {
+        "submobject_mode" : "all_at_once"
+    }
     def __init__(self, method, *args, **kwargs):
         """
         Method is a method of Mobject.  *args is for the method,
@@ -88,7 +92,11 @@ class ApplyMethod(Transform):
 
         Relies on the fact that mobject methods return the mobject
         """
-        assert(inspect.ismethod(method))
+        if not inspect.ismethod(method):
+            raise Exception(
+            "Whoops, looks like you accidentally invoked " + \
+            "the method you want to animate"
+        )
         assert(isinstance(method.im_self, Mobject))
         Transform.__init__(
             self,
@@ -119,10 +127,7 @@ class FadeIn(Transform):
         if isinstance(mobject, VMobject):
             mobject.set_stroke(width = 0)
         Transform.__init__(self, mobject, target, **kwargs)
-        # self.mobject.rgbs = self.starting_mobject.rgbs * alpha
-        # if self.mobject.points.shape != self.starting_mobject.points.shape:
-        #     self.mobject.points = self.starting_mobject.points
-        #     #TODO, Why do you need to do this? Shouldn't points always align?
+
 
 class ShimmerIn(DelayByOrder):
     def __init__(self, mobject, **kwargs):

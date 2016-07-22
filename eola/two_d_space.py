@@ -46,11 +46,11 @@ class VectorScene(Scene):
         self.add(axes)
         self.freeze_background()
 
-    def add_vector(self, vector, animate = True, color = YELLOW):
+    def add_vector(self, vector, color = YELLOW, animate = True):
         if not isinstance(vector, Arrow):
             vector = Vector(vector, color = color)
         if animate:
-            self.play(ShowCreation(vector, submobject_mode = "one_at_a_time"))
+            self.play(ShowCreation(vector))
         self.add(vector)
         return vector
 
@@ -66,12 +66,11 @@ class VectorScene(Scene):
             ]
         ]
 
-    def get_basis_vector_labels(self, animate = False, **kwargs):
+    def get_basis_vector_labels(self, **kwargs):
         i_hat, j_hat = self.get_basis_vectors()
         return [
-            self.label_vector(
+            self.get_vector_label(
                 vect, label, color = color, 
-                animate = animate, 
                 label_scale_val = 1,
                 **kwargs
             )
@@ -81,11 +80,12 @@ class VectorScene(Scene):
             ]
         ]
 
-    def label_vector(self, vector, label, animate = True, 
-                     direction = "left", rotate = False,
-                     color = WHITE, add_to_vector = False,
-                     buff_factor = 2, 
-                     label_scale_val = VECTOR_LABEL_SCALE_VAL):
+    def get_vector_label(self, vector, label, 
+                         direction = "left", 
+                         rotate = False,
+                         color = WHITE, 
+                         buff_factor = 2, 
+                         label_scale_val = VECTOR_LABEL_SCALE_VAL):
         if len(label) == 1:
             label = "\\vec{\\textbf{%s}}"%label
         label = TexMobject(label)
@@ -103,9 +103,11 @@ class VectorScene(Scene):
         boundary_point = label.get_critical_point(boundary_dir)
         label.shift(buff_factor*boundary_point)
         label.shift(vector_vect/2.)
+        return label
 
-        if add_to_vector:
-            vector.add(label)
+
+    def label_vector(self, vector, label, animate = True, **kwargs):
+        label = self.get_vector_label(vector, label, **kwargs)
         if animate:
             self.play(Write(label, run_time = 1))
         self.add(label)
@@ -268,8 +270,8 @@ class LinearTransformationScene(VectorScene):
             self.plane = NumberPlane(**self.foreground_plane_kwargs)
             self.add_transformable_mobject(self.plane)
         if self.show_basis_vectors:
-            self.add_vector((1, 0), self.i_hat_color)
-            self.add_vector((0, 1), self.j_hat_color)
+            self.add_vector((1, 0), self.i_hat_color, animate = False)
+            self.add_vector((0, 1), self.j_hat_color, animate = False)
 
     def add_background_mobject(self, *mobjects):
         for mobject in mobjects:
@@ -283,9 +285,9 @@ class LinearTransformationScene(VectorScene):
                 self.transformable_mobject.append(mobject)
                 self.add(mobject)
 
-    def add_vector(self, vector, color = YELLOW, animate = False):
+    def add_vector(self, vector, color = YELLOW, **kwargs):
         vector = VectorScene.add_vector(
-            self, vector, color = color, animate = animate
+            self, vector, color = color, **kwargs
         )
         self.moving_vectors.append(vector)
         return vector

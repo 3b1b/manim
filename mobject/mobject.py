@@ -22,10 +22,6 @@ class Mobject(object):
         "name"         : None,
         "dim"          : 3,
         "target"       : None,
-        #Options are lagged_start, smoothed_lagged_start,
-        #one_at_a_time, all_at_once
-        "submobject_partial_creation_mode" : "lagged_start",
-        #TODO, probably make this Animations's responsibility?
     }
     def __init__(self, *submobjects, **kwargs):
         digest_config(self, kwargs)
@@ -548,7 +544,7 @@ class Mobject(object):
     def interpolate_color(self, mobject1, mobject2, alpha):
         raise Exception("Not implemented")
 
-    def become_partial(self, mobject, a, b, submobject_partial_creation_mode = None):
+    def become_partial(self, mobject, a, b):
         """
         Set points in such a way as to become only
         part of mobject.  
@@ -557,29 +553,6 @@ class Mobject(object):
         """
 
         #TODO, color?
-        spcm = submobject_partial_creation_mode or self.submobject_partial_creation_mode
-        pairs = zip(
-            self.family_members_with_points(), 
-            mobject.family_members_with_points()
-        )
-        for i, (self_sub, mob_sub) in enumerate(pairs):
-            if spcm in ["lagged_start", "smoothed_lagged_start"]:
-                prop = float(i)/len(pairs)
-                if spcm is "smoothed_lagged_start":
-                    prop = smooth(prop)
-                sub_a = np.clip(2*a - prop, 0, 1)
-                sub_b = np.clip(2*b - prop, 0, 1)
-            elif spcm == "one_at_a_time":
-                lower = float(i)/len(pairs)
-                upper = float(i+1)/len(pairs)
-                sub_a = np.clip((a-lower)/(upper-lower), 0, 1)
-                sub_b = np.clip((b-lower)/(upper-lower), 0, 1)
-            elif spcm == "all_at_once":
-                sub_a, sub_b = a, b
-            else:
-                raise Exception("Invalid submobject partial creation mode")
-            self_sub.pointwise_become_partial(mob_sub, sub_a, sub_b)
-        return self
 
     def pointwise_become_partial(self, mobject, a, b):
         raise Exception("Not implemented")

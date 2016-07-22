@@ -41,24 +41,26 @@ class VMobject(Mobject):
                        fill_color = None, 
                        fill_opacity = None,
                        family = True):
-        if stroke_color is not None:
-            setattr(self, "stroke_rgb", color_to_rgb(stroke_color))
-        if stroke_width is not None:
-            setattr(self, "stroke_width", stroke_width)
-        if fill_color is not None:
-            setattr(self, "fill_rgb", color_to_rgb(fill_color))
-        if fill_opacity is not None:
-            setattr(self, "fill_opacity", fill_opacity)
-        if family:
-            kwargs = locals()
-            kwargs.pop("self")
-            for mob in self.submobjects:
-                mob.set_style_data(**kwargs)
+        mobs = self.submobject_family() if family else [self]
+        for mob in mobs:
+            if stroke_color is not None:
+                mob.stroke_rgb = color_to_rgb(stroke_color)
+            if stroke_width is not None:
+                mob.stroke_width = stroke_width
+            if fill_color is not None:
+                mob.fill_rgb = color_to_rgb(fill_color)
+            if fill_opacity is not None:
+                mob.fill_opacity = fill_opacity
+            probably_meant_to_change_opacity = reduce(op.and_, [
+                fill_color is not None,
+                fill_opacity is None,
+                mob.fill_opacity == 0
+            ])
+            if probably_meant_to_change_opacity:
+                mob.fill_opacity = 1
         return self
 
     def set_fill(self, color = None, opacity = None, family = True):
-        if self.fill_opacity == 0 and opacity is None:
-            opacity = 1
         return self.set_style_data(
             fill_color = color, 
             fill_opacity = opacity, 
@@ -73,11 +75,7 @@ class VMobject(Mobject):
         )
 
     def highlight(self, color, family = True):
-        self.set_fill(
-            color = color, 
-            opacity = self.get_fill_opacity(),
-            family = family
-        )
+        self.set_fill(color = color, family = family)
         self.set_stroke(color = color, family = family)
         return self
 

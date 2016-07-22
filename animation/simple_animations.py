@@ -18,14 +18,12 @@ class Rotating(Animation):
         "rate_func"  : None,
         "in_place"   : True,
     }
+    def update_submobject(self, submobject, starting_mobject, alpha):
+        submobject.points = starting_submobject.points
+
     def update_mobject(self, alpha):
+        Animation.update_mobject(self, alpha)
         axes = [self.axis] if self.axis is not None else self.axes
-        families = [
-            self.mobject.submobject_family(),
-            self.starting_mobject.submobject_family()
-        ]
-        for mob, start in zip(*families):
-            mob.points = np.array(start.points)
         if self.in_place:
             method = self.mobject.rotate_in_place
         else:
@@ -34,14 +32,9 @@ class Rotating(Animation):
 
 
 class ShowPartial(Animation):
-    CONFIG = {
-        "submobject_mode" : None
-    }
-    def update_mobject(self, alpha):
-        self.mobject.become_partial(
-            self.starting_mobject, 
-            *self.get_bounds(alpha),
-            submobject_partial_creation_mode = self.submobject_mode
+    def update_submobject(self, submobject, starting_submobject, alpha):
+        submobject.pointwise_become_partial(
+            starting_submobject, *self.get_bounds(alpha)
         )
 
     def get_bounds(self, alpha):
@@ -83,32 +76,6 @@ class ShowPassingFlash(ShowPartial):
         return (lower, upper)
 
 
-class Flash(Animation):
-    CONFIG = {
-        "color" : "white",
-        "slow_factor" : 0.01,
-        "run_time" : 0.1,
-        "rate_func" : None,
-    }
-    def __init__(self, mobject, **kwargs):
-        self.intermediate = Mobject(color = self.color)
-        self.intermediate.add_points([
-            point + (x, y, 0)
-            for point in self.mobject.points
-            for x in [-1, 1]
-            for y in [-1, 1]
-        ])
-        Animation.__init__(self, mobject, **kwargs)        
-
-    def update_mobject(self, alpha):
-        #Makes alpha go from 0 to slow_factor to 0 instead of 0 to 1
-        alpha = self.slow_factor * (1.0 - 4 * (alpha - 0.5)**2)
-        self.mobject.interpolate(
-            self.starting_mobject, 
-            self.intermediate, 
-            alpha
-        )
-
 class MoveAlongPath(Animation):
     def __init__(self, mobject, vmobject, **kwargs):
         digest_config(self, kwargs, locals())
@@ -131,16 +98,12 @@ class Homotopy(Animation):
         digest_config(self, kwargs)
         Animation.__init__(self, mobject, **kwargs)
 
+    def update_submobject(self, submob, start, alpha):
+        submob.points = start.points
+
     def update_mobject(self, alpha):
-        pairs = zip(
-            self.mobject.submobject_family(),
-            self.starting_mobject.submobject_family()
-        )
-        for mob, start_mob in pairs:
-            mob.become_partial(start_mob, 0, 1)
-        self.mobject.apply_function(
-            self.function_at_time_t(alpha)
-        )
+        Animation.update_mobject(self, alpha)
+        submob.apply_function(self.function_at_time_t(alpha))
 
 
 class PhaseFlow(Animation):
