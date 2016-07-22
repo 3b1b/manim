@@ -26,9 +26,10 @@ class PMobject(Mobject):
         self.rgbs = np.append(self.rgbs, rgbs, axis = 0)
         return self
 
-    def highlight(self, color = YELLOW_C, condition = None):
+    def highlight(self, color = YELLOW_C, family = True, condition = None):
         rgb = Color(color).get_rgb()
-        for mob in self.family_members_with_points():
+        mobs = self.family_members_with_points() if family else [self]
+        for mob in mobs:
             if condition:
                 to_change = np.apply_along_axis(condition, 1, mob.points)
                 mob.rgbs[to_change, :] = rgb

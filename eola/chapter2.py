@@ -57,7 +57,7 @@ class CoordinatesAsScalars(VectorScene):
     }
 
     def construct(self):
-        self.lock_in_dim_grid()
+        self.lock_in_faded_grid()
 
         vector = self.add_vector(self.vector_coords)
         array, x_line, y_line = self.vector_to_coords(vector)
@@ -194,7 +194,7 @@ class CoordinatesAsScalarsExample2(CoordinatesAsScalars):
     }
 
     def construct(self):
-        self.lock_in_dim_grid()
+        self.lock_in_faded_grid()
 
         basis_vectors = self.get_basis_vectors()
         labels = self.get_basis_vector_labels()
@@ -246,7 +246,7 @@ class ShowVaryingLinearCombinations(VectorScene):
         "finish_by_drawing_lines" : False,
     }
     def construct(self):
-        self.lock_in_dim_grid()
+        self.lock_in_faded_grid()
         v1 = self.add_vector(self.vector1, color = self.vector1_color)
         v2 = self.add_vector(self.vector2, color = self.vector2_color)
         v1_label = self.label_vector(
@@ -651,7 +651,7 @@ class VectorsToDotsScene(VectorScene):
         "end_color" : BLUE_E,
     }
     def construct(self):
-        self.lock_in_dim_grid()
+        self.lock_in_faded_grid()
 
         vectors = self.get_vectors()
         colors = Color(self.start_color).range_to(
@@ -760,9 +760,6 @@ class VectorsInThePlane(VectorsToDotsScene):
             ]
         )
         self.remove(*vectors)
-        self.dither()
-        self.play(Homotopy(plane_wave_homotopy, plane, run_time = 3))
-        self.play(Transform(plane, NumberPlane(), rate_func = rush_from))
         self.dither()
 
 
@@ -1238,7 +1235,6 @@ class CheckYourUnderstanding(TeacherStudentsScene):
         self.random_blink()
 
 
-
 class TechnicalDefinitionOfBasis(Scene):
     def construct(self):
         title  = TextMobject("Technical definition of basis:")
@@ -1273,7 +1269,6 @@ class NextVideo(Scene):
         self.add(title)
         self.play(ShowCreation(rect))
         self.dither() 
-
 
 
 

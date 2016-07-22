@@ -26,6 +26,11 @@ class Transform(Animation):
         self.name += "To" + str(ending_mobject)  
         self.mobject.stroke_width = ending_mobject.stroke_width
 
+    def update_config(self, **kwargs):
+        Animation.update_config(self, **kwargs)
+        if "path_arc" in kwargs:
+            self.path_func = path_along_arc(kwargs["path_arc"])
+
     def init_path_func(self):
         if self.path_func is not None:
             return

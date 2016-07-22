@@ -19,99 +19,6 @@ Y_COLOR = RED_C
 Z_COLOR = BLUE_D
 
 
-class LinearTransformationScene(Scene):
-    CONFIG = {
-        "include_background_plane" : True,
-        "include_foreground_plane" : True,
-        "foreground_plane_kwargs" : {
-            "x_radius" : 2*SPACE_WIDTH,
-            "y_radius" : 2*SPACE_HEIGHT,
-            "secondary_line_ratio" : 0
-        },
-        "background_plane_kwargs" : {
-            "color" : GREY,
-            "secondary_color" : DARK_GREY,
-            "axes_color" : GREY,
-        },
-        "show_coordinates" : False,
-        "show_basis_vectors" : True,
-        "i_hat_color" : X_COLOR,
-        "j_hat_color" : Y_COLOR,
-    }
-    def setup(self):
-        self.background_mobjects = []
-        self.transformable_mobject = []
-        self.moving_vectors = []
-
-        self.background_plane = NumberPlane(
-            **self.background_plane_kwargs
-        )
-
-        if self.show_coordinates:
-            self.background_plane.add_coordinates()
-        if self.include_background_plane:                
-            self.add_background_mobject(self.background_plane)
-        if self.include_foreground_plane:
-            self.plane = NumberPlane(**self.foreground_plane_kwargs)
-            self.add_transformable_mobject(self.plane)
-        if self.show_basis_vectors:
-            self.add_vector((1, 0), self.i_hat_color)
-            self.add_vector((0, 1), self.j_hat_color)
-
-    def add_background_mobject(self, *mobjects):
-        for mobject in mobjects:
-            if mobject not in self.background_mobjects:
-                self.background_mobjects.append(mobject)
-                self.add(mobject)
-            
-    def add_transformable_mobject(self, *mobjects):
-        for mobject in mobjects:
-            if mobject not in self.transformable_mobject:
-                self.transformable_mobject.append(mobject)
-                self.add(mobject)
-
-    def add_vector(self, coords, color = YELLOW):
-        vector = Vector(self.background_plane.num_pair_to_point(coords))
-        vector.highlight(color)
-        self.moving_vectors.append(vector)
-        return vector
-
-    def apply_matrix(self, matrix, **kwargs):
-        matrix = np.array(matrix)
-        if matrix.shape == (2, 2):
-            new_matrix = np.identity(3)
-            new_matrix[:2, :2] = matrix
-            matrix = new_matrix
-        elif matrix.shape != (3, 3):
-            raise "Matrix has bad dimensions"
-        transpose = np.transpose(matrix)
-
-        def func(point):
-            return np.dot(point, transpose)
-
-        new_vectors = [
-            Vector(func(v.get_end()), color = v.get_stroke_color())
-            for v in self.moving_vectors
-        ]
-        self.play(
-            ApplyPointwiseFunction(
-                func,
-                VMobject(*self.transformable_mobject),
-                **kwargs
-            ),
-            Transform(
-                VMobject(*self.moving_vectors),
-                VMobject(*new_vectors), 
-                **kwargs
-            )
-        )
-
-    def apply_nonlinear_transformation(self, function, **kwargs):
-        pass #TODO
-
-
-
-
 class VectorScene(Scene):
     CONFIG = {
         "basis_vector_stroke_width" : 6
@@ -130,7 +37,7 @@ class VectorScene(Scene):
         self.add(axes)
         return axes
 
-    def lock_in_dim_grid(self, dimness = 0.7, axes_dimness = 0.5):
+    def lock_in_faded_grid(self, dimness = 0.7, axes_dimness = 0.5):
         plane = self.add_plane()
         axes = plane.get_axes()
         plane.fade(dimness)
@@ -321,6 +228,112 @@ class VectorScene(Scene):
             dots, dots_end, rate_func = rush_from
         ))
         self.remove(dots)
+
+
+
+class LinearTransformationScene(VectorScene):
+    CONFIG = {
+        "include_background_plane" : True,
+        "include_foreground_plane" : True,
+        "foreground_plane_kwargs" : {
+            "x_radius" : 2*SPACE_WIDTH,
+            "y_radius" : 2*SPACE_HEIGHT,
+            "secondary_line_ratio" : 0
+        },
+        "background_plane_kwargs" : {
+            "color" : GREY,
+            "secondary_color" : DARK_GREY,
+            "axes_color" : GREY,
+            "stroke_width" : 2,
+        },
+        "show_coordinates" : False,
+        "show_basis_vectors" : True,
+        "i_hat_color" : X_COLOR,
+        "j_hat_color" : Y_COLOR,
+    }
+    def setup(self):
+        self.background_mobjects = []
+        self.transformable_mobject = []
+        self.moving_vectors = []
+
+        self.background_plane = NumberPlane(
+            **self.background_plane_kwargs
+        )
+
+        if self.show_coordinates:
+            self.background_plane.add_coordinates()
+        if self.include_background_plane:                
+            self.add_background_mobject(self.background_plane)
+        if self.include_foreground_plane:
+            self.plane = NumberPlane(**self.foreground_plane_kwargs)
+            self.add_transformable_mobject(self.plane)
+        if self.show_basis_vectors:
+            self.add_vector((1, 0), self.i_hat_color)
+            self.add_vector((0, 1), self.j_hat_color)
+
+    def add_background_mobject(self, *mobjects):
+        for mobject in mobjects:
+            if mobject not in self.background_mobjects:
+                self.background_mobjects.append(mobject)
+                self.add(mobject)
+            
+    def add_transformable_mobject(self, *mobjects):
+        for mobject in mobjects:
+            if mobject not in self.transformable_mobject:
+                self.transformable_mobject.append(mobject)
+                self.add(mobject)
+
+    def add_vector(self, vector, color = YELLOW, animate = False):
+        vector = VectorScene.add_vector(
+            self, vector, color = color, animate = animate
+        )
+        self.moving_vectors.append(vector)
+        return vector
+
+    def get_matrix_transformation(self, transposed_matrix):
+        transposed_matrix = np.array(transposed_matrix)
+        if transposed_matrix.shape == (2, 2):
+            new_matrix = np.identity(3)
+            new_matrix[:2, :2] = transposed_matrix
+            transposed_matrix = new_matrix
+        elif transposed_matrix.shape != (3, 3):
+            raise "Matrix has bad dimensions"
+        return lambda point: np.dot(point, transposed_matrix)
+
+
+    def get_vector_movement(self, func):
+        start = VMobject(*self.moving_vectors)       
+        target = VMobject(*[
+            Vector(func(v.get_end()), color = v.get_color())
+            for v in self.moving_vectors
+        ])
+        return Transform(start, target)
+
+    def apply_transposed_matrix(self, transposed_matrix, **kwargs):
+        func = self.get_matrix_transformation(transposed_matrix)
+        if "path_arc" not in kwargs:
+            net_rotation = np.mean([
+                angle_of_vector(func(RIGHT)),
+                angle_of_vector(func(UP))-np.pi/2
+            ])
+            kwargs["path_arc"] = net_rotation
+        self.apply_function(func, **kwargs)
+
+    def apply_nonlinear_transformation(self, function, **kwargs):
+        self.plane.prepare_for_nonlinear_transform(100)
+        self.apply_function(function, **kwargs)
+
+    def apply_function(self, function, **kwargs):
+        if "run_time" not in kwargs:
+            kwargs["run_time"] = 3
+        self.play(
+            ApplyPointwiseFunction(
+                function,
+                VMobject(*self.transformable_mobject),
+            ),
+            self.get_vector_movement(function),
+            **kwargs
+        )
 
 
 

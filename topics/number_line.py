@@ -116,6 +116,7 @@ class NumberPlane(VMobject):
         "color" : BLUE_D,
         "secondary_color" : BLUE_E,
         "axes_color" : WHITE,
+        "secondary_stroke_width" : 1,
         "x_radius": SPACE_WIDTH,
         "y_radius": SPACE_HEIGHT,
         "space_unit_to_x_unit" : 1,
@@ -127,6 +128,7 @@ class NumberPlane(VMobject):
         "written_coordinate_nudge" : 0.1*(DOWN+RIGHT),
         "num_pair_at_center" : (0, 0),
         "propogate_style_to_family" : False,
+        "submobject_partial_creation_mode" : "smoothed_lagged_start",
     }
     
     def generate_points(self):
@@ -170,9 +172,11 @@ class NumberPlane(VMobject):
 
     def init_colors(self):
         VMobject.init_colors(self)
-        self.axes.set_stroke(self.axes_color)
-        self.main_lines.set_stroke(self.color)
-        self.secondary_lines.set_stroke(self.secondary_color, 1)
+        self.axes.set_stroke(self.axes_color, self.stroke_width)
+        self.main_lines.set_stroke(self.color, self.stroke_width)
+        self.secondary_lines.set_stroke(
+            self.secondary_color, self.secondary_stroke_width
+        )
         return self
 
     def get_center_point(self):
@@ -236,10 +240,10 @@ class NumberPlane(VMobject):
         arrow = Arrow(ORIGIN, coords, **kwargs)
         return arrow
 
-    def prepare_for_nonlinear_transform(self):
+    def prepare_for_nonlinear_transform(self, num_inserted_anchor_points = 40):
         for mob in self.submobject_family():
             if mob.get_num_points() > 0:
-                mob.insert_n_anchor_points(20)
+                mob.insert_n_anchor_points(num_inserted_anchor_points)
                 mob.change_anchor_mode("smooth")
 
 

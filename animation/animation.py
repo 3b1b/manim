@@ -30,6 +30,12 @@ class Animation(object):
             self.name = self.__class__.__name__ + str(self.mobject)
         self.update(0)
 
+    def update_config(self, **kwargs):
+        if "path_arc" in kwargs:
+            kwargs["path_arc"]
+        digest_config(self, kwargs)
+        return self
+
     def __str__(self):
         return self.name
 
@@ -65,7 +71,7 @@ class Animation(object):
 
     def set_name(self, name):
         self.name = name
-        return self
+        return self        
 
     def update_mobject(self, alpha):
         #Typically ipmlemented by subclass

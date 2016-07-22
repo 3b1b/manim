@@ -22,8 +22,10 @@ class Mobject(object):
         "name"         : None,
         "dim"          : 3,
         "target"       : None,
-        #Options are lagged_start, one_at_a_time, all_at_once
+        #Options are lagged_start, smoothed_lagged_start,
+        #one_at_a_time, all_at_once
         "submobject_partial_creation_mode" : "lagged_start",
+        #TODO, probably make this Animations's responsibility?
     }
     def __init__(self, *submobjects, **kwargs):
         digest_config(self, kwargs)
@@ -286,14 +288,21 @@ class Mobject(object):
 
     ## Color functions
 
-    def highlight(self, color = YELLOW_C, condition = None):
+    def highlight(self, color = YELLOW_C, family = True, condition = None):
         """
         Condition is function which takes in one arguments, (x, y, z).
         """
         raise Exception("Not implemented")
 
     def gradient_highlight(self, start_color, end_color):
-        raise Exception("Not implemented")        
+        raise Exception("Not implemented") 
+
+    def submobject_gradient_highlight(self, start_color, end_color):
+        mobs = self.family_members_with_points()
+        colors = Color(start_color).range_to(end_color, len(mobs))
+        for mob, color in zip(mobs, colors):
+            mob.highlight(color, family = False)
+        return self
 
     def set_color(self, color):
         self.highlight(color)
@@ -305,10 +314,10 @@ class Mobject(object):
         return self
 
     def fade_to(self, color, alpha):
-        start = color_to_rgb(self.get_color())
-        end = color_to_rgb(color)
-        new_rgb = interpolate(start, end, alpha)
         for mob in self.family_members_with_points():
+            start = color_to_rgb(mob.get_color())
+            end = color_to_rgb(color)
+            new_rgb = interpolate(start, end, alpha)
             mob.highlight(Color(rgb = new_rgb))
         return self
 
@@ -554,8 +563,10 @@ class Mobject(object):
             mobject.family_members_with_points()
         )
         for i, (self_sub, mob_sub) in enumerate(pairs):
-            if spcm == "lagged_start":
+            if spcm in ["lagged_start", "smoothed_lagged_start"]:
                 prop = float(i)/len(pairs)
+                if spcm is "smoothed_lagged_start":
+                    prop = smooth(prop)
                 sub_a = np.clip(2*a - prop, 0, 1)
                 sub_b = np.clip(2*b - prop, 0, 1)
             elif spcm == "one_at_a_time":

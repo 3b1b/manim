@@ -6,8 +6,9 @@ from helpers import *
 
 class VMobject(Mobject):
     CONFIG = {
-        "fill_color"       : BLACK,
+        "fill_color"       : None,
         "fill_opacity"     : 0.0,
+        "stroke_color"     : None,
         #Indicates that it will not be displayed, but
         #that it should count in parent mobject's path
         "is_subpath"       : False,
@@ -21,12 +22,10 @@ class VMobject(Mobject):
 
     ## Colors
     def init_colors(self):
-        if not hasattr(self, "stroke_color"):
-            self.stroke_color = self.color
         self.set_style_data(
-           stroke_color = self.stroke_color,
+           stroke_color = self.stroke_color or self.color,
            stroke_width = self.stroke_width,
-           fill_color = self.fill_color, 
+           fill_color = self.fill_color or self.color, 
            fill_opacity = self.fill_opacity,
            family = self.propogate_style_to_family
         )
@@ -58,6 +57,8 @@ class VMobject(Mobject):
         return self
 
     def set_fill(self, color = None, opacity = None, family = True):
+        if self.fill_opacity == 0 and opacity is None:
+            opacity = 1
         return self.set_style_data(
             fill_color = color, 
             fill_opacity = opacity, 
@@ -71,19 +72,22 @@ class VMobject(Mobject):
             family = family
         )
 
-    def highlight(self, color):
-        self.set_fill(color = color)
-        self.set_stroke(color = color)
+    def highlight(self, color, family = True):
+        self.set_fill(
+            color = color, 
+            opacity = self.get_fill_opacity(),
+            family = family
+        )
+        self.set_stroke(color = color, family = family)
         return self
 
-    def fade(self, darkness = 0.5):
-        Mobject.fade(self, darkness)
-        return self
+    # def fade(self, darkness = 0.5):
+    #     Mobject.fade(self, darkness)
+    #     return self
 
     def get_fill_color(self):
         try:
-            self.fill_rgb[self.fill_rgb<0] = 0
-            self.fill_rgb[self.fill_rgb>1] = 1
+            self.fill_rgb = np.clip(self.fill_rgb, 0, 1)
             return Color(rgb = self.fill_rgb)
         except:
             return Color(WHITE)
@@ -98,8 +102,10 @@ class VMobject(Mobject):
         except:
             return Color(WHITE)
 
-    #TODO, get color?  Specify if stroke or fill
-    #is the predominant color attribute?
+    def get_color(self):
+        if self.fill_opacity == 0:
+            return self.get_stroke_color()
+        return self.get_fill_color()
 
     ## Drawing
     def start_at(self, point):

@@ -1,5 +1,6 @@
 from vectorized_mobject import VMobject
 from svg_mobject import SVGMobject, VMobjectFromSVGPathstring
+from topics.geometry import Rectangle
 from helpers import *
 import collections
 
@@ -101,7 +102,15 @@ class TexMobject(SVGMobject):
             lambda m1, m2 : int((m1.get_left()-m2.get_left())[0])
         )
 
-
+    def add_background_rectangle(self, color = BLACK, opacity = 0.75):
+        rect = Rectangle(
+            stroke_width = 0,
+            fill_color = color,
+            fill_opacity = opacity
+        )
+        rect.replace(self, stretch = True)
+        self.submobjects = [rect] + self.submobjects
+        return self
 
 class TextMobject(TexMobject):
     CONFIG = {

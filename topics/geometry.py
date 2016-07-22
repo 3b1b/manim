@@ -44,8 +44,8 @@ class Dot(Circle): #Use 1D density, even though 2D
     CONFIG = {
         "radius"       : 0.05,
         "stroke_width" : 0,
-        "fill_color"   : WHITE,
-        "fill_opacity" : 1.0
+        "fill_opacity" : 1.0,
+        "color" : WHITE
     }
     def __init__(self, point = ORIGIN, **kwargs):
         Circle.__init__(self, **kwargs)
