@@ -240,11 +240,11 @@ class NumberPlane(VMobject):
         arrow = Arrow(ORIGIN, coords, **kwargs)
         return arrow
 
-    def prepare_for_nonlinear_transform(self, num_inserted_anchor_points = 40):
-        for mob in self.submobject_family():
-            if mob.get_num_points() > 0:
-                mob.insert_n_anchor_points(num_inserted_anchor_points)
-                mob.change_anchor_mode("smooth")
+    def prepare_for_nonlinear_transform(self, num_inserted_anchor_points = 50):
+        for mob in self.family_members_with_points():
+            mob.insert_n_anchor_points(num_inserted_anchor_points)
+            mob.make_smooth()
+        return self
 
 
 

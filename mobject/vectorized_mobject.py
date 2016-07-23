@@ -45,22 +45,22 @@ class VMobject(Mobject):
         for mob in mobs:
             if stroke_color is not None:
                 mob.stroke_rgb = color_to_rgb(stroke_color)
-            if stroke_width is not None:
-                mob.stroke_width = stroke_width
             if fill_color is not None:
                 mob.fill_rgb = color_to_rgb(fill_color)
+            if stroke_width is not None:
+                mob.stroke_width = stroke_width
             if fill_opacity is not None:
                 mob.fill_opacity = fill_opacity
-            probably_meant_to_change_opacity = reduce(op.and_, [
-                fill_color is not None,
-                fill_opacity is None,
-                mob.fill_opacity == 0
-            ])
-            if probably_meant_to_change_opacity:
-                mob.fill_opacity = 1
         return self
 
     def set_fill(self, color = None, opacity = None, family = True):
+        probably_meant_to_change_opacity = reduce(op.and_, [
+            color is not None,
+            opacity is None,
+            self.fill_opacity == 0
+        ])
+        if probably_meant_to_change_opacity:
+            opacity = 1
         return self.set_style_data(
             fill_color = color, 
             fill_opacity = opacity, 
@@ -75,8 +75,11 @@ class VMobject(Mobject):
         )
 
     def highlight(self, color, family = True):
-        self.set_fill(color = color, family = family)
-        self.set_stroke(color = color, family = family)
+        self.set_style_data(
+            stroke_color = color, 
+            fill_color = color,
+            family = family
+        )
         return self
 
     # def fade(self, darkness = 0.5):
@@ -202,6 +205,13 @@ class VMobject(Mobject):
             lambda m : m.is_subpath,
             self.submobjects
         )
+
+    def apply_function(self, function, maintain_smoothness = True):
+        Mobject.apply_function(self, function)
+        if maintain_smoothness:
+            self.make_smooth()
+        return self
+
 
     ## Information about line
 

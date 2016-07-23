@@ -314,7 +314,7 @@ class Mobject(object):
             start = color_to_rgb(mob.get_color())
             end = color_to_rgb(color)
             new_rgb = interpolate(start, end, alpha)
-            mob.highlight(Color(rgb = new_rgb))
+            mob.highlight(Color(rgb = new_rgb), family = False)
         return self
 
     def fade(self, darkness = 0.5):

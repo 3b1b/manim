@@ -12,6 +12,7 @@ from scipy import linalg
 from constants import *
 
 CLOSED_THRESHOLD = 0.01
+STRAIGHT_PATH_THRESHOLD = 0.01
 
 def get_smooth_handle_points(points):
     num_handles = len(points) - 1
@@ -262,7 +263,7 @@ def path_along_arc(arc_angle):
     If vect is vector from start to end, [vect[:,1], -vect[:,0]] is 
     perpendicualr to vect in the left direction.
     """
-    if arc_angle == 0:
+    if abs(arc_angle) < STRAIGHT_PATH_THRESHOLD:
         return straight_path
     def path(start_points, end_points, alpha):
         vects = end_points - start_points

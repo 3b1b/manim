@@ -20,6 +20,10 @@ from mobject.vectorized_mobject import *
 from eola.matrix import *
 from eola.two_d_space import *
 
+def curvy_squish(point):
+    x, y, z = point
+    return (x+np.cos(y))*RIGHT + (y+np.sin(x))*UP
+
 class OpeningQuote(Scene):
     def construct(self):
         words = TextMobject([
@@ -49,7 +53,6 @@ class OpeningQuote(Scene):
         self.play(Write(comment))
         self.dither()
 
-
 class Introduction(TeacherStudentsScene):
     def construct(self):
         title = TextMobject("Matrices as linear transformations")
@@ -70,7 +73,6 @@ class Introduction(TeacherStudentsScene):
             p = p + 3*DOWN
             return (SPACE_WIDTH+SPACE_HEIGHT)*p/np.linalg.norm(p)
         self.play(ApplyPointwiseFunction(spread_out, everything))
-
 
 class ShowGridCreation(Scene):
     def construct(self):
@@ -114,7 +116,6 @@ class IntroduceLinearTransformations(LinearTransformationScene):
         )
         self.dither()
 
-
 class SimpleLinearTransformationScene(LinearTransformationScene):
     CONFIG = {
         "show_basis_vectors" : False,
@@ -143,8 +144,7 @@ class SimpleNonlinearTransformationScene(LinearTransformationScene):
         self.dither()
 
     def func(self, point):
-        x, y, z = point
-        return (x+np.cos(y))*RIGHT + (y+np.sin(x))*UP
+        return curvy_squish(point)
 
 class MovingOrigin(SimpleNonlinearTransformationScene):
     CONFIG = {
@@ -185,7 +185,6 @@ class SneakyNonlinearTransformationExplained(SneakyNonlinearTransformation):
         self.play(ShowCreation(diag))
         self.add_transformable_mobject(diag)
 
-
 class AnotherLinearTransformation(SimpleLinearTransformationScene):
     CONFIG = {
         "transposed_matrix" : [
@@ -209,7 +208,6 @@ class AnotherLinearTransformation(SimpleLinearTransformationScene):
         self.play(Write(text))
         self.dither()
 
-
 class Rotation(SimpleLinearTransformationScene):
     CONFIG = {
         "angle" : np.pi/3,
@@ -221,8 +219,6 @@ class Rotation(SimpleLinearTransformationScene):
         ]
         SimpleLinearTransformationScene.construct(self)
 
-
-
 class YetAnotherLinearTransformation(SimpleLinearTransformationScene):
     CONFIG = {
         "transposed_matrix" : [
@@ -230,7 +226,6 @@ class YetAnotherLinearTransformation(SimpleLinearTransformationScene):
             [3, 2],
         ]
     }
-
 
 class MoveAroundAllVectors(LinearTransformationScene):
     CONFIG = {
@@ -269,16 +264,14 @@ class MoveAroundAllVectors(LinearTransformationScene):
             self.add(vector.copy().highlight(DARK_GREY))
         else:
             for vector in vectors.split():
-                self.add_vector(vector)
+                self.add_vector(vector, animate = False)
         self.apply_transposed_matrix([[3, 0], [1, 2]])
         self.dither()
-
 
 class MoveAroundJustOneVector(MoveAroundAllVectors):
     CONFIG = {
         "focus_on_one_vector" : True,
     }
-
 
 class RotateIHat(LinearTransformationScene):
     CONFIG = {
@@ -296,8 +289,6 @@ class RotateIHat(LinearTransformationScene):
         self.dither()
         self.play(Write(j_label, run_time = 1))
         self.dither()
-
-
 
 class TransformationsAreFunctions(Scene):
     def construct(self):
@@ -344,7 +335,6 @@ class TransformationsAreFunctions(Scene):
         for v, a in [(starting_vector, start_arrow), (ending_vector, ending_arrow)]:
             self.play(Write(v), ShowCreation(a), run_time = 1)
         self.dither()
-
 
 class UsedToThinkinfOfFunctionsAsGraphs(VectorScene):
     def construct(self):
@@ -408,6 +398,158 @@ class UsedToThinkinfOfFunctionsAsGraphs(VectorScene):
             ShowCreation(arrows)
         )
         self.dither()
+
+class TryingToVisualizeFourDimensions(Scene):
+    def construct(self):
+        randy = Randolph().to_corner()
+        bubble = randy.get_bubble()
+        formula = TexMobject("""
+            L\\left(\\left[
+                \\begin{array}{c}
+                    x \\\\
+                    y
+                \\end{array}
+            \\right]\\right) = 
+            \\left[
+                \\begin{array}{c}
+                    2x + y \\\\
+                    x + 2y
+                \\end{array}
+            \\right]
+        """)
+        formula.next_to(randy, RIGHT)
+        formula.split()[3].highlight(X_COLOR)
+        formula.split()[4].highlight(Y_COLOR)
+        VMobject(*formula.split()[9:9+4]).highlight(MAROON_C)
+        VMobject(*formula.split()[13:13+4]).highlight(BLUE)
+        thought = TextMobject("""
+            Do I imagine plotting 
+            $(x, y, 2x+y, x+2y)$???
+        """)
+        thought.split()[-17].highlight(X_COLOR)
+        thought.split()[-15].highlight(Y_COLOR)
+        VMobject(*thought.split()[-13:-13+4]).highlight(MAROON_C)
+        VMobject(*thought.split()[-8:-8+4]).highlight(BLUE)
+
+        bubble.position_mobject_inside(thought)
+        thought.shift(0.2*UP)
+
+        self.add(randy)
+
+        self.play(
+            ApplyMethod(randy.look, DOWN+RIGHT),
+            Write(formula)
+        )
+        self.play(
+            ApplyMethod(randy.change_mode, "pondering"),
+            ShowCreation(bubble),
+            Write(thought)
+        )
+        self.play(Blink(randy))
+        self.dither()
+        self.remove(thought)
+        bubble.make_green_screen()
+        self.dither()
+        self.play(Blink(randy))
+        self.play(ApplyMethod(randy.change_mode, "confused"))
+        self.dither()
+        self.play(Blink(randy))
+        self.dither()
+
+class ForgetAboutGraphs(Scene):
+    def construct(self):
+        self.play(Write("You must unlearn graphs"))
+        self.dither()
+
+class ThinkAboutFunctionAsMovingVector(LinearTransformationScene):
+    CONFIG = {
+        "show_basis_vectors" : False,
+        "leave_ghost_vectors" : True,
+    }
+    def construct(self):
+        self.setup()
+        vector = self.add_vector([2, 1])
+        label = self.add_transformable_label(vector, "v")
+        self.dither()
+        self.apply_transposed_matrix([[1, 1], [-3, 1]])
+        self.dither()
+
+class PrepareForFormalDefinition(TeacherStudentsScene):
+    def construct(self):
+        self.setup()
+        self.teacher_says("Get ready for a formal definition!")
+        self.dither(3)
+        bubble = self.student_thinks("")
+        bubble.make_green_screen()
+        self.dither(3)
+
+class AdditivityProperty(LinearTransformationScene):
+    CONFIG = {
+        "show_basis_vectors" : False,
+        "give_title" : True,
+        "transposed_matrix" : [[2, 0], [1, 1]],
+        "nonlinear_transformation" : None,
+        "vector_v" : [2, 1],
+        "vector_w" : [1, -2],
+    }
+    def construct(self):
+        self.setup()
+        added_anims = []
+        if self.give_title:
+            title = TextMobject("""
+                First fundamental property of 
+                linear transformations
+            """)
+            title.to_edge(UP)
+            title.add_background_rectangle()
+            self.play(Write(title))
+            added_anims.append(Animation(title))
+        self.dither()
+        # self.play(ApplyMethod(self.plane.fade))
+
+        v, w = self.draw_all_vectors()
+        self.apply_transformation()
+        self.show_final_sum(v, w)
+
+    def draw_all_vectors(self):
+        v = self.add_vector(self.vector_v, color = MAROON_C)
+        v_label = self.add_transformable_label(v, "v")
+        w = self.add_vector(self.vector_w, color = GREEN)
+        w_label = self.add_transformable_label(w, "w")
+        new_w = w.copy().fade(0.4)
+        self.play(ApplyMethod(new_w.shift, v.get_end()))
+        sum_vect = self.add_vector(new_w.get_end(), color = PINK)
+        sum_label = self.add_transformable_label(
+            sum_vect, 
+            "%s + %s"%(v_label.expression, w_label.expression),
+            rotate = True
+        )
+        self.play(FadeOut(new_w))
+        return v, w
+
+    def apply_transformation(selfe):
+        if self.nonlinear_transformation:
+            self.apply_nonlinear_transformation(self.nonlinear_transformation)
+        else:
+            self.apply_transposed_matrix(
+                self.transposed_matrix,
+                added_anims = added_anims
+            )
+        self.dither()
+
+    def show_final_sum(self, v, w):
+        new_w = w.copy()
+        self.play(ApplyMethod(new_w.shift, v.get_end()))
+        self.dither()
+
+
+class NonlinearLacksAdditivity(AdditivityProperty):
+    CONFIG = {
+        "give_title" : False,
+        "nonlinear_transformation" : curvy_squish,
+        "vector_w" : [2, -3],
+    }
+
 
 
 

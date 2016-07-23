@@ -98,12 +98,8 @@ class ApplyMethod(Transform):
             "the method you want to animate"
         )
         assert(isinstance(method.im_self, Mobject))
-        Transform.__init__(
-            self,
-            method.im_self,
-            copy.deepcopy(method)(*args),
-            **kwargs
-        )
+        target = copy.deepcopy(method)(*args)
+        Transform.__init__(self, method.im_self, target, **kwargs)
 
 class FadeOut(Transform):
     CONFIG = {

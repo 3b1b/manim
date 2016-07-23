@@ -84,27 +84,21 @@ class VectorScene(Scene):
                          direction = "left", 
                          rotate = False,
                          color = WHITE, 
-                         buff_factor = 2, 
                          label_scale_val = VECTOR_LABEL_SCALE_VAL):
         if len(label) == 1:
             label = "\\vec{\\textbf{%s}}"%label
         label = TexMobject(label)
-        label.highlight(color)        
+        label.highlight(color)     
         label.scale(label_scale_val)
-        if rotate:
-            label.rotate(vector.get_angle())
+        label.add_background_rectangle()
 
-        vector_vect = vector.get_end() - vector.get_start()
-        if direction is "left":
-            rot_angle = -np.pi/2
-        else:
-            rot_angle = np.pi/2
-        boundary_dir = -np.round(rotate_vector(vector_vect, rot_angle))
-        boundary_point = label.get_critical_point(boundary_dir)
-        label.shift(buff_factor*boundary_point)
-        label.shift(vector_vect/2.)
+        angle = vector.get_angle()
+        label.shift(label.get_height()*UP)
+        label.rotate(angle)
+        label.shift((vector.get_end() - vector.get_start())/2)
+        if not rotate:
+            label.rotate_in_place(-angle)
         return label
-
 
     def label_vector(self, vector, label, animate = True, **kwargs):
         label = self.get_vector_label(vector, label, **kwargs)
@@ -252,11 +246,13 @@ class LinearTransformationScene(VectorScene):
         "show_basis_vectors" : True,
         "i_hat_color" : X_COLOR,
         "j_hat_color" : Y_COLOR,
+        "leave_ghost_vectors" : False,
     }
     def setup(self):
         self.background_mobjects = []
-        self.transformable_mobject = []
+        self.transformable_mobjects = []
         self.moving_vectors = []
+        self.transformable_labels = []
 
         self.background_plane = NumberPlane(
             **self.background_plane_kwargs
@@ -281,8 +277,8 @@ class LinearTransformationScene(VectorScene):
             
     def add_transformable_mobject(self, *mobjects):
         for mobject in mobjects:
-            if mobject not in self.transformable_mobject:
-                self.transformable_mobject.append(mobject)
+            if mobject not in self.transformable_mobjects:
+                self.transformable_mobjects.append(mobject)
                 self.add(mobject)
 
     def add_vector(self, vector, color = YELLOW, **kwargs):
@@ -291,6 +287,14 @@ class LinearTransformationScene(VectorScene):
         )
         self.moving_vectors.append(vector)
         return vector
+
+    def add_transformable_label(self, vector, label, **kwargs):
+        label_mob = self.label_vector(vector, label, **kwargs)
+        label_mob.target_text = "L(%s)"%label_mob.expression
+        label_mob.vector = vector
+        label_mob.kwargs = kwargs
+        self.transformable_labels.append(label_mob)
+        return label_mob
 
     def get_matrix_transformation(self, transposed_matrix):
         transposed_matrix = np.array(transposed_matrix)
@@ -302,14 +306,24 @@ class LinearTransformationScene(VectorScene):
             raise "Matrix has bad dimensions"
         return lambda point: np.dot(point, transposed_matrix)
 
+    def get_piece_movement(self, pieces):
+        start = VMobject(*pieces)       
+        target = VMobject(*[mob.target for mob in pieces])
+        if self.leave_ghost_vectors:
+            self.add(start.copy().fade(0.7))
+        return Transform(start, target, submobject_mode = "all_at_once")
 
     def get_vector_movement(self, func):
-        start = VMobject(*self.moving_vectors)       
-        target = VMobject(*[
-            Vector(func(v.get_end()), color = v.get_color())
-            for v in self.moving_vectors
-        ])
-        return Transform(start, target)
+        for v in self.moving_vectors:
+            v.target = Vector(func(v.get_end()), color = v.get_color())
+        return self.get_piece_movement(self.moving_vectors)
+
+    def get_transformable_label_movement(self):
+        for l in self.transformable_labels:
+            l.target = self.get_vector_label(
+                l.vector.target, l.target_text, **l.kwargs
+            )
+        return self.get_piece_movement(self.transformable_labels)
 
     def apply_transposed_matrix(self, transposed_matrix, **kwargs):
         func = self.get_matrix_transformation(transposed_matrix)
@@ -322,18 +336,20 @@ class LinearTransformationScene(VectorScene):
         self.apply_function(func, **kwargs)
 
     def apply_nonlinear_transformation(self, function, **kwargs):
-        self.plane.prepare_for_nonlinear_transform(100)
+        self.plane.prepare_for_nonlinear_transform()
         self.apply_function(function, **kwargs)
 
-    def apply_function(self, function, **kwargs):
+    def apply_function(self, function, added_anims = [], **kwargs):
         if "run_time" not in kwargs:
             kwargs["run_time"] = 3
         self.play(
             ApplyPointwiseFunction(
                 function,
-                VMobject(*self.transformable_mobject),
+                VMobject(*self.transformable_mobjects),
             ),
             self.get_vector_movement(function),
+            self.get_transformable_label_movement(),
+            *added_anims,
             **kwargs
         )
 

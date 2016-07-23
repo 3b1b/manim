@@ -226,12 +226,9 @@ class Bubble(SVGMobject):
         return mobject
 
     def add_content(self, mobject):
-        if self.content in self.submobjects:
-            self.submobjects.remove(self.content)
         self.position_mobject_inside(mobject)
         self.content = mobject
-        self.add(self.content)
-        return self
+        return self.content
 
     def write(self, text):
         self.add_content(TextMobject(text))
@@ -296,11 +293,12 @@ class TeacherStudentsScene(Scene):
         bubble.add_content(content)
         if pi_creature.bubble:
             content_intro_anims = [
-                Transform(pi_creature.bubble, bubble)
+                Transform(pi_creature.bubble, bubble),
+                Transform(pi_creature.bubble.content, bubble.content)
             ]
         else:
             content_intro_anims = [
-                FadeIn(bubble.split()[0]),
+                FadeIn(bubble),
                 Write(content),
             ]
             pi_creature.bubble = bubble 
@@ -324,7 +322,10 @@ class TeacherStudentsScene(Scene):
 
         for p in self.get_everyone():
             if p.bubble and p is not pi_creature:
-                added_anims.append(FadeOut(p.bubble))
+                added_anims += [
+                    FadeOut(p.bubble),
+                    FadeOut(p.bubble.content)
+                ]
                 p.bubble = None
                 added_anims.append(ApplyMethod(p.change_mode, "plain"))
 
@@ -335,24 +336,25 @@ class TeacherStudentsScene(Scene):
             ),
         ]
         self.play(*anims)
+        return pi_creature.bubble
 
     def teacher_says(self, content, **kwargs):
-        self.introduce_bubble(
+        return self.introduce_bubble(
             content, "speech", self.get_teacher(), **kwargs
         )
 
     def student_says(self, content, student_index = 1, **kwargs):
         student = self.get_students()[student_index]
-        self.introduce_bubble(content, "speech", student, **kwargs)
+        return self.introduce_bubble(content, "speech", student, **kwargs)
 
     def teacher_thinks(self, content, **kwargs):
-        self.introduce_bubble(
+        return self.introduce_bubble(
             content, "thought", self.get_teacher(), **kwargs
         )
 
     def student_thinks(self, content, student_index = 1, **kwargs):
         student = self.get_students()[student_index]
-        self.introduce_bubble(content, "thought", student, **kwargs)
+        return self.introduce_bubble(content, "thought", student, **kwargs)
 
     def random_blink(self, num_times = 1):
         for x in range(num_times):
