@@ -93,11 +93,11 @@ class VectorScene(Scene):
         label.add_background_rectangle()
 
         angle = vector.get_angle()
-        label.shift(label.get_height()*UP)
+        if not rotate:
+            label.rotate(-angle)
+        label.shift(-label.get_bottom() + 0.1*UP)
         label.rotate(angle)
         label.shift((vector.get_end() - vector.get_start())/2)
-        if not rotate:
-            label.rotate_in_place(-angle)
         return label
 
     def label_vector(self, vector, label, animate = True, **kwargs):

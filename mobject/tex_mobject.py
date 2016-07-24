@@ -109,7 +109,7 @@ class TexMobject(SVGMobject):
             fill_opacity = opacity
         )
         rect.replace(self, stretch = True)
-        self.submobjects = [rect] + self.submobjects
+        self.submobjects = [rect, VMobject(*self.submobjects)]
         return self
 
 class TextMobject(TexMobject):

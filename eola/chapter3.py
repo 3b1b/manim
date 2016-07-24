@@ -55,24 +55,55 @@ class OpeningQuote(Scene):
 
 class Introduction(TeacherStudentsScene):
     def construct(self):
-        title = TextMobject("Matrices as linear transformations")
+        title = TextMobject(["Matrices as", "Linear transformations"])
         title.to_edge(UP)
         title.highlight(YELLOW)
-        self.add(title)
+        linear_transformations = title.split()[1]
+        self.add(*title.split())
         self.setup()
         self.teacher_says("""
             Listen up folks, this one is
             particularly important
         """, height = 3)
         self.random_blink(2)
-        self.teacher_says("We'll start by just watching", height = 3)
-        self.random_blink()
-        self.teacher_thinks(VMobject())
+        self.teacher_thinks("", height = 3)
+        self.remove(linear_transformations)
         everything = VMobject(*self.get_mobjects())
         def spread_out(p):
-            p = p + 3*DOWN
+            p = p + 2*DOWN
             return (SPACE_WIDTH+SPACE_HEIGHT)*p/np.linalg.norm(p)
-        self.play(ApplyPointwiseFunction(spread_out, everything))
+        self.play(
+            ApplyPointwiseFunction(spread_out, everything),
+            ApplyFunction(
+                lambda m : m.center().to_edge(UP), 
+                linear_transformations
+            )
+        )
+
+class ThreePerspectives(Scene):
+    def construct(self):
+        title = TextMobject("Linear transformations")
+        title.to_edge(UP)
+        title.highlight(YELLOW)
+        self.add(title)
+
+        words = VMobject(*map(TextMobject, [
+            "1. Geometric perspective",
+            "2. Numerical computations",
+            "3. Abstract definition"
+        ]))
+        words.arrange_submobjects(DOWN, buff = 0.5, aligned_edge = LEFT)
+        words.to_edge(LEFT, buff = 2)
+        for word in words.split():
+            self.play(Write(word), run_time = 2)
+            self.dither()
+        for word in words.split():
+            all_else = self.get_mobjects()
+            all_else.remove(word)
+            all_else_copies = [mob.copy() for mob in all_else]
+            self.play(*[ApplyMethod(mob.fade, 0.7) for mob in all_else])
+            self.dither()
+            self.play(*[Transform(*pair) for pair in zip(all_else, all_else_copies)])
 
 class ShowGridCreation(Scene):
     def construct(self):
@@ -240,10 +271,7 @@ class MoveAroundAllVectors(LinearTransformationScene):
             for y in np.arange(-int(SPACE_HEIGHT)+0.5, int(SPACE_HEIGHT)+0.5)
         ])
         vectors.submobject_gradient_highlight(PINK, BLUE_E)        
-        dots = VMobject(*[
-            Dot(v.get_end(), color = v.get_color())
-            for v in vectors.split()
-        ])
+        dots = self.get_dots(vectors)
 
         self.dither()
         self.play(ShowCreation(dots))
@@ -267,6 +295,15 @@ class MoveAroundAllVectors(LinearTransformationScene):
                 self.add_vector(vector, animate = False)
         self.apply_transposed_matrix([[3, 0], [1, 2]])
         self.dither()
+        dots = self.get_dots(vectors)
+        self.play(Transform(vectors, dots))
+        self.dither()
+
+    def get_dots(self, vectors):
+        return VMobject(*[
+            Dot(v.get_end(), color = v.get_color())
+            for v in vectors.split()
+        ])
 
 class MoveAroundJustOneVector(MoveAroundAllVectors):
     CONFIG = {
@@ -491,6 +528,7 @@ class AdditivityProperty(LinearTransformationScene):
         "nonlinear_transformation" : None,
         "vector_v" : [2, 1],
         "vector_w" : [1, -2],
+        "proclaim_sum" : True,
     }
     def construct(self):
         self.setup()
@@ -501,14 +539,15 @@ class AdditivityProperty(LinearTransformationScene):
                 linear transformations
             """)
             title.to_edge(UP)
+            title.highlight(YELLOW)
             title.add_background_rectangle()
             self.play(Write(title))
             added_anims.append(Animation(title))
         self.dither()
-        # self.play(ApplyMethod(self.plane.fade))
+        self.play(ApplyMethod(self.plane.fade), *added_anims)
 
         v, w = self.draw_all_vectors()
-        self.apply_transformation()
+        self.apply_transformation(added_anims)
         self.show_final_sum(v, w)
 
     def draw_all_vectors(self):
@@ -527,7 +566,7 @@ class AdditivityProperty(LinearTransformationScene):
         self.play(FadeOut(new_w))
         return v, w
 
-    def apply_transformation(selfe):
+    def apply_transformation(self, added_anims):
         if self.nonlinear_transformation:
             self.apply_nonlinear_transformation(self.nonlinear_transformation)
         else:
@@ -541,16 +580,31 @@ class AdditivityProperty(LinearTransformationScene):
         new_w = w.copy()
         self.play(ApplyMethod(new_w.shift, v.get_end()))
         self.dither()
-
+        if self.proclaim_sum:
+            text = TextMobject("It's still their sum!")
+            text.add_background_rectangle()
+            text.move_to(new_w.get_end(), side_to_align = -new_w.get_end())
+            text.shift_onto_screen()
+            self.play(Write(text))
+            self.dither()
 
 class NonlinearLacksAdditivity(AdditivityProperty):
     CONFIG = {
         "give_title" : False,
         "nonlinear_transformation" : curvy_squish,
+        "vector_v" : [3, 2],
         "vector_w" : [2, -3],
+        "proclaim_sum" : False,
     }
 
-
+class SecondAdditivityExample(AdditivityProperty):
+    CONFIG = {
+        "give_title" : False,
+        "transposed_matrix" : [[1, -1], [2, 1]],
+        "vector_v" : [-2, 2],
+        "vector_w" : [3, 0],
+        "proclaim_sum" : False,
+    }
 
 
 
