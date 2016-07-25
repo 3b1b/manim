@@ -262,6 +262,7 @@ class MoveAroundAllVectors(LinearTransformationScene):
     CONFIG = {
         "show_basis_vectors" : False,
         "focus_on_one_vector" : False,
+        "include_background_plane" : False,
     }
     def construct(self):
         self.setup()
@@ -270,7 +271,7 @@ class MoveAroundAllVectors(LinearTransformationScene):
             for x in np.arange(-int(SPACE_WIDTH)+0.5, int(SPACE_WIDTH)+0.5)
             for y in np.arange(-int(SPACE_HEIGHT)+0.5, int(SPACE_HEIGHT)+0.5)
         ])
-        vectors.submobject_gradient_highlight(PINK, BLUE_E)        
+        vectors.submobject_gradient_highlight(PINK, YELLOW)
         dots = self.get_dots(vectors)
 
         self.dither()
@@ -305,10 +306,473 @@ class MoveAroundAllVectors(LinearTransformationScene):
             for v in vectors.split()
         ])
 
-class MoveAroundJustOneVector(MoveAroundAllVectors):
+# class MoveAroundJustOneVector(MoveAroundAllVectors):
+#     CONFIG = {
+#         "focus_on_one_vector" : True,
+#     }
+
+class ReasonForThinkingAboutArrows(LinearTransformationScene):
     CONFIG = {
-        "focus_on_one_vector" : True,
+        "show_basis_vectors" : False
     }
+    def construct(self):
+        self.setup()
+        self.plane.fade()
+        v_color = MAROON_C
+        w_color = BLUE
+
+        v = self.add_vector([3, 1], color = v_color)
+        w = self.add_vector([1, -2], color = w_color)
+        vectors = VMobject(v, w)
+
+        self.to_and_from_dots(vectors)
+        self.scale_and_add(vectors)
+        self.apply_transposed_matrix([[1, 1], [-1, 0]])
+        self.scale_and_add(vectors)
+
+    def to_and_from_dots(self, vectors):
+        vectors_copy = vectors.copy()
+        dots = VMobject(*[
+            Dot(v.get_end(), color = v.get_color())
+            for v in vectors.split()
+        ])
+
+        self.dither()
+        self.play(Transform(vectors, dots))
+        self.dither()
+        self.play(Transform(vectors, vectors_copy))
+        self.dither()
+
+    def scale_and_add(self, vectors):
+        vectors_copy = vectors.copy()
+        v, w, = vectors.split()
+        scaled_v = Vector(0.5*v.get_end(), color = v.get_color())
+        scaled_w = Vector(1.5*w.get_end(), color = w.get_color())
+        shifted_w = scaled_w.copy().shift(scaled_v.get_end())
+        sum_vect = Vector(shifted_w.get_end(), color = PINK)
+
+        self.play(
+            ApplyMethod(v.scale, 0.5),
+            ApplyMethod(w.scale, 1.5),
+        )
+        self.play(ApplyMethod(w.shift, v.get_end()))
+        self.add_vector(sum_vect)
+        self.dither()
+        self.play(Transform(
+            vectors, vectors_copy, 
+            submobject_mode = "all_at_once"
+        ))
+        self.dither()
+
+class LinearTransformationWithOneVector(LinearTransformationScene):
+    CONFIG = {
+        "show_basis_vectors" : False,
+    }
+    def construct(self):
+        self.setup()
+        v = self.add_vector([3, 1])
+        self.vector_to_coords(v) 
+        self.apply_transposed_matrix([[-1, 1], [-2, -1]])
+        self.vector_to_coords(v)
+
+class FollowIHatJHat(LinearTransformationScene):
+    CONFIG = {
+        "show_basis_vectors" : False
+    }
+    def construct(self):
+        self.setup()
+        i_hat = self.add_vector([1, 0], color = X_COLOR)
+        i_label = self.label_vector(i_hat, "\\hat{\\imath}")
+        j_hat = self.add_vector([0, 1], color = Y_COLOR)
+        j_label = self.label_vector(j_hat, "\\hat{\\jmath}")
+
+        self.dither()
+        self.play(*map(FadeOut, [i_label, j_label]))
+        self.apply_transposed_matrix([[-1, 1], [-2, -1]])
+        self.dither()
+
+class TrackBasisVectorsExample(LinearTransformationScene):
+    CONFIG = {
+        "transposed_matrix" : [[1, -2], [3, 0]],
+        "v_coords" : [-1, 2],
+        "v_coord_strings" : ["-1", "2"],
+        "result_coords_string" : """
+            =
+            \\left[ \\begin{array}{c}
+                -1(1) + 2(3) \\\\
+                -1(-2) + 2(0)
+            \\end{arary}\\right] 
+            = 
+            \\left[ \\begin{array}{c}
+                5 \\\\
+                2
+            \\end{arary}\\right] 
+        """
+    }
+    def construct(self):
+        self.setup()
+        self.label_bases()
+        self.introduce_vector()
+        self.dither()
+        self.apply_transposed_matrix(self.transposed_matrix)
+        self.dither()
+        self.show_linear_combination(clean_up = False)
+        self.write_linear_map_rule()
+        self.show_basis_vector_coords()
+
+    def label_bases(self):
+        triplets = [
+            (self.i_hat, "\\hat{\\imath}", X_COLOR),
+            (self.j_hat, "\\hat{\\jmath}", Y_COLOR),
+        ]
+        label_mobs = []
+        for vect, label, color in triplets:
+            label_mobs.append(self.add_transformable_label(
+                vect, label, "\\text{Transformed } " + label,
+                color = color,
+                direction = "right",
+            ))
+        self.i_label, self.j_label = label_mobs
+
+    def introduce_vector(self):
+        v = self.add_vector(self.v_coords)
+        coords = Matrix(self.v_coords)
+        coords.scale(VECTOR_LABEL_SCALE_VAL)
+        coords.next_to(v.get_end(), np.sign(self.v_coords[0])*RIGHT)
+
+        self.play(Write(coords, run_time = 1))
+        v_def = self.get_v_definition()
+        pre_def = VMobject(
+            VectorizedPoint(coords.get_center()),
+            VMobject(*[
+                mob.copy()
+                for mob in coords.get_mob_matrix().flatten()
+            ])
+        )
+        self.play(Transform(
+            pre_def, v_def, 
+            run_time = 2, 
+            submobject_mode = "all_at_once"
+        ))
+        self.remove(pre_def)
+        self.add_foreground_mobject(v_def)
+        self.dither()
+        self.show_linear_combination()
+        self.remove(coords)
+
+    def show_linear_combination(self, clean_up = True):
+        i_hat_copy, j_hat_copy = [m.copy() for m in self.i_hat, self.j_hat]
+        self.play(ApplyFunction(
+            lambda m : m.scale(self.v_coords[0]).fade(0.3),
+            i_hat_copy
+        ))
+        self.play(ApplyFunction(
+            lambda m : m.scale(self.v_coords[1]).fade(0.3),
+            j_hat_copy
+        ))
+        self.play(ApplyMethod(j_hat_copy.shift, i_hat_copy.get_end()))
+        self.dither(2)
+        if clean_up:
+            self.play(FadeOut(i_hat_copy), FadeOut(j_hat_copy))
+
+
+    def get_v_definition(self):
+        v_def = TexMobject([
+            "\\vec{\\textbf{v}}",
+            " = %s"%self.v_coord_strings[0],
+            "\\hat{\\imath}",
+            "+%s"%self.v_coord_strings[1],
+            "\\hat{\\jmath}",
+        ])
+        v, equals_neg_1, i_hat, plus_2, j_hat = v_def.split()
+        v.highlight(YELLOW)
+        i_hat.highlight(X_COLOR)
+        j_hat.highlight(Y_COLOR)
+        v_def.add_background_rectangle()
+        v_def.to_corner(UP + LEFT)
+        self.v_def = v_def
+        return v_def
+
+    def write_linear_map_rule(self):
+        rule = TexMobject([
+            "\\text{Transformed } \\vec{\\textbf{v}}",
+            " = %s"%self.v_coord_strings[0],
+            "(\\text{Transformed }\\hat{\\imath})",
+            "+%s"%self.v_coord_strings[1],
+            "(\\text{Transformed } \\hat{\\jmath})",
+        ])
+        v, equals_neg_1, i_hat, plus_2, j_hat = rule.split()
+        v.highlight(YELLOW)
+        i_hat.highlight(X_COLOR)
+        j_hat.highlight(Y_COLOR)
+        rule.scale(0.85)
+        rule.next_to(self.v_def, DOWN, buff = 0.2)
+        rule.to_edge(LEFT)
+        rule.add_background_rectangle()
+
+        self.play(Write(rule, run_time = 2))
+        self.dither()
+        self.linear_map_rule = rule
+
+
+    def show_basis_vector_coords(self):
+        i_coords = matrix_to_mobject(self.transposed_matrix[0])
+        j_coords = matrix_to_mobject(self.transposed_matrix[1])
+        i_coords.highlight(X_COLOR)
+        j_coords.highlight(Y_COLOR)
+        for coords in i_coords, j_coords:
+            coords.add_background_rectangle()
+            coords.scale(0.7)
+        i_coords.next_to(self.i_hat.get_end(), RIGHT)
+        j_coords.next_to(self.j_hat.get_end(), RIGHT)
+
+        calculation = TexMobject([
+            " = %s"%self.v_coord_strings[0],
+            matrix_to_tex_string(self.transposed_matrix[0]),
+            "+%s"%self.v_coord_strings[1],
+            matrix_to_tex_string(self.transposed_matrix[1]),
+        ])
+        equals_neg_1, i_hat, plus_2, j_hat = calculation.split()
+        i_hat.highlight(X_COLOR)
+        j_hat.highlight(Y_COLOR)
+        calculation.scale(0.8)
+        calculation.next_to(self.linear_map_rule, DOWN)
+        calculation.to_edge(LEFT)
+        calculation.add_background_rectangle()
+
+        result = TexMobject(self.result_coords_string)
+        result.scale(0.8)
+        result.add_background_rectangle()
+        result.next_to(calculation, DOWN)
+        result.to_edge(LEFT)
+
+        self.play(Write(i_coords, run_time = 1))
+        self.dither()
+        self.play(Write(j_coords, run_time = 1))
+        self.dither()
+        self.play(Write(calculation))
+        self.dither()
+        self.play(Write(result))
+        self.dither()
+
+class TrackBasisVectorsExampleGenerally(TrackBasisVectorsExample):
+    CONFIG = {
+        "v_coord_strings" : ["x", "y"],
+        "result_coords_string" : """
+            =
+            \\left[ \\begin{array}{c}
+                1x + 3y \\\\
+                -2x + 0y
+            \\end{arary}\\right] 
+        """
+    }
+
+class MatrixVectorMultiplication(LinearTransformationScene):
+    CONFIG = {
+        "abstract" : False
+    }
+    def construct(self):
+        self.setup()
+        matrix = self.build_to_matrix()
+        self.label_matrix(matrix)
+        vector, formula = self.multiply_by_vector(matrix)
+        self.reposition_matrix_and_vector(matrix, vector, formula)
+
+    def build_to_matrix(self):
+        self.dither()
+        self.apply_transposed_matrix([[3, -2], [2, 1]])
+        self.dither()
+        i_coords = vector_coordinate_label(self.i_hat)
+        j_coords = vector_coordinate_label(self.j_hat)
+        if self.abstract:
+            new_i_coords = Matrix(["a", "c"])
+            new_j_coords = Matrix(["b", "d"])
+            new_i_coords.scale(0.7).move_to(i_coords)
+            new_j_coords.scale(0.7).move_to(j_coords)
+            i_coords = new_i_coords
+            j_coords = new_j_coords
+        i_coords.highlight(X_COLOR)
+        j_coords.highlight(Y_COLOR)
+        i_brackets = i_coords.get_brackets()
+        j_brackets = j_coords.get_brackets()
+        for coords in i_coords, j_coords:
+            rect = Rectangle(
+                color = BLACK,
+                stroke_width = 0,
+                fill_opacity = 0.75
+            )
+            rect.replace(coords, stretch = True)
+            coords.rect = rect
+
+        abstract_matrix = np.append(
+            i_coords.get_mob_matrix(), 
+            j_coords.get_mob_matrix(),
+            axis = 1
+        )
+        concrete_matrix = Matrix(
+            copy.deepcopy(abstract_matrix),
+            add_background_rectangles = True
+        )
+        concrete_matrix.to_edge(UP)
+        matrix_brackets = concrete_matrix.get_brackets()
+
+        self.play(FadeIn(i_coords.rect), Write(i_coords))
+        self.play(FadeIn(j_coords.rect), Write(j_coords))
+        self.dither()
+        self.remove(i_coords.rect, j_coords.rect)
+        self.play(
+            Transform(
+                VMobject(*abstract_matrix.flatten()),
+                VMobject(*concrete_matrix.get_mob_matrix().flatten()),
+            ),
+            Transform(i_brackets, matrix_brackets),
+            Transform(j_brackets, matrix_brackets),
+            run_time = 2,
+            submobject_mode = "all_at_once"
+        )
+        everything = VMobject(*self.get_mobjects())
+        self.play(
+            FadeOut(everything),
+            Animation(concrete_matrix)
+        )
+        return concrete_matrix
+
+    def label_matrix(self, matrix):
+        title = TextMobject("``2x2 Matrix''")
+        title.to_edge(UP+LEFT)
+        col_circles = []
+        for i, color in enumerate([X_COLOR, Y_COLOR]):
+            col = VMobject(*matrix.get_mob_matrix()[:,i])
+            col_circle = Circle(color = color)
+            col_circle.stretch_to_fit_width(matrix.get_width()/3)
+            col_circle.stretch_to_fit_height(matrix.get_height())
+            col_circle.move_to(col)
+            col_circles.append(col_circle)
+        i_circle, j_circle = col_circles
+        i_message = TextMobject("Where $\\hat{\\imath}$ lands")
+        j_message = TextMobject("Where $\\hat{\\jmath}$ lands")
+        i_message.highlight(X_COLOR)
+        j_message.highlight(Y_COLOR)
+        i_message.next_to(i_circle, DOWN, buff = 2, aligned_edge = RIGHT)
+        j_message.next_to(j_circle, DOWN, buff = 2, aligned_edge = LEFT)
+        i_arrow = Arrow(i_message, i_circle)
+        j_arrow = Arrow(j_message, j_circle)
+
+        self.play(Write(title))
+        self.dither()
+        self.play(ShowCreation(i_circle))
+        self.play(
+            Write(i_message, run_time = 1.5),
+            ShowCreation(i_arrow),
+        )
+        self.dither()
+        self.play(ShowCreation(j_circle))
+        self.play(
+            Write(j_message, run_time = 1.5),
+            ShowCreation(j_arrow)
+        )
+        self.dither()
+        self.play(*map(FadeOut, [
+            i_message, i_circle, i_arrow, j_message, j_circle, j_arrow
+        ]))
+
+
+    def multiply_by_vector(self, matrix):
+        vector = Matrix(["x", "y"]) if self.abstract else Matrix([5, 7])
+        vector.scale_to_fit_height(matrix.get_height())
+        vector.next_to(matrix, buff = 2)
+        brace = Brace(vector, DOWN)
+        words = TextMobject("Any  ol' vector")
+        words.next_to(brace, DOWN)
+
+        self.play(
+            Write(vector),
+            GrowFromCenter(brace),
+            Write(words),
+            run_time = 1
+        )
+        self.dither()
+
+        v1, v2 = vector.get_mob_matrix().flatten()
+        mob_matrix = matrix.copy().get_mob_matrix()
+        col1 = Matrix(mob_matrix[:,0])
+        col2 = Matrix(mob_matrix[:,1])
+        formula = VMobject(
+            v1.copy(), col1, TexMobject("+"), v2.copy(), col2
+        )
+        formula.arrange_submobjects(RIGHT, buff = 0.1)
+        formula.center()
+        formula_start = VMobject(
+            v1.copy(), 
+            VMobject(*matrix.copy().get_mob_matrix()[:,0]),
+            VectorizedPoint(),
+            v2.copy(),
+            VMobject(*matrix.copy().get_mob_matrix()[:,1]),
+        )
+
+        self.play(
+            FadeOut(brace),
+            FadeOut(words),
+            Transform(
+                formula_start, formula, 
+                run_time = 2,
+                submobject_mode = "all_at_once"
+            )
+        )
+        self.dither()
+        self.show_result(formula)
+        return vector, formula
+
+    def show_result(self, formula):
+        if self.abstract:
+            row1 = ["a", "x", "+", "b", "y"]
+            row2 = ["c", "x", "+", "d", "y"]
+        else:
+            row1 = ["3", "(5)", "+", "2", "(7)"]
+            row2 = ["-2", "(5)", "+", "1", "(7)"]
+        row1 = VMobject(*map(TexMobject, row1))
+        row2 = VMobject(*map(TexMobject, row2))
+        for row in row1, row2:
+            row.arrange_submobjects(RIGHT, buff = 0.1)
+            row.scale(0.7)
+        final_sum = Matrix([row1, row2])
+        row1, row2 = final_sum.get_mob_matrix().flatten()
+        row1.split()[0].highlight(X_COLOR)
+        row2.split()[0].highlight(X_COLOR)
+        row1.split()[3].highlight(Y_COLOR)
+        row2.split()[3].highlight(Y_COLOR)
+        equals = TexMobject("=")
+        equals.next_to(formula, RIGHT)
+        final_sum.next_to(equals, RIGHT)
+
+        self.play(
+            Write(equals, run_time = 1),
+            Write(final_sum)
+        )
+        self.dither()
+
+    def reposition_matrix_and_vector(self, matrix, vector, formula):
+        start_state = VMobject(matrix, vector)
+        end_state = start_state.copy()
+        end_state.arrange_submobjects(RIGHT, buff = 0.1)
+        equals = TexMobject("=")
+        equals.next_to(formula, LEFT)
+        end_state.next_to(equals, LEFT)
+
+        self.play(
+            Transform(
+                start_state, end_state, 
+                submobject_mode = "all_at_once"
+            ),
+            Write(equals, run_time = 1)
+        )
+        self.dither()
+
+class MatrixVectorMultiplicationAbstract(MatrixVectorMultiplication):
+    CONFIG = {
+        "abstract" : True,
+    }
+
 
 class RotateIHat(LinearTransformationScene):
     CONFIG = {

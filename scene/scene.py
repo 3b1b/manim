@@ -132,9 +132,10 @@ class Scene(object):
         return [m.copy() for m in self.mobjects]
 
     def align_run_times(self, *animations, **kwargs):
-        max_run_time = max([a.run_time for a in animations])
         for animation in animations:
             animation.update_config(**kwargs)
+        max_run_time = max([a.run_time for a in animations])
+        for animation in animations:
             if animation.run_time != max_run_time:
                 new_rate_func = squish_rate_func(
                     animation.get_rate_func(),

@@ -41,16 +41,19 @@ class VMobject(Mobject):
                        fill_color = None, 
                        fill_opacity = None,
                        family = True):
-        mobs = self.submobject_family() if family else [self]
-        for mob in mobs:
-            if stroke_color is not None:
-                mob.stroke_rgb = color_to_rgb(stroke_color)
-            if fill_color is not None:
-                mob.fill_rgb = color_to_rgb(fill_color)
-            if stroke_width is not None:
-                mob.stroke_width = stroke_width
-            if fill_opacity is not None:
-                mob.fill_opacity = fill_opacity
+        if stroke_color is not None:
+            self.stroke_rgb = color_to_rgb(stroke_color)
+        if fill_color is not None:
+            self.fill_rgb = color_to_rgb(fill_color)
+        if stroke_width is not None:
+            self.stroke_width = stroke_width
+        if fill_opacity is not None:
+            self.fill_opacity = fill_opacity
+        if family:
+            kwargs = locals()
+            kwargs.pop("self")
+            for mob in self.submobjects:
+                mob.set_style_data(**kwargs)
         return self
 
     def set_fill(self, color = None, opacity = None, family = True):

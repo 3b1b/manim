@@ -198,8 +198,8 @@ class Mobject(object):
         corner in the 2d plane.
         """
         target_point = np.sign(direction) * (SPACE_WIDTH, SPACE_HEIGHT, 0)
-        anchor_point = self.get_critical_point(direction)
-        shift_val = target_point - anchor_point - buff * np.array(direction) 
+        point_to_align = self.get_critical_point(direction)
+        shift_val = target_point - point_to_align - buff * np.array(direction)
         shift_val = shift_val * abs(np.sign(direction))
         self.shift(shift_val)
         return self
@@ -210,13 +210,17 @@ class Mobject(object):
     def to_edge(self, edge = LEFT, buff = DEFAULT_MOBJECT_TO_EDGE_BUFFER):
         return self.align_on_border(edge, buff)
 
-    def next_to(self, mobject,
+    def next_to(self, mobject_or_point,
                 direction = RIGHT, 
                 buff = DEFAULT_MOBJECT_TO_MOBJECT_BUFFER,
                 aligned_edge = ORIGIN):
-        anchor_point = self.get_critical_point(aligned_edge-direction)
-        target_point = mobject.get_critical_point(aligned_edge+direction)
-        self.shift(target_point - anchor_point + buff*direction)
+        if isinstance(mobject_or_point, Mobject):
+            mob = mobject_or_point
+            target_point = mob.get_critical_point(aligned_edge+direction)
+        else:
+            target_point = mobject_or_point
+        point_to_align = self.get_critical_point(aligned_edge-direction)
+        self.shift(target_point - point_to_align + buff*direction)
         return self
 
     def shift_onto_screen(self):
@@ -253,8 +257,8 @@ class Mobject(object):
             target = point_or_mobject.get_critical_point(side_to_align)
         else:
             target = point_or_mobject
-        anchor_point = self.get_critical_point(side_to_align)
-        self.shift(target - anchor_point)
+        point_to_align = self.get_critical_point(side_to_align)
+        self.shift(target - point_to_align)
         return self
 
     def replace(self, mobject, stretch = False):

@@ -34,10 +34,10 @@ def matrix_to_mobject(matrix):
 def vector_coordinate_label(vector_mob, integer_labels = True, n_dim = 2):
     vect = np.array(vector_mob.get_end())
     if integer_labels:
-        vect = vect.astype(int)
+        vect = np.round(vect).astype(int)
     vect = vect[:n_dim]
     vect = vect.reshape((n_dim, 1))
-    label = Matrix(vect)
+    label = Matrix(vect, add_background_rectangles = True)
     label.scale(VECTOR_LABEL_SCALE_VAL)
 
     shift_dir = np.array(vector_mob.get_end())
@@ -52,6 +52,7 @@ class Matrix(VMobject):
     CONFIG = {
         "v_buff" : 0.5,
         "h_buff" : 1,
+        "add_background_rectangles" : False
     }
     def __init__(self, matrix, **kwargs):
         """
@@ -70,6 +71,9 @@ class Matrix(VMobject):
         self.add_brackets()
         self.center()
         self.mob_matrix = matrix
+        if self.add_background_rectangles:
+            for mob in matrix.flatten():
+                mob.add_background_rectangle()
 
     def string_matrix_to_mob_matrix(self, matrix):
         return np.array([

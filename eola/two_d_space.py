@@ -4,6 +4,7 @@ from scene import Scene
 from mobject import Mobject
 from mobject.vectorized_mobject import VMobject
 from mobject.tex_mobject import TexMobject, TextMobject
+from animation import Animation    
 from animation.transform import ApplyPointwiseFunction, Transform, \
     ApplyMethod, FadeOut, ApplyFunction
 from animation.simple_animations import ShowCreation, Write
@@ -46,9 +47,9 @@ class VectorScene(Scene):
         self.add(axes)
         self.freeze_background()
 
-    def add_vector(self, vector, color = YELLOW, animate = True):
+    def add_vector(self, vector, color = YELLOW, animate = True, **kwargs):
         if not isinstance(vector, Arrow):
-            vector = Vector(vector, color = color)
+            vector = Vector(vector, color = color, **kwargs)
         if animate:
             self.play(ShowCreation(vector))
         self.add(vector)
@@ -95,7 +96,10 @@ class VectorScene(Scene):
         angle = vector.get_angle()
         if not rotate:
             label.rotate(-angle)
-        label.shift(-label.get_bottom() + 0.1*UP)
+        if direction is "left":
+            label.shift(-label.get_bottom() + 0.1*UP)
+        else:
+            label.shift(-label.get_top() + 0.1*DOWN)
         label.rotate(angle)
         label.shift((vector.get_end() - vector.get_start())/2)
         return label
@@ -174,7 +178,7 @@ class VectorScene(Scene):
         brackets = array.get_brackets()
 
         if show_creation:
-            self.play(ShowCreation(arrow, submobject_mode = "one_at_a_time"))
+            self.play(ShowCreation(arrow))
         self.play(
             ShowCreation(x_line),
             Write(x_coord_start),
@@ -187,10 +191,9 @@ class VectorScene(Scene):
         )
         self.dither()
         self.play(
-            Transform(x_coord_start, x_coord),
-            Transform(y_coord_start, y_coord),
-            Write(brackets),
-            run_time = 1
+            Transform(x_coord_start, x_coord, submobject_mode = "all_at_once"),
+            Transform(y_coord_start, y_coord, submobject_mode = "all_at_once"),
+            Write(brackets, run_time = 1),
         )
         self.dither()
 
@@ -250,9 +253,11 @@ class LinearTransformationScene(VectorScene):
     }
     def setup(self):
         self.background_mobjects = []
+        self.foreground_mobjects = []        
         self.transformable_mobjects = []
         self.moving_vectors = []
         self.transformable_labels = []
+
 
         self.background_plane = NumberPlane(
             **self.background_plane_kwargs
@@ -266,20 +271,30 @@ class LinearTransformationScene(VectorScene):
             self.plane = NumberPlane(**self.foreground_plane_kwargs)
             self.add_transformable_mobject(self.plane)
         if self.show_basis_vectors:
-            self.add_vector((1, 0), self.i_hat_color, animate = False)
-            self.add_vector((0, 1), self.j_hat_color, animate = False)
+            self.i_hat, self.j_hat = [
+                self.add_vector(
+                    coords, color, animate = False, stroke_width = 6
+                )
+                for coords, color in [
+                    ((1, 0), self.i_hat_color),
+                    ((0, 1), self.j_hat_color),
+                ]
+            ]
+
+    def add_special_mobjects(self, mob_list, *mobs_to_add):
+        for mobject in mobs_to_add:
+            if mobject not in mob_list:
+                mob_list.append(mobject)
+                self.add(mobject)
 
     def add_background_mobject(self, *mobjects):
-        for mobject in mobjects:
-            if mobject not in self.background_mobjects:
-                self.background_mobjects.append(mobject)
-                self.add(mobject)
+        self.add_special_mobjects(self.background_mobjects, *mobjects)
+
+    def add_foreground_mobject(self, *mobjects):
+        self.add_special_mobjects(self.foreground_mobjects, *mobjects)
             
     def add_transformable_mobject(self, *mobjects):
-        for mobject in mobjects:
-            if mobject not in self.transformable_mobjects:
-                self.transformable_mobjects.append(mobject)
-                self.add(mobject)
+        self.add_special_mobjects(self.transformable_mobjects, *mobjects)
 
     def add_vector(self, vector, color = YELLOW, **kwargs):
         vector = VectorScene.add_vector(
@@ -288,9 +303,12 @@ class LinearTransformationScene(VectorScene):
         self.moving_vectors.append(vector)
         return vector
 
-    def add_transformable_label(self, vector, label, **kwargs):
+    def add_transformable_label(self, vector, label, new_label = None, **kwargs):
         label_mob = self.label_vector(vector, label, **kwargs)
-        label_mob.target_text = "L(%s)"%label_mob.expression
+        if new_label:
+            label_mob.target_text = new_label
+        else:
+            label_mob.target_text = "L(%s)"%label_mob.expression
         label_mob.vector = vector
         label_mob.kwargs = kwargs
         self.transformable_labels.append(label_mob)
@@ -342,16 +360,13 @@ class LinearTransformationScene(VectorScene):
     def apply_function(self, function, added_anims = [], **kwargs):
         if "run_time" not in kwargs:
             kwargs["run_time"] = 3
-        self.play(
-            ApplyPointwiseFunction(
-                function,
-                VMobject(*self.transformable_mobjects),
-            ),
-            self.get_vector_movement(function),
-            self.get_transformable_label_movement(),
-            *added_anims,
-            **kwargs
+        added_anims.append(self.get_vector_movement(function))
+        added_anims.append(self.get_transformable_label_movement())
+        added_anims += map(Animation, self.foreground_mobjects)
+        function_application = ApplyPointwiseFunction(
+            function, VMobject(*self.transformable_mobjects)
         )
+        self.play(function_application, *added_anims, **kwargs)
 
 
 

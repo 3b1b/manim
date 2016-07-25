@@ -103,13 +103,21 @@ class TexMobject(SVGMobject):
         )
 
     def add_background_rectangle(self, color = BLACK, opacity = 0.75):
-        rect = Rectangle(
+        self.rectangle = Rectangle(
+            color = color,            
             stroke_width = 0,
-            fill_color = color,
             fill_opacity = opacity
         )
-        rect.replace(self, stretch = True)
-        self.submobjects = [rect, VMobject(*self.submobjects)]
+        self.rectangle.replace(self, stretch = True)
+        letters = VMobject(*self.submobjects)
+        self.submobjects = [self.rectangle, letters]
+        ##Hacky stuff to fix later ...TODO
+        def rect_become_partial(mob, a, b):
+            return self.rectangle.set_fill(opacity = b*opacity)
+        self.rectangle.pointwise_become_partial = rect_become_partial
+        def rect_set_style_data(*args, **kwargs):
+            return self.rectangle #Do nothing
+        self.rectangle.set_style_data = rect_set_style_data
         return self
 
 class TextMobject(TexMobject):

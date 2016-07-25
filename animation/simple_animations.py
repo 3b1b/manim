@@ -42,14 +42,11 @@ class ShowPartial(Animation):
 
 
 class ShowCreation(ShowPartial):
-    def get_bounds(self, alpha):
-        return (0, alpha)
-
-class ShowCreationPerSubmobject(ShowCreation):
     CONFIG = {
         "submobject_mode" : "one_at_a_time",
-        "run_time" : 1
     }
+    def get_bounds(self, alpha):
+        return (0, alpha)
 
 class Write(ShowCreation):
     CONFIG = {

@@ -163,6 +163,9 @@ class ScaleInPlace(ApplyMethod):
         ApplyMethod.__init__(self, mobject.scale_in_place, scale_factor, **kwargs)
 
 class ApplyFunction(Transform):
+    CONFIG = {
+        "submobject_mode" : "all_at_once",
+    }
     def __init__(self, function, mobject, **kwargs):
         Transform.__init__(
             self, 
