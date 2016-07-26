@@ -50,7 +50,6 @@ class ShowCreation(ShowPartial):
 
 class Write(ShowCreation):
     CONFIG = {
-        "run_time" : 3,
         "rate_func" : None,
         "submobject_mode" : "lagged_start",
     }
@@ -59,7 +58,19 @@ class Write(ShowCreation):
             mobject = TextMobject(mob_or_text)
         else:
             mobject = mob_or_text
+        if "run_time" not in kwargs:
+            self.establish_run_time(mobject)
         ShowCreation.__init__(self, mobject, **kwargs)
+
+    def establish_run_time(self, mobject):
+        num_subs = len(mobject.family_members_with_points())
+        if num_subs < 5:
+            self.run_time = 1
+        elif num_subs < 15:
+            self.run_time = 2
+        else:
+            self.run_time = 3
+
 
 class ShowPassingFlash(ShowPartial):
     CONFIG = {

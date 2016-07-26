@@ -14,6 +14,7 @@ class Transform(Animation):
     CONFIG = {
         "path_arc" : 0,
         "path_func" : None,
+        "submobject_mode" : "all_at_once",
     }
     def __init__(self, mobject, ending_mobject, **kwargs):
         #Copy ending_mobject so as to not mess with caller

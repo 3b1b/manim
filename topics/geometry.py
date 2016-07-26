@@ -267,6 +267,30 @@ class Square(Rectangle):
             **kwargs
         )
 
+class BackgroundRectangle(Rectangle):
+    CONFIG = {
+        "color" : BLACK,
+        "stroke_width" : 0,
+        "fill_opacity" : 0.75,
+    }
+    def __init__(self, mobject, **kwargs):
+        self.lock_style = False
+        Rectangle.__init__(self, **kwargs)
+        self.lock_style = True
+        self.replace(mobject, stretch = True)
+        self.original_fill_opacity = self.fill_opacity
+
+    def pointwise_become_partial(self, mobject, a, b):
+        self.lock_style = False
+        self.set_fill(opacity = b*self.original_fill_opacity)
+        self.lock_style = True
+        return self
+
+    def set_style_data(self, *args, **kwargs):
+        if self.lock_style:
+            return self #Do nothing
+        return Rectangle.set_style_data(self, *args, **kwargs)
+
 
 class Grid(VMobject):
     CONFIG = {

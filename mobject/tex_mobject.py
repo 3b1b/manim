@@ -1,6 +1,6 @@
 from vectorized_mobject import VMobject
 from svg_mobject import SVGMobject, VMobjectFromSVGPathstring
-from topics.geometry import Rectangle
+from topics.geometry import BackgroundRectangle
 from helpers import *
 import collections
 
@@ -103,21 +103,9 @@ class TexMobject(SVGMobject):
         )
 
     def add_background_rectangle(self, color = BLACK, opacity = 0.75):
-        self.rectangle = Rectangle(
-            color = color,            
-            stroke_width = 0,
-            fill_opacity = opacity
-        )
-        self.rectangle.replace(self, stretch = True)
+        rect = BackgroundRectangle(self)
         letters = VMobject(*self.submobjects)
-        self.submobjects = [self.rectangle, letters]
-        ##Hacky stuff to fix later ...TODO
-        def rect_become_partial(mob, a, b):
-            return self.rectangle.set_fill(opacity = b*opacity)
-        self.rectangle.pointwise_become_partial = rect_become_partial
-        def rect_set_style_data(*args, **kwargs):
-            return self.rectangle #Do nothing
-        self.rectangle.set_style_data = rect_set_style_data
+        self.submobjects = [rect, letters]
         return self
 
 class TextMobject(TexMobject):

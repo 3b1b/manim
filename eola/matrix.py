@@ -221,7 +221,8 @@ class NumericalMatrixMultiplication(Scene):
                         Transform(
                             start_parts, 
                             result_entry.copy().highlight(YELLOW), 
-                            path_arc = -np.pi/2
+                            path_arc = -np.pi/2,
+                            submobject_mode = "all_at_once",
                         ),
                         *lagging_anims
                     )

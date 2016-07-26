@@ -346,6 +346,7 @@ class VMobject(Mobject):
         return self
 
 
+
 class VectorizedPoint(VMobject):
     CONFIG = {
         "color" : BLACK,

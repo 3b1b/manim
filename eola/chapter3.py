@@ -80,43 +80,324 @@ class Introduction(TeacherStudentsScene):
             )
         )
 
-class ThreePerspectives(Scene):
+class MatrixVectorMechanicalMultiplication(NumericalMatrixMultiplication):
+    CONFIG = {
+        "left_matrix" : [[1, -3], [2, 4]],
+        "right_matrix" : [[5], [7]]
+    }
+
+class PostponeHigherDimensions(TeacherStudentsScene):
     def construct(self):
-        title = TextMobject("Linear transformations")
+        self.setup()
+        self.student_says("What about 3 dimensions?")
+        self.random_blink()
+        self.teacher_says("All in due time,\\\\ young padawan")
+        self.random_blink()
+
+class DescribeTransformation(Scene):
+    def construct(self):
+        self.add_title()
+        self.show_function()
+
+    def add_title(self):
+        title = TextMobject(["Linear", "transformation"])
         title.to_edge(UP)
-        title.highlight(YELLOW)
-        self.add(title)
+        linear, transformation = title.split()
+        brace = Brace(transformation, DOWN)
+        function = TextMobject("function").next_to(brace, DOWN)
+        function.highlight(YELLOW)
 
-        words = VMobject(*map(TextMobject, [
-            "1. Geometric perspective",
-            "2. Numerical computations",
-            "3. Abstract definition"
-        ]))
-        words.arrange_submobjects(DOWN, buff = 0.5, aligned_edge = LEFT)
-        words.to_edge(LEFT, buff = 2)
-        for word in words.split():
-            self.play(Write(word), run_time = 2)
-            self.dither()
-        for word in words.split():
-            all_else = self.get_mobjects()
-            all_else.remove(word)
-            all_else_copies = [mob.copy() for mob in all_else]
-            self.play(*[ApplyMethod(mob.fade, 0.7) for mob in all_else])
-            self.dither()
-            self.play(*[Transform(*pair) for pair in zip(all_else, all_else_copies)])
+        self.play(Write(title))
+        self.dither()
+        self.play(
+            GrowFromCenter(brace),
+            Write(function),
+            ApplyMethod(linear.fade)
+        )
 
-class ShowGridCreation(Scene):
+    def show_function(self):
+        f_of_x = TexMobject("f(x)")
+        L_of_v = TexMobject("L(\\vec{\\textbf{v}})")
+        nums = [5, 2, -3]
+        num_inputs = VMobject(*map(TexMobject, map(str, nums)))
+        num_outputs = VMobject(*[
+            TexMobject(str(num**2))
+            for num in nums
+        ])
+        for mob in num_inputs, num_outputs:
+            mob.arrange_submobjects(DOWN, buff = 1)
+        num_inputs.next_to(f_of_x, LEFT, buff = 1)
+        num_outputs.next_to(f_of_x, RIGHT, buff = 1)
+        f_point = VectorizedPoint(f_of_x.get_center())
+
+        input_vect = Matrix([5, 7])
+        input_vect.next_to(L_of_v, LEFT, buff = 1)
+        output_vect = Matrix([2, -3])
+        output_vect.next_to(L_of_v, RIGHT, buff = 1)
+
+        vector_input_words = TextMobject("Vector input")
+        vector_input_words.highlight(MAROON_C)
+        vector_input_words.next_to(input_vect, DOWN)
+        vector_output_words = TextMobject("Vector output")
+        vector_output_words.highlight(BLUE)
+        vector_output_words.next_to(output_vect, DOWN)
+
+        self.play(Write(f_of_x, run_time = 1))
+        self.play(Write(num_inputs, run_time = 2))
+        self.dither()
+        for mob in f_point, num_outputs:
+            self.play(Transform(
+                num_inputs, mob,
+                submobject_mode = "lagged_start"
+            ))
+        self.dither()
+
+        self.play(
+            FadeOut(num_inputs),
+            Transform(f_of_x, L_of_v)
+        )
+        self.play(
+            Write(input_vect),
+            Write(vector_input_words)
+        )
+        self.dither()
+        for mob in f_point, output_vect:
+            self.play(Transform(
+                input_vect, mob,
+                submobject_mode = "lagged_start"
+            ))
+        self.play(Write(vector_output_words))
+        self.dither()
+
+class WhyConfuseWithTerminology(TeacherStudentsScene):
     def construct(self):
-        plane = NumberPlane()
-        coords = VMobject(*plane.get_coordinate_labels())
-        self.play(ShowCreation(plane, run_time = 3))
-        self.play(Write(coords, run_time = 3))
+        self.setup()
+        self.student_says("Why confuse us with \\\\ redundant terminology?")
+        self.play(*[
+            ApplyMethod(self.get_students()[i].change_mode, "confused")
+            for i in 0, 2
+        ])
+        self.random_blink()
+        self.dither()
+
+class ThinkinfOfFunctionsAsGraphs(VectorScene):
+    def construct(self):
+        axes = self.add_axes()
+        graph = FunctionGraph(lambda x : x**2, x_min = -2, x_max = 2)
+        name = TexMobject("f(x) = x^2")
+        name.next_to(graph, RIGHT).to_edge(UP)
+        point = Dot(graph.point_from_proportion(0.8))
+        point_label = TexMobject("(2, f(2))")
+        point_label.next_to(point.get_center(), DOWN+RIGHT, buff = 0.1)
+
+        self.play(ShowCreation(graph))
+        self.play(Write(name, run_time = 1))
+        self.play(
+            ShowCreation(point),
+            Write(point_label),
+            run_time = 1
+        )
+        self.dither()
+
+        def collapse_func(p):
+            return np.dot(p, [RIGHT, RIGHT, OUT]) + (SPACE_HEIGHT+1)*DOWN
+        self.play(
+            ApplyPointwiseFunction(collapse_func, axes),
+            ApplyPointwiseFunction(collapse_func, graph),
+            ApplyMethod(point.shift, 10*DOWN),
+            ApplyMethod(point_label.shift, 10*DOWN),
+            ApplyPointwiseFunction(collapse_func, name),
+            run_time = 2
+        )
+        self.clear()
+        words = TextMobject(["Instead think about", "\\emph{movement}"])
+        words.split()[-1].highlight(YELLOW)
+        self.play(Write(words))
+        self.dither()
+
+class TransformJustOneVector(VectorScene):
+    def construct(self):
+        self.lock_in_faded_grid()
+        v1_coords = [-3, 1]
+        t_matrix = [[0, -1], [2, -1]]
+        v1 = Vector(v1_coords)
+        v2 = Vector(
+            np.dot(np.array(t_matrix).transpose(), v1_coords),
+            color = PINK
+        )
+        for v, word in (v1, "Input"), (v2, "Output"):
+            v.label = TextMobject("%s vector"%word)
+            v.label.next_to(v.get_end(), UP)
+            v.label.highlight(v.get_color())
+            self.play(ShowCreation(v))
+            self.play(Write(v.label))
+        self.dither()
+        self.remove(v2)
+        self.play(
+            Transform(
+                v1.copy(), v2, 
+                path_arc = -np.pi/2, run_time = 3
+            ),
+            ApplyMethod(v1.fade)
+        )
+        self.dither()
+
+class TransformManyVectors(VectorScene):
+    CONFIG = {
+        "transposed_matrix" : [[2, 1], [1, 2]],
+        "use_dots" : False,
+    }
+    def construct(self):
+        self.lock_in_faded_grid()
+        vectors = VMobject(*[
+            Vector([x, y])
+            for x in np.arange(-int(SPACE_WIDTH)+0.5, int(SPACE_WIDTH)+0.5)
+            for y in np.arange(-int(SPACE_HEIGHT)+0.5, int(SPACE_HEIGHT)+0.5)
+        ])
+        vectors.submobject_gradient_highlight(PINK, YELLOW)
+        t_matrix = self.transposed_matrix
+        transformed_vectors = VMobject(*[
+            Vector(
+                np.dot(np.array(t_matrix).transpose(), v.get_end()[:2]),
+                color = v.get_color()
+            )
+            for v in vectors.split()
+        ])
+
+        self.play(ShowCreation(vectors, submobject_mode = "lagged_start"))
+        self.dither()
+        if self.use_dots:
+            self.play(Transform(
+                vectors, self.vectors_to_dots(vectors),
+                run_time = 3,
+                submobject_mode = "lagged_start"
+            ))
+            transformed_vectors = self.vectors_to_dots(transformed_vectors)
+            self.dither()
+        self.play(Transform(
+            vectors, transformed_vectors,
+            run_time = 3,
+            path_arc = -np.pi/2
+        ))
+        self.dither()
+        if self.use_dots:
+            self.play(Transform(
+                vectors, self.dots_to_vectors(vectors),
+                run_time = 2,
+                submobject_mode = "lagged_start"
+            ))
+            self.dither()
+
+    def vectors_to_dots(self, vectors):
+        return VMobject(*[
+            Dot(v.get_end(), color = v.get_color())
+            for v in vectors.split()
+        ])
+
+    def dots_to_vectors(self, dots):
+        return VMobject(*[
+            Vector(dot.get_center(), color = dot.get_color())
+            for dot in dots.split()
+        ])
+
+class TransformManyVectorsAsPoints(TransformManyVectors):
+    CONFIG = {
+        "use_dots" : True
+    }
+
+class TransformInfiniteGrid(LinearTransformationScene):
+    CONFIG = {
+        "include_background_plane" : False,
+        "foreground_plane_kwargs" : {
+            "x_radius" : 2*SPACE_WIDTH,
+            "y_radius" : 2*SPACE_HEIGHT,
+        },
+        "show_basis_vectors" : False
+    }
+    def construct(self):
+        self.setup()
+        self.play(ShowCreation(
+            self.plane, run_time = 3, submobject_mode = "lagged_start"
+        ))
+        self.dither()
+        self.apply_transposed_matrix([[2, 1], [1, 2]])
+        self.dither()
+
+class TransformInfiniteGridWithBackground(TransformInfiniteGrid):
+    CONFIG = {
+        "include_background_plane" : True,
+        "foreground_plane_kwargs" : {
+            "x_radius" : 2*SPACE_WIDTH,
+            "y_radius" : 2*SPACE_HEIGHT,
+            "secondary_line_ratio" : 0
+        },
+
+    }
+
+class ApplyComplexFunction(LinearTransformationScene):
+    CONFIG = {
+        "function" : lambda z : 0.5*z**2,
+        "show_basis_vectors" : False,
+        "foreground_plane_kwargs" : {
+            "x_radius" : SPACE_WIDTH,
+            "y_radius" : SPACE_HEIGHT,
+            "secondary_line_ratio" : 0
+        },
+    }
+    def construct(self):
+        self.setup()
+        self.plane.prepare_for_nonlinear_transform(100)
+        self.dither()
+        self.play(ApplyMethod(
+            self.plane.apply_complex_function, self.function,
+            run_time = 5,
+            path_arc = np.pi/2
+        ))
+        self.dither()
+
+class ExponentialTransformation(ApplyComplexFunction):
+    CONFIG = {
+        "function" : np.exp,
+    }
+
+class CrazyTransformation(ApplyComplexFunction):
+    CONFIG = {
+        "function" : lambda z : np.sin(z)**2 + np.sinh(z)
+    }    
+
+class LookToWordLinear(Scene):
+    def construct(self):
+        title = TextMobject(["Linear ", "transformations"])
+        title.to_edge(UP)
+        faded_title = title.copy().fade()
+        linear, transformation = title.split()
+        faded_linear, faded_transformation = faded_title.split()
+        linear_brace = Brace(linear, DOWN)
+        transformation_brace = Brace(transformation, DOWN)
+        function = TextMobject("function")
+        function.highlight(YELLOW)
+        function.next_to(transformation_brace, DOWN)
+        new_sub_word = TextMobject("What does this mean?")
+        new_sub_word.highlight(BLUE)
+        new_sub_word.next_to(linear_brace, DOWN)
+
+        self.add(
+            faded_linear, transformation, 
+            transformation_brace, function
+        )
+        self.dither()
+        self.play(
+            Transform(faded_linear, linear),
+            Transform(transformation, faded_transformation),
+            Transform(transformation_brace, linear_brace),
+            Transform(function, new_sub_word),
+            submobject_mode = "lagged_start"
+        )
         self.dither()
 
 class IntroduceLinearTransformations(LinearTransformationScene):
     CONFIG = {
         "show_basis_vectors" : False,
-        "include_background_plane" : False
     }
     def construct(self):
         self.setup()
@@ -135,12 +416,10 @@ class IntroduceLinearTransformations(LinearTransformationScene):
             rule.add_background_rectangle()
 
         self.play(
-            # FadeIn(lines_rule_rect),            
             Write(lines_rule, run_time = 2),
         )
         self.dither()
         self.play(
-            # FadeIn(origin_rule_rect),            
             Write(origin_rule, run_time = 2),
             ShowCreation(arrow),
             GrowFromCenter(dot)
@@ -216,7 +495,7 @@ class SneakyNonlinearTransformationExplained(SneakyNonlinearTransformation):
         self.play(ShowCreation(diag))
         self.add_transformable_mobject(diag)
 
-class AnotherLinearTransformation(SimpleLinearTransformationScene):
+class GridLinesRemainParallel(SimpleLinearTransformationScene):
     CONFIG = {
         "transposed_matrix" : [
             [3, 0],
@@ -257,123 +536,31 @@ class YetAnotherLinearTransformation(SimpleLinearTransformationScene):
             [3, 2],
         ]
     }
-
-class MoveAroundAllVectors(LinearTransformationScene):
-    CONFIG = {
-        "show_basis_vectors" : False,
-        "focus_on_one_vector" : False,
-        "include_background_plane" : False,
-    }
     def construct(self):
-        self.setup()
-        vectors = VMobject(*[
-            Vector([x, y])
-            for x in np.arange(-int(SPACE_WIDTH)+0.5, int(SPACE_WIDTH)+0.5)
-            for y in np.arange(-int(SPACE_HEIGHT)+0.5, int(SPACE_HEIGHT)+0.5)
-        ])
-        vectors.submobject_gradient_highlight(PINK, YELLOW)
-        dots = self.get_dots(vectors)
-
-        self.dither()
-        self.play(ShowCreation(dots))
-        self.dither()
-        self.play(Transform(dots, vectors))
-        self.dither()
-        self.remove(dots)
-        if self.focus_on_one_vector:
-            vector = vectors.split()[43]#yeah, great coding Grant
-            self.remove(vectors)
-            self.add_vector(vector)
-            self.play(*[
-                FadeOut(v) 
-                for v in vectors.split()
-                if v is not vector
-            ])
-            self.dither()
-            self.add(vector.copy().highlight(DARK_GREY))
-        else:
-            for vector in vectors.split():
-                self.add_vector(vector, animate = False)
-        self.apply_transposed_matrix([[3, 0], [1, 2]])
-        self.dither()
-        dots = self.get_dots(vectors)
-        self.play(Transform(vectors, dots))
-        self.dither()
-
-    def get_dots(self, vectors):
-        return VMobject(*[
-            Dot(v.get_end(), color = v.get_color())
-            for v in vectors.split()
-        ])
-
-# class MoveAroundJustOneVector(MoveAroundAllVectors):
-#     CONFIG = {
-#         "focus_on_one_vector" : True,
-#     }
-
-class ReasonForThinkingAboutArrows(LinearTransformationScene):
-    CONFIG = {
-        "show_basis_vectors" : False
-    }
-    def construct(self):
-        self.setup()
-        self.plane.fade()
-        v_color = MAROON_C
-        w_color = BLUE
-
-        v = self.add_vector([3, 1], color = v_color)
-        w = self.add_vector([1, -2], color = w_color)
-        vectors = VMobject(v, w)
-
-        self.to_and_from_dots(vectors)
-        self.scale_and_add(vectors)
-        self.apply_transposed_matrix([[1, 1], [-1, 0]])
-        self.scale_and_add(vectors)
-
-    def to_and_from_dots(self, vectors):
-        vectors_copy = vectors.copy()
-        dots = VMobject(*[
-            Dot(v.get_end(), color = v.get_color())
-            for v in vectors.split()
-        ])
-
-        self.dither()
-        self.play(Transform(vectors, dots))
-        self.dither()
-        self.play(Transform(vectors, vectors_copy))
-        self.dither()
-
-    def scale_and_add(self, vectors):
-        vectors_copy = vectors.copy()
-        v, w, = vectors.split()
-        scaled_v = Vector(0.5*v.get_end(), color = v.get_color())
-        scaled_w = Vector(1.5*w.get_end(), color = w.get_color())
-        shifted_w = scaled_w.copy().shift(scaled_v.get_end())
-        sum_vect = Vector(shifted_w.get_end(), color = PINK)
-
-        self.play(
-            ApplyMethod(v.scale, 0.5),
-            ApplyMethod(w.scale, 1.5),
+        SimpleLinearTransformationScene.construct(self)
+        words = TextMobject("""
+            How would you describe 
+            one of these numerically?
+            """
         )
-        self.play(ApplyMethod(w.shift, v.get_end()))
-        self.add_vector(sum_vect)
-        self.dither()
-        self.play(Transform(
-            vectors, vectors_copy, 
-            submobject_mode = "all_at_once"
-        ))
-        self.dither()
+        words.add_background_rectangle()
+        words.to_edge(UP)
+        words.highlight(GREEN)
+        formula = TexMobject(
+            matrix_to_tex_string(["x", "y"]) + "\\rightarrow" + \
+            matrix_to_tex_string(["-1x+3y", "1x + 2y"])
+        )
+        formula.add_background_rectangle()
 
-class LinearTransformationWithOneVector(LinearTransformationScene):
-    CONFIG = {
-        "show_basis_vectors" : False,
-    }
-    def construct(self):
-        self.setup()
-        v = self.add_vector([3, 1])
-        self.vector_to_coords(v) 
-        self.apply_transposed_matrix([[-1, 1], [-2, -1]])
-        self.vector_to_coords(v)
+        self.play(Write(words))
+        self.dither()
+        self.play(
+            ApplyMethod(self.plane.fade, 0.7),
+            ApplyMethod(self.background_plane.fade, 0.7),
+            Write(formula, run_time = 2),
+            Animation(words)
+        )
+        self.dither()
 
 class FollowIHatJHat(LinearTransformationScene):
     CONFIG = {
@@ -596,12 +783,7 @@ class MatrixVectorMultiplication(LinearTransformationScene):
         i_brackets = i_coords.get_brackets()
         j_brackets = j_coords.get_brackets()
         for coords in i_coords, j_coords:
-            rect = Rectangle(
-                color = BLACK,
-                stroke_width = 0,
-                fill_opacity = 0.75
-            )
-            rect.replace(coords, stretch = True)
+            rect = BackgroundRectangle(coords)
             coords.rect = rect
 
         abstract_matrix = np.append(
@@ -616,8 +798,8 @@ class MatrixVectorMultiplication(LinearTransformationScene):
         concrete_matrix.to_edge(UP)
         matrix_brackets = concrete_matrix.get_brackets()
 
-        self.play(FadeIn(i_coords.rect), Write(i_coords))
-        self.play(FadeIn(j_coords.rect), Write(j_coords))
+        self.play(ShowCreation(i_coords.rect), Write(i_coords))
+        self.play(ShowCreation(j_coords.rect), Write(j_coords))
         self.dither()
         self.remove(i_coords.rect, j_coords.rect)
         self.play(
@@ -773,6 +955,243 @@ class MatrixVectorMultiplicationAbstract(MatrixVectorMultiplication):
         "abstract" : True,
     }
 
+class ColumnsToBasisVectors(LinearTransformationScene):
+    def construct(self):
+        self.setup()
+        transposed_matrix = [[3, 1], [1, 2]]
+        vector_coords = [-1, 2]
+
+        vector = self.move_matrix_columns(transposed_matrix, vector_coords)
+        self.scale_and_add(vector, vector_coords)
+
+    def move_matrix_columns(self, transposed_matrix, vector_coords = None):
+        matrix = np.array(transposed_matrix).transpose()
+        matrix_mob = Matrix(matrix)
+        matrix_mob.to_corner(UP+LEFT)
+        col1 = VMobject(*matrix_mob.get_mob_matrix()[:,0])
+        col1.highlight(X_COLOR)
+        col2 = VMobject(*matrix_mob.get_mob_matrix()[:,1])
+        col2.highlight(Y_COLOR)
+        matrix_brackets = matrix_mob.get_brackets()
+        matrix_background = BackgroundRectangle(matrix_mob)
+        self.add_foreground_mobject(matrix_background, matrix_mob)
+
+        if vector_coords is not None:
+            vector = Matrix(vector_coords)
+            VMobject(*vector.get_mob_matrix().flatten()).highlight(YELLOW)
+            vector.scale_to_fit_height(matrix_mob.get_height())
+            vector.next_to(matrix_mob, RIGHT)
+            vector_background = BackgroundRectangle(vector)
+            self.add_foreground_mobject(vector_background, vector)
+
+        new_i = Vector(matrix[:,0])
+        new_j = Vector(matrix[:,1])
+        i_label = vector_coordinate_label(new_i).highlight(X_COLOR)
+        j_label = vector_coordinate_label(new_j).highlight(Y_COLOR)
+        i_coords = VMobject(*i_label.get_mob_matrix().flatten())
+        j_coords = VMobject(*j_label.get_mob_matrix().flatten())
+        i_brackets = i_label.get_brackets()
+        j_brackets = j_label.get_brackets()
+        i_label_background = BackgroundRectangle(i_label)
+        j_label_background = BackgroundRectangle(j_label)
+        i_coords_start = VMobject(
+            matrix_background.copy(),
+            col1.copy(),
+            matrix_brackets.copy()
+        )
+        i_coords_end = VMobject(
+            i_label_background,
+            i_coords,
+            i_brackets,
+        )
+        j_coords_start = VMobject(
+            matrix_background.copy(),
+            col2.copy(),
+            matrix_brackets.copy()
+        )
+        j_coords_end = VMobject(
+            j_label_background,
+            j_coords,
+            j_brackets,
+        )
+
+        transform_matrix1 = np.array(matrix)
+        transform_matrix1[:,1] = [0, 1]
+        transform_matrix2 = np.dot(
+            matrix,
+            np.linalg.inv(transform_matrix1)
+        )
+
+        self.dither()
+        self.apply_transposed_matrix(
+            transform_matrix1.transpose(),
+            added_anims = [Transform(i_coords_start, i_coords_end)],
+            path_arc = np.pi/2
+        )
+        self.add_foreground_mobject(i_coords_start)
+        self.apply_transposed_matrix(
+            transform_matrix2.transpose(),
+            added_anims = [Transform(j_coords_start, j_coords_end) ],
+            path_arc = np.pi/2
+        )
+        self.add_foreground_mobject(j_coords_start)
+        self.dither()
+        return vector if vector_coords is not None else None
+
+
+    def scale_and_add(self, vector, vector_coords):
+        i_copy = self.i_hat.copy()
+        j_copy = self.j_hat.copy()
+        i_target = i_copy.copy().scale(vector_coords[0]).fade(0.3)
+        j_target = j_copy.copy().scale(vector_coords[1]).fade(0.3)
+
+        coord1, coord2 = vector.copy().get_mob_matrix().flatten()
+        coord1.add_background_rectangle()
+        coord2.add_background_rectangle()
+
+        self.play(
+            Transform(i_copy, i_target),
+            ApplyMethod(coord1.next_to, i_target.get_center(), DOWN)
+        )
+        self.play(
+            Transform(j_copy, j_target),
+            ApplyMethod(coord2.next_to, j_target.get_center(), LEFT)
+        )
+        j_copy.add(coord2)
+        self.play(ApplyMethod(j_copy.shift, i_copy.get_end()))
+        self.add_vector(j_copy.get_end())
+        self.dither()
+
+class Describe90DegreeRotation(LinearTransformationScene):
+    CONFIG = {
+        "transposed_matrix" : [[0, 1], [-1, 0]],
+        "title" : "$90^\\circ$ rotation counterclockwise",
+    }
+    def construct(self):
+        self.setup()
+        title = TextMobject(self.title)
+        title.shift(DOWN)
+        title.add_background_rectangle()
+        matrix = Matrix(np.array(self.transposed_matrix).transpose())
+        matrix.to_corner(UP+LEFT)
+        matrix_background = BackgroundRectangle(matrix)
+        col1 = VMobject(*matrix.get_mob_matrix()[:,0])
+        col2 = VMobject(*matrix.get_mob_matrix()[:,1])
+        col1.highlight(X_COLOR)
+        col2.highlight(Y_COLOR)
+        self.add_foreground_mobject(matrix_background, matrix.get_brackets())
+
+        self.dither()
+        self.apply_transposed_matrix(self.transposed_matrix)
+        self.dither()
+        self.play(Write(title))
+        self.add_foreground_mobject(title)
+
+        for vect, color, col in [(self.i_hat, X_COLOR, col1), (self.j_hat, Y_COLOR, col2)]:
+            label = vector_coordinate_label(vect)
+            label.highlight(color)
+            background = BackgroundRectangle(label)
+            coords = VMobject(*label.get_mob_matrix().flatten())
+            brackets = label.get_brackets()
+
+            self.play(ShowCreation(background), Write(label))
+            self.dither()
+            self.play(
+                ShowCreation(background, rate_func = lambda t : smooth(1-t)),                
+                ApplyMethod(coords.replace, col),
+                FadeOut(brackets),
+            )
+            self.remove(label)
+            self.add_foreground_mobject(coords)
+            self.dither()
+        self.show_vector(matrix)
+
+    def show_vector(self, matrix):
+        vector = Matrix(["x", "y"])
+        VMobject(*vector.get_mob_matrix().flatten()).highlight(YELLOW)
+        vector.scale_to_fit_height(matrix.get_height())
+        vector.next_to(matrix, RIGHT)
+        v_background = BackgroundRectangle(vector)
+
+        matrix = np.array(self.transposed_matrix).transpose()
+        inv = np.linalg.inv(matrix)
+        self.apply_transposed_matrix(inv.transpose(), run_time = 0.5)
+        self.add_vector([1, 2])
+        self.dither()
+        self.apply_transposed_matrix(self.transposed_matrix)
+        self.play(ShowCreation(v_background), Write(vector))
+        self.dither()
+
+class DescribeShear(Describe90DegreeRotation):
+    CONFIG = {
+        "transposed_matrix" : [[1, 0], [1, 1]],
+        "title" : "``Shear''",
+    }
+
+class DeduceTransformationFromMatrix(ColumnsToBasisVectors):
+    def construct(self):
+        self.setup()
+        self.move_matrix_columns([[1, 2], [3, 1]])
+
+class LinearlyDependentColumns(ColumnsToBasisVectors):
+    def construct(self):
+        self.setup()
+        title = TextMobject("Linearly dependent")
+        subtitle = TextMobject("columns")
+        title.add_background_rectangle()
+        subtitle.add_background_rectangle()
+        subtitle.next_to(title, DOWN)
+        title.add(subtitle)
+        title.shift(UP).to_edge(LEFT)
+        title.highlight(YELLOW)
+        self.add_foreground_mobject(title)
+        self.move_matrix_columns([[2, 1], [-2, -1]])
+
+class NextVideo(Scene):
+    def construct(self):
+        title = TextMobject("Next video: Matrix multiplication as composition")
+        title.to_edge(UP)
+        rect = Rectangle(width = 16, height = 9, color = BLUE)
+        rect.scale_to_fit_height(6)
+        rect.next_to(title, DOWN)
+
+        self.add(title)
+        self.play(ShowCreation(rect))
+        self.dither()         
+
+
+class FinalSlide(Scene):
+    def construct(self):
+        text = TextMobject("""
+            \\footnotesize 
+            Technically, the definition of ``linear'' is as follows: 
+            A transformation L is linear if it satisfies these
+            two properties:
+
+            \\begin{align*}
+                L(\\vec{\\textbf{v}} + \\vec{\\textbf{w}}) 
+                &= L(\\vec{\\textbf{v}}) + L(\\vec{\\textbf{w}})
+                & & \\text{``Additivity''} \\\\
+                L(c\\vec{\\textbf{v}}) &= c L(\\vec{\\textbf{v}})
+                & & \\text{``Scaling''}
+            \\end{align*}
+
+            I'll talk about these properties later on, but I'm a big 
+            believer in first understanding things visually.  
+            Once you do, it becomes much more intuitive why these 
+            two properties make sense.  So for now, you can 
+            feel fine thinking of linear transformations as those 
+            which keep grid lines parallel and evenly spaced 
+            (and which fix the origin in place), since this visual 
+            definition is actually equivalent to the two properties 
+            above.
+        """, enforce_new_line_structure = False)
+        text.scale_to_fit_height(2*SPACE_HEIGHT - 2)
+        text.to_edge(UP)
+        self.add(text)
+        self.dither()
+
+### Old scenes
 
 class RotateIHat(LinearTransformationScene):
     CONFIG = {
@@ -1070,9 +1489,125 @@ class SecondAdditivityExample(AdditivityProperty):
         "proclaim_sum" : False,
     }
 
+class ShowGridCreation(Scene):
+    def construct(self):
+        plane = NumberPlane()
+        coords = VMobject(*plane.get_coordinate_labels())
+        self.play(ShowCreation(plane, run_time = 3))
+        self.play(Write(coords, run_time = 3))
+        self.dither()
 
+class MoveAroundAllVectors(LinearTransformationScene):
+    CONFIG = {
+        "show_basis_vectors" : False,
+        "focus_on_one_vector" : False,
+        "include_background_plane" : False,
+    }
+    def construct(self):
+        self.setup()
+        vectors = VMobject(*[
+            Vector([x, y])
+            for x in np.arange(-int(SPACE_WIDTH)+0.5, int(SPACE_WIDTH)+0.5)
+            for y in np.arange(-int(SPACE_HEIGHT)+0.5, int(SPACE_HEIGHT)+0.5)
+        ])
+        vectors.submobject_gradient_highlight(PINK, YELLOW)
+        dots = self.get_dots(vectors)
 
+        self.dither()
+        self.play(ShowCreation(dots))
+        self.dither()
+        self.play(Transform(dots, vectors))
+        self.dither()
+        self.remove(dots)
+        if self.focus_on_one_vector:
+            vector = vectors.split()[43]#yeah, great coding Grant
+            self.remove(vectors)
+            self.add_vector(vector)
+            self.play(*[
+                FadeOut(v) 
+                for v in vectors.split()
+                if v is not vector
+            ])
+            self.dither()
+            self.add(vector.copy().highlight(DARK_GREY))
+        else:
+            for vector in vectors.split():
+                self.add_vector(vector, animate = False)
+        self.apply_transposed_matrix([[3, 0], [1, 2]])
+        self.dither()
+        dots = self.get_dots(vectors)
+        self.play(Transform(vectors, dots))
+        self.dither()
 
+    def get_dots(self, vectors):
+        return VMobject(*[
+            Dot(v.get_end(), color = v.get_color())
+            for v in vectors.split()
+        ])
+
+class ReasonForThinkingAboutArrows(LinearTransformationScene):
+    CONFIG = {
+        "show_basis_vectors" : False
+    }
+    def construct(self):
+        self.setup()
+        self.plane.fade()
+        v_color = MAROON_C
+        w_color = BLUE
+
+        v = self.add_vector([3, 1], color = v_color)
+        w = self.add_vector([1, -2], color = w_color)
+        vectors = VMobject(v, w)
+
+        self.to_and_from_dots(vectors)
+        self.scale_and_add(vectors)
+        self.apply_transposed_matrix([[1, 1], [-1, 0]])
+        self.scale_and_add(vectors)
+
+    def to_and_from_dots(self, vectors):
+        vectors_copy = vectors.copy()
+        dots = VMobject(*[
+            Dot(v.get_end(), color = v.get_color())
+            for v in vectors.split()
+        ])
+
+        self.dither()
+        self.play(Transform(vectors, dots))
+        self.dither()
+        self.play(Transform(vectors, vectors_copy))
+        self.dither()
+
+    def scale_and_add(self, vectors):
+        vectors_copy = vectors.copy()
+        v, w, = vectors.split()
+        scaled_v = Vector(0.5*v.get_end(), color = v.get_color())
+        scaled_w = Vector(1.5*w.get_end(), color = w.get_color())
+        shifted_w = scaled_w.copy().shift(scaled_v.get_end())
+        sum_vect = Vector(shifted_w.get_end(), color = PINK)
+
+        self.play(
+            ApplyMethod(v.scale, 0.5),
+            ApplyMethod(w.scale, 1.5),
+        )
+        self.play(ApplyMethod(w.shift, v.get_end()))
+        self.add_vector(sum_vect)
+        self.dither()
+        self.play(Transform(
+            vectors, vectors_copy, 
+            submobject_mode = "all_at_once"
+        ))
+        self.dither()
+
+class LinearTransformationWithOneVector(LinearTransformationScene):
+    CONFIG = {
+        "show_basis_vectors" : False,
+    }
+    def construct(self):
+        self.setup()
+        v = self.add_vector([3, 1])
+        self.vector_to_coords(v) 
+        self.apply_transposed_matrix([[-1, 1], [-2, -1]])
+        self.vector_to_coords(v)
 
 
 
