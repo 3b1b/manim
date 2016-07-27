@@ -12,7 +12,7 @@ from topics.geometry import Vector, Line, Circle, Arrow, Dot
 
 from helpers import *
 
-VECTOR_LABEL_SCALE_VAL = 0.7
+VECTOR_LABEL_SCALE_VAL = 1.0
 
 def matrix_to_tex_string(matrix):
     matrix = np.array(matrix).astype("string")
@@ -106,6 +106,9 @@ class Matrix(VMobject):
 
     def get_mob_matrix(self):
         return self.mob_matrix
+
+    def get_entries(self):
+        return VMobject(*self.get_mob_matrix().flatten())
 
     def get_brackets(self):
         return self.brackets

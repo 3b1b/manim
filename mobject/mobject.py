@@ -297,9 +297,16 @@ class Mobject(object):
     def gradient_highlight(self, start_color, end_color):
         raise Exception("Not implemented") 
 
-    def submobject_gradient_highlight(self, start_color, end_color):
+    def submobject_gradient_highlight(self, start_color, end_color, use_color_range_to = False):
         mobs = self.family_members_with_points()
-        colors = Color(start_color).range_to(end_color, len(mobs))
+        if use_color_range_to:
+            colors = Color(start_color).range_to(end_color, len(mobs))
+        else:
+            rgb1, rgb2 = map(color_to_rgb, [start_color, end_color])
+            colors = [
+                Color(rgb = interpolate(rgb1, rgb2, alpha))
+                for alpha in np.linspace(0, 1, len(mobs))
+            ]
         for mob, color in zip(mobs, colors):
             mob.highlight(color, family = False)
         return self

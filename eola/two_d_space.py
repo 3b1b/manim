@@ -311,6 +311,8 @@ class LinearTransformationScene(VectorScene):
             label_mob.target_text = "L(%s)"%label_mob.expression
         label_mob.vector = vector
         label_mob.kwargs = kwargs
+        if "animate" in label_mob.kwargs:
+            label_mob.kwargs.pop("animate")
         self.transformable_labels.append(label_mob)
         return label_mob
 

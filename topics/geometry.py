@@ -286,6 +286,12 @@ class BackgroundRectangle(Rectangle):
         self.lock_style = True
         return self
 
+    def fade_to(self, *args, **kwargs):
+        self.lock_style = False
+        Rectangle.fade_to(self, *args, **kwargs)
+        self.lock_style = True
+        return self
+
     def set_style_data(self, *args, **kwargs):
         if self.lock_style:
             return self #Do nothing
