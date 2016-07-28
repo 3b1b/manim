@@ -15,6 +15,8 @@ from helpers import *
 from camera import Camera
 from tk_scene import TkSceneRoot
 from mobject import Mobject
+from animation import Animation
+from animation.transform import ApplyMethod
 
 class Scene(object):
     CONFIG = {
@@ -27,7 +29,7 @@ class Scene(object):
         self.camera = Camera(**self.camera_config)
         self.frames = []
         self.mobjects = []
-        self.num_animations = 0
+        self.num_plays = 0
 
         self.construct(*self.construct_args)
 
@@ -161,25 +163,62 @@ class Scene(object):
         times = np.arange(0, run_time, self.frame_duration)
         time_progression = ProgressDisplay(times)
         time_progression.set_description("".join([
-            "Animation %d: "%self.num_animations,
+            "Animation %d: "%self.num_plays,
             str(animations[0]),
             (", etc." if len(animations) > 1 else ""),
         ]))
         return time_progression
 
+    def compile_play_args_to_animation_list(self, *args):
+        """
+        Eacn arg can either be an animation, or a mobject method
+        followed by that methods arguments.  
 
-    def play(self, *animations, **kwargs):
-        if len(animations) == 0:
-            raise Warning("Called Scene.play with no animations")
-            return
-        self.num_animations += 1
+        This animation list is built by going through the args list, 
+        and each animation is simply added, but when a mobject method 
+        s hit, an ApplyMethod animation is built using the args that 
+        follow up until either another animation is hit, another method 
+        is hit, or the args list runs out.
+        """
+        animations = []
+        method_state = {
+            "method" : None,
+            "args" : []
+        }
+        def compile_method(state, animations):
+            if state["method"] is None:
+                return
+            animations.append(ApplyMethod(
+                state["method"], *state["args"]
+            ))
+            state["method"] = None
+            state["args"] = []
+        for arg in args:
+            if isinstance(arg, Animation):
+                compile_method(method_state, animations)
+                animations.append(arg)
+            elif inspect.ismethod(arg):
+                compile_method(method_state, animations)
+                method_state["method"] = arg
+            elif method_state["method"] is not None:
+                method_state["args"].append(arg)
+            else:
+                raise Exception("Invalid play arguments")
+        compile_method(method_state, animations)
+        return animations
+
+    def play(self, *args, **kwargs):
+        if len(args) == 0:
+            raise Exception("Called Scene.play with no animations")
+        animations = self.compile_play_args_to_animation_list(*args)
+        self.num_plays += 1
 
         animations = self.align_run_times(*animations, **kwargs)
         moving_mobjects, static_mobjects = \
             self.separate_moving_and_static_mobjects(*animations)
+
         self.update_frame(static_mobjects)
         static_image = self.get_frame()
-
         for t in self.get_time_progression(animations):
             for animation in animations:
                 animation.update(t / animation.run_time)
