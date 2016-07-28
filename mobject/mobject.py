@@ -179,6 +179,7 @@ class Mobject(object):
 
     def flip(self, axis = UP):
         self.rotate_in_place(np.pi, axis)
+        return self
 
     def scale_in_place(self, scale_factor):
         self.do_in_place(self.scale, scale_factor)

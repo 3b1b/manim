@@ -9,7 +9,7 @@ from animation.transform import ApplyPointwiseFunction, Transform, \
     ApplyMethod, FadeOut, ApplyFunction
 from animation.simple_animations import ShowCreation, Write
 from topics.number_line import NumberPlane, Axes
-from topics.geometry import Vector, Line, Circle, Arrow, Dot
+from topics.geometry import Vector, Line, Circle, Arrow, Dot, BackgroundRectangle
 
 from helpers import *
 from eola.matrix import Matrix, VECTOR_LABEL_SCALE_VAL, vector_coordinate_label
@@ -54,6 +54,11 @@ class VectorScene(Scene):
             self.play(ShowCreation(vector))
         self.add(vector)
         return vector
+
+    def write_vector_coordinates(self, vector, **kwargs):
+        coords = vector_coordinate_label(vector, **kwargs)
+        self.play(Write(coords))
+        return coords
 
     def get_basis_vectors(self):
         return [
@@ -303,6 +308,11 @@ class LinearTransformationScene(VectorScene):
         self.moving_vectors.append(vector)
         return vector
 
+    def write_vector_coordinates(self, vector, **kwargs):
+        coords = VectorScene.write_vector_coordinates(self, vector, **kwargs)
+        self.add_foreground_mobject(coords)
+        return coords
+
     def add_transformable_label(self, vector, label, new_label = None, **kwargs):
         label_mob = self.label_vector(vector, label, **kwargs)
         if new_label:
@@ -315,6 +325,16 @@ class LinearTransformationScene(VectorScene):
             label_mob.kwargs.pop("animate")
         self.transformable_labels.append(label_mob)
         return label_mob
+
+    def add_title(self, title, scale_val = 1.5, animate = False):
+        if not isinstance(title, Mobject):
+            title = TextMobject(title).scale(scale_val)
+        title.to_edge(UP)
+        title.add_background_rectangle()
+        if animate:
+            self.play(Write(title))
+        self.add_foreground_mobject(title)
+        return self
 
     def get_matrix_transformation(self, transposed_matrix):
         transposed_matrix = np.array(transposed_matrix)

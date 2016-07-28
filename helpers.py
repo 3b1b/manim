@@ -133,6 +133,9 @@ def list_update(l1, l2):
     """
     return filter(lambda e : e not in l2, l1) + list(l2)
 
+def list_difference_update(l1, l2):
+    return filter(lambda e : e not in l2, l1)
+
 def all_elements_are_instances(iterable, Class):
     return all(map(lambda e : isinstance(e, Class), iterable))
 

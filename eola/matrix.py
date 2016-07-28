@@ -8,11 +8,11 @@ from animation.transform import ApplyPointwiseFunction, Transform, \
     ApplyMethod, FadeOut, ApplyFunction
 from animation.simple_animations import ShowCreation, Write
 from topics.number_line import NumberPlane, Axes
-from topics.geometry import Vector, Line, Circle, Arrow, Dot
+from topics.geometry import Vector, Line, Circle, Arrow, Dot, BackgroundRectangle
 
 from helpers import *
 
-VECTOR_LABEL_SCALE_VAL = 1.0
+VECTOR_LABEL_SCALE_VAL = 0.8
 
 def matrix_to_tex_string(matrix):
     matrix = np.array(matrix).astype("string")
@@ -31,7 +31,8 @@ def matrix_to_tex_string(matrix):
 def matrix_to_mobject(matrix):
     return TexMobject(matrix_to_tex_string(matrix))
 
-def vector_coordinate_label(vector_mob, integer_labels = True, n_dim = 2):
+def vector_coordinate_label(vector_mob, integer_labels = True, 
+                            n_dim = 2, color = WHITE):
     vect = np.array(vector_mob.get_end())
     if integer_labels:
         vect = np.round(vect).astype(int)
@@ -41,11 +42,14 @@ def vector_coordinate_label(vector_mob, integer_labels = True, n_dim = 2):
     label.scale(VECTOR_LABEL_SCALE_VAL)
 
     shift_dir = np.array(vector_mob.get_end())
-    if shift_dir[0] > 0: #Pointing right
+    if shift_dir[0] >= 0: #Pointing right
         shift_dir -= label.get_left() + DEFAULT_MOBJECT_TO_MOBJECT_BUFFER*LEFT
     else: #Pointing left
         shift_dir -= label.get_right() + DEFAULT_MOBJECT_TO_MOBJECT_BUFFER*RIGHT
     label.shift(shift_dir)
+    label.highlight(color)
+    background = BackgroundRectangle(label)
+    label.submobjects = [background] + label.submobjects
     return label
 
 class Matrix(VMobject):
@@ -104,8 +108,14 @@ class Matrix(VMobject):
         self.brackets = VMobject(l_bracket, r_bracket)
         return self
 
+    def highlight_columns(self, *colors):
+        for i, color in enumerate(colors):
+            VMobject(*self.mob_matrix[:,i]).highlight(color)
+        return self
+
     def get_mob_matrix(self):
         return self.mob_matrix
+
 
     def get_entries(self):
         return VMobject(*self.get_mob_matrix().flatten())
@@ -117,7 +127,8 @@ class Matrix(VMobject):
 class NumericalMatrixMultiplication(Scene):
     CONFIG = {
         "left_matrix" : [[1, 2], [3, 4]],
-        "right_matrix" : [[5, 6], [7, 8]]
+        "right_matrix" : [[5, 6], [7, 8]],
+        "use_parens" : True,
     }
     def construct(self):
         left_string_matrix, right_string_matrix = [
@@ -143,8 +154,9 @@ class NumericalMatrixMultiplication(Scene):
         mob_matrix = np.array([VMobject()]).repeat(m*n).reshape((m, n))
         for a in range(m):
             for b in range(n):
+                template = "(%s)(%s)" if self.use_parens else "%s%s"
                 parts = [
-                    prefix + "(%s)(%s)"%(left[a][c], right[c][b])
+                    prefix + template%(left[a][c], right[c][b])
                     for c in range(k)
                     for prefix in ["" if c == 0 else "+"]
                 ]
