@@ -48,10 +48,16 @@ class MatrixToBlank(Scene):
         matrix = Matrix([[3, 1], [0, 2]])
         arrow = Arrow(LEFT, RIGHT)
         matrix.to_edge(LEFT)
-        arrow.next_to(matrix, LEFT)
+        arrow.next_to(matrix, RIGHT)
         matrix.add(arrow)
         self.play(Write(matrix))
         self.dither()
+
+class ExampleTransformation(LinearTransformationScene):
+    def construct(self):
+        self.setup()
+        self.apply_transposed_matrix([[3, 0], [1, 2]])
+        self.dither(2)
 
 class RecapTime(TeacherStudentsScene):
     def construct(self):
@@ -226,6 +232,13 @@ class RecapOver(TeacherStudentsScene):
         self.teacher_says("Recap over!")
 
 class TwoSuccessiveTransformations(LinearTransformationScene):
+    CONFIG = {
+        "foreground_plane_kwargs" : {
+            "x_radius" : 2*SPACE_WIDTH,
+            "y_radius" : 2*SPACE_WIDTH,
+            "secondary_line_ratio" : 0
+        },
+    }
     def construct(self):
         self.setup()
         self.apply_transposed_matrix([[2, 1],[1, 2]])
@@ -1007,13 +1020,72 @@ class ThreeSuccessiveTransformationsAltParens(ThreeSuccessiveTransformations):
         "symbols_str" : "(AB)C"
     }
 
+class ThreeSuccessiveTransformationsSimple(ThreeSuccessiveTransformations):
+    CONFIG = {
+        "symbols_str" : "ABC"
+    }    
 
+class ExplanationTrumpsProof(Scene):
+    def construct(self):
+        greater = TexMobject(">")
+        greater.shift(RIGHT)
+        explanation = TextMobject("Good explanation")
+        explanation.highlight(BLUE)
+        proof = TextMobject("Symbolic proof")
+        proof.highlight(LIGHT_BROWN)
+        explanation.next_to(greater, LEFT)
+        proof.next_to(greater, RIGHT)
+        explanation.get_center = lambda : explanation.get_right()
+        proof.get_center = lambda : proof.get_left()
 
+        self.play(
+            Write(explanation),
+            Write(greater),
+            Write(proof),
+            run_time = 1
+        )
+        self.play(
+            explanation.scale_in_place, 1.5,
+            proof.scale_in_place, 0.7
+        )
+        self.dither()
 
+class GoPlay(TeacherStudentsScene):
+    def construct(self):
+        self.setup()
+        self.teacher_says("Go play!", height = 3, width = 5)
+        self.play(*[
+            ApplyMethod(student.change_mode, "happy")
+            for student in self.get_students()
+        ])
+        self.random_blink()
+        student = self.get_students()[-1]
+        bubble = ThoughtBubble(direction = RIGHT, width = 6, height = 5)
+        bubble.pin_to(student, allow_flipping = False)
+        bubble.make_green_screen()        
+        self.play(
+            ShowCreation(bubble),
+            student.look, UP+LEFT,
+        )
+        self.play(student.change_mode, "pondering")
+        for x in range(3):
+            self.random_blink()
+            self.dither(2)
 
+class NextVideo(Scene):
+    def construct(self):
+        title = TextMobject("""
+            Next video: Linear transformations in three dimensions
+        """)
+        title.scale_to_fit_width(2*SPACE_WIDTH - 2)
+        title.to_edge(UP)
+        rect = Rectangle(width = 16, height = 9, color = BLUE)
+        rect.scale_to_fit_height(6)
+        rect.next_to(title, DOWN)
 
-
-
+        self.add(title)
+        self.play(ShowCreation(rect))
+        self.dither()  
 
 
 

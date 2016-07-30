@@ -145,7 +145,6 @@ class NumericalMatrixMultiplication(Scene):
         )
 
         self.organize_matrices(left, right, result)
-        # self.add_lines(left, right)
         self.animate_product(left, right, result)
 
 

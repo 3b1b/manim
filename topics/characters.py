@@ -207,9 +207,9 @@ class Bubble(SVGMobject):
         self.direction = -np.array(self.direction)
         return self
 
-    def pin_to(self, mobject):
+    def pin_to(self, mobject, allow_flipping = True):
         mob_center = mobject.get_center()
-        if (mob_center[0] > 0) != (self.direction[0] > 0):
+        if np.sign(mob_center[0]) != np.sign(self.direction[0]) and allow_flipping:
             self.flip()
         boundary_point = mobject.get_critical_point(UP-self.direction)
         vector_from_center = 1.0*(boundary_point-mob_center)
@@ -338,21 +338,21 @@ class TeacherStudentsScene(Scene):
         self.play(*anims)
         return pi_creature.bubble
 
-    def teacher_says(self, content, **kwargs):
+    def teacher_says(self, content = "", **kwargs):
         return self.introduce_bubble(
             content, "speech", self.get_teacher(), **kwargs
         )
 
-    def student_says(self, content, student_index = 1, **kwargs):
+    def student_says(self, content = "", student_index = 1, **kwargs):
         student = self.get_students()[student_index]
         return self.introduce_bubble(content, "speech", student, **kwargs)
 
-    def teacher_thinks(self, content, **kwargs):
+    def teacher_thinks(self, content = "", **kwargs):
         return self.introduce_bubble(
             content, "thought", self.get_teacher(), **kwargs
         )
 
-    def student_thinks(self, content, student_index = 1, **kwargs):
+    def student_thinks(self, content = "", student_index = 1, **kwargs):
         student = self.get_students()[student_index]
         return self.introduce_bubble(content, "thought", student, **kwargs)
 
