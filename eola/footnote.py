@@ -370,6 +370,16 @@ class ShowMatrixMultiplication(Scene):
 class ApplyTwoSuccessiveTransforms(Scene):
     pass
 
+class ComputerGraphicsAndRobotics(Scene):
+    def construct(self):
+        mob = VMobject(
+            TextMobject("Computer graphics"),
+            TextMobject("Robotics")
+        )
+        mob.arrange_submobjects(DOWN, buff = 1)
+        self.play(Write(mob, run_time = 1))
+        self.dither()
+
 class ThreeDRotation(Scene):
     pass
 
@@ -395,22 +405,16 @@ class QuestionsToPonder(Scene):
         title = TextMobject("Questions to ponder")
         title.highlight(YELLOW).to_edge(UP)
         self.add(title)
-        questions = map(TextMobject, [
-            "Can you visualize these transformations?",
-            "Can you represent them with matrices?",
-            "How many rows and columns?",
-            "When does it make sense to multiply these matrices?",
-        ])
-        nums = VMobject(*[
-            TexMobject("%d."%(num+1))
-            for num in range(len(questions))
-        ])
-        nums.arrange_submobjects(DOWN, buff = 1, aligned_edge = LEFT)
-        nums.to_edge(LEFT)
-        for num, question in zip(nums.split(), questions):
-            question.scale(0.8)
-            question.next_to(num)
-            self.play(Write(num), FadeIn(question))
+        questions = VMobject(*map(TextMobject, [
+            "1. Can you visualize these transformations?",
+            "2. Can you represent them with matrices?",
+            "3. How many rows and columns?",
+            "4. When can you multiply these matrices?",
+        ]))
+        questions.arrange_submobjects(DOWN, buff = 1, aligned_edge = LEFT)
+        questions.to_edge(LEFT)
+        for question in questions.split():
+            self.play(Write(question, run_time = 1))
             self.dither()
 
 class NextVideo(Scene):

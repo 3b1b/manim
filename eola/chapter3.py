@@ -1074,6 +1074,7 @@ class ColumnsToBasisVectors(LinearTransformationScene):
 
         vector = self.move_matrix_columns(transposed_matrix, vector_coords)
         self.scale_and_add(vector, vector_coords)
+        self.dither(3)
 
     def move_matrix_columns(self, transposed_matrix, vector_coords = None):
         matrix = np.array(transposed_matrix).transpose()
