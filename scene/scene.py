@@ -114,13 +114,13 @@ class Scene(object):
         )
         return self
 
-    def bring_to_front(self, mobject):
-        self.add(mobject)
+    def bring_to_front(self, *mobjects):
+        self.add(*mobjects)
         return self
 
-    def bring_to_back(self, mobject):
-        self.remove(mobject)
-        self.mobjects = [mobject] + self.mobjects
+    def bring_to_back(self, *mobjects):
+        self.remove(*mobjects)
+        self.mobjects = mobjects + self.mobjects
         return self
 
     def clear(self):

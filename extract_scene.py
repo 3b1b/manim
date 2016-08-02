@@ -122,7 +122,8 @@ def is_scene(obj):
 
 def prompt_user_for_choice(name_to_obj):
    num_to_name = {}
-   for count, name in zip(it.count(1), name_to_obj):
+   names = sorted(name_to_obj.keys())
+   for count, name in zip(it.count(1), names):
       print "%d: %s"%(count, name)
       num_to_name[count] = name
    try:

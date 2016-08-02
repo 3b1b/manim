@@ -9,7 +9,8 @@ from animation.transform import ApplyPointwiseFunction, Transform, \
     ApplyMethod, FadeOut, ApplyFunction
 from animation.simple_animations import ShowCreation, Write
 from topics.number_line import NumberPlane, Axes
-from topics.geometry import Vector, Line, Circle, Arrow, Dot, BackgroundRectangle
+from topics.geometry import Vector, Line, Circle, Arrow, Dot, \
+    BackgroundRectangle, Square
 
 from helpers import *
 from eola.matrix import Matrix, VECTOR_LABEL_SCALE_VAL, vector_coordinate_label
@@ -260,8 +261,9 @@ class LinearTransformationScene(VectorScene):
         self.background_mobjects = []
         self.foreground_mobjects = []        
         self.transformable_mobjects = []
-        self.moving_vectors = []
+        self.moving_vectors = []        
         self.transformable_labels = []
+        self.moving_mobjects = []
 
 
         self.background_plane = NumberPlane(
@@ -301,6 +303,24 @@ class LinearTransformationScene(VectorScene):
     def add_transformable_mobject(self, *mobjects):
         self.add_special_mobjects(self.transformable_mobjects, *mobjects)
 
+    def add_moving_mobject(self, mobject, target_mobject = None):
+        mobject.target = target_mobject
+        self.add_special_mobjects(self.moving_mobjects, mobject)
+
+    def add_unit_square(self, color = YELLOW, opacity = 0.3, animate = False):
+        square = Square(color = color, side_length = 1)
+        square.shift(-square.get_corner(DOWN+LEFT))
+        if animate:
+            added_anims = map(Animation, self.moving_vectors)
+            self.play(ShowCreation(square), *added_anims)
+            self.play(square.set_fill, color, opacity, *added_anims)
+        else:
+            square.set_fill(color, opacity)
+        self.add_transformable_mobject(square)
+        self.bring_to_front(*self.moving_vectors)        
+        self.square = square
+        return self
+
     def add_vector(self, vector, color = YELLOW, **kwargs):
         vector = VectorScene.add_vector(
             self, vector, color = color, **kwargs
@@ -334,6 +354,7 @@ class LinearTransformationScene(VectorScene):
         if animate:
             self.play(Write(title))
         self.add_foreground_mobject(title)
+        self.title = title
         return self
 
     def get_matrix_transformation(self, transposed_matrix):
@@ -352,6 +373,14 @@ class LinearTransformationScene(VectorScene):
         if self.leave_ghost_vectors:
             self.add(start.copy().fade(0.7))
         return Transform(start, target, submobject_mode = "all_at_once")
+
+    def get_moving_mobject_movement(self, func):
+        for m in self.moving_mobjects:
+            if m.target is None:
+                m.target = m.copy()
+            target_point = func(m.get_center())
+            m.target.move_to(target_point)
+        return self.get_piece_movement(self.moving_mobjects)
 
     def get_vector_movement(self, func):
         for v in self.moving_vectors:
@@ -382,13 +411,18 @@ class LinearTransformationScene(VectorScene):
     def apply_function(self, function, added_anims = [], **kwargs):
         if "run_time" not in kwargs:
             kwargs["run_time"] = 3
-        added_anims.append(self.get_vector_movement(function))
-        added_anims.append(self.get_transformable_label_movement())
-        added_anims += map(Animation, self.foreground_mobjects)
-        function_application = ApplyPointwiseFunction(
-            function, VMobject(*self.transformable_mobjects)
-        )
-        self.play(function_application, *added_anims, **kwargs)
+        anims = [
+            ApplyPointwiseFunction(function, t_mob)
+            for t_mob in self.transformable_mobjects
+        ] + [
+            self.get_vector_movement(function),
+            self.get_transformable_label_movement(),
+            self.get_moving_mobject_movement(function),
+        ] + [
+            Animation(f_mob)
+            for f_mob in self.foreground_mobjects
+        ] + added_anims
+        self.play(*anims, **kwargs)
 
 
 

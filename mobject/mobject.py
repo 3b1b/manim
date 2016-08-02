@@ -224,12 +224,12 @@ class Mobject(object):
         self.shift(target_point - point_to_align + buff*direction)
         return self
 
-    def shift_onto_screen(self):
+    def shift_onto_screen(self, **kwargs):
         space_lengths = [SPACE_WIDTH, SPACE_HEIGHT]
         for vect in UP, DOWN, LEFT, RIGHT:
             dim = np.argmax(np.abs(vect))
             if abs(self.get_edge_center(vect)[dim]) > space_lengths[dim]:
-                self.to_edge(vect)
+                self.to_edge(vect, **kwargs)
 
     def stretch_to_fit(self, length, dim, stretch = True):
         old_length = self.length_over_dim(dim)

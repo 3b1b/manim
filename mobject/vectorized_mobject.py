@@ -14,6 +14,7 @@ class VMobject(Mobject):
         "is_subpath"       : False,
         "close_new_points" : False,
         "mark_paths_closed" : False,
+        "considered_smooth" : True,
         "propogate_style_to_family" : False,
     }
     def __init__(self, *args, **kwargs):
@@ -181,6 +182,7 @@ class VMobject(Mobject):
         return self
 
     def make_smooth(self):
+        self.considered_smooth = True
         return self.change_anchor_mode("smooth")
 
     def make_jagged(self):
@@ -211,7 +213,7 @@ class VMobject(Mobject):
 
     def apply_function(self, function, maintain_smoothness = True):
         Mobject.apply_function(self, function)
-        if maintain_smoothness:
+        if maintain_smoothness and self.considered_smooth:
             self.make_smooth()
         return self
 

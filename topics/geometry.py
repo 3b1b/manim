@@ -56,6 +56,7 @@ class Dot(Circle): #Use 1D density, even though 2D
 class Line(VMobject):
     CONFIG = {
         "buff" : 0,
+        "considered_smooth" : False,
     }
     def __init__(self, start, end, **kwargs):
         digest_config(self, kwargs)
@@ -214,6 +215,7 @@ class Polygon(VMobject):
         "color" : GREEN_D,
         "mark_paths_closed" : True,
         "close_new_points" : True,
+        "considered_smooth" : False,
     }
     def __init__(self, *vertices, **kwargs):
         assert len(vertices) > 1
@@ -244,6 +246,7 @@ class Rectangle(VMobject):
         "width"  : 4.0,
         "mark_paths_closed" : True,
         "close_new_points" : True,
+        "considered_smooth" : False,
     }
     def generate_points(self):
         y, x = self.height/2., self.width/2.
@@ -302,6 +305,7 @@ class Grid(VMobject):
     CONFIG = {
         "height" : 6.0,
         "width"  : 6.0,
+        "considered_smooth" : False,
     }
     def __init__(self, rows, columns, **kwargs):
         digest_config(self, kwargs, locals())
