@@ -4,8 +4,8 @@ from topics.geometry import BackgroundRectangle
 from helpers import *
 import collections
 
-TEX_MOB_SCALE_VAL = 0.05
-TEXT_MOB_SCALE_VAL = 0.05
+TEX_MOB_SCALE_FACTOR = 0.05
+TEXT_MOB_SCALE_FACTOR = 0.05
 
 
 class TexSymbol(VMobjectFromSVGPathstring):
@@ -35,7 +35,7 @@ class TexMobject(SVGMobject):
         "should_center"     : True,
         "separate_list_arg_with_spaces" : True,
         "enforce_new_line_structure" : False,
-        "initial_scale_val" : TEX_MOB_SCALE_VAL,
+        "initial_scale_factor" : TEX_MOB_SCALE_FACTOR,
         "organize_left_to_right" : False,
         "propogate_style_to_family" : True,
     }
@@ -103,7 +103,7 @@ class TexMobject(SVGMobject):
         )
 
     def add_background_rectangle(self, color = BLACK, opacity = 0.75):
-        rect = BackgroundRectangle(self)
+        rect = BackgroundRectangle(self, color = color, opacity = opacity)
         letters = VMobject(*self.submobjects)
         self.submobjects = [rect, letters]
         return self
@@ -111,7 +111,7 @@ class TexMobject(SVGMobject):
 class TextMobject(TexMobject):
     CONFIG = {
         "template_tex_file" : TEMPLATE_TEXT_FILE,
-        "initial_scale_val" : TEXT_MOB_SCALE_VAL,
+        "initial_scale_factor" : TEXT_MOB_SCALE_FACTOR,
         "enforce_new_line_structure" : True,
     }
 

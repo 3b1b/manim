@@ -328,25 +328,84 @@ class BreakBlobIntoGridSquaresVeryGranular(BreakBlobIntoGridSquares):
 
 class NameDeterminant(LinearTransformationScene):
     CONFIG = {
-        "t_matrix" : [[1, 0], [2, 1]]
+        "t_matrix" : [[3, 0], [2, 2]]
     }
     def construct(self):
         self.setup()
-        self.add_unit_square()
-        self.add_title(["The", "``determinant''", "of a transformation"])
+        self.plane.fade(0.3)
+        self.add_unit_square(color = YELLOW_E, opacity = 0.5)
+        self.add_title(
+            ["The", "``determinant''", "of a transformation"],
+            scale_factor = 1
+        )
         self.title.split()[1].split()[1].highlight(YELLOW)
 
-        text = TextMobject("Area $=1$")
-        text.move_to(self.square)
+        matrix_background, matrix, det_text = self.get_matrix()
+        self.add_foreground_mobject(matrix_background, matrix)
+
+        A = TexMobject("A")
+        area_label = VMobject(A.copy(), A.copy(), A)
+        area_label.move_to(self.square)
         det = np.linalg.det(self.t_matrix)
-        self.add_moving_mobject(text, TextMobject("Area $=%d$"%det))
-        self.show_frame()
+        if np.round(det) == det:
+            det = int(det)
+        area_label_target = VMobject(
+            TexMobject(str(det)), TexMobject("\\cdot"), A.copy()
+        )
+        if det < 1 and det > 0:
+            area_label_target.scale(det)
+        area_label_target.arrange_submobjects(RIGHT, buff = 0.1)
+        self.add_moving_mobject(area_label, area_label_target)
+        
+        self.dither()
+        self.apply_transposed_matrix(self.t_matrix)
+        self.dither()
+        det_mob_copy = area_label.split()[0].copy()
+        new_det_mob = det_mob_copy.copy().scale_to_fit_height(
+            det_text.split()[0].get_height()
+        )
+        new_det_mob.next_to(det_text, RIGHT, buff = 0.2)
+        new_det_mob.add_background_rectangle()
+        det_mob_copy.add_background_rectangle(opacity = 0)
+        self.play(Write(det_text))
+        self.play(Transform(det_mob_copy, new_det_mob))
+        self.dither()
 
 
+    def get_matrix(self):
+        matrix = Matrix(np.array(self.t_matrix).transpose())
+        matrix.highlight_columns(X_COLOR, Y_COLOR)
+        matrix.next_to(self.title, DOWN, buff = 0.5)
+        matrix.shift(2*LEFT)
+        matrix_background = BackgroundRectangle(matrix)
 
+        braces = TexMobject("()")
+        braces.scale(2)
+        braces.stretch_to_fit_height(matrix.get_height())
+        l_brace, r_brace = braces.split()
+        l_brace.next_to(matrix, LEFT, buff = 0.1)
+        r_brace.next_to(matrix, RIGHT, buff = 0.1)
+        det = TextMobject("det").next_to(l_brace, LEFT, buff = 0.1)
+        det.add_background_rectangle()
+        eq = TexMobject("=").next_to(r_brace, RIGHT, buff = 0.1)
 
+        det_text = VMobject(det, l_brace, r_brace, eq)
+        return matrix_background, matrix, det_text
 
+class DeterminantIsOneHalf(NameDeterminant):
+    CONFIG = {
+        "t_matrix" : [[0.5, -0.5], [0.5, 0.5]],
+        "foreground_plane_kwargs" : {
+            "x_radius" : 2*SPACE_WIDTH,
+            "y_radius" : 2*SPACE_WIDTH,
+            "secondary_line_ratio" : 0
+        },
+    }
 
+class DeterminantIsZero(NameDeterminant):
+    CONFIG = {
+        "t_matrix" : [[2, 1], [2, 1]],
+    }
 
 
 

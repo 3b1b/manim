@@ -22,7 +22,7 @@ from scene import Scene
 from scene.zoomed_scene import ZoomedScene
 
 from brachistochrone.curves import \
-    Cycloid, PathSlidingScene, RANDY_SCALE_VAL, TryManyPaths
+    Cycloid, PathSlidingScene, RANDY_SCALE_FACTOR, TryManyPaths
 
 
 class Lens(Arc):
@@ -846,7 +846,7 @@ class SpringSetup(ShowMultiplePathsInWater):
 class WhatGovernsTheSpeedOfLight(PhotonScene, PathSlidingScene):
     def construct(self):
         randy = Randolph()
-        randy.scale(RANDY_SCALE_VAL)
+        randy.scale(RANDY_SCALE_FACTOR)
         randy.shift(-randy.get_bottom())
         self.add_cycloid_end_points()   
 

@@ -588,13 +588,13 @@ class FollowIHatJHat(LinearTransformationScene):
         i_label = self.label_vector(
             i_hat, "\\hat{\\imath}", 
             color = X_COLOR,
-            label_scale_val = 1
+            label_scale_factor = 1
         )
         j_hat = self.add_vector([0, 1], color = Y_COLOR)
         j_label = self.label_vector(
             j_hat, "\\hat{\\jmath}", 
             color = Y_COLOR,
-            label_scale_val = 1
+            label_scale_factor = 1
         )
 
         self.dither()
@@ -648,7 +648,7 @@ class TrackBasisVectorsExample(LinearTransformationScene):
     def introduce_vector(self):
         v = self.add_vector(self.v_coords)
         coords = Matrix(self.v_coords)
-        coords.scale(VECTOR_LABEL_SCALE_VAL)
+        coords.scale(VECTOR_LABEL_SCALE_FACTOR)
         coords.next_to(v.get_end(), np.sign(self.v_coords[0])*RIGHT)
 
         self.play(Write(coords, run_time = 1))

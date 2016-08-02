@@ -337,7 +337,7 @@ class ShowLightAndSlidingObject(MultilayeredScene, TryManyPaths, PhotonScene):
             path.rgbs[:,2] = 0
         loop = paths.pop(1) ##Bad!
         randy = Randolph()
-        randy.scale(RANDY_SCALE_VAL)
+        randy.scale(RANDY_SCALE_FACTOR)
         randy.shift(-randy.get_bottom())
         photon_run = self.photon_run_along_path(
             loop, 

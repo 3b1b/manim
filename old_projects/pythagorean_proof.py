@@ -13,7 +13,7 @@ A_COLOR = BLUE
 B_COLOR = MAROON_D
 C_COLOR = YELLOW
 
-TEX_MOB_SCALE_VAL = 0.5
+TEX_MOB_SCALE_FACTOR = 0.5
 POINTS = np.array([
     DOWN,
     2*UP,
@@ -47,7 +47,7 @@ class Triangle(Polygon):
         return self
 
     def add_letter(self, char, nudge = 0.3):
-        mob = TexMobject(char).scale(TEX_MOB_SCALE_VAL)
+        mob = TexMobject(char).scale(TEX_MOB_SCALE_FACTOR)
         if char == "a":
             points = self.get_vertices()[[0, 2, 1]]
         elif char == "b":
@@ -89,7 +89,7 @@ def c_square(**kwargs):
 class DrawPointsReference(Scene):
     def construct(self):
         for point, count in zip(POINTS, it.count()):
-            mob = TexMobject(str(count)).scale(TEX_MOB_SCALE_VAL)
+            mob = TexMobject(str(count)).scale(TEX_MOB_SCALE_FACTOR)
             mob.shift(POINTS[count])
             self.add(mob)
 
@@ -104,7 +104,7 @@ class DrawAllThreeSquares(Scene):
         c = c_square()
         self.add(Triangle(), a, b, c)
         for letter, mob in zip("abc", [a, b, c]):
-            char_mob = TexMobject(letter+"^2").scale(TEX_MOB_SCALE_VAL)
+            char_mob = TexMobject(letter+"^2").scale(TEX_MOB_SCALE_FACTOR)
             char_mob.shift(mob.get_center())
             self.add(char_mob)
 
@@ -235,8 +235,8 @@ class ShowBigRectangleDimensions(DrawAllThreeSquaresWithMoreTriangles):
         for brace in u_brace, side_brace:
             brace.shift(0.2*DOWN)
         side_brace.rotate(-np.pi/2)
-        a_plus_2b = TexMobject("a+2b").scale(TEX_MOB_SCALE_VAL)
-        b_plus_2a = TexMobject("b+2a").scale(TEX_MOB_SCALE_VAL)
+        a_plus_2b = TexMobject("a+2b").scale(TEX_MOB_SCALE_FACTOR)
+        b_plus_2a = TexMobject("b+2a").scale(TEX_MOB_SCALE_FACTOR)
         a_plus_2b.next_to(u_brace, DOWN)
         b_plus_2a.next_to(side_brace, LEFT)
         self.add_mobjects_among(locals().values())
@@ -263,7 +263,7 @@ class DrawOnlyABSquares(Scene):
         a = a_square()
         b = b_square()
         for char, mob in zip("ab", [a, b]):
-            symobl = TexMobject(char+"^2").scale(TEX_MOB_SCALE_VAL)
+            symobl = TexMobject(char+"^2").scale(TEX_MOB_SCALE_FACTOR)
             symobl.shift(mob.get_center())
             self.add(symobl)
         triangle = Triangle()
@@ -394,8 +394,8 @@ class ZoomInOnTroublePoint(Scene):
             for mob in self.mobjects:
                 mob.rotate(np.pi/2)
         if with_labels:
-            alpha = TexMobject("\\alpha").scale(TEX_MOB_SCALE_VAL)
-            beta = TexMobject("90-\\alpha").scale(TEX_MOB_SCALE_VAL)
+            alpha = TexMobject("\\alpha").scale(TEX_MOB_SCALE_FACTOR)
+            beta = TexMobject("90-\\alpha").scale(TEX_MOB_SCALE_FACTOR)
             if rotate:
                 alpha.next_to(angle1_arc, UP+0.1*LEFT)
                 beta.next_to(angle2_arc, DOWN+0.5*LEFT)
@@ -446,7 +446,7 @@ class LabelLargeSquare(DrawCSquareWithAllTraingles):
         u_brace.shift(0.2*DOWN)
         side_brace = deepcopy(u_brace).rotate(np.pi/2)
         upper_brace = deepcopy(u_brace).rotate(np.pi)
-        a_plus_b = TexMobject("a+b").scale(TEX_MOB_SCALE_VAL)
+        a_plus_b = TexMobject("a+b").scale(TEX_MOB_SCALE_FACTOR)
         upper_brace.add(a_plus_b.next_to(upper_brace, UP))
         side_brace.add(a_plus_b.next_to(side_brace, RIGHT))
         self.add(upper_brace, side_brace)

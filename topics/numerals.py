@@ -40,7 +40,7 @@ class RangingValues(Animation):
         "value_function" : None,
         "tracked_mobject" : None,
         "tracked_mobject_next_to_kwargs" : {},
-        "scale_val" : None
+        "scale_factor" : None
     }
     def __init__(self, start_val = 0, end_val = 1, **kwargs):
         digest_config(self, kwargs, locals())
@@ -60,8 +60,8 @@ class RangingValues(Animation):
             self.get_number(alpha), 
             num_decimal_points=self.num_decimal_points
         )
-        if self.scale_val:
-            mob.scale(self.scale_val)
+        if self.scale_factor:
+            mob.scale(self.scale_factor)
         if self.tracking_function:
             self.tracking_function(alpha, mob)
         elif self.tracked_mobject:

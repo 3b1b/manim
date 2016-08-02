@@ -536,7 +536,7 @@ class SlidingObject(CycloidScene, PathSlidingScene):
         CycloidScene.construct(self)
 
         randy = Randolph()
-        randy.scale(RANDY_SCALE_VAL)
+        randy.scale(RANDY_SCALE_FACTOR)
         randy.shift(-randy.get_bottom())
         central_randy = randy.copy()
         start_randy = self.adjust_mobject_to_index(

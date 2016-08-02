@@ -134,13 +134,13 @@ class CoordinatesAsScalars(VectorScene):
         i_hat_label = self.label_vector(
             i_hat, "\\hat{\\imath}", 
             color = X_COLOR, 
-            label_scale_val = 1
+            label_scale_factor = 1
         )
         self.add_vector(j_hat)
         j_hat_label = self.label_vector(
             j_hat, "\\hat{\\jmath}", 
             color = Y_COLOR, 
-            label_scale_val = 1
+            label_scale_factor = 1
         )
         self.dither()
 
@@ -287,7 +287,7 @@ class ShowVaryingLinearCombinations(VectorScene):
                     "direction" : LEFT,
                     "buff" : 0.1
                 },
-                scale_val = 0.75,
+                scale_factor = 0.75,
                 value_function = get_val_func(v)
             )
             for v, label in (v1, v1_label), (v2, v2_label)
@@ -414,11 +414,11 @@ class ShowVaryingLinearCombinations(VectorScene):
         sum_anims = self.get_sum_animations(v1, v2)
         aux_anims = list(sum_anims) + label_anims + scalar_anims
 
-        scale_val = 2
+        scale_factor = 2
         for w1, w2 in (v2, v1), (v1, v2):
             w1_vect = w1.get_end()-w1.get_start()
             w2_vect = w2.get_end()-w2.get_start()
-            for num in scale_val, -1, -1./scale_val:
+            for num in scale_factor, -1, -1./scale_factor:
                 curr_tip = self.sum_vector.get_end()
                 line = Line(ORIGIN, curr_tip)
                 self.play(

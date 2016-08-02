@@ -7,7 +7,7 @@ from helpers import *
 
 class SVGMobject(VMobject):
     CONFIG = {
-        "initial_scale_val" : 1,
+        "initial_scale_factor" : 1,
         "should_center" : True,
     }
     def __init__(self, svg_file, **kwargs):
@@ -129,7 +129,7 @@ class SVGMobject(VMobject):
     def move_into_position(self):
         if self.should_center:
             self.center()
-        self.scale_in_place(self.initial_scale_val)
+        self.scale_in_place(self.initial_scale_factor)
 
 
 

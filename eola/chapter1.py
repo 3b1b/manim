@@ -893,7 +893,7 @@ class VectorAdditionNumerically(VectorScene):
                 var.highlight(X_COLOR)
             else:
                 var.highlight(Y_COLOR)
-            var.scale(VECTOR_LABEL_SCALE_VAL)
+            var.scale(VECTOR_LABEL_SCALE_FACTOR)
             var.move_to(starter)
         self.play(
             Transform(
@@ -1050,7 +1050,7 @@ class ScalingNumerically(VectorScene):
         VMobject(x_sym, two_x_sym).highlight(X_COLOR)
         VMobject(y_sym, two_y_sym).highlight(Y_COLOR)
         syms = [x_sym, y_sym, two_x_sym, two_y_sym]
-        VMobject(*syms).scale(VECTOR_LABEL_SCALE_VAL)
+        VMobject(*syms).scale(VECTOR_LABEL_SCALE_FACTOR)
         for sym, num in zip(syms, [x, y] + list(two_v_elems)):
             sym.move_to(num)
         self.play(

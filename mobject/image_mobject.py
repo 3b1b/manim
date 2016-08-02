@@ -17,7 +17,7 @@ class ImageMobject(PMobject):
         "invert"          : True,
         "use_cache"       : True,
         "stroke_width" : 1,
-        "scale_value"     : 1.0,
+        "scale_factorue"     : 1.0,
         "should_center"   : True,
     }
     def __init__(self, image_file, **kwargs):
@@ -36,7 +36,7 @@ class ImageMobject(PMobject):
         for path in possible_paths:
             if os.path.exists(path):
                 self.generate_points_from_file(path)
-                self.scale(self.scale_value)
+                self.scale(self.scale_factorue)
                 if self.should_center:
                     self.center()
                 return

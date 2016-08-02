@@ -20,7 +20,7 @@ from topics.number_line import *
 from mobject.region import  Region, region_from_polygon_vertices
 from scene import Scene
 
-RANDY_SCALE_VAL = 0.3
+RANDY_SCALE_FACTOR = 0.3
 
 
 
@@ -239,7 +239,7 @@ class TryManyPaths(PathSlidingScene):
         randy = Randolph()
         randy.shift(-randy.get_bottom())
         self.slider = randy.copy()  
-        randy.scale(RANDY_SCALE_VAL)
+        randy.scale(RANDY_SCALE_FACTOR)
         paths = self.get_paths()
         point_a = Dot(paths[0].points[0])
         point_b = Dot(paths[0].points[-1])
@@ -317,7 +317,7 @@ class TryManyPaths(PathSlidingScene):
 class RollingRandolph(PathSlidingScene):
     def construct(self):
         randy = Randolph()
-        randy.scale(RANDY_SCALE_VAL)
+        randy.scale(RANDY_SCALE_FACTOR)
         randy.shift(-randy.get_bottom())
         self.add_cycloid_end_points()        
         self.slide(randy, self.cycloid, roll = True)
@@ -334,7 +334,7 @@ class NotTheCircle(PathSlidingScene):
         path.gradient_highlight(RED_D, WHITE)
         radius = Line(ORIGIN, path.points[0])
         randy = Randolph()
-        randy.scale(RANDY_SCALE_VAL)
+        randy.scale(RANDY_SCALE_FACTOR)
         randy.shift(-randy.get_bottom())
         randy_copy = randy.copy()
         words = TextMobject("Circular paths are good, \\\\ but still not the best")
@@ -367,7 +367,7 @@ class NotTheCircle(PathSlidingScene):
 class TransitionAwayFromSlide(PathSlidingScene):
     def construct(self):
         randy = Randolph()
-        randy.scale(RANDY_SCALE_VAL)
+        randy.scale(RANDY_SCALE_FACTOR)
         randy.shift(-randy.get_bottom())
         self.add_cycloid_end_points()
         arrow = Arrow(ORIGIN, 2*RIGHT)
@@ -469,7 +469,7 @@ class WhatGovernsSpeed(PathSlidingScene):
     }
     def construct(self):
         randy = Randolph()
-        randy.scale(RANDY_SCALE_VAL)
+        randy.scale(RANDY_SCALE_FACTOR)
         randy.shift(-randy.get_bottom())
         self.add_cycloid_end_points()
         points = self.cycloid.points
@@ -652,7 +652,7 @@ class DefineCurveWithKnob(PathSlidingScene):
         self.path.highlight(BLACK)        
 
         randy = Randolph()
-        randy.scale(RANDY_SCALE_VAL)
+        randy.scale(RANDY_SCALE_FACTOR)
         randy.shift(-randy.get_bottom())
 
         self.play(ShimmerIn(words))

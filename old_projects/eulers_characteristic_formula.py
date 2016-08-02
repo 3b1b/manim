@@ -17,8 +17,8 @@ from moser_main import EulersFormula
 from script_wrapper import command_line_create_scene
 
 MOVIE_PREFIX = "ecf_graph_scenes/"
-RANDOLPH_SCALE_VAL = 0.3
-EDGE_ANNOTATION_SCALE_VAL = 0.7
+RANDOLPH_SCALE_FACTOR = 0.3
+EDGE_ANNOTATION_SCALE_FACTOR = 0.7
 DUAL_CYCLE = [3, 4, 5, 6, 1, 0, 2, 3]
 
 class EulersFormulaWords(Scene):
@@ -162,7 +162,7 @@ class OldIntroduceGraphs(GraphScene):
         self.clear()
         self.add(*self.edges)
         self.replace_vertices_with(Face().scale(0.4))
-        friends = TextMobject("Friends").scale(EDGE_ANNOTATION_SCALE_VAL)
+        friends = TextMobject("Friends").scale(EDGE_ANNOTATION_SCALE_FACTOR)
         self.annotate_edges(friends.shift((0, friends.get_height()/2, 0)))
         self.play(*[
             CounterclockwiseTransform(vertex, Dot(point))
@@ -282,11 +282,11 @@ class ThreePiecesOfTerminology(GraphScene):
             ]
         ]
         self.generate_spanning_tree()
-        scale_val = 1.2       
+        scale_factor = 1.2       
         def accent(mobject, color = "yellow"):
-            return mobject.scale_in_place(scale_val).highlight(color)
+            return mobject.scale_in_place(scale_factor).highlight(color)
         def tone_down(mobject):
-            return mobject.scale_in_place(1.0/scale_val).highlight("white")
+            return mobject.scale_in_place(1.0/scale_factor).highlight("white")
 
         self.add(accent(cycles))
         self.trace_cycle(run_time = 1.0)
@@ -332,7 +332,7 @@ class WalkingRandolph(GraphScene):
         GraphScene.construct(self)
         point_path = [self.points[i] for i in self.path]
         randy = Randolph()
-        randy.scale(RANDOLPH_SCALE_VAL)
+        randy.scale(RANDOLPH_SCALE_FACTOR)
         randy.move_to(point_path[0])
         for next, last in zip(point_path[1:], point_path):
             self.play(
@@ -416,7 +416,7 @@ class IntroduceRandolph(GraphScene):
         name = TextMobject("Randolph")
         self.play(Transform(
             randy,
-            deepcopy(randy).scale(RANDOLPH_SCALE_VAL).move_to(self.points[0]),
+            deepcopy(randy).scale(RANDOLPH_SCALE_FACTOR).move_to(self.points[0]),
         ))
         self.dither()
         name.shift((0, 1, 0))
@@ -427,15 +427,15 @@ class DefineSpanningTree(GraphScene):
     def construct(self):
         GraphScene.construct(self)
         randy = Randolph()
-        randy.scale(RANDOLPH_SCALE_VAL).move_to(self.points[0])
+        randy.scale(RANDOLPH_SCALE_FACTOR).move_to(self.points[0])
         dollar_signs = TextMobject("\\$\\$")
-        dollar_signs.scale(EDGE_ANNOTATION_SCALE_VAL)
+        dollar_signs.scale(EDGE_ANNOTATION_SCALE_FACTOR)
         dollar_signs = Mobject(*[
             deepcopy(dollar_signs).shift(edge.get_center())
             for edge in self.edges
         ])
         unneeded = TextMobject("unneeded!")
-        unneeded.scale(EDGE_ANNOTATION_SCALE_VAL)
+        unneeded.scale(EDGE_ANNOTATION_SCALE_FACTOR)
         self.generate_spanning_tree()
         def green_dot_at_index(index):
             return Dot(
@@ -546,7 +546,7 @@ class FacebookGraph(GraphScene):
         account.shift(0.2*LEFT + 0.1*UP)
         friends = TexMobject(
             "\\leftarrow \\text{friends} \\rightarrow"
-        ).scale(0.5*EDGE_ANNOTATION_SCALE_VAL)
+        ).scale(0.5*EDGE_ANNOTATION_SCALE_FACTOR)
 
         self.clear()
         accounts = [
@@ -873,7 +873,7 @@ class CyclesCorrespondWithConnectedComponents(GraphScene):
         dual_cycle = DUAL_CYCLE
         enclosed_vertices = [0, 1]
         randy = Randolph()
-        randy.scale(RANDOLPH_SCALE_VAL)
+        randy.scale(RANDOLPH_SCALE_FACTOR)
         randy.move_to(self.points[cycle[0]])
 
         lines_to_remove = []
@@ -933,8 +933,8 @@ class IntroduceMortimer(GraphScene):
         self.add(morty, name)
         self.dither()
         self.remove(name)
-        small_randy = deepcopy(randy).scale(RANDOLPH_SCALE_VAL)
-        small_morty = deepcopy(morty).scale(RANDOLPH_SCALE_VAL)
+        small_randy = deepcopy(randy).scale(RANDOLPH_SCALE_FACTOR)
+        small_morty = deepcopy(morty).scale(RANDOLPH_SCALE_FACTOR)
         small_randy.move_to(self.points[randy_path[0]])
         small_morty.move_to(self.dual_points[morty_path[0]])
         self.play(*[
@@ -978,8 +978,8 @@ class RandolphMortimerSpanningTreeGame(GraphScene):
         self.generate_spanning_tree()
         self.generate_dual_graph()
         self.generate_regions()
-        randy = Randolph().scale(RANDOLPH_SCALE_VAL)
-        morty = Mortimer().scale(RANDOLPH_SCALE_VAL)
+        randy = Randolph().scale(RANDOLPH_SCALE_FACTOR)
+        morty = Mortimer().scale(RANDOLPH_SCALE_FACTOR)
         randy.move_to(self.points[0])
         morty.move_to(self.dual_points[0])
         attempted_dual_point_index = 2
@@ -1028,7 +1028,7 @@ class MortimerCannotTraverseCycle(GraphScene):
         self.generate_dual_graph()
         dual_cycle = DUAL_CYCLE
         trapped_points = [0, 1]
-        morty = Mortimer().scale(RANDOLPH_SCALE_VAL)
+        morty = Mortimer().scale(RANDOLPH_SCALE_FACTOR)
         morty.move_to(self.dual_points[dual_cycle[0]])
         time_per_edge = 0.5
         text = TextMobject("""
@@ -1105,10 +1105,10 @@ class DualSpanningTree(GraphScene):
         self.generate_dual_graph()
         self.generate_spanning_tree()
         randy = Randolph()
-        randy.scale(RANDOLPH_SCALE_VAL)
+        randy.scale(RANDOLPH_SCALE_FACTOR)
         randy.move_to(self.points[0])
         morty = Mortimer()
-        morty.scale(RANDOLPH_SCALE_VAL)
+        morty.scale(RANDOLPH_SCALE_FACTOR)
         morty.move_to(self.dual_points[0])
         dual_edges = [1, 3, 4, 7, 11, 9, 13]
         words = TextMobject("""

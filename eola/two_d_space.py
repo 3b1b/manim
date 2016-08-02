@@ -13,7 +13,7 @@ from topics.geometry import Vector, Line, Circle, Arrow, Dot, \
     BackgroundRectangle, Square
 
 from helpers import *
-from eola.matrix import Matrix, VECTOR_LABEL_SCALE_VAL, vector_coordinate_label
+from eola.matrix import Matrix, VECTOR_LABEL_SCALE_FACTOR, vector_coordinate_label
 
 
 X_COLOR = GREEN_C
@@ -78,7 +78,7 @@ class VectorScene(Scene):
         return [
             self.get_vector_label(
                 vect, label, color = color, 
-                label_scale_val = 1,
+                label_scale_factor = 1,
                 **kwargs
             )
             for vect, label , color in [
@@ -91,12 +91,13 @@ class VectorScene(Scene):
                          direction = "left", 
                          rotate = False,
                          color = WHITE, 
-                         label_scale_val = VECTOR_LABEL_SCALE_VAL):
-        if len(label) == 1:
-            label = "\\vec{\\textbf{%s}}"%label
-        label = TexMobject(label)
-        label.highlight(color)     
-        label.scale(label_scale_val)
+                         label_scale_factor = VECTOR_LABEL_SCALE_FACTOR):
+        if not isinstance(label, TexMobject):
+            if len(label) == 1:
+                label = "\\vec{\\textbf{%s}}"%label
+            label = TexMobject(label)
+            label.highlight(color)
+        label.scale(label_scale_factor)
         label.add_background_rectangle()
 
         angle = vector.get_angle()
@@ -346,9 +347,9 @@ class LinearTransformationScene(VectorScene):
         self.transformable_labels.append(label_mob)
         return label_mob
 
-    def add_title(self, title, scale_val = 1.5, animate = False):
+    def add_title(self, title, scale_factor = 1.5, animate = False):
         if not isinstance(title, Mobject):
-            title = TextMobject(title).scale(scale_val)
+            title = TextMobject(title).scale(scale_factor)
         title.to_edge(UP)
         title.add_background_rectangle()
         if animate:

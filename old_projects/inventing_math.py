@@ -806,26 +806,26 @@ class ZoomInOnOne(Scene):
         )
 
         num_levels = 3
-        scale_val = 10
+        scale_factor = 10
         number_lines = [
             NumberLine(
                 interval_size = 1, 
-                density = scale_val*DEFAULT_POINT_DENSITY_1D
+                density = scale_factor*DEFAULT_POINT_DENSITY_1D
             ).filter_out(
                 lambda (x, y, z):abs(y)>0.1
-            ).scale(1.0/scale_val**x)
+            ).scale(1.0/scale_factor**x)
             for x in range(num_levels)
         ]
         kwargs = {"rate_func" : None}
         self.play(*[
-            ApplyMethod(number_lines[x].scale, scale_val, **kwargs)
+            ApplyMethod(number_lines[x].scale, scale_factor, **kwargs)
             for x in range(1, num_levels)
         ]+[
-            ApplyMethod(number_lines[0].stretch, scale_val, 0, **kwargs),
+            ApplyMethod(number_lines[0].stretch, scale_factor, 0, **kwargs),
         ]+[
             ApplyMethod(
                 all_numbers[i].shift, 
-                2*LEFT*(scale_val-1)*(-1)**i, 
+                2*LEFT*(scale_factor-1)*(-1)**i, 
                 **kwargs
             )
             for i in 0, 1

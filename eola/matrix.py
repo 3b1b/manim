@@ -12,7 +12,7 @@ from topics.geometry import Vector, Line, Circle, Arrow, Dot, BackgroundRectangl
 
 from helpers import *
 
-VECTOR_LABEL_SCALE_VAL = 0.8
+VECTOR_LABEL_SCALE_FACTOR = 0.8
 
 def matrix_to_tex_string(matrix):
     matrix = np.array(matrix).astype("string")
@@ -39,7 +39,7 @@ def vector_coordinate_label(vector_mob, integer_labels = True,
     vect = vect[:n_dim]
     vect = vect.reshape((n_dim, 1))
     label = Matrix(vect, add_background_rectangles = True)
-    label.scale(VECTOR_LABEL_SCALE_VAL)
+    label.scale(VECTOR_LABEL_SCALE_FACTOR)
 
     shift_dir = np.array(vector_mob.get_end())
     if shift_dir[0] >= 0: #Pointing right

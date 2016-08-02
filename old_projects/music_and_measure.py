@@ -97,7 +97,7 @@ class Piano(ImageMobject):
     CONFIG = {
         "stroke_width" : 1,
         "invert" : False, 
-        "scale_value" : 0.5
+        "scale_factorue" : 0.5
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
@@ -1213,25 +1213,25 @@ class StepsToSolution(IntervalScene):
 
     def add_terms(self):
         self.ones = []
-        scale_val = 0.6
+        scale_factor = 0.6
         plus = None
         for count in range(1, 10):
             frac_bottom = TexMobject("\\over %d"%(2**count))
-            frac_bottom.scale(scale_val)
-            one = TexMobject("1").scale(scale_val)
+            frac_bottom.scale(scale_factor)
+            one = TexMobject("1").scale(scale_factor)
             one.next_to(frac_bottom, UP, buff = 0.1)
             compound = Mobject(frac_bottom, one)
             if plus:
                 compound.next_to(plus)
             else:
                 compound.to_edge(LEFT)
-            plus = TexMobject("+").scale(scale_val)
+            plus = TexMobject("+").scale(scale_factor)
             plus.next_to(compound)
             frac_bottom, one = compound.split()
             self.ones.append(one)
             self.add(frac_bottom, one, plus)
             self.dither(0.2)
-        dots = TexMobject("\\dots").scale(scale_val).next_to(plus)
+        dots = TexMobject("\\dots").scale(scale_factor).next_to(plus)
         arrow = Arrow(ORIGIN, RIGHT).next_to(dots)
         one = TexMobject("1").next_to(arrow)
         self.ones.append(one)
