@@ -137,7 +137,8 @@ class Rotate(ApplyMethod):
         "in_place" : False,
     }
     def __init__(self, mobject, angle = np.pi, axis = OUT, **kwargs):
-        kwargs["path_arc"] = angle
+        if "path_arc" not in kwargs:
+            kwargs["path_arc"] = angle
         digest_config(self, kwargs, locals())
         if self.in_place:
             method = mobject.rotate_in_place

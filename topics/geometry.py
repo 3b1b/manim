@@ -31,6 +31,14 @@ class Arc(VMobject):
             )
         ]
 
+    def add_tip(self):
+        #TODO, do this a better way
+        arrow = Arrow(*self.points[-2:])
+        self.add(arrow.split()[-1])
+        self.highlight(self.get_color())
+        return self
+
+
 class Circle(Arc):
     CONFIG = {
         "color" : RED,

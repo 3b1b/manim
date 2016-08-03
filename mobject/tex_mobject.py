@@ -103,7 +103,10 @@ class TexMobject(SVGMobject):
         )
 
     def add_background_rectangle(self, color = BLACK, opacity = 0.75):
-        rect = BackgroundRectangle(self, color = color, opacity = opacity)
+        rect = BackgroundRectangle(
+            self, color = color, 
+            fill_opacity = opacity
+        )
         letters = VMobject(*self.submobjects)
         self.submobjects = [rect, letters]
         return self
@@ -123,6 +126,7 @@ class Brace(TexMobject):
     }
     TEX_STRING = "\\underbrace{%s}"%(3*"\\qquad")
     def __init__(self, mobject, direction = DOWN, **kwargs):
+        digest_config(self, kwargs, locals())
         TexMobject.__init__(self, self.TEX_STRING, **kwargs)
         angle = -np.arctan2(*direction[:2]) + np.pi
         mobject.rotate(-angle)
@@ -132,6 +136,16 @@ class Brace(TexMobject):
         self.shift(left - self.get_corner(UP+LEFT) + self.buff*DOWN)
         for mob in mobject, self:
             mob.rotate(angle)
+
+    def put_at_tip(self, mob, **kwargs):
+        mob.next_to(self, self.direction, **kwargs)
+        return self
+
+    def get_text(self, text, **kwargs):
+        text_mob = TextMobject(text)
+        self.put_at_tip(text_mob, **kwargs)
+        return text_mob
+
 
     
 def tex_hash(expression, template_tex_file):

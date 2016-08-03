@@ -35,6 +35,8 @@ class Animation(object):
 
     def update_config(self, **kwargs):
         digest_config(self, kwargs)
+        if "rate_func" in kwargs and kwargs["rate_func"] is None:
+            self.rate_func = (lambda x : x)
         return self
 
     def __str__(self):
