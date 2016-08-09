@@ -763,24 +763,52 @@ class MultiplyToIdentity(LinearTransformationScene):
         identity = Matrix([[1, 0], [0, 1]])
         identity.highlight_columns(X_COLOR, Y_COLOR)
         identity.next_to(eq, RIGHT)
-        VMobject(lhs, identity).center().to_edge(UP)
-        lhs.add_background_rectangle()
-        identity.add_to_back(BackgroundRectangle(identity))
+        VMobject(lhs, identity).center().to_corner(UP+RIGHT)
+        for mob in A, A_inv, eq:
+            mob.add_to_back(BackgroundRectangle(mob))
+        identity.background = BackgroundRectangle(identity)
 
-        col1 = VMobject(*identity.get_mob_matrix[:,0])
-        col2 = VMobject(*identity.get_mob_matrix[:,1])
+        col1 = VMobject(*identity.get_mob_matrix()[:,0])
+        col2 = VMobject(*identity.get_mob_matrix()[:,1])
 
         A.text = "Transformation"
         A_inv.text = "Inverse transformation"
         product = VMobject(A, A_inv)
         product.text = "Matrix multiplication"
-        identity.text = "The transformation that does nothing"
+        identity.text = "The transformation \\\\ that does nothing"
         for mob in A, A_inv, product, identity:
             mob.brace = Brace(mob)
             mob.text = mob.brace.get_text(mob.text)
             mob.text.add_background_rectangle()
 
-        self.add(A, A_inv)
+        self.add_foreground_mobject(A, A_inv)
+        brace, text = A.brace, A.text
+        self.play(GrowFromCenter(brace), Write(text), run_time = 1)
+        self.add_foreground_mobject(brace, text)
+        self.apply_transposed_matrix(self.t_matrix)
+        self.play(
+            Transform(brace, A_inv.brace),
+            Transform(text, A_inv.text),
+        )
+        self.apply_inverse_transpose(self.t_matrix)
+        self.dither()
+        self.play(
+            Transform(brace, product.brace),
+            Transform(text, product.text)
+        )
+        self.dither()
+        self.play(
+            Write(identity.background),
+            Write(identity.get_brackets()),
+            Write(eq),
+            Transform(brace, identity.brace),
+            Transform(text, identity.text)
+        )
+        self.dither()
+        self.play(Write(col1))
+        self.dither()
+        self.play(Write(col2))
+        self.dither()
 
 
 

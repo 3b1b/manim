@@ -100,7 +100,7 @@ class TexMobject(SVGMobject):
             fill_opacity = opacity
         )
         letters = VMobject(*self.submobjects)
-        self.add_to_back(rect)
+        self.submobjects = [rect, letters]
         return self
 
 class TextMobject(TexMobject):
