@@ -687,7 +687,7 @@ class GeneralMultiplication(MoreComplicatedExampleNumerically):
             for entry, char in zip(m1_entries.split(), "efgh")
         ])
 
-        words = TextMobject("This method works genearlly")
+        words = TextMobject("This method works generally")
         self.play(Write(words, run_time = 2))
         self.play(Transform(
             m1_entries, m1_entries_target, 

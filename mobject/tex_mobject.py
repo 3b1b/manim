@@ -39,26 +39,18 @@ class TexMobject(SVGMobject):
         "organize_left_to_right" : False,
         "propogate_style_to_family" : True,
     }
-    def __init__(self, expression, **kwargs):
+    def __init__(self, *args, **kwargs):
         digest_config(self, kwargs, locals())
-        self.is_input_a_list = isinstance(expression, list)
+        ##TODO, Eventually remove this
+        if len(args) == 1 and isinstance(args[0], list):
+            args = args[0]
+        ##
+        assert(all([isinstance(a, str) for a in args]))
         VMobject.__init__(self, **kwargs)
         self.move_into_position()
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
 
-    def handle_input_type(self):
-        if isinstance(self.expression, str):
-            self.is_input_a_list = False
-        elif isinstance(self.expression, collections.Iterable):
-            self.is_input_a_list = True
-            self.expression = list(self.expression)
-        else:
-            raise Exception(
-                "TexMobject was expecting string or list, got " + \
-                str(type(self.expression)) + \
-                " instead."
-            )
 
     def path_string_to_mobject(self, path_string):
         #Overwrite superclass default to use
@@ -72,22 +64,22 @@ class TexMobject(SVGMobject):
             self.template_tex_file
         )
         SVGMobject.generate_points(self)
-        if self.is_input_a_list:
-            self.handle_list_expression(self.expression)
+        if len(self.args) > 1:
+            self.handle_multiple_args()
 
     def get_modified_expression(self):
         separator = ""
-        if self.is_input_a_list and self.separate_list_arg_with_spaces:
+        if self.separate_list_arg_with_spaces:
             separator = " "
-        result = separator.join(self.expression)
+        result = separator.join(self.args)
         if self.enforce_new_line_structure:
             result = result.replace("\n", " \\\\ \n ")
         return result
 
-    def handle_list_expression(self, list_expression):
+    def handle_multiple_args(self):
         new_submobjects = []
         curr_index = 0
-        for expr in list_expression:
+        for expr in self.args:
             model = TexMobject(expr, **self.CONFIG)
             new_index = curr_index + len(model.submobjects)
             new_submobjects.append(VMobject(
@@ -108,7 +100,7 @@ class TexMobject(SVGMobject):
             fill_opacity = opacity
         )
         letters = VMobject(*self.submobjects)
-        self.submobjects = [rect, letters]
+        self.add_to_back(rect)
         return self
 
 class TextMobject(TexMobject):

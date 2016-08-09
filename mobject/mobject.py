@@ -51,6 +51,11 @@ class Mobject(object):
         self.submobjects = list_update(self.submobjects, mobjects)
         return self
 
+    def add_to_back(self, *mobjects):
+        self.remove(*mobjects)
+        self.submobjects = list(mobjects) + self.submobjects
+        return self
+
     def remove(self, *mobjects):
         for mobject in mobjects:
             if mobject in self.submobjects:
@@ -298,17 +303,25 @@ class Mobject(object):
     def gradient_highlight(self, start_color, end_color):
         raise Exception("Not implemented") 
 
-    def submobject_gradient_highlight(self, start_color, end_color, use_color_range_to = False):
+    def submobject_gradient_highlight(self, *colors):
+        if len(colors) == 0:
+            raise Exception("Need at least one color")
+        elif len(colors) == 1:
+            return self.highlight(*colors)
+
         mobs = self.family_members_with_points()
-        if use_color_range_to:
-            colors = Color(start_color).range_to(end_color, len(mobs))
-        else:
-            rgb1, rgb2 = map(color_to_rgb, [start_color, end_color])
-            colors = [
-                Color(rgb = interpolate(rgb1, rgb2, alpha))
-                for alpha in np.linspace(0, 1, len(mobs))
-            ]
-        for mob, color in zip(mobs, colors):
+        rgbs = map(color_to_rgb, colors)
+        alphas = np.linspace(0, (len(rgbs) - 1), len(mobs))
+        floors = alphas.astype('int')
+        alphas_mod1 = alphas % 1
+        #End edge case
+        alphas_mod1[-1] = 1
+        floors[-1] = len(rgbs) - 2
+        new_colors = [
+            Color(rgb = interpolate(rgbs[i], rgbs[i+1], alpha))
+            for i, alpha in zip(floors, alphas_mod1)
+        ]
+        for mob, color in zip(mobs, new_colors):
             mob.highlight(color, family = False)
         return self
 
@@ -337,6 +350,15 @@ class Mobject(object):
         return self.color
     ##
 
+    def save_state(self):
+        self.saved_state = self.copy()
+        return self
+
+    def restore(self):
+        if not hasattr(self, "saved_state"):
+            raise Exception("Trying to restore without having saved")
+        self.__dict__.update(self.saved_state.__dict__)
+        return self
 
     def apply_complex_function(self, function):
         return self.apply_function(

@@ -257,6 +257,7 @@ class LinearTransformationScene(VectorScene):
         "i_hat_color" : X_COLOR,
         "j_hat_color" : Y_COLOR,
         "leave_ghost_vectors" : False,
+        "t_matrix" : np.array([[3, 0], [1, 2]]),
     }
     def setup(self):
         self.background_mobjects = []
@@ -266,7 +267,7 @@ class LinearTransformationScene(VectorScene):
         self.transformable_labels = []
         self.moving_mobjects = []
 
-
+        self.t_matrix = np.array(self.t_matrix)
         self.background_plane = NumberPlane(
             **self.background_plane_kwargs
         )
@@ -288,6 +289,7 @@ class LinearTransformationScene(VectorScene):
                     ((0, 1), self.j_hat_color),
                 ]
             ]
+
 
     def add_special_mobjects(self, mob_list, *mobs_to_add):
         for mobject in mobs_to_add:
@@ -404,6 +406,10 @@ class LinearTransformationScene(VectorScene):
             ])
             kwargs["path_arc"] = net_rotation
         self.apply_function(func, **kwargs)
+
+    def apply_inverse_transpose(self, t_matrix, **kwargs):
+        t_inv = np.linalg.inv(np.array(t_matrix).T).T
+        self.apply_transposed_matrix(t_inv, **kwargs)
 
     def apply_nonlinear_transformation(self, function, **kwargs):
         self.plane.prepare_for_nonlinear_transform()

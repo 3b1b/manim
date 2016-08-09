@@ -441,6 +441,22 @@ class IntroduceLinearTransformations(LinearTransformationScene):
         )
         self.dither()
 
+class ToThePedants(Scene):
+    def construct(self):
+        words = TextMobject([
+            "To the pedants:\\\\",
+        """
+            Yeah yeah, I know that's not the formal definition
+            for linear transformations, as seen in textbooks,
+            but I'm building visual intuition here, and what 
+            I've said is equivalent to the formal definition
+            (which I'll get to later in the series).
+        """])
+        words.split()[0].highlight(RED)
+        words.to_edge(UP)
+        self.add(words)
+        self.dither()
+
 class SimpleLinearTransformationScene(LinearTransformationScene):
     CONFIG = {
         "show_basis_vectors" : False,
@@ -1138,13 +1154,13 @@ class ColumnsToBasisVectors(LinearTransformationScene):
         self.apply_transposed_matrix(
             transform_matrix1.transpose(),
             added_anims = [Transform(i_coords_start, i_coords_end)],
-            path_arc = np.pi/2
+            path_arc = np.pi/2,
         )
         self.add_foreground_mobject(i_coords_start)
         self.apply_transposed_matrix(
             transform_matrix2.transpose(),
             added_anims = [Transform(j_coords_start, j_coords_end) ],
-            path_arc = np.pi/2
+            path_arc = np.pi/2,
         )
         self.add_foreground_mobject(j_coords_start)
         self.dither()

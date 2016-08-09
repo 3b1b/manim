@@ -5,6 +5,7 @@ from mobject.svg_mobject import SVGMobject
 from mobject.vectorized_mobject import VMobject
 from mobject.tex_mobject import TextMobject
 
+from animation import Animation
 from animation.transform import Transform, ApplyMethod, FadeOut, FadeIn
 from animation.simple_animations import Write
 from scene import Scene
@@ -107,6 +108,7 @@ class PiCreature(SVGMobject):
                 pupil.shift(nudge_size*UP)
         return self
 
+
     def get_looking_direction(self):
         return np.sign(np.round(
             self.pupils.get_center() - self.eyes.get_center(),
@@ -165,6 +167,35 @@ class Blink(ApplyMethod):
     }
     def __init__(self, pi_creature, **kwargs):
         ApplyMethod.__init__(self, pi_creature.blink, **kwargs)
+
+class DoTheWave(Transform):
+    CONFIG = {
+        "run_time" : 2
+    }
+    def __init__(self, pi_creature, **kwargs):
+        start_state = pi_creature.copy()
+        self.target_states = [
+            pi_creature.copy().change_mode("wave_%d"%x)
+            for x in 1, 2, 3
+        ] + [
+            pi_creature.copy()
+        ]
+        Transform.__init__(self, pi_creature, self.target_states[0], **kwargs)
+
+    def update_mobject(self, alpha):
+        scaled = alpha*len(self.target_states)
+        try:
+            if scaled-1 > 0:
+                self.starting_mobject = self.target_states[int(scaled)-1]
+            self.ending_mobject = self.target_states[int(scaled)]
+        except IndexError:
+            self.ending_mobject = self.target_states[-1]
+        Transform.update_mobject(self, scaled%1)
+        return self
+
+
+
+
 
 class Bubble(SVGMobject):
     CONFIG = {
@@ -275,6 +306,7 @@ class TeacherStudentsScene(Scene):
         self.students.arrange_submobjects(RIGHT)
         self.students.scale(0.8)
         self.students.to_corner(DOWN+LEFT)
+        self.students = self.students.split()
 
         for pi_creature in self.get_everyone():
             pi_creature.bubble = None
@@ -284,7 +316,7 @@ class TeacherStudentsScene(Scene):
         return self.teacher
 
     def get_students(self):
-        return self.students.split()
+        return self.students
 
     def get_everyone(self):
         return [self.get_teacher()] + self.get_students()

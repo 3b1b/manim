@@ -348,6 +348,11 @@ class BreakBlobIntoGridSquaresGranular(BreakBlobIntoGridSquares):
         "square_size" : 0.25
     }
 
+class BreakBlobIntoGridSquaresMoreGranular(BreakBlobIntoGridSquares):
+    CONFIG = {
+        "square_size" : 0.15
+    }    
+
 class BreakBlobIntoGridSquaresVeryGranular(BreakBlobIntoGridSquares):
     CONFIG = {
         "square_size" : 0.1
@@ -409,6 +414,11 @@ class NameDeterminant(LinearTransformationScene):
         det_text.remove(det_text.split()[-1])
         return matrix_background, matrix, det_text
 
+class SecondDeterminantExample(NameDeterminant):
+    CONFIG = {
+        "t_matrix" : [[-1, -1], [1, -1]]
+    }
+
 class DeterminantIsThree(NameDeterminant):
     CONFIG = {
         "t_matrix" : [[0, -1.5], [2, 1]]
@@ -429,6 +439,12 @@ class DeterminantIsZero(NameDeterminant):
         "t_matrix" : [[4, 2], [2, 1]],
     }
 
+class SecondDeterminantIsZeroExamlpe(NameDeterminant):
+    CONFIG = {
+        "t_matrix" : [[0, 0], [0, 0]],
+        "show_basis_vectors" : False
+    }
+
 class NextFewVideos(Scene):
     def construct(self):
         icon = SVGMobject("video_icon")
@@ -445,6 +461,16 @@ class NextFewVideos(Scene):
             FadeIn(icons, submobject_mode = "lagged_start"),
             run_time = 3
         )
+        self.dither()
+
+class UnderstandingBeforeApplication(TeacherStudentsScene):
+    def construct(self):
+        self.setup()
+        self.teacher_says("""
+            Just the visual 
+            understanding for now
+        """)
+        self.random_blink()
         self.dither()
 
 class WhatIveSaidSoFar(TeacherStudentsScene):
@@ -807,6 +833,10 @@ class RightHandRule(Scene):
         i_hat = Vector([-1.75, 0.5])
         j_hat = Vector([-1.4, -0.7])
         k_hat = Vector([0, 1.7])
+        vects = [i_hat, j_hat, k_hat]        
+        if self.flip:
+            VMobject(hand, *vects).flip()
+
         i_label, j_label, k_label = [
             TexMobject("\\hat{%s}"%s).scale(1.5)
             for s in "\\imath", "\\jmath", "k"
@@ -815,12 +845,9 @@ class RightHandRule(Scene):
         j_label.next_to(j_hat.get_end(), DOWN)
         k_label.next_to(k_hat.get_end(), UP)
 
-        vects = [i_hat, j_hat, k_hat]
         labels = [i_label, j_label, k_label]
         colors = [X_COLOR, Y_COLOR, Z_COLOR]
 
-        if self.flip:
-            VMobject(hand, *vects+labels).flip()
 
         # self.add(NumberPlane())
         self.play(
@@ -841,6 +868,16 @@ class LeftHandRule(RightHandRule):
         "flip" : True
     }
 
+class AskHowToCompute(TeacherStudentsScene):
+    def construct(self):
+        self.setup()
+        student = self.get_students()[1]
+        self.student_says("How do you \\\\ compute this?")
+        self.play(student.change_mode, "confused")
+        self.random_blink()
+        self.dither()
+        self.random_blink()
+
 class TwoDDeterminantFormula(Scene):
     def construct(self):
         eq = TextMobject("=")
@@ -853,7 +890,7 @@ class TwoDDeterminantFormula(Scene):
         VMobject(matrix, det_text).next_to(eq, LEFT)
         formula = TexMobject(list("ad-bc"))
         formula.next_to(eq, RIGHT)
-        formula.shift(0.2*UP)
+        formula.shift(0.1*UP)
 
         a, d, minus, b, c = formula.split()
         VMobject(a, c).highlight(X_COLOR)
@@ -878,7 +915,7 @@ class TwoDDeterminantFormula(Scene):
             for m in mb, mc, b, c
         ])
         self.dither()
-        for pair in (mc, c), (mb, b):
+        for pair in (mb, b), (mc, c):
             self.play(*[
                 Transform(m, m.original)
                 for m in pair
@@ -957,9 +994,9 @@ class FullFormulaExplanation(LinearTransformationScene):
         d = self.j_hat.get_end()[1]*UP
 
         shapes_colors_and_tex = [
-            (Polygon(ORIGIN, a, a+c), TEAL, "bd/2"),
-            (Polygon(ORIGIN, d+b, d), TEAL, "\\dfrac{bd}{2}"),
-            (Polygon(a+c, a+b+c, a+b+c+d), MAROON, "\\dfrac{ac}{2}"),
+            (Polygon(ORIGIN, a, a+c), MAROON, "ac/2"),
+            (Polygon(ORIGIN, d+b, d, d), TEAL, "\\dfrac{bd}{2}"),
+            (Polygon(a+c, a+b+c, a+b+c, a+b+c+d), TEAL, "\\dfrac{bd}{2}"),
             (Polygon(b+d, a+b+c+d, b+c+d), MAROON, "ac/2"),
             (Polygon(a, a+b, a+b+c, a+c), PINK, "bc"),
             (Polygon(d, d+b, d+b+c, d+c), PINK, "bc"),
@@ -991,8 +1028,8 @@ class FullFormulaExplanation(LinearTransformationScene):
             (a, a+b, DOWN, "b"),
             (a+b, a+b+c, RIGHT, "c"),
             (a+b+c, a+b+c+d, RIGHT, "d"),
-            (a+b+c+d, a+c+d, UP, "a"),
-            (a+c+d, d+c, UP, "b"),
+            (a+b+c+d, b+c+d, UP, "a"),
+            (b+c+d, d+c, UP, "b"),
             (d+c, d, LEFT, "c"),
             (d, ORIGIN, LEFT, "d"),
         ]
