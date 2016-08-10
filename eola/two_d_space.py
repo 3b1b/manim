@@ -260,6 +260,10 @@ class LinearTransformationScene(VectorScene):
         "t_matrix" : np.array([[3, 0], [1, 2]]),
     }
     def setup(self):
+        if hasattr(self, "has_setup"):
+            return
+        self.has_setup = True
+        ##^This is to not break all the old Scenes
         self.background_mobjects = []
         self.foreground_mobjects = []        
         self.transformable_mobjects = []

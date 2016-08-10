@@ -454,7 +454,13 @@ class Mobject(object):
         raise Exception("Not implemented")
 
 
-    ## Family matters        
+    ## Family matters
+
+    def __getitem__(self, index):
+        return self.split()[index]
+
+    def __iter__(self):
+        return iter(self.split())
 
     def split(self):
         result = [self] if len(self.points) > 0 else []

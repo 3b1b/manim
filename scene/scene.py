@@ -31,7 +31,11 @@ class Scene(object):
         self.mobjects = []
         self.num_plays = 0
 
+        self.setup()
         self.construct(*self.construct_args)
+
+    def setup(self):
+        pass #For any common super classes to set up.
 
     def construct(self):
         pass #To be implemented in subclasses

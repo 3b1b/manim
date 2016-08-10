@@ -43,9 +43,9 @@ class TexMobject(SVGMobject):
         digest_config(self, kwargs, locals())
         ##TODO, Eventually remove this
         if len(args) == 1 and isinstance(args[0], list):
-            args = args[0]
+            self.args = args[0]
         ##
-        assert(all([isinstance(a, str) for a in args]))
+        assert(all([isinstance(a, str) for a in self.args]))
         VMobject.__init__(self, **kwargs)
         self.move_into_position()
         if self.organize_left_to_right:
@@ -133,8 +133,8 @@ class Brace(TexMobject):
         mob.next_to(self, self.direction, **kwargs)
         return self
 
-    def get_text(self, text, **kwargs):
-        text_mob = TextMobject(text)
+    def get_text(self, *text, **kwargs):
+        text_mob = TextMobject(*text)
         self.put_at_tip(text_mob, **kwargs)
         return text_mob
 
