@@ -267,7 +267,7 @@ class Mobject(object):
         self.shift(target - point_to_align)
         return self
 
-    def replace(self, mobject, stretch = False):
+    def replace(self, mobject, dim_to_match = 0, stretch = False):
         if not mobject.get_num_points() and not mobject.submobjects:
             raise Warning("Attempting to replace mobject with no points")
             return self
@@ -275,7 +275,11 @@ class Mobject(object):
             self.stretch_to_fit_width(mobject.get_width())
             self.stretch_to_fit_height(mobject.get_height())
         else:
-            self.scale_to_fit_width(mobject.get_width())
+            self.stretch_to_fit(
+                mobject.length_over_dim(dim_to_match),
+                dim_to_match, 
+                stretch = False
+            )
         self.shift(mobject.get_center() - self.get_center())
         return self
 

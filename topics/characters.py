@@ -3,7 +3,7 @@ from helpers import *
 from mobject import Mobject
 from mobject.svg_mobject import SVGMobject
 from mobject.vectorized_mobject import VMobject
-from mobject.tex_mobject import TextMobject
+from mobject.tex_mobject import TextMobject, TexMobject
 
 from animation import Animation
 from animation.transform import Transform, ApplyMethod, FadeOut, FadeIn
@@ -343,8 +343,12 @@ class TeacherStudentsScene(Scene):
                          pi_creature_target_mode = None,
                          added_anims = [],
                          **bubble_kwargs):
-        if isinstance(content, str):
-            content = TextMobject(content)     
+        if all(map(lambda s : isinstance(s, str), content)):
+            content = TextMobject(*content)
+        elif len(content) == 1 and isinstance(content[0], TexMobject):
+            content = content[0]
+        else:
+            raise Exception("Invalid content type")
         content_intro_anims = self.get_bubble_intro_animation(
             content, bubble_type, pi_creature, **bubble_kwargs
         )
@@ -373,22 +377,22 @@ class TeacherStudentsScene(Scene):
         self.play(*anims)
         return pi_creature.bubble
 
-    def teacher_says(self, content = "", **kwargs):
+    def teacher_says(self, *content, **kwargs):
         return self.introduce_bubble(
             content, "speech", self.get_teacher(), **kwargs
         )
 
-    def student_says(self, content = "", student_index = 1, **kwargs):
-        student = self.get_students()[student_index]
+    def student_says(self, *content, **kwargs):
+        student = self.get_students()[kwargs.get("student_index", 1)]
         return self.introduce_bubble(content, "speech", student, **kwargs)
 
-    def teacher_thinks(self, content = "", **kwargs):
+    def teacher_thinks(self, *content, **kwargs):
         return self.introduce_bubble(
             content, "thought", self.get_teacher(), **kwargs
         )
 
-    def student_thinks(self, content = "", student_index = 1, **kwargs):
-        student = self.get_students()[student_index]
+    def student_thinks(self, *content, **kwargs):
+        student = self.get_students()[kwargs.get("student_index", 1)]
         return self.introduce_bubble(content, "thought", student, **kwargs)
 
     def random_blink(self, num_times = 1):
@@ -397,6 +401,11 @@ class TeacherStudentsScene(Scene):
             self.play(Blink(pi_creature))
             self.dither()
 
+    def change_student_modes(self, *modes):
+        self.play(*[
+            ApplyMethod(pi.change_mode, mode)
+            for pi, mode in zip(self.get_students(), modes)
+        ])
 
 
 

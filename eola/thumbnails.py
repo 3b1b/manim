@@ -74,6 +74,15 @@ class Chapter4p2(Chapter0):
         "t_matrix" : [[1, 2], [-1, 1]]
     }
 
+class Chapter5(LinearTransformationScene):
+    def construct(self):
+        self.plane.fade()
+        self.add_unit_square()        
+        self.plane.set_stroke(width = 6)
+        VMobject(self.i_hat, self.j_hat).set_stroke(width = 10)
+        self.square.set_fill(YELLOW, opacity = 0.7)
+        self.square.set_stroke(width = 0)
+        self.apply_transposed_matrix(self.t_matrix, run_time = 0)
 
 
 
