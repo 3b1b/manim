@@ -1156,6 +1156,136 @@ class OneInputMultipleOutputs(InvertNonInvertable):
         self.play(Write(multiple_outputs, run_time = 2))
         self.dither()
 
+class SolutionsCanStillExist(TeacherStudentsScene):
+    def construct(self):
+        words = TextMobject("""
+            Solutions can still 
+            exist when""",  "$\\det(A) = 0$"
+        )
+        words[1].highlight(TEAL)
+        self.teacher_says(words)
+        self.random_blink(2)
+
+class ShowVInAndOutOfColumnSpace(LinearSystemTransformationScene):
+    CONFIG = {
+        "t_matrix" : [[2, 1], [-2, -1]]
+    }
+    def construct(self):
+        v_out = Vector([1, -1])
+        v_in = Vector([-4, -2])
+        v_out.words = "No solution exists"
+        v_in.words = "Solutions exist"
+        v_in.words_color = YELLOW
+        v_out.words_color = RED
+
+
+        self.apply_transposed_matrix(self.t_matrix, path_arc = 0)
+        self.dither()
+        for v in v_in, v_out:
+            self.add_vector(v, animate = True)
+            words = TextMobject(v.words)
+            words.highlight(v.words_color)
+            words.next_to(v.get_end(), DOWN+RIGHT)
+            words.add_background_rectangle()
+            self.play(Write(words), run_time = 2)
+        self.dither()
+
+class NotAllSquishesAreCreatedEqual(TeacherStudentsScene):
+    def construct(self):
+        self.student_says("""
+            Some squishes feel
+            ...squishier
+        """)
+        self.random_blink(2)
+
+class PrepareForRank(Scene):
+    def construct(self):
+        new_term, rank = words = TextMobject(
+            "New terminology: ",
+            "rank"
+        )
+        rank.highlight(TEAL)
+        self.play(Write(words))
+        self.dither()
+
+class DefineRank(Scene):
+    def construct(self):
+        rank = TextMobject("``Rank''")
+        rank.highlight(TEAL)
+        arrow = DoubleArrow(LEFT, RIGHT)
+        dims = TextMobject(
+            "Number of\\\\", "dimensions \\\\", 
+            "in the output"
+        )
+        dims[1].highlight(rank.get_color())
+
+        rank.next_to(arrow, LEFT)
+        dims.next_to(arrow, RIGHT)
+
+        self.play(Write(rank))
+        self.play(
+            ShowCreation(arrow),
+            *map(Write, dims)
+        )
+        self.dither()
+
+class DefineColumnSpace(Scene):
+    def construct(self):
+        left_words = TextMobject(
+            "Set of all possible\\\\",
+            "outputs",
+            "$A\\vec{\\textbf{v}}$",
+        )
+        left_words[1].highlight(TEAL)
+        VMobject(*left_words[-1][1:]).highlight(YELLOW)
+        arrow = DoubleArrow(LEFT, RIGHT).to_edge(UP)
+        right_words = TextMobject("``Column space''", "of $A$")
+        right_words[0].highlight(left_words[1].get_color())
+
+        everyone = VMobject(left_words, arrow, right_words)
+        everyone.arrange_submobjects(RIGHT)
+        everyone.to_edge(UP)
+
+        self.play(Write(left_words))
+        self.dither()
+        self.play(
+            ShowCreation(arrow),
+            Write(right_words)
+        )
+        self.dither()
+
+class ColumnsRepresentBasisVectors(Scene):
+    def construct(self):
+        matrix = Matrix([[3, 1], [4, 1]])
+        matrix.shift(UP)
+        i_hat_words, j_hat_words = [
+            TextMobject("Where $\\hat{\\%smath}$ lands"%char)
+            for char in "i", "j"
+        ]
+        i_hat_words.highlight(X_COLOR)
+        i_hat_words.next_to(ORIGIN, LEFT).to_edge(UP)
+        j_hat_words.highlight(Y_COLOR)
+        j_hat_words.next_to(ORIGIN, RIGHT).to_edge(UP)
+
+        self.add(matrix)
+        self.dither()
+        for i, words in enumerate([i_hat_words, j_hat_words]):
+
+            arrow = Arrow(
+                words.get_bottom(),
+                matrix.get_mob_matrix()[0,i].get_top(),
+                color = words.get_color()
+            )
+            self.play(
+                Write(words, run_time = 1),
+                ShowCreation(arrow),
+                *[
+                    ApplyMethod(m.highlight, words.get_color())
+                    for m in matrix.get_mob_matrix()[:,i]
+                ]
+            )
+        self.dither()
+
 class ThreeDOntoPlane(Scene):
     pass
 
@@ -1175,13 +1305,17 @@ class TowDColumnsDontSpan(LinearTransformationScene):
         matrix.add_to_back(BackgroundRectangle(matrix))
         self.add_foreground_mobject(matrix)
         brace = Brace(matrix)
-        words = brace.get_text(
-            "Columns don't",
-            "span \\\\",
-            "full output space"
+        words = VMobject(
+            TextMobject("Span", "of columns"),
+            TexMobject("\\Updownarrow"),
+            TextMobject("``Column space''")
         )
-        words[1].highlight(PINK)
-        words.add_background_rectangle()
+        words.arrange_submobjects(DOWN, buff = 0.1)
+        words.next_to(brace, DOWN)
+        words[0][0].highlight(PINK)
+        words[2].highlight(TEAL)
+        words[0].add_background_rectangle()
+        words[2].add_background_rectangle()
         VMobject(matrix, brace, words).to_corner(UP+LEFT)
 
         self.apply_transposed_matrix(self.t_matrix, path_arc = 0)
@@ -1197,7 +1331,7 @@ class TowDColumnsDontSpan(LinearTransformationScene):
         bases = [self.i_hat, self.j_hat]
         for mob in bases:
             mob.original = mob.copy()
-        for x in range(12):
+        for x in range(8):
             for mob in bases:
                 mob.target = mob.original.copy()
                 mob.target.set_stroke(width = 6)
@@ -1213,19 +1347,10 @@ class TowDColumnsDontSpan(LinearTransformationScene):
                 VMobject(*[m.target for m in bases]),
                 run_time = 2
             ))
-            if x == 5:
-                self.play(ShowCreation(Vector([2, -1])))
-                form = TexMobject(
-                    "A", "\\vec{\\textbf{x}}", "=", "\\vec{\\textbf{v}}"
-                )
-                form[1].highlight(PINK)
-                form[3].highlight(YELLOW)
-                words = TextMobject("has no solution")
-                words.next_to(form, RIGHT)
-                form.add(words)
-                form.to_corner(UP+RIGHT)
-                form.add_background_rectangle()
-                self.play(Write(form, run_time = 2))
+
+class FullRankWords(Scene):
+    def construct(self):
+        self.play(Write(TextMobject("Full rank").scale(2)))
 
 class ThreeDColumnsDontSpan(Scene):
     def construct(self):
