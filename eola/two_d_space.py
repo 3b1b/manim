@@ -90,12 +90,14 @@ class VectorScene(Scene):
     def get_vector_label(self, vector, label, 
                          direction = "left", 
                          rotate = False,
-                         color = WHITE, 
+                         color = None, 
                          label_scale_factor = VECTOR_LABEL_SCALE_FACTOR):
         if not isinstance(label, TexMobject):
             if len(label) == 1:
                 label = "\\vec{\\textbf{%s}}"%label
             label = TexMobject(label)
+            if color is None:
+                color = vector.get_color()
             label.highlight(color)
         label.scale(label_scale_factor)
         label.add_background_rectangle()
@@ -257,7 +259,7 @@ class LinearTransformationScene(VectorScene):
         "i_hat_color" : X_COLOR,
         "j_hat_color" : Y_COLOR,
         "leave_ghost_vectors" : False,
-        "t_matrix" : np.array([[3, 0], [1, 2]]),
+        "t_matrix" : [[3, 0], [1, 2]],
     }
     def setup(self):
         if hasattr(self, "has_setup"):

@@ -294,6 +294,22 @@ class ThoughtBubble(Bubble):
         return self
 
 
+class RandolphScene(Scene):
+    CONFIG = {
+        "randy_mode" : "plain"
+    }
+    def setup(self):
+        self.randy = Randolph(mode = self.randy_mode)
+        self.randy.to_corner()
+        self.add(self.randy)
+
+    def dither(self, blink = True):
+        if blink:
+            self.play(Blink(self.randy))
+        else:
+            Scene.dither(self)
+        return self
+
 class TeacherStudentsScene(Scene):
     def setup(self):
         self.teacher = Mortimer()

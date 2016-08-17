@@ -13,7 +13,7 @@ class NumberLine(VMobject):
         "x_max" : SPACE_WIDTH,
         "space_unit_to_num" : 1,
         "tick_size" : 0.1,
-        "tick_frequency" : 0.5,
+        "tick_frequency" : 1,
         "leftmost_tick" : None, #Defaults to ceil(x_min)
         "numbers_with_elongated_ticks" : [0],
         "longer_tick_multiple" : 2,
@@ -63,7 +63,7 @@ class NumberLine(VMobject):
         return self.x_min + dist_from_left
 
     def default_numbers_to_display(self):
-        return self.get_tick_numbers()[::2]
+        return np.arange(self.leftmost_tick, self.x_max, 1)
 
     def get_vertical_number_offset(self, direction = DOWN):
         return 4*direction*self.tick_size
@@ -75,7 +75,7 @@ class NumberLine(VMobject):
         result = []
         for number in numbers:
             mob = TexMobject(str(int(number)))
-            mob.scale_to_fit_height(2*self.tick_size)
+            mob.scale_to_fit_height(3*self.tick_size)
             mob.shift(
                 self.number_to_point(number),
                 self.get_vertical_number_offset(**kwargs)
@@ -128,7 +128,6 @@ class NumberPlane(VMobject):
         "written_coordinate_nudge" : 0.1*(DOWN+RIGHT),
         "num_pair_at_center" : (0, 0),
         "propogate_style_to_family" : False,
-        "submobject_partial_creation_mode" : "smoothed_lagged_start",
     }
     
     def generate_points(self):
