@@ -36,3 +36,13 @@ Try running the following:
 python extract_scene.py -p example_scenes.py SquareToCircle
 
 -p gives a preview of an animation, -w will write it to a file, and -s will show/save the final image in the animation.
+
+## Docker Method
+Since its a bit tricky to get all the dependencies set up just right, there is
+a Dockerfile provided.
+
+1. [Install Docker](https://www.docker.com/products/overview)
+2. Build docker image. `docker build -t manim .`
+3. Run it! `docker run --rm -v "$PWD/files":/app/files manim example_scenes.py WarpSquare`
+
+You'll find the output images in `./files` as usual.
