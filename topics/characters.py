@@ -303,11 +303,11 @@ class RandolphScene(Scene):
         self.randy.to_corner()
         self.add(self.randy)
 
-    def dither(self, blink = True):
+    def dither(self, time = 1, blink = True):
         if blink:
             self.play(Blink(self.randy))
-        else:
-            Scene.dither(self)
+            time -= 1
+        Scene.dither(self, time)
         return self
 
 class TeacherStudentsScene(Scene):

@@ -79,6 +79,7 @@ class TexMobject(SVGMobject):
     def handle_multiple_args(self):
         new_submobjects = []
         curr_index = 0
+        self.expression_parts = list(self.args)
         for expr in self.args:
             model = TexMobject(expr, **self.CONFIG)
             new_index = curr_index + len(model.submobjects)
@@ -87,6 +88,14 @@ class TexMobject(SVGMobject):
             ))
             curr_index = new_index
         self.submobjects = new_submobjects
+        return self
+
+    def highlight_by_tex(self, tex, color):
+        if not hasattr(self, "expression_parts"):
+            raise Exception("Calling highlight_by_tex on a non-composite TexMobject")
+        for submob, part_tex in zip(self.split(), self.expression_parts):
+            if part_tex == tex:
+                submob.highlight(color)
         return self
 
     def organize_submobjects_left_to_right(self):
@@ -130,7 +139,7 @@ class Brace(TexMobject):
             mob.rotate(angle)
 
     def put_at_tip(self, mob, **kwargs):
-        mob.next_to(self, self.direction, **kwargs)
+        mob.next_to(self, self.direction, buff = SMALL_BUFF, **kwargs)
         return self
 
     def get_text(self, *text, **kwargs):
@@ -159,7 +168,7 @@ def generate_tex_file(expression, template_tex_file):
     result = os.path.join(
         TEX_DIR, 
         tex_hash(expression, template_tex_file)
-    )+".tex"
+    ) + ".tex"
     if not os.path.exists(result):
         print "Writing \"%s\" to %s"%(
             "".join(expression), result

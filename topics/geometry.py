@@ -133,6 +133,34 @@ class Line(VMobject):
         self.shift(new_start - self.get_start())
         return self
 
+class DashedLine(Line):
+    CONFIG = {
+        "dashed_segment_length" : 0.25
+    }
+    def __init__(self, *args, **kwargs):
+        self.init_kwargs = kwargs
+        Line.__init__(self, *args, **kwargs)
+
+    def generate_points(self):
+        length = np.linalg.norm(self.end-self.start)
+        num_interp_points = int(length/self.dashed_segment_length)
+        points = [
+            interpolate(self.start, self.end, alpha)
+            for alpha in np.linspace(0, 1, num_interp_points)
+        ]
+        includes = it.cycle([True, False])
+        for p1, p2, include in zip(points, points[1:], includes):
+            if include:
+                self.add(Line(p1, p2, **self.init_kwargs))
+        return self
+
+    def get_start(self):
+        return self[0].points[0]
+
+    def get_end(self):
+        return self[-1].points[-1]
+
+
 
 class Arrow(Line):
     CONFIG = {
