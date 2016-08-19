@@ -347,7 +347,9 @@ class VMobject(Mobject):
         self.set_points(points)
         return self
 
-
+class Group(VMobject):
+    #Alternate name to improve readability during use
+    pass 
 
 class VectorizedPoint(VMobject):
     CONFIG = {

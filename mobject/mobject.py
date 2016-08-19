@@ -304,8 +304,9 @@ class Mobject(object):
         """
         raise Exception("Not implemented")
 
-    def gradient_highlight(self, start_color, end_color):
-        raise Exception("Not implemented") 
+    def gradient_highlight(self, *colors):
+        self.submobject_gradient_highlight(*colors)
+        return self
 
     def submobject_gradient_highlight(self, *colors):
         if len(colors) == 0:

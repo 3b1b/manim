@@ -83,6 +83,10 @@ class NumberLine(VMobject):
             result.append(mob)
         return result
 
+    def get_numbers(self, *numbers, **kwargs):
+        ##TODO, this shouldn't exist alongside the above method.
+        return VMobject(*self.get_number_mobjects(*numbers, **kwargs))
+
     def add_numbers(self, *numbers, **kwargs):
         self.numbers = self.get_number_mobjects(
             *numbers, **kwargs
