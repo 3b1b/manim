@@ -192,7 +192,7 @@ class StockPrices(Scene):
         stock_lines = []
         for color in TEAL, PINK, YELLOW, RED, BLUE:
             sl = StockLine(color = color)
-            sl.move_to(y_axis.get_center(), side_to_align = LEFT)
+            sl.move_to(y_axis.get_center(), aligned_edge = LEFT)
             everyone.add(sl)
             stock_lines.append(sl)
         everyone.center()
@@ -814,7 +814,7 @@ class DescribeInverse(LinearTransformationScene):
             neg_1 = TexMobject("-1")
             neg_1.move_to(
                 inv_matrix.get_corner(UP+RIGHT), 
-                side_to_align = LEFT
+                aligned_edge = LEFT
             )
             neg_1.shift(0.1*RIGHT)
             inv_matrix.add(neg_1)
@@ -1480,7 +1480,7 @@ class NameColumnSpace(Scene):
             two_d_span[index].scale(0)
         two_d_span.arrange_submobjects(RIGHT, buff = 0.2)
         two_d_span[-1].next_to(two_d_span[4], RIGHT, buff = 0.2)
-        two_d_span.move_to(span_text, side_to_align = RIGHT)
+        two_d_span.move_to(span_text, aligned_edge = RIGHT)
         mob_matrix = np.array([
             two_d_span[i].get_entries().split()
             for i in 2, 4
@@ -1676,7 +1676,7 @@ class NameNullSpace(LinearTransformationScene):
         line.highlight(YELLOW)
         null_space_label = TextMobject("``Null space''")
         kernel_label = TextMobject("``Kernel''")
-        null_space_label.move_to(vectors[13].get_end(), side_to_align = UP+LEFT)
+        null_space_label.move_to(vectors[13].get_end(), aligned_edge = UP+LEFT)
         kernel_label.next_to(null_space_label, DOWN)
         for mob in null_space_label, kernel_label:
             mob.highlight(YELLOW)
@@ -1743,7 +1743,7 @@ class NullSpaceSolveForVEqualsZero(NameNullSpace):
         zero_vector = Matrix([0, 0])
         zero_vector.highlight(YELLOW)
         zero_vector.scale(0.7)
-        zero_vector.move_to(v, side_to_align = LEFT)
+        zero_vector.move_to(v, aligned_edge = LEFT)
         VMobject(equation, zero_vector).next_to(ORIGIN, LEFT).to_edge(UP)
         zero_vector_rect = BackgroundRectangle(zero_vector)        
         equation.add_background_rectangle()

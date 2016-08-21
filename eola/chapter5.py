@@ -901,7 +901,7 @@ class TwoDDeterminantFormula(Scene):
                 mob.zero = TexMobject("\\cdot 0")
             else:
                 mob.zero = TexMobject("0")
-            mob.zero.move_to(mob, side_to_align = DOWN+LEFT)
+            mob.zero.move_to(mob, aligned_edge = DOWN+LEFT)
             mob.zero.highlight(mob.get_color())
             mob.original = mob.copy()
         c.zero.shift(0.1*RIGHT)

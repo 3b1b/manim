@@ -216,18 +216,27 @@ class Mobject(object):
     def to_edge(self, edge = LEFT, buff = DEFAULT_MOBJECT_TO_EDGE_BUFFER):
         return self.align_on_border(edge, buff)
 
-    def next_to(self, mobject_or_point,
+    def next_to(self, mobject_or_point, 
                 direction = RIGHT, 
                 buff = DEFAULT_MOBJECT_TO_MOBJECT_BUFFER,
-                aligned_edge = ORIGIN):
+                aligned_edge = ORIGIN,
+                align_using_submobjects = False,
+                ):
         if isinstance(mobject_or_point, Mobject):
             mob = mobject_or_point
-            target_point = mob.get_critical_point(aligned_edge+direction)
+            target_point = mob.get_critical_point(
+                aligned_edge+direction,
+                use_submobject = align_using_submobjects
+            )
         else:
             target_point = mobject_or_point
-        point_to_align = self.get_critical_point(aligned_edge-direction)
+        point_to_align = self.get_critical_point(
+            aligned_edge-direction,
+            use_submobject = align_using_submobjects
+        )
         self.shift(target_point - point_to_align + buff*direction)
         return self
+
 
     def shift_onto_screen(self, **kwargs):
         space_lengths = [SPACE_WIDTH, SPACE_HEIGHT]
@@ -258,12 +267,12 @@ class Mobject(object):
     def scale_to_fit_height(self, height):
         return self.stretch_to_fit(height, 1, stretch = False)
 
-    def move_to(self, point_or_mobject, side_to_align = ORIGIN):
+    def move_to(self, point_or_mobject, aligned_edge = ORIGIN):
         if isinstance(point_or_mobject, Mobject):
-            target = point_or_mobject.get_critical_point(side_to_align)
+            target = point_or_mobject.get_critical_point(aligned_edge)
         else:
             target = point_or_mobject
-        point_to_align = self.get_critical_point(side_to_align)
+        point_to_align = self.get_critical_point(aligned_edge)
         self.shift(target - point_to_align)
         return self
 
@@ -398,7 +407,9 @@ class Mobject(object):
     def get_num_points(self):
         return len(self.points)
 
-    def get_critical_point(self, direction):
+    def get_critical_point(self, direction, use_submobject = False):
+        if use_submobject:
+            return self.get_submobject_critical_point(direction)
         result = np.zeros(self.dim)
         for dim in [0, 1]:
             if direction[dim] <= 0:
@@ -413,6 +424,17 @@ class Mobject(object):
             else:
                 result[dim] = max_point
         return result
+
+    def get_submobject_critical_point(self, direction):
+        if len(self.split()) == 1:
+            return self.get_critical_point(direction)
+        index = np.argmax([
+            np.dot(submob.get_center(), direction)
+            for submob in self
+        ])
+        return self[index].get_critical_point(
+            direction, use_submobject = True
+        )
 
     # Pseudonyms for more general get_critical_point method
     def get_edge_center(self, direction):

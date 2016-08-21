@@ -302,7 +302,7 @@ class MatrixInTheWild(Scene):
             self.play(Blink(randy))
             self.dither(2)
         new_matrix = Matrix([[3, 1, 4], [1, 5, 9]])
-        new_matrix.move_to(matrix, side_to_align = UP+LEFT)
+        new_matrix.move_to(matrix, aligned_edge = UP+LEFT)
         self.play(
             Transform(matrix, new_matrix),
             FadeOut(bubble)

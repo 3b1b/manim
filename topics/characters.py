@@ -94,7 +94,7 @@ class PiCreature(SVGMobject):
     def look(self, direction):
         x, y = direction[:2]        
         for pupil, eye in zip(self.pupils.split(), self.eyes.split()):
-            pupil.move_to(eye, side_to_align = direction)
+            pupil.move_to(eye, aligned_edge = direction)
             #Some hacky nudging is required here
             if y > 0 and x != 0: # Look up and to a side
                 nudge_size = pupil.get_height()/4.

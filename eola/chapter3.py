@@ -1598,7 +1598,7 @@ class AdditivityProperty(LinearTransformationScene):
         if self.proclaim_sum:
             text = TextMobject("It's still their sum!")
             text.add_background_rectangle()
-            text.move_to(new_w.get_end(), side_to_align = -new_w.get_end())
+            text.move_to(new_w.get_end(), aligned_edge = -new_w.get_end())
             text.shift_onto_screen()
             self.play(Write(text))
             self.dither()

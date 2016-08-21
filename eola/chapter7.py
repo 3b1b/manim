@@ -27,18 +27,19 @@ V_COLOR = YELLOW
 W_COLOR = MAROON_B
 SUM_COLOR = PINK
 
-def get_projection(stable_vector, vector_to_project):
-    dot_product = np.dot(*[
-        v.get_end()
-        for v in stable_vector, vector_to_project
-    ])
-    stable_square_norm = stable_vector.get_length()**2
-    result = Vector(
-        stable_vector.get_end()*dot_product/stable_square_norm,
+
+def get_projection(vector_to_project, stable_vector):
+    v1, v2 = stable_vector, vector_to_project
+    return v1*np.dot(v1, v2)/(np.linalg.norm(v1)**2)
+
+def get_vect_mob_projection(vector_to_project, stable_vector):
+    return Vector(
+        get_projection(
+            vector_to_project.get_end(),            
+            stable_vector.get_end()
+        ),
         color = vector_to_project.get_color()
-    )
-    result.fade()
-    return result
+    ).fade()
 
 class OpeningQuote(Scene):
     def construct(self):
@@ -515,7 +516,7 @@ class SymmetricVAndW(VectorScene):
             vect.label.highlight(vect.get_color())
             vect.label.next_to(vect.get_end(), DOWN+RIGHT)
         for v1, v2 in (v, w), (w, v):
-            v1.proj = get_projection(v2, v1)
+            v1.proj = get_vect_mob_projection(v1, v2)
             v1.proj_line = Line(
                 v1.get_end(), v1.proj.get_end(), color = GREY
             )
@@ -1061,32 +1062,23 @@ class FollowVectorViaCoordinatesConcrete(FollowVectorViaCoordinates):
     }
 
 class TwoDOneDMatrixMultiplication(Scene):
+    CONFIG = {
+        "matrix" : [[1, -2]],
+        "vector" : [4, 3],
+        "order_left_to_right" : False,
+    }
     def construct(self):
-        matrix = Matrix([[1, -2]])
+        matrix = Matrix(self.matrix)
         matrix.label = "Transform"
-        vector = Matrix([4, 3])
+        vector = Matrix(self.vector)
         vector.label = "Vector"
         matrix.next_to(vector, LEFT, buff = 0.2)
+        self.color_matrix_and_vector(matrix, vector)
         for m, vect in zip([matrix, vector], [UP, DOWN]):
-            x, y = m.get_entries()
-            x.highlight(X_COLOR)
-            y.highlight(Y_COLOR)
             m.brace = Brace(m, vect)
             m.label = m.brace.get_text(m.label)
         matrix.label.highlight(BLUE)
-        vector.label.highlight(YELLOW)
-
-        starter_pairs = zip(vector.get_entries(), matrix.get_entries())
-        pairs = [
-            VMobject(
-                e1.copy(), TexMobject("\\cdot"), e2.copy()
-            ).arrange_submobjects()
-            for e1, e2 in starter_pairs
-        ]
-        symbols = map(TexMobject, ["=", "+"])
-        equation = VMobject(*it.chain(*zip(symbols, pairs)))
-        equation.arrange_submobjects()
-        equation.next_to(vector, RIGHT)
+        vector.label.highlight(MAROON_B)
 
         for m in vector, matrix:
             self.play(Write(m))
@@ -1096,6 +1088,23 @@ class TwoDOneDMatrixMultiplication(Scene):
                 run_time = 1
             )
             self.dither()
+        self.show_product(matrix, vector)
+
+    def show_product(self, matrix, vector):
+        starter_pairs = zip(vector.get_entries(), matrix.get_entries())
+        pairs = [
+            VMobject(
+                e1.copy(), TexMobject("\\cdot"), e2.copy()
+            ).arrange_submobjects(
+                LEFT if self.order_left_to_right else RIGHT,
+            )
+            for e1, e2 in starter_pairs
+        ]
+        symbols = map(TexMobject, ["=", "+"])
+        equation = VMobject(*it.chain(*zip(symbols, pairs)))
+        equation.arrange_submobjects(align_using_submobjects = True)
+        equation.next_to(vector, RIGHT)
+
         self.play(Write(VMobject(*symbols)))
         for starter_pair, pair in zip(starter_pairs, pairs):
             self.play(Transform(
@@ -1104,6 +1113,12 @@ class TwoDOneDMatrixMultiplication(Scene):
                 path_arc = -np.pi/2
             ))
         self.dither()
+
+    def color_matrix_and_vector(self, matrix, vector):
+        for m in matrix, vector:
+            x, y = m.get_entries()
+            x.highlight(X_COLOR)
+            y.highlight(Y_COLOR)
 
 class AssociationBetweenMatricesAndVectors(Scene):
     def construct(self):
@@ -1174,13 +1189,526 @@ class ImagineYouDontKnowThis(Scene):
         self.dither()
 
 class ProjectOntoUnitVectorNumberline(VectorScene):
-    def construct(self):
-        self.lock_in_faded_grid()
-        u_hat = Vector([1, 0], color = PINK)
-        u_hat.rotate(np.pil/6)
-        number_line = NumberLine()
+    CONFIG = {
+        "randomize_dots" : True,
+        "animate_setup" : True,
+        "zoom_factor" : 1,
+        "u_hat_color" : YELLOW,
+        "tilt_angle" : np.pi/6,
+    }
+    def setup(self):
+        plane = self.add_plane()
+        plane.fade()
+
+        u_hat = Vector([1, 0], color = self.u_hat_color)
+        u_brace = Brace(u_hat)
+        u_hat.rotate(self.tilt_angle)
+        u_hat.label = TexMobject("\\hat{\\textbf{u}}")
+        u_hat.label.highlight(u_hat.get_color())
+        u_hat.label.next_to(u_hat.get_end(), UP+LEFT)
+        u_brace.rotate(u_hat.get_angle())
+        one = TexMobject("1").add_background_rectangle()
+        one.next_to(u_brace.get_center(), DOWN+RIGHT, buff = MED_BUFF/2)
+
+        number_line = NumberLine(x_min = -9, x_max = 9)
         numbers = number_line.get_numbers()
-        VMobject(number_line, numbers).rotate(u_hat.get_angle())
+        Group(number_line, numbers).rotate(u_hat.get_angle())
+        if self.animate_setup:
+            self.play(ShowCreation(u_hat))
+            self.play(Write(u_hat.label))
+            self.play(
+                GrowFromCenter(u_brace),
+                Write(one)
+            )
+            self.dither()
+            self.play(
+                ShowCreation(number_line),
+                Write(numbers),
+                Animation(u_hat), 
+                *map(FadeOut, [u_brace, one]),
+                run_time = 3 
+            )
+        else:
+            self.add(number_line, numbers, u_hat)
+
+        if self.zoom_factor != 1:
+            for mob in plane, u_hat:
+                mob.target = mob.copy().scale(self.zoom_factor)
+            number_line.target = number_line.copy()
+            number_line.target.rotate(-u_hat.get_angle())
+            number_line.target.stretch(self.zoom_factor, 0)
+            numbers.target = number_line.target.get_numbers()
+            number_line.target.rotate(u_hat.get_angle())
+            numbers.target.rotate(u_hat.get_angle())
+            self.play(*[
+                Transform(mob, mob.target)
+                for mob in self.get_mobjects()
+            ])
+            self.dither()
+        self.number_line, self.numbers, self.u_hat = number_line, numbers, u_hat
+
+
+    def construct(self):
+        vectors = self.get_vectors(randomize = self.randomize_dots)
+        dots = self.get_dots(vectors)
+        proj_dots = self.get_proj_dots(dots)
+        proj_lines = self.get_proj_lines(dots, proj_dots)
+
+        self.dither()
+        self.play(FadeIn(vectors, submobject_mode = "lagged_start"))
+        self.dither()
+        self.play(Transform(vectors, dots))
+        self.dither()
+        self.play(ShowCreation(proj_lines))
+        self.dither()
+        self.play(
+            self.number_line.set_stroke, None, 2, 
+            Transform(vectors, proj_dots),
+            Transform(proj_lines, proj_dots),
+            Animation(self.u_hat),
+            submobject_mode = "lagged_start",
+            run_time = 2
+        )
+        self.dither()
+
+
+    def get_vectors(self, num_vectors = 10, randomize = True):
+        x_max = SPACE_WIDTH - 1
+        y_max = SPACE_HEIGHT - 1
+        x_vals = np.linspace(-x_max, x_max, num_vectors)
+        y_vals = np.linspace(y_max, -y_max, num_vectors)
+        if randomize:
+            random.shuffle(y_vals)
+        vectors = Group(*[
+            Vector(x*RIGHT + y*UP)
+            for x, y in zip(x_vals, y_vals)
+        ])
+        vectors.gradient_highlight(PINK, MAROON_B)
+        return vectors
+
+    def get_dots(self, vectors):
+        return Group(*[
+            Dot(v.get_end(), color = v.get_color(), radius = 0.075)
+            for v in vectors
+        ]) 
+
+    def get_proj_dots(self, dots):
+        return Group(*[
+            dot.copy().move_to(get_projection(
+                dot.get_center(), self.u_hat.get_end()
+            ))
+            for dot in dots
+        ])
+
+    def get_proj_lines(self, dots, proj_dots):
+        return Group(*[
+            DashedLine(
+                d1.get_center(), d2.get_center(), 
+                buff = 0, color = d1.get_color(),
+                dashed_segment_length = 0.15
+            )
+            for d1, d2 in zip(dots, proj_dots)
+        ])
+
+class ProjectionFunctionSymbol(Scene):
+    def construct(self):
+        v_tex = "\\vec{\\textbf{v}}"
+        equation = TexMobject(
+            "P(", v_tex, ")=", 
+            "\\text{number }", v_tex, "\\text{ lands on}"
+        )
+        equation.highlight_by_tex(v_tex, YELLOW)
+        equation.shift(2*UP)
+        words = TextMobject(
+            "This projection function is", "linear"
+        )
+        words.highlight_by_tex("linear", BLUE)
+        arrow = Arrow(
+            words.get_top(), equation[0].get_bottom(), 
+            color = BLUE
+        )
+
+        self.add(Group(*equation[:3]))
+        self.play(Write(Group(*equation[3:])))
+        self.dither()
+        self.play(Write(words), ShowCreation(arrow))
+        self.dither()
+
+class ProjectLineOfDots(ProjectOntoUnitVectorNumberline):
+    CONFIG = {
+        "randomize_dots" : False,
+        "animate_setup" : False,
+    }
+
+class AskAboutProjectionMatrix(Scene):
+    def construct(self):
+        matrix = Matrix([["?", "?"]])
+        matrix.highlight_columns(X_COLOR, Y_COLOR)
+        words = TextMobject("Projection matrix:")
+        VMobject(words, matrix).arrange_submobjects(buff = MED_BUFF).shift(UP)
+        basis_words = [
+            TextMobject("Where", "$\\hat{\\%smath}$"%char, "lands")
+            for char in "i", "j"
+        ]
+        for b_words, q_mark, direction in zip(basis_words, matrix.get_entries(), [UP, DOWN]):
+            b_words.next_to(q_mark, direction, buff = 1.5)
+            b_words.arrow = Arrow(b_words, q_mark, color = q_mark.get_color())
+            b_words.highlight(q_mark.get_color())
+
+        self.play(
+            Write(words), 
+            Write(matrix)
+        )
+        self.dither()
+        for b_words in basis_words:
+            self.play(
+                Write(b_words),
+                ShowCreation(b_words.arrow)
+            )
+        self.dither()
+
+class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
+    CONFIG = {
+        "animate_setup" : False,
+        "zoom_factor" : 3,
+        "u_hat_color" : YELLOW,
+        "tilt_angle" : np.pi/5,
+    }
+    def construct(self):
+        basis_vectors = self.get_basis_vectors()
+        i_hat, j_hat = basis_vectors
+        for vect in basis_vectors:
+            vect.scale(self.zoom_factor)
+        dots = self.get_dots(basis_vectors)
+        proj_dots = self.get_proj_dots(dots)
+        proj_lines = self.get_proj_lines(dots, proj_dots)
+        for dot in proj_dots:
+            dot.scale_in_place(0.1)
+        proj_basis = Group(*[
+            get_vect_mob_projection(vector, self.u_hat)
+            for vector in basis_vectors
+        ])
+
+        i_tex, j_tex = ["$\\hat{\\%smath}$"%char for char in "i", "j"]
+        question = TextMobject(
+            "Where do", i_tex, "and", j_tex, "land?"
+        )
+        question.highlight_by_tex(i_tex, X_COLOR)
+        question.highlight_by_tex(j_tex, Y_COLOR)
+        question.add_background_rectangle()
+        matrix = Matrix([["u_x", "u_y"]])
+        Group(question, matrix).arrange_submobjects(DOWN).to_corner(
+            UP+LEFT, buff = MED_BUFF/2
+        )
+        matrix_rect = BackgroundRectangle(matrix)
+
+
+        i_label = TexMobject(i_tex[1:-1])
+        j_label = TexMobject(j_tex[1:-1])
+        u_label = TexMobject("\\vec{\\textbf{u}}")
+        trips = zip(
+            (i_label, j_label, u_label), 
+            (i_hat, j_hat, self.u_hat),
+            (DOWN+RIGHT, UP+LEFT, UP),
+        )
+        for label, vect, direction in trips:
+            label.highlight(vect.get_color())
+            label.scale(1.2)
+            label.next_to(vect.get_end(), direction, buff = MED_BUFF/2)
+
+        self.play(Write(u_label, run_time = 1))
+        self.play(*map(ShowCreation, basis_vectors))
+        self.play(*map(Write, [i_label, j_label]), run_time = 1)
+        self.play(ShowCreation(proj_lines))
+        self.play(
+            Write(question), 
+            ShowCreation(matrix_rect),            
+            Write(matrix.get_brackets()),
+            run_time = 2,
+        )
+        to_remove = [proj_lines]
+        quads = zip(basis_vectors, proj_basis, proj_lines, proj_dots)
+        for vect, proj_vect, proj_line, proj_dot in quads:
+            self.play(Transform(vect.copy(), proj_vect))
+            to_remove += self.get_mobjects_from_last_animation()
+        self.dither()
+        self.play(*map(FadeOut, to_remove))
+
+        # self.show_u_coords(u_label)
+        u_x, u_y = [
+            TexMobject("u_%s"%c).highlight(self.u_hat.get_color())
+            for c in "x", "y"
+        ]
+        matrix_x, matrix_y = matrix.get_entries()
+        self.remove(j_hat, j_label)
+        self.show_symmetry(i_hat, u_x, matrix_x)
+        self.add(j_hat, j_label)
+        self.remove(i_hat, i_label)
+        self.show_symmetry(j_hat, u_y, matrix_y)
+
+    # def show_u_coords(self, u_label):
+    #     coords = Matrix(["u_x", "u_y"])
+    #     x, y = coords.get_entries()
+    #     x.highlight(X_COLOR)
+    #     y.highlight(Y_COLOR)
+    #     coords.add_to_back(BackgroundRectangle(coords))
+    #     eq = TexMobject("=")
+    #     eq.next_to(u_label, RIGHT)
+    #     coords.next_to(eq, RIGHT)
+    #     self.play(*map(FadeIn, [eq, coords]))
+    #     self.dither()
+    #     self.u_coords = coords
+
+    def show_symmetry(self, vect, coord, coord_landing_spot):
+        starting_mobjects = list(self.get_mobjects())
+        line = DashedLine(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        words = TextMobject("Line of symmetry")
+        words.next_to(ORIGIN, UP+LEFT)
+        words.shift(LEFT)
+        words.add_background_rectangle()
+        angle = np.mean([vect.get_angle(), self.u_hat.get_angle()])
+        Group(line, words).rotate(angle)
+
+        self.play(ShowCreation(line))
+        if vect.get_end()[0] > 0.1:#is ihat
+            self.play(Write(words, run_time = 1))
+
+        vect.proj = get_vect_mob_projection(vect, self.u_hat)
+        self.u_hat.proj = get_vect_mob_projection(self.u_hat, vect)
+        for v in vect, self.u_hat:
+            v.proj_line = DashedLine(
+                v.get_end(), v.proj.get_end(), 
+                color = v.get_color()
+            )
+            v.proj_line.fade()
+            v.tick = Line(0.1*DOWN, 0.1*UP, color = WHITE)
+            v.tick.rotate(v.proj.get_angle())
+            v.tick.shift(v.proj.get_end())
+            v.q_mark = TextMobject("?")
+            v.q_mark.next_to(v.tick, v.proj.get_end()-v.get_end())
+
+            self.play(ShowCreation(v.proj_line))
+            self.play(Transform(v.copy(), v.proj))
+            self.remove(*self.get_mobjects_from_last_animation())
+            self.add(v.proj)
+            self.dither()
+        for v in vect, self.u_hat:
+            self.play(
+                ShowCreation(v.tick),
+                Write(v.q_mark)
+            )
+            self.dither()
+        for v in self.u_hat, vect:
+            coord_copy = coord.copy().move_to(v.q_mark)
+            self.play(Transform(v.q_mark, coord_copy))
+            self.dither()
+        final_coord = coord_copy.copy()
+        self.play(final_coord.move_to, coord_landing_spot)
+
+        added_mobjects = [
+            mob
+            for mob in self.get_mobjects()
+            if mob not in starting_mobjects + [final_coord]
+        ]
+        self.play(*map(FadeOut, added_mobjects))
+
+class ShowSingleProjection(ProjectBasisVectors):
+    CONFIG = {
+        "zoom_factor" : 1
+    }
+    def construct(self):
+        vector = Vector([5, - 1], color = MAROON_B)
+        proj = get_vect_mob_projection(vector, self.u_hat)
+        proj_line = DashedLine(
+            vector.get_end(), proj.get_end(), 
+            color = vector.get_color()
+        )
+        coords = Matrix(["x", "y"])
+        coords.get_entries().highlight(vector.get_color())
+        coords.add_to_back(BackgroundRectangle(coords))
+        coords.next_to(vector.get_end(), RIGHT)
+
+        u_label = TexMobject("\\hat{\\textbf{u}}")
+        u_label.next_to(self.u_hat.get_end(), UP)
+        u_label.add_background_rectangle()
+        self.add(u_label)
+
+        self.play(ShowCreation(vector))
+        self.play(Write(coords))
+        self.dither()
+        self.play(ShowCreation(proj_line))
+        self.play(
+            Transform(vector.copy(), proj),
+            Animation(self.u_hat)
+        )
+        self.dither()
+
+class GeneralTwoDOneDMatrixMultiplication(TwoDOneDMatrixMultiplication):
+    CONFIG = {
+        "matrix" : [["u_x", "u_y"]],
+        "vector" : ["x", "y"],
+        "order_left_to_right" : True,
+    }
+    def construct(self):
+        TwoDOneDMatrixMultiplication.construct(self)
+        everything = Group(*self.get_mobjects())
+        to_fade = filter(
+            lambda m : isinstance(m, Brace) or isinstance(m, TextMobject),
+            everything
+        )
+
+        u = Matrix(self.matrix[0])
+        v = Matrix(self.vector)
+        self.color_matrix_and_vector(u, v)
+        dot_product = Group(u, TexMobject("\\cdot"), v)
+        dot_product.arrange_submobjects()
+        dot_product.shift(2*RIGHT+DOWN)
+        words = Group(
+            TextMobject("Matrix-vector product"),
+            TexMobject("\\Updownarrow"),
+            TextMobject("Dot product")
+        )
+        words[0].highlight(BLUE)
+        words[2].highlight(GREEN)
+        words.arrange_submobjects(DOWN)
+        words.to_edge(LEFT)
+
+
+
+        self.play(
+            everything.to_corner, UP+RIGHT,
+            *map(FadeOut, to_fade)
+        )
+        self.remove(everything)
+        self.add(*everything)
+        self.remove(*to_fade)
+
+        self.play(Write(words, run_time = 2))        
+        self.play(ShowCreation(dot_product))
+        self.show_product(u, v)
+
+
+
+    def color_matrix_and_vector(self, matrix, vector):
+        colors = [X_COLOR, Y_COLOR]
+        for coord, color in zip(matrix.get_entries(), colors):
+            coord[0].highlight(YELLOW)
+            coord[1].highlight(color)
+        vector.get_entries().highlight(MAROON_B)
+
+class UHatIsTransformInDisguise(Scene):
+    def construct(self):
+        u_tex = "$\\hat{\\textbf{u}}$"
+        words = TextMobject(
+            u_tex,
+            "is secretly a \\\\",
+            "transform",
+            "in disguise",
+        )
+        words.highlight_by_tex(u_tex, YELLOW)
+        words.highlight_by_tex("transform", BLUE)
+        words.scale(2)
+
+        self.play(Write(words))
+        self.dither()
+
+class ScaleUpUHat(ProjectOntoUnitVectorNumberline) :
+    CONFIG = {
+        "animate_setup" : False,
+        "u_hat_color" : YELLOW,
+        "tilt_angle" : np.pi/6,
+        "scalar" : 3,
+    }
+    def construct(self):
+        self.scale_u_hat()
+        self.show_matrix()
+        self.transform_basis_vectors()
+        self.transform_some_vector()
+
+    def scale_u_hat(self):
+        self.u_hat.coords = Matrix(["u_x", "u_y"])
+        new_u = self.u_hat.copy().scale(self.scalar)
+        new_u.coords = Matrix([
+            "%du_x"%self.scalar,
+            "%du_y"%self.scalar,
+        ])
+        for v in self.u_hat, new_u:
+            v.coords.get_entries().highlight(YELLOW)
+            v.coords.add_to_back(BackgroundRectangle(v.coords))
+            v.coords.next_to(v.get_end(), UP+LEFT)
+
+        self.play(Write(self.u_hat.coords))
+        self.play(Transform(self.u_hat, new_u))
+        self.play(Transform(self.u_hat.coords, new_u.coords))
+        self.dither()
+
+    def show_matrix(self):
+        matrix = Matrix([list(self.u_hat.coords.get_entries().copy())])
+        matrix.highlight_columns(X_COLOR, Y_COLOR)
+        matrix.add_to_back(BackgroundRectangle(matrix))
+        brace = Brace(matrix)
+        words = TextMobject(
+            "\\centering Associated\\\\", 
+            "transformation"
+        )
+        words.highlight_by_tex("transformation", BLUE)
+        words.add_background_rectangle()
+        brace.put_at_tip(words)
+        Group(matrix, brace, words).to_corner(UP+LEFT)
+
+        self.play(Transform(
+            self.u_hat.coords, matrix
+        ))
+        self.play(
+            GrowFromCenter(brace),
+            Write(words, run_time = 2)
+        )
+        self.dither()
+        self.matrix_words = words
+
+    def transform_basis_vectors(self):
+        start_state = list(self.get_mobjects())
+        bases = self.get_basis_vectors()
+        for b, char in zip(bases, ["x", "y"]):
+            b.proj = get_vect_mob_projection(b, self.u_hat)
+            b.proj_line = DashedLine(
+                b.get_end(), b.proj.get_end(),
+                dashed_segment_length = 0.75
+            )
+            b.proj.label = TexMobject("u_%s"%char)
+            b.proj.label.highlight(b.get_color())
+            b.scaled_proj = b.proj.copy().scale(self.scalar)
+            b.scaled_proj.label = Group(
+                TexMobject(str(self.scalar)).highlight(b.get_color()),
+                b.proj.label.copy()
+            ).arrange_submobjects(aligned_edge = DOWN)
+            for v in b.proj, b.scaled_proj:
+                v.label.next_to(v.get_end(), UP+LEFT)
+
+        self.play(*map(ShowCreation, bases))
+        for b in bases:
+            mover = b.copy()
+            self.play(ShowCreation(b.proj_line))
+            self.play(Transform(mover, b.proj))
+            self.play(Write(b.proj.label))
+            self.dither()
+            self.play(
+                Transform(mover, b.scaled_proj),
+                Transform(b.proj.label, b.scaled_proj.label)
+            )
+            self.dither()
+        self.play(*map(FadeOut, [
+            mob
+            for mob in self.get_mobjects()
+            if mob not in start_state
+        ]))
+
+    def transform_some_vector(self):
+        words = TextMobject(
+            "\\centering Project",
+            "then scale"
+        )
+        words.move_to(self.matrix_words, aligned_edge = UP)
 
 
 
@@ -1191,9 +1719,10 @@ class ProjectOntoUnitVectorNumberline(VectorScene):
 
 
 
-
-
-
+# get_proj_lines(self, dots, proj_dots)
+# get_proj_dots(self, dots)
+# get_dots(self, vectors)
+# get_vectors(self, num_vectors = 10, randomize = True)
 
 
 
