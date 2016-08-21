@@ -7,12 +7,33 @@ import random
 import inspect
 import string
 import re
+import os
 from scipy import linalg
 
 from constants import *
 
 CLOSED_THRESHOLD = 0.01
 STRAIGHT_PATH_THRESHOLD = 0.01
+
+def play_chord(*nums):
+    commands = [
+        "play",
+        "-n",
+        "-c1",
+        "synth",
+    ] + [
+        "sin %-"+str(num)
+        for num in nums
+    ] + [
+        "fade h 0.5 1 0.5"
+    ]
+    try:
+        os.system(" ".join(commands))
+    except:
+        pass
+
+def play_finish_sound():
+    play_chord(12, 9, 5, 2)
 
 def get_smooth_handle_points(points):
     num_handles = len(points) - 1

@@ -1121,26 +1121,33 @@ class TwoDOneDMatrixMultiplication(Scene):
             y.highlight(Y_COLOR)
 
 class AssociationBetweenMatricesAndVectors(Scene):
+    CONFIG = {
+        "matrices" : [
+            [[2, 7]],
+            [[1, -2]]
+        ]
+    }
     def construct(self):
         matrices_words = TextMobject("$1\\times 2$ matrices")
         matrices_words.highlight(BLUE)
         vectors_words = TextMobject("2d vectors")
         vectors_words.highlight(YELLOW)
         arrow = DoubleArrow(LEFT, RIGHT, color = WHITE)
-        VMobject(
+        Group(
             matrices_words, arrow, vectors_words
         ).arrange_submobjects(buff = MED_BUFF)
 
-        matrices = VMobject(Matrix([[2, 7]]), Matrix([[1, -2]]))
-        vectors = VMobject(Matrix([2, 7]), Matrix([1, -2]))
+        matrices = Group(*map(Matrix, self.matrices))
+        vectors = Group(*map(Matrix, [m[0] for m in self.matrices]))
         for m in list(matrices) + list(vectors):
             x, y = m.get_entries()
             x.highlight(X_COLOR)
             y.highlight(Y_COLOR)
-        matrices[0].next_to(matrices_words, UP, buff = MED_BUFF)
-        matrices[1].next_to(matrices_words, DOWN, buff = MED_BUFF)
-        vectors[0].next_to(vectors_words, UP, buff = MED_BUFF)
-        vectors[1].next_to(vectors_words, DOWN, buff = MED_BUFF)
+        matrices.words = matrices_words
+        vectors.words = vectors_words
+        for group in matrices, vectors:
+            for m, direction in zip(group, [UP, DOWN]):
+                m.next_to(group.words, direction, buff = MED_BUFF)
 
         self.play(*map(Write, [matrices_words, vectors_words]))
         self.play(ShowCreation(arrow))
@@ -1638,8 +1645,10 @@ class ScaleUpUHat(ProjectOntoUnitVectorNumberline) :
             v.coords.next_to(v.get_end(), UP+LEFT)
 
         self.play(Write(self.u_hat.coords))
-        self.play(Transform(self.u_hat, new_u))
-        self.play(Transform(self.u_hat.coords, new_u.coords))
+        self.play(
+            Transform(self.u_hat, new_u),
+            Transform(self.u_hat.coords, new_u.coords)
+        )
         self.dither()
 
     def show_matrix(self):
@@ -1673,17 +1682,16 @@ class ScaleUpUHat(ProjectOntoUnitVectorNumberline) :
             b.proj = get_vect_mob_projection(b, self.u_hat)
             b.proj_line = DashedLine(
                 b.get_end(), b.proj.get_end(),
-                dashed_segment_length = 0.75
+                dashed_segment_length = 0.05
             )
             b.proj.label = TexMobject("u_%s"%char)
             b.proj.label.highlight(b.get_color())
             b.scaled_proj = b.proj.copy().scale(self.scalar)
-            b.scaled_proj.label = Group(
-                TexMobject(str(self.scalar)).highlight(b.get_color()),
-                b.proj.label.copy()
-            ).arrange_submobjects(aligned_edge = DOWN)
-            for v in b.proj, b.scaled_proj:
-                v.label.next_to(v.get_end(), UP+LEFT)
+            b.scaled_proj.label = TexMobject("3u_%s"%char)
+            b.scaled_proj.label.highlight(b.get_color())
+            for v, direction in zip([b.proj, b.scaled_proj], [UP, UP+LEFT]):
+                v.label.add_background_rectangle()
+                v.label.next_to(v.get_end(), direction)
 
         self.play(*map(ShowCreation, bases))
         for b in bases:
@@ -1705,11 +1713,97 @@ class ScaleUpUHat(ProjectOntoUnitVectorNumberline) :
 
     def transform_some_vector(self):
         words = TextMobject(
-            "\\centering Project",
+            "\\centering Project\\\\",
             "then scale"
         )
+        project, then_scale = words.split()
+        words.add_background_rectangle()
         words.move_to(self.matrix_words, aligned_edge = UP)
 
+        v = Vector([3, -1], color = MAROON_B)
+        proj = get_vect_mob_projection(v, self.u_hat)
+        proj_line = DashedLine(
+            v.get_end(), proj.get_end(),
+            color = v.get_color()
+        )
+        mover = v.copy()
+
+        self.play(ShowCreation(v))
+        self.play(Transform(self.matrix_words, words))
+        self.play(ShowCreation(proj_line))
+        self.play(
+            Transform(mover, proj),
+            project.highlight, YELLOW
+        )
+        self.dither()
+        self.play(
+            mover.scale, self.scalar,
+            then_scale.highlight, YELLOW
+        )
+        self.dither()
+
+class NoticeWhatHappenedHere(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("""
+            Notice what 
+            happened here
+        """)
+        self.change_student_modes(*["pondering"]*3)
+        self.random_blink()
+
+class AbstractNumericAssociation(AssociationBetweenMatricesAndVectors):
+    CONFIG = {
+        "matrices" : [
+            [["u_x", "u_y"]]
+        ]
+    }
+
+class TwoDOneDTransformationSeparateSpace(Scene):
+    def construct(self):
+        x_rad = SPACE_WIDTH/2-0.5
+        plane = NumberPlane(x_radius = x_rad)
+        squish_plane = plane.copy().apply_function(
+            lambda p : sum(p)*RIGHT
+        )
+        plane.to_edge(LEFT)
+        squish_plane.scale_to_fit_width(2*x_rad)
+        squish_plane.to_edge(RIGHT)
+
+        number_line = NumberLine().stretch_to_fit_width(2*x_rad)
+        number_line.to_edge(RIGHT)
+        numbers = number_line.get_numbers(*range(-6, 8, 2))
+        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+
+        words = TextMobject("""
+            Any time you have a
+            2d-to-1d linear transform...
+        """)
+        words.add_background_rectangle()
+        words.to_edge(UP)
+
+        self.play(Write(words, run_time = 1))
+        self.play(*map(ShowCreation, [
+            plane, number_line, v_line
+        ])+[Animation(words)])
+        self.play(Write(numbers, run_time = 1))
+        self.play(
+            Transform(plane, squish_plane),
+            Animation(words),
+            path_arc = -np.pi/4,
+            run_time = 3
+        )
+        self.dither()
+
+class IsntThisBeautiful(TeacherStudentsScene):
+    def construct(self):
+        self.teacher.look(DOWN+LEFT)
+        self.teacher_says(
+            "Isn't this beautiful",
+            pi_creature_target_mode = "surprised"
+        )
+        for student in self.get_students():
+            self.play(student.change_mode, "happy")
+        self.random_blink()
 
 
 
@@ -1719,10 +1813,10 @@ class ScaleUpUHat(ProjectOntoUnitVectorNumberline) :
 
 
 
-# get_proj_lines(self, dots, proj_dots)
-# get_proj_dots(self, dots)
-# get_dots(self, vectors)
-# get_vectors(self, num_vectors = 10, randomize = True)
+
+
+
+
 
 
 
