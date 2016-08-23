@@ -48,6 +48,12 @@ class ShowCreation(ShowPartial):
     def get_bounds(self, alpha):
         return (0, alpha)
 
+class Uncreate(ShowCreation):
+    CONFIG = {
+        "rate_func" : lambda t : smooth(1-t),
+        "remover"   : True
+    }
+
 class Write(ShowCreation):
     CONFIG = {
         "rate_func" : None,

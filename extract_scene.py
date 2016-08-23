@@ -204,10 +204,13 @@ def main():
          scene_kwargs["construct_args"] = tuplify(args)
          try:
             handle_scene(SceneClass(**scene_kwargs), **config)
+            play_finish_sound()
          except:
             print "\n\n"
             traceback.print_exc()
             print "\n\n"
+            play_error_sound()
+
 
 
 if __name__ == "__main__":

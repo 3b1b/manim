@@ -85,7 +85,7 @@ class OpeningQuote(Scene):
             ", not ",
             "numbers.",
             "''",
-        ], separate_list_arg_with_spaces = False)
+        ], arg_separator = "")
         # words.scale_to_fit_width(2*SPACE_WIDTH - 2)
         words.to_edge(UP)
         words.split()[1].highlight(BLUE)

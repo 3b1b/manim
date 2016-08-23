@@ -21,6 +21,7 @@ class Animation(object):
         #Options are lagged_start, smoothed_lagged_start,
         #one_at_a_time, all_at_once
         "submobject_mode" : "lagged_start",
+        "lag_factor" : 2,
     }
     def __init__(self, mobject, **kwargs):
         mobject = instantiate(mobject)
@@ -77,7 +78,8 @@ class Animation(object):
             prop = float(index)/num_submobjects
             if self.submobject_mode is "smoothed_lagged_start":
                 prop = smooth(prop)
-            return np.clip(2*alpha - prop, 0, 1)
+            lf = self.lag_factor
+            return np.clip(lf*alpha - (lf-1)*prop, 0, 1)
         elif self.submobject_mode == "one_at_a_time":
             lower = float(index)/num_submobjects
             upper = float(index+1)/num_submobjects

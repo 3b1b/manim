@@ -51,7 +51,9 @@ class OpeningQuote(Scene):
             "\\\\Calvin:" ,
             "Yeah. All these equations are like miracles."
             "You take two numbers and when you add them, "
-            "they magically become one NEW number!"
+            "they magically become one NEW number! "
+            "No one can say how it happens. "
+            "You either believe it or you don't.",
         )
         words.scale_to_fit_width(2*SPACE_WIDTH - 1)
         words.to_edge(UP)
@@ -60,8 +62,14 @@ class OpeningQuote(Scene):
         words[4].highlight(YELLOW)
 
         for i in range(3):
-            self.play(Write(VMobject(*words[2*i:2*i+1])))
-        # self.play(FadeIn(words))
+            speaker, quote = words[2*i:2*i+2]
+            self.play(FadeIn(speaker, run_time = 0.5))
+            rt = max(1, len(quote.split())/18)
+            self.play(Write(
+                quote, 
+                run_time = rt,
+                lag_factor = 5 if rt > 3 else 2,
+            ))
         self.dither(2)
 
 class TraditionalOrdering(RandolphScene):
@@ -94,6 +102,7 @@ class TraditionalOrdering(RandolphScene):
 class ThisSeriesOrdering(RandolphScene):
     def construct(self):
         title = TextMobject("Essence of linear algebra")
+        self.randy.rotate(np.pi, UP)
         title.scale(1.2).highlight(BLUE)
         title.to_corner(UP+LEFT)
         line = Line(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT, color = WHITE)
@@ -124,7 +133,9 @@ class ThisSeriesOrdering(RandolphScene):
         chapters.to_edge(RIGHT)
 
         self.add(title)
-        self.play(ShowCreation(line))
+        self.play(
+            ShowCreation(line),
+        )
         self.play(
             FadeIn(
                 chapters, 
@@ -133,48 +144,53 @@ class ThisSeriesOrdering(RandolphScene):
             ),
             self.randy.change_mode, "sassy"
         )
+        self.play(self.randy.look, UP+LEFT)
         self.play(chapters[6].highlight, PINK)
-        self.dither(2)
-        self.dither(2)
+        self.dither(6)
 
 class OneMustViewThroughTransformations(TeacherStudentsScene):
     def construct(self):
-        self.teacher_says("""
-            Only with transformations
-            can we truly understand
-        """)
+        words = TextMobject(
+            "Only with" , "transformations",
+            "\n can we truly understand",
+        )
+        words.highlight_by_tex("transformations", BLUE)
+        self.teacher_says(words)
         self.change_student_modes(
             "pondering",
             "plain",
             "raise_right_hand"
         )
         self.random_blink(2)
-        self.teacher_says("""
-            First, the 
-            standard view...
-        """)
+        words = TextMobject(
+            "First, the ",
+            "standard view...",
+            arg_separator = "\n"
+        )
+        self.teacher_says(words)
         self.random_blink(2)
 
 class ShowNumericalDotProduct(Scene):
     CONFIG = {
         "v1" : [2, 7, 1],
         "v2" : [8, 2, 8],
+        "write_dot_product_words" : True,
     }
     def construct(self):
         v1 = Matrix(self.v1)
         v2 = Matrix(self.v2)
         inter_array_dot = TexMobject("\\cdot").scale(1.5)
-        dot_product = VMobject(v1, inter_array_dot, v2)
-        dot_product.arrange_submobjects(RIGHT)
+        dot_product = Group(v1, inter_array_dot, v2)
+        dot_product.arrange_submobjects(RIGHT, buff = MED_BUFF/2)
         dot_product.to_edge(LEFT)
         pairs = zip(v1.get_entries(), v2.get_entries())
 
         for pair, color in zip(pairs, [X_COLOR, Y_COLOR, Z_COLOR, PINK]):
-            VMobject(*pair).highlight(color)
+            Group(*pair).highlight(color)
 
         dot = TexMobject("\\cdot")
-        products = VMobject(*[
-            VMobject(
+        products = Group(*[
+            Group(
                 p1.copy(), dot.copy(), p2.copy()
             ).arrange_submobjects(RIGHT, buff = SMALL_BUFF)
             for p1, p2 in pairs
@@ -185,24 +201,38 @@ class ShowNumericalDotProduct(Scene):
 
         products.target = products.copy()
         plusses = ["+"]*(len(self.v1)-1)
-        symbols = VMobject(*map(TexMobject, ["="] + plusses))
-        final_sum = VMobject(*it.chain(*zip(
+        symbols = Group(*map(TexMobject, ["="] + plusses))
+        final_sum = Group(*it.chain(*zip(
             symbols, products.target
         )))
         final_sum.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
         final_sum.next_to(dot_product, RIGHT)
 
+        title = TextMobject("Two vectors of the same dimension")
+        title.to_edge(UP)
+
+        arrow = Arrow(DOWN, UP).next_to(inter_array_dot, DOWN)
+        dot_product_words = TextMobject("Dot product")
+        dot_product_words.highlight(YELLOW)
+        dot_product_words.next_to(arrow, DOWN)
+        dot_product_words.shift_onto_screen()
 
         self.play(
             Write(v1),
             Write(v2),
-            FadeIn(inter_array_dot)
+            FadeIn(inter_array_dot),
+            FadeIn(title)
         )
         self.dither()
-        
-        self.dither()
+        if self.write_dot_product_words:
+            self.play(
+                inter_array_dot.highlight, YELLOW,
+                ShowCreation(arrow),
+                Write(dot_product_words, run_time = 2)
+            )
+            self.dither()
         self.play(Transform(
-            VMobject(*it.starmap(VMobject, pairs)).copy(),
+            Group(*it.starmap(Group, pairs)).copy(),
             products,
             path_arc = -np.pi/2,
             run_time = 2 
@@ -227,6 +257,7 @@ class FourDDotProductExample(ShowNumericalDotProduct):
     CONFIG = {
         "v1" : [6, 2, 8, 3],
         "v2" : [1, 8, 5, 3],
+        "write_dot_product_words" : False,
     }
 
 class GeometricInterpretation(VectorScene):
@@ -323,7 +354,7 @@ class GeometricInterpretation(VectorScene):
             "(",
             "Length of $\\vec{\\textbf{%s}}$"%stable_char,
             ")",
-            separate_list_arg_with_spaces = False
+            arg_separator = ""
         )
         product.scale(0.9)
         product.next_to(self.dot_product, RIGHT)
@@ -524,7 +555,7 @@ class SymmetricVAndW(VectorScene):
         line_of_symmetry.rotate(np.mean([v.get_angle(), w.get_angle()]))
         line_of_symmetry_words = TextMobject("Line of symmetry")
         line_of_symmetry_words.add_background_rectangle()
-        line_of_symmetry_words.next_to(ORIGIN, UP+RIGHT)
+        line_of_symmetry_words.next_to(ORIGIN, UP+LEFT)
         line_of_symmetry_words.rotate(line_of_symmetry.get_angle())
 
         for vect in v, w:
@@ -539,11 +570,14 @@ class SymmetricVAndW(VectorScene):
             run_time = 2
         )
         self.dither()
-        self.play(ShowCreation(line_of_symmetry))
-        self.play(Write(line_of_symmetry_words))
-        self.dither()
-        self.play(Transform(line_of_symmetry_words, line_of_symmetry))
-        for vect in v, w:
+        self.play(
+            ShowCreation(line_of_symmetry),
+            Write(line_of_symmetry_words, run_time = 1)
+        )
+        self.dither(0.5)
+        self.remove(line_of_symmetry_words)
+        self.play(*map(Uncreate, line_of_symmetry_words))
+        for vect in w, v:
             self.play(ShowCreation(vect.proj_line))
             vect_copy = vect.copy()
             self.play(Transform(vect_copy, vect.proj))
@@ -556,9 +590,8 @@ class SymmetricVAndW(VectorScene):
     def show_doubling(self, v, w):
         scalar = 2
         new_v = v.copy().scale(scalar)
-        new_v.label = VMobject(TexMobject(str(scalar)), v.label.copy())
-        new_v.label.arrange_submobjects()
-        new_v.label.highlight(new_v.get_color())
+        new_v.label = VMobject(TexMobject("c"), v.label.copy())
+        new_v.label.arrange_submobjects(aligned_edge = DOWN)
         new_v.label.next_to(new_v.get_end(), DOWN+RIGHT)
         new_v.proj = v.proj.copy().scale(scalar)
         new_v.proj.fade()
@@ -569,9 +602,9 @@ class SymmetricVAndW(VectorScene):
 
         v_tex, w_tex = ["\\vec{\\textbf{%s}}"%c for c in "v", "w"]
         equation = TexMobject(
-            "(", "2", v_tex, ")", "\\cdot", w_tex,
+            "(", "c", v_tex, ")", "\\cdot", w_tex,
             "=",
-            "2(", v_tex, "\\cdot", w_tex, ")"
+            "c(", v_tex, "\\cdot", w_tex, ")"
         )
         equation.highlight_by_tex(v_tex, V_COLOR)
         equation.highlight_by_tex(w_tex, W_COLOR)
@@ -584,23 +617,37 @@ class SymmetricVAndW(VectorScene):
         v.save_state()
         v.proj.save_state()
         self.play(Transform(*[
-            VMobject(mob, mob.proj, mob.proj_line, mob.label)
+            Group(mob, mob.proj, mob.proj_line, mob.label)
             for mob in v, new_v
         ]), run_time = 2)
+        last_mob = self.get_mobjects_from_last_animation()[0]
+        self.remove(last_mob)
+        self.add(*last_mob)
         self.play(Write(words))
         self.dither()
 
         two_v_parts = equation[1:3]
         equation.remove(*two_v_parts)
-        self.play(
-            Write(equation),
-            Transform(new_v.label.copy(), VMobject(*two_v_parts))
-        )
-        self.dither()
 
-        for vect in v, v.proj:
+        for v_part, projector, stable in zip([v, v.proj], [w, v], [v, w]):
+            self.play(*map(FadeOut, [
+                stable.proj, stable.proj_line
+            ]))
             self.play(
-                vect.restore,
+                Transform(projector.copy(), projector.proj),
+                ShowCreation(projector.proj_line)
+            )
+            self.remove(self.get_mobjects_from_last_animation()[0])
+            self.add(projector.proj)
+            self.dither()
+            if equation not in self.get_mobjects():
+                self.play(
+                    Write(equation),
+                    Transform(new_v.label.copy(), VMobject(*two_v_parts))
+                )
+                self.dither()
+            self.play(
+                v_part.restore,
                 rate_func = there_and_back,
                 run_time = 2
             )
@@ -1759,58 +1806,246 @@ class AbstractNumericAssociation(AssociationBetweenMatricesAndVectors):
     }
 
 class TwoDOneDTransformationSeparateSpace(Scene):
+    CONFIG = {
+        "v_coords" : [4, 1]
+    }
     def construct(self):
-        x_rad = SPACE_WIDTH/2-0.5
-        plane = NumberPlane(x_radius = x_rad)
-        squish_plane = plane.copy().apply_function(
-            lambda p : sum(p)*RIGHT
-        )
-        plane.to_edge(LEFT)
-        squish_plane.scale_to_fit_width(2*x_rad)
-        squish_plane.to_edge(RIGHT)
+        width = SPACE_WIDTH-1
+        plane = NumberPlane(x_radius = 6, y_radius = 7)
+        squish_plane = plane.copy()
+        i_hat = Vector([1, 0], color = X_COLOR)
+        j_hat = Vector([0, 1], color = Y_COLOR)
+        vect = Vector(self.v_coords, color = YELLOW)
+        plane.add(vect, i_hat, j_hat)
+        plane.scale_to_fit_width(SPACE_WIDTH)
+        plane.to_edge(LEFT, buff = 0)
+        plane.remove(vect, i_hat, j_hat)
 
-        number_line = NumberLine().stretch_to_fit_width(2*x_rad)
+        squish_plane.apply_function(
+            lambda p : np.dot(p, [4, 1, 0])*RIGHT
+        )
+        squish_plane.add(Vector(self.v_coords[0]*RIGHT, color = X_COLOR))
+        squish_plane.add(Vector(self.v_coords[1]*RIGHT, color = Y_COLOR))
+        squish_plane.scale(width/(2*SPACE_WIDTH))
+        plane.add(i_hat, j_hat)
+
+        number_line = NumberLine().stretch_to_fit_width(width)
         number_line.to_edge(RIGHT)
+        squish_plane.move_to(number_line)
+
         numbers = number_line.get_numbers(*range(-6, 8, 2))
         v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        v_line.highlight(GREY)
+        v_line.set_stroke(width = 10)
 
-        words = TextMobject("""
-            Any time you have a
-            2d-to-1d linear transform...
-        """)
-        words.add_background_rectangle()
-        words.to_edge(UP)
+        matrix = Matrix([self.v_coords])
+        matrix.highlight_columns(X_COLOR, Y_COLOR)
+        matrix.next_to(number_line, UP, buff = LARGE_BUFF)
+        v_coords = Matrix(self.v_coords)
+        v_coords.highlight_columns(YELLOW)
+        v_coords.scale(0.75)
+        v_coords.next_to(vect.get_end(), RIGHT)
+        for array in matrix, v_coords:
+            array.add_to_back(BackgroundRectangle(array))
 
-        self.play(Write(words, run_time = 1))
+        start_words = TextMobject(
+            "\\centering Any time you have a \\\\",
+            "2d-to-1d linear transform..."
+        )
+        end_words = TextMobject(
+            "\\centering ...it's associated \\\\",
+            "with some vector",
+        )
+        for words in start_words, end_words:
+            words.add_background_rectangle()
+            words.scale(0.8)
+        start_words.next_to(ORIGIN, RIGHT, buff = MED_BUFF).to_edge(UP)
+        end_words.next_to(ORIGIN, DOWN+LEFT, buff = MED_BUFF/2)
+
         self.play(*map(ShowCreation, [
             plane, number_line, v_line
-        ])+[Animation(words)])
-        self.play(Write(numbers, run_time = 1))
-        self.play(
-            Transform(plane, squish_plane),
-            Animation(words),
-            path_arc = -np.pi/4,
-            run_time = 3
-        )
+        ])+[
+            Write(numbers, run_time = 2)
+        ])
+        self.play(Write(start_words, run_time = 2))
+        self.play(Write(matrix, run_time = 1))
+        mover = plane.copy()
+        interim = plane.copy().scale(0.8).move_to(number_line)
+        for target in interim, squish_plane:
+            self.play(
+                Transform(mover, target),
+                Animation(plane),
+                Animation(start_words),
+                run_time = 1,
+            )
+        self.dither()
+        self.play(Transform(start_words.copy(), end_words))
+        self.play(ShowCreation(vect))
+        self.play(Transform(matrix.copy(), v_coords))
         self.dither()
 
 class IsntThisBeautiful(TeacherStudentsScene):
     def construct(self):
         self.teacher.look(DOWN+LEFT)
         self.teacher_says(
-            "Isn't this beautiful",
+            "Isn't this", "beautiful",
             pi_creature_target_mode = "surprised"
         )
         for student in self.get_students():
             self.play(student.change_mode, "happy")
         self.random_blink()
+        duality_words = TextMobject(
+            "It's called", "duality"
+        )
+        duality_words[1].gradient_highlight(BLUE, YELLOW)
+        self.teacher_says(duality_words)
+        self.random_blink()
 
+class DualOfAVector(ScaleUpUHat):
+    pass #Exact copy
 
+class DualOfATransform(TwoDOneDTransformationSeparateSpace):
+    pass #Exact copy
 
+class UnderstandingProjection(ProjectOntoUnitVectorNumberline):
+    pass ##Copy
 
+class ShowQualitativeDotProductValuesCopy(ShowQualitativeDotProductValues):
+    pass
 
+class TranslateToTheWorldOfTransformations(Scene):
+    def construct(self):
+        v1, v2 = [
+            Matrix(["x_%d"%n, "y_%d"%n])
+            for n in 1, 2
+        ]
+        v1.highlight_columns(V_COLOR)
+        v2.highlight_columns(W_COLOR)
+        dot = TexMobject("\\cdot")
 
+        matrix = Matrix([["x_1", "y_1"]])
+        matrix.highlight_columns(X_COLOR, Y_COLOR)
 
+        dot_product = Group(v1, dot, v2)
+        dot_product.arrange_submobjects(RIGHT)
+        matrix.next_to(v2, LEFT)
+
+        brace = Brace(matrix, UP)
+        word = TextMobject("Transform")
+        word.scale_to_fit_width(brace.get_width())
+        brace.put_at_tip(word)
+        word.highlight(BLUE)
+
+        self.play(Write(dot_product))
+        self.dither()
+        self.play(
+            dot.highlight, BLACK,            
+            Transform(v1, matrix),
+        )
+        self.play(
+            GrowFromCenter(brace),
+            Write(word)
+        )
+        self.dither()
+
+class NumericalAssociationSilliness(GeneralTwoDOneDMatrixMultiplication):
+    pass #copy
+
+class YouMustKnowPersonality(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("""
+            You should learn a
+            vector's personality
+        """)
+        self.random_blink()
+        self.change_student_modes("pondering")
+        self.random_blink()
+        self.change_student_modes("pondering", "plain", "pondering")
+        self.random_blink()
+
+class WhatTheVectorWantsToBe(Scene):
+    CONFIG = {
+        "v_coords" : [2, 4]
+    }
+    def construct(self):
+        width = SPACE_WIDTH-1
+        plane = NumberPlane(x_radius = 6, y_radius = 7)
+        squish_plane = plane.copy()
+        i_hat = Vector([1, 0], color = X_COLOR)
+        j_hat = Vector([0, 1], color = Y_COLOR)
+        vect = Vector(self.v_coords, color = YELLOW)
+        plane.add(vect, i_hat, j_hat)
+        plane.scale_to_fit_width(SPACE_WIDTH)
+        plane.to_edge(LEFT, buff = 0)
+        plane.remove(vect, i_hat, j_hat)
+
+        squish_plane.apply_function(
+            lambda p : np.dot(p, [4, 1, 0])*RIGHT
+        )
+        squish_plane.add(Vector(self.v_coords[1]*RIGHT, color = Y_COLOR))
+        squish_plane.add(Vector(self.v_coords[0]*RIGHT, color = X_COLOR))        
+        squish_plane.scale(width/(2*SPACE_WIDTH))
+        plane.add(j_hat, i_hat)
+
+        number_line = NumberLine().stretch_to_fit_width(width)
+        number_line.to_edge(RIGHT)
+        squish_plane.move_to(number_line)
+
+        numbers = number_line.get_numbers(*range(-6, 8, 2))
+        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        v_line.highlight(GREY)
+        v_line.set_stroke(width = 10)
+
+        matrix = Matrix([self.v_coords])
+        matrix.highlight_columns(X_COLOR, Y_COLOR)
+        matrix.next_to(number_line, UP, buff = LARGE_BUFF)
+        v_coords = Matrix(self.v_coords)
+        v_coords.highlight_columns(YELLOW)
+        v_coords.scale(0.75)
+        v_coords.next_to(vect.get_end(), RIGHT)
+        for array in matrix, v_coords:
+            array.add_to_back(BackgroundRectangle(array))
+
+        words = TextMobject(
+            "What the vector",
+            "\\\\ wants",
+            "to be"
+        )
+        words[1].highlight(BLUE)
+        words.next_to(matrix, UP, buff = MED_BUFF)
+
+        self.add(plane, v_line, number_line, numbers)
+        self.play(ShowCreation(vect))
+        self.play(Write(v_coords))
+        self.dither()
+        self.play(
+            Transform(v_coords.copy(), matrix),
+            Write(words)
+        )
+        self.play(
+            Transform(plane.copy(), squish_plane),
+            Animation(words),
+            Animation(matrix),
+            Animation(plane),
+        )
+        self.dither()
+
+class NextVideo(Scene):
+    def construct(self):
+        title = TextMobject("""
+            Next video: Cross products in the
+            light of linear transformations
+        """)
+        title.scale_to_fit_height(1.2)
+        title.to_edge(UP, buff = MED_BUFF/2)
+        rect = Rectangle(width = 16, height = 9, color = BLUE)
+        rect.scale_to_fit_height(6)
+        rect.next_to(title, DOWN)
+        Group(title, rect).show()
+
+        self.add(title)
+        self.play(ShowCreation(rect))
+        self.dither()
 
 
 

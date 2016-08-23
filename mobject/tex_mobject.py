@@ -33,7 +33,7 @@ class TexMobject(SVGMobject):
         "fill_opacity"      : 1.0,
         "fill_color"        : WHITE,
         "should_center"     : True,
-        "separate_list_arg_with_spaces" : True,
+        "arg_separator"     : " ",
         "enforce_new_line_structure" : False,
         "initial_scale_factor" : TEX_MOB_SCALE_FACTOR,
         "organize_left_to_right" : False,
@@ -68,10 +68,7 @@ class TexMobject(SVGMobject):
             self.handle_multiple_args()
 
     def get_modified_expression(self):
-        separator = ""
-        if self.separate_list_arg_with_spaces:
-            separator = " "
-        result = separator.join(self.args)
+        result = self.arg_separator.join(self.args)
         if self.enforce_new_line_structure:
             result = result.replace("\n", " \\\\ \n ")
         return result

@@ -351,7 +351,6 @@ class Scene(object):
             process.stdin.write(frame.tostring())
         process.stdin.close()
         process.wait()
-        play_finish_sound()    
 
     # To list possible args that subclasses have
     # Elements should always be a tuple
