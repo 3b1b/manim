@@ -46,6 +46,7 @@ class TexMobject(SVGMobject):
             self.args = args[0]
         ##
         assert(all([isinstance(a, str) for a in self.args]))
+        self.tex_string = self.get_modified_expression()        
         VMobject.__init__(self, **kwargs)
         self.move_into_position()
         if self.organize_left_to_right:
@@ -60,7 +61,7 @@ class TexMobject(SVGMobject):
 
     def generate_points(self):
         self.svg_file = tex_to_svg_file(
-            self.get_modified_expression(),
+            self.tex_string,
             self.template_tex_file
         )
         SVGMobject.generate_points(self)
@@ -72,6 +73,9 @@ class TexMobject(SVGMobject):
         if self.enforce_new_line_structure:
             result = result.replace("\n", " \\\\ \n ")
         return result
+
+    def get_tex_string(self):
+        return self.tex_string
 
     def handle_multiple_args(self):
         new_submobjects = []

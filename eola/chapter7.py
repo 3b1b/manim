@@ -662,7 +662,9 @@ class LurkingQuestion(TeacherStudentsScene):
             Wait, why are the
             two views connected?
             """,
-            pi_creature_target_mode = "confused"
+            student_index = 2,
+            pi_creature_target_mode = "raise_left_hand",
+            width = 6,
         )
         self.change_student_modes(
             "raise_right_hand", "confused", "raise_left_hand"
@@ -820,6 +822,10 @@ class AdditivityProperty(TwoDToOneDScene):
         v = Vector([2, 1], color = V_COLOR)
         w = Vector([-1, 1], color = W_COLOR)
 
+
+        L, sum_tex, r_paren = symbols = self.get_symbols()
+        symbols.shift(4*RIGHT+2*UP)
+        self.add_foreground_mobject(sum_tex)
         self.play(ShowCreation(v))
         self.play(ShowCreation(w))
         if self.sum_before:
@@ -830,8 +836,10 @@ class AdditivityProperty(TwoDToOneDScene):
         self.apply_transposed_matrix(self.t_matrix)
         if not self.sum_before:
             sum_vect = self.play_sum(v, w)
+        symbols.target = symbols.copy().next_to(sum_vect, UP)
+        Group(L, r_paren).highlight(BLACK)
+        self.play(Transform(symbols, symbols.target))
         self.dither()
-        self.write_symbols(sum_vect)
 
     def play_sum(self, v, w):
         sum_vect = Vector(v.get_end()+w.get_end(), color = SUM_COLOR)
@@ -849,24 +857,30 @@ class AdditivityProperty(TwoDToOneDScene):
         self.add_vector(sum_vect, animate = False)
         return sum_vect
 
-    def write_symbols(self, sum_vect):
+    def get_symbols(self):
         v_tex, w_tex = ["\\vec{\\textbf{%s}}"%c for c in "v", "w"]
         if self.sum_before:
             tex_mob = TexMobject(
                 "L(", v_tex, "+", w_tex, ")"
             )
-            tex_mob.next_to(sum_vect, UP)
+            result = Group(
+                tex_mob[0], 
+                Group(*tex_mob[1:4]), 
+                tex_mob[4]
+            )
         else:
             tex_mob = TexMobject(
-                "L(", v_tex, ")+L(", w_tex, ")"
+                "L(", v_tex, ")", "+", "L(", w_tex, ")"
             )
-            tex_mob.next_to(sum_vect, DOWN)
+            result = Group(
+                VectorizedPoint(tex_mob.get_left()),
+                tex_mob,
+                VectorizedPoint(tex_mob.get_right()),
+            )
         tex_mob.highlight_by_tex(v_tex, V_COLOR)
         tex_mob.highlight_by_tex(w_tex, W_COLOR)
-
-
-        self.play(Write(tex_mob))
-        self.dither()
+        result[1].add_to_back(BackgroundRectangle(result[1]))        
+        return result
 
 class AdditivityPropertyPart2(AdditivityProperty):
     CONFIG = {
@@ -1394,6 +1408,47 @@ class ProjectLineOfDots(ProjectOntoUnitVectorNumberline):
         "animate_setup" : False,
     }
 
+class ProjectSingleVectorOnUHat(ProjectOntoUnitVectorNumberline):
+    CONFIG = {
+        "animate_setup" : False
+    }
+    def construct(self):
+        v = Vector([-3, 1], color = PINK)
+        v.proj = get_vect_mob_projection(v, self.u_hat)
+        v.proj_line = DashedLine(v.get_end(), v.proj.get_end())
+        v.proj_line.highlight(v.get_color())
+        v_tex = "\\vec{\\textbf{v}}"
+        u_tex = self.u_hat.label.get_tex_string()
+        v.label = TexMobject(v_tex)
+        v.label.highlight(v.get_color())
+        v.label.next_to(v.get_end(), LEFT)
+        dot_product = TexMobject(v_tex, "\\cdot", u_tex)
+        dot_product.highlight_by_tex(v_tex, v.get_color())
+        dot_product.highlight_by_tex(u_tex, self.u_hat.get_color())
+        dot_product.next_to(ORIGIN, UP, buff = MED_BUFF)
+        dot_product.rotate(self.tilt_angle)
+        dot_product.shift(v.proj.get_end())
+        dot_product.add_background_rectangle()
+        v.label.add_background_rectangle()
+
+        self.play(
+            ShowCreation(v),
+            Write(v.label),
+        )
+        self.dither()
+        self.play(
+            ShowCreation(v.proj_line),
+            Transform(v.copy(), v.proj)
+        )
+        self.dither()
+        self.play(
+            FadeOut(v),
+            FadeOut(v.proj_line),
+            FadeOut(v.label),
+            Write(dot_product)
+        )
+        self.dither()
+
 class AskAboutProjectionMatrix(Scene):
     def construct(self):
         matrix = Matrix([["?", "?"]])
@@ -1666,6 +1721,14 @@ class UHatIsTransformInDisguise(Scene):
         self.play(Write(words))
         self.dither()
 
+class AskAboutNonUnitVectors(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "What about \\\\ non-unit vectors",
+            pi_creature_target_mode = "raise_left_hand"
+        )
+        self.random_blink(2)
+
 class ScaleUpUHat(ProjectOntoUnitVectorNumberline) :
     CONFIG = {
         "animate_setup" : False,
@@ -1913,7 +1976,10 @@ class UnderstandingProjection(ProjectOntoUnitVectorNumberline):
 class ShowQualitativeDotProductValuesCopy(ShowQualitativeDotProductValues):
     pass
 
-class TranslateToTheWorldOfTransformations(Scene):
+class TranslateToTheWorldOfTransformations(TwoDOneDMatrixMultiplication):
+    CONFIG = {
+        "order_left_to_right" : True,
+    }
     def construct(self):
         v1, v2 = [
             Matrix(["x_%d"%n, "y_%d"%n])
@@ -1939,13 +2005,15 @@ class TranslateToTheWorldOfTransformations(Scene):
         self.play(Write(dot_product))
         self.dither()
         self.play(
-            dot.highlight, BLACK,            
+            dot.set_fill, BLACK, 0,
             Transform(v1, matrix),
         )
         self.play(
             GrowFromCenter(brace),
             Write(word)
         )
+        self.dither()
+        self.show_product(v1, v2)
         self.dither()
 
 class NumericalAssociationSilliness(GeneralTwoDOneDMatrixMultiplication):
@@ -2023,10 +2091,14 @@ class WhatTheVectorWantsToBe(Scene):
             Write(words)
         )
         self.play(
-            Transform(plane.copy(), squish_plane),
-            Animation(words),
-            Animation(matrix),
-            Animation(plane),
+            Transform(plane.copy(), squish_plane, run_time = 3),
+            *map(Animation, [
+                words,
+                matrix,
+                plane,
+                vect, 
+                v_coords
+            ])
         )
         self.dither()
 
