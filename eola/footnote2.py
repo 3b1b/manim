@@ -515,12 +515,17 @@ class TwoDTo1DTransformWithDots(TwoDTo1DTransform):
             )
             for dot in dots
         ])
+        words = TextMobject(
+            "Line of dots remains evenly spaced"
+        )
+        words.next_to(line, UP, buff = MED_BUFF)
 
         self.play(Write(dots))
         self.apply_transposed_matrix(
             self.t_matrix,
             added_anims = [Transform(dots, new_dots)]
         )
+        self.play(Write(words))
         self.dither()
 
 class NextVideo(Scene):

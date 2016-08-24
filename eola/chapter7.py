@@ -21,7 +21,6 @@ from eola.matrix import *
 from eola.two_d_space import *
 from eola.footnote2 import TwoDTo1DTransformWithDots
 
-from ka_playgrounds.circuits import Resistor, Source, LongResistor
 
 V_COLOR = YELLOW
 W_COLOR = MAROON_B
@@ -584,13 +583,15 @@ class SymmetricVAndW(VectorScene):
             self.remove(vect_copy)
             self.add(vect.proj)
             self.dither()
-
+        self.play(*map(FadeOut,[
+            v.proj, v.proj_line, w.proj, w.proj_line
+        ]))
         self.show_doubling(v, w)
 
     def show_doubling(self, v, w):
         scalar = 2
         new_v = v.copy().scale(scalar)
-        new_v.label = VMobject(TexMobject("c"), v.label.copy())
+        new_v.label = VMobject(TexMobject("2"), v.label.copy())
         new_v.label.arrange_submobjects(aligned_edge = DOWN)
         new_v.label.next_to(new_v.get_end(), DOWN+RIGHT)
         new_v.proj = v.proj.copy().scale(scalar)
@@ -602,9 +603,9 @@ class SymmetricVAndW(VectorScene):
 
         v_tex, w_tex = ["\\vec{\\textbf{%s}}"%c for c in "v", "w"]
         equation = TexMobject(
-            "(", "c", v_tex, ")", "\\cdot", w_tex,
+            "(", "2", v_tex, ")", "\\cdot", w_tex,
             "=",
-            "c(", v_tex, "\\cdot", w_tex, ")"
+            "2(", v_tex, "\\cdot", w_tex, ")"
         )
         equation.highlight_by_tex(v_tex, V_COLOR)
         equation.highlight_by_tex(w_tex, W_COLOR)
@@ -616,23 +617,26 @@ class SymmetricVAndW(VectorScene):
 
         v.save_state()
         v.proj.save_state()
+        v.proj_line.save_state()
         self.play(Transform(*[
-            Group(mob, mob.proj, mob.proj_line, mob.label)
+            Group(mob, mob.label)
             for mob in v, new_v
         ]), run_time = 2)
-        last_mob = self.get_mobjects_from_last_animation()[0]
+        last_mob = self.get_mobjects_from_last_animation()[0] 
         self.remove(last_mob)
-        self.add(*last_mob)
+        self.add(*last_mob)       
+        Transform(
+            Group(v.proj, v.proj_line),
+            Group(new_v.proj, new_v.proj_line)
+        ).update(1)##Hacky
+
         self.play(Write(words))
         self.dither()
 
         two_v_parts = equation[1:3]
         equation.remove(*two_v_parts)
 
-        for v_part, projector, stable in zip([v, v.proj], [w, v], [v, w]):
-            self.play(*map(FadeOut, [
-                stable.proj, stable.proj_line
-            ]))
+        for full_v, projector, stable in zip([False, True], [w, v], [v, w]):
             self.play(
                 Transform(projector.copy(), projector.proj),
                 ShowCreation(projector.proj_line)
@@ -646,26 +650,32 @@ class SymmetricVAndW(VectorScene):
                     Transform(new_v.label.copy(), VMobject(*two_v_parts))
                 )
                 self.dither()
+            v_parts = [v]
+            if full_v:
+                v_parts += [v.proj, v.proj_line]
             self.play(
-                v_part.restore,
+                *[v_part.restore for v_part in v_parts],
                 rate_func = there_and_back,
                 run_time = 2
             )
             self.dither()
+            self.play(*map(FadeOut, [
+                projector.proj, projector.proj_line
+            ]))
 
 class LurkingQuestion(TeacherStudentsScene):
     def construct(self):
-        self.teacher_says("That's the standard intro")
-        self.dither()
-        self.student_says(
-            """
-            Wait, why are the
-            two views connected?
-            """,
-            student_index = 2,
-            pi_creature_target_mode = "raise_left_hand",
-            width = 6,
-        )
+        # self.teacher_says("That's the standard intro")
+        # self.dither()
+        # self.student_says(
+        #     """
+        #     Wait, why are the
+        #     two views connected?
+        #     """,
+        #     student_index = 2,
+        #     pi_creature_target_mode = "raise_left_hand",
+        #     width = 6,
+        # )
         self.change_student_modes(
             "raise_right_hand", "confused", "raise_left_hand"
         )
@@ -675,7 +685,7 @@ class LurkingQuestion(TeacherStudentsScene):
             answer comes from""",
             "duality"
         )
-        answer.highlight_by_tex("duality", PINK)
+        answer[-1].gradient_highlight(BLUE, YELLOW)
         self.teacher_says(answer)
         self.random_blink(2)
         self.teacher_thinks("")
@@ -765,6 +775,64 @@ class Symbolic2To1DTransform(Scene):
         )
         self.dither()
         self.play(Write(special_words))
+        self.dither()
+
+class RecommendChapter3(Scene):
+    def construct(self):
+        title = TextMobject("""
+            Definite watch Chapter 3
+            if you haven't already
+        """)
+        title.to_edge(UP)
+        rect = Rectangle(width = 16, height = 9, color = BLUE)
+        rect.scale_to_fit_height(6)
+        rect.next_to(title, DOWN)
+
+        self.add(title)
+        self.play(ShowCreation(rect))
+        self.dither()  
+
+class OkayToIgnoreFormalProperties(Scene):
+    def construct(self):
+        title = TextMobject("Formal linearity properties")
+        title.to_edge(UP)
+        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line.next_to(title, DOWN)
+        v_tex, w_tex = ["\\vec{\\textbf{%s}}"%s for s in "v", "w"]
+        additivity = TexMobject(
+            "L(", v_tex, "+", w_tex, ") = ",
+            "L(", v_tex, ") + L(", w_tex, ")",
+        )
+        scaling = TexMobject(
+            "L(", "c", v_tex, ") =", "c", "L(", v_tex, ")",
+        )
+        for tex_mob in additivity, scaling:
+            tex_mob.highlight_by_tex(v_tex, V_COLOR)
+            tex_mob.highlight_by_tex(w_tex, W_COLOR)
+            tex_mob.highlight_by_tex("c", GREEN)
+        additivity.next_to(h_line, DOWN, buff = MED_BUFF)
+        scaling.next_to(additivity, DOWN, buff = MED_BUFF)
+        words = TextMobject("We'll ignore these")
+        words.highlight(RED)
+        arrow = Arrow(DOWN, UP, color = RED)
+        arrow.next_to(scaling, DOWN)
+        words.next_to(arrow, DOWN)
+
+        randy = Randolph().to_corner(DOWN+LEFT)
+        morty = Mortimer().to_corner(DOWN+RIGHT)
+
+        self.add(randy, morty, title)
+        self.play(ShowCreation(h_line))
+        for tex_mob in additivity, scaling:
+            self.play(Write(tex_mob, run_time = 2))
+        self.play(
+            FadeIn(words),
+            ShowCreation(arrow),
+        )
+        self.play(
+            randy.look, LEFT,
+            morty.look, RIGHT,
+        )
         self.dither()
 
 class FormalVsVisual(Scene):
@@ -936,6 +1004,48 @@ class ScalingPropertyPart2(ScalingProperty):
 
 class ThisTwoDTo1DTransformWithDots(TwoDTo1DTransformWithDots):
     pass
+
+class NonLinearFailsDotTest(TwoDTo1DTransformWithDots):
+    def construct(self):
+        line = NumberLine()
+        self.add(line, *self.get_mobjects())
+        offset = LEFT+DOWN
+        vect = 2*RIGHT+UP
+        dots = VMobject(*[
+             Dot(offset + a*vect, radius = 0.075)
+             for a in np.linspace(-2, 3, 18)
+        ])
+        dots.submobject_gradient_highlight(YELLOW_B, YELLOW_C)
+        func = lambda p : (p[0]**2 - p[1]**2)*RIGHT
+        new_dots = VMobject(*[
+            Dot(
+                func(dot.get_center()), 
+                color = dot.get_color(),
+                radius = dot.radius
+            )
+            for dot in dots
+        ])
+        words = TextMobject(
+            "Line of dots", "do not", "remain evenly spaced"
+        )
+        words.highlight_by_tex("do not", RED)
+        words.next_to(line, UP, buff = MED_BUFF)
+        array_tex = matrix_to_tex_string(["x", "y"])
+        equation = TexMobject(
+            "f", "\\left(%s \\right)"%array_tex, " = x^2 - y^2"
+        )
+        for part in equation:
+            part.add_to_back(BackgroundRectangle(part))
+        equation.to_corner(UP+LEFT)
+        self.add_foreground_mobject(equation)
+
+        self.play(Write(dots))
+        self.apply_nonlinear_transformation(
+            func,
+            added_anims = [Transform(dots, new_dots)]
+        )
+        self.play(Write(words))
+        self.dither()
 
 class AlwaysfollowIHatJHat(TeacherStudentsScene):
     def construct(self):
@@ -1242,6 +1352,69 @@ class WhatAboutTheGeometricView(TeacherStudentsScene):
         self.change_student_modes("pondering", "raise_right_hand", "pondering")
         self.random_blink(2)
 
+class SomeKindOfConnection(Scene):
+    CONFIG = {
+        "v_coords" : [2, 3]
+    }
+    def construct(self):
+        width = SPACE_WIDTH-1
+        plane = NumberPlane(x_radius = 4, y_radius = 6)
+        squish_plane = plane.copy()
+        i_hat = Vector([1, 0], color = X_COLOR)
+        j_hat = Vector([0, 1], color = Y_COLOR)
+        vect = Vector(self.v_coords, color = YELLOW)
+        plane.add(vect, i_hat, j_hat)
+        plane.scale_to_fit_width(SPACE_WIDTH)
+        plane.to_edge(LEFT, buff = 0)
+        plane.remove(vect, i_hat, j_hat)
+
+        squish_plane.apply_function(
+            lambda p : np.dot(p, [4, 1, 0])*RIGHT
+        )
+        squish_plane.add(Vector(self.v_coords[1]*RIGHT, color = Y_COLOR))
+        squish_plane.add(Vector(self.v_coords[0]*RIGHT, color = X_COLOR))        
+        squish_plane.scale(width/(2*SPACE_WIDTH))
+        plane.add(j_hat, i_hat)
+
+        number_line = NumberLine().stretch_to_fit_width(width)
+        number_line.to_edge(RIGHT)
+        squish_plane.move_to(number_line)
+
+        numbers = number_line.get_numbers(*range(-6, 8, 2))
+        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        v_line.highlight(GREY)
+        v_line.set_stroke(width = 10)
+
+        matrix = Matrix([self.v_coords])
+        matrix.highlight_columns(X_COLOR, Y_COLOR)
+        matrix.next_to(number_line, UP, buff = LARGE_BUFF)
+        v_coords = Matrix(self.v_coords)
+        v_coords.highlight_columns(YELLOW)
+        v_coords.scale(0.75)
+        v_coords.next_to(vect.get_end(), RIGHT)
+        for array in matrix, v_coords:
+            array.add_to_back(BackgroundRectangle(array))
+
+
+        self.play(*map(ShowCreation, [
+            plane, number_line, v_line
+        ])+[
+            Write(numbers, run_time = 2)
+        ])
+        self.play(Write(matrix, run_time = 1))
+        mover = plane.copy()
+        interim = plane.copy().scale(0.8).move_to(number_line)
+        for target in interim, squish_plane:
+            self.play(
+                Transform(mover, target),
+                Animation(plane),
+                run_time = 1,
+            )
+        self.dither()
+        self.play(ShowCreation(vect))
+        self.play(Transform(matrix.copy(), v_coords))
+        self.dither()
+
 class AnExampleWillClarify(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("An example will clarify...")
@@ -1269,33 +1442,32 @@ class ProjectOntoUnitVectorNumberline(VectorScene):
         plane.fade()
 
         u_hat = Vector([1, 0], color = self.u_hat_color)
-        u_brace = Brace(u_hat)
+        u_brace = Brace(u_hat, UP)
         u_hat.rotate(self.tilt_angle)
         u_hat.label = TexMobject("\\hat{\\textbf{u}}")
         u_hat.label.highlight(u_hat.get_color())
         u_hat.label.next_to(u_hat.get_end(), UP+LEFT)
+        one = TexMobject("1")
+        u_brace.put_at_tip(one)
+        u_brace.add(one)
         u_brace.rotate(u_hat.get_angle())
-        one = TexMobject("1").add_background_rectangle()
-        one.next_to(u_brace.get_center(), DOWN+RIGHT, buff = MED_BUFF/2)
+        one.rotate_in_place(-u_hat.get_angle())
 
         number_line = NumberLine(x_min = -9, x_max = 9)
         numbers = number_line.get_numbers()
         Group(number_line, numbers).rotate(u_hat.get_angle())
         if self.animate_setup:
-            self.play(ShowCreation(u_hat))
-            self.play(Write(u_hat.label))
-            self.play(
-                GrowFromCenter(u_brace),
-                Write(one)
-            )
-            self.dither()
             self.play(
                 ShowCreation(number_line),
                 Write(numbers),
-                Animation(u_hat), 
-                *map(FadeOut, [u_brace, one]),
                 run_time = 3 
             )
+            self.dither()
+            self.play(ShowCreation(u_hat))
+            self.play(FadeIn(u_brace))
+            self.play(FadeOut(u_brace))
+            self.play(Write(u_hat.label))            
+            self.dither()
         else:
             self.add(number_line, numbers, u_hat)
 
@@ -1514,7 +1686,7 @@ class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
 
         i_label = TexMobject(i_tex[1:-1])
         j_label = TexMobject(j_tex[1:-1])
-        u_label = TexMobject("\\vec{\\textbf{u}}")
+        u_label = TexMobject("\\hat{\\textbf{u}}")
         trips = zip(
             (i_label, j_label, u_label), 
             (i_hat, j_hat, self.u_hat),
@@ -1963,6 +2135,31 @@ class IsntThisBeautiful(TeacherStudentsScene):
         duality_words[1].gradient_highlight(BLUE, YELLOW)
         self.teacher_says(duality_words)
         self.random_blink()
+
+class RememberGraphDuality(Scene):
+    def construct(self):
+        words = TextMobject("""
+            \\centering
+            Some of you may remember an 
+            early video I did on graph duality
+        """)
+        words.to_edge(UP)
+        self.play(Write(words, lag_factor = 4))
+        self.dither()
+
+class LooseDualityDescription(Scene):
+    def construct(self):
+        duality = TextMobject("Duality")
+        duality.gradient_highlight(BLUE, YELLOW)
+        arrow = TexMobject("\\Leftrightarrow")
+        words = TextMobject("Natural-but-surprising", "correspondence")
+        words[1].gradient_highlight(BLUE, YELLOW)
+        Group(duality, arrow, words).arrange_submobjects(buff = MED_BUFF)
+
+        self.add(duality)
+        self.play(Write(arrow))
+        self.play(Write(words))
+        self.dither()
 
 class DualOfAVector(ScaleUpUHat):
     pass #Exact copy

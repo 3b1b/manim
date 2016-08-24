@@ -140,7 +140,7 @@ class Brace(TexMobject):
             mob.rotate(angle)
 
     def put_at_tip(self, mob, **kwargs):
-        mob.next_to(self, self.direction, buff = SMALL_BUFF, **kwargs)
+        mob.next_to(self, self.direction, **kwargs)
         return self
 
     def get_text(self, *text, **kwargs):
