@@ -315,13 +315,21 @@ class Define2dCrossProduct(LinearTransformationScene):
         w = self.add_vector(self.w_coords, color = W_COLOR)
         self.moving_vectors.remove(v)
         self.moving_vectors.remove(w)
-        for vect, name in (v, "v"), (w, "w"):
+        for vect, name, direction in (v, "v", "left"), (w, "w", "right"):
             color = vect.get_color()
-            vect.label = self.label_vector(vect, name, color = color)
+            vect.label = self.label_vector(
+                vect, name, color = color, direction = direction
+            )
             vect.coord_array = self.write_vector_coordinates(
                 vect, color = color
             )
+            self.foreground_mobjects.remove(vect.coord_array)
             vect.coords = vect.coord_array.get_entries()
+        for vect, edge in (v, DOWN), (w, UP):
+            vect.coord_array.move_to(
+                vect.coord_array.get_center(), 
+                aligned_edge = edge
+            )
         movers = [v.label, w.label, v.coords, w.coords]
         for mover in movers:
             mover.target = mover.copy()
@@ -381,27 +389,41 @@ class Define2dCrossProduct(LinearTransformationScene):
         self.play(FadeOut(disclaimer))
         self.dither()
 
+        cross_product.add_to_back(cross_background)
+        cross_product.add(equals)
+        self.cross_product = cross_product
         self.matrix = matrix
         self.det_text = det_text
+        self.v, self.w = v, w
 
     def show_transformation(self):
-        matrix = self.matrix
+        matrix = self.matrix.copy()
         everything = self.get_mobjects()
         everything.remove(self.plane)
         everything.remove(self.background_plane)
-        everything.remove(matrix)
         self.play(
             *map(FadeOut, everything) + [
             Animation(self.background_plane),
             self.plane.restore,            
             Animation(matrix),
         ])
+        i_hat, j_hat = self.get_basis_vectors()
+        for vect in i_hat, j_hat:
+            vect.save_state()
+        basis_labels = self.get_basis_vector_labels()
+        self.play(
+            ShowCreation(i_hat),
+            ShowCreation(j_hat),
+            Write(basis_labels)
+        )
+        self.dither()
+
         side_brace = Brace(matrix, RIGHT)
         transform_words = side_brace.get_text("Linear transformation")
         transform_words.add_background_rectangle()
 
         col1, col2 = [
-            Group(*matrix.get_mob_matrix()[:,i])
+            Group(*matrix.get_mob_matrix()[i,:])
             for i in 0, 1
         ]
 
@@ -431,30 +453,192 @@ class Define2dCrossProduct(LinearTransformationScene):
             col2.highlight, Y_COLOR
         )
         self.dither()
-        self.play(*map(FadeOut, [i_words, i_words.arrow]))
+        self.play(*map(FadeOut, [i_words, i_words.arrow, basis_labels]))
 
-        i_hat, j_hat = self.get_basis_vectors()
-        basis_labels = self.get_basis_vector_labels()
-        self.play(
-            ShowCreation(i_hat),
-            ShowCreation(j_hat),
-            Write(basis_labels)
-        )
-        self.dither()
-        self.play(FadeOut(basis_labels))
-        self.add_vector(i_hat)
-        self.add_vector(j_hat)
+        self.add_vector(i_hat, animate = False)
+        self.add_vector(j_hat, animate = False)
         self.play(*map(FadeOut, [side_brace, transform_words]))
         self.add_foreground_mobject(matrix)
         self.apply_transposed_matrix([self.v_coords, self.w_coords])
         self.dither()
+        self.play(
+            FadeOut(self.plane),
+            *map(Animation, [
+                self.background_plane,
+                matrix,
+                i_hat,
+                j_hat,
+            ])
+        )
+        self.play(
+            ShowCreation(self.v),
+            ShowCreation(self.w),
+            FadeIn(self.v.label),
+            FadeIn(self.w.label),
+            FadeIn(self.v.coord_array),
+            FadeIn(self.w.coord_array),
+            matrix.highlight_columns, V_COLOR, W_COLOR
+        )
+        self.dither()
+        self.i_hat, self.j_hat = i_hat, j_hat
+        self.matrix = matrix
 
 
     def transform_square(self):
-        pass
+        self.play(Write(self.det_text))
+        self.matrix.add(self.det_text)
+
+        vect_stuffs = Group(*it.chain(*[
+            [m, m.label, m.coord_array]
+            for m in self.v, self.w
+        ]))
+        to_restore = [self.plane, self.i_hat, self.j_hat]
+        for mob in to_restore:
+            mob.fade(1)
+
+        self.play(*map(FadeOut, vect_stuffs))
+        self.play(
+            *[m.restore for m in to_restore] + [
+                Animation(self.matrix)
+            ]
+        )
+        self.add_unit_square(animate = True, opacity = 0.2)
+        self.square.save_state()
+        self.dither()
+        self.apply_transposed_matrix(
+            [self.v_coords, self.w_coords]
+        )
+        self.dither()
+        self.play(
+            FadeOut(self.plane),
+            Animation(self.matrix),
+            *map(FadeIn, vect_stuffs)
+        )
+        self.play(Write(self.cross_product))
+
+        det_text_brace = Brace(self.det_text)
+        area_words = det_text_brace.get_text("Area of this parallelogram")
+        area_words.add_background_rectangle()
+        area_arrow = Arrow(
+            area_words.get_bottom(), 
+            self.square.get_center(),
+            color = WHITE
+        )
+        self.play(
+            GrowFromCenter(det_text_brace),
+            Write(area_words),
+            ShowCreation(area_arrow)
+        )
+        self.dither()
+
+        pm = Group(*map(TexMobject, ["+", "-"]))
+        pm.gradient_highlight(GREEN, RED)
+        pm.arrange_submobjects(DOWN, buff = SMALL_BUFF)
+        pm.add_to_back(BackgroundRectangle(pm))
+        pm.next_to(area_words[0], LEFT, aligned_edge = DOWN)
+        self.play(
+            Transform(self.square.get_point_mobject(), pm),
+            path_arc = -np.pi/2
+        )
+        self.dither()
+        self.play(*map(FadeOut, [
+            area_arrow, self.v.coord_array, self.w.coord_array
+        ]))
 
     def show_orientation_rule(self):
-        pass
+        self.remove(self.i_hat, self.j_hat)
+        for vect in self.v, self.w:
+            vect.add(vect.label)
+            vect.target = vect.copy()
+        angle = np.pi/3
+        self.v.target.rotate(-angle)
+        self.w.target.rotate(angle)
+        self.v.target.label.rotate_in_place(angle)
+        self.w.target.label.rotate_in_place(-angle)
+        for vect in self.v, self.w:
+            vect.target.label[0].set_fill(opacity = 0)
+        self.square.target = self.square.copy().restore()
+        transform = self.get_matrix_transformation([
+            self.v.target.get_end()[:2],
+            self.w.target.get_end()[:2],
+        ])
+        self.square.target.apply_function(transform)
+
+        movers = Group(self.square, self.v, self.w)
+        movers.target = Group(*[m.target for m in movers])
+        movers.save_state()
+        self.remove(self.square)
+        self.play(Transform(movers, movers.target))
+        self.dither()
+
+        v_tex, w_tex = ["\\vec{\\textbf{%s}}"%s for s in "v", "w"]
+        positive_words, negative_words = words_list = [
+            TexMobject(v_tex, "\\times", w_tex, "\\text{ is }", word)
+            for word in "\\text{positive}", "\\text{negative}"
+        ]
+        for words in words_list:
+            words.highlight_by_tex(v_tex, V_COLOR)
+            words.highlight_by_tex(w_tex, W_COLOR)
+            words.highlight_by_tex("\\text{positive}", GREEN)
+            words.highlight_by_tex("\\text{negative}", RED)
+            words.add_background_rectangle()
+            words.next_to(self.square, UP)
+        arc = self.get_arc(self.v, self.w)
+        arc.highlight(GREEN)
+        self.play(
+            Write(positive_words),
+            ShowCreation(arc)
+        )
+        self.dither()
+        self.remove(arc)
+        self.play(movers.restore)
+        arc = self.get_arc(self.v, self.w)
+        arc.highlight(RED)
+        self.play(
+            Transform(positive_words, negative_words),
+            ShowCreation(arc)
+        )
+        self.dither()
+
+        anticommute = TexMobject(
+            v_tex, "\\times", w_tex, "=-", w_tex, "\\times", v_tex
+        )
+        anticommute.shift(SPACE_WIDTH*RIGHT/2)
+        anticommute.to_edge(UP)
+        anticommute.highlight_by_tex(v_tex, V_COLOR)
+        anticommute.highlight_by_tex(w_tex, W_COLOR)
+        anticommute.add_background_rectangle()
+        for v1, v2 in (self.v, self.w), (self.w, self.v):
+            v1.label[0].set_fill(opacity = 0)
+            v1.target = v1.copy()
+            v1.target.label.rotate_in_place(v1.get_angle()-v2.get_angle())
+            v1.target.label.scale_in_place(v1.get_length()/v2.get_length())
+            v1.target.rotate(v2.get_angle()-v1.get_angle())
+            v1.target.scale(v2.get_length()/v1.get_length())
+            v1.target.label.move_to(v2.label)
+        self.play(
+            FadeOut(arc),
+            Transform(positive_words, anticommute)
+        )
+        self.play(
+            Transform(self.v, self.v.target),
+            Transform(self.w, self.w.target),
+            rate_func = there_and_back,
+            run_time = 2,
+        )
+        self.dither()
+
+    def get_arc(self, v, w, radius = 2):
+        v_angle, w_angle = v.get_angle(), w.get_angle()
+        nudge = 0.05
+        arc = Arc(
+            (1-2*nudge)*(v_angle - w_angle),
+            start_angle = interpolate(w_angle, v_angle, nudge),
+            radius = radius,
+            stroke_width = 8,
+        )
+        arc.add_tip()
+        return arc
 
 
 
