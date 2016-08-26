@@ -296,11 +296,14 @@ class ThoughtBubble(Bubble):
 
 class RandolphScene(Scene):
     CONFIG = {
-        "randy_mode" : "plain"
+        "randy_kwargs" : {},
+        "randy_corner" : DOWN+LEFT
     }
     def setup(self):
-        self.randy = Randolph(mode = self.randy_mode)
-        self.randy.to_corner()
+        self.randy = Randolph(**self.randy_kwargs)
+        self.randy.to_corner(self.randy_corner)
+        if self.randy_corner[0] > 0:
+            self.randy.flip()
         self.add(self.randy)
 
     def dither(self, time = 1, blink = True):

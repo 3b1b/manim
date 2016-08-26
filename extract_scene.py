@@ -79,7 +79,8 @@ def get_configuration(sys_argv):
    #By default, write to file
    actions = ["write", "preview", "save_image"]
    if not any([config[key] for key in actions]):
-      config["write"] = True
+      config["write"] = True   
+   config["skip_animations"] = config["save_image"] and not config["write"]
 
    if len(args) == 0:
       print HELP_MESSAGE
@@ -197,7 +198,8 @@ def main():
    )
    config["movie_prefix"] = config["file"].replace(".py", "")
    scene_kwargs = {
-      "camera_config" : config["camera_config"]
+      "camera_config" : config["camera_config"],
+      "skip_animations" : config["skip_animations"],
    }
    for SceneClass in get_scene_classes(scene_names_to_classes, config):
       for args in get_scene_args(SceneClass, config):

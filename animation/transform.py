@@ -123,6 +123,7 @@ class FadeIn(Transform):
         mobject.fade(1)
         if isinstance(mobject, VMobject):
             mobject.set_stroke(width = 0)
+            mobject.set_fill(opacity = 0)
         Transform.__init__(self, mobject, target, **kwargs)
 
 

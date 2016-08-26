@@ -780,7 +780,7 @@ class Symbolic2To1DTransform(Scene):
 class RecommendChapter3(Scene):
     def construct(self):
         title = TextMobject("""
-            Definite watch Chapter 3
+            Definitely watch Chapter 3
             if you haven't already
         """)
         title.to_edge(UP)
@@ -2316,7 +2316,56 @@ class NextVideo(Scene):
         self.play(ShowCreation(rect))
         self.dither()
 
+class CrossAndDualWords(Scene):
+    def construct(self):
+        from eola.chapter5 import get_det_text
+        
+        v_tex, u_tex, w_tex = [
+            "\\vec{\\textbf{%s}}"%s
+            for s in "vuw"
+        ]
+        vector_word = TextMobject("Vector:")
+        transform_word = TextMobject("Dual transform:")
 
+        cross = TexMobject(
+            v_tex, "=", u_tex, "\\times", w_tex
+        )
+        for tex, color in zip([v_tex, u_tex, w_tex], [V_COLOR, U_COLOR, W_COLOR]):
+            cross.highlight_by_tex(tex, color)
+        input_array_tex = matrix_to_tex_string(["x", "y", "z"])
+        func = TexMobject("L\\left(%s\\right) = "%input_array_tex)
+        matrix = Matrix(np.array([
+            ["x", "y", "z"],
+            ["u_1", "u_2", "u_3"],
+            ["w_1", "w_2", "w_3"],
+        ]).T)
+        matrix.highlight_columns(WHITE, U_COLOR, W_COLOR)
+        det_text = get_det_text(matrix)
+        det_text.add(matrix)
+        dot_with_cross = TexMobject(
+            "%s \\cdot ("%input_array_tex,
+            u_tex, "\\times", w_tex, ")"
+        )
+        dot_with_cross.highlight_by_tex(u_tex, U_COLOR)
+        dot_with_cross.highlight_by_tex(w_tex, W_COLOR)
+        transform = Group(func, det_text)
+        transform.arrange_submobjects()
+
+        Group(transform, dot_with_cross).scale(0.7)
+        vector_word.to_corner(UP+LEFT)
+        transform_word.next_to(vector_word, DOWN, buff = MED_BUFF, aligned_edge = LEFT)
+        cross.next_to(vector_word, buff = MED_BUFF)
+        transform.next_to(transform_word, DOWN, buff = MED_BUFF, aligned_edge = LEFT)
+        dot_with_cross.next_to(func, RIGHT)
+
+        self.add(vector_word)
+        self.play(Write(cross))
+        self.dither()
+        self.play(FadeIn(transform_word))
+        self.play(Write(transform))
+        self.dither()
+        self.play(Transform(det_text, dot_with_cross))
+        self.dither()
 
 
 

@@ -20,9 +20,10 @@ from animation.transform import ApplyMethod
 
 class Scene(object):
     CONFIG = {
-        "camera_config"  : {},
-        "frame_duration" : DEFAULT_FRAME_DURATION,
-        "construct_args" : [],
+        "camera_config"   : {},
+        "frame_duration"  : DEFAULT_FRAME_DURATION,
+        "construct_args"  : [],
+        "skip_animations" : False,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
@@ -214,6 +215,9 @@ class Scene(object):
     def play(self, *args, **kwargs):
         if len(args) == 0:
             raise Exception("Called Scene.play with no animations")
+        if self.skip_animations:
+            kwargs["run_time"] = 0
+
         animations = self.compile_play_args_to_animation_list(*args)
         self.num_plays += 1
 
@@ -274,6 +278,8 @@ class Scene(object):
         return self
 
     def dither(self, duration = DEFAULT_DITHER_TIME):
+        if self.skip_animations:
+            return self
         self.update_frame()
         self.frames += [self.get_frame()]*int(duration / self.frame_duration)
         return self
