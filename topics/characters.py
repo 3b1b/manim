@@ -6,7 +6,8 @@ from mobject.vectorized_mobject import VMobject
 from mobject.tex_mobject import TextMobject, TexMobject
 
 from animation import Animation
-from animation.transform import Transform, ApplyMethod, FadeOut, FadeIn
+from animation.transform import Transform, ApplyMethod, \
+    FadeOut, FadeIn, ApplyPointwiseFunction
 from animation.simple_animations import Write
 from scene import Scene
 
@@ -427,6 +428,24 @@ class TeacherStudentsScene(Scene):
             ApplyMethod(pi.change_mode, mode)
             for pi, mode in zip(self.get_students(), modes)
         ])
+
+    def zoom_in_on_thought_bubble(self, radius = SPACE_HEIGHT+SPACE_WIDTH):
+        bubble = None
+        for pi in self.get_everyone():
+            if hasattr(pi, "bubble") and isinstance(pi.bubble, ThoughtBubble):
+                bubble = pi.bubble
+                break
+        if bubble is None:
+            raise Exception("No pi creatures have a thought bubble")
+        vect = -bubble.get_bubble_center()
+        def func(point):
+            centered = point+vect
+            return radius*centered/np.linalg.norm(centered)
+        self.play(*[
+            ApplyPointwiseFunction(func, mob)
+            for mob in self.get_mobjects()
+        ])
+
 
 
 

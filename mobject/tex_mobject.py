@@ -93,7 +93,9 @@ class TexMobject(SVGMobject):
 
     def highlight_by_tex(self, tex, color):
         if not hasattr(self, "expression_parts"):
-            raise Exception("Calling highlight_by_tex on a non-composite TexMobject")
+            if tex == self.get_tex_string():
+                self.highlight(color)
+            return self
         for submob, part_tex in zip(self.split(), self.expression_parts):
             if part_tex == tex:
                 submob.highlight(color)
@@ -105,12 +107,12 @@ class TexMobject(SVGMobject):
         )
 
     def add_background_rectangle(self, color = BLACK, opacity = 0.75):
-        rect = BackgroundRectangle(
+        self.background_rectangle = BackgroundRectangle(
             self, color = color, 
             fill_opacity = opacity
         )
         letters = VMobject(*self.submobjects)
-        self.submobjects = [rect, letters]
+        self.submobjects = [self.background_rectangle, letters]
         return self
 
 class TextMobject(TexMobject):

@@ -21,7 +21,7 @@ from eola.matrix import *
 from eola.two_d_space import *
 from eola.chapter3 import MatrixVectorMultiplicationAbstract
 
-def get_det_text(matrix, determinant = None):
+def get_det_text(matrix, determinant = None, background_rect = True):
     parens = TexMobject(["(", ")"])
     parens.scale(2)
     parens.stretch_to_fit_height(matrix.get_height())
@@ -29,7 +29,8 @@ def get_det_text(matrix, determinant = None):
     l_paren.next_to(matrix, LEFT, buff = 0.1)
     r_paren.next_to(matrix, RIGHT, buff = 0.1)
     det = TextMobject("det").next_to(l_paren, LEFT, buff = 0.1)
-    det.add_background_rectangle()
+    if background_rect:
+        det.add_background_rectangle()
     det_text = VMobject(det, l_paren, r_paren)
     if determinant is not None:
         eq = TexMobject("=")
@@ -826,28 +827,28 @@ class OrientationReversing3DTransformation(Scene):
 
 class RightHandRule(Scene):
     CONFIG = {
-        "flip" : False
+        "flip" : False,
+        "labels_tex" : ["\\hat{\\imath}", "\\hat{\\jmath}", "\\hat{k}"],
+        "colors" : [X_COLOR, Y_COLOR, Z_COLOR],
     }
     def construct(self):
         hand = RightHand()
-        i_hat = Vector([-1.75, 0.5])
-        j_hat = Vector([-1.4, -0.7])
-        k_hat = Vector([0, 1.7])
-        vects = [i_hat, j_hat, k_hat]        
+        v1 = Vector([-1.75, 0.5])
+        v2 = Vector([-1.4, -0.7])
+        v3 = Vector([0, 1.7])
+        vects = [v1, v2, v3]        
         if self.flip:
             VMobject(hand, *vects).flip()
 
-        i_label, j_label, k_label = [
-            TexMobject("\\hat{%s}"%s).scale(1.5)
-            for s in "\\imath", "\\jmath", "k"
+        v1_label, v2_label, v3_label = [
+            TexMobject(label_tex).scale(1.5)
+            for label_tex in self.labels_tex
         ]
-        i_label.next_to(i_hat.get_end(), UP)
-        j_label.next_to(j_hat.get_end(), DOWN)
-        k_label.next_to(k_hat.get_end(), UP)
+        v1_label.next_to(v1.get_end(), UP)
+        v2_label.next_to(v2.get_end(), DOWN)
+        v3_label.next_to(v3.get_end(), UP)
 
-        labels = [i_label, j_label, k_label]
-        colors = [X_COLOR, Y_COLOR, Z_COLOR]
-
+        labels = [v1_label, v2_label, v3_label]
 
         # self.add(NumberPlane())
         self.play(
@@ -855,7 +856,7 @@ class RightHandRule(Scene):
             FadeIn(hand.inlines)
         )
         self.dither()
-        for vect, label, color in zip(vects, labels, colors):
+        for vect, label, color in zip(vects, labels, self.colors):
             vect.highlight(color)
             label.highlight(color)
             vect.set_stroke(width = 8)
