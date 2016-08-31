@@ -34,22 +34,20 @@ def get_vect_tex(*strings):
     else:
         return result
 
+def get_perm_sign(*permutation):
+    identity = np.identity(len(permutation))
+    return np.linalg.det(identity[list(permutation)])
+
 class OpeningQuote(Scene):
     def construct(self):
-        words = TextMobject(
-            "``And what is the use of a book,'' thought Alice,",
-            "``without", "pictures", "or", "conversations", "?''"
-        )
-        words.highlight_by_tex("pictures", BLUE)
-        words.highlight_by_tex("conversations", MAROON_B)
-        words.scale_to_fit_width(2*SPACE_WIDTH - 2)
+        words = TextMobject("``Every dimension is special.''")
         words.to_edge(UP)
-        author = TextMobject("-Lewis Carroll (Alice in Wonderland)")
+        author = TextMobject("-Jeff Lagarias")
         author.highlight(YELLOW)
         author.next_to(words, DOWN, buff = 0.5)
 
         self.play(FadeIn(words))
-        self.dither(4)
+        self.dither(1)
         self.play(Write(author, run_time = 3))
         self.dither()
 
@@ -76,40 +74,98 @@ class DoTheSameForCross(TeacherStudentsScene):
         self.change_student_modes("pondering")
         self.random_blink()
 
-class ListSteps(RandolphScene):
+class ListSteps(Scene):
     CONFIG = {
         "randy_corner" : DOWN+RIGHT
     }
     def construct(self):
         title = TextMobject("Two part chapter")
-        title.highlight(YELLOW)
         title.to_edge(UP)
         h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
         h_line.next_to(title, DOWN)
+        randy = Randolph().flip().to_corner(DOWN+RIGHT)
+        randy.look(UP+LEFT)
 
         step_1 = TextMobject("This video: Standard introduction")
         step_2 = TextMobject("Next video: Deeper understanding with ", "linear transformations")
         step_2.highlight_by_tex("linear transformations", BLUE)
         steps = Group(step_1, step_2)
         steps.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = LARGE_BUFF)
-        steps.next_to(self.randy, UP)
-        steps.to_edge(LEFT)
+        steps.next_to(randy, UP)
+        steps.to_edge(LEFT, buff = LARGE_BUFF)
 
         self.add(title)
         self.play(ShowCreation(h_line))
+        for step in steps:
+            self.play(Write(step))
+            self.dither()
+        for step in steps:
+            target = step.copy()
+            target.scale_in_place(1.1)
+            target.highlight(YELLOW)
+            target.highlight_by_tex("linear transformations", BLUE)
+            step.target = target
+            step.save_state()
+        self.play(FadeIn(randy))
+        self.play(Blink(randy))
         self.play(
-            Write(step_1),
-            ApplyFunction(
-                lambda m : m.change_mode("happy").look(UP+LEFT),
-                self.randy
+            MoveToTarget(step_1),
+            step_2.fade,
+            randy.change_mode, "happy"
+        )
+        self.play(Blink(randy))
+        self.play(
+            Transform(step_1, step_1.copy().restore().fade()),
+            MoveToTarget(step_2),
+            randy.look, LEFT
+        )
+        self.play(randy.change_mode, "erm")
+        self.dither(2)
+        self.play(randy.change_mode, "pondering")
+        self.play(Blink(randy))
+
+class SimpleDefine2dCrossProduct(LinearTransformationScene):
+    CONFIG = {
+        "show_basis_vectors" : False,
+        "v_coords" : [3, 1],
+        "w_coords" : [2, -1],
+    }
+    def construct(self):
+        self.add_vectors()
+        self.show_area()
+        self.show_sign()
+
+    def add_vectors(self):
+        self.plane.fade()
+        v = self.add_vector(self.v_coords, color = V_COLOR)
+        w = self.add_vector(self.w_coords, color = W_COLOR)
+        for vect, name, direction in (v, "v", "left"), (w, "w", "right"):
+            color = vect.get_color()
+            vect.label = self.label_vector(
+                vect, name, color = color, direction = direction,
             )
-        )
-        self.dither(1)
-        self.play(
-            Write(step_2),
-            self.randy.change_mode, "pondering"
-        )
-        self.dither()
+            vect.coord_array = vector_coordinate_label(
+                vect, color = color,
+            )
+            vect.coords = vect.coord_array.get_entries()
+        for vect, edge in (v, DOWN), (w, UP):
+            vect.coord_array.move_to(
+                vect.coord_array.get_center(), 
+                aligned_edge = edge
+            )
+            self.play(Write(vect.coord_array, run_time = 1))
+        self.v, self.w = v, w
+
+    def show_area(self):
+        transform = self.get_matrix_transformation(np.array([
+            self.v_coords, 
+            self.w_coords,
+        ]).T)
+        self.square.apply_function(transform)
+
+    def show_sign(self):
+        pass
+
 
 class ContrastDotAndCross(Scene):
     def construct(self):
@@ -986,7 +1042,8 @@ class WriteAreaOfParallelogram(Scene):
 
 class WriteCrossProductProperties(Scene):
     def construct(self):
-        v_tex, w_tex, p_tex = get_vect_tex(*"vwp")
+        v_tex, w_tex, p_tex = texs = get_vect_tex(*"vwp")
+        v_cash, w_cash, p_cash = ["$%s$"%tex for tex in texs]
         cross_product = TexMobject(v_tex, "\\times", w_tex, "=", p_tex)
         cross_product.highlight_by_tex(v_tex, V_COLOR)
         cross_product.highlight_by_tex(w_tex, W_COLOR)
@@ -997,15 +1054,23 @@ class WriteCrossProductProperties(Scene):
         brace.do_in_place(brace.stretch, 2, 0)
         vector = brace.get_text("vector")
         vector.highlight(P_COLOR)
-        length_words = TextMobject("With length", "2.5")
-        length_words.highlight_by_tex("2.5", BLUE)
-        length_words.next_to(vector, DOWN, buff = MED_BUFF)
-        perpendicular = TextMobject("""
-            Perpendicular to 
-            the""", "parallelogram"
+        length_words = TextMobject(
+            "Length of ", p_cash, "\\\\ = ", 
+            "(parallelogram's area)"
         )
-        perpendicular.highlight_by_tex("parallelogram", BLUE)
-        perpendicular.next_to(length_words, DOWN, buff = MED_BUFF)
+        length_words.highlight_by_tex(p_cash, P_COLOR)
+        length_words.scale_to_fit_width(SPACE_WIDTH - 1)
+        length_words.highlight_by_tex("(parallelogram's area)", BLUE)
+        length_words.next_to(Group(cross_product, vector), DOWN, buff = LARGE_BUFF)
+        perpendicular = TextMobject(
+            "\\centering Perpendicular to",
+            v_cash, "and", w_cash
+        )
+        perpendicular.scale_to_fit_width(SPACE_WIDTH - 1)        
+        perpendicular.highlight_by_tex(v_cash, V_COLOR)
+        perpendicular.highlight_by_tex(w_cash, W_COLOR)
+        perpendicular.next_to(length_words, DOWN, buff = LARGE_BUFF)
+
 
         self.play(Write(cross_product))
         self.play(
@@ -1081,10 +1146,6 @@ class ShowCrossProductFormula(Scene):
         cross_product = Group(m1, TexMobject("\\times"), m2)
         cross_product.arrange_submobjects()
         cross_product.shift(2*LEFT)
-
-        def get_perm_sign(a, b, c):
-            identity = np.identity(3)
-            return np.linalg.det(identity[[a, b, c]])
 
         entry_dicts = [{} for x in range(3)]
         movement_sets = []

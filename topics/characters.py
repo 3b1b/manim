@@ -31,6 +31,7 @@ class PiCreature(SVGMobject):
         "initial_scale_factor" : 0.01,
         "corner_scale_factor" : 0.75,
         "flip_at_start" : False,
+        "is_looking_direction_purposeful" : False,
     }
     def __init__(self, mode = "plain", **kwargs):
         self.parts_named = False
@@ -81,18 +82,20 @@ class PiCreature(SVGMobject):
     def change_mode(self, mode):
         curr_center = self.get_center()
         curr_height = self.get_height()
-        looking_direction = None
-        looking_direction = self.get_looking_direction()
-        should_be_flipped = self.is_flipped()
+        should_be_flipped = self.is_flipped()        
+        if self.is_looking_direction_purposeful:
+            looking_direction = self.get_looking_direction()
         self.__init__(mode)
         self.scale_to_fit_height(curr_height)
         self.shift(curr_center)
-        self.look(looking_direction)
         if should_be_flipped ^ self.is_flipped():
             self.flip()
+        if self.is_looking_direction_purposeful:
+            self.look(looking_direction)
         return self
 
     def look(self, direction):
+        self.is_looking_direction_purposeful = True
         x, y = direction[:2]        
         for pupil, eye in zip(self.pupils.split(), self.eyes.split()):
             pupil.move_to(eye, aligned_edge = direction)
@@ -113,7 +116,7 @@ class PiCreature(SVGMobject):
     def get_looking_direction(self):
         return np.sign(np.round(
             self.pupils.get_center() - self.eyes.get_center(),
-            decimals = 1
+            decimals = 2
         ))
 
     def is_flipped(self):

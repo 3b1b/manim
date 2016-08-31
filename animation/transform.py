@@ -61,6 +61,12 @@ class CounterclockwiseTransform(Transform):
         "path_arc" : np.pi
     }
 
+class MoveToTarget(Transform):
+    def __init__(self, mobject, **kwargs):
+        if not hasattr(mobject, "target"):
+            raise Exception("MoveToTarget called on mobject without attribute 'target' ")
+        Transform.__init__(self, mobject, mobject.target, **kwargs)
+
 class GrowFromCenter(Transform):
     def __init__(self, mobject, **kwargs):
         target = mobject.copy()

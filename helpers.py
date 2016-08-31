@@ -35,7 +35,7 @@ def play_chord(*nums):
         pass
 
 def play_error_sound():
-    play_chord(12, 11, 8, 6, 1)
+    play_chord(11, 8, 6, 1)
 
 
 def play_finish_sound():
@@ -144,7 +144,7 @@ def bezier(points):
     n = len(points) - 1
     return lambda t : sum([
         ((1-t)**(n-k))*(t**k)*choose(n, k)*point
-        for point, k in zip(points, it.count())
+        for k, point in enumerate(points)
     ])
 
 def remove_list_redundancies(l):
