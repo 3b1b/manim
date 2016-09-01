@@ -60,6 +60,7 @@ class Mobject(object):
         for mobject in mobjects:
             if mobject in self.submobjects:
                 self.submobjects.remove(mobject)
+        return self
 
     def get_array_attrs(self):
         return ["points"]

@@ -127,13 +127,15 @@ class ListSteps(Scene):
 class SimpleDefine2dCrossProduct(LinearTransformationScene):
     CONFIG = {
         "show_basis_vectors" : False,
-        "v_coords" : [3, 1],
+        "v_coords" : [3, 2],
         "w_coords" : [2, -1],
     }
     def construct(self):
         self.add_vectors()
         self.show_area()
+        self.write_area_words()        
         self.show_sign()
+        self.swap_v_and_w()
 
     def add_vectors(self):
         self.plane.fade()
@@ -144,28 +146,292 @@ class SimpleDefine2dCrossProduct(LinearTransformationScene):
             vect.label = self.label_vector(
                 vect, name, color = color, direction = direction,
             )
+        self.v, self.w = v, w
+
+    def show_area(self):
+        self.add_unit_square()
+        transform = self.get_matrix_transformation(np.array([
+            self.v_coords, 
+            self.w_coords,
+        ]))
+        self.square.apply_function(transform)
+        self.play(
+            ShowCreation(self.square),
+            *map(Animation, [self.v, self.w])
+        )
+        self.dither()
+        self.play(FadeOut(self.square))
+        v_copy = self.v.copy()
+        w_copy = self.w.copy()
+        self.play(v_copy.shift, self.w.get_end())
+        self.play(w_copy.shift, self.v.get_end())
+        self.dither()
+        self.play(
+            FadeIn(self.square),
+            *map(Animation, [self.v, self.w, v_copy, w_copy])
+        )
+        self.dither()
+        self.play(*map(FadeOut, [v_copy, w_copy]))
+
+    def write_area_words(self):
+        times = TexMobject("\\times")
+        for vect in self.v, self.w:
+            vect.label.target = vect.label.copy()
+            vect.label.target.save_state()
+        cross = Group(self.v.label.target, times, self.w.label.target)
+        cross.arrange_submobjects(aligned_edge = DOWN)
+        cross.scale(1.5)        
+        cross.shift(2.5*UP).to_edge(LEFT)
+        cross_rect = BackgroundRectangle(cross)
+        equals = TexMobject("=")
+        equals.add_background_rectangle()
+        equals.next_to(cross, buff = MED_BUFF/2)
+        words = TextMobject("Area of parallelogram")
+        words.add_background_rectangle()
+        words.next_to(equals, buff = MED_BUFF/2)
+        arrow = Arrow(
+            words.get_bottom(), 
+            self.square.get_center(),
+            color = WHITE
+        )
+
+        self.play(
+            FadeIn(cross_rect),            
+            Write(times),
+            *[
+                ApplyMethod(
+                    vect.label.target.restore, 
+                    rate_func = lambda t : smooth(1-t)
+                )
+                for vect in self.v, self.w
+            ]
+        )
+        self.dither()
+        self.play(ApplyFunction(
+            lambda m : m.scale_in_place(1.2).highlight(RED),
+            times,
+            rate_func = there_and_back
+        ))
+        self.dither()
+        self.play(Write(words), Write(equals))
+        self.play(ShowCreation(arrow))
+        self.dither()
+        self.play(FadeOut(arrow))
+
+        self.area_words = words
+        self.cross = cross
+
+    def show_sign(self):        
+        for vect, angle in (self.v, -np.pi/2), (self.w, np.pi/2):
+            vect.add(vect.label)
+            vect.save_state()
+            vect.target = vect.copy()
+            vect.target.rotate(angle)
+            vect.target.label.rotate_in_place(-angle)
+            vect.target.label.background_rectangle.set_fill(opacity = 0)
+        square = self.square
+        square.save_state()
+        self.add_unit_square(animate = False, opacity = 0.15)
+        transform = self.get_matrix_transformation([
+            self.v.target.get_end()[:2],
+            self.w.target.get_end()[:2],
+        ])
+        self.square.apply_function(transform)
+        self.remove(self.square)
+        square.target = self.square
+        self.square = square
+
+        positive = TextMobject("Positive").highlight(GREEN)
+        negative = TextMobject("Negative").highlight(RED)
+        for word in positive, negative:
+            word.add_background_rectangle()
+            word.arrow = Arrow(
+                word.get_top(), word.get_top() + 1.5*UP,
+                color = word.get_color()
+            )
+            Group(word, word.arrow).next_to(
+                self.area_words, DOWN, 
+                aligned_edge = LEFT, 
+                buff = SMALL_BUFF
+            )
+        minus_sign = TexMobject("-")
+        minus_sign.highlight(RED)
+        minus_sign.move_to(self.area_words, aligned_edge = LEFT)
+        self.area_words.target = self.area_words.copy()
+        self.area_words.target.next_to(minus_sign, RIGHT)
+
+        self.play(*map(MoveToTarget, [square, self.v, self.w]))
+        arc = self.get_arc(self.v, self.w, radius = 1.5)
+        arc.highlight(GREEN)
+        self.play(ShowCreation(arc))
+        self.dither()
+        self.play(Write(positive), ShowCreation(positive.arrow))
+        self.remove(arc)
+        self.play(
+            FadeOut(positive), 
+            FadeOut(positive.arrow),
+            *[mob.restore for mob in square, self.v, self.w]
+        )
+        arc = self.get_arc(self.v, self.w, radius = 1.5)
+        arc.highlight(RED)
+        self.play(ShowCreation(arc))
+        self.play(
+            Write(negative),
+            ShowCreation(negative.arrow),
+            Write(minus_sign),
+            MoveToTarget(self.area_words)
+        )
+        self.dither()
+        self.play(*map(FadeOut, [negative, negative.arrow, arc]))
+
+    def swap_v_and_w(self):
+        new_cross = self.cross.copy()
+        new_cross.arrange_submobjects(LEFT, aligned_edge = DOWN)
+        new_cross.move_to(self.area_words, aligned_edge = LEFT)
+        for vect in self.v, self.w:
+            vect.remove(vect.label)
+
+        self.play(
+            FadeOut(self.area_words),
+            Transform(self.cross.copy(), new_cross, path_arc = np.pi/2)
+        )
+        self.dither()
+
+        curr_matrix = np.array([self.v.get_end()[:2], self.w.get_end()[:2]])
+        new_matrix = np.array(list(reversed(curr_matrix)))
+        transform = self.get_matrix_transformation(
+            np.dot(new_matrix.T, np.linalg.inv(curr_matrix.T)).T
+        )
+        self.square.target = self.square.copy().apply_function(transform)
+        self.play(
+            MoveToTarget(self.square),            
+            Transform(self.v, self.w),
+            Transform(self.w, self.v),
+            rate_func = there_and_back,
+            run_time = 3
+        )
+        self.dither()
+
+
+    def get_arc(self, v, w, radius = 2):
+        v_angle, w_angle = v.get_angle(), w.get_angle()
+        nudge = 0.05
+        arc = Arc(
+            (1-2*nudge)*(w_angle - v_angle),
+            start_angle = interpolate(v_angle, w_angle, nudge),
+            radius = radius,
+            stroke_width = 8,
+        )
+        arc.add_tip()
+        return arc
+
+class CrossBasisVectors(LinearTransformationScene):
+    def construct(self):
+        self.plane.fade()
+        i_label = self.get_vector_label(
+            self.i_hat, "\\hat{\\imath}",
+            direction = "right",
+            color = X_COLOR,
+        )
+        j_label = self.get_vector_label(
+            self.j_hat, "\\hat{\\jmath}",
+            direction = "left",
+            color = Y_COLOR,
+        )
+        for label in i_label, j_label:
+            self.play(Write(label))
+            label.target = label.copy()
+        i_label.target.scale(1.5)
+        j_label.target.scale(1.2)
+
+        self.dither()
+
+        times = TexMobject("\\times")
+        cross = Group(i_label.target, times, j_label.target)
+        cross.arrange_submobjects()
+        cross.next_to(ORIGIN).shift(1.5*UP)
+        cross_rect = BackgroundRectangle(cross)
+        eq = TexMobject("= + 1")
+        eq.add_background_rectangle()
+        eq.next_to(cross, RIGHT)
+
+        self.play(
+            ShowCreation(cross_rect),            
+            MoveToTarget(i_label.copy()),
+            MoveToTarget(j_label.copy()),
+            Write(times),
+        )
+        self.play(Write(eq))
+        self.dither()
+        arc = self.get_arc(self.i_hat, self.j_hat, radius = 1)
+        # arc.highlight(GREEN)
+        self.play(ShowCreation(arc))
+        self.dither()
+
+
+    def get_arc(self, v, w, radius = 2):
+        v_angle, w_angle = v.get_angle(), w.get_angle()
+        nudge = 0.05
+        arc = Arc(
+            (1-2*nudge)*(w_angle - v_angle),
+            start_angle = interpolate(v_angle, w_angle, nudge),
+            radius = radius,
+            stroke_width = 8,
+        )
+        arc.add_tip()
+        return arc
+
+class VisualExample(SimpleDefine2dCrossProduct):
+    CONFIG = {
+        "show_basis_vectors" : False,
+        "v_coords" : [3, 1],
+        "w_coords" : [1, -2],
+    }
+    def construct(self):
+        self.add_vectors()
+        # self.show_coords()
+        self.show_area()
+        self.write_area_words()
+
+        result = np.linalg.det([self.v_coords, self.w_coords])
+        val = TexMobject(str(int(abs(result)))).scale(2)
+        val.move_to(self.square.get_center())
+        arc = self.get_arc(self.v, self.w, radius = 1)
+        arc.highlight(RED)
+        minus = TexMobject("-").highlight(RED)
+        minus.scale(1.5)
+        minus.move_to(self.area_words, aligned_edge = LEFT)
+
+        self.play(ShowCreation(val))
+        self.dither()
+        self.play(ShowCreation(arc))
+        self.dither()
+        self.play(FadeOut(self.area_words))
+        self.play(
+            Transform(arc, minus),
+            val.next_to, minus, RIGHT
+        )
+        self.dither()
+
+    def show_coords(self):
+        for vect, edge in (self.v, DOWN), (self.w, UP):        
+            color = vect.get_color()
             vect.coord_array = vector_coordinate_label(
                 vect, color = color,
             )
-            vect.coords = vect.coord_array.get_entries()
-        for vect, edge in (v, DOWN), (w, UP):
             vect.coord_array.move_to(
                 vect.coord_array.get_center(), 
                 aligned_edge = edge
             )
             self.play(Write(vect.coord_array, run_time = 1))
-        self.v, self.w = v, w
 
-    def show_area(self):
-        transform = self.get_matrix_transformation(np.array([
-            self.v_coords, 
-            self.w_coords,
-        ]).T)
-        self.square.apply_function(transform)
-
-    def show_sign(self):
-        pass
-
+class HowDoYouCompute(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "How do you \\\\ compute this?",
+            pi_creature_target_mode = "raise_left_hand"
+        )
+        self.random_blink(2)
 
 class ContrastDotAndCross(Scene):
     def construct(self):
@@ -732,8 +998,8 @@ class Define2dCrossProduct(LinearTransformationScene):
         v_angle, w_angle = v.get_angle(), w.get_angle()
         nudge = 0.05
         arc = Arc(
-            (1-2*nudge)*(v_angle - w_angle),
-            start_angle = interpolate(w_angle, v_angle, nudge),
+            (1-2*nudge)*(w_angle - v_angle),
+            start_angle = interpolate(v_angle, w_angle, nudge),
             radius = radius,
             stroke_width = 8,
         )

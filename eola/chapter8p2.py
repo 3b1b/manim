@@ -573,10 +573,15 @@ class DefineDualTransform(Scene):
         dual_vector.scale_to_fit_height(self.func_tex.get_height())
         dual_vector.get_brackets()[0].shift(0.2*LEFT)
         dual_vector.get_entries().shift(0.1*LEFT)
+        dual_vector.scale(1.25)
         dual_dot = Group(
             dual_vector,
             TexMobject("\\cdot").next_to(dual_vector)
         )
+        matrix_words = TextMobject("""
+            $1 \\times 3$ matrix encoding the 
+            3d-to-1d linear transformation
+        """)
 
         self.play(
             Write(title, run_time = 2),
@@ -589,14 +594,16 @@ class DefineDualTransform(Scene):
         func, func_input = self.func_tex
         func_input.target = func_input.copy()
         func_input.target.scale(1.2)
-        func_input.target2 = func_input.copy()
-        func_input.target.move_to(
-            self.variables_text.get_right(),
-            aligned_edge = UP
-        )
-        func_input.target2.move_to(self.func_tex, aligned_edge = RIGHT)
+        func_input.target.move_to(self.func_tex, aligned_edge = RIGHT)
         matrix.next_to(func_input.target, LEFT)
-        dual_dot.next_to(func_input.target2, LEFT)
+        dual_dot.next_to(func_input.target, LEFT)
+        matrix_words.next_to(matrix, DOWN, buff = 1.5)
+        matrix_words.shift_onto_screen()
+        matrix_arrow = Arrow(
+            matrix_words.get_top(),
+            matrix.get_bottom(),
+            color = WHITE
+        )
 
         self.play(
             Transform(func, matrix),
@@ -605,8 +612,13 @@ class DefineDualTransform(Scene):
         )
         self.dither()
         self.play(
+            Write(matrix_words),
+            ShowCreation(matrix_arrow)
+        )
+        self.dither(2)
+        self.play(*map(FadeOut, [matrix_words, matrix_arrow]))
+        self.play(
             Transform(func, dual_vector),
-            Transform(func_input, func_input.target2),
             Write(dual_dot[1])
         )
         self.dither()
@@ -739,6 +751,7 @@ class DefineDualTransform(Scene):
         ])
         equals = self.get_mobjects_from_last_animation()
         self.dither(2)
+
         everything = everything.copy()
         self.play(
             FadeOut(Group(*self.get_mobjects())),
@@ -767,6 +780,19 @@ class DefineDualTransform(Scene):
             Write(question)
         )
         self.dither()
+
+class WhyAreWeDoingThis(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Um...why are \\\\ we doing this?",
+            pi_creature_target_mode = "confused"
+        )
+        self.random_blink()
+        self.play(self.get_teacher().change_mode, "erm")
+        self.change_student_modes("plain", "confused", "raise_left_hand")
+        self.random_blink()
+        self.change_student_modes("pondering", "confused", "raise_left_hand")
+        self.random_blink(5)
 
 class ThreeDTripleCrossProduct(Scene):
     pass #Simple parallelepiped
@@ -863,6 +889,21 @@ class WriteXYZ(Scene):
 class ThreeDDotProductWithCross(Scene):
     pass 
 
+class CrossVectorEmphasisWords(Scene):
+    def construct(self):
+        v_tex, w_tex = ["$%s$"%s for s in get_vect_tex(*"vw")]
+        words = [
+            TextMobject("Perpendicular to", v_tex, "and", w_tex),
+            TextMobject("Length = (Area of ", "parallelogram", ")")
+        ]
+        for word in words:
+            word.highlight_by_tex(v_tex, ORANGE)
+            word.highlight_by_tex(w_tex, W_COLOR)
+            word.highlight_by_tex("parallelogram", BLUE)
+            self.play(Write(word))
+            self.dither()
+            self.play(FadeOut(word))
+
 class NextVideo(Scene):
     def construct(self):
         title = TextMobject("""
@@ -877,11 +918,77 @@ class NextVideo(Scene):
         self.play(ShowCreation(rect))
         self.dither()
 
+class ChangeOfBasisPreview(LinearTransformationScene):
+    CONFIG = {
+        "include_background_plane" : False,
+        "foreground_plane_kwargs" : {
+            "x_radius" : 2*SPACE_WIDTH,
+            "y_radius" : 2*SPACE_WIDTH,
+            "secondary_line_ratio" : 0
+        },
+        "t_matrix" : [[2, 1], [-1, 1]],
+        "i_target_color" : YELLOW,
+        "j_target_color" : MAROON_B,
+        "sum_color" : PINK,
+        "vector" : [-1, 2],
+    }
+    def construct(self):
+        randy = Randolph()
+        pinky = Mortimer(color = PINK)
+        randy.to_corner(DOWN+LEFT)
+        pinky.to_corner(DOWN+RIGHT)
+        self.plane.fade()
 
+        self.add_foreground_mobject(randy, pinky)
+        coords = Matrix(self.vector)
+        coords.add_to_back(BackgroundRectangle(coords))
+        self.add_foreground_mobject(coords)
+        coords.move_to(
+            randy.get_corner(UP+RIGHT),
+            aligned_edge = DOWN+LEFT
+        )
+        coords.target = coords.copy()
+        coords.target.move_to(
+            pinky.get_corner(UP+LEFT),
+            aligned_edge = DOWN+RIGHT
+        )
+        self.play(
+            Write(coords),
+            randy.change_mode, "speaking"
+        )
+        self.scale_basis_vectors()
+        self.apply_transposed_matrix(
+            self.t_matrix,
+            added_anims = [
+                MoveToTarget(coords),
+                ApplyMethod(pinky.change_mode, "speaking"),
+                ApplyMethod(randy.change_mode, "plain"),
+            ]
+        )
+        self.play(
+            randy.change_mode, "erm",
+            self.i_hat.highlight, self.i_target_color,
+            self.j_hat.highlight, self.j_target_color,
+        )
+        self.i_hat.color = self.i_target_color
+        self.j_hat.color = self.j_target_color
+        self.scale_basis_vectors()
 
-
-
-
+    def scale_basis_vectors(self):
+        for vect in self.i_hat, self.j_hat:
+            vect.save_state()
+        self.play(self.i_hat.scale, self.vector[0])
+        self.play(self.j_hat.scale, self.vector[1])
+        self.play(self.j_hat.shift, self.i_hat.get_end())
+        sum_vect = Vector(self.j_hat.get_end(), color = self.sum_color)
+        self.play(ShowCreation(sum_vect))
+        self.dither(2)
+        self.play(
+            FadeOut(sum_vect),
+            self.i_hat.restore,
+            self.j_hat.restore,
+        )
+        self.dither()
 
 
 
