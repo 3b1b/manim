@@ -23,14 +23,14 @@ from mobject.tex_mobject import *
 
 from mobject.vectorized_mobject import *
 
-
 ## To watch one of these scenes, run the following:
-## python extract_scenes.py -p <SceneName>
+## python extract_scenes.py -p file_name <SceneName>
 
 class SquareToCircle(Scene):
     def construct(self):
         circle = Circle()
         square = Square()
+        square.rotate(np.pi/8)
         self.play(ShowCreation(square))
         self.play(Transform(square, circle))
         self.dither()
