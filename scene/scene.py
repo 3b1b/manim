@@ -16,7 +16,7 @@ from camera import Camera
 from tk_scene import TkSceneRoot
 from mobject import Mobject
 from animation import Animation
-from animation.transform import ApplyMethod
+from animation.transform import MoveToTarget
 
 class Scene(object):
     CONFIG = {
@@ -181,35 +181,45 @@ class Scene(object):
 
         This animation list is built by going through the args list, 
         and each animation is simply added, but when a mobject method 
-        s hit, an ApplyMethod animation is built using the args that 
+        s hit, a MoveToTarget animation is built using the args that 
         follow up until either another animation is hit, another method 
         is hit, or the args list runs out.
         """
         animations = []
-        method_state = {
-            "method" : None,
-            "args" : []
+        state = {
+            "curr_method" : None,
+            "last_method" : None,
+            "method_args" : [],
         }
-        def compile_method(state, animations):
-            if state["method"] is None:
+        def compile_method(state):
+            if state["curr_method"] is None:
                 return
-            animations.append(ApplyMethod(
-                state["method"], *state["args"]
-            ))
-            state["method"] = None
-            state["args"] = []
+            mobject = state["curr_method"].im_self
+            if state["last_method"] and state["last_method"].im_self is mobject:
+                animations.pop()
+                #method should already have target then.
+            else:
+                mobject.target = mobject.copy()
+            state["curr_method"].im_func(
+                mobject.target, *state["method_args"]
+            )
+            animations.append(MoveToTarget(mobject))
+            state["last_method"] = state["curr_method"]
+            state["curr_method"] = None
+            state["method_args"] = []
+            
         for arg in args:
             if isinstance(arg, Animation):
-                compile_method(method_state, animations)
+                compile_method(state)
                 animations.append(arg)
             elif inspect.ismethod(arg):
-                compile_method(method_state, animations)
-                method_state["method"] = arg
-            elif method_state["method"] is not None:
-                method_state["args"].append(arg)
+                compile_method(state)
+                state["curr_method"] = arg
+            elif state["curr_method"] is not None:
+                state["method_args"].append(arg)
             else:
                 raise Exception("Invalid play arguments")
-        compile_method(method_state, animations)
+        compile_method(state)
         return animations
 
     def play(self, *args, **kwargs):
