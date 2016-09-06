@@ -79,11 +79,13 @@ class Camera(object):
                     self.adjusted_thickness(mobject.stroke_width)
                 )
             #TODO, more?  Call out if it's unknown?
-        image = Image.fromarray(self.pixel_array, mode = "RGB")
+
+        image = Image.fromarray(self.pixel_array, mode = "RGB")        
         canvas = aggdraw.Draw(image)
+
         for vmobject in vmobjects:
             self.display_vectorized(vmobject, canvas)
-        canvas.flush()            
+        canvas.flush()
         self.pixel_array[:,:] = np.array(image)
 
 

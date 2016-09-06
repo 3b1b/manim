@@ -44,8 +44,7 @@ class Scene(object):
     def __str__(self):
         if hasattr(self, "name"):
             return self.name
-        return self.__class__.__name__ + \
-               self.args_to_string(*self.construct_args)
+        return self.__class__.__name__
 
     def set_name(self, name):
         self.name = name
@@ -62,6 +61,7 @@ class Scene(object):
     def update_frame(self, mobjects = None, background = None, **kwargs):
         if mobjects is None:
             mobjects = self.mobjects
+            kwargs["include_submobjects"] = False
         if background is not None:
             self.camera.set_image(background)
         else:
@@ -74,26 +74,28 @@ class Scene(object):
         self.clear()
     ###
 
-    def extract_mobjects_with_points(self, *mobjects):
+    def extract_mobject_family_members(self, *mobjects):
         return list(it.chain(*[
-            m.family_members_with_points()
+            m.submobject_family()
             for m in mobjects
         ]))
         
-
-    def add(self, *mobjects):
+    def add(self, *mobjects_to_add):
         """
         Mobjects will be displayed, from background to foreground,
         in the order with which they are entered.
 
-        Scene class only keeps track of top-level monjects, all 
-        concerns with submobjects is left to animations and subclass
-        implementations of the construct method.
+        Scene class keep track not just of the mobject directly added,
+        but also of every family member therein.
         """
-        if not all_elements_are_instances(mobjects, Mobject):
+        if not all_elements_are_instances(mobjects_to_add, Mobject):
             raise Exception("Adding something which is not a mobject")
-        old_mobjects = filter(lambda m : m not in mobjects, self.mobjects)
-        self.mobjects = old_mobjects + list(mobjects)
+        mobjects_to_add = self.extract_mobject_family_members(*mobjects_to_add)
+        old_mobjects = filter(
+            lambda m : m not in mobjects_to_add, 
+            self.mobjects
+        )
+        self.mobjects = old_mobjects + mobjects_to_add
         return self
 
     def add_mobjects_among(self, values):
@@ -105,16 +107,12 @@ class Scene(object):
         self.add(*mobjects)
         return self
 
-    def remove(self, *mobjects):
-        if not all_elements_are_instances(mobjects, Mobject):
+    def remove(self, *mobjects_to_remove):
+        if not all_elements_are_instances(mobjects_to_remove, Mobject):
             raise Exception("Removing something which is not a mobject")
-        mobjects = list(it.chain(*[m.submobject_family() for m in mobjects]))
-        if len(mobjects) == 0:
-            return
+        mobjects_to_remove = self.extract_mobject_family_members(*mobjects_to_remove)
         self.mobjects = filter(
-            lambda m : not set(
-                m.family_members_with_points()
-            ).issubset(mobjects),
+            lambda m : m not in mobjects_to_remove,
             self.mobjects
         )
         return self
@@ -155,11 +153,12 @@ class Scene(object):
     def separate_moving_and_static_mobjects(self, *animations):
         """
         """
-        moving_mobjects = [anim.mobject for anim in animations]
-        moving_parts = self.extract_mobjects_with_points(*moving_mobjects)
+        moving_mobjects = self.extract_mobject_family_members(
+            *[anim.mobject for anim in animations]
+        )
         static_mobjects = filter(
-            lambda m : m not in moving_parts,
-            self.extract_mobjects_with_points(*self.mobjects)
+            lambda m : m not in moving_mobjects,
+            self.mobjects
         )
         return moving_mobjects, static_mobjects
 
@@ -207,7 +206,7 @@ class Scene(object):
             state["last_method"] = state["curr_method"]
             state["curr_method"] = None
             state["method_args"] = []
-            
+
         for arg in args:
             if isinstance(arg, Animation):
                 compile_method(state)
@@ -241,7 +240,7 @@ class Scene(object):
             for animation in animations:
                 animation.update(t / animation.run_time)
             self.update_frame(moving_mobjects, static_image)
-            self.frames.append(self.get_frame())
+            self.add_frames(self.get_frame())
 
         self.clean_up_animations(*animations)
         return self
@@ -291,8 +290,11 @@ class Scene(object):
         if self.skip_animations:
             return self
         self.update_frame()
-        self.frames += [self.get_frame()]*int(duration / self.frame_duration)
+        self.add_frames(*[self.get_frame()]*int(duration / self.frame_duration))
         return self
+
+    def add_frames(self, *frames):
+        self.frames += list(frames)
 
     def repeat_frames(self, num):
         self.frames = self.frames*num
@@ -353,9 +355,9 @@ class Scene(object):
             '-vcodec','rawvideo',
             '-s', '%dx%d'%(width, height), # size of one frame
             '-pix_fmt', 'rgb24',
-            '-r', str(fps),       # frames per second
-            '-i', '-',            # The imput comes from a pipe
-            '-an',                # Tells FFMPEG not to expect any audio
+            '-r', str(fps), # frames per second
+            '-i', '-',      # The imput comes from a pipe
+            '-an',          # Tells FFMPEG not to expect any audio
             '-vcodec', 'mpeg',
             '-c:v', 'libx264',
             '-pix_fmt', 'yuv420p',
@@ -367,20 +369,6 @@ class Scene(object):
             process.stdin.write(frame.tostring())
         process.stdin.close()
         process.wait()
-
-    # To list possible args that subclasses have
-    # Elements should always be a tuple
-    args_list = []
-
-    # For subclasses to turn args in the above  
-    # list into stings which can be appended to the name
-    @staticmethod
-    def args_to_string(*args):
-        return ""
-        
-    @staticmethod
-    def string_to_args(string):
-        raise Exception("string_to_args Not Implemented!")
 
 
 

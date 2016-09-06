@@ -14,7 +14,7 @@ from camera import Camera
 
 HELP_MESSAGE = """
    Usage: 
-   python extract_scene.py <module> [<scene name>] [<arg_string>]
+   python extract_scene.py <module> [<scene name>]
 
    -p preview in low quality
    -s show and save picture of last frame
@@ -48,7 +48,6 @@ def get_configuration(sys_argv):
    config = {
       "file"           : None,
       "scene_name"     : "",
-      "args_extension" : "",
       "camera_config"  : PRODUCTION_QUALITY_CAMERA_CONFIG,
       "preview"        : False,
       "write"          : False,
@@ -88,8 +87,6 @@ def get_configuration(sys_argv):
    config["file"] = args[0]
    if len(args) > 1:
       config["scene_name"] = args[1]
-   if len(args) > 2:
-      config["args_extension"] = " ".join(args[2:])
    return config
 
 def handle_scene(scene, **config):
@@ -137,35 +134,6 @@ def prompt_user_for_choice(name_to_obj):
       print INVALID_NUMBER_MESSAGE
       sys.exit()
 
-def get_scene_args(SceneClass, config):
-   """
-   Return arguments as a sequence
-   """
-   tuplify = lambda x : x if type(x) == tuple else (x,)
-   args_list = map(tuplify, SceneClass.args_list)
-   preset_extensions = [
-      SceneClass.args_to_string(*args)
-      for args in args_list
-   ]
-   if len(args_list) > 0:
-      num_args = len(args_list[0])
-   else:
-      num_args = len(inspect.getargspec(SceneClass.construct).args) - 1
-
-   if num_args == 0:
-      return [()]
-   if config["write_all"]:
-      return args_list
-   if config["args_extension"] in preset_extensions:
-      index = preset_extensions.index(config["args_extension"])
-      return [args_list[index]]
-   if config["args_extension"] == "" :
-      if len(args_list) == 1:
-         return args_list
-      name_to_args = dict(zip(preset_extensions, args_list))
-      return prompt_user_for_choice(name_to_args)
-   return [SceneClass.string_to_args(config["args_extension"])]
-
 def get_scene_classes(scene_names_to_classes, config):
    if len(scene_names_to_classes) == 0:
       print NO_SCENE_MESSAGE
@@ -189,7 +157,6 @@ def get_module(file_name):
       last_module = imp.load_module(part, *load_args)
    return last_module
 
-
 def main():
    config = get_configuration(sys.argv)
    module = get_module(config["file"])
@@ -202,17 +169,14 @@ def main():
       "skip_animations" : config["skip_animations"],
    }
    for SceneClass in get_scene_classes(scene_names_to_classes, config):
-      for args in get_scene_args(SceneClass, config):
-         scene_kwargs["construct_args"] = tuplify(args)
-         try:
-            handle_scene(SceneClass(**scene_kwargs), **config)
-            play_finish_sound()
-         except:
-            print "\n\n"
-            traceback.print_exc()
-            print "\n\n"
-            play_error_sound()
-
+      try:
+         handle_scene(SceneClass(**scene_kwargs), **config)
+         play_finish_sound()
+      except:
+         print "\n\n"
+         traceback.print_exc()
+         print "\n\n"
+         play_error_sound()
 
 
 if __name__ == "__main__":
