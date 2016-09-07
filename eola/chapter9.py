@@ -75,7 +75,7 @@ class LinearCombinationScene(LinearTransformationScene):
             )
         if coord_mobs is None:
             coord_mobs = map(TexMobject, map(str, numerical_coords))
-            Group(*coord_mobs).set_fill(opacity = 0)
+            VGroup(*coord_mobs).set_fill(opacity = 0)
             for coord, basis in zip(coord_mobs, basis_vectors):
                 coord.next_to(basis.label, LEFT)
         for coord, basis in zip(coord_mobs, basis_vectors):
@@ -86,10 +86,10 @@ class LinearCombinationScene(LinearTransformationScene):
                 coord, basis, basis.label
             ]))
             self.dither()
-        self.play(
-            Group(*self.get_mobjects_from_last_animation()).shift,
-            basis_vectors[0].get_end()
-        )
+        self.play(*[
+            ApplyMethod(m.shift, basis_vectors[0].get_end())
+            for m in self.get_mobjects_from_last_animation()
+        ])
         if show_sum_vect:
             sum_vect = Vector(
                 basis_vectors[1].get_end(),
@@ -97,16 +97,12 @@ class LinearCombinationScene(LinearTransformationScene):
             )
             self.play(ShowCreation(sum_vect))
         self.dither(2)
-        self.play(*[
-            basis.restore for basis in basis_vectors
-        ]+[
-            basis.label.restore for basis in basis_vectors
-        ]+[
-            FadeOut(coord) for coord in coord_mobs
-        ]+[
-            FadeOut(sum_vect) for x in [1] if show_sum_vect
-        ])
-
+        self.play(*it.chain(
+            [basis.restore for basis in basis_vectors],
+            [basis.label.restore for basis in basis_vectors],
+            [FadeOut(coord) for coord in coord_mobs],
+            [FadeOut(sum_vect) for x in [1] if show_sum_vect],
+        ))
 
 
 
@@ -119,10 +115,11 @@ class RemindOfCoordinates(LinearCombinationScene):
 
         v = self.add_vector(self.vector_coords, color = V_COLOR)
         coords = self.write_vector_coordinates(v)
-
         self.show_standard_coord_meaning(*coords.get_entries().copy())
         self.show_abstract_scalar_idea(*coords.get_entries().copy())
         self.scale_basis_vectors(*coords.get_entries().copy())
+
+
 
     def show_standard_coord_meaning(self, x_coord, y_coord):
         x, y = self.vector_coords
@@ -145,31 +142,30 @@ class RemindOfCoordinates(LinearCombinationScene):
         to_save = x_coord, y_coord, self.i_hat, self.j_hat
         for mob in to_save:
             mob.save_state()
-        everything = self.get_mobjects()
+        everything = VGroup(*self.get_mobjects())
 
         x, y = self.vector_coords  
         scaled_i = self.i_hat.copy().scale(x)
         scaled_j = self.j_hat.copy().scale(y)
-        Group(self.i_hat, scaled_i).shift(x_shift)
-        Group(self.j_hat, scaled_j).shift(y_shift)
-
+        VGroup(self.i_hat, scaled_i).shift(x_shift)
+        VGroup(self.j_hat, scaled_j).shift(y_shift)
 
         self.play(
-            *map(FadeOut, everything) + [
+            FadeOut(everything),
             x_coord.scale_in_place, 1.5,
             x_coord.move_to, x_shift + 3*UP,
             y_coord.scale_in_place, 1.5,
             y_coord.move_to, y_shift + 3*UP,
-        ])
+        )
         self.play(*map(FadeIn, [self.i_hat, self.j_hat]))
         self.dither()
         self.play(Transform(self.i_hat, scaled_i))
         self.play(Transform(self.j_hat, scaled_j))
         self.dither()
-        self.play(*it.chain(
-            map(FadeIn, everything),
-            [mob.restore for mob in to_save]
-        ))
+        self.play(
+            FadeIn(everything),
+            *[mob.restore for mob in to_save]
+        )
         self.dither()
 
     def scale_basis_vectors(self, x_coord, y_coord):

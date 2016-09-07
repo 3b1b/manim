@@ -347,7 +347,7 @@ class VMobject(Mobject):
         self.set_points(points)
         return self
 
-class Group(VMobject):
+class VGroup(VMobject):
     #Alternate name to improve readability during use
     pass 
 

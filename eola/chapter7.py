@@ -179,17 +179,17 @@ class ShowNumericalDotProduct(Scene):
         v1 = Matrix(self.v1)
         v2 = Matrix(self.v2)
         inter_array_dot = TexMobject("\\cdot").scale(1.5)
-        dot_product = Group(v1, inter_array_dot, v2)
+        dot_product = VGroup(v1, inter_array_dot, v2)
         dot_product.arrange_submobjects(RIGHT, buff = MED_BUFF/2)
         dot_product.to_edge(LEFT)
         pairs = zip(v1.get_entries(), v2.get_entries())
 
         for pair, color in zip(pairs, [X_COLOR, Y_COLOR, Z_COLOR, PINK]):
-            Group(*pair).highlight(color)
+            VGroup(*pair).highlight(color)
 
         dot = TexMobject("\\cdot")
-        products = Group(*[
-            Group(
+        products = VGroup(*[
+            VGroup(
                 p1.copy(), dot.copy(), p2.copy()
             ).arrange_submobjects(RIGHT, buff = SMALL_BUFF)
             for p1, p2 in pairs
@@ -200,8 +200,8 @@ class ShowNumericalDotProduct(Scene):
 
         products.target = products.copy()
         plusses = ["+"]*(len(self.v1)-1)
-        symbols = Group(*map(TexMobject, ["="] + plusses))
-        final_sum = Group(*it.chain(*zip(
+        symbols = VGroup(*map(TexMobject, ["="] + plusses))
+        final_sum = VGroup(*it.chain(*zip(
             symbols, products.target
         )))
         final_sum.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
@@ -231,7 +231,7 @@ class ShowNumericalDotProduct(Scene):
             )
             self.dither()
         self.play(Transform(
-            Group(*it.starmap(Group, pairs)).copy(),
+            VGroup(*it.starmap(Group, pairs)).copy(),
             products,
             path_arc = -np.pi/2,
             run_time = 2 
@@ -619,15 +619,15 @@ class SymmetricVAndW(VectorScene):
         v.proj.save_state()
         v.proj_line.save_state()
         self.play(Transform(*[
-            Group(mob, mob.label)
+            VGroup(mob, mob.label)
             for mob in v, new_v
         ]), run_time = 2)
         last_mob = self.get_mobjects_from_last_animation()[0] 
         self.remove(last_mob)
         self.add(*last_mob)       
         Transform(
-            Group(v.proj, v.proj_line),
-            Group(new_v.proj, new_v.proj_line)
+            VGroup(v.proj, v.proj_line),
+            VGroup(new_v.proj, new_v.proj_line)
         ).update(1)##Hacky
 
         self.play(Write(words))
@@ -905,7 +905,7 @@ class AdditivityProperty(TwoDToOneDScene):
         if not self.sum_before:
             sum_vect = self.play_sum(v, w)
         symbols.target = symbols.copy().next_to(sum_vect, UP)
-        Group(L, r_paren).highlight(BLACK)
+        VGroup(L, r_paren).highlight(BLACK)
         self.play(Transform(symbols, symbols.target))
         self.dither()
 
@@ -931,16 +931,16 @@ class AdditivityProperty(TwoDToOneDScene):
             tex_mob = TexMobject(
                 "L(", v_tex, "+", w_tex, ")"
             )
-            result = Group(
+            result = VGroup(
                 tex_mob[0], 
-                Group(*tex_mob[1:4]), 
+                VGroup(*tex_mob[1:4]), 
                 tex_mob[4]
             )
         else:
             tex_mob = TexMobject(
                 "L(", v_tex, ")", "+", "L(", w_tex, ")"
             )
-            result = Group(
+            result = VGroup(
                 VectorizedPoint(tex_mob.get_left()),
                 tex_mob,
                 VectorizedPoint(tex_mob.get_right()),
@@ -1304,12 +1304,12 @@ class AssociationBetweenMatricesAndVectors(Scene):
         vectors_words = TextMobject("2d vectors")
         vectors_words.highlight(YELLOW)
         arrow = DoubleArrow(LEFT, RIGHT, color = WHITE)
-        Group(
+        VGroup(
             matrices_words, arrow, vectors_words
         ).arrange_submobjects(buff = MED_BUFF)
 
-        matrices = Group(*map(Matrix, self.matrices))
-        vectors = Group(*map(Matrix, [m[0] for m in self.matrices]))
+        matrices = VGroup(*map(Matrix, self.matrices))
+        vectors = VGroup(*map(Matrix, [m[0] for m in self.matrices]))
         for m in list(matrices) + list(vectors):
             x, y = m.get_entries()
             x.highlight(X_COLOR)
@@ -1455,7 +1455,7 @@ class ProjectOntoUnitVectorNumberline(VectorScene):
 
         number_line = NumberLine(x_min = -9, x_max = 9)
         numbers = number_line.get_numbers()
-        Group(number_line, numbers).rotate(u_hat.get_angle())
+        VGroup(number_line, numbers).rotate(u_hat.get_angle())
         if self.animate_setup:
             self.play(
                 ShowCreation(number_line),
@@ -1519,7 +1519,7 @@ class ProjectOntoUnitVectorNumberline(VectorScene):
         y_vals = np.linspace(y_max, -y_max, num_vectors)
         if randomize:
             random.shuffle(y_vals)
-        vectors = Group(*[
+        vectors = VGroup(*[
             Vector(x*RIGHT + y*UP)
             for x, y in zip(x_vals, y_vals)
         ])
@@ -1527,13 +1527,13 @@ class ProjectOntoUnitVectorNumberline(VectorScene):
         return vectors
 
     def get_dots(self, vectors):
-        return Group(*[
+        return VGroup(*[
             Dot(v.get_end(), color = v.get_color(), radius = 0.075)
             for v in vectors
         ]) 
 
     def get_proj_dots(self, dots):
-        return Group(*[
+        return VGroup(*[
             dot.copy().move_to(get_projection(
                 dot.get_center(), self.u_hat.get_end()
             ))
@@ -1541,7 +1541,7 @@ class ProjectOntoUnitVectorNumberline(VectorScene):
         ])
 
     def get_proj_lines(self, dots, proj_dots):
-        return Group(*[
+        return VGroup(*[
             DashedLine(
                 d1.get_center(), d2.get_center(), 
                 buff = 0, color = d1.get_color(),
@@ -1568,8 +1568,8 @@ class ProjectionFunctionSymbol(Scene):
             color = BLUE
         )
 
-        self.add(Group(*equation[:3]))
-        self.play(Write(Group(*equation[3:])))
+        self.add(VGroup(*equation[:3]))
+        self.play(Write(VGroup(*equation[3:])))
         self.dither()
         self.play(Write(words), ShowCreation(arrow))
         self.dither()
@@ -1665,7 +1665,7 @@ class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
         proj_lines = self.get_proj_lines(dots, proj_dots)
         for dot in proj_dots:
             dot.scale_in_place(0.1)
-        proj_basis = Group(*[
+        proj_basis = VGroup(*[
             get_vect_mob_projection(vector, self.u_hat)
             for vector in basis_vectors
         ])
@@ -1678,7 +1678,7 @@ class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
         question.highlight_by_tex(j_tex, Y_COLOR)
         question.add_background_rectangle()
         matrix = Matrix([["u_x", "u_y"]])
-        Group(question, matrix).arrange_submobjects(DOWN).to_corner(
+        VGroup(question, matrix).arrange_submobjects(DOWN).to_corner(
             UP+LEFT, buff = MED_BUFF/2
         )
         matrix_rect = BackgroundRectangle(matrix)
@@ -1748,7 +1748,7 @@ class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
         words.shift(LEFT)
         words.add_background_rectangle()
         angle = np.mean([vect.get_angle(), self.u_hat.get_angle()])
-        Group(line, words).rotate(angle)
+        VGroup(line, words).rotate(angle)
 
         self.play(ShowCreation(line))
         if vect.get_end()[0] > 0.1:#is ihat
@@ -1832,7 +1832,7 @@ class GeneralTwoDOneDMatrixMultiplication(TwoDOneDMatrixMultiplication):
     }
     def construct(self):
         TwoDOneDMatrixMultiplication.construct(self)
-        everything = Group(*self.get_mobjects())
+        everything = VGroup(*self.get_mobjects())
         to_fade = filter(
             lambda m : isinstance(m, Brace) or isinstance(m, TextMobject),
             everything
@@ -1841,10 +1841,10 @@ class GeneralTwoDOneDMatrixMultiplication(TwoDOneDMatrixMultiplication):
         u = Matrix(self.matrix[0])
         v = Matrix(self.vector)
         self.color_matrix_and_vector(u, v)
-        dot_product = Group(u, TexMobject("\\cdot"), v)
+        dot_product = VGroup(u, TexMobject("\\cdot"), v)
         dot_product.arrange_submobjects()
         dot_product.shift(2*RIGHT+DOWN)
-        words = Group(
+        words = VGroup(
             TextMobject("Matrix-vector product"),
             TexMobject("\\Updownarrow"),
             TextMobject("Dot product")
@@ -1945,7 +1945,7 @@ class ScaleUpUHat(ProjectOntoUnitVectorNumberline) :
         words.highlight_by_tex("transformation", BLUE)
         words.add_background_rectangle()
         brace.put_at_tip(words)
-        Group(matrix, brace, words).to_corner(UP+LEFT)
+        VGroup(matrix, brace, words).to_corner(UP+LEFT)
 
         self.play(Transform(
             self.u_hat.coords, matrix
@@ -2154,7 +2154,7 @@ class LooseDualityDescription(Scene):
         arrow = TexMobject("\\Leftrightarrow")
         words = TextMobject("Natural-but-surprising", "correspondence")
         words[1].gradient_highlight(BLUE, YELLOW)
-        Group(duality, arrow, words).arrange_submobjects(buff = MED_BUFF)
+        VGroup(duality, arrow, words).arrange_submobjects(buff = MED_BUFF)
 
         self.add(duality)
         self.play(Write(arrow))
@@ -2189,7 +2189,7 @@ class TranslateToTheWorldOfTransformations(TwoDOneDMatrixMultiplication):
         matrix = Matrix([["x_1", "y_1"]])
         matrix.highlight_columns(X_COLOR, Y_COLOR)
 
-        dot_product = Group(v1, dot, v2)
+        dot_product = VGroup(v1, dot, v2)
         dot_product.arrange_submobjects(RIGHT)
         matrix.next_to(v2, LEFT)
 
@@ -2310,7 +2310,7 @@ class NextVideo(Scene):
         rect = Rectangle(width = 16, height = 9, color = BLUE)
         rect.scale_to_fit_height(6)
         rect.next_to(title, DOWN)
-        Group(title, rect).show()
+        VGroup(title, rect).show()
 
         self.add(title)
         self.play(ShowCreation(rect))

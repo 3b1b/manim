@@ -25,6 +25,8 @@ class Mobject(object):
     }
     def __init__(self, *submobjects, **kwargs):
         digest_config(self, kwargs)
+        if not all(map(lambda m : isinstance(m, Mobject), submobjects)):
+            raise Exception("All submobjects must be of type Mobject")
         self.submobjects = list(submobjects)
         self.color = Color(self.color)
         if self.name is None:
@@ -627,7 +629,11 @@ class Mobject(object):
 
 
 
-
+class Group(Mobject):
+    #Alternate name to improve readibility in cases where
+    #the mobject is used primarily for its submobject housing
+    #functionality.
+    pass 
 
 
 

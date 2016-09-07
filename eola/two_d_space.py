@@ -2,7 +2,7 @@ import numpy as np
 
 from scene import Scene
 from mobject import Mobject
-from mobject.vectorized_mobject import VMobject, Group
+from mobject.vectorized_mobject import VMobject, VGroup
 from mobject.tex_mobject import TexMobject, TextMobject
 from animation import Animation    
 from animation.transform import ApplyPointwiseFunction, Transform, \
@@ -75,7 +75,7 @@ class VectorScene(Scene):
 
     def get_basis_vector_labels(self, **kwargs):
         i_hat, j_hat = self.get_basis_vectors()
-        return Group(*[
+        return VGroup(*[
             self.get_vector_label(
                 vect, label, color = color, 
                 label_scale_factor = 1,

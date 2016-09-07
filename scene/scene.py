@@ -59,9 +59,10 @@ class Scene(object):
         return self.camera.get_image()
 
     def update_frame(self, mobjects = None, background = None, **kwargs):
+        if "include_submobjects" not in kwargs:
+            kwargs["include_submobjects"] = False
         if mobjects is None:
             mobjects = self.mobjects
-            kwargs["include_submobjects"] = False
         if background is not None:
             self.camera.set_image(background)
         else:
@@ -75,27 +76,25 @@ class Scene(object):
     ###
 
     def extract_mobject_family_members(self, *mobjects):
-        return list(it.chain(*[
-            m.submobject_family()
-            for m in mobjects
-        ]))
+        return remove_list_redundancies(list(
+            it.chain(*[
+                m.submobject_family()
+                for m in mobjects
+            ])
+        ))
         
     def add(self, *mobjects_to_add):
         """
         Mobjects will be displayed, from background to foreground,
         in the order with which they are entered.
 
-        Scene class keep track not just of the mobject directly added,
+        Scene class keeps track not just of the mobject directly added,
         but also of every family member therein.
         """
         if not all_elements_are_instances(mobjects_to_add, Mobject):
             raise Exception("Adding something which is not a mobject")
         mobjects_to_add = self.extract_mobject_family_members(*mobjects_to_add)
-        old_mobjects = filter(
-            lambda m : m not in mobjects_to_add, 
-            self.mobjects
-        )
-        self.mobjects = old_mobjects + mobjects_to_add
+        self.mobjects = list_update(self.mobjects, mobjects_to_add)
         return self
 
     def add_mobjects_among(self, values):
@@ -223,7 +222,7 @@ class Scene(object):
 
     def play(self, *args, **kwargs):
         if len(args) == 0:
-            raise Exception("Called Scene.play with no animations")
+            warnings.warn("Called Scene.play with no animations")
         if self.skip_animations:
             kwargs["run_time"] = 0
 
@@ -241,19 +240,16 @@ class Scene(object):
                 animation.update(t / animation.run_time)
             self.update_frame(moving_mobjects, static_image)
             self.add_frames(self.get_frame())
-
+        self.add(*moving_mobjects)
+        self.mobjects_from_last_animation = moving_mobjects
         self.clean_up_animations(*animations)
         return self
 
     def clean_up_animations(self, *animations):
-        self.mobjects_from_last_animation = []        
         for animation in animations:
             animation.clean_up()
             if animation.is_remover():
                 self.remove(animation.mobject)
-            else:
-                self.add(animation.mobject)
-            self.mobjects_from_last_animation.append(animation.mobject)
         return self
 
     def get_mobjects_from_last_animation(self):

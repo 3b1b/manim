@@ -77,7 +77,7 @@ class BruteForceVerification(Scene):
         v.highlight(V_COLOR)
         w.highlight(W_COLOR)
         def get_term(e1, e2, e3, e4):
-            group = Group(
+            group = VGroup(
                 e1.copy(), e2.copy(), 
                 TexMobject("-"),
                 e3.copy(), e4.copy(),
@@ -89,7 +89,7 @@ class BruteForceVerification(Scene):
             (v3, w1, v1, w3),
             (v2, w3, v3, w2),
         ])))
-        cross_product = Group(
+        cross_product = VGroup(
             v.copy(), TexMobject("\\times"), w.copy(),
             TexMobject("="), cross.copy()
         )
@@ -221,12 +221,12 @@ class DotProductToTransformSymbol(Scene):
         _input.get_entries().gradient_highlight(X_COLOR, Y_COLOR)
         left_input, right_input = [_input.copy() for x in range(2)]
         dot, equals = map(TexMobject, ["\\cdot", "="])
-        equation = Group(
+        equation = VGroup(
             vector, dot, left_input, equals,
             matrix, right_input
         )
         equation.arrange_submobjects()
-        left_brace = Brace(Group(vector, left_input))
+        left_brace = Brace(VGroup(vector, left_input))
         right_brace = Brace(matrix, UP)
         left_words = left_brace.get_text("Dot product")
         right_words = right_brace.get_text("Transform")
@@ -332,7 +332,7 @@ class ThreeStepPlan(Scene):
         steps[0].highlight_by_tex(w_text, W_COLOR)
         steps[1][1].gradient_highlight(BLUE, YELLOW)
         steps[2].highlight_by_tex(cross_text, P_COLOR)
-        Group(*steps).arrange_submobjects(
+        VGroup(*steps).arrange_submobjects(
             DOWN, aligned_edge = LEFT, buff = LARGE_BUFF
         ).next_to(h_line, DOWN, buff = MED_BUFF)
 
@@ -355,7 +355,7 @@ class ThreeStepPlan(Scene):
         steps[0].remove(linear, transformation)
         self.play(
             Transform(
-                Group(linear, transformation), 
+                VGroup(linear, transformation), 
                 linear_transformation
             ),
             *map(FadeOut, steps)
@@ -375,8 +375,8 @@ class ThreeStepPlan(Scene):
         matrix.highlight_columns(X_COLOR, V_COLOR, W_COLOR)
         matrix.get_mob_matrix()[1, 0].highlight(Y_COLOR)
         matrix.get_mob_matrix()[2, 0].highlight(Z_COLOR)
-        Group(*matrix.get_mob_matrix()[1, 1:]).shift(0.15*DOWN)
-        Group(*matrix.get_mob_matrix()[2, 1:]).shift(0.35*DOWN)
+        VGroup(*matrix.get_mob_matrix()[1, 1:]).shift(0.15*DOWN)
+        VGroup(*matrix.get_mob_matrix()[2, 1:]).shift(0.35*DOWN)
         det_text = get_det_text(matrix)
         det_text.add(matrix)
         return det_text
@@ -408,13 +408,13 @@ class DefineDualTransform(Scene):
             Matrix(["%s_%d"%(s, d) for d in range(1, 4)])
             for s in "uvw"
         ]
-        defs_equals = Group()
-        definitions = Group()
+        defs_equals = VGroup()
+        definitions = VGroup()
         for array, tex_mob, color in zip(arrays, tex_mobs, colors):
             array.highlight_columns(color)
             tex_mob.highlight(color)
             equals = TexMobject("=")
-            definition = Group(tex_mob, equals, array)
+            definition = VGroup(tex_mob, equals, array)
             definition.arrange_submobjects(RIGHT)
             definitions.add(definition)
             defs_equals.add(equals)
@@ -435,12 +435,12 @@ class DefineDualTransform(Scene):
             TexMobject(sym) 
             for sym in "\\times", "\\times", "=",
         ]
-        triple_cross = Group(
+        triple_cross = VGroup(
             u_tex.target, times1, v_tex.target, times2, w_tex.target, equals
         )
         triple_cross.arrange_submobjects()
 
-        final_mobs = Group(triple_cross, Group(det_text, matrix))
+        final_mobs = VGroup(triple_cross, VGroup(det_text, matrix))
         final_mobs.arrange_submobjects()
         final_mobs.next_to(self.title, DOWN, buff = MED_BUFF)
 
@@ -522,14 +522,14 @@ class DefineDualTransform(Scene):
         )
         func_tex.scale(0.7)
         func_input = Matrix(list("xyz"))
-        func_input_template = Group(*func_tex[3:-2])
+        func_input_template = VGroup(*func_tex[3:-2])
         func_input.scale_to_fit_height(func_input_template.get_height())
-        func_input.next_to(Group(*func_tex[:3]), RIGHT)
-        Group(*func_tex[-2:]).next_to(func_input, RIGHT)
+        func_input.next_to(VGroup(*func_tex[:3]), RIGHT)
+        VGroup(*func_tex[-2:]).next_to(func_input, RIGHT)
         func_tex[0].scale_in_place(1.5)
 
-        func_tex = Group(
-            Group(*[func_tex[i] for i in 0, 1, 2, -2, -1]),
+        func_tex = VGroup(
+            VGroup(*[func_tex[i] for i in 0, 1, 2, -2, -1]),
             func_input
         )
         func_tex.next_to(self.equals, LEFT)
@@ -547,7 +547,7 @@ class DefineDualTransform(Scene):
             for mob in self.u_entries
         ])
         self.play(*[
-            Write(Group(vect_brace, vect_brace.tex))
+            Write(VGroup(vect_brace, vect_brace.tex))
             for vect_brace in v_brace, w_brace
         ])
         self.dither()
@@ -555,16 +555,16 @@ class DefineDualTransform(Scene):
         self.dither()
 
         self.func_tex = func_tex
-        self.variables_text = Group(brace, number_text)
+        self.variables_text = VGroup(brace, number_text)
 
     def introduce_dual_vector(self):
-        everything = Group(*self.get_mobjects())
+        everything = VGroup(*self.get_mobjects())
         colors = [X_COLOR, Y_COLOR, Z_COLOR]
-        q_marks = Group(*map(TextMobject, "???"))
+        q_marks = VGroup(*map(TextMobject, "???"))
         q_marks.scale(2)
         q_marks.gradient_highlight(*colors)
 
-        title = Group(TextMobject("This function is linear"))
+        title = VGroup(TextMobject("This function is linear"))
         title.highlight(GREEN)
         title.to_edge(UP)
         matrix = Matrix([list(q_marks.copy())])
@@ -574,7 +574,7 @@ class DefineDualTransform(Scene):
         dual_vector.get_brackets()[0].shift(0.2*LEFT)
         dual_vector.get_entries().shift(0.1*LEFT)
         dual_vector.scale(1.25)
-        dual_dot = Group(
+        dual_dot = VGroup(
             dual_vector,
             TexMobject("\\cdot").next_to(dual_vector)
         )
@@ -623,7 +623,7 @@ class DefineDualTransform(Scene):
         )
         self.dither()
 
-        p_coords = Group(*map(TexMobject, [
+        p_coords = VGroup(*map(TexMobject, [
             "p_%d"%d for d in range(1, 4)
         ]))
         p_coords.highlight(RED)        
@@ -654,15 +654,15 @@ class DefineDualTransform(Scene):
         self.input_array = func_input
 
     def expand_dot_product(self):
-        everything = Group(*self.get_mobjects())
+        everything = VGroup(*self.get_mobjects())
         self.play(everything.to_edge, UP)
         self.remove(everything)
         self.add(*everything)
-        to_fade = Group()
+        to_fade = VGroup()
 
         p_entries = self.p_array.get_entries()
         input_entries = self.input_array.get_entries()
-        dot_components = Group()
+        dot_components = VGroup()
         for p, x, i in zip(p_entries, input_entries, it.count()):
             if i == 2:
                 x.sym  = TexMobject("=")
@@ -671,7 +671,7 @@ class DefineDualTransform(Scene):
             p.sym = TexMobject("\\cdot")
             p.target = p.copy().scale(2)
             x.target = x.copy().scale(2)
-            component = Group(p.target, p.sym, x.target, x.sym)
+            component = VGroup(p.target, p.sym, x.target, x.sym)
             component.arrange_submobjects()
             dot_components.add(component)
         dot_components.arrange_submobjects()
@@ -680,7 +680,7 @@ class DefineDualTransform(Scene):
         dot_arrow = Arrow(self.p_array.get_corner(DOWN+RIGHT), dot_components)
         to_fade.add(dot_arrow)
         self.play(ShowCreation(dot_arrow))
-        new_ps = Group()
+        new_ps = VGroup()
         for p, x in zip(p_entries, input_entries):
             self.play(
                 MoveToTarget(p.copy()),
@@ -696,7 +696,7 @@ class DefineDualTransform(Scene):
         x, y, z = self.u_entries
         v1, v2, v3 = self.v_entries
         w1, w2, w3 = self.w_entries
-        cross_components = Group()
+        cross_components = VGroup()
         quints = [
             (x, v2, w3, v3, w2),
             (y, v3, w1, v1, w3),
@@ -716,7 +716,7 @@ class DefineDualTransform(Scene):
                 mob.target.scale(1.5)
                 mob.sym = sym
             quint_targets = [mob.target for mob in quint]
-            component = Group(*it.chain(*zip(quint_targets, syms)))
+            component = VGroup(*it.chain(*zip(quint_targets, syms)))
             component.arrange_submobjects()
             cross_components.add(component)
             to_fade.add(syms[0], syms[-1], quint[0])
@@ -754,14 +754,14 @@ class DefineDualTransform(Scene):
 
         everything = everything.copy()
         self.play(
-            FadeOut(Group(*self.get_mobjects())),
+            FadeOut(VGroup(*self.get_mobjects())),
             Animation(everything)
         )
         self.clear()
         self.add(everything)
 
     def ask_question(self):
-        everything = Group(*self.get_mobjects())
+        everything = VGroup(*self.get_mobjects())
         p_tex = "$%s$"%get_vect_tex("p")
         question = TextMobject(
             "What vector", 
@@ -828,11 +828,11 @@ class DotProductWords(Scene):
         p_mob.scale(1.5)
         p_mob.highlight(P_COLOR)
         input_array = Matrix(list("xyz"))
-        dot_product = Group(p_mob, Dot(radius = 0.07), input_array)
+        dot_product = VGroup(p_mob, Dot(radius = 0.07), input_array)
         dot_product.arrange_submobjects(buff = MED_BUFF/2)
         equals = TexMobject("=")
         dot_product.next_to(equals, LEFT)
-        words = Group(*it.starmap(TextMobject, [
+        words = VGroup(*it.starmap(TextMobject, [
             ("(Length of projection)",),
             ("(Length of ", p_tex, ")",)
         ]))
@@ -842,7 +842,7 @@ class DotProductWords(Scene):
         words[1].next_to(words[0], DOWN, aligned_edge = LEFT)
         times.next_to(words[0], RIGHT)
 
-        everyone = Group(dot_product, equals, times, words)
+        everyone = VGroup(dot_product, equals, times, words)
         everyone.center().scale_to_fit_width(SPACE_WIDTH - 1)
         self.add(dot_product)
         self.play(Write(equals))
@@ -864,7 +864,7 @@ class GeometricVolumeWords(Scene):
             for s in get_vect_tex(*"vw")
         ]
 
-        words = Group(
+        words = VGroup(
             TextMobject("(Area of", "parallelogram", ")$\\times$"),
             TextMobject(
                 "(Component of $%s$"%matrix_to_tex_string(list("xyz")),
