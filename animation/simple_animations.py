@@ -102,6 +102,9 @@ class MoveAlongPath(Animation):
         )
 
 class Homotopy(Animation):
+    CONFIG = {
+        "run_time" : 3
+    }
     def __init__(self, homotopy, mobject, **kwargs):
         """
         Homotopy a function from (x, y, z, t) to (x', y', z')
@@ -114,10 +117,11 @@ class Homotopy(Animation):
 
     def update_submobject(self, submob, start, alpha):
         submob.points = start.points
+        submob.apply_function(self.function_at_time_t(alpha))        
 
     def update_mobject(self, alpha):
         Animation.update_mobject(self, alpha)
-        submob.apply_function(self.function_at_time_t(alpha))
+
 
 
 class PhaseFlow(Animation):

@@ -262,9 +262,9 @@ class LinearTransformationScene(VectorScene):
         "t_matrix" : [[3, 0], [1, 2]],
     }
     def setup(self):
-        if hasattr(self, "has_setup"):
+        if hasattr(self, "has_already_setup"):
             return
-        self.has_setup = True
+        self.has_already_setup = True
         ##^This is to not break all the old Scenes
         self.background_mobjects = []
         self.foreground_mobjects = []        

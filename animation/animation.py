@@ -20,7 +20,7 @@ class Animation(object):
         "remover" : False, 
         #Options are lagged_start, smoothed_lagged_start,
         #one_at_a_time, all_at_once
-        "submobject_mode" : "lagged_start",
+        "submobject_mode" : "all_at_once",
         "lag_factor" : 2,
     }
     def __init__(self, mobject, **kwargs):

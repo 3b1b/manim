@@ -215,6 +215,11 @@ class Scene(object):
                 state["curr_method"] = arg
             elif state["curr_method"] is not None:
                 state["method_args"].append(arg)
+            elif isinstance(arg, Mobject):
+                raise Exception("""
+                    I think you may have invoked a method 
+                    you meant to pass in as a Scene.play argument
+                """)
             else:
                 raise Exception("Invalid play arguments")
         compile_method(state)
