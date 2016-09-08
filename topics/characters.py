@@ -2,7 +2,7 @@ from helpers import *
 
 from mobject import Mobject
 from mobject.svg_mobject import SVGMobject
-from mobject.vectorized_mobject import VMobject
+from mobject.vectorized_mobject import VMobject, VGroup
 from mobject.tex_mobject import TextMobject, TexMobject
 
 from animation import Animation
@@ -32,6 +32,7 @@ class PiCreature(SVGMobject):
         "corner_scale_factor" : 0.75,
         "flip_at_start" : False,
         "is_looking_direction_purposeful" : False,
+        "start_corner" : None,
     }
     def __init__(self, mode = "plain", **kwargs):
         self.parts_named = False
@@ -44,6 +45,8 @@ class PiCreature(SVGMobject):
         self.init_colors()
         if self.flip_at_start:
             self.flip()
+        if self.start_corner is not None:
+            self.to_corner(self.start_corner)
 
     def name_parts(self):
         self.mouth = self.submobjects[MOUTH_INDEX]
@@ -75,42 +78,43 @@ class PiCreature(SVGMobject):
         self.body.set_fill(color)
         return self
 
-    def move_to(self, destination):
-        self.shift(destination-self.get_bottom())
-        return self
-
     def change_mode(self, mode):
-        curr_center = self.get_center()
+        curr_eye_center = self.eyes.get_center()
         curr_height = self.get_height()
-        should_be_flipped = self.is_flipped()        
-        if self.is_looking_direction_purposeful:
-            looking_direction = self.get_looking_direction()
+        should_be_flipped = self.is_flipped()
+        should_look = hasattr(self, "purposeful_looking_direction")
+        if should_look:
+            looking_direction = self.purposeful_looking_direction
         self.__init__(mode)
         self.scale_to_fit_height(curr_height)
-        self.shift(curr_center)
+        self.shift(curr_eye_center - self.eyes.get_center())
         if should_be_flipped ^ self.is_flipped():
             self.flip()
-        if self.is_looking_direction_purposeful:
+        if should_look:
             self.look(looking_direction)
         return self
 
     def look(self, direction):
-        self.is_looking_direction_purposeful = True
-        x, y = direction[:2]        
+        direction = direction/np.linalg.norm(direction)
+        self.purposeful_looking_direction = direction
         for pupil, eye in zip(self.pupils.split(), self.eyes.split()):
-            pupil.move_to(eye, aligned_edge = direction)
-            #Some hacky nudging is required here
-            if y > 0 and x != 0: # Look up and to a side
-                nudge_size = pupil.get_height()/4.
-                if x > 0: 
-                    nudge = nudge_size*(DOWN+LEFT)
-                else:
-                    nudge = nudge_size*(DOWN+RIGHT)
-                pupil.shift(nudge)
-            elif y < 0:
-                nudge_size = pupil.get_height()/8.
-                pupil.shift(nudge_size*UP)
+            pupil_radius = pupil.get_width()/2.            
+            eye_radius = eye.get_width()/2.
+            pupil.move_to(eye)
+            if direction[1] < 0:
+                pupil.shift(pupil_radius*DOWN/3)
+            pupil.shift(direction*(eye_radius-pupil_radius))
+            bottom_diff = eye.get_bottom()[1] - pupil.get_bottom()[1]
+            if bottom_diff > 0:
+                pupil.shift(bottom_diff*UP)
         return self
+
+    def look_at(self, point_or_mobject):
+        if isinstance(point_or_mobject, Mobject):
+            point = point_or_mobject.get_center()
+        else:
+            point = point_or_mobject
+        self.look(point - self.eyes.get_center())
 
 
     def get_looking_direction(self):
@@ -208,11 +212,12 @@ class Bubble(SVGMobject):
         "content_scale_factor" : 0.75,
         "height" : 5,
         "width"  : 8,
+        "bubble_center_adjustment_factor" : 1./8,
         "file_name" : None,
         "propogate_style_to_family" : True,
     }
     def __init__(self, **kwargs):
-        digest_config(self, kwargs, locals())
+        digest_config(self, kwargs)
         if self.file_name is None:
             raise Exception("Must invoke Bubble subclass")
         svg_file = os.path.join(
@@ -232,7 +237,8 @@ class Bubble(SVGMobject):
         return self.get_corner(DOWN+self.direction)-0.6*self.direction
 
     def get_bubble_center(self):
-        return self.get_center() + self.get_height()*UP/8.0
+        factor = self.bubble_center_adjustment_factor
+        return self.get_center() + factor*self.get_height()*UP
 
     def move_tip_to(self, point):
         self.shift(point - self.get_tip())
@@ -324,14 +330,16 @@ class TeacherStudentsScene(Scene):
         self.teacher = Mortimer()
         self.teacher.to_corner(DOWN + RIGHT)
         self.teacher.look(DOWN+LEFT)
-        self.students = VMobject(*[
+        self.students = VGroup(*[
             Randolph(color = c)
             for c in BLUE_D, BLUE_C, BLUE_E
         ])
         self.students.arrange_submobjects(RIGHT)
         self.students.scale(0.8)
         self.students.to_corner(DOWN+LEFT)
-        self.students = self.students.split()
+        self.teacher.look_at(self.students[-1].eyes)
+        for student in self.students:
+            student.look_at(self.teacher.eyes)
 
         for pi_creature in self.get_everyone():
             pi_creature.bubble = None
@@ -344,7 +352,7 @@ class TeacherStudentsScene(Scene):
         return self.students
 
     def get_everyone(self):
-        return [self.get_teacher()] + self.get_students()
+        return [self.get_teacher()] + list(self.get_students())
 
     def get_bubble_intro_animation(self, content, bubble_type,
                                    pi_creature,
@@ -427,10 +435,15 @@ class TeacherStudentsScene(Scene):
             self.dither()
 
     def change_student_modes(self, *modes):
-        self.play(*[
-            ApplyMethod(pi.change_mode, mode)
-            for pi, mode in zip(self.get_students(), modes)
-        ])
+        pairs = zip(self.get_students(), modes)
+        start = VGroup(*[s for s, m in pairs])
+        target = VGroup(*[s.copy().change_mode(m) for s, m in pairs])
+        self.play(Transform(
+            start, target, 
+            submobject_mode = "lagged_start",
+            run_time = 2
+        ))
+
 
     def zoom_in_on_thought_bubble(self, radius = SPACE_HEIGHT+SPACE_WIDTH):
         bubble = None
