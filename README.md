@@ -23,7 +23,7 @@ latex
 Here are directions that should work on any 64 bit platform (tested on osx
 10.11.4)
 
-This doesn't install freetype, but I don't think its required for this project
+This doesn't install freetype, but I don't think it's required for this project
 
 ```
 cd $TMPDIR

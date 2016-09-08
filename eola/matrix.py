@@ -2,7 +2,7 @@ import numpy as np
 
 from scene import Scene
 from mobject import Mobject
-from mobject.vectorized_mobject import VMobject
+from mobject.vectorized_mobject import VMobject, VGroup
 from mobject.tex_mobject import TexMobject, TextMobject
 from animation.transform import ApplyPointwiseFunction, Transform, \
     ApplyMethod, FadeOut, ApplyFunction
@@ -113,15 +113,20 @@ class Matrix(VMobject):
             VMobject(*self.mob_matrix[:,i]).highlight(color)
         return self
 
+    def add_background_to_entries(self):
+        for mob in self.get_entries():
+            mob.add_background_rectangle()
+        return self
+
     def get_mob_matrix(self):
         return self.mob_matrix
-
 
     def get_entries(self):
         return VMobject(*self.get_mob_matrix().flatten())
 
     def get_brackets(self):
         return self.brackets
+
 
 
 class NumericalMatrixMultiplication(Scene):

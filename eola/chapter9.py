@@ -95,6 +95,7 @@ class LinearCombinationScene(LinearTransformationScene):
     def show_linear_combination(self, numerical_coords,
                                 basis_vectors,
                                 coord_mobs,
+                                revert_to_original = True,
                                 show_sum_vect = False,
                                 sum_vect_color = V_COLOR,
                                 ):
@@ -142,12 +143,15 @@ class LinearCombinationScene(LinearTransformationScene):
             )
             self.play(ShowCreation(sum_vect))
         self.dither(2)
-        self.play(*it.chain(
-            [basis.restore for basis in basis_vectors],
-            [basis.label.restore for basis in basis_vectors],
-            [FadeOut(coord) for coord in coord_mobs],
-            [FadeOut(sum_vect) for x in [1] if show_sum_vect],
-        ))
+        if revert_to_original:
+            self.play(*it.chain(
+                [basis.restore for basis in basis_vectors],
+                [basis.label.restore for basis in basis_vectors],
+                [FadeOut(coord) for coord in coord_mobs],
+                [FadeOut(sum_vect) for x in [1] if show_sum_vect],
+            ))
+        if show_sum_vect:
+            return sum_vect
 
 class RemindOfCoordinates(LinearCombinationScene):
     CONFIG = {
@@ -329,11 +333,20 @@ class JenniferScene(LinearCombinationScene):
         self.b1 = Vector(self.b1_coords, color = X_COLOR)
         self.b2 = Vector(self.b2_coords, color = Y_COLOR)
         for i, vect in enumerate([self.b1, self.b2]):
-            vect.label = self.get_vector_label(
-                vect, "\\vec{\\textbf{b}}_%d"%(i+1),
-                direction = "right",
-                color = vect.get_color()
-            )
+            vect.label = TexMobject("\\vec{\\textbf{b}}_%d"%(i+1))
+            vect.label.scale(0.7)
+            vect.label.add_background_rectangle()
+            vect.label.highlight(vect.get_color())
+        self.b1.label.next_to(
+            self.b1.get_end()*0.4, UP+LEFT, SMALL_BUFF/2
+        )
+        self.b2.label.next_to(
+            self.b2.get_end(), DOWN+LEFT, buff = SMALL_BUFF
+        )
+        self.basis_vectors = VGroup(
+            self.b1, self.b2, self.b1.label, self.b2.label
+        )
+
         transform = self.get_matrix_transformation(self.cob_matrix().T)
         self.jenny_plane = self.plane.copy()
         self.jenny_plane.apply_function(transform)
@@ -386,9 +399,6 @@ class IntroduceJennifer(JenniferScene):
             )
             self.dither()
         self.play(FadeOut(words))
-        self.basis_vectors = VGroup(
-            self.b1, self.b2, self.b1.label, self.b2.label
-        )
 
     def show_v_from_both_perspectives(self):
         v = Vector(self.v_coords)
@@ -642,8 +652,9 @@ class ShowGrid(LinearTransformationScene):
         self.remove(self.i_hat, self.j_hat)
         self.dither()
         self.plane.prepare_for_nonlinear_transform()
+        self.plane.save_state()
         self.play(Homotopy(plane_wave_homotopy, self.plane))
-        self.play(self.plane.center)
+        self.play(self.plane.restore)
         for vect in self.i_hat, self.j_hat:
             self.play(ShowCreation(vect))
         self.dither()
@@ -658,12 +669,245 @@ class GridIsAConstruct(TeacherStudentsScene):
         self.change_student_modes(*["pondering"]*3)
         self.random_blink(2)
 
+class JennysGrid(JenniferScene):
+    def construct(self):
+        self.add(self.jenny)
+        self.jenny.shift(3*RIGHT)
+        bubble = self.jenny.get_bubble("speech", width = 4)
+        bubble.flip()
+        bubble.set_fill(BLACK, opacity = 0.8)
+        bubble.to_edge(LEFT)
+        bubble.write("""
+            This grid is also
+            just a construct
+        """)
+        coords = [1.5, -3]
+        coords_mob = Matrix(coords)
+        coords_mob.add_background_to_entries()
+        bubble.position_mobject_inside(coords_mob)
 
+        for vect in self.b1, self.b2:
+            self.play(
+                ShowCreation(vect),
+                Write(vect.label)
+            )
+        self.dither()
+        self.play(
+            ShowCreation(
+                self.jenny_plane, 
+                run_time = 3, 
+                submobject_mode = "lagged_start"
+            ),
+            self.jenny.change_mode, "speaking",
+            self.jenny.look_at, ORIGIN,
+            ShowCreation(bubble),
+            Write(bubble.content),
+            Animation(self.basis_vectors)
+        )
+        self.play(Blink(self.jenny))
+        self.play(
+            FadeOut(bubble.content),
+            FadeIn(coords_mob)
+        )
+        self.show_linear_combination(
+            numerical_coords = coords,
+            basis_vectors = [self.b1, self.b2],
+            coord_mobs = coords_mob.get_entries().copy(),
+            show_sum_vect = True
+        )
 
+class ShowOriginOfGrid(JenniferScene):
+    def construct(self):
+        for plane in self.plane, self.jenny_plane:
+            plane.fade(0.3)
+        self.add(self.jenny_plane)
+        self.jenny_plane.save_state()
 
+        origin_word = TextMobject("Origin")
+        origin_word.shift(2*RIGHT+2.5*UP)
+        origin_word.add_background_rectangle()
+        arrow = Arrow(origin_word, ORIGIN, color = RED)
+        origin_dot = Dot(ORIGIN, radius = 0.1, color = RED)
+        coords = Matrix([0, 0])
+        coords.add_to_back(BackgroundRectangle(coords))
+        coords.next_to(ORIGIN, DOWN+LEFT)
+        vector = Vector([3, -2], color = PINK)
 
+        self.play(
+            Write(origin_word),
+            ShowCreation(arrow)
+        )
+        self.play(ShowCreation(origin_dot))
+        self.dither()
+        self.play(
+            Transform(self.jenny_plane, self.plane),
+            *map(Animation, [origin_word, origin_dot, arrow])
+        )
+        self.dither()
+        self.play(Write(coords))
+        self.dither()
+        self.play(FadeIn(vector))
+        self.dither()
+        self.play(Transform(vector, Mobject.scale(vector.copy(), 0)))
+        self.dither()
+        self.play(
+            self.jenny_plane.restore, 
+            *map(Animation, [origin_word, origin_dot, arrow, coords])
+        )
+        for vect in self.b1, self.b2:
+            self.play(
+                ShowCreation(vect),
+                Write(vect.label)
+            )
+        self.dither()
 
+class AskAboutTranslation(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "\\centering How do you translate \\\\ between coordinate systems?",
+            pi_creature_target_mode = "raise_right_hand"
+        )
+        self.random_blink(3)
 
+class TranslateFromJenny(JenniferScene):
+    CONFIG = {
+        "coords" : [-1, 2]
+    }
+    def construct(self):
+        self.add_players()
+        self.ask_question()
+        self.establish_coordinates()
+        self.perform_arithmetic()
+
+    def add_players(self):
+        for plane in self.jenny_plane, self.plane:
+            plane.fade()
+        self.add(
+            self.jenny_plane, 
+            self.jenny, self.you, 
+            self.basis_vectors
+        )
+        self.jenny.coords = Matrix(self.coords)
+        self.you.coords = Matrix(["?", "?"])
+        self.you.coords.get_entries().gradient_highlight(X_COLOR, Y_COLOR)
+        for pi in self.jenny, self.you:
+            pi.bubble = get_small_bubble(pi)
+            pi.bubble.set_fill(BLACK, opacity = 0.8)
+            pi.coords.scale(0.8)
+            pi.coords.add_background_to_entries()
+            pi.bubble.add_content(pi.coords)
+
+    def ask_question(self):
+        self.play(
+            self.jenny.change_mode, "pondering",
+            ShowCreation(self.jenny.bubble),
+            Write(self.jenny.coords)
+        )
+        coord_mobs = self.jenny.coords.get_entries().copy()
+        self.basis_vectors_copy = self.basis_vectors.copy()
+        self.basis_vectors_copy.fade(0.3)
+        self.add(self.basis_vectors_copy, self.basis_vectors)
+        sum_vect = self.show_linear_combination(
+            numerical_coords = self.coords,
+            basis_vectors = [self.b1, self.b2],
+            coord_mobs = coord_mobs,
+            revert_to_original = False,
+            show_sum_vect = True,
+        )
+        self.dither()
+        everything = self.get_mobjects()
+        for submob in self.jenny_plane.submobject_family():
+            everything.remove(submob)
+        self.play(
+            Transform(self.jenny_plane, self.plane),
+            *map(Animation, everything)
+        )
+        self.play(
+            self.you.change_mode, "confused",
+            ShowCreation(self.you.bubble),
+            Write(self.you.coords)
+        )
+        self.dither()
+
+    def establish_coordinates(self):
+        b1, b2 = self.basis_vectors_copy[:2]
+        b1_coords = Matrix(self.b1_coords).highlight(X_COLOR)
+        b2_coords = Matrix(self.b2_coords).highlight(Y_COLOR)
+        for coords in b1_coords, b2_coords:
+            coords.scale(0.7)
+            coords.add_to_back(BackgroundRectangle(coords))
+        b1_coords.next_to(b1.get_end(), RIGHT)
+        b2_coords.next_to(b2.get_end(), UP)
+
+        for coords in b1_coords, b2_coords:
+            self.play(Write(coords))
+        self.b1_coords_mob, self.b2_coords_mob = b1_coords, b2_coords
+
+    def perform_arithmetic(self):
+        jenny_x, jenny_y = self.jenny.coords.get_entries().copy()
+        equals, plus, equals2 = syms = map(TexMobject, list("=+="))
+        result = Matrix([-4, 1])
+        result.scale_to_fit_height(self.you.coords.get_height())
+        for mob in syms + [self.you.coords, self.jenny.coords, result]:
+            mob.add_to_back(BackgroundRectangle(mob))
+        movers = [
+            self.you.coords, equals,
+            jenny_x, self.b1_coords_mob, plus,
+            jenny_y, self.b2_coords_mob,
+            equals2, result
+        ]
+        for mover in movers:
+            mover.target = mover.copy()
+        mover_targets = VGroup(*[mover.target for mover in movers])
+        mover_targets.arrange_submobjects()
+        mover_targets.to_edge(UP)
+        for mob in syms + [result]:
+            mob.move_to(mob.target)
+            mob.set_fill(BLACK, opacity = 0)
+
+        mover_sets = [
+            [self.you.coords, equals],
+            [self.b1_coords_mob, self.b2_coords_mob],
+            [jenny_x, plus, jenny_y]
+        ]
+        for mover_set in mover_sets:
+            self.play(*map(MoveToTarget, mover_set))
+        self.dither()
+        self.play(
+            MoveToTarget(equals2),
+            Transform(self.b1_coords_mob.copy(), result.target),
+            Transform(self.b2_coords_mob.copy(), result.target),
+        )
+        self.remove(*self.get_mobjects_from_last_animation())
+        result = result.target
+        self.add(equals2, result)
+        self.dither()
+
+        result_copy = result.copy()
+        self.you.bubble.add_content(result_copy)
+        self.play(
+            self.you.change_mode, "hooray",
+            Transform(result.copy(), result_copy)
+        )
+        self.play(Blink(self.you))
+        self.dither()
+
+        matrix = Matrix(np.array([self.b1_coords, self.b2_coords]).T)
+        matrix.highlight_columns(X_COLOR, Y_COLOR)
+        self.jenny.coords.target = self.jenny.coords.copy()
+        self.jenny.coords.target.next_to(equals, LEFT)
+        matrix.scale_to_fit_height(self.jenny.coords.get_height())
+        matrix.next_to(self.jenny.coords.target, LEFT)
+        matrix.add_to_back(BackgroundRectangle(matrix))
+
+        self.play(
+            FadeOut(self.jenny.bubble),
+            FadeOut(self.you.coords),
+            self.jenny.change_mode, "plain",
+            MoveToTarget(self.jenny.coords),
+            FadeIn(matrix)
+        )
+        self.dither()
 
 
 
