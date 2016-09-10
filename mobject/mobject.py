@@ -612,7 +612,7 @@ class Mobject(object):
         self.interpolate_color(mobject1, mobject2, alpha)
 
     def interpolate_color(self, mobject1, mobject2, alpha):
-        raise Exception("Not implemented")
+        pass #To implement in subclass
 
     def become_partial(self, mobject, a, b):
         """
@@ -621,11 +621,12 @@ class Mobject(object):
         Inputs 0 <= a < b <= 1 determine what portion
         of mobject to become.
         """
-
+        pass #To implement in subclasses
+        
         #TODO, color?
 
     def pointwise_become_partial(self, mobject, a, b):
-        raise Exception("Not implemented")
+        pass #To implement in subclass
 
 
 

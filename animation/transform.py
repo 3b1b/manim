@@ -8,7 +8,7 @@ from helpers import *
 
 from animation import Animation
 from simple_animations import DelayByOrder
-from mobject import Mobject, Point, VMobject
+from mobject import Mobject, Point, VMobject, Group
 
 class Transform(Animation):
     CONFIG = {
@@ -66,6 +66,21 @@ class MoveToTarget(Transform):
         if not hasattr(mobject, "target"):
             raise Exception("MoveToTarget called on mobject without attribute 'target' ")
         Transform.__init__(self, mobject, mobject.target, **kwargs)
+
+class CyclicReplace(Transform):
+    CONFIG = {
+        "path_arc" : np.pi/2
+    }
+    def __init__(self, *mobjects, **kwargs):
+        start = Group(*mobjects)
+        target = Group(*[
+            m1.copy().move_to(m2)
+            for m1, m2 in adjascent_pairs(start)
+        ])
+        Transform.__init__(self, start, target, **kwargs)
+
+class Swap(CyclicReplace):
+    pass #Renaming, more understandable for two entries
 
 class GrowFromCenter(Transform):
     def __init__(self, mobject, **kwargs):

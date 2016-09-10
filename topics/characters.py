@@ -416,6 +416,12 @@ class TeacherStudentsScene(Scene):
         )
 
     def student_says(self, *content, **kwargs):
+        if "pi_creature_target_mode" not in kwargs:
+            target_mode = random.choice([
+                "raise_right_hand", 
+                "raise_left_hand", 
+            ])
+            kwargs["pi_creature_target_mode"] = target_mode
         student = self.get_students()[kwargs.get("student_index", 1)]
         return self.introduce_bubble(content, "speech", student, **kwargs)
 

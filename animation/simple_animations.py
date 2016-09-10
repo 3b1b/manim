@@ -60,12 +60,15 @@ class Write(ShowCreation):
         "submobject_mode" : "lagged_start",
     }
     def __init__(self, mob_or_text, **kwargs):
+        digest_config(self, kwargs)        
         if isinstance(mob_or_text, str):
             mobject = TextMobject(mob_or_text)
         else:
             mobject = mob_or_text
-        if "run_time" not in kwargs:
+        if not hasattr(self, "run_time"):
             self.establish_run_time(mobject)
+        if not hasattr(self, "lag_factor"):
+            self.lag_factor = self.run_time - 1            
         ShowCreation.__init__(self, mobject, **kwargs)
 
     def establish_run_time(self, mobject):
