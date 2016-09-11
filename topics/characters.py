@@ -115,6 +115,7 @@ class PiCreature(SVGMobject):
         else:
             point = point_or_mobject
         self.look(point - self.eyes.get_center())
+        return self
 
 
     def get_looking_direction(self):
@@ -175,33 +176,6 @@ class Blink(ApplyMethod):
     }
     def __init__(self, pi_creature, **kwargs):
         ApplyMethod.__init__(self, pi_creature.blink, **kwargs)
-
-class DoTheWave(Transform):
-    CONFIG = {
-        "run_time" : 2
-    }
-    def __init__(self, pi_creature, **kwargs):
-        start_state = pi_creature.copy()
-        self.target_states = [
-            pi_creature.copy().change_mode("wave_%d"%x)
-            for x in 1, 2, 3
-        ] + [
-            pi_creature.copy()
-        ]
-        Transform.__init__(self, pi_creature, self.target_states[0], **kwargs)
-
-    def update_mobject(self, alpha):
-        scaled = alpha*len(self.target_states)
-        try:
-            if scaled-1 > 0:
-                self.starting_mobject = self.target_states[int(scaled)-1]
-            self.ending_mobject = self.target_states[int(scaled)]
-        except IndexError:
-            self.ending_mobject = self.target_states[-1]
-        Transform.update_mobject(self, scaled%1)
-        return self
-
-
 
 
 

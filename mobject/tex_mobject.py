@@ -38,6 +38,7 @@ class TexMobject(SVGMobject):
         "initial_scale_factor" : TEX_MOB_SCALE_FACTOR,
         "organize_left_to_right" : False,
         "propogate_style_to_family" : True,
+        "alignment" : "",
     }
     def __init__(self, *args, **kwargs):
         digest_config(self, kwargs, locals())
@@ -72,6 +73,8 @@ class TexMobject(SVGMobject):
         result = self.arg_separator.join(self.args)
         if self.enforce_new_line_structure:
             result = result.replace("\n", " \\\\ \n ")
+        result = " ".join([self.alignment, result])
+        result = result.strip()
         return result
 
     def get_tex_string(self):
@@ -120,6 +123,7 @@ class TextMobject(TexMobject):
         "template_tex_file" : TEMPLATE_TEXT_FILE,
         "initial_scale_factor" : TEXT_MOB_SCALE_FACTOR,
         "enforce_new_line_structure" : True,
+        "alignment" : "\\centering",
     }
 
 
