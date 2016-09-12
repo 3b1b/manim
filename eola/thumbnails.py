@@ -19,6 +19,7 @@ from mobject.vectorized_mobject import *
 
 from eola.matrix import *
 from eola.two_d_space import *
+from eola.chapter9 import Jennifer, You
 
 class Chapter0(LinearTransformationScene):
     CONFIG = {
@@ -84,6 +85,34 @@ class Chapter5(LinearTransformationScene):
         self.square.set_stroke(width = 0)
         self.apply_transposed_matrix(self.t_matrix, run_time = 0)
 
+class Chapter9(Scene):
+    def construct(self):
+        you = You()
+        jenny = Jennifer()
+        you.change_mode("erm")
+        jenny.change_mode("speaking")
+        you.shift(LEFT)
+        jenny.shift(2*RIGHT)
+
+        vector = Vector([3, 2])
+        vector.center().shift(2*DOWN)
+        vector.set_stroke(width = 8)
+        vector.tip.scale_in_place(2)
+
+        you.coords = Matrix([3, 2])
+        jenny.coords = Matrix(["5/3", "1/3"])
+        for pi in jenny, you:
+            pi.bubble = pi.get_bubble("speech", width = 3, height = 3)
+            if pi is you:
+                pi.bubble.shift(MED_BUFF*RIGHT)
+            else:
+                pi.coords.scale(0.8)
+                pi.bubble.shift(MED_BUFF*LEFT)
+            pi.bubble.add_content(pi.coords)
+            pi.add(pi.bubble, pi.coords)
+            pi.look_at(vector)
+
+        self.add(you, jenny, vector)
 
 
 

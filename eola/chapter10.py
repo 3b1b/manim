@@ -19,6 +19,7 @@ from mobject.vectorized_mobject import *
 
 from eola.matrix import *
 from eola.two_d_space import *
+from eola.chapter1 import plane_wave_homotopy
 
 class OpeningQuote(Scene):
     def construct(self):
@@ -103,7 +104,7 @@ class StudentsFindThisConfusing(TeacherStudentsScene):
         self.random_blink(3)
 
 class ShowComments(Scene):
-    pass
+    pass #TODO
 
 class EigenThingsArentAllThatBad(TeacherStudentsScene):
     def construct(self):
@@ -111,7 +112,10 @@ class EigenThingsArentAllThatBad(TeacherStudentsScene):
             "Eigen-things aren't \\\\ actually so bad",
             pi_creature_target_mode = "hooray"
         )
-        self.random_blink(5)
+        self.change_student_modes(
+            "pondering", "pondering", "erm"
+        )
+        self.random_blink(4)
 
 class ManyPrerequisites(Scene):
     def construct(self):
@@ -256,14 +260,10 @@ class VectorRemainsOnSpan(ExampleTranformationScene):
 
 class IHatAsEigenVector(ExampleTranformationScene):
     def construct(self):
-        # self.highlight_first_column()
-        def homotopy(x, y, z, t):
-            pass
-        x_axis = self.plane.axes[0]
-        self.play(
-            x_axis.highlight, GREEN_E,
-            Homotopy(plane_wave_homotopy, x_axis, run_time = 3)
-        )
+        self.highlight_first_column()
+        self.highlight_x_axis()        
+        self.apply_transposed_matrix(self.t_matrix, path_arc = 0)
+        self.label_i_hat_landing_spot()
 
     def highlight_first_column(self):
         faders = VGroup(self.plane, self.i_hat, self.j_hat)
@@ -276,14 +276,214 @@ class IHatAsEigenVector(ExampleTranformationScene):
         self.play(faders.restore, Animation(self.matrix))
         self.dither()
 
+    def highlight_x_axis(self):
+        x_axis = self.plane.axes[0]
+        targets = [
+            self.i_hat.copy().scale(val)
+            for val in -SPACE_WIDTH, SPACE_WIDTH, 1
+        ]
+        lines = [
+            Line(v1.get_end(), v2.get_end(), color = YELLOW)
+            for v1, v2 in adjascent_pairs([self.i_hat]+targets)
+        ]
+        for target, line in zip(targets, lines):
+            self.play(
+                ShowCreation(line),                
+                Transform(self.i_hat, target),
+            )
+        self.dither()
+        self.remove(*lines)
+        x_axis.highlight(YELLOW)
+
+    def label_i_hat_landing_spot(self):
+        array = Matrix(self.t_matrix[0])
+        array.highlight(X_COLOR)
+        array.rect = BackgroundRectangle(array)
+        array.add_to_back(array.rect)
+        brace = Brace(self.i_hat, buff = 0)
+        brace.put_at_tip(array)
+
+        self.play(GrowFromCenter(brace))
+        matrix = self.matrix.copy()
+        self.play(
+            Transform(matrix.rect, array.rect),
+            Transform(matrix.get_brackets(), array.get_brackets()),
+            Transform(
+                VGroup(*matrix.get_mob_matrix()[:,0]), 
+                array.get_entries()
+            ),
+        )
+        self.dither()
+
+class AllXAxisVectorsAreEigenvectors(ExampleTranformationScene):
+    def construct(self):
+        vectors = VGroup(*[
+            self.add_vector(u*x*RIGHT, animate = False)
+            for x in reversed(range(1, int(SPACE_WIDTH)+1))
+            for u in -1, 1
+        ])
+        vectors.gradient_highlight(YELLOW, X_COLOR)
+        self.play(ShowCreation(vectors))
+        self.dither()
+        self.apply_transposed_matrix(self.t_matrix, path_arc = 0)
+        self.dither()
 
 class SneakierEigenVector(ExampleTranformationScene):
     def construct(self):
-        pass
+        coords = [-1, 1]
+        vector = Vector(coords)
+        array = Matrix(coords)
+        array.scale(0.7)
+        array.highlight(vector.get_color())
+        array.add_to_back(BackgroundRectangle(array))        
+        array.target = array.copy()
+        array.next_to(vector.get_end(), LEFT)
+        array.target.next_to(2*vector.get_end(), LEFT)
+        two_times = TexMobject("2 \\cdot")
+        two_times.add_background_rectangle()
+        two_times.next_to(array.target, LEFT)
+        span_line = Line(-4*vector.get_end(), 4*vector.get_end())
+        span_line.highlight(MAROON_B)
+
+        self.matrix.shift(-2*self.matrix.get_center()[0]*RIGHT)
+
+        self.add_vector(vector)
+        self.play(Write(array))
+        self.play(
+            ShowCreation(span_line), 
+            Animation(vector),
+            Animation(array),
+        )
+        self.dither()
+        self.apply_transposed_matrix(
+            self.t_matrix,
+            added_anims = [
+                MoveToTarget(array),
+                Transform(VectorizedPoint(array.get_left()), two_times)
+            ],
+            path_arc = 0,
+        )
+        self.dither()
+
+class FullSneakyEigenspace(ExampleTranformationScene):
+    def construct(self):
+        self.matrix.shift(-2*self.matrix.get_center()[0]*RIGHT)
+        vectors = VGroup(*[
+            self.add_vector(u*x*(LEFT+UP), animate = False)
+            for x in reversed(np.arange(0.5, 5, 0.5))
+            for u in -1, 1
+        ])
+        vectors.gradient_highlight(MAROON_B, YELLOW)
+        words = TextMobject("Stretch by 2")
+        words.add_background_rectangle()
+        words.next_to(ORIGIN, DOWN+LEFT, buff = MED_BUFF)
+        words.shift(MED_BUFF*LEFT)
+        words.rotate(vectors[0].get_angle())
+        words.start = words.copy()
+        words.start.scale(0.5)
+        words.start.set_fill(opacity = 0)
+
+        self.play(ShowCreation(vectors))
+        self.dither()
+        self.apply_transposed_matrix(
+            self.t_matrix,
+            added_anims = [Transform(words.start, words)],
+            path_arc = 0
+        )
+        self.dither()
 
 class NameEigenvectorsAndEigenvalues(ExampleTranformationScene):
+    CONFIG = {
+        "show_basis_vectors" : False
+    }
     def construct(self):
-        pass
+        self.remove(self.matrix)
+        self.foreground_mobjects.remove(self.matrix)
+        x_vectors = VGroup(*[
+            self.add_vector(u*x*RIGHT, animate = False)
+            for x in range(int(SPACE_WIDTH)+1, 0, -1)
+            for u in -1, 1
+        ])
+        x_vectors.gradient_highlight(YELLOW, X_COLOR)
+        self.remove(x_vectors)
+        sneak_vectors = VGroup(*[
+            self.add_vector(u*x*(LEFT+UP), animate = False)
+            for x in np.arange(int(SPACE_HEIGHT), 0, -0.5)
+            for u in -1, 1
+        ])
+        sneak_vectors.gradient_highlight(MAROON_B, YELLOW)
+        self.remove(sneak_vectors)
+
+        x_words = TextMobject("Stretched by 3")
+        sneak_words = TextMobject("Stretched by 2")
+        for words in x_words, sneak_words:
+            words.add_background_rectangle()
+            words.next_to(x_vectors, DOWN)
+            words.next_to(words.get_center(), LEFT, buff = 1.5)
+            eigen_word = TextMobject("Eigenvectors")
+            eigen_word.add_background_rectangle()
+            eigen_word.replace(words)
+            words.target = eigen_word
+            eigen_val_words = TextMobject(
+                "with eigenvalue ",
+                "%s"%words.get_tex_string()[-1]
+            )
+            eigen_val_words.add_background_rectangle()
+            eigen_val_words.next_to(words, DOWN, aligned_edge = RIGHT)
+            words.eigen_val_words = eigen_val_words
+        x_words.eigen_val_words.highlight(X_COLOR)
+        sneak_words.eigen_val_words.highlight(YELLOW)
+
+        VGroup(
+            sneak_words,
+            sneak_words.target,
+            sneak_words.eigen_val_words,
+        ).rotate(sneak_vectors[0].get_angle())
+
+        non_eigen = Vector([1, 1], color = PINK)
+        non_eigen_span = Line(
+            -SPACE_HEIGHT*non_eigen.get_end(), 
+            SPACE_HEIGHT*non_eigen.get_end(), 
+            color = RED
+        )
+        non_eigen_words = TextMobject("""
+            Knocked off
+            its own span
+        """)
+        non_eigen_words.add_background_rectangle()
+        non_eigen_words.scale(0.7)
+        non_eigen_words.next_to(non_eigen.get_end(), RIGHT)
+        non_eigen_span.fade()
+
+        for vectors in x_vectors, sneak_vectors:
+            self.play(ShowCreation(vectors, run_time = 1))
+        self.dither()
+        for words in x_words, sneak_words:
+            self.play(Write(words, run_time = 1.5))
+            self.add_foreground_mobject(words)
+            self.dither()
+        self.play(ShowCreation(non_eigen))
+        self.play(
+            ShowCreation(non_eigen_span),
+            Write(non_eigen_words),
+            Animation(non_eigen)
+        )
+        self.add_vector(non_eigen, animate = False)
+        self.dither()
+        self.apply_transposed_matrix(
+            self.t_matrix,
+            added_anims = [FadeOut(non_eigen_words)],
+            path_arc = 0,
+        )
+        self.dither(2)
+        self.play(*map(FadeOut, [non_eigen, non_eigen_span]))
+        self.play(*map(MoveToTarget, [x_words, sneak_words]))
+        self.dither()
+        for words in x_words, sneak_words:
+            self.play(Write(words.eigen_val_words), run_time = 2)
+            self.dither()
+
+
 
 
 

@@ -6,7 +6,7 @@ from geometry import Line
 from helpers import *
 
 
-class Stars(Mobject):
+class Stars(Mobject1D):
     CONFIG = {
         "stroke_width" : 1,
         "radius"          : SPACE_WIDTH,
