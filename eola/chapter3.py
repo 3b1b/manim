@@ -1083,12 +1083,14 @@ class MatrixVectorMultiplicationAbstract(MatrixVectorMultiplication):
     }
 
 class ColumnsToBasisVectors(LinearTransformationScene):
+    CONFIG = {
+        "t_matrix" : [[3, 1], [1, 2]]
+    }
     def construct(self):
         self.setup()
-        transposed_matrix = [[3, 1], [1, 2]]
         vector_coords = [-1, 2]
 
-        vector = self.move_matrix_columns(transposed_matrix, vector_coords)
+        vector = self.move_matrix_columns(self.t_matrix, vector_coords)
         self.scale_and_add(vector, vector_coords)
         self.dither(3)
 
@@ -1096,6 +1098,7 @@ class ColumnsToBasisVectors(LinearTransformationScene):
         matrix = np.array(transposed_matrix).transpose()
         matrix_mob = Matrix(matrix)
         matrix_mob.to_corner(UP+LEFT)
+        matrix_mob.add_background_to_entries()
         col1 = VMobject(*matrix_mob.get_mob_matrix()[:,0])
         col1.highlight(X_COLOR)
         col2 = VMobject(*matrix_mob.get_mob_matrix()[:,1])

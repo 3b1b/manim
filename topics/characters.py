@@ -248,8 +248,8 @@ class Bubble(SVGMobject):
         self.content = mobject
         return self.content
 
-    def write(self, text):
-        self.add_content(TextMobject(text))
+    def write(self, *text):
+        self.add_content(TextMobject(*text))
         return self
 
     def clear(self):
@@ -414,15 +414,19 @@ class TeacherStudentsScene(Scene):
             self.play(Blink(pi_creature))
             self.dither()
 
-    def change_student_modes(self, *modes):
+    def change_student_modes(self, *modes, **kwargs):
+        added_anims = kwargs.get("added_anims", [])
         pairs = zip(self.get_students(), modes)
         start = VGroup(*[s for s, m in pairs])
         target = VGroup(*[s.copy().change_mode(m) for s, m in pairs])
-        self.play(Transform(
-            start, target, 
-            submobject_mode = "lagged_start",
-            run_time = 2
-        ))
+        self.play(
+            Transform(
+                start, target, 
+                submobject_mode = "lagged_start",
+                run_time = 2
+            ),
+            *added_anims
+        )
 
 
     def zoom_in_on_thought_bubble(self, radius = SPACE_HEIGHT+SPACE_WIDTH):

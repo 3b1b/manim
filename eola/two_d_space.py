@@ -394,6 +394,9 @@ class LinearTransformationScene(VectorScene):
     def get_vector_movement(self, func):
         for v in self.moving_vectors:
             v.target = Vector(func(v.get_end()), color = v.get_color())
+            norm = np.linalg.norm(v.target.get_end())
+            if norm < 0.1:
+                v.target.get_tip().scale_in_place(norm)
         return self.get_piece_movement(self.moving_vectors)
 
     def get_transformable_label_movement(self):

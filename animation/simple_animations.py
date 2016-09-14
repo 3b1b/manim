@@ -68,7 +68,7 @@ class Write(ShowCreation):
         if "run_time" not in kwargs:
             self.establish_run_time(mobject)
         if "lag_factor" not in kwargs:
-            self.lag_factor = self.run_time - 1            
+            self.lag_factor = max(self.run_time - 1, 1)
         ShowCreation.__init__(self, mobject, **kwargs)
 
     def establish_run_time(self, mobject):

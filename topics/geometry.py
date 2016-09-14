@@ -203,6 +203,9 @@ class Arrow(Line):
         self.add(self.tip)
         self.init_colors()
 
+    def get_tip(self):
+        return self.tip
+
     def scale(self, scale_factor):
         Line.scale(self, scale_factor)
         if self.preserve_tip_size_when_scaling:

@@ -48,8 +48,8 @@ def vector_coordinate_label(vector_mob, integer_labels = True,
         shift_dir -= label.get_right() + DEFAULT_MOBJECT_TO_MOBJECT_BUFFER*RIGHT
     label.shift(shift_dir)
     label.highlight(color)
-    background = BackgroundRectangle(label)
-    label.submobjects = [background] + label.submobjects
+    label.rect = BackgroundRectangle(label)
+    label.add_to_back(label.rect)
     return label
 
 class Matrix(VMobject):

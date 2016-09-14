@@ -200,6 +200,7 @@ class VMobject(Mobject):
         it comes time to display.
         """
         subpath_mobject = self.copy()#TODO, better way?
+        # subpath_mobject = VMobject()
         subpath_mobject.is_subpath = True
         subpath_mobject.set_points(points)
         self.add(subpath_mobject)
