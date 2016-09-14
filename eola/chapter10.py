@@ -644,6 +644,15 @@ class DeduceTransformationFromMatrix(ColumnsToBasisVectors):
     def construct(self):
         self.setup()
         self.move_matrix_columns([[3, 0], [1, 2]])
+        words = TextMobject("""
+            This gives too much weight 
+            to our coordinate system
+        """)
+        words.add_background_rectangle()
+        words.next_to(ORIGIN, DOWN+LEFT, buff = MED_BUFF)
+        words.shift_onto_screen()
+        self.play(Write(words))
+        self.dither()
 
 class WordsOnComputation(TeacherStudentsScene):
     def construct(self):
@@ -1204,7 +1213,7 @@ class LineOfReasoning(Scene):
 
 class IfYouDidntKnowDeterminants(TeacherStudentsScene):
     def construct(self):
-        expression = TexMobject("\\det(A-", "\\lambda", ")=0")
+        expression = TexMobject("\\det(A-", "\\lambda", "I" ")=0")
         expression.highlight_by_tex("\\lambda", MAROON_B)
         expression.scale(1.3)
         self.teacher_says(expression)
@@ -1758,6 +1767,16 @@ class ShearExample(RevisitExampleTransformation):
         # self.lambda_equals_two = lambda_equals_two
         # self.dither()
 
+class EigenvalueCanHaveMultipleEigenVectors(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("""
+            A single eigenvalue can 
+            have more that a line
+            full of eigenvectors
+        """)
+        self.change_student_modes(*["pondering"]*3)
+        self.random_blink(2)
+
 class ScalingExample(LinearTransformationScene):
     CONFIG = {
         "t_matrix" : [[2, 0], [0, 2]]
@@ -1925,6 +1944,74 @@ class DefineDiagonalMatrix(Scene):
         )
         self.dither()
 
+class RepeatedMultiplicationInAction(Scene):
+    def construct(self):
+        vector = Matrix(["x", "y"])
+        vector.highlight(YELLOW)
+        vector.scale(1.2)
+        vector.shift(RIGHT)
+        matrix, scalars = self.get_matrix(vector)
+        #First multiplication
+        for v_entry, scalar in zip(vector.get_entries(), scalars):
+            scalar.target = scalar.copy()
+            scalar.target.next_to(v_entry, LEFT)
+        l_bracket = vector.get_brackets()[0]
+        l_bracket.target = l_bracket.copy()
+        l_bracket.target.next_to(VGroup(*[
+            scalar.target for scalar in scalars
+        ]), LEFT)
+
+        self.add(vector)
+        self.play(*map(FadeIn, [matrix]+scalars))
+        self.dither()
+        self.play(
+            FadeOut(matrix),
+            *map(MoveToTarget, scalars + [l_bracket])
+        )
+        self.dither()
+        #nth multiplications                    
+        for scalar in scalars:
+            scalar.exp = VectorizedPoint(scalar.get_corner(UP+RIGHT))
+            scalar.exp.shift(SMALL_BUFF*RIGHT/2.)
+        for new_exp in range(2, 6):
+            matrix, new_scalars = self.get_matrix(vector)
+            new_exp_mob = TexMobject(str(new_exp)).scale(0.7)
+            movers = []
+            to_remove = []
+            for v_entry, scalar, new_scalar in zip(vector.get_entries(), scalars, new_scalars):
+                scalar.exp.target = new_exp_mob.copy()
+                scalar.exp.target.highlight(scalar.get_color())
+                scalar.exp.target.move_to(scalar.exp, aligned_edge = LEFT)
+                new_scalar.target = scalar.exp.target
+                scalar.target = scalar.copy()
+                VGroup(scalar.target, scalar.exp.target).next_to(
+                    v_entry, LEFT, aligned_edge = DOWN
+                )
+                movers += [scalar, scalar.exp, new_scalar]
+                to_remove.append(new_scalar)
+            l_bracket.target.next_to(VGroup(*[
+                scalar.target for scalar in scalars
+            ]), LEFT)
+            movers.append(l_bracket)
+
+            self.play(*map(FadeIn, [matrix]+new_scalars))
+            self.dither()
+            self.play(
+                FadeOut(matrix),
+                *map(MoveToTarget, movers)
+            )
+            self.remove(*to_remove)
+            self.dither()
+
+
+    def get_matrix(self, vector):
+        matrix = Matrix([[3, 0], [0, 2]])
+        matrix.highlight_columns(X_COLOR, Y_COLOR)
+        matrix.next_to(vector, LEFT)
+        scalars = [matrix.get_mob_matrix()[i, i] for i in range(2)]
+        matrix.remove(*scalars)
+        return matrix, scalars
+
 class RepeatedMultilpicationOfMatrices(Scene):
     CONFIG = {
         "matrix" : [[3, 0], [0, 2]],
@@ -2007,9 +2094,27 @@ class WhatAreTheOddsOfThat(TeacherStudentsScene):
         self.change_student_modes("pondering")
         self.random_blink(3)
 
+class LastVideo(Scene):
+    def construct(self):
+        title = TextMobject("Last chapter: Change of basis")
+        title.to_edge(UP)
+        rect = Rectangle(width = 16, height = 9, color = BLUE)
+        rect.scale_to_fit_height(6)
+        rect.next_to(title, DOWN, buff = MED_BUFF)
+
+        self.add(title)
+        self.play(ShowCreation(rect))
+        self.dither()
+
 class ChangeToEigenBasis(ExampleTranformationScene):
     CONFIG = {
-        "show_basis_vectors" : False
+        "show_basis_vectors" : False,
+        "include_background_plane" : False,
+        "foreground_plane_kwargs" : {
+            "x_radius" : 2*SPACE_WIDTH,
+            "y_radius" : 2*SPACE_HEIGHT,
+            "secondary_line_ratio" : 0
+        },
     }
     def construct(self):
         self.plane.fade()
@@ -2116,7 +2221,7 @@ class ChangeToEigenBasis(ExampleTranformationScene):
         neg_1 = TexMobject("-1")
         neg_1.add_background_rectangle()
         inv_cob.target.next_to(
-            self.matrix, LEFT, buff = neg_1.get_width()+SMALL_BUFF
+            self.matrix, LEFT, buff = neg_1.get_width()+2*SMALL_BUFF
         )
         neg_1.next_to(
             inv_cob.target.get_corner(UP+RIGHT), 
@@ -2130,6 +2235,16 @@ class ChangeToEigenBasis(ExampleTranformationScene):
         self.add_foreground_mobject(cob_matrix, inv_cob, neg_1)
         self.play(*map(FadeOut, self.to_fade))
         self.dither()
+        self.play(FadeOut(self.plane))
+        cob_transform = self.get_matrix_transformation([[1, 0], [-1, 1]])        
+        ApplyMethod(self.plane.apply_function, cob_transform).update(1)
+        self.plane.main_lines.highlight(BLUE_D)
+        self.plane.axes.highlight(WHITE)
+        self.play(
+            FadeIn(self.plane),
+            *map(Animation, self.foreground_mobjects+self.moving_vectors)
+        )
+        self.add(self.plane.copy().highlight(GREY).set_stroke(width = 2))
         self.apply_transposed_matrix(self.t_matrix)
 
         equals = TexMobject("=").next_to(cob_matrix)
@@ -2146,14 +2261,16 @@ class ChangeToEigenBasis(ExampleTranformationScene):
 
         eigenbasis = TextMobject("``Eigenbasis''")
         eigenbasis.add_background_rectangle()
-        eigenbasis.next_to(ORIGIN, DOWN+LEFT)
+        eigenbasis.next_to(ORIGIN, DOWN)
         self.play(Write(eigenbasis))
         self.dither()
 
     def ask_about_power(self):
         morty = Mortimer()
-        morty.to_corner(DOWN+RIGHT)
-        bubble = morty.get_bubble("speech", height = 3, width = 5)
+        morty.to_edge(DOWN).shift(LEFT)
+        bubble = morty.get_bubble(
+            "speech", height = 3, width = 5, direction = RIGHT
+        )
         bubble.set_fill(BLACK, opacity = 1)
         matrix_copy = self.matrix.copy().scale(0.7)
         hundred = TexMobject("100").scale(0.7)
@@ -2173,7 +2290,14 @@ class ChangeToEigenBasis(ExampleTranformationScene):
             self.play(Blink(morty))
             self.dither(2)
 
-
+class CannotDoWithWithAllTransformations(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("""
+            Not all matrices
+            can become diagonal
+        """)
+        self.change_student_modes(*["tired"]*3)
+        self.random_blink(2)
 
 
 
