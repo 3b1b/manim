@@ -234,7 +234,7 @@ class VMobject(Mobject):
     def point_from_proportion(self, alpha):
         num_cubics = self.get_num_anchor_points()-1
         interpoint_alpha = num_cubics*(alpha % (1./num_cubics))
-        index = 3*int(alpha*num_cubics)
+        index = min(3*int(alpha*num_cubics), 3*num_cubics)
         cubic = bezier(self.points[index:index+4])
         return cubic(interpoint_alpha)
 

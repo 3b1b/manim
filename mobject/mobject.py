@@ -36,7 +36,7 @@ class Mobject(object):
         self.init_colors()
 
     def __str__(self):
-        return self.name
+        return str(self.name)
 
     def init_points(self):
         self.points = np.zeros((0, self.dim))
@@ -100,6 +100,10 @@ class Mobject(object):
 
     def copy(self):
         return deepcopy(self)
+
+    def generate_target(self):
+        self.target = self.copy()
+        return self.target
 
     #### Transforming operations ######
 
@@ -247,6 +251,7 @@ class Mobject(object):
             dim = np.argmax(np.abs(vect))
             if abs(self.get_edge_center(vect)[dim]) > space_lengths[dim]:
                 self.to_edge(vect, **kwargs)
+        return self
 
     def stretch_to_fit(self, length, dim, stretch = True):
         old_length = self.length_over_dim(dim)
@@ -622,7 +627,7 @@ class Mobject(object):
         of mobject to become.
         """
         pass #To implement in subclasses
-        
+
         #TODO, color?
 
     def pointwise_become_partial(self, mobject, a, b):

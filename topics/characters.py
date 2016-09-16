@@ -98,7 +98,7 @@ class PiCreature(SVGMobject):
         direction = direction/np.linalg.norm(direction)
         self.purposeful_looking_direction = direction
         for pupil, eye in zip(self.pupils.split(), self.eyes.split()):
-            pupil_radius = pupil.get_width()/2.            
+            pupil_radius = pupil.get_width()/2.
             eye_radius = eye.get_width()/2.
             pupil.move_to(eye)
             if direction[1] < 0:
@@ -136,15 +136,16 @@ class PiCreature(SVGMobject):
             )
         return self
 
-    def to_corner(self, vect = None):
+    def to_corner(self, vect = None, **kwargs):
         if vect is not None:
-            SVGMobject.to_corner(self, vect)
+            SVGMobject.to_corner(self, vect, **kwargs)
         else:
             self.scale(self.corner_scale_factor)
-            self.to_corner(DOWN+LEFT)
+            self.to_corner(DOWN+LEFT, **kwargs)
         return self
 
     def get_bubble(self, bubble_type = "thought", **kwargs):
+        #TODO, change bubble_type arg to have type Bubble
         if bubble_type == "thought":
             bubble = ThoughtBubble(**kwargs)
         elif bubble_type == "speech":
@@ -153,6 +154,11 @@ class PiCreature(SVGMobject):
             raise Exception("%s is an invalid bubble type"%bubble_type)
         bubble.pin_to(self)
         return bubble
+
+    def make_eye_contact(self, pi_creature):
+        self.look_at(pi_creature.eyes)
+        pi_creature.look_at(self.eyes)
+        return self
 
 
 class Randolph(PiCreature):
@@ -259,6 +265,12 @@ class Bubble(SVGMobject):
 class SpeechBubble(Bubble):
     CONFIG = {
         "file_name" : "Bubbles_speech.svg",
+        "height" : 4
+    }
+
+class DoubleSpeechBubble(Bubble):
+    CONFIG = {
+        "file_name" : "Bubbles_double_speech.svg",
         "height" : 4
     }
 
@@ -429,14 +441,14 @@ class TeacherStudentsScene(Scene):
         )
 
 
-    def zoom_in_on_thought_bubble(self, radius = SPACE_HEIGHT+SPACE_WIDTH):
-        bubble = None
-        for pi in self.get_everyone():
-            if hasattr(pi, "bubble") and isinstance(pi.bubble, ThoughtBubble):
-                bubble = pi.bubble
-                break
+    def zoom_in_on_thought_bubble(self, bubble = None, radius = SPACE_HEIGHT+SPACE_WIDTH):
         if bubble is None:
-            raise Exception("No pi creatures have a thought bubble")
+            for pi in self.get_everyone():
+                if hasattr(pi, "bubble") and isinstance(pi.bubble, ThoughtBubble):
+                    bubble = pi.bubble
+                    break
+            if bubble is None:
+                raise Exception("No pi creatures have a thought bubble")
         vect = -bubble.get_bubble_center()
         def func(point):
             centered = point+vect

@@ -1167,6 +1167,11 @@ class ColumnsToBasisVectors(LinearTransformationScene):
         )
         self.add_foreground_mobject(j_coords_start)
         self.dither()
+
+        self.matrix = VGroup(matrix_background, matrix_mob)
+        self.i_coords = i_coords_start
+        self.j_coords = j_coords_start
+
         return vector if vector_coords is not None else None
 
 

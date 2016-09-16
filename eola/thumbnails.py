@@ -114,6 +114,44 @@ class Chapter9(Scene):
 
         self.add(you, jenny, vector)
 
+class Chapter10(LinearTransformationScene):
+    CONFIG = {
+        "foreground_plane_kwargs" : {
+            "x_radius" : 2*SPACE_WIDTH,
+            "y_radius" : 2*SPACE_HEIGHT,
+            "secondary_line_ratio" : 1
+
+        },
+        "include_background_plane" : False,
+    }
+
+    def construct(self):
+        v_tex = "\\vec{\\textbf{v}}"
+        eq = TexMobject("A", v_tex, "=", "\\lambda", v_tex)
+        eq.highlight_by_tex(v_tex, YELLOW)
+        eq.highlight_by_tex("\\lambda", MAROON_B)
+        eq.scale(3)
+        eq.add_background_rectangle()
+        eq.shift(2*DOWN)        
+
+        title = TextMobject(
+            "Eigen", "vectors \\\\",
+            "Eigen", "values"
+        , arg_separator = "")
+        title.scale(2.5)
+        title.to_edge(UP)
+        # title.highlight_by_tex("Eigen", MAROON_B)
+        title[0].highlight(YELLOW)
+        title[2].highlight(MAROON_B)
+        title.add_background_rectangle()
+
+
+        self.add_vector([-1, 1], color = YELLOW, animate = False)
+        self.apply_transposed_matrix([[3, 0], [1, 2]])        
+        self.plane.fade()
+        self.remove(self.j_hat)
+        self.add(eq, title)
+
 
 
 

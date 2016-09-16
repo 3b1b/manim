@@ -29,7 +29,7 @@ def plane_wave_homotopy(x, y, z, t):
     norm = np.linalg.norm([x, y])
     tau = interpolate(5, -5, t) + norm/SPACE_WIDTH
     alpha = sigmoid(tau)
-    return [x, y + 0.5*np.sin(2*np.pi*alpha), z]
+    return [x, y + 0.5*np.sin(2*np.pi*alpha)-t*SMALL_BUFF/2, z]
 
 class Physicist(PiCreature):
     CONFIG = {

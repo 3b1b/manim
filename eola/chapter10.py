@@ -998,8 +998,8 @@ class NonZeroSolutionsVisually(LinearTransformationScene):
         equation.highlight_by_tex("\\lambda", MAROON_B)
         equation.highlight_by_tex("\\vec{\\textbf{v}}", YELLOW)
         equation.add_background_rectangle()
-        equation.next_to(ORIGIN, LEFT, buff = MED_BUFF)
-        equation.to_edge(UP)
+        equation.next_to(ORIGIN, DOWN, buff = MED_BUFF)
+        equation.to_edge(LEFT)
 
         det_equation = TexMobject(
             "\\text{Squishification} \\Rightarrow",
@@ -1136,7 +1136,10 @@ class TweakLambda(LinearTransformationScene):
             self.add(*self.lambda_vals)
 
             new_det = DecimalNumber(
-                np.linalg.det(self.t_matrix - val*np.identity(2))
+                np.linalg.det([
+                    self.i_hat.get_end()[:2],
+                    self.j_hat.get_end()[:2],
+                ])
             )
             new_det.move_to(self.det, aligned_edge = LEFT)
             new_det.highlight(self.det.get_color())

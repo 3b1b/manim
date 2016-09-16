@@ -21,6 +21,9 @@ class FunctionGraph(VMobject):
             for x in np.linspace(self.x_min, self.x_max, self.num_steps)
         ], mode = "smooth")
 
+    def get_function(self):
+        return self.function
+
 
 class ParametricFunction(VMobject):
     CONFIG = {

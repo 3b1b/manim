@@ -36,19 +36,21 @@ class You(PiCreature):
         "flip_at_start" : True,
     }
 
-def get_small_bubble(pi_creature):
+def get_small_bubble(pi_creature, height = 4, width = 3):
     pi_center_x = pi_creature.get_center()[0]
     kwargs = {
         "height" : 4,
         "bubble_center_adjustment_factor" : 1./6,
     }
     bubble = ThoughtBubble(**kwargs)
-    bubble.stretch_to_fit_width(3)
+    bubble.stretch_to_fit_width(3)##Canonical width
     bubble.rotate(np.pi/4)
+    bubble.stretch_to_fit_width(width)
+    bubble.stretch_to_fit_height(height)
     if pi_center_x < 0:
         bubble.flip()
     bubble.next_to(pi_creature, UP, buff = MED_BUFF)
-    bubble.to_edge(pi_center_x*RIGHT, buff = SMALL_BUFF)
+    bubble.shift_onto_screen()
     bubble.set_fill(BLACK, opacity = 0.8)
     return bubble
 
