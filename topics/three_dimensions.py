@@ -25,6 +25,25 @@ class Stars(Mobject1D):
             )
             for r, phi, theta in zip(radii, phis, thetas)
         ])
+class StarsCartesian(Mobject2D):
+    CONFIG = {
+        "stroke_width" : 1,
+        "radius"       : 2*SPACE_WIDTH,
+        "num_points"   : 1000,
+    }
+    def generate_points(self):
+        xs, ys, zs = [
+            scalar*np.random.random(self.num_points)
+            for scalar in [self.radius, self.radius, self.radius]
+        ]
+        self.add_points([
+            (
+                x - self.radius/2,
+                y - self.radius/2,
+                z - self.radius/2
+            )
+            for x, y, z in zip(xs, ys, zs)
+        ])
 
 class CubeWithFaces(Mobject2D):
     def generate_points(self):
