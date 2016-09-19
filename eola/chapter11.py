@@ -872,7 +872,6 @@ class AddTwoFunctions(FunctionGraphScene):
             FadeIn(rect),
             Animation(prefix),
             Transform(fg_group, suffix),
-            run_time = 2
         )
         self.remove(prefix, fg_group)
         self.add(sum_def)
@@ -949,19 +948,253 @@ class AddTwoFunctions(FunctionGraphScene):
             for mob in g_lines, dots
         ])
         self.dither()
-        self.play(*map(FadeOut, [f_lines, g_lines]))
-        self.add_lines(sum_lines)
+        # self.play(*map(FadeOut, [f_lines, g_lines]))
+        # self.add_lines(sum_lines)
+        # self.dither()
+
+class AddVectorsCoordinateByCoordinate(Scene):
+    def construct(self):
+        v1 = Matrix(["x_1", "y_1", "z_1"])
+        v2 = Matrix(["x_2", "y_2", "z_2"])
+        v_sum =  Matrix(["x_1 + x_2", "y_1 + y_2", "z_1 + z_2"])
+        for v in v1, v2, v_sum:
+            v.get_entries()[0].highlight(X_COLOR)
+            v.get_entries()[1].highlight(Y_COLOR)
+            v.get_entries()[2].highlight(Z_COLOR)
+        plus, equals = TexMobject("+=")
+        VGroup(v1, plus, v2, equals, v_sum).arrange_submobjects()
+
+        self.add(v1, plus, v2)
+        self.dither()
+        self.play(
+            Write(equals),
+            Write(v_sum.get_brackets())
+        )
+        self.play(
+            Transform(v1.get_entries().copy(), v_sum.get_entries()),
+            Transform(v2.get_entries().copy(), v_sum.get_entries()),
+        )
         self.dither()
 
 class ScaleFunction(FunctionGraphScene):
     def construct(self):
-        graph = self.get_function_graph()
+        graph = self.get_function_graph(
+            lambda x : 0.7*self.default_functions[0](x),
+            animate = False
+        )
         scaled_graph = self.get_function_graph(
             lambda x : graph.get_function()(x)*2,
-            add = False
+            animate = False, add = False
         )
         graph_lines = self.get_output_lines(graph)
         scaled_lines = self.get_output_lines(scaled_graph, nudge = False)
+
+        f_label = self.label_graph(graph, "f", animate = False)
+        two_f_label = self.label_graph(scaled_graph, "(2f)", animate = False)
+        self.remove(two_f_label)
+
+        title = TexMobject("(2f)", "(x) = 2", "f", "(x)")
+        title.highlight_by_tex("(2f)", scaled_graph.get_color())
+        title.highlight_by_tex("f", graph.get_color())
+        title.next_to(ORIGIN, LEFT, buff = MED_BUFF)
+        title.to_edge(UP)
+        self.add(title)
+
+        self.add_lines(graph_lines)
+        self.dither()
+        self.play(Transform(graph_lines, scaled_lines))
+        self.play(ShowCreation(scaled_graph))
+        self.play(Write(two_f_label))
+        self.play(FadeOut(graph_lines))
+        self.dither()
+
+class ScaleVectorByCoordinates(Scene):
+    def construct(self):
+        two, dot, equals = TexMobject("2 \\cdot =")
+        v1 = Matrix(list("xyz"))
+        v1.get_entries().gradient_highlight(X_COLOR, Y_COLOR, Z_COLOR)
+        v2 = v1.copy()
+        two_targets = VGroup(*[
+            two.copy().next_to(entry, LEFT)
+            for entry in v2.get_entries()
+        ])
+        v2.get_brackets()[0].next_to(two_targets, LEFT)
+        v2.add(two_targets)
+        VGroup(two, dot, v1, equals, v2).arrange_submobjects()
+
+        self.add(two, dot, v1)
+        self.play(
+            Write(equals),
+            Write(v2.get_brackets())
+        )
+        self.play(
+            Transform(two.copy(), two_targets),
+            Transform(v1.get_entries().copy(), v2.get_entries())
+        )
+        self.dither()
+
+class ShowSlopes(Animation):
+    CONFIG = {
+        "line_color" : YELLOW,
+        "dx" : 0.01,
+        "rate_func" : None,
+        "run_time" : 5
+    }
+    def __init__(self, graph, **kwargs):
+        digest_config(self, kwargs, locals())
+        line = Line(LEFT, RIGHT, color = self.line_color)
+        line.save_state()
+        Animation.__init__(self, line, **kwargs)
+
+    def update_mobject(self, alpha):
+        f = self.graph.point_from_proportion        
+        low, high = map(f, np.clip([alpha-self.dx, alpha+self.dx], 0, 1))
+        slope = (high[1]-low[1])/(high[0]-low[0])
+        self.mobject.restore()
+        self.mobject.rotate(np.arctan(slope))
+        self.mobject.move_to(f(alpha))
+
+class FromVectorsToFunctions(VectorScene):
+    def construct(self):
+        self.show_vector_addition_and_scaling()
+        self.bring_in_functions()
+        self.show_derivative()
+
+    def show_vector_addition_and_scaling(self):
+        self.plane = self.add_plane()
+        self.plane.fade()
+        words1 = TextMobject("Vector", "addition")
+        words2 = TextMobject("Vector", "scaling")
+        for words in words1, words2:
+            words.add_background_rectangle()
+            words.next_to(ORIGIN, RIGHT).to_edge(UP)
+        self.add(words1)
+
+        v = self.add_vector([2, -1], color = MAROON_B)
+        w = self.add_vector([3, 2], color = YELLOW)
+        w.save_state()
+        self.play(w.shift, v.get_end())
+        vw_sum = self.add_vector(w.get_end(), color = PINK)
+        self.dither()
+        self.play(
+            Transform(words1, words2),
+            FadeOut(vw_sum),
+            w.restore
+        )
+        self.add(
+            v.copy().fade(),
+            w.copy().fade()
+        )
+        self.play(v.scale, 2)
+        self.play(w.scale, -0.5)
+        self.dither()
+
+    def bring_in_functions(self):
+        everything = VGroup(*self.get_mobjects())
+        axes = Axes()
+        axes.shift(2*SPACE_WIDTH*LEFT)
+
+        fg_scene_config = FunctionGraphScene.CONFIG
+        graph = FunctionGraph(fg_scene_config["default_functions"][0])
+        graph.highlight(MAROON_B)
+        func_tex = TexMobject("\\frac{1}{9}x^3 - x")
+        func_tex.highlight(graph.get_color())
+        func_tex.shift(5.5*RIGHT+2*UP)
+
+        words = VGroup(*[
+            TextMobject(words).add_background_rectangle()
+            for words in [
+                "Linear transformations",
+                "Null space",
+                "Dot products",
+                "Eigen-everything",
+            ]
+        ])
+        words.gradient_highlight(BLUE_B, BLUE_D)
+        words.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        words.to_corner(UP+LEFT)
+        self.play(FadeIn(
+            words,
+            submobject_mode = "lagged_start",
+            run_time = 3
+        ))
+        self.dither()
+        self.play(*[
+            ApplyMethod(mob.shift, 2*SPACE_WIDTH*RIGHT)
+            for mob in axes, everything
+        ] + [Animation(words)]
+        )
+        self.play(ShowCreation(graph), Animation(words))
+        self.play(Write(func_tex, run_time = 2))
+        self.dither(2)
+
+        top_word = words[0]
+        words.remove(top_word)
+        self.play(
+            FadeOut(words),
+            top_word.shift, top_word.get_center()[0]*LEFT
+        )
+        self.dither()
+        self.func_tex = func_tex
+        self.graph = graph
+
+    def show_derivative(self):
+        func_tex, graph = self.func_tex, self.graph
+        new_graph = FunctionGraph(lambda x : (x**2)/3.-1)
+        new_graph.highlight(YELLOW)
+
+        func_tex.generate_target()
+        lp, rp = parens = TexMobject("()")
+        parens.scale_to_fit_height(func_tex.get_height())
+        L, equals = TexMobject("L=")
+        deriv = TexMobject("\\frac{d}{dx}")
+        new_func = TexMobject("\\frac{1}{3}x^2 - 1")
+        new_func.highlight(YELLOW)
+        group = VGroup(
+            L, lp, func_tex.target, rp,
+            equals, new_func
+        )
+        group.arrange_submobjects()
+        group.shift(2*UP).to_edge(LEFT, buff = 2*MED_BUFF)
+        rect = BackgroundRectangle(group)
+        group.add_to_back(rect)
+        deriv.move_to(L, aligned_edge = RIGHT)
+
+        self.play(
+            MoveToTarget(func_tex),
+            *map(Write, [L, lp, rp, equals, new_func])
+        )
+        self.remove(func_tex)
+        self.add(func_tex.target)
+        self.dither()
+        faded_graph = graph.copy().fade()
+        self.add(faded_graph)
+        self.play(
+            Transform(graph, new_graph, run_time = 2),
+            Animation(group)
+        )
+        self.dither()
+        self.play(Transform(L, deriv))
+        self.play(ShowSlopes(faded_graph))
+        self.dither()
+
+class WhatDoesLinearMean(TeacherStudentsScene):
+    def construct(self):
+        words = TextMobject("""
+            What does it mean for
+            a transformation of functions
+            to be """, "linear", "?",
+            arg_separator = ""
+        )
+        words.highlight_by_tex("linear", BLUE)
+        self.student_says(words)
+        self.change_student_modes("pondering")
+        self.random_blink(4)
+
+
+
+
+
 
 
 
