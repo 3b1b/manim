@@ -279,6 +279,14 @@ def intersection(line1, line2):
     result = result.reshape((2,)) + p0
     return result
 
+def random_bright_color():
+    color = random_color()
+    curr_rgb = color_to_rgb(color)
+    new_rgb = interpolate(
+        curr_rgb, np.ones(len(curr_rgb)), 0.5
+    )
+    return Color(rgb = new_rgb)
+
 def random_color():
     return random.choice(PALETTE)
 

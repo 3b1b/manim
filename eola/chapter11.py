@@ -277,60 +277,6 @@ class HigherDimensionalVectorsNumerically(Scene):
             ])
             self.dither()
 
-class AskAbout4DCSStudent(Scene):
-    def construct(self):
-        cs_student = CSStudent().to_edge(DOWN).shift(2*RIGHT)
-        asker = PiCreature(color = MAROON_D)
-        asker.to_edge(DOWN).shift(2*LEFT)
-        for pi1, pi2 in (cs_student, asker), (asker, cs_student):
-            pi1.speech_bubble = pi1.get_bubble("speech")
-            pi1.look_at(pi2.eyes)
-
-        thought_bubble = get_small_bubble(cs_student)
-        thought_bubble.rotate(-np.pi/6)
-        thought_bubble.stretch_to_fit_height(4)
-        thought_bubble.next_to(
-            cs_student.get_corner(UP+RIGHT), UP, buff = 0
-        )
-        
-        vector = Matrix([3, 1, 4, 1])
-        vector.highlight(YELLOW)
-        vector.scale_to_fit_height(2)
-        thought_bubble.add_content(vector)
-        thought_bubble.add(thought_bubble.content)
-        asker.speech_bubble.write("""
-            What is this ``4d space''
-            you speak of?
-        """)
-        cs_student.speech_bubble.write(
-            "The set of all",
-            "ordered \\\\ quadruplets",
-            "of real numbers",
-        )
-        cs_student.speech_bubble.content[1].highlight(YELLOW)
-        for pi in asker, cs_student:
-            pi.speech_bubble.add(pi.speech_bubble.content)
-
-        self.add(asker, cs_student)
-        self.play(
-            asker.change_mode, "erm",
-            Write(asker.speech_bubble),
-        )
-        self.play(Blink(cs_student))
-        self.play(
-            asker.change_mode, "plain",
-            cs_student.change_mode, "speaking",
-            FadeOut(asker.speech_bubble),
-            Write(cs_student.speech_bubble),
-        )
-        self.play(
-            asker.change_mode, "pondering",
-            asker.look_at, thought_bubble,
-            Write(thought_bubble)
-        )
-        self.play(Blink(asker))
-        self.dither()
-
 class HyperCube(VMobject):
     CONFIG = {
         "color" : BLUE_C,
@@ -353,84 +299,49 @@ class HyperCube(VMobject):
 
 class AskAbout4DPhysicsStudent(Scene):
     def construct(self):
-        physy = PhysicsStudent().flip().to_edge(DOWN).shift(2*RIGHT)
-        asker = PiCreature(color = MAROON_D)
-        asker.to_edge(DOWN).shift(2*LEFT)
-        for pi1, pi2 in (physy, asker), (asker, physy):
-            pi1.speech_bubble = pi1.get_bubble("speech")
+        physy = PhysicsStudent().to_edge(DOWN).shift(2*LEFT)
+        compy = CSStudent().to_edge(DOWN).shift(2*RIGHT)
+        for pi1, pi2 in (physy, compy), (compy, physy):
             pi1.look_at(pi2.eyes)
+        physy.bubble = physy.get_bubble("speech", width = 4)
 
-        thought_bubble = get_small_bubble(physy)
-        thought_bubble.rotate(-np.pi/6)
-        thought_bubble.stretch_to_fit_height(5)
-        thought_bubble.stretch_to_fit_width(4)
-        thought_bubble.shift(RIGHT)
-        thought_bubble.next_to(
-            physy.get_corner(UP+RIGHT), UP, buff = 0
-        )
-        
-        vector = Vector([1, 2])
         line = Line(LEFT, RIGHT, color = BLUE_B)
         square = Square(color = BLUE_C)
+        square.scale_in_place(0.7)        
         cube = HyperCube(color = BLUE_D, dims = 3)
         hyper_cube = HyperCube()
-        thought_mobs = vector, line, square, cube, hyper_cube
-        for mob in thought_mobs:
-            mob.scale_to_fit_height(2)
-            thought_bubble.add_content(mob)
-        square.scale_in_place(0.7)
-        asker.speech_bubble.flip()
-        asker.speech_bubble.stretch_to_fit_width(4.5)
-        asker.speech_bubble.to_edge(LEFT)
-        asker.speech_bubble.write("""
-            Well, what do \\emph{you}
-            think 4d space is?
-        """)
-        physy.speech_bubble.write("""
-            Well, it's kind of like 
-            3d space, but with another 
-            dimension, you know?
-        """)
-        for pi in asker, physy:
-            pi.speech_bubble.add(pi.speech_bubble.content)
+        thought_mobs = []
+        for i, mob in enumerate([line, square, cube, hyper_cube]):
+            mob.scale_to_fit_height(2)            
+            tex = TexMobject("%dD"%(i+1))
+            tex.next_to(mob, UP)
+            group = VGroup(mob, tex)
+            thought_mobs.append(group)
+            group.shift(
+                physy.bubble.get_top() -\
+                tex.get_top() + MED_BUFF*DOWN
+            )
+        line.shift(DOWN)
+        curr_mob = thought_mobs[0]
 
-
-        self.add(asker, physy, thought_bubble, vector)
+        self.add(compy, physy)
         self.play(
-            asker.change_mode, "sassy",
-            Write(asker.speech_bubble),
-        )
-        self.play(Blink(physy))
-        self.play(
-            asker.change_mode, "plain",
+            compy.change_mode, "confused",
             physy.change_mode, "hooray",
-            FadeOut(asker.speech_bubble),
-            Write(physy.speech_bubble),
+            ShowCreation(physy.bubble),
+            Write(curr_mob, run_time = 1),
         )
-        self.play(
-            asker.change_mode, "confused",
-            asker.look_at, thought_bubble,
-            physy.look_at, thought_bubble,
-        )
-        for mob in thought_mobs[1:]:
-            self.play(Transform(vector, mob))
-            self.remove(vector)
-            vector = mob
-            self.add(vector)
-            self.dither()
-        self.play(Blink(asker))
-        asker.speech_bubble.remove(asker.speech_bubble.content)
-        asker.speech_bubble.write("Is that real?")
-        asker.speech_bubble.add(asker.speech_bubble.content)
-        self.play(
-            FadeOut(physy.speech_bubble),
-            FadeOut(physy.speech_bubble),
-            Write(asker.speech_bubble, run_time = 2),
-            asker.change_mode, "sassy",
-            physy.change_mode, "plain",
-            physy.look_at, asker.eyes,
-        )
-        self.play(Blink(physy))
+        self.play(Blink(compy))
+        for i, mob in enumerate(thought_mobs[1:]):
+            self.play(Transform(curr_mob, mob))
+            self.remove(curr_mob)
+            curr_mob = mob
+            self.add(curr_mob)
+            if i%2 == 1:
+                self.play(Blink(physy))
+            else:
+                self.dither()
+        self.play(Blink(compy))
         self.dither()
 
 class ManyCoordinateSystems(LinearTransformationScene):
@@ -528,10 +439,6 @@ class TransformationsWithCoordinates(ColumnsToBasisVectors):
         self.setup()
         self.add_unit_square()
         eigenvectors = VGroup(*self.get_eigenvectors())
-        
-        for mob in self.square, eigenvectors:
-            mob.set_fill(opacity = 0)
-            mob.set_stroke(width = 0)
 
         det_word = TextMobject("Determinant")
         det_word.highlight(YELLOW)
@@ -565,8 +472,6 @@ class TransformationsWithCoordinates(ColumnsToBasisVectors):
         )
         self.dither()
 
-
-
     def get_eigenvectors(self):
         vals, (eig_matrix) = np.linalg.eig(self.t_matrix.T)
         v1, v2 = eig_matrix.T
@@ -580,156 +485,6 @@ class TransformationsWithCoordinates(ColumnsToBasisVectors):
             vectors.gradient_highlight(MAROON_B, YELLOW)
             result += list(vectors)
         return result
-
-class NameDeterminantCopy(NameDeterminant):
-    pass#
-
-class NameEigenvectorsAndEigenvaluesCopy(ExampleTranformationScene):
-    CONFIG = {
-        "show_basis_vectors" : False,
-        "include_background_plane" : False,
-    }
-    def construct(self):
-        self.remove(self.matrix)
-        self.foreground_mobjects.remove(self.matrix)
-        x_vectors = VGroup(*[
-            self.add_vector(u*x*RIGHT, animate = False)
-            for x in range(int(SPACE_WIDTH)+1, 0, -1)
-            for u in -1, 1
-        ])
-        x_vectors.gradient_highlight(YELLOW, X_COLOR)
-        self.remove(x_vectors)
-        sneak_vectors = VGroup(*[
-            self.add_vector(u*x*(LEFT+UP), animate = False)
-            for x in np.arange(int(SPACE_HEIGHT), 0, -0.5)
-            for u in -1, 1
-        ])
-        sneak_vectors.gradient_highlight(MAROON_B, YELLOW)
-        self.remove(sneak_vectors)
-
-        x_words = TextMobject("Stretched by 3")
-        sneak_words = TextMobject("Stretched by 2")
-        for words in x_words, sneak_words:
-            words.add_background_rectangle()
-            words.next_to(x_vectors, DOWN)
-            words.next_to(words.get_center(), LEFT, buff = 1.5)
-            eigen_word = TextMobject("Eigenvectors")
-            eigen_word.add_background_rectangle()
-            eigen_word.replace(words)
-            words.target = eigen_word
-            eigen_val_words = TextMobject(
-                "with eigenvalue ",
-                "%s"%words.get_tex_string()[-1]
-            )
-            eigen_val_words.add_background_rectangle()
-            eigen_val_words.next_to(words, DOWN, aligned_edge = RIGHT)
-            words.eigen_val_words = eigen_val_words
-        x_words.eigen_val_words.highlight(X_COLOR)
-        sneak_words.eigen_val_words.highlight(YELLOW)
-
-        VGroup(
-            sneak_words,
-            sneak_words.target,
-            sneak_words.eigen_val_words,
-        ).rotate(sneak_vectors[0].get_angle())
-
-        final_words = TextMobject("""
-            Result doesn't care about 
-            the coordinate system
-        """)
-        final_words.add_background_rectangle()
-        final_words.to_corner(UP+RIGHT)
-
-        for vectors in x_vectors, sneak_vectors:
-            self.play(ShowCreation(vectors, run_time = 1))
-        self.dither()
-        for words in x_words, sneak_words:
-            self.play(Write(words, run_time = 1.5))
-            self.add_foreground_mobject(words)
-            self.dither()
-        self.dither()
-        self.apply_transposed_matrix(
-            self.t_matrix,
-            path_arc = 0,
-        )
-        self.dither(2)
-        self.play(*map(MoveToTarget, [x_words, sneak_words]))
-        self.dither()
-        for words in x_words, sneak_words:
-            self.play(Write(words.eigen_val_words), run_time = 2)
-            self.add_foreground_mobject(words.eigen_val_words)
-            self.dither()
-        fade_out = FadeOut(self.plane)
-        self.play(fade_out, Write(final_words))
-        fade_out.update(1)
-        self.apply_inverse_transpose(
-            self.t_matrix, 
-            rate_func = there_and_back,
-            path_arc = 0
-        )
-
-class ReallyWhatAreVectors(Scene):
-    def construct(self):
-        physy = PhysicsStudent()
-        physy.thought = Vector([1, 2])
-        physy.words = "Nature seems to \\\\ disagree with you"
-        compy = CSStudent()
-        compy.thought = Matrix([1, 2])
-        compy.words = "How else could you \\\\ possibly define them?"
-        for pi, vect in (physy, LEFT), (compy, RIGHT):
-            pi.to_edge(DOWN)
-            pi.shift(4*vect)
-            pi.bubble = get_small_bubble(pi)
-            pi.thought.highlight(YELLOW)
-            pi.thought.scale_to_fit_height(2)
-            pi.bubble.add_content(pi.thought)
-            pi.bubble.add(pi.thought)
-
-            pi.speech_bubble = pi.get_bubble("speech", width = 5)
-            pi.speech_bubble.set_fill(BLACK, opacity = 1)
-            pi.speech_bubble.write(pi.words)
-            pi.speech_bubble.add(pi.speech_bubble.content)
-            self.add(pi)
-        physy.make_eye_contact(compy)
-
-        hundred_d = Matrix(["3", "5", "\\vdots", "8", "6"])
-        hundred_d.highlight(GREEN)
-        hundred_d.scale_to_fit_height(compy.thought.get_height())
-        hundred_d.move_to(compy.thought)
-
-        double_speech = DoubleSpeechBubble(width = 6)
-        double_speech.set_fill(BLACK, opacity = 1)
-        double_speech.write("What \\emph{are} vectors???")
-        double_speech.add(double_speech.content)
-        double_speech.next_to(VGroup(compy, physy), UP)
-
-        self.play(
-            *[FadeIn(pi.bubble) for pi in physy, compy],
-            run_time = 1
-        )
-        self.play(
-            Write(physy.speech_bubble),
-            physy.change_mode, "sassy"
-        )
-        self.play(Blink(compy))
-        self.dither()
-        self.play(
-            FadeOut(physy.speech_bubble),
-            Write(compy.speech_bubble),
-            physy.change_mode, "pondering",
-            compy.change_mode, "pleading"
-        )
-        self.play(Transform(compy.thought, hundred_d))
-        self.play(Blink(physy))
-        self.dither()
-        self.play(
-            FadeOut(compy.speech_bubble),
-            Write(double_speech),
-            compy.change_mode, "confused",
-            physy.change_mode, "confused",
-        )
-        self.play(*map(Blink, [compy, physy]))
-        self.dither()
 
 class OtherVectorishThings(TeacherStudentsScene):
     def construct(self):
@@ -947,10 +702,11 @@ class AddTwoFunctions(FunctionGraphScene):
             MoveToTarget(mob, **kwargs)
             for mob in g_lines, dots
         ])
+        self.play(
+            *[mob.fade for mob in g_lines, f_lines]+[
+            Animation(dots)
+        ])
         self.dither()
-        # self.play(*map(FadeOut, [f_lines, g_lines]))
-        # self.add_lines(sum_lines)
-        # self.dither()
 
 class AddVectorsCoordinateByCoordinate(Scene):
     def construct(self):
@@ -1178,6 +934,43 @@ class FromVectorsToFunctions(VectorScene):
         self.play(ShowSlopes(faded_graph))
         self.dither()
 
+class ManyFunctions(FunctionGraphScene):
+    def construct(self):
+        randy = Randolph().to_corner(DOWN+LEFT)
+        self.add(randy)
+        for i in range(100):
+            if i < 3:
+                run_time = 1
+                self.dither()
+            elif i < 10:
+                run_time = 0.4
+            else:
+                run_time = 0.2
+            added_anims = []
+            if i == 3:
+                added_anims = [randy.change_mode, "confused"]
+            if i == 10:
+                added_anims = [randy.change_mode, "pleading"]
+            self.add_random_function(
+                run_time = run_time,
+                added_anims = added_anims
+            )
+
+    def add_random_function(self, run_time = 1, added_anims = []):
+        coefs = np.random.randint(-3, 3, np.random.randint(3, 8))
+        def func(x):
+            return sum([c*x**(i) for i, c, in enumerate(coefs)])
+        graph = self.get_function_graph(func, animate = False)
+        if graph.get_height() > 2*SPACE_HEIGHT:
+            graph.stretch_to_fit_height(2*SPACE_HEIGHT)
+            graph.shift(graph.point_from_proportion(0.5)[1]*DOWN)
+            graph.shift(interpolate(-3, 3, random.random())*UP)
+        graph.highlight(random_bright_color())
+        self.play(
+            ShowCreation(graph, run_time = run_time),
+            *added_anims
+        )
+
 class WhatDoesLinearMean(TeacherStudentsScene):
     def construct(self):
         words = TextMobject("""
@@ -1191,19 +984,544 @@ class WhatDoesLinearMean(TeacherStudentsScene):
         self.change_student_modes("pondering")
         self.random_blink(4)
 
+class FormalDefinitionOfLinear(LinearTransformationScene):
+    CONFIG = {
+        "show_basis_vectors" : False,
+        "include_background_plane" : False,
+        "t_matrix" : [[1, 1], [-0.5, 1]],
+        "w_coords" : [1, 1],
+        "v_coords" : [1, -2],        
+        "foreground_plane_kwargs" : {
+            "x_radius" : 2*SPACE_WIDTH,
+            "y_radius" : 2*SPACE_HEIGHT,
+            "secondary_line_ratio" : 1
+        },
+    }
+    def construct(self):
+        self.plane.fade()
+        self.write_properties()
+        self.show_additive_property()
+        self.show_scaling_property()
+        self.add_words()
+
+    def write_properties(self):
+        title = TextMobject(
+            "Formal definition of linearity"
+        )
+        title.add_background_rectangle()
+        title.to_edge(UP)
+        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line.next_to(title, DOWN)
+
+        v_tex, w_tex = ["\\vec{\\textbf{%s}}"%s for s in "vw"]
+        tex_sets = [
+            [
+                ("\\text{Additivity: }",),
+                ("L(", v_tex, "+", w_tex, ")"),
+                ("=", "L(", v_tex, ")", "+", "L(", w_tex, ")"),
+            ],
+            [
+                ("\\text{Scaling: }",),
+                ("L(", "c", v_tex, ")"),
+                ("=", "c", "L(", v_tex, ")"),
+            ],
+        ]
+        properties = VGroup()
+        for tex_set in tex_sets:
+            words = VGroup(*it.starmap(TexMobject, tex_set))
+            for word in words:
+                word.highlight_by_tex(v_tex, YELLOW)
+                word.highlight_by_tex(w_tex, MAROON_B)
+                word.highlight_by_tex("c", GREEN)
+            words.arrange_submobjects()
+            words.lhs = words[1]
+            words.rhs = words[2]
+            words.add_to_back(BackgroundRectangle(words))
+            words.scale(0.8)
+            properties.add(words)
+        properties.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_BUFF)
+        properties.next_to(h_line, DOWN).to_edge(LEFT)
+
+        self.play(Write(title), ShowCreation(h_line))
+        self.dither()
+        for words in properties:
+            self.play(Write(words))
+        self.dither()
+        self.add_foreground_mobject(title, h_line, *properties)
+        self.additivity, self.scaling = properties
+
+    def show_additive_property(self):
+        self.plane.save_state()
+
+        v = self.add_vector(self.v_coords)
+        v_label = self.add_transformable_label(v, "v", direction = "right")
+        w = self.add_vector(self.w_coords, color = MAROON_B)
+        w_label = self.add_transformable_label(w, "w", direction = "left")
+        w_group = VGroup(w, w_label)
+        w_group.save_state()
+        self.play(w_group.shift, v.get_end())
+        vw_sum = self.add_vector(w.get_end(), color = PINK)
+        v_label_copy, w_label_copy = v_label.copy(), w_label.copy()
+        v_label_copy.generate_target()
+        w_label_copy.generate_target()
+        plus = TexMobject("+")
+        vw_label = VGroup(v_label_copy.target, plus, w_label_copy.target)
+        vw_label.arrange_submobjects()
+        vw_label.next_to(vw_sum.get_end(), RIGHT)
+        self.play(
+            MoveToTarget(v_label_copy),
+            MoveToTarget(w_label_copy),
+            Write(plus)
+        )
+        vs_label_copy = vw_label.copy()
+        vw_label = VGroup(
+            VectorizedPoint(vw_label.get_left()),
+            vw_label,
+            VectorizedPoint(vw_label.get_right()),
+        )
+        self.remove(v_label_copy, w_label_copy, plus)
+        self.add(vw_label)
+        self.play(
+            w_group.restore,
+        )
+        vw_label.target = VGroup(
+            TexMobject("L(").scale(0.8),
+            vw_label_copy,
+            TexMobject(")").scale(0.8),
+        )
+        vw_label.target.arrange_submobjects()
+        for mob in vw_label, vw_label.target:
+            mob.add_to_back(BackgroundRectangle(mob))
+
+        transform = self.get_matrix_transformation(self.t_matrix)
+        point = transform(vw_sum.get_end())
+        vw_label.target.next_to(point, UP)
+        self.apply_transposed_matrix(
+            self.t_matrix, 
+            added_anims = [MoveToTarget(vw_label)]
+        )
+        self.dither()
+        self.play(w_group.shift, v.get_end())
+        v_label_copy, w_label_copy = v_label.copy(), w_label.copy()
+        v_label_copy.generate_target()
+        w_label_copy.generate_target()
+        equals, plus = TexMobject("=+")
+        rhs = VGroup(
+            equals, v_label_copy.target,
+            plus, w_label_copy.target
+        )
+        rhs.arrange_submobjects()
+        rhs.next_to(vw_label, RIGHT)
+        rect = BackgroundRectangle(rhs)
+        self.play(*it.chain(
+            map(Write, [rect, equals, plus]),
+            map(MoveToTarget, [v_label_copy, w_label_copy]),
+        ))
+        to_fade = [self.plane, v, v_label, w_group, vw_label, vw_sum]
+        to_fade += self.get_mobjects_from_last_animation()
+
+        self.dither()
+        self.play(*it.chain(
+            map(FadeOut, to_fade),
+            map(Animation, self.foreground_mobjects)
+        ))
+        self.plane.restore()
+        self.play(FadeIn(self.plane), *map(Animation, self.foreground_mobjects))
+        self.transformable_mobjects = []
+        self.moving_vectors = []        
+        self.transformable_labels = []
+        self.moving_mobjects = []
+        self.add_transformable_mobject(self.plane)
+        self.add(*self.foreground_mobjects)
+
+    def show_scaling_property(self):
+        v = self.add_vector([1, -1])
+        v_label = self.add_transformable_label(v, "v")
+        scaled_v = v.copy().scale(2)
+        scaled_v_label = TexMobject("c\\vec{\\textbf{v}}")
+        scaled_v_label.highlight(YELLOW)
+        scaled_v_label[1][0].highlight(GREEN)
+        scaled_v_label.next_to(scaled_v.get_end(), RIGHT)
+        scaled_v_label.add_background_rectangle()
+        v_copy, v_label_copy = v.copy(), v_label.copy()
+        self.play(
+            v.fade,            
+            Transform(v_copy, scaled_v),
+            Transform(v_label_copy, scaled_v_label),
+        )
+        self.remove(v_copy, v_label_copy)
+        self.add(scaled_v_label)
+        self.add_vector(scaled_v, animate = False)
+        self.dither()
+
+        transform = self.get_matrix_transformation(self.t_matrix)
+        point = transform(scaled_v.get_end())
+        scaled_v_label.target = TexMobject("L(", "c", "\\vec{\\textbf{v}}", ")")
+        scaled_v_label.target.highlight_by_tex("c", GREEN)
+        scaled_v_label.target.highlight_by_tex("\\vec{\\textbf{v}}", YELLOW)
+        scaled_v_label.target.scale(0.8)
+        scaled_v_label.target.next_to(point, RIGHT)
+        scaled_v_label.target.add_background_rectangle()
+
+        self.apply_transposed_matrix(
+            self.t_matrix, 
+            added_anims = [MoveToTarget(scaled_v_label)]
+        )
+        self.dither()
+        scaled_v = v.copy().scale(2)
+        rhs = TexMobject("=", "c", "L(", "\\vec{\\textbf{v}}", ")")
+        rhs.highlight_by_tex("c", GREEN)
+        rhs.highlight_by_tex("\\vec{\\textbf{v}}", YELLOW)
+        rhs.add_background_rectangle()
+        rhs.scale(0.8)
+        rhs.next_to(scaled_v_label, RIGHT)
+        v_copy = v.copy()
+        self.add(v_copy)
+        self.play(Transform(v, scaled_v))
+        self.play(Write(rhs))
+        self.dither()
+        faders = [
+            scaled_v_label, scaled_v, v_copy, 
+            v, rhs
+        ] + self.transformable_labels + self.moving_vectors
+        self.play(*map(FadeOut, faders))
+
+    def add_words(self):
+        randy = Randolph().shift(LEFT).to_edge(DOWN)
+        bubble = randy.get_bubble("speech")
+        bubble.set_fill(BLACK, opacity = 0.8)
+        words = TextMobject(
+            "Linear transformations\\\\",
+            "preserve",
+            "addition and \\\\ scalar multiplication",
+        )
+        words.scale(0.9)
+        words.highlight_by_tex("preserve", YELLOW)
+        bubble.add_content(words)
+
+        self.play(FadeIn(randy))
+        self.play(
+            randy.change_mode, "speaking",
+            ShowCreation(bubble),
+            Write(words)
+        )
+        self.play(Blink(randy))
+        self.dither()
+
+class DerivativeIsLinear(Scene):
+    def construct(self):
+        self.add_title()
+        self.prepare_text()
+        self.show_additivity()
+        self.show_scaling()
+
+    def add_title(self):
+        title = TextMobject("Derivative is linear")
+        title.to_edge(UP)
+        self.add(title)
+
+    def prepare_text(self):
+        v_tex, w_tex = ["\\vec{\\textbf{%s}}"%s for s in "vw"]
+        additivity = TexMobject(
+            "L(", v_tex, "+", w_tex, ")", "=",
+            "L(", v_tex, ")+L(", w_tex, ")"
+        )
+        scaling = TexMobject(
+            "L(", "c", v_tex, ")=", "c", "L(", v_tex, ")"
+        )
+        for text in additivity, scaling:
+            text.highlight_by_tex(v_tex, YELLOW)
+            text.highlight_by_tex(w_tex, MAROON_B)
+            text.highlight_by_tex("c", GREEN)
+
+        deriv_tex = "\\dfrac{d}{dx}"
+        deriv_additivity = TexMobject(
+            deriv_tex, "(", "x^3", "+", "x^2", ")", "=",
+            deriv_tex, "(", "x^3", ")", "+", 
+            deriv_tex, "(", "x^2", ")"
+        )
+        deriv_scaling = TexMobject(
+            deriv_tex, "(", "4", "x^3", ")", "=",
+            "4", deriv_tex, "(", "x^3", ")"
+        )
+        for text in deriv_additivity, deriv_scaling:
+            text.highlight_by_tex("x^3", YELLOW)
+            text.highlight_by_tex("x^2", MAROON_B)
+            text.highlight_by_tex("4", GREEN)
+
+        self.additivity = additivity
+        self.scaling = scaling
+        self.deriv_additivity = deriv_additivity
+        self.deriv_scaling = deriv_scaling
+
+    def show_additivity(self):
+        general, deriv = self.additivity, self.deriv_additivity
+        group = VGroup(general, deriv )
+        group.arrange_submobjects(DOWN, buff = 1.5)
+
+        inner_sum = VGroup(*deriv[2:2+3])
+        outer_sum_deriv = VGroup(deriv[0], deriv[1], deriv[5])
+        inner_func1 = deriv[9]
+        outer_deriv1 = VGroup(deriv[7], deriv[8], deriv[10])
+        plus = deriv[11]
+        inner_func2 = deriv[14]
+        outer_deriv2 = VGroup(deriv[12], deriv[13], deriv[15])
+
+        self.play(FadeIn(group))
+        self.dither()
+        self.point_out(inner_sum)
+        self.point_out(outer_sum_deriv)
+        self.dither()
+        self.point_out(outer_deriv1, outer_deriv2)        
+        self.point_out(inner_func1, inner_func2)
+        self.point_out(plus)
+        self.dither()
+        self.play(FadeOut(group))
+
+    def show_scaling(self):
+        general, deriv = self.scaling, self.deriv_scaling
+        group = VGroup(general, deriv)
+        group.arrange_submobjects(DOWN, buff = 1.5)
+
+        inner_scaling = VGroup(*deriv[2:4])
+        lhs_deriv = VGroup(deriv[0], deriv[1], deriv[4])
+        rhs_deriv = VGroup(*deriv[7:])
+        outer_scaling = deriv[6]
+
+        self.play(FadeIn(group))
+        self.dither()
+        self.point_out(inner_scaling)
+        self.point_out(lhs_deriv)
+        self.dither()
+        self.point_out(rhs_deriv)
+        self.point_out(outer_scaling)
+        self.dither()
+
+    def point_out(self, *terms):
+        anims = []
+        for term in terms:
+            anims += [
+                term.scale_in_place, 1.2,
+                term.highlight, RED,
+            ]
+        self.play(
+            *anims,
+            run_time = 1,
+            rate_func = there_and_back
+        )
+
+class ProposeDerivativeAsMatrix(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            """
+            Let's describe the
+            derivative with 
+            a matrix
+            """,
+            pi_creature_target_mode = "hooray"
+        )
+        self.random_blink()
+        self.change_student_modes("pondering", "confused", "erm")
+        self.random_blink(3)
+
+class IntroducePolynomialSpace(Scene):
+    def construct(self):
+        self.add_title()
+        self.show_polynomial_cloud()
+        self.split_individual_polynomial()
+        self.list_basis_functions()
+        self.show_example_coordinates()
+        self.derivative_as_matrix()
+
+    def add_title(self):
+        title = TextMobject("Our current space: ", "All polynomials")
+        title.to_edge(UP)
+        title[1].highlight(BLUE)
+        self.play(Write(title))
+        self.dither()
+        self.title = title
+
+    def show_polynomial_cloud(self):
+        cloud = ThoughtBubble()[-1]
+        cloud.stretch_to_fit_height(6)
+        cloud.center()
+        
+
+        polys = VGroup(
+            TexMobject("x^2", "+", "3", "x", "+", "5"),
+            TexMobject("4x^7-5x^2"),
+            TexMobject("x^{100}+2x^{99}+3x^{98}+\\cdots"),
+            TexMobject("3x-7"),
+            TexMobject("x^{1{,}000{,}000{,}000}+1"),
+            TexMobject("\\vdots"),
+        )
+        polys.gradient_highlight(BLUE_B, BLUE_D)
+        polys.arrange_submobjects(DOWN, buff = MED_BUFF)
+        polys.next_to(cloud.get_top(), DOWN, buff = 2*MED_BUFF)
+
+        self.play(ShowCreation(cloud))
+        for poly in polys:
+            self.play(Write(poly), run_time = 1)
+        self.dither()
+        self.poly1, self.poly2 = polys[0], polys[1]
+        polys.remove(self.poly1)
+        self.play(
+            FadeOut(cloud),
+            FadeOut(polys),
+            self.poly1.next_to, ORIGIN, LEFT,
+            self.poly1.highlight, WHITE
+        )
+
+    def split_individual_polynomial(self):
+        leading_coef = TexMobject("1")
+        leading_coef.next_to(self.poly1[0], LEFT, aligned_edge = DOWN)
+        self.poly1.add_to_back(leading_coef)
+        one = TexMobject("\\cdot", "1")
+        one.next_to(self.poly1[-1], RIGHT, aligned_edge = DOWN)
+        self.poly1.add(one)
+        for mob in leading_coef, one:
+            mob.highlight(BLACK)
+
+        brace = Brace(self.poly1)
+        brace.text = brace.get_text("Already written as \\\\ a linear combination")
+
+        index_to_color = {
+            0 : WHITE,
+            1 : Z_COLOR,
+            4 : Y_COLOR,
+            7 : X_COLOR,
+        }
+        self.play(
+            GrowFromCenter(brace),
+            Write(brace.text),
+            *[
+                ApplyMethod(self.poly1[index].highlight, color)
+                for index, color in index_to_color.items()
+            ]
+        )
+        self.dither()
+        self.brace = brace
+
+    def list_basis_functions(self):
+        title = TextMobject("Basis functions")
+        title.next_to(self.title, DOWN, buff = MED_BUFF)
+        title.to_edge(RIGHT)
+        h_line = Line(ORIGIN, RIGHT).scale(title.get_width())
+        h_line.next_to(title, DOWN)
+
+        x_cubed = TexMobject("x^3")
+        x_cubed.highlight(MAROON_B)
+        x_cubed.to_corner(DOWN+RIGHT).shift(2*(DOWN+RIGHT))
+        basis_group = VGroup(
+            self.poly1[7][1],
+            self.poly1[4],
+            self.poly1[1],
+            x_cubed
+        ).copy()
+        basis_group.generate_target()
+        basis_group.target.arrange_submobjects(
+            DOWN, buff = 0.75*LARGE_BUFF, aligned_edge = LEFT
+        )
+        basis_group.target.to_edge(RIGHT, buff = 2*MED_BUFF)
+        dots = TexMobject("\\vdots")
+        dots.next_to(basis_group.target, DOWN, buff = MED_BUFF, aligned_edge = LEFT)
+
+        basis_functions = [
+            TexMobject("b_%d(x)="%i)
+            for i in range(len(list(basis_group)))
+        ]
+        for basis_func, term in zip(basis_functions, basis_group.target):
+            basis_func.next_to(term, LEFT)
+        for i in 2, 3:
+            basis_functions[i].shift(SMALL_BUFF*DOWN)
+
+        self.play(
+            FadeIn(title),
+            ShowCreation(h_line),
+            MoveToTarget(basis_group),
+            Write(dots)
+        )
+        for basis_func in basis_functions:
+            self.play(Write(basis_func, run_time = 1))
+        self.play(Write(dots))
+        self.dither()
+        self.basis = basis_group
+
+    def show_example_coordinates(self):
+        coords = Matrix(["5", "3", "1", "0", "0", "\\vdots"])
+        self.poly1.generate_target()
+        equals = TexMobject("=").next_to(coords, LEFT)
+        self.poly1.target.next_to(equals, LEFT)
+        entries = coords.get_entries()
+        entries.save_state()
+        entries.set_fill(opacity = 0)
+
+        self.play(
+            MoveToTarget(self.poly1),
+            Write(equals),
+            FadeOut(self.brace),
+            FadeOut(self.brace.text)
+        )
+        for entry, index in zip(entries, [6, 3, 0]):
+            entry.move_to(self.poly1[index])
+        self.play(Write(coords.get_brackets()))
+        self.play(
+            entries.restore,
+            submobject_mode = "lagged_start",
+            run_time = 3
+        )
+        self.dither()
+        target = self.poly1.copy()
+        terms = [
+            VGroup(*target[6:8]),
+            VGroup(target[5], *target[3:5]),
+            VGroup(target[2], *target[0:2]),
+        ]
+        target[5].next_to(target[3], LEFT)
+        target[2].next_to(target[0], LEFT)
+        more_terms = [
+            TexMobject("+0", "x^3").highlight_by_tex("x^3", MAROON_B),
+            TexMobject("+0", "x^4").highlight_by_tex("x^4", YELLOW),
+            TexMobject("\\vdots")
+        ]        
+        for entry, term in zip(entries, terms+more_terms):
+            term.next_to(entry, LEFT, buff = LARGE_BUFF)
+        more_terms[-1].shift(MED_BUFF*LEFT)
+
+        self.play(Transform(self.poly1, target))
+        self.dither()
+        self.play(FadeIn(
+            VGroup(*more_terms), 
+            submobject_mode = "lagged_start",
+            run_time = 2
+        ))
+        self.dither()
+
+        self.play(*map(FadeOut, [self.poly1]+more_terms))
+        self.poly2.next_to(equals, LEFT)
+        self.poly2.shift(MED_BUFF*UP)
+        self.poly2.highlight(WHITE)
+        self.poly2[0].highlight(TEAL)
+        VGroup(*self.poly2[3:5]).highlight(RED)
+        new_coords = Matrix(["0", "0", "-5", "0", "0", "0", "0", "4", "\\vdots"])
+        new_coords.get_entries()[2].highlight(RED)
+        new_coords.get_entries()[7].highlight(TEAL)
+        new_coords.scale_to_fit_height(6)
+        new_coords.move_to(coords, aligned_edge = LEFT)
+        self.play(
+            Write(self.poly2),
+            Transform(coords, new_coords)
+        )
+        self.dither(2)
+        self.play(*map(FadeOut, [self.poly2, coords, equals]))
+
+    def derivative_as_matrix(self):
+        pass
 
 
-
-
-
-
-
-
-
-
-
-
-
+class DerivativeAsMatrix(Scene):
+    def construct(self):
+        pass
 
 
 
