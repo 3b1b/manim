@@ -364,7 +364,7 @@ class TeacherStudentsScene(Scene):
                          **bubble_kwargs):
         if all(map(lambda s : isinstance(s, str), content)):
             content = TextMobject(*content)
-        elif len(content) == 1 and isinstance(content[0], TexMobject):
+        elif len(content) == 1 and isinstance(content[0], Mobject):
             content = content[0]
         else:
             raise Exception("Invalid content type")
@@ -379,7 +379,7 @@ class TeacherStudentsScene(Scene):
                 pi_creature_target_mode = "pondering"
 
         for p in self.get_everyone():
-            if p.bubble and p is not pi_creature:
+            if (p.bubble is not None) and (p is not pi_creature):
                 added_anims += [
                     FadeOut(p.bubble),
                     FadeOut(p.bubble.content)

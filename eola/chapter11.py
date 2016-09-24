@@ -20,7 +20,7 @@ from eola.matrix import *
 from eola.two_d_space import *
 from eola.chapter1 import plane_wave_homotopy
 from eola.chapter3 import ColumnsToBasisVectors
-from eola.chapter5 import NameDeterminant
+from eola.chapter5 import NameDeterminant, Blob
 from eola.chapter9 import get_small_bubble
 from eola.chapter10 import ExampleTranformationScene
 
@@ -74,7 +74,7 @@ class OpeningQuote(Scene):
 
 class RevisitOriginalQuestion(TeacherStudentsScene):
     def construct(self):
-        self.teacher_says("Let's revisit \\\\ an old question")
+        self.teacher_says("Let's revisit ", "\\\\ an old question")
         self.random_blink()
         question = TextMobject("What are ", "vectors", "?", arg_separator = "")
         question.highlight_by_tex("vectors", YELLOW)
@@ -111,29 +111,19 @@ class WhatIsA2DVector(LinearTransformationScene):
         coords.add_to_back(BackgroundRectangle(coords))
         coords.next_to(v.get_end(), RIGHT)
 
-        two_d_vector, two_d_space = words = [
-            TextMobject(
-                "``Two-dimensional ", word, "''", arg_separator = ""
-            ).highlight_by_tex(word, color)
-            for word, color in ("vector", YELLOW), ("space", BLUE)
-        ]
-        for word, vect in zip(words, [LEFT, RIGHT]):
-            word.add_background_rectangle()
-            word.next_to(ORIGIN, vect, buff = MED_BUFF)
-            word.to_edge(UP)
+        two_d_vector = TextMobject(
+            "``Two-dimensional ", "vector", "''", 
+            arg_separator = ""
+        )
+        two_d_vector.highlight_by_tex("vector", YELLOW)
+        two_d_vector.add_background_rectangle()
+        two_d_vector.to_edge(UP)
 
         self.play(
             Write(two_d_vector),
             ShowCreation(v),
             Write(coords),
             run_time = 2
-        )
-        self.dither()
-        last_mobs = self.get_mobjects_from_last_animation()
-        self.play(
-            Homotopy(plane_wave_homotopy, self.plane),
-            Write(two_d_space, run_time = 2),
-            *map(Animation, last_mobs)
         )
         self.dither()
         self.v, self.coords = v, coords
@@ -303,11 +293,11 @@ class AskAbout4DPhysicsStudent(Scene):
         compy = CSStudent().to_edge(DOWN).shift(2*RIGHT)
         for pi1, pi2 in (physy, compy), (compy, physy):
             pi1.look_at(pi2.eyes)
-        physy.bubble = physy.get_bubble("speech", width = 4)
+        physy.bubble = physy.get_bubble("speech", width = 5, height = 4.5)
 
         line = Line(LEFT, RIGHT, color = BLUE_B)
         square = Square(color = BLUE_C)
-        square.scale_in_place(0.7)        
+        square.scale_in_place(0.5)
         cube = HyperCube(color = BLUE_D, dims = 3)
         hyper_cube = HyperCube()
         thought_mobs = []
@@ -425,10 +415,11 @@ class ManyCoordinateSystems(LinearTransformationScene):
             *map(FadeOut, [array, coord1, coord2])
         )
 
-class TransformationsWithCoordinates(ColumnsToBasisVectors):
+class DeterminantAndEigenvectorDontCare(LinearTransformationScene):
     CONFIG = {
         "t_matrix" : [[3, 1], [1, 2]],
         "include_background_plane" : False,
+        "show_basis_vectors" : False,
         "foreground_plane_kwargs" : {
             "x_radius" : 2*SPACE_WIDTH,
             "y_radius" : 2*SPACE_HEIGHT,
@@ -436,41 +427,94 @@ class TransformationsWithCoordinates(ColumnsToBasisVectors):
         },
     }
     def construct(self):
-        self.setup()
-        self.add_unit_square()
+        words = TextMobject(
+            "Determinant", 
+            "and", 
+            "eigenvectors", 
+            "don't \\\\ care about the coordinate system"
+        )
+        words.highlight_by_tex("Determinant", YELLOW)
+        words.highlight_by_tex("eigenvectors", MAROON_B)
+        words.add_background_rectangle()
+        words.to_edge(UP)
+        dark_yellow = Color(rgb = interpolate(
+            color_to_rgb(YELLOW),
+            color_to_rgb(BLACK),
+            0.5
+        ))
+
+        blob = Blob(
+            stroke_color = YELLOW,
+            fill_color = dark_yellow,
+            fill_opacity = 1,
+        )
+        blob.shift(2*LEFT+UP)
+        det_label = TexMobject("A")
+        det_label = VGroup(
+            VectorizedPoint(det_label.get_left()).highlight(WHITE),
+            det_label
+        )
+        det_label_target = TexMobject("\\det(M)\\cdot", "A")
+        det_label.move_to(blob)
+
         eigenvectors = VGroup(*self.get_eigenvectors())
 
-        det_word = TextMobject("Determinant")
-        det_word.highlight(YELLOW)
-        det_word.to_edge(UP)
-        eigen_word = TextMobject("Eigenvectors")
-        eigen_word.highlight(MAROON_B)
-        eigen_word.next_to(det_word, DOWN, aligned_edge = LEFT)
-        for word in det_word, eigen_word:
-            word.add_background_rectangle()
-
-        self.move_matrix_columns(self.t_matrix)
-        faders = [self.matrix, self.i_coords, self.j_coords]
-        self.play(*map(FadeOut, faders))
-        FadeOut(VGroup(*faders)).update(1)
+        self.add_foreground_mobject(words)
+        self.dither()
         self.play(
-            Write(det_word, run_time = 2),
-            self.square.set_fill, YELLOW, 0.3,
-            self.square.set_stroke, YELLOW, DEFAULT_POINT_THICKNESS,
-            *map(Animation, [self.i_hat, self.j_hat])
+            FadeIn(blob),
+            Write(det_label)
         )
-        self.add_foreground_mobject(det_word)
         self.play(
-            Write(eigen_word, run_time = 2),
-            FadeIn(eigenvectors)
-        )
-        for eigenvector in eigenvectors:
-            self.add_vector(eigenvector, animate = False)
-        self.add_foreground_mobject(eigen_word)        
-        self.apply_inverse_transpose(
-            self.t_matrix, rate_func = there_and_back
+            ShowCreation(
+                eigenvectors,
+                submobject_mode = "one_at_a_time",
+                run_time = 2,
+            ),
+            Animation(words)
         )
         self.dither()
+        
+        self.add_transformable_mobject(blob)
+        self.add_moving_mobject(det_label, det_label_target)
+        for vector in eigenvectors:
+            self.add_vector(vector, animate = False)
+        self.remove(self.plane)
+        non_plane_mobs = self.get_mobjects()
+        self.add(self.plane, *non_plane_mobs)
+        
+        cob_matrices = [
+            None,
+            [[1, -1], [-3, -1]],
+            [[-1, 2], [-0.5, -1]],
+        ] 
+        def special_rate_func(t):
+            if t < 0.3:
+                return smooth(t/0.3)
+            if t > 0.7:
+                return smooth((1-t)/0.3)
+            return 1
+        for cob_matrix in cob_matrices:
+            if cob_matrix is not None:
+                self.play(
+                    FadeOut(self.plane),
+                    *map(Animation, non_plane_mobs)
+                )
+                transform = self.get_matrix_transformation(cob_matrix)
+                self.plane.apply_function(transform)
+                self.play(
+                    FadeIn(self.plane),
+                    *map(Animation, non_plane_mobs)
+                )
+                self.dither()
+            self.apply_transposed_matrix(
+                self.t_matrix,
+                rate_func = special_rate_func,
+                run_time = 8
+            )
+
+
+        
 
     def get_eigenvectors(self):
         vals, (eig_matrix) = np.linalg.eig(self.t_matrix.T)
@@ -479,12 +523,43 @@ class TransformationsWithCoordinates(ColumnsToBasisVectors):
         for v in v1, v2:
             vectors = VGroup(*[
                 Vector(u*x*v)
-                for x in range(14, 0, -2)
+                for x in range(7, 0, -1)
                 for u in -1, 1
             ])
-            vectors.gradient_highlight(MAROON_B, YELLOW)
+            vectors.gradient_highlight(MAROON_A, MAROON_C)
             result += list(vectors)
         return result
+
+class WhatIsSpace(Scene):
+    def construct(self):
+        physy = PhysicsStudent()
+        compy = CSStudent()
+        physy.to_edge(DOWN).shift(4*LEFT)
+        compy.to_edge(DOWN).shift(4*RIGHT)
+        physy.make_eye_contact(compy)
+
+        physy.bubble = get_small_bubble(physy)
+        vector = Vector([1, 2])
+        physy.bubble.add_content(vector)
+        compy.bubble = compy.get_bubble("speech", width = 6, height = 4)
+        compy.bubble.set_fill(BLACK, opacity = 1)
+        compy.bubble.write("What exactly do\\\\ you mean by ``space''?")
+
+        self.add(compy, physy)
+        self.play(
+            physy.change_mode, "pondering",
+            ShowCreation(physy.bubble),
+            ShowCreation(vector)
+        )
+        self.play(
+            compy.change_mode, "sassy",
+            ShowCreation(compy.bubble),
+            Write(compy.bubble.content)
+        )
+        self.play(Blink(physy))
+        self.dither()
+        self.play(Blink(compy))
+        self.dither()
 
 class OtherVectorishThings(TeacherStudentsScene):
     def construct(self):
@@ -509,10 +584,10 @@ class OtherVectorishThings(TeacherStudentsScene):
 
 class FunctionGraphScene(Scene):
     CONFIG = {
-        "graph_colors" : [MAROON_B, YELLOW, PINK],
+        "graph_colors" : [RED, YELLOW, PINK],
         "default_functions" : [
-            lambda x : (x**3 - 9*x)/10.,
-            lambda x : (x**2)/8.-1
+            lambda x : (x**3 - 9*x)/20.,
+            lambda x : -(x**2)/8.+1
         ],
         "default_names" : ["f", "g", "h"],
         "x_min" : -4,
@@ -600,10 +675,6 @@ class AddTwoFunctions(FunctionGraphScene):
         f_lines = self.get_output_lines(f_graph)
         g_lines = self.get_output_lines(g_graph)
         sum_lines = self.get_output_lines(sum_graph, nudge = False)
-        for lines in f_lines, g_lines:
-            self.add_lines(lines)
-        self.play(*map(FadeOut, [f_graph, g_graph]))
-        self.dither()
 
         curr_x_point = f_lines[0].get_start()
         sum_def = self.get_sum_definition(DecimalNumber(curr_x_point[0]))
@@ -620,6 +691,10 @@ class AddTwoFunctions(FunctionGraphScene):
             Write(prefix, run_time = 2),
             FadeIn(brace)
         )
+        self.dither()        
+        for lines in f_lines, g_lines:
+            self.add_lines(lines)
+        self.play(*map(FadeOut, [f_graph, g_graph]))
         self.dither()
         self.play(FadeOut(brace))
         fg_group = VGroup(*list(f_label)+list(g_label))
@@ -681,7 +756,7 @@ class AddTwoFunctions(FunctionGraphScene):
         dots.target = VGroup()
         for f_line, g_line in zip(f_lines, g_lines.target):
             align_perfectly = f_line.get_end()[1]*g_line.get_end()[1] > 0
-            dot = Dot(g_line.get_end())
+            dot = Dot(g_line.get_end(), radius = 0.07)
             g_line.shift(f_line.get_end()-g_line.get_start())
             dot.target = Dot(g_line.get_end())            
             if not align_perfectly:
@@ -702,10 +777,10 @@ class AddTwoFunctions(FunctionGraphScene):
             MoveToTarget(mob, **kwargs)
             for mob in g_lines, dots
         ])
-        self.play(
-            *[mob.fade for mob in g_lines, f_lines]+[
-            Animation(dots)
-        ])
+        # self.play(
+        #     *[mob.fade for mob in g_lines, f_lines]+[
+        #     Animation(dots)
+        # ])
         self.dither()
 
 class AddVectorsCoordinateByCoordinate(Scene):
@@ -735,7 +810,7 @@ class AddVectorsCoordinateByCoordinate(Scene):
 class ScaleFunction(FunctionGraphScene):
     def construct(self):
         graph = self.get_function_graph(
-            lambda x : 0.7*self.default_functions[0](x),
+            lambda x : self.default_functions[0](x),
             animate = False
         )
         scaled_graph = self.get_function_graph(
@@ -934,6 +1009,24 @@ class FromVectorsToFunctions(VectorScene):
         self.play(ShowSlopes(faded_graph))
         self.dither()
 
+class TransformationsAndOperators(TeacherStudentsScene):
+    def construct(self):
+        self.student_says("""
+            Are these the same
+            as ``linear operators''?
+        """, student_index = 0)
+        self.random_blink()
+        teacher = self.get_teacher()
+        bubble = teacher.get_bubble("speech", height = 2, width = 2)
+        bubble.set_fill(BLACK, opacity = 1)
+        bubble.write("Yup!")
+        self.play(
+            teacher.change_mode, "hooray",
+            ShowCreation(bubble),
+            Write(bubble.content, run_time = 1)
+        )
+        self.random_blink(2)
+
 class ManyFunctions(FunctionGraphScene):
     def construct(self):
         randy = Randolph().to_corner(DOWN+LEFT)
@@ -1037,10 +1130,10 @@ class FormalDefinitionOfLinear(LinearTransformationScene):
             words.lhs = words[1]
             words.rhs = words[2]
             words.add_to_back(BackgroundRectangle(words))
-            words.scale(0.8)
+            # words.scale(0.8)
             properties.add(words)
         properties.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_BUFF)
-        properties.next_to(h_line, DOWN).to_edge(LEFT)
+        properties.next_to(h_line, DOWN, buff = 2*MED_BUFF).to_edge(LEFT)
 
         self.play(Write(title), ShowCreation(h_line))
         self.dither()
@@ -1073,7 +1166,7 @@ class FormalDefinitionOfLinear(LinearTransformationScene):
             MoveToTarget(w_label_copy),
             Write(plus)
         )
-        vs_label_copy = vw_label.copy()
+        vw_label_copy = vw_label.copy()
         vw_label = VGroup(
             VectorizedPoint(vw_label.get_left()),
             vw_label,
@@ -1140,12 +1233,11 @@ class FormalDefinitionOfLinear(LinearTransformationScene):
         scaled_v = v.copy().scale(2)
         scaled_v_label = TexMobject("c\\vec{\\textbf{v}}")
         scaled_v_label.highlight(YELLOW)
-        scaled_v_label[1][0].highlight(GREEN)
+        scaled_v_label[0].highlight(GREEN)
         scaled_v_label.next_to(scaled_v.get_end(), RIGHT)
         scaled_v_label.add_background_rectangle()
         v_copy, v_label_copy = v.copy(), v_label.copy()
         self.play(
-            v.fade,            
             Transform(v_copy, scaled_v),
             Transform(v_label_copy, scaled_v_label),
         )
@@ -1188,8 +1280,10 @@ class FormalDefinitionOfLinear(LinearTransformationScene):
 
     def add_words(self):
         randy = Randolph().shift(LEFT).to_edge(DOWN)
-        bubble = randy.get_bubble("speech")
+        bubble = randy.get_bubble("speech", width = 6, height = 4)
         bubble.set_fill(BLACK, opacity = 0.8)
+        bubble.shift(0.5*DOWN)
+        VGroup(randy, bubble).to_edge(RIGHT, buff = 0)
         words = TextMobject(
             "Linear transformations\\\\",
             "preserve",
@@ -1201,12 +1295,27 @@ class FormalDefinitionOfLinear(LinearTransformationScene):
 
         self.play(FadeIn(randy))
         self.play(
+            ShowCreation(bubble),            
+            Write(words),
             randy.change_mode, "speaking",
-            ShowCreation(bubble),
-            Write(words)
         )
         self.play(Blink(randy))
         self.dither()
+
+class CalcStudentsKnowThatDerivIsLinear(TeacherStudentsScene):
+    def construct(self):
+        words = TextMobject(
+            """Calc students subconsciously
+            know that""",
+            "$\\dfrac{d}{dx}$",
+            "is linear"
+        )
+        words.highlight_by_tex("$\\dfrac{d}{dx}$", BLUE)
+        self.teacher_says(words)
+        self.change_student_modes(
+            "pondering", "confused", "erm"
+        )
+        self.random_blink(3)
 
 class DerivativeIsLinear(Scene):
     def construct(self):
@@ -1324,6 +1433,89 @@ class ProposeDerivativeAsMatrix(TeacherStudentsScene):
         self.change_student_modes("pondering", "confused", "erm")
         self.random_blink(3)
 
+class PolynomialsHaveArbitrarilyLargeDegree(Scene):
+    def construct(self):
+        polys = VGroup(*map(TexMobject, [
+            "x^{300} + 9x^2",
+            "4x^{4{,}000{,}000{,}000} + 1",
+            "3x^{\\left(10^{100}\\right)}",
+            "\\vdots"
+        ]))
+        polys.gradient_highlight(BLUE_B, BLUE_D)
+        polys.arrange_submobjects(DOWN, buff = 2*MED_BUFF)
+        polys.scale(1.3)
+
+        arrow = TexMobject("\\Rightarrow").scale(1.5)
+
+        brace = Brace(
+            Line(UP, DOWN).scale(SPACE_HEIGHT).shift(SPACE_WIDTH*RIGHT),
+            LEFT
+        )
+        words = TextMobject("Infinitely many")
+        words.scale(1.5)
+        words.next_to(brace, LEFT)
+        arrow.next_to(words, LEFT)
+        polys.next_to(arrow, LEFT)
+
+        self.play(Write(polys))
+        self.dither()
+        self.play(
+            FadeIn(arrow),
+            Write(words),
+            GrowFromCenter(brace)
+        )
+        self.dither()
+
+class GeneneralPolynomialCoordinates(Scene):
+    def construct(self):
+        poly = TexMobject(
+            "a_n", "x^n", "+",
+            "a_{n-1}", "x^{n-1}", "+",
+            "\\cdots",
+            "a_1", "x", "+",             
+            "a_0", 
+        )
+        poly.highlight_by_tex("a_n", YELLOW)
+        poly.highlight_by_tex("a_{n-1}", MAROON_B)
+        poly.highlight_by_tex("a_1", RED)
+        poly.highlight_by_tex("a_0", GREEN)
+        poly.scale(1.3)
+
+        array = Matrix(
+            ["a_0", "a_1", "\\vdots", "a_{n-1}", "a_n", "0", "\\vdots"]
+        )
+        array.get_entries()[0].highlight(GREEN)
+        array.get_entries()[1].highlight(RED)
+        array.get_entries()[3].highlight(MAROON_B)
+        array.get_entries()[4].highlight(YELLOW)
+        array.scale(1.2)
+
+        equals = TexMobject("=").scale(1.3)
+        group = VGroup(poly, equals, array)
+        group.arrange_submobjects()
+        group.to_edge(RIGHT)
+
+        pre_entries = VGroup(
+            poly[-1], poly[-4], poly[-5], 
+            poly[3], poly[0], 
+            VectorizedPoint(poly.get_left()),
+            VectorizedPoint(poly.get_left()),
+        )
+
+        self.add(poly, equals, array.get_brackets())
+        self.dither()
+        self.play(
+            Transform(pre_entries.copy(), array.get_entries())
+        )
+        self.dither()
+
+class SimplePolynomialCoordinates(Scene):
+    def construct(self):
+        matrix = Matrix(["5", "3", "1", "0", "\\vdots"])
+        matrix.to_edge(LEFT)
+        self.play(Write(matrix))
+        self.dither()
+
 class IntroducePolynomialSpace(Scene):
     def construct(self):
         self.add_title()
@@ -1350,7 +1542,7 @@ class IntroducePolynomialSpace(Scene):
         polys = VGroup(
             TexMobject("x^2", "+", "3", "x", "+", "5"),
             TexMobject("4x^7-5x^2"),
-            TexMobject("x^{100}+2x^{99}+3x^{98}+\\cdots"),
+            TexMobject("x^{100}+2x^{99}+3x^{98}"),
             TexMobject("3x-7"),
             TexMobject("x^{1{,}000{,}000{,}000}+1"),
             TexMobject("\\vdots"),
@@ -1427,10 +1619,11 @@ class IntroducePolynomialSpace(Scene):
         dots.next_to(basis_group.target, DOWN, buff = MED_BUFF, aligned_edge = LEFT)
 
         basis_functions = [
-            TexMobject("b_%d(x)="%i)
+            TexMobject("b_%d(x)"%i, "=")
             for i in range(len(list(basis_group)))
         ]
         for basis_func, term in zip(basis_functions, basis_group.target):
+            basis_func.highlight(term.get_color())
             basis_func.next_to(term, LEFT)
         for i in 2, 3:
             basis_functions[i].shift(SMALL_BUFF*DOWN)
@@ -1446,6 +1639,7 @@ class IntroducePolynomialSpace(Scene):
         self.play(Write(dots))
         self.dither()
         self.basis = basis_group
+        self.basis_functions = basis_functions
 
     def show_example_coordinates(self):
         coords = Matrix(["5", "3", "1", "0", "0", "\\vdots"])
@@ -1502,9 +1696,9 @@ class IntroducePolynomialSpace(Scene):
         self.poly2.shift(MED_BUFF*UP)
         self.poly2.highlight(WHITE)
         self.poly2[0].highlight(TEAL)
-        VGroup(*self.poly2[3:5]).highlight(RED)
+        VGroup(*self.poly2[3:5]).highlight(Z_COLOR)
         new_coords = Matrix(["0", "0", "-5", "0", "0", "0", "0", "4", "\\vdots"])
-        new_coords.get_entries()[2].highlight(RED)
+        new_coords.get_entries()[2].highlight(Z_COLOR)
         new_coords.get_entries()[7].highlight(TEAL)
         new_coords.scale_to_fit_height(6)
         new_coords.move_to(coords, aligned_edge = LEFT)
@@ -1512,16 +1706,811 @@ class IntroducePolynomialSpace(Scene):
             Write(self.poly2),
             Transform(coords, new_coords)
         )
-        self.dither(2)
+        self.dither()
+        for i, mob in (2, VGroup(*self.poly2[3:5])), (7, self.poly2[0]):
+            self.play(
+                new_coords.get_entries()[i].scale_in_place, 1.3,
+                mob.scale_in_place, 1.3,
+                rate_func = there_and_back
+            )
+            self.remove(*self.get_mobjects_from_last_animation())
+            self.dither()
         self.play(*map(FadeOut, [self.poly2, coords, equals]))
 
     def derivative_as_matrix(self):
-        pass
+        matrix = Matrix([
+            ["?"]*4 + ["\\cdots"]
+            for x in range(4)
+        ] + [
+            ["\\vdots"]*4 + ["\\ddots"]
+        ])
+        matrix.shift(2*LEFT)
+        matrix.get_entries().gradient_highlight(GREEN, YELLOW, MAROON_B)
+        mob_matrix = matrix.get_mob_matrix()
+        ##Horrible
+        last_col = VGroup(*mob_matrix[:,-1])
+        last_col_top = last_col.get_top()
+        last_col.arrange_submobjects(DOWN, buff = 0.83)
+        last_col.move_to(last_col_top, aligned_edge = UP+RIGHT)
+        ##End horrible
+        colors = [X_COLOR, Y_COLOR, Z_COLOR, MAROON_B, YELLOW]
+        for i, j in it.product(*[range(4)]*2):
+            entry = mob_matrix[i, j]
+            if j == i+1:
+                entry.target = TexMobject(str(j))
+            else:
+                entry.target = TexMobject("0")
+            entry.target.scale(0.8).move_to(entry)
+            entry.target.highlight(colors[j])
 
+        deriv = TexMobject("\\dfrac{d}{dx}")
+        equals = TexMobject("=")
+        equals.next_to(matrix, LEFT)
+        deriv.next_to(equals, LEFT)
 
-class DerivativeAsMatrix(Scene):
+        self.play(FadeIn(deriv), FadeIn(equals))
+        self.play(Write(matrix))
+        self.dither()
+
+        basis_derivatives = [
+            "0",
+            "1",
+            "2x",
+            "3x^2",
+        ]
+        arrays = [
+            ["0", "0", "0", "0", "\\vdots"],
+            ["1", "0", "0", "0", "\\vdots"],
+            ["0", "2", "0", "0", "\\vdots"],
+            ["0", "0", "3", "0", "\\vdots"],
+        ]
+        qunits = zip(
+            it.count(),
+            self.basis,
+            self.basis_functions,
+            basis_derivatives,
+            arrays
+        )
+        for j, basis, basis_func, basis_deriv_tex, arr in qunits:
+            matrix.save_state()
+            matrix.generate_target()
+            matrix.target.scale(0.35)
+            matrix.target.to_corner(UP+LEFT)
+
+            func, func_equals = basis_func
+            deriv_copy = deriv.copy()
+            movers = [func, equals, deriv_copy, basis, func_equals]
+            for mob in movers:
+                mob.generate_target()
+                mob.save_state()
+            lp, rp = TexMobject("()")
+            basis_deriv = TexMobject(basis_deriv_tex)
+            new_equals = TexMobject("=")
+            coords = Matrix(arr)
+            coords.highlight(basis.get_color())
+            basis_deriv.highlight(basis.get_color())
+            group = VGroup(
+                func.target, equals.target, deriv_copy.target, 
+                lp, basis.target, rp, func_equals.target,
+                basis_deriv, new_equals, coords
+            )
+            group.arrange_submobjects()
+            group.next_to(deriv)
+
+            self.play(*it.chain(
+                map(MoveToTarget, [
+                    matrix, func, equals, 
+                    deriv_copy, basis, func_equals
+                ]),
+                map(Write, [lp, rp])
+            ))
+            self.dither()
+            self.play(*map(Write, [basis_deriv, new_equals, coords]))
+            self.dither()
+            self.play(*it.chain(
+                [mob.restore for mob in movers+[matrix]],
+                map(FadeOut, [lp, rp, basis_deriv, new_equals]),
+                [coords.to_edge, RIGHT, 4]
+            ))
+
+            column = VGroup(*[
+                mob_matrix[i,j]
+                for i in range(4)
+            ])
+            column_target = VGroup(*[
+                mob.target
+                for mob in column
+            ])
+            entries = VGroup(*coords.get_entries()[:4])
+            self.play(
+                Transform(entries, column_target),
+                FadeOut(coords.get_brackets()),
+                FadeOut(coords.get_entries()[-1]),
+                Transform(column, column_target)
+            )
+            self.remove(coords)
+            self.dither()
+
+class MatrixVectorMultiplicationAndDerivative(TeacherStudentsScene):
     def construct(self):
-        pass
+        mv_mult = VGroup(
+            Matrix([[3, 1], [0, 2]]).highlight_columns(X_COLOR, Y_COLOR),
+            Matrix(["x", "y"]).highlight_columns(YELLOW)
+        )
+        mv_mult.arrange_submobjects()
+        mv_mult.scale(0.75)
+        arrow = TexMobject("\\Leftrightarrow")
+        deriv = TexMobject("\\dfrac{df}{dx}")
+        group = VGroup(mv_mult, arrow, deriv)
+        group.arrange_submobjects(buff = MED_BUFF)
+        arrow.highlight(BLACK)
+
+        teacher = self.get_teacher()
+        bubble = teacher.get_bubble("speech", height = 4)
+        bubble.add_content(group)
+
+        self.play(
+            teacher.change_mode, "speaking",
+            ShowCreation(bubble),
+            Write(group)
+        )
+        self.random_blink()
+        group.generate_target()        
+        group.target.scale(0.8)
+        words = TextMobject("Linear transformations")
+        h_line = Line(ORIGIN, RIGHT).scale(words.get_width())
+        h_line.next_to(words, DOWN)
+        group.target.next_to(h_line, DOWN, buff = MED_BUFF)
+        group.target[1].highlight(WHITE)
+        new_group = VGroup(words, h_line, group.target)
+        bubble.add_content(new_group)
+
+        self.play(
+            MoveToTarget(group),
+            ShowCreation(h_line),
+            Write(words),
+            self.get_teacher().change_mode, "hooray"
+        )
+        self.change_student_modes(*["pondering"]*3)
+        self.random_blink(3)
+
+class CompareTermsInLinearAlgebraToFunction(Scene):
+    def construct(self):
+        l_title = TextMobject("Linear algebra \\\\ concepts")
+        r_title = TextMobject("Alternate names when \\\\ applied to functions")
+        for title, vect in (l_title, LEFT), (r_title, RIGHT):
+            title.to_edge(UP)
+            title.shift(vect*SPACE_WIDTH/2)
+        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line.shift(
+            VGroup(l_title, r_title).get_bottom()[1]*UP + SMALL_BUFF*DOWN
+        )
+        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        VGroup(h_line, v_line).highlight(BLUE)
+
+        self.add(l_title, r_title)
+        self.play(*map(ShowCreation, [h_line, v_line]))
+        self.dither()
+
+        lin_alg_concepts = VGroup(*map(TextMobject, [
+            "Linear transformations",
+            "Dot products",
+            "Eigenvectors",
+        ]))
+        function_concepts = VGroup(*map(TextMobject, [
+            "Linear operators",
+            "Inner products",
+            "Eigenfunctions",
+        ]))
+        for concepts, vect in (lin_alg_concepts, LEFT), (function_concepts, RIGHT):
+            concepts.arrange_submobjects(DOWN, buff = 2*MED_BUFF, aligned_edge = LEFT)
+            concepts.next_to(h_line, DOWN, buff = LARGE_BUFF)
+            concepts.shift(vect*SPACE_WIDTH/2)
+            concepts.gradient_highlight(YELLOW_B, YELLOW_C)
+
+            for concept in concepts:
+                self.play(Write(concept, run_time = 1))
+            self.dither()
+
+class BackToTheQuestion(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            """
+            Wait...so how does
+            this relate to what vectors 
+            really are?
+            """,
+            pi_creature_target_mode = "confused"
+        )
+        self.random_blink(2)
+        self.teacher_says(
+            """
+            There are many different
+            vector-ish things
+            """
+        )
+        self.random_blink(2)
+
+class YouAsAMathematician(Scene):
+    def construct(self):
+        mathy = Mathematician()
+        mathy.to_corner(DOWN+LEFT)
+        words = TextMobject("You as a mathematician")
+        words.shift(2*UP)
+        arrow = Arrow(words.get_bottom(), mathy.get_corner(UP+RIGHT))
+        bubble = mathy.get_bubble()
+
+        equations = self.get_content()
+        bubble.add_content(equations)
+
+        self.add(mathy)
+        self.play(Write(words, run_time = 2))
+        self.play(
+            ShowCreation(arrow),
+            mathy.change_mode, "wave_1",
+            mathy.look, OUT
+        )
+        self.play(Blink(mathy))
+        self.dither()
+        self.play(
+            FadeOut(words),
+            FadeOut(arrow),
+            mathy.change_mode, "pondering",
+            ShowCreation(bubble),
+        )
+        self.play(Write(equations))
+        self.play(Blink(mathy))
+        self.dither()
+
+        bubble.write("Does this make any sense \\\\ for functions too?")
+        self.play(
+            equations.next_to, mathy.eyes, RIGHT, 2*LARGE_BUFF,
+            mathy.change_mode, "confused",
+            mathy.look, RIGHT,
+            Write(bubble.content)
+        )
+        self.dither()
+        self.play(Blink(mathy))
+
+    def get_content(self):
+        v_tex = "\\vec{\\textbf{v}}"
+        eigen_equation = TexMobject("A", v_tex, "=", "\\lambda", v_tex)
+        v_ne_zero = TexMobject(v_tex, "\\ne \\vec{\\textbf{0}}")
+        det_equation = TexMobject("\\det(A-", "\\lambda", "I)=0")
+        arrow = TexMobject("\\Rightarrow")
+
+        for tex in eigen_equation, v_ne_zero, det_equation:
+            tex.highlight_by_tex(v_tex, YELLOW)
+            tex.highlight_by_tex("\\lambda", MAROON_B)
+
+        lhs = VGroup(eigen_equation, v_ne_zero)
+        lhs.arrange_submobjects(DOWN)
+        group = VGroup(lhs, arrow, det_equation)
+        group.arrange_submobjects(buff = MED_BUFF)
+        return group
+
+class ShowVectorSpaces(Scene):
+    def construct(self):
+        title = TextMobject("Vector spaces")
+        title.to_edge(UP)
+        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line.next_to(title, DOWN)
+
+        v_lines = [
+            Line(
+                h_line.get_center(), SPACE_HEIGHT*DOWN
+            ).shift(vect*SPACE_WIDTH/3.)
+            for vect in LEFT, RIGHT
+        ]
+        vectors = self.get_vectors()
+        vectors.shift(LEFT*SPACE_WIDTH*(2./3))
+        arrays = self.get_arrays()
+        functions = self.get_functions()
+        functions.shift(RIGHT*SPACE_WIDTH*(2./3))
+
+        self.add(h_line, *v_lines)
+        self.play(ShowCreation(
+            vectors,
+            submobject_mode = "one_at_a_time",
+            run_time = 3
+        ))
+        self.play(Write(arrays))
+        self.play(Write(functions))
+        self.dither()
+        self.play(Write(title))
+
+    def get_vectors(self, n_vectors = 10):
+        vectors = VGroup(*[
+            Vector(RIGHT).scale(scalar).rotate(angle)
+            for scalar, angle in zip(
+                2*np.random.random(n_vectors)+0.5,
+                np.linspace(0, 6, n_vectors)
+            )
+        ])
+        vectors.gradient_highlight(YELLOW, MAROON_B)
+        return vectors
+
+    def get_arrays(self):
+        arrays = VGroup(*[
+            VGroup(*[
+                Matrix(np.random.randint(-9, 9, 2))
+                for x in range(4)
+            ])
+            for x in range(3)
+        ])
+        for subgroup in arrays:
+            subgroup.arrange_submobjects(DOWN, buff = MED_BUFF)
+        arrays.arrange_submobjects(RIGHT)
+        arrays.scale(0.7)
+        arrays.gradient_highlight(YELLOW, MAROON_B)
+        return arrays
+
+    def get_functions(self):
+        functions = VGroup(*[
+            TexMobject(poly)
+            for poly in [
+                "x^2+3x+5",
+                "4x^7-5x^2",
+                "x^{100}+2x^{99}+3x^{98}",
+                "3x-7",
+                "x^{1{,}000{,}000{,}000}+1",
+                "\\vdots",
+            ]
+        ])
+        functions.arrange_submobjects(DOWN, buff = MED_BUFF)
+        functions.gradient_highlight(YELLOW, MAROON_B)
+        return functions
+
+class ToolsOfLinearAlgebra(Scene):
+    def construct(self):
+        words = VGroup(*map(TextMobject, [
+            "Linear transformations",
+            "Null space",
+            "Eigenvectors",
+            "Dot products",
+            "$\\vdots$"
+        ]))
+        words.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_BUFF)
+        words[-1].next_to(words[-2], DOWN)
+        self.play(FadeIn(
+            words,
+            submobject_mode = "lagged_start",
+            run_time = 3
+        ))
+        self.dither()
+
+class MathematicianSpeakingToAll(Scene):
+    def construct(self):
+        mathy = Mathematician().to_corner(DOWN+LEFT)
+        others = VGroup(*[
+            Randolph().flip().highlight(color)
+            for color in BLUE_D, GREEN_E, GOLD_E, BLUE_C
+        ])
+        others.arrange_submobjects()
+        others.scale(0.8)
+        others.to_corner(DOWN+RIGHT)
+
+        bubble = mathy.get_bubble("speech")
+        bubble.write("""
+            I don't want to think
+            about all y'all's crazy
+            vector spaces
+        """)
+
+        self.add(mathy, others)
+        self.play(
+            ShowCreation(bubble),
+            Write(bubble.content),
+            mathy.change_mode, "sassy",
+            mathy.look_at, others
+        )
+        self.play(Blink(others[3]))
+        self.dither()
+        thought_bubble = mathy.get_bubble("thought")
+        self.play(
+            FadeOut(bubble.content),
+            Transform(bubble, thought_bubble),
+            mathy.change_mode, "speaking",
+            mathy.look_at, bubble,
+            *[ApplyMethod(pi.look_at, bubble) for pi in others]
+        )
+
+        vect = -bubble.get_bubble_center()
+        def func(point):
+            centered = point+vect
+            return 10*centered/np.linalg.norm(centered)
+        self.play(*[
+            ApplyPointwiseFunction(func, mob)
+            for mob in self.get_mobjects()
+        ])
+
+class ListAxioms(Scene):
+    def construct(self):
+        title = TextMobject("Rules for vectors addition and scaling")
+        title.to_edge(UP)
+        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line.next_to(title, DOWN)
+        self.add(title, h_line)
+
+        u_tex, v_tex, w_tex = ["\\vec{\\textbf{%s}}"%s for s in "uvw"]
+        axioms = VGroup(*it.starmap(TexMobject, [
+            (
+                "1. \\,", 
+                u_tex, "+", "(", v_tex, "+", w_tex, ")=(", 
+                u_tex, "+", v_tex, ")+", w_tex
+            ),
+            (   "2. \\,", 
+                v_tex, "+", w_tex, "=", w_tex, "+", v_tex
+            ),
+            (
+                "3. \\,", 
+                "\\text{There is a vector }", "\\textbf{0}",
+                "\\text{ such that }", "\\textbf{0}+", v_tex,
+                "=", v_tex, "\\text{ for all }", v_tex
+            ),
+            (
+                "4. \\,", 
+                "\\text{For every vector }", v_tex, 
+                "\\text{ there is a vector }", "-", v_tex,
+                "\\text{ so that }", v_tex, "+", "(-", v_tex, ")=\\textbf{0}"
+            ),
+            (   "5. \\,", 
+                "a", "(", "b", v_tex, ")=(", "a", "b", ")", v_tex
+            ),
+            (  
+                "6. \\,", 
+                "1", v_tex, "=", v_tex
+            ),
+            (
+                "7. \\,", 
+                "a", "(", v_tex, "+", w_tex, ")", "=", 
+                "a", v_tex, "+", "a", w_tex
+            ),
+            (
+                "8. \\,", 
+                "(", "a", "+", "b", ")", v_tex, "=",
+                "a", v_tex, "+", "b", v_tex
+            ),
+        ]))
+        tex_color_pairs = [
+            (v_tex, YELLOW),
+            (w_tex, MAROON_B),
+            (u_tex, PINK),
+            ("a", BLUE),
+            ("b", GREEN)
+
+        ]
+        for axiom in axioms:
+            for tex, color in tex_color_pairs:
+                axiom.highlight_by_tex(tex, color)
+        axioms.arrange_submobjects(
+            DOWN, buff = 2*MED_BUFF,
+            aligned_edge = LEFT
+        )
+        axioms.scale_to_fit_width(2*SPACE_WIDTH-1)
+        axioms.next_to(h_line, DOWN, buff = MED_BUFF)
+
+        self.play(FadeIn(
+            axioms,
+            submobject_mode = "lagged_start",
+            run_time = 5
+        ))
+        self.dither()
+        axioms_word = TextMobject("``Axioms''")
+        axioms_word.highlight(YELLOW)
+        axioms_word.scale(2)
+        axioms_word.shift(SPACE_WIDTH*RIGHT/2, SPACE_HEIGHT*DOWN/2)
+        self.play(Write(axioms_word, run_time = 3))
+        self.dither()
+
+class AxiomsAreInterface(Scene):
+    def construct(self):
+        mathy = Mathematician().to_edge(LEFT)
+        mathy.change_mode("pondering")
+        others = [
+            Randolph().flip().highlight(color)
+            for color in BLUE_D, GREEN_E, GOLD_E, BLUE_C
+        ]
+        others = VGroup(
+            VGroup(*others[:2]),
+            VGroup(*others[2:]),
+        )
+        for group in others:
+            group.arrange_submobjects(RIGHT)
+        others.arrange_submobjects(DOWN)
+        others.scale(0.8)
+        others.to_edge(RIGHT)
+        VGroup(mathy, others).to_edge(DOWN)
+        double_arrow = DoubleArrow(mathy, others)
+
+        axioms, are, rules_of_nature = words = TextMobject(
+            "Axioms", "are", "rules of nature"
+        )
+        words.to_edge(UP)
+        axioms.highlight(YELLOW)
+        an_interface = TextMobject("an interface")
+        an_interface.next_to(rules_of_nature, DOWN)
+        red_line = Line(
+            rules_of_nature.get_left(),
+            rules_of_nature.get_right(),
+            color = RED
+        )
+
+        self.play(Write(words))
+        self.dither()
+        self.play(ShowCreation(red_line))
+        self.play(Transform(
+            rules_of_nature.copy(),
+            an_interface
+        ))
+        self.dither()
+        self.play(FadeIn(mathy))
+        self.play(
+            ShowCreation(double_arrow),
+            FadeIn(others, submobject_mode = "lagged_start", run_time = 2)
+        )
+        self.play(axioms.copy().next_to, double_arrow, UP)
+        self.play(Blink(mathy))
+        self.dither()
+
+class VectorSpaceOfPiCreatures(Scene):
+    def construct(self):
+        creatures = self.add_creatures()
+        self.show_sum(creatures)
+
+    def add_creatures(self):
+        creatures = VGroup(*[
+            VGroup(*[
+                PiCreature()
+                for x in range(4)
+            ]).arrange_submobjects(RIGHT, buff = 1.5)
+            for y in range(4)
+        ]).arrange_submobjects(DOWN, buff = 1.5)
+        creatures = VGroup(*it.chain(*creatures))
+        creatures.scale_to_fit_height(2*SPACE_HEIGHT-1)
+        for pi in creatures:
+            pi.change_mode(random.choice([
+                "pondering", "pondering",
+                "happy", "happy", "happy",
+                "confused", 
+                "angry", "erm", "sassy", "hooray", 
+                "speaking", "tired", 
+                "plain", "plain"
+            ]))
+            if random.random() < 0.5:
+                pi.flip()
+            pi.shift(0.5*(random.random()-0.5)*RIGHT)
+            pi.shift(0.5*(random.random()-0.5)*UP)
+            pi.highlight(random.choice([
+                BLUE_B, BLUE_C, BLUE_D, BLUE_E,
+                MAROON_B, MAROON_C, MAROON_D, MAROON_E,
+                GREY_BROWN, GREY_BROWN, GREY,
+                YELLOW_C, YELLOW_D, YELLOW_E
+            ]))
+            pi.scale_in_place(random.random()+0.5)
+
+        self.play(FadeIn(
+            creatures,
+            submobject_mode = "lagged_start",
+            run_time = 3
+        ))
+        self.dither()
+        return creatures
+
+    def show_sum(self, creatures):
+        def is_valid(pi1, pi2, pi3):
+            if len(set([pi.get_color() for pi in pi1, pi2, pi3])) < 3:
+                return False
+            if pi1.is_flipped()^pi2.is_flipped():
+                return False
+            return True
+        pi1, pi2, pi3 = pis = [random.choice(creatures) for x in range(3)]
+        while not is_valid(pi1, pi2, pi3):
+            pi1, pi2, pi3 = pis = [random.choice(creatures) for x in range(3)]
+        creatures.remove(*pis)
+
+        transform = Transform(pi1.copy(), pi2.copy())
+        transform.update(0.5)
+        sum_pi = transform.mobject
+        sum_pi.scale_to_fit_height(pi1.get_height()+pi2.get_height())
+        for pi in pis:
+            pi.generate_target()
+        plus, equals = TexMobject("+=")
+        sum_equation = VGroup(
+            pi1.target, plus, pi2.target,
+            equals, sum_pi
+        )
+        sum_equation.arrange_submobjects().center()
+
+        scaled_pi3 = pi3.copy().scale(2)
+        equals2 = TexMobject("=")
+        two = TexMobject("2 \\cdot")
+        scale_equation = VGroup(
+            two, pi3.target, equals2, scaled_pi3
+        )
+        scale_equation.arrange_submobjects()
+
+        VGroup(sum_equation, scale_equation).arrange_submobjects(
+            DOWN, buff = MED_BUFF
+        )
+
+        self.play(FadeOut(creatures))
+        self.play(*it.chain(
+            map(MoveToTarget, [pi1, pi2, pi3]),
+            map(Write, [plus, equals, two, equals2]),
+        ))
+        self.play(
+            Transform(pi1.copy(), sum_pi),
+            Transform(pi2.copy(), sum_pi),
+            Transform(pi3.copy(), scaled_pi3)
+        )
+        self.remove(*self.get_mobjects_from_last_animation())
+        self.add(sum_pi, scaled_pi3)
+        for pi in pi1, sum_pi, scaled_pi3, pi3:
+            self.play(Blink(pi))
+
+class MathematicianDoesntHaveToThinkAboutThat(Scene):
+    def construct(self):
+        mathy = Mathematician().to_corner(DOWN+LEFT)
+        bubble = mathy.get_bubble("thought", height = 4)
+        words = TextMobject("I don't have to worry", "\\\\ about that madness!")
+        bubble.add_content(words)
+        new_words = TextMobject("So long as I", "\\\\ work abstractly")
+        bubble.add_content(new_words)
+
+        self.play(
+            mathy.change_mode, "hooray",
+            ShowCreation(bubble),
+            Write(words)
+        )
+        self.play(Blink(mathy))
+        self.dither()
+        self.play(
+            mathy.change_mode, "pondering",
+            Transform(words, new_words)
+        )
+        self.play(Blink(mathy))
+        self.dither()
+
+class TextbooksAreAbstract(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            """
+            All the textbooks I found
+            are pretty abstract.
+            """,
+            pi_creature_target_mode = "pleading"
+        )
+        self.random_blink(3)
+        self.teacher_says(
+            """
+            For each new concept, 
+            contemplate it for 2d space
+            with grid lines...
+            """
+        )
+        self.change_student_modes("pondering")
+        self.random_blink(2)
+        self.teacher_says(
+            "...then in some different\\\\",
+            "context, like a function space"
+        )
+        self.change_student_modes(*["pondering"]*2)
+        self.random_blink()
+        self.teacher_says(
+            "Only then should you\\\\",
+            "think from the axioms",
+            pi_creature_target_mode = "surprised"
+        )
+        self.change_student_modes(*["pondering"]*3)
+        self.random_blink()
+
+class LastAskWhatAreVectors(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "So...what are vectors?",
+            pi_creature_target_mode = "erm"
+        )
+        self.random_blink()
+        self.teacher_says(
+            """
+            The form they take
+            doesn't really matter
+            """
+        )
+        self.random_blink()
+
+class WhatIsThree(Scene):
+    def construct(self):
+        what_is, three, q_mark = words = TextMobject(
+            "What is ", "3", "?",
+            arg_separator = ""
+        )
+        words.scale(1.5)
+        self.play(Write(words))
+        self.dither()
+        self.play(
+            FadeOut(what_is),
+            FadeOut(q_mark),
+            three.center
+        )
+
+        triplets = [
+            VGroup(*[
+                PiCreature(color = color).scale(0.4)
+                for color in BLUE_E, BLUE_C, BLUE_D
+            ]),
+            VGroup(*[HyperCube().scale(0.3) for x in range(3)]),
+            VGroup(*[Vector(RIGHT) for x in range(3)]),
+            TexMobject("""
+                \\Big\\{
+                    \\emptyset, 
+                    \\{\\emptyset\\}, 
+                    \\{\\{\\emptyset\\}, \\emptyset\\}
+                \\Big\\}
+            """)
+        ]
+        directions = [UP+LEFT, UP+RIGHT, DOWN+LEFT, DOWN+RIGHT]
+        for group, vect in zip(triplets, directions):
+            if isinstance(group, TexMobject):
+                pass
+            elif isinstance(group[0], Vector):
+                group.arrange_submobjects(RIGHT)
+                group.gradient_highlight(YELLOW, MAROON_B)
+            else:
+                m1, m2, m3 = group
+                m2.next_to(m1, buff = MED_BUFF)
+                m3.next_to(VGroup(m1, m2), DOWN, buff = MED_BUFF)
+            group.next_to(three, vect, buff = LARGE_BUFF)
+            self.play(FadeIn(group))
+        self.dither()
+        self.play(*[
+            Transform(
+                trip, three, 
+                submobject_mode = "lagged_start",
+                run_time = 2
+            )
+            for trip in triplets
+        ])
+
+class IStillRecommendConcrete(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("""
+            I still recommend 
+            thinking concretely
+        """)
+        self.random_blink(2)
+        self.student_thinks("")
+        self.zoom_in_on_thought_bubble()
+
+class AbstractionIsThePrice(Scene):
+    def construct(self):
+        words = TextMobject(
+            "Abstractness", "is the price\\\\"
+            "of", "generality"
+        )
+        words.highlight_by_tex("Abstractness", YELLOW)
+        words.highlight_by_tex("generality", BLUE)
+        self.play(Write(words))
+        self.dither()
+
+class ThatsAWrap(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("That's all for now!")
+        self.random_blink(2)
+
+class GoodLuck(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Good luck with \\\\ your future learning!",
+            pi_creature_target_mode = "hooray"
+        )
+        self.change_student_modes(*["happy"]*3)
+        self.random_blink(3)
+
+
+
+
 
 
 

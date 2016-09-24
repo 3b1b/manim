@@ -497,6 +497,9 @@ class Mobject(object):
     def __iter__(self):
         return iter(self.split())
 
+    def __len__(self):
+        return len(self.split())
+
     def split(self):
         result = [self] if len(self.points) > 0 else []
         return result + self.submobjects

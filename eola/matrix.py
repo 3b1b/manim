@@ -83,7 +83,7 @@ class Matrix(VMobject):
         return np.array([
             map(TexMobject, row)
             for row in matrix
-        ])
+        ]).reshape(matrix.shape)
 
     def organize_mob_matrix(self, matrix):
         for i, row in enumerate(matrix):
