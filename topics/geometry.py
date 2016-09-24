@@ -85,7 +85,9 @@ class Line(VMobject):
         start_to_end = self.end - self.start
         length = np.linalg.norm(start_to_end)
         if length > 2*self.buff:
-            start_to_end /= np.linalg.norm(start_to_end)
+            dummy = start_to_end / np.linalg.norm(start_to_end)
+            start_to_end = dummy
+            #start_to_end /= np.linalg.norm(start_to_end)
             self.start = self.start + self.buff*start_to_end
             self.end = self.end - self.buff*start_to_end
 

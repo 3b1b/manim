@@ -1,10 +1,9 @@
 import numpy as np
 import itertools as it
 
-from mobject import Mobject, Mobject1D, Mobject2D, Mobject
+from mobject import Mobject, Mobject1D, Mobject2D, Mobject, VMobject
 from geometry import Line
 from helpers import *
-
 
 class Stars(Mobject1D):
     CONFIG = {
@@ -70,22 +69,35 @@ class Cube(Mobject1D):
         self.pose_at_angle()
         self.set_color(YELLOW)
 
-class Octohedron(Mobject1D):
+class Octohedron(VMobject):
+    CONFIG = {
+
+    }
     def generate_points(self):
-        x = np.array([1, 0, 0])
-        y = np.array([0, 1, 0])
-        z = np.array([0, 0, 1])
-        vertex_pairs = [(x+y, x-y), (x+y,-x+y), (-x-y,-x+y), (-x-y,x-y)]
-        vertex_pairs += [
-            (b[0]*x+b[1]*y, b[2]*np.sqrt(2)*z)
-            for b in it.product(*[(-1, 1)]*3)
+        # TODO in a more generalized way where you can just define the vertices?
+        vertex_pairs = [
+            (LEFT+UP, RIGHT+UP),
+            (RIGHT+UP, RIGHT+DOWN),
+            (RIGHT+DOWN, LEFT+DOWN),
+            (LEFT+DOWN, LEFT+UP),
+
+            (LEFT+UP, IN*np.sqrt(2)),
+            (RIGHT+UP, IN*np.sqrt(2)),
+            (RIGHT+DOWN, IN*np.sqrt(2)),
+            (LEFT+DOWN, IN*np.sqrt(2)),
+
+            (LEFT+UP, OUT*np.sqrt(2)),
+            (RIGHT+UP, OUT*np.sqrt(2)),
+            (RIGHT+DOWN, OUT*np.sqrt(2)),
+            (LEFT+DOWN, OUT*np.sqrt(2))
         ]
+
         for pair in vertex_pairs:
-            self.add_points(
-                Line(pair[0], pair[1], density = 1/self.epsilon).points
-            )
-        self.pose_at_angle()
-        self.set_color(MAROON_D)
+            self.add(Line(pair[0], pair[1]))
+
+
+        self.rotate_in_place(- 3 * np.pi / 7, RIGHT)
+        self.rotate_in_place(np.pi / 12, UP)
 
 class Dodecahedron(Mobject1D):
     def generate_points(self):
