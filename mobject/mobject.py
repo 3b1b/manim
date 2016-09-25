@@ -253,14 +253,18 @@ class Mobject(object):
                 self.to_edge(vect, **kwargs)
         return self
 
+    def stretch_in_place(self, factor, dim):
+        self.do_in_place(self.stretch, factor, dim)
+        return self
+
     def stretch_to_fit(self, length, dim, stretch = True):
         old_length = self.length_over_dim(dim)
         if old_length == 0:
             return self
         if stretch:
-            self.do_in_place(self.stretch, length/old_length, dim)
+            self.stretch_in_place(length/old_length, dim)
         else:
-            self.do_in_place(self.scale, length/old_length)
+            self.scale_in_place(length/old_length)
         return self
 
     def stretch_to_fit_width(self, width):
@@ -496,9 +500,6 @@ class Mobject(object):
 
     def __iter__(self):
         return iter(self.split())
-
-    def __len__(self):
-        return len(self.split())
 
     def split(self):
         result = [self] if len(self.points) > 0 else []

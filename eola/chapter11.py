@@ -1643,6 +1643,8 @@ class IntroducePolynomialSpace(Scene):
 
     def show_example_coordinates(self):
         coords = Matrix(["5", "3", "1", "0", "0", "\\vdots"])
+        for i, color in enumerate([X_COLOR, Y_COLOR, Z_COLOR]):
+            coords[i].highlight(color)
         self.poly1.generate_target()
         equals = TexMobject("=").next_to(coords, LEFT)
         self.poly1.target.next_to(equals, LEFT)
@@ -1714,34 +1716,32 @@ class IntroducePolynomialSpace(Scene):
                 rate_func = there_and_back
             )
             self.remove(*self.get_mobjects_from_last_animation())
+            self.add(self.poly2)
             self.dither()
         self.play(*map(FadeOut, [self.poly2, coords, equals]))
 
     def derivative_as_matrix(self):
         matrix = Matrix([
-            ["?"]*4 + ["\\cdots"]
-            for x in range(4)
+            [
+                str(j) if j == i+1 else "0" 
+                for j in range(4)
+            ] + ["\\cdots"]
+            for i in range(4)
         ] + [
             ["\\vdots"]*4 + ["\\ddots"]
         ])
         matrix.shift(2*LEFT)
-        matrix.get_entries().gradient_highlight(GREEN, YELLOW, MAROON_B)
-        mob_matrix = matrix.get_mob_matrix()
+        diag_entries = VGroup(*[
+            matrix.get_mob_matrix()[i, i+1]
+            for i in range(3)
+        ])
         ##Horrible
-        last_col = VGroup(*mob_matrix[:,-1])
+        last_col = VGroup(*matrix.get_mob_matrix()[:,-1])
         last_col_top = last_col.get_top()
         last_col.arrange_submobjects(DOWN, buff = 0.83)
         last_col.move_to(last_col_top, aligned_edge = UP+RIGHT)
         ##End horrible
-        colors = [X_COLOR, Y_COLOR, Z_COLOR, MAROON_B, YELLOW]
-        for i, j in it.product(*[range(4)]*2):
-            entry = mob_matrix[i, j]
-            if j == i+1:
-                entry.target = TexMobject(str(j))
-            else:
-                entry.target = TexMobject("0")
-            entry.target.scale(0.8).move_to(entry)
-            entry.target.highlight(colors[j])
+        matrix.highlight_columns(X_COLOR, Y_COLOR, Z_COLOR, MAROON_B)
 
         deriv = TexMobject("\\dfrac{d}{dx}")
         equals = TexMobject("=")
@@ -1751,85 +1751,140 @@ class IntroducePolynomialSpace(Scene):
         self.play(FadeIn(deriv), FadeIn(equals))
         self.play(Write(matrix))
         self.dither()
-
-        basis_derivatives = [
-            "0",
-            "1",
-            "2x",
-            "3x^2",
-        ]
-        arrays = [
-            ["0", "0", "0", "0", "\\vdots"],
-            ["1", "0", "0", "0", "\\vdots"],
-            ["0", "2", "0", "0", "\\vdots"],
-            ["0", "0", "3", "0", "\\vdots"],
-        ]
-        qunits = zip(
-            it.count(),
-            self.basis,
-            self.basis_functions,
-            basis_derivatives,
-            arrays
-        )
-        for j, basis, basis_func, basis_deriv_tex, arr in qunits:
-            matrix.save_state()
-            matrix.generate_target()
-            matrix.target.scale(0.35)
-            matrix.target.to_corner(UP+LEFT)
-
-            func, func_equals = basis_func
-            deriv_copy = deriv.copy()
-            movers = [func, equals, deriv_copy, basis, func_equals]
-            for mob in movers:
-                mob.generate_target()
-                mob.save_state()
-            lp, rp = TexMobject("()")
-            basis_deriv = TexMobject(basis_deriv_tex)
-            new_equals = TexMobject("=")
-            coords = Matrix(arr)
-            coords.highlight(basis.get_color())
-            basis_deriv.highlight(basis.get_color())
-            group = VGroup(
-                func.target, equals.target, deriv_copy.target, 
-                lp, basis.target, rp, func_equals.target,
-                basis_deriv, new_equals, coords
-            )
-            group.arrange_submobjects()
-            group.next_to(deriv)
-
-            self.play(*it.chain(
-                map(MoveToTarget, [
-                    matrix, func, equals, 
-                    deriv_copy, basis, func_equals
-                ]),
-                map(Write, [lp, rp])
-            ))
-            self.dither()
-            self.play(*map(Write, [basis_deriv, new_equals, coords]))
-            self.dither()
-            self.play(*it.chain(
-                [mob.restore for mob in movers+[matrix]],
-                map(FadeOut, [lp, rp, basis_deriv, new_equals]),
-                [coords.to_edge, RIGHT, 4]
-            ))
-
-            column = VGroup(*[
-                mob_matrix[i,j]
-                for i in range(4)
-            ])
-            column_target = VGroup(*[
-                mob.target
-                for mob in column
-            ])
-            entries = VGroup(*coords.get_entries()[:4])
+        diag_entries.save_state()
+        diag_entries.generate_target()
+        diag_entries.target.scale_in_place(1.2)
+        diag_entries.target.highlight(YELLOW)
+        for anim in MoveToTarget(diag_entries), diag_entries.restore:
             self.play(
-                Transform(entries, column_target),
-                FadeOut(coords.get_brackets()),
-                FadeOut(coords.get_entries()[-1]),
-                Transform(column, column_target)
+                anim,
+                submobject_mode = "lagged_start",
+                run_time = 1.5,
             )
-            self.remove(coords)
+        self.dither()
+        matrix.generate_target()
+        matrix.target.to_corner(DOWN+LEFT).shift(0.25*UP)
+        deriv.generate_target()
+        deriv.target.next_to(
+            matrix.target, UP, 
+            buff = MED_BUFF,
+            aligned_edge = LEFT
+        )
+        deriv.target.shift(0.25*RIGHT)
+        self.play(
+            FadeOut(equals),
+            *map(MoveToTarget, [matrix, deriv])
+        )
+
+        poly = TexMobject(
+            "(", "1", "x^3", "+",
+            "5", "x^2", "+",
+            "4", "x", "+",
+            "5", ")"
+        )
+        coefs = VGroup(*np.array(poly)[[10, 7, 4, 1]])
+        VGroup(*poly[1:3]).highlight(MAROON_B)
+        VGroup(*poly[4:6]).highlight(Z_COLOR)
+        VGroup(*poly[7:9]).highlight(Y_COLOR)
+        VGroup(*poly[10:11]).highlight(X_COLOR)
+        poly.next_to(deriv)
+        self.play(FadeIn(poly))
+
+        array = Matrix(list(coefs.copy()) + [TexMobject("\\vdots")])
+        array.next_to(matrix, RIGHT)
+        self.play(Write(array.get_brackets()))
+        to_remove = []
+        for coef, entry in zip(coefs, array.get_entries()):
+            self.play(Transform(coef.copy(), entry))
+            to_remove += self.get_mobjects_from_last_animation()
+        self.play(Write(array.get_entries()[-1]))
+        to_remove += self.get_mobjects_from_last_animation()        
+        self.remove(*to_remove)
+        self.add(array)
+
+        eq1, eq2 = TexMobject("="), TexMobject("=")
+        eq1.next_to(poly)
+        eq2.next_to(array)
+        
+        poly_result = TexMobject(
+            "3", "x^2", "+",
+            "10", "x", "+",
+            "4"
+        )
+        poly_result.next_to(eq1)
+        brace = Brace(poly_result, buff = 0)
+
+        self.play(*map(Write, [eq1, eq2, brace]))
+
+        result_coefs = VGroup(*np.array(poly_result)[[6, 3, 0]])
+        VGroup(*poly_result[0:2]).highlight(MAROON_B)
+        VGroup(*poly_result[3:5]).highlight(Z_COLOR)
+        VGroup(*poly_result[6:]).highlight(Y_COLOR)
+        result_terms = [
+            VGroup(*poly_result[6:]),
+            VGroup(*poly_result[3:6]),
+            VGroup(*poly_result[0:3]),
+        ]
+        relevant_entries = VGroup(*array.get_entries()[1:4])
+        dots = [TexMobject("\\cdot") for x in range(3)]
+        result_entries = []
+        for entry, diag_entry, dot in zip(relevant_entries, diag_entries, dots):
+            entry.generate_target()
+            diag_entry.generate_target()
+            group = VGroup(diag_entry.target, dot, entry.target)
+            group.arrange_submobjects()
+            result_entries.append(group)
+        result_array = Matrix(
+            result_entries + [
+                TexMobject("0"),
+                TexMobject("\\vdots")
+            ]
+        )
+        result_array.next_to(eq2)
+
+        rects = [
+            Rectangle(
+                color = YELLOW
+            ).replace(
+                VGroup(*matrix.get_mob_matrix()[i,:]),
+                stretch = True
+            ).stretch_in_place(1.1, 0).stretch_in_place(1.3, 1)
+            for i in range(3)
+        ]
+        vert_rect = Rectangle(color = YELLOW)
+        vert_rect.replace(array.get_entries(), stretch = True)
+        vert_rect.stretch_in_place(1.1, 1)
+        vert_rect.stretch_in_place(1.5, 0)
+        tuples = zip(
+            relevant_entries,
+            diag_entries,
+            result_entries,
+            rects,
+            result_terms,
+            coefs[1:]
+        )
+        self.play(Write(result_array.get_brackets()))
+        for entry, diag_entry, result_entry, rect, result_term, coef in tuples:
+            self.play(FadeIn(rect), FadeIn(vert_rect))
             self.dither()
+            self.play(
+                entry.scale_in_place, 1.2,
+                diag_entry.scale_in_place, 1.2,
+            )
+            diag_entry_target, dot, entry_target = result_entry
+            self.play(
+                Transform(entry.copy(), entry_target),
+                Transform(diag_entry.copy(), diag_entry_target),
+                entry.scale_in_place, 1/1.2,
+                diag_entry.scale_in_place, 1/1.2,
+                Write(dot)
+            )
+            self.dither()
+            self.play(Transform(coef.copy(), VGroup(result_term)))
+            self.dither()
+            self.play(FadeOut(rect), FadeOut(vert_rect))
+        self.play(*map(Write, result_array.get_entries()[3:]))
+        self.dither()
 
 class MatrixVectorMultiplicationAndDerivative(TeacherStudentsScene):
     def construct(self):
@@ -2046,20 +2101,21 @@ class ShowVectorSpaces(Scene):
         return arrays
 
     def get_functions(self):
+        axes = Axes()
+        axes.scale(0.3)
         functions = VGroup(*[
-            TexMobject(poly)
-            for poly in [
-                "x^2+3x+5",
-                "4x^7-5x^2",
-                "x^{100}+2x^{99}+3x^{98}",
-                "3x-7",
-                "x^{1{,}000{,}000{,}000}+1",
-                "\\vdots",
+            FunctionGraph(func, x_min = -4, x_max = 4)
+            for func in [
+                lambda x : x**3 - 9*x,
+                lambda x : x**3 - 4*x,
+                lambda x : x**2 - 1,
             ]
         ])
-        functions.arrange_submobjects(DOWN, buff = MED_BUFF)
+        functions.stretch_to_fit_width(SPACE_WIDTH/2.)
+        functions.stretch_to_fit_height(6)
         functions.gradient_highlight(YELLOW, MAROON_B)
-        return functions
+        functions.center()
+        return VGroup(axes, functions)
 
 class ToolsOfLinearAlgebra(Scene):
     def construct(self):
