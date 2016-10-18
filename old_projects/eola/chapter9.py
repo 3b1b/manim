@@ -17,8 +17,8 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from mobject.vectorized_mobject import *
 
-from eola.matrix import *
-from eola.two_d_space import *
+from topics.matrix import *
+from topics.vector_space_scene import *
 from eola.chapter1 import plane_wave_homotopy
 
 V_COLOR = YELLOW

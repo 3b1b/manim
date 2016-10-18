@@ -13,7 +13,7 @@ from topics.geometry import Vector, Line, Circle, Arrow, Dot, \
     BackgroundRectangle, Square
 
 from helpers import *
-from eola.matrix import Matrix, VECTOR_LABEL_SCALE_FACTOR, vector_coordinate_label
+from topics.matrix import Matrix, VECTOR_LABEL_SCALE_FACTOR, vector_coordinate_label
 
 
 X_COLOR = GREEN_C

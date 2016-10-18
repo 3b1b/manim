@@ -17,9 +17,9 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from mobject.vectorized_mobject import *
 
-from eola.matrix import *
+from topics.matrix import *
 from eola.chapter1 import plane_wave_homotopy
-from eola.two_d_space import *
+from topics.vector_space_scene import *
 
 class OpeningQuote(Scene):
     def construct(self):
