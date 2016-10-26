@@ -22,6 +22,337 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
+
+class Clock(VMobject):
+    CONFIG = {
+        "propogate_style_to_family" : True,
+    }
+    def __init__(self, **kwargs):
+        circle = Circle()
+        ticks = []
+        for x in range(12):
+            alpha = x/12.
+            point = complex_to_R3(
+                np.exp(2*np.pi*alpha*complex(0, 1))
+            )
+            length = 0.2 if x%3 == 0 else 0.1
+            ticks.append(
+                Line(point, (1-length)*point)
+            )
+        self.hour_hand = Line(ORIGIN, 0.3*UP)
+        self.minute_hand = Line(ORIGIN, 0.6*UP)
+        for hand in self.hour_hand, self.minute_hand:
+            #Balance out where the center is
+            hand.add(VectorizedPoint(-hand.get_end()))
+
+        VMobject.__init__(
+            self, circle, 
+            self.hour_hand, self.minute_hand,
+            *ticks
+        )
+
+class ClockPassesTime(Animation):
+    CONFIG = {
+        "run_time" : 5, 
+        "rate_func" : None,
+    }
+    def __init__(self, clock, **kwargs):
+        assert(isinstance(clock, Clock))
+        rot_kwargs = {
+            "axis" : OUT,
+            "in_place" : True
+        }
+        self.hour_rotation = Rotating(
+            clock.hour_hand, 
+            radians = -2*np.pi,
+            **rot_kwargs
+        )
+        self.minute_rotation = Rotating(
+            clock.minute_hand, 
+            radians = -12*2*np.pi,
+            **rot_kwargs
+        )
+        Animation.__init__(self, clock, **kwargs)
+
+    def update_mobject(self, alpha):
+        for rotation in self.hour_rotation, self.minute_rotation:
+            rotation.update_mobject(alpha)
+
+class SideGigToFullTime(Scene):
+    def construct(self):
+        morty = Mortimer()
+        morty.next_to(ORIGIN, DOWN)
+        self.add(morty)
+
+        self.side_project(morty)
+        self.income(morty)
+        self.full_time(morty)
+
+    def side_project(self, morty):
+        rect = PictureInPictureFrame()
+        rect.next_to(morty, UP+LEFT)
+        side_project = TextMobject("Side project")
+        side_project.next_to(rect, UP)
+        dollar_sign = TexMobject("\\$")
+        cross = VGroup(*[
+            Line(vect, -vect, color = RED)
+            for vect in UP+RIGHT, UP+LEFT
+        ])
+        cross.scale_to_fit_height(dollar_sign.get_height())
+        no_money = VGroup(dollar_sign, cross)
+        no_money.next_to(rect, DOWN)
+
+        self.play(
+            morty.change_mode, "raise_right_hand",
+            morty.look_at, rect
+        )
+        self.play(
+            Write(side_project),
+            ShowCreation(rect)
+        )
+        self.dither()
+        self.play(Blink(morty))
+        self.dither()
+        self.play(Write(dollar_sign))
+        self.play(ShowCreation(cross))
+
+        self.screen_title = side_project
+        self.cross = cross
+
+    def income(self, morty):
+        dollar_signs = VGroup(*[
+            TexMobject("\\$")
+            for x in range(10)
+        ])
+        dollar_signs.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        dollar_signs.highlight(BLACK)
+        dollar_signs.next_to(morty.eyes, RIGHT, buff = 2*LARGE_BUFF)
+
+        self.play(
+            morty.change_mode, "happy",
+            morty.look_at, dollar_signs, 
+            dollar_signs.shift, LEFT,
+            dollar_signs.highlight, GREEN
+        )
+        for x in range(5):
+            last_sign = dollar_signs[0]
+            dollar_signs.remove(last_sign)
+            self.play(
+                FadeOut(last_sign),
+                dollar_signs.shift, LEFT
+            )
+        random.shuffle(dollar_signs.submobjects)
+        self.play(
+            ApplyMethod(
+                dollar_signs.shift, 
+                (SPACE_HEIGHT+1)*DOWN,
+                submobject_mode = "lagged_start"
+            ),
+            morty.change_mode, "guilty",
+            morty.look, DOWN+RIGHT
+        )
+        self.play(Blink(morty))
+
+    def full_time(self, morty):
+        new_title = TextMobject("Full time")
+        new_title.move_to(self.screen_title)
+        q_mark = TexMobject("?")
+        q_mark.next_to(self.cross)
+        q_mark.highlight(GREEN)
+
+        self.play(morty.look_at, q_mark)
+        self.play(Transform(self.screen_title, new_title))
+        self.play(
+            Transform(self.cross, q_mark),
+            morty.change_mode, "confused"
+        )
+        self.play(Blink(morty))
+        self.dither()
+        self.play(
+            morty.change_mode, "happy",
+            morty.look, UP+RIGHT
+        )
+        self.play(Blink(morty))
+        self.dither()
+
+class TakesTime(Scene):
+    def construct(self):
+        rect = PictureInPictureFrame(height = 4)
+        rect.to_edge(RIGHT, buff = LARGE_BUFF)
+        clock = Clock()
+        clock.hour_hand.highlight(BLUE_C)
+        clock.minute_hand.highlight(BLUE_D)
+        clock.next_to(rect, LEFT, buff = LARGE_BUFF)
+        self.add(rect)
+        self.play(ShowCreation(clock))
+        for x in range(3):
+            self.play(ClockPassesTime(clock))
+
+class GrowingToDoList(Scene):
+    def construct(self):
+        morty = Mortimer()
+        morty.flip()
+        morty.next_to(ORIGIN, DOWN+LEFT)
+        title = TextMobject("3blue1brown to-do list")
+        title.next_to(ORIGIN, RIGHT)
+        title.to_edge(UP)
+        underline = Line(title.get_left(), title.get_right())
+        underline.next_to(title, DOWN)
+
+        lines = VGroup(*map(TextMobject, [
+            "That one on topology",
+            "Something with quaternions",
+            "Solving puzzles with binary counting",
+            "Tatoos on math",
+            "Laplace stuffs",
+            "The role of memorization in math",
+            "Strangeness of the axiom of choice",
+            "Tensors",
+            "Different view of $e^{\\pi i}$",
+            "Quadratic reciprocity",
+            "Fourier stuffs",
+            "$1+2+3+\\cdots = -\\frac{1}{12}$",
+            "Understanding entropy",
+        ]))
+        lines.scale(0.65)
+        lines.arrange_submobjects(DOWN, buff = MED_BUFF, aligned_edge = LEFT)
+        lines.gradient_highlight(BLUE_C, YELLOW)
+        lines.next_to(title, DOWN, buff = LARGE_BUFF/2.)
+        lines.to_edge(RIGHT)
+
+        self.play(
+            Write(title),
+            morty.look_at, title
+        )
+        self.play(
+            Write(lines[0]), 
+            morty.change_mode, "erm",
+            run_time = 1
+        )
+        for line in lines[1:3]:
+            self.play(
+                Write(line), 
+                morty.look_at, line,
+                run_time = 1
+            )
+        self.play(
+            morty.change_mode, "pleading",
+            morty.look_at, lines,
+            Write(
+                VGroup(*lines[3:]),
+                lag_factor = 7
+            )
+        )
+
+class TwoTypesOfVideos(Scene):
+    def construct(self):
+        morty = Mortimer().shift(2*DOWN)
+        stand_alone = TextMobject("Standalone videos")
+        stand_alone.shift(SPACE_WIDTH*LEFT/2)
+        stand_alone.to_edge(UP)
+        series = TextMobject("Series")
+        series.shift(SPACE_WIDTH*RIGHT/2)
+        series.to_edge(UP)
+        box = Rectangle(width = 16, height = 9, color = WHITE)
+        box.scale_to_fit_height(3)
+        box.next_to(stand_alone, DOWN)
+        series_list = VGroup(*[  
+            TextMobject("Essence of %s"%s)
+            for s in [
+                "linear algebra",
+                "calculus",
+                "probability",
+                "real analysis",
+                "complex analysis",
+                "ODEs",
+            ]
+        ])
+        series_list.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_BUFF)
+        series_list.scale_to_fit_width(SPACE_WIDTH-2)
+        series_list.next_to(series, DOWN, buff = MED_BUFF)
+        series_list.to_edge(RIGHT)
+
+        fridays = TextMobject("Every other friday")
+        when_done = TextMobject("When series is done")
+        for words, vect in (fridays, LEFT), (when_done, RIGHT):
+            words.highlight(YELLOW)
+            words.next_to(
+                morty, vect, 
+                buff = MED_BUFF, 
+                aligned_edge = UP
+            )
+        unless = TextMobject("""
+            Unless you're
+            a patron \\dots
+        """)
+        unless.next_to(when_done, DOWN, buff = MED_BUFF)
+
+        self.add(morty)
+        self.play(Blink(morty))
+        self.play(
+            morty.change_mode, "raise_right_hand",
+            morty.look_at, stand_alone,
+            Write(stand_alone, run_time = 2),
+        )
+        self.play(
+            morty.change_mode, "raise_left_hand",
+            morty.look_at, series,
+            Write(series, run_time = 2),
+        )
+        self.play(Blink(morty))
+        self.dither()
+        self.play(
+            morty.change_mode, "raise_right_hand",
+            morty.look_at, box,
+            ShowCreation(box)
+        )
+        for x in range(3):
+            self.dither(2)
+            self.play(Blink(morty))            
+        self.play(
+            morty.change_mode, "raise_left_hand",
+            morty.look_at, series
+        )
+        for i, words in enumerate(series_list):
+            self.play(Write(words), run_time = 1)
+        self.play(Blink(morty))
+        self.dither()
+        self.play(series_list[1].highlight, BLUE)
+        self.dither(2)
+        self.play(Blink(morty))
+        self.dither()
+        pairs = [
+            (fridays, "speaking"), 
+            (when_done, "wave_2") ,
+            (unless, "surprised"),
+        ]
+        for words, mode in pairs:
+            self.play(
+                Write(words),
+                morty.change_mode, mode,
+                morty.look_at, words
+            )
+            self.dither()
+
+class ClassWatching(TeacherStudentsScene):
+    def construct(self):
+        rect = PictureInPictureFrame(height = 4)
+        rect.next_to(self.get_teacher(), UP, buff = LARGE_BUFF/2.)
+        rect.to_edge(RIGHT)
+        self.add(rect)
+        for pi in self.get_students():
+            pi.look_at(rect)
+
+        self.random_blink(5)
+        self.change_student_modes(
+            "raise_left_hand",
+            "raise_right_hand",            
+            "sassy",
+        )
+        self.play(self.get_teacher().change_mode, "pondering")
+        self.random_blink(3)
+
+
 class RandolphWatching(Scene):
     def construct(self):
         randy = Randolph()
@@ -71,17 +402,17 @@ class GrowRonaksSierpinski(Scene):
                 run_time = run_time,
                 submobject_mode = "all_at_once"
             ))
-            if n == 2:
-                dot = dot_layer[1]
-                words = TextMobject("Stop growth at pink")
-                words.next_to(dot, DOWN, 2)
-                arrow = Arrow(words, dot)
-                self.play(
-                    Write(words),
-                    ShowCreation(arrow)
-                )
-                self.dither()
-                self.play(*map(FadeOut, [words, arrow]))
+            # if n == 2:
+            #     dot = dot_layer[1]
+            #     words = TextMobject("Stop growth at pink")
+            #     words.next_to(dot, DOWN, 2)
+            #     arrow = Arrow(words, dot)
+            #     self.play(
+            #         Write(words),
+            #         ShowCreation(arrow)
+            #     )
+            #     self.dither()
+            #     self.play(*map(FadeOut, [words, arrow]))
             log2 = np.log2(n)
             if n > 2 and log2-np.round(log2) == 0 and n < self.n_layers:
                 self.dither()
@@ -141,6 +472,24 @@ class GrowRonaksSierpinski(Scene):
         for n in range(n_layers+1):
             dots.add(self.get_dot_layer(n))
         return dots
+
+class PatreonLogo(Scene):
+    def construct(self):
+        words1 = TextMobject(
+            "Support future\\\\",
+            "3blue1brown videos"
+        )
+        words2 = TextMobject(
+            "Early access to\\\\",
+            "``Essence of'' series"
+        )
+        for words in words1, words2:
+            words.scale(2)
+            words.to_edge(DOWN)
+        self.play(Write(words1))
+        self.dither(2)
+        self.play(Transform(words1, words2))
+        self.dither(2)
 
 class PatreonLogin(Scene):
     pass
@@ -222,6 +571,186 @@ class PythagoreanTransformation(Scene):
         self.play(Write(a_square_tex))
         self.play(Write(b_square_tex))
         self.dither(2)
+
+class KindWordsOnEoLA(TeacherStudentsScene):
+    def construct(self):
+        rect = Rectangle(width = 16, height = 9, color = WHITE)
+        rect.scale_to_fit_height(4)
+        title = TextMobject("Essence of linear algebra")
+        title.to_edge(UP)
+        rect.next_to(title, DOWN)
+        self.play(
+            Write(title), 
+            ShowCreation(rect),
+            *[
+                ApplyMethod(pi.look_at, rect)
+                for pi in self.get_everyone()
+            ],
+            run_time = 2
+        )
+        self.random_blink()
+        self.change_student_modes(*["hooray"]*3)
+        self.random_blink()
+        self.play(self.get_teacher().change_mode, "happy")
+        self.random_blink()
+
+class MakeALotOfPiCreaturesHappy(Scene):
+    def construct(self):
+        width = 7
+        height = 4
+        pis = VGroup(*[
+            VGroup(*[
+                Randolph()
+                for x in range(7)
+            ]).arrange_submobjects(RIGHT, buff = 2*MED_BUFF)
+            for x in range(4)
+        ]).arrange_submobjects(DOWN, buff = 2*MED_BUFF)
+
+        pi_list = list(it.chain(*[
+            layer.submobjects
+            for layer in pis.submobjects
+        ]))
+        random.shuffle(pi_list)
+        colors = color_gradient([BLUE_D, GREY_BROWN], len(pi_list))
+        for pi, color in zip(pi_list, colors):
+            pi.highlight(color)
+        pis = VGroup(*pi_list)
+        pis.scale_to_fit_height(6)
+
+        self.add(pis)
+        pis.generate_target()
+        self.dither()
+        for pi, color in zip(pis.target, colors):
+            pi.change_mode("hooray")
+            # pi.scale_in_place(1)
+            pi.highlight(color)
+        self.play(
+            MoveToTarget(
+                pis,
+                run_time = 2,
+                submobject_mode = "lagged_start",
+                lag_factor = 5,
+            )
+        )
+        for x in range(10):
+            pi = random.choice(pi_list)
+            self.play(Blink(pi))
+
+
+class IntegrationByParts(Scene):
+    def construct(self):
+        rect = Rectangle(width = 5, height = 3)
+        # f = lambda t : 4*np.sin(t*np.pi/2)
+        f = lambda t : 4*t
+        g = lambda t : 3*smooth(t)
+        curve = ParametricFunction(lambda t : f(t)*RIGHT + g(t)*DOWN)
+        curve.highlight(YELLOW)
+        curve.center()
+        rect = Rectangle()
+        rect.replace(curve, stretch = True)
+
+        regions = []
+        for vect, color in (UP+RIGHT, BLUE), (DOWN+LEFT, GREEN):
+            region = curve.copy()
+            region.add_control_points(3*[rect.get_corner(vect)])
+            region.set_stroke(width = 0)
+            region.set_fill(color = color, opacity = 0.5)
+            regions.append(region)
+        upper_right, lower_left = regions
+
+        v_lines, h_lines = VGroup(), VGroup()
+        for alpha in np.linspace(0, 1, 30):
+            point = curve.point_from_proportion(alpha)
+            top_point = curve.points[0][1]*UP + point[0]*RIGHT
+            left_point = curve.points[0][0]*RIGHT + point[1]*UP
+            v_lines.add(Line(top_point, point))
+            h_lines.add(Line(left_point, point))
+        v_lines.highlight(BLUE_E)
+        h_lines.highlight(GREEN_E)
+
+        equation = TexMobject(
+            "\\int_0^1 g\\,df", 
+            "+\\int_0^1 f\\,dg",
+            "= \\big(fg \\big)_0^1"
+        )
+        equation.to_edge(UP)
+        equation.highlight_by_tex(
+            "\\int_0^1 g\\,df",
+            upper_right.get_color()
+        )
+        equation.highlight_by_tex(
+            "+\\int_0^1 f\\,dg",
+            lower_left.get_color()
+        )
+
+        left_brace = Brace(rect, LEFT)
+        down_brace = Brace(rect, DOWN)
+        g_T = left_brace.get_text("$g(t)\\big|_0^1$")
+        f_T = down_brace.get_text("$f(t)\\big|_0^1$")
+
+        self.draw_curve(curve)
+        self.play(ShowCreation(rect))
+        self.play(*map(Write, [down_brace, left_brace, f_T, g_T]))
+        self.dither()
+        self.play(FadeIn(upper_right))
+        self.play(
+            ShowCreation(
+                v_lines,
+                submobjects = "one_at_a_time",
+                run_time = 2
+            ),
+            Animation(curve),
+            Animation(rect)
+        )
+        self.play(Write(equation[0]))
+        self.dither()
+        self.play(FadeIn(lower_left))
+        self.play(
+            ShowCreation(
+                h_lines,
+                submobjects = "one_at_a_time",
+                run_time = 2
+            ),
+            Animation(curve),
+            Animation(rect)
+        )
+        self.play(Write(equation[1]))
+        self.dither()
+        self.play(Write(equation[2]))
+        self.dither()
+
+    def draw_curve(self, curve):
+        lp, lnum, comma, rnum, rp = coords = TexMobject(
+            "\\big(f(", "t", "), g(", "t", ")\\big)"
+        )
+        coords.highlight_by_tex("0.00", BLACK)
+        dot = Dot(radius = 0.1)
+        dot.move_to(curve.points[0])
+        coords.next_to(dot, UP+RIGHT)
+        self.play(
+            ShowCreation(curve),
+            UpdateFromFunc(
+                dot,
+                lambda d : d.move_to(curve.points[-1])
+            ),
+            MaintainPositionRelativeTo(coords, dot),
+            run_time = 5,
+            rate_func = None
+        )
+        self.dither()
+        self.play(*map(FadeOut, [coords, dot]))
+
+class EndScreen(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            """
+            See you every 
+            other friday!
+            """,
+            pi_creature_target_mode = "hooray"
+        )
+        self.change_student_modes(*["happy"]*3)
+        self.random_blink()
 
 
 

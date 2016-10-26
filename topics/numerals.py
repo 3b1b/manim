@@ -51,7 +51,7 @@ class RangingValue(Animation):
 
     def update_mobject(self, alpha = 0):
         mobject = DecimalNumber(
-            self.value_function(),
+            self.value_function(alpha),
             num_decimal_points = self.num_decimal_points,
             color = self.color,
         )

@@ -336,17 +336,7 @@ class Mobject(object):
             return self.highlight(*colors)
 
         mobs = self.family_members_with_points()
-        rgbs = map(color_to_rgb, colors)
-        alphas = np.linspace(0, (len(rgbs) - 1), len(mobs))
-        floors = alphas.astype('int')
-        alphas_mod1 = alphas % 1
-        #End edge case
-        alphas_mod1[-1] = 1
-        floors[-1] = len(rgbs) - 2
-        new_colors = [
-            Color(rgb = interpolate(rgbs[i], rgbs[i+1], alpha))
-            for i, alpha in zip(floors, alphas_mod1)
-        ]
+        new_colors = color_gradient(colors, len(mobs))
         for mob, color in zip(mobs, new_colors):
             mob.highlight(color, family = False)
         return self

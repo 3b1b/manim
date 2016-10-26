@@ -114,6 +114,19 @@ def color_to_rgb(color):
 def color_to_int_rgb(color):
     return (255*color_to_rgb(color)).astype('uint8')
 
+def color_gradient(reference_colors, length_of_output):
+    rgbs = map(color_to_rgb, reference_colors)
+    alphas = np.linspace(0, (len(rgbs) - 1), length_of_output)
+    floors = alphas.astype('int')
+    alphas_mod1 = alphas % 1
+    #End edge case
+    alphas_mod1[-1] = 1
+    floors[-1] = len(rgbs) - 2
+    return [
+        Color(rgb = interpolate(rgbs[i], rgbs[i+1], alpha))
+        for i, alpha in zip(floors, alphas_mod1)
+    ]
+
 def compass_directions(n = 4, start_vect = RIGHT):
     angle = 2*np.pi/n
     return np.array([

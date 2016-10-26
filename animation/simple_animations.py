@@ -18,8 +18,8 @@ class Rotating(Animation):
         "rate_func"  : None,
         "in_place"   : True,
     }
-    def update_submobject(self, submobject, starting_mobject, alpha):
-        submobject.points = starting_submobject.points
+    def update_submobject(self, submobject, starting_submobject, alpha):
+        submobject.points = np.array(starting_submobject.points)
 
     def update_mobject(self, alpha):
         Animation.update_mobject(self, alpha)
@@ -150,9 +150,8 @@ class MoveAlongPath(Animation):
         Animation.__init__(self, mobject, **kwargs)
 
     def update_mobject(self, alpha):
-        n = self.path.get_num_points()-1
-        point = self.path.points[int(alpha*n)]
-        self.mobject.shift(point-self.mobject.get_center())
+        point = self.path.point_from_proportion(alpha)
+        self.mobject.move_to(point)
 
 class UpdateFromFunc(Animation):
     """

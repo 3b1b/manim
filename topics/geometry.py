@@ -280,7 +280,7 @@ class RegularPolygon(VMobject):
 
 class Rectangle(VMobject):
     CONFIG = {
-        "color"  : YELLOW,
+        "color"  : WHITE,
         "height" : 2.0,
         "width"  : 4.0,
         "mark_paths_closed" : True,
@@ -327,6 +327,24 @@ class BackgroundRectangle(Rectangle):
     def get_fill_color(self):
         return Color(self.color)
 
+class PictureInPictureFrame(Rectangle):
+    CONFIG = {
+        "height" : 3,
+        "aspect_ratio" : (16, 9)
+    }
+    def __init__(self, **kwargs):
+        digest_config(self, kwargs)
+        height = self.height
+        if "height" in kwargs:
+            kwargs.pop("height")
+        Rectangle.__init__(
+            self,
+            width = self.aspect_ratio[0],
+            height = self.aspect_ratio[1],
+            **kwargs
+        )
+        self.scale_to_fit_height(height)
+        
 
 class Grid(VMobject):
     CONFIG = {
