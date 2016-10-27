@@ -50,7 +50,7 @@ class Circle(Arc):
 
 class Dot(Circle): #Use 1D density, even though 2D
     CONFIG = {
-        "radius"       : 0.05,
+        "radius"       : 0.08,
         "stroke_width" : 0,
         "fill_opacity" : 1.0,
         "color" : WHITE

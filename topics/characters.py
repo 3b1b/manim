@@ -51,11 +51,11 @@ class PiCreature(SVGMobject):
     def name_parts(self):
         self.mouth = self.submobjects[MOUTH_INDEX]
         self.body = self.submobjects[BODY_INDEX]
-        self.pupils = VMobject(*[
+        self.pupils = VGroup(*[
             self.submobjects[LEFT_PUPIL_INDEX],
             self.submobjects[RIGHT_PUPIL_INDEX]
         ])
-        self.eyes = VMobject(*[
+        self.eyes = VGroup(*[
             self.submobjects[LEFT_EYE_INDEX],
             self.submobjects[RIGHT_EYE_INDEX]
         ])
@@ -175,6 +175,28 @@ class Mathematician(PiCreature):
     CONFIG = {
         "color" : GREY,
     }
+
+class BabyPiCreature(PiCreature):
+    CONFIG = {
+        "scale_factor" : 0.5,
+        "eye_scale_factor" : 1.2,
+        "pupil_scale_factor" : 1.3
+    }
+    def __init__(self, *args, **kwargs):
+        PiCreature.__init__(self, *args, **kwargs)
+        self.scale(self.scale_factor)
+        self.shift(LEFT)
+        self.to_edge(DOWN, buff = LARGE_BUFF)
+        eyes = VGroup(self.eyes, self.pupils)
+        eyes_bottom = eyes.get_bottom()
+        eyes.scale(self.eye_scale_factor)
+        eyes.move_to(eyes_bottom, aligned_edge = DOWN)
+        looking_direction = self.get_looking_direction()
+        for pupil in self.pupils:
+            pupil.scale_in_place(self.pupil_scale_factor)
+        self.look(looking_direction)
+        
+
 
 class Blink(ApplyMethod):
     CONFIG = {

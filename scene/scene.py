@@ -76,12 +76,12 @@ class Scene(object):
     ###
 
     def extract_mobject_family_members(self, *mobjects):
-        return remove_list_redundancies(list(
+        return list(
             it.chain(*[
                 m.submobject_family()
                 for m in mobjects
             ])
-        ))
+        )
         
     def add(self, *mobjects_to_add):
         """
@@ -237,7 +237,6 @@ class Scene(object):
         animations = self.align_run_times(*animations, **kwargs)
         moving_mobjects, static_mobjects = \
             self.separate_moving_and_static_mobjects(*animations)
-
         self.update_frame(static_mobjects)
         static_image = self.get_frame()
         for t in self.get_time_progression(animations):

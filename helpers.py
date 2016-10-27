@@ -42,6 +42,7 @@ def play_finish_sound():
     play_chord(12, 9, 5, 2)
 
 def get_smooth_handle_points(points):
+    points = np.array(points)
     num_handles = len(points) - 1
     dim = points.shape[1]    
     if num_handles < 1:
