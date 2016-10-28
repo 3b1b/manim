@@ -1,7 +1,7 @@
 from helpers import *
 
 from mobject import Mobject1D
-from mobject.vectorized_mobject import VMobject
+from mobject.vectorized_mobject import VMobject, VGroup
 from mobject.tex_mobject import TexMobject
 from topics.geometry import Line, Arrow
 from scene import Scene
@@ -72,7 +72,7 @@ class NumberLine(VMobject):
         #TODO, handle decimals
         if len(numbers) == 0:
             numbers = self.default_numbers_to_display()
-        result = []
+        result = VGroup()
         for number in numbers:
             mob = TexMobject(str(int(number)))
             mob.scale_to_fit_height(3*self.tick_size)
@@ -80,12 +80,8 @@ class NumberLine(VMobject):
                 self.number_to_point(number),
                 self.get_vertical_number_offset(**kwargs)
             )
-            result.append(mob)
+            result.add(mob)
         return result
-
-    def get_numbers(self, *numbers, **kwargs):
-        ##TODO, this shouldn't exist alongside the above method.
-        return VMobject(*self.get_number_mobjects(*numbers, **kwargs))
 
     def add_numbers(self, *numbers, **kwargs):
         self.numbers = self.get_number_mobjects(

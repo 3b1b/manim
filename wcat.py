@@ -52,6 +52,7 @@ class ClosedLoopScene(Scene):
         ],
         "dot_color" : YELLOW,
         "connecting_lines_color" : BLUE,
+        "pair_colors" : [MAROON_B, PURPLE_B],
     }
     def setup(self):
         self.dots = VGroup()
@@ -81,6 +82,11 @@ class ClosedLoopScene(Scene):
         dots.highlight(self.dot_color)
         return dots
 
+    def get_rect_alphas(self, square = False):
+        #Inefficient and silly, but whatever.
+        dots = self.get_rect_vertex_dots(square = square)
+        return self.get_dot_alphas(dots)
+
     def add_dot(self, dot):
         self.add_dots(dot)
 
@@ -107,10 +113,7 @@ class ClosedLoopScene(Scene):
             n_pairs = len(list(self.dots))/2
             pairs = zip(self.dots[:n_pairs], self.dots[n_pairs:])
         for d1, d2 in pairs:
-            line = Line(
-                d1.get_center(), d2.get_center(),
-                stroke_width = 6
-            )
+            line = Line(d1.get_center(), d2.get_center())
             line.start_dot = d1 
             line.end_dot = d2
             line.update_anim = UpdateFromFunc(
@@ -120,8 +123,11 @@ class ClosedLoopScene(Scene):
                     l.end_dot.get_center()
                 )
             )
+            line.highlight(d1.get_color())
             self.connecting_lines.add(line)
-        self.connecting_lines.highlight(self.connecting_lines_color)
+        if cyclic:
+            self.connecting_lines.highlight(self.connecting_lines_color)
+            self.connecting_lines.set_stroke(width = 6)
         self.add(self.connecting_lines, self.dots)
 
     def get_line_anims(self):
@@ -147,7 +153,7 @@ class ClosedLoopScene(Scene):
         if random_seed is not None:
             np.random.seed(random_seed)
         start_alphas = self.get_dot_alphas()
-        alpha_rates = 0.1 + 0.1*np.random.random(len(list(self.dots)))
+        alpha_rates = 0.05 + 0.1*np.random.random(len(list(self.dots)))
         def generate_rate_func(start, rate):
             return lambda t : (start + t*rate*run_time)%1
         anims = [
@@ -192,7 +198,12 @@ class ClosedLoopScene(Scene):
         )
         self.remove(self.loop)
         self.loop = target_loop
-        self.add(self.loop)
+        self.add(self.loop, self.dots, self.connecting_lines)
+
+    def highlight_dots_by_pair(self):
+        n_pairs = len(list(self.dots))/2
+        for d1, d2, c in zip(self.dots[:n_pairs], self.dots[n_pairs:], self.pair_colors):
+            VGroup(d1, d2).highlight(c)
 
     def find_square(self):
         alpha_quads = list(it.combinations(
@@ -504,7 +515,7 @@ class DefineInscribedSquareProblem(ClosedLoopScene):
             VGroup(self.dots[i], self.dots[j])
             for i, j in (0, 2), (1, 3)
         ]
-        pair_colors = MAROON_B, PURPLE_C
+        pair_colors = MAROON_B, PURPLE_B
         diag_lines = [
             Line(d1.get_center(), d2.get_center(), color = c)
             for (d1, d2), c in zip(dot_pairs, pair_colors)
@@ -516,14 +527,481 @@ class DefineInscribedSquareProblem(ClosedLoopScene):
                 pair.highlight, line.get_color(),
             )
 
+class RectangleProperties(Scene):
+    def construct(self):
+        rect = Rectangle(color = BLUE)
+        vertex_dots = VGroup(*[
+            Dot(anchor, color = YELLOW)
+            for anchor in rect.get_anchors_and_handles()[0]
+        ])
+        dot_pairs = [
+            VGroup(vertex_dots[i], vertex_dots[j])
+            for i, j in (0, 2), (1, 3)
+        ]
+        colors = [MAROON_B, PURPLE_B]
+        diag_lines = [
+            Line(d1.get_center(), d2.get_center(), color = c)
+            for (d1, d2), c in zip(dot_pairs, colors)
+        ]
+        braces = [Brace(rect).next_to(ORIGIN, DOWN) for x in range(2)]
+        for brace, line in zip(braces, diag_lines):
+            brace.stretch_to_fit_width(line.get_length())
+            brace.rotate(line.get_angle())
+        a, b, c, d = labels = VGroup(*[
+            TexMobject(s).next_to(dot, dot.get_center(), buff = SMALL_BUFF)
+            for s, dot in zip("abcd", vertex_dots)
+        ])
+        midpoint = Dot(ORIGIN, color = RED)
 
 
+        self.play(ShowCreation(rect))
+        self.dither()
+        self.play(
+            ShowCreation(vertex_dots),
+            Write(labels)
+        )
+        self.dither()
+        mob_lists = [
+            (a, c, dot_pairs[0]),
+            (b, d, dot_pairs[1]),
+        ]
+        for color, mob_list in zip(colors, mob_lists):
+            self.play(*[
+                ApplyMethod(mob.highlight, color)
+                for mob in mob_list
+            ])
+            self.dither()
+        for line, brace in zip(diag_lines, braces):
+            self.play(
+                ShowCreation(line),
+                GrowFromCenter(brace)
+            )
+            self.dither()
+            self.play(FadeOut(brace))
+        self.play(FadeIn(midpoint))
+        self.dither()
 
+class PairOfPairBecomeRectangle(Scene):
+    def construct(self):
+        dots = VGroup(
+            Dot(4*RIGHT+0.5*DOWN, color = MAROON_B),
+            Dot(5*RIGHT+3*UP, color = MAROON_B),
+            Dot(LEFT+0.1*DOWN, color = PURPLE_B),
+            Dot(2*LEFT+UP, color = PURPLE_B)
+        )
+        labels = VGroup()
+        for dot, char in zip(dots, "acbd"):
+            label = TexMobject(char)
+            y_coord = dot.get_center()[1]
+            label.next_to(dot, np.sign(dot.get_center()[1])*UP)
+            label.highlight(dot.get_color())
+            labels.add(label)
+        lines = [
+            Line(
+                dots[i].get_center(), 
+                dots[j].get_center(), 
+                color = dots[i].get_color()
+            )
+            for i, j in (0, 1), (2, 3)
+        ]
+        groups = [
+            VGroup(dots[0], dots[1], labels[0], labels[1], lines[0]),
+            VGroup(dots[2], dots[3], labels[2], labels[3], lines[1]),
+        ]
+        midpoint = Dot(LEFT, color = RED)
 
+        words = VGroup(*map(TextMobject, [
+            "Common midpoint",
+            "Same distance apart",
+            "$\\Downarrow$",
+            "Rectangle",
+        ]))
+        words.arrange_submobjects(DOWN)
+        words.to_edge(RIGHT)
+        words[-1].highlight(BLUE)
 
+        self.play(
+            ShowCreation(dots),
+            Write(labels)
+        )
+        self.play(*map(ShowCreation, lines))
+        self.dither()
+        self.play(*[
+            ApplyMethod(
+                group.shift, 
+                -group[-1].get_center()+midpoint.get_center()
+            )
+            for group in groups
+        ])
+        self.play(
+            ShowCreation(midpoint),
+            Write(words[0])
+        )
+        factor = lines[0].get_length()/lines[1].get_length()        
+        grower = groups[1].copy()
+        new_line = grower[-1]
+        new_line.scale_in_place(factor)
+        grower[0].move_to(new_line.get_start())
+        grower[2].next_to(grower[0], DOWN)
+        grower[1].move_to(new_line.get_end())
+        grower[3].next_to(grower[1], UP)
 
+        self.play(Transform(groups[1], grower))
+        self.play(Write(words[1]))
+        self.dither()
 
+        rectangle = Polygon(*[
+            dots[i].get_center()
+            for i in 0, 2, 1, 3
+        ])
+        rectangle.highlight(BLUE)
+        self.play(
+            ShowCreation(rectangle),
+            Animation(dots)
+        )
+        self.play(*map(Write, words[2:]))
+        self.dither()
 
+class SearchForRectangleOnLoop(ClosedLoopScene):
+    def construct(self):
+        self.add_dots_at_alphas(*np.linspace(0.2, 0.8, 4))
+        self.highlight_dots_by_pair()
+        rect_alphas = self.get_rect_alphas()
+
+        self.play(ShowCreation(self.dots))
+        self.add_connecting_lines()
+        self.play(ShowCreation(self.connecting_lines))
+        self.let_dots_wonder(2)
+        self.move_dots_to_alphas(rect_alphas)
+
+        midpoint = Dot(
+            center_of_mass([d.get_center() for d in self.dots]),
+            color = RED
+        )
+        self.play(ShowCreation(midpoint))
+        self.dither()
+        angles = [line.get_angle() for line in self.connecting_lines]
+        angle_mean = np.mean(angles)
+        self.play(
+            *[
+                ApplyMethod(line.rotate_in_place, angle_mean-angle)
+                for line, angle in zip(self.connecting_lines, angles)
+            ] + [Animation(midpoint)],
+            rate_func = there_and_back
+        )
+        self.add(self.connecting_lines.copy(), midpoint)
+        self.connecting_lines = VGroup()
+        self.dither()
+        self.add_connecting_lines(cyclic = True)
+        self.play(
+            ShowCreation(self.connecting_lines), 
+            Animation(self.dots)
+        )
+        self.dither()
+
+class DeclareFunction(ClosedLoopScene):
+    def construct(self):
+        self.add_dots_at_alphas(0.2, 0.8)
+        self.highlight_dots_by_pair()        
+        self.add_connecting_lines()
+        VGroup(
+            self.loop, self.dots, self.connecting_lines
+        ).scale(0.7).to_edge(LEFT).shift(DOWN)
+        arrow = Arrow(LEFT, RIGHT).next_to(self.loop)
+        self.add(arrow)
+
+        self.add_tex()
+        self.let_dots_wonder(10)
+
+    def add_tex(self):
+        tex = TexMobject("f", "(A, B)", "=", "(x, y, z)")
+        tex.to_edge(UP)
+        tex.shift(LEFT)
+
+        ab_brace = Brace(tex[1])
+        xyz_brace = Brace(tex[-1], RIGHT)
+        ab_brace.add(ab_brace.get_text("Pair of points on the loop"))
+        xyz_brace.add(xyz_brace.get_text("Point in 3d space"))
+        ab_brace.gradient_highlight(MAROON_B, PURPLE_B)
+        xyz_brace.highlight(BLUE)
+
+        self.add(tex)
+        self.play(Write(ab_brace))
+        self.dither()
+        self.play(Write(xyz_brace))
+        self.dither()
+
+class DefinePairTo3dFunction(Scene):
+    def construct(self):
+        pass
+
+class LabelMidpoint(Scene):
+    def construct(self):
+        words = TextMobject("Midpoint $M$")
+        words.highlight(RED)
+        words.scale(2)
+        self.play(Write(words, run_time = 1))
+        self.dither()
+
+class LabelDistance(Scene):
+    def construct(self):
+        words = TextMobject("Distance $d$")
+        words.highlight(MAROON_B)
+        words.scale(2)
+        self.play(Write(words, run_time = 1))
+        self.dither()
+
+class DrawingOneLineOfTheSurface(Scene):
+    def construct(self):
+        pass
+
+class FunctionSurface(Scene):
+    def construct(self):
+        pass
+
+class PointPairApprocahingEachother3D(Scene):
+    def construct(self):
+        pass
+
+class InputPairToFunction(Scene):
+    def construct(self):
+        tex = TexMobject("f(X, X)", "=X")
+        tex.highlight_by_tex("=X", BLUE)
+        tex.scale(2)
+        self.play(Write(tex[0]))
+        self.dither(2)
+        self.play(Write(tex[1]))
+        self.dither(2)
+
+class WigglePairUnderSurface(Scene):
+    def construct(self):
+        pass        
+
+class WriteContinuous(Scene):
+    def construct(self):
+        self.play(Write(TextMobject("Continuous").scale(2)))
+        self.dither(2)
+
+class DistinctPairCollisionOnSurface(Scene):
+    def construct(self):
+        pass
+
+class PairOfRealsToPlane(Scene):
+    def construct(self):
+        r1, r2 = numbers = -3, 2
+        colors = GREEN, RED
+        dot1, dot2 = dots = VGroup(*[Dot(color = c) for c in colors])
+        for dot, number in zip(dots, numbers):
+            dot.move_to(number*RIGHT)
+        pair_label = TexMobject("(", str(r1), ",", str(r2), ")")
+        for number, color in zip(numbers, colors):
+            pair_label.highlight_by_tex(str(number), color)
+        pair_label.next_to(dots, UP, buff = 2)
+        arrows = VGroup(*[
+            Arrow(pair_label[i], dot, color = dot.get_color())
+            for i, dot in zip([1, 3], dots)
+        ])
+        two_d_point = Dot(r1*RIGHT + r2*UP, color = YELLOW)
+        pair_label.add_background_rectangle()
+
+        x_axis = NumberLine(color = BLUE)
+        y_axis = NumberLine(color = BLUE)
+        plane = NumberPlane().fade()
+
+        self.add(x_axis, y_axis, dots, pair_label)
+        self.play(ShowCreation(arrows, run_time = 2))
+        self.dither()
+        self.play(
+            pair_label.next_to, two_d_point, UP+LEFT, SMALL_BUFF,
+            Rotate(y_axis, np.pi/2),
+            Rotate(dot2, np.pi/2),
+            FadeOut(arrows)
+        )
+        lines = VGroup(*[
+            DashedLine(dot, two_d_point, color = dot.get_color())
+            for dot in dots
+        ])
+        self.play(*map(ShowCreation, lines))
+        self.play(ShowCreation(two_d_point))
+        everything = VGroup(*self.get_mobjects())
+        self.play(
+            FadeIn(plane), 
+            Animation(everything),
+            Animation(dot2)
+        )
+        self.dither()
+
+class SeekSurfaceForPairs(ClosedLoopScene):
+    def construct(self):
+        self.loop.to_edge(LEFT)
+        self.add_dots_at_alphas(0.2, 0.3)
+        self.highlight_dots_by_pair()        
+        self.add_connecting_lines()
+
+        arrow = Arrow(LEFT, RIGHT).next_to(self.loop)
+        words = TextMobject("Some 2d surface")
+        words.next_to(arrow, RIGHT)
+
+        anims = [
+            ShowCreation(arrow),
+            Write(words)
+        ]
+        for anim in anims:
+            self.let_dots_wonder(
+                random_seed = 1,
+                added_anims = [anim],
+                run_time = anim.run_time
+            )
+        self.let_dots_wonder(random_seed = 1, run_time = 10)
+
+class AskAbouPairType(TeacherStudentsScene):
+    def construct(self):
+        self.student_says("""
+            Do you mean ordered
+            or unordered pairs?
+        """)
+        self.play(*[
+            ApplyMethod(self.get_students()[i].change_mode, "confused")
+            for i in 0, 2
+        ])
+        self.random_blink(3)
+
+class DefineOrderedPair(ClosedLoopScene):
+    def construct(self):
+        title = TextMobject("Ordered pairs")
+        title.to_edge(UP)
+        subtitle = TexMobject(
+            "(", "a", ",", "b", ")", 
+            "\\ne", 
+            "(", "b", ",", "a", ")"
+        )
+        labels_start = VGroup(subtitle[1], subtitle[3])
+        labels_end = VGroup(subtitle[9], subtitle[7])
+        subtitle.next_to(title, DOWN)
+        colors = GREEN, RED
+        for char, color in zip("ab", colors):
+            subtitle.highlight_by_tex(char, color)
+        self.loop.next_to(subtitle, DOWN)
+        self.add(title, subtitle)
+
+        self.add_dots_at_alphas(0.5, 0.6)
+        dots = self.dots
+        for dot, color, char in zip(dots, colors, "ab"):
+            dot.highlight(color)
+            label = TexMobject(char)
+            label.highlight(color)
+            label.next_to(dot, LEFT, buff = SMALL_BUFF)
+            dot.label = label
+
+        self.dither()
+        self.play(*[
+            Transform(label.copy(), dot.label)
+            for label, dot in zip(labels_start, dots)
+        ])
+        self.remove(*self.get_mobjects_from_last_animation())
+        self.add(*[d.label for d in dots])
+        self.dither()
+        self.play(
+            dots[0].move_to, dots[1],
+            dots[1].move_to, dots[0],
+            *[
+                MaintainPositionRelativeTo(dot.label, dot)
+                for dot in dots
+            ],
+            path_arc = np.pi/2
+        )
+        self.play(*[
+            Transform(dot.label.copy(), label)
+            for dot, label in zip(dots, labels_end)
+        ])
+        self.dither()
+
+class DefineUnorderedPair(ClosedLoopScene):
+    def construct(self):
+        title = TextMobject("Ordered pairs")
+        title.to_edge(UP)
+        subtitle = TexMobject(
+            "\\{a,b\\}",
+            "=",
+            "\\{b,a\\}",
+        )
+        subtitle.next_to(title, DOWN)
+        for char in "ab":
+            subtitle.highlight_by_tex(char, PURPLE_B)
+        self.loop.next_to(subtitle, DOWN)
+        self.add(title, subtitle)
+
+        self.add_dots_at_alphas(0.5, 0.6)
+        dots = self.dots
+        dots.highlight(PURPLE_B)
+
+        labels = VGroup(*[subtitle[i].copy() for i in 0, 2])
+        for label, vect in zip(labels, [LEFT, RIGHT]):
+            label.next_to(dots, vect, LARGE_BUFF)
+        arrows = [
+            Arrow(*pair, color = PURPLE_B)
+            for pair in it.product(labels, dots)
+        ]
+        arrow_pairs = [VGroup(*arrows[:2]), VGroup(*arrows[2:])]
+
+        for label, arrow_pair in zip(labels, arrow_pairs):
+            self.play(*map(FadeIn, [label, arrow_pair]))
+            self.dither()
+        for x in range(2):
+            self.play(
+                dots[0].move_to, dots[1],
+                dots[1].move_to, dots[0],
+                path_arc = np.pi/2
+            )
+            self.dither()
+
+class DeformToInterval(ClosedLoopScene):
+    def construct(self):
+        interval = UnitInterval(color = WHITE)
+        interval.shift(2*DOWN)
+        numbers = interval.get_number_mobjects(0, 1)
+        line = Line(interval.get_left(), interval.get_right())
+        line.insert_n_anchor_points(self.loop.get_num_anchor_points())
+        line.make_smooth()
+        original_line = line.copy()
+
+        self.loop.scale(0.7)
+        self.loop.to_edge(UP)
+        original_loop = self.loop.copy()
+        cut_loop = self.loop.copy()
+        cut_loop.points[0] += 0.3*(UP+RIGHT)
+        cut_loop.points[-1] += 0.3*(DOWN+RIGHT)
+        original_cut_loop = cut_loop.copy()
+
+        #Unwrap loop
+        self.transform_loop(cut_loop, path_arc = np.pi)
+        self.dither()
+        self.transform_loop(
+            line,
+            run_time = 3,
+            path_arc = np.pi/2
+        )
+        self.dither()
+        self.play(ShowCreation(interval))
+        self.play(Write(numbers))
+        self.dither()
+
+        #Follow points
+        self.loop = original_loop.copy()
+        self.play(FadeIn(self.loop))
+        self.add(original_loop)
+        self.add_dots_at_alphas(*np.linspace(0, 1, 20))
+        self.dots.gradient_highlight(BLUE, MAROON_C, BLUE)
+        self.play(Write(self.dots))
+        dots_copy = self.dots.copy()        
+        self.add(dots_copy)
+        self.dither()
+        self.transform_loop(line, run_time = 3)
+        self.dither()
+        self.loop = original_loop
+        self.dots = dots_copy
+        self.transform_loop(original_cut_loop)
+        self.dither()
 
 
 
