@@ -184,7 +184,7 @@ class ClosedLoopScene(Scene):
         anims += self.get_line_anims()
         self.play(*anims)
 
-    def transform_loop(self, target_loop, **kwargs):
+    def transform_loop(self, target_loop, added_anims = [], **kwargs):
         alphas = self.get_dot_alphas()
         dot_anims = []
         for dot, alpha in zip(self.dots, alphas):
@@ -193,12 +193,9 @@ class ClosedLoopScene(Scene):
             dot_anims.append(MoveToTarget(dot))
         self.play(
             Transform(self.loop, target_loop),
-            *dot_anims + self.get_line_anims(),
+            *dot_anims + self.get_line_anims() + added_anims,
             **kwargs
         )
-        self.remove(self.loop)
-        self.loop = target_loop
-        self.add(self.loop, self.dots, self.connecting_lines)
 
     def highlight_dots_by_pair(self):
         n_pairs = len(list(self.dots))/2
@@ -963,7 +960,6 @@ class DeformToInterval(ClosedLoopScene):
         line = Line(interval.get_left(), interval.get_right())
         line.insert_n_anchor_points(self.loop.get_num_anchor_points())
         line.make_smooth()
-        original_line = line.copy()
 
         self.loop.scale(0.7)
         self.loop.to_edge(UP)
@@ -971,7 +967,6 @@ class DeformToInterval(ClosedLoopScene):
         cut_loop = self.loop.copy()
         cut_loop.points[0] += 0.3*(UP+RIGHT)
         cut_loop.points[-1] += 0.3*(DOWN+RIGHT)
-        original_cut_loop = cut_loop.copy()
 
         #Unwrap loop
         self.transform_loop(cut_loop, path_arc = np.pi)
@@ -992,16 +987,47 @@ class DeformToInterval(ClosedLoopScene):
         self.add(original_loop)
         self.add_dots_at_alphas(*np.linspace(0, 1, 20))
         self.dots.gradient_highlight(BLUE, MAROON_C, BLUE)
+        dot_at_1 = self.dots[-1]
+        dot_at_1.generate_target()
+        dot_at_1.target.move_to(interval.get_right())
+        dots_copy = self.dots.copy()
+        fading_dots = VGroup(*list(self.dots)+list(dots_copy))
+        end_dots = VGroup(
+            self.dots[0], self.dots[-1],
+            dots_copy[0], dots_copy[-1]
+        )
+        fading_dots.remove(*end_dots)
+
         self.play(Write(self.dots))
-        dots_copy = self.dots.copy()        
         self.add(dots_copy)
         self.dither()
-        self.transform_loop(line, run_time = 3)
+        self.transform_loop(
+            line, 
+            added_anims = [MoveToTarget(dot_at_1)],
+            run_time = 3
+        )
         self.dither()
         self.loop = original_loop
         self.dots = dots_copy
-        self.transform_loop(original_cut_loop)
+        dot_at_1 = self.dots[-1]
+        dot_at_1.target.move_to(cut_loop.points[-1])
+        self.transform_loop(
+            cut_loop,
+            added_anims = [MoveToTarget(dot_at_1)]
+        )
         self.dither()
+        fading_dots.generate_target()
+        fading_dots.target.set_fill(opacity = 0.3)
+        self.play(MoveToTarget(fading_dots))
+        self.play(
+            end_dots.shift, 0.2*UP, 
+            rate_func = wiggle
+        )
+        self.dither()
+
+class RepresentPairInUnitSquare(Scene):
+    def construct(self):
+        pass
 
 
 
