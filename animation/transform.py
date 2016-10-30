@@ -157,16 +157,21 @@ class ShimmerIn(DelayByOrder):
 class Rotate(ApplyMethod):
     CONFIG = {
         "in_place" : False,
+        "about_point" : None,
     }
     def __init__(self, mobject, angle = np.pi, axis = OUT, **kwargs):
         if "path_arc" not in kwargs:
             kwargs["path_arc"] = angle
         digest_config(self, kwargs, locals())
+        target = mobject.copy()
         if self.in_place:
-            method = mobject.rotate_in_place
-        else:
-            method = mobject.rotate
-        ApplyMethod.__init__(self, method, angle, axis, **kwargs)
+            self.about_point = mobject.get_center()
+        target.rotate(
+            angle, 
+            axis = axis,
+            about_point = self.about_point,
+        )
+        Transform.__init__(self, mobject, target, **kwargs)
 
 
 class ApplyPointwiseFunction(ApplyMethod):

@@ -123,15 +123,19 @@ class Mobject(object):
             mob.points *= scale_factor
         return self
 
-    def rotate(self, angle, axis = OUT, axes = []):
+    def rotate(self, angle, axis = OUT, axes = [], about_point = None):
         if len(axes) == 0:
             axes = [axis]
+        if about_point is not None:
+            self.shift(-about_point)
         rot_matrix = np.identity(self.dim)
         for axis in axes:
             rot_matrix = np.dot(rot_matrix, rotation_matrix(angle, axis))
         t_rot_matrix = np.transpose(rot_matrix)
         for mob in self.family_members_with_points():
             mob.points = np.dot(mob.points, t_rot_matrix)
+        if about_point is not None:
+            self.shift(about_point)
         return self
 
     def stretch(self, factor, dim):

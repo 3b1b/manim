@@ -1025,9 +1025,580 @@ class DeformToInterval(ClosedLoopScene):
         )
         self.dither()
 
-class RepresentPairInUnitSquare(Scene):
+class RepresentPairInUnitSquare(ClosedLoopScene):
+    def construct(self):
+        interval = UnitInterval(color = WHITE)
+        interval.shift(2.5*DOWN)
+        interval.shift(LEFT)
+        numbers = interval.get_number_mobjects(0, 1)
+        line = Line(interval.get_left(), interval.get_right())
+        line.insert_n_anchor_points(self.loop.get_num_anchor_points())
+        line.make_smooth()
+        vert_interval = interval.copy()
+        square = Square()
+        square.scale_to_fit_width(interval.get_width())
+        square.set_stroke(width = 0)
+        square.set_fill(color = BLUE, opacity = 0.3)
+        square.move_to(
+            interval.get_left(),
+            aligned_edge = DOWN+LEFT
+        )
+
+        right_words = VGroup(*[
+            TextMobject("Pair of\\\\ loop points"),
+            TexMobject("\\Downarrow"),
+            TextMobject("Point in \\\\ unit square")
+        ])
+        right_words.arrange_submobjects(DOWN)
+        right_words.to_edge(RIGHT)
+
+        dot_coords = (0.3, 0.7)
+        self.loop.scale(0.7)
+        self.loop.to_edge(UP)
+        self.add_dots_at_alphas(*dot_coords)
+        self.dots.gradient_highlight(GREEN, RED)
+
+        self.play(
+            Write(self.dots),
+            Write(right_words[0])
+        )
+        self.dither()
+        self.transform_loop(line)
+        self.play(
+            ShowCreation(interval),
+            Write(numbers),
+            Animation(self.dots)
+        )
+        self.dither()
+        self.play(*[
+            Rotate(mob, np.pi/2, about_point = interval.get_left())
+            for mob in vert_interval, self.dots[1]
+        ])
+
+        #Find interior point
+        point = self.dots[0].get_center()[0]*RIGHT
+        point += self.dots[1].get_center()[1]*UP
+        inner_dot = Dot(point, color = YELLOW)
+        dashed_lines = VGroup(*[
+            DashedLine(dot, inner_dot, color = dot.get_color())
+            for dot in self.dots
+        ])
+        self.play(ShowCreation(dashed_lines))
+        self.play(ShowCreation(inner_dot))
+        self.play(
+            FadeIn(square),
+            Animation(self.dots),
+            *map(Write, right_words[1:])
+        )
+        self.dither()
+
+        #Shift point in square
+
+        movers = list(dashed_lines)+list(self.dots)+[inner_dot]
+        for mob in movers:
+            mob.generate_target()
+        shift_vals = [
+            RIGHT+DOWN, 
+            LEFT+DOWN, 
+            LEFT+2*UP,
+            3*DOWN,
+            2*RIGHT+UP,
+            RIGHT+UP,
+            3*LEFT+3*DOWN
+        ]
+        for shift_val in shift_vals:
+            inner_dot.target.shift(shift_val)
+            self.dots[0].target.shift(shift_val[0]*RIGHT)
+            self.dots[1].target.shift(shift_val[1]*UP)
+            for line, dot in zip(dashed_lines, self.dots):
+                line.target.put_start_and_end_on(
+                    dot.target.get_center(), 
+                    inner_dot.target.get_center()
+                )
+            self.play(*map(MoveToTarget, movers))
+        self.dither()
+        self.play(*map(FadeOut, [dashed_lines, self.dots]))
+
+class EdgesOfSquare(Scene):
+    def construct(self):
+        square = self.add_square()
+        x_edges, y_edges = self.get_edges(square)
+        label_groups = self.get_coordinate_labels(square)
+        arrow_groups = self.get_arrows(x_edges, y_edges)
+
+        for edge in list(x_edges) + list(y_edges):
+            self.play(ShowCreation(edge))
+        self.dither()
+        for label_group in label_groups:
+            for label in label_group[:3]:
+                self.play(FadeIn(label))
+            self.dither()
+            self.play(Write(VGroup(*label_group[3:])))
+            self.dither()
+        self.play(FadeOut(VGroup(*label_groups)))
+        for arrows in arrow_groups:
+            self.play(ShowCreation(arrows, run_time = 2))
+            self.dither()
+        self.play(*[
+            ApplyMethod(
+                n.next_to,
+                square.get_corner(vect+LEFT),
+                LEFT,
+                MED_BUFF,
+                path_arc = np.pi/2
+            )
+            for n, vect in zip(self.numbers, [DOWN, UP])
+        ])
+        self.dither()
+
+    def add_square(self):
+        interval = UnitInterval(color = WHITE)
+        interval.shift(2.5*DOWN)
+        bottom_left = interval.get_left()
+        for tick in interval.tick_marks:
+            height = tick.get_height()
+            tick.scale_in_place(0.5)
+            tick.shift(height*DOWN/4.)
+        self.numbers = interval.get_number_mobjects(0, 1)
+        vert_interval = interval.copy()
+        vert_interval.rotate(np.pi, axis = UP+RIGHT, about_point = bottom_left)
+        square = Square()
+        square.scale_to_fit_width(interval.get_width())
+        square.set_stroke(width = 0)
+        square.set_fill(color = BLUE, opacity = 0.3)
+        square.move_to(
+            bottom_left,
+            aligned_edge = DOWN+LEFT
+        )
+        self.add(interval, self.numbers, vert_interval, square)
+        return square
+
+    def get_edges(self, square):
+        y_edges = VGroup(*[
+            Line(
+                square.get_corner(vect+LEFT),
+                square.get_corner(vect+RIGHT),
+            )
+            for vect in DOWN, UP
+        ])
+        y_edges.highlight(BLUE)
+        x_edges = VGroup(*[
+            Line(
+                square.get_corner(vect+DOWN),
+                square.get_corner(vect+UP),
+            )
+            for vect in LEFT, RIGHT
+        ])
+        x_edges.highlight(MAROON_B)
+        return x_edges, y_edges
+
+    def get_coordinate_labels(self, square):
+        alpha_range = np.arange(0, 1.1, 0.1)
+        dot_groups = [
+            VGroup(*[
+                Dot(interpolate(
+                    square.get_corner(DOWN+vect),
+                    square.get_corner(UP+vect),
+                    alpha
+                ))
+                for alpha in alpha_range
+            ])
+            for vect in LEFT, RIGHT            
+        ]
+        for group in dot_groups:
+            group.gradient_highlight(YELLOW, PURPLE_B)
+        label_groups = [
+            VGroup(*[
+                TexMobject("(%s, %s)"%(a, b)).scale(0.7)
+                for b in alpha_range
+            ])
+            for a in 0, 1
+        ]
+        for dot_group, label_group in zip(dot_groups, label_groups):
+            for dot, label in zip(dot_group, label_group):
+                label[1].highlight(MAROON_B)
+                label.next_to(dot, RIGHT*np.sign(dot.get_center()[0]))
+                label.add(dot)
+        return label_groups
+
+    def get_arrows(self, x_edges, y_edges):
+        alpha_range = np.linspace(0, 1, 4)
+        return [
+            VGroup(*[
+                VGroup(*[
+                    Arrow(
+                        edge.point_from_proportion(a1),
+                        edge.point_from_proportion(a2),
+                        buff = 0
+                    )
+                    for a1, a2 in zip(alpha_range, alpha_range[1:])
+                ])
+                for edge in edges
+            ]).highlight(edges.get_color())
+            for edges in x_edges, y_edges
+        ]
+
+class EndpointsGluedTogether(ClosedLoopScene):
+    def construct(self):
+        interval = UnitInterval(color = WHITE)
+        interval.shift(2*DOWN)
+        numbers = interval.get_number_mobjects(0, 1)
+        line = Line(interval.get_left(), interval.get_right())
+        line.insert_n_anchor_points(self.loop.get_num_anchor_points())
+        line.make_smooth()
+
+        self.loop.scale(0.7)
+        self.loop.to_edge(UP)
+        original_loop = self.loop
+        self.remove(original_loop)
+
+        self.loop = line
+        dots = VGroup(*[
+            Dot(line.get_critical_point(vect))
+            for vect in LEFT, RIGHT
+        ])
+        dots.highlight(BLUE)
+
+        self.add(interval, dots)
+        self.play(dots.rotate_in_place, np.pi/20, rate_func = wiggle)
+        self.dither()
+        self.transform_loop(
+            original_loop,
+            added_anims = [
+                ApplyMethod(dot.move_to, original_loop.points[0])
+                for dot in dots
+            ],
+            run_time = 3
+        )
+        self.dither()
+
+class WrapUpToTorus(Scene):
     def construct(self):
         pass
+
+class WhatAboutUnordered(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "What about \\\\ unordered pairs?"
+        )
+        self.play(self.get_teacher().change_mode, "pondering")
+        self.random_blink(2)
+
+class TrivialPairCollision(ClosedLoopScene):
+    def construct(self):
+        self.loop.to_edge(RIGHT)
+        self.add_dots_at_alphas(0.35, 0.55)
+        self.dots.gradient_highlight(BLUE, YELLOW)
+        a, b = self.dots
+        a_label = TexMobject("a").next_to(a, RIGHT)
+        a_label.highlight(a.get_color())
+        b_label = TexMobject("b").next_to(b, LEFT)
+        b_label.highlight(b.get_color())
+        line = Line(
+            a.get_corner(DOWN+LEFT),
+            b.get_corner(UP+RIGHT),
+            color = MAROON_B
+        )
+        midpoint = Dot(self.dots.get_center(), color = RED)
+        randy = Randolph(mode = "pondering")
+        randy.next_to(self.loop, LEFT, aligned_edge = DOWN)
+        randy.look_at(b)
+        self.add(randy)
+
+        for label in a_label, b_label:
+            self.play(
+                Write(label, run_time = 1),
+                randy.look_at, label
+            )
+        self.play(Blink(randy))
+        self.dither()
+        swappers = [a, b, a_label, b_label]
+        for mob in swappers:
+            mob.save_state()
+        self.play(
+            a.move_to, b,
+            b.move_to, a,
+            a_label.next_to, b, LEFT,
+            b_label.next_to, a, RIGHT,
+            randy.look_at, a,
+            path_arc = np.pi
+        )
+        self.play(ShowCreation(midpoint))
+        self.play(ShowCreation(line), Animation(midpoint))
+        self.play(randy.change_mode, "erm", randy.look_at, b)
+        self.play(
+            randy.look_at, a,
+            *[m.restore for m in swappers],
+            path_arc = -np.pi
+        )
+        self.play(Blink(randy))
+        self.dither()
+
+class FoldUnitSquare(EdgesOfSquare):
+    def construct(self):    
+        self.add_triangles()
+        self.add_arrows()
+        self.show_points_to_glue()
+        self.perform_fold()
+        self.show_singleton_pairs()
+        self.ask_about_gluing()
+        self.clarify_edge_gluing()
+
+    def add_triangles(self):
+        square = self.add_square()
+        triangles = VGroup(*[
+            Polygon(*[square.get_corner(vect) for vect in vects])
+            for vects in [
+                (DOWN+LEFT, UP+RIGHT, UP+LEFT),            
+                (DOWN+LEFT, UP+RIGHT, DOWN+RIGHT),
+            ]
+        ])
+        triangles.set_stroke(width = 0)
+        triangles.set_fill(
+            color = square.get_color(), 
+            opacity = square.get_fill_opacity()
+        )
+        self.remove(square)
+        self.square = square
+        self.add(triangles)
+        self.triangles = triangles
+
+    def add_arrows(self):
+        start_arrows = VGroup()
+        end_arrows = VGroup()
+        colors = MAROON_B, BLUE
+        for a in 0, 1:        
+            for color in colors:
+                b_range = np.linspace(0, 1, 4)
+                for b1, b2 in zip(b_range, b_range[1:]):
+                    arrow = Arrow(
+                        self.get_point_from_coords(a, b1),
+                        self.get_point_from_coords(a, b2),
+                        buff = 0,
+                        color = color
+                    )
+                    if color is BLUE:
+                        arrow.rotate(
+                            -np.pi/2, 
+                            about_point = self.square.get_center()
+                        )
+                    if (a is 0):
+                        start_arrows.add(arrow)
+                    else:
+                        end_arrows.add(arrow)
+        self.add(start_arrows, end_arrows)
+        self.start_arrows = start_arrows
+        self.end_arrows = VGroup(*list(end_arrows[3:])+list(end_arrows[:3])).copy()
+        self.end_arrows.highlight(
+            color_gradient([MAROON_B, BLUE], 3)[1]
+        )
+
+    def show_points_to_glue(self):
+        colors = YELLOW, MAROON_B, PINK
+        pairs = [(0.2, 0.3), (0.5, 0.7), (0.25, 0.6)]
+        unit = self.square.get_width()
+
+        start_dots = VGroup()
+        end_dots = VGroup()
+        for (x, y), color in zip(pairs, colors):
+            old_x_line, old_y_line = None, None
+            for (a, b) in (x, y), (y, x):
+                point = self.get_point_from_coords(a, b)
+                dot = Dot(point)
+                dot.highlight(color)
+                if color == colors[-1]:
+                    s = "(x, y)" if a < b else "(y, x)"
+                    label = TexMobject(s)
+                else:
+                    label = TexMobject("(%.01f, %.01f)"%(a, b))
+                vect = UP+RIGHT if a < b else DOWN+RIGHT
+                label.next_to(dot, vect, buff = SMALL_BUFF)
+
+                self.play(*map(FadeIn, [dot, label]))
+                x_line = Line(point+a*unit*LEFT, point)
+                y_line = Line(point+b*unit*DOWN, point)
+                x_line.highlight(GREEN)
+                y_line.highlight(RED)
+                if old_x_line is None:
+                    self.play(ShowCreation(x_line), Animation(dot))
+                    self.play(ShowCreation(y_line), Animation(dot))
+                    old_x_line, old_y_line = y_line, x_line
+                else:
+                    self.play(Transform(old_x_line, x_line), Animation(dot))
+                    self.play(Transform(old_y_line, y_line), Animation(dot))
+                    self.remove(old_x_line, old_y_line)
+                    self.add(x_line, y_line, dot)
+                self.dither(2)
+                self.play(FadeOut(label))
+                if a < b:
+                    start_dots.add(dot)
+                else:
+                    end_dots.add(dot)
+            self.play(*map(FadeOut, [x_line, y_line]))
+        self.start_dots, self.end_dots = start_dots, end_dots
+
+    def perform_fold(self):
+        diag_line = DashedLine(
+            self.square.get_corner(DOWN+LEFT),
+            self.square.get_corner(UP+RIGHT),
+            color = RED
+        )
+
+        self.play(ShowCreation(diag_line))
+        self.dither()
+        self.play(
+            Transform(*self.triangles),
+            Transform(self.start_dots, self.end_dots),
+            Transform(self.start_arrows, self.end_arrows),
+        )
+        self.dither()
+        self.diag_line = diag_line
+
+    def show_singleton_pairs(self):
+        xs = [0.7, 0.4, 0.5]
+        old_label = None
+        old_dot = None
+        for x in xs:
+            point = self.get_point_from_coords(x, x)
+            dot = Dot(point)
+            if x is xs[-1]:
+                label = TexMobject("(x, x)")
+            else:
+                label = TexMobject("(%.1f, %.1f)"%(x, x))
+            label.next_to(dot, UP+LEFT, buff = SMALL_BUFF)
+            VGroup(dot, label).highlight(RED)
+            if old_label is None:
+                self.play(
+                    ShowCreation(dot),
+                    Write(label)
+                )
+                old_label = label
+                old_dot = dot
+            else:
+                self.play(
+                    Transform(old_dot, dot),
+                    Transform(old_label, label),
+                )
+            self.dither()
+        #Some strange bug necesitating this
+        self.remove(old_label)
+        self.add(label)
+
+    def ask_about_gluing(self):
+        keepers = VGroup(
+            self.triangles[0],
+            self.start_arrows,
+            self.diag_line
+        ).copy()
+        faders = VGroup(*self.get_mobjects())
+        randy = Randolph()
+        randy.next_to(ORIGIN, DOWN)
+        bubble = randy.get_bubble(height = 4, width = 6)
+        bubble.write("How do you \\\\ glue those arrows?")
+
+        self.play(
+            FadeOut(faders),
+            Animation(keepers)
+        )
+        self.play(
+            keepers.scale, 0.6,
+            keepers.shift, 4*RIGHT + UP,
+            FadeIn(randy)
+        )
+        self.play(
+            randy.change_mode, "pondering",
+            randy.look_at, keepers,
+            ShowCreation(bubble),
+            Write(bubble.content)
+        )
+        self.play(Blink(randy))
+        self.dither()
+        self.randy = randy
+
+    def clarify_edge_gluing(self):
+        dots = VGroup(*[
+            Dot(self.get_point_from_coords(*coords), radius = 0.1)
+            for coords in [
+                (0.1, 0),
+                (1, 0.1),
+                (0.9, 0),
+                (1, 0.9),
+            ]
+        ])
+        dots.scale(0.6)
+        dots.shift(4*RIGHT + UP)
+        for dot in dots[:2]:
+            dot.highlight(YELLOW)
+            self.play(
+                ShowCreation(dot),
+                self.randy.look_at, dot
+            )
+        self.dither()
+        for dot in dots[2:]:
+            dot.highlight(MAROON_B)
+            self.play(
+                ShowCreation(dot),
+                self.randy.look_at, dot
+            )
+        self.play(Blink(self.randy))
+        self.dither()
+
+    def get_point_from_coords(self, x, y):
+        left, right, bottom, top = [
+            self.triangles.get_edge_center(vect)
+            for vect in LEFT, RIGHT, DOWN, UP
+        ]
+        x_point = interpolate(left, right, x)
+        y_point = interpolate(bottom, top, y)
+        return x_point[0]*RIGHT + y_point[1]*UP
+
+class PrepareForMobiusStrip(Scene):
+    def construct(self):
+        self.add_triangles()
+        self.perform_cut()
+        self.rearrange_pieces()
+
+
+    def add_triangles(self):
+        tri1, tri2 = triangles = VGroup(
+            Polygon(
+                DOWN+LEFT,
+                ORIGIN,
+                DOWN+RIGHT
+            ),
+            Polygon(
+                DOWN+LEFT,
+                UP+LEFT,
+                UP+RIGHT
+            ),
+        )
+
+    def perform_cut(self):
+        pass
+
+    def rearrange_pieces(self):
+        pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
