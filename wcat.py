@@ -239,7 +239,6 @@ class ClosedLoopScene(Scene):
         return midpoint_diffs + distance_diffs + dots
 
 
-
 #############################
 
 class Introduction(TeacherStudentsScene):
@@ -1276,6 +1275,35 @@ class WrapUpToTorus(Scene):
     def construct(self):
         pass
 
+class TorusPlaneAnalogy(ClosedLoopScene):
+    def construct(self):
+        top_arrow = Arrow(LEFT, RIGHT)
+        top_arrow.to_edge(UP, buff = 2*LARGE_BUFF)
+        low_arrow = Arrow(LEFT, RIGHT).shift(2*DOWN)
+        self.loop.scale(0.5)
+        self.loop.next_to(top_arrow, RIGHT)
+        self.loop.shift_onto_screen()
+        self.add_dots_at_alphas(0.3, 0.5)
+        self.dots.gradient_highlight(GREEN, RED)
+
+        plane = NumberPlane()
+        plane.scale(0.3).next_to(low_arrow, LEFT)
+        number_line = NumberLine()
+        number_line.scale(0.3)
+        number_line.next_to(low_arrow, RIGHT)
+        number_line.add(
+            Dot(number_line.number_to_point(3), color = GREEN),
+            Dot(number_line.number_to_point(-2), color = RED),
+        )
+
+        self.dither()
+        self.play(ShowCreation(top_arrow))
+        self.dither()
+        self.play(ShowCreation(plane))
+        self.play(ShowCreation(low_arrow))
+        self.play(ShowCreation(number_line))
+        self.dither()
+
 class WhatAboutUnordered(TeacherStudentsScene):
     def construct(self):
         self.student_says(
@@ -1558,44 +1586,236 @@ class PrepareForMobiusStrip(Scene):
         self.perform_cut()
         self.rearrange_pieces()
 
-
     def add_triangles(self):
-        tri1, tri2 = triangles = VGroup(
+        triangles = VGroup(
             Polygon(
                 DOWN+LEFT,
+                DOWN+RIGHT,
                 ORIGIN,
-                DOWN+RIGHT
             ),
             Polygon(
-                DOWN+LEFT,
-                UP+LEFT,
-                UP+RIGHT
+                DOWN+RIGHT,
+                UP+RIGHT,          
+                ORIGIN,
             ),
         )
+        triangles.set_fill(color = BLUE, opacity = 0.6)
+        triangles.set_stroke(width = 0)
+        triangles.center()
+        triangles.scale(2)
+        arrows_color = color_gradient([PINK, BLUE], 3)[1]
+        for tri in triangles:
+            anchors = tri.get_anchors_and_handles()[0]
+            alpha_range = np.linspace(0, 1, 4)
+            arrows = VGroup(*[
+                Arrow(
+                    interpolate(anchors[0], anchors[1], a),
+                    interpolate(anchors[0], anchors[1], b),
+                    buff = 0,
+                    color = arrows_color
+                )
+                for a, b in zip(alpha_range, alpha_range[1:])
+            ])
+            tri.original_arrows = arrows
+            tri.add(arrows)
+            i, j, k = (0, 2, 1) if tri is triangles[0] else (1, 2, 0)
+            dashed_line = DashedLine(
+                anchors[i], anchors[j], 
+                color = RED
+            )
+            tri.add(dashed_line)
+
+            #Add but don't draw cut_arrows
+            start, end = anchors[j], anchors[k]
+            cut_arrows = VGroup(*[
+                Arrow(
+                    interpolate(start, end, a),
+                    interpolate(start, end, b),
+                    buff = 0,
+                    color = YELLOW
+                )
+                for a, b in zip(alpha_range, alpha_range[1:])
+            ])
+            tri.cut_arrows = cut_arrows
+        self.add(triangles)
+        self.triangles = triangles
 
     def perform_cut(self):
-        pass
+        tri1, tri2 = self.triangles
+
+
+        self.play(ShowCreation(tri1.cut_arrows))
+        for tri in self.triangles:
+            tri.add(tri.cut_arrows)
+        self.dither()
+        self.play(
+            tri1.shift, (DOWN+LEFT)/2.,
+            tri2.shift, (UP+RIGHT)/2.,
+        )
+        self.dither()
 
     def rearrange_pieces(self):
+        tri1, tri2 = self.triangles
+        self.play(
+            tri1.rotate, np.pi, UP+RIGHT,
+            tri1.next_to, ORIGIN, RIGHT,
+            tri2.next_to, ORIGIN, LEFT,
+        )
+        self.dither()
+        self.play(*[
+            ApplyMethod(tri.shift, tri.points[0][0]*LEFT)
+            for tri in self.triangles
+        ])
+        self.play(*[
+            FadeOut(tri.original_arrows)
+            for tri in self.triangles
+        ])
+        for tri in self.triangles:
+            tri.remove(tri.original_arrows)
+        self.dither()
+        # self.play(*[
+        #     ApplyMethod(tri.rotate, -np.pi/4)
+        #     for tri in self.triangles
+        # ])
+        # self.dither()
+
+class FoldToMobius(Scene):
+    def construct(self):
         pass
 
+class MobiusPlaneAnalogy(ClosedLoopScene):
+    def construct(self):
+        top_arrow = Arrow(LEFT, RIGHT)
+        top_arrow.to_edge(UP, buff = 2*LARGE_BUFF)
+        low_arrow = Arrow(LEFT, RIGHT).shift(2*DOWN)
+        self.loop.scale(0.5)
+        self.loop.next_to(top_arrow, RIGHT)
+        self.loop.shift_onto_screen()
+        self.add_dots_at_alphas(0.3, 0.5)
+        self.dots.highlight(PURPLE_B)
+
+        plane = NumberPlane()
+        plane.scale(0.3).next_to(low_arrow, LEFT)
+        number_line = NumberLine()
+        number_line.scale(0.3)
+        number_line.next_to(low_arrow, RIGHT)
+        number_line.add(
+            Dot(number_line.number_to_point(3), color = GREEN),
+            Dot(number_line.number_to_point(-2), color = RED),
+        )
+
+        self.dither()
+        self.play(ShowCreation(top_arrow))
+        self.dither()
+        self.play(ShowCreation(plane))
+        self.play(ShowCreation(low_arrow))
+        self.play(ShowCreation(number_line))
+        self.dither()
+
+class DrawRightArrow(Scene):
+    CONFIG = {
+        "tex" : "\\Rightarrow"
+    }
+    def construct(self):
+        arrow = TexMobject(self.tex)
+        arrow.scale(4)
+        self.play(Write(arrow))
+        self.dither()
+
+class DrawLeftrightArrow(DrawRightArrow):
+    CONFIG = {
+        "tex" : "\\Leftrightarrow"
+    }
+
+class MapMobiusStripOntoSurface(Scene):
+    def construct(self):
+        pass
+
+class StripMustIntersectItself(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            """
+            The strip must 
+            intersect itself
+            during this process
+            """,
+            width = 4
+        )
+        dot = Dot(2*UP + 4*LEFT)
+        for student in self.get_students():
+            student.generate_target()
+            student.target.change_mode("pondering")
+            student.target.look_at(dot)
+        self.play(*map(MoveToTarget, self.get_students()))
+        self.random_blink(4)
+
+class PairOfMobiusPointsLandOnEachother(Scene):
+    def construct(self):
+        pass
+
+class ThatsTheProof(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            """
+            Bada boom
+            bada bang!
+            """,
+            pi_creature_target_mode = "hooray",
+            width = 4
+        )
+        self.change_student_modes(*["hooray"]*3)
+        self.random_blink()
+        self.change_student_modes(
+            "confused", "sassy", "erm"
+        )
+        self.teacher_says(
+            """
+            If you trust
+            the mobius strip 
+            fact...
+            """,
+            pi_creature_target_mode = "guilty",            
+            width = 4,
+        )
+        self.random_blink()
+
+class TryItYourself(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("""
+            It's actually an
+            edifying exercise.
+        """)
+        self.random_blink()
+        self.change_student_modes(*["pondering"]*3)
+        self.random_blink(2)
+
+        pi = self.get_students()[1]
+        bubble = pi.get_bubble(
+            "thought", 
+            width = 4, height = 4,
+            direction = RIGHT
+        )
+        bubble.set_fill(BLACK, opacity = 1)
+        bubble.write("Orientation seem\\\\ to matter...")
+        self.play(
+            FadeIn(bubble),
+            Write(bubble.content)
+        )
+        self.random_blink(3)
+
+class OneMoreAnimation(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("""
+            One more animation,
+            but first...
+        """)
+        self.change_student_modes(*["happy"]*3)
+        self.random_blink()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+class ShiftingLoopPairSurface(Scene):
+    def construct(self):
+        pass
 
 
 
