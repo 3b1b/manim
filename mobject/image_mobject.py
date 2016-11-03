@@ -66,7 +66,7 @@ class ImageMobject(PMobject):
         if all(map(os.path.exists, cached_attr_files)):
             for attr, cache_file in zip(attrs, cached_attr_files):
                 arr = np.fromfile(cache_file, dtype = dtype)
-                arr = arr.reshape(arr.size/self.DIM, self.DIM)
+                arr = arr.reshape(arr.size/self.dim, self.dim)
                 setattr(self, attr, arr)
             return True
         return False

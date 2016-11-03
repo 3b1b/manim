@@ -311,6 +311,23 @@ class ThoughtBubble(Bubble):
         self.submobjects[-1].set_fill(GREEN_SCREEN, opacity = 1)
         return self
 
+class Headphones(SVGMobject):
+    CONFIG = {
+        "file_name" : "headphones",
+        "height" : 2,
+        "y_stretch_factor" : 0.5,
+        "color" : GREY,
+    }
+    def __init__(self, **kwargs):
+        digest_config(self, kwargs)
+        SVGMobject.__init__(self, self.file_name, **kwargs)
+        self.stretch(self.y_stretch_factor, 1)        
+        self.scale_to_fit_height(self.height)
+        self.set_stroke(width = 0)
+        self.set_fill(color = self.color)
+
+
+
 
 class RandolphScene(Scene):
     CONFIG = {

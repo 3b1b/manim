@@ -95,7 +95,7 @@ class ClosedLoopScene(Scene):
         self.add(self.dots)
 
     def add_rect_dots(self, square = False):
-        self.add_dots(*self.get_rect_vertex_dots())
+        self.add_dots(*self.get_rect_vertex_dots(square = square))
 
     def add_dots_at_alphas(self, *alphas):
         self.add_dots(*[
@@ -267,20 +267,29 @@ class WhenIWasAKid(TeacherStudentsScene):
         speaker = self.get_speaker()
 
         self.prepare_everyone(children, speaker)
-        self.transition_from_previous_scene(children, speaker)
+        self.state_excitement(children, speaker)
         self.students = children
         self.teacher = speaker
         self.run_class()
         self.grow_up()
 
-    def transition_from_previous_scene(self, children, speaker):
-        self.play(self.get_teacher().change_mode, "hooray", run_time = 0)
+    def state_excitement(self, children, speaker):
+        self.teacher_says(
+            """
+            Here's why 
+            I'm excited!
+            """,
+            pi_creature_target_mode = "hooray"
+        )
         self.change_student_modes(*["happy"]*3)
+        self.dither()
 
         speaker.look_at(children)
         me = children[-1]
         self.play(
             FadeOut(self.get_students()),
+            FadeOut(self.get_teacher().bubble),
+            FadeOut(self.get_teacher().bubble.content),
             Transform(self.get_teacher(), me)
         )
         self.remove(self.get_teacher())
@@ -293,12 +302,37 @@ class WhenIWasAKid(TeacherStudentsScene):
         speaker = self.teacher
         title = TextMobject("Topology")
         title.to_edge(UP)
+        pi1, pi2, pi3, me = children
 
         self.random_blink()
-        self.play(self.teacher.change_mode, "speaking")
+        self.teacher_says(
+            """
+            Math! Excitement!
+            You are the future!
+            """,
+            pi_creature_target_mode = "hooray"
+        )
+        self.play(
+            pi1.look_at, pi2.eyes,
+            pi1.change_mode, "erm",
+            pi2.look_at, pi1.eyes,
+            pi2.change_mode, "surprised",
+        )
+        self.play(
+            pi3.look_at, me.eyes,
+            pi3.change_mode, "sassy",
+            me.look_at, pi3.eyes,
+        )
+        self.random_blink(2)
+
+        self.play(
+            self.teacher.change_mode, "speaking",
+            FadeOut(self.teacher.bubble),
+            FadeOut(self.teacher.bubble.content),
+        )
         self.play(Write(title))
         self.random_blink()
-        pi1, pi2, pi3, me = children
+        
         self.play(pi1.change_mode, "raise_right_hand")
         self.random_blink()
         self.play(
@@ -412,7 +446,7 @@ class DefineInscribedSquareProblem(ClosedLoopScene):
         self.dither()
         self.play(ShowCreation(
             self.loop, 
-            run_time = 3, 
+            run_time = 5, 
             rate_func = None
         ))
         self.dither()
@@ -452,6 +486,9 @@ class DefineInscribedSquareProblem(ClosedLoopScene):
         randy.mouth.set_stroke(width = 0)
 
         self.transform_loop(circle)
+        self.remove(self.loop)
+        self.loop = circle
+        self.add(self.loop, self.connecting_lines, self.dots)
         self.dither()
         odd_eigths = np.linspace(1./8, 7./8, 4)
         self.move_dots_to_alphas(odd_eigths)
@@ -472,12 +509,14 @@ class DefineInscribedSquareProblem(ClosedLoopScene):
             FadeIn(randy),
             Animation(randy),            
             Blink(randy),
+            Animation(randy),         
+            Blink(randy),
             Animation(randy),
             Blink(randy, rate_func = smooth)
         ]
         for anim in randy_anims:
             self.let_dots_wonder(
-                run_time = 1,
+                run_time = 1.5,
                 random_seed = 0,
                 added_anims = [anim]
             )
@@ -782,6 +821,13 @@ class DistinctPairCollisionOnSurface(Scene):
     def construct(self):
         pass
 
+class PairsOfPointsOnLoop(ClosedLoopScene):
+    def construct(self):
+        self.add_dots_at_alphas(0.2, 0.5)
+        self.dots.highlight(MAROON_B)
+        self.add_connecting_lines()
+        self.let_dots_wonder(run_time = 10)
+
 class PairOfRealsToPlane(Scene):
     def construct(self):
         r1, r2 = numbers = -3, 2
@@ -886,8 +932,12 @@ class DefineOrderedPair(ClosedLoopScene):
             dot.highlight(color)
             label = TexMobject(char)
             label.highlight(color)
-            label.next_to(dot, LEFT, buff = SMALL_BUFF)
+            label.next_to(dot, RIGHT, buff = SMALL_BUFF)
             dot.label = label
+        self.dots[1].label.shift(0.3*UP)
+        first = TextMobject("First")
+        first.next_to(self.dots[0], UP+2*LEFT, LARGE_BUFF)
+        arrow = Arrow(first.get_bottom(), self.dots[0], color = GREEN)
 
         self.dither()
         self.play(*[
@@ -898,23 +948,14 @@ class DefineOrderedPair(ClosedLoopScene):
         self.add(*[d.label for d in dots])
         self.dither()
         self.play(
-            dots[0].move_to, dots[1],
-            dots[1].move_to, dots[0],
-            *[
-                MaintainPositionRelativeTo(dot.label, dot)
-                for dot in dots
-            ],
-            path_arc = np.pi/2
+            Write(first),
+            ShowCreation(arrow)
         )
-        self.play(*[
-            Transform(dot.label.copy(), label)
-            for dot, label in zip(dots, labels_end)
-        ])
         self.dither()
 
 class DefineUnorderedPair(ClosedLoopScene):
     def construct(self):
-        title = TextMobject("Ordered pairs")
+        title = TextMobject("Unordered pairs")
         title.to_edge(UP)
         subtitle = TexMobject(
             "\\{a,b\\}",
@@ -950,6 +991,14 @@ class DefineUnorderedPair(ClosedLoopScene):
                 path_arc = np.pi/2
             )
             self.dither()
+
+class BeginWithOrdered(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("""
+            One must know order
+            before he can ignore it.
+        """)
+        self.random_blink(3)
 
 class DeformToInterval(ClosedLoopScene):
     def construct(self):
@@ -1277,9 +1326,11 @@ class WrapUpToTorus(Scene):
 
 class TorusPlaneAnalogy(ClosedLoopScene):
     def construct(self):
-        top_arrow = Arrow(LEFT, RIGHT)
+        top_arrow = DoubleArrow(LEFT, RIGHT)
         top_arrow.to_edge(UP, buff = 2*LARGE_BUFF)
-        low_arrow = Arrow(LEFT, RIGHT).shift(2*DOWN)
+        single_pointed_top_arrow = Arrow(LEFT, RIGHT)
+        single_pointed_top_arrow.to_edge(UP, buff = 2*LARGE_BUFF)        
+        low_arrow = DoubleArrow(LEFT, RIGHT).shift(2*DOWN)
         self.loop.scale(0.5)
         self.loop.next_to(top_arrow, RIGHT)
         self.loop.shift_onto_screen()
@@ -1297,12 +1348,32 @@ class TorusPlaneAnalogy(ClosedLoopScene):
         )
 
         self.dither()
+        self.play(ShowCreation(single_pointed_top_arrow))
+        self.dither()
         self.play(ShowCreation(top_arrow))
         self.dither()
         self.play(ShowCreation(plane))
         self.play(ShowCreation(low_arrow))
         self.play(ShowCreation(number_line))
         self.dither()
+
+class WigglingPairOfPoints(ClosedLoopScene):
+    def construct(self):
+        alpha_pairs = [
+            (0.4, 0.6),
+            (0.42, 0.62),
+        ]
+        self.add_dots_at_alphas(*alpha_pairs[-1])
+        self.add_connecting_lines()
+        self.dots.gradient_highlight(GREEN, RED)
+        self.connecting_lines.highlight(YELLOW)
+        for x, pair in zip(range(20), it.cycle(alpha_pairs)):
+            self.move_dots_to_alphas(pair, run_time = 0.3)
+
+
+class WigglingTorusPoint(Scene):
+        def construct(self):
+            pass    
 
 class WhatAboutUnordered(TeacherStudentsScene):
     def construct(self):
@@ -1360,6 +1431,23 @@ class TrivialPairCollision(ClosedLoopScene):
             path_arc = -np.pi
         )
         self.play(Blink(randy))
+        self.dither()
+
+class NotHelpful(Scene):
+    def construct(self):
+        morty = Mortimer()
+        morty.next_to(ORIGIN, DOWN)
+        bubble = morty.get_bubble("speech", width = 4, height = 3)
+        bubble.write("Not helpful!")
+
+        self.add(morty)
+        self.play(
+            FadeIn(bubble),
+            FadeIn(bubble.content),
+            morty.change_mode, "angry",
+            morty.look, OUT
+        )
+        self.play(Blink(morty))
         self.dither()
 
 class FoldUnitSquare(EdgesOfSquare):
@@ -1727,6 +1815,49 @@ class DrawLeftrightArrow(DrawRightArrow):
         "tex" : "\\Leftrightarrow"
     }
 
+class MobiusToPairToSurface(ClosedLoopScene):
+    def construct(self):
+        self.loop.scale(0.5)
+        self.loop.next_to(ORIGIN, RIGHT)
+        self.loop.to_edge(UP)
+        self.add_dots_at_alphas(0.4, 0.6)
+        self.dots.highlight(MAROON_B)
+        self.add_connecting_lines()
+        strip_dot = Dot().next_to(self.loop, LEFT, buff = 2*LARGE_BUFF)
+        surface_dot = Dot().next_to(self.loop, DOWN, buff = 2*LARGE_BUFF)
+
+        top_arrow = Arrow(strip_dot, self.loop)
+        right_arrow = Arrow(self.loop, surface_dot)
+        diag_arrow = Arrow(strip_dot, surface_dot)
+
+        randy = self.randy = Randolph(mode = "pondering")
+        randy.next_to(ORIGIN, DOWN+LEFT)
+
+        self.look_at(strip_dot)
+        self.play(
+            ShowCreation(top_arrow),
+            randy.look_at, self.loop
+        )
+        self.dither()
+        self.look_at(strip_dot, surface_dot)
+        self.play(ShowCreation(diag_arrow))
+        self.play(Blink(randy))
+        self.look_at(strip_dot, self.loop)
+        self.dither()
+        self.play(
+            ShowCreation(right_arrow),
+            randy.look_at, surface_dot
+        )
+        self.play(Blink(randy))
+        self.play(randy.change_mode, "happy")
+        self.play(Blink(randy))
+        self.dither()
+
+
+    def look_at(self, *things):
+        for thing in things:
+            self.play(self.randy.look_at, thing)
+
 class MapMobiusStripOntoSurface(Scene):
     def construct(self):
         pass
@@ -1812,14 +1943,100 @@ class OneMoreAnimation(TeacherStudentsScene):
         self.change_student_modes(*["happy"]*3)
         self.random_blink()
 
+class PatreonThanks(Scene):
+    CONFIG = {
+        "specific_patrons" : [
+            "Loo Yu Jun",
+            "Tom",
+            "Othman Alikhan",
+            "Markus Persson",
+            "Joseph John Cox",
+            "Achille Brighton",
+            "Kirk Werklund",
+            "Luc Ritchie",
+            "Ripta Pasay",
+            "PatrickJMT  ",
+            "Felipe Diniz",
+        ]
+    }
+    def construct(self):
+        morty = Mortimer()
+        morty.next_to(ORIGIN, DOWN)
+
+        n_patrons = len(self.specific_patrons)
+        special_thanks = TextMobject("Special thanks to:")
+        special_thanks.highlight(YELLOW)
+        special_thanks.shift(2*UP)
+
+        left_patrons = VGroup(*map(TextMobject, 
+            self.specific_patrons[:n_patrons/2]
+        ))
+        right_patrons = VGroup(*map(TextMobject, 
+            self.specific_patrons[n_patrons/2:]
+        ))
+        for patrons, vect in (left_patrons, LEFT), (right_patrons, RIGHT):
+            patrons.arrange_submobjects(DOWN, aligned_edge = LEFT)
+            patrons.next_to(special_thanks, DOWN)
+            patrons.to_edge(vect, buff = LARGE_BUFF)
+
+        self.play(morty.change_mode, "gracious")
+        self.play(Write(special_thanks, run_time = 1))
+        self.play(Write(left_patrons))
+        self.play(Write(right_patrons))
+        self.play(Blink(morty))
+        self.play(morty.look_at, left_patrons)
+        self.dither()
+        self.play(morty.look_at, right_patrons)
+        self.play(Blink(morty))
+
+
+class CreditTWo(Scene):
+    def construct(self):
+        morty = Mortimer()
+        morty.next_to(ORIGIN, DOWN)
+        morty.to_edge(RIGHT)
+
+        brother = PiCreature(color = GOLD_E)
+        brother.next_to(morty, LEFT)
+        brother.look_at(morty.eyes)
+        
+        headphones = Headphones(height = 1)
+        headphones.move_to(morty.eyes, aligned_edge = DOWN)
+        headphones.shift(0.1*DOWN)
+
+        url = TextMobject("www.audible.com/3b1b")
+        url.to_corner(UP+RIGHT, buff = LARGE_BUFF)
+
+        self.add(morty)
+        self.play(Blink(morty))
+        self.play(
+            FadeIn(headphones), 
+            Write(url),
+            Animation(morty)
+        )
+        self.play(morty.change_mode, "happy")
+        self.dither()
+        self.play(Blink(morty))
+        self.dither()
+        self.play(
+            FadeIn(brother),
+            morty.look_at, brother.eyes
+        )
+        self.play(brother.change_mode, "surprised")
+        self.play(Blink(brother))
+        self.dither()
+        self.play(
+            morty.look, LEFT,
+            brother.change_mode, "happy",
+            brother.look, LEFT
+        )
+        self.play(Blink(morty))
+        self.dither()
+
 
 class ShiftingLoopPairSurface(Scene):
     def construct(self):
         pass
-
-
-
-
 
 
 
