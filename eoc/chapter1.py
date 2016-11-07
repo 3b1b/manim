@@ -23,6 +23,162 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
+class CircleScene(Scene):
+    CONFIG = {
+        "radius" : 1.5,
+        "stroke_color" : WHITE,
+        "fill_color" : BLUE_E,
+        "fill_opacity" : 0.5,
+        "radial_line_color" : MAROON_B,
+        "outer_ring_color" : GREEN_E,
+        "dR" : 0.1,
+        "unwrapped_tip" : ORIGIN,
+    }
+    def setup(self):
+        self.circle = Circle(
+            radius = self.radius,
+            stroke_color = self.stroke_color,
+            fill_color = self.fill_color,
+            fill_opacity = self.fill_opacity,
+        )
+        self.circle.to_corner(UP+LEFT, buff = 2*MED_BUFF)
+        self.radius_line = Line(
+            self.circle.get_center(),
+            self.circle.get_right(),
+            color = self.radial_line_color
+        )
+        self.radius_brace = Brace(self.radius_line, buff = SMALL_BUFF)
+        self.radius_label = self.radius_brace.get_text("R", buff = SMALL_BUFF)
+
+        self.add(
+            self.circle, self.radius_line, 
+            self.radius_brace, self.radius_label
+        )
+
+    def introduce_circle(self):
+        self.remove(self.circle)
+        self.play(
+            ShowCreation(self.radius_line),
+            GrowFromCenter(self.radius_brace),
+            Write(self.radius_label),
+        )
+        self.circle.set_fill(opacity = 0)
+
+        self.play(
+            Rotate(
+                self.radius_line, 2*np.pi-0.001, 
+                about_point = self.circle.get_center(),
+            ),
+            ShowCreation(self.circle),
+            run_time = 2
+        )
+        self.play(
+            self.circle.set_fill, self.fill_color, self.fill_opacity,
+            Animation(self.radius_line),
+            Animation(self.radius_brace),
+            Animation(self.radius_label),
+        )
+
+    def increase_radius(self):
+        radius_mobs = VGroup(
+            self.radius_line, self.radius_brace, self.radius_label
+        )
+        nudge_line = Line(
+            self.radius_line.get_right(),
+            self.radius_line.get_right() + self.dR*RIGHT,
+            color = self.radius_line.get_color()
+        )
+        nudge_arrow = Arrow(
+            nudge_line.get_center() + 0.5*RIGHT+DOWN,
+            nudge_line.get_center(),
+            color = YELLOW,
+            buff = 0.025,
+            tip_length = 0.2,
+        )
+        nudge_label = TexMobject("%.01f"%self.dR)
+        nudge_label.scale(0.75)
+        nudge_label.next_to(nudge_arrow.get_start(), DOWN)
+
+        radius_mobs.add(nudge_line, nudge_arrow, nudge_label)
+
+        outer_ring = self.get_outer_ring()
+
+        self.play(ShowCreation(nudge_line))
+        self.play(
+            ShowCreation(nudge_arrow),
+            Write(nudge_label)
+        )
+        self.dither()
+        self.play(
+            FadeIn(outer_ring),
+            *map(Animation, radius_mobs)
+        )
+        return outer_ring
+
+
+    def get_ring(self, radius, dR, color = GREEN):
+        ring = Circle(radius = radius + dR).center()
+        inner_ring = Circle(radius = radius)
+        inner_ring.rotate(np.pi, RIGHT)
+        ring.append_vectorized_mobject(inner_ring)
+        ring.set_stroke(width = 0)
+        ring.set_fill(color)
+        ring.move_to(self.circle)
+        ring.R = radius 
+        ring.dR = dR
+        return ring
+
+    def get_outer_ring(self):
+        return self.get_ring(
+            radius = self.radius, dR = self.dR,
+            color = self.outer_ring_color
+        )
+
+    def unwrap_ring(self, ring):
+        self.unwrap_rings(ring)
+
+    def unwrap_rings(self, *rings):
+        rings = VGroup(*rings)
+        unwrapped = VGroup(*[
+            self.get_unwrapped(ring)
+            for ring in rings
+        ])
+        self.play(
+            rings.rotate, np.pi/2,
+            rings.next_to, unwrapped.get_bottom(), UP,
+            run_time = 2,
+            path_arc = np.pi/2
+        )
+        self.play(Transform(
+            rings, unwrapped, 
+            run_time = 3,
+        ))
+
+    def get_unwrapped(self, ring):
+        R = ring.R
+        R_plus_dr = ring.R + ring.dR
+        n_anchors = ring.get_num_anchor_points()
+        result = VMobject()
+        result.set_points_as_corners([
+            interpolate(np.pi*R_plus_dr*LEFT,  np.pi*R_plus_dr*RIGHT, a)
+            for a in np.linspace(0, 1, n_anchors/2)
+        ]+[
+            interpolate(np.pi*R*RIGHT+self.dR*UP,  np.pi*R*LEFT+self.dR*UP, a)
+            for a in np.linspace(0, 1, n_anchors/2)
+        ])
+        result.set_style_data(
+            stroke_color = ring.get_stroke_color(),
+            stroke_width = ring.get_stroke_width(),
+            fill_color = ring.get_fill_color(),
+            fill_opacity = ring.get_fill_opacity(),
+        )
+        result.move_to(self.unwrapped_tip, aligned_edge = DOWN)
+        result.shift(R_plus_dr*DOWN)
+
+        return result
+
+######################
+
 class OpeningQuote(Scene):
     CONFIG = {
         "quote" : """
@@ -212,6 +368,7 @@ class IntroduceCircle(Scene):
 
         words.arrange_submobjects(DOWN, aligned_edge = LEFT)
         words.next_to(circle, RIGHT)
+        words.to_edge(UP)
         pi_R, pre_squared = TexMobject("\\pi R", "{}^2")
         squared = TexMobject("2").replace(pre_squared)
         area_form = VGroup(pi_R, squared)
@@ -219,6 +376,21 @@ class IntroduceCircle(Scene):
         two, pi_R = TexMobject("2", "\\pi R")
         circum_form = VGroup(pi_R, two)
         circum_form.next_to(circumference, RIGHT)
+
+        derivative = TexMobject(
+            "\\frac{d}{dR}", "\\pi R^2", "=", "2\\pi R"
+        )
+        integral = TexMobject(
+            "\\int_0^R", "2\\pi r", "\\, dR = ", "\\pi R^2"
+        )
+        up_down_arrow = TexMobject("\\Updownarrow")
+        calc_stuffs = VGroup(derivative, up_down_arrow, integral)
+        calc_stuffs.arrange_submobjects(DOWN)
+        calc_stuffs.next_to(words, DOWN, buff = LARGE_BUFF, aligned_edge = LEFT)
+
+        brace = Brace(calc_stuffs, RIGHT)
+        to_be_explained = brace.get_text("To be \\\\ explained")
+        VGroup(brace, to_be_explained).highlight(GREEN)
 
         self.play(ShowCreation(radius), Write(R))
         self.play(
@@ -246,6 +418,43 @@ class IntroduceCircle(Scene):
             run_time = 3
         ))
         self.dither()
+        self.play(
+            area_form.copy().replace, derivative[1],
+            circum_form.copy().replace, derivative[3],
+            Write(derivative[0]),
+            Write(derivative[2]),
+            run_time = 1
+        )
+        self.dither()
+        self.play(
+            area_form.copy().replace, integral[3],
+            Transform(circum_form.copy(), integral[1]),
+            Write(integral[0]),
+            Write(integral[2]),
+            run_time = 1
+        )
+        self.dither()
+        self.play(Write(up_down_arrow))
+        self.dither()
+        self.play(
+            GrowFromCenter(brace),
+            Write(to_be_explained)
+        )
+        self.dither()
+
+class IntroduceTinyChangeInArea(CircleScene):
+    def construct(self):
+        new_area_form, minus area_form = expression = TexMobject(
+            "\\pi (R + 0.1)^2", "-", "\\pi R^2"
+        )
+        expression.to_corner(UP+RIGHT, buff = 2*MED_BUFF)
+
+        self.introduce_circle()
+        self.dither()
+        outer_ring = self.increase_radius()
+        self.dither()
+        # ring = self.get_outer_ring()
+
 
 
 

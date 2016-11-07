@@ -7,7 +7,7 @@ class Arc(VMobject):
     CONFIG = {
         "radius"           : 1.0,
         "start_angle"      : 0,
-        "num_anchors"      : 8,
+        "num_anchors"      : 9,
         "anchors_span_full_range" : True,
     }
     def __init__(self, angle, **kwargs):

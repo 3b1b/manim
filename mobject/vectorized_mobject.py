@@ -107,6 +107,9 @@ class VMobject(Mobject):
         except:
             return Color(WHITE)
 
+    def get_stroke_width(self):
+        return self.stroke_width
+
     def get_color(self):
         if self.fill_opacity == 0:
             return self.get_stroke_color()
@@ -205,6 +208,11 @@ class VMobject(Mobject):
         subpath_mobject.set_points(points)
         self.add(subpath_mobject)
         return subpath_mobject
+
+    def append_vectorized_mobject(self, vectorized_mobject):
+        new_points = list(vectorized_mobject.points)
+        self.add_control_points(2*[new_points[0]] + new_points)
+        return self
 
     def get_subpath_mobjects(self):
         return filter(
