@@ -9,27 +9,31 @@ class SVGMobject(VMobject):
     CONFIG = {
         "initial_scale_factor" : 1,
         "should_center" : True,
+        #Must be filled in in a subclass, or when called
+        "file_name" : None, 
     }
-    def __init__(self, svg_file, **kwargs):
+    def __init__(self, **kwargs):
         digest_config(self, kwargs, locals())
         self.ensure_valid_file()
         VMobject.__init__(self, **kwargs)
         self.move_into_position()
 
     def ensure_valid_file(self):
+        if self.file_name is None:
+            raise Exception("Must specify file for SVGMobject")
         possible_paths = [
-            self.svg_file,
-            os.path.join(IMAGE_DIR, self.svg_file),
-            os.path.join(IMAGE_DIR, self.svg_file + ".svg"),
+            self.file_name,
+            os.path.join(IMAGE_DIR, self.file_name),
+            os.path.join(IMAGE_DIR, self.file_name + ".svg"),
         ]
         for path in possible_paths:
             if os.path.exists(path):
-                self.svg_file = path
+                self.file_name = path
                 return
-        raise IOError("No file matching %s in image directory"%self.svg_file)
+        raise IOError("No file matching %s in image directory"%self.file_name)
 
     def generate_points(self):
-        doc = minidom.parse(self.svg_file)
+        doc = minidom.parse(self.file_name)
         self.ref_to_element = {}
         for svg in doc.getElementsByTagName("svg"):
             self.add(*self.get_mobjects_from(svg))

@@ -115,7 +115,7 @@ class EigenThingsArentAllThatBad(TeacherStudentsScene):
     def construct(self):
         self.teacher_says(
             "Eigen-things aren't \\\\ actually so bad",
-            pi_creature_target_mode = "hooray"
+            target_mode = "hooray"
         )
         self.change_student_modes(
             "pondering", "pondering", "erm"
@@ -496,7 +496,7 @@ class CanEigenvaluesBeNegative(TeacherStudentsScene):
     def construct(self):
         self.student_says("Can eigenvalues be negative?")
         self.random_blink()
-        self.teacher_says("But of course!", pi_creature_target_mode = "hooray")
+        self.teacher_says("But of course!", target_mode = "hooray")
         self.random_blink()
 
 class EigenvalueNegativeOneHalf(LinearTransformationScene):
@@ -659,7 +659,7 @@ class WordsOnComputation(TeacherStudentsScene):
         self.teacher_says(
             "I won't cover the full\\\\",
             "details of computation...",
-            pi_creature_target_mode = "guilty"
+            target_mode = "guilty"
         )
         self.change_student_modes("angry", "sassy", "angry")
         self.random_blink()

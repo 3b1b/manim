@@ -1,8 +1,8 @@
 import os
 import numpy as np
 
-DEFAULT_HEIGHT = 1080
-DEFAULT_WIDTH  = 1920
+DEFAULT_HEIGHT = 1080*2
+DEFAULT_WIDTH  = 1920*2
 DEFAULT_FRAME_DURATION = 0.04
 
 #There might be other configuration than pixel_shape later...

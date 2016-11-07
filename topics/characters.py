@@ -5,6 +5,8 @@ from mobject.svg_mobject import SVGMobject
 from mobject.vectorized_mobject import VMobject, VGroup
 from mobject.tex_mobject import TextMobject, TexMobject
 
+from topics.objects import Bubble, ThoughtBubble, SpeechBubble
+
 from animation import Animation
 from animation.transform import Transform, ApplyMethod, \
     FadeOut, FadeIn, ApplyPointwiseFunction
@@ -41,7 +43,7 @@ class PiCreature(SVGMobject):
             "PiCreatures_%s.svg"%mode
         )
         digest_config(self, kwargs, locals())
-        SVGMobject.__init__(self, svg_file, **kwargs)
+        SVGMobject.__init__(self, file_name = svg_file, **kwargs)
         self.init_colors()
         if self.flip_at_start:
             self.flip()
@@ -207,128 +209,6 @@ class Blink(ApplyMethod):
 
 
 
-class Bubble(SVGMobject):
-    CONFIG = {
-        "direction" : LEFT,
-        "center_point" : ORIGIN,
-        "content_scale_factor" : 0.75,
-        "height" : 5,
-        "width"  : 8,
-        "bubble_center_adjustment_factor" : 1./8,
-        "file_name" : None,
-        "propogate_style_to_family" : True,
-    }
-    def __init__(self, **kwargs):
-        digest_config(self, kwargs)
-        if self.file_name is None:
-            raise Exception("Must invoke Bubble subclass")
-        svg_file = os.path.join(
-            IMAGE_DIR, self.file_name
-        )
-        SVGMobject.__init__(self, svg_file, **kwargs)
-        self.center()
-        self.stretch_to_fit_height(self.height)
-        self.stretch_to_fit_width(self.width)
-        if self.direction[0] > 0:
-            Mobject.flip(self)
-        self.direction_was_specified = ("direction" in kwargs)
-        self.content = Mobject()
-
-    def get_tip(self):
-        #TODO, find a better way
-        return self.get_corner(DOWN+self.direction)-0.6*self.direction
-
-    def get_bubble_center(self):
-        factor = self.bubble_center_adjustment_factor
-        return self.get_center() + factor*self.get_height()*UP
-
-    def move_tip_to(self, point):
-        self.shift(point - self.get_tip())
-        return self
-
-    def flip(self):
-        Mobject.flip(self)        
-        self.direction = -np.array(self.direction)
-        return self
-
-    def pin_to(self, mobject):
-        mob_center = mobject.get_center()
-        want_to_filp = np.sign(mob_center[0]) != np.sign(self.direction[0])
-        can_flip = not self.direction_was_specified
-        if want_to_filp and can_flip:
-            self.flip()
-        boundary_point = mobject.get_critical_point(UP-self.direction)
-        vector_from_center = 1.0*(boundary_point-mob_center)
-        self.move_tip_to(mob_center+vector_from_center)
-        return self
-
-    def position_mobject_inside(self, mobject):
-        scaled_width = self.content_scale_factor*self.get_width()
-        if mobject.get_width() > scaled_width:
-            mobject.scale_to_fit_width(scaled_width)
-        mobject.shift(
-            self.get_bubble_center() - mobject.get_center()
-        )
-        return mobject
-
-    def add_content(self, mobject):
-        self.position_mobject_inside(mobject)
-        self.content = mobject
-        return self.content
-
-    def write(self, *text):
-        self.add_content(TextMobject(*text))
-        return self
-
-    def clear(self):
-        self.add_content(VMobject())
-        return self
-
-class SpeechBubble(Bubble):
-    CONFIG = {
-        "file_name" : "Bubbles_speech.svg",
-        "height" : 4
-    }
-
-class DoubleSpeechBubble(Bubble):
-    CONFIG = {
-        "file_name" : "Bubbles_double_speech.svg",
-        "height" : 4
-    }
-
-class ThoughtBubble(Bubble):
-    CONFIG = {
-        "file_name" : "Bubbles_thought.svg",
-    }
-
-    def __init__(self, **kwargs):
-        Bubble.__init__(self, **kwargs)
-        self.submobjects.sort(
-            lambda m1, m2 : int((m1.get_bottom()-m2.get_bottom())[1])
-        )
-
-    def make_green_screen(self):
-        self.submobjects[-1].set_fill(GREEN_SCREEN, opacity = 1)
-        return self
-
-class Headphones(SVGMobject):
-    CONFIG = {
-        "file_name" : "headphones",
-        "height" : 2,
-        "y_stretch_factor" : 0.5,
-        "color" : GREY,
-    }
-    def __init__(self, **kwargs):
-        digest_config(self, kwargs)
-        SVGMobject.__init__(self, self.file_name, **kwargs)
-        self.stretch(self.y_stretch_factor, 1)        
-        self.scale_to_fit_height(self.height)
-        self.set_stroke(width = 0)
-        self.set_fill(color = self.color)
-
-
-
-
 class RandolphScene(Scene):
     CONFIG = {
         "randy_kwargs" : {},
@@ -384,6 +264,7 @@ class TeacherStudentsScene(Scene):
                                    **bubble_kwargs):
         bubble = pi_creature.get_bubble(bubble_type, **bubble_kwargs)
         bubble.add_content(content)
+        bubble.resize_to_content()
         if pi_creature.bubble:
             content_intro_anims = [
                 Transform(pi_creature.bubble, bubble),
@@ -398,7 +279,7 @@ class TeacherStudentsScene(Scene):
         return content_intro_anims
 
     def introduce_bubble(self, content, bubble_type, pi_creature,
-                         pi_creature_target_mode = None,
+                         target_mode = None,
                          added_anims = [],
                          **bubble_kwargs):
         if all(map(lambda s : isinstance(s, str), content)):
@@ -411,11 +292,11 @@ class TeacherStudentsScene(Scene):
             content, bubble_type, pi_creature, **bubble_kwargs
         )
 
-        if not pi_creature_target_mode:
+        if not target_mode:
             if bubble_type is "speech":
-                pi_creature_target_mode = "speaking"
+                target_mode = "speaking"
             else:
-                pi_creature_target_mode = "pondering"
+                target_mode = "pondering"
 
         for p in self.get_everyone():
             if (p.bubble is not None) and (p is not pi_creature):
@@ -429,7 +310,7 @@ class TeacherStudentsScene(Scene):
         anims = added_anims + content_intro_anims + [
             ApplyMethod(
                 pi_creature.change_mode, 
-                pi_creature_target_mode,
+                target_mode,
             ),
         ]
         self.play(*anims)
@@ -441,12 +322,12 @@ class TeacherStudentsScene(Scene):
         )
 
     def student_says(self, *content, **kwargs):
-        if "pi_creature_target_mode" not in kwargs:
+        if "target_mode" not in kwargs:
             target_mode = random.choice([
                 "raise_right_hand", 
                 "raise_left_hand", 
             ])
-            kwargs["pi_creature_target_mode"] = target_mode
+            kwargs["target_mode"] = target_mode
         student = self.get_students()[kwargs.get("student_index", 1)]
         return self.introduce_bubble(content, "speech", student, **kwargs)
 

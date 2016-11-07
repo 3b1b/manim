@@ -1427,7 +1427,7 @@ class ProposeDerivativeAsMatrix(TeacherStudentsScene):
             derivative with 
             a matrix
             """,
-            pi_creature_target_mode = "hooray"
+            target_mode = "hooray"
         )
         self.random_blink()
         self.change_student_modes("pondering", "confused", "erm")
@@ -1975,7 +1975,7 @@ class BackToTheQuestion(TeacherStudentsScene):
             this relate to what vectors 
             really are?
             """,
-            pi_creature_target_mode = "confused"
+            target_mode = "confused"
         )
         self.random_blink(2)
         self.teacher_says(
@@ -2435,7 +2435,7 @@ class TextbooksAreAbstract(TeacherStudentsScene):
             All the textbooks I found
             are pretty abstract.
             """,
-            pi_creature_target_mode = "pleading"
+            target_mode = "pleading"
         )
         self.random_blink(3)
         self.teacher_says(
@@ -2456,7 +2456,7 @@ class TextbooksAreAbstract(TeacherStudentsScene):
         self.teacher_says(
             "Only then should you\\\\",
             "think from the axioms",
-            pi_creature_target_mode = "surprised"
+            target_mode = "surprised"
         )
         self.change_student_modes(*["pondering"]*3)
         self.random_blink()
@@ -2465,7 +2465,7 @@ class LastAskWhatAreVectors(TeacherStudentsScene):
     def construct(self):
         self.student_says(
             "So...what are vectors?",
-            pi_creature_target_mode = "erm"
+            target_mode = "erm"
         )
         self.random_blink()
         self.teacher_says(
@@ -2559,7 +2559,7 @@ class GoodLuck(TeacherStudentsScene):
     def construct(self):
         self.teacher_says(
             "Good luck with \\\\ your future learning!",
-            pi_creature_target_mode = "hooray"
+            target_mode = "hooray"
         )
         self.change_student_modes(*["happy"]*3)
         self.random_blink(3)

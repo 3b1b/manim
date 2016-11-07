@@ -201,7 +201,7 @@ class DualityReview(TeacherStudentsScene):
     def construct(self):
         words = TextMobject("Quick", "duality", "review")
         words[1].gradient_highlight(BLUE, YELLOW)
-        self.teacher_says(words, pi_creature_target_mode = "surprised")
+        self.teacher_says(words, target_mode = "surprised")
         self.change_student_modes("pondering")
         self.random_blink(2)
 
@@ -785,7 +785,7 @@ class WhyAreWeDoingThis(TeacherStudentsScene):
     def construct(self):
         self.student_says(
             "Um...why are \\\\ we doing this?",
-            pi_creature_target_mode = "confused"
+            target_mode = "confused"
         )
         self.random_blink()
         self.play(self.get_teacher().change_mode, "erm")

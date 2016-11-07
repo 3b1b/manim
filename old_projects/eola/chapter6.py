@@ -70,12 +70,12 @@ class NoComputations(TeacherStudentsScene):
         self.setup()
         self.student_says(
             "Will you cover \\\\ computations?",
-            pi_creature_target_mode = "raise_left_hand"
+            target_mode = "raise_left_hand"
         )
         self.random_blink()
         self.teacher_says(
             "Well...uh...no",
-            pi_creature_target_mode = "guilty",
+            target_mode = "guilty",
         )
         self.play(*[
             ApplyMethod(student.change_mode, mode)
@@ -2037,7 +2037,7 @@ class WhatAboutNonsquareMatrices(TeacherStudentsScene):
     def construct(self):
         self.student_says(
             "What about \\\\ nonsquare matrices?",
-            pi_creature_target_mode = "raise_right_hand"
+            target_mode = "raise_right_hand"
         )
         self.play(self.get_students()[0].change_mode, "confused")
         self.random_blink(6)

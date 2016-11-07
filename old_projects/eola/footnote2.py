@@ -47,7 +47,7 @@ class AnotherFootnote(TeacherStudentsScene):
         self.teacher.look(LEFT)
         self.teacher_says(
             "More footnotes!",
-            pi_creature_target_mode = "surprised",
+            target_mode = "surprised",
             run_time = 1
         )
         self.random_blink(2)

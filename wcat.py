@@ -17,6 +17,7 @@ from topics.number_line import *
 from topics.combinatorics import *
 from topics.numerals import *
 from topics.three_dimensions import *
+from topics.objects import *
 from scene import Scene
 from camera import Camera
 from mobject.svg_mobject import *
@@ -254,7 +255,7 @@ class Introduction(TeacherStudentsScene):
         self.random_blink(3)
         self.teacher_says(
             "Here's why \\\\ I'm excited...",
-            pi_creature_target_mode = "hooray"
+            target_mode = "hooray"
         )
         for pi in self.get_students():
             pi.target.look_at(self.get_teacher().eyes)
@@ -279,7 +280,7 @@ class WhenIWasAKid(TeacherStudentsScene):
             Here's why 
             I'm excited!
             """,
-            pi_creature_target_mode = "hooray"
+            target_mode = "hooray"
         )
         self.change_student_modes(*["happy"]*3)
         self.dither()
@@ -310,7 +311,7 @@ class WhenIWasAKid(TeacherStudentsScene):
             Math! Excitement!
             You are the future!
             """,
-            pi_creature_target_mode = "hooray"
+            target_mode = "hooray"
         )
         self.play(
             pi1.look_at, pi2.eyes,
@@ -352,7 +353,7 @@ class WhenIWasAKid(TeacherStudentsScene):
         self.student_says(
             "How is this math?",
             student_index = -1,
-            pi_creature_target_mode = "pleading",
+            target_mode = "pleading",
             width = 5, 
             height = 3,
             direction = RIGHT
@@ -1891,7 +1892,7 @@ class ThatsTheProof(TeacherStudentsScene):
             Bada boom
             bada bang!
             """,
-            pi_creature_target_mode = "hooray",
+            target_mode = "hooray",
             width = 4
         )
         self.change_student_modes(*["hooray"]*3)
@@ -1905,7 +1906,7 @@ class ThatsTheProof(TeacherStudentsScene):
             the mobius strip 
             fact...
             """,
-            pi_creature_target_mode = "guilty",            
+            target_mode = "guilty",            
             width = 4,
         )
         self.random_blink()
@@ -1949,6 +1950,7 @@ class PatreonThanks(Scene):
             "Loo Yu Jun",
             "Tom",
             "Othman Alikhan",
+            "Juan Batiz-Benet",
             "Markus Persson",
             "Joseph John Cox",
             "Achille Brighton",
@@ -1981,14 +1983,19 @@ class PatreonThanks(Scene):
 
         self.play(morty.change_mode, "gracious")
         self.play(Write(special_thanks, run_time = 1))
-        self.play(Write(left_patrons))
-        self.play(Write(right_patrons))
+        self.play(
+            Write(left_patrons),
+            morty.look_at, left_patrons
+        )
+        self.play(
+            Write(right_patrons),
+            morty.look_at, right_patrons
+        )
         self.play(Blink(morty))
-        self.play(morty.look_at, left_patrons)
-        self.dither()
-        self.play(morty.look_at, right_patrons)
-        self.play(Blink(morty))
-
+        for patrons in left_patrons, right_patrons:
+            for index in 0, -1:
+                self.play(morty.look_at, patrons[index])
+                self.dither()
 
 class CreditTWo(Scene):
     def construct(self):
@@ -2033,11 +2040,96 @@ class CreditTWo(Scene):
         self.play(Blink(morty))
         self.dither()
 
+class CreditThree(Scene):
+    def construct(self):
+        logo_dot = Dot().to_edge(UP).shift(3*RIGHT)
+        randy = Randolph()
+        randy.next_to(ORIGIN, DOWN)
+        randy.to_edge(LEFT)
+        randy.look(RIGHT)
+        self.add(randy)
+        bubble = randy.get_bubble(width = 2, height = 2)
+
+        domains = VGroup(*map(TextMobject, [
+            "visualnumbertheory.com",
+            "buymywidgets.com",
+            "learnwhatilearn.com",
+        ]))
+        domains.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        domains.next_to(randy, UP, buff = LARGE_BUFF)
+        domains.shift_onto_screen()
+
+        promo_code = TextMobject("Promo code: TOPOLOGY")
+        promo_code.shift(3*RIGHT)
+        self.add(promo_code)
+        whois = TextMobject("Free WHOIS privacy")
+        whois.next_to(promo_code, DOWN, buff = LARGE_BUFF)
+
+        self.play(Blink(randy))
+        self.play(
+            randy.change_mode, "happy",
+            randy.look_at, logo_dot
+        )
+        self.dither()
+        self.play(
+            ShowCreation(bubble),
+            randy.change_mode, "pondering",
+            run_time = 2
+        )
+        self.play(Blink(randy))
+        self.play(
+            Transform(bubble, VectorizedPoint(randy.get_corner(UP+LEFT))),
+            randy.change_mode, "sad"
+        )
+        self.dither()
+        self.play(
+            Write(domains, run_time = 5, lag_factor = 5),
+            randy.look_at, domains
+        )
+        self.dither()
+        self.play(Blink(randy))
+        self.play(
+            randy.change_mode, "hooray",
+            randy.look_at, logo_dot,
+            FadeOut(domains)
+        )
+        self.dither()
+        self.play(
+            Write(whois),
+            randy.change_mode, "confused",
+            randy.look_at, whois
+        )
+        self.dither(2)
+        self.play(randy.change_mode, "sassy")
+        self.dither(2)
+        self.play(
+            randy.change_mode, "happy",
+            randy.look_at, logo_dot
+        )
+        self.play(Blink(randy))
+        self.dither()
+
 
 class ShiftingLoopPairSurface(Scene):
     def construct(self):
         pass
 
+class ThumbnailImage(ClosedLoopScene):
+    def construct(self):
+        self.add_rect_dots(square = True)
+        for dot in self.dots:
+            dot.scale_in_place(1.5)
+        self.add_connecting_lines(cyclic = True)
+        self.connecting_lines.set_stroke(width = 10)
+        self.loop.add(self.connecting_lines, self.dots)
+
+        title = TextMobject("Unsolved")
+        title.scale(2.5)
+        title.to_edge(UP)
+        title.gradient_highlight(YELLOW, MAROON_B)
+        self.add(title)
+        self.loop.next_to(title, DOWN, buff = MED_BUFF)
+        self.loop.shift(2*LEFT)
 
 
 

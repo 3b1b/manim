@@ -47,9 +47,12 @@ class TexMobject(SVGMobject):
             self.args = args[0]
         ##
         assert(all([isinstance(a, str) for a in self.args]))
-        self.tex_string = self.get_modified_expression()        
-        VMobject.__init__(self, **kwargs)
-        self.move_into_position()
+        self.tex_string = self.get_modified_expression()
+        file_name = tex_to_svg_file(
+            self.tex_string,
+            self.template_tex_file
+        )
+        SVGMobject.__init__(self, file_name = file_name, **kwargs)
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
 
@@ -61,10 +64,6 @@ class TexMobject(SVGMobject):
 
 
     def generate_points(self):
-        self.svg_file = tex_to_svg_file(
-            self.tex_string,
-            self.template_tex_file
-        )
         SVGMobject.generate_points(self)
         if len(self.args) > 1:
             self.handle_multiple_args()

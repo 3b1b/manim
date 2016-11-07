@@ -812,7 +812,7 @@ class AskAboutTranslation(TeacherStudentsScene):
     def construct(self):
         self.student_says(
             "\\centering How do you translate \\\\ between coordinate systems?",
-            pi_creature_target_mode = "raise_right_hand"
+            target_mode = "raise_right_hand"
         )
         self.random_blink(3)
 

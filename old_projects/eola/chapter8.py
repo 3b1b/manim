@@ -69,7 +69,7 @@ class DoTheSameForCross(TeacherStudentsScene):
     def construct(self):
         words = TextMobject("Let's do the same \\\\ for", "cross products")
         words.highlight_by_tex("cross products", YELLOW)
-        self.teacher_says(words, pi_creature_target_mode = "surprised")
+        self.teacher_says(words, target_mode = "surprised")
         self.random_blink(2)
         self.change_student_modes("pondering")
         self.random_blink()
@@ -429,7 +429,7 @@ class HowDoYouCompute(TeacherStudentsScene):
     def construct(self):
         self.student_says(
             "How do you \\\\ compute this?",
-            pi_creature_target_mode = "raise_left_hand"
+            target_mode = "raise_left_hand"
         )
         self.random_blink(2)
 
@@ -1478,7 +1478,7 @@ class ThisGetsWeird(TeacherStudentsScene):
     def construct(self):
         self.teacher_says(
             "This gets weird...", 
-            pi_creature_target_mode = "sassy"
+            target_mode = "sassy"
         )
         self.random_blink(2)
 
@@ -1639,7 +1639,7 @@ class ThereIsAReason(TeacherStudentsScene):
             "reason", "for doing it"
         )
         words.highlight_by_tex("reason", YELLOW)
-        self.teacher_says(words, pi_creature_target_mode = "surprised")
+        self.teacher_says(words, target_mode = "surprised")
         self.change_student_modes(
             "raise_right_hand", "confused", "raise_left_hand"
         )
@@ -1649,7 +1649,7 @@ class RememberDuality(TeacherStudentsScene):
     def construct(self):
         words = TextMobject("Remember ", "duality", "?", arg_separator = "")
         words[1].gradient_highlight(BLUE, YELLOW)
-        self.teacher_says(words, pi_creature_target_mode = "sassy")
+        self.teacher_says(words, target_mode = "sassy")
         self.random_blink(2)
 
 class NextVideo(Scene):

@@ -106,7 +106,8 @@ class MoveAlongPath(Animation):
 
 class Homotopy(Animation):
     CONFIG = {
-        "run_time" : 3
+        "run_time" : 3,
+        "apply_function_kwargs" : {},
     }
     def __init__(self, homotopy, mobject, **kwargs):
         """
@@ -120,7 +121,10 @@ class Homotopy(Animation):
 
     def update_submobject(self, submob, start, alpha):
         submob.points = start.points
-        submob.apply_function(self.function_at_time_t(alpha))        
+        submob.apply_function(
+            self.function_at_time_t(alpha),
+            **self.apply_function_kwargs
+        )
 
     def update_mobject(self, alpha):
         Animation.update_mobject(self, alpha)

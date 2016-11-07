@@ -352,7 +352,6 @@ class ClassWatching(TeacherStudentsScene):
         self.play(self.get_teacher().change_mode, "pondering")
         self.random_blink(3)
 
-
 class RandolphWatching(Scene):
     def construct(self):
         randy = Randolph()
@@ -464,7 +463,7 @@ class GrowRonaksSierpinski(Scene):
         for n in range(n_layers):
             ronaks_sierpinski.add(self.get_lines_at_layer(n))
         ronaks_sierpinski.gradient_highlight(*self.colors)
-        ronaks_sierpinski.set_stroke(width = 3)
+        ronaks_sierpinski.set_stroke(width = 0)##TODO
         return ronaks_sierpinski
 
     def get_dots(self, n_layers):
@@ -747,7 +746,7 @@ class EndScreen(TeacherStudentsScene):
             See you every 
             other friday!
             """,
-            pi_creature_target_mode = "hooray"
+            target_mode = "hooray"
         )
         self.change_student_modes(*["happy"]*3)
         self.random_blink()

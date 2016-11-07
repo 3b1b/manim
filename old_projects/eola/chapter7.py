@@ -523,7 +523,7 @@ class AskAboutSymmetry(TeacherStudentsScene):
         VMobject(question[3], question[5]).highlight(W_COLOR)
         self.student_says(
             question,
-            pi_creature_target_mode = "raise_left_hand"
+            target_mode = "raise_left_hand"
         )
         self.change_student_modes("confused")
         self.play(self.get_teacher().change_mode, "pondering")
@@ -673,7 +673,7 @@ class LurkingQuestion(TeacherStudentsScene):
         #     two views connected?
         #     """,
         #     student_index = 2,
-        #     pi_creature_target_mode = "raise_left_hand",
+        #     target_mode = "raise_left_hand",
         #     width = 6,
         # )
         self.change_student_modes(
@@ -1347,7 +1347,7 @@ class WhatAboutTheGeometricView(TeacherStudentsScene):
             What does this association
             mean geometrically? 
             """, 
-            pi_creature_target_mode = "raise_right_hand"
+            target_mode = "raise_right_hand"
         )
         self.change_student_modes("pondering", "raise_right_hand", "pondering")
         self.random_blink(2)
@@ -1897,7 +1897,7 @@ class AskAboutNonUnitVectors(TeacherStudentsScene):
     def construct(self):
         self.student_says(
             "What about \\\\ non-unit vectors",
-            pi_creature_target_mode = "raise_left_hand"
+            target_mode = "raise_left_hand"
         )
         self.random_blink(2)
 
@@ -2124,7 +2124,7 @@ class IsntThisBeautiful(TeacherStudentsScene):
         self.teacher.look(DOWN+LEFT)
         self.teacher_says(
             "Isn't this", "beautiful",
-            pi_creature_target_mode = "surprised"
+            target_mode = "surprised"
         )
         for student in self.get_students():
             self.play(student.change_mode, "happy")
