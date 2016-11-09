@@ -162,6 +162,16 @@ class PiCreature(SVGMobject):
         pi_creature.look_at(self.eyes)
         return self
 
+    def shrug(self):
+        self.change_mode("shruggie")
+        top_mouth_point, bottom_mouth_point = [
+            self.mouth.points[np.argmax(self.mouth.points[:,1])],
+            self.mouth.points[np.argmin(self.mouth.points[:,1])]
+        ]
+        self.look(top_mouth_point - bottom_mouth_point)
+        return self
+            
+
 
 class Randolph(PiCreature):
     pass #Nothing more than an alternative name
@@ -209,26 +219,53 @@ class Blink(ApplyMethod):
 
 
 
-class RandolphScene(Scene):
+class PiCreatureScene(Scene):
     CONFIG = {
-        "randy_kwargs" : {},
-        "randy_corner" : DOWN+LEFT
+        "total_dither_time" : 0
     }
     def setup(self):
-        self.randy = Randolph(**self.randy_kwargs)
-        self.randy.to_corner(self.randy_corner)
-        if self.randy_corner[0] > 0:
-            self.randy.flip()
-        self.add(self.randy)
+        self.pi_creature = self.get_pi_creature()
+        self.add(self.pi_creature)
+
+    def get_pi_creature(self):
+        return Randolph().to_corner()
+
+    def play(self, *args, **kwargs):
+        if self.pi_creature not in self.get_mobjects():
+            Scene.play(self, *args, **kwargs)
+            return
+
+        if inspect.ismethod(args[0]):
+            mobject_of_interest = args[0].im_self
+        elif isinstance(args[0], Transform):
+            if args[0].mobject is self.pi_creature:
+                mobject_of_interest = self.pi_creature
+            else:
+                mobject_of_interest = args[0].ending_mobject
+        elif isinstance(args[0], Animation):
+            mobject_of_interest = args[0].mobject
+        else:
+            raise Exception("Invalid play args")
+
+        if mobject_of_interest is self.pi_creature:
+            new_anims = []
+        else:
+            new_anims = [self.pi_creature.look_at, mobject_of_interest]
+        Scene.play(self, *list(args) + new_anims, **kwargs)
 
     def dither(self, time = 1, blink = True):
         while time > 0:
-            if blink and time%2 == 1:
-                self.play(Blink(self.randy))
+            if blink and self.total_dither_time%2 == 1:
+                self.play(Blink(self.pi_creature))
             else:
                 Scene.dither(self, time)
             time -= 1
+            self.total_dither_time += 1
         return self
+
+    def change_mode(self, mode):
+        self.play(self.pi_creature.change_mode, mode)
+
 
 class TeacherStudentsScene(Scene):
     def setup(self):
