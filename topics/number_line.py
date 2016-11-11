@@ -51,16 +51,17 @@ class NumberLine(VMobject):
         return np.arange(self.leftmost_tick, self.x_max, self.tick_frequency)
 
     def number_to_point(self, number):
+        alpha = float(number-self.x_min)/(self.x_max - self.x_min)
         return interpolate(
-            self.main_line.get_left(),
-            self.main_line.get_right(),
-            float(number-self.x_min)/(self.x_max - self.x_min)
+            self.main_line.get_start(),
+            self.main_line.get_end(),
+            alpha
         )
 
     def point_to_number(self, point):
-        dist_from_left = (point[0]-self.main_line.get_left()[0])
-        num_dist_from_left = num_dist_from_left/self.space_unit_to_num
-        return self.x_min + dist_from_left
+        dist_from_left = float(point[0]-self.main_line.get_left()[0])
+        num_dist_from_left = dist_from_left/self.space_unit_to_num
+        return self.x_min + num_dist_from_left
 
     def default_numbers_to_display(self):
         return np.arange(self.leftmost_tick, self.x_max, 1)

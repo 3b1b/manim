@@ -58,16 +58,25 @@ class Scene(object):
     def get_frame(self):
         return self.camera.get_image()
 
+    def set_camera_background(self, background):
+        self.camera.set_image(background)
+
+    def reset_camera(self):
+        self.camera.reset()
+
+    def capture_mobjects_in_camera(self, mobjects, **kwargs):
+        self.camera.capture_mobjects(mobjects, **kwargs)
+
     def update_frame(self, mobjects = None, background = None, **kwargs):
         if "include_submobjects" not in kwargs:
             kwargs["include_submobjects"] = False
         if mobjects is None:
             mobjects = self.mobjects
         if background is not None:
-            self.camera.set_image(background)
+            self.set_camera_background(background)
         else:
-            self.camera.reset()
-        self.camera.capture_mobjects(mobjects, **kwargs)
+            self.reset_camera()
+        self.capture_mobjects_in_camera(mobjects, **kwargs)
 
     def freeze_background(self):
         self.update_frame()
@@ -76,12 +85,12 @@ class Scene(object):
     ###
 
     def extract_mobject_family_members(self, *mobjects):
-        return list(
+        return remove_list_redundancies(list(
             it.chain(*[
                 m.submobject_family()
                 for m in mobjects
             ])
-        )
+        ))
         
     def add(self, *mobjects_to_add):
         """

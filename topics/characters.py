@@ -17,12 +17,12 @@ from scene import Scene
 PI_CREATURE_DIR = os.path.join(IMAGE_DIR, "PiCreature")
 PI_CREATURE_SCALE_FACTOR = 0.5
 
-MOUTH_INDEX       = 5
-BODY_INDEX        = 4
-RIGHT_PUPIL_INDEX = 3
-LEFT_PUPIL_INDEX  = 2
-RIGHT_EYE_INDEX   = 1
 LEFT_EYE_INDEX    = 0
+RIGHT_EYE_INDEX   = 1
+LEFT_PUPIL_INDEX  = 2
+RIGHT_PUPIL_INDEX = 3
+BODY_INDEX        = 4
+MOUTH_INDEX       = 5
 
 
 class PiCreature(SVGMobject):

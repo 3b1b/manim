@@ -80,12 +80,34 @@ class ZoomedScene(Scene):
             frame[left:right, up:down, :] = self.zoomed_camera.get_image()
         return frame
 
-    def update_frame(self, *args, **kwargs):
-        Scene.update_frame(self, *args, **kwargs)        
+    def set_camera_background(self, background):
+        self.camera.set_image(background)
+        if self.zoom_activated:
+            (up, left), (down, right) = self.zoomed_canvas_pixel_indices
+            self.zoomed_camera.set_image(background[left:right, up:down])
+        #TODO, check this..
+
+    def reset_camera(self):
+        self.camera.reset()
         if self.zoom_activated:
             self.zoomed_camera.reset()
-            self.zoomed_camera.capture_mobjects(self.mobjects)
 
+    def capture_mobjects_in_camera(self, mobjects, **kwargs):
+        self.camera.capture_mobjects(mobjects, **kwargs)
+        if self.zoom_activated:
+            self.zoomed_camera.capture_mobjects(
+                mobjects, **kwargs
+            )
+
+    def separate_moving_and_static_mobjects(self, *animations):
+        moving_mobjects, static_mobjects = Scene.separate_moving_and_static_mobjects(
+            self, *animations
+        )
+        if self.zoom_activated and self.little_rectangle in moving_mobjects:
+            # When the camera is moving, so is everything...
+            return self.get_mobjects(), []
+        else:
+            return moving_mobjects, static_mobjects
 
 
 

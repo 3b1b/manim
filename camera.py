@@ -130,6 +130,7 @@ class Camera(object):
             points = mob.points
             if len(points) == 0:
                 continue
+            points = self.align_points_to_camera(points)
             coords = self.points_to_pixel_coords(points)
             start = "M%d %d"%tuple(coords[0])
             #(handle1, handle2, anchor) tripletes
