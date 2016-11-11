@@ -24,6 +24,8 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
+from eoc.graph_scene import GraphScene
+
 class CircleScene(PiCreatureScene):
     CONFIG = {
         "radius" : 1.5,
@@ -1839,9 +1841,177 @@ class IntroduceConcentricRings(CircleScene):
         )
         self.dither(4)
 
+class AskAboutGeneralCircles(TeacherStudentsScene):
+    def construct(self):
+        self.student_says("""
+            What about integrals
+            beyond this circle
+            example?
+        """)
+        self.change_student_modes("confused")
+        self.random_blink(2)
+        self.teacher_says(
+            "All in due time",
+        )
+        self.change_student_modes(*["happy"]*3)
+        self.random_blink(2)
 
+class GraphIntegral(GraphScene):
+    CONFIG = {
+        "x_min" : -0.25,
+        "x_max" : 4,
+        "x_tick_frequency" : 0.25,
+        "x_leftmost_tick" : -0.25,
+        "x_labeled_nums" : range(1, 5),
+        "x_axis_label" : "r",
+        "y_min" : -2,
+        "y_max" : 25,
+        "y_tick_frequency" : 2.5,
+        "y_bottom_tick" : 0,
+        "y_labeled_nums" : range(5, 30, 5),
+        "y_axis_label" : "",
+        "dr" : 0.125,
+        "R" : 3.5,
+    }
+    def construct(self):
+        integral = TexMobject("\\int_0^R 2\\pi r \\, dr")
+        integral.to_edge(UP).shift(LEFT)
 
+        self.play(Write(integral))
+        self.dither()
+        self.setup_axes()
+        self.add_rectangles()
+        self.thinner_rectangles()
+        self.ask_about_area()
 
+        
+    def add_rectangles(self):
+        tick_height = 0.2
+        special_tick_index = 12
+        ticks = VGroup(*[
+            Line(UP, DOWN).move_to(self.coords_to_point(x, 0))
+            for x in np.arange(0, self.R+self.dr, self.dr)
+        ])
+        ticks.stretch_to_fit_height(tick_height)
+        ticks.highlight(YELLOW)
+        R_label = TexMobject("R")
+        R_label.next_to(self.coords_to_point(self.R, 0), DOWN)
+
+        values_words = TextMobject("Values of $r$")
+        values_words.shift(UP)
+        arrows = VGroup(*[
+            Arrow(
+                values_words.get_bottom(), 
+                tick.get_center(), 
+                tip_length = 0.15
+            )
+            for tick in ticks
+        ])
+
+        dr_brace = Brace(
+            VGroup(*ticks[special_tick_index:special_tick_index+2]), 
+            buff = SMALL_BUFF
+        )
+        dr_text = dr_brace.get_text("$dr$", buff = SMALL_BUFF)
+        # dr_text.highlight(YELLOW)
+
+        rectangles = self.get_rectangles(self.dr)
+        special_rect = rectangles[special_tick_index]
+        left_brace = Brace(special_rect, LEFT)
+        height_label = left_brace.get_text("$2\\pi r$")
+
+        self.play(
+            ShowCreation(ticks, submobject_mode = "lagged_start"),
+            Write(R_label)
+        )
+        self.play(
+            Write(values_words),
+            ShowCreation(arrows)
+        )
+        self.dither()
+        self.play(
+            GrowFromCenter(dr_brace),
+            Write(dr_text)
+        )
+        self.dither()
+        rectangles.save_state()
+        rectangles.stretch_to_fit_height(0)
+        rectangles.move_to(self.graph_origin, DOWN+LEFT)
+        self.play(*map(FadeOut, [arrows, values_words]))
+        self.play(
+            rectangles.restore, 
+            Animation(ticks),
+            run_time = 2
+        )
+        self.dither()
+        self.play(*[
+            ApplyMethod(rect.fade, 0.7)
+            for rect in rectangles
+            if rect is not special_rect
+        ] + [Animation(ticks)])
+        self.play(
+            GrowFromCenter(left_brace),
+            Write(height_label)
+        )
+        self.dither()
+
+        graph = self.graph_function(
+            lambda r : 2*np.pi*r, 
+            animate = False
+        )
+        graph_label = self.label_graph(
+            self.graph, "f(r) = 2\\pi r", 
+            proportion = 0.5,
+            direction = LEFT,
+            animate = False
+        )
+        self.play(
+            rectangles.restore,
+            Animation(ticks),
+            FadeOut(left_brace),
+            Transform(height_label, graph_label),
+            ShowCreation(graph)
+        )
+        self.dither(3)
+        self.play(*map(FadeOut, [ticks, dr_brace, dr_text]))
+        self.rectangles = rectangles
+
+    def thinner_rectangles(self):
+        for x in range(2, 8):
+            new_rects = self.get_rectangles(
+                dr = self.dr/x, stroke_width = 1./x
+            )
+            self.play(Transform(self.rectangles, new_rects))
+        self.dither()
+
+    def ask_about_area(self):
+        question = TextMobject("What's this \\\\ area")
+        question.to_edge(RIGHT).shift(2*UP)
+        arrow = Arrow(
+            question.get_bottom(), 
+            self.rectangles, 
+            buff = SMALL_BUFF
+        )
+        self.play(
+            Write(question),
+            ShowCreation(arrow)
+        )
+        self.dither()
+
+    def get_rectangles(self, dr, stroke_width = 1):
+        rectangles = VGroup()
+        for r in np.arange(0, self.R, dr):
+            points = VGroup(
+                VectorizedPoint(self.coords_to_point(r, 0)),
+                VectorizedPoint(self.coords_to_point(r+dr, 2*np.pi*r)),
+            )
+            rect = Rectangle()
+            rect.replace(points, stretch = True)
+            rect.set_fill(opacity = 1)
+            rectangles.add(rect)
+        rectangles.gradient_highlight(BLUE, GREEN)
+        rectangles.set_stroke(BLACK, width = stroke_width)
+        return rectangles
 
 
 
