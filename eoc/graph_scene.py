@@ -3,10 +3,11 @@ from helpers import *
 from scene import Scene
 # from topics.geometry import 
 from mobject.tex_mobject import TexMobject
-from mobject.vectorized_mobject import VGroup
+from mobject.vectorized_mobject import VGroup, VectorizedPoint
 from animation.simple_animations import Write, ShowCreation
 from topics.number_line import NumberLine
 from topics.functions import ParametricFunction
+from topics.geometry import Rectangle
 
 class GraphScene(Scene):
     CONFIG = {
@@ -40,7 +41,8 @@ class GraphScene(Scene):
             color = self.axes_color
         )
         x_axis.shift(self.graph_origin - x_axis.number_to_point(0))
-        x_axis.add_numbers(*self.x_labeled_nums)
+        if self.x_labeled_nums:
+            x_axis.add_numbers(*self.x_labeled_nums)
         x_label = TexMobject(self.x_axis_label)
         x_label.next_to(x_axis, RIGHT+UP, buff = SMALL_BUFF)
 
@@ -56,8 +58,9 @@ class GraphScene(Scene):
         )
         y_axis.shift(self.graph_origin-y_axis.number_to_point(0))
         y_axis.rotate(np.pi/2, about_point = y_axis.number_to_point(0))
-        y_axis.add_numbers(*self.y_labeled_nums)
-        y_axis.numbers.shift(self.y_axis_numbers_nudge)
+        if self.y_labeled_nums:
+            y_axis.add_numbers(*self.y_labeled_nums)
+            y_axis.numbers.shift(self.y_axis_numbers_nudge)
         y_label = TexMobject(self.y_axis_label)
         y_label.next_to(y_axis.get_top(), RIGHT, buff = 2*MED_BUFF)
 
@@ -87,6 +90,7 @@ class GraphScene(Scene):
 
         if is_main_graph:
             self.graph = graph
+            self.func = func
         if animate:
             self.play(ShowCreation(graph))
         self.add(graph)
@@ -119,6 +123,30 @@ class GraphScene(Scene):
             self.play(Write(label))
         self.add(label)
         return label
+
+    def get_riemann_rectangles(self, 
+                               x_min = None, 
+                               x_max = None, 
+                               dx = 0.1, 
+                               stroke_width = 1,
+                               start_color = BLUE,
+                               end_color = GREEN):
+        assert(hasattr(self, "func"))
+        x_min = x_min if x_min is not None else self.x_min
+        x_max = x_max if x_max is not None else self.x_max
+        rectangles = VGroup()
+        for x in np.arange(x_min, x_max, dx):
+            points = VGroup(*map(VectorizedPoint, [
+                self.coords_to_point(x, 0),
+                self.coords_to_point(x+dx, self.func(x+dx)),
+            ]))
+            rect = Rectangle()
+            rect.replace(points, stretch = True)
+            rect.set_fill(opacity = 1)
+            rectangles.add(rect)
+        rectangles.gradient_highlight(start_color, end_color)
+        rectangles.set_stroke(BLACK, width = stroke_width)
+        return rectangles
 
 
 

@@ -38,6 +38,7 @@ class CircleScene(PiCreatureScene):
         "dR_color" : YELLOW,
         "unwrapped_tip" : ORIGIN,
         "include_pi_creature" : False,
+        "circle_corner" : UP+LEFT
     }
     def setup(self):
         self.circle = Circle(
@@ -46,7 +47,7 @@ class CircleScene(PiCreatureScene):
             fill_color = self.fill_color,
             fill_opacity = self.fill_opacity,
         )
-        self.circle.to_corner(UP+LEFT, buff = 2*MED_BUFF)
+        self.circle.to_corner(self.circle_corner, buff = 2*MED_BUFF)
         self.radius_line = Line(
             self.circle.get_center(),
             self.circle.get_right(),
@@ -94,7 +95,7 @@ class CircleScene(PiCreatureScene):
             Animation(self.radius_label),
         )
 
-    def increase_radius(self, run_time = 2):
+    def increase_radius(self, numerical_dr = True, run_time = 2):
         radius_mobs = VGroup(
             self.radius_line, self.radius_brace, self.radius_label
         )
@@ -110,7 +111,10 @@ class CircleScene(PiCreatureScene):
             buff = SMALL_BUFF,
             tip_length = 0.2,
         )
-        nudge_label = TexMobject("%.01f"%self.dR)
+        if numerical_dr:
+            nudge_label = TexMobject("%.01f"%self.dR)
+        else:
+            nudge_label = TexMobject("dr")
         nudge_label.highlight(self.dR_color)
         nudge_label.scale(0.75)
         nudge_label.next_to(nudge_arrow.get_start(), DOWN)
@@ -237,6 +241,7 @@ class OpeningQuote(Scene):
 class Introduction(TeacherStudentsScene):
     def construct(self):
         self.show_series()
+        self.look_to_center()        
         self.go_through_students()
         self.zoom_in_on_first()
 
@@ -302,6 +307,20 @@ class Introduction(TeacherStudentsScene):
             ]
         )
 
+    def look_to_center(self):
+        anims = []
+        for pi in self.get_everyone():
+            anims += [
+                pi.change_mode, "pondering",
+                pi.look_at, 2*UP
+            ]
+        self.play(*anims)
+        self.random_blink(6)
+        self.play(*[
+            ApplyMethod(pi.change_mode, "happy")
+            for pi in self.get_everyone()
+        ])
+
     def go_through_students(self):
         pi1, pi2, pi3 = self.get_students()
         for pi in pi1, pi2, pi3:
@@ -312,7 +331,7 @@ class Introduction(TeacherStudentsScene):
             TexMobject("\\int_0^1 \\frac{1}{1-x^2}\\,dx").shift(UP+LEFT),
             TexMobject("\\frac{d}{dx} e^x = e^x").shift(DOWN+RIGHT),
         )
-        cant_wait = TextMobject("I litterally \\\\ can't wait")
+        cant_wait = TextMobject("I literally \\\\ can't wait")
         big_derivative = TexMobject("""
             \\frac{d}{dx} \\left( \\sin(x^2)2^{\\sqrt{x}} \\right)
         """)
@@ -460,6 +479,38 @@ class IntroduceCircle(Scene):
             Write(to_be_explained)
         )
         self.dither()
+
+class HeartOfCalculus(GraphScene):
+    CONFIG = {
+        "x_labeled_nums" : [],
+        "y_labeled_nums" : [],
+    }
+    def construct(self):
+        self.setup_axes()
+        self.graph_function(lambda x : 3*np.sin(x/2) + x)
+        rect_sets = [
+            self.get_riemann_rectangles(
+                0, self.x_max, 1./(2**n), stroke_width = 1./(n+1)
+            )
+            for n in range(6)
+        ]
+
+        rects = rect_sets.pop(0)
+        rects.save_state()
+        rects.stretch_to_fit_height(0)
+        rects.shift(
+            (self.graph_origin[1] - rects.get_center()[1])*UP
+        )
+        self.play(
+            rects.restore,
+            submobject_mode = "lagged_start",
+            run_time = 3
+        )
+        while rect_sets:
+            self.play(
+                Transform(rects, rect_sets.pop(0)),
+                run_time = 2
+            )
 
 class PragmatismToArt(Scene):
     def construct(self):
@@ -759,6 +810,14 @@ class IntroduceTinyChangeInArea(CircleScene):
         morty.to_corner(DOWN+RIGHT)
         return morty
 
+class CleanUpABit(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("""
+            Let's clean that
+            up a bit
+        """)
+        self.random_blink(2)
+
 class BuildToDADR(CircleScene):
     CONFIG = {
         "include_pi_creature" : True,
@@ -838,6 +897,15 @@ class BuildToDADR(CircleScene):
             map(MoveToTarget, [self.equals, self.plus])
         ))
         self.play(*[term.denom.restore for term in terms])
+        self.dither(2)
+        self.play(
+            self.outer_ring.highlight, YELLOW,
+            rate_func = there_and_back
+        )
+        self.play(
+            self.nudge_label.scale_in_place, 2,
+            rate_func = there_and_back
+        )
         self.dither(2)
         canceleres = VGroup(self.circum_term[1], self.circum_term.denom)
         self.play(canceleres.highlight, RED)
@@ -991,6 +1059,15 @@ class BuildToDADR(CircleScene):
         self.play(*map(Write, [arrow, ignore_error]))
         self.play(error_group.fade, 0.8)
         self.dither(2)
+        equality_brace = Brace(VGroup(self.change.denom, self.circum_term))
+        equal_word = equality_brace.get_text("Equality")
+        VGroup(equality_brace, equal_word).highlight(BLUE)
+        self.play(
+            GrowFromCenter(equality_brace),
+            Write(equal_word, run_time = 1)
+        )
+        self.dither(2)
+        self.play(*map(FadeOut, [equality_brace, equal_word]))
 
         less_wrong_philosophy = TextMobject("``Less wrong'' philosophy")
         less_wrong_philosophy.move_to(ignore_error, LEFT)
@@ -1093,24 +1170,20 @@ class BuildToDADR(CircleScene):
         self.play(self.pi_creature.change_mode, "guilty")
         self.dither()
 
-        d_something = TextMobject("$d$(something)")
-        VGroup(*d_something[1:]).highlight(BLUE)
-        brace = Brace(d_something)
-        text = brace.get_text("""
-            Tiny change to
-            that something
-        """)
-        VGroup(*text[16:]).highlight(BLUE)
-        d_understanding = VGroup(d_something, brace, text)
-        d_understanding.move_to(self.less_wrong_philosophy, UP+LEFT)
+        new_bubble = self.pi_creature.get_bubble("speech", height = 6)
+        new_bubble.set_fill(BLACK, opacity = 0.8)
+        new_bubble.resize_to_content()
+        new_bubble.pin_to(self.pi_creature)
+        new_bubble.write("But it gets \\\\ less wrong!")
 
         self.play(
             FadeOut(bubble),
             FadeOut(bubble.content),
-            Transform(self.less_wrong_philosophy, d_understanding),
-            randy.change_mode, "pondering",
+            ShowCreation(new_bubble),
+            Write(new_bubble.content),
+            randy.change_mode, "erm",
             randy.highlight, BLUE_E,
-            self.pi_creature.change_mode, "speaking"
+            self.pi_creature.change_mode, "shruggie"
         )
         self.dither(2)
 
@@ -1999,24 +2072,228 @@ class GraphIntegral(GraphScene):
         self.dither()
 
     def get_rectangles(self, dr, stroke_width = 1):
-        rectangles = VGroup()
-        for r in np.arange(0, self.R, dr):
-            points = VGroup(
-                VectorizedPoint(self.coords_to_point(r, 0)),
-                VectorizedPoint(self.coords_to_point(r+dr, 2*np.pi*r)),
-            )
-            rect = Rectangle()
-            rect.replace(points, stretch = True)
-            rect.set_fill(opacity = 1)
-            rectangles.add(rect)
-        rectangles.gradient_highlight(BLUE, GREEN)
-        rectangles.set_stroke(BLACK, width = stroke_width)
-        return rectangles
+        return self.get_riemann_rectangles(
+            0, self.R, dr, stroke_width = stroke_width
+        )
 
+class FundamentalTheorem(CircleScene):
+    CONFIG = {
+        "circle_corner" : ORIGIN,
+        "radius" : 1.5,
+        "area_color" : BLUE,
+        "circum_color" : WHITE,
+        "unwrapped_tip" : 2.5*UP,
+        "include_pi_creature" : False
+    }
+    def setup(self):
+        CircleScene.setup(self)
+        group = VGroup(
+            self.circle, self.radius_line,
+            self.radius_brace, self.radius_label
+        )
+        self.remove(*group)
+        group.shift(DOWN)
 
+        self.foreground_group = VGroup(
+            self.radius_line,
+            self.radius_brace,
+            self.radius_label,
+        )
 
+    def get_pi_creature(self):
+        morty = Mortimer()
+        morty.scale(0.7)
+        morty.to_corner(DOWN+RIGHT)
+        return morty
 
+    def construct(self):
+        self.add_derivative_terms()
+        self.add_integral_terms()
+        self.think_about_it()
+        self.bring_in_circle()
+        self.show_outer_ring()
+        self.show_all_rings()
+        self.emphasize_oposites()
 
+    def add_derivative_terms(self):
+        symbolic = TexMobject(
+            "\\frac{d(\\pi R^2)}{dR} =", "2\\pi R"
+        )
+        VGroup(*symbolic[0][2:5]).highlight(self.area_color)
+        VGroup(*symbolic[0][7:9]).highlight(self.dR_color)
+        symbolic[1].highlight(self.circum_color)
+
+        geometric = TexMobject("\\frac{d \\quad}{dR}=")
+        VGroup(*geometric[2:4]).highlight(self.dR_color)
+        radius = geometric[0].get_height()
+        area_circle = Circle(
+            stroke_width = 0,
+            fill_color = self.area_color,
+            fill_opacity = 0.5,
+            radius = radius
+        )
+        area_circle.next_to(geometric[0], buff = SMALL_BUFF)
+        circum_circle = Circle(
+            color = self.circum_color,
+            radius = radius
+        )
+        circum_circle.next_to(geometric, RIGHT)
+        geometric.add(area_circle, circum_circle)
+        self.derivative_terms = VGroup(symbolic, geometric)
+        self.derivative_terms.arrange_submobjects(
+            DOWN, buff = LARGE_BUFF, aligned_edge = LEFT
+        )
+        self.derivative_terms.next_to(ORIGIN, LEFT, buff = LARGE_BUFF)
+
+        self.play(
+            Write(self.derivative_terms),
+            self.pi_creature.change_mode, "hooray"
+        )
+        self.dither()
+
+    def add_integral_terms(self):
+        symbolic = TexMobject(
+            "\\int_0^R", "2\\pi r", "\\cdot", "dr", "=", "\\pi R^2"
+        )
+        symbolic.highlight_by_tex("2\\pi r", self.circum_color)
+        symbolic.highlight_by_tex("dr", self.dR_color)
+        symbolic.highlight_by_tex("\\pi R^2", self.area_color)
+
+        geometric = symbolic.copy()
+        area_circle = Circle(
+            radius = geometric[-1].get_width()/2,
+            stroke_width = 0,
+            fill_color = self.area_color,
+            fill_opacity = 0.5
+        )
+        area_circle.move_to(geometric[-1])
+        circum_circle = Circle(
+            radius = geometric[1].get_width()/2,
+            color = self.circum_color
+        )
+        circum_circle.move_to(geometric[1])
+        geometric.submobjects[1] = circum_circle
+        geometric.submobjects[-1] = area_circle
+
+        self.integral_terms = VGroup(symbolic, geometric)
+        self.integral_terms.arrange_submobjects(
+            DOWN, 
+            buff = LARGE_BUFF, 
+            aligned_edge = LEFT
+        )
+        self.integral_terms.next_to(ORIGIN, RIGHT, buff = LARGE_BUFF)
+
+        self.play(Write(self.integral_terms))
+        self.dither()
+
+    def think_about_it(self):
+        for mode in "confused", "pondering", "surprised":
+            self.change_mode(mode)
+            self.dither()
+
+    def bring_in_circle(self):
+        self.play(
+            FadeOut(self.derivative_terms[0]),
+            FadeOut(self.integral_terms[0]),
+            self.derivative_terms[1].to_corner, UP+LEFT, 2*MED_BUFF,
+            self.integral_terms[1].to_corner, UP+RIGHT, 2*MED_BUFF,
+            self.pi_creature.change_mode, "speaking"
+        )
+        self.introduce_circle()
+
+    def show_outer_ring(self):
+        self.increase_radius(numerical_dr = False)
+        self.foreground_group.add(self.nudge_line, self.nudge_arrow)
+        self.dither()
+        ring_copy = self.outer_ring.copy()
+        ring_copy.save_state()
+        self.unwrap_ring(ring_copy, to_edge = LEFT)
+        brace = Brace(ring_copy, UP)
+        brace.stretch_in_place(0.95, 0)
+        deriv = brace.get_text("$\\dfrac{dA}{dR}$")
+        VGroup(*deriv[:2]).highlight(self.outer_ring.get_color())
+        VGroup(*deriv[-2:]).highlight(self.dR_color)
+        self.play(
+            GrowFromCenter(brace),
+            Write(deriv),
+            self.pi_creature.change_mode, "happy"
+        )
+        self.to_fade = VGroup(deriv, brace)
+        self.to_restore = ring_copy        
+
+    def show_all_rings(self):
+        rings = VGroup(*[
+            self.get_ring(radius = r, dR = self.dR)
+            for r in np.arange(0, self.radius, self.dR)
+        ])
+        rings.gradient_highlight(BLUE_E, GREEN_E)
+        rings.save_state()
+        integrand = self.integral_terms[1][1]
+        for ring in rings:
+            Transform(ring, integrand).update(1)
+
+        self.play(
+            ApplyMethod(
+                rings.restore,
+                submobject_mode = "lagged_start",
+                run_time = 5
+            ),
+            Animation(self.foreground_group),
+        )
+
+    def emphasize_oposites(self):
+        self.play(
+            FadeOut(self.to_fade),
+            self.to_restore.restore,
+            Animation(self.foreground_group),
+            run_time = 2
+        )
+        arrow = DoubleArrow(
+            self.derivative_terms[1],
+            self.integral_terms[1],
+        )
+        opposites = TextMobject("Opposites")
+        opposites.next_to(arrow, DOWN)
+
+        self.play(
+            ShowCreation(arrow),
+            Write(opposites)
+        )
+        self.dither()
+
+class NameTheFundamentalTheorem(TeacherStudentsScene):
+    def construct(self):
+        symbols = TexMobject(
+            "\\frac{d}{dx} \\int_0^x f(t)dt = f(x)",
+        )
+        symbols.to_corner(UP+LEFT)
+        brace = Brace(symbols)
+        abstract = brace.get_text("Abstract version")
+        self.add(symbols)
+        self.play(
+            GrowFromCenter(brace),
+            Write(abstract),
+            *[
+                ApplyMethod(pi.look_at, symbols)
+                for pi in self.get_everyone()
+            ]
+        )
+        self.change_student_modes("pondering", "confused", "erm")
+        self.random_blink()
+        self.teacher_says("""
+            This is known as
+            the ``fundamental 
+            theorem of calculus''
+        """, width = 5, height = 5, target_mode = "hooray")
+        self.random_blink(3)
+        self.teacher_says("""
+            We'll get here
+            in due time.
+        """)
+        self.change_student_modes(*["happy"]*3)
+        self.dither(2)
+
+        
 
 
 
