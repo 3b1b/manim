@@ -202,13 +202,42 @@ class CircleScene(PiCreatureScene):
 
 ######################
 
+class PatronsOnly(Scene):
+    def construct(self):
+        morty = Mortimer()
+        morty.shift(2*DOWN)
+        title = TextMobject("""
+            This is a draft
+            for patrons only
+        """)
+        title.highlight(RED)
+        title.scale(2)
+        title.to_edge(UP)
+
+        self.add(morty)
+        self.play(
+            Write(title),
+            morty.change_mode, "wave_1"
+        )
+        self.play(Blink(morty))
+        self.play(
+            morty.change_mode, "pondering",
+            morty.look_at, title
+        )
+        self.play(Blink(morty))
+        self.dither()
+
 class OpeningQuote(Scene):
     CONFIG = {
-        "quote" : """
-            The art of doing mathematics is finding 
-            that special case that contains all the 
-            germs of generality.
-        """,
+        "quote" : [
+            """The art of doing mathematics is finding
+            that """, "special case", 
+            """that contains all the 
+            germs of generality."""
+        ],
+        "highlighted_quote_terms" : {
+            "special case" : BLUE
+        },
         "author" : "David Hilbert"
     }
     def construct(self):
@@ -218,17 +247,25 @@ class OpeningQuote(Scene):
         self.play(FadeIn(
             quote,
             submobject_mode = "lagged_start",
-            run_time = 2
+            run_time = 4
         ))
         self.dither(2)
-        self.play(Write(author, run_time = 4))
+        self.play(Write(author, run_time = 3))
         self.dither()
 
     def get_quote(self):
-        quote = TextMobject(
-            "``%s''"%self.quote.strip(),
-            alignment = "",
-        )
+        if isinstance(self.quote, str):
+            quote = TextMobject(
+                "``%s''"%self.quote.strip(),
+                alignment = "",
+            )
+        else:
+            words = list(self.quote)
+            words[0] = "``%s"%words[0]
+            words[-1] += "''"
+            quote = TextMobject(*words, alignment = "")
+        for term, color in self.highlighted_quote_terms.items():
+            quote.highlight_by_tex(term, color)
         quote.to_edge(UP)
         return quote
 
@@ -1170,11 +1207,11 @@ class BuildToDADR(CircleScene):
         self.play(self.pi_creature.change_mode, "guilty")
         self.dither()
 
-        new_bubble = self.pi_creature.get_bubble("speech", height = 6)
+        new_bubble = self.pi_creature.get_bubble("speech")
         new_bubble.set_fill(BLACK, opacity = 0.8)
+        new_bubble.write("But it gets \\\\ less wrong!")
         new_bubble.resize_to_content()
         new_bubble.pin_to(self.pi_creature)
-        new_bubble.write("But it gets \\\\ less wrong!")
 
         self.play(
             FadeOut(bubble),
@@ -1193,8 +1230,8 @@ class NameDerivative(IntroduceTinyChangeInArea):
         self.change_nudge_label()
         self.name_derivative_for_cricle()
         self.interpret_geometrically()
-        self.replace_words()
         self.show_limiting_process()
+        self.reference_approximation()
         self.emphasize_equality()
 
     def change_nudge_label(self):
@@ -1255,6 +1292,7 @@ class NameDerivative(IntroduceTinyChangeInArea):
         self.dither()
         self.dArea_fom = dArea_fom
         self.words = words
+        self.two_pi_R = two_pi_R
 
     def interpret_geometrically(self):
         target_formula = TexMobject(
@@ -1298,21 +1336,9 @@ class NameDerivative(IntroduceTinyChangeInArea):
         self.play(Transform(circum_circle.copy(), circum_form))
         self.change_mode("happy")
 
-    def replace_words(self):
-        new_words = TextMobject(
-            "Ask what this\\\\",
-            "ratio approaches."
-        )
-        new_words.move_to(self.words)
-        self.play(
-            Transform(self.words, new_words),
-            self.pi_creature.change_mode, "pondering"
-        )
-        self.dither()
-
     def show_limiting_process(self):
         big_dR = 0.3
-        small_dR = 0.05
+        small_dR = 0.01
         big_ring = self.get_ring(self.radius, big_dR)
         small_ring = self.get_ring(self.radius, small_dR)
         big_nudge_line = self.nudge_line.copy().scale_to_fit_width(big_dR)
@@ -1322,42 +1348,73 @@ class NameDerivative(IntroduceTinyChangeInArea):
         new_nudge_arrow = Arrow(self.nudge_label, big_nudge_line)
         small_nudge_arrow = Arrow(self.nudge_label, small_nudge_line)
 
+        ring_group = VGroup(self.outer_ring, self.nudge_line, self.nudge_arrow)
+        ring_group.save_state()
+        big_group = VGroup(big_ring, big_nudge_line, new_nudge_arrow)
+        small_group = VGroup(small_ring, small_nudge_line, small_nudge_arrow)
+
+        fracs = VGroup()
+        sample_dRs = [0.3, 0.1, 0.01]
+        for dR in sample_dRs:
+            dA = 2*np.pi*dR + np.pi*(dR**2)
+            frac = TexMobject("\\frac{%.3f}{%.2f}"%(dA, dR))
+            VGroup(*frac[:5]).highlight(self.outer_ring.get_color())
+            VGroup(*frac[6:]).highlight(self.dR_color)
+            fracs.add(frac)
+        fracs.add(TexMobject("\\cdots \\rightarrow"))
+        fracs.add(TexMobject("???"))
+        fracs[-1].gradient_highlight(self.dR_color, self.outer_ring.get_color())
+        fracs.arrange_submobjects(RIGHT, buff = 2*MED_BUFF)
+        fracs.to_corner(DOWN+LEFT)
+
+        arrows = VGroup()
+        for frac in fracs[:len(sample_dRs)] + [fracs[-1]]:
+            arrow = Arrow(self.words.get_bottom(), frac.get_top())
+            arrow.highlight(WHITE)
+            if frac is fracs[-1]:
+                check = TexMobject("\\checkmark")
+                check.highlight(GREEN)
+                check.next_to(arrow.get_center(), UP+RIGHT, SMALL_BUFF)
+                arrow.add(check)
+            else:
+                cross = TexMobject("\\times")
+                cross.highlight(RED)
+                cross.move_to(arrow.get_center())
+                cross.set_stroke(RED, width = 5)
+                arrow.add(cross)
+            arrows.add(arrow)
+
+
         self.play(
-            Transform(self.outer_ring, big_ring),
-            Transform(self.nudge_line, big_nudge_line),
-            Transform(self.nudge_arrow, new_nudge_arrow),
-            self.pi_creature.change_mode, "pondering"
+            Transform(ring_group, big_group),
+            self.pi_creature.change_mode, "sassy"
         )
-        big_trap = self.outer_ring.copy()
-        big_trap.dR = big_dR
-        small_trap = self.get_unwrapped(small_ring.copy())
-        for trap in  big_trap, small_trap:
-            trap.set_fill(opacity = 0.5)
-        self.unwrap_ring(big_trap)
-        small_trap.move_to(big_trap)
-        big_rect, small_rect = [
-            Rectangle(
-                height = trap.get_height(),
-                width = 2*np.pi*self.radius,
-                stroke_width = 0,
-                fill_color = BLUE,
-                fill_opacity = 0.5
-            ).move_to(trap)
-            for trap in big_trap, small_trap
-        ]
-        self.play(FadeIn(big_rect))
+        for n, frac in enumerate(fracs):
+            anims = [FadeIn(frac)]
+            num_fracs = len(sample_dRs)
+            if n < num_fracs:
+                anims.append(ShowCreation(arrows[n]))
+                anims.append(Transform(
+                    ring_group, small_group,
+                    rate_func = lambda t : t*(1./(num_fracs-n)),
+                    run_time = 2
+                ))
+            elif n > num_fracs:
+                anims.append(ShowCreation(arrows[-1]))
+            self.play(*anims)
+        self.dither(2)
         self.play(
-            Transform(self.outer_ring, small_ring),
-            Transform(self.nudge_line, small_nudge_line),
-            Transform(self.nudge_arrow, small_nudge_arrow),
-            Transform(big_trap, small_trap),
-            Transform(big_rect, small_rect),
-            run_time = 6,
-            rate_func = None
+            FadeOut(arrows),
+            ring_group.restore,
+            self.pi_creature.change_mode, "happy",
         )
-        self.change_mode("happy")
         self.dither()
-        self.last_mover = VGroup(big_trap, big_rect)
+
+    def reference_approximation(self):
+        ring_copy = self.outer_ring.copy()
+        self.unwrap_ring(ring_copy)
+        self.dither()
+        self.last_mover = ring_copy
 
     def emphasize_equality(self):
         equals = self.dArea_fom[-2]
@@ -1366,9 +1423,15 @@ class NameDerivative(IntroduceTinyChangeInArea):
         self.remove(self.last_mover)
         self.play(
             equals.scale_in_place, 1.5,
-            equals.highlight, GREEN
+            equals.highlight, GREEN,
+            rate_func = there_and_back,
+            run_time = 2
         )
-        self.play(equals.scale_in_place, 1./1.5)
+        self.play(
+            self.two_pi_R.set_stroke, YELLOW, 3,
+            rate_func = there_and_back,
+            run_time = 2
+        )
         self.dither()
 
         new_words = TextMobject(
@@ -1392,6 +1455,7 @@ class DerivativeAsTangentLine(ZoomedScene):
         self.setup_axes()
         self.show_zoomed_in_steps()
         self.show_tangent_lines()
+        self.state_commonality()
 
     def setup_axes(self):
         x_axis = NumberLine(
@@ -1408,6 +1472,7 @@ class DerivativeAsTangentLine(ZoomedScene):
         x_axis.add_numbers(1, 2, 3, 4)
         x_label = TexMobject("R")
         x_label.next_to(x_axis, RIGHT+UP, buff = SMALL_BUFF)
+        self.x_axis_label = x_label
 
         y_axis = NumberLine(
             x_min = -2,
@@ -1559,6 +1624,7 @@ class DerivativeAsTangentLine(ZoomedScene):
 
         self.play(ShowCreation(line))
         self.dither()
+        self.note_R_value_of_point()
 
         alphas = np.arange(0, 1, 0.01)
         graph_points = map(self.graph.point_from_proportion, alphas)
@@ -1586,6 +1652,65 @@ class DerivativeAsTangentLine(ZoomedScene):
         self.play(Write(two_pi_R))
         self.dither()
         shift_everything_to_alpha(0.8, 4)
+        self.dither()
+
+    def note_R_value_of_point(self):
+        R = self.R_to_zoom_in_on
+        point = self.graph_point(R)
+        R_axis_point = point[0]*RIGHT + 2.5*DOWN
+
+        dashed_line = DashedLine(point, R_axis_point, color = RED)
+        dot = Dot(R_axis_point, color = RED)
+        arrow = Arrow(
+            self.x_axis_label.get_left(),
+            dot,
+            buff = SMALL_BUFF
+        )
+        self.play(ShowCreation(dashed_line))
+        self.play(ShowCreation(dot))
+        self.play(ShowCreation(arrow))
+        self.play(dot.scale_in_place, 2, rate_func = there_and_back)
+        self.dither()
+        self.play(*map(FadeOut, [dashed_line, dot, arrow]))
+
+    def state_commonality(self):
+        morty = Mortimer()
+        morty.scale(0.7)
+        morty.to_edge(DOWN).shift(2*RIGHT)
+        bubble = morty.get_bubble("speech", height = 2)
+        bubble.set_fill(BLACK, opacity = 0.8)
+        bubble.shift(0.5*DOWN)        
+        bubble.write("This is the standard view")
+
+        self.play(FadeIn(morty))
+        self.play(
+            ShowCreation(bubble),
+            Write(bubble.content),
+            morty.change_mode, "surprised"
+        )
+        self.play(Blink(morty))
+        self.dither()
+        new_words = TextMobject("Which is...fine...")
+        new_words.move_to(bubble.content, RIGHT)
+        self.play(
+            bubble.stretch_to_fit_width, 5,
+            bubble.shift, RIGHT,
+            Transform(bubble.content, new_words),            
+            morty.change_mode, "hesitant"
+        )
+        self.play(Blink(morty))
+        self.dither()
+
+class SimpleConfusedPi(Scene):
+    def construct(self):
+        randy = Randolph()
+        confused = Randolph(mode = "confused")
+        for pi in randy, confused:
+            pi.flip()
+            pi.look(UP+LEFT)
+            pi.scale(2)
+            pi.rotate(np.pi/2)
+        self.play(Transform(randy, confused))
         self.dither()
 
 class TangentLinesAreNotEverything(TeacherStudentsScene):
@@ -1687,6 +1812,7 @@ class IntroduceConcentricRings(CircleScene):
         area_sum.to_edge(RIGHT)
         area_sum.to_edge(UP, buff = MED_BUFF)
         dots_equals_area[-1].shift(0.1*UP)
+        self.area_sum_rhs = dots_equals_area[-1]
 
         # start_rings.set_fill(opacity = 0.3)
         self.play(
@@ -1797,6 +1923,31 @@ class IntroduceConcentricRings(CircleScene):
             self.pi_creature.change_mode, "pondering"
         )
         self.dither(2)
+
+        last = VMobject()
+        last.save_state()
+        for ring in self.rings:
+            ring.save_state()
+            target = ring.copy()
+            target.set_fill(opacity = 1)
+            self.play(
+                last.restore,
+                Transform(ring, target),
+                Animation(self.foreground_group),
+                run_time = 0.5
+            )
+            last = ring
+        self.play(last.restore)
+        self.dither()
+
+        ghost = self.rings.copy()
+        for mob in self.area_sum_rhs, self.two_pi_r:
+            ghost.set_fill(opacity = 0.1)
+            self.play(Transform(ghost, mob))
+            self.dither()
+        self.remove(ghost)
+
+        self.dither()
         self.play(FadeOut(formula_q))
         self.play(Write(int_sym))
         self.dither()
@@ -1824,6 +1975,13 @@ class IntroduceConcentricRings(CircleScene):
         self.play(Write(equals_pi_R_squared))
         self.dither()
         self.equals = equals_pi_R_squared[0]
+        self.integral_terms = VGroup(
+            self.integral_expression[1], 
+            self.integral_expression[2], 
+            self.int_lower_bound, 
+            self.int_upper_bound,
+            VGroup(*equals_pi_R_squared[1:])
+        )
 
     def grow_and_shrink_r_line(self, zero_target, R_target):
         self.radial_line.get_center = self.circle.get_center
@@ -1870,6 +2028,7 @@ class IntroduceConcentricRings(CircleScene):
             self.r_label.restore,
             FadeOut(equals_0)
         )
+        self.int_lower_bound, self.int_upper_bound = zero_target, R_target
 
     def ask_about_approx(self):
         approx = TexMobject("\\approx").replace(self.equals)
@@ -1912,7 +2071,12 @@ class IntroduceConcentricRings(CircleScene):
             GrowFromCenter(int_brace),
             Write(integral_word)
         )
-        self.dither(4)
+        self.dither()
+        for term in self.integral_terms:
+            term.save_state()
+            self.play(term.highlight, YELLOW)
+            self.play(term.restore)
+        self.dither(3)
 
 class AskAboutGeneralCircles(TeacherStudentsScene):
     def construct(self):
@@ -1947,16 +2111,35 @@ class GraphIntegral(GraphScene):
         "R" : 3.5,
     }
     def construct(self):
+        self.func = lambda r : 2*np.pi*r
         integral = TexMobject("\\int_0^R 2\\pi r \\, dr")
         integral.to_edge(UP).shift(LEFT)
+        self.little_r = integral[5]
 
         self.play(Write(integral))
         self.dither()
         self.setup_axes()
+        self.show_horizontal_axis()
         self.add_rectangles()
         self.thinner_rectangles()
         self.ask_about_area()
 
+    def show_horizontal_axis(self):
+        arrows = [
+            Arrow(self.little_r, self.coords_to_point(*coords))
+            for coords in (0, 0), (self.x_max, 0)
+        ]
+        moving_arrow = arrows[0].copy()
+        self.play(
+            ShowCreation(moving_arrow),
+            self.little_r.highlight, YELLOW
+        )
+        for arrow in reversed(arrows):
+            self.play(Transform(moving_arrow, arrow, run_time = 4))
+        self.play(
+            FadeOut(moving_arrow),
+            self.little_r.highlight, WHITE
+        )
         
     def add_rectangles(self):
         tick_height = 0.2
@@ -2075,6 +2258,24 @@ class GraphIntegral(GraphScene):
         return self.get_riemann_rectangles(
             0, self.R, dr, stroke_width = stroke_width
         )
+
+class MoreOnThisLater(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("""
+            More details on
+            integrals later
+        """)
+        self.change_student_modes(
+            "raise_right_hand", 
+            "raise_left_hand",
+            "raise_left_hand",
+        )
+        self.random_blink(2)
+        self.teacher_says("""
+            This is just
+            a preview
+        """)
+        self.random_blink(2)
 
 class FundamentalTheorem(CircleScene):
     CONFIG = {
@@ -2293,9 +2494,184 @@ class NameTheFundamentalTheorem(TeacherStudentsScene):
         self.change_student_modes(*["happy"]*3)
         self.dither(2)
 
-        
+class CalculusInANutshell(CircleScene):
+    CONFIG = {
+        "circle_corner" : ORIGIN,
+        "radius" : 3,
+    }
+    def construct(self):
+        self.clear()
+        self.morph_word()
+        self.show_remainder_of_series()
 
+    def morph_word(self):
+        calculus = TextMobject("Calculus")
+        calculus.scale(1.5)
+        calculus.to_edge(UP)
+        dR = self.radius/float(len(calculus.split()))
+        rings = VGroup(*[
+            self.get_ring(rad, 0.95*dR)
+            for rad in np.arange(0, self.radius, dR)
+        ])
+        for ring in rings:
+            ring.add(ring.copy().rotate(np.pi))
+        for mob in calculus, rings:
+            mob.gradient_highlight(BLUE, GREEN)
+        rings.set_stroke(width = 0) 
 
+        self.play(Write(calculus))
+        self.dither()
+        self.play(Transform(
+            calculus, rings,
+            submobject_mode = "lagged_start",
+            run_time = 5
+        ))
+        self.dither()
+
+    def show_remainder_of_series(self):
+        series = VideoSeries()
+        first = series[0]
+        first.set_fill(YELLOW)
+        first.save_state()
+        first.center()
+        first.scale_to_fit_height(SPACE_HEIGHT*2)
+        first.set_fill(opacity = 0)
+        everything = VGroup(*self.get_mobjects())
+        everything.generate_target()
+        everything.target.scale(series[1].get_height()/first.get_height())
+        everything.target.shift(first.saved_state.get_center())
+        everything.target.set_fill(opacity = 0.1)
+
+        second = series[1]
+        brace = Brace(second)
+        derivatives = brace.get_text("Derivatives")
+
+        self.play(
+            MoveToTarget(everything),
+            first.restore,
+            run_time = 2
+        )
+        self.play(FadeIn(
+            VGroup(*series[1:]),
+            submobject_mode = "lagged_start",
+            run_time = 2,
+        ))
+        self.dither()
+        self.play(
+            GrowFromCenter(brace),
+            Write(derivatives)
+        )
+        self.dither()
+
+class PatreonThanks(Scene):
+    CONFIG = {
+        "specific_patrons" : [
+            "Ali Yahya",
+            "Cryptic Swarm",
+            "Juan Batiz-Benet",
+            "Yu Jun",
+            "Othman Alikhan",
+            "Joseph John Cox",
+            "Luc Ritchie",
+            "Einar Johansen",
+            "Rish Kundalia",
+            "Achille Brighton",
+            "Kirk Werklund",
+            "Ripta Pasay",
+            "Felipe Diniz",
+        ]
+    }
+    def construct(self):
+        morty = Mortimer()
+        morty.next_to(ORIGIN, DOWN)
+
+        n_patrons = len(self.specific_patrons)
+        special_thanks = TextMobject("Special thanks to:")
+        special_thanks.highlight(YELLOW)
+        special_thanks.shift(2*UP)
+
+        left_patrons = VGroup(*map(TextMobject, 
+            self.specific_patrons[:n_patrons/2]
+        ))
+        right_patrons = VGroup(*map(TextMobject, 
+            self.specific_patrons[n_patrons/2:]
+        ))
+        for patrons, vect in (left_patrons, LEFT), (right_patrons, RIGHT):
+            patrons.arrange_submobjects(DOWN, aligned_edge = LEFT)
+            patrons.next_to(special_thanks, DOWN)
+            patrons.to_edge(vect, buff = LARGE_BUFF)
+
+        self.play(morty.change_mode, "gracious")
+        self.play(Write(special_thanks, run_time = 1))
+        self.play(
+            Write(left_patrons),
+            morty.look_at, left_patrons
+        )
+        self.play(
+            Write(right_patrons),
+            morty.look_at, right_patrons
+        )
+        self.play(Blink(morty))
+        for patrons in left_patrons, right_patrons:
+            for index in 0, -1:
+                self.play(morty.look_at, patrons[index])
+                self.dither()
+
+class Thumbnail(CircleScene):
+    CONFIG = {
+        "radius" : 2,
+        "circle_corner" : ORIGIN
+    }
+    def construct(self):
+        self.clear()
+        title = TextMobject("Essence of \\\\ calculus")
+        title.scale(2)
+        title.to_edge(UP)
+
+        area_circle = Circle(
+            fill_color = BLUE,
+            fill_opacity = 0.5,
+            stroke_width = 0,
+        )
+        circum_circle = Circle(
+            color = YELLOW
+        )
+
+        deriv_eq = TexMobject("\\frac{d \\quad}{dR} = ")
+        int_eq = TexMobject("\\int_0^R \\quad = ") 
+        target_height = deriv_eq[0].get_height()*2
+        area_circle.scale_to_fit_height(target_height)
+        circum_circle.scale_to_fit_height(target_height)
+
+        area_circle.next_to(deriv_eq[0], buff = SMALL_BUFF)
+        circum_circle.next_to(deriv_eq)
+        deriv_eq.add(area_circle.copy(), circum_circle.copy())
+
+        area_circle.next_to(int_eq)
+        circum_circle.next_to(int_eq[-1], LEFT)
+        int_eq.add(area_circle, circum_circle)
+
+        for mob in deriv_eq, int_eq:
+            mob.scale(1.5)
+
+        arrow = TexMobject("\\Leftrightarrow").scale(2)
+        arrow.shift(DOWN)
+        deriv_eq.next_to(arrow, LEFT)
+        int_eq.next_to(arrow, RIGHT)
+
+        self.add(title, arrow, deriv_eq, int_eq)
+
+        # dR = 0.25
+        # rings = VGroup(*[
+        #     self.get_ring(rad, 0.9*dR)
+        #     for rad in np.arange(0, self.radius, dR)
+        # ])
+        # for ring in rings:
+        #     ring.add(ring.copy().rotate(np.pi))
+        # rings.gradient_highlight(BLUE, GREEN_E)
+        # rings.next_to(title, DOWN)
+
+        # self.add(title, rings)
 
 
 

@@ -45,6 +45,8 @@ class GraphScene(Scene):
             x_axis.add_numbers(*self.x_labeled_nums)
         x_label = TexMobject(self.x_axis_label)
         x_label.next_to(x_axis, RIGHT+UP, buff = SMALL_BUFF)
+        x_axis.add(x_label)
+        self.x_axis_label_mob = x_label
 
         y_num_range = float(self.y_max - self.y_min)
         y_axis = NumberLine(
@@ -63,6 +65,8 @@ class GraphScene(Scene):
             y_axis.numbers.shift(self.y_axis_numbers_nudge)
         y_label = TexMobject(self.y_axis_label)
         y_label.next_to(y_axis.get_top(), RIGHT, buff = 2*MED_BUFF)
+        y_axis.add(y_label)
+        self.y_axis_label_mob = y_label
 
         if animate:
             self.play(Write(VGroup(x_axis, y_axis)))
