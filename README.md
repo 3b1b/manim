@@ -16,7 +16,7 @@ pip install -r requirements.txt
 ```
 
 Requirements to be installed outside of pip:
-aggdraw
+aggdraw (try it from scottopell/aggdraw-64bits@c95aac4)
 ffmpeg
 latex
 
