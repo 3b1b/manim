@@ -2661,18 +2661,6 @@ class Thumbnail(CircleScene):
 
         self.add(title, arrow, deriv_eq, int_eq)
 
-        # dR = 0.25
-        # rings = VGroup(*[
-        #     self.get_ring(rad, 0.9*dR)
-        #     for rad in np.arange(0, self.radius, dR)
-        # ])
-        # for ring in rings:
-        #     ring.add(ring.copy().rotate(np.pi))
-        # rings.gradient_highlight(BLUE, GREEN_E)
-        # rings.next_to(title, DOWN)
-
-        # self.add(title, rings)
-
 
 
 

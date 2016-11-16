@@ -253,18 +253,43 @@ class Succession(Animation):
         else:
             run_time = sum([anim.run_time for anim in animations])
         self.num_anims = len(animations)
-        self.anims = animations
-        mobject = animations[0].mobject
+        self.anims = (animations)
+        mobject = Mobject(*[anim.mobject for anim in self.anims])
+        self.last_index = 0
         Animation.__init__(self, mobject, run_time = run_time, **kwargs)
 
     def __str__(self):
         return self.__class__.__name__ + \
                "".join(map(str, self.anims))
 
-    def update(self, alpha):
+    def update_mobject(self, alpha):
         scaled_alpha = alpha*self.num_anims
-        self.mobject = self.anims
-        for index in range(len(self.anims)):
-            self.anims[index].update(scaled_alpha - index)
+        index = min(int(scaled_alpha), len(self.anims)-1)
+        curr_anim = self.anims[index]
+        if index != self.last_index:
+            last_anim = self.anims[self.last_index]
+            last_anim.clean_up()
+            if last_anim.mobject is curr_anim.mobject:
+                self.anims[index].starting_mobject = curr_anim.mobject.copy()
+        self.anims[index].update_mobject(scaled_alpha - index)
+        self.last_index = index
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

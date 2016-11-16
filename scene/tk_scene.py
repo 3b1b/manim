@@ -18,14 +18,15 @@ class TkSceneRoot(Tkinter.Tk):
         self.frame.pack()
         self.canvas = Tkinter.Canvas(self.frame, **kwargs)
         self.canvas.configure(background='black')        
-        self.canvas.place(x=0,y=0)
+        self.canvas.place(x=0, y=0)
 
         last_time = time.time()
         for frame in it.cycle(scene.frames):
-            try:
-                self.show_new_image(frame)
-            except:
-                break
+            # try:
+            #     self.show_new_image(frame)
+            # except:
+            #     break
+            self.show_new_image(frame)
             sleep_time = scene.frame_duration
             sleep_time -= time.time() - last_time
             time.sleep(max(0, sleep_time))
@@ -34,7 +35,6 @@ class TkSceneRoot(Tkinter.Tk):
 
     def show_new_image(self, frame):
         image = Image.fromarray(frame).convert('RGB')
-        image.resize(self.frame.size())
         photo = ImageTk.PhotoImage(image)
         self.canvas.delete(Tkinter.ALL)
         self.canvas.create_image(

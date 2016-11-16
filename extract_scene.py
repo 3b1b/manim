@@ -22,7 +22,7 @@ HELP_MESSAGE = """
    -l use low quality
    -m use medium quality
    -a run and save every scene in the script, or all args for the given scene
-   -q don't pring progress
+   -q don't print progress
 """
 SCENE_NOT_FOUND_MESSAGE = """
    That scene is not in the script

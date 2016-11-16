@@ -13,9 +13,7 @@ from helpers import *
 class Mobject(object):
     """
     Mathematical Object
-
     """
-    #Number of numbers used to describe a point (3 for pos, 3 for normal vector)
     CONFIG = {
         "color"        : WHITE,
         "stroke_width" : DEFAULT_POINT_THICKNESS,
@@ -371,6 +369,9 @@ class Mobject(object):
     ##
 
     def save_state(self):
+        if hasattr(self, "saved_state"):
+            #Prevent exponential growth of data
+            self.saved_state = None
         self.saved_state = self.copy()
         return self
 
