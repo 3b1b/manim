@@ -3,7 +3,9 @@ import numpy as np
 
 DEFAULT_HEIGHT = 1080
 DEFAULT_WIDTH  = 1920
+
 DEFAULT_FRAME_DURATION = 0.04
+PRODUCTION_QUALITY_FRAME_DURATION = 1./60
 
 #There might be other configuration than pixel_shape later...
 PRODUCTION_QUALITY_CAMERA_CONFIG = {

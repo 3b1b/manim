@@ -49,6 +49,7 @@ def get_configuration(sys_argv):
       "file"           : None,
       "scene_name"     : "",
       "camera_config"  : PRODUCTION_QUALITY_CAMERA_CONFIG,
+      "frame_duration" : PRODUCTION_QUALITY_FRAME_DURATION,
       "preview"        : False,
       "write"          : False,
       "save_image"     : False,
@@ -59,22 +60,22 @@ def get_configuration(sys_argv):
       if opt == '-h':
          print HELP_MESSAGE
          return
-      elif opt == '-l':
+      if opt in ['-l', '-p']:
          config["camera_config"] = LOW_QUALITY_CAMERA_CONFIG
-      elif opt == '-m':
-         config["camera_config"] = MEDIUM_QUALITY_CAMERA_CONFIG
-      elif opt == '-p':
-         config["camera_config"] = LOW_QUALITY_CAMERA_CONFIG
+      if opt in ['-l', '-p', '-m']:
+         config["frame_duration"] = DEFAULT_FRAME_DURATION
+      if opt == '-p':
          config["preview"] = True
-      elif opt == '-w':
+      if opt == '-m':
+         config["camera_config"] = MEDIUM_QUALITY_CAMERA_CONFIG
+      if opt == '-w':
          config["write"] = True
-      elif opt == '-s':
+      if opt == '-s':
          config["save_image"] = True
-      elif opt == '-q':
+      if opt in ['-q', '-a']:
          config["quiet"] = True
-      elif opt == '-a':
+      if opt == '-a':
          config["write_all"] = True
-         config["quiet"] = True
    #By default, write to file
    actions = ["write", "preview", "save_image"]
    if not any([config[key] for key in actions]):
@@ -166,6 +167,7 @@ def main():
    config["movie_prefix"] = config["file"].replace(".py", "")
    scene_kwargs = {
       "camera_config" : config["camera_config"],
+      "frame_duration" : config["frame_duration"],
       "skip_animations" : config["skip_animations"],
    }
    for SceneClass in get_scene_classes(scene_names_to_classes, config):
