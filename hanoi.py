@@ -49,7 +49,7 @@ class CountingScene(Scene):
 
         self.add(self.number_mob)
 
-    def get_template_configuration(self, pos):
+    def get_template_configuration(self, place):
         #This should probably be replaced for non-base-10 counting scenes
         down_right = (0.5)*RIGHT + (np.sqrt(3)/2)*DOWN
         result = []
@@ -58,9 +58,9 @@ class CountingScene(Scene):
                 result.append(
                     down_right_steps*down_right + left_steps*LEFT
                 )
-        return reversed(result[:self.get_digit_boxes(pos)])
+        return reversed(result[:self.get_place_max(place)])
 
-    def get_dot_template(self, pos):
+    def get_dot_template(self, place):
         #This should be replaced for non-base-10 counting scenes
         down_right = (0.5)*RIGHT + (np.sqrt(3)/2)*DOWN
         dots = VGroup(*[
@@ -71,13 +71,13 @@ class CountingScene(Scene):
                 stroke_width = 2,
                 stroke_color = WHITE,
             )
-            for point in self.get_template_configuration(pos)
+            for point in self.get_template_configuration(place)
         ])
         dots.scale_to_fit_height(self.dot_configuration_height)
         return dots
 
     def add_configuration(self):
-        new_template = self.get_dot_template(len(self.dot_templates) + 1)
+        new_template = self.get_dot_template(len(self.dot_templates))
         new_template.move_to(self.ones_configuration_location)
         left_vect = (new_template.get_width()+LARGE_BUFF)*LEFT
         new_template.shift(
@@ -181,8 +181,6 @@ class CountingScene(Scene):
             place += 1
         return result
 
-    def get_digit_boxes(self, pos):
-        return 1
     def is_next_digit(self):
         return False
     def get_place_num(self, num, place):
@@ -198,8 +196,6 @@ class PowerCounter(CountingScene):
                 return False
             number /= self.base
         return True
-    def get_digit_boxes(self, pos):
-        return self.base
     def get_place_max(self, place):
         return self.base
     def get_place_num(self, num, place):
