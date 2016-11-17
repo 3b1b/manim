@@ -25,7 +25,6 @@ from mobject.tex_mobject import *
 
 class CountingScene(Scene):
     CONFIG = {
-        "base" : 10,
         "digit_place_colors" : [YELLOW, MAROON_B, RED, GREEN, BLUE, PURPLE_D],
         "counting_dot_starting_position" : (SPACE_WIDTH-1)*RIGHT + (SPACE_HEIGHT-1)*UP,
         "count_dot_starting_radius" : 0.5,
@@ -37,6 +36,7 @@ class CountingScene(Scene):
     def setup(self):
         self.dots = VGroup()
         self.number = 0        
+        self.max_place = 0
         self.number_mob = VGroup(TexMobject(str(self.number)))
         self.number_mob.scale(self.num_scale_factor)
         self.number_mob.shift(self.num_start_location)
@@ -49,7 +49,7 @@ class CountingScene(Scene):
 
         self.add(self.number_mob)
 
-    def get_template_configuration(self):
+    def get_template_configuration(self, pos):
         #This should probably be replaced for non-base-10 counting scenes
         down_right = (0.5)*RIGHT + (np.sqrt(3)/2)*DOWN
         result = []
@@ -60,7 +60,7 @@ class CountingScene(Scene):
                 )
         return reversed(result[:self.get_digit_boxes(pos)])
 
-    def get_dot_template(self):
+    def get_dot_template(self, pos):
         #This should be replaced for non-base-10 counting scenes
         down_right = (0.5)*RIGHT + (np.sqrt(3)/2)*DOWN
         dots = VGroup(*[
@@ -71,13 +71,13 @@ class CountingScene(Scene):
                 stroke_width = 2,
                 stroke_color = WHITE,
             )
-            for point in self.get_template_configuration()
+            for point in self.get_template_configuration(pos)
         ])
         dots.scale_to_fit_height(self.dot_configuration_height)
         return dots
 
     def add_configuration(self):
-        new_template = self.get_dot_template()
+        new_template = self.get_dot_template(len(self.dot_templates) + 1)
         new_template.move_to(self.ones_configuration_location)
         left_vect = (new_template.get_width()+LARGE_BUFF)*LEFT
         new_template.shift(
@@ -120,7 +120,7 @@ class CountingScene(Scene):
             self.curr_configurations[place].add(moving_dot)
 
 
-            if len(self.curr_configurations[place].split()) == self.base:
+            if len(self.curr_configurations[place].split()) == self.get_place_max(place):
                 full_configuration = self.curr_configurations[place]
                 self.curr_configurations[place] = VGroup()
                 place += 1
@@ -145,9 +145,11 @@ class CountingScene(Scene):
     def get_digit_increment_animations(self):
         result = []
         self.number += 1
+        is_next_digit = self.is_next_digit()
+        if is_next_digit: self.max_place += 1
         new_number_mob = self.get_number_mob(self.number)
         new_number_mob.move_to(self.number_mob, RIGHT)
-        if self.is_next_digit():
+        if is_next_digit:
             self.add_configuration()
             place = len(new_number_mob.split())-1
             result.append(FadeIn(self.dot_templates[place]))
@@ -167,15 +169,15 @@ class CountingScene(Scene):
     def get_number_mob(self, num):
         result = VGroup()
         place = 0
-        while num > 0:
-            digit = TexMobject(str(num % self.base))
+        max_place = self.max_place
+        while place < max_place:
+            digit = TexMobject(str(self.get_place_num(num, place)))
             if place >= len(self.digit_place_colors):
                 self.digit_place_colors += self.digit_place_colors
             digit.highlight(self.digit_place_colors[place])
             digit.scale(self.num_scale_factor)
             digit.next_to(result, LEFT, buff = SMALL_BUFF, aligned_edge = DOWN)
             result.add(digit)
-            num /= self.base
             place += 1
         return result
 
@@ -183,6 +185,10 @@ class CountingScene(Scene):
         return 1
     def is_next_digit(self):
         return False
+    def get_place_num(self, num, place):
+        return 0
+    def get_place_max(self, place):
+        return 0
 
 class PowerCounter(CountingScene):
     def is_next_digit(self):
@@ -194,8 +200,15 @@ class PowerCounter(CountingScene):
         return True
     def get_digit_boxes(self, pos):
         return self.base
+    def get_place_max(self, place):
+        return self.base
+    def get_place_num(self, num, place):
+        return (num / (self.base ** place)) % self.base
 
 class CountInDecimal(PowerCounter):
+    CONFIG = {
+        "base" : 10,
+    }
     def construct(self):
         for x in range(11):
             self.increment()
