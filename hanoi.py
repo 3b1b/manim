@@ -41,7 +41,9 @@ class CountingScene(Scene):
         self.number_mob.scale(self.num_scale_factor)
         self.number_mob.shift(self.num_start_location)
 
-        self.initialize_configurations()
+        self.dot_templates = []
+        self.dot_template_iterators = []
+        self.curr_configurations = []
 
         self.arrows = VGroup()
 
@@ -73,11 +75,6 @@ class CountingScene(Scene):
         ])
         dots.scale_to_fit_height(self.dot_configuration_height)
         return dots
-
-    def initialize_configurations(self):
-        self.dot_templates = []
-        self.dot_template_iterators = []
-        self.curr_configurations = []
 
     def add_configuration(self):
         new_template = self.get_dot_template()
