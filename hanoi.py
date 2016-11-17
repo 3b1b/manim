@@ -237,6 +237,22 @@ class CountInBinaryTo256(PowerCounter):
     def get_template_configuration(self):
         return [ORIGIN, UP]
 
+class FactorialBase(CountingScene):
+    CONFIG = {
+        "dot_configuration_height" : 1,
+        "ones_configuration_location" : UP+4*RIGHT
+    }
+    def construct(self):
+        self.count(30, 0.4)
+    def is_next_digit(self):
+        return self.number == self.factorial(self.max_place + 1)
+    def get_place_max(self, place):
+        return place + 2
+    def get_place_num(self, num, place):
+        return (num / self.factorial(place + 1)) % self.get_place_max(place)
+    def factorial(self, n):
+        if (n == 1): return 1
+        else: return n * self.factorial(n - 1)
 
 class TowersOfHanoiScene(Scene):
     CONFIG = {
