@@ -26,7 +26,7 @@ from mobject.tex_mobject import *
 class CountingScene(Scene):
     CONFIG = {
         "base" : 10,
-        "power_colors" : [YELLOW, MAROON_B, RED, GREEN, BLUE, PURPLE_D],
+        "digit_place_colors" : [YELLOW, MAROON_B, RED, GREEN, BLUE, PURPLE_D],
         "counting_dot_starting_position" : (SPACE_WIDTH-1)*RIGHT + (SPACE_HEIGHT-1)*UP,
         "count_dot_starting_radius" : 0.5,
         "dot_configuration_height" : 2,
@@ -100,7 +100,7 @@ class CountingScene(Scene):
         moving_dot = Dot(
             self.counting_dot_starting_position,
             radius = self.count_dot_starting_radius,
-            color = self.power_colors[0],
+            color = self.digit_place_colors[0],
         )
         moving_dot.generate_target()
         moving_dot.set_fill(opacity = 0)
@@ -135,7 +135,7 @@ class CountingScene(Scene):
                 circle = Circle(
                     radius = radius,
                     stroke_width = 0,
-                    fill_color = self.power_colors[place],
+                    fill_color = self.digit_place_colors[place],
                     fill_opacity = 0.5,
                 )
                 circle.move_to(center)
@@ -157,7 +157,7 @@ class CountingScene(Scene):
             arrow = Arrow(
                 new_number_mob[place].get_top(),
                 self.dot_templates[place].get_bottom(),
-                color = self.power_colors[place]
+                color = self.digit_place_colors[place]
             )
             self.arrows.add(arrow)
             result.append(ShowCreation(arrow))
@@ -172,9 +172,9 @@ class CountingScene(Scene):
         place = 0
         while num > 0:
             digit = TexMobject(str(num % self.base))
-            if place >= len(self.power_colors):
-                self.power_colors += self.power_colors
-            digit.highlight(self.power_colors[place])
+            if place >= len(self.digit_place_colors):
+                self.digit_place_colors += self.digit_place_colors
+            digit.highlight(self.digit_place_colors[place])
             digit.scale(self.num_scale_factor)
             digit.next_to(result, LEFT, buff = SMALL_BUFF, aligned_edge = DOWN)
             result.add(digit)
