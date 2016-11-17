@@ -147,7 +147,7 @@ class CountingScene(Scene):
         self.number += 1
         new_number_mob = self.get_number_mob(self.number)
         new_number_mob.move_to(self.number_mob, RIGHT)
-        if self.is_perfect_power():
+        if self.is_next_digit():
             self.add_configuration()
             place = len(new_number_mob.split())-1
             result.append(FadeIn(self.dot_templates[place]))
@@ -179,7 +179,11 @@ class CountingScene(Scene):
             place += 1
         return result
 
-    def is_perfect_power(self):
+    def is_next_digit(self):
+        return False
+
+class PowerCounter(CountingScene):
+    def is_next_digit(self):
         number = self.number
         while number > 1:
             if number%self.base != 0:
@@ -187,8 +191,7 @@ class CountingScene(Scene):
             number /= self.base
         return True
 
-
-class CountInDecimal(CountingScene):
+class CountInDecimal(PowerCounter):
     def construct(self):
         for x in range(11):
             self.increment()
@@ -197,7 +200,7 @@ class CountInDecimal(CountingScene):
         for x in range(20):
             self.increment()
 
-class CountInTernary(CountingScene):
+class CountInTernary(PowerCounter):
     CONFIG = {
         "base" : 3,
         "dot_configuration_height" : 1,
@@ -209,7 +212,7 @@ class CountInTernary(CountingScene):
     # def get_template_configuration(self):
     #     return [ORIGIN, UP]
 
-class CountInBinaryTo256(CountingScene):
+class CountInBinaryTo256(PowerCounter):
     CONFIG = {
         "base" : 2,
         "dot_configuration_height" : 1,
