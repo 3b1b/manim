@@ -58,7 +58,7 @@ class CountingScene(Scene):
                 result.append(
                     down_right_steps*down_right + left_steps*LEFT
                 )
-        return reversed(result[:self.base])
+        return reversed(result[:self.get_digit_boxes(pos)])
 
     def get_dot_template(self):
         #This should be replaced for non-base-10 counting scenes
@@ -179,6 +179,8 @@ class CountingScene(Scene):
             place += 1
         return result
 
+    def get_digit_boxes(self, pos):
+        return 1
     def is_next_digit(self):
         return False
 
@@ -190,6 +192,8 @@ class PowerCounter(CountingScene):
                 return False
             number /= self.base
         return True
+    def get_digit_boxes(self, pos):
+        return self.base
 
 class CountInDecimal(PowerCounter):
     def construct(self):
