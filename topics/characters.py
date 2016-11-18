@@ -109,6 +109,9 @@ class PiCreature(SVGMobject):
             bottom_diff = eye.get_bottom()[1] - pupil.get_bottom()[1]
             if bottom_diff > 0:
                 pupil.shift(bottom_diff*UP)
+            # top_diff = eye.get_top()[1]-pupil.get_top()[1]
+            # if top_diff < 0:
+            #     pupil.shift(top_diff*UP)
         return self
 
     def look_at(self, point_or_mobject):

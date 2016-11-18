@@ -258,10 +258,6 @@ class Succession(Animation):
         self.last_index = 0
         Animation.__init__(self, mobject, run_time = run_time, **kwargs)
 
-    def __str__(self):
-        return self.__class__.__name__ + \
-               "".join(map(str, self.anims))
-
     def update_mobject(self, alpha):
         scaled_alpha = alpha*self.num_anims
         index = min(int(scaled_alpha), len(self.anims)-1)

@@ -96,7 +96,8 @@ class CountingScene(Scene):
             self.increment(run_time_per_anim)
 
     def increment(self, run_time_per_anim = 1, added_anims = [], total_run_time = None):
-        if total_run_time is not None:
+        run_all_at_once = (total_run_time is not None)
+        if run_all_at_once:
             num_rollovers = self.get_num_rollovers()
             run_time_per_anim = float(total_run_time)/(num_rollovers+1)
         moving_dot = Dot(
@@ -106,9 +107,6 @@ class CountingScene(Scene):
         )
         moving_dot.generate_target()
         moving_dot.set_fill(opacity = 0)
-        kwargs = {
-            "run_time" : run_time_per_anim
-        }
 
         continue_rolling_over = True
         first_move = True
@@ -123,9 +121,25 @@ class CountingScene(Scene):
             moving_dot.target.replace(
                 self.dot_template_iterators[place].next()
             )
-            self.play(MoveToTarget(moving_dot), *added_anims, **kwargs)
+            if run_all_at_once:
+                denom = float(num_rollovers+1)
+                start_t = place/denom
+                def get_modified_rate_func(anim):
+                    return lambda t : anim.original_rate_func(
+                        start_t + t/denom
+                    )
+                for anim in added_anims:
+                    if not hasattr(anim, "original_rate_func"):
+                        anim.original_rate_func = anim.rate_func
+                    anim.rate_func = get_modified_rate_func(anim)
+            self.play(
+                MoveToTarget(moving_dot), 
+                *added_anims, 
+                run_time = run_time_per_anim
+            )
             self.curr_configurations[place].add(moving_dot)
-            added_anims = []
+            if not run_all_at_once:
+                added_anims = []
 
 
             if len(self.curr_configurations[place].split()) == self.base:
@@ -337,7 +351,6 @@ class TowersOfHanoiScene(Scene):
         else:
             return self.disks[min_disk_index].get_top()
 
-
     def get_next_disk_0_peg(self):
         curr_peg_index = self.disk_index_to_peg_index(0)
         return (curr_peg_index+1)%3
@@ -455,6 +468,26 @@ def get_binary_tex_mobs(num_list):
         result.add(bits)
     return result
 
+def get_binary_tex_mob(number, n_bits = 4):
+    assert(number < 2**n_bits)
+    curr_bit = n_bits - 1
+    zero_width = TexMobject("0").get_width()
+    result = VGroup()
+    while curr_bit >= 0:
+        if number >= 2**curr_bit:
+            bit = "1"
+            number -= 2**curr_bit
+        else:
+            bit = "0"
+        bit_mob = TexMobject(bit)
+        n = n_bits - curr_bit - 1
+        bit_mob.shift(n*(zero_width+SMALL_BUFF)*RIGHT)
+        result.add(bit_mob)
+        curr_bit -= 1
+    return result.center()
+
+
+
 
 ####################
 
@@ -472,8 +505,16 @@ class IntroduceKeith(Scene):
         randy = Randolph().next_to(keith, LEFT, LARGE_BUFF, aligned_edge = DOWN)
         randy.shift_onto_screen()
 
-        bubble = keith.get_bubble("speech")
-        bubble.write("Check this out...")
+        bubble = keith.get_bubble("speech", width = 7)
+        bubble.write("01101011 $\\Rightarrow$ Towers of Hanoi")
+        zero_width = bubble.content[0].get_width()
+        one_width = bubble.content[1].get_width()        
+        for mob in bubble.content[:8]:
+            if abs(mob.get_width() - zero_width) < 0.01:
+                mob.highlight(GREEN)
+            else:
+                mob.highlight(YELLOW)
+
         bubble.resize_to_content()
         bubble.pin_to(keith)
         VGroup(bubble, bubble.content).shift(DOWN)
@@ -928,7 +969,7 @@ class IntroduceBinaryCounting(BinaryCountingScene):
     def construct(self):
         self.introduce_name()
         self.initial_counting()
-        self.rhtyhm_of_counting()
+        self.show_self_similarity()
 
     def introduce_name(self):
         title = TextMobject("Binary (base 2):", "0, 1")
@@ -955,10 +996,6 @@ class IntroduceBinaryCounting(BinaryCountingScene):
         self.play(bits.restore)
         self.dither()
 
-
-        # for x in range(16):
-        #     self.increment(0.5)
-
     def initial_counting(self):
         randy = Randolph().to_corner(DOWN+LEFT)
         bubble = randy.get_bubble("thought", height = 3.4, width = 5)
@@ -970,6 +1007,7 @@ class IntroduceBinaryCounting(BinaryCountingScene):
         self.play(self.number_mob.set_fill, self.power_colors[0], 1)
         self.increment()
         self.dither()
+        self.start_dot = self.curr_configurations[0][0]
 
         ##Up to 10
         self.increment()
@@ -1038,22 +1076,619 @@ class IntroduceBinaryCounting(BinaryCountingScene):
             randy.look_at, self.number_mob,
             *map(MoveToTarget, [brace, twos_place])
         )
-        for x in range(7):
-            self.increment(total_run_time = 1)
-        self.randy = randy
-
-    def rhtyhm_of_counting(self):
-        randy = self.randy
-        # randy = Randolph()
-        self.increment(total_run_time = 1, added_anims = [
-            randy.change_mode, "wave_1"
-        ])
-        randy.target = randy.copy().change_mode("wave_2")
-        arm_movement = MoveToTarget(randy, rate_func = there_and_back)
-        self.play(arm_movement)
-
         for x in range(8):
-            self.increment(total_run_time = 1, added_anims = [arm_movement])
+            self.increment(total_run_time = 1)
+        self.dither()
+        for x in range(8):
+            self.increment(total_run_time = 1.5)
+
+    def show_self_similarity(self):
+        cover_rect = Rectangle()
+        cover_rect.scale_to_fit_width(2*SPACE_WIDTH)
+        cover_rect.scale_to_fit_height(2*SPACE_HEIGHT)
+        cover_rect.set_stroke(width = 0)
+        cover_rect.set_fill(BLACK, opacity = 0.85)
+        big_dot = self.curr_configurations[-1][0].copy()
+        self.play(
+            FadeIn(cover_rect),
+            Animation(big_dot)
+        )
+        self.play(
+            big_dot.center,
+            big_dot.scale_to_fit_height, 2*SPACE_HEIGHT-2,
+            big_dot.to_edge, LEFT,
+            run_time = 5
+        )
+
+class BinaryCountingAtEveryScale(Scene):
+    CONFIG = {
+        "num_bits" : 4,
+        "show_title" : False,
+    }
+    def construct(self):
+        title = TextMobject("Count to %d (which is %s in binary)"%(
+            2**self.num_bits-1, bin(2**self.num_bits-1)[2:]
+        ))
+        title.to_edge(UP)
+        if self.show_title:
+            self.add(title)
+
+        bit_mobs = [
+            get_binary_tex_mob(n, self.num_bits)
+            for n in range(2**self.num_bits)
+        ]
+        curr_bits = bit_mobs[0]
+
+        lower_brace = Brace(VGroup(*curr_bits[1:]))
+        do_a_thing = lower_brace.get_text("Do a thing")
+        VGroup(lower_brace, do_a_thing).highlight(YELLOW)
+        upper_brace = Brace(curr_bits, UP)
+        roll_over = upper_brace.get_text("Roll over")
+        VGroup(upper_brace, roll_over).highlight(MAROON_B)
+        again = TextMobject("again")
+        again.next_to(do_a_thing, RIGHT, 2*SMALL_BUFF)
+        again.highlight(YELLOW)
+
+        self.add(curr_bits, lower_brace, do_a_thing)
+
+        def get_run_through(mobs):
+            return Succession(*[
+                Transform(
+                    curr_bits, mob, 
+                    rate_func = squish_rate_func(smooth, 0, 0.5)
+                )
+                for mob in mobs
+            ], run_time = 1)
+
+        for bit_mob in bit_mobs:
+            curr_bits.align_data(bit_mob)
+            bit_mob.highlight(YELLOW)
+            bit_mob[0].highlight(MAROON_B)
+        self.play(get_run_through(bit_mobs[1:2**(self.num_bits-1)]))
+        self.play(*map(FadeIn, [upper_brace, roll_over]))
+        self.play(Transform(
+            VGroup(*reversed(list(curr_bits))),
+            VGroup(*reversed(list(bit_mobs[2**(self.num_bits-1)]))),
+            submobject_mode = "lagged_start",
+            lag_factor = self.num_bits
+        ))
+        self.dither()
+        self.play(
+            get_run_through(bit_mobs[2**(self.num_bits-1)+1:]),
+            Write(again)
+        )
+        self.dither()
+
+class BinaryCountingAtSmallestScale(BinaryCountingAtEveryScale):
+    CONFIG = {
+        "num_bits" : 2,
+        "show_title" : True,
+    }
+
+class BinaryCountingAtMediumScale(BinaryCountingAtEveryScale):
+    CONFIG = {
+        "num_bits" : 4,
+        "show_title" : True,
+    }
+
+class BinaryCountingAtLargeScale(BinaryCountingAtEveryScale):
+    CONFIG = {
+        "num_bits" : 8,
+        "show_title" : True,
+    }
+
+class IntroduceSolveByCounting(TowersOfHanoiScene):
+    CONFIG = {
+        "num_disks" : 4
+    }
+    def construct(self):
+        self.initialize_bit_mobs()
+        for disk in self.disks:
+            disk.original_fill_color = disk.get_color()
+        braces = [
+            Brace(VGroup(*self.curr_bit_mob[-n:]))
+            for n in range(1, self.num_disks + 1)
+        ]
+        word_list = [
+            brace.get_text(text)
+            for brace, text in zip(braces, [
+                "Only flip last bit",
+                "Roll over once",
+                "Roll over twice",
+                "Roll over three times",
+            ])
+        ]
+        brace = braces[0].copy()
+        words = word_list[0].copy()
+
+        ##First increment
+        self.play(self.get_increment_animation())
+        self.play(
+            GrowFromCenter(brace),
+            Write(words, run_time = 1)
+        )
+        disk = self.disks[0]
+        last_bit = self.curr_bit_mob[-1]
+        last_bit.save_state()
+        self.play(
+            disk.set_fill, YELLOW,
+            disk[1].set_fill, BLACK,
+            last_bit.set_fill, YELLOW,
+        )
+        self.dither()
+        self.move_disk(0, run_time = 2)
+        self.play(
+            last_bit.restore,
+            disk.set_fill, disk.original_fill_color,
+            self.disks[0][1].set_fill, BLACK
+        )
+
+        ##Second increment
+        self.play(
+            self.get_increment_animation(),
+            Transform(words, word_list[1]),
+            Transform(brace, braces[1]),
+        )
+        disk = self.disks[1]
+        twos_bit = self.curr_bit_mob[-2]
+        twos_bit.save_state()
+        self.play(
+            disk.set_fill, MAROON_B,
+            disk[1].set_fill, BLACK,
+            twos_bit.set_fill, MAROON_B,
+        )
+        self.move_disk(1, run_time = 2)
+        self.dither()
+        self.move_disk_to_peg(1, 1, stay_on_peg = False)
+        cross = TexMobject("\\times")
+        cross.replace(disk)
+        cross.set_fill(RED, opacity = 0.5)
+        self.play(FadeIn(cross))
+        self.dither()
+        self.move_disk_to_peg(
+            1, 2, stay_on_peg = False, 
+            added_anims = [FadeOut(cross)]
+        )
+        self.play(
+            disk.set_fill, disk.original_fill_color,
+            disk[1].set_fill, BLACK,
+            twos_bit.restore,
+            Transform(brace, braces[0]),
+            Transform(words, word_list[0]),
+        )
+        self.move_disk(
+            0, 
+            added_anims = [self.get_increment_animation()],
+            run_time = 2
+        )
+        self.dither()
+
+        ##Fourth increment
+        self.play(
+            Transform(brace, braces[2]),
+            Transform(words, word_list[2]),
+        )
+        self.play(self.get_increment_animation())
+        disk = self.disks[2]
+        fours_bit = self.curr_bit_mob[-3]
+        fours_bit.save_state()
+        self.play(
+            disk.set_fill, RED,
+            disk[1].set_fill, BLACK,
+            fours_bit.set_fill, RED
+        )
+        self.move_disk(2, run_time = 2)
+        self.play(
+            disk.set_fill, disk.original_fill_color,
+            disk[1].set_fill, BLACK,
+            fours_bit.restore,
+            FadeOut(brace),
+            FadeOut(words)
+        )
+        self.dither()
+        for disk_index in 0, 1, 0:
+            self.move_disk(
+                disk_index, 
+                added_anims = [self.get_increment_animation()]
+            )
+        self.dither()
+
+        ##Eighth incremement
+        brace = braces[3]
+        words = word_list[3]
+        self.play(
+            self.get_increment_animation(),
+            GrowFromCenter(brace),
+            Write(words, run_time = 1)
+        )
+        disk = self.disks[3]
+        eights_bit = self.curr_bit_mob[0]
+        eights_bit.save_state()
+        self.play(
+            disk.set_fill, GREEN,
+            disk[1].set_fill, BLACK,
+            eights_bit.set_fill, GREEN
+        )
+        self.move_disk(3, run_time = 2)
+        self.play(
+            disk.set_fill, disk.original_fill_color,
+            disk[1].set_fill, BLACK,
+            eights_bit.restore,
+        )
+        self.play(*map(FadeOut, [brace, words]))
+        for disk_index in get_ruler_sequence(2):
+            self.move_disk(
+                disk_index,
+                stay_on_peg = False,
+                added_anims = [self.get_increment_animation()]
+            )
+        self.dither()
+
+    def initialize_bit_mobs(self):
+        bit_mobs = VGroup(*[
+            get_binary_tex_mob(n, self.num_disks)
+            for n in range(2**(self.num_disks))
+        ])
+        bit_mobs.scale(2)
+        for bit_mob in bit_mobs:
+            for bit, disk in zip(bit_mob, reversed(list(self.disks))):
+                bit.highlight(disk.get_color())
+        bit_mobs.next_to(self.peg_labels, DOWN)
+        self.bit_mobs_iter = it.cycle(bit_mobs)
+        self.curr_bit_mob = self.bit_mobs_iter.next()
+
+        self.add(self.curr_bit_mob)
+
+    def get_increment_animation(self):
+        return Succession(
+            Transform(self.curr_bit_mob, self.bit_mobs_iter.next()),
+            Animation(self.curr_bit_mob)
+        )
+
+class SolveSixDisksByCounting(IntroduceSolveByCounting):
+    CONFIG = {
+        "num_disks" : 6
+    }
+    def construct(self):
+        self.initialize_bit_mobs()
+        for disk_index in get_ruler_sequence(5):
+            self.move_disk(
+                disk_index,
+                stay_on_peg = False,
+                added_anims = [self.get_increment_animation()],
+            )
+        self.dither()
+
+class RecursionTime(Scene):
+    def construct(self):
+        keith = Keith().shift(2*DOWN+3*LEFT)
+        morty = Mortimer().shift(2*DOWN+3*RIGHT)
+        keith.make_eye_contact(morty)
+
+        keith_kick = keith.copy().change_mode("dance_kick")
+        keith_kick.scale_in_place(1.3)
+        keith_kick.shift(0.5*LEFT)
+        keith_kick.look_at(morty.eyes)
+        keith_hooray = keith.copy().change_mode("hooray")
+
+        self.add(keith, morty)
+
+        bubble = keith.get_bubble("speech", height = 2)
+        bubble.write("Recursion time!!!")
+        VGroup(bubble, bubble.content).shift(UP)
+
+        self.play(
+            Transform(keith, keith_kick),
+            morty.change_mode, "happy",
+            ShowCreation(bubble),
+            Write(bubble.content, run_time = 1)
+        )
+        self.play(
+            morty.change_mode, "hooray",
+            Transform(keith, keith_hooray),
+            bubble.content.gradient_highlight, BLUE_A, BLUE_E
+        )
+        self.play(Blink(morty))
+        self.dither()
+
+class Eyes(VMobject):
+    CONFIG = {
+        "height" : 0.3,
+    }
+    def __init__(self, mobject, **kwargs):
+        VMobject.__init__(self, **kwargs)
+        self.mobject = mobject
+        self.submobjects = self.get_eyes().submobjects
+
+    def get_eyes(self, mode = "plain", return_pi = False):
+        pi = Randolph(mode = mode)
+        eyes = VGroup(pi.eyes, pi.pupils)
+        eyes.scale_to_fit_height(self.height)
+        if self.submobjects:
+            eyes.move_to(self, DOWN)
+        else:
+            eyes.move_to(self.mobject.get_top(), DOWN)
+        if return_pi:
+            return eyes, pi
+        else:
+            return eyes
+
+    def change_mode_anim(self, mode, **kwargs):
+        return Transform(self, self.get_eyes(mode), **kwargs)
+
+    def blink_anim(self):
+        target = self.copy()
+        bottom_y = self.get_bottom()[1]
+        for submob in target:
+            submob.apply_function(
+                lambda p : [p[0], bottom_y, p[2]]
+            )
+        return Transform(
+            self, target, 
+            rate_func = squish_rate_func(there_and_back)
+        )
+
+    def look_at_anim(self, point_or_mobject, **kwargs):
+        target, pi = self.get_eyes(return_pi = True)
+        pi.look_at(point_or_mobject)
+        return Transform(self, target, **kwargs)
+
+class RecursiveSolution(TowersOfHanoiScene):
+    CONFIG = {
+        "num_disks" : 4
+    }
+    def construct(self):
+        VGroup(*self.get_mobjects()).shift(1.5*DOWN)
+        big_disk = self.disks[-1]
+        self.eyes = Eyes(big_disk)
+        title = TextMobject("Move 4-tower")
+        sub_steps = TextMobject(
+            "Move 3-tower,",
+            "Move disk 3,",
+            "Move 3-tower",
+        )
+        sub_steps[1].highlight(GREEN)
+        sub_step_brace = Brace(sub_steps, UP)
+        sub_sub_steps = TextMobject(
+            "Move 2-tower,",
+            "Move disk 2,",
+            "Move 2-tower",
+        )
+        sub_sub_steps[1].highlight(RED)
+        sub_sub_steps_brace = Brace(sub_sub_steps, UP)
+        steps = VGroup(
+            title, sub_step_brace, sub_steps, 
+            sub_sub_steps_brace, sub_sub_steps
+        )
+        steps.arrange_submobjects(DOWN)
+        steps.scale(0.7)
+        steps.to_edge(UP)
+        VGroup(sub_sub_steps_brace, sub_sub_steps).next_to(sub_steps[-1], DOWN)
+
+        self.add(title)
+
+        ##Big disk is frustrated
+        self.play(
+            FadeIn(self.eyes),
+            big_disk.set_fill, GREEN,
+            big_disk.label.set_fill, BLACK,
+        )
+        big_disk.add(self.eyes)        
+        self.blink()
+        self.dither()
+        self.change_mode("angry")
+        for x in range(2):
+            self.dither()
+            self.shake(big_disk)
+            self.blink()
+            self.dither()
+        self.change_mode("plain")
+        self.look_at(self.peg_labels[2])
+        self.look_at(self.disks[0])
+        self.blink()
+
+        #Subtower move
+        self.move_subtower_to_peg(3, 1, run_time = 2, added_anims = [
+            self.eyes.look_at_anim(self.pegs[1]),
+            FadeIn(sub_step_brace),
+            Write(sub_steps[0], run_time = 1)
+        ])
+        self.dither()
+        self.move_disk_to_peg(0, 0, run_time = 2, added_anims = [
+            self.eyes.look_at_anim(self.pegs[0].get_top())
+        ])
+        self.shake(big_disk)
+        self.move_disk_to_peg(0, 2, run_time = 2, added_anims = [
+            self.eyes.look_at_anim(self.pegs[2].get_bottom())
+        ])
+        self.change_mode("angry")
+        self.move_disk_to_peg(0, 1, run_time = 2, added_anims = [
+            self.eyes.look_at_anim(self.disks[1].get_top())
+        ])
+        self.blink()
+
+        #Final moves for big case
+        self.move_disk(3, run_time = 2, added_anims = [
+            Write(sub_steps[1])
+        ])
+        self.look_at(self.disks[1])
+        self.blink()
+        bubble = SpeechBubble()
+        bubble.write("I'm set!")
+        bubble.resize_to_content()
+        bubble.pin_to(big_disk)
+        bubble.add_content(bubble.content)
+        bubble.set_fill(BLACK, opacity = 0.7)
+        self.play(
+            ShowCreation(bubble),
+            Write(bubble.content)
+        )
+        self.dither()
+        self.blink()
+        self.play(*map(FadeOut, [bubble, bubble.content]))
+        big_disk.remove(self.eyes)
+        self.move_subtower_to_peg(3, 2, run_time = 2, added_anims = [
+            self.eyes.look_at_anim(self.pegs[2].get_top()),
+            Write(sub_steps[2])
+        ])
+        self.play(FadeOut(self.eyes))
+        self.dither()
+
+        #Highlight subproblem
+        self.play(
+            VGroup(*self.disks[:3]).move_to, self.pegs[1], DOWN
+        )
+        self.disk_tracker = [set([]), set([0, 1, 2]), set([3])]
+        arc = Arc(-5*np.pi/6, start_angle = 5*np.pi/6)
+        arc.add_tip()
+        arc.highlight(YELLOW)
+        arc.scale_to_fit_width(
+            VGroup(*self.pegs[1:]).get_width()*0.8
+        )
+        arc.next_to(self.disks[0], UP+RIGHT, buff = SMALL_BUFF)
+        q_mark = TextMobject("?")
+        q_mark.next_to(arc, UP)
+        self.play(
+            ShowCreation(arc),
+            Write(q_mark),
+            sub_steps[-1].highlight, YELLOW
+        )
+        self.dither()
+        self.play(
+            GrowFromCenter(sub_sub_steps_brace),
+            *map(FadeOut, [arc, q_mark])
+        )
+
+        #Disk 2 frustration
+        big_disk = self.disks[2]
+        self.eyes.move_to(big_disk.get_top(), DOWN)
+        self.play(
+            FadeIn(self.eyes),
+            big_disk.set_fill, RED,
+            big_disk.label.set_fill, BLACK
+        )
+        big_disk.add(self.eyes)
+        self.change_mode("sad")
+        self.look_at(self.pegs[1].get_top())
+        self.shake(big_disk)
+        self.blink()
+
+        #Move sub-sub-tower
+        self.move_subtower_to_peg(2, 0, run_time = 2, added_anims = [
+            self.eyes.look_at_anim(self.pegs[0].get_bottom()),
+            Write(sub_sub_steps[0])
+        ])
+        self.blink()
+        self.move_disk_to_peg(2, 2, run_time = 2, added_anims = [
+            Write(sub_sub_steps[1])
+        ])
+        self.look_at(self.disks[0])
+        big_disk.remove(self.eyes)
+        self.move_subtower_to_peg(2, 2, run_time = 2, added_anims = [
+            self.eyes.look_at_anim(self.pegs[2].get_top()),
+            Write(sub_sub_steps[2])
+        ])
+        self.blink()
+        self.look_at(self.disks[-1])
+
+        #Move eyes
+        self.play(FadeOut(self.eyes))
+        self.eyes.move_to(self.disks[1].get_top(), DOWN)
+        self.play(FadeIn(self.eyes))
+        self.blink()
+        self.play(FadeOut(self.eyes))
+        self.eyes.move_to(self.disks[3].get_top(), DOWN)
+        self.play(FadeIn(self.eyes))
+
+        #Show process one last time
+        big_disk = self.disks[3]
+        big_disk.add(self.eyes)
+        self.move_subtower_to_peg(3, 1, run_time = 2, added_anims = [
+            self.eyes.look_at_anim(self.pegs[0])
+        ])
+        self.move_disk_to_peg(3, 0, run_time = 2)
+        big_disk.remove(self.eyes)
+        self.move_subtower_to_peg(3, 0, run_time = 2, added_anims = [
+            self.eyes.look_at_anim(self.pegs[0].get_top())
+        ])
+        self.blink()
+
+
+
+
+
+    def shake(self, disk):
+        self.play(disk.shift, 0.2*UP, rate_func = wiggle)
+
+    def blink(self):
+        self.play(self.eyes.blink_anim())
+
+    def look_at(self, point_or_mobject):
+        self.play(self.eyes.look_at_anim(point_or_mobject))
+
+    def change_mode(self, mode):
+        self.play(self.eyes.change_mode_anim(mode))
+
+class CodeThisUp(Scene):
+    def construct(self):
+        keith = Keith()
+        keith.shift(2*DOWN+3*LEFT)
+        morty = Mortimer()
+        morty.shift(2*DOWN+3*RIGHT)
+        keith.make_eye_contact(morty)
+        point = 2*UP+3*RIGHT
+        bubble = keith.get_bubble("speech", width = 4.5, height = 3)
+        bubble.write("This is the \\\\ most efficient")
+        self.add(morty, keith)
+
+        self.play(
+            keith.change_mode, "speaking",
+            keith.look_at, point
+        )
+        self.play(
+            morty.change_mode, "pondering",
+            morty.look_at, point
+        )
+        self.play(Blink(keith))
+        self.dither(2)
+        self.play(Blink(morty))
+        self.dither()
+        self.play(
+            keith.change_mode, "hooray",
+            keith.look_at, morty.eyes
+        )
+        self.play(Blink(keith))
+        self.dither()
+        self.play(
+            keith.change_mode, "speaking",
+            keith.look_at, morty.eyes,
+            ShowCreation(bubble),
+            Write(bubble.content),
+            morty.change_mode, "happy",
+            morty.look_at, keith.eyes,
+        )
+        self.dither()
+        self.play(Blink(morty))
+        self.dither()
+
+class HanoiSolutionCode(Scene):
+    def construct(self):
+        pass
+
+class WhyDoesBinaryAchieveThis(Scene):
+    def construct(self):
+        keith = Keith()
+        keith.shift(2*DOWN+3*LEFT)
+        morty = Mortimer()
+        morty.shift(2*DOWN+3*RIGHT)
+        keith.make_eye_contact(morty)
+        bubble = morty.get_bubble("speech", width = 5, height = 3)
+        bubble.write("""
+            Why does counting
+            in binary work?
+        """)
+        self.add(morty, keith)
+
 
 
 
