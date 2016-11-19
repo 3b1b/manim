@@ -21,7 +21,7 @@ from animation.transform import MoveToTarget
 class Scene(object):
     CONFIG = {
         "camera_config"   : {},
-        "frame_duration"  : DEFAULT_FRAME_DURATION,
+        "frame_duration"  : LOW_QUALITY_FRAME_DURATION,
         "construct_args"  : [],
         "skip_animations" : False,
     }

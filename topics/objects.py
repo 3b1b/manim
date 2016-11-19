@@ -84,7 +84,7 @@ class Bubble(SVGMobject):
         return self.get_center() + factor*self.get_height()*UP
 
     def move_tip_to(self, point):
-        self.shift(point - self.get_tip())
+        VGroup(self, self.content).shift(point - self.get_tip())
         return self
 
     def flip(self):

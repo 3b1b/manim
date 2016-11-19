@@ -31,9 +31,9 @@ class Arc(VMobject):
             )
         ]
 
-    def add_tip(self):
+    def add_tip(self, tip_length = 0.25):
         #TODO, do this a better way
-        arrow = Arrow(*self.points[-2:])
+        arrow = Arrow(*self.points[-2:], tip_length = tip_length)
         self.add(arrow.split()[-1])
         self.highlight(self.get_color())
         return self

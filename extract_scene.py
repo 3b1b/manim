@@ -62,12 +62,12 @@ def get_configuration(sys_argv):
          return
       if opt in ['-l', '-p']:
          config["camera_config"] = LOW_QUALITY_CAMERA_CONFIG
-      if opt in ['-l', '-p', '-m']:
-         config["frame_duration"] = DEFAULT_FRAME_DURATION
+         config["frame_duration"] = LOW_QUALITY_FRAME_DURATION
       if opt == '-p':
          config["preview"] = True
       if opt == '-m':
          config["camera_config"] = MEDIUM_QUALITY_CAMERA_CONFIG
+         config["frame_duration"] = MEDIUM_QUALITY_FRAME_DURATION
       if opt == '-w':
          config["write"] = True
       if opt == '-s':
