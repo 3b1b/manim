@@ -70,6 +70,7 @@ class CountingScene(Scene):
             )
             for point in self.get_template_configuration()
         ])
+        dots[-1].set_stroke(width = 0)
         dots.scale_to_fit_height(self.dot_configuration_height)
         return dots
 
@@ -109,15 +110,11 @@ class CountingScene(Scene):
         moving_dot.set_fill(opacity = 0)
 
         continue_rolling_over = True
-        first_move = True
         place = 0
-        while continue_rolling_over:              
-            if first_move:
-                added_anims = list(
-                    self.get_digit_increment_animations()+\
-                    added_anims
-                )
-                first_move = False
+        self.number += 1
+        added_anims = list(added_anims) #Silly python objects...
+        added_anims += self.get_new_configuration_animations()
+        while continue_rolling_over:          
             moving_dot.target.replace(
                 self.dot_template_iterators[place].next()
             )
@@ -163,16 +160,21 @@ class CountingScene(Scene):
                 moving_dot[0].set_fill(opacity = 0)
             else:
                 continue_rolling_over = False
+        self.play(*self.get_digit_increment_animations())
+
+    def get_new_configuration_animations(self):
+        if self.is_perfect_power():
+            self.add_configuration()
+            return [FadeIn(self.dot_templates[-1])]
+        else:
+            return []
 
     def get_digit_increment_animations(self):
         result = []
-        self.number += 1
         new_number_mob = self.get_number_mob(self.number)
         new_number_mob.move_to(self.number_mob, RIGHT)
         if self.is_perfect_power():
-            self.add_configuration()
             place = len(new_number_mob.split())-1
-            result.append(FadeIn(self.dot_templates[place]))
             arrow = Arrow(
                 new_number_mob[place].get_top(),
                 self.dot_templates[place].get_bottom(),
@@ -258,6 +260,8 @@ class TowersOfHanoiScene(Scene):
         "num_disks" : 5,
         "peg_width" : 0.25,
         "peg_height" : 2.5,
+        "peg_spacing" : 4,
+        "include_peg_labels" : True,
         "middle_peg_bottom" : 0.5*DOWN,
         "disk_height" : 0.4,
         "disk_min_width" : 1,
@@ -280,13 +284,15 @@ class TowersOfHanoiScene(Scene):
         peg.move_to(self.middle_peg_bottom, DOWN)
         self.pegs = VGroup(*[
             peg.copy().shift(vect)
-            for vect in 4*LEFT, ORIGIN, 4*RIGHT
+            for vect in self.peg_spacing*LEFT, ORIGIN, self.peg_spacing*RIGHT
         ])
-        self.peg_labels = VGroup(*[
-            TexMobject(char).next_to(peg, DOWN)
-            for char, peg in zip("ABC", self.pegs)
-        ])
-        self.add(self.pegs, self.peg_labels)
+        self.add(self.pegs)
+        if self.include_peg_labels:
+            self.peg_labels = VGroup(*[
+                TexMobject(char).next_to(peg, DOWN)
+                for char, peg in zip("ABC", self.pegs)
+            ])
+            self.add(self.peg_labels)
 
     def add_disks(self):
         self.disks = VGroup(*[
@@ -365,6 +371,19 @@ class TowersOfHanoiScene(Scene):
             if self.min_disk_index_on_peg(index) > disk_index:
                 return index
         raise Exception("Tower's of Honoi rule broken: No available disks")
+
+    def set_disk_config(self, peg_indices):
+        assert(len(peg_indices) == self.num_disks)
+        self.disk_tracker = [set([]) for x in range(3)]
+        for n, peg_index in enumerate(peg_indices):
+            disk_index = self.num_disks - n - 1
+            disk = self.disks[disk_index]
+            peg = self.pegs[peg_index]
+            disk.move_to(peg.get_bottom(), DOWN)
+            n_disks_here = len(self.disk_tracker[peg_index])
+            disk.shift(disk.get_height()*n_disks_here*UP)
+            self.disk_tracker[peg_index].add(disk_index)
+
 
     def move_disk(self, disk_index, **kwargs):
         next_peg_index = self.get_available_peg(disk_index)
@@ -491,7 +510,6 @@ def get_base_b_tex_mob(number, base, n_digits):
         result.add(digit_mob)
         number = (number - remainder)/base
     return result.center()
-
 
 def get_binary_tex_mob(number, n_bits = 4):
     return get_base_b_tex_mob(number, 2, n_bits)
@@ -1197,8 +1215,8 @@ class IntroduceSolveByCounting(TowersOfHanoiScene):
         for disk in self.disks:
             disk.original_fill_color = disk.get_color()
         braces = [
-            Brace(VGroup(*self.curr_bit_mob[-n:]))
-            for n in range(1, self.num_disks + 1)
+            Brace(VGroup(*self.curr_bit_mob[:n]))
+            for n in range(1, self.num_disks+1)
         ]
         word_list = [
             brace.get_text(text)
@@ -1219,7 +1237,7 @@ class IntroduceSolveByCounting(TowersOfHanoiScene):
             Write(words, run_time = 1)
         )
         disk = self.disks[0]
-        last_bit = self.curr_bit_mob[-1]
+        last_bit = self.curr_bit_mob[0]
         last_bit.save_state()
         self.play(
             disk.set_fill, YELLOW,
@@ -1241,7 +1259,7 @@ class IntroduceSolveByCounting(TowersOfHanoiScene):
             Transform(brace, braces[1]),
         )
         disk = self.disks[1]
-        twos_bit = self.curr_bit_mob[-2]
+        twos_bit = self.curr_bit_mob[1]
         twos_bit.save_state()
         self.play(
             disk.set_fill, MAROON_B,
@@ -1281,7 +1299,7 @@ class IntroduceSolveByCounting(TowersOfHanoiScene):
         )
         self.play(self.get_increment_animation())
         disk = self.disks[2]
-        fours_bit = self.curr_bit_mob[-3]
+        fours_bit = self.curr_bit_mob[2]
         fours_bit.save_state()
         self.play(
             disk.set_fill, RED,
@@ -1298,10 +1316,8 @@ class IntroduceSolveByCounting(TowersOfHanoiScene):
         )
         self.dither()
         for disk_index in 0, 1, 0:
-            self.move_disk(
-                disk_index, 
-                added_anims = [self.get_increment_animation()]
-            )
+            self.play(self.get_increment_animation())
+            self.move_disk(disk_index)
         self.dither()
 
         ##Eighth incremement
@@ -1313,7 +1329,7 @@ class IntroduceSolveByCounting(TowersOfHanoiScene):
             Write(words, run_time = 1)
         )
         disk = self.disks[3]
-        eights_bit = self.curr_bit_mob[0]
+        eights_bit = self.curr_bit_mob[3]
         eights_bit.save_state()
         self.play(
             disk.set_fill, GREEN,
@@ -1328,11 +1344,8 @@ class IntroduceSolveByCounting(TowersOfHanoiScene):
         )
         self.play(*map(FadeOut, [brace, words]))
         for disk_index in get_ruler_sequence(2):
-            self.move_disk(
-                disk_index,
-                stay_on_peg = False,
-                added_anims = [self.get_increment_animation()]
-            )
+            self.play(self.get_increment_animation())
+            self.move_disk(disk_index, stay_on_peg = False)
         self.dither()
 
     def initialize_bit_mobs(self):
@@ -1341,18 +1354,24 @@ class IntroduceSolveByCounting(TowersOfHanoiScene):
             for n in range(2**(self.num_disks))
         ])
         bit_mobs.scale(2)
+        self.bit_mobs_iter = it.cycle(bit_mobs)
+        self.curr_bit_mob = self.bit_mobs_iter.next()
+
         for bit_mob in bit_mobs:
+            bit_mob.align_data(self.curr_bit_mob)
             for bit, disk in zip(bit_mob, reversed(list(self.disks))):
                 bit.highlight(disk.get_color())
         bit_mobs.next_to(self.peg_labels, DOWN)
-        self.bit_mobs_iter = it.cycle(bit_mobs)
-        self.curr_bit_mob = self.bit_mobs_iter.next()
 
         self.add(self.curr_bit_mob)
 
     def get_increment_animation(self):
         return Succession(
-            Transform(self.curr_bit_mob, self.bit_mobs_iter.next()),
+            Transform(
+                self.curr_bit_mob, self.bit_mobs_iter.next(),
+                submobject_mode = "lagged_start",
+                path_arc = -np.pi/3
+            ),
             Animation(self.curr_bit_mob)
         )
 
@@ -1360,16 +1379,19 @@ class SolveSixDisksByCounting(IntroduceSolveByCounting):
     CONFIG = {
         "num_disks" : 6,
         "stay_on_peg" : False,
-        "run_time_per_move" : 1,
+        "run_time_per_move" : 0.5,
     }
     def construct(self):
         self.initialize_bit_mobs()
         for disk_index in get_ruler_sequence(self.num_disks-1):
+            self.play(
+                self.get_increment_animation(),
+                run_time = self.run_time_per_move,
+            )
             self.move_disk(
                 disk_index,
                 stay_on_peg = self.stay_on_peg,
                 run_time = self.run_time_per_move,
-                added_anims = [self.get_increment_animation()],
             )
         self.dither()
 
@@ -1747,48 +1769,74 @@ class SolveTwoDisksByCounting(SolveSixDisksByCounting):
     def construct(self):
         self.initialize_bit_mobs()
         for disk_index in 0, 1, 0:
+            self.play(self.get_increment_animation())
             self.move_disk(
                 disk_index, 
                 stay_on_peg = False,
-                added_anims = [self.get_increment_animation()]
             )
             self.dither()
 
 class ShowFourDiskFourBitsParallel(IntroduceSolveByCounting):
     CONFIG = {
         "num_disks" : 4,
-        "small_run_time" : 0.2,
+        "subtask_run_time" : 1,
     }
     def construct(self):
         self.initialize_bit_mobs()
-        self.subtask()
+        self.counting_subtask()
         self.dither()
+        self.disk_subtask()
+        self.dither()
+        self.play(self.get_increment_animation())
         self.move_disk(
             self.num_disks-1, 
             stay_on_peg = False,
-            added_anims = [
-                self.get_increment_animation()
-            ]
         )
         self.dither()
-        self.subtask()
+        self.counting_subtask()
+        self.dither()
+        self.disk_subtask()
         self.dither()
 
-    def subtask(self):
+    def disk_subtask(self):
+        sequence = get_ruler_sequence(self.num_disks-2)
+        run_time = float(self.subtask_run_time)/len(sequence)
         for disk_index in get_ruler_sequence(self.num_disks-2):
             self.move_disk(
                 disk_index, 
-                run_time = self.small_run_time, 
+                run_time = run_time,
                 stay_on_peg = False,
-                added_anims = [
-                    self.get_increment_animation()
-                ]
             )
+        # curr_peg = self.disk_index_to_peg_index(0)
+        # self.move_subtower_to_peg(self.num_disks-1, curr_peg+1)
 
+    def counting_subtask(self):
+        num_tasks = 2**(self.num_disks-1)-1
+        run_time = float(self.subtask_run_time)/num_tasks
+        # for x in range(num_tasks):
+        #     self.play(
+        #         self.get_increment_animation(),
+        #         run_time = run_time
+        #     )
+        self.play(
+            Succession(*[
+                self.get_increment_animation()
+                for x in range(num_tasks)
+            ]),
+            rate_func = None,
+            run_time = self.subtask_run_time
+        )
+
+    def get_increment_animation(self):
+        return Transform(
+            self.curr_bit_mob, self.bit_mobs_iter.next(),
+            path_arc = -np.pi/3,
+        )
+        
 class ShowSixDiskSixBitsParallel(ShowFourDiskFourBitsParallel):
     CONFIG = {
         "num_disks" : 6,
-        "small_run_time" : 0.05
+        "subtask_run_time" : 2
     }
 
 class CoolRight(Scene):
@@ -2238,10 +2286,14 @@ class CompareNumberSystems(Scene):
             mob.brace = Brace(mob)
             mob.name = mob.brace.get_text(text)
         zero_one_two.name.gradient_highlight(BLUE, GREEN)
+        dots = TexMobject("\\dots")
+        dots.next_to(zero_one.name, RIGHT, aligned_edge = DOWN, buff = SMALL_BUFF)
 
         keith = Keith()
         keith.shift(2*DOWN+3*LEFT)
         keith.look_at(zero_one_two)
+        morty = Mortimer()
+        morty.shift(2*DOWN+3*RIGHT)
 
         for title, symbol in zip(titles, symbols):
             self.play(FadeIn(title))
@@ -2264,10 +2316,31 @@ class CompareNumberSystems(Scene):
         )
         self.play(keith.change_mode, "sassy")
         self.play(Blink(keith))
+        self.play(FadeIn(morty))
+        self.play(
+            morty.change_mode, "sassy",
+            morty.look_at, zero_one_two
+        )
+        self.play(Blink(morty))
+        self.dither()
+        self.play(
+            morty.shrug,
+            morty.look_at, keith.eyes,
+            keith.shrug,
+            keith.look_at, morty.eyes
+        )
+        self.dither()
+        self.play(
+            morty.change_mode, "hesitant",
+            morty.look_at, zero_one.name,
+            keith.change_mode, "erm",
+            keith.look_at, zero_one.name
+        )
+        self.play(Blink(morty))
+        self.play(Write(dots, run_time = 3))
         self.dither()
 
-
-class CountInTernary(CountingScene):
+class IntroduceTernaryCounting(CountingScene):
     CONFIG = {
         "base" : 3,
         "counting_dot_starting_position" : (SPACE_WIDTH-1)*RIGHT + (SPACE_HEIGHT-1)*UP,
@@ -2278,13 +2351,547 @@ class CountInTernary(CountingScene):
         "num_start_location" : DOWN+RIGHT,
     }
     def construct(self):
-        for x in range(27):
+        for x in range(2):
+            self.increment()
+        self.dither()
+        self.increment()
+        brace = Brace(self.number_mob[-1])
+        threes_place = brace.get_text("Three's place")
+        self.play(
+            GrowFromCenter(brace),
+            Write(threes_place)
+        )
+        self.dither()
+        for x in range(6):
+            self.increment()
+            self.dither()
+        new_brace = Brace(self.number_mob[-1])
+        nines_place = new_brace.get_text("Nine's place")
+        self.play(
+            Transform(brace, new_brace),
+            Transform(threes_place, nines_place),
+        )
+        self.dither()
+        for x in range(9):
+            self.increment()
+
+class TernaryCountingSelfSimilarPattern(Scene):
+    CONFIG = {
+        "num_trits" : 3,
+        "colors" : CountingScene.CONFIG["power_colors"][:3],
+    }
+    def construct(self):
+        colors = self.colors
+
+        title = TextMobject("Count to " + "2"*self.num_trits)
+        for i, color in enumerate(colors):
+            title[-i-1].highlight(color)
+        steps = VGroup(*map(TextMobject, [
+            "Count to %s,"%("2"*(self.num_trits-1)),
+            "Roll over,",
+            "Count to %s,"%("2"*(self.num_trits-1)),
+            "Roll over,",
+            "Count to %s,"%("2"*(self.num_trits-1)),
+        ]))
+        steps.arrange_submobjects(RIGHT)
+        for step in steps[::2]:
+            for i, color in enumerate(colors[:-1]):
+                step[-i-2].highlight(color)
+        VGroup(*steps[1::2]).highlight(colors[-1])
+        steps.scale_to_fit_width(2*SPACE_WIDTH-1)
+        brace = Brace(steps, UP)
+        word_group = VGroup(title, brace, steps)
+        word_group.arrange_submobjects(DOWN)
+        word_group.to_edge(UP)
+
+        ternary_mobs = VGroup(*[
+            get_ternary_tex_mob(n, n_trits = self.num_trits)
+            for n in range(3**self.num_trits)
+        ])
+        ternary_mobs.scale(2)
+        ternary_mob_iter = it.cycle(ternary_mobs)
+        curr_ternary_mob = ternary_mob_iter.next()
+
+        for trits in ternary_mobs:
+            trits.align_data(curr_ternary_mob)
+            for trit, color in zip(trits, colors):
+                trit.highlight(color)
+        def get_increment():
+            return Transform(
+                curr_ternary_mob, ternary_mob_iter.next(),
+                submobject_mode = "lagged_start",
+                path_arc = -np.pi/3
+            )
+
+        self.add(curr_ternary_mob, title)
+        self.play(GrowFromCenter(brace))
+        for i, step in enumerate(steps):
+            self.play(Write(step, run_time = 1))
+            if i%2 == 0:
+                self.play(
+                    Succession(*[
+                        get_increment()
+                        for x in range(3**(self.num_trits-1)-1)
+                    ]),
+                    run_time = 1
+                )
+            else:
+                self.play(get_increment())
+            self.dither()
+
+class TernaryCountingSelfSimilarPatternFiveTrits(TernaryCountingSelfSimilarPattern):
+    CONFIG = {
+        "num_trits" : 5,
+        "colors" : color_gradient([YELLOW, PINK, RED], 5),
+    }
+
+class CountInTernary(IntroduceTernaryCounting):
+    def construct(self):
+        for x in range(9):
             self.increment()
         self.dither()
 
+class SolveConstrainedWithTernaryCounting(ConstrainedTowersOfHanoiScene):
+    CONFIG = {
+        "num_disks" : 4,
+    }    
+    def construct(self):
+        for x in range(3**self.num_disks-1):
+            self.increment(run_time = 0.75)
+        self.dither()
+
+    def setup(self):
+        ConstrainedTowersOfHanoiScene.setup(self)
+        ternary_mobs = VGroup(*[
+            get_ternary_tex_mob(x)
+            for x in range(3**self.num_disks)
+        ])
+        ternary_mobs.scale(2)
+        ternary_mobs.next_to(self.peg_labels, DOWN)
+
+        for trits in ternary_mobs:
+            trits.align_data(ternary_mobs[0])
+            trits.gradient_highlight(*self.disk_start_and_end_colors)
+        self.ternary_mob_iter = it.cycle(ternary_mobs)            
+        self.curr_ternary_mob = self.ternary_mob_iter.next().copy()            
+        self.disk_index_iter = it.cycle(
+            get_ternary_ruler_sequence(self.num_disks-1)
+        )
+        self.ternary_mobs = ternary_mobs
+
+    def increment(self, run_time = 1, stay_on_peg = False):
+        self.increment_number(run_time)
+        self.move_next_disk(run_time, stay_on_peg)
+
+    def increment_number(self, run_time = 1):
+        self.play(Transform(
+            self.curr_ternary_mob, self.ternary_mob_iter.next(),
+            path_arc = -np.pi/3,
+            submobject_mode = "lagged_start", 
+            run_time = run_time,
+        ))
+
+    def move_next_disk(self, run_time = None, stay_on_peg = False):
+        self.move_disk(
+            self.disk_index_iter.next(), 
+            run_time = run_time,
+            stay_on_peg = stay_on_peg
+        )
+
+class DescribeSolutionByCountingToConstrained(SolveConstrainedWithTernaryCounting):
+    def construct(self):
+        braces = [
+            Brace(VGroup(*self.curr_ternary_mob[:n+1]))
+            for n in range(self.num_disks)
+        ]
+        words = [
+            brace.get_text(text)
+            for brace, text in zip(braces, [
+                "Only flip last trit",
+                "Roll over once",
+                "Roll over twice",
+                "Roll over three times",
+            ])
+        ]
+
+        #Count 1, 2
+        color = YELLOW
+        brace = braces[0]
+        word = words[0]
+        words[0].highlight(color)
+        self.increment_number()        
+        self.play(
+            FadeIn(brace),
+            Write(word, run_time = 1),
+            self.curr_ternary_mob[0].highlight, color
+        )
+        self.dither()
+        self.play(
+            self.disks[0].set_fill, color,
+            self.disks[0].label.set_fill, BLACK,
+        )
+        self.move_next_disk(stay_on_peg = True)
+        self.dither()
+        self.ternary_mobs[2][0].highlight(color)
+        self.increment_number()
+        self.move_next_disk(stay_on_peg = True)
+        self.dither()
+        
+        #Count 10
+        color = MAROON_B
+        words[1].highlight(color)
+        self.increment_number()
+        self.play(
+            Transform(brace, braces[1]),
+            Transform(word, words[1]),
+            self.curr_ternary_mob[1].highlight, color
+        )
+        self.dither()
+        self.play(
+            self.disks[1].set_fill, color,
+            self.disks[1].label.set_fill, BLACK,
+        )
+        self.move_next_disk(stay_on_peg = True)
+        self.dither()
+        self.play(*map(FadeOut, [brace, word]))
+
+        #Count up to 22
+        for x in range(5):
+            self.increment()
+            self.dither()
+
+        #Count to 100
+        color = RED
+        words[2].highlight(color)
+
+        self.dither()
+        self.increment_number()
+        self.play(
+            FadeIn(braces[2]),
+            Write(words[2], run_time = 1),
+            self.curr_ternary_mob[2].set_fill, color,
+            self.disks[2].set_fill, color,
+            self.disks[2].label.set_fill, BLACK,
+        )
+        self.dither()
+        self.move_next_disk(stay_on_peg = True)
+        self.dither()
+        self.play(*map(FadeOut, [braces[2], words[2]]))
+
+        for x in range(20):
+            self.increment()
+
+class Describe2222(Scene):
+    def construct(self):
+        ternary_mob = TexMobject("2222").scale(1.5)
+        brace = Brace(ternary_mob)
+        description = brace.get_text("$3^4 - 1 = 80$")
+        VGroup(ternary_mob, brace, description).scale(1.5)
+
+        self.add(ternary_mob)
+        self.dither()
+        self.play(GrowFromCenter(brace))
+        self.play(Write(description))
+        self.dither()
+
+class KeithAsksAboutConfigurations(Scene):
+    def construct(self):
+        keith = Keith().shift(2*DOWN+3*LEFT)
+        morty = Mortimer().shift(2*DOWN+3*RIGHT)
+        keith.make_eye_contact(morty)
+        bubble = keith.get_bubble("speech")
+        bubble.write("Think about how many \\\\ configurations there are.")
+
+        self.add(keith, morty)
+        self.play(Blink(keith))
+        self.play(
+            keith.change_mode, "speaking",
+            ShowCreation(bubble),
+            Write(bubble.content)
+        )
+        self.play(Blink(morty))
+        self.play(morty.change_mode, "pondering")
+        self.dither()
+
+class AskAboutConfigurations(SolveConstrainedWithTernaryCounting):
+    def construct(self):
+        question = TextMobject("How many configurations?")
+        question.scale(1.5)
+        question.to_edge(UP)
+        self.add(question)
+
+        for x in range(15):
+            self.remove(self.curr_ternary_mob)
+            self.dither(2)
+            for y in range(7):
+                self.increment(run_time = 0)
+
+class AnswerConfigurationsCount(TowersOfHanoiScene):
+    CONFIG = {
+        "middle_peg_bottom" : 2.5*DOWN,
+        "num_disks" : 4,
+        "peg_height" : 1.5,
+    }
+    def construct(self):
+        answer = TextMobject("$3^4 = 81$ configurations")
+        answer.to_edge(UP)
+        self.add(answer)
+
+        parentheticals = self.get_parentheticals(answer)
+
+        self.prepare_disks()
+
+        for parens, disk in zip(parentheticals, reversed(list(self.disks))):
+            VGroup(parens, parens.brace, parens.three).highlight(disk.get_color())
+            self.play(
+                Write(parens, run_time = 1),
+                FadeIn(disk)
+            )
+            self.play(
+                ApplyMethod(
+                    disk.next_to, self.pegs[2], UP,
+                    run_time = 2
+                ),
+                GrowFromCenter(parens.brace),
+                Write(parens.three, run_time = 1)
+            )
+            x_diff = disk.saved_state.get_center()[0]-disk.get_center()[0]
+            self.play(
+                disk.shift, x_diff*RIGHT
+            )
+            self.play(disk.restore)
+            self.dither()
+
+    def get_parentheticals(self, top_mob):
+        parentheticals = VGroup(*reversed([
+            TexMobject("""
+                \\left(
+                    \\begin{array}{c}
+                        \\text{Choices for} \\\\
+                        \\text{disk %d}
+                    \\end{array}
+                \\right)
+            """%d)
+            for d in range(self.num_disks)
+        ]))
+        parentheticals.arrange_submobjects()
+        parentheticals.scale_to_fit_width(2*SPACE_WIDTH-1)
+        parentheticals.next_to(top_mob, DOWN)
+        for parens in parentheticals:
+            brace = Brace(parens)
+            three = brace.get_text("$3$")
+            parens.brace = brace
+            parens.three = three
+        return parentheticals
+
+    def prepare_disks(self):
+        configuration = [1, 2, 1, 0]
+        for n, peg_index in enumerate(configuration):
+            disk_index = self.num_disks-n-1
+            disk = self.disks[disk_index]
+            top = Circle(radius = disk.get_width()/2)
+            inner = Circle(radius = self.peg_width/2)
+            inner.flip()
+            top.add_subpath(inner.points)
+            top.set_stroke(width = 0)
+            top.set_fill(disk.get_color())
+            top.rotate(np.pi/2, RIGHT)
+            top.move_to(disk, UP)
+            bottom = top.copy()
+            bottom.move_to(disk, DOWN)
+            disk.remove(disk.label)
+            disk.add(top, bottom, disk.label)
+            self.move_disk_to_peg(disk_index, peg_index, run_time = 0)
+            if disk_index == 0:
+                disk.move_to(self.pegs[peg_index].get_bottom(), DOWN)
+        for disk in self.disks:
+            disk.save_state()
+            disk.rotate(np.pi/30, RIGHT)
+            disk.next_to(self.pegs[0], UP)
+        self.remove(self.disks)
+
+class ThisIsMostEfficientText(Scene):
+    def construct(self):
+        text = TextMobject("This is the most efficient solution")
+        text.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        text.to_edge(DOWN)
+        self.play(Write(text))
+        self.dither(2)
+
+class ShowSomeGraph(Scene):
+    def construct(self):
+        title = TextMobject("Graphs")
+        title.scale(2)
+        title.to_edge(UP)
+
+        nodes = VGroup(*map(Dot, [
+            2*LEFT, 
+            UP,
+            DOWN,
+            2*RIGHT,
+            2*RIGHT+2*UP,
+            2*RIGHT+2*DOWN,
+            4*RIGHT+2*UP,
+        ]))
+        edge_pairs = [
+            (0, 1),
+            (0, 2),
+            (1, 3),
+            (2, 3),
+            (3, 4),
+            (3, 5),
+            (4, 6),
+        ]
+        edges = VGroup()
+        for i, j in edge_pairs:
+            edges.add(Line(
+                nodes[i].get_center(), 
+                nodes[j].get_center(), 
+            ))
+
+        self.play(Write(title))
+        for mob in nodes, edges:
+            mob.gradient_highlight(YELLOW, MAROON_B)
+            self.play(ShowCreation(
+                mob, 
+                submobject_mode = "lagged_start",
+                run_time = 2,
+            ))
+        self.dither()
+
+class SierpinskiGraphScene(Scene):
+    CONFIG = {
+        "num_disks" : 3,
+        "towers_config" : {
+            "num_disks" : 3,
+            "peg_height" : 1.5,
+            "peg_spacing" : 2,
+            "include_peg_labels" : False,
+            "disk_min_width" : 1,
+            "disk_max_width" : 2,
+        },
+        "node_radius" : 0.4,
+        "center_to_island_length" : 2.0,
+        "include_towers" : True,
+        "start_color" : RED,
+        "end_color" : GREEN,
+        "graph_stroke_width" : 2,
+    }
+    def setup(self):
+        self.nodes = VGroup(*[
+            self.create_node(node_index)
+            for node_index in range(3**self.num_disks)
+        ])
+        circles = VGroup(*[node.circle for node in self.nodes])
+        circles.gradient_highlight(self.start_color, self.end_color)
+        circles.set_fill(BLACK, opacity = 0.7)
+        circles.set_stroke(width = self.graph_stroke_width)
+        self.nodes.center()
+        self.add(self.nodes)
+
+        self.edges = self.get_edges()
+        self.add(self.edges)
+
+
+    def node_index_to_coord_list(self, node_index):
+        assert(node_index >= 0 and node_index < 3**self.num_disks)
+        coord_list = []
+        for x in range(self.num_disks):
+            coord_list = [node_index%3] + coord_list
+            node_index /= 3
+        return coord_list
+
+    def create_node(self, node_index, include_towers = None):
+        if include_towers is None:
+            include_towers = self.include_towers
+        coords = self.node_index_to_coord_list(node_index)
+        node = VGroup()
+        center = np.array(ORIGIN)
+        for n, coord in enumerate(coords):
+            assert(coord in [0, 1, 2])
+            vect = rotate_vector(RIGHT, -5*np.pi/6 - coord*2*np.pi/3)
+            vect *= self.center_to_island_length/float(2**n)
+            center = center + vect
+        circle = Circle(radius = self.node_radius)
+        circle.scale(self.node_radius)
+        circle.shift(center)
+        node.circle = circle
+        node.add(circle)
+
+        if include_towers:
+            towers_scene = TowersOfHanoiScene(**self.towers_config)
+            towers_scene.set_disk_config(coords)
+            towers = VGroup(*towers_scene.get_mobjects())
+            towers.scale_to_fit_width(0.75*node.get_width())
+            towers.move_to(center)
+            node.towers = towers
+            node.add(towers)
+        return node
+
+    def distance_between_nodes(self, i, j):
+        return np.linalg.norm(
+            self.nodes[i].get_center()-\
+            self.nodes[j].get_center()
+        )
+
+    def get_edges(self):
+        edges = VGroup()
+        min_distance = self.distance_between_nodes(0, 1)
+        min_distance *= 1.1 ##Just a little buff to be sure
+        for i, j in it.combinations(range(3**self.num_disks), 2):
+            center1 = self.nodes[i].get_center()
+            center2 = self.nodes[j].get_center()
+            if np.linalg.norm(center1 - center2) < min_distance:
+                vect = center1-center2
+                edge = Line(
+                    center1 - 2*vect*self.node_radius,
+                    center2 + 2*vect*self.node_radius,
+                    color = self.nodes[i].circle.get_stroke_color(),
+                    stroke_width = self.graph_stroke_width,
+                )
+                edges.add(edge)
+        return edges
 
 
 
+
+class IntroduceGraphStructure(SierpinskiGraphScene):
+    CONFIG = {
+        "include_towers" : True, 
+        "graph_stroke_width" : 2,
+    }
+    def construct(self):
+        self.remove(self.nodes, self.edges)
+        self.introduce_nodes()
+        self.define_edges()
+
+    def introduce_nodes(self):
+        self.play(FadeIn(
+            self.nodes,
+            run_time = 3,
+            submobject_mode = "lagged_start",
+            lag_factor = 7,
+        ))
+        vect = LEFT
+        for index in 3, 21, 8, 17, 10, 13:
+            node = self.nodes[index]
+            node.save_state()
+            self.play(
+                node.scale_to_fit_height, 2*SPACE_HEIGHT-2,
+                node.next_to, ORIGIN, vect
+            )
+            self.dither()
+            self.play(node.restore)
+            vect = -vect
+
+    def define_edges(self):
+        nodes = [self.nodes[i] for i in 12, 14]
+        for node, vect in zip(nodes, [LEFT, RIGHT]):
+            node.save_state()
+            node.generate_target()
+            node.target.scale_to_fit_height(2*SPACE_HEIGHT-1)
+            node.target.to_edge(vect)
+        
 
 
 
