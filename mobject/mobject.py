@@ -100,6 +100,7 @@ class Mobject(object):
         return deepcopy(self)
 
     def generate_target(self):
+        self.target = None #Prevent exponential explosion
         self.target = self.copy()
         return self.target
 

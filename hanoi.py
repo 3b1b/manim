@@ -4,6 +4,7 @@ from mobject.tex_mobject import TexMobject
 from mobject import Mobject
 from mobject.image_mobject import ImageMobject
 from mobject.vectorized_mobject import *
+from mobject.point_cloud_mobject import Mobject1D
 
 from animation.animation import Animation
 from animation.transform import *
@@ -18,6 +19,7 @@ from topics.combinatorics import *
 from topics.numerals import *
 from topics.three_dimensions import *
 from topics.objects import *
+# from topics.fractals import *
 from scene import Scene
 from camera import Camera
 from mobject.svg_mobject import *
@@ -2718,6 +2720,43 @@ class ThisIsMostEfficientText(Scene):
         self.play(Write(text))
         self.dither(2)
 
+class RepeatingConfiguraiton(Scene):
+    def construct(self):
+        dots = VGroup(*[Dot() for x in range(10)])
+        arrows = VGroup(*[Arrow(LEFT, RIGHT) for x in range(9)])
+        arrows.add(VGroup())
+        arrows.scale(0.5)
+        group = VGroup(*it.chain(*zip(dots, arrows)))
+        group.arrange_submobjects()
+        title = TextMobject("Same state twice")
+        title.shift(3*UP)
+        special_dots = VGroup(dots[2], dots[6])
+        special_arrows = VGroup(*[
+            Arrow(title.get_bottom(), dot, color = RED)
+            for dot in special_dots
+        ])
+        mid_mobs = VGroup(*group[5:14])
+        mid_arrow = Arrow(dots[2], dots[7], tip_length = 0.125)
+        more_efficient = TextMobject("More efficient")
+        more_efficient.next_to(mid_arrow, UP)
+
+        self.play(ShowCreation(group, run_time = 2))
+        self.play(Write(title))
+        self.play(
+            ShowCreation(special_arrows),
+            special_dots.highlight, RED
+        )
+        self.dither()
+        self.play(
+            mid_mobs.shift, 2*DOWN,
+            FadeOut(special_arrows)
+        )
+        self.play(
+            ShowCreation(mid_arrow),
+            Write(more_efficient)
+        )
+        self.dither()
+
 class ShowSomeGraph(Scene):
     def construct(self):
         title = TextMobject("Graphs")
@@ -2770,7 +2809,7 @@ class SierpinskiGraphScene(Scene):
             "disk_min_width" : 1,
             "disk_max_width" : 2,
         },
-        "node_radius" : 0.4,
+        "preliminary_node_radius" : 1,
         "center_to_island_length" : 2.0,
         "include_towers" : True,
         "start_color" : RED,
@@ -2778,55 +2817,63 @@ class SierpinskiGraphScene(Scene):
         "graph_stroke_width" : 2,
     }
     def setup(self):
-        self.nodes = VGroup(*[
-            self.create_node(node_index)
-            for node_index in range(3**self.num_disks)
-        ])
-        circles = VGroup(*[node.circle for node in self.nodes])
+        self.initialize_nodes()
+        self.add(self.nodes)
+
+        self.initialize_edges()
+        self.add(self.edges)
+
+    def initialize_nodes(self):
+        circles = self.get_node_circles(self.num_disks)
         circles.gradient_highlight(self.start_color, self.end_color)
         circles.set_fill(BLACK, opacity = 0.7)
         circles.set_stroke(width = self.graph_stroke_width)
-        self.nodes.center()
-        self.add(self.nodes)
 
-        self.edges = self.get_edges()
-        self.add(self.edges)
+        self.nodes = VGroup()
+        for circle in circles.submobject_family():
+            if not isinstance(circle, Circle):
+                continue
+            node = VGroup()
+            node.add(circle)
+            node.circle = circle
+            self.nodes.add(node)
+        if self.include_towers:
+            self.add_towers_to_nodes()
+        self.nodes.scale_to_fit_height(2*SPACE_HEIGHT-2)
+        self.nodes.to_edge(UP)
 
+    def get_node_circles(self, order = 3):
+        if order == 0:
+            return Circle(radius = self.preliminary_node_radius)
+        islands = [self.get_node_circles(order-1) for x in range(3)]
+        for island, angle in (islands[0], np.pi/6), (islands[2], 5*np.pi/6):
+            island.rotate(
+                np.pi,
+                rotate_vector(RIGHT, angle),
+                about_point = island.get_center_of_mass()
+            )
+        for n, island in enumerate(islands):
+            vect = rotate_vector(RIGHT, -5*np.pi/6-n*2*np.pi/3)
+            island.scale(0.5)
+            island.shift(vect)
+        return VGroup(*islands)
 
-    def node_index_to_coord_list(self, node_index):
-        assert(node_index >= 0 and node_index < 3**self.num_disks)
-        coord_list = []
-        for x in range(self.num_disks):
-            coord_list = [node_index%3] + coord_list
-            node_index /= 3
-        return coord_list
+    def add_towers_to_nodes(self):
+        towers_scene = ConstrainedTowersOfHanoiScene(**self.towers_config)
+        tower_scene_group = VGroup(*towers_scene.get_mobjects())
+        ruler_sequence = get_ternary_ruler_sequence(self.num_disks-1)
+        self.disks = VGroup(*[VGroup() for x in range(self.num_disks)])
 
-    def create_node(self, node_index, include_towers = None):
-        if include_towers is None:
-            include_towers = self.include_towers
-        coords = self.node_index_to_coord_list(node_index)
-        node = VGroup()
-        center = np.array(ORIGIN)
-        for n, coord in enumerate(coords):
-            assert(coord in [0, 1, 2])
-            vect = rotate_vector(RIGHT, -5*np.pi/6 - coord*2*np.pi/3)
-            vect *= self.center_to_island_length/float(2**n)
-            center = center + vect
-        circle = Circle(radius = self.node_radius)
-        circle.scale(self.node_radius)
-        circle.shift(center)
-        node.circle = circle
-        node.add(circle)
-
-        if include_towers:
-            towers_scene = TowersOfHanoiScene(**self.towers_config)
-            towers_scene.set_disk_config(coords)
-            towers = VGroup(*towers_scene.get_mobjects())
-            towers.scale_to_fit_width(0.75*node.get_width())
-            towers.move_to(center)
+        for disk_index, node in zip(ruler_sequence+[0], self.nodes):
+            towers = tower_scene_group.copy()
+            for mob in towers:
+                if hasattr(mob, "label"):
+                    self.disks[int(mob.label.tex_string)].add(mob)
+            towers.scale_to_fit_width(0.85*node.get_width())
+            towers.move_to(node)
             node.towers = towers
             node.add(towers)
-        return node
+            towers_scene.move_disk(disk_index, run_time = 0)            
 
     def distance_between_nodes(self, i, j):
         return np.linalg.norm(
@@ -2834,36 +2881,72 @@ class SierpinskiGraphScene(Scene):
             self.nodes[j].get_center()
         )
 
-    def get_edges(self):
+    def initialize_edges(self):
         edges = VGroup()
+        self.edge_dict = {}
         min_distance = self.distance_between_nodes(0, 1)
         min_distance *= 1.1 ##Just a little buff to be sure
+        node_radius = self.nodes[0].get_width()/2
         for i, j in it.combinations(range(3**self.num_disks), 2):
             center1 = self.nodes[i].get_center()
             center2 = self.nodes[j].get_center()
-            if np.linalg.norm(center1 - center2) < min_distance:
-                vect = center1-center2
+            vect = center1-center2
+            distance = np.linalg.norm(center1 - center2)
+            if distance < min_distance:
                 edge = Line(
-                    center1 - 2*vect*self.node_radius,
-                    center2 + 2*vect*self.node_radius,
+                    center1 - (vect/distance)*node_radius,
+                    center2 + (vect/distance)*node_radius,
                     color = self.nodes[i].circle.get_stroke_color(),
                     stroke_width = self.graph_stroke_width,
                 )
                 edges.add(edge)
-        return edges
+                self.edge_dict[self.node_indices_to_key(i, j)] = edge
+        self.edges = edges
 
+    def node_indices_to_key(self, i, j):
+        return ",".join(map(str, sorted([i, j])))
 
+    def node_indices_to_edge(self, i, j):
+        key = self.node_indices_to_key(i, j)
+        if key not in self.edge_dict:
+            warnings.warn("(%d, %d) is not an edge"%(i, j))
+            return VGroup()
+        return self.edge_dict[key]
 
+    def zoom_into_node(self, node_index, order = 0):
+        start_index = node_index - node_index%(3**order)
+        node_indices = [start_index + r for r in range(3**order)]
+        self.zoom_into_nodes(node_indices)
+
+    def zoom_into_nodes(self, node_indices):
+        nodes = VGroup(*[
+            self.nodes[index].circle
+            for index in node_indices
+        ])
+        everything = VGroup(*self.get_mobjects())
+        if nodes.get_width()/nodes.get_height() > SPACE_WIDTH/SPACE_HEIGHT:
+            scale_factor = (2*SPACE_WIDTH-2)/nodes.get_width()
+        else:
+            scale_factor = (2*SPACE_HEIGHT-2)/nodes.get_height()
+        self.play(
+            everything.shift, -nodes.get_center(),
+            everything.scale, scale_factor
+        )
+        self.remove(everything)
+        self.add(*everything)
+        self.dither()
 
 class IntroduceGraphStructure(SierpinskiGraphScene):
     CONFIG = {
         "include_towers" : True, 
-        "graph_stroke_width" : 2,
+        "graph_stroke_width" : 3,
+        "num_disks" : 3,
     }
     def construct(self):
         self.remove(self.nodes, self.edges)
         self.introduce_nodes()
         self.define_edges()
+        self.tour_structure()
 
     def introduce_nodes(self):
         self.play(FadeIn(
@@ -2882,6 +2965,7 @@ class IntroduceGraphStructure(SierpinskiGraphScene):
             )
             self.dither()
             self.play(node.restore)
+            node.saved_state = None
             vect = -vect
 
     def define_edges(self):
@@ -2889,9 +2973,291 @@ class IntroduceGraphStructure(SierpinskiGraphScene):
         for node, vect in zip(nodes, [LEFT, RIGHT]):
             node.save_state()
             node.generate_target()
-            node.target.scale_to_fit_height(2*SPACE_HEIGHT-1)
+            node.target.scale_to_fit_height(5)
+            node.target.center()
             node.target.to_edge(vect)
-        
+            arc = Arc(angle = -2*np.pi/3, start_angle = 5*np.pi/6)
+            if vect is RIGHT:
+                arc.flip()
+            arc.scale_to_fit_width(0.8*node.target.towers.get_width())
+            arc.next_to(node.target.towers, UP)
+            arc.add_tip()
+            arc.highlight(YELLOW)
+            node.arc = arc
+
+        self.play(*map(MoveToTarget, nodes))
+        edge = Line(
+            nodes[0].get_right(), nodes[1].get_left(),
+            color = YELLOW,
+            stroke_width = 6,
+        )
+        edge.target = self.node_indices_to_edge(12, 14)
+        self.play(ShowCreation(edge))
+        self.dither()
+        for node in nodes:
+            self.play(ShowCreation(node.arc))
+        self.dither()
+        self.play(*[
+            FadeOut(node.arc)
+            for node in nodes
+        ])
+        self.play(
+            MoveToTarget(edge),
+            *[node.restore for node in nodes]
+        )
+        self.dither()
+        self.play(ShowCreation(self.edges, run_time = 3))
+        self.dither()
+
+    def tour_structure(self):
+        for n in range(3):
+            self.zoom_into_node(n)
+        self.zoom_into_node(0, 1)
+        self.play(
+            self.disks[0].highlight, YELLOW,
+            *[
+                ApplyMethod(disk.label.highlight, BLACK)
+                for disk in self.disks[0]
+            ]
+        )
+        self.dither()
+        self.zoom_into_node(0, 3)
+        self.zoom_into_node(15, 1)
+        self.dither()
+        self.zoom_into_node(20, 1)
+        self.dither()
+
+class DescribeTriforcePattern(SierpinskiGraphScene):
+    CONFIG = {
+        "index_pairs" : [(7, 1), (2, 3), (5, 6)],
+        "scale" : 2,
+        "disk_color" : MAROON_B,
+        # "include_towers" : False,
+    }
+    def construct(self):
+        index_pair = self.index_pairs[0]
+        self.zoom_into_node(index_pair[0], self.scale)
+        self.play(
+            self.disks[self.scale-1].highlight, self.disk_color,
+            *[
+                ApplyMethod(disk.label.highlight, BLACK)
+                for disk in self.disks[self.scale-1]
+            ]
+        )
+
+        nodes = [self.nodes[i] for i in index_pair]
+        for node, vect in zip(nodes, [LEFT, RIGHT]):
+            node.save_state()
+            node.generate_target()
+            node.target.scale_to_fit_height(6)
+            node.target.center().next_to(ORIGIN, vect)
+
+        self.play(*map(MoveToTarget, nodes))
+        self.dither()
+        self.play(*[node.restore for node in nodes])
+        bold_edges = [
+            self.node_indices_to_edge(*pair).copy().set_stroke(self.disk_color, 6)
+            for pair in self.index_pairs
+        ]
+        self.play(ShowCreation(bold_edges[0]))
+        self.dither()
+        self.play(*map(ShowCreation, bold_edges[1:]))
+        self.dither()
+
+        nodes = self.nodes[:3**self.scale]
+        circles = VGroup(*[node.circle for node in nodes])
+        towers = VGroup(*[node.towers for node in nodes])
+        circles.save_state()
+        self.play(
+            circles.set_stroke, self.disk_color,
+            Animation(towers),
+            submobject_mode = "lagged_start",
+            run_time = 3
+        )
+        self.dither()
+        self.play(
+            circles.restore,
+            Animation(towers),
+            submobject_mode = "lagged_start",
+        )
+        self.dither()
+        for pair in self.index_pairs:
+            self.zoom_into_nodes(pair)
+
+class DescribeOrderTwoPattern(DescribeTriforcePattern):
+    CONFIG = {
+        "index_pairs" : [(8, 9), (17, 18), (4, 22)],
+        "scale" : 3,
+        "disk_color" : RED,
+    }
+
+class BiggerTowers(SierpinskiGraphScene):
+    CONFIG = {
+        "num_disks" : 6,
+        "include_towers" : False
+    }
+    def construct(self):
+        for order in range(3, 7):
+            self.zoom_into_node(0, order)
+
+class ShowPathThroughGraph(SierpinskiGraphScene):
+    CONFIG = {
+        "include_towers" : True
+    }
+    def construct(self):
+        arrows = VGroup(*[
+            Arrow(
+                n1.get_center(),
+                n2.get_center(),
+                tip_length = 0.15,
+                buff = 0.15
+            )
+            for n1, n2 in zip(self.nodes, self.nodes[1:])
+        ])
+        self.dither()
+        self.play(ShowCreation(
+            arrows,
+            rate_func = None,
+            run_time = 5
+        ))
+        self.dither(2)
+        for index in range(9):
+            self.zoom_into_node(index)
+
+class MentionFinalAnimation(Scene):
+    def construct(self):
+        morty = Mortimer()
+        morty.shift(2*DOWN+3*RIGHT)
+        bubble = morty.get_bubble("speech", width = 6)
+        bubble.write("Before the final\\\\ animation...")
+
+        self.add(morty)
+        self.dither()
+        self.play(
+            morty.change_mode, "speaking",
+            morty.look_at, bubble.content,
+            ShowCreation(bubble),
+            Write(bubble.content)
+        )
+        self.play(Blink(morty))
+        self.dither(2)
+        self.play(Blink(morty))
+        self.dither(2)
+
+class PatreonThanks(Scene):
+    CONFIG = {
+        "specific_patrons" : [
+            "CrypticSwarm",
+            "Ali Yahya",
+            "Juan    Batiz-Benet",
+            "Yu  Jun",
+            "Othman  Alikhan",
+            "Joseph  John Cox",
+            "Luc Ritchie",
+            "Einar Johansen",
+            "Rish    Kundalia",
+            "Achille Brighton",
+            "Kirk    Werklund",
+            "Ripta   Pasay",
+            "Felipe  Diniz",
+        ]
+    }
+    def construct(self):
+        morty = Mortimer()
+        morty.next_to(ORIGIN, DOWN)
+
+        n_patrons = len(self.specific_patrons)
+        special_thanks = TextMobject("Special thanks to:")
+        special_thanks.highlight(YELLOW)
+        special_thanks.shift(3*UP)
+
+        left_patrons = VGroup(*map(TextMobject, 
+            self.specific_patrons[:n_patrons/2]
+        ))
+        right_patrons = VGroup(*map(TextMobject, 
+            self.specific_patrons[n_patrons/2:]
+        ))
+        for patrons, vect in (left_patrons, LEFT), (right_patrons, RIGHT):
+            patrons.arrange_submobjects(DOWN, aligned_edge = LEFT)
+            patrons.next_to(special_thanks, DOWN)
+            patrons.to_edge(vect, buff = LARGE_BUFF)
+
+        self.play(morty.change_mode, "gracious")
+        self.play(Write(special_thanks, run_time = 1))
+        self.play(
+            Write(left_patrons),
+            morty.look_at, left_patrons
+        )
+        self.play(
+            Write(right_patrons),
+            morty.look_at, right_patrons
+        )
+        self.play(Blink(morty))
+        for patrons in left_patrons, right_patrons:
+            for index in 0, -1:
+                self.play(morty.look_at, patrons[index])
+                self.dither()
+
+class ShowSierpinskiCurvesOfIncreasingOrder(Scene):
+    CONFIG = {
+        "sierpinski_graph_scene_config" :{
+            "include_towers" : False
+        },
+        "max_order" : 8,
+        "path_stroke_width" : 7,
+    }
+    def construct(self):
+        graph_scenes = [
+            SierpinskiGraphScene(
+                num_disks = order,
+                **self.sierpinski_graph_scene_config
+            )
+            for order in range(2, self.max_order+1)
+        ]
+        paths = [self.get_path(scene) for scene in graph_scenes]
+        graphs = []
+        for scene in graph_scenes:
+            graphs.append(scene.nodes)
+        for graph in graphs:
+            graph.set_fill(opacity = 0)
+
+        graph, path = graphs[0], paths[0]
+
+        self.add(graph)
+        self.dither()
+        self.play(ShowCreation(path, run_time = 2))        
+        self.play(graph.fade, 0.5, Animation(path))
+        for other_graph in graphs[1:]:
+            other_graph.fade(0.5)
+        self.dither()
+        for new_graph, new_path in zip(graphs[1:], paths[1:]):
+            self.play(
+                Transform(graph, new_graph),
+                Transform(path, new_path),
+                run_time = 2
+            )
+            self.dither()
+
+
+    def get_path(self, graph_scene):
+        path = VGroup()
+        nodes = graph_scene.nodes
+        for n1, n2, n3 in zip(nodes, nodes[1:], nodes[2:]):
+            segment = VMobject()
+            segment.set_points_as_corners([
+                n1.get_center(),
+                n2.get_center(),
+                n3.get_center(),
+            ])
+            path.add(segment)
+        path.gradient_highlight(
+            graph_scene.start_color,
+            graph_scene.end_color,
+        )
+        path.set_stroke(width = self.path_stroke_width)
+        return path
+
+
 
 
 

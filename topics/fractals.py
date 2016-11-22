@@ -1,4 +1,5 @@
-from mobject import Mobject, Point, Mobject1D
+# from mobject import Mobject, Point, Mobject1D
+from mobject.vectorized_mobject import VMobject, VGroup, VectorizedPoint
 from scene import Scene
 from animation.transform import Transform
 from animation.simple_animations import ShowCreation
@@ -14,7 +15,7 @@ def rotate(points, angle = np.pi, axis = OUT):
     return points
 
 
-class SpaceFillingCurve(Mobject1D):
+class SpaceFillingCurve(VMobject):
     CONFIG = {
         "radius"      : 3,
         "order"       : 5,
@@ -25,7 +26,7 @@ class SpaceFillingCurve(Mobject1D):
     def generate_points(self):
         points = self.get_anchor_points()
         for pair in zip(points, points[1:]):
-            self.add_line(*pair)
+            self.add(Line(*pair))
         self.gradient_highlight(self.start_color, self.end_color)
 
     def get_anchor_points(self):
