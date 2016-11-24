@@ -58,6 +58,9 @@ class Scene(object):
     def get_frame(self):
         return self.camera.get_image()
 
+    def set_camera_image(self, pixel_array):
+        self.camera.set_image(pixel_array)
+
     def set_camera_background(self, background):
         self.camera.set_background(background)
 
@@ -73,7 +76,7 @@ class Scene(object):
         if mobjects is None:
             mobjects = self.mobjects
         if background is not None:
-            self.set_camera_background(background)
+            self.set_camera_image(background)
         else:
             self.reset_camera()
         self.capture_mobjects_in_camera(mobjects, **kwargs)

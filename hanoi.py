@@ -1104,7 +1104,8 @@ class IntroduceBinaryCounting(BinaryCountingScene):
             "$0 \\!\\cdot\\! 2 + $",
             "$0$",
         )
-        for piece, color in zip(bubble.content.submobjects, self.power_colors):
+        colors = reversed(self.power_colors[:3])
+        for piece, color in zip(bubble.content.submobjects, colors):
             piece[0].highlight(color)
         self.increment(added_anims = [Transform(curr_content, bubble.content)])
         four_brace = Brace(self.number_mob[-1])
