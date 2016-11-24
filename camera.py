@@ -57,6 +57,9 @@ class Camera(object):
     def set_image(self, pixel_array):
         self.pixel_array = np.array(pixel_array)
 
+    def set_background(self, pixel_array):
+        self.background = np.array(pixel_array)
+
     def reset(self):
         self.set_image(np.array(self.background))
 

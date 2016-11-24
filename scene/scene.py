@@ -59,7 +59,7 @@ class Scene(object):
         return self.camera.get_image()
 
     def set_camera_background(self, background):
-        self.camera.set_image(background)
+        self.camera.set_background(background)
 
     def reset_camera(self):
         self.camera.reset()

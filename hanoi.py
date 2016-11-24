@@ -577,6 +577,25 @@ class IntroduceKeith(Scene):
         )
         self.play(Blink(keith))
         self.dither()
+        original_content = bubble.content
+        bubble.write("I'm usually meh \\\\ on puzzles")
+        self.play(
+            keith.change_mode, "hesitant",
+            Transform(original_content, bubble.content),
+        )
+        self.play(
+            morty.change_mode, "happy",
+            morty.look_at, keith.eyes
+        )
+        self.play(Blink(keith))
+        bubble.write("But \\emph{analyzing} puzzles!")
+        VGroup(*bubble.content[3:12]).highlight(YELLOW)
+        self.play(
+            keith.change_mode, "hooray",
+            Transform(original_content, bubble.content)
+        )
+        self.play(Blink(morty))
+        self.dither()
         self.play(FadeIn(randy))
         self.play(
             randy.change_mode, "confused",
@@ -586,7 +605,7 @@ class IntroduceKeith(Scene):
             morty.change_mode, "plain",
             morty.look_at, randy.eyes,
             FadeOut(bubble),
-            FadeOut(bubble.content),
+            FadeOut(original_content),
             ShowCreation(randy.bubble),
             Write(randy.bubble.content)
         )
@@ -1675,6 +1694,28 @@ class RecursiveSolution(TowersOfHanoiScene):
     def change_mode(self, mode):
         self.play(self.eyes.change_mode_anim(mode))
 
+class KeithSaysBigToSmall(Scene):
+    def construct(self):
+        keith = Keith()
+        keith.shift(2.5*DOWN + 3*LEFT)
+        bubble = keith.get_bubble("speech", height = 4.5)
+        bubble.write("""
+            Big problem
+            $\\Downarrow$
+            Smaller problem
+        """)
+
+        self.add(keith)
+        self.play(Blink(keith))
+        self.play(
+            keith.change_mode, "speaking",
+            ShowCreation(bubble),
+            Write(bubble.content)
+        )
+        self.dither()
+        self.play(Blink(keith))
+        self.dither()
+
 class CodeThisUp(Scene):
     def construct(self):
         keith = Keith()
@@ -1721,6 +1762,23 @@ class HanoiSolutionCode(Scene):
     def construct(self):
         pass
 
+class NoRoomForInefficiency(Scene):
+    def construct(self):
+        morty = Mortimer().flip()
+        morty.shift(2.5*DOWN+3*LEFT)
+        bubble = morty.get_bubble("speech", width = 4)
+        bubble.write("No room for \\\\ inefficiency")
+        VGroup(morty, bubble, bubble.content).to_corner(DOWN+RIGHT)
+
+        self.add(morty)
+        self.play(
+            morty.change_mode, "speaking",
+            ShowCreation(bubble),
+            Write(bubble.content)
+        )
+        self.play(Blink(morty))
+        self.dither()
+
 class WhyDoesBinaryAchieveThis(Scene):
     def construct(self):
         keith = Keith()
@@ -1743,6 +1801,22 @@ class WhyDoesBinaryAchieveThis(Scene):
         )
         self.play(keith.change_mode, "happy")
         self.dither()
+        self.play(Blink(morty))
+        self.dither()
+
+class BothAreSelfSimilar(Scene):
+    def construct(self):
+        morty = Mortimer().flip()
+        morty.shift(2.5*DOWN+3*LEFT)
+        bubble = morty.get_bubble("speech")
+        bubble.write("Both are self-similar")
+
+        self.add(morty)
+        self.play(
+            morty.change_mode, "hooray",
+            ShowCreation(bubble),
+            Write(bubble.content)
+        )
         self.play(Blink(morty))
         self.dither()
 
@@ -1834,7 +1908,19 @@ class ShowFourDiskFourBitsParallel(IntroduceSolveByCounting):
             self.curr_bit_mob, self.bit_mobs_iter.next(),
             path_arc = -np.pi/3,
         )
-        
+ 
+class ShowThreeDiskThreeBitsParallel(ShowFourDiskFourBitsParallel):
+    CONFIG = {
+        "num_disks" : 3,
+        "subtask_run_time" : 1
+    }
+
+class ShowFiveDiskFiveBitsParallel(ShowFourDiskFourBitsParallel):
+    CONFIG = {
+        "num_disks" : 5,
+        "subtask_run_time" : 2
+    }
+
 class ShowSixDiskSixBitsParallel(ShowFourDiskFourBitsParallel):
     CONFIG = {
         "num_disks" : 6,
@@ -3032,7 +3118,8 @@ class DescribeTriforcePattern(SierpinskiGraphScene):
         "index_pairs" : [(7, 1), (2, 3), (5, 6)],
         "scale" : 2,
         "disk_color" : MAROON_B,
-        # "include_towers" : False,
+        "include_towers" : True,
+        "first_connect_0_and_2_islands" : True, #Dumb that I have to do this
     }
     def construct(self):
         index_pair = self.index_pairs[0]
@@ -3064,31 +3151,47 @@ class DescribeTriforcePattern(SierpinskiGraphScene):
         self.play(*map(ShowCreation, bold_edges[1:]))
         self.dither()
 
-        nodes = self.nodes[:3**self.scale]
-        circles = VGroup(*[node.circle for node in nodes])
-        towers = VGroup(*[node.towers for node in nodes])
-        circles.save_state()
-        self.play(
-            circles.set_stroke, self.disk_color,
-            Animation(towers),
-            submobject_mode = "lagged_start",
-            run_time = 3
-        )
+        power_of_three = 3**(self.scale-1)
+        index_sets = [
+            range(0, power_of_three),
+            range(power_of_three, 2*power_of_three),
+            range(2*power_of_three, 3*power_of_three),
+        ]
+        if self.first_connect_0_and_2_islands:
+            index_sets = [index_sets[0], index_sets[2], index_sets[1]]
+        islands = [
+            VGroup(*[self.nodes[i] for i in index_set])
+            for index_set in index_sets
+        ]
+        def wiggle_island(island):
+            return ApplyMethod(
+                island.rotate_in_place, np.pi/12, 
+                run_time = 1,
+                rate_func = wiggle
+            )
+        self.play(*map(wiggle_island, islands[:2]))
         self.dither()
-        self.play(
-            circles.restore,
-            Animation(towers),
-            submobject_mode = "lagged_start",
-        )
+        self.play(wiggle_island(islands[2]))
         self.dither()
-        for pair in self.index_pairs:
-            self.zoom_into_nodes(pair)
+        for index_set in index_sets:
+            self.zoom_into_nodes(index_set)
+        self.zoom_into_nodes(list(it.chain(*index_sets)))
+        self.dither()
+
+class TriforcePatternWord(Scene):
+    def construct(self):
+        word = TextMobject("Triforce \\\\ pattern")
+        word.scale(2)
+        word.to_corner(DOWN+RIGHT)
+        self.play(Write(word))
+        self.dither(2)
 
 class DescribeOrderTwoPattern(DescribeTriforcePattern):
     CONFIG = {
         "index_pairs" : [(8, 9), (17, 18), (4, 22)],
         "scale" : 3,
         "disk_color" : RED,
+        "first_connect_0_and_2_islands" : False,
     }
 
 class BiggerTowers(SierpinskiGraphScene):
@@ -3198,12 +3301,39 @@ class PatreonThanks(Scene):
                 self.play(morty.look_at, patrons[index])
                 self.dither()
 
+class MortyLookingAtRectangle(Scene):
+    def construct(self):
+        morty = Mortimer()
+        morty.to_corner(DOWN+RIGHT)
+        url = TextMobject("www.desmos.com/careers")
+        url.to_corner(UP+LEFT)
+        rect = Rectangle(height = 9, width = 16)
+        rect.scale_to_fit_height(5)
+        rect.next_to(url, DOWN)
+        rect.shift_onto_screen()
+        url.save_state()
+        url.next_to(morty.get_corner(UP+LEFT), UP)
+
+        self.play(morty.change_mode, "raise_right_hand")
+        self.play(Write(url))
+        self.play(Blink(morty))
+        self.dither()
+        self.play(
+            url.restore,
+            morty.change_mode, "happy"
+        )
+        self.play(ShowCreation(rect))
+        self.dither()
+        self.play(Blink(morty))
+        self.dither()
+
 class ShowSierpinskiCurvesOfIncreasingOrder(Scene):
     CONFIG = {
         "sierpinski_graph_scene_config" :{
             "include_towers" : False
         },
-        "max_order" : 8,
+        "min_order" : 2,
+        "max_order" : 7,
         "path_stroke_width" : 7,
     }
     def construct(self):
@@ -3212,7 +3342,7 @@ class ShowSierpinskiCurvesOfIncreasingOrder(Scene):
                 num_disks = order,
                 **self.sierpinski_graph_scene_config
             )
-            for order in range(2, self.max_order+1)
+            for order in range(self.min_order, self.max_order+1)
         ]
         paths = [self.get_path(scene) for scene in graph_scenes]
         graphs = []
@@ -3225,7 +3355,8 @@ class ShowSierpinskiCurvesOfIncreasingOrder(Scene):
 
         self.add(graph)
         self.dither()
-        self.play(ShowCreation(path, run_time = 2))        
+        self.play(ShowCreation(path, run_time = 3, rate_func = None))
+        self.dither()   
         self.play(graph.fade, 0.5, Animation(path))
         for other_graph in graphs[1:]:
             other_graph.fade(0.5)
@@ -3237,7 +3368,7 @@ class ShowSierpinskiCurvesOfIncreasingOrder(Scene):
                 run_time = 2
             )
             self.dither()
-
+        self.path = path
 
     def get_path(self, graph_scene):
         path = VGroup()
@@ -3254,11 +3385,60 @@ class ShowSierpinskiCurvesOfIncreasingOrder(Scene):
             graph_scene.start_color,
             graph_scene.end_color,
         )
-        path.set_stroke(width = self.path_stroke_width)
+        path.set_stroke(
+            width = self.path_stroke_width - graph_scene.num_disks/2
+        )
         return path
 
+class Part1Thumbnail(Scene):
+    CONFIG = {
+        "part_number" : 1,
+        "sierpinski_order" : 5
+    }
+    def construct(self):
+        toh_scene = TowersOfHanoiScene(
+            peg_spacing = 2,
+            part_number = 1,
+        )
+        toh_scene.remove(toh_scene.peg_labels)
+        toh_scene.pegs[2].set_fill(opacity = 0.5)
+        toh = VGroup(*toh_scene.get_mobjects())
+        toh.scale(2)
+        toh.to_edge(DOWN)
+        self.add(toh)
 
+        sierpinski_scene = ShowSierpinskiCurvesOfIncreasingOrder(
+            min_order = self.sierpinski_order,
+            max_order = self.sierpinski_order,
+            skip_animations = True,
+        )
+        sierpinski_scene.path.set_stroke(width = 10)        
+        sierpinski = VGroup(*sierpinski_scene.get_mobjects())
+        sierpinski.scale(0.9)
+        sierpinski.to_corner(DOWN+RIGHT)
+        self.add(sierpinski)
 
+        binary = TexMobject("01011")
+        binary.highlight_by_tex("0", GREEN)
+        binary.highlight_by_tex("1", BLUE)
+        binary.gradient_highlight(GREEN, RED)
+        binary.add_background_rectangle()
+        binary.background_rectangle.set_fill(opacity = 0.5)
+        # binary.set_fill(opacity = 0.5)
+        binary.scale(4)
+        binary.to_corner(UP+LEFT)
+        self.add(binary)
+
+        part = TextMobject("Part %d"%self.part_number)
+        part.scale(4)
+        part.to_corner(UP+RIGHT)
+        part.add_background_rectangle()
+        self.add(part)
+
+class Part2Thumbnail(Part1Thumbnail):
+    CONFIG = {
+        "part_number" : 2
+    }
 
 
 
