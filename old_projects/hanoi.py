@@ -386,7 +386,6 @@ class TowersOfHanoiScene(Scene):
             disk.shift(disk.get_height()*n_disks_here*UP)
             self.disk_tracker[peg_index].add(disk_index)
 
-
     def move_disk(self, disk_index, **kwargs):
         next_peg_index = self.get_available_peg(disk_index)
         self.move_disk_to_peg(disk_index, next_peg_index, **kwargs)
