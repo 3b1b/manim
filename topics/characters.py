@@ -10,7 +10,7 @@ from topics.objects import Bubble, ThoughtBubble, SpeechBubble
 from animation import Animation
 from animation.transform import Transform, ApplyMethod, \
     FadeOut, FadeIn, ApplyPointwiseFunction
-from animation.simple_animations import Write
+from animation.simple_animations import Write, ShowCreation
 from scene import Scene
 
 
@@ -225,14 +225,40 @@ class Blink(ApplyMethod):
 
 class PiCreatureScene(Scene):
     CONFIG = {
-        "total_dither_time" : 0
+        "total_dither_time" : 0,
+        "use_morty" : True,
     }
     def setup(self):
         self.pi_creature = self.get_pi_creature()
         self.add(self.pi_creature)
 
     def get_pi_creature(self):
-        return Randolph().to_corner()
+        if self.use_morty:
+            return Mortimer().to_corner(DOWN+RIGHT)
+        else:
+            return Randolph().to_corner(DOWN+LEFT)
+
+    def say(self, words, target_mode = "speaking"):
+        if isinstance(words, str):
+            words = TextMobject(words)
+        bubble = SpeechBubble()
+        bubble.add_content(words)
+        bubble.resize_to_content()
+        bubble.pin_to(self.pi_creature)
+        self.play(
+            self.pi_creature.change_mode, target_mode,
+            self.pi_creature.look_at, bubble.content,
+            ShowCreation(bubble),
+            Write(bubble.content)
+        )
+        self.pi_creature.bubble = bubble
+
+    def get_bubble_fade_anims(self, target_mode = "plain"):
+        return [
+            FadeOut(self.pi_creature.bubble),
+            FadeOut(self.pi_creature.bubble.content),
+            self.pi_creature.change_mode, target_mode
+        ]
 
     def play(self, *args, **kwargs):
         if self.pi_creature not in self.get_mobjects():
@@ -256,6 +282,9 @@ class PiCreatureScene(Scene):
         else:
             new_anims = [self.pi_creature.look_at, mobject_of_interest]
         Scene.play(self, *list(args) + new_anims, **kwargs)
+
+    def blink(self):
+        self.play(Blink(self.pi_creature))
 
     def dither(self, time = 1, blink = True):
         while time > 0:

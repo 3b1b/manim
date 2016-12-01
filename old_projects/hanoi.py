@@ -252,6 +252,12 @@ class CountInTernary(CountingScene):
     # def get_template_configuration(self):
     #     return [ORIGIN, UP]
 
+class CountTo27InTernary(CountInTernary):
+    def construct(self):
+        for x in range(27):
+            self.increment()
+        self.dither()
+
 class CountInBinaryTo256(BinaryCountingScene):
     def construct(self):
         self.count(256, 0.25)

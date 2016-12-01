@@ -180,8 +180,9 @@ class VMobject(Mobject):
         return self
 
     def change_anchor_mode(self, mode):
-        anchors, h1, h2 = self.get_anchors_and_handles()
-        self.set_anchor_points(anchors, mode = mode)
+        for submob in self.family_members_with_points():
+            anchors, h1, h2 = submob.get_anchors_and_handles()
+            submob.set_anchor_points(anchors, mode = mode)
         return self
 
     def make_smooth(self):

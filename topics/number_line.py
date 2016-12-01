@@ -242,8 +242,10 @@ class NumberPlane(VMobject):
 
     def prepare_for_nonlinear_transform(self, num_inserted_anchor_points = 50):
         for mob in self.family_members_with_points():
-            mob.insert_n_anchor_points(num_inserted_anchor_points)
-            mob.make_smooth()
+            num_anchors = mob.get_num_anchor_points()
+            if num_inserted_anchor_points > num_anchors:
+                mob.insert_n_anchor_points(num_inserted_anchor_points-num_anchors)
+                mob.make_smooth()
         return self
 
 
