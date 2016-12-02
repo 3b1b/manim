@@ -77,19 +77,26 @@ class Camera(object):
             if isinstance(mobject, VMobject):
                 vmobjects.append(mobject)
             elif isinstance(mobject, PMobject):
+                self.display_multiple_vectorized_mobjects(vmobjects)
+                vmobjects = []
                 self.display_point_cloud(
                     mobject.points, mobject.rgbs, 
                     self.adjusted_thickness(mobject.stroke_width)
                 )
             #TODO, more?  Call out if it's unknown?
+        self.display_multiple_vectorized_mobjects(vmobjects)
 
+    def display_multiple_vectorized_mobjects(self, vmobjects):
+        if len(vmobjects) == 0:
+            return
+        #More efficient to bundle together in one "canvas"
         image = Image.fromarray(self.pixel_array, mode = "RGB")        
         canvas = aggdraw.Draw(image)
-
         for vmobject in vmobjects:
             self.display_vectorized(vmobject, canvas)
         canvas.flush()
         self.pixel_array[:,:] = np.array(image)
+
 
 
     def display_region(self, region):

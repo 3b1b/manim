@@ -13,12 +13,12 @@ class ImageMobject(PMobject):
     Automatically filters out black pixels
     """
     CONFIG = {
-        "filter_color"    : "black",
-        "invert"          : True,
-        "use_cache"       : True,
+        "filter_color" : "black",
+        "invert" : False,
+        "use_cache" : True,
         "stroke_width" : 1,
-        "scale_factorue"     : 1.0,
-        "should_center"   : True,
+        "scale_factorue": 1.0,
+        "should_center" : True,
     }
     def __init__(self, image_file, **kwargs):
         digest_locals(self)

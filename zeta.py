@@ -51,7 +51,8 @@ class ComplexTransformationScene(Scene):
         "thincken_lines_after_transformation" : False,
         "default_apply_complex_function_kwargs" : {
             "run_time" : 5,
-        }
+        },
+        "background_label_scale_val" : 0.5,
     }
     def setup(self):
         self.foreground_mobjects = []
@@ -80,25 +81,30 @@ class ComplexTransformationScene(Scene):
         )
 
     def add_background_plane(self):
-        background = NumberPlane().fade()
+        background = NumberPlane(**self.plane_config).fade()
         real_labels = VGroup(*[
-            TexMobject(str(x)).shift(x*RIGHT)
+            TexMobject(str(x)).shift(
+                background.num_pair_to_point((x, 0))
+            )
             for x in range(int(self.x_min), int(self.x_max)+1)
         ])
         imag_labels = VGroup(*[
-            TexMobject("%di"%y).shift(y*UP)
+            TexMobject("%di"%y).shift(
+                background.num_pair_to_point((0, y))
+            )
             for y in range(int(self.y_min), int(self.y_max)+1)
             if y != 0
         ])
         for labels in real_labels, imag_labels:
             for label in labels:
-                label.scale_in_place(0.5)
+                label.scale_in_place(self.background_label_scale_val)
                 label.next_to(label.get_center(), DOWN+LEFT, buff = SMALL_BUFF)
                 label.add_background_rectangle()
             background.add(labels)
         self.real_labels = real_labels
         self.imag_labels = imag_labels
         self.add(background)
+        self.background = background
 
     def add_transformable_plane(self, animate = False):
         self.plane_config.update({
@@ -575,10 +581,14 @@ class DefineForRealS(PiCreatureScene):
         arrow = self.arrow
         smaller_words = self.smaller_words
         bigger_words = TextMobject("Getting \\emph{bigger}?")
+        bigger_words.move_to(self.smaller_words)
 
         #plug in -1
         self.transition_to_new_input(zeta_def, -1, "-\\frac{1}{12}")
-        self.change_mode("confused")
+        self.play(
+            Transform(self.smaller_words, bigger_words),
+            self.pi_creature.change_mode, "confused"
+        )
         new_sum_terms = TexMobject(
             list("1+2+3+4+") + ["\\cdots"]
         )
@@ -590,12 +600,10 @@ class DefineForRealS(PiCreatureScene):
         self.play(
             Transform(sum_terms, new_sum_terms),
             Transform(brace, new_brace),
-            sigma.next_to, new_brace, UP
-        )
-        self.play(
+            sigma.next_to, new_brace, UP,
             MoveToTarget(arrow),
             Transform(smaller_words, bigger_words),
-            self.final_sum.next_to, sum_terms, RIGHT
+            self.final_sum.next_to, new_sum_terms, RIGHT
         )
         self.dither(3)
 
@@ -669,8 +677,10 @@ class DefineForRealS(PiCreatureScene):
             for s1, s2 in zip(power_sums, power_sums[1:])
         ])
         lines.set_stroke(width = line_thickness)
-        VGroup(*lines[:4]).gradient_highlight(RED, GREEN_B)
-        VGroup(*lines[4:]).gradient_highlight(GREEN_B, MAROON_B)
+        # VGroup(*lines[:4]).gradient_highlight(RED, GREEN_B)
+        # VGroup(*lines[4:]).gradient_highlight(GREEN_B, MAROON_B)
+        VGroup(*lines[::2]).highlight(MAROON_B)
+        VGroup(*lines[1::2]).highlight(RED)
 
         braces = VGroup(*[
             Brace(line, UP)
@@ -684,7 +694,7 @@ class DefineForRealS(PiCreatureScene):
 
         final_dot = Dot(
             self.number_line.number_to_point(power_sums[-1]),
-            color = MAROON_B
+            color = GREEN_B
         )
 
         return lines, braces, dots, final_dot
@@ -705,13 +715,382 @@ class DefineForRealS(PiCreatureScene):
             self.pi_creature.change_mode, "pondering"
         )
 
+class IgnoreNegatives(TeacherStudentsScene):
+    def construct(self):
+        definition = TexMobject("""
+            \\zeta(s) = \\sum_{n=1}^{\\infty} \\frac{1}{n^s}
+        """)
+        VGroup(definition[2], definition[-1]).highlight(YELLOW)
+        definition.to_corner(UP+LEFT)
+        self.add(definition)
+        brace = Brace(definition, DOWN)
+        only_s_gt_1 = brace.get_text("""
+            Only defined 
+            for $s > 1$
+        """)
+        only_s_gt_1[-3].highlight(YELLOW)
 
 
+        self.change_student_modes(*["confused"]*3)
+        words = TextMobject(
+            "Ignore $s \\le 1$ \\dots \\\\",
+            "For now."
+        )
+        words[0][6].highlight(YELLOW)
+        words[1].highlight(BLACK)
+        self.teacher_says(words)
+        self.play(words[1].highlight, WHITE)
+        self.change_student_modes(*["happy"]*3)
+        self.play(
+            GrowFromCenter(brace),
+            Write(only_s_gt_1),
+            *it.chain(*[
+                [pi.look_at, definition]
+                for pi in self.get_everyone()
+            ])
+        )
+        self.random_blink(3)
+
+class RiemannFatherOfComplex(ComplexTransformationScene):
+    def construct(self):
+        name = TextMobject(
+            "Bernhard Riemann $\\rightarrow$ Complex analysis"
+        )
+        name.to_corner(UP+LEFT)
+        name.shift(0.25*DOWN)
+        name.add_background_rectangle()        
+        # photo = Square()
+        photo = ImageMobject("Riemann", invert = False)
+        photo.scale_to_fit_width(5)
+        photo.next_to(name, DOWN, aligned_edge = LEFT)
 
 
+        self.add(photo)
+        self.play(Write(name))
+        self.dither()
 
+        input_dot = Dot(2*RIGHT+UP, color = YELLOW)
+        arc = Arc(-2*np.pi/3)
+        arc.rotate(-np.pi)
+        arc.add_tip()
+        arc.shift(input_dot.get_top()-arc.points[0]+SMALL_BUFF*UP)
+        output_dot = Dot(
+            arc.points[-1] + SMALL_BUFF*(2*RIGHT+DOWN),
+            color = MAROON_B
+        )
+        for dot, tex in (input_dot, "z"), (output_dot, "f(z)"):
+            dot.label = TexMobject(tex)
+            dot.label.add_background_rectangle()
+            dot.label.next_to(dot, DOWN+RIGHT, buff = SMALL_BUFF)
+            dot.label.highlight(dot.get_color())
 
+        self.play(
+            ShowCreation(input_dot),
+            Write(input_dot.label)
+        )
+        self.play(ShowCreation(arc))
+        self.play(
+            ShowCreation(output_dot),
+            Write(output_dot.label)
+        )
+        self.dither()
 
+class FromRealToComplex(ComplexTransformationScene):
+    CONFIG = {
+        "plane_config" : {
+            "space_unit_to_x_unit" : 2,
+            "space_unit_to_y_unit" : 2,
+        },
+        "background_label_scale_val" : 0.7,
+        "output_color" : GREEN_B,
+    }
+    def construct(self):
+        self.handle_background()
+        self.show_real_to_real()
+        self.transition_to_complex()
+        self.single_out_complex_exponent()
+        ##Fade to several scenes defined below
+        self.show_s_equals_two_lines()
+        self.transition_to_spiril_sum()
+        self.vary_complex_input()
+        self.show_domain_of_convergence()
+
+    def handle_background(self):
+        self.remove(self.background)
+        #Oh yeah, this is great practice...
+        self.background[-1].remove(*self.background[-1][-3:])
+
+    def show_real_to_real(self):
+        zeta = self.get_zeta_definition("2",  "\\frac{\\pi^2}{6}")
+        number_line = NumberLine(
+            space_unit_to_num = 2, 
+            tick_frequency = 0.5,
+            numbers_with_elongated_ticks = range(-2, 3)
+        )
+        number_line.add_numbers()
+        input_dot = Dot(number_line.number_to_point(2))
+        input_dot.highlight(YELLOW)
+
+        output_dot = Dot(number_line.number_to_point(np.pi**2/6))
+        output_dot.highlight(self.output_color)
+
+        arc = Arc(
+            2*np.pi/3, start_angle = np.pi/6,
+        )
+        arc.stretch_to_fit_width(
+            (input_dot.get_center()-output_dot.get_center())[0]
+        )
+        arc.stretch_to_fit_height(0.5)
+        arc.next_to(input_dot.get_center(), UP, aligned_edge = RIGHT)
+        arc.add_tip()
+
+        two = zeta[1][2].copy()
+        sum_term = zeta[-1]
+        self.add(number_line, *zeta[:-1])
+        self.dither()
+        self.play(Transform(two, input_dot))
+        self.remove(two)
+        self.add(input_dot)
+        self.play(ShowCreation(arc))
+        self.play(ShowCreation(output_dot))
+        self.play(Transform(output_dot.copy(), sum_term))
+        self.remove(*self.get_mobjects_from_last_animation())
+        self.add(sum_term)
+        self.dither(2)
+        self.play(
+            ShowCreation(
+                self.background,
+                run_time = 2
+            ),
+            FadeOut(VGroup(arc, output_dot, number_line)),
+            Animation(zeta),
+            Animation(input_dot)
+        )
+        self.dither(2)
+
+        self.zeta = zeta
+        self.input_dot = input_dot
+
+    def transition_to_complex(self):
+        complex_zeta = self.get_zeta_definition("2+i", "???")
+        input_dot = self.input_dot
+        input_dot.generate_target()
+        input_dot.target.move_to(
+            self.background.num_pair_to_point((2, 1))
+        )
+        input_label = TexMobject("2+i")
+        input_label.highlight(YELLOW)
+        input_label.next_to(input_dot.target, DOWN+RIGHT, buff = SMALL_BUFF)
+        input_label.add_background_rectangle()
+        input_label.save_state()
+        input_label.replace(VGroup(*complex_zeta[1][2:5]))
+        input_label.background_rectangle.scale_in_place(0.01)
+        self.input_label = input_label
+
+        self.play(Transform(self.zeta, complex_zeta))
+        self.dither()
+        self.play(
+            input_label.restore,
+            MoveToTarget(input_dot)
+        )
+        self.dither(2)
+
+    def single_out_complex_exponent(self):
+        frac_scale_factor = 1.2
+
+        randy = Randolph()
+        randy.to_corner()
+        bubble = randy.get_bubble(height = 4)
+        bubble.set_fill(BLACK, opacity = 1)
+
+        pre_frac = self.zeta[2][2].copy()
+        frac = VGroup(
+            VectorizedPoint(pre_frac.get_left()),
+            VGroup(*pre_frac[:3]),
+            VectorizedPoint(pre_frac.get_right()),
+            VGroup(*pre_frac[3:])
+        )
+        frac.generate_target()
+        frac.target.scale(frac_scale_factor)
+        bubble.add_content(frac.target)
+        new_frac = TexMobject(
+            "\\Big(", "\\frac{1}{2}", "\\Big)", "^{2+i}"
+        )
+        new_frac[-1].highlight(YELLOW)
+        new_frac.scale(frac_scale_factor)
+        new_frac.move_to(frac.target)
+        new_frac.shift(LEFT+0.2*UP)
+
+        words = TextMobject("Not repeated \\\\", " multiplication")
+        words.scale(0.8)
+        words.highlight(RED)
+        words.next_to(new_frac, RIGHT)
+
+        new_words = TextMobject("Not \\emph{super} \\\\", "crucial to know...")
+        new_words.replace(words)
+        new_words.scale_in_place(1.3)
+
+        self.play(FadeIn(randy))
+        self.play(
+            randy.change_mode, "confused",
+            randy.look_at, bubble,
+            ShowCreation(bubble),
+            MoveToTarget(frac)
+        )
+        self.play(Blink(randy))
+        self.play(Transform(frac, new_frac))
+        self.play(Write(words))
+        for x in range(2):
+            self.dither(2)
+            self.play(Blink(randy))
+        self.play(
+            Transform(words, new_words),
+            randy.change_mode, "maybe"
+        )
+        self.dither()
+        self.play(Blink(randy))
+        self.play(randy.change_mode, "happy")
+        self.dither()
+        self.play(*map(FadeOut, [randy, bubble, frac, words]))
+
+    def show_s_equals_two_lines(self):
+        self.input_label.save_state()
+        zeta = self.get_zeta_definition("2", "\\frac{\\pi^2}{6}")
+        lines, output_dot = self.get_sum_lines(2)
+        sum_terms = self.zeta[2][:-1:2]
+        dots_copy = zeta[2][-1].copy()
+        pi_copy = zeta[3].copy()
+        def transform_and_replace(m1, m2):
+            self.play(Transform(m1, m2))
+            self.remove(m1)
+            self.add(m2)
+
+        self.play(
+            self.input_dot.shift, 2*DOWN,
+            self.input_label.fade, 0.7,
+        )
+        self.play(Transform(self.zeta, zeta))
+
+        for term, line in zip(sum_terms, lines):
+            line.save_state()
+            line.next_to(term, DOWN)
+            term_copy = term.copy()
+            transform_and_replace(term_copy, line)
+            self.play(line.restore)
+        later_lines = VGroup(*lines[4:])
+        transform_and_replace(dots_copy, later_lines)
+        self.dither()
+        transform_and_replace(pi_copy, output_dot)
+        self.dither()
+
+        self.lines = lines
+        self.output_dot = output_dot
+
+    def transition_to_spiril_sum(self):
+        zeta = self.get_zeta_definition("2+i", "1.15 - 0.44i")
+        zeta.scale_to_fit_width(2*SPACE_WIDTH-1)
+        zeta.to_corner(UP+LEFT)
+        lines, output_dot = self.get_sum_lines(complex(2, 1))
+
+        self.play(
+            self.input_dot.shift, 2*UP,
+            self.input_label.restore,
+        )
+        self.dither()
+        self.play(Transform(self.zeta, zeta))
+        self.dither()
+        self.play(
+            Transform(self.lines, lines),
+            Transform(self.output_dot, output_dot),
+            run_time = 2,
+            path_arc = -np.pi/6,
+        )
+        self.dither()
+
+    def vary_complex_input(self):
+        zeta = self.get_zeta_definition("s", "")
+        zeta[3].highlight(BLACK)
+        self.play(Transform(self.zeta, zeta))
+        self.play(FadeOut(self.input_label))
+        self.dither(2)
+        inputs = [
+            complex(1.2, 1),
+            complex(1.2, -1),
+            complex(3, -1),
+            complex(1, 1),
+            complex(0.8, -1),
+            complex(0.8, -14.135),
+            # complex(2, 1),
+        ]
+        for s in inputs:
+            input_point = self.z_to_point(s)
+            lines, output_dot = self.get_sum_lines(s)
+            self.play(
+                self.input_dot.move_to, input_point,
+                Transform(self.lines, lines),
+                Transform(self.output_dot, output_dot),
+                run_time = 2
+            )
+            self.dither()
+
+    def show_domain_of_convergence(self):
+        pass
+
+    def get_zeta_definition(self, input_string, output_string, input_color = YELLOW):
+        inputs = VGroup()
+        num_shown_terms = 4
+        n_input_chars = len(input_string)
+
+        zeta_s_eq = TexMobject("\\zeta(%s) = "%input_string)
+        zeta_s_eq.to_edge(LEFT, buff = LARGE_BUFF)
+        zeta_s_eq.shift(0.5*UP)
+        inputs.add(*zeta_s_eq[2:2+n_input_chars])
+
+        sum_terms = TexMobject(*it.chain(*zip(
+            [
+                "\\frac{1}{%d^{%s}}"%(d, input_string)
+                for d in range(1, 1+num_shown_terms)
+            ],
+            it.cycle(["+"])
+        )))
+        sum_terms.add(TexMobject("\\cdots").next_to(sum_terms[-1]))
+        sum_terms.next_to(zeta_s_eq, RIGHT)
+        for x in range(num_shown_terms):
+            inputs.add(*sum_terms[2*x][-n_input_chars:])
+
+        output = TexMobject("= \\," + output_string)
+        output.next_to(sum_terms, RIGHT)
+        output.highlight(self.output_color)
+
+        inputs.highlight(input_color)
+        group = VGroup(zeta_s_eq, sum_terms, output)
+        group.to_edge(UP)
+        group.add_to_back(BackgroundRectangle(group))
+        return group
+
+    def z_to_point(self, z):
+        return self.background.num_pair_to_point((z.real, z.imag))
+
+    def get_sum_lines(self, exponent, line_thickness = 6):
+        num_lines = 200
+        powers = [0] + [x**(-exponent) for x in range(1, num_lines)]
+        power_sums = np.cumsum(powers)
+        lines = VGroup(*[
+            Line(*map(self.z_to_point, z_pair))
+            for z_pair in zip(power_sums, power_sums[1:])
+        ])
+        lines.set_stroke(width = line_thickness)
+        # VGroup(*lines[:4]).gradient_highlight(RED, GREEN_B)
+        # VGroup(*lines[4:]).gradient_highlight(GREEN_B, MAROON_B)
+        VGroup(*lines[::2]).highlight(MAROON_B)
+        VGroup(*lines[1::2]).highlight(RED)
+
+        final_dot = Dot(
+            self.z_to_point(power_sums[-1]),
+            color = self.output_color
+        )
+
+        return lines, final_dot
 
 
 

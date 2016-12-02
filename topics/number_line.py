@@ -184,7 +184,7 @@ class NumberPlane(VMobject):
 
     def num_pair_to_point(self, pair):
         pair = np.array(pair) + self.num_pair_at_center
-        result = self.get_center()
+        result = self.axes.get_center()
         result[0] += pair[0]*self.space_unit_to_x_unit
         result[1] += pair[1]*self.space_unit_to_y_unit
         return result
