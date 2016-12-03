@@ -126,9 +126,10 @@ class Homotopy(Animation):
             **self.apply_function_kwargs
         )
 
-    def update_mobject(self, alpha):
-        Animation.update_mobject(self, alpha)
-
+class SmoothedVectorizedHomotopy(Homotopy):
+    def update_submobject(self, submob, start, alpha):
+        Homotopy.update_submobject(self, submob, start, alpha)
+        submob.make_smooth()
 
 
 class PhaseFlow(Animation):
