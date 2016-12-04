@@ -17,6 +17,9 @@ class Camera(object):
         "space_shape" : (SPACE_HEIGHT, SPACE_WIDTH),
         "space_center" : ORIGIN,
         "background_color" : BLACK,
+        #Points in vectorized mobjects with norm greater
+        #than this value will be rescaled.
+        "max_allowable_norm" : 5*SPACE_WIDTH,
     }
 
     def __init__(self, background = None, **kwargs):
@@ -138,6 +141,7 @@ class Camera(object):
         result = ""        
         for mob in [vmobject]+vmobject.get_subpath_mobjects():
             points = mob.points
+            points = self.adjust_out_of_range_points(points)            
             if len(points) == 0:
                 continue
             points = self.align_points_to_camera(points)
@@ -189,6 +193,21 @@ class Camera(object):
     def align_points_to_camera(self, points):
         ## This is where projection should live
         return points - self.space_center
+
+    def adjust_out_of_range_points(self, points):
+        if not np.any(points > self.max_allowable_norm):
+            return points
+        norms = np.apply_along_axis(np.linalg.norm, 1, points)
+        violator_indices = norms > self.max_allowable_norm
+        violators = points[violator_indices,:]
+        violator_norms = norms[violator_indices]
+        reshaped_norms = np.repeat(
+            violator_norms.reshape((len(violator_norms), 1)), 
+            points.shape[1], 1
+        )
+        rescaled = self.max_allowable_norm * violators / reshaped_norms
+        points[violator_indices] = rescaled
+        return points
 
     def points_to_pixel_coords(self, points):
         result = np.zeros((len(points), 2))

@@ -27,10 +27,11 @@ mpmath.mp.dps = 7
 
 
 def zeta(z):
+    max_norm = 5*SPACE_WIDTH
     try:
         return np.complex(mpmath.zeta(z))
     except:
-        return np.complex(10*SPACE_WIDTH, 0)
+        return np.complex(max_norm, 0)
 
 class ComplexTransformationScene(Scene):
     CONFIG = {
@@ -48,7 +49,7 @@ class ComplexTransformationScene(Scene):
         "horiz_start_color" : GREEN_B,
         "horiz_end_color" : YELLOW,
         "num_anchors_to_add_per_line" : 50,
-        "thincken_lines_after_transformation" : False,
+        "post_transformation_storke_width" : None,
         "default_apply_complex_function_kwargs" : {
             "run_time" : 5,
         },
@@ -152,7 +153,7 @@ class ComplexTransformationScene(Scene):
         self.add_points_to_plane(plane)
         transformer = VGroup(
             plane, *self.transformable_mobjects
-        )
+        )        
         return transformer, transform_kwargs
 
 
@@ -162,8 +163,8 @@ class ComplexTransformationScene(Scene):
         transformer.target.apply_complex_function(func)
         for mob in transformer.target[0].family_members_with_points():
             mob.make_smooth()
-            if mob.get_stroke_width() == 1 and self.thincken_lines_after_transformation:
-                mob.set_stroke(width = 2)
+        if self.post_transformation_storke_width is not None:
+            transformer.target.set_stroke(width = self.post_transformation_storke_width)
         self.play(
             MoveToTarget(transformer, **transform_kwargs),
             *added_anims
@@ -187,7 +188,7 @@ class ZetaTransformationScene(ComplexTransformationScene):
     CONFIG = {
         "num_anchors_in_extra_lines" : 300,
         "num_anchors_to_add_per_line" : 75,
-        "thincken_lines_after_transformation" : True,
+        "post_transformation_storke_width" : 2,
         "default_apply_complex_function_kwargs" : {
             "run_time" : 5,
         }
@@ -231,12 +232,17 @@ class ZetaTransformationScene(ComplexTransformationScene):
 
     def get_reflected_plane(self):
         reflected_plane = self.plane.copy()
-        reflected_plane.rotate(np.pi, UP)
-        reflected_plane.move_to(self.z_to_point(1), RIGHT)
+        reflected_plane.rotate(np.pi, UP, about_point = RIGHT)
         for mob in reflected_plane.family_members_with_points():
             mob.highlight(
                 Color(rgb = 1-0.5*color_to_rgb(mob.get_color()))
             )
+        reflected_plane.prepare_for_nonlinear_transform(
+            self.num_anchors_in_extra_lines
+        )
+        reflected_plane.submobjects = list(reversed(
+            reflected_plane.family_members_with_points()
+        ))
         return reflected_plane
 
     def apply_zeta_function(self, **kwargs):
@@ -1730,14 +1736,17 @@ class ShowZetaOnHalfPlane(ZetaTransformationScene):
         self.play(ShowCreation(left_i_lines, run_time = 2))
         self.dither(2)
         self.restore_mobjects(self.plane, left_i_lines)
-        self.add_transformable_mobjects(left_i_lines)
         self.play(Transform(self.plane, colored_plane))
         self.dither()
+        self.left_i_lines = left_i_lines
 
     def show_continuation(self):
         reflected_plane = self.get_reflected_plane()
         self.play(ShowCreation(reflected_plane, run_time = 5))
-
+        self.remove(self.left_i_lines)
+        reflected_plane.prepare_for_nonlinear_transform(
+            self.num_anchors_to_add_per_line
+        )
         self.add_transformable_mobjects(reflected_plane)
         self.dither()
         self.apply_zeta_function()
@@ -1792,9 +1801,10 @@ class ShowConditionalDefinition(Scene):
             for s in ">", "\\le"
         ])
         definitions = VGroup(sigma, something_else)
-        definitions.arrange(DOWN, buff = MED_BUFF)
-        conditions.arrange(DOWN, buff = MED_BUFF)
-        conditions.next_to(definitions, RIGHT, buff = LARGE_BUFF)
+        definitions.arrange_submobjects(DOWN, buff = 2*MED_BUFF, aligned_edge = LEFT)
+        conditions.arrange_submobjects(DOWN, buff = LARGE_BUFF)
+        definitions.shift(2*LEFT+2*UP)
+        conditions.next_to(definitions, RIGHT, buff = LARGE_BUFF, aligned_edge = DOWN)
         brace = Brace(definitions, LEFT)
         zeta.next_to(brace, LEFT)
 
@@ -1804,12 +1814,138 @@ class ShowConditionalDefinition(Scene):
         self.dither()
         self.play(
             sigma.restore,
-            GrowFromCenter(brace)
+            GrowFromCenter(brace),
+            FadeIn(something_else)
         )
-        self.play(*map(Write, [conditions, something_else]))
+        self.play(Write(conditions))
         self.dither()
 
+        underbrace = Brace(something_else)
+        question = underbrace.get_text("""
+            What to put here?
+        """)
+        VGroup(underbrace, question).highlight(GREEN_B)
 
+        self.play(
+            GrowFromCenter(underbrace),
+            Write(question),
+            something_else.highlight, GREEN_B
+        )
+        self.dither(2)
+
+class SquiggleOnExtensions(ZetaTransformationScene):
+    CONFIG = {
+        "num_anchors_in_extra_lines" : 300,
+        "x_min" : 1,
+        "x_max" : int(SPACE_WIDTH+1),
+    }
+    def construct(self):
+        self.show_negative_one()
+        self.cycle_through_options()
+        self.lock_into_place()
+
+    def show_negative_one(self):
+        self.add_transformable_plane()
+        self.add_extra_plane_lines_for_zeta()
+        reflected_plane = self.get_reflected_plane()
+        self.add(reflected_plane)
+
+
+        dot = self.note_point(-1, "-1")
+        self.add_transformable_mobjects(reflected_plane)
+        self.apply_zeta_function(added_anims = [
+            ApplyMethod(
+                dot.move_to, self.z_to_point(-1./12),
+                run_time = 5
+            )
+        ])
+        self.note_point(-1./12, "-\\frac{1}{12}")
+        self.left_plane = reflected_plane
+        self.dot = dot
+
+    def note_point(self, z, label_tex):
+        dot = Dot(self.z_to_point(z))
+        dot.highlight(YELLOW)
+        label = TexMobject(label_tex)
+        label.add_background_rectangle()
+        label.next_to(dot, UP, buff = 1)
+        label.shift(0.5*LEFT)
+        arrow = Arrow(label, dot, buff = SMALL_BUFF)
+
+        self.play(Write(label, run_time = 1))
+        self.play(*map(ShowCreation, [arrow, dot]))
+        self.dither()
+        self.play(*map(FadeOut, [arrow, label]))
+        return dot
+
+    def cycle_through_options(self):
+        gamma = np.euler_gamma
+        def sinusoidal_func(point):
+            x, y, z = point
+            return np.array([
+                x - abs(0.2*np.sin(np.pi*x/gamma)*np.cos(y)),
+                y + 0.2*np.sin(np.pi*x/gamma),
+                0
+            ])
+        def mixed_scalar_func(point):
+            x, y, z = point
+            scalar = 1 + (gamma-x)/(gamma+SPACE_WIDTH)
+            return np.array([
+                (scalar**2)*x,
+                (scalar**3)*y,
+                0
+            ])
+        def alt_sinusoidal_func(point):
+            x, y, z = point
+            freq = np.pi/gamma
+            return np.array([
+                x-0.2*np.sin(x*freq)*np.sin(x),
+                y+0.2*np.sin(x*freq)*np.cos(y),
+                0
+            ])
+
+        funcs = [sinusoidal_func, mixed_scalar_func, alt_sinusoidal_func]
+        new_left_planes = [
+            self.left_plane.copy().apply_function(func)
+            for func in funcs
+        ]
+        new_dots = [
+            self.dot.copy().move_to(func(self.dot.get_center()))
+            for func in funcs
+        ]
+        self.left_plane.save_state()
+        for plane, dot in zip(new_left_planes, new_dots):
+            self.play(
+                Transform(self.left_plane, plane), 
+                Transform(self.dot, new_dot),
+                run_time = 3
+            )
+            self.dither()
+        self.play(FadeOut(dot))
+
+        #Squiggle on example
+        self.dither()
+        self.play(FadeOut(self.left_plane))
+        self.play(ShowCreation(
+            self.left_plane,
+            run_time = 5,
+            rate_func = None
+        ))
+        self.dither()
+
+    def lock_into_place(self):
+        words = TextMobject("""
+            If $\\zeta(s)$ is to have a
+            \\emph{derivative} everywhere,
+            there is only one possible extension
+        """, alignment = "")
+        words.to_corner(UP+LEFT)
+        words.add_background_rectangle()
+
+        self.play(Write(words))
+        self.add_foreground_mobjects(words)
+        self.play(self.left_plane.restore)
+        self.dither()
 
 
 
