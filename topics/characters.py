@@ -358,32 +358,34 @@ class TeacherStudentsScene(Scene):
             content = content[0]
         else:
             raise Exception("Invalid content type")
-        content_intro_anims = self.get_bubble_intro_animation(
+
+        anims = []
+        #Remove other bubbles
+        for p in self.get_everyone():
+            if (p.bubble is not None) and (p is not pi_creature):
+                anims += [
+                    FadeOut(p.bubble),
+                    FadeOut(p.bubble.content)
+                ]
+                p.bubble = None
+                anims.append(ApplyMethod(p.change_mode, "plain"))
+        #Bring in new bubble
+        anims += self.get_bubble_intro_animation(
             content, bubble_type, pi_creature, **bubble_kwargs
         )
-
+        #Add changing mode
         if not target_mode:
             if bubble_type is "speech":
                 target_mode = "speaking"
             else:
                 target_mode = "pondering"
-
-        for p in self.get_everyone():
-            if (p.bubble is not None) and (p is not pi_creature):
-                added_anims += [
-                    FadeOut(p.bubble),
-                    FadeOut(p.bubble.content)
-                ]
-                p.bubble = None
-                added_anims.append(ApplyMethod(p.change_mode, "plain"))
-
-        anims = added_anims + content_intro_anims + [
+        anims.append(
             ApplyMethod(
                 pi_creature.change_mode, 
                 target_mode,
-            ),
-        ]
-        self.play(*anims)
+            )
+        )
+        self.play(*anims + added_anims)
         return pi_creature.bubble
 
     def teacher_says(self, *content, **kwargs):

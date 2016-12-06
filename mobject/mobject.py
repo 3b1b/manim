@@ -117,24 +117,35 @@ class Mobject(object):
         return self        
 
 
-    def scale(self, scale_factor):
-        for mob in self.family_members_with_points():
-            mob.points *= scale_factor
-        return self
-
-    def rotate(self, angle, axis = OUT, axes = [], about_point = None):
-        if len(axes) == 0:
-            axes = [axis]
+    def scale(self, scale_factor, about_point = None):
         if about_point is not None:
             self.shift(-about_point)
+        for mob in self.family_members_with_points():
+            mob.points *= scale_factor
+        if about_point is not None:
+            self.shift(about_point)
+        return self
+
+    def scale_about_point(self, scale_factor, point):
+        self.do_about_point(point, self.scale, scale_factor)
+        return self
+
+    def rotate_about_origin(self, angle, axis = OUT, axes = []):
+        if len(axes) == 0:
+            axes = [axis]
         rot_matrix = np.identity(self.dim)
         for axis in axes:
             rot_matrix = np.dot(rot_matrix, rotation_matrix(angle, axis))
         t_rot_matrix = np.transpose(rot_matrix)
         for mob in self.family_members_with_points():
             mob.points = np.dot(mob.points, t_rot_matrix)
-        if about_point is not None:
-            self.shift(about_point)
+        return self
+
+    def rotate(self, angle, axis = OUT, axes = [], about_point = None):
+        if about_point is None:
+            self.rotate_about_origin(angle, axis, axes)
+        else:
+            self.do_about_point(about_point, self.rotate, angle, axis, axes)
         return self
 
     def stretch(self, factor, dim):
@@ -181,11 +192,14 @@ class Mobject(object):
 
     #### In place operations ######
 
-    def do_in_place(self, method, *args, **kwargs):
-        center = self.get_center()
-        self.shift(-center)
+    def do_about_point(self, point, method, *args, **kwargs):
+        self.shift(-point)
         method(*args, **kwargs)
-        self.shift(center)
+        self.shift(point)
+        return self
+
+    def do_in_place(self, method, *args, **kwargs):
+        self.do_about_point(self.get_center(), method, *args, **kwargs)
         return self
 
     def rotate_in_place(self, angle, axis = OUT, axes = []):

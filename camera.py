@@ -141,7 +141,7 @@ class Camera(object):
         result = ""        
         for mob in [vmobject]+vmobject.get_subpath_mobjects():
             points = mob.points
-            points = self.adjust_out_of_range_points(points)            
+            # points = self.adjust_out_of_range_points(points)            
             if len(points) == 0:
                 continue
             points = self.align_points_to_camera(points)
