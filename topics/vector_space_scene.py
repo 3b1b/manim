@@ -237,8 +237,6 @@ class VectorScene(Scene):
         ))
         self.remove(dots)
 
-
-
 class LinearTransformationScene(VectorScene):
     CONFIG = {
         "include_background_plane" : True,
@@ -295,7 +293,6 @@ class LinearTransformationScene(VectorScene):
                     ((0, 1), self.j_hat_color),
                 ]
             ]
-
 
     def add_special_mobjects(self, mob_list, *mobs_to_add):
         for mobject in mobs_to_add:

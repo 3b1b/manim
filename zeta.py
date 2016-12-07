@@ -1219,17 +1219,23 @@ class FromRealToComplex(ComplexTransformationScene):
         zeta_s_eq.shift(0.5*UP)
         inputs.add(*zeta_s_eq[2:2+n_input_chars])
 
-        sum_terms = TexMobject(*it.chain(*zip(
+
+        raw_sum_terms = TexMobject(*[
+            "\\frac{1}{%d^{%s}} + "%(d, input_string)
+            for d in range(1, 1+num_shown_terms)
+        ])
+        sum_terms = VGroup(*it.chain(*[
             [
-                "\\frac{1}{%d^{%s}}"%(d, input_string)
-                for d in range(1, 1+num_shown_terms)
-            ],
-            it.cycle(["+"])
-        )))
+                VGroup(*term[:3]), 
+                VGroup(*term[3:-1]),
+                term[-1],
+            ]
+            for term in raw_sum_terms
+        ]))
         sum_terms.add(TexMobject("\\cdots").next_to(sum_terms[-1]))
         sum_terms.next_to(zeta_s_eq, RIGHT)
         for x in range(num_shown_terms):
-            inputs.add(*sum_terms[2*x][-n_input_chars:])
+            inputs.add(*sum_terms[3*x+1])
 
         output = TexMobject("= \\," + output_string)
         output.next_to(sum_terms, RIGHT)
@@ -1893,8 +1899,8 @@ class SquiggleOnExtensions(ZetaTransformationScene):
 
     def show_negative_one(self):
         self.add_transformable_plane()
-        self.add_reflected_plane()
         thin_plane = self.plane.copy()
+        thin_plane.add(self.get_reflected_plane())
         self.remove(self.plane)
         self.add_extra_plane_lines_for_zeta()
         reflected_plane = self.get_reflected_plane()
@@ -1968,13 +1974,16 @@ class SquiggleOnExtensions(ZetaTransformationScene):
                 y-0.2*np.sin(x*freq)*np.sin(y),
                 0
             ])
-
         funcs = [
             shear, 
             mixed_scalar_func, 
             alt_mixed_scalar_func, 
             sinusoidal_func,
         ]
+        for mob in self.left_plane.family_members_with_points():
+            if np.all(np.abs(mob.points[:,1]) < 0.1):
+                self.left_plane.remove(mob)
+
         new_left_planes = [
             self.left_plane.copy().apply_function(func)
             for func in funcs
@@ -2014,7 +2023,6 @@ class SquiggleOnExtensions(ZetaTransformationScene):
         words.to_corner(UP+LEFT)
         words.highlight_by_tex("\\emph{derivative}", YELLOW)
         words.add_background_rectangle()
-        words.show()
 
         self.play(Write(words))
         self.add_foreground_mobjects(words)
@@ -2391,6 +2399,376 @@ class NoteZetaFunctionAnalyticOnRightHalf(ZetaTransformationScene):
         brackets.rotate(rotation, about_point = ORIGIN)
         brackets.shift(self.z_to_point(output_z))
         return brackets
+
+class InfiniteContinuousJigsawPuzzle(ZetaTransformationScene):
+    CONFIG = {
+        "anchor_density" : 35,
+    }
+    def construct(self):
+        self.set_stage()
+        self.add_title()
+        self.show_jigsaw()
+        self.name_analytic_continuation()
+
+    def set_stage(self):
+        self.plane = self.get_dense_grid()
+        left_plane = self.get_reflected_plane()
+        self.plane.add(left_plane)
+        self.apply_zeta_function(run_time = 0)
+        self.remove(left_plane)
+        lines_per_piece = 5
+        pieces = [
+            VGroup(*left_plane[lines_per_piece*i:lines_per_piece*(i+1)])
+            for i in range(len(list(left_plane))/lines_per_piece)
+        ]
+        random.shuffle(pieces)
+        self.pieces = pieces
+
+    def add_title(self):
+        title = TextMobject("Infinite ", "continuous ", "jigsaw puzzle")
+        title.scale(1.5)
+        title.to_edge(UP)
+        for word in title:
+            word.add_to_back(BackgroundRectangle(word))
+            self.play(FadeIn(word))
+        self.dither()
+        self.add_foreground_mobjects(title)
+        self.title = title
+
+    def show_jigsaw(self):
+        for piece in self.pieces:
+            self.play(FadeIn(piece, run_time = 0.5))
+        self.dither()
+
+    def name_analytic_continuation(self):
+        words = TextMobject("``Analytic continuation''")
+        words.highlight(YELLOW)
+        words.scale(1.5)
+        words.next_to(self.title, DOWN, buff = LARGE_BUFF)
+        words.add_background_rectangle()
+        self.play(Write(words))
+        self.dither()
+
+class ThatsHowZetaIsDefined(TeacherStudentsScene):
+    def construct(self):
+        self.add_zeta_definition()
+        self.teacher_says("""
+            So that's how 
+            $\\zeta(s)$ is defined
+        """)
+        self.change_student_modes(*["hooray"]*3)
+        self.random_blink(2)
+
+    def add_zeta_definition(self):
+        zeta = TexMobject(
+            "\\zeta(s) = \\sum_{n=1}^\\infty \\frac{1}{n^s}"
+        )
+        VGroup(zeta[2], zeta[-1]).highlight(YELLOW)
+        zeta.to_corner(UP+LEFT)
+        self.add(zeta)
+
+class ManyIntersectingLinesPreZeta(ZetaTransformationScene):
+    CONFIG = {
+        "apply_zeta" : False
+    }
+    def construct(self):
+        self.add_transformable_plane()
+        self.add_extra_plane_lines_for_zeta()
+        self.add_reflected_plane()
+        self.plane.fade()
+        self.add_title()
+
+        line = Line(DOWN+2*LEFT, UP+2*RIGHT)
+        lines = VGroup(line, line.copy().rotate(np.pi/5))
+        # lines.set_stroke(WHITE, width = 5)
+        nudge_size = 0.9      
+        lines.shift((1+nudge_size)*RIGHT)
+
+        if self.apply_zeta:
+            self.apply_zeta_function(run_time = 0)
+            lines.set_stroke(width = 0)
+
+        added_anims = self.get_modified_line_anims(lines)
+        for vect in LEFT, RIGHT:
+            self.play(
+                ApplyMethod(lines.shift, 2*nudge_size*vect, path_arc = np.pi),
+                *added_anims,
+                run_time = 3
+            )
+
+    def add_title(self):
+        if self.apply_zeta:
+            title = TextMobject("After \\\\ transformation")
+        else:
+            title = TextMobject("Before \\\\ transformation")
+        title.add_background_rectangle()
+        title.to_edge(UP)
+        self.add_foreground_mobjects(title)
+
+    def get_modified_line_anims(self, lines):
+        return []
+
+class ManyIntersectingLinesPostZeta(ManyIntersectingLinesPreZeta):
+    CONFIG = {
+        "apply_zeta" : True, 
+        # "anchor_density" : 5
+    }
+    def get_modified_line_anims(self, lines):
+        n_inserted_points = 30        
+        new_lines = lines.copy()
+        new_lines.set_stroke(width = 5)
+        def update_new_lines(lines_to_update):
+            transformed = lines.copy()
+            self.prepare_for_transformation(transformed)
+            transformed.apply_complex_function(zeta)
+            transformed.make_smooth()
+            transformed.set_stroke(width = 5)
+            for start, end in zip(lines_to_update, transformed):
+                if start.get_num_points() > 0:
+                    start.points = np.array(end.points)
+        return [UpdateFromFunc(new_lines, update_new_lines)]
+                
+class ButWhatIsTheExensions(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            """
+            But what exactly \\emph{is}
+            that continuation?
+            """,
+            target_mode = "sassy"
+        )
+        self.change_student_modes("confused", "sassy", "confused")
+        self.random_blink(2)
+        self.teacher_says("""
+            You're $\\$1{,}000{,}000$ richer
+            if you can answer
+            that fully
+        """)
+        self.change_student_modes(*["pondering"]*3)
+        self.random_blink(3)
+
+class DiscussZeros(ZetaTransformationScene):
+    CONFIG = {
+        # "anchor_density" : 5,
+    }
+    def construct(self):
+        self.establish_plane()
+        self.ask_about_zeros()
+        self.show_trivial_zeros()
+        self.show_critical_strip()
+        self.transform_bit_of_critical_line()
+        self.extend_transformed_critical_line()
+
+    def establish_plane(self):
+        self.add_transformable_plane()
+        self.add_extra_plane_lines_for_zeta()
+        self.add_reflected_plane()
+        self.plane.fade()
+
+    def ask_about_zeros(self):
+        dots = VGroup(*[
+            Dot(
+                (2+np.sin(12*alpha))*\
+                rotate_vector(RIGHT, alpha+nudge)
+            )
+            for alpha in np.arange(3*np.pi/20, 2*np.pi, 2*np.pi/5)
+            for nudge in [random.random()*np.pi/6]
+        ])
+        dots.highlight(YELLOW)
+        q_marks = VGroup(*[
+            TexMobject("?").next_to(dot, UP)
+            for dot in dots
+        ])
+        arrows = VGroup(*[
+            Arrow(dot, ORIGIN, buff = 0.2, tip_length = 0.1)
+            for dot in dots
+        ])
+        question = TextMobject("Which numbers go to $0$?")
+        question.add_background_rectangle()
+        question.to_edge(UP)
+
+        for mob in dots, arrows, q_marks:
+            self.play(ShowCreation(mob))
+        self.play(Write(question))  
+        self.dither(2)
+        dots.generate_target()
+        for i, dot in enumerate(dots.target):
+            dot.move_to(2*(i+1)*LEFT)
+        self.play(
+            FadeOut(arrows),
+            FadeOut(q_marks),
+            FadeOut(question),
+            MoveToTarget(dots),
+        )
+        self.dither()
+        self.dots = dots
+
+    def show_trivial_zeros(self):
+        trivial_zero_words = TextMobject("``Trivial'' zeros")
+        trivial_zero_words.next_to(ORIGIN, UP)
+        trivial_zero_words.to_edge(LEFT)
+
+        randy = Randolph().flip()
+        randy.to_corner(DOWN+RIGHT)
+        bubble = randy.get_bubble()
+        bubble.set_fill(BLACK, opacity = 0.8)
+        bubble.write("$1^1 + 2^2 + 3^2 + \\cdots = 0$")
+        bubble.resize_to_content()
+        bubble.pin_to(randy)
+
+        self.plane.save_state()
+        self.dots.save_state()
+        for dot in self.dots.target:
+            dot.move_to(ORIGIN)
+        self.apply_zeta_function(
+            added_anims = [MoveToTarget(self.dots, run_time = 3)],
+            run_time = 3
+        )
+        self.dither(3)
+        self.play(
+            self.plane.restore,
+            self.plane.make_smooth,
+            self.dots.restore,
+            run_time = 2
+        )
+        self.play(Write(trivial_zero_words))
+        self.dither()
+        self.play(FadeIn(randy))
+        self.play(
+            randy.change_mode, "confused",
+            ShowCreation(bubble),
+            Write(bubble.content)
+        )
+        self.play(Blink(randy))
+        self.dither()
+        self.play(Blink(randy))
+        self.play(*map(FadeOut, [
+            randy, bubble, bubble.content, trivial_zero_words
+        ]))
+
+    def show_critical_strip(self):
+        strip = Rectangle(
+            height = 2*SPACE_HEIGHT,
+            width = 1
+        )
+        strip.next_to(ORIGIN, RIGHT, buff = 0)
+        strip.set_stroke(width = 0)
+        strip.set_fill(YELLOW, opacity = 0.3)
+        name = TextMobject("Critical strip")
+        name.add_background_rectangle()
+        name.next_to(ORIGIN, LEFT)
+        name.to_edge(UP)
+        arrow = Arrow(name.get_bottom(), 0.5*RIGHT+UP)
+        primes = TexMobject("2, 3, 5, 7, 11, 13, 17, \\dots")
+        primes.to_corner(UP+RIGHT)       
+        # photo = Square()
+        photo = ImageMobject("Riemann", invert = False)
+        photo.scale_to_fit_width(5)
+        photo.to_corner(UP+LEFT)
+        new_dots = VGroup(*[
+            Dot(0.5*RIGHT + (y*random.random())*UP)
+            for y in np.linspace(-3, 3, 5)
+        ])
+        new_dots.highlight(YELLOW)
+        critical_line = Line(
+            0.5*RIGHT+SPACE_HEIGHT*DOWN,
+            0.5*RIGHT+SPACE_HEIGHT*UP,
+            color = YELLOW
+        )
+
+        self.give_dots_wandering_anims()
+
+        self.play(FadeIn(strip), *self.get_dot_wandering_anims())
+        self.play(
+            Write(name, run_time = 1), 
+            ShowCreation(arrow),
+            *self.get_dot_wandering_anims()
+        )
+        self.play(*self.get_dot_wandering_anims())
+        self.play(
+            FadeIn(primes),
+            *self.get_dot_wandering_anims()
+        )
+        for x in range(7):
+            self.play(*self.get_dot_wandering_anims())
+        self.play(
+            FadeIn(photo),
+            FadeOut(name),
+            FadeOut(arrow),
+            *self.get_dot_wandering_anims()
+        )
+        self.play(Transform(self.dots, new_dots))
+        self.play(ShowCreation(critical_line))
+        self.dither(3)
+        self.play(*map(FadeOut, [
+            photo, primes, self.dots, strip
+        ]))
+        self.critical_line = critical_line
+
+    def give_dots_wandering_anims(self):
+        def func(t):
+            result = (np.sin(6*2*np.pi*t) + 1)*RIGHT/2
+            result += 3*np.cos(2*2*np.pi*t)*UP
+            return result
+            
+        self.wandering_path = ParametricFunction(func)
+        for i, dot in enumerate(self.dots):
+            dot.target = dot.copy()
+            dot.target.move_to(self.wandering_path.point_from_proportion(
+                (2*i+2)/(4.*len(list(self.dots)))
+            ))
+            q_mark = TexMobject("?")
+            q_mark.next_to(dot.target, UP)
+            dot.target.add(q_mark)
+        self.dot_anim_count = 0
+
+    def get_dot_wandering_anims(self):
+        self.dot_anim_count += 1
+        if self.dot_anim_count == 1:
+            return map(MoveToTarget, self.dots)
+        result = []
+        denom = 4*(len(list(self.dots)))
+        def get_rate_func(index):
+            return lambda t : (float(self.dot_anim_count + 2*index + t)/denom)%1
+        return [
+            MoveAlongPath(
+                dot, self.wandering_path, 
+                rate_func = get_rate_func(i)
+            )
+            for i, dot in enumerate(self.dots)
+        ]
+
+    def transform_bit_of_critical_line(self):
+        group = VGroup(self.plane, self.critical_line)
+        self.play(
+            group.scale, 0.8, 
+            rate_func = there_and_back,
+            run_time = 2
+        )
+        self.dither()
+        self.play(
+            self.plane.set_stroke, GREY, 1,
+            Animation(self.critical_line)
+        )
+        self.plane.add(self.critical_line)
+        self.apply_zeta()
+        self.dither(2)
+
+    def extend_transformed_critical_line(self):
+        def func(t):
+            z = zeta(complex(0.5, t))
+            return z.real*RIGHT + z.imag*UP
+        full_line = VGroup(*[
+            ParametricFunction(func, t_min = t0, t_max = t0+1)
+            for t0 in range(100)
+        ])
+        full_line.gradient_highlight(
+            YELLOW, BLUE, GREEN, RED, YELLOW, BLUE, GREEN, RED,
+        )
+        self.play(ShowCreation(full_line, run_time = 20, rate_func = None))
+        self.dither()
+
+
 
 
 
