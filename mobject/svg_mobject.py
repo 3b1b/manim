@@ -28,12 +28,12 @@ class SVGMobject(VMobject):
         ]
         for path in possible_paths:
             if os.path.exists(path):
-                self.file_name = path
+                self.file_path = path
                 return
         raise IOError("No file matching %s in image directory"%self.file_name)
 
     def generate_points(self):
-        doc = minidom.parse(self.file_name)
+        doc = minidom.parse(self.file_path)
         self.ref_to_element = {}
         for svg in doc.getElementsByTagName("svg"):
             self.add(*self.get_mobjects_from(svg))

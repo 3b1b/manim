@@ -44,7 +44,7 @@ class Headphones(SVGMobject):
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
-        SVGMobject.__init__(self, self.file_name, **kwargs)
+        SVGMobject.__init__(self, file_name = self.file_name, **kwargs)
         self.stretch(self.y_stretch_factor, 1)        
         self.scale_to_fit_height(self.height)
         self.set_stroke(width = 0)

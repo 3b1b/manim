@@ -17,6 +17,7 @@ from topics.number_line import *
 from topics.combinatorics import *
 from topics.numerals import *
 from topics.three_dimensions import *
+from topics.objects import *
 from scene import Scene
 from camera import Camera
 from mobject.svg_mobject import *
@@ -1003,13 +1004,12 @@ class FromRealToComplex(ComplexTransformationScene):
         bubble = randy.get_bubble(height = 4)
         bubble.set_fill(BLACK, opacity = 1)
 
-        pre_frac = self.zeta[2][2].copy()
         frac = VGroup(
-            VectorizedPoint(pre_frac.get_left()),
-            VGroup(*pre_frac[:3]),
-            VectorizedPoint(pre_frac.get_right()),
-            VGroup(*pre_frac[3:])
-        )
+            VectorizedPoint(self.zeta[2][3].get_left()),
+            self.zeta[2][3],
+            VectorizedPoint(self.zeta[2][3].get_right()),
+            self.zeta[2][4],
+        ).copy()
         frac.generate_target()
         frac.target.scale(frac_scale_factor)
         bubble.add_content(frac.target)
@@ -1057,7 +1057,7 @@ class FromRealToComplex(ComplexTransformationScene):
         self.input_label.save_state()
         zeta = self.get_zeta_definition("2", "\\frac{\\pi^2}{6}")
         lines, output_dot = self.get_sum_lines(2)
-        sum_terms = self.zeta[2][:-1:2]
+        sum_terms = self.zeta[2][:-1:3]
         dots_copy = zeta[2][-1].copy()
         pi_copy = zeta[3].copy()
         def transform_and_replace(m1, m2):
@@ -2548,9 +2548,6 @@ class ButWhatIsTheExensions(TeacherStudentsScene):
         self.random_blink(3)
 
 class DiscussZeros(ZetaTransformationScene):
-    CONFIG = {
-        # "anchor_density" : 5,
-    }
     def construct(self):
         self.establish_plane()
         self.ask_about_zeros()
@@ -2631,6 +2628,11 @@ class DiscussZeros(ZetaTransformationScene):
             self.dots.restore,
             run_time = 2
         )
+        self.remove(*self.get_mobjects_from_last_animation())
+        self.plane.restore()
+        self.dots.restore()
+        self.add(self.plane, self.dots)
+
         self.play(Write(trivial_zero_words))
         self.dither()
         self.play(FadeIn(randy))
@@ -2666,8 +2668,8 @@ class DiscussZeros(ZetaTransformationScene):
         photo.scale_to_fit_width(5)
         photo.to_corner(UP+LEFT)
         new_dots = VGroup(*[
-            Dot(0.5*RIGHT + (y*random.random())*UP)
-            for y in np.linspace(-3, 3, 5)
+            Dot(0.5*RIGHT + y*UP)
+            for y in np.linspace(-2.5, 3.2, 5)
         ])
         new_dots.highlight(YELLOW)
         critical_line = Line(
@@ -2692,7 +2694,7 @@ class DiscussZeros(ZetaTransformationScene):
         for x in range(7):
             self.play(*self.get_dot_wandering_anims())
         self.play(
-            FadeIn(photo),
+            GrowFromCenter(photo),
             FadeOut(name),
             FadeOut(arrow),
             *self.get_dot_wandering_anims()
@@ -2700,9 +2702,13 @@ class DiscussZeros(ZetaTransformationScene):
         self.play(Transform(self.dots, new_dots))
         self.play(ShowCreation(critical_line))
         self.dither(3)
-        self.play(*map(FadeOut, [
-            photo, primes, self.dots, strip
-        ]))
+        self.play(
+            photo.shift, 7*LEFT,
+            *map(FadeOut, [
+            primes, self.dots, strip
+            ])
+        )
+        self.remove(photo)
         self.critical_line = critical_line
 
     def give_dots_wandering_anims(self):
@@ -2714,19 +2720,18 @@ class DiscussZeros(ZetaTransformationScene):
         self.wandering_path = ParametricFunction(func)
         for i, dot in enumerate(self.dots):
             dot.target = dot.copy()
-            dot.target.move_to(self.wandering_path.point_from_proportion(
-                (2*i+2)/(4.*len(list(self.dots)))
-            ))
             q_mark = TexMobject("?")
             q_mark.next_to(dot.target, UP)
             dot.target.add(q_mark)
+            dot.target.move_to(self.wandering_path.point_from_proportion(
+                (float(2+2*i)/(4*len(list(self.dots))))%1
+            ))
         self.dot_anim_count = 0
 
     def get_dot_wandering_anims(self):
         self.dot_anim_count += 1
         if self.dot_anim_count == 1:
             return map(MoveToTarget, self.dots)
-        result = []
         denom = 4*(len(list(self.dots)))
         def get_rate_func(index):
             return lambda t : (float(self.dot_anim_count + 2*index + t)/denom)%1
@@ -2739,9 +2744,9 @@ class DiscussZeros(ZetaTransformationScene):
         ]
 
     def transform_bit_of_critical_line(self):
-        group = VGroup(self.plane, self.critical_line)
         self.play(
-            group.scale, 0.8, 
+            self.plane.scale, 0.8,
+            self.critical_line.scale, 0.8,
             rate_func = there_and_back,
             run_time = 2
         )
@@ -2751,8 +2756,12 @@ class DiscussZeros(ZetaTransformationScene):
             Animation(self.critical_line)
         )
         self.plane.add(self.critical_line)
-        self.apply_zeta()
+        self.apply_zeta_function()
         self.dither(2)
+        self.play(
+            self.plane.fade,
+            Animation(self.critical_line)
+        )
 
     def extend_transformed_critical_line(self):
         def func(t):
@@ -2768,10 +2777,291 @@ class DiscussZeros(ZetaTransformationScene):
         self.play(ShowCreation(full_line, run_time = 20, rate_func = None))
         self.dither()
 
+class HighlightCriticalLineAgain(DiscussZeros):
+    def construct(self):
+        self.establish_plane()
+        title = TexMobject("\\zeta(", "s", ") = 0")
+        title.highlight_by_tex("s", YELLOW)
+        title.add_background_rectangle()
+        title.to_corner(UP+LEFT)
+        self.add(title)
 
+        strip = Rectangle(
+            height = 2*SPACE_HEIGHT,
+            width = 1
+        )
+        strip.next_to(ORIGIN, RIGHT, buff = 0)
+        strip.set_stroke(width = 0)
+        strip.set_fill(YELLOW, opacity = 0.3)
+        line = Line(
+            0.5*RIGHT+SPACE_HEIGHT*UP,
+            0.5*RIGHT+SPACE_HEIGHT*DOWN,
+            color = YELLOW
+        )
+        randy = Randolph().to_corner(DOWN+LEFT)
+        million = TexMobject("\\$1{,}000{,}000")
+        million.highlight(GREEN_B)
+        million.next_to(ORIGIN, UP+LEFT)
+        million.shift(2*LEFT)
+        arrow1 = Arrow(million.get_right(), line.get_top())
+        arrow2 = Arrow(million.get_right(), line.get_bottom())
 
+        self.add(randy, strip)
+        self.play(Write(million))
+        self.play(
+            randy.change_mode, "pondering",
+            randy.look_at, line.get_top(),
+            ShowCreation(arrow1),
+            run_time = 3
+        )
+        self.play(
+            randy.look_at, line.get_bottom(),
+            ShowCreation(line),
+            Transform(arrow1, arrow2)
+        )
+        self.play(FadeOut(arrow1))
+        self.play(Blink(randy))
+        self.dither()
+        self.play(randy.look_at, line.get_center())
+        self.play(randy.change_mode, "confused")
+        self.play(Blink(randy))
+        self.dither()
+        self.play(randy.change_mode, "pondering")
+        self.dither()
 
+class DiscussSumOfNaturals(Scene):
+    def construct(self):
+        title = TexMobject(
+            "\\zeta(s) = \\sum_{n=1}^\\infty \\frac{1}{n^s}"
+        )
+        VGroup(title[2], title[-1]).highlight(YELLOW)
+        title.to_corner(UP+LEFT)
 
+        neg_twelfth, eq, zeta_neg_1, sum_naturals = equation = TexMobject(
+            "-\\frac{1}{12}",
+            "=",
+            "\\zeta(-1)", 
+            "= 1 + 2 + 3 + 4 + \\cdots"
+        )
+        neg_twelfth.highlight(GREEN_B)
+        VGroup(*zeta_neg_1[2:4]).highlight(YELLOW)
+        q_mark = TexMobject("?").next_to(sum_naturals[0], UP)
+        q_mark.highlight(RED)
+        randy = Randolph()
+        randy.to_corner(DOWN+LEFT)
+        analytic_continuation = TextMobject("Analytic continuation")
+        analytic_continuation.next_to(title, RIGHT, 3*LARGE_BUFF)
+
+        sum_to_zeta = Arrow(title.get_corner(DOWN+RIGHT), zeta_neg_1)
+        sum_to_ac = Arrow(title.get_right(), analytic_continuation)
+        ac_to_zeta = Arrow(analytic_continuation.get_bottom(), zeta_neg_1.get_top())
+        cross = TexMobject("\\times")
+        cross.scale(2)
+        cross.highlight(RED)
+        cross.rotate(np.pi/6)
+        cross.move_to(sum_to_zeta.get_center())
+
+        brace = Brace(VGroup(zeta_neg_1, sum_naturals))
+        words = TextMobject(
+            "If not equal, at least connected",
+            "\\\\(see links in description)"
+        )
+        words.next_to(brace, DOWN)
+
+        self.add(neg_twelfth, eq, zeta_neg_1, randy, title)
+        self.dither()
+        self.play(
+            Write(sum_naturals),
+            Write(q_mark),
+            randy.change_mode, "confused"
+        )
+        self.play(Blink(randy))
+        self.dither()
+        self.play(randy.change_mode, "angry")
+        self.play(
+            ShowCreation(sum_to_zeta),
+            Write(cross)
+        )
+        self.play(Blink(randy))
+        self.dither()
+        self.play(
+            Transform(sum_to_zeta, sum_to_ac),
+            FadeOut(cross),
+            Write(analytic_continuation),
+            randy.change_mode, "pondering",
+            randy.look_at, analytic_continuation,
+        )
+        self.play(ShowCreation(ac_to_zeta))
+        self.play(Blink(randy))
+        self.dither()
+        self.play(
+            GrowFromCenter(brace),
+            Write(words[0]),
+            randy.look_at, words[0],
+        )
+        self.dither()
+        self.play(FadeIn(words[1]))
+        self.play(Blink(randy))
+        self.dither()
+
+class InventingMathPreview(Scene):
+    def construct(self):
+        rect = Rectangle(height = 9, width = 16)
+        rect.scale_to_fit_height(4)
+        title = TextMobject("What does it feel like to invent math?")
+        title.next_to(rect, UP)
+        sum_tex = TexMobject("1+2+4+8+\\cdots = -1")
+        sum_tex.scale_to_fit_width(rect.get_width()-1)
+
+        self.play(
+            ShowCreation(rect),
+            Write(title)
+        )
+        self.play(Write(sum_tex))
+        self.dither()
+
+class FinalAnimationTease(Scene):
+    def construct(self):
+        morty = Mortimer().shift(2*(DOWN+RIGHT))
+        bubble = morty.get_bubble("speech")
+        bubble.write("""
+            Want to know what 
+            $\\zeta'(s)$ looks like?
+        """)
+
+        self.add(morty)
+        self.play(
+            morty.change_mode, "hooray",
+            morty.look_at, bubble.content,
+            ShowCreation(bubble),
+            Write(bubble.content)
+        )
+        self.play(Blink(morty))
+        self.dither()
+
+class PatreonThanks(Scene):
+    CONFIG = {
+        "specific_patrons" : [
+            "CrypticSwarm",
+            "Ali Yahya",
+            "Damion Kistler",
+            "Juan Batiz-Benet",
+            "Yu Jun",
+            "Othman Alikhan",
+            "Markus Persson",
+            "Joseph John Cox",
+            "Luc Ritchie",
+            "Shimin Kuang",
+            "Einar Johansen",
+            "Rish Kundalia",
+            "Achille Brighton",
+            "Kirk Werklund",
+            "Ripta Pasay",
+            "Felipe Diniz",
+        ]
+    }
+    def construct(self):
+        morty = Mortimer()
+        morty.next_to(ORIGIN, DOWN)
+
+        n_patrons = len(self.specific_patrons)
+        special_thanks = TextMobject("Special thanks to:")
+        special_thanks.highlight(YELLOW)
+        special_thanks.shift(3*UP)
+        patreon_logo = ImageMobject("patreon", invert = False)
+        patreon_logo.scale_to_fit_height(1.5)
+        patreon_logo.next_to(special_thanks, DOWN)
+
+        left_patrons = VGroup(*map(TextMobject, 
+            self.specific_patrons[:n_patrons/2]
+        ))
+        right_patrons = VGroup(*map(TextMobject, 
+            self.specific_patrons[n_patrons/2:]
+        ))
+        for patrons, vect in (left_patrons, LEFT), (right_patrons, RIGHT):
+            patrons.arrange_submobjects(DOWN, aligned_edge = LEFT)
+            patrons.next_to(special_thanks, DOWN)
+            patrons.to_edge(vect, buff = LARGE_BUFF)
+
+        self.add(patreon_logo)
+        self.play(morty.change_mode, "gracious")
+        self.play(Write(special_thanks, run_time = 1))
+        self.play(
+            Write(left_patrons),
+            morty.look_at, left_patrons
+        )
+        self.play(
+            Write(right_patrons),
+            morty.look_at, right_patrons
+        )
+        self.play(Blink(morty))
+        for patrons in left_patrons, right_patrons:
+            for index in 0, -1:
+                self.play(morty.look_at, patrons[index])
+                self.dither()
+
+class CreditTwo(Scene):
+    def construct(self):
+        morty = Mortimer()
+        morty.next_to(ORIGIN, DOWN)
+        morty.to_edge(RIGHT)
+
+        brother = PiCreature(color = GOLD_E)
+        brother.next_to(morty, LEFT)
+        brother.look_at(morty.eyes)
+        
+        headphones = Headphones(height = 1)
+        headphones.move_to(morty.eyes, aligned_edge = DOWN)
+        headphones.shift(0.1*DOWN)
+
+        url = TextMobject("www.audible.com/3blue1brown")
+        url.to_corner(UP+RIGHT, buff = LARGE_BUFF)
+
+        self.add(morty)
+        self.play(Blink(morty))
+        self.play(
+            FadeIn(headphones), 
+            Write(url),
+            Animation(morty)
+        )
+        self.play(morty.change_mode, "happy")
+        self.dither()
+        self.play(Blink(morty))
+        self.dither()
+        self.play(
+            FadeIn(brother),
+            morty.look_at, brother.eyes
+        )
+        self.play(brother.change_mode, "surprised")
+        self.play(Blink(brother))
+        self.dither()
+        self.play(
+            morty.look, LEFT,
+            brother.change_mode, "happy",
+            brother.look, LEFT
+        )
+        self.play(Blink(morty))
+        self.dither()
+
+class FinalAnimation(ZetaTransformationScene):
+    CONFIG = {
+        "min_added_anchors" : 100,
+    }
+    def construct(self):
+        self.add_transformable_plane()
+        self.add_extra_plane_lines_for_zeta()
+        self.add_reflected_plane()
+        title = TexMobject("s", "\\to \\frac{d\\zeta}{ds}(", "s", ")")
+        title.highlight_by_tex("s", YELLOW)
+        title.add_background_rectangle()
+        title.scale(1.5)
+        title.to_corner(UP+LEFT)
+
+        self.play(Write(title))
+        self.add_foreground_mobjects(title)
+        self.dither()
+        self.apply_complex_function(d_zeta, run_time = 8)
+        self.dither()
 
 
 
