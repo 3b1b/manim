@@ -2873,6 +2873,37 @@ class ButWhatIsTheExensions(TeacherStudentsScene):
         self.change_student_modes(*["pondering"]*3)
         self.random_blink(3)
 
+class MathematiciansLookingAtFunctionEquation(Scene):
+    def construct(self):
+        equation = TexMobject(
+            "\\zeta(s)",
+            "= 2^s \\pi ^{s-1}",
+            "\\sin\\left(\\frac{\\pi s}{2}\\right)",
+            "\\Gamma(1-s)", 
+            "\\zeta(1-s)",
+        )
+        equation.shift(UP)
+
+        mathy = Mathematician().to_corner(DOWN+LEFT)
+        mathys = VGroup(mathy)
+        for x in range(2):
+            mathys.add(Mathematician().next_to(mathys))
+        for mathy in mathys:
+            mathy.change_mode("pondering")
+            mathy.look_at(equation)
+
+        self.add(mathys)
+        self.play(Write(VGroup(*equation[:-1])))
+        self.play(Transform(
+            equation[0].copy(),
+            equation[-1],
+            path_arc = -np.pi/3,
+            run_time = 2
+        ))
+        for mathy in mathys:
+            self.play(Blink(mathy))
+        self.dither()
+
 class DiscussZeros(ZetaTransformationScene):
     def construct(self):
         self.establish_plane()
@@ -3102,6 +3133,19 @@ class DiscussZeros(ZetaTransformationScene):
         )
         self.play(ShowCreation(full_line, run_time = 20, rate_func = None))
         self.dither()
+
+class AskAboutRelationToPrimes(TeacherStudentsScene):
+    def construct(self):
+        self.student_says("""
+            Whoa!  Where the heck
+            do primes come in here?
+        """, target_mode = "confused")
+        self.random_blink(3)
+        self.teacher_says("""
+            Perhaps in a 
+            different video.
+        """, target_mode = "hesitant")
+        self.random_blink(3)
 
 class HighlightCriticalLineAgain(DiscussZeros):
     def construct(self):
@@ -3351,8 +3395,9 @@ class CreditTwo(Scene):
             Animation(morty)
         )
         self.play(morty.change_mode, "happy")
-        self.dither()
-        self.play(Blink(morty))
+        for x in range(4):
+            self.dither()
+            self.play(Blink(morty))
         self.dither()
         self.play(
             FadeIn(brother),
@@ -3366,8 +3411,11 @@ class CreditTwo(Scene):
             brother.change_mode, "happy",
             brother.look, LEFT
         )
-        self.play(Blink(morty))
-        self.dither()
+        for x in range(10):
+            self.play(Blink(morty))
+            self.dither()
+            self.play(Blink(brother))
+            self.dither()
 
 class FinalAnimation(ZetaTransformationScene):
     CONFIG = {
@@ -3389,7 +3437,35 @@ class FinalAnimation(ZetaTransformationScene):
         self.apply_complex_function(d_zeta, run_time = 8)
         self.dither()
 
+class Thumbnail(ZetaTransformationScene):
+    CONFIG = {
+        "anchor_density" : 35
+    }
+    def construct(self):
+        self.add_transformable_plane()
+        self.add_extra_plane_lines_for_zeta()
+        self.add_reflected_plane()
+        self.apply_zeta_function()
+        self.plane.set_stroke(width = 4)
 
+        div_sum = TexMobject("1+2+3+4+\\cdots = -", "\\frac{1}{12}")
+        div_sum.scale_to_fit_width(2*SPACE_WIDTH-1)
+        div_sum.to_edge(DOWN)
+        div_sum.highlight(YELLOW)
+        for mob in div_sum.submobjects:
+            mob.add_to_back(BackgroundRectangle(mob))
+
+        zeta = TexMobject("\\zeta(s)")
+        zeta.scale_to_fit_height(SPACE_HEIGHT-1)
+        zeta.to_corner(UP+LEFT)
+
+        million = TexMobject("\\$1{,}000{,}000")
+        million.scale_to_fit_width(SPACE_WIDTH)
+        million.to_edge(UP+RIGHT)
+        million.highlight(GREEN_B)
+        million.add_background_rectangle()
+
+        self.add(div_sum, million, zeta)
 
 
 
