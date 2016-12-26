@@ -253,20 +253,23 @@ class OpeningQuote(Scene):
         self.play(Write(author, run_time = 3))
         self.dither()
 
-    def get_quote(self):
+    def get_quote(self, max_width = 2*SPACE_WIDTH-1):
         if isinstance(self.quote, str):
             quote = TextMobject(
                 "``%s''"%self.quote.strip(),
                 alignment = "",
             )
         else:
-            words = list(self.quote)
-            words[0] = "``%s"%words[0]
-            words[-1] += "''"
+            words = ["``"] + list(self.quote) + ["''"]
             quote = TextMobject(*words, alignment = "")
+            ##TODO, make less hacky
+            quote[0].shift(0.2*RIGHT)
+            quote[-1].shift(0.2*LEFT)
         for term, color in self.highlighted_quote_terms.items():
             quote.highlight_by_tex(term, color)
         quote.to_edge(UP)
+        if quote.get_width() > max_width:
+            quote.scale_to_fit_width(max_width)
         return quote
 
     def get_author(self, quote):

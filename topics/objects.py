@@ -5,6 +5,10 @@ from mobject.vectorized_mobject import VGroup
 from mobject.svg_mobject import SVGMobject
 from mobject.tex_mobject import TextMobject
 
+from animation import Animation
+from animation.simple_animations import Rotating
+
+from topics.geometry import Circle, Line
 
 
 class VideoIcon(SVGMobject):
@@ -50,6 +54,63 @@ class Headphones(SVGMobject):
         self.set_stroke(width = 0)
         self.set_fill(color = self.color)
 
+class Clock(VGroup):
+    CONFIG = {
+        "propogate_style_to_family" : True,
+    }
+    def __init__(self, **kwargs):
+        circle = Circle()
+        ticks = []
+        for x in range(12):
+            alpha = x/12.
+            point = complex_to_R3(
+                np.exp(2*np.pi*alpha*complex(0, 1))
+            )
+            length = 0.2 if x%3 == 0 else 0.1
+            ticks.append(
+                Line(point, (1-length)*point)
+            )
+        self.hour_hand = Line(ORIGIN, 0.3*UP)
+        self.minute_hand = Line(ORIGIN, 0.6*UP)
+        # for hand in self.hour_hand, self.minute_hand:
+        #     #Balance out where the center is
+        #     hand.add(VectorizedPoint(-hand.get_end()))
+
+        VGroup.__init__(
+            self, circle, 
+            self.hour_hand, self.minute_hand,
+            *ticks
+        )
+
+class ClockPassesTime(Animation):
+    CONFIG = {
+        "run_time" : 5, 
+        "hours_passed" : 12,
+        "rate_func" : None,
+    }
+    def __init__(self, clock, **kwargs):
+        digest_config(self, kwargs)
+        assert(isinstance(clock, Clock))
+        rot_kwargs = {
+            "axis" : OUT,
+            "about_point" : clock.get_center()
+        }
+        hour_radians = -self.hours_passed*2*np.pi/12
+        self.hour_rotation = Rotating(
+            clock.hour_hand, 
+            radians = hour_radians,
+            **rot_kwargs
+        )
+        self.minute_rotation = Rotating(
+            clock.minute_hand, 
+            radians = 12*hour_radians,
+            **rot_kwargs
+        )
+        Animation.__init__(self, clock, **kwargs)
+
+    def update_mobject(self, alpha):
+        for rotation in self.hour_rotation, self.minute_rotation:
+            rotation.update_mobject(alpha)
 
 class Bubble(SVGMobject):
     CONFIG = {

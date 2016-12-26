@@ -204,7 +204,8 @@ class VMobject(Mobject):
         it comes time to display.
         """
         subpath_mobject = self.copy()#TODO, better way?
-        # subpath_mobject = VMobject()
+        subpath_mobject.submobjects = []
+        # subpath_mobject = self.__class__()
         subpath_mobject.is_subpath = True
         subpath_mobject.set_points(points)
         self.add(subpath_mobject)
@@ -253,6 +254,13 @@ class VMobject(Mobject):
             for i in range(3)
         ]
 
+    def get_anchors(self):
+        return self.points[::3]
+
+    def get_points_defining_boundary(self):
+        return self.get_anchors()
+
+        
     ## Alignment
 
     def align_points(self, mobject):

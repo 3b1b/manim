@@ -416,11 +416,15 @@ class TeacherStudentsScene(Scene):
         for x in range(num_times):
             pi_creature = random.choice(self.get_everyone())
             self.play(Blink(pi_creature))
-            self.dither()
+            Scene.dither(self)
+
+    def dither(self, time = 1):
+        self.random_blink(num_times = max(time/2, 1))
 
     def change_student_modes(self, *modes, **kwargs):
         added_anims = kwargs.get("added_anims", [])
         pairs = zip(self.get_students(), modes)
+        pairs = [(s, m) for s, m in pairs if m is not None]
         start = VGroup(*[s for s, m in pairs])
         target = VGroup(*[s.copy().change_mode(m) for s, m in pairs])
         self.play(

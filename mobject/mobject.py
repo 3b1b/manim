@@ -403,7 +403,8 @@ class Mobject(object):
 
     def reduce_across_dimension(self, points_func, reduce_func, dim):
         try:
-            values = [points_func(self.points[:, dim])]
+            points = self.get_points_defining_boundary()
+            values = [points_func(points[:, dim])]
         except:
             values = []
         values += [
@@ -425,6 +426,9 @@ class Mobject(object):
         return self.get_merged_array("points")
 
     ### Getters ###
+
+    def get_points_defining_boundary(self):
+        return self.points
 
     def get_num_points(self):
         return len(self.points)
@@ -517,7 +521,7 @@ class Mobject(object):
 
     def submobject_family(self):
         sub_families = map(Mobject.submobject_family, self.submobjects)
-        all_mobjects = [self] + reduce(op.add, sub_families, [])
+        all_mobjects = [self] + list(it.chain(*sub_families))
         return remove_list_redundancies(all_mobjects)
 
     def family_members_with_points(self):

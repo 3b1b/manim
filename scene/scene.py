@@ -155,7 +155,7 @@ class Scene(object):
             if animation.run_time != max_run_time:
                 new_rate_func = squish_rate_func(
                     animation.get_rate_func(),
-                    0, 1./max_run_time
+                    0, float(animation.run_time)/max_run_time
                 )
                 animation.set_rate_func(new_rate_func)
                 animation.set_run_time(max_run_time)
@@ -337,6 +337,7 @@ class Scene(object):
         full_path = os.path.join(path, file_name)
         if not os.path.exists(path):
             os.makedirs(path)
+        self.update_frame()
         Image.fromarray(self.get_frame()).save(full_path)
 
     def get_movie_file_path(self, name, extension):

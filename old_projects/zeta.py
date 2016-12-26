@@ -1357,7 +1357,8 @@ class FromRealToComplex(ComplexTransformationScene):
         VGroup(*lines[1::2]).highlight(RED)
 
         final_dot = Dot(
-            self.z_to_point(power_sums[-1]),
+            # self.z_to_point(power_sums[-1]),
+            self.z_to_point(zeta(exponent)),
             color = self.output_color
         )
 
@@ -3448,7 +3449,7 @@ class Thumbnail(ZetaTransformationScene):
         self.apply_zeta_function()
         self.plane.set_stroke(width = 4)
 
-        div_sum = TexMobject("1+2+3+4+\\cdots = -", "\\frac{1}{12}")
+        div_sum = TexMobject("-\\frac{1}{12} = ", "1+2+3+4+\\cdots")
         div_sum.scale_to_fit_width(2*SPACE_WIDTH-1)
         div_sum.to_edge(DOWN)
         div_sum.highlight(YELLOW)
@@ -3460,7 +3461,7 @@ class Thumbnail(ZetaTransformationScene):
         zeta.to_corner(UP+LEFT)
 
         million = TexMobject("\\$1{,}000{,}000")
-        million.scale_to_fit_width(SPACE_WIDTH)
+        million.scale_to_fit_width(SPACE_WIDTH+1)
         million.to_edge(UP+RIGHT)
         million.highlight(GREEN_B)
         million.add_background_rectangle()
@@ -3468,9 +3469,51 @@ class Thumbnail(ZetaTransformationScene):
         self.add(div_sum, million, zeta)
 
 
+class ZetaPartialSums(ZetaTransformationScene):
+    CONFIG = {
+        "anchor_density" : 35,
+        "num_partial_sums" : 12,
+    }
+    def construct(self):
+        self.add_transformable_plane()
+        self.add_extra_plane_lines_for_zeta()
+        self.prepare_for_transformation(self.plane)
 
+        N_list = [2**k for k in range(self.num_partial_sums)]
+        sigma = TexMobject(
+            "\\sum_{n = 1}^N \\frac{1}{n^s}"
+        )
+        sigmas = []
+        for N in N_list + ["\\infty"]:
+            tex = TexMobject(str(N))
+            tex.highlight(YELLOW)
+            new_sigma = sigma.copy()
+            top = new_sigma[0]
+            tex.move_to(top, DOWN)
+            new_sigma.remove(top)
+            new_sigma.add(tex)
+            new_sigma.to_corner(UP+LEFT)
+            sigmas.append(new_sigma)
 
-
+        def get_partial_sum_func(n_terms):
+            return lambda s : sum([1./(n**s) for n in range(1, n_terms+1)])
+        interim_planes = [
+            self.plane.copy().apply_complex_function(
+                get_partial_sum_func(N)
+            )
+            for N in N_list
+        ]
+        interim_planes.append(self.plane.copy().apply_complex_function(zeta))
+        symbol = VGroup(TexMobject("s"))
+        symbol.scale(2)
+        symbol.highlight(YELLOW)
+        symbol.to_corner(UP+LEFT)
+        for plane, sigma in zip(interim_planes, sigmas):
+            self.play(
+                Transform(self.plane, plane),
+                Transform(symbol, sigma)
+            )
+            self.dither()
 
 
 

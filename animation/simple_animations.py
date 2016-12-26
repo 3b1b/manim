@@ -11,24 +11,30 @@ from animation import Animation
 
 class Rotating(Animation):
     CONFIG = {
-        "axes"       : [RIGHT, UP],
-        "axis"       : None,
+        "axes"       : [],
+        "axis"       : OUT,
         "radians"    : 2*np.pi,
-        "run_time"   : 20.0,
+        "run_time"   : 5,
         "rate_func"  : None,
         "in_place"   : True,
+        "about_point" : None,
     }
     def update_submobject(self, submobject, starting_submobject, alpha):
         submobject.points = np.array(starting_submobject.points)
 
     def update_mobject(self, alpha):
         Animation.update_mobject(self, alpha)
-        axes = [self.axis] if self.axis is not None else self.axes
-        if self.in_place:
-            method = self.mobject.rotate_in_place
-        else:
-            method = self.mobject.rotate           
-        method(alpha*self.radians, axes = axes)     
+        axes = self.axes if self.axes else [self.axis]
+        about_point = None
+        if self.about_point is not None:
+            about_point = self.about_point
+        elif self.in_place: #This is superseeded
+            self.about_point = self.mobject.get_center()
+        self.mobject.rotate(
+            alpha*self.radians, 
+            axes = axes,
+            about_point = self.about_point
+        )
 
 
 class ShowPartial(Animation):
@@ -267,8 +273,14 @@ class Succession(Animation):
             last_anim = self.anims[self.last_index]
             last_anim.clean_up()
             if last_anim.mobject is curr_anim.mobject:
-                self.anims[index].starting_mobject = curr_anim.mobject.copy()
-        self.anims[index].update_mobject(scaled_alpha - index)
+                #TODO, is there a way to do this that doesn't
+                #require leveraging implementation details of 
+                #Animations, and knowing about the different
+                #struction of Transform?
+                if hasattr(curr_anim, "ending_mobject"):
+                    curr_anim.mobject.align_data(curr_anim.ending_mobject)
+                curr_anim.starting_mobject = curr_anim.mobject.copy()
+        curr_anim.update(scaled_alpha - index)
         self.last_index = index
 
 

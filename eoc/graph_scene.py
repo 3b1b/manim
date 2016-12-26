@@ -2,7 +2,7 @@ from helpers import *
 
 from scene import Scene
 # from topics.geometry import 
-from mobject.tex_mobject import TexMobject
+from mobject.tex_mobject import TexMobject, TextMobject
 from mobject.vectorized_mobject import VGroup, VectorizedPoint
 from animation.simple_animations import Write, ShowCreation
 from topics.number_line import NumberLine
@@ -15,14 +15,14 @@ class GraphScene(Scene):
         "x_max" : 10,
         "x_axis_width" : 9,
         "x_tick_frequency" : 1,
-        "x_leftmost_tick" : -1,
+        "x_leftmost_tick" : None, #Change if different from x_min
         "x_labeled_nums" : range(1, 10),
         "x_axis_label" : "x",
         "y_min" : -1,
         "y_max" : 10,
         "y_axis_height" : 6,
         "y_tick_frequency" : 1,
-        "y_bottom_tick" : -1,
+        "y_bottom_tick" : None, #Change if different from y_min
         "y_labeled_nums" : range(1, 10),
         "y_axis_label" : "y",
         "axes_color" : GREY,
@@ -36,15 +36,16 @@ class GraphScene(Scene):
             x_max = self.x_max,
             space_unit_to_num = self.x_axis_width/x_num_range,
             tick_frequency = self.x_tick_frequency,
-            leftmost_tick = self.x_leftmost_tick,
+            leftmost_tick = self.x_leftmost_tick or self.x_min,
             numbers_with_elongated_ticks = self.x_labeled_nums,
             color = self.axes_color
         )
         x_axis.shift(self.graph_origin - x_axis.number_to_point(0))
         if self.x_labeled_nums:
             x_axis.add_numbers(*self.x_labeled_nums)
-        x_label = TexMobject(self.x_axis_label)
+        x_label = TextMobject(self.x_axis_label)
         x_label.next_to(x_axis, RIGHT+UP, buff = SMALL_BUFF)
+        x_label.shift_onto_screen()
         x_axis.add(x_label)
         self.x_axis_label_mob = x_label
 
@@ -54,7 +55,7 @@ class GraphScene(Scene):
             x_max = self.y_max,
             space_unit_to_num = self.y_axis_height/y_num_range,
             tick_frequency = self.y_tick_frequency,
-            leftmost_tick = self.y_bottom_tick,
+            leftmost_tick = self.y_bottom_tick or self.y_min,
             numbers_with_elongated_ticks = self.y_labeled_nums,
             color = self.axes_color
         )
@@ -63,8 +64,9 @@ class GraphScene(Scene):
         if self.y_labeled_nums:
             y_axis.add_numbers(*self.y_labeled_nums)
             y_axis.numbers.shift(self.y_axis_numbers_nudge)
-        y_label = TexMobject(self.y_axis_label)
+        y_label = TextMobject(self.y_axis_label)
         y_label.next_to(y_axis.get_top(), RIGHT, buff = 2*MED_BUFF)
+        y_label.shift_onto_screen()
         y_axis.add(y_label)
         self.y_axis_label_mob = y_label
 
@@ -82,7 +84,7 @@ class GraphScene(Scene):
 
     def graph_function(self, func, 
                        color = BLUE,
-                       animate = True,
+                       animate = False,
                        is_main_graph = True, 
                        ):
 
