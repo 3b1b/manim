@@ -73,7 +73,7 @@ class GraphScene(Scene):
         if animate:
             self.play(Write(VGroup(x_axis, y_axis)))
         else:
-            selfe.add(x_axis, y_axis_label)
+            self.add(x_axis, y_axis)
         self.x_axis, self.y_axis = x_axis, y_axis
 
     def coords_to_point(self, x, y):

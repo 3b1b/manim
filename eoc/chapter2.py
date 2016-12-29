@@ -32,7 +32,7 @@ class Car(SVGMobject):
     CONFIG = {
         "file_name" : "Car", 
         "height" : 1,
-        "color" : GREY,
+        "color" : "#BBBBBB",
     }
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, **kwargs)
@@ -356,12 +356,14 @@ class IntroduceCar(Scene):
 
         group.target.rotate(np.pi/2, about_point = point_A)
         group.target.shift(graph_scene.graph_origin - point_A)
-        self.play(MoveToTarget(group))
+        self.play(MoveToTarget(group, path_arc = np.pi/2))
         self.dither()
 
 class GraphCarTrajectory(GraphScene):
     CONFIG = {
         "x_min" : 0,
+        "x_max" : 10.01,
+        "x_labeled_nums" : range(1, 11),
         "x_axis_label" : "Time (seconds)",
         "y_min" : 0,
         "y_max" : 110,
@@ -372,16 +374,40 @@ class GraphCarTrajectory(GraphScene):
     }
     def construct(self):
         self.setup_axes(animate = False)
-        graph = self.graph_function(
-            lambda t : 100*smooth(t/10.),
-        )
-        self.remove(graph)
+        graph = self.graph_function(lambda t : 100*smooth(t/10.))
+        origin = self.coords_to_point(0, 0)
+
+        h_line, v_line = [
+            Line(origin, origin, color = color, stroke_width = 2)
+            for color in MAROON_B, YELLOW
+        ]
+        def h_update(h_line):
+            end = graph.points[-1]
+            t_axis_point = end[0]*RIGHT + origin[1]*UP
+            h_line.put_start_and_end_on(t_axis_point, end)
+        def v_update(v_line):
+            end = graph.points[-1]
+            d_axis_point = origin[0]*RIGHT + end[1]*UP
+            v_line.put_start_and_end_on(d_axis_point, end)
 
         car = Car()
         car.rotate(np.pi/2)
-        car.move_to(self.coords_to_point(0, 0))
+        car.move_to(origin)
         self.add(car)
-        
+        self.play(
+            ShowCreation(
+                graph,
+                rate_func = None,
+            ),
+            MoveCar(
+                car, self.coords_to_point(0, 100),
+            ),
+            UpdateFromFunc(h_line, h_update),
+            UpdateFromFunc(v_line, v_update),
+            run_time = 10,
+        )
+        self.dither()
+
 
 
 
