@@ -111,7 +111,6 @@ class TrigRepresentationsScene(Scene):
             end_point = (1./np.sin(self.theta_value))*self.unit_length*UP
         return Line(start_point, end_point, color = color)
 
-
 class IntroduceCSC(TrigRepresentationsScene):
     def construct(self):
         self.clear()
@@ -261,20 +260,25 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         self.dither()
         self.change_mode("well")
 
-        original_theta_value = self.theta_value
-        self.theta_value = self.alt_theta_val
-        sin_group.target = self.get_line_brace_text("sin")
-        cos_group.target = self.get_line_brace_text("cos")
-        self.theta_group.target = self.get_theta_group()
-        self.play(
-            *map(MoveToTarget,
-                [sin_group, cos_group, self.theta_group]
-            ),
-            path_arc = self.theta_value - original_theta_value,
-            rate_func = there_and_back,
-            run_time = 5
+        mover = VGroup(
+            sin_group,
+            cos_group,
+            self.theta_group,
         )
-        self.theta_value = original_theta_value
+        thetas = np.linspace(self.theta_value, self.alt_theta_val, 10)
+        targets = []
+        for theta in list(thetas) + list(reversed(thetas)):
+            self.theta_value = theta
+            targets.append(VGroup(
+                self.get_line_brace_text("sin"),
+                self.get_line_brace_text("cos"),
+                self.get_theta_group()
+            ))
+        self.play(Succession(*[
+            Transform(mover, target)
+            for target in targets
+        ], run_time = 5, rate_func = smooth))
+
         self.change_mode("happy")
         self.dither()
         self.sin_group, self.cos_group = sin_group, cos_group
@@ -330,20 +334,25 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
             small_lines.add(small_line)
         self.play(FadeOut(line), Animation(small_lines))
 
-        original_theta_value = self.theta_value
-        self.theta_value = self.alt_theta_val
-        tan_group.target = self.get_line_brace_text("tan")
-        cot_group.target = self.get_line_brace_text("cot")
-        self.theta_group.target = self.get_theta_group()
-        self.play(
-            *map(MoveToTarget,
-                [tan_group, cot_group, self.theta_group]
-            ),
-            path_arc = self.theta_value - original_theta_value,
-            rate_func = there_and_back,
-            run_time = 5
+        mover = VGroup(
+            tan_group,
+            cot_group,
+            self.theta_group,
         )
-        self.theta_value = original_theta_value
+        thetas = np.linspace(self.theta_value, self.alt_theta_val, 10)
+        targets = []
+        for theta in list(thetas) + list(reversed(thetas)):
+            self.theta_value = theta
+            targets.append(VGroup(
+                self.get_line_brace_text("tan"),
+                self.get_line_brace_text("cot"),
+                self.get_theta_group()
+            ))
+        self.play(Succession(*[
+            Transform(mover, target)
+            for target in targets
+        ], run_time = 5, rate_func = smooth))
+
         self.change_mode("happy")
         self.dither(2)
 
@@ -399,27 +408,34 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
             )
             self.dither()
 
-
-        original_theta_value = self.theta_value
-        self.theta_value = self.alt_theta_val
-        sec_group.target = self.get_line_brace_text("sec")
-        csc_group.target = self.get_line_brace_text("csc")
-        for group in sec_group, csc_group:
-            line = group.target[0]
-            group.target.add(
-                Dot(line.get_end(), color = line.get_color())
-            )
-        self.theta_group.target = self.get_theta_group()
-        self.tangent_line.target = self.get_tangent_line()
-        self.play(
-            *map(MoveToTarget,
-                [sec_group, csc_group, self.tangent_line, self.theta_group]
-            ),
-            path_arc = self.theta_value - original_theta_value,
-            rate_func = there_and_back,
-            run_time = 5
+        mover = VGroup(
+            sec_group,
+            csc_group,
+            self.theta_group,
+            self.tangent_line,
         )
-        self.theta_value = original_theta_value
+        thetas = np.linspace(self.theta_value, self.alt_theta_val, 10)
+        targets = []
+        for theta in list(thetas) + list(reversed(thetas)):
+            self.theta_value = theta
+            new_sec_group = self.get_line_brace_text("sec")
+            new_csc_group = self.get_line_brace_text("csc")
+            for group in new_sec_group, new_csc_group:
+                line = group[0]
+                group.add(
+                    Dot(line.get_end(), color = line.get_color())
+                )
+            targets.append(VGroup(
+                new_sec_group,
+                new_csc_group,
+                self.get_theta_group(),
+                self.get_tangent_line(),
+            ))
+        self.play(Succession(*[
+            Transform(mover, target)
+            for target in targets
+        ], run_time = 5, rate_func = smooth))
+
         self.change_mode("confused")
         self.dither(2)
 
@@ -444,11 +460,13 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
 
         tri1 = Polygon(
             ORIGIN, radial_line.get_end(), sin_line.get_end(),
-            color = GREEN
+            color = GREEN,
+            stroke_width = 8,
         )
         tri2 = Polygon(
             csc_line.get_end(), ORIGIN, radial_line.get_end(),
-            color = GREEN
+            color = GREEN,
+            stroke_width = 8,
         )
 
         opp_over_hyp = TexMobject(
@@ -476,6 +494,10 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         tri1.save_state()
         self.play(Transform(tri1, tri2, path_arc = np.pi/2))
         self.play(Write(arc_theta))
+        self.play(ApplyMethod(
+            tri1.rotate_in_place, np.pi/12, 
+            rate_func = wiggle
+        ))
         self.dither(2)
 
         self.play(Write(opp_over_hyp))
@@ -539,43 +561,52 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         )
         self.dither()
         self.play(
-            dem2.move_to, frac2[-2],
-            VGroup(*frac2[-2:]).highlight, BLACK
+            dem2.move_to, frac2[2],
+            VGroup(*frac2[1:3]).highlight, BLACK
         )
+        self.dither()
 
     def summarize_full_group(self):
         scale_factor = 1.5
         theta_subgroup = VGroup(self.theta_group[0], self.theta_group[-1])
-        self.play(
-            self.circle.scale, scale_factor,
-            self.axes.scale, scale_factor,
-            theta_subgroup.scale, scale_factor,
-        )
+        self.play(*it.chain(*[
+            [mob.scale, scale_factor]
+            for mob in [
+                self.circle, self.axes, 
+                theta_subgroup, self.tangent_line
+            ]
+        ]))
         self.unit_length *= scale_factor
 
         to_fade = VGroup()
         for func_name in ["sin", "tan", "sec", "cos", "cot", "csc"]:
             line, brace, text = self.get_line_brace_text(func_name)
-            angle = line.get_angle()
-            if np.cos(angle) < 0:
-                angle += np.pi
-            if func_name is "sin":
-                target = line.get_center()+0.2*LEFT+0.1*DOWN
-            else:
-                target = VGroup(brace, line).get_center_of_mass()
             if func_name in ["sin", "cos"]:
+                angle = line.get_angle()
+                if np.cos(angle) < 0:
+                    angle += np.pi
+                if func_name is "sin":
+                    target = line.get_center()+0.2*LEFT+0.1*DOWN
+                else:
+                    target = VGroup(brace, line).get_center_of_mass()
                 text.scale(0.75)
-            text.rotate(angle)
-            text.move_to(target)
-            line.set_stroke(width = 6)
-            self.play(
-                ShowCreation(line),
-                Write(text, run_time = 1)
-            )
+                text.rotate(angle)
+                text.move_to(target)
+                line.set_stroke(width = 6)
+                self.play(
+                    ShowCreation(line),
+                    Write(text, run_time = 1)
+                )
+            else:
+                self.play(
+                    ShowCreation(line),
+                    GrowFromCenter(brace),
+                    Write(text, run_time = 1)
+                )
+            if func_name in ["sec", "csc", "cot"]:
+                to_fade.add(*self.get_mobjects_from_last_animation())
             if func_name is "sec":
                 self.dither()
-            if func_name in ["sec", "csc", "cot"]:
-                to_fade.add(line, text)
         self.dither()
         self.change_mode("surprised")
         self.dither(2)
@@ -610,7 +641,32 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
             color = GREY
         )
 
-
+class RenameAllInTermsOfSine(Scene):
+    def construct(self):
+        texs = [
+            "\\sin(\\theta)",
+            "\\cos(\\theta)",
+            "\\tan(\\theta)",
+            "\\csc(\\theta)",
+            "\\sec(\\theta)",
+            "\\cot(\\theta)",
+        ]
+        shift_vals = [
+            2*LEFT+3*UP,
+            2*LEFT+UP,
+            2*LEFT+DOWN,
+            2*RIGHT+3*UP,
+            2*RIGHT+UP,
+            2*RIGHT+DOWN,
+        ]
+        equivs = [
+            "",
+            "\\sin(90^\\circ - \\theta)",
+            "\\frac{\\sin(\\theta)}{\\sin(90^\\circ - \\theta)}",
+            "\\frac{1}{\\sin(\\theta)}",
+            "\\frac{1}{\\sin(90^\\circ - \\theta)}",
+            "\\frac{\\sin(90^\\circ - \\theta)}{\\sin(\\theta)}",
+        ]
 
 
 
