@@ -19,15 +19,16 @@ class SpaceFillingCurve(VMobject):
     CONFIG = {
         "radius"      : 3,
         "order"       : 5,
-        "start_color" : RED,
-        "end_color"   : GREEN,
+        "colors" : [RED, GREEN],
     }
 
     def generate_points(self):
         points = self.get_anchor_points()
-        for pair in zip(points, points[1:]):
-            self.add(Line(*pair))
-        self.gradient_highlight(self.start_color, self.end_color)
+        for triplet in zip(points, points[1:], points[2:]):
+            corner = VMobject()
+            corner.set_points_as_corners(triplet)
+            self.add(corner)
+        self.gradient_highlight(*self.colors)
 
     def get_anchor_points(self):
         raise Exception("Not implemented")
@@ -151,8 +152,7 @@ class HilbertCurve3D(SelfSimilarSpaceFillingCurve):
 
 class PeanoCurve(SelfSimilarSpaceFillingCurve):
     CONFIG = {
-        "start_color" : PURPLE,
-        "end_color"   : TEAL,
+        "colors" : [PURPLE, TEAL],
         "offsets" : [
             LEFT+DOWN,
             LEFT,
@@ -177,8 +177,7 @@ class PeanoCurve(SelfSimilarSpaceFillingCurve):
 
 class TriangleFillingCurve(SelfSimilarSpaceFillingCurve):
     CONFIG = {
-        "start_color" : MAROON,
-        "end_color"   : YELLOW,
+        "colors" : [MAROON, YELLOW],
         "offsets" : [
             LEFT/4.+DOWN/6.,
             ORIGIN,
@@ -219,8 +218,7 @@ class TriangleFillingCurve(SelfSimilarSpaceFillingCurve):
 
 class UtahFillingCurve(SelfSimilarSpaceFillingCurve):
     CONFIG = {
-        "start_color" : WHITE,
-        "end_color"   : BLUE_D,
+        "colors" : [WHITE, BLUE_D],
         "axis_offset_pairs" : [
 
         ],
@@ -231,8 +229,7 @@ class UtahFillingCurve(SelfSimilarSpaceFillingCurve):
 
 class FlowSnake(LindenmayerCurve):
     CONFIG = {
-        "start_color" : YELLOW,
-        "end_color"   : GREEN,
+        "colors" : [YELLOW, GREEN],
         "axiom"       : "A",
         "rule" : {
             "A" : "A-B--B+A++AA+B-",
