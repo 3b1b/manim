@@ -283,6 +283,27 @@ class Succession(Animation):
         curr_anim.update(scaled_alpha - index)
         self.last_index = index
 
+class AnimationGroup(Animation):
+    def __init__(self, *sub_anims, **kwargs):
+        digest_config(self, kwargs, locals())
+        max_run_time = float(max([a.run_time for a in sub_anims]))
+        for anim in sub_anims:
+            #Use np.divide to that 1./0 = np.inf
+            anim.alpha_multiplier = np.divide(max_run_time, anim.run_time)
+
+        if "run_time" in kwargs:
+            self.run_time = kwargs.pop("run_time")
+        else:
+            self.run_time = max_run_time
+        everything = Mobject(*[a.mobject for a in sub_anims])
+        Animation.__init__(self, everything, **kwargs)
+
+    def update(self, alpha):
+        for anim in self.sub_anims:
+            sub_alpha = np.clip(alpha*anim.alpha_multiplier, 0, 1)
+            anim.update(sub_alpha)
+
+
 
 
 

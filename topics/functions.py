@@ -29,7 +29,7 @@ class ParametricFunction(VMobject):
     CONFIG = {
         "t_min" : 0,
         "t_max" : 1,
-        "epsilon" : 0.1,
+        "num_anchor_points" : 10,
     }
     def __init__(self, function, **kwargs):
         self.function = function
@@ -38,10 +38,10 @@ class ParametricFunction(VMobject):
     def generate_points(self):
         self.set_anchor_points([
             self.function(t)
-            for t in np.arange(
+            for t in np.linspace(
                 self.t_min, 
-                self.t_max+self.epsilon, 
-                self.epsilon
+                self.t_max,
+                self.num_anchor_points
             )
         ], mode = "smooth")
 

@@ -122,6 +122,8 @@ class Bubble(SVGMobject):
         "bubble_center_adjustment_factor" : 1./8,
         "file_name" : None,
         "propogate_style_to_family" : True,
+        "fill_color" : BLACK,
+        "fill_opacity" : 0.8,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs, locals())

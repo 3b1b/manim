@@ -10,7 +10,7 @@ from topics.objects import Bubble, ThoughtBubble, SpeechBubble
 from animation import Animation
 from animation.transform import Transform, ApplyMethod, \
     FadeOut, FadeIn, ApplyPointwiseFunction
-from animation.simple_animations import Write, ShowCreation
+from animation.simple_animations import Write, ShowCreation, AnimationGroup
 from scene import Scene
 
 
@@ -213,7 +213,6 @@ class BabyPiCreature(PiCreature):
         self.look(looking_direction)
         
 
-
 class Blink(ApplyMethod):
     CONFIG = {
         "rate_func" : squish_rate_func(there_and_back)
@@ -222,6 +221,39 @@ class Blink(ApplyMethod):
         ApplyMethod.__init__(self, pi_creature.blink, **kwargs)
 
 
+class PiCreatureSays(AnimationGroup):
+    CONFIG = {
+        "target_mode" : "speaking",
+        "change_mode_kwargs" : {},
+        "bubble_creation_kwargs" : {},
+        "write_kwargs" : {},
+    }
+    def __init__(self, pi_creature, *content, **kwargs):
+        digest_config(self, kwargs)
+        bubble = pi_creature.get_bubble("speech")
+        bubble.write(*content)
+        bubble.resize_to_content()
+        bubble.pin_to(pi_creature)
+        pi_creature.bubble = bubble
+
+        AnimationGroup.__init__(
+            self,
+            ApplyMethod(
+                pi_creature.change_mode, 
+                self.target_mode,
+                **self.change_mode_kwargs
+            ),
+            ShowCreation(
+                bubble, 
+                **self.bubble_creation_kwargs
+            ),
+            Write(
+                bubble.content, 
+                **self.write_kwargs
+            ),
+            **kwargs
+        )
+    
 
 class PiCreatureScene(Scene):
     CONFIG = {
