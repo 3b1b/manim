@@ -89,7 +89,7 @@ class Car(SVGMobject):
         return self
 
     def get_tires(self):
-        return self[1][1], self[1][3]
+        return VGroup(self[1][1], self[1][3])
 
 class MoveCar(ApplyMethod):
     def __init__(self, car, target_point, **kwargs):
@@ -677,12 +677,165 @@ class ShowSpeedometer(IntroduceCar):
     #     self.add(self.speedomoeter)
     #     self.play(*self.get_added_movement_anims())
 
+class VelocityInAMomentMakesNoSense(Scene):
+    def construct(self):
+        randy = Randolph()
+        randy.next_to(ORIGIN, DOWN+LEFT)
+        words = TextMobject("Velocity in \\\\ a moment")
+        words.next_to(randy, UP+RIGHT)
+        randy.look_at(words)
+        q_marks = TextMobject("???")
+        q_marks.next_to(randy, UP)
 
+        self.play(
+            randy.change_mode, "confused",
+            Write(words)
+        )
+        self.play(Blink(randy))
+        self.play(Write(q_marks))
+        self.play(Blink(randy))
+        self.dither()
 
+class SnapshotOfACar(Scene):
+    def construct(self):
+        car = Car()
+        car.scale(1.5)
+        car.move_to(3*LEFT+DOWN)
+        flash_box = Rectangle(
+            width = 2*SPACE_WIDTH,
+            height = 2*SPACE_HEIGHT,
+            stroke_width = 0,
+            fill_color = WHITE,
+            fill_opacity = 1,
+        )
+        speed_lines = VGroup(*[
+            Line(point, point+0.5*LEFT)
+            for point in [
+                0.5*UP+0.25*RIGHT,
+                ORIGIN, 
+                0.5*DOWN+0.25*RIGHT
+            ]
+        ])
+        question = TextMobject("""
+            How fast is
+            this car going?
+        """)
 
+        self.play(MoveCar(
+            car, RIGHT+DOWN, 
+            run_time = 2,
+            rate_func = rush_into
+        ))
+        car.get_tires().highlight(GREY)
+        speed_lines.next_to(car, LEFT)
+        self.add(speed_lines)
+        self.play(
+            flash_box.set_fill, None, 0,
+            rate_func = rush_from
+        )
+        question.next_to(car, UP, buff = LARGE_BUFF)
+        self.play(Write(question, run_time = 2))
+        self.dither(2)
 
+class CompareTwoTimes(Scene):
+    CONFIG = {
+        "start_distance" : 30,
+        "start_time" : 4,
+        "end_distance" : 50,
+        "end_time" : 5,
+        "distance_color" : YELLOW,
+        "time_color" : BLUE,
+    }
+    def construct(self):
+        self.introduce_states()
+        self.show_equation()
+        self.fade_all_but_one_moment()
 
+    def introduce_states(self):
+        state1 = self.get_car_state(self.start_distance, self.start_time)
+        state2 = self.get_car_state(self.end_distance, self.end_time)
 
+        state1.to_corner(UP+LEFT)
+        state2.to_corner(DOWN+LEFT)
+
+        dividers = VGroup(
+            Line(SPACE_WIDTH*LEFT, RIGHT),
+            Line(RIGHT+SPACE_HEIGHT*UP, RIGHT+SPACE_HEIGHT*DOWN),
+        )
+        dividers.highlight(GREY)
+
+        self.add(dividers, state1)
+        self.dither()
+        copied_state = state1.copy()
+        self.play(copied_state.move_to, state2)
+        self.play(Transform(copied_state, state2))
+        self.dither(2)
+        self.keeper = state1
+
+    def show_equation(self):
+        velocity = TextMobject("Velocity")
+        change_over_change = TexMobject(
+            "\\frac{\\text{Change in distance}}{\\text{Change in time}}"
+        )
+        formula = TexMobject(
+            "\\frac{(%d - %d) \\text{ meters}}{(%d - %d) \\text{ seconds}}"%(
+                self.end_distance, self.start_distance,
+                self.end_time, self.start_time,
+            )
+        )
+        VGroup(*list(formula[1:3]) + list(formula[4:6])).highlight(self.distance_color)
+        VGroup(formula[-11], formula[-9]).highlight(self.time_color)
+
+        down_arrow1 = TexMobject("\\Downarrow")
+        down_arrow2 = TexMobject("\\Downarrow")
+        group = VGroup(
+            velocity, down_arrow1, 
+            change_over_change, down_arrow2,
+            formula,
+        )
+        group.arrange_submobjects(DOWN)
+        group.to_corner(UP+RIGHT)
+
+        self.play(FadeIn(
+            group, submobject_mode = "lagged_start",
+            run_time = 3
+        ))
+        self.dither(3)
+
+    def fade_all_but_one_moment(self):
+        anims = [
+            ApplyMethod(mob.fade, 0.5)
+            for mob in self.get_mobjects()
+        ]
+        anims.append(Animation(self.keeper.copy()))
+        self.play(*anims)
+        self.dither()
+
+    def get_car_state(self, distance, time):
+        line = Line(3*LEFT, 3*RIGHT)
+        dots = map(Dot, line.get_start_and_end())
+        line.add(*dots)
+        car = Car()
+        car.move_to(line.get_start())
+        car.shift((distance/10)*RIGHT)
+        front_line = car.get_front_line()
+
+        brace = Brace(VGroup(dots[0], front_line), DOWN)
+        distance_label = brace.get_text(
+            str(distance), " meters"
+        )
+        distance_label.highlight_by_tex(str(distance), self.distance_color)
+        brace.add(distance_label)
+        time_label = TextMobject(
+            "Time:", str(time), "seconds"
+        )
+        time_label.highlight_by_tex(str(time), self.time_color)
+        time_label.next_to(
+            VGroup(line, car), UP,
+            aligned_edge = LEFT
+        )
+
+        return VGroup(line, car, front_line, brace, time_label)
 
 
 
