@@ -296,6 +296,10 @@ class FathersOfCalculus(Scene):
         self.dither()
 
 class IntroduceCar(Scene):
+    CONFIG = {
+        "should_transition_to_graph" : True,
+        "show_distance" : True,
+    }
     def construct(self):
         point_A = DOWN+4*LEFT
         point_B = DOWN+5*RIGHT
@@ -308,6 +312,7 @@ class IntroduceCar(Scene):
             dot.add(label)
 
         car = Car()
+        self.car = car #For introduce_added_mobjects use in subclasses
         car.move_to(point_A)
         front_line = car.get_front_line()
 
@@ -321,43 +326,57 @@ class IntroduceCar(Scene):
         self.add(A, B, line, car, time_label)
         self.play(ShowCreation(front_line))
         self.play(FadeOut(front_line))
+        self.introduce_added_mobjects()
         self.play(
             MoveCar(car, point_B, run_time = 10),
-            IncrementNumber(time_label[1], run_time = 11)
+            IncrementNumber(time_label[1], run_time = 11),
+            *self.get_added_movement_anims()
         )
         front_line = car.get_front_line()
         self.play(ShowCreation(front_line))
         self.play(FadeOut(front_line))
-        self.play(
-            GrowFromCenter(distance_brace),
-            Write(distance)
-        )
-        self.dither()
-        self.play(
-            car.move_to, point_A,
-            FadeOut(time_label),
-            FadeOut(distance_brace),
-            FadeOut(distance)
-        )
-        graph_scene = GraphCarTrajectory(skip_animations = True)
-        origin = graph_scene.graph_origin
-        top = graph_scene.coords_to_point(0, 100)
-        new_length = np.linalg.norm(top-origin)
-        new_point_B = point_A + new_length*RIGHT
 
-        group = VGroup(car, A, B, line)
-        for mob in group:
-            mob.generate_target()
-        group.target = VGroup(*[m.target for m in group])
-        B.target.shift(new_point_B - point_B)
-        line.target.put_start_and_end_on(
-            point_A, new_point_B
-        )
+        if self.show_distance:
+            self.play(
+                GrowFromCenter(distance_brace),
+                Write(distance)
+            )
+            self.dither()
 
-        group.target.rotate(np.pi/2, about_point = point_A)
-        group.target.shift(graph_scene.graph_origin - point_A)
-        self.play(MoveToTarget(group, path_arc = np.pi/2))
-        self.dither()
+        if self.should_transition_to_graph:
+            self.play(
+                car.move_to, point_A,
+                FadeOut(time_label),
+                FadeOut(distance_brace),
+                FadeOut(distance),
+            )
+            graph_scene = GraphCarTrajectory(skip_animations = True)
+            origin = graph_scene.graph_origin
+            top = graph_scene.coords_to_point(0, 100)
+            new_length = np.linalg.norm(top-origin)
+            new_point_B = point_A + new_length*RIGHT
+            car_line_group = VGroup(car, A, B, line)
+            for mob in car_line_group:
+                mob.generate_target()
+            car_line_group.target = VGroup(*[
+                m.target for m in car_line_group
+            ])
+            B = car_line_group[2]
+            B.target.shift(new_point_B - point_B)
+            line.target.put_start_and_end_on(
+                point_A, new_point_B
+            )
+
+            car_line_group.target.rotate(np.pi/2, about_point = point_A)
+            car_line_group.target.shift(graph_scene.graph_origin - point_A)
+            self.play(MoveToTarget(car_line_group, path_arc = np.pi/2))
+            self.dither()
+
+    def introduce_added_mobjects(self):
+        pass
+
+    def get_added_movement_anims(self):
+        return []
 
 class GraphCarTrajectory(GraphScene):
     CONFIG = {
@@ -464,23 +483,15 @@ class GraphCarTrajectory(GraphScene):
         rect = Rectangle().replace(ghost_line, stretch = True)
         rect.set_stroke(width = 0)
         rect.set_fill(BLUE, opacity = 0.3)
-        def get_change_lines():
-            p1 = self.input_to_graph_point(curr_time)
-            p2 = self.input_to_graph_point(curr_time+delta_t)
-            interim_point = p2[0]*RIGHT + p1[1]*UP
-            delta_t_line = Line(p1, interim_point, color = YELLOW)
-            delta_s_line = Line(interim_point, p2, color = MAROON_B)
-            brace = Brace(delta_s_line, RIGHT, buff = SMALL_BUFF)
-            return VGroup(delta_t_line, delta_s_line, brace)
 
-        change_lines = get_change_lines()
+        change_lines = self.get_change_lines(curr_time, delta_t)
         self.play(FadeIn(rect))
         self.dither()
         self.play(Write(change_lines))
         self.dither()
         for x in range(1, 10):
             curr_time = x
-            new_change_lines = get_change_lines()
+            new_change_lines = self.get_change_lines(curr_time, delta_t)
             self.play(
                 rect.move_to, self.coords_to_point(curr_time, 0), DOWN+LEFT,
                 Transform(change_lines, new_change_lines)
@@ -496,6 +507,15 @@ class GraphCarTrajectory(GraphScene):
                 self.dither()
         self.play(*map(FadeOut, [rect, change_lines]))
         self.rect = rect
+
+    def get_change_lines(self, curr_time, delta_t = 1):
+        p1 = self.input_to_graph_point(curr_time)
+        p2 = self.input_to_graph_point(curr_time+delta_t)
+        interim_point = p2[0]*RIGHT + p1[1]*UP
+        delta_t_line = Line(p1, interim_point, color = YELLOW)
+        delta_s_line = Line(interim_point, p2, color = MAROON_B)
+        brace = Brace(delta_s_line, RIGHT, buff = SMALL_BUFF)
+        return VGroup(delta_t_line, delta_s_line, brace)
 
     def show_velocity_graph(self):
         velocity_graph = self.get_derivative_graph()
@@ -518,11 +538,17 @@ class GraphCarTrajectory(GraphScene):
         self.rect.move_to(self.coords_to_point(0, 0), DOWN+LEFT)
         self.play(FadeIn(self.rect))
         self.dither()
-        for time in 4.5, 9:
+        for time, show_slope in (4.5, True), (9, False):
             self.play(
                 self.rect.move_to, self.coords_to_point(time, 0), DOWN+LEFT
             )
-            self.dither()
+            if show_slope:
+                change_lines = self.get_change_lines(time)
+                self.play(FadeIn(change_lines))
+                self.dither()
+                self.play(FadeOut(change_lines))
+            else:
+                self.dither()
         self.play(FadeOut(self.rect))
 
         #Change distance and velocity graphs
@@ -575,8 +601,81 @@ class GraphCarTrajectory(GraphScene):
         self.play(Blink(morty))
         self.dither()
 
+class ShowSpeedometer(IntroduceCar):
+    CONFIG = {
+        "num_ticks" : 8,
+        "tick_length" : 0.2,
+        "needle_width" : 0.1,
+        "needle_height" : 0.8,
+        "should_transition_to_graph" : False,
+        "show_distance" : False,
+    }
+    def setup(self):
+        start_angle = -np.pi/6
+        end_angle = 7*np.pi/6
+        speedomoeter = Arc(
+            start_angle = start_angle,
+            angle = end_angle-start_angle
+        )
+        tick_angle_range = np.linspace(end_angle, start_angle, self.num_ticks)
+        for index, angle in enumerate(tick_angle_range):
+            vect = rotate_vector(RIGHT, angle)
+            tick = Line((1-self.tick_length)*vect, vect)
+            label = TexMobject(str(10*index))
+            label.scale_to_fit_height(self.tick_length)
+            label.shift((1+self.tick_length)*vect)
+            speedomoeter.add(tick, label)
 
+        needle = Polygon(
+            LEFT, UP, RIGHT,
+            stroke_width = 0,
+            fill_opacity = 1,
+            fill_color = YELLOW
+        )
+        needle.stretch_to_fit_width(self.needle_width)
+        needle.stretch_to_fit_height(self.needle_height)
+        needle.rotate(end_angle-np.pi/2)
+        speedomoeter.add(needle)
+        speedomoeter.needle = needle
 
+        speedomoeter.center_offset = speedomoeter.get_center()
+
+        speedomoeter_title = TextMobject("Speedometer")
+        speedomoeter_title.to_corner(UP+LEFT)
+        speedomoeter.next_to(speedomoeter_title, DOWN)
+
+        self.speedomoeter = speedomoeter
+        self.speedomoeter_title = speedomoeter_title
+
+    def introduce_added_mobjects(self):
+        speedomoeter = self.speedomoeter
+        speedomoeter_title = self.speedomoeter_title
+
+        speedomoeter.save_state()
+        speedomoeter.rotate(-np.pi/2, UP)
+        speedomoeter.scale_to_fit_height(self.car.get_height()/4)
+        speedomoeter.move_to(self.car)
+        speedomoeter.shift((self.car.get_width()/4)*RIGHT)
+
+        self.play(speedomoeter.restore, run_time = 2)
+        self.play(Write(speedomoeter_title, run_time = 1))
+
+    def get_added_movement_anims(self):
+        needle = self.speedomoeter.needle
+        center = self.speedomoeter.get_center() - self.speedomoeter.center_offset
+        return [
+            Rotating(
+                needle, 
+                about_point = center,
+                radians = -np.pi/2,
+                run_time = 10,
+                rate_func = there_and_back
+            )
+        ]
+
+    # def construct(self):
+    #     self.add(self.speedomoeter)
+    #     self.play(*self.get_added_movement_anims())
 
 
 
