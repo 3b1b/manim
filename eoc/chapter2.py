@@ -377,16 +377,22 @@ class GraphCarTrajectory(GraphScene):
         graph = self.graph_function(lambda t : 100*smooth(t/10.))
         origin = self.coords_to_point(0, 0)
 
+        self.introduce_graph(graph, origin)
+        self.comment_on_slope(graph, origin)
+        self.show_velocity_graph()
+        self.ask_critically_about_velocity()
+
+    def introduce_graph(self, graph, origin):
         h_line, v_line = [
             Line(origin, origin, color = color, stroke_width = 2)
             for color in MAROON_B, YELLOW
         ]
-        def h_update(h_line):
-            end = graph.points[-1]
+        def h_update(h_line, proportion = 1):
+            end = graph.point_from_proportion(proportion)
             t_axis_point = end[0]*RIGHT + origin[1]*UP
             h_line.put_start_and_end_on(t_axis_point, end)
-        def v_update(v_line):
-            end = graph.points[-1]
+        def v_update(v_line, proportion = 1):
+            end = graph.point_from_proportion(proportion)
             d_axis_point = origin[0]*RIGHT + end[1]*UP
             v_line.put_start_and_end_on(d_axis_point, end)
 
@@ -407,6 +413,168 @@ class GraphCarTrajectory(GraphScene):
             run_time = 10,
         )
         self.dither()
+        self.play(*map(FadeOut, [h_line, v_line, car]))
+
+        #Show example vertical distance
+        h_update(h_line, 0.6)
+        t_dot = Dot(h_line.get_start(), color = h_line.get_color())
+        t_dot.save_state()
+        t_dot.move_to(self.x_axis_label_mob)
+        t_dot.set_fill(opacity = 0)
+        dashed_h = DashedLine(*h_line.get_start_and_end())
+        dashed_h.highlight(h_line.get_color())
+        brace = Brace(dashed_h, RIGHT)
+        brace_text = brace.get_text("Distance traveled")
+        self.play(t_dot.restore)
+        self.dither()
+        self.play(ShowCreation(dashed_h))
+        self.play(
+            GrowFromCenter(brace),
+            Write(brace_text)
+        )
+        self.dither(2)
+        self.play(*map(FadeOut, [t_dot, dashed_h, brace, brace_text]))
+
+        #Name graph
+        s_of_t = TexMobject("s(t)")
+        s_of_t.next_to(
+            graph.point_from_proportion(1), 
+            DOWN+RIGHT,
+            buff = SMALL_BUFF
+        )
+        s = s_of_t[0]
+        d = TexMobject("d")
+        d.move_to(s, DOWN)
+        d.highlight(YELLOW)
+
+        self.play(Write(s_of_t))
+        self.dither()
+        s.save_state()
+        self.play(Transform(s, d))
+        self.dither()
+        self.play(s.restore)
+
+    def comment_on_slope(self, graph, origin):
+        delta_t = 1
+        curr_time = 0
+        ghost_line = Line(
+            origin, 
+            self.coords_to_point(delta_t, self.y_max)
+        )
+        rect = Rectangle().replace(ghost_line, stretch = True)
+        rect.set_stroke(width = 0)
+        rect.set_fill(BLUE, opacity = 0.3)
+        def get_change_lines():
+            p1 = self.input_to_graph_point(curr_time)
+            p2 = self.input_to_graph_point(curr_time+delta_t)
+            interim_point = p2[0]*RIGHT + p1[1]*UP
+            delta_t_line = Line(p1, interim_point, color = YELLOW)
+            delta_s_line = Line(interim_point, p2, color = MAROON_B)
+            brace = Brace(delta_s_line, RIGHT, buff = SMALL_BUFF)
+            return VGroup(delta_t_line, delta_s_line, brace)
+
+        change_lines = get_change_lines()
+        self.play(FadeIn(rect))
+        self.dither()
+        self.play(Write(change_lines))
+        self.dither()
+        for x in range(1, 10):
+            curr_time = x
+            new_change_lines = get_change_lines()
+            self.play(
+                rect.move_to, self.coords_to_point(curr_time, 0), DOWN+LEFT,
+                Transform(change_lines, new_change_lines)
+            )
+            if curr_time == 5:
+                text = change_lines[-1].get_text(
+                    "$\\frac{\\text{meters}}{\\text{second}}$"
+                )
+                self.play(Write(text))
+                self.dither()
+                self.play(FadeOut(text))
+            else:
+                self.dither()
+        self.play(*map(FadeOut, [rect, change_lines]))
+        self.rect = rect
+
+    def show_velocity_graph(self):
+        velocity_graph = self.get_derivative_graph()
+
+        self.play(ShowCreation(velocity_graph))
+        def get_velocity_label(v_graph):
+            result = self.label_graph(
+                v_graph,
+                label = "v(t)",
+                direction = UP+RIGHT,
+                proportion = 0.5,
+                buff = SMALL_BUFF,
+                animate = False,
+            )
+            self.remove(result)
+            return result
+        label = get_velocity_label(velocity_graph)
+        self.play(Write(label))
+        self.dither()
+        self.rect.move_to(self.coords_to_point(0, 0), DOWN+LEFT)
+        self.play(FadeIn(self.rect))
+        self.dither()
+        for time in 4.5, 9:
+            self.play(
+                self.rect.move_to, self.coords_to_point(time, 0), DOWN+LEFT
+            )
+            self.dither()
+        self.play(FadeOut(self.rect))
+
+        #Change distance and velocity graphs
+        self.graph.save_state()
+        velocity_graph.save_state()
+        label.save_state()
+        def shallow_slope(t):
+            return 100*smooth(t/10., inflection = 4)
+        def steep_slope(t):
+            return 100*smooth(t/10., inflection = 25)
+        def double_smooth_graph_function(t):
+            if t < 5:
+                return 50*smooth(t/5.)
+            else:
+                return 50*(1+smooth((t-5)/5.))
+        graph_funcs = [
+            shallow_slope,
+            steep_slope,
+            double_smooth_graph_function,
+        ]
+        for graph_func in graph_funcs:
+            new_graph = self.graph_function(
+                graph_func,
+                is_main_graph = False
+            )
+            self.remove(new_graph)
+            new_velocity_graph = self.get_derivative_graph(graph = new_graph)
+            new_velocity_label = get_velocity_label(new_velocity_graph)
+
+            self.play(Transform(self.graph, new_graph))
+            self.play(
+                Transform(velocity_graph, new_velocity_graph),
+                Transform(label, new_velocity_label),
+            )
+            self.dither(2)
+        self.play(self.graph.restore)
+        self.play(
+            velocity_graph.restore,
+            label.restore,
+        )
+        self.dither(2)
+
+    def ask_critically_about_velocity(self):
+        morty = Mortimer().flip()
+        morty.to_corner(DOWN+LEFT)
+        self.play(PiCreatureSays(morty,
+            "Think critically about \\\\",
+            "what velocity means."
+        ))
+        self.play(Blink(morty))
+        self.dither()
+
 
 
 

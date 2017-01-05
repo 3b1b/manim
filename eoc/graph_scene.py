@@ -28,13 +28,15 @@ class GraphScene(Scene):
         "axes_color" : GREY,
         "graph_origin" : 2.5*DOWN + 4*LEFT,
         "y_axis_numbers_nudge" : 0.4*UP+0.5*LEFT,
+        "num_graph_anchor_points" : 25,
     }
     def setup_axes(self, animate = True):
         x_num_range = float(self.x_max - self.x_min)
+        self.space_unit_to_x = self.x_axis_width/x_num_range
         x_axis = NumberLine(
             x_min = self.x_min,
             x_max = self.x_max,
-            space_unit_to_num = self.x_axis_width/x_num_range,
+            space_unit_to_num = self.space_unit_to_x,
             tick_frequency = self.x_tick_frequency,
             leftmost_tick = self.x_leftmost_tick or self.x_min,
             numbers_with_elongated_ticks = self.x_labeled_nums,
@@ -50,10 +52,11 @@ class GraphScene(Scene):
         self.x_axis_label_mob = x_label
 
         y_num_range = float(self.y_max - self.y_min)
+        self.space_unit_to_y = self.y_axis_height/y_num_range
         y_axis = NumberLine(
             x_min = self.y_min,
             x_max = self.y_max,
-            space_unit_to_num = self.y_axis_height/y_num_range,
+            space_unit_to_num = self.space_unit_to_y,
             tick_frequency = self.y_tick_frequency,
             leftmost_tick = self.y_bottom_tick or self.y_min,
             numbers_with_elongated_ticks = self.y_labeled_nums,
@@ -88,11 +91,16 @@ class GraphScene(Scene):
                        is_main_graph = True, 
                        ):
 
-        def parameterized_graph(alpha):
+        def parameterized_function(alpha):
             x = interpolate(self.x_min, self.x_max, alpha)
             return self.coords_to_point(x, func(x))
 
-        graph = ParametricFunction(parameterized_graph, color = color)
+        graph = ParametricFunction(
+            parameterized_function, 
+            color = color,
+            num_anchor_points = self.num_graph_anchor_points,
+        )
+        graph.underlying_function = func
 
         if is_main_graph:
             self.graph = graph
@@ -102,15 +110,34 @@ class GraphScene(Scene):
         self.add(graph)
         return graph
 
-    def input_to_graph_point(self, x):
-        assert(hasattr(self, "graph"))
-        alpha = (x - self.x_min)/(self.x_max - self.x_min)
-        return self.graph.point_from_proportion(alpha)
 
-    def angle_of_tangent(self, x, dx = 0.01):
-        assert(hasattr(self, "graph"))
-        vect = self.graph_point(x + dx) - self.graph_point(x)
+    def input_to_graph_point(self, x, graph = None):
+        if graph is None:
+            assert(hasattr(self, "graph"))
+            graph = self.graph
+        return self.coords_to_point(
+            x, graph.underlying_function(x)
+        )
+        # alpha = (x - self.x_min)/(self.x_max - self.x_min)
+        # return graph.point_from_proportion(alpha)
+
+    def angle_of_tangent(self, x, graph = None, dx = 0.01):
+        vect = self.input_to_graph_point(x + dx, graph) - self.input_to_graph_point(x, graph)
         return angle_of_vector(vect)
+
+    def slope_of_tangent(self, *args):
+        return np.tan(self.angle_of_tangent(*args))
+
+    def get_derivative_graph(self, graph = None, dx = 0.01, color = RED):
+        derivative_graph = self.graph_function(
+            lambda x : self.slope_of_tangent(x, graph, dx) / self.space_unit_to_y,
+            color = color,
+            animate = False,
+            is_main_graph = False
+        )
+        self.remove(derivative_graph)
+        return derivative_graph
+
 
     def label_graph(self, graph, label = "f(x)", 
                     proportion = 0.7, 
