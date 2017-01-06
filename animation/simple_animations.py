@@ -177,6 +177,10 @@ class UpdateFromFunc(Animation):
     def update_mobject(self, alpha):
         self.update_function(self.mobject)
 
+class UpdateFromAlphaFunc(UpdateFromFunc):
+    def update_mobject(self, alpha):
+        self.update_function(self.mobject, alpha)
+        
 
 class MaintainPositionRelativeTo(Animation):
     CONFIG = {

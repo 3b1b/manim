@@ -7,7 +7,7 @@ from mobject.vectorized_mobject import VGroup, VectorizedPoint
 from animation.simple_animations import Write, ShowCreation
 from topics.number_line import NumberLine
 from topics.functions import ParametricFunction
-from topics.geometry import Rectangle
+from topics.geometry import Rectangle, DashedLine
 
 class GraphScene(Scene):
     CONFIG = {
@@ -115,11 +115,7 @@ class GraphScene(Scene):
         if graph is None:
             assert(hasattr(self, "graph"))
             graph = self.graph
-        return self.coords_to_point(
-            x, graph.underlying_function(x)
-        )
-        # alpha = (x - self.x_min)/(self.x_max - self.x_min)
-        # return graph.point_from_proportion(alpha)
+        return self.coords_to_point(x, graph.underlying_function(x))
 
     def angle_of_tangent(self, x, graph = None, dx = 0.01):
         vect = self.input_to_graph_point(x + dx, graph) - self.input_to_graph_point(x, graph)
@@ -180,6 +176,26 @@ class GraphScene(Scene):
         rectangles.gradient_highlight(start_color, end_color)
         rectangles.set_stroke(BLACK, width = stroke_width)
         return rectangles
+
+    def get_vertical_line_to_graph(self,
+                                   x,
+                                   graph = None,
+                                   line_kwargs = None,
+                                   ):
+        if graph is None:
+            assert(hasattr(self, "graph"))
+            graph = self.graph
+        if line_kwargs is None:
+            line_kwargs = {}
+        if "color" not in line_kwargs:
+            line_kwargs["color"] = graph.get_color()
+        return DashedLine(
+            self.coords_to_point(x, 0),
+            self.input_to_graph_point(x, graph),
+            **line_kwargs
+        )   
+
+                                  
 
 
 

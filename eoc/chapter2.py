@@ -837,6 +837,103 @@ class CompareTwoTimes(Scene):
 
         return VGroup(line, car, front_line, brace, time_label)
 
+class VelocityAtIndividualPointsVsPairs(GraphCarTrajectory):
+    CONFIG = {
+        "start_time" : 6,
+        "end_time" : 3,
+        "dt" : 1,
+    }
+    def construct(self):
+        self.setup_axes(animate = False)
+        distance_graph = self.graph_function(lambda t : 100*smooth(t/10.))
+        distance_label = self.label_graph(
+            distance_graph,
+            label = "s(t)",
+            proportion = 1,
+            direction = DOWN+RIGHT,
+            buff = SMALL_BUFF
+        )
+        velocity_graph = self.get_derivative_graph()
+        self.play(ShowCreation(velocity_graph))
+        velocity_label = self.label_graph(
+            velocity_graph, 
+            label = "v(t)",
+            proportion = 0.5, 
+            direction = UP+RIGHT,
+            buff = MED_BUFF
+        )
+        velocity_graph.add(velocity_label)
+
+        self.show_individual_times_to_velocity(velocity_graph)
+        self.play(velocity_graph.fade, 0.6)
+        self.show_two_times_on_distance()
+        self.show_confused_pi_creature()
+
+    def show_individual_times_to_velocity(self, velocity_graph):
+        start_time = self.start_time
+        end_time = self.end_time
+        line = self.get_vertical_line_to_graph(start_time, velocity_graph)
+        def line_update(line, alpha):
+            time = interpolate(start_time, end_time, alpha)
+            line.put_start_and_end_on(
+                self.coords_to_point(time, 0),
+                self.input_to_graph_point(time, graph = velocity_graph)
+            )
+
+        self.play(ShowCreation(line))
+        self.dither()
+        self.play(UpdateFromAlphaFunc(
+            line, line_update,
+            run_time = 4,
+            rate_func = there_and_back
+        ))
+        self.dither()
+        velocity_graph.add(line)
+
+    def show_two_times_on_distance(self):
+        line1 = self.get_vertical_line_to_graph(self.start_time)
+        line2 = self.get_vertical_line_to_graph(self.start_time+self.dt)
+        p1 = line1.get_end()
+        p2 = line2.get_end()
+        interim_point = p2[0]*RIGHT+p1[1]*UP
+        dt_line = Line(p1, interim_point, color = MAROON_B)
+        ds_line = Line(interim_point, p2, color = YELLOW)
+        dt_brace = Brace(dt_line, DOWN, buff = SMALL_BUFF)
+        ds_brace = Brace(ds_line, RIGHT, buff = SMALL_BUFF)
+        dt_text = dt_brace.get_text("Change in time", buff = SMALL_BUFF)
+        ds_text = ds_brace.get_text("Change in distance", buff = SMALL_BUFF)
+
+        self.play(ShowCreation(VGroup(line1, line2)))
+        for line, brace, text in (dt_line, dt_brace, dt_text), (ds_line, ds_brace, ds_text):
+            brace.highlight(line.get_color())
+            text.highlight(line.get_color())
+            text.add_background_rectangle()
+            self.play(
+                ShowCreation(line),
+                GrowFromCenter(brace),
+                Write(text)
+            )
+            self.dither()
+
+    def show_confused_pi_creature(self):
+        randy = Randolph()
+        randy.to_corner(DOWN+LEFT)
+        randy.shift(2*RIGHT)
+
+        self.play(randy.change_mode, "confused")
+        self.play(Blink(randy))
+        self.dither(2)
+        self.play(Blink(randy))
+        self.play(randy.change_mode, "erm")
+        self.dither()
+        self.play(Blink(randy))
+        self.dither(2)
+
+
+
+
+
+
 
 
 
