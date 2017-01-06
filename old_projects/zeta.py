@@ -301,7 +301,7 @@ class ZetaTransformationScene(ComplexTransformationScene):
         transform_kwargs.update(kwargs)
         self.apply_complex_function(zeta, **kwargs)
 
-class TestZetaOnFullPlane(ZetaTransformationScene):
+class TestZetaOnHalfPlane(ZetaTransformationScene):
     CONFIG = {
         "anchor_density" : 15,
     }
@@ -314,15 +314,10 @@ class TestZetaOnFullPlane(ZetaTransformationScene):
             for mob in self.plane.family_members_with_points()
         ])
         print len(self.plane.family_members_with_points())
-        self.show_frame()
         self.apply_zeta_function()
         self.dither()
 
-class TestZetaOnHalfPlane(ZetaTransformationScene):
-    CONFIG = {
-        "x_min" : 1,
-        "x_max" : int(SPACE_WIDTH+2)
-    }
+class TestZetaOnFullPlane(ZetaTransformationScene):
     def construct(self):
         self.add_transformable_plane(animate = True)
         self.add_extra_plane_lines_for_zeta(animate = True)
