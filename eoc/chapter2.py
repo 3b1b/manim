@@ -27,6 +27,9 @@ from mobject.tex_mobject import *
 from eoc.chapter1 import OpeningQuote
 from eoc.graph_scene import *
 
+DISTANCE_COLOR = BLUE
+TIME_COLOR = YELLOW
+VELOCITY_COLOR = GREEN
 
 class Car(SVGMobject):
     CONFIG = {
@@ -67,7 +70,7 @@ class Car(SVGMobject):
         return DashedLine(
             self.get_corner(UP+RIGHT), 
             self.get_corner(DOWN+RIGHT),
-            color = YELLOW,
+            color = DISTANCE_COLOR,
             dashed_segment_length = 0.05,
         )
 
@@ -390,6 +393,8 @@ class GraphCarTrajectory(GraphScene):
         "y_labeled_nums" : range(10, 110, 10),
         "y_axis_label" : "Distance traveled \\\\ (meters)",
         "graph_origin" : 2.5*DOWN + 5*LEFT,
+        "default_graph_colors" : [DISTANCE_COLOR, VELOCITY_COLOR],
+        "default_derivative_color" : VELOCITY_COLOR,
     }
     def construct(self):
         self.setup_axes(animate = False)
@@ -404,7 +409,7 @@ class GraphCarTrajectory(GraphScene):
     def introduce_graph(self, graph, origin):
         h_line, v_line = [
             Line(origin, origin, color = color, stroke_width = 2)
-            for color in MAROON_B, YELLOW
+            for color in TIME_COLOR, DISTANCE_COLOR
         ]
         def h_update(h_line, proportion = 1):
             end = graph.point_from_proportion(proportion)
@@ -464,7 +469,7 @@ class GraphCarTrajectory(GraphScene):
         s = s_of_t[0]
         d = TexMobject("d")
         d.move_to(s, DOWN)
-        d.highlight(YELLOW)
+        d.highlight(DISTANCE_COLOR)
 
         self.play(Write(s_of_t))
         self.dither()
@@ -482,7 +487,7 @@ class GraphCarTrajectory(GraphScene):
         )
         rect = Rectangle().replace(ghost_line, stretch = True)
         rect.set_stroke(width = 0)
-        rect.set_fill(BLUE, opacity = 0.3)
+        rect.set_fill(TIME_COLOR, opacity = 0.3)
 
         change_lines = self.get_change_lines(curr_time, delta_t)
         self.play(FadeIn(rect))
@@ -512,8 +517,8 @@ class GraphCarTrajectory(GraphScene):
         p1 = self.input_to_graph_point(curr_time)
         p2 = self.input_to_graph_point(curr_time+delta_t)
         interim_point = p2[0]*RIGHT + p1[1]*UP
-        delta_t_line = Line(p1, interim_point, color = YELLOW)
-        delta_s_line = Line(interim_point, p2, color = MAROON_B)
+        delta_t_line = Line(p1, interim_point, color = TIME_COLOR)
+        delta_s_line = Line(interim_point, p2, color = DISTANCE_COLOR)
         brace = Brace(delta_s_line, RIGHT, buff = SMALL_BUFF)
         return VGroup(delta_t_line, delta_s_line, brace)
 
@@ -575,7 +580,9 @@ class GraphCarTrajectory(GraphScene):
                 is_main_graph = False
             )
             self.remove(new_graph)
-            new_velocity_graph = self.get_derivative_graph(graph = new_graph)
+            new_velocity_graph = self.get_derivative_graph(
+                graph = new_graph,
+            )
             new_velocity_label = get_velocity_label(new_velocity_graph)
 
             self.play(Transform(self.graph, new_graph))
@@ -743,13 +750,13 @@ class CompareTwoTimes(Scene):
         "start_time" : 4,
         "end_distance" : 50,
         "end_time" : 5,
-        "distance_color" : YELLOW,
-        "time_color" : BLUE,
+        "fade_at_the_end" : True,
     }
     def construct(self):
         self.introduce_states()
         self.show_equation()
-        self.fade_all_but_one_moment()
+        if self.fade_at_the_end:
+            self.fade_all_but_one_moment()
 
     def introduce_states(self):
         state1 = self.get_car_state(self.start_distance, self.start_time)
@@ -778,13 +785,24 @@ class CompareTwoTimes(Scene):
             "\\frac{\\text{Change in distance}}{\\text{Change in time}}"
         )
         formula = TexMobject(
-            "\\frac{(%d - %d) \\text{ meters}}{(%d - %d) \\text{ seconds}}"%(
-                self.end_distance, self.start_distance,
-                self.end_time, self.start_time,
+            "\\frac{(%s - %s) \\text{ meters}}{(%s - %s) \\text{ seconds}}"%(
+                str(self.end_distance), str(self.start_distance),
+                str(self.end_time), str(self.start_time),
             )
         )
-        VGroup(*list(formula[1:3]) + list(formula[4:6])).highlight(self.distance_color)
-        VGroup(formula[-11], formula[-9]).highlight(self.time_color)
+        ed_len = len(str(self.end_distance))
+        sd_len = len(str(self.start_distance))
+        et_len = len(str(self.end_time))
+        st_len = len(str(self.start_time))
+        seconds_len = len("seconds")
+        VGroup(
+            VGroup(*formula[1:1+ed_len]),
+            VGroup(*formula[2+ed_len:2+ed_len+sd_len])
+        ).highlight(DISTANCE_COLOR)
+        VGroup(
+            VGroup(*formula[-2-seconds_len-et_len-st_len:-2-seconds_len-st_len]),
+            VGroup(*formula[-1-seconds_len-st_len:-1-seconds_len]),
+        ).highlight(TIME_COLOR)
 
         down_arrow1 = TexMobject("\\Downarrow")
         down_arrow2 = TexMobject("\\Downarrow")
@@ -801,6 +819,7 @@ class CompareTwoTimes(Scene):
             run_time = 3
         ))
         self.dither(3)
+        self.formula = formula
 
     def fade_all_but_one_moment(self):
         anims = [
@@ -824,12 +843,12 @@ class CompareTwoTimes(Scene):
         distance_label = brace.get_text(
             str(distance), " meters"
         )
-        distance_label.highlight_by_tex(str(distance), self.distance_color)
+        distance_label.highlight_by_tex(str(distance), DISTANCE_COLOR)
         brace.add(distance_label)
         time_label = TextMobject(
             "Time:", str(time), "seconds"
         )
-        time_label.highlight_by_tex(str(time), self.time_color)
+        time_label.highlight_by_tex(str(time), TIME_COLOR)
         time_label.next_to(
             VGroup(line, car), UP,
             aligned_edge = LEFT
@@ -839,9 +858,9 @@ class CompareTwoTimes(Scene):
 
 class VelocityAtIndividualPointsVsPairs(GraphCarTrajectory):
     CONFIG = {
-        "start_time" : 6,
+        "start_time" : 6.5,
         "end_time" : 3,
-        "dt" : 1,
+        "dt" : 1.0,
     }
     def construct(self):
         self.setup_axes(animate = False)
@@ -850,7 +869,7 @@ class VelocityAtIndividualPointsVsPairs(GraphCarTrajectory):
             distance_graph,
             label = "s(t)",
             proportion = 1,
-            direction = DOWN+RIGHT,
+            direction = RIGHT,
             buff = SMALL_BUFF
         )
         velocity_graph = self.get_derivative_graph()
@@ -858,14 +877,14 @@ class VelocityAtIndividualPointsVsPairs(GraphCarTrajectory):
         velocity_label = self.label_graph(
             velocity_graph, 
             label = "v(t)",
-            proportion = 0.5, 
-            direction = UP+RIGHT,
+            proportion = self.start_time/10.0, 
+            direction = UP,
             buff = MED_BUFF
         )
         velocity_graph.add(velocity_label)
 
         self.show_individual_times_to_velocity(velocity_graph)
-        self.play(velocity_graph.fade, 0.6)
+        self.play(velocity_graph.fade, 0.4)
         self.show_two_times_on_distance()
         self.show_confused_pi_creature()
 
@@ -891,13 +910,13 @@ class VelocityAtIndividualPointsVsPairs(GraphCarTrajectory):
         velocity_graph.add(line)
 
     def show_two_times_on_distance(self):
-        line1 = self.get_vertical_line_to_graph(self.start_time)
-        line2 = self.get_vertical_line_to_graph(self.start_time+self.dt)
+        line1 = self.get_vertical_line_to_graph(self.start_time-self.dt/2.0)
+        line2 = self.get_vertical_line_to_graph(self.start_time+self.dt/2.0)
         p1 = line1.get_end()
         p2 = line2.get_end()
         interim_point = p2[0]*RIGHT+p1[1]*UP
-        dt_line = Line(p1, interim_point, color = MAROON_B)
-        ds_line = Line(interim_point, p2, color = YELLOW)
+        dt_line = Line(p1, interim_point, color = TIME_COLOR)
+        ds_line = Line(interim_point, p2, color = DISTANCE_COLOR)
         dt_brace = Brace(dt_line, DOWN, buff = SMALL_BUFF)
         ds_brace = Brace(ds_line, RIGHT, buff = SMALL_BUFF)
         dt_text = dt_brace.get_text("Change in time", buff = SMALL_BUFF)
@@ -929,7 +948,288 @@ class VelocityAtIndividualPointsVsPairs(GraphCarTrajectory):
         self.play(Blink(randy))
         self.dither(2)
 
+class CompareTwoVerySimilarTimes(CompareTwoTimes):
+    CONFIG = {
+        "start_distance" : 20,
+        "start_time" : 3,
+        "end_distance" : 20.21,
+        "end_time" : 3.01,
+        "fade_at_the_end" : False,
+    }
+    def construct(self):
+        CompareTwoTimes.construct(self)
 
+        formula = self.formula
+        ds_symbols, dt_symbols = [
+            VGroup(*[
+                mob
+                for mob in formula
+                if mob.get_color() == Color(color)
+            ])
+            for color in DISTANCE_COLOR, TIME_COLOR
+        ]
+        ds_brace = Brace(ds_symbols, UP)
+        ds_text = ds_brace.get_text("$ds$", buff = SMALL_BUFF)
+        ds_text.highlight(DISTANCE_COLOR)
+        dt_brace = Brace(dt_symbols, DOWN)
+        dt_text = dt_brace.get_text("$dt$", buff = SMALL_BUFF)
+        dt_text.highlight(TIME_COLOR)
+
+        self.play(
+            GrowFromCenter(dt_brace),
+            Write(dt_text)
+        )
+        formula.add(dt_brace, dt_text)
+        self.dither(2)
+
+        formula.generate_target()
+        VGroup(
+            ds_brace, ds_text, formula.target
+        ).move_to(formula, UP).shift(0.5*UP)
+        self.play(
+            MoveToTarget(formula),
+            GrowFromCenter(ds_brace),
+            Write(ds_text)
+        )
+        self.dither(2)
+
+class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
+    CONFIG = {
+        "dt" : 0.1,
+        "zoom_factor" : 4,#Before being shrunk by dt
+        "start_time" : 3,
+        "end_time" : 7,
+    }
+    def construct(self):
+        self.setup_axes(animate = False)
+        distance_graph = self.graph_function(
+            lambda t : 100*smooth(t/10.),
+            animate = False,
+        )
+        distance_label = self.label_graph(
+            distance_graph,
+            label = "s(t)",
+            proportion = 0.9,
+            direction = UP+LEFT,
+            buff = SMALL_BUFF
+        )
+        input_point_line = self.get_vertical_line_to_graph(
+            self.start_time,
+            line_kwargs = {
+                "dashed_segment_length" : 0.02,
+                "stroke_width" : 4,
+                "color" : WHITE,
+            },
+        )
+        def get_ds_dt_group(time):
+            point1 = self.input_to_graph_point(time)
+            point2 = self.input_to_graph_point(time+self.dt)
+            interim_point = point2[0]*RIGHT+point1[1]*UP
+            dt_line = Line(point1, interim_point, color = TIME_COLOR)
+            ds_line = Line(interim_point, point2, color = DISTANCE_COLOR)
+            result = VGroup()
+            for line, char, vect in (dt_line, "t", DOWN), (ds_line, "s", RIGHT):
+                line.scale(1./self.dt)
+                brace = Brace(line, vect)
+                text = brace.get_text("$d%s$"%char)
+                text.next_to(brace, vect)
+                text.highlight(line.get_color())
+                subgroup = VGroup(line, brace, text)
+                subgroup.scale(self.dt)
+                result.add(subgroup)
+            return result
+        def align_little_rectangle_on_ds_dt_group(rect):
+            rect.move_to(ds_dt_group, DOWN+RIGHT)
+            rect.shift(self.dt*(DOWN+RIGHT)/4)
+            return rect
+        ds_dt_group = get_ds_dt_group(self.start_time)
+
+        #Initially zoom in
+        self.play(ShowCreation(input_point_line))
+        self.activate_zooming()
+        self.play(*map(FadeIn, [self.big_rectangle, self.little_rectangle]))
+        self.play(
+            ApplyFunction(
+                align_little_rectangle_on_ds_dt_group,
+                self.little_rectangle
+            )
+        )
+        self.little_rectangle.generate_target()
+        self.little_rectangle.target.scale(self.zoom_factor*self.dt)
+        align_little_rectangle_on_ds_dt_group(
+            self.little_rectangle.target
+        )
+        self.play(
+            MoveToTarget(self.little_rectangle),
+            run_time = 3
+        )
+        for subgroup in ds_dt_group:
+            line, brace, text= subgroup
+            self.play(ShowCreation(line))
+            self.play(
+                GrowFromCenter(brace),
+                Write(text)
+            )
+            self.dither()
+
+        #Show as function
+        frac = TexMobject("\\frac{ds}{dt}")
+        VGroup(*frac[:2]).highlight(DISTANCE_COLOR)
+        VGroup(*frac[-2:]).highlight(TIME_COLOR)
+        frac.next_to(self.input_to_graph_point(5.25), DOWN+RIGHT)
+        rise_over_run = TexMobject(
+            "=\\frac{\\text{rise}}{\\text{run}}"
+        )
+        rise_over_run.next_to(frac, RIGHT)
+        of_t = TexMobject("(t)")
+        of_t.next_to(frac, RIGHT, buff = SMALL_BUFF)
+
+        dt_choice = TexMobject("dt = 0.01")
+        dt_choice.highlight(TIME_COLOR)
+        dt_choice.next_to(of_t, UP, aligned_edge = LEFT, buff = LARGE_BUFF)
+
+
+        full_formula = TexMobject(
+            "=\\frac{s(t+dt) - s(t)}{dt}"
+        )
+        full_formula.next_to(of_t)
+        s_t_plus_dt = VGroup(*full_formula[1:8])
+        s_t = VGroup(*full_formula[9:13])
+        numerator = VGroup(*full_formula[1:13])
+        lower_dt =  VGroup(*full_formula[-2:])
+        upper_dt = VGroup(*full_formula[5:7])
+        equals = full_formula[0]
+        frac_line = full_formula[-3]
+        s_t_plus_dt.highlight(DISTANCE_COLOR)
+        s_t.highlight(DISTANCE_COLOR)
+        lower_dt.highlight(TIME_COLOR)
+        upper_dt.highlight(TIME_COLOR)
+
+        velocity_graph = self.get_derivative_graph()
+        t_tick_marks = VGroup(*[
+            Line(
+                UP, DOWN,
+                color = TIME_COLOR,
+                stroke_width = 3,
+            ).scale(0.1).move_to(self.coords_to_point(t, 0))
+            for t in np.linspace(0, 10, 75)
+        ])
+
+        v_line_at_t, v_line_at_t_plus_dt = [
+            self.get_vertical_line_to_graph(
+                time,
+                line_class = Line,
+                line_kwargs = {"color" : MAROON_B}
+            )
+            for time in self.end_time, self.end_time + self.dt
+        ]
+
+
+        self.play(Write(frac))
+        self.play(Write(rise_over_run))
+        self.dither()
+        def input_point_line_update(line, alpha):
+            time = interpolate(self.start_time, self.end_time, alpha)
+            line.put_start_and_end_on(
+                self.coords_to_point(time, 0),
+                self.input_to_graph_point(time),
+            )
+        def ds_dt_group_update(group, alpha):
+            time = interpolate(self.start_time, self.end_time, alpha)
+            new_group = get_ds_dt_group(time)
+            Transform(group, new_group).update(1)
+        self.play(
+            UpdateFromAlphaFunc(input_point_line, input_point_line_update),
+            UpdateFromAlphaFunc(ds_dt_group, ds_dt_group_update),
+            UpdateFromFunc(self.little_rectangle, align_little_rectangle_on_ds_dt_group),
+            run_time = 6,
+        )
+        self.play(FadeOut(input_point_line))
+        self.dither()
+        self.play(FadeOut(rise_over_run))
+        self.play(Write(of_t))
+        self.dither(2)
+        self.play(ShowCreation(velocity_graph))
+        velocity_label = self.label_graph(
+            velocity_graph, 
+            label = "v(t)",
+            proportion = 0.6,
+            direction = DOWN+LEFT,
+            buff = SMALL_BUFF
+        )
+        self.dither(2)
+        self.play(Write(dt_choice))
+        self.dither()
+        for anim_class in FadeIn, FadeOut:
+            self.play(anim_class(
+                t_tick_marks, submobject_mode = "lagged_start",
+                run_time = 2
+            ))
+        self.play(
+            Write(equals),
+            Write(numerator)
+        )
+        self.dither()
+
+        self.play(ShowCreation(v_line_at_t))
+        self.dither()
+        self.play(ShowCreation(v_line_at_t_plus_dt))
+        self.dither()
+        self.play(*map(FadeOut, [v_line_at_t, v_line_at_t_plus_dt]))
+        self.play(
+            Write(frac_line),
+            Write(lower_dt)
+        )
+        self.dither(2)
+
+        #Show different curves
+        self.disactivate_zooming()
+        self.remove(ds_dt_group)
+
+        self.graph.save_state()
+        velocity_graph.save_state()
+        velocity_label.save_state()
+        def steep_slope(t):
+            return 100*smooth(t/10., inflection = 25)
+        def sin_wiggle(t):
+            return (10/(2*np.pi/10.))*(np.sin(2*np.pi*t/10.) + 2*np.pi*t/10.)
+        def double_smooth_graph_function(t):
+            if t < 5:
+                return 50*smooth(t/5.)
+            else:
+                return 50*(1+smooth((t-5)/5.))
+        graph_funcs = [
+            steep_slope,
+            sin_wiggle,            
+            double_smooth_graph_function,
+        ]
+        for graph_func in graph_funcs:
+            new_graph = self.graph_function(
+                graph_func,
+                color = DISTANCE_COLOR,
+                is_main_graph = False
+            )
+            self.remove(new_graph)
+            new_velocity_graph = self.get_derivative_graph(
+                graph = new_graph,
+            )
+
+            self.play(Transform(self.graph, new_graph))
+            self.play(Transform(velocity_graph, new_velocity_graph))
+            self.dither(2)
+        self.play(self.graph.restore)
+        self.play(
+            velocity_graph.restore,
+            velocity_label.restore,
+        )
+
+
+
+
+
+
+
+        
 
 
 

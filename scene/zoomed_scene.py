@@ -8,6 +8,10 @@ from camera import MovingCamera, Camera
 from helpers import *
 
 class ZoomedScene(Scene):
+    """
+    Move around self.little_rectangle to determine
+    which part of the screen is zoomed in on.
+    """
     CONFIG = {
         "zoomed_canvas_space_shape" : (3, 3),
         "zoomed_canvas_center"      : None,

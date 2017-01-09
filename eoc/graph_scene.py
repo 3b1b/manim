@@ -29,6 +29,8 @@ class GraphScene(Scene):
         "graph_origin" : 2.5*DOWN + 4*LEFT,
         "y_axis_numbers_nudge" : 0.4*UP+0.5*LEFT,
         "num_graph_anchor_points" : 25,
+        "default_graph_colors" : [BLUE, GREEN, YELLOW],
+        "default_derivative_color" : RED,
     }
     def setup_axes(self, animate = True):
         x_num_range = float(self.x_max - self.x_min)
@@ -78,6 +80,7 @@ class GraphScene(Scene):
         else:
             self.add(x_axis, y_axis)
         self.x_axis, self.y_axis = x_axis, y_axis
+        self.default_graph_colors = it.cycle(self.default_graph_colors)
 
     def coords_to_point(self, x, y):
         assert(hasattr(self, "x_axis") and hasattr(self, "y_axis"))
@@ -86,10 +89,12 @@ class GraphScene(Scene):
         return result
 
     def graph_function(self, func, 
-                       color = BLUE,
+                       color = None,
                        animate = False,
                        is_main_graph = True, 
                        ):
+        if color is None:
+            color = self.default_graph_colors.next()
 
         def parameterized_function(alpha):
             x = interpolate(self.x_min, self.x_max, alpha)
@@ -124,7 +129,9 @@ class GraphScene(Scene):
     def slope_of_tangent(self, *args):
         return np.tan(self.angle_of_tangent(*args))
 
-    def get_derivative_graph(self, graph = None, dx = 0.01, color = RED):
+    def get_derivative_graph(self, graph = None, dx = 0.01, color = None):
+        if color is None:
+            color = self.default_derivative_color
         derivative_graph = self.graph_function(
             lambda x : self.slope_of_tangent(x, graph, dx) / self.space_unit_to_y,
             color = color,
@@ -180,6 +187,7 @@ class GraphScene(Scene):
     def get_vertical_line_to_graph(self,
                                    x,
                                    graph = None,
+                                   line_class = DashedLine,
                                    line_kwargs = None,
                                    ):
         if graph is None:
@@ -189,7 +197,7 @@ class GraphScene(Scene):
             line_kwargs = {}
         if "color" not in line_kwargs:
             line_kwargs["color"] = graph.get_color()
-        return DashedLine(
+        return line_class(
             self.coords_to_point(x, 0),
             self.input_to_graph_point(x, graph),
             **line_kwargs
