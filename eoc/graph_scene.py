@@ -7,7 +7,7 @@ from mobject.vectorized_mobject import VGroup, VectorizedPoint
 from animation.simple_animations import Write, ShowCreation
 from topics.number_line import NumberLine
 from topics.functions import ParametricFunction
-from topics.geometry import Rectangle, DashedLine
+from topics.geometry import Rectangle, DashedLine, Line
 
 class GraphScene(Scene):
     CONFIG = {
@@ -145,7 +145,7 @@ class GraphScene(Scene):
     def label_graph(self, graph, label = "f(x)", 
                     proportion = 0.7, 
                     direction = LEFT,
-                    buff = 2*MED_BUFF,
+                    buff = MED_BUFF,
                     animate = True
                     ):
         label = TexMobject(label)
@@ -187,7 +187,7 @@ class GraphScene(Scene):
     def get_vertical_line_to_graph(self,
                                    x,
                                    graph = None,
-                                   line_class = DashedLine,
+                                   line_class = Line,
                                    line_kwargs = None,
                                    ):
         if graph is None:

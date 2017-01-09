@@ -398,13 +398,20 @@ class GraphCarTrajectory(GraphScene):
     }
     def construct(self):
         self.setup_axes(animate = False)
-        graph = self.graph_function(lambda t : 100*smooth(t/10.))
+        graph = self.graph_sigmoid_trajectory_function()
         origin = self.coords_to_point(0, 0)
 
         self.introduce_graph(graph, origin)
         self.comment_on_slope(graph, origin)
         self.show_velocity_graph()
         self.ask_critically_about_velocity()
+
+    def graph_sigmoid_trajectory_function(self, **kwargs):
+        graph = self.graph_function(
+            lambda t : 100*smooth(t/10.),
+            **kwargs
+        )
+        return graph
 
     def introduce_graph(self, graph, origin):
         h_line, v_line = [
@@ -1223,13 +1230,370 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
             velocity_label.restore,
         )
 
+        #Pause and reflect
+        randy = Randolph()
+        randy.to_corner(DOWN+LEFT).shift(2*RIGHT)
+        randy.look_at(frac_line)
 
+        self.play(FadeIn(randy))
+        self.play(randy.change_mode, "pondering")
+        self.dither()
+        self.play(Blink(randy))
+        self.play(randy.change_mode, "thinking")
+        self.dither()
+        self.play(Blink(randy))
+        self.dither()
 
+class DefineTrueDerivative(Scene):
+    def construct(self):
+        title = TextMobject("The true derivative")
+        title.to_edge(UP)
 
+        lhs = TexMobject("\\frac{ds}{dt}(t) = ")
+        VGroup(*lhs[:2]).highlight(DISTANCE_COLOR)
+        VGroup(*lhs[3:5]).highlight(TIME_COLOR)
+        lhs.shift(3*LEFT+UP)
 
+        dt_rhs = self.get_fraction("dt")
+        numerical_rhs_list = [
+            self.get_fraction("0.%s1"%("0"*x))
+            for x in range(7)
+        ]
+        for rhs in [dt_rhs] + numerical_rhs_list:
+            rhs.next_to(lhs, RIGHT)
 
+        brace, dt_to_zero = self.get_brace_and_text(dt_rhs)
 
-        
+        self.add(lhs, dt_rhs)
+        self.play(Write(title))
+        self.dither()
+        dt_rhs.save_state()
+        for num_rhs in numerical_rhs_list:
+            self.play(Transform(dt_rhs, num_rhs))
+        self.dither()
+        self.play(dt_rhs.restore)
+        self.play(
+            GrowFromCenter(brace),
+            Write(dt_to_zero)
+        )
+        self.dither()
+
+    def get_fraction(self, dt_string):
+        tex_mob = TexMobject(
+            "\\frac{s(t + %s) - s(t)}{%s}"%(dt_string, dt_string)
+        )
+        part_lengths = [
+            0,
+            len("s(t+"),
+            1,#1 and -1 below are purely for transformation quirks
+            len(dt_string)-1,
+            len(")-s(t)_"),#Underscore represents frac_line
+            1,
+            len(dt_string)-1,
+        ]
+        pl_cumsum = np.cumsum(part_lengths)
+        result = VGroup(*[
+            VGroup(*tex_mob[i1:i2])
+            for i1, i2 in zip(pl_cumsum, pl_cumsum[1:])
+        ])
+        VGroup(*result[1:3]+result[4:6]).highlight(TIME_COLOR)
+        return result
+
+    def get_brace_and_text(self, deriv_frac):
+        brace = Brace(VGroup(deriv_frac), DOWN)
+        dt_to_zero = brace.get_text("$dt \\to 0$")
+        VGroup(*dt_to_zero[:2]).highlight(TIME_COLOR)
+        return brace, dt_to_zero
+
+class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
+    CONFIG = {
+        "start_time" : 6,
+        "end_time" : 2,
+        "alt_end_time" : 10,
+        "start_dt" : 2,
+        "end_dt" : 0.01,
+        "secant_line_length" : 10,
+
+    }
+    def construct(self):
+        self.setup_axes(animate = False)
+        self.remove(self.y_axis_label_mob, self.x_axis_label_mob)
+        self.add_derivative_definition(self.y_axis_label_mob)
+        self.add_graph()
+        self.show_tangent_line()
+        self.best_constant_approximation_around_a_point()
+
+    def get_ds_dt_group(self, dt, animate = False):
+        points = [
+            self.input_to_graph_point(time)
+            for time in self.curr_time, self.curr_time+dt
+        ]
+        dots = map(Dot, points)
+        for dot in dots:
+            dot.scale_in_place(0.5)
+        secant_line = Line(*points)
+        secant_line.highlight(VELOCITY_COLOR)
+        secant_line.scale_in_place(
+            self.secant_line_length/secant_line.get_length()
+        )
+
+        interim_point = points[1][0]*RIGHT + points[0][1]*UP
+        dt_line = Line(points[0], interim_point, color = TIME_COLOR)
+        ds_line = Line(interim_point, points[1], color = DISTANCE_COLOR)
+        dt = TexMobject("dt")
+        dt.highlight(TIME_COLOR)
+        if dt.get_width() > dt_line.get_width():
+            dt.scale(
+                dt_line.get_width()/dt.get_width(),
+                about_point = dt.get_top()
+            )
+        dt.next_to(dt_line, DOWN, buff = SMALL_BUFF)
+        ds = TexMobject("ds")
+        ds.highlight(DISTANCE_COLOR)
+        if ds.get_height() > ds_line.get_height():
+            ds.scale(
+                ds_line.get_height()/ds.get_height(),
+                about_point = ds.get_left()
+            )
+        ds.next_to(ds_line, RIGHT, buff = SMALL_BUFF)
+
+        group = VGroup(
+            secant_line, 
+            ds_line, dt_line,
+            ds, dt,
+            *dots
+        )
+        if animate:
+            self.play(
+                ShowCreation(dt_line),
+                Write(dt),
+                ShowCreation(dots[0]),                
+            )
+            self.play(
+                ShowCreation(ds_line),
+                Write(ds),
+                ShowCreation(dots[1]),                
+            )
+            self.play(
+                ShowCreation(secant_line),
+                Animation(VGroup(*dots))
+            )
+        return group
+
+    def add_graph(self):
+        def double_smooth_graph_function(t):
+            if t < 5:
+                return 50*smooth(t/5.)
+            else:
+                return 50*(1+smooth((t-5)/5.))
+        graph = self.graph_function(
+            double_smooth_graph_function,
+            animate = False
+        )
+        self.label_graph(
+            graph, "s(t)", 
+            proportion = 1, 
+            direction = DOWN+RIGHT, 
+            buff = SMALL_BUFF,
+            animate = False
+        )
+
+    def add_derivative_definition(self, target_upper_left):
+        deriv_frac = self.get_fraction("dt")
+        lhs = TexMobject("\\frac{ds}{dt}(t)=")
+        VGroup(*lhs[:2]).highlight(DISTANCE_COLOR)
+        VGroup(*lhs[3:5]).highlight(TIME_COLOR)
+        lhs.next_to(deriv_frac, LEFT)
+        brace, text = self.get_brace_and_text(deriv_frac)
+        deriv_def = VGroup(lhs, deriv_frac, brace, text)
+        deriv_word = TextMobject("Derivative")        
+        deriv_word.next_to(deriv_def, UP, buff = 2*MED_BUFF)
+        deriv_def.add(deriv_word)
+        rect = Rectangle(color = WHITE)
+        rect.replace(deriv_def, stretch = True)
+        rect.scale_in_place(1.2)
+        deriv_def.add(rect)
+        deriv_def.scale(0.7)
+        deriv_def.move_to(target_upper_left, UP+LEFT)
+        self.add(deriv_def)
+        return deriv_def
+
+    def show_tangent_line(self):
+        self.curr_time = self.start_time
+
+        ds_dt_group = self.get_ds_dt_group(2, animate = True)
+        self.dither()
+        def update_ds_dt_group(ds_dt_group, alpha):
+            new_dt = interpolate(self.start_dt, self.end_dt, alpha)
+            new_group = self.get_ds_dt_group(new_dt)
+            Transform(ds_dt_group, new_group).update(1)
+        self.play(
+            UpdateFromAlphaFunc(ds_dt_group, update_ds_dt_group),
+            run_time = 8
+        )
+        self.dither()
+        def update_as_tangent_line(ds_dt_group, alpha):
+            self.curr_time = interpolate(self.start_time, self.end_time, alpha)
+            new_group = self.get_ds_dt_group(self.end_dt)
+            Transform(ds_dt_group, new_group).update(1)
+        self.play(
+            UpdateFromAlphaFunc(ds_dt_group, update_as_tangent_line),
+            run_time = 8,
+            rate_func = there_and_back
+        )
+        self.dither()
+        what_dt_is_not_text = self.what_this_is_not_saying()
+        self.dither()
+        self.play(
+            UpdateFromAlphaFunc(ds_dt_group, update_ds_dt_group),
+            run_time = 8,
+            rate_func = lambda t : 1-there_and_back(t)
+        )
+        self.dither()
+        self.play(FadeOut(what_dt_is_not_text))
+
+        v_line = self.get_vertical_line_to_graph(
+            self.curr_time,
+            line_class = Line,
+            line_kwargs = {
+                "color" : MAROON_B,
+                "stroke_width" : 3
+            }
+        )
+        def v_line_update(v_line):
+            v_line.put_start_and_end_on(
+                self.coords_to_point(self.curr_time, 0),
+                self.input_to_graph_point(self.curr_time),
+            )
+            return v_line
+        self.play(ShowCreation(v_line))
+        self.dither()
+
+        original_end_time = self.end_time
+        for end_time in self.alt_end_time, original_end_time, self.start_time:
+            self.end_time = end_time
+            self.play(
+                UpdateFromAlphaFunc(ds_dt_group, update_as_tangent_line),
+                UpdateFromFunc(v_line, v_line_update),
+                run_time = abs(self.curr_time-self.end_time),
+            )
+            self.start_time = end_time
+        self.play(FadeOut(v_line))
+
+    def what_this_is_not_saying(self):
+        phrases = [
+            TextMobject(
+                "$dt$", "is", "not", s
+            )
+            for s in "``infinitely small''", "0"
+        ]
+        for phrase in phrases:
+            phrase[0].highlight(TIME_COLOR)
+            phrase[2].highlight(RED)
+        phrases[0].shift(DOWN+2*RIGHT)
+        phrases[1].next_to(phrases[0], DOWN, aligned_edge = LEFT)
+
+        for phrase in phrases:
+            self.play(Write(phrase))
+        return VGroup(*phrases)
+
+    def best_constant_approximation_around_a_point(self):
+        words = TextMobject("""
+            Best constant 
+            approximation
+            around a point
+        """)
+        words.next_to(self.x_axis, UP, aligned_edge = RIGHT)
+        circle = Circle(
+            radius = 0.25,
+            color = WHITE
+        ).shift(self.input_to_graph_point(self.curr_time))
+
+        self.play(Write(words))
+        self.play(ShowCreation(circle))        
+        self.dither()
+
+class LeadIntoASpecificExample(TeacherStudentsScene, SecantLineToTangentLine):
+    def setup(self):
+        TeacherStudentsScene.setup(self)
+
+    def construct(self):
+        dot = Dot() #Just to coordinate derivative definition
+        dot.to_corner(UP+LEFT, buff = SMALL_BUFF)
+        deriv_def = self.add_derivative_definition(dot)
+        self.remove(deriv_def)
+
+        self.teacher_says("An example \\\\ should help.")
+        self.dither()
+        self.play(
+            Write(deriv_def),
+            *it.chain(*[
+                [pi.change_mode, "thinking", pi.look_at, dot]
+                for pi in self.get_students()
+            ])
+        )
+        self.random_blink(3)
+        # self.teacher_says(
+        #     """
+        #     The idea of 
+        #     ``approaching''
+        #     actually makes 
+        #     things easier
+        #     """,
+        #     height = 3,
+        #     target_mode = "hooray"
+        # )
+        # self.dither(2)
+
+class TCubedExample(GraphCarTrajectory):
+    CONFIG = {
+        "y_min" : 0,
+        "y_max" : 10,
+        "y_tick_frequency" : 1,
+        "y_labeled_nums" : range(10),
+        "x_min" : 0,
+        "x_max" : 4,
+        "x_labeled_nums" : range(1, 5),
+        "graph_origin" : 2.5*DOWN + 6*LEFT,
+    }
+    def construct(self):
+        self.draw_graph()
+        self.show_vertical_lines()
+
+    def draw_graph(self):
+        self.setup_axes(animate = False)
+        self.x_axis_label_mob.shift(0.*DOWN)
+        graph = self.graph_function(lambda t : t**3, animate = True)
+        self.label_graph(
+            graph,
+            label = "s(t) = t^3",
+            proportion = 0.525,
+            direction = RIGHT,
+            buff = SMALL_BUFF
+        )
+        self.dither()
+
+    def show_vertical_lines(self):
+        for t in 1, 2:
+            v_line = self.get_vertical_line_to_graph(
+                t, line_kwargs = {"color" : WHITE}
+            )
+            brace = Brace(v_line, RIGHT)
+            text = TexMobject("%d^3 = %d"%(t, t**3))
+            text.next_to(brace, RIGHT)
+            text.shift(0.2*UP)
+            group = VGroup(v_line, brace, text)
+            if t == 1:
+                self.play(ShowCreation(v_line))
+                self.play(
+                    GrowFromCenter(brace),
+                    Write(text)
+                )
+                last_group = group
+            else:
+                self.play(Transform(last_group, group))
+            self.dither()
+        self.play(FadeOut(group))
 
 
 
