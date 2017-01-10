@@ -1545,30 +1545,39 @@ class LeadIntoASpecificExample(TeacherStudentsScene, SecantLineToTangentLine):
         # )
         # self.dither(2)
 
-class TCubedExample(GraphCarTrajectory):
+class TCubedExample(SecantLineToTangentLine):
     CONFIG = {
+        "y_axis_label" : "Distance",
         "y_min" : 0,
-        "y_max" : 10,
+        "y_max" : 16,
         "y_tick_frequency" : 1,
-        "y_labeled_nums" : range(10),
+        "y_labeled_nums" : range(0, 17, 2),
         "x_min" : 0,
         "x_max" : 4,
         "x_labeled_nums" : range(1, 5),
         "graph_origin" : 2.5*DOWN + 6*LEFT,
+        "start_time" : 2,
+        "start_dt" : 0.25,
+        "secant_line_length" : 0,
     }
     def construct(self):
         self.draw_graph()
         self.show_vertical_lines()
+        self.bear_with_me()
+        self.add_ds_dt_group()
+        self.brace_for_details()
+        self.show_expansion()
 
     def draw_graph(self):
         self.setup_axes(animate = False)
-        self.x_axis_label_mob.shift(0.*DOWN)
+        self.x_axis_label_mob.shift(0.5*DOWN)
+        # self.y_axis_label_mob.next_to(self.y_axis, UP)
         graph = self.graph_function(lambda t : t**3, animate = True)
         self.label_graph(
             graph,
             label = "s(t) = t^3",
-            proportion = 0.525,
-            direction = RIGHT,
+            proportion = 0.62,
+            direction = LEFT,
             buff = SMALL_BUFF
         )
         self.dither()
@@ -1593,7 +1602,187 @@ class TCubedExample(GraphCarTrajectory):
             else:
                 self.play(Transform(last_group, group))
             self.dither()
-        self.play(FadeOut(group))
+        self.play(FadeOut(last_group))
+
+    def bear_with_me(self):
+        morty = Mortimer()
+        morty.to_corner(DOWN+RIGHT)
+
+        self.play(FadeIn(morty))
+        self.play(PiCreatureSays(
+            morty, "Bear with \\\\ me here",
+            target_mode = "sassy"
+        ))
+        self.play(Blink(morty))
+        self.dither()
+        self.play(*map(
+            FadeOut, 
+            [morty, morty.bubble, morty.bubble.content]
+        ))
+
+    def add_ds_dt_group(self):
+        self.curr_time = self.start_time
+        self.curr_dt = self.start_dt
+        ds_dt_group = self.get_ds_dt_group(dt = self.start_dt)
+        v_lines = self.get_vertical_lines()
+
+        lhs = TexMobject("\\frac{ds}{dt}(2) = ")
+        lhs.next_to(ds_dt_group, UP+RIGHT, buff = 2*MED_BUFF)
+        ds = VGroup(*lhs[:2])
+        dt = VGroup(*lhs[3:5])
+        ds.highlight(DISTANCE_COLOR)
+        dt.highlight(TIME_COLOR)
+        ds.target, dt.target = ds_dt_group[3:5]
+        for mob in ds, dt:
+            mob.save_state()
+            mob.move_to(mob.target)
+
+        rhs = TexMobject(
+            "\\frac{s(2+dt) - s(2)}{dt}"
+        )
+        rhs.next_to(lhs[-1])
+        VGroup(*rhs[4:6]).highlight(TIME_COLOR)
+        VGroup(*rhs[-2:]).highlight(TIME_COLOR)
+        numerator = VGroup(*rhs[:-3])
+        non_numerator = VGroup(*rhs[-3:])
+        numerator_non_minus = VGroup(*numerator)
+        numerator_non_minus.remove(rhs[7])
+        s_pair = rhs[0], rhs[8]
+        lp_pair = rhs[6], rhs[11]
+        for s, lp in zip(s_pair, lp_pair):
+            s.target = TexMobject("3").scale(0.7)
+            s.target.move_to(lp.get_corner(UP+RIGHT), LEFT)
+
+
+
+        self.play(Write(ds_dt_group, run_time = 2))
+        self.play(
+            FadeIn(lhs),
+            *[mob.restore for mob in ds, dt]
+        )
+        self.play(ShowCreation(v_lines[0]))
+        self.dither()
+        self.play(
+            dt.target.scale_in_place, 1.2,
+            rate_func = there_and_back
+        )
+        self.dither(2)
+        self.play(Write(numerator))
+        self.play(ShowCreation(v_lines[1]))
+        self.dither()
+        self.play(Write(non_numerator))
+        self.dither(2)
+        self.play(
+            *map(MoveToTarget, s_pair),
+            **{
+                "path_arc" : -np.pi/2
+            }
+        )
+        self.play(numerator_non_minus.shift, 0.2*LEFT)
+        self.dither()
+
+        self.vertical_lines = v_lines
+        self.ds_dt_group = ds_dt_group
+        self.lhs = lhs
+        self.rhs = rhs
+
+    def get_vertical_lines(self):
+        return VGroup(*[
+            self.get_vertical_line_to_graph(
+                time,
+                line_class = DashedLine,
+                line_kwargs = {
+                    "color" : WHITE,
+                    "dashed_segment_length" : 0.05,
+                }
+            )
+            for time in self.start_time, self.start_time+self.start_dt
+        ])
+
+    def brace_for_details(self):
+        brace_yourself = TextMobject(
+            "(Brace yourself for details)"
+        )
+        brace_yourself.next_to(
+            self.lhs, DOWN, 
+            buff = LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+        self.play(FadeIn(brace_yourself))
+        self.dither()
+        self.play(FadeOut(brace_yourself))
+
+    def show_expansion(self):
+        expression = TexMobject("""
+            \\frac{
+                2^3 + 
+                3 (2)^2 dt + 
+                3 (2)(dt)^2 + 
+                (dt)^3
+                - 2^3
+            }{dt}
+        """)
+        expression.scale_to_fit_width(
+            VGroup(self.lhs, self.rhs).get_width()
+        )
+        expression.next_to(
+            self.lhs, DOWN, 
+            aligned_edge = LEFT,
+            buff = LARGE_BUFF
+        )
+        term_lens = [
+            len("23+"),
+            len("3(2)2dt+"),
+            len("3(2)(dt)2+"),
+            len("(dt)3"),
+            len("-23"),
+            len("_"),#frac bar
+            len("dt"),
+        ]
+        terms = [
+            VGroup(*expression[i1:i2])
+            for i1, i2 in zip(
+                [0]+list(np.cumsum(term_lens)),
+                np.cumsum(term_lens)
+            )
+        ]
+
+        dts = [
+            VGroup(*terms[1][-3:-1]),
+            VGroup(*terms[2][5:7]),
+            VGroup(*terms[3][1:3]),
+            terms[-1]
+        ]
+        VGroup(*dts).highlight(TIME_COLOR)
+
+        two_cubed_terms = terms[0], terms[4]
+
+        for term in terms:
+            self.play(FadeIn(term))
+            self.dither()
+
+        #Cancel out two_cubed terms
+        self.play(*it.chain(*[
+            [
+                tc.scale, 1.3, tc.get_corner(vect),
+                tc.highlight, RED
+            ]
+            for tc, vect in zip(
+                two_cubed_terms, 
+                [DOWN+RIGHT, DOWN+LEFT]
+            )
+        ]))
+        self.play(*map(FadeOut, two_cubed_terms))
+        numerator = VGroup(*terms[1:4])
+        self.play(
+            numerator.scale, 1.3, numerator.get_bottom(),
+            terms[-1].scale, 1.3, terms[-1].get_top()
+        )
+
+        #Cancel out dt
+        #TODO
+
+
 
 
 
