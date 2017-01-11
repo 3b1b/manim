@@ -54,7 +54,7 @@ class ComplexTransformationScene(Scene):
         "horiz_start_color" : GREEN_B,
         "horiz_end_color" : YELLOW,
         "num_anchors_to_add_per_line" : 50,
-        "post_transformation_storke_width" : None,
+        "post_transformation_stroke_width" : None,
         "default_apply_complex_function_kwargs" : {
             "run_time" : 5,
         },
@@ -169,8 +169,8 @@ class ComplexTransformationScene(Scene):
         transformer.target.apply_complex_function(func)
         for mob in transformer.target[0].family_members_with_points():
             mob.make_smooth()
-        if self.post_transformation_storke_width is not None:
-            transformer.target.set_stroke(width = self.post_transformation_storke_width)
+        if self.post_transformation_stroke_width is not None:
+            transformer.target.set_stroke(width = self.post_transformation_stroke_width)
         self.play(
             MoveToTarget(transformer, **transform_kwargs),
             *added_anims
@@ -196,7 +196,7 @@ class ZetaTransformationScene(ComplexTransformationScene):
         "min_added_anchors" : 10,
         "max_added_anchors" : 300,
         "num_anchors_to_add_per_line" : 75,
-        "post_transformation_storke_width" : 2,
+        "post_transformation_stroke_width" : 2,
         "default_apply_complex_function_kwargs" : {
             "run_time" : 5,
         },
@@ -323,6 +323,7 @@ class TestZetaOnFullPlane(ZetaTransformationScene):
         self.add_extra_plane_lines_for_zeta(animate = True)
         self.add_reflected_plane(animate = True)
         self.apply_zeta_function()
+
 
 class TestZetaOnLine(ZetaTransformationScene):
     def construct(self):
