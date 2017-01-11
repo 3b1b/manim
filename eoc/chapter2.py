@@ -1557,8 +1557,10 @@ class TCubedExample(SecantLineToTangentLine):
         "x_labeled_nums" : range(1, 5),
         "graph_origin" : 2.5*DOWN + 6*LEFT,
         "start_time" : 2,
+        "end_time" : 0.5,
         "start_dt" : 0.25,
-        "secant_line_length" : 0,
+        "end_dt" : 0.001,
+        "secant_line_length" : 0.01,
     }
     def construct(self):
         self.draw_graph()
@@ -1567,6 +1569,7 @@ class TCubedExample(SecantLineToTangentLine):
         self.add_ds_dt_group()
         self.brace_for_details()
         self.show_expansion()
+        self.react_to_simplicity()
 
     def draw_graph(self):
         self.setup_axes(animate = False)
@@ -1663,12 +1666,17 @@ class TCubedExample(SecantLineToTangentLine):
         self.play(ShowCreation(v_lines[0]))
         self.dither()
         self.play(
-            dt.target.scale_in_place, 1.2,
+            dt.scale_in_place, 1.2,
             rate_func = there_and_back
         )
         self.dither(2)
         self.play(Write(numerator))
         self.play(ShowCreation(v_lines[1]))
+        self.dither()
+        self.play(
+            v_lines[0].highlight, YELLOW,
+            rate_func = there_and_back
+        )
         self.dither()
         self.play(Write(non_numerator))
         self.dither(2)
@@ -1716,8 +1724,8 @@ class TCubedExample(SecantLineToTangentLine):
         expression = TexMobject("""
             \\frac{
                 2^3 + 
-                3 (2)^2 dt + 
-                3 (2)(dt)^2 + 
+                3 (2)^2 dt
+                + 3 (2)(dt)^2 + 
                 (dt)^3
                 - 2^3
             }{dt}
@@ -1732,8 +1740,8 @@ class TCubedExample(SecantLineToTangentLine):
         )
         term_lens = [
             len("23+"),
-            len("3(2)2dt+"),
-            len("3(2)(dt)2+"),
+            len("3(2)2dt"),
+            len("+3(2)(dt)2+"),
             len("(dt)3"),
             len("-23"),
             len("_"),#frac bar
@@ -1748,8 +1756,8 @@ class TCubedExample(SecantLineToTangentLine):
         ]
 
         dts = [
-            VGroup(*terms[1][-3:-1]),
-            VGroup(*terms[2][5:7]),
+            VGroup(*terms[1][-2:]),
+            VGroup(*terms[2][6:8]),
             VGroup(*terms[3][1:3]),
             terms[-1]
         ]
@@ -1775,13 +1783,244 @@ class TCubedExample(SecantLineToTangentLine):
         self.play(*map(FadeOut, two_cubed_terms))
         numerator = VGroup(*terms[1:4])
         self.play(
-            numerator.scale, 1.3, numerator.get_bottom(),
-            terms[-1].scale, 1.3, terms[-1].get_top()
+            numerator.scale, 1.4, numerator.get_bottom(),
+            terms[-1].scale, 1.4, terms[-1].get_top()
         )
+        self.dither(2)
 
         #Cancel out dt
-        #TODO
+        #This is all way too hacky...
+        faders = VGroup(
+            terms[-1],            
+            VGroup(*terms[1][-2:]), #"3(2)^2 dt"
+            terms[2][-2], # "+3(2)(dt)2+"
+            terms[3][-1], # "(dt)3"
+        )
+        new_exp = TexMobject("2").replace(faders[-1], dim_to_match = 1)
+        self.play(
+            faders.highlight, BLACK,
+            run_time = 3,
+            submobject_mode = "lagged_start"
+        )
+        self.play(FadeIn(new_exp))
+        terms[3].add(new_exp)
+        shift_val = 0.4*DOWN
+        self.play(
+            FadeOut(terms[-2]),#frac_line
+            terms[1].shift, shift_val + 0.45*RIGHT,
+            terms[2].shift, shift_val,
+            terms[3].shift, shift_val,
+        )
 
+        #Isolate dominant term
+        arrow = Arrow(
+            self.lhs[4].get_bottom(), terms[1][2].get_top(),
+            color = WHITE,
+            buff = MED_BUFF
+        )
+        brace = Brace(VGroup(terms[2][0], terms[3][-1]), DOWN)
+        brace_text = brace.get_text("Contains $dt$")
+        VGroup(*brace_text[-2:]).highlight(TIME_COLOR)
+
+        self.play(ShowCreation(arrow))
+        self.dither()
+        self.play(
+            GrowFromCenter(brace), 
+            Write(brace_text)
+        )
+        self.dither(2)
+
+        #Shink dt
+        faders = VGroup(*terms[2:4] + [brace, brace_text])        
+        def ds_dt_group_update(group, alpha):
+            new_dt = interpolate(self.start_dt, self.end_dt, alpha)
+            new_group = self.get_ds_dt_group(new_dt)
+            Transform(group, new_group).update(1)
+        self.play(FadeOut(self.vertical_lines))
+        self.play(
+            UpdateFromAlphaFunc(self.ds_dt_group, ds_dt_group_update),
+            faders.fade, 0.7,
+            run_time = 5
+        )
+        self.dither(2)
+
+        #Show as derivative
+        deriv_term = VGroup(*terms[1][:5])
+        deriv_term.generate_target()
+        lhs_copy = self.lhs.copy()
+        lhs_copy.generate_target()
+        lhs_copy.target.shift(3*DOWN)
+        #hack a little, hack a lot
+        deriv_term.target.scale(1.1)
+        deriv_term.target.next_to(lhs_copy.target)
+        deriv_term.target.shift(0.07*DOWN)
+
+        self.play(
+            FadeOut(arrow),
+            FadeOut(faders),            
+            MoveToTarget(deriv_term),
+            MoveToTarget(lhs_copy),
+        )
+        arrow = Arrow(
+            self.rhs.get_bottom(), deriv_term.target.get_top(),
+            buff = MED_BUFF,
+            color = WHITE
+        )
+        approach_text = TextMobject("As $dt \\to 0$")
+        approach_text.next_to(arrow.get_center(), RIGHT)
+        VGroup(*approach_text[2:4]).highlight(TIME_COLOR)
+        self.play(
+            ShowCreation(arrow),
+            Write(approach_text)
+        )
+        self.dither(2)
+        self.secant_line_length = 10
+        self.play(Transform(
+            self.ds_dt_group,
+            self.get_ds_dt_group(self.end_dt)
+        ))
+        self.dither()
+
+        #Generalize to more t
+        twos = [
+            self.lhs[6],
+            self.rhs[2],
+            self.rhs[10],
+            lhs_copy[6],
+            deriv_term[2]
+        ]
+        for two in twos:
+            two.target = TexMobject("t")
+            two.target.replace(two, dim_to_match = 1)
+        self.play(*map(MoveToTarget, twos))
+        def update_as_tangent_line(group, alpha):
+            self.curr_time = interpolate(self.start_time, self.end_time, alpha)
+            new_group = self.get_ds_dt_group(self.end_dt)
+            Transform(group, new_group).update(1)
+        self.play(
+            UpdateFromAlphaFunc(self.ds_dt_group, update_as_tangent_line),
+            run_time = 5,
+            rate_func = there_and_back
+        )
+        self.dither(2)
+
+        self.lhs_copy = lhs_copy
+        self.deriv_term = deriv_term
+        self.approach_text = approach_text
+
+    def react_to_simplicity(self):
+        morty = Mortimer().flip().to_corner(DOWN+LEFT)
+
+        self.play(FadeIn(morty))
+        self.play(PiCreatureSays(
+            morty, "That's \\\\ beautiful!",
+            target_mode = "hooray"
+        ))
+        self.play(Blink(morty))
+        self.play(
+            morty.change_mode, 'happy',
+            *map(FadeOut, [morty.bubble, morty.bubble.content])
+        )
+
+        numerator = VGroup(*self.rhs[:12])
+        denominator = VGroup(*self.rhs[-2:])
+        for mob in numerator, denominator, self.approach_text, self.deriv_term:
+            mob.generate_target()
+            mob.target.scale_in_place(1.2)
+            mob.target.highlight(MAROON_B)
+            self.play(
+                MoveToTarget(
+                    mob, rate_func = there_and_back,
+                    run_time = 1.5,
+                ),
+                morty.look_at, mob
+            )
+            self.dither()
+        self.play(Blink(morty))
+        self.dither()
+
+class YouWouldntDoThisEveryTime(TeacherStudentsScene):
+    def construct(self):
+        self.change_student_modes(
+            "pleading", "guilty", "hesitant",
+            run_time = 0
+        )
+        self.teacher_says(
+            "You wouldn't do this \\\\ every time"
+        )
+        self.change_student_modes(*["happy"]*3)
+        self.dither(2)
+        self.student_thinks(
+            "$\\frac{d(t^3)}{dt} = 3t^2$",
+        )
+        self.dither(3)
+
+        series = VideoSeries()
+        series.scale_to_fit_width(2*SPACE_WIDTH-1)
+        series.to_edge(UP)
+        this_video = series[1]
+        next_video = series[2]
+        this_video.save_state()
+        this_video.highlight(YELLOW)
+        self.play(FadeIn(series, submobject_mode = "lagged_start"))
+        self.play(
+            this_video.restore,
+            next_video.highlight, YELLOW,
+            next_video.shift, 0.5*DOWN
+        )
+        self.dither(2)
+
+class ContrastConcreteDtWithLimit(Scene):
+    def construct(self):
+        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        self.add(v_line)
+
+        l_title = TextMobject("""
+            If $dt$ has a
+            specific size.
+        """)
+        VGroup(*l_title[2:4]).highlight(TIME_COLOR)
+        r_title = TexMobject("dt \\to 0")
+        VGroup(*r_title[:2]).highlight(TIME_COLOR)
+        for title, vect in (l_title, LEFT), (r_title, RIGHT):
+            title.to_edge(UP)
+            title.shift(SPACE_WIDTH*vect/2)
+            self.add(title)
+
+        l_formula = TexMobject("""
+            \\frac{d(t^3)}{dt} = 
+            \\frac{
+                t^3+
+                3t^2 \\, dt + 
+                3t \\, (dt)^2 + 
+                (dt)^3
+                - t^3
+            }{dt}
+        """)
+        VGroup(*it.chain(
+            l_formula[6:8],
+            l_formula[15:17],
+            l_formula[21:23],
+            l_formula[27:29],
+            l_formula[35:37],
+        )).highlight(TIME_COLOR)
+        l_formula.scale_to_fit_width(SPACE_WIDTH-2*MED_BUFF)
+        l_formula.to_edge(LEFT)
+
+        l_brace = Brace(l_formula, DOWN)
+        l_text = l_brace.get_text("Messy")
+        l_text.highlight(RED)
+
+        r_formula = TexMobject(
+            "\\frac{d(t^3)}{dt} = 3t^2"
+        )
+        VGroup(*r_formula[6:8]).highlight(TIME_COLOR)
+        r_formula.shift(SPACE_WIDTH*RIGHT/2)
+        r_brace = Brace(r_formula, DOWN)
+        r_text = r_brace.get_text("Simple")
+        r_text.highlight(GREEN)
+
+        self.add(r_formula, r_brace, r_text, l_formula, l_brace, l_text)
 
 
 
