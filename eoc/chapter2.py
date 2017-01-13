@@ -969,6 +969,42 @@ class VelocityAtIndividualPointsVsPairs(GraphCarTrajectory):
         self.play(Blink(randy))
         self.dither(2)
 
+class FirstRealWorld(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("First, the real world.")
+        self.change_student_modes(
+            "happy", "hooray", "happy"
+        )
+        self.dither(3)
+
+class SidestepParadox(Scene):
+    def construct(self):
+        car = Car()
+        car.shift(DOWN)
+        show_speedometer = ShowSpeedometer(skip_animations = True)
+        speedomoeter = show_speedometer.speedomoeter
+        speedomoeter.next_to(car, UP)
+
+        title = TextMobject(
+            "Instantaneous", "rate of change"
+        )
+        title.to_edge(UP)
+        cross = TexMobject("\\times")
+        cross.replace(title[0], stretch = True)
+        cross.set_fill(RED, opacity = 0.8)
+
+        new_words = TextMobject("over a small time")
+        new_words.next_to(title[1], DOWN)
+        new_words.highlight(TIME_COLOR)
+
+        self.add(title, car)
+        self.play(Write(speedomoeter))
+        self.dither()
+        self.play(Write(cross))
+        self.dither()
+        self.play(Write(new_words))
+        self.dither()
+
 class CompareTwoVerySimilarTimes(CompareTwoTimes):
     CONFIG = {
         "start_distance" : 20,
@@ -1334,6 +1370,7 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
         self.remove(self.y_axis_label_mob, self.x_axis_label_mob)
         self.add_derivative_definition(self.y_axis_label_mob)
         self.add_graph()
+        self.draw_axes()
         self.show_tangent_line()
         self.best_constant_approximation_around_a_point()
 
@@ -1404,7 +1441,7 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
             double_smooth_graph_function,
             animate = False
         )
-        self.label_graph(
+        self.graph_label = self.label_graph(
             graph, "s(t)", 
             proportion = 1, 
             direction = DOWN+RIGHT, 
@@ -1432,6 +1469,18 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
         self.add(deriv_def)
         return deriv_def
 
+    def draw_axes(self):
+        self.x_axis.remove(self.x_axis_label_mob)
+        self.y_axis.remove(self.y_axis_label_mob)
+        self.play(Write(
+            VGroup(
+                self.x_axis, self.y_axis,
+                self.graph, self.graph_label
+            ),
+            run_time = 4
+        ))
+        self.dither()
+
     def show_tangent_line(self):
         self.curr_time = self.start_time
 
@@ -1443,7 +1492,7 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
             Transform(ds_dt_group, new_group).update(1)
         self.play(
             UpdateFromAlphaFunc(ds_dt_group, update_ds_dt_group),
-            run_time = 8
+            run_time = 15
         )
         self.dither()
         def update_as_tangent_line(ds_dt_group, alpha):
@@ -1666,6 +1715,11 @@ class TCubedExample(SecantLineToTangentLine):
             mob.save_state()
             mob.move_to(mob.target)
 
+        nonzero_size = TextMobject("Nonzero size...for now")
+        nonzero_size.highlight(TIME_COLOR)
+        nonzero_size.next_to(dt, DOWN+2*RIGHT, buff = LARGE_BUFF)
+        arrow = Arrow(nonzero_size, dt)
+
         rhs = TexMobject(
             "\\frac{s(2+dt) - s(2)}{dt}"
         )
@@ -1692,10 +1746,11 @@ class TCubedExample(SecantLineToTangentLine):
         self.play(ShowCreation(v_lines[0]))
         self.dither()
         self.play(
-            dt.scale_in_place, 1.2,
-            rate_func = there_and_back
+            ShowCreation(arrow),
+            Write(nonzero_size),
         )
         self.dither(2)
+        self.play(*map(FadeOut, [arrow, nonzero_size]))
         self.play(Write(numerator))
         self.play(ShowCreation(v_lines[1]))
         self.dither()
@@ -1734,17 +1789,24 @@ class TCubedExample(SecantLineToTangentLine):
         ])
 
     def brace_for_details(self):
-        brace_yourself = TextMobject(
-            "(Brace yourself for details)"
+        morty = Mortimer()
+        morty.next_to(self.rhs, DOWN, buff = LARGE_BUFF)
+
+        self.play(FadeIn(morty))
+        self.play(
+            morty.change_mode, "hooray",
+            morty.look_at, self.rhs
         )
-        brace_yourself.next_to(
-            self.lhs, DOWN, 
-            buff = LARGE_BUFF,
-            aligned_edge = LEFT
-        )
-        self.play(FadeIn(brace_yourself))
+        self.play(Blink(morty))
         self.dither()
-        self.play(FadeOut(brace_yourself))
+        self.play(
+            morty.change_mode, "sassy",
+            morty.look, OUT
+        )
+        self.play(Blink(morty))
+        self.play(morty.change_mode, "pondering")
+        self.dither()
+        self.play(FadeOut(morty))
 
     def show_expansion(self):
         expression = TexMobject("""
@@ -1863,6 +1925,11 @@ class TCubedExample(SecantLineToTangentLine):
             new_group = self.get_ds_dt_group(new_dt)
             Transform(group, new_group).update(1)
         self.play(FadeOut(self.vertical_lines))
+        self.secant_line_length = 10
+        self.play(Transform(
+            self.ds_dt_group,
+            self.get_ds_dt_group(self.start_dt)
+        ))
         self.play(
             UpdateFromAlphaFunc(self.ds_dt_group, ds_dt_group_update),
             faders.fade, 0.7,
@@ -1900,12 +1967,22 @@ class TCubedExample(SecantLineToTangentLine):
             Write(approach_text)
         )
         self.dither(2)
-        self.secant_line_length = 10
-        self.play(Transform(
-            self.ds_dt_group,
-            self.get_ds_dt_group(self.end_dt)
-        ))
         self.dither()
+
+        #Ephasize slope
+        v_line = self.vertical_lines[0]
+        slope_text = TextMobject("Slope = $12$")
+        slope_text.highlight(VELOCITY_COLOR)
+        slope_text.next_to(v_line.get_end(), LEFT)
+        self.play(Write(slope_text))
+        self.play(
+            self.ds_dt_group.rotate_in_place, np.pi/24,
+            rate_func = wiggle
+        )
+        self.play(ShowCreation(v_line))
+        self.dither()
+        self.play(FadeOut(v_line))
+        self.play(FadeOut(slope_text))
 
         #Generalize to more t
         twos = [
@@ -2471,8 +2548,37 @@ class Chapter2PatreonThanks(PatreonThanks):
         ]
     }
 
+class Thumbnail(SecantLineToTangentLine):
+    def construct(self):
+        self.setup_axes(animate = False)
+        self.add_graph()
+        self.curr_time = 6
+        ds_dt_group = self.get_ds_dt_group(1)
+        self.add(ds_dt_group)
+        self.remove(self.x_axis_label_mob)
+        self.remove(self.y_axis_label_mob)
+        VGroup(*self.get_mobjects()).fade(0.4)
 
+        title = TextMobject("Derivative paradox")
+        title.scale_to_fit_width(2*SPACE_WIDTH-1)
+        title.to_edge(UP)
+        title.add_background_rectangle()
+        title.gradient_highlight(GREEN, YELLOW)
 
+        randy = Randolph(mode = "confused")
+        randy.scale(1.7)
+        randy.to_corner(DOWN+LEFT)
+        randy.shift(RIGHT)
+
+        deriv = TexMobject("\\frac{ds}{dt}(t)")
+        VGroup(*deriv[:2]).highlight(DISTANCE_COLOR)
+        VGroup(*deriv[3:5]).highlight(TIME_COLOR)
+        deriv.scale(3)
+        # deriv.next_to(randy, RIGHT, buff = 2)
+        deriv.to_edge(RIGHT, buff = LARGE_BUFF)
+        randy.look_at(deriv)
+
+        self.add(title, randy, deriv)
 
 
 
