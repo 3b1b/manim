@@ -24,7 +24,7 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
-from eoc.chapter1 import OpeningQuote
+from eoc.chapter1 import OpeningQuote, PatreonThanks
 from eoc.graph_scene import *
 
 DISTANCE_COLOR = BLUE
@@ -172,8 +172,21 @@ class Chapter2OpeningQuote(OpeningQuote):
 
 class Introduction(TeacherStudentsScene):
     def construct(self):
+        goals = TextMobject(
+            "Goals: ",
+            "1) Learn derivatives", 
+            ", 2) Avoid paradoxes.",
+            arg_separator = ""
+        )
+        goals[1].highlight(MAROON_B)
+        goals[2].highlight(RED)
+        goals[2][0].highlight(WHITE)
+        goals.to_edge(UP)
+        self.add(*goals[:2])
+
         self.student_says(
-            "What is a derivative?"
+            "What is a derivative?",
+            run_time = 2
         )
         self.play(self.get_teacher().change_mode, "happy")
         self.dither()
@@ -183,24 +196,24 @@ class Introduction(TeacherStudentsScene):
             target_mode = "well"
         )
         self.change_student_modes(None, "pondering", "thinking")
-        self.dither()
+        self.play(Write(goals[2], run_time = 2))
         self.change_student_modes("erm")
         self.student_says(
-            "Doesn't the derivative measure\\\\",
-            "instantaneous rate of change", "?",
+            "Instantaneous rate of change", "?",
             student_index = 0,
         )
         self.dither()
 
         bubble = self.get_students()[0].bubble
-        phrase = bubble.content[1]
+        phrase = bubble.content[0]
         bubble.content.remove(phrase)
         self.play(
+            FadeOut(bubble),
+            FadeOut(bubble.content),
+            FadeOut(goals),
             phrase.center,
             phrase.scale, 1.5,
             phrase.to_edge, UP,
-            FadeOut(bubble),
-            FadeOut(bubble.content),
             *it.chain(*[
                 [
                     pi.change_mode, mode,
@@ -247,7 +260,7 @@ class Introduction(TeacherStudentsScene):
             clock.copy().next_to, instantaneous_description, DOWN,
             get_clock_anim(3)
         )
-        self.play(get_clock_anim(6))
+        self.play(get_clock_anim(12))
 
 class FathersOfCalculus(Scene):
     CONFIG = {
@@ -584,6 +597,7 @@ class GraphCarTrajectory(GraphScene):
         for graph_func in graph_funcs:
             new_graph = self.graph_function(
                 graph_func,
+                color = DISTANCE_COLOR,
                 is_main_graph = False
             )
             self.remove(new_graph)
@@ -1513,6 +1527,18 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
         self.play(ShowCreation(circle))        
         self.dither()
 
+class UseOfDImpliesApproaching(TeacherStudentsScene):
+    def construct(self):
+        statement = TextMobject("""
+            Using ``$d$''
+            announces that
+            $dt \\to 0$
+        """)
+        VGroup(*statement[-4:-2]).highlight(TIME_COLOR)
+        self.teacher_says(statement)
+        self.change_student_modes(*["pondering"]*3)
+        self.dither(4)
+
 class LeadIntoASpecificExample(TeacherStudentsScene, SecantLineToTangentLine):
     def setup(self):
         TeacherStudentsScene.setup(self)
@@ -1799,10 +1825,10 @@ class TCubedExample(SecantLineToTangentLine):
         new_exp = TexMobject("2").replace(faders[-1], dim_to_match = 1)
         self.play(
             faders.highlight, BLACK,
-            run_time = 3,
-            submobject_mode = "lagged_start"
+            FadeIn(new_exp),
+            run_time = 2,
         )
-        self.play(FadeIn(new_exp))
+        self.dither()
         terms[3].add(new_exp)
         shift_val = 0.4*DOWN
         self.play(
@@ -2020,19 +2046,430 @@ class ContrastConcreteDtWithLimit(Scene):
         r_text = r_brace.get_text("Simple")
         r_text.highlight(GREEN)
 
-        self.add(r_formula, r_brace, r_text, l_formula, l_brace, l_text)
+        triplets = [
+            (l_formula, l_brace, l_text),
+            (r_formula, r_brace, r_text),
+        ]
+        for formula, brace, text in triplets:
+            self.play(Write(formula, run_time = 1))
+            self.play(
+                GrowFromCenter(brace),
+                Write(text)
+            )
+            self.dither(2)
+
+class TimeForAnActualParadox(TeacherStudentsScene):
+    def construct(self):
+        words = TextMobject("``Instantaneous rate of change''")
+        paradoxes = TextMobject("Paradoxes")
+        arrow = Arrow(ORIGIN, DOWN, buff = 0)
+        group = VGroup(words, arrow, paradoxes)
+        group.arrange_submobjects(DOWN)
+        group.to_edge(UP)
+
+        teacher = self.get_teacher()
+        self.play(
+            teacher.change_mode, "raise_right_hand",
+            teacher.look_at, words,
+            Write(words)
+        )
+        self.play(*map(Write, [arrow, paradoxes]))
+        self.play(*it.chain(*[
+            [pi.change_mode, mode, pi.look_at, words]
+            for pi, mode in zip(
+                self.get_students(),
+                ["pondering", "happy", "hesitant"]
+            )
+        ]))
+        self.dither(4)
+
+class ParadoxAtTEquals0(TCubedExample):
+    CONFIG = {
+        "tangent_line_length" : 20,
+    }
+    def construct(self):
+        self.draw_graph()
+        self.ask_question()
+        self.show_derivative_text()
+        self.show_tangent_line()
+        self.if_not_then_when()
+        self.single_out_question()
+
+    def draw_graph(self):
+        self.setup_axes(animate = False)
+        self.x_axis_label_mob.set_fill(opacity = 0)
+        graph = self.graph_function(lambda t : t**3, animate = False)
+        graph_x_max = 3.0
+        graph.pointwise_become_partial(graph, 0, graph_x_max/self.x_max)
+
+        origin = self.coords_to_point(0, 0)
+        h_line = Line(LEFT, RIGHT, color = TIME_COLOR)
+        v_line = Line(UP, DOWN, color = DISTANCE_COLOR)
+        VGroup(h_line, v_line).set_stroke(width = 2)
+
+        def h_line_update(h_line):
+            point = graph.point_from_proportion(1)
+            y_axis_point = origin[0]*RIGHT + point[1]*UP
+            h_line.put_start_and_end_on(y_axis_point, point)
+            return h_line
+
+        def v_line_update(v_line):
+            point = graph.point_from_proportion(1)
+            x_axis_point =  point[0]*RIGHT + origin[1]*UP
+            v_line.put_start_and_end_on(x_axis_point, point)
+            return v_line
+
+        car = Car()
+        car.rotate(np.pi/2)
+        car.move_to(origin)
+        self.add(car)
+        #Should be 0, 1, but for some reason I don't know
+        #the car was lagging the graph.
+        car_target_point = self.coords_to_point(0, 1.15)
+
+        self.play(
+            MoveCar(
+                car, car_target_point,
+                rate_func = lambda t : (t*graph_x_max)**3
+            ),
+            ShowCreation(graph, rate_func = None),
+            UpdateFromFunc(h_line, h_line_update),
+            UpdateFromFunc(v_line, v_line_update),
+            run_time = 5
+        )
+        self.play(*map(FadeOut, [h_line, v_line]))
+
+        self.label_graph(
+            graph,
+            label = "s(t) = t^3",
+            proportion = 0.8,
+            direction = RIGHT,
+            buff = SMALL_BUFF
+        )
+        self.dither()
+
+        self.car = car
+
+    def ask_question(self):
+        question = TextMobject(
+            "At time $t=0$,", 
+            "is \\\\ the car moving?"
+        )
+        VGroup(*question[0][-4:-1]).highlight(RED)
+        question.next_to(
+            self.coords_to_point(0, 10),
+            RIGHT
+        )
+        origin = self.coords_to_point(0, 0)
+        arrow = Arrow(question.get_bottom(), origin)
+
+        self.play(Write(question[0], run_time = 1))
+        self.play(MoveCar(self.car, origin))
+        self.dither()
+        self.play(Write(question[1]))
+        self.play(ShowCreation(arrow))
+        self.dither(2)
+
+        self.question = question
+
+    def show_derivative_text(self):
+        derivative = TexMobject(
+            "\\frac{ds}{dt}(t) = 3t^2",
+            "= 3(0)^2",
+            "= 0",
+            "\\frac{\\text{m}}{\\text{s}}",
+        )
+        VGroup(*derivative[0][:2]).highlight(DISTANCE_COLOR)
+        VGroup(*derivative[0][3:5]).highlight(TIME_COLOR)
+        derivative[1][3].highlight(RED)
+        derivative[-1].scale_in_place(0.7)
+        derivative.to_edge(RIGHT, buff = LARGE_BUFF)
+        derivative.shift(2*UP)
+
+        self.play(Write(derivative[0]))
+        self.dither()
+        self.play(FadeIn(derivative[1]))
+        self.play(*map(FadeIn, derivative[2:]))
+        self.dither(2)
+
+        self.derivative = derivative
+
+    def show_tangent_line(self):
+        dot = Dot()
+        line = Line(ORIGIN, RIGHT, color = VELOCITY_COLOR)
+        line.scale(self.tangent_line_length)
+
+        start_time = 2
+        end_time = 0
+
+        def get_time_and_point(alpha):
+            time = interpolate(start_time, end_time, alpha)
+            point = self.input_to_graph_point(time)
+            return time, point
+
+        def dot_update(dot, alpha):
+            dot.move_to(get_time_and_point(alpha)[1])
+
+        def line_update(line, alpha):
+            time, point = get_time_and_point(alpha)
+            line.rotate(
+                self.angle_of_tangent(time)-line.get_angle()
+            )
+            line.move_to(point)
+
+        dot_update(dot, 0)
+        line_update(line, 0)
+        self.play(
+            ShowCreation(line),
+            ShowCreation(dot)
+        )
+        self.play(
+            UpdateFromAlphaFunc(line, line_update),
+            UpdateFromAlphaFunc(dot, dot_update),            
+            run_time = 4
+        )
+        self.dither(2)
+
+        self.tangent_line = line
+
+    def if_not_then_when(self):
+        morty = Mortimer()
+        morty.scale(0.7)
+        morty.to_corner(DOWN+RIGHT)
+
+        self.play(FadeIn(morty))
+        self.play(PiCreatureSays(
+            morty, "If not at $t=0$, when?",
+            target_mode = "maybe"
+        ))
+        self.play(Blink(morty))
+        self.play(MoveCar(
+            self.car, self.coords_to_point(0, 1),
+            rate_func = lambda t : (3*t)**3,
+            run_time = 5
+        ))
+        self.play(
+            morty.change_mode, "pondering",
+            FadeOut(morty.bubble),
+            FadeOut(morty.bubble.content),
+        )
+        self.play(MoveCar(self.car, self.coords_to_point(0, 0)))
+        self.play(Blink(morty))
+        self.dither(2)
+
+        self.morty = morty
+
+    def single_out_question(self):
+        morty, question = self.morty, self.question
+
+        #Shouldn't need this
+        morty.bubble.content.set_fill(opacity = 0)
+        morty.bubble.set_fill(opacity = 0)
+        morty.bubble.set_stroke(width = 0)
+
+        change_word = VGroup(*question[1][-7:-1])
+        moment_word = question[0]
+
+        brace = Brace(VGroup(*self.derivative[1:]))
+        brace_text = brace.get_text("Best constant \\\\ approximation")
+
+        self.remove(question, morty)
+        pre_everything = Mobject(*self.get_mobjects())
+        everything = Mobject(*pre_everything.family_members_with_points())
+        everything.save_state()
+
+        self.play(
+            everything.fade, 0.8,
+            question.center,
+            morty.change_mode, "confused",
+            morty.look_at, ORIGIN
+        )
+        self.play(Blink(morty))
+        for word in change_word, moment_word:
+            self.play(
+                word.scale_in_place, 1.2,
+                word.highlight, YELLOW,
+                rate_func = there_and_back,
+                run_time = 1.5
+            )
+        self.dither(2)
+        self.play(
+            everything.restore,
+            FadeOut(question),
+            morty.change_mode, "raise_right_hand",
+            morty.look_at, self.derivative
+        )
+        self.play(
+            GrowFromCenter(brace),
+            FadeIn(brace_text)
+        )
+        self.dither()
+        self.play(
+            self.tangent_line.rotate_in_place, np.pi/24,
+            rate_func = wiggle,
+            run_time = 1
+        )
+        self.play(Blink(morty))
+        self.dither()
+
+class TinyMovement(ZoomedScene):
+    CONFIG = {
+        "distance" : 0.05,
+        "distance_label" : "(0.1)^3 = 0.001",
+        "time_label" : "0.1",
+    }
+    def construct(self):
+        self.activate_zooming()
+        self.show_initial_motion()
+        self.show_ratios()
+
+    def show_initial_motion(self):
+        car = Car()
+        car.move_to(ORIGIN)
+        car_points = car.get_all_points()
+        lowest_to_highest_indices = np.argsort(car_points[:,1])
+        wheel_point = car_points[lowest_to_highest_indices[2]]
+        target_wheel_point = wheel_point+self.distance*RIGHT
+
+        dots = VGroup(*[
+            Dot(point, radius = self.distance/10)
+            for point in wheel_point, target_wheel_point
+        ])
+        brace = Brace(Line(ORIGIN, RIGHT))
+        distance_label = TexMobject(self.distance_label)
+        distance_label.next_to(brace, DOWN)
+        distance_label.highlight(DISTANCE_COLOR)
+        brace.add(distance_label)
+        brace.scale(self.distance)
+        brace.next_to(dots, DOWN, buff = self.distance/5)
+
+        zoom_rect = self.little_rectangle
+        zoom_rect.scale(2)
+        zoom_rect.move_to(wheel_point)
+
+        time_label = TextMobject("Time $t = $")
+        time_label.next_to(car, UP, buff = LARGE_BUFF)
+        start_time = TexMobject("0")
+        end_time = TexMobject(self.time_label)
+        for time in start_time, end_time:
+            time.highlight(TIME_COLOR)
+            time.next_to(time_label, RIGHT)
+
+        self.add(car, time_label, start_time)
+        self.play(
+            zoom_rect.scale_in_place,
+            10*self.distance / zoom_rect.get_width()
+        )
+        self.play(ShowCreation(dots[0]))
+        self.play(Transform(start_time, end_time))
+        self.play(MoveCar(car, self.distance*RIGHT))
+        self.play(ShowCreation(dots[1]))
+        self.play(Write(brace, run_time = 1))
+        self.play(
+            zoom_rect.scale, 0.5,
+            zoom_rect.move_to, brace
+        )
+        self.dither()
+
+    def show_ratios(self):
+        ratios = [
+            self.get_ratio(n)
+            for n in range(1, 5)
+        ]
+        ratio = ratios[0]
+        self.play(FadeIn(ratio))
+        self.dither(2)
+        for new_ratio in ratios[1:]:
+            self.play(Transform(ratio, new_ratio))
+            self.dither()
+
+    def get_ratio(self, power = 1):
+        dt = "0.%s1"%("0"*(power-1))
+        ds_dt = "0.%s1"%("0"*(2*power-1))
+        expression = TexMobject("""
+            \\frac{(%s)^3 \\text{ meters}}{%s \\text{ seconds}}
+            = %s \\frac{\\text{meters}}{\\text{second}}
+        """%(dt, dt, ds_dt))
+        expression.next_to(ORIGIN, DOWN, buff = LARGE_BUFF)
+        lengths = [
+            0,
+            len("("),
+            len(dt),
+            len(")3meters_"),
+            len(dt),
+            len("seconds="),
+            len(ds_dt),
+            len("meters_second")
+        ]
+        result = VGroup(*[
+            VGroup(*expression[i1:i2])
+            for i1, i2 in zip(
+                np.cumsum(lengths),
+                np.cumsum(lengths)[1:],
+            )
+        ])
+        result[1].highlight(DISTANCE_COLOR)
+        result[3].highlight(TIME_COLOR)
+        result[5].highlight(VELOCITY_COLOR)
+
+        return result
+
+class NextVideos(TeacherStudentsScene):
+    def construct(self):
+        series = VideoSeries()
+        series.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        series.to_edge(UP)
+        series[1].highlight(YELLOW)
+        self.add(series)
+
+        brace = Brace(VGroup(*series[2:6]))
+        brace_text = brace.get_text("More derivative stuffs")
 
 
-
-
-
-
-
-
-
-
-
-
+        self.play(
+            GrowFromCenter(brace),
+            self.get_teacher().change_mode, "raise_right_hand"
+        )
+        self.play(
+            Write(brace_text),
+            *it.chain(*[
+                [pi.look_at, brace]
+                for pi in self.get_students()
+            ])
+        )
+        self.dither(2)
+        self.change_student_modes(*["thinking"]*3)
+        self.dither(3)
+        
+class Chapter2PatreonThanks(PatreonThanks):
+    CONFIG = {
+        "specific_patrons" : [
+            "Meshal  Alshammari",
+            "Ali Yahya",
+            "CrypticSwarm    ",
+            "Yu  Jun",
+            "Shelby  Doolittle",
+            "Dave    Nicponski",
+            "Damion  Kistler",
+            "Juan    Benet",
+            "Othman  Alikhan",
+            "Markus  Persson",
+            "Dan Buchoff",
+            "Derek   Dai",
+            "Joseph  Cox",
+            "Luc Ritchie",
+            "Mark    Govea",
+            "Guido   Gambardella",
+            "Vecht",
+            "Jonathan    Eppele",
+            "Shimin Kuang",
+            "Rish    Kundalia",
+            "Achille Brighton",
+            "Kirk    Werklund",
+            "Ripta   Pasay",
+            "Felipe  Diniz",
+        ]
+    }
 
 
 

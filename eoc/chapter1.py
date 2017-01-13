@@ -2582,16 +2582,17 @@ class PatreonThanks(Scene):
             "Kirk Werklund",
             "Ripta Pasay",
             "Felipe Diniz",
-        ]
+        ],
+        "max_patrons_height" : 2*SPACE_HEIGHT - 1,
     }
     def construct(self):
         morty = Mortimer()
         morty.next_to(ORIGIN, DOWN)
 
         n_patrons = len(self.specific_patrons)
-        special_thanks = TextMobject("Special thanks to:")
+        special_thanks = TextMobject("Special thanks")
         special_thanks.highlight(YELLOW)
-        special_thanks.shift(2*UP)
+        special_thanks.to_edge(UP)
 
         left_patrons = VGroup(*map(TextMobject, 
             self.specific_patrons[:n_patrons/2]
@@ -2599,10 +2600,26 @@ class PatreonThanks(Scene):
         right_patrons = VGroup(*map(TextMobject, 
             self.specific_patrons[n_patrons/2:]
         ))
+        for patrons in left_patrons, right_patrons:
+            patrons.arrange_submobjects(
+                DOWN, aligned_edge = LEFT,
+                buff = 1.5*MED_BUFF
+            )
+        all_patrons = VGroup(left_patrons, right_patrons)
+        if all_patrons.get_height() > self.max_patrons_height:
+            all_patrons.scale_to_fit_height(self.max_patrons_height)
         for patrons, vect in (left_patrons, LEFT), (right_patrons, RIGHT):
-            patrons.arrange_submobjects(DOWN, aligned_edge = LEFT)
-            patrons.next_to(special_thanks, DOWN)
-            patrons.to_edge(vect, buff = LARGE_BUFF)
+            patrons.to_edge(vect, buff = MED_BUFF)
+
+        # shift_distance = max(
+        #     0, 1-SPACE_HEIGHT-all_patrons.get_bottom()[1]
+        # )
+        # velocity = shift_distance/8
+        # def get_shift_anim():
+        #     return ApplyMethod(
+        #         all_patrons.shift, velocity*UP,
+        #         rate_func = None
+        #     )
 
         self.play(morty.change_mode, "gracious")
         self.play(Write(special_thanks, run_time = 1))
@@ -2617,7 +2634,9 @@ class PatreonThanks(Scene):
         self.play(Blink(morty))
         for patrons in left_patrons, right_patrons:
             for index in 0, -1:
-                self.play(morty.look_at, patrons[index])
+                self.play(
+                    morty.look_at, patrons[index],
+                )
                 self.dither()
 
 class Thumbnail(CircleScene):
