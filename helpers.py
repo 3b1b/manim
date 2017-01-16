@@ -116,6 +116,8 @@ def color_to_int_rgb(color):
     return (255*color_to_rgb(color)).astype('uint8')
 
 def color_gradient(reference_colors, length_of_output):
+    if length_of_output == 0:
+        return reference_colors[0]
     rgbs = map(color_to_rgb, reference_colors)
     alphas = np.linspace(0, (len(rgbs) - 1), length_of_output)
     floors = alphas.astype('int')

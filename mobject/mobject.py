@@ -270,6 +270,17 @@ class Mobject(object):
                 self.to_edge(vect, **kwargs)
         return self
 
+    def is_off_screen(self):
+        if self.get_left()[0] > SPACE_WIDTH:
+            return True
+        if self.get_right()[0] < -SPACE_WIDTH:
+            return True
+        if self.get_bottom()[1] > SPACE_HEIGHT:
+            return True
+        if self.get_top()[1] < -SPACE_HEIGHT:
+            return True
+        return False
+
     def stretch_in_place(self, factor, dim):
         self.do_in_place(self.stretch, factor, dim)
         return self

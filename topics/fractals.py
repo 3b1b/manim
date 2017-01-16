@@ -30,7 +30,12 @@ class SelfSimilarFractal(VMobject):
         self.gradient_highlight(*self.colors)
 
     def generate_points(self):
-        self.submobjects = self.get_order_n_self(self.order).submobjects
+        order_n_self = self.get_order_n_self(self.order)
+        if self.order == 0:
+            self.submobjects = [order_n_self]
+        else:
+            self.submobjects = order_n_self.submobjects
+        return self
 
     def get_order_n_self(self, order):
         if order == 0:
@@ -69,7 +74,8 @@ class Sierpinski(SelfSimilarFractal):
 class DiamondFractal(SelfSimilarFractal):
     CONFIG = {
         "num_subparts" : 4,
-        "height" : 6,
+        "height" : 4,
+        "colors" : [GREEN_E, YELLOW],
     }
     def get_seed_shape(self):
         return RegularPolygon(n = 4)
