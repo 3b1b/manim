@@ -3,7 +3,7 @@ from mobject.vectorized_mobject import VMobject, VGroup, VectorizedPoint
 from scene import Scene
 from animation.transform import Transform
 from animation.simple_animations import ShowCreation
-from topics.geometry import Line
+from topics.geometry import Line, Polygon, RegularPolygon
 
 from helpers import *
 
@@ -15,19 +15,92 @@ def rotate(points, angle = np.pi, axis = OUT):
     return points
 
 
+class SelfSimilarFractal(VMobject):
+    CONFIG = {
+        "order" : 5,
+        "num_subparts" : 3,
+        "height" : 4,
+        "colors" : [RED, WHITE],
+        "stroke_width" : 1,
+        "fill_opacity" : 1,
+        "propogate_style_to_family" : True,
+    }
+    def init_colors(self):
+        VMobject.init_colors(self)
+        self.gradient_highlight(*self.colors)
+
+    def generate_points(self):
+        self.submobjects = self.get_order_n_self(self.order).submobjects
+
+    def get_order_n_self(self, order):
+        if order == 0:
+            result = self.get_seed_shape()
+        else:
+            subparts = [
+                self.get_order_n_self(order - 1)
+                for x in range(self.num_subparts)
+            ]
+            self.arrange_subparts(*subparts)
+            result = VGroup(*subparts)
+
+        result.scale_to_fit_height(self.height)
+        result.center()
+        return result
+
+    def get_seed_shape(self):
+        raise Exception("Not implemented")
+
+    def arrange_subparts(self, *subparts):
+        raise Exception("Not implemented")
+
+
+class Sierpinski(SelfSimilarFractal):
+    def get_seed_shape(self):
+        return Polygon(
+            RIGHT, np.sqrt(3)*UP, LEFT,
+        )
+
+    def arrange_subparts(self, *subparts):
+        tri1, tri2, tri3 = subparts
+        tri1.move_to(tri2.get_corner(DOWN+LEFT), UP)
+        tri3.move_to(tri2.get_corner(DOWN+RIGHT), UP)
+
+
+class DiamondFractal(SelfSimilarFractal):
+    CONFIG = {
+        "num_subparts" : 4,
+        "height" : 6,
+    }
+    def get_seed_shape(self):
+        return RegularPolygon(n = 4)
+
+    def arrange_subparts(self, *subparts):
+        # VGroup(*subparts).rotate(np.pi/4)
+        for part, vect in zip(subparts, compass_directions(start_vect = UP+RIGHT)):
+            part.next_to(ORIGIN, vect, buff = 0)
+        VGroup(*subparts).rotate(np.pi/4)
+
+
+######## Space filling curves ############
+
 class SpaceFillingCurve(VMobject):
     CONFIG = {
         "radius"      : 3,
         "order"       : 5,
         "colors" : [RED, GREEN],
+        "monochromatic" : False,
+        "stroke_width" : 2,
     }
 
     def generate_points(self):
         points = self.get_anchor_points()
-        for triplet in zip(points, points[1:], points[2:]):
-            corner = VMobject()
-            corner.set_points_as_corners(triplet)
-            self.add(corner)
+        if self.monochromatic:
+            self.set_points_as_corners(points)
+        else:
+            for triplet in zip(points, points[1:], points[2:]):
+                corner = VMobject()
+                corner.set_points_as_corners(triplet)
+                self.add(corner)
         self.gradient_highlight(*self.colors)
 
     def get_anchor_points(self):
@@ -244,11 +317,10 @@ class FlowSnake(LindenmayerCurve):
         LindenmayerCurve.__init__(self, **kwargs)
         self.rotate(-self.order*np.pi/9)
 
-class Sierpinski(LindenmayerCurve):
+class SierpinskiCurve(LindenmayerCurve):
     CONFIG = {
-        "start_color" : RED,
-        "end_color"   : WHITE,
-        "axiom"       : "A",
+        "colors" : [RED, WHITE],
+        "axiom" : "B",
         "rule" : {
             "A" : "+B-A-B+",
             "B" : "-A+B+A-",
@@ -259,10 +331,9 @@ class Sierpinski(LindenmayerCurve):
         "angle"        : -np.pi/3,
     }
 
-class KochCurve(LindenmayerCurve):
+class KochSnowFlake(LindenmayerCurve):
     CONFIG = {
-        "start_color"  : BLUE_D,
-        "end_color"    : WHITE,
+        "colors" : [BLUE_D, WHITE],
         "axiom"        : "A--A--A--",
         "rule"         : {
             "A" : "A+A--A+A"
@@ -277,6 +348,12 @@ class KochCurve(LindenmayerCurve):
         digest_config(self, kwargs)
         self.scale_factor = 2*(1+np.cos(self.angle))
         LindenmayerCurve.__init__(self, **kwargs)
+
+class KochCurve(KochSnowFlake):
+    CONFIG = {
+        "axiom" : "A--"
+    }
+        
 
 
 class StellarCurve(LindenmayerCurve):

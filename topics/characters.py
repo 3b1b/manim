@@ -29,7 +29,9 @@ class PiCreature(SVGMobject):
     CONFIG = {
         "color" : BLUE_E,
         "stroke_width" : 0,
+        "stroke_color" : BLACK,
         "fill_opacity" : 1.0,
+        "propogate_style_to_family" : True,
         "initial_scale_factor" : 0.01,
         "corner_scale_factor" : 0.75,
         "flip_at_start" : False,
@@ -44,7 +46,6 @@ class PiCreature(SVGMobject):
         )
         digest_config(self, kwargs, locals())
         SVGMobject.__init__(self, file_name = svg_file, **kwargs)
-        self.init_colors()
         if self.flip_at_start:
             self.flip()
         if self.start_corner is not None:
@@ -66,7 +67,7 @@ class PiCreature(SVGMobject):
         self.parts_named = True
 
     def init_colors(self):
-        self.set_stroke(color = BLACK, width = self.stroke_width)
+        SVGMobject.init_colors(self)
         if not self.parts_named:
             self.name_parts()
         self.mouth.set_fill(BLACK, opacity = 1)

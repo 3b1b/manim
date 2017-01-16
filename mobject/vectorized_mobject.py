@@ -17,9 +17,6 @@ class VMobject(Mobject):
         "considered_smooth" : True,
         "propogate_style_to_family" : False,
     }
-    def __init__(self, *args, **kwargs):
-        Mobject.__init__(self, *args, **kwargs)
-        VMobject.init_colors(self)
 
     ## Colors
     def init_colors(self):

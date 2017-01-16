@@ -267,14 +267,14 @@ class Polygon(VMobject):
     def get_vertices(self):
         return self.get_anchors_and_handles()[0]
 
-class RegularPolygon(VMobject):
+class RegularPolygon(Polygon):
     CONFIG = {
         "start_angle" : 0
     }
     def __init__(self, n = 3, **kwargs):
         digest_config(self, kwargs, locals())
         start_vect = rotate_vector(RIGHT, self.start_angle)
-        vertices = compass_directions(n, start_angle)
+        vertices = compass_directions(n, start_vect)
         Polygon.__init__(self, *vertices, **kwargs)
 
 
