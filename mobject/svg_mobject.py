@@ -62,6 +62,8 @@ class SVGMobject(VMobject):
             result.append(self.rect_to_mobject(element))
         elif element.tagName == 'circle':
             result.append(self.circle_to_mobject(element))
+        elif element.tagName == 'polygon':
+            result.append(self.polygon_to_mobject(element))
         else:
             warnings.warn("Unknown element type: " + element.tagName)
         result = filter(lambda m : m is not None, result)
@@ -85,6 +87,14 @@ class SVGMobject(VMobject):
         return self.get_mobjects_from(
             self.ref_to_element[ref]
         )
+
+    def polygon_to_mobject(self, polygon_element):
+        #TODO, This seems hacky...
+        path_string = polygon_element.getAttribute("points")
+        for digit in string.digits:
+            path_string = path_string.replace(" " + digit, " L" + digit)
+        path_string = "M" + path_string
+        return self.path_string_to_mobject(path_string)
 
     # <circle class="st1" cx="143.8" cy="268" r="22.6"/>
 

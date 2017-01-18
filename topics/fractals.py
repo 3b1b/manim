@@ -14,6 +14,50 @@ def rotate(points, angle = np.pi, axis = OUT):
     points = np.dot(points, np.transpose(matrix))
     return points
 
+def fractalify(vmobject, order = 3, *args, **kwargs):
+    for x in range(order):
+        fractalification_iteration(vmobject)
+    return vmobject
+
+def fractalification_iteration(vmobject, 
+                               dimension = 1.05, 
+                               num_inserted_anchors_range = range(1, 4)
+                               ):
+    num_points = vmobject.get_num_points()
+    if num_points > 0:
+        # original_anchors = vmobject.get_anchors()
+        original_anchors = [
+            vmobject.point_from_proportion(x)
+            for x in np.linspace(0, 0.99, num_points)
+        ]
+        new_anchors = []
+        for p1, p2, in zip(original_anchors, original_anchors[1:]):
+            num_inserts = random.choice(num_inserted_anchors_range)
+            inserted_points = [
+                interpolate(p1, p2, alpha)
+                for alpha in np.linspace(0, 1, num_inserts+2)[1:-1]
+            ]
+            mass_scaling_factor = 1./(num_inserts+1)
+            length_scaling_factor = mass_scaling_factor**(1./dimension)
+            target_length = np.linalg.norm(p1-p2)*length_scaling_factor
+            curr_length = np.linalg.norm(p1-p2)*mass_scaling_factor
+            #offset^2 + curr_length^2 = target_length^2
+            offset_len = np.sqrt(target_length**2 - curr_length**2)
+            unit_vect = (p1-p2)/np.linalg.norm(p1-p2)
+            offset_unit_vect = rotate_vector(unit_vect, np.pi/2)
+            inserted_points = [
+                point + u*offset_len*offset_unit_vect
+                for u, point in zip(it.cycle([-1, 1]), inserted_points)
+            ]
+            new_anchors += [p1] + inserted_points
+        new_anchors.append(original_anchors[-1])
+        vmobject.set_points_as_corners(new_anchors)
+    vmobject.submobjects = [
+        fractalification_iteration(submob, dimension, num_inserted_anchors_range)
+        for submob in vmobject.submobjects
+    ]
+    return vmobject
+
 
 class SelfSimilarFractal(VMobject):
     CONFIG = {
@@ -87,15 +131,31 @@ class DiamondFractal(SelfSimilarFractal):
         VGroup(*subparts).rotate(np.pi/4)
 
 
+class PentagonalFractal(SelfSimilarFractal):
+    CONFIG = {
+        "num_subparts" : 5,
+        "colors" : [MAROON_B, YELLOW, RED]
+    }
+    def get_seed_shape(self):
+        return RegularPolygon(n = 5, start_angle = np.pi/2)
+
+    def arrange_subparts(self, *subparts):
+        phi = (1 + np.sqrt(5))/2
+        for x, part in enumerate(subparts):
+            part.shift(0.95*part.get_height()*UP)
+            part.rotate(2*np.pi*x/5)
+
+
 ######## Space filling curves ############
 
-class SpaceFillingCurve(VMobject):
+class FractalCurve(VMobject):
     CONFIG = {
         "radius"      : 3,
         "order"       : 5,
         "colors" : [RED, GREEN],
         "monochromatic" : False,
-        "stroke_width" : 2,
+        "stroke_width" : 3,
+        "propogate_style_to_family" : True,
     }
 
     def generate_points(self):
@@ -107,13 +167,15 @@ class SpaceFillingCurve(VMobject):
                 corner = VMobject()
                 corner.set_points_as_corners(triplet)
                 self.add(corner)
+
+    def init_colors(self):
         self.gradient_highlight(*self.colors)
 
     def get_anchor_points(self):
         raise Exception("Not implemented")
 
 
-class LindenmayerCurve(SpaceFillingCurve):
+class LindenmayerCurve(FractalCurve):
     CONFIG = {
         "axiom"        : "A",
         "rule"         : {},
@@ -154,7 +216,7 @@ class LindenmayerCurve(SpaceFillingCurve):
         return np.array(result) - center_of_mass(result)
 
 
-class SelfSimilarSpaceFillingCurve(SpaceFillingCurve):
+class SelfSimilarSpaceFillingCurve(FractalCurve):
     CONFIG = {
         "offsets" : [],
         #keys must awkwardly be in string form...
@@ -339,7 +401,7 @@ class SierpinskiCurve(LindenmayerCurve):
 
 class KochSnowFlake(LindenmayerCurve):
     CONFIG = {
-        "colors" : [BLUE_D, WHITE],
+        "colors" : [BLUE_D, WHITE, BLUE_D],
         "axiom"        : "A--A--A--",
         "rule"         : {
             "A" : "A+A--A+A"
@@ -374,7 +436,7 @@ class StellarCurve(LindenmayerCurve):
         "angle" : 2*np.pi/5,
     }
 
-class SnakeCurve(SpaceFillingCurve):
+class SnakeCurve(FractalCurve):
     CONFIG = {
         "start_color" : BLUE,
         "end_color"   : YELLOW,
@@ -409,7 +471,7 @@ class SpaceFillingCurveScene(Scene):
         curve_class_name, order_str = arg_str.split()
         space_filling_curves = dict([
             (Class.__name__, Class)
-            for Class in get_all_descendent_classes(SpaceFillingCurve)
+            for Class in get_all_descendent_classes(FractalCurve)
         ])
         if curve_class_name not in space_filling_curves:
             raise Exception(
