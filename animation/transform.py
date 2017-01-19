@@ -25,7 +25,6 @@ class Transform(Animation):
 
         Animation.__init__(self, mobject, **kwargs)
         self.name += "To" + str(ending_mobject)  
-        self.mobject.stroke_width = ending_mobject.stroke_width
 
     def update_config(self, **kwargs):
         Animation.update_config(self, **kwargs)
