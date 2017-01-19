@@ -352,8 +352,9 @@ class SelfSimilarFractalsAsSubset(Scene):
         )
         self.play(ShowCreation(britain), run_time = 5)
         self.play(
-            britain.set_stroke, BLACK, 0,
             britain.set_fill, BLUE, 1,
+            britain.set_stroke, None, 0,
+            run_time = 2
         )
         self.play(FadeIn(randy))
         self.play(MoveToTarget(randy, run_time = 2))
@@ -361,8 +362,10 @@ class SelfSimilarFractalsAsSubset(Scene):
 
 class ConstrastSmoothAndFractal(Scene):
     CONFIG = {
-        "britain_zoom_point_proportion" : 0.4,
-        "scale_factor" : 15,
+        "britain_zoom_point_proportion" : 0.45,
+        "scale_factor" : 50,
+        "fractalification_order" : 2,
+        "fractal_dimension" : 1.21,
     }
     def construct(self):
         v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
@@ -398,7 +401,11 @@ class ConstrastSmoothAndFractal(Scene):
         britain.zoom_point = britain.point_from_proportion(
             self.britain_zoom_point_proportion
         )
-        fractalify(britain, order = 2, dimension = 1.21)
+        fractalify(
+            britain, 
+            order = self.fractalification_order, 
+            dimension = self.fractal_dimension,
+        )
 
         britains = VGroup(britain, smooth_britain)
         self.play(*[
@@ -425,7 +432,7 @@ class ConstrastSmoothAndFractal(Scene):
             ),
             Animation(smooth),
             Animation(fractal),
-            run_time = 5
+            run_time = 10,
         )
         self.dither(2)
         
@@ -895,7 +902,9 @@ class DefineTwoDimensional(PiCreatureScene):
         "length_color" : GREEN,
         "dimension_color" : YELLOW,
         "shape_width" : 2,
-        "scale_factor" : 1.5,
+        "scale_factor" : 0.5,
+        "bottom_shape_buff" : MED_BUFF,
+        "scalar" : "s",
     }
     def construct(self):
         self.add_title()
@@ -937,11 +946,13 @@ class DefineTwoDimensional(PiCreatureScene):
         top_length = TextMobject("Length:", "$L$")
         top_mass = TextMobject("Mass:", "$M$")
         bottom_length = TextMobject(
-            "Length: ", "$s$", "$L$", 
+            "Length: ", "$%s$"%self.scalar, "$L$", 
             arg_separator = ""
         )
         bottom_mass = TextMobject(
-            "Mass: ", "$s^%s$"%self.dimension, "$M$", 
+            "Mass: ", 
+            "$%s^%s$"%(self.scalar, self.dimension), 
+            "$M$", 
             arg_separator = ""
         )
         self.dimension_in_exp = VGroup(
@@ -969,6 +980,7 @@ class DefineTwoDimensional(PiCreatureScene):
 
         self.top_L = top_length[-1]
         self.bottom_L = VGroup(*bottom_length[-2:])
+        self.bottom_mass = bottom_mass
 
     def show_top_length(self):
         brace = Brace(self.shape, LEFT)
@@ -982,14 +994,16 @@ class DefineTwoDimensional(PiCreatureScene):
 
     def perform_scaling(self):
         group = VGroup(self.shape, self.brace).copy()
-        self.play(group.shift, (group.get_top()[1]+MED_BUFF)*DOWN)
+        self.play(
+            group.shift, 
+            (group.get_top()[1]+self.bottom_shape_buff)*DOWN
+        )
 
         shape, brace = group
         bottom_L = self.bottom_L.copy()        
         shape.generate_target()
-        shape.target.scale(
+        shape.target.scale_in_place(
             self.scale_factor, 
-            about_point = shape.get_corner(UP+LEFT)
         )
         brace.target = Brace(shape.target, LEFT)
         self.play(*map(MoveToTarget, group))
@@ -999,11 +1013,11 @@ class DefineTwoDimensional(PiCreatureScene):
     def show_dimension(self):
         top_dimension = self.dimension_in_title.copy()
         self.play(self.pi_creature.look_at, top_dimension)
-        self.play(
-            top_dimension.replace, 
+        self.play(Transform(
+            top_dimension, 
             self.dimension_in_exp,
             run_time = 2,
-        )
+        ))
         self.dither(3)
 
     def get_shape(self):
@@ -1013,7 +1027,210 @@ class DefineTwoDimensional(PiCreatureScene):
             fill_opacity = 0.7,
         )
 
+class DefineThreeDimensional(DefineTwoDimensional):
+    CONFIG = {
+        "dimension" : "3",
+    }
+    def get_shape(self):
+        return Square(
+            stroke_width = 0,
+            fill_opacity = 0
+        )
 
+class DefineSierpinskiDimension(DefineTwoDimensional):
+    CONFIG = {
+        "dimension" : "D",
+        "scalar" : "\\left( \\frac{1}{2} \\right)",
+        "sierpinski_order" : 6,
+        "equation_scale_factor" : 1.3,
+    }
+    def construct(self):
+        DefineTwoDimensional.construct(self)
+        self.change_mode("confused")
+        self.dither()
+        self.add_one_third()
+        self.isolate_equation()
+
+    def add_one_third(self):
+        equation = TextMobject(
+            "$= \\left(\\frac{1}{3}\\right)$", "$M$",
+            arg_separator = ""
+        )
+        equation.highlight_by_tex("$M$", self.mass_color)
+        equation.next_to(self.bottom_mass)
+
+        self.play(Write(equation))
+        self.change_mode("pondering")
+        self.dither()
+
+        self.equation = VGroup(self.bottom_mass, equation)
+        self.distilled_equation = VGroup(
+            self.bottom_mass[1],
+            equation[0]
+        ).copy()
+
+    def isolate_equation(self):
+        # everything = VGroup(*self.get_mobjects())
+        keepers = [self.pi_creature, self.equation]
+        for mob in keepers:
+            mob.save_state()
+        keepers_copies = [mob.copy() for mob in keepers]
+        self.play(
+            *[
+                ApplyMethod(mob.fade, 0.5)
+                for mob in self.get_mobjects()
+            ] + [
+                Animation(mob)
+                for mob in keepers_copies
+            ]
+        )
+        self.remove(*keepers_copies)
+        for mob in keepers:
+            ApplyMethod(mob.restore).update(1)
+        self.add(*keepers) 
+        self.play(
+            self.pi_creature.change_mode, "confused",
+            self.pi_creature.look_at, self.equation
+        )
+        self.dither()
+
+        equation = self.distilled_equation
+        self.play(
+            equation.arrange_submobjects, RIGHT,
+            equation.scale, self.equation_scale_factor,
+            equation.to_corner, UP+RIGHT,
+            run_time = 2
+        )
+        self.dither(2)
+
+        simpler_equation = TexMobject("2^D = 3")
+        simpler_equation[1].highlight(self.dimension_color)
+        simpler_equation.scale(self.equation_scale_factor)
+        simpler_equation.next_to(equation, DOWN, buff = 2*MED_BUFF)
+
+        log_expression = TexMobject("\\log_2(3) \\approx", "1.585")
+        log_expression[-1].highlight(self.dimension_color)
+        log_expression.scale(self.equation_scale_factor)
+        log_expression.next_to(simpler_equation, DOWN, buff = 2*MED_BUFF)
+        log_expression.shift_onto_screen()
+
+        self.play(Write(simpler_equation))
+        self.change_mode("pondering")
+        self.dither(2)
+        self.play(Write(log_expression))
+        self.play(
+            self.pi_creature.change_mode, "hooray",
+            self.pi_creature.look_at, log_expression
+        )
+        self.dither(2)
+
+    def get_shape(self):
+        return Sierpinski(
+            order = self.sierpinski_order,
+            color = RED,
+        )
+
+class ShowSierpinskiCurve(Scene):
+    CONFIG = {
+        "max_order" : 8,
+    }
+    def construct(self):
+        curve = self.get_curve(2)
+        self.play(ShowCreation(curve, run_time = 2))
+        for order in range(3, self.max_order + 1):
+            self.play(Transform(
+                curve, self.get_curve(order),
+                run_time = 2
+            ))
+            self.dither()
+
+    def get_curve(self, order):
+        curve = SierpinskiCurve(order = order, monochromatic = True)
+        curve.highlight(RED)
+        return curve
+
+class LengthAndAreaOfSierpinski(ShowSierpinskiCurve):
+    CONFIG = {
+        "curve_start_order" : 5,
+        "sierpinski_start_order" : 4,
+        "n_iterations" : 3,
+    }
+    def construct(self):
+        length = TextMobject("Length = $\\infty$")
+        length.shift(SPACE_WIDTH*LEFT/2).to_edge(UP)
+        area = TextMobject("Area = $0$")
+        area.shift(SPACE_WIDTH*RIGHT/2).to_edge(UP)
+        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        self.add(length, area, v_line)
+
+        curve = self.get_curve(order = self.curve_start_order)
+        sierp = self.get_sierpinski(order = self.sierpinski_start_order)
+        self.add(curve, sierp)
+        self.dither()
+
+        for x in range(self.n_iterations):
+            new_curve = self.get_curve(order = self.curve_start_order+x+1)
+            new_sierp = self.get_sierpinski(
+                order = self.sierpinski_start_order+x+1
+            )
+            self.play(
+                Transform(curve, new_curve),
+                Transform(sierp, new_sierp),
+                run_time = 2
+            )
+            self.dither()
+
+    def get_curve(self, order):
+        # curve = ShowSierpinskiCurve.get_curve(self, order)
+        curve = SierpinskiCurve(order = order)
+        curve.scale_to_fit_height(4).center()
+        curve.shift(SPACE_WIDTH*LEFT/2)
+        return curve
+
+    def get_sierpinski(self, order):
+        result = Sierpinski(order = order)
+        result.shift(SPACE_WIDTH*RIGHT/2)
+        return result
+
+
+
+
+
+
+
+
+
+
+
+class MortyLookingAtRectangle(Scene):
+    def construct(self):
+        morty = Mortimer()
+        morty.to_corner(DOWN+RIGHT)
+        url = TextMobject("affirmjobs.3b1b.co")
+        url.to_corner(UP+LEFT)
+        rect = Rectangle(height = 9, width = 16)
+        rect.scale_to_fit_height(5)
+        rect.next_to(url, DOWN)
+        rect.shift_onto_screen()
+        url.save_state()
+        url.next_to(morty.get_corner(UP+LEFT), UP)
+
+        self.play(morty.change_mode, "raise_right_hand")
+        self.play(Write(url))
+        self.play(Blink(morty))
+        self.dither()
+        self.play(
+            url.restore,
+            morty.change_mode, "happy"
+        )
+        self.play(ShowCreation(rect))
+        self.dither()
+        self.play(Blink(morty))
+        for mode in ["wave_2", "hooray", "happy", "pondering", "happy"]:
+            self.play(morty.change_mode, mode)
+            self.dither(2)
+            self.play(Blink(morty))
+            self.dither(2)
 
 
 

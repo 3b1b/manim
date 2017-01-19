@@ -169,6 +169,7 @@ class FractalCurve(VMobject):
                 self.add(corner)
 
     def init_colors(self):
+        VMobject.init_colors(self)
         self.gradient_highlight(*self.colors)
 
     def get_anchor_points(self):
