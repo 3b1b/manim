@@ -293,28 +293,25 @@ class PiCreatureScene(Scene):
             self.pi_creature.change_mode, target_mode
         ]
 
-    def play(self, *args, **kwargs):
+    def compile_play_args_to_animation_list(self, *args):
+        animations = Scene.compile_play_args_to_animation_list(self, *args)
         if self.pi_creature not in self.get_mobjects():
-            Scene.play(self, *args, **kwargs)
-            return
+            return animations
+        if len(animations) == 0:
+            return animations
+        first_anim = animations[0]
+        if first_anim.mobject is self.pi_creature:
+            return animations
 
-        if inspect.ismethod(args[0]):
-            mobject_of_interest = args[0].im_self
-        elif isinstance(args[0], Transform):
-            if args[0].mobject is self.pi_creature:
-                mobject_of_interest = self.pi_creature
-            else:
-                mobject_of_interest = args[0].ending_mobject
-        elif isinstance(args[0], Animation):
-            mobject_of_interest = args[0].mobject
+        if isinstance(first_anim, Transform):
+            mobject_of_interest = first_anim.ending_mobject
         else:
-            raise Exception("Invalid play args")
-
-        if mobject_of_interest is self.pi_creature:
-            new_anims = []
-        else:
-            new_anims = [self.pi_creature.look_at, mobject_of_interest]
-        Scene.play(self, *list(args) + new_anims, **kwargs)
+            mobject_of_interest = first_anim.mobject
+        new_anim = ApplyMethod(
+            self.pi_creature.look_at,
+            mobject_of_interest
+        )
+        return list(animations) + [new_anim]
 
     def blink(self):
         self.play(Blink(self.pi_creature))
