@@ -135,6 +135,8 @@ COLOR_MAP = {
     "PURPLE_A"    : "#CAA3E8",
     "WHITE"       : "#FFFFFF",
     "BLACK"       : "#000000",
+    "LIGHT_GRAY"  : "#BBBBBB",
+    "LIGHT_GREY"  : "#BBBBBB",
     "GRAY"        : "#888888",
     "GREY"        : "#888888",
     "DARK_GREY"   : "#444444",
