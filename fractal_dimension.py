@@ -24,6 +24,14 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
+from eoc.graph_scene import GraphScene
+
+def break_up(mobject, factor = 1.3):
+    mobject.scale_in_place(factor)
+    for submob in mobject:
+        submob.scale_in_place(1./factor)
+    return mobject
+
 
 class Britain(SVGMobject):
     CONFIG = {
@@ -41,6 +49,12 @@ class Britain(SVGMobject):
         self.submobjects = []
         self.scale_to_fit_height(self.height)
         self.center()
+
+class Norway(Britain):
+    CONFIG = {
+        "file_name" : "Norway",
+        "mark_paths_closed" : False
+    }
 
 class KochTest(Scene):
     def construct(self):
@@ -638,12 +652,6 @@ class FourSelfSimilarShapes(Scene):
         self.shapes_copy = shapes_copy
         line, square, cube, sierpinski = shapes_copy
 
-        def break_up(mobject, factor = 1.3):
-            mobject.scale_in_place(factor)
-            for submob in mobject:
-                submob.scale_in_place(1./factor)
-            return mobject
-
         self.play(line.shift, 3*DOWN)
         self.play(ApplyFunction(break_up, line))
         self.dither()        
@@ -1170,6 +1178,10 @@ class LengthAndAreaOfSierpinski(ShowSierpinskiCurve):
 
         for x in range(self.n_iterations):
             new_curve = self.get_curve(order = self.curve_start_order+x+1)
+            alpha = (x+1.0)/self.n_iterations
+            stroke_width = interpolate(3, 1, alpha)
+            new_curve.set_stroke(width = stroke_width)
+
             new_sierp = self.get_sierpinski(
                 order = self.sierpinski_start_order+x+1
             )
@@ -1178,7 +1190,8 @@ class LengthAndAreaOfSierpinski(ShowSierpinskiCurve):
                 Transform(sierp, new_sierp),
                 run_time = 2
             )
-            self.dither()
+        self.play(sierp.set_fill, None, 0)
+        self.dither()
 
     def get_curve(self, order):
         # curve = ShowSierpinskiCurve.get_curve(self, order)
@@ -1191,6 +1204,1146 @@ class LengthAndAreaOfSierpinski(ShowSierpinskiCurve):
         result = Sierpinski(order = order)
         result.shift(SPACE_WIDTH*RIGHT/2)
         return result
+
+class DimensionOfKoch(Scene):
+    CONFIG = {
+        "scaling_factor_color" : YELLOW,
+        "mass_scaling_color" : BLUE,
+        "dimension_color" : GREEN_A,
+        "curve_class" : KochCurve,
+        "scaling_factor" : 3,
+        "mass_scaling_factor" : 4,
+        "num_subparts" : 4,
+        "koch_curve_order" : 5,
+        "koch_curve_width" : 5,
+        "break_up_factor" : 1.5,
+        "down_shift" : 3*DOWN,
+        "dimension_rhs" : "\\approx 1.262",
+    }
+    def construct(self):
+        self.add_labels()
+        self.add_curve()
+        self.break_up_curve()
+        self.compare_sizes()
+        self.show_dimension()
+
+    def add_labels(self):
+        scaling_factor = TextMobject(
+            "Scaling factor:", 
+            "$\\frac{1}{%d}$"%self.scaling_factor,
+        )
+        scaling_factor.next_to(ORIGIN, UP)
+        scaling_factor.to_edge(LEFT)
+        scaling_factor[1].highlight(self.scaling_factor_color)
+        self.add(scaling_factor[0])
+
+        mass_scaling = TextMobject(
+            "Mass scaling factor:", 
+            "$\\frac{1}{%d}$"%self.mass_scaling_factor
+        )
+        mass_scaling.next_to(ORIGIN, DOWN)
+        mass_scaling.to_edge(LEFT)
+        mass_scaling[1].highlight(self.mass_scaling_color)
+        self.add(mass_scaling[0])
+
+        self.scaling_factor_mob = scaling_factor[1]
+        self.mass_scaling_factor_mob = mass_scaling[1]
+
+    def add_curve(self):
+        curve = self.curve_class(order = self.koch_curve_order)
+        curve.scale_to_fit_width(self.koch_curve_width)
+        curve.to_corner(UP+RIGHT, LARGE_BUFF)
+
+        self.play(ShowCreation(curve, run_time = 2))
+        self.dither()
+        self.curve = curve
+
+    def break_up_curve(self):
+        curve_copy = self.curve.copy()
+        length = len(curve_copy)
+        n_parts = self.num_subparts
+        broken_curve = VGroup(*[
+            VGroup(*curve_copy[i*length/n_parts:(i+1)*length/n_parts])
+            for i in range(n_parts)
+        ])
+        self.play(broken_curve.shift, self.down_shift)
+
+        broken_curve.generate_target()
+        break_up(broken_curve.target, self.break_up_factor)
+        broken_curve.target.shift_onto_screen
+        self.play(MoveToTarget(broken_curve))
+        self.dither()
+
+        self.add(broken_curve)
+        self.broken_curve = broken_curve
+
+    def compare_sizes(self):
+        big_brace = Brace(self.curve, DOWN)
+        one = big_brace.get_text("$1$")
+        little_brace = Brace(self.broken_curve[0], DOWN)
+        one_third = little_brace.get_text("1/%d"%self.scaling_factor)
+        one_third.highlight(self.scaling_factor_color)
+
+        self.play(
+            GrowFromCenter(big_brace),
+            GrowFromCenter(little_brace),
+            Write(one),
+            Write(one_third),
+        )
+        self.dither()
+        self.play(Write(self.scaling_factor_mob))
+        self.dither()
+        self.play(Write(self.mass_scaling_factor_mob))
+        self.dither()
+
+    def show_dimension(self):
+        raw_formula = TexMobject("""
+            \\left( \\frac{1}{%s} \\right)^D
+            =
+            \\left( \\frac{1}{%s} \\right)
+        """%(self.scaling_factor, self.mass_scaling_factor))
+        formula = VGroup(
+            VGroup(*raw_formula[:5]),
+            VGroup(raw_formula[5]),
+            VGroup(raw_formula[6]),
+            VGroup(*raw_formula[7:]),
+        )
+        formula.to_corner(UP+LEFT)
+
+        simpler_formula = TexMobject(
+            str(self.scaling_factor),
+            "^D", "=", 
+            str(self.mass_scaling_factor)
+        )
+        simpler_formula.move_to(formula, UP)
+
+        for mob in formula, simpler_formula:
+            mob[0].highlight(self.scaling_factor_color)
+            mob[1].highlight(self.dimension_color)
+            mob[3].highlight(self.mass_scaling_color)
+
+        log_expression = TexMobject(
+            "D = \\log_%d(%d) %s"%(
+                self.scaling_factor,
+                self.mass_scaling_factor,
+                self.dimension_rhs
+            )
+        )
+        log_expression[0].highlight(self.dimension_color)
+        log_expression[5].highlight(self.scaling_factor_color)
+        log_expression[7].highlight(self.mass_scaling_color)
+        log_expression.next_to(
+            simpler_formula, DOWN,
+            aligned_edge = LEFT, 
+            buff = 2*MED_BUFF
+        )
+
+        third = self.scaling_factor_mob.copy()
+        fourth = self.mass_scaling_factor_mob.copy()
+        for mob in third, fourth:
+            mob.add(VectorizedPoint(mob.get_right()))
+            mob.add_to_back(VectorizedPoint(mob.get_left()))
+
+
+
+        self.play(
+            Transform(third, formula[0]),
+            Transform(fourth, formula[-1]),
+        )
+        self.play(*map(FadeIn, formula[1:-1]))
+        self.remove(third, fourth)
+        self.add(formula)
+        self.dither(2)
+        self.play(Transform(formula, simpler_formula))
+        self.dither(2)
+        self.play(Write(log_expression))
+        self.dither(2)
+
+class DimensionOfQuadraticKoch(DimensionOfKoch):
+    CONFIG = {
+        "curve_class" : QuadraticKoch,
+        "scaling_factor" : 4,
+        "mass_scaling_factor" : 8,
+        "num_subparts" : 8,
+        "koch_curve_order" : 4,
+        "koch_curve_width" : 4,
+        "break_up_factor" : 1.7,
+        "down_shift" : 4*DOWN,
+        "dimension_rhs" : "= \\frac{3}{2} = 1.5",
+    }
+    def construct(self):
+        self.add_labels()
+        self.add_curve()
+        self.highlight_curve_subparts()
+        self.show_dimension()
+
+    def get_curve(self, order):
+        curve = self.curve_class(
+            order = order, 
+            monochromatic = True
+        )
+        curve.scale_to_fit_width(self.koch_curve_width)
+        alpha = float(order) / self.koch_curve_order
+        stroke_width = interpolate(3, 1, alpha)
+        curve.set_stroke(width = stroke_width)
+        return curve
+
+    def add_curve(self):
+        seed_label = TextMobject("Seed")
+        seed_label.shift(SPACE_WIDTH*RIGHT/2).to_edge(UP)
+        seed = self.get_curve(order = 1)
+        seed.next_to(seed_label, DOWN)
+
+        curve = seed.copy()
+
+        resulting_fractal = TextMobject("Resulting fractal")
+        resulting_fractal.shift(SPACE_WIDTH*RIGHT/2)
+
+        self.add(seed_label, seed)
+        self.dither()
+        self.play(
+            curve.next_to, resulting_fractal, DOWN, 2*MED_BUFF,
+            Write(resulting_fractal, run_time = 1)
+        )
+        for order in range(2, self.koch_curve_order+1):
+            new_curve = self.get_curve(order)
+            new_curve.move_to(curve)
+            n_anchors = len(curve.get_anchors())
+            curve.insert_n_anchor_points(6*n_anchors)
+            curve.make_jagged()
+            self.play(Transform(curve, new_curve, run_time = 2))
+        self.dither()
+
+        self.curve = curve
+
+    def highlight_curve_subparts(self):
+        n_parts = self.num_subparts
+        colored_curve = self.curve_class(
+            order = self.koch_curve_order,
+            stroke_width = 1
+        )
+        colored_curve.replace(self.curve)
+        length = len(colored_curve)
+        broken_curve = VGroup(*[
+            VGroup(*colored_curve[i*length/n_parts:(i+1)*length/n_parts])
+            for i in range(n_parts)
+        ])
+        colors = it.cycle([WHITE, RED])
+        for subpart, color in zip(broken_curve, colors):
+            subpart.highlight(color)
+        self.play(
+            FadeOut(self.curve),
+            FadeIn(colored_curve)
+        )
+        self.play(
+            ApplyFunction(
+                lambda m : break_up(m, self.break_up_factor),
+                broken_curve,
+                rate_func = there_and_back,
+                run_time = 2
+            )
+        )
+        self.dither()
+        self.play(Write(self.scaling_factor_mob))
+        self.play(Write(self.mass_scaling_factor_mob))
+        self.dither(2)
+
+class ThisIsSelfSimilarityDimension(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("""
+            This is called
+            ``self-similarity dimension''
+        """)
+        self.change_student_modes(*["pondering"]*3)
+        self.dither(2)
+
+class ShowDiskScaling(Scene):
+    def construct(self):
+        self.show_non_self_similar_shapes()
+        self.isolate_disk()
+        self.scale_disk()
+        self.write_mass_scaling_factor()
+        self.try_fitting_small_disks()
+
+    def show_non_self_similar_shapes(self):
+        title = TextMobject(
+            "Most shapes are not self-similar"
+        )
+        title.to_edge(UP)
+        self.add(title)
+
+        hexagon = RegularPolygon(n = 6)
+        disk = Circle()
+        blob = VMobject().set_points_smoothly([
+            RIGHT, RIGHT+UP, ORIGIN, RIGHT+DOWN, LEFT, UP, RIGHT
+        ])
+        britain = Britain()
+        shapes = VGroup(hexagon, blob, disk, britain)
+        for shape in shapes:
+            shape.scale_to_fit_width(1.5)
+            shape.set_stroke(width = 0)
+            shape.set_fill(opacity = 1)
+        shapes.gradient_highlight(BLUE_B, BLUE_E)
+        shapes.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        shapes.next_to(title, DOWN)
+        for shape in shapes:
+            self.play(FadeIn(shape))
+        self.dither(2)
+
+        self.disk = disk
+        self.to_fade = VGroup(
+            title, hexagon, blob, britain
+        )
+
+    def isolate_disk(self):
+        disk = self.disk
+        self.play(
+            FadeOut(self.to_fade),            
+            disk.scale_to_fit_width, 2,
+            disk.next_to, ORIGIN, LEFT, 2,
+            disk.set_fill, BLUE_D, 0.7
+        )
+
+        radius = Line(
+            disk.get_center(), disk.get_right(),
+            color = YELLOW
+        )
+        one = TexMobject("1").next_to(radius, DOWN, SMALL_BUFF)
+
+        self.play(ShowCreation(radius))
+        self.play(Write(one))
+        self.dither()
+
+        self.disk.add(radius, one)
+
+    def scale_disk(self):
+        scaled_disk = self.disk.copy()
+        scaled_disk.generate_target()
+        scaled_disk.target.scale(2)
+        scaled_disk.target.next_to(ORIGIN, RIGHT)
+
+        one = scaled_disk.target[-1]
+        two = TexMobject("2")
+        two.move_to(one, UP)
+        scaled_disk.target.submobjects[-1] = two
+
+        self.play(MoveToTarget(scaled_disk))
+        self.dither()
+
+        self.scaled_disk = scaled_disk
+
+    def write_mass_scaling_factor(self):
+        mass_scaling = TextMobject(
+            "Mass scaling factor: $2^2 = 4$"
+        )
+        mass_scaling.next_to(self.scaled_disk, UP)
+        mass_scaling.to_edge(UP)
+        self.play(Write(mass_scaling))
+        self.dither()
+
+    def try_fitting_small_disks(self):
+        disk = self.disk.copy()
+        disk.submobjects = []
+        disk.set_fill(opacity = 0.5)
+        foursome = VGroup(*[
+            disk.copy().next_to(ORIGIN, vect, buff = 0)
+            for vect in compass_directions(start_vect = UP+RIGHT)
+        ])
+        foursome.move_to(self.scaled_disk)
+
+        self.play(Transform(disk, foursome))
+        self.remove(*self.get_mobjects_from_last_animation())
+        self.add(foursome)
+        self.dither()
+        self.play(ApplyFunction(
+            lambda m : break_up(m, 0.2),
+            foursome,
+            rate_func = there_and_back,
+            run_time = 4,
+        ))
+        self.dither()
+        self.play(FadeOut(foursome))
+        self.dither()
+
+class WhatDoYouMeanByMass(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "What do you mean \\\\ by mass?",
+            target_mode = "sassy"
+        )
+        self.change_student_modes("pondering", "sassy", "confused")
+        self.dither()
+        self.play(self.get_teacher().change_mode, "thinking")
+        self.dither(2)
+        self.teacher_thinks("")
+        self.zoom_in_on_thought_bubble()
+
+class BoxCountingScene(Scene):
+    CONFIG = {
+        "box_width" : 0.25,
+        "box_color" : YELLOW,
+        "box_opacity" : 0.5,
+        "num_boundary_check_points" : 200,
+        "corner_rect_left_extension" : 0,
+    }
+    def setup(self):
+        self.num_rows = 2*int(SPACE_HEIGHT/self.box_width)+1
+        self.num_cols = 2*int(SPACE_WIDTH/self.box_width)+1
+
+    def get_grid(self):
+        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        v_lines = VGroup(*[
+            v_line.copy().shift(u*x*self.box_width*RIGHT)
+            for x in range(self.num_cols/2+1)
+            for u in [-1, 1]
+        ])
+        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_lines = VGroup(*[
+            h_line.copy().shift(u*y*self.box_width*UP)
+            for y in range(self.num_rows/2+1)
+            for u in [-1, 1]
+        ])
+
+        grid = VGroup(v_lines, h_lines)
+        if self.box_width > 0.2:
+            grid.set_stroke(width = 1)
+        else:
+            grid.set_stroke(width = 0.5)
+        return grid
+
+    def get_highlighted_boxes(self, vmobject):
+        points = []
+        if vmobject.stroke_width > 0:
+            for submob in vmobject.family_members_with_points():
+                alphas = np.linspace(0, 1, self.num_boundary_check_points)
+                points += [
+                    submob.point_from_proportion(alpha)
+                    for alpha in alphas
+                ]
+        if vmobject.fill_opacity > 0:
+            camera = Camera(**LOW_QUALITY_CAMERA_CONFIG)
+            camera.capture_mobject(vmobject)
+            box_centers = self.get_box_centers()
+            pixel_coords = camera.points_to_pixel_coords(box_centers)
+            for index, (x, y) in enumerate(pixel_coords):
+                try:
+                    rgb = camera.pixel_array[y, x]
+                    if not np.all(rgb == np.zeros(3)):
+                        points.append(box_centers[index])
+                except:
+                    pass
+        return self.get_boxes(points)
+
+    def get_box_centers(self):
+        bottom_left = reduce(op.add, [
+            self.box_width*(self.num_cols/2)*LEFT,
+            self.box_width*(self.num_rows/2)*DOWN,
+            self.box_width*RIGHT/2,
+            self.box_width*UP/2,
+        ])
+        return np.array([
+            bottom_left + (x*RIGHT+y*UP)*self.box_width
+            for x in range(self.num_cols)
+            for y in range(self.num_rows)
+        ])
+
+    def get_boxes(self, points):
+        points = np.array(points)
+        rounded_points = np.floor(points/self.box_width)*self.box_width
+        unique_rounded_points = np.vstack({
+            tuple(row) for 
+            row in rounded_points
+        })
+
+        return VGroup(*[
+            Square(
+                side_length = self.box_width,
+                stroke_width = 0,
+                fill_color = self.box_color,
+                fill_opacity = self.box_opacity,
+            ).move_to(point, DOWN+LEFT)
+            for point in unique_rounded_points
+        ])
+
+    def get_corner_rect(self):
+        rect = Rectangle(
+            height = SPACE_HEIGHT/2, 
+            width = SPACE_WIDTH+self.corner_rect_left_extension,
+            stroke_width = 0,
+            fill_color = BLACK,
+            fill_opacity = 0.8
+        )
+        rect.to_corner(UP+RIGHT, buff = 0)
+        return rect
+
+    def get_counting_label(self):
+        label = TextMobject("Boxes touched:")
+        label.next_to(ORIGIN, RIGHT)
+        label.to_edge(UP)
+        label.shift(self.corner_rect_left_extension*LEFT)
+        self.counting_num_reference = label[-1]        
+        rect = BackgroundRectangle(label)
+        rect.stretch(1.3, 0)
+        rect.move_to(label, LEFT)
+        label.add_to_back(rect)
+        return label
+
+    def count_boxes(self, boxes):
+        num = DecimalNumber(len(boxes), num_decimal_points = 0)
+        num.next_to(boxes, RIGHT)
+        num.add_to_back(BackgroundRectangle(num))
+
+        self.play(ShowCreation(boxes, run_time = 3))
+        self.play(Write(num))
+        self.play(
+            num.next_to, self.counting_num_reference, RIGHT, MED_BUFF, DOWN,
+            num.highlight, YELLOW
+        )
+        return num
+
+
+class BoxCountingWithDisk(BoxCountingScene):
+    CONFIG = {
+        "box_width" : 0.25,
+        "num_boundary_check_points" : 200,
+    }
+    def construct(self):
+        disk = Circle(radius = 1)
+        disk.set_fill(BLUE, opacity = 0.5)
+        disk.set_stroke(BLUE, width = 1)
+
+        radius = Line(disk.get_center(), disk.get_right())
+        disk.add(radius)
+        one = TexMobject("1").next_to(radius, DOWN, SMALL_BUFF)
+
+        boxes = self.get_highlighted_boxes(disk)
+        grid = self.get_grid()
+        corner_rect = self.get_corner_rect()
+        counting_label = self.get_counting_label()
+
+
+        self.add(disk, one)
+        self.play(
+            ShowCreation(grid), 
+            Animation(disk),
+        )
+        self.dither()
+        self.play(
+            FadeIn(corner_rect),
+            FadeIn(counting_label)
+        )
+        counting_mob = self.count_boxes(boxes)
+        self.dither(2)
+
+        disk.generate_target()
+        disk.target.scale(2, about_point = disk.get_top())
+        two = TexMobject("2").next_to(disk.target[1], DOWN, SMALL_BUFF)
+        self.play(
+            MoveToTarget(disk),
+            Transform(one, two),
+            FadeOut(boxes),
+        )
+        self.play(counting_mob.next_to, counting_mob, DOWN)
+        boxes = self.get_highlighted_boxes(disk)
+        new_counting_mob = self.count_boxes(boxes)
+        self.dither()
+
+        frac_line = TexMobject("-")
+        frac_line.highlight(YELLOW)
+        frac_line.stretch_to_fit_width(new_counting_mob.get_width())
+        frac_line.next_to(new_counting_mob, DOWN, buff = SMALL_BUFF)
+        approx = TexMobject("\\approx 2^2")
+        approx.next_to(frac_line, RIGHT)
+        approx.shift_onto_screen()
+        self.play(*map(Write, [frac_line, approx]))
+        self.dither(2)
+
+class FinerBoxCountingWithDisk(BoxCountingWithDisk):
+    CONFIG = {
+        "box_width" : 0.1
+    } 
+
+class PlotDiskBoxCounting(GraphScene):
+    CONFIG = {
+        "x_axis_label" : "Scaling factor",
+        "y_axis_label" : "Number of boxes \\\\ touched",
+        "x_labeled_nums" : [],
+        "y_labeled_nums" : [],
+        "x_min" : 0,
+        "y_min" : 0,
+        "y_max" : 30,
+        "func" : lambda x : 0.5*x**2,
+        "func_label" : "f(x) = cx^2",
+    }
+    def construct(self):
+        self.plot_points()
+        self.describe_better_fit()
+
+    def plot_points(self):
+        self.setup_axes()
+        self.graph_function(self.func)
+        self.remove(self.graph)
+
+        data_points = [
+            self.input_to_graph_point(x) + ((random.random()-0.5)/x)*UP
+            for x in np.arange(2, 10, 0.5)
+        ]
+        data_dots = VGroup(*[
+            Dot(point, radius = 0.05, color = YELLOW)
+            for point in data_points
+        ])
+
+        self.play(ShowCreation(data_dots))
+        self.dither()
+        self.play(ShowCreation(self.graph))
+        self.label_graph(
+            self.graph, 
+            self.func_label,
+            direction = RIGHT+DOWN,
+            buff = SMALL_BUFF,
+            color = WHITE,
+        )
+        self.dither()
+
+    def describe_better_fit(self):
+        words = TextMobject("Better fit at \\\\ higher inputs")
+        arrow = Arrow(2*LEFT, 2*RIGHT)
+        arrow.next_to(self.x_axis_label_mob, UP)
+        arrow.shift(2*LEFT)
+        words.next_to(arrow, UP)
+
+        self.play(ShowCreation(arrow))
+        self.play(Write(words))
+        self.dither(2)
+
+class FineGridSameAsLargeScaling(BoxCountingScene):
+    CONFIG = {
+        "box_width" : 0.25/6,
+        "scale_factor" : 6
+    }
+    def construct(self):
+        disk = Circle(radius = 1)
+        disk.set_fill(BLUE, opacity = 0.5)
+        disk.set_stroke(BLUE, width = 1)
+
+        grid = self.get_grid()
+        grid.scale(self.scale_factor)
+
+        self.add(grid, disk)
+        self.dither()
+        self.play(disk.scale, self.scale_factor)
+        self.dither()
+        self.play(
+            grid.scale, 1./self.scale_factor,
+            disk.scale, 1./self.scale_factor,
+            disk.set_stroke, None, 0.5,
+        )
+        self.dither()
+        boxes = self.get_highlighted_boxes(disk)
+        self.play(ShowCreation(boxes, run_time = 3))
+        self.dither(2)
+
+class BoxCountingSierpinski(BoxCountingScene):
+    CONFIG = {
+        "box_width" : 0.1,
+        "sierpinski_order" : 7,
+        "sierpinski_width" : 3,
+        "num_boundary_check_points" : 6,
+        "corner_rect_left_extension" : 2,
+    }
+    def construct(self):
+        self.add(self.get_grid())
+        sierp = Sierpinski(order = self.sierpinski_order)
+        sierp.set_fill(opacity = 0)
+        sierp.move_to(3*DOWN, DOWN+RIGHT)
+        sierp.scale_to_fit_width(self.sierpinski_width)
+        boxes = self.get_highlighted_boxes(sierp)
+
+        corner_rect = self.get_corner_rect()
+        counting_label = self.get_counting_label()
+
+        self.play(ShowCreation(sierp))
+        self.play(*map(FadeIn, [corner_rect, counting_label]))
+        self.dither()
+        counting_mob = self.count_boxes(boxes)
+        self.dither()
+        self.play(
+            FadeOut(boxes),
+            sierp.scale, 2, sierp.get_corner(DOWN+RIGHT),
+        )
+        self.play(counting_mob.next_to, counting_mob, DOWN)
+        boxes = self.get_highlighted_boxes(sierp)
+        new_counting_mob = self.count_boxes(boxes)
+        self.dither()
+
+        frac_line = TexMobject("-")
+        frac_line.highlight(YELLOW)
+        frac_line.stretch_to_fit_width(new_counting_mob.get_width())
+        frac_line.next_to(new_counting_mob, DOWN, buff = SMALL_BUFF)
+        approx_three = TexMobject("\\approx 3")
+        approx_three.next_to(frac_line, RIGHT)
+        equals_exp = TexMobject("= 2^{1.585...}")
+        equals_exp.next_to(approx_three, RIGHT, aligned_edge = DOWN)
+        equals_exp.shift_onto_screen()
+
+        self.play(*map(Write, [frac_line, approx_three]))
+        self.dither()
+        self.play(Write(equals_exp))
+        self.dither()
+
+class PlotSierpinskiBoxCounting(PlotDiskBoxCounting):
+    CONFIG = {
+        "func" : lambda x : 0.5*x**1.585,
+        "func_label" : "f(x) = cx^{1.585}",
+    }
+    def construct(self):
+        self.plot_points()
+
+class BoxCountingWithBritain(BoxCountingScene):
+    CONFIG = {
+        "box_width" : 0.1,
+        "num_boundary_check_points" : 5000,
+        "corner_rect_left_extension" : 1,
+    }
+    def construct(self):
+        self.show_box_counting()
+        self.show_formula()
+
+    def show_box_counting(self):
+        self.add(self.get_grid())
+        britain = Britain(
+            stroke_width = 2,
+            fill_opacity = 0
+        )
+        britain = fractalify(britain, order = 1, dimension = 1.21)
+        britain.shift(DOWN+LEFT)
+        boxes = self.get_highlighted_boxes(britain)
+
+        self.play(ShowCreation(britain, run_time = 3))
+        self.dither()
+        self.play(ShowCreation(boxes, run_time = 3))
+        self.dither()
+        self.play(FadeOut(boxes))
+        self.play(britain.scale, 2.5, britain.get_corner(DOWN+RIGHT))
+        boxes = self.get_highlighted_boxes(britain)
+        self.play(ShowCreation(boxes, run_time = 2))
+        self.dither()
+
+    def show_formula(self):
+        corner_rect = self.get_corner_rect()
+        equation = TextMobject("""
+            Number of boxes $\\approx$ 
+            \\quad $c(\\text{scaling factor})^{1.21}$
+        """)
+        equation.next_to(
+            corner_rect.get_corner(UP+LEFT), DOWN+RIGHT 
+        )
+
+        N = equation[0].copy()
+        word_len = len("Numberofboxes")
+        approx = equation[word_len].copy()
+        c = equation[word_len+1].copy()
+        s = equation[word_len+3].copy()
+        dim = VGroup(*equation[-len("1.21"):]).copy()
+
+        N.highlight(YELLOW)
+        s.highlight(BLUE)
+        dim.highlight(GREEN)
+
+        simpler_eq = VGroup(N, approx, c, s, dim)
+        simpler_eq.generate_target()
+        simpler_eq.target.arrange_submobjects(buff = SMALL_BUFF)
+        simpler_eq.target.move_to(N, LEFT)
+        simpler_eq.target[-1].next_to(
+            simpler_eq.target[-2].get_corner(UP+RIGHT),
+            RIGHT, 
+            buff = SMALL_BUFF
+        )
+
+        self.play(
+            FadeIn(corner_rect),
+            Write(equation)
+        )
+        self.dither(2)
+        self.play(FadeIn(simpler_eq))
+        self.dither()
+        self.play(
+            FadeOut(equation),
+            Animation(simpler_eq)
+        )
+        self.play(MoveToTarget(simpler_eq))
+        self.dither(2)
+
+        log_expression1 = TexMobject(
+            "\\log(", "N", ")", "=",
+            "\\log(", "c", "s", "^{1.21}", ")"
+        )
+        log_expression2 = TexMobject(
+            "\\log(", "N", ")", "=", 
+            "\\log(", "c", ")", "+",
+            "1.21", "\\log(", "s", ")"
+        )
+        for log_expression in log_expression1, log_expression2:
+            log_expression.next_to(simpler_eq, DOWN, aligned_edge = LEFT)
+            log_expression.highlight_by_tex("N", N.get_color())
+            log_expression.highlight_by_tex("s", s.get_color())
+            log_expression.highlight_by_tex("^{1.21}", dim.get_color())
+            log_expression.highlight_by_tex("1.21", dim.get_color())
+        rewired_log_expression1 = VGroup(*[
+            log_expression1[index].copy()
+            for index in [
+                0, 1, 2, 3, #match with log_expression2
+                4, 5, 8, 8,
+                7, 4, 6, 8
+            ]
+        ])
+
+        self.play(Write(log_expression1))
+        self.remove(log_expression1)
+        self.add(rewired_log_expression1)
+        self.dither()
+        self.play(Transform(
+            rewired_log_expression1,
+            log_expression2,
+            run_time = 2
+        ))
+        self.dither(2)
+
+        self.final_expression = VGroup(
+            simpler_eq, rewired_log_expression1
+        )
+
+class CheapBoxCountingWithBritain(BoxCountingWithBritain):
+    CONFIG = {
+        "skip_animations" : True,
+    }
+    def construct(self):
+        self.show_formula()
+
+class ConfusedAtParabolicData(PlotDiskBoxCounting):
+    CONFIG = {
+        "func" : lambda x : 0.5*x**1.6,
+        "func_label" : "f(x) = cx^{1.21}",
+    }
+
+    def construct(self):
+        self.plot_points()
+        randy = Randolph()
+        randy.to_corner(DOWN+LEFT)
+        randy.shift(RIGHT)
+
+        self.play(FadeIn(randy))
+        self.play(randy.change_mode, "confused")
+        self.play(randy.look_at, self.x_axis_label_mob)
+        self.play(Blink(randy))
+        self.dither(2)
+
+class IntroduceLogLogPlot(GraphScene):
+    CONFIG = {
+        "x_axis_label" : "\\log(s)",
+        "y_axis_label" : "\\log(N)",
+        "x_labeled_nums" : [],
+        "y_labeled_nums" : [],
+        "graph_origin" : 2.5*DOWN+6*LEFT,
+        "dimension" : 1.21,
+        "y_intercept" : 2,
+        "x_max" : 16,
+    }
+    def construct(self):
+        last_scene = CheapBoxCountingWithBritain()
+        expression = last_scene.final_expression
+        box = Rectangle(
+            stroke_color = WHITE,
+            fill_color = BLACK,
+            fill_opacity = 0.7,
+        )
+        box.replace(expression, stretch = True)
+        box.scale_in_place(1.2)
+        expression.add_to_back(box)
+        self.add(expression)
+
+        self.setup_axes(animate = False)
+        self.x_axis_label_mob[-2].highlight(BLUE)
+        self.y_axis_label_mob[-2].highlight(YELLOW)
+        graph = self.graph_function(
+            lambda x : self.y_intercept+self.dimension*x
+        )
+        self.remove(graph)
+        p1 = self.input_to_graph_point(2)
+        p2 = self.input_to_graph_point(3)
+        interim_point = p2[0]*RIGHT + p1[1]*UP
+        h_line = Line(p1, interim_point)
+        v_line = Line(interim_point, p2)
+        slope_lines = VGroup(h_line, v_line)
+        slope_lines.highlight(GREEN)
+
+        slope = TextMobject("Slope = ", "$%.2f$"%self.dimension)
+        slope[-1].highlight(GREEN)
+        slope.next_to(slope_lines, RIGHT)
+
+        self.dither()
+        self.play(
+            ShowCreation(graph),
+            Animation(expression)
+        )
+        self.dither()
+        self.play(ShowCreation(slope_lines))
+        self.play(Write(slope))
+        self.dither()
+
+        data_points = [
+            self.input_to_graph_point(x) + ((random.random()-0.5)/x)*UP
+            for x in np.arange(1, 8, 0.7)
+        ]
+        data_dots = VGroup(*[
+            Dot(point, radius = 0.05, color = YELLOW)
+            for point in data_points
+        ])
+
+        self.play(ShowCreation(data_dots, run_time = 3))
+        self.dither()
+
+class ZoomInOnBritain(Scene):
+    def construct(self):
+        britain = Britain()
+        fractalify(britain, order = 3, dimension = 1.21)
+        point = britain.point_from_proportion(0.3)
+
+        self.add(britain)
+        self.dither()
+        self.play(
+            britain.scale, 100, point,
+            run_time = 10
+        )
+        self.dither()
+
+class FromHandwavyToQuantitative(Scene):
+    def construct(self):
+        randy = Randolph()
+        morty = Mortimer()
+        for pi in randy, morty:
+            pi.next_to(ORIGIN, DOWN)
+        randy.shift(2*LEFT)
+        morty.shift(2*RIGHT)
+        randy.make_eye_contact(morty)
+
+        self.add(randy, morty)
+        self.play(PiCreatureSays(
+            randy, "Fractals are rough",
+            target_mode = "shruggie"
+        ))
+        self.play(morty.change_mode, "sassy")
+        self.play(Blink(morty))
+        self.play(
+            PiCreatureSays(
+                morty, "We can make \\\\ that quantitative!",
+                target_mode = "hooray"
+            ),
+            FadeOut(randy.bubble),
+            FadeOut(randy.bubble.content),
+            randy.change_mode, "happy"
+        )
+        self.play(Blink(randy))
+        self.dither()
+
+class WhatSlopeDoesLogLogPlotApproach(IntroduceLogLogPlot):
+    def construct(self):
+        self.setup_axes(animate = False)
+        self.x_axis_label_mob[-2].highlight(BLUE)
+        self.y_axis_label_mob[-2].highlight(YELLOW)
+        graph = self.graph_function(
+            lambda x : self.y_intercept+self.dimension*x
+        )
+        self.remove(graph)
+        
+
+class IfBritainWasEventuallySmooth(Scene):
+    def construct(self):
+        britain = Britain()
+        britain.make_smooth()
+        point = britain.point_from_proportion(0.3)
+
+        self.add(britain)
+        self.dither()
+        self.play(
+            britain.scale, 200, point,
+            run_time = 10
+        )
+        self.dither()
+
+class SmoothBritainLogLogPlot(IntroduceLogLogPlot):
+    CONFIG = {
+    }
+    def construct(self):
+        self.setup_axes()
+        self.graph_function(
+            lambda x : (1 + np.exp(-x/5.0))*x
+        )
+        self.remove(self.graph)
+
+        p1, p2, p3, p4 = [
+            self.input_to_graph_point(x)
+            for x in 1, 2, 7, 8
+        ]
+        interim_point1 = p2[0]*RIGHT + p1[1]*UP
+        interim_point2 = p4[0]*RIGHT + p3[1]*UP
+
+        print self.func(2)
+
+        slope_lines1, slope_lines2 = VMobject(), VMobject()
+        slope_lines1.set_points_as_corners(
+            [p1, interim_point1, p2]
+        )
+        slope_lines2.set_points_as_corners(
+            [p3, interim_point2, p4]
+        )
+        slope_lines_group = VGroup(slope_lines1, slope_lines2)
+        slope_lines_group.highlight(GREEN)
+
+        slope_label1 = TextMobject("Slope $> 1$")
+        slope_label2 = TextMobject("Slope $= 1$")
+        slope_label1.next_to(slope_lines1)
+        slope_label2.next_to(slope_lines2)
+
+        data_points = [
+            self.input_to_graph_point(x) + ((random.random()-0.5)/x)*UP
+            for x in np.arange(1, 12, 0.7)
+        ]
+        data_dots = VGroup(*[
+            Dot(point, radius = 0.05, color = YELLOW)
+            for point in data_points
+        ])
+
+        self.play(ShowCreation(data_dots, run_time = 3))
+        self.play(ShowCreation(self.graph))
+        self.dither()
+        self.play(
+            ShowCreation(slope_lines1),
+            Write(slope_label1)
+        )
+        self.dither()
+        self.play(
+            ShowCreation(slope_lines2),
+            Write(slope_label2)
+        )
+        self.dither()
+
+
+
+class ChangeWorldview(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("""
+            This changes how
+            you see the world.
+        """)
+        self.change_student_modes(*["thinking"]*3)
+        self.dither(3)
+
+class CompareBritainAndNorway(Scene):
+    def construct(self):
+        norway = Norway(
+            fill_opacity = 0,
+            stroke_width = 2,
+        )
+        norway.to_corner(UP+RIGHT, buff = 0)
+        fractalify(norway, order = 1, dimension = 1.5)
+        anchors = list(norway.get_anchors())
+        anchors.append(SPACE_WIDTH*RIGHT+SPACE_HEIGHT*UP)
+        norway.set_points_as_corners(anchors)        
+
+        britain = Britain(
+            fill_opacity = 0,
+            stroke_width = 2
+        )
+        britain.shift(SPACE_WIDTH*LEFT/2)
+        britain.to_edge(UP)
+        fractalify(britain, order = 1, dimension = 1.21)
+
+        britain_label = TextMobject("""
+            Britain coast:
+            1.21-dimensional
+        """)
+        norway_label = TextMobject("""
+            Norway coast: 
+            1.52-dimensional
+        """)
+        britain_label.next_to(britain, DOWN)
+        norway_label.next_to(britain_label, RIGHT, aligned_edge = DOWN)
+        norway_label.to_edge(RIGHT)
+
+        self.add(britain_label, norway_label)
+        self.play(
+            *map(ShowCreation, [norway, britain]),
+            run_time = 3
+        )
+        self.dither()
+        self.play(*it.chain(*[
+            [
+                mob.set_stroke, None, 0, 
+                mob.set_fill, BLUE, 1
+            ]
+            for mob in britain, norway
+        ]))
+        self.dither(2)
+
+class CompareOceansLabels(Scene):
+    def construct(self):
+        label1 = TextMobject("Dimension $\\approx 2.05$")
+        label2 = TextMobject("Dimension $\\approx 2.3$")
+
+        label1.shift(SPACE_WIDTH*LEFT/2).to_edge(UP)
+        label2.shift(SPACE_WIDTH*RIGHT/2).to_edge(UP)
+
+        self.play(Write(label1))
+        self.dither()
+        self.play(Write(label2))
+        self.dither()
+
+class CompareOceans(Scene):
+    def construct(self):
+        pass
+
+class DefineFractal(TeacherStudentsScene):
+    def construct(self):
+        fractal = TextMobject("Fractal:")
+        fractal.scale(2)
+        fractal.to_edge(UP)
+
+        definition = TextMobject(
+            "A shapes with a", "non-integer dimension\\\\",
+            "that stays", "constant at all scales.",
+            alignment = ""
+        )
+        definition[1].highlight(GREEN)
+        definition[3].highlight(BLUE)
+
+        definition.shift(UP)
+
+        self.add(fractal)
+        for pi in self.get_everyone():
+            pi.look_at(fractal)
+        self.dither()
+        self.play(
+            Write(VGroup(*definition[:2])),
+            self.get_teacher().change_mode, "raise_right_hand"
+        )
+        self.change_student_modes("hesitant", "pondering", "happy")
+        self.play(
+            Write(VGroup(*definition[2:])),
+            *[
+                ApplyMethod(pi.look_at, definition)
+                for pi in self.get_everyone()
+            ]
+        )
+        self.dither(3)
+
+
+
+
+
+
+
+
 
 
 

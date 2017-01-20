@@ -9,7 +9,7 @@ from topics.objects import Bubble, ThoughtBubble, SpeechBubble
 
 from animation import Animation
 from animation.transform import Transform, ApplyMethod, \
-    FadeOut, FadeIn, ApplyPointwiseFunction
+    FadeOut, FadeIn, ApplyPointwiseFunction, MoveToTarget
 from animation.simple_animations import Write, ShowCreation, AnimationGroup
 from scene import Scene
 
@@ -228,6 +228,7 @@ class PiCreatureSays(AnimationGroup):
         "change_mode_kwargs" : {},
         "bubble_creation_kwargs" : {},
         "write_kwargs" : {},
+        "look_at_arg" : None,
     }
     def __init__(self, pi_creature, *content, **kwargs):
         digest_config(self, kwargs)
@@ -237,21 +238,16 @@ class PiCreatureSays(AnimationGroup):
         bubble.pin_to(pi_creature)
         pi_creature.bubble = bubble
 
+        pi_creature.generate_target()
+        pi_creature.target.change_mode(self.target_mode)
+        if self.look_at_arg:
+            pi_creature.target.look_at(self.look_at_arg)
+
         AnimationGroup.__init__(
             self,
-            ApplyMethod(
-                pi_creature.change_mode, 
-                self.target_mode,
-                **self.change_mode_kwargs
-            ),
-            ShowCreation(
-                bubble, 
-                **self.bubble_creation_kwargs
-            ),
-            Write(
-                bubble.content, 
-                **self.write_kwargs
-            ),
+            MoveToTarget(pi_creature, **self.change_mode_kwargs),
+            ShowCreation(bubble, **self.bubble_creation_kwargs),
+            Write(bubble.content, **self.write_kwargs),
             **kwargs
         )
     

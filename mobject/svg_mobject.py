@@ -62,7 +62,7 @@ class SVGMobject(VMobject):
             result.append(self.rect_to_mobject(element))
         elif element.tagName == 'circle':
             result.append(self.circle_to_mobject(element))
-        elif element.tagName == 'polygon':
+        elif element.tagName in ['polygon', 'polyline']:
             result.append(self.polygon_to_mobject(element))
         else:
             warnings.warn("Unknown element type: " + element.tagName)

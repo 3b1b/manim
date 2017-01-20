@@ -146,10 +146,12 @@ class GraphScene(Scene):
                     proportion = 0.7, 
                     direction = LEFT,
                     buff = MED_BUFF,
+                    color = None,
                     animate = True
                     ):
         label = TexMobject(label)
-        label.highlight(graph.get_color())
+        color = color or graph.get_color()
+        label.highlight(color)
         label.next_to(
             graph.point_from_proportion(proportion), 
             direction,

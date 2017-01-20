@@ -28,7 +28,7 @@ def fractalification_iteration(vmobject,
         # original_anchors = vmobject.get_anchors()
         original_anchors = [
             vmobject.point_from_proportion(x)
-            for x in np.linspace(0, 0.99, num_points)
+            for x in np.linspace(0, 1-1./num_points, num_points)
         ]
         new_anchors = []
         for p1, p2, in zip(original_anchors, original_anchors[1:]):
@@ -423,6 +423,19 @@ class KochCurve(KochSnowFlake):
         "axiom" : "A--"
     }
         
+
+class QuadraticKoch(LindenmayerCurve):
+    CONFIG = {
+        "colors" : [YELLOW, WHITE, MAROON_B],
+        "axiom"        : "A",
+        "rule"         : {
+            "A" : "A+A-A-AA+A+A-A"
+        },
+        "radius"       : 4,
+        "scale_factor" : 4,
+        "start_step"   : RIGHT,
+        "angle"        : np.pi/2
+    }
 
 
 class StellarCurve(LindenmayerCurve):
