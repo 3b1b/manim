@@ -4,6 +4,7 @@ from scene import Scene
 from animation.transform import Transform
 from animation.simple_animations import ShowCreation
 from topics.geometry import Line, Polygon, RegularPolygon
+from characters import PiCreature, Randolph
 
 from helpers import *
 
@@ -85,8 +86,9 @@ class SelfSimilarFractal(VMobject):
         if order == 0:
             result = self.get_seed_shape()
         else:
+            lower_order = self.get_order_n_self(order - 1)
             subparts = [
-                self.get_order_n_self(order - 1)
+                lower_order.copy()
                 for x in range(self.num_subparts)
             ]
             self.arrange_subparts(*subparts)
@@ -134,16 +136,38 @@ class DiamondFractal(SelfSimilarFractal):
 class PentagonalFractal(SelfSimilarFractal):
     CONFIG = {
         "num_subparts" : 5,
-        "colors" : [MAROON_B, YELLOW, RED]
+        "colors" : [MAROON_B, YELLOW, RED],
+        "height" : 6,
     }
     def get_seed_shape(self):
         return RegularPolygon(n = 5, start_angle = np.pi/2)
 
     def arrange_subparts(self, *subparts):
-        phi = (1 + np.sqrt(5))/2
         for x, part in enumerate(subparts):
             part.shift(0.95*part.get_height()*UP)
             part.rotate(2*np.pi*x/5)
+
+class PiCreatureFractal(PentagonalFractal):
+    def init_colors(self):
+        SelfSimilarFractal.init_colors(self)
+        internal_pis = [
+            pi
+            for pi in self.submobject_family()
+            if isinstance(pi, PiCreature)
+        ]
+        colors = color_gradient(self.colors, len(internal_pis))
+        for pi, color in zip(internal_pis, colors):
+            pi.init_colors()
+            pi.body.set_stroke(color, width = 0.5)
+            pi.highlight(color)
+
+    def get_seed_shape(self):
+        return Randolph(mode = "shruggie")
+
+    def arrange_subparts(self, *subparts):
+        for part in subparts:
+            part.rotate(2*np.pi/5)
+        PentagonalFractal.arrange_subparts(self, *subparts)
 
 
 ######## Space filling curves ############

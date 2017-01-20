@@ -25,13 +25,13 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
 from eoc.graph_scene import GraphScene
+from eoc.chapter1 import PatreonThanks
 
 def break_up(mobject, factor = 1.3):
     mobject.scale_in_place(factor)
     for submob in mobject:
         submob.scale_in_place(1./factor)
     return mobject
-
 
 class Britain(SVGMobject):
     CONFIG = {
@@ -102,6 +102,7 @@ class FractalCreation(Scene):
             ))
             self.dither()
         self.dither()
+
 
 ###################################
 
@@ -1701,7 +1702,6 @@ class BoxCountingScene(Scene):
         )
         return num
 
-
 class BoxCountingWithDisk(BoxCountingScene):
     CONFIG = {
         "box_width" : 0.25,
@@ -2104,15 +2104,32 @@ class IntroduceLogLogPlot(GraphScene):
         self.dither()
 
 class ZoomInOnBritain(Scene):
+    CONFIG = {
+        "zoom_factor" : 1000
+    }
     def construct(self):
         britain = Britain()
         fractalify(britain, order = 3, dimension = 1.21)
-        point = britain.point_from_proportion(0.3)
+        anchors = britain.get_anchors()
+
+        key_value = int(0.3*len(anchors))
+        point = anchors[key_value]        
+        thinning_factor = 100
+        num_neighbors_kept = 1000
+
+        britain.set_points_as_corners(reduce(
+            lambda a1, a2 : np.append(a1, a2, axis = 0), 
+            [
+            anchors[:key_value-num_neighbors_kept:thinning_factor,:],
+            anchors[key_value-num_neighbors_kept:key_value+num_neighbors_kept,:],
+            anchors[key_value+num_neighbors_kept::thinning_factor,:],
+            ]
+        ))
 
         self.add(britain)
         self.dither()
         self.play(
-            britain.scale, 100, point,
+            britain.scale, self.zoom_factor, point,
             run_time = 10
         )
         self.dither()
@@ -2147,16 +2164,47 @@ class FromHandwavyToQuantitative(Scene):
         self.dither()
 
 class WhatSlopeDoesLogLogPlotApproach(IntroduceLogLogPlot):
+    CONFIG = {
+        "words" : "What slope does \\\\ this approach?"
+    }
     def construct(self):
         self.setup_axes(animate = False)
         self.x_axis_label_mob[-2].highlight(BLUE)
         self.y_axis_label_mob[-2].highlight(YELLOW)
         graph = self.graph_function(
-            lambda x : self.y_intercept+self.dimension*x
+            lambda x : (1-np.exp(-x))*x
         )
         self.remove(graph)
-        
 
+        data_points = [
+            self.input_to_graph_point(x) + (0.2*(random.random()-0.5)/x)*UP
+            for x in np.arange(1, 12, 0.2)
+        ]
+        data_dots = VGroup(*[
+            Dot(point, radius = 0.02, color = YELLOW)
+            for point in data_points
+        ])
+
+        words = TextMobject(self.words)
+        p1, p2 = [
+            self.input_to_graph_point(x)
+            for x in 5, 10
+        ]
+        words.rotate(Line(p1, p2).get_angle())
+        words.next_to(p1, RIGHT, aligned_edge = DOWN, buff = LARGE_BUFF)
+
+        morty = Mortimer()
+        morty.to_corner(DOWN+RIGHT)
+        self.add(morty)
+
+        self.play(ShowCreation(data_dots, run_time = 3))
+        self.play(
+            Write(words),
+            morty.change_mode, "speaking"
+        )
+        self.play(Blink(morty))
+        self.dither()
+        
 class IfBritainWasEventuallySmooth(Scene):
     def construct(self):
         britain = Britain()
@@ -2228,7 +2276,11 @@ class SmoothBritainLogLogPlot(IntroduceLogLogPlot):
         )
         self.dither()
 
-
+class SlopeAlwaysAboveOne(WhatSlopeDoesLogLogPlotApproach):
+    CONFIG = {
+        "words" : "Slope always $> 1$",
+        "x_max" : 20,
+    }
 
 class ChangeWorldview(TeacherStudentsScene):
     def construct(self):
@@ -2303,57 +2355,104 @@ class CompareOceans(Scene):
     def construct(self):
         pass
 
-class DefineFractal(TeacherStudentsScene):
+class FractalNonFractalFlowChart(Scene):
     def construct(self):
-        fractal = TextMobject("Fractal:")
-        fractal.scale(2)
-        fractal.to_edge(UP)
+        is_fractal = TextMobject("Is it a \\\\ fractal?")
+        nature = TextMobject("Probably from \\\\ nature")
+        man_made = TextMobject("Probably \\\\ man-made")
 
-        definition = TextMobject(
-            "A shapes with a", "non-integer dimension\\\\",
-            "that stays", "constant at all scales.",
-            alignment = ""
+        is_fractal.to_edge(UP)
+        nature.shift(SPACE_WIDTH*LEFT/2)
+        man_made.shift(SPACE_WIDTH*RIGHT/2)
+
+        yes_arrow = Arrow(
+            is_fractal.get_bottom(),
+            nature.get_top()
         )
-        definition[1].highlight(GREEN)
-        definition[3].highlight(BLUE)
+        no_arrow = Arrow(
+            is_fractal.get_bottom(),
+            man_made.get_top()
+        )
 
-        definition.shift(UP)
+        yes = TextMobject("Yes")
+        no = TextMobject("No")
+        yes.highlight(GREEN)
+        no.highlight(RED)
 
-        self.add(fractal)
-        for pi in self.get_everyone():
-            pi.look_at(fractal)
+        for word, arrow in (yes, yes_arrow), (no, no_arrow):
+            word.next_to(ORIGIN, UP)
+            word.rotate(arrow.get_angle())
+            if word is yes:
+                word.rotate(np.pi)
+            word.shift(arrow.get_center())
+
+        britain = Britain()
+        britain.scale_to_fit_height(3)
+        britain.to_corner(UP+LEFT)
+        self.add(britain)
+
+        randy = Randolph()
+        randy.scale_to_fit_height(3)
+        randy.to_corner(UP+RIGHT)
+
+        self.add(is_fractal)
         self.dither()
-        self.play(
-            Write(VGroup(*definition[:2])),
-            self.get_teacher().change_mode, "raise_right_hand"
-        )
-        self.change_student_modes("hesitant", "pondering", "happy")
-        self.play(
-            Write(VGroup(*definition[2:])),
-            *[
-                ApplyMethod(pi.look_at, definition)
-                for pi in self.get_everyone()
-            ]
-        )
-        self.dither(3)
+        for word, arrow, answer in (yes, yes_arrow, nature), (no, no_arrow, man_made):
+            self.play(
+                ShowCreation(arrow),
+                Write(word, run_time = 1)
+            )
+            self.play(Write(answer, run_time = 1))
+            if word is yes:
+                self.dither()
+            else:
+                self.play(Blink(randy))
 
+class ShowPiCreatureFractalCreation(FractalCreation):
+    CONFIG = {
+        "fractal_class" : PiCreatureFractal,
+        "max_order" : 4,
+    }
 
+class FractalPatreonThanks(PatreonThanks):
+    CONFIG = {
+        "specific_patrons" : [
+            "Ali Yahya",
+            "CrypticSwarm",
+            "Yu  Jun",
+            "Shelby  Doolittle",
+            "Dave    Nicponski",
+            "Damion  Kistler",
+            "Juan    Benet",
+            "Othman  Alikhan",
+            "Markus  Persson",
+            "Dan Buchoff",
+            "Derek   Dai",
+            "Joseph  John Cox",
+            "Luc Ritchie",
+            "Vecht",
+            "Jonathan Eppele",
+            "Shimin Kuang",
+            "Rish    Kundalia",
+            "Achille Brighton",
+            "Kirk    Werklund",
+            "Felipe  Diniz",
+        ]
+    }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+class AffirmLogo(SVGMobject):
+    CONFIG = {
+        "fill_color" : "#0FA0EA",
+        "fill_opacity" : 1,
+        "stroke_color" : "#0FA0EA",
+        "stroke_width" : 0,
+        "propogate_style_to_family" : True,
+        "file_name" : "affirm_logo",
+        "width" : 3,
+    }
+    def __init__(self, **kwargs):
+        SVGMobject.__init__(self, **kwargs)
+        self.scale_to_fit_width(self.width)
 
 class MortyLookingAtRectangle(Scene):
     def construct(self):
@@ -2368,7 +2467,21 @@ class MortyLookingAtRectangle(Scene):
         url.save_state()
         url.next_to(morty.get_corner(UP+LEFT), UP)
 
-        self.play(morty.change_mode, "raise_right_hand")
+        affirm_logo = AffirmLogo()[0]
+        affirm_logo.to_corner(UP+RIGHT, buff = 2*MED_BUFF)
+
+        self.add(morty)
+        affirm_logo.save_state()
+        affirm_logo.shift(DOWN)
+        affirm_logo.set_fill(opacity = 0)
+        self.play(
+            ApplyMethod(affirm_logo.restore, run_time = 2),
+            morty.look_at, affirm_logo,
+        )
+        self.play(
+            morty.change_mode, "raise_right_hand",
+            morty.look_at, url,
+        )
         self.play(Write(url))
         self.play(Blink(morty))
         self.dither()
