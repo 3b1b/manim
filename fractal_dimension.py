@@ -533,6 +533,30 @@ class ExamplesOfDimension(Scene):
             self.dither()
         self.dither()
 
+class FractalDimensionIsNonsense(Scene):
+    def construct(self):
+        morty = Mortimer().shift(DOWN+3*RIGHT)
+        mathy = Mathematician().shift(DOWN+3*LEFT)
+        morty.make_eye_contact(mathy)
+
+        self.add(morty, mathy)
+        self.play(
+            PiCreatureSays(
+                mathy, "It's 1.585-dimensional!",
+                target_mode = "hooray"
+            ),
+            morty.change_mode, "hesitant"
+        )
+        self.play(Blink(morty))
+        self.play(
+            PiCreatureSays(morty, "Nonsense!", target_mode = "angry"),
+            FadeOut(mathy.bubble),
+            FadeOut(mathy.bubble.content),
+            mathy.change_mode, "guilty"
+        )
+        self.play(Blink(mathy))
+        self.dither()
+
 class DimensionForNaturalNumbers(Scene):
     def construct(self):
         labels = VGroup(*[
@@ -575,6 +599,8 @@ class OfCourseItsMadeUp(TeacherStudentsScene):
             """But it's useful!""",
             target_mode = "hooray"
         )
+        self.change_student_modes(*["happy"]*3)
+        self.dither(3)
 
 class FourSelfSimilarShapes(Scene):
     CONFIG = {
@@ -889,7 +915,7 @@ class ScaledCubeMass(ScaledLineMass):
         "mass_scaling_factor" : "\\frac{1}{8} = \\left( \\frac{1}{2} \\right)^3",
     }
     def get_shape(self):
-        return TextMobject("TODO").set_fill(opacity = 0)
+        return VectorizedPoint()
 
 class FormCubeFromSubcubesIn3D(Scene):
     def construct(self):
@@ -1206,6 +1232,24 @@ class LengthAndAreaOfSierpinski(ShowSierpinskiCurve):
         result.shift(SPACE_WIDTH*RIGHT/2)
         return result
 
+class FractionalAnalogOfLengthAndArea(Scene):
+    def construct(self):
+        last_sc = LengthAndAreaOfSierpinski(skip_animations = True)
+        self.add(*last_sc.get_mobjects())
+
+        morty = Mortimer()
+        morty.to_corner(DOWN+RIGHT)
+        self.play(FadeIn(morty))
+        self.play(PiCreatureSays(
+            morty, 
+            """
+            Better described with a
+            1.585-dimensional measure.
+            """
+        ))
+        self.play(Blink(morty))
+        self.dither()
+
 class DimensionOfKoch(Scene):
     CONFIG = {
         "scaling_factor_color" : YELLOW,
@@ -1457,6 +1501,90 @@ class ThisIsSelfSimilarityDimension(TeacherStudentsScene):
         """)
         self.change_student_modes(*["pondering"]*3)
         self.dither(2)
+
+class ShowSeveralSelfSimilarityDimensions(Scene):
+    def construct(self):
+        vects = [
+            4*LEFT,
+            ORIGIN, 
+            4*RIGHT,
+        ]
+        fractal_classes = [
+            PentagonalFractal,
+            QuadraticKoch,
+            DiamondFractal,
+        ]
+        max_orders = [
+            4, 
+            4, 
+            5,
+        ]
+        dimensions = [
+            1.668,
+            1.500,
+            1.843,
+        ]
+
+        title = TextMobject("``Self-similarity dimension''")
+        title.to_edge(UP)
+        title.highlight(YELLOW)
+        self.add(title)
+
+
+        def get_curves(order):
+            curves = VGroup()
+            for Class, vect in zip(fractal_classes, vects):
+                curve = Class(order = order)
+                curve.scale_to_fit_width(2),
+                curve.shift(vect)
+                curves.add(curve)
+            return curves
+        curves = get_curves(1)
+        self.add(curves)
+
+        for curve, dimension, u in zip(curves, dimensions, [1, -1, 1]):
+            label = TextMobject("%.3f-dimensional"%dimension)
+            label.scale(0.85)
+            label.next_to(curve, u*UP, buff = LARGE_BUFF)
+            self.add(label)
+
+        self.dither()
+
+        for order in  range(2, max(max_orders)+1):
+            anims = []
+            for curve, max_order in zip(curves, max_orders):
+                if order <= max_order:
+                    new_curve = curve.__class__(order = order)
+                    new_curve.replace(curve)
+                    anims.append(Transform(curve, new_curve))
+            self.play(*anims, run_time = 2)
+        self.dither()
+        self.curves = curves
+
+class SeparateFractals(Scene):
+    def construct(self):
+        last_sc = ShowSeveralSelfSimilarityDimensions(skip_animations = True)
+        self.add(*last_sc.get_mobjects())
+        quad_koch = last_sc.curves[1]
+        length = len(quad_koch)
+        new_quad_koch = VGroup(*[
+            VGroup(*quad_koch[i*length/8:(i+1)*length/8])
+            for i in range(8)
+        ])
+        curves = list(last_sc.curves)
+        curves[1] = new_quad_koch
+        curves = VGroup(*curves)
+        curves.save_state()
+        self.play(*[
+            ApplyFunction(
+                lambda m : break_up(m, 2), 
+                curve
+            )
+            for curve in curves
+        ])
+        self.dither(2)
+        self.play(curves.restore)
+        self.dither()
 
 class ShowDiskScaling(Scene):
     def construct(self):
