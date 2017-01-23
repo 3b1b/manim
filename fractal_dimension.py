@@ -450,6 +450,33 @@ class ConstrastSmoothAndFractal(Scene):
             run_time = 10,
         )
         self.dither(2)
+
+class InfiniteKochZoom(Scene):
+    CONFIG = {
+        "order" : 6,
+        "left_point" : 3*LEFT,
+    }
+    def construct(self):
+        small_curve = self.get_curve(self.order)
+        larger_curve = self.get_curve(self.order + 1)
+        larger_curve.scale(3, about_point = small_curve.points[0])
+        self.play(Transform(small_curve, larger_curve, run_time = 2))
+        self.repeat_frames(5)
+
+
+
+    def get_curve(self, order):
+        koch_curve = KochCurve(
+            monochromatic = True, 
+            order = order,
+            color = BLUE,
+            stroke_width = 2,
+        )
+        koch_curve.scale_to_fit_width(18)
+        koch_curve.shift(
+            self.left_point - koch_curve.points[0]
+        )
+        return koch_curve
         
 class ShowIdealizations(Scene):
     def construct(self):
@@ -1834,21 +1861,30 @@ class BoxCountingWithDisk(BoxCountingScene):
     CONFIG = {
         "box_width" : 0.25,
         "num_boundary_check_points" : 200,
+        "corner_rect_left_extension" : 2,
+        "disk_opacity" : 0.5,
+        "disk_stroke_width" : 0.5,
+        "decimal_string" : "= %.2f",
     }
     def construct(self):
         disk = Circle(radius = 1)
-        disk.set_fill(BLUE, opacity = 0.5)
-        disk.set_stroke(BLUE, width = 1)
+        disk.set_fill(BLUE, opacity = self.disk_opacity)
+        disk.set_stroke(BLUE, width = self.disk_stroke_width)
+        disk.shift(0.1*np.sqrt(2)*(UP+RIGHT))
 
         radius = Line(disk.get_center(), disk.get_right())
         disk.add(radius)
         one = TexMobject("1").next_to(radius, DOWN, SMALL_BUFF)
 
         boxes = self.get_highlighted_boxes(disk)
+        small_box_num = len(boxes)
         grid = self.get_grid()
         corner_rect = self.get_corner_rect()
         counting_label = self.get_counting_label()
 
+        prop_words = TextMobject("Proportional to", "$\\pi r^2$")
+        prop_words[1].highlight(BLUE)
+        prop_words.next_to(counting_label, DOWN, aligned_edge = LEFT)
 
         self.add(disk, one)
         self.play(
@@ -1861,7 +1897,11 @@ class BoxCountingWithDisk(BoxCountingScene):
             FadeIn(counting_label)
         )
         counting_mob = self.count_boxes(boxes)
+        self.dither()
+        self.play(Write(prop_words, run_time = 2))
         self.dither(2)
+        self.play(FadeOut(prop_words))
+
 
         disk.generate_target()
         disk.target.scale(2, about_point = disk.get_top())
@@ -1873,6 +1913,7 @@ class BoxCountingWithDisk(BoxCountingScene):
         )
         self.play(counting_mob.next_to, counting_mob, DOWN)
         boxes = self.get_highlighted_boxes(disk)
+        large_box_count = len(boxes)
         new_counting_mob = self.count_boxes(boxes)
         self.dither()
 
@@ -1880,15 +1921,31 @@ class BoxCountingWithDisk(BoxCountingScene):
         frac_line.highlight(YELLOW)
         frac_line.stretch_to_fit_width(new_counting_mob.get_width())
         frac_line.next_to(new_counting_mob, DOWN, buff = SMALL_BUFF)
+        decimal = TexMobject(self.decimal_string%(float(large_box_count)/small_box_num))
+        decimal.next_to(frac_line, RIGHT)
         approx = TexMobject("\\approx 2^2")
-        approx.next_to(frac_line, RIGHT)
+        approx.next_to(decimal, RIGHT, aligned_edge = DOWN)
         approx.shift_onto_screen()
-        self.play(*map(Write, [frac_line, approx]))
-        self.dither(2)
+        self.play(*map(Write, [frac_line, decimal]))
+        self.play(Write(approx))
+        self.dither()
+
+        randy = Randolph().shift(3*RIGHT).to_edge(DOWN)
+        self.play(FadeIn(randy))
+        self.play(PiCreatureSays(
+            randy, "Is it?",
+            target_mode = "sassy",
+            bubble_kwargs = {"direction" : LEFT}
+        ))
+        self.play(Blink(randy))
+        self.dither()
 
 class FinerBoxCountingWithDisk(BoxCountingWithDisk):
     CONFIG = {
-        "box_width" : 0.1
+        "box_width" : 0.03,
+        "num_boundary_check_points" : 1000,
+        "disk_stroke_width" : 0.5,
+        "decimal_string" : "= %.2f",
     } 
 
 class PlotDiskBoxCounting(GraphScene):
@@ -2141,6 +2198,28 @@ class BoxCountingWithBritain(BoxCountingScene):
             simpler_eq, rewired_log_expression1
         )
 
+class GiveShapeAndPonder(Scene):
+    def construct(self):
+        morty = Mortimer()
+        randy = Randolph()
+        morty.next_to(ORIGIN, DOWN).shift(3*RIGHT)
+        randy.next_to(ORIGIN, DOWN).shift(3*LEFT)
+
+        norway = Norway(fill_opacity = 0, stroke_width = 1)
+        norway.scale_to_fit_width(2)
+        norway.next_to(morty, UP+LEFT, buff = -MED_BUFF)
+
+        self.play(
+            morty.change_mode, "raise_right_hand",
+            morty.look_at, norway,
+            randy.look_at, norway,
+            ShowCreation(norway)
+        )
+        self.play(Blink(morty))
+        self.play(randy.change_mode, "pondering")
+        self.play(Blink(randy))
+        self.dither()
+
 class CheapBoxCountingWithBritain(BoxCountingWithBritain):
     CONFIG = {
         "skip_animations" : True,
@@ -2210,6 +2289,17 @@ class IntroduceLogLogPlot(GraphScene):
         slope.next_to(slope_lines, RIGHT)
 
         self.dither()
+        data_points = [
+            self.input_to_graph_point(x) + ((random.random()-0.5)/x)*UP
+            for x in np.arange(1, 8, 0.7)
+        ]
+        data_dots = VGroup(*[
+            Dot(point, radius = 0.05, color = YELLOW)
+            for point in data_points
+        ])
+        self.play(ShowCreation(data_dots, run_time = 3))
+        self.dither()
+
         self.play(
             ShowCreation(graph),
             Animation(expression)
@@ -2219,17 +2309,124 @@ class IntroduceLogLogPlot(GraphScene):
         self.play(Write(slope))
         self.dither()
 
+class ManyBritainCounts(BoxCountingWithBritain):
+    CONFIG = {
+        "box_width" : 0.1,
+        "num_boundary_check_points" : 5000,
+        "corner_rect_left_extension" : 1,
+    }
+    def construct(self):
+        britain = Britain(
+            stroke_width = 2,
+            fill_opacity = 0
+        )
+        britain = fractalify(britain, order = 1, dimension = 1.21)
+        britain.next_to(ORIGIN, LEFT)
+        self.add(self.get_grid())
+        self.add(britain)
+
+        for width in range(1, 6):
+            self.play(britain.scale_to_fit_width, width)
+            boxes = self.get_highlighted_boxes(britain)
+            self.play(ShowCreation(boxes))
+            self.dither()
+            self.play(FadeOut(boxes))
+
+class ReadyForRealDefinition(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("""
+            Now for what
+            fractals really are.
+        """)
+        self.change_student_modes(*["hooray"]*3)
+        self.dither(2)
+
+class DefineFractal(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("""
+            Fractals are shapes
+            with a non-integer dimension.
+        """)
+        self.change_student_modes("thinking", "happy", "erm")
+        self.dither(3)
+        self.teacher_says(
+            "Kind of...",
+            target_mode = "sassy"
+        )
+        self.change_student_modes(*["pondering"]*3)
+        self.play(*[
+            ApplyMethod(pi.look, DOWN)
+            for pi in self.get_everyone()
+        ])
+        self.dither(3)
+
+class DifferentSlopesAtDifferentScales(IntroduceLogLogPlot):
+    def construct(self):
+        self.setup_axes(animate = False)
+        self.x_axis_label_mob[-2].highlight(BLUE)
+        self.y_axis_label_mob[-2].highlight(YELLOW)
+        self.graph_function(
+            lambda x : 0.01*(x-5)**3 + 0.3*x + 3
+        ) 
+        self.remove(self.graph)
+
+        words = TextMobject("""
+            Different slopes
+            at different scales
+        """)
+        words.to_edge(RIGHT)
+        arrows = VGroup(*[
+            Arrow(words.get_left(), self.input_to_graph_point(x))
+            for x in 1, 7, 12
+        ])
+
+
         data_points = [
-            self.input_to_graph_point(x) + ((random.random()-0.5)/x)*UP
-            for x in np.arange(1, 8, 0.7)
+            self.input_to_graph_point(x) + (0.3*(random.random()-0.5))*UP
+            for x in np.arange(1, self.x_max, 0.7)
         ]
         data_dots = VGroup(*[
             Dot(point, radius = 0.05, color = YELLOW)
             for point in data_points
         ])
 
-        self.play(ShowCreation(data_dots, run_time = 3))
+        self.play(ShowCreation(data_dots, run_time = 2))
+        self.play(ShowCreation(self.graph))
         self.dither()
+        self.play(
+            Write(words),
+            ShowCreation(arrows)
+        )
+        self.dither()
+
+class HoldUpCoilExample(TeacherStudentsScene):
+    def construct(self):
+        self.play(
+            self.get_teacher().change_mode, "raise_right_hand",
+            self.get_teacher().look, UP+LEFT
+        )
+        self.dither(5)
+        self.change_student_modes(*["thinking"]*3)
+        self.dither(5)
+
+class ListDimensionTypes(PiCreatureScene):
+    CONFIG = {
+        "use_morty" : False,
+    }
+    def construct(self):
+        types = VGroup(*map(TextMobject, [
+            "Box counting dimension",
+            "Information dimension",
+            "Hausdorff dimension",
+            "Packing dimension"
+        ]))
+        types.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        for text in types:
+            self.play(
+                Write(text, run_time = 1),
+                self.pi_creature.change_mode, "pondering"
+            )
+        self.dither(3)
 
 class ZoomInOnBritain(Scene):
     CONFIG = {
@@ -2262,6 +2459,13 @@ class ZoomInOnBritain(Scene):
         )
         self.dither()
 
+class NoteTheConstantSlope(Scene):
+    def construct(self):
+        words = TextMobject("Note the \\\\ constant slope")
+        words.highlight(YELLOW)
+        self.play(Write(words))
+        self.dither(2)
+
 class FromHandwavyToQuantitative(Scene):
     def construct(self):
         randy = Randolph()
@@ -2293,45 +2497,79 @@ class FromHandwavyToQuantitative(Scene):
 
 class WhatSlopeDoesLogLogPlotApproach(IntroduceLogLogPlot):
     CONFIG = {
-        "words" : "What slope does \\\\ this approach?"
+        "words" : "What slope does \\\\ this approach?",
+        "x_max" : 20,
+        "y_max" : 15,
     }
     def construct(self):
         self.setup_axes(animate = False)
         self.x_axis_label_mob[-2].highlight(BLUE)
         self.y_axis_label_mob[-2].highlight(YELLOW)
-        graph = self.graph_function(
-            lambda x : (1-np.exp(-x))*x
-        )
-        self.remove(graph)
 
+        spacing = 0.5
+        x_range = np.arange(1, self.x_max, spacing)
+        randomness = [
+            0.5*np.exp(-x/2)+spacing*(0.8 + random.random()/(x**(0.5)))
+            for x in x_range
+        ]
+        cum_sums = np.cumsum(randomness)
         data_points = [
-            self.input_to_graph_point(x) + (0.2*(random.random()-0.5)/x)*UP
-            for x in np.arange(1, 12, 0.2)
+            self.coords_to_point(x, cum_sum)
+            for x, cum_sum in zip(x_range, cum_sums)
         ]
         data_dots = VGroup(*[
-            Dot(point, radius = 0.02, color = YELLOW)
+            Dot(point, radius = 0.025, color = YELLOW)
             for point in data_points
         ])
 
         words = TextMobject(self.words)
         p1, p2 = [
-            self.input_to_graph_point(x)
-            for x in 5, 10
+            data_dots[int(alpha*len(data_dots))].get_center()
+            for alpha in 0.3, 0.5
         ]
         words.rotate(Line(p1, p2).get_angle())
-        words.next_to(p1, RIGHT, aligned_edge = DOWN, buff = LARGE_BUFF)
+        words.next_to(p1, RIGHT, aligned_edge = DOWN, buff = 1.5)
 
         morty = Mortimer()
         morty.to_corner(DOWN+RIGHT)
         self.add(morty)
 
-        self.play(ShowCreation(data_dots, run_time = 3))
+        self.play(ShowCreation(data_dots, run_time = 7))
         self.play(
             Write(words),
             morty.change_mode, "speaking"
         )
         self.play(Blink(morty))
         self.dither()
+
+class BritainBoxCountHighZoom(BoxCountingWithBritain):
+    def construct(self):
+        britain = Britain(
+            stroke_width = 2,
+            fill_opacity = 0
+        )
+        britain = fractalify(britain, order = 2, dimension = 1.21)
+        self.add(self.get_grid())
+        self.add(britain)
+
+        for x in range(2):
+            self.play(
+                britain.scale, 10, britain.point_from_proportion(0.3),
+                run_time = 2
+            )
+            if x == 0:
+                a, b = 0.2, 0.5
+            else:
+                a, b = 0.25, 0.35
+            britain.pointwise_become_partial(britain, a, b)
+            self.count_britain(britain)
+            self.dither()
+
+    def count_britain(self, britain):
+        boxes = self.get_highlighted_boxes(britain)
+        self.play(ShowCreation(boxes))
+        self.dither()
+        self.play(FadeOut(boxes))
         
 class IfBritainWasEventuallySmooth(Scene):
     def construct(self):
@@ -2522,6 +2760,7 @@ class FractalNonFractalFlowChart(Scene):
         randy = Randolph()
         randy.scale_to_fit_height(3)
         randy.to_corner(UP+RIGHT)
+        self.add(randy)
 
         self.add(is_fractal)
         self.dither()
@@ -2597,6 +2836,7 @@ class MortyLookingAtRectangle(Scene):
 
         affirm_logo = AffirmLogo()[0]
         affirm_logo.to_corner(UP+RIGHT, buff = 2*MED_BUFF)
+        affirm_logo.shift(0.5*DOWN)
 
         self.add(morty)
         affirm_logo.save_state()
