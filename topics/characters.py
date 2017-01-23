@@ -227,12 +227,13 @@ class PiCreatureSays(AnimationGroup):
         "target_mode" : "speaking",
         "change_mode_kwargs" : {},
         "bubble_creation_kwargs" : {},
+        "bubble_kwargs" : {},
         "write_kwargs" : {},
         "look_at_arg" : None,
     }
     def __init__(self, pi_creature, *content, **kwargs):
         digest_config(self, kwargs)
-        bubble = pi_creature.get_bubble("speech")
+        bubble = pi_creature.get_bubble("speech", **self.bubble_kwargs)
         bubble.write(*content)
         bubble.resize_to_content()
         bubble.pin_to(pi_creature)
@@ -303,6 +304,12 @@ class PiCreatureScene(Scene):
             mobject_of_interest = first_anim.ending_mobject
         else:
             mobject_of_interest = first_anim.mobject
+
+        last_anim = animations[-1]
+        if last_anim.mobject is self.pi_creature and isinstance(last_anim, Transform):
+            if isinstance(animations[-1], Transform):
+                animations[-1].ending_mobject.look_at(mobject_of_interest)
+                return animations
         new_anim = ApplyMethod(
             self.pi_creature.look_at,
             mobject_of_interest
