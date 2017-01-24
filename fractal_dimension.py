@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from helpers import *
 
 from mobject.tex_mobject import TexMobject
@@ -23,6 +21,8 @@ from scene import Scene
 from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
+
+from fractal_charm import FractalCreation
 
 from eoc.graph_scene import GraphScene
 from eoc.chapter1 import PatreonThanks
@@ -82,26 +82,7 @@ class SierpinskiTest(Scene):
         # self.play(sierp.scale, 2, sierp.get_top())
         # self.dither(3)
 
-class FractalCreation(Scene):
-    CONFIG = {
-        "fractal_class" : PentagonalFractal,
-        "max_order" : 5,
-        "path_arc" : np.pi/6,
-        "submobject_mode" : "lagged_start"
-    }
-    def construct(self):
-        fractal = self.fractal_class(order = 0)
-        self.play(FadeIn(fractal))
-        for order in range(1, self.max_order+1):
-            new_fractal = self.fractal_class(order = order)
-            self.play(Transform(
-                fractal, new_fractal,
-                path_arc = self.path_arc,
-                submobject_mode = self.submobject_mode,
-                run_time = 2
-            ))
-            self.dither()
-        self.dither()
+
 
 
 ###################################
@@ -2312,7 +2293,7 @@ class IntroduceLogLogPlot(GraphScene):
 class ManyBritainCounts(BoxCountingWithBritain):
     CONFIG = {
         "box_width" : 0.1,
-        "num_boundary_check_points" : 5000,
+        "num_boundary_check_points" : 10000,
         "corner_rect_left_extension" : 1,
     }
     def construct(self):
@@ -2325,8 +2306,8 @@ class ManyBritainCounts(BoxCountingWithBritain):
         self.add(self.get_grid())
         self.add(britain)
 
-        for width in range(1, 6):
-            self.play(britain.scale_to_fit_width, width)
+        for x in range(5):
+            self.play(britain.scale, 2, britain.point_from_proportion(0.8))
             boxes = self.get_highlighted_boxes(britain)
             self.play(ShowCreation(boxes))
             self.dither()
@@ -2359,6 +2340,49 @@ class DefineFractal(TeacherStudentsScene):
             for pi in self.get_everyone()
         ])
         self.dither(3)
+
+class RoughnessAndFractionalDimension(Scene):
+    def construct(self):
+        title = TextMobject(
+            "Non-integer dimension $\\Leftrightarrow$ Roughness"
+        )
+        title.to_edge(UP)
+        self.add(title)
+
+        randy = Randolph().scale(2)
+        randy.to_corner(DOWN+RIGHT)
+        self.add(randy)
+
+        target = randy.copy()
+        target.change_mode("hooray")
+        ponder_target = randy.copy()
+        ponder_target.change_mode("pondering")
+        for mob in target, ponder_target:
+            fractalify(mob, order = 2)
+
+        dimension_label = TextMobject("Boundary dimension = ", "1")
+        dimension_label.to_edge(LEFT)
+        one = dimension_label[1]
+        one.highlight(BLUE)
+        new_dim = TexMobject("1.2")
+        new_dim.move_to(one, DOWN+LEFT)
+        new_dim.highlight(one.get_color())
+        self.add(dimension_label)
+
+        self.play(Blink(randy))
+        self.play(
+            Transform(randy, target, run_time = 2),
+            Transform(one, new_dim)
+        )
+        self.dither()
+        self.play(Blink(randy))
+        self.play(randy.look, DOWN+RIGHT)
+        self.dither()
+        self.play(randy.look, DOWN+LEFT)
+        self.play(Blink(randy))
+        self.dither()
+        self.play(Transform(randy, ponder_target))
+        self.dither()
 
 class DifferentSlopesAtDifferentScales(IntroduceLogLogPlot):
     def construct(self):
@@ -2401,13 +2425,52 @@ class DifferentSlopesAtDifferentScales(IntroduceLogLogPlot):
 
 class HoldUpCoilExample(TeacherStudentsScene):
     def construct(self):
+        point = UP+RIGHT
         self.play(
             self.get_teacher().change_mode, "raise_right_hand",
-            self.get_teacher().look, UP+LEFT
+            self.get_teacher().look_at, point
         )
+        self.play(*[
+            ApplyMethod(pi.look_at, point)
+            for pi in self.get_students()
+        ])
         self.dither(5)
         self.change_student_modes(*["thinking"]*3)
+        self.play(*[
+            ApplyMethod(pi.look_at, point)
+            for pi in self.get_students()
+        ])
         self.dither(5)
+
+class SmoothHilbertZoom(Scene):
+    def construct(self):
+        hilbert = HilbertCurve(
+            order = 7, 
+            color = MAROON_B,
+            monochromatic = True
+        )
+        hilbert.make_smooth()
+        self.add(hilbert)        
+
+        two_d_title = TextMobject("2D at a distance...")
+        one_d_title = TextMobject("1D up close")
+        for title in two_d_title, one_d_title:
+            title.to_edge(UP)
+
+        self.add(two_d_title)
+        self.dither()
+        self.play(
+            ApplyMethod(
+                hilbert.scale, 100, 
+                hilbert.point_from_proportion(0.3),
+            ),
+            Transform(
+                two_d_title, one_d_title,
+                rate_func = squish_rate_func(smooth)
+            ),
+            run_time = 3
+        )
+        self.dither()
 
 class ListDimensionTypes(PiCreatureScene):
     CONFIG = {
@@ -2777,7 +2840,7 @@ class FractalNonFractalFlowChart(Scene):
 
 class ShowPiCreatureFractalCreation(FractalCreation):
     CONFIG = {
-        "fractal_class" : PiCreatureFractal,
+        "fractal_class" : PentagonalPiCreatureFractal,
         "max_order" : 4,
     }
 

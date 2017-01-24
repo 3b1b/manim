@@ -177,6 +177,17 @@ class PiCreature(SVGMobject):
         return self
             
 
+def get_all_pi_creature_modes():
+    result = []
+    prefix = "PiCreatures_"
+    suffix = ".svg"
+    for file in os.listdir(PI_CREATURE_DIR):
+        if file.startswith(prefix) and file.endswith(suffix):
+            result.append(
+                file[len(prefix):-len(suffix)]
+            )
+    return result
+
 
 class Randolph(PiCreature):
     pass #Nothing more than an alternative name

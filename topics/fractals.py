@@ -3,8 +3,8 @@ from mobject.vectorized_mobject import VMobject, VGroup, VectorizedPoint
 from scene import Scene
 from animation.transform import Transform
 from animation.simple_animations import ShowCreation
-from topics.geometry import Line, Polygon, RegularPolygon
-from characters import PiCreature, Randolph
+from topics.geometry import Line, Polygon, RegularPolygon, Square
+from characters import PiCreature, Randolph, get_all_pi_creature_modes
 
 from helpers import *
 
@@ -20,10 +20,7 @@ def fractalify(vmobject, order = 3, *args, **kwargs):
         fractalification_iteration(vmobject)
     return vmobject
 
-def fractalification_iteration(vmobject, 
-                               dimension = 1.05, 
-                               num_inserted_anchors_range = range(1, 4)
-                               ):
+def fractalification_iteration(vmobject, dimension = 1.05, num_inserted_anchors_range = range(1, 4)):
     num_points = vmobject.get_num_points()
     if num_points > 0:
         # original_anchors = vmobject.get_anchors()
@@ -147,7 +144,7 @@ class PentagonalFractal(SelfSimilarFractal):
             part.shift(0.95*part.get_height()*UP)
             part.rotate(2*np.pi*x/5)
 
-class PiCreatureFractal(PentagonalFractal):
+class PentagonalPiCreatureFractal(PentagonalFractal):
     def init_colors(self):
         SelfSimilarFractal.init_colors(self)
         internal_pis = [
@@ -168,6 +165,88 @@ class PiCreatureFractal(PentagonalFractal):
         for part in subparts:
             part.rotate(2*np.pi/5)
         PentagonalFractal.arrange_subparts(self, *subparts)
+
+
+class PiCreatureFractal(VMobject):
+    CONFIG = {
+        "order" : 7,
+        "scale_val" : 1.7,
+        "start_mode" : "hooray",
+        "height" : 6,
+        "colors" : [
+            BLUE_D, BLUE_B, MAROON_B, MAROON_D, GREY,
+            YELLOW, RED, GREY_BROWN, RED, RED_E,
+        ],
+        "random_seed" : 0,
+        "stroke_width" : 0,
+    }
+    def init_colors(self):
+        VMobject.init_colors(self)
+        internal_pis = [
+            pi
+            for pi in self.submobject_family()
+            if isinstance(pi, PiCreature)
+        ]
+        random.seed(self.random_seed)
+        for pi in reversed(internal_pis):
+            color = random.choice(self.colors)
+            pi.highlight(color)
+            pi.set_stroke(color, width = 0)
+
+
+    def generate_points(self):
+        random.seed(self.random_seed)
+        modes = get_all_pi_creature_modes()
+        seed = PiCreature(mode = self.start_mode)
+        seed.scale_to_fit_height(self.height)
+        seed.to_edge(DOWN)
+        creatures = [seed]
+        self.add(seed)
+        for x in range(self.order):
+            new_creatures = []
+            for creature in creatures:
+                for eye in creature.eyes:
+                    new_creature = PiCreature(
+                        mode = random.choice(modes)
+                    )
+                    new_creature.replace(eye)
+                    new_creature.scale(
+                        self.scale_val,
+                        about_point = new_creature.get_bottom()
+                    )
+                    new_creatures.append(new_creature)
+                creature.blink()
+            self.add_to_back(VGroup(*new_creatures))
+            creatures = new_creatures
+
+    # def init_colors(self):
+    #     VMobject.init_colors(self)
+    #     self.gradient_highlight(*self.colors)
+
+
+class WonkyHexagonFractal(SelfSimilarFractal):
+    CONFIG = {
+        "num_subparts" : 7
+    }
+    def get_seed_shape(self):
+        return RegularPolygon(n=6)
+
+    def arrange_subparts(self, *subparts):
+        for i, piece in enumerate(subparts):
+            piece.rotate(i*np.pi/12)
+        p1, p2, p3, p4, p5, p6, p7 = subparts
+        center_row = VGroup(p1, p4, p7)
+        center_row.arrange_submobjects(RIGHT, buff = 0)
+        for p in p2, p3, p5, p6:
+            p.scale_to_fit_width(p1.get_width())
+        p2.move_to(p1.get_top(), DOWN+LEFT)
+        p3.move_to(p1.get_bottom(), UP+LEFT)
+        p5.move_to(p4.get_top(), DOWN+LEFT)
+        p6.move_to(p4.get_bottom(), UP+LEFT)
+
+
+
+
 
 
 ######## Space filling curves ############
