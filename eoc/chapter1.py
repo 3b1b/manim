@@ -26,6 +26,8 @@ from mobject.tex_mobject import *
 
 from eoc.graph_scene import GraphScene
 
+#### Warning, scenes here not updated based on most recent GraphScene changes #######
+
 class CircleScene(PiCreatureScene):
     CONFIG = {
         "radius" : 1.5,

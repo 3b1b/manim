@@ -31,6 +31,10 @@ DISTANCE_COLOR = BLUE
 TIME_COLOR = YELLOW
 VELOCITY_COLOR = GREEN
 
+
+#### Warning, scenes here not updated based on most recent GraphScene changes #######
+
+
 class Car(SVGMobject):
     CONFIG = {
         "file_name" : "Car", 

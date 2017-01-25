@@ -4,7 +4,8 @@ from scene import Scene
 # from topics.geometry import 
 from mobject.tex_mobject import TexMobject, TextMobject
 from mobject.vectorized_mobject import VGroup, VectorizedPoint
-from animation.simple_animations import Write, ShowCreation
+from animation.simple_animations import Write, ShowCreation, UpdateFromAlphaFunc
+from animation.transform import Transform
 from topics.number_line import NumberLine
 from topics.functions import ParametricFunction
 from topics.geometry import Rectangle, DashedLine, Line
@@ -17,22 +18,23 @@ class GraphScene(Scene):
         "x_tick_frequency" : 1,
         "x_leftmost_tick" : None, #Change if different from x_min
         "x_labeled_nums" : range(1, 10),
-        "x_axis_label" : "x",
+        "x_axis_label" : "$x$",
         "y_min" : -1,
         "y_max" : 10,
         "y_axis_height" : 6,
         "y_tick_frequency" : 1,
         "y_bottom_tick" : None, #Change if different from y_min
         "y_labeled_nums" : range(1, 10),
-        "y_axis_label" : "y",
+        "y_axis_label" : "$y$",
         "axes_color" : GREY,
         "graph_origin" : 2.5*DOWN + 4*LEFT,
         "y_axis_numbers_nudge" : 0.4*UP+0.5*LEFT,
         "num_graph_anchor_points" : 25,
         "default_graph_colors" : [BLUE, GREEN, YELLOW],
-        "default_derivative_color" : RED,
+        "default_derivative_color" : GREEN,
+        "default_input_color" : YELLOW,
     }
-    def setup_axes(self, animate = True):
+    def setup_axes(self, animate = False):
         x_num_range = float(self.x_max - self.x_min)
         self.space_unit_to_x = self.x_axis_width/x_num_range
         x_axis = NumberLine(
@@ -88,11 +90,7 @@ class GraphScene(Scene):
         result += self.y_axis.number_to_point(y)[1]*UP
         return result
 
-    def graph_function(self, func, 
-                       color = None,
-                       animate = False,
-                       is_main_graph = True, 
-                       ):
+    def get_graph(self, func, color = None):
         if color is None:
             color = self.default_graph_colors.next()
 
@@ -106,77 +104,69 @@ class GraphScene(Scene):
             num_anchor_points = self.num_graph_anchor_points,
         )
         graph.underlying_function = func
-
-        if is_main_graph:
-            self.graph = graph
-            self.func = func
-        if animate:
-            self.play(ShowCreation(graph))
-        self.add(graph)
         return graph
 
-
-    def input_to_graph_point(self, x, graph = None):
-        if graph is None:
-            assert(hasattr(self, "graph"))
-            graph = self.graph
+    def input_to_graph_point(self, x, graph):
         return self.coords_to_point(x, graph.underlying_function(x))
 
-    def angle_of_tangent(self, x, graph = None, dx = 0.01):
+    def angle_of_tangent(self, x, graph, dx = 0.01):
         vect = self.input_to_graph_point(x + dx, graph) - self.input_to_graph_point(x, graph)
         return angle_of_vector(vect)
 
-    def slope_of_tangent(self, *args):
-        return np.tan(self.angle_of_tangent(*args))
+    def slope_of_tangent(self, *args, **kwargs):
+        return np.tan(self.angle_of_tangent(*args, **kwargs))
 
-    def get_derivative_graph(self, graph = None, dx = 0.01, color = None):
+    def get_derivative_graph(self, graph, dx = 0.01, color = None):
         if color is None:
             color = self.default_derivative_color
-        derivative_graph = self.graph_function(
+        return self.get_graph(
             lambda x : self.slope_of_tangent(x, graph, dx) / self.space_unit_to_y,
             color = color,
-            animate = False,
-            is_main_graph = False
         )
-        self.remove(derivative_graph)
-        return derivative_graph
 
-
-    def label_graph(self, graph, label = "f(x)", 
-                    proportion = 0.7, 
-                    direction = LEFT,
-                    buff = MED_BUFF,
-                    color = None,
-                    animate = True
-                    ):
+    def get_graph_label(
+        self, 
+        graph, 
+        label = "f(x)", 
+        x_val = None,
+        direction = RIGHT,
+        buff = MED_BUFF,
+        color = None,
+        ):
         label = TexMobject(label)
         color = color or graph.get_color()
         label.highlight(color)
+        if x_val is None:
+            x_range = np.linspace(self.x_min, self.x_max, 20)
+            for left_x, right_x in zip(x_range, x_range[1:]):
+                right_point = self.input_to_graph_point(right_x, graph)
+                if right_point[1] > SPACE_HEIGHT:
+                    break
+            x_val = left_x
         label.next_to(
-            graph.point_from_proportion(proportion), 
+            self.input_to_graph_point(x_val, graph),
             direction,
             buff = buff
         )
-        if animate:
-            self.play(Write(label))
-        self.add(label)
+        label.shift_onto_screen()
         return label
 
-    def get_riemann_rectangles(self, 
-                               x_min = None, 
-                               x_max = None, 
-                               dx = 0.1, 
-                               stroke_width = 1,
-                               start_color = BLUE,
-                               end_color = GREEN):
-        assert(hasattr(self, "func"))
+    def get_riemann_rectangles(
+        self, 
+        graph,
+        x_min = None, 
+        x_max = None, 
+        dx = 0.1, 
+        stroke_width = 1,
+        start_color = BLUE,
+        end_color = GREEN):
         x_min = x_min if x_min is not None else self.x_min
         x_max = x_max if x_max is not None else self.x_max
         rectangles = VGroup()
         for x in np.arange(x_min, x_max, dx):
             points = VGroup(*map(VectorizedPoint, [
                 self.coords_to_point(x, 0),
-                self.coords_to_point(x+dx, self.func(x+dx)),
+                self.input_to_graph_point(x+dx, graph)
             ]))
             rect = Rectangle()
             rect.replace(points, stretch = True)
@@ -186,15 +176,12 @@ class GraphScene(Scene):
         rectangles.set_stroke(BLACK, width = stroke_width)
         return rectangles
 
-    def get_vertical_line_to_graph(self,
-                                   x,
-                                   graph = None,
-                                   line_class = Line,
-                                   line_kwargs = None,
-                                   ):
-        if graph is None:
-            assert(hasattr(self, "graph"))
-            graph = self.graph
+    def get_vertical_line_to_graph(
+        self,
+        x, graph,
+        line_class = Line,
+        line_kwargs = None,
+        ):
         if line_kwargs is None:
             line_kwargs = {}
         if "color" not in line_kwargs:
@@ -205,7 +192,89 @@ class GraphScene(Scene):
             **line_kwargs
         )   
 
-                                  
+    def get_secant_slope_group(
+        self, 
+        x, graph, 
+        dx = None,
+        dx_line_color = None,
+        df_line_color = None,
+        slope_line_color = None,
+        dx_label = None,
+        df_label = None,
+        include_secant_line = True,
+        secant_line_color = None,
+        secant_line_length = 10,
+        ):
+        kwargs = locals()
+        kwargs.pop("self")
+        group = VGroup()
+        group.kwargs = kwargs
+
+        dx = dx or float(self.x_max - self.x_min)/10
+        dx_line_color = dx_line_color or self.default_input_color
+        df_line_color = df_line_color or graph.get_color()
+
+        p1 = self.input_to_graph_point(x, graph)
+        p2 = self.input_to_graph_point(x+dx, graph)
+        interim_point = p2[0]*RIGHT + p1[1]*UP
+
+        group.dx_line = Line(
+            p1, interim_point,
+            color = dx_line_color
+        )
+        group.df_line = Line(
+            interim_point, p2,
+            color = df_line_color
+        )
+        if dx_label is not None:
+            group.dx_label = TexMobject(dx_label)
+            if group.dx_label.get_width() > group.dx_line.get_width():
+                group.dx_label.scale_to_fit_width(group.dx_line.get_width())
+            group.dx_label.next_to(group.dx_line, DOWN, SMALL_BUFF)
+            group.dx_label.highlight(group.dx_line.get_color())
+
+        if df_label is not None:
+            group.df_label = TexMobject(df_label)
+            if group.df_label.get_height() > group.df_line.get_height():
+                group.df_label.scale_to_fit_height(group.df_line.get_height())
+            group.df_label.next_to(group.df_line, RIGHT, SMALL_BUFF)
+            group.df_label.highlight(group.df_line.get_color())
+
+        if include_secant_line:
+            secant_line_color = secant_line_color or self.default_derivative_color
+            group.secant_line = Line(p1, p2, color = secant_line_color)
+            group.secant_line.scale_in_place(
+                secant_line_length/group.secant_line.get_length()
+            )
+
+        group.digest_mobject_attrs()
+        return group
+
+    def animate_secant_slope_group_dx_change(
+        self, secant_slope_group, target_dx,
+        run_time = 3,
+        **anim_kwargs
+        ):
+        start_dx = secant_slope_group.kwargs["dx"]
+        def update_func(group, alpha):
+            dx = interpolate(start_dx, target_dx, alpha)
+            kwargs = dict(secant_slope_group.kwargs)
+            kwargs["dx"] = dx
+            new_group = self.get_secant_slope_group(**kwargs)
+            Transform(group, new_group).update(1)
+            return group
+
+        self.play(UpdateFromAlphaFunc(
+            secant_slope_group, update_func,
+            run_time = run_time,
+            **anim_kwargs
+        ))
+
+
+
+
+
+
 
 
 
