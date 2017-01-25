@@ -345,14 +345,16 @@ class VMobject(Mobject):
             return self
         self.mark_paths_closed = False
         num_cubics = mobject.get_num_anchor_points()-1
-        lower_index = int(a*num_cubics)
-        upper_index = int(b*num_cubics)
+        lower_index = np.floor(a*num_cubics)
+        upper_index = np.ceil(b*num_cubics)
         points = np.array(
             mobject.points[3*lower_index:3*upper_index+4]
         )
         if len(points) > 1:
             a_residue = (num_cubics*a)%1
             b_residue = (num_cubics*b)%1
+            if b == 1:
+                b_residue = 1
             points[:4] = partial_bezier_points(
                 points[:4], a_residue, 1
             )

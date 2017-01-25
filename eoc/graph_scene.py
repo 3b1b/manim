@@ -137,12 +137,12 @@ class GraphScene(Scene):
         color = color or graph.get_color()
         label.highlight(color)
         if x_val is None:
-            x_range = np.linspace(self.x_min, self.x_max, 20)
-            for left_x, right_x in zip(x_range, x_range[1:]):
-                right_point = self.input_to_graph_point(right_x, graph)
-                if right_point[1] > SPACE_HEIGHT:
+            #Search from right to left
+            for x in np.linspace(self.x_max, self.x_min, 100):
+                point = self.input_to_graph_point(x, graph)
+                if point[1] < SPACE_HEIGHT:
                     break
-            x_val = left_x
+            x_val = x
         label.next_to(
             self.input_to_graph_point(x_val, graph),
             direction,
@@ -180,10 +180,8 @@ class GraphScene(Scene):
         self,
         x, graph,
         line_class = Line,
-        line_kwargs = None,
+        **line_kwargs
         ):
-        if line_kwargs is None:
-            line_kwargs = {}
         if "color" not in line_kwargs:
             line_kwargs["color"] = graph.get_color()
         return line_class(
@@ -226,18 +224,33 @@ class GraphScene(Scene):
             interim_point, p2,
             color = df_line_color
         )
+
+        labels = VGroup()
         if dx_label is not None:
             group.dx_label = TexMobject(dx_label)
-            if group.dx_label.get_width() > group.dx_line.get_width():
-                group.dx_label.scale_to_fit_width(group.dx_line.get_width())
-            group.dx_label.next_to(group.dx_line, DOWN, SMALL_BUFF)
+            labels.add(group.dx_label)
+        if df_label is not None:
+            group.df_label = TexMobject(df_label)
+            labels.add(group.df_label)
+
+        if len(labels) > 0:
+            max_width = 0.8*group.dx_line.get_width()
+            max_height = 0.8*group.df_line.get_height()            
+            if labels.get_width() > max_width:
+                labels.scale_to_fit_width(max_width)
+            if labels.get_height() > max_height:
+                labels.scale_to_fit_height(max_height)
+
+        if dx_label is not None:
+            group.dx_label.next_to(
+                group.dx_line, DOWN, buff = group.dx_label.get_height()/2
+            )
             group.dx_label.highlight(group.dx_line.get_color())
 
         if df_label is not None:
-            group.df_label = TexMobject(df_label)
-            if group.df_label.get_height() > group.df_line.get_height():
-                group.df_label.scale_to_fit_height(group.df_line.get_height())
-            group.df_label.next_to(group.df_line, RIGHT, SMALL_BUFF)
+            group.df_label.next_to(
+                group.df_line, RIGHT, buff = group.df_label.get_height()/2
+            )
             group.df_label.highlight(group.df_line.get_color())
 
         if include_secant_line:
@@ -250,25 +263,45 @@ class GraphScene(Scene):
         group.digest_mobject_attrs()
         return group
 
-    def animate_secant_slope_group_dx_change(
-        self, secant_slope_group, target_dx,
+    def animate_secant_slope_group_change(
+        self, secant_slope_group, 
+        target_dx = None,
+        target_x = None,
         run_time = 3,
+        added_anims = None,
         **anim_kwargs
         ):
+        if target_dx is None and target_x is None:
+            raise Exception("At least one of target_x and target_dx must not be None")
+        if added_anims is None:
+            added_anims = []
+
         start_dx = secant_slope_group.kwargs["dx"]
+        start_x = secant_slope_group.kwargs["x"]
+        if target_dx is None:
+            target_dx = start_dx
+        if target_x is None:
+            target_x = start_x
         def update_func(group, alpha):
             dx = interpolate(start_dx, target_dx, alpha)
+            x = interpolate(start_x, target_x, alpha)
             kwargs = dict(secant_slope_group.kwargs)
             kwargs["dx"] = dx
+            kwargs["x"] = x
             new_group = self.get_secant_slope_group(**kwargs)
             Transform(group, new_group).update(1)
             return group
 
-        self.play(UpdateFromAlphaFunc(
-            secant_slope_group, update_func,
-            run_time = run_time,
-            **anim_kwargs
-        ))
+        self.play(
+            UpdateFromAlphaFunc(
+                secant_slope_group, update_func,
+                run_time = run_time,
+                **anim_kwargs
+            ),
+            *added_anims
+        )
+        secant_slope_group.kwargs["x"] = target_x
+        secant_slope_group.kwargs["dx"] = target_dx
 
 
 

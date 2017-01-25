@@ -112,6 +112,12 @@ def is_closed(points):
 def color_to_rgb(color):
     return np.array(Color(color).get_rgb())
 
+def rgb_to_color(rgb):
+    try:
+        return Color(rgb = rgb)
+    except:
+        return Color(WHITE)
+
 def color_to_int_rgb(color):
     return (255*color_to_rgb(color)).astype('uint8')
 
@@ -126,7 +132,7 @@ def color_gradient(reference_colors, length_of_output):
     alphas_mod1[-1] = 1
     floors[-1] = len(rgbs) - 2
     return [
-        Color(rgb = interpolate(rgbs[i], rgbs[i+1], alpha))
+        rgb_to_color(interpolate(rgbs[i], rgbs[i+1], alpha))
         for i, alpha in zip(floors, alphas_mod1)
     ]
 
@@ -397,7 +403,7 @@ def make_even_by_cycling(iterable_1, iterable_2):
         [cycle2.next() for x in range(length)]
     )
 
-### Alpha Functions ###
+### Rate Functions ###
 
 def sigmoid(x):
     return 1.0/(1 + np.exp(-x))
@@ -419,6 +425,8 @@ def there_and_back(t, inflection = 10.0):
     new_t = 2*t if t < 0.5 else 2*(1 - t)
     return smooth(new_t, inflection)
 
+def running_start(t, pull_factor = -0.5):
+    return bezier([0, 0, pull_factor, pull_factor, 1, 1, 1])(t)
 
 def not_quite_there(func = smooth, proportion = 0.7):
     def result(t):

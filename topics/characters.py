@@ -279,20 +279,17 @@ class PiCreatureScene(Scene):
         else:
             return Randolph().to_corner(DOWN+LEFT)
 
-    def say(self, words, target_mode = "speaking"):
-        if isinstance(words, str):
-            words = TextMobject(words)
-        bubble = SpeechBubble()
-        bubble.add_content(words)
-        bubble.resize_to_content()
-        bubble.pin_to(self.pi_creature)
+    def say(self, *content, **kwargs):
+        added_anims = []
+        if "target_mode" in kwargs:
+            target_mode = kwargs["target_mode"]
+        else:
+            target_mode = "speaking"
+        added_anims += [self.pi_creature.change_mode, target_mode]
         self.play(
-            self.pi_creature.change_mode, target_mode,
-            self.pi_creature.look_at, bubble.content,
-            ShowCreation(bubble),
-            Write(bubble.content)
+            PiCreatureSays(self.pi_creature, *content, **kwargs),
+            *added_anims
         )
-        self.pi_creature.bubble = bubble
 
     def get_bubble_fade_anims(self, target_mode = "plain"):
         return [
@@ -311,20 +308,17 @@ class PiCreatureScene(Scene):
         if first_anim.mobject is self.pi_creature:
             return animations
 
-        if isinstance(first_anim, Transform):
-            mobject_of_interest = first_anim.ending_mobject
-        else:
-            mobject_of_interest = first_anim.mobject
+        #Look at ending state
+        first_anim.update(1)
+        point_of_interest = first_anim.mobject.get_center()
+        first_anim.update(0)
 
         last_anim = animations[-1]
         if last_anim.mobject is self.pi_creature and isinstance(last_anim, Transform):
             if isinstance(animations[-1], Transform):
-                animations[-1].ending_mobject.look_at(mobject_of_interest)
+                animations[-1].ending_mobject.look_at(point_of_interest)
                 return animations
-        new_anim = ApplyMethod(
-            self.pi_creature.look_at,
-            mobject_of_interest
-        )
+        new_anim = ApplyMethod(self.pi_creature.look_at, point_of_interest)
         return list(animations) + [new_anim]
 
     def blink(self):
