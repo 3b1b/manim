@@ -3,7 +3,7 @@ from mobject.vectorized_mobject import VMobject, VGroup, VectorizedPoint
 from scene import Scene
 from animation.transform import Transform
 from animation.simple_animations import ShowCreation
-from topics.geometry import Line, Polygon, RegularPolygon, Square
+from topics.geometry import Line, Polygon, RegularPolygon, Square, Circle
 from characters import PiCreature, Randolph, get_all_pi_creature_modes
 
 from helpers import *
@@ -170,7 +170,7 @@ class PentagonalPiCreatureFractal(PentagonalFractal):
 class PiCreatureFractal(VMobject):
     CONFIG = {
         "order" : 7,
-        "scale_val" : 1.7,
+        "scale_val" : 2.5,
         "start_mode" : "hooray",
         "height" : 6,
         "colors" : [
@@ -201,21 +201,24 @@ class PiCreatureFractal(VMobject):
         seed.scale_to_fit_height(self.height)
         seed.to_edge(DOWN)
         creatures = [seed]
-        self.add(seed)
+        self.add(VGroup(seed))
         for x in range(self.order):
             new_creatures = []
             for creature in creatures:
-                for eye in creature.eyes:
+                for eye, vect in zip(creature.eyes, [LEFT, RIGHT]):
                     new_creature = PiCreature(
                         mode = random.choice(modes)
                     )
-                    new_creature.replace(eye)
-                    new_creature.scale(
-                        self.scale_val,
-                        about_point = new_creature.get_bottom()
+                    new_creature.scale_to_fit_height(
+                        self.scale_val*eye.get_height()
+                    )
+                    new_creature.next_to(
+                        eye, vect, 
+                        buff = 0, 
+                        aligned_edge = DOWN
                     )
                     new_creatures.append(new_creature)
-                creature.blink()
+                creature.look_at(random.choice(new_creatures))
             self.add_to_back(VGroup(*new_creatures))
             creatures = new_creatures
 
@@ -244,36 +247,74 @@ class WonkyHexagonFractal(SelfSimilarFractal):
         p5.move_to(p4.get_top(), DOWN+LEFT)
         p6.move_to(p4.get_bottom(), UP+LEFT)
 
+class CircularFractal(SelfSimilarFractal):
+    CONFIG = {
+        "num_subparts" : 3,
+        "colors" : [GREEN, BLUE, GREY]
+    }
+    def get_seed_shape(self):
+        return Circle()
 
-
+    def arrange_subparts(self, *subparts):
+        if not hasattr(self, "been_here"):
+            self.num_subparts = 3+self.order
+            self.been_here = True
+        for i, part in enumerate(subparts):
+            theta = np.pi/self.num_subparts
+            part.next_to(
+                ORIGIN, UP,
+                buff = self.height/(2*np.tan(theta))
+            )
+            part.rotate(i*2*np.pi/self.num_subparts)
+        self.num_subparts -= 1
 
 
 
 ######## Space filling curves ############
+
+class JaggedCurvePiece(VMobject):
+    def insert_n_anchor_points(self, n):
+        if self.get_num_anchor_points() == 0:
+            self.points = np.zeros((1, 3))
+        anchors = self.get_anchors()
+        indices = np.linspace(0, len(anchors)-1, n+len(anchors)).astype('int')
+        self.set_points_as_corners(anchors[indices])
+
 
 class FractalCurve(VMobject):
     CONFIG = {
         "radius"      : 3,
         "order"       : 5,
         "colors" : [RED, GREEN],
+        "num_submobjects" : 20,
         "monochromatic" : False,
-        "stroke_width" : 3,
+        "order_to_stroke_width_map" : {
+            3 : 3,
+            4 : 2,
+            5 : 1,
+        },
         "propogate_style_to_family" : True,
     }
 
     def generate_points(self):
         points = self.get_anchor_points()
-        if self.monochromatic:
-            self.set_points_as_corners(points)
-        else:
-            for triplet in zip(points, points[1:], points[2:]):
-                corner = VMobject()
-                corner.set_points_as_corners(triplet)
-                self.add(corner)
+        self.set_points_as_corners(points)
+        if not self.monochromatic:
+            alphas = np.linspace(0, 1, self.num_submobjects)
+            for alpha_pair in zip(alphas, alphas[1:]):
+                submobject = JaggedCurvePiece()
+                submobject.pointwise_become_partial(
+                    self, *alpha_pair
+                )
+                self.add(submobject)
+            self.points = np.zeros((0, 3))
 
     def init_colors(self):
         VMobject.init_colors(self)
         self.gradient_highlight(*self.colors)
+        for order in sorted(self.order_to_stroke_width_map.keys()):
+            if self.order >= order:
+                self.set_stroke(width = self.order_to_stroke_width_map[order])
 
     def get_anchor_points(self):
         raise Exception("Not implemented")
@@ -513,7 +554,12 @@ class KochSnowFlake(LindenmayerCurve):
         "radius"       : 4,
         "scale_factor" : 3,
         "start_step"   : RIGHT,
-        "angle"        : np.pi/3
+        "angle"        : np.pi/3,
+        "order_to_stroke_width_map" : {
+            3 : 3,
+            5 : 2,
+            6 : 1,
+        },
     }
 
     def __init__(self, **kwargs):
@@ -575,61 +621,6 @@ class SnakeCurve(FractalCurve):
                     lower_left + x*step*RIGHT + y*step*UP
                 )
         return result
-
-
-
-class SpaceFillingCurveScene(Scene):
-    @staticmethod
-    def args_to_string(CurveClass, order):
-        return CurveClass.__name__ + "Order" + str(order)
-
-    @staticmethod
-    def string_to_args(arg_str):
-        curve_class_name, order_str = arg_str.split()
-        space_filling_curves = dict([
-            (Class.__name__, Class)
-            for Class in get_all_descendent_classes(FractalCurve)
-        ])
-        if curve_class_name not in space_filling_curves:
-            raise Exception(
-                "%s is not a space filling curve"%curve_class_name
-            )
-        CurveClass = space_filling_curves[curve_class_name]
-        return CurveClass, int(order_str)
-
-class TransformOverIncreasingOrders(SpaceFillingCurveScene):
-    def setup(self, CurveClass):
-        sample = CurveClass(order = 1)
-        self.curve = Line(3*LEFT, 3*RIGHT)
-        self.curve.gradient_highlight(
-            sample.start_color, 
-            sample.end_color
-        )
-        self.CurveClass = CurveClass
-        self.order = 0
-
-    def construct(self, CurveClass, max_order):
-        self.setup(CurveClass)
-        while self.order < max_order:
-            self.increase_order()
-        self.dither()
-
-    def increase_order(self, *other_anims):
-        self.order += 1
-        new_curve = self.CurveClass(order = self.order)
-        self.play(
-            Transform(self.curve, new_curve),
-            *other_anims,
-            run_time = 3/np.sqrt(self.order)
-        )
-
-
-class DrawSpaceFillingCurve(SpaceFillingCurveScene):
-    def construct(self, CurveClass, order):
-        curve = CurveClass(order = order)
-        self.play(ShowCreation(curve), run_time = 10)
-        self.dither()
-
 
 
 

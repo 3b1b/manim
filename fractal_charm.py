@@ -32,7 +32,6 @@ class FractalCreation(Scene):
             "run_time" : 2,
         },
         "fractal_kwargs" : {},
-        "modify_stroke_width" : True,
     }
     def construct(self):
         fractal = self.fractal_class(order = 0, **self.fractal_kwargs)
@@ -42,12 +41,7 @@ class FractalCreation(Scene):
                 order = order,
                 **self.fractal_kwargs
             )
-            if self.modify_stroke_width:
-                smallest = new_fractal.family_members_with_points()[0]
-                if smallest.get_width() < 0.25:
-                    new_fractal.set_stroke(width = 2)
-                if smallest.get_width() < 0.1:
-                    new_fractal.set_stroke(width = 1)
+            fractal.align_data(new_fractal)
             self.play(Transform(
                 fractal, new_fractal,
                 **self.transform_kwargs
@@ -70,7 +64,7 @@ class DiamondFractalCreation(FractalCreation):
 class PiCreatureFractalCreation(FractalCreation):
     CONFIG = {
         "fractal_class" : PiCreatureFractal,
-        "max_order" : 5,
+        "max_order" : 6,
         "fractal_kwargs" : {"height" : 6},
         "transform_kwargs" : {
             "submobject_mode" : "all_at_once",
@@ -102,8 +96,11 @@ class QuadraticKochFractalCreation(FractalCreation):
 class KochSnowFlakeFractalCreation(FractalCreation):
     CONFIG = {
         "fractal_class" : KochSnowFlake,
-        "max_order" : 5,
-        "fractal_kwargs" : {"radius" : 6},
+        "max_order" : 6,
+        "fractal_kwargs" : {
+            "radius" : 6,
+            "num_submobjects" : 100,
+        },
         "transform_kwargs" : {
             "submobject_mode" : "lagged_start",
             "path_arc" : np.pi/6,
@@ -117,11 +114,15 @@ class WonkyHexagonFractalCreation(FractalCreation):
         "fractal_class" : WonkyHexagonFractal,
         "max_order" : 5,
         "fractal_kwargs" : {"height" : 6},
-        "transform_kwargs" : {
-            "submobject_mode" : "lagged_start",
-            "path_arc" : np.pi/6,
-            "run_time" : 2,
-        },
+    }
+
+
+
+class CircularFractalCreation(FractalCreation):
+    CONFIG = {
+        "fractal_class" : CircularFractal,
+        "max_order" : 5,
+        "fractal_kwargs" : {"height" : 6},
     }
 
 
