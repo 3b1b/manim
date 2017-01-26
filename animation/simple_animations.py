@@ -90,6 +90,7 @@ class DrawBorderThenFill(Animation):
     CONFIG = {
         "run_time" : 2,
         "stroke_width" : 2,
+        "stroke_color" : None,
         "rate_func" : double_smooth,
     }
     def __init__(self, vmobject, **kwargs):
@@ -100,14 +101,11 @@ class DrawBorderThenFill(Animation):
 
     def update_submobject(self, submobject, starting_submobject, alpha):
         if alpha < 0.5:
-            print 2*alpha
             submobject.pointwise_become_partial(
                 starting_submobject, 0, 2*alpha
             )
-            submobject.set_stroke(
-                starting_submobject.get_color(),
-                width = self.stroke_width
-            )
+            color = self.stroke_color or starting_submobject.get_color()
+            submobject.set_stroke(color, width = self.stroke_width)
             submobject.set_fill(opacity = 0)
         else:
             if not self.reached_halfway_point_before:
