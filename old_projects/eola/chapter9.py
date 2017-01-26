@@ -49,7 +49,7 @@ def get_small_bubble(pi_creature, height = 4, width = 3):
     bubble.stretch_to_fit_height(height)
     if pi_center_x < 0:
         bubble.flip()
-    bubble.next_to(pi_creature, UP, buff = MED_BUFF)
+    bubble.next_to(pi_creature, UP, buff = MED_SMALL_BUFF)
     bubble.shift_onto_screen()
     bubble.set_fill(BLACK, opacity = 0.8)
     return bubble
@@ -241,16 +241,16 @@ class RemindOfCoordinates(LinearCombinationScene):
 
         ass1 = TextMobject("-First coordinate")
         ass1 = VGroup(ass1, self.i_hat.copy())
-        ass1.arrange_submobjects(buff = MED_BUFF)
+        ass1.arrange_submobjects(buff = MED_SMALL_BUFF)
 
         ass2 = TextMobject("-Second coordinate")
         ass2 = VGroup(ass2, self.j_hat.copy())
-        ass2.arrange_submobjects(buff = MED_BUFF)
+        ass2.arrange_submobjects(buff = MED_SMALL_BUFF)
 
         ass3 = TextMobject("-Unit of distance")
 
         group = VGroup(title, ass1, ass2, ass3)
-        group.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_BUFF)
+        group.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
         group.to_corner(UP+LEFT)
         # VGroup(*group[1:]).shift(0.5*DOWN)
         for words in group:
@@ -295,7 +295,7 @@ class NameCoordinateSystem(Scene):
         coords = Matrix([3, 2])
         arrow = TexMobject("\\Rightarrow")
         vector.next_to(arrow, RIGHT, buff = 0)
-        coords.next_to(arrow, LEFT, buff = 2*MED_BUFF)
+        coords.next_to(arrow, LEFT, buff = MED_LARGE_BUFF)
         group = VGroup(coords, arrow, vector)
         group.shift(2*UP)
         coordinate_system = TextMobject("``Coordinate system''")
@@ -313,7 +313,7 @@ class NameCoordinateSystem(Scene):
         basis_group = VGroup(i_hat, j_hat, i_label, j_label)
         basis_group.shift(DOWN)
         basis_words = TextMobject("``Basis vectors''")
-        basis_words.shift(basis_group.get_bottom()[1]*UP+MED_BUFF*DOWN)
+        basis_words.shift(basis_group.get_bottom()[1]*UP+MED_SMALL_BUFF*DOWN)
 
         self.play(Write(coords))
         self.play(Write(arrow), ShowCreation(vector))
@@ -653,11 +653,11 @@ class SpeakingDifferentLanguages(JenniferScene):
         for pi in jenny, you:
             pi.bubble = pi.get_bubble("speech", width = 4.5, height = 3.5)
             if pi is you:
-                pi.bubble.shift(MED_BUFF*RIGHT)
+                pi.bubble.shift(MED_SMALL_BUFF*RIGHT)
             else:
                 pi.coords.scale(0.8)
-                pi.bubble.shift(MED_BUFF*LEFT)
-            pi.coords.next_to(pi.text, buff = MED_BUFF)
+                pi.bubble.shift(MED_SMALL_BUFF*LEFT)
+            pi.coords.next_to(pi.text, buff = MED_SMALL_BUFF)
             pi.coords.add(pi.text)
             pi.bubble.add_content(pi.coords)
 
@@ -980,7 +980,7 @@ class TalkThroughChangeOfBasisMatrix(JenniferScene):
 
         matrix = Matrix(np.array([self.b1_coords, self.b2_coords]).T)
         matrix.highlight_columns(X_COLOR, Y_COLOR)
-        matrix.next_to(ORIGIN, RIGHT, buff = MED_BUFF).to_edge(UP)
+        matrix.next_to(ORIGIN, RIGHT, buff = MED_SMALL_BUFF).to_edge(UP)
 
         b1_coords = Matrix(self.b1_coords)
         b1_coords.highlight(X_COLOR)
@@ -1103,7 +1103,7 @@ class ChangeOfBasisExample(JenniferScene):
         start_words = TextMobject("How", "we", "think of")
         start_words.add_background_rectangle()
         start_group = VGroup(start_words, v_coords)
-        start_group.arrange_submobjects(buff = MED_BUFF)
+        start_group.arrange_submobjects(buff = MED_SMALL_BUFF)
         start_group.next_to(self.you, LEFT, buff = 0)
         start_group.to_edge(UP)
         end_words = TextMobject("How", "Jennifer", "thinks of")
@@ -1178,7 +1178,7 @@ class FeelsBackwards(Scene):
 
         ##Swap things
         inverse_word = TextMobject("Inverse")
-        inverse_word.next_to(matrix, LEFT, buff = MED_BUFF)
+        inverse_word.next_to(matrix, LEFT, buff = MED_SMALL_BUFF)
         inverse_exponent = TexMobject("-1")
         inverse_exponent.next_to(matrix.get_corner(UP+RIGHT), RIGHT)
         self.play(*map(Write, [inverse_word, inverse_exponent]))
@@ -1209,8 +1209,8 @@ class RecallInverse(JenniferScene):
         matrix = Matrix(numerical_t_matrix.T)
         matrix.add_to_back(BackgroundRectangle(matrix))
         matrix.highlight_columns(X_COLOR, Y_COLOR)
-        matrix.to_corner(UP+LEFT, buff = 2*MED_BUFF)
-        # matrix.shift(MED_BUFF*DOWN)
+        matrix.to_corner(UP+LEFT, buff = MED_LARGE_BUFF)
+        # matrix.shift(MED_SMALL_BUFF*DOWN)
         inverse_exponent = TexMobject("-1")
         inverse_exponent.next_to(matrix.get_corner(UP+RIGHT), RIGHT)
         inverse_exponent.add_background_rectangle()
@@ -1227,7 +1227,7 @@ class RecallInverse(JenniferScene):
         inv_matrix.scale_to_fit_height(matrix.get_height())
         inv_matrix.add_to_back(BackgroundRectangle(inv_matrix))
         equals.next_to(matrix, RIGHT, buff = 0.7)
-        inv_matrix.next_to(equals, RIGHT, buff = MED_BUFF)
+        inv_matrix.next_to(equals, RIGHT, buff = MED_SMALL_BUFF)
 
         self.add_foreground_mobject(matrix)
         self.apply_transposed_matrix(numerical_t_matrix)
@@ -1417,7 +1417,7 @@ class SummarizeTranslationProcess(Scene):
         self.play(
             VGroup(her_vector, equals).next_to, A_inv, LEFT,
             her_arrow.rotate_in_place, -np.pi/6,
-            her_arrow.shift, MED_BUFF*LEFT,
+            her_arrow.shift, MED_SMALL_BUFF*LEFT,
             Transform(A, A_inv, path_arc = np.pi)
         )
         self.dither()
@@ -1447,9 +1447,9 @@ class Prerequisites(Scene):
         for direction, words in zip([LEFT, RIGHT], prereqs):
             rect = Rectangle(height = 9, width = 16)
             rect.scale_to_fit_height(3.5)
-            rect.next_to(ORIGIN, direction, buff = MED_BUFF)
+            rect.next_to(ORIGIN, direction, buff = MED_SMALL_BUFF)
             rect.highlight(BLUE)
-            words.next_to(rect, UP, buff =  MED_BUFF)
+            words.next_to(rect, UP, buff =  MED_SMALL_BUFF)
             self.play(
                 Write(words),
                 ShowCreation(rect)
@@ -1493,7 +1493,7 @@ class RotationExample(LinearTransformationScene):
             coords.add_to_back(coords.rect)
             coords.highlight(vect.get_color())
             direction = UP if vect is self.j_hat else RIGHT
-            coords.next_to(vect.get_end(), direction, buff = MED_BUFF)
+            coords.next_to(vect.get_end(), direction, buff = MED_SMALL_BUFF)
             self.play(Write(coords))
             self.dither()
 
@@ -1525,7 +1525,7 @@ class RotationExample(LinearTransformationScene):
         follow_basis.add_background_rectangle()
         follow_basis.next_to(
             matrix, LEFT, 
-            buff = MED_BUFF, 
+            buff = MED_SMALL_BUFF, 
         )
 
         record = TextMobject(
@@ -1536,7 +1536,7 @@ class RotationExample(LinearTransformationScene):
         record.add_background_rectangle()
         record.next_to(
             matrix, DOWN, 
-            buff = MED_BUFF, 
+            buff = MED_SMALL_BUFF, 
             aligned_edge = LEFT
         )
 
@@ -1813,7 +1813,7 @@ class NextVideo(Scene):
         title = TextMobject("""
             Next video: Eigenvectors and eigenvalues
         """)
-        title.to_edge(UP, buff = MED_BUFF)
+        title.to_edge(UP, buff = MED_SMALL_BUFF)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
         rect.scale_to_fit_height(6)
         rect.next_to(title, DOWN)

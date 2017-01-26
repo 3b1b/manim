@@ -867,7 +867,7 @@ class ReadIntoZetaFunction(Scene):
             Line(LEFT, ORIGIN).shift(0.4*DOWN)
         )
         paragraph_lines.scale_to_fit_width(max_width)
-        paragraph_lines.next_to(title, DOWN, 2*MED_BUFF)
+        paragraph_lines.next_to(title, DOWN, MED_LARGE_BUFF)
         paper.add(paragraph_lines)
         max_height = 1.5*paragraph_lines.get_height()
 
@@ -879,7 +879,7 @@ class ReadIntoZetaFunction(Scene):
 
         statement.next_to(paragraph_lines, DOWN)
         statement.highlight(GREEN_B)
-        paper.add(paragraph_lines.copy().next_to(statement, DOWN, 2*MED_BUFF))
+        paper.add(paragraph_lines.copy().next_to(statement, DOWN, MED_LARGE_BUFF))
 
         randy.look_at(statement)
         self.add(randy, paper)
@@ -1247,7 +1247,7 @@ class FromRealToComplex(ComplexTransformationScene):
             converges and 
             makes sense
         """)
-        domain_words.to_corner(UP+RIGHT, buff = 2*MED_BUFF)
+        domain_words.to_corner(UP+RIGHT, buff = MED_LARGE_BUFF)
 
         anti_domain_words = TextMobject("""
             Not so much...
@@ -1400,7 +1400,7 @@ class TerritoryOfExponents(ComplexTransformationScene):
             "\\left(\\frac{1}{2}\\right)^s"
         )
         exponent[-1].highlight(YELLOW)
-        exponent.next_to(ORIGIN, LEFT, 2*MED_BUFF).to_edge(UP)
+        exponent.next_to(ORIGIN, LEFT, MED_LARGE_BUFF).to_edge(UP)
         self.add_foreground_mobjects(exponent)
 
 class ComplexExponentiation(Scene):
@@ -2091,7 +2091,7 @@ class ShowConditionalDefinition(Scene):
             for s in ">", "\\le"
         ])
         definitions = VGroup(sigma, something_else)
-        definitions.arrange_submobjects(DOWN, buff = 2*MED_BUFF, aligned_edge = LEFT)
+        definitions.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
         conditions.arrange_submobjects(DOWN, buff = LARGE_BUFF)
         definitions.shift(2*LEFT+2*UP)
         conditions.next_to(definitions, RIGHT, buff = LARGE_BUFF, aligned_edge = DOWN)

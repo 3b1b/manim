@@ -72,7 +72,7 @@ class GraphScene(Scene):
             y_axis.add_numbers(*self.y_labeled_nums)
             y_axis.numbers.shift(self.y_axis_numbers_nudge)
         y_label = TextMobject(self.y_axis_label)
-        y_label.next_to(y_axis.get_top(), RIGHT, buff = 2*MED_BUFF)
+        y_label.next_to(y_axis.get_top(), RIGHT, buff = MED_LARGE_BUFF)
         y_label.shift_onto_screen()
         y_axis.add(y_label)
         self.y_axis_label_mob = y_label
@@ -130,7 +130,7 @@ class GraphScene(Scene):
         label = "f(x)", 
         x_val = None,
         direction = RIGHT,
-        buff = MED_BUFF,
+        buff = MED_SMALL_BUFF,
         color = None,
         ):
         label = TexMobject(label)
@@ -224,14 +224,17 @@ class GraphScene(Scene):
             interim_point, p2,
             color = df_line_color
         )
+        group.add(group.dx_line, group.df_line)
 
         labels = VGroup()
         if dx_label is not None:
             group.dx_label = TexMobject(dx_label)
             labels.add(group.dx_label)
+            group.add(group.dx_label)
         if df_label is not None:
             group.df_label = TexMobject(df_label)
             labels.add(group.df_label)
+            group.add(group.df_label)
 
         if len(labels) > 0:
             max_width = 0.8*group.dx_line.get_width()
@@ -259,8 +262,8 @@ class GraphScene(Scene):
             group.secant_line.scale_in_place(
                 secant_line_length/group.secant_line.get_length()
             )
+            group.add(group.secant_line)
 
-        group.digest_mobject_attrs()
         return group
 
     def animate_secant_slope_group_change(

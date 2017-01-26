@@ -92,7 +92,7 @@ class StudentsFindThisConfusing(TeacherStudentsScene):
         question2.target.next_to(
             question1, DOWN, 
             aligned_edge = LEFT, 
-            buff = MED_BUFF
+            buff = MED_SMALL_BUFF
         )
         equation = TexMobject(
             "\\det\\left( %s \\right)=0"%matrix_to_tex_string([
@@ -142,13 +142,13 @@ class ManyPrerequisites(Scene):
         ]
         for rect, word in zip(rects, words):
             word_mob = TextMobject(word)
-            word_mob.next_to(rect, UP, buff = MED_BUFF)
+            word_mob.next_to(rect, UP, buff = MED_SMALL_BUFF)
             rect.add(word_mob)
 
         Matrix(np.array(rects).reshape((2, 2)))
         rects = VGroup(*rects)
         rects.scale_to_fit_height(2*SPACE_HEIGHT - 1.5)
-        rects.next_to(h_line, DOWN, buff = MED_BUFF)
+        rects.next_to(h_line, DOWN, buff = MED_SMALL_BUFF)
 
         self.play(Write(rects[0]))
         self.dither()
@@ -166,7 +166,7 @@ class ExampleTranformationScene(LinearTransformationScene):
     def add_matrix(self):
         matrix = Matrix(self.t_matrix.T)
         matrix.highlight_columns(X_COLOR, Y_COLOR)
-        matrix.next_to(ORIGIN, LEFT, buff = MED_BUFF)
+        matrix.next_to(ORIGIN, LEFT, buff = MED_SMALL_BUFF)
         matrix.to_edge(UP)
         matrix.rect = BackgroundRectangle(matrix)
         matrix.add_to_back(matrix.rect)
@@ -225,7 +225,7 @@ class VectorKnockedOffSpan(ExampleTranformationScene):
         all_words.shift(
             line.point_from_proportion(0.75) - \
             span_label.get_corner(DOWN+RIGHT) + \
-            MED_BUFF*LEFT
+            MED_SMALL_BUFF*LEFT
         )
         for text in all_words:
             text.add_to_back(BackgroundRectangle(text))
@@ -385,8 +385,8 @@ class FullSneakyEigenspace(ExampleTranformationScene):
         vectors.gradient_highlight(MAROON_B, YELLOW)
         words = TextMobject("Stretch by 2")
         words.add_background_rectangle()
-        words.next_to(ORIGIN, DOWN+LEFT, buff = MED_BUFF)
-        words.shift(MED_BUFF*LEFT)
+        words.next_to(ORIGIN, DOWN+LEFT, buff = MED_SMALL_BUFF)
+        words.shift(MED_SMALL_BUFF*LEFT)
         words.rotate(vectors[0].get_angle())
         words.start = words.copy()
         words.start.scale(0.5)
@@ -649,7 +649,7 @@ class DeduceTransformationFromMatrix(ColumnsToBasisVectors):
             to our coordinate system
         """)
         words.add_background_rectangle()
-        words.next_to(ORIGIN, DOWN+LEFT, buff = MED_BUFF)
+        words.next_to(ORIGIN, DOWN+LEFT, buff = MED_SMALL_BUFF)
         words.shift_onto_screen()
         self.play(Write(words))
         self.dither()
@@ -998,7 +998,7 @@ class NonZeroSolutionsVisually(LinearTransformationScene):
         equation.highlight_by_tex("\\lambda", MAROON_B)
         equation.highlight_by_tex("\\vec{\\textbf{v}}", YELLOW)
         equation.add_background_rectangle()
-        equation.next_to(ORIGIN, DOWN, buff = MED_BUFF)
+        equation.next_to(ORIGIN, DOWN, buff = MED_SMALL_BUFF)
         equation.to_edge(LEFT)
 
         det_equation = TexMobject(
@@ -1007,7 +1007,7 @@ class NonZeroSolutionsVisually(LinearTransformationScene):
         )
         det_equation_matrix = VGroup(*det_equation[2:2+4])
         det_equation.highlight_by_tex("\\lambda", MAROON_B)
-        det_equation.next_to(equation, DOWN, buff = MED_BUFF)
+        det_equation.next_to(equation, DOWN, buff = MED_SMALL_BUFF)
         det_equation.to_edge(LEFT)
         det_equation.add_background_rectangle()
 
@@ -1598,7 +1598,7 @@ class SolveRotationEigenvalues(Rotate90Degrees):
         )
         polynomial.highlight_by_tex("\\lambda^2", MAROON_B)
         polynomial.add_background_rectangle()
-        polynomial.next_to(equals, DOWN, buff = 2*MED_BUFF, aligned_edge = LEFT)
+        polynomial.next_to(equals, DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
         self.play(Write(polynomial))
         self.dither()
 
@@ -1608,7 +1608,7 @@ class SolveRotationEigenvalues(Rotate90Degrees):
         )
         result.highlight_by_tex("\\lambda", MAROON_B)
         result.add_background_rectangle()
-        result.next_to(polynomial, DOWN, buff = 2*MED_BUFF, aligned_edge = LEFT)
+        result.next_to(polynomial, DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
         self.play(Write(result))
         self.dither()
 
@@ -1665,8 +1665,8 @@ class ShearExample(RevisitExampleTransformation):
         for word in words:
             word.highlight_by_tex("1", MAROON_B)
             word.add_to_back(BackgroundRectangle(word))
-        words.arrange_submobjects(DOWN, buff = MED_BUFF)
-        words.next_to(ORIGIN, DOWN+RIGHT, buff = MED_BUFF)
+        words.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+        words.next_to(ORIGIN, DOWN+RIGHT, buff = MED_SMALL_BUFF)
         self.play(ShowCreation(vectors), run_time = 2)
         self.play(Write(words))
         self.dither()
@@ -1814,7 +1814,7 @@ class IntroduceEigenbasis(TeacherStudentsScene):
         )
         self.random_blink()
         new_words = VGroup(words1.copy(), words2)
-        new_words.arrange_submobjects(DOWN, buff = MED_BUFF)
+        new_words.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
         new_words.scale(0.8)
         self.teacher.bubble.add_content(new_words)
         self.play(
@@ -2103,7 +2103,7 @@ class LastVideo(Scene):
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
         rect.scale_to_fit_height(6)
-        rect.next_to(title, DOWN, buff = MED_BUFF)
+        rect.next_to(title, DOWN, buff = MED_SMALL_BUFF)
 
         self.add(title)
         self.play(ShowCreation(rect))
@@ -2155,7 +2155,7 @@ class ChangeToEigenBasis(ExampleTranformationScene):
         new_words = TextMobject("Use eigenvectors as basis")
         for text in words, new_words:
             text.add_background_rectangle()
-            text.next_to(ORIGIN, DOWN+LEFT, buff = MED_BUFF)
+            text.next_to(ORIGIN, DOWN+LEFT, buff = MED_SMALL_BUFF)
             # text.to_edge(RIGHT)
 
         self.play(Write(words))
@@ -2279,7 +2279,7 @@ class ChangeToEigenBasis(ExampleTranformationScene):
         hundred = TexMobject("100").scale(0.7)
         hundred.next_to(matrix_copy.get_corner(UP+RIGHT), RIGHT)
         compute = TextMobject("Compute")
-        compute.next_to(matrix_copy, LEFT, buff = MED_BUFF)
+        compute.next_to(matrix_copy, LEFT, buff = MED_SMALL_BUFF)
         words = VGroup(compute, matrix_copy, hundred)
         bubble.add_content(words)
 

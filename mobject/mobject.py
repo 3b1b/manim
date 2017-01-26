@@ -266,7 +266,9 @@ class Mobject(object):
         space_lengths = [SPACE_WIDTH, SPACE_HEIGHT]
         for vect in UP, DOWN, LEFT, RIGHT:
             dim = np.argmax(np.abs(vect))
-            if abs(self.get_edge_center(vect)[dim]) > space_lengths[dim]:
+            buff = kwargs.get("buff", DEFAULT_MOBJECT_TO_EDGE_BUFFER)
+            max_val = space_lengths[dim] - buff
+            if abs(self.get_edge_center(vect)[dim]) > max_val:
                 self.to_edge(vect, **kwargs)
         return self
 

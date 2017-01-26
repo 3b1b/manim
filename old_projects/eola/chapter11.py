@@ -65,7 +65,7 @@ class OpeningQuote(Scene):
         words.to_edge(UP)
         author = TextMobject("-Vladmir Arnold")
         author.highlight(YELLOW)
-        author.next_to(words, DOWN, buff = 2*MED_BUFF)
+        author.next_to(words, DOWN, buff = MED_LARGE_BUFF)
 
         self.play(Write(words, run_time = 8))
         self.dither()
@@ -136,7 +136,7 @@ class WhatIsA2DVector(LinearTransformationScene):
         students = [physics_student, cs_student]
         for student, vect in zip(students, [LEFT, RIGHT]):
             student.change_mode("confused")
-            student.to_corner(DOWN+vect, buff = 2*MED_BUFF)
+            student.to_corner(DOWN+vect, buff = MED_LARGE_BUFF)
             student.look_at(v)
             student.bubble = get_small_bubble(
                 student, height = 4, width = 4,
@@ -309,7 +309,7 @@ class AskAbout4DPhysicsStudent(Scene):
             thought_mobs.append(group)
             group.shift(
                 physy.bubble.get_top() -\
-                tex.get_top() + MED_BUFF*DOWN
+                tex.get_top() + MED_SMALL_BUFF*DOWN
             )
         line.shift(DOWN)
         curr_mob = thought_mobs[0]
@@ -827,7 +827,7 @@ class ScaleFunction(FunctionGraphScene):
         title = TexMobject("(2f)", "(x) = 2", "f", "(x)")
         title.highlight_by_tex("(2f)", scaled_graph.get_color())
         title.highlight_by_tex("f", graph.get_color())
-        title.next_to(ORIGIN, LEFT, buff = MED_BUFF)
+        title.next_to(ORIGIN, LEFT, buff = MED_SMALL_BUFF)
         title.to_edge(UP)
         self.add(title)
 
@@ -986,7 +986,7 @@ class FromVectorsToFunctions(VectorScene):
             equals, new_func
         )
         group.arrange_submobjects()
-        group.shift(2*UP).to_edge(LEFT, buff = 2*MED_BUFF)
+        group.shift(2*UP).to_edge(LEFT, buff = MED_LARGE_BUFF)
         rect = BackgroundRectangle(group)
         group.add_to_back(rect)
         deriv.move_to(L, aligned_edge = RIGHT)
@@ -1132,8 +1132,8 @@ class FormalDefinitionOfLinear(LinearTransformationScene):
             words.add_to_back(BackgroundRectangle(words))
             # words.scale(0.8)
             properties.add(words)
-        properties.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_BUFF)
-        properties.next_to(h_line, DOWN, buff = 2*MED_BUFF).to_edge(LEFT)
+        properties.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
+        properties.next_to(h_line, DOWN, buff = MED_LARGE_BUFF).to_edge(LEFT)
 
         self.play(Write(title), ShowCreation(h_line))
         self.dither()
@@ -1442,7 +1442,7 @@ class PolynomialsHaveArbitrarilyLargeDegree(Scene):
             "\\vdots"
         ]))
         polys.gradient_highlight(BLUE_B, BLUE_D)
-        polys.arrange_submobjects(DOWN, buff = 2*MED_BUFF)
+        polys.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
         polys.scale(1.3)
 
         arrow = TexMobject("\\Rightarrow").scale(1.5)
@@ -1548,8 +1548,8 @@ class IntroducePolynomialSpace(Scene):
             TexMobject("\\vdots"),
         )
         polys.gradient_highlight(BLUE_B, BLUE_D)
-        polys.arrange_submobjects(DOWN, buff = MED_BUFF)
-        polys.next_to(cloud.get_top(), DOWN, buff = 2*MED_BUFF)
+        polys.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+        polys.next_to(cloud.get_top(), DOWN, buff = MED_LARGE_BUFF)
 
         self.play(ShowCreation(cloud))
         for poly in polys:
@@ -1596,7 +1596,7 @@ class IntroducePolynomialSpace(Scene):
 
     def list_basis_functions(self):
         title = TextMobject("Basis functions")
-        title.next_to(self.title, DOWN, buff = MED_BUFF)
+        title.next_to(self.title, DOWN, buff = MED_SMALL_BUFF)
         title.to_edge(RIGHT)
         h_line = Line(ORIGIN, RIGHT).scale(title.get_width())
         h_line.next_to(title, DOWN)
@@ -1614,9 +1614,9 @@ class IntroducePolynomialSpace(Scene):
         basis_group.target.arrange_submobjects(
             DOWN, buff = 0.75*LARGE_BUFF, aligned_edge = LEFT
         )
-        basis_group.target.to_edge(RIGHT, buff = 2*MED_BUFF)
+        basis_group.target.to_edge(RIGHT, buff = MED_LARGE_BUFF)
         dots = TexMobject("\\vdots")
-        dots.next_to(basis_group.target, DOWN, buff = MED_BUFF, aligned_edge = LEFT)
+        dots.next_to(basis_group.target, DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT)
 
         basis_functions = [
             TexMobject("b_%d(x)"%i, "=")
@@ -1682,7 +1682,7 @@ class IntroducePolynomialSpace(Scene):
         ]        
         for entry, term in zip(entries, terms+more_terms):
             term.next_to(entry, LEFT, buff = LARGE_BUFF)
-        more_terms[-1].shift(MED_BUFF*LEFT)
+        more_terms[-1].shift(MED_SMALL_BUFF*LEFT)
 
         self.play(Transform(self.poly1, target))
         self.dither()
@@ -1695,7 +1695,7 @@ class IntroducePolynomialSpace(Scene):
 
         self.play(*map(FadeOut, [self.poly1]+more_terms))
         self.poly2.next_to(equals, LEFT)
-        self.poly2.shift(MED_BUFF*UP)
+        self.poly2.shift(MED_SMALL_BUFF*UP)
         self.poly2.highlight(WHITE)
         self.poly2[0].highlight(TEAL)
         VGroup(*self.poly2[3:5]).highlight(Z_COLOR)
@@ -1767,7 +1767,7 @@ class IntroducePolynomialSpace(Scene):
         deriv.generate_target()
         deriv.target.next_to(
             matrix.target, UP, 
-            buff = MED_BUFF,
+            buff = MED_SMALL_BUFF,
             aligned_edge = LEFT
         )
         deriv.target.shift(0.25*RIGHT)
@@ -1897,7 +1897,7 @@ class MatrixVectorMultiplicationAndDerivative(TeacherStudentsScene):
         arrow = TexMobject("\\Leftrightarrow")
         deriv = TexMobject("\\dfrac{df}{dx}")
         group = VGroup(mv_mult, arrow, deriv)
-        group.arrange_submobjects(buff = MED_BUFF)
+        group.arrange_submobjects(buff = MED_SMALL_BUFF)
         arrow.highlight(BLACK)
 
         teacher = self.get_teacher()
@@ -1915,7 +1915,7 @@ class MatrixVectorMultiplicationAndDerivative(TeacherStudentsScene):
         words = TextMobject("Linear transformations")
         h_line = Line(ORIGIN, RIGHT).scale(words.get_width())
         h_line.next_to(words, DOWN)
-        group.target.next_to(h_line, DOWN, buff = MED_BUFF)
+        group.target.next_to(h_line, DOWN, buff = MED_SMALL_BUFF)
         group.target[1].highlight(WHITE)
         new_group = VGroup(words, h_line, group.target)
         bubble.add_content(new_group)
@@ -1958,7 +1958,7 @@ class CompareTermsInLinearAlgebraToFunction(Scene):
             "Eigenfunctions",
         ]))
         for concepts, vect in (lin_alg_concepts, LEFT), (function_concepts, RIGHT):
-            concepts.arrange_submobjects(DOWN, buff = 2*MED_BUFF, aligned_edge = LEFT)
+            concepts.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
             concepts.next_to(h_line, DOWN, buff = LARGE_BUFF)
             concepts.shift(vect*SPACE_WIDTH/2)
             concepts.gradient_highlight(YELLOW_B, YELLOW_C)
@@ -2041,7 +2041,7 @@ class YouAsAMathematician(Scene):
         lhs = VGroup(eigen_equation, v_ne_zero)
         lhs.arrange_submobjects(DOWN)
         group = VGroup(lhs, arrow, det_equation)
-        group.arrange_submobjects(buff = MED_BUFF)
+        group.arrange_submobjects(buff = MED_SMALL_BUFF)
         return group
 
 class ShowVectorSpaces(Scene):
@@ -2094,7 +2094,7 @@ class ShowVectorSpaces(Scene):
             for x in range(3)
         ])
         for subgroup in arrays:
-            subgroup.arrange_submobjects(DOWN, buff = MED_BUFF)
+            subgroup.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
         arrays.arrange_submobjects(RIGHT)
         arrays.scale(0.7)
         arrays.gradient_highlight(YELLOW, MAROON_B)
@@ -2126,7 +2126,7 @@ class ToolsOfLinearAlgebra(Scene):
             "Dot products",
             "$\\vdots$"
         ]))
-        words.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_BUFF)
+        words.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
         words[-1].next_to(words[-2], DOWN)
         self.play(FadeIn(
             words,
@@ -2240,11 +2240,11 @@ class ListAxioms(Scene):
             for tex, color in tex_color_pairs:
                 axiom.highlight_by_tex(tex, color)
         axioms.arrange_submobjects(
-            DOWN, buff = 2*MED_BUFF,
+            DOWN, buff = MED_LARGE_BUFF,
             aligned_edge = LEFT
         )
         axioms.scale_to_fit_width(2*SPACE_WIDTH-1)
-        axioms.next_to(h_line, DOWN, buff = MED_BUFF)
+        axioms.next_to(h_line, DOWN, buff = MED_SMALL_BUFF)
 
         self.play(FadeIn(
             axioms,
@@ -2387,7 +2387,7 @@ class VectorSpaceOfPiCreatures(Scene):
         scale_equation.arrange_submobjects()
 
         VGroup(sum_equation, scale_equation).arrange_submobjects(
-            DOWN, buff = MED_BUFF
+            DOWN, buff = MED_SMALL_BUFF
         )
 
         self.play(FadeOut(creatures))
@@ -2515,8 +2515,8 @@ class WhatIsThree(Scene):
                 group.gradient_highlight(YELLOW, MAROON_B)
             else:
                 m1, m2, m3 = group
-                m2.next_to(m1, buff = MED_BUFF)
-                m3.next_to(VGroup(m1, m2), DOWN, buff = MED_BUFF)
+                m2.next_to(m1, buff = MED_SMALL_BUFF)
+                m3.next_to(VGroup(m1, m2), DOWN, buff = MED_SMALL_BUFF)
             group.next_to(three, vect, buff = LARGE_BUFF)
             self.play(FadeIn(group))
         self.dither()

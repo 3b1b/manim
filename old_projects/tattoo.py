@@ -709,7 +709,7 @@ class ExplainTrigFunctionDistances(TrigRepresentationsScene, PiCreatureScene):
         text.scale(0.75)
         text[-2].highlight(self.theta_color)
         text.add_background_rectangle()
-        text.next_to(brace.get_center_of_mass(), vect, buff = 1.2*MED_BUFF)
+        text.next_to(brace.get_center_of_mass(), vect, buff = 1.2*MED_SMALL_BUFF)
         return VGroup(line, brace, text)
 
     def get_tangent_line(self):

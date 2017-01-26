@@ -185,10 +185,10 @@ class SimpleDefine2dCrossProduct(LinearTransformationScene):
         cross_rect = BackgroundRectangle(cross)
         equals = TexMobject("=")
         equals.add_background_rectangle()
-        equals.next_to(cross, buff = MED_BUFF/2)
+        equals.next_to(cross, buff = MED_SMALL_BUFF/2)
         words = TextMobject("Area of parallelogram")
         words.add_background_rectangle()
-        words.next_to(equals, buff = MED_BUFF/2)
+        words.next_to(equals, buff = MED_SMALL_BUFF/2)
         arrow = Arrow(
             words.get_bottom(), 
             self.square.get_center(),
@@ -491,7 +491,7 @@ class ContrastDotAndCross(Scene):
             dot_prod.arrange_submobjects(RIGHT)
             if dot_prod.get_width() > max_width:
                 dot_prod.scale_to_fit_width(max_width)
-            dot_prod.next_to(last_mob, DOWN, buff = MED_BUFF)
+            dot_prod.next_to(last_mob, DOWN, buff = MED_SMALL_BUFF)
             last_mob = dot_prod
             dot_prod.to_edge(LEFT)
             dot_prod.remove(result)
@@ -561,7 +561,7 @@ class ContrastDotAndCross(Scene):
         )
         full_cross_product.arrange_submobjects()
         full_cross_product.scale(0.75)
-        full_cross_product.next_to(self.r_h_line, DOWN, buff = MED_BUFF/2)
+        full_cross_product.next_to(self.r_h_line, DOWN, buff = MED_SMALL_BUFF/2)
         full_cross_product.remove(result)
         self.play(
             Write(full_cross_product),
@@ -593,7 +593,7 @@ class ContrastDotAndCross(Scene):
 
     def add_2d_cross_product(self):
         h_line = DashedLine(ORIGIN, SPACE_WIDTH*RIGHT)
-        h_line.next_to(self.only_3d_text, DOWN, buff = MED_BUFF/2)
+        h_line.next_to(self.only_3d_text, DOWN, buff = MED_SMALL_BUFF/2)
         h_line.to_edge(RIGHT, buff = 0)
         arrays = np.random.randint(0, 9, (2, 2))
         m1, m2 = matrices = map(Matrix, arrays)
@@ -616,7 +616,7 @@ class ContrastDotAndCross(Scene):
         result.arrange_submobjects(RIGHT)
         full_cross_product = VGroup(cross_product, result)
         full_cross_product.arrange_submobjects(RIGHT)
-        full_cross_product.next_to(h_line, DOWN, buff = MED_BUFF/2)
+        full_cross_product.next_to(h_line, DOWN, buff = MED_SMALL_BUFF/2)
 
         self.play(ShowCreation(h_line))
         self.play(Write(cross_product))
@@ -1111,7 +1111,7 @@ class TwoDCrossProductExample(Define2dCrossProduct):
         self.show_transformation(v, w)
         det_sym = TexMobject(str(int(abs(det))))
         det_sym.scale(1.5)
-        det_sym.next_to(v.get_end()+w.get_end(), DOWN+RIGHT, buff = MED_BUFF/2)
+        det_sym.next_to(v.get_end()+w.get_end(), DOWN+RIGHT, buff = MED_SMALL_BUFF/2)
         arc = self.get_arc(v, w, radius = 1)
         arc.highlight(RED)
         self.play(Write(det_sym))
@@ -1169,7 +1169,7 @@ class BiggerWhenPerpendicular(LinearTransformationScene):
         group.arrange_submobjects()
         group.to_edge(UP)
         end_words.move_to(start_words, aligned_edge = RIGHT)
-        smaller.next_to(cross_is, buff = MED_BUFF/2, aligned_edge = DOWN)
+        smaller.next_to(cross_is, buff = MED_SMALL_BUFF/2, aligned_edge = DOWN)
         for mob in list(group) + [end_words, smaller]:
             mob.add_background_rectangle()
 
@@ -1593,11 +1593,11 @@ class DeterminantTrick(Scene):
             if last_mob:
                 plus = TexMobject("+")
                 syms.add(plus)
-                plus.next_to(term, LEFT, buff = MED_BUFF/2)
+                plus.next_to(term, LEFT, buff = MED_SMALL_BUFF/2)
                 term.add_to_back(plus)
-                term.next_to(last_mob, RIGHT, buff = MED_BUFF/2)
+                term.next_to(last_mob, RIGHT, buff = MED_SMALL_BUFF/2)
             else:
-                term.next_to(equation, DOWN, buff = MED_BUFF, aligned_edge = LEFT)
+                term.next_to(equation, DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT)
             last_mob = term
             self.play(*it.chain(*[
                 [mob.scale_in_place, 1.2]
@@ -1659,7 +1659,7 @@ class NextVideo(Scene):
             light of linear transformations
         """)
         title.scale_to_fit_height(1.2)
-        title.to_edge(UP, buff = MED_BUFF/2)
+        title.to_edge(UP, buff = MED_SMALL_BUFF/2)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
         rect.scale_to_fit_height(6)
         rect.next_to(title, DOWN)
@@ -1700,10 +1700,10 @@ class CrossAndDualWords(Scene):
 
         VGroup(transform, dot_with_cross).scale(0.7)
         VGroup(vector_word, cross).arrange_submobjects(
-            RIGHT, buff = MED_BUFF
+            RIGHT, buff = MED_SMALL_BUFF
         ).center().shift(LEFT).to_edge(UP)
-        transform_word.next_to(vector_word, DOWN, buff = MED_BUFF, aligned_edge = LEFT)
-        transform.next_to(transform_word, DOWN, buff = MED_BUFF, aligned_edge = LEFT)
+        transform_word.next_to(vector_word, DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT)
+        transform.next_to(transform_word, DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT)
         dot_with_cross.next_to(func, RIGHT)
 
         self.add(vector_word)

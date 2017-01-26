@@ -14,7 +14,7 @@ from helpers import *
 
 from camera import Camera
 from tk_scene import TkSceneRoot
-from mobject import Mobject
+from mobject import Mobject, VMobject
 from animation import Animation
 from animation.transform import MoveToTarget
 
@@ -92,6 +92,7 @@ class Scene(object):
             it.chain(*[
                 m.submobject_family()
                 for m in mobjects
+                if not (isinstance(m, VMobject) and m.is_subpath)
             ])
         ))
         

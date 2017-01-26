@@ -1193,7 +1193,7 @@ class EdgesOfSquare(Scene):
                 n.next_to,
                 square.get_corner(vect+LEFT),
                 LEFT,
-                MED_BUFF,
+                MED_SMALL_BUFF,
                 path_arc = np.pi/2
             )
             for n, vect in zip(self.numbers, [DOWN, UP])
@@ -2128,7 +2128,7 @@ class ThumbnailImage(ClosedLoopScene):
         title.to_edge(UP)
         title.gradient_highlight(YELLOW, MAROON_B)
         self.add(title)
-        self.loop.next_to(title, DOWN, buff = MED_BUFF)
+        self.loop.next_to(title, DOWN, buff = MED_SMALL_BUFF)
         self.loop.shift(2*LEFT)
 
 

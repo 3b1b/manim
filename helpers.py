@@ -421,6 +421,12 @@ def rush_from(t):
 def slow_into(t):
     return np.sqrt(1-(1-t)*(1-t))
 
+def double_smooth(t):
+    if t < 0.5:
+        return 0.5*smooth(2*t)
+    else:
+        return 0.5*(1 + smooth(2*t - 1))
+
 def there_and_back(t, inflection = 10.0):
     new_t = 2*t if t < 0.5 else 2*(1 - t)
     return smooth(new_t, inflection)

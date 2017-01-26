@@ -104,9 +104,9 @@ class BruteForceVerification(Scene):
         computation_words.scale(0.75)
         h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
         v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
-        computation_words.to_edge(UP, buff = MED_BUFF/2)
+        computation_words.to_edge(UP, buff = MED_SMALL_BUFF/2)
         h_line.next_to(computation_words, DOWN)
-        formula_word.next_to(h_line, UP, buff = MED_BUFF)
+        formula_word.next_to(h_line, UP, buff = MED_SMALL_BUFF)
         computation_words.shift(SPACE_WIDTH*RIGHT/2)
         formula_word.shift(SPACE_WIDTH*LEFT/2)
 
@@ -146,7 +146,7 @@ class BruteForceVerification(Scene):
             mob.highlight_by_tex(v_tex, V_COLOR)
             mob.highlight_by_tex(w_tex, W_COLOR)
             mob.highlight_by_tex("\\theta", GREEN)
-            mob.next_to(last_point, DOWN, buff = MED_BUFF)
+            mob.next_to(last_point, DOWN, buff = MED_SMALL_BUFF)
             if mob.get_width() > max_width:
                 mob.scale_to_fit_width(max_width)
             last_point = mob
@@ -276,7 +276,7 @@ class MathematicalWild(Scene):
             to the number line
         """)
         bubble.content.highlight(BLUE)
-        bubble.content.shift(MED_BUFF*UP/2)
+        bubble.content.shift(MED_SMALL_BUFF*UP/2)
         bubble.remove(*bubble[:-1])
         bubble.add(bubble.content)
         bubble.next_to(randy.get_corner(UP+RIGHT), RIGHT)
@@ -334,7 +334,7 @@ class ThreeStepPlan(Scene):
         steps[2].highlight_by_tex(cross_text, P_COLOR)
         VGroup(*steps).arrange_submobjects(
             DOWN, aligned_edge = LEFT, buff = LARGE_BUFF
-        ).next_to(h_line, DOWN, buff = MED_BUFF)
+        ).next_to(h_line, DOWN, buff = MED_SMALL_BUFF)
 
         self.add(title)
         self.play(ShowCreation(h_line))
@@ -343,7 +343,7 @@ class ThreeStepPlan(Scene):
             self.dither()
 
         linear_transformation = TextMobject("Linear", "transformation")
-        linear_transformation.next_to(h_line, DOWN, MED_BUFF)
+        linear_transformation.next_to(h_line, DOWN, MED_SMALL_BUFF)
         det = self.get_det()
         rect = Rectangle(width = 16, height = 9, color = BLUE)
         rect.scale_to_fit_height(3.5)
@@ -418,7 +418,7 @@ class DefineDualTransform(Scene):
             definition.arrange_submobjects(RIGHT)
             definitions.add(definition)
             defs_equals.add(equals)
-        definitions.arrange_submobjects(buff = MED_BUFF)
+        definitions.arrange_submobjects(buff = MED_SMALL_BUFF)
         definitions.shift(2*DOWN)
 
         mobs_with_targets = list(it.chain(
@@ -442,7 +442,7 @@ class DefineDualTransform(Scene):
 
         final_mobs = VGroup(triple_cross, VGroup(det_text, matrix))
         final_mobs.arrange_submobjects()
-        final_mobs.next_to(self.title, DOWN, buff = MED_BUFF)
+        final_mobs.next_to(self.title, DOWN, buff = MED_SMALL_BUFF)
 
         for mob in definitions, final_mobs:
             mob.scale_to_fit_width(SPACE_WIDTH - 1)
@@ -720,7 +720,7 @@ class DefineDualTransform(Scene):
             component.arrange_submobjects()
             cross_components.add(component)
             to_fade.add(syms[0], syms[-1], quint[0])
-        cross_components.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_BUFF)
+        cross_components.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
         cross_components.next_to(dot_components, RIGHT)
         for quint in quints:
             self.play(*[
@@ -739,7 +739,7 @@ class DefineDualTransform(Scene):
         self.play(
             ApplyFunction(
                 lambda m : m.arrange_submobjects(
-                    DOWN, buff = MED_BUFF+SMALL_BUFF
+                    DOWN, buff = MED_SMALL_BUFF+SMALL_BUFF
                 ).next_to(cross_components, LEFT),
                 new_ps
             ),
@@ -773,7 +773,7 @@ class DefineDualTransform(Scene):
         question.highlight_by_tex(p_tex, P_COLOR)
         everything.target = everything.copy()
         everything.target.next_to(
-            question, DOWN, buff = MED_BUFF
+            question, DOWN, buff = MED_SMALL_BUFF
         )
         self.play(
             MoveToTarget(everything),
@@ -829,7 +829,7 @@ class DotProductWords(Scene):
         p_mob.highlight(P_COLOR)
         input_array = Matrix(list("xyz"))
         dot_product = VGroup(p_mob, Dot(radius = 0.07), input_array)
-        dot_product.arrange_submobjects(buff = MED_BUFF/2)
+        dot_product.arrange_submobjects(buff = MED_SMALL_BUFF/2)
         equals = TexMobject("=")
         dot_product.next_to(equals, LEFT)
         words = VGroup(*it.starmap(TextMobject, [
@@ -909,7 +909,7 @@ class NextVideo(Scene):
         title = TextMobject("""
             Next video: Change of basis
         """)
-        title.to_edge(UP, buff = MED_BUFF/2)
+        title.to_edge(UP, buff = MED_SMALL_BUFF/2)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
         rect.scale_to_fit_height(6)
         rect.next_to(title, DOWN)

@@ -180,7 +180,7 @@ class ShowNumericalDotProduct(Scene):
         v2 = Matrix(self.v2)
         inter_array_dot = TexMobject("\\cdot").scale(1.5)
         dot_product = VGroup(v1, inter_array_dot, v2)
-        dot_product.arrange_submobjects(RIGHT, buff = MED_BUFF/2)
+        dot_product.arrange_submobjects(RIGHT, buff = MED_SMALL_BUFF/2)
         dot_product.to_edge(LEFT)
         pairs = zip(v1.get_entries(), v2.get_entries())
 
@@ -459,7 +459,7 @@ class ShowQualitativeDotProductValues(VectorScene):
         ])
         for word, sym in zip(words, [comp, equals, less_than]):
             word.add_background_rectangle()
-            word.next_to(sym, DOWN, aligned_edge = LEFT, buff = MED_BUFF)
+            word.next_to(sym, DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
             word.highlight(sym.get_color())
 
         v = Vector([1.5, 1.5], color = V_COLOR)
@@ -713,7 +713,7 @@ class TwoDToOneDScene(LinearTransformationScene):
 class Introduce2Dto1DLinearTransformations(TwoDToOneDScene):
     def construct(self):
         number_line_words = TextMobject("Number line")
-        number_line_words.next_to(self.number_line, UP, buff = MED_BUFF)
+        number_line_words.next_to(self.number_line, UP, buff = MED_SMALL_BUFF)
         numbers = VMobject(*self.number_line.get_number_mobjects())
 
         self.remove(self.number_line)
@@ -810,8 +810,8 @@ class OkayToIgnoreFormalProperties(Scene):
             tex_mob.highlight_by_tex(v_tex, V_COLOR)
             tex_mob.highlight_by_tex(w_tex, W_COLOR)
             tex_mob.highlight_by_tex("c", GREEN)
-        additivity.next_to(h_line, DOWN, buff = MED_BUFF)
-        scaling.next_to(additivity, DOWN, buff = MED_BUFF)
+        additivity.next_to(h_line, DOWN, buff = MED_SMALL_BUFF)
+        scaling.next_to(additivity, DOWN, buff = MED_SMALL_BUFF)
         words = TextMobject("We'll ignore these")
         words.highlight(RED)
         arrow = Arrow(DOWN, UP, color = RED)
@@ -869,11 +869,11 @@ class FormalVsVisual(Scene):
         visual_statement.submobject_gradient_highlight(YELLOW, MAROON_B)
 
         properties = VMobject(additivity, scaling)
-        properties.arrange_submobjects(DOWN, buff = MED_BUFF)
+        properties.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
         
         for text, mob in (formal, properties), (visual, visual_statement):
             mob.scale(0.75)
-            mob.next_to(text, DOWN, buff = MED_BUFF)
+            mob.next_to(text, DOWN, buff = MED_SMALL_BUFF)
 
         self.add(title)
         self.play(*map(ShowCreation, [line, v_line]))
@@ -1029,7 +1029,7 @@ class NonLinearFailsDotTest(TwoDTo1DTransformWithDots):
             "Line of dots", "do not", "remain evenly spaced"
         )
         words.highlight_by_tex("do not", RED)
-        words.next_to(line, UP, buff = MED_BUFF)
+        words.next_to(line, UP, buff = MED_SMALL_BUFF)
         array_tex = matrix_to_tex_string(["x", "y"])
         equation = TexMobject(
             "f", "\\left(%s \\right)"%array_tex, " = x^2 - y^2"
@@ -1306,7 +1306,7 @@ class AssociationBetweenMatricesAndVectors(Scene):
         arrow = DoubleArrow(LEFT, RIGHT, color = WHITE)
         VGroup(
             matrices_words, arrow, vectors_words
-        ).arrange_submobjects(buff = MED_BUFF)
+        ).arrange_submobjects(buff = MED_SMALL_BUFF)
 
         matrices = VGroup(*map(Matrix, self.matrices))
         vectors = VGroup(*map(Matrix, [m[0] for m in self.matrices]))
@@ -1318,7 +1318,7 @@ class AssociationBetweenMatricesAndVectors(Scene):
         vectors.words = vectors_words
         for group in matrices, vectors:
             for m, direction in zip(group, [UP, DOWN]):
-                m.next_to(group.words, direction, buff = MED_BUFF)
+                m.next_to(group.words, direction, buff = MED_SMALL_BUFF)
 
         self.play(*map(Write, [matrices_words, vectors_words]))
         self.play(ShowCreation(arrow))
@@ -1597,7 +1597,7 @@ class ProjectSingleVectorOnUHat(ProjectOntoUnitVectorNumberline):
         dot_product = TexMobject(v_tex, "\\cdot", u_tex)
         dot_product.highlight_by_tex(v_tex, v.get_color())
         dot_product.highlight_by_tex(u_tex, self.u_hat.get_color())
-        dot_product.next_to(ORIGIN, UP, buff = MED_BUFF)
+        dot_product.next_to(ORIGIN, UP, buff = MED_SMALL_BUFF)
         dot_product.rotate(self.tilt_angle)
         dot_product.shift(v.proj.get_end())
         dot_product.add_background_rectangle()
@@ -1626,7 +1626,7 @@ class AskAboutProjectionMatrix(Scene):
         matrix = Matrix([["?", "?"]])
         matrix.highlight_columns(X_COLOR, Y_COLOR)
         words = TextMobject("Projection matrix:")
-        VMobject(words, matrix).arrange_submobjects(buff = MED_BUFF).shift(UP)
+        VMobject(words, matrix).arrange_submobjects(buff = MED_SMALL_BUFF).shift(UP)
         basis_words = [
             TextMobject("Where", "$\\hat{\\%smath}$"%char, "lands")
             for char in "i", "j"
@@ -1679,7 +1679,7 @@ class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
         question.add_background_rectangle()
         matrix = Matrix([["u_x", "u_y"]])
         VGroup(question, matrix).arrange_submobjects(DOWN).to_corner(
-            UP+LEFT, buff = MED_BUFF/2
+            UP+LEFT, buff = MED_SMALL_BUFF/2
         )
         matrix_rect = BackgroundRectangle(matrix)
 
@@ -1695,7 +1695,7 @@ class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
         for label, vect, direction in trips:
             label.highlight(vect.get_color())
             label.scale(1.2)
-            label.next_to(vect.get_end(), direction, buff = MED_BUFF/2)
+            label.next_to(vect.get_end(), direction, buff = MED_SMALL_BUFF/2)
 
         self.play(Write(u_label, run_time = 1))
         self.play(*map(ShowCreation, basis_vectors))
@@ -2094,8 +2094,8 @@ class TwoDOneDTransformationSeparateSpace(Scene):
         for words in start_words, end_words:
             words.add_background_rectangle()
             words.scale(0.8)
-        start_words.next_to(ORIGIN, RIGHT, buff = MED_BUFF).to_edge(UP)
-        end_words.next_to(ORIGIN, DOWN+LEFT, buff = MED_BUFF/2)
+        start_words.next_to(ORIGIN, RIGHT, buff = MED_SMALL_BUFF).to_edge(UP)
+        end_words.next_to(ORIGIN, DOWN+LEFT, buff = MED_SMALL_BUFF/2)
 
         self.play(*map(ShowCreation, [
             plane, number_line, v_line
@@ -2154,7 +2154,7 @@ class LooseDualityDescription(Scene):
         arrow = TexMobject("\\Leftrightarrow")
         words = TextMobject("Natural-but-surprising", "correspondence")
         words[1].gradient_highlight(BLUE, YELLOW)
-        VGroup(duality, arrow, words).arrange_submobjects(buff = MED_BUFF)
+        VGroup(duality, arrow, words).arrange_submobjects(buff = MED_SMALL_BUFF)
 
         self.add(duality)
         self.play(Write(arrow))
@@ -2277,7 +2277,7 @@ class WhatTheVectorWantsToBe(Scene):
             "to be"
         )
         words[1].highlight(BLUE)
-        words.next_to(matrix, UP, buff = MED_BUFF)
+        words.next_to(matrix, UP, buff = MED_SMALL_BUFF)
 
         self.add(plane, v_line, number_line, numbers)
         self.play(ShowCreation(vect))
@@ -2306,7 +2306,7 @@ class NextVideo(Scene):
             light of linear transformations
         """)
         title.scale_to_fit_height(1.2)
-        title.to_edge(UP, buff = MED_BUFF/2)
+        title.to_edge(UP, buff = MED_SMALL_BUFF/2)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
         rect.scale_to_fit_height(6)
         rect.next_to(title, DOWN)

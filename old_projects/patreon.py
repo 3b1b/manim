@@ -161,7 +161,7 @@ class GrowingToDoList(Scene):
             "Understanding entropy",
         ]))
         lines.scale(0.65)
-        lines.arrange_submobjects(DOWN, buff = MED_BUFF, aligned_edge = LEFT)
+        lines.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT)
         lines.gradient_highlight(BLUE_C, YELLOW)
         lines.next_to(title, DOWN, buff = LARGE_BUFF/2.)
         lines.to_edge(RIGHT)
@@ -213,9 +213,9 @@ class TwoTypesOfVideos(Scene):
                 "ODEs",
             ]
         ])
-        series_list.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_BUFF)
+        series_list.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
         series_list.scale_to_fit_width(SPACE_WIDTH-2)
-        series_list.next_to(series, DOWN, buff = MED_BUFF)
+        series_list.next_to(series, DOWN, buff = MED_SMALL_BUFF)
         series_list.to_edge(RIGHT)
 
         fridays = TextMobject("Every other friday")
@@ -224,14 +224,14 @@ class TwoTypesOfVideos(Scene):
             words.highlight(YELLOW)
             words.next_to(
                 morty, vect, 
-                buff = MED_BUFF, 
+                buff = MED_SMALL_BUFF, 
                 aligned_edge = UP
             )
         unless = TextMobject("""
             Unless you're
             a patron \\dots
         """)
-        unless.next_to(when_done, DOWN, buff = MED_BUFF)
+        unless.next_to(when_done, DOWN, buff = MED_SMALL_BUFF)
 
         self.add(morty)
         self.play(Blink(morty))
@@ -451,8 +451,8 @@ class PythagoreanTransformation(Scene):
             tri1.copy().rotate(-i*np.pi/2)
             for i in range(1, 4)
         ]
-        a = TexMobject("a").next_to(tri1[0], DOWN, buff = MED_BUFF)
-        b = TexMobject("b").next_to(tri1[2], LEFT, buff = MED_BUFF)
+        a = TexMobject("a").next_to(tri1[0], DOWN, buff = MED_SMALL_BUFF)
+        b = TexMobject("b").next_to(tri1[2], LEFT, buff = MED_SMALL_BUFF)
         c = TexMobject("c").next_to(tri1[1].get_center(), UP+RIGHT)
 
         c_square = Polygon(*[
@@ -547,9 +547,9 @@ class MakeALotOfPiCreaturesHappy(Scene):
             VGroup(*[
                 Randolph()
                 for x in range(7)
-            ]).arrange_submobjects(RIGHT, buff = 2*MED_BUFF)
+            ]).arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
             for x in range(4)
-        ]).arrange_submobjects(DOWN, buff = 2*MED_BUFF)
+        ]).arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
 
         pi_list = list(it.chain(*[
             layer.submobjects

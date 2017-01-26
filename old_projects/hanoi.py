@@ -2268,7 +2268,7 @@ class RecursiveSolutionToConstrained(RecursiveSolution):
         smaller_subdivision.set_fill(opacity = 0)
         self.play(
             steps.shift, 
-            (SPACE_HEIGHT-sub_sub_steps.get_top()[1]-MED_BUFF)*UP,
+            (SPACE_HEIGHT-sub_sub_steps.get_top()[1]-MED_SMALL_BUFF)*UP,
             self.eyes.look_at_anim(steps)
         )
         self.play(ApplyMethod(

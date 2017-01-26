@@ -104,10 +104,10 @@ class Chapter9(Scene):
         for pi in jenny, you:
             pi.bubble = pi.get_bubble("speech", width = 3, height = 3)
             if pi is you:
-                pi.bubble.shift(MED_BUFF*RIGHT)
+                pi.bubble.shift(MED_SMALL_BUFF*RIGHT)
             else:
                 pi.coords.scale(0.8)
-                pi.bubble.shift(MED_BUFF*LEFT)
+                pi.bubble.shift(MED_SMALL_BUFF*LEFT)
             pi.bubble.add_content(pi.coords)
             pi.add(pi.bubble, pi.coords)
             pi.look_at(vector)

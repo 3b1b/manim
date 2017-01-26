@@ -285,7 +285,7 @@ class MatrixInTheWild(Scene):
         matrix.next_to(randy, RIGHT, buff = LARGE_BUFF, aligned_edge = DOWN)
         bubble = randy.get_bubble(height = 4)
         bubble.make_green_screen()
-        VMobject(randy, bubble, matrix).to_corner(UP+LEFT, buff = MED_BUFF)
+        VMobject(randy, bubble, matrix).to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
 
         self.add(randy)
         self.play(Write(matrix))
@@ -449,7 +449,7 @@ class TwoDTo1DTransform(LinearTransformationScene):
     def construct(self):
         line = NumberLine()
         plane_words = TextMobject("2d space")
-        plane_words.next_to(self.j_hat, UP, buff = MED_BUFF)
+        plane_words.next_to(self.j_hat, UP, buff = MED_SMALL_BUFF)
         plane_words.add_background_rectangle()
         line_words = TextMobject("1d space (number line)")
         line_words.next_to(line, UP)
@@ -483,7 +483,7 @@ class TwoDTo1DTransform(LinearTransformationScene):
         matrix = Matrix([[1, 2]])
         matrix_words = TextMobject("Transformation matrix: ")
         matrix_group = VMobject(matrix_words, matrix)
-        matrix_group.arrange_submobjects(buff = MED_BUFF)
+        matrix_group.arrange_submobjects(buff = MED_SMALL_BUFF)
         matrix_group.to_edge(UP)
         entries = matrix.get_entries()
 
@@ -518,7 +518,7 @@ class TwoDTo1DTransformWithDots(TwoDTo1DTransform):
         words = TextMobject(
             "Line of dots remains evenly spaced"
         )
-        words.next_to(line, UP, buff = MED_BUFF)
+        words.next_to(line, UP, buff = MED_SMALL_BUFF)
 
         self.play(Write(dots))
         self.apply_transposed_matrix(

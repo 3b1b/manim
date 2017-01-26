@@ -49,7 +49,7 @@ class CircleScene(PiCreatureScene):
             fill_color = self.fill_color,
             fill_opacity = self.fill_opacity,
         )
-        self.circle.to_corner(self.circle_corner, buff = 2*MED_BUFF)
+        self.circle.to_corner(self.circle_corner, buff = MED_LARGE_BUFF)
         self.radius_line = Line(
             self.circle.get_center(),
             self.circle.get_right(),
@@ -722,7 +722,7 @@ class IntroduceTinyChangeInArea(CircleScene):
             two_pi_R.target, lp, dR.target.scale(1./0.7), rp
         )
         final_area.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
-        final_area.next_to(almost_rect, DOWN, buff = 2*MED_BUFF)
+        final_area.next_to(almost_rect, DOWN, buff = MED_LARGE_BUFF)
         final_area.highlight(GREEN_A)
         final_area[3].highlight(self.dR_color)
         change_in_area.shift(0.1*LEFT)
@@ -768,7 +768,7 @@ class IntroduceTinyChangeInArea(CircleScene):
         pi_R_squared, plus, two_pi_R_dR, plus2, pi_dR_squared, minus2, pi_R_squared2 = expanded
         for subset in two_pi_R_dR[4:7], pi_dR_squared[2:5]:
             VGroup(*subset).highlight(self.dR_color)
-        expanded.next_to(new_area_form, DOWN, aligned_edge = LEFT, buff = MED_BUFF)
+        expanded.next_to(new_area_form, DOWN, aligned_edge = LEFT, buff = MED_SMALL_BUFF)
         expanded.shift(LEFT/2.)
 
         faders = [area_brace, area_word, new_area_brace, new_area_word]
@@ -1258,7 +1258,7 @@ class NameDerivative(IntroduceTinyChangeInArea):
             "=", "\\frac{d(\\pi R^2)}{dR}",
             "=", "2\\pi R"
         )
-        dArea_fom.to_edge(UP, buff = 2*MED_BUFF).shift(RIGHT)
+        dArea_fom.to_edge(UP, buff = MED_LARGE_BUFF).shift(RIGHT)
         dA, frac_line, dR = VGroup(*dA_dR[:2]), dA_dR[2], VGroup(*dA_dR[3:])
         dA.highlight(GREEN_B)
         dR.highlight(self.dR_color)
@@ -1369,7 +1369,7 @@ class NameDerivative(IntroduceTinyChangeInArea):
         fracs.add(TexMobject("\\cdots \\rightarrow"))
         fracs.add(TexMobject("???"))
         fracs[-1].gradient_highlight(self.dR_color, self.outer_ring.get_color())
-        fracs.arrange_submobjects(RIGHT, buff = 2*MED_BUFF)
+        fracs.arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
         fracs.to_corner(DOWN+LEFT)
 
         arrows = VGroup()
@@ -1494,7 +1494,7 @@ class DerivativeAsTangentLine(ZoomedScene):
         y_axis.add_numbers(5, 10, 15, 20)
         y_axis.numbers.shift(0.4*UP+0.5*LEFT)
         y_label = TexMobject("A")
-        y_label.next_to(y_axis.get_top(), RIGHT, buff = 2*MED_BUFF)
+        y_label.next_to(y_axis.get_top(), RIGHT, buff = MED_LARGE_BUFF)
 
         def func(alpha):
             R = interpolate(self.R_min, self.R_max, alpha)
@@ -1815,7 +1815,7 @@ class IntroduceConcentricRings(CircleScene):
         area_sum.add(*dots_equals_area)
         area_sum.arrange_submobjects()
         area_sum.to_edge(RIGHT)
-        area_sum.to_edge(UP, buff = MED_BUFF)
+        area_sum.to_edge(UP, buff = MED_SMALL_BUFF)
         dots_equals_area[-1].shift(0.1*UP)
         self.area_sum_rhs = dots_equals_area[-1]
 
@@ -2043,7 +2043,7 @@ class IntroduceConcentricRings(CircleScene):
             "an approximation?"
         )
         question.next_to(approx, DOWN, buff = 1.3*LARGE_BUFF)
-        arrow = Arrow(question, approx, buff = MED_BUFF)
+        arrow = Arrow(question, approx, buff = MED_SMALL_BUFF)
         approach_words = TextMobject("Consider\\\\", "$dr \\to 0$")
         approach_words.move_to(question, RIGHT)
         int_brace = Brace(self.integral_expression)
@@ -2401,8 +2401,8 @@ class FundamentalTheorem(CircleScene):
         self.play(
             FadeOut(self.derivative_terms[0]),
             FadeOut(self.integral_terms[0]),
-            self.derivative_terms[1].to_corner, UP+LEFT, 2*MED_BUFF,
-            self.integral_terms[1].to_corner, UP+RIGHT, 2*MED_BUFF,
+            self.derivative_terms[1].to_corner, UP+LEFT, MED_LARGE_BUFF,
+            self.integral_terms[1].to_corner, UP+RIGHT, MED_LARGE_BUFF,
             self.pi_creature.change_mode, "speaking"
         )
         self.introduce_circle()
@@ -2605,13 +2605,13 @@ class PatreonThanks(Scene):
         for patrons in left_patrons, right_patrons:
             patrons.arrange_submobjects(
                 DOWN, aligned_edge = LEFT,
-                buff = 1.5*MED_BUFF
+                buff = 1.5*MED_SMALL_BUFF
             )
         all_patrons = VGroup(left_patrons, right_patrons)
         if all_patrons.get_height() > self.max_patrons_height:
             all_patrons.scale_to_fit_height(self.max_patrons_height)
         for patrons, vect in (left_patrons, LEFT), (right_patrons, RIGHT):
-            patrons.to_edge(vect, buff = MED_BUFF)
+            patrons.to_edge(vect, buff = MED_SMALL_BUFF)
 
         # shift_distance = max(
         #     0, 1-SPACE_HEIGHT-all_patrons.get_bottom()[1]

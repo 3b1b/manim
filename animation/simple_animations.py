@@ -86,6 +86,43 @@ class Write(ShowCreation):
         else:
             self.run_time = 3
 
+class DrawBorderThenFill(Animation):
+    CONFIG = {
+        "run_time" : 2,
+        "stroke_width" : 2,
+        "rate_func" : double_smooth,
+    }
+    def __init__(self, vmobject, **kwargs):
+        if not isinstance(vmobject, VMobject):
+            raise Exception("DrawBorderThenFill only works for VMobjects")
+        self.reached_halfway_point_before = False
+        Animation.__init__(self, vmobject, **kwargs)
+
+    def update_submobject(self, submobject, starting_submobject, alpha):
+        if alpha < 0.5:
+            print 2*alpha
+            submobject.pointwise_become_partial(
+                starting_submobject, 0, 2*alpha
+            )
+            submobject.set_stroke(
+                starting_submobject.get_color(),
+                width = self.stroke_width
+            )
+            submobject.set_fill(opacity = 0)
+        else:
+            if not self.reached_halfway_point_before:
+                self.reached_halfway_point_before = True
+                submobject.points = np.array(starting_submobject.points)
+            width, opacity = [
+                interpolate(start, end, 2*alpha - 1)
+                for start, end in [
+                    (self.stroke_width, starting_submobject.get_stroke_width()),
+                    (0, starting_submobject.get_fill_opacity())
+                ]
+            ]
+            submobject.set_stroke(width = width)
+            submobject.set_fill(opacity = opacity)
+
 
 class ShowPassingFlash(ShowPartial):
     CONFIG = {

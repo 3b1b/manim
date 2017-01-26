@@ -308,7 +308,7 @@ class SelfSimilarFractalsAsSubset(Scene):
         self.small_rect = small_rect
 
         group = VGroup(fractals, title, small_rect)
-        group.to_corner(UP+LEFT, buff = 2*MED_BUFF)
+        group.to_corner(UP+LEFT, buff = MED_LARGE_BUFF)
 
         self.play(
             Write(title),
@@ -320,13 +320,13 @@ class SelfSimilarFractalsAsSubset(Scene):
 
     def add_general_fractals(self):
         big_rectangle = Rectangle(
-            width = 2*SPACE_WIDTH - 2*MED_BUFF,
-            height = 2*SPACE_HEIGHT - 2*MED_BUFF,
+            width = 2*SPACE_WIDTH - MED_LARGE_BUFF,
+            height = 2*SPACE_HEIGHT - MED_LARGE_BUFF,
         )
         title = TextMobject("Fractals")
         title.scale(1.5)
         title.next_to(ORIGIN, RIGHT, buff = LARGE_BUFF)
-        title.to_edge(UP, buff = 2*MED_BUFF)
+        title.to_edge(UP, buff = MED_LARGE_BUFF)
 
         britain = Britain(
             fill_opacity = 0,
@@ -654,7 +654,7 @@ class FourSelfSimilarShapes(Scene):
         shapes = VGroup(line, square, cube, sierpinski)
         for shape, title in zip(shapes, titles):
             shape.scale_to_fit_width(self.shape_width)
-            shape.next_to(title, DOWN, buff = MED_BUFF)
+            shape.next_to(title, DOWN, buff = MED_SMALL_BUFF)
         line.shift(DOWN)
 
         return shapes
@@ -729,7 +729,7 @@ class FourSelfSimilarShapes(Scene):
         ])
         for label, shape in zip(labels, self.shapes_copy):
             label.next_to(shape, DOWN)
-            label.to_edge(DOWN, buff = 2*MED_BUFF)
+            label.to_edge(DOWN, buff = MED_LARGE_BUFF)
             if label is labels[-1]:
                 label.shift(0.1*UP) #Dumb
 
@@ -766,7 +766,7 @@ class GeneralWordForMeasurement(Scene):
             Line(
                 measure.get_bottom(), word.get_top(), 
                 color = word.get_color(),
-                buff = MED_BUFF
+                buff = MED_SMALL_BUFF
             )
             for word in words
         ])
@@ -946,7 +946,7 @@ class DefineTwoDimensional(PiCreatureScene):
         "dimension_color" : YELLOW,
         "shape_width" : 2,
         "scale_factor" : 0.5,
-        "bottom_shape_buff" : MED_BUFF,
+        "bottom_shape_buff" : MED_SMALL_BUFF,
         "scalar" : "s",
     }
     def construct(self):
@@ -978,7 +978,7 @@ class DefineTwoDimensional(PiCreatureScene):
     def add_shape(self):
         shape = self.get_shape()
         shape.scale_to_fit_width(self.shape_width)
-        shape.next_to(self.title, DOWN, buff = 2*MED_BUFF)
+        shape.next_to(self.title, DOWN, buff = MED_LARGE_BUFF)
         # self.shape.shift(SPACE_HEIGHT*UP/2)
         self.mass_color = shape.get_color()
         self.add(shape)
@@ -1008,7 +1008,7 @@ class DefineTwoDimensional(PiCreatureScene):
         for group in top_group, bottom_group:
             group.arrange_submobjects(
                 DOWN, 
-                buff = 2*MED_BUFF,
+                buff = MED_LARGE_BUFF,
                 aligned_edge = LEFT
             )
             group[0][-1].highlight(self.length_color)
@@ -1149,12 +1149,12 @@ class DefineSierpinskiDimension(DefineTwoDimensional):
         simpler_equation = TexMobject("2^D = 3")
         simpler_equation[1].highlight(self.dimension_color)
         simpler_equation.scale(self.equation_scale_factor)
-        simpler_equation.next_to(equation, DOWN, buff = 2*MED_BUFF)
+        simpler_equation.next_to(equation, DOWN, buff = MED_LARGE_BUFF)
 
         log_expression = TexMobject("\\log_2(3) \\approx", "1.585")
         log_expression[-1].highlight(self.dimension_color)
         log_expression.scale(self.equation_scale_factor)
-        log_expression.next_to(simpler_equation, DOWN, buff = 2*MED_BUFF)
+        log_expression.next_to(simpler_equation, DOWN, buff = MED_LARGE_BUFF)
         log_expression.shift_onto_screen()
 
         self.play(Write(simpler_equation))
@@ -1388,7 +1388,7 @@ class DimensionOfKoch(Scene):
         log_expression.next_to(
             simpler_formula, DOWN,
             aligned_edge = LEFT, 
-            buff = 2*MED_BUFF
+            buff = MED_LARGE_BUFF
         )
 
         third = self.scaling_factor_mob.copy()
@@ -1455,7 +1455,7 @@ class DimensionOfQuadraticKoch(DimensionOfKoch):
         self.add(seed_label, seed)
         self.dither()
         self.play(
-            curve.next_to, resulting_fractal, DOWN, 2*MED_BUFF,
+            curve.next_to, resulting_fractal, DOWN, MED_LARGE_BUFF,
             Write(resulting_fractal, run_time = 1)
         )
         for order in range(2, self.koch_curve_order+1):
@@ -1833,7 +1833,7 @@ class BoxCountingScene(Scene):
         self.play(ShowCreation(boxes, run_time = 3))
         self.play(Write(num))
         self.play(
-            num.next_to, self.counting_num_reference, RIGHT, MED_BUFF, DOWN,
+            num.next_to, self.counting_num_reference, RIGHT, MED_SMALL_BUFF, DOWN,
             num.highlight, YELLOW
         )
         return num
@@ -2188,7 +2188,7 @@ class GiveShapeAndPonder(Scene):
 
         norway = Norway(fill_opacity = 0, stroke_width = 1)
         norway.scale_to_fit_width(2)
-        norway.next_to(morty, UP+LEFT, buff = -MED_BUFF)
+        norway.next_to(morty, UP+LEFT, buff = -MED_SMALL_BUFF)
 
         self.play(
             morty.change_mode, "raise_right_hand",
@@ -2898,7 +2898,7 @@ class MortyLookingAtRectangle(Scene):
         url.next_to(morty.get_corner(UP+LEFT), UP)
 
         affirm_logo = AffirmLogo()[0]
-        affirm_logo.to_corner(UP+RIGHT, buff = 2*MED_BUFF)
+        affirm_logo.to_corner(UP+RIGHT, buff = MED_LARGE_BUFF)
         affirm_logo.shift(0.5*DOWN)
 
         self.add(morty)

@@ -57,11 +57,11 @@ class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
         "start_x" : 2,
         "big_x" : 3,
         "dx" : 0.1,
-        "x_min" : -5,
-        "x_labeled_nums" : range(-4, 0, 2) + range(2, 10, 2),
+        "x_min" : -9,
+        "x_labeled_nums" : range(-8, 0, 2) + range(2, 10, 2),
         "y_labeled_nums" : range(2, 12, 2),
-        "little_rect_nudge" : 0.5*(2*UP+RIGHT),
-        "graph_origin" : 2.5*DOWN + 2*LEFT,
+        "little_rect_nudge" : 0.5*(1.5*UP+RIGHT),
+        "graph_origin" : 2.5*DOWN + LEFT,
         "zoomed_canvas_corner" : UP+LEFT,
     }
     def construct(self):
@@ -107,7 +107,7 @@ class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
         df_dx.next_to(
             self.input_to_graph_point(self.start_x, self.graph),
             DOWN+RIGHT,
-            buff = MED_BUFF
+            buff = MED_SMALL_BUFF
         )
 
         self.play(ShowCreation(v_line))
@@ -117,21 +117,19 @@ class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
         self.add(nudged_v_line)
         self.dither()
         self.activate_zooming()
+        self.little_rectangle.replace(self.big_rectangle)
         self.play(
             FadeIn(self.little_rectangle),
             FadeIn(self.big_rectangle),
         )
         self.play(
-            self.little_rectangle.scale_to_fit_width, 
-            4*self.dx,
-            self.little_rectangle.move_to,
-            self.input_to_graph_point(self.start_x, self.graph),
-            self.little_rectangle.shift,
-            self.dx*self.little_rect_nudge,
+            ApplyFunction(
+                lambda r : self.position_little_rectangle(r, ss_group),
+                self.little_rectangle
+            ),
             self.pi_creature.change_mode, "pondering",
             self.pi_creature.look_at, ss_group
         )
-        self.dither()
         self.play(
             ShowCreation(ss_group.dx_line),
             Write(ss_group.dx_label),
@@ -149,13 +147,20 @@ class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
         ]))
         self.ss_group = ss_group
 
+    def position_little_rectangle(self, rect, ss_group):
+        rect.scale_to_fit_width(3*self.dx)
+        rect.move_to(
+            ss_group.dx_line.get_left()
+        )
+        rect.shift(
+            self.dx*self.little_rect_nudge
+        )
+        return rect
+
     def show_differing_slopes(self):
         ss_group = self.ss_group
         def rect_update(rect):
-            rect.move_to(ss_group.dx_line.get_left())
-            rect.shift(self.dx*self.little_rect_nudge)
-            return rect
-
+            self.position_little_rectangle(rect, ss_group)
 
         self.play(
             ShowCreation(ss_group.secant_line),
@@ -173,15 +178,76 @@ class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
             self.dither()
 
     def mention_alternate_view(self):
-        # self.remove(self.pi_creature)
-        # everything = VGroup(*self.get_mobjects())
-        # self.add(self.pi_creature)
-        # self.disactivate_zooming()
-        # self.play(FadeOut(everything))
-
+        self.remove(self.pi_creature)
+        everything = VGroup(*self.get_mobjects())
+        self.add(self.pi_creature)
+        self.disactivate_zooming()
+        self.play(
+            ApplyMethod(
+                everything.shift, 2*SPACE_WIDTH*LEFT,
+                rate_func = lambda t : running_start(t, -0.1)
+            ),
+            self.pi_creature.change_mode, "happy"
+        )
         self.say("Let's try \\\\ another view.", target_mode = "speaking")
         self.dither(2)
 
+class NudgeSideLengthOfSquare(PiCreatureScene):
+    CONFIG = {
+        "square_width" : 3,
+        "dx" : 0.5,
+    }
+    def construct(self):
+        ApplyMethod(self.pi_creature.change_mode, "speaking").update(1)
+        self.add_function_label()
+        self.introduce_square()
+        self.increase_area()
+        self.examine_thin_rectangles()
+        self.examine_tiny_square()
+        self.write_out_derivative()
+        self.shrink_dx()
+
+    def add_function_label(self):
+        label = TexMobject("f(x) = x^2")
+        label.next_to(ORIGIN, RIGHT)
+        label.to_edge(UP)
+        self.add(label)
+
+    def introduce_square(self):
+        square = Square(
+            side_length = self.square_width,
+            stroke_width = 0,
+            fill_opacity = 0.75,
+            fill_color = BLUE,
+        )
+        square.to_corner(UP+LEFT, buff = LARGE_BUFF)
+        x_squared = TexMobject("x^2")
+        x_squared.move_to(square)
+
+        braces = VGroup()
+        for vect in DOWN, RIGHT:
+            brace = Brace(square, vect)
+            brace.add(brace.get_text("$x$"))
+            braces.add(brace)
+
+        self.play(DrawBorderThenFill(square))
+        self.add(square, x_squared, braces)
+
+
+    def increase_area(self):
+        pass
+
+    def examine_thin_rectangles(self):
+        pass
+
+    def examine_tiny_square(self):
+        pass
+
+    def write_out_derivative(self):
+        pass
+
+    def shrink_dx(self):
+        pass
 
 
 

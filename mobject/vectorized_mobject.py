@@ -345,8 +345,8 @@ class VMobject(Mobject):
             return self
         self.mark_paths_closed = False
         num_cubics = mobject.get_num_anchor_points()-1
-        lower_index = np.floor(a*num_cubics)
-        upper_index = np.ceil(b*num_cubics)
+        lower_index = int(a*num_cubics)
+        upper_index = int(b*num_cubics)
         points = np.array(
             mobject.points[3*lower_index:3*upper_index+4]
         )

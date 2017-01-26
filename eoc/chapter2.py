@@ -904,7 +904,7 @@ class VelocityAtIndividualPointsVsPairs(GraphCarTrajectory):
             label = "v(t)",
             proportion = self.start_time/10.0, 
             direction = UP,
-            buff = MED_BUFF
+            buff = MED_SMALL_BUFF
         )
         velocity_graph.add(velocity_label)
 
@@ -1462,7 +1462,7 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
         brace, text = self.get_brace_and_text(deriv_frac)
         deriv_def = VGroup(lhs, deriv_frac, brace, text)
         deriv_word = TextMobject("Derivative")        
-        deriv_word.next_to(deriv_def, UP, buff = 2*MED_BUFF)
+        deriv_word.next_to(deriv_def, UP, buff = MED_LARGE_BUFF)
         deriv_def.add(deriv_word)
         rect = Rectangle(color = WHITE)
         rect.replace(deriv_def, stretch = True)
@@ -1709,7 +1709,7 @@ class TCubedExample(SecantLineToTangentLine):
         v_lines = self.get_vertical_lines()
 
         lhs = TexMobject("\\frac{ds}{dt}(2) = ")
-        lhs.next_to(ds_dt_group, UP+RIGHT, buff = 2*MED_BUFF)
+        lhs.next_to(ds_dt_group, UP+RIGHT, buff = MED_LARGE_BUFF)
         ds = VGroup(*lhs[:2])
         dt = VGroup(*lhs[3:5])
         ds.highlight(DISTANCE_COLOR)
@@ -1908,7 +1908,7 @@ class TCubedExample(SecantLineToTangentLine):
         arrow = Arrow(
             self.lhs[4].get_bottom(), terms[1][2].get_top(),
             color = WHITE,
-            buff = MED_BUFF
+            buff = MED_SMALL_BUFF
         )
         brace = Brace(VGroup(terms[2][0], terms[3][-1]), DOWN)
         brace_text = brace.get_text("Contains $dt$")
@@ -1960,7 +1960,7 @@ class TCubedExample(SecantLineToTangentLine):
         )
         arrow = Arrow(
             self.rhs.get_bottom(), deriv_term.target.get_top(),
-            buff = MED_BUFF,
+            buff = MED_SMALL_BUFF,
             color = WHITE
         )
         approach_text = TextMobject("As $dt \\to 0$")
@@ -2111,7 +2111,7 @@ class ContrastConcreteDtWithLimit(Scene):
             l_formula[27:29],
             l_formula[35:37],
         )).highlight(TIME_COLOR)
-        l_formula.scale_to_fit_width(SPACE_WIDTH-2*MED_BUFF)
+        l_formula.scale_to_fit_width(SPACE_WIDTH-MED_LARGE_BUFF)
         l_formula.to_edge(LEFT)
 
         l_brace = Brace(l_formula, DOWN)
