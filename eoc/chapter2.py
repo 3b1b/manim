@@ -101,7 +101,7 @@ class Car(SVGMobject):
 class MoveCar(ApplyMethod):
     def __init__(self, car, target_point, **kwargs):
         ApplyMethod.__init__(self, car.move_to, target_point, **kwargs)
-        displacement = self.ending_mobject.get_right()-self.starting_mobject.get_right()
+        displacement = self.target_mobject.get_right()-self.starting_mobject.get_right()
         distance = np.linalg.norm(displacement)
         tire_radius = car.get_tires()[0].get_width()/2
         self.total_tire_radians = -distance/tire_radius

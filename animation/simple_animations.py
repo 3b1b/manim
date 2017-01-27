@@ -321,8 +321,8 @@ class Succession(Animation):
                 #require leveraging implementation details of 
                 #Animations, and knowing about the different
                 #struction of Transform?
-                if hasattr(curr_anim, "ending_mobject"):
-                    curr_anim.mobject.align_data(curr_anim.ending_mobject)
+                if hasattr(curr_anim, "target_mobject"):
+                    curr_anim.mobject.align_data(curr_anim.target_mobject)
                 curr_anim.starting_mobject = curr_anim.mobject.copy()
         curr_anim.update(scaled_alpha - index)
         self.last_index = index

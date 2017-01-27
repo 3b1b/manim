@@ -621,12 +621,21 @@ class NudgeSideLengthOfCube(Scene):
         "pose_angle" : np.pi/12,
         "pose_axis" : UP+RIGHT,
         "small_piece_scaling_factor" : 0.7,
-        "is_recursing" : False,
+        "allow_recursion" : True,
     }
     def construct(self):
+        self.states = dict()
+        if self.allow_recursion:
+            self.alt_scene = self.__class__(
+                skip_animations = True,
+                allow_recursion = False,
+                dx = self.alt_dx,
+            )
+
         self.add_title()
         self.introduce_cube()
         self.write_df_equation()
+        self.write_derivative()
 
     def add_title(self):
         title = TexMobject("f(x) = x^3")
@@ -671,6 +680,8 @@ class NudgeSideLengthOfCube(Scene):
         self.add(dv_pieces)
         self.play(GrowFromCenter(dx_brace))
         self.dither()
+        for piece in dv_pieces:
+            piece.on_cube_state = piece.copy()
         self.play(*[
             ApplyMethod(
                 piece.shift, 
@@ -683,6 +694,7 @@ class NudgeSideLengthOfCube(Scene):
         self.dither()
 
         self.cube = cube
+        self.dx_brace = dx_brace
         self.faces, self.bars, self.corner_cube = [
             VGroup(*[
                 piece 
@@ -713,7 +725,7 @@ class NudgeSideLengthOfCube(Scene):
         df_equation.to_edge(UP)
 
         faces_brace = Brace(faces, DOWN)
-        faces_brace_text = faces_brace.get_text("$3x^2", "\\, dx$")
+        derivative = faces_brace.get_text("$3x^2", "\\, dx$")
         extras_brace = Brace(VGroup(bars, corner_cube), DOWN)
         ignore_text = extras_brace.get_text(
             "Multiple \\\\ of $dx^2$"
@@ -725,19 +737,26 @@ class NudgeSideLengthOfCube(Scene):
         self.play(*map(Write, [df, equals]))
         self.grab_pieces(self.faces, faces)
         self.dither()
-        # self.shrink_dx()
+        self.shrink_dx("Faces are introduced")
         face = self.faces[0]
         face.save_state()
         self.play(face.shift, SPACE_WIDTH*RIGHT)
-        x_squared_dx.move_to(self.faces[0])
+        x_squared_dx.next_to(face, LEFT)
         self.play(Write(x_squared_dx, run_time = 1))
-        for submob in x_squared_dx:
-            self.play(submob.highlight, RED, rate_func = there_and_back)
-            self.play(submob.highlight, RED, rate_func = there_and_back)
         self.dither()
+        for submob, sides in zip(x_squared_dx, [face[0], VGroup(*face[1:])]):
+            self.play(
+                submob.highlight, RED,
+                sides.highlight, RED,
+                rate_func = there_and_back
+            )
+            self.dither()
         self.play(
             face.restore,
-            Transform(x_squared_dx, faces_brace_text),
+            Transform(
+                x_squared_dx, derivative,
+                replace_mobject_with_target_in_scene = True
+            ),
             GrowFromCenter(faces_brace)
         )
         self.dither()
@@ -757,6 +776,79 @@ class NudgeSideLengthOfCube(Scene):
         ])
         self.dither()
 
+        self.df_equation = df_equation
+        self.derivative = derivative
+
+    def write_derivative(self):
+        df, equals, faces, plus1, bars, plus2, corner_cube = self.df_equation
+        df = df.copy()
+        equals = equals.copy()        
+        df_equals = VGroup(df, equals)        
+
+        derivative = self.derivative.copy()
+        dx = derivative[1]
+
+        extra_stuff = TexMobject("+(\\dots)", "dx^2")
+        dx_squared = extra_stuff[1]
+
+        derivative.generate_target()
+        derivative.target.shift(2*DOWN)
+        extra_stuff.next_to(derivative.target)
+        self.play(
+            MoveToTarget(derivative),
+            df_equals.next_to, derivative.target[0], LEFT,
+            df_equals.shift, 0.07*DOWN
+        )
+        self.play(Write(extra_stuff))
+        self.dither()
+
+        frac_line = TexMobject("-")
+        frac_line.replace(df)
+        extra_stuff.generate_target()
+        extra_stuff.target.next_to(derivative[0])
+        frac_line2 = TexMobject("-")
+        frac_line2.stretch_to_fit_width(
+            extra_stuff.target[1].get_width()
+        )
+        frac_line2.move_to(extra_stuff.target[1])
+        extra_stuff.target[1].next_to(frac_line2, UP, buff = SMALL_BUFF)
+        dx_below_dx_squared = TexMobject("dx")
+        dx_below_dx_squared.next_to(frac_line2, DOWN, buff = SMALL_BUFF)
+        self.play(
+            FadeIn(frac_line),
+            FadeIn(frac_line2),
+            df.next_to, frac_line, UP, SMALL_BUFF,
+            dx.next_to, frac_line, DOWN, SMALL_BUFF,
+            MoveToTarget(extra_stuff),
+            Write(dx_below_dx_squared),
+            path_arc = -np.pi
+        )
+        self.dither()
+        inner_dx = VGroup(*dx_squared[:-1])
+        self.play(
+            FadeOut(frac_line2),
+            FadeOut(dx_below_dx_squared),
+            dx_squared[-1].highlight, BLACK,
+            inner_dx.next_to, extra_stuff[0], RIGHT, SMALL_BUFF
+        )
+        self.dither()
+        self.shrink_dx("Derivative is written", restore = False)
+        self.play(*[
+            ApplyMethod(mob.fade, 0.7)
+            for mob in extra_stuff, inner_dx
+        ])
+        self.dither(2)
+
+        anims = []
+        for mob in list(self.faces)+list(self.bars)+list(self.corner_cube):
+            vect = mob.get_center()-self.cube.get_center()
+            anims += [
+                mob.shift, -(1./3)*vect
+            ]
+        anims += self.dx_brace.shift, 0.7*DOWN
+        self.play(*anims)
+        self.dither()
+
     def grab_pieces(self, start_pieces, end_pices, to_write = None):
         for piece in start_pieces:
             piece.generate_target()
@@ -774,29 +866,38 @@ class NudgeSideLengthOfCube(Scene):
             *added_anims
         )
 
-    def shrink_dx(self):
-        self.mobjects_at_start_of_shrink_dx = self.get_mobjects()
-        if self.is_recursing:
+    def shrink_dx(self, state_name, restore = True):
+        mobjects = self.get_mobjects()
+        mobjects_with_points = [
+            m for m in mobjects
+            if m.get_num_points() > 0
+        ]
+        #Alt_scene will reach this point, and save copy of self
+        #in states dict
+        self.states[state_name] = [
+            mob.copy() for mob in mobjects_with_points
+        ] 
+        if not self.allow_recursion:
             return
-        alt_scene = self.__class__(
-            dx = self.alt_dx,
-            skip_animations = True,
-            is_recursing = True
-        )
-        for mob in self.get_mobjects():
-            mob.save_state()
+        if restore:
+            movers = self.states[state_name]
+            for mob in movers:
+                mob.save_state()
+            self.remove(*mobjects)
+        else:
+            movers = mobjects_with_points
         self.play(*[
             Transform(*pair)
             for pair in zip(
-                self.get_mobjects(),
-                alt_scene.mobjects_at_start_of_shrink_dx
+                movers,
+                self.alt_scene.states[state_name]
             )
         ])
         self.dither()
-        self.play(*[
-            mob.restore
-            for mob in self.get_mobjects()
-        ])
+        if restore:
+            self.play(*[m.restore for m in movers])
+            self.remove(*movers)
+            self.mobjects = mobjects
 
     def get_cube(self):
         cube = self.get_prism(self.x, self.x, self.x)

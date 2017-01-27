@@ -15,16 +15,18 @@ class Transform(Animation):
         "path_arc" : 0,
         "path_func" : None,
         "submobject_mode" : "all_at_once",
+        "replace_mobject_with_target_in_scene" : False,
     }
-    def __init__(self, mobject, ending_mobject, **kwargs):
-        #Copy ending_mobject so as to not mess with caller
-        ending_mobject = ending_mobject.copy()
+    def __init__(self, mobject, target_mobject, **kwargs):
+        #Copy target_mobject so as to not mess with caller
+        self.original_target_mobject = target_mobject
+        target_mobject = target_mobject.copy()
         digest_config(self, kwargs, locals())
-        mobject.align_data(ending_mobject)
+        mobject.align_data(target_mobject)
         self.init_path_func()
 
         Animation.__init__(self, mobject, **kwargs)
-        self.name += "To" + str(ending_mobject)  
+        self.name += "To" + str(target_mobject)  
 
     def update_config(self, **kwargs):
         Animation.update_config(self, **kwargs)
@@ -42,7 +44,7 @@ class Transform(Animation):
     def get_all_families_zipped(self):
         return zip(*map(
             Mobject.submobject_family,
-            [self.mobject, self.starting_mobject, self.ending_mobject]
+            [self.mobject, self.starting_mobject, self.target_mobject]
         ))
 
     def update_submobject(self, submob, start, end, alpha):
@@ -235,13 +237,13 @@ class TransformAnimations(Transform):
         if start_anim.starting_mobject.get_num_points() != end_anim.starting_mobject.get_num_points():
             start_anim.starting_mobject.align_data(end_anim.starting_mobject)
             for anim in start_anim, end_anim:
-                if hasattr(anim, "ending_mobject"):
-                    anim.starting_mobject.align_data(anim.ending_mobject)
+                if hasattr(anim, "target_mobject"):
+                    anim.starting_mobject.align_data(anim.target_mobject)
 
         Transform.__init__(self, start_anim.mobject, end_anim.mobject, **kwargs)
         #Rewire starting and ending mobjects
         start_anim.mobject = self.starting_mobject
-        end_anim.mobject = self.ending_mobject
+        end_anim.mobject = self.target_mobject
 
     def update(self, alpha):
         self.start_anim.update(alpha)

@@ -587,6 +587,11 @@ class QuadraticKoch(LindenmayerCurve):
     }
 
 
+class QuadraticKochIsland(QuadraticKoch):
+    CONFIG = {
+        "axiom" : "A+A+A+A"
+    }
+
 class StellarCurve(LindenmayerCurve):
     CONFIG = {
         "start_color" : RED,

@@ -317,7 +317,7 @@ class PiCreatureScene(Scene):
         last_anim = animations[-1]
         if last_anim.mobject is self.pi_creature and isinstance(last_anim, Transform):
             if isinstance(animations[-1], Transform):
-                animations[-1].ending_mobject.look_at(point_of_interest)
+                animations[-1].target_mobject.look_at(point_of_interest)
                 return animations
         new_anim = ApplyMethod(self.pi_creature.look_at, point_of_interest)
         return list(animations) + [new_anim]

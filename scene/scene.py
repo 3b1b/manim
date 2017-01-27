@@ -16,7 +16,7 @@ from camera import Camera
 from tk_scene import TkSceneRoot
 from mobject import Mobject, VMobject
 from animation import Animation
-from animation.transform import MoveToTarget
+from animation.transform import MoveToTarget, Transform
 
 class Scene(object):
     CONFIG = {
@@ -241,6 +241,7 @@ class Scene(object):
     def play(self, *args, **kwargs):
         if len(args) == 0:
             warnings.warn("Called Scene.play with no animations")
+            return
         if self.skip_animations:
             kwargs["run_time"] = 0
 
@@ -267,6 +268,10 @@ class Scene(object):
             animation.clean_up()
             if animation.is_remover():
                 self.remove(animation.mobject)
+            if isinstance(animation, Transform) :
+                if animation.replace_mobject_with_target_in_scene:
+                    self.remove(animation.mobject)
+                    self.add(animation.original_target_mobject)
         return self
 
     def get_mobjects_from_last_animation(self):
