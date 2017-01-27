@@ -2847,25 +2847,30 @@ class ShowPiCreatureFractalCreation(FractalCreation):
 class FractalPatreonThanks(PatreonThanks):
     CONFIG = {
         "specific_patrons" : [
+            "Meshal  Alshammari",
             "Ali Yahya",
-            "CrypticSwarm",
+            "CrypticSwarm    ",
             "Yu  Jun",
             "Shelby  Doolittle",
             "Dave    Nicponski",
             "Damion  Kistler",
-            "Juan    Benet",
+            "Juan    Batiz-Benet",
             "Othman  Alikhan",
             "Markus  Persson",
             "Dan Buchoff",
             "Derek   Dai",
             "Joseph  John Cox",
             "Luc Ritchie",
-            "Vecht",
+            "Jerry   Ling",
+            "Mark    Govea",
+            "Guido   Gambardella",
+            "Vecht   ",
             "Jonathan Eppele",
             "Shimin Kuang",
             "Rish    Kundalia",
             "Achille Brighton",
             "Kirk    Werklund",
+            "Ripta   Pasay",
             "Felipe  Diniz",
         ]
     }
@@ -2931,9 +2936,20 @@ class MortyLookingAtRectangle(Scene):
 
 
 
+class Thumbnail(Scene):
+    def construct(self):
+        title = TextMobject("1.5-dimensional")
+        title.scale(2)        
+        title.to_edge(UP)
 
 
+        koch_curve = QuadraticKoch(order = 6, monochromatic = True)
+        koch_curve.set_stroke(width = 0)
+        koch_curve.set_fill(BLUE)
+        koch_curve.scale_to_fit_height(1.5*SPACE_HEIGHT)
+        koch_curve.to_edge(DOWN, buff = SMALL_BUFF)
 
+        self.add(koch_curve, title)
 
 
 
