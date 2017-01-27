@@ -130,11 +130,12 @@ class TextMobject(TexMobject):
 class Brace(TexMobject):
     CONFIG = {
         "buff" : 0.2,
+        "n_quads" : 3,
+        "tex_string" : "\\underbrace{%s}"%(3*"\\qquad"),
     }
-    TEX_STRING = "\\underbrace{%s}"%(3*"\\qquad")
     def __init__(self, mobject, direction = DOWN, **kwargs):
         digest_config(self, kwargs, locals())
-        TexMobject.__init__(self, self.TEX_STRING, **kwargs)
+        TexMobject.__init__(self, self.tex_string, **kwargs)
         angle = -np.arctan2(*direction[:2]) + np.pi
         mobject.rotate(-angle)
         left  = mobject.get_corner(DOWN+LEFT)

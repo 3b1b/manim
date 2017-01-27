@@ -100,11 +100,16 @@ class DrawBorderThenFill(Animation):
         Animation.__init__(self, vmobject, **kwargs)
 
     def update_submobject(self, submobject, starting_submobject, alpha):
+        submobject.pointwise_become_partial(
+            starting_submobject, 0, min(2*alpha, 1)
+        )
         if alpha < 0.5:
-            submobject.pointwise_become_partial(
-                starting_submobject, 0, 2*alpha
-            )
-            color = self.stroke_color or starting_submobject.get_color()
+            if self.stroke_color:
+                color = self.stroke_color 
+            elif starting_submobject.stroke_width > 0:
+                color = starting_submobject.get_stroke_color()
+            else:
+                color = starting_submobject.get_color()
             submobject.set_stroke(color, width = self.stroke_width)
             submobject.set_fill(opacity = 0)
         else:

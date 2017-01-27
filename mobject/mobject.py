@@ -309,6 +309,12 @@ class Mobject(object):
     def scale_to_fit_height(self, height):
         return self.stretch_to_fit(height, 1, stretch = False)
 
+    def space_out_submobjects(self, factor = 1.5):
+        self.scale_in_place(factor)
+        for submob in self.submobjects:
+            submob.scale_in_place(1./factor)
+        return self
+
     def move_to(self, point_or_mobject, aligned_edge = ORIGIN):
         if isinstance(point_or_mobject, Mobject):
             target = point_or_mobject.get_critical_point(aligned_edge)
@@ -450,7 +456,7 @@ class Mobject(object):
         if use_submobject:
             return self.get_submobject_critical_point(direction)
         result = np.zeros(self.dim)
-        for dim in [0, 1]:
+        for dim in range(self.dim):
             if direction[dim] <= 0:
                 min_point = self.reduce_across_dimension(np.min, np.min, dim)
             if direction[dim] >= 0:

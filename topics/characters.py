@@ -268,6 +268,7 @@ class PiCreatureScene(Scene):
     CONFIG = {
         "total_dither_time" : 0,
         "use_morty" : True,
+        "seconds_to_blink" : 3,
     }
     def setup(self):
         self.pi_creature = self.get_pi_creature()
@@ -326,7 +327,7 @@ class PiCreatureScene(Scene):
 
     def dither(self, time = 1, blink = True):
         while time > 0:
-            if blink and self.total_dither_time%2 == 1:
+            if blink and self.total_dither_time%self.seconds_to_blink == 1:
                 self.play(Blink(self.pi_creature))
             else:
                 Scene.dither(self, time)
