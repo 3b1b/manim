@@ -1008,10 +1008,236 @@ class ShowCubeDVIn3D(Scene):
     def construct(self):
         raise Exception("This scene is only here for the stage_scenes script.")
 
+class GraphOfXCubed(GraphScene):
+    CONFIG = {
+        "x_min" : -6,
+        "x_max" : 6,
+        "x_axis_width" : 2*SPACE_WIDTH,
+        "x_labeled_nums" : range(-6, 7),
+        "y_min" : -35,
+        "y_max" : 35,
+        "y_axis_height" : 2*SPACE_HEIGHT,
+        "y_tick_frequency" : 5,
+        "y_labeled_nums" : range(-30, 40, 10),
+        "graph_origin" : ORIGIN,
+        "dx" : 0.2,
+        "deriv_x_min" : -3,
+        "deriv_x_max" : 3,
+    }
+    def construct(self):
+        self.setup_axes(animate = False)
+        graph = self.get_graph(lambda x : x**3)
+        label = self.get_graph_label(
+            graph, "f(x) = x^3",
+            direction = LEFT,
+        )
 
 
+        deriv_graph, full_deriv_graph = [
+            self.get_derivative_graph(
+                graph,
+                color = DERIVATIVE_COLOR,
+                x_min = low_x,
+                x_max = high_x,
+            )
+            for low_x, high_x in [
+                (self.deriv_x_min, self.deriv_x_max),
+                (self.x_min, self.x_max),
+            ]
+        ]
+        deriv_label = self.get_graph_label(
+            deriv_graph,
+            "\\frac{df}{dx}(x) = 3x^2",
+            x_val = -3, 
+            direction = LEFT
+        )
+        deriv_label.shift(0.5*DOWN)
+
+        ss_group = self.get_secant_slope_group(
+            self.deriv_x_min, graph, 
+            dx = self.dx,
+            dx_line_color = WHITE,
+            df_line_color = WHITE,
+            secant_line_color = YELLOW,
+        )
+
+        self.play(ShowCreation(graph))
+        self.play(Write(label, run_time = 1))
+        self.dither()
+        self.play(Write(deriv_label, run_time = 1))
+        self.play(ShowCreation(ss_group, submobject_mode = "all_at_once"))
+        self.animate_secant_slope_group_change(
+            ss_group,
+            target_x = self.deriv_x_max,
+            run_time = 10,
+            added_anims = [
+                ShowCreation(deriv_graph, run_time = 10)
+            ]
+        )
+        self.play(FadeIn(full_deriv_graph))
+        self.dither()
+        for x_val in -2, -self.dx/2, 2:
+            self.animate_secant_slope_group_change(
+                ss_group,
+                target_x = x_val,
+                run_time = 2
+            )
+            if x_val != -self.dx/2:
+                v_line = self.get_vertical_line_to_graph(
+                    x_val, deriv_graph,
+                    line_class = DashedLine
+                )
+                self.play(ShowCreation(v_line))
+                self.play(FadeOut(v_line))
+
+class PatternForPowerRule(PiCreatureScene):
+    CONFIG = {
+        "num_exponents" : 5,
+    }
+    def construct(self):
+        self.introduce_pattern()
+        self.generalize_pattern()
+        self.show_hopping()
+
+    def introduce_pattern(self):
+        exp_range = range(1, 1+self.num_exponents)
+        colors = color_gradient([BLUE_D, YELLOW], self.num_exponents)
+        derivatives = VGroup()
+        for exponent, color in zip(exp_range, colors):
+            derivative = TexMobject(
+                "\\frac{d(x^%d)}{dx} = "%exponent,
+                "%d x^{%d}"%(exponent, exponent-1)
+            )
+            VGroup(*derivative[0][2:4]).highlight(color)
+            derivatives.add(derivative)
+        derivatives.arrange_submobjects(
+            DOWN, aligned_edge = LEFT,
+            buff = MED_LARGE_BUFF
+        )
+        derivatives.scale_to_fit_height(2*SPACE_HEIGHT-1)
+        derivatives.to_edge(LEFT)
+
+        self.play(FadeIn(derivatives[0]))
+        for d1, d2 in zip(derivatives, derivatives[1:]):
+            self.play(Transform(
+                d1.copy(), d2,
+                replace_mobject_with_target_in_scene = True  
+            ))
+        self.change_mode("thinking")
+        self.dither()
+        for derivative in derivatives[-2:]:
+            derivative.save_state()
+            self.play(
+                derivative.scale, 2,
+                derivative.next_to, derivative,
+                RIGHT, SMALL_BUFF, DOWN,
+            )
+            self.dither(2)
+            self.play(derivative.restore)
+            self.remove(derivative)
+            derivative.restore()
+            self.add(derivative)
+
+        self.derivatives = derivatives
+        self.colors = colors
+
+    def generalize_pattern(self):
+        derivatives = self.derivatives
 
 
+        power_rule = TexMobject(
+            "\\frac{d (x^n)}{dx} = ",
+            "nx^{n-1}"
+        )
+        title = TextMobject("``Power rule''")        
+        title.next_to(power_rule, UP, MED_LARGE_BUFF)
+        lines = VGroup(*[
+            Line(
+                deriv.get_right(), power_rule.get_left(),
+                buff = MED_SMALL_BUFF,
+                color = deriv[0][2].get_color()
+            )
+            for deriv in derivatives
+        ])
+
+        self.play(
+            Transform(
+                VGroup(*[d[0].copy() for d in derivatives]),
+                VGroup(power_rule[0]),
+                replace_mobject_with_target_in_scene = True
+            ),
+            ShowCreation(lines),
+            submobject_mode = "lagged_start",
+            run_time = 2,
+        )
+        self.dither()
+        self.play(Write(power_rule[1]))
+        self.dither()
+        self.play(
+            Write(title),
+            self.pi_creature.change_mode, "speaking"
+        )
+        self.dither()
+
+    def show_hopping(self):
+        exp_range = range(2, 2+self.num_exponents-1)
+        self.change_mode("tired")
+        for exp, color in zip(exp_range, self.colors[1:]):
+            form = TexMobject(
+                "x^",
+                str(exp),
+                "\\rightarrow",
+                str(exp),
+                "x^",
+                str(exp-1)
+            )
+            form.highlight(color)
+            form.to_corner(UP+RIGHT, buff = LARGE_BUFF)
+            lhs = VGroup(*form[:2])
+            lhs_copy = lhs.copy()
+            rhs = VGroup(*form[-2:])
+            arrow = form[2]
+
+            self.play(Write(lhs))
+            self.play(
+                lhs_copy.move_to, rhs, DOWN+LEFT,
+                Write(arrow)
+            )
+            self.dither()
+            self.play(Transform(
+                lhs_copy[1], form[3],
+                path_arc = np.pi,
+                rate_func = running_start,
+                replace_mobject_with_target_in_scene = True
+            ))
+            self.play(FadeIn(form[5]))
+            self.dither()
+            self.play(
+                self.pi_creature.change_mode, "hesitant",
+                self.pi_creature.look_at, lhs_copy
+            )
+            self.play(*map(FadeOut, [form, lhs_copy]))
+
+# class PowerRuleAlgebra(Scene):
+#     CONFIG = {
+#         "dx_color" : YELLOW,
+#     }
+#     def construct(self):
+#         value = TextMobject("Value:")
+#         x_to_n = TexMobject("x^n")
+#         nudged = TextMobject("Nudged Value:")
+#         x_dx_to_n = TexMobject("(x+dx)^n")
+#         equals = TexMobject("equals")
+#         full_product = TexMobject("(x+dx)(x+dx)(x+dx)\\cdots(x+dx)")
+
+#         value.to_corner(UP+LEFT)
+#         x_to_n.next_to(value, RIGHT)
+#         nudged.next_to(value, DOWN, aligned_edge = LEFT)
+#         x_dx_group = VGroup(x_dx_to_n, equals, full_product)
+#         x_dx_group.arrange_submobjects(RIGHT)
+
+
+#         self.add(value, nudged_value)
 
 
 

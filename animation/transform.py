@@ -124,6 +124,7 @@ class ApplyMethod(Transform):
         target = copy.deepcopy(method)(*args)
         Transform.__init__(self, method.im_self, target, **kwargs)
 
+
 class FadeOut(Transform):
     CONFIG = {
         "remover" : True, 

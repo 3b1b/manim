@@ -28,7 +28,7 @@ class GraphScene(Scene):
         "y_axis_label" : "$y$",
         "axes_color" : GREY,
         "graph_origin" : 2.5*DOWN + 4*LEFT,
-        "y_axis_numbers_nudge" : 0.4*UP+0.5*LEFT,
+        "y_axis_numbers_nudge" : 0.4*UP,
         "num_graph_anchor_points" : 25,
         "default_graph_colors" : [BLUE, GREEN, YELLOW],
         "default_derivative_color" : GREEN,
@@ -48,9 +48,16 @@ class GraphScene(Scene):
         )
         x_axis.shift(self.graph_origin - x_axis.number_to_point(0))
         if self.x_labeled_nums:
-            x_axis.add_numbers(*self.x_labeled_nums)
+            x_axis.add_numbers(*filter(
+                lambda x : x != 0,
+                self.x_labeled_nums
+            ))
         x_label = TextMobject(self.x_axis_label)
-        x_label.next_to(x_axis, RIGHT+UP, buff = SMALL_BUFF)
+        x_label.next_to(
+            x_axis.get_tick_marks(), UP, 
+            aligned_edge = RIGHT,
+            buff = SMALL_BUFF
+        )
         x_label.shift_onto_screen()
         x_axis.add(x_label)
         self.x_axis_label_mob = x_label
@@ -69,10 +76,19 @@ class GraphScene(Scene):
         y_axis.shift(self.graph_origin-y_axis.number_to_point(0))
         y_axis.rotate(np.pi/2, about_point = y_axis.number_to_point(0))
         if self.y_labeled_nums:
-            y_axis.add_numbers(*self.y_labeled_nums)
-            y_axis.numbers.shift(self.y_axis_numbers_nudge)
+            y_axis.add_numbers(*filter(
+                lambda y : y != 0,
+                self.y_labeled_nums
+            ))
+            for mob in y_axis.numbers:
+                mob.next_to(mob.get_center(), LEFT, MED_SMALL_BUFF)
+                mob.shift(self.y_axis_numbers_nudge)
         y_label = TextMobject(self.y_axis_label)
-        y_label.next_to(y_axis.get_top(), RIGHT, buff = MED_LARGE_BUFF)
+        y_label.next_to(
+            y_axis.get_tick_marks(), RIGHT, 
+            aligned_edge = UP,
+            buff = SMALL_BUFF
+        )
         y_label.shift_onto_screen()
         y_axis.add(y_label)
         self.y_axis_label_mob = y_label
@@ -90,12 +106,21 @@ class GraphScene(Scene):
         result += self.y_axis.number_to_point(y)[1]*UP
         return result
 
-    def get_graph(self, func, color = None):
+    def get_graph(
+        self, func, 
+        color = None,
+        x_min = None,
+        x_max = None,
+        ):
         if color is None:
             color = self.default_graph_colors.next()
+        if x_min is None:
+            x_min = self.x_min
+        if x_max is None:
+            x_max = self.x_max
 
         def parameterized_function(alpha):
-            x = interpolate(self.x_min, self.x_max, alpha)
+            x = interpolate(x_min, x_max, alpha)
             return self.coords_to_point(x, func(x))
 
         graph = ParametricFunction(
@@ -116,13 +141,12 @@ class GraphScene(Scene):
     def slope_of_tangent(self, *args, **kwargs):
         return np.tan(self.angle_of_tangent(*args, **kwargs))
 
-    def get_derivative_graph(self, graph, dx = 0.01, color = None):
-        if color is None:
-            color = self.default_derivative_color
-        return self.get_graph(
-            lambda x : self.slope_of_tangent(x, graph, dx) / self.space_unit_to_y,
-            color = color,
-        )
+    def get_derivative_graph(self, graph, dx = 0.01, **kwargs):
+        if "color" not in kwargs:
+            kwargs["color"] = self.default_derivative_color
+        def deriv(x):
+            return self.slope_of_tangent(x, graph, dx) / self.space_unit_to_y
+        return self.get_graph(deriv, **kwargs)
 
     def get_graph_label(
         self, 

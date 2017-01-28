@@ -135,7 +135,7 @@ class Line(VMobject):
 
 class DashedLine(Line):
     CONFIG = {
-        "dashed_segment_length" : 0.15
+        "dashed_segment_length" : 0.05
     }
     def __init__(self, *args, **kwargs):
         self.init_kwargs = kwargs

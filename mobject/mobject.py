@@ -268,7 +268,8 @@ class Mobject(object):
             dim = np.argmax(np.abs(vect))
             buff = kwargs.get("buff", DEFAULT_MOBJECT_TO_EDGE_BUFFER)
             max_val = space_lengths[dim] - buff
-            if abs(self.get_edge_center(vect)[dim]) > max_val:
+            edge_center = self.get_edge_center(vect)
+            if np.dot(edge_center, vect) > max_val:
                 self.to_edge(vect, **kwargs)
         return self
 
