@@ -1204,13 +1204,17 @@ class PatternForPowerRule(PiCreatureScene):
                 Write(arrow)
             )
             self.dither()
-            self.play(Transform(
-                lhs_copy[1], form[3],
-                path_arc = np.pi,
-                rate_func = running_start,
-                replace_mobject_with_target_in_scene = True
-            ))
-            self.play(FadeIn(form[5]))
+            self.play(
+                ApplyMethod(
+                    lhs_copy[1].replace, form[3],
+                    path_arc = np.pi,
+                    rate_func = running_start,
+                ),
+                FadeIn(
+                    form[5],
+                    rate_func = squish_rate_func(smooth, 0.5, 1)
+                )   
+            )
             self.dither()
             self.play(
                 self.pi_creature.change_mode, "hesitant",
@@ -1218,30 +1222,248 @@ class PatternForPowerRule(PiCreatureScene):
             )
             self.play(*map(FadeOut, [form, lhs_copy]))
 
-# class PowerRuleAlgebra(Scene):
-#     CONFIG = {
-#         "dx_color" : YELLOW,
-#     }
-#     def construct(self):
-#         value = TextMobject("Value:")
-#         x_to_n = TexMobject("x^n")
-#         nudged = TextMobject("Nudged Value:")
-#         x_dx_to_n = TexMobject("(x+dx)^n")
-#         equals = TexMobject("equals")
-#         full_product = TexMobject("(x+dx)(x+dx)(x+dx)\\cdots(x+dx)")
+class PowerRuleAlgebra(Scene):
+    CONFIG = {
+        "dx_color" : YELLOW,
+        "x_color" : BLUE,
+    }
+    def construct(self):
+        x_to_n = TexMobject("x^n")
+        down_arrow = Arrow(UP, DOWN, buff = MED_LARGE_BUFF)
+        paren_strings = ["(", "x", "+", "dx", ")"]
+        x_dx_to_n = TexMobject(*paren_strings +["^n"])
+        equals = TexMobject("=")
+        equals2 = TexMobject("=")
+        full_product = TexMobject(
+            *paren_strings*3+["\\cdots"]+paren_strings
+        )
 
-#         value.to_corner(UP+LEFT)
-#         x_to_n.next_to(value, RIGHT)
-#         nudged.next_to(value, DOWN, aligned_edge = LEFT)
-#         x_dx_group = VGroup(x_dx_to_n, equals, full_product)
-#         x_dx_group.arrange_submobjects(RIGHT)
+        x_to_n.highlight(self.x_color)
+        for mob in x_dx_to_n, full_product:
+            mob.highlight_by_tex("dx", self.dx_color)
+            mob.highlight_by_tex("x", self.x_color)
 
+        nudge_group = VGroup(x_to_n, down_arrow, x_dx_to_n)
+        nudge_group.arrange_submobjects(DOWN)
+        nudge_group.to_corner(UP+LEFT)
+        down_arrow.next_to(x_to_n[0], DOWN)
+        equals.next_to(x_dx_to_n)
+        full_product.next_to(equals)
+        equals2.next_to(equals, DOWN, 1.5*LARGE_BUFF)
 
-#         self.add(value, nudged_value)
+        nudge_brace = Brace(x_dx_to_n, DOWN)
+        nudged_output = nudge_brace.get_text("Nudged \\\\ output")
+        product_brace = Brace(full_product, UP)
+        product_brace.add(product_brace.get_text("$n$ times"))
 
+        self.add(x_to_n)
+        self.play(ShowCreation(down_arrow))
+        self.play(
+            FadeIn(x_dx_to_n),
+            GrowFromCenter(nudge_brace),
+            GrowFromCenter(nudged_output)
+        )
+        self.dither()
+        self.play(
+            Write(VGroup(equals, full_product)),
+            GrowFromCenter(
+                product_brace,
+                rate_func = squish_rate_func(smooth, 0.6, 1)
+            ),
+            run_time = 3
+        )
+        self.dither()
+        self.workout_product(equals2, full_product)
 
+    def workout_product(self, equals, full_product):
+        product_part_tex_pairs = zip(full_product, full_product.expression_parts)
+        xs, dxs = [
+            VGroup(*[
+                submob
+                for submob, tex in product_part_tex_pairs
+                if tex == target_tex
+            ])
+            for target_tex in "x", "dx"
+        ]
 
+        x_to_n = TexMobject("x^n")
+        extra_stuff = TexMobject("+(\\text{Multiple of }\\, dx^2)")
+        # extra_stuff.scale(0.8)
+        VGroup(*extra_stuff[-4:-2]).highlight(self.dx_color)
 
+        x_to_n.next_to(equals, RIGHT, align_using_submobjects = True)
+        x_to_n.highlight(self.x_color)
+
+        xs_copy = xs.copy()
+        full_product.save_state()
+        self.play(full_product.highlight, WHITE)
+        self.play(xs_copy.highlight, self.x_color)
+        self.play(
+            Write(equals),
+            Transform(xs_copy, x_to_n)
+        )
+        self.dither()
+        brace, derivative_term = self.pull_out_linear_terms(
+            x_to_n, product_part_tex_pairs, xs, dxs
+        )
+        self.dither()
+
+        circle = Circle(color = DERIVATIVE_COLOR)
+        circle.replace(derivative_term, stretch = True)
+        circle.scale_in_place(1.4)
+        circle.rotate_in_place(
+            Line(
+                derivative_term.get_corner(DOWN+LEFT),
+                derivative_term.get_corner(UP+RIGHT),
+            ).get_angle()
+        )
+
+        extra_stuff.next_to(brace, aligned_edge = UP)
+
+        self.play(Write(extra_stuff), full_product.restore)
+        self.dither()
+        self.play(ShowCreation(circle))
+        self.dither()
+
+    def pull_out_linear_terms(self, x_to_n, product_part_tex_pairs, xs, dxs):
+        last_group = None
+        all_linear_terms = VGroup()
+        for dx_index, dx in enumerate(dxs):
+            if dx is dxs[-1]:
+                v_dots = TexMobject("\\vdots")
+                v_dots.next_to(last_group[0], DOWN)
+                h_dots_list = [
+                    submob
+                    for submob, tex in product_part_tex_pairs
+                    if tex == "\\cdots"
+                ]
+                h_dots_copy = h_dots_list[0].copy()
+                self.play(ReplacementTransform(
+                    h_dots_copy, v_dots,
+                ))
+                last_group.add(v_dots)
+                all_linear_terms.add(v_dots)
+
+            dx_copy = dx.copy()
+            xs_copy = xs.copy()
+            xs_copy.remove(xs_copy[dx_index])
+            self.play(
+                dx_copy.highlight, self.dx_color,
+                xs_copy.highlight, self.x_color,
+                rate_func = squish_rate_func(smooth, 0, 0.5)
+            )
+
+            dx_copy.generate_target()
+            xs_copy.generate_target()
+            target_list = [dx_copy.target] + list(xs_copy.target)
+            target_list.sort(
+                lambda m1, m2 : cmp(m1.get_center()[0], m2.get_center()[0])
+            )
+            dots = TexMobject("+", ".", ".", "\\dots")
+            for dot_index, dot in enumerate(dots):
+                target_list.insert(2*dot_index, dot)
+            group = VGroup(*target_list)
+            group.arrange_submobjects(RIGHT, SMALL_BUFF)
+            if last_group is None:
+                group.next_to(x_to_n, RIGHT)
+            else:
+                group.next_to(last_group, DOWN, aligned_edge = LEFT)
+            last_group = group
+
+            self.play(
+                MoveToTarget(dx_copy),
+                MoveToTarget(xs_copy),
+                Write(dots)
+            )
+            all_linear_terms.add(dx_copy, xs_copy, dots)
+
+        all_linear_terms.generate_target()
+        all_linear_terms.target.scale(0.7)
+        brace = Brace(all_linear_terms.target, UP)
+        compact = TexMobject("+\\,", "n", "x^{n-1}", "\\,dx")
+        compact.highlight_by_tex("x^{n-1}", self.x_color)
+        compact.highlight_by_tex("\\,dx", self.dx_color)
+        compact.next_to(brace, UP)
+        brace.add(compact)
+        derivative_term = VGroup(*compact[1:3])
+
+        VGroup(brace, all_linear_terms.target).shift(
+            x_to_n[0].get_right()+MED_LARGE_BUFF*RIGHT - \
+            compact[0].get_left()
+        )
+
+        self.play(MoveToTarget(all_linear_terms))
+        self.play(Write(brace, run_time = 1))
+        return brace, derivative_term
+
+class OneOverX(PiCreatureScene):
+    CONFIG = {
+        "rectangle_corner" : (SPACE_WIDTH - MED_LARGE_BUFF)*LEFT + 2*UP,
+        "rectangle_color_kwargs" : {
+            "fill_color" : BLUE,
+            "fill_opacity" : 0.7,
+            "stroke_width" : 1,
+            "stroke_color" : WHITE,
+        },
+        "unit_length" : 3,
+    }
+    def construct(self):
+        rect_group = self.get_rectangle_group(1.5)
+
+        self.add(rect_group)
+        self.dither()
+        self.change_rectangle_group(rect_group, 0.2)
+        self.dither()
+
+    def get_rectangle_group(
+        self, x, 
+        x_label = "x", 
+        one_over_x_label = "\\frac{1}{x}"
+        ):
+        result = Rectangle()
+        result.rectangle = self.get_rectangle(x)
+
+        result.digest_mobject_attrs()
+        return result
+
+    def get_rectangle(self, x):
+        rectangle = Rectangle(
+            width = x*self.unit_length,
+            height = (1./x)*self.unit_length,
+            **self.rectangle_color_kwargs
+        )
+        rectangle.move_to(self.rectangle_corner, UP+LEFT)
+        return rectangle
+
+    def change_rectangle_group(
+        self, 
+        rect_group, target_x,
+        target_group_kwargs = None,
+        added_anims = [],
+        **anim_kwargs
+        ):
+        target_group_kwargs = target_group_kwargs or {}
+        if "run_time" not in anim_kwargs:
+            anim_kwargs["run_time"] = 3
+
+        target_group = self.get_rectangle_group(target_x, **target_group_kwargs)
+        start_width, target_width = [
+            group.rectangle.get_width()
+            for group in rect_group, target_group
+        ]
+        area = self.unit_length**2
+        def update_rect(rect, alpha):
+            width = interpolate(start_width, target_width, alpha)
+            rect.stretch_to_fit_width(width)
+            rect.stretch_to_fit_height(area/width)
+            rect.move_to(self.rectangle_corner, UP+LEFT)
+
+        self.play(
+            Transform(rect_group, target_group),
+            UpdateFromAlphaFunc(rect_group.rectangle, update_rect),
+            *added_anims,
+            **anim_kwargs
+        )
 
 
 

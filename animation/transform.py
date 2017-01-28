@@ -51,6 +51,11 @@ class Transform(Animation):
         submob.interpolate(start, end, alpha, self.path_func)
         return self
 
+class ReplacementTransform(Transform):
+    CONFIG = {
+        "replace_mobject_with_target_in_scene" : True,
+    }
+
 
 class ClockwiseTransform(Transform):
     CONFIG = {
