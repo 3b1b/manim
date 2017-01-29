@@ -121,7 +121,10 @@ class GraphScene(Scene):
 
         def parameterized_function(alpha):
             x = interpolate(x_min, x_max, alpha)
-            return self.coords_to_point(x, func(x))
+            y = func(x)
+            if not np.isfinite(y):
+                y = self.y_max
+            return self.coords_to_point(x, y)
 
         graph = ParametricFunction(
             parameterized_function, 

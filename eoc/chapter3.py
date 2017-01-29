@@ -1396,23 +1396,124 @@ class PowerRuleAlgebra(Scene):
         self.play(Write(brace, run_time = 1))
         return brace, derivative_term
 
-class OneOverX(PiCreatureScene):
+class OneOverX(PiCreatureScene, GraphScene):
     CONFIG = {
-        "rectangle_corner" : (SPACE_WIDTH - MED_LARGE_BUFF)*LEFT + 2*UP,
+        "unit_length" : 3.0,    
+        "graph_origin" : (SPACE_WIDTH - LARGE_BUFF)*LEFT + 2*DOWN,
         "rectangle_color_kwargs" : {
             "fill_color" : BLUE,
             "fill_opacity" : 0.7,
             "stroke_width" : 1,
             "stroke_color" : WHITE,
         },
-        "unit_length" : 3,
+
+        "x_axis_label" : "",
+        "y_axis_label" : "",
+        "x_min" : 0,
+        "y_min" : 0,
+        "x_tick_frequency" : 0.5,
+        "y_tick_frequency" : 0.5,
+        "x_labeled_nums" : range(0, 4),
+        "y_labeled_nums" : [1],
+        "y_axis_height" : 10,
+        "morty_scale_val" : 0.8,
+        "area_label_scale_factor" : 0.75,
+        "dx" : 0.1,
     }
+    def setup(self):
+        for c in self.__class__.__bases__:
+            c.setup(self)
+        self.x_max = self.x_axis_width/self.unit_length
+        self.y_max = self.y_axis_height/self.unit_length
+
+
     def construct(self):
-        rect_group = self.get_rectangle_group(1.5)
+        self.introduce_function()
+        self.introduce_puddle()
+        self.introduce_graph()
+        self.perform_nudge()
+        # self.draw_graph()
+
+
+    def introduce_function(self):
+        func = TexMobject("f(x) = ", "\\frac{1}{x}")
+        func.to_edge(UP)
+        recip_copy = func[1].copy()
+        x_to_neg_one = TexMobject("x^{-1}")
+        x_to_neg_one.submobjects.reverse()
+        neg_one = VGroup(*x_to_neg_one[:2])
+        neg_two = TexMobject("-2")
+
+        self.play(
+            Write(func),
+            self.pi_creature.change_mode, "pondering"
+        )
+        self.dither()
+        self.play(
+            recip_copy.next_to, self.pi_creature, UP+LEFT,
+            self.pi_creature.change_mode, "raise_right_hand"
+        )
+        x_to_neg_one.move_to(recip_copy)
+        neg_two.replace(neg_one)
+        self.play(ReplacementTransform(recip_copy, x_to_neg_one))
+        self.dither()
+        self.play(
+            neg_one.scale, 1.5,
+            neg_one.next_to, x_to_neg_one, LEFT, SMALL_BUFF, DOWN,
+            rate_func = running_start,
+            path_arc = np.pi
+        )
+        self.play(FadeIn(neg_two))
+        self.dither(2)
+        self.say(
+            "More geometry!",
+            target_mode = "hooray",
+            added_anims = [
+                FadeOut(x_to_neg_one),
+                FadeOut(neg_two),
+            ],
+            run_time = 2
+        )
+        self.dither()
+        self.play(*self.get_bubble_fade_anims())
+
+
+    def introduce_puddle(self):
+        pass
+
+    def introduce_graph(self):
+        pass
+
+    def perform_nudge(self):
+        pass
+
+
+    ########
+
+    def get_pi_creature(self):
+        morty = PiCreatureScene.get_pi_creature(self)
+        morty.scale(
+            self.morty_scale_val, 
+            about_point = morty.get_corner(DOWN+RIGHT)
+        )
+        return morty
+
+    def draw_graph(self):
+        self.setup_axes()
+        graph = self.get_graph(lambda x : 1./x)
+
+        rect_group = self.get_rectangle_group(0.5)
 
         self.add(rect_group)
         self.dither()
-        self.change_rectangle_group(rect_group, 0.2)
+        self.change_rectangle_group(
+            rect_group, 2,
+            target_group_kwargs = {
+                "x_label" : "2",
+                "one_over_x_label" : "\\frac{1}{2}",
+            },
+            added_anims = [ShowCreation(graph)]
+        )
         self.dither()
 
     def get_rectangle_group(
@@ -1420,10 +1521,34 @@ class OneOverX(PiCreatureScene):
         x_label = "x", 
         one_over_x_label = "\\frac{1}{x}"
         ):
-        result = Rectangle()
+        result = VGroup()
+        result.x_val = x
         result.rectangle = self.get_rectangle(x)
 
-        result.digest_mobject_attrs()
+        result.x_brace, result.dx_brace = braces = [
+            Brace(result.rectangle, vect)
+            for vect in UP, RIGHT
+        ]
+        result.labels = VGroup()
+        for brace, label in zip(braces, [x_label, one_over_x_label]):
+            brace.get_text("$%s$"%label)
+            result.labels.add(brace.get_text("$%s$"%label))
+
+        area_label = TextMobject("Area = 1")
+        area_label.scale(self.area_label_scale_factor)
+        max_width = max(result.rectangle.get_width()-2*SMALL_BUFF, 0)
+        if area_label.get_width() > max_width:
+            area_label.scale_to_fit_width(max_width)
+        area_label.move_to(result.rectangle)
+        result.area_label = area_label
+
+        result.add(
+            result.rectangle,
+            result.x_brace,
+            result.dx_brace,
+            result.labels,
+            result.area_label,
+        )
         return result
 
     def get_rectangle(self, x):
@@ -1432,7 +1557,7 @@ class OneOverX(PiCreatureScene):
             height = (1./x)*self.unit_length,
             **self.rectangle_color_kwargs
         )
-        rectangle.move_to(self.rectangle_corner, UP+LEFT)
+        rectangle.move_to(self.graph_origin, DOWN+LEFT)
         return rectangle
 
     def change_rectangle_group(
@@ -1447,20 +1572,24 @@ class OneOverX(PiCreatureScene):
             anim_kwargs["run_time"] = 3
 
         target_group = self.get_rectangle_group(target_x, **target_group_kwargs)
-        start_width, target_width = [
-            group.rectangle.get_width()
-            for group in rect_group, target_group
-        ]
-        area = self.unit_length**2
-        def update_rect(rect, alpha):
-            width = interpolate(start_width, target_width, alpha)
-            rect.stretch_to_fit_width(width)
-            rect.stretch_to_fit_height(area/width)
-            rect.move_to(self.rectangle_corner, UP+LEFT)
+        target_labels = target_group.labels
+        labels_transform = Transform(
+            rect_group.labels,
+            target_group.labels
+        )
+
+        start_x = float(rect_group.x_val)
+        def update_rect_group(group, alpha):
+            x = interpolate(start_x, target_x, alpha)
+            new_group = self.get_rectangle_group(x, **target_group_kwargs)
+            Transform(group, new_group).update(1)
+            labels_transform.update(alpha)
+            for l1, l2 in zip(rect_group.labels, new_group.labels):
+                l1.move_to(l2)
+            return rect_group
 
         self.play(
-            Transform(rect_group, target_group),
-            UpdateFromAlphaFunc(rect_group.rectangle, update_rect),
+            UpdateFromAlphaFunc(rect_group, update_rect_group),
             *added_anims,
             **anim_kwargs
         )

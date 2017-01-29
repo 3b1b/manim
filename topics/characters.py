@@ -281,7 +281,7 @@ class PiCreatureScene(Scene):
             return Randolph().to_corner(DOWN+LEFT)
 
     def say(self, *content, **kwargs):
-        added_anims = []
+        added_anims = kwargs.get("added_anims", [])
         if "target_mode" in kwargs:
             target_mode = kwargs["target_mode"]
         else:
