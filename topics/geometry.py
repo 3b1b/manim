@@ -123,10 +123,12 @@ class Line(VMobject):
         return angle_of_vector(end-start)
 
     def put_start_and_end_on(self, new_start, new_end):
+        epsilon = 0.01
         if self.get_length() == 0:
             #TODO, this is hacky
-            self.points[0] += 0.01*LEFT
+            self.points[0] += epsilon*LEFT
         new_length = np.linalg.norm(new_end - new_start)
+        new_length = max(new_length, epsilon)
         new_angle = angle_of_vector(new_end - new_start)
         self.scale(new_length / self.get_length())
         self.rotate(new_angle - self.get_angle())

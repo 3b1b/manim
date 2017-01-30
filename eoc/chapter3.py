@@ -1402,7 +1402,7 @@ class OneOverX(PiCreatureScene, GraphScene):
         "graph_origin" : (SPACE_WIDTH - LARGE_BUFF)*LEFT + 2*DOWN,
         "rectangle_color_kwargs" : {
             "fill_color" : BLUE,
-            "fill_opacity" : 0.7,
+            "fill_opacity" : 0.5,
             "stroke_width" : 1,
             "stroke_color" : WHITE,
         },
@@ -1419,6 +1419,9 @@ class OneOverX(PiCreatureScene, GraphScene):
         "morty_scale_val" : 0.8,
         "area_label_scale_factor" : 0.75,
         "dx" : 0.1,
+        "start_x_value" : 1.3,
+        "dx_color" : GREEN,
+        "df_color" : RED,
     }
     def setup(self):
         for c in self.__class__.__bases__:
@@ -1426,14 +1429,11 @@ class OneOverX(PiCreatureScene, GraphScene):
         self.x_max = self.x_axis_width/self.unit_length
         self.y_max = self.y_axis_height/self.unit_length
 
-
     def construct(self):
         self.introduce_function()
         self.introduce_puddle()
         self.introduce_graph()
         self.perform_nudge()
-        # self.draw_graph()
-
 
     def introduce_function(self):
         func = TexMobject("f(x) = ", "\\frac{1}{x}")
@@ -1464,7 +1464,7 @@ class OneOverX(PiCreatureScene, GraphScene):
             path_arc = np.pi
         )
         self.play(FadeIn(neg_two))
-        self.dither(2)
+        self.dither()
         self.say(
             "More geometry!",
             target_mode = "hooray",
@@ -1477,15 +1477,198 @@ class OneOverX(PiCreatureScene, GraphScene):
         self.dither()
         self.play(*self.get_bubble_fade_anims())
 
-
     def introduce_puddle(self):
-        pass
+        rect_group = self.get_rectangle_group(self.start_x_value)
+
+        self.play(
+            DrawBorderThenFill(rect_group.rectangle),
+            Write(rect_group.area_label),
+            self.pi_creature.change_mode, "thinking"
+        )
+        self.play(
+            GrowFromCenter(rect_group.x_brace),
+            Write(rect_group.x_label),
+        )
+        self.dither()
+        self.play(
+            GrowFromCenter(rect_group.recip_brace),
+            Write(rect_group.recip_label),
+        )
+        self.setup_axes(animate = True)
+        self.dither()
+
+        for d in 2, 3:
+            self.change_rectangle_group(
+                rect_group, d,
+                target_group_kwargs = {
+                    "x_label" : str(d),
+                    "one_over_x_label" : "\\frac{1}{%d}"%d,
+                },
+                run_time = 2
+            )
+            self.dither()
+        self.change_rectangle_group(rect_group, 3)
+        self.dither()
+
+        self.rect_group = rect_group
 
     def introduce_graph(self):
-        pass
+        rect_group = self.rect_group
+        graph = self.get_graph(lambda x : 1./x)
+        graph.points = np.array(list(reversed(graph.points)))
+
+        self.change_rectangle_group(
+            rect_group, 0.01,
+            added_anims = [
+                ShowCreation(graph)
+            ],
+            run_time = 5,
+        )
+        self.change_mode("happy")
+        self.change_rectangle_group(rect_group, self.start_x_value)
+        self.dither()
+
+        self.graph = graph
 
     def perform_nudge(self):
-        pass
+        rect_group = self.rect_group
+        graph = self.graph
+
+        rect_copy = rect_group.rectangle.copy()
+        rect_copy.set_fill(opacity = 0)
+        new_rect = self.get_rectangle(
+            self.start_x_value + self.dx
+        )
+
+        recip_brace = rect_group.recip_brace
+        recip_brace.generate_target()
+        recip_brace.target.next_to(
+            new_rect, RIGHT, 
+            buff = SMALL_BUFF,
+            aligned_edge = DOWN,
+        )
+        recip_label = rect_group.recip_label
+        recip_label.generate_target()
+        recip_label.target.next_to(recip_brace.target, RIGHT)
+
+        h_lines = VGroup(*[
+            DashedLine(
+                ORIGIN, (rect_copy.get_width()+LARGE_BUFF)*RIGHT, 
+                color = self.df_color,
+                stroke_width = 2
+            ).move_to(rect.get_corner(UP+LEFT), LEFT)
+            for rect in rect_group.rectangle, new_rect
+        ])
+
+        v_lines = VGroup(*[
+            DashedLine(
+                ORIGIN, (rect_copy.get_height()+MED_LARGE_BUFF)*UP,
+                color = self.dx_color,
+                stroke_width = 2
+            ).move_to(rect.get_corner(DOWN+RIGHT), DOWN)
+            for rect in rect_group.rectangle, new_rect
+        ])
+
+        dx_brace = Brace(v_lines, UP, buff = 0)
+        dx_label = dx_brace.get_text("$dx$")
+        dx_brace.add(dx_label)
+
+        df_brace = Brace(h_lines, RIGHT, buff = 0)
+        df_label = df_brace.get_text("$d\\left(\\frac{1}{x}\\right)$")
+        df_brace.add(df_label)
+        minus_sign = TexMobject("-")
+        minus_sign.move_to(df_label, LEFT)
+
+        area_changes = VGroup()
+        point_pairs = [
+            (new_rect.get_corner(UP+RIGHT), rect_copy.get_corner(DOWN+RIGHT)),
+            (new_rect.get_corner(UP+LEFT), rect_copy.get_corner(UP+RIGHT))
+        ]
+        for color, point_pair in zip([self.dx_color, self.df_color], point_pairs):
+            area_change_rect = Rectangle(
+                fill_opacity = 1,
+                fill_color = color,
+                stroke_width = 0
+            )
+            area_change_rect.replace(
+                VGroup(*map(VectorizedPoint, point_pair)),
+                stretch = True
+            )
+            area_changes.add(area_change_rect)
+        area_gained, area_lost = area_changes
+
+        area_gained_label = TextMobject("Area gained")
+        area_gained_label.scale(0.75)
+        area_gained_label.next_to(
+            rect_copy.get_corner(DOWN+RIGHT), 
+            UP+LEFT, buff = SMALL_BUFF
+        )
+        area_gained_arrow = Arrow(
+            area_gained_label.get_top(),
+            area_gained.get_center(),
+            buff = 0,
+            color = WHITE
+        )
+        
+        area_lost_label = TextMobject("Area lost")
+        area_lost_label.scale(0.75)
+        area_lost_label.next_to(rect_copy.get_left(), RIGHT)
+        area_lost_arrow = Arrow(
+            area_lost_label.get_top(),
+            area_lost.get_center(),
+            buff = 0,
+            color = WHITE
+        )
+
+        question = TexMobject(
+            "\\frac{d(1/x)}{dx} = ???"
+        )
+        question.next_to(
+            self.pi_creature.get_corner(UP+LEFT), 
+            UP, buff = MED_SMALL_BUFF,
+        )
+
+        self.play(
+            FadeOut(rect_group.area_label),
+            ReplacementTransform(rect_copy, new_rect),
+            MoveToTarget(recip_brace),
+            MoveToTarget(recip_label),
+            self.pi_creature.change_mode, "pondering"
+        )
+        self.play(
+            GrowFromCenter(dx_brace),
+            *map(ShowCreation, v_lines)
+        )
+        self.dither()
+        self.play(
+            GrowFromCenter(df_brace),
+            *map(ShowCreation, h_lines)
+        )
+        self.change_mode("confused")
+        self.dither()
+
+        self.play(
+            FadeIn(area_gained),
+            Write(area_gained_label, run_time = 2),
+            ShowCreation(area_gained_arrow)
+        )
+        self.dither()
+        self.play(
+            FadeIn(area_lost),
+            Write(area_lost_label, run_time = 2),
+            ShowCreation(area_lost_arrow)
+        )
+        self.dither()
+        self.play(
+            Write(minus_sign),
+            df_label.next_to, minus_sign, RIGHT, SMALL_BUFF
+        )
+        self.dither()
+        self.play(
+            Write(question),
+            self.pi_creature.change_mode, "raise_right_hand"
+        )
+        self.dither(2)
 
 
     ########
@@ -1525,7 +1708,7 @@ class OneOverX(PiCreatureScene, GraphScene):
         result.x_val = x
         result.rectangle = self.get_rectangle(x)
 
-        result.x_brace, result.dx_brace = braces = [
+        result.x_brace, result.recip_brace = braces = [
             Brace(result.rectangle, vect)
             for vect in UP, RIGHT
         ]
@@ -1533,6 +1716,7 @@ class OneOverX(PiCreatureScene, GraphScene):
         for brace, label in zip(braces, [x_label, one_over_x_label]):
             brace.get_text("$%s$"%label)
             result.labels.add(brace.get_text("$%s$"%label))
+        result.x_label, result.recip_label = result.labels
 
         area_label = TextMobject("Area = 1")
         area_label.scale(self.area_label_scale_factor)
@@ -1545,16 +1729,21 @@ class OneOverX(PiCreatureScene, GraphScene):
         result.add(
             result.rectangle,
             result.x_brace,
-            result.dx_brace,
+            result.recip_brace,
             result.labels,
             result.area_label,
         )
         return result
 
     def get_rectangle(self, x):
+        try:
+            y = 1./x
+        except ZeroDivisionError:
+            y = 100
+
         rectangle = Rectangle(
             width = x*self.unit_length,
-            height = (1./x)*self.unit_length,
+            height = y*self.unit_length,
             **self.rectangle_color_kwargs
         )
         rectangle.move_to(self.graph_origin, DOWN+LEFT)
@@ -1593,21 +1782,548 @@ class OneOverX(PiCreatureScene, GraphScene):
             *added_anims,
             **anim_kwargs
         )
+        rect_group.x_val = target_x
+
+class SquareRootOfX(Scene):
+    CONFIG = {
+        "square_color_kwargs" : {
+            "stroke_color" : WHITE,
+            "stroke_width" : 1,
+            "fill_color" : BLUE_E,
+            "fill_opacity" : 1,
+        },
+        "bigger_square_color_kwargs" : {
+            "stroke_color" : WHITE,
+            "stroke_width" : 1,
+            "fill_color" : YELLOW,
+            "fill_opacity" : 0.7,
+        },
+        "square_corner" : 6*LEFT+3*UP,
+        "square_width" : 3,
+        "d_sqrt_x" : 0.3,
+    }
+    def construct(self):
+        self.add_title()
+        self.introduce_square()
+        self.nudge_square()
+
+    def add_title(self):
+        title = TexMobject("f(x) = \\sqrt{x}")
+        title.next_to(ORIGIN, RIGHT)
+        title.to_edge(UP)
+        self.add(title)
+
+    def introduce_square(self):
+        square = Square(
+            side_length = self.square_width,
+            **self.square_color_kwargs
+        )
+        square.move_to(self.square_corner, UP+LEFT)
+        area_label = TextMobject("Area $ = x$")
+        area_label.move_to(square)
+
+        bottom_brace, right_brace = braces = VGroup(*[
+            Brace(square, vect)
+            for vect in DOWN, RIGHT
+        ])
+        for brace in braces:
+            brace.add(brace.get_text("$\\sqrt{x}$"))
+
+
+        self.play(
+            DrawBorderThenFill(square),
+            Write(area_label)
+        )
+        self.play(*map(FadeIn, braces))
+        self.dither()
+
+        self.square = square
+        self.area_label = area_label
+        self.braces = braces
+
+    def nudge_square(self):
+        square = self.square
+        area_label = self.area_label
+        bottom_brace, right_brace = self.braces
+
+        bigger_square = Square(
+            side_length = self.square_width + self.d_sqrt_x,
+            **self.bigger_square_color_kwargs
+        )
+        bigger_square.move_to(self.square_corner, UP+LEFT)
+
+        square_copy = square.copy()
+
+        lines = VGroup(*[
+            DashedLine(
+                ORIGIN,
+                (self.square_width + MED_LARGE_BUFF)*vect,
+                color = WHITE,
+                stroke_width = 3
+            ).shift(s.get_corner(corner))
+            for corner, vect in [(DOWN+LEFT, RIGHT), (UP+RIGHT, DOWN)]
+            for s in square, bigger_square
+        ])
+        little_braces = VGroup(*[
+            Brace(VGroup(*line_pair), vect, buff = 0)
+            for line_pair, vect in (lines[:2], RIGHT), (lines[2:], DOWN)
+        ])
+        for brace in little_braces:
+            tex = brace.get_text("$d\\sqrt{x}$", buff = SMALL_BUFF)
+            tex.scale_in_place(0.8)
+            brace.add(tex)
+
+        area_increase = TextMobject("$dx$ = New area")
+        area_increase.highlight(bigger_square.get_color())
+        area_increase.next_to(square, RIGHT, 4)
+
+        question = TexMobject("\\frac{d\\sqrt{x}}{dx} = ???")
+        VGroup(*question[5:7]).highlight(bigger_square.get_color())
+        question.next_to(
+            area_increase, DOWN, 
+            aligned_edge = LEFT, 
+            buff = LARGE_BUFF
+        )
+        
+        self.play(
+            Transform(square_copy, bigger_square),
+            Animation(square),
+            Animation(area_label),
+            bottom_brace.next_to, bigger_square, DOWN, SMALL_BUFF, LEFT,
+            right_brace.next_to, bigger_square, RIGHT, SMALL_BUFF, UP,
+        )
+        self.play(Write(area_increase))
+        self.play(*it.chain(
+            map(ShowCreation, lines),
+            map(FadeIn, little_braces)
+        ))
+        self.play(Write(question))
+        self.dither()
+
+class MentionSine(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("Let's tackle $\\sin(\\theta)$")
+        self.change_student_modes("pondering", "hooray", "erm")
+        self.dither(2)
+        self.student_thinks("")
+        self.zoom_in_on_thought_bubble()
+
+class IntroduceUnitCircleWithSine(GraphScene):
+    CONFIG = {
+        "unit_length" : 2.5,
+        "graph_origin" : ORIGIN,
+        "x_axis_width" : 15,
+        "y_axis_height" : 10,
+        "x_min" : -3,
+        "x_max" : 3,
+        "y_min" : -2,
+        "y_max" : 2,
+        "x_labeled_nums" : [-2, -1, 1, 2],
+        "y_labeled_nums" : [-1, 1],
+        "x_tick_frequency" : 0.5,
+        "y_tick_frequency" : 0.5,
+        "circle_color" : BLUE,
+        "example_radians" : 0.8,
+        "rotations_per_second" : 0.25,
+        "include_radial_line_dot" : True,
+        "remove_angle_label" : True,
+        "line_class" : DashedLine,
+        "theta_label" : "= 0.8",
+    }
+    def construct(self):
+        self.setup_axes()
+        self.add_title()
+        self.introduce_unit_circle()
+        self.draw_example_radians()
+        self.label_sine()
+        self.walk_around_circle()
+
+    def add_title(self):
+        title = TexMobject("f(\\theta) = \\sin(\\theta)")
+        title.to_corner(UP+LEFT)
+        self.add(title)
+
+    def introduce_unit_circle(self):
+        circle = self.get_unit_circle()
+        radial_line = Line(ORIGIN, self.unit_length*RIGHT)
+        radial_line.highlight(RED)
+        if self.include_radial_line_dot:
+            dot = Dot()
+            dot.move_to(radial_line.get_end())
+            radial_line.add(dot)
+
+        self.play(ShowCreation(radial_line))
+        self.play(
+            ShowCreation(circle),            
+            Rotate(radial_line, 2*np.pi),
+            run_time = 2,
+        )
+        self.dither()
+
+        self.circle = circle
+        self.radial_line = radial_line
+
+    def draw_example_radians(self):
+        circle = self.circle
+        radial_line = self.radial_line
+
+        line = Line(
+            ORIGIN, self.example_radians*self.unit_length*UP,
+            color = YELLOW,
+        )
+        line.shift(SPACE_WIDTH*RIGHT/3).to_edge(UP)
+        line.insert_n_anchor_points(10)
+        line.make_smooth()
+
+        arc = Arc(
+            self.example_radians, radius = self.unit_length,
+            color = line.get_color(),
+        )
+        arc_copy = arc.copy().highlight(WHITE)
+
+        brace = Brace(line, RIGHT)
+        brace_text = brace.get_text("$\\theta%s$"%self.theta_label)
+        brace_text.highlight(line.get_color())
+        theta_copy = brace_text[0].copy()
+
+        self.play(
+            GrowFromCenter(line),
+            GrowFromCenter(brace),
+        )
+        self.play(Write(brace_text))
+        self.dither()
+        self.play(
+            line.move_to, radial_line.get_end(), DOWN,
+            FadeOut(brace)
+        )
+        self.play(ReplacementTransform(line, arc))
+        self.dither()
+        self.play(
+            Rotate(radial_line, self.example_radians),
+            ShowCreation(arc_copy)
+        )
+        self.dither()
+        arc_copy.generate_target()
+        arc_copy.target.scale(0.2)
+        theta_copy.generate_target()
+        theta_copy.target.next_to(
+            arc_copy.target, RIGHT,
+            aligned_edge = DOWN,
+            buff = SMALL_BUFF
+        )
+        theta_copy.target.shift(SMALL_BUFF*UP)
+        self.play(*map(MoveToTarget, [arc_copy, theta_copy]))
+        self.dither()
+
+        self.angle_label = VGroup(arc_copy, theta_copy)
+        self.example_theta_equation = brace_text
+
+    def label_sine(self):
+        radial_line = self.radial_line
+
+        drop_point = radial_line.get_end()[0]*RIGHT
+        v_line = self.line_class(radial_line.get_end(), drop_point)
+        brace = Brace(v_line, RIGHT)
+        brace_text = brace.get_text("$\\sin(\\theta)$")
+        brace_text[-2].highlight(YELLOW)
+
+        self.play(ShowCreation(v_line))
+        self.play(
+            GrowFromCenter(brace),
+            Write(brace_text)
+        )
+        self.dither()
+        faders = [brace, brace_text, self.example_theta_equation]
+        if self.remove_angle_label:
+            faders += self.angle_label
+        self.play(*map(FadeOut, faders))
+
+        self.v_line = v_line
+
+    def walk_around_circle(self):
+        radial_line = self.radial_line
+        v_line = self.v_line
+
+        def v_line_update(v_line):
+            drop_point = radial_line.get_end()[0]*RIGHT
+            v_line.put_start_and_end_on(
+                radial_line.get_end(), drop_point
+            )
+            return v_line
+        filler_arc = self.circle.copy()
+        filler_arc.highlight(YELLOW)
+        curr_arc_portion = self.example_radians/(2*np.pi)
+        filler_portion = 1 - curr_arc_portion
+        filler_arc.pointwise_become_partial(filler_arc, curr_arc_portion, 1)
+
+        self.play(
+            Rotate(radial_line, filler_portion*2*np.pi),
+            ShowCreation(filler_arc),
+            UpdateFromFunc(v_line, v_line_update),
+            run_time = filler_portion/self.rotations_per_second,
+            rate_func = None,
+        )
+        for x in range(5):
+            self.play(
+                Rotate(radial_line, 2*np.pi),
+                UpdateFromFunc(v_line, v_line_update),
+                run_time = 1./self.rotations_per_second,
+                rate_func = None,
+            )
+
+    ##############
+
+    def setup_axes(self):
+        GraphScene.setup_axes(self)
+        VGroup(*self.x_axis.numbers[:2]).shift(MED_SMALL_BUFF*LEFT)
+        VGroup(*self.x_axis.numbers[2:]).shift(SMALL_BUFF*RIGHT)
+        self.y_axis.numbers[0].shift(MED_SMALL_BUFF*DOWN)
+        self.y_axis.numbers[1].shift(MED_SMALL_BUFF*UP)
+
+    def get_unit_circle(self):
+        return Circle(
+            radius = self.unit_length,
+            color = self.circle_color,
+        )
+
+class DerivativeIntuitionFromSineGraph(GraphScene):
+    CONFIG = {
+        "graph_origin" : 6*LEFT,
+        "x_axis_width" : 11,
+        "x_min" : 0,
+        "x_max" : 4*np.pi,
+        "x_labeled_nums" : np.arange(0, 4*np.pi, np.pi),
+        "x_tick_frequency" : np.pi/4,
+        "x_axis_label" : "$\\theta$",
+        "y_axis_height" : 6,
+        "y_min" : -2,
+        "y_max" : 2,
+        "y_tick_frequency" : 0.5,
+        "y_axis_label" : "",
+    }
+    def construct(self):
+        self.setup_axes()
+        self.draw_sine_graph()
+        self.draw_derivative_from_slopes()
+
+    def draw_sine_graph(self):
+        graph = self.get_graph(np.sin)
+        v_line = DashedLine(ORIGIN, UP)
+        rps = IntroduceUnitCircleWithSine.CONFIG["rotations_per_second"]
+        self.play(
+            ShowCreation(graph),
+            UpdateFromFunc(v_line, lambda v : self.v_line_update(v, graph)),
+            run_time = 2./rps,
+            rate_func = None
+        )
+        self.dither()
 
 
 
+        self.graph = graph
+
+    def draw_derivative_from_slopes(self):
+        ss_group = self.get_secant_slope_group(
+            0, self.graph,
+            dx = 0.01,
+            secant_line_color = RED,
+        )
+        deriv_graph = self.get_graph(np.cos, color = DERIVATIVE_COLOR)
+        v_line = DashedLine(
+            self.graph_origin, self.coords_to_point(0, 1), 
+            color = RED
+        )
+
+        self.play(ShowCreation(ss_group, submobject_mode = "all_at_once"))
+        self.play(ShowCreation(v_line))
+        self.dither()
+        last_theta = 0
+        next_theta = np.pi/2
+        while last_theta < self.x_max:
+            deriv_copy = deriv_graph.copy()
+            self.animate_secant_slope_group_change(
+                ss_group,
+                target_x = next_theta,
+                added_anims = [
+                    ShowCreation(
+                        deriv_copy,
+                        rate_func = lambda t : interpolate(
+                            last_theta/self.x_max, 
+                            next_theta/self.x_max,
+                            smooth(t)
+                        ),
+                        run_time = 3,
+                    ),
+                    UpdateFromFunc(
+                        v_line, 
+                        lambda v : self.v_line_update(v, deriv_copy),
+                        run_time = 3
+                    ),
+                ]
+            )
+            self.dither()
+            if next_theta == 2*np.pi:
+                words = TextMobject("Looks a lot like $\\cos(\\theta)$")
+                words.next_to(self.graph_origin, RIGHT)
+                words.to_edge(UP)
+                arrow = Arrow(
+                    words.get_bottom(), 
+                    deriv_graph.point_from_proportion(0.45)
+                )
+                VGroup(words, arrow).highlight(deriv_graph.get_color())
+                self.play(
+                    Write(words),
+                    ShowCreation(arrow)
+                )
+            self.remove(deriv_copy)
+            last_theta = next_theta
+            next_theta += np.pi/2
+        self.add(deriv_copy)
+
+    ######
+
+    def v_line_update(self, v_line, graph):
+        point = graph.point_from_proportion(1)
+        drop_point = point[0]*RIGHT
+        v_line.put_start_and_end_on(drop_point, point)
+        return v_line
+
+    def setup_axes(self):
+        GraphScene.setup_axes(self)
+        self.x_axis.remove(self.x_axis.numbers)
+        self.remove(self.x_axis.numbers)
+        for x in range(1, 4):
+            if x == 1:
+                label = TexMobject("\\pi")
+            else:
+                label = TexMobject("%d\\pi"%x)
+            label.next_to(self.coords_to_point(x*np.pi, 0), DOWN, MED_LARGE_BUFF)
+            self.add(label)
+        self.x_axis_label_mob.highlight(YELLOW)
+
+class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
+    CONFIG = {
+        "zoom_factor" : 10,
+        "zoomed_canvas_space_shape" : (3, 4.5),    
+        "include_radial_line_dot" : False,
+        "remove_angle_label" : False,
+        "theta_label" : "",
+        "line_class" : Line,
+        "example_radians" : 1.0,
+        "zoomed_canvas_corner_buff" : SMALL_BUFF,
+        "d_theta" : 0.05,
+    }
+    def construct(self):
+        self.setup_axes()
+        self.add_title()
+        self.introduce_unit_circle()
+        self.draw_example_radians()
+        self.label_sine()
+
+        self.zoom_in()
+        self.perform_nudge()
+        self.show_similar_triangles()
+        self.analyze_ratios()
+
+    def zoom_in(self):
+        self.activate_zooming()
+        self.little_rectangle.next_to(self.radial_line.get_end(), UP, LARGE_BUFF)
+        self.play(*map(FadeIn, [
+            self.little_rectangle, self.big_rectangle
+        ]))
+        self.play(
+            self.little_rectangle.move_to, 
+            self.radial_line.get_end(), DOWN+RIGHT,
+            self.little_rectangle.shift, 
+            SMALL_BUFF*(DOWN+RIGHT)
+        )
+        self.dither()
+
+    def perform_nudge(self):
+        d_theta_arc = Arc(
+            start_angle = self.example_radians,
+            angle = self.d_theta,
+            radius = self.unit_length,
+            color = MAROON_B,
+            stroke_width = 6
+        )
+        d_theta_arc.scale(self.zoom_factor)
+        d_theta_brace = Brace(
+            d_theta_arc,
+            rotate_vector(RIGHT, self.example_radians)
+        )
+        d_theta_label = TexMobject("d\\theta")
+        d_theta_label.next_to(
+            d_theta_brace.get_center(), d_theta_brace.direction, 
+            MED_LARGE_BUFF
+        )
+        d_theta_label.highlight(d_theta_arc.get_color())
+
+        group = VGroup(d_theta_arc, d_theta_brace, d_theta_label)
+        group.scale(1./self.zoom_factor)
+
+        point = self.radial_line.get_end()
+        nudged_point = d_theta_arc.point_from_proportion(1)
+        # new_v_line = self.line_class(
+        #     nudged_point, nudged_point[0]*RIGHT
+        # )
+        interim_point = nudged_point[0]*RIGHT+point[1]*UP
+        h_line = DashedLine(
+            interim_point, point, 
+            dashed_segment_length = 0.01
+        )
+        d_sine_line = Line(interim_point, nudged_point, color = DERIVATIVE_COLOR)
+        d_sine_brace = Brace(Line(ORIGIN, UP), LEFT)
+        d_sine_brace.scale_to_fit_height(d_sine_line.get_height())
+        d_sine_brace.next_to(d_sine_line, LEFT, buff = SMALL_BUFF/self.zoom_factor)
+        d_sine = TexMobject("d(\\sin(\\theta))")
+        d_sine.highlight(d_sine_line.get_color())
+        d_sine.scale_to_fit_width(1.5*self.d_theta*self.unit_length)
+        d_sine.next_to(d_sine_brace, LEFT, SMALL_BUFF/self.zoom_factor)
+
+        self.play(
+            ShowCreation(d_theta_arc),
+            # ReplacementTransform(self.v_line.copy(), new_v_line)
+        )
+        self.play(
+            GrowFromCenter(d_theta_brace),
+            FadeIn(d_theta_label)
+        )
+        self.dither()
+        self.play(
+            ShowCreation(h_line),
+            ShowCreation(d_sine_line)
+        )
+        self.play(
+            GrowFromCenter(d_sine_brace),
+            Write(d_sine)
+        )
+        self.dither()
+
+        self.little_triangle = Polygon(
+            nudged_point, point, interim_point
+        )
+
+
+    def show_similar_triangles(self):
+        little_triangle = self.little_triangle
+        big_triangle = Polygon(
+            self.graph_origin,
+            self.radial_line.get_end(),
+            self.radial_line.get_end()[0]*RIGHT,
+        )
+        for triangle in little_triangle, big_triangle:
+            triangle.highlight(GREEN)
+            triangle.set_fill(GREEN, opacity = 0.5)
+        new_angle_label = self.angle_label.copy()
+        # new_angle_label.
+
+        self.add(little_triangle, big_triangle)
 
 
 
-
-
-
-
-
-
-
-
-
+    def analyze_ratios(self):
+        pass
 
 
 

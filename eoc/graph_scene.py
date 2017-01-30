@@ -17,14 +17,14 @@ class GraphScene(Scene):
         "x_axis_width" : 9,
         "x_tick_frequency" : 1,
         "x_leftmost_tick" : None, #Change if different from x_min
-        "x_labeled_nums" : range(1, 10),
+        "x_labeled_nums" : None,
         "x_axis_label" : "$x$",
         "y_min" : -1,
         "y_max" : 10,
         "y_axis_height" : 6,
         "y_tick_frequency" : 1,
         "y_bottom_tick" : None, #Change if different from y_min
-        "y_labeled_nums" : range(1, 10),
+        "y_labeled_nums" : None,
         "y_axis_label" : "$y$",
         "axes_color" : GREY,
         "graph_origin" : 2.5*DOWN + 4*LEFT,
@@ -37,6 +37,10 @@ class GraphScene(Scene):
     def setup_axes(self, animate = False):
         x_num_range = float(self.x_max - self.x_min)
         self.space_unit_to_x = self.x_axis_width/x_num_range
+        if self.x_labeled_nums is None:
+            self.x_labeled_nums = np.arange(
+                self.x_min, self.x_max, 2*self.x_tick_frequency
+            )
         x_axis = NumberLine(
             x_min = self.x_min,
             x_max = self.x_max,
@@ -46,8 +50,8 @@ class GraphScene(Scene):
             numbers_with_elongated_ticks = self.x_labeled_nums,
             color = self.axes_color
         )
-        x_axis.shift(self.graph_origin - x_axis.number_to_point(0))
-        if self.x_labeled_nums:
+        x_axis.shift(self.graph_origin - x_axis.number_to_point(0))        
+        if len(self.x_labeled_nums) > 0:
             x_axis.add_numbers(*filter(
                 lambda x : x != 0,
                 self.x_labeled_nums
@@ -64,6 +68,10 @@ class GraphScene(Scene):
 
         y_num_range = float(self.y_max - self.y_min)
         self.space_unit_to_y = self.y_axis_height/y_num_range
+        if self.y_labeled_nums is None:
+            self.y_labeled_nums = np.arange(
+                self.y_min, self.y_max, 2*self.y_tick_frequency
+            )
         y_axis = NumberLine(
             x_min = self.y_min,
             x_max = self.y_max,
@@ -75,7 +83,7 @@ class GraphScene(Scene):
         )
         y_axis.shift(self.graph_origin-y_axis.number_to_point(0))
         y_axis.rotate(np.pi/2, about_point = y_axis.number_to_point(0))
-        if self.y_labeled_nums:
+        if len(self.y_labeled_nums) > 0:
             y_axis.add_numbers(*filter(
                 lambda y : y != 0,
                 self.y_labeled_nums

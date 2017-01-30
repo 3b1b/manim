@@ -126,7 +126,6 @@ class TextMobject(TexMobject):
     }
 
 
-
 class Brace(TexMobject):
     CONFIG = {
         "buff" : 0.2,

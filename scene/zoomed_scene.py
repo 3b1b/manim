@@ -16,6 +16,7 @@ class ZoomedScene(Scene):
         "zoomed_canvas_space_shape" : (3, 3),
         "zoomed_canvas_center"      : None,
         "zoomed_canvas_corner"      : UP+RIGHT,
+        "zoomed_canvas_corner_buff" : DEFAULT_MOBJECT_TO_EDGE_BUFFER,
         "zoomed_camera_background"  : None,
         "zoom_factor"               : 6,
         "square_color"              : WHITE,
@@ -47,7 +48,10 @@ class ZoomedScene(Scene):
         if self.zoomed_canvas_center is not None:
             self.big_rectangle.shift(self.zoomed_canvas_center)
         elif self.zoomed_canvas_corner is not None:
-            self.big_rectangle.to_corner(self.zoomed_canvas_corner)
+            self.big_rectangle.to_corner(
+                self.zoomed_canvas_corner,
+                buff = self.zoomed_canvas_corner_buff
+            )
         self.add(self.big_rectangle)
 
 
@@ -60,8 +64,8 @@ class ZoomedScene(Scene):
         self.zoomed_canvas_pixel_indices = pixel_coords
         (up, left), (down, right) = pixel_coords
         self.zoomed_canvas_pixel_shape = (
+            right-left,            
             down-up,
-            right-left
         )
 
     def setup_zoomed_camera(self):
