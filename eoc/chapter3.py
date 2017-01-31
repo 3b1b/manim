@@ -51,7 +51,6 @@ class Chapter3OpeningQuote(OpeningQuote):
 
 
 
-
 class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
     CONFIG = {
         "start_x" : 2,
@@ -1942,6 +1941,7 @@ class IntroduceUnitCircleWithSine(GraphScene):
         title = TexMobject("f(\\theta) = \\sin(\\theta)")
         title.to_corner(UP+LEFT)
         self.add(title)
+        self.title = title
 
     def introduce_unit_circle(self):
         circle = self.get_unit_circle()
@@ -2264,9 +2264,6 @@ class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
 
         point = self.radial_line.get_end()
         nudged_point = d_theta_arc.point_from_proportion(1)
-        # new_v_line = self.line_class(
-        #     nudged_point, nudged_point[0]*RIGHT
-        # )
         interim_point = nudged_point[0]*RIGHT+point[1]*UP
         h_line = DashedLine(
             interim_point, point, 
@@ -2281,10 +2278,7 @@ class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
         d_sine.scale_to_fit_width(1.5*self.d_theta*self.unit_length)
         d_sine.next_to(d_sine_brace, LEFT, SMALL_BUFF/self.zoom_factor)
 
-        self.play(
-            ShowCreation(d_theta_arc),
-            # ReplacementTransform(self.v_line.copy(), new_v_line)
-        )
+        self.play(ShowCreation(d_theta_arc))
         self.play(
             GrowFromCenter(d_theta_brace),
             FadeIn(d_theta_label)
@@ -2303,7 +2297,8 @@ class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
         self.little_triangle = Polygon(
             nudged_point, point, interim_point
         )
-
+        self.d_theta_group = VGroup(d_theta_brace, d_theta_label)
+        self.d_sine_group = VGroup(d_sine_brace, d_sine)
 
     def show_similar_triangles(self):
         little_triangle = self.little_triangle
@@ -2315,15 +2310,162 @@ class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
         for triangle in little_triangle, big_triangle:
             triangle.highlight(GREEN)
             triangle.set_fill(GREEN, opacity = 0.5)
+
         new_angle_label = self.angle_label.copy()
-        # new_angle_label.
+        new_angle_label.scale(
+            little_triangle.get_width()/big_triangle.get_height()
+        )
+        new_angle_label.rotate(-np.pi/2)
+        new_angle_label.shift(little_triangle.points[0])
+        new_angle_label[1].rotate_in_place(np.pi/2)
 
-        self.add(little_triangle, big_triangle)
+        self.play(DrawBorderThenFill(little_triangle))
+        self.dither()
+        for mob in self.d_theta_group, self.d_sine_group:
+            self.play(
+                mob.scale, 1.2, mob.get_corner(DOWN+RIGHT),
+                mob.highlight, YELLOW,
+                rate_func = there_and_back,
+            )
+            self.dither()
 
-
+        self.play(
+            DrawBorderThenFill(big_triangle),
+            Animation(self.angle_label)
+        )
+        self.dither()
+        self.play(
+            self.radial_line.rotate_in_place, np.pi/12,
+            Animation(big_triangle),
+            rate_func = wiggle,
+        )
+        self.dither()
+        self.play(
+            ReplacementTransform(
+                big_triangle.copy().set_fill(opacity = 0), 
+                little_triangle,
+                path_arc = -np.pi/2,
+                run_time = 3,
+            ),
+            Animation(self.angle_label)
+        )
+        self.dither()
+        self.play(Write(new_angle_label))
+        self.dither()
 
     def analyze_ratios(self):
-        pass
+        d_ratio = TexMobject("\\frac{d(\\sin(\\theta))}{d\\theta} = ")
+        VGroup(*d_ratio[:9]).highlight(GREEN)
+        VGroup(*d_ratio[10:12]).highlight(MAROON_B)
+        trig_ratio = TexMobject("\\frac{\\text{Adj.}}{\\text{Hyp.}}")
+        VGroup(*trig_ratio[:4]).highlight(GREEN)
+        VGroup(*trig_ratio[5:9]).highlight(MAROON_B)
+        cos = TexMobject("= \\cos(\\theta)")
+        cos.add_background_rectangle()
+
+        group = VGroup(d_ratio, trig_ratio, cos)
+        group.arrange_submobjects()
+        group.next_to(
+            self.title, DOWN, 
+            buff = MED_LARGE_BUFF, 
+            aligned_edge = LEFT
+        )
+
+        for mob in group:
+            self.play(Write(mob))
+            self.dither()
+
+class TryWithCos(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Try the same \\\\ with $\\cos(\\theta)$",
+            target_mode = "hooray"
+        )
+        self.change_student_modes(*["pondering"]*3)
+        self.dither(3)
+
+class NextVideo(TeacherStudentsScene):
+    def construct(self):
+        series = VideoSeries()
+        next_video = series[3]
+        series.to_edge(UP)
+
+        d_sum = TexMobject("\\frac{d}{dx}(x^3 + x^2)")
+        d_product = TexMobject("\\frac{d}{dx} \\sin(x)x^2")
+        d_composition = TexMobject("\\frac{d}{dx} \\cos\\left(\\frac{1}{x}\\right)")
+
+        group = VGroup(d_sum, d_product, d_composition)
+        group.arrange_submobjects(RIGHT, buff = 2*LARGE_BUFF)
+        group.next_to(VGroup(*self.get_everyone()), UP, buff = LARGE_BUFF)
+
+        self.play(
+            FadeIn(
+                series,
+                submobject_mode = "lagged_start",
+                run_time = 3,
+            ),
+            *[
+                ApplyMethod(pi.look_at, next_video)
+                for pi in self.get_everyone()
+            ]
+        )
+        self.play(
+            next_video.highlight, YELLOW,
+            next_video.shift, MED_LARGE_BUFF*DOWN
+        )
+        self.dither()
+        for mob in group:
+            self.play(
+                Write(mob, run_time = 1),
+                *[
+                    ApplyMethod(pi.look_at, mob)
+                    for pi in self.get_everyone()
+                ]
+            )
+        self.dither(3)
+
+class Chapter3PatreonThanks(PatreonThanks):
+    CONFIG = {
+        "specific_patrons" : [
+            "Ali Yahya",
+            "CrypticSwarm    ",
+            "Yu  Jun",
+            "Shelby  Doolittle",
+            "Dave    Nicponski",
+            "Damion  Kistler",
+            "Juan    Benet",
+            "Othman  Alikhan",
+            "Markus  Persson",
+            "Dan Buchoff",
+            "Derek   Dai",
+            "Joseph  John Cox",
+            "Luc Ritchie",
+            "Guido   Gambardella",
+            "Jerry   Ling",
+            "Mark    Govea",
+            "Vecht   ",
+            "Jonathan    Eppele",
+            "Shimin Kuang",
+            "Rish    Kundalia",
+            "Achille Brighton",
+            "Kirk    Werklund",
+            "Ripta   Pasay",
+            "Felipe  Diniz",
+        ]
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
