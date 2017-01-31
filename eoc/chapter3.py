@@ -25,7 +25,8 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
 from eoc.chapter1 import OpeningQuote, PatreonThanks
-from eoc.chapter2 import DISTANCE_COLOR, TIME_COLOR, VELOCITY_COLOR
+from eoc.chapter2 import DISTANCE_COLOR, TIME_COLOR, \
+    VELOCITY_COLOR, Car, MoveCar
 from eoc.graph_scene import *
 
 OUTPUT_COLOR = DISTANCE_COLOR
@@ -45,11 +46,183 @@ class Chapter3OpeningQuote(OpeningQuote):
         "author" : "David Hilbert"
     }
 
+class PoseAbstractDerivative(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("""
+            Given $f(x) = x^2 \\sin(x)$, \\\\
+            compute $\\frac{df}{dx}(x)$
+        """)
+        content_copy = self.teacher.bubble.content.copy()
+        self.change_student_modes("sad", "confused", "erm")
+        self.dither()
+        self.student_says(
+            "Why?", target_mode = "sassy",
+            added_anims = [
+                content_copy.scale, 0.8,
+                content_copy.to_corner, UP+LEFT
+            ]
+        )
+        self.play(self.teacher.change_mode, "pondering")
+        self.dither(2)
+
+class ContrastAbstractAndConcrete(Scene):
+    def construct(self):
+        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        l_title = TextMobject("Abstract functions")
+        l_title.shift(SPACE_WIDTH*LEFT/2)
+        l_title.to_edge(UP)
+        r_title = TextMobject("Applications")
+        r_title.shift(SPACE_WIDTH*RIGHT/2)
+        r_title.to_edge(UP)
+        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line.shift((r_title.get_bottom()[1]-MED_SMALL_BUFF)*UP)
+
+        functions = VGroup(*map(TexMobject, [
+            "f(x) = 2x^2 - x^3",
+            "f(x) = \\sin(x)",
+            "f(x) = e^x",
+            "\\v_dots"
+        ]))
+        functions.arrange_submobjects(
+            DOWN, 
+            aligned_edge = LEFT,
+            buff = LARGE_BUFF
+        )
+        functions.shift(SPACE_WIDTH*LEFT/2)
+        functions[-1].shift(MED_LARGE_BUFF*RIGHT)
+
+        self.add(l_title, r_title)
+        self.play(*map(ShowCreation, [h_line, v_line]))
+        self.play(Write(functions))
+        self.dither()
+        anims = [
+            method(func_mob)
+            for func_mob, method in zip(functions, [
+                self.get_car_anim,
+                self.get_spring_anim,
+                self.get_population_anim,
+            ])
+        ]
+        for anim in anims:
+            self.play(FadeIn(anim.mobject))
+            self.play(anim)
+            self.play(FadeOut(anim.mobject))
 
 
+    def get_car_anim(self, alignement_mob):
+        car = Car()
+        # car.scale(0.5)
+        point = 2*RIGHT + alignement_mob.get_bottom()[1]*UP
+        target_point = point + 5*RIGHT
+        car.move_to(point)
+        return MoveCar(
+            car, target_point, 
+            run_time = 5,
+        )
 
+    def get_spring_anim(self, alignement_mob):
+        spring = ParametricFunction(
+            lambda t : (t/8.)*RIGHT+np.sin(t)*UP+np.cos(t)*OUT,
+            t_max = 12*np.pi,
+            num_anchor_points = 100,
+        )
+        spring.scale_to_fit_height(1)
+        spring.rotate(np.pi/6, UP)
+        spring.highlight(GREY)
+        spring.next_to(ORIGIN, RIGHT)
+        spring.shift(alignement_mob.get_center()[1]*UP)
 
+        weight = Square(
+            side_length = 0.5,
+            stroke_width = 0, 
+            fill_color = LIGHT_GREY,
+            fill_opacity = 1,
+        )
+        weight.move_to(spring.points[-1])
+        spring.add(weight)
 
+        spring.generate_target()
+        spring.target.stretch(2, 0)
+        spring.target.move_to(spring, LEFT)
+        spring.target[1].stretch_to_fit_width(spring[1].get_width())
+
+        return MoveToTarget(
+            spring, 
+            rate_func = lambda t : 1+np.sin(6*np.pi*t),
+            run_time = 5
+        )
+
+    def get_population_anim(self, alignement_mob):
+        colors = color_gradient([BLUE_B, BLUE_E], 12)
+        pis = VGroup(*[
+            Randolph(
+                mode = "happy",
+                color = random.choice(colors)
+            ).shift(
+                4*x*RIGHT + 4*y*UP + \
+                2*random.random()*RIGHT + \
+                2*random.random()*UP
+            )
+            for x in range(20)
+            for y in range(10)
+        ])
+        pis.scale_to_fit_height(3)
+        pis.center()
+        pis.to_edge(DOWN, buff = SMALL_BUFF)
+        pis.shift(SPACE_WIDTH*RIGHT/2.)
+
+        anims = []
+        for index, pi in enumerate(pis):
+            if index < 2:
+                anims.append(FadeIn(pi))
+                continue
+            mom_index, dad_index = random.choice(
+                list(it.combinations(range(index), 2))
+            )
+            pi.parents = VGroup(pis[mom_index], pis[dad_index]).copy()
+            pi.parents.set_fill(opacity = 0)
+        exp = 1
+        while 2**exp < len(pis):
+            low_index = 2**exp
+            high_index = min(2**(exp+1), len(pis))
+            these_pis = pis[low_index:high_index]
+            anims.append(Transform(
+                VGroup(*[pi.parents for pi in these_pis]),
+                VGroup(*[VGroup(pi, pi.copy()) for pi in these_pis]),
+                submobject_mode = "lagged_start",
+                run_time = 2,
+            ))
+            exp += 1
+
+        return Succession(*anims, rate_func = None)
+
+class ListOfRules(PiCreatureScene):
+    CONFIG = {
+        "use_morty" : False,
+    }
+    def construct(self):
+        rules = VGroup(*map(TexMobject, [
+            "\\frac{d}{dx} x^n = nx^{n-1}",
+            "\\frac{d}{dx} \\sin(x) = \\cos(x)",
+            "\\frac{d}{dx} \\cos(x) = -\\sin(x)",
+            "\\frac{d}{dx} a^x = \\ln(a) a^x",
+            "\\vdots"
+        ]))
+        rules.arrange_submobjects(
+            DOWN, buff = MED_LARGE_BUFF,
+            aligned_edge = LEFT,
+        )
+        rules[-1].shift(MED_LARGE_BUFF*RIGHT)
+        rules.scale_to_fit_height(2*SPACE_HEIGHT-1)
+        rules.next_to(self.pi_creature, RIGHT)
+        rules.to_edge(DOWN)
+
+        self.play(
+            Write(rules),
+            self.pi_creature.change_mode, "pleading",
+        )
+        self.change_mode("tired")
+        self.dither()
 
 class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
     CONFIG = {
@@ -2200,6 +2373,15 @@ class DerivativeIntuitionFromSineGraph(GraphScene):
             label.next_to(self.coords_to_point(x*np.pi, 0), DOWN, MED_LARGE_BUFF)
             self.add(label)
         self.x_axis_label_mob.highlight(YELLOW)
+
+class LookToFunctionsMeaning(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("""
+            Look to the function's
+            actual meaning
+        """)
+        self.change_student_modes(*["pondering"]*3)
+        self.dither(3)
 
 class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
     CONFIG = {
