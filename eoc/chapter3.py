@@ -111,7 +111,6 @@ class ContrastAbstractAndConcrete(Scene):
 
     def get_car_anim(self, alignement_mob):
         car = Car()
-        # car.scale(0.5)
         point = 2*RIGHT + alignement_mob.get_bottom()[1]*UP
         target_point = point + 5*RIGHT
         car.move_to(point)
@@ -121,33 +120,34 @@ class ContrastAbstractAndConcrete(Scene):
         )
 
     def get_spring_anim(self, alignement_mob):
-        spring = ParametricFunction(
-            lambda t : (t/8.)*RIGHT+np.sin(t)*UP+np.cos(t)*OUT,
-            t_max = 12*np.pi,
-            num_anchor_points = 100,
-        )
-        spring.scale_to_fit_height(1)
-        spring.rotate(np.pi/6, UP)
-        spring.highlight(GREY)
-        spring.next_to(ORIGIN, RIGHT)
-        spring.shift(alignement_mob.get_center()[1]*UP)
+        compact_spring, extended_spring = [
+            ParametricFunction(
+                lambda t : (t/denom)*RIGHT+np.sin(t)*UP+np.cos(t)*OUT,
+                t_max = 12*np.pi,
+                num_anchor_points = 100,
+            )
+            for denom in 12.0, 4.0
+        ]
+        for spring in compact_spring, extended_spring:
+            spring.scale(0.5)
+            spring.rotate(np.pi/6, UP)
+            spring.highlight(GREY)
+            spring.next_to(ORIGIN, RIGHT)
+            spring.shift(
+                alignement_mob.get_center()[1]*UP + SMALL_BUFF*RIGHT \
+                -spring.points[0]
+            )
+            weight = Square(
+                side_length = 0.5,
+                stroke_width = 0, 
+                fill_color = LIGHT_GREY,
+                fill_opacity = 1,
+            )
+            weight.move_to(spring.points[-1])
+            spring.add(weight)
 
-        weight = Square(
-            side_length = 0.5,
-            stroke_width = 0, 
-            fill_color = LIGHT_GREY,
-            fill_opacity = 1,
-        )
-        weight.move_to(spring.points[-1])
-        spring.add(weight)
-
-        spring.generate_target()
-        spring.target.stretch(2, 0)
-        spring.target.move_to(spring, LEFT)
-        spring.target[1].stretch_to_fit_width(spring[1].get_width())
-
-        return MoveToTarget(
-            spring, 
+        return Transform(
+            compact_spring, extended_spring, 
             rate_func = lambda t : 1+np.sin(6*np.pi*t),
             run_time = 5
         )
@@ -196,6 +196,15 @@ class ContrastAbstractAndConcrete(Scene):
 
         return Succession(*anims, rate_func = None)
 
+class ApplicationNames(Scene):
+    def construct(self):
+        for name in "Velocity", "Oscillation", "Population growth":
+            mob = TextMobject(name)
+            mob.scale(2)
+            self.play(Write(mob))
+            self.dither(2)
+            self.play(FadeOut(mob))
+
 class ListOfRules(PiCreatureScene):
     CONFIG = {
         "use_morty" : False,
@@ -235,6 +244,7 @@ class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
         "little_rect_nudge" : 0.5*(1.5*UP+RIGHT),
         "graph_origin" : 2.5*DOWN + LEFT,
         "zoomed_canvas_corner" : UP+LEFT,
+        "zoomed_canvas_space_shape" : (4, 4),
     }
     def construct(self):
         self.draw_graph()
@@ -243,7 +253,7 @@ class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
         self.mention_alternate_view()
 
     def draw_graph(self):
-        self.setup_axes()
+        self.setup_axes(animate = True)
         graph = self.get_graph(lambda x : x**2)
         label = self.get_graph_label(
             graph, "f(x) = x^2",
@@ -282,6 +292,19 @@ class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
             buff = MED_SMALL_BUFF
         )
 
+        derivative_q = TextMobject("Derivative?")
+        derivative_q.next_to(self.pi_creature.get_corner(UP+LEFT), UP)
+
+
+        self.play(
+            Write(derivative_q, run_time = 1),
+            self.pi_creature.change_mode, "speaking"
+        )
+        self.dither()
+        self.play(
+            FadeOut(derivative_q),
+            self.pi_creature.change_mode, "plain"
+        )
         self.play(ShowCreation(v_line))
         self.dither()
         self.play(Transform(v_line.copy(), nudged_v_line))
@@ -779,6 +802,28 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
         ])
         self.change_mode("happy")
         self.dither(2)
+
+class ChangeInAreaOverChangeInX(Scene):
+    def construct(self):
+        fractions = []
+        for pair in ("Change in area", "Change in $x$"), ("$d(x^2)$", "$dx$"):
+            top, bottom = map(TextMobject, pair)
+            top.highlight(YELLOW)
+            bottom.highlight(BLUE_B)
+            frac_line = TexMobject("-")
+            frac_line.stretch_to_fit_width(top.get_width())
+            top.next_to(frac_line, UP, SMALL_BUFF)
+            bottom.next_to(frac_line, DOWN, SMALL_BUFF)
+            fractions.append(VGroup(
+                top, frac_line, bottom
+            ))
+        words, symbols = fractions
+
+        self.play(Write(words[0], run_time = 1))
+        self.play(*map(Write, words[1:]), run_time = 1)
+        self.dither()
+        self.play(Transform(words, symbols))
+        self.dither()
 
 class NudgeSideLengthOfCube(Scene):
     CONFIG = {
@@ -1568,6 +1613,19 @@ class PowerRuleAlgebra(Scene):
         self.play(Write(brace, run_time = 1))
         return brace, derivative_term
 
+class ReactToFullExpansion(Scene):
+    def construct(self):
+        randy = Randolph()
+        self.add(randy)
+
+        self.play(randy.change_mode, "pleading")
+        self.play(Blink(randy))
+        self.play(randy.change_mode, "angry")
+        self.dither()
+        self.play(randy.change_mode, "thinking")
+        self.play(Blink(randy))
+        self.dither()
+
 class OneOverX(PiCreatureScene, GraphScene):
     CONFIG = {
         "unit_length" : 3.0,    
@@ -1956,6 +2014,18 @@ class OneOverX(PiCreatureScene, GraphScene):
         )
         rect_group.x_val = target_x
 
+class AskRecipriocalQuestion(Scene):
+    def construct(self):
+        tex = TexMobject(
+            "(\\text{What number?})",  
+            "\\cdot x = 1"
+        )
+        arrow = Arrow(DOWN+LEFT, UP+RIGHT)
+        arrow.move_to(tex[0].get_top(), DOWN+LEFT)
+        self.play(Write(tex))
+        self.play(ShowCreation(arrow))
+        self.dither()
+
 class SquareRootOfX(Scene):
     CONFIG = {
         "square_color_kwargs" : {
@@ -2079,6 +2149,28 @@ class MentionSine(TeacherStudentsScene):
         self.dither(2)
         self.student_thinks("")
         self.zoom_in_on_thought_bubble()
+
+class NameUnitCircle(Scene):
+    def construct(self):
+        words = TextMobject("Unit circle")
+        words.scale(2)
+        words.highlight(BLUE)
+        self.play(Write(words))
+        self.dither()
+
+class DerivativeOfSineIsSlope(Scene):
+    def construct(self):
+        tex = TexMobject(
+            "\\frac{d(\\sin(\\theta))}{d\\theta} = ",
+            "\\text{Slope of this graph}"
+        )
+        tex.scale_to_fit_width(2*SPACE_WIDTH-1)
+        tex.to_edge(DOWN)
+        VGroup(*tex[0][2:8]).highlight(BLUE)
+        VGroup(*tex[1][-9:]).highlight(BLUE)
+
+        self.play(Write(tex, run_time = 2))
+        self.dither()
 
 class IntroduceUnitCircleWithSine(GraphScene):
     CONFIG = {
@@ -2278,6 +2370,7 @@ class DerivativeIntuitionFromSineGraph(GraphScene):
         self.setup_axes()
         self.draw_sine_graph()
         self.draw_derivative_from_slopes()
+        self.alter_derivative_graph()
 
     def draw_sine_graph(self):
         graph = self.get_graph(np.sin)
@@ -2290,9 +2383,6 @@ class DerivativeIntuitionFromSineGraph(GraphScene):
             rate_func = None
         )
         self.dither()
-
-
-
         self.graph = graph
 
     def draw_derivative_from_slopes(self):
@@ -2352,6 +2442,23 @@ class DerivativeIntuitionFromSineGraph(GraphScene):
             last_theta = next_theta
             next_theta += np.pi/2
         self.add(deriv_copy)
+
+        self.deriv_graph = deriv_copy
+
+    def alter_derivative_graph(self):
+        func_list = [
+            lambda x : 0.5*(np.cos(x)**3 + np.cos(x)),
+            lambda x : 0.75*(np.sign(np.cos(x))*np.cos(x)**2 + np.cos(x)),
+            lambda x : 2*np.cos(x),
+            lambda x : np.cos(x),
+        ]
+        for func in func_list:
+            new_graph = self.get_graph(func, color = DERIVATIVE_COLOR)
+            self.play(
+                Transform(self.deriv_graph, new_graph),
+                run_time = 2
+            )
+            self.dither()
 
     ######
 
@@ -2492,6 +2599,8 @@ class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
         for triangle in little_triangle, big_triangle:
             triangle.highlight(GREEN)
             triangle.set_fill(GREEN, opacity = 0.5)
+        big_triangle_copy = big_triangle.copy()
+        big_triangle_copy.next_to(ORIGIN, UP+LEFT)
 
         new_angle_label = self.angle_label.copy()
         new_angle_label.scale(
@@ -2501,18 +2610,45 @@ class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
         new_angle_label.shift(little_triangle.points[0])
         new_angle_label[1].rotate_in_place(np.pi/2)
 
+        little_triangle_lines = VGroup(*[
+            Line(*map(little_triangle.get_corner, pair))
+            for pair in [
+                (DOWN+RIGHT, UP+LEFT),
+                (UP+LEFT, DOWN+LEFT)
+            ]
+        ])
+        little_triangle_lines.highlight(little_triangle.get_color())
+
         self.play(DrawBorderThenFill(little_triangle))
+        self.play(
+            little_triangle.scale, 2, little_triangle.get_corner(DOWN+RIGHT),
+            little_triangle.highlight, YELLOW,
+            rate_func = there_and_back
+        )
         self.dither()
-        for mob in self.d_theta_group, self.d_sine_group:
+        groups = [self.d_theta_group, self.d_sine_group]
+        for group, line in zip(groups, little_triangle_lines):
+            self.play(ApplyMethod(
+                line.rotate_in_place, np.pi/12,
+                rate_func = wiggle,
+                remover = True,
+            ))
             self.play(
-                mob.scale, 1.2, mob.get_corner(DOWN+RIGHT),
-                mob.highlight, YELLOW,
+                group.scale, 1.2, group.get_corner(DOWN+RIGHT),
+                group.highlight, YELLOW,
                 rate_func = there_and_back,
             )
             self.dither()
 
+        self.play(ReplacementTransform(
+            little_triangle.copy().set_fill(opacity = 0), 
+            big_triangle_copy,
+            path_arc = np.pi/2,
+            run_time = 2
+        ))
+        self.dither()
         self.play(
-            DrawBorderThenFill(big_triangle),
+            ReplacementTransform(big_triangle_copy, big_triangle),
             Animation(self.angle_label)
         )
         self.dither()
@@ -2529,10 +2665,18 @@ class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
                 path_arc = -np.pi/2,
                 run_time = 3,
             ),
-            Animation(self.angle_label)
+            ReplacementTransform(
+                self.angle_label.copy(),
+                new_angle_label,
+                path_arc = -np.pi/2,
+                run_time = 3,
+            ),
         )
-        self.dither()
-        self.play(Write(new_angle_label))
+        self.play(
+            new_angle_label.scale_in_place, 2,
+            new_angle_label.highlight, RED,
+            rate_func = there_and_back
+        )
         self.dither()
 
     def analyze_ratios(self):
@@ -2557,14 +2701,12 @@ class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
             self.play(Write(mob))
             self.dither()
 
-class TryWithCos(TeacherStudentsScene):
+class TryWithCos(Scene):
     def construct(self):
-        self.teacher_says(
-            "Try the same \\\\ with $\\cos(\\theta)$",
-            target_mode = "hooray"
-        )
-        self.change_student_modes(*["pondering"]*3)
-        self.dither(3)
+        words = TextMobject("What about $\\cos(\\theta)$?")
+        words.highlight(YELLOW)
+        self.play(Write(words))
+        self.dither()
 
 class NextVideo(TeacherStudentsScene):
     def construct(self):
@@ -2636,15 +2778,24 @@ class Chapter3PatreonThanks(PatreonThanks):
         ]
     }
 
+class Thumbnail(NudgeSideLengthOfCube):
+    def construct(self):
+        self.introduce_cube()
+        VGroup(*self.get_mobjects()).to_edge(DOWN)
 
+        formula = TexMobject(
+            "\\frac{d(x^3)}{dx} = 3x^2"
+        )
+        VGroup(*formula[:5]).highlight(YELLOW)
+        VGroup(*formula[-3:]).highlight(GREEN_B)
+        formula.scale_to_fit_width(SPACE_WIDTH-1)
+        formula.to_edge(RIGHT)
+        self.add(formula)
 
-
-
-
-
-
-
-
+        title = TextMobject("Geometric derivatives")
+        title.scale_to_fit_width(2*SPACE_WIDTH-1)
+        title.to_edge(UP)
+        self.add(title)
 
 
 
