@@ -128,14 +128,20 @@ class Camera(object):
 
     def get_pen_and_fill(self, vmobject):
         pen = aggdraw.Pen(
-            vmobject.get_stroke_color().get_hex_l(),
+            self.get_stroke_color(vmobject).get_hex_l(),
             max(vmobject.stroke_width, 0)
         )
         fill = aggdraw.Brush(
-            vmobject.get_fill_color().get_hex_l(),
+            self.get_fill_color(vmobject).get_hex_l(),
             opacity = int(255*vmobject.get_fill_opacity())
         )
         return (pen, fill)
+
+    def get_stroke_color(self, vmobject):
+        return vmobject.get_stroke_color()
+
+    def get_fill_color(self, vmobject):
+        return vmobject.get_fill_color()
 
     def get_pathstring(self, vmobject):
         result = ""        
@@ -282,9 +288,46 @@ class MovingCamera(Camera):
             0 if self.aligned_dimension == "height" else 1
         )
         
+class ShadingCamera(Camera):
+    CONFIG = {
+        # "sun_vect" : OUT+LEFT+UP,
+        "sun_vect" : UP+LEFT,
+        "shading_factor" : 0.5,
+    }
+    def __init__(self, *args, **kwargs):
+        Camera.__init__(self, *args, **kwargs)
+        self.unit_sun_vect = self.sun_vect/np.linalg.norm(self.sun_vect)
 
+    def get_stroke_color(self, vmobject):
+        return Color(rgb = self.get_shaded_rgb(
+            color_to_rgb(vmobject.get_stroke_color()),
+            normal_vect = self.get_unit_normal_vect(vmobject)
+        ))
 
+    def get_fill_color(self, vmobject):
+        return Color(rgb = self.get_shaded_rgb(
+            color_to_rgb(vmobject.get_fill_color()),
+            normal_vect = self.get_unit_normal_vect(vmobject)
+        ))
 
+    def get_shaded_rgb(self, rgb, normal_vect):
+        brightness = np.dot(normal_vect, self.unit_sun_vect)
+        if brightness > 0:
+            alpha = self.shading_factor*brightness
+            return interpolate(rgb, np.ones(3), alpha)
+        else:
+            alpha = -self.shading_factor*brightness
+            return interpolate(rgb, np.zeros(3), alpha)
+
+    def get_unit_normal_vect(self, vmobject):
+        anchors = vmobject.get_anchors()
+        if len(anchors) < 3:
+            return OUT
+        normal = np.cross(anchors[1]-anchors[0], anchors[2]-anchors[1])
+        length = np.linalg.norm(normal)
+        if length == 0:
+            return OUT
+        return normal/length
 
 
 

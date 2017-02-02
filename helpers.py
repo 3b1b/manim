@@ -530,7 +530,7 @@ def angle_of_vector(vector):
     z = complex(*vector[:2])
     if z == 0:
         return 0
-    return np.log(complex(*vector[:2])).imag
+    return np.angle(complex(*vector[:2]))
 
 
 

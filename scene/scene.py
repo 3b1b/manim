@@ -20,6 +20,7 @@ from animation.transform import MoveToTarget, Transform
 
 class Scene(object):
     CONFIG = {
+        "camera_class"    : Camera,
         "camera_config"   : {},
         "frame_duration"  : LOW_QUALITY_FRAME_DURATION,
         "construct_args"  : [],
@@ -27,7 +28,7 @@ class Scene(object):
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
-        self.camera = Camera(**self.camera_config)
+        self.camera = self.camera_class(**self.camera_config)
         self.frames = []
         self.mobjects = []
         self.num_plays = 0
