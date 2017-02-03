@@ -58,8 +58,7 @@ class GraphScene(Scene):
             ))
         x_label = TextMobject(self.x_axis_label)
         x_label.next_to(
-            x_axis.get_tick_marks(), UP, 
-            aligned_edge = RIGHT,
+            x_axis.get_tick_marks(), UP+RIGHT, 
             buff = SMALL_BUFF
         )
         x_label.shift_onto_screen()
@@ -93,8 +92,7 @@ class GraphScene(Scene):
                 mob.shift(self.y_axis_numbers_nudge)
         y_label = TextMobject(self.y_axis_label)
         y_label.next_to(
-            y_axis.get_tick_marks(), RIGHT, 
-            aligned_edge = UP,
+            y_axis.get_tick_marks(), UP+RIGHT, 
             buff = SMALL_BUFF
         )
         y_label.shift_onto_screen()

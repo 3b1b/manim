@@ -22,6 +22,8 @@ from camera import Camera, ShadingCamera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
+from eoc.graph_scene import GraphScene
+
 class Jewel(VMobject):
     CONFIG = {
         "color" : WHITE,
@@ -509,16 +511,120 @@ class SphereOntoPlaneIn3D(ExternallyAnimatedScene):
 class DiscontinuousSphereOntoPlaneIn3D(ExternallyAnimatedScene):
     pass
 
-class WriteNotAllowed(Scene):
+class WriteWords(Scene):
+    CONFIG = {
+        "words" : "",
+        "color" : WHITE,
+    }
     def construct(self):
-        words = TextMobject("Not allowed")
-        words.highlight(RED)
-        words.scale(2)
+        words = TextMobject(self.words)
+        words.highlight(self.color)
+        words.scale_to_fit_width(2*SPACE_WIDTH-1)
+        words.to_edge(DOWN)
         self.play(Write(words))
         self.dither(2)
 
-class ManyPointsLandingOnEachOtherIn3D(ExternallyAnimatedScene):
+class WriteNotAllowed(WriteWords):
+    CONFIG = {
+        "words" : "Not allowed",
+        "color" : RED,
+    }
+
+class NonAntipodalCollisionIn3D(ExternallyAnimatedScene):
     pass
+
+class AntipodalCollisionIn3D(ExternallyAnimatedScene):
+    pass
+
+class WriteBorsukUlam(WriteWords):
+    CONFIG = {
+        "words" : "Borsuk-Ulam Theorem",
+    }
+
+class WriteAntipodal(WriteWords):
+    CONFIG = {
+        "words" : "``Antipodal''",
+        "color" : MAROON_B,
+    }
+
+class ProjectOntoEquatorIn3D(ExternallyAnimatedScene):
+    pass
+
+class ProjectOntoEquatorWithPolesIn3D(ExternallyAnimatedScene):
+    pass
+
+class ProjectAntipodalNonCollisionIn3D(ExternallyAnimatedScene):
+    pass
+
+class ShearThenProjectnOntoEquatorPolesMissIn3D(ExternallyAnimatedScene):
+    pass
+
+class ShearThenProjectnOntoEquatorAntipodalCollisionIn3D(ExternallyAnimatedScene):
+    pass
+
+class ClassicExample(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("The classic example...")
+        self.change_student_modes(*["happy"]*3)
+        self.dither(2)
+
+
+class AntipodalEarthPoints(ExternallyAnimatedScene):
+    pass
+
+class RotatingEarth(ExternallyAnimatedScene):
+    pass
+
+class TemperaturePressurePlane(GraphScene):
+    CONFIG = {
+        "x_labeled_nums" : [],
+        "y_labeled_nums" : [],
+        "x_axis_label" : "Temperature",
+        "y_axis_label" : "Pressure",
+        "graph_origin" : 2.5*DOWN + 2*LEFT,
+        "corner_square_width" : 4,
+        "example_point_coords" : (2, 5),
+    }
+    def construct(self):
+        self.setup_axes()
+        self.draw_corner_square()
+        self.add_example_coordinates()
+
+    def draw_corner_square(self):
+        square = Square(
+            side_length = self.corner_square_width,
+            stroke_color = WHITE,
+            stroke_width = 2
+        )
+        square.to_corner(UP+LEFT, buff = 0)
+
+        arrow = Arrow(
+            square.get_right(), 
+            self.coords_to_point(*self.example_point_coords)
+        )
+
+        self.play(ShowCreation(square))
+        self.play(ShowCreation(arrow))
+
+
+    def add_example_coordinates(self):
+        dot = Dot(self.coords_to_point(*self.example_point_coords))
+        dot.highlight(YELLOW)
+        tex = TexMobject("(25^\\circ\\text{C}, 101 \\text{ kPa})")
+        tex.next_to(dot, UP+RIGHT, buff = SMALL_BUFF)
+
+        self.play(ShowCreation(dot))
+        self.play(Write(tex))
+        self.dither()
+
+
+
+
+
+
+
+
+
 
 
 
