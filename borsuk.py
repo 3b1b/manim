@@ -47,18 +47,63 @@ class Jewel(VMobject):
         self.submobjects.sort(lambda m1, m2 : cmp(-m1.get_center()[2], -m2.get_center()[2]))
         return self
 
+class Necklace(VMobject):
+    CONFIG = {
+        "width" : 2*SPACE_WIDTH - 1,
+        "jewel_buff" : MED_SMALL_BUFF,
+        "chain_color" : GREY,
+        "default_colors" : [(4, BLUE), (6, WHITE), (4, GREEN)]
+    }
+    def __init__(self, *colors, **kwargs):
+        digest_config(self, kwargs, locals())
+        if len(colors) == 0:
+            self.colors = self.get_default_colors()
+        VMobject.__init__(self, **kwargs)
+
+    def get_default_colors(self):
+        result = list(it.chain(*[
+            num*[color]
+            for num, color in self.default_colors
+        ]))
+        random.shuffle(result)
+        return result
+
+    def generate_points(self):
+        jewels = VGroup(*[
+            Jewel(color = color)
+            for color in self.colors
+        ])
+        jewels.arrange_submobjects(buff = self.jewel_buff)
+        jewels.scale_to_fit_width(self.width)
+        jewels.center()
+
+        chain = Line(
+            jewels[0].get_center(), 
+            jewels[-1].get_center(), 
+            color = self.chain_color,
+        )
+        self.add(chain, *jewels)
+        self.chain = chain
+        self.jewels = jewels
+
 ################
 
 class CheckOutMathologer(PiCreatureScene):
     CONFIG = {
         "logo_height" : 1.5,
-        "screen_height" : 5
+        "screen_height" : 5,
+        "channel_name" : "Mathologer",
+        "logo_file" : "mathologer_logo",
+        "logo_color" : None,
     }
     def construct(self):
-        logo = ImageMobject("Mathologer_logo")
+        logo = ImageMobject(self.logo_file)
         logo.scale_to_fit_height(self.logo_height)
         logo.to_corner(UP+LEFT)
-        name = TextMobject("Mathologer")
+        if self.logo_color is not None:
+            logo.highlight(self.logo_color)
+            logo.stroke_width = 1
+        name = TextMobject(self.channel_name)
         name.next_to(logo, RIGHT)
 
         rect = Rectangle(height = 9, width = 16)
@@ -87,6 +132,7 @@ class IntroduceStolenNecklaceProblem(Scene):
         "jewel_colors" : [BLUE, GREEN, WHITE, RED],
         "num_per_jewel" : [8, 10, 4, 6],
         "num_shuffles" : 1,
+        "necklace_center" : UP,
         "random_seed" : 2,
         "forced_binary_choices" : (0, 1, 0, 1, 0),
         "show_matching_after_divvying" : True,
@@ -273,7 +319,7 @@ class IntroduceStolenNecklaceProblem(Scene):
         for group, choice in zip(subgroups, binary_choices):
             strand = Line(
                 group[0].get_center(), group[-1].get_center(),
-                color = necklace.line.get_color()
+                color = necklace.chain.get_color()
             )
             strand.add(*group)
             strand_groups[choice].add(strand)
@@ -281,7 +327,7 @@ class IntroduceStolenNecklaceProblem(Scene):
 
         self.play(ShowCreation(v_lines))
         self.play(
-            FadeOut(necklace.line),
+            FadeOut(necklace.chain),
             *it.chain(*[
                 map(Animation, group)
                 for group in strand_groups
@@ -329,7 +375,7 @@ class IntroduceStolenNecklaceProblem(Scene):
             self.dither()
         self.play(
             FadeOut(v_lines),
-            FadeIn(necklace.line),
+            FadeIn(necklace.chain),
             *[
                 group.restore for group in strand_groups
             ]
@@ -344,25 +390,9 @@ class IntroduceStolenNecklaceProblem(Scene):
             num*[color]
             for num, color in zip(self.num_per_jewel, self.jewel_colors)
         ])
-        jewels = VGroup(*[
-            Jewel(color = color)
-            for color in colors
-        ])
-        jewels.arrange_submobjects()
-        jewels.scale_to_fit_width(2*SPACE_WIDTH-1)
-        jewels.center().shift(UP)
-
-        necklace = VGroup()
-        necklace.line = Line(
-            jewels[0].get_center(), 
-            jewels[-1].get_center(), 
-            color = GREY
-        )
-        necklace.jewels = jewels
-        necklace.add(necklace.line, *jewels)
-
-        self.necklace = necklace
-        return necklace
+        self.necklace = Necklace(*colors)
+        self.necklace.shift(self.necklace_center)
+        return self.necklace
 
     def get_jewels_organized_by_type(self, jewels):
         return [
@@ -568,7 +598,6 @@ class ClassicExample(TeacherStudentsScene):
         self.change_student_modes(*["happy"]*3)
         self.dither(2)
 
-
 class AntipodalEarthPoints(ExternallyAnimatedScene):
     pass
 
@@ -589,6 +618,7 @@ class TemperaturePressurePlane(GraphScene):
         self.setup_axes()
         self.draw_corner_square()
         self.add_example_coordinates()
+        self.wander_continuously()
 
     def draw_corner_square(self):
         square = Square(
@@ -606,7 +636,6 @@ class TemperaturePressurePlane(GraphScene):
         self.play(ShowCreation(square))
         self.play(ShowCreation(arrow))
 
-
     def add_example_coordinates(self):
         dot = Dot(self.coords_to_point(*self.example_point_coords))
         dot.highlight(YELLOW)
@@ -616,26 +645,549 @@ class TemperaturePressurePlane(GraphScene):
         self.play(ShowCreation(dot))
         self.play(Write(tex))
         self.dither()
+        self.play(FadeOut(tex))
+
+    def wander_continuously(self):
+        path = VMobject().set_points_smoothly([
+            ORIGIN, 2*UP+RIGHT, 2*DOWN+RIGHT,
+            5*RIGHT, 4*RIGHT+UP, 3*RIGHT+2*DOWN,
+            DOWN+LEFT, 2*RIGHT
+        ])
+        point = self.coords_to_point(*self.example_point_coords)
+        path.shift(point)
+
+        path.highlight(GREEN)
+
+        self.play(ShowCreation(path, run_time = 10, rate_func = None))
+        self.dither()
+
+class AlternateSphereSquishing(ExternallyAnimatedScene):
+    pass
+
+class AlternateAntipodalCollision(ExternallyAnimatedScene):
+    pass
+
+class AskWhy(TeacherStudentsScene):
+    def construct(self):
+        self.student_says("But...why?")
+        self.change_student_modes("pondering", None, "thinking")
+        self.play(self.get_teacher().change_mode, "happy")
+        self.dither(3)
+
+class PointOutVSauce(CheckOutMathologer):
+    CONFIG = {
+        "channel_name" : "",
+        "logo_file" : "Vsauce_logo",
+        "logo_height" : 1,
+        "logo_color" : GREY,
+    }
+
+class WalkEquatorPostTransform(GraphScene):
+    CONFIG = {
+        "x_labeled_nums" : [],
+        "y_labeled_nums" : [],
+        "graph_origin" : 2.5*DOWN + 2*LEFT,
+        "curved_arrow_color" : WHITE,
+        "curved_arrow_radius" : 3,
+        "num_great_arcs" : 10,
+    }
+    def construct(self):
+        self.setup_axes()
+        self.add_curved_arrow()
+        self.great_arc_images = self.get_great_arc_images()
+
+        self.walk_equator()
+        self.walk_tilted_equator()
+        self.draw_transverse_curve()
+        self.walk_transverse_curve()
+
+    def add_curved_arrow(self):
+        arc = Arc(
+            start_angle = 2*np.pi/3, angle = -np.pi/2, 
+            radius = self.curved_arrow_radius,
+            color = self.curved_arrow_color
+        )
+        arc.add_tip()
+        arc.move_to(self.coords_to_point(0, 7))
+
+        self.add(arc)
+
+    def walk_equator(self):
+        equator = self.great_arc_images[0]
+        dots = VGroup(Dot(), Dot())
+        dots.highlight(MAROON_B)
+        dot_movement = self.get_arc_walk_dot_movement(equator, dots)
+        dot_movement.update(0)
+
+        self.play(ShowCreation(equator, run_time = 3))
+        self.play(FadeIn(dots[0]))
+        dots[1].set_fill(opacity = 0)
+        self.play(dot_movement)
+        self.play(dots[1].set_fill, None, 1)
+        self.play(dot_movement)
+        self.play(dot_movement)
+
+        proportion = equator.collision_point_proportion
+        self.play(self.get_arc_walk_dot_movement(
+            equator, dots,
+            rate_func = lambda t : 2*proportion*smooth(t)
+        ))
+        v_line = DashedLine(SPACE_HEIGHT*UP, SPACE_HEIGHT*DOWN)
+        v_line.shift(dots.get_center()[0]*RIGHT)
+        self.play(ShowCreation(v_line))
+        self.dither()
+        self.play(FadeOut(v_line))
+
+        dots.save_state()
+        equator.save_state()
+        self.play(
+            equator.fade,
+            dots.fade
+        )
+
+        self.first_dots = dots
+
+    def walk_tilted_equator(self):
+        equator = self.great_arc_images[0]
+        tilted_eq = self.great_arc_images[1]
+
+        dots = VGroup(Dot(), Dot())
+        dots.highlight(MAROON_B)
+        dot_movement = self.get_arc_walk_dot_movement(tilted_eq, dots)
+        dot_movement.update(0)
+
+        self.play(ReplacementTransform(equator.copy(), tilted_eq))
+        self.dither()
+        self.play(FadeIn(dots))
+        self.play(dot_movement)
+
+        proportion = tilted_eq.collision_point_proportion
+        self.play(self.get_arc_walk_dot_movement(
+            tilted_eq, dots,
+            rate_func = lambda t : 2*proportion*smooth(t)
+        ))
+        v_line = DashedLine(SPACE_HEIGHT*UP, SPACE_HEIGHT*DOWN)
+        v_line.shift(dots.get_center()[0]*RIGHT)
+        self.play(ShowCreation(v_line))
+        self.dither()
+        self.play(FadeOut(v_line))
+        self.play(*map(FadeOut, [tilted_eq, dots]))
+
+    def draw_transverse_curve(self):
+        transverse_curve = self.get_transverse_curve(self.great_arc_images)
+        dots = self.first_dots
+        equator = self.great_arc_images[0]
+
+        self.play(dots.restore)
+        equator.restore()
+        self.great_arc_images.fade()
+
+        target_arcs = list(self.great_arc_images[1:])
+        target_dots = []
+        for arc in target_arcs:
+            new_dots = dots.copy()
+            for dot, point in zip(new_dots, arc.x_collision_points):
+                dot.move_to(point)
+            target_dots.append(new_dots)
+
+        alt_eq = equator.copy()
+        alt_eq.points = np.array(list(reversed(alt_eq.points)))
+        alt_dots = dots.copy()
+        alt_dots.submobjects.reverse()
+        target_arcs += [alt_eq, alt_eq.copy()]
+        target_dots += [alt_dots, alt_dots.copy()]
+
+        equator_transform = Succession(*[
+            Transform(equator, arc, rate_func = None)
+            for arc in target_arcs
+        ])
+        dots_transform = Succession(*[
+            Transform(dots, target, rate_func = None)
+            for target in target_dots
+        ])
+
+        self.play(
+            ShowCreation(transverse_curve, submobject_mode = "all_at_once"),
+            equator_transform,
+            dots_transform,
+            run_time = 10,
+            rate_func = None,
+        )
+        self.dither(2)
+
+    def walk_transverse_curve(self):
+        transverse_curve = self.get_transverse_curve(self.great_arc_images)
+        dots = self.first_dots
+
+        def dot_update(dots, alpha):
+            for dot, curve in zip(dots, transverse_curve):
+                dot.move_to(curve.point_from_proportion(alpha))
+            return dots
+
+        for x in range(3):
+            self.play(
+                UpdateFromAlphaFunc(dots, dot_update),
+                run_time = 4
+            )
+        self.dither()
+
+    #######
+
+    def get_arc_walk_dot_movement(self, arc, dots, **kwargs):
+        def dot_update(dots, alpha):
+            dots[0].move_to(arc.point_from_proportion(0.5*alpha))
+            dots[1].move_to(arc.point_from_proportion(0.5+0.5*alpha))
+            return dots
+        if "run_time" not in kwargs:
+            kwargs["run_time"] = 5
+        return UpdateFromAlphaFunc(dots, dot_update, **kwargs)
+
+    def sphere_to_plane(self, point):
+        x, y, z = point
+        return np.array([
+            x - 2*x*z + y + 1,
+            y+0.5*y*np.cos(z*np.pi),
+            0
+        ])
+
+    def sphere_point(self, portion_around_equator, equator_tilt = 0):
+        theta = portion_around_equator*2*np.pi
+        point = np.cos(theta)*RIGHT + np.sin(theta)*UP
+        phi = equator_tilt*np.pi
+        return rotate_vector(point, phi, RIGHT)
+
+    def get_great_arc_images(self):
+        curves = VGroup(*[
+            ParametricFunction(
+                lambda t : self.sphere_point(t, s)
+            ).apply_function(self.sphere_to_plane)
+            for s in np.arange(0, 1, 1./self.num_great_arcs)
+            # for s in [0]
+        ])
+        curves.highlight(YELLOW)
+        curves[0].highlight(RED)
+        for curve in curves:
+            antipodal_x_diff = lambda x : \
+                curve.point_from_proportion(x+0.5)[0]-\
+                curve.point_from_proportion(x)[0]
+            last_x = 0                
+            last_sign = np.sign(antipodal_x_diff(last_x))
+            for x in np.linspace(0, 0.5, 100):
+                sign = np.sign(antipodal_x_diff(x))
+                if sign != last_sign:
+                    mean = np.mean([last_x, x])
+                    curve.x_collision_points = [
+                        curve.point_from_proportion(mean),
+                        curve.point_from_proportion(mean+0.5),
+                    ]
+                    curve.collision_point_proportion = mean
+                    break
+                last_x = x
+                last_sign = sign
+        return curves
+
+    def get_transverse_curve(self, gerat_arc_images):
+        points = list(it.chain(*[
+            [
+                curve.x_collision_points[i]
+                for curve in gerat_arc_images
+            ]
+            for i in 0, 1
+        ]))
+        full_curve = VMobject(close_new_points = True)
+        full_curve.set_points_smoothly(points + [points[0]])
+        full_curve.highlight(MAROON_B)
+        first_half = full_curve.copy().pointwise_become_partial(
+            full_curve, 0, 0.5
+        )
+        second_half = first_half.copy().rotate_in_place(np.pi, RIGHT)
+        broken_curve = VGroup(first_half, second_half)
+        return broken_curve
 
 
+class WalkAroundEquatorPreimage(ExternallyAnimatedScene):
+    pass
+
+class WalkTiltedEquatorPreimage(ExternallyAnimatedScene):
+    pass
+
+class FormLoopTransverseToEquator(ExternallyAnimatedScene):
+    pass
+
+class AntipodalWalkAroundTransverseLoop(ExternallyAnimatedScene):
+    pass
+
+class MentionGenerality(TeacherStudentsScene):
+    CONFIG = {
+        "camera_class" : ShadingCamera,
+    }
+    def construct(self):
+        necklace = Necklace(width = SPACE_WIDTH)
+        necklace.shift(2*UP)
+        necklace.to_edge(RIGHT)
+        arrow = TexMobject("\\Leftrightarrow")
+        arrow.scale(2)
+        arrow.next_to(necklace, LEFT)
+        q_marks = TexMobject("???")
+        q_marks.next_to(arrow, UP)
+        arrow.add(q_marks)
+
+        formula = TexMobject("f(\\textbf{x}) = f(-\\textbf{x})")
+        formula.next_to(self.get_students(), UP, buff = LARGE_BUFF)
+        formula.to_edge(LEFT, buff = LARGE_BUFF)
+
+        self.play(
+            self.teacher.change_mode, "raise_right_hand",
+            self.teacher.look_at, arrow
+        )
+        self.play(
+            FadeIn(necklace, run_time = 2, submobject_mode = "lagged_start"),
+            Write(arrow),
+            *[
+                ApplyMethod(pi.look_at, arrow)
+                for pi in self.get_everyone()
+            ]
+        )
+        self.change_student_modes("pondering", "erm", "confused")
+        self.dither()
+        self.play(*[
+            ApplyMethod(pi.look_at, arrow)
+            for pi in self.get_everyone()
+        ])
+        self.play(Write(formula))
+        self.dither(3)
+
+class SimpleSphere(ExternallyAnimatedScene):
+    pass
+
+class PointsIn3D(Scene):
+    CONFIG = {
+        # "colors" : [RED, GREEN, BLUE],
+        "colors" : color_gradient([GREEN, BLUE], 3),
+    }
+    def construct(self):
+        sphere_def = TextMobject(
+            "\\doublespacing Sphere in 3D: All", "$(x_1, x_2, x_3)$\\\\", 
+            "such that", "$x_1^2 + x_2^2 + x_3^2 = 1$",
+            alignment = "",
+        )
+        sphere_def.next_to(ORIGIN, DOWN)
+        for index, subindex_list in (1, [1, 2, 4, 5, 7, 8]), (3, [0, 2, 4, 6, 8, 10]):
+            colors = np.repeat(self.colors, 2)
+            for subindex, color in zip(subindex_list, colors):
+                sphere_def[index][subindex].highlight(color)
+
+        point_ex = TextMobject(
+            "For example, ", 
+            "(", "0.41", ", ", "-0.58", ", ", "0.71", ")",
+            arg_separator = ""
+        )
+        for index, color in zip([2, 4, 6], self.colors):
+            point_ex[index].highlight(color)
+        point_ex.scale(0.8)
+        point_ex.next_to(
+            sphere_def[1], UP+RIGHT,
+            buff = 1.5*LARGE_BUFF
+        )
+        point_ex.shift_onto_screen()
+        arrow = Arrow(sphere_def[1].get_top(), point_ex.get_bottom())
+
+        self.play(Write(sphere_def[1]))
+        self.play(ShowCreation(arrow))
+        self.play(Write(point_ex))
+        self.dither()
+        self.play(
+            Animation(sphere_def[1].copy(), remover = True),
+            Write(sphere_def),
+        )
+        self.dither()
+
+class AntipodalPairToBeGivenCoordinates(ExternallyAnimatedScene):
+    pass
+
+class WritePointCoordinates(Scene):
+    CONFIG = {
+        "colors" : color_gradient([GREEN, BLUE], 3),
+        "corner" : DOWN+RIGHT,
+    }
+    def construct(self):
+        coords = self.get_coords()
+        arrow = Arrow(
+            -self.corner, self.corner, 
+            stroke_width = 8,
+            color = MAROON_B
+        )
+        x_component = self.corner[0]*RIGHT
+        y_component = self.corner[1]*UP
+        arrow.next_to(
+            coords.get_edge_center(y_component), 
+            y_component, 
+            aligned_edge = -x_component,
+            buff = MED_SMALL_BUFF
+        )
+
+        group = VGroup(coords, arrow)
+        group.scale(2)        
+        group.to_corner(self.corner)
 
 
+        self.play(FadeIn(coords))
+        self.play(ShowCreation(arrow))
+        self.dither()
 
+    def get_coords(self):
+        coords = TexMobject(
+            "(", "0.41", ", ", "-0.58", ", ", "0.71", ")",
+            arg_separator = ""
+        )
+        for index, color in zip([1, 3, 5], self.colors):
+            coords[index].highlight(color)
+        return coords
 
+class WriteAntipodalCoordinates(WritePointCoordinates):
+    CONFIG = {
+        "corner" : UP+LEFT,
+        "sign_color" : RED,
+    }
 
+    def get_coords(self):
+        coords = TexMobject(
+            "(", "-", "0.41", ", ", "+", "0.58", ", ", "-", "0.71", ")",
+            arg_separator = ""
+        )
+        for index, color in zip([2, 5, 8], self.colors):
+            coords[index].highlight(color)
+            coords[index-1].highlight(self.sign_color)
+        return coords
 
+class GeneralizeBorsukUlam(Scene):
+    CONFIG = {
+        "n_dims" : 3,
+        "boundary_colors" : [GREEN, BLUE],
+        "output_boundary_color" : [MAROON_B, YELLOW],
+        "negative_color" : RED,
+    }
+    def construct(self):
+        self.colors = color_gradient(self.boundary_colors, self.n_dims)
 
+        sphere_set = self.get_sphere_set()
+        arrow = Arrow(LEFT, RIGHT)
+        f = TexMobject("f")
+        output_space = self.get_output_space()
+        equation = self.get_equation()
 
+        sphere_set.to_corner(UP+LEFT)
+        arrow.next_to(sphere_set, RIGHT)
+        f.next_to(arrow, UP)
+        output_space.next_to(arrow, RIGHT)
+        equation.to_edge(RIGHT)
+        lhs = VGroup(*equation[:2])
+        eq = equation[2]
+        rhs = VGroup(*equation[3:])
 
+        self.play(FadeIn(sphere_set))
+        self.dither()
+        self.play(
+            ShowCreation(arrow),
+            Write(f)
+        )
+        self.play(Write(output_space))
+        self.dither()
+        self.play(FadeIn(lhs))
+        self.play(
+            ReplacementTransform(lhs.copy(), rhs),
+            Write(eq)
+        )
+        self.dither()
 
+    def get_condition(self):
+        squares = map(TexMobject, [
+            "x_%d^2"%d
+            for d in range(1, 1+self.n_dims)
+        ])
+        for square, color in zip(squares, self.colors):
+            square[0].highlight(color)
+            square[-1].highlight(color)
+        plusses = [TexMobject("+") for x in range(self.n_dims-1)]
+        plusses += [TexMobject("=1")]
+        condition = VGroup(*it.chain(*zip(squares, plusses)))
+        condition.arrange_submobjects(RIGHT)
 
+        return condition
 
+    def get_tuple(self):
+        mid_parts = list(it.chain(*[
+            ["x_%d"%d, ","]
+            for d in range(1, self.n_dims)
+        ]))
+        tup = TexMobject(*["("] + mid_parts + ["x_%d"%self.n_dims, ")"])
+        for index, color in zip(it.count(1, 2), self.colors):
+            tup[index].highlight(color)
 
+        return tup
 
+    def get_negative_tuple(self):
+        mid_parts = list(it.chain(*[
+            ["-", "x_%d"%d, ","]
+            for d in range(1, self.n_dims)
+        ]))
+        tup = TexMobject(*["("] + mid_parts + ["-", "x_%d"%self.n_dims, ")"])
+        for index, color in zip(it.count(1, 3), self.colors):
+            tup[index].highlight(self.negative_color)
+            tup[index+1].highlight(color)
 
+        return tup
 
+    def get_output_space(self):
+        return TextMobject("%dD space"%(self.n_dims-1))
+        # n_dims = self.n_dims-1
+        # colors = color_gradient(self.output_boundary_color, n_dims)
+        # mid_parts = list(it.chain(*[
+        #     ["y_%d"%d, ","]
+        #     for d in range(1, n_dims)
+        # ]))
+        # tup = TexMobject(*["("] + mid_parts + ["y_%d"%n_dims, ")"])
+        # for index, color in zip(it.count(1, 2), colors):
+        #     tup[index].highlight(color)
 
+        # return tup
 
+    def get_equation(self):
+        tup = self.get_tuple()
+        neg_tup = self.get_negative_tuple()
+        f1, f2 = [TexMobject("f") for x in range(2)]
+        equals = TexMobject("=")
+        equation = VGroup(f1, tup, equals, f2, neg_tup)
+        equation.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+
+        return equation
+
+    def get_sphere_set(self):
+        tup = self.get_tuple()
+        such_that = TextMobject("such that")
+        such_that.next_to(tup, RIGHT)
+        condition = self.get_condition()
+        condition.next_to(
+            tup, DOWN, 
+            buff = MED_LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+        group = VGroup(tup, such_that, condition)
+        l_brace = Brace(group, LEFT)
+        r_brace = Brace(group, RIGHT)
+        group.add(l_brace, r_brace)
+
+        return group
+
+class FourDBorsukUlam(GeneralizeBorsukUlam):
+    CONFIG = {
+        "n_dims" : 4,
+    }
+
+class FiveDBorsukUlam(GeneralizeBorsukUlam):
+    CONFIG = {
+        "n_dims" : 5,
+    }
 
 
 
