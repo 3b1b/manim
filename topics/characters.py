@@ -246,7 +246,8 @@ class PiCreatureSays(AnimationGroup):
         digest_config(self, kwargs)
         bubble = pi_creature.get_bubble("speech", **self.bubble_kwargs)
         bubble.write(*content)
-        bubble.resize_to_content()
+        if "height" not in self.bubble_kwargs and "width" not in self.bubble_kwargs:
+            bubble.resize_to_content()
         bubble.pin_to(pi_creature)
         pi_creature.bubble = bubble
 
@@ -368,9 +369,10 @@ class TeacherStudentsScene(Scene):
     def get_everyone(self):
         return [self.get_teacher()] + list(self.get_students())
 
-    def get_bubble_intro_animation(self, content, bubble_type,
-                                   pi_creature,
-                                   **bubble_kwargs):
+    def get_bubble_intro_animation(
+        self, content, bubble_type, pi_creature,
+        **bubble_kwargs
+        ):
         bubble = pi_creature.get_bubble(bubble_type, **bubble_kwargs)
         bubble.add_content(content)
         bubble.resize_to_content()
@@ -387,10 +389,12 @@ class TeacherStudentsScene(Scene):
             pi_creature.bubble = bubble 
         return content_intro_anims
 
-    def introduce_bubble(self, content, bubble_type, pi_creature,
-                         target_mode = None,
-                         added_anims = [],
-                         **bubble_kwargs):
+    def introduce_bubble(
+        self, content, bubble_type, pi_creature,
+        target_mode = None,
+        added_anims = [],
+        **bubble_kwargs
+        ):
         if all(map(lambda s : isinstance(s, str), content)):
             content = TextMobject(*content)
         elif len(content) == 1 and isinstance(content[0], Mobject):

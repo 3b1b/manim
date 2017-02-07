@@ -49,7 +49,7 @@ class Jewel(VMobject):
 
 class Necklace(VMobject):
     CONFIG = {
-        "width" : 2*SPACE_WIDTH - 1,
+        "height" : 2*SPACE_WIDTH - 1,
         "jewel_buff" : MED_SMALL_BUFF,
         "chain_color" : GREY,
         "default_colors" : [(4, BLUE), (6, WHITE), (4, GREEN)]
@@ -76,10 +76,11 @@ class Necklace(VMobject):
         jewels.arrange_submobjects(buff = self.jewel_buff)
         jewels.scale_to_fit_width(self.width)
         jewels.center()
+        j_to_j_dist = (jewels[1].get_center()-jewels[0].get_center())[0]
 
         chain = Line(
-            jewels[0].get_center(), 
-            jewels[-1].get_center(), 
+            jewels[0].get_center() + j_to_j_dist*LEFT/2, 
+            jewels[-1].get_center() + j_to_j_dist*RIGHT/2, 
             color = self.chain_color,
         )
         self.add(chain, *jewels)
@@ -135,7 +136,6 @@ class IntroduceStolenNecklaceProblem(Scene):
         "necklace_center" : UP,
         "random_seed" : 2,
         "forced_binary_choices" : (0, 1, 0, 1, 0),
-        "show_matching_after_divvying" : True,
     }
     def construct(self):
         random.seed(self.random_seed)
@@ -297,10 +297,14 @@ class IntroduceStolenNecklaceProblem(Scene):
             for thief in thieves
         ]))
 
-    def divvy_with_n_cuts(self):
+    def divvy_with_n_cuts(
+        self, 
+        with_thieves = True, 
+        highlight_groups = True,
+        show_matching_after_divvying = True,
+        ):
         necklace = self.necklace
         jewel_types = self.jewel_types
-        thieves = self.thieves
         jewels = sorted(
             necklace.jewels, 
             lambda m1, m2 : cmp(m1.get_center()[0], m2.get_center()[0])
@@ -339,36 +343,37 @@ class IntroduceStolenNecklaceProblem(Scene):
             strand_groups[0].shift, UP/2.,
             strand_groups[1].shift, DOWN/2.,
         )
-        self.play(*it.chain(*[
-            [thief.change_mode, "happy", thief.look_at, self.necklace]
-            for thief in thieves
-        ]))
-        self.play(Blink(thieves[1]))
-
-        for group in strand_groups:
-            box = Rectangle(
-                width = group.get_width()+2*SMALL_BUFF,
-                height = group.get_height()+2*SMALL_BUFF,
-                stroke_width = 0,
-                fill_color = YELLOW,
-                fill_opacity = 0.3,
-            )
-            box.move_to(group)
-            self.play(FadeIn(box))
+        if with_thieves:
+            self.play(*it.chain(*[
+                [thief.change_mode, "happy", thief.look_at, self.necklace]
+                for thief in thieves
+            ]))
+            self.play(Blink(thieves[1]))
+        else:
             self.dither()
-            self.play(FadeOut(box))
+
+        if highlight_groups:
+            for group in strand_groups:
+                box = Rectangle(
+                    width = group.get_width()+2*SMALL_BUFF,
+                    height = group.get_height()+2*SMALL_BUFF,
+                    stroke_width = 0,
+                    fill_color = YELLOW,
+                    fill_opacity = 0.3,
+                )
+                box.move_to(group)
+                self.play(FadeIn(box))
+                self.dither()
+                self.play(FadeOut(box))
 
         self.dither()
-        if self.show_matching_after_divvying:
+        if show_matching_after_divvying:
             for jewel_type in jewel_types:
                 self.play(
-                    *it.chain(*[
-                        [
-                            jewel.scale_in_place, 2,
-                            jewel.rotate_in_place, np.pi/12, UP,
-                        ]
+                    *[
+                        ApplyMethod(jewel.scale_in_place, 1.5)
                         for jewel in jewel_type
-                    ]),
+                    ],
                     rate_func = there_and_back,
                     run_time = 2
                 )
@@ -385,12 +390,12 @@ class IntroduceStolenNecklaceProblem(Scene):
 
     ########
 
-    def get_necklace(self):
+    def get_necklace(self, **kwargs):
         colors = reduce(op.add, [
             num*[color]
             for num, color in zip(self.num_per_jewel, self.jewel_colors)
         ])
-        self.necklace = Necklace(*colors)
+        self.necklace = Necklace(*colors, **kwargs)
         self.necklace.shift(self.necklace_center)
         return self.necklace
 
@@ -523,7 +528,9 @@ class RepeatedShuffling(IntroduceStolenNecklaceProblem):
 
         for x in range(self.num_shuffles):
             self.shuffle_jewels(jewels)
-            self.divvy_with_n_cuts()
+            self.divvy_with_n_cuts(
+                show_matching_after_divvying = False
+            )
 
 class NowForTheTopology(TeacherStudentsScene):
     def construct(self):
@@ -824,11 +831,21 @@ class WalkEquatorPostTransform(GraphScene):
                 dot.move_to(curve.point_from_proportion(alpha))
             return dots
 
-        for x in range(3):
+        for x in range(2):
             self.play(
                 UpdateFromAlphaFunc(dots, dot_update),
                 run_time = 4
             )
+        self.play(
+            UpdateFromAlphaFunc(dots, dot_update),
+            run_time = 4,
+            rate_func = lambda t : 0.455*smooth(t)
+        )
+        self.play(
+            dots.highlight, YELLOW,
+            dots.scale_in_place, 1.2,
+            rate_func = there_and_back
+        )
         self.dither()
 
     #######
@@ -903,7 +920,6 @@ class WalkEquatorPostTransform(GraphScene):
         second_half = first_half.copy().rotate_in_place(np.pi, RIGHT)
         broken_curve = VGroup(first_half, second_half)
         return broken_curve
-
 
 class WalkAroundEquatorPreimage(ExternallyAnimatedScene):
     pass
@@ -1179,15 +1195,443 @@ class GeneralizeBorsukUlam(Scene):
 
         return group
 
-class FourDBorsukUlam(GeneralizeBorsukUlam):
-    CONFIG = {
-        "n_dims" : 4,
-    }
+# class FourDBorsukUlam(GeneralizeBorsukUlam):
+#     CONFIG = {
+#         "n_dims" : 4,
+#     }
 
-class FiveDBorsukUlam(GeneralizeBorsukUlam):
+# class FiveDBorsukUlam(GeneralizeBorsukUlam):
+#     CONFIG = {
+#         "n_dims" : 5,
+#     }
+
+class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
     CONFIG = {
-        "n_dims" : 5,
+        "camera_class" : ShadingCamera,
+        "jewel_colors" : [BLUE, GREEN],
+        "num_per_jewel" : [8, 10],
+        "random_seed" : 2,
+        "forced_binary_choices" : (0, 1, 0),
+        "show_matching_after_divvying" : True,
+        "necklace_center" : ORIGIN,
+        "necklace_width" : 2*SPACE_WIDTH - 3,
+        "random_seed" : 0,
+        "num_continuous_division_searches" : 4,
     }
+    def construct(self):
+        random.seed(self.random_seed)
+        self.introduce_necklace()
+        self.divvy_with_n_cuts()
+        self.identify_necklace_with_unit_interval()
+        self.color_necklace()
+        self.find_continuous_fair_division()
+        self.show_continuous_fair_division()
+        self.highlight_continuous_groups()
+        self.mention_equivalence_to_discrete_case()
+        self.shift_divide_off_tick_marks()
+
+    def introduce_necklace(self):
+        self.get_necklace(
+            width = self.necklace_width,
+        )
+        self.play(FadeIn(
+            self.necklace,
+            submobject_mode = "lagged_start"
+        ))
+        self.shuffle_jewels(self.necklace.jewels)
+        jewel_types = self.get_jewels_organized_by_type(
+            self.necklace.jewels
+        )
+        self.dither()
+        self.count_jewel_types(jewel_types)
+        self.dither()
+
+        self.jewel_types = jewel_types
+
+    def count_jewel_types(self, jewel_types):
+        enumeration_labels = VGroup()
+        for jewel_type in jewel_types:
+            num_mob = TexMobject(str(len(jewel_type)))
+            jewel_copy = jewel_type[0].copy()
+            # jewel_copy.scale_to_fit_height(num_mob.get_height())
+            jewel_copy.next_to(num_mob)
+            label = VGroup(num_mob, jewel_copy)
+            enumeration_labels.add(label)
+        enumeration_labels.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        enumeration_labels.to_edge(UP)
+
+        for jewel_type, label in zip(jewel_types, enumeration_labels):
+            jewel_type.submobjects.sort(lambda m1, m2: cmp(m1.get_center()[0], m2.get_center()[0]))
+            jewel_type.save_state()
+            jewel_type.generate_target()
+            jewel_type.target.arrange_submobjects()
+            jewel_type.target.move_to(2*UP)
+            self.play(
+                MoveToTarget(jewel_type), 
+                Write(label)
+            )
+            self.play(jewel_type.restore)
+
+    def divvy_with_n_cuts(self):
+        IntroduceStolenNecklaceProblem.divvy_with_n_cuts(
+            self, 
+            with_thieves = False, 
+            highlight_groups = False,
+            show_matching_after_divvying = True,
+        )
+
+    def identify_necklace_with_unit_interval(self):
+        interval = UnitInterval(
+            tick_frequency = 1./sum(self.num_per_jewel),
+            tick_size = 0.2,
+            numbers_with_elongated_ticks = [],
+        )
+        interval.stretch_to_fit_width(self.necklace.get_width())
+        interval.move_to(self.necklace)
+        tick_marks = interval.tick_marks
+        tick_marks.set_stroke(WHITE, width = 2)
+
+        brace = Brace(interval)
+        brace_text = brace.get_text("Length = 1")
+
+        self.play(
+            GrowFromCenter(brace),
+            Write(brace_text)
+        )
+        self.dither()
+        self.play(
+            ShowCreation(interval.tick_marks),
+        )
+        self.dither()
+
+        self.tick_marks = interval.tick_marks
+        self.length_brace = VGroup(brace, brace_text)
+
+    def color_necklace(self):
+        example_index = len(self.necklace.jewels)/2
+        jewels = self.necklace.jewels
+        chain = self.necklace.chain
+        self.remove(self.necklace)
+        self.add(chain, jewels)
+
+        jewels.submobjects.sort(
+            lambda m1, m2 : cmp(m1.get_center()[0], m2.get_center()[0])
+        )
+        remaining_indices = range(len(jewels))
+        remaining_indices.remove(example_index)
+
+        example_segment = self.color_necklace_by_indices(example_index)
+        remaining_segments = self.color_necklace_by_indices(*remaining_indices)
+        self.remove(chain)
+        segments = VGroup(example_segment[0], *remaining_segments)
+        segments.submobjects.sort(
+            lambda m1, m2 : cmp(m1.get_center()[0], m2.get_center()[0])
+        )
+        segment_types = VGroup(*[
+            VGroup(*filter(
+                lambda m : m.get_color() == Color(color), 
+                segments
+            ))
+            for color in self.jewel_colors
+        ])
+
+        for group in segment_types:
+            length_tex = TexMobject("\\frac{%d}{%d}"%(
+                len(group),
+                len(jewels)
+             ))
+            length_tex.next_to(group, UP)
+            length_tex.shift(UP)
+            self.play(
+                group.shift, UP,
+                Write(length_tex, run_time = 1),
+            )
+            self.dither()
+            self.play(
+                group.shift, DOWN,
+                FadeOut(length_tex)
+            )
+        self.play(FadeOut(self.length_brace))
+
+        self.segments = segments
+
+    def color_necklace_by_indices(self, *indices):
+        chain = self.necklace.chain
+        jewels = VGroup(*[
+            self.necklace.jewels[i]
+            for i in indices
+        ])
+        n_jewels = len(self.necklace.jewels)
+
+        segments = VGroup(*[
+            Line(
+                chain.point_from_proportion(index/float(n_jewels)),
+                chain.point_from_proportion((index+1)/float(n_jewels)),
+                color = jewel.get_color()
+            )
+            for index, jewel in zip(indices, jewels)
+        ])
+        for jewel in jewels:
+            jewel.save_state()
+
+        self.play(jewels.shift, jewels.get_height()*UP)
+        self.play(ReplacementTransform(
+            jewels, segments,
+            submobject_mode = "lagged_start",
+            run_time = 2
+        ))
+        self.dither()
+        return segments
+
+    def find_continuous_fair_division(self):
+        chain = self.necklace.chain
+        n_jewels = len(self.necklace.jewels)
+
+        slice_indices, ignore = self.find_slice_indices(
+            self.necklace.jewels,
+            self.jewel_types
+        )
+        cut_proportions = [
+            sorted([random.random(), random.random()])
+            for x in range(self.num_continuous_division_searches)
+        ]
+        cut_proportions.append([
+            float(i)/n_jewels
+            for i in slice_indices[1:-1]
+        ])
+        cut_points = [
+            map(chain.point_from_proportion, pair)
+            for pair in cut_proportions
+        ]
+        v_lines = VGroup(*[DashedLine(UP, DOWN) for x in range(2)])
+
+        for line, point in zip(v_lines, cut_points[0]):
+            line.move_to(point)
+
+        self.play(ShowCreation(v_lines))
+        self.dither()
+        for target_points in cut_points[1:]:
+            self.play(*[
+                ApplyMethod(line.move_to, point)
+                for line, point in zip(v_lines, target_points)
+            ])
+            self.dither()
+
+        self.slice_indices = slice_indices
+        self.v_lines = v_lines
+
+    def show_continuous_fair_division(self):
+        slice_indices = self.slice_indices
+
+        groups = [
+            VGroup(
+                VGroup(*self.segments[i1:i2]),
+                VGroup(*self.tick_marks[i1:i2]),
+            )
+            for i1, i2 in zip(slice_indices, slice_indices[1:])
+        ]
+        groups[-1].add(self.tick_marks[-1])
+        vects = [[UP, DOWN][i] for i in self.forced_binary_choices]
+
+        self.play(*[
+            ApplyMethod(group.shift, 0.5*vect)
+            for group, vect in zip(groups, vects)
+        ])
+        self.dither()
+
+        self.groups = groups
+
+    def highlight_continuous_groups(self):
+        top_group = VGroup(self.groups[0], self.groups[2])
+        bottom_group = self.groups[1]
+        boxes = VGroup()
+        for group in top_group, bottom_group:
+            box = Rectangle(
+                width = group.get_width()+2*SMALL_BUFF,
+                height = group.get_height()+SMALL_BUFF,
+                stroke_width = 0,
+                fill_color = WHITE,
+                fill_opacity = 0.25,
+            )
+            box.move_to(group)
+            boxes.add(box)
+
+        weight_description = VGroup(*[
+            VGroup(
+                TexMobject("\\frac{%d}{%d}"%(
+                    len(jewel_type)/2, len(self.segments)
+                )),
+                Jewel(color = jewel_type[0].get_color())
+            ).arrange_submobjects()
+            for jewel_type in self.jewel_types
+        ])
+        weight_description.arrange_submobjects(buff = LARGE_BUFF)
+        weight_description.next_to(boxes, UP, aligned_edge = LEFT)
+
+        self.play(FadeIn(boxes))
+        self.play(Write(weight_description))
+        self.dither()
+
+        self.highlight_box = boxes
+        self.weight_description = weight_description
+
+    def mention_equivalence_to_discrete_case(self):
+        morty = Mortimer()
+        morty.flip()
+        morty.to_edge(DOWN)
+        morty.shift(LEFT)
+        self.play(FadeIn(morty))
+        self.play(PiCreatureSays(
+            morty, 
+            """This is equivalent to
+            the discrete case. """,
+            bubble_kwargs = {
+                "height" : 3, 
+                "direction" : LEFT,
+            }
+        ))
+        self.play(Blink(morty))
+        self.dither()
+        self.play(*map(FadeOut, [
+            morty, morty.bubble, morty.bubble.content
+        ]))
+        
+    def shift_divide_off_tick_marks(self):
+        groups = self.groups
+        slice_indices = self.slice_indices
+        v_lines = self.v_lines
+
+        left_segment = groups[1][0][0]
+        left_tick = groups[1][1][0]
+        right_segment = groups[-1][0][0]
+        right_tick = groups[-1][1][0]
+
+        segment_width = left_segment.get_width()
+
+        for mob in left_segment, right_segment:
+            mob.parts = VGroup(
+                mob.copy().pointwise_become_partial(mob, 0, 0.5),
+                mob.copy().pointwise_become_partial(mob, 0.5, 1),
+            )
+            self.remove(mob)
+            self.add(mob.parts)
+        restorers = [left_segment.parts, left_tick, right_segment.parts, right_tick]
+        for mob in restorers:
+            mob.save_state()
+
+        self.play(v_lines.shift, segment_width*RIGHT/2)
+        self.play(*[
+            ApplyMethod(mob.shift, vect)
+            for mob, vect in [
+                (left_segment.parts[0], UP),
+                (left_tick, UP),
+                (right_segment.parts[0], DOWN),
+                (right_tick, DOWN),
+            ]
+        ])
+        self.dither()
+
+        words = TextMobject("Cut part way through segment")
+        words.to_edge(RIGHT)
+        words.shift(2*UP)
+        arrow1 = Arrow(words.get_bottom(), left_segment.parts[0].get_right())
+        arrow2 = Arrow(words.get_bottom(), right_segment.parts[1].get_left())
+        VGroup(words, arrow1, arrow2).highlight(RED)
+
+        self.play(Write(words), ShowCreation(arrow1))
+        self.dither()
+        self.play(ShowCreation(arrow2))
+        self.dither()
+        self.play(*map(FadeOut, [words, arrow1, arrow2]))
+
+        for line in v_lines:
+            self.play(line.shift, segment_width*LEFT/2)
+        self.play(*[mob.restore for mob in restorers])
+        self.remove(left_segment.parts, right_segment.parts)
+        self.add(left_segment, right_segment)
+
+class ThinkAboutTheChoices(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("""
+            Think about the choices
+            behind a division...
+        """)
+        self.change_student_modes(*["pondering"]*3)
+        self.dither(3)
+
+class ChoicesInNecklaceCutting(Scene):
+    CONFIG = {
+        "num_continuous_division_searches" : 4,
+        "final_num_pair" : [1./6, 1./3],
+    }
+    def construct(self):
+        self.add_necklace()
+        self.choose_places_to_cut()
+        self.show_three_numbers_adding_to_one()
+        self.make_binary_choice()
+
+    def add_necklace(self):
+        width, colors, num_per_color = [
+            MakeTwoJewelCaseContinuous.CONFIG[key]
+            for key in [
+                "necklace_width", "jewel_colors", "num_per_jewel"
+            ]
+        ]
+        color_list = list(it.chain(*[
+            num*[color] 
+            for num, color in zip(num_per_color, colors)
+        ]))
+        random.shuffle(color_list)
+
+        interval = UnitInterval(
+            tick_frequency = 1./sum(num_per_color),
+            tick_size = 0.2,
+            numbers_with_elongated_ticks = [],
+        )
+        interval.stretch_to_fit_width(width)
+        tick_marks = interval.tick_marks
+        tick_marks.set_stroke(WHITE, width = 2)
+
+        segments = VGroup()
+        for l_tick, r_tick, color in zip(tick_marks, tick_marks[1:], color_list):
+            segment = Line(
+                l_tick.get_center(),
+                r_tick.get_center(),
+                color = color
+            )
+            segments.add(segment)
+
+        self.necklace = VGroup(segments, tick_marks)
+        self.interval = interval
+        self.add(self.necklace)
+
+    def choose_places_to_cut(self):
+        v_lines = [DashedLine(UP, DOWN), for x in range(2)]
+        num_pairs = [
+            sorted([random.random(), random.random()])
+            for x in range(self.num_continuous_division_searches)
+        ] + [self.final_num_pair]
+
+        point_pairs = [
+            map(self.interval.number_to_point, num_pair)
+            for num_pair in num_pair
+        ]
+        
+        for line, point in zip(v_lines, point_pairs[0]):
+            line.move_to(point)
+        self.play(ShowCreation(v_lines))
+        for point_pair in point_pairs[1:]:
+            self.play(*[
+                ApplyMethod(line.move_to, point)
+                for line, point in zip(v_lines, point_pair)
+            ])
+        self.dither()
+
+    def show_three_numbers_adding_to_one(self):
+        pass
+
+    def make_binary_choice(self):
+        pass
 
 
 

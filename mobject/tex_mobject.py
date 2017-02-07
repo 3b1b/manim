@@ -134,12 +134,16 @@ class Brace(TexMobject):
     }
     def __init__(self, mobject, direction = DOWN, **kwargs):
         digest_config(self, kwargs, locals())
-        TexMobject.__init__(self, self.tex_string, **kwargs)
         angle = -np.arctan2(*direction[:2]) + np.pi
         mobject.rotate(-angle)
         left  = mobject.get_corner(DOWN+LEFT)
         right = mobject.get_corner(DOWN+RIGHT)
-        self.stretch_to_fit_width(right[0]-left[0])
+        target_width = right[0]-left[0]
+
+        ## Adding int(target_width) qquads gives approximately the right width
+        tex_string = "\\underbrace{%s}"%(int(target_width)*"\\qquad")
+        TexMobject.__init__(self, tex_string, **kwargs)
+        self.stretch_to_fit_width(target_width)
         self.shift(left - self.get_corner(UP+LEFT) + self.buff*DOWN)
         for mob in mobject, self:
             mob.rotate(angle)

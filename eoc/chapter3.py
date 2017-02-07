@@ -489,7 +489,6 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
             brace = Brace(
                 corner_square, vect, 
                 buff = SMALL_BUFF,
-                tex_string = "\\underbrace{%s}"%(3*"\\quad"),
             )
             text = brace.get_text("$dx$", buff = SMALL_BUFF)
             text.highlight(self.dx_color)
@@ -876,7 +875,6 @@ class NudgeSideLengthOfCube(Scene):
         x_brace = Brace(cube, LEFT, buff = SMALL_BUFF)
         dx_brace = Brace(
             dv_pieces[1], LEFT, buff = SMALL_BUFF,
-            tex_string = "\\underbrace{%s}"%(3*"\\quad"),
         )
         dx_brace.stretch_in_place(1.5, 1)
         for brace, tex in (x_brace, "x"), (dx_brace, "dx"):

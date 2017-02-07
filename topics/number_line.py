@@ -48,7 +48,10 @@ class NumberLine(VMobject):
         return self.tick_marks
 
     def get_tick_numbers(self):
-        return np.arange(self.leftmost_tick, self.x_max, self.tick_frequency)
+        return np.arange(
+            self.leftmost_tick, self.x_max + self.tick_frequency, 
+            self.tick_frequency
+        )
 
     def number_to_point(self, number):
         alpha = float(number-self.x_min)/(self.x_max - self.x_min)
