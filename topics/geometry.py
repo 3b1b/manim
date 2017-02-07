@@ -169,7 +169,7 @@ class Arrow(Line):
         "color"      : YELLOW_C,
         "tip_length" : 0.25,
         "tip_angle"  : np.pi/6,
-        "buff"       : 0.3,
+        "buff"       : MED_SMALL_BUFF,
         "propogate_style_to_family" : False,
         "preserve_tip_size_when_scaling" : True,
     }

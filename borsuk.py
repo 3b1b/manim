@@ -1079,13 +1079,14 @@ class WriteAntipodalCoordinates(WritePointCoordinates):
 class GeneralizeBorsukUlam(Scene):
     CONFIG = {
         "n_dims" : 3,
-        "boundary_colors" : [GREEN, BLUE],
+        "boundary_colors" : [GREEN_B, BLUE],
         "output_boundary_color" : [MAROON_B, YELLOW],
         "negative_color" : RED,
     }
-    def construct(self):
+    def setup(self):
         self.colors = color_gradient(self.boundary_colors, self.n_dims)
 
+    def construct(self):
         sphere_set = self.get_sphere_set()
         arrow = Arrow(LEFT, RIGHT)
         f = TexMobject("f")
@@ -1556,13 +1557,18 @@ class ThinkAboutTheChoices(TeacherStudentsScene):
             Think about the choices
             behind a division...
         """)
-        self.change_student_modes(*["pondering"]*3)
+        self.change_student_modes(
+            *["pondering"]*3,
+            look_at_arg = SPACE_WIDTH*RIGHT+SPACE_HEIGHT*DOWN
+        )
         self.dither(3)
 
 class ChoicesInNecklaceCutting(Scene):
     CONFIG = {
         "num_continuous_division_searches" : 4,
-        "final_num_pair" : [1./6, 1./3],
+        "final_num_pair" : [1./6, 1./2],
+        "necklace_center" : DOWN,
+        "thief_box_offset" : 1.2,
     }
     def construct(self):
         self.add_necklace()
@@ -1589,6 +1595,7 @@ class ChoicesInNecklaceCutting(Scene):
             numbers_with_elongated_ticks = [],
         )
         interval.stretch_to_fit_width(width)
+        interval.shift(self.necklace_center)
         tick_marks = interval.tick_marks
         tick_marks.set_stroke(WHITE, width = 2)
 
@@ -1602,11 +1609,12 @@ class ChoicesInNecklaceCutting(Scene):
             segments.add(segment)
 
         self.necklace = VGroup(segments, tick_marks)
-        self.interval = interval
         self.add(self.necklace)
 
+        self.interval = interval        
+
     def choose_places_to_cut(self):
-        v_lines = [DashedLine(UP, DOWN), for x in range(2)]
+        v_lines = VGroup(*[DashedLine(UP, DOWN) for x in range(2)])
         num_pairs = [
             sorted([random.random(), random.random()])
             for x in range(self.num_continuous_division_searches)
@@ -1614,24 +1622,457 @@ class ChoicesInNecklaceCutting(Scene):
 
         point_pairs = [
             map(self.interval.number_to_point, num_pair)
-            for num_pair in num_pair
+            for num_pair in num_pairs
         ]
         
         for line, point in zip(v_lines, point_pairs[0]):
             line.move_to(point)
         self.play(ShowCreation(v_lines))
         for point_pair in point_pairs[1:]:
+            self.dither()
             self.play(*[
                 ApplyMethod(line.move_to, point)
                 for line, point in zip(v_lines, point_pair)
             ])
         self.dither()
 
+        self.division_points = list(it.chain(
+            [self.interval.get_left()],
+            point_pairs[-1],
+            [self.interval.get_right()]
+        ))
+
+        self.v_lines = v_lines
+
     def show_three_numbers_adding_to_one(self):
-        pass
+        points = self.division_points
+        braces = [
+            Brace(Line(p1+SMALL_BUFF*RIGHT/2, p2+SMALL_BUFF*LEFT/2))
+            for p1, p2 in zip(points, points[1:])
+        ]
+        for char, denom, brace in zip("abc", [6, 3, 2], braces):
+            brace.label = brace.get_text("$%s$"%char)
+            brace.concrete_label = brace.get_text("$\\frac{1}{%d}$"%denom)
+            VGroup(
+                brace.label,
+                brace.concrete_label
+            ).highlight(YELLOW)
+
+        words = TextMobject(
+            "1) Choose", "$a$, $b$, $c$", "so that", "$a+b+c = 1$"
+        )
+        words[1].highlight(YELLOW)
+        words[3].highlight(YELLOW)
+        words.to_corner(UP+LEFT)
+
+        self.play(*it.chain(*[
+            [GrowFromCenter(brace), Write(brace.label)]
+            for brace in braces
+        ]))
+        self.play(Write(words))
+        self.dither(2)
+        self.play(*[
+            ReplacementTransform(brace.label, brace.concrete_label)
+            for brace in braces
+        ])
+        self.dither()
+        self.wiggle_v_lines()
+        self.dither()
+        self.play(*map(FadeOut, list(braces) + [
+            brace.concrete_label for brace in braces
+        ]))
+
+        self.choice_one_words = words
 
     def make_binary_choice(self):
+        groups = self.get_groups()
+        boxes, labels = self.get_boxes_and_labels()
+        arrow_pairs, curr_arrows = self.get_choice_arrow_pairs(groups)
+        words = TextMobject("2) Make a binary choice for each segment")
+        words.next_to(
+            self.choice_one_words, DOWN, 
+            buff = MED_LARGE_BUFF, 
+            aligned_edge = LEFT
+        )
+
+        self.play(Write(words))
+        self.play(*map(FadeIn, [boxes, labels]))
+        for binary_choices in it.product(*[[0, 1]]*3):
+            self.play(*[
+                ApplyMethod(group.move_to, group.target_points[choice])
+                for group, choice in zip(groups, binary_choices)
+            ] + [
+                Transform(
+                    curr_arrow, arrow_pair[choice],
+                    path_arc = np.pi
+                )
+                for curr_arrow, arrow_pair, choice in zip(
+                    curr_arrows, arrow_pairs, binary_choices
+                )
+            ])
+            self.dither()
+
+    ######
+
+    def get_groups(self):
+        segments, tick_marks = self.necklace
+        n_segments = len(segments)
+        indices = [0, n_segments/6, n_segments/2, n_segments]
+
+        groups = [
+            VGroup(
+                VGroup(*segments[i1:i2]),
+                VGroup(*tick_marks[i1:i2]),
+            )
+            for i1, i2 in zip(indices, indices[1:])
+        ]
+        for group, index in zip(groups, indices[1:]):
+            group.add(tick_marks[index].copy())
+        groups[-1][-1].add(tick_marks[-1])
+
+        for group in groups:
+            group.target_points = [
+                group.get_center() + self.thief_box_offset*vect
+                for vect in UP, DOWN
+            ]
+
+        return groups
+
+    def get_boxes_and_labels(self):
+        box = Rectangle(
+            height = self.necklace.get_height()+SMALL_BUFF,
+            width = self.necklace.get_width()+2*SMALL_BUFF,
+            stroke_width = 0,
+            fill_color = WHITE,
+            fill_opacity = 0.25
+        )
+        box.move_to(self.necklace)
+
+        boxes = VGroup(*[
+            box.copy().shift(self.thief_box_offset*vect)
+            for vect in UP, DOWN
+        ])
+        labels = VGroup(*[
+            TextMobject(
+                "Thief %d"%(i+1)
+            ).next_to(box, UP, aligned_edge = RIGHT)
+            for i, box in enumerate(boxes)
+        ])
+        return boxes, labels
+
+    def get_choice_arrow_pairs(self, groups):
+        arrow = TexMobject("\\uparrow")
+        arrow_pairs = [
+            [arrow.copy(), arrow.copy().rotate(np.pi)]
+            for group in groups
+        ]
+        pre_arrow_points = [
+            VectorizedPoint(group.get_center())
+            for group in groups
+        ]
+        for point, arrow_pair in zip(pre_arrow_points, arrow_pairs):
+            for arrow, color in zip(arrow_pair, [GREEN, RED]):
+                arrow.highlight(color)
+                arrow.move_to(point.get_center())
+        return arrow_pairs, pre_arrow_points
+
+    def wiggle_v_lines(self):
+        self.play(
+            *it.chain(*[
+                [
+                    line.rotate_in_place, np.pi/12, vect,
+                    line.highlight, RED
+                ]
+                for line, vect in zip(self.v_lines, [OUT, IN])
+            ]),
+            rate_func = wiggle
+        )
+
+class CompareThisToSphereChoice(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("""
+            Compare this to choosing
+            a point on the sphere.
+        """)
+        self.change_student_modes(
+            *["pondering"]*3,
+            look_at_arg = SPACE_WIDTH*RIGHT+SPACE_HEIGHT*DOWN
+        )
+        self.dither(3)
+
+class ChoicesForSpherePoint(GeneralizeBorsukUlam):
+    def construct(self):
+        self.add_sphere_set()
+        self.initialize_words()
+        self.play(Write(self.choice_one_words))
+        self.dither()
+        self.show_example_choices()
+        self.show_binary_choices()
+
+    def get_tuple(self):
+        tup = TexMobject("(x, y, z)")
+        for i, color in zip([1, 3, 5], self.colors):
+            tup[i].highlight(color)
+        return tup
+
+    def get_condition(self):
+        condition = TexMobject("x^2+y^2+z^2 = 1")
+        for i, color in zip([0, 3, 6], self.colors):
+            VGroup(*condition[i:i+2]).highlight(color)
+        return condition
+
+    def add_sphere_set(self):
+        sphere_set = self.get_sphere_set()
+        sphere_set.scale(0.7)
+        sphere_set.to_edge(RIGHT)
+        sphere_set.shift(UP)
+
+        self.add(sphere_set)
+
+    def initialize_words(self):
+        choice_one_words = TextMobject(
+            "1) Choose", "$x^2$, $y^2$, $z^2$",
+            "so that", "$x^2+y^2+z^2 = 1$"
+        )
+        for i in 1, 3:
+            for j, color in zip([0, 3, 6], self.colors):
+                VGroup(*choice_one_words[i][j:j+2]).highlight(color)
+        choice_one_words.to_corner(UP+LEFT)
+
+        choice_two_words = TextMobject(
+            "2) Make a binary choice for each one"
+        )
+        choice_two_words.next_to(
+            choice_one_words, DOWN, 
+            buff = MED_LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+
+        self.choice_one_words = choice_one_words
+        self.choice_two_words = choice_two_words
+
+    def show_example_choices(self):
+        choices = VGroup(*[
+            TexMobject(*tex).highlight(color)
+            for color, tex in zip(self.colors, [
+                ("x", "^2 = ", "1/6"),
+                ("y", "^2 = ", "1/3"),
+                ("z", "^2 = ", "1/2"),
+            ])
+        ])
+        choices.arrange_submobjects(
+            DOWN, 
+            buff = LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+        choices.scale_to_fit_height(SPACE_HEIGHT)
+        choices.to_edge(LEFT)
+        choices.shift(DOWN)
+
+        self.play(FadeIn(
+            choices,
+            run_time = 2,
+            submobject_mode = "lagged_start"
+        ))
+        self.dither()
+
+        self.choices = choices
+
+    def show_binary_choices(self):
+        for choice in self.choices:
+            var_tex = choice.expression_parts[0]
+            frac_tex = choice.expression_parts[2]
+            sqrts = VGroup(*[
+                TexMobject(
+                    var_tex + "=" + sign + \
+                    "\\sqrt{%s}"%frac_tex)
+                for sign in ["+", "-"]
+            ])
+            for sqrt in sqrts:
+                sqrt.scale(0.6)
+            sqrts.arrange_submobjects(DOWN)
+            sqrts.next_to(choice, RIGHT, buff = LARGE_BUFF)
+            sqrts.highlight(choice.get_color())
+
+            arrows = VGroup(*[
+                Arrow(
+                    choice.get_right(), sqrt.get_left(), 
+                    color = WHITE,
+                    tip_length = 0.1,
+                    buff = SMALL_BUFF
+                )
+                for sqrt in sqrts
+            ])
+
+            self.play(ShowCreation(arrows))
+            self.play(FadeIn(sqrts, submobject_mode = "lagged_start"))
+        self.play(Write(self.choice_two_words))
+        self.dither()
+
+class NecklaceDivisionSphereAssociation(ChoicesInNecklaceCutting):
+    CONFIG = {
+        "xyz_colors" : color_gradient([GREEN_B, BLUE], 3),
+        "necklace_center" : DOWN,
+        "thief_box_offset" : 1.6,
+        "denoms" : [6, 3, 2],
+    }
+    def construct(self):
+        self.add_necklace()
+        self.add_sphere_point_label()
+        self.choose_places_to_cut()
+        self.add_braces()
+        self.add_boxes_and_labels()
+        self.show_binary_choice_association()
+        self.ask_about_antipodal_pairs()
+
+    def add_sphere_point_label(self):
+        label = TextMobject(
+            "$(x, y, z)$",
+            "such that",
+            "$x^2 + y^2 + z^2 = 1$"
+        )
+        for i, j_list in (0, [1, 3, 5]), (2, [0, 3, 6]):
+            for j, color in zip(j_list, self.xyz_colors):
+                label[i][j].highlight(color)
+        label.to_corner(UP+RIGHT)
+
+        ghost_sphere_point = VectorizedPoint()
+        ghost_sphere_point.to_corner(UP+LEFT, buff = LARGE_BUFF)
+        ghost_sphere_point.shift(2*RIGHT)
+
+        arrow = Arrow(
+            label.get_left(), ghost_sphere_point,
+            color = WHITE
+        )
+
+        self.add(label, arrow)
+
+        self.sphere_point_label = label
+
+    def add_braces(self):
+        points = self.division_points
+        braces = [
+            Brace(
+                Line(p1+SMALL_BUFF*RIGHT/2, p2+SMALL_BUFF*LEFT/2),
+                UP
+            )
+            for p1, p2 in zip(points, points[1:])
+        ]
+        for char, brace, color, denom in zip("xyz", braces, self.xyz_colors, self.denoms):
+            brace.label = brace.get_text(
+                "$%s^2$"%char, "$= 1/%d$"%denom,
+                buff = SMALL_BUFF
+            )
+            brace.label.highlight(color)
+            if brace.label.get_right()[0] > brace.get_right()[0]:
+                brace.label.next_to(
+                    brace, UP, buff = SMALL_BUFF,
+                    aligned_edge = RIGHT
+                )
+
+        self.play(*it.chain(
+            map(GrowFromCenter, braces),
+            [Write(brace.label) for brace in braces]
+        ))
+        self.dither()
+
+        self.braces = braces
+
+    def add_boxes_and_labels(self):
+        boxes, labels = self.get_boxes_and_labels()
+        self.play(*map(FadeIn, [boxes, labels]))
+        self.dither()
+
+    def show_binary_choice_association(self):
+        groups = self.get_groups()
+        self.swapping_anims = []
+        final_choices = [1, 0, 1]
+        quads = zip(self.braces, self.denoms, groups, final_choices)
+        for brace, denom, group, final_choice in quads:
+            char = brace.label.args[0][1]
+            choices = [
+                TexMobject(
+                    char, "=", sign, "\\sqrt{\\frac{1}{%d}}"%denom
+                )
+                for sign in "+", "-"
+            ]
+            for choice, color in zip(choices, [GREEN, RED]):
+                # choice[0].highlight(brace.label.get_color())
+                choice[2].highlight(color)
+                choice.scale(0.8)
+                choice.move_to(group)
+                if choice.get_width() > 0.8*group.get_width():
+                    choice.next_to(group.get_right(), LEFT, buff = MED_SMALL_BUFF)
+            original_choices = [m.copy() for m in choices]
+
+            self.play(
+                ReplacementTransform(
+                    VGroup(brace.label[0], brace, brace.label[1]), 
+                    choices[0]
+                ),
+                group.move_to, group.target_points[0]
+            )
+            self.dither()
+            self.play(
+                Transform(*choices),
+                group.move_to, group.target_points[1]
+            )
+            self.dither()
+            if final_choice == 0:
+                self.play(
+                    Transform(choices[0], original_choices[0]),
+                    group.move_to, group.target_points[0]
+                )
+            self.swapping_anims += [
+                Transform(choices[0], original_choices[1-final_choice]),
+                group.move_to, group.target_points[1-final_choice]
+            ]
+
+    def ask_about_antipodal_pairs(self):
+        question = TextMobject("What do antipodal points signify?")
+        question.move_to(self.sphere_point_label, LEFT)
+        question.highlight(MAROON_B)
+        antipodal_tex = TexMobject(
+            "(x, y, z) \\rightarrow (-x, -y, -z)"
+        )
+        antipodal_tex.next_to(question, DOWN, aligned_edge = LEFT)
+
+        self.play(FadeOut(self.sphere_point_label))
+        self.play(FadeIn(question))
+        self.dither()
+        self.play(Write(antipodal_tex))
+        self.dither()
+        self.wiggle_v_lines()
+        self.dither()
+        self.play(*self.swapping_anims)
+        self.dither()
+
+class TotalLengthOfEachJewelEquals(NecklaceDivisionSphereAssociation):
+    CONFIG = {
+        "random_seed" : 2,
+        "hard_coded_fair_division_indices" : [],
+    }
+    def construct(self):
+        random.seed(self.random_seed)
+        self.add_necklace()
+        self.add_boxes_and_labels()
+        self.find_fair_division()
+
+    def find_fair_division(self):
         pass
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

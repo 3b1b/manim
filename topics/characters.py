@@ -470,6 +470,9 @@ class TeacherStudentsScene(Scene):
         pairs = [(s, m) for s, m in pairs if m is not None]
         start = VGroup(*[s for s, m in pairs])
         target = VGroup(*[s.copy().change_mode(m) for s, m in pairs])
+        if "look_at_arg" in kwargs:
+            for pi in target:
+                pi.look_at(kwargs["look_at_arg"])
         self.play(
             Transform(
                 start, target, 
