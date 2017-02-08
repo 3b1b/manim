@@ -50,7 +50,7 @@ class Jewel(VMobject):
 
 class Necklace(VMobject):
     CONFIG = {
-        "height" : 2*SPACE_WIDTH - 1,
+        "width" : 2*SPACE_WIDTH - 1,
         "jewel_buff" : MED_SMALL_BUFF,
         "chain_color" : GREY,
         "default_colors" : [(4, BLUE), (6, WHITE), (4, GREEN)]
@@ -90,9 +90,17 @@ class Necklace(VMobject):
 
 ################
 
-class ThisIsGoingToBeGood(TeacherStudentsScene):
+class FromPreviousTopologyVideo(Scene):
     def construct(self):
-        pass
+        rect = Rectangle(height = 9, width = 16)
+        rect.scale_to_fit_height(2*SPACE_HEIGHT-2)
+        title = TextMobject("From original ``Who cares about topology'' video")
+        title.to_edge(UP)
+        rect.next_to(title, DOWN)
+
+        self.add(title)
+        self.play(ShowCreation(rect))
+        self.dither()
 
 class CheckOutMathologer(PiCreatureScene):
     CONFIG = {
@@ -217,6 +225,11 @@ class IntroduceStolenNecklaceProblem(Scene):
             for jewel in jewels
         ])
         self.play(Blink(self.thieves[0]))
+        for jewel_type in jewel_types:
+            self.play(
+                jewel_type.shift, 0.2*UP,
+                rate_func = wiggle
+            )
         self.dither()
         for x in range(self.num_shuffles):
             self.shuffle_jewels(jewels)
