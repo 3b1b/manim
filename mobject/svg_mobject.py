@@ -189,7 +189,7 @@ class VMobjectFromSVGPathstring(VMobject):
         #list. This variable may get modified in the conditionals below.
         points = self.growing_path.points
         new_points = self.string_to_points(coord_string)
-        if isLower:
+        if isLower and len(points) > 0:
             new_points += points[-1]
         if command == "M": #moveto
             if len(points) > 0:
@@ -201,9 +201,12 @@ class VMobjectFromSVGPathstring(VMobject):
             if command == "H":
                 new_points[0,1] = points[-1,1]
             elif command == "V":
+                if isLower:
+                    new_points[0,0] -= points[-1,0]
+                    new_points[0,0] += points[-1,1]
                 new_points[0,1] = new_points[0,0]
                 new_points[0,0] = points[-1,0]
-            new_points = new_points[[0, 0, 0]]
+            new_points = new_points.repeat(3, axis = 0)
         elif command == "C": #curveto
             pass #Yay! No action required
         elif command in ["S", "T"]: #smooth curveto
@@ -219,6 +222,13 @@ class VMobjectFromSVGPathstring(VMobject):
                 #Both handles and new anchor are the start
                 new_points = points[[0, 0, 0]]
             # self.mark_paths_closed = True
+
+        #Handle situations where there's multiple relative control points
+        if isLower and len(points) > 3:
+            for i in range(3, len(new_points), 3):
+                new_points[i:i+3] -= points[-1]
+                new_points[i:i+3] += new_points[i-1]
+
         self.growing_path.add_control_points(new_points)
 
     def string_to_points(self, coord_string):

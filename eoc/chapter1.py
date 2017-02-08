@@ -2596,6 +2596,10 @@ class PatreonThanks(Scene):
         special_thanks.highlight(YELLOW)
         special_thanks.to_edge(UP)
 
+        patreon_logo = PatreonLogo()
+        # patreon_logo.scale_to_fit_width(morty.get_width())
+        patreon_logo.next_to(morty, UP, buff = MED_LARGE_BUFF)
+
         left_patrons = VGroup(*map(TextMobject, 
             self.specific_patrons[:n_patrons/2]
         ))
@@ -2623,7 +2627,10 @@ class PatreonThanks(Scene):
         #         rate_func = None
         #     )
 
-        self.play(morty.change_mode, "gracious")
+        self.play(
+            morty.change_mode, "gracious",
+            DrawBorderThenFill(patreon_logo)
+        )
         self.play(Write(special_thanks, run_time = 1))
         self.play(
             Write(left_patrons),

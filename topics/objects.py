@@ -11,6 +11,26 @@ from animation.simple_animations import Rotating
 from topics.geometry import Circle, Line
 
 
+class PatreonLogo(SVGMobject):
+    CONFIG = {
+        "file_name" : "patreon_logo",
+        "fill_color" : "#ff5900",
+        "fill_opacity" : 1,
+        "stroke_width" : 0,
+        "height" : 2,
+        "propogate_style_to_family" : True
+    }
+    def __init__(self, **kwargs):
+        SVGMobject.__init__(self, **kwargs)
+        outer, inner = self.split()
+        # outer.add_subpath(inner.points)
+        # self.remove(inner)
+        inner.set_fill(BLACK, opacity = 1)
+        inner.set_stroke(self.fill_color, width = 0.5)
+        self.scale_to_fit_height(self.height)
+        self.center()
+
+
 class VideoIcon(SVGMobject):
     CONFIG = {
         "file_name" : "video_icon",

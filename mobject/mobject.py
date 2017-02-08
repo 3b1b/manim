@@ -560,6 +560,15 @@ class Mobject(object):
             self.center()
         return self
 
+    def sort_submobjects(self, point_to_num_func = lambda p : p[0]):
+        self.submobjects.sort(
+            lambda *mobs : cmp(*[
+                point_to_num_func(mob.get_center())
+                for mob in mobs
+            ])
+        )
+        return self
+
     ## Alignment  
     def align_data(self, mobject):
         self.align_submobjects(mobject)

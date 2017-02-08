@@ -22,6 +22,7 @@ from camera import Camera, ShadingCamera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
+from eoc.chapter1 import PatreonThanks
 from eoc.graph_scene import GraphScene
 
 class Jewel(VMobject):
@@ -89,6 +90,10 @@ class Necklace(VMobject):
 
 ################
 
+class ThisIsGoingToBeGood(TeacherStudentsScene):
+    def construct(self):
+        pass
+
 class CheckOutMathologer(PiCreatureScene):
     CONFIG = {
         "logo_height" : 1.5,
@@ -98,12 +103,7 @@ class CheckOutMathologer(PiCreatureScene):
         "logo_color" : None,
     }
     def construct(self):
-        logo = ImageMobject(self.logo_file)
-        logo.scale_to_fit_height(self.logo_height)
-        logo.to_corner(UP+LEFT)
-        if self.logo_color is not None:
-            logo.highlight(self.logo_color)
-            logo.stroke_width = 1
+        logo = self.get_logo()
         name = TextMobject(self.channel_name)
         name.next_to(logo, RIGHT)
 
@@ -112,11 +112,8 @@ class CheckOutMathologer(PiCreatureScene):
         rect.next_to(logo, DOWN)
         rect.to_edge(LEFT)
 
-        logo.save_state()
-        logo.shift(DOWN)
-        logo.highlight(BLACK)
         self.play(
-            logo.restore,
+            self.get_logo_intro_animation(logo),
             self.pi_creature.change_mode, "hooray",
         )
         self.play(
@@ -126,6 +123,21 @@ class CheckOutMathologer(PiCreatureScene):
         self.dither(2)
         self.change_mode("happy")
         self.dither(2)
+
+    def get_logo(self):
+        logo = ImageMobject(self.logo_file)
+        logo.scale_to_fit_height(self.logo_height)
+        logo.to_corner(UP+LEFT)
+        if self.logo_color is not None:
+            logo.highlight(self.logo_color)
+            logo.stroke_width = 1
+        return logo
+
+    def get_logo_intro_animation(self, logo):
+        logo.save_state()
+        logo.shift(DOWN)
+        logo.highlight(BLACK)
+        return ApplyMethod(logo.restore)
 
 class IntroduceStolenNecklaceProblem(Scene):
     CONFIG = {
@@ -688,6 +700,20 @@ class PointOutVSauce(CheckOutMathologer):
         "logo_height" : 1,
         "logo_color" : GREY,
     }
+    def get_logo(self):
+        logo = SVGMobject(file_name = self.logo_file)
+        logo.scale_to_fit_height(self.logo_height)
+        logo.to_corner(UP+LEFT)
+        logo.set_stroke(width = 0)
+        logo.set_fill(GREEN)
+        logo.sort_submobjects()
+        return logo
+
+    def get_logo_intro_animation(self, logo):
+        return DrawBorderThenFill(
+            logo,
+            run_time = 2,
+        )
 
 class WalkEquatorPostTransform(GraphScene):
     CONFIG = {
@@ -1097,6 +1123,7 @@ class GeneralizeBorsukUlam(Scene):
         arrow.next_to(sphere_set, RIGHT)
         f.next_to(arrow, UP)
         output_space.next_to(arrow, RIGHT)
+        equation.next_to(sphere_set, DOWN, buff = LARGE_BUFF)
         equation.to_edge(RIGHT)
         lhs = VGroup(*equation[:2])
         eq = equation[2]
@@ -1195,11 +1222,6 @@ class GeneralizeBorsukUlam(Scene):
         group.add(l_brace, r_brace)
 
         return group
-
-# class FourDBorsukUlam(GeneralizeBorsukUlam):
-#     CONFIG = {
-#         "n_dims" : 4,
-#     }
 
 # class FiveDBorsukUlam(GeneralizeBorsukUlam):
 #     CONFIG = {
@@ -1714,10 +1736,11 @@ class ChoicesInNecklaceCutting(Scene):
 
     ######
 
-    def get_groups(self):
+    def get_groups(self, indices = None):
         segments, tick_marks = self.necklace
-        n_segments = len(segments)
-        indices = [0, n_segments/6, n_segments/2, n_segments]
+        if indices is None:
+            n_segments = len(segments)
+            indices = [0, n_segments/6, n_segments/2, n_segments]
 
         groups = [
             VGroup(
@@ -1727,8 +1750,8 @@ class ChoicesInNecklaceCutting(Scene):
             for i1, i2 in zip(indices, indices[1:])
         ]
         for group, index in zip(groups, indices[1:]):
-            group.add(tick_marks[index].copy())
-        groups[-1][-1].add(tick_marks[-1])
+            group[1].add(tick_marks[index].copy())
+        groups[-1][1].add(tick_marks[-1])
 
         for group in groups:
             group.target_points = [
@@ -1800,6 +1823,9 @@ class CompareThisToSphereChoice(TeacherStudentsScene):
         )
         self.dither(3)
 
+class SimpleRotatingSphereWithPoint(ExternallyAnimatedScene):
+    pass
+
 class ChoicesForSpherePoint(GeneralizeBorsukUlam):
     def construct(self):
         self.add_sphere_set()
@@ -1828,6 +1854,7 @@ class ChoicesForSpherePoint(GeneralizeBorsukUlam):
         sphere_set.shift(UP)
 
         self.add(sphere_set)
+        self.sphere_set = sphere_set
 
     def initialize_words(self):
         choice_one_words = TextMobject(
@@ -2047,35 +2074,400 @@ class NecklaceDivisionSphereAssociation(ChoicesInNecklaceCutting):
         self.play(*self.swapping_anims)
         self.dither()
 
+class SimpleRotatingSphereWithAntipodes(ExternallyAnimatedScene):
+    pass
+
 class TotalLengthOfEachJewelEquals(NecklaceDivisionSphereAssociation):
     CONFIG = {
-        "random_seed" : 2,
-        "hard_coded_fair_division_indices" : [],
+        "camera_class" : ShadingCamera,
+        "random_seed" : 1,
+        "thief_box_offset" : 1.2,
     }
     def construct(self):
         random.seed(self.random_seed)
         self.add_necklace()
         self.add_boxes_and_labels()
         self.find_fair_division()
+        self.demonstrate_fair_division()
+        self.perform_antipodal_swap()
 
     def find_fair_division(self):
-        pass
+        segments, tick_marks = self.necklace
+        segments.sort_submobjects()
+        segment_colors = [
+            segment.get_color()
+            for segment in segments
+        ]
+        indices = self.get_fair_division_indices(segment_colors)
+        groups = self.get_groups(
+            [0] + list(np.array(indices)+1) + [len(segments)]
+        )
+        self.add(*groups)
+        binary_choice = [0, 1, 0]
+
+        v_lines = VGroup(*[DashedLine(UP, DOWN) for x in range(2)])
+        v_lines.move_to(self.necklace)
+        self.play(ShowCreation(v_lines))
+        self.play(*[
+            ApplyMethod(line.move_to, segments[index].get_right())
+            for line, index in zip(v_lines, indices)
+        ])
+        self.dither()
+        self.play(*[
+            ApplyMethod(group.move_to, group.target_points[choice])
+            for group, choice in zip(groups, binary_choice)
+        ])
+        self.dither()
+
+        self.groups = groups
+        self.v_lines = v_lines
+
+    def get_fair_division_indices(self, colors):
+        colors = np.array(list(colors))
+        color_types = map(Color, set([c.get_hex_l() for c in colors]))
+        type_to_count = dict([
+            (color, sum(colors == color))
+            for color in color_types
+        ])
+        for i1, i2 in it.combinations(range(1, len(colors)-1), 2):
+            bools = [
+                sum(colors[i1:i2] == color) == type_to_count[color]/2
+                for color in color_types
+            ]
+            if np.all(bools):
+                return i1, i2
+        raise Exception("No fair division found")
+
+    def demonstrate_fair_division(self):
+        segments, tick_marks = self.necklace
+        color_types = map(Color, set([
+            segment.get_color().get_hex_l()
+            for segment in segments
+        ]))
+        top_segments = VGroup(*it.chain(
+            self.groups[0][0],
+            self.groups[2][0],
+        ))
+        bottom_segments = self.groups[1][0]
+        for color in color_types:
+            monochrome_groups = [
+                VGroup(*filter(
+                    lambda segment: segment.get_color() == color,
+                    segment_group
+                ))
+                for segment_group in top_segments, bottom_segments
+            ]
+            labels = VGroup()
+            for i, group in enumerate(monochrome_groups):
+                group.save_state()
+                group.generate_target()
+                group.target.arrange_submobjects(buff = SMALL_BUFF)
+                brace = Brace(group.target, UP)
+                label = VGroup(
+                    TextMobject("Thief %d"%(i+1)),
+                    Jewel(color = group[0].get_color())
+                )
+                label.arrange_submobjects()
+                label.next_to(brace, UP)
+                full_group = VGroup(group.target, brace, label)
+                vect = LEFT if i == 0 else RIGHT
+                full_group.next_to(ORIGIN, vect, buff = MED_LARGE_BUFF)
+                full_group.to_edge(UP)
+                labels.add(brace, label)
+            equals = TexMobject("=")
+            equals.next_to(monochrome_groups[0].target, RIGHT)
+
+            for group, label in zip(monochrome_groups, labels):
+                self.play(
+                    MoveToTarget(group),
+                    FadeIn(labels)
+                )
+                self.dither()
+            self.play(FadeIn(equals))
+            self.dither()
+            self.play(*it.chain(
+                [group.restore for group in monochrome_groups],
+                map(FadeOut, list(labels)+[equals]),
+            ))
+        self.dither()
+
+    def perform_antipodal_swap(self):
+        binary_choices_list = [(1, 0, 1), (0, 1, 0)]
+        for binary_choices in binary_choices_list:
+            self.play(*[
+                ApplyMethod(
+                    group.move_to,
+                    group.target_points[choice]
+                )
+                for group, choice in zip(self.groups, binary_choices)
+            ])
+            self.dither()
+
+class ExclaimBorsukUlam(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Borsuk-Ulam!",
+            target_mode = "hooray"
+        )
+        self.play(*[
+            ApplyMethod(pi.change_mode, "hooray")
+            for pi in self.get_everyone()
+        ])
+        self.dither(3)
+
+class ShowFunctionDiagram(TotalLengthOfEachJewelEquals):
+    CONFIG = {
+        "necklace_center" : ORIGIN,
+        "camera_class" : ShadingCamera,
+        "thief_box_offset" : 0.3,
+    }
+    def construct(self):
+        self.add_necklace()
+        self.add_number_pair()
+        self.add_sphere_arrow()
+        self.add_xy_plane()
+
+    def add_necklace(self):
+        random.seed(self.random_seed)
+        ChoicesInNecklaceCutting.add_necklace(self)
+        self.necklace.scale_to_fit_width(SPACE_WIDTH-1)
+        self.necklace.to_edge(UP, buff = LARGE_BUFF)
+        self.necklace.to_edge(LEFT, buff = SMALL_BUFF)
+        self.add(self.necklace)
+
+        self.find_fair_division()
+
+    def add_number_pair(self):
+        colors = [BLUE, GREEN]
+        pair, alt_pair = [
+            TextMobject(
+                "(Thief %d"%d, "X", ", Thief %d "%d, "X", ")"
+            )
+            for d in 1, 2
+        ]
+        for tup in pair, alt_pair:
+            jewels = [Jewel(color = color) for color in colors]
+            for i, jewel in zip([1, 3], jewels):
+                jewel.replace(tup[i])
+                tup.submobjects[i] = jewel
+
+            tup.scale_to_fit_width(SPACE_WIDTH-2)
+            tup.next_to(self.necklace, buff = 2*LARGE_BUFF)
+
+        # arrow = Arrow(self.necklace, pair, color = WHITE)
+        arrow = TexMobject("\\rightarrow")
+        arrow.scale(1.5)
+        arrow.move_to(
+            Line(self.necklace.get_right(), pair.get_left())
+        )
+        arrow.highlight(YELLOW)
+
+        self.play(Write(arrow))
+        self.play(Write(pair))
+        self.dither()
+        pair.save_state()
+        self.play(Transform(pair, alt_pair, path_arc = np.pi))
+        self.dither(2)
+        self.play(ApplyMethod(pair.restore, path_arc = np.pi))
+        self.dither()
+        for choices in [(1, 0, 0), (0, 1, 0)]:
+            self.play(*[
+                ApplyMethod(group.move_to, group.target_points[i])
+                for group, i in zip(self.groups, choices)
+            ])
+            self.dither()
+
+        self.num_pair = pair
+
+    def add_sphere_arrow(self):
+        arrow = TexMobject("\\updownarrow")
+        arrow.scale(1.5)
+        arrow.highlight(YELLOW)
+        arrow.next_to(self.necklace, DOWN, buff = LARGE_BUFF)
+
+        self.play(Write(arrow))
+        self.dither()
+
+    def add_xy_plane(self):
+        arrow = TexMobject("\\updownarrow")
+        arrow.scale(1.5)
+        arrow.highlight(YELLOW)
+        arrow.next_to(self.num_pair, DOWN, buff = 1.2*LARGE_BUFF)
+
+        xy_plane = NumberPlane()
+        xy_plane.scale_to_fit_width(SPACE_WIDTH-1)        
+        xy_plane.next_to(arrow, DOWN, buff = LARGE_BUFF)
+
+        curved_arrow = Arc(
+            start_angle = 3*np.pi/4,
+            angle = -np.pi/2,
+            radius = 3,
+            color = YELLOW,
+        )
+        curved_arrow.add_tip()
+        curved_arrow.shift(2*DOWN)
+
+        self.play(Write(arrow))
+        self.play(ShowCreation(xy_plane))
+        self.dither()
+        self.play(ShowCreation(curved_arrow))
+        self.dither()
+
+class WhatAboutGeneralCase(TeacherStudentsScene):
+    def construct(self):
+        self.student_says("""
+            What about when
+            there's more than 2 jewels?
+        """)
+        self.change_student_modes("confused", None, "sassy")
+        self.dither()
+        self.play(self.get_teacher().change_mode, "thinking")
+        self.dither()
+        self.teacher_says(
+            """Use Borsuk-Ulam for
+            higher-dimensional spheres """, 
+            target_mode = "hooray"
+        )
+        self.change_student_modes(*["confused"]*3)
+        self.dither(2)
+
+class Simple3DSpace(ExternallyAnimatedScene):
+    pass
+
+class FourDBorsukUlam(GeneralizeBorsukUlam):
+    CONFIG = {
+        "n_dims" : 4,
+    }
+    def get_sphere_set(self):
+        sphere_set = GeneralizeBorsukUlam.get_sphere_set(self)
+        brace = Brace(sphere_set)
+        text = brace.get_text("Hypersphere in 4D")
+        sphere_set.add(brace, text)
+        return sphere_set
+
+class CircleToSphereToQMarks(Scene):
+    def construct(self):
+        pis = VGroup()
+        modes = ["happy", "pondering", "pleading"]
+        shapes = [
+            Circle(color = BLUE, radius = 0.5), 
+            VectorizedPoint(), 
+            TexMobject("???")
+        ]
+        for d, mode, shape in zip(it.count(2), modes, shapes):
+            randy = Randolph(mode = mode)
+            randy.scale(0.7)
+            bubble = randy.get_bubble(direction = LEFT)
+            bubble.resize_to_content()
+            bubble.pin_to(randy)
+            bubble.position_mobject_inside(shape)
+            title = TextMobject("%dD"%d)
+            randy.add(bubble, shape)
+            title.next_to(randy, UP)
+            randy.add(title)
+            pis.add(randy)
 
 
+        progression = VGroup(
+            pis[0],
+            Arrow(LEFT, RIGHT),
+            pis[1],
+            Arrow(LEFT, RIGHT),
+            pis[2],
+        )
+        progression.arrange_submobjects()
+        for mob in progression:
+            self.play(FadeIn(mob))
+        self.dither()
 
+class BorsukPatreonThanks(PatreonThanks):
+    CONFIG = {
+        "specific_patrons" : [
+            "Ali  Yahya",
+            "Meshal  Alshammari",
+            "CrypticSwarm    ",
+            "Ankit   Agarwal",
+            "Yu  Jun",
+            "Shelby  Doolittle",
+            "Dave    Nicponski",
+            "Damion  Kistler",
+            "Juan    Benet",
+            "Othman  Alikhan",
+            "Markus  Persson",
+            "Dan Buchoff",
+            "Derek   Dai",
+            "Joseph  John Cox",
+            "Luc Ritchie",
+            "Guido   Gambardella",
+            "Jerry   Ling",
+            "Mark    Govea",
+            "Vecht",
+            "Jonathan    Eppele",
+            "Shimin Kuang",
+            "Rish    Kundalia",
+            "Achille Brighton",
+            "Kirk    Werklund",
+            "Ripta   Pasay",
+            "Felipe  Diniz",
+        ]
+    }
 
+class MortyLookingAtRectangle(Scene):
+    def construct(self):
+        morty = Mortimer()
+        morty.to_corner(DOWN+RIGHT)
+        url = TextMobject("www.thegreatcoursesplus.com/3blue1brown")
+        url.scale(0.75)
+        url.to_corner(UP+LEFT)
+        rect = Rectangle(height = 9, width = 16)
+        rect.scale_to_fit_height(5)
+        rect.next_to(url, DOWN)
+        rect.shift_onto_screen()
+        url.save_state()
+        url.next_to(morty.get_corner(UP+LEFT), UP)
+        url.shift_onto_screen()
 
+        self.add(morty)
+        self.play(
+            morty.change_mode, "raise_right_hand",
+            morty.look_at, url,
+        )
+        self.play(Write(url))
+        self.play(Blink(morty))
+        self.dither()
+        self.play(
+            url.restore,
+            morty.change_mode, "happy"
+        )
+        self.play(ShowCreation(rect))
+        self.dither()
+        self.play(Blink(morty))
+        for mode in ["pondering", "hooray", "happy", "pondering", "happy"]:
+            self.play(morty.change_mode, mode)
+            self.dither(2)
+            self.play(Blink(morty))
+            self.dither(2)
 
+class RotatingThreeDSphereProjection(Scene):
+    CONFIG = {
+        "camera_class" : ShadingCamera,
+    }
+    def construct(self):
+        sphere = VGroup(*[
+            Circle(radius = np.sin(t)).shift(np.cos(t)*OUT)
+            for t in np.linspace(0, np.pi, 20)
+        ])
+        sphere.set_stroke(BLUE, width = 2)
+        # sphere.set_fill(BLUE, opacity = 0.1)
 
+        self.play(Rotating(
+            sphere, axis = RIGHT+OUT,
+            run_time = 10
+        ))
+        self.repeat_frames(4)
 
-
-
-
-
-
-
-
-
+class FourDSphereProjectTo4D(ExternallyAnimatedScene):
+    pass
 
 
 
