@@ -18,6 +18,7 @@ from topics.combinatorics import *
 from topics.numerals import *
 from topics.three_dimensions import *
 from scene import Scene
+from scene.reconfigurable_scene import ReconfigurableScene
 from camera import Camera, ShadingCamera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
@@ -371,9 +372,9 @@ class IntroduceStolenNecklaceProblem(Scene):
         if with_thieves:
             self.play(*it.chain(*[
                 [thief.change_mode, "happy", thief.look_at, self.necklace]
-                for thief in thieves
+                for thief in self.thieves
             ]))
-            self.play(Blink(thieves[1]))
+            self.play(Blink(self.thieves[1]))
         else:
             self.dither()
 
@@ -484,6 +485,28 @@ class IntroduceStolenNecklaceProblem(Scene):
                 if np.all(match_array):
                     return slice_indices, binary_choices
         raise Exception("No fair division found")
+
+class ThingToProve(PiCreatureScene):
+    def construct(self):
+        arrow = Arrow(UP, DOWN)
+        top_words = TextMobject("$n$ jewel types")
+        top_words.next_to(arrow, UP)
+        bottom_words = TextMobject("""
+            Fair division possible
+            with $n$ cuts
+        """)
+        bottom_words.next_to(arrow, DOWN)
+
+        self.play(
+            Write(top_words, run_time = 2),
+            self.pi_creature.change_mode, "raise_right_hand"
+        )
+        self.play(ShowCreation(arrow))
+        self.play(
+            Write(bottom_words, run_time = 2),
+            self.pi_creature.change_mode, "pondering"
+        )
+        self.dither(3)
 
 class FiveJewelCase(IntroduceStolenNecklaceProblem):
     CONFIG = {
@@ -648,15 +671,15 @@ class TemperaturePressurePlane(GraphScene):
     }
     def construct(self):
         self.setup_axes()
-        self.draw_corner_square()
+        self.draw_arrow()
         self.add_example_coordinates()
         self.wander_continuously()
 
-    def draw_corner_square(self):
+    def draw_arrow(self):
         square = Square(
             side_length = self.corner_square_width,
             stroke_color = WHITE,
-            stroke_width = 2
+            stroke_width = 0,
         )
         square.to_corner(UP+LEFT, buff = 0)
 
@@ -665,7 +688,6 @@ class TemperaturePressurePlane(GraphScene):
             self.coords_to_point(*self.example_point_coords)
         )
 
-        self.play(ShowCreation(square))
         self.play(ShowCreation(arrow))
 
     def add_example_coordinates(self):
@@ -1241,6 +1263,15 @@ class GeneralizeBorsukUlam(Scene):
 #         "n_dims" : 5,
 #     }
 
+class MentionMakingNecklaceProblemContinuous(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("""
+            Translate this into
+            a continuous problem.
+        """)
+        self.change_student_modes("confused", "pondering", "erm")
+        self.dither(3)
+
 class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
     CONFIG = {
         "camera_class" : ShadingCamera,
@@ -1483,13 +1514,13 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         boxes = VGroup()
         for group in top_group, bottom_group:
             box = Rectangle(
-                width = group.get_width()+2*SMALL_BUFF,
+                width = 2*SPACE_WIDTH-2,
                 height = group.get_height()+SMALL_BUFF,
                 stroke_width = 0,
                 fill_color = WHITE,
                 fill_opacity = 0.25,
             )
-            box.move_to(group)
+            box.shift(group.get_center()[1]*UP)
             boxes.add(box)
 
         weight_description = VGroup(*[
@@ -1555,6 +1586,18 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         for mob in restorers:
             mob.save_state()
 
+        emerald_segments = VGroup(*[
+            segment
+            for segment in list(groups[0][0])+list(groups[2][0])
+            if segment.get_color() == Color(self.jewel_colors[1])
+            if segment is not right_segment
+        ])
+        emerald_segments.add(
+            left_segment.parts[0],
+            right_segment.parts[1],
+        )
+        emerald_segments.sort_submobjects()
+
         self.play(v_lines.shift, segment_width*RIGHT/2)
         self.play(*[
             ApplyMethod(mob.shift, vect)
@@ -1575,6 +1618,39 @@ class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
         VGroup(words, arrow1, arrow2).highlight(RED)
 
         self.play(Write(words), ShowCreation(arrow1))
+        self.dither()
+
+        emerald_segments.save_state()
+        emerald_segments.generate_target()
+        emerald_segments.target.arrange_submobjects()
+        emerald_segments.target.move_to(2*DOWN)
+        brace = Brace(emerald_segments.target, DOWN)
+        label = VGroup(
+            TexMobject("5\\left( 1/18 \\right)"),
+            Jewel(color = self.jewel_colors[1])
+        ).arrange_submobjects()
+        label.next_to(brace, DOWN)
+        self.play(MoveToTarget(emerald_segments))
+        self.play(GrowFromCenter(brace))
+        self.play(Write(label))
+        self.dither()
+        broken_pair = VGroup(*emerald_segments[2:4])
+        broken_pair.save_state()
+        self.play(broken_pair.shift, 0.5*UP)
+        vect = broken_pair[1].get_left()-broken_pair[1].get_right()
+        self.play(
+            broken_pair[0].shift, -vect/2,
+            broken_pair[1].shift, vect/2,
+        )
+        self.dither()
+        self.play(broken_pair.space_out_submobjects)
+        self.play(broken_pair.restore)
+        self.dither()
+        self.play(
+            emerald_segments.restore,
+            *map(FadeOut, [brace, label])
+        )
+
         self.dither()
         self.play(ShowCreation(arrow2))
         self.dither()
@@ -1598,10 +1674,10 @@ class ThinkAboutTheChoices(TeacherStudentsScene):
         )
         self.dither(3)
 
-class ChoicesInNecklaceCutting(Scene):
+class ChoicesInNecklaceCutting(ReconfigurableScene):
     CONFIG = {
         "num_continuous_division_searches" : 4,
-        "final_num_pair" : [1./6, 1./2],
+        "denoms" : [6, 3, 2],
         "necklace_center" : DOWN,
         "thief_box_offset" : 1.2,
     }
@@ -1650,10 +1726,12 @@ class ChoicesInNecklaceCutting(Scene):
 
     def choose_places_to_cut(self):
         v_lines = VGroup(*[DashedLine(UP, DOWN) for x in range(2)])
+        final_num_pair = np.cumsum([1./d for d in self.denoms[:2]])
+
         num_pairs = [
             sorted([random.random(), random.random()])
             for x in range(self.num_continuous_division_searches)
-        ] + [self.final_num_pair]
+        ] + [final_num_pair]
 
         point_pairs = [
             map(self.interval.number_to_point, num_pair)
@@ -1685,7 +1763,7 @@ class ChoicesInNecklaceCutting(Scene):
             Brace(Line(p1+SMALL_BUFF*RIGHT/2, p2+SMALL_BUFF*LEFT/2))
             for p1, p2 in zip(points, points[1:])
         ]
-        for char, denom, brace in zip("abc", [6, 3, 2], braces):
+        for char, denom, brace in zip("abc", self.denoms, braces):
             brace.label = brace.get_text("$%s$"%char)
             brace.concrete_label = brace.get_text("$\\frac{1}{%d}$"%denom)
             VGroup(
@@ -1712,6 +1790,8 @@ class ChoicesInNecklaceCutting(Scene):
         ])
         self.dither()
         self.wiggle_v_lines()
+        self.dither()
+        self.show_alt_config(denoms = [3, 3, 3])
         self.dither()
         self.play(*map(FadeOut, list(braces) + [
             brace.concrete_label for brace in braces
