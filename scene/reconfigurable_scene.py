@@ -2,6 +2,7 @@ import numpy as np
 
 from scene import Scene
 from animation.transform import Transform
+from mobject import Mobject
 
 from helpers import *
 
@@ -13,9 +14,16 @@ class ReconfigurableScene(Scene):
         self.states = []
         self.num_recursions = 0
 
-    def show_alt_config(self, return_to_original_configuration = True, **new_config):
-        original_state = self.get_mobjects()
-        state_copy = [m.copy() for m in original_state]
+    def transition_to_alt_config(
+        self, 
+        return_to_original_configuration = True, 
+        transformation_kwargs = None,
+        **new_config
+        ):
+        if transformation_kwargs is None:
+            transformation_kwargs = {}
+        original_state = self.get_state()
+        state_copy = original_state.copy()
         self.states.append(state_copy)
         if not self.allow_recursion:
             return
@@ -28,20 +36,41 @@ class ReconfigurableScene(Scene):
 
         if return_to_original_configuration:
             self.clear()
-            self.transition_between_states(state_copy, alt_state)
-            self.transition_between_states(state_copy, original_state)
+            self.transition_between_states(
+                state_copy, alt_state, 
+                **transformation_kwargs
+            )
+            self.transition_between_states(
+                state_copy, original_state, 
+                **transformation_kwargs
+            )
             self.clear()
             self.add(*original_state)
         else:
-            self.transition_between_states(original_state, alt_state)
+            self.transition_between_states(
+                original_state, alt_state, 
+                **transformation_kwargs
+            )
             self.__dict__.update(new_config)
 
-    def transition_between_states(self, start_state, target_state):
-            self.play(*[
-                Transform(*pair)
-                for pair in zip(start_state, target_state)
+    def get_state(self):
+        # Want to return a mobject that maintains the most 
+        # structure.  The way to do that is to extract only
+        # those that aren't inside another.
+        mobjects = self.get_mobjects()
+        families = [m.submobject_family() for m in mobjects]
+        def is_top_level(mobject):
+            num_families = sum([
+                (mobject in family) 
+                for family in families
             ])
-            self.dither()
+            return num_families == 1
+
+        return Mobject(*filter(is_top_level, mobjects))
+
+    def transition_between_states(self, start_state, target_state, **kwargs):
+        self.play(Transform(start_state, target_state, **kwargs))
+        self.dither()
 
 
 
