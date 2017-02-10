@@ -57,16 +57,8 @@ class ReconfigurableScene(Scene):
         # Want to return a mobject that maintains the most 
         # structure.  The way to do that is to extract only
         # those that aren't inside another.
-        mobjects = self.get_mobjects()
-        families = [m.submobject_family() for m in mobjects]
-        def is_top_level(mobject):
-            num_families = sum([
-                (mobject in family) 
-                for family in families
-            ])
-            return num_families == 1
-
-        return Mobject(*filter(is_top_level, mobjects))
+        top_level_mobjects = self.get_top_level_mobjects()
+        return Mobject(*self.get_top_level_mobjects())
 
     def transition_between_states(self, start_state, target_state, **kwargs):
         self.play(Transform(start_state, target_state, **kwargs))

@@ -1791,7 +1791,7 @@ class ChoicesInNecklaceCutting(ReconfigurableScene):
         self.dither()
         self.wiggle_v_lines()
         self.dither()
-        self.show_alt_config(denoms = [3, 3, 3])
+        self.transition_to_alt_config(denoms = [3, 3, 3])
         self.dither()
         self.play(*map(FadeOut, list(braces) + [
             brace.concrete_label for brace in braces
@@ -2266,22 +2266,21 @@ class TotalLengthOfEachJewelEquals(NecklaceDivisionSphereAssociation):
                 vect = LEFT if i == 0 else RIGHT
                 full_group.next_to(ORIGIN, vect, buff = MED_LARGE_BUFF)
                 full_group.to_edge(UP)
-                labels.add(brace, label)
+                labels.add(VGroup(brace, label))
             equals = TexMobject("=")
             equals.next_to(monochrome_groups[0].target, RIGHT)
+            labels[-1].add(equals)
 
             for group, label in zip(monochrome_groups, labels):
                 self.play(
                     MoveToTarget(group),
-                    FadeIn(labels)
+                    FadeIn(label),
                 )
                 self.dither()
-            self.play(FadeIn(equals))
-            self.dither()
-            self.play(*it.chain(
-                [group.restore for group in monochrome_groups],
-                map(FadeOut, list(labels)+[equals]),
-            ))
+            self.play(
+                FadeOut(labels),
+                *[group.restore for group in monochrome_groups]
+            )
         self.dither()
 
     def perform_antipodal_swap(self):
@@ -2308,17 +2307,18 @@ class ExclaimBorsukUlam(TeacherStudentsScene):
         ])
         self.dither(3)
 
-class ShowFunctionDiagram(TotalLengthOfEachJewelEquals):
+class ShowFunctionDiagram(TotalLengthOfEachJewelEquals, ReconfigurableScene):
     CONFIG = {
         "necklace_center" : ORIGIN,
         "camera_class" : ShadingCamera,
         "thief_box_offset" : 0.3,
+        "make_up_fair_division_indices" : False,
     }
     def construct(self):
         self.add_necklace()
         self.add_number_pair()
+        self.swap_necklace_allocation()
         self.add_sphere_arrow()
-        self.add_xy_plane()
 
     def add_necklace(self):
         random.seed(self.random_seed)
@@ -2331,79 +2331,117 @@ class ShowFunctionDiagram(TotalLengthOfEachJewelEquals):
         self.find_fair_division()
 
     def add_number_pair(self):
-        colors = [BLUE, GREEN]
-        pair, alt_pair = [
-            TextMobject(
-                "(Thief %d"%d, "X", ", Thief %d "%d, "X", ")"
+        plane_classes = [
+            JewelPairPlane(
+                skip_animations = True, 
+                thief_number = x
             )
-            for d in 1, 2
+            for x in 1, 2
         ]
-        for tup in pair, alt_pair:
-            jewels = [Jewel(color = color) for color in colors]
-            for i, jewel in zip([1, 3], jewels):
-                jewel.replace(tup[i])
-                tup.submobjects[i] = jewel
+        t1_plane, t2_plane = planes = VGroup(*[
+            VGroup(*plane_class.get_top_level_mobjects())
+            for plane_class in plane_classes
+        ])
+        planes.scale_to_fit_width(SPACE_WIDTH)
+        planes.to_edge(RIGHT)
+        self.example_coords = plane_classes[0].example_coords[0]
 
-            tup.scale_to_fit_width(SPACE_WIDTH-2)
-            tup.next_to(self.necklace, buff = 2*LARGE_BUFF)
-
-        # arrow = Arrow(self.necklace, pair, color = WHITE)
-        arrow = TexMobject("\\rightarrow")
-        arrow.scale(1.5)
-        arrow.move_to(
-            Line(self.necklace.get_right(), pair.get_left())
+        arrow = Arrow(
+            self.necklace.get_corner(DOWN+RIGHT), 
+            self.example_coords,
+            color = YELLOW
         )
-        arrow.highlight(YELLOW)
 
-        self.play(Write(arrow))
-        self.play(Write(pair))
+        self.play(ShowCreation(arrow))
+        self.play(Write(t1_plane), Animation(arrow))
         self.dither()
-        pair.save_state()
-        self.play(Transform(pair, alt_pair, path_arc = np.pi))
+        clean_state = VGroup(*self.mobjects).family_members_with_points()
+        self.clear()
+        self.add(*clean_state)
+        self.transition_to_alt_config(
+            make_up_fair_division_indices = True
+        )
+        self.dither()
+        t1_plane.save_state()
+        self.play(
+            Transform(*planes, path_arc = np.pi),
+            Animation(arrow)
+        )
         self.dither(2)
-        self.play(ApplyMethod(pair.restore, path_arc = np.pi))
+        self.play(
+            ApplyMethod(t1_plane.restore, path_arc = np.pi),
+            Animation(arrow)
+        )
         self.dither()
-        for choices in [(1, 0, 0), (0, 1, 0)]:
+
+    def swap_necklace_allocation(self):
+        for choices in [(1, 0, 1), (0, 1, 0)]:
             self.play(*[
                 ApplyMethod(group.move_to, group.target_points[i])
                 for group, i in zip(self.groups, choices)
             ])
             self.dither()
 
-        self.num_pair = pair
-
     def add_sphere_arrow(self):
-        arrow = TexMobject("\\updownarrow")
-        arrow.scale(1.5)
-        arrow.highlight(YELLOW)
-        arrow.next_to(self.necklace, DOWN, buff = LARGE_BUFF)
+        up_down_arrow = TexMobject("\\updownarrow")
+        up_down_arrow.scale(1.5)
+        up_down_arrow.highlight(YELLOW)
+        up_down_arrow.next_to(self.necklace, DOWN, buff = LARGE_BUFF)
 
-        self.play(Write(arrow))
-        self.dither()
-
-    def add_xy_plane(self):
-        arrow = TexMobject("\\updownarrow")
-        arrow.scale(1.5)
-        arrow.highlight(YELLOW)
-        arrow.next_to(self.num_pair, DOWN, buff = 1.2*LARGE_BUFF)
-
-        xy_plane = NumberPlane()
-        xy_plane.scale_to_fit_width(SPACE_WIDTH-1)        
-        xy_plane.next_to(arrow, DOWN, buff = LARGE_BUFF)
-
-        curved_arrow = Arc(
-            start_angle = 3*np.pi/4,
-            angle = -np.pi/2,
-            radius = 3,
-            color = YELLOW,
+        to_plane_arrow = Arrow(
+            up_down_arrow.get_bottom() + DOWN+RIGHT,
+            self.example_coords,
+            color = YELLOW
         )
-        curved_arrow.add_tip()
-        curved_arrow.shift(2*DOWN)
 
-        self.play(Write(arrow))
-        self.play(ShowCreation(xy_plane))
+        self.play(Write(up_down_arrow))
         self.dither()
-        self.play(ShowCreation(curved_arrow))
+        self.play(ShowCreation(to_plane_arrow))
+        self.dither()
+
+    def get_fair_division_indices(self, *args):
+        if self.make_up_fair_division_indices:
+            return [9, 14]
+        else:
+            return TotalLengthOfEachJewelEquals.get_fair_division_indices(self, *args)
+
+class JewelPairPlane(GraphScene):
+    CONFIG = {
+        "camera_class" : ShadingCamera,
+        "x_labeled_nums" : [],
+        "y_labeled_nums" : [],
+        "thief_number" : 1,
+        "colors" : [BLUE, GREEN],
+    }
+    def construct(self):
+        self.setup_axes()
+        point = self.coords_to_point(4, 5)
+        dot = Dot(point, color = WHITE)
+        coord_pair = TexMobject(
+            "\\big(", 
+            "\\text{Theif %d }"%self.thief_number, "X", ",", 
+            "\\text{Theif %d }"%self.thief_number, "X", 
+            "\\big)"
+        )
+        # coord_pair.scale(1.5)
+        to_replace = [coord_pair[i] for i in [2, 5]]
+        for mob, color in zip(to_replace, self.colors):
+            jewel = Jewel(color = color)
+            jewel.replace(mob)
+            coord_pair.remove(mob)
+            coord_pair.add(jewel)
+        coord_pair.next_to(dot, UP+RIGHT, buff = 0)
+
+        self.example_coords = VGroup(dot, coord_pair)
+        self.add(self.example_coords)
+
+class WhatThisMappingActuallyLooksLikeWords(Scene):
+    def construct(self):
+        words = TextMobject("What this mapping actually looks like")
+        words.scale_to_fit_width(2*SPACE_WIDTH-1)
+        words.to_edge(DOWN)
+
+        self.play(Write(words))
         self.dither()
 
 class WhatAboutGeneralCase(TeacherStudentsScene):
@@ -2427,10 +2465,68 @@ class WhatAboutGeneralCase(TeacherStudentsScene):
 class Simple3DSpace(ExternallyAnimatedScene):
     pass
 
-class FourDBorsukUlam(GeneralizeBorsukUlam):
+class FourDBorsukUlam(GeneralizeBorsukUlam, PiCreatureScene):
     CONFIG = {
         "n_dims" : 4,
+        "use_morty" : False,
     }
+    def setup(self):
+        GeneralizeBorsukUlam.setup(self)
+        PiCreatureScene.setup(self)
+        self.pi_creature.to_corner(DOWN+LEFT, buff = MED_SMALL_BUFF)
+
+    def construct(self):
+        sphere_set = self.get_sphere_set()
+        arrow = Arrow(LEFT, RIGHT)
+        f = TexMobject("f")
+        output_space = self.get_output_space()
+        equation = self.get_equation()
+
+        sphere_set.to_corner(UP+LEFT)
+        arrow.next_to(sphere_set, RIGHT)
+        f.next_to(arrow, UP)
+        output_space.next_to(arrow, RIGHT)
+        equation.next_to(sphere_set, DOWN, buff = LARGE_BUFF)
+        equation.to_edge(RIGHT)
+        lhs = VGroup(*equation[:2])
+        eq = equation[2]
+        rhs = VGroup(*equation[3:])
+
+        brace = Brace(Line(ORIGIN, 5*RIGHT))
+        brace.to_edge(RIGHT)
+        brace_text = brace.get_text("Triplets of numbers")
+        brace_text.shift_onto_screen()
+
+        self.play(FadeIn(sphere_set))
+        self.change_mode("confused")
+        self.dither()
+        self.play(
+            ShowCreation(arrow),
+            Write(f)
+        )
+        self.play(Write(output_space))
+        self.dither()
+        self.change_mode("maybe")
+        self.dither(2)
+        self.change_mode("pondering")
+        self.dither()
+        self.play(
+            GrowFromCenter(brace),
+            Write(brace_text)
+        )
+        self.dither()
+        self.play(*map(FadeOut, [brace, brace_text]))
+        self.dither()
+        self.play(
+            FadeIn(lhs),
+            self.pi_creature.change_mode, "raise_right_hand"
+        )
+        self.play(
+            ReplacementTransform(lhs.copy(), rhs),
+            Write(eq)
+        )
+        self.dither(2)
+
     def get_sphere_set(self):
         sphere_set = GeneralizeBorsukUlam.get_sphere_set(self)
         brace = Brace(sphere_set)
@@ -2440,7 +2536,7 @@ class FourDBorsukUlam(GeneralizeBorsukUlam):
 
 class CircleToSphereToQMarks(Scene):
     def construct(self):
-        pis = VGroup()
+        pi_groups = VGroup()
         modes = ["happy", "pondering", "pleading"]
         shapes = [
             Circle(color = BLUE, radius = 0.5), 
@@ -2450,28 +2546,27 @@ class CircleToSphereToQMarks(Scene):
         for d, mode, shape in zip(it.count(2), modes, shapes):
             randy = Randolph(mode = mode)
             randy.scale(0.7)
-            bubble = randy.get_bubble(direction = LEFT)
-            bubble.resize_to_content()
+            bubble = randy.get_bubble(
+                height = 3, width = 4,
+                direction = LEFT
+            )
             bubble.pin_to(randy)
             bubble.position_mobject_inside(shape)
             title = TextMobject("%dD"%d)
-            randy.add(bubble, shape)
             title.next_to(randy, UP)
-            randy.add(title)
-            pis.add(randy)
+            arrow = Arrow(LEFT, RIGHT)
+            arrow.next_to(randy.get_corner(UP+RIGHT))
+            pi_groups.add(VGroup(
+                randy, bubble, shape, title, arrow
+            ))
 
-
-        progression = VGroup(
-            pis[0],
-            Arrow(LEFT, RIGHT),
-            pis[1],
-            Arrow(LEFT, RIGHT),
-            pis[2],
-        )
-        progression.arrange_submobjects()
-        for mob in progression:
+        pi_groups[-1].remove(pi_groups[-1][-1])
+        pi_groups.arrange_submobjects(buff = -1)
+        for mob in pi_groups:
             self.play(FadeIn(mob))
-        self.dither()
+        self.dither(2)
+        self.play(pi_groups[-1][0].change_mode, "thinking")
+        self.dither(2)
 
 class BorsukPatreonThanks(PatreonThanks):
     CONFIG = {
@@ -2486,6 +2581,7 @@ class BorsukPatreonThanks(PatreonThanks):
             "Damion  Kistler",
             "Juan    Benet",
             "Othman  Alikhan",
+            "Justin Helps",
             "Markus  Persson",
             "Dan Buchoff",
             "Derek   Dai",

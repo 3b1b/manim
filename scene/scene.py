@@ -96,6 +96,19 @@ class Scene(object):
                 if not (isinstance(m, VMobject) and m.is_subpath)
             ])
         ))
+
+    def get_top_level_mobjects(self):
+        # Return only those which are not in the family
+        # of another mobject from the scene
+        mobjects = self.get_mobjects()
+        families = [m.submobject_family() for m in mobjects]
+        def is_top_level(mobject):
+            num_families = sum([
+                (mobject in family) 
+                for family in families
+            ])
+            return num_families == 1
+        return filter(is_top_level, mobjects)
         
     def add(self, *mobjects_to_add):
         """
