@@ -82,7 +82,10 @@ class PiCreature(SVGMobject):
         return self
 
     def change_mode(self, mode):
-        new_self = self.__class__(mode = mode)
+        new_self = self.__class__(
+            mode = mode,
+            color = self.color
+        )
         new_self.scale_to_fit_height(self.get_height())
         new_self.shift(self.eyes.get_center() - new_self.eyes.get_center())
         if self.is_flipped() ^ new_self.is_flipped():
@@ -304,7 +307,8 @@ class PiCreatureScene(Scene):
         return VGroup(self.create_pi_creature())
 
     def create_pi_creature(self):
-        return Mortimer().to_corner(DOWN+RIGHT)
+        self.pi_creature = Mortimer().to_corner(DOWN+RIGHT)
+        return self.pi_creature
 
     def get_pi_creatures(self):
         return self.pi_creatures
@@ -406,9 +410,9 @@ class PiCreatureScene(Scene):
                 if pi_creature in anim.mobject.submobject_family()
             ]
             if anims_with_pi_creature:
-                for anim in animations:
+                for anim in anims_with_pi_creature:
                     if isinstance(anim, Transform):
-                        index = anim.submobject_family().index(pi_creature)
+                        index = anim.mobject.submobject_family().index(pi_creature)
                         target_family = anim.target_mobject.submobject_family()
                         target = target_family[index]
                         if isinstance(target, PiCreature):
