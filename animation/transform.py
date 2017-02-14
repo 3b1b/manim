@@ -13,6 +13,7 @@ from mobject import Mobject, Point, VMobject, Group
 class Transform(Animation):
     CONFIG = {
         "path_arc" : 0,
+        "path_arc_axis" : OUT,
         "path_func" : None,
         "submobject_mode" : "all_at_once",
         "replace_mobject_with_target_in_scene" : False,
@@ -31,7 +32,10 @@ class Transform(Animation):
     def update_config(self, **kwargs):
         Animation.update_config(self, **kwargs)
         if "path_arc" in kwargs:
-            self.path_func = path_along_arc(kwargs["path_arc"])
+            self.path_func = path_along_arc(
+                kwargs["path_arc"],
+                kwargs["path_arc_axis"]
+            )
 
     def init_path_func(self):
         if self.path_func is not None:
@@ -39,13 +43,13 @@ class Transform(Animation):
         if self.path_arc == 0:
             self.path_func = straight_path
         else:
-            self.path_func = path_along_arc(self.path_arc)
+            self.path_func = path_along_arc(
+                self.path_arc,
+                self.path_arc_axis,
+            )
 
-    def get_all_families_zipped(self):
-        return zip(*map(
-            Mobject.submobject_family,
-            [self.mobject, self.starting_mobject, self.target_mobject]
-        ))
+    def get_all_mobjects(self):
+        return self.mobject, self.starting_mobject, self.target_mobject
 
     def update_submobject(self, submob, start, end, alpha):
         submob.interpolate(start, end, alpha, self.path_func)
@@ -169,6 +173,8 @@ class Rotate(ApplyMethod):
     def __init__(self, mobject, angle = np.pi, axis = OUT, **kwargs):
         if "path_arc" not in kwargs:
             kwargs["path_arc"] = angle
+        if "path_arc_axis" not in kwargs:
+            kwargs["path_arc_axis"] = axis
         digest_config(self, kwargs, locals())
         target = mobject.copy()
         if self.in_place:

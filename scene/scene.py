@@ -427,5 +427,3 @@ class Scene(object):
 
 
 
-
-

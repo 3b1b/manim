@@ -64,14 +64,17 @@ class Animation(object):
         #Typically ipmlemented by subclass
         pass
 
-    def get_all_families_zipped(self):
+    def get_all_mobjects(self):
         """
         Ordering must match the ording of arguments to update_submobject
         """ 
-        return zip(
-            self.mobject.submobject_family(),
-            self.starting_mobject.submobject_family()
-        )
+        return self.mobject, self.starting_mobject
+
+    def get_all_families_zipped(self):
+        return zip(*map(
+            Mobject.family_members_with_points,
+            self.get_all_mobjects()
+        ))
 
     def get_sub_alpha(self, alpha, index, num_submobjects):
         if self.submobject_mode in ["lagged_start", "smoothed_lagged_start"]:

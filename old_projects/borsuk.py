@@ -19,7 +19,7 @@ from topics.numerals import *
 from topics.three_dimensions import *
 from scene import Scene
 from scene.reconfigurable_scene import ReconfigurableScene
-from camera import Camera, ShadingCamera
+from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
@@ -148,9 +148,8 @@ class CheckOutMathologer(PiCreatureScene):
         logo.highlight(BLACK)
         return ApplyMethod(logo.restore)
 
-class IntroduceStolenNecklaceProblem(Scene):
+class IntroduceStolenNecklaceProblem(ThreeDScene):
     CONFIG = {
-        "camera_class" : ShadingCamera,
         "jewel_colors" : [BLUE, GREEN, WHITE, RED],
         "num_per_jewel" : [8, 10, 4, 6],
         "num_shuffles" : 1,
@@ -994,10 +993,7 @@ class FormLoopTransverseToEquator(ExternallyAnimatedScene):
 class AntipodalWalkAroundTransverseLoop(ExternallyAnimatedScene):
     pass
 
-class MentionGenerality(TeacherStudentsScene):
-    CONFIG = {
-        "camera_class" : ShadingCamera,
-    }
+class MentionGenerality(TeacherStudentsScene, ThreeDScene):
     def construct(self):
         necklace = Necklace(width = SPACE_WIDTH)
         necklace.shift(2*UP)
@@ -1274,7 +1270,6 @@ class MentionMakingNecklaceProblemContinuous(TeacherStudentsScene):
 
 class MakeTwoJewelCaseContinuous(IntroduceStolenNecklaceProblem):
     CONFIG = {
-        "camera_class" : ShadingCamera,
         "jewel_colors" : [BLUE, GREEN],
         "num_per_jewel" : [8, 10],
         "random_seed" : 2,
@@ -2170,9 +2165,8 @@ class NecklaceDivisionSphereAssociation(ChoicesInNecklaceCutting):
 class SimpleRotatingSphereWithAntipodes(ExternallyAnimatedScene):
     pass
 
-class TotalLengthOfEachJewelEquals(NecklaceDivisionSphereAssociation):
+class TotalLengthOfEachJewelEquals(NecklaceDivisionSphereAssociation, ThreeDScene):
     CONFIG = {
-        "camera_class" : ShadingCamera,
         "random_seed" : 1,
         "thief_box_offset" : 1.2,
     }
@@ -2310,7 +2304,7 @@ class ExclaimBorsukUlam(TeacherStudentsScene):
 class ShowFunctionDiagram(TotalLengthOfEachJewelEquals, ReconfigurableScene):
     CONFIG = {
         "necklace_center" : ORIGIN,
-        "camera_class" : ShadingCamera,
+        "camera_class" : ThreeDCamera,
         "thief_box_offset" : 0.3,
         "make_up_fair_division_indices" : False,
     }
@@ -2407,7 +2401,7 @@ class ShowFunctionDiagram(TotalLengthOfEachJewelEquals, ReconfigurableScene):
 
 class JewelPairPlane(GraphScene):
     CONFIG = {
-        "camera_class" : ShadingCamera,
+        "camera_class" : ThreeDCamera,
         "x_labeled_nums" : [],
         "y_labeled_nums" : [],
         "thief_number" : 1,
@@ -2639,7 +2633,7 @@ class MortyLookingAtRectangle(Scene):
 
 class RotatingThreeDSphereProjection(Scene):
     CONFIG = {
-        "camera_class" : ShadingCamera,
+        "camera_class" : ThreeDCamera,
     }
     def construct(self):
         sphere = VGroup(*[
@@ -2659,8 +2653,21 @@ class FourDSphereProjectTo4D(ExternallyAnimatedScene):
     pass
 
 
+class Test(Scene):
+    CONFIG = {
+        "camera_class" : ThreeDCamera,
+    }
+    def construct(self):
+        randy = Randolph()
+        necklace = Necklace()
+        necklace.insert_n_anchor_points(20)
+        # necklace.apply_function(
+        #     lambda (x, y, z) : x*RIGHT + (y + 0.1*x**2)*UP
+        # )
+        necklace.scale_to_fit_width(randy.get_width() + 1)
+        necklace.move_to(randy)
 
-
+        self.add(randy, necklace)
 
 
 

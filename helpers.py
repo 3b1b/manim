@@ -318,7 +318,7 @@ def random_color():
 def straight_path(start_points, end_points, alpha):
     return interpolate(start_points, end_points, alpha)
 
-def path_along_arc(arc_angle):
+def path_along_arc(arc_angle, axis = OUT):
     """
     If vect is vector from start to end, [vect[:,1], -vect[:,0]] is 
     perpendicualr to vect in the left direction.
@@ -333,7 +333,7 @@ def path_along_arc(arc_angle):
                 centers[:,i] += 0.5*b*vects[:,1-i]/np.tan(arc_angle/2)
         return centers + np.dot(
             start_points-centers, 
-            np.transpose(rotation_about_z(alpha*arc_angle))
+            np.transpose(rotation_matrix(alpha*arc_angle, axis))
         )
     return path
 

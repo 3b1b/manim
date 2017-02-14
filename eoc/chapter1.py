@@ -2597,7 +2597,6 @@ class PatreonThanks(Scene):
         special_thanks.to_edge(UP)
 
         patreon_logo = PatreonLogo()
-        # patreon_logo.scale_to_fit_width(morty.get_width())
         patreon_logo.next_to(morty, UP, buff = MED_LARGE_BUFF)
 
         left_patrons = VGroup(*map(TextMobject, 
