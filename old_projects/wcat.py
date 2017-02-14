@@ -413,11 +413,11 @@ class WhenIWasAKid(TeacherStudentsScene):
         speaker.to_edge(RIGHT)
         return speaker
 
-    def get_everyone(self):
+    def get_pi_creatures(self):
         if hasattr(self, "everyone"):
             return self.everyone
         else:
-            return TeacherStudentsScene.get_everyone(self)
+            return TeacherStudentsScene.get_pi_creatures(self)
 
 class FormingTheMobiusStrip(Scene):
     def construct(self):
@@ -1438,7 +1438,7 @@ class NotHelpful(Scene):
     def construct(self):
         morty = Mortimer()
         morty.next_to(ORIGIN, DOWN)
-        bubble = morty.get_bubble("speech", width = 4, height = 3)
+        bubble = morty.get_bubble(SpeechBubble, width = 4, height = 3)
         bubble.write("Not helpful!")
 
         self.add(morty)

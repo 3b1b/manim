@@ -651,7 +651,7 @@ class SpeakingDifferentLanguages(JenniferScene):
         jenny.coords = Matrix(["5/3", "1/3"])
         jenny.text = TextMobject("Non, c'est")
         for pi in jenny, you:
-            pi.bubble = pi.get_bubble("speech", width = 4.5, height = 3.5)
+            pi.bubble = pi.get_bubble(SpeechBubble, width = 4.5, height = 3.5)
             if pi is you:
                 pi.bubble.shift(MED_SMALL_BUFF*RIGHT)
             else:
@@ -720,7 +720,7 @@ class JennysGrid(JenniferScene):
     def construct(self):
         self.add(self.jenny)
         self.jenny.shift(3*RIGHT)
-        bubble = self.jenny.get_bubble("speech", width = 4)
+        bubble = self.jenny.get_bubble(SpeechBubble, width = 4)
         bubble.flip()
         bubble.set_fill(BLACK, opacity = 0.8)
         bubble.to_edge(LEFT)

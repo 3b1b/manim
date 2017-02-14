@@ -62,7 +62,7 @@ class StudentsFindThisConfusing(TeacherStudentsScene):
             Write(title), 
             *[
                 ApplyMethod(pi.look_at, title)
-                for pi in self.get_everyone()
+                for pi in self.get_pi_creatures()
             ]
         )
         self.play(
@@ -608,7 +608,7 @@ class ContrastMatrixUnderstandingWithEigenvalue(TeacherStudentsScene):
         for mob in axis_and_rotation, matrix:
             mob.to_corner(UP+RIGHT)
 
-        everyone = self.get_everyone()
+        everyone = self.get_pi_creatures()
         self.play(
             Write(axis_and_rotation),
             *it.chain(*zip(
@@ -752,7 +752,7 @@ class SymbolicEigenvectors(Scene):
 
         morty = Mortimer().to_edge(DOWN)
         morty.change_mode("speaking")
-        bubble = morty.get_bubble("speech", width = 5, direction = LEFT)
+        bubble = morty.get_bubble(SpeechBubble, width = 5, direction = LEFT)
         VGroup(morty, bubble).to_edge(RIGHT)
         solve_text = TextMobject(
             "Solve for \\\\",
@@ -955,7 +955,7 @@ class SymbolicEigenvectors(Scene):
         randy = Randolph(mode = "speaking").to_edge(DOWN)
         randy.flip()
         randy.look_at(self.expression)
-        bubble = randy.get_bubble("speech", direction = LEFT, width = 5)
+        bubble = randy.get_bubble(SpeechBubble, direction = LEFT, width = 5)
         words = TextMobject("We need")
         equation = TexMobject(
             "\\det(A-", "\\lambda", "I)", "=0"

@@ -403,7 +403,7 @@ class WhyPeopleMayKnowIt(TeacherStudentsScene):
         #Thoughts
         self.play(*it.chain(*[
             [pi.change_mode, "pondering", pi.look_at, func_mob]
-            for pi in self.get_everyone()
+            for pi in self.get_pi_creatures()
         ]))
         self.random_blink()
         self.student_thinks(
@@ -425,7 +425,7 @@ class WhyPeopleMayKnowIt(TeacherStudentsScene):
         self.random_blink()
         self.play(*it.chain(*[
             [pi.change_mode, "confused", pi.look_at, divergent_sum]
-            for pi in self.get_everyone()
+            for pi in self.get_pi_creatures()
         ]))
         self.dither()
         self.random_blink()
@@ -934,7 +934,7 @@ class IgnoreNegatives(TeacherStudentsScene):
             Write(only_s_gt_1),
             *it.chain(*[
                 [pi.look_at, definition]
-                for pi in self.get_everyone()
+                for pi in self.get_pi_creatures()
             ])
         )
         self.random_blink(3)
@@ -1270,7 +1270,7 @@ class FromRealToComplex(ComplexTransformationScene):
         morty = Mortimer().flip()
         morty.scale(0.7)
         morty.to_corner(DOWN+LEFT)
-        bubble = morty.get_bubble("speech", height = 4)
+        bubble = morty.get_bubble(SpeechBubble, height = 4)
         bubble.set_fill(BLACK, opacity = 0.5)
         bubble.write("""
             How can we visualize
@@ -1884,7 +1884,7 @@ class VisualizingSSquared(ComplexTransformationScene):
         morty = Mortimer().flip()
         morty.scale(0.7)
         morty.to_corner(DOWN+LEFT)
-        bubble = morty.get_bubble("speech", height = 2, width = 4)
+        bubble = morty.get_bubble(SpeechBubble, height = 2, width = 4)
         bubble.set_fill(BLACK, opacity = 0.9)
         bubble.write("""
             It all happens
@@ -1945,7 +1945,7 @@ class ShowZetaOnHalfPlane(ZetaTransformationScene):
     def react_to_transformation(self):
         morty = Mortimer().flip()
         morty.to_corner(DOWN+LEFT)
-        bubble = morty.get_bubble("speech")
+        bubble = morty.get_bubble(SpeechBubble)
         bubble.set_fill(BLACK, 0.5)
         bubble.write("\\emph{Damn}!")
         bubble.resize_to_content()
@@ -2332,7 +2332,7 @@ class IntroduceAnglePreservation(VisualizingSSquared):
         morty.to_corner(DOWN+RIGHT)
         randy.make_eye_contact(morty)
         for pi, words in (randy, "$f'(s) = 2s$"), (morty, "Here's some \\\\ related geometry..."):
-            pi.bubble = pi.get_bubble("speech")
+            pi.bubble = pi.get_bubble(SpeechBubble)
             pi.bubble.set_fill(BLACK, opacity = 0.7)
             pi.bubble.write(words)
             pi.bubble.resize_to_content()
@@ -3290,7 +3290,7 @@ class InventingMathPreview(Scene):
 class FinalAnimationTease(Scene):
     def construct(self):
         morty = Mortimer().shift(2*(DOWN+RIGHT))
-        bubble = morty.get_bubble("speech")
+        bubble = morty.get_bubble(SpeechBubble)
         bubble.write("""
             Want to know what 
             $\\zeta'(s)$ looks like?

@@ -1901,8 +1901,8 @@ class OneOverX(PiCreatureScene, GraphScene):
 
     ########
 
-    def get_pi_creature(self):
-        morty = PiCreatureScene.get_pi_creature(self)
+    def create_pi_creature(self):
+        morty = PiCreatureScene.create_pi_creature(self)
         morty.scale(
             self.morty_scale_val, 
             about_point = morty.get_corner(DOWN+RIGHT)
@@ -2718,7 +2718,7 @@ class NextVideo(TeacherStudentsScene):
 
         group = VGroup(d_sum, d_product, d_composition)
         group.arrange_submobjects(RIGHT, buff = 2*LARGE_BUFF)
-        group.next_to(VGroup(*self.get_everyone()), UP, buff = LARGE_BUFF)
+        group.next_to(VGroup(*self.get_pi_creatures()), UP, buff = LARGE_BUFF)
 
         self.play(
             FadeIn(
@@ -2728,7 +2728,7 @@ class NextVideo(TeacherStudentsScene):
             ),
             *[
                 ApplyMethod(pi.look_at, next_video)
-                for pi in self.get_everyone()
+                for pi in self.get_pi_creatures()
             ]
         )
         self.play(
@@ -2741,7 +2741,7 @@ class NextVideo(TeacherStudentsScene):
                 Write(mob, run_time = 1),
                 *[
                     ApplyMethod(pi.look_at, mob)
-                    for pi in self.get_everyone()
+                    for pi in self.get_pi_creatures()
                 ]
             )
         self.dither(3)

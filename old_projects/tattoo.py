@@ -148,7 +148,7 @@ class ReactionsToTattoo(PiCreatureScene):
         self.dither(2)
 
 
-    def get_pi_creature(self):
+    def create_pi_creature(self):
         randy = Randolph()
         randy.next_to(ORIGIN, DOWN)
         return randy

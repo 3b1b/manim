@@ -430,7 +430,7 @@ class HelpsToHaveOneThought(Scene):
         randys.to_corner(DOWN+LEFT)
         randy = randys.split()[1]
 
-        speech_bubble = morty.get_bubble("speech")
+        speech_bubble = morty.get_bubble(SpeechBubble)
         words = TextMobject("Think of some vector...")
         speech_bubble.position_mobject_inside(words)
         thought_bubble = randy.get_bubble()
@@ -1119,8 +1119,8 @@ class ItDoesntMatterWhich(Scene):
         for pi in physy, compy:
             pi.next_to(pi.title, UP)
             self.add(pi, pi.title)
-        compy_speech = compy.get_bubble("speech")
-        physy_speech = physy.get_bubble("speech")
+        compy_speech = compy.get_bubble(SpeechBubble)
+        physy_speech = physy.get_bubble(SpeechBubble)
         arrow = Vector([2, 1])
         array = matrix_to_mobject([2, 1])
         goes_to = TexMobject("\\Rightarrow")

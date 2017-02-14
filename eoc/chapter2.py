@@ -223,7 +223,7 @@ class Introduction(TeacherStudentsScene):
                     pi.change_mode, mode,
                     pi.look_at, SPACE_HEIGHT*UP
                 ]
-                for pi, mode in zip(self.get_everyone(), [
+                for pi, mode in zip(self.get_pi_creatures(), [
                     "speaking", "pondering", "confused", "confused",
                 ])
             ])

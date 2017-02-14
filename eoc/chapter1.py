@@ -63,13 +63,13 @@ class CircleScene(PiCreatureScene):
             self.radius_brace, self.radius_label
         )
 
-        self.pi_creature = self.get_pi_creature()
+        self.pi_creature = self.create_pi_creature()
         if self.include_pi_creature:
             self.add(self.pi_creature)
         else:
             self.pi_creature.set_fill(opacity = 0)
 
-    def get_pi_creature(self):
+    def create_pi_creature(self):
         return Mortimer().to_corner(DOWN+RIGHT)
 
     def introduce_circle(self, added_anims = []):
@@ -240,17 +240,19 @@ class OpeningQuote(Scene):
         "highlighted_quote_terms" : {
             "special case" : BLUE
         },
-        "author" : "David Hilbert"
+        "author" : "David Hilbert",
+        "fade_in_kwargs" : {
+            "submobject_mode" : "lagged_start",
+            "rate_func" : None,
+            "lag_factor" : 3,
+            "run_time" : 5,
+        },
     }
     def construct(self):
         quote = self.get_quote()
         author = self.get_author(quote)
 
-        self.play(FadeIn(
-            quote,
-            submobject_mode = "lagged_start",
-            run_time = 4
-        ))
+        self.play(FadeIn(quote, **self.fade_in_kwargs))
         self.dither(2)
         self.play(Write(author, run_time = 3))
         self.dither()
@@ -322,7 +324,7 @@ class Introduction(TeacherStudentsScene):
                     lambda p : p.change_mode("hooray").look_at(series[1]),
                     pi
                 )
-                for pi in self.get_everyone()
+                for pi in self.get_pi_creatures()
             ]
         )
         def homotopy(x, y, z, t):
@@ -336,7 +338,7 @@ class Introduction(TeacherStudentsScene):
             ),
             *[
                 ApplyMethod(pi.look_at, series[-1])
-                for pi in self.get_everyone()
+                for pi in self.get_pi_creatures()
             ],
             run_time = 5
         )
@@ -345,13 +347,13 @@ class Introduction(TeacherStudentsScene):
             FadeOut(self.teacher.bubble.content),
             *[
                 ApplyMethod(pi.change_mode, "happy")
-                for pi in self.get_everyone()
+                for pi in self.get_pi_creatures()
             ]
         )
 
     def look_to_center(self):
         anims = []
-        for pi in self.get_everyone():
+        for pi in self.get_pi_creatures():
             anims += [
                 pi.change_mode, "pondering",
                 pi.look_at, 2*UP
@@ -360,7 +362,7 @@ class Introduction(TeacherStudentsScene):
         self.random_blink(6)
         self.play(*[
             ApplyMethod(pi.change_mode, "happy")
-            for pi in self.get_everyone()
+            for pi in self.get_pi_creatures()
         ])
 
     def go_through_students(self):
@@ -846,7 +848,7 @@ class IntroduceTinyChangeInArea(CircleScene):
         self.play(FadeIn(rect))
         self.dither()
 
-    def get_pi_creature(self):
+    def create_pi_creature(self):
         morty = Mortimer()
         morty.scale(0.7)
         morty.to_corner(DOWN+RIGHT)
@@ -872,7 +874,7 @@ class BuildToDADR(CircleScene):
         self.elaborate_on_d()
         self.not_infinitely_small()
 
-    def get_pi_creature(self):
+    def create_pi_creature(self):
         morty = Mortimer()
         morty.flip()
         morty.to_corner(DOWN+LEFT)
@@ -1212,7 +1214,7 @@ class BuildToDADR(CircleScene):
         self.play(self.pi_creature.change_mode, "guilty")
         self.dither()
 
-        new_bubble = self.pi_creature.get_bubble("speech")
+        new_bubble = self.pi_creature.get_bubble(SpeechBubble)
         new_bubble.set_fill(BLACK, opacity = 0.8)
         new_bubble.write("But it gets \\\\ less wrong!")
         new_bubble.resize_to_content()
@@ -1682,7 +1684,7 @@ class DerivativeAsTangentLine(ZoomedScene):
         morty = Mortimer()
         morty.scale(0.7)
         morty.to_edge(DOWN).shift(2*RIGHT)
-        bubble = morty.get_bubble("speech", height = 2)
+        bubble = morty.get_bubble(SpeechBubble, height = 2)
         bubble.set_fill(BLACK, opacity = 0.8)
         bubble.shift(0.5*DOWN)        
         bubble.write("This is the standard view")
@@ -1747,7 +1749,7 @@ class IntroduceConcentricRings(CircleScene):
         self.write_integral()
         self.ask_about_approx()
 
-    def get_pi_creature(self):
+    def create_pi_creature(self):
         morty = Mortimer()
         morty.scale(0.7)
         morty.to_corner(DOWN+RIGHT)
@@ -2306,7 +2308,7 @@ class FundamentalTheorem(CircleScene):
             self.radius_label,
         )
 
-    def get_pi_creature(self):
+    def create_pi_creature(self):
         morty = Mortimer()
         morty.scale(0.7)
         morty.to_corner(DOWN+RIGHT)
@@ -2481,7 +2483,7 @@ class NameTheFundamentalTheorem(TeacherStudentsScene):
             Write(abstract),
             *[
                 ApplyMethod(pi.look_at, symbols)
-                for pi in self.get_everyone()
+                for pi in self.get_pi_creatures()
             ]
         )
         self.change_student_modes("pondering", "confused", "erm")

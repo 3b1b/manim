@@ -541,7 +541,7 @@ class IntroduceKeith(Scene):
         randy = Randolph().next_to(keith, LEFT, LARGE_BUFF, aligned_edge = DOWN)
         randy.shift_onto_screen()
 
-        bubble = keith.get_bubble("speech", width = 7)
+        bubble = keith.get_bubble(SpeechBubble, width = 7)
         bubble.write("01101011 $\\Rightarrow$ Towers of Hanoi")
         zero_width = bubble.content[0].get_width()
         one_width = bubble.content[1].get_width()        
@@ -555,7 +555,7 @@ class IntroduceKeith(Scene):
         bubble.pin_to(keith)
         VGroup(bubble, bubble.content).shift(DOWN)
 
-        randy.bubble = randy.get_bubble("speech", height = 3)
+        randy.bubble = randy.get_bubble(SpeechBubble, height = 3)
         randy.bubble.write("Wait, what's \\\\ Towers of Hanoi?")
 
         title = TextMobject("Keith Schwarz (Computer scientist)")
@@ -803,7 +803,7 @@ class KeithShowingBinary(Scene):
         keith.next_to(morty, LEFT, buff = 2*LARGE_BUFF)
         randy = Randolph()
         randy.next_to(keith, LEFT, buff = 2*LARGE_BUFF)
-        randy.bubble = randy.get_bubble("speech")
+        randy.bubble = randy.get_bubble(SpeechBubble)
         randy.bubble.set_fill(BLACK, opacity = 1)
         randy.bubble.write("Hold on...how does \\\\ binary work again?")
 
@@ -1053,7 +1053,7 @@ class IntroduceBinaryCounting(BinaryCountingScene):
 
     def initial_counting(self):
         randy = Randolph().to_corner(DOWN+LEFT)
-        bubble = randy.get_bubble("thought", height = 3.4, width = 5)
+        bubble = randy.get_bubble(ThoughtBubble, height = 3.4, width = 5)
         bubble.write(
             "Not ten, not ten \\\\",
             "\\quad not ten, not ten..."
@@ -1436,7 +1436,7 @@ class RecursionTime(Scene):
 
         self.add(keith, morty)
 
-        bubble = keith.get_bubble("speech", height = 2)
+        bubble = keith.get_bubble(SpeechBubble, height = 2)
         bubble.write("Recursion time!!!")
         VGroup(bubble, bubble.content).shift(UP)
 
@@ -1704,7 +1704,7 @@ class KeithSaysBigToSmall(Scene):
     def construct(self):
         keith = Keith()
         keith.shift(2.5*DOWN + 3*LEFT)
-        bubble = keith.get_bubble("speech", height = 4.5)
+        bubble = keith.get_bubble(SpeechBubble, height = 4.5)
         bubble.write("""
             Big problem
             $\\Downarrow$
@@ -1730,7 +1730,7 @@ class CodeThisUp(Scene):
         morty.shift(2*DOWN+3*RIGHT)
         keith.make_eye_contact(morty)
         point = 2*UP+3*RIGHT
-        bubble = keith.get_bubble("speech", width = 4.5, height = 3)
+        bubble = keith.get_bubble(SpeechBubble, width = 4.5, height = 3)
         bubble.write("This is the \\\\ most efficient")
         self.add(morty, keith)
 
@@ -1772,7 +1772,7 @@ class NoRoomForInefficiency(Scene):
     def construct(self):
         morty = Mortimer().flip()
         morty.shift(2.5*DOWN+3*LEFT)
-        bubble = morty.get_bubble("speech", width = 4)
+        bubble = morty.get_bubble(SpeechBubble, width = 4)
         bubble.write("No room for \\\\ inefficiency")
         VGroup(morty, bubble, bubble.content).to_corner(DOWN+RIGHT)
 
@@ -1792,7 +1792,7 @@ class WhyDoesBinaryAchieveThis(Scene):
         morty = Mortimer()
         morty.shift(2*DOWN+3*RIGHT)
         keith.make_eye_contact(morty)
-        bubble = morty.get_bubble("speech", width = 5, height = 3)
+        bubble = morty.get_bubble(SpeechBubble, width = 5, height = 3)
         bubble.write("""
             Why does counting
             in binary work?
@@ -1814,7 +1814,7 @@ class BothAreSelfSimilar(Scene):
     def construct(self):
         morty = Mortimer().flip()
         morty.shift(2.5*DOWN+3*LEFT)
-        bubble = morty.get_bubble("speech")
+        bubble = morty.get_bubble(SpeechBubble)
         bubble.write("Both are self-similar")
 
         self.add(morty)
@@ -2071,7 +2071,7 @@ class StillRecruse(Scene):
         morty.shift(2*DOWN+3*RIGHT)
         keith.make_eye_contact(morty)
         point = 2*UP+3*RIGHT
-        bubble = keith.get_bubble("speech", width = 4.5, height = 3)
+        bubble = keith.get_bubble(SpeechBubble, width = 4.5, height = 3)
         bubble.write("You can still\\\\ use recursion")
         self.add(morty, keith)
 
@@ -2693,7 +2693,7 @@ class KeithAsksAboutConfigurations(Scene):
         keith = Keith().shift(2*DOWN+3*LEFT)
         morty = Mortimer().shift(2*DOWN+3*RIGHT)
         keith.make_eye_contact(morty)
-        bubble = keith.get_bubble("speech")
+        bubble = keith.get_bubble(SpeechBubble)
         bubble.write("Think about how many \\\\ configurations there are.")
 
         self.add(keith, morty)
@@ -3237,7 +3237,7 @@ class MentionFinalAnimation(Scene):
     def construct(self):
         morty = Mortimer()
         morty.shift(2*DOWN+3*RIGHT)
-        bubble = morty.get_bubble("speech", width = 6)
+        bubble = morty.get_bubble(SpeechBubble, width = 6)
         bubble.write("Before the final\\\\ animation...")
 
         self.add(morty)

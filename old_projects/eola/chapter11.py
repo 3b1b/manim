@@ -202,7 +202,7 @@ class WhatIsA2DVector(LinearTransformationScene):
             map(Animation, [cs_student.bubble, cs_student.arrow]),
             [mob.restore for mob in cs_student.v, cs_student.coords],
         ))
-        bubble = cs_student.get_bubble("speech", width = 4, height = 3)
+        bubble = cs_student.get_bubble(SpeechBubble, width = 4, height = 3)
         bubble.set_fill(BLACK, opacity = 1)
         bubble.next_to(cs_student, UP+LEFT)
         bubble.write("Consider higher \\\\ dimensions")
@@ -293,7 +293,7 @@ class AskAbout4DPhysicsStudent(Scene):
         compy = CSStudent().to_edge(DOWN).shift(2*RIGHT)
         for pi1, pi2 in (physy, compy), (compy, physy):
             pi1.look_at(pi2.eyes)
-        physy.bubble = physy.get_bubble("speech", width = 5, height = 4.5)
+        physy.bubble = physy.get_bubble(SpeechBubble, width = 5, height = 4.5)
 
         line = Line(LEFT, RIGHT, color = BLUE_B)
         square = Square(color = BLUE_C)
@@ -541,7 +541,7 @@ class WhatIsSpace(Scene):
         physy.bubble = get_small_bubble(physy)
         vector = Vector([1, 2])
         physy.bubble.add_content(vector)
-        compy.bubble = compy.get_bubble("speech", width = 6, height = 4)
+        compy.bubble = compy.get_bubble(SpeechBubble, width = 6, height = 4)
         compy.bubble.set_fill(BLACK, opacity = 1)
         compy.bubble.write("What exactly do\\\\ you mean by ``space''?")
 
@@ -1017,7 +1017,7 @@ class TransformationsAndOperators(TeacherStudentsScene):
         """, student_index = 0)
         self.random_blink()
         teacher = self.get_teacher()
-        bubble = teacher.get_bubble("speech", height = 2, width = 2)
+        bubble = teacher.get_bubble(SpeechBubble, height = 2, width = 2)
         bubble.set_fill(BLACK, opacity = 1)
         bubble.write("Yup!")
         self.play(
@@ -1280,7 +1280,7 @@ class FormalDefinitionOfLinear(LinearTransformationScene):
 
     def add_words(self):
         randy = Randolph().shift(LEFT).to_edge(DOWN)
-        bubble = randy.get_bubble("speech", width = 6, height = 4)
+        bubble = randy.get_bubble(SpeechBubble, width = 6, height = 4)
         bubble.set_fill(BLACK, opacity = 0.8)
         bubble.shift(0.5*DOWN)
         VGroup(randy, bubble).to_edge(RIGHT, buff = 0)
@@ -1901,7 +1901,7 @@ class MatrixVectorMultiplicationAndDerivative(TeacherStudentsScene):
         arrow.highlight(BLACK)
 
         teacher = self.get_teacher()
-        bubble = teacher.get_bubble("speech", height = 4)
+        bubble = teacher.get_bubble(SpeechBubble, height = 4)
         bubble.add_content(group)
 
         self.play(
@@ -2146,7 +2146,7 @@ class MathematicianSpeakingToAll(Scene):
         others.scale(0.8)
         others.to_corner(DOWN+RIGHT)
 
-        bubble = mathy.get_bubble("speech")
+        bubble = mathy.get_bubble(SpeechBubble)
         bubble.write("""
             I don't want to think
             about all y'all's crazy
@@ -2162,7 +2162,7 @@ class MathematicianSpeakingToAll(Scene):
         )
         self.play(Blink(others[3]))
         self.dither()
-        thought_bubble = mathy.get_bubble("thought")
+        thought_bubble = mathy.get_bubble(ThoughtBubble)
         self.play(
             FadeOut(bubble.content),
             Transform(bubble, thought_bubble),
@@ -2408,7 +2408,7 @@ class VectorSpaceOfPiCreatures(Scene):
 class MathematicianDoesntHaveToThinkAboutThat(Scene):
     def construct(self):
         mathy = Mathematician().to_corner(DOWN+LEFT)
-        bubble = mathy.get_bubble("thought", height = 4)
+        bubble = mathy.get_bubble(ThoughtBubble, height = 4)
         words = TextMobject("I don't have to worry", "\\\\ about that madness!")
         bubble.add_content(words)
         new_words = TextMobject("So long as I", "\\\\ work abstractly")

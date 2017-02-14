@@ -1018,14 +1018,14 @@ class MentionGenerality(TeacherStudentsScene, ThreeDScene):
             Write(arrow),
             *[
                 ApplyMethod(pi.look_at, arrow)
-                for pi in self.get_everyone()
+                for pi in self.get_pi_creatures()
             ]
         )
         self.change_student_modes("pondering", "erm", "confused")
         self.dither()
         self.play(*[
             ApplyMethod(pi.look_at, arrow)
-            for pi in self.get_everyone()
+            for pi in self.get_pi_creatures()
         ])
         self.play(Write(formula))
         self.dither(3)
@@ -2297,7 +2297,7 @@ class ExclaimBorsukUlam(TeacherStudentsScene):
         )
         self.play(*[
             ApplyMethod(pi.change_mode, "hooray")
-            for pi in self.get_everyone()
+            for pi in self.get_pi_creatures()
         ])
         self.dither(3)
 

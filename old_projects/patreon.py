@@ -529,7 +529,7 @@ class KindWordsOnEoLA(TeacherStudentsScene):
             ShowCreation(rect),
             *[
                 ApplyMethod(pi.look_at, rect)
-                for pi in self.get_everyone()
+                for pi in self.get_pi_creatures()
             ],
             run_time = 2
         )

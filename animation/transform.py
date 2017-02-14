@@ -47,7 +47,6 @@ class Transform(Animation):
                 self.path_arc,
                 self.path_arc_axis,
             )
-
     def get_all_mobjects(self):
         return self.mobject, self.starting_mobject, self.target_mobject
 
@@ -154,9 +153,6 @@ class FadeIn(Transform):
         target = mobject.copy()
         Transform.__init__(self, mobject, target, **kwargs)
         self.starting_mobject.fade(1)
-        if isinstance(self.starting_mobject, VMobject):
-            self.starting_mobject.set_stroke(width = 0)
-            self.starting_mobject.set_fill(opacity = 0)
 
 
 class ShimmerIn(DelayByOrder):

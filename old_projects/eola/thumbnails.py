@@ -102,7 +102,7 @@ class Chapter9(Scene):
         you.coords = Matrix([3, 2])
         jenny.coords = Matrix(["5/3", "1/3"])
         for pi in jenny, you:
-            pi.bubble = pi.get_bubble("speech", width = 3, height = 3)
+            pi.bubble = pi.get_bubble(SpeechBubble, width = 3, height = 3)
             if pi is you:
                 pi.bubble.shift(MED_SMALL_BUFF*RIGHT)
             else:

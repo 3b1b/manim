@@ -174,7 +174,7 @@ class WhatAreFractals(TeacherStudentsScene):
             FadeIn(picture),
             *[
                 ApplyMethod(pi.look_at, name)
-                for pi in self.get_everyone()
+                for pi in self.get_pi_creatures()
             ]
         )
         self.dither(2)
@@ -2337,7 +2337,7 @@ class DefineFractal(TeacherStudentsScene):
         self.change_student_modes(*["pondering"]*3)
         self.play(*[
             ApplyMethod(pi.look, DOWN)
-            for pi in self.get_everyone()
+            for pi in self.get_pi_creatures()
         ])
         self.dither(3)
 

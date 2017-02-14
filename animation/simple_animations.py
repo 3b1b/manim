@@ -334,7 +334,6 @@ class AnimationGroup(Animation):
         for anim in sub_anims:
             #Use np.divide to that 1./0 = np.inf
             anim.alpha_multiplier = np.divide(max_run_time, anim.run_time)
-
         if "run_time" in kwargs:
             self.run_time = kwargs.pop("run_time")
         else:

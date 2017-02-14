@@ -794,7 +794,7 @@ class ProfessorsTry(Scene):
         morty = Mortimer()
         morty.to_corner(DOWN+RIGHT)
         morty.shift(3*LEFT)
-        speech_bubble = morty.get_bubble("speech", height = 4, width = 8)
+        speech_bubble = morty.get_bubble(SpeechBubble, height = 4, width = 8)
         speech_bubble.shift(RIGHT)
         words = TextMobject(
             "It really is beautiful!  I want you to \\\\" + \
@@ -922,7 +922,7 @@ class ResourceForTeachers(Scene):
     def construct(self):
         morty = Mortimer(mode = "speaking")
         morty.to_corner(DOWN + RIGHT)
-        bubble = morty.get_bubble("speech")
+        bubble = morty.get_bubble(SpeechBubble)
         bubble.write("I'm assuming you \\\\ know linear algebra\\dots")
         words = bubble.content
         bubble.clear()
