@@ -1,6 +1,7 @@
 import numpy as np
 
 from scene import Scene
+from animation.transform import FadeIn
 from mobject import Mobject
 from topics.geometry import Rectangle
 from camera import MovingCamera, Camera
@@ -18,6 +19,7 @@ class ZoomedScene(Scene):
         "zoomed_canvas_corner"      : UP+RIGHT,
         "zoomed_canvas_corner_buff" : DEFAULT_MOBJECT_TO_EDGE_BUFFER,
         "zoomed_camera_background"  : None,
+        "little_rectangle_start_position" : ORIGIN,
         "zoom_factor"               : 6,
         "square_color"              : WHITE,
         "zoom_activated"            : False,
@@ -27,6 +29,12 @@ class ZoomedScene(Scene):
         self.setup_zoomed_canvas()
         self.setup_zoomed_camera()
         self.zoom_activated = True
+
+    def animate_activate_zooming(self):
+        self.activate_zooming()
+        self.play(*map(FadeIn, [
+            self.little_rectangle, self.big_rectangle
+        ]))
 
     def disactivate_zooming(self):
         self.remove(self.big_rectangle, self.little_rectangle)
@@ -71,7 +79,9 @@ class ZoomedScene(Scene):
     def setup_zoomed_camera(self):
         self.little_rectangle = self.big_rectangle.copy()
         self.little_rectangle.scale(1./self.zoom_factor)
-        self.little_rectangle.center()
+        self.little_rectangle.move_to(
+            self.little_rectangle_start_position
+        )
         self.zoomed_camera = MovingCamera(
             self.little_rectangle,
             pixel_shape = self.zoomed_canvas_pixel_shape,

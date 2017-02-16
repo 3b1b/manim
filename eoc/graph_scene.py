@@ -37,10 +37,7 @@ class GraphScene(Scene):
     def setup_axes(self, animate = False):
         x_num_range = float(self.x_max - self.x_min)
         self.space_unit_to_x = self.x_axis_width/x_num_range
-        if self.x_labeled_nums is None:
-            self.x_labeled_nums = np.arange(
-                self.x_min, self.x_max, 2*self.x_tick_frequency
-            )
+        self.x_labeled_nums = self.x_labeled_nums or []
         x_axis = NumberLine(
             x_min = self.x_min,
             x_max = self.x_max,
@@ -67,10 +64,7 @@ class GraphScene(Scene):
 
         y_num_range = float(self.y_max - self.y_min)
         self.space_unit_to_y = self.y_axis_height/y_num_range
-        if self.y_labeled_nums is None:
-            self.y_labeled_nums = np.arange(
-                self.y_min, self.y_max, 2*self.y_tick_frequency
-            )
+        self.y_labeled_nums = self.y_labeled_nums or []
         y_axis = NumberLine(
             x_min = self.y_min,
             x_max = self.y_max,
@@ -221,7 +215,21 @@ class GraphScene(Scene):
             self.coords_to_point(x, 0),
             self.input_to_graph_point(x, graph),
             **line_kwargs
-        )   
+        )  
+
+    def get_vertical_lines_to_graph(
+        self, graph,
+        x_min = None,
+        x_max = None,
+        num_lines = 20,
+        **kwargs
+        ):
+        x_min = x_min or self.x_min
+        x_max = x_max or self.x_max
+        return VGroup(*[
+            self.get_vertical_line_to_graph(x, graph, **kwargs)
+            for x in np.linspace(x_min, x_max, num_lines)
+        ])
 
     def get_secant_slope_group(
         self, 
@@ -236,6 +244,15 @@ class GraphScene(Scene):
         secant_line_color = None,
         secant_line_length = 10,
         ):
+        """
+        Resulting group is of the form VGroup(
+            dx_line, 
+            df_line,
+            dx_label, (if applicable)
+            df_label, (if applicable)
+            secant_line, (if applicable)
+        )
+        """
         kwargs = locals()
         kwargs.pop("self")
         group = VGroup()

@@ -9,6 +9,7 @@ from helpers import *
 from animation import Animation
 from simple_animations import DelayByOrder
 from mobject import Mobject, Point, VMobject, Group
+from topics.geometry import Dot
 
 class Transform(Animation):
     CONFIG = {
@@ -160,6 +161,26 @@ class ShimmerIn(DelayByOrder):
         mobject.sort_points(lambda p : np.dot(p, DOWN+RIGHT))
         DelayByOrder.__init__(self, FadeIn(mobject, **kwargs))
 
+class FocusOn(Transform):
+    CONFIG = {
+        "opacity" : 0.2,
+        "color" : GREY,
+        "run_time" : 2,
+        "remover" : True,
+    }
+    def __init__(self, mobject_or_point, **kwargs):
+        digest_config(self, kwargs)
+        big_dot = Dot(
+            radius = SPACE_WIDTH+SPACE_HEIGHT,
+            stroke_width = 0,
+            fill_color = self.color,
+            fill_opacity = 0,
+        )
+        little_dot = Dot(radius = 0)
+        little_dot.set_fill(self.color, opacity = self.opacity)
+        little_dot.move_to(mobject_or_point)
+
+        Transform.__init__(self, big_dot, little_dot, **kwargs)
 
 class Rotate(ApplyMethod):
     CONFIG = {

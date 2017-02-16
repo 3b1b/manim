@@ -154,6 +154,7 @@ class DashedLine(Line):
         for p1, p2, include in zip(points, points[1:], includes):
             if include:
                 self.add(Line(p1, p2, **self.init_kwargs))
+        self.put_start_and_end_on(self.start, self.end)
         return self
 
     def get_start(self):

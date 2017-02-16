@@ -1,6 +1,8 @@
 
 from helpers import *
 
+from mobject.vectorized_mobject import VGroup
+from topics.geometry import Square
 from scene import Scene
 from camera import Camera
 
@@ -60,7 +62,24 @@ class ThreeDScene(Scene):
         "camera_class" : ThreeDCamera,
     }
 
+##############
 
+class Cube(VGroup):
+    CONFIG = {
+        "fill_opacity" : 0.75,
+        "fill_color" : BLUE,
+        "stroke_width" : 0,
+        "propogate_style_to_family" : True,
+        "side_length" : 2,
+    }
+    def generate_points(self):
+        faces = [
+            Square(side_length = self.side_length).shift(OUT).apply_function(
+                lambda p : np.dot(p, z_to_vector(vect).T)
+            )
+            for vect in IN, OUT, LEFT, RIGHT, UP, DOWN
+        ]
+        self.add(*faces)
 
 
 

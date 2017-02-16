@@ -16,6 +16,7 @@ class NumberLine(VMobject):
         "tick_frequency" : 1,
         "leftmost_tick" : None, #Defaults to ceil(x_min)
         "numbers_with_elongated_ticks" : [0],
+        "numbers_to_show" : None,
         "longer_tick_multiple" : 2,
         "number_at_center" : 0,
         "propogate_style_to_family" : True
@@ -62,11 +63,19 @@ class NumberLine(VMobject):
         )
 
     def point_to_number(self, point):
-        dist_from_left = float(point[0]-self.main_line.get_left()[0])
-        num_dist_from_left = dist_from_left/self.space_unit_to_num
-        return self.x_min + num_dist_from_left
+        left_point, right_point = self.main_line.get_start_and_end()
+        full_vect = right_point-left_point
+        def distance_from_left(p):
+            return np.dot(p-left_point, full_vect)/np.linalg.norm(full_vect)
+
+        return interpolate(
+            self.x_min, self.x_max, 
+            distance_from_left(point)/distance_from_left(right_point)
+        )
 
     def default_numbers_to_display(self):
+        if self.numbers_to_show is not None:
+            return self.numbers_to_show
         return np.arange(self.leftmost_tick, self.x_max, 1)
 
     def get_vertical_number_offset(self, direction = DOWN):

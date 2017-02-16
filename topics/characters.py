@@ -242,8 +242,8 @@ class PiCreatureBubbleIntroduction(AnimationGroup):
     }
     def __init__(self, pi_creature, *content, **kwargs):
         digest_config(self, kwargs)
-        if isinstance(content, Mobject):
-            bubble_content = content
+        if isinstance(content[0], Mobject):
+            bubble_content = content[0]
         else:
             bubble_content = TextMobject(*content)
         bubble = pi_creature.get_bubble(
@@ -390,11 +390,13 @@ class PiCreatureScene(Scene):
         first mobject being animated with each .play call
         """
         animations = Scene.compile_play_args_to_animation_list(self, *args)
-        if len(animations) == 0:
+        non_pi_creature_anims = filter(
+            lambda anim : anim.mobject not in self.get_pi_creatures(),
+            animations
+        )
+        if len(non_pi_creature_anims) == 0:
             return animations
-        first_anim = animations[0]
-        if isinstance(first_anim, Blink):
-            return animations
+        first_anim = non_pi_creature_anims[0]
         #Look at ending state
         first_anim.update(1)
         point_of_interest = first_anim.mobject.get_center()
@@ -405,10 +407,10 @@ class PiCreatureScene(Scene):
                 continue
             if pi_creature in first_anim.mobject.submobject_family():
                 continue
-            anims_with_pi_creature = [
-                anim for anim in animations
-                if pi_creature in anim.mobject.submobject_family()
-            ]
+            anims_with_pi_creature = filter(
+                lambda anim : pi_creature in anim.mobject.submobject_family(),
+                animations
+            )
             if anims_with_pi_creature:
                 for anim in anims_with_pi_creature:
                     if isinstance(anim, Transform):

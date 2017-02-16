@@ -310,7 +310,7 @@ class Mobject(object):
     def scale_to_fit_height(self, height):
         return self.stretch_to_fit(height, 1, stretch = False)
 
-    def space_out_submobjects(self, factor = 1.5):
+    def space_out_submobjects(self, factor = 1.5, **kwargs):
         self.scale_in_place(factor)
         for submob in self.submobjects:
             submob.scale_in_place(1./factor)

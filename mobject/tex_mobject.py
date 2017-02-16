@@ -1,4 +1,4 @@
-from vectorized_mobject import VMobject
+from vectorized_mobject import VMobject, VGroup
 from svg_mobject import SVGMobject, VMobjectFromSVGPathstring
 from topics.geometry import BackgroundRectangle
 from helpers import *
@@ -74,7 +74,23 @@ class TexMobject(SVGMobject):
             result = result.replace("\n", " \\\\ \n ")
         result = " ".join([self.alignment, result])
         result = result.strip()
+        result = self.remove_stray_braces(result)
         return result
+
+    def remove_stray_braces(self, tex):
+        """
+        Makes TexMobject resiliant to unmatched { at start
+        """
+        num_lefts, num_rights = [
+            tex.count(char)
+            for char in "{}"
+        ]
+        if tex.startswith("{") and num_lefts > num_rights:
+            return tex[1:]
+        elif tex.endswith("}") and num_rights > num_lefts:
+            return tex[:-1]
+        return tex
+
 
     def get_tex_string(self):
         return self.tex_string
@@ -86,7 +102,7 @@ class TexMobject(SVGMobject):
         for expr in self.args:
             model = TexMobject(expr, **self.CONFIG)
             new_index = curr_index + len(model.submobjects)
-            new_submobjects.append(VMobject(
+            new_submobjects.append(VGroup(
                 *self.submobjects[curr_index:new_index]
             ))
             curr_index = new_index
@@ -129,8 +145,9 @@ class TextMobject(TexMobject):
 class Brace(TexMobject):
     CONFIG = {
         "buff" : 0.2,
-        "n_quads" : 3,
-        "tex_string" : "\\underbrace{%s}"%(3*"\\qquad"),
+        "width_multiplier" : 2,
+        "max_num_quads" : 15,
+        "min_num_quads" : 0,
     }
     def __init__(self, mobject, direction = DOWN, **kwargs):
         digest_config(self, kwargs, locals())
@@ -141,7 +158,11 @@ class Brace(TexMobject):
         target_width = right[0]-left[0]
 
         ## Adding int(target_width) qquads gives approximately the right width
-        tex_string = "\\underbrace{%s}"%(int(target_width)*"\\qquad")
+        num_quads = np.clip(
+            int(self.width_multiplier*target_width),
+            self.min_num_quads, self.max_num_quads
+        )
+        tex_string = "\\underbrace{%s}"%(num_quads*"\\qquad")
         TexMobject.__init__(self, tex_string, **kwargs)
         self.stretch_to_fit_width(target_width)
         self.shift(left - self.get_corner(UP+LEFT) + self.buff*DOWN)
