@@ -85,10 +85,11 @@ class TexMobject(SVGMobject):
             tex.count(char)
             for char in "{}"
         ]
-        if tex.startswith("{") and num_lefts > num_rights:
-            return tex[1:]
-        elif tex.endswith("}") and num_rights > num_lefts:
-            return tex[:-1]
+        if num_rights > num_lefts:
+            backwards = tex[::-1].replace("}", "", num_rights-num_lefts)
+            tex = backwards[::-1]
+        elif num_lefts > num_rights:
+            tex = tex.replace("{", "", num_lefts-num_rights)
         return tex
 
 
@@ -109,13 +110,13 @@ class TexMobject(SVGMobject):
         self.submobjects = new_submobjects
         return self
 
-    def highlight_by_tex(self, tex, color):
+    def highlight_by_tex(self, tex, color, substring = True):
         if not hasattr(self, "expression_parts"):
             if tex == self.get_tex_string():
                 self.highlight(color)
             return self
         for submob, part_tex in zip(self.split(), self.expression_parts):
-            if part_tex == tex:
+            if (part_tex == tex) or (substring and tex in part_tex):
                 submob.highlight(color)
         return self
 
