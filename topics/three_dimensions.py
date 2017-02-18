@@ -16,8 +16,11 @@ class ThreeDCamera(Camera):
         self.unit_sun_vect = self.sun_vect/np.linalg.norm(self.sun_vect)
 
     def display_multiple_vectorized_mobjects(self, vmobjects):
-        def cmp_vmobs(vm1, vm2):
-            return cmp(vm1.get_center()[2], vm2.get_center()[2])
+        def cmp_vmobs(*vmobs):
+            return cmp(*[
+                vm.get_edge_center(IN)[2]
+                for vm in vmobs
+            ])
         Camera.display_multiple_vectorized_mobjects(
             self, 
             sorted(vmobjects, cmp = cmp_vmobs)
@@ -73,13 +76,12 @@ class Cube(VGroup):
         "side_length" : 2,
     }
     def generate_points(self):
-        faces = [
-            Square(side_length = self.side_length).shift(OUT).apply_function(
-                lambda p : np.dot(p, z_to_vector(vect).T)
-            )
-            for vect in IN, OUT, LEFT, RIGHT, UP, DOWN
-        ]
-        self.add(*faces)
+        for vect in IN, OUT, LEFT, RIGHT, UP, DOWN:
+            face = Square(side_length = self.side_length)
+            face.shift(self.side_length*OUT/2.0)
+            face.apply_function(lambda p : np.dot(p, z_to_vector(vect).T))
+
+            self.add(face)
 
 
 

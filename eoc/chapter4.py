@@ -1676,9 +1676,10 @@ class GeneralizeChainRule(Scene):
         )
         general = TexMobject(
             "\\frac{d}{dx}", "g(", "h(x)", ")", "=",
-            "{dg \\over ", " dh}(", "h(x)", ")", "{dh \\over", " dx}", "(x)"
+            "{dg \\over ", " dh}", "(", "h(x)", ")", "{dh \\over", " dx}", "(x)"
         )
         example.to_edge(UP, buff = LARGE_BUFF)
+        example.shift(RIGHT)
         general.next_to(example, DOWN, buff = 1.5*LARGE_BUFF)
         for mob in example, general:
             mob.highlight(SINE_COLOR)
@@ -1694,24 +1695,26 @@ class GeneralizeChainRule(Scene):
 
         general_outer = VGroup(*general[1:4])
         general_inner = general[2]
-        d_general_outer = VGroup(*general[5:9])
-        d_general_inner = general[7]
-        d_general_d_inner = VGroup(*general[9:12])
+        d_general_outer = VGroup(*general[5:10])
+        d_general_inner = general[8]
+        d_general_d_inner = VGroup(*general[10:13])
 
         example_outer_brace = Brace(example_outer)
-        example_inner_brace = Brace(example_inner, buff = SMALL_BUFF)
+        example_inner_brace = Brace(example_inner, UP, buff = SMALL_BUFF)
         d_example_outer_brace = Brace(d_example_outer)
         d_example_inner_brace = Brace(d_example_inner, buff = SMALL_BUFF)
         d_example_d_inner_brace = Brace(d_example_d_inner, UP, buff = SMALL_BUFF)
 
         general_outer_brace = Brace(general_outer)
-        general_inner_brace = Brace(general_inner, buff = SMALL_BUFF)
+        general_inner_brace = Brace(general_inner, UP, buff = SMALL_BUFF)
         d_general_outer_brace = Brace(d_general_outer)
         d_general_inner_brace = Brace(d_general_inner, buff = SMALL_BUFF)
         d_general_d_inner_brace = Brace(d_general_d_inner, UP, buff = SMALL_BUFF)
 
         for brace in example_outer_brace, general_outer_brace:
             brace.text = brace.get_text("Outer")
+        for brace in example_inner_brace, general_inner_brace:
+            brace.text = brace.get_text("Inner")
         for brace in d_example_outer_brace, d_general_outer_brace:
             brace.text = brace.get_text("d(Outer)")
             brace.text.shift(SMALL_BUFF*LEFT)
@@ -1720,12 +1723,16 @@ class GeneralizeChainRule(Scene):
 
         #d(out)d(in) for example
         self.add(example)
-        outer_braces = VGroup(example_outer_brace, d_example_outer_brace)
-        self.play(*map(GrowFromCenter, outer_braces))
-        for brace in outer_braces:
+        braces = VGroup(
+            example_outer_brace, 
+            example_inner_brace, 
+            d_example_outer_brace
+        )
+        for brace in braces:
+            self.play(GrowFromCenter(brace))
             self.play(Write(brace.text, run_time = 1))
+            self.dither()
         self.dither()
-        inner_braces = VGroup(example_inner_brace, d_example_inner_brace)
         self.play(*it.chain(*[
             [mob.scale_in_place, 1.2, mob.highlight, YELLOW]
             for mob in example_inner, d_example_inner
@@ -1750,12 +1757,247 @@ class GeneralizeChainRule(Scene):
         self.dither()
 
         #Generalize
+        self.play(*map(FadeIn, general[:5]))
+        self.dither()
+        self.play(
+            Transform(example_outer_brace, general_outer_brace),
+            Transform(example_outer_brace.text, general_outer_brace.text),
+            Transform(example_inner_brace, general_inner_brace),
+            Transform(example_inner_brace.text, general_inner_brace.text),
+        )
+        self.dither()
+        self.play(
+            Transform(d_example_outer_brace, d_general_outer_brace),
+            Transform(d_example_outer_brace.text, d_general_outer_brace.text),
+        )
+        self.play(Write(d_general_outer))
+        self.dither(2)
+        self.play(
+            Transform(d_example_d_inner_brace, d_general_d_inner_brace),
+            Transform(d_example_d_inner_brace.text, d_general_d_inner_brace.text),
+        )
+        self.play(Write(d_general_d_inner))
+        self.dither(2)
+
+        #Name chain rule
+        name = TextMobject("``Chain rule''")
+        name.scale(1.2)
+        name.highlight(YELLOW)
+        name.to_corner(UP+LEFT)
+        self.play(Write(name))
+        self.dither()
+
+        #Point out dh bottom
+        morty = Mortimer().flip()
+        morty.to_corner(DOWN+LEFT)
+        d_general_outer_copy = d_general_outer.copy()
+        morty.set_fill(opacity = 0)
+        self.play(
+            morty.set_fill, None, 1,
+            morty.change_mode, "raise_left_hand",
+            morty.look, UP+LEFT,
+            d_general_outer_copy.next_to, 
+            morty.get_corner(UP+LEFT), UP, MED_LARGE_BUFF,
+            d_general_outer_copy.shift_onto_screen
+        )
+        self.dither()        
+        circle = Circle(color = YELLOW)
+        circle.replace(d_general_outer_copy[1])
+        circle.scale_in_place(1.4)
+        self.play(ShowCreation(circle))
+        self.play(Blink(morty))
+        self.dither()
+        inner = d_general_outer_copy[3]
+        self.play(
+            morty.change_mode, "hooray",
+            morty.look_at, inner,
+            inner.shift, UP
+        )
+        self.play(inner.shift, DOWN)
+        self.dither()
+        self.play(morty.change_mode, "pondering")
+        self.play(Blink(morty))
+        self.dither()
+        self.play(*map(FadeOut, [
+            d_general_outer_copy, inner, circle
+        ]))
+
+        #Show cancelation
+        braces = [
+            d_example_d_inner_brace,
+            d_example_outer_brace,
+            example_inner_brace,
+            example_outer_brace,
+        ]
+        texts = [brace.text for brace in braces]
+        self.play(*map(FadeOut, braces+texts))
+
+        to_collapse = VGroup(VGroup(*general[7:10]), general[12])
+        dg_dh = VGroup(*general[5:7])
+        dh_dx = VGroup(*general[10:12])
+        to_collapse.generate_target()
+        points = VGroup(*map(VectorizedPoint, 
+            [m.get_left() for m in to_collapse]
+        ))
+        self.play(
+            Transform(to_collapse, points),
+            dh_dx.next_to, dg_dh,
+            morty.look_at, dg_dh,
+        )
+        self.dither()
+        for mob in list(dg_dh)+list(dh_dx):
+            circle = Circle(color = YELLOW)
+            circle.replace(mob)
+            circle.scale_in_place(1.3)
+            self.play(ShowCreation(circle))
+            self.dither()
+            self.play(FadeOut(circle))
+
+        strikes = VGroup()
+        for dh in dg_dh[1], dh_dx[0]:
+            strike = TexMobject("/")
+            strike.stretch(2, dim = 0)
+            strike.rotate(-np.pi/12)
+            strike.move_to(dh)
+            strike.highlight(RED)
+            strikes.add(strike)
+        self.play(Write(strikes))
+        self.play(morty.change_mode, "hooray")
+        equals_dg_dx = TexMobject("= \\frac{dg}{dx}")
+        equals_dg_dx.next_to(dh_dx)
+        self.play(Write(equals_dg_dx))
+        self.play(Blink(morty))
+        self.dither()
+
+class WatchingVideo(PiCreatureScene):
+    def construct(self):
+        randy = self.get_primary_pi_creature()
+        laptop = Laptop()
+        laptop.next_to(randy.get_corner(UP+RIGHT), RIGHT)
+        randy.look_at(laptop.screen)
+
+        formulas = VGroup(*[
+            TexMobject("\\frac{d}{dx}\\left( %s \\right)"%s)
+            for s in [
+                "e^x \\sin(x)",
+                "\\sin(x) \\cdot  \\frac{1}{\\cos(x)}",
+                "\\cos(3x)^2",
+                "e^x(x^2 + 3x + 2)",
+            ]
+        ])
+        formulas.arrange_submobjects(
+            DOWN, 
+            buff = MED_LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+        formulas.next_to(randy, LEFT, buff = MED_LARGE_BUFF)
+        formulas.shift_onto_screen()
+
+        self.add(randy, laptop)
+        self.dither()
+        self.play(randy.change_mode, "erm")
+        self.play(Blink(randy))
+        self.dither()
+        self.play(randy.change_mode, "maybe")
+        self.dither()
+        self.play(Blink(randy))
+        for formula in formulas:
+            self.play(
+                Write(formula, run_time = 2),
+                randy.change_mode, "thinking"
+            )
+            self.dither()
+
+    def create_pi_creatures(self):
+        return [Randolph().shift(DOWN+RIGHT)]
 
 
 
+class NextVideo(TeacherStudentsScene):
+    def construct(self):
+        series = VideoSeries()
+        series.to_edge(UP)
+        next_video = series[4]
 
+        pre_expression = TexMobject(
+            "x", "^2", "+", "y", "^2", "=", "1"
+        )
+        d_expression = TexMobject(
+            "2", "x", "\\,dx", "+", "2", "y", "\\,dy", "=", "0"
+        )
+        expression_to_d_expression_indices = [
+            1, 0, 0, 2, 4, 3, 3, 5, 6
+        ]
+        expression = VGroup()
+        for i, j in enumerate(expression_to_d_expression_indices):
+            submob = pre_expression[j].copy()
+            if d_expression.expression_parts[i] == "2":
+                two = TexMobject("2")
+                two.replace(submob)
+                expression.add(two)
+            else:
+                expression.add(submob)
 
+        for mob in expression, d_expression:
+            mob.scale(1.2)
+            mob.next_to(
+                self.get_teacher().get_corner(UP+LEFT), UP,
+                buff = MED_LARGE_BUFF
+            )
+            mob.shift_onto_screen()
 
+        self.add(series)        
+        self.play(
+            next_video.shift, 0.5*DOWN,
+            next_video.highlight, YELLOW,
+            self.get_teacher().change_mode, "raise_right_hand"
+        )
+        self.dither()
+        self.play(
+            Write(expression),
+            *[
+                ApplyMethod(pi.change_mode, "pondering")
+                for pi in self.get_students()
+            ]
+        )
+        self.dither()
+        self.remove(expression)
+        self.play(Transform(expression, d_expression, path_arc = np.pi/2))
+        self.dither(3)
+
+class Chapter4Thanks(PatreonThanks):
+    CONFIG = {
+        "specific_patrons" : [
+            "Ali  Yahya",
+            "Meshal  Alshammari",
+            "CrypticSwarm    ",
+            "Ankit   Agarwal",
+            "Yu  Jun",
+            "Shelby  Doolittle",
+            "Dave    Nicponski",
+            "Damion  Kistler",
+            "Juan    Benet",
+            "Othman  Alikhan",
+            "Justin Helps",
+            "Markus  Persson",
+            "Dan Buchoff",
+            "Derek   Dai",
+            "Joseph  John Cox",
+            "Luc Ritchie",
+            "Nils Schneider",
+            "Mathew Bramson",
+            "Guido   Gambardella",
+            "Jerry   Ling",
+            "Mark    Govea",
+            "Vecht",
+            "Shimin Kuang",
+            "Rish    Kundalia",
+            "Achille Brighton",
+            "Kirk    Werklund",
+            "Ripta   Pasay",
+            "Felipe  Diniz",
+        ]
+    }
 
 
 

@@ -8,8 +8,82 @@ from mobject.tex_mobject import TextMobject
 from animation import Animation
 from animation.simple_animations import Rotating
 
-from topics.geometry import Circle, Line
+from topics.geometry import Circle, Line, Rectangle, Square
+from topics.three_dimensions import Cube
 
+
+class Laptop(VGroup):
+    CONFIG = {
+        "width" : 3,
+        "body_dimensions" : [4, 3, 0.05],
+        "screen_thickness" : 0.01,
+        "keyboard_width_to_body_width" : 0.9,
+        "keyboard_height_to_body_height" : 0.5,
+        "screen_width_to_screen_plate_width" : 0.9,
+        "key_color_kwargs" : {
+            "stroke_width" : 0,
+            "fill_color" : BLACK,
+            "fill_opacity" : 1,
+        },
+        "body_color" : LIGHT_GREY,
+        "shaded_body_color" : GREY,
+        "open_angle" : np.pi/4,
+    }
+    def generate_points(self):
+        body = Cube(side_length = 1)
+        for dim, scale_factor in enumerate(self.body_dimensions):
+            body.stretch(scale_factor, dim = dim)
+        body.scale_to_fit_width(self.width)
+        body.set_fill(self.shaded_body_color, opacity = 1)
+        body.sort_submobjects(lambda p : p[2])
+        body[-1].set_fill(self.body_color)
+        keyboard = VGroup(*[
+            VGroup(*[
+                Square(**self.key_color_kwargs)
+                for x in range(12-y%2)
+            ]).arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+            for y in range(4)
+        ]).arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+        keyboard.stretch_to_fit_width(
+            self.keyboard_width_to_body_width*body.get_width(),
+        )
+        keyboard.stretch_to_fit_height(
+            self.keyboard_height_to_body_height*body.get_height(),
+        )
+        keyboard.next_to(body, OUT, buff = 0.1*SMALL_BUFF)
+        keyboard.shift(MED_SMALL_BUFF*UP)
+        body.add(keyboard)
+
+        screen_plate = body.copy()
+        screen_plate.stretch(self.screen_thickness/self.body_dimensions[2], dim = 2)
+        screen = Rectangle(
+            stroke_width = 0,
+            fill_color = BLACK,
+            fill_opacity = 1,
+        )
+        screen.replace(screen_plate, stretch = True)
+        screen.scale_in_place(self.screen_width_to_screen_plate_width)
+        screen.next_to(screen_plate, OUT, buff = 0.1*SMALL_BUFF)
+        screen_plate.add(screen)
+        screen_plate.next_to(body, UP, buff = 0)
+        screen_plate.rotate(
+            self.open_angle, RIGHT, 
+            about_point = screen_plate.get_bottom()
+        )
+        self.screen_plate = screen_plate
+        self.screen = screen
+
+        axis = Line(
+            body.get_corner(UP+LEFT+OUT),
+            body.get_corner(UP+RIGHT+OUT),
+            color = BLACK,
+            stroke_width = 2
+        )
+        self.axis = axis
+
+        self.add(body, screen_plate, axis)
+        self.rotate(5*np.pi/12, LEFT)
+        self.rotate(np.pi/6, DOWN)
 
 class PatreonLogo(SVGMobject):
     CONFIG = {
