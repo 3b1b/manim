@@ -30,7 +30,7 @@ from eoc.graph_scene import *
 
 SINE_COLOR = BLUE
 X_SQUARED_COLOR = GREEN
-SUM_COLOR = RED
+SUM_COLOR = YELLOW
 PRODUCT_COLOR = YELLOW
 
 class Chapter3OpeningQuote(OpeningQuote):
@@ -79,13 +79,14 @@ class TransitionFromLastVideo(TeacherStudentsScene):
         )
         for rule in simple_rules:
             self.play(
-                Write(rule, run_time = 1),
+                Write(rule, run_time = 2),
                 self.get_teacher().change_mode, "raise_right_hand",
                 *[
                     ApplyMethod(pi.change_mode, "pondering")
                     for pi in self.get_students()
                 ]
             )
+            self.dither()
         self.dither(2)
         self.play(simple_rules.replace, last_video)
         self.play(
@@ -138,7 +139,10 @@ class TransitionFromLastVideo(TeacherStudentsScene):
             VGroup(*pre_decomposed_division[9:]),
         )
         for mob in subtraction, decomposed_subtraction, division, decomposed_division:
-            mob.next_to(self.get_teacher(), UP+LEFT)
+            mob.next_to(
+                VGroup(self.get_teacher(), self.get_students()[-1]),
+                UP, buff = MED_LARGE_BUFF
+            )
 
         top_group = VGroup(series, simple_rules, brace)
         combination_rules.save_state()
@@ -171,10 +175,10 @@ class TransitionFromLastVideo(TeacherStudentsScene):
         monster = TexMobject(
             "\\Big(",
             "e^{\\sin(x)} \\cdot",
-            "\\cos\\big(",
+            "\\cos\\Big(",
             "\\frac{1}{x^3}",
             " + x^3",
-            "\\big)",
+            "\\Big)",
             "\\Big)^4"
         )
         monster.next_to(self.get_pi_creatures(), UP)
@@ -186,12 +190,7 @@ class TransitionFromLastVideo(TeacherStudentsScene):
             monster[1],
             VGroup(monster[0], monster[6])
         ]
-        modes = [
-            "erm", "erm",
-            "confused", 
-            "sad", "sad",
-            "pleading",
-        ]
+        modes = 3*["erm"] + 3*["pleading"]
         for part, mode in zip(parts, modes):
             self.play(
                 FadeIn(part, submobject_mode = "lagged_start"),
@@ -201,11 +200,28 @@ class TransitionFromLastVideo(TeacherStudentsScene):
                     for pi in self.get_students()
                 ]
             )
-        self.dither(2)
+        self.dither()
+        self.change_student_modes(*["happy"]*3)
+        words = map(TextMobject, [
+            "composition", "product", 
+            "composition", "sum",
+            "composition"
+        ])
+
+        for word, part in zip(words, reversed(parts)):
+            word.highlight(YELLOW)
+            word.next_to(monster, UP)
+            self.play(
+                FadeIn(word),
+                part.scale_in_place, 1.2,
+                part.highlight, YELLOW
+            )
+            self.dither()
+            self.play(*map(FadeOut, [word, part]))
+        self.play(FadeOut(parts[0]))
 
         #Bring back combinations
         self.play(
-            FadeOut(monster),
             combination_rules.restore,
             *[
                 ApplyMethod(pi_creature.change_mode, "pondering")
@@ -214,7 +230,68 @@ class TransitionFromLastVideo(TeacherStudentsScene):
         )
         self.dither(2)
 
-class SumRule(GraphScene, ZoomedScene):
+class ComingUp(Scene):
+    def construct(self):
+        rect = Rectangle(height = 9, width = 16)
+        rect.set_stroke(WHITE)
+        rect.scale_to_fit_height(2*SPACE_HEIGHT-2)
+        title = TextMobject("Coming up...")
+        title.to_edge(UP)
+        rect.next_to(title, DOWN)
+
+        self.play(Write(title))
+        self.play(ShowCreation(rect))
+        self.dither()
+
+class PreSumRuleDiscussion(Scene):
+    def construct(self):
+        title = TextMobject("Sum rule")
+        title.to_edge(UP)
+        self.add(title)
+
+        specific = TexMobject(
+            "\\frac{d}{dx}(", "\\sin(x)", "+", "x^2", ")",
+            "=", "\\cos(x)", "+", "2x"
+        )
+        general = TexMobject(
+            "\\frac{d}{dx}(", "g(x)", "+", "h(x)", ")",
+            "=", "\\frac{dg}{dx}", "+", "\\frac{dh}{dx}"
+        )
+        for formula in specific, general:
+            formula[1].highlight(SINE_COLOR)
+            formula[6].highlight(SINE_COLOR)
+            formula[3].highlight(X_SQUARED_COLOR)
+            formula[8].highlight(X_SQUARED_COLOR)
+        VGroup(specific, general).arrange_submobjects(DOWN, buff = LARGE_BUFF)
+
+        #Add on rules
+        self.add(specific)
+        for i in 0, 4, 5:
+            self.add(general[i])
+        self.dither(2)
+        for indices in [(1, 2, 3), (6,), (7, 8)]:
+            self.play(*[
+                ReplacementTransform(
+                    specific[i].copy(), general[i]
+                )
+                for i in indices
+            ])
+            self.dither()
+
+        #Highlight parts
+        for i in 1, 3, -1, 6, 8:
+            if i < 0:
+                self.dither()
+            else:
+                part = specific[i]
+                self.play(
+                    part.highlight, YELLOW,
+                    part.scale_in_place, 1.2,
+                    rate_func = there_and_back
+                )
+        self.dither()
+
+class SumRule(GraphScene):
     CONFIG = {
         "x_labeled_nums" : [],
         "y_labeled_nums" : [],
@@ -222,35 +299,31 @@ class SumRule(GraphScene, ZoomedScene):
         "x_max" : 4,
         "x_axis_width" : 2*SPACE_WIDTH,
         "y_max" : 3,
-        "graph_origin" : 2.5*DOWN + 3.5*LEFT,
+        "graph_origin" : 2.5*DOWN + 2.5*LEFT,
         "graph_label_x_value" : 1.5,
         "example_input" : 0.5,
         "example_input_string" : "0.5",
-        "dx" : 0.02,
-        "zoomed_canvas_corner" : UP+LEFT,
-        "zoomed_canvas_corner_buff" : SMALL_BUFF,
-        "little_rectangle_start_position" : 2.5*LEFT,
-        "zoom_factor" : 10,
+        "dx" : 0.05,
+        "v_lines_x_min" : -1,
+        "v_lines_x_max" : 2,
+        "graph_scale_factor" : 2,
         "tex_scale_factor" : 0.8,
     }
     def construct(self):
         self.write_function()
         self.add_graphs()
-        self.ask_about_derivative()
-        self.add_v_lines()
-        self.show_df_graphically()
-        self.show_df_algebraically()
-        self.show_d_sine()
-        self.show_d_x_squared()
-        self.complete_derivative()
-        self.revisit_ss_groups()
+        self.zoom_in_on_graph()
+        self.show_example_stacking()
+        self.show_df()
+        self.expand_derivative()
 
     def write_function(self):
-        func_mob = TexMobject("f(x) = ", "\\sin(x)", "+", "x^2")
+        func_mob = TexMobject("f(x)", "=", "\\sin(x)", "+", "x^2")
         func_mob.scale(self.tex_scale_factor)
+        func_mob.highlight_by_tex("f(x)", SUM_COLOR)
         func_mob.highlight_by_tex("\\sin(x)", SINE_COLOR)
         func_mob.highlight_by_tex("x^2", X_SQUARED_COLOR)
-        func_mob.to_corner(UP+RIGHT)
+        func_mob.to_corner(UP+LEFT)
         self.add(func_mob)
 
         self.func_mob = func_mob
@@ -269,25 +342,12 @@ class SumRule(GraphScene, ZoomedScene):
             direction = UP+RIGHT,
             buff = 0,
         )
-        sine_label.scale(self.tex_scale_factor)
+        sine_label.scale_in_place(self.tex_scale_factor)
         parabola_label = self.get_graph_label(
             parabola, "x^2", x_val = self.graph_label_x_value,
         )
-        parabola_label.scale(self.tex_scale_factor)
-        sum_label = self.get_graph_label(
-            sum_graph, "f(x) = \\sin(x) + x^2", 
-            x_val = self.graph_label_x_value,
-            direction = LEFT,
-        )
-        sum_label.scale(
-            self.tex_scale_factor,
-            about_point = sum_label.get_corner(DOWN+RIGHT)
-        )
-        #Break up
-        sum_label = VGroup(
-            VGroup(*sum_label[:11]),
-            VGroup(*sum_label[11:])
-        )
+        parabola_label.scale_in_place(self.tex_scale_factor)
+
         graphs = VGroup(sine_graph, parabola)
         labels = VGroup(sine_label, parabola_label)
         for label in labels:
@@ -300,236 +360,302 @@ class SumRule(GraphScene, ZoomedScene):
             )
         self.dither()
 
-        sine_v_lines, parabox_v_lines = [
+        num_lines = (self.v_lines_x_max-self.v_lines_x_min)/self.dx
+        sine_v_lines, parabox_v_lines = v_line_sets = [
             self.get_vertical_lines_to_graph(
-                graph, x_max = 2, num_lines = 50,
+                graph, 
+                x_min = self.v_lines_x_min,
+                x_max = self.v_lines_x_max, 
+                num_lines = num_lines,
                 stroke_width = 2
             )
-            for graph in sine_graph, parabola
+            for graph in graphs
         ]
-        parabox_v_lines.shift(0.02*RIGHT)
-        self.play(ShowCreation(sine_v_lines), Animation(labels))
-        self.play(ShowCreation(parabox_v_lines), Animation(labels))
+        sine_v_lines.shift(0.02*RIGHT)
+        for v_lines in v_line_sets:
+            self.play(ShowCreation(v_lines), Animation(labels))
         self.dither()
-        self.play(*[
-            ApplyMethod(
-                l1.shift, l2.get_end()-l1.get_start()
-            )
-            for l1, l2, in zip(sine_v_lines, parabox_v_lines)
-        ] + [Animation(labels)])
+        self.play(*it.chain(
+            [
+                ApplyMethod(l2.move_to, l1.get_top(), DOWN)
+                for l1, l2, in zip(*v_line_sets)
+            ],
+            [graph.fade for graph in graphs],
+            [Animation(labels)]
+        ))
         self.dither()
 
-        # self.play(ReplacementTransform(graphs.copy(), sum_graph))
         self.play(ShowCreation(sum_graph))
-        self.play(Write(sum_label, run_time = 2))
         self.dither()
-
 
         self.sum_graph = sum_graph
         self.parabola = parabola
         self.sine_graph = sine_graph
-        self.sum_v_lines = VGroup(sine_v_lines, parabox_v_lines)
         self.graph_labels = labels
+        self.v_line_sets = v_line_sets
 
-    def ask_about_derivative(self):
-        deriv_q = TexMobject("{df ", "\\over dx}", "=", "???")
-        deriv_q.scale(self.tex_scale_factor)
-        deriv_q.next_to(self.func_mob, DOWN)
-        self.play(Write(deriv_q))
+    def zoom_in_on_graph(self):
+        graph_parts = VGroup(
+            self.axes, 
+            self.sine_graph, self.parabola, self.sum_graph,
+            *self.v_line_sets
+        )
+        graph_parts.remove(self.func_mob, *self.graph_labels)
+        graph_parts.generate_target()
+        self.graph_labels.generate_target()
+        for mob in graph_parts, self.graph_labels:
+            mob.target.scale(
+                self.graph_scale_factor, 
+                about_point = self.graph_origin,
+            )
+        for mob in self.graph_labels.target:
+            mob.scale(
+                1./self.graph_scale_factor,
+                about_point = mob.get_bottom()
+            )
+            mob.shift_onto_screen()
+        self.play(*map(MoveToTarget, [
+            graph_parts, self.graph_labels
+        ]))
         self.dither()
 
-        self.deriv_q = deriv_q
-
-    def add_v_lines(self):
-        v_line, nudged_v_line = lines = VGroup(*[
-            self.get_vertical_line_to_graph(
-                x, self.sum_graph,
-                line_class = DashedLine,
-                dashed_segment_length = 0.025,
-                color = WHITE
-            )
-            for x in self.example_input, self.example_input+self.dx
-        ])
-        dots = [
-            Dot(line.get_bottom(), radius = 0.03, color = YELLOW)
-            for line in lines
+    def show_example_stacking(self):
+        v_line_sets = self.v_line_sets
+        num_lines = len(v_line_sets[0])
+        example_v_lines, nudged_v_lines = [
+            VGroup(*[v_lines[index] for v_lines in v_line_sets])
+            for index in (num_lines/2, num_lines/2+1)
         ]
-        labels = [
-            TexMobject(
-                str(self.example_input) + s
-            ).next_to(dot, DOWN+vect, buff = MED_LARGE_BUFF)
-            for s, dot, vect in zip(
-                ["", "+dx"], dots, [LEFT, RIGHT]
-            )
+        for line in nudged_v_lines:
+            line.save_state()
+        sine_lines, parabola_lines = [
+            VGroup(example_v_lines[i], nudged_v_lines[i])
+            for i in 0, 1
         ]
-        arrows = [
-            Arrow(
-                label.get_corner(UP+vect), dot,
+        faders = VGroup(*filter(
+            lambda line : line not in example_v_lines,
+            it.chain(*v_line_sets)
+        ))
+        label_groups = []
+        for line, tex, vect in zip(sine_lines, ["", "+dx"], [LEFT, RIGHT]):
+            dot = Dot(line.get_bottom(), radius = 0.03, color = YELLOW)
+            label = TexMobject(
+                "x=" + str(self.example_input) + tex
+            )
+            label.next_to(dot, DOWN+vect, buff = MED_LARGE_BUFF)
+            arrow = Arrow(
+                label.get_corner(UP-vect), dot,
                 buff = SMALL_BUFF,
                 color = WHITE,
                 tip_length = 0.1
             )
-            for label, dot, vect in zip(labels, dots, [RIGHT, LEFT])
+            label_groups.append(VGroup(label, arrow, dot))
+
+        line_tex_direction_triplets = [
+            (sine_lines[0], "\\sin(0.5)", LEFT),
+            (sine_lines[1], "\\sin(0.5+dx)", RIGHT),
+            (parabola_lines[0], "(0.5)^2", LEFT),
+            (parabola_lines[1], "(0.5+dx)^2", RIGHT),
         ]
-
-        self.play(
-            FadeOut(self.sum_v_lines),
-            Animation(self.graph_labels)
-        )
-        for line, dot, label, arrow in zip(lines, dots, labels, arrows):
-            self.play(
-                Write(label),
-                ShowCreation(arrow)
+        for line, tex, direction in line_tex_direction_triplets:
+            line.brace = Brace(
+                line, direction,
+                buff = SMALL_BUFF,
+                min_num_quads = 2,
             )
-            self.play(
-                ShowCreation(line),
-                ShowCreation(dot)
+            line.brace.highlight(line.get_color())
+            line.brace.add_background_rectangle()
+            line.brace_text = line.brace.get_text("$%s$"%tex)
+            line.brace_text.scale(
+                self.tex_scale_factor,
+                about_point = line.brace_text.get_edge_center(-direction)
             )
-            self.dither()
+            line.brace_text.add_background_rectangle()
+            line.brace_anim = MaintainPositionRelativeTo(
+                VGroup(line.brace, line.brace_text), line
+            )
 
-    def show_df_graphically(self):
-        ss_group = self.get_secant_slope_group(
-            self.example_input, self.sum_graph,
-            dx = self.dx,
-            dx_label = "dx",
-            df_label = "df",
-            include_secant_line = False
-        )
-
-        self.animate_activate_zooming()
+        ##Look at example lines
         self.play(
-            self.little_rectangle.move_to, ss_group,
+            example_v_lines.set_stroke, None, 4,
+            faders.fade,
+            Animation(self.graph_labels),
+            Write(label_groups[0]),
         )
-        self.play(Write(ss_group))
+        for line in example_v_lines:
+            line.save_state()
+        self.dither()
+        self.play(
+            GrowFromCenter(sine_lines[0].brace),
+            Write(sine_lines[0].brace_text),
+        )
+        self.dither()
+        self.play(
+            sine_lines[0].shift, UP+4*LEFT,
+            sine_lines[0].brace_anim,
+            parabola_lines[0].move_to, sine_lines[0], DOWN
+        )
+        self.dither()
+        parabola_lines[0].brace_anim.update(1)
+        self.play(
+            GrowFromCenter(parabola_lines[0].brace),
+            Write(parabola_lines[0].brace_text),
+        )
+        self.dither()
+        self.play(*it.chain(*[
+            [line.restore, line.brace_anim]
+            for line in example_v_lines
+        ]))
+
+        ## Nudged_lines
+        self.play(
+            Write(label_groups[1]),
+            *it.chain(*[
+                [line.restore, line.set_stroke, None, 4]
+                for line in nudged_v_lines
+            ])
+        )
+        self.dither()
+        for line in nudged_v_lines:
+            self.play(
+                GrowFromCenter(line.brace),
+                Write(line.brace_text)
+            )
         self.dither()
 
-        self.ss_group = ss_group
+        self.sine_lines = sine_lines
+        self.parabola_lines = parabola_lines
 
-    def show_df_algebraically(self):
-        deriv = TexMobject(
+    def show_df(self):
+        sine_lines = self.sine_lines
+        parabola_lines = self.parabola_lines
+
+        df, equals, d_sine, plus, d_x_squared = deriv_mob = TexMobject(
             "df", "=", "d(\\sin(x))", "+", "d(x^2)"
         )
-        deriv.scale(self.tex_scale_factor)
-        deriv.next_to(self.deriv_q, DOWN, buff = MED_LARGE_BUFF)
-        deriv.highlight_by_tex("df", SUM_COLOR)
-        deriv.highlight_by_tex("d(\\sin(x))", SINE_COLOR)
-        deriv.highlight_by_tex("d(x^2)", X_SQUARED_COLOR)
-
-        self.play(FocusOn(self.deriv_q))
-        self.play(ReplacementTransform(
-            self.deriv_q[0].copy(),
-            deriv[0]
-        ))
-        self.play(Write(VGroup(*deriv[1:])))
-        self.dither()
-
-        self.deriv = deriv
-
-    def show_d_sine(self):
-        ss_group = self.get_secant_slope_group(
-            self.example_input, self.sine_graph,
-            dx = self.dx,
-            dx_label = "dx",
-            df_label = "\\cos(0.5)dx",
-            include_secant_line = False
+        df.highlight(SUM_COLOR)
+        d_sine.highlight(SINE_COLOR)
+        d_x_squared.highlight(X_SQUARED_COLOR)
+        deriv_mob.scale(self.tex_scale_factor)
+        deriv_mob.next_to(
+            self.func_mob, DOWN, 
+            buff = MED_LARGE_BUFF, 
+            aligned_edge = LEFT
         )
-        for mob, vect in (ss_group.dx_label, UP), (ss_group.df_label, LEFT):
-            mob.scale(4, about_point = mob.get_edge_center(vect))
+        for submob in deriv_mob:
+            submob.add_to_back(BackgroundRectangle(submob))
 
-        d_sine = self.deriv[2]
-        brace = Brace(d_sine)
-        cosine_dx = TexMobject("\\cos(x)", "dx")
-        cosine_dx.scale(self.tex_scale_factor)
-        cosine_dx.next_to(brace, DOWN)
-        cosine_dx.highlight(d_sine.get_color())
-
+        df_lines = self.show_difference(parabola_lines, df, equals)
+        self.dither()
+        self.play(FadeOut(df_lines))
         self.play(
-            GrowFromCenter(brace),
-            Write(cosine_dx)
+            parabola_lines[0].shift,
+            (parabola_lines[1].get_bottom()[1]-parabola_lines[0].get_bottom()[1])*UP,
+            parabola_lines[0].brace_anim
         )
-        self.dither()
-        self.play(
-            self.little_rectangle.move_to, ss_group,
-        )
-        self.dither()
-        self.play(Write(ss_group))
+        d_sine_lines = self.show_difference(sine_lines, d_sine, plus)
+        d_x_squared_lines = self.show_difference(parabola_lines, d_x_squared, VGroup())
         self.dither()
 
-        self.cosine = cosine_dx[0]
-        self.sine_ss_group = ss_group
+        self.deriv_mob = deriv_mob
+        self.d_sine_lines = d_sine_lines
+        self.d_x_squared_lines = d_x_squared_lines
 
-    def show_d_x_squared(self):
-        ss_group = self.get_secant_slope_group(
-            self.example_input, self.parabola,
-            dx = self.dx,
-            dx_label = "dx",
-            df_label = "2(0.5)dx",
-            include_secant_line = False
-        )
-        for mob, vect in (ss_group.dx_label, UP), (ss_group.df_label, LEFT):
-            mob.scale(3, about_point = mob.get_edge_center(vect))
+    def show_difference(self, v_lines, target_tex, added_tex):
+        distance = v_lines[1].get_top()[1]-v_lines[0].get_top()[1]
+        h_lines = VGroup(*[
+            DashedLine(ORIGIN, 2*RIGHT, stroke_width = 3)
+            for x in range(2)
+        ])
+        h_lines.arrange_submobjects(DOWN, buff = distance)
+        h_lines.move_to(v_lines[1].get_top(), UP+RIGHT)
 
-        d_x_squraed = self.deriv[4]
-        brace = Brace(d_x_squraed)
-        two_x_dx = TexMobject("2x", "\\,dx")
-        two_x_dx.scale(self.tex_scale_factor)
-        two_x_dx.next_to(brace, DOWN)
-        two_x_dx.highlight(d_x_squraed.get_color())
+        brace = Brace(h_lines, LEFT)
+        brace_text = target_tex.copy()
+        brace_text.next_to(brace, LEFT)
 
-        self.play(FocusOn(two_x_dx))
-        self.play(
-            GrowFromCenter(brace),
-            Write(two_x_dx)
-        )
+        self.play(ShowCreation(h_lines))
+        self.play(GrowFromCenter(brace), Write(brace_text))
         self.dither()
         self.play(
-            self.little_rectangle.move_to, ss_group,
+            ReplacementTransform(brace_text.copy(), target_tex),
+            Write(added_tex)
         )
-        self.dither()
-        self.play(Write(ss_group))
-        self.dither()
+        return VGroup(h_lines, brace, brace_text)
 
-        self.two_x = two_x_dx[0]
-        self.x_squared_ss_group = ss_group
+    def expand_derivative(self):
+        expanded_deriv = TexMobject(
+            "df", "=", "\\cos(x)", "\\,dx", "+", "2x", "\\,dx"
+        )
+        expanded_deriv.highlight_by_tex("df", SUM_COLOR)
+        VGroup(*expanded_deriv[2:4]).highlight(SINE_COLOR)
+        VGroup(*expanded_deriv[5:7]).highlight(X_SQUARED_COLOR)
+        expanded_deriv.scale(self.tex_scale_factor)
+        expanded_deriv.next_to(
+            self.deriv_mob, DOWN,
+            buff = MED_LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+        background_rect = BackgroundRectangle(expanded_deriv)
 
-    def complete_derivative(self):
-        cosine = self.cosine.copy()
-        two_x = self.two_x.copy()
-        lhs = VGroup(*self.deriv_q[:3])
-        to_fade = VGroup(*self.deriv_q[3:])
-        for mob in cosine, two_x, lhs:
-            mob.generate_target()
-        lhs.target.next_to(self.func_mob, DOWN, aligned_edge = LEFT)
-        cosine.target.next_to(lhs.target)
-        plus = TexMobject("+").scale(self.tex_scale_factor)
-        plus.next_to(cosine.target)
-        two_x.target.next_to(plus)
+        rearranged_deriv = TexMobject(
+            "{df \\over", "dx}", "=", "\\cos(x)", "+", "2x"
+        )
+        rearranged_deriv[0].highlight(SUM_COLOR)
+        rearranged_deriv[3].highlight(SINE_COLOR)
+        rearranged_deriv[5].highlight(X_SQUARED_COLOR)
+        rearranged_deriv.scale(self.tex_scale_factor)
+        rearranged_deriv.move_to(expanded_deriv, UP+LEFT)
+        deriv_target_indices = [0, 2, 3, 1, 4, 5, 1]
 
-        box = Rectangle(color = YELLOW)
-        box.replace(VGroup(lhs.target, two_x.target), stretch = True)
-        box.scale_in_place(1.2)
-
-        self.play(FocusOn(self.deriv_q))
         self.play(
-            Write(plus),
-            FadeOut(
-                to_fade, 
-                rate_func = squish_rate_func(smooth, 0, 0.5)
+            FadeIn(
+                background_rect, 
+                rate_func = squish_rate_func(smooth, 0.6, 1)
             ),
-            *map(MoveToTarget, [cosine, two_x, lhs]),
-            run_time = 2
+            Write(expanded_deriv)
         )
-        to_fade.highlight(BLACK)
-        self.play(ShowCreation(box))
-        self.dither(2)
+        self.dither()
 
-    def revisit_ss_groups(self):
-        for ss_group in self.sine_ss_group, self.ss_group:
+        tex_group_pairs = [
+            ("\\cos(0.5)dx", self.d_sine_lines),
+            ("2(0.5)dx", self.d_x_squared_lines),
+        ]
+        def indicate(mob):
             self.play(
-                self.little_rectangle.move_to, ss_group,
-                run_time = 2
+                mob.highlight, YELLOW,
+                mob.scale_in_place, 1.2,
+                rate_func = there_and_back
             )
-            self.dither(2)
+        for tex, group in tex_group_pairs:
+            old_label = group[-1]
+            new_label = TexMobject(tex)
+            pre_dx = VGroup(*new_label[:-2])
+            dx = VGroup(*new_label[-2:])
+            new_label.add_background_rectangle()
+            new_label.scale(self.tex_scale_factor)
+            new_label.move_to(old_label, RIGHT)
+            new_label.highlight(old_label.get_color())
+
+            self.play(FocusOn(old_label))
+            indicate(old_label)
+            self.dither()
+            self.play(FadeOut(old_label))
+            self.play(FadeIn(new_label))
+            self.dither()
+            indicate(dx)
+            self.dither()
+            indicate(pre_dx)
+            self.dither()
+        self.dither()
+        self.play(*[
+            Transform(
+                expanded_deriv[i], rearranged_deriv[j],
+                path_arc = -np.pi/2
+            )
+            for i, j in enumerate(deriv_target_indices)
+        ])
+        self.dither()
 
 class DiscussProducts(TeacherStudentsScene):
     def construct(self):
@@ -631,6 +757,15 @@ class NotGraphsForProducts(GraphScene):
         )
         self.dither()
 
+class ConfusedMorty(Scene):
+    def construct(self):
+        morty = Mortimer()
+        self.add(morty)
+        self.dither()
+        self.play(morty.change_mode, "confused")
+        self.play(Blink(morty))
+        self.dither(2)
+
 class IntroduceProductAsArea(ReconfigurableScene):
     CONFIG = {
         "top_func" : np.sin,
@@ -697,7 +832,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
         )
         scale_factor = self.x_slider.get_width()/self.slider_x_max
         graph.scale(scale_factor)
-        graph.move_to(x_axis.number_to_point(0), LEFT)
+        graph.move_to(x_axis.number_to_point(0), DOWN+LEFT)
 
         label = TexMobject("\\sin(x)")
         label.highlight(SINE_COLOR)

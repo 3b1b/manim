@@ -97,7 +97,7 @@ class GraphScene(Scene):
             self.play(Write(VGroup(x_axis, y_axis)))
         else:
             self.add(x_axis, y_axis)
-        self.x_axis, self.y_axis = x_axis, y_axis
+        self.x_axis, self.y_axis = self.axes = VGroup(x_axis, y_axis)
         self.default_graph_colors = it.cycle(self.default_graph_colors)
 
     def coords_to_point(self, x, y):
