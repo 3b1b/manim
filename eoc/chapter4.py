@@ -905,8 +905,8 @@ class IntroduceProductAsArea(ReconfigurableScene):
         self.dx = original_dx
         df_boxes = self.get_df_boxes()
         right_box, corner_box, right_box = df_boxes
-        df_box_labels = self.get_df_box_labels(df_boxes)
 
+        self.play(FocusOn(nudge_label_group))
         self.play(*map(GrowFromCenter, nudge_label_group))
         self.animate_x_change(
             self.default_x+self.dx,
@@ -918,22 +918,15 @@ class IntroduceProductAsArea(ReconfigurableScene):
         self.play(
             ReplacementTransform(thin_df_boxes, df_boxes),
             VGroup(*labels[1]).shift, right_box.get_width()*RIGHT,
-            *map(GrowFromCenter, df_box_labels)
         )
         self.play(
             df_boxes.space_out_submobjects, 1.1,
             df_boxes.move_to, box, UP+LEFT,
-            *[
-                MaintainPositionRelativeTo(label, box)
-                for label, box in zip(
-                    df_box_labels, [right_box, corner_box]
-                )
-            ]
         )
         self.dither()
 
         self.df_boxes = df_boxes
-        self.df_box_labels = df_box_labels
+        self.df_box_labels = self.get_df_box_labels(df_boxes)
         self.x_slider.add(nudge_label_group)
 
     def get_nudge_label_group(self):
@@ -1049,6 +1042,8 @@ class IntroduceProductAsArea(ReconfigurableScene):
     def highlight_boxes_and_label(self, boxes, label):
         boxes.save_state()
         label.save_state()
+
+        self.play(GrowFromCenter(label))
         self.play(
             boxes.highlight, RED,
             label.highlight, RED,
@@ -1180,16 +1175,44 @@ class IntroduceProductAsArea(ReconfigurableScene):
             new_deriv.next_to(self.deriv, DOWN, buff = MED_LARGE_BUFF)
             new_deriv.shift_onto_screen()
 
+        def indicate(mob):
+            self.play(
+                mob.scale_in_place, 1.2,
+                mob.highlight, YELLOW,
+                rate_func = there_and_back
+            )
+
+
         for index in 3, 6:
             self.deriv.submobjects.insert(
                 index+1, self.deriv[index].copy()
             )
+        non_deriv_indices = range(len(expanded_deriv))
+        for indices in [(3, 4), (7, 8)]:
+            top_part = VGroup()
+            bottom_part = VGroup()            
+            for i in indices:
+                non_deriv_indices.remove(i)
+                top_part.add(self.deriv[i].copy())
+                bottom_part.add(expanded_deriv[i])
+            self.play(top_part.move_to, bottom_part)
+            self.dither()
+            indicate(top_part)
+            self.dither()
+            self.play(ReplacementTransform(top_part, bottom_part))
+            self.dither()
+        top_part = VGroup()
+        bottom_part = VGroup()
+        for i in non_deriv_indices:
+            top_part.add(self.deriv[i].copy())
+            bottom_part.add(expanded_deriv[i])
         self.play(ReplacementTransform(
-            self.deriv.copy(), expanded_deriv
+            top_part, bottom_part
         ))
+
         self.dither()
         self.play(*[
-            Transform(
+            ReplacementTransform(
                 expanded_deriv[i], final_deriv[j],
                 path_arc = -np.pi/2
             )
@@ -1205,6 +1228,9 @@ class IntroduceProductAsArea(ReconfigurableScene):
                 (8, 1),
             ]
         ])
+        self.dither()
+        for index in 0, 1, 3, 4, 6, 7:
+            indicate(final_deriv[index])
         self.dither()
 
     def write_derivative_abstractly(self):
