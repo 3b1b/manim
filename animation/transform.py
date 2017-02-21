@@ -182,6 +182,19 @@ class FocusOn(Transform):
 
         Transform.__init__(self, big_dot, little_dot, **kwargs)
 
+class Indicate(Transform):
+    CONFIG = {
+        "rate_func" : there_and_back,
+        "scale_factor" : 1.2,
+        "color" : YELLOW,
+    }
+    def __init__(self, mobject, **kwargs):
+        digest_config(self, kwargs)
+        target = mobject.copy()
+        target.scale_in_place(self.scale_factor)
+        target.highlight(YELLOW)
+        Transform.__init__(self, mobject, target, **kwargs)
+
 class Rotate(ApplyMethod):
     CONFIG = {
         "in_place" : False,

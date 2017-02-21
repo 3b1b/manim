@@ -230,6 +230,45 @@ class TransitionFromLastVideo(TeacherStudentsScene):
         )
         self.dither(2)
 
+class DampenedSpring(Scene):
+    def construct(self):
+        compact_spring, extended_spring = [
+            ParametricFunction(
+                lambda t : (t/denom)*RIGHT+np.sin(t)*UP+np.cos(t)*OUT,
+                t_max = 12*np.pi,
+                num_anchor_points = 100,
+                color = GREY,
+            ).shift(3*LEFT)
+            for denom in 12.0, 2.0
+        ]
+        for spring in compact_spring, extended_spring:
+            spring.scale(0.5)
+            spring.rotate(np.pi/6, UP)
+            spring.highlight(GREY)
+            spring.shift(-spring.points[0] + 3*LEFT)
+
+        moving_spring = compact_spring.copy()
+
+        def update_spring(spring, a):
+            spring.interpolate(
+                compact_spring, 
+                extended_spring,
+                0.5*(np.exp(-4*a)*np.cos(40*a)+1)
+            )
+
+        equation = TexMobject(
+            "\\text{Length} = 2 + e^{-4t}\\cos(20t)"
+        )
+        equation.to_edge(UP)
+
+
+        self.add(moving_spring, equation)
+        self.play(UpdateFromAlphaFunc(
+            moving_spring, update_spring, run_time = 10,
+            rate_func = None
+        ))
+        self.dither()
+
 class ComingUp(Scene):
     def construct(self):
         rect = Rectangle(height = 9, width = 16)
@@ -1183,7 +1222,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
             )
 
 
-        for index in 3, 6:
+        for index in 6, 3:
             self.deriv.submobjects.insert(
                 index+1, self.deriv[index].copy()
             )
@@ -1359,6 +1398,13 @@ class IntroduceProductAsArea(ReconfigurableScene):
             result.add(VGroup(brace, label))
         return result
 
+class WriteDXSquared(Scene):
+    def construct(self):
+        term = TexMobject("(...)(dx)^2")
+        term.highlight(RED)
+        self.play(Write(term))
+        self.dither()
+
 class MneumonicExample(TeacherStudentsScene):
     def construct(self):
         d, left, right, rp = deriv_q = TexMobject(
@@ -1382,22 +1428,41 @@ class MneumonicExample(TeacherStudentsScene):
             self.get_teacher().change_mode, "raise_right_hand"
         )
         self.change_student_modes(*["pondering"]*3)
-        for i, j, vect in [(0, 2, RIGHT), (2, 5, LEFT)]:
-            these_words = VGroup(*words[i:j])
-            these_terms = VGroup(*deriv[i:j])
-            self.play(
-                these_words.next_to, these_terms, DOWN,
-                MED_LARGE_BUFF, vect
-            )
-            self.play(ReplacementTransform(
-                these_words.copy(), these_terms
-            ))
-            self.dither()
-        self.play(*it.chain(*[
-            [pi.change_mode, "confused", pi.look_at, deriv_q]
-            for pi in self.get_pi_creatures()
-        ]))
+
+        left_words = VGroup(*words[:2])
+        left_terms = VGroup(*deriv[:2])
+        self.play(
+            left_words.next_to, left_terms, DOWN,
+            MED_LARGE_BUFF, RIGHT
+        )
+        self.play(ReplacementTransform(
+            left_words.copy(), left_terms
+        ))
         self.dither()
+        self.play(*map(Indicate, [left, left_words[0], left_terms[0]]))
+        self.dither()
+        self.play(*map(Indicate, [right, left_words[1], left_terms[1]]))
+        self.dither()
+
+        right_words = VGroup(*words[2:])
+        right_terms = VGroup(*deriv[2:])
+        self.play(
+            right_words.next_to, right_terms, DOWN,
+            MED_LARGE_BUFF, LEFT
+        )
+        self.play(ReplacementTransform(
+            right_words.copy(), right_terms
+        ))
+        self.dither()
+        self.play(*map(Indicate, [right, right_words[1], right_terms[1]]))
+        self.dither()
+        self.play(*map(Indicate, [left, right_words[2], right_terms[2]]))
+        self.dither(3)
+
+        self.play(self.get_teacher().change_mode, "shruggie")
+        self.dither()
+        self.change_student_modes(*["confused"]*3)
+        self.dither(3)
 
 class ConstantMultiplication(TeacherStudentsScene):
     def construct(self):
@@ -1707,16 +1772,24 @@ class ThreeLinesChainRule(ReconfigurableScene):
         )
         self.__dict__.update(self.__class__.CONFIG)
         self.dither()
+        for mob in dsine_value:
+            self.play(Indicate(mob))
+            self.dither()
 
         two_x_dx = dx_squared_value[0]
         dx_squared = dsine_value[1]
         two_x_dx_copy = VGroup(*two_x_dx[1:]).copy()
+        self.play(FocusOn(two_x_dx))
         self.play(Write(two_x_dx))
         self.play(
             two_x_dx_copy.move_to, dx_squared, LEFT,
             dx_squared.next_to, dx_squared, UP,
+            run_time = 2
         )
         self.play(FadeOut(dx_squared))
+        for sublist in two_x_dx_copy[:2], two_x_dx_copy[2:]:
+            self.play(Indicate(VGroup(*sublist)))
+            self.dither()
         self.dither(2)
 
         self.final_derivative = dsine_value
@@ -2028,14 +2101,34 @@ class GeneralizeChainRule(Scene):
         equals_dg_dx.next_to(dh_dx)
         self.play(Write(equals_dg_dx))
         self.play(Blink(morty))
+        self.dither(2)
+
+        ##More than a notational trick
+        self.play(
+            PiCreatureSays(morty, """
+                This is more than a
+                notational trick
+            """),
+            VGroup(
+                dg_dh, dh_dx, equals_dg_dx, strikes,
+                *general[:5]
+            ).shift, DOWN,
+            FadeOut(example)
+        )
+        self.dither()
+        self.play(Blink(morty))
         self.dither()
 
 class WatchingVideo(PiCreatureScene):
     def construct(self):
-        randy = self.get_primary_pi_creature()
         laptop = Laptop()
-        laptop.next_to(randy.get_corner(UP+RIGHT), RIGHT)
+        laptop.scale(2)
+        laptop.to_corner(UP+RIGHT)
+        randy = self.get_primary_pi_creature()
+        randy.move_to(laptop, DOWN+LEFT)
+        randy.shift(MED_SMALL_BUFF*UP)
         randy.look_at(laptop.screen)
+
 
         formulas = VGroup(*[
             TexMobject("\\frac{d}{dx}\\left( %s \\right)"%s)
@@ -2072,8 +2165,6 @@ class WatchingVideo(PiCreatureScene):
     def create_pi_creatures(self):
         return [Randolph().shift(DOWN+RIGHT)]
 
-
-
 class NextVideo(TeacherStudentsScene):
     def construct(self):
         series = VideoSeries()
@@ -2107,6 +2198,15 @@ class NextVideo(TeacherStudentsScene):
             )
             mob.shift_onto_screen()
 
+        axes = Axes(x_min = -3, x_max = 3, color = GREY)
+        axes.add(Circle(color = YELLOW))
+        line = Line(np.sqrt(2)*UP, np.sqrt(2)*RIGHT)
+        line.scale_in_place(1.5)
+        axes.add(line)
+
+        axes.scale(0.5)
+        axes.next_to(d_expression, LEFT)
+
         self.add(series)        
         self.play(
             next_video.shift, 0.5*DOWN,
@@ -2121,10 +2221,20 @@ class NextVideo(TeacherStudentsScene):
                 for pi in self.get_students()
             ]
         )
+        self.play(FadeIn(axes))
         self.dither()
         self.remove(expression)
         self.play(Transform(expression, d_expression, path_arc = np.pi/2))
-        self.dither(3)
+        self.dither()
+        self.play(
+            Rotate(
+                line, np.pi/4, 
+                about_point = axes.get_center(),
+                rate_func = wiggle,
+                run_time = 3
+            )
+        )
+        self.dither(2)
 
 class Chapter4Thanks(PatreonThanks):
     CONFIG = {
@@ -2160,7 +2270,25 @@ class Chapter4Thanks(PatreonThanks):
         ]
     }
 
-
+class Thumbnail(IntroduceProductAsArea):
+    CONFIG = {
+        "default_x" : 0.8,
+        "dx" : 0.05
+    }
+    def construct(self):
+        self.x_slider = self.get_x_slider(self.default_x)
+        blg = self.box_label_group = self.get_box_label_group(
+            self.default_x
+        )
+        df_boxes = self.get_df_boxes()
+        df_boxes.space_out_submobjects(1.1)
+        df_boxes.move_to(blg[0], UP+LEFT)
+        blg[1][1].next_to(df_boxes[-1], RIGHT)
+        df_box_labels = self.get_df_box_labels(df_boxes)
+        blg.add(df_boxes, df_box_labels)
+        blg.scale_to_fit_height(2*SPACE_HEIGHT-2*MED_LARGE_BUFF)
+        blg.center()
+        self.add(blg)
 
 
 
