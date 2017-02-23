@@ -12,6 +12,37 @@ from topics.geometry import Circle, Line, Rectangle, Square
 from topics.three_dimensions import Cube
 
 
+class PartyHat(SVGMobject):
+    CONFIG = {
+        "file_name" : "party_hat",
+        "height" : 1.5,
+        "pi_creature" : None,
+        "stroke_width" : 0,
+        "fill_opacity" : 1,
+        "propogate_style_to_family" : True,
+        "frills_color" : MAROON_B,
+        "cone_color" : RED,
+        "dots_color" : YELLOW,
+    }
+    NUM_FRILLS = 7
+    NUM_DOTS = 6
+    def __init__(self, **kwargs):
+        SVGMobject.__init__(self, **kwargs)
+        self.scale_to_fit_height(self.height)
+        if self.pi_creature is not None:
+            self.next_to(self.pi_creature.eyes, UP, buff = 0)
+
+        self.frills = VGroup(*self[:self.NUM_FRILLS])
+        self.cone = self[self.NUM_FRILLS]
+        self.dots = VGroup(*self[self.NUM_FRILLS+1:])
+
+        self.frills.highlight(self.frills_color)
+        self.cone.highlight(self.cone_color)
+        self.dots.highlight(self.dots_color)
+
+
+
+
 class Laptop(VGroup):
     CONFIG = {
         "width" : 3,
