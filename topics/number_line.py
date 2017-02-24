@@ -176,7 +176,7 @@ class NumberPlane(VMobject):
                     self.main_lines.add(line1, line2)
                 else:
                     self.secondary_lines.add(line1, line2)
-        self.add(self.axes, self.main_lines, self.secondary_lines)
+        self.add(self.secondary_lines, self.main_lines, self.axes)
         self.stretch(self.space_unit_to_x_unit, 0)
         self.stretch(self.space_unit_to_y_unit, 1)
         #Put x_axis before y_axis
