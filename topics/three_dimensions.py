@@ -1,30 +1,19 @@
 
 from helpers import *
 
-from mobject.vectorized_mobject import VGroup
+from mobject.vectorized_mobject import VGroup, VMobject
 from topics.geometry import Square
 from scene import Scene
 from camera import Camera
 
 class ThreeDCamera(Camera):
     CONFIG = {
-        "sun_vect" : UP+LEFT,
+        "sun_vect" : 3*UP+LEFT,
         "shading_factor" : 0.5,
     }
     def __init__(self, *args, **kwargs):
         Camera.__init__(self, *args, **kwargs)
         self.unit_sun_vect = self.sun_vect/np.linalg.norm(self.sun_vect)
-
-    def display_multiple_vectorized_mobjects(self, vmobjects):
-        def cmp_vmobs(*vmobs):
-            return cmp(*[
-                vm.get_edge_center(IN)[2]
-                for vm in vmobs
-            ])
-        Camera.display_multiple_vectorized_mobjects(
-            self, 
-            sorted(vmobjects, cmp = cmp_vmobs)
-        )
 
     def get_stroke_color(self, vmobject):
         return Color(rgb = self.get_shaded_rgb(
@@ -59,6 +48,19 @@ class ThreeDCamera(Camera):
             return OUT
         return normal/length
 
+    def display_multiple_vectorized_mobjects(self, vmobjects):
+        def z_cmp(*vmobs):
+            if all([hasattr(vm, "part_of_three_d_mobject") for vm in vmobs]):
+                return cmp(*[
+                    vm.get_edge_center(IN)[2]
+                    for vm in vmobs
+                ])
+            else:
+                return 0
+        Camera.display_multiple_vectorized_mobjects(
+            self, sorted(vmobjects, cmp = z_cmp)
+        )
+
 
 class ThreeDScene(Scene):
     CONFIG = {
@@ -67,7 +69,13 @@ class ThreeDScene(Scene):
 
 ##############
 
-class Cube(VGroup):
+class ThreeDMobject(VMobject):
+    def __init__(self, **kwargs):
+        VMobject.__init__(self, **kwargs)
+        for submobject in self.submobject_family():
+            submobject.part_of_three_d_mobject = True
+
+class Cube(ThreeDMobject):
     CONFIG = {
         "fill_opacity" : 0.75,
         "fill_color" : BLUE,
