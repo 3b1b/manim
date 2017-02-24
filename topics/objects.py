@@ -20,9 +20,9 @@ class PartyHat(SVGMobject):
         "stroke_width" : 0,
         "fill_opacity" : 1,
         "propogate_style_to_family" : True,
-        "frills_color" : MAROON_B,
+        "frills_colors" : [MAROON_B, PURPLE],
         "cone_color" : RED,
-        "dots_color" : YELLOW,
+        "dots_colors" : [YELLOW],
     }
     NUM_FRILLS = 7
     NUM_DOTS = 6
@@ -36,9 +36,9 @@ class PartyHat(SVGMobject):
         self.cone = self[self.NUM_FRILLS]
         self.dots = VGroup(*self[self.NUM_FRILLS+1:])
 
-        self.frills.highlight(self.frills_color)
+        self.frills.gradient_highlight(*self.frills_colors)
         self.cone.highlight(self.cone_color)
-        self.dots.highlight(self.dots_color)
+        self.dots.gradient_highlight(*self.dots_colors)
 
 
 
