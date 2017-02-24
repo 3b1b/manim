@@ -307,16 +307,10 @@ class SymmetriesOfSquare(ThreeDScene):
         },
     }
     def construct(self):
-        ##REMOVE##
-        should_skip_animations = self.skip_animations
-        self.skip_animations = True
-        ##
-
         self.add_title()
         self.ask_about_square_symmetry()
         self.talk_through_90_degree_rotation()
         self.talk_through_vertical_flip()
-        self.skip_animations = should_skip_animations
         self.confused_by_lack_of_labels()
         self.add_labels()
         self.show_full_group()
@@ -353,18 +347,7 @@ class SymmetriesOfSquare(ThreeDScene):
         self.play(*map(FadeOut, [brace, q_marks]))
 
     def talk_through_90_degree_rotation(self):
-        square_radius = np.linalg.norm(self.square.get_corner(UP+RIGHT))
-        arc = Arc(
-            radius = square_radius + SMALL_BUFF,
-            start_angle = np.pi/4 + SMALL_BUFF,
-            angle = np.pi/2 - 2*SMALL_BUFF,
-            color = YELLOW
-        )
-        arc.add_tip()
-        arcs = VGroup(arc, *[
-            arc.copy().rotate(i*np.pi/2)
-            for i in range(1, 4)
-        ])
+        arcs = self.get_rotation_arcs(self.square, np.pi/2)
 
         self.play(*map(ShowCreation, arcs))
         self.dither()
@@ -379,8 +362,8 @@ class SymmetriesOfSquare(ThreeDScene):
 
     def confused_by_lack_of_labels(self):
         randy = Randolph(mode = "confused")
-        randy.next_to(self.square, DOWN+LEFT)
-        randy.shift_onto_screen()
+        randy.next_to(self.square, LEFT, buff = LARGE_BUFF)
+        randy.to_edge(DOWN)
         self.play(FadeIn(randy))
         for axis in OUT, RIGHT, UP:
             self.rotate_square(
@@ -393,19 +376,117 @@ class SymmetriesOfSquare(ThreeDScene):
         self.randy = randy
 
     def add_labels(self):
-        pass
+        labels = VGroup()
+        dots = VGroup()
+        for tex, vertex in zip("ABCD", self.square.get_anchors()):
+            label = TexMobject(tex)
+            label.next_to(vertex, vertex, SMALL_BUFF)
+            labels.add(label)
+            dot = Dot(vertex, color = WHITE)
+            dots.add(dot)
+        self.square.add(labels, dots)
+        self.square.labels = labels
+        self.square.dots = dots
+
+        self.play(
+            Write(labels),
+            Write(dots),
+            self.randy.change_mode, "happy",
+            self.randy.look_at, labels[0]
+        )
+        self.play(Blink(self.randy))
+        self.play(FadeOut(self.randy))
+
+        self.rotate_square(run_time = 2)
+        self.dither()
 
     def show_full_group(self):
-        pass
+        new_title = TextMobject("Group", "of", "symmetries")
+        new_title.move_to(self.title)
+
+        all_squares = VGroup(*[
+            self.square.copy().scale(0.5)
+            for x in range(8)
+        ])
+        all_squares.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+
+        top_squares = VGroup(*all_squares[:4])
+        bottom_squares = VGroup(*all_squares[4:])
+        bottom_squares.next_to(top_squares, DOWN, buff = LARGE_BUFF)
+
+        all_squares.scale_to_fit_width(2*SPACE_WIDTH-2*LARGE_BUFF)
+        all_squares.center()
+        all_squares.to_edge(DOWN, buff = LARGE_BUFF)
+
+        self.play(ReplacementTransform(self.square, all_squares[0]))
+        self.play(ReplacementTransform(self.title, new_title))
+        self.title = new_title
+        self.play(*[
+            ApplyMethod(mob.highlight, GREY)
+            for mob in self.title[1:]
+        ])
+
+        for square, angle in zip(all_squares[1:4], [np.pi/2, np.pi, -np.pi/2]):
+            arcs = self.get_rotation_arcs(square, angle, MED_SMALL_BUFF)
+            if angle == np.pi:
+                arcs = VGroup(arcs[0], arcs[2])
+            self.play(*map(FadeIn, [square, arcs]))
+            square.rotation_kwargs = {"angle" : angle}
+            self.rotate_square(square = square, **square.rotation_kwargs)
+            square.add(arcs)
+
+        for square, axis in zip(bottom_squares, [RIGHT, RIGHT+UP, UP, UP+LEFT]):
+            axis_line = self.get_axis_line(square, axis)
+            self.play(FadeIn(square))
+            self.play(ShowCreation(axis_line))
+            square.rotation_kwargs = {"angle" : np.pi, "axis" : axis}
+            self.rotate_square(square = square, **square.rotation_kwargs)
+            square.add(axis_line)
+        self.dither()
+
+        self.all_squares = all_squares
 
     def show_top_actions(self):
-        pass
+        all_squares = self.all_squares
+
+        self.play(Indicate(all_squares[0]))
+        self.dither()
+
+        rotations = [
+            Rotate(
+                square,
+                rate_func = lambda t : -there_and_back(t),
+                run_time = 3,
+                about_point = square.get_center(),
+                **square.rotation_kwargs
+            )
+            for square in all_squares[1:4]
+        ]
+        for rotation in rotations:
+            for label in rotation.target_mobject.labels:
+                label.rotate_in_place(-rotation.angle)
+        self.play(*rotations)
+        self.dither()
 
     def show_bottom_actions(self):
-        pass
+        for square in self.all_squares[4:]:
+            self.rotate_square(
+                square = square,
+                rate_func = there_and_back,
+                run_time = 2,
+                **square.rotation_kwargs
+            )
+        self.dither()
 
     def name_dihedral_group(self):
-        pass
+        new_title = TextMobject(
+            "``Dihedral group'' of order 8"
+        )
+        new_title.to_edge(UP)
+
+        self.play(FadeOut(self.title))
+        self.play(FadeIn(new_title))
+        self.dither()
 
     ##########
 
@@ -422,13 +503,19 @@ class SymmetriesOfSquare(ThreeDScene):
             assert hasattr(self, "square")
             square = self.square
         added_anims = added_anims or []
-        rotation = Rotate(square, angle = angle, axis = axis, **kwargs)
+        rotation = Rotate(
+            square, 
+            angle = angle, 
+            axis = axis, 
+            about_point = square.get_center(),
+            **kwargs
+        )
         if hasattr(square, "labels"):
             for label in rotation.target_mobject.labels:
                 label.rotate_in_place(-angle, axis)
 
         if show_axis:
-            axis_line = DashedLine(2*axis, -2*axis)
+            axis_line = self.get_axis_line(square, axis)
             self.play(
                 ShowCreation(axis_line),
                 Animation(square)
@@ -448,9 +535,30 @@ class SymmetriesOfSquare(ThreeDScene):
             **kwargs
         )
 
+    def get_rotation_arcs(self, square, angle, angle_buff = SMALL_BUFF):
+        square_radius = np.linalg.norm(
+            square.points[0] - square.get_center()
+        )
+        arc = Arc(
+            radius = square_radius + SMALL_BUFF,
+            start_angle = np.pi/4 + np.sign(angle)*angle_buff,
+            angle = angle - np.sign(angle)*2*angle_buff,
+            color = YELLOW
+        )
+        arc.add_tip()
+        arcs = VGroup(arc, *[
+            arc.copy().rotate(i*np.pi/2)
+            for i in range(1, 4)
+        ])
+        arcs.move_to(square[0])
 
+        return arcs
 
-
+    def get_axis_line(self, square, axis):
+        axis_line = DashedLine(2*axis, -2*axis)
+        axis_line.replace(square, dim_to_match = np.argmax(np.abs(axis)))
+        axis_line.scale_in_place(1.2)
+        return axis_line
 
 
 
