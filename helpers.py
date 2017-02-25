@@ -325,16 +325,14 @@ def path_along_arc(arc_angle, axis = OUT):
     """
     if abs(arc_angle) < STRAIGHT_PATH_THRESHOLD:
         return straight_path
+    unit_axis = axis/np.linalg.norm(axis)
     def path(start_points, end_points, alpha):
         vects = end_points - start_points
         centers = start_points + 0.5*vects
         if arc_angle != np.pi:
-            for i, b in [(0, -1), (1, 1)]:
-                centers[:,i] += 0.5*b*vects[:,1-i]/np.tan(arc_angle/2)
-        return centers + np.dot(
-            start_points-centers, 
-            np.transpose(rotation_matrix(alpha*arc_angle, axis))
-        )
+            centers += np.cross(unit_axis, vects/2.0)/np.tan(arc_angle/2)
+        rot_matrix = rotation_matrix(alpha*arc_angle, unit_axis)
+        return centers + np.dot(start_points-centers, rot_matrix.T)
     return path
 
 def clockwise_path():

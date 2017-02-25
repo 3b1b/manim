@@ -10,6 +10,7 @@ class ThreeDCamera(Camera):
     CONFIG = {
         "sun_vect" : 3*UP+LEFT,
         "shading_factor" : 0.5,
+        "camera_distance" : 20,
     }
     def __init__(self, *args, **kwargs):
         Camera.__init__(self, *args, **kwargs)
@@ -60,6 +61,16 @@ class ThreeDCamera(Camera):
         Camera.display_multiple_vectorized_mobjects(
             self, sorted(vmobjects, cmp = z_cmp)
         )
+
+
+    def points_to_pixel_coords(self, points):
+        distance_ratios = (self.camera_distance + points[:,2])/self.camera_distance
+        scale_factors = interpolate(0, 1, distance_ratios)
+        adjusted_points = np.array(points)
+        for i in 0, 1:
+            adjusted_points[:,i] *= scale_factors
+
+        return Camera.points_to_pixel_coords(self, adjusted_points)
 
 
 class ThreeDScene(Scene):

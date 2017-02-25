@@ -26,6 +26,33 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
+def get_composite_rotation_angle_and_axis(angles, axes):
+        matrices = [
+            rotation_matrix(angle = angle, axis = axis)
+            for angle, axis in zip(angles, axes)
+        ]
+        result_matrix = reduce(
+            np.dot, reversed(matrices), np.identity(3)
+        )
+        eigenvalues, eigenvectors = np.linalg.eig(result_matrix)
+        axis_index = np.argmin(np.abs(eigenvalues-1))
+        axis = np.round(eigenvectors[axis_index].astype('float'))
+
+        possible_angles = [
+            np.angle(eigenvalues[(axis_index+i)%3])
+            for i in 1, 2
+        ]
+        angle_index = np.argmin([
+            np.linalg.norm(
+                rotation_matrix(angle = angle, axis = axis) -\
+                result_matrix
+            )
+            for angle in possible_angles
+        ])
+        angle = possible_angles[angle_index]
+
+        return angle, axis
+
 class ConfettiSpiril(Animation):
     CONFIG = {
         "x_start" : 0,
@@ -305,6 +332,7 @@ class SymmetriesOfSquare(ThreeDScene):
             "fill_color" : BLUE,
             "fill_opacity" : 0.75,
         },
+        "dashed_line_config" : {},
     }
     def construct(self):
         self.add_title()
@@ -376,23 +404,13 @@ class SymmetriesOfSquare(ThreeDScene):
         self.randy = randy
 
     def add_labels(self):
-        labels = VGroup()
-        dots = VGroup()
-        for tex, vertex in zip("ABCD", self.square.get_anchors()):
-            label = TexMobject(tex)
-            label.next_to(vertex, vertex, SMALL_BUFF)
-            labels.add(label)
-            dot = Dot(vertex, color = WHITE)
-            dots.add(dot)
-        self.square.add(labels, dots)
-        self.square.labels = labels
-        self.square.dots = dots
+        self.add_labels_and_dots(self.square)
 
         self.play(
-            Write(labels),
-            Write(dots),
+            Write(self.square.labels),
+            Write(self.square.dots),
             self.randy.change_mode, "happy",
-            self.randy.look_at, labels[0]
+            self.randy.look_at, self.square.labels[0]
         )
         self.play(Blink(self.randy))
         self.play(FadeOut(self.randy))
@@ -546,26 +564,568 @@ class SymmetriesOfSquare(ThreeDScene):
             color = YELLOW
         )
         arc.add_tip()
+        if abs(angle) < np.pi:
+            angle_multiple_range = range(1, 4)
+        else:
+            angle_multiple_range = [2]
         arcs = VGroup(arc, *[
             arc.copy().rotate(i*np.pi/2)
-            for i in range(1, 4)
+            for i in angle_multiple_range
         ])
         arcs.move_to(square[0])
 
         return arcs
 
     def get_axis_line(self, square, axis):
-        axis_line = DashedLine(2*axis, -2*axis)
+        axis_line = DashedLine(2*axis, -2*axis, **self.dashed_line_config)
         axis_line.replace(square, dim_to_match = np.argmax(np.abs(axis)))
         axis_line.scale_in_place(1.2)
         return axis_line
 
+    def add_labels_and_dots(self, square):
+        labels = VGroup()
+        dots = VGroup()
+        for tex, vertex in zip("ABCD", square.get_anchors()):
+            label = TexMobject(tex)
+            label.add_background_rectangle()
+            label.next_to(vertex, vertex-square.get_center(), SMALL_BUFF)
+            labels.add(label)
+            dot = Dot(vertex, color = WHITE)
+            dots.add(dot)
+        square.add(labels, dots)
+        square.labels = labels
+        square.dots = dots
+
+class ManyGroupsAreInfinite(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("Many groups are infinite")
+        self.change_student_modes(*["pondering"]*3)
+        self.dither(2)
+
+class CircleSymmetries(Scene):
+    CONFIG = {
+        "circle_radius" : 2,
+    }
+    def construct(self):
+        self.add_circle_and_title()        
+        self.show_range_of_angles()
+        self.associate_rotations_with_points()
+
+    def add_circle_and_title(self):
+        title = TextMobject("Group of rotations")
+        title.to_edge(UP)
+
+        circle = self.get_circle()
+
+        self.play(Write(title), ShowCreation(circle, run_time = 2))
+        self.dither()
+        angles = [
+            np.pi/2, -np.pi/3, 5*np.pi/6, 
+            3*np.pi/2 + 0.1
+        ]
+        angles.append(-sum(angles))
+        for angle in angles:
+            self.play(Rotate(circle, angle = angle))
+            self.dither()
+
+        self.circle = circle
+
+    def show_range_of_angles(self):
+        self.add_radial_line()
+        arc_circle = self.get_arc_circle()
+
+        theta = TexMobject("\\theta = ")
+        theta_value = DecimalNumber(0.00)
+        theta_value.next_to(theta, RIGHT)
+        theta_group = VGroup(theta, theta_value)
+        theta_group.next_to(arc_circle, UP)
+        def theta_value_update(theta_value, alpha):
+            new_theta_value = DecimalNumber(alpha*2*np.pi)
+            new_theta_value.scale_to_fit_height(theta.get_height())
+            new_theta_value.next_to(theta, RIGHT)
+            Transform(theta_value, new_theta_value).update(1)
+            return new_theta_value
 
 
+        self.play(FadeIn(theta_group))
+        for rate_func in smooth, lambda t : smooth(1-t):
+            self.play(
+                Rotate(self.circle, 2*np.pi-0.001),
+                ShowCreation(arc_circle),
+                UpdateFromAlphaFunc(theta_value, theta_value_update),
+                run_time = 7,
+                rate_func = rate_func
+            )
+            self.dither()
+        self.play(FadeOut(theta_group))
+        self.dither()
+
+    def associate_rotations_with_points(self):
+        zero_dot = Dot(self.circle.point_from_proportion(0))
+        zero_dot.highlight(RED)
+        zero_arrow = Arrow(UP+RIGHT, ORIGIN)
+        zero_arrow.highlight(zero_dot.get_color())
+        zero_arrow.next_to(zero_dot, UP+RIGHT, buff = SMALL_BUFF)
+
+        self.play(
+            ShowCreation(zero_arrow),
+            DrawBorderThenFill(zero_dot)
+        )
+        self.circle.add(zero_dot)
+        self.dither()
+
+        for alpha in 0.2, 0.6, 0.4, 0.8:
+            point = self.circle.point_from_proportion(alpha)
+            dot = Dot(point, color = YELLOW)
+            vect = np.sign(point)
+            arrow = Arrow(vect, ORIGIN)
+            arrow.next_to(dot, vect, buff = SMALL_BUFF)
+            arrow.highlight(dot.get_color())
+            angle = alpha*2*np.pi
+
+            self.play(
+                ShowCreation(arrow),
+                DrawBorderThenFill(dot)
+            )
+            self.play(
+                Rotate(self.circle, angle, run_time = 2),
+                Animation(dot)
+            )
+            self.dither()            
+            self.play(
+                Rotate(self.circle, -angle, run_time = 2),
+                FadeOut(dot),
+                FadeOut(arrow),
+            )
+            self.dither()
+
+    ####
+
+    def get_circle(self):
+        circle = Circle(color = MAROON_B, radius = self.circle_radius)
+        circle.ticks = VGroup()
+        for alpha in np.arange(0, 1, 1./8):
+            point = circle.point_from_proportion(alpha)
+            tick = Line((1 - 0.05)*point, (1 + 0.05)*point)
+            circle.ticks.add(tick)
+        circle.add(circle.ticks)
+        return circle
+
+    def add_radial_line(self):
+        radius = Line(
+            self.circle.get_center(), 
+            self.circle.point_from_proportion(0)
+        )
+        static_radius = radius.copy().highlight(GREY)
+
+        self.play(ShowCreation(radius))
+        self.add(static_radius, radius)
+        self.circle.radius = radius
+        self.circle.static_radius = static_radius
+        self.circle.add(radius)
+
+    def get_arc_circle(self):
+        arc_radius = self.circle_radius/5.0
+        arc_circle = Circle(
+            radius = arc_radius,
+            color = WHITE
+        )
+        return arc_circle
+
+class GroupOfCubeSymmetries(ThreeDScene):
+    CONFIG = {
+        "cube_opacity" : 0.9,
+        "cube_colors" : [RED, RED, GREEN, GREEN, BLUE, BLUE]
+    }
+    def construct(self):
+        title = TextMobject("Group of cube symmetries")
+        title.to_edge(UP)
+        self.add(title)
+
+        cube = self.get_cube()
+
+        face_centers = np.array([
+            face.get_center() for face in cube[::2]
+        ])
+        angle_axis_pairs = []
+        for axis in face_centers:
+            angle_axis_pairs.append((np.pi/2, axis))
+        for i in range(3):
+            ones = np.ones(3)
+            ones[i] = -1
+            axis = np.dot(ones, face_centers)
+            angle_axis_pairs.append((2*np.pi/3, axis))
+
+        for angle, axis in angle_axis_pairs:
+            self.play(Rotate(
+                cube, angle = angle, axis = axis,
+                run_time = 2
+            ))
+            self.dither()
+
+    def get_cube(self):
+        cube = Cube(fill_opacity = self.cube_opacity)
+        cube.gradient_highlight(*self.cube_colors)
+        pose_matrix = self.get_pose_matrix()
+        cube.apply_function(
+            lambda p : np.dot(p, pose_matrix.T),
+            maintain_smoothness = False
+        )
+        return cube
+
+    def get_pose_matrix(self):
+        return np.dot(
+            rotation_matrix(np.pi/8, UP),
+            rotation_matrix(np.pi/24, RIGHT)
+        )
+
+class HowDoSymmetriesPlayWithEachOther(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "How do symmetries \\\\ play with each other?",
+            target_mode = "hesitant",
+        )
+        self.change_student_modes("pondering", "maybe", "confused")
+        self.dither(2)
+
+class AddSquareSymmetries(SymmetriesOfSquare):
+    def construct(self):
+        square = Square(**self.square_config)
+        square.flip(RIGHT)
+        square.shift(DOWN)
+        self.add_labels_and_dots(square)
+        alt_square = square.copy()
+        equals = TexMobject("=")
+        equals.move_to(square)
+
+        equation_square = Square(**self.square_config)
+        equation = VGroup(
+            equation_square, TexMobject("+"), 
+            equation_square.copy(), TexMobject("="),
+            equation_square.copy(),
+        )
+        equation[0].add(self.get_rotation_arcs(
+            equation[0], np.pi/2,
+        ))
+        equation[2].add(self.get_axis_line(equation[4], UP))
+        equation[4].add(self.get_axis_line(equation[4], UP+RIGHT))
+        for mob in equation[::2]:
+            mob.scale(0.5)
+        equation.arrange_submobjects(RIGHT)
+        equation.to_edge(UP)
+
+        arcs = self.get_rotation_arcs(square, np.pi/2)
+
+        self.add(square)
+        self.play(FadeIn(arcs))
+        self.rotate_square(
+            square = square, angle = np.pi/2,
+            added_anims = map(FadeIn, equation[:2])
+        )
+        self.dither()
+        self.play(FadeOut(arcs))
+        self.flip_square(
+            square = square, axis = UP,
+            added_anims = map(FadeIn, equation[2:4])
+        )
+        self.dither()
+        alt_square.next_to(equals, RIGHT, buff = LARGE_BUFF)
+        alt_square.save_state()
+        alt_square.move_to(square)
+        alt_square.set_fill(opacity = 0)
+        self.play(
+            square.next_to, equals, LEFT, LARGE_BUFF,
+            alt_square.restore,
+            Write(equals)
+        )
+        self.flip_square(
+            square = alt_square, axis = UP+RIGHT,
+            added_anims = map(FadeIn, equation[4:]),
+        )
+        self.dither(2)
+
+        ## Reiterate composition
+        self.rotate_square(square = square, angle = np.pi/2)
+        self.flip_square(square = square, axis = UP)
+        self.dither()
+        self.flip_square(square = alt_square, axis = UP+RIGHT)
+        self.dither()
+
+class AddCircleSymmetries(CircleSymmetries):
+    def construct(self):
+        circle = self.circle = self.get_circle()
+        arc_circle = self.get_arc_circle()
+        angles = [3*np.pi/2, 2*np.pi/3, np.pi/6]
+        arcs = [
+            arc_circle.copy().scale(scalar)
+            for scalar in [1, 1.2, 1.4]
+        ]
+
+        equation = TexMobject(
+            "270^\\circ", "+", "120^\\circ", "=", "30^\\circ",
+        )
+        equation.to_edge(UP)
+
+        colors = [BLUE, YELLOW, GREEN]
+        for color, arc, term in zip(colors, arcs, equation[::2]):
+            arc.highlight(color)
+            term.highlight(color)
+
+        self.play(FadeIn(circle))
+        self.add_radial_line()
+        alt_radius = circle.radius.copy()
+        alt_radius.highlight(GREY)
+        alt_circle = circle.copy()
+        equals = TexMobject("=")
+        equals.move_to(circle)
+
+        def rotate(circle, angle, arc, terms):
+            self.play(
+                Rotate(circle, angle, in_place = True),
+                ShowCreation(
+                    arc,
+                    rate_func = lambda t : (angle/(2*np.pi))*smooth(t)
+                ),
+                Write(VGroup(*terms)),
+                run_time = 2,
+            )
+
+        rotate(circle, angles[0], arcs[0], equation[:2])
+        self.dither()
+        circle.add(alt_radius)
+        rotate(circle, angles[1], arcs[1], equation[2:4])
+        self.play(FadeOut(alt_radius))
+        circle.remove(alt_radius)
+        self.dither()
+
+        circle.add(circle.static_radius)
+        circle.add(*arcs[:2])
+
+        alt_static_radius = circle.static_radius.copy()
+        alt_circle.add(alt_static_radius)
+        alt_circle.next_to(equals, RIGHT, buff = LARGE_BUFF)
+        alt_circle.save_state()
+        alt_circle.move_to(circle)
+        alt_circle.set_stroke(width = 0)
+        self.play(
+            circle.next_to, equals, LEFT, LARGE_BUFF,
+            alt_circle.restore,
+            Write(equals)
+        )
+        arcs[2].shift(alt_circle.get_center())
+        alt_circle.remove(alt_static_radius)
+        self.dither()
+        rotate(alt_circle, angles[2], arcs[2], equation[4:])
+        self.dither()
+        self.play(
+            Rotate(arcs[1], angles[0], about_point = circle.get_center())
+        )
+        self.dither(2)
+        for term, arc in zip(equation[::2], arcs):
+            self.play(*[
+                ApplyMethod(mob.scale_in_place, 1.2, rate_func = there_and_back)
+                for mob in term, arc
+            ])
+            self.dither()
+
+class AddCubeSymmetries(GroupOfCubeSymmetries):
+    CONFIG = {
+        "angle_axis_pairs" : [
+            (np.pi/2, RIGHT),
+            (np.pi/2, UP)
+        ],
+        "cube_opacity" : 0.5,
+        "cube_colors" : [BLUE],
+    }
+    def construct(self):
+        angle_axis_pairs = list(self.angle_axis_pairs)
+        angle_axis_pairs.append(
+            self.get_composition_angle_and_axis()
+        )
+        self.pose_matrix = self.get_pose_matrix()
+        cube = self.get_cube()
 
 
+        equation = cube1, plus, cube2, equals, cube3 = VGroup(
+            cube, TexMobject("+"), 
+            cube.copy(), TexMobject("="),
+            cube.copy()
+        )
+        equation.arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
+        equation.center()
+
+        self.add(cube1)
+        self.rotate_cube(cube1, *angle_axis_pairs[0])
+        cube_copy = cube1.copy()
+        cube_copy.set_fill(opacity = 0)
+        self.play(
+            cube_copy.move_to, cube2,
+            cube_copy.set_fill, None, self.cube_opacity,
+            Write(plus)
+        )
+        self.rotate_cube(cube_copy, *angle_axis_pairs[1])
+        self.play(Write(equals))
+        self.play(DrawBorderThenFill(cube3, run_time = 1))
+        self.rotate_cube(cube3, *angle_axis_pairs[2])
+        self.dither(2)
+
+        times = TexMobject("\\times")
+        times.scale(1.5)
+        times.move_to(plus)
+        times.highlight(RED)
+        self.dither()
+        self.play(ReplacementTransform(plus, times))
+        self.play(Indicate(times))
+        self.dither()
+        for cube, (angle, axis) in zip([cube1, cube_copy, cube3], angle_axis_pairs):
+            self.rotate_cube(cube, angle, axis, add_arrows = False)
+        self.dither()
+
+    # def get_pose_matrix(self):
+    #     return np.identity(3)
+
+    def rotate_cube(self, cube, angle, axis, add_arrows = True):
+        axis = np.dot(axis, self.pose_matrix.T)
+        anims = []
+        if add_arrows:
+            arrows = VGroup(*[
+                Arc(
+                    start_angle = np.pi/12+a, angle = 5*np.pi/6,
+                    color = YELLOW
+                ).add_tip()
+                for a in 0, np.pi
+            ])
+            arrows.scale_to_fit_height(1.5*cube.get_height())
+            z_to_axis = z_to_vector(axis)
+            arrows.apply_function(
+                lambda p : np.dot(p, z_to_axis.T),
+                maintain_smoothness = False
+            )
+            arrows.move_to(cube)
+            arrows.shift(-axis*cube.get_height()/2/np.linalg.norm(axis))
+            anims += map(ShowCreation, arrows)
+        anims.append(
+            Rotate(cube, axis = axis, angle = angle, in_place = True)
+        )
+        self.play(*anims, run_time = 1.5)
+        self.add(cube)
+
+    def get_composition_angle_and_axis(self):
+        return get_composite_rotation_angle_and_axis(
+            *zip(*self.angle_axis_pairs)
+        )
+
+class DihedralGroupStructure(SymmetriesOfSquare):
+    CONFIG = {
+        "dashed_line_config" : {
+            "dashed_segment_length" : 0.1
+        },
+        "filed_sum_scale_factor" : 0.45,
+        "num_rows" : 5,
+    }
+    def construct(self):
+        angle_axis_pairs = [
+            (np.pi/2, OUT),
+            (np.pi, OUT),
+            (-np.pi/2, OUT),
+            # (np.pi, RIGHT),
+            # (np.pi, UP+RIGHT),
+            (np.pi, UP),
+            (np.pi, UP+LEFT),
+        ]
+        pair_pairs = list(it.combinations(angle_axis_pairs, 2))
+        random.shuffle(pair_pairs)
+        for pair_pair in pair_pairs[:4]:
+            sum_expression = self.demonstrate_sum(pair_pair)
+            self.file_away_sum(sum_expression)
+        for pair_pair in pair_pairs[4:]:
+            should_skip_animstions = self.skip_animations
+            self.skip_animations = True
+            sum_expression = self.demonstrate_sum(pair_pair)
+            self.file_away_sum(sum_expression)
+            self.skip_animations = should_skip_animstions
+            self.play(FadeIn(sum_expression))
+        self.dither(3)
 
 
+    def demonstrate_sum(self, angle_axis_pairs):
+        angle_axis_pairs = list(angle_axis_pairs) + [
+            get_composite_rotation_angle_and_axis(
+                *zip(*angle_axis_pairs)
+            )
+        ]
+
+        prototype_square = Square(**self.square_config)
+        prototype_square.flip(RIGHT)
+        self.add_labels_and_dots(prototype_square)
+        prototype_square.scale(0.7)
+        expression = s1, plus, s2, equals, s3 = VGroup(
+            prototype_square, TexMobject("+"), 
+            prototype_square.copy(), TexMobject("="),
+            prototype_square.copy()
+        )
+
+        final_expression = VGroup()
+        for square, (angle, axis) in zip([s1, s2, s3], angle_axis_pairs):
+            if np.argmax(np.abs(axis)) == 2: ##Axis is in z direction
+                square.action_illustration = self.get_rotation_arcs(
+                    square, angle
+                )
+            else:
+                square.action_illustration = self.get_axis_line(
+                    square, axis
+                )
+            square.add(square.action_illustration)
+            final_expression.add(square.action_illustration)
+            square.rotation_kwargs = {
+                "square" : square,
+                "angle" : angle,
+                "axis" : axis,
+            }
+        expression.arrange_submobjects()
+        expression.to_edge(RIGHT)
+        for square in s1, s2, s3:
+            square.remove(square.action_illustration)
+
+        self.play(FadeIn(s1))
+        self.play(*map(ShowCreation, s1.action_illustration))
+        self.rotate_square(**s1.rotation_kwargs)
+        self.play(
+            FadeIn(s2),
+            Write(plus)
+        )
+        self.play(*map(ShowCreation, s2.action_illustration))
+        self.rotate_square(**s2.rotation_kwargs)
+        self.play(
+            Write(equals),
+            FadeIn(s3)
+        )
+        self.play(*map(ShowCreation, s3.action_illustration))
+        self.rotate_square(**s3.rotation_kwargs)
+        self.dither()
+        final_expression.add(*expression)
+
+        return final_expression
+
+    def file_away_sum(self, sum_expression):
+        if not hasattr(self, "num_sum_expressions"):
+            self.num_sum_expressions = 0
+        target = sum_expression.copy()
+        target.scale(self.filed_sum_scale_factor)
+        y_index = self.num_sum_expressions%self.num_rows
+        y_prop = float(y_index)/(self.num_rows-1)
+        y = interpolate(SPACE_HEIGHT-LARGE_BUFF, -SPACE_HEIGHT+LARGE_BUFF, y_prop)
+        x_index = self.num_sum_expressions//self.num_rows
+        x_spacing = 2*SPACE_WIDTH/3
+        x = (x_index-1)*x_spacing
+
+        target.move_to(x*RIGHT + y*UP)
+
+        self.play(Transform(sum_expression, target))
+        self.dither()
+
+        self.num_sum_expressions += 1
+        self.last_sum_expression = sum_expression
 
 
 
