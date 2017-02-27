@@ -158,11 +158,16 @@ class DashedLine(Line):
         return self
 
     def get_start(self):
-        return self[0].points[0]
+        if len(self) > 0:
+            return self[0].points[0]
+        else:
+            return self.start
 
     def get_end(self):
-        return self[-1].points[-1]
-
+        if len(self) > 0:
+            return self[-1].points[-1]
+        else:
+            return self.end
 
 
 class Arrow(Line):
@@ -175,9 +180,9 @@ class Arrow(Line):
         "preserve_tip_size_when_scaling" : True,
     }
     def __init__(self, *args, **kwargs):
+        points = map(self.pointify, args)
         if len(args) == 1:
-            point = self.pointify(args[0])
-            args = (point+UP+LEFT, target)
+            args = (points[0]+UP+LEFT, points[0])
         Line.__init__(self, *args, **kwargs)
         self.add_tip()
 
@@ -203,8 +208,17 @@ class Arrow(Line):
             [tip_points[0], end, tip_points[1]],
             mode = "corners"
         )
+        self.set_points_as_corners(
+            [start, center_of_mass(tip_points)]
+        )
         self.add(self.tip)
         self.init_colors()
+
+    def get_end(self):
+        if hasattr(self, "tip"):
+            return self.tip.get_anchors()[1]
+        else:
+            return Line.get_end(self)
 
     def get_tip(self):
         return self.tip

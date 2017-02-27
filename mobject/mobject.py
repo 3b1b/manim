@@ -411,9 +411,11 @@ class Mobject(object):
         return self
 
     def restore(self):
-        if not hasattr(self, "saved_state"):
+        if not hasattr(self, "saved_state") or self.save_state is None:
             raise Exception("Trying to restore without having saved")
-        self.__dict__.update(self.saved_state.__dict__)
+        self.align_data(self.saved_state)
+        for sm1, sm2 in zip(self.submobject_family(), self.saved_state.submobject_family()):
+            sm1.interpolate(sm1, sm2, 1)
         return self
 
     def apply_complex_function(self, function):
@@ -658,7 +660,7 @@ class Mobject(object):
     def interpolate(self, mobject1, mobject2, 
                     alpha, path_func = straight_path):
         """
-        Turns target_mobject into an interpolation between mobject1 
+        Turns self into an interpolation between mobject1 
         and mobject2.
         """
         self.points = path_func(

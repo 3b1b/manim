@@ -26,37 +26,44 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
+ADDER_COLOR = GREEN
+MULTIPLIER_COLOR = YELLOW
+
+def normalize(vect):
+    norm = np.linalg.norm(vect)
+    if norm == 0:
+        return OUT
+    else:
+        return vect/norm
+
 def get_composite_rotation_angle_and_axis(angles, axes):
-        matrices = [
-            rotation_matrix(angle = angle, axis = axis)
-            for angle, axis in zip(angles, axes)
-        ]
-        result_matrix = reduce(
-            np.dot, reversed(matrices), np.identity(3)
+    angle1, axis1 = 0, OUT
+    for angle2, axis2 in zip(angles, axes):
+        ## Figure out what (angle3, axis3) is the same 
+        ## as first applying (angle1, axis1), then (angle2, axis2)
+        axis2 = normalize(axis2)
+        dot = np.dot(axis2, axis1)
+        cross = np.cross(axis2, axis1)
+        angle3 = 2*np.arccos(
+            np.cos(angle2/2)*np.cos(angle1/2) - \
+            np.sin(angle2/2)*np.sin(angle1/2)*dot
         )
-        eigenvalues, eigenvectors = np.linalg.eig(result_matrix)
-        axis_index = np.argmin(np.abs(eigenvalues-1))
-        axis = np.round(eigenvectors[axis_index].astype('float'))
+        axis3 = (
+            np.sin(angle2/2)*np.cos(angle1/2)*axis2 + \
+            np.cos(angle2/2)*np.sin(angle1/2)*axis1 + \
+            np.sin(angle2/2)*np.sin(angle1/2)*cross
+        )
+        axis3 = normalize(axis3)
+        angle1, axis1 = angle3, axis3
 
-        possible_angles = [
-            np.angle(eigenvalues[(axis_index+i)%3])
-            for i in 1, 2
-        ]
-        angle_index = np.argmin([
-            np.linalg.norm(
-                rotation_matrix(angle = angle, axis = axis) -\
-                result_matrix
-            )
-            for angle in possible_angles
-        ])
-        angle = possible_angles[angle_index]
-
-        return angle, axis
+    if angle1 > np.pi:
+        angle1 -= 2*np.pi
+    return angle1, axis1
 
 class ConfettiSpiril(Animation):
     CONFIG = {
         "x_start" : 0,
-        "spiril_radius" : 1,
+        "spiril_radius" : 0.5,
         "num_spirils" : 4,
         "run_time" : 10,
         "rate_func" : None,
@@ -404,18 +411,16 @@ class SymmetriesOfSquare(ThreeDScene):
         self.randy = randy
 
     def add_labels(self):
-        self.add_labels_and_dots(self.square)
+        self.add_randy_to_square(self.square)
 
         self.play(
-            Write(self.square.labels),
-            Write(self.square.dots),
+            FadeIn(self.square.randy),
             self.randy.change_mode, "happy",
-            self.randy.look_at, self.square.labels[0]
+            self.randy.look_at, self.square.randy.eyes
         )
         self.play(Blink(self.randy))
         self.play(FadeOut(self.randy))
 
-        self.rotate_square(run_time = 2)
         self.dither()
 
     def show_full_group(self):
@@ -446,8 +451,6 @@ class SymmetriesOfSquare(ThreeDScene):
 
         for square, angle in zip(all_squares[1:4], [np.pi/2, np.pi, -np.pi/2]):
             arcs = self.get_rotation_arcs(square, angle, MED_SMALL_BUFF)
-            if angle == np.pi:
-                arcs = VGroup(arcs[0], arcs[2])
             self.play(*map(FadeIn, [square, arcs]))
             square.rotation_kwargs = {"angle" : angle}
             self.rotate_square(square = square, **square.rotation_kwargs)
@@ -470,7 +473,7 @@ class SymmetriesOfSquare(ThreeDScene):
         self.play(Indicate(all_squares[0]))
         self.dither()
 
-        rotations = [
+        self.play(*[
             Rotate(
                 square,
                 rate_func = lambda t : -there_and_back(t),
@@ -479,11 +482,7 @@ class SymmetriesOfSquare(ThreeDScene):
                 **square.rotation_kwargs
             )
             for square in all_squares[1:4]
-        ]
-        for rotation in rotations:
-            for label in rotation.target_mobject.labels:
-                label.rotate_in_place(-rotation.angle)
-        self.play(*rotations)
+        ])
         self.dither()
 
     def show_bottom_actions(self):
@@ -564,7 +563,7 @@ class SymmetriesOfSquare(ThreeDScene):
             color = YELLOW
         )
         arc.add_tip()
-        if abs(angle) < np.pi:
+        if abs(angle) < 3*np.pi/4:
             angle_multiple_range = range(1, 4)
         else:
             angle_multiple_range = [2]
@@ -595,6 +594,13 @@ class SymmetriesOfSquare(ThreeDScene):
         square.add(labels, dots)
         square.labels = labels
         square.dots = dots
+
+    def add_randy_to_square(self, square, mode = "pondering"):
+        randy = Randolph(mode = mode)
+        randy.scale_to_fit_height(0.75*square.get_height())
+        randy.move_to(square)
+        square.add(randy)
+        square.randy = randy
 
 class ManyGroupsAreInfinite(TeacherStudentsScene):
     def construct(self):
@@ -734,8 +740,9 @@ class CircleSymmetries(Scene):
 
 class GroupOfCubeSymmetries(ThreeDScene):
     CONFIG = {
-        "cube_opacity" : 0.9,
-        "cube_colors" : [RED, RED, GREEN, GREEN, BLUE, BLUE]
+        "cube_opacity" : 0.5,
+        "cube_colors" : [BLUE],
+        "put_randy_on_cube" : True,
     }
     def construct(self):
         title = TextMobject("Group of cube symmetries")
@@ -744,12 +751,8 @@ class GroupOfCubeSymmetries(ThreeDScene):
 
         cube = self.get_cube()
 
-        face_centers = np.array([
-            face.get_center() for face in cube[::2]
-        ])
-        angle_axis_pairs = []
-        for axis in face_centers:
-            angle_axis_pairs.append((np.pi/2, axis))
+        face_centers = [face.get_center() for face in cube[0:7:2]]
+        angle_axis_pairs = zip(3*[np.pi/2], face_centers)
         for i in range(3):
             ones = np.ones(3)
             ones[i] = -1
@@ -766,6 +769,16 @@ class GroupOfCubeSymmetries(ThreeDScene):
     def get_cube(self):
         cube = Cube(fill_opacity = self.cube_opacity)
         cube.gradient_highlight(*self.cube_colors)
+        if self.put_randy_on_cube:
+            randy = Randolph(mode = "pondering")
+            randy.pupils.shift(0.01*OUT)
+            randy.add(randy.pupils.copy().shift(0.02*IN))
+            for submob in randy.submobject_family():
+                submob.part_of_three_d_mobject = True
+            randy.scale(0.5)
+            face = cube[1]
+            randy.move_to(face)
+            face.add(randy)
         pose_matrix = self.get_pose_matrix()
         cube.apply_function(
             lambda p : np.dot(p, pose_matrix.T),
@@ -793,7 +806,7 @@ class AddSquareSymmetries(SymmetriesOfSquare):
         square = Square(**self.square_config)
         square.flip(RIGHT)
         square.shift(DOWN)
-        self.add_labels_and_dots(square)
+        self.add_randy_to_square(square, mode = "shruggie")
         alt_square = square.copy()
         equals = TexMobject("=")
         equals.move_to(square)
@@ -932,7 +945,7 @@ class AddCubeSymmetries(GroupOfCubeSymmetries):
     CONFIG = {
         "angle_axis_pairs" : [
             (np.pi/2, RIGHT),
-            (np.pi/2, UP)
+            (np.pi/2, UP),
         ],
         "cube_opacity" : 0.5,
         "cube_colors" : [BLUE],
@@ -944,7 +957,6 @@ class AddCubeSymmetries(GroupOfCubeSymmetries):
         )
         self.pose_matrix = self.get_pose_matrix()
         cube = self.get_cube()
-
 
         equation = cube1, plus, cube2, equals, cube3 = VGroup(
             cube, TexMobject("+"), 
@@ -978,13 +990,14 @@ class AddCubeSymmetries(GroupOfCubeSymmetries):
         self.play(Indicate(times))
         self.dither()
         for cube, (angle, axis) in zip([cube1, cube_copy, cube3], angle_axis_pairs):
-            self.rotate_cube(cube, angle, axis, add_arrows = False)
+            self.rotate_cube(
+                cube, -angle, axis, add_arrows = False,
+                rate_func = there_and_back,
+                run_time = 1.5
+            )
         self.dither()
 
-    # def get_pose_matrix(self):
-    #     return np.identity(3)
-
-    def rotate_cube(self, cube, angle, axis, add_arrows = True):
+    def rotate_cube(self, cube, angle, axis, add_arrows = True, **kwargs):
         axis = np.dot(axis, self.pose_matrix.T)
         anims = []
         if add_arrows:
@@ -1005,10 +1018,12 @@ class AddCubeSymmetries(GroupOfCubeSymmetries):
             arrows.shift(-axis*cube.get_height()/2/np.linalg.norm(axis))
             anims += map(ShowCreation, arrows)
         anims.append(
-            Rotate(cube, axis = axis, angle = angle, in_place = True)
+            Rotate(
+                cube, axis = axis, angle = angle, in_place = True,
+                **kwargs
+            )
         )
         self.play(*anims, run_time = 1.5)
-        self.add(cube)
 
     def get_composition_angle_and_axis(self):
         return get_composite_rotation_angle_and_axis(
@@ -1020,7 +1035,7 @@ class DihedralGroupStructure(SymmetriesOfSquare):
         "dashed_line_config" : {
             "dashed_segment_length" : 0.1
         },
-        "filed_sum_scale_factor" : 0.45,
+        "filed_sum_scale_factor" : 0.4,
         "num_rows" : 5,
     }
     def construct(self):
@@ -1033,17 +1048,17 @@ class DihedralGroupStructure(SymmetriesOfSquare):
             (np.pi, UP),
             (np.pi, UP+LEFT),
         ]
-        pair_pairs = list(it.combinations(angle_axis_pairs, 2))
+        pair_pairs = list(it.product(*[angle_axis_pairs]*2))
         random.shuffle(pair_pairs)
         for pair_pair in pair_pairs[:4]:
             sum_expression = self.demonstrate_sum(pair_pair)
             self.file_away_sum(sum_expression)
         for pair_pair in pair_pairs[4:]:
-            should_skip_animstions = self.skip_animations
+            should_skip_animations = self.skip_animations
             self.skip_animations = True
             sum_expression = self.demonstrate_sum(pair_pair)
             self.file_away_sum(sum_expression)
-            self.skip_animations = should_skip_animstions
+            self.skip_animations = should_skip_animations
             self.play(FadeIn(sum_expression))
         self.dither(3)
 
@@ -1057,17 +1072,21 @@ class DihedralGroupStructure(SymmetriesOfSquare):
 
         prototype_square = Square(**self.square_config)
         prototype_square.flip(RIGHT)
-        self.add_labels_and_dots(prototype_square)
+        self.add_randy_to_square(prototype_square)
+
+        # self.add_labels_and_dots(prototype_square)
         prototype_square.scale(0.7)
         expression = s1, plus, s2, equals, s3 = VGroup(
-            prototype_square, TexMobject("+"), 
-            prototype_square.copy(), TexMobject("="),
+            prototype_square, TexMobject("+").scale(2), 
+            prototype_square.copy(), TexMobject("=").scale(2),
             prototype_square.copy()
         )
 
         final_expression = VGroup()
         for square, (angle, axis) in zip([s1, s2, s3], angle_axis_pairs):
-            if np.argmax(np.abs(axis)) == 2: ##Axis is in z direction
+            if np.cos(angle) > 0.5:
+                square.action_illustration = VectorizedPoint()
+            elif np.argmax(np.abs(axis)) == 2: ##Axis is in z direction
                 square.action_illustration = self.get_rotation_arcs(
                     square, angle
                 )
@@ -1083,19 +1102,27 @@ class DihedralGroupStructure(SymmetriesOfSquare):
                 "axis" : axis,
             }
         expression.arrange_submobjects()
-        expression.to_edge(RIGHT)
+        expression.scale_to_fit_width(SPACE_WIDTH+1)
+        expression.to_edge(RIGHT, buff = SMALL_BUFF)
         for square in s1, s2, s3:
             square.remove(square.action_illustration)
 
         self.play(FadeIn(s1))
         self.play(*map(ShowCreation, s1.action_illustration))
         self.rotate_square(**s1.rotation_kwargs)
+
+        s1_copy = s1.copy()
         self.play(
-            FadeIn(s2),
+            # FadeIn(s2),
+            s1_copy.move_to, s2,
             Write(plus)
         )
+        Transform(s2, s1_copy).update(1)
+        self.remove(s1_copy)
+        self.add(s2)
         self.play(*map(ShowCreation, s2.action_illustration))
         self.rotate_square(**s2.rotation_kwargs)
+
         self.play(
             Write(equals),
             FadeIn(s3)
@@ -1127,18 +1154,541 @@ class DihedralGroupStructure(SymmetriesOfSquare):
         self.num_sum_expressions += 1
         self.last_sum_expression = sum_expression
 
+class ThisIsAVeryGeneralIdea(Scene):
+    def construct(self):
+        groups = TextMobject("Groups")
+        groups.to_edge(UP)
+        groups.highlight(BLUE)
+
+        examples = VGroup(*map(TextMobject, [
+            "Square matrices \\\\ \\small (Where $\\det(M) \\ne 0$)",
+            "Molecular \\\\ symmetry",
+            "Cryptography",
+            "Numbers",
+        ]))
+        numbers = examples[-1]
+        examples.arrange_submobjects(buff = LARGE_BUFF)
+        examples.scale_to_fit_width(2*SPACE_WIDTH-1)
+        examples.move_to(UP)
+
+        lines = VGroup(*[
+            Line(groups.get_bottom(), ex.get_top(), buff = MED_SMALL_BUFF)
+            for ex in examples
+        ])
+        lines.highlight(groups.get_color())
+
+        self.add(groups)
+
+        for example, line in zip(examples, lines):
+            self.play(
+                ShowCreation(line),
+                Write(example, run_time = 2)
+            )
+        self.dither()
+        self.play(
+            VGroup(*examples[:-1]).fade, 0.7,
+            VGroup(*lines[:-1]).fade, 0.7,
+        )
+
+        self.play(
+            numbers.scale, 1.2, numbers.get_corner(UP+RIGHT),
+        )
+        self.dither(2)
+
+        sub_categories = VGroup(*map(TextMobject, [
+            "Numbers \\\\ (Additive)",
+            "Numbers \\\\ (Multiplicative)",
+        ]))
+        sub_categories.arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
+        sub_categories.next_to(numbers, DOWN, 1.5*LARGE_BUFF)
+        sub_categories.to_edge(RIGHT)
+        sub_categories[0].highlight(ADDER_COLOR)
+        sub_categories[1].highlight(MULTIPLIER_COLOR)
+
+        sub_lines = VGroup(*[
+            Line(numbers.get_bottom(), sc.get_top(), buff = MED_SMALL_BUFF)
+            for sc in sub_categories
+        ])
+        sub_lines.highlight(numbers.get_color())
+
+        self.play(*it.chain(
+            map(ShowCreation, sub_lines),
+            map(Write, sub_categories)
+        ))
+        self.dither()
+
+class NumbersAsActionsQ(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Numbers are actions?",
+            target_mode = "confused",
+        )
+        self.change_student_modes("pondering", "confused", "erm")
+        self.play(self.get_teacher().change_mode, "happy")
+        self.dither(3)
+
+class AdditiveGroupOfReals(Scene):
+    CONFIG = {
+        "number_line_center" : UP,
+        "shadow_line_center" : DOWN,
+        "zero_color" : GREEN_B,
+    }
+    def construct(self):
+        self.add_number_line()
+        self.show_example_slides(3, -7)
+        self.write_group_of_slides()
+        self.show_example_slides(2, 6, -1, -3)
+        self.mark_zero()
+        self.show_example_slides_labeled(3, -2)
+        self.comment_on_zero_as_identity()
+        self.show_example_slides_labeled(
+            5.5, added_anims = [self.get_write_name_of_group_anim()]
+        )
+        self.show_example_additions((3, 2), (2, -5), (-4, 4))
+
+    def add_number_line(self):
+        number_line = NumberLine(
+            x_min = -2*SPACE_WIDTH,
+            x_max = 2*SPACE_WIDTH
+        )
+
+        number_line.shift(self.number_line_center)
+        shadow_line = NumberLine(color = GREY, stroke_width = 2)
+        shadow_line.shift(self.shadow_line_center)
+        for line in number_line, shadow_line:
+            line.add_numbers()
+        shadow_line.numbers.fade(0.25)
+        shadow_line.save_state()
+        shadow_line.highlight(BLACK)
+        shadow_line.move_to(number_line)
 
 
+        self.play(*map(Write, number_line), run_time = 1)
+        self.play(shadow_line.restore, Animation(number_line))
+        self.dither()
 
+        self.number_line = number_line
+        self.shadow_line = shadow_line
 
+    def show_example_slides(self, *nums):
+        for num in nums:
+            zero_point = self.number_line.number_to_point(0)            
+            num_point = self.number_line.number_to_point(num)
+            arrow = Arrow(zero_point, num_point, buff = 0)
+            arrow.highlight(ADDER_COLOR)
+            arrow.shift(MED_LARGE_BUFF*UP)
 
+            self.play(ShowCreation(arrow))
+            self.play(
+                self.number_line.shift,
+                num_point - zero_point,
+                run_time = 2
+            )
+            self.play(FadeOut(arrow))
 
+    def write_group_of_slides(self):
+        title = TextMobject("Group of line symmetries")
+        title.to_edge(UP)
+        self.play(Write(title))
+        self.title = title
 
+    def mark_zero(self):
+        dot = Dot(
+            self.number_line.number_to_point(0),
+            color = self.zero_color
+        )
+        arrow = Arrow(dot, color = self.zero_color)
+        words = TextMobject("Follow zero")
+        words.next_to(arrow.get_start(), UP)
+        words.highlight(self.zero_color)
 
+        self.play(
+            ShowCreation(arrow),
+            DrawBorderThenFill(dot),
+            Write(words),
+        )
+        self.dither()
+        self.play(*map(FadeOut, [arrow, words]))
 
+        self.number_line.add(dot)
 
+    def show_example_slides_labeled(self, *nums, **kwargs):
+        for num in nums:
+            line = DashedLine(
+                self.number_line.number_to_point(num)+MED_LARGE_BUFF*UP,
+                self.shadow_line.number_to_point(num)+MED_LARGE_BUFF*DOWN,
+            )
+            vect = self.number_line.number_to_point(num) - \
+                   self.number_line.number_to_point(0)
+            self.play(ShowCreation(line))
+            self.dither()
+            self.play(self.number_line.shift, vect, run_time = 2)
+            self.dither()
+            if "added_anims" in kwargs:
+                self.play(*kwargs["added_anims"])
+                self.dither()
+            self.play(
+                self.number_line.shift, -vect,
+                FadeOut(line)
+            )
 
+    def comment_on_zero_as_identity(self):
+        line = DashedLine(
+            self.number_line.number_to_point(0)+MED_LARGE_BUFF*UP,
+            self.shadow_line.number_to_point(0)+MED_LARGE_BUFF*DOWN,
+        )
+        words = TexMobject("0 \\leftrightarrow \\text{Do nothing}")
+        words.shift(line.get_top()+MED_SMALL_BUFF*UP - words[0].get_bottom())
 
+        self.play(
+            ShowCreation(line),
+            Write(words)
+        )
+        self.dither(2)
+        self.play(*map(FadeOut, [line, words]))
+
+    def get_write_name_of_group_anim(self):
+        new_title = TextMobject("Additive group of real numbers")
+        VGroup(*new_title[-len("realnumbers"):]).highlight(BLUE)
+        VGroup(*new_title[:len("Additive")]).highlight(ADDER_COLOR)
+        new_title.to_edge(UP)
+        return Transform(self.title, new_title)
+
+    def show_example_additions(self, *num_pairs):
+        for num_pair in num_pairs:
+            num_mobs = VGroup()
+            arrows = VGroup()
+            self.number_line.save_state()
+            for num in num_pair:
+                zero_point, num_point, arrow, num_mob = \
+                    self.get_adder_mobs(num)
+                if len(num_mobs) > 0:
+                    last_num_mob = num_mobs[0]
+                    x = num_mob.get_center()[0]
+                    if x < last_num_mob.get_right()[0] and x > last_num_mob.get_left()[0]:
+                        num_mob.next_to(last_num_mob, RIGHT)
+                num_mobs.add(num_mob)
+                arrows.add(arrow)
+
+                self.play(
+                    ShowCreation(arrow),
+                    Write(num_mob, run_time = 1)
+                )
+                self.play(
+                    self.number_line.shift, 
+                    num_point - zero_point
+                )
+                self.dither()
+            #Reset
+            self.play(
+                FadeOut(num_mobs),
+                FadeOut(self.number_line)
+            )
+            ApplyMethod(self.number_line.restore).update(1)
+            self.play(FadeIn(self.number_line))
+
+            #Sum arrow
+            num = sum(num_pair)
+            zero_point, sum_point, arrow, sum_mob = \
+                self.get_adder_mobs(sum(num_pair))
+            VGroup(arrow, sum_mob).shift(MED_LARGE_BUFF*UP)
+            arrows.add(arrow)
+            self.play(
+                ShowCreation(arrow),
+                Write(sum_mob, run_time = 1)
+            )
+            self.dither()
+            self.play(
+                self.number_line.shift, 
+                num_point - zero_point,
+                run_time = 2
+            )
+            self.dither()
+            self.play(
+                self.number_line.restore,
+                *map(FadeOut, [arrows, sum_mob])
+            )
+
+    def get_adder_mobs(self, num):
+        zero_point = self.number_line.number_to_point(0)            
+        num_point = self.number_line.number_to_point(num)
+        arrow = Arrow(zero_point, num_point, buff = 0)
+        arrow.highlight(ADDER_COLOR)
+        arrow.shift(MED_SMALL_BUFF*UP)
+        if num == 0:
+            arrow = DashedLine(UP, ORIGIN)
+            arrow.move_to(zero_point)
+        elif num < 0:
+            arrow.highlight(RED)
+            arrow.shift(SMALL_BUFF*UP)
+        sign = "+" if num >= 0 else ""
+        num_mob = TexMobject(sign + str(num))
+        num_mob.next_to(arrow, UP)
+        num_mob.highlight(arrow.get_color())
+        return zero_point, num_point, arrow, num_mob
+
+class AdditiveGroupOfComplexNumbers(ComplexTransformationScene):
+    CONFIG = {
+        "x_min" : -2*int(SPACE_WIDTH),
+        "x_max" : 2*int(SPACE_WIDTH),
+        "y_min" : -2*SPACE_HEIGHT,
+        "y_max" : 2*SPACE_HEIGHT,
+        "example_points" : [
+            complex(3, 2),
+            complex(1, -3),
+        ]
+    }
+    def construct(self):
+        self.add_plane()
+        self.show_vertical_slide()
+        self.show_example_point()
+        self.show_example_addition()
+        self.write_group_name()
+        self.show_some_random_slides()
+
+    def add_plane(self):
+        self.add_transformable_plane(animate = True)
+        zero_dot = Dot(
+            self.z_to_point(0),
+            color = ADDER_COLOR
+        )
+        self.play(ShowCreation(zero_dot))
+        self.plane.add(zero_dot)
+        self.dither()
+
+    def show_vertical_slide(self):
+        dots = VGroup(*[
+            Dot(self.z_to_point(complex(0, i)))
+            for i in range(1, 4)
+        ])
+        dots.highlight(YELLOW)
+        labels = VGroup(*self.imag_labels[-3:])
+
+        arrow = Arrow(ORIGIN, dots[-1].get_center(), buff = 0)
+        arrow.highlight(ADDER_COLOR)
+
+        self.plane.save_state()
+        for dot, label in zip(dots, labels):
+            self.play(
+                Indicate(label),
+                ShowCreation(dot)
+            )
+        self.add_foreground_mobjects(dots)
+        self.dither()
+        self.play(ShowCreation(arrow))
+        self.play(
+            self.plane.shift, dots[-1].get_center(),
+            Animation(arrow),
+            run_time = 2
+        )
+        self.dither()
+        self.play(FadeOut(arrow))
+        self.play(
+            self.plane.shift, 6*DOWN,
+            run_time = 2,
+        )
+        self.play(self.plane.restore, run_time = 2)
+        self.foreground_mobjects.remove(dots)
+        self.play(FadeOut(dots))
+
+    def show_example_point(self):
+        z = self.example_points[0]
+        point = self.z_to_point(z)
+        dot = Dot(point, color = YELLOW)
+        arrow = Vector(point, buff = dot.radius)
+        arrow.highlight(dot.get_color())
+        label = TexMobject("%d + %di"%(z.real, z.imag))
+        label.next_to(point, UP)
+        label.highlight(dot.get_color())
+        label.add_background_rectangle()
+
+        real_arrow = Vector(self.z_to_point(z.real))
+        imag_arrow = Vector(self.z_to_point(z - z.real))
+        VGroup(real_arrow, imag_arrow).highlight(ADDER_COLOR)
+
+        self.play(
+            Write(label),
+            DrawBorderThenFill(dot)
+        )
+        self.dither()
+        self.play(ShowCreation(arrow))
+        self.add_foreground_mobjects(label, dot, arrow)
+        self.dither()
+        self.slide(z)
+        self.dither()
+        self.play(FadeOut(self.plane))
+        self.plane.restore()
+        self.plane.set_stroke(width = 0)
+        self.play(self.plane.restore)
+        self.play(ShowCreation(real_arrow))
+        self.add_foreground_mobjects(real_arrow)
+        self.slide(z.real)
+        self.dither()
+        self.play(ShowCreation(imag_arrow))
+        self.dither()
+        self.play(imag_arrow.shift, self.z_to_point(z.real))
+        self.add_foreground_mobjects(imag_arrow)
+        self.slide(z - z.real)
+        self.dither()
+
+        self.foreground_mobjects.remove(real_arrow)
+        self.foreground_mobjects.remove(imag_arrow)
+        self.play(*map(FadeOut, [real_arrow, imag_arrow, self.plane]))
+        self.plane.restore()
+        self.plane.set_stroke(0)
+        self.play(self.plane.restore)
+
+        self.z1 = z
+        self.arrow1 = arrow
+        self.dot1 = dot
+        self.label1 = label
+
+    def show_example_addition(self):
+        z1 = self.z1
+        arrow1 = self.arrow1
+        dot1 = self.dot1
+        label1 = self.label1
+
+        z2 = self.example_points[1]
+        point2 = self.z_to_point(z2)
+        dot2 = Dot(point2, color = TEAL)
+        arrow2 = Vector(
+            point2, 
+            buff = dot2.radius,
+            color = dot2.get_color()
+        )
+        label2 = TexMobject(
+            "%d %di"%(z2.real, z2.imag)
+        )
+        label2.next_to(point2, UP+RIGHT)
+        label2.highlight(dot2.get_color())
+        label2.add_background_rectangle()
+
+        self.play(ShowCreation(arrow2))
+        self.play(
+            DrawBorderThenFill(dot2),
+            Write(label2)
+        )
+        self.add_foreground_mobjects(arrow2, dot2, label2)
+        self.dither()
+
+        self.slide(z1)
+        arrow2_copy = arrow2.copy()
+        self.play(arrow2_copy.shift, self.z_to_point(z1))
+        self.add_foreground_mobjects(arrow2_copy)
+        self.slide(z2)
+        self.play(FadeOut(arrow2_copy))
+        self.foreground_mobjects.remove(arrow2_copy)
+        self.dither()
+
+        ##Break into components
+        real_arrow, imag_arrow = component_arrows = [
+            Vector(
+                self.z_to_point(z),
+                color = ADDER_COLOR
+            )
+            for z in [
+                z1.real+z2.real,
+                complex(0, z1.imag+z2.imag),
+            ]
+        ]
+        imag_arrow.shift(real_arrow.get_end())
+        plus = TexMobject("+").next_to(
+            real_arrow.get_center(), UP+RIGHT
+        )
+        plus.add_background_rectangle()
+
+        rp1, rp2, ip1, ip2 = label_parts = [
+            VGroup(label1[1][0].copy()),
+            VGroup(label2[1][0].copy()),
+            VGroup(*label1[1][2:]).copy(),
+            VGroup(*label2[1][1:]).copy(),
+        ]
+        for part in label_parts:
+            part.generate_target()
+
+        rp1.target.next_to(plus, LEFT)
+        rp2.target.next_to(plus, RIGHT)
+        ip1.target.next_to(imag_arrow.get_center(), RIGHT)
+        ip1.target.shift(SMALL_BUFF*DOWN)
+        ip2.target.next_to(ip1.target, RIGHT)
+
+        real_background_rect = BackgroundRectangle(
+            VGroup(rp1.target, rp2.target)
+        )
+        imag_background_rect = BackgroundRectangle(
+            VGroup(ip1.target, ip2.target)
+        )
+
+        self.play(
+            ShowCreation(real_arrow),
+            ShowCreation(
+                real_background_rect,
+                rate_func = squish_rate_func(smooth, 0.75, 1),
+            ),
+            Write(plus),
+            *map(MoveToTarget, [rp1, rp2])
+        )
+        self.dither()
+        self.play(
+            ShowCreation(imag_arrow),
+            ShowCreation(
+                imag_background_rect,
+                rate_func = squish_rate_func(smooth, 0.75, 1),
+            ),
+            *map(MoveToTarget, [ip1, ip2])
+        )
+        self.dither(2)
+        to_remove = [
+            arrow1, dot1, label1,
+            arrow2, dot2, label2,
+            real_background_rect,
+            imag_background_rect,
+            plus,
+        ] + label_parts + component_arrows
+        for mob in to_remove:
+            if mob in self.foreground_mobjects:
+                self.foreground_mobjects.remove(mob)
+        self.play(*map(FadeOut, to_remove))
+        self.play(self.plane.restore, run_time = 2)
+        self.dither()
+
+    def write_group_name(self):
+        title = TextMobject(
+            "Additive", "group of", "complex numbers"
+        )
+        title[0].highlight(ADDER_COLOR)
+        title[2].highlight(BLUE)
+        title.add_background_rectangle()
+        title.to_edge(UP, buff = MED_SMALL_BUFF)
+
+        self.play(Write(title))
+        self.add_foreground_mobjects(title)
+        self.dither()
+
+    def show_some_random_slides(self):
+        example_slides = [
+            complex(3),
+            complex(0, 2),
+            complex(-4, -1),
+            complex(-2, -1),
+            complex(4, 2),
+        ]
+        for z in example_slides:
+            self.slide(z)
+            self.dither()
+
+    #########
+
+    def slide(self, z, *added_anims, **kwargs):
+        kwargs["run_time"] = kwargs.get("run_time", 2)
+        self.play(
+            ApplyMethod(
+                self.plane.shift, self.z_to_point(z),
+                **kwargs
+            ),
+            *added_anims
+        )
 
 
 

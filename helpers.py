@@ -325,6 +325,8 @@ def path_along_arc(arc_angle, axis = OUT):
     """
     if abs(arc_angle) < STRAIGHT_PATH_THRESHOLD:
         return straight_path
+    if np.linalg.norm(axis) == 0:
+        axis = OUT
     unit_axis = axis/np.linalg.norm(axis)
     def path(start_points, end_points, alpha):
         vects = end_points - start_points

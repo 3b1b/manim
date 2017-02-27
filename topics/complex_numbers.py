@@ -6,7 +6,7 @@ from mobject.tex_mobject import TexMobject, TextMobject
 from number_line import NumberPlane
 from animation import Animation
 from animation.transform import ApplyPointwiseFunction
-from animation.simple_animations import Homotopy
+from animation.simple_animations import Homotopy, ShowCreation
 from scene import Scene
 
 
@@ -23,10 +23,10 @@ class ComplexTransformationScene(Scene):
         "y_min" : -SPACE_HEIGHT,
         "y_max" : SPACE_HEIGHT,
         "use_multicolored_plane" : False,
-        "vert_start_color" : MAROON_B,
-        "vert_end_color" : RED,
-        "horiz_start_color" : GREEN_B,
-        "horiz_end_color" : YELLOW,
+        "vert_start_color" : BLUE,
+        "vert_end_color" : BLUE,
+        "horiz_start_color" : BLUE,
+        "horiz_end_color" : BLUE,
         "num_anchors_to_add_per_line" : 50,
         "post_transformation_stroke_width" : None,
         "default_apply_complex_function_kwargs" : {
@@ -68,13 +68,13 @@ class ComplexTransformationScene(Scene):
             TexMobject(str(x)).shift(
                 background.num_pair_to_point((x, 0))
             )
-            for x in range(-int(self.x_max), int(self.x_max))
+            for x in range(-int(background.x_radius), int(background.x_radius))
         ])
         imag_labels = VGroup(*[
             TexMobject("%di"%y).shift(
                 background.num_pair_to_point((0, y))
             )
-            for y in range(-int(self.y_max), int(self.y_max))
+            for y in range(-int(background.y_radius), int(background.y_radius))
             if y != 0
         ])
         for labels in real_labels, imag_labels:
@@ -127,6 +127,7 @@ class ComplexTransformationScene(Scene):
             )
 
     def z_to_point(self, z):
+        z = complex(z)
         return self.background.num_pair_to_point((z.real, z.imag))
         
     def get_transformer(self, **kwargs):

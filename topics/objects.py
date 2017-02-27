@@ -21,7 +21,7 @@ class PartyHat(SVGMobject):
         "fill_opacity" : 1,
         "propogate_style_to_family" : True,
         "frills_colors" : [MAROON_B, PURPLE],
-        "cone_color" : RED,
+        "cone_color" : GREEN,
         "dots_colors" : [YELLOW],
     }
     NUM_FRILLS = 7

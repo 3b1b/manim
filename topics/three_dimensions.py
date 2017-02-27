@@ -51,11 +51,18 @@ class ThreeDCamera(Camera):
 
     def display_multiple_vectorized_mobjects(self, vmobjects):
         def z_cmp(*vmobs):
-            if all([hasattr(vm, "part_of_three_d_mobject") for vm in vmobs]):
+            is_three_d = np.array([
+                hasattr(vm, "part_of_three_d_mobject") 
+                for vm in vmobs
+            ])
+            if sum(is_three_d) == 2:
+                cmp_vect = self.get_unit_normal_vect(vmobs[0])
                 return cmp(*[
-                    vm.get_edge_center(IN)[2]
+                    np.dot(vm.get_center(), cmp_vect)
                     for vm in vmobs
                 ])
+            elif sum(is_three_d) == 1:
+                return 1 if is_three_d[0] else -1
             else:
                 return 0
         Camera.display_multiple_vectorized_mobjects(
