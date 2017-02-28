@@ -1454,56 +1454,6 @@ class RecursionTime(Scene):
         self.play(Blink(morty))
         self.dither()
 
-class Eyes(VMobject):
-    CONFIG = {
-        "height" : 0.3,
-        "thing_looked_at" : None,
-        "mode" : "plain",
-    }
-    def __init__(self, mobject, **kwargs):
-        VMobject.__init__(self, **kwargs)
-        self.mobject = mobject
-        self.submobjects = self.get_eyes().submobjects
-
-    def get_eyes(self, mode = None, thing_to_look_at = None):
-        mode = mode or self.mode
-        if thing_to_look_at is None:
-            thing_to_look_at = self.thing_looked_at
-
-        pi = Randolph(mode = mode)
-        eyes = VGroup(pi.eyes, pi.pupils)
-        eyes.scale_to_fit_height(self.height)
-        if self.submobjects:
-            eyes.move_to(self, DOWN)
-        else:
-            eyes.move_to(self.mobject.get_top(), DOWN)
-        if thing_to_look_at is not None:
-            pi.look_at(thing_to_look_at)
-        return eyes
-
-    def change_mode_anim(self, mode, **kwargs):
-        self.mode = mode
-        return Transform(self, self.get_eyes(mode = mode), **kwargs)
-
-    def look_at_anim(self, point_or_mobject, **kwargs):
-        self.thing_looked_at = point_or_mobject
-        return Transform(
-            self, self.get_eyes(thing_to_look_at = point_or_mobject), 
-            **kwargs
-        )
-
-    def blink_anim(self):
-        target = self.copy()
-        bottom_y = self.get_bottom()[1]
-        for submob in target:
-            submob.apply_function(
-                lambda p : [p[0], bottom_y, p[2]]
-            )
-        return Transform(
-            self, target, 
-            rate_func = squish_rate_func(there_and_back)
-        )
-
 class RecursiveSolution(TowersOfHanoiScene):
     CONFIG = {
         "num_disks" : 4,

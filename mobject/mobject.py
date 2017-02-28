@@ -126,10 +126,6 @@ class Mobject(object):
             self.shift(about_point)
         return self
 
-    def scale_about_point(self, scale_factor, point):
-        self.do_about_point(point, self.scale, scale_factor)
-        return self
-
     def rotate_about_origin(self, angle, axis = OUT, axes = []):
         if len(axes) == 0:
             axes = [axis]
@@ -214,6 +210,10 @@ class Mobject(object):
         self.do_in_place(self.scale, scale_factor)
         return self
 
+    def scale_about_point(self, scale_factor, point):
+        self.do_about_point(point, self.scale, scale_factor)
+        return self
+
     def pose_at_angle(self):
         self.rotate_in_place(np.pi / 7, RIGHT+UP)
         return self
@@ -283,6 +283,10 @@ class Mobject(object):
         if self.get_top()[1] < -SPACE_HEIGHT:
             return True
         return False
+
+    def stretch_about_point(self, factor, dim, point):
+        self.do_about_point(point, self.stretch, factor, dim)
+        return self
 
     def stretch_in_place(self, factor, dim):
         self.do_in_place(self.stretch, factor, dim)

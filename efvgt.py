@@ -1232,6 +1232,8 @@ class AdditiveGroupOfReals(Scene):
         "number_line_center" : UP,
         "shadow_line_center" : DOWN,
         "zero_color" : GREEN_B,
+        "x_min" : -2*SPACE_WIDTH,
+        "x_max" : 2*SPACE_WIDTH,
     }
     def construct(self):
         self.add_number_line()
@@ -1248,8 +1250,8 @@ class AdditiveGroupOfReals(Scene):
 
     def add_number_line(self):
         number_line = NumberLine(
-            x_min = -2*SPACE_WIDTH,
-            x_max = 2*SPACE_WIDTH
+            x_min = self.x_min,
+            x_max = self.x_max,
         )
 
         number_line.shift(self.number_line_center)
@@ -1535,7 +1537,7 @@ class AdditiveGroupOfComplexNumbers(ComplexTransformationScene):
         self.foreground_mobjects.remove(imag_arrow)
         self.play(*map(FadeOut, [real_arrow, imag_arrow, self.plane]))
         self.plane.restore()
-        self.plane.set_stroke(0)
+        self.plane.set_stroke(width = 0)
         self.play(self.plane.restore)
 
         self.z1 = z
@@ -1689,6 +1691,371 @@ class AdditiveGroupOfComplexNumbers(ComplexTransformationScene):
             ),
             *added_anims
         )
+
+class SchizophrenicNumbers(Scene):
+    def construct(self):
+        v_line = DashedLine(
+            SPACE_HEIGHT*UP,
+            SPACE_HEIGHT*DOWN
+        )
+        left_title = TextMobject("Additive group")
+        left_title.shift(SPACE_WIDTH*LEFT/2)
+        right_title = TextMobject("Multiplicative group")
+        right_title.shift(SPACE_WIDTH*RIGHT/2)
+        VGroup(left_title, right_title).to_edge(UP)
+        self.add(v_line, left_title, right_title)
+
+        numbers = VGroup(
+            Randolph(mode = "happy").scale(0.2),
+            TexMobject("3").shift(UP+LEFT),
+            TexMobject("5.83").shift(UP+RIGHT),
+            TexMobject("\\sqrt{2}").shift(DOWN+LEFT),
+            TexMobject("2-i").shift(DOWN+RIGHT),
+        )
+        for number in numbers:
+            number.highlight(ADDER_COLOR)
+            number.scale(1.5)            
+            if isinstance(number, PiCreature):
+                continue
+            number.eyes = Eyes(number[0], height = 0.1)
+            number.add(number.eyes)
+        numbers[3].eyes.next_to(numbers[3][1], UP, buff = 0)
+        numbers.shift(SPACE_WIDTH*LEFT/2)
+
+        self.play(FadeIn(numbers))
+        self.blink_numbers(numbers)
+        self.dither()
+        self.add(numbers.copy())
+        for number in numbers:
+            number.generate_target()
+            number.target.shift(SPACE_WIDTH*RIGHT)
+            number.target.eyes.save_state()
+            number.target.highlight(MULTIPLIER_COLOR)
+            number.target.eyes.restore()
+        self.play(*[
+            MoveToTarget(
+                number, 
+                rate_func = squish_rate_func(
+                    smooth, alpha, alpha+0.5
+                ),
+                run_time = 2,
+            )
+            for number, alpha in zip(numbers, np.linspace(0, 0.5, len(numbers)))
+        ])
+        self.dither()
+        self.blink_numbers(numbers)
+        self.dither()
+
+    def blink_numbers(self, numbers):
+        self.play(*[
+            num.eyes.blink_anim(
+                rate_func = squish_rate_func(
+                    there_and_back, alpha, alpha+0.2
+                )
+            )
+            for num, alpha in zip(
+                numbers[1:], 0.8*np.random.random(len(numbers))
+            )
+        ])
+
+class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
+    CONFIG = {
+        "number_line_center" : 0.5*UP,
+        "shadow_line_center" : 1.5*DOWN,
+        "x_min" : -3*SPACE_WIDTH,
+        "x_max" : 3*SPACE_WIDTH,
+    }
+    def setup(self):
+        self.foreground_mobjects = VGroup()
+
+    def construct(self):
+        self.add_title()
+        self.add_number_line()
+        self.introduce_stretch_and_squish()
+        self.show_zero_fixed_in_place()
+        self.follow_one()
+        self.every_positive_number_association()
+        self.compose_actions(3, 2)
+        self.compose_actions(4, 0.5)
+        self.write_group_name()
+        self.compose_actions(1.5, 1.5)
+
+    def add_title(self):
+        self.title = TextMobject("Group of stretching/squishing actions")
+        self.title.to_edge(UP)
+        self.add(self.title)
+
+    def add_number_line(self):
+        AdditiveGroupOfReals.add_number_line(self)
+        self.zero_point = self.number_line.number_to_point(0)
+        self.one = filter(
+            lambda m : m.get_tex_string() is "1",
+            self.number_line.numbers
+        )[0]
+        self.one.add_background_rectangle()
+        self.one.background_rectangle.scale_in_place(1.3)
+        self.number_line.save_state()        
+
+    def introduce_stretch_and_squish(self):
+        for num in [3, 0.25]:
+            self.stretch(num)
+            self.dither()
+        self.play(self.number_line.restore)
+        self.dither()
+
+    def show_zero_fixed_in_place(self):
+        arrow = Arrow(self.zero_point + UP, self.zero_point, buff = 0)
+        arrow.highlight(ADDER_COLOR)
+        words = TextMobject("Fix zero")
+        words.highlight(ADDER_COLOR)
+        words.next_to(arrow, UP)
+
+        self.play(
+            ShowCreation(arrow),
+            Write(words)
+        )
+        self.foreground_mobjects.add(arrow)
+        self.stretch(4)
+        self.stretch(0.1)
+        self.dither()
+        self.play(self.number_line.restore)
+        self.play(FadeOut(words))
+        self.dither()
+
+        self.zero_arrow = arrow
+
+    def follow_one(self):
+        dot = Dot(self.number_line.number_to_point(1))
+        arrow = Arrow(dot.get_center()+UP+RIGHT, dot)
+        words = TextMobject("Follow one")
+        words.next_to(arrow.get_start(), UP)
+        for mob in dot, arrow, words:
+            mob.highlight(MULTIPLIER_COLOR)
+
+        three_line, half_line = [
+            DashedLine(
+                self.number_line.number_to_point(num),
+                self.shadow_line.number_to_point(num)
+            )
+            for num in 3, 0.5
+        ]
+        three_mob = filter(
+            lambda m : m.get_tex_string() == "3",
+            self.shadow_line.numbers    
+        )[0]
+        half_point = self.shadow_line.number_to_point(0.5)
+        half_arrow = Arrow(
+            half_point+UP+LEFT, half_point, buff = SMALL_BUFF,
+            tip_length = 0.15,
+        )
+        half_label = TexMobject("1/2")
+        half_label.scale(0.7)
+        half_label.highlight(MULTIPLIER_COLOR)
+        half_label.next_to(half_arrow.get_start(), LEFT, buff = SMALL_BUFF)
+        
+        self.play(
+            ShowCreation(arrow),
+            DrawBorderThenFill(dot),
+            Write(words)
+        )
+        self.number_line.add(dot)
+        self.number_line.numbers.add(dot)
+        self.number_line.save_state()
+        self.dither()
+        self.play(*map(FadeOut, [arrow, words]))
+
+        self.stretch(3)
+        self.play(
+            ShowCreation(three_line),
+            Animation(self.one)
+        )
+        dot_copy = dot.copy()
+        self.play(
+            dot_copy.move_to, three_line.get_bottom()
+        )
+        self.play(Indicate(three_mob, run_time = 2))
+        self.dither()
+        self.play(
+            self.number_line.restore,
+            *map(FadeOut, [three_line, dot_copy])
+        )
+        self.dither()
+        self.stretch(0.5)
+        self.play(
+            ShowCreation(half_line),
+            Animation(self.one)
+        )
+        dot_copy = dot.copy()
+        self.play(
+            dot_copy.move_to, half_line.get_bottom()
+        )
+        self.play(
+            Write(half_label),
+            ShowCreation(half_arrow)
+        )
+        self.dither()
+        self.play(
+            self.number_line.restore,
+            *map(FadeOut, [
+                half_label, half_arrow, 
+                half_line, dot_copy
+            ])
+        )
+        self.dither()
+
+        self.one_dot = dot
+
+    def every_positive_number_association(self):
+        positive_reals_line = Line(
+            self.shadow_line.number_to_point(0),
+            self.shadow_line.number_to_point(SPACE_WIDTH),
+            color = MULTIPLIER_COLOR
+        )
+        positive_reals_words = TextMobject("All positive reals")
+        positive_reals_words.highlight(MULTIPLIER_COLOR)
+        positive_reals_words.next_to(positive_reals_line, UP)
+        positive_reals_words.add_background_rectangle()
+
+        half_line, one_line = [
+            DashedLine(
+                self.number_line.number_to_point(num),
+                self.shadow_line.number_to_point(num)
+            )
+            for num in 0.5, 1
+        ]
+
+        self.play(
+            self.zero_arrow.shift, 0.5*UP,
+            rate_func = there_and_back
+        )
+        self.dither()
+        self.play(
+            self.one_dot.shift, 0.25*UP,
+            rate_func = wiggle
+        )
+        self.stretch(3)
+        self.stretch(0.33/3, run_time = 3)
+        self.dither()
+        self.play(ShowCreation(half_line), Animation(self.one))
+        self.play(
+            ShowCreation(positive_reals_line),
+            Write(positive_reals_words),
+        )
+        self.dither()
+        self.play(
+            ReplacementTransform(half_line, one_line),
+            self.number_line.restore,
+            Animation(positive_reals_words),
+            run_time = 2
+        )
+        self.number_line.add_to_back(one_line)
+        self.number_line.save_state()
+        self.stretch(
+            7, run_time = 10, rate_func = there_and_back,
+            added_anims = [Animation(positive_reals_words)]
+        )
+        self.dither()
+
+    def compose_actions(self, num1, num2):
+        words = VGroup(*[
+            TextMobject("(%s by %s)"%(word, str(num)))
+            for num in num1, num2, num1*num2
+            for word in ["Stretch" if num > 1 else "Squish"]
+        ])
+        words.submobjects.insert(2, TexMobject("="))
+        words.arrange_submobjects(RIGHT)
+        top_words = VGroup(*words[:2])
+        top_words.highlight(MULTIPLIER_COLOR)
+        bottom_words = VGroup(*words[2:])
+        bottom_words.next_to(top_words, DOWN)
+        words.scale(0.8)
+        words.next_to(self.number_line, UP)
+        words.to_edge(RIGHT)
+
+        for num, word in zip([num1, num2], top_words):
+            self.stretch(
+                num, 
+                added_anims = [FadeIn(word)],
+                run_time = 3
+            )
+            self.dither()
+        self.play(FadeOut(self.number_line))
+        self.number_line.restore()
+        self.play(FadeIn(self.number_line))
+        self.stretch(
+            num1*num2,
+            added_anims = [FadeIn(bottom_words)],
+            run_time = 3
+        )
+        self.dither(2)
+        self.play(
+            ApplyMethod(self.number_line.restore, run_time = 2),
+            FadeOut(words),
+        )
+        self.dither()
+
+    def write_group_name(self):
+        new_title = TextMobject(
+            "Multiplicative group of positive real numbers"
+        )
+        new_title.to_edge(UP)
+        VGroup(*new_title[:len("Multiplicative")]).highlight(MULTIPLIER_COLOR)
+        VGroup(*new_title[-len("positiverealnumbers"):]).highlight(MULTIPLIER_COLOR)
+
+        self.play(Transform(self.title, new_title))
+        self.dither()
+
+    ###
+
+    def stretch(self, factor, run_time = 2, **kwargs):
+        kwargs["run_time"] = run_time
+        target = self.number_line.copy()
+        target.stretch_about_point(factor, 0, self.zero_point)
+        total_factor = (target.number_to_point(1)-self.zero_point)[0]
+        for number in target.numbers:
+            number.stretch_in_place(1./factor, dim = 0)
+            if total_factor < 0.7:
+                number.stretch_in_place(total_factor, dim = 0)
+        self.play(
+            Transform(self.number_line, target, **kwargs),
+            *kwargs.get("added_anims", [])
+        )
+
+    def play(self, *anims, **kwargs):
+        anims = list(anims) + [Animation(self.foreground_mobjects)]
+        Scene.play(self, *anims, **kwargs)
+
+class MultiplicativeGroupOfComplexNumbers(AdditiveGroupOfComplexNumbers):
+    def construct(self):
+        self.add_plane()
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
