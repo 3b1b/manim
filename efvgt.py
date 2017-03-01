@@ -1456,6 +1456,7 @@ class AdditiveGroupOfComplexNumbers(ComplexTransformationScene):
         )
         self.play(ShowCreation(zero_dot))
         self.plane.add(zero_dot)
+        self.plane.zero_dot = zero_dot
         self.dither()
 
     def show_vertical_slide(self):
@@ -1764,6 +1765,7 @@ class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
         "shadow_line_center" : 1.5*DOWN,
         "x_min" : -3*SPACE_WIDTH,
         "x_max" : 3*SPACE_WIDTH,
+        "positive_reals_color" : MAROON_B,
     }
     def setup(self):
         self.foreground_mobjects = VGroup()
@@ -1909,10 +1911,10 @@ class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
         positive_reals_line = Line(
             self.shadow_line.number_to_point(0),
             self.shadow_line.number_to_point(SPACE_WIDTH),
-            color = MULTIPLIER_COLOR
+            color = self.positive_reals_color
         )
         positive_reals_words = TextMobject("All positive reals")
-        positive_reals_words.highlight(MULTIPLIER_COLOR)
+        positive_reals_words.highlight(self.positive_reals_color)
         positive_reals_words.next_to(positive_reals_line, UP)
         positive_reals_words.add_background_rectangle()
 
@@ -1979,14 +1981,7 @@ class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
                 run_time = 3
             )
             self.dither()
-        self.play(FadeOut(self.number_line))
-        self.number_line.restore()
-        self.play(FadeIn(self.number_line))
-        self.stretch(
-            num1*num2,
-            added_anims = [FadeIn(bottom_words)],
-            run_time = 3
-        )
+        self.play(Write(bottom_words, run_time = 2))
         self.dither(2)
         self.play(
             ApplyMethod(self.number_line.restore, run_time = 2),
@@ -1999,8 +1994,12 @@ class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
             "Multiplicative group of positive real numbers"
         )
         new_title.to_edge(UP)
-        VGroup(*new_title[:len("Multiplicative")]).highlight(MULTIPLIER_COLOR)
-        VGroup(*new_title[-len("positiverealnumbers"):]).highlight(MULTIPLIER_COLOR)
+        VGroup(
+            *new_title[:len("Multiplicative")]
+        ).highlight(MULTIPLIER_COLOR)
+        VGroup(
+            *new_title[-len("positiverealnumbers"):]
+        ).highlight(self.positive_reals_color)
 
         self.play(Transform(self.title, new_title))
         self.dither()
@@ -2026,20 +2025,712 @@ class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
         Scene.play(self, *anims, **kwargs)
 
 class MultiplicativeGroupOfComplexNumbers(AdditiveGroupOfComplexNumbers):
+    CONFIG = {
+        "dot_radius" : Dot.CONFIG["radius"],
+        "y_min" : -3*SPACE_HEIGHT,
+        "y_max" : 3*SPACE_HEIGHT,
+    }
     def construct(self):
         self.add_plane()
-        
+        self.add_title()
+        self.fix_zero_and_move_one()
+        self.show_example_actions()
+        self.show_action_at_i()
+        self.show_action_at_i_again()
+        self.show_i_squared_is_negative_one()
+        self.talk_through_specific_example()
+        self.show_break_down()
+        self.example_actions_broken_down()
+
+    def add_plane(self):
+        AdditiveGroupOfComplexNumbers.add_plane(self)
+        one_dot = Dot(
+            self.z_to_point(1), 
+            color = MULTIPLIER_COLOR,
+            radius = self.dot_radius,
+        )
+        self.plane.add(one_dot)
+        self.plane.one_dot = one_dot
+        self.plane.save_state()
+        self.add(self.plane)
+
+    def add_title(self):
+        title = TextMobject(
+            "Multiplicative", "group of", 
+            "complex numbers"
+        )
+        title.to_edge(UP)
+        title[0].highlight(MULTIPLIER_COLOR)
+        title[2].highlight(BLUE)
+        title.add_background_rectangle()
+
+        self.play(Write(title, run_time = 2))
+        self.dither()
+        self.add_foreground_mobjects(title)
+
+    def fix_zero_and_move_one(self):
+        zero_arrow = Arrow(
+            UP+1.25*LEFT, ORIGIN, 
+            buff = 2*self.dot_radius
+        )
+        zero_arrow.highlight(ADDER_COLOR)
+        zero_words = TextMobject("Fix zero")
+        zero_words.highlight(ADDER_COLOR)
+        zero_words.add_background_rectangle()
+        zero_words.next_to(zero_arrow.get_start(), UP)
+
+        one_point = self.z_to_point(1)
+        one_arrow = Arrow(
+            one_point+UP+1.25*RIGHT, one_point, 
+            buff = 2*self.dot_radius,
+            color = MULTIPLIER_COLOR,
+        )
+        one_words = TextMobject("Drag one")
+        one_words.highlight(MULTIPLIER_COLOR)
+        one_words.add_background_rectangle()
+        one_words.next_to(one_arrow.get_start(), UP)
+
+        self.play(
+            Write(zero_words, run_time = 2),
+            ShowCreation(zero_arrow),
+            Indicate(self.plane.zero_dot, color = RED),
+        )
+        self.play(
+            Write(one_words, run_time = 2),
+            ShowCreation(one_arrow),
+            Indicate(self.plane.one_dot, color = RED),
+        )
+        self.dither(2)
+        self.play(*map(FadeOut, [
+            zero_words, zero_arrow,
+            one_words, one_arrow,
+        ]))
+
+    def show_example_actions(self):
+        z_list = [
+            complex(2),
+            complex(0.5),
+            complex(2, 1),
+            complex(-2, 2),
+        ]
+        for last_z, z in zip([1] + z_list, z_list):
+            self.multiply_by_z(z/last_z)
+            self.dither()
+        self.reset_plane()
+        self.dither()
+
+    def show_action_at_i(self):
+        i_point = self.z_to_point(complex(0, 1))
+        i_dot = Dot(i_point)
+        i_dot.highlight(RED)
+        i_arrow = Arrow(i_point+UP+LEFT, i_point)
+        i_arrow.highlight(i_dot.get_color())
+
+        arc = Arc(
+            start_angle = np.pi/24,
+            angle = 10*np.pi/24,
+            radius = self.z_to_point(1)[0],
+            num_anchors = 20,
+        )
+        arc.add_tip(tip_length = 0.15)
+        arc.highlight(YELLOW)
+
+        self.play(
+            ShowCreation(i_arrow),
+            DrawBorderThenFill(i_dot)
+        )
+        self.dither()
+        self.play(
+            FadeOut(i_arrow),
+            ShowCreation(arc)
+        )
+        self.add_foreground_mobjects(arc)
+        self.dither(2)
+        self.multiply_by_z(complex(0, 1), run_time = 3)
+        self.remove(i_dot)
+        self.dither()
+
+        self.turn_arrow = arc
+
+    def show_action_at_i_again(self):
+        neg_one_label = filter(
+            lambda m : m.get_tex_string() == "-1",
+            self.real_labels
+        )[0]
+        half_turn_arc = Arc(
+            start_angle = np.pi/12,
+            angle = 10*np.pi/12,
+            color = self.turn_arrow.get_color()
+        )
+        half_turn_arc.add_tip(tip_length = 0.15)
+
+        self.multiply_by_z(complex(0, 1), run_time = 3)
+        self.dither()
+        self.play(Transform(
+            self.turn_arrow, half_turn_arc,
+            path_arc = np.pi/2
+        ))
+        self.dither()        
+        self.play(Indicate(neg_one_label, run_time = 2))
+        self.dither()
+        self.foreground_mobjects.remove(self.turn_arrow)
+        self.reset_plane(FadeOut(self.turn_arrow))
+
+    def show_i_squared_is_negative_one(self):
+        equation = TexMobject("i", "\\cdot", "i", "=", "-1")
+        terms = equation[::2]
+        equation.add_background_rectangle()
+        equation.next_to(ORIGIN, RIGHT)
+        equation.shift(1.5*UP)
+        equation.highlight(MULTIPLIER_COLOR)
+
+        self.play(Write(equation, run_time = 2))
+        self.dither()
+        for term in terms[:2]:
+            self.multiply_by_z(
+                complex(0, 1),
+                added_anims = [
+                    Animation(equation),
+                    Indicate(term, color = RED, run_time = 2)
+                ]
+            )
+            self.dither()
+        self.play(Indicate(terms[-1], color = RED, run_time = 2))
+        self.dither()
+        self.reset_plane(FadeOut(equation))
+
+    def talk_through_specific_example(self):
+        z = complex(2, 1)
+        angle = np.angle(z)
+        point = self.z_to_point(z)
+        dot = Dot(point, color = WHITE)
+        label = TexMobject("%d + %di"%(z.real, z.imag))
+        label.add_background_rectangle()
+        label.next_to(dot, UP+RIGHT, buff = 0)
+
+        brace = Brace(
+            Line(ORIGIN, self.z_to_point(np.sqrt(5))),
+            UP
+        )
+        brace_text = brace.get_text("$\\sqrt{5}$")
+        brace_text.add_background_rectangle()
+        brace_text.scale(0.7, about_point = brace.get_top())
+        brace.rotate(angle)
+        brace_text.rotate(angle).rotate_in_place(-angle)
+        VGroup(brace, brace_text).highlight(MAROON_B)
+        arc = Arc(angle, color = WHITE, radius = 0.5)
+        angle_label = TexMobject("30^\\circ")
+        angle_label.scale(0.7)
+        angle_label.next_to(
+            arc, RIGHT, 
+            buff = SMALL_BUFF, aligned_edge = DOWN
+        )
+        angle_label.highlight(MULTIPLIER_COLOR)
+
+        self.play(
+            Write(label),
+            DrawBorderThenFill(dot)
+        )
+        self.add_foreground_mobjects(label, dot)
+        self.dither()
+        self.multiply_by_z(z, run_time = 3)
+        self.dither()
+        self.reset_plane()
+        self.multiply_by_z(
+            np.exp(complex(0, 1)*angle),
+            added_anims = [
+                ShowCreation(arc, run_time = 2),
+                Write(angle_label)
+            ]
+        )
+        self.add_foreground_mobjects(arc, angle_label)
+        self.dither()
+        self.play(
+            GrowFromCenter(brace),
+            Write(brace_text)
+        )
+        self.add_foreground_mobjects(brace, brace_text)
+        self.multiply_by_z(np.sqrt(5), run_time = 3)
+        self.dither(2)
+        to_remove = [
+            label, dot,
+            brace, brace_text, 
+            arc, angle_label,
+        ]
+        for mob in to_remove:
+            self.foreground_mobjects.remove(mob)
+        self.reset_plane(*map(FadeOut, to_remove))
+        self.dither()
+
+    def show_break_down(self):
+        positive_reals = Line(ORIGIN, SPACE_WIDTH*RIGHT)
+        positive_reals.highlight(MAROON_B)
+        circle = Circle(
+            radius = self.z_to_point(1)[0],
+            color = MULTIPLIER_COLOR
+        )
+        real_actions = [3, 0.5, 1]
+        rotation_actions = [
+            np.exp(complex(0, angle))
+            for angle in np.linspace(0, 2*np.pi, 4)[1:]
+        ]
+
+        self.play(ShowCreation(positive_reals))
+        self.add_foreground_mobjects(positive_reals)
+        for last_z, z in zip([1]+real_actions, real_actions):
+            self.multiply_by_z(z/last_z)
+        self.dither()
+        self.play(ShowCreation(circle))
+        self.add_foreground_mobjects(circle)
+        for last_z, z in zip([1]+rotation_actions, rotation_actions):
+            self.multiply_by_z(z/last_z, run_time = 3)
+        self.dither()
+
+    def example_actions_broken_down(self):
+        z_list = [
+            complex(2, -1),
+            complex(-2, -3),
+            complex(0.5, 0.5),
+        ]
+        for z in z_list:
+            dot = Dot(self.z_to_point(z))
+            dot.highlight(WHITE)
+            dot.save_state()
+            dot.move_to(self.plane.one_dot)
+            dot.set_fill(opacity = 1)
+
+            norm = np.abs(z)
+            angle = np.angle(z)
+            rot_z = np.exp(complex(0, angle))
+
+            self.play(dot.restore)
+            self.multiply_by_z(norm)
+            self.dither()
+            self.multiply_by_z(rot_z)
+            self.dither()
+            self.reset_plane(FadeOut(dot))
+
+    ##
+
+    def multiply_by_z(self, z, run_time = 2, **kwargs):
+        target = self.plane.copy()
+        target.apply_complex_function(lambda w : z*w)
+        for dot in target.zero_dot, target.one_dot:
+            dot.scale_to_fit_width(2*self.dot_radius)
+        angle = np.angle(z)
+        kwargs["path_arc"] = kwargs.get("path_arc", angle)
+        self.play(
+            Transform(self.plane, target, run_time = run_time, **kwargs),
+            *kwargs.get("added_anims", [])
+        )
+
+    def reset_plane(self, *added_anims):
+        self.play(FadeOut(self.plane), *added_anims)
+        self.plane.restore()
+        self.play(FadeIn(self.plane))
+
+class ExponentsAsRepeatedMultiplication(TeacherStudentsScene):
+    def construct(self):
+        self.show_repeated_multiplication()
+        self.show_non_counting_exponents()
+
+    def show_repeated_multiplication(self):
+        three_twos = TexMobject("2 \\cdot 2 \\cdot 2")
+        five_twos = TexMobject("2 \\cdot "*4 + "2")
+        exponents = []
+        teacher_corner = self.get_teacher().get_corner(UP+LEFT)
+        for twos in three_twos, five_twos:
+            twos.next_to(teacher_corner, UP)
+            twos.generate_target()
+            d = sum(np.array(list(twos.get_tex_string())) == "2")
+            exponents.append(d)
+            twos.brace = Brace(twos, UP)
+            twos.exp = twos.brace.get_text("$2^%d$"%d)
+            twos.generate_target()
+            twos.brace_anim = MaintainPositionRelativeTo(
+                VGroup(twos.brace, twos.exp), twos
+            )
+
+        self.play(
+            GrowFromCenter(three_twos.brace),
+            Write(three_twos.exp),
+            self.get_teacher().change_mode, "raise_right_hand",
+        )
+        for mob in three_twos:
+            self.play(Write(mob, run_time = 1))
+        self.change_student_modes(*["pondering"]*3)
+        self.dither(2)
+        self.play(
+            FadeIn(five_twos.brace),
+            FadeIn(five_twos.exp),
+            three_twos.center,
+            three_twos.to_edge, UP, 2*LARGE_BUFF,
+            three_twos.brace_anim,
+        )
+        self.play(FadeIn(
+            five_twos, 
+            run_time = 3,
+            submobject_mode = "lagged_start"
+        ))
+        self.dither(2)
+
+        cdot = TexMobject("\\cdot")
+        lhs = TexMobject("2^{%d + %d} = "%tuple(exponents))
+        rule = VGroup(
+            lhs, three_twos.target, cdot, five_twos.target
+        )
+        rule.arrange_submobjects()
+        lhs.next_to(three_twos.target, LEFT, aligned_edge = DOWN)
+        rule.next_to(self.get_pi_creatures(), UP)
+
+        self.play(
+            MoveToTarget(three_twos),
+            three_twos.brace_anim,
+            MoveToTarget(five_twos),
+            five_twos.brace_anim,
+            Write(cdot),
+            self.get_teacher().change_mode, "happy",
+        )
+        self.dither()
+        self.play(Write(lhs))
+        self.dither()
+        self.change_student_modes(*["happy"]*3)
+        self.dither()
+
+        general_equation = TexMobject("2^{x+y}=", "2^x", "2^y")
+        general_equation.to_edge(UP, buff = MED_LARGE_BUFF)
+        general_equation[0].highlight(GREEN_B)
+        VGroup(*general_equation[1:]).highlight(MULTIPLIER_COLOR)
+        self.play(*[
+            ReplacementTransform(
+                mob.copy(), term, run_time = 2
+            )
+            for term, mob in zip(general_equation, [
+                lhs, three_twos.exp, five_twos.exp
+            ])
+        ])
+        self.dither(2)
+
+        self.exponential_rule = general_equation
+        self.expanded_exponential_rule = VGroup(
+            lhs, three_twos, three_twos.brace, three_twos.exp,
+            cdot, five_twos, five_twos.brace, five_twos.exp,
+        )
+
+    def show_non_counting_exponents(self):
+        self.play(
+            self.expanded_exponential_rule.scale, 0.5,
+            self.expanded_exponential_rule.to_corner, UP+LEFT
+        )
+        half_power, neg_power, imag_power = alt_powers = VGroup(
+            TexMobject("2^{1/2}"),
+            TexMobject("2^{-1}"),
+            TexMobject("2^{i}"),
+        )
+        alt_powers.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        alt_powers.next_to(self.get_students(), UP, buff = LARGE_BUFF)
+
+        self.play(
+            Write(half_power, run_time = 2),
+            *[
+                ApplyMethod(pi.change_mode, "pondering")
+                for pi in self.get_pi_creatures()
+            ]
+        )
+        for mob in alt_powers[1:]:
+            self.play(Write(mob, run_time = 1))
+            self.dither()
+        self.dither()
+        self.play(*it.chain(*[
+            [pi.change_mode, "confused", pi.look_at, half_power]
+            for pi in self.get_students()
+        ]))
+        for power in alt_powers[:2]:
+            self.play(Indicate(power))
+            self.dither()
+        self.dither()
+
+        self.teacher_says("Extend the \\\\ definition")
+        self.change_student_modes("pondering", "confused", "erm")
+        self.dither()
+
+        half_expression = TexMobject(
+            "\\big(", "2^{1/2}", "\\big)", 
+            "\\big(2^{1/2}\\big) = 2^{1}"
+        )
+        neg_one_expression = TexMobject(
+            "\\big(", "2^{-1}", "\\big)", 
+            "\\big( 2^{1} \\big) = 2^{0}"
+        )
+        expressions = VGroup(half_expression, neg_one_expression)
+        expressions.arrange_submobjects(
+            DOWN, aligned_edge = LEFT, buff = MED_LARGE_BUFF
+        )
+        expressions.next_to(self.get_students(), UP, buff = LARGE_BUFF)
+        expressions.to_edge(LEFT)
+
+        self.play(
+            Transform(half_power, half_expression[1]),
+            Write(half_expression),            
+            RemovePiCreatureBubble(self.get_teacher()),            
+        )
+        self.dither()
+        self.play(
+            Transform(neg_power, neg_one_expression[1]),
+            Write(neg_one_expression)
+        )
+        self.dither()
+        self.play(
+            imag_power.move_to, UP,
+            imag_power.scale_in_place, 1.5,
+            imag_power.highlight, BLUE,
+            self.get_teacher().change_mode, "raise_right_hand"
+        )
+        self.play(*it.chain(*[
+            [pi.change_mode, "pondering", pi.look_at, imag_power]
+            for pi in self.get_students()
+        ]))
+        self.dither()
+
+        group_theory_words = TextMobject("Group theory?")
+        group_theory_words.next_to(
+            self.exponential_rule, DOWN+RIGHT, buff = LARGE_BUFF
+        )
+        arrow = Arrow(
+            group_theory_words.get_left(), 
+            self.exponential_rule.get_corner(DOWN+RIGHT),
+            color = WHITE,
+        )
+        VGroup(group_theory_words, arrow).shift(LEFT)
+        self.play(
+            Write(group_theory_words), 
+            ShowCreation(arrow)
+        )
+        self.dither(2)
+
+class ExponentsAsHomomorphism(Scene):
+    CONFIG = {
+        "top_line_center" : 2.5*UP,
+        "top_line_config" : {
+            "x_min" : -16,
+            "x_max" : 16,
+        },
+        "bottom_line_center" : 2.5*DOWN,
+        "bottom_line_config" : {
+            "x_min" : -2*SPACE_WIDTH,
+            "x_max" : 2*SPACE_WIDTH,
+        }
+    }
+    def construct(self):
+        self.comment_on_equation()
+        self.show_adders()
+        self.show_multipliers()
+        self.confused_at_mapping()
+        self.talk_through_composition()
+        self.add_quote()
+
+    def comment_on_equation(self):
+        equation = TexMobject(
+            "2", "^{x", "+", "y}", "=", "2^x", "2^y"
+        )
+        lhs = VGroup(*equation[:4])
+        rhs = VGroup(*equation[5:])
+        lhs_brace = Brace(lhs, UP)
+        lhs_text = lhs_brace.get_text("Add inputs")
+        lhs_text.highlight(GREEN_B)
+        rhs_brace = Brace(rhs, DOWN)
+        rhs_text = rhs_brace.get_text("Multiply outputs")
+        rhs_text.highlight(MULTIPLIER_COLOR)
+
+        self.add(equation)
+        for brace, text in (lhs_brace, lhs_text), (rhs_brace, rhs_text):
+            self.play(
+                GrowFromCenter(brace),
+                Write(text)
+            )
+            self.dither()
+        self.dither()
+
+        self.equation = equation
+        self.lhs_brace_group = VGroup(lhs_brace, lhs_text)
+        self.rhs_brace_group = VGroup(rhs_brace, rhs_text)
+
+    def show_adders(self):
+        equation = self.equation
+        adders = VGroup(equation[1], equation[3]).copy()
+        top_line = NumberLine(**self.top_line_config)
+        top_line.add_numbers()
+        top_line.shift(self.top_line_center)
+
+        self.play(
+            adders.scale, 1.5,
+            adders.center,
+            adders.space_out_submobjects, 2,
+            adders.to_edge, UP,
+            adders.highlight, GREEN_B,
+            FadeOut(self.lhs_brace_group),
+            Write(top_line)
+        )
+        self.dither()
+        for x in 3, 5, -8:
+            self.play(top_line.shift, x*RIGHT, run_time = 2)
+            self.dither()
+
+        self.top_line = top_line
+        self.adders = adders
+
+    def show_multipliers(self):
+        equation = self.equation
+        multipliers = VGroup(*self.equation[-2:]).copy()
+
+        bottom_line = NumberLine(**self.bottom_line_config)
+        bottom_line.add_numbers()
+        bottom_line.shift(self.bottom_line_center)
+
+        self.play(
+            multipliers.space_out_submobjects, 4,
+            multipliers.next_to, self.bottom_line_center, 
+                UP, MED_LARGE_BUFF,
+            multipliers.highlight, YELLOW,
+            FadeOut(self.rhs_brace_group),
+            Write(bottom_line),
+        )
+        stretch_kwargs = {
+        }
+        for x in 3, 1./5, 5./3:
+            self.play(
+                self.get_stretch_anim(bottom_line, x),
+                run_time = 3
+            )
+        self.dither()
+
+        self.bottom_line = bottom_line
+        self.multipliers = multipliers
+
+    def confused_at_mapping(self):
+        arrow = Arrow(
+            self.top_line.get_bottom()[1]*UP,
+            self.bottom_line.get_top()[1]*UP,
+            color = WHITE
+        )
+        randy = Randolph(mode = "confused")
+        randy.scale(0.75)
+        randy.flip()
+        randy.next_to(arrow, RIGHT, LARGE_BUFF)
+        randy.look_at(arrow.get_top())
+
+        self.play(self.equation.to_edge, LEFT)
+        self.play(
+            ShowCreation(arrow),
+            FadeIn(randy)
+        )
+        self.play(randy.look_at, arrow.get_bottom())
+        self.play(Blink(randy))
+        self.dither()
+        for x in 1, -2, 3, 1, -3:
+            self.play(
+                self.get_stretch_anim(self.bottom_line, 2**x),
+                self.top_line.shift, x*RIGHT,
+                randy.look_at, self.top_line,
+                run_time = 2
+            )
+            if random.random() < 0.3:
+                self.play(Blink(randy))
+            else:
+                self.dither()
+
+        self.randy = randy
+
+    def talk_through_composition(self):
+        randy = self.randy
+        terms = list(self.adders) + list(self.multipliers)
+        inputs = [-1, 2]
+        target_texs = map(str, inputs)
+        target_texs += ["2^{%d}"%x for x in inputs]
+        for mob, target_tex in zip(terms, target_texs):
+            target = TexMobject(target_tex)
+            target.highlight(mob[0].get_color())
+            target.move_to(mob, DOWN)
+            if mob in self.adders:
+                target.to_edge(UP)
+            mob.target = target
+
+        self.play(
+            self.equation.next_to, ORIGIN, LEFT, MED_LARGE_BUFF,
+            randy.change_mode, "pondering",
+            randy.look_at, self.equation
+        )
+        self.dither()
+        self.play(randy.look_at, self.top_line)
+        self.show_composition(
+            *inputs,
+            parallel_anims = map(MoveToTarget, self.adders)
+        )
+        self.play(
+            FocusOn(self.bottom_line_center),
+            randy.look_at, self.bottom_line_center,
+        )
+        self.show_composition(
+            *inputs,
+            parallel_anims = map(MoveToTarget, self.multipliers)
+        )
+        self.dither()
+
+    def add_quote(self):
+        brace = Brace(self.equation, UP)
+        quote = TextMobject("``Preserves the group structure''")
+        quote.add_background_rectangle()
+        quote.next_to(brace, UP)
+
+        self.play(
+            GrowFromCenter(brace),
+            Write(quote),
+            self.randy.look_at, quote,
+        )
+        self.play(self.randy.change_mode, "thinking")
+        self.play(Blink(self.randy))
+        self.dither()
+        self.show_composition(-1, 2)
+        self.dither()
+
+    ####
+
+    def show_composition(self, *inputs, **kwargs):
+        parallel_anims = kwargs.get("parallel_anims", [])
+        for x in range(len(inputs) - len(parallel_anims)):
+            parallel_anims.append(Animation(Mobject()))
+
+        for line in self.top_line, self.bottom_line:
+            line.save_state()
+
+        for x, parallel_anim in zip(inputs, parallel_anims):
+            anims = [
+                ApplyMethod(self.top_line.shift, x*RIGHT),
+                self.get_stretch_anim(self.bottom_line, 2**x),
+            ]
+            for anim in anims:
+                anim.set_run_time(2)
+            self.play(parallel_anim)
+            self.play(*anims)
+            self.dither()
+        self.play(*[
+            line.restore 
+            for line in self.top_line, self.bottom_line
+        ])
+
+    def get_stretch_anim(self, bottom_line, x):
+        target = bottom_line.copy()
+        target.stretch_about_point(
+            x, 0, self.bottom_line_center,
+        )
+        for number in target.numbers:
+            number.stretch_in_place(1./x, dim = 0)
+        return Transform(bottom_line, target)
 
 
-
-
-
-
-
-
-
-
-
+class DihedralCubeHomomorphism(Scene):
+    def construct(self):
+        pass
 
 
 

@@ -154,6 +154,9 @@ class FadeIn(Transform):
         target = mobject.copy()
         Transform.__init__(self, mobject, target, **kwargs)
         self.starting_mobject.fade(1)
+        if isinstance(self.starting_mobject, VMobject):
+            self.starting_mobject.set_stroke(width = 0)
+            self.starting_mobject.set_fill(opacity = 0)
 
 
 class ShimmerIn(DelayByOrder):
@@ -192,7 +195,7 @@ class Indicate(Transform):
         digest_config(self, kwargs)
         target = mobject.copy()
         target.scale_in_place(self.scale_factor)
-        target.highlight(YELLOW)
+        target.highlight(self.color)
         Transform.__init__(self, mobject, target, **kwargs)
 
 class Rotate(ApplyMethod):
