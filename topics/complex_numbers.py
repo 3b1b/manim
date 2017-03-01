@@ -23,7 +23,7 @@ class ComplexTransformationScene(Scene):
         "y_min" : -SPACE_HEIGHT,
         "y_max" : SPACE_HEIGHT,
         "use_multicolored_plane" : False,
-        "vert_start_color" : BLUE,
+        "vert_start_color" : BLUE, ##TODO
         "vert_end_color" : BLUE,
         "horiz_start_color" : BLUE,
         "horiz_end_color" : BLUE,

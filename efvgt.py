@@ -771,10 +771,10 @@ class GroupOfCubeSymmetries(ThreeDScene):
         cube.gradient_highlight(*self.cube_colors)
         if self.put_randy_on_cube:
             randy = Randolph(mode = "pondering")
-            randy.pupils.shift(0.01*OUT)
-            randy.add(randy.pupils.copy().shift(0.02*IN))
-            for submob in randy.submobject_family():
-                submob.part_of_three_d_mobject = True
+            # randy.pupils.shift(0.01*OUT)
+            # randy.add(randy.pupils.copy().shift(0.02*IN))
+            # for submob in randy.submobject_family():
+            #     submob.part_of_three_d_mobject = True
             randy.scale(0.5)
             face = cube[1]
             randy.move_to(face)
@@ -2727,10 +2727,253 @@ class ExponentsAsHomomorphism(Scene):
             number.stretch_in_place(1./x, dim = 0)
         return Transform(bottom_line, target)
 
-
-class DihedralCubeHomomorphism(Scene):
+class DihedralCubeHomomorphism(GroupOfCubeSymmetries, SymmetriesOfSquare):
     def construct(self):
+        angle_axis_pairs = [
+            (np.pi/2, OUT),
+            (np.pi, RIGHT),
+            (np.pi, OUT),
+            (np.pi, UP+RIGHT),
+            (-np.pi/2, OUT),
+            (np.pi, UP+LEFT),
+        ]
+        angle_axis_pairs *= 3
+
+        title = TextMobject("``Homomorphism''")
+        title.to_edge(UP)
+        equation = TexMobject("f(X \\circ Y) = f(X) \\circ f(Y)")
+        equation.next_to(title, DOWN)
+
+        self.add(title, equation)
+
+        arrow = Arrow(LEFT, RIGHT)
+        cube = self.get_cube()
+        cube.next_to(arrow, RIGHT)
+        pose_matrix = self.get_pose_matrix()
+
+        square = self.square = Square(**self.square_config)
+        self.add_randy_to_square(square)
+        square.next_to(arrow, LEFT)
+
+        self.add(square, cube)
+        self.play(ShowCreation(arrow))
+        for angle, raw_axis in angle_axis_pairs:
+            posed_axis = np.dot(raw_axis, pose_matrix.T)
+            self.play(*[
+                Rotate(
+                    mob, angle = angle, axis = axis, 
+                    in_place = True,
+                    run_time = abs(angle/(np.pi/2))
+                )
+                for mob, axis in (square, raw_axis), (cube, posed_axis)
+            ])
+            self.dither()
+
+class ComplexExponentiationAbstract():
+    CONFIG = {
+        "start_base" : 2,
+        "new_base" : 5,
+        "group_type" : None,
+        "color" : None,
+        "vect" : None,
+    }
+    def construct(self):
+        should_skip_animations = self.skip_animations
+        self.skip_animations = True
+
+        self.base = self.start_base
+        example_inputs = [2, -3, 1]
+        self.add_vertial_line()
+        self.add_plane_unanimated()
+        self.add_title()
+        self.add_arrow()
+        self.show_example(complex(1, 1))
+        self.draw_real_line()
+        self.show_real_actions(*example_inputs)
+        self.show_pure_imaginary_actions(*example_inputs)
+        self.highlight_vertical_line()
+        self.skip_animations = should_skip_animations
+        self.highlight_unit_circle()
+        # self.show_pure_imaginary_actions(*example_inputs)
+        self.walk_input_up_vertical()
+        self.change_base(self.new_base, str(self.new_base))
+        self.walk_input_up_vertical()
+        self.change_mode(np.exp(1), "e")
+        self.walk_input_up_vertical()
+
+    def add_vertial_line(self):
+        line = Line(SPACE_HEIGHT*UP, SPACE_HEIGHT*DOWN)
+        line.set_stroke(color = self.color, width = 10)
+        line.shift(-SPACE_WIDTH*self.vect/2)
+        self.add(line)
+        self.add_foreground_mobjects(line)
+
+    def add_plane_unanimated(self):
+        should_skip_animations = self.skip_animations
+        self.skip_animations = True
+        self.add_plane()
+        self.skip_animations = should_skip_animations
+
+    def add_title(self):
+        title = TextMobject(self.group_type, "group")
+        title[0].highlight(self.color)
+        title.add_background_rectangle()
+        title.to_edge(UP)
+        self.add_foreground_mobjects(title)
+
+    def add_arrow(self):
+        arrow = Arrow(LEFT, RIGHT, color = WHITE)
+        arrow.move_to(-SPACE_WIDTH*self.vect/2 + 2*UP)
+        arrow.set_stroke(width = 6),
+        func = TexMobject("2^x")    
+        func.next_to(arrow, UP, aligned_edge = LEFT)
+        func.add_background_rectangle()
+
+        self.add_foreground_mobjects(arrow, func)
+        self.dither()
+
+    def show_example(self, z):
+        self.apply_action(
+            z,
+            run_time = 5,
+            rate_func = there_and_back
+        )
+
+    def draw_real_line(self):
+        line = VGroup(Line(ORIGIN, SPACE_WIDTH*RIGHT))
+        if self.vect[0] < 0:
+            line.add(Line(ORIGIN, SPACE_WIDTH*LEFT))
+        line.highlight(RED)
+
+        self.play(*map(ShowCreation, line), run_time = 3)
+        self.add_foreground_mobjects(line)
+
+    def show_real_actions(self, *example_inputs):
+        for x in example_inputs:
+            self.apply_action(x)
+            self.dither()
+
+    def show_pure_imaginary_actions(self, *example_input_imag_parts):
+        for y in example_input_imag_parts:
+            self.apply_action(complex(0, y), run_time = 3)
+            self.dither()
+
+    def change_base(self, new_base, new_base_tex):
         pass
+
+class ComplexExponentiationAdderHalf(
+    ComplexExponentiationAbstract, 
+    AdditiveGroupOfComplexNumbers
+    ):
+    CONFIG = {
+        "group_type" : "Additive",
+        "color" : GREEN_B,
+        "vect" : LEFT,
+    }
+    def construct(self):
+        ComplexExponentiationAbstract.construct(self)
+
+    def apply_action(self, z, run_time = 2, **kwargs):
+        kwargs["run_time"] = run_time
+        self.play(
+            ApplyMethod(
+                self.plane.shift, self.z_to_point(z),
+                **kwargs
+            ),
+            *kwargs.get("added_anims", [])
+        )
+
+    def highlight_vertical_line(self):
+        line = VGroup(
+            Line(ORIGIN, SPACE_HEIGHT*UP),
+            Line(ORIGIN, SPACE_HEIGHT*DOWN),
+        )
+        line.highlight(YELLOW)
+
+        self.play(*map(ShowCreation, line))
+        self.play(
+            line.rotate, np.pi/24,
+            rate_func = wiggle,
+        )
+        self.dither()
+
+        self.foreground_mobjects = [line] + self.foreground_mobjects
+        self.vertical_line = line
+
+    def highlight_unit_circle(self):
+        line = VGroup(
+            Line(ORIGIN, SPACE_HEIGHT*UP),
+            Line(ORIGIN, SPACE_HEIGHT*DOWN),
+        )
+        line.highlight(YELLOW)
+        for submob in line:
+            submob.insert_n_anchor_points(10)
+            submob.make_smooth()
+        circle = VGroup(
+            Circle(),
+            Circle().flip(RIGHT),
+        )
+        circle.highlight(YELLOW)
+        circle.shift(SPACE_WIDTH*RIGHT)
+
+        self.play(ReplacementTransform(
+            line, circle, run_time = 3
+        ))
+        self.remove(circle)
+        self.dither()
+
+    def walk_input_up_vertical(self):
+        pass
+
+
+
+class ComplexExponentiationMultiplierHalf(
+    ComplexExponentiationAbstract, 
+    MultiplicativeGroupOfComplexNumbers
+    ):
+    CONFIG = {
+        "group_type" : "Multiplicative",
+        "color" : MULTIPLIER_COLOR,
+        "vect" : RIGHT,
+    }
+
+    def construct(self):
+        ComplexExponentiationAbstract.construct(self)
+
+    def apply_action(self, z, run_time = 2, **kwargs):
+        kwargs["run_time"] = run_time
+        self.multiply_by_z(2**z, **kwargs)
+
+    def highlight_vertical_line(self):
+        self.dither(3)
+
+    def highlight_unit_circle(self):
+        line = VGroup(
+            Line(ORIGIN, SPACE_HEIGHT*UP),
+            Line(ORIGIN, SPACE_HEIGHT*DOWN),
+        )
+        line.highlight(YELLOW)
+        line.shift(SPACE_WIDTH*LEFT)
+        for submob in line:
+            submob.insert_n_anchor_points(10)
+            submob.make_smooth()
+        circle = VGroup(
+            Circle(),
+            Circle().flip(RIGHT),
+        )
+        circle.highlight(YELLOW)
+
+        self.play(ReplacementTransform(
+            line, circle, run_time = 3
+        ))
+        self.add_foreground_mobjects(circle)
+        self.dither()
+
+    def walk_input_up_vertical(self):
+        pass
+
+
+
 
 
 
