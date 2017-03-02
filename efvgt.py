@@ -1933,12 +1933,12 @@ class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
         positive_reals_words.next_to(positive_reals_line, UP)
         positive_reals_words.add_background_rectangle()
 
-        half_line, one_line = [
+        third_line, one_line = [
             DashedLine(
                 self.number_line.number_to_point(num),
                 self.shadow_line.number_to_point(num)
             )
-            for num in 0.5, 1
+            for num in 0.33, 1
         ]
 
         self.play(
@@ -1953,14 +1953,14 @@ class MultiplicativeGroupOfReals(AdditiveGroupOfReals):
         self.stretch(3)
         self.stretch(0.33/3, run_time = 3)
         self.dither()
-        self.play(ShowCreation(half_line), Animation(self.one))
+        self.play(ShowCreation(third_line), Animation(self.one))
         self.play(
             ShowCreation(positive_reals_line),
             Write(positive_reals_words),
         )
         self.dither()
         self.play(
-            ReplacementTransform(half_line, one_line),
+            ReplacementTransform(third_line, one_line),
             self.number_line.restore,
             Animation(positive_reals_words),
             run_time = 2
@@ -2494,12 +2494,19 @@ class ExponentsAsRepeatedMultiplication(TeacherStudentsScene):
             Transform(neg_power, neg_one_expression[1]),
             Write(neg_one_expression)
         )
-        self.dither()
+        self.dither(2)
+        self.play(
+            self.exponential_rule.next_to,
+            self.get_teacher().get_corner(UP+LEFT), UP, MED_LARGE_BUFF,
+            self.get_teacher().change_mode, "raise_right_hand",
+        )
+        self.dither(2)
         self.play(
             imag_power.move_to, UP,
             imag_power.scale_in_place, 1.5,
             imag_power.highlight, BLUE,
-            self.get_teacher().change_mode, "raise_right_hand"
+            self.exponential_rule.to_edge, RIGHT,
+            self.get_teacher().change_mode, "speaking"
         )
         self.play(*it.chain(*[
             [pi.change_mode, "pondering", pi.look_at, imag_power]
@@ -2509,14 +2516,15 @@ class ExponentsAsRepeatedMultiplication(TeacherStudentsScene):
 
         group_theory_words = TextMobject("Group theory?")
         group_theory_words.next_to(
-            self.exponential_rule, DOWN+RIGHT, buff = LARGE_BUFF
+            self.exponential_rule, UP, buff = LARGE_BUFF
         )
         arrow = Arrow(
-            group_theory_words.get_left(), 
-            self.exponential_rule.get_corner(DOWN+RIGHT),
+            group_theory_words,
+            self.exponential_rule,
             color = WHITE,
+            buff = SMALL_BUFF
         )
-        VGroup(group_theory_words, arrow).shift(LEFT)
+        group_theory_words.shift_onto_screen()
         self.play(
             Write(group_theory_words), 
             ShowCreation(arrow)
@@ -3147,7 +3155,7 @@ class ComplexExponentiationMultiplierHalf(
         for last_angle, angle in zip([0]+angles, angles):
             arc, brace, curved_brace, label = self.get_arc_braces_and_label(angle)
             if angle == np.pi:
-                label = TexMobject("%.5f"%np.pi)
+                label = TexMobject("%.5f\\dots"%np.pi)
                 label.add_background_rectangle(opacity = 1)
                 label.next_to(curved_brace, UP, buff = SMALL_BUFF)
 
@@ -3210,6 +3218,23 @@ class WhyE(TeacherStudentsScene):
         self.student_says("Why e?")
         self.play(self.get_teacher().change_mode, "pondering")
         self.dither(3)
+
+class ReadFormula(Scene):
+    def construct(self):
+        formula = TexMobject("e^", "{\\pi i}", "=", "-1")
+        formula[1].highlight(GREEN_B)
+        formula[3].highlight(MULTIPLIER_COLOR)
+        formula.scale(2)
+
+        randy = Randolph()
+        randy.shift(2*LEFT)
+        formula.next_to(randy, RIGHT, aligned_edge = UP)
+
+        self.add(randy, formula)
+        self.play(randy.change_mode, "thinking")
+        self.dither()
+        self.play(Blink(randy))
+        self.dither()
 
 class EfvgtPatreonThanks(PatreonThanks):
     CONFIG = {
@@ -3315,7 +3340,37 @@ class ECLPromo(PiCreatureScene):
         )
         self.dither(6)
 
+class ExpTransformation(ComplexTransformationScene):
+    CONFIG = {
+        "camera_class": CameraWithPerspective,
+    }
+    def construct(self):
+        self.camera.camera_distance = 10,
+        self.add_transformable_plane()
+        self.prepare_for_transformation(self.plane)
+        final_plane = self.plane.copy().apply_complex_function(np.exp)
+        cylinder = self.plane.copy().apply_function(
+            lambda (x, y, z) : np.array([x, np.sin(y), -np.cos(y)])
+        )
+        title = TexMobject("z \\to e^z")
+        title.add_background_rectangle()
+        title.scale(1.5)
+        title.next_to(ORIGIN, RIGHT)
+        title.to_edge(UP, buff = MED_SMALL_BUFF)
+        self.add_foreground_mobjects(title)
 
+        self.play(Transform(
+            self.plane, cylinder, 
+            run_time = 3,
+            path_arc_axis = RIGHT,
+            path_arc = np.pi,
+        ))
+        self.play(Rotate(
+            self.plane, -np.pi/3, UP, 
+            run_time = 5
+        ))
+        self.play(Transform(self.plane, final_plane, run_time = 3))
+        self.dither(3)
 
 
 
