@@ -422,9 +422,10 @@ class Mobject(object):
             sm1.interpolate(sm1, sm2, 1)
         return self
 
-    def apply_complex_function(self, function):
+    def apply_complex_function(self, function, **kwargs):
         return self.apply_function(
-            lambda (x, y, z) : complex_to_R3(function(complex(x, y)))
+            lambda (x, y, z) : complex_to_R3(function(complex(x, y))),
+            **kwargs
         )
 
     def reduce_across_dimension(self, points_func, reduce_func, dim):

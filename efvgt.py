@@ -26,6 +26,8 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
+from eoc.chapter1 import PatreonThanks
+
 ADDER_COLOR = GREEN
 MULTIPLIER_COLOR = YELLOW
 
@@ -207,6 +209,10 @@ class Anniversary(TeacherStudentsScene):
         ]
         return confetti_spirils
 
+class HomomophismPreview(Scene):
+    def construct(self):
+        raise Exception("Meant as a place holder, not to be excecuted")
+
 class WatchingScreen(PiCreatureScene):
     CONFIG = {
         "screen_height" : 5.5
@@ -229,8 +235,8 @@ class WatchingScreen(PiCreatureScene):
 
 class LetsStudyTheBasics(TeacherStudentsScene):
     def construct(self):
-        self.teacher_says("Let's learn some \\\\ group theory.")
-        self.change_student_modes(*["happy"]*3)
+        self.teacher_says("Let's learn some \\\\ group theory!")
+        self.change_student_modes(*["hooray"]*3)
         self.dither(2)
 
 class QuickExplanation(ComplexTransformationScene):
@@ -1442,6 +1448,7 @@ class AdditiveGroupOfComplexNumbers(ComplexTransformationScene):
     }
     def construct(self):
         self.add_plane()
+        self.show_preview_example_slides()
         self.show_vertical_slide()
         self.show_example_point()
         self.show_example_addition()
@@ -1458,6 +1465,12 @@ class AdditiveGroupOfComplexNumbers(ComplexTransformationScene):
         self.plane.add(zero_dot)
         self.plane.zero_dot = zero_dot
         self.dither()
+
+    def show_preview_example_slides(self):
+        example_vect = 2*UP+RIGHT
+        for vect in example_vect, -example_vect:
+            self.play(self.plane.shift, vect, run_time = 2)
+            self.dither()
 
     def show_vertical_slide(self):
         dots = VGroup(*[
@@ -1478,18 +1491,20 @@ class AdditiveGroupOfComplexNumbers(ComplexTransformationScene):
             )
         self.add_foreground_mobjects(dots)
         self.dither()
-        self.play(ShowCreation(arrow))
+        Scene.play(self, ShowCreation(arrow))
+        self.add_foreground_mobjects(arrow)
         self.play(
             self.plane.shift, dots[-1].get_center(),
-            Animation(arrow),
             run_time = 2
         )
         self.dither()
         self.play(FadeOut(arrow))
+        self.foreground_mobjects.remove(arrow)
         self.play(
             self.plane.shift, 6*DOWN,
-            run_time = 2,
+            run_time = 3,
         )
+        self.dither()
         self.play(self.plane.restore, run_time = 2)
         self.foreground_mobjects.remove(dots)
         self.play(FadeOut(dots))
@@ -2739,8 +2754,22 @@ class DihedralCubeHomomorphism(GroupOfCubeSymmetries, SymmetriesOfSquare):
         ]
         angle_axis_pairs *= 3
 
-        title = TextMobject("``Homomorphism''")
-        title.to_edge(UP)
+        title = TextMobject(
+            "``", "Homo", "morph", "ism", "''", 
+            arg_separator = ""
+        )
+        homo_brace = Brace(title[1], UP, buff = SMALL_BUFF)
+        homo_def = homo_brace.get_text("same")
+        morph_brace = Brace(title[2], UP, buff = SMALL_BUFF)
+        morph_def = morph_brace.get_text("shape", buff = SMALL_BUFF)
+        def_group = VGroup(
+            homo_brace, homo_def, 
+            morph_brace, morph_def
+        )
+        VGroup(title, def_group).to_edge(UP)
+        homo_group = VGroup(title[1], homo_brace, homo_def)
+        morph_group = VGroup(title[2], morph_brace, morph_def)
+
         equation = TexMobject("f(X \\circ Y) = f(X) \\circ f(Y)")
         equation.next_to(title, DOWN)
 
@@ -2755,9 +2784,13 @@ class DihedralCubeHomomorphism(GroupOfCubeSymmetries, SymmetriesOfSquare):
         self.add_randy_to_square(square)
         square.next_to(arrow, LEFT)
 
+        VGroup(square, arrow, cube).next_to(
+            equation, DOWN, buff = MED_LARGE_BUFF
+        )
+
         self.add(square, cube)
         self.play(ShowCreation(arrow))
-        for angle, raw_axis in angle_axis_pairs:
+        for i, (angle, raw_axis) in enumerate(angle_axis_pairs):
             posed_axis = np.dot(raw_axis, pose_matrix.T)
             self.play(*[
                 Rotate(
@@ -2768,6 +2801,14 @@ class DihedralCubeHomomorphism(GroupOfCubeSymmetries, SymmetriesOfSquare):
                 for mob, axis in (square, raw_axis), (cube, posed_axis)
             ])
             self.dither()
+            if i == 2:
+                for group, color in (homo_group, YELLOW), (morph_group, BLUE):
+                    part, remainder = group[0], VGroup(*group[1:])
+                    remainder.highlight(color)
+                    self.play(
+                        part.highlight, color,
+                        FadeIn(remainder)
+                    )
 
 class ComplexExponentiationAbstract():
     CONFIG = {
@@ -2778,12 +2819,9 @@ class ComplexExponentiationAbstract():
         "vect" : None,
     }
     def construct(self):
-        should_skip_animations = self.skip_animations
-        self.skip_animations = True
-
         self.base = self.start_base
         example_inputs = [2, -3, 1]
-        self.add_vertial_line()
+        self.add_vertical_line()
         self.add_plane_unanimated()
         self.add_title()
         self.add_arrow()
@@ -2792,16 +2830,18 @@ class ComplexExponentiationAbstract():
         self.show_real_actions(*example_inputs)
         self.show_pure_imaginary_actions(*example_inputs)
         self.highlight_vertical_line()
-        self.skip_animations = should_skip_animations
         self.highlight_unit_circle()
-        # self.show_pure_imaginary_actions(*example_inputs)
+        self.show_pure_imaginary_actions(*example_inputs)
         self.walk_input_up_vertical()
         self.change_base(self.new_base, str(self.new_base))
         self.walk_input_up_vertical()
-        self.change_mode(np.exp(1), "e")
-        self.walk_input_up_vertical()
+        self.change_base(np.exp(1), "e")
+        self.take_steps_for_e()
+        self.write_eulers_formula()
+        self.show_pure_imaginary_actions(-np.pi, np.pi)
+        self.dither()
 
-    def add_vertial_line(self):
+    def add_vertical_line(self):
         line = Line(SPACE_HEIGHT*UP, SPACE_HEIGHT*DOWN)
         line.set_stroke(color = self.color, width = 10)
         line.shift(-SPACE_WIDTH*self.vect/2)
@@ -2816,21 +2856,23 @@ class ComplexExponentiationAbstract():
 
     def add_title(self):
         title = TextMobject(self.group_type, "group")
+        title.scale(0.8)
         title[0].highlight(self.color)
         title.add_background_rectangle()
-        title.to_edge(UP)
+        title.to_edge(UP, buff = MED_SMALL_BUFF)
         self.add_foreground_mobjects(title)
 
     def add_arrow(self):
         arrow = Arrow(LEFT, RIGHT, color = WHITE)
         arrow.move_to(-SPACE_WIDTH*self.vect/2 + 2*UP)
         arrow.set_stroke(width = 6),
-        func = TexMobject("2^x")    
-        func.next_to(arrow, UP, aligned_edge = LEFT)
-        func.add_background_rectangle()
+        func_mob = TexMobject("2^x")    
+        func_mob.next_to(arrow, UP, aligned_edge = LEFT)
+        func_mob.add_background_rectangle()
 
-        self.add_foreground_mobjects(arrow, func)
+        self.add_foreground_mobjects(arrow, func_mob)
         self.dither()
+        self.func_mob = func_mob
 
     def show_example(self, z):
         self.apply_action(
@@ -2848,6 +2890,8 @@ class ComplexExponentiationAbstract():
         self.play(*map(ShowCreation, line), run_time = 3)
         self.add_foreground_mobjects(line)
 
+        self.real_line = line
+
     def show_real_actions(self, *example_inputs):
         for x in example_inputs:
             self.apply_action(x)
@@ -2859,7 +2903,28 @@ class ComplexExponentiationAbstract():
             self.dither()
 
     def change_base(self, new_base, new_base_tex):
-        pass
+        new_func_mob = TexMobject(new_base_tex + "^x")
+        new_func_mob.add_background_rectangle()
+        new_func_mob.move_to(self.func_mob)
+
+        self.play(FocusOn(self.func_mob))
+        self.play(Transform(self.func_mob, new_func_mob))
+        self.dither()
+        self.base = new_base
+
+    def write_eulers_formula(self):
+        formula = TexMobject("e^", "{\\pi", "i}", "=", "-1")
+        VGroup(*formula[1:3]).highlight(ADDER_COLOR)
+        formula[-1].highlight(MULTIPLIER_COLOR)
+        formula.scale(1.5)
+        formula.next_to(ORIGIN, UP)
+        formula.shift(-SPACE_WIDTH*self.vect/2)
+        for part in formula:
+            part.add_to_back(BackgroundRectangle(part))
+
+        Scene.play(self, Write(formula))
+        self.add_foreground_mobjects(formula)
+        self.dither(2)
 
 class ComplexExponentiationAdderHalf(
     ComplexExponentiationAbstract, 
@@ -2890,7 +2955,11 @@ class ComplexExponentiationAdderHalf(
         )
         line.highlight(YELLOW)
 
-        self.play(*map(ShowCreation, line))
+        self.play(
+            FadeOut(self.real_line),
+            *map(ShowCreation, line)
+        )
+        self.foreground_mobjects.remove(self.real_line)
         self.play(
             line.rotate, np.pi/24,
             rate_func = wiggle,
@@ -2923,9 +2992,64 @@ class ComplexExponentiationAdderHalf(
         self.dither()
 
     def walk_input_up_vertical(self):
-        pass
+        arrow = Arrow(ORIGIN, UP, buff = 0, tip_length = 0.15)
+        arrow.highlight(GREEN)
+        brace = Brace(arrow, RIGHT, buff = SMALL_BUFF)
+        brace_text = brace.get_text("1 unit")
+        brace_text.add_background_rectangle()
 
+        Scene.play(self, ShowCreation(arrow))
+        self.add_foreground_mobjects(arrow)
+        self.play(
+            GrowFromCenter(brace),
+            Write(brace_text, run_time = 1)
+        )
+        self.add_foreground_mobjects(brace, brace_text)        
+        self.dither()
+        self.apply_action(complex(0, 1))
+        self.dither(7)##Line up with MultiplierHalf
 
+        to_remove = arrow, brace, brace_text
+        for mob in to_remove:
+            self.foreground_mobjects.remove(mob)
+        self.play(*map(FadeOut, to_remove))
+        self.apply_action(complex(0, -1))
+
+    def take_steps_for_e(self):
+        slide_values = [1, 1, 1, np.pi-3]
+        braces = [
+            Brace(Line(ORIGIN, x*UP), RIGHT, buff = SMALL_BUFF)
+            for x in np.cumsum(slide_values)
+        ]
+        labels = map(TextMobject, [
+            "1 unit",
+            "2 units",
+            "3 units",
+            "$\\pi$ units",
+        ])
+        for label, brace in zip(labels, braces):
+            label.add_background_rectangle()
+            label.next_to(brace, RIGHT, buff = SMALL_BUFF)
+
+        curr_brace = None
+        curr_label = None
+        for slide_value, label, brace in zip(slide_values, labels, braces):
+            self.apply_action(complex(0, slide_value))
+            if curr_brace is None:
+                curr_brace = brace
+                curr_label = label
+                self.play(
+                    GrowFromCenter(curr_brace),
+                    Write(curr_label)
+                )
+                self.add_foreground_mobjects(brace, label)
+            else:
+                self.play(
+                    Transform(curr_brace, brace),
+                    Transform(curr_label, label),
+                )
+            self.dither()
+            self.dither(4) ##Line up with multiplier half
 
 class ComplexExponentiationMultiplierHalf(
     ComplexExponentiationAbstract, 
@@ -2942,10 +3066,12 @@ class ComplexExponentiationMultiplierHalf(
 
     def apply_action(self, z, run_time = 2, **kwargs):
         kwargs["run_time"] = run_time
-        self.multiply_by_z(2**z, **kwargs)
+        self.multiply_by_z(self.base**z, **kwargs)
 
     def highlight_vertical_line(self):
-        self.dither(3)
+        self.play(FadeOut(self.real_line))
+        self.foreground_mobjects.remove(self.real_line)
+        self.dither(2)
 
     def highlight_unit_circle(self):
         line = VGroup(
@@ -2970,12 +3096,224 @@ class ComplexExponentiationMultiplierHalf(
         self.dither()
 
     def walk_input_up_vertical(self):
-        pass
+        output_z = self.base**complex(0, 1)
+        angle = np.angle(output_z)
 
+        arc, brace, curved_brace, radians_label = \
+            self.get_arc_braces_and_label(angle)
 
+        self.dither(3)
+        self.apply_action(complex(0, 1))
 
+        Scene.play(self, ShowCreation(arc))
+        self.add_foreground_mobjects(arc)
+        self.play(GrowFromCenter(brace))
+        self.play(Transform(brace, curved_brace))
+        self.play(Write(radians_label, run_time = 2))
+        self.dither(2)
 
+        self.foreground_mobjects.remove(arc)
+        self.play(*map(FadeOut, [arc, brace, radians_label]))
+        self.apply_action(complex(0, -1))
 
+    def get_arc_braces_and_label(self, angle):
+        arc = Arc(angle)
+        arc.set_stroke(GREEN, width = 6)
+        arc_line = Line(RIGHT, RIGHT+angle*UP)
+        brace = Brace(arc_line, RIGHT, buff = 0)
+        for submob in brace.family_members_with_points():
+            submob.insert_n_anchor_points(10)
+        curved_brace = brace.copy()
+        curved_brace.shift(LEFT)
+        curved_brace.apply_complex_function(
+            np.exp, maintain_smoothness = False
+        )
+
+        half_point = arc.point_from_proportion(0.5)
+        radians_label = TexMobject("%.3f"%angle)
+        radians_label.add_background_rectangle()
+        radians_label.next_to(
+            1.5*half_point, np.round(half_point), buff = 0
+        )
+
+        return arc, brace, curved_brace, radians_label
+
+    def take_steps_for_e(self):
+        angles = [1, 2, 3, np.pi]
+
+        curr_brace = None
+        curr_label = None
+        curr_arc = None
+        for last_angle, angle in zip([0]+angles, angles):
+            arc, brace, curved_brace, label = self.get_arc_braces_and_label(angle)
+            if angle == np.pi:
+                label = TexMobject("%.5f"%np.pi)
+                label.add_background_rectangle(opacity = 1)
+                label.next_to(curved_brace, UP, buff = SMALL_BUFF)
+
+            self.apply_action(complex(0, angle-last_angle))
+            self.dither(2)#Line up with Adder half
+            if curr_brace is None:
+                curr_brace = curved_brace
+                curr_label = label
+                curr_arc = arc
+                brace.set_fill(opacity = 0)
+                Scene.play(self, ShowCreation(curr_arc))
+                self.add_foreground_mobjects(curr_arc)
+                self.play(
+                    ReplacementTransform(brace, curr_brace),
+                    Write(curr_label)
+                )
+                self.add_foreground_mobjects(curr_brace, curr_label)
+            else:
+                Scene.play(self, ShowCreation(arc))
+                self.add_foreground_mobjects(arc)
+                self.foreground_mobjects.remove(curr_arc)
+                self.remove(curr_arc)
+                curr_arc = arc
+                self.play(
+                    Transform(curr_brace, curved_brace),
+                    Transform(curr_label, label),
+                )
+            self.dither()
+            self.dither()
+
+class ExpComplexHomomorphismPreviewAbstract(ComplexExponentiationAbstract):
+    def construct(self):
+        self.base = self.start_base
+
+        self.add_vertical_line()
+        self.add_plane_unanimated()
+        self.add_title()
+        self.add_arrow()
+        self.change_base(np.exp(1), "e")
+        self.write_eulers_formula()
+        self.show_pure_imaginary_actions(np.pi, 0, -np.pi)
+        self.dither()
+
+class ExpComplexHomomorphismPreviewAdderHalf(
+    ExpComplexHomomorphismPreviewAbstract,
+    ComplexExponentiationAdderHalf
+    ):
+    def construct(self):
+        ExpComplexHomomorphismPreviewAbstract.construct(self)
+
+class ExpComplexHomomorphismPreviewMultiplierHalf(
+    ExpComplexHomomorphismPreviewAbstract,
+    ComplexExponentiationMultiplierHalf
+    ):
+    def construct(self):
+        ExpComplexHomomorphismPreviewAbstract.construct(self)
+
+class WhyE(TeacherStudentsScene):
+    def construct(self):
+        self.student_says("Why e?")
+        self.play(self.get_teacher().change_mode, "pondering")
+        self.dither(3)
+
+class EfvgtPatreonThanks(PatreonThanks):
+    CONFIG = {
+        "specific_patrons" : [
+            "Ali  Yahya",
+            "Meshal  Alshammari",
+            "CrypticSwarm    ",
+            "Justin Helps",
+            "Ankit   Agarwal",
+            "Yu  Jun",
+            "Shelby  Doolittle",
+            "Dave    Nicponski",
+            "Damion  Kistler",
+            "Juan    Benet",
+            "Othman  Alikhan",
+            "Markus  Persson",
+            "Dan Buchoff",
+            "Derek   Dai",
+            "Joseph  John Cox",
+            "Luc Ritchie",
+            "Nils Schneider",
+            "Mathew Bramson",
+            "Guido   Gambardella",
+            "Jerry   Ling",
+            "Mark    Govea",
+            "Vecht",
+            "Shimin Kuang",
+            "Rish    Kundalia",
+            "Achille Brighton",
+            "Kirk    Werklund",
+            "Ripta   Pasay",
+            "Felipe  Diniz",
+        ]
+    }
+
+class EmeraldLogo(SVGMobject):
+    CONFIG = {
+        "file_name" : "emerald_logo",
+        "stroke_width" : 0,
+        "fill_opacity" : 1,
+        "propogate_style_to_family" : True,
+        # "helix_color" : "#439271",
+        "helix_color" : GREEN_E,
+    }
+    def __init__(self, **kwargs):
+        SVGMobject.__init__(self, **kwargs)
+        self.scale_to_fit_height(1)
+        for submob in self.split()[18:]:
+            submob.highlight(self.helix_color)
+
+class ECLPromo(PiCreatureScene):
+    CONFIG = {
+        "seconds_to_blink" : 4,
+    }
+    def construct(self):
+        logo = EmeraldLogo()
+        logo.to_corner(UP+RIGHT, buff = MED_SMALL_BUFF)
+        logo.shift(0.5*DOWN)
+        logo_part1 = VGroup(*logo[:15])
+        logo_part2 = VGroup(*logo[15:])
+
+        url = TextMobject("emeraldjobs.3b1b.co")
+        url.next_to(logo, DOWN, buff = 0, aligned_edge = RIGHT)
+        url.save_state()
+        url.next_to(self.pi_creature.get_corner(UP+LEFT), UP)
+
+        rect = Rectangle(height = 9, width = 16)
+        rect.scale_to_fit_height(5)
+        rect.to_edge(LEFT)
+        rect.shift(DOWN)
+
+        card_point = Dot()
+        card_point.to_corner(UP+RIGHT, buff = MED_SMALL_BUFF)
+        arrow = Arrow(LEFT, RIGHT)
+        arrow.next_to(card_point, LEFT, buff = MED_LARGE_BUFF)
+
+        self.play(
+            FadeIn(
+                logo_part1, run_time = 3, 
+                submobject_mode = "lagged_start"
+            ),
+            self.pi_creature.change_mode, "hooray"
+        )
+        self.play(DrawBorderThenFill(logo_part2))
+        self.dither(2)
+
+        self.play(
+            self.pi_creature.change_mode, "raise_right_hand",
+            self.pi_creature.look_at, url,
+        )
+        self.play(Write(url))
+        self.dither(2)
+        self.play(
+            url.restore,
+            self.pi_creature.change_mode, "happy"
+        )
+        self.play(ShowCreation(rect))
+        self.dither(10)
+        self.play(
+            ShowCreation(arrow),
+            self.pi_creature.change_mode, "raise_right_hand",
+            self.pi_creature.look_at, arrow
+        )
+        self.dither(6)
 
 
 
