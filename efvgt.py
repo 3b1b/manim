@@ -239,6 +239,21 @@ class LetsStudyTheBasics(TeacherStudentsScene):
         self.change_student_modes(*["hooray"]*3)
         self.dither(2)
 
+class JustGiveMeAQuickExplanation(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "I ain't got \\\\ time for this!",
+            target_mode = "angry",
+        )
+        self.play(*it.chain(*[
+            [
+                pi.change_mode, "hesitant", 
+                pi.look_at, self.get_students()[1].eyes
+            ]
+            for pi in self.get_students()[::2]
+        ]))
+        self.dither(2)
+
 class QuickExplanation(ComplexTransformationScene):
     CONFIG = {
         "plane_config" : {
@@ -3229,21 +3244,23 @@ class ReadFormula(Scene):
         randy = Randolph()
         randy.shift(2*LEFT)
         formula.next_to(randy, RIGHT, aligned_edge = UP)
+        randy.look_at(formula)
 
         self.add(randy, formula)
+        self.dither()
         self.play(randy.change_mode, "thinking")
         self.dither()
         self.play(Blink(randy))
-        self.dither()
+        self.dither(3)
 
 class EfvgtPatreonThanks(PatreonThanks):
     CONFIG = {
         "specific_patrons" : [
-            "Ali  Yahya",
+            "Ali Yahya",
             "Meshal  Alshammari",
             "CrypticSwarm    ",
             "Justin Helps",
-            "Ankit   Agarwal",
+            "Ankit Agarwal",
             "Yu  Jun",
             "Shelby  Doolittle",
             "Dave    Nicponski",
@@ -3252,7 +3269,7 @@ class EfvgtPatreonThanks(PatreonThanks):
             "Othman  Alikhan",
             "Markus  Persson",
             "Dan Buchoff",
-            "Derek   Dai",
+            "Derek Dai",
             "Joseph  John Cox",
             "Luc Ritchie",
             "Nils Schneider",
@@ -3291,54 +3308,47 @@ class ECLPromo(PiCreatureScene):
     }
     def construct(self):
         logo = EmeraldLogo()
-        logo.to_corner(UP+RIGHT, buff = MED_SMALL_BUFF)
-        logo.shift(0.5*DOWN)
+        logo.to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
         logo_part1 = VGroup(*logo[:15])
         logo_part2 = VGroup(*logo[15:])
 
-        url = TextMobject("emeraldjobs.3b1b.co")
-        url.next_to(logo, DOWN, buff = 0, aligned_edge = RIGHT)
-        url.save_state()
-        url.next_to(self.pi_creature.get_corner(UP+LEFT), UP)
-
         rect = Rectangle(height = 9, width = 16)
         rect.scale_to_fit_height(5)
+        rect.next_to(logo, DOWN)
         rect.to_edge(LEFT)
-        rect.shift(DOWN)
-
-        card_point = Dot()
-        card_point.to_corner(UP+RIGHT, buff = MED_SMALL_BUFF)
-        arrow = Arrow(LEFT, RIGHT)
-        arrow.next_to(card_point, LEFT, buff = MED_LARGE_BUFF)
 
         self.play(
-            FadeIn(
-                logo_part1, run_time = 3, 
-                submobject_mode = "lagged_start"
-            ),
-            self.pi_creature.change_mode, "hooray"
+            self.pi_creature.change_mode, "hooray",
+            ShowCreation(rect)
         )
-        self.play(DrawBorderThenFill(logo_part2))
-        self.dither(2)
-
+        self.dither(3)
+        self.play(FadeIn(
+            logo_part1, run_time = 3, 
+            submobject_mode = "lagged_start"
+        ))
+        logo_part2.save_state()
+        logo_part2.scale(2)
+        logo_part2.next_to(self.pi_creature.get_corner(UP+LEFT), UP)
+        logo_part2.shift(MED_SMALL_BUFF*RIGHT)
         self.play(
             self.pi_creature.change_mode, "raise_right_hand",
-            self.pi_creature.look_at, url,
-        )
-        self.play(Write(url))
-        self.dither(2)
+        )        
+        self.play(DrawBorderThenFill(logo_part2))
         self.play(
-            url.restore,
+            logo_part2.scale_in_place, 0.5,
+            logo_part2.to_edge, UP
+        )
+        self.play(
+            logo_part2.restore,
             self.pi_creature.change_mode, "happy"
         )
-        self.play(ShowCreation(rect))
+        self.play(self.pi_creature.look_at, rect)
         self.dither(10)
         self.play(
-            ShowCreation(arrow),
-            self.pi_creature.change_mode, "raise_right_hand",
-            self.pi_creature.look_at, arrow
+            self.pi_creature.change_mode, "pondering",
+            self.pi_creature.look, DOWN
         )
-        self.dither(6)
+        self.dither(10)
 
 class ExpTransformation(ComplexTransformationScene):
     CONFIG = {
@@ -3352,7 +3362,7 @@ class ExpTransformation(ComplexTransformationScene):
         cylinder = self.plane.copy().apply_function(
             lambda (x, y, z) : np.array([x, np.sin(y), -np.cos(y)])
         )
-        title = TexMobject("z \\to e^z")
+        title = TexMobject("x \\to e^x")
         title.add_background_rectangle()
         title.scale(1.5)
         title.next_to(ORIGIN, RIGHT)
@@ -3372,13 +3382,26 @@ class ExpTransformation(ComplexTransformationScene):
         self.play(Transform(self.plane, final_plane, run_time = 3))
         self.dither(3)
 
+class Thumbnail(Scene):
+    def construct(self):
+        formula = TexMobject("e^", "{\\pi i}", "=", "-1")
+        formula[1].highlight(GREEN_B)
+        formula[3].highlight(YELLOW)
+        formula.scale(4)
+        formula.to_edge(UP, buff = LARGE_BUFF)
+        self.add(formula)
+
+        via = TextMobject("via")
+        via.scale(2)
+        groups = TextMobject("Group theory")
+        groups.scale(3)
+        groups.to_edge(DOWN)
+        via.move_to(VGroup(formula, groups))
+        self.add(via, groups)
 
 
 
-
-
-
-
+      
 
 
 

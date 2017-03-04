@@ -35,7 +35,7 @@ class Transform(Animation):
         if "path_arc" in kwargs:
             self.path_func = path_along_arc(
                 kwargs["path_arc"],
-                kwargs["path_arc_axis"]
+                kwargs.get("path_arc_axis", OUT)
             )
 
     def init_path_func(self):
