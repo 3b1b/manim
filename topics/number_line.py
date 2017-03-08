@@ -217,16 +217,17 @@ class NumberPlane(VMobject):
         for index, vals in enumerate([x_vals, y_vals]):
             num_pair = [0, 0]
             for val in vals:
+                if val == 0:
+                    continue
                 num_pair[index] = val
                 point = self.num_pair_to_point(num_pair)
                 num = TexMobject(str(val))
+                num.add_background_rectangle()
                 num.scale_to_fit_height(
                     self.written_coordinate_height
                 )
-                num.shift(
-                    point-num.get_corner(UP+LEFT),
-                    self.written_coordinate_nudge
-                )
+                vect = DOWN if index == 0 else LEFT
+                num.next_to(point, vect, buff = SMALL_BUFF)
                 result.append(num)
         return result
 
@@ -235,13 +236,18 @@ class NumberPlane(VMobject):
 
     def get_axis_labels(self, x_label = "x", y_label = "y"):
         x_axis, y_axis = self.get_axes().split()
-        x_label_mob = TexMobject(x_label)
-        y_label_mob = TexMobject(y_label)
-        x_label_mob.next_to(x_axis, DOWN)
-        x_label_mob.to_edge(RIGHT)
-        y_label_mob.next_to(y_axis, RIGHT)
-        y_label_mob.to_edge(UP)
-        return VMobject(x_label_mob, y_label_mob)
+        quads = [
+            (x_axis, x_label, UP, RIGHT),
+            (y_axis, y_label, RIGHT, UP),
+        ]
+        labels = VGroup()
+        for axis, tex, vect, edge in quads:
+            label = TexMobject(tex)
+            label.add_background_rectangle()
+            label.next_to(axis, vect)
+            label.to_edge(edge)
+            labels.add(label)
+        return labels
 
 
     def add_coordinates(self, x_vals = None, y_vals = None):
