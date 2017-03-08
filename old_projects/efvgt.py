@@ -26,7 +26,8 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
-from eoc.chapter1 import PatreonThanks
+
+from topics.common_scenes import PatreonThanks
 
 ADDER_COLOR = GREEN
 MULTIPLIER_COLOR = YELLOW

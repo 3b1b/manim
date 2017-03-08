@@ -544,7 +544,7 @@ class SixJewelCase(FiveJewelCase):
 class DiscussApplicability(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("""
-            Minize sharding,
+            Minimize sharding,
             allocate resources evenly
         """)
         self.change_student_modes(*["pondering"]*3)
@@ -2413,8 +2413,8 @@ class JewelPairPlane(GraphScene):
         dot = Dot(point, color = WHITE)
         coord_pair = TexMobject(
             "\\big(", 
-            "\\text{Theif %d }"%self.thief_number, "X", ",", 
-            "\\text{Theif %d }"%self.thief_number, "X", 
+            "\\text{Thief %d }"%self.thief_number, "X", ",", 
+            "\\text{Thief %d }"%self.thief_number, "X", 
             "\\big)"
         )
         # coord_pair.scale(1.5)

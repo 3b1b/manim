@@ -25,7 +25,8 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
-from eoc.chapter1 import OpeningQuote, PatreonThanks
+
+from topics.common_scenes import OpeningQuote, PatreonThanks
 from eoc.graph_scene import *
 
 SINE_COLOR = BLUE
