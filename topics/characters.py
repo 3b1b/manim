@@ -349,7 +349,7 @@ class PiCreatureScene(Scene):
     }
     def setup(self):
         self.pi_creatures = VGroup(*self.create_pi_creatures())
-        self.add(self.pi_creatures)
+        self.add(*self.pi_creatures)
 
     def create_pi_creatures(self):
         """ 
@@ -441,6 +441,9 @@ class PiCreatureScene(Scene):
         first mobject being animated with each .play call
         """
         animations = Scene.compile_play_args_to_animation_list(self, *args)
+        if not any([pi in self.get_mobjects() for pi in self.get_pi_creatures()]):
+            return animations
+
         non_pi_creature_anims = filter(
             lambda anim : anim.mobject not in self.get_pi_creatures(),
             animations
