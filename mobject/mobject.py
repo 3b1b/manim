@@ -292,7 +292,7 @@ class Mobject(object):
         self.do_in_place(self.stretch, factor, dim)
         return self
 
-    def stretch_to_fit(self, length, dim, stretch = True):
+    def rescale_to_fit(self, length, dim, stretch = False):
         old_length = self.length_over_dim(dim)
         if old_length == 0:
             return self
@@ -303,16 +303,16 @@ class Mobject(object):
         return self
 
     def stretch_to_fit_width(self, width):
-        return self.stretch_to_fit(width, 0)
+        return self.rescale_to_fit(width, 0, stretch = True)
 
     def stretch_to_fit_height(self, height):
-        return self.stretch_to_fit(height, 1)
+        return self.rescale_to_fit(height, 1, stretch = True)
 
     def scale_to_fit_width(self, width):
-        return self.stretch_to_fit(width, 0, stretch = False)
+        return self.rescale_to_fit(width, 0, stretch = False)
 
     def scale_to_fit_height(self, height):
-        return self.stretch_to_fit(height, 1, stretch = False)
+        return self.rescale_to_fit(height, 1, stretch = False)
 
     def space_out_submobjects(self, factor = 1.5, **kwargs):
         self.scale_in_place(factor)
@@ -337,7 +337,7 @@ class Mobject(object):
             self.stretch_to_fit_width(mobject.get_width())
             self.stretch_to_fit_height(mobject.get_height())
         else:
-            self.stretch_to_fit(
+            self.rescale_to_fit(
                 mobject.length_over_dim(dim_to_match),
                 dim_to_match, 
                 stretch = False

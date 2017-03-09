@@ -171,13 +171,24 @@ class Brace(TexMobject):
             mob.rotate(angle)
 
     def put_at_tip(self, mob, **kwargs):
-        mob.next_to(self, self.direction, **kwargs)
+        mob.next_to(self.get_tip(), self.get_direction(), **kwargs)
         return self
 
     def get_text(self, *text, **kwargs):
         text_mob = TextMobject(*text)
         self.put_at_tip(text_mob, **kwargs)
         return text_mob
+
+    def get_tip(self):
+        # Very specific to the LaTeX representation
+        # of a brace, but it's the only way I can think
+        # of to get the tip regardless of orientation.
+        return self.submobjects[2].get_anchors()[7]
+
+    def get_direction(self):
+        vect = self.get_tip() - self.get_center()
+        return vect/np.linalg.norm(vect)
+
 
 
     

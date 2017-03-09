@@ -24,7 +24,7 @@ class CameraWithPerspective(Camera):
 
 class ThreeDCamera(CameraWithPerspective):
     CONFIG = {
-        "sun_vect" : 3*UP+LEFT,
+        "sun_vect" : 5*UP+LEFT,
         "shading_factor" : 0.5,
     }
     def __init__(self, *args, **kwargs):
@@ -66,18 +66,16 @@ class ThreeDCamera(CameraWithPerspective):
 
     def display_multiple_vectorized_mobjects(self, vmobjects):
         def z_cmp(*vmobs):
-            is_three_d = np.array([
-                hasattr(vm, "part_of_three_d_mobject") 
-                for vm in vmobs
-            ])
-            if sum(is_three_d) == 2:
-                cmp_vect = self.get_unit_normal_vect(vmobs[0])
+            #Compare to three dimensional mobjects based on their
+            #z value, otherwise don't compare.
+            is_three_d = [hasattr(vm, "part_of_3d_mobject") for vm in vmobs]
+            has_points = [vm.get_num_points() > 0 for vm in vmobs]
+            if all(is_three_d) and all(has_points):
+                cmp_vect = self.get_unit_normal_vect(vm)
                 return cmp(*[
                     np.dot(vm.get_center(), cmp_vect)
                     for vm in vmobs
                 ])
-            elif sum(is_three_d) == 1:
-                return 1 if is_three_d[0] else -1
             else:
                 return 0
         Camera.display_multiple_vectorized_mobjects(
@@ -95,7 +93,7 @@ class ThreeDMobject(VMobject):
     def __init__(self, **kwargs):
         VMobject.__init__(self, **kwargs)
         for submobject in self.submobject_family():
-            submobject.part_of_three_d_mobject = True
+            submobject.part_of_3d_mobject = True
 
 class Cube(ThreeDMobject):
     CONFIG = {
@@ -113,7 +111,14 @@ class Cube(ThreeDMobject):
 
             self.add(face)
 
-
+class Prism(Cube):
+    CONFIG = {
+        "dimensions" : [3, 2, 1]
+    }
+    def generate_points(self):
+        Cube.generate_points(self)
+        for dim, value in enumerate(self.dimensions):
+            self.rescale_to_fit(value, dim, stretch = True)
 
 
 
