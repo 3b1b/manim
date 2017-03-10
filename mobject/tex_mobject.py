@@ -165,13 +165,18 @@ class Brace(TexMobject):
         )
         tex_string = "\\underbrace{%s}"%(num_quads*"\\qquad")
         TexMobject.__init__(self, tex_string, **kwargs)
+        self.tip_point_index = np.argmin(self.get_all_points()[:,1])
         self.stretch_to_fit_width(target_width)
         self.shift(left - self.get_corner(UP+LEFT) + self.buff*DOWN)
         for mob in mobject, self:
             mob.rotate(angle)
 
     def put_at_tip(self, mob, **kwargs):
-        mob.next_to(self.get_tip(), self.get_direction(), **kwargs)
+        mob.next_to(
+            self.get_tip(), 
+            np.round(self.get_direction()), 
+            **kwargs
+        )
         return self
 
     def get_text(self, *text, **kwargs):
@@ -183,7 +188,8 @@ class Brace(TexMobject):
         # Very specific to the LaTeX representation
         # of a brace, but it's the only way I can think
         # of to get the tip regardless of orientation.
-        return self.submobjects[2].get_anchors()[7]
+        # return self.submobjects[2].get_anchors()[7]
+        return self.get_all_points()[self.tip_point_index]
 
     def get_direction(self):
         vect = self.get_tip() - self.get_center()
