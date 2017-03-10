@@ -171,12 +171,18 @@ class Brace(TexMobject):
         for mob in mobject, self:
             mob.rotate(angle)
 
-    def put_at_tip(self, mob, **kwargs):
-        mob.next_to(
-            self.get_tip(), 
-            np.round(self.get_direction()), 
-            **kwargs
-        )
+    def put_at_tip(self, mob, use_next_to = True, **kwargs):
+        if use_next_to:
+            mob.next_to(
+                self.get_tip(), 
+                np.round(self.get_direction()), 
+                **kwargs
+            )
+        else:
+            mob.move_to(self.get_tip())
+            buff = kwargs.get("buff", DEFAULT_MOBJECT_TO_MOBJECT_BUFFER)
+            shift_distance = mob.get_width()/2.0+buff
+            mob.shift(self.get_direction()*shift_distance)
         return self
 
     def get_text(self, *text, **kwargs):
