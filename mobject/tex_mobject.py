@@ -110,14 +110,33 @@ class TexMobject(SVGMobject):
         self.submobjects = new_submobjects
         return self
 
-    def highlight_by_tex(self, tex, color, substring = True):
+    def get_part_by_tex(self, tex, substring = True, return_all_parts = False):
+        def test(tex1, tex2):
+            return tex1 == tex2 or (substring and tex1 in tex2)
         if not hasattr(self, "expression_parts"):
-            if tex == self.get_tex_string():
-                self.highlight(color)
-            return self
-        for submob, part_tex in zip(self.split(), self.expression_parts):
-            if (part_tex == tex) or (substring and tex in part_tex):
-                submob.highlight(color)
+            if test(tex, self.get_tex_string()):
+                return self
+            return None
+        all_parts = [
+            submob
+            for submob, part_tex in zip(self.split(), self.expression_parts)
+            if test(tex, part_tex)
+        ]
+        if return_all_parts:
+            return all_parts
+        else:
+            if len(all_parts) > 0:
+                return all_parts[0]
+            else:
+                return None
+
+    def get_parts_by_tex(self, tex, **kwargs):
+        return self.get_part_by_tex(tex, return_all_parts = True, **kwargs)
+
+    def highlight_by_tex(self, tex, color, **kwargs):
+        parts_to_color = self.get_parts_by_tex(tex, **kwargs)
+        for part in parts_to_color:
+            part.highlight(color)
         return self
 
     def organize_submobjects_left_to_right(self):
