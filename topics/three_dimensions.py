@@ -31,17 +31,22 @@ class ThreeDCamera(CameraWithPerspective):
         Camera.__init__(self, *args, **kwargs)
         self.unit_sun_vect = self.sun_vect/np.linalg.norm(self.sun_vect)
 
+    def get_color(self, method):
+        color = method()
+        vmobject = method.im_self
+        if is_3d(vmobject):
+            return Color(rgb = self.get_shaded_rgb(
+                color_to_rgb(color),
+                normal_vect = self.get_unit_normal_vect(vmobject)
+            ))
+        else:
+            return color
+
     def get_stroke_color(self, vmobject):
-        return Color(rgb = self.get_shaded_rgb(
-            color_to_rgb(vmobject.get_stroke_color()),
-            normal_vect = self.get_unit_normal_vect(vmobject)
-        ))
+        return self.get_color(vmobject.get_stroke_color)
 
     def get_fill_color(self, vmobject):
-        return Color(rgb = self.get_shaded_rgb(
-            color_to_rgb(vmobject.get_fill_color()),
-            normal_vect = self.get_unit_normal_vect(vmobject)
-        ))
+        return self.get_color(vmobject.get_fill_color)
 
     def get_shaded_rgb(self, rgb, normal_vect):
         brightness = np.dot(normal_vect, self.unit_sun_vect)
@@ -68,9 +73,9 @@ class ThreeDCamera(CameraWithPerspective):
         def z_cmp(*vmobs):
             #Compare to three dimensional mobjects based on their
             #z value, otherwise don't compare.
-            is_three_d = [hasattr(vm, "part_of_3d_mobject") for vm in vmobs]
+            three_d_status = map(is_3d, vmobs)
             has_points = [vm.get_num_points() > 0 for vm in vmobs]
-            if all(is_three_d) and all(has_points):
+            if all(three_d_status) and all(has_points):
                 cmp_vect = self.get_unit_normal_vect(vm)
                 return cmp(*[
                     np.dot(vm.get_center(), cmp_vect)
@@ -88,6 +93,9 @@ class ThreeDScene(Scene):
     }
 
 ##############
+
+def is_3d(mobject):
+    return hasattr(mobject, "part_of_3d_mobject")
 
 class ThreeDMobject(VMobject):
     def __init__(self, **kwargs):
