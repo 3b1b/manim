@@ -481,13 +481,13 @@ class Mobject(object):
     def get_submobject_critical_point(self, direction):
         if len(self.split()) == 1:
             return self.get_critical_point(direction)
-        index = np.argmax([
-            np.dot(submob.get_center(), direction)
-            for submob in self
+        with_points = self.family_members_with_points()
+        submob_critical_points = np.array([
+            submob.get_critical_point(direction)
+            for submob in with_points
         ])
-        return self[index].get_critical_point(
-            direction, use_submobject = True
-        )
+        index = np.argmax(np.dot(direction, submob_critical_points.T))
+        return submob_critical_points[index]
 
     # Pseudonyms for more general get_critical_point method
     def get_edge_center(self, direction):
