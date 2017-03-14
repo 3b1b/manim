@@ -223,8 +223,8 @@ class Arrow(Line):
     def get_tip(self):
         return self.tip
 
-    def scale(self, scale_factor):
-        Line.scale(self, scale_factor)
+    def scale(self, scale_factor, **kwargs):
+        Line.scale(self, scale_factor, **kwargs)
         if self.preserve_tip_size_when_scaling:
             self.remove(self.tip)
             self.add_tip()

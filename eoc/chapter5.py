@@ -175,7 +175,20 @@ class SlopeOfCircleExample(ZoomedScene):
             run_time = 5,
         ))
         self.dither(2)
-        self.play(*map(FadeOut, [lines, labels]))
+
+        #Move labels to equation
+        movers = labels.copy()
+        pairs = zip(
+            [movers[1], movers[2], movers[0]],
+            self.circle_equation[1][0:-1:3]
+        )
+        self.play(*[
+            ApplyMethod(m1.replace, m2)
+            for m1, m2 in pairs
+        ])
+        self.dither()
+
+        self.play(*map(FadeOut, [lines, labels, movers]))
         self.remove(full_group)
         self.add(dot)
         self.dither()
@@ -599,19 +612,22 @@ class RelatedRatesExample(ThreeDScene):
         "wall_center" : 1.5*LEFT+0.5*UP,
     }
     def construct(self):
+        self.skip_animations = True
         self.introduce_ladder()
         self.write_related_rates()
         self.measure_ladder()
         self.slide_ladder()
-        self.write_equation()
-        self.isolate_x_of_t()
-        self.discuss_lhs_as_function()
-        self.let_dt_pass()
-        self.take_derivative_of_rhs()
-        self.take_derivative_of_lhs()
-        self.bring_back_velocity_arrows()
-        self.replace_terms_in_final_form()
-        self.write_final_solution()
+        self.skip_animations = False
+        self.ponder_question()
+        # self.write_equation()
+        # self.isolate_x_of_t()
+        # self.discuss_lhs_as_function()
+        # self.let_dt_pass()
+        # self.take_derivative_of_rhs()
+        # self.take_derivative_of_lhs()
+        # self.bring_back_velocity_arrows()
+        # self.replace_terms_in_final_form()
+        # self.write_final_solution()
 
     def introduce_ladder(self):
         ladder = Ladder(height = self.get_ladder_length())
@@ -726,6 +742,31 @@ class RelatedRatesExample(ThreeDScene):
         self.dy_label = speed_label
         self.dx_arrow = left_arrow
         self.dx_label = q_marks
+
+    def ponder_question(self):
+        randy = Randolph(mode = "pondering")
+        randy.flip()
+        randy.to_corner(DOWN+RIGHT)
+
+        self.play(FadeIn(randy))
+        self.play(Blink(randy))
+        self.dither()
+        self.play(
+            randy.change_mode, "confused",
+            randy.look_at, self.ladder.get_top()
+        )
+        self.play(randy.look_at, self.ladder.get_bottom())
+        self.play(randy.look_at, self.ladder.get_top())
+        self.play(Blink(randy))
+        self.dither()
+        self.play(PiCreatureSays(
+            randy, "Give names"
+        ))
+        self.play(Blink(randy))
+        self.play(*map(FadeOut, [
+            randy, randy.bubble, randy.bubble.content
+        ]))
+
 
     def write_equation(self):
         self.x_and_y_labels = self.get_x_and_y_labels()
@@ -1195,7 +1236,1471 @@ class RelatedRatesExample(ThreeDScene):
     def get_ladder_length(self):
         return np.linalg.norm([self.start_x, self.start_y])
 
+class LightweightLadderScene(RelatedRatesExample):
+    CONFIG = {
+        "skip_animations" : True
+    }
+    def construct(self):
+        self.introduce_ladder()
+        self.measure_ladder()
+        self.add(self.numerical_x_and_y_labels)
 
+class LightweightCircleExample(SlopeOfCircleExample):
+    CONFIG = {
+        "skip_animations" : True,
+        "plane_kwargs" : {
+            "x_radius" : 5,
+            "y_radius" : 5,
+            "space_unit_to_x_unit" : SPACE_UNIT_TO_PLANE_UNIT,
+            "space_unit_to_y_unit" : SPACE_UNIT_TO_PLANE_UNIT,
+        },
+    }
+    def construct(self):
+        self.setup_plane()
+        self.introduce_circle()
+        self.talk_through_pythagorean_theorem()
+        self.draw_example_slope()
+
+        self.remove(self.circle_equation)
+        self.remove(self.slope_word)
+        self.example_point_coords_mob.scale(
+            1.5, about_point = self.example_point_coords_mob.get_corner(UP+RIGHT)
+        )
+        self.plane.axis_labels[0].shift(3*LEFT)
+
+class CompareLadderAndCircle(PiCreatureScene, ThreeDScene):
+    def construct(self):
+        self.introduce_both_scenes()
+        self.show_derivatives()
+        self.comment_on_ladder_derivative()
+        self.comment_on_circle_derivative()
+
+    def introduce_both_scenes(self):
+        ladder_scene = LightweightLadderScene()
+        ladder_mobs = VGroup(*ladder_scene.get_top_level_mobjects())
+        circle_scene = LightweightCircleExample()
+        circle_mobs = VGroup(*circle_scene.get_top_level_mobjects())
+        for mobs, vect in (ladder_mobs, LEFT), (circle_mobs, RIGHT):
+            mobs.scale_to_fit_height(SPACE_HEIGHT-MED_LARGE_BUFF)
+            mobs.next_to(
+                self.pi_creature.get_corner(UP+vect), UP,
+                buff = SMALL_BUFF,
+                aligned_edge = -vect
+            )
+
+        ladder_mobs.save_state()
+        ladder_mobs.fade(1)
+        ladder_mobs.rotate_in_place(np.pi/3, UP)
+        self.play(
+            self.pi_creature.change_mode, "raise_right_hand",
+            self.pi_creature.look_at, ladder_mobs,
+            ApplyMethod(ladder_mobs.restore, run_time = 2)
+        )
+        self.play(
+            self.pi_creature.change_mode, "raise_left_hand",
+            self.pi_creature.look_at, circle_mobs,
+            Write(circle_mobs, run_time = 2)
+        )
+        self.dither(2)
+        self.play(
+            circle_mobs.to_edge, RIGHT,
+            ladder_mobs.to_edge, LEFT,
+        )
+
+    def show_derivatives(self):
+        equation = TexMobject(
+            "x", "^2", "+", "y", "^2", "= 5^2"
+        )
+        derivative = TexMobject(
+            "2", "x", "dx", "+", "2", "y", "dy", "=0"
+        )
+        self.color_equations(equation, derivative)
+        equation.to_edge(UP)
+        equation.shift(MED_LARGE_BUFF*LEFT)
+        derivative.next_to(equation, DOWN, buff = MED_LARGE_BUFF)
+
+        self.play(
+            Write(equation),
+            self.pi_creature.change_mode, "plain",
+            self.pi_creature.look_at, equation
+        )
+        self.dither()
+        self.play(*[
+            ReplacementTransform(
+                equation[i].copy(), derivative[j],
+                path_arc = np.pi/2
+            )
+            for i, j in enumerate([1, 0, 3, 5, 4, 7])
+        ]+[
+            Write(derivative[j])
+            for j in 2, 6
+        ])
+        self.play(
+            self.pi_creature.change_mode, "pondering",
+            self.pi_creature.look_at, derivative
+        )
+        self.dither()
+
+        self.equation = equation
+        self.derivative = derivative
+
+    def comment_on_ladder_derivative(self):
+        equation = self.equation
+        derivative = self.derivative
+
+        time_equation = TexMobject(
+            "x(t)", "^2", "+", "y(t)", "^2", "= 5^2"
+        )
+        time_derivative = TexMobject(
+            "2", "x(t)", "\\frac{dx}{dt}", "+", 
+            "2", "y(t)", "\\frac{dy}{dt}", "=0"
+        )
+        self.color_equations(time_equation, time_derivative)
+        time_equation.move_to(equation)
+        time_derivative.move_to(derivative, UP)
+
+        brace = Brace(time_derivative)
+        brace_text = brace.get_text("A rate")
+
+        equation.save_state()
+        derivative.save_state()
+
+        self.play(Transform(equation, time_equation))
+        self.dither()
+        self.play(Transform(derivative, time_derivative))
+        self.dither()
+        self.play(GrowFromCenter(brace))
+        self.play(Write(brace_text))
+        self.change_mode("hooray")
+        self.dither(2)
+        self.play(
+            equation.restore,
+            derivative.restore,
+            FadeOut(brace),
+            FadeOut(brace_text),
+            self.pi_creature.change_mode, "confused"
+        )
+        self.dither()
+
+    def comment_on_circle_derivative(self):
+        derivative = self.derivative
+        dx = derivative.get_part_by_tex("dx")
+        dy = derivative.get_part_by_tex("dy")
+
+        for mob in dx, dy:
+            brace = Brace(mob)
+            brace.next_to(mob[0], DOWN, buff = SMALL_BUFF, aligned_edge = LEFT)
+            text = brace.get_text("No $dt$", buff = SMALL_BUFF)
+            text.highlight(YELLOW)
+
+            self.play(
+                GrowFromCenter(brace),
+                Write(text)
+            )
+            self.dither()
+
+        self.play(
+            self.pi_creature.change_mode, "pondering",
+            self.pi_creature.look, DOWN+LEFT
+        )
+        self.dither(2)
+
+    #######
+
+    def create_pi_creature(self):
+        self.pi_creature = Mortimer().to_edge(DOWN)
+        return self.pi_creature
+
+    def color_equations(self, equation, derivative):
+        for mob in equation[0], derivative[1]:
+            mob.highlight(GREEN)
+        for mob in equation[3], derivative[5]:
+            mob.highlight(RED)
+
+class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
+    CONFIG = {
+        "zoomed_canvas_corner" : DOWN+RIGHT,
+        "zoomed_canvas_space_shape" : (3, 4),
+    }
+    def construct(self):
+        self.setup_plane()
+        self.write_equation()
+        self.show_example_point()
+        self.shift_example_point((4, 4))
+        self.shift_example_point((3, 3))
+        self.shift_example_point(self.example_point)
+        self.take_derivative_symbolically()
+        self.show_dx_dy_step()
+        self.plug_in_example_values()
+        self.ask_about_equalling_zero()
+        self.show_tangent_step()
+        self.point_out_equalling_zero()
+        self.show_tangent_line()
+
+    def write_equation(self):
+        equation = TexMobject("x", "^2", "+", "y", "^2")
+        equation.add_background_rectangle()
+
+        brace = Brace(equation, UP, buff = SMALL_BUFF)
+        s_expression = self.get_s_expression("x", "y")
+        s_rect, s_of_xy = s_expression
+        s, xy = s_of_xy
+        s_expression.next_to(brace, UP, buff = SMALL_BUFF)
+
+        group = VGroup(equation, s_expression, brace)
+        group.shift(2*SPACE_WIDTH*LEFT/3)
+        group.to_edge(UP, buff = MED_SMALL_BUFF)
+
+        s.save_state()
+        s.next_to(brace, UP)
+
+
+        self.play(Write(equation))
+        self.play(GrowFromCenter(brace))
+        self.play(Write(s))
+        self.dither()
+        self.play(
+            FadeIn(s_rect),
+            s.restore, 
+            GrowFromCenter(xy)
+        )
+        self.dither()
+
+        self.equation = equation
+        self.s_expression = s_expression
+
+    def show_example_point(self):
+        point = self.plane.num_pair_to_point(self.example_point)
+        dot = Dot(point, color = self.example_color)
+        new_s_expression = self.get_s_expression(*self.example_point)
+        new_s_expression.next_to(dot, UP+RIGHT, buff = 0)
+        new_s_expression.highlight(self.example_color)
+        equals_25 = TexMobject("=%d"%int(np.linalg.norm(self.example_point)**2))
+        equals_25.highlight(YELLOW)
+        equals_25.next_to(new_s_expression, RIGHT, align_using_submobjects = True)
+        equals_25.add_background_rectangle()
+
+        circle = Circle(
+            radius = self.circle_radius*self.plane.space_unit_to_x_unit,
+            color = self.circle_color,
+        )
+
+        self.play(
+            ReplacementTransform(
+                self.s_expression.copy(),
+                new_s_expression
+            ),
+            ShowCreation(dot)
+        )
+        self.play(ShowCreation(circle), Animation(dot))
+        self.play(Write(equals_25))
+        self.dither()
+
+        self.example_point_dot = dot
+        self.example_point_label = VGroup(
+            new_s_expression, equals_25
+        )
+
+    def shift_example_point(self, coords):
+        point = self.plane.num_pair_to_point(coords)
+        s_expression = self.get_s_expression(*coords)
+        s_expression.next_to(point, UP+RIGHT, buff = SMALL_BUFF)
+        s_expression.highlight(self.example_color)
+        result = coords[0]**2 + coords[1]**2
+        rhs = TexMobject("=%d"%int(result))
+        rhs.add_background_rectangle()
+        rhs.highlight(YELLOW)
+        rhs.next_to(s_expression, RIGHT, align_using_submobjects = True)
+        point_label = VGroup(s_expression, rhs)
+
+        self.play(
+            self.example_point_dot.move_to, point,
+            Transform(self.example_point_label, point_label)
+        )
+        self.dither(2)
+
+    def take_derivative_symbolically(self):
+        equation = self.equation
+        derivative = TexMobject(
+            "dS =", "2", "x", "\\,dx", "+", "2", "y", "\\,dy",
+        )
+        derivative[2].highlight(GREEN)
+        derivative[6].highlight(RED)
+        derivative.next_to(equation, DOWN, buff = MED_LARGE_BUFF)
+        derivative.add_background_rectangle()
+        derivative.to_edge(LEFT)
+
+        self.play(*[
+            FadeIn(derivative[0])
+        ]+[
+            ReplacementTransform(
+                self.s_expression[1][0].copy(),
+                derivative[1][0],
+            )
+        ]+[
+            Write(derivative[1][j])
+            for j in 3, 7
+        ])
+        self.play(*[
+            ReplacementTransform(
+                equation[1][i].copy(), derivative[1][j],
+                path_arc = np.pi/2,
+                run_time = 2,
+                rate_func = squish_rate_func(smooth, (j-1)/12., (j+6)/12.)
+            )
+            for i, j in enumerate([2, 1, 4, 6, 5])
+        ])
+        self.dither(2)
+
+        self.derivative = derivative
+
+    def show_dx_dy_step(self):
+        dot = self.example_point_dot
+        s_label = self.example_point_label
+        rhs = s_label[-1]
+        s_label.remove(rhs)
+
+        point = dot.get_center()
+        vect = 2*LEFT + DOWN
+        new_point = point + vect*0.6/self.zoom_factor
+        interim_point = new_point[0]*RIGHT + point[1]*UP
+
+        dx_line = Line(point, interim_point, color = GREEN)
+        dy_line = Line(interim_point, new_point, color = RED)
+        for line, tex, vect in (dx_line, "dx", UP), (dy_line, "dy", LEFT):
+            label = TexMobject(tex)
+            label.highlight(line.get_color())
+            label.next_to(line, vect, buff = SMALL_BUFF)
+            label.add_background_rectangle()
+            label.scale(
+                1./self.zoom_factor, 
+                about_point = line.get_center()
+            )
+            line.label = label
+
+        self.activate_zooming()
+        lil_rect = self.little_rectangle        
+        lil_rect.move_to(dot)
+        lil_rect.shift(0.05*lil_rect.get_width()*LEFT)
+        lil_rect.shift(0.2*lil_rect.get_height()*DOWN)
+        lil_rect.save_state()
+        lil_rect.scale_to_fit_height(SPACE_HEIGHT - MED_LARGE_BUFF)
+        lil_rect.move_to(s_label, UP)
+        lil_rect.shift(MED_SMALL_BUFF*UP)
+        self.dither()
+        self.play(
+            FadeOut(rhs),
+            dot.scale, 1./self.zoom_factor, point,
+            s_label.scale, 1./self.zoom_factor, point,
+            lil_rect.restore,
+            run_time = 2
+        )
+        self.dither()
+        for line in dx_line, dy_line:
+            self.play(ShowCreation(line))
+            self.play(Write(line.label, run_time = 1))
+            self.dither()
+
+        new_dot = Dot(color = dot.get_color())
+        new_s_label = self.get_s_expression(
+            "%d + dx"%int(self.example_point[0]),
+            "%d + dy"%int(self.example_point[1]),
+        )
+        new_dot.scale_to_fit_height(dot.get_height())
+        new_dot.move_to(new_point)
+        new_s_label.scale_to_fit_height(s_label.get_height())
+        new_s_label.scale(0.8)
+        new_s_label.next_to(
+            new_dot, DOWN, 
+            buff = SMALL_BUFF/self.zoom_factor, 
+            aligned_edge = LEFT
+        )
+        new_s_label.shift(MED_LARGE_BUFF*LEFT/self.zoom_factor)
+        new_s_label.highlight(self.example_color)
+        VGroup(*new_s_label[1][1][3:5]).highlight(GREEN)
+        VGroup(*new_s_label[1][1][-3:-1]).highlight(RED)
+
+        self.play(ShowCreation(new_dot))
+        self.play(Write(new_s_label))
+        self.dither()
+
+        ds = self.derivative[1][0]
+        self.play(FocusOn(ds))
+        self.play(Indicate(ds))
+        self.dither()
+
+        self.tiny_step_group = VGroup(
+            dx_line, dx_line.label,
+            dy_line, dy_line.label,
+            s_label, new_s_label, new_dot
+        )
+
+    def plug_in_example_values(self):
+        deriv_example = TexMobject(
+            "dS =", "2", "(3)", "\\,(-0.02)", "+", "2", "(4)", "\\,(-0.01)",
+        )
+
+        deriv_example[2].highlight(GREEN)
+        deriv_example[6].highlight(RED)
+        deriv_example.add_background_rectangle()
+        deriv_example.scale(0.8)
+        deriv_example.next_to(ORIGIN, UP, buff = SMALL_BUFF)
+        deriv_example.to_edge(LEFT, buff = MED_SMALL_BUFF)
+
+        def add_example_parts(*indices):
+            self.play(*[
+                ReplacementTransform(
+                    self.derivative[1][i].copy(),
+                    deriv_example[1][i],
+                    run_time = 2
+                )
+                for i in indices
+            ])
+
+        self.play(FadeIn(deriv_example[0]))
+        add_example_parts(0)
+        self.dither()
+        add_example_parts(1, 2, 4, 5, 6)
+        self.dither(2)
+        add_example_parts(3)
+        self.dither()
+        add_example_parts(7)
+        self.dither()
+
+        #React
+        randy = Randolph()
+        randy.next_to(ORIGIN, LEFT)
+        randy.to_edge(DOWN)
+
+        self.play(FadeIn(randy))
+        self.play(
+            randy.change_mode, "pondering",
+            randy.look_at, deriv_example.get_left()
+        )
+        self.play(Blink(randy))
+        self.play(randy.look_at, deriv_example.get_right())
+        self.dither()
+        self.play(
+            Indicate(self.equation),
+            randy.look_at, self.equation
+        )
+        self.play(Blink(randy))
+        self.play(
+            randy.change_mode, "thinking",
+            randy.look_at, self.big_rectangle
+        )
+        self.dither(2)
+        self.play(PiCreatureSays(
+            randy, "Approximately",
+            target_mode = "sassy"
+        ))
+        self.dither()
+        self.play(RemovePiCreatureBubble(randy))
+        self.play(randy.look_at, deriv_example)
+        self.play(FadeOut(deriv_example))
+        self.dither()
+
+        self.randy = randy
+
+    def ask_about_equalling_zero(self):
+        dot = self.example_point_dot
+        randy = self.randy
+
+        equals_zero = TexMobject("=0")
+        equals_zero.highlight(YELLOW)
+        equals_zero.add_background_rectangle()
+        equals_zero.next_to(self.derivative, RIGHT)
+
+        self.play(
+            Write(equals_zero),
+            randy.change_mode, "confused",
+            randy.look_at, equals_zero
+        )
+        self.dither()
+        self.play(Blink(randy))
+        self.play(
+            randy.change_mode, "plain",
+            randy.look_at, self.big_rectangle,
+        )
+        self.play(
+            FadeOut(self.tiny_step_group),
+            self.little_rectangle.move_to, dot,
+        )
+        self.dither()
+
+        self.equals_zero = equals_zero
+
+    def show_tangent_step(self):
+        dot = self.example_point_dot
+        randy = self.randy
+
+        point = dot.get_center()
+        step_vect = rotate_vector(point, np.pi/2)/np.linalg.norm(point)
+        new_point = point + step_vect/self.zoom_factor
+        interim_point = point[0]*RIGHT + new_point[1]*UP
+        new_dot = dot.copy().move_to(new_point)
+
+        step_line = Line(point, new_point, color = WHITE)
+        dy_line = Line(point, interim_point, color = RED)
+        dx_line = Line(interim_point, new_point, color = GREEN)
+
+        s_label = TexMobject("S = 25")
+        s_label.highlight(self.example_color)
+        s_label.next_to(
+            point, DOWN,
+            buff = MED_LARGE_BUFF,
+            aligned_edge = RIGHT
+        )
+        s_label.scale(1./self.zoom_factor, about_point = point)
+        arrow1, arrow2 = [
+            Arrow(
+                s_label.get_top(), mob,
+                preserve_tip_size_when_scaling = False,
+                color = self.example_color,
+                buff = SMALL_BUFF/self.zoom_factor,
+                tip_length = 0.15/self.zoom_factor
+            )
+            for mob in dot, new_dot
+        ]
+
+        for line, tex, vect in (dy_line, "dy", RIGHT), (dx_line, "dx", UP):
+            label = TexMobject(tex)
+            label.highlight(line.get_color())
+            label.next_to(line, vect)
+            label.scale(
+                1./self.zoom_factor, 
+                about_point = line.get_center()
+            )
+            line.label = label
+
+            self.play(ShowCreation(line))
+            self.play(Write(label))
+        self.play(ShowCreation(new_dot))
+        self.play(
+            randy.change_mode, "pondering",
+            randy.look_at, self.big_rectangle
+        )
+        self.play(Blink(randy))
+        self.dither()
+
+        self.play(Write(s_label))
+        self.play(ShowCreation(arrow1))
+        self.dither()
+        self.play(ReplacementTransform(arrow1.copy(), arrow2))
+        self.dither(2)
+
+    def point_out_equalling_zero(self):
+        derivative = self.derivative
+        equals_zero = self.equals_zero
+        randy = self.randy
+
+        self.play(
+            FocusOn(equals_zero),
+            self.randy.look_at, equals_zero
+        )
+        self.play(Indicate(equals_zero, color = RED))
+        self.play(Blink(randy))
+        self.play(randy.change_mode, "happy")
+        self.play(randy.look_at, self.big_rectangle)
+        self.dither(2)
+
+    def show_tangent_line(self):
+        randy = self.randy
+        point = self.example_point_dot.get_center()
+        line = Line(ORIGIN, 5*RIGHT)
+        line.rotate(angle_of_vector(point)+np.pi/2)
+        line.move_to(point)
+
+        self.play(PiCreatureSays(
+            randy, "Approximately...",
+        ))
+        self.play(Blink(randy))
+        self.play(RemovePiCreatureBubble(randy))
+        self.play(
+            GrowFromCenter(line),
+            randy.look_at, line
+        )
+        self.dither(2)
+        self.play(
+            self.little_rectangle.scale_in_place, self.zoom_factor/2,
+            run_time = 4,
+            rate_func = there_and_back
+        )
+        self.dither(2)
+
+    ############
+
+    def get_s_expression(self, x, y):
+        result = TexMobject("S", "(%s, %s)"%(str(x), str(y)))
+        result.add_background_rectangle()
+        return result
+
+class TryOtherExamples(TeacherStudentsScene):
+    def construct(self):
+        formula = TexMobject("\\sin(x)y^2 = x")
+        formula.next_to(
+            self.get_teacher().get_corner(UP+LEFT), UP,
+            buff = MED_LARGE_BUFF,
+            aligned_edge = RIGHT
+        )
+
+        self.teacher_says(
+            """Nothing special
+            about $x^2 + y^2 = 25$"""
+        )
+        self.dither()
+        self.play(RemovePiCreatureBubble(
+            self.get_teacher(),
+            target_mode = "raise_right_hand"
+        ))
+        self.play(Write(formula, run_time = 1))
+        self.change_student_modes(*["pondering"]*3)
+        self.dither(2)
+        self.play(formula.to_corner, UP+LEFT)
+        self.dither()
+
+class AlternateExample(ZoomedScene):
+    CONFIG = {
+        "example_color" : MAROON_B,
+        "zoom_factor" : 10,
+        "zoomed_canvas_corner" : DOWN+RIGHT,
+        "zoomed_canvas_space_shape" : (3, 4),
+    }
+    def construct(self): 
+        self.add_plane()
+        self.draw_graph()
+        self.emphasize_meaning_of_points()
+        self.zoom_in()
+        self.show_tiny_step()
+        self.ask_about_derivatives()
+        self.differentiate_lhs()
+        self.differentiate_rhs()
+        self.put_step_on_curve()
+        self.emphasize_equality()
+        self.manipulate_to_find_dy_dx()
+
+    def add_plane(self):
+        formula = TexMobject("\\sin(x)y^2 = x")
+        formula.to_corner(UP+LEFT)
+        formula.add_background_rectangle()
+
+        plane = NumberPlane(
+            space_unit_to_x_unit = 0.75,
+            x_radius = 2*SPACE_WIDTH,
+        )
+        plane.fade()
+        plane.add_coordinates()
+
+        self.add(formula)
+        self.play(Write(plane, run_time = 2), Animation(formula))
+        self.dither()
+
+        self.plane = plane
+        self.formula = formula
+        self.lhs = VGroup(*formula[1][:8])
+        self.rhs = VGroup(formula[1][-1])
+
+    def draw_graph(self):
+        graphs = VGroup(*[
+            FunctionGraph(
+                lambda x : u*np.sqrt(x/np.sin(x)),
+                num_steps = 200,
+                x_min = x_min+0.1,
+                x_max = x_max-0.1,
+            )
+            for u in [-1, 1]
+            for x_min, x_max in [
+                (-4*np.pi, -2*np.pi),
+                (-np.pi, np.pi),
+                (2*np.pi, 4*np.pi),
+            ]
+        ])
+        graphs.stretch(self.plane.space_unit_to_x_unit, dim = 0)
+
+        self.play(
+            ShowCreation(
+                graphs, 
+                run_time = 3, 
+                submobject_mode = "all_at_once"
+            ),
+            Animation(self.formula)
+        )
+        self.dither()
+
+        self.graphs = graphs
+
+    def emphasize_meaning_of_points(self):
+        graph = self.graphs[4]
+        dot = Dot(color = self.example_color)
+        label = TexMobject("(x, y)")
+        label.add_background_rectangle()
+        label.highlight(self.example_color)
+
+        def update_dot(dot, alpha):
+            prop = interpolate(0.9, 0.1, alpha)
+            point = graph.point_from_proportion(prop)
+            dot.move_to(point)
+            return dot
+
+        def update_label(label):
+            point = dot.get_center()
+            vect = np.array(point)/np.linalg.norm(point)
+            vect[0] *= 2
+            vect[1] *= -1
+            label.move_to(
+                point + vect*0.4*label.get_width()
+            )
+
+        update_dot(dot, 0)
+        update_label(label)
+
+        self.play(
+            ShowCreation(dot),
+            Write(label),
+            run_time = 1
+        )
+        self.play(
+            UpdateFromAlphaFunc(dot, update_dot),
+            UpdateFromFunc(label, update_label),
+            run_time = 3,
+        )
+        self.dither()
+        self.play(*[
+            ApplyMethod(
+                label[1][i].copy().move_to, self.formula[1][j],
+                run_time = 3,
+                rate_func = squish_rate_func(smooth, count/6., count/6.+2./3)
+            )
+            for count, (i, j) in enumerate([(1, 4), (1, 9), (3, 6)])
+        ])
+        movers = self.get_mobjects_from_last_animation()
+        self.dither()
+        self.play(
+            UpdateFromAlphaFunc(dot, update_dot),
+            UpdateFromFunc(label, update_label),
+            run_time = 3,
+            rate_func = lambda t : 1-smooth(t)
+        )
+        self.dither()
+        self.play(*[
+            ApplyMethod(mover.set_fill, None, 0, remover = True)
+            for mover in movers
+        ])
+
+        self.dot = dot
+        self.label = label
+
+    def zoom_in(self):
+        dot = self.dot
+        label = self.label
+
+        self.activate_zooming()
+        self.little_rectangle.scale(self.zoom_factor)
+        self.little_rectangle.move_to(dot)
+        self.dither()
+        for mob in VGroup(dot, label), self.little_rectangle:
+            self.play(
+                ApplyMethod(
+                    mob.scale, 1./self.zoom_factor,
+                    method_kwargs = {"about_point" : dot.get_center()},
+                    run_time = 1,
+                )
+            )
+        self.dither()
+
+    def show_tiny_step(self):
+        dot = self.dot
+        label = self.label
+        point = dot.get_center()
+        step_vect = 1.2*(UP+LEFT)/float(self.zoom_factor)
+        new_point = point + step_vect
+        interim_point = new_point[0]*RIGHT + point[1]*UP
+
+        dx_line = Line(point, interim_point, color = GREEN)
+        dy_line = Line(interim_point, new_point, color = RED)
+        for line, tex, vect in (dx_line, "dx", DOWN), (dy_line, "dy", LEFT):
+            label = TexMobject(tex)
+            label.next_to(line, vect, buff = SMALL_BUFF)
+            label.highlight(line.get_color())
+            label.scale(1./self.zoom_factor, about_point = line.get_center())
+            label.add_background_rectangle()
+            line.label = label
+
+        arrow = Arrow(
+            point, new_point, buff = 0,
+            tip_length = 0.15/self.zoom_factor,
+            color = WHITE
+        )
+
+        self.play(ShowCreation(arrow))
+        for line in dx_line, dy_line:
+            self.play(ShowCreation(line), Animation(arrow))
+            self.play(Write(line.label, run_time = 1))
+        self.dither()
+
+        self.step_group = VGroup(
+            arrow, dx_line, dx_line.label, dy_line, dy_line.label
+        )
+
+    def ask_about_derivatives(self):
+        formula = self.formula
+        lhs, rhs = self.lhs, self.rhs
+
+        word = TextMobject("Change?")
+        word.add_background_rectangle()
+        word.next_to(
+            Line(lhs.get_center(), rhs.get_center()),
+            DOWN, buff = 1.5*LARGE_BUFF
+        )
+
+        arrows = VGroup(*[
+            Arrow(word, part)
+            for part in lhs, rhs
+        ])
+
+        self.play(FocusOn(formula))
+        self.play(
+            Write(word),
+            ShowCreation(arrows)
+        )
+        self.dither()
+        self.play(*map(FadeOut, [word, arrows]))
+
+    def differentiate_lhs(self):
+        formula = self.formula
+        lhs = self.lhs
+        brace = Brace(lhs, DOWN, buff = SMALL_BUFF)
+        sine_x = VGroup(*lhs[:6])
+        sine_rect = BackgroundRectangle(sine_x)
+        y_squared = VGroup(*lhs[6:])
+
+        mnemonic = TextMobject(
+            "``", 
+            "Left", " d-Right", " + ",
+            "Right",  " d-Left"
+            "''",
+            arg_separator = ""
+        )
+        mnemonic.highlight_by_tex("d-Right", RED)
+        mnemonic.highlight_by_tex("d-Left", GREEN)
+        mnemonic.add_background_rectangle()
+        mnemonic.scale_to_fit_width(SPACE_WIDTH-2*MED_LARGE_BUFF)
+        mnemonic.next_to(ORIGIN, UP)
+        mnemonic.to_edge(LEFT)
+
+        derivative = TexMobject(
+            "\\sin(x)", "(2y\\,dy)", "+", 
+            "y^2", "(\\cos(x)\\,dx)",
+        )
+        derivative.highlight_by_tex("dx", GREEN)
+        derivative.highlight_by_tex("dy", RED)
+        derivative.scale_to_fit_width(SPACE_WIDTH - 2*MED_LARGE_BUFF)
+        derivative.next_to(
+            brace, DOWN, 
+            buff = MED_LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+        derivative_rects = [
+            BackgroundRectangle(VGroup(*subset))
+            for subset in derivative[:2], derivative[2:]
+        ]
+        derivative_rects[1].stretch(1.05, dim = 0)
+
+        self.play(GrowFromCenter(brace))
+        self.play(Write(mnemonic))
+        self.dither()
+        pairs = [
+            (sine_rect, derivative_rects[0]),
+            (sine_x, derivative[0]),
+            (y_squared, derivative[1]),
+            (sine_rect, derivative_rects[1]),
+            (y_squared, derivative[2]),
+            (y_squared, derivative[3]),
+            (sine_x, derivative[4]),
+        ]
+        for pairs_subset in pairs[:3], pairs[3:]:
+            self.play(*[
+                ReplacementTransform(m1.copy(), m2, path_arc = np.pi/2)
+                for m1, m2 in pairs_subset
+            ])
+            self.dither()
+            self.play(Indicate(pairs_subset[-1][1]))
+            self.dither()
+        self.dither()
+        self.play(FadeOut(mnemonic))
+
+        self.lhs_derivative = VGroup(*derivative_rects+[derivative])
+        self.lhs_brace = brace
+
+    def differentiate_rhs(self):
+        lhs_derivative = self.lhs_derivative
+        lhs_brace = self.lhs_brace
+        rhs = self.rhs
+
+        equals, dx = equals_dx = TexMobject("=", "dx")
+        equals_dx.scale(0.9)
+        equals_dx.highlight_by_tex("dx", GREEN)
+        equals_dx.add_background_rectangle()
+        equals_dx.next_to(lhs_derivative, RIGHT, buff = SMALL_BUFF)
+
+        circle = Circle(color = GREEN)
+        circle.replace(self.rhs)
+        circle.scale_in_place(1.7)
+
+        arrow = Arrow(rhs.get_right(), dx.get_top())
+        arrow.highlight(GREEN)
+
+        self.play(ReplacementTransform(lhs_brace, circle))
+        self.play(ShowCreation(arrow))
+        self.play(Write(equals_dx))
+        self.dither()
+        self.play(*map(FadeOut, [circle, arrow]))
+
+        self.equals_dx = equals_dx
+
+    def put_step_on_curve(self):
+        dot = self.dot
+        point = dot.get_center()
+        graph = self.graphs[4]
+        arrow, dx_line, dx_line.label, dy_line, dy_line.label = self.step_group
+
+        #Find graph point at right x_val
+        arrow_end = arrow.get_end()
+        graph_points = [
+            graph.point_from_proportion(alpha)
+            for alpha in np.linspace(0, 1, 1000)
+        ]
+        distances = np.apply_along_axis(
+            lambda p : np.abs(p[0] - arrow_end[0]),
+            1, graph_points
+        )
+        index = np.argmin(distances)
+        new_end_point = graph_points[index]
+
+        lil_rect = self.little_rectangle
+        self.play(
+            arrow.put_start_and_end_on, point, new_end_point,
+            dy_line.put_start_and_end_on, 
+                dy_line.get_start(), new_end_point,
+            MaintainPositionRelativeTo(dy_line.label, dy_line),
+            lil_rect.shift, lil_rect.get_height()*DOWN/3,
+            run_time = 2
+        )
+        self.dither(2)
+
+    def emphasize_equality(self):
+        self.play(FocusOn(self.lhs))
+        self.dither()
+        for mob in self.lhs, self.rhs:
+            self.play(Indicate(mob))
+        self.dither()
+
+    def manipulate_to_find_dy_dx(self):
+        full_derivative = VGroup(
+            self.lhs_derivative, self.equals_dx
+        )
+        brace = Brace(full_derivative, DOWN, buff = SMALL_BUFF)
+        words = brace.get_text(
+            "Commonly, solve for", "$dy/dx$",
+            buff = SMALL_BUFF
+        )
+        VGroup(*words[1][:2]).highlight(RED)
+        VGroup(*words[1][3:]).highlight(GREEN)
+        words.add_background_rectangle()
+
+        self.play(GrowFromCenter(brace))
+        self.play(Write(words))
+        self.dither()
+
+        randy = Randolph()
+        randy.to_corner(DOWN+LEFT)
+        randy.look_at(full_derivative)
+
+        self.play(FadeIn(randy))
+        self.play(randy.change_mode, "confused")
+        self.play(Blink(randy))
+        self.dither(2)
+        self.play(randy.change_mode, "pondering")
+        self.play(Blink(randy))
+        self.dither()
+
+class AskAboutNaturalLog(TeacherStudentsScene):
+    def construct(self):
+        exp_deriv = TexMobject("\\frac{d(e^x)}{dx} = e^x")
+        for i in 2, 3, 9, 10:
+            exp_deriv[i].highlight(BLUE)
+        log_deriv = TexMobject("\\frac{d(\\ln(x))}{dx} = ???")
+        VGroup(*log_deriv[2:2+5]).highlight(GREEN)
+
+        for deriv in exp_deriv, log_deriv:
+            deriv.next_to(self.get_teacher().get_corner(UP+LEFT), UP)
+
+        self.teacher_says(
+            """We can find
+            new derivatives""",
+            target_mode = "hooray"
+        )
+        self.change_student_modes(*["happy"]*3)
+        self.play(RemovePiCreatureBubble(
+            self.get_teacher(),
+            target_mode = "raise_right_hand"
+        ))
+        self.play(Write(exp_deriv))
+        self.dither()
+        self.play(
+            Write(log_deriv),
+            exp_deriv.next_to, log_deriv, UP, LARGE_BUFF,
+            *[
+                ApplyMethod(pi.change_mode, "confused")
+                for pi in self.get_pi_creatures()
+            ]
+        )
+        self.dither(3)
+
+class DerivativeOfNaturalLog(ZoomedScene):
+    CONFIG = {
+        "zoom_factor" : 10,
+        "zoomed_canvas_corner" : DOWN+RIGHT,
+        "example_color" : MAROON_B,
+    }
+    def construct(self):
+        self.add_plane()
+        self.draw_graph()
+        self.describe_as_implicit_curve()
+        self.slope_gives_derivative()
+        self.rearrange_equation()
+        self.take_derivative()
+        self.show_tiny_nudge()
+        self.note_derivatives()
+        self.solve_for_dy_dx()
+        self.show_slope_above_x()
+
+    def add_plane(self):
+        plane = NumberPlane()
+        plane.fade()
+        plane.add_coordinates()
+        self.add(plane)
+        self.plane = plane
+
+    def draw_graph(self):
+        graph = FunctionGraph(
+            np.log, 
+            x_min = 0.01, 
+            x_max = SPACE_WIDTH,
+            num_steps = 100
+        )
+        formula = TexMobject("y = \\ln(x)")
+        formula.next_to(ORIGIN, LEFT, buff = MED_LARGE_BUFF)
+        formula.to_edge(UP)
+        formula.add_background_rectangle()
+
+        self.add(formula)
+        self.play(ShowCreation(graph))
+        self.dither()
+
+        self.formula = formula
+        self.graph = graph
+
+    def describe_as_implicit_curve(self):
+        formula = self.formula #y = ln(x)
+        graph = self.graph
+
+        dot = Dot(color = self.example_color)
+        label = TexMobject("(x, y)")
+        label.add_background_rectangle()
+        label.highlight(self.example_color)
+
+        def update_dot(dot, alpha):
+            prop = interpolate(0.1, 0.7, alpha)
+            point = graph.point_from_proportion(prop)
+            dot.move_to(point)
+            return dot
+
+        def update_label(label):
+            point = dot.get_center()
+            vect = point - SPACE_HEIGHT*(DOWN+RIGHT)
+            vect = vect/np.linalg.norm(vect)
+            label.move_to(
+                point + vect*0.5*label.get_width()
+            )
+
+        update_dot(dot, 0)
+        update_label(label)
+
+        self.play(*map(FadeIn, [dot, label]))
+        self.play(
+            UpdateFromAlphaFunc(dot, update_dot),
+            UpdateFromFunc(label, update_label),
+            run_time = 3,
+        )
+        self.dither()
+        xy_start = VGroup(label[1][1], label[1][3]).copy()
+        xy_end = VGroup(formula[1][5], formula[1][0]).copy()
+        xy_end.highlight(self.example_color)
+        self.play(Transform(
+            xy_start, xy_end,
+            run_time = 2,
+        ))
+        self.dither()
+        self.play(
+            UpdateFromAlphaFunc(dot, update_dot),
+            UpdateFromFunc(label, update_label),
+            run_time = 3,
+            rate_func = lambda t : 1-0.6*smooth(t),
+        )
+        self.play(*map(FadeOut, [xy_start, label]))
+
+        self.dot = dot
+
+    def slope_gives_derivative(self):
+        dot = self.dot
+        point = dot.get_center()
+        line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        slope = 1./point[0]
+        line.rotate(np.arctan(slope))
+        line.move_to(point)
+
+        new_point = line.point_from_proportion(0.6)
+        interim_point = point[0]*RIGHT + new_point[1]*UP
+        dy_line = Line(point, interim_point, color = RED)
+        dx_line = Line(interim_point, new_point, color = GREEN)
+
+        equation = TexMobject(
+            "\\text{Slope} = ",
+            "\\frac{dy}{dx} = ",
+            "\\frac{d(\\ln(x))}{dx}",
+        )
+        VGroup(*equation[1][:2]).highlight(RED)
+        VGroup(*equation[2][:8]).highlight(RED)
+        VGroup(*equation[1][3:5]).highlight(GREEN)
+        VGroup(*equation[2][-2:]).highlight(GREEN)
+        for part in equation:
+            rect = BackgroundRectangle(part)
+            rect.stretch_in_place(1.2, 0)
+            part.add_to_back(rect)
+        equation.scale(0.8)
+        equation.next_to(ORIGIN, RIGHT)
+        equation.to_edge(UP, buff = MED_SMALL_BUFF)
+
+
+        self.play(
+            GrowFromCenter(line),
+            Animation(dot)
+        )
+        self.play(ShowCreation(VGroup(dy_line, dx_line)))
+        for part in equation:
+            self.play(Write(part, run_time = 2))
+        self.dither()
+
+        self.dx_line, self.dy_line = dx_line, dy_line
+        self.slope_equation = equation
+        self.tangent_line = line
+
+    def rearrange_equation(self):
+        formula = self.formula
+        y, eq = formula[1][:2]
+        ln = VGroup(*formula[1][2:4])
+        x = formula[1][5]
+
+        new_formula = TexMobject("e", "^y", "=", "x")
+        e, new_y, new_eq, new_x = new_formula
+        new_formula.next_to(
+            formula, DOWN, 
+            buff = MED_LARGE_BUFF,
+        )
+        rect = BackgroundRectangle(new_formula)
+
+        y = new_y.copy().replace(y)
+        self.play(Indicate(formula, scale_factor = 1))
+        self.play(ReplacementTransform(ln.copy(), e))
+        self.play(ReplacementTransform(y, new_y))
+        self.play(ReplacementTransform(eq.copy(), new_eq))
+        self.play(
+            FadeIn(rect),
+            Animation(VGroup(e, new_y, new_eq)),
+            ReplacementTransform(x.copy(), new_x)
+        )
+        self.dither(2)
+        for mob in e, new_y, new_x:
+            self.play(Indicate(mob))
+        self.dither()
+
+        self.new_formula = new_formula
+
+    def take_derivative(self):
+        new_formula = self.new_formula
+        e, y, eq, x = new_formula
+        derivative = TexMobject("e", "^y", "\\,dy", "=", "dx")
+        new_e, new_y, dy, new_eq, dx = derivative
+        derivative.next_to(new_formula, DOWN, MED_LARGE_BUFF)
+        derivative.add_background_rectangle()
+        dx.highlight(GREEN)
+        dy.highlight(RED)
+
+        pairs = [
+            (VGroup(e, y), VGroup(new_e, new_y)),
+            (new_y, dy),
+            (eq, new_eq),
+            (x, dx)
+        ]
+        for start, target in pairs:
+            self.play(
+                ReplacementTransform(start.copy(), target)
+            )
+        self.play(FadeIn(derivative[0]), Animation(derivative[1]))
+        self.remove(derivative, pairs[0][1])
+        self.add(derivative)
+        self.dither()
+
+        self.derivative = derivative
+
+    def show_tiny_nudge(self):
+        dot = self.dot
+        point = dot.get_center()
+        dx_line = self.dx_line
+        dy_line = self.dy_line
+        group = VGroup(dot, dx_line, dy_line)
+        self.play(group.scale, 1./self.zoom_factor, point)
+        for line, tex, vect in (dx_line, "dx", UP), (dy_line, "dy", LEFT):
+            label = TexMobject(tex)
+            label.add_background_rectangle()
+            label.next_to(line, vect, buff = SMALL_BUFF)
+            label.highlight(line.get_color())
+            label.scale(
+                1./self.zoom_factor, 
+                about_point = line.get_center()
+            )
+            line.label = label
+
+        self.activate_zooming()
+        lil_rect = self.little_rectangle
+        lil_rect.move_to(group)
+        lil_rect.scale_in_place(self.zoom_factor)
+        self.play(lil_rect.scale_in_place, 1./self.zoom_factor)
+        self.play(Write(dx_line.label))
+        self.play(Write(dy_line.label))
+        self.dither()
+
+    def note_derivatives(self):
+        e, y, dy, eq, dx = self.derivative[1]
+
+        self.play(FocusOn(e))
+        self.play(Indicate(VGroup(e, y, dy)))
+        self.dither()
+        self.play(Indicate(dx))
+        self.dither()
+
+    def solve_for_dy_dx(self):
+        e, y, dy, eq, dx = self.derivative[1]
+        ey_group = VGroup(e, y)
+        original_rect = self.derivative[0]
+
+        rearranged = TexMobject(
+            "{dy \\over ", " dx}", "=", "{1 \\over ", "e", "^y}"
+        )
+        new_dy, new_dx, new_eq, one_over, new_e, new_y = rearranged
+        new_ey_group = VGroup(new_e, new_y)
+        new_dx.highlight(GREEN)
+        new_dy.highlight(RED)
+        rearranged.shift(eq.get_center() - new_eq.get_center())
+        rearranged.shift(MED_SMALL_BUFF*DOWN)
+        new_rect = BackgroundRectangle(rearranged)
+
+        self.play(*[
+            ReplacementTransform(
+                m1, m2, 
+                run_time = 2,
+                path_arc = -np.pi/2,
+            )
+            for m1, m2 in [
+                (original_rect, new_rect),
+                (dx, new_dx),
+                (dy, new_dy),
+                (eq, new_eq),
+                (ey_group, new_ey_group),
+                (e.copy(), one_over)
+            ]
+        ])
+        self.dither()
+
+        #Change denominator
+        e, y, eq, x = self.new_formula
+        ey_group = VGroup(e, y).copy()
+        ey_group.highlight(YELLOW)
+        x_copy = x.copy()
+
+        self.play(new_ey_group.highlight, YELLOW)
+        self.play(Transform(new_ey_group, ey_group))
+        self.play(
+            new_ey_group.highlight, WHITE,
+            x_copy.highlight, YELLOW
+        )
+        self.play(x_copy.next_to, one_over, DOWN, MED_SMALL_BUFF)
+        self.dither(2)
+
+        equals_one_over_x = VGroup(
+            new_eq, one_over, x_copy
+        ).copy()
+        rect = BackgroundRectangle(equals_one_over_x)
+        rect.stretch_in_place(1.1, dim = 0)
+        equals_one_over_x.add_to_back(rect)
+
+        self.play(
+            equals_one_over_x.next_to, 
+            self.slope_equation, RIGHT, 0,
+            run_time = 2
+        )
+        self.dither()
+
+    def show_slope_above_x(self):
+        line = self.tangent_line
+        start_x = line.get_center()[0]
+        target_x = 0.2
+
+        def update_line(line, alpha):
+            x = interpolate(start_x, target_x, alpha)
+            point = x*RIGHT + np.log(x)*UP
+            angle = np.arctan(1./x)
+            line.rotate(angle - line.get_angle())
+            line.move_to(point)
+
+        self.play(UpdateFromAlphaFunc(
+            line, update_line,
+            rate_func = there_and_back,
+            run_time = 6
+        ))
+        self.dither()
+
+class FinalWords(TeacherStudentsScene):
+    def construct(self):
+        words = TextMobject(
+            "This is a peek into \\\\",
+            "Multivariable", "calculus"
+        )
+        mvc = VGroup(*words[1:])
+        words.highlight_by_tex("Multivariable", YELLOW)
+        formula = TexMobject("f(x, y) = \\sin(x)y^2")
+        formula.next_to(self.get_teacher().get_corner(UP+LEFT), UP)
+
+        self.teacher_says(words)
+        self.change_student_modes("erm", "hooray", "sassy")
+        self.play(
+            FadeOut(self.teacher.bubble),
+            FadeOut(VGroup(*words[:1])),
+            mvc.to_corner, UP+LEFT,
+            self.teacher.change_mode, "raise_right_hand",
+            self.teacher.look_at, formula,
+            Write(formula, run_time = 2),
+        )
+        self.change_student_modes("pondering", "confused", "thinking")
+        self.dither(3)
+
+        ##Show series
+        series = VideoSeries()
+        series.to_edge(UP)
+        video = series[5]
+        lim = TexMobject("\\lim_{h \\to 0} \\frac{f(x+h)-f(x)}{h}")
+        self.play(
+            FadeOut(mvc),
+            FadeOut(formula),
+            self.teacher.change_mode, "plain",
+            FadeIn(
+                series, run_time = 2,
+                submobject_mode = "lagged_start",
+            ),
+        )
+        self.play(
+            video.highlight, YELLOW,
+            video.shift, video.get_height()*DOWN/2
+        )
+        lim.next_to(video, DOWN)
+        self.play(
+            Write(lim),
+            *it.chain(*[
+                [pi.change_mode, "pondering", pi.look_at, lim]
+                for pi in self.get_pi_creatures()
+            ])
+        )
+        self.dither(3)
+
+class Chapter5PatreonThanks(PatreonThanks):
+    CONFIG = {
+        "specific_patrons" : [
+            "Ali  Yahya",
+            "Meshal  Alshammari",
+            "CrypticSwarm    ",
+            "Nathan Pellegrin",
+            "Karan Bhargava", 
+            "Justin Helps",
+            "Ankit   Agarwal",
+            "Yu  Jun",
+            "Dave    Nicponski",
+            "Damion  Kistler",
+            "Juan    Benet",
+            "Othman  Alikhan",
+            "Justin Helps",
+            "Markus  Persson",
+            "Dan Buchoff",
+            "Derek   Dai",
+            "Joseph  John Cox",
+            "Luc Ritchie",
+            "Daan Smedinga",
+            "Jonathan Eppele",
+            "Nils Schneider",
+            "Albert Nguyen",
+            "Mustafa Mahdi",
+            "Mathew Bramson",
+            "Guido   Gambardella",
+            "Jerry   Ling",
+            "Mark    Govea",
+            "Vecht",
+            "Shimin Kuang",
+            "Rish    Kundalia",
+            "Achille Brighton",
+            "Kirk    Werklund",
+            "Ripta   Pasay",
+            "Felipe  Diniz",
+        ]
+    }
+
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
 
 

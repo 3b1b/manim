@@ -247,6 +247,7 @@ class NumberPlane(VMobject):
             label.next_to(axis, vect)
             label.to_edge(edge)
             labels.add(label)
+        self.axis_labels = labels
         return labels
 
 

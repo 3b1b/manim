@@ -41,7 +41,7 @@ NO_SCENE_MESSAGE = """
 
 def get_configuration(sys_argv):
    try:
-      opts, args = getopt.getopt(sys_argv[1:], 'hlmpwsqa')
+      opts, args = getopt.getopt(sys_argv[1:], 'hlmpwsqao:')
    except getopt.GetoptError as err:
       print str(err)
       sys.exit(2)
@@ -55,6 +55,7 @@ def get_configuration(sys_argv):
       "save_image"     : False,
       "quiet"          : False,
       "write_all"      : False,
+      "output_name"    : None,
    }
    for opt, arg in opts:
       if opt == '-h':
@@ -76,6 +77,8 @@ def get_configuration(sys_argv):
          config["quiet"] = True
       if opt == '-a':
          config["write_all"] = True
+      if opt == '-o':
+         config["output_name"] = arg
    #By default, write to file
    actions = ["write", "preview", "save_image"]
    if not any([config[key] for key in actions]):
@@ -91,7 +94,8 @@ def get_configuration(sys_argv):
    return config
 
 def handle_scene(scene, **config):
-   name = str(scene)
+   print config["output_name"]
+   output_name = config["output_name"] or str(scene)
    if config["quiet"]:
       curr_stdout = sys.stdout
       sys.stdout = open(os.devnull, "w")
@@ -102,9 +106,9 @@ def handle_scene(scene, **config):
       if not config["write_all"]:
          scene.show_frame()
       path = os.path.join(MOVIE_DIR, config["movie_prefix"])
-      scene.save_image(path, name)
+      scene.save_image(path, output_name)
    if config["write"]:
-      scene.write_to_movie(os.path.join(config["movie_prefix"], name))
+      scene.write_to_movie(os.path.join(config["movie_prefix"], output_name))
 
    if config["quiet"]:
       sys.stdout.close()

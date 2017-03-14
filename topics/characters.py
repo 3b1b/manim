@@ -428,13 +428,6 @@ class PiCreatureScene(Scene):
     def think(self, *content, **kwargs):
         self.pi_creature_thinks(self.get_primary_pi_creature(), *content, **kwargs)
 
-    def get_bubble_fade_anims(self, **kwargs):
-        return [
-            RemovePiCreatureBubble(pi_creature, **kwargs)
-            for pi_creature in self.get_pi_creatures()
-            if hasattr(pi_creature.bubble)
-        ]
-
     def compile_play_args_to_animation_list(self, *args):
         """
         Add animations so that all pi creatures look at the 

@@ -130,7 +130,8 @@ class ApplyMethod(Transform):
             "the method you want to animate"
         )
         assert(isinstance(method.im_self, Mobject))
-        target = copy.deepcopy(method)(*args)
+        method_kwargs = kwargs.get("method_kwargs", {})
+        target = copy.deepcopy(method)(*args, **method_kwargs)
         Transform.__init__(self, method.im_self, target, **kwargs)
 
 

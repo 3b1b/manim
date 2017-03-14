@@ -3,7 +3,7 @@ from helpers import *
 
 from scene.scene import Scene
 from animation.simple_animations import Write, DrawBorderThenFill
-from animation.transform import FadeIn
+from animation.transform import FadeIn, ApplyMethod
 from mobject.vectorized_mobject import VGroup
 from mobject.tex_mobject import TexMobject, TextMobject
 from topics.characters import Mortimer, Blink
@@ -120,25 +120,25 @@ class PatreonThanks(Scene):
                 DOWN, aligned_edge = LEFT,
                 buff = 1.5*MED_SMALL_BUFF
             )
-        all_patrons = VGroup(left_patrons, right_patrons)
-        if all_patrons.get_height() > self.max_patrons_height:
-            all_patrons.scale_to_fit_height(self.max_patrons_height)
-        for patrons, vect in (left_patrons, LEFT), (right_patrons, RIGHT):
-            patrons.to_edge(vect, buff = MED_SMALL_BUFF)
 
-        # shift_distance = max(
-        #     0, 1-SPACE_HEIGHT-all_patrons.get_bottom()[1]
-        # )
-        # velocity = shift_distance/8
-        # def get_shift_anim():
-        #     return ApplyMethod(
-        #         all_patrons.shift, velocity*UP,
-        #         rate_func = None
-        #     )
+        all_patrons = VGroup(left_patrons, right_patrons)
+        all_patrons.scale(0.7)
+        for patrons, vect in (left_patrons, LEFT), (right_patrons, RIGHT):
+            patrons.to_corner(UP+vect, buff = MED_SMALL_BUFF)
+
+        shift_distance = max(
+            0, 1-SPACE_HEIGHT-all_patrons.get_bottom()[1]
+        )
+        velocity = shift_distance/9.0
+        def get_shift_anim():
+            return ApplyMethod(
+                all_patrons.shift, velocity*UP,
+                rate_func = None
+            )
 
         self.play(
             morty.change_mode, "gracious",
-            DrawBorderThenFill(patreon_logo)
+            DrawBorderThenFill(patreon_logo),
         )
         self.play(Write(special_thanks, run_time = 1))
         self.play(
@@ -149,13 +149,14 @@ class PatreonThanks(Scene):
             Write(right_patrons),
             morty.look_at, right_patrons
         )
-        self.play(Blink(morty))
+        self.play(Blink(morty), get_shift_anim())
         for patrons in left_patrons, right_patrons:
             for index in 0, -1:
                 self.play(
                     morty.look_at, patrons[index],
+                    get_shift_anim()
                 )
-                self.dither()
+                self.play(get_shift_anim())
 
 
 
