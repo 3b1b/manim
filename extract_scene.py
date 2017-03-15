@@ -94,7 +94,6 @@ def get_configuration(sys_argv):
    return config
 
 def handle_scene(scene, **config):
-   print config["output_name"]
    output_name = config["output_name"] or str(scene)
    if config["quiet"]:
       curr_stdout = sys.stdout

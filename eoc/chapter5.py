@@ -2588,7 +2588,6 @@ class DerivativeOfNaturalLog(ZoomedScene):
         ))
         self.dither()
 
-
 class FinalWords(TeacherStudentsScene):
     def construct(self):
         words = TextMobject(
@@ -2680,6 +2679,26 @@ class Chapter5PatreonThanks(PatreonThanks):
             "Felipe  Diniz",
         ]
     }
+
+class Thumbnail(AlternateExample):
+    def construct(self):
+        title = VGroup(*map(TextMobject, [
+            "Implicit", "Differentiation"
+        ]))
+        title.arrange_submobjects(DOWN)
+        title.scale(3)
+        title.next_to(ORIGIN, UP)
+
+        for word in title:
+            word.add_background_rectangle()
+
+        self.add_plane()
+        self.draw_graph()
+        self.graphs.set_stroke(width = 8)
+        self.remove(self.formula)
+
+
+        self.add(title)
 
 
 
