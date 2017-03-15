@@ -612,22 +612,20 @@ class RelatedRatesExample(ThreeDScene):
         "wall_center" : 1.5*LEFT+0.5*UP,
     }
     def construct(self):
-        self.skip_animations = True
         self.introduce_ladder()
         self.write_related_rates()
         self.measure_ladder()
         self.slide_ladder()
-        self.skip_animations = False
         self.ponder_question()
-        # self.write_equation()
-        # self.isolate_x_of_t()
-        # self.discuss_lhs_as_function()
-        # self.let_dt_pass()
-        # self.take_derivative_of_rhs()
-        # self.take_derivative_of_lhs()
-        # self.bring_back_velocity_arrows()
-        # self.replace_terms_in_final_form()
-        # self.write_final_solution()
+        self.write_equation()
+        self.isolate_x_of_t()
+        self.discuss_lhs_as_function()
+        self.let_dt_pass()
+        self.take_derivative_of_rhs()
+        self.take_derivative_of_lhs()
+        self.bring_back_velocity_arrows()
+        self.replace_terms_in_final_form()
+        self.write_final_solution()
 
     def introduce_ladder(self):
         ladder = Ladder(height = self.get_ladder_length())
@@ -766,7 +764,6 @@ class RelatedRatesExample(ThreeDScene):
         self.play(*map(FadeOut, [
             randy, randy.bubble, randy.bubble.content
         ]))
-
 
     def write_equation(self):
         self.x_and_y_labels = self.get_x_and_y_labels()
@@ -1090,7 +1087,7 @@ class RelatedRatesExample(ThreeDScene):
 
         new_lhs_derivative = TexMobject(
             "2", "(%d)"%int(self.start_x), "\\frac{dx}{dt}", "+",
-            "2", "(%d)"%int(self.start_y), "(1)",
+            "2", "(%d)"%int(self.start_y), "(-1)",
             "= 0"
         )
         new_lhs_derivative[1].highlight(GREEN)
@@ -1123,7 +1120,7 @@ class RelatedRatesExample(ThreeDScene):
 
     def write_final_solution(self):
         solution = TexMobject(
-            "\\frac{dx}{dt} = \\frac{-4}{3}"
+            "\\frac{dx}{dt} = \\frac{4}{3}"
         )
         for i in 0, 1, -1:
             solution[i].highlight(GREEN)
@@ -1136,7 +1133,7 @@ class RelatedRatesExample(ThreeDScene):
 
         box = Rectangle(color = YELLOW)
         box.replace(solution)
-        box.scale_in_place(1.3)
+        box.scale_in_place(1.5)
 
         self.play(Write(solution))
         self.dither()
@@ -1844,6 +1841,7 @@ class TryOtherExamples(TeacherStudentsScene):
             aligned_edge = RIGHT
         )
 
+
         self.teacher_says(
             """Nothing special
             about $x^2 + y^2 = 25$"""
@@ -2264,6 +2262,9 @@ class DerivativeOfNaturalLog(ZoomedScene):
         "example_color" : MAROON_B,
     }
     def construct(self):
+        should_skip_animations = self.skip_animations
+        self.skip_animations = True
+
         self.add_plane()
         self.draw_graph()
         self.describe_as_implicit_curve()
@@ -2273,6 +2274,7 @@ class DerivativeOfNaturalLog(ZoomedScene):
         self.show_tiny_nudge()
         self.note_derivatives()
         self.solve_for_dy_dx()
+        self.skip_animations = should_skip_animations
         self.show_slope_above_x()
 
     def add_plane(self):
@@ -2556,6 +2558,13 @@ class DerivativeOfNaturalLog(ZoomedScene):
         line = self.tangent_line
         start_x = line.get_center()[0]
         target_x = 0.2
+        graph = FunctionGraph(
+            lambda x : 1./x, 
+            x_min = 0.1,
+            x_max = SPACE_WIDTH,
+            num_steps = 100,
+            color = PINK,
+        )
 
         def update_line(line, alpha):
             x = interpolate(start_x, target_x, alpha)
@@ -2570,6 +2579,15 @@ class DerivativeOfNaturalLog(ZoomedScene):
             run_time = 6
         ))
         self.dither()
+        self.play(ShowCreation(graph, run_time = 3))
+        self.dither()
+        self.play(UpdateFromAlphaFunc(
+            line, update_line,
+            rate_func = there_and_back,
+            run_time = 6
+        ))
+        self.dither()
+
 
 class FinalWords(TeacherStudentsScene):
     def construct(self):
