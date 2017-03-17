@@ -5,6 +5,15 @@ from vectorized_mobject import VMobject
 from topics.geometry import Rectangle, Circle
 from helpers import *
 
+def string_to_numbers(num_string):
+    num_string = num_string.replace("-",",-")
+    num_string = num_string.replace("e,-","e-")
+    return [
+        float(s)
+        for s in re.split("[ ,]", num_string)
+        if s != ""
+    ]
+
 class SVGMobject(VMobject):
     CONFIG = {
         "initial_scale_factor" : 1,
@@ -129,6 +138,27 @@ class SVGMobject(VMobject):
             y = -float(element.getAttribute('y'))
         except:
             pass
+
+        try:
+            transform = element.getAttribute('transform')
+            prefix = "matrix("
+            suffix = ")"
+            if not transform.startswith(prefix) or not transform.endswith(suffix): raise Exception()
+            transform = transform[len(prefix):-len(suffix)]
+            transform = string_to_numbers(transform)
+            transform = np.array(transform).reshape([3,2])
+            x += transform[2][0]
+            y += transform[2][1]
+            matrix = np.identity(self.dim)
+            matrix[:2,:2] = transform[:2,:]
+            t_matrix = np.transpose(matrix)
+
+            for mob in mobject.family_members_with_points():
+                mob.points = np.dot(mob.points, t_matrix)
+
+        except:
+            pass
+
         mobject.shift(x*RIGHT+y*UP)
         #TODO, transforms
 
@@ -144,8 +174,6 @@ class SVGMobject(VMobject):
         if self.should_center:
             self.center()
         self.scale_in_place(self.initial_scale_factor)
-
-
 
 
 class VMobjectFromSVGPathstring(VMobject):
@@ -195,7 +223,8 @@ class VMobjectFromSVGPathstring(VMobject):
             if len(points) > 0:
                 self.growing_path = self.add_subpath(new_points)
             else:
-                self.growing_path.start_at(new_points[0])
+                if isLower: self.growing_path.start_at(np.sum(new_points, axis=0))
+                else: self.growing_path.start_at(new_points[-1])
             return
         elif command in ["L", "H", "V"]: #lineto
             if command == "H":
@@ -224,7 +253,7 @@ class VMobjectFromSVGPathstring(VMobject):
             # self.mark_paths_closed = True
 
         #Handle situations where there's multiple relative control points
-        if isLower and len(points) > 3:
+        if isLower and len(new_points) > 3:
             for i in range(3, len(new_points), 3):
                 new_points[i:i+3] -= points[-1]
                 new_points[i:i+3] += new_points[i-1]
@@ -232,12 +261,7 @@ class VMobjectFromSVGPathstring(VMobject):
         self.growing_path.add_control_points(new_points)
 
     def string_to_points(self, coord_string):
-        coord_string = coord_string.replace("-",",-")
-        numbers = [
-            float(s)
-            for s in re.split("[ ,]", coord_string)
-            if s != ""
-        ]
+        numbers = string_to_numbers(coord_string)
         if len(numbers)%2 == 1:
             numbers.append(0)
         num_points = len(numbers)/2
@@ -247,4 +271,3 @@ class VMobjectFromSVGPathstring(VMobject):
 
     def get_original_path_string(self):
         return self.path_string
-
