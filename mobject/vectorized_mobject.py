@@ -215,7 +215,7 @@ class VMobject(Mobject):
 
     def get_subpath_mobjects(self):
         return filter(
-            lambda m : m.is_subpath,
+            lambda m : hasattr(m, 'is_subpath') and m.is_subpath,
             self.submobjects
         )
 
