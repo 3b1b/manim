@@ -325,6 +325,16 @@ class Scene(object):
         self.add_frames(*[self.get_frame()]*int(duration / self.frame_duration))
         return self
 
+    def force_skipping(self):
+        self.original_skipping_status = self.skip_animations
+        self.skip_animations = True
+        return self
+
+    def revert_to_original_skipping_status(self):
+        if hasattr(self, "original_skipping_status"):
+            self.skip_animations = self.original_skipping_status
+        return self
+
     def add_frames(self, *frames):
         self.frames += list(frames)
 

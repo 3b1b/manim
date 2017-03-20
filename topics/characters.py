@@ -346,10 +346,12 @@ class PiCreatureScene(Scene):
     CONFIG = {
         "total_dither_time" : 0,
         "seconds_to_blink" : 3,
+        "pi_creatures_start_on_screen" : True,
     }
     def setup(self):
         self.pi_creatures = VGroup(*self.create_pi_creatures())
-        self.add(*self.pi_creatures)
+        if self.pi_creatures_start_on_screen:
+            self.add(*self.pi_creatures)
 
     def create_pi_creatures(self):
         """ 
@@ -366,6 +368,17 @@ class PiCreatureScene(Scene):
 
     def get_primary_pi_creature(self):
         return self.pi_creatures[0]
+
+    def any_pi_creatures_on_screen(self):
+        mobjects = self.get_mobjects()
+        return any([pi in mobjects for pi in self.get_pi_creatures()])
+
+    def get_on_screen_pi_creatures(self):
+        mobjects = self.get_mobjects()
+        return VGroup(*filter(
+            lambda pi : pi in mobjects,
+            self.get_pi_creatures()
+        ))
 
     def introduce_bubble(
         self, 
@@ -434,7 +447,7 @@ class PiCreatureScene(Scene):
         first mobject being animated with each .play call
         """
         animations = Scene.compile_play_args_to_animation_list(self, *args)
-        if not any([pi in self.get_mobjects() for pi in self.get_pi_creatures()]):
+        if not self.any_pi_creatures_on_screen():
             return animations
 
         non_pi_creature_anims = filter(
@@ -473,11 +486,34 @@ class PiCreatureScene(Scene):
         return animations
 
     def blink(self):
-        self.play(Blink(random.choice(self.get_pi_creatures())))
+        self.play(Blink(random.choice(self.get_on_screen_pi_creatures())))
+
+    def joint_blink(self, pi_creatures = None, shuffle = True, **kwargs):
+        if pi_creatures is None:
+            pi_creatures = self.get_on_screen_pi_creatures()
+        creatures_list = list(pi_creatures)
+        if shuffle:
+            random.shuffle(creatures_list)
+
+        def get_rate_func(pi):
+            index = creatures_list.index(pi)
+            proportion = float(index)/len(creatures_list)
+            start_time = 0.8*proportion
+            return squish_rate_func(
+                there_and_back,
+                start_time, start_time + 0.2
+            )
+
+        self.play(*[
+            Blink(pi, rate_func = get_rate_func(pi), **kwargs)
+            for pi in creatures_list
+        ])
+        return self
 
     def dither(self, time = 1, blink = True):
         while time > 0:
-            if blink and self.total_dither_time%self.seconds_to_blink == 0:
+            time_to_blink = self.total_dither_time%self.seconds_to_blink == 0
+            if blink and self.any_pi_creatures_on_screen() and time_to_blink:
                 self.blink()
             else:
                 Scene.dither(self)
