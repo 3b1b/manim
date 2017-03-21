@@ -775,8 +775,134 @@ class ExponentRatioWithE(AnalyzeExponentRatio):
         "base_str" : "e",
     }
 
+class AskAboutConstantOne(TeacherStudentsScene):
+    def construct(self):
+        note = TexMobject(
+            "{ d(a^", "t", ")", "\\over \\,", "dt}", 
+            "=", "a^", "t", "(\\text{Some constant})"
+        )
+        note.highlight_by_tex("t", YELLOW)
+        note.highlight_by_tex("dt", GREEN)
+        note.highlight_by_tex("constant", BLUE)
+        note.to_corner(UP+LEFT)
+        self.add(note)
 
+        self.student_says(
+            "Is there a base where\\\\",
+            "that constant is 1?"
+        )
+        self.change_student_modes(
+            "pondering", "raise_right_hand", "thinking",
+            # look_at_arg = self.get_students()[1].bubble
+        )
+        self.dither(2)
+        self.play(FadeOut(note[-1], run_time = 3))
+        self.dither()
 
+        self.teacher_says(
+            "There is!\\\\",
+            "$e = 2.71828\\dots$",
+            target_mode = "hooray"
+        )
+        self.change_student_modes(*["confused"]*3)
+        self.dither(3)
+
+class NaturalLog(Scene):
+    def construct(self):
+        expressions = VGroup(*map(self.get_expression, [2, 3, 7]))
+        expressions.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+        expressions.to_edge(LEFT)
+
+        self.play(FadeIn(
+            expressions, 
+            run_time = 3, 
+            submobject_mode = "lagged_start"
+        ))
+        self.dither()
+        self.play(
+            expressions.set_fill, None, 1,
+            run_time = 2,
+            submobject_mode = "lagged_start"
+        )
+        self.dither()
+        for i in 0, 2, 1:
+            self.show_natural_loggedness(expressions[i])
+
+    def show_natural_loggedness(self, expression):
+        base, constant = expression[1], expression[-3]
+
+        log_constant, exp_constant = constant.copy(), constant.copy()
+        log_base, exp_base = base.copy(), base.copy()
+        log_equals, exp_equals = map(TexMobject, "==")
+
+        ln = TexMobject("\\ln(2)")
+        log_base.move_to(ln[-2])        
+        ln.remove(ln[-2])
+        log_equals.next_to(ln, LEFT)
+        log_constant.next_to(log_equals, LEFT)
+        log_expression = VGroup(
+            ln, log_constant, log_equals, log_base
+        )
+
+        e = TexMobject("e")
+        exp_constant.scale(0.7)
+        exp_constant.next_to(e, UP+RIGHT, buff = 0)
+        exp_base.next_to(exp_equals, RIGHT)
+        VGroup(exp_base, exp_equals).next_to(
+            VGroup(e, exp_constant), RIGHT, 
+            aligned_edge = DOWN
+        )
+        exp_expression = VGroup(
+            e, exp_constant, exp_equals, exp_base
+        )
+
+        for group, vect in (log_expression, UP), (exp_expression, DOWN):
+            group.to_edge(RIGHT)
+            group.shift(vect)
+
+        self.play(
+            ReplacementTransform(base.copy(), log_base),
+            ReplacementTransform(constant.copy(), log_constant),
+            run_time = 2
+        )
+        self.play(Write(ln), Write(log_equals))
+        self.dither()
+        self.play(
+            ReplacementTransform(
+                log_expression.copy(),
+                exp_expression,
+                run_time = 2,
+            )
+        )
+        self.dither(2)
+
+        ln_a = expression[-1]
+        self.play(
+            FadeOut(expression[-2]),
+            FadeOut(constant),
+            ln_a.move_to, constant, LEFT,
+            ln_a.highlight, BLUE
+        )
+        self.dither()
+        self.play(*map(FadeOut, [log_expression, exp_expression]))
+        self.dither()
+
+    def get_expression(self, base):
+        expression = TexMobject(
+            "{d(", "%d^"%base, "t", ")", "\\over \\,", "dt}",
+            "=", "%d^"%base, "t", "(%.4f\\dots)"%np.log(base),
+        )
+        expression.highlight_by_tex("t", YELLOW)
+        expression.highlight_by_tex("dt", GREEN)
+        expression.highlight_by_tex("\\dots", BLUE)
+
+        brace = Brace(expression.get_part_by_tex("\\dots"), UP)
+        brace_text = brace.get_text("$\\ln(%d)$"%base)
+        for mob in brace, brace_text:
+            mob.set_fill(opacity = 0)
+
+        expression.add(brace, brace_text)
+        return expression
 
 
 
