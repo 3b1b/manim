@@ -237,7 +237,6 @@ class GraphScene(Scene):
         dx = None,
         dx_line_color = None,
         df_line_color = None,
-        slope_line_color = None,
         dx_label = None,
         df_label = None,
         include_secant_line = True,

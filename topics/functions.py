@@ -44,9 +44,9 @@ class ParametricFunction(VMobject):
         t_values = np.linspace(
             self.t_min, self.t_max, self.num_anchor_points
         )
-        points = self.function(t_values)
+        points = np.array(map(self.function, t_values))
         okay_indices = np.apply_along_axis(np.all, 1, np.isfinite(points))
-        point = point[okay_indices]
+        points = points[okay_indices]
         self.set_anchor_points(points, mode = "smooth")
 
 

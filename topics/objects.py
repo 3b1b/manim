@@ -153,7 +153,7 @@ class VideoIcon(SVGMobject):
 
 class VideoSeries(VGroup):
     CONFIG = {
-        "num_videos" : 10,
+        "num_videos" : 11,
         "gradient_colors" : [BLUE_B, BLUE_D],
     }
     def __init__(self, **kwargs):
@@ -161,6 +161,7 @@ class VideoSeries(VGroup):
         videos = [VideoIcon() for x in range(self.num_videos)]
         VGroup.__init__(self, *videos, **kwargs)
         self.arrange_submobjects()
+        self.scale_to_fit_width(2*SPACE_WIDTH-MED_LARGE_BUFF)
         self.gradient_highlight(*self.gradient_colors)
 
 
