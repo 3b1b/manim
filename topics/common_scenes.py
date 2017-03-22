@@ -18,6 +18,7 @@ class OpeningQuote(Scene):
             """that contains all the 
             germs of generality."""
         ],
+        "quote_arg_separator" : " ",
         "highlighted_quote_terms" : {
             "special case" : BLUE
         },
@@ -25,7 +26,7 @@ class OpeningQuote(Scene):
         "fade_in_kwargs" : {
             "submobject_mode" : "lagged_start",
             "rate_func" : None,
-            "lag_factor" : 3,
+            "lag_factor" : 4,
             "run_time" : 5,
         },
     }
@@ -39,14 +40,15 @@ class OpeningQuote(Scene):
         self.dither()
 
     def get_quote(self, max_width = 2*SPACE_WIDTH-1):
+        text_mobject_kwargs = {
+            "alignment" : "",
+            "arg_separator" : self.quote_arg_separator,
+        }
         if isinstance(self.quote, str):
-            quote = TextMobject(
-                "``%s''"%self.quote.strip(),
-                alignment = "",
-            )
+            quote = TextMobject("``%s''"%self.quote.strip(), **text_mobject_kwargs)
         else:
             words = ["``"] + list(self.quote) + ["''"]
-            quote = TextMobject(*words, alignment = "")
+            quote = TextMobject(*words, **text_mobject_kwargs)
             ##TODO, make less hacky
             quote[0].shift(0.2*RIGHT)
             quote[-1].shift(0.2*LEFT)

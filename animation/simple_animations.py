@@ -178,6 +178,26 @@ class SmoothedVectorizedHomotopy(Homotopy):
         submob.make_smooth()
 
 
+class ApplyWave(Homotopy):
+    CONFIG = {
+        "direction" : DOWN,
+        "amplitude" : 0.2,
+        "run_time" : 1,
+    }
+    def __init__(self, mobject, **kwargs):
+        digest_config(self, kwargs, locals())
+        left_x = mobject.get_left()[0]
+        right_x = mobject.get_right()[0]
+        vect = self.amplitude*self.direction
+        def homotopy(x, y, z, t):
+            start_point = np.array([x, y, z])
+            alpha = (x-left_x)/(right_x-left_x)
+            power = np.exp(2*(alpha-0.5))
+            nudge = there_and_back(t**power)
+            return np.array([x, y, z]) + nudge*vect
+        Homotopy.__init__(self, homotopy, mobject, **kwargs)
+
+
 class PhaseFlow(Animation):
     CONFIG = {
         "virtual_time" : 1,

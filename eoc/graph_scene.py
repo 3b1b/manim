@@ -251,6 +251,7 @@ class GraphScene(Scene):
             df_label, (if applicable)
             secant_line, (if applicable)
         )
+        with attributes of those names.
         """
         kwargs = locals()
         kwargs.pop("self")
