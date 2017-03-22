@@ -25,7 +25,7 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
-from topics.common_scenes import OpeningQuote
+from topics.common_scenes import OpeningQuote, PatreonThanks
 
 from eoc.graph_scene import *
 
@@ -600,6 +600,32 @@ class GraphOfTwoToT(GraphScene):
             ss_group, slope_label
         )
 
+class SimpleGraphOfTwoToT(GraphOfTwoToT):
+    CONFIG = {
+        "x_axis_label" : "",
+        "y_axis_label" : "",
+    }
+    def construct(self):
+        self.setup_axes()
+        func = lambda t : 2**t
+        graph = self.get_graph(func)
+        line_pairs = VGroup()
+        for x in 1, 2, 3, 4, 5:
+            point = self.coords_to_point(x, func(x))
+            x_axis_point = self.coords_to_point(x, 0)
+            y_axis_point = self.coords_to_point(0, func(x))
+            line_pairs.add(VGroup(
+                DashedLine(x_axis_point, point),
+                DashedLine(y_axis_point, point),
+            ))
+
+
+        self.play(ShowCreation(graph, run_time = 2))
+        for pair in line_pairs:
+            self.play(ShowCreation(pair))
+        self.dither()
+
+
 class AnalyzeExponentRatio(PiCreatureScene):
     CONFIG = {
         "base" : 2,
@@ -1095,9 +1121,76 @@ class NextVideo(TeacherStudentsScene):
         )
         self.dither(3)
 
+class ExpPatreonThanks(PatreonThanks):
+    CONFIG = {
+        "specific_patrons" : [
+            "Ali  Yahya",
+            "Meshal  Alshammari",
+            "CrypticSwarm    ",
+            "Kathryn Schmiedicke",
+            "Nathan Pellegrin",
+            "Karan Bhargava", 
+            "Justin Helps",
+            "Ankit   Agarwal",
+            "Yu  Jun",
+            "Dave    Nicponski",
+            "Damion  Kistler",
+            "Juan    Benet",
+            "Othman  Alikhan",
+            "Justin Helps",
+            "Markus  Persson",
+            "Dan Buchoff",
+            "Derek   Dai",
+            "Joseph  John Cox",
+            "Luc Ritchie",
+            "Mustafa Mahdi",
+            "Daan Smedinga",
+            "Jonathan Eppele",
+            "Albert Nguyen",
+            "Nils Schneider",
+            "Mustafa Mahdi",
+            "Mathew Bramson",
+            "Guido   Gambardella",
+            "Jerry   Ling",
+            "Mark    Govea",
+            "Vecht",
+            "Shimin Kuang",
+            "Rish    Kundalia",
+            "Achille Brighton",
+            "Kirk    Werklund",
+            "Ripta   Pasay",
+            "Felipe  Diniz",
+        ]
+    }
 
+class Thumbnail(Scene):
+    def construct(self):
+        derivative = TexMobject(
+            "\\frac{d(a^t)}{dt} = a^t \\ln(a)"
+        )
+        derivative[3].highlight(YELLOW)
+        derivative[10].highlight(YELLOW)
+        derivative[2].highlight(BLUE)
+        derivative[9].highlight(BLUE)
+        derivative[14].highlight(BLUE)
+        derivative.scale(2)
+        derivative.to_edge(UP)
 
+        randy = Randolph()
+        randy.scale(1.3)
+        randy.next_to(ORIGIN, LEFT).to_edge(DOWN)
+        randy.change_mode("pondering")
 
+        question = TextMobject("What is $e\\,$?")
+        e = question[-2]
+        e.scale(1.2, about_point = e.get_bottom())
+        e.highlight(BLUE)
+        question.scale(1.7)
+        question.next_to(randy, RIGHT, aligned_edge = UP)
+        question.shift(DOWN)
+        randy.look_at(question)
+
+        self.add(derivative, randy, question)
 
 
 
