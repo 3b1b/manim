@@ -413,10 +413,10 @@ class PiCreatureScene(Scene):
                 *content,
                 bubble_class = bubble_class,
                 bubble_kwargs = bubble_kwargs,
-                target_mode = target_mode
+                target_mode = target_mode,
+                **kwargs
             ),
-            *added_anims,
-            **kwargs
+            *added_anims
         )
 
     def pi_creature_says(self, pi_creature, *content, **kwargs):

@@ -129,7 +129,6 @@ class ZoomedScene(Scene):
         )
         if self.zoom_activated and self.little_rectangle in moving_mobjects:
             # When the camera is moving, so is everything,
-            mobjects = self.get_mobjects()
             return self.get_mobjects(), []
         else:
             return moving_mobjects, static_mobjects
