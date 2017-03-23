@@ -361,10 +361,10 @@ class AnimationGroup(Animation):
         everything = Mobject(*[a.mobject for a in sub_anims])
         Animation.__init__(self, everything, **kwargs)
 
-    def update(self, alpha):
+    def update_mobject(self, alpha):
         for anim in self.sub_anims:
             sub_alpha = np.clip(alpha*anim.alpha_multiplier, 0, 1)
-            anim.update(sub_alpha)
+            anim.update_mobject(sub_alpha)
 
 
 
