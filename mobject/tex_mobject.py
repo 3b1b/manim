@@ -108,6 +108,7 @@ class TexMobject(SVGMobject):
             ))
             curr_index = new_index
         self.submobjects = new_submobjects
+        self.original_submobjects = list(new_submobjects)
         return self
 
     def get_parts_by_tex(self, tex, substring = True):
@@ -120,7 +121,10 @@ class TexMobject(SVGMobject):
             return []
         return [
             submob
-            for submob, part_tex in zip(self.split(), self.expression_parts)
+            for submob, part_tex in zip(
+                self.original_submobjects, 
+                self.expression_parts
+            )
             if test(tex, part_tex)
         ]
 

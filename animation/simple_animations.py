@@ -7,6 +7,7 @@ from mobject import Mobject
 from mobject.vectorized_mobject import VMobject
 from mobject.tex_mobject import TextMobject
 from animation import Animation
+from animation import sync_animation_run_times_and_rate_funcs
 
 
 class Rotating(Animation):
@@ -350,21 +351,14 @@ class Succession(Animation):
 class AnimationGroup(Animation):
     def __init__(self, *sub_anims, **kwargs):
         digest_config(self, kwargs, locals())
-        max_run_time = float(max([a.run_time for a in sub_anims]))
-        for anim in sub_anims:
-            #Use np.divide to that 1./0 = np.inf
-            anim.alpha_multiplier = np.divide(max_run_time, anim.run_time)
-        if "run_time" in kwargs:
-            self.run_time = kwargs.pop("run_time")
-        else:
-            self.run_time = max_run_time
+        sync_animation_run_times_and_rate_funcs(*sub_anims, **kwargs)
+        self.run_time = max([a.run_time for a in sub_anims])
         everything = Mobject(*[a.mobject for a in sub_anims])
         Animation.__init__(self, everything, **kwargs)
 
-    def update_mobject(self, alpha):
+    def update(self, alpha):
         for anim in self.sub_anims:
-            sub_alpha = np.clip(alpha*anim.alpha_multiplier, 0, 1)
-            anim.update_mobject(sub_alpha)
+            anim.update(alpha)
 
 
 

@@ -296,13 +296,17 @@ class GraphScene(Scene):
 
         if dx_label is not None:
             group.dx_label.next_to(
-                group.dx_line, DOWN, buff = group.dx_label.get_height()/2
+                group.dx_line, 
+                np.sign(dx)*DOWN,
+                buff = group.dx_label.get_height()/2
             )
             group.dx_label.highlight(group.dx_line.get_color())
 
         if df_label is not None:
             group.df_label.next_to(
-                group.df_line, RIGHT, buff = group.df_label.get_height()/2
+                group.df_line, 
+                np.sign(dx)*RIGHT,
+                buff = group.df_label.get_height()/2
             )
             group.df_label.highlight(group.df_line.get_color())
 

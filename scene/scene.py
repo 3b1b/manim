@@ -16,6 +16,7 @@ from camera import Camera
 from tk_scene import TkSceneRoot
 from mobject import Mobject, VMobject
 from animation import Animation
+from animation.animation import sync_animation_run_times_and_rate_funcs
 from animation.transform import MoveToTarget, Transform
 
 class Scene(object):
@@ -162,20 +163,6 @@ class Scene(object):
     def get_mobject_copies(self):
         return [m.copy() for m in self.mobjects]
 
-    def align_run_times(self, *animations, **kwargs):
-        for animation in animations:
-            animation.update_config(**kwargs)
-        max_run_time = max([a.run_time for a in animations])
-        for animation in animations:
-            if animation.run_time != max_run_time:
-                new_rate_func = squish_rate_func(
-                    animation.get_rate_func(),
-                    0, float(animation.run_time)/max_run_time
-                )
-                animation.set_rate_func(new_rate_func)
-                animation.set_run_time(max_run_time)
-        return animations
-
     def separate_moving_and_static_mobjects(self, *animations):
         """
         """
@@ -262,7 +249,7 @@ class Scene(object):
         animations = self.compile_play_args_to_animation_list(*args)
         self.num_plays += 1
 
-        animations = self.align_run_times(*animations, **kwargs)
+        sync_animation_run_times_and_rate_funcs(*animations, **kwargs)
         moving_mobjects, static_mobjects = \
             self.separate_moving_and_static_mobjects(*animations)
         self.update_frame(static_mobjects)

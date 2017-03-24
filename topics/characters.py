@@ -286,6 +286,7 @@ class PiCreatureBubbleIntroduction(AnimationGroup):
         "target_mode" : "speaking",
         "bubble_class" : SpeechBubble,
         "change_mode_kwargs" : {},
+        "bubble_creation_class" : ShowCreation,
         "bubble_creation_kwargs" : {},
         "bubble_kwargs" : {},
         "write_kwargs" : {},
@@ -305,14 +306,16 @@ class PiCreatureBubbleIntroduction(AnimationGroup):
 
         pi_creature.generate_target()
         pi_creature.target.change_mode(self.target_mode)
-        if self.look_at_arg:
+        if self.look_at_arg is not None:
             pi_creature.target.look_at(self.look_at_arg)
 
+        change_mode = MoveToTarget(pi_creature, **self.change_mode_kwargs)
+        bubble_creation = self.bubble_creation_class(
+            bubble, **self.bubble_creation_kwargs
+        )
+        writing = Write(bubble.content, **self.write_kwargs)
         AnimationGroup.__init__(
-            self,
-            MoveToTarget(pi_creature, **self.change_mode_kwargs),
-            ShowCreation(bubble, **self.bubble_creation_kwargs),
-            Write(bubble.content, **self.write_kwargs),
+            self, change_mode, bubble_creation, writing,
             **kwargs
         )
 
@@ -324,15 +327,21 @@ class PiCreatureSays(PiCreatureBubbleIntroduction):
 
 class RemovePiCreatureBubble(AnimationGroup):
     CONFIG = {
-        "target_mode" : "plain"
+        "target_mode" : "plain",
+        "look_at_arg" : None,
     }
     def __init__(self, pi_creature, **kwargs):
         assert hasattr(pi_creature, "bubble")
         digest_config(self, kwargs, locals())
 
+        pi_creature.generate_target()
+        pi_creature.target.change_mode(self.target_mode)
+        if self.look_at_arg is not None:
+            pi_creature.target.look_at(self.look_at_arg)
+
         AnimationGroup.__init__(
             self,
-            ApplyMethod(pi_creature.change_mode, self.target_mode),
+            MoveToTarget(pi_creature),
             FadeOut(pi_creature.bubble),
             FadeOut(pi_creature.bubble.content),
         )

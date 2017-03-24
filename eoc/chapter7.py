@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from helpers import *
 
 from mobject.tex_mobject import TexMobject
@@ -178,6 +180,27 @@ class LimitJustMeansApproach(PiCreatureScene):
         result.highlight_by_tex(dx, self.dx_color)
         return result
 
+class Goals(Scene):
+    def construct(self):
+        goals = [
+            TextMobject("Goal %d:"%d, s)
+            for d, s in [
+                (1, "Formal definition of derivatives"),
+                (2, "$(\\epsilon, \\delta)$ definition of a limit"),
+                (3, "L'Hôpital's rule"),
+            ]
+        ]
+        for goal in goals:
+            goal.scale(1.3)
+            goal.shift(3*DOWN).to_edge(LEFT)
+
+        curr_goal = goals[0]
+        self.play(FadeIn(curr_goal))
+        self.dither(2)
+        for goal in goals[1:]:
+            self.play(Transform(curr_goal, goal))
+            self.dither(2)
+
 class RefreshOnDerivativeDefinition(GraphScene):
     CONFIG = {
         "start_x" : 2,
@@ -346,7 +369,17 @@ class RefreshOnDerivativeDefinition(GraphScene):
 
 class RantOpenAndClose(Scene):
     def construct(self):
-        pass
+        opening, closing = [
+            TextMobject(
+                start, "Rant on infinitesimals", "$>$",
+                arg_separator = ""
+            )
+            for start in "$<$", "$<$/"
+        ]
+        self.play(FadeIn(opening))
+        self.dither(2)
+        self.play(Transform(opening, closing))
+        self.dither(2)
 
 class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedScene):
     CONFIG = {
@@ -579,6 +612,7 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
         )
         self.dither()
 
+        #Zoom in
         self.activate_zooming()
         lil_rect = self.little_rectangle
         lil_rect.move_to(self.ss_group)
@@ -604,6 +638,15 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
         self.play(lil_rect.restore, run_time = 4)
         self.dither()
         self.disactivate_zooming()
+        self.dither()
+
+        #Last approaching reference
+        for target_dx in 3, 0.01, -2, 0.01:
+            self.animate_secant_slope_group_change(
+                self.ss_group, target_dx = target_dx,
+                run_time = 4,
+            )
+            self.dither()
 
 class OtherViewsOfDx(TeacherStudentsScene):
     def construct(self):
@@ -632,7 +675,9 @@ class OtherViewsOfDx(TeacherStudentsScene):
             TextMobject(*args)
             for args in [
                 ("Why the new \\\\ variable", "$h$", "?"),
-                ("$dx$", "is more $\\dots$ contentious.")
+                ("$dx$", "is more $\\dots$ contentious."),
+                ("$dx$", "is infinitely small"),
+                ("$dx$", "is nothing more \\\\ than a symbol"),
             ]
         ]
         for statement in statements:
@@ -643,8 +688,7 @@ class OtherViewsOfDx(TeacherStudentsScene):
                 for tex in "$h$", "$dx$"
             ]
 
-
-        self.force_skipping()
+        #Question
         self.student_says(
             statements[0],
             student_index = 1,
@@ -657,121 +701,485 @@ class OtherViewsOfDx(TeacherStudentsScene):
             lag_factor = 1.5,
         ))
         self.dither()
-        self.revert_to_original_skipping_status()##
+
+        #Teacher answer
         self.teacher_says(
             statements[1],
             target_mode = "hesitant",
+            bubble_creation_class = FadeIn,
         )
         self.play(ReplacementTransform(
             statements[1].dx.copy(), dx_group, 
-            run_time = 2
+            run_time = 2,
         ))
         self.dither()
 
+        #First alternate view
+        moving_dx = dx_group.copy()
+        bubble_intro = PiCreatureBubbleIntroduction(
+            self.get_students()[2],
+            statements[2],
+            target_mode = "hooray",
+            bubble_creation_class = FadeIn,
+        )
+        bubble_intro.update(1)
+        dx_movement = Transform(
+            moving_dx, statements[2].dx,
+            run_time = 2
+        )
+        bubble_intro.update(0)
+        self.play(
+            bubble_intro, dx_movement,
+            RemovePiCreatureBubble(self.get_teacher()),
+        )   
+        self.play(self.get_teacher().change_mode, "erm")
+        self.dither()
 
-
+        #Next alternate view
+        bubble_intro = PiCreatureBubbleIntroduction(
+            self.get_students()[0],
+            statements[3],
+            target_mode = "maybe",
+            look_at_arg = 3*UP,
+            bubble_creation_class = FadeIn,
+        )
+        bubble_intro.update(1)
+        dx_movement = Transform(
+            moving_dx, statements[3].dx,
+            run_time = 2
+        )
+        bubble_intro.update(0)
+        last_bubble = self.get_students()[2].bubble
+        self.play(
+            bubble_intro, dx_movement,
+            FadeOut(last_bubble),
+            FadeOut(last_bubble.content),
+            *it.chain(*[
+                [
+                    pi.change_mode, "pondering", 
+                    pi.look_at, bubble_intro.mobject
+                ]
+                for pi in self.get_students()[1:]
+            ])
+        )
+        self.dither(3)
+        
 class GraphLimitExpression(GraphScene):
     CONFIG = {
         "start_x" : 2,
         "h_color" : GREEN,
         "f_color" : YELLOW,
-        "start_x_color" : RED,
-        "graph_origin" : 3*DOWN,
-        "x_min" : -5,
+        "two_color" : RED,
+        "graph_origin" : 3*DOWN+LEFT,
+        "x_min" : -8,
         "x_max" : 5,
         "x_axis_label" : "$h$",
-        "x_labeled_nums" : range(-5, 6),
+        "x_labeled_nums" : range(-8, 6, 2),
         "y_min" : 0,
         "y_max" : 20,
         "y_tick_frequency" : 1,
         "y_labeled_nums" : range(5, 25, 5),
         "y_axis_label" : "",
+        "big_epsilon" : 0.7,
+        "small_epsilon" : 0.01,
     }
     def construct(self):
-        self.force_skipping()
-
-        def func(h):
-            return 3*(2**2) + 3*2*h + h**2
-
+        self.func = lambda h : 3*(2**2) + 3*2*h + h**2
         self.setup_axes()
-        self.introduce_limit_term()
-        self.show_graph()
+        self.introduce_function()
         self.emphasize_non_definedness_at_0()
-        self.point_out_limit_point()
+        self.draw_limit_point_hole()
+        self.show_limit()
+        self.skeptic_asks()
         self.show_epsilon_delta_intuition()
-        self.limits_as_a_language()
 
-    def introduce_limit_term(self):
-        abstract_limit = TexMobject(
-            "\\lim", "_{h", "\\to 0}", "=",
-            "{f", "(", str(self.start_x), "+", "h", ")", 
-            "-", "f", "(", str(self.start_x), ")",
+    def introduce_function(self):
+        expression = TexMobject(
+            "{(", "2", "+", "h", ")", "^3",
+            "-", "(", "2", ")", "^3",
             "\\over \\,", "h}",
             arg_separator = "",
         )
-        cube_limit = TexMobject(
-            "\\lim", "_{h", "\\to 0}", "=",
-            "{(", str(self.start_x), "+", "h", ")", "^3",
-            "-", "(", str(self.start_x), ")", "^3",
-            "\\over \\,", "h}",
-            arg_separator = "",
+        limit = TexMobject("\\lim", "_{h", "\\to 0}")
+        derivative = TexMobject(
+            "{d(x^3)", "\\over \\,", "dx}", "(", "2", ")"
         )
         tex_to_color = {
             "h" : self.h_color,
-            "f" : self.f_color,
-            "3" : self.f_color,
-            str(self.start_x) : self.start_x_color
+            "dx" : self.h_color,
+            "2" : self.two_color
         }
-        for expression in abstract_limit, cube_limit:
+        for tex_mob in expression, limit, derivative:
             for tex, color in tex_to_color.items():
-                expression.highlight_by_tex(tex, color)
-            expression.next_to(ORIGIN, RIGHT, LARGE_BUFF)
-            expression.to_edge(UP)
+                tex_mob.highlight_by_tex(tex, color)
+            tex_mob.next_to(ORIGIN, RIGHT, LARGE_BUFF)
+            tex_mob.to_edge(UP)
 
-        brace = Brace(VGroup(*abstract_limit[4:]), DOWN)
-        graph_this = brace.get_text("Graph this")
+        expression.save_state()
+        expression.generate_target()
+        expression.target.next_to(limit, RIGHT)
+        brace = Brace(VGroup(limit, expression.target))
+        derivative.next_to(brace, DOWN)
 
-        self.revert_to_original_skipping_status()
-        self.add(abstract_limit)
+        graph = self.get_graph(self.func, color = BLUE)
+
+        indices = [0, 6, 11, 13]
+        for i, j in zip(indices, indices[1:]):
+            group = VGroup(*expression[i:j])
+            self.play(FadeIn(
+                group,
+                submobject_mode = "lagged_start",
+                lag_factor = 1.5
+            ))
+            self.dither()
+        self.play(ShowCreation(graph))
+        self.dither()
         self.play(
-            GrowFromCenter(brace),
-            Write(graph_this)
+            MoveToTarget(expression),
+            FadeIn(limit, submobject_mode = "lagged_start"),
+            GrowFromCenter(brace)
+        )
+        self.play(Write(derivative))
+        self.dither(2)
+        self.play(
+            expression.restore,
+            *map(FadeOut, [derivative, brace, limit])
         )
         self.dither()
-        self.play(*[
-            ReplacementTransform(
-                VGroup(*abstract_limit.get_parts_by_tex(tex)),
-                VGroup(*cube_limit.get_parts_by_tex(
-                    tex if tex is not "f" else "3"
-                )),
-                run_time = 2,
-            )
-            for tex in [
-                "lim", "h", "to", "=", "f", "(", 
-                str(self.start_x), "+", ")", "-", "over"
-            ]
-        ])
-        self.dither()
-        for part in cube_limit.get_parts_by_tex("2"):
-            self.play(Indicate(part))
-        self.dither(2)
 
-    def show_graph(self):
-        pass
+        colored_graph = graph.copy().highlight(YELLOW)
+        self.play(ShowCreation(colored_graph))
+        self.dither()
+        self.play(ShowCreation(graph))
+        self.remove(colored_graph)
+        self.dither()
+
+        self.expression = expression
+        self.limit = limit
+        self.graph = graph
 
     def emphasize_non_definedness_at_0(self):
-        pass
+        expression = self.expression
+        
+        dot = Dot(self.graph_origin, color = GREEN)
+        h_equals_0 = TexMobject("h", "=", "0", "?")
+        h_equals_0.next_to(self.graph_origin, UP+RIGHT, LARGE_BUFF)
+        for tex in "h", "0":
+            h_equals_0.highlight_by_tex(tex, GREEN)
 
-    def point_out_limit_point(self):
-        pass
+        arrow = Arrow(h_equals_0.get_left(), self.graph_origin)
+        arrow.highlight(WHITE)
+
+        new_expression = expression.copy()
+        h_group = VGroup(*new_expression.get_parts_by_tex("h"))
+        for h in h_group:
+            zero = TexMobject("0")
+            zero.highlight(h.get_color())
+            zero.replace(h, dim_to_match = 1)
+            Transform(h, zero).update(1)
+        rhs = TexMobject("=", "{\\, 0\\,", "\\over \\,", "0\\,}")
+        rhs.highlight_by_tex("0", GREEN)
+        rhs.next_to(new_expression, RIGHT)
+        equation = VGroup(new_expression, rhs)
+        equation.next_to(expression, DOWN, buff = LARGE_BUFF)
+
+        ud_brace = Brace(VGroup(*rhs[1:]), DOWN)
+        undefined = TextMobject("Undefined")
+        undefined.next_to(ud_brace, DOWN)
+        undefined.to_edge(RIGHT)
+
+        self.play(Write(h_equals_0, run_time = 2))
+        self.play(*map(ShowCreation, [arrow, dot]))
+        self.dither()
+        self.play(ReplacementTransform(
+            expression.copy(), new_expression
+        ))
+        self.dither()
+        self.play(Write(rhs))
+        self.dither()
+        self.play(
+            GrowFromCenter(ud_brace),
+            Write(undefined)
+        )
+        self.dither(2)
+
+        self.point_to_zero_group = VGroup(
+            h_equals_0, arrow, dot
+        )
+        self.plug_in_zero_group = VGroup(
+            new_expression, rhs, ud_brace, undefined
+        )
+
+    def draw_limit_point_hole(self):
+        dx = 0.07
+        color = self.graph.get_color()
+        circle = Circle(
+            radius = dx, 
+            stroke_color = color,
+            fill_color = BLACK,
+            fill_opacity = 1,
+        )
+        circle.move_to(self.coords_to_point(0, 12))
+        colored_circle = circle.copy()
+        colored_circle.set_stroke(YELLOW)
+        colored_circle.set_fill(opacity = 0)
+
+        self.play(GrowFromCenter(circle))
+        self.dither()
+        self.play(ShowCreation(colored_circle))
+        self.play(ShowCreation(
+            circle.copy().set_fill(opacity = 0),
+            remover = True
+        ))
+        self.remove(colored_circle)
+        self.play(
+            circle.scale_in_place, 0.3,
+            run_time = 2,
+            rate_func = wiggle
+        )
+        self.dither()
+
+        self.limit_point_hole = circle
+
+    def show_limit(self):
+        dot = self.point_to_zero_group[-1]
+        ed_group = self.get_epsilon_delta_group(self.big_epsilon)
+
+        left_v_line, right_v_line = ed_group.delta_lines
+        bottom_h_line, top_h_line = ed_group.epsilon_lines
+        ed_group.delta_lines.save_state()
+        ed_group.epsilon_lines.save_state()
+
+        brace = Brace(ed_group.input_range, UP)
+        brace_text = brace.get_text("Inputs around 0", buff = SMALL_BUFF)
+        brace_text.add_background_rectangle()
+        brace_text.shift(RIGHT)
+
+        limit_point_hole_copy = self.limit_point_hole.copy()
+        limit_point_hole_copy.set_stroke(YELLOW)
+        h_zero_hole = limit_point_hole_copy.copy()
+        h_zero_hole.move_to(self.graph_origin)
+
+        ed_group.input_range.add(h_zero_hole)
+        ed_group.output_range.add(limit_point_hole_copy)
+
+        #Show range around 0
+        self.play(
+            FadeOut(self.plug_in_zero_group),
+            FadeOut(VGroup(*self.point_to_zero_group[:-1])),
+        )
+        self.play(
+            GrowFromCenter(brace),
+            Write(brace_text),
+            ReplacementTransform(dot, ed_group.input_range),
+        )
+        self.add(h_zero_hole)
+        self.dither()
+        self.play(
+            ReplacementTransform(
+                ed_group.input_range.copy(), 
+                ed_group.output_range, 
+                run_time = 2
+            ),
+        )
+        self.remove(self.limit_point_hole)
+
+        #Show approaching
+        self.play(*map(FadeOut, [brace, brace_text]))
+        for v_line, h_line in (right_v_line, top_h_line), (left_v_line, bottom_h_line):
+            self.play(
+                ShowCreation(v_line),
+                ShowCreation(h_line)
+            )
+            self.dither()
+            self.play(
+                v_line.move_to, self.coords_to_point(0, 0), DOWN,
+                h_line.move_to, self.coords_to_point(0, self.func(0)),
+                run_time = 3
+            )
+            self.play(
+                VGroup(h_line, v_line).set_stroke, GREY, 2,
+            )
+        self.dither()
+
+        #Write limit
+        limit = self.limit
+        limit.next_to(self.expression, LEFT)
+        equals, twelve = rhs = TexMobject("=", "12")
+        rhs.next_to(self.expression, RIGHT)
+        twelve_copy = twelve.copy()
+        limit_group = VGroup(limit, rhs)
+
+        self.play(Write(limit_group))
+        self.dither()
+        self.play(twelve_copy.next_to, top_h_line, RIGHT)
+        self.dither()
+
+        self.twelve_copy = twelve_copy
+        self.ed_group = ed_group
+        self.input_range_brace_group = VGroup(brace, brace_text)
+
+    def skeptic_asks(self):
+        randy = Randolph()
+        randy.scale(0.9)
+        randy.to_edge(DOWN)
+
+        self.play(FadeIn(randy))
+        self.play(PiCreatureSays(
+            randy, """
+                What \\emph{exactly} do you
+                mean by ``approach''
+            """,
+            bubble_kwargs = {
+                "height" : 3,
+                "width" : 5,
+                "fill_opacity" : 1,
+                "direction" : LEFT,
+            },
+            target_mode = "sassy"
+        ))
+        self.remove(self.twelve_copy)
+        self.play(randy.look, OUT)
+        self.play(Blink(randy))
+        self.dither()
+        self.play(RemovePiCreatureBubble(
+            randy, target_mode = "pondering",
+            look_at_arg = self.limit_point_hole
+        ))
+        self.play(
+            self.ed_group.delta_lines.restore,
+            self.ed_group.epsilon_lines.restore,
+            Animation(randy),
+            rate_func = there_and_back,
+            run_time = 5,
+        )
+        self.play(Blink(randy))
+        self.play(FadeOut(randy))
 
     def show_epsilon_delta_intuition(self):
-        pass
+        self.play(
+            FadeOut(self.ed_group.epsilon_lines),
+            FadeIn(self.input_range_brace_group)
+        )
+        self.ed_group.epsilon_lines.restore()
+        self.dither()
+        self.play(
+            self.ed_group.delta_lines.restore, 
+            Animation(self.input_range_brace_group),
+            run_time = 2
+        )
+        self.play(FadeOut(self.input_range_brace_group))
+        self.play(
+            ReplacementTransform(
+                self.ed_group.input_range.copy(),
+                self.ed_group.output_range,
+                run_time = 2
+            )
+        )
+        self.dither()
+        self.play(*map(GrowFromCenter, self.ed_group.epsilon_lines))
+        self.play(*[
+            ApplyMethod(
+                line.copy().set_stroke(GREY, 2).move_to,
+                self.coords_to_point(0, self.func(0)),
+                run_time = 3,
+                rate_func = there_and_back,
+                remover = True,
+            )
+            for line in self.ed_group.epsilon_lines
+        ])
+        self.dither()
 
-    def limits_as_a_language(self):
-        pass
+        holes = VGroup(
+            self.ed_group.input_range.submobjects.pop(),
+            self.ed_group.output_range.submobjects.pop(),
+        )
+        self.animate_epsilon_delta_group_change(
+            self.ed_group,
+            target_epsilon = self.small_epsilon,
+            run_time = 8,
+            rate_func = lambda t : smooth(t, 2),
+            added_anims = [
+                ApplyMethod(
+                    hole.scale_in_place, 0.5,
+                    run_time = 8
+                )
+                for hole in holes
+            ]
+        )
+        self.dither()
 
+    #########
 
+    def get_epsilon_delta_group(
+        self, 
+        epsilon,
+        dashed_line_stroke_width = 3,
+        dashed_line_length = 2*SPACE_HEIGHT,
+        input_range_color = YELLOW,
+        input_range_stroke_width = 6,
+        ):
+        kwargs = dict(locals())
+        result = VGroup()
+        kwargs.pop("self")
+        result.epsilon = kwargs.pop("epsilon")
+        result.kwargs = kwargs
+        dashed_line = DashedLine(
+            ORIGIN, dashed_line_length*RIGHT,
+            stroke_width = dashed_line_stroke_width
+        )
+        x_values = [-epsilon, epsilon]
+        x_axis_points = [self.coords_to_point(x, 0) for x in x_values]
+        result.delta_lines = VGroup(*[
+            dashed_line.copy().rotate(np.pi/2).move_to(
+                point, DOWN
+            )
+            for point in x_axis_points
+        ])
+        result.epsilon_lines = VGroup(*[
+            dashed_line.copy().move_to(
+                self.coords_to_point(0, self.func(x))
+            )
+            for x in x_values
+        ])
+        result.input_range = Line(
+            *x_axis_points, 
+            color = input_range_color,
+            stroke_width = input_range_stroke_width
+        )
+        result.output_range = self.get_graph(
+            self.func,
+            color = input_range_color,
+            x_min = x_values[0],
+            x_max = x_values[1],
+        )
+        result.output_range.set_stroke(width = input_range_stroke_width)
+
+        result.digest_mobject_attrs()
+        return result
+
+    def animate_epsilon_delta_group_change(
+        self, epsilon_delta_group, target_epsilon,
+        **kwargs
+        ):
+        added_anims = kwargs.get("added_anims", [])
+        start_epsilon = epsilon_delta_group.epsilon
+        ed_group_kwargs = epsilon_delta_group.kwargs
+        def update_ed_group(ed_group, alpha):
+            epsilon = interpolate(start_epsilon, target_epsilon, alpha)
+            new_group = self.get_epsilon_delta_group(
+                epsilon, **ed_group_kwargs
+            )
+            Transform(ed_group, new_group).update(1)
+            return ed_group
+
+        self.play(
+            UpdateFromAlphaFunc(
+                epsilon_delta_group, update_ed_group,
+                **kwargs
+            ),
+            *added_anims
+        )
 
 
 
