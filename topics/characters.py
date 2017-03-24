@@ -533,6 +533,14 @@ class PiCreatureScene(Scene):
     def change_mode(self, mode):
         self.play(self.get_primary_pi_creature().change_mode, mode)
 
+    def look_at(self, thing_to_look_at, pi_creatures = None):
+        if pi_creatures is None:
+            pi_creatures = self.get_pi_creatures()
+        self.play(*it.chain(*[
+            [pi.look_at, self.get_teacher().eyes]
+            for pi in pi_creatures
+        ]))
+
 
 class TeacherStudentsScene(PiCreatureScene):
     CONFIG = {

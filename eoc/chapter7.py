@@ -780,8 +780,8 @@ class GraphLimitExpression(GraphScene):
         "y_tick_frequency" : 1,
         "y_labeled_nums" : range(5, 25, 5),
         "y_axis_label" : "",
-        "big_epsilon" : 0.7,
-        "small_epsilon" : 0.01,
+        "big_delta" : 0.7,
+        "small_delta" : 0.01,
     }
     def construct(self):
         self.func = lambda h : 3*(2**2) + 3*2*h + h**2
@@ -943,7 +943,7 @@ class GraphLimitExpression(GraphScene):
 
     def show_limit(self):
         dot = self.point_to_zero_group[-1]
-        ed_group = self.get_epsilon_delta_group(self.big_epsilon)
+        ed_group = self.get_epsilon_delta_group(self.big_delta)
 
         left_v_line, right_v_line = ed_group.delta_lines
         bottom_h_line, top_h_line = ed_group.epsilon_lines
@@ -1094,9 +1094,10 @@ class GraphLimitExpression(GraphScene):
             self.ed_group.input_range.submobjects.pop(),
             self.ed_group.output_range.submobjects.pop(),
         )
+        holes.save_state()
         self.animate_epsilon_delta_group_change(
             self.ed_group,
-            target_epsilon = self.small_epsilon,
+            target_delta = self.small_delta,
             run_time = 8,
             rate_func = lambda t : smooth(t, 2),
             added_anims = [
@@ -1109,11 +1110,13 @@ class GraphLimitExpression(GraphScene):
         )
         self.dither()
 
+        self.holes = holes
+
     #########
 
     def get_epsilon_delta_group(
         self, 
-        epsilon,
+        delta,
         dashed_line_stroke_width = 3,
         dashed_line_length = 2*SPACE_HEIGHT,
         input_range_color = YELLOW,
@@ -1122,13 +1125,13 @@ class GraphLimitExpression(GraphScene):
         kwargs = dict(locals())
         result = VGroup()
         kwargs.pop("self")
-        result.epsilon = kwargs.pop("epsilon")
+        result.delta = kwargs.pop("delta")
         result.kwargs = kwargs
         dashed_line = DashedLine(
             ORIGIN, dashed_line_length*RIGHT,
             stroke_width = dashed_line_stroke_width
         )
-        x_values = [-epsilon, epsilon]
+        x_values = [-delta, delta]
         x_axis_points = [self.coords_to_point(x, 0) for x in x_values]
         result.delta_lines = VGroup(*[
             dashed_line.copy().rotate(np.pi/2).move_to(
@@ -1142,33 +1145,37 @@ class GraphLimitExpression(GraphScene):
             )
             for x in x_values
         ])
-        result.input_range = Line(
-            *x_axis_points, 
-            color = input_range_color,
-            stroke_width = input_range_stroke_width
-        )
-        result.output_range = self.get_graph(
-            self.func,
-            color = input_range_color,
-            x_min = x_values[0],
-            x_max = x_values[1],
-        )
-        result.output_range.set_stroke(width = input_range_stroke_width)
+        basically_zero = 0.00001
+        result.input_range, result.output_range = [
+            VGroup(*[
+                self.get_graph(
+                    func,
+                    color = input_range_color,
+                    x_min = x_min,
+                    x_max = x_max,
+                )
+                for x_min, x_max in [
+                    (-delta, -basically_zero),
+                    (basically_zero, delta),
+                ]
+            ]).set_stroke(width = input_range_stroke_width)
+            for func in lambda h : 0, self.func
+        ]
 
         result.digest_mobject_attrs()
         return result
 
     def animate_epsilon_delta_group_change(
-        self, epsilon_delta_group, target_epsilon,
+        self, epsilon_delta_group, target_delta,
         **kwargs
         ):
         added_anims = kwargs.get("added_anims", [])
-        start_epsilon = epsilon_delta_group.epsilon
+        start_delta = epsilon_delta_group.delta
         ed_group_kwargs = epsilon_delta_group.kwargs
         def update_ed_group(ed_group, alpha):
-            epsilon = interpolate(start_epsilon, target_epsilon, alpha)
+            delta = interpolate(start_delta, target_delta, alpha)
             new_group = self.get_epsilon_delta_group(
-                epsilon, **ed_group_kwargs
+                delta, **ed_group_kwargs
             )
             Transform(ed_group, new_group).update(1)
             return ed_group
@@ -1181,12 +1188,247 @@ class GraphLimitExpression(GraphScene):
             *added_anims
         )
 
+class LimitCounterExample(GraphLimitExpression):
+    CONFIG = {
+        "x_min" : -8,
+        "x_max" : 8,
+        "x_labeled_nums" : range(-8, 10, 2),
+        "x_axis_width" : 2*SPACE_WIDTH - LARGE_BUFF,
+        "y_min" : -4,
+        "y_max" : 4,
+        "y_labeled_nums" : range(-2, 4, 1),
+        "y_axis_height" : 2*SPACE_HEIGHT+2*LARGE_BUFF,
+        "graph_origin" : DOWN,
+        "graph_color" : BLUE,
+        "hole_radius" : 0.075,
+        "big_delta" : 1.5,
+        "small_delta" : 0.05,
+    }
+    def construct(self):
+        def func(h):
+            square = 0.25*h**2
+            if h < 0:
+                return -square + 1
+            else:
+                return square + 2
+        self.func = func
 
+        self.setup_axes()
+        self.draw_graph()
+        self.approach_zero()
+        self.write_limit_not_defined()
+        self.show_epsilon_delta_intuition()
 
+    def draw_graph(self):
+        epsilon = 0.1
+        left_graph, right_graph = [
+            self.get_graph(
+                self.func,
+                color = self.graph_color,
+                x_min = x_min,
+                x_max = x_max,
+            )
+            for x_min, x_max in [
+                (self.x_min, -epsilon),
+                (epsilon, self.x_max),
+            ]
+        ]
+        left_hole = self.get_hole(0, 1, color = self.graph_color)
+        right_hole = self.get_hole(0, 2, color = self.graph_color)
+        graph = VGroup(
+            left_graph, left_hole, 
+            right_hole, right_graph
+        )
 
+        self.play(ShowCreation(graph, run_time = 5))
+        self.dither()
+        self.play(ReplacementTransform(
+            left_hole.copy().set_stroke(YELLOW), right_hole
+        ))
+        self.dither()
 
+        self.graph = graph
+        self.graph_holes = VGroup(left_hole, right_hole)
 
+    def approach_zero(self):
+        ed_group = self.get_epsilon_delta_group(self.big_delta)
+        left_v_line, right_v_line = ed_group.delta_lines
+        bottom_h_line, top_h_line = ed_group.epsilon_lines
+        ed_group.delta_lines.save_state()
+        ed_group.epsilon_lines.save_state()
 
+        right_lines = VGroup(right_v_line, top_h_line)
+        left_lines = VGroup(left_v_line, bottom_h_line)
+
+        basically_zero = 0.00001
+        def update_lines(lines, alpha):
+            v_line, h_line = lines
+            sign = 1 if v_line is right_v_line else -1
+            x_val = interpolate(sign*self.big_delta, sign*basically_zero, alpha)
+            v_line.move_to(self.coords_to_point(x_val, 0), DOWN)
+            h_line.move_to(self.coords_to_point(0, self.func(x_val)))
+            return lines
+
+        for lines in right_lines, left_lines:
+            self.play(*map(ShowCreation, lines))
+            self.play(UpdateFromAlphaFunc(
+                lines, update_lines,
+                run_time = 3
+            ))
+            self.play(lines.set_stroke, GREY, 3)
+            self.dither()
+
+        self.ed_group = ed_group
+
+    def write_limit_not_defined(self):
+        limit = TexMobject(
+            "\\lim", "_{h", "\\to 0}", "f(", "h", ")"
+        )
+        limit.highlight_by_tex("h", GREEN)
+        limit.move_to(self.coords_to_point(2, 1.5))
+
+        words = TextMobject("is not defined")
+        words.highlight(RED)
+        words.next_to(limit, RIGHT, align_using_submobjects = True)
+
+        limit_group = VGroup(limit, words)
+
+        self.play(Write(limit))
+        self.dither()
+        self.play(Write(words))
+        self.dither()
+        self.play(limit_group.to_corner, UP+LEFT)
+        self.dither()
+
+    def show_epsilon_delta_intuition(self):
+        ed_group = self.ed_group
+        self.play(
+            ed_group.delta_lines.restore,
+            ed_group.epsilon_lines.restore,
+        )
+        self.play(ShowCreation(ed_group.input_range))
+        self.dither()
+        self.play(ReplacementTransform(
+            ed_group.input_range.copy(),
+            ed_group.output_range,
+            run_time = 2
+        ))
+        self.graph.remove(*self.graph_holes)
+        self.remove(*self.graph_holes)
+        self.dither()
+        self.animate_epsilon_delta_group_change(
+            ed_group, target_delta = self.small_delta,
+            run_time = 6
+        )
+
+        brace = Brace(self.ed_group.epsilon_lines, RIGHT, buff = SMALL_BUFF)
+        brace_text = brace.get_text("Can't get \\\\ smaller", buff = SMALL_BUFF)
+        self.play(
+            GrowFromCenter(brace),
+            Write(brace_text)
+        )
+        self.dither()
+        run_time_rate_func_pairs = [
+            (3, lambda t : 1 - there_and_back(t)),
+            (1, lambda t : 1 - 0.2*there_and_back(3*t % 1)),
+            (1, lambda t : 1 - 0.2*there_and_back(5*t % 1)),
+        ]
+        for run_time, rate_func in run_time_rate_func_pairs:
+            self.animate_epsilon_delta_group_change(
+                ed_group, target_delta = self.small_delta,
+                run_time = run_time,
+                rate_func = rate_func,
+            )
+            self.dither()
+
+    #####
+
+    def get_epsilon_delta_group(self, delta, **kwargs):
+        ed_group = GraphLimitExpression.get_epsilon_delta_group(self, delta, **kwargs)
+        color = ed_group.kwargs["input_range_color"]
+        radius = min(delta/2, self.hole_radius)
+        pairs = [
+            (ed_group.input_range[0], (0, 0)),
+            (ed_group.input_range[1], (0, 0)),
+            (ed_group.output_range[0], (0, 1)),
+            (ed_group.output_range[1], (0, 2)),
+        ]
+        for mob, coords in pairs:
+            mob.add(self.get_hole(
+                *coords, 
+                color = color,
+                radius = radius
+            ))
+        return ed_group
+
+    def get_hole(self, *coords, **kwargs):
+        color = kwargs.get("color", BLUE)
+        radius = kwargs.get("radius", self.hole_radius)
+        return Circle(
+            radius = radius,
+            stroke_color = color,
+            fill_color = BLACK,
+            fill_opacity = 1,
+        ).move_to(self.coords_to_point(*coords))
+
+class PrefaceToEpsilonDeltaDefinition(TeacherStudentsScene):
+    def construct(self):
+        title = TexMobject("(\\epsilon, \\delta) \\text{ definition}")
+        title.next_to(self.get_teacher().get_corner(UP+LEFT), UP)
+        title.save_state()
+        title.shift(DOWN)
+        title.set_fill(opacity = 0)
+
+        self.play(
+            title.restore,
+            self.get_teacher().change_mode, "raise_right_hand",
+        )
+        self.change_student_modes(*["confused"]*3)
+        self.dither()
+        self.student_says(
+            "Isn't that pretty \\\\ technical?",
+            target_mode = "guilty",
+            added_anims = [
+                title.to_edge, UP,
+                self.get_teacher().change_mode, "plain",
+                self.get_teacher().look_at, self.get_students()[1].eyes
+            ]
+        )
+        self.look_at(self.get_teacher().eyes, self.get_students())
+        self.dither()
+        self.teacher_says("", bubble_kwargs = {"stroke_width" : 0})
+        self.change_student_modes(
+            *["pondering"]*3,
+            look_at_arg = UP+LEFT,
+            added_anims = [self.get_teacher().look_at, UP+LEFT]
+        )
+        self.dither(3)
+        words = TextMobject(
+            "It's a glimpse of\\\\",
+            "real analysis"
+        )
+        words.highlight_by_tex("real", YELLOW)
+        self.teacher_says(
+            words, 
+            bubble_kwargs = {"height" : 3, "width" : 6}
+        )
+        self.change_student_modes(*["happy"]*3)
+        self.dither(6)
+
+class EpsilonDeltaExample(GraphLimitExpression):
+    def construct(self):
+        self.skip_superclass_anims()
+
+    def skip_superclass_anims(self):
+        self.force_skipping()
+        GraphLimitExpression.construct(self)
+        self.animate_epsilon_delta_group_change(
+            self.ed_group,
+            target_delta = self.big_delta,
+        )
+        self.holes.restore()
+        self.add(self.holes)
+        self.revert_to_original_skipping_status()
 
 
 
