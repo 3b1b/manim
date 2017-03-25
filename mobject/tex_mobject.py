@@ -128,6 +128,20 @@ class TexMobject(SVGMobject):
             if test(tex, part_tex)
         ]
 
+    def copy(self):
+        ## TODO, is this the best way?
+        copy_mobject = SVGMobject.copy(self)
+        if hasattr(self, "expression_parts"):
+            pairs = zip(
+                self.submobject_family(), 
+                copy_mobject.submobject_family()
+            )
+            for submob, copy_submob in pairs:
+                if submob in self.original_submobjects:
+                    index = self.original_submobjects.index(submob)
+                    copy_mobject.original_submobjects[index] = copy_submob
+        return copy_mobject
+
     def get_part_by_tex(self, tex, **kwargs):
         all_parts = self.get_parts_by_tex(tex, **kwargs)
         return all_parts[0] if all_parts else None
