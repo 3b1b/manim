@@ -1,8 +1,8 @@
 import numpy as np
 import operator as op
 import os
+import copy
 from PIL import Image
-from copy import deepcopy
 from colour import Color
 
 from helpers import *
@@ -97,7 +97,15 @@ class Mobject(object):
         )
 
     def copy(self):
-        return deepcopy(self)
+        copy_mobject = copy.copy(self)
+        copy_mobject.points = np.array(self.points)
+        copy_mobject.submobjects = [
+            submob.copy() for submob in self.submobjects
+        ]
+        return copy_mobject
+        
+    def deepcopy(self):
+        return copy.deepcopy(self)
 
     def generate_target(self):
         self.target = None #Prevent exponential explosion
