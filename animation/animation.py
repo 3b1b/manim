@@ -118,8 +118,11 @@ class Animation(object):
     def is_remover(self):
         return self.remover
 
-    def clean_up(self):
+    def clean_up(self, surrounding_scene = None):
         self.update(1)
+        if self.is_remover() and surrounding_scene is not None:
+            surrounding_scene.remove(self.mobject)
+        return self
 
 
 def sync_animation_run_times_and_rate_funcs(*animations, **kwargs):

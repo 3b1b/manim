@@ -17,7 +17,7 @@ from tk_scene import TkSceneRoot
 from mobject import Mobject, VMobject
 from animation import Animation
 from animation.animation import sync_animation_run_times_and_rate_funcs
-from animation.transform import MoveToTarget, Transform
+from animation.transform import MoveToTarget
 
 class Scene(object):
     CONFIG = {
@@ -142,6 +142,20 @@ class Scene(object):
             lambda m : m not in mobjects_to_remove,
             self.mobjects
         )
+        self.remove_mobjects_without_family_on_screen()
+        return self
+
+    def remove_mobjects_without_family_on_screen(self):
+        def should_keep(mobject):
+            if mobject.get_num_points() > 0:
+                return True
+            num_family_members_among_mobjects = sum([
+                submob in self.mobjects
+                for submob in mobject.submobject_family()
+            ])
+            return num_family_members_among_mobjects > 1
+
+        self.mobjects = filter(should_keep, self.mobjects)
         return self
 
     def bring_to_front(self, *mobjects):
@@ -266,13 +280,7 @@ class Scene(object):
 
     def clean_up_animations(self, *animations):
         for animation in animations:
-            animation.clean_up()
-            if animation.is_remover():
-                self.remove(animation.mobject)
-            if isinstance(animation, Transform) :
-                if animation.replace_mobject_with_target_in_scene:
-                    self.remove(animation.mobject)
-                    self.add(animation.original_target_mobject)
+            animation.clean_up(self)
         return self
 
     def get_mobjects_from_last_animation(self):

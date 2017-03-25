@@ -329,6 +329,7 @@ class RemovePiCreatureBubble(AnimationGroup):
     CONFIG = {
         "target_mode" : "plain",
         "look_at_arg" : None,
+        "remover" : True,
     }
     def __init__(self, pi_creature, **kwargs):
         assert hasattr(pi_creature, "bubble")
@@ -346,9 +347,12 @@ class RemovePiCreatureBubble(AnimationGroup):
             FadeOut(pi_creature.bubble.content),
         )
 
-    def clean_up(self):
-        AnimationGroup.clean_up(self)
+    def clean_up(self, surrounding_scene = None):
+        AnimationGroup.clean_up(self, surrounding_scene)
         self.pi_creature.bubble = None
+        if surrounding_scene is not None:
+            surrounding_scene.add(self.pi_creature)
+
     
 
 class PiCreatureScene(Scene):

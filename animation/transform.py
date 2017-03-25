@@ -55,6 +55,12 @@ class Transform(Animation):
         submob.interpolate(start, end, alpha, self.path_func)
         return self
 
+    def clean_up(self, surrounding_scene = None):
+        Animation.clean_up(self, surrounding_scene)
+        if self.replace_mobject_with_target_in_scene and surrounding_scene is not None:
+            surrounding_scene.remove(self.mobject)
+            surrounding_scene.add(self.original_target_mobject)
+
 class ReplacementTransform(Transform):
     CONFIG = {
         "replace_mobject_with_target_in_scene" : True,
@@ -147,7 +153,8 @@ class FadeOut(Transform):
             target.set_fill(opacity = 0)
         Transform.__init__(self, mobject, target, **kwargs)
 
-    def clean_up(self):
+    def clean_up(self, surrounding_scene = None):
+        Transform.clean_up(self, surrounding_scene)
         self.update(0)
 
 class FadeIn(Transform):
