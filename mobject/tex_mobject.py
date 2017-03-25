@@ -129,7 +129,10 @@ class TexMobject(SVGMobject):
         ]
 
     def copy(self):
-        ## TODO, is this the best way?
+        ## The shallow copy method usually only cares about 
+        ## points and submobjects, but for TexMobjects with
+        ## multiple parts the original_submobject list should
+        ## be updated as well.
         copy_mobject = SVGMobject.copy(self)
         if hasattr(self, "expression_parts"):
             pairs = zip(

@@ -1206,6 +1206,14 @@ class LimitCounterExample(GraphLimitExpression):
         "small_delta" : 0.05,
     }
     def construct(self):
+        self.add_func()
+        self.setup_axes()
+        self.draw_graph()
+        self.approach_zero()
+        self.write_limit_not_defined()
+        self.show_epsilon_delta_intuition()
+
+    def add_func(self):
         def func(h):
             square = 0.25*h**2
             if h < 0:
@@ -1213,12 +1221,6 @@ class LimitCounterExample(GraphLimitExpression):
             else:
                 return square + 2
         self.func = func
-
-        self.setup_axes()
-        self.draw_graph()
-        self.approach_zero()
-        self.write_limit_not_defined()
-        self.show_epsilon_delta_intuition()
 
     def draw_graph(self):
         epsilon = 0.1
@@ -1623,9 +1625,78 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
         result.digest_mobject_attrs()
         return result
 
+class EpsilonDeltaCounterExample(LimitCounterExample, EpsilonDeltaExample):
+    def construct(self):
+        self.add_func()
+        self.setup_axes()
+        self.draw_graph()
+        self.introduce_epsilon()
+        self.introduce_epsilon_delta_group()
+        self.move_epsilon_group_up_and_down()
 
+    def introduce_epsilon(self):
+        epsilon_group = self.get_epsilon_group(0.4, 1.5)
+        rhs = TexMobject("=0.4")
+        label = epsilon_group.labels[1]
+        rhs.next_to(label, RIGHT)
+        epsilon_group.add(rhs)
 
+        self.play(ShowCreation(epsilon_group.limit_line))
+        self.play(*it.chain(
+            [
+                ReplacementTransform(
+                    epsilon_group.limit_line.copy(),
+                    line
+                )
+                for line in epsilon_group.epsilon_lines
+            ],
+            map(GrowFromCenter, epsilon_group.braces)
+        ))
+        self.play(*map(Write, epsilon_group.labels))
+        self.play(Write(rhs))
+        self.dither()
 
+        self.epsilon_group = epsilon_group
+
+    def introduce_epsilon_delta_group(self):
+        ed_group = self.get_epsilon_delta_group(self.big_delta)
+
+        self.play(*map(ShowCreation, ed_group.delta_lines))
+        self.play(ShowCreation(ed_group.input_range))
+        self.play(ReplacementTransform(
+            ed_group.input_range.copy(),
+            ed_group.output_range,
+            run_time = 2
+        ))
+        self.play(*map(GrowFromCenter, ed_group.epsilon_lines))
+        self.dither(2)
+        self.animate_epsilon_delta_group_change(
+            ed_group, target_delta = self.small_delta,
+            run_time = 3
+        )
+        ed_group.delta = self.small_delta
+        self.dither()
+
+        self.ed_group = ed_group
+
+    def move_epsilon_group_up_and_down(self):
+        vects = [
+            self.coords_to_point(0, 2) - self.coords_to_point(0, 1.5),
+            self.coords_to_point(0, 1) - self.coords_to_point(0, 2),
+        ]
+        for vect in vects:
+            self.play(self.epsilon_group.shift, vect)
+            self.dither()
+            self.shake_ed_group()
+            self.dither()
+
+    ##
+
+    def shake_ed_group(self):
+        self.animate_epsilon_delta_group_change(
+            self.ed_group, target_delta = self.big_delta,
+            rate_func = lambda t : 0.2*there_and_back(2*t%1)
+        )
 
 
 
