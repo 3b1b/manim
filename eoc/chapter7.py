@@ -870,7 +870,7 @@ class GraphLimitExpression(GraphScene):
         arrow = Arrow(h_equals_0.get_left(), self.graph_origin)
         arrow.highlight(WHITE)
 
-        new_expression = expression.copy()
+        new_expression = expression.deepcopy()
         h_group = VGroup(*new_expression.get_parts_by_tex("h"))
         for h in h_group:
             zero = TexMobject("0")
@@ -1016,6 +1016,7 @@ class GraphLimitExpression(GraphScene):
         self.dither()
 
         self.twelve_copy = twelve_copy
+        self.rhs = rhs
         self.ed_group = ed_group
         self.input_range_brace_group = VGroup(brace, brace_text)
 
@@ -1415,9 +1416,21 @@ class PrefaceToEpsilonDeltaDefinition(TeacherStudentsScene):
         self.change_student_modes(*["happy"]*3)
         self.dither(6)
 
-class EpsilonDeltaExample(GraphLimitExpression):
+class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
+    CONFIG = {
+        "epsilon_list" : [2, 1, 0.5],
+        "zoomed_canvas_corner" : DOWN+RIGHT,
+    }
     def construct(self):
+        self.delta_list = [
+            epsilon/6.0 for epsilon in self.epsilon_list
+        ]
         self.skip_superclass_anims()
+        self.introduce_epsilon()
+        self.match_epsilon()
+        self.zoom_in()
+        self.introduce_delta()
+        self.smaller_epsilon()
 
     def skip_superclass_anims(self):
         self.force_skipping()
@@ -1429,6 +1442,206 @@ class EpsilonDeltaExample(GraphLimitExpression):
         self.holes.restore()
         self.add(self.holes)
         self.revert_to_original_skipping_status()
+
+    def introduce_epsilon(self):
+        epsilon_group, small_epsilon_group = map(
+            self.get_epsilon_group,
+            self.epsilon_list[:2]
+        )
+
+        twelve_line = epsilon_group.limit_line
+        twelve = self.rhs[-1]
+        twelve_copy = twelve.copy()
+        twelve_copy.next_to(twelve_line)
+
+        distance = TextMobject("Distance")
+        distance.next_to(epsilon_group.labels, DOWN, LARGE_BUFF)
+        distance.to_edge(RIGHT)
+        arrows = VGroup(*[
+            Arrow(distance.get_top(), label.get_right())
+            for label in epsilon_group.labels
+        ])
+
+        self.play(ShowCreation(twelve_line))
+        self.play(Write(twelve_copy))
+        self.play(ReplacementTransform(twelve_copy, twelve))
+        self.dither()
+
+        self.play(*it.chain(
+            [
+                ReplacementTransform(twelve_line.copy(), line)
+                for line in epsilon_group.epsilon_lines
+            ], 
+            map(GrowFromCenter, epsilon_group.braces),
+        ))
+        self.play(*map(Write, epsilon_group.labels))
+        self.play(
+            Write(distance),
+            ShowCreation(arrows)
+        )
+        self.dither()
+        self.play(*map(FadeOut, [distance, arrows]))
+        self.play(Transform(
+            epsilon_group, small_epsilon_group,
+            run_time = 2
+        ))
+        self.dither()
+
+        self.epsilon_group = epsilon_group
+
+    def match_epsilon(self):
+        self.animate_epsilon_delta_group_change(
+            self.ed_group, target_delta = self.delta_list[1],
+            run_time = 2,
+            added_anims = [
+                ApplyMethod(
+                    hole.scale_in_place, 0.25,
+                    run_time = 2
+                )
+                for hole in self.holes
+            ]
+        )
+        self.ed_group.delta = self.delta_list[1]
+        self.ed_group.input_range.make_jagged()
+        self.dither()
+
+    def zoom_in(self):
+        self.ed_group.input_range.make_jagged()
+
+        self.activate_zooming()
+        lil_rect = self.little_rectangle
+        lil_rect.move_to(self.graph_origin)
+        lil_rect.scale_in_place(self.zoom_factor)
+        self.add(self.holes)
+        self.dither()
+        self.play(lil_rect.scale_in_place, 1./self.zoom_factor)
+        self.dither()
+
+    def introduce_delta(self):
+        delta_group = self.get_delta_group(self.delta_list[1])
+        self.play(*map(GrowFromCenter, delta_group.braces))
+        self.play(*map(Write, delta_group.labels))
+        self.dither()
+        self.play(
+            ReplacementTransform(
+                self.ed_group.input_range.copy(),
+                self.ed_group.output_range,
+                run_time = 2
+            ),
+            Animation(self.holes),
+        )
+        self.play(ApplyWave(
+            VGroup(self.ed_group.output_range, self.holes[1]),
+            direction = RIGHT
+        ))
+        self.dither(2)
+
+        self.delta_group = delta_group
+
+    def smaller_epsilon(self):
+        new_epsilon = self.epsilon_list[-1]
+        new_delta = self.delta_list[-1]
+        self.play(Transform(
+            self.epsilon_group,
+            self.get_epsilon_group(new_epsilon)
+        ))
+        self.dither()
+        self.animate_epsilon_delta_group_change(
+            self.ed_group, target_delta = new_delta,
+            added_anims = [
+                Transform(
+                    self.delta_group,
+                    self.get_delta_group(new_delta)
+                )
+            ] + [
+                ApplyMethod(hole.scale_in_place, 0.5)
+                for hole in self.holes
+            ]
+        )
+        self.ed_group.input_range.make_jagged()
+        self.dither(2)
+
+    ##
+
+    def get_epsilon_group(self, epsilon, limit_value = 12):
+        result = VGroup()
+        line_length = 2*SPACE_HEIGHT
+        lines = [
+            Line(
+                ORIGIN, line_length*RIGHT,
+            ).move_to(self.coords_to_point(0, limit_value+nudge))
+            for nudge in 0, -epsilon, epsilon
+        ]
+        result.limit_line = lines[0]
+        result.limit_line.set_stroke(RED, width = 3)
+        result.epsilon_lines = VGroup(*lines[1:])
+        result.epsilon_lines.set_stroke(MAROON_B, width = 2)
+        brace = Brace(Line(ORIGIN, 0.5*UP), RIGHT)
+        result.braces = VGroup(*[
+            brace.copy().scale_to_fit_height(
+                group.get_height()
+            ).next_to(group, RIGHT)
+            for i in 1, 2
+            for group in [VGroup(lines[0], lines[i])]
+        ])
+        result.labels = VGroup(*[
+            brace.get_text("\\Big $\\epsilon$", buff = SMALL_BUFF)
+            for brace in result.braces
+        ])
+        for label, brace in zip(result.labels, result.braces):
+            label.scale_to_fit_height(min(
+                label.get_height(),
+                0.8*brace.get_height()
+            ))
+
+        result.digest_mobject_attrs()
+        return result
+
+    def get_delta_group(self, delta):
+        result = VGroup()
+        brace = Brace(Line(ORIGIN, RIGHT), DOWN)
+        brace.scale_to_fit_width(
+            (self.coords_to_point(delta, 0)-self.graph_origin)[0]
+        )
+        result.braces = VGroup(*[
+            brace.copy().move_to(self.coords_to_point(x, 0))
+            for x in -delta/2, delta/2
+        ])
+        result.braces.shift(self.holes[0].get_height()*DOWN)
+        result.labels = VGroup(*[
+            TexMobject("\\delta").scale(
+                1./self.zoom_factor
+            )
+            for brace in result.braces
+        ])
+        for label, brace in zip(result.labels, result.braces):
+            label.next_to(
+                brace, DOWN, 
+                buff = SMALL_BUFF/self.zoom_factor
+            )
+
+        result.digest_mobject_attrs()
+        return result
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
