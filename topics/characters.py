@@ -62,8 +62,6 @@ class PiCreature(SVGMobject):
             self.submobjects[LEFT_EYE_INDEX],
             self.submobjects[RIGHT_EYE_INDEX]
         ])
-        self.submobjects = []
-        self.add(self.body, self.mouth, self.eyes, self.pupils)
         self.parts_named = True
 
     def init_colors(self):
@@ -76,6 +74,10 @@ class PiCreature(SVGMobject):
         self.eyes.set_fill(WHITE, opacity = 1)
         return self
 
+    def copy(self):
+        copy_mobject = SVGMobject.copy(self)
+        copy_mobject.name_parts()
+        return copy_mobject
 
     def highlight(self, color):
         self.body.set_fill(color)
