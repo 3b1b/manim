@@ -89,9 +89,9 @@ class PiCreature(SVGMobject):
             color = self.color
         )
         new_self.scale_to_fit_height(self.get_height())
-        new_self.shift(self.eyes.get_center() - new_self.eyes.get_center())
         if self.is_flipped() ^ new_self.is_flipped():
             new_self.flip()
+        new_self.shift(self.eyes.get_center() - new_self.eyes.get_center())
         if hasattr(self, "purposeful_looking_direction"):
             new_self.look(self.purposeful_looking_direction)
         Transform(self, new_self).update(1)

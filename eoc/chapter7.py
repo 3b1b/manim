@@ -1118,6 +1118,7 @@ class GraphLimitExpression(GraphScene):
     def get_epsilon_delta_group(
         self, 
         delta,
+        limit_x = 0,
         dashed_line_stroke_width = 3,
         dashed_line_length = 2*SPACE_HEIGHT,
         input_range_color = YELLOW,
@@ -1127,12 +1128,13 @@ class GraphLimitExpression(GraphScene):
         result = VGroup()
         kwargs.pop("self")
         result.delta = kwargs.pop("delta")
+        result.limit_x = kwargs.pop("limit_x")
         result.kwargs = kwargs
         dashed_line = DashedLine(
             ORIGIN, dashed_line_length*RIGHT,
             stroke_width = dashed_line_stroke_width
         )
-        x_values = [-delta, delta]
+        x_values = [limit_x-delta, limit_x+delta]
         x_axis_points = [self.coords_to_point(x, 0) for x in x_values]
         result.delta_lines = VGroup(*[
             dashed_line.copy().rotate(np.pi/2).move_to(
@@ -1140,12 +1142,11 @@ class GraphLimitExpression(GraphScene):
             )
             for point in x_axis_points
         ])
-        result.epsilon_lines = VGroup(*[
-            dashed_line.copy().move_to(
-                self.coords_to_point(0, self.func(x))
+        if self.func(limit_x) < 0:
+            result.delta_lines.rotate(
+                np.pi, RIGHT, 
+                about_point = result.delta_lines.get_bottom()
             )
-            for x in x_values
-        ])
         basically_zero = 0.00001
         result.input_range, result.output_range = [
             VGroup(*[
@@ -1156,12 +1157,19 @@ class GraphLimitExpression(GraphScene):
                     x_max = x_max,
                 )
                 for x_min, x_max in [
-                    (-delta, -basically_zero),
-                    (basically_zero, delta),
+                    (limit_x-delta, limit_x-basically_zero),
+                    (limit_x+basically_zero, limit_x+delta),
                 ]
             ]).set_stroke(width = input_range_stroke_width)
-            for func in lambda h : 0, self.func
+            for func in (lambda h : 0), self.func
         ]
+        result.epsilon_lines = VGroup(*[
+            dashed_line.copy().move_to(
+                self.coords_to_point(limit_x, 0)[0]*RIGHT+\
+                result.output_range.get_edge_center(vect)[1]*UP
+            )
+            for vect in DOWN, UP
+        ])
 
         result.digest_mobject_attrs()
         return result
@@ -1171,12 +1179,14 @@ class GraphLimitExpression(GraphScene):
         **kwargs
         ):
         added_anims = kwargs.get("added_anims", [])
+        limit_x = epsilon_delta_group.limit_x
         start_delta = epsilon_delta_group.delta
         ed_group_kwargs = epsilon_delta_group.kwargs
         def update_ed_group(ed_group, alpha):
             delta = interpolate(start_delta, target_delta, alpha)
             new_group = self.get_epsilon_delta_group(
-                delta, **ed_group_kwargs
+                delta, limit_x = limit_x,
+                **ed_group_kwargs
             )
             Transform(ed_group, new_group).update(1)
             return ed_group
@@ -1202,6 +1212,7 @@ class LimitCounterExample(GraphLimitExpression):
         "graph_origin" : DOWN,
         "graph_color" : BLUE,
         "hole_radius" : 0.075,
+        "smaller_hole_radius" : 0.04,
         "big_delta" : 1.5,
         "small_delta" : 0.05,
     }
@@ -1323,6 +1334,7 @@ class LimitCounterExample(GraphLimitExpression):
             ed_group, target_delta = self.small_delta,
             run_time = 6
         )
+        self.hole_radius = self.smaller_hole_radius
 
         brace = Brace(self.ed_group.epsilon_lines, RIGHT, buff = SMALL_BUFF)
         brace_text = brace.get_text("Can't get \\\\ smaller", buff = SMALL_BUFF)
@@ -1582,7 +1594,7 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
         result.braces = VGroup(*[
             brace.copy().scale_to_fit_height(
                 group.get_height()
-            ).next_to(group, RIGHT)
+            ).next_to(group, RIGHT, SMALL_BUFF)
             for i in 1, 2
             for group in [VGroup(lines[0], lines[i])]
         ])
@@ -1627,6 +1639,7 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
 
 class EpsilonDeltaCounterExample(LimitCounterExample, EpsilonDeltaExample):
     def construct(self):
+        self.hole_radius = 0.04
         self.add_func()
         self.setup_axes()
         self.draw_graph()
@@ -1668,6 +1681,7 @@ class EpsilonDeltaCounterExample(LimitCounterExample, EpsilonDeltaExample):
             ed_group.output_range,
             run_time = 2
         ))
+        self.remove(self.graph_holes)
         self.play(*map(GrowFromCenter, ed_group.epsilon_lines))
         self.dither(2)
         self.animate_epsilon_delta_group_change(
@@ -1683,6 +1697,7 @@ class EpsilonDeltaCounterExample(LimitCounterExample, EpsilonDeltaExample):
         vects = [
             self.coords_to_point(0, 2) - self.coords_to_point(0, 1.5),
             self.coords_to_point(0, 1) - self.coords_to_point(0, 2),
+            self.coords_to_point(0, 1.5) - self.coords_to_point(0, 1),
         ]
         for vect in vects:
             self.play(self.epsilon_group.shift, vect)
@@ -1698,13 +1713,292 @@ class EpsilonDeltaCounterExample(LimitCounterExample, EpsilonDeltaExample):
             rate_func = lambda t : 0.2*there_and_back(2*t%1)
         )
 
+class TheoryHeavy(TeacherStudentsScene):
+    def construct(self):
+        lhs = TexMobject(
+            "{df", "\\over \\,", "dx}", "(", "x", ")"
+        )
+        equals = TexMobject("=")
+        rhs = TexMobject(
+            "\\lim", "_{h", "\\to 0}", 
+            "{f", "(", "x", "+", "h", ")", "-", "f", "(", "x", ")",
+            "\\over \\,", "h}"
+        )
+        derivative = VGroup(lhs, equals, rhs)
+        derivative.arrange_submobjects(RIGHT)
+        for tex_mob in derivative:
+            tex_mob.highlight_by_tex("x", RED)
+            tex_mob.highlight_by_tex("h", GREEN)
+            tex_mob.highlight_by_tex("dx", GREEN)
+            tex_mob.highlight_by_tex("f", YELLOW)
+        derivative.next_to(self.get_pi_creatures(), UP, buff = MED_LARGE_BUFF)
+
+        lim = rhs.get_part_by_tex("lim")
+        epsilon_delta = TexMobject("(\\epsilon, \\delta)")
+        epsilon_delta.next_to(lim, UP, buff = 1.5*LARGE_BUFF)
+        arrow = Arrow(epsilon_delta, lim, color = WHITE)
 
 
+        self.student_says(
+            "Too much theory!",
+            target_mode = "angry",
+            write_kwargs = {"run_time" : 2},
+        )
+        self.dither()
+        student = self.get_students()[1]
+        Scene.play(self,
+            Write(lhs),
+            FadeOut(student.bubble),
+            FadeOut(student.bubble.content),
+            *[
+                ApplyFunction(
+                    lambda pi : pi.change_mode("pondering").look_at(epsilon_delta),
+                    pi
+                )
+                for pi in self.get_pi_creatures()
+            ]
+        )
+        part_tex_pairs = [
+            ("df", "f"),
+            ("over", "+"),
+            ("over", "-"),
+            ("over", "to"),
+            ("over", "over"),
+            ("dx", "h"),
+            ("(", "("),
+            ("x", "x"),
+            (")", ")"),
+        ]
+        self.play(Write(equals), Write(lim), *[
+            ReplacementTransform(
+                VGroup(*lhs.get_parts_by_tex(t1)).copy(),
+                VGroup(*rhs.get_parts_by_tex(t2)),
+                run_time = 2,
+                rate_func = squish_rate_func(smooth, alpha, alpha+0.5)
+            )
+            for (t1, t2), alpha in zip(
+                part_tex_pairs,
+                np.linspace(0, 0.5, len(part_tex_pairs))
+            )
+        ])
+        self.dither(2)
+        self.play(
+            Write(epsilon_delta),
+            ShowCreation(arrow)
+        )
+        self.dither(3)
+        derivative.add(epsilon_delta, arrow)
+        self.student_says(
+            "How do you \\\\ compute limits?",
+            student_index = 2,
+            added_anims = [
+                derivative.scale, 0.8,
+                derivative.to_corner, UP+LEFT
+            ]
+        )
+        self.play(self.get_teacher().change_mode, "happy")
+        self.dither(2)
 
+class LHopitalExample(LimitCounterExample):
+    CONFIG = {
+        "graph_origin" : ORIGIN,
+        "x_axis_width" : 2*SPACE_WIDTH,
+        "x_min" : -5,
+        "x_max" : 5,
+        "x_labeled_nums" : range(-6, 8, 2),
+        "x_axis_label" : "$x$",
+        "y_axis_height" : 2*SPACE_HEIGHT,
+        "y_min" : -3,
+        "y_max" : 3,
+        "y_labeled_nums" : range(-2, 4, 2),
+        "y_axis_label" : "",
+        "x_color" : RED,
+        "hole_radius" : 0.07,
+        "big_delta" : 0.5,
+        "small_delta" : 0.01,
+    }
+    def construct(self):
+        self.force_skipping()
 
+        self.setup_axes()
+        self.introduce_function()
+        self.show_non_definedness_at_one()
+        self.plug_in_value_close_to_one()
+        self.ask_about_systematic_process()
+        self.mention_derivatives_as_helpful()
+        self.nudge_by_dx()
+        self.show_altered_numerator_and_denominator()
 
+    def setup_axes(self):
+        GraphScene.setup_axes(self)
+        self.x_axis_label_mob.highlight(self.x_color)
 
+    def introduce_function(self):
+        graph = self.get_graph(self.func)
+        colored_graph = graph.copy().highlight(YELLOW)
+        func_label = self.get_func_label()
+        func_label.next_to(ORIGIN, RIGHT, buff = LARGE_BUFF)
+        func_label.to_edge(UP)
 
+        x_copy = self.x_axis_label_mob.copy()
+
+        self.play(
+            Write(func_label),
+            Transform(
+                x_copy, VGroup(*func_label.get_parts_by_tex("x")),
+                remover = True
+            )
+        )
+        self.play(ShowCreation(
+            graph,
+            run_time = 3,
+            rate_func = None
+        ))
+        self.dither(4) ## Overly oscillation
+        self.play(ShowCreation(colored_graph, run_time = 2))
+        self.dither()
+        self.play(ShowCreation(graph, run_time = 2))
+        self.remove(colored_graph)
+        self.dither()
+
+        self.graph = graph
+        self.func_label = func_label
+
+    def show_non_definedness_at_one(self):
+        morty = Mortimer().flip().to_corner(DOWN+LEFT)
+        words = TexMobject("\\text{Try }", "x", "=1")
+        words.highlight_by_tex("x", self.x_color, substring = False)
+
+        v_line = self.get_vertical_line_to_graph(
+            1, self.graph, 
+            line_class = DashedLine,
+            color = self.x_color
+        )
+
+        func_1 = self.get_func_label("1")
+        func_1.next_to(self.func_label, DOWN, buff = MED_LARGE_BUFF)
+        rhs = TexMobject("= \\frac{0}{0}")
+        rhs.next_to(func_1, RIGHT)
+        func_1_group = VGroup(func_1, rhs)
+
+        hole = self.get_hole(1, self.func(1))
+        ed_group = self.get_epsilon_delta_group(
+            self.big_delta, limit_x = 1,
+        )
+
+        lim = TexMobject("\\lim", "_{x", "\\to 1}")
+        lim.highlight_by_tex("x", self.x_color)
+        lim.move_to(self.func_label, LEFT)
+        self.func_label.generate_target()
+        self.func_label.target.next_to(lim, RIGHT)
+        equals_q = TexMobject("= ???")
+        equals_q.next_to(self.func_label.target, RIGHT)
+
+        self.play(PiCreatureSays(morty, words))
+        self.play(
+            Blink(morty),
+            ShowCreation(v_line)
+        )
+        self.play(
+            RemovePiCreatureBubble(
+                morty, target_mode = "pondering",
+                look_at_arg = func_1
+            ),
+            ReplacementTransform(
+                self.func_label.copy(),
+                func_1
+            )
+        )
+        self.dither(2)
+        self.play(Write(VGroup(*rhs[:-1])))
+        self.dither()
+        self.play(Write(rhs[-1]))
+        self.dither()
+        self.play(
+            GrowFromCenter(hole),
+            morty.look_at, hole
+        )
+        self.dither()
+
+        self.play(GrowFromCenter(ed_group.input_range))
+        self.play(
+            ReplacementTransform(
+                ed_group.input_range.copy(),
+                ed_group.output_range
+            ),
+            *map(ShowCreation, ed_group.delta_lines)
+        )
+        self.play(*map(GrowFromCenter, ed_group.epsilon_lines))
+        self.play(morty.change_mode, "thinking")
+        self.animate_epsilon_delta_group_change(
+            ed_group, target_delta = self.small_delta,
+            run_time = 4
+        )
+        self.play(Blink(morty))
+        self.play(
+            Write(lim),
+            MoveToTarget(self.func_label),
+            Write(equals_q),
+            morty.change_mode, "confused", 
+            morty.look_at, lim
+        )
+        self.dither(2)
+        self.play(
+            func_1_group.to_corner, DOWN+RIGHT,
+            *map(FadeOut, [morty, ed_group])
+        )
+        self.dither()
+        
+    def plug_in_value_close_to_one(self):
+        self.revert_to_original_skipping_status()
+        pass
+
+    def ask_about_systematic_process(self):
+        pass
+
+    def mention_derivatives_as_helpful(self):
+        pass
+
+    def nudge_by_dx(self):
+        pass
+
+    def show_altered_numerator_and_denominator(self):
+        pass
+
+    ##
+
+    def func(self, x):
+        if abs(x) != 1:
+            return np.sin(x*np.pi) / (x**2 - 1)
+        else:
+            return np.pi*np.cos(x*np.pi) / (2*x)
+
+    def get_func_label(self, argument = "x"):
+        in_tex = "{%s}"%str(argument)
+        result = TexMobject(
+            "{\\sin(\\pi ", in_tex, ") \\over ",
+            in_tex, "^2 - 1}"
+        )
+        result.highlight_by_tex(in_tex, self.x_color)
+        return result
+
+    def get_epsilon_delta_group(self, delta, **kwargs):
+        ed_group = GraphLimitExpression.get_epsilon_delta_group(self, delta, **kwargs)
+        color = ed_group.kwargs["input_range_color"]
+        radius = min(delta/2, self.hole_radius)
+        pairs = [
+            # (ed_group.input_range[0], (1, 0)),
+            (ed_group.input_range[1], (1, 0)),
+            # (ed_group.output_range[0], (1, self.func(1))),
+            (ed_group.output_range[1], (1, self.func(1))),
+        ]
+        for mob, coords in pairs:
+            mob.add(self.get_hole(
+                *coords, 
+                color = color,
+                radius = radius
+            ))
+        return ed_group
 
 
 
