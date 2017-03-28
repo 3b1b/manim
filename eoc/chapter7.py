@@ -763,7 +763,7 @@ class OtherViewsOfDx(TeacherStudentsScene):
             ])
         )
         self.dither(3)
-        
+
 class GraphLimitExpression(GraphScene):
     CONFIG = {
         "start_x" : 2,
@@ -1799,7 +1799,7 @@ class TheoryHeavy(TeacherStudentsScene):
         self.play(self.get_teacher().change_mode, "happy")
         self.dither(2)
 
-class LHopitalExample(LimitCounterExample):
+class LHopitalExample(LimitCounterExample, PiCreatureScene):
     CONFIG = {
         "graph_origin" : ORIGIN,
         "x_axis_width" : 2*SPACE_WIDTH,
@@ -1808,26 +1808,27 @@ class LHopitalExample(LimitCounterExample):
         "x_labeled_nums" : range(-6, 8, 2),
         "x_axis_label" : "$x$",
         "y_axis_height" : 2*SPACE_HEIGHT,
-        "y_min" : -3,
-        "y_max" : 3,
+        "y_min" : -3.1,
+        "y_max" : 3.1,
+        "y_bottom_tick" : -4,
         "y_labeled_nums" : range(-2, 4, 2),
         "y_axis_label" : "",
         "x_color" : RED,
         "hole_radius" : 0.07,
         "big_delta" : 0.5,
         "small_delta" : 0.01,
+        "dx" : 0.2,
+        "dx_color" : YELLOW,
+        "tex_scale_value" : 0.9,
     }
     def construct(self):
-        self.force_skipping()
-
+        self.remove(*self.get_pi_creatures()) 
         self.setup_axes()
         self.introduce_function()
         self.show_non_definedness_at_one()
         self.plug_in_value_close_to_one()
         self.ask_about_systematic_process()
-        self.mention_derivatives_as_helpful()
         self.nudge_by_dx()
-        self.show_altered_numerator_and_denominator()
 
     def setup_axes(self):
         GraphScene.setup_axes(self)
@@ -1865,26 +1866,32 @@ class LHopitalExample(LimitCounterExample):
         self.func_label = func_label
 
     def show_non_definedness_at_one(self):
-        morty = Mortimer().flip().to_corner(DOWN+LEFT)
+        morty = self.get_primary_pi_creature()
         words = TexMobject("\\text{Try }", "x", "=1")
         words.highlight_by_tex("x", self.x_color, substring = False)
 
-        v_line = self.get_vertical_line_to_graph(
-            1, self.graph, 
-            line_class = DashedLine,
-            color = self.x_color
+        v_line, alt_v_line = [
+            self.get_vertical_line_to_graph(
+                x, self.graph, 
+                line_class = DashedLine,
+                color = self.x_color
+            )
+            for x in 1, -1
+        ]
+        hole, alt_hole = [
+            self.get_hole(x, self.func(x))
+            for x in 1, -1
+        ]
+        ed_group = self.get_epsilon_delta_group(
+            self.big_delta, limit_x = 1,
         )
 
         func_1 = self.get_func_label("1")
         func_1.next_to(self.func_label, DOWN, buff = MED_LARGE_BUFF)
-        rhs = TexMobject("= \\frac{0}{0}")
+        rhs = TexMobject("\\Rightarrow \\frac{0}{0}")
         rhs.next_to(func_1, RIGHT)
         func_1_group = VGroup(func_1, rhs)
-
-        hole = self.get_hole(1, self.func(1))
-        ed_group = self.get_epsilon_delta_group(
-            self.big_delta, limit_x = 1,
-        )
+        func_1_group.add_to_back(BackgroundRectangle(func_1_group))
 
         lim = TexMobject("\\lim", "_{x", "\\to 1}")
         lim.highlight_by_tex("x", self.x_color)
@@ -1894,6 +1901,7 @@ class LHopitalExample(LimitCounterExample):
         equals_q = TexMobject("= ???")
         equals_q.next_to(self.func_label.target, RIGHT)
 
+        self.play(FadeIn(morty))
         self.play(PiCreatureSays(morty, words))
         self.play(
             Blink(morty),
@@ -1914,10 +1922,15 @@ class LHopitalExample(LimitCounterExample):
         self.dither()
         self.play(Write(rhs[-1]))
         self.dither()
-        self.play(
-            GrowFromCenter(hole),
-            morty.look_at, hole
-        )
+        self.play(GrowFromCenter(hole))
+        self.dither()
+
+        self.play(ShowCreation(alt_v_line))
+        self.play(GrowFromCenter(alt_hole))
+        self.dither()
+        alt_group = VGroup(alt_v_line, alt_hole)
+        self.play(alt_group.set_stroke, GREY, 2)
+        self.play(FocusOn(hole))
         self.dither()
 
         self.play(GrowFromCenter(ed_group.input_range))
@@ -1934,7 +1947,7 @@ class LHopitalExample(LimitCounterExample):
             ed_group, target_delta = self.small_delta,
             run_time = 4
         )
-        self.play(Blink(morty))
+        self.dither()
         self.play(
             Write(lim),
             MoveToTarget(self.func_label),
@@ -1944,28 +1957,294 @@ class LHopitalExample(LimitCounterExample):
         )
         self.dither(2)
         self.play(
-            func_1_group.to_corner, DOWN+RIGHT,
+            func_1_group.to_corner, UP+LEFT,
             *map(FadeOut, [morty, ed_group])
         )
         self.dither()
-        
+
+        self.lim_group = VGroup(lim, self.func_label, equals_q)
+        for part in self.lim_group:
+            part.add_to_back(BackgroundRectangle(part))
+        self.func_1_group = func_1_group
+        self.v_line = v_line
+
     def plug_in_value_close_to_one(self):
-        self.revert_to_original_skipping_status()
-        pass
+        num = 1.00001
+        result = self.func(num)
+        label = self.get_func_label(num)
+        rhs = TexMobject("= %.4f\\dots"%result)
+        rhs.next_to(label, RIGHT)
+        approx_group = VGroup(label, rhs)
+        approx_group.scale_to_fit_width(SPACE_WIDTH-2*MED_LARGE_BUFF)
+        approx_group.next_to(ORIGIN, UP, buff = MED_LARGE_BUFF)
+        approx_group.to_edge(RIGHT)
+
+        self.play(ReplacementTransform(
+            self.func_label.copy(),
+            label
+        ))
+        self.dither()
+        self.play(Write(rhs))
+        self.dither()
+
+        self.approx_group = approx_group
 
     def ask_about_systematic_process(self):
-        pass
+        morty = self.pi_creature
+        morty.change_mode("plain")
 
-    def mention_derivatives_as_helpful(self):
-        pass
+        self.func_1_group.save_state()
+
+        self.play(
+            FadeIn(morty),
+            FadeOut(VGroup(
+                *self.x_axis.numbers[:len(self.x_axis.numbers)/2]
+            ))
+        )
+        self.pi_creature_says(
+            morty, "Is there a \\\\ better way?",
+            bubble_kwargs = {
+                "height" : 3,
+                "width" : 4,
+            },
+        )
+        self.dither(2)
+        self.play(
+            RemovePiCreatureBubble(
+                morty, target_mode = "raise_left_hand",
+                look_at_arg = self.func_1_group
+            ),
+            self.func_1_group.scale, self.tex_scale_value,
+            self.func_1_group.move_to, 
+                morty.get_corner(UP+LEFT), DOWN+LEFT,
+            self.func_1_group.shift, MED_LARGE_BUFF*UP,
+        )
+        self.dither(2)
+        self.play(
+            morty.change_mode, "raise_right_hand",
+            morty.look, UP+RIGHT,
+            FadeOut(self.approx_group),
+            self.func_1_group.restore,
+            self.lim_group.next_to, 
+                morty.get_corner(UP+RIGHT), RIGHT,
+        )
+        self.dither(2)
+        self.play(
+            self.lim_group.scale, self.tex_scale_value,
+            self.lim_group.next_to, ORIGIN, UP,
+            self.lim_group.to_edge, LEFT,
+            morty.change_mode, "plain"
+        )
+        self.dither()
+        self.play(FadeOut(morty))
 
     def nudge_by_dx(self):
-        pass
+        nudged_v_line = self.get_vertical_line_to_graph(
+            x = 1 + self.dx,
+            graph = self.graph, 
+            line_class = DashedLine,
+            color = RED
+        )
+        brace = Brace(
+            VGroup(self.v_line, nudged_v_line), 
+            direction = UP,
+            min_num_quads = 1,
+        )
+        dx_label = brace.get_text("$dx$")
+        dx_label.highlight(self.dx_color)
 
-    def show_altered_numerator_and_denominator(self):
-        pass
+        rect, func_1, to_zero_over_zero = self.func_1_group
+        to, zero1, over, zero2 = to_zero_over_zero
+        self.remove(rect)
+        func_1_plus_dx = self.get_func_label(
+            "(1 + dx)"
+        )
+        lhs_ones = []
+        for part in func_1_plus_dx.get_parts_by_tex("(1 + dx)"):
+            VGroup(part[0], part[2], part[5]).highlight(WHITE)
+            VGroup(*part[3:5]).highlight(self.dx_color)
+            lhs_ones.append(part[1])
+        func_1_plus_dx.move_to(func_1, LEFT)
+
+        nudged_rhs = TexMobject(
+            "{0", "+ d\\big(\\sin(\\pi ", "x", ")\\big)",
+            "\\over \\,", 
+            "0", "+ d\\big(", "x", "^2 - 1\\big)}"
+        )
+        d_sine = VGroup(*nudged_rhs[1:4])
+        d_denom = VGroup(*nudged_rhs[-3:])
+        nudged_rhs.highlight_by_tex("x", self.x_color)
+        nudged_rhs.scale(self.tex_scale_value)
+        nudged_rhs.next_to(
+            func_1_plus_dx, RIGHT, 
+            buff = to.get_width()+MED_LARGE_BUFF
+        )
+        nudged_rhs_rect = BackgroundRectangle(
+            nudged_rhs, fill_opacity = 1
+        )
+
+        approx = TexMobject("\\approx")
+        approx.next_to(nudged_rhs, RIGHT)
+        d_over_d = TexMobject(
+            "{\\cos(\\pi", "x", ")", "\\pi", "\\, dx",
+            "\\over\\,",
+            "2\\,", "x", "\\, dx}"
+        )
+        d_over_d.scale(self.tex_scale_value)
+        cos_dx = VGroup(*d_over_d[:5])
+        two_x_dx = VGroup(*d_over_d[-3:])
+        d_over_d.highlight_by_tex("x", self.x_color)
+        d_over_d.highlight_by_tex("dx", self.dx_color)
+        d_over_d.next_to(approx, RIGHT)
+        rhs_ones = []
+        rhs_xs = d_over_d.get_parts_by_tex("x", substring = False)
+        for x in rhs_xs:
+            one = TexMobject("\\cdot \\! 1")
+            one.highlight(self.x_color)
+            one.scale(self.tex_scale_value)
+            one.move_to(x, DOWN+LEFT)
+            rhs_ones.append(one)
+
+        final_rhs = TexMobject("=", "\\frac{-\\pi}{2}")
+        final_rhs.scale(self.tex_scale_value)
+        final_rhs.next_to(d_over_d, RIGHT)
+
+        def replace_x_by_one(index):
+            self.play(FocusOn(lhs_ones[index]))
+            self.play(
+                Transform(
+                    lhs_ones[index].copy(),
+                    rhs_ones[index],
+                    path_arc = np.pi/2,
+                    run_time = 2,
+                    remover = True
+                ),
+                Transform(
+                    rhs_xs[index],
+                    rhs_ones[index],
+                    run_time = 2,
+                    rate_func = squish_rate_func(smooth, 0.5, 1)
+                )
+            )
+        def get_brace_shrink_anims():
+            return [
+                Transform(nudged_v_line, self.v_line),
+                brace.stretch_to_fit_width, 0.01,
+                brace.next_to, self.v_line, UP, SMALL_BUFF,
+                MaintainPositionRelativeTo(dx_label, brace),
+            ]
+
+
+        self.play(Indicate(self.v_line))
+        self.play(ReplacementTransform(
+            self.v_line.copy(),
+            nudged_v_line
+        ))
+        self.play(GrowFromCenter(brace))
+        self.play(Write(dx_label))
+        self.dither()
+        self.play(FocusOn(func_1))
+        self.play(Indicate(func_1))
+        self.play(
+            ReplacementTransform(func_1, func_1_plus_dx),
+            to_zero_over_zero.next_to, func_1_plus_dx, RIGHT
+        )
+        self.dither()
+        self.play(
+            FadeIn(nudged_rhs_rect),
+            ReplacementTransform(
+                over, nudged_rhs.get_part_by_tex("over")
+            ),
+            Write(d_sine),
+            *[
+                ReplacementTransform(VGroup(zero), part)
+                for zero, part in zip(
+                    [zero1, zero2],
+                    nudged_rhs.get_parts_by_tex("0")
+                )
+            ]
+        )
+        self.dither()
+        self.play(Write(d_denom))
+        self.dither()
+
+        #Bring in d_over_d
+        self.play(
+            Write(approx),
+            ReplacementTransform(
+                nudged_rhs.get_part_by_tex("over").copy(),
+                d_over_d.get_part_by_tex("over")
+            ),
+            ReplacementTransform(d_sine.copy(), cos_dx)
+        )
+        replace_x_by_one(0)
+        self.dither(2)
+
+        ##Emphasize meaning of approximation
+        cosine = VGroup(*cos_dx[:-1])
+        d_sine_ghost, cosine_ghost = [
+            mob.copy().set_fill(opacity = 0.2)
+            for mob in d_sine, cosine
+        ]
+        self.play(Indicate(d_sine))
+        self.play(Transform(
+            d_sine_ghost, cosine_ghost, 
+            run_time = 2,
+            remover = True,
+        ))
+        self.play(Indicate(cosine))
+        self.dither()
+        self.play(*[
+            ApplyWave(mob, direction = UP, amplitude = 0.1)
+            for mob in [
+                d_over_d.get_part_by_tex("dx"),
+                dx_label
+            ]
+        ])
+        self.play(
+            *get_brace_shrink_anims(),
+            rate_func = there_and_back,
+            run_time = 5
+        )    
+        self.dither()
+
+        self.play(ReplacementTransform(d_denom.copy(), two_x_dx))
+        self.dither()
+        replace_x_by_one(1)
+        self.dither()
+
+        #Cancel out dx's
+        dxs = VGroup(*d_over_d.get_parts_by_tex("dx"))
+        circles = VGroup(*[
+            Circle(color = GREEN).replace(dx).scale_in_place(1.3)
+            for dx in dxs
+        ])
+
+        self.play(ShowCreation(circles, run_time = 2))
+        self.dither(2)
+        self.play(*map(FadeOut, [circles, dxs]))
+        self.dither(2)
+
+        #Write final answer
+        final_ratio = final_rhs.get_part_by_tex("pi").copy()
+        final_ratio.add_to_back(BackgroundRectangle(final_ratio))
+        left_brace = Brace(self.v_line, LEFT)
+        self.play(Write(final_rhs))
+        self.play(
+            *get_brace_shrink_anims(),
+            run_time = 3
+        )
+        self.play(GrowFromCenter(left_brace))
+        self.play(
+            final_ratio.next_to, left_brace, LEFT, SMALL_BUFF
+        )
+        self.dither(2)
 
     ##
+
+    def create_pi_creature(self):
+        self.pi_creature = Mortimer().flip().to_corner(DOWN+LEFT)
+        return self.pi_creature
 
     def func(self, x):
         if abs(x) != 1:
@@ -2000,9 +2279,58 @@ class LHopitalExample(LimitCounterExample):
             ))
         return ed_group
 
+class DerivativeLimitReciprocity(Scene):
+    def construct(self):
+        arrow = Arrow(LEFT, RIGHT, color = WHITE)
+        lim = TexMobject("\\lim", "_{h", "\\to 0}")
+        lim.highlight_by_tex("h", GREEN)
+        lim.next_to(arrow, LEFT)
+        deriv = TexMobject("{df", "\\over\\,", "dx}")
+        deriv.highlight_by_tex("dx", GREEN)
+        deriv.highlight_by_tex("df", YELLOW)
+        deriv.next_to(arrow, RIGHT)
+
+        self.play(FadeIn(lim, submobject_mode = "lagged_start"))
+        self.play(ShowCreation(arrow))
+        self.play(FadeIn(deriv, submobject_mode = "lagged_start"))
+        self.dither()
+        self.play(Rotate(arrow, np.pi, run_time = 2))
+        self.dither()
+
+class NameLHopitalsRule(Scene):
+    def construct(self):
+        condition = TexMobject(
+            "{f", "(", "a", ")", 
+            "\\over\\,",
+            "g", "(", "a", ")}", 
+            "\\Rightarrow",
+            "{\\,0\\,", "\\over\\,", "0\\,}"
+        )
+        condition.to_edge(UP)
+        lim = TexMobject(
+            "\\lim_", "{x", " \\to", "a}",
+            "{f", "(", "x", ")", 
+            "\\over\\,",
+            "g", "(", "x", ")}",
+        )
+        rhs = TexMobject(
+            "=", 
+            "{ \\dfrac{df}{dx}", "(", "a", ")" 
+            "\\over\\,", 
+            "\\dfrac{dg}{dx}", "(", "a", ")}"
+        )
+        rhs.next_to(lim, RIGHT)
+        rule = VGroup(lim, rhs)
+        rule.center()
+        for tex_mob in condition, lim, rhs:
+            tex_mob.highlight_by_tex("f", BLUE)
+            tex_mob.highlight_by_tex("g", GREEN)
+            tex_mob.highlight_by_tex("a", RED, substring = False)
+            tex_mob.highlight_by_tex("a}", RED)
+            tex_mob.highlight_by_tex("arrow", WHITE)
 
 
-
+        self.add(condition, rule)
 
 
 
