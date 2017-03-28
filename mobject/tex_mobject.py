@@ -101,49 +101,28 @@ class TexMobject(SVGMobject):
         curr_index = 0
         self.expression_parts = list(self.args)
         for expr in self.args:
-            model = TexMobject(expr, **self.CONFIG)
-            new_index = curr_index + len(model.submobjects)
-            new_submobjects.append(VGroup(
-                *self.submobjects[curr_index:new_index]
-            ))
+            sub_tex_mob = TexMobject(expr, **self.CONFIG)
+            new_index = curr_index + len(sub_tex_mob.submobjects)
+            sub_tex_mob.submobjects = self.submobjects[curr_index:new_index]
+            new_submobjects.append(sub_tex_mob)
             curr_index = new_index
         self.submobjects = new_submobjects
-        self.original_submobjects = list(new_submobjects)
         return self
 
     def get_parts_by_tex(self, tex, substring = True):
         def test(tex1, tex2):
             return tex1 == tex2 or (substring and tex1 in tex2)
 
-        if not hasattr(self, "expression_parts"):
-            if test(tex, self.get_tex_string()):
-                return self
-            return []
-        return [
-            submob
-            for submob, part_tex in zip(
-                self.original_submobjects, 
-                self.expression_parts
-            )
-            if test(tex, part_tex)
-        ]
-
-    def copy(self):
-        ## The shallow copy method usually only cares about 
-        ## points and submobjects, but for TexMobjects with
-        ## multiple parts the original_submobject list should
-        ## be updated as well.
-        copy_mobject = SVGMobject.copy(self)
+        tex_submobjects = filter(
+            lambda m : isinstance(m, TexMobject),
+            self.submobject_family()
+        )
         if hasattr(self, "expression_parts"):
-            pairs = zip(
-                self.submobject_family(), 
-                copy_mobject.submobject_family()
-            )
-            for submob, copy_submob in pairs:
-                if submob in self.original_submobjects:
-                    index = self.original_submobjects.index(submob)
-                    copy_mobject.original_submobjects[index] = copy_submob
-        return copy_mobject
+            tex_submobjects.remove(self)
+        return filter(
+            lambda m : test(tex, m.get_tex_string()),
+            tex_submobjects
+        )
 
     def get_part_by_tex(self, tex, **kwargs):
         all_parts = self.get_parts_by_tex(tex, **kwargs)
