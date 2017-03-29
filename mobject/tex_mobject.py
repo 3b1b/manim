@@ -102,6 +102,7 @@ class TexMobject(SVGMobject):
         self.expression_parts = list(self.args)
         for expr in self.args:
             sub_tex_mob = TexMobject(expr, **self.CONFIG)
+            sub_tex_mob.tex_string = expr ##Want it unmodified
             new_index = curr_index + len(sub_tex_mob.submobjects)
             sub_tex_mob.submobjects = self.submobjects[curr_index:new_index]
             new_submobjects.append(sub_tex_mob)

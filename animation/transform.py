@@ -137,7 +137,8 @@ class ApplyMethod(Transform):
         )
         assert(isinstance(method.im_self, Mobject))
         method_kwargs = kwargs.get("method_kwargs", {})
-        target = copy.deepcopy(method)(*args, **method_kwargs)
+        target = method.im_self.copy()
+        method.im_func(target, *args, **method_kwargs)
         Transform.__init__(self, method.im_self, target, **kwargs)
 
 

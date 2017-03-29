@@ -1799,7 +1799,7 @@ class TheoryHeavy(TeacherStudentsScene):
         self.play(self.get_teacher().change_mode, "happy")
         self.dither(2)
 
-class LHopitalExample(LimitCounterExample, PiCreatureScene):
+class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, ReconfigurableScene):
     CONFIG = {
         "graph_origin" : ORIGIN,
         "x_axis_width" : 2*SPACE_WIDTH,
@@ -1817,18 +1817,34 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene):
         "hole_radius" : 0.07,
         "big_delta" : 0.5,
         "small_delta" : 0.01,
-        "dx" : 0.2,
-        "dx_color" : YELLOW,
+        "dx" : 0.06,
+        "dx_color" : WHITE,
         "tex_scale_value" : 0.9,
+        "sin_color" : GREEN,
+        "parabola_color" : YELLOW,
+        "zoomed_canvas_corner" : DOWN+LEFT,
+        "zoom_factor" : 10,
+        "zoomed_canvas_space_shape" : (5, 5),
+        "zoomed_canvas_corner_buff" : MED_SMALL_BUFF,
+        "zoomed_rect_center_coords" : (1 + 0.1, -0.03),
     }
     def construct(self):
-        self.remove(*self.get_pi_creatures()) 
         self.setup_axes()
         self.introduce_function()
         self.show_non_definedness_at_one()
         self.plug_in_value_close_to_one()
         self.ask_about_systematic_process()
-        self.nudge_by_dx()
+        self.show_graph_of_numerator_and_denominator()
+        self.zoom_in_to_trouble_point()
+        self.talk_through_sizes_of_nudges()
+        self.show_final_ratio()
+        self.show_final_height()
+
+    def setup(self):
+        PiCreatureScene.setup(self)
+        ZoomedScene.setup(self)
+        ReconfigurableScene.setup(self)
+        self.remove(*self.get_pi_creatures()) 
 
     def setup_axes(self):
         GraphScene.setup_axes(self)
@@ -1890,7 +1906,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene):
         func_1.next_to(self.func_label, DOWN, buff = MED_LARGE_BUFF)
         rhs = TexMobject("\\Rightarrow \\frac{0}{0}")
         rhs.next_to(func_1, RIGHT)
-        func_1_group = VGroup(func_1, rhs)
+        func_1_group = VGroup(func_1, *rhs)
         func_1_group.add_to_back(BackgroundRectangle(func_1_group))
 
         lim = TexMobject("\\lim", "_{x", "\\to 1}")
@@ -1898,7 +1914,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene):
         lim.move_to(self.func_label, LEFT)
         self.func_label.generate_target()
         self.func_label.target.next_to(lim, RIGHT)
-        equals_q = TexMobject("= ???")
+        equals_q = TexMobject("=", "???")
         equals_q.next_to(self.func_label.target, RIGHT)
 
         self.play(FadeIn(morty))
@@ -1964,7 +1980,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene):
 
         self.lim_group = VGroup(lim, self.func_label, equals_q)
         for part in self.lim_group:
-            part.add_to_back(BackgroundRectangle(part))
+            part.add_background_rectangle()
         self.func_1_group = func_1_group
         self.v_line = v_line
 
@@ -1972,6 +1988,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene):
         num = 1.00001
         result = self.func(num)
         label = self.get_func_label(num)
+        label.add_background_rectangle()
         rhs = TexMobject("= %.4f\\dots"%result)
         rhs.next_to(label, RIGHT)
         approx_group = VGroup(label, rhs)
@@ -1994,13 +2011,16 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene):
         morty.change_mode("plain")
 
         self.func_1_group.save_state()
+        to_fade = VGroup(
+            *self.x_axis.numbers[:len(self.x_axis.numbers)/2]
+        )
 
         self.play(
             FadeIn(morty),
-            FadeOut(VGroup(
-                *self.x_axis.numbers[:len(self.x_axis.numbers)/2]
-            ))
+            FadeOut(to_fade)
         )
+        self.x_axis.remove(*to_fade)
+
         self.pi_creature_says(
             morty, "Is there a \\\\ better way?",
             bubble_kwargs = {
@@ -2030,214 +2050,340 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene):
         )
         self.dither(2)
         self.play(
+            FadeOut(self.func_1_group),
             self.lim_group.scale, self.tex_scale_value,
-            self.lim_group.next_to, ORIGIN, UP,
-            self.lim_group.to_edge, LEFT,
+            self.lim_group.to_corner, UP+LEFT,
+            # self.lim_group.next_to, ORIGIN, UP, MED_LARGE_BUFF,
+            # self.lim_group.to_edge, LEFT,
             morty.change_mode, "plain"
         )
         self.dither()
         self.play(FadeOut(morty))
 
-    def nudge_by_dx(self):
-        nudged_v_line = self.get_vertical_line_to_graph(
-            x = 1 + self.dx,
-            graph = self.graph, 
-            line_class = DashedLine,
-            color = RED
+    def show_graph_of_numerator_and_denominator(self):
+        sine_graph = self.get_graph(
+            lambda x : np.sin(np.pi*x), 
+            color = self.sin_color
         )
-        brace = Brace(
-            VGroup(self.v_line, nudged_v_line), 
-            direction = UP,
-            min_num_quads = 1,
+        sine_label = self.get_graph_label(
+            sine_graph, "\\sin(\\pi x)",
+            x_val = 4.5,
+            direction = UP
         )
-        dx_label = brace.get_text("$dx$")
-        dx_label.highlight(self.dx_color)
-
-        rect, func_1, to_zero_over_zero = self.func_1_group
-        to, zero1, over, zero2 = to_zero_over_zero
-        self.remove(rect)
-        func_1_plus_dx = self.get_func_label(
-            "(1 + dx)"
+        parabola = self.get_graph(
+            lambda x : x**2 - 1,
+            color = self.parabola_color
         )
-        lhs_ones = []
-        for part in func_1_plus_dx.get_parts_by_tex("(1 + dx)"):
-            VGroup(part[0], part[2], part[5]).highlight(WHITE)
-            VGroup(*part[3:5]).highlight(self.dx_color)
-            lhs_ones.append(part[1])
-        func_1_plus_dx.move_to(func_1, LEFT)
-
-        nudged_rhs = TexMobject(
-            "{0", "+ d\\big(\\sin(\\pi ", "x", ")\\big)",
-            "\\over \\,", 
-            "0", "+ d\\big(", "x", "^2 - 1\\big)}"
+        parabola_label = self.get_graph_label(
+            parabola, "x^2 - 1"
         )
-        d_sine = VGroup(*nudged_rhs[1:4])
-        d_denom = VGroup(*nudged_rhs[-3:])
-        nudged_rhs.highlight_by_tex("x", self.x_color)
-        nudged_rhs.scale(self.tex_scale_value)
-        nudged_rhs.next_to(
-            func_1_plus_dx, RIGHT, 
-            buff = to.get_width()+MED_LARGE_BUFF
+        fader = VGroup(*[
+            Rectangle(
+                width = 2*SPACE_WIDTH,
+                height = 2*SPACE_HEIGHT,
+                stroke_width = 0,
+                fill_opacity = 0.75,
+                fill_color = BLACK,
+            ).next_to(self.coords_to_point(1, 0), vect, MED_LARGE_BUFF)
+            for vect in LEFT, RIGHT
+        ])
+
+        self.play(
+            ShowCreation(sine_graph, run_time = 2),
+            Animation(self.lim_group)
         )
-        nudged_rhs_rect = BackgroundRectangle(
-            nudged_rhs, fill_opacity = 1
-        )
+        self.play(FadeIn(sine_label))
+        self.dither()
+        self.play(ShowCreation(parabola, run_time = 2))
+        self.play(FadeIn(parabola_label))
+        self.dither()
+        self.play(FadeIn(fader, run_time = 2))
+        self.dither()
+        self.play(FadeOut(fader))
 
-        approx = TexMobject("\\approx")
-        approx.next_to(nudged_rhs, RIGHT)
-        d_over_d = TexMobject(
-            "{\\cos(\\pi", "x", ")", "\\pi", "\\, dx",
-            "\\over\\,",
-            "2\\,", "x", "\\, dx}"
-        )
-        d_over_d.scale(self.tex_scale_value)
-        cos_dx = VGroup(*d_over_d[:5])
-        two_x_dx = VGroup(*d_over_d[-3:])
-        d_over_d.highlight_by_tex("x", self.x_color)
-        d_over_d.highlight_by_tex("dx", self.dx_color)
-        d_over_d.next_to(approx, RIGHT)
-        rhs_ones = []
-        rhs_xs = d_over_d.get_parts_by_tex("x", substring = False)
-        for x in rhs_xs:
-            one = TexMobject("\\cdot \\! 1")
-            one.highlight(self.x_color)
-            one.scale(self.tex_scale_value)
-            one.move_to(x, DOWN+LEFT)
-            rhs_ones.append(one)
+        self.sine_graph = sine_graph
+        self.sine_label = sine_label
+        self.parabola = parabola
+        self.parabola_label = parabola_label
 
-        final_rhs = TexMobject("=", "\\frac{-\\pi}{2}")
-        final_rhs.scale(self.tex_scale_value)
-        final_rhs.next_to(d_over_d, RIGHT)
-
-        def replace_x_by_one(index):
-            self.play(FocusOn(lhs_ones[index]))
-            self.play(
-                Transform(
-                    lhs_ones[index].copy(),
-                    rhs_ones[index],
-                    path_arc = np.pi/2,
-                    run_time = 2,
-                    remover = True
-                ),
-                Transform(
-                    rhs_xs[index],
-                    rhs_ones[index],
-                    run_time = 2,
-                    rate_func = squish_rate_func(smooth, 0.5, 1)
-                )
-            )
-        def get_brace_shrink_anims():
-            return [
-                Transform(nudged_v_line, self.v_line),
-                brace.stretch_to_fit_width, 0.01,
-                brace.next_to, self.v_line, UP, SMALL_BUFF,
-                MaintainPositionRelativeTo(dx_label, brace),
-            ]
-
-
-        self.play(Indicate(self.v_line))
-        self.play(ReplacementTransform(
-            self.v_line.copy(),
-            nudged_v_line
+    def zoom_in_to_trouble_point(self):
+        self.activate_zooming()
+        lil_rect = self.little_rectangle
+        lil_rect.scale(self.zoom_factor)
+        lil_rect.move_to(self.coords_to_point(
+            *self.zoomed_rect_center_coords
         ))
-        self.play(GrowFromCenter(brace))
+        self.dither()
+        self.play(lil_rect.scale_in_place, 1./self.zoom_factor)
+        self.dither()
+
+    def talk_through_sizes_of_nudges(self):
+        arrow_tip_length = 0.15/self.zoom_factor
+        zoom_tex_scale_factor = min(
+            0.75/self.zoom_factor,
+            1.5*self.dx
+        )
+
+        dx_arrow = Arrow(
+            self.coords_to_point(1, 0),
+            self.coords_to_point(1+self.dx, 0),
+            tip_length = arrow_tip_length,
+            color = WHITE,
+        )
+        dx_label = TexMobject("dx")
+        dx_label.scale(zoom_tex_scale_factor)
+        dx_label.next_to(dx_arrow, UP, buff = SMALL_BUFF/self.zoom_factor)
+
+        d_sine_arrow, d_parabola_arrow = [
+            Arrow(
+                self.coords_to_point(1+self.dx, 0),
+                self.coords_to_point(
+                    1+self.dx, 
+                    graph.underlying_function(1+self.dx)
+                ),
+                tip_length = arrow_tip_length,
+                color = graph.get_color()
+            )
+            for graph in self.sine_graph, self.parabola
+        ]
+        tex_arrow_pairs = [
+            [("d\\big(", "\\sin(", "\\pi", "x", ")", "\\big)"), d_sine_arrow],
+            [("d\\big(", "x", "^2", "-1", "\\big)"), d_parabola_arrow],
+            [("\\cos(", "\\pi", "x", ")", "\\pi ", "\\, dx"), d_sine_arrow],
+            [("2", "x", "\\, dx"), d_parabola_arrow],
+        ]
+        d_labels = []
+        for tex_args, arrow in tex_arrow_pairs:
+            label = TexMobject(*tex_args)
+            label.highlight_by_tex("x", self.x_color)
+            label.highlight_by_tex("dx", self.dx_color)
+            label.scale(zoom_tex_scale_factor)
+            label.next_to(arrow, RIGHT, buff = SMALL_BUFF/self.zoom_factor)
+            d_labels.append(label)
+        d_sine_label, d_parabola_label, cos_dx, two_x_dx = d_labels
+
+        #Show dx        
+        self.play(ShowCreation(dx_arrow))
         self.play(Write(dx_label))
         self.dither()
-        self.play(FocusOn(func_1))
-        self.play(Indicate(func_1))
-        self.play(
-            ReplacementTransform(func_1, func_1_plus_dx),
-            to_zero_over_zero.next_to, func_1_plus_dx, RIGHT
-        )
-        self.dither()
-        self.play(
-            FadeIn(nudged_rhs_rect),
-            ReplacementTransform(
-                over, nudged_rhs.get_part_by_tex("over")
-            ),
-            Write(d_sine),
-            *[
-                ReplacementTransform(VGroup(zero), part)
-                for zero, part in zip(
-                    [zero1, zero2],
-                    nudged_rhs.get_parts_by_tex("0")
-                )
-            ]
-        )
-        self.dither()
-        self.play(Write(d_denom))
-        self.dither()
 
-        #Bring in d_over_d
-        self.play(
-            Write(approx),
-            ReplacementTransform(
-                nudged_rhs.get_part_by_tex("over").copy(),
-                d_over_d.get_part_by_tex("over")
-            ),
-            ReplacementTransform(d_sine.copy(), cos_dx)
-        )
-        replace_x_by_one(0)
-        self.dither(2)
-
-        ##Emphasize meaning of approximation
-        cosine = VGroup(*cos_dx[:-1])
-        d_sine_ghost, cosine_ghost = [
-            mob.copy().set_fill(opacity = 0.2)
-            for mob in d_sine, cosine
-        ]
-        self.play(Indicate(d_sine))
-        self.play(Transform(
-            d_sine_ghost, cosine_ghost, 
-            run_time = 2,
-            remover = True,
+        #Show d_sine bump
+        point = VectorizedPoint(self.coords_to_point(1, 0))
+        self.play(ReplacementTransform(point, d_sine_arrow))
+        self.dither()
+        self.play(ReplacementTransform(
+            VGroup(dx_label[1].copy()),
+            d_sine_label,
+            run_time = 2
         ))
-        self.play(Indicate(cosine))
-        self.dither()
-        self.play(*[
-            ApplyWave(mob, direction = UP, amplitude = 0.1)
-            for mob in [
-                d_over_d.get_part_by_tex("dx"),
-                dx_label
-            ]
-        ])
+        self.dither(2)
         self.play(
-            *get_brace_shrink_anims(),
-            rate_func = there_and_back,
-            run_time = 5
-        )    
+            d_sine_label.shift, d_sine_label.get_height()*UP
+        )
+        tex_pair_lists = [
+            [
+                ("sin", "cos"),
+                ("pi", "pi"),
+                ("x", "x"),
+                (")", ")"),
+            ],
+            [
+                ("pi", "\\pi "), #Space there is important, though hacky
+            ],
+            [
+                ("d\\big(", "dx"),
+                ("\\big)", "dx"),
+            ]
+        ]
+        for tex_pairs in tex_pair_lists:
+            self.play(*[
+                ReplacementTransform(
+                    d_sine_label.get_part_by_tex(t1).copy(), 
+                    cos_dx.get_part_by_tex(t2)
+                )
+                for t1, t2 in tex_pairs
+            ])
+            self.dither()
+        self.play(FadeOut(d_sine_label))
         self.dither()
 
-        self.play(ReplacementTransform(d_denom.copy(), two_x_dx))
+        #Substitute x = 1
+        self.substitute_x_equals_1(cos_dx, zoom_tex_scale_factor)
+
+        #Proportionality constant
+        cos_pi = VGroup(*cos_dx[:-1])
+        cos = VGroup(*cos_dx[:-2])
+        brace = Brace(Line(LEFT, RIGHT), UP)
+        brace.scale_to_fit_width(cos_pi.get_width())
+        brace.move_to(cos_pi.get_top(), DOWN)
+        brace_text = TextMobject(
+            """
+                \\begin{flushleft} 
+                Proportionality
+                constant 
+                \\end{flushleft}
+            """
+        )
+        brace_text.scale(0.9*zoom_tex_scale_factor)
+        brace_text.add_background_rectangle()
+        brace_text.next_to(brace, UP, SMALL_BUFF/self.zoom_factor, LEFT)
+        neg_one = TexMobject("-", "1")
+        neg_one.add_background_rectangle()
+        neg_one.scale(zoom_tex_scale_factor)
+
+        self.play(GrowFromCenter(brace))
+        self.play(Write(brace_text))
+        self.dither(2)
+        self.play(
+            brace.scale_to_fit_width, cos.get_width(),
+            brace.next_to, cos, UP, SMALL_BUFF/self.zoom_factor,
+            FadeOut(brace_text)
+        )
+        neg_one.next_to(brace, UP, SMALL_BUFF/self.zoom_factor)
+        self.play(Write(neg_one))
         self.dither()
-        replace_x_by_one(1)
+        self.play(FadeOut(cos))
+        neg = neg_one.get_part_by_tex("-").copy()
+        self.play(neg.next_to, cos_dx[-2], LEFT, SMALL_BUFF/self.zoom_factor)
+        self.play(*map(FadeOut, [neg_one, brace]))
+        neg_pi_dx = VGroup(neg, *cos_dx[-2:])
+        self.play(
+            neg_pi_dx.next_to, d_sine_arrow, 
+            RIGHT, SMALL_BUFF/self.zoom_factor
+        )
         self.dither()
 
-        #Cancel out dx's
-        dxs = VGroup(*d_over_d.get_parts_by_tex("dx"))
+        #Show d_parabola bump
+        point = VectorizedPoint(self.coords_to_point(1, 0))
+        self.play(ReplacementTransform(point, d_parabola_arrow))
+        self.play(ReplacementTransform(
+            VGroup(dx_label[1].copy()),
+            d_parabola_label,
+            run_time = 2
+        ))
+        self.dither(2)
+        self.play(
+            d_parabola_label.shift, d_parabola_label.get_height()*UP
+        )
+        tex_pair_lists = [
+            [
+                ("2", "2"),
+                ("x", "x"),
+            ],
+            [
+                ("d\\big(", "dx"),
+                ("\\big)", "dx"),
+            ]
+        ]
+        for tex_pairs in tex_pair_lists:
+            self.play(*[
+                ReplacementTransform(
+                    d_parabola_label.get_part_by_tex(t1).copy(), 
+                    two_x_dx.get_part_by_tex(t2)
+                )
+                for t1, t2 in tex_pairs
+            ])
+        self.dither()
+        self.play(FadeOut(d_parabola_label))
+        self.dither()
+
+        #Substitute x = 1
+        self.substitute_x_equals_1(two_x_dx, zoom_tex_scale_factor)
+
+    def substitute_x_equals_1(self, tex_mob, zoom_tex_scale_factor):
+        x = tex_mob.get_part_by_tex("x")
+        equation = TexMobject("x", "=", "1")
+        eq_x, equals, one = equation
+        equation.scale(zoom_tex_scale_factor)
+        equation.next_to(
+            x, UP, 
+            buff = MED_SMALL_BUFF/self.zoom_factor,
+            aligned_edge = LEFT
+        )
+        equation.highlight_by_tex("x", self.x_color)
+        equation.highlight_by_tex("1", self.x_color)
+        dot_one = TexMobject("\\cdot", "1")
+        dot_one.scale(zoom_tex_scale_factor)
+        dot_one.highlight(self.x_color)
+        dot_one.move_to(x, DOWN+LEFT)
+
+        self.play(x.move_to, eq_x)
+        self.dither()
+        self.play(
+            ReplacementTransform(x.copy(), eq_x),
+            Transform(x, one),
+            Write(equals)
+        )
+        self.dither()
+        self.play(Transform(x, dot_one))
+        self.dither()
+        self.play(*map(FadeOut, [eq_x, equals]))
+        self.dither()
+
+    def show_final_ratio(self):
+        lim, ratio, equals_q = self.lim_group
+        self.remove(self.lim_group)
+        self.add(*self.lim_group)
+        numerator = VGroup(*ratio[1][:3])
+        denominator = VGroup(*ratio[1][-2:])
+        rhs = TexMobject(
+            "\\approx", 
+            "{-\\pi", "\\, dx", "\\over \\,", "2", "\\, dx}"
+        )
+        rhs.add_background_rectangle()
+        rhs.move_to(equals_q, LEFT)
+        equals = TexMobject("=")
+        approx = rhs.get_part_by_tex("approx")
+        equals.move_to(approx)
+
+        dxs = VGroup(*rhs.get_parts_by_tex("dx"))
         circles = VGroup(*[
             Circle(color = GREEN).replace(dx).scale_in_place(1.3)
             for dx in dxs
         ])
 
-        self.play(ShowCreation(circles, run_time = 2))
-        self.dither(2)
-        self.play(*map(FadeOut, [circles, dxs]))
-        self.dither(2)
+        #Show numerator and denominator
+        self.play(FocusOn(ratio))
+        for mob in numerator, denominator:
+            self.play(ApplyWave(
+                mob, direction = UP+RIGHT, amplitude = 0.1
+            ))
+            self.dither()
+        self.play(ReplacementTransform(equals_q, rhs))
+        self.dither()
 
-        #Write final answer
-        final_ratio = final_rhs.get_part_by_tex("pi").copy()
-        final_ratio.add_to_back(BackgroundRectangle(final_ratio))
-        left_brace = Brace(self.v_line, LEFT)
-        self.play(Write(final_rhs))
-        self.play(
-            *get_brace_shrink_anims(),
-            run_time = 3
+        #Cancel dx's
+        self.play(*map(ShowCreation, circles), run_time = 2)
+        self.dither()
+        self.play(dxs.fade, 0.75, FadeOut(circles))
+        self.dither()
+
+        #Shrink dx
+        self.transition_to_alt_config(
+            transformation_kwargs = {"run_time" : 2},
+            dx = self.dx/10
         )
-        self.play(GrowFromCenter(left_brace))
-        self.play(
-            final_ratio.next_to, left_brace, LEFT, SMALL_BUFF
-        )
+        self.dither()
+        self.play(Transform(approx, equals))
+        self.play(Indicate(approx))
+        self.dither()
+
+        self.final_ratio = rhs
+
+    def show_final_height(self):
+        brace = Brace(self.v_line, LEFT)
+        height = brace.get_text("$\\dfrac{-\\pi}{2}$")
+        height.add_background_rectangle()
+        
+        self.disactivate_zooming()
+        self.play(*map(FadeOut, [
+            self.sine_graph, self.sine_label,
+            self.parabola, self.parabola_label,
+        ]) + [
+            Animation(self.final_ratio)
+        ])
+        self.play(GrowFromCenter(brace))
+        self.play(Write(height))
         self.dither(2)
 
     ##
@@ -2255,7 +2401,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene):
     def get_func_label(self, argument = "x"):
         in_tex = "{%s}"%str(argument)
         result = TexMobject(
-            "{\\sin(\\pi ", in_tex, ") \\over ",
+            "{\\sin(\\pi ", in_tex, ")", " \\over \\,",
             in_tex, "^2 - 1}"
         )
         result.highlight_by_tex(in_tex, self.x_color)
@@ -2297,40 +2443,355 @@ class DerivativeLimitReciprocity(Scene):
         self.play(Rotate(arrow, np.pi, run_time = 2))
         self.dither()
 
-class NameLHopitalsRule(Scene):
+class GeneralLHoptial(LHopitalExample):
+    CONFIG = {
+        "f_color" : GREEN,
+        "g_color" : YELLOW,
+        "a_value" : 2.5,
+        "zoomed_rect_center_coords" : (2.55, 0),
+        "zoom_factor" : 15,
+        "image_height" : 3,
+    }
     def construct(self):
-        condition = TexMobject(
-            "{f", "(", "a", ")", 
-            "\\over\\,",
-            "g", "(", "a", ")}", 
-            "\\Rightarrow",
-            "{\\,0\\,", "\\over\\,", "0\\,}"
+        self.setup_axes()
+        self.add_graphs()
+        self.zoom_in()
+        self.show_limit_in_symbols()
+        self.show_tiny_nudge()
+        self.show_derivative_ratio()
+        self.show_example()
+        self.show_bernoulli_and_lHopital()
+
+    def add_graphs(self):
+        f_graph = self.get_graph(self.f, self.f_color)
+        f_label = self.get_graph_label(
+            f_graph, "f(x)", 
+            x_val = 3, 
+            direction = RIGHT
         )
-        condition.to_edge(UP)
-        lim = TexMobject(
-            "\\lim_", "{x", " \\to", "a}",
-            "{f", "(", "x", ")", 
-            "\\over\\,",
-            "g", "(", "x", ")}",
+        g_graph = ParametricFunction(
+            lambda y : self.coords_to_point(np.exp(y)+self.a_value-1, y),
+            t_min = self.y_min,
+            t_max = self.y_max,
+            color = self.g_color
+        )
+        g_graph.underlying_function = self.g
+        g_label = self.get_graph_label(
+            g_graph, "g(x)", x_val = 4, direction = UP
+        )
+
+        a_dot = Dot(self.coords_to_point(self.a_value, 0))
+        a_label = TexMobject("x = a")
+        a_label.next_to(a_dot, UP, LARGE_BUFF)
+        a_arrow = Arrow(a_label.get_bottom(), a_dot, buff = SMALL_BUFF)
+        VGroup(a_dot, a_label, a_arrow).highlight(self.x_color)
+
+        self.play(ShowCreation(f_graph), Write(f_label))
+        self.play(ShowCreation(g_graph), Write(g_label))
+        self.dither()
+
+        self.play(
+            Write(a_label),
+            ShowCreation(a_arrow),
+            ShowCreation(a_dot),
+        )
+        self.dither()
+        self.play(*map(FadeOut, [a_label, a_arrow]))
+
+        self.a_dot = a_dot
+        self.f_graph = f_graph
+        self.f_label = f_label
+        self.g_graph = g_graph
+        self.g_label = g_label
+
+    def zoom_in(self):
+        self.activate_zooming()
+        lil_rect = self.little_rectangle
+        lil_rect.scale(self.zoom_factor)
+        lil_rect.move_to(self.coords_to_point(
+            *self.zoomed_rect_center_coords
+        ))
+        self.dither()
+        self.play(
+            lil_rect.scale_in_place, 1./self.zoom_factor,
+            self.a_dot.scale_in_place, 1./self.zoom_factor,
+            run_time = 3,
+        )
+        self.dither()
+
+    def show_limit_in_symbols(self):
+        frac_a = self.get_frac("a", self.x_color)
+        frac_x = self.get_frac("x")
+        lim = TexMobject("\\lim", "_{x", "\\to", "a}")
+        lim.highlight_by_tex("a", self.x_color)
+        equals_zero_over_zero = TexMobject(
+            "=", "{\\, 0 \\,", "\\over \\,", "0 \\,}"
+        )
+        equals_q = TexMobject(*"=???")
+        frac_x.next_to(lim, RIGHT, SMALL_BUFF)
+        VGroup(lim, frac_x).to_corner(UP+LEFT)
+        frac_a.move_to(frac_x)
+        equals_zero_over_zero.next_to(frac_a, RIGHT)
+        equals_q.next_to(frac_a, RIGHT)
+
+        self.play(
+            ReplacementTransform(
+                VGroup(*self.f_label).copy(), 
+                VGroup(frac_a.numerator)
+            ),
+            ReplacementTransform(
+                VGroup(*self.g_label).copy(),
+                VGroup(frac_a.denominator)
+            ),
+            Write(frac_a.over),
+            run_time = 2
+        )
+        self.dither()
+        self.play(Write(equals_zero_over_zero))
+        self.dither(2)
+        self.play(
+            ReplacementTransform(
+                VGroup(*frac_a.get_parts_by_tex("a")),
+                VGroup(lim.get_part_by_tex("a"))
+            )
+        )
+        self.play(Write(VGroup(*lim[:-1])))
+        self.play(ReplacementTransform(
+            VGroup(*lim.get_parts_by_tex("x")).copy(),
+            VGroup(*frac_x.get_parts_by_tex("x"))
+        ))
+        self.play(ReplacementTransform(
+            equals_zero_over_zero, equals_q
+        ))
+        self.dither()
+
+        self.remove(frac_a)
+        self.add(frac_x)
+        self.frac_x = frac_x
+        self.remove(equals_q)
+        self.add(*equals_q)
+        self.equals_q = equals_q
+
+    def show_tiny_nudge(self):
+        arrow_tip_length = 0.15/self.zoom_factor
+        zoom_tex_scale_factor = min(
+            0.75/self.zoom_factor,
+            1.5*self.dx
+        )
+        z_small_buff = SMALL_BUFF/self.zoom_factor
+
+        dx_arrow = Arrow(
+            self.coords_to_point(self.a_value, 0),
+            self.coords_to_point(self.a_value+self.dx, 0),
+            tip_length = arrow_tip_length,
+            color = WHITE,
+        )
+        dx_label = TexMobject("dx")
+        dx_label.scale(zoom_tex_scale_factor)
+        dx_label.next_to(dx_arrow, UP, buff = z_small_buff)
+        dx_label.shift(z_small_buff*RIGHT)
+
+        df_arrow, dg_arrow = [
+            Arrow(
+                self.coords_to_point(self.a_value+self.dx, 0),
+                self.coords_to_point(
+                    self.a_value+self.dx, 
+                    graph.underlying_function(self.a_value+self.dx)
+                ),
+                tip_length = arrow_tip_length,
+                color = graph.get_color()
+            )
+            for graph in self.f_graph, self.g_graph
+        ]
+        v_labels = []
+        for char, arrow in ("f", df_arrow), ("g", dg_arrow):
+            label = TexMobject(
+                "\\frac{d%s}{dx}"%char, "(", "a", ")", "\\,dx"
+            )
+            label.scale(zoom_tex_scale_factor)
+            label.highlight_by_tex("a", self.x_color)
+            label.highlight_by_tex("frac", arrow.get_color())
+            label.next_to(arrow, RIGHT, z_small_buff)
+            v_labels.append(label)
+        df_label, dg_label = v_labels
+
+        self.play(ShowCreation(dx_arrow))
+        self.play(Write(dx_label))
+        self.play(Indicate(dx_label))
+        self.dither(2)
+
+        self.play(ShowCreation(df_arrow))
+        self.play(Write(df_label))
+        self.dither()
+
+        self.play(ShowCreation(dg_arrow))
+        self.play(Write(dg_label))
+        self.dither()
+
+    def show_derivative_ratio(self):
+        q_marks = VGroup(*self.equals_q[1:])
+
+        deriv_ratio = TexMobject(
+            "{ \\frac{df}{dx}", "(", "a", ")", "\\,dx",
+            "\\over \\,",
+            "\\frac{dg}{dx}", "(", "a", ")", "\\,dx}",
+        )
+        deriv_ratio.highlight_by_tex("a", self.x_color)
+        deriv_ratio.highlight_by_tex("df", self.f_color)
+        deriv_ratio.highlight_by_tex("dg", self.g_color)
+        deriv_ratio.move_to(q_marks, LEFT)
+
+        dxs = VGroup(*deriv_ratio.get_parts_by_tex("\\,dx"))
+        circles = VGroup(*[
+            Circle(color = GREEN).replace(dx).scale_in_place(1.3)
+            for dx in dxs
+        ])
+
+        self.play(FadeOut(q_marks))
+        self.play(Write(deriv_ratio))
+        self.dither(2)
+
+        self.play(FadeIn(circles))
+        self.dither()
+        self.play(FadeOut(circles), dxs.fade, 0.75)
+        self.dither(2)
+
+        self.transition_to_alt_config(
+            transformation_kwargs = {"run_time" : 2},
+            dx = self.dx/10,
+        )
+        self.dither()
+
+    def show_example(self):
+        lhs = TexMobject(
+            "\\lim", "_{x \\to", "0}",
+            "{\\sin(", "x", ")", "\\over \\,", "x}",
         )
         rhs = TexMobject(
             "=", 
-            "{ \\dfrac{df}{dx}", "(", "a", ")" 
-            "\\over\\,", 
-            "\\dfrac{dg}{dx}", "(", "a", ")}"
+            "{\\cos(", "0", ")", "\\over \\,", "1}",
+            "=", "1"
         )
-        rhs.next_to(lim, RIGHT)
-        rule = VGroup(lim, rhs)
-        rule.center()
-        for tex_mob in condition, lim, rhs:
-            tex_mob.highlight_by_tex("f", BLUE)
-            tex_mob.highlight_by_tex("g", GREEN)
-            tex_mob.highlight_by_tex("a", RED, substring = False)
-            tex_mob.highlight_by_tex("a}", RED)
-            tex_mob.highlight_by_tex("arrow", WHITE)
+        rhs.next_to(lhs, RIGHT)
+        equation = VGroup(lhs, rhs)
+        equation.to_corner(UP+RIGHT)
+        for part in equation:
+            part.highlight_by_tex("0", self.x_color)
+        brace = Brace(lhs, DOWN)
+        brace_text = brace.get_text("Looks like 0/0")
+        brace_text.add_background_rectangle()
 
+        name = TextMobject(
+            "``", "L'Hôpital's", " rule", "''",
+            arg_separator = ""
+        )
+        name.shift(SPACE_WIDTH*RIGHT/2)
+        name.to_edge(UP)
 
-        self.add(condition, rule)
+        self.play(Write(lhs))
+        self.dither()
+        self.play(
+            GrowFromCenter(brace),
+            Write(brace_text)
+        )
+        self.dither()
+        self.play(Write(rhs[0]), ReplacementTransform(
+            VGroup(*lhs[3:6]).copy(),
+            VGroup(*rhs[1:4])
+        ))
+        self.dither()
+        self.play(ReplacementTransform(
+            VGroup(*lhs[6:8]).copy(),
+            VGroup(*rhs[4:6]),
+        ))
+        self.dither()
+        self.play(Write(VGroup(*rhs[6:])))
+        self.dither(2)
+
+        ##Slide away
+        example = VGroup(lhs, rhs, brace, brace_text)
+        self.play(
+            example.scale, 0.7,
+            example.to_corner, DOWN+RIGHT, SMALL_BUFF,
+            path_arc = 7*np.pi/6,
+        )
+        self.play(Write(name))
+        self.dither(2)
+
+        self.rule_name = name
+
+    def show_bernoulli_and_lHopital(self):
+        lhopital_name = self.rule_name.get_part_by_tex("L'Hôpital's")
+        strike = Line(
+            lhopital_name.get_left(),
+            lhopital_name.get_right(),
+            color = RED
+        )
+        bernoulli_name = TextMobject("Bernoulli's")
+        bernoulli_name.next_to(lhopital_name, DOWN)
+
+        bernoulli_image = ImageMobject("Johann_Bernoulli2")
+        lhopital_image = ImageMobject("Guillaume_de_L'Hopital")
+        for image in bernoulli_image, lhopital_image:
+            image.scale_to_fit_height(self.image_height)
+            image.to_edge(UP)
+
+        arrow = Arrow(ORIGIN, DOWN, buff = 0, color = GREEN)
+        arrow.next_to(lhopital_image, DOWN, buff = SMALL_BUFF)
+        dollars = VGroup(*[TexMobject("\\$") for x in range(5)])
+        for dollar, alpha in zip(dollars, np.linspace(0, 1, len(dollars))):
+            angle = alpha*np.pi
+            dollar.move_to(np.sin(angle)*RIGHT + np.cos(angle)*UP)
+        dollars.highlight(GREEN)
+        dollars.next_to(arrow, RIGHT, MED_LARGE_BUFF)
+        dollars[0].set_fill(opacity = 0)
+        dollars.save_state()
+
+        self.play(ShowCreation(strike))
+        self.play(
+            Write(bernoulli_name),
+            FadeIn(bernoulli_image)
+        )
+        self.dither()
+        self.play(
+            FadeIn(lhopital_image),
+            bernoulli_image.next_to, arrow, DOWN, SMALL_BUFF,
+            ShowCreation(arrow),
+            FadeIn(dollars)
+        )
+
+        for x in range(10):
+            dollars.restore()
+            self.play(*[
+                Transform(*pair)
+                for pair in zip(dollars, dollars[1:])
+            ] + [
+                FadeOut(dollars[-1])
+            ])
+
+    ####
+
+    def f(self, x):
+        return -0.1*(x-self.a_value)*x*(x+4.5)
+
+    def g(self, x):
+        return np.log(x-self.a_value+1)
+
+    def get_frac(self, input_tex, color = WHITE):
+        result = TexMobject(
+            "{f", "(", input_tex, ")", "\\over \\,",
+            "g", "(", input_tex, ")}"
+        )
+        result.highlight_by_tex("f", self.f_color)
+        result.highlight_by_tex("g", self.g_color)
+        result.highlight_by_tex(input_tex, color)
+
+        result.numerator = VGroup(*result[:4])
+        result.denominator = VGroup(*result[-4:])
+        result.over = result.get_part_by_tex("over")
+
+        return result
+
 
 
 
