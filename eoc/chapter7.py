@@ -88,22 +88,21 @@ class ThisVideo(TeacherStudentsScene):
             tex_mob = tex_mobs[index]
             self.play(ApplyWave(
                 videos,
-                apply_function_kwargs = {"maintain_smoothness" : False}
+                direction = DOWN,
             ))
             self.play(
                 GrowFromCenter(brace),
                 Write(tex_mob, run_time = 2)
             )
-            self.dither()
-        self.play(self.get_teacher().change_mode, "raise_right_hand")
         self.play(
             this_video.highlight, YELLOW,
-            GrowFromCenter(this_brace)
+            GrowFromCenter(this_brace),
+            self.get_teacher().change_mode, "raise_right_hand",
+            self.get_teacher().look_at, this_video
         )
         self.play(Write(this_tex))
-        self.dither()
-        self.play(ShowCreation(lim_to_deriv_arrow))
-        self.change_student_modes(*["happy"]*3)
+        self.dither(2)
+        self.play(self.get_teacher().change_mode, "sassy")
         self.dither(2)
 
 class LimitJustMeansApproach(PiCreatureScene):
@@ -764,6 +763,30 @@ class OtherViewsOfDx(TeacherStudentsScene):
         )
         self.dither(3)
 
+class GoalsListed(Scene):
+    def construct(self):
+        goals = VGroup(*[
+            TextMobject("Goal %d: %s"%(d, s))
+            for d, s in zip(it.count(1), [
+                "Formal definition of a derivative",
+                "$(\\epsilon, \\delta)$ definition of limits",
+                "L'Hôpital's rule",
+            ])
+        ])
+        goals.arrange_submobjects(
+            DOWN, buff = LARGE_BUFF, aligned_edge = LEFT
+        )
+
+        for goal in goals:
+            self.play(FadeIn(goal))
+            self.dither()
+        for i, goal in enumerate(goals):
+            anims = [goal.highlight, YELLOW]
+            if i > 0:
+                anims += [goals[i-1].highlight, WHITE]
+            self.play(*anims)
+            self.dither()
+
 class GraphLimitExpression(GraphScene):
     CONFIG = {
         "start_x" : 2,
@@ -821,18 +844,29 @@ class GraphLimitExpression(GraphScene):
         brace = Brace(VGroup(limit, expression.target))
         derivative.next_to(brace, DOWN)
 
-        graph = self.get_graph(self.func, color = BLUE)
+
 
         indices = [0, 6, 11, 13]
-        for i, j in zip(indices, indices[1:]):
-            group = VGroup(*expression[i:j])
-            self.play(FadeIn(
-                group,
+        funcs = [
+            lambda h : (2+h)**3,
+            lambda h : (2+h)**3 - 2**3,
+            self.func
+        ]
+        graph = None
+        for i, j, func in zip(indices, indices[1:], funcs):
+            anims = [FadeIn(
+                VGroup(*expression[i:j]),
                 submobject_mode = "lagged_start",
                 lag_factor = 1.5
-            ))
+            )]
+            new_graph = self.get_graph(func, color = BLUE)
+            if graph is None:
+                graph = new_graph
+                anims.append(FadeIn(graph))
+            else:
+                anims.append(Transform(graph, new_graph))
+            self.play(*anims)
             self.dither()
-        self.play(ShowCreation(graph))
         self.dither()
         self.play(
             MoveToTarget(expression),
@@ -1758,6 +1792,7 @@ class TheoryHeavy(TeacherStudentsScene):
                 for pi in self.get_pi_creatures()
             ]
         )
+        student.bubble = None
         part_tex_pairs = [
             ("df", "f"),
             ("over", "+"),
@@ -2445,7 +2480,7 @@ class DerivativeLimitReciprocity(Scene):
 
 class GeneralLHoptial(LHopitalExample):
     CONFIG = {
-        "f_color" : GREEN,
+        "f_color" : BLUE,
         "g_color" : YELLOW,
         "a_value" : 2.5,
         "zoomed_rect_center_coords" : (2.55, 0),
@@ -2792,13 +2827,143 @@ class GeneralLHoptial(LHopitalExample):
 
         return result
 
+class CannotUseLHopital(TeacherStudentsScene):
+    def construct(self):
+        deriv = TexMobject(
+            "{d(e^x)", "\\over \\,", "dx}", "(", "x", ")", "=",
+            "\\lim", "_{h", "\\to 0}",
+            "{e^{", "x", "+", "h}", 
+            "-", "e^", "x",
+            "\\over \\,", "h}"
+        )
+        deriv.to_edge(UP)
+        deriv.highlight_by_tex("x", RED)
+        deriv.highlight_by_tex("dx", GREEN)
+        deriv.highlight_by_tex("h", GREEN)
+        deriv.highlight_by_tex("e^", YELLOW)
 
+        self.play(
+            Write(deriv),
+            *it.chain(*[
+                [pi.change_mode, "pondering", pi.look_at, deriv]
+                for pi in self.get_pi_creatures()
+            ])
+        )
+        self.dither()
+        self.student_says(
+            "Use L'Hôpital's rule!", 
+            target_mode = "hooray"
+        )
+        self.dither()
+        answer = TexMobject(
+            "\\text{That requires knowing }",
+            "{d(e^x)", "\\over \\,", "dx}"
+        )
+        answer.highlight_by_tex("e^", YELLOW)
+        answer.highlight_by_tex("dx", GREEN)
+        self.teacher_says(
+            answer,
+            bubble_kwargs = {"height" : 2.5},
+            target_mode = "hesitant"
+        )
+        self.change_student_modes(*["confused"]*3)
+        self.dither(3)
 
+class NextVideo(TeacherStudentsScene):
+    def construct(self):
+        series = VideoSeries()
+        series.to_edge(UP)
+        next_video = series[7]
+        brace = Brace(next_video, DOWN)
 
+        integral = TexMobject("\\int", "f(x)", "dx")
+        ftc = TexMobject(
+            "F(b)", "-", "F(a)", "=", "\\int_a^b", 
+            "{dF", "\\over \\,", "dx}", "(x)", "dx"
+        )
+        for tex_mob in integral, ftc:
+            tex_mob.highlight_by_tex("dx", GREEN)
+            tex_mob.highlight_by_tex("f", YELLOW)
+            tex_mob.highlight_by_tex("F", YELLOW)
+            tex_mob.next_to(brace, DOWN)
 
+        self.add(series)
+        self.play(
+            GrowFromCenter(brace),
+            next_video.highlight, YELLOW,
+            self.get_teacher().change_mode, "raise_right_hand",
+            self.get_teacher().look_at, next_video
+        )
+        self.play(Write(integral))
+        self.dither(2)
+        self.play(*[
+            ReplacementTransform(
+                VGroup(*integral.get_parts_by_tex(p1)),
+                VGroup(*ftc.get_parts_by_tex(p2)),
+                run_time = 2,
+                path_arc = np.pi/2,
+                rate_func = squish_rate_func(smooth, alpha, alpha+0.5)
+            )
+            for alpha, (p1, p2) in zip(np.linspace(0, 0.5, 3), [
+                ("int", "int"),
+                ("f", "F"),
+                ("dx", "dx"),
+            ])
+        ]+[
+            Write(VGroup(*ftc.get_parts_by_tex(part)))
+            for part in "-", "=", "over", "(x)"
+        ])
+        self.change_student_modes(*["pondering"]*3)
+        self.dither(3)
 
+class Chapter7PatreonThanks(PatreonThanks):
+    CONFIG = {
+        "specific_patrons" : [
+            "Ali  Yahya",
+            "Meshal  Alshammari",
+            "CrypticSwarm    ",
+            "Kaustuv DeBiswas",
+            "Kathryn Schmiedicke",
+            "Nathan Pellegrin",
+            "Karan Bhargava", 
+            "Justin Helps",
+            "Ankit   Agarwal",
+            "Yu  Jun",
+            "Dave    Nicponski",
+            "Damion  Kistler",
+            "Juan    Benet",
+            "Othman  Alikhan",
+            "Justin Helps",
+            "Markus  Persson",
+            "Dan Buchoff",
+            "Derek   Dai",
+            "Joseph  John Cox",
+            "Luc Ritchie",
+            "Mustafa Mahdi",
+            "Daan Smedinga",
+            "Jonathan Eppele",
+            "Albert Nguyen",
+            "Nils Schneider",
+            "Mustafa Mahdi",
+            "Mathew Bramson",
+            "Guido   Gambardella",
+            "Jerry   Ling",
+            "Mark    Govea",
+            "Vecht",
+            "Shimin Kuang",
+            "Rish    Kundalia",
+            "Achille Brighton",
+            "Ripta   Pasay",
+            "Felipe  Diniz",
+        ]
+    }
 
-
+class Thumbnail(Scene):
+    def construct(self):
+        lim = TexMobject("\\lim", "_{h", "\\to 0}")
+        lim.highlight_by_tex("h", GREEN)
+        lim.scale_to_fit_height(5)
+        self.add(lim)
 
 
 

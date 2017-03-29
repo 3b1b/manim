@@ -356,6 +356,9 @@ class Succession(Animation):
         self.last_index = index
 
 class AnimationGroup(Animation):
+    CONFIG = {
+        "rate_func" : None
+    }
     def __init__(self, *sub_anims, **kwargs):
         digest_config(self, kwargs, locals())
         sync_animation_run_times_and_rate_funcs(*sub_anims, **kwargs)
@@ -363,7 +366,7 @@ class AnimationGroup(Animation):
         everything = Mobject(*[a.mobject for a in sub_anims])
         Animation.__init__(self, everything, **kwargs)
 
-    def update(self, alpha):
+    def update_mobject(self, alpha):
         for anim in self.sub_anims:
             anim.update(alpha)
 
