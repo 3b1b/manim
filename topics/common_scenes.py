@@ -12,17 +12,10 @@ from topics.objects import PatreonLogo
 
 class OpeningQuote(Scene):
     CONFIG = {
-        "quote" : [
-            """The art of doing mathematics is finding
-            that """, "special case", 
-            """that contains all the 
-            germs of generality."""
-        ],
+        "quote" : [],
         "quote_arg_separator" : " ",
-        "highlighted_quote_terms" : {
-            "special case" : BLUE
-        },
-        "author" : "David Hilbert",
+        "highlighted_quote_terms" : {},
+        "author" : "",
         "fade_in_kwargs" : {
             "submobject_mode" : "lagged_start",
             "rate_func" : None,
