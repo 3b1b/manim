@@ -543,7 +543,7 @@ class PiCreatureScene(Scene):
         if pi_creatures is None:
             pi_creatures = self.get_pi_creatures()
         self.play(*it.chain(*[
-            [pi.look_at, self.get_teacher().eyes]
+            [pi.look_at, thing_to_look_at]
             for pi in pi_creatures
         ]))
 

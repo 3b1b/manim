@@ -208,7 +208,13 @@ class VMobject(Mobject):
 
     def append_vectorized_mobject(self, vectorized_mobject):
         new_points = list(vectorized_mobject.points)
-        self.add_control_points(2*[new_points[0]] + new_points)
+        if len(new_points) == 0:
+            return
+        if self.get_num_points() == 0:
+            self.start_at(new_points[0])
+            self.add_control_points(new_points[1:])
+        else:
+            self.add_control_points(2*[new_points[0]] + new_points)
         return self
 
     def get_subpath_mobjects(self):

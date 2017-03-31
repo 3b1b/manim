@@ -32,16 +32,18 @@ class CircleScene(PiCreatureScene):
         "radius" : 1.5,
         "stroke_color" : WHITE,
         "fill_color" : BLUE_E,
-        "fill_opacity" : 0.5,
+        "fill_opacity" : 0.75,
         "radial_line_color" : MAROON_B,
         "outer_ring_color" : GREEN_E,
+        "ring_colors" : [BLUE, GREEN],
         "dR" : 0.1,
         "dR_color" : YELLOW,
         "unwrapped_tip" : ORIGIN,
         "include_pi_creature" : False,
-        "circle_corner" : UP+LEFT
+        "circle_corner" : UP+LEFT,
     }
     def setup(self):
+        PiCreatureScene.setup(self)
         self.circle = Circle(
             radius = self.radius,
             stroke_color = self.stroke_color,
@@ -57,19 +59,13 @@ class CircleScene(PiCreatureScene):
         self.radius_brace = Brace(self.radius_line, buff = SMALL_BUFF)
         self.radius_label = self.radius_brace.get_text("$R$", buff = SMALL_BUFF)
 
-        self.add(
-            self.circle, self.radius_line, 
-            self.radius_brace, self.radius_label
+        self.radius_group = VGroup(
+            self.radius_line, self.radius_brace, self.radius_label
         )
+        self.add(self.circle, *self.radius_group)
 
-        self.pi_creature = self.create_pi_creature()
-        if self.include_pi_creature:
-            self.add(self.pi_creature)
-        else:
-            self.pi_creature.set_fill(opacity = 0)
-
-    def create_pi_creature(self):
-        return Mortimer().to_corner(DOWN+RIGHT)
+        if not self.include_pi_creature:
+            self.remove(self.get_primary_pi_creature())
 
     def introduce_circle(self, added_anims = []):
         self.remove(self.circle)
@@ -150,6 +146,18 @@ class CircleScene(PiCreatureScene):
         ring.dR = dR
         return ring
 
+    def get_rings(self, **kwargs):
+        dR = kwargs.get("dR", self.dR)
+        colors = kwargs.get("colors", self.ring_colors)
+        radii = np.arange(0, self.radius, dR)
+        colors = color_gradient(colors, len(radii))
+
+        rings = VGroup(*[
+            self.get_ring(radius, dR = dR, color = color)
+            for radius, color in zip(radii, colors)
+        ])
+        return rings
+
     def get_outer_ring(self):
         return self.get_ring(
             radius = self.radius, dR = self.dR,
@@ -197,11 +205,20 @@ class CircleScene(PiCreatureScene):
         )
         result.move_to(self.unwrapped_tip, aligned_edge = DOWN)
         result.shift(R_plus_dr*DOWN)
-        result.to_edge(to_edge)
+        if to_edge is not None:
+            result.to_edge(to_edge)
 
         return result
 
+    def create_pi_creature(self):
+        self.pi_creature = Randolph(color = BLUE_C)
+        self.pi_creature.to_corner(DOWN+LEFT)
+        return self.pi_creature
+
+
 #############
+
+#revert_to_original_skipping_status
 
 class Chapter1OpeningQuote(OpeningQuote):
     CONFIG = {
@@ -218,20 +235,569 @@ class Chapter1OpeningQuote(OpeningQuote):
         "author" : "David Hilbert",
     }
 
+class Introduction(TeacherStudentsScene):
+    def construct(self):
+        self.show_series()
+        self.show_many_facts()
+        self.invent_calculus()
+
+    def show_series(self):
+        series = VideoSeries()
+        series.to_edge(UP)
+        this_video = series[0]
+        this_video.highlight(YELLOW)
+        this_video.save_state()
+        this_video.set_fill(opacity = 0)
+        this_video.center()
+        this_video.scale_to_fit_height(2*SPACE_HEIGHT)
+        self.this_video = this_video
+
+
+        words = TextMobject(
+            "Welcome to \\\\",
+            "Essence of calculus"
+        )
+        words.highlight_by_tex("Essence of calculus", YELLOW)
+
+        self.teacher.change_mode("happy")
+        self.play(
+            FadeIn(
+                series,
+                submobject_mode = "lagged_start",
+                run_time = 2
+            ),
+            Blink(self.get_teacher())
+        )
+        self.teacher_says(words, target_mode = "hooray")
+        self.change_student_modes(
+            *["hooray"]*3,
+            look_at_arg = series[1].get_left(),
+            added_anims = [
+                ApplyMethod(this_video.restore, run_time = 3),
+            ]
+        )
+        self.play(
+            ApplyWave(series, direction = DOWN, run_time = 2),
+            Animation(self.teacher.bubble),
+            Animation(self.teacher.bubble.content),
+        )
+
+        essence_words = words.get_part_by_tex("Essence").copy()
+        self.play(
+            FadeOut(self.teacher.bubble),
+            FadeOut(self.teacher.bubble.content),
+            essence_words.next_to, series, DOWN,
+            *[
+                ApplyMethod(pi.change_mode, "pondering")
+                for pi in self.get_pi_creatures()
+            ]
+        )
+        self.dither(3)
+
+        self.series = series
+        self.essence_words = essence_words
+
+    def show_many_facts(self):
+        rules = list(it.starmap(TexMobject, [
+            ("{d(", "x", "^2)", "\\over \\,", "dx}", "=", "2", "x"),
+            (
+                "d(", "f", "g", ")", "=", 
+                "f", "dg", "+", "g", "df",
+            ),
+            (
+                "F(x)", "=", "\\int_0^x", 
+                "\\frac{dF}{dg}(t)\\,", "dt"
+            ),
+            (
+                "f(x)", "=", "\\sum_{n = 0}^\\infty",
+                "f^{(n)}(a)", "\\frac{(x-a)^n}{n!}"
+            ),
+        ]))
+        video_indices = [2, 3, 7, 10]
+        tex_to_color = [
+            ("x", BLUE),
+            ("f", BLUE),
+            ("df", BLUE),
+            ("g", YELLOW),
+            ("dg", YELLOW),
+            ("f(x)", BLUE),
+            ( "f^{(n)}(a)", BLUE),
+        ]
+
+        for rule in rules:
+            for tex, color in tex_to_color:
+                rule.highlight_by_tex(tex, color, substring = False)
+            rule.next_to(self.teacher.get_corner(UP+LEFT), UP)
+            rule.shift_onto_screen()
+
+        student_index = 1
+        student = self.get_students()[student_index]
+        self.change_student_modes(
+            "pondering", "sassy", "pondering",
+            look_at_arg = self.teacher.eyes,
+            added_anims = [
+                self.teacher.change_mode, "plain"
+            ]
+        )
+        self.dither(2)
+        self.play(
+            Write(rules[0]),
+            self.teacher.change_mode, "raise_right_hand",
+        )
+        self.dither()
+        alt_rules_list = list(rules[1:]) + [VectorizedPoint(self.teacher.eyes.get_top())]
+        for last_rule, rule, video_index in zip(rules, alt_rules_list, video_indices):
+            video = self.series[video_index]
+            self.play(
+                last_rule.replace, video,
+                FadeIn(rule),
+            )
+            self.play(Animation(rule))
+            self.dither()
+        self.play(
+            self.teacher.change_mode, "happy",
+            self.teacher.look_at, student.eyes
+        )
+
+    def invent_calculus(self):
+        student = self.get_students()[1]
+        creatures = self.get_pi_creatures()
+        creatures.remove(student)
+        creature_copies = creatures.copy()
+        self.remove(creatures)
+        self.add(creature_copies)
+
+        calculus = VGroup(*self.essence_words[-len("calculus"):])
+        calculus.generate_target()
+        invent = TextMobject("Invent")
+        invent_calculus = VGroup(invent, calculus.target)
+        invent_calculus.arrange_submobjects(RIGHT, buff = MED_SMALL_BUFF)
+        invent_calculus.next_to(student, UP, 1.5*LARGE_BUFF)
+        invent_calculus.shift(RIGHT)
+        arrow = Arrow(invent_calculus, student)
+
+        fader = Rectangle(
+            width = 2*SPACE_WIDTH,
+            height = 2*SPACE_HEIGHT,
+            stroke_width = 0,
+            fill_color = BLACK,
+            fill_opacity = 0.5,
+        )
+
+        self.play(
+            FadeIn(fader),
+            Animation(student),
+            Animation(calculus)
+        )
+        self.play(
+            Write(invent),
+            MoveToTarget(calculus),
+            student.change_mode, "erm",
+            student.look_at, calculus
+        )
+        self.play(ShowCreation(arrow))
+        self.dither(2)
+
+class PreviewFrame(Scene):
+    def construct(self):
+        frame = Rectangle(height = 9, width = 16, color = WHITE)
+        frame.scale_to_fit_height(1.5*SPACE_HEIGHT)
+
+        colors = iter(color_gradient([BLUE, YELLOW], 3))
+        titles = [
+            TextMobject("Chapter %d:"%d, s).to_edge(UP).highlight(colors.next())
+            for d, s in [
+                (3, "Derivative formulas through geometry"),
+                (4, "Chain rule, product rule, etc."),
+                (7, "Limits"),
+            ]
+        ]
+        title = titles[0]
+
+        frame.next_to(title, DOWN)
+
+        self.add(frame, title)
+        self.dither(3)
+        for next_title in titles[1:]:
+            self.play(Transform(title, next_title))
+            self.dither(3)
+
+class ProductRuleDiagram(Scene):
+    def construct(self):
+        df = 0.4
+        dg = 0.2
+        rect_kwargs = {
+            "stroke_width" : 0,
+            "fill_color" : BLUE,
+            "fill_opacity" : 0.6,
+        }
+
+        rect = Rectangle(width = 4, height = 3, **rect_kwargs)
+        rect.shift(DOWN)
+        df_rect = Rectangle(
+            height = rect.get_height(),
+            width = df,
+            **rect_kwargs
+        )
+        dg_rect = Rectangle(
+            height = dg,
+            width = rect.get_width(),
+            **rect_kwargs
+        )
+        corner_rect = Rectangle(
+            height = dg, 
+            width = df,
+            **rect_kwargs
+        )
+        d_rects = VGroup(df_rect, dg_rect, corner_rect)
+        for d_rect, direction in zip(d_rects, [RIGHT, DOWN, RIGHT+DOWN]):
+            d_rect.next_to(rect, direction, buff = 0)
+            d_rect.set_fill(YELLOW, 0.75)
+
+        corner_pairs = [
+            (DOWN+RIGHT, UP+RIGHT),
+            (DOWN+RIGHT, DOWN+LEFT),
+            (DOWN+RIGHT, DOWN+RIGHT),
+        ]
+        for d_rect, corner_pair in zip(d_rects, corner_pairs):
+            line = Line(*[
+                rect.get_corner(corner)
+                for corner in corner_pair
+            ])
+            d_rect.line = d_rect.copy().replace(line, stretch = True)
+            d_rect.line.highlight(d_rect.get_color())
+
+        f_brace = Brace(rect, UP)
+        g_brace = Brace(rect, LEFT)
+        df_brace = Brace(df_rect, UP)
+        dg_brace = Brace(dg_rect, LEFT)
+
+        f_label = f_brace.get_text("$f$")
+        g_label = g_brace.get_text("$g$")
+        df_label = df_brace.get_text("$df$")
+        dg_label = dg_brace.get_text("$dg$")
+
+        VGroup(f_label, df_label).highlight(GREEN)
+        VGroup(g_label, dg_label).highlight(RED)
+
+        f_label.generate_target()
+        g_label.generate_target()
+        fg_group = VGroup(f_label.target, g_label.target)
+        fg_group.generate_target()
+        fg_group.target.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        fg_group.target.move_to(rect.get_center())
+
+        for mob in df_brace, df_label, dg_brace, dg_label:
+            mob.save_state()
+            mob.scale(0.01, about_point = rect.get_corner(
+                mob.get_center() - rect.get_center()
+            ))
+
+        self.add(rect)
+        self.play(
+            GrowFromCenter(f_brace),
+            GrowFromCenter(g_brace),
+            Write(f_label),
+            Write(g_label),
+        )
+        self.play(MoveToTarget(fg_group))
+        self.play(*[
+            mob.restore
+            for mob in df_brace, df_label, dg_brace, dg_label
+        ] + [
+            ReplacementTransform(d_rect.line, d_rect)
+            for d_rect in d_rects
+        ])
+        self.dither()
+        self.play(
+            d_rects.space_out_submobjects, 1.2,
+            MaintainPositionRelativeTo(
+                VGroup(df_brace, df_label),
+                df_rect
+            ),
+            MaintainPositionRelativeTo(
+                VGroup(dg_brace, dg_label),
+                dg_rect
+            ),
+        )
+        self.dither()
+
+        deriv = TexMobject(
+            "d(", "fg", ")", "=", 
+            "f", "\\cdot", "dg", "+", "g", "\\cdot", "df"
+        )
+        deriv.to_edge(UP)
+        alpha_iter = iter(np.linspace(0, 0.5, 5))
+        self.play(*[
+            ApplyMethod(
+                mob.copy().move_to,
+                deriv.get_part_by_tex(tex, substring = False),
+                rate_func = squish_rate_func(smooth, alpha, alpha+0.5)
+            )
+            for mob, tex in [
+                (fg_group, "fg"),
+                (f_label, "f"),
+                (dg_label, "dg"),
+                (g_label, "g"),
+                (df_label, "df"),
+            ]
+            for alpha in [alpha_iter.next()]
+        ]+[
+            Write(VGroup(*it.chain(*[
+                deriv.get_parts_by_tex(tex, substring = False)
+                for tex in "d(", ")", "=", "\\cdot", "+"
+            ])))
+        ], run_time = 3)
+        self.dither()
+
+class IntroduceCircle(CircleScene):
+    CONFIG = {
+        "include_pi_creature" : True,
+        "unwrapped_tip" : 2*RIGHT
+    }
+    def construct(self):
+        self.force_skipping()
+
+        self.introduce_area()
+        self.question_area()
+        self.show_calculus_symbols()
+
+    def introduce_area(self):
+        area = TexMobject("\\text{Area}", "=", "\\pi", "R", "^2")
+        area.next_to(self.pi_creature.get_corner(UP+RIGHT), UP+RIGHT)
+
+        self.remove(self.circle, self.radius_group)
+        self.play(
+            self.pi_creature.change_mode, "pondering",
+            self.pi_creature.look_at, self.circle
+        )
+        self.introduce_circle()
+        self.dither()
+        R_copy = self.radius_label.copy()
+        self.play(
+            self.pi_creature.change_mode, "raise_right_hand",
+            self.pi_creature.look_at, area,
+            Transform(R_copy, area.get_part_by_tex("R"))
+        )
+        self.play(Write(area))
+        self.remove(R_copy)
+        self.dither()
+
+        self.area = area
+
+    def question_area(self):
+        q_marks = TexMobject("???")
+        q_marks.next_to(self.pi_creature, UP)
+        rings = VGroup(*reversed(self.get_rings()))
+        unwrapped_rings = VGroup(*[
+            self.get_unwrapped(ring, to_edge = None)
+            for ring in rings
+        ])
+        unwrapped_rings.arrange_submobjects(UP, buff = SMALL_BUFF)
+        unwrapped_rings.move_to(self.unwrapped_tip, UP)
+        ring_anim_kwargs = {
+            "run_time" : 3,
+            "submobject_mode" : "lagged_start"
+        }
+
+        self.play(
+            Animation(self.area),
+            Write(q_marks),
+            self.pi_creature.change_mode, "confused",
+            self.pi_creature.look_at, self.area,
+        )
+        self.dither()
+        self.play(
+            FadeIn(rings, **ring_anim_kwargs),
+            Animation(self.radius_group),
+            FadeOut(q_marks),
+            self.pi_creature.change_mode, "thinking"
+        )
+        self.dither()
+        self.play(
+            rings.rotate, np.pi/2,
+            rings.move_to, unwrapped_rings.get_top(),
+            Animation(self.radius_group),
+            path_arc = np.pi/2,
+            **ring_anim_kwargs
+        )
+        self.play(
+            Transform(rings, unwrapped_rings, **ring_anim_kwargs),
+        )
+        self.dither()
+
+    def show_calculus_symbols(self):
+        ftc = TexMobject(
+            "\\int_0^R", "\\frac{dA}{dr}", "\\,dr",
+            "=", "A(R)"
+        )
+        ftc.shift(2*UP)
+
+        self.play(
+            ReplacementTransform(
+                self.area.get_part_by_tex("R").copy(),
+                ftc.get_part_by_tex("int")
+            ),
+            self.pi_creature.change_mode, "plain"
+        )
+        self.dither()
+        self.play(
+            ReplacementTransform(
+                self.area.get_part_by_tex("Area").copy(),
+                ftc.get_part_by_tex("frac")
+            ),
+            ReplacementTransform(
+                self.area.get_part_by_tex("R").copy(),
+                ftc.get_part_by_tex("\\,dr")
+            )
+        )
+        self.dither()
+        self.play(Write(VGroup(*ftc[-2:])))
+        self.dither(2)
+
+class ApproximateOneRing(CircleScene):
+    CONFIG = {
+        "num_lines" : 24,
+        "ring_index_proportion" : 0.75,
+        "ring_shift_val" : 6*RIGHT,
+        "ring_colors" : [BLUE, GREEN_E],
+    }
+    def construct(self):
+        self.force_skipping()
+
+        self.write_radius_three()
+        self.try_to_understand_area()
+        self.slice_into_rings()
+        self.isolate_one_ring()
+        self.straighten_ring_out()
+        self.ask_about_precise_shape()
+        self.approximate_as_rectangle()
+
+    def write_radius_three(self):
+        three = TexMobject("3")
+        three.move_to(self.radius_label)
+
+        self.look_at(self.circle)
+        self.play(Transform(
+            self.radius_label, three,
+            path_arc = np.pi
+        ))
+        self.dither()
+
+    def try_to_understand_area(self):
+        line_sets = [
+            VGroup(*[
+                Line(
+                    self.circle.point_from_proportion(alpha),
+                    self.circle.point_from_proportion(func(alpha)),
+                )
+                for alpha in np.linspace(0, 1, self.num_lines)
+            ])
+            for func in [
+                lambda alpha : 1-alpha,
+                lambda alpha : (0.5-alpha)%1,
+                lambda alpha : (alpha + 0.4)%1,
+                lambda alpha : (alpha + 0.5)%1,
+            ]
+        ]
+        for lines in line_sets:
+            lines.set_stroke(BLACK, 2)
+        lines = line_sets[0]
+
+        self.play(
+            ShowCreation(
+                lines, 
+                run_time = 2, 
+                submobject_mode = "lagged_start"
+            ),
+            Animation(self.radius_group),
+            self.pi_creature.change_mode, "maybe"
+        )
+        self.dither(2)
+        for new_lines in line_sets[1:]:
+            self.play(
+                Transform(lines, new_lines),
+                Animation(self.radius_group)
+            )
+            self.dither()
+        self.dither()
+        self.play(FadeOut(lines), Animation(self.radius_group))
+
+    def slice_into_rings(self):
+        rings = self.get_rings()
+        rings.set_stroke(BLACK, 1)
+
+        self.play(
+            FadeIn(
+                rings,
+                submobject_mode = "lagged_start",
+                run_time = 3
+            ),
+            Animation(self.radius_group),
+            self.pi_creature.change_mode, "pondering",
+            self.pi_creature.look_at, self.circle
+        )
+        self.dither(2)
+        group = VGroup(self.circle, rings, self.radius_group)
+        for x in range(2):
+            self.play(
+                ApplyMethod(
+                    group.rotate_in_place, np.pi, 
+                    path_arc = np.pi,
+                    rate_func = there_and_back,
+                ),
+                self.pi_creature.change_mode, "happy"
+            )
+        self.dither(2)
+
+        self.rings = rings
+
+    def isolate_one_ring(self):
+        index = int(self.ring_index_proportion*len(self.rings))
+        ring = self.rings[index]
+
+        radius = Line(ORIGIN, ring.R*RIGHT, color = WHITE)
+        radius.rotate(np.pi/4)
+        r_label = TexMobject("r")
+        r_label.next_to(radius.get_center(), UP+LEFT, SMALL_BUFF)
+        area_q = TextMobject("Area?")
+        area_q.highlight(YELLOW)
+
+
+        self.revert_to_original_skipping_status()
+        self.play(ring.shift, self.ring_shift_val)
+
+        VGroup(radius, r_label).shift(ring.get_center())
+        area_q.next_to(ring, DOWN)
+
+        self.play(ShowCreation(radius))
+        self.play(Write(r_label))
+        self.dither()
+        self.play(Write(area_q))
+        self.dither()
+        self.play(
+            Indicate(
+                self.rings,
+                scale_factor = 1.01,
+                submobject_mode = "lagged_start",
+                run_time = 3,
+            ),
+            Animation(self.radius_group)
+        )
+        self.dither()
 
 
 
 
 
+    def straighten_ring_out(self):
+        pass
 
+    def ask_about_precise_shape(self):
+        pass
 
-
-
-
-
-
-
-
+    def approximate_as_rectangle(self):
+        pass
 
 
 

@@ -75,7 +75,7 @@ class Write(ShowCreation):
         if "run_time" not in kwargs:
             self.establish_run_time(mobject)
         if "lag_factor" not in kwargs:
-            if len(mobject.family_members_with_points()) < 2:
+            if len(mobject.family_members_with_points()) < 3:
                 min_lag_factor = 1
             else:
                 min_lag_factor = 2
