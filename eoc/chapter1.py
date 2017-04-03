@@ -20,6 +20,7 @@ from topics.three_dimensions import *
 from topics.objects import *
 from scene import Scene
 from scene.zoomed_scene import ZoomedScene
+from scene.reconfigurable_scene import ReconfigurableScene
 from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
@@ -178,7 +179,7 @@ class CircleScene(PiCreatureScene):
             rings.rotate, np.pi/2,
             rings.next_to, unwrapped.get_bottom(), UP,
             run_time = 2,
-            path_arc = np.pi/2
+            path_arc = np.pi/2,
         )
         self.play(
             Transform(rings, unwrapped, run_time = 3),
@@ -655,22 +656,24 @@ class IntroduceCircle(CircleScene):
         self.play(Write(VGroup(*ftc[-2:])))
         self.dither(2)
 
-class ApproximateOneRing(CircleScene):
+class ApproximateOneRing(CircleScene, ReconfigurableScene):
     CONFIG = {
         "num_lines" : 24,
-        "ring_index_proportion" : 0.75,
+        "ring_index_proportion" : 0.6,
         "ring_shift_val" : 6*RIGHT,
         "ring_colors" : [BLUE, GREEN_E],
+        "unwrapped_tip" : 2*RIGHT+0.5*UP,
     }
-    def construct(self):
-        self.force_skipping()
+    def setup(self):
+        CircleScene.setup(self)
+        ReconfigurableScene.setup(self)
 
+    def construct(self):
         self.write_radius_three()
         self.try_to_understand_area()
         self.slice_into_rings()
         self.isolate_one_ring()
         self.straighten_ring_out()
-        self.ask_about_precise_shape()
         self.approximate_as_rectangle()
 
     def write_radius_three(self):
@@ -738,14 +741,10 @@ class ApproximateOneRing(CircleScene):
             self.pi_creature.look_at, self.circle
         )
         self.dither(2)
-        group = VGroup(self.circle, rings, self.radius_group)
         for x in range(2):
             self.play(
-                ApplyMethod(
-                    group.rotate_in_place, np.pi, 
-                    path_arc = np.pi,
-                    rate_func = there_and_back,
-                ),
+                Rotate(rings, np.pi, in_place = True, run_time = 2),
+                Animation(self.radius_group),
                 self.pi_creature.change_mode, "happy"
             )
         self.dither(2)
@@ -753,51 +752,210 @@ class ApproximateOneRing(CircleScene):
         self.rings = rings
 
     def isolate_one_ring(self):
-        index = int(self.ring_index_proportion*len(self.rings))
-        ring = self.rings[index]
+        rings = self.rings
+        index = int(self.ring_index_proportion*len(rings))
+        original_ring = rings[index]
+        ring = original_ring.copy()
 
         radius = Line(ORIGIN, ring.R*RIGHT, color = WHITE)
         radius.rotate(np.pi/4)
         r_label = TexMobject("r")
         r_label.next_to(radius.get_center(), UP+LEFT, SMALL_BUFF)
-        area_q = TextMobject("Area?")
+        area_q = TextMobject("Area", "?", arg_separator = "")
         area_q.highlight(YELLOW)
 
 
-        self.revert_to_original_skipping_status()
-        self.play(ring.shift, self.ring_shift_val)
+        self.play(
+            ring.shift, self.ring_shift_val,
+            original_ring.set_fill, None, 0.25,
+            Animation(self.radius_group),
+        )
 
         VGroup(radius, r_label).shift(ring.get_center())
-        area_q.next_to(ring, DOWN)
+        area_q.next_to(ring, RIGHT)
 
         self.play(ShowCreation(radius))
         self.play(Write(r_label))
         self.dither()
         self.play(Write(area_q))
         self.dither()
-        self.play(
-            Indicate(
-                self.rings,
-                scale_factor = 1.01,
-                submobject_mode = "lagged_start",
-                run_time = 3,
-            ),
+        self.play(*[
+            ApplyMethod(
+                r.set_fill, YELLOW, 
+                rate_func = squish_rate_func(there_and_back, alpha, alpha+0.15),
+                run_time = 3
+            )
+            for r, alpha in zip(rings, np.linspace(0, 0.85, len(rings)))
+        ]+[
             Animation(self.radius_group)
-        )
+        ])
+        self.dither()
+        self.change_mode("thinking")
         self.dither()
 
-
-
-
+        self.original_ring = original_ring
+        self.ring = ring
+        self.ring_radius_group = VGroup(radius, r_label)
+        self.area_q = area_q
 
     def straighten_ring_out(self):
-        pass
+        ring = self.ring.copy()
+        trapazoid = TextMobject("Trapazoid?")
+        rectangle_ish = TextMobject("Rectangle-ish")
+        for text in trapazoid, rectangle_ish:
+            text.next_to(
+                self.pi_creature.get_corner(UP+RIGHT), 
+                DOWN+RIGHT, buff = MED_LARGE_BUFF
+            )
 
-    def ask_about_precise_shape(self):
-        pass
+        self.unwrap_ring(ring, to_edge = RIGHT)
+        self.change_mode("pondering")
+        self.dither()
+        self.play(Write(trapazoid))
+        self.dither()
+        self.play(trapazoid.shift, DOWN)
+        strike = Line(
+            trapazoid.get_left(), trapazoid.get_right(),
+            stroke_color = RED,
+            stroke_width = 8
+        )
+        self.play(
+            Write(rectangle_ish),
+            ShowCreation(strike),
+            self.pi_creature.change_mode, "happy"
+        )
+        self.dither()
+        self.play(*map(FadeOut, [trapazoid, strike]))
+
+        self.unwrapped_ring = ring
 
     def approximate_as_rectangle(self):
-        pass
+        top_brace, side_brace = [
+            Brace(
+                self.unwrapped_ring, vect, buff = SMALL_BUFF,
+                min_num_quads = 2,
+            )
+            for vect in UP, LEFT
+        ]
+        top_brace.scale_in_place(self.ring.R/(self.ring.R+self.dR))
+        side_brace.set_stroke(WHITE, 0.5)
+
+
+        width_label = TexMobject("2\\pi", "r")
+        width_label.next_to(top_brace, UP, SMALL_BUFF)
+        dr_label = TexMobject("dr")
+        q_marks = TexMobject("???")
+        concrete_dr = TexMobject("=0.1")
+        concrete_dr.submobjects.reverse()
+        for mob in dr_label, q_marks, concrete_dr:
+            mob.next_to(side_brace, LEFT, SMALL_BUFF)
+        dr_label.save_state()
+
+        alt_side_brace = side_brace.copy()
+        alt_side_brace.move_to(ORIGIN, UP+RIGHT)
+        alt_side_brace.rotate(-np.pi/2)
+        alt_side_brace.shift(
+            self.original_ring.get_boundary_point(RIGHT)
+        )
+        alt_dr_label = dr_label.copy()
+        alt_dr_label.next_to(alt_side_brace, UP, SMALL_BUFF)
+
+        approx = TexMobject("\\approx")
+        approx.next_to(
+            self.area_q.get_part_by_tex("Area"), 
+            RIGHT,
+            align_using_submobjects = True,
+        )
+        two_pi_r_dr = VGroup(width_label, dr_label).copy()
+        two_pi_r_dr.generate_target()
+        two_pi_r_dr.target.arrange_submobjects(
+            RIGHT, buff = SMALL_BUFF, aligned_edge = DOWN
+        )
+        two_pi_r_dr.target.next_to(approx, RIGHT, aligned_edge = DOWN)
+
+        self.play(GrowFromCenter(top_brace))
+        self.play(
+            Write(width_label.get_part_by_tex("pi")),
+            ReplacementTransform(
+                self.ring_radius_group[1].copy(),
+                width_label.get_part_by_tex("r")
+            )
+        )
+        self.dither()
+        self.play(
+            GrowFromCenter(side_brace),
+            Write(q_marks)
+        )
+        self.change_mode("confused")
+        self.dither()
+        for num_rings in 20, 7:
+            self.show_alternate_width(num_rings)
+        self.play(ReplacementTransform(q_marks, dr_label))
+        self.play(
+            ReplacementTransform(side_brace.copy(), alt_side_brace),
+            ReplacementTransform(dr_label.copy(), alt_dr_label),
+            run_time = 2
+        )
+        self.dither()
+        self.play(
+            dr_label.next_to, concrete_dr.copy(), LEFT, SMALL_BUFF, DOWN,
+            Write(concrete_dr, run_time = 2),
+            self.pi_creature.change_mode, "pondering"
+        )
+        self.dither(2)
+        self.play(
+            MoveToTarget(two_pi_r_dr),
+            FadeIn(approx),
+            self.area_q.get_part_by_tex("?").fade, 1,
+        )
+        self.dither()
+        self.play(
+            FadeOut(concrete_dr),
+            dr_label.restore
+        )
+        self.show_alternate_width(
+            40, 
+            transformation_kwargs = {"run_time" : 4},
+            return_to_original_configuration = False,
+        )
+        self.dither(2)
+        self.look_at(self.circle)
+        self.play(
+            ApplyWave(self.rings, amplitude = 0.1),
+            Animation(self.radius_group),
+            Animation(alt_side_brace),
+            Animation(alt_dr_label),
+            run_time = 3,
+            submobject_mode = "lagged_start"
+        )
+        self.dither(2)
+
+    def show_alternate_width(self, num_rings, **kwargs):
+        self.transition_to_alt_config(
+            dR = self.radius/num_rings, **kwargs
+        )
+
+class GraphRectangles(CircleScene, GraphScene):
+    CONFIG = {
+        "x_min" : -1,
+        "x_max" : 4,
+        "x_axis_width" : 8,
+        "x_labeled_nums" : range(1, 5),
+        "x_axis_label" : "$r$",
+        "y_min" : 0,
+        "y_max" : 20,
+        "y_tick_frequency" : 2.5,
+        "y_labeled_nums" : range(5, 25, 5),
+        "y+axis_label" : ""
+    }
+    def setup(self):
+        CircleScene.setup(self)
+        self.graph_origin = (self.circle.get_right()[0]+LARGE_BUFF)*RIGHT
+        self.graph_origin += 3*DOWN
+        GraphScene.setup(self)
+
+    def construct(self):
+        self.setup_axes()
 
 
 
