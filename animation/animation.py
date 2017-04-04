@@ -120,8 +120,11 @@ class Animation(object):
 
     def clean_up(self, surrounding_scene = None):
         self.update(1)
-        if self.is_remover() and surrounding_scene is not None:
-            surrounding_scene.remove(self.mobject)
+        if surrounding_scene is not None:
+            if self.is_remover():
+                surrounding_scene.remove(self.mobject)
+            else:
+                surrounding_scene.add(self.mobject)
         return self
 
 

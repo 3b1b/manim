@@ -26,6 +26,7 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
 from eoc.graph_scene import GraphScene
+from eoc.chapter2 import Car, MoveCar
 from topics.common_scenes import OpeningQuote, PatreonThanks
 
 class CircleScene(PiCreatureScene):
@@ -937,40 +938,973 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
 
 class GraphRectangles(CircleScene, GraphScene):
     CONFIG = {
-        "x_min" : -1,
+        "graph_origin" : 3.25*LEFT+2.5*DOWN,
+        "x_min" : 0,
         "x_max" : 4,
-        "x_axis_width" : 8,
-        "x_labeled_nums" : range(1, 5),
+        "x_axis_width" : 7,
+        "x_labeled_nums" : range(5),
         "x_axis_label" : "$r$",
         "y_min" : 0,
         "y_max" : 20,
         "y_tick_frequency" : 2.5,
         "y_labeled_nums" : range(5, 25, 5),
-        "y+axis_label" : ""
+        "y_axis_label" : "",
+        "exclude_zero_label" : False,
+        "num_rings_in_ring_sum_start" : 3,
+        "tick_height" : 0.2,
     }
     def setup(self):
         CircleScene.setup(self)
-        self.graph_origin = (self.circle.get_right()[0]+LARGE_BUFF)*RIGHT
-        self.graph_origin += 3*DOWN
         GraphScene.setup(self)
+        self.setup_axes()
+        self.remove(self.axes)
+
+        # self.pi_creature.change_mode("pondering")
+        # self.pi_creature.look_at(self.circle)
+        # self.add(self.pi_creature)
+
+        three = TexMobject("3")
+        three.move_to(self.radius_label)
+        self.radius_label.save_state()
+        Transform(self.radius_label, three).update(1)
 
     def construct(self):
+        self.draw_ring_sum()
+        self.draw_r_values()
+        self.unwrap_rings_onto_graph()
+        self.draw_graph()
+        self.point_out_approximation()
+        self.let_dr_approah_zero()
+        self.compute_area_under_graph()
+        self.show_circle_unwrapping()
+
+    def draw_ring_sum(self):
+        rings = self.get_rings()
+        rings.set_stroke(BLACK, 1)
+        ring_sum, draw_ring_sum_anims = self.get_ring_sum(rings)
+        area_label = TexMobject(
+            "\\text{Area}", "\\approx", 
+            "2\\pi", "r", "\\,dr"
+        )
+        area_label.highlight_by_tex("r", YELLOW, substring = False)
+        area_label.next_to(ring_sum, RIGHT, aligned_edge = UP)
+        area = area_label.get_part_by_tex("Area")
+        arrow_start = area.get_corner(DOWN+LEFT)
+        arrows = VGroup(*[
+            Arrow(
+                arrow_start,
+                ring.target.get_boundary_point(
+                    arrow_start - ring.target.get_center()
+                ),
+                color = ring.get_color()
+            )
+            for ring in rings
+            if ring.target.get_fill_opacity() > 0
+        ])
+        
+        self.add(rings, self.radius_group)
+        self.remove(self.circle)
+        self.dither()
+        self.play(*draw_ring_sum_anims)
+        self.play(Write(area_label, run_time = 2))
+        self.play(ShowCreation(arrows))
+        self.dither()
+
+        self.ring_sum = ring_sum
+        area_label.add(arrows)
+        self.area_label = area_label
+        self.rings = rings
+
+    def draw_r_values(self):
+        values_of_r = TextMobject("Values of ", "$r$")
+        values_of_r.highlight_by_tex("r", YELLOW)
+        values_of_r.next_to(
+            self.x_axis, UP, 
+            buff = 2*LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+
+        r_ticks = VGroup(*[
+            Line(
+                self.coords_to_point(r, -self.tick_height),
+                self.coords_to_point(r, self.tick_height),
+                color = YELLOW
+            )
+            for r in np.arange(0, 3, 0.1)
+        ])
+        arrows = VGroup(*[
+            Arrow(
+                values_of_r.get_part_by_tex("r").get_bottom(),
+                tick.get_top(),
+                buff = SMALL_BUFF,
+                color = YELLOW,
+                tip_length = 0.15
+            )
+            for tick in r_ticks[0], r_ticks[-1]
+        ])
+        first_tick = r_ticks[0].copy()
+        moving_arrow = arrows[0].copy()
+
+        index = 2
+        dr_brace = Brace(
+            VGroup(*r_ticks[index:index+2]), 
+            DOWN, buff = SMALL_BUFF
+        )
+        dr_label = TexMobject("dr")
+        dr_label.next_to(
+            dr_brace, DOWN, 
+            buff = SMALL_BUFF, 
+            aligned_edge = LEFT
+        )
+        dr_group = VGroup(dr_brace, dr_label)
+
+        self.play(
+            FadeIn(values_of_r),
+            FadeIn(self.x_axis),
+        )
+        self.play(
+            ShowCreation(moving_arrow),
+            ShowCreation(first_tick),
+        )
+        self.play(Indicate(self.rings[0]))
+        self.dither()
+        self.play(
+            Transform(moving_arrow, arrows[-1]),
+            ShowCreation(r_ticks, submobject_mode = "lagged_start"),
+            run_time = 2
+        )
+        self.play(Indicate(self.rings[-1]))
+        self.dither()
+        self.play(FadeIn(dr_group))
+        self.dither()
+        self.play(*map(FadeOut, [moving_arrow, values_of_r]))
+
+        self.x_axis.add(r_ticks)
+        self.r_ticks = r_ticks
+        self.dr_group = dr_group
+        
+    def unwrap_rings_onto_graph(self):
+        rings = self.rings
+        graph = self.get_graph(lambda r : 2*np.pi*r)
+        flat_graph = self.get_graph(lambda r : 0)
+        rects, flat_rects = [
+            self.get_riemann_rectangles(
+                g, x_min = 0, x_max = 3, dx = self.dR,
+                start_color = self.rings[0].get_fill_color(),
+                end_color = self.rings[-1].get_fill_color(),
+            )
+            for g in graph, flat_graph
+        ]
+        self.graph, self.flat_rects = graph, flat_rects
+
+        transformed_rings = VGroup()
+        self.ghost_rings = VGroup()        
+        for index, rect, r in zip(it.count(), rects, np.arange(0, 3, 0.1)):
+            proportion = float(index)/len(rects)
+            ring_index = int(len(rings)*proportion**0.6)
+            ring = rings[ring_index]
+            if ring in transformed_rings:
+                ring = ring.copy()
+            transformed_rings.add(ring)
+            if ring.get_fill_opacity() > 0:
+                ghost_ring = ring.copy()
+                ghost_ring.set_fill(opacity = 0.25)
+                self.add(ghost_ring, ring)
+                self.ghost_rings.add(ghost_ring)
+
+            ring.rect = rect
+
+            n_anchors = ring.get_num_anchor_points()            
+            target = VMobject()
+            target.set_points_as_corners([
+                interpolate(ORIGIN,  DOWN, a)
+                for a in np.linspace(0, 1, n_anchors/2)
+            ]+[
+                interpolate(DOWN+RIGHT, RIGHT, a)
+                for a in np.linspace(0, 1, n_anchors/2)
+            ])
+            target.replace(rect, stretch = True)
+            target.stretch_to_fit_height(2*np.pi*r)
+            target.move_to(rect, DOWN)
+            target.set_stroke(BLACK, 1)
+            target.set_fill(ring.get_fill_color(), 1)
+            ring.target = target
+            ring.original_ring = ring.copy()
+
+        foreground_animations = map(Animation, [self.x_axis, self.area_label])
+        example_ring = transformed_rings[2]
+
+        self.play(
+            MoveToTarget(
+                example_ring,
+                path_arc = -np.pi/2,
+                run_time = 2
+            ),
+            Animation(self.x_axis),
+        )
+        self.dither(2)
+        self.play(*[
+            MoveToTarget(
+                ring,
+                path_arc = -np.pi/2,
+                run_time = 4,
+                rate_func = squish_rate_func(smooth, alpha, alpha+0.25)
+            )
+            for ring, alpha in zip(
+                transformed_rings, 
+                np.linspace(0, 0.75, len(transformed_rings))
+            )
+        ] + foreground_animations)
+        self.dither()
+
+        ##Demonstrate height of one rect
+        highlighted_ring = transformed_rings[6].copy()
+        original_ring = transformed_rings[6].original_ring
+        original_ring.move_to(highlighted_ring, RIGHT)
+        original_ring.set_fill(opacity = 1)
+        highlighted_ring.save_state()
+
+        side_brace = Brace(highlighted_ring, RIGHT)
+        height_label = side_brace.get_text("2\\pi", "r")
+        height_label.highlight_by_tex("r", YELLOW)
+
+        self.play(
+            transformed_rings.set_fill, None, 0.2,
+            Animation(highlighted_ring),
+            *foreground_animations
+        )
+        self.play(
+            self.dr_group.arrange_submobjects, DOWN,
+            self.dr_group.next_to, highlighted_ring, 
+            DOWN, SMALL_BUFF
+        )
+        self.dither()
+        self.play(
+            GrowFromCenter(side_brace),
+            Write(height_label)
+        )
+        self.dither()
+        self.play(Transform(highlighted_ring, original_ring))
+        self.dither()
+        self.play(highlighted_ring.restore)
+        self.dither()
+        self.play(
+            transformed_rings.set_fill, None, 1,
+            FadeOut(side_brace),
+            FadeOut(height_label),
+            *foreground_animations
+        )
+        self.remove(highlighted_ring)
+        self.dither()
+
+        ##Rescale
+        self.play(*[
+            ApplyMethod(
+                ring.replace, ring.rect, 
+                method_kwargs = {"stretch" : True}
+            )
+            for ring in transformed_rings
+        ] + [
+            Write(self.y_axis),
+            FadeOut(self.area_label),
+        ] + foreground_animations)
+        self.remove(transformed_rings)
+        self.add(rects)
+        self.dither()
+
+        self.rects = rects
+
+    def draw_graph(self):
+        graph_label = self.get_graph_label(
+            self.graph, "2\\pi r", 
+            direction = UP+LEFT,
+            x_val = 2.5,
+            buff = SMALL_BUFF
+        )
+
+        self.play(ShowCreation(self.graph))
+        self.play(Write(graph_label))
+        self.dither()
+        self.play(*[
+            Transform(
+                rect, flat_rect,
+                run_time = 2,
+                rate_func = squish_rate_func(
+                    lambda t : 0.1*there_and_back(t), 
+                    alpha, alpha+0.5
+                ),
+                submobject_mode = "lagged_start"
+            )
+            for rect, flat_rect, alpha in zip(
+                self.rects, self.flat_rects,
+                np.linspace(0, 0.5, len(self.rects))
+            )
+        ] + map(Animation, [self.x_axis, self.graph])
+        )
+        self.dither(2)
+
+    def point_out_approximation(self):
+        rect = self.rects[10]
+        rect.generate_target()
+        rect.save_state()
+        approximation = TextMobject("= Approximation")
+        approximation.scale(0.8)
+        group = VGroup(rect.target, approximation)
+        group.arrange_submobjects(RIGHT)
+        group.to_edge(RIGHT)
+
+        self.play(
+            MoveToTarget(rect),
+            Write(approximation),
+        )
+        self.dither(2)
+        self.play(
+            rect.restore,
+            FadeOut(approximation)
+        )
+        self.dither()
+
+    def let_dr_approah_zero(self):
+        thinner_rects_list = [
+            self.get_riemann_rectangles(
+                self.graph,
+                x_min = 0, 
+                x_max = 3,
+                dx = 1./(10*2**n),
+                stroke_width = 1./(2**n),
+                start_color = self.rects[0].get_fill_color(),
+                end_color = self.rects[-1].get_fill_color(),
+            )
+            for n in range(1, 5)
+        ]
+
+        self.play(*map(FadeOut, [self.r_ticks, self.dr_group]))
+        self.x_axis.remove(self.r_ticks, *self.r_ticks)
+        for new_rects in thinner_rects_list:
+            self.play(
+                Transform(
+                    self.rects, new_rects, 
+                    submobject_mode = "lagged_start",
+                    run_time = 2
+                ),
+                Animation(self.axes),
+                Animation(self.graph),
+            )
+            self.dither()
+        self.play(ApplyWave(
+            self.rects,
+            direction = RIGHT,
+            run_time = 2,
+            submobject_mode = "lagged_start",
+        ))
+        self.dither()
+
+    def compute_area_under_graph(self):
+        formula, formula_with_R = formulas = [
+            self.get_area_formula(R)
+            for R in "3", "R"
+        ]
+        for mob in formulas:
+            mob.to_corner(UP+RIGHT, buff = MED_SMALL_BUFF)
+
+        brace = Brace(self.rects, RIGHT)
+        height_label = brace.get_text("$2\\pi \\cdot 3$")
+        height_label_with_R = brace.get_text("$2\\pi \\cdot R$")
+        base_line = Line(
+            self.coords_to_point(0, 0),
+            self.coords_to_point(3, 0),
+            color = YELLOW
+        )
+
+        fresh_rings = self.get_rings(dR = 0.025)
+        fresh_rings.set_stroke(width = 0)
+        self.radius_label.restore()
+        VGroup(
+            fresh_rings, self.radius_group
+        ).to_corner(UP+LEFT, buff = SMALL_BUFF)
+
+        self.play(Write(formula.top_line, run_time = 2))
+        self.play(FocusOn(base_line))
+        self.play(ShowCreation(base_line))
+        self.dither()
+        self.play(
+            GrowFromCenter(brace),
+            Write(height_label)
+        )
+        self.dither()
+        self.play(FocusOn(formula))
+        self.play(Write(formula.mid_line))
+        self.dither()
+        self.play(Write(formula.bottom_line))
+        self.dither(2)
+
+        self.play(*map(FadeOut, [
+            self.ghost_rings,
+            self.ring_sum.tex_mobs
+        ]))
+        self.play(*map(FadeIn, [fresh_rings, self.radius_group]))
+        self.dither()
+        self.play(
+            Transform(formula, formula_with_R),
+            Transform(height_label, height_label_with_R),
+        )
+        self.dither(2)
+
+        self.fresh_rings = fresh_rings
+
+    def show_circle_unwrapping(self):
+        rings = self.fresh_rings
+        rings.rotate_in_place(np.pi)
+        rings.submobjects.reverse()
+        ghost_rings = rings.copy()
+        ghost_rings.set_fill(opacity = 0.25)
+        self.add(ghost_rings, rings, self.radius_group)
+
+        unwrapped = VGroup(*[
+            self.get_unwrapped(ring, to_edge = None)
+            for ring in rings
+        ])
+        unwrapped.stretch_to_fit_height(1)
+        unwrapped.stretch_to_fit_width(2)
+        unwrapped.move_to(ORIGIN, DOWN)
+        unwrapped.apply_function(
+            lambda p : np.dot(p, 
+                np.array([[1, 0, 0], [-1, 1, 0], [0, 0, 1]])
+            ),
+            maintain_smoothness = False
+        )
+        unwrapped.rotate(np.pi/2)
+        unwrapped.replace(self.rects, stretch = True)
+
+        self.play(self.rects.fade, 0.8)
+        self.play(
+            Transform(
+                rings, unwrapped,
+                run_time = 5,
+                submobject_mode = "lagged_start",
+            ),
+            Animation(self.radius_group)
+        )
+        self.dither()
+
+    #####
+
+    def get_ring_sum(self, rings):
+        arranged_group = VGroup()
+        tex_mobs = VGroup()
+        for ring in rings:
+            ring.generate_target()
+            ring.target.set_stroke(width = 0)
+
+        for ring in rings[:self.num_rings_in_ring_sum_start]:
+            plus = TexMobject("+")
+            arranged_group.add(ring.target)
+            arranged_group.add(plus)
+            tex_mobs.add(plus)
+        dots = TexMobject("\\vdots")
+        plus = TexMobject("+")
+        arranged_group.add(dots, plus)
+        tex_mobs.add(dots, plus)
+        last_ring = rings[-1]
+
+        arranged_group.add(last_ring.target)
+        arranged_group.arrange_submobjects(DOWN, buff = SMALL_BUFF)
+        arranged_group.scale_to_fit_height(2*SPACE_HEIGHT-1)
+        arranged_group.to_corner(DOWN+LEFT, buff = MED_SMALL_BUFF)
+        for mob in tex_mobs:
+            mob.scale_in_place(0.7)
+
+        middle_rings = rings[self.num_rings_in_ring_sum_start:-1]
+        alphas = np.linspace(0, 1, len(middle_rings))
+        for ring, alpha in zip(middle_rings, alphas):
+            ring.target.set_fill(opacity = 0)
+            ring.target.move_to(interpolate(
+                dots.get_left(), last_ring.target.get_center(), alpha
+            ))
+
+        draw_ring_sum_anims = [Write(tex_mobs)]
+        draw_ring_sum_anims += [
+            MoveToTarget(
+                ring,
+                run_time = 3,
+                path_arc = -np.pi/3,
+                rate_func = squish_rate_func(smooth, alpha, alpha+0.8)
+            )
+            for ring, alpha in zip(rings, np.linspace(0, 0.2, len(rings)))
+        ]
+        draw_ring_sum_anims.append(FadeOut(self.radius_group))
+        
+        ring_sum = VGroup(rings, tex_mobs)
+        ring_sum.rings = VGroup(*[r.target for r in rings])
+        ring_sum.tex_mobs = tex_mobs
+        
+        return ring_sum, draw_ring_sum_anims
+
+    def get_area_formula(self, R):
+        formula = TexMobject(
+            "\\text{Area}", "&= \\frac{1}{2}", "b", "h",
+            "\\\\ &=", "\\frac{1}{2}", "(%s)"%R, "(2\\pi \\cdot %s)"%R,
+            "\\\\ &=", "\\pi ", "%s"%R, "^2"
+            
+        )
+        formula.highlight_by_tex("b", GREEN, substring = False)
+        formula.highlight_by_tex("h", RED, substring = False)
+        formula.highlight_by_tex("%s"%R, GREEN)
+        formula.highlight_by_tex("(2\\pi ", RED)
+        formula.highlight_by_tex("(2\\pi ", RED)
+        formula.scale(0.8)
+
+        formula.top_line = VGroup(*formula[:4])
+        formula.mid_line = VGroup(*formula[4:8])
+        formula.bottom_line = VGroup(*formula[8:])
+        return formula
+
+class ThinkLikeAMathematician(TeacherStudentsScene):
+    def construct(self):
+        pi_R_squraed = TexMobject("\\pi", "R", "^2")
+        pi_R_squraed.highlight_by_tex("R", YELLOW)
+        pi_R_squraed.move_to(self.get_students(), UP)
+        pi_R_squraed.set_fill(opacity = 0)
+
+        self.play(
+            pi_R_squraed.shift, 2*UP,
+            pi_R_squraed.set_fill, None, 1
+        )
+        self.change_student_modes(*["hooray"]*3)
+        self.dither(2)
+        self.change_student_modes(
+            *["pondering"]*3,
+            look_at_arg = self.teacher.eyes,
+            added_anims = [PiCreatureSays(
+                self.teacher, "But why did \\\\ that work?"
+            )]
+        )
+        self.play(FadeOut(pi_R_squraed))
+        self.look_at(2*UP+4*LEFT)
+        self.dither(5)
+
+class RecapCircleSolution(GraphRectangles, ReconfigurableScene):
+    def setup(self):
+        GraphRectangles.setup(self)
+        ReconfigurableScene.setup(self)
+
+    def construct(self):
+        self.break_up_circle()
+        self.show_sum()
+        self.dr_indicates_spacing()
+        self.smaller_dr()
+        self.show_riemann_sum()
+        self.limiting_riemann_sum()
+        self.full_precision()
+
+    def break_up_circle(self):
+        self.remove(self.circle)
+        rings = self.get_rings()
+        rings.set_stroke(BLACK, 1)
+        ring_sum, draw_ring_sum_anims = self.get_ring_sum(rings)
+
+        hard_problem = TextMobject("Hard problem")
+        down_arrow = TexMobject("\\Downarrow")
+        sum_words = TextMobject("Sum of many \\\\ small values")
+        integral_condition = VGroup(hard_problem, down_arrow, sum_words)
+        integral_condition.arrange_submobjects(DOWN)
+        integral_condition.scale(0.8)
+        integral_condition.to_corner(UP+RIGHT)
+        
+        self.add(rings, self.radius_group)
+        self.play(FadeIn(
+            integral_condition, 
+            submobject_mode = "lagged_start"
+        ))
+        self.dither()
+        self.play(*draw_ring_sum_anims)
+
+        self.rings = rings
+        self.integral_condition = integral_condition
+
+    def show_sum(self):
+        visible_rings = filter(
+            lambda ring : ring.get_fill_opacity() > 0,
+            self.rings
+        )
+        radii = self.dR*np.arange(len(visible_rings))
+        radii[-1] = 3-self.dR
+
+        radial_lines = VGroup()
+        for ring in visible_rings:
+            radius_line = Line(ORIGIN, ring.R*RIGHT, color = YELLOW)
+            radius_line.rotate(np.pi/4)
+            radius_line.shift(ring.get_center())
+            radial_lines.add(radius_line)
+
+        approximations = VGroup()
+        for ring, radius in zip(visible_rings, radii):
+            label = TexMobject(
+                "\\approx", "2\\pi", 
+                "(%s)"%str(radius), "(%s)"%str(self.dR)
+            )
+            label[2].highlight(YELLOW)
+            label[3].highlight(GREEN)
+            label.scale(0.75)
+            label.next_to(ring, RIGHT)
+            approximations.add(label)
+        approximations[-1].shift(UP+0.5*LEFT)
+        area_label = TexMobject("2\\pi", "r", "\\, dr")
+        area_label.highlight_by_tex("r", YELLOW)
+        area_label.highlight_by_tex("dr", GREEN)
+        area_label.next_to(approximations, RIGHT, buff = 2*LARGE_BUFF)
+        arrows = VGroup(*[
+            Arrow(
+                area_label.get_left(),
+                approximation.get_right(),
+                color = WHITE
+            )
+            for approximation in approximations
+        ])
+
+        self.play(Write(area_label))
+        self.play(
+            ShowCreation(arrows, submobject_mode = "all_at_once"),
+            FadeIn(radial_lines),
+            *[
+                ReplacementTransform(
+                    area_label.copy(),
+                    VGroup(*approximation[1:])
+                )
+                for approximation in approximations
+            ]
+        )
+        self.dither()
+        self.play(Write(VGroup(*[
+            approximation[0]
+            for approximation in approximations
+        ])))
+        self.dither()
+
+        self.area_label = area_label
+        self.area_arrows = arrows
+        self.approximations = approximations
+
+    def dr_indicates_spacing(self):
+        r_ticks = VGroup(*[
+            Line(
+                self.coords_to_point(r, -self.tick_height),
+                self.coords_to_point(r, self.tick_height),
+                color = YELLOW
+            )
+            for r in np.arange(0, 3, self.dR)
+        ])
+
+        index = int(0.75*len(r_ticks))
+        brace_ticks = VGroup(*r_ticks[index:index+2])
+        dr_brace = Brace(brace_ticks, UP, buff = SMALL_BUFF)
+
+        dr = self.area_label.get_part_by_tex("dr")
+        dr_copy = dr.copy()
+        circle = Circle().replace(dr)
+        circle.scale_in_place(1.3)
+
+        dr_num = self.approximations[0][-1]
+
+        self.play(ShowCreation(circle))
+        self.play(FadeOut(circle))
+        self.play(ReplacementTransform(
+            dr.copy(), dr_num,
+            run_time = 2,
+            path_arc = np.pi/2,
+        ))
+        self.dither()
+        self.play(FadeIn(self.x_axis))
+        self.play(Write(r_ticks, run_time = 1))
+        self.dither()
+        self.play(
+            GrowFromCenter(dr_brace),
+            dr_copy.next_to, dr_brace.copy(), UP
+        )
+        self.dither()
+
+        self.r_ticks = r_ticks
+        self.dr_brace_group = VGroup(dr_brace, dr_copy)
+
+    def smaller_dr(self):
+        self.transition_to_alt_config(dR = 0.05)
+
+    def show_riemann_sum(self):
+        graph = self.get_graph(lambda r : 2*np.pi*r)
+        graph_label = self.get_graph_label(
+            graph, "2\\pi r",
+            x_val = 2.5,
+            direction = UP+LEFT
+        )
+        rects = self.get_riemann_rectangles(
+            graph,
+            x_min = 0, 
+            x_max = 3,
+            dx = self.dR
+        )
+
+        self.play(
+            Write(self.y_axis, run_time = 2),
+            *map(FadeOut, [
+                self.approximations,
+                self.area_label,
+                self.area_arrows,
+                self.dr_brace_group,
+                self.r_ticks,
+            ])
+        )
+        self.play(
+            ReplacementTransform(
+                self.rings.copy(), rects,
+                run_time = 2,
+                submobject_mode = "lagged_start"
+            ),
+            Animation(self.x_axis),
+        )
+        self.play(ShowCreation(graph))
+        self.play(Write(graph_label))
+        self.dither()
+
+        self.graph = graph
+        self.graph_label = graph_label
+        self.rects = rects
+
+    def limiting_riemann_sum(self):
+        thinner_rects_list = [
+            self.get_riemann_rectangles(
+                self.graph,
+                x_min = 0, 
+                x_max = 3,
+                dx = 1./(10*2**n),
+                stroke_width = 1./(2**n),
+                start_color = self.rects[0].get_fill_color(),
+                end_color = self.rects[-1].get_fill_color(),
+            )
+            for n in range(1, 4)
+        ]
+
+        for new_rects in thinner_rects_list:
+            self.play(
+                Transform(
+                    self.rects, new_rects, 
+                    submobject_mode = "lagged_start",
+                    run_time = 2
+                ),
+                Animation(self.axes),
+                Animation(self.graph),
+            )
+            self.dither()
+
+    def full_precision(self):
+        words = TextMobject("Area under \\\\ a graph")
+        group = VGroup(TexMobject("\\Downarrow"), words)
+        group.arrange_submobjects(DOWN)
+        group.highlight(YELLOW)
+        group.scale(0.8)
+        group.next_to(self.integral_condition, DOWN)
+
+        arc = Arc(start_angle = 2*np.pi/3, angle = 2*np.pi/3)
+        arc.scale(2)
+        arc.add_tip()
+        arc.add(arc[1].copy().rotate(np.pi, RIGHT))
+        arc_next_to_group = VGroup(
+            self.integral_condition[0][0],
+            words[0]
+        )
+        arc.scale_to_fit_height(
+            arc_next_to_group.get_height()-MED_LARGE_BUFF
+        )
+        arc.next_to(arc_next_to_group, LEFT, SMALL_BUFF)
+
+        self.play(Write(group))
+        self.dither()
+        self.play(ShowCreation(arc))
+        self.dither()
+
+class ExampleIntegralProblems(PiCreatureScene, GraphScene):
+    CONFIG = {
+        "dt" : 0.2,
+        "t_max" : 7,
+        "x_max" : 8,
+        "y_axis_height" : 5.5,
+        "x_axis_label" : "$t$",
+        "y_axis_label" : "",
+        "graph_origin" : 3*DOWN + 4.5*LEFT
+    }
+    def construct(self):
+        self.write_integral_condition()
+        self.show_car()
+        self.show_graph()
+        self.let_dt_approach_zero()
+        self.show_confusion()
+
+    def write_integral_condition(self):
+        words = TextMobject(
+            "Hard problem $\\Rightarrow$ Sum of many small values"
+        )
+        words.to_edge(UP)
+
+        self.play(
+            Write(words),
+            self.pi_creature.change_mode, "raise_right_hand"
+        )
+        self.dither()
+
+        self.words = words
+
+    def show_car(self):
+        car = Car()
+        start, end = 3*LEFT+UP, 5*RIGHT+UP
+        car.move_to(start)
+
+        line = Line(start, end)
+        tick_height = MED_SMALL_BUFF
+        ticks = VGroup(*[
+            Line(
+                p+tick_height*UP/2,
+                p+tick_height*DOWN/2,
+                color = YELLOW,
+                stroke_width = 2
+            )
+            for t in np.arange(0, self.t_max, self.dt)
+            for p in [
+                line.point_from_proportion(smooth(t/self.t_max))
+            ]
+        ])
+
+        index = int(len(ticks)/2)
+        brace_ticks = VGroup(*ticks[index:index+2])
+        brace = Brace(brace_ticks, UP)
+        v_dt = TexMobject("v(t)", "dt")
+        v_dt.next_to(brace, UP, SMALL_BUFF)
+        v_dt.highlight(YELLOW)
+        v_dt_brace_group = VGroup(brace, v_dt)
+
+        self.play(
+            FadeIn(car),
+            self.pi_creature.change_mode, "plain"
+        )
+        self.play(
+            MoveCar(car, end),
+            FadeIn(
+                ticks, 
+                submobject_mode = "one_at_a_time",
+                rate_func = None,
+            ),
+            ShowCreation(line),
+            FadeIn(
+                v_dt_brace_group,
+                rate_func = squish_rate_func(smooth, 0.6, 0.8)
+            ),
+            run_time = self.t_max
+        )
+        self.dither()
+
+        self.v_dt_brace_group = v_dt_brace_group
+        self.line = line
+        self.ticks = ticks
+        self.car = car
+
+    def show_graph(self):
         self.setup_axes()
+        self.remove(self.axes)
+        s_graph = self.get_graph(
+            lambda t : 1.8*self.y_max*smooth(t/self.t_max)
+        )
+        v_graph = self.get_derivative_graph(s_graph)
+        rects = self.get_riemann_rectangles(
+            v_graph,
+            x_min = 0, 
+            x_max = self.t_max,
+            dx = self.dt
+        )
+        rects.set_fill(opacity = 0.5)
+        pre_rects = rects.copy()
+        pre_rects.rotate(-np.pi/2)
+        for index, pre_rect in enumerate(pre_rects):
+            ti1 = len(self.ticks)*index/len(pre_rects)
+            ti2 = min(ti1+1, len(self.ticks)-1)
+            tick_pair = VGroup(self.ticks[ti1], self.ticks[ti2])
+            pre_rect.stretch_to_fit_width(tick_pair.get_width())
+            pre_rect.move_to(tick_pair)
 
+        special_rect = rects[int(0.6*len(rects))]
+        brace = Brace(special_rect, LEFT, buff = 0)
 
+        v_dt_brace_group_copy = self.v_dt_brace_group.copy()
+        start_brace, (v_t, dt) = v_dt_brace_group_copy
 
+        self.play(
+            FadeIn(
+                pre_rects, 
+                run_time = 2,
+                submobject_mode = "lagged_start"
+            ),
+            Animation(self.ticks)
+        )
+        self.play(
+            ReplacementTransform(
+                pre_rects, rects,
+                run_time = 3,
+                submobject_mode = "lagged_start"
+            ),
+            Animation(self.ticks),
+            Write(self.axes, run_time = 1)
+        )
+        self.play(ShowCreation(v_graph))
+        self.change_mode("pondering")
+        self.dither()
+        self.play(
+            v_t.next_to, brace, LEFT, SMALL_BUFF,
+            dt.next_to, special_rect, DOWN,
+            special_rect.set_fill, None, 1,
+            ReplacementTransform(start_brace, brace),
+        )
+        self.dither(3)
 
+        self.v_graph = v_graph
+        self.rects = rects
+        self.v_dt_brace_group_copy = v_dt_brace_group_copy
 
+    def let_dt_approach_zero(self):
+        thinner_rects_list = [
+            self.get_riemann_rectangles(
+                self.v_graph,
+                x_min = 0,
+                x_max = self.t_max,
+                dx = self.dt/(2**n),
+                stroke_width = 1./(2**n)
+            )
+            for n in range(1, 5)
+        ]
 
+        self.play(
+            self.rects.set_fill, None, 1,
+            Animation(self.x_axis),
+            FadeOut(self.v_dt_brace_group_copy),
+        )
+        self.change_mode("thinking")
+        self.dither()
+        for thinner_rects in thinner_rects_list:
+            self.play(
+                Transform(
+                    self.rects, thinner_rects,
+                    run_time = 2,
+                    submobject_mode = "lagged_start"
+                )
+            )
+            self.dither()
 
+    def show_confusion(self):
+        randy = Randolph()
+        randy.to_corner(DOWN+LEFT)
+        randy.to_edge(LEFT, buff = MED_SMALL_BUFF)
 
-
-
-
-
-
-
-
+        self.play(FadeIn(randy))
+        self.play(randy.change_mode, "confused")
+        self.change_mode("plain")
+        self.play(Blink(randy))
+        self.dither()
 
 
 

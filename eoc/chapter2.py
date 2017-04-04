@@ -60,7 +60,6 @@ class Car(SVGMobject):
         self.add(orientation_line)
         self.orientation_line = orientation_line
 
-
         self.add_treds_to_tires()
 
     def move_to(self, point_or_mobject):

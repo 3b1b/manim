@@ -29,6 +29,7 @@ class GraphScene(Scene):
         "axes_color" : GREY,
         "graph_origin" : 2.5*DOWN + 4*LEFT,
         "y_axis_numbers_nudge" : 0.4*UP,
+        "exclude_zero_label" : True,
         "num_graph_anchor_points" : 25,
         "default_graph_colors" : [BLUE, GREEN, YELLOW],
         "default_derivative_color" : GREEN,
@@ -49,10 +50,12 @@ class GraphScene(Scene):
         )
         x_axis.shift(self.graph_origin - x_axis.number_to_point(0))        
         if len(self.x_labeled_nums) > 0:
-            x_axis.add_numbers(*filter(
-                lambda x : x != 0,
-                self.x_labeled_nums
-            ))
+            if self.exclude_zero_label:
+                self.x_labeled_nums = filter(
+                    lambda x : x != 0,
+                    self.x_labeled_nums
+                )
+            x_axis.add_numbers(*self.x_labeled_nums)
         x_label = TextMobject(self.x_axis_label)
         x_label.next_to(
             x_axis.get_tick_marks(), UP+RIGHT, 
@@ -77,10 +80,12 @@ class GraphScene(Scene):
         y_axis.shift(self.graph_origin-y_axis.number_to_point(0))
         y_axis.rotate(np.pi/2, about_point = y_axis.number_to_point(0))
         if len(self.y_labeled_nums) > 0:
-            y_axis.add_numbers(*filter(
-                lambda y : y != 0,
-                self.y_labeled_nums
-            ))
+            if self.exclude_zero_label:
+                self.y_labeled_nums = filter(
+                    lambda y : y != 0,
+                    self.y_labeled_nums
+                )
+            y_axis.add_numbers(*self.y_labeled_nums)
             for mob in y_axis.numbers:
                 mob.next_to(mob.get_center(), LEFT, MED_SMALL_BUFF)
                 mob.shift(self.y_axis_numbers_nudge)
@@ -184,6 +189,7 @@ class GraphScene(Scene):
         x_min = None, 
         x_max = None, 
         dx = 0.1, 
+        input_sample_type = "left",
         stroke_width = 1,
         start_color = BLUE,
         end_color = GREEN):
@@ -191,10 +197,19 @@ class GraphScene(Scene):
         x_max = x_max if x_max is not None else self.x_max
         rectangles = VGroup()
         for x in np.arange(x_min, x_max, dx):
+            if input_sample_type == "left":
+                sample_input = x
+            elif input_sample_type == "right":
+                sample_input = x+dx
+            else:
+                raise Exception("Invalid input sample type")
+            graph_point = self.input_to_graph_point(sample_input, graph)
             points = VGroup(*map(VectorizedPoint, [
                 self.coords_to_point(x, 0),
-                self.input_to_graph_point(x+dx, graph)
+                self.coords_to_point(x+dx, 0),
+                graph_point
             ]))
+
             rect = Rectangle()
             rect.replace(points, stretch = True)
             rect.set_fill(opacity = 1)

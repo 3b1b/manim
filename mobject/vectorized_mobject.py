@@ -201,6 +201,7 @@ class VMobject(Mobject):
         it comes time to display.
         """
         subpath_mobject = self.copy() ##Really helps to be of the same class
+        subpath_mobject.submobjects = []
         subpath_mobject.is_subpath = True
         subpath_mobject.set_points(points)
         self.add(subpath_mobject)
