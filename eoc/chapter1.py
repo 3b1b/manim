@@ -1799,6 +1799,9 @@ class ExampleIntegralProblems(PiCreatureScene, GraphScene):
             run_time = self.t_max
         )
         self.dither()
+        for mob in v_dt:
+            self.play(Indicate(mob))
+            self.dither(2)
 
         self.v_dt_brace_group = v_dt_brace_group
         self.line = line
@@ -1875,7 +1878,7 @@ class ExampleIntegralProblems(PiCreatureScene, GraphScene):
                 dx = self.dt/(2**n),
                 stroke_width = 1./(2**n)
             )
-            for n in range(1, 5)
+            for n in range(1, 4)
         ]
 
         self.play(
@@ -1896,15 +1899,276 @@ class ExampleIntegralProblems(PiCreatureScene, GraphScene):
             self.dither()
 
     def show_confusion(self):
-        randy = Randolph()
+        randy = Randolph(color = BLUE_C)
         randy.to_corner(DOWN+LEFT)
         randy.to_edge(LEFT, buff = MED_SMALL_BUFF)
 
         self.play(FadeIn(randy))
-        self.play(randy.change_mode, "confused")
-        self.change_mode("plain")
+        self.play(
+            randy.change_mode, "confused",
+            randy.look_at, self.rects
+        )
+        self.play(
+            self.pi_creature.change_mode, "confused",
+            self.pi_creature.look_at, randy.eyes
+        )
         self.play(Blink(randy))
         self.dither()
+
+class MathematicianPonderingAreaUnderDifferentCurves(PiCreatureScene):
+    def construct(self):
+        self.play(
+            self.pi_creature.change_mode, "raise_left_hand",
+            self.pi_creature.look, UP+LEFT
+        )
+        self.dither(4)
+        self.play(
+            self.pi_creature.change_mode, "raise_right_hand",
+            self.pi_creature.look, UP+RIGHT
+        )
+        self.dither(4)
+        self.play(
+            self.pi_creature.change_mode, "pondering",
+            self.pi_creature.look, UP+LEFT
+        )
+        self.dither(2)
+
+    def create_pi_creature(self):
+        self.pi_creature = Randolph(color = BLUE_C)
+        self.pi_creature.to_edge(DOWN)
+        return self.pi_creature
+
+class AreaUnderParabola(GraphScene):
+    CONFIG = {
+        "x_max" : 4,
+        "x_labeled_nums" : range(-1, 5),
+        "y_min" : 0,
+        "y_max" : 15,
+        "y_tick_frequency" : 2.5,
+        "y_labeled_nums" : range(5, 20, 5),
+        "n_rect_iteration" : 6,
+    }
+    def construct(self):
+        self.force_skipping()
+
+        self.setup_axes()
+        self.show_graph()
+        self.show_area()
+        self.ask_about_area()
+        self.show_confusion()
+        self.show_variable_endpoint()
+        self.name_integral()
+
+    def show_graph(self):
+        graph = self.get_graph(lambda x : x**2)
+        graph_label = self.get_graph_label(
+            graph, "x^2", 
+            direction = LEFT,
+            x_val = 3.8,
+        )
+
+        self.play(ShowCreation(graph))
+        self.play(Write(graph_label))
+        self.dither()
+
+        self.graph = graph
+        self.graph_label = graph_label
+
+    def show_area(self):
+        dx_list = [0.25/(2**n) for n in range(self.n_rect_iteration)]
+        rect_lists = [
+            self.get_riemann_rectangles(
+                self.graph,
+                x_min = 0,
+                x_max = 3,
+                dx = dx,
+                stroke_width = 4*dx,
+            )
+            for dx in dx_list
+        ]
+        rects = rect_lists[0]
+        foreground_mobjects = [self.axes, self.graph]
+
+        self.play(
+            DrawBorderThenFill(
+                rects,
+                run_time = 2,
+                rate_func = smooth,
+                submobject_mode = "lagged_start",
+            ),
+            *map(Animation, foreground_mobjects)
+        )
+        self.dither()
+        for new_rects in rect_lists[1:]:
+            self.play(
+                Transform(
+                    rects, new_rects,
+                    submobject_mode = "lagged_start",
+                ), 
+                *map(Animation, foreground_mobjects)
+            )
+        self.dither()
+
+        self.rects = rects
+        self.dx = dx_list[-1]
+        self.foreground_mobjects = foreground_mobjects
+
+    def ask_about_area(self):
+        rects = self.rects
+        question = TextMobject("Area?")
+        question.next_to(rects, RIGHT, aligned_edge = UP)
+        mid_rect = rects[2*len(rects)/3]
+        arrow = Arrow(question.get_bottom(), mid_rect)
+
+        v_lines = VGroup(*[
+            DashedLine(
+                2*SPACE_HEIGHT*UP, ORIGIN,
+                color = RED
+            ).move_to(self.coords_to_point(x, 0), DOWN)
+            for x in 0, 3
+        ])
+
+        self.play(
+            Write(question),
+            ShowCreation(arrow)
+        )
+        self.dither()
+        self.play(ShowCreation(v_lines, run_time = 2))
+        self.dither()
+
+        self.foreground_mobjects += [question, arrow]
+        self.question = question
+        self.question_arrow = arrow
+        self.v_lines = v_lines
+
+    def show_confusion(self):
+        morty = Mortimer()
+        morty.to_corner(DOWN+RIGHT)
+
+        self.play(FadeIn(morty))
+        self.play(
+            morty.change_mode, "confused",
+            morty.look_at, self.question,
+        )
+        self.play(morty.look_at, self.rects.get_bottom())
+        self.play(Blink(morty))
+        self.play(morty.look_at, self.question)
+        self.dither()
+        self.play(Blink(morty))
+        self.play(FadeOut(morty))
+
+    def show_variable_endpoint(self):
+        triangle = RegularPolygon(
+            n = 3,
+            start_angle = np.pi/2,
+            stroke_width = 0,
+            fill_color = WHITE,
+            fill_opacity = 1,
+        )
+        triangle.scale_to_fit_height(0.25)
+        triangle.move_to(self.v_lines[1].get_bottom(), UP)
+        x_label = TexMobject("x")
+        x_label.next_to(triangle, DOWN)
+        self.right_point_slider = VGroup(triangle, x_label)
+
+        A_func = TexMobject("A(x)")
+        A_func.move_to(self.question, DOWN)
+
+        self.play(FadeOut(self.x_axis.numbers))
+        self.x_axis.remove(*self.x_axis.numbers)
+        self.foreground_mobjects.remove(self.axes)
+        self.play(DrawBorderThenFill(self.right_point_slider))
+        self.move_right_point_to(2)
+        self.dither()
+        self.move_right_point_to(3)
+        self.dither()
+        self.play(ReplacementTransform(self.question, A_func))
+        self.dither()
+
+        self.A_func = A_func
+
+    def name_integral(self):
+        words = TextMobject("``Integral'' of ", "$x^2$")
+        words.highlight_by_tex("x^2", self.graph_label.get_color())
+        words.next_to(self.A_func, UP, LARGE_BUFF)
+        words.to_edge(RIGHT)
+        arrow = Arrow(words.get_bottom(), self.A_func)
+        arrow.highlight(WHITE)
+
+        self.foreground_mobjects += [words, arrow]
+
+        self.revert_to_original_skipping_status()
+        self.play(
+            Write(words),
+            ShowCreation(arrow)
+        )
+        self.dither()
+        for x in 4, 2, 3:
+            self.move_right_point_to(x, run_time = 2)
+
+    ####
+
+    def move_right_point_to(self, target_x, **kwargs):
+        v_line = self.v_lines[1]
+        slider = self.right_point_slider
+        rects = self.rects
+        curr_x = self.x_axis.point_to_number(v_line.get_bottom())
+
+        group = VGroup(rects, v_line, slider)
+        def update_group(group, alpha):
+            rects, v_line, slider = group
+            new_x = interpolate(curr_x, target_x, alpha)
+            new_rects = self.get_riemann_rectangles(
+                self.graph,
+                x_min = 0,
+                x_max = new_x,
+                dx = self.dx*new_x/3.0,
+                stroke_width = rects[0].get_stroke_width(),
+            )
+            point = self.coords_to_point(new_x, 0)
+            v_line.move_to(point, DOWN)
+            slider.move_to(point, UP)
+            Transform(rects, new_rects).update(1)
+            return VGroup(rects, v_line, slider)
+
+        self.play(
+            UpdateFromAlphaFunc(
+                group, update_group,
+                **kwargs
+            ),
+            *map(Animation, self.foreground_mobjects)
+        )
+
+class WhoCaresAboutArea(TeacherStudentsScene):
+    def construct(self):
+        point = 2*RIGHT+3*UP
+
+        self.student_says(
+            "Who cares!?!", target_mode = "angry",
+        )
+        self.play(self.teacher.change_mode, "guilty")
+        self.dither()
+        self.play(
+            RemovePiCreatureBubble(self.students[1]),
+            self.teacher.change_mode, "raise_right_hand",
+            self.teacher.look_at, point
+        )
+        self.change_student_modes(
+            *["pondering"]*3, 
+            look_at_arg = point,
+            added_anims = [self.teacher.look_at, point]
+
+        )
+        self.dither(3)
+
+
+
+
+
+
+
+
+
 
 
 
