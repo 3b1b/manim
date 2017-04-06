@@ -142,18 +142,15 @@ class Scene(object):
             lambda m : m not in mobjects_to_remove,
             self.mobjects
         )
-        self.remove_mobjects_without_family_on_screen()
+        self.remove_mobjects_not_completely_on_screen()
         return self
 
-    def remove_mobjects_without_family_on_screen(self):
+    def remove_mobjects_not_completely_on_screen(self):
         def should_keep(mobject):
-            if mobject.get_num_points() > 0:
-                return True
-            num_family_members_among_mobjects = sum([
+            return all([
                 submob in self.mobjects
-                for submob in mobject.submobject_family()
+                for submob in mobject.family_members_with_points()
             ])
-            return num_family_members_among_mobjects > 1
 
         self.mobjects = filter(should_keep, self.mobjects)
         return self
