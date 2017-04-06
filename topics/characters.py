@@ -8,8 +8,7 @@ from mobject.tex_mobject import TextMobject, TexMobject
 from topics.objects import Bubble, ThoughtBubble, SpeechBubble
 
 from animation import Animation
-from animation.transform import Transform, ApplyMethod, \
-    FadeOut, FadeIn, ApplyPointwiseFunction, MoveToTarget
+from animation.transform import *
 from animation.simple_animations import Write, ShowCreation, AnimationGroup
 from scene import Scene
 
@@ -151,10 +150,15 @@ class PiCreature(SVGMobject):
             self.to_corner(DOWN+LEFT, **kwargs)
         return self
 
-    def get_bubble(self, bubble_class = ThoughtBubble, **kwargs):
+    def get_bubble(self, *content, **kwargs):
+        bubble_class = kwargs.get("bubble_class", ThoughtBubble)
         bubble = bubble_class(**kwargs)
-        if "content" in kwargs:
-            bubble.add_content(kwargs["content"])
+        if len(content) > 0:
+            if isinstance(content[0], str):
+                content_mob = TextMobject(*content)
+            else:
+                content_mob = content[0]
+            bubble.add_content(content_mob)
             if "height" not in kwargs and "width" not in kwargs:
                 bubble.resize_to_content()
         bubble.pin_to(self)
@@ -296,13 +300,9 @@ class PiCreatureBubbleIntroduction(AnimationGroup):
     }
     def __init__(self, pi_creature, *content, **kwargs):
         digest_config(self, kwargs)
-        if isinstance(content[0], Mobject):
-            bubble_content = content[0]
-        else:
-            bubble_content = TextMobject(*content)
         bubble = pi_creature.get_bubble(
-            self.bubble_class,
-            content = bubble_content,
+            *content,
+            bubble_class = self.bubble_class,
             **self.bubble_kwargs
         )
 
@@ -395,58 +395,67 @@ class PiCreatureScene(Scene):
             self.get_pi_creatures()
         ))
 
-    def introduce_bubble(
-        self, 
-        pi_creature,
-        bubble_class,
-        content = None,
-        target_mode = None,
-        bubble_kwargs = None,
-        bubble_removal_kwargs = None,
-        added_anims = None,
-        **kwargs
-        ):
-        content = content or []
-        if target_mode is None:
-            target_mode = "thinking" if bubble_class is ThoughtBubble else "speaking"
-        bubble_kwargs = bubble_kwargs or dict()
-        bubble_removal_kwargs = bubble_removal_kwargs or dict()
-        added_anims = added_anims or []
+    def introduce_bubble(self, pi_creature, *content, **kwargs):
+        bubble_class = kwargs.pop("bubble_class", SpeechBubble)
+        target_mode = kwargs.pop(
+            "target_mode", 
+            "thinking" if bubble_class is ThoughtBubble else "speaking"
+        )
+        bubble_kwargs = kwargs.pop("bubble_kwargs", {})
+        bubble_removal_kwargs = kwargs.pop("bubble_removal_kwargs", {})
+        added_anims = kwargs.pop("added_anims", [])
 
-        pi_creatures_with_bubbles = [
-            pi for pi in self.get_pi_creatures()
-            if pi is not pi_creature
-            if hasattr(pi, "bubble") and pi.bubble is not None
-        ]
-        added_anims += [
-            RemovePiCreatureBubble(pi, **bubble_removal_kwargs)
-            for pi in pi_creatures_with_bubbles
-        ]
-        self.play(
-            PiCreatureBubbleIntroduction(
+        anims = []
+        on_screen_mobjects = self.get_mobjects()
+        def has_bubble(pi):
+            return hasattr(pi, "bubble") and \
+                   pi.bubble is not None and \
+                   pi.bubble in on_screen_mobjects
+
+        pi_creatures_with_bubbles = filter(has_bubble, self.get_pi_creatures())
+        if pi_creature in pi_creatures_with_bubbles:
+            pi_creatures_with_bubbles.remove(pi_creature)
+            old_bubble = pi_creature.bubble
+            bubble = pi_creature.get_bubble(
+                *content,
+                bubble_class = bubble_class,
+                **bubble_kwargs
+            )
+            anims += [
+                ReplacementTransform(old_bubble, bubble),
+                ReplacementTransform(old_bubble.content, bubble.content),
+                pi_creature.change_mode, target_mode
+            ]
+        else:
+            anims.append(PiCreatureBubbleIntroduction(
                 pi_creature,
                 *content,
                 bubble_class = bubble_class,
                 bubble_kwargs = bubble_kwargs,
                 target_mode = target_mode,
                 **kwargs
-            ),
-            *added_anims
-        )
+            ))
+        anims += [
+            RemovePiCreatureBubble(pi, **bubble_removal_kwargs)
+            for pi in pi_creatures_with_bubbles
+        ]
+        anims += added_anims
+
+        self.play(*anims)
 
     def pi_creature_says(self, pi_creature, *content, **kwargs):
         self.introduce_bubble(
             pi_creature, 
+            *content,
             bubble_class = SpeechBubble,
-            content = content,
             **kwargs
         )
 
     def pi_creature_thinks(self, pi_creature, *content, **kwargs):
         self.introduce_bubble(
             pi_creature,
+            *content,
             bubble_class = ThoughtBubble,
-            content = content,
             **kwargs
         )
 
