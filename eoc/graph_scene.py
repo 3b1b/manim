@@ -35,6 +35,9 @@ class GraphScene(Scene):
         "default_derivative_color" : GREEN,
         "default_input_color" : YELLOW,
     }
+    def setup(self):
+        self.default_graph_colors_cycle = it.cycle(self.default_graph_colors)
+
     def setup_axes(self, animate = False):
         x_num_range = float(self.x_max - self.x_min)
         self.space_unit_to_x = self.x_axis_width/x_num_range
@@ -118,7 +121,7 @@ class GraphScene(Scene):
         x_max = None,
         ):
         if color is None:
-            color = self.default_graph_colors.next()
+            color = self.default_graph_colors_cycle.next()
         if x_min is None:
             x_min = self.x_min
         if x_max is None:

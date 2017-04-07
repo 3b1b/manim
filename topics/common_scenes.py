@@ -91,6 +91,7 @@ class PatreonThanks(Scene):
             "Felipe  Diniz",
         ],
         "max_patrons_height" : 2*SPACE_HEIGHT - 1,
+        "patron_scale_val" : 0.7,
     }
     def construct(self):
         morty = Mortimer()
@@ -117,7 +118,7 @@ class PatreonThanks(Scene):
             )
 
         all_patrons = VGroup(left_patrons, right_patrons)
-        all_patrons.scale(0.7)
+        all_patrons.scale(self.patron_scale_val)
         for patrons, vect in (left_patrons, LEFT), (right_patrons, RIGHT):
             patrons.to_corner(UP+vect, buff = MED_SMALL_BUFF)
 

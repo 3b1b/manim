@@ -40,9 +40,6 @@ class PartyHat(SVGMobject):
         self.cone.highlight(self.cone_color)
         self.dots.gradient_highlight(*self.dots_colors)
 
-
-
-
 class Laptop(VGroup):
     CONFIG = {
         "width" : 3,
@@ -135,7 +132,6 @@ class PatreonLogo(SVGMobject):
         self.scale_to_fit_height(self.height)
         self.center()
 
-
 class VideoIcon(SVGMobject):
     CONFIG = {
         "file_name" : "video_icon",
@@ -163,7 +159,6 @@ class VideoSeries(VGroup):
         self.arrange_submobjects()
         self.scale_to_fit_width(2*SPACE_WIDTH-MED_LARGE_BUFF)
         self.gradient_highlight(*self.gradient_colors)
-
 
 class Headphones(SVGMobject):
     CONFIG = {

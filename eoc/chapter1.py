@@ -1946,11 +1946,13 @@ class AreaUnderParabola(GraphScene):
         "y_max" : 15,
         "y_tick_frequency" : 2.5,
         "y_labeled_nums" : range(5, 20, 5),
-        "n_rect_iteration" : 6,
+        "n_rect_iterations" : 6,
+        "default_right_x" : 3,
+        "func" : lambda x : x**2,
+        "graph_label_tex" : "x^2",
+        "graph_label_x_val" : 3.8,
     }
     def construct(self):
-        self.force_skipping()
-
         self.setup_axes()
         self.show_graph()
         self.show_area()
@@ -1960,11 +1962,11 @@ class AreaUnderParabola(GraphScene):
         self.name_integral()
 
     def show_graph(self):
-        graph = self.get_graph(lambda x : x**2)
+        graph = self.get_graph(self.func)
         graph_label = self.get_graph_label(
-            graph, "x^2", 
+            graph, self.graph_label_tex, 
             direction = LEFT,
-            x_val = 3.8,
+            x_val = self.graph_label_x_val,
         )
 
         self.play(ShowCreation(graph))
@@ -1975,12 +1977,12 @@ class AreaUnderParabola(GraphScene):
         self.graph_label = graph_label
 
     def show_area(self):
-        dx_list = [0.25/(2**n) for n in range(self.n_rect_iteration)]
+        dx_list = [0.25/(2**n) for n in range(self.n_rect_iterations)]
         rect_lists = [
             self.get_riemann_rectangles(
                 self.graph,
                 x_min = 0,
-                x_max = 3,
+                x_max = self.default_right_x,
                 dx = dx,
                 stroke_width = 4*dx,
             )
@@ -2016,16 +2018,16 @@ class AreaUnderParabola(GraphScene):
     def ask_about_area(self):
         rects = self.rects
         question = TextMobject("Area?")
-        question.next_to(rects, RIGHT, aligned_edge = UP)
+        question.move_to(rects.get_top(), DOWN)
         mid_rect = rects[2*len(rects)/3]
-        arrow = Arrow(question.get_bottom(), mid_rect)
+        arrow = Arrow(question.get_bottom(), mid_rect.get_center())
 
         v_lines = VGroup(*[
             DashedLine(
                 2*SPACE_HEIGHT*UP, ORIGIN,
                 color = RED
             ).move_to(self.coords_to_point(x, 0), DOWN)
-            for x in 0, 3
+            for x in 0, self.default_right_x
         ])
 
         self.play(
@@ -2080,7 +2082,7 @@ class AreaUnderParabola(GraphScene):
         self.play(DrawBorderThenFill(self.right_point_slider))
         self.move_right_point_to(2)
         self.dither()
-        self.move_right_point_to(3)
+        self.move_right_point_to(self.default_right_x)
         self.dither()
         self.play(ReplacementTransform(self.question, A_func))
         self.dither()
@@ -2088,23 +2090,21 @@ class AreaUnderParabola(GraphScene):
         self.A_func = A_func
 
     def name_integral(self):
-        words = TextMobject("``Integral'' of ", "$x^2$")
-        words.highlight_by_tex("x^2", self.graph_label.get_color())
-        words.next_to(self.A_func, UP, LARGE_BUFF)
-        words.to_edge(RIGHT)
-        arrow = Arrow(words.get_bottom(), self.A_func)
-        arrow.highlight(WHITE)
+        f_tex = "$%s$"%self.graph_label_tex
+        words = TextMobject("``Integral'' of ", f_tex)
+        words.highlight_by_tex(f_tex, self.graph_label.get_color())
+        brace = Brace(self.A_func, UP)
+        words.next_to(brace, UP)
 
-        self.foreground_mobjects += [words, arrow]
-
-        self.revert_to_original_skipping_status()
         self.play(
             Write(words),
-            ShowCreation(arrow)
+            GrowFromCenter(brace)
         )
         self.dither()
-        for x in 4, 2, 3:
+        for x in 4, 2, self.default_right_x:
             self.move_right_point_to(x, run_time = 2)
+
+        self.integral_words_group = VGroup(brace, words)
 
     ####
 
@@ -2161,18 +2161,519 @@ class WhoCaresAboutArea(TeacherStudentsScene):
         )
         self.dither(3)
 
+class PlayWithThisIdea(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Play with", "the", "thought!",
+            target_mode = "hooray"
+        )
+        self.change_student_modes(*["happy"]*3)
+        self.dither()
+        equation = TexMobject("A(x)", "\\leftrightarrow", "x^2")
+        equation.highlight_by_tex("x^2", BLUE)
+        self.teacher_says(equation, target_mode = "sassy")
+        self.change_student_modes(*["thinking"]*3)
+        self.dither(2)
+
+class PlayingTowardsDADX(AreaUnderParabola, ReconfigurableScene):
+    CONFIG = {
+        "n_rect_iterations" : 6,
+        "deriv_dx" : 0.2,
+        "graph_origin" : 2.5*DOWN + 6*LEFT,
+    }
+    def setup(self):
+        AreaUnderParabola.setup(self)
+        ReconfigurableScene.setup(self)
+
+    def construct(self):
+        self.fast_forward_to_end_of_previous_scene()
+
+        self.nudge_x()
+        self.describe_sliver()
+        self.shrink_dx()
+        self.write_dA_dx()
+        self.dA_remains_a_mystery()
+        self.write_example_inputs()
+        self.show_dA_dx_in_detail()
+        self.show_smaller_x()
+
+    def fast_forward_to_end_of_previous_scene(self):
+        self.force_skipping()
+        AreaUnderParabola.construct(self)
+        self.revert_to_original_skipping_status()
+
+    def nudge_x(self):
+        shadow_rects = self.rects.copy()
+        shadow_rects.set_fill(BLACK, opacity = 0.5)
+
+        original_v_line = self.v_lines[1].copy()
+        right_v_lines = VGroup(original_v_line, self.v_lines[1])
+        curr_x = self.x_axis.point_to_number(original_v_line.get_bottom())
+
+        self.add(original_v_line)
+        self.foreground_mobjects.append(original_v_line)
+        self.move_right_point_to(curr_x + self.deriv_dx)
+        self.play(
+            FadeIn(shadow_rects), 
+            *map(Animation, self.foreground_mobjects)
+        )
+
+        self.shadow_rects = shadow_rects
+        self.right_v_lines = right_v_lines
+
+    def describe_sliver(self):
+        dx_brace = Brace(self.right_v_lines, DOWN, buff = 0)
+        dx_label = dx_brace.get_text("$dx$")
+        dx_group = VGroup(dx_brace, dx_label)
+
+        dA_rect = Rectangle(
+            width = self.right_v_lines.get_width(),
+            height = self.shadow_rects[-1].get_height(),
+            stroke_width = 0,
+            fill_color = YELLOW,
+            fill_opacity = 0.5,
+        ).move_to(self.right_v_lines, DOWN)
+        dA_label = TexMobject("d", "A")
+        dA_label.next_to(dA_rect, RIGHT, MED_LARGE_BUFF, UP)
+        dA_label.highlight(GREEN)
+        dA_arrow = Arrow(
+            dA_label.get_bottom()+MED_SMALL_BUFF*DOWN, 
+            dA_rect.get_center(),
+            buff = 0,
+            color = WHITE
+        )
+
+        difference_in_area = TextMobject(
+            "d", "ifference in ", "A", "rea",
+            arg_separator = ""
+        )
+        difference_in_area.highlight_by_tex("d", GREEN)
+        difference_in_area.highlight_by_tex("A", GREEN)
+        difference_in_area.scale(0.7)
+        difference_in_area.next_to(dA_label, UP, MED_SMALL_BUFF, LEFT)
+
+        side_brace = Brace(dA_rect, LEFT, buff = 0)
+        graph_label_copy = self.graph_label.copy()
+
+        self.play(
+            FadeOut(self.right_point_slider),
+            FadeIn(dx_group)
+        )
+        self.play(Indicate(dx_label))
+        self.dither()
+        self.play(ShowCreation(dA_arrow))
+        self.dither()
+        self.play(Write(dA_label, run_time = 2))
+        self.dither()
+        self.play(
+            ReplacementTransform(dA_label[0].copy(), difference_in_area[0]),
+            ReplacementTransform(dA_label[1].copy(), difference_in_area[2]),
+            *map(FadeIn, [difference_in_area[1], difference_in_area[3]])
+        )
+        self.dither(2)
+        self.play(FadeIn(dA_rect), Animation(dA_arrow))
+        self.play(GrowFromCenter(side_brace))
+        self.play(
+            graph_label_copy.highlight, WHITE,
+            graph_label_copy.next_to, side_brace, LEFT, SMALL_BUFF
+        )
+        self.dither()
+        self.play(Indicate(dx_group))
+        self.dither()
+        self.play(FadeOut(difference_in_area))
+
+        self.dx_group = dx_group
+        self.dA_rect = dA_rect
+        self.dA_label = dA_label
+        self.graph_label_copy = graph_label_copy
+
+    def shrink_dx(self, **kwargs):
+        self.transition_to_alt_config(
+            deriv_dx = 0.05,
+            transformation_kwargs = {"run_time" : 2},
+            **kwargs
+        )
+
+    def write_dA_dx(self):
+        f_tex = self.graph_label_tex
+        equation = TexMobject("dA", "\\approx", f_tex, "dx")
+        equation.to_edge(RIGHT).shift(3*UP)
+        deriv_equation = TexMobject(
+            "{dA", "\\over \\,", "dx}", "\\approx", f_tex
+        )
+        deriv_equation.move_to(equation, UP+LEFT)
+
+        for tex_mob in equation, deriv_equation:
+            tex_mob.highlight_by_tex(
+                "dA", self.dA_label.get_color()
+            )
+
+        dA = VGroup(self.dA_label[0][0], self.dA_label[1][0])
+        x_squared = self.graph_label_copy
+        dx = self.dx_group[1]
+
+        self.play(*[
+            ReplacementTransform(
+                mob.copy(),
+                equation.get_part_by_tex(tex),
+                run_time = 2
+            )
+            for mob, tex in (x_squared, f_tex), (dx, "dx"), (dA, "dA")
+        ])
+        self.play(Write(equation.get_part_by_tex("approx")))
+        self.dither()
+        for tex, mob in (f_tex, x_squared), ("dx", dx):
+            self.play(*map(Indicate, [
+                equation.get_part_by_tex(tex),
+                mob
+            ]))
+            self.dither(2)
+        self.play(*[
+            ReplacementTransform(
+                equation.get_part_by_tex(tex),
+                deriv_equation.get_part_by_tex(tex),
+                run_time = 2,
+            )
+            for tex in "dA", "approx", f_tex, "dx"
+        ] + [
+            Write(deriv_equation.get_part_by_tex("over"))
+        ])
+        self.dither(2)
+        self.shrink_dx(return_to_original_configuration = False)
+        self.dither()
+
+        self.deriv_equation = deriv_equation
+
+    def dA_remains_a_mystery(self):
+        randy = Randolph(color = BLUE_C)
+        randy.to_corner(DOWN+LEFT)
+        randy.look_at(self.A_func)
+
+        A_circle, dA_circle = [
+            Circle(color = color).replace(
+                mob, stretch = True
+            ).scale_in_place(1.5)
+            for mob, color in (self.A_func, RED), (self.deriv_equation, GREEN)
+        ]
+        q_marks = TexMobject("???")
+        q_marks.next_to(A_circle, UP)
+
+        self.play(
+            FadeOut(self.integral_words_group),
+            FadeIn(randy)
+        )
+        self.play(
+            ShowCreation(A_circle),
+            randy.change_mode, "confused"
+        )
+        self.play(Write(q_marks, run_time = 2))
+        self.play(Blink(randy))
+        self.dither()
+        self.play(
+            randy.change_mode, "surprised",
+            randy.look_at, dA_circle,
+            ReplacementTransform(A_circle, dA_circle)
+        )
+        self.play(Blink(randy))
+        self.dither()
+        self.play(*map(FadeOut, [randy, q_marks, dA_circle]))
+
+    def write_example_inputs(self):
+        d = self.default_right_x
+        three = TexMobject("x =", "%d"%d)
+        three_plus_dx = TexMobject("x = ", "%d.001"%d)
+        labels_lines_vects = zip(
+            [three, three_plus_dx],
+            self.right_v_lines,
+            [LEFT, RIGHT]
+        )
+
+        for label, line, vect in labels_lines_vects:
+            point = line.get_bottom()
+            label.next_to(point, DOWN+vect, MED_SMALL_BUFF)
+            label.shift(LARGE_BUFF*vect)
+            label.arrow = Arrow(
+                label, point,
+                buff = SMALL_BUFF,
+                color = WHITE,
+                tip_length = 0.15
+            )
+            line_copy = line.copy()
+            line_copy.highlight(YELLOW)
+
+            self.play(
+                FadeIn(label),
+                FadeIn(label.arrow),
+                ShowCreation(line_copy)
+            )
+            self.play(FadeOut(line_copy))
+        self.dither()
+
+        self.three = three 
+        self.three_plus_dx = three_plus_dx
+
+    def show_dA_dx_in_detail(self):
+        d = self.default_right_x
+        expression = TexMobject(
+            "{A(", "%d.001"%d, ") ", "-A(", "%d"%d, ")", 
+            "\\over \\,", "0.001}", 
+            "\\approx", "%d"%d, "^2"
+        )
+        expression.scale(0.9)
+        expression.next_to(
+            self.deriv_equation, DOWN, MED_LARGE_BUFF
+        )
+        expression.to_edge(RIGHT)
+
+        self.play(
+            ReplacementTransform(
+                self.three_plus_dx.get_part_by_tex("%d.001"%d).copy(),
+                expression.get_part_by_tex("%d.001"%d)
+            ),
+            Write(VGroup(
+                expression.get_part_by_tex("A("),
+                expression.get_part_by_tex(")"),
+            )),
+        )
+        self.dither()
+        self.play(
+            ReplacementTransform(
+                self.three.get_part_by_tex("%d"%d).copy(),
+                expression.get_part_by_tex("%d"%d, substring = False)
+            ),
+            Write(VGroup(
+                expression.get_part_by_tex("-A("),
+                expression.get_parts_by_tex(")")[1],
+            )),
+        )
+        self.dither(2)
+        self.play(
+            Write(expression.get_part_by_tex("over")),
+            ReplacementTransform(
+                expression.get_part_by_tex("%d.001"%d).copy(),
+                expression.get_part_by_tex("0.001"),
+            )
+            
+        )
+        self.dither()
+        self.play(
+            Write(expression.get_part_by_tex("approx")),
+            ReplacementTransform(
+                self.graph_label_copy.copy(),
+                VGroup(*expression[-2:]),
+                run_time = 2
+            )
+        )
+        self.dither()
+
+    def show_smaller_x(self):
+        self.transition_to_alt_config(
+            default_right_x = 2,
+            deriv_dx = 0.04,
+            transformation_kwargs = {"run_time" : 2}
+        )
+
+class AlternateAreaUnderCurve(PlayingTowardsDADX):
+    CONFIG = {
+        "func" : lambda x : (x-2)**3 - 3*(x-2) + 6,
+        "graph_label_tex" : "f(x)",
+        "deriv_dx" : 0.1,
+        "x_max" : 5,
+        "x_axis_width" : 11,
+        "graph_label_x_val" : 4.5,
+    }
+    def construct(self):
+        #Superclass parts to skip
+        self.force_skipping()
+        self.setup_axes()
+        self.show_graph()
+        self.show_area()
+        self.ask_about_area()
+        self.show_confusion()
+
+        #Superclass parts to show
+        self.revert_to_original_skipping_status()
+        self.show_variable_endpoint()
+        self.name_integral()
+        self.nudge_x()
+        self.describe_sliver()
+        self.write_dA_dx()
+
+        #New animations
+        self.approximation_improves_for_smaller_dx()
+        self.name_derivative()
+
+    def approximation_improves_for_smaller_dx(self):
+        color = YELLOW
+        approx = self.deriv_equation.get_part_by_tex("approx")
+        dx_to_zero_words = TextMobject(
+            "Gets better \\\\ as", 
+            "$dx \\to 0$"
+        )
+        dx_to_zero_words.highlight_by_tex("dx", color)
+        dx_to_zero_words.next_to(approx, DOWN, 1.5*LARGE_BUFF)
+        arrow = Arrow(dx_to_zero_words, approx, color = color)
+
+        self.play(
+            approx.highlight, color,
+            ShowCreation(arrow),
+            FadeIn(dx_to_zero_words),
+        )
+        self.dither()
+        self.transition_to_alt_config(
+            deriv_dx = self.deriv_dx/4.0,
+            transformation_kwargs = {"run_time" : 2}
+        )
+
+        self.dx_to_zero_words = dx_to_zero_words
+        self.dx_to_zero_words_arrow = arrow
+
+    def name_derivative(self):
+        deriv_words = TextMobject("``Derivative'' of $A$")
+        deriv_words.scale(0.9)
+        deriv_words.to_edge(UP+RIGHT)
+        moving_group = VGroup(
+            self.deriv_equation, 
+            self.dx_to_zero_words,
+            self.dx_to_zero_words_arrow,
+        )
+        moving_group.generate_target()
+        moving_group.target.next_to(deriv_words, DOWN, LARGE_BUFF)
+        moving_group.target.to_edge(RIGHT)
+
+        self.play(
+            FadeIn(deriv_words),
+            MoveToTarget(moving_group)
+        )
+
+        dA_dx = VGroup(*self.deriv_equation[:3])
+        box = Rectangle(color = GREEN)
+        box.replace(dA_dx, stretch = True)
+        box.scale_in_place(1.3)
+        brace = Brace(box, UP)
+
+        self.play(*map(FadeIn, [box, brace]))
+        self.dither()
 
 
+    ########
+    def show_smaller_x(self):
+        return
 
+    def shrink_dx(self, **kwargs):
+        return
 
+class NextVideoWrapper(Scene):
+    def construct(self):
+        rect = Rectangle(height = 9, width = 16)
+        rect.scale_to_fit_height(1.5*SPACE_HEIGHT)
+        titles = [
+            TextMobject("Chapter %d:"%d, s)
+            for d, s in [
+                (2, "The paradox of the derivative"),
+                (3, "Derivative formulas through geometry"),
+            ]
+        ]
+        for title in titles:
+            title.to_edge(UP)
+        rect.next_to(VGroup(*titles), DOWN)
 
+        self.add(titles[0])
+        self.play(ShowCreation(rect))
+        self.dither(3)
+        self.play(Transform(*titles))
+        self.dither(3)
 
+class ProblemSolvingTool(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("""
+            The derivative is a
+            problem-solving tool
+        """)
+        self.dither(3)
 
+class WriteFundamentalTheorem(Scene):
+    def construct(self):
+        words = TextMobject("""
+            Fundamental theorem 
+            of calculus
+        """)
+        words.scale_to_fit_width(2*SPACE_WIDTH - LARGE_BUFF)
+        words.to_corner(UP+LEFT)
+        self.play(Write(words))
+        self.dither()
 
+class NextVideos(TeacherStudentsScene):
+    def construct(self):
+        series = VideoSeries()
+        series.to_edge(UP)
+        this_video = series[0]
+        this_video.highlight(YELLOW)
 
+        self.add(series)
+        self.teacher_says(
+            "That's a high-level view"
+        )
+        self.dither()
+        self.play(
+            RemovePiCreatureBubble(
+                self.teacher,
+                target_mode = "raise_right_hand"
+            ),
+            *it.chain(*[
+                [pi.change_mode, "pondering", pi.look_at, this_video]
+                for pi in self.get_students()
+            ])
+        )
+        self.play(ApplyWave(series, run_time = 3))
+        self.dither()
 
+        student = self.get_students()[1]
+        self.remove(student)
+        everything = VGroup(*self.get_top_level_mobjects())
+        self.add(student)
+        words = TextMobject("""
+            You could have
+            invented this.
+        """)
+        words.next_to(student, UP, LARGE_BUFF)
 
+        self.play(
+            everything.fade, 0.75,
+            student.change_mode, "plain"
+        )
+        self.play(
+            Write(words),
+            student.look_at, words,
+        )
+        self.play(
+            student.change_mode, "confused",
+            student.look_at, words
+        )
+        self.dither(3)
+        self.play(student.change_mode, "thinking")
+        self.dither(4)
 
+class Chapter1PatreonThanks(PatreonThanks):
+    CONFIG = {
+        "specific_patrons" : [
+            "Ali Yahya",
+            "CrypticSwarm",
+            "Juan    Benet",
+            "Yu  Jun",
+            "Othman  Alikhan",
+            "Markus  Persson",
+            "Joseph  John Cox",
+            "Luc Ritchie",
+            "Einar Johansen",
+            "Rish    Kundalia",
+            "Achille Brighton",
+            "Kirk Werklund",
+            "Ripta   Pasay",
+            "Felipe  Diniz",
+        ],
+        "patron_scale_val" : 0.9
+    }
 
 
 

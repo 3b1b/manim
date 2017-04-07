@@ -134,7 +134,8 @@ class DrawBorderThenFill(Animation):
 
 class ShowPassingFlash(ShowPartial):
     CONFIG = {
-        "time_width" : 0.1
+        "time_width" : 0.1,
+        "remover" : True,
     }
     def get_bounds(self, alpha):
         alpha *= (1+self.time_width)
