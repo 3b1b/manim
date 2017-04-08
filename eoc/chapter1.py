@@ -220,8 +220,6 @@ class CircleScene(PiCreatureScene):
 
 #############
 
-#revert_to_original_skipping_status
-
 class Chapter1OpeningQuote(OpeningQuote):
     CONFIG = {
         "quote" : [
@@ -278,11 +276,19 @@ class Introduction(TeacherStudentsScene):
                 ApplyMethod(this_video.restore, run_time = 3),
             ]
         )
-        self.play(
-            ApplyWave(series, direction = DOWN, run_time = 2),
+        self.play(*[
+            ApplyMethod(
+                video.shift, 0.5*video.get_height()*DOWN,
+                run_time = 3,
+                rate_func = squish_rate_func(
+                    there_and_back, alpha, alpha+0.3
+                )
+            )
+            for video, alpha in zip(series, np.linspace(0, 0.7, len(series)))
+        ]+[
             Animation(self.teacher.bubble),
             Animation(self.teacher.bubble.content),
-        )
+        ])
 
         essence_words = words.get_part_by_tex("Essence").copy()
         self.play(
@@ -936,6 +942,23 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
             dR = self.radius/num_rings, **kwargs
         )
 
+class MoveForwardWithApproximation(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Move forward with \\\\",
+            "the", "approximation"
+        )
+        self.change_student_modes("hesitant", "erm", "sassy")
+        self.dither()
+        words = TextMobject(
+            "It gets better", 
+            "\\\\ for smaller ",
+            "$dr$"
+        )
+        words.highlight_by_tex("dr", BLUE)
+        self.teacher_says(words, target_mode = "shruggie")
+        self.dither(3)
+
 class GraphRectangles(CircleScene, GraphScene):
     CONFIG = {
         "graph_origin" : 3.25*LEFT+2.5*DOWN,
@@ -1482,6 +1505,16 @@ class ThinkLikeAMathematician(TeacherStudentsScene):
         self.play(FadeOut(pi_R_squraed))
         self.look_at(2*UP+4*LEFT)
         self.dither(5)
+
+class TwoThingsToNotice(TeacherStudentsScene):
+    def construct(self):
+        words = TextMobject(
+            "Two things to \\\\ note about",
+            "$dr$",
+        )
+        words.highlight_by_tex("dr", GREEN)
+        self.teacher_says(words, run_time = 1)
+        self.dither(3)
 
 class RecapCircleSolution(GraphRectangles, ReconfigurableScene):
     def setup(self):
@@ -2551,8 +2584,18 @@ class AlternateAreaUnderCurve(PlayingTowardsDADX):
         box.replace(dA_dx, stretch = True)
         box.scale_in_place(1.3)
         brace = Brace(box, UP)
+        faders = VGroup(
+            self.dx_to_zero_words[0],
+            self.dx_to_zero_words_arrow
+        )
+        dx_to_zero = self.dx_to_zero_words[1]
 
         self.play(*map(FadeIn, [box, brace]))
+        self.dither()
+        self.play(
+            FadeOut(faders),
+            dx_to_zero.next_to, box, DOWN
+        )
         self.dither()
 
 
@@ -2592,14 +2635,23 @@ class ProblemSolvingTool(TeacherStudentsScene):
         """)
         self.dither(3)
 
-class WriteFundamentalTheorem(Scene):
+class FundamentalTheorem(Scene):
     def construct(self):
         words = TextMobject("""
-            Fundamental theorem 
-            of calculus
+            Fundamental theorem of calculus
         """)
-        words.scale_to_fit_width(2*SPACE_WIDTH - LARGE_BUFF)
-        words.to_corner(UP+LEFT)
+        words.to_edge(UP)
+        arrow = DoubleArrow(LEFT, RIGHT).shift(2*RIGHT)
+        deriv = TexMobject(
+            "{dA", "\\over \\,", "dx}", "=", "x^2"
+        )
+        deriv.highlight_by_tex("dA", GREEN)
+        deriv.next_to(arrow, RIGHT)
+
+        self.play(ShowCreation(arrow))
+        self.dither()
+        self.play(Write(deriv))
+        self.dither()
         self.play(Write(words))
         self.dither()
 
@@ -2618,14 +2670,28 @@ class NextVideos(TeacherStudentsScene):
         self.play(
             RemovePiCreatureBubble(
                 self.teacher,
-                target_mode = "raise_right_hand"
+                target_mode = "raise_right_hand",
+                look_at_arg = this_video,
             ),
             *it.chain(*[
                 [pi.change_mode, "pondering", pi.look_at, this_video]
                 for pi in self.get_students()
             ])
         )
-        self.play(ApplyWave(series, run_time = 3))
+        self.play(*[
+            ApplyMethod(pi.look_at, series)
+            for pi in self.get_pi_creatures()
+        ])
+        self.play(*[
+            ApplyMethod(
+                video.shift, 0.5*video.get_height()*DOWN,
+                run_time = 3,
+                rate_func = squish_rate_func(
+                    there_and_back, alpha, alpha+0.3
+                )
+            )
+            for video, alpha in zip(series, np.linspace(0, 0.7, len(series)))
+        ])
         self.dither()
 
         student = self.get_students()[1]
@@ -2638,6 +2704,7 @@ class NextVideos(TeacherStudentsScene):
         """)
         words.next_to(student, UP, LARGE_BUFF)
 
+        self.play(self.teacher.change_mode, "plain")
         self.play(
             everything.fade, 0.75,
             student.change_mode, "plain"
@@ -2674,6 +2741,42 @@ class Chapter1PatreonThanks(PatreonThanks):
         ],
         "patron_scale_val" : 0.9
     }
+
+class Thumbnail(AlternateAreaUnderCurve):
+    CONFIG = {
+        "x_axis_label" : "",
+        "y_axis_label" : "",
+        "graph_origin" : 2.4*DOWN + 3*LEFT,
+    }
+    def construct(self):
+        self.setup_axes()
+        self.remove(*self.x_axis.numbers)
+        self.remove(*self.y_axis.numbers)
+        graph = self.get_graph(self.func)
+        rects = self.get_riemann_rectangles(
+            graph,
+            x_min = 0,
+            x_max = 4,
+            dx = 0.25,
+            start_color = BLUE_E,
+        )
+        words = TextMobject("""
+            Essence of
+            calculus
+        """)
+        words.scale_to_fit_width(9)
+        words.to_edge(UP)
+
+        self.add(graph, rects, words)
+
+
+
+
+
+
+
+
+
 
 
 

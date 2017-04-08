@@ -120,7 +120,9 @@ class PatreonThanks(Scene):
         all_patrons = VGroup(left_patrons, right_patrons)
         all_patrons.scale(self.patron_scale_val)
         for patrons, vect in (left_patrons, LEFT), (right_patrons, RIGHT):
-            patrons.to_corner(UP+vect, buff = MED_SMALL_BUFF)
+            patrons.to_edge(vect, buff = MED_SMALL_BUFF)
+            if patrons.get_height() > 2*SPACE_HEIGHT - LARGE_BUFF:
+                patrons.to_edge(UP, buff = MED_SMALL_BUFF)
 
         shift_distance = max(
             0, 1-SPACE_HEIGHT-all_patrons.get_bottom()[1]
