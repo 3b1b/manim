@@ -125,8 +125,10 @@ class PatreonThanks(Scene):
                 patrons.to_edge(UP, buff = MED_SMALL_BUFF)
 
         shift_distance = max(
-            0, 1-SPACE_HEIGHT-all_patrons.get_bottom()[1]
+            0, (all_patrons.get_height() - 2*SPACE_HEIGHT)
         )
+        if shift_distance > 0:
+            shift_distance += 1
         velocity = shift_distance/9.0
         def get_shift_anim():
             return ApplyMethod(

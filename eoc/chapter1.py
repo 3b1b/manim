@@ -676,11 +676,17 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
         ReconfigurableScene.setup(self)
 
     def construct(self):
+        self.force_skipping()
+
         self.write_radius_three()
         self.try_to_understand_area()
         self.slice_into_rings()
         self.isolate_one_ring()
+
+        self.revert_to_original_skipping_status()
         self.straighten_ring_out()
+        self.force_skipping()
+
         self.approximate_as_rectangle()
 
     def write_radius_three(self):
@@ -807,9 +813,9 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
 
     def straighten_ring_out(self):
         ring = self.ring.copy()
-        trapazoid = TextMobject("Trapazoid?")
+        trapezoid = TextMobject("Trapezoid?")
         rectangle_ish = TextMobject("Rectangle-ish")
-        for text in trapazoid, rectangle_ish:
+        for text in trapezoid, rectangle_ish:
             text.next_to(
                 self.pi_creature.get_corner(UP+RIGHT), 
                 DOWN+RIGHT, buff = MED_LARGE_BUFF
@@ -818,11 +824,11 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
         self.unwrap_ring(ring, to_edge = RIGHT)
         self.change_mode("pondering")
         self.dither()
-        self.play(Write(trapazoid))
+        self.play(Write(trapezoid))
         self.dither()
-        self.play(trapazoid.shift, DOWN)
+        self.play(trapezoid.shift, DOWN)
         strike = Line(
-            trapazoid.get_left(), trapazoid.get_right(),
+            trapezoid.get_left(), trapezoid.get_right(),
             stroke_color = RED,
             stroke_width = 8
         )
@@ -832,7 +838,7 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
             self.pi_creature.change_mode, "happy"
         )
         self.dither()
-        self.play(*map(FadeOut, [trapazoid, strike]))
+        self.play(*map(FadeOut, [trapezoid, strike]))
 
         self.unwrapped_ring = ring
 
