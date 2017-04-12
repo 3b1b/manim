@@ -53,6 +53,7 @@ class Car(SVGMobject):
         randy.look(RIGHT)
         randy.move_to(self)
         randy.shift(0.07*self.height*(RIGHT+UP))
+        self.randy = randy
         self.add_to_back(randy)
 
         orientation_line = Line(self.get_left(), self.get_right())
@@ -318,10 +319,11 @@ class IntroduceCar(Scene):
     CONFIG = {
         "should_transition_to_graph" : True,
         "show_distance" : True,
+        "point_A" : DOWN+4*LEFT,
+        "point_B" : DOWN+5*RIGHT,
     }
     def construct(self):
-        point_A = DOWN+4*LEFT
-        point_B = DOWN+5*RIGHT
+        point_A, point_B = self.point_A, self.point_B
         A = Dot(point_A)
         B = Dot(point_B)
         line = Line(point_A, point_B)
@@ -411,6 +413,8 @@ class GraphCarTrajectory(GraphScene):
         "graph_origin" : 2.5*DOWN + 5*LEFT,
         "default_graph_colors" : [DISTANCE_COLOR, VELOCITY_COLOR],
         "default_derivative_color" : VELOCITY_COLOR,
+        "time_of_journey" : 10,
+        "care_movement_rate_func" : smooth,
     }
     def construct(self):
         self.setup_axes(animate = False)
@@ -423,10 +427,11 @@ class GraphCarTrajectory(GraphScene):
         self.ask_critically_about_velocity()
 
     def graph_sigmoid_trajectory_function(self, **kwargs):
-        graph = self.graph_function(
+        graph = self.get_graph(
             lambda t : 100*smooth(t/10.),
             **kwargs
         )
+        self.s_graph = graph
         return graph
 
     def introduce_graph(self, graph, origin):
@@ -446,6 +451,9 @@ class GraphCarTrajectory(GraphScene):
         car = Car()
         car.rotate(np.pi/2)
         car.move_to(origin)
+        car_target = origin*RIGHT + graph.point_from_proportion(1)*UP
+
+
         self.add(car)
         self.play(
             ShowCreation(
@@ -453,11 +461,12 @@ class GraphCarTrajectory(GraphScene):
                 rate_func = None,
             ),
             MoveCar(
-                car, self.coords_to_point(0, 100),
+                car, car_target,
+                rate_func = self.care_movement_rate_func
             ),
             UpdateFromFunc(h_line, h_update),
             UpdateFromFunc(v_line, v_update),
-            run_time = 10,
+            run_time = self.time_of_journey,
         )
         self.dither()
         self.play(*map(FadeOut, [h_line, v_line, car]))
@@ -537,8 +546,12 @@ class GraphCarTrajectory(GraphScene):
         self.rect = rect
 
     def get_change_lines(self, curr_time, delta_t = 1):
-        p1 = self.input_to_graph_point(curr_time)
-        p2 = self.input_to_graph_point(curr_time+delta_t)
+        p1 = self.input_to_graph_point(
+            curr_time, self.s_graph
+        )
+        p2 = self.input_to_graph_point(
+            curr_time+delta_t, self.s_graph
+        )
         interim_point = p2[0]*RIGHT + p1[1]*UP
         delta_t_line = Line(p1, interim_point, color = TIME_COLOR)
         delta_s_line = Line(interim_point, p2, color = DISTANCE_COLOR)
@@ -546,17 +559,16 @@ class GraphCarTrajectory(GraphScene):
         return VGroup(delta_t_line, delta_s_line, brace)
 
     def show_velocity_graph(self):
-        velocity_graph = self.get_derivative_graph()
+        velocity_graph = self.get_derivative_graph(self.s_graph)
 
         self.play(ShowCreation(velocity_graph))
         def get_velocity_label(v_graph):
-            result = self.label_graph(
+            result = self.get_graph_label(
                 v_graph,
                 label = "v(t)",
                 direction = UP+RIGHT,
-                proportion = 0.5,
+                x_val = 5,
                 buff = SMALL_BUFF,
-                animate = False,
             )
             self.remove(result)
             return result
@@ -580,7 +592,7 @@ class GraphCarTrajectory(GraphScene):
         self.play(FadeOut(self.rect))
 
         #Change distance and velocity graphs
-        self.graph.save_state()
+        self.s_graph.save_state()
         velocity_graph.save_state()
         label.save_state()
         def shallow_slope(t):
@@ -598,10 +610,9 @@ class GraphCarTrajectory(GraphScene):
             double_smooth_graph_function,
         ]
         for graph_func in graph_funcs:
-            new_graph = self.graph_function(
+            new_graph = self.get_graph(
                 graph_func,
                 color = DISTANCE_COLOR,
-                is_main_graph = False
             )
             self.remove(new_graph)
             new_velocity_graph = self.get_derivative_graph(
@@ -609,13 +620,13 @@ class GraphCarTrajectory(GraphScene):
             )
             new_velocity_label = get_velocity_label(new_velocity_graph)
 
-            self.play(Transform(self.graph, new_graph))
+            self.play(Transform(self.s_graph, new_graph))
             self.play(
                 Transform(velocity_graph, new_velocity_graph),
                 Transform(label, new_velocity_label),
             )
             self.dither(2)
-        self.play(self.graph.restore)
+        self.play(self.s_graph.restore)
         self.play(
             velocity_graph.restore,
             label.restore,
@@ -640,11 +651,12 @@ class ShowSpeedometer(IntroduceCar):
         "needle_height" : 0.8,
         "should_transition_to_graph" : False,
         "show_distance" : False,
+        "speedometer_title_text" : "Speedometer",
     }
     def setup(self):
         start_angle = -np.pi/6
         end_angle = 7*np.pi/6
-        speedomoeter = Arc(
+        speedometer = Arc(
             start_angle = start_angle,
             angle = end_angle-start_angle
         )
@@ -655,7 +667,7 @@ class ShowSpeedometer(IntroduceCar):
             label = TexMobject(str(10*index))
             label.scale_to_fit_height(self.tick_length)
             label.shift((1+self.tick_length)*vect)
-            speedomoeter.add(tick, label)
+            speedometer.add(tick, label)
 
         needle = Polygon(
             LEFT, UP, RIGHT,
@@ -666,46 +678,45 @@ class ShowSpeedometer(IntroduceCar):
         needle.stretch_to_fit_width(self.needle_width)
         needle.stretch_to_fit_height(self.needle_height)
         needle.rotate(end_angle-np.pi/2)
-        speedomoeter.add(needle)
-        speedomoeter.needle = needle
+        speedometer.add(needle)
+        speedometer.needle = needle
 
-        speedomoeter.center_offset = speedomoeter.get_center()
+        speedometer.center_offset = speedometer.get_center()
 
-        speedomoeter_title = TextMobject("Speedometer")
-        speedomoeter_title.to_corner(UP+LEFT)
-        speedomoeter.next_to(speedomoeter_title, DOWN)
+        speedometer_title = TextMobject(self.speedometer_title_text)
+        speedometer_title.to_corner(UP+LEFT)
+        speedometer.next_to(speedometer_title, DOWN)
 
-        self.speedomoeter = speedomoeter
-        self.speedomoeter_title = speedomoeter_title
+        self.speedometer = speedometer
+        self.speedometer_title = speedometer_title
 
     def introduce_added_mobjects(self):
-        speedomoeter = self.speedomoeter
-        speedomoeter_title = self.speedomoeter_title
+        speedometer = self.speedometer
+        speedometer_title = self.speedometer_title
 
-        speedomoeter.save_state()
-        speedomoeter.rotate(-np.pi/2, UP)
-        speedomoeter.scale_to_fit_height(self.car.get_height()/4)
-        speedomoeter.move_to(self.car)
-        speedomoeter.shift((self.car.get_width()/4)*RIGHT)
+        speedometer.save_state()
+        speedometer.rotate(-np.pi/2, UP)
+        speedometer.scale_to_fit_height(self.car.get_height()/4)
+        speedometer.move_to(self.car)
+        speedometer.shift((self.car.get_width()/4)*RIGHT)
 
-        self.play(speedomoeter.restore, run_time = 2)
-        self.play(Write(speedomoeter_title, run_time = 1))
+        self.play(speedometer.restore, run_time = 2)
+        self.play(Write(speedometer_title, run_time = 1))
 
-    def get_added_movement_anims(self):
-        needle = self.speedomoeter.needle
-        center = self.speedomoeter.get_center() - self.speedomoeter.center_offset
-        return [
-            Rotating(
-                needle, 
-                about_point = center,
-                radians = -np.pi/2,
-                run_time = 10,
-                rate_func = there_and_back
-            )
-        ]
+    def get_added_movement_anims(self, **kwargs):
+        needle = self.speedometer.needle
+        center = self.speedometer.get_center() - self.speedometer.center_offset
+        default_kwargs = {
+            "about_point" : center,
+            "radians" : -np.pi/2,
+            "run_time" : 10,
+            "rate_func" : there_and_back,
+        }
+        default_kwargs.update(kwargs)
+        return [Rotating(needle, **default_kwargs)]
 
     # def construct(self):
-    #     self.add(self.speedomoeter)
+    #     self.add(self.speedometer)
     #     self.play(*self.get_added_movement_anims())
 
 class VelocityInAMomentMakesNoSense(Scene):
@@ -985,8 +996,8 @@ class SidestepParadox(Scene):
         car = Car()
         car.shift(DOWN)
         show_speedometer = ShowSpeedometer(skip_animations = True)
-        speedomoeter = show_speedometer.speedomoeter
-        speedomoeter.next_to(car, UP)
+        speedometer = show_speedometer.speedometer
+        speedometer.next_to(car, UP)
 
         title = TextMobject(
             "Instantaneous", "rate of change"
@@ -1001,7 +1012,7 @@ class SidestepParadox(Scene):
         new_words.highlight(TIME_COLOR)
 
         self.add(title, car)
-        self.play(Write(speedomoeter))
+        self.play(Write(speedometer))
         self.dither()
         self.play(Write(cross))
         self.dither()
@@ -1379,7 +1390,7 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
 
     def get_ds_dt_group(self, dt, animate = False):
         points = [
-            self.input_to_graph_point(time)
+            self.input_to_graph_point(time, self.graph)
             for time in self.curr_time, self.curr_time+dt
         ]
         dots = map(Dot, points)
@@ -1440,16 +1451,12 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
                 return 50*smooth(t/5.)
             else:
                 return 50*(1+smooth((t-5)/5.))
-        graph = self.graph_function(
-            double_smooth_graph_function,
-            animate = False
-        )
-        self.graph_label = self.label_graph(
-            graph, "s(t)", 
-            proportion = 1, 
+        self.graph = self.get_graph(double_smooth_graph_function)
+        self.graph_label = self.get_graph_label(
+            self.graph, "s(t)", 
+            x_val = self.x_max, 
             direction = DOWN+RIGHT, 
             buff = SMALL_BUFF,
-            animate = False
         )
 
     def add_derivative_definition(self, target_upper_left):
@@ -1520,6 +1527,7 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
 
         v_line = self.get_vertical_line_to_graph(
             self.curr_time,
+            self.graph,
             line_class = Line,
             line_kwargs = {
                 "color" : MAROON_B,
@@ -1529,7 +1537,7 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
         def v_line_update(v_line):
             v_line.put_start_and_end_on(
                 self.coords_to_point(self.curr_time, 0),
-                self.input_to_graph_point(self.curr_time),
+                self.input_to_graph_point(self.curr_time, self.graph),
             )
             return v_line
         self.play(ShowCreation(v_line))

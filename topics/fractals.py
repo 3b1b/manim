@@ -512,7 +512,6 @@ class UtahFillingCurve(SelfSimilarSpaceFillingCurve):
         "radius_scale_factor" : 2/(3*np.sqrt(3)),
     }
 
-
 class FlowSnake(LindenmayerCurve):
     CONFIG = {
         "colors" : [YELLOW, GREEN],

@@ -24,12 +24,12 @@ class OpeningQuote(Scene):
         },
     }
     def construct(self):
-        quote = self.get_quote()
-        author = self.get_author(quote)
+        self.quote = self.get_quote()
+        self.author = self.get_author(self.quote)
 
-        self.play(FadeIn(quote, **self.fade_in_kwargs))
+        self.play(FadeIn(self.quote, **self.fade_in_kwargs))
         self.dither(2)
-        self.play(Write(author, run_time = 3))
+        self.play(Write(self.author, run_time = 3))
         self.dither()
 
     def get_quote(self, max_width = 2*SPACE_WIDTH-1):

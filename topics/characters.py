@@ -395,7 +395,14 @@ class PiCreatureScene(Scene):
             self.get_pi_creatures()
         ))
 
-    def introduce_bubble(self, pi_creature, *content, **kwargs):
+    def introduce_bubble(self, *args, **kwargs):
+        if isinstance(args[0], PiCreature):
+            pi_creature = args[0]
+            content = args[1:]
+        else:
+            pi_creature = self.get_primary_pi_creature()
+            content = args
+
         bubble_class = kwargs.pop("bubble_class", SpeechBubble)
         target_mode = kwargs.pop(
             "target_mode", 
@@ -443,18 +450,16 @@ class PiCreatureScene(Scene):
 
         self.play(*anims)
 
-    def pi_creature_says(self, pi_creature, *content, **kwargs):
+    def pi_creature_says(self, *args, **kwargs):
         self.introduce_bubble(
-            pi_creature, 
-            *content,
+            *args,
             bubble_class = SpeechBubble,
             **kwargs
         )
 
-    def pi_creature_thinks(self, pi_creature, *content, **kwargs):
+    def pi_creature_thinks(self, *args, **kwargs):
         self.introduce_bubble(
-            pi_creature,
-            *content,
+            *args,
             bubble_class = ThoughtBubble,
             **kwargs
         )

@@ -221,6 +221,24 @@ class GraphScene(Scene):
         rectangles.set_stroke(BLACK, width = stroke_width)
         return rectangles
 
+    def get_riemann_rectangles_list(
+        self, 
+        graph,
+        n_iterations,
+        max_dx = 0.5, 
+        power_base = 2, 
+        **kwargs
+        ):
+        return [
+            self.get_riemann_rectangles(
+                graph = graph,
+                dx = float(max_dx)/(power_base**n),
+                stroke_width = 1./(power_base**n),
+                **kwargs
+            )
+            for n in range(n_iterations)
+        ]
+
     def get_vertical_line_to_graph(
         self,
         x, graph,
