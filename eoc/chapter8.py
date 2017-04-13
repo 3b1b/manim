@@ -1,4 +1,5 @@
 from helpers import *
+import scipy
 
 from mobject.tex_mobject import TexMobject
 from mobject import Mobject
@@ -361,8 +362,11 @@ class PlotVelocity(GraphScene):
         return graph, graph_label
 
 class Chapter2Wrapper(Scene):
+    CONFIG = {
+        "title" : "Chapter 2: The paradox of the derivative",
+    }
     def construct(self):
-        title = TextMobject("Chapter 2: The paradox of the derivative")
+        title = TextMobject(self.title)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = WHITE)
         rect.scale_to_fit_height(1.5*SPACE_HEIGHT)
@@ -546,13 +550,12 @@ class AreaUnderVGraph(PlotVelocity):
 class ConstantVelocityCar(Scene):
     def construct(self):
         car = Car()
-        car.scale(2)
-        car.move_to(3*LEFT + 3*DOWN)
+        car.move_to(5*LEFT + 3*DOWN)
 
         self.add(car)
         self.dither()
         self.play(MoveCar(
-            car, 6*RIGHT+3*DOWN,
+            car, 7*RIGHT+3*DOWN,
             run_time = 5,
             rate_func = None,
         ))
@@ -759,6 +762,7 @@ class PiecewiseConstantPlot(PlotVelocity):
         self.write_integral_symbol()
         self.roles_of_dt()
         self.what_does_sum_approach()
+        self.label_integral()
 
     def setup_graph(self):
         self.setup_axes()
@@ -1035,8 +1039,9 @@ class PiecewiseConstantPlot(PlotVelocity):
         self.dither()
         for x in range(2):
             self.play(
-                rect.scale_to_fit_height, v_lines[1].get_height(),
+                rect.stretch_to_fit_height, v_lines[1].get_height(),
                 rect.move_to, rect.get_bottom(), DOWN,
+                Animation(v_lines),
                 run_time = 4,
                 rate_func = there_and_back
             )
@@ -1263,6 +1268,16 @@ class PiecewiseConstantPlot(PlotVelocity):
         brace = Brace(self.integral, DOWN)
         dt_to_0 = brace.get_text("$dt \\to 0$")
 
+        distance_words = TextMobject(
+            "Area", "= Distance traveled"
+        )
+        distance_words.next_to(rects, UP)
+        arrow = Arrow(
+            distance_words[0].get_bottom(),
+            rects.get_center(),
+            color = WHITE
+        )
+
         self.play(PiCreatureSays(
             morty, "Why not $\\Sigma$?",
             target_mode = "sassy"
@@ -1293,6 +1308,51 @@ class PiecewiseConstantPlot(PlotVelocity):
             )
             self.dither()
 
+        self.play(
+            Write(distance_words),
+            ShowCreation(arrow),
+            morty.change_mode, "pondering",
+            morty.look_at, distance_words,
+        )
+        self.dither()
+        self.play(Blink(morty))
+        self.dither()
+
+        self.area_arrow = arrow
+
+    def label_integral(self):
+        words = TextMobject("``Integral of $v(t)$''")
+        words.to_edge(UP)
+        arrow = Arrow(
+            words.get_right(),
+            self.integral.get_left()
+        )
+
+        self.play(Indicate(self.integral))
+        self.play(Write(words, run_time = 2))
+        self.play(ShowCreation(arrow))
+        self.dither()
+        self.play(*[
+            ApplyFunction(
+                lambda r : r.shift(0.2*UP).set_fill(None, 1),
+                rect,
+                run_time = 3,
+                rate_func = squish_rate_func(
+                    there_and_back,
+                    alpha, alpha+0.2,
+                )
+            )
+            for rect, alpha in zip(
+                self.rects, 
+                np.linspace(0, 0.8, len(self.rects))
+            )
+        ]+[
+            Animation(self.area_arrow),
+            self.morty.change_mode, "happy",
+            self.morty.look_at, self.rects,
+        ])
+        self.dither()
+
     #####
 
     def get_pw_constant_graph(self):
@@ -1320,25 +1380,249 @@ class PiecewiseConstantPlot(PlotVelocity):
         ticks.highlight(YELLOW)
         return ticks
 
-class CarJourneyApproximations(Scene):
+class CarJourneyApproximation(Scene):
+    CONFIG = {
+        "n_jumps" : 5,
+    }
     def construct(self):
-        pass
+        points = [5*LEFT + v for v in UP, 2*DOWN]
+        cars = [Car().move_to(point) for point in points]
+        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        words = [
+            TextMobject("Real motion (smooth)").shift(3*UP),
+            TextMobject("Approximated motion (jerky)").shift(0.5*DOWN),
+        ]
 
 
+        self.add(h_line, *cars + words)
+        self.dither()
+        self.play(*[
+            MoveCar(
+                car, point+10*RIGHT,
+                run_time = 5,
+                rate_func = rf
+            )
+            for car, point, rf in zip(cars, points, [
+                s_rate_func,
+                self.get_approximated_rate_func(self.n_jumps)
+            ])
+        ])
+        self.dither()
+
+    def get_approximated_rate_func(self, n):
+        new_v_rate_func = lambda t : v_rate_func(np.floor(t*n)/n)
+        max_integral, err = scipy.integrate.quad(
+            v_rate_func, 0, 1
+        )
+        def result(t):
+            integral, err = scipy.integrate.quad(new_v_rate_func, 0, t)
+            return integral/max_integral
+        return result
+
+class LessWrongCarJourneyApproximation(CarJourneyApproximation):
+    CONFIG = {
+        "n_jumps" : 20,
+    }
+
+class HowDoesThisHelp(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "How does this help\\textinterrobang",
+            target_mode = "angry",
+            run_time = 1
+        )
+        self.change_student_modes(
+            "confused", "angry", "confused",
+        )
+        self.dither(2)
+        self.teacher_says(
+            "You're right.",
+            target_mode = "shruggie",
+            run_time = 1
+        )
+        self.change_student_modes(*["sassy"]*3)
+        self.dither(2)
+
+class AreaUnderACurve(GraphScene):
+    CONFIG = {
+        "y_max" : 4,
+        "y_min" : 0,
+        "num_iterations" : 7
+    }
+    def construct(self):
+        self.setup_axes()
+        graph = self.get_graph(self.func)
+        rect_list = self.get_riemann_rectangles_list(
+            graph, self.num_iterations
+        )
+        VGroup(*rect_list).set_fill(opacity = 0.8)
+        rects = rect_list[0]
+
+        self.play(ShowCreation(graph))
+        self.play(Write(rects))
+        for new_rects in rect_list[1:]:
+            rects.align_submobjects(new_rects)
+            for every_other_rect in rects[::2]:
+                every_other_rect.set_fill(opacity = 0)
+            self.play(Transform(
+                rects, new_rects,
+                run_time = 2,
+                submobject_mode = "lagged_start"
+            ))
+        self.dither()
 
 
+    def func(self, x):
+        return np.sin(x) + 1
 
+class AltAreaUnderCurve(AreaUnderACurve):
+    CONFIG = {
+        "graph_origin" : 2*DOWN,
+        "x_min" : -3,
+        "x_max" : 3,
+        "x_axis_width" : 12,
+        "y_max" : 2,
+        "y_axis_height" : 4,
+    }
+    def func(self, x):
+        return np.exp(-x**2)
 
+class Chapter1Wrapper(Chapter2Wrapper):
+    CONFIG = {
+        "title" : "Essence of calculus, chapter 1",
+    }
 
+class AreaIsDerivative(PlotVelocity):
+    CONFIG = {
+        "y_axis_label" : "",
+        # "num_rects" : 250,
+        "num_rects" : 20,
+    }
+    def setup(self):
+        PlotVelocity.setup(self)
+        self.setup_axes()
+        self.add(*self.get_v_graph_and_label())
+        self.foreground_mobjects = []        
 
+    def construct(self):
+        self.force_skipping()
 
+        self.introduce_variable_area()
+        self.write_integral()
 
+    def introduce_variable_area(self):
+        area = self.area = self.get_area(0, 6)
+        x_nums = self.x_axis.numbers
 
+        self.play(Write(area, run_time = 2))
+        self.play(FadeOut(self.x_axis.numbers))
+        self.add_T_label(6)
+        self.change_area_bounds(
+            new_t_max = 4,
+            rate_func = there_and_back,
+            run_time = 2
+        )
+        self.dither()
 
+    def write_integral(self):
+        integral = TexMobject("\\int", "^T", "_0", "v(t)", "\\,dt")
+        integral.to_corner(UP+RIGHT)
+        top_T = integral.get_part_by_tex("T")
+        moving_T = self.T_label_group[0]
 
+        s_T = TexMobject("s(T) = ")
+        s_T.next_to(integral, LEFT)
 
+        int_arrow, s_arrow = [
+            Arrow(
+                mob.get_left(), self.area.get_center(),
+                color = WHITE
+            ),
+            for mob in integral, s_T
+        ]
 
+        self.revert_to_original_skipping_status()
+        self.play(Write(integral))
+        self.play(ShowCreation(int_arrow))
+        self.foreground_mobjects.append(int_arrow)
+        self.dither()
+        self.change_area_bounds(
+            new_t_max = 8,
+            rate_func = there_and_back,
+            run_time = 2,
+        )
+        self.play(Indicate(top_T))
+        self.play(ReplacementTransform(
+            top_T.copy(), moving_T
+        ))
+        self.change_area_bounds(
+            new_t_max = 3,
+            rate_func = there_and_back,
+            run_time = 2
+        )
+        self.dither()
 
+    ####
+
+    def add_T_label(self, x_val):
+        triangle = RegularPolygon(n=3, start_angle = np.pi/2)
+        triangle.scale_to_fit_height(MED_SMALL_BUFF)
+        triangle.move_to(self.coords_to_point(x_val, 0), UP)
+        triangle.set_fill(WHITE, 1)
+        triangle.set_stroke(width = 0)
+        T_label = TexMobject("T")
+        T_label.next_to(triangle, DOWN)
+        v_line = self.get_vertical_line_to_graph(
+            x_val, self.v_graph,
+            color = YELLOW
+        )
+
+        self.play(
+            DrawBorderThenFill(triangle),
+            ShowCreation(v_line),
+            Write(T_label, run_time = 1)
+        )
+
+        self.T_label_group = VGroup(T_label, triangle)
+        self.right_v_line = v_line
+
+    def get_area(self, t_min, t_max):
+        dx = float(t_max - t_min) / self.num_rects
+        return self.get_riemann_rectangles(
+            self.v_graph,
+            x_min = t_min,
+            x_max = t_max,
+            dx = dx,
+            stroke_width = 0,
+        ).set_fill(opacity = 0.8)
+
+    def change_area_bounds(self, new_t_min = None, new_t_max = None, **kwargs):
+        curr_t_min = self.x_axis.point_to_number(self.area.get_left())
+        curr_t_max = self.x_axis.point_to_number(self.area.get_right())
+        new_t_min = new_t_min or curr_t_min
+        new_t_max = new_t_max or curr_t_max
+
+        group = VGroup(self.area, self.right_v_line, self.T_label_group)
+        def update_group(group, alpha):
+            area, v_line, T_label = group
+            t_min = interpolate(curr_t_min, new_t_min, alpha)
+            t_max = interpolate(curr_t_max, new_t_max, alpha)
+            new_area = self.get_area(t_min, t_max)
+            new_v_line = self.get_vertical_line_to_graph(
+                t_max, self.v_graph
+            )
+            new_v_line.highlight(v_line.get_color())
+            T_label.move_to(new_v_line.get_bottom(), UP)
+
+            Transform(area, new_area).update(1)
+            Transform(v_line, new_v_line).update(1)
+            return group
+
+        self.play(
+            UpdateFromAlphaFunc(group, update_group),
+            *map(Animation, self.foreground_mobjects),
+            **kwargs
+        )
 
 
 
