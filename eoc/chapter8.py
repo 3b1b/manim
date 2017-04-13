@@ -570,7 +570,6 @@ class ConstantVelocityPlot(PlotVelocity):
         self.comment_on_area_wierdness()
         self.note_units()
 
-
     def draw_graph(self):
         graph = self.get_graph(
             lambda t : 10,
@@ -674,6 +673,27 @@ class ConstantVelocityPlot(PlotVelocity):
             for axis in self.x_axis, self.y_axis
         ])
         lines.highlight(TIME_COLOR)
+        square = Square(
+            stroke_color = BLACK,
+            stroke_width = 1,
+            fill_color = PINK,
+            fill_opacity = 1,
+        )
+        square.replace(
+            VGroup(*[
+                VectorizedPoint(self.coords_to_point(i, i))
+                for i in 0, 1
+            ]),
+            stretch = True
+        )
+        units_of_area = VGroup(*[
+            square.copy().move_to(
+                self.coords_to_point(x, y),
+                DOWN+LEFT
+            )
+            for x in range(8)
+            for y in range(10)
+        ])
 
         self.play(ShowCreation(x_line))
         self.play(Indicate(self.x_axis_label_mob))
@@ -684,29 +704,625 @@ class ConstantVelocityPlot(PlotVelocity):
         )
         self.play(Indicate(self.y_axis_label_mob))
         self.play(FadeOut(y_line))
-        self.dither()
-        for direction in UP, DOWN:
+        for FadeClass in FadeIn, FadeOut:
             self.play(
-                ApplyWave(
-                    self.area_rect,
-                    run_time = 1,
-                    direction = direction,
-                    amplitude = MED_SMALL_BUFF,
+                FadeClass(
+                    units_of_area, 
+                    submobject_mode = "lagged_start",
+                    run_time = 3
                 ),
-                *map(Animation, self.get_mobjects()) + [
-                    self.randy.look_at, self.area_rect
-                ]
+                Animation(self.s_label),
+                self.randy.look_at, self.area_rect
             )
+        self.play(Blink(self.randy))
         self.dither()
 
+class PiecewiseConstantCar(Scene):
+    def construct(self):
+        car = Car()
+        start_point = 5*LEFT
+        car.move_to(start_point)
 
+        self.add(car)
+        self.dither()
+        for shift in 2, 6, 12:
+            car.randy.rotate_in_place(np.pi/8)
+            anim = MoveCar(
+                car, start_point+shift*RIGHT,
+                rate_func = None
+            )
 
+            anim.target_mobject[0].rotate_in_place(-np.pi/8)
+            # for mob in anim.starting_mobject, anim.mobject:
+            #     mob.randy.rotate_in_place(np.pi/6)
+            self.play(anim)
+        self.dither()
 
+class PiecewiseConstantPlot(PlotVelocity):
+    CONFIG = {
+        "y_axis_label" : "",
+        "min_graph_proportion" : 0.1,
+        "max_graph_proportion" : 0.8,
+        "num_riemann_approximations" : 7, ##TODO
+        "riemann_rect_fill_opacity" : 0.75,
+        "tick_size" : 0.2,
+    }
+    def construct(self):
+        self.setup_graph()
+        self.always_changing()
+        self.show_piecewise_constant_graph()
+        self.compute_distance_on_each_interval()
+        self.approximate_original_curve()
+        self.revert_to_specific_approximation()
+        self.show_specific_rectangle()
+        self.show_v_dt_for_all_rectangles()
+        self.write_integral_symbol()
+        self.roles_of_dt()
+        self.what_does_sum_approach()
 
+    def setup_graph(self):
+        self.setup_axes()
+        self.add(*self.get_v_graph_and_label())
 
+    def always_changing(self):
+        dot = Dot()
+        arrow = Arrow(LEFT, RIGHT)
+        words = TextMobject("Always changing")
+        group = VGroup(dot, arrow, words)
+        def update_group(group, alpha):
+            dot, arrow, words = group
+            prop = interpolate(
+                self.min_graph_proportion,
+                self.max_graph_proportion,
+                alpha
+            )
+            graph_point = self.v_graph.point_from_proportion(prop)
+            dot.move_to(graph_point)
+            x_val = self.x_axis.point_to_number(graph_point)
+            angle = self.angle_of_tangent(x_val, self.v_graph)
+            angle += np.pi/2
+            vect = rotate_vector(RIGHT, angle)
+            arrow.rotate(angle - arrow.get_angle() + np.pi)
+            arrow.shift(
+                graph_point + MED_SMALL_BUFF*vect - arrow.get_end()
+            )
+            words.next_to(arrow.get_start(), UP)
+            return group
+        update_group(group, 0)
 
+        self.play(
+            Write(words),
+            ShowCreation(arrow),
+            DrawBorderThenFill(dot),
+            run_time = 1
+        )
+        self.play(UpdateFromAlphaFunc(
+            group, update_group,
+            rate_func = there_and_back,
+            run_time = 5
+        ))
+        self.dither()
+        self.play(FadeOut(group))
 
+    def show_piecewise_constant_graph(self):
+        pw_constant_graph = self.get_pw_constant_graph()
+        alt_lines = [
+            line.copy().highlight(YELLOW)
+            for line in pw_constant_graph[:4]
+        ]
+        for line in alt_lines:
+            line.start_dot = Dot(line.get_start())
+            line.end_dot = Dot(line.get_end())
+            VGroup(line.start_dot, line.end_dot).highlight(line.get_color())
+        line = alt_lines[0]
 
+        faders = [self.v_graph, self.v_graph_label]
+        for mob in faders:
+            mob.save_state()
+            mob.generate_target()
+            mob.target.fade(0.7)
+
+        self.play(*map(MoveToTarget, faders))
+        self.play(ShowCreation(pw_constant_graph, run_time = 2))
+        self.dither()
+        self.play(ShowCreation(line))
+        self.dither()
+        for new_line in alt_lines[1:]:
+            for mob in line.end_dot, new_line.start_dot, new_line:
+                self.play(Transform(
+                    line, mob,
+                    run_time = 1./3
+                ))
+            self.remove(line)
+            self.add(new_line)
+            self.dither(2)
+            line = new_line
+        self.play(FadeOut(line))
+
+        self.pw_constant_graph = pw_constant_graph
+
+    def compute_distance_on_each_interval(self):
+        rect_list = self.get_riemann_rectangles_list(
+            self.v_graph, self.num_riemann_approximations, 
+            max_dx = 1,
+            x_min = 0,
+            x_max = 8,
+        )
+        for rects in rect_list:
+            rects.set_fill(opacity = self.riemann_rect_fill_opacity)
+        flat_rects = self.get_riemann_rectangles(
+            self.get_graph(lambda t : 0),
+            x_min = 0, x_max = 8, dx = 1
+        )
+        rects = rect_list[0]
+        rect = rects[1]
+        flat_rects.submobjects[1] = rect.copy()
+
+        right_brace = Brace(rect, RIGHT)
+        top_brace = Brace(rect, UP)
+        right_brace.label = right_brace.get_text("$7\\frac{\\text{m}}{\\text{s}}$")
+        top_brace.label = top_brace.get_text("$1$s")
+
+        self.play(FadeIn(rect))
+        for brace in right_brace, top_brace:
+            self.play(
+                GrowFromCenter(brace),
+                Write(brace.label, run_time = 1),
+            )
+            brace.add(brace.label)
+            self.dither()
+        self.play(
+            ReplacementTransform(
+                flat_rects, rects,
+                run_time = 2,
+                submobject_mode = "lagged_start",
+            ),
+            Animation(right_brace)
+        )
+        self.play(*map(FadeOut, [top_brace, right_brace]))
+        self.dither()
+
+        self.rects = rects
+        self.rect_list = rect_list
+
+    def approximate_original_curve(self):
+        rects = self.rects
+        self.play(
+            FadeOut(self.pw_constant_graph),
+            *[
+                m.restore 
+                for m in self.v_graph, self.v_graph_label
+            ]+[Animation(self.rects)]
+        )
+        for new_rects in self.rect_list[1:]:
+            rects.align_submobjects(new_rects)
+            for every_other_rect in rects[::2]:
+                every_other_rect.set_fill(opacity = 0)
+            self.play(Transform(
+                rects, new_rects, 
+                run_time = 2,
+                submobject_mode = "lagged_start"
+            ))
+            self.dither()
+
+    def revert_to_specific_approximation(self):
+        rects = self.rects
+        rects.save_state()
+        target_rects = self.rect_list[2]
+        target_rects.set_fill(opacity = 1)
+
+        ticks = self.get_ticks(target_rects)
+        tick_pair = VGroup(*ticks[4:6])
+        brace = Brace(tick_pair, DOWN, buff = 0)
+        dt_label = brace.get_text("$dt$", buff = SMALL_BUFF)
+
+        example_text = TextMobject(
+            "For example, \\\\",
+            "$dt$", "$=0.25$"
+        )
+        example_text.to_corner(UP+RIGHT)
+        example_text.highlight_by_tex("dt", YELLOW)
+
+        self.play(ReplacementTransform(
+            rects, target_rects,
+            run_time = 2,
+            submobject_mode = "lagged_start"
+        ))
+        rects.restore()
+        self.dither()
+        self.play(
+            ShowCreation(ticks),
+            FadeOut(self.x_axis.numbers)
+        )
+        self.play(
+            GrowFromCenter(brace),
+            Write(dt_label)
+        )
+        self.dither()
+        self.play(
+            FadeIn(
+                example_text, 
+                run_time = 2,
+                submobject_mode = "lagged_start",
+            ),
+            ReplacementTransform(
+                dt_label.copy(),
+                example_text.get_part_by_tex("dt")
+            )
+        )
+        self.dither()
+
+        self.rects = rects = target_rects
+        self.ticks = ticks
+        self.dt_brace = brace
+        self.dt_label = dt_label
+        self.dt_example_text = example_text
+
+    def show_specific_rectangle(self):
+        rects = self.rects
+        rect = rects[4].copy()
+        rect_top = Line(
+            rect.get_corner(UP+LEFT),
+            rect.get_corner(UP+RIGHT),
+            color = self.v_graph.get_color()
+        )
+
+        t_vals = [1, 1.25]
+        t_labels = VGroup(*[
+            TexMobject("t=%s"%str(t))
+            for t in t_vals
+        ])
+        t_labels.scale(0.7)
+        t_labels.next_to(rect, DOWN)
+        for vect, label in zip([LEFT, RIGHT], t_labels):
+            label.shift(1.5*vect)
+            label.add(Arrow(
+                label.get_edge_center(-vect),
+                rect.get_corner(DOWN+vect),
+                buff = SMALL_BUFF,
+                tip_length = 0.15,
+                color = WHITE
+            ))
+
+        v_lines = VGroup()
+        h_lines = VGroup()
+        height_labels = VGroup()
+        for t in t_vals:
+            v_line = self.get_vertical_line_to_graph(
+                t, self.v_graph,
+                color = YELLOW
+            )
+            y_axis_point = self.graph_origin[0]*RIGHT
+            y_axis_point += v_line.get_end()[1]*UP
+            h_line = DashedLine(v_line.get_end(), y_axis_point)
+            label = TexMobject("%.1f"%v_func(t))
+            label.scale(0.5)
+            label.next_to(h_line, LEFT, SMALL_BUFF)
+            v_lines.add(v_line)
+            h_lines.add(h_line)
+            height_labels.add(label)
+
+        circle = Circle(radius = 0.25, color = WHITE)
+        circle.move_to(rect.get_top())
+
+        self.play(
+            rects.set_fill, None, 0.25,
+            Animation(rect)
+        )
+        self.dither()
+        for label in t_labels:
+            self.play(FadeIn(label))
+        self.dither()
+        for v_line, h_line, label in zip(v_lines, h_lines, height_labels):
+            self.play(ShowCreation(v_line))
+            self.play(ShowCreation(h_line))
+            self.play(Write(label, run_time = 1))
+            self.dither()
+        self.dither()
+        t_label_copy = t_labels[0].copy()
+        self.play(
+            t_label_copy.scale, 1./0.7,
+            t_label_copy.next_to, self.v_graph_label, DOWN+LEFT, 0
+        )
+        self.dither()
+        self.play(FadeOut(t_label_copy))
+        self.dither()
+
+        self.play(ShowCreation(circle))
+        self.play(ShowCreation(rect_top))
+        self.play(FadeOut(circle))
+        rect.add(rect_top)
+        self.dither()
+        for x in range(2):
+            self.play(
+                rect.scale_to_fit_height, v_lines[1].get_height(),
+                rect.move_to, rect.get_bottom(), DOWN,
+                run_time = 4,
+                rate_func = there_and_back
+            )
+
+        self.play(*map(FadeOut, [
+            group[1]
+            for group in v_lines, h_lines, height_labels
+        ]))
+        self.play(
+            v_lines[0].highlight, RED,
+            rate_func = there_and_back,
+        )
+        self.dither()
+
+        area = TextMobject(
+            "7$\\frac{\\text{m}}{\\text{s}}$",
+            "$\\times$",
+            "0.25s",
+            "=",
+            "1.75m"
+        )
+        area.next_to(rect, RIGHT, LARGE_BUFF)
+        arrow = Arrow(
+            area.get_left(), rect.get_center(), 
+            buff = 0,
+            color = WHITE
+        )
+        area.shift(SMALL_BUFF*RIGHT)
+
+        self.play(
+            Write(area),
+            ShowCreation(arrow)
+        )
+        self.dither(2)
+        self.play(*map(FadeOut, [
+            area, arrow, 
+            v_lines[0], h_lines[0], height_labels[0],
+            rect, t_labels
+        ]))
+
+    def show_v_dt_for_all_rectangles(self):
+        dt_brace_group = VGroup(self.dt_brace, self.dt_label)
+        rects_subset = self.rects[10:15]
+
+        last_rect = None
+        for rect in rects_subset:
+            brace = Brace(rect, LEFT, buff = 0)
+            v_t = TexMobject("v(t)")
+            v_t.next_to(brace, LEFT, SMALL_BUFF)
+            anims = [
+                rect.set_fill, None, 1,
+                dt_brace_group.next_to, rect, DOWN, SMALL_BUFF
+            ]
+            if last_rect is not None:
+                anims += [
+                    last_rect.set_fill, None, 0.25,
+                    ReplacementTransform(last_brace, brace),
+                    ReplacementTransform(last_v_t, v_t),
+                ]
+            else:
+                anims += [
+                    GrowFromCenter(brace),
+                    Write(v_t)
+                ]
+            self.play(*anims)
+            self.dither()
+
+            last_rect = rect
+            last_brace = brace
+            last_v_t = v_t
+
+        self.v_t = last_v_t
+        self.v_t_brace = last_brace
+
+    def write_integral_symbol(self):
+        integral = TexMobject(
+            "\\int", "^8", "_0", "v(t)", "\\,dt"
+        )
+        integral.to_corner(UP+RIGHT)
+        int_copy = integral.get_part_by_tex("int").copy()
+        bounds = map(integral.get_part_by_tex, ["0", "8"])
+
+        sum_word = TextMobject("``Sum''")
+        sum_word.next_to(integral, DOWN, MED_LARGE_BUFF, LEFT)
+        alt_sum_word = sum_word.copy()
+        int_symbol = TexMobject("\\int")
+        int_symbol.replace(alt_sum_word[1], dim_to_match = 1)
+        alt_sum_word.submobjects[1] = int_symbol
+
+        self.play(FadeOut(self.dt_example_text))
+        self.play(Write(integral.get_part_by_tex("int")))
+        self.dither()
+        self.play(Transform(int_copy, int_symbol))
+        self.play(Write(alt_sum_word), Animation(int_copy))
+        self.remove(int_copy)
+        self.play(ReplacementTransform(alt_sum_word, sum_word))
+        self.dither()
+
+        for bound in bounds:
+            self.play(Write(bound))
+        self.dither()
+        for bound, num in zip(bounds, [0, 8]):
+            bound_copy = bound.copy()
+            point = self.coords_to_point(num, 0)
+            self.play(
+                bound_copy.scale, 1.5,
+                bound_copy.next_to, point, DOWN, MED_LARGE_BUFF
+            )
+        self.play(ApplyWave(self.ticks, direction = UP))
+        self.dither()
+
+        for mob, tex in (self.v_t, "v(t)"), (self.dt_label, "dt"):
+            self.play(ReplacementTransform(
+                mob.copy().highlight(YELLOW), 
+                integral.get_part_by_tex(tex),
+                run_time = 2
+            ))
+        self.dither()
+
+        self.integral = integral
+        self.sum_word = sum_word
+
+    def roles_of_dt(self):
+        rects = self.rects
+        next_rects = self.rect_list[3]
+
+        morty = Mortimer().flip()
+        morty.to_corner(DOWN+LEFT)
+        int_dt = self.integral.get_part_by_tex("dt")
+        dt_copy = int_dt.copy()
+
+        self.play(FadeIn(morty))
+        self.play(
+            morty.change_mode, "raise_right_hand",
+            morty.look, UP+RIGHT,
+            dt_copy.next_to, morty.get_corner(UP+RIGHT), UP,
+            dt_copy.highlight, YELLOW
+        )
+        self.play(Blink(morty))
+        self.play(
+            ReplacementTransform(
+                dt_copy.copy(), int_dt,
+                run_time = 2
+            ),
+            morty.look_at, int_dt
+        )
+        self.dither(2)
+        self.play(
+            ReplacementTransform(dt_copy.copy(), self.dt_label),
+            morty.look_at, self.dt_label
+        )
+        self.play(*[
+            ApplyMethod(
+                tick.shift, tick.get_height()*UP/2,
+                run_time = 2,
+                rate_func = squish_rate_func(
+                    there_and_back,
+                    alpha, alpha+0.2,
+                )
+            )
+            for tick, alpha in zip(
+                self.ticks, 
+                np.linspace(0, 0.8, len(self.ticks))
+            )
+        ])
+        self.dither()
+
+        #Shrink dt just a bit
+        self.play(
+            morty.change_mode, "pondering",
+            rects.set_fill, None, 0.75,
+            *map(FadeOut, [
+                dt_copy, self.v_t, self.v_t_brace
+            ])
+        )
+        rects.align_submobjects(next_rects)
+        for every_other_rect in rects[::2]:
+            every_other_rect.set_fill(opacity = 0)
+        self.play(
+            self.dt_brace.stretch, 0.5, 0,
+            self.dt_brace.move_to, self.dt_brace, LEFT,
+            ReplacementTransform(
+                rects, next_rects,
+                run_time = 2,
+                submobject_mode = "lagged_start"
+            ),
+            Transform(
+                self.ticks, self.get_ticks(next_rects),
+                run_time = 2,
+                submobject_mode = "lagged_start",
+            ),
+        )
+        self.rects = rects = next_rects
+        self.dither()
+        self.play(Blink(morty))
+        self.play(*[
+            ApplyFunction(
+                lambda r : r.shift(0.2*UP).set_fill(None, 1),
+                rect,
+                run_time = 2,
+                rate_func = squish_rate_func(
+                    there_and_back,
+                    alpha, alpha+0.2,
+                )
+            )
+            for rect, alpha in zip(
+                rects, 
+                np.linspace(0, 0.8, len(rects))
+            )
+        ]+[
+            morty.change_mode, "thinking",
+        ])
+        self.dither()
+
+        self.morty = morty
+
+    def what_does_sum_approach(self):
+        morty = self.morty
+        rects = self.rects
+
+        cross = TexMobject("\\times")
+        cross.replace(self.sum_word, stretch = True)
+        cross.highlight(RED)
+        brace = Brace(self.integral, DOWN)
+        dt_to_0 = brace.get_text("$dt \\to 0$")
+
+        self.play(PiCreatureSays(
+            morty, "Why not $\\Sigma$?",
+            target_mode = "sassy"
+        ))
+        self.play(Blink(morty))
+        self.dither()
+        self.play(Write(cross))
+        self.dither()
+        self.play(
+            RemovePiCreatureBubble(morty, target_mode = "plain"),
+            *map(FadeOut, [
+                cross, self.sum_word, self.ticks,
+                self.dt_brace, self.dt_label,
+            ])
+        )
+        self.play(FadeIn(brace), FadeIn(dt_to_0))
+        for new_rects in self.rect_list[4:]:
+            rects.align_submobjects(new_rects)
+            for every_other_rect in rects[::2]:
+                every_other_rect.set_fill(opacity = 0)
+            self.play(
+                Transform(
+                    rects, new_rects, 
+                    run_time = 2,
+                    submobject_mode = "lagged_start"
+                ),
+                morty.look_at, rects,
+            )
+            self.dither()
+
+    #####
+
+    def get_pw_constant_graph(self):
+        result = VGroup()
+        for left_x in range(8):
+            xs = [left_x, left_x+1]
+            y = self.v_graph.underlying_function(left_x)
+            line = Line(*[
+                self.coords_to_point(x, y)
+                for x in xs
+            ])
+            line.highlight(self.v_graph.get_color())
+            result.add(line)
+        return result
+
+    def get_ticks(self, rects):
+        ticks = VGroup(*[
+            Line(
+                point+self.tick_size*UP/2, 
+                point+self.tick_size*DOWN/2
+            )
+            for t in np.linspace(0, 8, len(rects)+1)
+            for point in [self.coords_to_point(t, 0)]
+        ])
+        ticks.highlight(YELLOW)
+        return ticks
+
+class CarJourneyApproximations(Scene):
+    def construct(self):
+        pass
 
 
 
