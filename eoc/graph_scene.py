@@ -196,11 +196,15 @@ class GraphScene(Scene):
         stroke_width = 1,
         fill_opacity = 1,
         start_color = BLUE,
-        end_color = GREEN):
+        end_color = GREEN,
+        show_signed_area = True,
+        ):
         x_min = x_min if x_min is not None else self.x_min
         x_max = x_max if x_max is not None else self.x_max
         rectangles = VGroup()
-        for x in np.arange(x_min, x_max, dx):
+        x_range = np.arange(x_min, x_max, dx) 
+        colors = color_gradient([start_color, end_color], len(x_range))
+        for x, color in zip(x_range, colors):
             if input_sample_type == "left":
                 sample_input = x
             elif input_sample_type == "right":
@@ -216,10 +220,13 @@ class GraphScene(Scene):
 
             rect = Rectangle()
             rect.replace(points, stretch = True)
-            rect.set_fill(opacity = fill_opacity)
+            if graph_point[1] < self.graph_origin[1] and show_signed_area:
+                fill_color = invert_color(color)
+            else:
+                fill_color = color
+            rect.set_fill(fill_color, opacity = fill_opacity)
+            rect.set_stroke(BLACK, width = stroke_width)
             rectangles.add(rect)
-        rectangles.gradient_highlight(start_color, end_color)
-        rectangles.set_stroke(BLACK, width = stroke_width)
         return rectangles
 
     def get_riemann_rectangles_list(

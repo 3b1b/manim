@@ -99,10 +99,15 @@ class Car(SVGMobject):
         return VGroup(self[1][1], self[1][3])
 
 class MoveCar(ApplyMethod):
+    CONFIG = {
+        "moving_forward" : True,
+    }
     def __init__(self, car, target_point, **kwargs):
         ApplyMethod.__init__(self, car.move_to, target_point, **kwargs)
         displacement = self.target_mobject.get_right()-self.starting_mobject.get_right()
         distance = np.linalg.norm(displacement)
+        if not self.moving_forward:
+            distance *= -1
         tire_radius = car.get_tires()[0].get_width()/2
         self.total_tire_radians = -distance/tire_radius
 

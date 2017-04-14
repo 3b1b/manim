@@ -1429,6 +1429,15 @@ class LessWrongCarJourneyApproximation(CarJourneyApproximation):
         "n_jumps" : 20,
     }
 
+class TellMeThatsNotSurprising(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Tell me that's \\\\ not surprising!",
+            target_mode = "hooray",
+            run_time = 1
+        )
+        self.dither(3)
+
 class HowDoesThisHelp(TeacherStudentsScene):
     def construct(self):
         self.student_says(
@@ -1762,7 +1771,6 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
             *map(Animation, self.foreground_mobjects),
             **kwargs
         )
-
 
 class DirectInterpretationOfDsDt(TeacherStudentsScene):
     def construct(self):
@@ -2473,12 +2481,239 @@ class FundamentalTheorem(GraphScene):
         self.play(self.integral.set_fill, None, 1)
         self.dither(3)
 
+class LetsRecap(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Let's recap",
+            target_mode = "hesitant",
+        )
+        self.change_student_modes(*["happy"]*3)
+        self.dither(3)
 
+class NegativeArea(GraphScene):
+    CONFIG = {
+        "x_axis_label" : "Time",
+        "y_axis_label" : "Velocity",
+        "graph_origin" : 1.5*DOWN + 5*LEFT,
+        "y_min" : -3,
+        "y_max" : 7,
+        "small_dx" : 0.01,
+        "sample_input" : 5,
+    }
+    def construct(self):
+        self.setup_axes()
+        self.add_graph_and_area()
+        self.write_negative_area()
+        self.show_negative_point()
+        self.show_car_going_backwards()
+        self.write_v_dt()
+        self.show_rectangle()
+        self.write_signed_area()
 
+    def add_graph_and_area(self):
+        graph = self.get_graph(
+            lambda x : -0.02*(x+1)*(x-3)*(x-7)*(x-10),
+            x_min = 0,
+            x_max = 8,
+            color = VELOCITY_COLOR
+        )
+        area = self.get_riemann_rectangles(
+            graph, 
+            x_min = 0,
+            x_max = 8,
+            dx = self.small_dx,
+            start_color = BLUE_D,
+            end_color = BLUE_D,
+            fill_opacity = 0.75,
+            stroke_width = 0,
+        )
 
+        self .play(
+            ShowCreation(graph),
+            FadeIn(
+                area, 
+                run_time = 2,
+                submobject_mode = "lagged_start",
+            )
+        )
 
+        self.graph = graph
+        self.area = area
 
+    def write_negative_area(self):
+        words = TextMobject("Negative area")
+        words.highlight(RED)
+        words.next_to(
+            self.coords_to_point(7, -2),
+            RIGHT,
+        )
+        arrow = Arrow(words, self.coords_to_point(
+            self.sample_input, -1,
+        ))
 
+        self.play(
+            Write(words, run_time = 2),
+            ShowCreation(arrow)
+        )
+        self.dither(2)
+        self.play(*map(FadeOut, [self.area, arrow]))
+
+        self.negative_area_words = words
+
+    def show_negative_point(self):
+        v_line = self.get_vertical_line_to_graph(
+            self.sample_input, self.graph,
+            color = RED
+        )
+        self.play(ShowCreation(v_line))
+        self.dither()
+        self.v_line = v_line
+
+    def show_car_going_backwards(self):
+        car = Car()
+        start_point = 3*RIGHT + 2*UP
+        end_point = start_point + LEFT
+        nudged_end_point = end_point + MED_SMALL_BUFF*LEFT
+        car.move_to(start_point)
+        arrow = Arrow(RIGHT, LEFT, color = RED)
+        arrow.next_to(car, UP+LEFT)
+        arrow.shift(MED_LARGE_BUFF*RIGHT)
+
+        self.play(FadeIn(car))
+        self.play(ShowCreation(arrow))
+        self.play(MoveCar(
+            car, end_point, 
+            moving_forward = False,
+            run_time = 3
+        ))
+        self.dither()
+        ghost_car = car.copy().fade()
+        right_nose_line = self.get_car_nose_line(car)
+        self.play(ShowCreation(right_nose_line))
+        self.add(ghost_car)
+        self.play(MoveCar(
+            car, nudged_end_point,
+            moving_forward = False
+        ))
+        left_nose_line = self.get_car_nose_line(car)
+        self.play(ShowCreation(left_nose_line))
+
+        self.nose_lines = VGroup(left_nose_line, right_nose_line)
+        self.car = car
+        self.ghost_car = ghost_car
+
+    def write_v_dt(self):
+        brace = Brace(self.nose_lines, DOWN, buff = 0)
+        equation = TexMobject("ds", "=", "v(t)", "dt")
+        equation.next_to(brace, DOWN, SMALL_BUFF, LEFT)
+        equation.highlight_by_tex("ds", DISTANCE_COLOR)
+        equation.highlight_by_tex("dt", TIME_COLOR)
+
+        negative = TextMobject("Negative")
+        negative.highlight(RED)
+        negative.next_to(equation.get_corner(UP+RIGHT), UP, LARGE_BUFF)
+        ds_arrow, v_arrow = arrows = VGroup(*[
+            Arrow(
+                negative.get_bottom(),
+                equation.get_part_by_tex(tex).get_top(),
+                color = RED,
+            )
+            for tex in "ds", "v(t)"
+        ])
+
+        self.play(
+            GrowFromCenter(brace),
+            Write(equation)
+        )
+        self.dither()
+        self.play(FadeIn(negative))
+        self.play(ShowCreation(v_arrow))
+        self.dither(2)
+        self.play(ReplacementTransform(
+            v_arrow.copy(),
+            ds_arrow
+        ))
+        self.dither(2)
+
+        self.ds_equation = equation
+        self.negative_word = negative
+        self.negative_word_arrows = arrows
+
+    def show_rectangle(self):
+        rect_list = self.get_riemann_rectangles_list(
+            self.graph, x_min = 0, x_max = 8,
+            n_iterations = 6,
+            start_color = BLUE_D,
+            end_color = BLUE_D,
+            fill_opacity = 0.75,
+        )
+        rects = rect_list[0]
+        rect = rects[len(rects)*self.sample_input//8]
+
+        dt_brace = Brace(rect, UP, buff = 0)
+        v_brace = Brace(rect, LEFT, buff = 0)
+        dt_label = dt_brace.get_text("$dt$", buff = SMALL_BUFF)
+        dt_label.highlight(YELLOW)
+        v_label = v_brace.get_text("$v(t)$", buff = SMALL_BUFF)
+        v_label.add_background_rectangle()
+
+        self.play(FadeOut(self.v_line), FadeIn(rect))
+        self.play(
+            GrowFromCenter(dt_brace), 
+            GrowFromCenter(v_brace), 
+            Write(dt_label),
+            Write(v_label),
+        )
+        self.dither(2)
+        self.play(*it.chain(
+            [FadeIn(r) for r in rects if r is not rect],
+            map(FadeOut, [
+                dt_brace, v_brace, dt_label, v_label
+            ])
+        ))
+        self.dither()
+        for new_rects in rect_list[1:]:
+            self.transform_between_riemann_rects(rects, new_rects)
+        self.dither()
+
+    def write_signed_area(self):
+        words = TextMobject("``Signed area''")
+        words.next_to(self.coords_to_point(self.sample_input, 0), UP)
+        symbols = VGroup(*[
+            TexMobject(sym).move_to(self.coords_to_point(*coords))
+            for sym, coords in [
+                ("+", (1, 2)),
+                ("-", (5, -1)),
+                ("+", (7.6, 0.5)),
+            ]
+        ])
+        self.play(Write(words))
+        self.play(Write(symbols))
+        self.dither()
+
+    ####
+
+    def get_car_nose_line(self, car):
+        line = DashedLine(car.get_top(), car.get_bottom())
+        line.move_to(car.get_right())
+        return line
+
+class NextVideo(TeacherStudentsScene):
+    def construct(self):
+        series = VideoSeries()
+        series.to_edge(UP)
+        next_video = series[8]
+        integral = TexMobject("\\int")
+        integral.next_to(next_video, DOWN, LARGE_BUFF)
+
+        self.play(FadeIn(series, submobject_mode = "lagged_start"))
+        self.play(
+            next_video.highlight, YELLOW,
+            next_video.shift, next_video.get_height()*DOWN/2,
+            self.teacher.change_mode, "raise_right_hand"
+        )
+        self.play(Write(integral))
+        self.dither(5)
 
 
 

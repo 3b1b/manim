@@ -118,6 +118,9 @@ def rgb_to_color(rgb):
     except:
         return Color(WHITE)
 
+def invert_color(color):
+    return rgb_to_color(1.0 - color_to_rgb(color))
+
 def color_to_int_rgb(color):
     return (255*color_to_rgb(color)).astype('uint8')
 
