@@ -402,7 +402,7 @@ class IntroduceCar(Scene):
 class GraphCarTrajectory(GraphScene):
     CONFIG = {
         "x_min" : 0,
-        "x_max" : 10.01,
+        "x_max" : 10,
         "x_labeled_nums" : range(1, 11),
         "x_axis_label" : "Time (seconds)",
         "y_min" : 0,

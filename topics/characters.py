@@ -123,6 +123,11 @@ class PiCreature(SVGMobject):
         self.look(point - self.eyes.get_center())
         return self
 
+    def change(self, new_mode, look_at_arg = None):
+        self.change_mode(new_mode)
+        if look_at_arg:
+            self.look_at(look_at_arg)
+        return self
 
     def get_looking_direction(self):
         return np.sign(np.round(
