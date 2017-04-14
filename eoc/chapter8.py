@@ -1500,7 +1500,7 @@ class Chapter1Wrapper(Chapter2Wrapper):
 class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
     CONFIG = {
         "y_axis_label" : "",
-        "num_rects" : 250,
+        "num_rects" : 400,
         "dT" : 0.25,
     }
     def setup(self):
@@ -2032,21 +2032,16 @@ class GraphSPlusC(GraphDistanceVsTime):
 
 class LowerBound(AreaIsDerivative):
     CONFIG = {
-        "num_rects" : 20,
         "graph_origin" : 2.5*DOWN + 6*LEFT
     }
 
     def construct(self):
-        self.force_skipping()
-
         self.add_integral_and_area()
         self.mention_lower_bound()
         self.drag_right_endpoint_to_zero()
         self.write_antiderivative_difference()
         self.show_alternate_antiderivative_difference()
         self.add_constant_to_antiderivative()
-        self.write_fundamental_theorem_of_calculus()
-        self.information_of_continuum_vs_endpoints()
 
     def add_integral_and_area(self):
         self.area = self.get_area(0, 6)
@@ -2182,28 +2177,54 @@ class LowerBound(AreaIsDerivative):
     def show_alternate_antiderivative_difference(self):
         new_integral = self.get_integral("1", "7")
         new_antideriv_diff = self.get_antiderivative_difference("1", "7")
-        for tex_mob in [new_integral]+new_antideriv_diff[1::2]:
+        numbers = [
+            TexMobject("%d"%d).next_to(
+                self.coords_to_point(d, 0), 
+                DOWN, MED_LARGE_BUFF
+            )
+            for d in 1, 7
+        ]
+        tex_mobs = [new_integral]+new_antideriv_diff[1::2]+numbers
+        for tex_mob in tex_mobs:
             tex_mob.highlight_by_tex("1", RED)
             tex_mob.highlight_by_tex("7", GREEN)
             tex_mob.highlight_by_tex("\\frac{1}{3}", WHITE)
 
-        self.revert_to_original_skipping_status()
         self.change_area_bounds(1, 7, run_time = 2)
+        self.play(
+            self.T_label_group[0].set_fill, None, 0,
+            *map(FadeIn, numbers)
+        )
         self.play(
             Transform(self.integral, new_integral),
             Transform(self.antideriv_diff, new_antideriv_diff),
         )
         self.dither(3)
-
+        for part in self.antideriv_diff[1::2]:
+            self.play(Indicate(part, scale_factor = 1.1))
+            self.dither()
 
     def add_constant_to_antiderivative(self):
-        pass
+        antideriv_diff = self.antideriv_diff
+        plus_fives = VGroup(*[TexMobject("+5") for i in range(2)])
+        plus_fives.highlight(YELLOW)
+        for five, part in zip(plus_fives, antideriv_diff[1::2]):
+            five.next_to(part, DOWN)
+        group = VGroup(
+            plus_fives[0],
+            antideriv_diff[2].copy(),
+            plus_fives[1]
+        )
 
-    def write_fundamental_theorem_of_calculus(self):
-        pass
-
-    def information_of_continuum_vs_endpoints(self):
-        pass
+        self.play(Write(plus_fives, run_time = 2))
+        self.dither(2)
+        self.play(
+            group.arrange_submobjects,
+            group.next_to, antideriv_diff, DOWN, MED_LARGE_BUFF
+        )
+        self.dither()
+        self.play(FadeOut(group, run_time = 2))
+        self.dither()
 
     #####
 
@@ -2243,8 +2264,214 @@ class LowerBound(AreaIsDerivative):
         result.next_to(self.integral, RIGHT)
         return result
 
+class FundamentalTheorem(GraphScene):
+    CONFIG = {
+        "lower_bound" : 1,
+        "upper_bound" : 7,
+        "lower_bound_color" : RED,
+        "upper_bound_color" : GREEN,
+        "n_riemann_iterations" : 6,
+    }
 
+    def construct(self):
+        self.add_graph_and_integral()
+        self.show_f_dx_sum()
+        self.show_rects_approaching_area()
+        self.write_antiderivative()
+        self.write_fundamental_theorem_of_calculus()
+        self.show_integral_considering_continuum()
+        self.show_antiderivative_considering_bounds()
 
+    def add_graph_and_integral(self):
+        self.setup_axes()
+        integral = TexMobject("\\int", "^b", "_a", "f(x)", "\\,dx")
+        integral.next_to(ORIGIN, LEFT)
+        integral.to_edge(UP)
+        integral.highlight_by_tex("a", self.lower_bound_color)
+        integral.highlight_by_tex("b", self.upper_bound_color)
+        graph = self.get_graph(
+            lambda x : -0.01*x*(x-3)*(x-6)*(x-12) + 3,
+        )
+        self.add(integral, graph)
+        self.graph = graph
+        self.integral = integral
+
+        self.bound_labels = VGroup()
+        self.v_lines = VGroup()
+        for bound, tex in (self.lower_bound, "a"), (self.upper_bound, "b"):
+            label = integral.get_part_by_tex(tex).copy()
+            label.scale(1.5)
+            label.next_to(self.coords_to_point(bound, 0), DOWN)
+            v_line = self.get_vertical_line_to_graph(
+                bound, graph, color = label.get_color()
+            )
+
+            self.bound_labels.add(label)
+            self.v_lines.add(v_line)
+            self.add(label, v_line)
+
+    def show_f_dx_sum(self):
+        kwargs = {
+            "x_min" : self.lower_bound,
+            "x_max" : self.upper_bound,
+            "fill_opacity" : 0.75,
+            "stroke_width" : 0.25,
+        }
+        low_opacity = 0.25
+        start_rect_index = 3
+        num_shown_sum_steps = 5
+        last_rect_index = start_rect_index + num_shown_sum_steps + 1
+
+        self.rect_list = self.get_riemann_rectangles_list(
+            self.graph, self.n_riemann_iterations, **kwargs
+        )
+        rects = self.rects = self.rect_list[0]
+        rects.save_state()
+
+        start_rect = rects[start_rect_index]
+        f_brace = Brace(start_rect, LEFT, buff = 0)
+        dx_brace = Brace(start_rect, DOWN, buff = 0)
+        f_brace.label = f_brace.get_text("$f(x)$")
+        dx_brace.label = dx_brace.get_text("$dx$")
+
+        flat_rects = self.get_riemann_rectangles(
+            self.get_graph(lambda x : 0), dx = 0.5, **kwargs
+        )
+
+        self.transform_between_riemann_rects(
+            flat_rects, rects, 
+            replace_mobject_with_target_in_scene = True,
+        )
+        self.play(*[
+            ApplyMethod(
+                rect.set_fill, None, 
+                1 if rect is start_rect else low_opacity
+            )
+            for rect in rects
+        ])
+        self.play(*it.chain(
+            map(GrowFromCenter, [f_brace, dx_brace]),
+            map(Write, [f_brace.label, dx_brace.label]),
+        ))
+        self.dither()
+        for i in range(start_rect_index+1, last_rect_index):
+            self.play(
+                rects[i-1].set_fill, None, low_opacity,
+                rects[i].set_fill, None, 1,
+                f_brace.scale_to_fit_height, rects[i].get_height(),
+                f_brace.next_to, rects[i], LEFT, 0,
+                dx_brace.next_to, rects[i], DOWN, 0,
+                *[
+                    MaintainPositionRelativeTo(brace.label, brace)
+                    for brace in f_brace, dx_brace
+                ]
+            )
+        self.dither()
+        self.play(*it.chain(
+            map(FadeOut, [
+                f_brace, dx_brace, 
+                f_brace.label, dx_brace.label
+            ]),
+            [rects.set_fill, None, kwargs["fill_opacity"]]
+        ))
+
+    def show_rects_approaching_area(self):
+        for new_rects in self.rect_list:
+            self.transform_between_riemann_rects(
+                self.rects, new_rects
+            )
+
+    def write_antiderivative(self):
+        deriv = TexMobject(
+            "{d", "F", "\\over\\,", "dx}", "(x)", "=", "f(x)"
+        )
+        deriv_F = deriv.get_part_by_tex("F")
+        deriv.next_to(self.integral, DOWN, MED_LARGE_BUFF)
+        rhs = TexMobject(*"=F(b)-F(a)")
+        rhs.highlight_by_tex("a", self.lower_bound_color)
+        rhs.highlight_by_tex("b", self.upper_bound_color)
+        rhs.next_to(self.integral, RIGHT)
+
+        self.play(Write(deriv))
+        self.dither(2)
+        self.play(*it.chain(
+            [
+                ReplacementTransform(deriv_F.copy(), part)
+                for part in rhs.get_parts_by_tex("F")
+            ],
+            [
+                Write(VGroup(*rhs.get_parts_by_tex(tex)))
+                for tex in "=()-"
+            ]
+        ))
+        for tex in "b", "a":
+            self.play(ReplacementTransform(
+                self.integral.get_part_by_tex(tex).copy(),
+                rhs.get_part_by_tex(tex)
+            ))
+            self.dither()
+        self.dither(2)
+
+        self.deriv = deriv
+        self.rhs = rhs
+
+    def write_fundamental_theorem_of_calculus(self):
+        words = TextMobject("""
+            Fundamental 
+            theorem of 
+            calculus
+        """)
+        words.to_edge(RIGHT)
+
+        self.play(Write(words, lag_factor = 3))
+        self.dither()
+
+    def show_integral_considering_continuum(self):
+        self.play(*[
+            ApplyMethod(mob.set_fill, None, 0.2)
+            for mob in self.deriv, self.rhs
+        ])
+        self.play(
+            self.rects.restore,
+            run_time = 3,
+            rate_func = there_and_back
+        )
+        self.dither()
+        for x in range(2):
+            self.play(*[
+                ApplyFunction(
+                    lambda m : m.shift(MED_SMALL_BUFF*UP).set_fill(opacity = 1),
+                    rect,
+                    run_time = 3,
+                    rate_func = squish_rate_func(
+                        there_and_back,
+                        alpha, alpha+0.2
+                    )
+                )
+                for rect, alpha in zip(
+                    self.rects, 
+                    np.linspace(0, 0.8, len(self.rects))
+                )
+            ])
+        self.dither()
+
+    def show_antiderivative_considering_bounds(self):
+        self.play(
+            self.integral.set_fill, None, 0.5,
+            self.deriv.set_fill, None, 1,
+            self.rhs.set_fill, None, 1,
+        )
+        for label, line in reversed(zip(self.bound_labels, self.v_lines)):
+            new_line = line.copy().highlight(YELLOW)
+            label.save_state()
+            self.play(label.highlight, YELLOW)
+            self.play(ShowCreation(new_line))
+            self.play(ShowCreation(line))
+            self.remove(new_line)
+            self.play(label.restore)
+        self.dither()
+        self.play(self.integral.set_fill, None, 1)
+        self.dither(3)
 
 
 

@@ -194,6 +194,7 @@ class GraphScene(Scene):
         dx = 0.1, 
         input_sample_type = "left",
         stroke_width = 1,
+        fill_opacity = 1,
         start_color = BLUE,
         end_color = GREEN):
         x_min = x_min if x_min is not None else self.x_min
@@ -215,7 +216,7 @@ class GraphScene(Scene):
 
             rect = Rectangle()
             rect.replace(points, stretch = True)
-            rect.set_fill(opacity = 1)
+            rect.set_fill(opacity = fill_opacity)
             rectangles.add(rect)
         rectangles.gradient_highlight(start_color, end_color)
         rectangles.set_stroke(BLACK, width = stroke_width)
@@ -226,18 +227,35 @@ class GraphScene(Scene):
         graph,
         n_iterations,
         max_dx = 0.5, 
-        power_base = 2, 
+        power_base = 2,
+        stroke_width = 1,
         **kwargs
         ):
         return [
             self.get_riemann_rectangles(
                 graph = graph,
                 dx = float(max_dx)/(power_base**n),
-                stroke_width = 1./(power_base**n),
+                stroke_width = float(stroke_width)/(power_base**n),
                 **kwargs
             )
             for n in range(n_iterations)
         ]
+
+    def transform_between_riemann_rects(self, curr_rects, new_rects, **kwargs):
+        transform_kwargs = {
+            "run_time" : 2,
+            "submobject_mode" : "lagged_start"
+        }
+        transform_kwargs.update(kwargs)
+        curr_rects.align_submobjects(new_rects)
+        x_coords = set() #Keep track of new repetitions
+        for rect in curr_rects:
+            x = rect.get_center()[0]
+            if x in x_coords:
+                rect.set_fill(opacity = 0)
+            else:
+                x_coords.add(x)
+        self.play(Transform(curr_rects, new_rects, **transform_kwargs))
 
     def get_vertical_line_to_graph(
         self,
