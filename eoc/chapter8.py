@@ -568,7 +568,8 @@ class ConstantVelocityCar(Scene):
 
 class ConstantVelocityPlot(PlotVelocity):
     CONFIG = {
-        "x_axis_label" : "Time"
+        "x_axis_label" : "Time",
+        "units_of_area_color" : BLUE_E,
     }
     def construct(self):
         self.setup_axes()
@@ -684,7 +685,7 @@ class ConstantVelocityPlot(PlotVelocity):
         square = Square(
             stroke_color = BLACK,
             stroke_width = 1,
-            fill_color = PINK,
+            fill_color = self.units_of_area_color,
             fill_opacity = 1,
         )
         square.replace(
@@ -712,6 +713,7 @@ class ConstantVelocityPlot(PlotVelocity):
         )
         self.play(Indicate(self.y_axis_label_mob))
         self.play(FadeOut(y_line))
+
         for FadeClass in FadeIn, FadeOut:
             self.play(
                 FadeClass(
@@ -756,6 +758,8 @@ class PiecewiseConstantPlot(PlotVelocity):
         "tick_size" : 0.2,
     }
     def construct(self):
+        self.force_skipping()
+
         self.setup_graph()
         self.always_changing()
         self.show_piecewise_constant_graph()
@@ -1089,7 +1093,9 @@ class PiecewiseConstantPlot(PlotVelocity):
 
     def show_v_dt_for_all_rectangles(self):
         dt_brace_group = VGroup(self.dt_brace, self.dt_label)
-        rects_subset = self.rects[10:15]
+        rects_subset = self.rects[10:20]
+
+        self.revert_to_original_skipping_status()
 
         last_rect = None
         for rect in rects_subset:
@@ -1385,9 +1391,18 @@ class PiecewiseConstantPlot(PlotVelocity):
         ticks.highlight(YELLOW)
         return ticks
 
+class DontKnowHowToHandleNonConstant(TeacherStudentsScene):
+    def construct(self):
+        self.play(*[
+            ApplyMethod(pi.change, "maybe", UP)
+            for pi in self.get_pi_creatures()
+        ])
+        self.dither(3)
+
 class CarJourneyApproximation(Scene):
     CONFIG = {
         "n_jumps" : 5,
+        "bottom_words" : "Approximated motion (5 jumps)",
     }
     def construct(self):
         points = [5*LEFT + v for v in UP, 2*DOWN]
@@ -1395,8 +1410,9 @@ class CarJourneyApproximation(Scene):
         h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
         words = [
             TextMobject("Real motion (smooth)").shift(3*UP),
-            TextMobject("Approximated motion (jerky)").shift(0.5*DOWN),
+            TextMobject(self.bottom_words).shift(0.5*DOWN),
         ]
+        words[1].highlight(GREEN)
 
 
         self.add(h_line, *cars + words)
@@ -1427,6 +1443,7 @@ class CarJourneyApproximation(Scene):
 class LessWrongCarJourneyApproximation(CarJourneyApproximation):
     CONFIG = {
         "n_jumps" : 20,
+        "bottom_words" : "Better approximation (20 jumps)",
     }
 
 class TellMeThatsNotSurprising(TeacherStudentsScene):
@@ -2715,9 +2732,64 @@ class NextVideo(TeacherStudentsScene):
         self.play(Write(integral))
         self.dither(5)
 
+class Chapter8PatreonThanks(PatreonThanks):
+    CONFIG = {
+        "specific_patrons" : [
+            "Ali Yahya",
+            "CrypticSwarm",
+            "Kaustuv DeBiswas",
+            "Kathryn Schmiedicke",
+            "Karan Bhargava",
+            "Ankit Agarwal",
+            "Yu Jun",
+            "Dave Nicponski",
+            "Damion Kistler",
+            "Juan Benet",
+            "Othman Alikhan",
+            "Markus Persson",
+            "Dan Buchoff",
+            "Derek Dai",
+            "Joseph John Cox",
+            "Luc Ritchie",
+            "Robert Teed",
+            "Jason Hise",
+            "Meshal Alshammari",
+            "Bernd Sing",
+            "Nils Schneider",
+            "James Thornton",
+            "Mustafa Mahdi",
+            "Jonathan Eppele",
+            "Mathew Bramson",
+            "Jerry Ling",
+            "Mark Govea",
+            "Vecht",
+            "Shimin Kuang",
+            "Rish Kundalia",
+            "Achille Brighton",
+            "Ripta Pasay",
+        ]
+    }
 
+class Thumbnail(FundamentalTheorem):
+    CONFIG = {
+        "x_axis_label" : "",
+        "y_axis_label" : "",
+        "graph_origin" : 1.5*DOWN + 4*LEFT,
+        "y_axis_height" : 5,
+    }
+    def construct(self):
+        self.setup_axes()
+        graph = self.get_graph(
+            lambda x : -0.01*x*(x-3)*(x-6)*(x-12) + 3,
+            color = YELLOW
+        )
+        rects = self.get_riemann_rectangles(
+            graph, 
+            x_min = 1, x_max = 8, 
+            dx = 0.5,
+        )
 
-
+        self.add(rects, graph)
 
 
 

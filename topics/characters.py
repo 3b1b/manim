@@ -125,7 +125,7 @@ class PiCreature(SVGMobject):
 
     def change(self, new_mode, look_at_arg = None):
         self.change_mode(new_mode)
-        if look_at_arg:
+        if look_at_arg is not None:
             self.look_at(look_at_arg)
         return self
 
@@ -184,7 +184,6 @@ class PiCreature(SVGMobject):
         self.look(top_mouth_point - bottom_mouth_point)
         return self
             
-
 def get_all_pi_creature_modes():
     result = []
     prefix = "PiCreatures_"
@@ -196,7 +195,6 @@ def get_all_pi_creature_modes():
             )
     return result
 
-
 class Randolph(PiCreature):
     pass #Nothing more than an alternative name
 
@@ -206,7 +204,6 @@ class Mortimer(PiCreature):
         "flip_at_start" : True,
     }
     
-
 class Mathematician(PiCreature):
     CONFIG = {
         "color" : GREY,
@@ -232,7 +229,6 @@ class BabyPiCreature(PiCreature):
             pupil.scale_in_place(self.pupil_scale_factor)
         self.look(looking_direction)
         
-
 class Blink(ApplyMethod):
     CONFIG = {
         "rate_func" : squish_rate_func(there_and_back)
@@ -360,7 +356,7 @@ class RemovePiCreatureBubble(AnimationGroup):
         if surrounding_scene is not None:
             surrounding_scene.add(self.pi_creature)
 
-    
+###########
 
 class PiCreatureScene(Scene):
     CONFIG = {
@@ -565,7 +561,6 @@ class PiCreatureScene(Scene):
             [pi.look_at, thing_to_look_at]
             for pi in pi_creatures
         ]))
-
 
 class TeacherStudentsScene(PiCreatureScene):
     CONFIG = {

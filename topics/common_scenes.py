@@ -3,7 +3,7 @@ from helpers import *
 
 from scene.scene import Scene
 from animation.simple_animations import Write, DrawBorderThenFill
-from animation.transform import FadeIn, ApplyMethod
+from animation.transform import FadeIn, FadeOut, ApplyMethod
 from mobject.vectorized_mobject import VGroup
 from mobject.tex_mobject import TexMobject, TextMobject
 from topics.characters import Mortimer, Blink
@@ -90,8 +90,9 @@ class PatreonThanks(Scene):
             "Ripta   Pasay",
             "Felipe  Diniz",
         ],
-        "max_patrons_height" : 2*SPACE_HEIGHT - 1,
+        "patron_group_size" : 8,
         "patron_scale_val" : 0.7,
+
     }
     def construct(self):
         morty = Mortimer()
@@ -105,59 +106,41 @@ class PatreonThanks(Scene):
         patreon_logo = PatreonLogo()
         patreon_logo.next_to(morty, UP, buff = MED_LARGE_BUFF)
 
-        left_patrons = VGroup(*map(TextMobject, 
-            self.specific_patrons[:n_patrons/2]
-        ))
-        right_patrons = VGroup(*map(TextMobject, 
-            self.specific_patrons[n_patrons/2:]
-        ))
-        for patrons in left_patrons, right_patrons:
-            patrons.arrange_submobjects(
-                DOWN, aligned_edge = LEFT,
-                buff = 1.5*MED_SMALL_BUFF
-            )
-
-        all_patrons = VGroup(left_patrons, right_patrons)
-        all_patrons.scale(self.patron_scale_val)
-        for patrons, vect in (left_patrons, LEFT), (right_patrons, RIGHT):
-            patrons.to_edge(vect, buff = MED_SMALL_BUFF)
-            if patrons.get_height() > 2*SPACE_HEIGHT - LARGE_BUFF:
-                patrons.to_edge(UP, buff = MED_SMALL_BUFF)
-
-        shift_distance = max(
-            0, (all_patrons.get_height() - 2*SPACE_HEIGHT)
-        )
-        if shift_distance > 0:
-            shift_distance += 1
-        velocity = shift_distance/9.0
-        def get_shift_anim():
-            return ApplyMethod(
-                all_patrons.shift, velocity*UP,
-                rate_func = None
-            )
+        patrons = map(TextMobject, self.specific_patrons)
+        patron_groups = []
+        index = 0
+        counter = 0
+        while index < len(patrons):
+            next_index = index + self.patron_group_size
+            group = VGroup(*patrons[index:next_index])
+            group.arrange_submobjects(DOWN, aligned_edge = LEFT)
+            if counter%2 == 0:
+                group.to_edge(LEFT)
+            else:
+                group.to_edge(RIGHT)
+            patron_groups.append(group)
+            index = next_index
+            counter += 1
 
         self.play(
             morty.change_mode, "gracious",
             DrawBorderThenFill(patreon_logo),
         )
         self.play(Write(special_thanks, run_time = 1))
-        self.play(
-            Write(left_patrons),
-            morty.look_at, left_patrons
-        )
-        self.play(
-            Write(right_patrons),
-            morty.look_at, right_patrons
-        )
-        self.play(Blink(morty), get_shift_anim())
-        for patrons in left_patrons, right_patrons:
-            for index in 0, -1:
-                self.play(
-                    morty.look_at, patrons[index],
-                    get_shift_anim()
-                )
-                self.play(get_shift_anim())
-
+        for i, group in enumerate(patron_groups):
+            anims = [
+                FadeIn(
+                    group, run_time = 2,
+                    submobject_mode = "lagged_start",
+                    lag_factor = 4,
+                ),
+                morty.look_at, group.get_top(),
+            ]
+            if i >= 2:
+                anims.append(FadeOut(patron_groups[i-2]))
+            self.play(*anims)
+            self.play(morty.look_at, group.get_bottom())
+            self.play(Blink(morty))
 
 
 
