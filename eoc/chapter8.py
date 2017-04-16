@@ -27,6 +27,7 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
 from eoc.graph_scene import GraphScene
+from eoc.chapter1 import Thumbnail as Chapter1Thumbnail
 from eoc.chapter2 import Car, MoveCar, ShowSpeedometer, \
     IncrementNumber, GraphCarTrajectory, SecantLineToTangentLine, \
     VELOCITY_COLOR, TIME_COLOR, DISTANCE_COLOR
@@ -268,6 +269,7 @@ class PlotVelocity(GraphScene):
         "y_tick_frequency" : 5,
         "y_labeled_nums" : range(5, 30, 5),
         "y_axis_label" : "Velocity in $\\frac{\\text{meters}}{\\text{second}}$",
+        "num_graph_anchor_points" : 50,
     }
     def construct(self):
         self.setup_axes()
@@ -753,13 +755,11 @@ class PiecewiseConstantPlot(PlotVelocity):
         "y_axis_label" : "",
         "min_graph_proportion" : 0.1,
         "max_graph_proportion" : 0.8,
-        "num_riemann_approximations" : 7, ##TODO
+        "num_riemann_approximations" : 7,
         "riemann_rect_fill_opacity" : 0.75,
         "tick_size" : 0.2,
     }
     def construct(self):
-        self.force_skipping()
-
         self.setup_graph()
         self.always_changing()
         self.show_piecewise_constant_graph()
@@ -908,14 +908,7 @@ class PiecewiseConstantPlot(PlotVelocity):
             ]+[Animation(self.rects)]
         )
         for new_rects in self.rect_list[1:]:
-            rects.align_submobjects(new_rects)
-            for every_other_rect in rects[::2]:
-                every_other_rect.set_fill(opacity = 0)
-            self.play(Transform(
-                rects, new_rects, 
-                run_time = 2,
-                submobject_mode = "lagged_start"
-            ))
+            self.transform_between_riemann_rects(rects, new_rects)
             self.dither()
 
     def revert_to_specific_approximation(self):
@@ -1094,8 +1087,6 @@ class PiecewiseConstantPlot(PlotVelocity):
     def show_v_dt_for_all_rectangles(self):
         dt_brace_group = VGroup(self.dt_brace, self.dt_label)
         rects_subset = self.rects[10:20]
-
-        self.revert_to_original_skipping_status()
 
         last_rect = None
         for rect in rects_subset:
@@ -2770,26 +2761,34 @@ class Chapter8PatreonThanks(PatreonThanks):
         ]
     }
 
-class Thumbnail(FundamentalTheorem):
+class Thumbnail(Chapter1Thumbnail):
     CONFIG = {
         "x_axis_label" : "",
         "y_axis_label" : "",
         "graph_origin" : 1.5*DOWN + 4*LEFT,
         "y_axis_height" : 5,
+        "x_max" : 5,
+        "x_axis_width" : 11,
     }
     def construct(self):
         self.setup_axes()
-        graph = self.get_graph(
-            lambda x : -0.01*x*(x-3)*(x-6)*(x-12) + 3,
-            color = YELLOW
-        )
+        self.remove(*self.x_axis.numbers)
+        self.remove(*self.y_axis.numbers)
+        graph = self.get_graph(self.func)
         rects = self.get_riemann_rectangles(
-            graph, 
-            x_min = 1, x_max = 8, 
-            dx = 0.5,
+            graph,
+            x_min = 0,
+            x_max = 4,
+            dx = 0.25,
         )
+        # words = TextMobject("""
+        #     Essence of
+        #     calculus
+        # """)
+        # words.scale_to_fit_width(9)
+        # words.to_edge(UP)
 
-        self.add(rects, graph)
+        self.add(graph, rects)
 
 
 

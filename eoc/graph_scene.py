@@ -198,6 +198,7 @@ class GraphScene(Scene):
         start_color = BLUE,
         end_color = GREEN,
         show_signed_area = True,
+        width_scale_factor = 1.001
         ):
         x_min = x_min if x_min is not None else self.x_min
         x_max = x_max if x_max is not None else self.x_max
@@ -214,7 +215,7 @@ class GraphScene(Scene):
             graph_point = self.input_to_graph_point(sample_input, graph)
             points = VGroup(*map(VectorizedPoint, [
                 self.coords_to_point(x, 0),
-                self.coords_to_point(x+dx, 0),
+                self.coords_to_point(x+width_scale_factor*dx, 0),
                 graph_point
             ]))
 
