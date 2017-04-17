@@ -229,7 +229,6 @@ def filtered_locals(local_args):
         result.pop(arg, local_args)
     return result
 
-
 def digest_config(obj, kwargs, local_args = {}):
     """
     Sets init args and CONFIG values as local variables
@@ -240,19 +239,31 @@ def digest_config(obj, kwargs, local_args = {}):
     as an attribute of the object.
     """
     ### Assemble list of CONFIGs from all super classes
-    classes_in_heirarchy = [obj.__class__]
+    classes_in_hierarchy = [obj.__class__]
     configs = []
-    while len(classes_in_heirarchy) > 0:
-        Class = classes_in_heirarchy.pop()
-        classes_in_heirarchy += Class.__bases__
+    while len(classes_in_hierarchy) > 0:
+        Class = classes_in_hierarchy.pop()
+        classes_in_hierarchy += Class.__bases__
         if hasattr(Class, "CONFIG"):
             configs.append(Class.CONFIG)    
 
     #Order matters a lot here, first dicts have higher priority
     all_dicts = [kwargs, filtered_locals(local_args), obj.__dict__]
     all_dicts += configs
-    item_lists = reversed([d.items() for d in all_dicts])
-    obj.__dict__ = dict(reduce(op.add, item_lists))
+    obj.__dict__ = merge_config(all_dicts)
+
+def merge_config(all_dicts):
+    all_config = reduce(op.add, [d.items() for d in all_dicts])
+    config = dict()
+    for c in all_config:
+        key, value = c
+        if not key in config:
+            config[key] = value
+        else:
+            #When two dictionaries have the same key, they are merged.
+            if isinstance(value, dict) and isinstance(config[key], dict):
+                config[key] = merge_config([config[key], value])
+    return config
 
 def digest_locals(obj):
     caller_locals = inspect.currentframe().f_back.f_locals
