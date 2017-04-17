@@ -76,7 +76,7 @@ class ThreeDCamera(CameraWithPerspective):
             three_d_status = map(is_3d, vmobs)
             has_points = [vm.get_num_points() > 0 for vm in vmobs]
             if all(three_d_status) and all(has_points):
-                cmp_vect = self.get_unit_normal_vect(vm)
+                cmp_vect = self.get_unit_normal_vect(vmobs[1])
                 return cmp(*[
                     np.dot(vm.get_center(), cmp_vect)
                     for vm in vmobs
@@ -98,8 +98,8 @@ def is_3d(mobject):
     return hasattr(mobject, "part_of_3d_mobject")
 
 class ThreeDMobject(VMobject):
-    def __init__(self, **kwargs):
-        VMobject.__init__(self, **kwargs)
+    def __init__(self, *args, **kwargs):
+        VMobject.__init__(self, *args, **kwargs)
         for submobject in self.submobject_family():
             submobject.part_of_3d_mobject = True
 

@@ -1659,6 +1659,8 @@ class OneOverX(PiCreatureScene, GraphScene):
         self.y_max = self.y_axis_height/self.unit_length
 
     def construct(self):
+        self.force_skipping()
+
         self.introduce_function()
         self.introduce_puddle()
         self.introduce_graph()
@@ -1704,7 +1706,7 @@ class OneOverX(PiCreatureScene, GraphScene):
             run_time = 2
         )
         self.dither()
-        self.play(*self.get_bubble_fade_anims())
+        self.play(RemovePiCreatureBubble(self.pi_creature))
 
     def introduce_puddle(self):
         rect_group = self.get_rectangle_group(self.start_x_value)
@@ -1805,8 +1807,16 @@ class OneOverX(PiCreatureScene, GraphScene):
         df_brace = Brace(h_lines, RIGHT, buff = 0)
         df_label = df_brace.get_text("$d\\left(\\frac{1}{x}\\right)$")
         df_brace.add(df_label)
-        minus_sign = TexMobject("-")
-        minus_sign.move_to(df_label, LEFT)
+
+        negative = TextMobject("Negative")
+        negative.highlight(RED)
+        negative.next_to(df_label, UP+RIGHT)
+        negative.shift(RIGHT)
+        negative_arrow = Arrow(
+            negative.get_left(),
+            df_label.get_corner(UP+RIGHT),
+            color = RED
+        )
 
         area_changes = VGroup()
         point_pairs = [
@@ -1888,9 +1898,10 @@ class OneOverX(PiCreatureScene, GraphScene):
             ShowCreation(area_lost_arrow)
         )
         self.dither()
+        self.revert_to_original_skipping_status()###
         self.play(
-            Write(minus_sign),
-            df_label.next_to, minus_sign, RIGHT, SMALL_BUFF
+            Write(negative),
+            ShowCreation(negative_arrow)
         )
         self.dither()
         self.play(
