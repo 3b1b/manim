@@ -49,7 +49,7 @@ class ThreeDCamera(CameraWithPerspective):
         return self.get_color(vmobject.get_fill_color)
 
     def get_shaded_rgb(self, rgb, normal_vect):
-        brightness = np.dot(normal_vect, self.unit_sun_vect)
+        brightness = np.dot(normal_vect, self.unit_sun_vect)**2
         if brightness > 0:
             alpha = self.shading_factor*brightness
             return interpolate(rgb, np.ones(3), alpha)

@@ -39,15 +39,18 @@ class GraphScene(Scene):
         self.default_graph_colors_cycle = it.cycle(self.default_graph_colors)
 
     def setup_axes(self, animate = False):
+        ##TODO, once eoc is done, refactor this to be less redundant.
         x_num_range = float(self.x_max - self.x_min)
         self.space_unit_to_x = self.x_axis_width/x_num_range
         self.x_labeled_nums = self.x_labeled_nums or []
+        if self.x_leftmost_tick is None:
+            self.x_leftmost_tick = self.x_min
         x_axis = NumberLine(
             x_min = self.x_min,
             x_max = self.x_max,
             space_unit_to_num = self.space_unit_to_x,
             tick_frequency = self.x_tick_frequency,
-            leftmost_tick = self.x_leftmost_tick or self.x_min,
+            leftmost_tick = self.x_leftmost_tick,
             numbers_with_elongated_ticks = self.x_labeled_nums,
             color = self.axes_color
         )
@@ -71,12 +74,14 @@ class GraphScene(Scene):
         y_num_range = float(self.y_max - self.y_min)
         self.space_unit_to_y = self.y_axis_height/y_num_range
         self.y_labeled_nums = self.y_labeled_nums or []
+        if self.y_bottom_tick is None:
+            self.y_bottom_tick = self.y_min
         y_axis = NumberLine(
             x_min = self.y_min,
             x_max = self.y_max,
             space_unit_to_num = self.space_unit_to_y,
             tick_frequency = self.y_tick_frequency,
-            leftmost_tick = self.y_bottom_tick or self.y_min,
+            leftmost_tick = self.y_bottom_tick,
             numbers_with_elongated_ticks = self.y_labeled_nums,
             color = self.axes_color
         )
@@ -194,6 +199,7 @@ class GraphScene(Scene):
         dx = 0.1, 
         input_sample_type = "left",
         stroke_width = 1,
+        stroke_color = BLACK,
         fill_opacity = 1,
         start_color = BLUE,
         end_color = GREEN,
@@ -226,7 +232,7 @@ class GraphScene(Scene):
             else:
                 fill_color = color
             rect.set_fill(fill_color, opacity = fill_opacity)
-            rect.set_stroke(BLACK, width = stroke_width)
+            rect.set_stroke(stroke_color, width = stroke_width)
             rectangles.add(rect)
         return rectangles
 
@@ -254,6 +260,7 @@ class GraphScene(Scene):
             "run_time" : 2,
             "submobject_mode" : "lagged_start"
         }
+        added_anims = kwargs.get("added_anims", [])
         transform_kwargs.update(kwargs)
         curr_rects.align_submobjects(new_rects)
         x_coords = set() #Keep track of new repetitions
@@ -263,7 +270,10 @@ class GraphScene(Scene):
                 rect.set_fill(opacity = 0)
             else:
                 x_coords.add(x)
-        self.play(Transform(curr_rects, new_rects, **transform_kwargs))
+        self.play(
+            Transform(curr_rects, new_rects, **transform_kwargs),
+            *added_anims
+        )
 
     def get_vertical_line_to_graph(
         self,

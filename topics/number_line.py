@@ -49,8 +49,9 @@ class NumberLine(VMobject):
         return self.tick_marks
 
     def get_tick_numbers(self):
+        epsilon = 0.001
         return np.arange(
-            self.leftmost_tick, self.x_max + self.tick_frequency, 
+            self.leftmost_tick, self.x_max+epsilon,
             self.tick_frequency
         )
 
