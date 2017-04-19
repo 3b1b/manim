@@ -1003,10 +1003,11 @@ class Antiderivative(AverageOfSineStart):
     CONFIG = {
         "antideriv_color" : GREEN,
         "deriv_color" : BLUE,
+        "riemann_rect_dx" : 0.01,
+        "y_axis_label" : "",
+        "graph_origin" : 4*LEFT + DOWN,
     }
     def construct(self):
-        self.force_skipping()
-
         self.setup_axes()
         self.add_x_axis_labels()
         self.negate_derivative_of_cosine()
@@ -1014,7 +1015,15 @@ class Antiderivative(AverageOfSineStart):
         self.apply_ftoc()
         self.show_difference_in_antiderivative()
         self.comment_on_area()
-        self.write_final_answer()
+        self.divide_by_pi()
+        self.highlight_antiderivative_fraction()
+        self.show_slope()
+        self.bring_back_derivative()
+        self.show_tangent_slope()
+
+    def add_x_axis_labels(self):
+        AverageOfSineStart.add_x_axis_labels(self)
+        self.remove(*self.x_axis_labels[::2])
 
     def negate_derivative_of_cosine(self):
         cos, neg_cos, sin, neg_sin = graphs = [
@@ -1035,7 +1044,8 @@ class Antiderivative(AverageOfSineStart):
             graph.label = self.get_graph_label(
                 graph, label,
                 x_val = x_val,
-                direction = vect
+                direction = vect,
+                buff = SMALL_BUFF
             ) 
 
         derivs = []
@@ -1106,7 +1116,7 @@ class Antiderivative(AverageOfSineStart):
             return 0.25*(np.floor(4*t) + smooth((4*t) % 1))
 
         self.play(*[
-            ApplyMethod(m.fade, 0.7)
+            ApplyMethod(m.fade, 0.6)
             for m in faders
         ])
         self.dither()
@@ -1129,27 +1139,297 @@ class Antiderivative(AverageOfSineStart):
             **kwargs
         )
         self.play(
-            FadeOut(ss_group),
-            FadeOut(v_line),
-            *[m.restore for m in faders]
+            *map(FadeOut, [ss_group, v_line, sin_copy])
         )
-        self.remove(sin_copy)
         self.dither()
+
+        self.ss_group = ss_group
 
     def apply_ftoc(self):
         deriv = self.deriv
-        pass
+        integral = TexMobject(
+            "\\int", "^\\pi", "_0", "\\sin(x)", "\\,dx"
+        )
+        rhs = TexMobject(
+            "=", "\\big(", "-\\cos", "(", "\\pi", ")", "\\big)",
+            "-", "\\big(", "-\\cos", "(", "0", ")", "\\big)",
+        )
+        rhs.next_to(integral, RIGHT)
+        equation = VGroup(integral, rhs)
+        equation.to_corner(UP+RIGHT, buff = MED_SMALL_BUFF)
+        (start_pi, end_pi), (start_zero, end_zero) = start_end_pairs = [
+            [
+                m.get_part_by_tex(tex) 
+                for m in integral, rhs
+            ]
+            for tex in "\\pi", "0"
+        ]
 
-        self.revert_to_original_skipping_status()
+        for tex_mob in integral, rhs:
+            tex_mob.highlight_by_tex("sin", self.deriv_color)
+            tex_mob.highlight_by_tex("cos", self.antideriv_color)
+            tex_mob.highlight_by_tex("0", YELLOW)
+            tex_mob.highlight_by_tex("\\pi", YELLOW)
+
+        self.play(
+            Write(integral),
+            self.deriv.scale, 0.5,
+            self.deriv.center,
+            self.deriv.to_edge, LEFT, MED_SMALL_BUFF,
+            self.deriv.shift, UP,
+        )
+        self.dither()
+
+        self.play(FadeIn(
+            VGroup(*filter(
+                lambda part : part not in [end_pi, end_zero],
+                rhs
+            )),
+            submobject_mode = "lagged_start",
+            run_time = 2,
+        ))
+        self.dither()
+        for start, end in start_end_pairs:
+            self.play(ReplacementTransform(
+                start.copy(), end,
+                path_arc = np.pi/6,
+                run_time = 2
+            ))
+            self.dither()
+
+        self.integral = integral
+        self.rhs = rhs
 
     def show_difference_in_antiderivative(self):
-        pass
+        pi_point, zero_point = points = [
+            self.input_to_graph_point(x, self.neg_cos)
+            for x in reversed(self.bounds)
+        ]
+        interim_point = pi_point[0]*RIGHT + zero_point[1]*UP
+        pi_dot, zero_dot = dots = [
+            Dot(point, color = YELLOW)
+            for point in points
+        ]
+        v_line = DashedLine(pi_point, interim_point)
+        h_line = DashedLine(interim_point, zero_point)
+        v_line_brace = Brace(v_line, RIGHT)
+        two_height_label = v_line_brace.get_text(
+            "$2$", buff = SMALL_BUFF
+        )
+        two_height_label.add_background_rectangle()
+
+        pi = self.x_axis_labels[1]
+        #Horrible hack
+        black_pi = pi.copy().highlight(BLACK)
+        self.add(black_pi, pi)
+
+        cos_tex = self.rhs.get_part_by_tex("cos")
+
+        self.play(ReplacementTransform(
+            cos_tex.copy(), pi_dot
+        ))
+        self.dither()
+        moving_dot = pi_dot.copy()
+        self.play(
+            ShowCreation(v_line),
+            # Animation(pi),
+            pi.shift, 0.8*pi.get_width()*(LEFT+UP),
+            moving_dot.move_to, interim_point,
+        )
+        self.play(
+            ShowCreation(h_line),
+            ReplacementTransform(moving_dot, zero_dot)
+        )
+        self.play(GrowFromCenter(v_line_brace))
+        self.dither(2)
+        self.play(Write(two_height_label))
+        self.dither(2)
+
+        self.v_line = v_line
+        self.h_line = h_line
+        self.pi_dot = pi_dot
+        self.zero_dot = zero_dot
+        self.v_line_brace = v_line_brace
+        self.two_height_label = two_height_label
 
     def comment_on_area(self):
-        pass
+        rects = self.get_riemann_rectangles(
+            self.sin, 
+            dx = self.riemann_rect_dx,
+            stroke_width = 0,
+            fill_opacity = 0.7,
+            x_min = self.bounds[0],
+            x_max = self.bounds[1],
+        )
+        area_two = TexMobject("2").replace(
+            self.two_height_label
+        )
 
-    def write_final_answer(self):
-        pass
+        self.play(Write(rects))
+        self.dither()
+        self.play(area_two.move_to, rects)
+        self.dither(2)
+
+        self.rects = rects
+        self.area_two = area_two
+
+    def divide_by_pi(self):
+        integral = self.integral
+        rhs = self.rhs
+        equals = rhs[0]
+        rhs_without_eq = VGroup(*rhs[1:])
+        frac_lines = VGroup(*[
+            TexMobject("\\over\\,").stretch_to_fit_width(
+                mob.get_width()
+            ).move_to(mob)
+            for mob in integral, rhs_without_eq
+        ])
+        frac_lines.shift(
+            (integral.get_height()/2 + SMALL_BUFF)*DOWN
+        )
+        pi_minus_zeros = VGroup(*[
+            TexMobject("\\pi", "-", "0").next_to(line, DOWN)
+            for line in frac_lines
+        ])
+        for tex_mob in pi_minus_zeros:
+            for tex in "pi", "0":
+                tex_mob.highlight_by_tex(tex, YELLOW)
+
+        answer = TexMobject(" = \\frac{2}{\\pi}")
+        answer.next_to(
+            frac_lines, RIGHT,
+            align_using_submobjects = True
+        )
+        answer.shift_onto_screen()
+
+        self.play(
+            equals.next_to, frac_lines[0].copy(), RIGHT,
+            rhs_without_eq.next_to, frac_lines[1].copy(), UP,
+            *map(Write, frac_lines)
+        )
+        self.play(*[
+            ReplacementTransform(
+                integral.get_part_by_tex(tex).copy(),
+                pi_minus_zeros[0].get_part_by_tex(tex)
+            )
+            for tex in "\\pi","0"
+        ] + [
+            Write(pi_minus_zeros[0].get_part_by_tex("-"))
+        ])
+        self.play(*[
+            ReplacementTransform(
+                rhs.get_part_by_tex(
+                    tex, substring = False
+                ).copy(),
+                pi_minus_zeros[1].get_part_by_tex(tex)
+            )
+            for tex in "\\pi", "-", "0"
+        ])
+        self.dither(2)
+
+        full_equation = VGroup(
+            integral, frac_lines, rhs, pi_minus_zeros
+        )
+        background_rect = BackgroundRectangle(full_equation, fill_opacity = 1)
+        background_rect.stretch_in_place(1.2, dim = 1)
+        full_equation.add_to_back(background_rect)
+        self.play(
+            full_equation.shift, 
+            (answer.get_width()+MED_LARGE_BUFF)*LEFT
+        )
+        self.play(Write(answer))
+        self.dither()
+
+        self.antiderivative_fraction = VGroup(
+            rhs_without_eq,
+            frac_lines[1],
+            pi_minus_zeros[1]
+        )
+        self.integral_fraction = VGroup(
+            integral,
+            frac_lines[0],
+            pi_minus_zeros[0],
+            equals
+        )
+
+    def highlight_antiderivative_fraction(self):
+        fraction = self.antiderivative_fraction
+        big_rect = Rectangle(
+            stroke_width = 0,
+            fill_color = BLACK,
+            fill_opacity = 0.9,
+        )
+        big_rect.scale_to_fit_width(2*SPACE_WIDTH)
+        big_rect.scale_to_fit_height(2*SPACE_HEIGHT)
+        morty = Mortimer()
+        morty.to_corner(DOWN+RIGHT)
+
+        self.play(
+            FadeIn(big_rect),
+            FadeIn(morty),
+            Animation(fraction)
+        )
+        self.play(morty.change, "raise_right_hand", fraction)
+        self.play(Blink(morty))
+        self.dither(2)
+        self.play(
+            FadeOut(big_rect),
+            FadeOut(morty),
+            Animation(fraction)
+        )
+
+    def show_slope(self):
+        line = Line(
+            self.zero_dot.get_center(),
+            self.pi_dot.get_center(),
+        )
+        line.highlight(RED)
+        line.scale_in_place(1.2)
+
+        pi = TexMobject("\\pi")
+        pi.next_to(self.h_line, DOWN)
+
+        self.play(
+            FadeOut(self.rects),
+            FadeOut(self.area_two)
+        )
+        self.play(Write(pi))
+        self.play(ShowCreation(line, run_time = 2))
+        self.dither()
+
+    def bring_back_derivative(self):
+        self.play(
+            FadeOut(self.integral_fraction),
+            self.deriv.scale, 1.7,
+            self.deriv.to_corner, UP+LEFT, MED_LARGE_BUFF,
+            self.deriv.shift, MED_SMALL_BUFF*DOWN,
+        )
+        self.dither()
+
+    def show_tangent_slope(self):
+        ss_group = self.get_secant_slope_group(
+            0, self.neg_cos,
+            dx = 0.001,
+            secant_line_color = YELLOW,
+            secant_line_length = 4,
+        )
+
+        self.play(*map(ShowCreation, ss_group), run_time = 2)
+        for count in range(2):
+            for x in reversed(self.bounds):
+                self.animate_secant_slope_group_change(
+                    ss_group,
+                    target_x = x,
+                    run_time = 6,
+                )
+
+
+
+
+
+
+
+
 
 
 
