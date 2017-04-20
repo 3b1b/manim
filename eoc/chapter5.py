@@ -625,6 +625,106 @@ class SimpleGraphOfTwoToT(GraphOfTwoToT):
             self.play(ShowCreation(pair))
         self.dither()
 
+class FakeDiagram(TeacherStudentsScene):
+    def construct(self):
+        gs = GraphScene(skip_animations = True)
+        gs.setup_axes()
+        background_graph, foreground_graph = graphs = VGroup(*[
+            gs.get_graph(
+                lambda t : np.log(2)*2**t,
+                x_min = -8,
+                x_max = 2 + dx
+            )
+            for dx in 0.25, 0
+        ])
+        for graph in graphs:
+            end_point = graph.points[-1]
+            axis_point = end_point[0]*RIGHT + gs.graph_origin[1]*UP
+            for alpha in np.linspace(0, 1, 20):
+                point = interpolate(axis_point, graph.points[0], alpha)
+                graph.add_control_points(3*[point])
+            graph.set_stroke(width = 1)
+            graph.set_fill(opacity = 1)
+            graph.highlight(BLUE_D)
+        background_graph.highlight(YELLOW)
+        background_graph.set_stroke(width = 0.5)
+
+        graphs.next_to(self.teacher, UP+LEFT, LARGE_BUFF)
+        two_to_t = TexMobject("2^t")
+        two_to_t.next_to(
+            foreground_graph.get_corner(DOWN+RIGHT), UP+LEFT
+        )
+        corner_line = Line(*[
+            graph.get_corner(DOWN+RIGHT)
+            for graph in graphs
+        ])
+        dt_brace = Brace(corner_line, DOWN, buff = SMALL_BUFF)
+        dt = dt_brace.get_text("$dt$")
+
+        side_brace = Brace(graphs, RIGHT, buff = SMALL_BUFF)
+        deriv = side_brace.get_text("$\\frac{d(2^t)}{dt}$")
+
+        circle = Circle(color = RED)
+        circle.replace(deriv, stretch = True)
+        circle.scale_in_place(1.5)
+
+        words = TextMobject("Not a real explanation")
+        words.to_edge(UP)
+        arrow = Arrow(words.get_bottom(), two_to_t.get_corner(UP+LEFT))
+        arrow.highlight(WHITE)
+
+        diagram = VGroup(
+            graphs, two_to_t, dt_brace, dt, 
+            side_brace, deriv, circle,
+            words, arrow
+        )
+
+        self.play(self.teacher.change_mode, "raise_right_hand")
+        self.play(
+            Animation(VectorizedPoint(graphs.get_right())),
+            DrawBorderThenFill(foreground_graph),
+            Write(two_to_t)
+        )
+        self.dither()
+        self.play(
+            ReplacementTransform(
+                foreground_graph.copy(),
+                background_graph,
+            ),
+            Animation(foreground_graph),
+            Animation(two_to_t),
+            GrowFromCenter(dt_brace),
+            Write(dt)
+        )
+        self.play(GrowFromCenter(side_brace))
+        self.play(Write(deriv, run_time = 2))
+        self.dither()
+
+        self.play(
+            ShowCreation(circle),
+            self.teacher.change_mode, "hooray"
+        )
+        self.change_student_modes(*["confused"]*3)
+        self.play(
+            Write(words),
+            ShowCreation(arrow),
+            self.teacher.change_mode, "shruggie"
+        )
+        self.dither(3)
+        self.play(
+            FadeOut(diagram),
+            *[
+                ApplyMethod(pi.change_mode, "plain")
+                for pi in self.get_pi_creatures()
+            ]
+        )
+        self.teacher_says(
+            "Let's think through\\\\ the algebra..."
+        )
+        self.dither(2)
+
+        self.diagram = diagram
+
 class AnalyzeExponentRatio(PiCreatureScene):
     CONFIG = {
         "base" : 2,
@@ -924,11 +1024,82 @@ class ExponentRatioWithSeven(AnalyzeExponentRatio):
         "base_str" : "7",
     }
 
+class ExponentRatioWithEight(AnalyzeExponentRatio):
+    CONFIG = {
+        "base" : 8,
+        "base_str" : "8",
+    }
+
 class ExponentRatioWithE(AnalyzeExponentRatio):
     CONFIG = {
         "base" : np.exp(1),
         "base_str" : "e",
     }
+
+class CompareTwoConstantToEightConstant(PiCreatureScene):
+    def construct(self):
+        two_deriv, eight_deriv = derivs = VGroup(*[
+            self.get_derivative_expression(base)
+            for base in 2, 8
+        ])
+
+        derivs.arrange_submobjects(
+            DOWN, buff = 1.5, aligned_edge = LEFT
+        )
+        derivs.to_edge(LEFT, LARGE_BUFF).shift(UP)
+        arrow = Arrow(*[deriv[-2] for deriv in derivs])
+        times_three = TexMobject("\\times 3")
+        times_three.next_to(arrow, RIGHT)
+
+        why = TextMobject("Why?")
+        why.next_to(self.pi_creature, UP, MED_LARGE_BUFF)
+
+        self.add(eight_deriv)
+        self.dither()
+        self.play(ReplacementTransform(
+            eight_deriv.copy(),
+            two_deriv
+        ))
+        self.dither()
+        self.play(ShowCreation(arrow))
+        self.play(
+            Write(times_three),
+            self.pi_creature.change_mode, "thinking"
+        )
+        self.dither(3)
+
+        self.play(
+            Animation(derivs),
+            Write(why),
+            self.pi_creature.change, "confused", derivs
+        )
+        self.dither()
+        for deriv in derivs:
+            for index in -5, -2:
+                self.play(Indicate(deriv[index]))
+            self.dither()
+        self.dither(2)
+
+    def get_derivative_expression(self, base):
+        base_str = str(base)
+        const_str = "%.4f\\dots"%np.log(base)
+        result = TexMobject(
+            "{d(", base_str, "^t", ")", "\\over", "dt}", 
+            "=", base_str, "^t", "(", const_str, ")"
+        )
+        tex_color_paris = [
+            ("t", YELLOW), 
+            ("dt", GREEN), 
+            (const_str, BLUE)
+        ]
+        for tex, color in tex_color_paris:
+            result.highlight_by_tex(tex, color)
+        return result
+
+    def create_pi_creature(self):
+        self.pi_creature = Randolph().flip()
+        self.pi_creature.to_edge(DOWN).shift(3*RIGHT)
+        return self.pi_creature
 
 class AskAboutConstantOne(TeacherStudentsScene):
     def construct(self):
@@ -961,6 +1132,8 @@ class AskAboutConstantOne(TeacherStudentsScene):
         )
         self.change_student_modes(*["confused"]*3)
         self.dither(3)
+
+
 
 class NaturalLog(Scene):
     def construct(self):

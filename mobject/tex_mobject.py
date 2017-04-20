@@ -74,8 +74,16 @@ class TexMobject(SVGMobject):
             result = result.replace("\n", " \\\\ \n ")
         result = " ".join([self.alignment, result])
         result = result.strip()
-        result = self.remove_stray_braces(result)
+        result = self.modify_special_strings(result)
+
         return result
+
+    def modify_special_strings(self, tex):
+        tex = self.remove_stray_braces(tex)
+        if tex == "\\over":
+            #fraction line needs something to be over
+            tex = "\\over\\,"
+        return tex
 
     def remove_stray_braces(self, tex):
         """

@@ -114,7 +114,6 @@ class UnitInterval(NumberLine):
         "number_at_center" : 0.5,
     }
 
-
 class Axes(VGroup):
     CONFIG = {
         "propogate_style_to_family" : True
@@ -124,7 +123,6 @@ class Axes(VGroup):
         self.x_axis = NumberLine(**kwargs)
         self.y_axis = NumberLine(**kwargs).rotate(np.pi/2)
         self.add(self.x_axis, self.y_axis)
-
 
 class NumberPlane(VMobject):
     CONFIG = {

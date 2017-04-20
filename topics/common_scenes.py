@@ -107,20 +107,17 @@ class PatreonThanks(Scene):
         patreon_logo.next_to(morty, UP, buff = MED_LARGE_BUFF)
 
         patrons = map(TextMobject, self.specific_patrons)
-        patron_groups = []
-        index = 0
-        counter = 0
-        while index < len(patrons):
-            next_index = index + self.patron_group_size
-            group = VGroup(*patrons[index:next_index])
+        num_groups = float(len(patrons)) / self.patron_group_size
+        proportion_range = np.linspace(0, 1, num_groups + 1)
+        indices = (len(patrons)*proportion_range).astype('int')
+        patron_groups = [
+            VGroup(*patrons[i:j])
+            for i, j in zip(indices, indices[1:])
+        ]        
+
+        for i, group in enumerate(patron_groups):
             group.arrange_submobjects(DOWN, aligned_edge = LEFT)
-            if counter%2 == 0:
-                group.to_edge(LEFT)
-            else:
-                group.to_edge(RIGHT)
-            patron_groups.append(group)
-            index = next_index
-            counter += 1
+            group.to_edge(LEFT if i%2 == 0 else RIGHT)
 
         self.play(
             morty.change_mode, "gracious",

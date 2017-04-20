@@ -659,6 +659,15 @@ class FiniteSampleWithMoreSamplePoints(FiniteSample):
         "dx" : 0.05
     }
 
+class FeelsRelatedToAnIntegral(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Seems integral-ish...",
+            target_mode = "maybe"
+        )
+        self.play(self.teacher.change_mode, "happy")
+        self.dither(2)
+
 class IntegralOfSine(FiniteSample):
     CONFIG = {
         "thin_dx" : 0.01,
@@ -978,6 +987,14 @@ class IntegralOfSine(FiniteSample):
                     v_line, self.graph, x,
                     run_time = 3
                 ))
+
+class Approx31(Scene):
+    def construct(self):
+        tex = TexMobject("\\approx 31")
+        tex.scale_to_fit_width(2*SPACE_WIDTH - LARGE_BUFF)
+        tex.to_edge(LEFT)
+        self.play(Write(tex))
+        self.dither(3)
 
 class LetsSolveThis(TeacherStudentsScene):
     def construct(self):
@@ -1357,7 +1374,7 @@ class Antiderivative(AverageOfSineStart):
         big_rect = Rectangle(
             stroke_width = 0,
             fill_color = BLACK,
-            fill_opacity = 0.9,
+            fill_opacity = 0.75,
         )
         big_rect.scale_to_fit_width(2*SPACE_WIDTH)
         big_rect.scale_to_fit_height(2*SPACE_HEIGHT)
@@ -1386,6 +1403,9 @@ class Antiderivative(AverageOfSineStart):
         line.highlight(RED)
         line.scale_in_place(1.2)
 
+        new_v_line = self.v_line.copy().highlight(RED)
+        new_h_line = self.h_line.copy().highlight(RED)
+
         pi = TexMobject("\\pi")
         pi.next_to(self.h_line, DOWN)
 
@@ -1393,7 +1413,12 @@ class Antiderivative(AverageOfSineStart):
             FadeOut(self.rects),
             FadeOut(self.area_two)
         )
-        self.play(Write(pi))
+        self.play(ShowCreation(new_v_line))
+        self.play(
+            ShowCreation(new_h_line),
+            Write(pi)
+        )
+        self.dither()
         self.play(ShowCreation(line, run_time = 2))
         self.dither()
 
@@ -1423,16 +1448,655 @@ class Antiderivative(AverageOfSineStart):
                     run_time = 6,
                 )
 
+class GeneralAverage(AverageOfContinuousVariable):
+    CONFIG = {
+        "bounds" : [1, 6],
+        "bound_colors" : [GREEN, RED],
+        "graph_origin" : 5*LEFT + 2*DOWN,
+        "num_rect_iterations" : 4,
+        "max_dx" : 0.25,
+    }
+    def construct(self):
+        self.setup_axes()
+        self.add_graph()
+        self.ask_about_average()
+        self.show_signed_area()
+        self.put_area_away()
+        self.show_finite_sample()
+        self.show_improving_samples()
+
+    def add_graph(self):
+        graph = self.get_graph(self.func)
+        graph_label = self.get_graph_label(graph, "f(x)")
+        v_lines = VGroup(*[
+            self.get_vertical_line_to_graph(
+                x, graph, line_class = DashedLine
+            )
+            for x in self.bounds
+        ])
+        for line, color in zip(v_lines, self.bound_colors):
+            line.highlight(color)
+        labels = map(TexMobject, "ab")
+        for line, label in zip(v_lines, labels):
+            vect = line.get_start()-line.get_end()
+            label.next_to(line, vect/np.linalg.norm(vect))
+            label.highlight(line.get_color())
+
+        self.y_axis_label_mob.shift(0.7*LEFT)
+
+        self.play(
+            ShowCreation(graph),
+            Write(
+                graph_label, 
+                rate_func = squish_rate_func(smooth, 0.5, 1)
+            ),
+            run_time = 2
+        )
+        for line, label in zip(v_lines, labels):
+            self.play(
+                Write(label),
+                ShowCreation(line)
+            )
+        self.dither()
+
+        self.graph = graph
+        self.graph_label = graph_label
+        self.bounds_labels = labels
+        self.bound_lines = v_lines
+
+    def ask_about_average(self):
+        v_line = self.get_vertical_line_to_graph(
+            self.bounds[0], self.graph, 
+            line_class = DashedLine,
+            color = WHITE
+        )
+        average = TextMobject("Average = ")
+        fraction = TexMobject(
+            "{\\displaystyle \\int", "^b", "_a", "f(x)", "\\,dx",
+            "\\over", "b", "-", "a}"
+        )
+        for color, tex in zip(self.bound_colors, "ab"):
+            fraction.highlight_by_tex(tex, color)
+        fraction.highlight_by_tex("displaystyle", WHITE)
+        integral = VGroup(*fraction[:5])
+        denominator = VGroup(*fraction[5:])
+        average.next_to(fraction.get_part_by_tex("over"), LEFT)
+        group = VGroup(average, fraction)
+        group.center().to_edge(UP).shift(LEFT)
+
+        self.count = 0
+        def next_v_line_anim():
+            target = self.bounds[0] if self.count%2 == 1 else self.bounds[1]
+            self.count += 1
+            return self.get_v_line_change_anim(
+                v_line, self.graph, target,
+                run_time = 4,
+            )
+
+        self.play(
+            next_v_line_anim(),
+            Write(average, run_time = 2),
+        )
+        self.play(
+            next_v_line_anim(),
+            Write(
+                VGroup(*[
+                    fraction.get_part_by_tex(tex)
+                    for tex in "int", "f(x)", "dx", "over"
+                ]),
+                rate_func = squish_rate_func(smooth, 0.25, 0.75),
+                run_time = 4
+            ),
+            *[
+                ReplacementTransform(
+                    label.copy(),
+                    fraction.get_part_by_tex(tex, substring = False),
+                    run_time = 2
+                )
+                for label, tex in zip(
+                    self.bounds_labels, 
+                    ["_a", "^b"]
+                )
+            ]
+        )
+        self.play(
+            next_v_line_anim(),
+            Write(
+                fraction.get_part_by_tex("-"),
+                run_time = 4,
+                rate_func = squish_rate_func(smooth, 0.5, 0.75),
+            ),
+            *[
+                ReplacementTransform(
+                    label.copy(),
+                    fraction.get_part_by_tex(tex, substring = False),
+                    run_time = 4,
+                    rate_func = squish_rate_func(smooth, 0.25, 0.75)
+                )
+                for label, tex in zip(
+                    self.bounds_labels, 
+                    ["a}", "b"]
+                )
+            ]
+
+        )
+        self.play(next_v_line_anim())
+        self.play(FadeOut(v_line))
+
+        self.average_expression = VGroup(average, fraction)
+
+    def show_signed_area(self):
+        rect_list = self.get_riemann_rectangles_list(
+            self.graph,
+            self.num_rect_iterations,
+            max_dx = self.max_dx,
+            x_min = self.bounds[0],
+            x_max = self.bounds[1],
+            end_color = BLUE,
+            fill_opacity = 0.75,
+            stroke_width = 0.25,
+        )
+        rects = rect_list[0]
+        plus = TexMobject("+")
+        plus.move_to(self.coords_to_point(2, 2))
+        minus = TexMobject("-")
+        minus.move_to(self.coords_to_point(5.24, -1))
+
+        self.play(FadeIn(
+            rects, 
+            run_time = 2,
+            submobject_mode = "lagged_start"
+        ))
+        for new_rects in rect_list[1:]:
+            self.transform_between_riemann_rects(rects, new_rects)
+        self.play(Write(plus))
+        self.play(Write(minus))
+        self.dither(2)
+
+        self.area = VGroup(rects, plus, minus)
+
+    def put_area_away(self):
+        self.play(
+            FadeOut(self.area),
+            self.average_expression.scale, 0.75,
+            self.average_expression.to_corner, DOWN+RIGHT,
+        )
+        self.dither()
+
+    def show_finite_sample(self):
+        v_lines = self.get_vertical_lines_to_graph(
+            self.graph,
+            x_min = self.bounds[0],
+            x_max = self.bounds[1],
+            color = GREEN
+        )
+        for line in v_lines:
+            if self.y_axis.point_to_number(line.get_end()) < 0:
+                line.highlight(RED)
+            line.save_state()
+
+        line_pair = VGroup(*v_lines[6:8])
+        brace = Brace(line_pair, DOWN)
+        dx = brace.get_text("$dx$")
+
+        num_samples = TextMobject("Num. samples")
+        approx = TexMobject("\\approx")
+        rhs = TexMobject("{b", "-", "a", "\\over", "dx}")
+        for tex, color in zip("ab", self.bound_colors):
+            rhs.highlight_by_tex(tex, color)
+        expression = VGroup(num_samples, approx, rhs)
+        expression.arrange_submobjects(RIGHT)
+        expression.next_to(self.y_axis, RIGHT)
+        rhs_copy = rhs.copy()
+
+        f_brace = Brace(line_pair, LEFT, buff = 0)
+        f_x = f_brace.get_text("$f(x)$")
+        add_up_f_over = TexMobject("\\text{Add up $f(x)$}", "\\over")
+        add_up_f_over.next_to(num_samples, UP)
+        add_up_f_over.to_edge(UP)
 
 
+        self.play(ShowCreation(v_lines, run_time = 2))
+        self.play(*map(Write, [brace, dx]))
+        self.dither()
+        self.play(Write(VGroup(num_samples, approx, *rhs[:-1])))
+        self.play(ReplacementTransform(
+            dx.copy(), rhs.get_part_by_tex("dx")
+        ))
+        self.dither(2)
 
+        self.play(
+            FadeIn(add_up_f_over),
+            *[
+                ApplyFunction(
+                    lambda m : m.fade().set_stroke(width = 2),
+                    v_line
+                )
+                for v_line in v_lines
+            ]
+        )
+        self.play(*[
+            ApplyFunction(
+                lambda m : m.restore().set_stroke(width = 5),
+                v_line,
+                run_time = 3,
+                rate_func = squish_rate_func(
+                    there_and_back, a, a+0.2
+                )
+            )
+            for v_line, a in zip(v_lines, np.linspace(0, 0.8, len(v_lines)))
+        ])
+        self.play(*[vl.restore for vl in v_lines])
+        self.play(rhs_copy.next_to, add_up_f_over, DOWN)
+        self.dither(2)
+        frac_line = add_up_f_over[1]
+        self.play(
+            FadeOut(rhs_copy.get_part_by_tex("over")),
+            rhs_copy.get_part_by_tex("dx").next_to,
+                add_up_f_over[0], RIGHT, SMALL_BUFF,
+            frac_line.scale_about_point, 1.2, frac_line.get_left(),
+            frac_line.stretch_to_fit_height, frac_line.get_height(),
+        )
+        rhs_copy.remove(rhs_copy.get_part_by_tex("over"))
+        self.dither(2)
 
+        int_fraction = self.average_expression[1].copy()
+        int_fraction.generate_target()
+        int_fraction.target.next_to(add_up_f_over, RIGHT, LARGE_BUFF)
+        int_fraction.target.shift_onto_screen()
+        double_arrow = TexMobject("\\Leftrightarrow")
+        double_arrow.next_to(
+            int_fraction.target.get_part_by_tex("over"), LEFT
+        )
 
+        self.play(
+            MoveToTarget(int_fraction),
+            VGroup(add_up_f_over, rhs_copy).shift, 0.4*DOWN
+        )
+        self.play(Write(double_arrow))
+        self.play(*map(FadeOut, [
+            dx, brace, num_samples, approx, rhs
+        ]))
+        self.dither()
 
+        self.v_lines = v_lines
 
+    def show_improving_samples(self):
+        stroke_width = self.v_lines[0].get_stroke_width()
+        new_v_lines_list = [
+            self.get_vertical_lines_to_graph(
+                self.graph,
+                x_min = self.bounds[0],
+                x_max = self.bounds[1],
+                num_lines = len(self.v_lines)*(2**n),
+                color = GREEN,
+                stroke_width = float(stroke_width)/n
+            )
+            for n in range(1, 4)
+        ]
+        for new_v_lines in new_v_lines_list:
+            for line in new_v_lines:
+                if self.y_axis.point_to_number(line.get_end()) < 0:
+                    line.highlight(RED)
 
+        for new_v_lines in new_v_lines_list:
+            self.play(Transform(
+                self.v_lines, new_v_lines,
+                run_time = 2,
+                submobject_mode = "lagged_start"
+            ))
+        self.dither()
 
+    ####
 
+    def func(self, x):
+        return 0.09*(x+1)*(x-4)*(x-8)
+
+class GeneralAntiderivative(GeneralAverage):
+    def construct(self):
+        self.force_skipping()
+        self.setup_axes()
+        self.add_graph()
+        self.revert_to_original_skipping_status()
+
+        self.fade_existing_graph()
+        self.add_fraction()
+        self.add_antiderivative_graph()
+        self.show_average_in_terms_of_F()
+        self.draw_slope()
+        self.show_tangent_line_slopes()
+
+    def fade_existing_graph(self):
+        self.graph.fade(0.3)
+        self.graph_label.fade(0.3)
+        self.bound_lines.fade(0.3)
+
+    def add_fraction(self):
+        fraction = TexMobject(
+            "{\\displaystyle \\int", "^b", "_a", "f(x)", "\\,dx",
+            "\\over", "b", "-", "a}"
+        )
+        for tex, color in zip("ab", self.bound_colors):
+            fraction.highlight_by_tex(tex, color)
+        fraction.highlight_by_tex("display", WHITE)
+
+        fraction.scale(0.8)
+        fraction.next_to(self.y_axis, RIGHT)
+        fraction.to_edge(UP, buff = MED_SMALL_BUFF)
+        self.add(fraction)
+
+        self.fraction = fraction
+
+    def add_antiderivative_graph(self):
+        x_max = 9.7
+        antideriv_graph = self.get_graph(
+            lambda x : scipy.integrate.quad(
+                self.graph.underlying_function,
+                1, x
+            )[0],
+            color = YELLOW,
+            x_max = x_max,
+        )
+        antideriv_graph_label = self.get_graph_label(
+            antideriv_graph, "F(x)",
+            x_val = x_max
+        )
+
+        deriv = TexMobject(
+            "{dF", "\\over", "dx}", "(x)", "=", "f(x)"
+        )
+        deriv.highlight_by_tex("dF", antideriv_graph.get_color())
+        deriv.highlight_by_tex("f(x)", BLUE)
+        deriv.next_to(
+            antideriv_graph_label, DOWN, MED_LARGE_BUFF, LEFT
+        )
+
+        self.play(
+            ShowCreation(antideriv_graph),
+            Write(
+                antideriv_graph_label, 
+                rate_func = squish_rate_func(smooth, 0.5, 1)
+            ),
+            run_time = 2,
+        )
+        self.dither()
+        self.play(Write(deriv))
+        self.dither()
+
+        self.antideriv_graph = antideriv_graph
+
+    def show_average_in_terms_of_F(self):
+        new_fraction = TexMobject(
+            "=", 
+            "{F", "(", "b", ")", "-", "F", "(", "a", ")",
+            "\\over",
+            "b", "-", "a}"
+        )
+        for tex, color in zip("abF", self.bound_colors+[YELLOW]):
+            new_fraction.highlight_by_tex(tex, color)
+        new_fraction.next_to(
+            self.fraction.get_part_by_tex("over"), RIGHT,
+            align_using_submobjects = True
+        )   
+
+        to_write = VGroup(*it.chain(*[
+            new_fraction.get_parts_by_tex(tex)
+            for tex in "=F()-"
+        ]))
+        to_write.remove(new_fraction.get_parts_by_tex("-")[-1])
+
+        numerator = VGroup(*new_fraction[1:10])
+        denominator = VGroup(*new_fraction[-3:])
+
+        self.play(Write(to_write))
+        self.play(*[
+            ReplacementTransform(
+                label.copy(),
+                new_fraction.get_part_by_tex(tex),
+                run_time = 2,
+                rate_func = squish_rate_func(smooth, a, a+0.7)
+            )
+            for label, tex, a in zip(
+                self.bounds_labels, "ab", [0, 0.3]
+            )
+        ])
+        self.dither()
+
+        self.show_change_in_height(numerator.copy())
+        self.shift_antideriv_graph_up_and_down()
+        self.play(Write(VGroup(*new_fraction[-4:])))
+        self.dither()
+
+        h_line_brace = Brace(self.h_line, DOWN)
+        denominator_copy = denominator.copy()
+        a_label = self.bounds_labels[0]
+        self.play(
+            GrowFromCenter(h_line_brace),
+            a_label.shift, 0.7*a_label.get_width()*LEFT,
+            a_label.shift, 2.2*a_label.get_height()*UP,
+        )
+        self.play(
+            denominator_copy.next_to, h_line_brace, 
+            DOWN, SMALL_BUFF
+        )
+        self.dither(3)
+
+    def show_change_in_height(self, numerator):
+        numerator.add_to_back(BackgroundRectangle(numerator))
+        a_point, b_point = points = [
+            self.input_to_graph_point(x, self.antideriv_graph)
+            for x in self.bounds
+        ]
+        interim_point = b_point[0]*RIGHT + a_point[1]*UP
+
+        v_line = Line(b_point, interim_point)
+        h_line = Line(interim_point, a_point)
+        VGroup(v_line, h_line).highlight(WHITE)
+        brace = Brace(v_line, RIGHT, buff = SMALL_BUFF)
+
+        graph_within_bounds = self.get_graph(
+            self.antideriv_graph.underlying_function,
+            x_min = self.bounds[0], 
+            x_max = self.bounds[1],
+            color = self.antideriv_graph.get_color()
+        )
+
+        b_label = self.bounds_labels[1]
+        self.play(
+            self.antideriv_graph.fade, 0.7,
+            Animation(graph_within_bounds)
+        )
+        self.play(
+            ShowCreation(v_line),
+            b_label.shift, b_label.get_width()*RIGHT,
+            b_label.shift, 1.75*b_label.get_height()*DOWN,
+        )
+        self.play(ShowCreation(h_line))
+        self.play(
+            numerator.scale, 0.75,
+            numerator.next_to, brace.copy(), RIGHT, SMALL_BUFF,
+            GrowFromCenter(brace),
+        )
+        self.dither(2)
+
+        self.antideriv_graph.add(
+            graph_within_bounds, v_line, h_line, numerator, brace
+        )
+        self.h_line = h_line
+        self.graph_points_at_bounds = points
+
+    def shift_antideriv_graph_up_and_down(self):
+        for vect in 2*UP, 3*DOWN, UP:
+            self.play(
+                self.antideriv_graph.shift, vect,
+                run_time = 2
+            )
+        self.dither()
+
+    def draw_slope(self):
+        line = Line(*self.graph_points_at_bounds)
+        line.highlight(PINK)
+        line.scale_in_place(1.3)
+
+        self.play(ShowCreation(line, run_time = 2))
+        self.dither()
+
+    def show_tangent_line_slopes(self):
+        ss_group = self.get_secant_slope_group(
+            x = self.bounds[0],
+            graph = self.antideriv_graph,
+            dx = 0.001,
+            secant_line_color = BLUE,
+            secant_line_length = 2,
+        )
+
+        self.play(*map(ShowCreation, ss_group))
+        for x in range(2):
+            for bound in reversed(self.bounds):
+                self.animate_secant_slope_group_change(
+                    ss_group,
+                    target_x = bound,
+                    run_time = 5,
+                )
+
+class LastVideoWrapper(Scene):
+    def construct(self):
+        title = TextMobject("Chapter 8: Integrals")
+        title.to_edge(UP)
+        rect = Rectangle(height = 9, width = 16)
+        rect.set_stroke(WHITE)
+        rect.scale_to_fit_height(1.5*SPACE_HEIGHT)
+        rect.next_to(title, DOWN)
+
+        self.play(Write(title), ShowCreation(rect))
+        self.dither(5)
+
+class ASecondIntegralSensation(TeacherStudentsScene):
+    def construct(self):
+        finite_average = TexMobject("{1+5+4+2 \\over 4}")
+        numbers = VGroup(*finite_average[0:7:2])
+        plusses = VGroup(*finite_average[1:7:2])
+        denominator = VGroup(*finite_average[7:])
+        finite_average.to_corner(UP+LEFT)
+        finite_average.to_edge(LEFT)
+
+        continuum = UnitInterval(
+            color = GREY,
+            space_unit_to_num = 6
+        )
+        continuum.next_to(finite_average, RIGHT, 2)
+        line = Line(continuum.get_left(), continuum.get_right())
+        line.highlight(YELLOW)
+        arrow = Arrow(DOWN+RIGHT, ORIGIN)
+        arrow.next_to(line.get_start(), DOWN+RIGHT, SMALL_BUFF)
+
+        sigma_to_integral = TexMobject(
+            "\\sum \\Leftrightarrow \\int"
+        )
+        sigma_to_integral.next_to(
+            self.teacher.get_corner(UP+LEFT), UP, MED_LARGE_BUFF
+        )
+
+        self.teacher_says(
+            "A second integral \\\\ sensation"
+        )
+        self.change_student_modes(*["erm"]*3)
+        self.dither()
+        self.play(
+            Write(numbers),
+            RemovePiCreatureBubble(self.teacher),
+        )
+        self.change_student_modes(
+            *["pondering"]*3,
+            look_at_arg = numbers
+        )
+        self.play(Write(plusses))
+        self.dither()
+        self.play(Write(denominator))
+        self.dither()
+
+        self.change_student_modes(
+            *["confused"]*3,
+            look_at_arg = continuum,
+            added_anims = [Write(continuum, run_time = 2)]
+        )
+        self.play(ShowCreation(arrow))
+        arrow.save_state()
+        self.play(
+            arrow.next_to, line.copy().get_end(), DOWN+RIGHT, SMALL_BUFF,
+            ShowCreation(line),
+            run_time = 2
+        )
+        self.play(*map(FadeOut, [arrow]))
+        self.dither(2)
+        self.change_student_modes(
+            *["pondering"]*3,
+            look_at_arg = sigma_to_integral,
+            added_anims = [
+                Write(sigma_to_integral),
+                self.teacher.change_mode, "raise_right_hand"
+            ]
+        )
+        self.dither(3)
+
+class Chapter9PatreonThanks(PatreonThanks):
+    CONFIG = {
+        "specific_patrons" : [
+            "Ali Yahya",
+            "CrypticSwarm",
+            "Kaustuv DeBiswas",
+            "Kathryn Schmiedicke",
+            "Karan Bhargava",
+            "Ankit Agarwal",
+            "Yu Jun",
+            "Dave Nicponski",
+            "Damion Kistler",
+            "Juan Benet",
+            "Othman Alikhan",
+            "Markus Persson",
+            "Dan Buchoff",
+            "Derek Dai",
+            "Joseph John Cox",
+            "Luc Ritchie",
+            "Zac Wentzell",
+            "Robert Teed",
+            "Jason Hise",
+            "Meshal Alshammari",
+            "Bernd Sing",
+            "Nils Schneider",
+            "James Thornton",
+            "Mustafa Mahdi",
+            "Jonathan Eppele",
+            "Mathew Bramson",
+            "Jerry Ling",
+            "Mark Govea",
+            "Vecht",
+            "Shimin Kuang",
+            "Rish Kundalia",
+            "Achille Brighton",
+            "Ripta Pasay",
+        ],
+    }
+
+class Thumbnail(AverageOfSineStart):
+    def construct(self):
+        # self.setup_axes()
+        # self.add_graph()
+        # self.add(self.get_riemann_rectangles(
+        #     self.graph, 
+        #     x_min = self.bounds[0],
+        #     x_max = self.bounds[1],
+        #     dx = 0.01,
+        #     stroke_width = 0,
+        # ))
+        tex_mob = TexMobject(
+            "{1 \\over", "b", "-", "a}", 
+            "\\int", "^b", "_a", "f(x)", "\\,dx"
+        )
+        tex_mob.scale_to_fit_height(SPACE_HEIGHT)
+        for tex, color in zip("abf", [GREEN, YELLOW, BLUE]):
+            tex_mob.highlight_by_tex(tex, color)
+        self.add(tex_mob)
 
 
 
