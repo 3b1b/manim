@@ -90,7 +90,7 @@ class PatreonThanks(Scene):
             "Ripta   Pasay",
             "Felipe  Diniz",
         ],
-        "patron_group_size" : 8,
+        "patron_group_size" : 10,
         "patron_scale_val" : 0.7,
 
     }
@@ -117,6 +117,7 @@ class PatreonThanks(Scene):
 
         for i, group in enumerate(patron_groups):
             group.arrange_submobjects(DOWN, aligned_edge = LEFT)
+            group.scale(self.patron_scale_val)
             group.to_edge(LEFT if i%2 == 0 else RIGHT)
 
         self.play(

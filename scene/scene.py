@@ -38,7 +38,12 @@ class Scene(object):
         self.construct(*self.construct_args)
 
     def setup(self):
-        pass #For any common super classes to set up.
+        """
+        This is meant to be implement by any scenes which
+        are comonly subclassed, and have some common setup
+        involved before the construct method is called.
+        """
+        pass
 
     def construct(self):
         pass #To be implemented in subclasses

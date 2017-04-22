@@ -2748,6 +2748,41 @@ class Chapter1PatreonThanks(PatreonThanks):
         "patron_scale_val" : 0.9
     }
 
+class EndScreen(PiCreatureScene):
+    CONFIG = {
+        "seconds_to_blink" : 4,
+    }
+    def construct(self):
+        words = TextMobject("End screen \\\\ clicky stuffs")
+        words.to_edge(UP)
+
+        self.play(
+            FadeIn(
+                words, 
+                run_time = 2, 
+                submobject_mode = "lagged_start"
+            ),
+            self.pi_creature.change_mode, "hooray"
+        )
+        self.dither(3)
+        mode_point_pairs = [
+            ("raise_left_hand", 5*LEFT+3*UP),
+            ("raise_right_hand", 5*RIGHT+3*UP),
+            ("thinking", 5*LEFT+2*DOWN),
+            ("thinking", 5*RIGHT+2*DOWN),
+        ]
+        for mode, point in mode_point_pairs:
+            self.play(self.pi_creature.change, mode, point)
+            self.dither(3)
+
+
+    def create_pi_creature(self):
+        self.pi_creature = Randolph()
+        self.pi_creature.shift(2*DOWN + LEFT)
+        return self.pi_creature
+
+
+
 class Thumbnail(AlternateAreaUnderCurve):
     CONFIG = {
         "x_axis_label" : "",

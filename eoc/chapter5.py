@@ -28,6 +28,7 @@ from mobject.tex_mobject import *
 from topics.common_scenes import OpeningQuote, PatreonThanks
 
 from eoc.graph_scene import *
+from eoc.chapter4 import ThreeLinesChainRule
 
 class ExpFootnoteOpeningQuote(OpeningQuote):
     CONFIG = {
@@ -58,10 +59,11 @@ class LastVideo(TeacherStudentsScene):
             DOWN, buff = MED_LARGE_BUFF,
         )
         known_formulas.scale_to_fit_height(2.5)
-        exp_question = TexMobject("2^x", ", 7^x", ", e^x", " ???")
+        exp_question = TexMobject("2^x", ", 7^x, ", "e^x", " ???")
 
         last_video_brace = Brace(last_video)
         known_formulas.next_to(last_video_brace, DOWN)
+        known_formulas.shift(MED_LARGE_BUFF*LEFT)
         last_video_brace.save_state()
         last_video_brace.shift(3*LEFT)
         last_video_brace.set_fill(opacity = 0)
@@ -75,25 +77,18 @@ class LastVideo(TeacherStudentsScene):
         self.play(Write(known_formulas))
         self.dither()
         self.student_says(
-            exp_question, student_index = -1,
+            exp_question, student_index = 1,
             added_anims = [self.get_teacher().change_mode, "pondering"]
         )
-        self.dither(2)
-        self.play(known_formulas.replace, last_video)
-        self.play(last_video_brace.next_to, this_video, DOWN)
+        self.dither(3)
+        e_to_x = exp_question.get_part_by_tex("e^x")
         self.play(
-            last_video.restore,
-            this_video.highlight, YELLOW
+            self.teacher.change_mode, "raise_right_hand",
+            e_to_x.scale, 1.5,
+            e_to_x.highlight, YELLOW,
+            e_to_x.next_to, self.teacher.get_corner(UP+LEFT), UP
         )
-        self.play(       
-            exp_question.next_to, last_video_brace, DOWN,
-            FadeOut(self.get_students()[-1].bubble),
-        )
-        self.change_student_modes(
-            *["pondering"]*3,
-            look_at_arg = exp_question
-        )
-        self.dither()
+        self.dither(2)
 
 class PopulationSizeGraphVsPopulationMassGraph(Scene):
     def construct(self):
@@ -719,7 +714,7 @@ class FakeDiagram(TeacherStudentsScene):
             ]
         )
         self.teacher_says(
-            "Let's think through\\\\ the algebra..."
+            "More numerical \\\\ than visual..."
         )
         self.dither(2)
 
@@ -1133,7 +1128,628 @@ class AskAboutConstantOne(TeacherStudentsScene):
         self.change_student_modes(*["confused"]*3)
         self.dither(3)
 
+class WhyPi(PiCreatureScene):
+    def construct(self):
+        circle = Circle(radius = 1, color = MAROON_B)
+        circle.rotate(np.pi/2)
+        circle.to_edge(UP)
+        ghost_circle = circle.copy()
+        ghost_circle.set_stroke(width = 1)
+        diam = Line(circle.get_left(), circle.get_right())
+        diam.highlight(YELLOW)
+        one = TexMobject("1")
+        one.next_to(diam, UP)
+        circum = diam.copy()
+        circum.highlight(circle.get_color())
+        circum.scale(np.pi)
+        circum.next_to(circle, DOWN, LARGE_BUFF)
+        circum.insert_n_anchor_points(circle.get_num_anchor_points()-2)
+        circum.make_jagged()
+        pi = TexMobject("\\pi")
+        pi.next_to(circum, UP)
+        why = TextMobject("Why?")
+        why.next_to(self.pi_creature, UP, MED_LARGE_BUFF)
 
+        self.add(ghost_circle, circle, diam, one)
+        self.dither()
+        self.play(Transform(circle, circum, run_time = 2))
+        self.play(
+            Write(pi),
+            Write(why),
+            self.pi_creature.change_mode, "confused",
+        )
+        self.dither(3)
+
+
+    #######
+
+    def create_pi_creature(self):
+        self.pi_creature = Randolph()
+        self.pi_creature.to_corner(DOWN+LEFT)
+        return self.pi_creature
+
+class GraphOfExp(GraphScene):
+    CONFIG = {
+        "x_min" : -3,
+        "x_max" : 3,
+        "x_tick_frequency" : 1,
+        "x_axis_label" : "t",
+        "x_labeled_nums" : range(-3, 4),
+        "x_axis_width" : 11,
+        "graph_origin" : 2*DOWN + LEFT,
+        "example_inputs" : [1, 2],
+        "small_dx" : 0.01,
+    }
+    def construct(self):
+        self.setup_axes()
+        self.show_slopes()
+
+    def show_slopes(self):
+        graph = self.get_graph(np.exp)
+        graph_label = self.get_graph_label(
+            graph, "e^t", direction = LEFT
+        )
+        graph_label.shift(MED_SMALL_BUFF*LEFT)
+
+        start_input, target_input = self.example_inputs
+        ss_group = self.get_secant_slope_group(
+            start_input, graph,
+            dx = self.small_dx,
+            dx_label = "dt",
+            df_label = "d(e^t)",
+            secant_line_color = YELLOW,
+        )
+        v_lines = [
+            self.get_vertical_line_to_graph(
+                x, graph, 
+                color = WHITE,
+            )
+            for x in self.example_inputs
+        ]
+        height_labels = [
+            TexMobject("e^%d"%x).next_to(vl, RIGHT, SMALL_BUFF)
+            for vl, x in zip(v_lines, self.example_inputs)
+        ]
+        slope_labels = [
+            TextMobject(
+                "Slope = $e^%d$"%x
+            ).next_to(vl.get_top(), UP+RIGHT).shift(0.7*RIGHT/x)
+           for vl, x in zip(v_lines, self.example_inputs)
+        ]
+
+        self.play(
+            ShowCreation(graph, run_time = 2),
+            Write(
+                graph_label, 
+                rate_func = squish_rate_func(smooth, 0.5, 1),
+            )
+        )
+        self.dither()
+        self.play(*map(ShowCreation, ss_group))
+        self.play(Write(slope_labels[0]))
+        self.play(ShowCreation(v_lines[0]))
+        self.play(Write(height_labels[0]))
+        self.dither(2)
+        self.animate_secant_slope_group_change(
+            ss_group,
+            target_x = target_input,
+            run_time = 2,
+            added_anims = [
+                Transform(
+                    *pair, 
+                    path_arc = np.pi/6,
+                    run_time = 2
+                )
+                for pair in [
+                    slope_labels,
+                    v_lines,
+                    height_labels,
+                ]
+            ]
+        )
+        self.dither(2)
+
+        self.graph = graph
+        self.ss_group = ss_group
+
+class Chapter4Wrapper(Scene):
+    def construct(self):
+        title = TextMobject("Chapter 4 chain rule intuition")
+        title.to_edge(UP)
+        rect = Rectangle(width = 16, height = 9)
+        rect.scale_to_fit_height(1.5*SPACE_HEIGHT)
+        rect.next_to(title, DOWN)
+
+        self.add(title)
+        self.play(ShowCreation(rect))
+        self.dither(3)
+
+class ApplyChainRule(TeacherStudentsScene):
+    def construct(self):
+        deriv_equation = TexMobject(
+            "{d(", "e^", "{3", "t}", ")", "\\over", "dt}",
+            "=", "3", "e^", "{3", "t}",
+        )
+        deriv_equation.next_to(self.teacher, UP+LEFT)
+        deriv_equation.shift(UP)
+        deriv_equation.highlight_by_tex("3", BLUE)
+        deriv = VGroup(*deriv_equation[:7])
+        exponent = VGroup(*deriv_equation[-2:])
+        circle = Circle(color = YELLOW)
+        circle.replace(exponent, stretch = True)
+        circle.scale_in_place(1.5)
+
+        self.teacher_says("Think of the \\\\ chain rule")
+        self.change_student_modes(*["pondering"]*3)
+        self.play(
+            Write(deriv),
+            RemovePiCreatureBubble(
+                self.teacher,
+                target_mode = "raise_right_hand"
+            ),
+        )
+        self.dither(2)
+        self.play(*[
+            Transform(
+                *deriv_equation.get_parts_by_tex(
+                    tex, substring = False
+                ).copy()[:2],
+                path_arc = -np.pi,
+                run_time = 2
+            )
+            for tex in "e^", "{3", "t}"
+        ] + [
+            Write(deriv_equation.get_part_by_tex("="))
+        ])
+        self.play(self.teacher.change_mode, "happy")
+        self.dither()
+        self.play(ShowCreation(circle))
+        self.play(Transform(
+            *deriv_equation.get_parts_by_tex("3").copy()[-1:-3:-1]
+        ))
+        self.play(FadeOut(circle))
+        self.dither(3)
+
+class ChainRuleIntuition(ThreeLinesChainRule):
+    CONFIG = {
+        "line_configs" : [
+            {
+                "func" : lambda t : t,
+                "func_label" : "t",
+                "triangle_color" : WHITE,
+                "center_y" : 3,
+                "x_min" : 0,
+                "x_max" : 3,
+                "numbers_to_show" : range(4),
+                "numbers_with_elongated_ticks" : range(4),
+                "tick_frequency" : 1,
+            },
+            {
+                "func" : lambda t : 3*t,
+                "func_label" : "3t",
+                "triangle_color" : GREEN,
+                "center_y" : 0.5,
+                "x_min" : 0,
+                "x_max" : 3,
+                "numbers_to_show" : range(0, 4),
+                "numbers_with_elongated_ticks" : range(4),
+                "tick_frequency" : 1,
+            },
+            {
+                "func" : lambda t : np.exp(3*t),
+                "func_label" : "e^{3t}",
+                "triangle_color" : BLUE,
+                "center_y" : -2,
+                "x_min" : 0,
+                "x_max" : 10,
+                "numbers_to_show" : range(0, 11, 3),
+                "numbers_with_elongated_ticks" : range(11),
+                "tick_frequency" : 1,
+            },
+        ],
+        "example_x" : 0.4,
+        "start_x" : 0.4,
+        "max_x" : 0.6,
+        "min_x" : 0.2,
+    }
+    def construct(self):
+        self.introduce_line_group()
+        self.nudge_x()
+
+    def nudge_x(self):
+        lines, labels = self.line_group
+        def get_value_points():
+            return [
+                label[0].get_bottom()
+                for label in labels
+            ]
+        starts = get_value_points()
+        self.animate_x_change(self.example_x + self.dx, run_time = 0)
+        ends = get_value_points()
+        self.animate_x_change(self.example_x, run_time = 0)
+
+        nudge_lines = VGroup()
+        braces = VGroup()
+        numbers = VGroup()
+        for start, end, line, label, config in zip(starts, ends, lines, labels, self.line_configs):
+            color = label[0].get_color()
+            nudge_line = Line(start, end)
+            nudge_line.set_stroke(color, width = 6)
+            brace = Brace(nudge_line, DOWN, buff = SMALL_BUFF)
+            brace.highlight(color)
+            func_label = config["func_label"]
+            if len(func_label) == 1:
+                text = "$d%s$"%func_label
+            else:
+                text = "$d(%s)$"%func_label
+            brace.text = brace.get_text(text, buff = SMALL_BUFF)
+            brace.text.highlight(color)
+            brace.add(brace.text)
+
+            line.add(nudge_line)
+            nudge_lines.add(nudge_line)
+            braces.add(brace)
+            numbers.add(line.numbers)
+            line.remove(*line.numbers)
+        dt_brace, d3t_brace, dexp3t_brace = braces
+
+        self.play(*map(FadeIn, [nudge_lines, braces]))
+        self.dither()
+        for count in range(3):
+            for dx in self.dx, 0:
+                self.animate_x_change(
+                    self.example_x + dx, 
+                    run_time = 2
+                )
+        self.dither()
+
+class WhyNaturalLogOf2ShowsUp(TeacherStudentsScene):
+    def construct(self):
+        self.add_e_to_the_three_t()
+        self.show_e_to_log_2()
+
+    def add_e_to_the_three_t(self):
+        exp_c = self.get_exp_C("c")
+        exp_c.next_to(self.teacher, UP+LEFT)
+
+        self.play(
+            FadeIn(
+                exp_c, 
+                run_time = 2, 
+                submobject_mode = "lagged_start"
+            ),
+            self.teacher.change, "raise_right_hand"
+        )
+        self.dither()
+        self.look_at(4*LEFT + UP)
+        self.dither(3)
+
+        self.exp_c = exp_c
+
+    def show_e_to_log_2(self):
+        equation = TexMobject(
+            "2", "^t", "= e^", "{\\ln(2)", "t}"
+        )
+        equation.move_to(self.exp_c)
+        t_group = equation.get_parts_by_tex("t")
+        non_t_group = VGroup(*equation)
+        non_t_group.remove(*t_group)
+
+        log_words = TextMobject("``$e$ to the ", "\\emph{what}", "equals 2?''")
+        log_words.highlight_by_tex("what", BLUE)
+        log_words.next_to(equation, UP+LEFT)
+        log_words_arrow = Arrow(
+            log_words.get_right(),
+            equation.get_part_by_tex("ln(2)").get_corner(UP+LEFT),
+            color = BLUE,
+        )
+
+        derivative = TexMobject(
+            "\\ln(2)", "2", "^t", "=", "\\ln(2)", "e^", "{\\ln(2)", "t}"
+        )
+        derivative.move_to(equation)
+        for tex_mob in equation, derivative:
+            tex_mob.highlight_by_tex("ln(2)", BLUE)
+            tex_mob.highlight_by_tex("t", YELLOW)
+        derivative_arrow = Arrow(1.5*UP, ORIGIN, buff = 0)
+        derivative_arrow.highlight(WHITE)
+        derivative_arrow.next_to(
+            derivative.get_parts_by_tex("="), UP
+        )
+        derivative_symbol = TextMobject("Derivative")
+        derivative_symbol.next_to(derivative_arrow, RIGHT)
+
+        self.play(
+            Write(non_t_group),
+            self.exp_c.next_to, equation, LEFT, 2*LARGE_BUFF,
+            self.exp_c.to_edge, UP,
+        )
+        self.change_student_modes("confused", "sassy", "erm")
+        self.play(
+            Write(log_words),
+            ShowCreation(
+                log_words_arrow, 
+                run_time = 2,
+                rate_func = squish_rate_func(smooth, 0.5, 1)
+            )
+        )
+        self.change_student_modes(
+            *["pondering"]*3,
+            look_at_arg = log_words
+        )
+        self.dither(2)
+
+        t_group.save_state()
+        t_group.shift(UP)
+        t_group.set_fill(opacity = 0)
+        self.play(
+            ApplyMethod(
+                t_group.restore,
+                run_time = 2,
+                submobject_mode = "lagged_start",
+            ),
+            self.teacher.change_mode, "speaking"
+        )
+        self.dither(2)
+        self.play(FocusOn(self.exp_c))
+        self.play(Indicate(self.exp_c, scale_factor = 1.05))
+        self.dither(2)
+
+        self.play(
+            equation.next_to, derivative_arrow, UP,
+            equation.shift, MED_SMALL_BUFF*RIGHT,
+            FadeOut(VGroup(log_words, log_words_arrow)),
+            self.teacher.change_mode, "raise_right_hand",
+        )
+        self.play(
+            ShowCreation(derivative_arrow),
+            Write(derivative_symbol),
+            Write(derivative)
+        )
+        self.dither(3)
+        self.play(self.teacher.change_mode, "happy")
+        self.dither(2)
+
+        student = self.get_students()[1]
+        ln = derivative.get_part_by_tex("ln(2)").copy()
+        rhs = TexMobject("=%s"%self.get_log_str(2))
+        self.play(
+            ln.next_to, student, UP+LEFT, MED_LARGE_BUFF,
+            student.change_mode, "raise_left_hand",
+        )
+        rhs.next_to(ln, RIGHT)
+        self.play(Write(rhs))
+        self.dither(2)
+
+
+    ######
+
+    def get_exp_C(self, C):
+        C_str = str(C)
+        result = TexMobject(
+            "{d(", "e^", "{%s"%C_str, "t}", ")", "\\over", "dt}",
+            "=", C_str, "e^", "{%s"%C_str, "t}",
+        )
+        result.highlight_by_tex(C_str, BLUE)
+        result.C_str = C_str
+        return result
+
+    def get_a_to_t(self, a):
+        a_str = str(a)
+        log_str = self.get_log_str(a)
+        result = TexMobject(
+            "{d(", a_str, "^t", ")", "\\over", "dt}",
+            "=", log_str, a_str, "^t"
+        )
+        result.highlight_by_tex(log_str, BLUE)
+        return result
+
+    def get_log_str(self, a):
+        return "%.4f\\dots"%np.log(float(a))
+
+class CompareWaysToWriteExponentials(GraphScene):
+    CONFIG = {
+        "y_max" : 50,
+        "y_tick_frequency" : 5,
+        "x_max" : 7,
+    }
+    def construct(self):
+        self.setup_axes()
+        bases = range(2, 7)
+        graphs = [
+            self.get_graph(lambda t : base**t, color = GREEN)
+            for base in bases
+        ]
+        graph = graphs[0]
+
+        a_to_t = TexMobject("a^t")
+        a_to_t.move_to(self.coords_to_point(6, 45))
+
+        cross = TexMobject("\\times")
+        cross.highlight(RED)
+        cross.replace(a_to_t, stretch = True)
+        e_to_ct = TexMobject("e^", "{c", "t}")
+        e_to_ct.highlight_by_tex("c", BLUE)
+        e_to_ct.scale(1.5)
+        e_to_ct.next_to(a_to_t, DOWN)
+
+        equations = VGroup()
+        for base in bases:
+            log_str =  "%.4f\\dots"%np.log(base)
+            equation = TexMobject(
+                str(base), "^t", "=",
+                "e^", "{(%s)"%log_str, "t}", 
+            )
+            equation.highlight_by_tex(log_str, BLUE)
+            equation.scale(1.2)
+            equations.add(equation)
+
+        equation = equations[0]
+        equations.next_to(e_to_ct, DOWN, LARGE_BUFF, LEFT)
+
+        self.play(
+            ShowCreation(graph),
+            Write(
+                a_to_t,
+                rate_func = squish_rate_func(smooth, 0.5, 1) 
+            ),
+            run_time = 2
+        )
+        self.play(Write(cross, run_time = 2))
+        self.play(Write(e_to_ct, run_time = 2))
+        self.dither(2)
+        self.play(Write(equation))
+        self.dither(2)
+        for new_graph, new_equation in zip(graphs, equations)[1:]:
+            self.play(
+                Transform(graph, new_graph),
+                Transform(equation, new_equation)
+            )
+            self.dither(2)
+        self.dither()
+
+class TooManySymbols(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Too symbol heavy!",
+            target_mode = "pleading"
+        )
+        self.play(self.teacher.change_mode, "guilty")
+        self.dither(3)
+
+class TemperatureOverTimeOfWarmWater(GraphScene):
+    CONFIG = {
+        "x_min" : 0,
+        "x_axis_label" : "$t$",
+        "y_axis_label" : "Temperature",
+        "T_room" : 4,
+        "include_solution" : False,
+    }
+    def construct(self):
+        self.setup_axes()
+        graph = self.get_graph(
+            lambda t : 3*np.exp(-0.3*t) + self.T_room,
+            color = RED
+        )
+        h_line = DashedLine(*[
+            self.coords_to_point(x, self.T_room)
+            for x in self.x_min, self.x_max
+        ])
+        T_room_label = TexMobject("T_{\\text{room}}")
+        T_room_label.next_to(h_line, LEFT)
+
+        ode = TexMobject(
+            "\\frac{d\\Delta T}{dt} = -k \\Delta T"
+        )
+        ode.to_corner(UP+RIGHT)
+
+        solution = TexMobject(
+            "\\Delta T(", "t", ") = e", "^{-k", "t}"
+        )
+        solution.next_to(ode, DOWN, MED_LARGE_BUFF)
+        solution.highlight_by_tex("t", YELLOW)
+        solution.highlight_by_tex("Delta", WHITE)
+
+        delta_T_brace = Brace(graph, RIGHT)
+        delta_T_label = TexMobject("\\Delta T")
+        delta_T_group = VGroup(delta_T_brace, delta_T_label)
+        def update_delta_T_group(group):
+            brace, label = group
+            v_line = Line(
+                graph.points[-1],
+                graph.points[-1][0]*RIGHT + h_line.get_center()[1]*UP
+            )
+            brace.scale_to_fit_height(v_line.get_height())
+            brace.next_to(v_line, RIGHT, SMALL_BUFF)
+            label.scale_to_fit_height(min(
+                label.get_height(),
+                brace.get_height()
+            ))
+            label.next_to(brace, RIGHT, SMALL_BUFF)
+
+        self.add(ode)
+        self.play(
+            Write(T_room_label),
+            ShowCreation(h_line, run_time = 2)
+        )
+        if self.include_solution:
+            self.play(Write(solution))
+        graph_growth = ShowCreation(graph, rate_func = None)
+        delta_T_group_update = UpdateFromFunc(
+            delta_T_group, update_delta_T_group
+        )
+        self.play(
+            GrowFromCenter(delta_T_brace),
+            Write(delta_T_label),
+        )
+        self.play(graph_growth, delta_T_group_update, run_time = 15)
+        self.dither(2)
+
+class TemperatureOverTimeOfWarmWaterWithSolution(TemperatureOverTimeOfWarmWater):
+    CONFIG = {
+        "include_solution" : True
+    }
+
+class InvestedMoney(Scene):
+    def construct(self):
+        # cash_str = "\\$\\$\\$"
+        cash_str = "M"
+        equation = TexMobject(
+            "{d", cash_str, "\\over", "dt}",
+            "=", "(1 + r)", cash_str
+        )
+        equation.highlight_by_tex(cash_str, GREEN)
+        equation.next_to(ORIGIN, LEFT)
+        equation.to_edge(UP)
+
+        arrow = Arrow(LEFT, RIGHT, color = WHITE)
+        arrow.next_to(equation)
+
+        solution = TexMobject(
+            cash_str, "(", "t", ")", "=", "e^", "{(1+r)", "t}"
+        )
+        solution.highlight_by_tex("t", YELLOW)
+        solution.highlight_by_tex(cash_str, GREEN)
+        solution.next_to(arrow, RIGHT)
+
+        cash = TexMobject("\\$")
+        cash_pile = VGroup(*[
+            cash.copy().shift(
+                x*(1+MED_SMALL_BUFF)*cash.get_width()*RIGHT +\
+                y*(1+MED_SMALL_BUFF)*cash.get_height()*UP
+            )
+            for x in range(40)
+            for y in range(8)
+        ])
+        cash_pile.highlight(GREEN)
+        cash_pile.center()
+        cash_pile.shift(DOWN)
+
+        anims = []
+        cash_size = len(cash_pile)
+        run_time = 10
+        const = np.log(cash_size)/run_time
+        for i, cash in enumerate(cash_pile):
+            start_time = np.log(i+1)/const
+            prop = start_time/run_time
+            rate_func = squish_rate_func(
+                smooth,
+                np.clip(prop-0.5/run_time, 0, 1),
+                np.clip(prop+0.5/run_time, 0, 1),
+            )
+            anims.append(GrowFromCenter(
+                cash, rate_func = rate_func,
+            ))
+
+        self.add(equation)
+        self.play(*anims, run_time = run_time)
+        self.dither()
+        self.play(ShowCreation(arrow))
+        self.play(Write(solution, run_time = 2))
+        self.dither()
+        self.play(FadeOut(cash_pile))
+        self.play(*anims, run_time = run_time)
+        self.dither()
 
 class NaturalLog(Scene):
     def construct(self):

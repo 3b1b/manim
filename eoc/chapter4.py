@@ -1549,6 +1549,8 @@ class ShoveXSquaredInSine(Scene):
 class ThreeLinesChainRule(ReconfigurableScene):
     CONFIG = {
         "start_x" : 0.5,
+        "max_x" : 1,
+        "min_x" : 0,
         "top_x" : 3,
         "example_x" : 1.5,
         "dx" : 0.1,
@@ -1613,7 +1615,7 @@ class ThreeLinesChainRule(ReconfigurableScene):
             ))
             self.dither()
             last_label = label
-        for x in 1, 0, self.start_x:
+        for x in self.max_x, self.min_x, self.start_x:
             self.animate_x_change(x, run_time = 1)
         self.dither()
 

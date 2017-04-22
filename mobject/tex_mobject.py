@@ -94,10 +94,10 @@ class TexMobject(SVGMobject):
             for char in "{}"
         ]
         if num_rights > num_lefts:
-            backwards = tex[::-1].replace("}", "", num_rights-num_lefts)
+            backwards = tex[::-1].replace("}", "", num_rights - num_lefts)
             tex = backwards[::-1]
         elif num_lefts > num_rights:
-            tex = tex.replace("{", "", num_lefts-num_rights)
+            tex = tex.replace("{", "", num_lefts - num_rights)
         return tex
 
 
@@ -128,10 +128,10 @@ class TexMobject(SVGMobject):
         )
         if hasattr(self, "expression_parts"):
             tex_submobjects.remove(self)
-        return filter(
+        return VGroup(*filter(
             lambda m : test(tex, m.get_tex_string()),
             tex_submobjects
-        )
+        ))
 
     def get_part_by_tex(self, tex, **kwargs):
         all_parts = self.get_parts_by_tex(tex, **kwargs)
