@@ -2640,7 +2640,7 @@ class FinalWords(TeacherStudentsScene):
         )
         self.dither(3)
 
-class Chapter5PatreonThanks(PatreonThanks):
+class Chapter6PatreonThanks(PatreonThanks):
     CONFIG = {
         "specific_patrons" : [
             "Ali  Yahya",
