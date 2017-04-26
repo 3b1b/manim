@@ -551,8 +551,6 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos, ZoomedScene):
         "zoom_factor" : 2,
     }
     def construct(self):
-        self.force_skipping()
-
         self.setup_axes()
         self.add_cosine_graph()
         self.add_quadratic_graph()
@@ -567,11 +565,9 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos, ZoomedScene):
         self.point_out_negative_concavity()
         self.compute_cosine_second_derivative()
         self.show_matching_curvature()
+        self.show_matching_tangent_lines()
         self.compute_polynomial_second_derivative()
-        self.point_out_underestimate()
-        self.second_derivative_of_cosine_increases()
-        self.second_derivative_of_quadratic_is_constant()
-
+        self.box_final_answer()
 
     def add_cosine_graph(self):
         cosine_label = TexMobject("\\cos(x)")
@@ -748,12 +744,10 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos, ZoomedScene):
             self.dither()
 
     def show_tangent_slope(self):
-        tangent_line = Line(LEFT, RIGHT, color = self.colors[1])
-        tangent_line.scale(2)
         graph_point_at_zero = self.input_to_graph_point(
             0, self.cosine_graph
         ) 
-        tangent_line.move_to(graph_point_at_zero)
+        tangent_line = self.get_tangent_line(0, self.cosine_graph)
 
         self.play(ShowCreation(tangent_line))
         self.change_quadratic_graph(
@@ -843,7 +837,6 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos, ZoomedScene):
         for start, target in zip(poly_group, poly_group_target):
             target.move_to(start)
 
-        self.revert_to_original_skipping_status()
         self.play(FadeOut(self.free_to_change_group))
         self.play(FadeIn(
             derivative, 
@@ -856,7 +849,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos, ZoomedScene):
             run_time = 2,
             submobject_mode = "lagged_start"
         ))
-        self.dither()
+        self.dither(2)
         self.play(Write(equals_c1))
         self.dither(2)
         self.play(Transform(
@@ -873,29 +866,158 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos, ZoomedScene):
         self.play(FadeIn(self.free_to_change_group))
 
     def let_c2_vary(self):
-        pass
+        alt_c2_values = [-1, -0.05, 1, -0.2]
+        for alt_c2 in alt_c2_values:
+            self.change_quadratic_graph(
+                self.quadratic_graph,
+                1, 0, alt_c2
+            )
+            self.dither()
 
     def point_out_negative_concavity(self):
-        pass
+        partial_cosine_graph = self.get_graph(
+            np.cos,
+            x_min = -1, 
+            x_max = 1,
+            color = PINK
+        )
+
+        self.play(ShowCreation(partial_cosine_graph, run_time = 2))
+        self.dither()
+        for x in -1, 0, 1:
+            self.play(self.get_tangent_line_change_anim(
+                self.tangent_line, x, self.cosine_graph,
+                run_time = 2
+            ))
+            self.dither()
+        self.play(*map(FadeOut, [
+            partial_cosine_graph, self.tangent_line
+        ]))
 
     def compute_cosine_second_derivative(self):
-        pass
+        second_deriv = TexMobject(
+            "{d^2(", "\\cos", ")", "\\over", "dx}", 
+            "(", "0", ")",
+        )
+        second_deriv.highlight_by_tex("cos", self.colors[0])
+        second_deriv.highlight_by_tex("-\\cos", self.colors[2])
+        second_deriv.scale(0.75)
+        second_deriv.add_background_rectangle()
+        second_deriv.next_to(
+            self.derivative_equation, DOWN,
+            buff = MED_LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+        rhs = TexMobject("=", "-\\cos(0)", "=", "-1")
+        rhs.highlight_by_tex("cos", self.colors[2])
+        rhs.scale(0.8)
+        rhs.next_to(
+            second_deriv, RIGHT, 
+            align_using_submobjects = True
+        )
+
+        self.play(FadeIn(
+            VGroup(second_deriv, *rhs[:2]),
+            run_time = 2,
+            submobject_mode = "lagged_start"
+        ))
+        self.dither(3)
+        self.play(Write(VGroup(*rhs[2:]), run_time = 2))
+        self.dither()
 
     def show_matching_curvature(self):
-        pass
+        alt_consts_list = [
+            (1, 1, -0.2),
+            (1, 0, -0.2),
+            (1, 0, -0.5),
+        ]
+        for alt_consts in alt_consts_list:
+            self.change_quadratic_graph(
+                self.quadratic_graph,
+                *alt_consts
+            )
+            self.dither()
+
+    def show_matching_tangent_lines(self):
+        graphs = [self.quadratic_graph, self.cosine_graph]
+        tangent_lines = [
+            self.get_tangent_line(0, graph, color = color)
+            for graph, color in zip(graphs, [WHITE, YELLOW])
+        ]
+        tangent_change_anims = [
+            self.get_tangent_line_change_anim(
+                line, np.pi/2, graph, 
+                run_time = 5,
+                rate_func = lambda t : smooth(t, 2.0)
+            )
+            for line, graph in zip(tangent_lines, graphs)
+        ]
+
+        self.play(*map(ShowCreation, tangent_lines))
+        self.play(*tangent_change_anims)
+        self.dither()
+        self.play(*map(FadeOut, tangent_lines))
 
     def compute_polynomial_second_derivative(self):
-        pass
+        c2s = ["c_2", "\\text{\\tiny $\\left(-\\frac{1}{2}\\right)$}"]
+        derivs = [
+            self.get_quadratic_derivative("0", c2)
+            for c2 in c2s
+        ]
+        second_derivs = [
+            TexMobject(
+                "{d^2 P \\over dx^2}", "(x)", "=", "2", c2
+            )
+            for c2 in c2s
+        ]
+        for deriv, second_deriv in zip(derivs, second_derivs):
+            second_deriv[0].scale(
+                0.7, about_point = second_deriv[0].get_right()
+            )
+            second_deriv[-1].highlight(self.colors[-1])
+            second_deriv.next_to(
+                deriv, DOWN, 
+                buff = MED_LARGE_BUFF,
+                aligned_edge = LEFT
+            )
 
-    def point_out_underestimate(self):
-        pass
+        poly_group = VGroup(
+            second_derivs[0], 
+            derivs[0],
+            self.quadratic_tex
+        )
+        poly_group_target = VGroup(
+            second_derivs[1],
+            derivs[1],
+            self.get_quadratic_tex("1", "0", c2s[1])
+        )
+        for tex_mob in poly_group_target:
+            tex_mob.get_part_by_tex(c2s[1]).shift(SMALL_BUFF*UP)
 
-    def second_derivative_of_cosine_increases(self):
-        pass
+        self.play(FadeOut(self.free_to_change_group))
+        self.play(FadeIn(derivs[0]))
+        self.dither(2)
+        self.play(Write(second_derivs[0]))
+        self.dither(2)
+        self.play(Transform(
+            poly_group, poly_group_target,
+            run_time = 3,
+            submobject_mode = "lagged_start"
+        ))
+        self.dither(3)
 
-    def second_derivative_of_quadratic_is_constant(self):
-        pass
+    def box_final_answer(self):
+        box = Rectangle(stroke_color = PINK)
+        box.stretch_to_fit_width(
+            self.quadratic_tex.get_width() + MED_LARGE_BUFF
+        )
+        box.stretch_to_fit_height(
+            self.quadratic_tex.get_height() + MED_LARGE_BUFF
+        )
+        box.move_to(self.quadratic_tex)
 
+        self.play(ShowCreation(box, run_time = 2))
+        self.dither(2)
 
     ######
 
@@ -928,8 +1050,9 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos, ZoomedScene):
             "{dP \\over dx}", "(", arg, ")", "=",
             c1, "+", "2", c2, arg
         )
-        for tex, color in zip([c1, c2], self.colors[1:]):
-            result.highlight_by_tex(tex, color)
+        result[0].scale(0.7, about_point = result[0].get_right())
+        for index, color in zip([5, 8], self.colors[1:]):
+            result[index].highlight(color)
         if hasattr(self, "quadratic_tex"):
             result.next_to(
                 self.quadratic_tex, DOWN,
@@ -942,13 +1065,29 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos, ZoomedScene):
         arrow = Arrow(LEFT, RIGHT)
         x_equals_0 = TexMobject("x = 0")
         x_equals_0.scale(0.75)
-        x_equals_0.next_to(arrow.get_center(), DOWN, SMALL_BUFF)
+        x_equals_0.next_to(arrow.get_center(), UP, 2*SMALL_BUFF)
         x_equals_0.shift(SMALL_BUFF*LEFT)
         return VGroup(arrow, x_equals_0)
 
+    def get_tangent_line(self, x, graph, color = YELLOW):
+        tangent_line = Line(LEFT, RIGHT, color = color)
+        tangent_line.rotate(self.angle_of_tangent(x, graph))
+        tangent_line.scale(2)
+        tangent_line.move_to(self.input_to_graph_point(x, graph))
+        return tangent_line
 
-
-
+    def get_tangent_line_change_anim(self, tangent_line, new_x, graph, **kwargs):
+        start_x = self.x_axis.point_to_number(
+            tangent_line.get_center()
+        )
+        def update(tangent_line, alpha):
+            x = interpolate(start_x, new_x, alpha)
+            new_line = self.get_tangent_line(
+                x, graph, color = tangent_line.get_color()
+            )
+            Transform(tangent_line, new_line).update(1)
+            return tangent_line
+        return UpdateFromAlphaFunc(tangent_line, update, **kwargs)
 
 
 
