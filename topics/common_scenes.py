@@ -43,8 +43,9 @@ class OpeningQuote(Scene):
             words = ["``"] + list(self.quote) + ["''"]
             quote = TextMobject(*words, **text_mobject_kwargs)
             ##TODO, make less hacky
-            quote[0].shift(0.2*RIGHT)
-            quote[-1].shift(0.2*LEFT)
+            if self.quote_arg_separator == " ":
+                quote[0].shift(0.2*RIGHT)
+                quote[-1].shift(0.2*LEFT)
         for term, color in self.highlighted_quote_terms.items():
             quote.highlight_by_tex(term, color)
         quote.to_edge(UP)
