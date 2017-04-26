@@ -2564,6 +2564,105 @@ class Chapter2PatreonThanks(PatreonThanks):
         ]
     }
 
+class Promotion(PiCreatureScene):
+    CONFIG = {
+        "camera_class" : ThreeDCamera,
+        "seconds_to_blink" : 5,
+    }
+    def construct(self):
+        aops_logo = AoPSLogo()
+        aops_logo.next_to(self.pi_creature, UP+LEFT)
+        url = TextMobject(
+            "AoPS.com/", "3blue1brown",
+            arg_separator = ""
+        )
+        url.to_corner(UP+LEFT)
+        url_rect = Rectangle(color = BLUE)
+        url_rect.replace(
+            url.get_part_by_tex("3blue1brown"),
+            stretch = True
+        )
+
+        url_rect.stretch_in_place(1.1, dim = 1)
+
+        rect = Rectangle(height = 9, width = 16)
+        rect.scale_to_fit_height(4.5)
+        rect.next_to(url, DOWN)
+        rect.to_edge(LEFT)
+        mathy = Mathematician()
+        mathy.flip()
+        mathy.to_corner(DOWN+RIGHT)
+        morty = self.pi_creature
+        morty.save_state()
+        book_spot = mathy.get_corner(UP+LEFT) + UP+LEFT
+        mathy.get_center = mathy.get_top
+
+        self.play(
+            self.pi_creature.change_mode, "raise_right_hand",
+            *[
+                DrawBorderThenFill(
+                    submob,
+                    run_time = 3,
+                    rate_func = squish_rate_func(double_smooth, a, a+0.5)
+                )
+                for submob, a in zip(aops_logo, np.linspace(0, 0.5, len(aops_logo)))
+            ]
+        )
+        self.play(Write(url))
+        self.play(
+            morty.change_mode, "plain",
+            morty.flip,
+            morty.scale, 0.7,
+            morty.next_to, mathy, LEFT, LARGE_BUFF,
+            morty.to_edge, DOWN,
+            FadeIn(mathy),
+        )
+        self.play(
+            PiCreatureSays(
+                mathy, "",
+                bubble_kwargs = {"width" : 5},
+                look_at_arg = morty.eyes,
+            ),
+            aops_logo.shift, 1.5*UP + 0.5*RIGHT
+        )
+        self.change_mode("happy")
+        self.dither(2)
+        self.play(Blink(mathy))
+        self.dither()
+        self.play(
+            RemovePiCreatureBubble(
+                mathy, target_mode = "happy"
+            ),
+            aops_logo.to_corner, UP+RIGHT,
+            aops_logo.shift, MED_SMALL_BUFF*DOWN,
+        )
+        self.play(
+            mathy.look_at, morty.eyes,
+            morty.look_at, mathy.eyes,
+        )
+        self.dither(2)
+        self.play(
+            Animation(VectorizedPoint(book_spot)),
+            mathy.change, "raise_right_hand", book_spot,
+            morty.change, "pondering",
+        )
+        self.dither(3)
+        self.play(Blink(mathy))
+        self.dither(7)
+        self.play(
+            ShowCreation(rect),
+            morty.restore,
+            morty.change, "happy", rect,
+            FadeOut(mathy),
+        )
+        self.dither(10)
+        self.play(ShowCreation(url_rect))
+        self.play(
+            FadeOut(url_rect),
+            url.get_part_by_tex("3blue1brown").highlight, BLUE,
+        )
+        self.dither(3)
+
 class Thumbnail(SecantLineToTangentLine):
     def construct(self):
         self.setup_axes(animate = False)
