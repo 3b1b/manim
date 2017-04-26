@@ -83,7 +83,20 @@ class Line(VMobject):
                 for alpha in np.linspace(0, 1, self.n_arc_anchors)
             ])
             self.considered_smooth = True
+        self.account_for_buff()
 
+    def account_for_buff(self):
+        anchors = self.get_anchors()
+        length = sum([
+            np.linalg.norm(a2-a1)
+            for a1, a2 in zip(anchors, anchors[1:])
+        ])
+        if length < 2*self.buff or self.buff == 0:
+            return
+        buff_proportion = self.buff / length
+        self.pointwise_become_partial(
+            self, buff_proportion, 1 - buff_proportion
+        )
 
     def set_start_and_end(self, start, end):
         start_to_end = self.pointify(end) - self.pointify(start)
@@ -96,12 +109,6 @@ class Line(VMobject):
             else np.array(arg)
             for arg, unit in zip([start, end], [1, -1])
         ]
-        start_to_end = self.end - self.start
-        length = np.linalg.norm(start_to_end)
-        if length > 2*self.buff:
-            start_to_end = start_to_end / np.linalg.norm(start_to_end)
-            self.start = self.start + self.buff*start_to_end
-            self.end = self.end - self.buff*start_to_end
 
     def pointify(self, mob_or_point):
         if isinstance(mob_or_point, Mobject):
