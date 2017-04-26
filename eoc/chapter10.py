@@ -599,9 +599,9 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos, ZoomedScene):
 
         self.play(ReplacementTransform(
             self.cosine_graph.copy(),
-            quadratic_graph
+            quadratic_graph,
+            run_time = 3
         ))
-        self.dither()
 
         self.quadratic_graph = quadratic_graph
 
@@ -774,23 +774,8 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos, ZoomedScene):
         self.tangent_line = tangent_line
 
     def compute_cosine_derivative(self):
-        derivative = TexMobject(
-            "{d(", "\\cos", ")", "\\over", "dx}", "(0)",
-        )
-        derivative.highlight_by_tex("\\cos", self.colors[0])
-        derivative.scale(0.75)
-        derivative.next_to(
-            self.cosine_label, DOWN,
-            buff = MED_LARGE_BUFF,
-            aligned_edge = LEFT
-        )
-        rhs = TexMobject("=", "-\\sin(0)", "=", "0")
-        rhs.highlight_by_tex("\\sin", self.colors[1])
-        rhs.scale(0.8)
-        rhs.next_to(
-            derivative, RIGHT,
-            align_using_submobjects = True
-        )
+        derivative, rhs = self.get_cosine_derivative()
+
 
         self.play(FadeIn(
             VGroup(derivative, *rhs[:2]),
@@ -807,8 +792,6 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos, ZoomedScene):
             rate_func = wiggle
         ))
         self.dither()
-
-        self.derivative_equation = VGroup(derivative, rhs)
 
     def compute_polynomial_derivative(self):
         derivative = self.get_quadratic_derivative("c_1", "c_2")
@@ -884,10 +867,10 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos, ZoomedScene):
 
         self.play(ShowCreation(partial_cosine_graph, run_time = 2))
         self.dither()
-        for x in -1, 0, 1:
+        for x, run_time in (-1, 2), (1, 4):
             self.play(self.get_tangent_line_change_anim(
                 self.tangent_line, x, self.cosine_graph,
-                run_time = 2
+                run_time = run_time
             ))
             self.dither()
         self.play(*map(FadeOut, [
@@ -895,26 +878,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos, ZoomedScene):
         ]))
 
     def compute_cosine_second_derivative(self):
-        second_deriv = TexMobject(
-            "{d^2(", "\\cos", ")", "\\over", "dx}", 
-            "(", "0", ")",
-        )
-        second_deriv.highlight_by_tex("cos", self.colors[0])
-        second_deriv.highlight_by_tex("-\\cos", self.colors[2])
-        second_deriv.scale(0.75)
-        second_deriv.add_background_rectangle()
-        second_deriv.next_to(
-            self.derivative_equation, DOWN,
-            buff = MED_LARGE_BUFF,
-            aligned_edge = LEFT
-        )
-        rhs = TexMobject("=", "-\\cos(0)", "=", "-1")
-        rhs.highlight_by_tex("cos", self.colors[2])
-        rhs.scale(0.8)
-        rhs.next_to(
-            second_deriv, RIGHT, 
-            align_using_submobjects = True
-        )
+        second_deriv, rhs = self.get_cosine_second_derivative()
 
         self.play(FadeIn(
             VGroup(second_deriv, *rhs[:2]),
@@ -947,15 +911,14 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos, ZoomedScene):
         tangent_change_anims = [
             self.get_tangent_line_change_anim(
                 line, np.pi/2, graph, 
-                run_time = 5,
-                rate_func = lambda t : smooth(t, 2.0)
+                run_time = 6,
+                rate_func = there_and_back,
             )
             for line, graph in zip(tangent_lines, graphs)
         ]
 
         self.play(*map(ShowCreation, tangent_lines))
         self.play(*tangent_change_anims)
-        self.dither()
         self.play(*map(FadeOut, tangent_lines))
 
     def compute_polynomial_second_derivative(self):
@@ -1032,7 +995,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos, ZoomedScene):
     def get_quadratic_graph(self, c0 = 1, c1 = 0, c2 = -0.5):
         return self.get_graph(
             lambda x : c0 + c1*x + c2*x**2,
-            color = self.colors[-1]
+            color = self.colors[2]
         )
 
     def get_quadratic_tex(self, c0, c1, c2, arg = "x"):
@@ -1089,11 +1052,438 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos, ZoomedScene):
             return tangent_line
         return UpdateFromAlphaFunc(tangent_line, update, **kwargs)
 
+    def get_cosine_derivative(self):
+        if not hasattr(self, "cosine_label"):
+            self.cosine_label = TexMobject("\\cos(x)")
+            self.cosine_label.to_corner(UP+LEFT)
+        derivative = TexMobject(
+            "{d(", "\\cos", ")", "\\over", "dx}", "(0)",
+        )
+        derivative.highlight_by_tex("\\cos", self.colors[0])
+        derivative.scale(0.7)
+        derivative.next_to(
+            self.cosine_label, DOWN,
+            buff = MED_LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+        rhs = TexMobject("=", "-\\sin(0)", "=", "0")
+        rhs.highlight_by_tex("\\sin", self.colors[1])
+        rhs.scale(0.75)
+        rhs.next_to(
+            derivative, RIGHT,
+            align_using_submobjects = True
+        )
+
+        self.cosine_derivative = VGroup(derivative, rhs)
+        return self.cosine_derivative
+
+    def get_cosine_second_derivative(self):
+        if not hasattr(self, "cosine_derivative"):
+            self.get_cosine_derivative()
+        second_deriv = TexMobject(
+            "{d^2(", "\\cos", ")", "\\over", "dx}", 
+            "(", "0", ")",
+        )
+        second_deriv.highlight_by_tex("cos", self.colors[0])
+        second_deriv.highlight_by_tex("-\\cos", self.colors[2])
+        second_deriv.scale(0.75)
+        second_deriv.add_background_rectangle()
+        second_deriv.next_to(
+            self.cosine_derivative, DOWN,
+            buff = MED_LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+        rhs = TexMobject("=", "-\\cos(0)", "=", "-1")
+        rhs.highlight_by_tex("cos", self.colors[2])
+        rhs.scale(0.8)
+        rhs.next_to(
+            second_deriv, RIGHT, 
+            align_using_submobjects = True
+        )
+
+        self.cosine_second_derivative = VGroup(second_deriv, rhs)
+        return self.cosine_second_derivative
+
+class ReflectOnQuadraticApproximation(TeacherStudentsScene):
+    def construct(self):
+        self.show_example_approximation()
+        self.add_polynomial()
+        self.show_c0()
+        self.show_c1()
+        self.show_c2()
+
+    def show_example_approximation(self):
+        approx_at_x, approx_at_point = [
+            TexMobject(
+                "\\cos(", s, ")", "\\approx",
+                "1 - \\frac{1}{2}", "(", s, ")", "^2"
+            ).next_to(self.get_students(), UP, 2)
+            for s in "x", "0.1",
+        ]
+        approx_rhs = TexMobject("=", "0.995")
+        approx_rhs.next_to(approx_at_point, RIGHT)
+        real_result = TexMobject(
+            "\\cos(", "0.1", ")", "=", 
+            "%.7f"%np.cos(0.1)
+        )
+        real_result.shift(
+            approx_rhs.get_part_by_tex("=").get_center() -\
+            real_result.get_part_by_tex("=").get_center()
+        )
+        for mob in approx_at_point, real_result:
+            mob.highlight_by_tex("0.1", YELLOW)
+        real_result.set_fill(opacity = 0)
+
+        self.play(
+            Write(approx_at_x, run_time = 2),
+            self.teacher.change_mode, "raise_right_hand"
+        )
+        self.dither(2)
+        self.play(ReplacementTransform(
+            approx_at_x, approx_at_point,
+        ))
+        self.dither()
+        self.play(Write(approx_rhs))
+        self.dither(2)
+        self.play(
+            real_result.shift, 1.5*DOWN,
+            real_result.set_fill, None, 1,
+        )
+        self.change_student_modes(*["hooray"]*3)
+        self.dither(2)
+        self.change_student_modes(
+            *["plain"]*3,
+            added_anims = map(FadeOut, [
+                approx_at_point, approx_rhs, real_result
+            ]),
+            look_at_arg = approx_at_x
+        )
+
+    def add_polynomial(self):
+        polynomial = self.get_polynomial()
+        const_terms = polynomial.get_parts_by_tex("c")
+
+        self.play(
+            Write(polynomial),
+            self.teacher.change, "pondering"
+        )
+        self.dither(2)
+        self.play(*[
+            ApplyMethod(
+                const.shift, MED_LARGE_BUFF*UP,
+                run_time = 2,
+                rate_func = squish_rate_func(there_and_back, a, a+0.7)
+            )
+            for const, a in zip(const_terms, np.linspace(0, 0.3, len(const_terms)))
+        ])
+        self.dither()
+
+        self.const_terms = const_terms
+        self.polynomial = polynomial
+
+    def show_c0(self):
+        c0 = self.polynomial.get_part_by_tex("c_0")
+        c0.save_state()
+        equation = TexMobject("P(0) = \\cos(0)")
+        equation.to_corner(UP+RIGHT)
+        new_polynomial = self.get_polynomial(c0 = "1")
+
+        self.play(c0.shift, UP)
+        self.play(Write(equation))
+        self.dither()
+        self.play(Transform(self.polynomial, new_polynomial))
+        self.play(FadeOut(equation))
+
+    def show_c1(self):
+        c1 = self.polynomial.get_part_by_tex("c_1")
+        c1.save_state()
+        equation = TexMobject(
+            "\\frac{dP}{dx}(0) = \\frac{d(\\cos)}{dx}(0)"
+        )
+        equation.to_corner(UP+RIGHT)
+        new_polynomial = self.get_polynomial(c0 = "1", c1 = "0")
+
+        self.play(c1.shift, UP)
+        self.play(Write(equation))
+        self.dither()
+        self.play(Transform(self.polynomial, new_polynomial))
+        self.dither()
+        self.play(FadeOut(equation))
+
+    def show_c2(self):
+        c2 = self.polynomial.get_part_by_tex("c_2")
+        c2.save_state()
+        equation = TexMobject(
+            "\\frac{d^2 P}{dx^2}(0) = \\frac{d^2(\\cos)}{dx^2}(0)"
+        )
+        equation.to_corner(UP+RIGHT)
+        alt_c2_tex = "\\text{\\tiny $\\left(-\\frac{1}{2}\\right)$}"
+        new_polynomial = self.get_polynomial(
+            c0 = "1", c1 = "0", c2 = alt_c2_tex
+        )
+        new_polynomial.get_part_by_tex(alt_c2_tex).shift(SMALL_BUFF*UP)
+
+        self.play(c2.shift, UP)
+        self.play(FadeIn(equation))
+        self.dither(2)
+        self.play(Transform(self.polynomial, new_polynomial))
+        self.dither(2)
+        self.play(FadeOut(equation))
+
+    #####
+
+    def get_polynomial(self, c0 = "c_0", c1 = "c_1", c2 = "c_2"):
+        polynomial = TexMobject(
+            "P(x) = ", c0, "+", c1, "x", "+", c2, "x^2"
+        )
+        colors = ConstructQuadraticApproximation.CONFIG["colors"]
+        for tex, color in zip([c0, c1, c2], colors):
+            polynomial.highlight_by_tex(tex, color, substring = False)
+
+        polynomial.next_to(self.teacher, UP, LARGE_BUFF)
+        polynomial.to_edge(RIGHT)
+        return polynomial
+
+class ReflectionOnQuadraticSupplement(ConstructQuadraticApproximation):
+    def construct(self):
+        self.setup_axes()
+        self.add(self.get_graph(np.cos, color = self.colors[0]))
+        quadratic_graph = self.get_quadratic_graph()
+        self.add(quadratic_graph)
+
+        self.dither()
+        for c0 in 0, 2, 1:
+            self.change_quadratic_graph(
+                quadratic_graph,
+                c0 = c0
+            )
+        self.dither(2)
+        for c1 in 1, -1, 0:
+            self.change_quadratic_graph(
+                quadratic_graph,
+                c1 = c1
+            )
+        self.dither(2)
+        for c2 in -0.1, -1, -0.5:
+            self.change_quadratic_graph(
+                quadratic_graph,
+                c2 = c2
+            )
+        self.dither(2)
+
+class SimilarityOfChangeBehavior(ConstructQuadraticApproximation):
+    def construct(self):
+        colors = [YELLOW, WHITE]
+        max_x = np.pi/2
+
+        self.setup_axes()        
+        cosine_graph = self.get_graph(np.cos, color = self.colors[0])
+        quadratic_graph = self.get_quadratic_graph()
+        graphs = VGroup(cosine_graph, quadratic_graph)
+        dots = VGroup()
+        for graph, color in zip(graphs, colors):
+            dot = Dot(color = color)
+            dot.move_to(self.input_to_graph_point(0, graph))
+            dot.graph = graph
+            dots.add(dot)
+
+        def update_dot(dot, alpha):
+            x = interpolate(0, max_x, alpha)
+            dot.move_to(self.input_to_graph_point(x, dot.graph))
+        dot_anims = [
+            UpdateFromAlphaFunc(dot, update_dot, run_time = 3)
+            for dot in dots
+        ]
+        tangent_lines = VGroup(*[
+            self.get_tangent_line(0, graph, color)
+            for graph, color in zip(graphs, colors)
+        ])
+        tangent_line_movements = [
+            self.get_tangent_line_change_anim(
+                line, max_x, graph,
+                run_time = 5,
+            )
+            for line, graph in zip(tangent_lines, graphs)
+        ]
+
+        self.add(cosine_graph, quadratic_graph)
+        self.play(FadeIn(dots))
+        self.play(*dot_anims)
+        self.play(
+            FadeIn(tangent_lines),
+            FadeOut(dots)
+        )
+        self.play(*tangent_line_movements + dot_anims, run_time = 6)
+        self.play(*map(FadeOut, [tangent_lines, dots]))
+        self.dither()
+
+class MoreTerms(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "More terms!",
+            target_mode = "surprised",
+        )
+        self.change_student_modes(*["hooray"]*3)
+        self.dither(3)
+
+class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
+    CONFIG = {
+        "colors": [BLUE, YELLOW, GREEN, RED, MAROON_B],
+    }
+    def construct(self):
+        self.force_skipping()
+
+        self.add_background()
+        self.take_third_derivative_of_cubic()
+        self.show_third_derivative_of_cosine()
+        self.add_quartic_term()
+        self.show_fourth_derivative_of_cosine()
+        self.take_fourth_derivative_of_quartic()
+        self.solve_for_c4()
+        self.show_quartic_approximation()
 
 
+    def add_background(self):
+        self.setup_axes()
+        self.cosine_graph = self.get_graph(
+            np.cos, color = self.colors[0]
+        )
+        self.quadratic_graph = self.get_quadratic_graph()
+        self.big_rect = Rectangle(
+            height = 2*SPACE_HEIGHT,
+            width = 2*SPACE_WIDTH,
+            stroke_width = 0,
+            fill_color = BLACK,
+            fill_opacity = 0.5,
+        )
+        self.add(
+            self.cosine_graph, self.quadratic_graph,
+            self.big_rect
+        )
+
+        self.cosine_label = TexMobject("\\cos", "(0)", "=1")
+        self.cosine_label.highlight_by_tex("cos", self.colors[0])
+        self.cosine_label.scale(0.75)
+        self.cosine_label.to_corner(UP+LEFT)
+        self.add(self.cosine_label)
+        self.add(self.get_cosine_derivative())
+        self.add(self.get_cosine_second_derivative())
+
+        self.polynomial = TexMobject(
+            "P(x)=", "1", "-\\frac{1}{2}", "x^2"
+        )
+        self.polynomial.highlight_by_tex("1", self.colors[0])
+        self.polynomial.highlight_by_tex("-\\frac{1}{2}", self.colors[2])
+        self.polynomial.to_corner(UP+RIGHT)
+        self.polynomial.quadratic_part = VGroup(
+            *self.polynomial[1:]
+        )
+        self.add(self.polynomial)
+
+    def take_third_derivative_of_cubic(self):
+        polynomial = self.polynomial
+        plus_cubic_term = TexMobject("+\\,", "c_3", "x^3")
+        plus_cubic_term.next_to(polynomial, RIGHT)
+        plus_cubic_term.to_edge(RIGHT, buff = LARGE_BUFF)
+        plus_cubic_term.highlight_by_tex("c_3", self.colors[3])
+        plus_cubic_copy = plus_cubic_term.copy()
+
+        polynomial.generate_target()
+        polynomial.target.next_to(plus_cubic_term, LEFT)
+
+        self.play(FocusOn(polynomial))
+        self.play(
+            MoveToTarget(polynomial),
+            GrowFromCenter(plus_cubic_term)
+        )
+        self.dither()
+
+        brace = Brace(polynomial.quadratic_part, DOWN)
+        third_derivative = TexMobject(
+            "\\frac{d^3 P}{dx^3}(x) = ", "0"
+        )
+        third_derivative.shift(
+            brace.get_bottom() + MED_SMALL_BUFF*DOWN -\
+            third_derivative.get_part_by_tex("0").get_top()
+        )        
+
+        self.play(Write(third_derivative[0]))
+        self.play(GrowFromCenter(brace))
+        self.play(ReplacementTransform(
+            polynomial.quadratic_part.copy(),
+            VGroup(third_derivative[1])
+        ))
+        self.dither(2)
+        self.play(plus_cubic_copy.next_to, third_derivative, RIGHT)
+        derivative_term = self.take_derivatives_of_monomial(
+            VGroup(*plus_cubic_copy[1:])
+        )
+        third_derivative.add(derivative_term)
+
+        self.polynomial_third_derivative = third_derivative
+
+    def show_third_derivative_of_cosine(self):
+        pass
+
+    def add_quartic_term(self):
+        pass
+
+    def show_fourth_derivative_of_cosine(self):
+        pass
+
+    def take_fourth_derivative_of_quartic(self):
+        pass
+
+    def solve_for_c4(self):
+        pass
+
+    def show_quartic_approximation(self):
+        pass
 
 
+    ####
 
+    def take_derivatives_of_monomial(self, term):
+        """
+        Must be a group of pure TexMobjects,
+        last part must be of the form x^n
+        """
+        n = int(term[-1].get_tex_string()[-1])
+        curr_term = term
+        for k in range(n, 0, -1):
+            exponent = curr_term[-1][-1]
+            exponent_copy = exponent.copy()
+            front_num = TexMobject("%d \\cdot"%k)
+            front_num.move_to(curr_term[0][0], DOWN+LEFT)
+
+            new_monomial = TexMobject("x^%d"%(k-1))
+            new_monomial.replace(curr_term[-1])
+            Transform(curr_term[-1], new_monomial).update(1)
+            curr_term.generate_target()
+            curr_term.target.shift(
+                (front_num.get_width()+SMALL_BUFF)*RIGHT
+            )
+            curr_term[-1][-1].set_fill(opacity = 0)
+
+            self.play(
+                ApplyMethod(
+                    exponent_copy.replace, front_num[0],
+                    path_arc = np.pi,
+                ),
+                Write(
+                    front_num[1], 
+                    rate_func = squish_rate_func(smooth, 0.5, 1)
+                ),
+                MoveToTarget(curr_term),
+                run_time = 2
+            )
+            self.remove(exponent_copy)
+            self.add(front_num)
+            curr_term = VGroup(front_num, *curr_term)
+        self.dither()
+        self.play(FadeOut(curr_term[-1]))
+
+        return VGroup(*curr_term[:-1])
 
 
 
