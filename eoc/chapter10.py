@@ -881,12 +881,12 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos, ZoomedScene):
         second_deriv, rhs = self.get_cosine_second_derivative()
 
         self.play(FadeIn(
-            VGroup(second_deriv, *rhs[:2]),
+            VGroup(second_deriv, *rhs[1][:2]),
             run_time = 2,
             submobject_mode = "lagged_start"
         ))
         self.dither(3)
-        self.play(Write(VGroup(*rhs[2:]), run_time = 2))
+        self.play(Write(VGroup(*rhs[1][2:]), run_time = 2))
         self.dither()
 
     def show_matching_curvature(self):
@@ -1081,7 +1081,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos, ZoomedScene):
         if not hasattr(self, "cosine_derivative"):
             self.get_cosine_derivative()
         second_deriv = TexMobject(
-            "{d^2(", "\\cos", ")", "\\over", "dx}", 
+            "{d^2(", "\\cos", ")", "\\over", "dx^2}", 
             "(", "0", ")",
         )
         second_deriv.highlight_by_tex("cos", self.colors[0])
@@ -1100,6 +1100,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos, ZoomedScene):
             second_deriv, RIGHT, 
             align_using_submobjects = True
         )
+        rhs.add_background_rectangle()
 
         self.cosine_second_derivative = VGroup(second_deriv, rhs)
         return self.cosine_second_derivative
@@ -1331,11 +1332,11 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
         "colors": [BLUE, YELLOW, GREEN, RED, MAROON_B],
     }
     def construct(self):
-        self.force_skipping()
-
         self.add_background()
         self.take_third_derivative_of_cubic()
         self.show_third_derivative_of_cosine()
+        self.set_c3_to_zero()
+        self.show_cubic_curves()
         self.add_quartic_term()
         self.show_fourth_derivative_of_cosine()
         self.take_fourth_derivative_of_quartic()
@@ -1418,38 +1419,200 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
         derivative_term = self.take_derivatives_of_monomial(
             VGroup(*plus_cubic_copy[1:])
         )
-        third_derivative.add(derivative_term)
+        third_derivative.add(plus_cubic_copy[0], derivative_term)
 
+        self.plus_cubic_term = plus_cubic_term
         self.polynomial_third_derivative = third_derivative
+        self.polynomial_third_derivative_brace = brace
 
     def show_third_derivative_of_cosine(self):
-        pass
+        cosine_third_derivative = self.get_cosine_third_derivative()
+        dot = Dot(fill_opacity = 0.5)
+        dot.move_to(self.polynomial_third_derivative)
+
+        self.play(
+            dot.move_to, cosine_third_derivative,
+            dot.set_fill, None, 0
+        )
+        self.play(ReplacementTransform(
+            self.cosine_second_derivative.copy(),
+            cosine_third_derivative
+        ))
+        self.dither(2)
+        dot.set_fill(opacity = 0.5)
+        self.play(
+            dot.move_to, self.polynomial_third_derivative.get_right(),
+            dot.set_fill, None, 0,
+        )
+        self.dither()
+
+    def set_c3_to_zero(self):
+        c3s = VGroup(
+            self.polynomial_third_derivative[-1][-1],
+            self.plus_cubic_term.get_part_by_tex("c_3")
+        )
+        zeros = VGroup(*[
+            TexMobject("0").move_to(c3)
+            for c3 in c3s
+        ])
+        zeros.highlight(self.colors[3])
+        zeros.shift(SMALL_BUFF*UP)
+        zeros[0].shift(0.25*SMALL_BUFF*(UP+LEFT))
+
+        self.play(Transform(
+            c3s, zeros, 
+            run_time = 2,
+            submobject_mode = "lagged_start"
+        ))
+        self.dither(2)
+
+    def show_cubic_curves(self):
+        real_graph = self.quadratic_graph
+        real_graph.save_state()
+        graph = real_graph.copy()
+        graph.save_state()
+        alt_graphs = [
+            self.get_graph(func, color = real_graph.get_color())
+            for func in [
+                lambda x : x*(x-1)*(x+1),
+                lambda x : 1 - 0.5*(x**2) + 0.2*(x**3)
+            ]
+        ]
+
+        self.play(FadeIn(graph))
+        real_graph.set_stroke(width = 0)
+        for alt_graph in alt_graphs:
+            self.play(Transform(graph, alt_graph, run_time = 2))
+            self.dither()
+        self.play(graph.restore, run_time = 2)
+        real_graph.restore()
+        self.play(FadeOut(graph))
 
     def add_quartic_term(self):
-        pass
+        polynomial = self.polynomial
+        plus_quartic_term = TexMobject("+\\,", "c_4", "x^4")
+        plus_quartic_term.next_to(polynomial, RIGHT)
+        plus_quartic_term.highlight_by_tex("c_4", self.colors[4])
+
+        self.play(*map(FadeOut, [
+            self.plus_cubic_term,
+            self.polynomial_third_derivative,
+            self.polynomial_third_derivative_brace,
+        ]))
+        self.play(Write(plus_quartic_term))
+        self.dither()
+
+        self.plus_quartic_term = plus_quartic_term
 
     def show_fourth_derivative_of_cosine(self):
-        pass
+        cosine_fourth_derivative = self.get_cosine_fourth_derivative()
+
+        self.play(FocusOn(self.cosine_third_derivative))
+        self.play(ReplacementTransform(
+            self.cosine_third_derivative.copy(),
+            cosine_fourth_derivative
+        ))
+        self.dither(3)
 
     def take_fourth_derivative_of_quartic(self):
-        pass
+        quartic_term = VGroup(*self.plus_quartic_term.copy()[1:])
+        fourth_deriv_lhs = TexMobject("{d^4 P \\over dx^4}(x)", "=")
+        fourth_deriv_lhs.next_to(
+            self.polynomial, DOWN,
+            buff = MED_LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+        alt_rhs = TexMobject("=", "24 \\cdot", "c_4")
+        alt_rhs.next_to(
+            fourth_deriv_lhs.get_part_by_tex("="), DOWN,
+            buff = LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+        alt_rhs.highlight_by_tex("c_4", self.colors[4])
+
+        self.play(Write(fourth_deriv_lhs))
+        self.play(
+            quartic_term.next_to, fourth_deriv_lhs, RIGHT
+        )
+        self.dither()
+        fourth_deriv_rhs = self.take_derivatives_of_monomial(quartic_term)
+        self.dither()
+        self.play(Write(alt_rhs))
+        self.dither()
+
+        self.fourth_deriv_lhs = fourth_deriv_lhs
+        self.fourth_deriv_rhs = fourth_deriv_rhs
+        self.fourth_deriv_alt_rhs = alt_rhs
 
     def solve_for_c4(self):
-        pass
+        c4s = VGroup(
+            self.fourth_deriv_alt_rhs.get_part_by_tex("c_4"),
+            self.fourth_deriv_rhs[-1],
+            self.plus_quartic_term.get_part_by_tex("c_4")
+        )
+        fraction = TexMobject("\\text{\\small $\\frac{1}{24}$}")
+        fraction.highlight(self.colors[4])
+        fractions = VGroup(*[
+            fraction.copy().move_to(c4, LEFT)
+            for c4 in c4s
+        ])
+        fractions.shift(SMALL_BUFF*UP)
+        x_to_4 = self.plus_quartic_term.get_part_by_tex("x^4")
+        x_to_4.generate_target()
+        x_to_4.target.shift(MED_SMALL_BUFF*RIGHT)
+
+        self.play(
+            Transform(
+                c4s, fractions,
+                run_time = 3,
+                submobject_mode = "lagged_start",
+            ),
+            MoveToTarget(x_to_4, run_time = 2)
+        )
+        self.dither(3)
 
     def show_quartic_approximation(self):
-        pass
+        real_graph = self.quadratic_graph
+        graph = real_graph.copy()
+        quartic_graph = self.get_graph(
+            lambda x : 1 - (x**2)/2.0 + (x**4)/24.0,
+            color = graph.get_color(),
+        )
+        tex_mobs = VGroup(*[
+            self.polynomial,
+            self.fourth_deriv_rhs,
+            self.fourth_deriv_alt_rhs,
+            self.cosine_label,
+            self.cosine_derivative,
+            self.cosine_second_derivative,
+            self.cosine_third_derivative[1],
+        ])
+        for tex_mob in tex_mobs:
+            tex_mob.add_to_back(BackgroundRectangle(tex_mob))
+
+
+        self.play(FadeIn(graph))
+        real_graph.set_stroke(width = 0)
+        self.play(
+            Transform(
+                graph, quartic_graph,
+                run_time = 3,
+            ),
+            Animation(tex_mobs)
+        )
+        self.dither(3)
 
 
     ####
 
-    def take_derivatives_of_monomial(self, term):
+    def take_derivatives_of_monomial(self, term, *added_anims):
         """
         Must be a group of pure TexMobjects,
         last part must be of the form x^n
         """
         n = int(term[-1].get_tex_string()[-1])
         curr_term = term
+        added_anims_iter = iter(added_anims)
         for k in range(n, 0, -1):
             exponent = curr_term[-1][-1]
             exponent_copy = exponent.copy()
@@ -1465,6 +1628,12 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
             )
             curr_term[-1][-1].set_fill(opacity = 0)
 
+            possibly_added_anims = []
+            try:
+                possibly_added_anims.append(added_anims_iter.next())
+            except:
+                pass
+
             self.play(
                 ApplyMethod(
                     exponent_copy.replace, front_num[0],
@@ -1475,6 +1644,7 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
                     rate_func = squish_rate_func(smooth, 0.5, 1)
                 ),
                 MoveToTarget(curr_term),
+                *possibly_added_anims,
                 run_time = 2
             )
             self.remove(exponent_copy)
@@ -1485,12 +1655,128 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
 
         return VGroup(*curr_term[:-1])
 
+    def get_cosine_third_derivative(self):
+        if not hasattr(self, "cosine_second_derivative"):
+            self.get_cosine_second_derivative()
+        third_deriv = TexMobject(
+            "{d^3(", "\\cos", ")", "\\over", "dx^3}", 
+            "(", "0", ")",
+        )
+        third_deriv.highlight_by_tex("cos", self.colors[0])
+        third_deriv.highlight_by_tex("-\\cos", self.colors[3])
+        third_deriv.scale(0.75)
+        third_deriv.add_background_rectangle()
+        third_deriv.next_to(
+            self.cosine_second_derivative, DOWN,
+            buff = MED_LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+        rhs = TexMobject("=", "\\sin(0)", "=", "0")
+        rhs.highlight_by_tex("sin", self.colors[3])
+        rhs.scale(0.8)
+        rhs.next_to(
+            third_deriv, RIGHT, 
+            align_using_submobjects = True
+        )
+        rhs.add_background_rectangle()
+        rhs.background_rectangle.scale_in_place(1.2)
 
+        self.cosine_third_derivative = VGroup(third_deriv, rhs)
+        return self.cosine_third_derivative
 
+    def get_cosine_fourth_derivative(self):
+        if not hasattr(self, "cosine_third_derivative"):
+            self.get_cosine_third_derivative()
+        fourth_deriv = TexMobject(
+            "{d^4(", "\\cos", ")", "\\over", "dx^4}", 
+            "(", "0", ")",
+        )
+        fourth_deriv.highlight_by_tex("cos", self.colors[0])
+        fourth_deriv.scale(0.75)
+        fourth_deriv.add_background_rectangle()
+        fourth_deriv.next_to(
+            self.cosine_third_derivative, DOWN,
+            buff = MED_LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+        rhs = TexMobject("=", "\\cos(0)", "=", "1")
+        rhs.highlight_by_tex("cos", self.colors[4])
+        rhs.scale(0.8)
+        rhs.next_to(
+            fourth_deriv, RIGHT, 
+            align_using_submobjects = True
+        )
+        rhs.add_background_rectangle()
+        rhs.background_rectangle.scale_in_place(1.2)
 
+        self.cosine_fourth_derivative = VGroup(fourth_deriv, rhs)
+        return self.cosine_fourth_derivative
 
+class NoticeAFewThings(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Notice a few things",
+            target_mode = "hesitant"
+        )
+        self.dither(3)
 
+class FactorialTerms(CubicAndQuarticApproximations):
+    def construct(self):
+        lhs_list = [
+            TexMobject(
+                "{d%s"%s, "\\over", "dx%s}"%s, "(", "c_8", "x^8", ")="
+            )
+            for i in range(9)
+            for s in ["^%d"%i if i > 1 else ""]
+        ]
+        for lhs in lhs_list:
+            lhs.highlight_by_tex("c_8", YELLOW)
+            lhs.next_to(ORIGIN, LEFT)
+        lhs_list[0].set_fill(opacity = 0)
+        added_anims = [
+            ReplacementTransform(
+                start_lhs, target_lhs,
+                rate_func = squish_rate_func(smooth, 0, 0.5)
+            )
+            for start_lhs, target_lhs in zip(lhs_list, lhs_list[1:])
+        ]
 
+        term = TexMobject("c_8", "x^8")
+        term.next_to(lhs[-1], RIGHT)
+        term.highlight_by_tex("c_8", YELLOW)
+
+        self.add(term)
+        self.dither()
+        result = self.take_derivatives_of_monomial(term, *added_anims)
+
+        factorial_term = VGroup(*result[:-1])
+        brace = Brace(factorial_term)
+        eight_factorial = brace.get_text("$8!$")
+
+        coefficient = result[-1]
+        words = TextMobject(
+            "Set", "$c_8$", 
+            "$ = \\frac{\\text{Desired derivative value}}{8!}"
+        )
+        words.highlight_by_tex("c_8", YELLOW)
+        words.shift(2*UP)
+
+        self.play(
+            GrowFromCenter(brace),
+            Write(eight_factorial)
+        )
+        self.play(
+            ReplacementTransform(
+                coefficient.copy(),
+                words.get_part_by_tex("c_8")
+            ),
+            Write(words),
+        )
+        self.dither(2)
+
+class HigherTermsDontMessUpLowerTerms(Scene):
+    def construct(self):
+        pass
 
 
 
