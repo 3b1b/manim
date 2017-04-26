@@ -77,6 +77,27 @@ class Speedometer(VMobject):
         self.rotate_needle(target_angle - self.get_needle_angle())
         return self
 
+class AoPSLogo(SVGMobject):
+    CONFIG = {
+        "file_name" : "aops_logo",
+        "height" : 1.5,
+    }
+    def __init__(self, **kwargs):
+        SVGMobject.__init__(self, **kwargs)
+        self.set_stroke(WHITE, width = 0)
+        colors = [BLUE_E, "#008445", GREEN_B]
+        index_lists = [
+            (10, 11, 12, 13, 14, 21, 22, 23, 24, 27, 28, 29, 30),
+            (0, 1, 2, 3, 4, 15, 16, 17, 26),
+            (5, 6, 7, 8, 9, 18, 19, 20, 25)
+        ]
+        for color, index_list in zip(colors, index_lists):
+            for i in index_list:
+                self.submobjects[i].set_fill(color, opacity = 1)
+
+        self.scale_to_fit_height(self.height)
+        self.center()
+
 class PartyHat(SVGMobject):
     CONFIG = {
         "file_name" : "party_hat",
