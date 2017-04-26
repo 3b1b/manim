@@ -65,11 +65,25 @@ class Line(VMobject):
     CONFIG = {
         "buff" : 0,
         "considered_smooth" : False,
+        "path_arc" : None,
+        "n_arc_anchors" : 10, #Only used if path_arc is not None
     }
     def __init__(self, start, end, **kwargs):
         digest_config(self, kwargs)
         self.set_start_and_end(start, end)
         VMobject.__init__(self, **kwargs)
+
+    def generate_points(self):
+        if self.path_arc is None:
+            self.set_points_as_corners([self.start, self.end])
+        else:
+            path_func = path_along_arc(self.path_arc)
+            self.set_points_smoothly([
+                path_func(self.start, self.end, alpha)
+                for alpha in np.linspace(0, 1, self.n_arc_anchors)
+            ])
+            self.considered_smooth = True
+
 
     def set_start_and_end(self, start, end):
         start_to_end = self.pointify(end) - self.pointify(start)
@@ -94,9 +108,6 @@ class Line(VMobject):
             return mob_or_point.get_center()
         return np.array(mob_or_point)
 
-    def generate_points(self):
-        self.set_points_as_corners([self.start, self.end])
-
     def get_length(self):
         start, end = self.get_start_and_end()
         return np.linalg.norm(start - end)
@@ -111,7 +122,7 @@ class Line(VMobject):
         return self.points[-1]
 
     def get_slope(self):
-        end = self.get_end()
+        start, end = self.get_start_and_end()
         rise, run = [
             float(end[i] - start[i])
             for i in [1, 0]
@@ -187,9 +198,10 @@ class Arrow(Line):
         self.add_tip()
 
     def add_tip(self, add_at_end = True):
-        vect = self.tip_length*RIGHT
-        vect = rotate_vector(vect, self.get_angle()+np.pi)
         start, end = self.get_start_and_end()
+        anchors = self.get_anchors()
+        vect = anchors[-1] - anchors[-2]
+        vect *= -self.tip_length / np.linalg.norm(vect)
         if not add_at_end:
             start, end = end, start
             vect = -vect
@@ -207,9 +219,6 @@ class Arrow(Line):
         self.tip.set_anchor_points(
             [tip_points[0], end, tip_points[1]],
             mode = "corners"
-        )
-        self.set_points_as_corners(
-            [start, center_of_mass(tip_points)]
         )
         self.add(self.tip)
         self.init_colors()
