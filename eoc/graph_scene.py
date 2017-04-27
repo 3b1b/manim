@@ -34,6 +34,8 @@ class GraphScene(Scene):
         "default_graph_colors" : [BLUE, GREEN, YELLOW],
         "default_derivative_color" : GREEN,
         "default_input_color" : YELLOW,
+        "default_riemann_start_color" : BLUE,
+        "default_riemann_end_color" : GREEN,
     }
     def setup(self):
         self.default_graph_colors_cycle = it.cycle(self.default_graph_colors)
@@ -201,13 +203,17 @@ class GraphScene(Scene):
         stroke_width = 1,
         stroke_color = BLACK,
         fill_opacity = 1,
-        start_color = BLUE,
-        end_color = GREEN,
+        start_color = None,
+        end_color = None,
         show_signed_area = True,
         width_scale_factor = 1.001
         ):
         x_min = x_min if x_min is not None else self.x_min
         x_max = x_max if x_max is not None else self.x_max
+        if start_color is None:
+            start_color = self.default_riemann_start_color
+        if end_color is None:
+            end_color = self.default_riemann_end_color
         rectangles = VGroup()
         x_range = np.arange(x_min, x_max, dx) 
         colors = color_gradient([start_color, end_color], len(x_range))

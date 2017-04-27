@@ -1519,6 +1519,8 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
         "y_axis_label" : "",
         "num_rects" : 400,
         "dT" : 0.25,
+        "variable_point_label" : "T",
+        "area_opacity" : 0.8,
     }
     def setup(self):
         PlotVelocity.setup(self)
@@ -1719,7 +1721,7 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
         triangle.move_to(self.coords_to_point(x_val, 0), UP)
         triangle.set_fill(WHITE, 1)
         triangle.set_stroke(width = 0)
-        T_label = TexMobject("T")
+        T_label = TexMobject(self.variable_point_label)
         T_label.next_to(triangle, DOWN)
         v_line = self.get_vertical_line_to_graph(
             x_val, self.v_graph,
@@ -1745,7 +1747,7 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
             x_max = t_max,
             dx = dx,
             stroke_width = 0,
-        ).set_fill(opacity = 0.8)
+        ).set_fill(opacity = self.area_opacity)
 
     def change_area_bounds(self, new_t_min = None, new_t_max = None, **kwargs):
         curr_t_min = self.x_axis.point_to_number(self.area.get_left())

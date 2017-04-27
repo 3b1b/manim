@@ -28,6 +28,7 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
 from eoc.graph_scene import GraphScene
+from eoc.chapter8 import AreaIsDerivative
 from topics.common_scenes import OpeningQuote, PatreonThanks
 
 def derivative(func, x, n = 1, dx = 0.01):
@@ -49,7 +50,7 @@ def taylor_approximation(func, highest_term, center_point = 0):
         for n, d in enumerate(derivatives)
     ]
     return lambda x : sum([
-        c*(x**n) 
+        c*((x-center_point)**n) 
         for n, c in enumerate(coefficients)
     ])
 
@@ -538,17 +539,17 @@ class ExampleApproximationWithCos(ExampleApproximationWithSine):
             (np.pi, "\\pi"),
             (2*np.pi, "2\\pi"),
         ]
+        self.x_axis_labels = VGroup()
         for x_val, label in x_val_label_pairs:
             tex = TexMobject(label)
             tex.next_to(self.coords_to_point(x_val, 0), DOWN)
             self.add(tex)
+            self.x_axis_labels.add(tex)
 
-class ConstructQuadraticApproximation(ExampleApproximationWithCos, ZoomedScene):
+class ConstructQuadraticApproximation(ExampleApproximationWithCos):
     CONFIG = {
         "x_axis_label" : "$x$",
         "colors" : [BLUE, YELLOW, GREEN],
-        "zoomed_canvas_corner" : DOWN+LEFT,
-        "zoom_factor" : 2,
     }
     def construct(self):
         self.setup_axes()
@@ -757,19 +758,11 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos, ZoomedScene):
         self.change_quadratic_graph(
             self.quadratic_graph, 1, 1, -0.1
         )
-        self.dither()
-        self.activate_zooming()
-        self.little_rectangle.move_to(graph_point_at_zero)
-        self.play(
-            self.little_rectangle.scale_in_place, 0.1,
-        )
-        self.dither()
+        self.dither(2)
         self.change_quadratic_graph(
             self.quadratic_graph, 1, 0, -0.1
         )
-        self.dither()
-        self.disactivate_zooming()
-        self.dither()
+        self.dither(2)
 
         self.tangent_line = tangent_line
 
@@ -1617,7 +1610,7 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
             exponent = curr_term[-1][-1]
             exponent_copy = exponent.copy()
             front_num = TexMobject("%d \\cdot"%k)
-            front_num.move_to(curr_term[0][0], DOWN+LEFT)
+            front_num.move_to(curr_term[0][0], LEFT)
 
             new_monomial = TexMobject("x^%d"%(k-1))
             new_monomial.replace(curr_term[-1])
@@ -1775,8 +1768,1156 @@ class FactorialTerms(CubicAndQuarticApproximations):
         self.dither(2)
 
 class HigherTermsDontMessUpLowerTerms(Scene):
+    CONFIG = {
+        "colors" : CubicAndQuarticApproximations.CONFIG["colors"][::2],
+
+    }
     def construct(self):
-        pass
+        self.add_polynomial()
+        self.show_second_derivative()
+
+    def add_polynomial(self):
+        c0_tex = "1"
+        c2_tex = "\\text{\\small $\\left(-\\frac{1}{2}\\right)$}"
+        c4_tex = "c_4"
+
+        polynomial = TexMobject(
+            "P(x) = ", 
+            c0_tex, "+", 
+            c2_tex, "x^2", "+",
+            c4_tex, "x^4",
+        )
+        polynomial.shift(2*LEFT + UP)
+        c0, c2, c4 = [
+            polynomial.get_part_by_tex(tex)
+            for tex in c0_tex, c2_tex, c4_tex
+        ]
+        for term, color in zip([c0, c2, c4], self.colors):
+            term.highlight(color)
+        arrows = VGroup(*[
+            Arrow(
+                c4.get_top(), c.get_top(), 
+                path_arc = arc,
+                color = c.get_color()
+            )
+            for c, arc in (c2, 0.9*np.pi), (c0, np.pi)
+        ])
+        no_affect_words = TextMobject(
+            "Doesn't affect \\\\ previous terms"
+        )
+        no_affect_words.next_to(arrows, RIGHT)
+        no_affect_words.shift(MED_SMALL_BUFF*(UP+LEFT))
+
+        self.add(*polynomial[:-2])
+        self.dither()
+        self.play(Write(VGroup(*polynomial[-2:])))
+        self.play(
+            Write(no_affect_words),
+            ShowCreation(arrows),
+            run_time = 3
+        )
+        self.dither(2)
+
+        self.polynomial = polynomial
+        self.c0_tex = c0_tex
+        self.c2_tex = c2_tex
+        self.c4_tex = c4_tex
+
+    def show_second_derivative(self):
+        second_deriv = TexMobject(
+            "{d^2 P \\over dx^2}(", "0", ")", "=",
+            "2", self.c2_tex, "+", 
+            "3 \\cdot 4", self.c4_tex, "(", "0", ")", "^2"
+        )
+        second_deriv.highlight_by_tex(self.c2_tex, self.colors[1])
+        second_deriv.highlight_by_tex(self.c4_tex, self.colors[2])
+        second_deriv.highlight_by_tex("0", YELLOW)
+        second_deriv.next_to(
+            self.polynomial, DOWN,
+            buff = MED_LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+        higher_terms = VGroup(*second_deriv[-6:])
+        brace = Brace(higher_terms, DOWN)
+        equals_zero = brace.get_text("=0")
+
+        second_deriv.save_state()
+        second_deriv.move_to(self.polynomial, LEFT)
+        second_deriv.set_fill(opacity = 0)
+
+        self.play(second_deriv.restore)
+        self.dither()
+        self.play(GrowFromCenter(brace))
+        self.dither()
+        self.play(Write(equals_zero))
+        self.dither(3)
+
+class ApproximateNearNewPoint(CubicAndQuarticApproximations):
+    CONFIG = {
+        "target_approx_centers" : [-np.pi/2, np.pi/2, np.pi],
+    }
+    def construct(self):
+        self.setup_axes()
+        self.add_cosine_graph()
+        self.shift_approximation_center()
+        self.show_polynomials()
+
+    def add_cosine_graph(self):
+        self.cosine_graph = self.get_graph(
+            np.cos, self.colors[0]
+        )
+        self.add(self.cosine_graph)
+
+    def shift_approximation_center(self):
+        quartic_graph = self.get_quartic_approximation(0)
+        dot = Dot(color = YELLOW)
+        dot.move_to(self.coords_to_point(0, 1))
+
+        v_line = self.get_vertical_line_to_graph(
+            self.target_approx_centers[-1], self.cosine_graph,
+            line_class = DashedLine,
+            color = YELLOW
+        )
+        pi = self.x_axis_labels[1]
+        pi.add_background_rectangle()
+
+        self.play(
+            ReplacementTransform(
+                self.cosine_graph.copy(),
+                quartic_graph,
+            ),
+            DrawBorderThenFill(dot, run_time = 1)
+        )
+        for target, rt in zip(self.target_approx_centers, [3, 4, 4]):
+            self.change_approximation_center(
+                quartic_graph, dot, target, run_time = rt
+            )
+        self.play(
+            ShowCreation(v_line),
+            Animation(pi)
+        )
+        self.dither()
+
+    def change_approximation_center(self, graph, dot, target, **kwargs):
+        start = self.x_axis.point_to_number(dot.get_center())
+        def update_quartic(graph, alpha):
+            new_a = interpolate(start, target, alpha)
+            new_graph = self.get_quartic_approximation(new_a)
+            Transform(graph, new_graph).update(1)
+            return graph
+
+        def update_dot(dot, alpha):
+            new_x = interpolate(start, target, alpha)
+            dot.move_to(self.input_to_graph_point(new_x, self.cosine_graph))
+
+        self.play(
+            UpdateFromAlphaFunc(graph, update_quartic),
+            UpdateFromAlphaFunc(dot, update_dot),
+            **kwargs
+        )
+
+    def show_polynomials(self):
+        poly_around_pi = self.get_polynomial("(x-\\pi)", "\\pi")
+        poly_around_pi.to_corner(UP+LEFT)
+
+        randy = Randolph()
+        randy.to_corner(DOWN+LEFT)
+
+        self.play(FadeIn(
+            poly_around_pi,
+            run_time = 4,
+            submobject_mode = "lagged_start"
+        ))
+        self.dither(2)
+        self.play(FadeIn(randy))
+        self.play(randy.change, "confused", poly_around_pi)
+        self.play(Blink(randy))
+        self.dither(2)
+        self.play(randy.change_mode, "happy")
+        self.dither(2)
+
+    ###
+
+    def get_polynomial(self, arg, center_tex):
+        result = TexMobject(
+            "P_{%s}(x)"%center_tex, "=", "c_0", *it.chain(*[
+                ["+", "c_%d"%d, "%s^%d"%(arg, d)]
+                for d in range(1, 5)
+            ])
+        )
+        for d, color in enumerate(self.colors):
+            result.highlight_by_tex("c_%d"%d, color)
+        result.scale(0.85)
+        result.add_background_rectangle()
+        return result
+
+    def get_quartic_approximation(self, a):
+        coefficients = [
+            derivative(np.cos, a, n)
+            for n in range(5)
+        ]
+        func = lambda x : sum([
+            (c/math.factorial(n))*(x - a)**n
+            for n, c in enumerate(coefficients)
+        ])
+        return self.get_graph(func, color = GREEN)
+
+class TranslationOfInformation(CubicAndQuarticApproximations):
+    def construct(self):
+        self.add_background()
+        self.mention_information_exchange()
+        self.show_derivative_pattern()
+        self.show_polynomial()
+        self.name_taylor_polynomial()
+        self.draw_new_function_graph()
+        self.write_general_function_derivative()
+        self.replace_coefficients_in_generality()
+        self.walk_through_terms()
+        self.show_polynomial_around_a()
+
+    def add_background(self):
+        self.setup_axes()
+        self.cosine_graph = self.get_graph(
+            np.cos, color = self.colors[0]
+        )
+        self.add(self.cosine_graph)
+
+    def mention_information_exchange(self):
+        deriv_info = TextMobject(
+            "Derivative \\\\ information \\\\ at a point"
+        )
+        deriv_info.next_to(ORIGIN, LEFT, LARGE_BUFF)
+        deriv_info.to_edge(UP)
+        output_info = TextMobject(
+            "Output \\\\ information \\\\ near that piont"
+        )
+        output_info.next_to(ORIGIN, RIGHT, LARGE_BUFF)
+        output_info.to_edge(UP)
+        arrow = Arrow(deriv_info, output_info)
+
+        center_v_line = self.get_vertical_line_to_graph(
+            0, self.cosine_graph,
+            line_class = DashedLine,
+            color = YELLOW
+        )
+        outer_v_lines = VGroup(*[
+            center_v_line.copy().shift(vect)
+            for vect in LEFT, RIGHT
+        ])
+        outer_v_lines.highlight(GREEN)
+        dot = Dot(color = YELLOW)
+        dot.move_to(center_v_line.get_top())
+        dot.save_state()
+        dot.move_to(deriv_info)
+        dot.set_fill(opacity = 0)
+
+        quadratic_graph = self.get_quadratic_graph()
+
+
+        self.play(Write(deriv_info, run_time = 2))
+        self.play(dot.restore)
+        self.play(ShowCreation(center_v_line))
+        self.dither()
+        self.play(ShowCreation(arrow))
+        self.play(Write(output_info, run_time = 2))
+
+        self.play(ReplacementTransform(
+            VGroup(center_v_line).copy(), 
+            outer_v_lines
+        ))
+        self.play(ReplacementTransform(
+            self.cosine_graph.copy(),
+            quadratic_graph
+        ), Animation(dot))
+        for x in -1, 1, 0:
+            start_x = self.x_axis.point_to_number(dot.get_center())
+            self.play(UpdateFromAlphaFunc(
+                dot,
+                lambda d, a : d.move_to(self.input_to_graph_point(
+                    interpolate(start_x, x, a), 
+                    self.cosine_graph
+                )),
+                run_time = 2
+            ))
+        self.dither()
+        self.play(*map(FadeOut, [
+            deriv_info, arrow, output_info, outer_v_lines
+        ]))
+
+        self.quadratic_graph = quadratic_graph
+        self.v_line = center_v_line
+        self.dot = dot
+
+    def show_derivative_pattern(self):
+        derivs_at_x, derivs_at_zero = [
+            VGroup(*[
+                TexMobject(tex, "(", arg, ")")
+                for tex in [
+                    "\\cos", "-\\sin", 
+                    "-\\cos", "\\sin", "\\cos"
+                ]
+            ])
+            for arg in "x", "0"
+        ]
+        arrows = VGroup(*[
+            Arrow(
+                UP, ORIGIN, 
+                color = WHITE,
+                buff = 0,
+                tip_length = MED_SMALL_BUFF
+            ) 
+            for d in derivs_at_x
+        ])
+        group = VGroup(*it.chain(*zip(
+            derivs_at_x,
+            arrows
+        )))
+        group.add(TexMobject("\\vdots"))
+        group.arrange_submobjects(DOWN, buff = SMALL_BUFF)
+        group.scale_to_fit_height(2*SPACE_HEIGHT - MED_LARGE_BUFF)
+        group.to_edge(LEFT)
+        for dx, d0, color in zip(derivs_at_x, derivs_at_zero, self.colors):
+            for d in dx, d0:
+                d.highlight(color)
+            d0.replace(dx)
+        rhs_group = VGroup(*[
+            TexMobject("=", "%d"%d).scale(0.7).next_to(deriv, RIGHT)
+            for deriv, d in zip(derivs_at_zero, [1, 0, -1, 0, 1])
+        ])
+        derivative_values = VGroup(*[
+            rhs[1] for rhs in rhs_group
+        ])
+        for value, color in zip(derivative_values, self.colors):
+            value.highlight(color)
+        zeros = VGroup(*[
+            deriv.get_part_by_tex("0")
+            for deriv in derivs_at_zero
+        ])
+
+        self.play(FadeIn(derivs_at_x[0]))
+        self.dither()
+        for start_d, arrow, target_d in zip(group[::2], group[1::2], group[2::2]):
+            self.play(
+                ReplacementTransform(
+                    start_d.copy(), target_d
+                ),
+                ShowCreation(arrow)
+            )
+            self.dither()
+        self.dither()
+        self.play(ReplacementTransform(
+            derivs_at_x, derivs_at_zero
+        ))
+        self.dither()
+        self.play(*map(Write, rhs_group))
+        self.dither()
+        for rhs in rhs_group:
+            self.play(Indicate(rhs[1]), color = WHITE)
+        self.dither()
+        self.play(*[
+            ReplacementTransform(
+                zero.copy(), self.dot,
+                run_time = 3,
+                rate_func = squish_rate_func(smooth, a, a+0.4)
+            )
+            for zero, a in zip(zeros, np.linspace(0, 0.6, len(zeros)))
+        ])
+        self.dither()
+
+        self.cosine_derivative_group = VGroup(
+            derivs_at_zero, arrows, group[-1], rhs_group
+        )
+        self.derivative_values = derivative_values
+
+    def show_polynomial(self):
+        derivative_values = self.derivative_values.copy()
+        polynomial = self.get_polynomial("x", 1, 0, -1, 0, 1)
+        polynomial.to_corner(UP+RIGHT)
+
+        monomial = TexMobject("\\frac{1}{4!}", "x^4")
+        monomial = VGroup(VGroup(monomial[0]), monomial[1])
+        monomial.next_to(polynomial, DOWN, LARGE_BUFF)
+
+        self.play(*[
+            Transform(
+                dv, pc,
+                run_time = 2,
+                path_arc = np.pi/2
+            )
+            for dv, pc, a in zip(
+                derivative_values, 
+                polynomial.coefficients,
+                np.linspace(0, 0.6, len(derivative_values))
+            )
+        ])
+        self.play(
+            Write(polynomial, run_time = 5),
+            Animation(derivative_values)
+        )
+        self.remove(derivative_values)
+        self.dither(2)
+        to_fade = self.take_derivatives_of_monomial(monomial)
+        self.play(FadeOut(to_fade))
+        self.dither()
+
+        self.polynomial = polynomial
+
+    def name_taylor_polynomial(self):
+        brace = Brace(
+            VGroup(
+                self.polynomial.coefficients, 
+                self.polynomial.factorials
+            ),
+            DOWN
+        )
+        name = brace.get_text("``Taylor polynomial''")
+        name.shift(MED_SMALL_BUFF*RIGHT)
+        quartic_graph = self.get_graph(
+            lambda x : 1 - (x**2)/2.0 + (x**4)/24.0,
+            color = GREEN,
+            x_min = -3.2, 
+            x_max = 3.2,
+        )
+        quartic_graph.highlight(self.colors[4])
+
+        self.play(GrowFromCenter(brace))
+        self.play(Write(name))
+        self.dither()
+        self.play(
+            Transform(
+                self.quadratic_graph, quartic_graph,
+                run_time = 2
+            ),
+            Animation(self.dot)
+        )
+        self.dither(2)
+
+        self.taylor_name_group = VGroup(brace, name)
+
+    def draw_new_function_graph(self):
+        def func(x):
+            return (np.sin(x**2 + x)+0.5)*np.exp(-x**2)
+        graph = self.get_graph(
+            func, color = self.colors[0]
+        )
+
+        self.play(*map(FadeOut, [
+            self.cosine_derivative_group,
+            self.cosine_graph,
+            self.quadratic_graph,
+            self.v_line,
+            self.dot
+        ]))
+        self.play(ShowCreation(graph))
+
+        self.graph = graph
+
+    def write_general_function_derivative(self):
+        derivs_at_x, derivs_at_zero, derivs_at_a = deriv_lists = [
+            VGroup(*[
+                TexMobject("\\text{$%s$}"%args[0], *args[1:])
+                for args in [
+                    ("f", "(", arg, ")"),
+                    ("\\frac{df}{dx}", "(", arg, ")"),
+                    ("\\frac{d^2 f}{dx^2}", "(", arg, ")"),
+                    ("\\frac{d^3 f}{dx^3}", "(", arg, ")"),
+                    ("\\frac{d^4 f}{dx^4}", "(", arg, ")"),
+                ]
+            ])
+            for arg in "x", "0", "a"
+        ]
+        derivs_at_x.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        derivs_at_x.scale_to_fit_height(2*SPACE_HEIGHT - MED_LARGE_BUFF)
+        derivs_at_x.to_edge(LEFT)
+        zeros = VGroup(*[
+            deriv.get_part_by_tex("0")
+            for deriv in derivs_at_zero
+        ])
+        self.dot.move_to(self.input_to_graph_point(0, self.graph))
+        self.v_line.put_start_and_end_on(
+            self.graph_origin, self.dot.get_center()
+        )
+
+        for color, dx, d0, da in zip(self.colors, *deriv_lists):
+            for d in dx, d0, da:
+                d.highlight(color)
+                d.add_background_rectangle()
+            d0.replace(dx)
+            da.replace(dx)
+
+        self.play(FadeIn(derivs_at_x[0]))
+        self.dither()
+        for start, target in zip(derivs_at_x, derivs_at_x[1:]):
+            self.play(ReplacementTransform(
+                start.copy(), target
+            ))
+            self.dither()
+        self.dither()
+        self.play(ReplacementTransform(
+            derivs_at_x, derivs_at_zero,
+        ))
+        self.play(ReplacementTransform(
+            zeros.copy(), self.dot,
+            run_time = 2,
+            submobject_mode = "lagged_start"
+        ))
+        self.play(ShowCreation(self.v_line))
+        self.dither()
+
+        self.derivs_at_zero = derivs_at_zero
+        self.derivs_at_a = derivs_at_a
+
+    def replace_coefficients_in_generality(self):
+        new_polynomial = self.get_polynomial("x", *[
+            tex_mob.get_tex_string()
+            for tex_mob in self.derivs_at_zero[:-1]
+        ])
+        new_polynomial.to_corner(UP+RIGHT)
+        polynomial_fourth_term = VGroup(
+            *self.polynomial[-7:-1]
+        )
+        self.polynomial.remove(*polynomial_fourth_term)
+
+        self.play(
+            ReplacementTransform(
+                self.polynomial, new_polynomial,
+                run_time = 2,
+                submobject_mode = "lagged_start"
+            ),
+            FadeOut(polynomial_fourth_term),
+            FadeOut(self.taylor_name_group),
+        )
+        self.polynomial = new_polynomial
+        self.dither(3)
+
+    def walk_through_terms(self):
+        func = self.graph.underlying_function
+        approx_graphs = [
+            self.get_graph(
+                taylor_approximation(func, n),
+                color = WHITE
+            )
+            for n in range(7)
+        ]
+        for graph, color in zip(approx_graphs, self.colors):
+            graph.highlight(color)
+
+        left_mob = self.polynomial.coefficients[0]
+        right_mobs = list(self.polynomial.factorials)
+        right_mobs.append(self.polynomial[-1])
+        braces = [
+            Brace(
+                VGroup(left_mob, *right_mobs[:n]),
+                DOWN
+            )
+            for n in range(len(approx_graphs))
+        ]
+        brace = braces[0]
+        brace.stretch_to_fit_width(MED_LARGE_BUFF)
+        approx_graph = approx_graphs[0]
+
+        self.polynomial.add_background_rectangle()
+
+        self.play(GrowFromCenter(brace))
+        self.play(ShowCreation(approx_graph))
+        self.dither()
+        for new_brace, new_graph in zip(braces[1:], approx_graphs[1:]):
+            self.play(Transform(brace, new_brace))
+            self.play(
+                Transform(approx_graph, new_graph, run_time = 2),
+                Animation(self.polynomial),
+                Animation(self.dot),
+            )
+            self.dither()
+        self.play(FadeOut(brace))
+
+        self.approx_graph = approx_graph
+        self.approx_order = len(approx_graphs) - 1
+
+    def show_polynomial_around_a(self):
+        new_polynomial = self.get_polynomial("(x-a)", *[
+            tex_mob.get_tex_string()
+            for tex_mob in self.derivs_at_a[:-2]
+        ])
+        new_polynomial.to_corner(UP+RIGHT)
+        new_polynomial.add_background_rectangle()
+
+        polynomial_third_term = VGroup(
+            *self.polynomial[1][-7:-1]
+        )
+        self.polynomial[1].remove(*polynomial_third_term)
+
+        group = VGroup(self.approx_graph, self.dot, self.v_line)
+        def get_update_function(target_x):
+            def update(group, alpha):
+                graph, dot, line = group
+                start_x = self.x_axis.point_to_number(dot.get_center())
+                x = interpolate(start_x, target_x, alpha)
+                graph_point = self.input_to_graph_point(x, self.graph)
+                dot.move_to(graph_point)
+                line.put_start_and_end_on(
+                    self.coords_to_point(x, 0),
+                    graph_point,
+                )
+                new_approx_graph = self.get_graph(
+                    taylor_approximation(
+                        self.graph.underlying_function,
+                        self.approx_order,
+                        center_point = x
+                    ),
+                    color = graph.get_color()
+                )
+                Transform(graph, new_approx_graph).update(1)
+                return VGroup(graph, dot, line)
+            return update
+
+        self.play(
+            UpdateFromAlphaFunc(
+                group, get_update_function(1), run_time = 2
+            ),
+            Animation(self.polynomial),
+            Animation(polynomial_third_term)
+        )
+        self.dither()
+        self.play(Transform(
+            self.derivs_at_zero, 
+            self.derivs_at_a
+        ))
+        self.play(
+            Transform(self.polynomial, new_polynomial),
+            FadeOut(polynomial_third_term)
+        )
+        self.dither()
+        for x in -1, np.pi/6:
+            self.play(
+                UpdateFromAlphaFunc(
+                    group, get_update_function(x), 
+                ),
+                Animation(self.polynomial),
+                run_time = 4,
+            )
+            self.dither()
+
+
+    #####
+
+    def get_polynomial(self, arg, *coefficients):
+        result = TexMobject(
+            "P(x) = ", str(coefficients[0]), *list(it.chain(*[
+                ["+", str(c), "{%s"%arg, "^%d"%n, "\\over", "%d!}"%n]
+                for n, c in zip(it.count(1), coefficients[1:])
+            ])) + [
+                "+ \\cdots"
+            ]
+        )
+        result.scale(0.8)
+        coefs = VGroup(result[1], *result[3:-1:6])
+        for coef, color in zip(coefs, self.colors):
+            coef.highlight(color)
+        result.coefficients = coefs
+        result.factorials = VGroup(*result[7::6])
+
+        return result
+
+class ExpPolynomial(TranslationOfInformation, ExampleApproximationWithExp):
+    CONFIG = {
+        "x_tick_frequency" : 1,
+        "x_leftmost_tick" : -3,
+        "graph_origin" : 2*(DOWN+LEFT),
+        "y_axis_label" : "",
+    }
+    def construct(self):
+        self.setup_axes()
+        self.add_graph()
+        self.show_derivatives()
+        self.show_polynomial()
+        self.walk_through_terms()
+
+    def add_graph(self):
+        graph = self.get_graph(np.exp)
+        e_to_x = self.get_graph_label(graph, "e^x")
+    
+        self.play(
+            ShowCreation(graph),
+            Write(
+                e_to_x, 
+                rate_func = squish_rate_func(smooth, 0.5, 1)
+            ),
+            run_time = 2
+        )
+        self.dither()
+
+        self.graph = graph
+        self.e_to_x = e_to_x
+
+    def show_derivatives(self):
+        self.e_to_x.generate_target()
+        derivs_at_x, derivs_at_zero = [
+            VGroup(*[
+                TexMobject("e^%s"%s).highlight(c)
+                for c in self.colors
+            ])
+            for s in "x", "0"
+        ]
+        derivs_at_x.submobjects[0] = self.e_to_x.target
+        arrows = VGroup(*[
+            Arrow(
+                UP, ORIGIN, 
+                color = WHITE,
+                buff = SMALL_BUFF,
+                tip_length = 0.2,
+            ) 
+            for d in derivs_at_x
+        ])
+        group = VGroup(*it.chain(*zip(
+            derivs_at_x,
+            arrows
+        )))
+        group.add(TexMobject("\\vdots"))
+        group.arrange_submobjects(DOWN, buff = 2*SMALL_BUFF)
+        group.scale_to_fit_height(2*SPACE_HEIGHT - MED_LARGE_BUFF)
+        group.to_edge(LEFT)
+        for dx, d0 in zip(derivs_at_x, derivs_at_zero):
+            for d in dx, d0:
+                d.add_background_rectangle()
+            d0.replace(dx)
+        rhs_group = VGroup(*[
+            TexMobject("=", "1").scale(0.7).next_to(deriv, RIGHT)
+            for deriv in derivs_at_zero
+        ])
+        derivative_values = VGroup(*[
+            rhs[1] for rhs in rhs_group
+        ])
+        for value, color in zip(derivative_values, self.colors):
+            value.highlight(color)
+
+        for arrow in arrows:
+            d_dx = TexMobject("d/dx")
+            d_dx.scale(0.5)
+            d_dx.next_to(arrow, RIGHT, SMALL_BUFF)
+            d_dx.shift(SMALL_BUFF*UP)
+            arrow.add(d_dx)
+
+        self.play(MoveToTarget(self.e_to_x))
+        derivs_at_x.submobjects[0] = self.e_to_x
+        for start_d, arrow, target_d in zip(group[::2], group[1::2], group[2::2]):
+            self.play(
+                ReplacementTransform(
+                    start_d.copy(), target_d
+                ),
+                Write(arrow, run_time = 1)
+            )
+            self.dither()
+        self.dither()
+        self.play(ReplacementTransform(
+            derivs_at_x, derivs_at_zero
+        ))
+        self.dither()
+        self.play(*map(Write, rhs_group))
+
+        self.derivative_values = derivative_values
+
+    def show_polynomial(self):
+        derivative_values = self.derivative_values.copy()
+        polynomial = self.get_polynomial("x", 1, 1, 1, 1, 1)
+        polynomial.to_corner(UP+RIGHT)
+
+        ##These are to make the walk_through_terms method work
+        self.polynomial = polynomial.copy()
+        self.dot = Dot(fill_opacity = 0)
+        ###
+        polynomial.add_background_rectangle()
+
+        self.play(*[
+            Transform(
+                dv, pc,
+                run_time = 2,
+                path_arc = np.pi/2
+            )
+            for dv, pc in zip(
+                derivative_values, 
+                polynomial.coefficients,
+            )
+        ])
+        self.play(
+            Write(polynomial, run_time = 4),
+            Animation(derivative_values)
+        )
+
+    ####
+
+    def setup_axes(self):
+        GraphScene.setup_axes(self)
+
+class ShowSecondTerm(TeacherStudentsScene):
+    def construct(self):
+        colors = CubicAndQuarticApproximations.CONFIG["colors"]
+        polynomial = TexMobject(
+            "f(a)", "+", 
+            "\\frac{df}{dx}(a)", "(x - a)", "+",
+            "\\frac{d^2 f}{dx^2}(a)", "(x - a)^2"
+        )
+        for tex, color in zip(["f(a)", "df", "d^2 f"], colors):
+            polynomial.highlight_by_tex(tex, color)
+        polynomial.next_to(self.teacher, UP+LEFT)
+        polynomial.shift(MED_LARGE_BUFF*UP)
+        second_term = VGroup(*polynomial[-2:])
+        box = Rectangle(color = colors[2])
+        box.replace(second_term, stretch = True)
+        box.stretch_in_place(1.1, 0)
+        box.stretch_in_place(1.2, 1)
+        words = TextMobject("Geometric view")
+        words.next_to(box, UP)
+
+        self.play(Write(polynomial))
+        self.play(
+            ShowCreation(box),
+            FadeIn(words),
+            self.teacher.change_mode, "raise_right_hand"
+        )
+        self.dither(3)
+
+class SecondTermIntuition(AreaIsDerivative):
+    CONFIG = {
+        "func" : lambda x : x*(x-1)*(x-2) + 2,
+        "num_rects" : 300,
+        "t_max" : 2.3,
+        "x_max" : 4,
+        "x_labeled_nums" : None,
+        "x_axis_label" : "",
+        "y_labeled_nums" : None,
+        "y_axis_label" : "",
+        "y_min" : -1,
+        "y_max" : 5,
+        "y_tick_frequency" : 1,
+        "variable_point_label" : "x",
+        "area_opacity" : 1,
+        "default_riemann_start_color" : BLUE_E,
+        "dx" : 0.15,
+        "skip_reconfiguration" : False,
+    }
+    def setup(self):
+        GraphScene.setup(self)
+        ReconfigurableScene.setup(self)
+        self.foreground_mobjects = []
+
+    def construct(self):
+        self.setup_axes()
+        self.introduce_area()
+        self.write_derivative()
+        self.nudge_end_point()
+        self.point_out_triangle()
+        self.relabel_start_and_end()
+        self.compute_triangle_area()
+        self.walk_through_taylor_terms()
+
+    def introduce_area(self):
+        graph = self.v_graph = self.get_graph(
+            self.func, color = WHITE,
+        )
+        self.foreground_mobjects.append(graph)
+        area = self.area = self.get_area(0, self.t_max)
+
+        func_name = TexMobject("f_{\\text{area}}(x)")
+        func_name.move_to(self.coords_to_point(0.6, 1))
+        self.foreground_mobjects.append(func_name)
+
+        self.add(graph, area, func_name)
+        self.add_T_label(self.t_max)
+
+        if not self.skip_animations:
+            for target in 1.6, 2.7, self.t_max:
+                self.change_area_bounds(
+                    new_t_max = target,
+                    run_time = 3,
+                )
+        self.func_name = func_name
+
+    def write_derivative(self):
+        deriv = TexMobject("\\frac{df_{\\text{area}}}{dx}(x)")
+        deriv.next_to(
+            self.input_to_graph_point(2.7, self.v_graph),
+            RIGHT
+        )
+        deriv.shift_onto_screen()
+
+        self.play(ApplyWave(self.v_graph, direction = UP))
+        self.play(Write(deriv, run_time = 2))
+        self.dither()
+
+        self.deriv_label = deriv
+
+    def nudge_end_point(self):
+        dark_area = self.area.copy()
+        dark_area.set_fill(BLACK, opacity = 0.5)
+        curr_x = self.x_axis.point_to_number(self.area.get_right())
+        new_x = curr_x + self.dx
+
+        rect = Rectangle(
+            stroke_width = 0,
+            fill_color = YELLOW,
+            fill_opacity = 0.75
+        )
+        rect.replace(
+            VGroup(
+                VectorizedPoint(self.coords_to_point(new_x, 0)),
+                self.right_v_line,
+            ),
+            stretch = True
+        )
+
+        dx_brace = Brace(rect, DOWN, buff = 0)
+        dx_label = dx_brace.get_text("$dx$", buff = SMALL_BUFF)
+        dx_label_group = VGroup(dx_label, dx_brace)
+
+        height_brace = Brace(rect, LEFT, buff = SMALL_BUFF)
+
+        self.change_area_bounds(new_t_max = new_x)
+        self.play(
+            FadeIn(dark_area),
+            *map(Animation, self.foreground_mobjects)
+        )
+        self.play(
+            FadeOut(self.T_label_group),
+            FadeIn(dx_label_group),
+            FadeIn(rect),
+            FadeIn(height_brace)
+        )
+        self.dither()
+        if not self.skip_reconfiguration:
+            self.transition_to_alt_config(
+                dx = self.dx/10.0,
+                run_time = 3,
+            )
+        self.play(FadeOut(height_brace))
+
+        self.dx_label_group = dx_label_group
+        self.rect = rect
+        self.dark_area = dark_area
+
+    def point_out_triangle(self):
+        triangle = Polygon(LEFT, ORIGIN, UP)
+        triangle.set_stroke(width = 0)
+        triangle.set_fill(MAROON_B, opacity = 1)
+        triangle.replace(
+            Line(
+                self.rect.get_corner(UP+LEFT),
+                self.right_v_line.get_top()
+            ),
+            stretch = True
+        )
+        circle = Circle(color = RED)
+        circle.scale_to_fit_height(triangle.get_height())
+        circle.replace(triangle, dim_to_match = 1)
+        circle.scale_in_place(1.3)
+
+        self.play(DrawBorderThenFill(triangle))
+        self.play(ShowCreation(circle))
+        self.play(FadeOut(circle))
+
+        self.triangle = triangle
+
+    def relabel_start_and_end(self):
+        dx_label, dx_brace = self.dx_label_group
+        x_minus_a = TexMobject("(x-a)")
+        x_minus_a.scale(0.7)
+        x_minus_a.move_to(dx_label)
+        labels = VGroup()
+        arrows = VGroup()
+        for vect, tex in (LEFT, "a"), (RIGHT, "x"):
+            point = self.rect.get_corner(DOWN+vect)
+            label = TexMobject(tex)
+            label.next_to(point, DOWN+vect)
+            label.shift(LARGE_BUFF*vect)
+            arrow = Arrow(
+                label.get_corner(UP-vect),
+                point,
+                buff = SMALL_BUFF,
+                tip_length = 0.2,
+                color = WHITE
+            )
+            labels.add(label)
+            arrows.add(arrow)
+
+
+        for label, arrow in zip(labels, arrows):
+            self.play(
+                Write(label),
+                ShowCreation(arrow)
+            )
+            self.dither()
+        self.dither()
+        self.play(ReplacementTransform(
+            dx_label, x_minus_a
+        ))
+        self.dither()
+
+        self.x_minus_a = x_minus_a
+
+    def compute_triangle_area(self):
+        triangle = self.triangle.copy()
+        tex_scale_factor = 0.7
+        base_line = Line(*[
+            triangle.get_corner(DOWN+vect)
+            for vect in LEFT, RIGHT
+        ])
+        base_line.highlight(RED)
+        base_label = TextMobject("Base = ", "$(x-a)$")
+        base_label.scale(tex_scale_factor)
+        base_label.next_to(base_line, DOWN+RIGHT, MED_LARGE_BUFF)
+        base_label.shift(SMALL_BUFF*UP)
+        base_term = base_label[1].copy()
+        base_arrow = Arrow(
+            base_label.get_left(), 
+            base_line.get_center(),
+            buff = SMALL_BUFF,
+            color = base_line.get_color(),
+            tip_length = 0.2
+        )
+
+        height_brace = Brace(triangle, RIGHT, buff = SMALL_BUFF)
+        height_labels = [
+            TexMobject("\\text{Height} = ", s, "(x-a)")
+            for s in [
+                "(\\text{Slope})", 
+                "\\frac{d^2 f_{\\text{area}}}{dx^2}(a)"
+            ]
+        ]
+        for label in height_labels:
+            label.scale(tex_scale_factor)
+            label.next_to(height_brace, RIGHT)
+        height_term = VGroup(*height_labels[1][1:]).copy()
+
+        self.play(
+            FadeIn(base_label),
+            ShowCreation(base_arrow),
+            ShowCreation(base_line)
+        )
+        self.dither(2)
+        self.play(
+            GrowFromCenter(height_brace),
+            Write(height_labels[0])
+        )
+        self.dither(2)
+        self.play(ReplacementTransform(*height_labels))
+        self.dither(2)
+
+        #Show area formula
+        equals_half = TexMobject("=\\frac{1}{2}")
+        equals_half.scale(tex_scale_factor)
+        group = VGroup(triangle, equals_half, height_term, base_term)
+        group.generate_target()
+        group.target.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        group.target[-1].next_to(
+            group.target[-2], RIGHT,
+            buff = SMALL_BUFF,
+            align_using_submobjects = True
+        )
+        group.target[1].shift(0.02*DOWN)
+        group.target.to_corner(UP+RIGHT)
+        exp_2 = TexMobject("2").scale(0.8*tex_scale_factor)
+        exp_2.next_to(
+            group.target[-2], UP+RIGHT,
+            buff = 0,
+            align_using_submobjects = True
+        )
+        equals_half.scale(0.1)
+        equals_half.move_to(triangle)
+        equals_half.set_fill(opacity = 0)
+
+        self.play(
+            FadeOut(self.deriv_label),
+            MoveToTarget(group, run_time = 2)
+        )
+        self.dither(2)
+        self.play(Transform(
+            group[-1], exp_2
+        ))
+        self.dither(2)
+
+    def walk_through_taylor_terms(self):
+        mini_area, mini_rect, mini_triangle = [
+            mob.copy()
+            for mob in self.dark_area, self.rect, self.triangle
+        ]
+        mini_area.set_fill(BLUE_E, opacity = 1)
+        mini_area.scale_to_fit_height(1)
+        mini_rect.scale_to_fit_height(1)
+        mini_triangle.scale_to_fit_height(0.5)
+
+        geometric_taylor = VGroup(
+            TexMobject("f(x) \\approx "), mini_area,
+            TexMobject("+"), mini_rect,
+            TexMobject("+"), mini_triangle,
+        )
+        geometric_taylor.arrange_submobjects(
+            RIGHT, buff = MED_SMALL_BUFF
+        )
+        geometric_taylor.to_corner(UP+LEFT)
+
+        analytic_taylor = TexMobject(
+            "f(x) \\approx", "f(a)", "+",
+            "\\frac{df}{dx}(a)(x-a)", "+",
+            "\\frac{1}{2}\\frac{d^2 f}{dx^2}(a)(x-a)^2"
+        )
+        analytic_taylor.highlight_by_tex("f(a)", BLUE)
+        analytic_taylor.highlight_by_tex("df", YELLOW)
+        analytic_taylor.highlight_by_tex("d^2 f", MAROON_B)
+        analytic_taylor.scale(0.7)
+        analytic_taylor.next_to(
+            geometric_taylor, DOWN,
+            aligned_edge = LEFT
+        )
+        for part in analytic_taylor:
+            part.add_to_back(BackgroundRectangle(part))
+
+        new_func_name = TexMobject("f_{\\text{area}}(a)")
+        new_func_name.replace(self.func_name)
+
+        self.play(FadeIn(
+            geometric_taylor,
+            run_time = 2,
+            submobject_mode = "lagged_start"
+        ))
+        self.dither()
+        self.play(
+            FadeIn(VGroup(*analytic_taylor[:3])),
+            self.dark_area.set_fill, BLUE_E, 1,
+            Transform(self.func_name, new_func_name)
+        )
+        self.dither()
+        self.play(
+            self.rect.scale_in_place, 0.5,
+            rate_func = there_and_back
+        )
+        self.play(FadeIn(VGroup(*analytic_taylor[3:5])))
+        self.dither(2)
+        self.play(
+            self.triangle.scale_in_place, 0.5,
+            rate_func = there_and_back
+        )
+        self.play(FadeIn(VGroup(*analytic_taylor[5:])))
+        self.dither(3)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
