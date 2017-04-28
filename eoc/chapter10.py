@@ -2899,19 +2899,559 @@ class SecondTermIntuition(AreaIsDerivative):
         self.play(FadeIn(VGroup(*analytic_taylor[5:])))
         self.dither(3)
 
+class AskAboutInfiniteSum(TeacherStudentsScene):
+    def construct(self):
+        self.ask_question()
+        self.name_taylor_series()
+        self.be_careful()
 
 
+    def ask_question(self):
+        big_rect = Rectangle(
+            width = 2*SPACE_WIDTH,
+            height = 2*SPACE_HEIGHT,
+            stroke_width = 0,
+            fill_color =  BLACK,
+            fill_opacity = 0.7,
+        )
+        randy = self.get_students()[1]
+        series = TexMobject(
+            "\\cos(x)", "\\approx", 
+            "1 - \\frac{x^2}{2!} + \\frac{x^4}{4!}",
+            " - \\frac{x^6}{6!}",
+            "+\\cdots"
+        )
+        series.next_to(randy, UP, 2)
+        series.shift_onto_screen()
+        rhs = VGroup(*series[2:])
+        arrow = Arrow(rhs.get_left(), rhs.get_right())
+        arrow.next_to(rhs, UP)
+        words = TextMobject("Add infinitely many")
+        words.next_to(arrow, UP)
 
+        self.teacher_says(
+            "We could call \\\\ it an end here"
+        )
+        self.change_student_modes(*["erm"]*3)
+        self.dither(3)
+        self.play(
+            RemovePiCreatureBubble(self.teacher),
+            self.get_students()[0].change_mode, "plain",
+            self.get_students()[2].change_mode, "plain",
+            FadeIn(big_rect),
+            randy.change_mode, "pondering"
+        )
+        crowd = VGroup(*self.get_pi_creatures())
+        crowd.remove(randy)
+        self.crowd_copy = crowd.copy()
+        self.remove(crowd)
+        self.add(self.crowd_copy, big_rect, randy)
 
+        self.play(Write(series))
+        self.play(
+            ShowCreation(arrow),
+            Write(words)
+        )
+        self.dither(3)
 
+        self.arrow = arrow
+        self.words = words
+        self.series = series
+        self.randy = randy
 
+    def name_taylor_series(self):
+        series_def = TextMobject(
+            "Infinite sum $\\Leftrightarrow$ series"
+        )
+        taylor_series = TextMobject("Taylor series")
+        for mob in series_def, taylor_series:
+            mob.move_to(self.words)
+        brace = Brace(self.series.get_part_by_tex("4!"), DOWN)
+        taylor_polynomial = brace.get_text("Taylor polynomial")
 
+        self.play(ReplacementTransform(
+            self.words, series_def
+        ))
+        self.dither()
+        self.play(
+            GrowFromCenter(brace),
+            Write(taylor_polynomial)
+        )
+        self.dither(2)
+        self.play(
+            series_def.scale, 0.7,
+            series_def.to_corner, UP+RIGHT,
+            FadeIn(taylor_series)
+        )
+        self.play(self.randy.change, "thinking", taylor_series)
+        self.dither()
 
+    def be_careful(self):
+        self.play(FadeIn(self.teacher))
+        self.remove(self.crowd_copy[0])
+        self.teacher_says(
+            "Be careful",
+            bubble_kwargs = {
+                "width" : 3,
+                "height" : 2
+            },
+            added_anims = [self.randy.change, "hesitant"]
+        )
+        self.dither(2)
+        self.play(self.randy.change, "confused", self.series)
+        self.dither(3)
 
+class ConvergenceExample(Scene):
+    def construct(self):
+        max_shown_power = 6
+        max_computed_power = 13
+        series = TexMobject(*list(it.chain(*[
+            ["\\frac{1}{%d}"%(3**n), "+"]
+            for n in range(1, max_shown_power)
+        ])) + ["\\cdots"])
+        series_nums = [3**(-n) for n in range(1, max_computed_power)]
+        partial_sums = np.cumsum(series_nums)
+        braces = self.get_partial_sum_braces(series, partial_sums)
 
+        convergence_words = TextMobject("``Converges'' to $\\frac{1}{2}$")
+        convergence_words.next_to(series, UP, LARGE_BUFF)
+        convergence_words.highlight(YELLOW)
+        rhs = TexMobject("= \\frac{1}{2}")
+        rhs.next_to(series, RIGHT)
+        rhs.highlight(BLUE)
 
+        brace = braces[0]
+        self.add(series, brace)
+        for i, new_brace in enumerate(braces[1:]):
+            self.play(Transform(brace, new_brace))
+            if i == 4:
+                self.play(FadeIn(convergence_words))
+            else:
+                self.dither()
+        self.play(
+            FadeOut(brace),
+            Write(rhs)
+        )
+        self.dither(2)
 
+    def get_partial_sum_braces(self, series, partial_sums):
+        braces = [
+            Brace(VGroup(*series[:n]))
+            for n in range(1, len(series)-1, 2)
+        ]
+        last_brace = braces[-1]
+        braces += [
+            braces[-1].copy().stretch_in_place(
+                1 + 0.1 + 0.02*(n+1), dim = 0,
+            ).move_to(last_brace, LEFT)
+            for n in range(len(partial_sums) - len(braces))
+        ]
+        for brace, partial_sum in zip(braces, partial_sums):
+            number = brace.get_text("%.7f"%partial_sum)
+            number.highlight(YELLOW)
+            brace.add(number)
+        return braces
 
+class ExpConvergenceExample(ConvergenceExample):
+    def construct(self):
+        e_to_x, series_with_x = x_group = self.get_series("x")
+        x_group.to_edge(UP)
+        e_to_1, series_with_1 = one_group = self.get_series("1")
+        terms = [1./math.factorial(n) for n in range(11)]
+        partial_sums = np.cumsum(terms)
+        braces = self.get_partial_sum_braces(series_with_1, partial_sums)
+        brace = braces[1]
+
+        for lhs, s in (e_to_x, "x"), (e_to_1, "1"):
+            new_lhs = TexMobject("e^%s"%s, "=")
+            new_lhs.move_to(lhs, RIGHT)
+            lhs.target = new_lhs
+
+        self.add(x_group)
+        self.dither()
+        self.play(ReplacementTransform(x_group.copy(), one_group))
+        self.play(FadeIn(brace))
+        self.dither()
+        for new_brace in braces[2:]:
+            self.play(Transform(brace, new_brace))
+            self.dither()
+        self.dither()
+        self.play(MoveToTarget(e_to_1))
+        self.dither(2)
+
+    def get_series(self, arg, n_terms = 5):
+        series = TexMobject("1", "+", *list(it.chain(*[
+            ["\\frac{%s^%d}{%d!}"%(arg, n, n), "+"]
+            for n in range(1, n_terms+1)
+        ])) + ["\\cdots"])
+        colors = list(CubicAndQuarticApproximations.CONFIG["colors"])
+        colors += [BLUE_C]
+        for term, color in zip(series[::2], colors):
+            term.highlight(color)
+
+        lhs = TexMobject("e^%s"%arg, "\\rightarrow")
+        lhs.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        group = VGroup(lhs, series)
+        group.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+
+        return group
+
+class ExpGraphConvergence(ExpPolynomial, ExpConvergenceExample):
+    CONFIG = {
+        "example_input" : 2,
+        "graph_origin" : 3*DOWN + LEFT,
+        "n_iterations" : 8,
+        "y_max" : 20,
+        "num_graph_anchor_points" : 50,
+        "func" : np.exp,
+    }
+    def construct(self):
+        self.setup_axes()
+        self.add_series()
+        approx_graphs = self.get_approx_graphs()
+
+        graph = self.get_graph(self.func, color = self.colors[0])
+        v_line = self.get_vertical_line_to_graph(
+            self.example_input, graph,
+            line_class = DashedLine,
+            color = YELLOW
+        )
+        dot = Dot(color = YELLOW)
+        dot.to_corner(UP+LEFT)
+
+        equals = TexMobject("=")
+        equals.replace(self.arrow)
+        equals.scale_in_place(0.8)
+
+        brace = self.braces[1]
+        approx_graph = approx_graphs[1]
+        x = self.example_input
+        self.add(graph, self.series)
+        self.dither()
+        self.play(dot.move_to, self.coords_to_point(x, 0))
+        self.play(
+            dot.move_to, self.input_to_graph_point(x, graph),
+            ShowCreation(v_line)
+        )
+        self.dither()
+        self.play(
+            GrowFromCenter(brace),
+            ShowCreation(approx_graph)
+        )
+        self.dither()
+        for new_brace, new_graph in zip(self.braces[2:], approx_graphs[2:]):
+            self.play(
+                Transform(brace, new_brace),
+                Transform(approx_graph, new_graph),
+                Animation(self.series),
+            )
+            self.dither()
+        self.play(FocusOn(equals))
+        self.play(Transform(self.arrow, equals))
+        self.dither(2)
+
+    def add_series(self):
+        series_group = self.get_series("x")
+        e_to_x, series = series_group
+        series_group.scale(0.8)
+        series_group.to_corner(UP+LEFT)
+        braces = self.get_partial_sum_braces(
+            series, np.zeros(self.n_iterations)
+        )
+        for brace in braces:
+            brace.remove(brace[-1])
+
+        series.add_background_rectangle()
+        self.add(series_group)
+
+        self.braces = braces
+        self.series = series
+        self.arrow = e_to_x[1]
+
+    def get_approx_graphs(self):
+        def get_nth_approximation(n):
+            return lambda x : sum([
+                float(x**k)/math.factorial(k)
+                for k in range(n+1)
+            ])
+        approx_graphs = [
+            self.get_graph(get_nth_approximation(n))
+            for n in range(self.n_iterations)
+        ]
+
+        colors = it.chain(self.colors, it.repeat(WHITE))
+        for approx_graph, color in zip(approx_graphs, colors):
+            approx_graph.highlight(color)
+            dot = Dot(color = WHITE)
+            dot.move_to(self.input_to_graph_point(
+                self.example_input, approx_graph
+            ))
+            approx_graph.add(dot)
+
+        return approx_graphs
+
+class SecondExpGraphConvergence(ExpGraphConvergence):
+    CONFIG = {
+        "example_input" : 3,
+        "n_iterations" : 12,
+    }
+
+class BoundedRadiusOfConvergence(CubicAndQuarticApproximations):
+    CONFIG = {
+        "num_graph_anchor_points" : 100,
+    }
+    def construct(self):
+        self.setup_axes()
+        func = lambda x : (np.sin(x**2 + x)+0.5)*(np.log(x+1.01)+1)*np.exp(-x)
+        graph = self.get_graph(
+            func, color = self.colors[0],
+            x_min = -0.99,
+            x_max = self.x_max,
+        )
+        v_line = self.get_vertical_line_to_graph(
+            0, graph,
+            line_class = DashedLine,
+            color = YELLOW
+        )
+        dot = Dot(color = YELLOW).move_to(v_line.get_top())
+        two_graph = self.get_graph(lambda x : 2)
+        outer_v_lines = VGroup(*[
+            DashedLine(
+                self.coords_to_point(x, -2),
+                self.coords_to_point(x, 2),
+                color = WHITE
+            )
+            for x in -1, 1
+        ])
+
+        colors = list(self.colors) + [GREEN, MAROON_B, PINK]
+        approx_graphs = [
+            self.get_graph(
+                taylor_approximation(func, n),
+                color = color
+            )
+            for n, color in enumerate(colors)
+        ]
+        approx_graph = approx_graphs[1]
+
+        self.add(graph, v_line, dot)
+        self.play(ReplacementTransform(
+            VGroup(v_line.copy()), outer_v_lines
+        ))
+        self.play(
+            ShowCreation(approx_graph),
+            Animation(dot)
+        )
+        self.dither()
+        for new_graph in approx_graphs[2:]:
+            self.play(
+                Transform(approx_graph, new_graph),
+                Animation(dot)
+            )
+            self.dither()
+        self.dither()
+
+class RadiusOfConvergenceForLnX(ExpGraphConvergence):
+    CONFIG = {
+        "x_min" : -1,
+        "x_leftmost_tick" : None,
+        "x_max" : 5,
+        "y_min" : -2,
+        "y_max" : 3,
+        "graph_origin" : DOWN+2*LEFT,
+        "func" : np.log,
+        "num_graph_anchor_points" : 100,
+        "n_iterations" : 7,
+        "convergent_example" : 1.5,
+        "divergent_example" : 2.5,
+    }
+    def construct(self):
+        self.add_graph()
+        self.add_series()
+        self.show_bounds()
+        self.show_converging_point()
+        self.show_diverging_point()
+        self.write_divergence()
+        self.write_radius_of_convergence()
+
+    def add_graph(self):
+        self.setup_axes()
+        self.graph = self.get_graph(
+            self.func,
+            x_min = 0.01
+        )
+        self.add(self.graph)
+
+    def add_series(self):
+        series = TexMobject(
+            "\\ln(x) \\rightarrow", 
+            "(x-1)", "-",
+            "\\frac{(x-1)^2}{2}", "+",
+            "\\frac{(x-1)^3}{3}", "-",
+            "\\frac{(x-1)^4}{4}", "+",
+            "\\cdots"
+        )
+        lhs = VGroup(*series[1:])
+        series.add_background_rectangle()
+        series.scale(0.8)
+        series.to_corner(UP+LEFT)
+        for n in range(4):
+            lhs[2*n].highlight(self.colors[n+1])
+        self.braces = self.get_partial_sum_braces(
+            lhs, np.zeros(self.n_iterations)
+        )
+        for brace in self.braces:
+            brace.remove(brace[-1])
+
+        self.play(FadeIn(
+            series, 
+            run_time = 3,
+            submobject_mode = "lagged_start"
+        ))
+        self.dither()
+        self.series = series
+        self.foreground_mobjects = [series]
+
+    def show_bounds(self):
+        dot = Dot(fill_opacity = 0)
+        dot.move_to(self.series)
+        v_lines = [
+            DashedLine(*[
+                self.coords_to_point(x, y)
+                for y in -2, 2
+            ])
+            for x in 0, 1, 2
+        ]
+        outer_v_lines = VGroup(*v_lines[::2])
+        center_v_line = VGroup(v_lines[1])
+        input_v_line = Line(*[
+            self.coords_to_point(self.convergent_example, y)
+            for y in -4, 3
+        ])
+        input_v_line.set_stroke(WHITE, width = 2)
+
+        self.play(
+            dot.move_to, self.coords_to_point(1, 0),
+            dot.set_fill, YELLOW, 1,
+        )
+        self.dither()
+        self.play(
+            GrowFromCenter(center_v_line),
+            Animation(dot)
+        )
+        self.play(Transform(center_v_line, outer_v_lines))
+
+        self.foreground_mobjects.append(dot)
+
+    def show_converging_point(self):
+        approx_graphs = [
+            self.get_graph(
+                taylor_approximation(self.func, n, 1),
+                color = WHITE
+            )
+            for n in range(1, self.n_iterations+1)
+        ]
+        colors = self.colors[1:] + [GREEN, MAROON_B, PINK]
+        for graph, color in zip(approx_graphs, colors):
+            graph.highlight(color)
+        for graph in approx_graphs:
+            dot = Dot(color = WHITE)
+            dot.move_to(self.input_to_graph_point(
+                self.convergent_example, graph
+            ))
+            graph.dot = dot
+            graph.add(dot)
+
+        approx_graph = approx_graphs[0].copy()
+        approx_dot = approx_graph.dot
+        brace = self.braces[0]
+
+        self.play(*it.chain(
+            map(FadeIn, [approx_graph, brace]),
+            map(Animation, self.foreground_mobjects)
+        ))
+        self.dither()
+        for new_graph, new_brace in zip(approx_graphs[1:], self.braces[1:]):
+            self.play(
+                Transform(approx_graph, new_graph),
+                Transform(brace, new_brace),
+                *map(Animation, self.foreground_mobjects)
+            )
+            self.dither()
+        approx_graph.remove(approx_dot)
+        self.play(
+            approx_dot.move_to, self.coords_to_point(self.divergent_example, 0),
+            *it.chain(
+                map(FadeOut, [approx_graph, brace]),
+                map(Animation, self.foreground_mobjects)
+            )
+        )
+        self.dither()
+
+        self.approx_graphs = approx_graphs
+        self.approx_dot = approx_dot
+        
+
+    def show_diverging_point(self):
+        for graph in self.approx_graphs:
+            graph.dot.move_to(self.input_to_graph_point(
+                self.divergent_example, graph
+            ))
+
+        approx_graph = self.approx_graphs[0].deepcopy()
+        brace = self.braces[0]
+
+        self.play(
+            ReplacementTransform(
+                self.approx_dot, approx_graph.dot
+            ),
+            FadeIn(approx_graph),
+            FadeIn(brace),
+            *map(Animation, self.foreground_mobjects)
+        )
+
+        for new_graph, new_brace in zip(self.approx_graphs[1:], self.braces[1:]):
+            self.play(
+                Transform(approx_graph, new_graph),
+                Transform(brace, new_brace),
+                *map(Animation, self.foreground_mobjects)
+            )
+            self.dither()
+        self.approx_dot = approx_graph.dot
+
+    def write_divergence(self):
+        word = TextMobject("``Diverges''")
+        word.next_to(self.approx_dot, RIGHT, LARGE_BUFF)
+        word.shift(MED_SMALL_BUFF*DOWN)
+        arrow = Arrow(
+            word.get_left(), self.approx_dot,
+            buff = SMALL_BUFF,
+            color = WHITE
+        )
+
+        self.play(
+            Write(word),
+            ShowCreation(arrow)
+        )
+        self.dither()
+
+    def write_radius_of_convergence(self):
+        line = Line(*[
+            self.coords_to_point(x, 0)
+            for x in 1, 2
+        ])
+        line.highlight(YELLOW)
+        brace = Brace(line, DOWN)
+        words = brace.get_text("``Radius of convergence''")
+        words.add_background_rectangle()
+
+        self.play(
+            GrowFromCenter(brace),
+            ShowCreation(line)
+        )
+        self.dither()
+        self.play(Write(words))
+        self.dither(3)
 
 
 
