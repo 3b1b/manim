@@ -3261,7 +3261,8 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
         "graph_origin" : DOWN+2*LEFT,
         "func" : np.log,
         "num_graph_anchor_points" : 100,
-        "n_iterations" : 7,
+        "initial_n_iterations" : 7,
+        "n_iterations" : 11,
         "convergent_example" : 1.5,
         "divergent_example" : 2.5,
     }
@@ -3351,7 +3352,11 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
             )
             for n in range(1, self.n_iterations+1)
         ]
-        colors = self.colors[1:] + [GREEN, MAROON_B, PINK]
+        colors = it.chain(
+            self.colors[1:],
+            [GREEN, MAROON_B],
+            it.repeat(PINK)
+        )
         for graph, color in zip(approx_graphs, colors):
             graph.highlight(color)
         for graph in approx_graphs:
@@ -3362,16 +3367,17 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
             graph.dot = dot
             graph.add(dot)
 
-        approx_graph = approx_graphs[0].copy()
+        approx_graph = approx_graphs[0].deepcopy()
         approx_dot = approx_graph.dot
-        brace = self.braces[0]
+        brace = self.braces[0].copy()
 
         self.play(*it.chain(
             map(FadeIn, [approx_graph, brace]),
             map(Animation, self.foreground_mobjects)
         ))
         self.dither()
-        for new_graph, new_brace in zip(approx_graphs[1:], self.braces[1:]):
+        new_graphs = approx_graphs[1:self.initial_n_iterations]
+        for new_graph, new_brace in zip(new_graphs, self.braces[1:]):
             self.play(
                 Transform(approx_graph, new_graph),
                 Transform(brace, new_brace),
@@ -3391,7 +3397,6 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
         self.approx_graphs = approx_graphs
         self.approx_dot = approx_dot
         
-
     def show_diverging_point(self):
         for graph in self.approx_graphs:
             graph.dot.move_to(self.input_to_graph_point(
@@ -3399,17 +3404,18 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
             ))
 
         approx_graph = self.approx_graphs[0].deepcopy()
-        brace = self.braces[0]
+        brace = self.braces[0].copy()
 
         self.play(
             ReplacementTransform(
                 self.approx_dot, approx_graph.dot
             ),
-            FadeIn(approx_graph),
+            FadeIn(approx_graph[0]),
             FadeIn(brace),
             *map(Animation, self.foreground_mobjects)
         )
 
+        new_graphs = self.approx_graphs[1:self.initial_n_iterations]
         for new_graph, new_brace in zip(self.approx_graphs[1:], self.braces[1:]):
             self.play(
                 Transform(approx_graph, new_graph),
@@ -3417,12 +3423,15 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
                 *map(Animation, self.foreground_mobjects)
             )
             self.dither()
+
         self.approx_dot = approx_graph.dot
+        self.approx_graph = approx_graph
 
     def write_divergence(self):
         word = TextMobject("``Diverges''")
         word.next_to(self.approx_dot, RIGHT, LARGE_BUFF)
         word.shift(MED_SMALL_BUFF*DOWN)
+        word.add_background_rectangle()
         arrow = Arrow(
             word.get_left(), self.approx_dot,
             buff = SMALL_BUFF,
@@ -3434,6 +3443,13 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
             ShowCreation(arrow)
         )
         self.dither()
+        new_graphs = self.approx_graphs[self.initial_n_iterations:]
+        for new_graph in new_graphs:
+            self.play(
+                Transform(self.approx_graph, new_graph),
+                *map(Animation, self.foreground_mobjects)
+            )
+            self.dither()
 
     def write_radius_of_convergence(self):
         line = Line(*[
@@ -3453,6 +3469,49 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
         self.play(Write(words))
         self.dither(3)
 
+class MoreToBeSaid(TeacherStudentsScene):
+    CONFIG = {
+        "seconds_to_blink" : 4,
+    }
+    def construct(self):
+        words = TextMobject(
+            "Lagrange error bounds, ", 
+            "convergence tests, ",
+            "$\\dots$"
+        )
+        words[0].highlight(BLUE)
+        words[1].highlight(GREEN)
+        words.to_edge(UP)
+        fade_rect = FullScreenFadeRectangle()
+        rect = Rectangle(height = 9, width = 16)        
+        rect.scale_to_fit_height(SPACE_HEIGHT)
+        rect.to_corner(UP+RIGHT)
+        randy = self.get_students()[1]
+
+        self.teacher_says(
+            "There's still \\\\ more to learn!",
+            target_mode = "surprised",
+            bubble_kwargs = {"height" : 3, "width" : 4}
+        )
+        for word in words:
+            self.play(FadeIn(word))
+            self.dither()
+        self.teacher_says(
+            "About everything",
+        )
+        self.change_student_modes(*["pondering"]*3)
+        self.dither()
+        self.remove()
+        self.pi_creatures = []##Hack
+        self.play(
+            RemovePiCreatureBubble(self.teacher),
+            FadeOut(words),
+            FadeIn(fade_rect),
+            randy.change, "happy", rect
+        )
+        self.pi_creatures = [randy]
+        self.play(ShowCreation(rect))
+        self.dither(4)
 
 
 
