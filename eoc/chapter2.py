@@ -2533,7 +2533,7 @@ class NextVideos(TeacherStudentsScene):
         self.dither(2)
         self.change_student_modes(*["thinking"]*3)
         self.dither(3)
-        
+
 class Chapter2PatreonThanks(PatreonThanks):
     CONFIG = {
         "specific_patrons" : [

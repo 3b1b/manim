@@ -2788,6 +2788,34 @@ class Chapter3PatreonThanks(PatreonThanks):
         ]
     }
 
+class Promotion(PiCreatureScene):
+    CONFIG = {
+        "seconds_to_blink" : 5,
+    }
+    def construct(self):
+        url = TextMobject("https://brilliant.org/3b1b/")
+        url.to_corner(UP+LEFT)
+
+        rect = Rectangle(height = 9, width = 16)
+        rect.scale_to_fit_height(5.5)
+        rect.next_to(url, DOWN)
+        rect.to_edge(LEFT)
+
+        self.play(
+            Write(url),
+            self.pi_creature.change, "raise_right_hand"
+        )
+        self.play(ShowCreation(rect))
+        self.dither(2)
+        self.change_mode("thinking")
+        self.dither()
+        self.look_at(url)
+        self.dither(10)
+        self.change_mode("happy")
+        self.dither(10)
+        self.change_mode("raise_right_hand")
+        self.dither(10)
+
 class Thumbnail(NudgeSideLengthOfCube):
     def construct(self):
         self.introduce_cube()

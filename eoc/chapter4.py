@@ -2270,7 +2270,8 @@ class Chapter4Thanks(PatreonThanks):
             "Kirk    Werklund",
             "Ripta   Pasay",
             "Felipe  Diniz",
-        ]
+        ],
+        "patron_group_size" : 8,
     }
 
 class Thumbnail(IntroduceProductAsArea):

@@ -2754,6 +2754,7 @@ class EndScreen(PiCreatureScene):
     }
     def construct(self):
         words = TextMobject("Clicky stuffs")
+        words.scale(1.5)
         words.next_to(self.pi_creature, UP)
         words.to_edge(UP)
 

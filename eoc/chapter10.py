@@ -197,6 +197,11 @@ class Pendulum(ReconfigurableScene):
         "radius" : 4,
         "weight_radius" : 0.2,
         "angle" : np.pi/6,
+        "approx_tex" : [
+            "\\approx 1 - ", "{\\theta", "^2", "\\over", "2}"
+        ],
+        "leave_original_cosine" : False,
+        "perform_substitution" : True,
     }
     def construct(self):
         self.draw_pendulum()
@@ -205,7 +210,6 @@ class Pendulum(ReconfigurableScene):
         self.get_angry_at_cosine()
         self.substitute_approximation()
         self.show_confusion()
-
 
     def draw_pendulum(self):
         pendulum = self.get_pendulum()
@@ -295,6 +299,10 @@ class Pendulum(ReconfigurableScene):
         cosine.generate_target()
         cosine.save_state()
         cosine.target.next_to(morty, UP)
+        if self.leave_original_cosine:
+            cosine_copy = cosine.copy()
+            self.add(cosine_copy)
+            self.one_minus.add(cosine_copy)
 
         self.play(FadeIn(morty))
         self.play(
@@ -330,6 +338,8 @@ class Pendulum(ReconfigurableScene):
             morty.change, "pondering", cosine_approx
         )
         self.dither()
+        if not self.perform_substitution:
+            return
         self.play(
             ApplyMethod(
                 cosine_approx.theta_squared_over_two.copy().next_to,
@@ -466,11 +476,9 @@ class Pendulum(ReconfigurableScene):
         return arc, theta
 
     def get_cosine_approx(self):
-        approx = TexMobject(
-            "\\approx 1 - ", "{\\theta", "^2", "\\over", "2}"
-        )
+        approx = TexMobject(*self.approx_tex)
         approx.highlight_by_tex("theta", YELLOW)
-        approx.theta_squared_over_two = VGroup(*approx[-4:])
+        approx.theta_squared_over_two = VGroup(*approx[1:5])
 
         return approx
 
@@ -483,6 +491,18 @@ class Pendulum(ReconfigurableScene):
 
     def swing_rate_func(self, t):
         return (1-np.cos(np.pi*t))/2.0
+
+class PendulumWithBetterApprox(Pendulum):
+    CONFIG = {
+        "approx_tex" : [
+            "\\approx 1 - ", "{\\theta", "^2", "\\over", "2}",
+            "+", "{\\theta", "^4", "\\over", "24}"
+        ],
+        "leave_original_cosine" : True,
+        "perform_substitution" : False,
+    }
+    def show_confusion(self):
+        pass
 
 class ExampleApproximationWithCos(ExampleApproximationWithSine):
     CONFIG = {
@@ -1852,9 +1872,56 @@ class HigherTermsDontMessUpLowerTerms(Scene):
         self.play(Write(equals_zero))
         self.dither(3)
 
+class EachTermControlsOneDerivative(Scene):
+    def construct(self):
+        colors = CubicAndQuarticApproximations.CONFIG["colors"]
+        polynomial = TexMobject(
+            "P(x) = ", "c_0", "+", "c_1", "x", *it.chain(*[
+                ["+", "c_%d"%n, "x^%d"%n]
+                for n in range(2, 5)
+            ])
+        )
+        consts = polynomial.get_parts_by_tex("c")
+        deriv_words = VGroup(*[
+            TextMobject("Controls \\\\ $%s(0)$"%tex)
+            for tex in [
+                "P",
+                "\\frac{dP}{dx}",
+            ] + [
+                "\\frac{d^%d P}{dx^%d}"%(n, n)
+                for n in range(2, 5)
+            ]
+        ])
+        deriv_words.arrange_submobjects(
+            RIGHT, 
+            buff = LARGE_BUFF,
+            aligned_edge = UP
+        )
+        deriv_words.scale_to_fit_width(2*SPACE_WIDTH - MED_LARGE_BUFF)
+        deriv_words.to_edge(UP)
+
+        for const, deriv, color in zip(consts, deriv_words, colors):
+            for mob in const, deriv:
+                mob.highlight(color)
+            arrow = Arrow(
+                const.get_top(),
+                deriv.get_bottom(),
+                # buff = SMALL_BUFF,
+                color = color
+            )
+            deriv.arrow = arrow
+
+        self.add(polynomial)
+        for deriv in deriv_words:
+            self.play(
+                ShowCreation(deriv.arrow),
+                FadeIn(deriv)
+            )
+            self.dither()
+
 class ApproximateNearNewPoint(CubicAndQuarticApproximations):
     CONFIG = {
-        "target_approx_centers" : [-np.pi/2, np.pi/2, np.pi],
+        "target_approx_centers" : [np.pi/2, np.pi],
     }
     def construct(self):
         self.setup_axes()
@@ -1962,6 +2029,14 @@ class ApproximateNearNewPoint(CubicAndQuarticApproximations):
         ])
         return self.get_graph(func, color = GREEN)
 
+class OnAPhilosophicalLevel(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "And on a \\\\ philosophical level",
+            run_time = 1
+        )
+        self.dither(3)
+
 class TranslationOfInformation(CubicAndQuarticApproximations):
     def construct(self):
         self.add_background()
@@ -1989,7 +2064,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
         deriv_info.next_to(ORIGIN, LEFT, LARGE_BUFF)
         deriv_info.to_edge(UP)
         output_info = TextMobject(
-            "Output \\\\ information \\\\ near that piont"
+            "Output \\\\ information \\\\ near that point"
         )
         output_info.next_to(ORIGIN, RIGHT, LARGE_BUFF)
         output_info.to_edge(UP)
@@ -2419,6 +2494,18 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
 
         return result
 
+class ThisIsAStandardFormula(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "You will see this \\\\ in your texts",
+            run_time = 1
+        )
+        self.change_student_modes(
+            *["sad"]*3,
+            look_at_arg = SPACE_HEIGHT*UP
+        )
+        self.dither(2)
+
 class ExpPolynomial(TranslationOfInformation, ExampleApproximationWithExp):
     CONFIG = {
         "x_tick_frequency" : 1,
@@ -2569,12 +2656,23 @@ class ShowSecondTerm(TeacherStudentsScene):
         words = TextMobject("Geometric view")
         words.next_to(box, UP)
 
-        self.play(Write(polynomial))
+        self.teacher_says(
+            "Now for \\\\ something fun!",
+            target_mode = "hooray"
+        )
+        self.dither(2)
+        self.play(
+            RemovePiCreatureBubble(
+                self.teacher,
+                target_mode = "raise_right_hand"
+            ),
+            Write(polynomial)
+        )
         self.play(
             ShowCreation(box),
             FadeIn(words),
-            self.teacher.change_mode, "raise_right_hand"
         )
+        self.change_student_modes(*["pondering"]*3)
         self.dither(3)
 
 class SecondTermIntuition(AreaIsDerivative):
@@ -2897,6 +2995,20 @@ class SecondTermIntuition(AreaIsDerivative):
             rate_func = there_and_back
         )
         self.play(FadeIn(VGroup(*analytic_taylor[5:])))
+        self.dither(3)
+
+class EachTermHasMeaning(TeacherStudentsScene):
+    def construct(self):
+        self.get_pi_creatures().scale_in_place(0.8).shift(UP)
+        self.teacher_says(
+            "Each term \\\\ has meaning!",
+            target_mode = "hooray",
+            bubble_kwargs = {"height" : 3, "width" : 4}
+        )
+        self.change_student_modes(
+            *["thinking"]*3,
+            look_at_arg = 4*UP
+        )
         self.dither(3)
 
 class AskAboutInfiniteSum(TeacherStudentsScene):
@@ -3513,9 +3625,70 @@ class MoreToBeSaid(TeacherStudentsScene):
         self.play(ShowCreation(rect))
         self.dither(4)
 
+class Chapter10Thanks(PatreonThanks):
+    CONFIG = {
+        "specific_patrons" : [
+            "Ali Yahya",
+            "CrypticSwarm",
+            "Kaustuv DeBiswas",
+            "Kathryn Schmiedicke",
+            "Karan Bhargava",
+            "Ankit Agarwal",
+            "Yu Jun",
+            "Dave Nicponski",
+            "Damion Kistler",
+            "Juan Benet",
+            "Othman Alikhan",
+            "Markus Persson",
+            "Joseph John Cox",
+            "Dan Buchoff",
+            "Derek Dai",
+            "Luc Ritchie",
+            "Ahmad Bamieh",
+            "Mark Govea",
+            "Zac Wentzell",
+            "Robert Teed",
+            "Jason Hise",
+            "Meshal Alshammari",
+            "Bernd Sing",
+            "Nils Schneider",
+            "James Thornton",
+            "Mustafa Mahdi",
+            "Jonathan Eppele",
+            "Mathew Bramson",
+            "Jerry Ling",
+            "Vecht",
+            "Shimin Kuang",
+            "Rish Kundalia",
+            "Achille Brighton",
+            "Ripta Pasay",
+        ],
+    }
 
+class Thumbnail(ExampleApproximationWithSine):
+    CONFIG = {
+        "graph_origin" : DOWN,
+        "x_axis_label" : "",
+        "y_axis_label" : "",
+        "x_axis_width" : 14,
+        "graph_stroke_width" : 8,
+    }
+    def construct(self):
+        self.setup_axes()
 
+        cos_graph = self.get_graph(np.cos)
+        cos_graph.set_stroke(BLUE, self.graph_stroke_width)
+        quad_graph = self.get_graph(taylor_approximation(np.cos, 2))
+        quad_graph.set_stroke(GREEN, self.graph_stroke_width)
+        quartic = self.get_graph(taylor_approximation(np.cos, 4))
+        quartic.set_stroke(PINK, self.graph_stroke_width)
+        self.add(cos_graph, quad_graph, quartic)
 
+        title = TextMobject("Taylor Series")
+        title.scale_to_fit_width(1.5*SPACE_WIDTH)
+        title.add_background_rectangle()
+        title.to_edge(UP)
+        self.add(title)
 
 
 
