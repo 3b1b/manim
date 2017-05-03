@@ -2783,14 +2783,11 @@ class Thumbnail(Chapter1Thumbnail):
             x_max = 4,
             dx = 0.25,
         )
-        # words = TextMobject("""
-        #     Essence of
-        #     calculus
-        # """)
-        # words.scale_to_fit_width(9)
-        # words.to_edge(UP)
+        words = TextMobject("Integrals")
+        words.scale_to_fit_width(8)
+        words.to_edge(UP)
 
-        self.add(graph, rects)
+        self.add(graph, rects, words)
 
 
 

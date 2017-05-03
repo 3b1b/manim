@@ -369,6 +369,14 @@ class FullScreenFadeRectangle(Rectangle):
         "fill_opacity" : 0.7,
     }
 
+class ScreenRectangle(Rectangle):
+    CONFIG = {
+        "width_to_height_ratio" : 16.0/9.0,
+        "height" : 4,
+    }
+    def generate_points(self):
+        self.width = self.width_to_height_ratio * self.height
+        Rectangle.generate_points(self)
 
 class PictureInPictureFrame(Rectangle):
     CONFIG = {

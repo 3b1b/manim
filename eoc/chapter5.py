@@ -1608,6 +1608,65 @@ class CompareWaysToWriteExponentials(GraphScene):
             self.dither(2)
         self.dither()
 
+class ManyExponentialForms(TeacherStudentsScene):
+    def construct(self):
+        lhs = TexMobject("2", "^t")
+        rhs_list = [
+            TexMobject("=", "%s^"%tex, "{(%.5f\\dots)"%log, "t}")
+            for tex, log in [
+                ("e", np.log(2)),
+                ("\\pi", np.log(2)/np.log(np.pi)),
+                ("42", np.log(2)/np.log(42)),
+            ]
+        ]
+        group = VGroup(lhs, *rhs_list)
+        group.arrange_submobjects(RIGHT)
+        group.scale_to_fit_width(2*SPACE_WIDTH - LARGE_BUFF)
+        group.next_to(self.get_pi_creatures(), UP, 2*LARGE_BUFF)
+        for part in group:
+            part.highlight_by_tex("t", YELLOW)
+            const = part.get_part_by_tex("dots")
+            if const:
+                const.highlight(BLUE)
+                brace = Brace(const, UP)
+                log = brace.get_text(
+                    "$\\log_{%s}(2)$"%part[1].get_tex_string()[:-1]
+                )
+                log.highlight(BLUE)
+                part.add(brace, log)
+        exp = VGroup(*rhs_list[0][1:4])
+        rect = BackgroundRectangle(group)
+
+        self.add(lhs, rhs_list[0])
+        self.dither()
+        for rhs in rhs_list[1:]:
+            self.play(FadeIn(
+                rhs, 
+                run_time = 2,
+                submobject_mode = 'lagged_start'
+            ))
+            self.dither(2)
+        self.dither()
+        self.play(
+            FadeIn(rect),
+            exp.next_to, self.teacher, UP+LEFT,
+            self.teacher.change, "raise_right_hand",
+        )
+        self.play(*[
+            ApplyFunction(
+                lambda m : m.shift(SMALL_BUFF*UP).highlight(RED),
+                part,
+                run_time = 2,
+                rate_func = squish_rate_func(there_and_back, a, a+0.3)
+            )
+            for part, a in zip(exp[1], np.linspace(0, 0.7, len(exp[1])))
+        ])
+        self.change_student_modes(
+            *["pondering"]*3,
+            look_at_arg = exp
+        )
+        self.dither(3)
+
 class TooManySymbols(TeacherStudentsScene):
     def construct(self):
         self.student_says(
@@ -1951,7 +2010,17 @@ class ExpPatreonThanks(PatreonThanks):
         ]
     }
 
-class Thumbnail(Scene):
+class Thumbnail(GraphOfTwoToT):
+    CONFIG = {
+        "x_axis_label" : "",
+        "y_axis_label" : "",
+        "x_labeled_nums" : None,
+        "y_labeled_nums" : None,
+        "y_max" : 32,
+        "y_tick_frequency" : 4,
+        "graph_origin" : 3*DOWN + 5*LEFT,
+        "x_axis_width" : 12,
+    }
     def construct(self):
         derivative = TexMobject(
             "\\frac{d(a^t)}{dt} =", "a^t \\ln(a)"
@@ -1961,32 +2030,36 @@ class Thumbnail(Scene):
         derivative[0][2].highlight(BLUE)
         derivative[1][0].highlight(BLUE)
         derivative[1][5].highlight(BLUE)
-        derivative.scale(3)
-        # derivative.to_edge(UP)
-        derivative.shift(DOWN)
+        derivative.scale(2)
+        derivative.add_background_rectangle()
+        derivative.to_corner(DOWN+RIGHT, buff = MED_SMALL_BUFF)
 
-        brace = Brace(Line(LEFT, RIGHT), UP)
-        brace.scale_to_fit_width(derivative[1].get_width())
-        brace.next_to(derivative[1], UP)
-        question = TextMobject("Why?")
-        question.scale(2.5)
-        question.next_to(brace, UP)
+        # brace = Brace(Line(LEFT, RIGHT), UP)
+        # brace.scale_to_fit_width(derivative[1].get_width())
+        # brace.next_to(derivative[1], UP)
+        # question = TextMobject("Why?")
+        # question.scale(2.5)
+        # question.next_to(brace, UP)
 
         # randy = Randolph()
         # randy.scale(1.3)
         # randy.next_to(ORIGIN, LEFT).to_edge(DOWN)
         # randy.change_mode("pondering")
 
-        # question = TextMobject("What is $e\\,$?")
-        # e = question[-2]
-        # e.scale(1.2, about_point = e.get_bottom())
-        # e.highlight(BLUE)
-        # question.scale(1.7)
-        # question.next_to(randy, RIGHT, aligned_edge = UP)
-        # question.shift(DOWN)
+        question = TextMobject("What is $e\\,$?")
+        e = question[-2]
+        e.scale(1.2, about_point = e.get_bottom())
+        e.highlight(BLUE)
+        question.scale(3)
+        question.add_background_rectangle()
+        question.to_edge(UP)
         # randy.look_at(question)
 
-        self.add(derivative, brace, question)
+        self.setup_axes()
+        graph = self.get_graph(np.exp)
+        graph.set_stroke(YELLOW, 8)
+
+        self.add(graph, question, derivative)
 
 
 
