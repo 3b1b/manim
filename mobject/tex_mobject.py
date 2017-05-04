@@ -3,6 +3,7 @@ from svg_mobject import SVGMobject, VMobjectFromSVGPathstring
 from topics.geometry import BackgroundRectangle
 from helpers import *
 import collections
+import sys
 
 TEX_MOB_SCALE_FACTOR = 0.05
 TEXT_MOB_SCALE_FACTOR = 0.05
@@ -264,12 +265,23 @@ def tex_to_dvi(tex_file):
         commands = [
             "latex", 
             "-interaction=batchmode", 
+            "-halt-on-error",
             "-output-directory=" + TEX_DIR,
             tex_file,
             "> /dev/null"
         ]
-        #TODO, Error check
-        os.system(" ".join(commands))
+        exit_code = os.system(" ".join(commands))
+        if exit_code != 0:
+            latex_output = ''
+            log_file = tex_file.replace(".tex", ".log")
+            if os.path.exists(log_file):
+                with open(log_file, 'r') as f:
+                    latex_output = f.read()
+            if latex_output:
+                sys.stderr.write(latex_output)
+            raise Exception(
+                "Latex error converting to dvi. "
+                "See log output above or the log file: %s" % log_file)
     return result
 
 def dvi_to_svg(dvi_file, regen_if_exists = False):
