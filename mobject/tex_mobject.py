@@ -143,6 +143,16 @@ class TexMobject(SVGMobject):
             part.highlight(color)
         return self
 
+    def index_of_part(self, part):
+        split_self = self.split()
+        if part not in split_self:
+            raise Exception("Trying to get index of part not in TexMobject")
+        return self.split().index(part)
+
+    def index_of_part_by_tex(self, tex, **kwargs):
+        part = self.get_part_by_tex(tex, **kwargs)
+        return self.index_of_part(part)
+
     def organize_submobjects_left_to_right(self):
         self.submobjects.sort(
             lambda m1, m2 : int((m1.get_left()-m2.get_left())[0])
@@ -213,11 +223,15 @@ class Brace(TexMobject):
         self.put_at_tip(text_mob, **kwargs)
         return text_mob
 
+    def get_tex(self, *tex, **kwargs):
+        tex_mob = TexMobject(*tex)
+        self.put_at_tip(tex_mob, **kwargs)
+        return tex_mob
+
     def get_tip(self):
         # Very specific to the LaTeX representation
         # of a brace, but it's the only way I can think
         # of to get the tip regardless of orientation.
-        # return self.submobjects[2].get_anchors()[7]
         return self.get_all_points()[self.tip_point_index]
 
     def get_direction(self):

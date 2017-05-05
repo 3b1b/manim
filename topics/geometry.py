@@ -205,6 +205,19 @@ class Arrow(Line):
         self.add_tip()
 
     def add_tip(self, add_at_end = True):
+        tip = VMobject(
+            close_new_points = True,
+            mark_paths_closed = True,
+            fill_color = self.color,
+            fill_opacity = 1,
+            stroke_color = self.color,
+        )
+        self.set_tip_points(tip, add_at_end)
+        self.tip = tip
+        self.add(self.tip)
+        self.init_colors()
+
+    def set_tip_points(self, tip, add_at_end = True):
         start, end = self.get_start_and_end()
         anchors = self.get_anchors()
         vect = anchors[-1] - anchors[-2]
@@ -216,19 +229,11 @@ class Arrow(Line):
             end+rotate_vector(vect, u*self.tip_angle)
             for u in 1, -1
         ]
-        self.tip = VMobject(
-            close_new_points = True,
-            mark_paths_closed = True,
-            fill_color = self.color,
-            fill_opacity = 1,
-            stroke_color = self.color,
-        )
-        self.tip.set_anchor_points(
+        tip.set_anchor_points(
             [tip_points[0], end, tip_points[1]],
             mode = "corners"
         )
-        self.add(self.tip)
-        self.init_colors()
+        return self
 
     def get_end(self):
         if hasattr(self, "tip"):
@@ -241,9 +246,8 @@ class Arrow(Line):
 
     def scale(self, scale_factor, **kwargs):
         Line.scale(self, scale_factor, **kwargs)
-        if self.preserve_tip_size_when_scaling:
-            self.remove(self.tip)
-            self.add_tip()
+        if self.preserve_tip_size_when_scaling and self.get_length() > self.tip_length:
+            self.set_tip_points(self.tip)
         return self
 
 class Vector(Arrow):

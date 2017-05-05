@@ -1121,10 +1121,10 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
 class ReflectOnQuadraticApproximation(TeacherStudentsScene):
     def construct(self):
         self.show_example_approximation()
-        self.add_polynomial()
-        self.show_c0()
-        self.show_c1()
-        self.show_c2()
+        # self.add_polynomial()
+        # self.show_c0()
+        # self.show_c1()
+        # self.show_c2()
 
     def show_example_approximation(self):
         approx_at_x, approx_at_point = [
@@ -1138,7 +1138,7 @@ class ReflectOnQuadraticApproximation(TeacherStudentsScene):
         approx_rhs.next_to(approx_at_point, RIGHT)
         real_result = TexMobject(
             "\\cos(", "0.1", ")", "=", 
-            "%.7f"%np.cos(0.1)
+            "%.7f\\dots"%np.cos(0.1)
         )
         real_result.shift(
             approx_rhs.get_part_by_tex("=").get_center() -\
