@@ -11,27 +11,22 @@ For 9/10 math animation needs, you'd probably be better off using a more well-ma
 
 
 ## Install requirements
+
+Manim dependencies rely on system libraries you will need to install on your
+operating system:
+* ffmpeg
+* latex
+
+Then you can install the python dependencies:
 ```sh
 pip install -r requirements.txt
 ```
 
-Requirements to be installed outside of pip:
-aggdraw (try it from scottopell/aggdraw-64bits@c95aac4)
-ffmpeg
-latex
-
-Here are directions that should work on any 64 bit platform (tested on osx
-10.11.4)
+Note: pip will install the python module `aggdraw` from
+https://github.com/scottopell/aggdraw-64bits/ and it might requires additional
+dependencies.
 
 This doesn't install freetype, but I don't think it's required for this project
-
-```
-cd $TMPDIR
-git clone https://github.com/scottopell/aggdraw-64bits
-cd aggdraw-64bits
-/usr/local/bin/python setup.py build_ext -i
-/usr/local/bin/python setup.py install
-```
 
 ## How to Use
 Try running the following:
