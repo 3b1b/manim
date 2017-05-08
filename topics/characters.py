@@ -39,12 +39,20 @@ class PiCreature(SVGMobject):
     }
     def __init__(self, mode = "plain", **kwargs):
         self.parts_named = False
-        svg_file = os.path.join(
-            PI_CREATURE_DIR, 
-            "PiCreatures_%s.svg"%mode
-        )
-        digest_config(self, kwargs, locals())
-        SVGMobject.__init__(self, file_name = svg_file, **kwargs)
+        try:
+            svg_file = os.path.join(
+                PI_CREATURE_DIR, 
+                "PiCreatures_%s.svg"%mode
+            )
+            SVGMobject.__init__(self, file_name = svg_file, **kwargs)
+        except:
+            warnings.warn("No PiCreature design with mode %s"%mode)
+            svg_file = os.path.join(
+                PI_CREATURE_DIR, 
+                "PiCreatures_plain.svg"
+            )
+            SVGMobject.__init__(self, file_name = svg_file, **kwargs)
+
         if self.flip_at_start:
             self.flip()
         if self.start_corner is not None:
