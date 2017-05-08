@@ -27,7 +27,7 @@ from mobject.tex_mobject import *
 
 
 from topics.common_scenes import OpeningQuote, PatreonThanks
-from eoc.graph_scene import *
+from topics.graph_scene import *
 
 SINE_COLOR = BLUE
 X_SQUARED_COLOR = GREEN

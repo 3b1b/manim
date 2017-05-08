@@ -26,7 +26,7 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
 from topics.common_scenes import *
-from eoc.graph_scene import *
+from topics.graph_scene import *
 
 SPACE_UNIT_TO_PLANE_UNIT = 0.75
 

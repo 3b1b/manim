@@ -27,9 +27,9 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
-from eoc.graph_scene import GraphScene
-from eoc.chapter1 import Car, MoveCar
-from eoc.chapter10 import derivative
+from topics.graph_scene import GraphScene
+from old_projects.eoc.chapter1 import Car, MoveCar
+from old_projects.eoc.chapter10 import derivative
 
 #revert_to_original_skipping_status
 

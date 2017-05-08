@@ -24,7 +24,7 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
-from eoc.graph_scene import GraphScene
+from topics.graph_scene import GraphScene
 
 #### Warning, scenes here not updated based on most recent GraphScene changes #######
 

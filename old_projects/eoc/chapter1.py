@@ -25,8 +25,8 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
-from eoc.graph_scene import GraphScene
-from eoc.chapter2 import Car, MoveCar
+from topics.graph_scene import GraphScene
+from old_projects.eoc.chapter2 import Car, MoveCar
 from topics.common_scenes import OpeningQuote, PatreonThanks
 
 class CircleScene(PiCreatureScene):

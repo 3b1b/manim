@@ -26,9 +26,9 @@ from mobject.tex_mobject import *
 
 
 from topics.common_scenes import OpeningQuote, PatreonThanks
-from eoc.chapter2 import DISTANCE_COLOR, TIME_COLOR, \
+from old_projects.eoc.chapter2 import DISTANCE_COLOR, TIME_COLOR, \
     VELOCITY_COLOR, Car, MoveCar
-from eoc.graph_scene import *
+from topics.graph_scene import *
 
 OUTPUT_COLOR = DISTANCE_COLOR
 INPUT_COLOR = TIME_COLOR

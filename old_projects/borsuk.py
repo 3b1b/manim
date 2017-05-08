@@ -24,7 +24,7 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
 from topics.common_scenes import PatreonThanks
-from eoc.graph_scene import GraphScene
+from topics.graph_scene import GraphScene
 
 class Jewel(VMobject):
     CONFIG = {

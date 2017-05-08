@@ -27,8 +27,8 @@ from mobject.tex_mobject import *
 
 from topics.common_scenes import OpeningQuote, PatreonThanks
 
-from eoc.graph_scene import *
-from eoc.chapter4 import ThreeLinesChainRule
+from topics.graph_scene import *
+from old_projects.eoc.chapter4 import ThreeLinesChainRule
 
 class ExpFootnoteOpeningQuote(OpeningQuote):
     CONFIG = {

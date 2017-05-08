@@ -27,8 +27,8 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
-from eoc.graph_scene import GraphScene
-from eoc.chapter8 import AreaIsDerivative
+from topics.graph_scene import GraphScene
+from old_projects.eoc.chapter8 import AreaIsDerivative
 from topics.common_scenes import OpeningQuote, PatreonThanks
 
 def derivative(func, x, n = 1, dx = 0.01):

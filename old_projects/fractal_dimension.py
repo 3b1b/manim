@@ -24,8 +24,8 @@ from mobject.tex_mobject import *
 
 from fractal_charm import FractalCreation
 
-from eoc.graph_scene import GraphScene
-from eoc.chapter1 import PatreonThanks
+from topics.graph_scene import GraphScene
+from topics.common_scenes import PatreonThanks
 
 def break_up(mobject, factor = 1.3):
     mobject.scale_in_place(factor)

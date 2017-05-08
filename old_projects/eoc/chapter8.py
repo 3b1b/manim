@@ -26,9 +26,9 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
-from eoc.graph_scene import GraphScene
-from eoc.chapter1 import Thumbnail as Chapter1Thumbnail
-from eoc.chapter2 import Car, MoveCar, ShowSpeedometer, \
+from topics.graph_scene import GraphScene
+from old_projects.eoc.chapter1 import Thumbnail as Chapter1Thumbnail
+from old_projects.eoc.chapter2 import Car, MoveCar, ShowSpeedometer, \
     IncrementNumber, GraphCarTrajectory, SecantLineToTangentLine, \
     VELOCITY_COLOR, TIME_COLOR, DISTANCE_COLOR
 from topics.common_scenes import OpeningQuote, PatreonThanks
