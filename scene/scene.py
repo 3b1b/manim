@@ -21,22 +21,29 @@ from animation.transform import MoveToTarget
 
 class Scene(object):
     CONFIG = {
-        "camera_class"    : Camera,
-        "camera_config"   : {},
-        "frame_duration"  : LOW_QUALITY_FRAME_DURATION,
-        "construct_args"  : [],
-        "skip_animations" : False,
+        "camera_class"     : Camera,
+        "camera_config"    : {},
+        "frame_duration"   : LOW_QUALITY_FRAME_DURATION,
+        "construct_args"   : [],
+        "skip_animations"  : False,
+        "write_to_movie"   : True,
+        "save_frames"      : False,
+        "output_directory" : MOVIE_DIR,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
         self.camera = self.camera_class(**self.camera_config)
-        self.frames = []
         self.mobjects = []
         self.foreground_mobjects = []
         self.num_plays = 0
+        self.saved_frames = []
 
         self.setup()
+        if self.write_to_movie:
+            self.open_movie_pipe()
         self.construct(*self.construct_args)
+        if self.write_to_movie:
+            self.close_movie_pipe()
 
     def setup(self):
         """
@@ -313,31 +320,6 @@ class Scene(object):
             return self.mobjects_from_last_animation
         return []
 
-    def play_over_time_range(self, t0, t1, *animations):
-        needed_scene_time = max(abs(t0), abs(t1))
-        existing_scene_time = len(self.frames)*self.frame_duration
-        if existing_scene_time < needed_scene_time:
-            self.dither(needed_scene_time - existing_scene_time)
-            existing_scene_time = needed_scene_time
-        #So negative values may be used
-        if t0 < 0:
-            t0 = float(t0)%existing_scene_time
-        if t1 < 0:
-            t1 = float(t1)%existing_scene_time
-        t0, t1 = min(t0, t1), max(t0, t1)    
-
-        moving_mobjects, static_mobjects = \
-            self.separate_moving_and_static_mobjects(*animations)
-        for t in np.arange(t0, t1, self.frame_duration):
-            for animation in animations:
-                animation.update((t-t0)/(t1 - t0))
-            index = int(t/self.frame_duration)
-            self.update_frame(moving_mobjects, self.frames[index])
-            self.frames[index] = self.get_frame()
-        for animation in animations:
-            animation.clean_up()
-        return self
-
     def dither(self, duration = DEFAULT_DITHER_TIME):
         if self.skip_animations:
             return self
@@ -356,21 +338,22 @@ class Scene(object):
         return self
 
     def add_frames(self, *frames):
-        self.frames += list(frames)
+        if self.write_to_movie:
+            for frame in frames:
+                self.writing_process.stdin.write(frame.tostring())
+        if self.save_frames:
+            self.saved_frames += list(frames)
 
-    def repeat_frames(self, num):
-        self.frames = self.frames*num
-        return self
-
-    def reverse_frames(self):
-        self.frames.reverse()
+    def repeat_frames(self, num = 1):
+        assert(self.save_frames)
+        self.add_frames(*self.saved_frames*num)
         return self
 
     def invert_colors(self):
         white_frame = 255*np.ones(self.get_frame().shape, dtype = 'uint8')
-        self.frames = [
+        self.saved_frames = [
             white_frame-frame
-            for frame in self.frames
+            for frame in self.saved_frames
         ]
         return self
 
@@ -381,8 +364,8 @@ class Scene(object):
     def preview(self):
         TkSceneRoot(self)
 
-    def save_image(self, directory = MOVIE_DIR, name = None):
-        path = os.path.join(directory, "images")
+    def save_image(self, name = None):
+        path = os.path.join(self.output_directory, "images")
         file_name = (name or str(self)) + ".png"
         full_path = os.path.join(path, file_name)
         if not os.path.exists(path):
@@ -391,20 +374,15 @@ class Scene(object):
         Image.fromarray(self.get_frame()).save(full_path)
 
     def get_movie_file_path(self, name, extension):
-        file_path = os.path.join(MOVIE_DIR, name)
+        file_path = os.path.join(self.output_directory, name)
         if not file_path.endswith(extension):
             file_path += extension
-        directory = os.path.split(file_path)[0]
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+        if not os.path.exists(self.output_directory):
+            os.makedirs(self.output_directory)
         return file_path
 
-    def write_to_movie(self, name = None):
-        if len(self.frames) == 0:
-            print "No frames, so I'm not writing anything"
-            return
-        if name is None:
-            name = str(self)
+    def open_movie_pipe(self):
+        name = str(self)
         file_path = self.get_movie_file_path(name, ".mp4")
         print "Writing to %s"%file_path
 
@@ -427,11 +405,11 @@ class Scene(object):
             '-loglevel', 'error',
             file_path,
         ]
-        process = sp.Popen(command, stdin=sp.PIPE)
-        for frame in self.frames:
-            process.stdin.write(frame.tostring())
-        process.stdin.close()
-        process.wait()
+        self.writing_process = sp.Popen(command, stdin=sp.PIPE)
+
+    def close_movie_pipe(self):
+        self.writing_process.stdin.close()
+        self.writing_process.wait()
 
 
 

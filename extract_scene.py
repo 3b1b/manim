@@ -46,16 +46,17 @@ def get_configuration(sys_argv):
       print str(err)
       sys.exit(2)
    config = {
-      "file"           : None,
-      "scene_name"     : "",
-      "camera_config"  : PRODUCTION_QUALITY_CAMERA_CONFIG,
-      "frame_duration" : PRODUCTION_QUALITY_FRAME_DURATION,
-      "preview"        : False,
-      "write"          : False,
-      "save_image"     : False,
-      "quiet"          : False,
-      "write_all"      : False,
-      "output_name"    : None,
+      "file"            : None,
+      "scene_name"      : "",
+      "camera_config"   : PRODUCTION_QUALITY_CAMERA_CONFIG,
+      "frame_duration"  : PRODUCTION_QUALITY_FRAME_DURATION,
+      "preview"         : False,
+      "write_to_movie"  : False,
+      "save_all_frames" : False,
+      "save_image"      : False,
+      "quiet"           : False,
+      "write_all"       : False,
+      "output_name"     : None,
    }
    for opt, arg in opts:
       if opt == '-h':
@@ -66,11 +67,12 @@ def get_configuration(sys_argv):
          config["frame_duration"] = LOW_QUALITY_FRAME_DURATION
       if opt == '-p':
          config["preview"] = True
+         config["save_all_frames"] = True
       if opt == '-m':
          config["camera_config"] = MEDIUM_QUALITY_CAMERA_CONFIG
          config["frame_duration"] = MEDIUM_QUALITY_FRAME_DURATION
       if opt == '-w':
-         config["write"] = True
+         config["write_to_movie"] = True
       if opt == '-s':
          config["save_image"] = True
       if opt in ['-q', '-a']:
@@ -80,10 +82,10 @@ def get_configuration(sys_argv):
       if opt == '-o':
          config["output_name"] = arg
    #By default, write to file
-   actions = ["write", "preview", "save_image"]
+   actions = ["write_to_movie", "preview", "save_image"]
    if not any([config[key] for key in actions]):
-      config["write"] = True   
-   config["skip_animations"] = config["save_image"] and not config["write"]
+      config["write_to_movie"] = True   
+   config["skip_animations"] = config["save_image"] and not config["write_to_movie"]
 
    if len(args) == 0:
       print HELP_MESSAGE
@@ -104,10 +106,7 @@ def handle_scene(scene, **config):
    if config["save_image"]:
       if not config["write_all"]:
          scene.show_frame()
-      path = os.path.join(MOVIE_DIR, config["movie_prefix"])
-      scene.save_image(path, output_name)
-   if config["write"]:
-      scene.write_to_movie(os.path.join(config["movie_prefix"], output_name))
+      scene.save_image(output_name)
 
    if config["quiet"]:
       sys.stdout.close()
@@ -167,12 +166,22 @@ def main():
    scene_names_to_classes = dict(
       inspect.getmembers(module, is_scene)
    )
-   config["movie_prefix"] = config["file"].replace(".py", "")
-   scene_kwargs = {
-      "camera_config" : config["camera_config"],
-      "frame_duration" : config["frame_duration"],
-      "skip_animations" : config["skip_animations"],
-   }
+   config["output_directory"] = os.path.join(
+      MOVIE_DIR, 
+      config["file"].replace(".py", "")
+   )
+
+   scene_kwargs = dict([
+      (key, config[key])
+      for key in [
+         "camera_config",
+         "frame_duration",
+         "skip_animations",
+         "write_to_movie",
+         "save_all_frames",
+         "output_directory",
+      ]
+   ])
    for SceneClass in get_scene_classes(scene_names_to_classes, config):
       try:
          handle_scene(SceneClass(**scene_kwargs), **config)
