@@ -6,7 +6,7 @@ import time
 
 class TkSceneRoot(Tkinter.Tk):
     def __init__(self, scene):
-        if scene.frames == []:
+        if scene.saved_frames == []:
             raise Exception(str(scene) + " has no frames!")
         Tkinter.Tk.__init__(self)
 
@@ -21,7 +21,7 @@ class TkSceneRoot(Tkinter.Tk):
         self.canvas.place(x=0, y=0)
 
         last_time = time.time()
-        for frame in it.cycle(scene.frames):
+        for frame in it.cycle(scene.saved_frames):
             # try:
             #     self.show_new_image(frame)
             # except:
