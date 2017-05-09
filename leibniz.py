@@ -130,8 +130,10 @@ class Introduction(PiCreatureScene):
         pi.highlight(MAROON_B)
         return result
 
-
-class ThisWontBeEasy(TeacherStudentsScene):
+class ShowSum(TeacherStudentsScene):
+    CONFIG = {
+        "num_terms_to_add" : 40,
+    }
     def construct(self):
         self.say_words()
         self.show_sum()
@@ -142,18 +144,118 @@ class ThisWontBeEasy(TeacherStudentsScene):
             "hooray", "sassy", "angry"
         )
         self.dither(2)
-        self.play(RemovePiCreatureBubble(
-            self.teacher,
-            target_mode = "raise_right_hand",
-        ))
-        self.change_student_modes(
-            *["pondering"]*3, 
-            look_at_arg = 3*UP
-        )
 
     def show_sum(self):
-        line = NumberLine()
-        line.add_numbers()
+        line = UnitInterval()
+        line.add_numbers(0, 1)
+        line.shift(UP)
+        sum_point = line.number_to_point(np.pi/4)
+
+        numbers = [0] + [
+            ((-1)**n)/(2.0*n + 1) 
+            for n in range(self.num_terms_to_add)
+        ]
+        partial_sums = np.cumsum(numbers)
+        points = map(line.number_to_point, partial_sums)
+        arrows = [
+            Arrow(
+                p1, p2, 
+                tip_length = 0.2*min(1, np.linalg.norm(p1-p2)),
+                buff = 0
+            )
+            for p1, p2 in zip(points, points[1:])
+        ]
+        dot = Dot(points[0])
+
+        sum_mob = TexMobject(
+            "1", "-\\frac{1}{3}", "+\\frac{1}{5}", 
+            "-\\frac{1}{7}", "+\\cdots"
+        )
+        sum_mob.to_edge(UP)
+        sum_mob.shift(LEFT)
+        rhs = TexMobject(
+            "=", "\\frac{\\pi}{4}",
+            "\\approx %.5f\\dots"%(np.pi/4)
+        )
+        rhs.next_to(sum_mob, RIGHT)
+        rhs.highlight_by_tex("pi", YELLOW)
+        sum_arrow = Arrow(
+            rhs.get_part_by_tex("pi"),
+            sum_point
+        )
+        fading_terms = [
+            TexMobject(sign + "\\frac{1}{%d}"%(2*n + 1))
+            for n, sign in zip(
+                range(self.num_terms_to_add),
+                it.cycle("+-")
+            )
+        ]
+        for fading_term, arrow in zip(fading_terms, arrows):
+            fading_term.next_to(arrow, UP)
+
+        terms = it.chain(sum_mob, it.repeat(None))
+        last_arrows = it.chain([None], arrows)
+        last_fading_terms = it.chain([None], fading_terms)
+
+        self.change_student_modes(
+            *["pondering"]*3,
+            look_at_arg = line,
+            added_anims = [
+                FadeIn(VGroup(line, dot)),
+                RemovePiCreatureBubble(
+                    self.teacher,
+                    target_mode = "raise_right_hand"
+                )
+            ]
+            
+        )
+        run_time = 1
+        for term, arrow, last_arrow, fading_term, last_fading_term in zip(
+            terms, arrows, last_arrows, fading_terms, last_fading_terms
+            ):
+            anims = []
+            if term:
+                anims.append(Write(term))
+            if last_arrow:
+                anims.append(FadeOut(last_arrow))
+            if last_fading_term:
+                anims.append(FadeOut(last_fading_term))
+            dot_movement = ApplyMethod(dot.move_to, arrow.get_end())
+            anims.append(ShowCreation(arrow))
+            anims.append(dot_movement)
+            anims.append(FadeIn(fading_term))
+            self.play(*anims, run_time = run_time)
+            if term:
+                self.dither()
+            else:
+                run_time *= 0.8
+        self.play(
+            FadeOut(arrow),
+            FadeOut(fading_term),
+            dot.move_to, sum_point
+        )
+        self.play(
+            Write(rhs),
+            ShowCreation(sum_arrow)
+        )
+        self.dither()
+        self.change_student_modes("erm", "confused", "maybe")
+        self.play(self.teacher.change_mode, "happy")
+        self.dither(2)
+
+class FermatsDreamExcerptWrapper(Scene):
+    def construct(self):
+        words = TextMobject(
+            "From ``Fermat's dream'' by Kato, Kurokawa and Saito"
+        )
+        words.scale(0.8)
+        words.to_edge(UP)
+        self.add(words)
+        self.dither()
+
+
+
+
 
 
 
