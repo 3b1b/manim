@@ -29,6 +29,7 @@ class Scene(object):
         "write_to_movie"   : True,
         "save_frames"      : False,
         "output_directory" : MOVIE_DIR,
+        "name" : None,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
@@ -37,6 +38,8 @@ class Scene(object):
         self.foreground_mobjects = []
         self.num_plays = 0
         self.saved_frames = []
+        if self.name is None:
+            self.name = self.__class__.__name__
 
         self.setup()
         if self.write_to_movie:
@@ -57,9 +60,7 @@ class Scene(object):
         pass #To be implemented in subclasses
 
     def __str__(self):
-        if hasattr(self, "name"):
-            return self.name
-        return self.__class__.__name__
+        return self.name
 
     def set_name(self, name):
         self.name = name

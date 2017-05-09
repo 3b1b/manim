@@ -96,7 +96,6 @@ def get_configuration(sys_argv):
    return config
 
 def handle_scene(scene, **config):
-   output_name = config["output_name"] or str(scene)
    if config["quiet"]:
       curr_stdout = sys.stdout
       sys.stdout = open(os.devnull, "w")
@@ -106,7 +105,7 @@ def handle_scene(scene, **config):
    if config["save_image"]:
       if not config["write_all"]:
          scene.show_frame()
-      scene.save_image(output_name)
+      scene.save_image()
 
    if config["quiet"]:
       sys.stdout.close()
@@ -182,6 +181,7 @@ def main():
          "output_directory",
       ]
    ])
+   scene_kwargs["name"] = config["output_name"]
    for SceneClass in get_scene_classes(scene_names_to_classes, config):
       try:
          handle_scene(SceneClass(**scene_kwargs), **config)
