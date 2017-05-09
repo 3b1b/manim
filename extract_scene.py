@@ -52,7 +52,7 @@ def get_configuration(sys_argv):
       "frame_duration"  : PRODUCTION_QUALITY_FRAME_DURATION,
       "preview"         : False,
       "write_to_movie"  : False,
-      "save_all_frames" : False,
+      "save_frames"     : False,
       "save_image"      : False,
       "quiet"           : False,
       "write_all"       : False,
@@ -67,7 +67,7 @@ def get_configuration(sys_argv):
          config["frame_duration"] = LOW_QUALITY_FRAME_DURATION
       if opt == '-p':
          config["preview"] = True
-         config["save_all_frames"] = True
+         config["save_frames"] = True
       if opt == '-m':
          config["camera_config"] = MEDIUM_QUALITY_CAMERA_CONFIG
          config["frame_duration"] = MEDIUM_QUALITY_FRAME_DURATION
@@ -178,7 +178,7 @@ def main():
          "frame_duration",
          "skip_animations",
          "write_to_movie",
-         "save_all_frames",
+         "save_frames",
          "output_directory",
       ]
    ])
