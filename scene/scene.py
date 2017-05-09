@@ -32,6 +32,7 @@ class Scene(object):
         self.camera = self.camera_class(**self.camera_config)
         self.frames = []
         self.mobjects = []
+        self.foreground_mobjects = []
         self.num_plays = 0
 
         self.setup()
@@ -160,6 +161,27 @@ class Scene(object):
         self.mobjects = filter(should_keep, self.mobjects)
         return self
 
+    def add_foreground_mobjects(self, *mobjects):
+        self.foreground_mobjects = list_update(
+            self.foreground_mobjects, 
+            mobjects
+        )
+        self.add(*mobjects)
+        return self
+
+    def add_foreground_mobject(self, mobject):
+        return self.add_foreground_mobjects(mobject)
+
+    def remove_foreground_mobjects(self, *mobjects):
+        self.foreground_mobjects = filter(
+            lambda m : m not in mobjects,
+            self.foreground_mobjects
+        )
+        return self
+
+    def remove_foreground_mobject(self, mobject):
+        return self.remove_foreground_mobjects(mobject)
+
     def bring_to_front(self, *mobjects):
         self.add(*mobjects)
         return self
@@ -183,7 +205,8 @@ class Scene(object):
         """
         """
         moving_mobjects = self.extract_mobject_family_members(
-            *[anim.mobject for anim in animations]
+            *[anim.mobject for anim in animations] + \
+            self.foreground_mobjects
         )
         static_mobjects = filter(
             lambda m : m not in moving_mobjects,
