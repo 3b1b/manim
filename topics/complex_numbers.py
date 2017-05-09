@@ -176,11 +176,12 @@ def complex_string(complex_num):
 
 class ComplexPlane(NumberPlane):
     CONFIG = {
-        "color"                 : GREEN,
+        "color"                 : BLUE,
         "unit_to_spatial_width" : 1,
         "line_frequency"        : 1,
         "faded_line_frequency"  : 0.5,
         "number_at_center"      : complex(0),
+        "number_scale_factor" : 0.5,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
@@ -238,7 +239,6 @@ class ComplexPlane(NumberPlane):
             end_point *= SPACE_WIDTH
             self.add(Line(ORIGIN, end_point, **config))
         return self
-
 
 class ComplexFunction(ApplyPointwiseFunction):
     def __init__(self, function, mobject = ComplexPlane, **kwargs):
