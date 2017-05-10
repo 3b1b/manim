@@ -139,7 +139,7 @@ class NumberPlane(VMobject):
         "secondary_line_ratio" : 1,
         "written_coordinate_height" : 0.2,
         "written_coordinate_nudge" : 0.1*(DOWN+RIGHT),
-        "num_pair_at_center" : (0, 0),
+        "coords_at_center" : (0, 0),
         "propogate_style_to_family" : False,
     }
     
@@ -192,21 +192,27 @@ class NumberPlane(VMobject):
         return self
 
     def get_center_point(self):
-        return self.num_pair_to_point(self.num_pair_at_center)
+        return self.num_pair_to_point(self.coords_at_center)
 
-    def num_pair_to_point(self, pair):
-        pair = np.array(pair) + self.num_pair_at_center
+    def coords_to_point(self, x, y):
+        x, y = np.array([x, y]) + self.coords_at_center
         result = self.axes.get_center()
-        result[0] += pair[0]*self.space_unit_to_x_unit
-        result[1] += pair[1]*self.space_unit_to_y_unit
+        result += x*self.get_space_unit_to_x_unit()*RIGHT
+        result += y*self.get_space_unit_to_y_unit()*UP
         return result
 
-    def point_to_num_pair(self, point):
+    def point_to_coords(self, point):
         new_point = point-self.get_center()
-        center_x, center_y = self.num_pair_at_center
-        x = center_x + point[0]/self.space_unit_to_x_unit
-        y = center_y + point[1]/self.space_unit_to_y_unit
+        center_x, center_y = self.coords_at_center
+        x = center_x + point[0]/self.get_space_unit_to_x_unit()
+        y = center_y + point[1]/self.get_space_unit_to_y_unit()
         return x, y
+
+    def get_space_unit_to_x_unit(self):
+        return self.axes.get_width() / (2.0*self.x_radius)
+
+    def get_space_unit_to_y_unit(self):
+        return self.axes.get_height() / (2.0*self.y_radius)
 
     def get_coordinate_labels(self, x_vals = None, y_vals = None):
         result = []
@@ -248,7 +254,6 @@ class NumberPlane(VMobject):
             labels.add(label)
         self.axis_labels = labels
         return labels
-
 
     def add_coordinates(self, x_vals = None, y_vals = None):
         self.add(*self.get_coordinate_labels(x_vals, y_vals))

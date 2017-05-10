@@ -374,6 +374,7 @@ class PiCreatureScene(Scene):
     }
     def setup(self):
         self.pi_creatures = VGroup(*self.create_pi_creatures())
+        self.pi_creature = self.get_primary_pi_creature()
         if self.pi_creatures_start_on_screen:
             self.add(*self.pi_creatures)
 
@@ -384,8 +385,7 @@ class PiCreatureScene(Scene):
         return VGroup(self.create_pi_creature())
 
     def create_pi_creature(self):
-        self.pi_creature = Mortimer().to_corner(DOWN+RIGHT)
-        return self.pi_creature
+        return Mortimer().to_corner(DOWN+RIGHT)
 
     def get_pi_creatures(self):
         return self.pi_creatures

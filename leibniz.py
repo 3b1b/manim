@@ -28,6 +28,15 @@ from mobject.tex_mobject import *
 
 # revert_to_original_skipping_status
 
+def chi_func(n):
+    if n%2 == 0:
+        return 0
+    if n%4 == 1:
+        return 1
+    else:
+        return -1
+
+######
 
 class Introduction(PiCreatureScene):
     def construct(self):
@@ -253,16 +262,381 @@ class FermatsDreamExcerptWrapper(Scene):
         self.add(words)
         self.dither()
 
+class ShowSumMeantForFadedBackground(Scene):
+    def construct(self):
+        tex_mob = TexMobject(
+            "1 - \\frac{1}{3} + \\frac{1}{5} - \\frac{1}{7} + \\cdots",
+            "=", "\\frac{\\pi}{4}"
+        )
+        tex_mob.highlight_by_tex("pi", YELLOW)
+        self.add(tex_mob)
+        self.dither()
+
+class ShowCalculus(PiCreatureScene):
+    def construct(self):
+        frac_sum = TexMobject(
+            "1 - \\frac{1}{3} + \\frac{1}{5} - \\frac{1}{7} + \\cdots",
+        )
+        int1 = TexMobject(
+            "= \\int_0^1 (1 - x^2 + x^4 - \\dots )\\,dx"
+        )
+        int2 = TexMobject(
+            "= \\int_0^1 \\frac{1}{1+x^2}\\,dx"
+        )
+        arctan = TexMobject("= \\tan^{-1}(1)")
+        pi_fourths = TexMobject("= \\frac{\\pi}{4}")
+
+        frac_sum.to_corner(UP+LEFT)
+        frac_sum.shift(RIGHT)
+        rhs_group = VGroup(int1, int2, arctan, pi_fourths)
+        rhs_group.arrange_submobjects(
+            DOWN, buff = MED_LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+        rhs_group.shift(
+            frac_sum.get_right() + MED_SMALL_BUFF*RIGHT \
+            -int1[0].get_left()
+        )
+        
+        self.add(frac_sum)
+        modes = it.chain(["plain"], it.cycle(["confused"]))
+        for rhs, mode in zip(rhs_group, modes):
+            self.play(
+                FadeIn(rhs),
+                self.pi_creature.change, mode
+            )
+            self.dither()
+        self.change_mode("maybe")
+        self.dither()
+        self.look_at(rhs_group[-1])
+        self.dither()
+        self.pi_creature_says(
+            "Where's the \\\\ circle?",
+            bubble_kwargs = {"width" : 4, "height" : 3},
+            target_mode = "maybe"
+        )
+        self.look_at(rhs_group[0])
+        self.dither()
+
+    def create_pi_creature(self):
+        return Randolph(color = BLUE_C).to_corner(DOWN+LEFT)
+
+class Outline(PiCreatureScene):
+    def construct(self):
+        self.generate_list()
+        self.wonder_at_pi()
+        self.count_lattice_points()
+        self.write_steps_2_and_3()
+        self.show_chi()
+        self.show_complicated_formula()
+        self.show_last_step()
+
+    def generate_list(self):
+        steps = VGroup(
+            TextMobject("1. Count lattice points"),
+            TexMobject("2. \\text{ Things like }17 = ", "4", "^2 + ", "1", "^2"),
+            TexMobject("3. \\text{ Things like }17 = (", "4", " + ", "i", ")(", "4", " - ", "i", ")"),
+            TextMobject("4. Introduce $\\chi$"),
+            TextMobject("5. Shift perspective"),
+        )
+        for step in steps[1:3]:
+            step.highlight_by_tex("1", RED, substring = False)
+            step.highlight_by_tex("i", RED, substring = False)
+            step.highlight_by_tex("4", GREEN, substring = False)
+        steps.arrange_submobjects(
+            DOWN, 
+            buff = MED_LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+        steps.to_corner(UP+LEFT)
+
+        self.steps = steps
+
+    def wonder_at_pi(self):
+        question = TexMobject("\\pi", "=???")
+        pi = question.get_part_by_tex("pi")
+        pi.scale(2, about_point = pi.get_right())
+        pi.highlight(YELLOW)
+        question.next_to(self.pi_creature.body, LEFT, aligned_edge = UP)
+        self.think(
+            "Who am I really?",
+            look_at_arg = question,
+            added_anims = [
+                FadeIn(question)
+            ]
+        )
+        self.dither(2)
+        self.play(
+            RemovePiCreatureBubble(self.pi_creature),
+            question.to_corner, UP+RIGHT
+        )
+
+        self.question = question
+        self.pi = question.get_part_by_tex("pi")
+
+    def count_lattice_points(self):
+        step = self.steps[0]
+        plane = NumberPlane(
+            x_radius = 10, y_radius = 10,
+            secondary_line_ratio = 0,
+            color = BLUE_E,
+        )
+        plane.scale_to_fit_height(6)
+        plane.next_to(step, DOWN)
+        plane.to_edge(LEFT)
+        circle = Circle(
+            color = YELLOW,
+            radius = np.linalg.norm(
+                plane.coords_to_points(10, 0) - \
+                plane.coords_to_points(0, 0)
+            )
+        )
+        plane_center = plane.coords_to_points(0, 0)
+        circle.move_to(plane_center)
+        lattice_points = VGroup(*[
+            Dot(
+                plane.coords_to_points(a, b), 
+                radius = 0.05,
+                color = PINK,
+            )
+            for a in range(-10, 11)
+            for b in range(-10, 11)
+            if a**2 + b**2 <= 10**2
+        ])
+        lattice_points.sort_submobjects(
+            lambda p : np.linalg.norm(p - plane_center)
+        )
+        lattice_group = VGroup(plane, circle, lattice_points)
+
+        self.play(ShowCreation(circle))
+        self.play(Write(plane, run_time = 2), Animation(circle))
+        self.play(
+            *[
+                DrawBorderThenFill(
+                    dot,
+                    stroke_width = 4,
+                    stroke_color = YELLOW,
+                    run_time = 4,
+                    rate_func = squish_rate_func(
+                        double_smooth, a, a + 0.25
+                    )
+                )
+                for dot, a in zip(
+                    lattice_points, 
+                    np.linspace(0, 0.75, len(lattice_points))
+                )
+            ]
+        )
+        self.play(
+            FadeIn(step)
+        )
+        self.dither()
+        self.play(
+            lattice_group.scale_to_fit_height, 2.5,
+            lattice_group.next_to, self.question, DOWN,
+            lattice_group.to_edge, RIGHT
+        )
+
+    def write_steps_2_and_3(self):
+        for step in self.steps[1:3]:
+            self.play(FadeIn(step))
+            self.dither(2)
+        self.dither()
+
+    def show_chi(self):
+        input_range = range(1, 7)
+        chis = VGroup(*[
+            TexMobject("\\chi(%d)"%n)
+            for n in input_range
+        ])
+        chis.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        chis.set_stroke(WHITE, width = 1)
+        numerators = VGroup()
+        arrows = VGroup()
+        for chi, n in zip(chis, input_range):
+            arrow = TexMobject("\\Downarrow")
+            arrow.next_to(chi, DOWN, SMALL_BUFF)
+            arrows.add(arrow)
+            value = TexMobject(str(chi_func(n)))
+            value.highlight_by_tex("1", BLUE)
+            value.highlight_by_tex("-1", GREEN)
+            value.next_to(arrow, DOWN)
+            numerators.add(value)
+        group = VGroup(chis, arrows, numerators)
+        group.scale_to_fit_width(1.3*SPACE_WIDTH)
+        group.to_corner(DOWN+LEFT)
+
+        self.play(FadeIn(self.steps[3]))
+        self.play(*[
+            FadeIn(
+                mob, 
+                run_time = 3,
+                submobject_mode = "lagged_start"
+            )
+            for mob in [chis, arrows, numerators]
+        ])
+        self.change_mode("pondering")
+        self.dither()
+
+        self.chis = chis
+        self.arrows = arrows
+        self.numerators = numerators
+
+    def show_complicated_formula(self):
+        rhs = TexMobject(
+            " = \\lim_{N \\to \\infty}",
+            " \\frac{1}{N}",
+            "\\sum_{n = 1}^N",
+            "\\sum_{d | n} \\chi(d)",
+        )
+        pi = self.pi 
+        self.add(pi.copy())
+        pi.generate_target()
+        pi.target.next_to(self.steps[3], RIGHT, MED_LARGE_BUFF)
+        pi.target.shift(MED_LARGE_BUFF*DOWN)
+        rhs.next_to(pi.target, RIGHT)
+
+        self.play(
+            MoveToTarget(pi),
+            Write(rhs)
+        )
+        self.change_mode("confused")
+        self.dither(2)
+
+        self.complicated_formula = rhs
+
+    def show_last_step(self):
+        expression = TexMobject(
+            "=", "\\frac{\\quad}{1}",
+            *it.chain(*[
+                ["+", "\\frac{\\quad}{%d}"%d]
+                for d in range(2, len(self.numerators)+1)
+            ] + [["+ \\cdots"]])
+        )
+        pi = self.pi
+        pi.generate_target()
+        pi.target.to_corner(DOWN+LEFT)
+        pi.target.shift(UP)
+        expression.next_to(pi.target, RIGHT)
+        self.numerators.generate_target()
+        for num, denom in zip(self.numerators.target, expression[1::2]):
+            num.scale(1.2)
+            num.next_to(denom, UP, MED_SMALL_BUFF)
+
+        self.play(
+            MoveToTarget(self.numerators),
+            MoveToTarget(pi),
+            FadeOut(self.chis),
+            FadeOut(self.arrows),
+            FadeOut(self.complicated_formula),
+        )
+        self.play(
+            Write(expression),
+            self.pi_creature.change_mode, "pondering"
+        )
+        self.dither(3)
+
+    ########
+    def create_pi_creature(self):
+        return Randolph(color = BLUE_B).flip().to_corner(DOWN+RIGHT)
+
+class LatticePointScene(Scene):
+    CONFIG = {
+        "y_radius" : 6,
+        "max_lattice_point_radius" : 6,
+        "dot_radius" : 0.075,
+        "secondary_line_ratio" : 0,
+        "plane_color" : BLUE_E,
+        "dot_color" : YELLOW,
+        "dot_drawing_stroke_color" : PINK,
+        "circle_color" : MAROON_D,
+    }
+    def setup(self):
+        plane = NumberPlane(
+            y_radius = self.y_radius,
+            x_radius = self.y_radius*SPACE_WIDTH/SPACE_HEIGHT,
+            secondary_line_ratio = self.secondary_line_ratio,
+            color = self.plane_color
+        )
+        plane.scale_to_fit_height(2*SPACE_HEIGHT)
+        self.add(plane)
+        self.plane = plane
+
+        self.setup_lattice_points()
+
+    def setup_lattice_points(self):
+        M = self.max_lattice_point_radius
+        int_range = range(-M, M+1)
+        self.lattice_points = VGroup()
+        for x, y in it.product(*[int_range]*2):
+            r_squared = x**2 + y**2
+            if r_squared > M**2:
+                continue
+            dot = Dot(
+                self.plane.coords_to_point(x, y),
+                color = self.dot_color,
+                radius = self.dot_radius,
+            )
+            dot.r_squared = r_squared
+            self.lattice_points.add(dot)
+        self.lattice_points.sort_submobjects(np.linalg.norm)
+
+    def get_circle(self, radius = None, color = None):
+        if radius is None:
+            radius = self.max_lattice_point_radius
+        if color is None:
+            color = self.circle_color
+        radius *= self.plane.get_space_unit_to_y_unit()
+        return Circle(
+            color = color,
+            radius = radius,
+        )
+
+    def get_lattice_points_on_r_squared_circle(self, r_squared):
+        return VGroup(*filter(
+            lambda dot : dot.r_squared == r_squared,
+            self.lattice_points
+        ))
+
+    def draw_lattice_points(self, points = None, run_time = 4):
+        if points is None:
+            points = self.lattice_points
+        self.play(*[
+            DrawBorderThenFill(
+                dot,
+                stroke_width = 4,
+                stroke_color = self.dot_drawing_stroke_color,
+                run_time = run_time,
+                rate_func = squish_rate_func(
+                    double_smooth, a, a + 0.25
+                ),
+            )
+            for dot, a in zip(
+                points, 
+                np.linspace(0, 0.75, len(points))
+            )
+        ])
+
+class CountLatticePoints(LatticePointScene):
+    CONFIG = {
+        "y_radius" : 11,
+        "max_lattice_point_radius" : 10,
+        "dot_radius" : 0.05,
+    }
+    def construct(self):
+        self.introduce_lattice_point()
+        self.draw_lattice_points_in_circle()
+        self.turn_points_int_units_of_area()
+        self.write_pi_R_squared()
+
+    def draw_lattice_points_in_circle(self):
+        circle = self.get_circle()
+        self.play(ShowCreation(circle))
+        self.draw_lattice_points()
+        self.dither()
 
 
-
-
-
-
-
-
-
-
+    ####
 
 
 
