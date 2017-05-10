@@ -123,7 +123,7 @@ class Introduction(PiCreatureScene):
         )
         plane.add_coordinates()
         point = plane.number_to_point(complex(1, 2))
-        dot = Dot(point, color = YELLOW)
+        dot = Dot(point, radius = YELLOW)
         label = TexMobject("1 + 2i")
         label.add_background_rectangle()
         label.next_to(dot, UP+RIGHT, buff = SMALL_BUFF)
@@ -543,6 +543,8 @@ class Outline(PiCreatureScene):
 class LatticePointScene(Scene):
     CONFIG = {
         "y_radius" : 6,
+        "x_radius" : None,
+        "plane_center" : ORIGIN,
         "max_lattice_point_radius" : 6,
         "dot_radius" : 0.075,
         "secondary_line_ratio" : 0,
@@ -552,13 +554,16 @@ class LatticePointScene(Scene):
         "circle_color" : MAROON_D,
     }
     def setup(self):
+        if self.x_radius is None:
+            self.x_radius = self.y_radius*SPACE_WIDTH/SPACE_HEIGHT
         plane = NumberPlane(
             y_radius = self.y_radius,
-            x_radius = self.y_radius*SPACE_WIDTH/SPACE_HEIGHT,
+            x_radius = self.x_radius,
             secondary_line_ratio = self.secondary_line_ratio,
             color = self.plane_color
         )
         plane.scale_to_fit_height(2*SPACE_HEIGHT)
+        plane.shift(self.plane_center)
         self.add(plane)
         self.plane = plane
 
@@ -587,10 +592,12 @@ class LatticePointScene(Scene):
         if color is None:
             color = self.circle_color
         radius *= self.plane.get_space_unit_to_y_unit()
-        return Circle(
+        circle = Circle(
             color = color,
             radius = radius,
         )
+        circle.move_to(self.plane.get_center())
+        return circle
 
     def get_lattice_points_on_r_squared_circle(self, r_squared):
         return VGroup(*filter(
@@ -622,25 +629,251 @@ class CountLatticePoints(LatticePointScene):
         "y_radius" : 11,
         "max_lattice_point_radius" : 10,
         "dot_radius" : 0.05,
+        "example_coords" : (7, 5),
     }
     def construct(self):
         self.introduce_lattice_point()
         self.draw_lattice_points_in_circle()
         self.turn_points_int_units_of_area()
         self.write_pi_R_squared()
+        self.allude_to_alternate_counting_method()
+
+
+    def introduce_lattice_point(self):
+        x, y = self.example_coords
+        example_dot = Dot(
+            self.plane.coords_to_point(x, y),
+            color = self.dot_color,
+            radius = 1.5*self.dot_radius,
+        )
+        label = TexMobject(str(self.example_coords))
+        label.add_background_rectangle()
+        label.next_to(example_dot, UP+RIGHT, buff = 0)
+        h_line = Line(
+            ORIGIN, self.plane.coords_to_point(x, 0),
+            color = GREEN
+        )
+        v_line = Line(
+            h_line.get_end(), self.plane.coords_to_point(x, y),
+            color = RED
+        )
+        lines = VGroup(h_line, v_line)
+
+        dots = self.lattice_points.copy()
+        random.shuffle(dots.submobjects)
+
+        self.play(*[
+            ApplyMethod(
+                dot.set_fill, None, 0,
+                run_time = 3,
+                rate_func = squish_rate_func(
+                    lambda t : 1 - there_and_back(t),
+                    a, a + 0.5
+                ),
+                remover = True
+            )
+            for dot, a in zip(dots, np.linspace(0, 0.5, len(dots)))
+        ])
+        self.play(
+            Write(label),
+            ShowCreation(lines),
+            DrawBorderThenFill(example_dot),
+            run_time = 2,
+        )
+        self.dither(2)
+        self.play(*map(FadeOut, [label, lines, example_dot]))
 
     def draw_lattice_points_in_circle(self):
         circle = self.get_circle()
-        self.play(ShowCreation(circle))
+        radius = Line(ORIGIN, circle.get_right())
+        radius.highlight(RED)
+        brace = Brace(radius, DOWN, buff = SMALL_BUFF)
+        radius_label = brace.get_text(
+            str(self.max_lattice_point_radius),
+            buff = SMALL_BUFF
+        )
+        radius_label.add_background_rectangle()
+        brace.add(radius_label)
+
+        self.play(
+            ShowCreation(circle),
+            Rotating(radius, about_point = ORIGIN),
+            run_time = 2,
+            rate_func = smooth,
+        )
+        self.play(FadeIn(brace))
+        self.add_foreground_mobject(brace)
         self.draw_lattice_points()
         self.dither()
+        self.play(*map(FadeOut, [brace, radius]))
+
+        self.circle = circle
+
+    def turn_points_int_units_of_area(self):
+        square = Square(fill_opacity = 0.9)
+        unit_line = Line(
+            self.plane.coords_to_point(0, 0),
+            self.plane.coords_to_point(1, 0),
+        )
+        square.scale_to_fit_width(unit_line.get_width())
+        squares = VGroup(*[
+            square.copy().move_to(point)
+            for point in self.lattice_points
+        ])
+        squares.gradient_highlight(BLUE_E, GREEN_E)
+        squares.set_stroke(WHITE, 1)
+        point_copies = self.lattice_points.copy()
+
+        self.play(
+            ReplacementTransform(
+                point_copies, squares,
+                run_time = 3,
+                submobject_mode = "lagged_start",
+                lag_factor = 4,
+            ),
+            Animation(self.lattice_points)
+        )
+        self.dither()
+        self.play(FadeOut(squares), Animation(self.lattice_points))
+
+    def write_pi_R_squared(self):
+        equations = VGroup(*[
+            VGroup(
+                TextMobject(
+                    "\\# Lattice points\\\\",
+                    "within radius ", R,
+                    alignment = ""
+                ),
+                TexMobject(
+                    "\\approx \\pi", "(", R, ")^2"
+                )
+            ).arrange_submobjects(RIGHT)
+            for R in "10", "1{,}000{,}000", "R"
+        ])
+        radius_10_eq, radius_million_eq, radius_R_eq = equations
+        for eq in equations:
+            for tex_mob in eq:
+                tex_mob.highlight_by_tex("0", BLUE)
+        radius_10_eq.to_corner(UP+LEFT)
+        radius_million_eq.next_to(radius_10_eq, DOWN, LARGE_BUFF)
+        radius_million_eq.to_edge(LEFT)
+        brace = Brace(radius_million_eq, DOWN)
+        brace.add(brace.get_text("More accurate"))
+        brace.highlight(YELLOW)
+
+        background = FullScreenFadeRectangle(opacity = 0.9)
+
+        self.play(
+            FadeIn(background),
+            Write(radius_10_eq)
+        )
+        self.dither(2)
+        self.play(ReplacementTransform(
+            radius_10_eq.copy(),
+            radius_million_eq
+        ))
+        self.play(FadeIn(brace))
+        self.dither(3)
+
+        self.radius_10_eq = radius_10_eq
+        self.million_group = VGroup(radius_million_eq, brace)
+        self.radius_R_eq = radius_R_eq
+
+    def allude_to_alternate_counting_method(self):
+        alt_count = TextMobject(
+            "(...something else...)", "$R^2$", "=",
+            arg_separator = ""
+        )
+        alt_count.to_corner(UP+LEFT)
+        alt_count.highlight_by_tex("something", MAROON_B)
+        self.radius_R_eq.next_to(alt_count, RIGHT)
+
+        final_group = VGroup(
+            alt_count.get_part_by_tex("something"),
+            self.radius_R_eq[1].get_part_by_tex("pi"),
+        ).copy()
+
+        self.play(
+            FadeOut(self.million_group),
+            Write(alt_count),
+            ReplacementTransform(
+                self.radius_10_eq,
+                self.radius_R_eq
+            )
+        )
+        self.dither(2)
+        self.play(
+            final_group.arrange_submobjects, RIGHT,
+            final_group.next_to, ORIGIN, UP
+        )
+        rect = BackgroundRectangle(final_group)
+        self.play(FadeIn(rect), Animation(final_group))
+        self.dither(2)
+
+class SoYouPlay(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "So you play!",
+            run_time = 2
+        )
+        self.change_student_modes("happy", "thinking", "hesitant")
+        self.dither()
+        self.look_at(Dot().to_corner(UP+LEFT))
+        self.dither(3)
+
+class CountThroughRings(LatticePointScene):
+    CONFIG = {
+        "example_point_coords" : (3, 2),
+        "num_rings_to_show_explicitly" : 6,
+        "x_radius" : 15,
+        "plane_center" : 2*RIGHT,
+        "max_lattice_point_radius" : 5,
+    }
+    def construct(self):
+        self.force_skipping()
+
+        self.add_lattice_points()
+        self.preview_rings()
+        self.show_specific_lattice_point_distance()
+        self.count_through_rings()
+
+    def add_lattice_points(self):
+        big_circle = self.get_circle()
+        self.add(big_circle)
+        self.add(self.lattice_points)
+        self.big_circle = big_circle
+
+    def preview_rings(self):
+        radii = list(set([
+            np.sqrt(p.r_squared) for p in self.lattice_points
+        ]))
+        radii.sort()
+        circles = VGroup(*[
+            self.get_circle(radius = r)
+            for r in radii
+        ])
+        circles.set_stroke(width = 2)
+    
+        self.revert_to_original_skipping_status()        
+        self.add_foreground_mobject(self.lattice_points)
+        self.play(FadeIn(circles))
+        self.play(LaggedStart(
+            ApplyMethod,
+            circles,
+            arg_creator = lambda m : (m.set_stroke, PINK, 4),
+            rate_func = there_and_back,
+        ))
+        self.dither()
+
+        self.remove_foreground_mobject(self.lattice_points)
 
 
-    ####
 
+    def show_specific_lattice_point_distance(self):
+        pass
 
-
-
+    def count_through_rings(self):
+        pass
 
 
 

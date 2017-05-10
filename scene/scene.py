@@ -157,6 +157,7 @@ class Scene(object):
             self.mobjects
         )
         self.remove_mobjects_not_completely_on_screen()
+        self.remove_foreground_mobjects(*mobjects_to_remove)
         return self
 
     def remove_mobjects_not_completely_on_screen(self):
@@ -314,6 +315,7 @@ class Scene(object):
     def clean_up_animations(self, *animations):
         for animation in animations:
             animation.clean_up(self)
+        self.add(*self.foreground_mobjects)
         return self
 
     def get_mobjects_from_last_animation(self):
