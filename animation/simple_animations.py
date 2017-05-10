@@ -294,6 +294,38 @@ class ApplyToCenters(Animation):
                 center_mob.get_center()-mobject.get_center()
             )
 
+class LaggedStart(Animation):
+    CONFIG = {
+        "run_time" : 2,
+        "lag_ratio" : 0.5,
+    }
+    def __init__(self, AnimationClass, mobject, arg_creator = None, **kwargs):
+        digest_config(self, kwargs)
+        for key in "rate_func", "run_time", "lag_ratio":
+            if key in kwargs:
+                kwargs.pop(key)
+        if arg_creator is None:
+            arg_creator = lambda mobject : (mobject,)
+        self.subanimations = [
+            AnimationClass(
+                *arg_creator(submob),
+                run_time = self.run_time,
+                rate_func = squish_rate_func(
+                    self.rate_func, beta, beta + self.lag_ratio
+                ),
+                **kwargs
+            )
+            for submob, beta in zip(
+                mobject, 
+                np.linspace(0, 1-self.lag_ratio, len(mobject))
+            )
+        ]
+        Animation.__init__(self, mobject, **kwargs)
+
+    def update(self, alpha):
+        for anim in self.subanimations:
+            anim.update(alpha)
+        return self
 
 
 class DelayByOrder(Animation):
@@ -324,7 +356,6 @@ class DelayByOrder(Animation):
             for power in [1+prop*(self.max_power-1)]
         ])
         self.animation.update_mobject(alpha_array)
-
 
 class Succession(Animation):
     def __init__(self, *animations, **kwargs):
