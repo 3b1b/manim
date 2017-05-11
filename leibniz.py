@@ -36,6 +36,113 @@ def chi_func(n):
     else:
         return -1
 
+class LatticePointScene(Scene):
+    CONFIG = {
+        "y_radius" : 6,
+        "x_radius" : None,
+        "plane_center" : ORIGIN,
+        "max_lattice_point_radius" : 6,
+        "dot_radius" : 0.075,
+        "secondary_line_ratio" : 0,
+        "plane_color" : BLUE_E,
+        "dot_color" : YELLOW,
+        "dot_drawing_stroke_color" : PINK,
+        "circle_color" : MAROON_D,
+        "radial_line_color" : RED,
+    }
+    def setup(self):
+        if self.x_radius is None:
+            self.x_radius = self.y_radius*SPACE_WIDTH/SPACE_HEIGHT
+        plane = ComplexPlane(
+            y_radius = self.y_radius,
+            x_radius = self.x_radius,
+            secondary_line_ratio = self.secondary_line_ratio,
+            color = self.plane_color
+        )
+        plane.scale_to_fit_height(2*SPACE_HEIGHT)
+        plane.shift(self.plane_center)
+        self.add(plane)
+        self.plane = plane
+
+        self.setup_lattice_points()
+
+    def setup_lattice_points(self):
+        M = self.max_lattice_point_radius
+        int_range = range(-M, M+1)
+        self.lattice_points = VGroup()
+        for x, y in it.product(*[int_range]*2):
+            r_squared = x**2 + y**2
+            if r_squared > M**2:
+                continue
+            dot = Dot(
+                self.plane.coords_to_point(x, y),
+                color = self.dot_color,
+                radius = self.dot_radius,
+            )
+            dot.r_squared = r_squared
+            self.lattice_points.add(dot)
+        self.lattice_points.sort_submobjects(np.linalg.norm)
+
+    def get_circle(self, radius = None, color = None):
+        if radius is None:
+            radius = self.max_lattice_point_radius
+        if color is None:
+            color = self.circle_color
+        radius *= self.plane.get_space_unit_to_y_unit()
+        circle = Circle(
+            color = color,
+            radius = radius,
+        )
+        circle.move_to(self.plane.get_center())
+        return circle
+
+    def get_radial_line_with_label(self, radius = None, color = None):
+        if radius is None:
+            radius = self.max_lattice_point_radius
+        if color is None:
+            color = self.radial_line_color
+        radial_line = Line(
+            self.plane_center,
+            self.plane.coords_to_point(radius, 0),
+            color = color
+        )
+        r_squared = int(np.round(radius**2))
+        root_label = TexMobject("\\sqrt{%d}"%r_squared)
+        root_label.add_background_rectangle()
+        root_label.next_to(radial_line, DOWN, SMALL_BUFF)
+
+        return radial_line, root_label
+
+    def get_lattice_points_on_r_squared_circle(self, r_squared):
+        points = VGroup(*filter(
+            lambda dot : dot.r_squared == r_squared,
+            self.lattice_points
+        ))
+        points.sort_submobjects(
+            lambda p : angle_of_vector(p-self.plane_center)%(2*np.pi)
+        )
+        return points
+
+    def draw_lattice_points(self, points = None, run_time = 4):
+        if points is None:
+            points = self.lattice_points
+        self.play(*[
+            DrawBorderThenFill(
+                dot,
+                stroke_width = 4,
+                stroke_color = self.dot_drawing_stroke_color,
+                run_time = run_time,
+                rate_func = squish_rate_func(
+                    double_smooth, a, a + 0.25
+                ),
+            )
+            for dot, a in zip(
+                points, 
+                np.linspace(0, 0.75, len(points))
+            )
+        ])
+
+
 ######
 
 class Introduction(PiCreatureScene):
@@ -310,8 +417,55 @@ class ShowCalculus(PiCreatureScene):
         return Randolph(color = BLUE_C).to_corner(DOWN+LEFT)
 
 class CertainRegularityInPrimes(LatticePointScene):
+    CONFIG = {
+        "y_radius" : 8,
+        "x_radius" : 20,
+        "max_lattice_point_radius" : 8,
+        "plane_center" : 2.5*RIGHT,
+    }
     def construct(self):
-        pass
+        self.add_pi_formula()
+        self.walk_through_primes()
+
+    def add_pi_formula(self):
+        formula = TexMobject(
+            "\\frac{\\pi}{4}", "=",
+            "1", "-", "\\frac{1}{3}",
+            "+", "\\frac{1}{5}", "-", "\\frac{1}{7}",
+            # "+\\frac{1}{9} - \\frac{1}{11}",
+            "+\\cdots"
+        )
+        formula.highlight_by_tex("pi", YELLOW)
+        formula.add_background_rectangle()
+        formula.to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
+        self.add_foreground_mobject(formula)
+
+    def walk_through_primes(self):
+        primes = [5, 13, 17, 29, 37, 41, 53]
+        lines_and_labels = [
+            self.get_radial_line_with_label(np.sqrt(p))
+            for p in primes
+        ]
+        lines, labels = zip(*lines_and_labels)
+        circles = [
+            self.get_circle(np.sqrt(p))
+            for p in primes
+        ]
+        dots_list = [
+            self.get_lattice_points_on_r_squared_circle(p)
+            for p in primes
+        ]
+        groups = [
+            VGroup(*mobs)
+            for mobs in zip(lines, labels, circles, dots_list)
+        ]
+
+        curr_group = groups[0]
+        self.play(Write(curr_group, run_time = 2))
+        self.dither()
+        for group in groups[1:]:
+            self.play(Transform(curr_group, group))
+            self.dither(2)
 
 class Outline(PiCreatureScene):
     def construct(self):
@@ -531,94 +685,6 @@ class Outline(PiCreatureScene):
     ########
     def create_pi_creature(self):
         return Randolph(color = BLUE_B).flip().to_corner(DOWN+RIGHT)
-
-class LatticePointScene(Scene):
-    CONFIG = {
-        "y_radius" : 6,
-        "x_radius" : None,
-        "plane_center" : ORIGIN,
-        "max_lattice_point_radius" : 6,
-        "dot_radius" : 0.075,
-        "secondary_line_ratio" : 0,
-        "plane_color" : BLUE_E,
-        "dot_color" : YELLOW,
-        "dot_drawing_stroke_color" : PINK,
-        "circle_color" : MAROON_D,
-    }
-    def setup(self):
-        if self.x_radius is None:
-            self.x_radius = self.y_radius*SPACE_WIDTH/SPACE_HEIGHT
-        plane = NumberPlane(
-            y_radius = self.y_radius,
-            x_radius = self.x_radius,
-            secondary_line_ratio = self.secondary_line_ratio,
-            color = self.plane_color
-        )
-        plane.scale_to_fit_height(2*SPACE_HEIGHT)
-        plane.shift(self.plane_center)
-        self.add(plane)
-        self.plane = plane
-
-        self.setup_lattice_points()
-
-    def setup_lattice_points(self):
-        M = self.max_lattice_point_radius
-        int_range = range(-M, M+1)
-        self.lattice_points = VGroup()
-        for x, y in it.product(*[int_range]*2):
-            r_squared = x**2 + y**2
-            if r_squared > M**2:
-                continue
-            dot = Dot(
-                self.plane.coords_to_point(x, y),
-                color = self.dot_color,
-                radius = self.dot_radius,
-            )
-            dot.r_squared = r_squared
-            self.lattice_points.add(dot)
-        self.lattice_points.sort_submobjects(np.linalg.norm)
-
-    def get_circle(self, radius = None, color = None):
-        if radius is None:
-            radius = self.max_lattice_point_radius
-        if color is None:
-            color = self.circle_color
-        radius *= self.plane.get_space_unit_to_y_unit()
-        circle = Circle(
-            color = color,
-            radius = radius,
-        )
-        circle.move_to(self.plane.get_center())
-        return circle
-
-    def get_lattice_points_on_r_squared_circle(self, r_squared):
-        points = VGroup(*filter(
-            lambda dot : dot.r_squared == r_squared,
-            self.lattice_points
-        ))
-        points.sort_submobjects(
-            lambda p : angle_of_vector(p-self.plane_center)%(2*np.pi)
-        )
-        return points
-
-    def draw_lattice_points(self, points = None, run_time = 4):
-        if points is None:
-            points = self.lattice_points
-        self.play(*[
-            DrawBorderThenFill(
-                dot,
-                stroke_width = 4,
-                stroke_color = self.dot_drawing_stroke_color,
-                run_time = run_time,
-                rate_func = squish_rate_func(
-                    double_smooth, a, a + 0.25
-                ),
-            )
-            for dot, a in zip(
-                points, 
-                np.linspace(0, 0.75, len(points))
-            )
-        ])
 
 class CountLatticePoints(LatticePointScene):
     CONFIG = {
@@ -1071,8 +1137,346 @@ class CountThroughRings(LatticePointScene):
             mover = VectorizedPoint(self.plane_center)
         self.play(ReplacementTransform(mover, target, run_time = run_time))
 
+class LookAtExampleRing(LatticePointScene):
+    CONFIG = {
+        "dot_radius" : 0.1,
+        "plane_center" : 2*LEFT,
+        "x_radius" : 17,
+        "y_radius" : 7,
+    }
+    def construct(self):
+        self.analyze_25()
+        self.analyze_11()
 
+    def analyze_25(self):
+        x_color = GREEN
+        y_color = RED
+        circle = self.get_circle(radius = 5)
+        points = self.get_lattice_points_on_r_squared_circle(25)
+        radius, root_label = self.get_radial_line_with_label(5)
+        coords_list = [(5, 0), (4, 3), (3, 4), (0, 5), (-3, 4), (-4, 3)]
+        labels = [
+            TexMobject("(", str(x), ",", str(y), ")")
+            for x, y in coords_list
+        ]
+        for label in labels:
+            label.x = label[1]
+            label.y = label[3]
+            label.x.highlight(x_color)
+            label.y.highlight(y_color)
+            label.add_background_rectangle()
 
+        for label, point in zip(labels, points):
+            x_coord = (point.get_center() - self.plane_center)[0]
+            vect = UP+RIGHT if x_coord >= 0 else UP+LEFT
+            label.next_to(point, vect, SMALL_BUFF)
+            label.point = point
+
+        def special_str(n):
+            return "(%d)"%n if n < 0 else str(n)
+
+        sums_of_squares = [
+            TexMobject(
+                special_str(x), "^2", "+", 
+                special_str(y), "^2", "= 25"
+            )
+            for x, y in coords_list
+        ]
+        for tex_mob in sums_of_squares:
+            tex_mob.x = tex_mob[0]
+            tex_mob.y = tex_mob[3]
+            tex_mob.x.highlight(x_color)
+            tex_mob.y.highlight(y_color)
+            tex_mob.add_background_rectangle()
+            tex_mob.to_corner(UP+RIGHT)
+
+        self.play(
+            ShowCreation(radius),
+            Write(root_label)
+        )
+        self.play(
+            ShowCreation(circle),
+            Rotating(
+                radius, 
+                about_point = self.plane_center,
+                rate_func = smooth, 
+            ),
+            FadeIn(points, submobject_mode = "lagged_start"),
+            run_time = 2,
+        )
+        self.dither()
+
+        curr_label = labels[0]
+        curr_sum_of_squares = sums_of_squares[0]
+        self.play(
+            Write(curr_label),
+            curr_label.point.highlight, PINK
+        )
+        x, y = curr_label.x.copy(), curr_label.y.copy()
+        self.play(
+            Transform(x, curr_sum_of_squares.x),
+            Transform(y, curr_sum_of_squares.y),
+        )
+        self.play(
+            Write(curr_sum_of_squares),
+            Animation(VGroup(x, y))
+        )
+        self.remove(x, y)
+        self.dither()
+
+        for label, sum_of_squares in zip(labels, sums_of_squares)[1:]:
+            self.play(
+                ReplacementTransform(curr_label, label),
+                label.point.highlight, PINK,
+                curr_label.point.highlight, self.dot_color
+            )
+            curr_label = label
+            self.play(
+                ReplacementTransform(
+                    curr_sum_of_squares, sum_of_squares
+                )
+            )
+            curr_sum_of_squares = sum_of_squares
+            self.dither()
+
+        points.save_state()
+        points.generate_target()
+        for i, point in enumerate(points.target):
+            point.move_to(
+                self.plane.coords_to_point(i%3, i//3)
+            )
+        points.target.next_to(circle, RIGHT)
+
+        self.play(MoveToTarget(
+            points, 
+            run_time = 2,
+        ))
+        self.dither()
+        self.play(points.restore, run_time = 2)
+        self.dither()
+        self.play(*map(FadeOut, [
+            curr_label, curr_sum_of_squares, 
+            circle, points,
+            radius, root_label
+        ]))
+
+    def analyze_11(self):
+        R = np.sqrt(11)
+        circle = self.get_circle(radius = R)
+        radius, root_label = self.get_radial_line_with_label(R)
+        equation = TexMobject("11 \\ne ", "a", "^2", "+", "b", "^2")
+        equation.highlight_by_tex("a", GREEN)
+        equation.highlight_by_tex("b", RED)
+        equation.add_background_rectangle()
+        equation.to_corner(UP+RIGHT)
+
+        self.play(
+            Write(root_label),
+            ShowCreation(radius),
+            run_time = 1
+        )
+        self.play(
+            ShowCreation(circle),
+            Rotating(
+                radius, 
+                about_point = self.plane_center,
+                rate_func = smooth, 
+            ),
+            run_time = 2,
+        )
+        self.dither()
+        self.play(Write(equation))
+        self.dither(3)
+
+class Given2DThinkComplex(TeacherStudentsScene):
+    def construct(self):
+        tex = TextMobject("2D $\\Leftrightarrow$ Complex numbers")
+        plane = ComplexPlane(
+            x_radius = 0.6*SPACE_WIDTH,
+            y_radius = 0.6*SPACE_HEIGHT,
+        )
+        plane.add_coordinates()
+        plane.scale_to_fit_height(SPACE_HEIGHT)
+        plane.to_corner(UP+LEFT)
+
+        self.teacher_says(tex)
+        self.change_student_modes("pondering", "confused", "erm")
+        self.dither()
+        self.play(
+            Write(plane),
+            RemovePiCreatureBubble(
+                self.teacher,
+                target_mode = "raise_right_hand"
+            )
+        )
+        self.change_student_modes(
+            *["thinking"]*3,
+            look_at_arg = plane
+        )
+        self.dither(3)
+
+class IntroduceComplexConjugate(LatticePointScene):
+    CONFIG = {
+        "y_radius" : 20,
+        "x_radius" : 30,
+        "plane_scale_factor" : 2,
+        "example_coords" : (3, 4),
+        "x_color" : GREEN,
+        "y_color" : RED,
+    }
+    def construct(self):
+        self.force_skipping()
+
+        self.resize_plane()
+        self.write_points_with_complex_coords()
+        self.introduce_complex_conjugate()
+        self.show_confusion()
+        self.expand_algebraically()
+        self.show_geometrically()
+
+    def resize_plane(self):
+        self.plane.scale(self.plane_scale_factor)
+
+    def write_points_with_complex_coords(self):
+        x, y = self.example_coords
+        x_color = self.x_color
+        y_color = self.y_color
+
+        point = self.plane.coords_to_point(x, y)
+        dot = Dot(point, color = self.dot_color)
+        x_point = self.plane.coords_to_point(x, 0)
+        h_arrow = Arrow(self.plane_center, x_point, buff = 0)
+        v_arrow = Arrow(x_point, point, buff = 0)
+        h_arrow.highlight(x_color)
+        v_arrow.highlight(y_color)
+        x_coord = TexMobject(str(x))
+        x_coord.next_to(h_arrow, DOWN, SMALL_BUFF)
+        x_coord.highlight(x_color)
+        x_coord.add_background_rectangle()
+        y_coord = TexMobject(str(y))
+        imag_y_coord = TexMobject(str(y) + "i")
+        for coord in y_coord, imag_y_coord:
+            coord.next_to(v_arrow, RIGHT, SMALL_BUFF)
+            coord.highlight(y_color)
+            coord.add_background_rectangle()
+
+        tuple_label = TexMobject(str((x, y)))
+        tuple_label[1].highlight(x_color)
+        tuple_label[3].highlight(y_color)
+        complex_label = TexMobject("%d+%di"%(x, y))
+        complex_label[0].highlight(x_color)
+        complex_label[2].highlight(y_color)
+        for label in tuple_label, complex_label:
+            label.add_background_rectangle()
+            label.next_to(dot, UP+RIGHT, buff = 0)
+
+        y_range = range(-8, 10, 2)
+        ticks = VGroup(*[
+            Line(
+                ORIGIN, MED_SMALL_BUFF*RIGHT
+            ).move_to(self.plane.coords_to_point(0, y))
+            for y in y_range
+        ])
+        imag_coords = VGroup()
+        for y, tick in zip(y_range, ticks):
+            if y == 0:
+                continue
+            if y == 1:
+                tex = "i"
+            elif y == -1:
+                tex = "-i"
+            else:
+                tex = "%di"%y
+            imag_coord = TexMobject(tex)
+            imag_coord.scale(0.75)
+            imag_coord.add_background_rectangle()
+            imag_coord.next_to(tick, LEFT, SMALL_BUFF)
+            imag_coords.add(imag_coord)
+
+        self.add(dot)
+        self.play(
+            ShowCreation(h_arrow),
+            Write(x_coord)
+        )
+        self.play(
+            ShowCreation(v_arrow),
+            Write(y_coord)
+        )
+        self.play(FadeIn(tuple_label))
+        self.dither()
+        self.play(*map(FadeOut, [tuple_label, y_coord]))
+        self.play(*map(FadeIn, [complex_label, imag_y_coord]))
+        self.play(*map(Write, [imag_coords, ticks]))
+        self.dither()
+        self.play(*map(FadeOut, [
+            v_arrow, h_arrow, 
+            x_coord, imag_y_coord,
+        ]))
+
+        self.complex_label = complex_label
+        self.example_dot = dot
+
+    def introduce_complex_conjugate(self):
+        x, y = self.example_coords
+        equation = VGroup(
+            TexMobject(str(x), "^2", "+", str(y), "^2", "="),
+            TexMobject("(", str(x), "+", str(y), "i", ")"),
+            TexMobject("(", str(x), "-", str(y), "i", ")"),
+        )
+        equation.arrange_submobjects(
+            RIGHT, buff = SMALL_BUFF,
+        )
+        equation.scale(0.9)
+        equation.to_corner(UP+RIGHT, buff = MED_SMALL_BUFF)
+        for tex_mob in equation:
+            tex_mob.highlight_by_tex(str(x), self.x_color)
+            tex_mob.highlight_by_tex(str(y), self.y_color)
+            tex_mob.add_background_rectangle()
+
+        dot = Dot(
+            self.plane.coords_to_point(x, -y),
+            color = self.dot_color
+        )
+        label = TexMobject("%d-%di"%(x, y))
+        label[0].highlight(self.x_color)
+        label[2].highlight(self.y_color)
+        label.add_background_rectangle()
+        label.next_to(dot, DOWN+RIGHT, buff = 0)
+
+        brace = Brace(equation[-1], DOWN)
+        conjugate_words = TextMobject("Complex \\\\ conjugate")
+        conjugate_words.scale(0.8)
+        conjugate_words.add_background_rectangle()
+        conjugate_words.next_to(brace, DOWN)
+
+        self.revert_to_original_skipping_status()
+        for part in equation:
+            self.play(FadeIn(part))
+        self.dither(2)
+        self.play(
+            GrowFromCenter(brace),
+            Write(conjugate_words, run_time = 2)
+        )
+        self.dither()
+        self.play(*[
+            ReplacementTransform(m1.copy(), m2)
+            for m1, m2 in [
+                (self.example_dot, dot),
+                (self.complex_label, label),
+            ]
+        ])
+        self.dither(2)
+
+    def show_confusion(self):
+        pass
+
+    def expand_algebraically(self):
+        pass
+
+    def show_geometrically(self):
+        pass
+
+        
 
 
 

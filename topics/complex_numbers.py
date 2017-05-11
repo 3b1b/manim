@@ -181,7 +181,7 @@ class ComplexPlane(NumberPlane):
         "line_frequency"        : 1,
         "faded_line_frequency"  : 0.5,
         "number_at_center"      : complex(0),
-        "number_scale_factor" : 0.5,
+        "number_scale_factor"   : 0.5,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
@@ -199,7 +199,7 @@ class ComplexPlane(NumberPlane):
 
     def number_to_point(self, number):
         number = complex(number)
-        return self.num_pair_to_point((number.real, number.imag))
+        return self.coords_to_point(number.real, number.imag)
 
     def get_coordinate_labels(self, *numbers):
         result = []
