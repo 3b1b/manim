@@ -265,10 +265,14 @@ def merge_config(all_dicts):
                 config[key] = merge_config([config[key], value])
     return config
 
-def digest_locals(obj):
-    caller_locals = inspect.currentframe().f_back.f_locals
-    obj.__dict__.update(filtered_locals(caller_locals))
-
+def digest_locals(obj, keys = None):
+    caller_locals = filtered_locals(
+        inspect.currentframe().f_back.f_locals
+    )
+    if keys is None:
+        keys = caller_locals.keys()
+    for key in keys:
+        setattr(obj, key, caller_locals[key])
 
 def interpolate(start, end, alpha):
     return (1-alpha)*start + alpha*end

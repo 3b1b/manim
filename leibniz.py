@@ -157,7 +157,7 @@ class ShowSum(TeacherStudentsScene):
     def show_sum(self):
         line = UnitInterval()
         line.add_numbers(0, 1)
-        line.shift(UP)
+        # line.shift(UP)
         sum_point = line.number_to_point(np.pi/4)
 
         numbers = [0] + [
@@ -177,19 +177,19 @@ class ShowSum(TeacherStudentsScene):
         dot = Dot(points[0])
 
         sum_mob = TexMobject(
-            "1", "-\\frac{1}{3}", "+\\frac{1}{5}", 
-            "-\\frac{1}{7}", "+\\cdots"
+            "1", "-\\frac{1}{3}", 
+            "+\\frac{1}{5}", "-\\frac{1}{7}",
+            "+\\frac{1}{9}", "-\\frac{1}{11}",
+            "+\\cdots"
         )
-        sum_mob.to_edge(UP)
-        sum_mob.shift(LEFT)
-        rhs = TexMobject(
-            "=", "\\frac{\\pi}{4}",
-            "\\approx %.5f\\dots"%(np.pi/4)
+        sum_mob.to_corner(UP+RIGHT)
+        lhs = TexMobject(
+            "\\frac{\\pi}{4}", "=", 
         )
-        rhs.next_to(sum_mob, RIGHT)
-        rhs.highlight_by_tex("pi", YELLOW)
+        lhs.next_to(sum_mob, LEFT)
+        lhs.highlight_by_tex("pi", YELLOW)
         sum_arrow = Arrow(
-            rhs.get_part_by_tex("pi"),
+            lhs.get_part_by_tex("pi").get_bottom(),
             sum_point
         )
         fading_terms = [
@@ -211,6 +211,7 @@ class ShowSum(TeacherStudentsScene):
             look_at_arg = line,
             added_anims = [
                 FadeIn(VGroup(line, dot)),
+                FadeIn(lhs),
                 RemovePiCreatureBubble(
                     self.teacher,
                     target_mode = "raise_right_hand"
@@ -243,10 +244,7 @@ class ShowSum(TeacherStudentsScene):
             FadeOut(fading_term),
             dot.move_to, sum_point
         )
-        self.play(
-            Write(rhs),
-            ShowCreation(sum_arrow)
-        )
+        self.play(ShowCreation(sum_arrow))
         self.dither()
         self.change_student_modes("erm", "confused", "maybe")
         self.play(self.teacher.change_mode, "happy")
@@ -260,16 +258,6 @@ class FermatsDreamExcerptWrapper(Scene):
         words.scale(0.8)
         words.to_edge(UP)
         self.add(words)
-        self.dither()
-
-class ShowSumMeantForFadedBackground(Scene):
-    def construct(self):
-        tex_mob = TexMobject(
-            "1 - \\frac{1}{3} + \\frac{1}{5} - \\frac{1}{7} + \\cdots",
-            "=", "\\frac{\\pi}{4}"
-        )
-        tex_mob.highlight_by_tex("pi", YELLOW)
-        self.add(tex_mob)
         self.dither()
 
 class ShowCalculus(PiCreatureScene):
@@ -320,6 +308,10 @@ class ShowCalculus(PiCreatureScene):
 
     def create_pi_creature(self):
         return Randolph(color = BLUE_C).to_corner(DOWN+LEFT)
+
+class CertainRegularityInPrimes(LatticePointScene):
+    def construct(self):
+        pass
 
 class Outline(PiCreatureScene):
     def construct(self):
@@ -600,10 +592,14 @@ class LatticePointScene(Scene):
         return circle
 
     def get_lattice_points_on_r_squared_circle(self, r_squared):
-        return VGroup(*filter(
+        points = VGroup(*filter(
             lambda dot : dot.r_squared == r_squared,
             self.lattice_points
         ))
+        points.sort_submobjects(
+            lambda p : angle_of_vector(p-self.plane_center)%(2*np.pi)
+        )
+        return points
 
     def draw_lattice_points(self, points = None, run_time = 4):
         if points is None:
@@ -823,17 +819,17 @@ class SoYouPlay(TeacherStudentsScene):
 
 class CountThroughRings(LatticePointScene):
     CONFIG = {
-        "example_point_coords" : (3, 2),
-        "num_rings_to_show_explicitly" : 6,
+        "example_coords" : (3, 2),
+        "num_rings_to_show_explicitly" : 7,
         "x_radius" : 15,
+
         "plane_center" : 2*RIGHT,
         "max_lattice_point_radius" : 5,
     }
     def construct(self):
-        self.force_skipping()
-
         self.add_lattice_points()
         self.preview_rings()
+        self.isolate_single_ring()
         self.show_specific_lattice_point_distance()
         self.count_through_rings()
 
@@ -854,7 +850,6 @@ class CountThroughRings(LatticePointScene):
         ])
         circles.set_stroke(width = 2)
     
-        self.revert_to_original_skipping_status()        
         self.add_foreground_mobject(self.lattice_points)
         self.play(FadeIn(circles))
         self.play(LaggedStart(
@@ -864,16 +859,217 @@ class CountThroughRings(LatticePointScene):
             rate_func = there_and_back,
         ))
         self.dither()
-
         self.remove_foreground_mobject(self.lattice_points)
 
+        digest_locals(self, ["circles", "radii"])
 
+    def isolate_single_ring(self):
+        x, y = self.example_coords
+        example_circle = self.circles[
+            self.radii.index(np.sqrt(x**2 + y**2))
+        ]
+        self.circles.remove(example_circle)
+        points_on_example_circle = self.get_lattice_points_on_r_squared_circle(
+            x**2 + y**2
+        ).copy()
+
+        self.play(
+            FadeOut(self.circles),
+            self.lattice_points.set_fill, GREY, 0.5,
+            Animation(points_on_example_circle)
+        )
+        self.dither()
+
+        digest_locals(self, ["points_on_example_circle", "example_circle"])
 
     def show_specific_lattice_point_distance(self):
-        pass
+        x, y = self.example_coords
+        dot = Dot(
+            self.plane.coords_to_point(x, y),
+            color = self.dot_color,
+            radius = self.dot_radius
+        )
+        label = TexMobject("(a, b)")
+        num_label = TexMobject(str(self.example_coords))
+        for mob in label, num_label:
+            mob.add_background_rectangle()
+            mob.next_to(dot, UP + RIGHT, SMALL_BUFF)
+        a, b = label[1][1].copy(), label[1][3].copy()
+
+        x_spot = self.plane.coords_to_point(x, 0)
+        radial_line = Line(self.plane_center, dot)
+        h_line = Line(self.plane_center, x_spot)
+        h_line.highlight(GREEN)
+        v_line = Line(x_spot, dot)
+        v_line.highlight(RED)
+
+        distance = TexMobject("\\sqrt{a^2 + b^2}")
+        distance_num = TexMobject("\\sqrt{%d}"%(x**2 + y**2))
+        for mob in distance, distance_num:
+            mob.scale(0.75)
+            mob.add_background_rectangle()
+            mob.next_to(radial_line.get_center(), UP, SMALL_BUFF)
+            mob.rotate(
+                radial_line.get_angle(),
+                about_point = mob.get_bottom()
+            )
+
+        self.play(Write(label))
+        self.play(
+            ApplyMethod(a.next_to, h_line, DOWN, SMALL_BUFF),
+            ApplyMethod(b.next_to, v_line, RIGHT, SMALL_BUFF),
+            ShowCreation(h_line),
+            ShowCreation(v_line),
+        )
+        self.play(ShowCreation(radial_line))
+        self.play(Write(distance))
+        self.dither(2)
+
+        a_num, b_num = [
+            TexMobject(str(coord))[0]
+            for coord in self.example_coords
+        ]
+        a_num.move_to(a, UP)
+        b_num.move_to(b, LEFT)
+        self.play(
+            Transform(label, num_label),
+            Transform(a, a_num),
+            Transform(b, b_num),
+        )
+        self.dither()
+        self.play(Transform(distance, distance_num))
+        self.dither(3)
+        self.play(*map(FadeOut, [
+            self.example_circle, self.points_on_example_circle,
+            distance, a, b,
+            radial_line, h_line, v_line,
+            label
+        ]))
 
     def count_through_rings(self):
-        pass
+        counts = [
+            len(self.get_lattice_points_on_r_squared_circle(N))
+            for N in range(self.max_lattice_point_radius**2 + 1)
+        ]
+        left_list = VGroup(*[
+            TexMobject(
+                "\\sqrt{%d} \\Rightarrow"%n, str(count)
+            )
+            for n, count in zip(
+                range(self.num_rings_to_show_explicitly),
+                counts
+            )
+        ])
+        left_counts = VGroup()
+        left_roots = VGroup()
+        for mob in left_list:
+            mob[1].highlight(YELLOW)
+            left_counts.add(VGroup(mob[1]))
+            mob.add_background_rectangle()
+            left_roots.add(VGroup(mob[0], mob[1][0]))
+
+        left_list.arrange_submobjects(
+            DOWN,
+            buff = MED_LARGE_BUFF,
+            aligned_edge = LEFT,
+        )
+        left_list.to_corner(UP + LEFT)
+
+        top_list = VGroup(*[
+            TexMobject("%d, "%count)
+            for count in counts
+        ])
+        top_list.highlight(YELLOW)
+        top_list.arrange_submobjects(RIGHT, aligned_edge = DOWN)
+        top_list.scale_to_fit_width(2*SPACE_WIDTH - MED_LARGE_BUFF)
+        top_list.to_edge(UP, buff = SMALL_BUFF)
+        top_rect = BackgroundRectangle(top_list)
+
+        for r_squared, count_mob, root in zip(it.count(), left_counts, left_roots):
+            self.show_ring_count(
+                r_squared,
+                count_mob,
+                added_anims = [FadeIn(root)]
+            )
+            self.dither(2)
+        self.play(
+            FadeOut(left_roots),
+            FadeIn(top_rect),
+            *[
+                ReplacementTransform(
+                    lc, VGroup(tc),
+                    path_arc = np.pi/2
+                )
+                for lc, tc in zip(left_counts, top_list)
+            ]
+        )
+        for r_squared in range(len(left_counts), self.max_lattice_point_radius**2 + 1):
+            self.show_ring_count(
+                r_squared, top_list[r_squared],
+            )
+        self.dither(3)
+
+
+    def show_ring_count(
+        self, radius_squared, target,
+        added_anims = None,        
+        run_time = 1
+        ):
+        added_anims = added_anims or []
+        radius = np.sqrt(radius_squared)
+        points = self.get_lattice_points_on_r_squared_circle(radius_squared)
+        points.save_state()
+        circle = self.get_circle(radius)
+        radial_line = Line(
+            self.plane_center, self.plane.coords_to_point(radius, 0),
+            color = RED
+        )
+        root = TexMobject("\\sqrt{%d}"%radius_squared)
+        root.add_background_rectangle()
+        root.scale_to_fit_width(
+            min(0.7*radial_line.get_width(), root.get_width())
+        )
+        root.next_to(radial_line, DOWN, SMALL_BUFF)
+        if not hasattr(self, "little_circle"):
+            self.little_circle = circle
+        if not hasattr(self, "radial_line"):
+            self.radial_line = radial_line
+        if not hasattr(self, "root"):
+            self.root = root
+        if hasattr(self, "last_points"):
+            added_anims += [self.last_points.restore]
+        self.last_points = points
+
+        if radius_squared == 0:
+            points.set_fill(YELLOW, 1)
+            self.play(
+                DrawBorderThenFill(points, stroke_color = PINK),
+                *added_anims,
+                run_time = run_time
+            )
+            self.play(ReplacementTransform(
+                points.copy(), target
+            ))
+            return
+        points.set_fill(YELLOW, 1)
+        self.play(
+            Transform(self.little_circle, circle),
+            Transform(self.radial_line, radial_line),
+            Transform(self.root, root),
+            DrawBorderThenFill(
+                points, 
+                stroke_width = 4,
+                stroke_color = PINK,
+            ),
+            *added_anims,
+            run_time = run_time
+        )
+        self.dither(run_time)
+        if len(points) > 0:
+            mover = points.copy()  
+        else:
+            mover = VectorizedPoint(self.plane_center)
+        self.play(ReplacementTransform(mover, target, run_time = run_time))
 
 
 

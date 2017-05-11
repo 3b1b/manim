@@ -37,7 +37,6 @@ class Rotating(Animation):
             about_point = self.about_point
         )
 
-
 class ShowPartial(Animation):
     def update_submobject(self, submobject, starting_submobject, alpha):
         submobject.pointwise_become_partial(
@@ -46,7 +45,6 @@ class ShowPartial(Animation):
 
     def get_bounds(self, alpha):
         raise Exception("Not Implemented")
-
 
 class ShowCreation(ShowPartial):
     CONFIG = {
@@ -131,7 +129,6 @@ class DrawBorderThenFill(Animation):
             submobject.set_stroke(width = width)
             submobject.set_fill(opacity = opacity)
 
-
 class ShowPassingFlash(ShowPartial):
     CONFIG = {
         "time_width" : 0.1,
@@ -143,7 +140,6 @@ class ShowPassingFlash(ShowPartial):
         lower = max(0, alpha - self.time_width/2)
         upper = min(1, alpha + self.time_width/2)
         return (lower, upper)
-
 
 class MoveAlongPath(Animation):
     def __init__(self, mobject, vmobject, **kwargs):
@@ -183,7 +179,6 @@ class SmoothedVectorizedHomotopy(Homotopy):
         Homotopy.update_submobject(self, submob, start, alpha)
         submob.make_smooth()
 
-
 class ApplyWave(Homotopy):
     CONFIG = {
         "direction" : DOWN,
@@ -205,7 +200,6 @@ class ApplyWave(Homotopy):
             nudge = there_and_back(t**power)
             return np.array([x, y, z]) + nudge*vect
         Homotopy.__init__(self, homotopy, mobject, **kwargs)
-
 
 class PhaseFlow(Animation):
     CONFIG = {
@@ -250,7 +244,6 @@ class UpdateFromAlphaFunc(UpdateFromFunc):
     def update_mobject(self, alpha):
         self.update_function(self.mobject, alpha)
         
-
 class MaintainPositionRelativeTo(Animation):
     CONFIG = {
         "tracked_critical_point" : ORIGIN

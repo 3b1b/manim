@@ -38,6 +38,7 @@ class Scene(object):
         self.foreground_mobjects = []
         self.num_plays = 0
         self.saved_frames = []
+        self.shared_locals = {}
         if self.name is None:
             self.name = self.__class__.__name__
 
@@ -64,6 +65,20 @@ class Scene(object):
 
     def set_name(self, name):
         self.name = name
+        return self
+
+    def update_shared_locals(self, *keys):
+        """
+        Often in constructing a scene, it's nice to refer to
+        what was a local variable from a previous subroutine,
+        so a dict of shared_locals is recorded, and it can be updated
+        by passing in the objects directly.
+        """
+        caller_locals = inspect.currentframe().f_back.f_locals
+        self.shared_locals.update(dict([
+            (key, caller_locals[key])
+            for key in keys
+        ]))
         return self
 
     ### Only these methods should touch the camera
