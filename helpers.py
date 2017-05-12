@@ -139,6 +139,11 @@ def color_gradient(reference_colors, length_of_output):
         for i, alpha in zip(floors, alphas_mod1)
     ]
 
+def average_color(*colors):
+    rgbs = np.array(map(color_to_rgb, colors))
+    mean_rgb = np.apply_along_axis(np.mean, 0, rgbs)
+    return rgb_to_color(mean_rgb)
+
 def compass_directions(n = 4, start_vect = RIGHT):
     angle = 2*np.pi/n
     return np.array([

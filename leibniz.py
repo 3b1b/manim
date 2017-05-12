@@ -472,9 +472,12 @@ class CertainRegularityInPrimes(LatticePointScene):
         "x_radius" : 20,
         "max_lattice_point_radius" : 8,
         "plane_center" : 2.5*RIGHT,
+        "primes" : [5, 13, 17, 29, 37, 41, 53],
+        "include_pi_formula" : True,
     }
     def construct(self):
-        self.add_pi_formula()
+        if self.include_pi_formula:
+            self.add_pi_formula()
         self.walk_through_primes()
 
     def add_pi_formula(self):
@@ -482,7 +485,6 @@ class CertainRegularityInPrimes(LatticePointScene):
             "\\frac{\\pi}{4}", "=",
             "1", "-", "\\frac{1}{3}",
             "+", "\\frac{1}{5}", "-", "\\frac{1}{7}",
-            # "+\\frac{1}{9} - \\frac{1}{11}",
             "+\\cdots"
         )
         formula.highlight_by_tex("pi", YELLOW)
@@ -491,7 +493,7 @@ class CertainRegularityInPrimes(LatticePointScene):
         self.add_foreground_mobject(formula)
 
     def walk_through_primes(self):
-        primes = [5, 13, 17, 29, 37, 41, 53]
+        primes = self.primes
         lines_and_labels = [
             self.get_radial_line_with_label(np.sqrt(p))
             for p in primes
@@ -1980,7 +1982,7 @@ class IntroduceGaussianPrimes(LatticePointScene):
             aligned_edge = LEFT
         )
         alt_factorization.add_background_rectangle()
-        
+
         for dot in dots:
             dot.add(Line(
                 self.plane_center,
@@ -2036,6 +2038,560 @@ class IntroduceGaussianPrimes(LatticePointScene):
         self.dither()
         self.play(Write(alt_factorization))
         self.dither(3)
+
+class FromIntegerFactorsToGaussianFactors(TeacherStudentsScene):
+    def construct(self):
+        expression = TexMobject(
+            "30", "=", "2", "\\cdot", "3", "\\cdot", "5"
+        )
+        expression.shift(2*UP)
+        two = expression.get_part_by_tex("2")
+        five = expression.get_part_by_tex("5")
+        two.highlight(BLUE)
+        five.highlight(GREEN)
+        two.factors = TexMobject("(1+i)", "(1-i)")
+        five.factors = TexMobject("(2+i)", "(2-i)")
+        for mob, vect in (two, DOWN), (five, UP):
+            mob.factors.next_to(mob, vect, LARGE_BUFF)
+            mob.factors.highlight(mob.get_color())
+            mob.arrows = VGroup(*[
+                Arrow(
+                    mob.get_edge_center(vect),
+                    factor.get_edge_center(-vect),
+                    color = mob.get_color(),
+                    tip_length = 0.15
+                )
+                for factor in mob.factors
+            ])
+
+        self.add(expression)
+        for mob in two, five:
+            self.play(
+                ReplacementTransform(
+                    mob.copy(),
+                    mob.factors
+                ),
+                *map(ShowCreation, mob.arrows)
+            )
+            self.dither()
+        self.play(*[
+            ApplyMethod(pi.change, "pondering", expression)
+            for pi in self.get_pi_creatures()
+        ])
+        self.dither(3)
+
+class FactorizationPattern(Scene):
+    def construct(self):
+        self.add_number_line()
+        self.show_one_mod_four_primes()
+        self.show_three_mod_four_primes()
+        self.ask_why_this_is_true()
+        self.show_two()
+
+    def add_number_line(self):
+        line = NumberLine(
+            x_min = 0,
+            x_max = 36,
+            space_unit_to_num = 0.4,
+            numbers_to_show = range(0, 33, 4),
+            numbers_with_elongated_ticks = range(0, 33, 4),
+        )
+        line.shift(2*DOWN)
+        line.to_edge(LEFT)
+        line.add_numbers()
+
+        self.add(line)
+        self.number_line = line
+
+    def show_one_mod_four_primes(self):
+        primes = [5, 13, 17, 29]
+        dots = VGroup(*[
+            Dot(self.number_line.number_to_point(prime))
+            for prime in primes
+        ])
+        dots.highlight(GREEN)
+        prime_mobs = VGroup(*map(TexMobject, map(str, primes)))
+        arrows = VGroup()
+        for prime_mob, dot in zip(prime_mobs, dots):
+            prime_mob.next_to(dot, UP, LARGE_BUFF)
+            prime_mob.highlight(dot.get_color())
+            arrow = Arrow(prime_mob, dot, buff = SMALL_BUFF)
+            arrow.highlight(dot.get_color())
+            arrows.add(arrow)
+
+        factorizations = VGroup(*[
+            TexMobject("=(%d+%si)(%d-%si)"%(x, y_str, x, y_str))
+            for x, y in [(2, 1), (3, 2), (4, 1), (5, 2)]
+            for y_str in [str(y) if y is not 1 else ""]
+        ])
+        factorizations.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        factorizations.to_corner(UP+LEFT)
+        factorizations.shift(RIGHT)
+        movers = VGroup()
+        for p_mob, factorization in zip(prime_mobs, factorizations):
+            mover = p_mob.copy()
+            mover.generate_target()
+            mover.target.next_to(factorization, LEFT)
+            movers.add(mover)
+        v_dots = TexMobject("\\vdots")
+        v_dots.next_to(factorizations[-1][0], DOWN)
+        factorization.add(v_dots)
+
+        self.play(*it.chain(
+            map(Write, prime_mobs),
+            map(ShowCreation, arrows),
+            map(DrawBorderThenFill, dots),
+        ))
+        self.dither()
+        self.play(*[
+            MoveToTarget(
+                mover,
+                run_time = 2,
+                path_arc = np.pi/2,
+            )
+            for mover in movers
+        ])
+        self.play(FadeIn(
+            factorizations, 
+            run_time = 2,
+            submobject_mode = "lagged_start"
+        ))
+        self.dither(4)
+        self.play(*map(FadeOut, [movers, factorizations]))
+
+    def show_three_mod_four_primes(self):
+        primes = [3, 7, 11, 19, 23, 31]
+        dots = VGroup(*[
+            Dot(self.number_line.number_to_point(prime))
+            for prime in primes
+        ])
+        dots.highlight(RED)
+        prime_mobs = VGroup(*map(TexMobject, map(str, primes)))
+        arrows = VGroup()
+        for prime_mob, dot in zip(prime_mobs, dots):
+            prime_mob.next_to(dot, UP, LARGE_BUFF)
+            prime_mob.highlight(dot.get_color())
+            arrow = Arrow(prime_mob, dot, buff = SMALL_BUFF)
+            arrow.highlight(dot.get_color())
+            arrows.add(arrow)
+
+        words = TextMobject("Already Gaussian primes")
+        words.to_corner(UP+LEFT)
+        word_arrows = VGroup(*[
+            Line(
+                words.get_bottom(), p_mob.get_top(),
+                color = p_mob.get_color(),
+                buff = MED_SMALL_BUFF
+            )
+            for p_mob in prime_mobs
+        ])
+
+        self.play(*it.chain(
+            map(Write, prime_mobs),
+            map(ShowCreation, arrows),
+            map(DrawBorderThenFill, dots),
+        ))
+        self.dither()
+        self.play(
+            Write(words),
+            *map(ShowCreation, word_arrows)
+        )
+        self.dither(4)
+        self.play(*map(FadeOut, [words, word_arrows]))
+
+    def ask_why_this_is_true(self):
+        randy = Randolph(color = BLUE_C)
+        randy.scale(0.7)
+        randy.to_edge(LEFT)
+        randy.shift(0.8*UP)
+
+        links_text = TextMobject("(See links in description)")
+        links_text.scale(0.7)
+        links_text.to_corner(UP+RIGHT)
+        links_text.shift(DOWN)
+
+        self.play(FadeIn(randy))
+        self.play(PiCreatureBubbleIntroduction(
+            randy, "Wait...why?",
+            bubble_class = ThoughtBubble,
+            bubble_kwargs = {"height" : 2, "width" : 3},
+            target_mode = "confused",
+            look_at_arg = self.number_line,
+        ))
+        self.play(Blink(randy))
+        self.dither()
+        self.play(FadeIn(links_text))
+        self.dither(2)
+        self.play(*map(FadeOut, [
+            randy, randy.bubble, randy.bubble.content,
+            links_text
+        ]))
+
+    def show_two(self):
+        two_dot = Dot(self.number_line.number_to_point(2))
+        two = TexMobject("2")
+        two.next_to(two_dot, UP, LARGE_BUFF)
+        arrow = Arrow(two, two_dot, buff = SMALL_BUFF)
+        VGroup(two_dot, two, arrow).highlight(YELLOW)
+
+        mover = two.copy()
+        mover.generate_target()
+        mover.target.to_corner(UP+LEFT)
+        factorization = TexMobject("=", "(1+i)", "(1-i)")
+        factorization.next_to(mover.target, RIGHT)
+        factors = VGroup(*factorization[1:])
+
+        words = TextMobject("Really the \\\\ same prime")
+        words.scale(0.8)
+        words.next_to(factors, DOWN, 0.8*LARGE_BUFF)
+        words_arrows = VGroup(*[
+            Arrow(
+                words.get_top(), factor.get_bottom(),
+                buff = SMALL_BUFF
+            )
+            for factor in factors
+        ])
+        analogy = TextMobject("Like $3$ and $-3$")
+        analogy.scale(0.8)
+        analogy.next_to(words, DOWN)
+        analogy.highlight(RED)
+
+        self.play(
+            Write(two),
+            ShowCreation(arrow),
+            DrawBorderThenFill(two_dot)
+        )
+        self.dither()
+        self.play(
+            MoveToTarget(mover),
+            Write(factorization)
+        )
+        self.dither(2)
+        self.play(
+            FadeIn(words),
+            *map(ShowCreation, words_arrows)
+        )
+        self.dither(3)
+        self.play(Write(analogy))
+        self.dither()
+
+class RingsWithOneModFourPrimes(CertainRegularityInPrimes):
+    CONFIG = {
+        "plane_center" : ORIGIN,
+        "primes" : [5, 13, 17, 29, 37, 41, 53],
+        "include_pi_formula" : False,
+    }
+
+class RingsWithThreeModFourPrimes(CertainRegularityInPrimes):
+    CONFIG = {
+        "plane_center" : ORIGIN,
+        "primes" : [3, 7, 11, 19, 23, 31, 43],
+        "include_pi_formula" : False,
+    }
+
+class FactorTwo(LatticePointScene):
+    CONFIG = {
+        "y_radius" : 3,
+    }
+    def construct(self):
+        two_dot = Dot(self.plane.coords_to_point(2, 0))
+        two_dot.highlight(YELLOW)
+        factor_dots = VGroup(*[
+            Dot(self.plane.coords_to_point(1, u))
+            for u in 1, -1
+        ])
+        two_label = TexMobject("2").next_to(two_dot, DOWN)
+        two_label.highlight(YELLOW)
+        two_label.add_background_rectangle()
+        factor_labels = VGroup(*[
+            TexMobject(tex).add_background_rectangle().next_to(dot, vect)
+            for tex, dot, vect in zip(
+                ["1+i", "1-i"], factor_dots, [UP, DOWN]
+            )
+        ])
+        VGroup(factor_labels, factor_dots).highlight(MAROON_B)
+
+        for dot in it.chain(factor_dots, [two_dot]):
+            line = Line(self.plane_center, dot.get_center())
+            line.highlight(dot.get_color())
+            dot.add(line)
+
+        self.play(
+            ShowCreation(two_dot),
+            Write(two_label),
+        )
+        self.play(*[
+            ReplacementTransform(
+                VGroup(mob1.copy()), mob2
+            )
+            for mob1, mob2 in [
+                (two_label, factor_labels),
+                (two_dot, factor_dots),
+            ]
+        ])
+        self.dither(3)
+
+class CountThroughRingsCopy(CountThroughRings):
+    pass
+
+class NameGaussianIntegersCopy(NameGaussianIntegers):
+    pass
+
+class IntroduceRecipe(Scene):
+    CONFIG = {
+        "N_string" : "25",
+        "integer_factors" : [5, 5],
+        "gaussian_factors" : [
+            complex(2, 1), complex(2, -1),
+            complex(2, 1), complex(2, -1),
+        ],
+        "x_color" : GREEN,
+        "y_color" : RED,
+        "N_color" : WHITE,
+        "i_positive_color" : BLUE,
+        "i_negative_color" : YELLOW,
+        "T_chart_width" : 8,
+        "T_chart_height" : 6,
+    }
+    def construct(self):
+        self.force_skipping()
+
+        self.add_title()
+        self.show_ordinary_factorization()
+        self.subfactor_ordinary_factorization()
+        self.organize_factors_into_columns()
+        self.mention_conjugate_rule()
+        self.take_product_of_columns()
+        self.mark_left_product_as_result()
+
+    def add_title(self):
+        title = TexMobject(
+            "\\text{Recipe for }",
+            "a", "+", "b", "i",
+            "\\text{ satisfying }",
+            "(", "a", "+", "b", "i", ")",
+            "(", "a", "-", "b", "i", ")",
+            "=", self.N_string
+        )
+        strings = ("a", "b", self.N_string)
+        colors = (self.x_color, self.y_color, self.N_color)
+        for tex, color in zip(strings, colors):
+            title.highlight_by_tex(tex, color, substring = False)
+        title.to_edge(UP, buff = MED_SMALL_BUFF)
+        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line.next_to(title, DOWN)
+        self.add(title, h_line)
+        N_mob = title.get_part_by_tex(self.N_string)
+        digest_locals(self, ["title", "h_line", "N_mob"])
+
+    def show_ordinary_factorization(self):
+        N_mob = self.N_mob.copy()
+        N_mob.generate_target()
+        N_mob.target.next_to(self.h_line, DOWN)
+        N_mob.target.to_edge(LEFT)
+
+        factors = self.integer_factors
+        symbols = ["="] + ["\\cdot"]*(len(factors)-1)
+        factorization = TexMobject(*it.chain(*zip(
+            symbols, map(str, factors)
+        )))
+        factorization.next_to(N_mob.target, RIGHT)
+
+        self.play(MoveToTarget(
+            N_mob,
+            run_time = 2,
+            path_arc = -np.pi/6
+        ))
+        self.play(Write(factorization))
+        self.dither()
+
+        self.factored_N_mob = N_mob
+        self.integer_factorization = factorization
+
+    def subfactor_ordinary_factorization(self):
+        factors = self.gaussian_factors
+        factorization = TexMobject(
+            "=", *map(self.complex_number_to_tex, factors)
+        )
+        max_width = 2*SPACE_WIDTH - 2
+        if factorization.get_width() > max_width:
+            factorization.scale_to_fit_width(max_width)
+        factorization.next_to(
+            self.integer_factorization, DOWN,
+            aligned_edge = LEFT
+        )
+        for factor, mob in zip(factors, factorization[1::]):
+            mob.underlying_number = factor
+            y = complex(factor).imag
+            if y > 0:
+                mob.highlight(self.i_positive_color)
+            if y < 0:
+                mob.highlight(self.i_negative_color)
+        movers = VGroup()
+        mover = self.integer_factorization[0].copy()
+        mover.target = factorization[0]
+        movers.add(mover)
+        index = 0
+        for prime_mob in self.integer_factorization[1::2]:
+            gauss_prime = factors[index]
+            gauss_prime_mob = factorization[index+1]
+            mover = prime_mob.copy()
+            mover.target = gauss_prime_mob
+            movers.add(mover)
+            if complex(gauss_prime).imag > 0:
+                index += 1
+                mover = prime_mob.copy()
+                mover.target = factorization[index+1]
+                movers.add(mover)
+            index += 1
+
+        self.play(LaggedStart(
+            MoveToTarget,
+            movers,
+            replace_mobject_with_target_in_scene = True
+        ))
+        self.dither()
+
+        self.gaussian_factorization = factorization
+
+    def organize_factors_into_columns(self):
+        T_chart = self.get_T_chart()
+        factors = self.gaussian_factorization.copy()[1:]
+        left_factors = VGroup(factors[0], factors[2])
+        right_factors = VGroup(factors[1], factors[3])
+        for group in left_factors, right_factors:
+            group.generate_target()
+            group.target.arrange_submobjects(DOWN)
+        left_factors.target.next_to(T_chart.left_h_line, DOWN)
+        right_factors.target.next_to(T_chart.right_h_line, DOWN)
+
+        self.play(ShowCreation(T_chart))
+        self.dither()
+        self.play(MoveToTarget(left_factors))
+        self.play(MoveToTarget(right_factors))
+        self.dither()
+
+        digest_locals(self, ["left_factors", "right_factors"])
+
+    def mention_conjugate_rule(self):
+        left_factors = self.left_factors
+        right_factors = self.right_factors
+        double_arrows = VGroup()
+        for lf, rf in zip(left_factors.target, right_factors.target):
+            arrow = DoubleArrow(
+                lf, rf, 
+                buff = SMALL_BUFF,
+                tip_length = SMALL_BUFF,
+                color = GREEN
+            )
+            word = TextMobject("Conjugates")
+            word.scale(0.75)
+            word.add_background_rectangle()
+            word.next_to(arrow, DOWN, SMALL_BUFF)
+            arrow.add(word)
+            double_arrows.add(arrow)
+        main_arrow = double_arrows[0]
+
+        self.play(Write(main_arrow, run_time = 1))
+        self.dither()
+        for new_arrow in double_arrows[1:]:
+            self.play(Transform(main_arrow, new_arrow))
+            self.dither()
+        self.dither()
+        self.play(FadeOut(main_arrow))
+
+    def take_product_of_columns(self):
+        arrows = self.get_product_multiplication_lines()
+        products = self.get_product_mobjects()
+        factor_groups = [self.left_factors, self.right_factors]
+
+        for arrow, product, group in zip(arrows, products, factor_groups):
+            self.play(ShowCreation(arrow))
+            self.play(ReplacementTransform(
+                group.copy(), VGroup(product)
+            ))
+            self.dither()
+        self.dither(3)
+
+    def mark_left_product_as_result(self):
+        self.revert_to_original_skipping_status()
+
+
+    #########
+
+    def get_T_chart(self):
+        T_chart = VGroup()
+        h_lines = VGroup(*[
+            Line(ORIGIN, self.T_chart_width*RIGHT/2.0) 
+            for x in range(2)
+        ])
+        h_lines.arrange_submobjects(RIGHT, buff = 0)
+        h_lines.shift(UP)
+        v_line = Line(self.T_chart_height*UP, ORIGIN)
+        v_line.move_to(h_lines.get_center(), UP)
+
+        T_chart.left_h_line, T_chart.right_h_line = h_lines
+        T_chart.v_line = v_line
+        T_chart.digest_mobject_attrs()
+
+        return T_chart
+
+    def complex_number_to_tex(self, z):
+        z = complex(z)
+        x, y = z.real, z.imag
+        if y == 0:
+            return "(%d)"%x
+        y_sign_tex = "+" if y >= 0 else "-"
+        if abs(y) == 1:
+            y_str = y_sign_tex + "i"
+        else:
+            y_str = y_sign_tex + "%di"%abs(y)
+        return "(%d%s)"%(x, y_str)
+
+    def get_product_multiplication_lines(self):
+        lines = VGroup()
+        for factors in self.left_factors, self.right_factors:
+            line = Line(*map(factors.get_corner, [DOWN+LEFT, DOWN+RIGHT]))
+            line.shift(SMALL_BUFF*DOWN)
+            line.scale_about_point(1.5, line.get_right())
+            times = TexMobject("\\times")
+            times.next_to(line.get_left(), UP+RIGHT, SMALL_BUFF)
+            line.add(times)
+            lines.add(line)
+        self.multiplication_lines = lines
+        return lines
+
+    def get_product_mobjects(self):
+        factor_groups = [self.left_factors, self.right_factors]
+        product_mobjects = VGroup()
+        for factors, line in zip(factor_groups, self.multiplication_lines):
+            product = reduce(op.mul, [
+                factor.underlying_number
+                for factor in factors
+            ])
+            color = average_color(*[
+                factor.get_color()
+                for factor in factors
+            ])
+            product_mob = TexMobject(
+                self.complex_number_to_tex(product)
+            )
+            product_mob.highlight(color)
+            product_mob.next_to(line, DOWN, aligned_edge = RIGHT)
+            product_mobjects.add(product_mob)
+        self.product_mobjects = product_mobjects
+        return product_mobjects
+
+
+
+
+
+
+
+
+
+
+
 
 
 

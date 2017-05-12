@@ -1,6 +1,6 @@
 
 
-from mobject.vectorized_mobject import VMobject
+from mobject.vectorized_mobject import VMobject, VGroup
 from mobject.tex_mobject import TexMobject
 from animation import Animation
 from scene import Scene
@@ -28,6 +28,16 @@ class DecimalNumber(VMobject):
                 self.submobjects[1], LEFT,
                 buff = self.digit_to_digit_buff
             )
+
+class Integer(VGroup):
+    def __init__(self, integer, **kwargs):
+        num_str = str(integer)
+        VGroup.__init__(self, *map(TexMobject, num_str), **kwargs)
+        self.arrange_submobjects(
+            RIGHT, buff = SMALL_BUFF, aligned_edge = DOWN
+        )
+        if num_str[0] == "-":
+            self[0].next_to(self[1], LEFT, buff = SMALL_BUFF)
 
 #Todo, this class is now broken
 
