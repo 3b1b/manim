@@ -81,7 +81,9 @@ class LatticePointScene(Scene):
             )
             dot.r_squared = r_squared
             self.lattice_points.add(dot)
-        self.lattice_points.sort_submobjects(np.linalg.norm)
+        self.lattice_points.sort_submobjects(
+            lambda p : np.linalg.norm(p - self.plane_center)
+        )
 
     def get_circle(self, radius = None, color = None):
         if radius is None:
@@ -109,7 +111,7 @@ class LatticePointScene(Scene):
         r_squared = int(np.round(radius**2))
         root_label = TexMobject("\\sqrt{%d}"%r_squared)
         root_label.add_background_rectangle()
-        root_label.next_to(radial_line, DOWN, SMALL_BUFF)
+        root_label.next_to(radial_line, UP, SMALL_BUFF)
 
         return radial_line, root_label
 
@@ -141,6 +143,54 @@ class LatticePointScene(Scene):
                 np.linspace(0, 0.75, len(points))
             )
         ])
+
+    def add_axis_labels(self, spacing = 2):
+        x_max = int(self.plane.point_to_coords(SPACE_WIDTH*RIGHT)[0])
+        y_max = int(self.plane.point_to_coords(SPACE_HEIGHT*UP)[1])
+        x_range = range(spacing, x_max, spacing)
+        y_range = range(spacing, y_max, spacing)
+        for r in x_range, y_range:
+            r += [-n for n in r]
+        tick = Line(ORIGIN, MED_SMALL_BUFF*UP)
+        x_ticks = VGroup(*[
+            tick.copy().move_to(self.plane.coords_to_point(x, 0))
+            for x in x_range
+        ])
+        tick.rotate(-np.pi/2)
+        y_ticks = VGroup(*[
+            tick.copy().move_to(self.plane.coords_to_point(0, y))
+            for y in y_range
+        ])
+        x_labels = VGroup(*[
+            TexMobject(str(x))
+            for x in x_range
+        ])
+        y_labels = VGroup(*[
+            TexMobject(str(y) + "i")
+            for y in y_range
+        ])
+
+        for labels, ticks in (x_labels, x_ticks), (y_labels, y_ticks):
+            labels.scale(0.6)
+            for tex_mob, tick in zip(labels, ticks):
+                tex_mob.add_background_rectangle()
+                tex_mob.next_to(
+                    tick,
+                    tick.get_start() - tick.get_end(),
+                    SMALL_BUFF
+                )
+        self.add(x_ticks, y_ticks, x_labels, y_labels)
+        digest_locals(self, [
+            "x_ticks", "y_ticks",
+            "x_labels", "y_labels",
+        ])
+
+    def point_to_int_coords(self, point):
+        x, y = self.plane.point_to_coords(point)[:2]
+        return (int(np.round(x)), int(np.round(y)))
+
+    def dot_to_int_coords(self, dot):
+        return self.point_to_int_coords(dot.get_center())
 
 
 ######
@@ -1319,14 +1369,13 @@ class IntroduceComplexConjugate(LatticePointScene):
     CONFIG = {
         "y_radius" : 20,
         "x_radius" : 30,
-        "plane_scale_factor" : 2,
+        "plane_scale_factor" : 1.7,
+        "plane_center" : 2*LEFT,
         "example_coords" : (3, 4),
         "x_color" : GREEN,
         "y_color" : RED,
     }
     def construct(self):
-        self.force_skipping()
-
         self.resize_plane()
         self.write_points_with_complex_coords()
         self.introduce_complex_conjugate()
@@ -1335,7 +1384,11 @@ class IntroduceComplexConjugate(LatticePointScene):
         self.show_geometrically()
 
     def resize_plane(self):
-        self.plane.scale(self.plane_scale_factor)
+        self.plane.scale(
+            self.plane_scale_factor,
+            about_point = self.plane_center
+        )
+        self.plane.set_stroke(width = 3)
 
     def write_points_with_complex_coords(self):
         x, y = self.example_coords
@@ -1370,7 +1423,7 @@ class IntroduceComplexConjugate(LatticePointScene):
             label.add_background_rectangle()
             label.next_to(dot, UP+RIGHT, buff = 0)
 
-        y_range = range(-8, 10, 2)
+        y_range = range(-9, 10, 3)
         ticks = VGroup(*[
             Line(
                 ORIGIN, MED_SMALL_BUFF*RIGHT
@@ -1419,13 +1472,14 @@ class IntroduceComplexConjugate(LatticePointScene):
     def introduce_complex_conjugate(self):
         x, y = self.example_coords
         equation = VGroup(
-            TexMobject(str(x), "^2", "+", str(y), "^2", "="),
+            TexMobject("25 = ", str(x), "^2", "+", str(y), "^2", "="),
             TexMobject("(", str(x), "+", str(y), "i", ")"),
             TexMobject("(", str(x), "-", str(y), "i", ")"),
         )
         equation.arrange_submobjects(
             RIGHT, buff = SMALL_BUFF,
         )
+        VGroup(*equation[-2:]).shift(0.5*SMALL_BUFF*DOWN)
         equation.scale(0.9)
         equation.to_corner(UP+RIGHT, buff = MED_SMALL_BUFF)
         for tex_mob in equation:
@@ -1449,9 +1503,11 @@ class IntroduceComplexConjugate(LatticePointScene):
         conjugate_words.add_background_rectangle()
         conjugate_words.next_to(brace, DOWN)
 
-        self.revert_to_original_skipping_status()
-        for part in equation:
-            self.play(FadeIn(part))
+        self.play(FadeIn(
+            equation,
+            run_time = 3,
+            submobject_mode = "lagged_start"
+        ))
         self.dither(2)
         self.play(
             GrowFromCenter(brace),
@@ -1467,17 +1523,519 @@ class IntroduceComplexConjugate(LatticePointScene):
         ])
         self.dither(2)
 
+        self.conjugate_label = VGroup(brace, conjugate_words)
+        self.equation = equation
+        self.conjugate_dot = dot
+
     def show_confusion(self):
-        pass
+        randy = Randolph(color = BLUE_C).to_corner(DOWN+LEFT)
+        morty = Mortimer().to_edge(DOWN)
+        randy.make_eye_contact(morty)
+
+        self.play(*map(FadeIn, [randy, morty]))
+        self.play(PiCreatureSays(
+            randy, "Wait \\dots why?",
+            target_mode = "confused",
+        ))
+        self.play(Blink(randy))
+        self.dither(2)
+        self.play(
+            RemovePiCreatureBubble(
+                randy, target_mode = "erm",
+            ),
+            PiCreatureSays(
+                morty, "Now it's a \\\\ factoring problem!",
+                target_mode = "hooray",
+                bubble_kwargs = {"width" : 5, "height" : 3}
+            )
+        )
+        self.play(
+            morty.look_at, self.equation,
+            randy.look_at, self.equation,
+        )
+        self.play(Blink(morty))
+        self.play(randy.change_mode, "pondering")
+        self.play(RemovePiCreatureBubble(morty))
+        self.play(*map(FadeOut, [randy, morty]))
 
     def expand_algebraically(self):
-        pass
+        x, y = self.example_coords
+        expansion = VGroup(
+            TexMobject(str(x), "^2"),
+            TexMobject("-", "(", str(y), "i", ")^2")
+        )
+        expansion.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        expansion.next_to(
+            VGroup(*self.equation[-2:]), 
+            DOWN, LARGE_BUFF
+        )
+        alt_y_term = TexMobject("+", str(y), "^2")
+        alt_y_term.move_to(expansion[1], LEFT)
+        for tex_mob in list(expansion) + [alt_y_term]:
+            tex_mob.highlight_by_tex(str(x), self.x_color)
+            tex_mob.highlight_by_tex(str(y), self.y_color)
+            tex_mob.rect = BackgroundRectangle(tex_mob)
+
+        x1 = self.equation[-2][1][1]
+        x2 = self.equation[-1][1][1]
+        y1 = VGroup(*self.equation[-2][1][3:5])
+        y2 = VGroup(*self.equation[-1][1][2:5])
+        vect = MED_LARGE_BUFF*UP
+
+        self.play(FadeOut(self.conjugate_label))
+        group = VGroup(x1, x2)
+        self.play(group.shift, -vect)
+        self.play(
+            FadeIn(expansion[0].rect),
+            ReplacementTransform(group.copy(), expansion[0]),
+        )
+        self.play(group.shift, vect)
+        group = VGroup(x1, y2)
+        self.play(group.shift, -vect)
+        self.dither()
+        self.play(group.shift, vect)
+        group = VGroup(x2, y1)
+        self.play(group.shift, -vect)
+        self.dither()
+        self.play(group.shift, vect)
+        group = VGroup(*it.chain(y1, y2))
+        self.play(group.shift, -vect)
+        self.dither()
+        self.play(
+            FadeIn(expansion[1].rect),
+            ReplacementTransform(group.copy(), expansion[1]),
+        )
+        self.play(group.shift, vect)
+        self.dither(2)
+        self.play(
+            Transform(expansion[1].rect, alt_y_term.rect),
+            Transform(expansion[1], alt_y_term),
+        )
+        self.dither()
+        self.play(*map(FadeOut, [
+            expansion[0].rect,
+            expansion[1].rect,
+            expansion
+        ]))
 
     def show_geometrically(self):
-        pass
+        dots = [self.example_dot, self.conjugate_dot]
+        top_dot, low_dot = dots
+        for dot in dots:
+            dot.line = Line(
+                self.plane_center, dot.get_center(), 
+                color = BLUE
+            )
+            dot.angle = dot.line.get_angle()
+            dot.arc = Arc(
+                dot.angle,
+                radius = 0.75, 
+                color = YELLOW
+            )
+            dot.arc.shift(self.plane_center)
+            dot.arc.add_tip(tip_length = 0.2)
+            dot.rotate_word = TextMobject("Rotate")
+            dot.rotate_word.scale(0.5)
+            dot.rotate_word.next_to(dot.arc, RIGHT, SMALL_BUFF)
+            dot.magnitude_word = TextMobject("Length 5")
+            dot.magnitude_word.scale(0.6)
+            dot.magnitude_word.next_to(
+                ORIGIN,
+                np.sign(dot.get_center()[1])*UP,
+                buff = SMALL_BUFF
+            )
+            dot.magnitude_word.add_background_rectangle()
+            dot.magnitude_word.rotate(dot.angle)
+            dot.magnitude_word.shift(dot.line.get_center())
+        twenty_five_label = TexMobject("25")
+        twenty_five_label.add_background_rectangle()
+        twenty_five_label.next_to(
+            self.plane.coords_to_point(25, 0),
+            DOWN
+        )
 
+        self.play(ShowCreation(top_dot.line))
+        mover = VGroup(
+            top_dot.line.copy().highlight(PINK), 
+            top_dot.copy()
+        )
+        self.play(FadeIn(
+            top_dot.magnitude_word,
+            submobject_mode = "lagged_start"
+        ))
+        self.dither()
+        self.play(ShowCreation(top_dot.arc))
+        self.dither(2)
+        self.play(ShowCreation(low_dot.line))
+        self.play(
+            ReplacementTransform(
+                top_dot.arc,
+                low_dot.arc
+            ),
+            FadeIn(low_dot.rotate_word)
+        )
+        self.play(
+            Rotate(
+                mover, low_dot.angle, 
+                about_point = self.plane_center
+            ),
+            run_time = 2
+        )
+        self.play(
+            FadeOut(low_dot.arc),
+            FadeOut(low_dot.rotate_word),
+            FadeIn(low_dot.magnitude_word),
+        )
+        self.play(
+            mover[0].scale_about_point, 5, self.plane_center,
+            mover[1].move_to, self.plane.coords_to_point(25, 0),
+            run_time = 2
+        )
+        self.dither()
+        self.play(Write(twenty_five_label))
+        self.dither(3)
+
+class NameGaussianIntegers(LatticePointScene):
+    CONFIG = {
+        "max_lattice_point_radius" : 15,
+        "dot_radius" : 0.05,
+        "plane_center" : 2*LEFT,
+        "x_radius" : 15,
+    }
+    def construct(self):
+        self.add_axis_labels()
+        self.add_a_plus_bi()
+        self.draw_lattice_points()
+        self.add_name()
+        self.restrict_to_one_circle()
+        self.show_question_algebraically()
+
+    def add_a_plus_bi(self):
+        label = TexMobject(
+            "a", "+", "b", "i"
+        )
+        a = label.get_part_by_tex("a")
+        b = label.get_part_by_tex("b")
+        a.highlight(GREEN)
+        b.highlight(RED)
+        label.add_background_rectangle()
+        label.to_corner(UP+RIGHT)
+        integers = TextMobject("Integers")
+        integers.next_to(label, DOWN, LARGE_BUFF)
+        integers.add_background_rectangle()
+        arrows = VGroup(*[
+            Arrow(integers.get_top(), mob, tip_length = 0.15)
+            for mob in a, b
+        ])
+        self.add_foreground_mobjects(label, integers, arrows)
+
+        self.a_plus_bi = label
+        self.integers_label = VGroup(integers, arrows)
+
+    def add_name(self):
+        gauss_name = TextMobject(
+            "Carl Friedrich Gauss"
+        )
+        gauss_name.add_background_rectangle()
+        gauss_name.next_to(ORIGIN, UP, MED_LARGE_BUFF)
+        gauss_name.to_edge(LEFT)
+
+        gaussian_integers = TextMobject("``Gaussian integers'': ")
+        gaussian_integers.scale(0.9)
+        gaussian_integers.next_to(self.a_plus_bi, LEFT)
+        gaussian_integers.add_background_rectangle()
+
+        self.play(FadeIn(gaussian_integers))
+        self.add_foreground_mobject(gaussian_integers)
+        self.play(FadeIn(
+            gauss_name,
+            run_time = 2,
+            submobject_mode = "lagged_start"
+        ))
+        self.dither(3)
+        self.play(FadeOut(gauss_name))
+
+        self.gaussian_integers = gaussian_integers
+
+    def restrict_to_one_circle(self):
+        dots = self.get_lattice_points_on_r_squared_circle(25).copy()
+        for dot in dots:
+            dot.scale_in_place(2)
+        circle = self.get_circle(5)
+        radius, root_label = self.get_radial_line_with_label(5)
+
+        self.play(
+            FadeOut(self.lattice_points),
+            ShowCreation(circle),
+            Rotating(
+                radius, 
+                run_time = 1, rate_func = smooth,
+                about_point = self.plane_center
+            ),
+            *map(GrowFromCenter, dots)
+        )
+        self.play(Write(root_label))
+        self.dither()
+
+        self.circle_dots = dots
+
+    def show_question_algebraically(self):
+        for i, dot in enumerate(self.circle_dots):
+            x, y = self.dot_to_int_coords(dot)
+            x_str = str(x)
+            y_str = str(y) if y >= 0 else "(%d)"%y
+            label = TexMobject(x_str, "+", y_str, "i")
+            label.scale(0.8)
+            label.next_to(
+                dot, 
+                dot.get_center()-self.plane_center + SMALL_BUFF*(UP+RIGHT),
+                buff = 0,
+            )
+            label.add_background_rectangle()
+            dot.label = label
+
+            equation = TexMobject(
+                "25 = "
+                "(", x_str, "+", y_str, "i", ")",
+                "(", x_str, "-", y_str, "i", ")",
+            )
+            equation.scale(0.9)
+            equation.add_background_rectangle()
+            equation.to_corner(UP + RIGHT)
+            dot.equation = equation
+
+            for mob in label, equation:
+                mob.highlight_by_tex(x_str, GREEN, substring = False)
+                mob.highlight_by_tex(y_str, RED, substring = False)
+
+            dot.line_pair = VGroup(*[
+                Line(
+                    self.plane_center,
+                    self.plane.coords_to_point(x, u*y),
+                    color = PINK,
+                )
+                for u in 1, -1
+            ])
+            dot.conjugate_dot = self.circle_dots[-i]
+
+        self.play(*map(FadeOut, [
+            self.a_plus_bi, self.integers_label,
+            self.gaussian_integers,
+        ]))
+
+        last_dot = None
+        for dot in self.circle_dots:
+            anims = [
+                dot.highlight, PINK,
+                dot.conjugate_dot.highlight, PINK,
+            ]
+            if last_dot is None:
+                anims += [
+                    FadeIn(dot.equation),
+                    FadeIn(dot.label),
+                ]
+                anims += map(ShowCreation, dot.line_pair)
+            else:
+                anims += [
+                    last_dot.highlight, self.dot_color,
+                    last_dot.conjugate_dot.highlight, self.dot_color,
+                    ReplacementTransform(last_dot.equation, dot.equation),
+                    ReplacementTransform(last_dot.label, dot.label),
+                    ReplacementTransform(last_dot.line_pair, dot.line_pair),
+                ]
+            self.play(*anims)
+            self.dither()
+            last_dot = dot
+
+class FactorOrdinaryNumber(TeacherStudentsScene):
+    def construct(self):
+        equation = TexMobject(
+            "2{,}250", "=", "2 \\cdot 3^2 \\cdot 5^3"
+        )
+        equation.next_to(self.get_pi_creatures(), UP, LARGE_BUFF)
+        number = equation[0]
+        alt_rhs_list = list(it.starmap(TexMobject, [
+            ("\\ne", "2^2 \\cdot 563"),
+            ("\\ne", "2^2 \\cdot 3 \\cdot 11 \\cdot 17"),
+            ("\\ne", "2 \\cdot 7^2 \\cdot 23"),
+            ("=", "(-2) \\cdot (-3) \\cdot (3) \\cdot 5^3"),
+        ]))
+        for alt_rhs in alt_rhs_list:
+            if "\\ne" in alt_rhs.get_tex_string():
+                alt_rhs.highlight(RED)
+            else:
+                alt_rhs.highlight(GREEN)
+            alt_rhs.move_to(equation.get_right())
+        number.save_state()
+        number.next_to(self.teacher, UP+LEFT)
+
+        self.play(
+            self.teacher.change_mode, "raise_right_hand",
+            Write(number)
+        )
+        self.dither(2)
+        self.play(
+            number.restore,
+            Write(VGroup(*equation[1:]))
+        )
+        self.change_student_modes(
+            *["pondering"]*3,
+            look_at_arg = equation,
+            added_anims = [self.teacher.change_mode, "happy"]
+        )
+        self.dither()
+        last_alt_rhs = None
+        for alt_rhs in alt_rhs_list:
+            equation.generate_target()
+            equation.target.next_to(alt_rhs, LEFT)
+            anims = [MoveToTarget(equation)]
+            if last_alt_rhs:
+                anims += [ReplacementTransform(last_alt_rhs, alt_rhs)]
+            else:
+                anims += [FadeIn(alt_rhs)]
+            self.play(*anims)
+            if alt_rhs is alt_rhs_list[-1]:
+                self.change_student_modes(
+                    *["sassy"]*3,
+                    look_at_arg = alt_rhs
+                )
+            self.dither(2)
+            last_alt_rhs = alt_rhs
+
+        self.play(
+            FadeOut(VGroup(equation, alt_rhs)),
+            PiCreatureSays(
+                self.teacher,
+                "It's similar for \\\\ Gaussian integers"
+            )
+        )
+        self.change_student_modes(*["happy"]*3)
+        self.dither(3)
+
+class IntroduceGaussianPrimes(LatticePointScene):
+    CONFIG = {
+        "plane_center" : LEFT,
+        "x_radius" : 13,
+    }
+    def construct(self):
+        five_dot, p1_dot, p2_dot, p3_dot, p4_dot = dots = [
+            Dot(self.plane.coords_to_point(*coords))
+            for coords in [
+                (5, 0), 
+                (2, 1), (2, -1), 
+                (-1, 2), (-1, -2),
+            ]
+        ]
+        five_dot.highlight(YELLOW)
+        p_dots = VGroup(*dots[1:])
+        p_dots.highlight(PINK)
+
+        five_label, p1_label, p2_label, p3_label, p4_label = labels = [
+            TexMobject(tex).add_background_rectangle()
+            for tex in "5", "2+i", "2-i", "-1+2i", "-1-2i",
+        ]
+        vects = [DOWN, UP+RIGHT, DOWN+RIGHT, UP+LEFT, DOWN+LEFT]
+        for dot, label, vect in zip(dots, labels, vects):
+            label.next_to(dot, vect, SMALL_BUFF)
+
+        arc_angle = 0.8*np.pi
+        times_i_arc = Arrow(
+            p1_dot.get_top(), p3_dot.get_top(), 
+            path_arc = arc_angle
+        )
+        times_neg_i_arc = Arrow(
+            p2_dot.get_bottom(), p4_dot.get_bottom(), 
+            path_arc = -arc_angle
+        )
+        times_i = TexMobject("\\times i")
+        times_i.add_background_rectangle()
+        times_i.next_to(
+            times_i_arc.point_from_proportion(0.5),
+            UP
+        )
+        times_neg_i = TexMobject("\\times (-i)")
+        times_neg_i.add_background_rectangle()
+        times_neg_i.next_to(
+            times_neg_i_arc.point_from_proportion(0.5),
+            DOWN
+        )
+        VGroup(
+            times_i, times_neg_i, times_i_arc, times_neg_i_arc
+        ).highlight(MAROON_B)
+
+        gaussian_prime = TextMobject("$\\Rightarrow$ ``Gaussian prime''")
+        gaussian_prime.add_background_rectangle()
+        gaussian_prime.scale(0.9)
+        gaussian_prime.next_to(p1_label, RIGHT)
+
+        factorization = TexMobject(
+            "5", "= (2+i)(2-i)"
+        )
+        factorization.to_corner(UP+RIGHT)
+        factorization.shift(1.5*LEFT)
+        factorization.add_background_rectangle()
+        alt_factorization = TexMobject("=(-1+2i)(-1-2i)")
+        alt_factorization.next_to(
+            factorization.get_part_by_tex("="), DOWN,
+            aligned_edge = LEFT
+        )
+        alt_factorization.add_background_rectangle()
         
+        for dot in dots:
+            dot.add(Line(
+                self.plane_center,
+                dot.get_center(),
+                color = dot.get_color()
+            ))
 
+        self.add(factorization)
+        self.play(
+            DrawBorderThenFill(five_dot), 
+            FadeIn(five_label)
+        )
+        self.dither()
+        self.play(
+            ReplacementTransform(
+                VGroup(five_dot).copy(),
+                VGroup(p1_dot, p2_dot)
+            )
+        )
+        self.play(*map(Write, [p1_label, p2_label]))
+        self.dither()
+        self.play(Write(gaussian_prime))
+        self.dither(2)
+        self.play(
+            ShowCreation(times_i_arc),
+            FadeIn(times_i),
+            *[
+                ReplacementTransform(
+                    mob1.copy(), mob2,
+                    path_arc = np.pi/2
+                )
+                for mob1, mob2 in [
+                    (p1_dot, p3_dot),
+                    (p1_label, p3_label),
+                ]
+            ]
+        )
+        self.dither()
+        self.play(
+            ShowCreation(times_neg_i_arc),
+            FadeIn(times_neg_i),
+            *[
+                ReplacementTransform(
+                    mob1.copy(), mob2,
+                    path_arc = -np.pi/2
+                )
+                for mob1, mob2 in [
+                    (p2_dot, p4_dot),
+                    (p2_label, p4_label),
+                ]
+            ]
+        )
+        self.dither()
+        self.play(Write(alt_factorization))
+        self.dither(3)
 
 
 

@@ -202,10 +202,10 @@ class NumberPlane(VMobject):
         return result
 
     def point_to_coords(self, point):
-        new_point = point-self.get_center()
+        new_point = point-self.axes.get_center()
         center_x, center_y = self.coords_at_center
-        x = center_x + point[0]/self.get_space_unit_to_x_unit()
-        y = center_y + point[1]/self.get_space_unit_to_y_unit()
+        x = center_x + new_point[0]/self.get_space_unit_to_x_unit()
+        y = center_y + new_point[1]/self.get_space_unit_to_y_unit()
         return x, y
 
     def get_space_unit_to_x_unit(self):

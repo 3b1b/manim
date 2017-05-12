@@ -101,7 +101,6 @@ class TexMobject(SVGMobject):
             tex = tex.replace("{", "", num_lefts - num_rights)
         return tex
 
-
     def get_tex_string(self):
         return self.tex_string
 
