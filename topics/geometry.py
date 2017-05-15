@@ -346,15 +346,27 @@ class Square(Rectangle):
             **kwargs
         )
 
-class BackgroundRectangle(Rectangle):
+class SurroundingRectangle(Rectangle):
+    CONFIG = {
+        "color" : YELLOW,
+        "buff" : SMALL_BUFF,
+    }
+    def __init__(self, mobject, **kwargs):
+        digest_config(self, kwargs)
+        kwargs["width"] = mobject.get_width() + 2*self.buff
+        kwargs["height"] = mobject.get_height() + 2*self.buff
+        Rectangle.__init__(self, **kwargs)
+        self.move_to(mobject)
+
+class BackgroundRectangle(SurroundingRectangle):
     CONFIG = {
         "color" : BLACK,
         "stroke_width" : 0,
         "fill_opacity" : 0.75,
+        "buff" : 0
     }
     def __init__(self, mobject, **kwargs):
-        Rectangle.__init__(self, **kwargs)
-        self.replace(mobject, stretch = True)
+        SurroundingRectangle.__init__(self, mobject, **kwargs)
         self.original_fill_opacity = self.fill_opacity
 
     def pointwise_become_partial(self, mobject, a, b):
@@ -363,6 +375,7 @@ class BackgroundRectangle(Rectangle):
 
     def get_fill_color(self):
         return Color(self.color)
+
 
 class FullScreenFadeRectangle(Rectangle):
     CONFIG = {

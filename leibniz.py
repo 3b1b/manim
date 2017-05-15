@@ -585,15 +585,15 @@ class Outline(PiCreatureScene):
         circle = Circle(
             color = YELLOW,
             radius = np.linalg.norm(
-                plane.coords_to_points(10, 0) - \
-                plane.coords_to_points(0, 0)
+                plane.coords_to_point(10, 0) - \
+                plane.coords_to_point(0, 0)
             )
         )
-        plane_center = plane.coords_to_points(0, 0)
+        plane_center = plane.coords_to_point(0, 0)
         circle.move_to(plane_center)
         lattice_points = VGroup(*[
             Dot(
-                plane.coords_to_points(a, b), 
+                plane.coords_to_point(a, b), 
                 radius = 0.05,
                 color = PINK,
             )
@@ -683,7 +683,7 @@ class Outline(PiCreatureScene):
     def show_complicated_formula(self):
         rhs = TexMobject(
             " = \\lim_{N \\to \\infty}",
-            " \\frac{1}{N}",
+            " \\frac{4}{N}",
             "\\sum_{n = 1}^N",
             "\\sum_{d | n} \\chi(d)",
         )
@@ -711,11 +711,14 @@ class Outline(PiCreatureScene):
                 for d in range(2, len(self.numerators)+1)
             ] + [["+ \\cdots"]])
         )
+        over_four = TexMobject("\\quad \\over 4")
+        over_four.to_corner(DOWN+LEFT)
+        over_four.shift(UP)
         pi = self.pi
         pi.generate_target()
-        pi.target.to_corner(DOWN+LEFT)
-        pi.target.shift(UP)
-        expression.next_to(pi.target, RIGHT)
+        pi.target.scale(0.75)
+        pi.target.next_to(over_four, UP)
+        expression.next_to(over_four, RIGHT, align_using_submobjects = True)
         self.numerators.generate_target()
         for num, denom in zip(self.numerators.target, expression[1::2]):
             num.scale(1.2)
@@ -724,6 +727,7 @@ class Outline(PiCreatureScene):
         self.play(
             MoveToTarget(self.numerators),
             MoveToTarget(pi),
+            Write(over_four),
             FadeOut(self.chis),
             FadeOut(self.arrows),
             FadeOut(self.complicated_formula),
@@ -736,7 +740,7 @@ class Outline(PiCreatureScene):
 
     ########
     def create_pi_creature(self):
-        return Randolph(color = BLUE_B).flip().to_corner(DOWN+RIGHT)
+        return Randolph(color = BLUE_C).flip().to_corner(DOWN+RIGHT)
 
 class CountLatticePoints(LatticePointScene):
     CONFIG = {
@@ -2350,12 +2354,11 @@ class IntroduceRecipe(Scene):
         "N_color" : WHITE,
         "i_positive_color" : BLUE,
         "i_negative_color" : YELLOW,
+        "i_zero_color" : MAROON_B,
         "T_chart_width" : 8,
         "T_chart_height" : 6,
     }
     def construct(self):
-        self.force_skipping()
-
         self.add_title()
         self.show_ordinary_factorization()
         self.subfactor_ordinary_factorization()
@@ -2363,6 +2366,7 @@ class IntroduceRecipe(Scene):
         self.mention_conjugate_rule()
         self.take_product_of_columns()
         self.mark_left_product_as_result()
+        self.swap_factors()
 
     def add_title(self):
         title = TexMobject(
@@ -2423,9 +2427,11 @@ class IntroduceRecipe(Scene):
         for factor, mob in zip(factors, factorization[1::]):
             mob.underlying_number = factor
             y = complex(factor).imag
-            if y > 0:
+            if y == 0:
+                mob.highlight(self.i_zero_color)
+            elif y > 0:
                 mob.highlight(self.i_positive_color)
-            if y < 0:
+            elif y < 0:
                 mob.highlight(self.i_negative_color)
         movers = VGroup()
         mover = self.integer_factorization[0].copy()
@@ -2457,8 +2463,7 @@ class IntroduceRecipe(Scene):
     def organize_factors_into_columns(self):
         T_chart = self.get_T_chart()
         factors = self.gaussian_factorization.copy()[1:]
-        left_factors = VGroup(factors[0], factors[2])
-        right_factors = VGroup(factors[1], factors[3])
+        left_factors, right_factors = self.get_left_and_right_factors()
         for group in left_factors, right_factors:
             group.generate_target()
             group.target.arrange_submobjects(DOWN)
@@ -2514,10 +2519,32 @@ class IntroduceRecipe(Scene):
         self.dither(3)
 
     def mark_left_product_as_result(self):
-        self.revert_to_original_skipping_status()
+        rect = self.get_result_surrounding_rect()
+        words = TextMobject("Output", " of recipe")
+        words.next_to(rect, DOWN, buff = MED_LARGE_BUFF)
+        words.to_edge(LEFT)
+        arrow = Arrow(words.get_top(), rect.get_left())
 
+        self.play(ShowCreation(rect))
+        self.play(
+            Write(words, run_time = 2),
+            ShowCreation(arrow)
+        )
+        self.dither(3)
+        self.play(*map(FadeOut, [words, arrow]))
+
+        self.output_label_group = VGroup(words, arrow)
+
+    def swap_factors(self):
+        for i in range(len(self.left_factors)):
+            self.swap_factors_at_index(i)
+            self.dither()
 
     #########
+
+    def get_left_and_right_factors(self):
+        factors = self.gaussian_factorization.copy()[1:]
+        return VGroup(*factors[::2]), VGroup(*factors[1::2])
 
     def get_T_chart(self):
         T_chart = VGroup()
@@ -2582,18 +2609,1175 @@ class IntroduceRecipe(Scene):
         self.product_mobjects = product_mobjects
         return product_mobjects
 
+    def swap_factors_at_index(self, index):
+        factor_groups = self.left_factors, self.right_factors
+        factors_to_swap = [group[index] for group in factor_groups]
+        self.play(*[
+            ApplyMethod(
+                factors_to_swap[i].move_to, factors_to_swap[1-i],
+                path_arc = np.pi/2,
+            )
+            for i in range(2)
+        ])
+        for i, group in enumerate(factor_groups):
+            group.submobjects[index] = factors_to_swap[1-i]
+        self.play(FadeOut(self.product_mobjects))
+        self.get_product_mobjects()
+        rect = self.result_surrounding_rect
+        new_rect = self.get_result_surrounding_rect()
+        self.play(*[
+            ReplacementTransform(group.copy(), VGroup(product))
+            for group, product in zip(
+                factor_groups, self.product_mobjects,
+            )
+        ]+[
+            ReplacementTransform(rect, new_rect)
+        ])
+        self.dither()
+
+    def get_result_surrounding_rect(self, product = None):
+        if product is None:
+            product = self.product_mobjects[0]
+        rect = SurroundingRectangle(product)
+        self.result_surrounding_rect = rect
+        return rect
+
+    def write_last_step(self):
+        output_words, arrow = self.output_label_group
+        final_step = TextMobject(
+            "Multiply by $1$, $i$, $-1$ or $-i$"
+        )
+        final_step.scale(0.9)
+        final_step.next_to(arrow.get_start(), DOWN, SMALL_BUFF)
+        final_step.shift_onto_screen()
+        
+        anims = [Write(final_step)]
+        if arrow not in self.get_mobjects():
+            # arrow = Arrow(
+            #     final_step.get_top(),
+            #     self.result_surrounding_rect.get_left()
+            # )
+            anims += [ShowCreation(arrow)]
+        self.play(*anims)
+        self.dither(2)
+
+class ThreeOutputsAsLatticePoints(LatticePointScene):
+    CONFIG = {
+        "coords_list" : [(3, 4), (5, 0), (3, -4)],
+        "dot_radius" : 0.1,
+        "colors" : [YELLOW, GREEN, PINK, MAROON_B],
+    }
+    def construct(self):
+        self.add_circle()
+        self.add_dots_and_labels()
+
+    def add_circle(self):
+        radius = np.sqrt(self.radius_squared)
+        circle = self.get_circle(radius)
+        radial_line, root_label = self.get_radial_line_with_label(radius)
+        self.add(radial_line, root_label, circle)
+        self.add_foreground_mobject(root_label)
+
+    def add_dots_and_labels(self):
+        dots = VGroup(*[
+            Dot(
+                self.plane.coords_to_point(*coords),
+                radius = self.dot_radius, 
+                color = self.colors[0],
+            )
+            for coords in self.coords_list
+        ])
+        labels = VGroup()
+        for x, y in self.coords_list:
+            if y == 0:
+                y_str = ""
+                vect = DOWN+RIGHT
+            elif y > 1:
+                y_str = "+%di"%y
+                vect = UP+RIGHT
+            else:
+                y_str = "%di"%y
+                vect = DOWN+RIGHT
+            label = TexMobject("%d%s"%(x, y_str))
+            label.add_background_rectangle()
+            point = self.plane.coords_to_point(x, y)
+            label.next_to(point, vect)
+            labels.add(label)
+
+        for dot, label in zip(dots, labels):
+            self.play(
+                FadeIn(label),
+                DrawBorderThenFill(
+                    dot, 
+                    stroke_color = PINK,
+                    stroke_width = 4
+                )
+            )
+        self.dither(2)
+
+        self.original_dots = dots
+
+class ShowAlternateFactorizationOfTwentyFive(IntroduceRecipe):
+    CONFIG = {
+        "gaussian_factors" : [
+            complex(-1, 2), complex(-1, -2),
+            complex(2, 1), complex(2, -1),
+        ],
+    }
+    def construct(self):
+        self.add_title()
+        self.show_ordinary_factorization()
+        self.subfactor_ordinary_factorization()
+        self.organize_factors_into_columns()
+        self.take_product_of_columns()
+        self.mark_left_product_as_result()
+        self.swap_factors()
+
+class WriteAlternateLastStep(IntroduceRecipe):
+    def construct(self):
+        self.force_skipping()        
+        self.add_title()
+        self.show_ordinary_factorization()
+        self.subfactor_ordinary_factorization()
+        self.organize_factors_into_columns()
+        self.take_product_of_columns()
+        self.mark_left_product_as_result()
+        self.revert_to_original_skipping_status()
+
+        self.cross_out_output_words()
+        self.write_last_step()
+
+    def cross_out_output_words(self):
+        output_words, arrow = self.output_label_group
+        cross = TexMobject("\\times")
+        cross.replace(output_words, stretch = True)
+        cross.highlight(RED)
+        
+        self.add(output_words, arrow)
+        self.play(Write(cross))
+        output_words.add(cross)
+        self.play(output_words.to_edge, DOWN)
+
+class ThreeOutputsAsLatticePointsContinued(ThreeOutputsAsLatticePoints):
+    def construct(self):
+        self.force_skipping()
+        ThreeOutputsAsLatticePoints.construct(self)
+        self.revert_to_original_skipping_status()
+
+        self.show_multiplication_by_units()
+
+    def show_multiplication_by_units(self):
+        original_dots = self.original_dots
+        lines = VGroup()
+        for dot in original_dots:
+            line = Line(self.plane_center, dot.get_center())
+            line.set_stroke(dot.get_color(), 6)
+            lines.add(line)
+            dot.add(line)
+        words_group = VGroup(*[
+            TextMobject("Multiply by $%s$"%s)
+            for s in "1", "i", "-1", "-i"
+        ])
+        for words, color in zip(words_group, self.colors):
+            words.add_background_rectangle()
+            words.highlight(color)
+        words_group.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        words_group.to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
+        angles = [np.pi/2, np.pi, -np.pi/2]
+
+        self.play(
+            FadeIn(words_group[0]),
+            *map(ShowCreation, lines)
+        )
+        for words, angle, color in zip(words_group[1:], angles, self.colors[1:]):
+            self.play(FadeIn(words))
+            dots_copy = original_dots.copy()
+            self.play(
+                dots_copy.rotate, angle,
+                dots_copy.highlight, color,
+                path_arc = angle
+            )
+            self.dither()
+        self.dither(2)
+
+class RecipeFor125(IntroduceRecipe):
+    CONFIG = {
+        "N_string" : "125",
+        "integer_factors" : [5, 5, 5],
+        "gaussian_factors" : [
+            complex(2, 1), complex(2, -1),
+            complex(2, 1), complex(2, -1),
+            complex(2, 1), complex(2, -1),
+        ],
+    }
+    def construct(self):
+        self.add_title()
+        self.show_ordinary_factorization()
+        self.subfactor_ordinary_factorization()
+        self.organize_factors_into_columns()
+        self.take_product_of_columns()
+        self.mark_left_product_as_result()
+        self.swap_factors()
+        self.write_last_step()
+
+class Show125Circle(ThreeOutputsAsLatticePointsContinued):
+    CONFIG = {
+        "radius_squared" : 125,
+        "coords_list" : [(2, 11), (10, 5), (10, -5), (2, -11)],
+        "y_radius" : 15,
+    }
+    def construct(self):
+        self.draw_circle()
+        self.add_dots_and_labels()
+        self.show_multiplication_by_units()
+        self.ask_about_two()
+
+    def draw_circle(self):
+        self.plane.scale(2)
+        radius = np.sqrt(self.radius_squared)
+        circle = self.get_circle(radius)
+        radial_line, root_label = self.get_radial_line_with_label(radius)
+
+        self.play(
+            Write(root_label),
+            ShowCreation(radial_line)
+        )
+        self.add_foreground_mobject(root_label)
+        self.play(
+            Rotating(
+                radial_line, 
+                rate_func = smooth, 
+                about_point = self.plane_center
+            ),
+            ShowCreation(circle),
+            run_time = 2,
+        )
+        group = VGroup(
+            self.plane, radial_line, circle, root_label
+        )
+        self.play(group.scale, 0.5)
+
+class RecipeFor375(IntroduceRecipe):
+    CONFIG = {
+        "N_string" : "375",
+        "integer_factors" : [3, 5, 5, 5],
+        "gaussian_factors" : [
+            3, 
+            complex(2, 1), complex(2, -1),
+            complex(2, 1), complex(2, -1),
+            complex(2, 1), complex(2, -1),
+        ],
+    }
+    def construct(self):
+        self.add_title()
+        self.show_ordinary_factorization()
+        self.subfactor_ordinary_factorization()
+        self.organize_factors_into_columns()
+        self.express_trouble_with_three()
+        self.take_product_of_columns()
+
+    def express_trouble_with_three(self):
+        morty = Mortimer().flip().to_corner(DOWN+LEFT)
+        three = self.gaussian_factorization[1].copy()
+        three.generate_target()
+        three.target.next_to(morty, UP, MED_LARGE_BUFF)
+
+        self.play(FadeIn(morty))
+        self.play(
+            MoveToTarget(three), 
+            morty.change, "angry", three.target
+        )
+        self.play(Blink(morty))
+        self.dither()
+        for factors in self.left_factors, self.right_factors:
+            self.play(
+                three.next_to, factors, DOWN,
+                morty.change, "sassy", factors.get_bottom()
+            )
+            self.dither()
+        self.right_factors.add(three)
+        self.play(morty.change_mode, "pondering")
+
+    ####
+
+    def get_left_and_right_factors(self):
+        factors = self.gaussian_factorization.copy()[1:]
+        return VGroup(*factors[1::2]), VGroup(*factors[2::2])
+
+class Show375Circle(LatticePointScene):
+    CONFIG = {
+        "y_radius" : 20,
+    }
+    def construct(self):
+        radius = np.sqrt(375)
+        circle = self.get_circle(radius)
+        radial_line, root_label = self.get_radial_line_with_label(radius)
+
+        self.play(
+            ShowCreation(radial_line),
+            Write(root_label, run_time = 1)
+        )
+        self.add_foreground_mobject(root_label)
+        self.play(
+            Rotating(
+                radial_line,
+                rate_func = smooth,
+                about_point = self.plane_center
+            ),
+            ShowCreation(circle),
+            run_time = 2,
+        )
+        group = VGroup(
+            self.plane, radial_line, root_label, circle
+        )
+        self.dither(2)
+
+class RecipeFor1125(IntroduceRecipe):
+    CONFIG = {
+        "N_string" : "1125",
+        "integer_factors" : [3, 3, 5, 5, 5],
+        "gaussian_factors" : [
+            3, 3,
+            complex(2, 1), complex(2, -1),
+            complex(2, 1), complex(2, -1),
+            complex(2, 1), complex(2, -1),
+        ],
+    }
+    def construct(self):
+        self.add_title()
+        self.show_ordinary_factorization()
+        self.subfactor_ordinary_factorization()
+        self.organize_factors_into_columns()
+        self.mention_conjugate_rule()
+        self.take_product_of_columns()
+        self.mark_left_product_as_result()
+        self.swap_factors()
+        self.write_last_step()
+
+    def write_last_step(self):
+        words = TextMobject(
+            "Multiply by \\\\ ", 
+            "$1$, $i$, $-1$ or $-i$"
+        )
+        words.scale(0.7)
+        words.to_corner(DOWN+LEFT)
+        product = self.product_mobjects[0]
+
+        self.play(Write(words))
+        self.dither()
+
+class SummarizeCountingRule(Show125Circle):
+    CONFIG = {
+        "dot_radius" : 0.075,
+        "N_str" : "N",
+        "rect_opacity" : 1,
+    }
+    def construct(self):
+        self.add_count_words()
+        self.draw_circle()
+        self.add_full_screen_rect()
+        self.talk_through_rules()
+        self.ask_about_two()
+
+    def add_count_words(self):
+        words = TextMobject(
+            "\\# Lattice points \\\\ on $\\sqrt{%s}$ circle"%self.N_str
+        )
+        words.to_corner(UP+LEFT)
+        words.add_background_rectangle()
+        self.add(words)
+        self.count_words = words
+
+    def draw_circle(self):
+        radius = np.sqrt(self.radius_squared)
+        circle = self.get_circle(radius)
+        radial_line, num_root_label = self.get_radial_line_with_label(radius)
+        root_label = TexMobject("\\sqrt{%s}"%self.N_str)
+        root_label.next_to(radial_line, UP, SMALL_BUFF)
+        dots = VGroup(*[
+            Dot(
+                self.plane.coords_to_point(*coords),
+                radius = self.dot_radius,
+                color = self.dot_color
+            )
+            for coords in self.coords_list
+        ])
+        for angle in np.pi/2, np.pi, -np.pi/2:
+            dots.add(*dots.copy().rotate(angle))
+
+        self.play(
+            Write(root_label),
+            ShowCreation(radial_line)
+        )
+        self.play(
+            Rotating(
+                radial_line, 
+                rate_func = smooth, 
+                about_point = self.plane_center
+            ),
+            ShowCreation(circle),
+            run_time = 2,
+        )
+        self.play(LaggedStart(
+            DrawBorderThenFill,
+            dots,
+            stroke_width = 4,
+            stroke_color = PINK
+        ))
+        self.dither(2)
+
+    def add_full_screen_rect(self):
+        rect = FullScreenFadeRectangle(
+            fill_opacity = self.rect_opacity
+        )
+        self.play(
+            FadeIn(rect),
+            Animation(self.count_words)
+        )
+
+    def talk_through_rules(self):
+        factorization = TexMobject(
+            "N =", 
+            "3", "^4", "\\cdot",
+            "5", "^3", "\\cdot",
+            "13", "^2"
+        )
+        factorization.next_to(ORIGIN, RIGHT)
+        factorization.to_edge(UP)
+
+        three, five, thirteen = [
+            factorization.get_part_by_tex(str(n), substring = False)
+            for n in 3, 5, 13
+        ]
+        three_power = factorization.get_part_by_tex("^4")
+        five_power = factorization.get_part_by_tex("^3")
+        thirteen_power = factorization.get_part_by_tex("^2")
+        alt_three_power = five_power.copy().move_to(three_power)
+
+        three_brace = Brace(VGroup(*factorization[1:3]), DOWN)
+        five_brace = Brace(VGroup(*factorization[3:6]), DOWN)
+        thirteen_brace = Brace(VGroup(*factorization[6:9]), DOWN)
+
+        three_choices = three_brace.get_tex("(", "1", ")")
+        five_choices = five_brace.get_tex(
+            "(", "3", "+", "1", ")"
+        )
+        thirteen_choices = thirteen_brace.get_tex(
+            "(", "2", "+", "1", ")"
+        )
+        all_choices = VGroup(three_choices, five_choices, thirteen_choices)
+        for choices in all_choices:
+            choices.scale(0.75, about_point = choices.get_top())
+        thirteen_choices.next_to(five_choices, RIGHT)
+        three_choices.next_to(five_choices, LEFT)
+        alt_three_choices = TexMobject("(", "0", ")")
+        alt_three_choices.scale(0.75)
+        alt_three_choices.move_to(three_choices, RIGHT)
+
+
+        self.play(FadeIn(factorization))
+        self.dither()
+        self.play(
+            five.highlight, GREEN,
+            thirteen.highlight, GREEN,
+            FadeIn(five_brace),
+            FadeIn(thirteen_brace),
+        )
+        self.dither()
+        for choices, power in (five_choices, five_power), (thirteen_choices, thirteen_power):
+            self.play(
+                Write(VGroup(choices[0], *choices[2:])),
+                ReplacementTransform(
+                    power.copy(), choices[1]
+                )
+            )
+        self.dither()
+        self.play(
+            three.highlight, RED,
+            FadeIn(three_brace)
+        )
+        self.dither()
+        self.play(
+            Write(VGroup(three_choices[0], three_choices[2])),
+            ReplacementTransform(
+                three_power.copy(), three_choices[1]
+            )
+        )
+        self.dither()
+
+        movers = three_power, three_choices
+        for mob in movers:
+            mob.save_state()
+        self.play(
+            Transform(
+                three_power, alt_three_power,
+                path_arc = np.pi
+            ),
+            Transform(three_choices, alt_three_choices)
+        )
+        self.dither()
+        self.play(
+            *[mob.restore for mob in movers],
+            path_arc = -np.pi
+        )
+        self.dither()
+
+        equals_four = TexMobject("=", "4")
+        four = equals_four.get_part_by_tex("4")
+        four.highlight(YELLOW)
+        final_choice_words = TextMobject(
+            "Mutiply", "by $1$, $i$, $-1$ or $-i$"
+        )
+        final_choice_words.highlight(YELLOW)
+        final_choice_words.next_to(four, DOWN, LARGE_BUFF, LEFT)
+        final_choice_words.to_edge(RIGHT)
+        final_choice_arrow = Arrow(
+            final_choice_words[0].get_top(),
+            four.get_bottom(),
+            buff = SMALL_BUFF
+        )
+
+        choices_copy = all_choices.copy()
+        choices_copy.generate_target()
+
+        choices_copy.target.scale(1./0.75)
+        choices_copy.target.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        choices_copy.target.next_to(equals_four, RIGHT, SMALL_BUFF)
+        choices_copy.target.shift(0.25*SMALL_BUFF*DOWN)
+        self.play(
+            self.count_words.next_to, equals_four, LEFT,
+            MoveToTarget(choices_copy),
+            FadeIn(equals_four)
+        )
+        self.play(*map(FadeIn, [final_choice_words, final_choice_arrow]))
+        self.dither()
+
+    def ask_about_two(self):
+        randy = Randolph(color = BLUE_C)
+        randy.scale(0.7)
+        randy.to_edge(LEFT)
+
+        self.play(FadeIn(randy))
+        self.play(PiCreatureBubbleIntroduction(
+            randy, "What about \\\\ factors of 2?",
+            bubble_class = ThoughtBubble,
+            bubble_kwargs = {"height" : 3, "width" : 3},
+            target_mode = "confused",
+            look_at_arg = self.count_words
+        ))
+        self.play(Blink(randy))
+        self.dither()
+
+class RecipeFor10(IntroduceRecipe):
+    CONFIG = {
+        "N_string" : "10",
+        "integer_factors" : [2, 5],
+        "gaussian_factors" : [
+            complex(1, 1), complex(1, -1),
+            complex(2, 1), complex(2, -1),
+        ],
+    }
+    def construct(self):
+        self.add_title()
+        self.show_ordinary_factorization()
+        self.subfactor_ordinary_factorization()
+        self.organize_factors_into_columns()
+        self.take_product_of_columns()
+        self.mark_left_product_as_result()
+        self.swap_two_factors()
+        self.write_last_step()
+
+    def swap_two_factors(self):
+        left = self.left_factors[0]
+        right = self.right_factors[0]
+        arrow = Arrow(right, left, buff = SMALL_BUFF)
+        times_i = TexMobject("\\times i")
+        times_i.next_to(arrow, DOWN, 0)
+        times_i.add_background_rectangle()
+        curr_product = self.product_mobjects[0].copy()
+
+        for x in range(2):
+            self.swap_factors_at_index(0)
+        self.play(
+            ShowCreation(arrow),
+            Write(times_i, run_time = 1)
+        )
+        self.dither()
+        self.play(curr_product.to_edge, LEFT)
+        self.swap_factors_at_index(0)
+        new_arrow = Arrow(
+            self.result_surrounding_rect, curr_product, 
+            buff = SMALL_BUFF
+        )
+        self.play(
+            Transform(arrow, new_arrow),
+            MaintainPositionRelativeTo(times_i, arrow)
+        )
+        self.dither(2)
+        self.play(*map(FadeOut, [arrow, times_i, curr_product]))
+
+class EffectOfPowersOfTwo(LatticePointScene):
+    CONFIG = {
+        "y_radius" : 9,
+        "max_lattice_point_radius" : 9,
+        "square_radii" : [5, 10, 20, 40, 80],
+    }
+    def construct(self):
+        radii = map(np.sqrt, self.square_radii)
+        circles = map(self.get_circle, radii)
+        radial_lines, root_labels = zip(*map(
+            self.get_radial_line_with_label, radii
+        ))
+        dots_list = map(
+            self.get_lattice_points_on_r_squared_circle,
+            self.square_radii
+        )
+        groups = [
+            VGroup(*mobs)
+            for mobs in zip(radial_lines, circles, root_labels, dots_list)
+        ]
+        group = groups[0]
+
+        self.add(group)
+        self.play(LaggedStart(
+            DrawBorderThenFill, dots_list[0],
+            stroke_width = 4,
+            stroke_color = PINK
+        ))
+        self.dither()
+        for new_group in groups[1:]:
+            self.play(Transform(group, new_group))
+            self.dither(2)
+
+class NumberTheoryAtItsBest(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Number theory at its best!",
+            target_mode = "hooray",
+            run_time = 2,
+        )
+        self.change_student_modes(*["hooray"]*3)
+        self.dither(3)
+
+class IntroduceChi(FactorizationPattern):
+    CONFIG = {
+        "numbers_list" : [
+            range(i, 36, d)
+            for i, d in (1, 4), (3, 4), (2, 2)
+        ],
+        "colors" : [GREEN, RED, YELLOW]
+    }
+    def construct(self):
+        self.add_number_line()
+        self.add_define_chi_label()
+        for index in range(3):
+            self.describe_values(index)
+        self.fade_out_labels()
+        self.cyclic_pattern()
+        self.write_multiplicative_label()
+        self.show_multiplicative()
+
+
+    def add_define_chi_label(self):
+        label = TextMobject("Define $\\chi(n)$:")
+        chi_expressions = VGroup(*[
+            self.get_chi_expression(numbers, color)
+            for numbers, color in zip(
+                self.numbers_list,
+                self.colors
+            )
+        ])
+        chi_expressions.scale(0.9)
+        chi_expressions.arrange_submobjects(
+            DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT
+        )
+        chi_expressions.to_corner(UP+RIGHT)
+        brace = Brace(chi_expressions, LEFT)
+        label.next_to(brace, LEFT)
+
+        self.play(
+            Write(label),
+            GrowFromCenter(brace)
+        )
+        self.define_chi_label = label
+        self.chi_expressions = chi_expressions
+
+    def describe_values(self, index):
+        numbers = self.numbers_list[index]
+        color = self.colors[index]
+        dots, arrows, labels = self.get_dots_arrows_and_labels(
+            numbers, color
+        )
+        chi_expression = self.chi_expressions[index]
+
+        self.introduce_dots_arrows_and_labels(dots, arrows, labels)
+        self.dither()
+        self.play(
+            Write(VGroup(*[
+                part 
+                for part in chi_expression
+                if part not in chi_expression.inputs
+            ])), 
+        *[
+            ReplacementTransform(label.copy(), num_mob)
+            for label, num_mob in zip(
+                labels, chi_expression.inputs
+            )
+        ])
+        self.dither()
+
+    def fade_out_labels(self):
+        self.play(*map(FadeOut, [
+            self.last_dots, self.last_arrows, self.last_labels,
+            self.number_line
+        ]))
+
+    def cyclic_pattern(self):
+        input_range = range(1, 9)
+        chis = VGroup(*[
+            TexMobject("\\chi(%d)"%n)
+            for n in input_range
+        ])
+        chis.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        chis.set_stroke(WHITE, width = 1)
+        numbers = VGroup()
+        arrows = VGroup()
+        for chi, n in zip(chis, input_range):
+            arrow = TexMobject("\\Uparrow")
+            arrow.next_to(chi, UP, SMALL_BUFF)
+            arrows.add(arrow)
+            value = TexMobject(str(chi_func(n)))
+            for tex, color in zip(["1", "-1", "0"], self.colors):
+                value.highlight_by_tex(tex, color)
+            value.next_to(arrow, UP)
+            numbers.add(value)
+        group = VGroup(chis, arrows, numbers)
+        group.scale_to_fit_width(2*SPACE_WIDTH - LARGE_BUFF)
+        group.to_edge(DOWN, buff = LARGE_BUFF)
+
+        self.play(*[
+            FadeIn(
+                mob, 
+                run_time = 3,
+                submobject_mode = "lagged_start"
+            )
+            for mob in [chis, arrows, numbers]
+        ])
+
+        self.play(LaggedStart(
+            ApplyMethod,
+            numbers,
+            lambda m : (m.shift, MED_SMALL_BUFF*UP),
+            rate_func = there_and_back,
+            lag_ratio = 0.2,
+            run_time = 6
+        ))
+
+        self.dither()
+        self.play(*map(FadeOut, [chis, arrows, numbers]))
+
+    def write_multiplicative_label(self):
+        morty = Mortimer()
+        morty.scale(0.7)
+        morty.to_corner(DOWN+RIGHT)
+
+        self.play(PiCreatureSays(
+            morty, "$\\chi$ is ``multiplicative''",
+            bubble_kwargs = {"height" : 2.5, "width" : 5}
+        ))
+        self.play(Blink(morty))
+        self.morty = morty
+
+    def show_multiplicative(self):
+        pairs = [(3, 5), (5, 5), (2, 13), (3, 11)]
+        expressions = VGroup()
+        for x, y in pairs:
+            expression = TexMobject(
+                "\\chi(%d)"%x,
+                "\\cdot",
+                "\\chi(%d)"%y,
+                "=", 
+                "\\chi(%d)"%(x*y)
+            )
+            braces = [
+                Brace(expression[i], UP) 
+                for i in 0, 2, 4
+            ]
+            for brace, n in zip(braces, [x, y, x*y]):
+                output = chi_func(n)
+                label = brace.get_tex(str(output))
+                label.highlight(self.number_to_color(output))
+                brace.add(label)
+                expression.add(brace)
+            expressions.add(expression)
+
+        expressions.next_to(ORIGIN, LEFT)
+        expressions.shift(DOWN)
+        expression = expressions[0]
+
+        self.play(
+            FadeIn(expression),
+            self.morty.change, "pondering", expression
+        )
+        self.dither(2)
+        for new_expression in expressions[1:]:
+            self.play(Transform(expression, new_expression))
+            self.dither(2)
 
 
 
 
+    #########
 
+    def get_dots_arrows_and_labels(self, numbers, color):
+        dots = VGroup()
+        arrows = VGroup()
+        labels = VGroup()
+        for number in numbers:
+            point = self.number_line.number_to_point(number)
+            dot = Dot(point)
+            label = TexMobject(str(number))
+            label.scale(0.8)
+            label.next_to(dot, UP, LARGE_BUFF)
+            arrow = Arrow(label, dot, buff = SMALL_BUFF)
+            VGroup(dot, label, arrow).highlight(color)
+            dots.add(dot)
+            arrows.add(arrow)
+            labels.add(label)
+        return dots, arrows, labels
 
+    def introduce_dots_arrows_and_labels(self, dots, arrows, labels):
+        if hasattr(self, "last_dots"):
+            self.play(
+                ReplacementTransform(self.last_dots, dots),
+                ReplacementTransform(self.last_arrows, arrows),
+                ReplacementTransform(self.last_labels, labels),
+            )
+        else:
+            self.play(
+                Write(labels),
+                FadeIn(arrows, submobject_mode = "lagged_start"),
+                LaggedStart(
+                    DrawBorderThenFill, dots,
+                    stroke_width = 4,
+                    stroke_color = YELLOW
+                ),
+                run_time = 2
+            )
+        self.last_dots = dots
+        self.last_arrows = arrows
+        self.last_labels = labels
 
+    def get_chi_expression(self, numbers, color, num_terms = 4):
+        truncated_numbers = numbers[:num_terms]
+        output = str(chi_func(numbers[0]))
+        result = TexMobject(*it.chain(*[
+            ["\\chi(", str(n), ")", "="]
+            for n in truncated_numbers
+        ] + [
+            ["\\cdots =", output]
+        ]))
+        result.inputs = VGroup()
+        for n in truncated_numbers:
+            num_mob = result.get_part_by_tex(str(n), substring = False)
+            num_mob.highlight(color)
+            result.inputs.add(num_mob)
+        result.highlight_by_tex(output, color, substring = False)
+        return result
 
+    def number_to_color(self, n):
+        output = chi_func(n)
+        if n == 1:
+            return self.colors[0]
+        elif n == -1:
+            return self.colors[1]
+        else:
+            return self.colors[2]
 
+class WriteCountingRuleWithChi(SummarizeCountingRule):
+    CONFIG = {
+        "colors" : [GREEN, RED, YELLOW]
+    }
+    def construct(self):
+        self.add_count_words()
+        self.draw_circle()
+        self.add_full_screen_rect()
 
+        self.add_factorization_and_rule()
+        self.write_chi_expression()
+        self.walk_through_expression_terms()
+        self.circle_four()
 
+    def add_factorization_and_rule(self):
+        factorization = TexMobject(
+            "N", "=", 
+            "2", "^2", "\\cdot",
+            "3", "^4", "\\cdot",
+            "5", "^3",
+        )
+        for tex, color in zip(["5", "3", "2"], self.colors):
+            factorization.highlight_by_tex(tex, color, substring = False)
+        factorization.to_edge(UP)
+        factorization.shift(LEFT)
 
+        count = VGroup(
+            TexMobject("=", "4"),
+            TexMobject("(", "1", ")"),
+            TexMobject("(", "1", ")"),
+            TexMobject("(", "3+1", ")"),
+        )
+        count.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        for i, color in zip([3, 2, 1], self.colors):
+            count[i][1].highlight(color)
+        count.next_to(
+            factorization.get_part_by_tex("="), DOWN,
+            buff = LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+
+        self.play(
+            FadeIn(factorization),
+            self.count_words.next_to, count, LEFT
+        )
+        self.dither()
+        self.play(*[
+            ReplacementTransform(
+                VGroup(factorization.get_part_by_tex(
+                    tex, substring = False
+                )).copy(),
+                part
+            )
+            for tex, part in zip(["=", "2", "3", "5"], count)
+        ])
+        self.dither()
+
+        self.factorization = factorization
+        self.count = count
+
+    def write_chi_expression(self):
+        equals_four = TexMobject("=", "4")
+        expression = VGroup(equals_four)
+        for n, k, color in zip([2, 3, 5], [2, 4, 3], reversed(self.colors)):
+            args = ["(", "\\chi(", "1", ")", "+"]
+            for i in range(1, k+1):
+                args += ["\\chi(", str(n), "^%d"%i, ")", "+"]
+            args[-1] = ")"
+            factor = TexMobject(*args)
+            factor.highlight_by_tex(str(n), color, substring = False)
+            factor.highlight_by_tex("1", color, substring = False)
+            factor.scale(0.8)
+            expression.add(factor)
+        expression.arrange_submobjects(
+            DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT
+        )
+        equals_four.next_to(expression[1], LEFT, SMALL_BUFF)
+        expression.shift(
+            self.count[0].get_center() + LARGE_BUFF*DOWN -\
+            equals_four.get_center()
+        )
+
+        count_copy = self.count.copy()
+        self.play(*[
+            ApplyMethod(
+                c_part.move_to, e_part, LEFT,
+                path_arc = -np.pi/2,
+                run_time = 2
+            )
+            for c_part, e_part in zip(count_copy, expression)
+        ])
+        self.dither()
+        self.play(ReplacementTransform(
+            count_copy, expression,
+            run_time = 2
+        ))
+        self.dither()
+
+        self.chi_expression = expression
+
+    def walk_through_expression_terms(self):
+        rect = FullScreenFadeRectangle()
+        groups = [
+            VGroup(
+                self.chi_expression[index],
+                self.count[index],
+                self.factorization.get_part_by_tex(tex1, substring = False),
+                self.factorization.get_part_by_tex(tex2, substring = False),
+            )
+            for index, tex1, tex2 in [
+                (-1, "5", "^3"), (-2, "3", "^4"), (-3, "2", "^2")
+            ]
+        ]
+        evaluation_strings = [
+            "(1+1+1+1)",
+            "(1-1+1-1+1)",
+            "(1+0+0)",
+        ]
+
+        for group, tex in zip(groups, evaluation_strings):
+            chi_sum, count, base, exp = group
+            brace = Brace(chi_sum, DOWN)
+            evaluation = brace.get_tex(*tex)
+            evaluation.highlight(base.get_color())
+            evaluation_rect = BackgroundRectangle(evaluation)
+
+            self.play(FadeIn(rect), Animation(group))
+            self.play(GrowFromCenter(brace))
+            self.play(
+                FadeIn(evaluation_rect),
+                ReplacementTransform(chi_sum.copy(), evaluation),
+            )
+            self.dither(2)
+            self.play(Indicate(count, color = PINK))
+            self.dither()
+            if base.get_tex_string() is "3":
+                new_exp = TexMobject("3")
+                new_exp.replace(exp)
+                count_num = count[1]
+                new_count = TexMobject("0")
+                new_count.replace(count_num, dim_to_match = 1)
+                new_count.highlight(count_num.get_color())
+                evaluation_point = VectorizedPoint(evaluation[-4].get_right())
+                chi_sum_point = VectorizedPoint(chi_sum[-7].get_right())
+                new_brace = Brace(VGroup(*chi_sum[:-6]), DOWN)
+
+                to_save = [brace, exp, evaluation, count_num, chi_sum]
+                for mob in to_save:
+                    mob.save_state()
+
+                self.play(FocusOn(exp))
+                self.play(Transform(exp, new_exp))
+                self.play(
+                    Transform(brace, new_brace),
+                    Transform(
+                        VGroup(*evaluation[-3:-1]),
+                        evaluation_point
+                    ),
+                    evaluation[-1].next_to, evaluation_point, RIGHT, SMALL_BUFF,
+                    Transform(
+                        VGroup(*chi_sum[-6:-1]),
+                        chi_sum_point
+                    ),
+                    chi_sum[-1].next_to, chi_sum_point, RIGHT, SMALL_BUFF
+                )
+                self.play(Transform(count_num, new_count))
+                self.play(Indicate(count_num, color = PINK))
+                self.dither()
+                self.play(*[mob.restore for mob in to_save])
+
+            self.play(
+                FadeOut(VGroup(
+                    rect, brace, evaluation_rect, evaluation
+                )),
+                Animation(group)
+            )
+
+    def circle_four(self):
+        four = self.chi_expression[0][1]
+        rect = SurroundingRectangle(four)
+
+        self.revert_to_original_skipping_status()
+        self.play(ShowCreation(rect))
+        self.dither(3)
+
+class ExpandCountWith45(SummarizeCountingRule):
+    CONFIG = {
+        "N_str" : "45",
+        "coords_list" : [(3, 6), (6, 3)],
+        "radius_squared" : 45,
+        "y_radius" : 7,
+        "rect_opacity" : 0.75,
+    }
+    def construct(self):
+        self.add_count_words()
+        self.draw_circle()
+        self.add_full_screen_rect()
+        #Bad copy-pasting for implementation of these methods,
+        #but it's late and I'm tired....
+        self.add_factorization_and_count()
+        self.write_chi_expression()
+
+    def add_factorization_and_count(self):
+        factorization = TexMobject(
+            "45", "=", "3", "^2", "\\cdot", "5",
+        )
+        for tex, color in zip(["5", "3",], [GREEN, RED]):
+            factorization.highlight_by_tex(tex, color, substring = False)
+        factorization.to_edge(U
+            P)
+        factorization.shift(1.7*LEFT + DOWN)
+
+        count = VGroup(
+            TexMobject("=", "4"),
+            TexMobject("(", "1", ")"),
+            TexMobject("(", "2", ")"),
+        )
+        count.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        for count_part, tex in zip(count[1:], ["3", "5"]):
+            factor =  factorization.get_part_by_tex(tex, substring = False)
+            color = factor.get_color()
+            count_part[1].highlight(color)
+        count.next_to(
+            factorization.get_part_by_tex("="), DOWN,
+            buff = LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+
+        self.play(
+            FadeIn(factorization),
+            self.count_words.next_to, count, LEFT
+        )
+        self.dither()
+        self.play(*[
+            ReplacementTransform(
+                VGroup(factorization.get_part_by_tex(
+                    tex, substring = False
+                )).copy(),
+                part
+            )
+            for tex, part in zip(["=", "3", "5"], count)
+        ])
+        self.dither()
+
+        self.factorization = factorization
+        self.count = count
+
+    def write_chi_expression(self):
+        equals_four = TexMobject("=", "4")
+        expression = VGroup(equals_four)
+        for n, k, color in zip([3, 5], [2, 1], [RED, GREEN]):
+            args = ["(", "\\chi(", "1", ")", "+"]
+            for i in range(1, k+1):
+                args += ["\\chi(", str(n), "^%d"%i, ")", "+"]
+            args[-1] = ")"
+            factor = TexMobject(*args)
+            factor.highlight_by_tex(str(n), color, substring = False)
+            factor.highlight_by_tex("1", color, substring = False)
+            factor.scale(0.8)
+            expression.add(factor)
+        expression.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        expression.next_to(
+            self.count, DOWN, 
+            buff = MED_LARGE_BUFF,
+            aligned_edge = LEFT,
+        )
+
+        count_copy = self.count.copy()
+        self.play(*[
+            ApplyMethod(
+                c_part.move_to, e_part, LEFT,
+                path_arc = -np.pi/2,
+                run_time = 2
+            )
+            for c_part, e_part in zip(count_copy, expression)
+        ])
+        self.dither()
+        self.play(ReplacementTransform(
+            count_copy, expression,
+            run_time = 2
+        ))
+        self.dither()
+
+        self.chi_expression = expression
 
 
 
