@@ -57,7 +57,7 @@ class LatticePointScene(Scene):
             y_radius = self.y_radius,
             x_radius = self.x_radius,
             secondary_line_ratio = self.secondary_line_ratio,
-            color = self.plane_color
+            radius = self.plane_color
         )
         plane.scale_to_fit_height(2*SPACE_HEIGHT)
         plane.shift(self.plane_center)
@@ -3691,10 +3691,10 @@ class ExpandCountWith45(SummarizeCountingRule):
         self.add_count_words()
         self.draw_circle()
         self.add_full_screen_rect()
-        #Bad copy-pasting for implementation of these methods,
-        #but it's late and I'm tired....
         self.add_factorization_and_count()
-        self.write_chi_expression()
+        self.expand_expression()
+        self.show_divisor_sum()
+
 
     def add_factorization_and_count(self):
         factorization = TexMobject(
@@ -3702,29 +3702,46 @@ class ExpandCountWith45(SummarizeCountingRule):
         )
         for tex, color in zip(["5", "3",], [GREEN, RED]):
             factorization.highlight_by_tex(tex, color, substring = False)
-        factorization.to_edge(U
-            P)
-        factorization.shift(1.7*LEFT + DOWN)
+        factorization.to_edge(UP)
+        factorization.shift(1.7*LEFT)
 
-        count = VGroup(
-            TexMobject("=", "4"),
-            TexMobject("(", "1", ")"),
-            TexMobject("(", "2", ")"),
-        )
-        count.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
-        for count_part, tex in zip(count[1:], ["3", "5"]):
-            factor =  factorization.get_part_by_tex(tex, substring = False)
-            color = factor.get_color()
-            count_part[1].highlight(color)
-        count.next_to(
-            factorization.get_part_by_tex("="), DOWN,
+        equals_four = TexMobject("=", "4")
+        expression = VGroup(equals_four)
+        for n, k, color in zip([3, 5], [2, 1], [RED, GREEN]):
+            args = ["("]
+            ["\\chi(1)", "+"]
+            for i in range(k+1):
+                if i == 0:
+                    input_str = "1"
+                elif i == 1:
+                    input_str = str(n)
+                else:
+                    input_str = "%d^%d"%(n, i)
+                args += ["\\chi(%s)"%input_str, "+"]
+            args[-1] = ")"
+            factor = TexMobject(*args)
+            for part in factor[1::2]:
+                part[2].highlight(color)
+            factor.scale(0.8)
+            expression.add(factor)
+        expression.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        expression.next_to(
+            factorization[1], DOWN, 
             buff = LARGE_BUFF,
-            aligned_edge = LEFT
+            aligned_edge = LEFT,
         )
+        braces = VGroup(*[
+            Brace(part, UP)
+            for part in expression[1:]
+        ])
+        for brace, num, color in zip(braces, [1, 2], [RED, GREEN]):
+            num_mob = brace.get_tex(str(num), buff = SMALL_BUFF)
+            num_mob.highlight(color)
+            brace.add(num_mob)
 
         self.play(
             FadeIn(factorization),
-            self.count_words.next_to, count, LEFT
+            self.count_words.next_to, expression, LEFT
         )
         self.dither()
         self.play(*[
@@ -3734,55 +3751,551 @@ class ExpandCountWith45(SummarizeCountingRule):
                 )).copy(),
                 part
             )
-            for tex, part in zip(["=", "3", "5"], count)
+            for tex, part in zip(["=", "3", "5"], expression)
         ])
-        self.dither()
-
-        self.factorization = factorization
-        self.count = count
-
-    def write_chi_expression(self):
-        equals_four = TexMobject("=", "4")
-        expression = VGroup(equals_four)
-        for n, k, color in zip([3, 5], [2, 1], [RED, GREEN]):
-            args = ["(", "\\chi(", "1", ")", "+"]
-            for i in range(1, k+1):
-                args += ["\\chi(", str(n), "^%d"%i, ")", "+"]
-            args[-1] = ")"
-            factor = TexMobject(*args)
-            factor.highlight_by_tex(str(n), color, substring = False)
-            factor.highlight_by_tex("1", color, substring = False)
-            factor.scale(0.8)
-            expression.add(factor)
-        expression.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
-        expression.next_to(
-            self.count, DOWN, 
-            buff = MED_LARGE_BUFF,
-            aligned_edge = LEFT,
-        )
-
-        count_copy = self.count.copy()
-        self.play(*[
-            ApplyMethod(
-                c_part.move_to, e_part, LEFT,
-                path_arc = -np.pi/2,
-                run_time = 2
-            )
-            for c_part, e_part in zip(count_copy, expression)
-        ])
-        self.dither()
-        self.play(ReplacementTransform(
-            count_copy, expression,
-            run_time = 2
-        ))
+        self.play(FadeIn(braces))
         self.dither()
 
         self.chi_expression = expression
+        self.factorization = factorization
+
+    def expand_expression(self):
+        equals, four, lp, rp = map(TexMobject, [
+            "=", "4", "\\big(", "\\big)"
+        ])
+        expansion = VGroup(equals, four, lp)
+        chi_pairs = list(it.product(*[
+            factor[1::2]
+            for factor in self.chi_expression[1:]
+        ]))
+        num_pairs = list(it.product([1, 3, 9], [1, 5]))
+        products = list(it.starmap(op.mul, num_pairs))
+        sorted_indices = np.argsort(products)
+        mover_groups = [VGroup(), VGroup()]
+        plusses = VGroup()
+        prime_pairs = VGroup()
+        for index in sorted_indices:
+            pair = chi_pairs[index]
+            prime_pair = VGroup()
+            for chi, movers in zip(pair, mover_groups):
+                mover = chi.copy()
+                mover.generate_target()
+                expansion.add(mover.target)
+                movers.add(mover)
+                prime_pair.add(mover.target[2])
+            prime_pairs.add(prime_pair)
+            if index != sorted_indices[-1]:
+                plus = TexMobject("+")
+                plusses.add(plus)
+                expansion.add(plus)
+        expansion.add(rp)
+        expansion.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        expansion.scale_to_fit_width(2*SPACE_WIDTH - LARGE_BUFF)
+        expansion.next_to(ORIGIN, UP)
+        rect = BackgroundRectangle(expansion)
+        rect.stretch_in_place(1.5, 1)
+
+        self.play(
+            FadeIn(rect),
+            *[
+                ReplacementTransform(
+                    self.chi_expression[i][j].copy(),
+                    mob
+                )
+                for i, j, mob in [
+                    (0, 0, equals),
+                    (0, 1, four),
+                    (1, 0, lp),
+                    (2, -1, rp),
+                ]
+            ]
+        )
+        for movers in mover_groups:
+            self.dither()
+            self.play(movers.next_to, rect, DOWN)
+            self.play(*map(MoveToTarget, movers))
+        self.play(Write(plusses))
+        self.dither()
+
+        self.expansion = expansion
+        self.prime_pairs = prime_pairs
+
+    def show_divisor_sum(self):
+        equals, four, lp, rp = map(TexMobject, [
+            "=", "4", "\\big(", "\\big)"
+        ])
+        divisor_sum = VGroup(equals, four, lp)
+
+        num_pairs = list(it.product([1, 3, 9], [1, 5]))
+        products = list(it.starmap(op.mul, num_pairs))
+        products.sort()
+        color = BLACK
+        product_mobs = VGroup()
+        chi_mobs = VGroup()
+        for product in products:
+            chi_mob = TexMobject("\\chi(", str(product), ")")
+            product_mob = chi_mob.get_part_by_tex(str(product))
+            product_mob.highlight(color)
+            product_mobs.add(product_mob)
+            divisor_sum.add(chi_mob)
+            chi_mobs.add(chi_mob)
+            if product != products[-1]:
+                divisor_sum.add(TexMobject("+"))
+        divisor_sum.add(rp)
+        divisor_sum.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        divisor_sum.next_to(self.expansion, DOWN, MED_LARGE_BUFF)
+        rect = BackgroundRectangle(divisor_sum)
+
+        prime_pairs = self.prime_pairs.copy()
+        for prime_pair, product_mob in zip(prime_pairs, product_mobs):
+            prime_pair.target = product_mob.copy()
+            prime_pair.target.highlight(YELLOW)
+
+        braces = VGroup(*[Brace(m, DOWN) for m in chi_mobs])
+        for brace, product in zip(braces, products):
+            value = brace.get_tex(str(chi_func(product)))
+            brace.add(value)
+
+        self.play(
+            FadeIn(rect),
+            Write(divisor_sum, run_time = 2)
+        )
+        self.play(LaggedStart(
+            MoveToTarget, prime_pairs, 
+            run_time = 4,
+            lag_ratio = 0.25,
+        ))
+        self.remove(prime_pairs)
+        product_mobs.highlight(YELLOW)
+        self.dither(2)
+        self.play(LaggedStart(
+            ApplyMethod,
+            product_mobs,
+            lambda m : (m.shift, MED_LARGE_BUFF*DOWN),
+            rate_func = there_and_back
+        ))
+        self.play(FadeIn(
+            braces, 
+            run_time = 2,
+            submobject_mode = "lagged_start",
+        ))
+        self.dither(2)
+
+class CountLatticePointsInBigCircle(LatticePointScene):
+    CONFIG = {
+        "y_radius" : 2*11,
+        "max_lattice_point_radius" : 10,
+        "dot_radius" : 0.05
+    }
+    def construct(self):
+        self.resize_plane()
+        self.introduce_points()
+        self.show_rings()
+        self.ignore_center_dot()
+
+    def resize_plane(self):
+        self.plane.set_stroke(width = 2)
+        self.plane.scale(2)
+        self.lattice_points.scale(2)
+        for point in self.lattice_points:
+            point.scale_in_place(0.5)
+
+    def introduce_points(self):
+        circle = self.get_circle(radius = self.max_lattice_point_radius)
+        radius = Line(ORIGIN, circle.get_right())
+        radius.highlight(RED)
+        R = TexMobject("R").next_to(radius, UP)
+        R_rect = BackgroundRectangle(R)
+        R_group = VGroup(R_rect, R)
+        pi_R_squared = TexMobject("\\pi", "R", "^2")
+        pi_R_squared.next_to(ORIGIN, UP)
+        pi_R_squared.to_edge(RIGHT)
+        pi_R_squared_rect = BackgroundRectangle(pi_R_squared)
+        pi_R_squared_group = VGroup(pi_R_squared_rect, pi_R_squared)
+
+        self.play(*map(FadeIn, [circle, radius, R_group]))
+        self.add_foreground_mobject(R_group)
+        self.draw_lattice_points()
+        self.dither()
+        self.play(
+            FadeOut(R_rect),
+            FadeIn(pi_R_squared_rect),
+            ReplacementTransform(R, pi_R_squared.get_part_by_tex("R")),
+            Write(VGroup(*[
+                part for part in pi_R_squared
+                if part is not pi_R_squared.get_part_by_tex("R")
+            ]))
+        )
+        self.remove(R_group)
+        self.add_foreground_mobject(pi_R_squared_group)
+        self.dither()
+
+        self.circle = circle
+        self.radius = radius
+
+    def show_rings(self):
+        N_range = range(self.max_lattice_point_radius**2)
+        rings = VGroup(*[
+            self.get_circle(radius = np.sqrt(N))
+            for N in N_range
+        ])
+        rings.gradient_highlight(TEAL, GREEN)
+        rings.set_stroke(width = 2)
+        dot_groups = VGroup(*[
+            self.get_lattice_points_on_r_squared_circle(N)
+            for N in N_range
+        ])
+        radicals = self.get_radicals()
+
+        self.play(
+            LaggedStart(FadeIn, rings),
+            Animation(self.lattice_points),
+            LaggedStart(FadeIn, radicals),
+            run_time = 3
+        )
+        self.add_foreground_mobject(radicals)
+        self.play(
+            LaggedStart(
+                ApplyMethod,
+                dot_groups,
+                lambda m : (m.set_stroke, PINK, 5),
+                rate_func = there_and_back,
+                run_time = 4,
+                lag_ratio = 0.1,
+            ),
+        )
+        self.dither()
+
+        self.rings = rings
+
+    def ignore_center_dot(self):
+        center_dot = self.lattice_points[0]
+        circle = Circle(color = RED)
+        circle.replace(center_dot)
+        circle.scale_in_place(2)
+        arrow = Arrow(ORIGIN, UP+RIGHT, color = RED)
+        arrow.next_to(circle, DOWN+LEFT, SMALL_BUFF)
+        new_max = 2*self.max_lattice_point_radius
+        new_dots = VGroup(*[
+            Dot(
+                self.plane.coords_to_point(x, y),
+                color = self.dot_color,
+                radius = self.dot_radius,
+            )
+            for x in range(-new_max, new_max+1)
+            for y in range(-new_max, new_max+1)
+            if (x**2 + y**2) > self.max_lattice_point_radius**2
+            if (x**2 + y**2) < new_max**2
+        ])
+        new_dots.sort_submobjects(np.linalg.norm)
+
+        self.play(*map(ShowCreation, [circle, arrow]))
+        self.play(*map(FadeOut, [circle, arrow]))
+        self.play(FadeOut(center_dot))
+        self.lattice_points.remove(center_dot)
+        self.dither()
+        self.play(*[
+            ApplyMethod(m.scale, 0.5)
+            for m in [
+                self.plane,
+                self.circle,
+                self.radius,
+                self.rings,
+                self.lattice_points
+            ]
+        ])
+        new_dots.scale(0.5)
+        self.play(FadeOut(self.rings))
+        self.play(
+            ApplyMethod(
+                VGroup(self.circle, self.radius).scale_in_place, 2,
+                rate_func = None,
+            ),
+            LaggedStart(
+                DrawBorderThenFill,
+                new_dots,
+                stroke_width = 4,
+                stroke_color = PINK,
+                lag_ratio = 0.2,
+            ),
+            run_time = 4,
+        )
+        self.dither(2)
+
+    #####
+
+    @staticmethod
+    def get_radicals():
+        radicals = VGroup(*[
+            TexMobject("\\sqrt{%d}"%N)
+            for N in range(1, 13)
+        ])
+        radicals.add(
+            TexMobject("\\vdots"),
+            TexMobject("\\sqrt{R^2}")
+        )
+        radicals.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+        radicals.scale_to_fit_height(2*SPACE_HEIGHT - MED_LARGE_BUFF)
+        radicals.to_edge(DOWN, buff = MED_SMALL_BUFF)
+        radicals.to_edge(LEFT)
+        for radical in radicals:
+            radical.add_background_rectangle()
+        return radicals
+
+class AddUpGrid(Scene):
+    def construct(self):
+        self.force_skipping()
+
+        self.add_radicals()
+        self.add_row_lines()
+        self.add_chi_sums()
+        self.put_four_in_corner()
+        self.talk_through_rows()
+        self.organize_into_columns()
+        self.add_count_words()
+        self.collapse_columns()
+        self.factor_out_R()
+        self.show_chi_sum_values()
+        self.compare_to_pi_R_squared()
+
+    def add_radicals(self):
+        self.radicals = CountLatticePointsInBigCircle.get_radicals()
+        self.add(self.radicals)
+
+    def add_row_lines(self):
+        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH - MED_LARGE_BUFF)
+        h_line.set_stroke(WHITE, 1)
+        row_lines = VGroup(*[
+            h_line.copy().next_to(
+                radical, DOWN,
+                buff = SMALL_BUFF,
+                aligned_edge = LEFT
+            )
+            for radical in self.radicals
+        ])
+        row_lines[-2].shift(
+            row_lines[-1].get_left()[0]*RIGHT -\
+            row_lines[-2].get_left()[0]*RIGHT
+        )
+
+        self.play(LaggedStart(ShowCreation, row_lines))
+        self.dither()
+
+        self.row_lines = row_lines
+
+    def add_chi_sums(self):
+        chi_sums = VGroup()
+        chi_mobs = VGroup()
+        plusses = VGroup()
+        fours = VGroup()
+        parens = VGroup()
+        arrows = VGroup()
+        for N, radical in zip(range(1, 13), self.radicals):
+            arrow, four, lp, rp = map(TexMobject, [
+                "\\Rightarrow", "4", "\\big(", "\\big)"
+            ])
+            fours.add(four)
+            parens.add(lp, rp)
+            arrows.add(arrow)
+            chi_sum = VGroup(arrow, four, lp)
+            for d in range(1, N+1):
+                if N%d != 0:
+                    continue
+                chi_mob = TexMobject("\\chi(", str(d), ")")
+                chi_mob[1].highlight(YELLOW)
+                chi_mob.d = d
+                chi_mobs.add(chi_mob)
+                chi_sum.add(chi_mob)
+                if d != N:
+                    plus = TexMobject("+")
+                    plus.chi_mob = chi_mob
+                    plusses.add(plus)
+                    chi_sum.add(plus)
+            chi_sum.add(rp)
+            chi_sum.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+            chi_sum.scale(0.7)
+            chi_sum.next_to(radical, RIGHT)
+            chi_sums.add(chi_sum)
+            radical.chi_sum = chi_sum
+
+        self.play(LaggedStart(
+            Write, chi_sums, 
+            run_time = 5,
+            rate_func = lambda t : t,
+        ))
+        self.dither()
+
+        digest_locals(self, [
+            "chi_sums", "chi_mobs", "plusses", 
+            "fours", "parens", "arrows",
+        ])
+
+    def put_four_in_corner(self):
+        corner_four = TexMobject("4")
+        corner_four.to_corner(DOWN+RIGHT, buff = MED_SMALL_BUFF)
+        rect = SurroundingRectangle(corner_four, color = BLUE)
+        corner_four.rect = rect
+
+        self.play(
+            ReplacementTransform(
+                self.fours, VGroup(corner_four),
+                run_time = 2,
+            ),
+            FadeOut(self.parens)
+        )
+        self.play(ShowCreation(rect))
+
+        self.corner_four = corner_four
+
+    def talk_through_rows(self):
+        rect = Rectangle(
+            stroke_width = 0,
+            fill_color = BLUE_C,
+            fill_opacity = 0.3,
+        )
+        rect.stretch_to_fit_width(
+            VGroup(self.radicals, self.chi_mobs).get_width()
+        )
+        rect.stretch_to_fit_height(self.radicals[0].get_height())
+
+        composite_rects, prime_rects = [
+            VGroup(*[
+                rect.copy().move_to(self.radicals[N-1], LEFT)
+                for N in numbers
+            ])
+            for numbers in [6, 12], [2, 3, 5, 7, 11]
+        ]
+        prime_rects.highlight(GREEN)
+
+        self.play(FadeIn(composite_rects))
+        self.dither(2)
+        self.play(
+            FadeOut(composite_rects),
+            FadeIn(prime_rects)
+        )
+        self.dither(2)
+        self.play(FadeOut(prime_rects))
+
+    def organize_into_columns(self):
+        left_x = self.arrows.get_right()[0] + SMALL_BUFF
+        spacing = self.chi_mobs[-1].get_width() + SMALL_BUFF
+        for chi_mob in self.chi_mobs:
+            y = chi_mob.get_left()[1]
+            x = left_x + (chi_mob.d - 1)*spacing
+            chi_mob.generate_target()
+            chi_mob.target.move_to(x*RIGHT + y*UP, LEFT)
+        for plus in self.plusses:
+            plus.generate_target()
+            plus.target.scale(0.5)
+            plus.target.next_to(
+                plus.chi_mob.target, RIGHT, SMALL_BUFF
+            )
+
+        self.play(*it.chain(
+            map(MoveToTarget, self.chi_mobs),
+            map(MoveToTarget, self.plusses),
+        ), run_time = 2)
+        self.dither()
+
+    def add_count_words(self):
+        rect = Rectangle(
+            stroke_color = WHITE,
+            stroke_width = 2,
+            fill_color = BLACK,
+            fill_opacity = 1,
+            height = 1.2,
+            width = 2*SPACE_WIDTH - 2*MED_SMALL_BUFF,
+        )
+        rect.move_to(3*LEFT, LEFT)
+        rect.to_edge(UP, buff = SMALL_BUFF)
+        # words = TextMobject(
+        #     "\\# Lattice points \\\\ within radius $R$"
+        # )
+        # words.scale(0.7)
+        words = TextMobject("Total")
+        words.scale(0.8)
+        words.next_to(rect.get_left(), RIGHT, SMALL_BUFF)
+        approx = TexMobject("\\approx")
+        approx.scale(0.7)
+        approx.next_to(words, RIGHT, SMALL_BUFF)
+        words.add(approx)
+
+        self.play(*map(FadeIn, [rect, words]))
+        self.dither()
+
+        self.count_rect = rect
+        self.count_words = words
+
+    def collapse_columns(self):
+        chi_mob_columns = [VGroup() for i in range(12)]
+        for chi_mob in self.chi_mobs:
+            chi_mob_columns[chi_mob.d - 1].add(chi_mob)
+
+        terms = VGroup()
+        for d in range(1, 7):
+            chi_args = ["{\\chi(", str(d), ")"]
+            if d != 1:
+                chi_args.append("\\over %d}"%d)
+            term = VGroup(
+                TexMobject("R^2"),
+                TexMobject(*chi_args),
+                TexMobject("+")
+            )
+            term.arrange_submobjects(RIGHT, SMALL_BUFF)
+            term[2].next_to(term[1][-1][0], RIGHT, SMALL_BUFF)
+            if d != 1:
+                term[2].add(term[1][-1])
+                term[1].remove(term[1][-1])
+            term[1][1].highlight(YELLOW)
+            terms.add(term)
+        terms.arrange_submobjects(RIGHT, SMALL_BUFF)
+        terms.scale(0.7)
+        terms.next_to(self.count_words, RIGHT, SMALL_BUFF)
+
+        self.revert_to_original_skipping_status()
+        for column, term in zip(chi_mob_columns, terms):
+            rect = SurroundingRectangle(column)
+            rect.set_stroke(width = 0)
+            rect.set_fill(YELLOW, 0.3)
 
 
+            self.play(FadeIn(rect))
+            self.dither()
+            self.play(
+                ReplacementTransform(
+                    column.copy(),
+                    VGroup(term[1]),
+                    run_time = 2
+                ),
+                Write(term[0]),
+                Write(term[2]),
+            )
+            self.dither()
+            if term is terms[2]:
+                vect = sum([
+                    self.count_rect.get_left()[0],
+                    SPACE_WIDTH,
+                    -MED_SMALL_BUFF,
+                ])*LEFT
+                self.play(*[
+                    ApplyMethod(m.shift, vect)
+                    for m in [
+                        self.count_rect,
+                        self.count_words,
+                    ]+list(terms[:3])
+                ])
+                VGroup(*terms[3:]).shift(vect)
+            self.play(FadeOut(rect))
 
 
+    def factor_out_R(self):
+        pass
 
+    def show_chi_sum_values(self):
+        pass
+
+    def compare_to_pi_R_squared(self):
+        pass
 
 
 
