@@ -2966,6 +2966,40 @@ class RecipeFor1125(IntroduceRecipe):
         self.play(Write(words))
         self.dither()
 
+class Show1125Circle(LatticePointScene):
+    CONFIG = {
+        "y_radius" : 35,
+        "max_lattice_point_radius" : 35,
+    }
+    def construct(self):
+        self.plane.set_stroke(width = 1)
+        radius = np.sqrt(1125)
+        circle = self.get_circle(radius)
+        radial_line, root_label = self.get_radial_line_with_label(radius)
+        dots = self.get_lattice_points_on_r_squared_circle(1125)
+
+        self.play(
+            ShowCreation(radial_line),
+            Write(root_label, run_time = 1)
+        )
+        self.add_foreground_mobject(root_label)
+        self.play(
+            Rotating(
+                radial_line,
+                rate_func = smooth,
+                about_point = self.plane_center
+            ),
+            ShowCreation(circle),
+            LaggedStart(
+                DrawBorderThenFill,
+                dots,
+                stroke_width = 4,
+                stroke_color = PINK,
+            ),
+            run_time = 2,
+        )
+        self.dither(2)
+
 class SummarizeCountingRule(Show125Circle):
     CONFIG = {
         "dot_radius" : 0.075,
@@ -4044,8 +4078,6 @@ class CountLatticePointsInBigCircle(LatticePointScene):
 
 class AddUpGrid(Scene):
     def construct(self):
-        self.force_skipping()
-
         self.add_radicals()
         self.add_row_lines()
         self.add_chi_sums()
@@ -4057,6 +4089,7 @@ class AddUpGrid(Scene):
         self.factor_out_R()
         self.show_chi_sum_values()
         self.compare_to_pi_R_squared()
+        self.celebrate()
 
     def add_radicals(self):
         self.radicals = CountLatticePointsInBigCircle.get_radicals()
@@ -4167,14 +4200,24 @@ class AddUpGrid(Scene):
         ]
         prime_rects.highlight(GREEN)
 
-        self.play(FadeIn(composite_rects))
+        randy = Randolph().flip()
+        randy.next_to(self.chi_mobs, RIGHT)
+
+        self.play(FadeIn(randy))
+        self.play(randy.change_mode, "pleading")
+        self.play(
+            FadeIn(composite_rects),
+            randy.look_at, composite_rects.get_bottom()
+        )
         self.dither(2)
         self.play(
             FadeOut(composite_rects),
-            FadeIn(prime_rects)
+            FadeIn(prime_rects),
+            randy.look_at, prime_rects.get_top(),
         )
-        self.dither(2)
-        self.play(FadeOut(prime_rects))
+        self.play(Blink(randy))
+        self.dither()
+        self.play(*map(FadeOut, [prime_rects, randy]))
 
     def organize_into_columns(self):
         left_x = self.arrows.get_right()[0] + SMALL_BUFF
@@ -4201,17 +4244,13 @@ class AddUpGrid(Scene):
         rect = Rectangle(
             stroke_color = WHITE,
             stroke_width = 2,
-            fill_color = BLACK,
+            fill_color = average_color(BLUE_E, BLACK),
             fill_opacity = 1,
-            height = 1.2,
+            height = 1.15,
             width = 2*SPACE_WIDTH - 2*MED_SMALL_BUFF,
         )
         rect.move_to(3*LEFT, LEFT)
         rect.to_edge(UP, buff = SMALL_BUFF)
-        # words = TextMobject(
-        #     "\\# Lattice points \\\\ within radius $R$"
-        # )
-        # words.scale(0.7)
         words = TextMobject("Total")
         words.scale(0.8)
         words.next_to(rect.get_left(), RIGHT, SMALL_BUFF)
@@ -4231,33 +4270,29 @@ class AddUpGrid(Scene):
         for chi_mob in self.chi_mobs:
             chi_mob_columns[chi_mob.d - 1].add(chi_mob)
 
-        terms = VGroup()
+        full_sum = VGroup()
         for d in range(1, 7):
-            chi_args = ["{\\chi(", str(d), ")"]
+            R_args = ["{R^2"]
             if d != 1:
-                chi_args.append("\\over %d}"%d)
+                R_args.append("\\over %d}"%d)
             term = VGroup(
-                TexMobject("R^2"),
-                TexMobject(*chi_args),
+                TexMobject(*R_args),
+                TexMobject("\\chi(", str(d), ")"),
                 TexMobject("+")
             )
             term.arrange_submobjects(RIGHT, SMALL_BUFF)
-            term[2].next_to(term[1][-1][0], RIGHT, SMALL_BUFF)
-            if d != 1:
-                term[2].add(term[1][-1])
-                term[1].remove(term[1][-1])
             term[1][1].highlight(YELLOW)
-            terms.add(term)
-        terms.arrange_submobjects(RIGHT, SMALL_BUFF)
-        terms.scale(0.7)
-        terms.next_to(self.count_words, RIGHT, SMALL_BUFF)
+            full_sum.add(term)
+        full_sum.arrange_submobjects(RIGHT, SMALL_BUFF)
+        full_sum.scale(0.7)
+        full_sum.next_to(self.count_words, RIGHT, SMALL_BUFF)
 
-        self.revert_to_original_skipping_status()
-        for column, term in zip(chi_mob_columns, terms):
+        for column, term in zip(chi_mob_columns, full_sum):
             rect = SurroundingRectangle(column)
+            rect.stretch_to_fit_height(2*SPACE_HEIGHT)
+            rect.move_to(column, UP)
             rect.set_stroke(width = 0)
             rect.set_fill(YELLOW, 0.3)
-
 
             self.play(FadeIn(rect))
             self.dither()
@@ -4271,7 +4306,7 @@ class AddUpGrid(Scene):
                 Write(term[2]),
             )
             self.dither()
-            if term is terms[2]:
+            if term is full_sum[2]:
                 vect = sum([
                     self.count_rect.get_left()[0],
                     SPACE_WIDTH,
@@ -4282,26 +4317,295 @@ class AddUpGrid(Scene):
                     for m in [
                         self.count_rect,
                         self.count_words,
-                    ]+list(terms[:3])
+                    ]+list(full_sum[:3])
                 ])
-                VGroup(*terms[3:]).shift(vect)
+                VGroup(*full_sum[3:]).shift(vect)
             self.play(FadeOut(rect))
 
+        self.full_sum = full_sum
 
     def factor_out_R(self):
-        pass
+        self.corner_four.generate_target()
+        R_squared = TexMobject("R^2")
+        dots = TexMobject("\\cdots")
+        lp, rp = map(TexMobject, ["\\big(", "\\big)"])
+        new_sum = VGroup(
+            self.corner_four.target, R_squared, lp
+        )
+
+        R_fracs, chi_terms, plusses = full_sum_parts = [
+            VGroup(*[term[i] for term in self.full_sum])
+            for i in range(3)
+        ]
+        targets = []
+        for part in full_sum_parts:
+            part.generate_target()
+            targets.append(part.target)
+        for R_frac, chi_term, plus in zip(*targets):
+            chi_term.scale(0.9)
+            chi_term.move_to(R_frac[0], DOWN)
+            if R_frac is R_fracs.target[0]:
+                new_sum.add(chi_term)
+            else:
+                new_sum.add(VGroup(chi_term, R_frac[1]))
+            new_sum.add(plus)
+        new_sum.add(dots)
+        new_sum.add(rp)
+        new_sum.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        new_sum.next_to(self.count_words, RIGHT, SMALL_BUFF)
+        R_squared.shift(0.5*SMALL_BUFF*UP)
+        R_movers = VGroup()
+        for R_frac in R_fracs.target:
+            if R_frac is R_fracs.target[0]:
+                mover = R_frac
+            else:
+                mover = R_frac[0]
+            Transform(mover, R_squared).update(1)
+            R_movers.add(mover)
+
+        self.play(*it.chain(
+            map(Write, [lp, rp, dots]), 
+            map(MoveToTarget, full_sum_parts),
+        ), run_time = 2)
+        self.remove(R_movers)
+        self.add(R_squared)
+        self.dither()
+        self.play(
+            MoveToTarget(self.corner_four, run_time = 2),
+            FadeOut(self.corner_four.rect)
+        )
+        self.dither(2)
+        self.remove(self.full_sum, self.corner_four)
+        self.add(new_sum)
+
+        self.new_sum = new_sum
 
     def show_chi_sum_values(self):
-        pass
+        alt_rhs = TexMobject(
+            "\\approx", "4", "R^2", 
+            "\\left(1 - \\frac{1}{3} + \\frac{1}{5}" + \
+            "-\\frac{1}{7} + \\frac{1}{9} - \\frac{1}{11}" + \
+            "+ \\cdots \\right)",
+        )
+        alt_rhs.scale(0.9)
+        alt_rhs.next_to(
+            self.count_words[-1], DOWN,
+            buff = LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+
+        self.play(
+            *map(FadeOut, [
+                self.chi_mobs, self.plusses, self.arrows,
+                self.radicals, self.row_lines
+            ]) + [
+            FadeOut(self.count_rect),
+            Animation(self.new_sum),
+            Animation(self.count_words),
+            ]
+        )
+        self.play(Write(alt_rhs))
+        self.dither(2)
+
+        self.alt_rhs = alt_rhs
 
     def compare_to_pi_R_squared(self):
-        pass
+        approx, pi, R_squared = area_rhs = TexMobject(
+            "\\approx", "\\pi", "R^2"
+        )
+        area_rhs.next_to(self.alt_rhs, RIGHT)
 
+        brace = Brace(
+            VGroup(self.alt_rhs, area_rhs), DOWN
+        )
+        brace.add(brace.get_text(
+            "Arbitrarily good as $R \\to \\infty$"
+        ))
 
+        pi_sum = TexMobject(
+            "4", self.alt_rhs[-1].get_tex_string(),
+            "=", "\\pi"
+        )
+        pi_sum.scale(0.9)
+        pi = pi_sum.get_part_by_tex("pi")
+        pi.scale(2, about_point = pi.get_left())
+        pi.highlight(YELLOW)
+        pi_sum.shift(
+            self.alt_rhs[-1].get_bottom(),
+            MED_SMALL_BUFF*DOWN,
+            -pi_sum[1].get_top()
+        )
 
+        self.play(Write(area_rhs))
+        self.dither()
+        self.play(FadeIn(brace))
+        self.dither(2)
+        self.play(FadeOut(brace))
+        self.play(*[
+            ReplacementTransform(m.copy(), pi_sum_part)
+            for pi_sum_part, m in zip(pi_sum, [
+                self.alt_rhs.get_part_by_tex("4"),
+                self.alt_rhs[-1],
+                area_rhs[0],
+                area_rhs[1],
+            ])
+        ])
 
+    def celebrate(self):
+        creatures = TeacherStudentsScene().get_pi_creatures()
+        self.play(FadeIn(creatures))
+        self.play(*[
+            ApplyMethod(pi.change, "hooray", self.alt_rhs)
+            for pi in creatures
+        ])
+        self.dither()
+        for i in 0, 2, 3:
+            self.play(Blink(creatures[i]))
+            self.dither()
 
+class IntersectionOfTwoFields(TeacherStudentsScene):
+    def construct(self):
+        circles = VGroup()
+        for vect, color, adj in (LEFT, BLUE, "Algebraic"), (RIGHT, YELLOW, "Analytic"):
+            circle = Circle(color = WHITE)
+            circle.set_fill(color, opacity = 0.3)
+            circle.stretch_to_fit_width(7)
+            circle.stretch_to_fit_height(4)
+            circle.shift(SPACE_WIDTH*vect/3.0 + LEFT)
+            title = TextMobject("%s \\\\ number theory"%adj)
+            title.scale(0.7)
+            title.move_to(circle)
+            title.to_edge(UP, buff = SMALL_BUFF)
+            circle.next_to(title, DOWN, SMALL_BUFF)
+            title.highlight(color)
+            circle.title = title
+            circles.add(circle)
+        new_number_systems = TextMobject(
+            "New \\\\ number systems"
+        )
+        gaussian_integers = TextMobject(
+            "e.g. Gaussian \\\\ integers"
+        )
+        new_number_systems.next_to(circles[0].get_top(), DOWN, MED_SMALL_BUFF)
+        new_number_systems.shift(MED_LARGE_BUFF*(DOWN+2*LEFT))
+        gaussian_integers.next_to(new_number_systems, DOWN)
+        gaussian_integers.highlight(BLUE)
+        circles[0].words = VGroup(new_number_systems, gaussian_integers)
 
+        zeta = TexMobject("\\zeta(s) = \\sum_{n=1}^\\infty \\frac{1}{n^2}")
+        L_function = TexMobject(
+            "L(s, \\chi) = \\sum_{n=1}^\\infty \\frac{\\chi(n)}{n^s}"
+        )
+        for mob in zeta, L_function:
+            mob.scale(0.8)
+        zeta.next_to(circles[1].get_top(), DOWN, MED_LARGE_BUFF)
+        zeta.shift(MED_LARGE_BUFF*RIGHT)
+        L_function.next_to(zeta, DOWN, MED_LARGE_BUFF)
+        L_function.highlight(YELLOW)
+        circles[1].words = VGroup(zeta, L_function)
+
+        mid_words = TextMobject("Where\\\\ we \\\\ were")
+        mid_words.scale(0.7)
+        mid_words.move_to(circles)
+
+        for circle in circles:
+            self.play(
+                Write(circle.title, run_time = 2),
+                DrawBorderThenFill(circle, run_time = 2),
+                self.teacher.change_mode, "raise_right_hand"
+            )
+        self.dither()
+        for circle in circles:
+            for word in circle.words:
+                self.play(
+                    Write(word, run_time = 2),
+                    self.teacher.change, "speaking",
+                    *[
+                        ApplyMethod(pi.change, "pondering")
+                        for pi in self.get_students()
+                    ]
+                )
+                self.dither()
+        self.play(
+            Write(mid_words),
+            self.teacher.change, "raise_right_hand"
+        )
+        self.change_student_modes(
+            *["thinking"]*3,
+            look_at_arg = mid_words
+        )
+        self.dither(3)
+
+class Sponsorship(PiCreatureScene):
+    def construct(self):
+        morty = self.pi_creature
+        logo = SVGMobject(
+            file_name = "remix_logo",
+        )
+        logo.scale_to_fit_height(1)
+        logo.center()
+        logo.set_stroke(width = 0)
+        logo.set_fill(BLUE_D, 1)
+        VGroup(*logo[6:]).gradient_highlight(BLUE_B, BLUE_E)
+        logo.next_to(morty.get_corner(UP+LEFT), UP)
+
+        url = TextMobject("www.remix.com")
+        url.to_corner(UP+LEFT)
+        rect = ScreenRectangle(height = 5)
+        rect.next_to(url, DOWN, aligned_edge = LEFT)
+
+        self.play(
+            morty.change_mode, "raise_right_hand",
+            LaggedStart(DrawBorderThenFill, logo, run_time = 3)
+        )
+        self.dither()
+        self.play(
+            ShowCreation(rect),
+            logo.scale, 0.8,
+            logo.to_corner, UP+RIGHT,
+            morty.change, "happy"
+        )
+        self.dither()
+        self.play(Write(url))
+        self.dither(3)
+        for mode in "confused", "pondering", "happy":
+            self.play(morty.change_mode, mode)
+            self.dither(3)
+
+class Thumbnail(Scene):
+    def construct(self):
+        # randy = TexMobject("\\pi").highlight(BLUE_D)
+        randy = Randolph()
+        randy.scale_to_fit_height(5)
+        randy.body.set_stroke(YELLOW, width = 2)
+        self.add(randy)
+
+        primes = [
+            n for n in range(2, 1000)
+            if all(n%k != 0 for k in range(2, n))
+        ][:140]
+        prime_mobs = VGroup()
+        x_spacing = LARGE_BUFF
+        y_spacing = 0.75
+        for i, prime in enumerate(primes):
+            prime_mob = Integer(prime)
+            prime_mob.scale(0.9)
+            x = i%10
+            y = i//10
+            prime_mob.shift(x*x_spacing*RIGHT + y*y_spacing*DOWN)
+            prime_mobs.add(prime_mob)
+            prime_mob.highlight({
+                -1 : YELLOW,
+                0 : RED,
+                1 : BLUE,
+            }[chi_func(prime)])
+        prime_mobs.center().to_edge(UP)
+        for i in range(7):
+            self.add(BackgroundRectangle(
+                VGroup(*prime_mobs[10*i:10*(i+1)]),
+                fill_opacity = 0.5,
+            ))
+        self.add(prime_mobs)
 
 
 

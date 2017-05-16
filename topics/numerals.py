@@ -30,11 +30,14 @@ class DecimalNumber(VMobject):
             )
 
 class Integer(VGroup):
+    CONFIG = {
+        "digit_buff" : 0.8*SMALL_BUFF
+    }
     def __init__(self, integer, **kwargs):
         num_str = str(integer)
         VGroup.__init__(self, *map(TexMobject, num_str), **kwargs)
         self.arrange_submobjects(
-            RIGHT, buff = SMALL_BUFF, aligned_edge = DOWN
+            RIGHT, buff = self.digit_buff, aligned_edge = DOWN
         )
         if num_str[0] == "-":
             self[0].next_to(self[1], LEFT, buff = SMALL_BUFF)

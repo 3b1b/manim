@@ -26,7 +26,7 @@ class Scene(object):
         "frame_duration"   : LOW_QUALITY_FRAME_DURATION,
         "construct_args"   : [],
         "skip_animations"  : False,
-        "write_to_movie"   : True,
+        "write_to_movie"   : False,
         "save_frames"      : False,
         "output_directory" : MOVIE_DIR,
         "name" : None,
