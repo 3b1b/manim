@@ -126,6 +126,7 @@ class PatreonThanks(Scene):
             DrawBorderThenFill(patreon_logo),
         )
         self.play(Write(special_thanks, run_time = 1))
+        print len(patron_groups)
         for i, group in enumerate(patron_groups):
             anims = [
                 FadeIn(

@@ -26,6 +26,8 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
+from topics.common_scenes import PatreonThanks
+
 # revert_to_original_skipping_status
 
 def chi_func(n):
@@ -1387,6 +1389,7 @@ class IntroduceComplexConjugate(LatticePointScene):
         self.introduce_complex_conjugate()
         self.show_confusion()
         self.expand_algebraically()
+        self.discuss_geometry()
         self.show_geometrically()
 
     def resize_plane(self):
@@ -1394,7 +1397,8 @@ class IntroduceComplexConjugate(LatticePointScene):
             self.plane_scale_factor,
             about_point = self.plane_center
         )
-        self.plane.set_stroke(width = 3)
+        self.plane.set_stroke(width = 1)
+        self.plane.axes.set_stroke(width = 3)
 
     def write_points_with_complex_coords(self):
         x, y = self.example_coords
@@ -1488,6 +1492,7 @@ class IntroduceComplexConjugate(LatticePointScene):
         VGroup(*equation[-2:]).shift(0.5*SMALL_BUFF*DOWN)
         equation.scale(0.9)
         equation.to_corner(UP+RIGHT, buff = MED_SMALL_BUFF)
+        equation.shift(MED_LARGE_BUFF*DOWN)
         for tex_mob in equation:
             tex_mob.highlight_by_tex(str(x), self.x_color)
             tex_mob.highlight_by_tex(str(y), self.y_color)
@@ -1623,6 +1628,45 @@ class IntroduceComplexConjugate(LatticePointScene):
             expansion[1].rect,
             expansion
         ]))
+
+    def discuss_geometry(self):
+        randy = Randolph(color = BLUE_C)
+        randy.scale(0.8)
+        randy.to_corner(DOWN+LEFT)
+        morty = Mortimer()
+        morty.scale_to_fit_height(randy.get_height())
+        morty.next_to(randy, RIGHT)
+        randy.make_eye_contact(morty)
+        screen = ScreenRectangle(height = 3.5)
+        screen.to_corner(DOWN+RIGHT, buff = MED_SMALL_BUFF)
+
+        self.play(*map(FadeIn, [randy, morty]))
+        self.play(PiCreatureSays(
+            morty, "More geometry!",
+            target_mode = "hooray",
+            run_time = 2,
+            bubble_kwargs = {"height" : 2, "width" : 4}
+        ))
+        self.play(Blink(randy))
+        self.play(
+            RemovePiCreatureBubble(
+                morty, target_mode = "plain",
+            ),
+            PiCreatureSays(
+                randy, "???",
+                target_mode = "maybe",
+                bubble_kwargs = {"width" : 3, "height" : 2}
+            )
+        )
+        self.play(
+            ShowCreation(screen),
+            morty.look_at, screen,
+            randy.look_at, screen,
+        )
+        self.play(Blink(morty))
+        self.play(RemovePiCreatureBubble(randy, target_mode = "pondering"))
+        self.dither()
+        self.play(*map(FadeOut, [randy, morty, screen]))
 
     def show_geometrically(self):
         dots = [self.example_dot, self.conjugate_dot]
@@ -1865,6 +1909,7 @@ class FactorOrdinaryNumber(TeacherStudentsScene):
             ("\\ne", "2^2 \\cdot 3 \\cdot 11 \\cdot 17"),
             ("\\ne", "2 \\cdot 7^2 \\cdot 23"),
             ("=", "(-2) \\cdot (-3) \\cdot (3) \\cdot 5^3"),
+            ("=", "2 \\cdot (-3) \\cdot (3) \\cdot (-5) \\cdot 5^2"),
         ]))
         for alt_rhs in alt_rhs_list:
             if "\\ne" in alt_rhs.get_tex_string():
@@ -1874,6 +1919,9 @@ class FactorOrdinaryNumber(TeacherStudentsScene):
             alt_rhs.move_to(equation.get_right())
         number.save_state()
         number.next_to(self.teacher, UP+LEFT)
+        title = TextMobject("Almost", "Unique factorization")
+        title.highlight_by_tex("Almost", YELLOW)
+        title.to_edge(UP)
 
         self.play(
             self.teacher.change_mode, "raise_right_hand",
@@ -1882,7 +1930,8 @@ class FactorOrdinaryNumber(TeacherStudentsScene):
         self.dither(2)
         self.play(
             number.restore,
-            Write(VGroup(*equation[1:]))
+            Write(VGroup(*equation[1:])),
+            Write(title[1])
         )
         self.change_student_modes(
             *["pondering"]*3,
@@ -1900,10 +1949,11 @@ class FactorOrdinaryNumber(TeacherStudentsScene):
             else:
                 anims += [FadeIn(alt_rhs)]
             self.play(*anims)
-            if alt_rhs is alt_rhs_list[-1]:
+            if alt_rhs is alt_rhs_list[-2]:
                 self.change_student_modes(
                     *["sassy"]*3,
-                    look_at_arg = alt_rhs
+                    look_at_arg = alt_rhs,
+                    added_anims = [Write(title[0])]
                 )
             self.dither(2)
             last_alt_rhs = alt_rhs
@@ -1912,35 +1962,60 @@ class FactorOrdinaryNumber(TeacherStudentsScene):
             FadeOut(VGroup(equation, alt_rhs)),
             PiCreatureSays(
                 self.teacher,
-                "It's similar for \\\\ Gaussian integers"
+                "It's similar for \\\\ Gaussian integers",
+                bubble_kwargs = {"height" : 3.5}
             )
         )
         self.change_student_modes(*["happy"]*3)
         self.dither(3)
 
-class IntroduceGaussianPrimes(LatticePointScene):
+class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
     CONFIG = {
         "plane_center" : LEFT,
         "x_radius" : 13,
     }
+    def create_pi_creature(self):
+        morty = Mortimer().flip()
+        morty.scale(0.7)
+        morty.next_to(ORIGIN, UP, buff = 0)
+        morty.to_edge(LEFT)
+        return morty
+
+    def setup(self):
+        LatticePointScene.setup(self)
+        PiCreatureScene.setup(self)
+        self.remove(self.pi_creature)
+
     def construct(self):
-        five_dot, p1_dot, p2_dot, p3_dot, p4_dot = dots = [
+        self.plane.set_stroke(width = 2)
+        morty = self.pi_creature
+        dots = [
             Dot(self.plane.coords_to_point(*coords))
             for coords in [
                 (5, 0), 
                 (2, 1), (2, -1), 
                 (-1, 2), (-1, -2),
+                (-2, -1), (-2, 1),
             ]
         ]
+        five_dot = dots[0]
         five_dot.highlight(YELLOW)
         p_dots = VGroup(*dots[1:])
-        p_dots.highlight(PINK)
+        p1_dot, p2_dot, p3_dot, p4_dot, p5_dot, p6_dot = p_dots
+        VGroup(p1_dot, p3_dot, p5_dot).highlight(PINK)
+        VGroup(p2_dot, p4_dot, p6_dot).highlight(RED)
 
-        five_label, p1_label, p2_label, p3_label, p4_label = labels = [
+        labels = [
             TexMobject(tex).add_background_rectangle()
-            for tex in "5", "2+i", "2-i", "-1+2i", "-1-2i",
+            for tex in "5", "2+i", "2-i", "-1+2i", "-1-2i", "-2-i", "-2+i"
         ]
-        vects = [DOWN, UP+RIGHT, DOWN+RIGHT, UP+LEFT, DOWN+LEFT]
+        five_label, p1_label, p2_label, p3_label, p4_label, p5_label, p6_label = labels
+        vects = [
+            DOWN, 
+            UP+RIGHT, DOWN+RIGHT, 
+            UP+LEFT, DOWN+LEFT,
+            DOWN+LEFT, UP+LEFT,
+        ]
         for dot, label, vect in zip(dots, labels, vects):
             label.next_to(dot, vect, SMALL_BUFF)
 
@@ -1980,12 +2055,14 @@ class IntroduceGaussianPrimes(LatticePointScene):
         factorization.to_corner(UP+RIGHT)
         factorization.shift(1.5*LEFT)
         factorization.add_background_rectangle()
-        alt_factorization = TexMobject("=(-1+2i)(-1-2i)")
-        alt_factorization.next_to(
-            factorization.get_part_by_tex("="), DOWN,
-            aligned_edge = LEFT
-        )
-        alt_factorization.add_background_rectangle()
+        neg_alt_factorization = TexMobject("=(-2-i)(-2+i)")
+        i_alt_factorization = TexMobject("=(-1+2i)(-1-2i)")
+        for alt_factorization in neg_alt_factorization, i_alt_factorization:
+            alt_factorization.next_to(
+                factorization.get_part_by_tex("="), DOWN,
+                aligned_edge = LEFT
+            )
+            alt_factorization.add_background_rectangle()
 
         for dot in dots:
             dot.add(Line(
@@ -2009,7 +2086,38 @@ class IntroduceGaussianPrimes(LatticePointScene):
         self.play(*map(Write, [p1_label, p2_label]))
         self.dither()
         self.play(Write(gaussian_prime))
-        self.dither(2)
+        self.dither()
+
+        #Show morty
+        self.play(FadeIn(morty))
+        self.play(PiCreatureSays(
+            morty, "\\emph{Almost} unique",
+            bubble_kwargs = {"height" : 2, "width" : 5},
+        ))
+        self.dither()
+        self.play(RemovePiCreatureBubble(morty, target_mode = "pondering"))
+
+        #Show neg_alternate expression 
+        movers = [p1_dot, p2_dot, p1_label, p2_label]
+        for mover in movers:
+            mover.save_state()
+        self.play(
+            Transform(p1_dot, p5_dot),
+            Transform(p1_label, p5_label),
+        )
+        self.play(
+            Transform(p2_dot, p6_dot),
+            Transform(p2_label, p6_label),
+        )
+        self.play(Write(neg_alt_factorization))
+        self.dither()
+        self.play(
+            FadeOut(neg_alt_factorization),
+            *[m.restore for m in movers]
+        )
+        self.dither()
+
+        ##Show i_alternate expression
         self.play(
             ShowCreation(times_i_arc),
             FadeIn(times_i),
@@ -2040,7 +2148,8 @@ class IntroduceGaussianPrimes(LatticePointScene):
             ]
         )
         self.dither()
-        self.play(Write(alt_factorization))
+        self.play(Write(i_alt_factorization))
+        self.change_mode("hesitant")
         self.dither(3)
 
 class FromIntegerFactorsToGaussianFactors(TeacherStudentsScene):
@@ -2082,10 +2191,22 @@ class FromIntegerFactorsToGaussianFactors(TeacherStudentsScene):
             ApplyMethod(pi.change, "pondering", expression)
             for pi in self.get_pi_creatures()
         ])
-        self.dither(3)
+        self.dither(5)
+        group = VGroup(
+            expression, 
+            two.arrows, two.factors,
+            five.arrows, five.factors,
+        )
+        self.teacher_says(
+            "Now for a \\\\ surprising fact...",
+            added_anims = [FadeOut(group)]
+        )
+        self.dither(2)
 
 class FactorizationPattern(Scene):
     def construct(self):
+        self.force_skipping()
+
         self.add_number_line()
         self.show_one_mod_four_primes()
         self.show_three_mod_four_primes()
@@ -2245,20 +2366,18 @@ class FactorizationPattern(Scene):
         factorization.next_to(mover.target, RIGHT)
         factors = VGroup(*factorization[1:])
 
-        words = TextMobject("Really the \\\\ same prime")
-        words.scale(0.8)
-        words.next_to(factors, DOWN, 0.8*LARGE_BUFF)
-        words_arrows = VGroup(*[
-            Arrow(
-                words.get_top(), factor.get_bottom(),
-                buff = SMALL_BUFF
-            )
-            for factor in factors
-        ])
-        analogy = TextMobject("Like $3$ and $-3$")
-        analogy.scale(0.8)
-        analogy.next_to(words, DOWN)
-        analogy.highlight(RED)
+        time_i_arrow = Arrow(
+            factors[1].get_bottom(),
+            factors[0].get_bottom(),
+            path_arc = -np.pi
+        )
+        times_i = TexMobject("\\times i")
+        # times_i.scale(1.5)
+        times_i.next_to(time_i_arrow, DOWN)
+        times_i.highlight(time_i_arrow.get_color())
+        words = TextMobject("You'll see why this matters...")
+        words.next_to(times_i, DOWN)
+        words.shift_onto_screen()
 
         self.play(
             Write(two),
@@ -2270,14 +2389,14 @@ class FactorizationPattern(Scene):
             MoveToTarget(mover),
             Write(factorization)
         )
+
+        self.revert_to_original_skipping_status()
         self.dither(2)
-        self.play(
-            FadeIn(words),
-            *map(ShowCreation, words_arrows)
-        )
-        self.dither(3)
-        self.play(Write(analogy))
-        self.dither()
+        self.play(ShowCreation(time_i_arrow))
+        self.play(Write(times_i))
+        self.dither(2)
+        self.play(FadeIn(words))
+        self.dither(2)
 
 class RingsWithOneModFourPrimes(CertainRegularityInPrimes):
     CONFIG = {
@@ -2333,7 +2452,12 @@ class FactorTwo(LatticePointScene):
                 (two_dot, factor_dots),
             ]
         ])
-        self.dither(3)
+        self.dither(2)
+        dot_copy = factor_dots[1].copy()
+        dot_copy.highlight(RED)
+        for angle in np.pi/2, -np.pi/2:
+            self.play(Rotate(dot_copy, angle, run_time = 2))
+            self.dither(2)
 
 class CountThroughRingsCopy(CountThroughRings):
     pass
@@ -2578,9 +2702,8 @@ class IntroduceRecipe(Scene):
     def get_product_multiplication_lines(self):
         lines = VGroup()
         for factors in self.left_factors, self.right_factors:
-            line = Line(*map(factors.get_corner, [DOWN+LEFT, DOWN+RIGHT]))
-            line.shift(SMALL_BUFF*DOWN)
-            line.scale_about_point(1.5, line.get_right())
+            line = Line(ORIGIN, 3*RIGHT)
+            line.next_to(factors, DOWN, SMALL_BUFF)
             times = TexMobject("\\times")
             times.next_to(line.get_left(), UP+RIGHT, SMALL_BUFF)
             line.add(times)
@@ -2604,7 +2727,7 @@ class IntroduceRecipe(Scene):
                 self.complex_number_to_tex(product)
             )
             product_mob.highlight(color)
-            product_mob.next_to(line, DOWN, aligned_edge = RIGHT)
+            product_mob.next_to(line, DOWN)
             product_mobjects.add(product_mob)
         self.product_mobjects = product_mobjects
         return product_mobjects
@@ -2661,6 +2784,13 @@ class IntroduceRecipe(Scene):
         self.play(*anims)
         self.dither(2)
 
+class StateThreeChoices(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "$5^2$ gives 3 choices."
+        )
+        self.dither(3)
+
 class ThreeOutputsAsLatticePoints(LatticePointScene):
     CONFIG = {
         "coords_list" : [(3, 4), (5, 0), (3, -4)],
@@ -2716,6 +2846,16 @@ class ThreeOutputsAsLatticePoints(LatticePointScene):
         self.dither(2)
 
         self.original_dots = dots
+
+class LooksLikeYoureMissingSome(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Looks like you're \\\\ missing a few",
+            target_mode = "sassy",
+            student_index = 0,
+        )
+        self.play(self.teacher.change, "guilty")
+        self.dither(3)
 
 class ShowAlternateFactorizationOfTwentyFive(IntroduceRecipe):
     CONFIG = {
@@ -2805,20 +2945,31 @@ class RecipeFor125(IntroduceRecipe):
         "N_string" : "125",
         "integer_factors" : [5, 5, 5],
         "gaussian_factors" : [
-            complex(2, 1), complex(2, -1),
-            complex(2, 1), complex(2, -1),
-            complex(2, 1), complex(2, -1),
+            complex(2, -1), complex(2, 1), 
+            complex(2, -1), complex(2, 1), 
+            complex(2, -1), complex(2, 1), 
         ],
     }
     def construct(self):
+        self.force_skipping()
+
         self.add_title()
         self.show_ordinary_factorization()
         self.subfactor_ordinary_factorization()
+
+        self.revert_to_original_skipping_status()
         self.organize_factors_into_columns()
         self.take_product_of_columns()
         self.mark_left_product_as_result()
         self.swap_factors()
         self.write_last_step()
+
+class StateFourChoices(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "$5^3$ gives 4 choices."
+        )
+        self.dither(3)
 
 class Show125Circle(ThreeOutputsAsLatticePointsContinued):
     CONFIG = {
@@ -2966,17 +3117,18 @@ class RecipeFor1125(IntroduceRecipe):
         self.play(Write(words))
         self.dither()
 
-class Show1125Circle(LatticePointScene):
+class Show125CircleSimple(LatticePointScene):
     CONFIG = {
-        "y_radius" : 35,
-        "max_lattice_point_radius" : 35,
+        "radius_squared" : 125,
+        "y_radius" : 12,
+        "max_lattice_point_radius" : 12,
     }
     def construct(self):
         self.plane.set_stroke(width = 1)
-        radius = np.sqrt(1125)
+        radius = np.sqrt(self.radius_squared)
         circle = self.get_circle(radius)
         radial_line, root_label = self.get_radial_line_with_label(radius)
-        dots = self.get_lattice_points_on_r_squared_circle(1125)
+        dots = self.get_lattice_points_on_r_squared_circle(self.radius_squared)
 
         self.play(
             ShowCreation(radial_line),
@@ -2999,6 +3151,13 @@ class Show1125Circle(LatticePointScene):
             run_time = 2,
         )
         self.dither(2)
+
+class Show1125Circle(Show125CircleSimple):
+    CONFIG = {
+        "radius_squraed" : 1125,
+        "y_radius" : 35,
+        "max_lattice_point_radius" : 35,
+    }
 
 class SummarizeCountingRule(Show125Circle):
     CONFIG = {
@@ -3202,6 +3361,13 @@ class SummarizeCountingRule(Show125Circle):
         self.play(Blink(randy))
         self.dither()
 
+class ThisIsTheHardestPart(TeacherStudentsScene):
+    def construct(self):
+        self.change_student_modes("horrified", "confused", "pleading")
+        self.teacher_says("This is the \\\\ hardest part")
+        self.change_student_modes("thinking", "happy", "pondering")
+        self.dither(2)
+
 class RecipeFor10(IntroduceRecipe):
     CONFIG = {
         "N_string" : "10",
@@ -3249,6 +3415,16 @@ class RecipeFor10(IntroduceRecipe):
         )
         self.dither(2)
         self.play(*map(FadeOut, [arrow, times_i, curr_product]))
+
+class FactorsOfTwoNeitherHelpNorHurt(TeacherStudentsScene):
+    def construct(self):
+        words = TextMobject(
+            "Factors of", "$2^k$", "neither \\\\ help nor hurt"
+        )
+        words.highlight_by_tex("2", YELLOW)
+        self.teacher_says(words)
+        self.change_student_modes(*["pondering"]*3)
+        self.dither(3)
 
 class EffectOfPowersOfTwo(LatticePointScene):
     CONFIG = {
@@ -3712,6 +3888,12 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
         self.revert_to_original_skipping_status()
         self.play(ShowCreation(rect))
         self.dither(3)
+
+class WeAreGettingClose(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("We're getting close...")
+        self.change_student_modes(*["hooray"]*3)
+        self.dither(2)
 
 class ExpandCountWith45(SummarizeCountingRule):
     CONFIG = {
@@ -4492,7 +4674,7 @@ class IntersectionOfTwoFields(TeacherStudentsScene):
         gaussian_integers.highlight(BLUE)
         circles[0].words = VGroup(new_number_systems, gaussian_integers)
 
-        zeta = TexMobject("\\zeta(s) = \\sum_{n=1}^\\infty \\frac{1}{n^2}")
+        zeta = TexMobject("\\zeta(s) = \\sum_{n=1}^\\infty \\frac{1}{n^s}")
         L_function = TexMobject(
             "L(s, \\chi) = \\sum_{n=1}^\\infty \\frac{\\chi(n)}{n^s}"
         )
@@ -4536,6 +4718,54 @@ class IntersectionOfTwoFields(TeacherStudentsScene):
         )
         self.dither(3)
 
+class LeibnizPatreonThanks(PatreonThanks):
+    CONFIG = {
+        "specific_patrons" : [
+            "Ali Yahya",
+            "Burt Humburg",
+            "CrypticSwarm",
+            "Erik Sundell",
+            "Yana Chernobilsky",
+            "Kaustuv DeBiswas",
+            "Kathryn Schmiedicke",
+            "Karan Bhargava",
+            "Ankit Agarwal",
+            "Yu Jun",
+            "Dave Nicponski",
+            "Damion Kistler",
+            "Juan Benet",
+            "Othman Alikhan",
+            "Markus Persson",
+            "Yoni Nazarathy",
+            "Joseph John Cox",
+            "Dan Buchoff",
+            "Luc Ritchie",
+            "Guido Gambardella",
+            "Julian Pulgarin",
+            "John Haley",
+            "Jeff Linse",
+            "Suraj Pratap",
+            "Cooper Jones",
+            "Ryan Dahl",
+            "Ahmad Bamieh",
+            "Mark Govea",
+            "Robert Teed",
+            "Jason Hise",
+            "Meshal Alshammari",
+            "Bernd Sing",
+            "Nils Schneider",
+            "James Thornton",
+            "Mustafa Mahdi",
+            "Mathew Bramson",
+            "Jerry Ling",
+            "Vecht",
+            "Shimin Kuang",
+            "Rish Kundalia",
+            "Achille Brighton",
+            "Ripta Pasay",
+        ],
+    }
+
 class Sponsorship(PiCreatureScene):
     def construct(self):
         morty = self.pi_creature
@@ -4574,39 +4804,45 @@ class Sponsorship(PiCreatureScene):
 
 class Thumbnail(Scene):
     def construct(self):
-        # randy = TexMobject("\\pi").highlight(BLUE_D)
         randy = Randolph()
         randy.scale_to_fit_height(5)
-        randy.body.set_stroke(YELLOW, width = 2)
+        body_copy = randy.body.copy()
+        body_copy.set_stroke(YELLOW, width = 3)
+        body_copy.set_fill(opacity = 0)
         self.add(randy)
 
         primes = [
             n for n in range(2, 1000)
             if all(n%k != 0 for k in range(2, n))
-        ][:140]
+        ]
         prime_mobs = VGroup()
-        x_spacing = LARGE_BUFF
-        y_spacing = 0.75
-        for i, prime in enumerate(primes):
+        x_spacing = 1.7
+        y_spacing = 1.5
+        n_rows = 10
+        n_cols = 8
+        for i, prime in enumerate(primes[:n_rows*n_cols]):
             prime_mob = Integer(prime)
-            prime_mob.scale(0.9)
-            x = i%10
-            y = i//10
+            prime_mob.scale(1.5)
+            x = i%n_cols
+            y = i//n_cols
             prime_mob.shift(x*x_spacing*RIGHT + y*y_spacing*DOWN)
             prime_mobs.add(prime_mob)
             prime_mob.highlight({
                 -1 : YELLOW,
                 0 : RED,
-                1 : BLUE,
+                1 : BLUE_C,
             }[chi_func(prime)])
         prime_mobs.center().to_edge(UP)
         for i in range(7):
-            self.add(BackgroundRectangle(
-                VGroup(*prime_mobs[10*i:10*(i+1)]),
-                fill_opacity = 0.5,
+            self.add(SurroundingRectangle(
+                VGroup(*prime_mobs[n_cols*i:n_cols*(i+1)]),
+                fill_opacity = 0.7,
+                fill_color = BLACK,
+                stroke_width = 0,
+                buff = 0,
             ))
         self.add(prime_mobs)
-
+        self.add(body_copy)
 
 
 
