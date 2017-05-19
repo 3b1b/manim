@@ -2548,7 +2548,7 @@ class IntroduceRecipe(Scene):
             self.integer_factorization, DOWN,
             aligned_edge = LEFT
         )
-        for factor, mob in zip(factors, factorization[1::]):
+        for factor, mob in zip(factors, factorization[1:]):
             mob.underlying_number = factor
             y = complex(factor).imag
             if y == 0:
@@ -2568,7 +2568,7 @@ class IntroduceRecipe(Scene):
             mover = prime_mob.copy()
             mover.target = gauss_prime_mob
             movers.add(mover)
-            if complex(gauss_prime).imag > 0:
+            if abs(complex(gauss_prime).imag) > 0:
                 index += 1
                 mover = prime_mob.copy()
                 mover.target = factorization[index+1]
@@ -2947,7 +2947,7 @@ class RecipeFor125(IntroduceRecipe):
         "gaussian_factors" : [
             complex(2, -1), complex(2, 1), 
             complex(2, -1), complex(2, 1), 
-            complex(2, -1), complex(2, 1), 
+            complex(2, -1), complex(2, 1),
         ],
     }
     def construct(self):
@@ -2956,13 +2956,13 @@ class RecipeFor125(IntroduceRecipe):
         self.add_title()
         self.show_ordinary_factorization()
         self.subfactor_ordinary_factorization()
-
+        
         self.revert_to_original_skipping_status()
         self.organize_factors_into_columns()
-        self.take_product_of_columns()
-        self.mark_left_product_as_result()
-        self.swap_factors()
-        self.write_last_step()
+        # self.take_product_of_columns()
+        # self.mark_left_product_as_result()
+        # self.swap_factors()
+        # self.write_last_step()
 
 class StateFourChoices(TeacherStudentsScene):
     def construct(self):
