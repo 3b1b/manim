@@ -50,7 +50,7 @@ class GraphScene(Scene):
         x_axis = NumberLine(
             x_min = self.x_min,
             x_max = self.x_max,
-            space_unit_to_num = self.space_unit_to_x,
+            unit_size = self.space_unit_to_x,
             tick_frequency = self.x_tick_frequency,
             leftmost_tick = self.x_leftmost_tick,
             numbers_with_elongated_ticks = self.x_labeled_nums,
@@ -81,7 +81,7 @@ class GraphScene(Scene):
         y_axis = NumberLine(
             x_min = self.y_min,
             x_max = self.y_max,
-            space_unit_to_num = self.space_unit_to_y,
+            unit_size = self.space_unit_to_y,
             tick_frequency = self.y_tick_frequency,
             leftmost_tick = self.y_bottom_tick,
             numbers_with_elongated_ticks = self.y_labeled_nums,

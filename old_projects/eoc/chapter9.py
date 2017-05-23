@@ -1982,7 +1982,7 @@ class ASecondIntegralSensation(TeacherStudentsScene):
 
         continuum = UnitInterval(
             color = GREY,
-            space_unit_to_num = 6
+            unit_size = 6
         )
         continuum.next_to(finite_average, RIGHT, 2)
         line = Line(continuum.get_left(), continuum.get_right())

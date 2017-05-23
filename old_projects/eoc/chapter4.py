@@ -1349,7 +1349,7 @@ class IntroduceProductAsArea(ReconfigurableScene):
         line = NumberLine(
             x_min = 0,
             x_max = self.slider_x_max,
-            space_unit_to_num = float(self.slider_width)/self.slider_x_max,
+            unit_size = float(self.slider_width)/self.slider_x_max,
             color = GREY,
             numbers_with_elongated_ticks = numbers,
             tick_frequency = 0.25,

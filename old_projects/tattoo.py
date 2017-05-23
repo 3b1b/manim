@@ -44,7 +44,7 @@ class TrigRepresentationsScene(Scene):
 
     def init_axes(self):
         self.axes = Axes(
-            space_unit_to_num = self.unit_length,
+            unit_size = self.unit_length,
         )
         self.axes.highlight(self.axes_color)
         self.add(self.axes)

@@ -2217,7 +2217,7 @@ class FactorizationPattern(Scene):
         line = NumberLine(
             x_min = 0,
             x_max = 36,
-            space_unit_to_num = 0.4,
+            unit_size = 0.4,
             numbers_to_show = range(0, 33, 4),
             numbers_with_elongated_ticks = range(0, 33, 4),
         )

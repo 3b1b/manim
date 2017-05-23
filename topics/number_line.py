@@ -11,7 +11,7 @@ class NumberLine(VMobject):
         "color" : BLUE,
         "x_min" : -SPACE_WIDTH,
         "x_max" : SPACE_WIDTH,
-        "space_unit_to_num" : 1,
+        "unit_size" : 1,
         "tick_size" : 0.1,
         "tick_frequency" : 1,
         "leftmost_tick" : None, #Defaults to ceil(x_min)
@@ -35,7 +35,7 @@ class NumberLine(VMobject):
             self.add_tick(x, self.tick_size)
         for x in self.numbers_with_elongated_ticks:
             self.add_tick(x, self.longer_tick_multiple*self.tick_size)
-        self.stretch(self.space_unit_to_num, 0)
+        self.stretch(self.unit_size, 0)
         self.shift(-self.number_to_point(self.number_at_center))
 
     def add_tick(self, x, size):
@@ -108,7 +108,7 @@ class UnitInterval(NumberLine):
     CONFIG = {
         "x_min" : 0,
         "x_max" : 1,
-        "space_unit_to_num" : 6,
+        "unit_size" : 6,
         "tick_frequency" : 0.1,
         "numbers_with_elongated_ticks" : [0, 1],
         "number_at_center" : 0.5,
@@ -130,20 +130,26 @@ class NumberPlane(VMobject):
         "secondary_color" : BLUE_E,
         "axes_color" : WHITE,
         "secondary_stroke_width" : 1,
-        "x_radius": SPACE_WIDTH,
-        "y_radius": SPACE_HEIGHT,
-        "space_unit_to_x_unit" : 1,
-        "space_unit_to_y_unit" : 1,
+        "x_radius": None,
+        "y_radius": None,
+        "x_unit_size" : 1,
+        "y_unit_size" : 1,
+        "center_point" : ORIGIN,
         "x_line_frequency" : 1,
         "y_line_frequency" : 1,
         "secondary_line_ratio" : 1,
         "written_coordinate_height" : 0.2,
         "written_coordinate_nudge" : 0.1*(DOWN+RIGHT),
-        "coords_at_center" : (0, 0),
         "propogate_style_to_family" : False,
     }
     
     def generate_points(self):
+        if self.x_radius is None:
+            center_to_edge = (SPACE_WIDTH + abs(self.center_point[0])) 
+            self.x_radius = center_to_edge / self.x_unit_size
+        if self.y_radius is None:
+            center_to_edge = (SPACE_HEIGHT + abs(self.center_point[1])) 
+            self.y_radius = center_to_edge / self.y_unit_size
         self.axes = VMobject()
         self.main_lines = VMobject()
         self.secondary_lines = VMobject()
@@ -176,8 +182,9 @@ class NumberPlane(VMobject):
                 else:
                     self.secondary_lines.add(line1, line2)
         self.add(self.secondary_lines, self.main_lines, self.axes)
-        self.stretch(self.space_unit_to_x_unit, 0)
-        self.stretch(self.space_unit_to_y_unit, 1)
+        self.stretch(self.x_unit_size, 0)
+        self.stretch(self.y_unit_size, 1)
+        self.shift(self.center_point)
         #Put x_axis before y_axis
         y_axis, x_axis = self.axes.split()
         self.axes = VMobject(x_axis, y_axis)
@@ -192,26 +199,25 @@ class NumberPlane(VMobject):
         return self
 
     def get_center_point(self):
-        return self.num_pair_to_point(self.coords_at_center)
+        return self.coords_to_point(0, 0)
 
     def coords_to_point(self, x, y):
-        x, y = np.array([x, y]) + self.coords_at_center
+        x, y = np.array([x, y])
         result = self.axes.get_center()
-        result += x*self.get_space_unit_to_x_unit()*RIGHT
-        result += y*self.get_space_unit_to_y_unit()*UP
+        result += x*self.get_x_unit_size()*RIGHT
+        result += y*self.get_y_unit_size()*UP
         return result
 
     def point_to_coords(self, point):
-        new_point = point-self.axes.get_center()
-        center_x, center_y = self.coords_at_center
-        x = center_x + new_point[0]/self.get_space_unit_to_x_unit()
-        y = center_y + new_point[1]/self.get_space_unit_to_y_unit()
+        new_point = point - self.axes.get_center()
+        x = new_point[0]/self.get_x_unit_size()
+        y = new_point[1]/self.get_y_unit_size()
         return x, y
 
-    def get_space_unit_to_x_unit(self):
+    def get_x_unit_size(self):
         return self.axes.get_width() / (2.0*self.x_radius)
 
-    def get_space_unit_to_y_unit(self):
+    def get_y_unit_size(self):
         return self.axes.get_height() / (2.0*self.y_radius)
 
     def get_coordinate_labels(self, x_vals = None, y_vals = None):
@@ -225,7 +231,7 @@ class NumberPlane(VMobject):
                 if val == 0:
                     continue
                 num_pair[index] = val
-                point = self.num_pair_to_point(num_pair)
+                point = self.coords_to_point(*num_pair)
                 num = TexMobject(str(val))
                 num.add_background_rectangle()
                 num.scale_to_fit_height(

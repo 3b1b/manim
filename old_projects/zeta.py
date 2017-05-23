@@ -461,7 +461,7 @@ class DefineForRealS(PiCreatureScene):
             x_max = 3,
             tick_frequency = 0.25,
             numbers_with_elongated_ticks = range(4),
-            space_unit_to_num = 3,
+            unit_size = 3,
         )
         number_line.add_numbers()
         number_line.next_to(self.pi_creature, LEFT)
@@ -862,7 +862,7 @@ class FromRealToComplex(ComplexTransformationScene):
     def show_real_to_real(self):
         zeta = self.get_zeta_definition("2",  "\\frac{\\pi^2}{6}")
         number_line = NumberLine(
-            space_unit_to_num = 2, 
+            unit_size = 2, 
             tick_frequency = 0.5,
             numbers_with_elongated_ticks = range(-2, 3)
         )

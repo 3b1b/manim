@@ -1415,7 +1415,7 @@ class DerivativeAsTangentLine(ZoomedScene):
         x_axis = NumberLine(
             x_min = -0.25, 
             x_max = 4,
-            space_unit_to_num = 2,
+            unit_size = 2,
             tick_frequency = 0.25,
             leftmost_tick = -0.25,
             numbers_with_elongated_ticks = [0, 1, 2, 3, 4],
@@ -1431,7 +1431,7 @@ class DerivativeAsTangentLine(ZoomedScene):
         y_axis = NumberLine(
             x_min = -2,
             x_max = 20,
-            space_unit_to_num = 0.3,
+            unit_size = 0.3,
             tick_frequency = 2.5,
             leftmost_tick = 0,
             longer_tick_multiple = -2,
