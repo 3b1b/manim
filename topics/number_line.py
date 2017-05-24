@@ -139,7 +139,6 @@ class NumberPlane(VMobject):
         "y_line_frequency" : 1,
         "secondary_line_ratio" : 1,
         "written_coordinate_height" : 0.2,
-        "written_coordinate_nudge" : 0.1*(DOWN+RIGHT),
         "propogate_style_to_family" : False,
     }
     

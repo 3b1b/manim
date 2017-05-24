@@ -189,7 +189,7 @@ class ComplexPlane(NumberPlane):
         return self.coords_to_point(number.real, number.imag)
 
     def get_coordinate_labels(self, *numbers):
-        result = []
+        result = VGroup()
         nudge = 0.1*(DOWN+RIGHT)
         if len(numbers) == 0:
             numbers = range(-int(self.x_radius), int(self.x_radius))
@@ -206,7 +206,7 @@ class ComplexPlane(NumberPlane):
             num = TexMobject(num_str)
             num.scale(self.number_scale_factor)
             num.shift(point-num.get_corner(UP+LEFT)+nudge)
-            result.append(num)
+            result.add(num)
         return result
 
     def add_coordinates(self, *numbers):
