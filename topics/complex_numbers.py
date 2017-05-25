@@ -188,6 +188,10 @@ class ComplexPlane(NumberPlane):
         number = complex(number)
         return self.coords_to_point(number.real, number.imag)
 
+    def point_to_number(self, point):
+        x, y = self.point_to_coords(point)
+        return complex(x, y)
+
     def get_coordinate_labels(self, *numbers):
         result = VGroup()
         nudge = 0.1*(DOWN+RIGHT)
@@ -245,7 +249,8 @@ class ComplexHomotopy(Homotopy):
         """
         Complex Hootopy a function Cx[0, 1] to C
         """
-        def homotopy((x, y, z, t)):
+        def homotopy(event):
+            x, y, z, t = event
             c = complex_homotopy((complex(x, y), t))
             return (c.real, c.imag, z)
         Homotopy.__init__(self, homotopy, mobject, *args, **kwargs)

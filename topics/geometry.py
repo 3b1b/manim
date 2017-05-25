@@ -123,10 +123,10 @@ class Line(VMobject):
         return self.get_start(), self.get_end()
 
     def get_start(self):
-        return self.points[0]
+        return np.array(self.points[0])
 
     def get_end(self):
-        return self.points[-1]
+        return np.array(self.points[-1])
 
     def get_slope(self):
         start, end = self.get_start_and_end()

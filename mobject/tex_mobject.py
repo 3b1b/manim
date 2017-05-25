@@ -84,6 +84,9 @@ class TexMobject(SVGMobject):
         if tex == "\\over":
             #fraction line needs something to be over
             tex = "\\over\\,"
+        for t1, t2 in ("\\left", "\\right"), ("\\right", "\\left"):
+            if t1 in tex and t2 not in tex:
+                tex = tex.replace(t1, "\\big")
         return tex
 
     def remove_stray_braces(self, tex):
