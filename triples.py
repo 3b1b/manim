@@ -56,6 +56,7 @@ class IntroduceTriples(TeacherStudentsScene):
             (3, 4, 5), 
             (5, 12, 13),
             (8, 15, 17),
+            (7, 24, 25),
         ]
 
         self.add(title)
@@ -92,11 +93,13 @@ class IntroduceTriples(TeacherStudentsScene):
                 hyp_line.get_angle(),
                 about_point = hyp_line.get_center()
             )
-            if c in [5, 13]:
+            if c in [5, 13, 25]:
                 if c == 5:
                     keys = range(0, 5, 2)
                 elif c == 13:
                     keys = range(0, 13, 3)
+                elif c == 25:
+                    keys = range(0, 25, 4)
                 i_list = filter(
                     lambda i : (i%c) in keys and (i//c) in keys,
                     range(c**2)
@@ -175,6 +178,8 @@ class CompareToFermatsLastTheorem(TeacherStudentsScene):
         low_text.highlight(RED)
 
         self.add(square_expression, top_brace, top_text)
+        self.change_student_modes(*["pondering"]*3)
+        self.play(self.teacher.change, "happy", run_time = 0)
         self.play(
             ReplacementTransform(
                 square_expression.copy(),
@@ -329,6 +334,17 @@ class BabylonianTablets(Scene):
         self.dither()
         self.play(LaggedStart(FadeIn, triples, run_time = 5))
         self.dither()
+
+class AskAboutFavoriteProof(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "What's you're \\\\ favorite proof?",
+            target_mode = "raise_right_hand"
+        )
+        self.change_student_modes("happy", "raise_right_hand", "happy")
+        self.teacher_thinks("", target_mode = "thinking")
+        self.dither()
+        self.zoom_in_on_thought_bubble()
 
 class PythagoreanProof(Scene):
     def construct(self):
@@ -496,18 +512,6 @@ class PythagoreanProof(Scene):
         group.move_to(a_square.get_right(), LEFT)
         t2, t3 = group
         return VGroup(t1, t2, t3)
-
-##TODO, REMOVE
-class LastVideoWrapper(Scene):
-    def construct(self):
-        title = TextMobject("Pi hiding in prime regularities")
-        title.to_edge(UP)
-        screen_rect = ScreenRectangle(height = 6)
-        screen_rect.next_to(title, DOWN)
-
-        self.play(ShowCreation(screen_rect))
-        self.play(Write(title))
-        self.dither()
 
 class ReframeOnLattice(PiCreatureScene):
     CONFIG = {
@@ -976,6 +980,12 @@ class ReframeOnLattice(PiCreatureScene):
         morty = Mortimer().flip()
         morty.to_corner(DOWN+LEFT, buff = MED_SMALL_BUFF)
         return morty
+
+class TimeToGetComplex(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("Time to \\\\ get complex")
+        self.change_student_modes("angry", "sassy", "pleading")
+        self.dither(2)
 
 class OneMoreExample(Scene):
     CONFIG = {
@@ -2033,6 +2043,55 @@ class PointsWeMiss(VisualizeZSquared):
         self.play(Blink(morty))
         self.dither(2)
 
+class PointsWeMissAreMultiplesOfOnesWeHit(TeacherStudentsScene):
+    def construct(self):
+        words = TextMobject(
+            "Every point we",
+            "miss",
+            "is \\\\ a multiple of one we",
+            "hit"
+        )
+        words.highlight_by_tex("miss", RED)
+        words.highlight_by_tex("hit", GREEN)
+        self.teacher_says(words)
+        self.change_student_modes(*["pondering"]*3)
+        self.dither(2)
+
+class DrawSingleRadialLine(PointsWeMiss):
+    def construct(self):
+        self.add_plane()
+        self.background_plane.set_stroke(width = 1)
+        self.add_transformed_color_grid()
+        self.color_grid.set_stroke(width = 1)
+        self.add_dots()
+        self.draw_line()
+
+    def draw_line(self):
+        point = self.background_plane.coords_to_point(3, 4)
+        dot = Dot(point, color = RED)
+        line = Line(
+            self.plane_center,
+            self.background_plane.coords_to_point(15, 20),
+            color = WHITE,
+        )
+        added_dots = VGroup(*[
+            Dot(self.background_plane.coords_to_point(3*k, 4*k))
+            for k in 2, 3, 5
+        ])
+        added_dots.highlight(GREEN)
+
+        self.play(GrowFromCenter(dot))
+        self.play(Indicate(dot))
+        self.play(ShowCreation(line), Animation(dot))
+        self.dither()
+        self.play(LaggedStart(
+            DrawBorderThenFill, added_dots,
+            stroke_color = PINK,
+            stroke_width = 4,
+            run_time = 3
+        ))
+        self.dither()
+
 class DrawRadialLines(PointsWeMiss):
     CONFIG = {
         "final_unit_size" : 0.2,
@@ -2449,6 +2508,95 @@ class ProjectPointsOntoUnitCircle(DrawRadialLines):
         self.play(FadeOut(lines))
         self.dither()
 
+class ICanOnlyDrawFinitely(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "I can only \\\\ draw finitely",
+            run_time = 2
+        )
+        self.dither(2)
+
+class SupposeMissingPoint(PointsWeMiss):
+    def construct(self):
+        self.add_plane()
+        self.background_plane.set_stroke(width = 1)
+        self.draw_missing_triple()
+        self.project_onto_unit_circle()
+
+    def draw_missing_triple(self):
+        point = self.background_plane.coords_to_point(12, 5)
+        origin = self.plane_center
+        line = Line(origin, point, color = WHITE)
+        dot = Dot(point, color = YELLOW)
+        triangle = Polygon(ORIGIN, RIGHT, RIGHT+UP)
+        triangle.set_stroke(BLUE, 2)
+        triangle.set_fill(BLUE, 0.5)
+        triangle.replace(line, stretch = True)
+        a = TexMobject("a")
+        a.next_to(triangle.get_bottom(), UP, SMALL_BUFF)
+        b = TexMobject("b")
+        b.add_background_rectangle()
+        b.next_to(triangle, RIGHT, SMALL_BUFF)
+        c = TexMobject("c")
+        c.add_background_rectangle()
+        c.next_to(line.get_center(), UP+LEFT, SMALL_BUFF)
+        triangle.add(a, b, c)
+        words = TextMobject(
+            "If we missed \\\\ a triple \\dots"
+        )
+        words.add_background_rectangle()
+        words.next_to(dot, UP+RIGHT)
+        words.shift_onto_screen()
+
+        self.add(triangle, line, dot)
+        self.play(Write(words))
+        self.dither()
+
+        self.words = words
+        self.triangle = triangle
+        self.line = line
+        self.dot = dot
+
+
+    def project_onto_unit_circle(self):
+        dot, line = self.dot, self.line
+        template_line = Line(*[
+            self.background_plane.number_to_point(n)
+            for n in -1, 1
+        ])
+        circle = Circle(color = GREEN)
+        circle.replace(template_line, dim_to_match = 0)
+        z = self.background_plane.point_to_number(dot.get_center())
+        z_norm = abs(z)
+        unit_z = z/z_norm
+        new_point = self.background_plane.number_to_point(unit_z)
+        dot.generate_target()
+        dot.target.move_to(new_point)
+        line.generate_target()
+        line.target.scale(1./z_norm, about_point = self.plane_center)
+
+        rational_point_word = TexMobject("(a/c) + (b/c)i")
+        rational_point_word.next_to(
+            self.background_plane.coords_to_point(0, 6), RIGHT
+        )
+        rational_point_word.add_background_rectangle()
+        arrow = Arrow(
+            rational_point_word.get_bottom(),
+            dot.target,
+            buff = SMALL_BUFF
+        )
+
+        self.play(ShowCreation(circle))
+        self.add(dot.copy().fade())
+        self.add(line.copy().set_stroke(GREY, 1))
+        self.play(*map(MoveToTarget, [dot, line]))
+        self.dither()
+        self.play(
+            Write(rational_point_word),
+            ShowCreation(arrow)
+        )
+        self.dither(2)
+
 class ProofTime(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("Proof time!", target_mode = "hooray")
@@ -2801,6 +2949,9 @@ class BitOfCircleGeometry(Scene):
         ]
         O = circle.get_center()
         O_dot = Dot(O, color = WHITE)
+        self.add(circle, O_dot)
+
+
         groups = VGroup()
         for point, tex, color in (O, "2", MAROON_B), (p2, "", RED):
             line1 = Line(point, p0)
@@ -2824,9 +2975,13 @@ class BitOfCircleGeometry(Scene):
             group = VGroup(line1, line2, dot1, dot2)
             group.highlight(color)
             group.add(arc, label)
+            if len(groups) == 0:
+                self.play(*map(ShowCreation, [dot1, dot2]))
+                self.play(*map(ShowCreation, [line1, line2]))
+                self.play(ShowCreation(arc))
+                self.play(FadeIn(label))
             groups.add(group)
 
-        self.add(circle, O_dot, groups[0])
         self.dither(2)
         self.play(ReplacementTransform(
             groups[0].copy(), groups[1]
@@ -2885,9 +3040,35 @@ class PatreonThanksTriples(PatreonThanks):
         ],
     }
 
-class Thumbnail(Scene):
+class Thumbnail(DrawRadialLines):
     def construct(self):
-        pass
+        self.force_skipping()
+        self.add_plane()
+        self.add_transformed_color_grid()
+        self.color_grid.set_stroke(width = 5)
+        self.resize_plane()
+        self.add_dots()
+        self.create_lines()
+        self.show_single_line()
+        self.show_all_lines()
+
+        rect = Rectangle(
+            height = 4.3, width = 4,
+            stroke_width = 3,
+            stroke_color = WHITE,
+            fill_color = BLACK,
+            fill_opacity = 1,
+        )
+        rect.to_corner(UP+RIGHT, buff = 0)
+        triples = VGroup(*map(TexMobject, [
+            "3^2 + 4^2 = 5^2",
+            "5^2 + 12^2 = 13^2",
+            "8^2 + 15^2 = 17^2",
+            "\\vdots"
+        ]))
+        triples.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        triples.next_to(rect.get_top(), DOWN)
+        self.add(rect, triples)
 
 
 
