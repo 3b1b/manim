@@ -2457,52 +2457,437 @@ class ProofTime(TeacherStudentsScene):
 
 class FinalProof(RationalPointsOnUnitCircle):
     def construct(self):
-        self.force_skipping()
-
         self.add_plane()
+        self.draw_rational_point()
         self.draw_line_from_example_point()
         self.show_slope_is_rational()
         self.show_all_rational_slopes()
         self.square_example_point()
-        self.show_circle_geometry()
+        self.project_onto_circle()
         self.show_same_slope()
         self.write_v_over_u_slope()
 
-    def draw_line_from_example_point(self):
-        coords = (5./13, 12/13.)
+    def draw_rational_point(self):
+        circle = self.get_unit_circle()
+        coords = (3./5., 4./5.)
         point = self.background_plane.coords_to_point(*coords)
         dot = Dot(point, color = YELLOW)
         label = TexMobject(
-            "\\frac{a}{c} + \\frac{b}{c}i"
+            "(a/c) + (b/c)i"
         )
         label.add_background_rectangle()
         label.next_to(dot, UP+RIGHT, buff = 0)
 
+        self.add(circle)
+        self.play(
+            Write(label, run_time = 2),
+            DrawBorderThenFill(dot)
+        )
+        self.dither()
 
+        self.example_dot = dot
+        self.example_label = label
+        self.unit_circle = circle
+
+    def draw_line_from_example_point(self):
+        neg_one_point = self.background_plane.number_to_point(-1)
+        neg_one_dot = Dot(neg_one_point, color = RED)
+        line = Line(
+            neg_one_point, self.example_dot.get_center(),
+            color = RED
+        )
+
+        self.play(
+            ShowCreation(line, run_time = 2),
+            Animation(self.example_label)
+        )
+        self.play(DrawBorderThenFill(neg_one_dot))
+        self.dither()
+
+        self.neg_one_dot = neg_one_dot
+        self.secant_line = line
 
     def show_slope_is_rational(self):
-        pass
+        p0 = self.neg_one_dot.get_center()
+        p1 = self.example_dot.get_center()
+        p_mid = p1[0]*RIGHT + p0[1]*UP
+
+        h_line = Line(p0, p_mid, color = MAROON_B)
+        v_line = Line(p_mid, p1, color = MAROON_B)
+        run_brace = Brace(h_line, DOWN)
+        run_text = run_brace.get_text(
+            "Run = $1 + \\frac{a}{c}$"
+        )
+        run_text.add_background_rectangle()
+        rise_brace = Brace(v_line, RIGHT)
+        rise_text = rise_brace.get_text("Rise = $\\frac{b}{c}$")
+        rise_text.add_background_rectangle()
+
+        self.play(*map(ShowCreation, [h_line, v_line]))
+        self.dither()
+        self.play(
+            GrowFromCenter(rise_brace),
+            FadeIn(rise_text)
+        )
+        self.dither()
+        self.play(
+            GrowFromCenter(run_brace),
+            FadeIn(run_text)
+        )
+        self.dither(3)
+        self.play(*map(FadeOut, [
+            self.example_dot, self.example_label,
+            self.secant_line,
+            h_line, v_line,
+            run_brace, rise_brace,
+            run_text, rise_text,
+        ]))
 
     def show_all_rational_slopes(self):
-        pass
+        lines = VGroup()
+        labels = VGroup()
+        for u in range(2, 7):
+            for v in range(1, u):
+                if fractions.gcd(u, v) != 1:
+                    continue
+                z_squared = complex(u, v)**2
+                unit_z_squared = z_squared/abs(z_squared)
+                point = self.background_plane.number_to_point(unit_z_squared)
+                dot = Dot(point, color = YELLOW)
+                line = Line(
+                    self.background_plane.number_to_point(-1),
+                    point,
+                    color = self.neg_one_dot.get_color()
+                )
+                line.add(dot)
+
+                label = TexMobject(
+                    "\\text{Slope = }",
+                    str(v), "/", str(u)
+                )
+                label.add_background_rectangle()
+                label.next_to(
+                    self.background_plane.coords_to_point(1, 1.5),
+                    RIGHT
+                )
+
+                lines.add(line)
+                labels.add(label)
+        line = lines[0]
+        label = labels[0]
+
+        self.play(
+            ShowCreation(line),
+            FadeIn(label)
+        )
+        self.dither()
+        for new_line, new_label in zip(lines, labels)[1:]:
+            self.play(
+                Transform(line, new_line),
+                Transform(label, new_label),
+            )
+            self.dither()
+        self.play(*map(FadeOut, [line, label]))
 
     def square_example_point(self):
-        pass
+        z = complex(2, 1)
+        point = self.background_plane.number_to_point(z)
+        uv_dot = Dot(point, color = YELLOW)
+        uv_label = TexMobject("u", "+", "v", "i")
+        uv_label.add_background_rectangle()
+        uv_label.next_to(uv_dot, DOWN+RIGHT, buff = 0)
+        uv_line = Line(
+            self.plane_center, point,
+            color = YELLOW
+        )
+        uv_arc = Arc(
+            angle = uv_line.get_angle(),
+            radius = 0.75
+        )
+        uv_arc.shift(self.plane_center)
+        theta = TexMobject("\\theta")
+        theta.next_to(uv_arc, RIGHT, SMALL_BUFF, DOWN)
+        theta.scale_in_place(0.8)
 
-    def show_circle_geometry(self):
-        pass
+        square_point = self.background_plane.number_to_point(z**2)
+        square_dot = Dot(square_point, color = MAROON_B)
+        square_label = TexMobject("(u+vi)^2")
+        square_label.add_background_rectangle()
+        square_label.next_to(square_dot, RIGHT)
+        square_line = Line(
+            self.plane_center, square_point,
+            color = MAROON_B
+        )
+        square_arc = Arc(
+            angle = square_line.get_angle(),
+            radius = 0.65
+        )
+        square_arc.shift(self.plane_center)
+        two_theta = TexMobject("2\\theta")
+        two_theta.next_to(
+            self.background_plane.coords_to_point(0, 1),
+            UP+RIGHT, SMALL_BUFF, 
+        )
+        two_theta_arrow = Arrow(
+            two_theta.get_right(),
+            square_arc.point_from_proportion(0.75),
+            tip_length = 0.15,
+            path_arc = -np.pi/2,
+            color = WHITE,
+            buff = SMALL_BUFF
+        )
+        self.two_theta_group = VGroup(two_theta, two_theta_arrow)
+
+        z_to_z_squared_arrow = Arrow(
+            point, square_point, 
+            path_arc = np.pi/3,
+            color = WHITE
+        )
+        z_to_z_squared = TexMobject("z", "\\to", "z^2")
+        z_to_z_squared.highlight_by_tex("z", YELLOW)
+        z_to_z_squared.highlight_by_tex("z^2", MAROON_B)
+        z_to_z_squared.add_background_rectangle()
+        z_to_z_squared.next_to(
+            z_to_z_squared_arrow.point_from_proportion(0.5),
+            RIGHT, SMALL_BUFF
+        )
+
+        self.play(
+            Write(uv_label),
+            DrawBorderThenFill(uv_dot)
+        )
+        self.play(ShowCreation(uv_line))
+        self.play(ShowCreation(uv_arc))
+        self.play(Write(theta))
+        self.dither()
+        self.play(
+            ShowCreation(z_to_z_squared_arrow),
+            FadeIn(z_to_z_squared)
+        )
+        self.play(*[
+            ReplacementTransform(
+                m1.copy(), m2,
+                path_arc = np.pi/3
+            )
+            for m1, m2 in [
+                (uv_dot, square_dot),
+                (uv_line, square_line),
+                (uv_label, square_label),
+                (uv_arc, square_arc),
+            ]
+        ])
+        self.dither()
+        self.play(
+            Write(two_theta),
+            ShowCreation(two_theta_arrow)
+        )
+        self.dither(2)
+        self.play(FadeOut(self.two_theta_group))
+
+        self.theta_group = VGroup(uv_arc, theta)
+        self.uv_line = uv_line
+        self.uv_dot = uv_dot
+        self.uv_label = uv_label
+        self.square_line = square_line
+        self.square_dot = square_dot
+
+    def project_onto_circle(self):
+        line = self.square_line.copy()
+        dot = self.square_dot.copy()
+        self.square_line.fade()
+        self.square_dot.fade()
+
+        radius = self.unit_circle.get_width()/2
+        line.generate_target()
+        line.target.scale(
+            radius / line.get_length(),
+            about_point = line.get_start()
+        )
+        dot.generate_target()
+        dot.target.move_to(line.target.get_end())
+
+        self.play(
+            MoveToTarget(line),
+            MoveToTarget(dot),
+        )
+        self.dither()
+        self.play(FadeIn(self.two_theta_group))
+        self.dither()
+        self.play(FadeOut(self.two_theta_group))
+        self.dither(6) ##circle geometry
+
+        self.rational_point_dot = dot
 
     def show_same_slope(self):
-        pass
+        line = Line(
+            self.neg_one_dot.get_center(),
+            self.rational_point_dot.get_center(),
+            color = self.neg_one_dot.get_color()
+        )
+        theta_group_copy = self.theta_group.copy()
+        same_slope_words = TextMobject("Same slope")
+        same_slope_words.add_background_rectangle()
+        same_slope_words.shift(4*LEFT + 0.33*UP)
+        line_copies = VGroup(
+            line.copy(),
+            self.uv_line.copy()
+        )
+        line_copies.generate_target()
+        line_copies.target.next_to(same_slope_words, DOWN)
+
+        self.play(ShowCreation(line))
+        self.dither()
+        self.play(
+            theta_group_copy.shift,
+            line.get_start() - self.uv_line.get_start()
+        )
+        self.dither()
+        self.play(
+            Write(same_slope_words),
+            MoveToTarget(line_copies)
+        )
+        self.dither()
+
+        self.same_slope_words = same_slope_words
 
     def write_v_over_u_slope(self):
+        p0 = self.plane_center
+        p1 = self.uv_dot.get_center()
+        p_mid = p1[0]*RIGHT + p0[1]*UP
+        h_line = Line(p0, p_mid, color = YELLOW)
+        v_line = Line(p_mid, p1, color = YELLOW)
+
+        rhs = TexMobject("=", "{v", "\\over", "u}")
+        rhs.next_to(self.same_slope_words, RIGHT)
+        rect = SurroundingRectangle(VGroup(*rhs[1:]))
+        morty = Mortimer().flip()
+        morty.scale(0.5)
+        morty.next_to(self.same_slope_words, UP, buff = 0)
+
+        self.play(ShowCreation(h_line))
+        self.play(ShowCreation(v_line))
+        self.dither()
+        self.play(*[
+            ReplacementTransform(
+                self.uv_label.get_part_by_tex(tex).copy(),
+                rhs.get_part_by_tex(tex),
+                run_time = 2
+            )
+            for tex in "u", "v"
+        ] + [
+            Write(rhs.get_part_by_tex(tex))
+            for tex in "=", "over"
+        ])
+        self.dither(2)
+        self.play(
+            ShowCreation(rect),
+            FadeIn(morty)
+        )
+        self.play(PiCreatureSays(
+            morty, "Free to choose!",
+            bubble_kwargs = {"height" : 1.5, "width" : 3},
+            target_mode = "hooray",
+            look_at_arg = rect
+        ))
+        self.play(Blink(morty))
+        self.dither(2)
+
+class BitOfCircleGeometry(Scene):
+    def construct(self):
+        circle = Circle(color = BLUE, radius = 3)
+        p0, p1, p2 = [
+            circle.point_from_proportion(alpha)
+            for alpha in 0, 0.15, 0.55
+        ]
+        O = circle.get_center()
+        O_dot = Dot(O, color = WHITE)
+        groups = VGroup()
+        for point, tex, color in (O, "2", MAROON_B), (p2, "", RED):
+            line1 = Line(point, p0)
+            line2 = Line(point, p1)
+            dot1 = Dot(p0)
+            dot2 = Dot(p1)
+            angle = line1.get_angle()
+            arc = Arc(
+                angle = line2.get_angle()-line1.get_angle(), 
+                start_angle = line1.get_angle(),
+                radius = 0.75,
+                color = WHITE
+            )
+            arc.set_stroke(YELLOW, 3)
+            arc.shift(point)
+            label = TexMobject(tex + "\\theta")
+            label.next_to(
+                arc.point_from_proportion(0.9), RIGHT
+            )
+
+            group = VGroup(line1, line2, dot1, dot2)
+            group.highlight(color)
+            group.add(arc, label)
+            groups.add(group)
+
+        self.add(circle, O_dot, groups[0])
+        self.dither(2)
+        self.play(ReplacementTransform(
+            groups[0].copy(), groups[1]
+        ))
+        self.dither(2)
+
+class PatreonThanksTriples(PatreonThanks):
+    CONFIG = {
+        "specific_patrons" : [
+            "Ali Yahya",
+            "Burt Humburg",
+            "CrypticSwarm",
+            "David Beyer",
+            "Erik Sundell",
+            "Yana Chernobilsky",
+            "Kaustuv DeBiswas",
+            "Kathryn Schmiedicke",
+            "Karan Bhargava",
+            "Ankit Agarwal",
+            "Yu Jun",
+            "Dave Nicponski",
+            "Damion Kistler",
+            "Juan Benet",
+            "Othman Alikhan",
+            "Markus Persson",
+            "Yoni Nazarathy",
+            "Joseph John Cox",
+            "Dan Buchoff",
+            "Luc Ritchie",
+            "Ankalagon",
+            "Eric Lavault",
+            "Tomohiro Furusawa",
+            "Boris Veselinovich",
+            "Julian Pulgarin",
+            "John Haley",
+            "Jeff Linse",
+            "Suraj Pratap",
+            "Cooper Jones",
+            "Ryan Dahl",
+            "Ahmad Bamieh",
+            "Mark Govea",
+            "Robert Teed",
+            "Jason Hise",
+            "Meshal Alshammari",
+            "Bernd Sing",
+            "Nils Schneider",
+            "James Thornton",
+            "Mustafa Mahdi",
+            "Mathew Bramson",
+            "Jerry Ling",
+            "Vecht",
+            "Shimin Kuang",
+            "Rish Kundalia",
+            "Achille Brighton",
+            "Ripta Pasay",
+        ],
+    }
+
+class Thumbnail(Scene):
+    def construct(self):
         pass
-
-
-
-
-
-
 
 
 
