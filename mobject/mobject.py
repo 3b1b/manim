@@ -103,7 +103,7 @@ class Mobject(object):
             submob.copy() for submob in self.submobjects
         ]
         return copy_mobject
-        
+
     def deepcopy(self):
         return copy.deepcopy(self)
 
@@ -120,9 +120,10 @@ class Mobject(object):
 
     def shift(self, *vectors):
         total_vector = reduce(op.add, vectors)
-        for mob in self.family_members_with_points():        
+        for mob in self.family_members_with_points():
+           mob.points = mob.points.astype('float')
            mob.points += total_vector
-        return self        
+        return self
 
 
     def scale(self, scale_factor, about_point = None):
@@ -248,8 +249,8 @@ class Mobject(object):
     def to_edge(self, edge = LEFT, buff = DEFAULT_MOBJECT_TO_EDGE_BUFFER):
         return self.align_on_border(edge, buff)
 
-    def next_to(self, mobject_or_point, 
-                direction = RIGHT, 
+    def next_to(self, mobject_or_point,
+                direction = RIGHT,
                 buff = DEFAULT_MOBJECT_TO_MOBJECT_BUFFER,
                 aligned_edge = ORIGIN,
                 align_using_submobjects = False,
@@ -347,7 +348,7 @@ class Mobject(object):
         else:
             self.rescale_to_fit(
                 mobject.length_over_dim(dim_to_match),
-                dim_to_match, 
+                dim_to_match,
                 stretch = False
             )
         self.shift(mobject.get_center() - self.get_center())
@@ -528,7 +529,7 @@ class Mobject(object):
 
     def length_over_dim(self, dim):
         return (
-            self.reduce_across_dimension(np.max, np.max, dim) - 
+            self.reduce_across_dimension(np.max, np.max, dim) -
             self.reduce_across_dimension(np.min, np.min, dim)
         )
 
@@ -564,7 +565,7 @@ class Mobject(object):
 
     def family_members_with_points(self):
         return filter(
-            lambda m : m.get_num_points() > 0, 
+            lambda m : m.get_num_points() > 0,
             self.submobject_family()
         )
 
@@ -584,7 +585,7 @@ class Mobject(object):
         )
         return self
 
-    ## Alignment  
+    ## Alignment
     def align_data(self, mobject):
         self.align_submobjects(mobject)
         self.align_points(mobject)
@@ -634,7 +635,7 @@ class Mobject(object):
 
     def null_point_align(self, mobject):
         """
-        If self has no points, but needs to align 
+        If self has no points, but needs to align
         with mobject, which has points
         """
         if self.submobjects:
@@ -670,10 +671,10 @@ class Mobject(object):
     def repeat_submobject(self, submob):
         return submob.copy()
 
-    def interpolate(self, mobject1, mobject2, 
+    def interpolate(self, mobject1, mobject2,
                     alpha, path_func = straight_path):
         """
-        Turns self into an interpolation between mobject1 
+        Turns self into an interpolation between mobject1
         and mobject2.
         """
         self.points = path_func(
@@ -687,7 +688,7 @@ class Mobject(object):
     def become_partial(self, mobject, a, b):
         """
         Set points in such a way as to become only
-        part of mobject.  
+        part of mobject.
         Inputs 0 <= a < b <= 1 determine what portion
         of mobject to become.
         """
@@ -704,17 +705,4 @@ class Group(Mobject):
     #Alternate name to improve readibility in cases where
     #the mobject is used primarily for its submobject housing
     #functionality.
-    pass 
-
-
-
-
-
-
-
-
-
-
-
-
-
+    pass
