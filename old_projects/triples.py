@@ -3053,13 +3053,13 @@ class Thumbnail(DrawRadialLines):
         self.show_all_lines()
 
         rect = Rectangle(
-            height = 4.3, width = 4,
+            height = 4.3, width = 4.2,
             stroke_width = 3,
             stroke_color = WHITE,
             fill_color = BLACK,
             fill_opacity = 1,
         )
-        rect.to_corner(UP+RIGHT, buff = 0)
+        rect.to_corner(UP+RIGHT, buff = 0.01)
         triples = VGroup(*map(TexMobject, [
             "3^2 + 4^2 = 5^2",
             "5^2 + 12^2 = 13^2",
