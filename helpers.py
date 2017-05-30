@@ -33,8 +33,11 @@ from scipy import linalg
 #####
 from constants import *
 
+# For use later in defining the threshold displacement between the first 
+# and final points on the curve defining some vector graphics object 
+# at which we will say the curve is indeed "closed"
 CLOSED_THRESHOLD = 0.01
-STRAIGHT_PATH_THRESHOLD = 0.01
+STRAIGHT_PATH_THRESHOLD = 0.01  
 
 def play_chord(*nums):
     """ GRANT WTF IS THIS???  Appears to take in some number of frequencies
@@ -66,7 +69,9 @@ def play_finish_sound():
     play_chord(12, 9, 5, 2)
 
 def get_smooth_handle_points(points):
-    """ #####
+    """ ##### not sure.  From what I can tell, this uses bezier curves to 
+        define some smooth vector graphic curve thing that can then be used
+        for animating objects.  
     """
     points = np.array(points)       # create an array of points
     num_handles = len(points) - 1   ##### Off by one error?
@@ -134,9 +139,15 @@ def diag_to_matrix(l_and_u, diag):
     return matrix
 
 def is_closed(points):
+    """ is_closed takes in an array, points, and checks the norm of 
+        the displacement between the first and final point.  If the 
+        threshold is small enough, then the curve will appear (for 
+        all intents and purposes) to be closed. 
+    """
     return np.linalg.norm(points[0] - points[-1]) < CLOSED_THRESHOLD
 
 def color_to_rgb(color):
+
     return np.array(Color(color).get_rgb())
 
 def rgb_to_color(rgb):
