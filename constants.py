@@ -76,31 +76,32 @@ BOTTOM     = SPACE_HEIGHT*DOWN
 LEFT_SIDE  = SPACE_WIDTH*LEFT
 RIGHT_SIDE = SPACE_WIDTH*RIGHT
 
+# Obtain the current path name for use in creating new files 
+# That way we can append the current path to the relative generated path
 THIS_DIR          = os.path.dirname(os.path.realpath(__file__))
-FILE_DIR          = os.path.join(THIS_DIR, "files")
-IMAGE_DIR         = os.path.join(FILE_DIR, "images")
-GIF_DIR           = os.path.join(FILE_DIR, "gifs")
+FILE_DIR          = os.path.join(THIS_DIR, "files")         # Dir for project files
+IMAGE_DIR         = os.path.join(FILE_DIR, "images")        # Project images
+GIF_DIR           = os.path.join(FILE_DIR, "gifs")          # Etc. for gif
 MOVIE_DIR         = os.path.join(FILE_DIR, "movies")
-STAGED_SCENES_DIR = os.path.join(FILE_DIR, "staged_scenes")
-TEX_DIR           = os.path.join(FILE_DIR, "Tex")
-TEX_IMAGE_DIR     = os.path.join(IMAGE_DIR, "Tex")
+STAGED_SCENES_DIR = os.path.join(FILE_DIR, "staged_scenes") 
+TEX_DIR           = os.path.join(FILE_DIR, "Tex")           # For LaTeX annotations
+TEX_IMAGE_DIR     = os.path.join(IMAGE_DIR, "Tex")          # Make subdir for TeX in images
 MOBJECT_DIR       = os.path.join(FILE_DIR, "mobjects")
 IMAGE_MOBJECT_DIR = os.path.join(MOBJECT_DIR, "image")
 
 for folder in [FILE_DIR, IMAGE_DIR, GIF_DIR, MOVIE_DIR, TEX_DIR,
                TEX_IMAGE_DIR, MOBJECT_DIR, IMAGE_MOBJECT_DIR,
-               STAGED_SCENES_DIR]:
-    if not os.path.exists(folder):
-        os.mkdir(folder)
+               STAGED_SCENES_DIR]: 
+    if not os.path.exists(folder):     # check if the directories above exist
+        os.mkdir(folder)               # if not... no problem!  Make one. 
 
-TEX_TEXT_TO_REPLACE = "YourTextHere"
-TEMPLATE_TEX_FILE  = os.path.join(THIS_DIR, "template.tex")
-TEMPLATE_TEXT_FILE = os.path.join(THIS_DIR, "text_template.tex")
+TEX_TEXT_TO_REPLACE = "YourTextHere" 
+TEMPLATE_TEX_FILE  = os.path.join(THIS_DIR, "template.tex")         # Add template.tex 
+TEMPLATE_TEXT_FILE = os.path.join(THIS_DIR, "text_template.tex")    # ..and text temp.
 
+LOGO_PATH = os.path.join(IMAGE_DIR, "logo.png")     # Add our logo in the Image dir 
 
-LOGO_PATH = os.path.join(IMAGE_DIR, "logo.png")
-
-FFMPEG_BIN = "ffmpeg"
+FFMPEG_BIN = "ffmpeg"  # Binary for ffmpeg
 
 
 ### Colors ###
@@ -163,17 +164,10 @@ COLOR_MAP = {
     "GREEN_SCREEN": "#00FF00",
     "ORANGE"      : "#FF862F",
 }
-PALETTE = COLOR_MAP.values()
-locals().update(COLOR_MAP)
-for name in filter(lambda s : s.endswith("_C"), COLOR_MAP.keys()):
-    locals()[name.replace("_C", "")] = locals()[name]
-
-
-
-
-
-
-
-
-
-
+#####
+PALETTE = COLOR_MAP.values()        # Set the color palette we can choose from 
+locals().update(COLOR_MAP)          # Update the local symbol table to add our colors
+for name in filter(lambda s : s.endswith("_C"), COLOR_MAP.keys()): #For all colors ending in _C, 
+    locals()[name.replace("_C", "")] = locals()[name] # I'm not sure what this is doing.  
+                                                      # shouldn't the order of these two sides be
+                                                      # switched??
