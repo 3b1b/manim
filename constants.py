@@ -1,59 +1,76 @@
+# For path joining 
 import os
+
+# GGOTTA GO FASTTTTT
 import numpy as np
 
+
+# Set default animation resolution
 DEFAULT_HEIGHT = 1080
 DEFAULT_WIDTH  = 1920
 
+# Set FPS 
 LOW_QUALITY_FRAME_DURATION = 1./20
 MEDIUM_QUALITY_FRAME_DURATION = 1./30
 PRODUCTION_QUALITY_FRAME_DURATION = 1./60
+# For all you MLG's out there ;)
+SUPER_QUALITY_FRAME_DURATION = 1./144
 
-#There might be other configuration than pixel_shape later...
+# There might be other configuration than pixel_shape later...
+# Set the resolution of the final output animation ß
 PRODUCTION_QUALITY_CAMERA_CONFIG = {
     "pixel_shape" : (DEFAULT_HEIGHT, DEFAULT_WIDTH),
 }
 
+# Describes the dimensions for medium quality resolution
 MEDIUM_QUALITY_CAMERA_CONFIG = {
     "pixel_shape" : (720, 1280),
 }
 
+# Same, but for low quality ß
 LOW_QUALITY_CAMERA_CONFIG = {
     "pixel_shape" : (480, 853),
 }
 
+###### To be honest I currently don't know what this does 
 DEFAULT_POINT_DENSITY_2D = 25 
 DEFAULT_POINT_DENSITY_1D = 250
 
+######
 DEFAULT_POINT_THICKNESS = 4
 
+######
 #TODO, Make sure these are not needed
 SPACE_HEIGHT = 4.0
 SPACE_WIDTH = SPACE_HEIGHT * DEFAULT_WIDTH / DEFAULT_HEIGHT
 
-
+##### I'm guessing this is frame buffer?  But can't tell
 SMALL_BUFF = 0.1
 MED_SMALL_BUFF = 0.25
 MED_LARGE_BUFF = 0.5
 LARGE_BUFF = 1
 
+###### 
 DEFAULT_MOBJECT_TO_EDGE_BUFFER = MED_LARGE_BUFF
 DEFAULT_MOBJECT_TO_MOBJECT_BUFFER = MED_SMALL_BUFF
 
-
+###### 
 #All in seconds
 DEFAULT_ANIMATION_RUN_TIME = 1.0
 DEFAULT_POINTWISE_FUNCTION_RUN_TIME = 3.0
 DEFAULT_DITHER_TIME = 1.0
 
 
+# Set the coordinates of the origin in our animation space, and also define a basis 
 ORIGIN = np.array(( 0, 0, 0))
 UP     = np.array(( 0, 1, 0))
 DOWN   = np.array(( 0,-1, 0))
 RIGHT  = np.array(( 1, 0, 0))
 LEFT   = np.array((-1, 0, 0))
-IN     = np.array(( 0, 0,-1))
 OUT    = np.array(( 0, 0, 1))
+IN     = np.array(( 0, 0,-1))
 
+# Defines the directioned top of the animation frame 
 TOP        = SPACE_HEIGHT*UP
 BOTTOM     = SPACE_HEIGHT*DOWN
 LEFT_SIDE  = SPACE_WIDTH*LEFT

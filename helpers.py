@@ -1,6 +1,13 @@
+# GOTTA GO FAST
 import numpy as np
+
+# For efficient iterative tools
 import itertools as it
+
+# For efficiency for reduce?
 import operator as op
+
+# Allows manipulation of Images through class Image
 from PIL import Image
 from colour import Color
 import random
