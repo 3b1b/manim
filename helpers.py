@@ -4,25 +4,42 @@ import numpy as np
 # For efficient iterative tools
 import itertools as it
 
-# For efficiency for reduce?
+##### For efficiency for reduce?
 import operator as op
 
-# Allows manipulation of Images through class Image
+##### Allows manipulation of Images through class Image
 from PIL import Image
+
+# Easy manipulation of colors with RGB values etc. 
 from colour import Color
 import random
+
+##### Allows us to get live info from modules, classes, methods, tracebacks, frame objects, 
+# and code objects. 
 import inspect
+
+##### More control over string formatting 
 import string
+
+##### For regular expressions?  Find more 
 import re
+
+##### For path joining, etc. 
 import os
+
+##### 
 from scipy import linalg
 
+#####
 from constants import *
 
 CLOSED_THRESHOLD = 0.01
 STRAIGHT_PATH_THRESHOLD = 0.01
 
 def play_chord(*nums):
+    """ GRANT WTF IS THIS???  Appears to take in some number of frequencies
+        And executes a shell command given w/ some sine wave of that freq. 
+    """
     commands = [
         "play",
         "-n",
@@ -37,7 +54,7 @@ def play_chord(*nums):
         "> /dev/null"
     ]
     try:
-        os.system(" ".join(commands))
+        os.system(" ".join(commands)) # execute the shell command
     except:
         pass
 
@@ -49,11 +66,13 @@ def play_finish_sound():
     play_chord(12, 9, 5, 2)
 
 def get_smooth_handle_points(points):
-    points = np.array(points)
-    num_handles = len(points) - 1
-    dim = points.shape[1]    
-    if num_handles < 1:
-        return np.zeros((0, dim)), np.zeros((0, dim))
+    """ #####
+    """
+    points = np.array(points)       # create an array of points
+    num_handles = len(points) - 1   ##### Off by one error?
+    dim = points.shape[1]           # num dimensions our pts are in
+    if num_handles < 1:             # If we don't have any points...
+        return np.zeros((0, dim)), np.zeros((0, dim))   # create a 0 array w/ shape
     #Must solve 2*num_handles equations to get the handles.
     #l and u are the number of lower an upper diagonal rows
     #in the matrix to solve.
@@ -61,6 +80,7 @@ def get_smooth_handle_points(points):
     #diag is a representation of the matrix in diagonal form
     #See https://www.particleincell.com/2012/bezier-splines/
     #for how to arive at these equations
+    ##### I have basically 0 idea what's happening here. 
     diag = np.zeros((l+u+1, 2*num_handles))
     diag[0,1::2] = -1
     diag[0,2::2] = 1
