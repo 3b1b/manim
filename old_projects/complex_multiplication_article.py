@@ -155,7 +155,7 @@ class DrawSolutionsToZToTheNEqualsW(Scene):
             Dot(point, color = BLUE_B, radius = 0.1)
             for point in points
         ]
-        lines = [Line(*pair) for pair in adjascent_pairs(points)]
+        lines = [Line(*pair) for pair in adjacent_pairs(points)]
 
         self.add(plane, circle, *dots+lines)
         self.add(*plane.get_coordinate_labels())

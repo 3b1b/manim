@@ -41,7 +41,7 @@ class Jewel(VMobject):
             compass_vects = list(compass_directions(self.num_equator_points))
             if vect is IN:
                 compass_vects.reverse()
-            for vect_pair in adjascent_pairs(compass_vects):
+            for vect_pair in adjacent_pairs(compass_vects):
                 self.add(Polygon(vect, *vect_pair))
         self.scale_to_fit_height(self.height)
         self.rotate(-np.pi/2-np.pi/24, RIGHT)        

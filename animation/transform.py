@@ -91,7 +91,7 @@ class CyclicReplace(Transform):
         start = Group(*mobjects)
         target = Group(*[
             m1.copy().move_to(m2)
-            for m1, m2 in adjascent_pairs(start)
+            for m1, m2 in adjacent_pairs(start)
         ])
         Transform.__init__(self, start, target, **kwargs)
 

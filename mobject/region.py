@@ -65,7 +65,7 @@ def region_from_line_boundary(*lines, **kwargs):
     return reg
 
 def region_from_polygon_vertices(*vertices, **kwargs):
-    return region_from_line_boundary(*adjascent_pairs(vertices), **kwargs)
+    return region_from_line_boundary(*adjacent_pairs(vertices), **kwargs)
 
 
 def plane_partition(*lines, **kwargs):

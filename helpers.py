@@ -202,7 +202,7 @@ def list_difference_update(l1, l2):
 def all_elements_are_instances(iterable, Class):
     return all(map(lambda e : isinstance(e, Class), iterable))
 
-def adjascent_pairs(objects):
+def adjacent_pairs(objects):
     return zip(objects, list(objects[1:])+[objects[0]])
 
 def complex_to_R3(complex_num):
@@ -375,7 +375,7 @@ def counterclockwise_path():
 
 ################################################
 
-def to_cammel_case(name):
+def to_camel_case(name):
     return "".join([
         filter(
             lambda c : c not in string.punctuation + string.whitespace, part
@@ -407,7 +407,7 @@ def invert_image(image):
     arr = (255 * np.ones(arr.shape)).astype(arr.dtype) - arr
     return Image.fromarray(arr)
 
-def streth_array_to_length(nparray, length):
+def stretch_array_to_length(nparray, length):
     curr_len = len(nparray)
     if curr_len > length:
         raise Warning("Trying to stretch array to a length shorter than its own")

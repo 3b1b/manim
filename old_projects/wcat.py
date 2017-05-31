@@ -109,7 +109,7 @@ class ClosedLoopScene(Scene):
 
     def add_connecting_lines(self, cyclic = False):
         if cyclic:
-            pairs = adjascent_pairs(self.dots)
+            pairs = adjacent_pairs(self.dots)
         else:
             n_pairs = len(list(self.dots))/2
             pairs = zip(self.dots[:n_pairs], self.dots[n_pairs:])
