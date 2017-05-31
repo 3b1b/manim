@@ -349,17 +349,22 @@ def instantiate(obj):
     return obj() if isinstance(obj, type) else obj
 
 def get_all_descendent_classes(Class):
-    """ get_all_descendent_classes
+    """ get_all_descendent_classes takes as input a class Class, 
+        and iterates through all the subclasses of Class, eventually
+        returning a list of all such subclasses (including the original)
     """
     awaiting_review = [Class]
     result = []
-    while awaiting_review:
-        Child = awaiting_review.pop()
-        awaiting_review += Child.__subclasses__()
-        result.append(Child)
+    while awaiting_review:              # while the list is nonempty....
+        Child = awaiting_review.pop()   # removes the last item of list
+        awaiting_review += Child.__subclasses__()  # add all the subclasses
+        result.append(Child)            # ...and add the child to the result list
     return result
 
 def filtered_locals(local_args):
+    """ filtered_locals takes as input some local arguments for 
+        ##### OK NO IDEA 
+    """
     result = local_args.copy()
     ignored_local_args = ["self", "kwargs"]
     for arg in ignored_local_args:
@@ -368,6 +373,8 @@ def filtered_locals(local_args):
 
 def digest_config(obj, kwargs, local_args = {}):
     """
+    Can't tell yet what kwargs or local_args _really_ are 
+
     Sets init args and CONFIG values as local variables
 
     The purpose of this function is to ensure that all 
@@ -379,17 +386,22 @@ def digest_config(obj, kwargs, local_args = {}):
     classes_in_hierarchy = [obj.__class__]
     configs = []
     while len(classes_in_hierarchy) > 0:
-        Class = classes_in_hierarchy.pop()
-        classes_in_hierarchy += Class.__bases__
-        if hasattr(Class, "CONFIG"):
-            configs.append(Class.CONFIG)    
+        Class = classes_in_hierarchy.pop()      # remove the last class from hierarchy
+        classes_in_hierarchy += Class.__bases__ # get the classes used in constructing Class
+        if hasattr(Class, "CONFIG"):            # add the config for Class, if it has one, 
+            configs.append(Class.CONFIG)        # to our overall config
 
+    ##### I DON'T KNOW WHAT THIS IS DOING, but I imagine it makes sense.  
     #Order matters a lot here, first dicts have higher priority
     all_dicts = [kwargs, filtered_locals(local_args), obj.__dict__]
     all_dicts += configs
     obj.__dict__ = merge_config(all_dicts)
 
 def merge_config(all_dicts):
+    """ merge_config takes as input an array of dictionaries, all_dicts, 
+        and merges them all into a list all_config.  Then, it loops through 
+        all the entries of the dicitonaries and merges them. 
+    """
     all_config = reduce(op.add, [d.items() for d in all_dicts])
     config = dict()
     for c in all_config:
@@ -403,6 +415,9 @@ def merge_config(all_dicts):
     return config
 
 def digest_locals(obj, keys = None):
+    """ digest_locals takes as input an object, obj, and works some of 
+        ##### Grant's black magic ##### on them. 
+    """
     caller_locals = filtered_locals(
         inspect.currentframe().f_back.f_locals
     )
@@ -413,13 +428,18 @@ def digest_locals(obj, keys = None):
 
 
 def center_of_mass(points):
+    """ center_of_mass takes as input an array of points (points), 
+        and then finds the unweighted center of mass of the points 
+        (essentially the average displacement of all the points)
+    """
     points = [np.array(point).astype("float") for point in points]
     return sum(points) / len(points)
 
 
 def is_on_line(p0, p1, p2, threshold = 0.01):
     """
-    Returns true of p0 is on the line between p1 and p2
+    is_on_line takes as input three points, p0, p1, and p2, and returns
+    true if p0 is within threshold = 0.01 of the line. 
     """
     p0, p1, p2 = map(lambda tup : np.array(tup[:2]), [p0, p1, p2])
     p1 -= p0
@@ -429,19 +449,23 @@ def is_on_line(p0, p1, p2, threshold = 0.01):
 
 def intersection(line1, line2):
     """
+    intersection takes as input two arrays of tuples corresponding 
+    to two points on the lines.  Then, it returns the 
+
     A "line" should come in the form [(x0, y0), (x1, y1)] for two
     points it runs through
     """
     p0, p1, p2, p3 = map(
         lambda tup : np.array(tup[:2]),
         [line1[0], line1[1], line2[0], line2[1]]
-    )
-    p1, p2, p3 = map(lambda x : x - p0, [p1, p2, p3])
-    transform = np.zeros((2, 2))
-    transform[:,0], transform[:,1] = p1, p2
-    if np.linalg.det(transform) == 0: return
-    inv = np.linalg.inv(transform)
-    new_p3 = np.dot(inv, p3.reshape((2, 1)))
+    ) # get the y values 
+    p1, p2, p3 = map(lambda x : x - p0, [p1, p2, p3]) # shift them down to p0 
+    transform = np.zeros((2, 2))  # get an empty 2 x 2 array
+    transform[:,0], transform[:,1] = p1, p2 # make into [[x1,x2],[y1,y2]]
+    if np.linalg.det(transform) == 0: return # test for linear dependence 
+    inv = np.linalg.inv(transform)           # else matrix is invertible; so find inv
+    new_p3 = np.dot(inv, p3.reshape((2, 1))) # dot the inverse with the column vec p3
+    #####
     #Where does line connecting (0, 1) to new_p3 hit x axis
     x_intercept = new_p3[0] / (1 - new_p3[1]) 
     result = np.dot(transform, [[x_intercept], [0]])
@@ -449,6 +473,10 @@ def intersection(line1, line2):
     return result
 
 def random_bright_color():
+    """ random_bright_color() takes no inputs.  It picks a color from
+        the current palette, and then interpolates an rgb value halfway
+        between the color and white, and returns this color. 
+    """
     color = random_color()
     curr_rgb = color_to_rgb(color)
     new_rgb = interpolate(
@@ -457,12 +485,21 @@ def random_bright_color():
     return Color(rgb = new_rgb)
 
 def random_color():
+    """ random_color() takes no inputs, and outputs a pseudo-random 
+        color from the palette
+    """
     return random.choice(PALETTE)
 
 
 ################################################
 
 def straight_path(start_points, end_points, alpha):
+    """ straight_path takes as inputs two arrays of points,
+        start_points and end_points, as well as a float alpha. 
+        Then, straight_path calls interpolate to obtain an 
+        array of points alpha of the way between each start 
+        and end point pair.
+    """
     return interpolate(start_points, end_points, alpha)
 
 def path_along_arc(arc_angle, axis = OUT):

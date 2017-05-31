@@ -1,10 +1,16 @@
+# For array manipulation
 import numpy as np
+# For use with reduce
 import operator as op
+# 
 import os
+#####
 import copy
+######
 from PIL import Image
+# For easy switching between color representations, etc. 
 from colour import Color
-
+# general helper functions
 from helpers import *
 
 
