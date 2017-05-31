@@ -147,22 +147,44 @@ def is_closed(points):
     return np.linalg.norm(points[0] - points[-1]) < CLOSED_THRESHOLD
 
 def color_to_rgb(color):
-
+    """ color_to_rgb takes in a color string, then internally converts
+        it to a hue, saturation, lightness tuple (e.g. (120, 100%, 50%)) 
+        and then converts it to an RGB tuple representation.  
+    """
     return np.array(Color(color).get_rgb())
 
 def rgb_to_color(rgb):
+    """ rbg_to_color takes in an rgb tuple, and returns a Color object
+        with that rgb value.  This is useful, because it allows us to 
+        easily convert between HSL, RGB, HEX, WEB, and partial 
+        representations. 
+    """ 
     try:
         return Color(rgb = rgb)
     except:
         return Color(WHITE)
 
 def invert_color(color):
+    """ invert_color takes as input an rgb tuple, color, and returns 
+        an object of class Color corresponding to the inverse color 
+        of said rgb tuple, if one exists.  
+    """
     return rgb_to_color(1.0 - color_to_rgb(color))
 
 def color_to_int_rgb(color):
-    return (255*color_to_rgb(color)).astype('uint8')
+    """ color_to_int_rgb takes as input a color string, color, 
+        and returns an integer rgb array (the values should 
+        be strictly positive, so we can cast to an 8-bit 
+        unsigned integer, which can have values from 0 to 
+        255)
+    """
+    return (255*color_to_rgb(color)).astype('uint8') 
 
 def color_gradient(reference_colors, length_of_output):
+    """ color_gradient takes as input a list of colors, 
+        reference_colors, and applies color_to_rgb to each. 
+        Then, 
+    """
     if length_of_output == 0:
         return reference_colors[0]
     rgbs = map(color_to_rgb, reference_colors)
