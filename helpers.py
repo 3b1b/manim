@@ -180,41 +180,93 @@ def color_to_int_rgb(color):
     """
     return (255*color_to_rgb(color)).astype('uint8') 
 
-def color_gradient(reference_colors, length_of_output):
-    """ color_gradient takes as input a list of colors, 
-        reference_colors, and applies color_to_rgb to each. 
-        Then, 
+def interpolate(start, end, alpha):
+    """ interpolate takes in two arrays (or ints, etc.)
+        start and end, then returns an array (or float 
+        etc.) alpha of the way between start and end
     """
-    if length_of_output == 0:
-        return reference_colors[0]
-    rgbs = map(color_to_rgb, reference_colors)
-    alphas = np.linspace(0, (len(rgbs) - 1), length_of_output)
-    floors = alphas.astype('int')
-    alphas_mod1 = alphas % 1
-    #End edge case
+    return (1-alpha)*start + alpha*end
+
+def color_gradient(reference_colors, length_of_output):
+    """ color_gradient takes as input a list of colors (
+        reference_colors), and length_of_output, an int.  
+        It applies color_to_rgb to each of the reference_colors,
+        then, uses np.linspace to interpolate evenly-spaced 
+        "positions" between the colors, and uses these positions 
+        to get length_of_output many rgb tuples corresponding to 
+        colors "between" the reference colors. It then outputs a 
+        list of these colors.  
+    """
+    if length_of_output == 0:       # if we want only one color
+        return reference_colors[0]  # ...just return it
+    rgbs = map(color_to_rgb, reference_colors) # get rgb tuples
+    print(rgbs)
+    # get alphas --> interpolating values between the colors for 
+    # smooth transitions between 'adjacent' colors in list
+    alphas = np.linspace(0, (len(rgbs) - 1), length_of_output) 
+    floors = alphas.astype('int') 
+    # alphas_mod1 are used to give a fractional 'distance' between
+    # two adjacent colors in the reference list, so we want them 
+    # all to be between 0 and 1.  Taking %1 will get rid of the 
+    # whole number component in front, and make interpolate 
+    # useable.  (if you're confused, print statements are helpful)
+    alphas_mod1 = alphas % 1 
+    #End edge case --> alphas_mod1[-1] = 0. because last alpha was 1
     alphas_mod1[-1] = 1
-    floors[-1] = len(rgbs) - 2
+    floors[-1] = len(rgbs) - 2 # fixes an off-by-one thing (?)
     return [
         rgb_to_color(interpolate(rgbs[i], rgbs[i+1], alpha))
         for i, alpha in zip(floors, alphas_mod1)
     ]
 
+
 def average_color(*colors):
+    """ average_color takes in an array of colors (colors),
+        then finds the mean of the rgb values of these input
+        colors.  Then, it returns a string representing the 
+        name of the color corresponding to this mean value. 
+
+    """
     rgbs = np.array(map(color_to_rgb, colors))
     mean_rgb = np.apply_along_axis(np.mean, 0, rgbs)
     return rgb_to_color(mean_rgb)
 
 def compass_directions(n = 4, start_vect = RIGHT):
+    """ Takes as input an int n and a starting vector,
+        then returns a length n array of evenly-spaced 
+        vectors that together form an n-pointed compass
+        rose, of sorts.
+    """
     angle = 2*np.pi/n
     return np.array([
         rotate_vector(start_vect, k*angle)
         for k in range(n)
     ])
 
+def choose(n, k):
+    """ Efficient n choose k 
+    """
+    if n < k: return 0
+    if k == 0: return 1
+    denom = reduce(op.mul, xrange(1, k+1), 1)
+    numer = reduce(op.mul, xrange(n, n-k, -1), 1)
+    return numer//denom
+
+def bezier(points):
+    """ bezier takes in an array of points (points), and
+        returns a function corresponding to the nth order
+        bezier curve
+    """
+    n = len(points) - 1
+    return lambda t : sum([
+        ((1-t)**(n-k))*(t**k)*choose(n, k)*point
+        for k, point in enumerate(points)
+    ])
+    
 def partial_bezier_points(points, a, b):
     """
     Given an array of points which define 
-    a bezier curve, and two numbres 0<=a<b<=1,
+    a bezier curve, and two numbers 0<=a<b<=1,
     return an array of the same size, which 
     describes the portion of the original bezier
     curve on the interval [a, b].
@@ -230,39 +282,53 @@ def partial_bezier_points(points, a, b):
         for i in range(len(points))
     ])
 
-def bezier(points):
-    n = len(points) - 1
-    return lambda t : sum([
-        ((1-t)**(n-k))*(t**k)*choose(n, k)*point
-        for k, point in enumerate(points)
-    ])
 
 def remove_list_redundancies(l):
     """
-    Used instead of list(set(l)) to maintain order
+    Takes as input a list l, and removes redundant entries without 
+    disturbing the order of the elements in the list.  This 
+    non-redundant list is then returned. 
     """
     return sorted(list(set(l)), lambda a, b : l.index(a) - l.index(b))
 
 def list_update(l1, l2):
     """
-    Used instead of list(set(l1).update(l2)) to maintain order,
-    making sure duplicates are removed from l1, not l2.
+    Takes as input two lists, l1 and l2, and returns a non-redundant 
+    ordered list with elements taken from l1 and l2.  Here, l2 
+    will be the list to append to l1 (I think...?)
     """
     return filter(lambda e : e not in l2, l1) + list(l2)
 
 def list_difference_update(l1, l2):
+    """ takes as input two lists l1 and l2, and returns 
+        a list of the elements of l1 that are not in l2
+    """
     return filter(lambda e : e not in l2, l1)
 
 def all_elements_are_instances(iterable, Class):
+    """ Takes as input an array of iterables and a Class, and 
+        returns True if all of the iterables are instances of 
+        the Class. 
+    """
     return all(map(lambda e : isinstance(e, Class), iterable))
 
 def adjascent_pairs(objects):
+    """ IDK whether to fix the typo here!  Anyways, adja(s)cent_pairs
+        Takes as input an array of objects (objects), and returns a list
+        of adjacent elements. 
+    """
     return zip(objects, list(objects[1:])+[objects[0]])
 
 def complex_to_R3(complex_num):
+    """ complex_to_R3 takes as input a complex number (complex_num), 
+        and maps it to a point in the x-y plane in R3 (represented as
+        an array).  
+    """
     return np.array((complex_num.real, complex_num.imag, 0))
 
 def tuplify(obj):
+    """ tuplify takes an input obj, and tries to put it in a tuple
+    """
     if isinstance(obj, str):
         return (obj,)
     try:
@@ -272,6 +338,10 @@ def tuplify(obj):
 
 def instantiate(obj):
     """
+    Instantiate takes as input an object obj, and returns an 
+    instance obj if obj is of some type, else returns... the 
+    obj itself????  GRANT?????
+
     Useful so that classes or instance of those classes can be 
     included in configuration, which can prevent defaults from
     getting created during compilation/importing
@@ -279,6 +349,8 @@ def instantiate(obj):
     return obj() if isinstance(obj, type) else obj
 
 def get_all_descendent_classes(Class):
+    """ get_all_descendent_classes
+    """
     awaiting_review = [Class]
     result = []
     while awaiting_review:
@@ -339,19 +411,11 @@ def digest_locals(obj, keys = None):
     for key in keys:
         setattr(obj, key, caller_locals[key])
 
-def interpolate(start, end, alpha):
-    return (1-alpha)*start + alpha*end
 
 def center_of_mass(points):
     points = [np.array(point).astype("float") for point in points]
     return sum(points) / len(points)
 
-def choose(n, r):
-    if n < r: return 0
-    if r == 0: return 1
-    denom = reduce(op.mul, xrange(1, r+1), 1)
-    numer = reduce(op.mul, xrange(n, n-r, -1), 1)
-    return numer//denom
 
 def is_on_line(p0, p1, p2, threshold = 0.01):
     """

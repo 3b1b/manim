@@ -17,7 +17,7 @@ PRODUCTION_QUALITY_FRAME_DURATION = 1./60
 SUPER_QUALITY_FRAME_DURATION = 1./144
 
 # There might be other configuration than pixel_shape later...
-# Set the resolution of the final output animation ß
+# Set the resolution of the final output animation 
 PRODUCTION_QUALITY_CAMERA_CONFIG = {
     "pixel_shape" : (DEFAULT_HEIGHT, DEFAULT_WIDTH),
 }
@@ -27,7 +27,7 @@ MEDIUM_QUALITY_CAMERA_CONFIG = {
     "pixel_shape" : (720, 1280),
 }
 
-# Same, but for low quality ß
+# Same, but for low quality 
 LOW_QUALITY_CAMERA_CONFIG = {
     "pixel_shape" : (480, 853),
 }
