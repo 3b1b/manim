@@ -181,7 +181,13 @@ def remove_list_redundancies(l):
     """
     Used instead of list(set(l)) to maintain order
     """
-    return sorted(list(set(l)), lambda a, b : l.index(a) - l.index(b))
+    result = []
+    used = set()
+    for x in l:
+        if not x in used:
+            result.append(x)
+            used.add(x)
+    return result
 
 def list_update(l1, l2):
     """

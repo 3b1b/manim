@@ -32,6 +32,7 @@ class Animation(object):
             self.rate_func = (lambda x : x)
         if self.name is None:
             self.name = self.__class__.__name__ + str(self.mobject)
+        self.all_families_zipped = self.get_all_families_zipped()
         self.update(0)
 
     def update_config(self, **kwargs):
@@ -54,7 +55,7 @@ class Animation(object):
         self.update_mobject(self.rate_func(alpha))
 
     def update_mobject(self, alpha):
-        families = self.get_all_families_zipped()
+        families = self.all_families_zipped
         for i, mobs in enumerate(families):
             sub_alpha = self.get_sub_alpha(alpha, i, len(families))
             self.update_submobject(*list(mobs) + [sub_alpha])

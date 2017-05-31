@@ -98,22 +98,7 @@ class Camera(object):
         for vmobject in vmobjects:
             self.display_vectorized(vmobject, canvas)
         canvas.flush()
-        self.pixel_array[:,:] = np.array(image)
-
-
-
-    def display_region(self, region):
-        (h, w) = self.pixel_shape
-        scalar = 2*self.space_shape[0] / h
-        xs =  scalar*np.arange(-w/2, w/2)+self.space_center[0]
-        ys = -scalar*np.arange(-h/2, h/2)+self.space_center[1]
-        x_array = np.dot(np.ones((h, 1)), xs.reshape((1, w)))
-        y_array = np.dot(ys.reshape(h, 1), np.ones((1, w)))
-        covered = region.condition(x_array, y_array)
-        rgb = np.array(Color(region.color).get_rgb())
-        rgb = (255*rgb).astype('uint8')
-        self.pixel_array[covered] = rgb
-
+        self.pixel_array[:,:] = image
 
     def display_vectorized(self, vmobject, canvas):
         if vmobject.is_subpath:
@@ -124,7 +109,6 @@ class Camera(object):
         pathstring = self.get_pathstring(vmobject)
         symbol = aggdraw.Symbol(pathstring)
         canvas.symbol((0, 0), symbol, pen, fill)
-
 
     def get_pen_and_fill(self, vmobject):
         pen = aggdraw.Pen(
@@ -194,7 +178,6 @@ class Camera(object):
         new_pa = self.pixel_array.reshape((ph*pw, 3))
         new_pa[indices] = rgbs
         self.pixel_array = new_pa.reshape((ph, pw, 3))
-
 
     def align_points_to_camera(self, points):
         ## This is where projection should live
