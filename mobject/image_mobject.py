@@ -14,7 +14,9 @@ import os
 # Which has methods 
 from PIL import Image
 
+
 from random import random
+
 
 from helpers import *
 from mobject import Mobject

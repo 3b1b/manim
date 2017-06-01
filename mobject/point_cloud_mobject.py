@@ -2,16 +2,24 @@ from .mobject import Mobject
 from helpers import *
 
 class PMobject(Mobject):
+    """ PMojbect defines a mathematical object as an array of points 
+        in R3 instead of as a vector curve 
+    """
     def init_points(self):
+        """ the init_points method creates empty 0x3 arrays to hold 
+            points and rgb tuples 
+        """
         self.rgbs = np.zeros((0, 3))
         self.points = np.zeros((0, 3))
         return self
 
     def get_array_attrs(self):
+        """ 
+        """
         return Mobject.get_array_attrs(self) + ["rgbs"]
 
     def add_points(self, points, rgbs = None, color = None):
-        """
+        """ 
         points must be a Nx3 numpy array, as must rgbs if it is not None
         """
         if not isinstance(points, np.ndarray):
@@ -27,6 +35,8 @@ class PMobject(Mobject):
         return self
 
     def highlight(self, color = YELLOW_C, family = True, condition = None):
+        """ 
+        """
         rgb = Color(color).get_rgb()
         mobs = self.family_members_with_points() if family else [self]
         for mob in mobs:
@@ -38,6 +48,8 @@ class PMobject(Mobject):
         return self
 
     def gradient_highlight(self, start_color, end_color):
+        """ 
+        """
         start_rgb, end_rgb = [
             np.array(Color(color).get_rgb())
             for color in start_color, end_color
@@ -183,4 +195,3 @@ class Point(PMobject):
     def __init__(self, location = ORIGIN, **kwargs):
         PMobject.__init__(self, **kwargs)
         self.add_points([location])
-

@@ -55,27 +55,38 @@ class Camera(object):
             self.background[:,:] = background_rgb
 
     def get_image(self):
+        """ the get_image method returns an array of an array of pixels
+        """
         return np.array(self.pixel_array)
 
     def set_image(self, pixel_array):
+        """ create an array of pixels representing the image
+        """
         self.pixel_array = np.array(pixel_array)
 
     def set_background(self, pixel_array):
+        """ create an array of pixels for the background
+        """
         self.background = np.array(pixel_array)
 
     def reset(self):
+        """ The reset method resets the current image to the background
+        """
         self.set_image(np.array(self.background))
 
     def capture_mobject(self, mobject):
         return self.capture_mobjects([mobject])
 
     def capture_mobjects(self, mobjects, include_submobjects = True):
+        """ the capture_mobjects method takes in an array (list?) of 
+            mobjects, and 
+        """ 
         if include_submobjects:
             mobjects = it.chain(*[
                 mob.family_members_with_points() 
                 for mob in mobjects
             ])
-        vmobjects = []
+        vmobjects = []  # create an empty list to be populated w/ vectorized mobjects
         for mobject in mobjects:
             if isinstance(mobject, VMobject):
                 vmobjects.append(mobject)
@@ -287,13 +298,3 @@ class MovingCamera(Camera):
         self.resize_space_shape(
             0 if self.aligned_dimension == "height" else 1
         )
-
-
-
-
-
-
-
-
-
-

@@ -18,7 +18,7 @@ from helpers import *
 
 class Mobject(object):
     """
-    Mathematical Object
+    Mathematical Object 
     """
     CONFIG = {
         "color"        : WHITE,
@@ -28,7 +28,7 @@ class Mobject(object):
         "target"       : None,
     }
     def __init__(self, *submobjects, **kwargs):
-        digest_config(self, kwargs)
+        digest_config(self, kwargs) # inherit config from submobjects
         if not all(map(lambda m : isinstance(m, Mobject), submobjects)):
             raise Exception("All submobjects must be of type Mobject")
         self.submobjects = list(submobjects)
@@ -54,6 +54,9 @@ class Mobject(object):
         pass
 
     def add(self, *mobjects):
+        """ The add method allows for on-the-fly updating of what mobjects
+            are contained in mobject 
+        """
         self.submobjects = list_update(self.submobjects, mobjects)
         return self
 
@@ -76,6 +79,7 @@ class Mobject(object):
         Ensures all attributes which are mobjects are included
         in the submobjects list.
         """
+        # get a list of all the mobjects
         mobject_attrs = filter(
             lambda x : isinstance(x, Mobject),
             self.__dict__.values()
@@ -84,6 +88,8 @@ class Mobject(object):
         return self
 
     def apply_over_attr_arrays(self, func):
+        """
+        """ 
         for attr in self.get_array_attrs():
             setattr(self, attr, func(getattr(self, attr)))
         return self
