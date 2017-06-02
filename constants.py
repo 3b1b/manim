@@ -6,8 +6,8 @@ import numpy as np
 
 
 # Set default animation resolution
-DEFAULT_HEIGHT = 1080
-DEFAULT_WIDTH  = 1920
+DEFAULT_HEIGHT = 4*1080
+DEFAULT_WIDTH  = 4*1920
 
 # Set FPS 
 LOW_QUALITY_FRAME_DURATION = 1./20
@@ -32,29 +32,29 @@ LOW_QUALITY_CAMERA_CONFIG = {
     "pixel_shape" : (480, 853),
 }
 
-###### To be honest I currently don't know what this does 
+# The density of points in point-cloud mobjects.  
 DEFAULT_POINT_DENSITY_2D = 25 
 DEFAULT_POINT_DENSITY_1D = 250
 
-######
+# point thickness for point-cloud mobjects
 DEFAULT_POINT_THICKNESS = 4
 
-######
+# float parameter for height/width of the space
 #TODO, Make sure these are not needed
 SPACE_HEIGHT = 4.0
+# define a float value for space width in terms of aspect ratio
 SPACE_WIDTH = SPACE_HEIGHT * DEFAULT_WIDTH / DEFAULT_HEIGHT
 
-##### I'm guessing this is frame buffer?  But can't tell
+# I think this is time buffer between things...??
 SMALL_BUFF = 0.1
 MED_SMALL_BUFF = 0.25
 MED_LARGE_BUFF = 0.5
 LARGE_BUFF = 1
 
-###### 
+#
 DEFAULT_MOBJECT_TO_EDGE_BUFFER = MED_LARGE_BUFF
 DEFAULT_MOBJECT_TO_MOBJECT_BUFFER = MED_SMALL_BUFF
 
-###### 
 #All in seconds
 DEFAULT_ANIMATION_RUN_TIME = 1.0
 DEFAULT_POINTWISE_FUNCTION_RUN_TIME = 3.0

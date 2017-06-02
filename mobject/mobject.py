@@ -43,6 +43,7 @@ class Mobject(object):
         return str(self.name)
 
     def init_points(self):
+        # initialize an empty array of dim-dimensional points 
         self.points = np.zeros((0, self.dim))
 
     def init_colors(self):
@@ -61,7 +62,10 @@ class Mobject(object):
         return self
 
     def add_to_back(self, *mobjects):
-        self.remove(*mobjects)
+        """ This time, remove the objects before adding them 
+            to the front of the list. 
+        """
+        self.remove(*mobjects) # what does the * do???? why is it not in the next line?
         self.submobjects = list(mobjects) + self.submobjects
         return self
 
@@ -84,6 +88,7 @@ class Mobject(object):
             lambda x : isinstance(x, Mobject),
             self.__dict__.values()
         )
+        # ensure submobjects list contains these 
         self.submobjects = list_update(self.submobjects, mobject_attrs)
         return self
 
@@ -576,6 +581,9 @@ class Mobject(object):
         return remove_list_redundancies(all_mobjects)
 
     def family_members_with_points(self):
+        """ This method checks all of the submobjects in self, and 
+            returns a list of all the submobjects with defined points
+        """
         return filter(
             lambda m : m.get_num_points() > 0,
             self.submobject_family()

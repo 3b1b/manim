@@ -23,7 +23,8 @@ class Camera(object):
     }
 
     def __init__(self, background = None, **kwargs):
-        digest_config(self, kwargs, locals())
+        # inherit configs from parent (?) classes
+        digest_config(self, kwargs, locals()) 
         self.init_background()
         self.resize_space_shape()
         self.reset()
@@ -44,8 +45,8 @@ class Camera(object):
         self.space_shape = (space_height, space_width)
 
     def init_background(self):
-        if self.background is not None:
-            self.pixel_shape = self.background.shape[:2]
+        if self.background is not None: # if we have something for background
+            self.pixel_shape = self.background.shape[:2] # pass it to .pixel_shape
         else:
             background_rgb = color_to_int_rgb(self.background_color)
             self.background = np.zeros(
@@ -79,7 +80,7 @@ class Camera(object):
 
     def capture_mobjects(self, mobjects, include_submobjects = True):
         """ the capture_mobjects method takes in an array (list?) of 
-            mobjects, and 
+            mobjects, and adjust the point array to capture them.  
         """ 
         if include_submobjects:
             mobjects = it.chain(*[
@@ -88,11 +89,16 @@ class Camera(object):
             ])
         vmobjects = []  # create an empty list to be populated w/ vectorized mobjects
         for mobject in mobjects:
+            # if it's a vectorized mobject, put it in the list
             if isinstance(mobject, VMobject):
                 vmobjects.append(mobject)
+            # ...else it's a point-cloud object
             elif isinstance(mobject, PMobject):
+                # display the vectorized mobjects
                 self.display_multiple_vectorized_mobjects(vmobjects)
+                # empty the list of vectorized mobjects after displaying them
                 vmobjects = []
+                # display the point cloud objects 
                 self.display_point_cloud(
                     mobject.points, mobject.rgbs, 
                     self.adjusted_thickness(mobject.stroke_width)
@@ -101,6 +107,10 @@ class Camera(object):
         self.display_multiple_vectorized_mobjects(vmobjects)
 
     def display_multiple_vectorized_mobjects(self, vmobjects):
+        """ Takes as input an array of vectorized mobjects (defined
+            in .mobjects) and adds them to the pixel array for our 
+            picture.
+        """
         if len(vmobjects) == 0:
             return
         #More efficient to bundle together in one "canvas"
@@ -108,21 +118,35 @@ class Camera(object):
         canvas = aggdraw.Draw(image)
         for vmobject in vmobjects:
             self.display_vectorized(vmobject, canvas)
+        # reset the canvas
         canvas.flush()
+        # redefine the mobject pixel array with the new stuff
         self.pixel_array[:,:] = np.array(image)
 
 
 
     def display_region(self, region):
+        """ display_region 
+        """
+        # get the dimensions of the object
         (h, w) = self.pixel_shape
+        # take the ratio of the pixel image dimensions vs. the float 
+        # space image dimensions and multiply it by 2 to allow for 
+        # custom origin definition.  
         scalar = 2*self.space_shape[0] / h
+        # add the left and right halves of x axis, and also the origin
         xs =  scalar*np.arange(-w/2, w/2)+self.space_center[0]
+        # do the same but for y's 
         ys = -scalar*np.arange(-h/2, h/2)+self.space_center[1]
+        # convert x_list 
         x_array = np.dot(np.ones((h, 1)), xs.reshape((1, w)))
+        # 
         y_array = np.dot(ys.reshape(h, 1), np.ones((1, w)))
+        # map a True value to every point covered by the region
         covered = region.condition(x_array, y_array)
         rgb = np.array(Color(region.color).get_rgb())
         rgb = (255*rgb).astype('uint8')
+        # put colors in for the covered pixels
         self.pixel_array[covered] = rgb
 
 
@@ -285,6 +309,8 @@ class MovingCamera(Camera):
         Camera.__init__(self, **kwargs)
 
     def capture_mobjects(self, *args, **kwargs):
+        """ 
+        """
         self.space_center = self.mobject.get_center()
         self.realign_space_shape()        
         Camera.capture_mobjects(self, *args, **kwargs)

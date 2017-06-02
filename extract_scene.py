@@ -40,8 +40,8 @@ NO_SCENE_MESSAGE = """
 
 
 def get_configuration(sys_argv):
-   try:
-      opts, args = getopt.getopt(sys_argv[1:], 'hlmpwsqao:')
+   try:  # get everything but the script name, and pass in the possible flags?
+      opts, args = getopt.getopt(sys_argv[1:], 'hlmpwsqao:') 
    except getopt.GetoptError as err:
       print str(err)
       sys.exit(2)
