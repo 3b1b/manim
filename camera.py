@@ -156,12 +156,20 @@ class Camera(object):
             #of by their parent
             return
         pen, fill = self.get_pen_and_fill(vmobject)
+        # get string representing drawing path for 
+        # the vector object
         pathstring = self.get_pathstring(vmobject)
+        # create a symbol object for use drawing 
         symbol = aggdraw.Symbol(pathstring)
+        # draw it on the canvas 
         canvas.symbol((0, 0), symbol, pen, fill)
 
 
     def get_pen_and_fill(self, vmobject):
+        """ takes in a vector mobject and returns the pen (outline)
+            parameters, and the brush (fill) parameters 
+        """
+        # why in the crap is this defined after being called 
         pen = aggdraw.Pen(
             self.get_stroke_color(vmobject).get_hex_l(),
             max(vmobject.stroke_width, 0)
@@ -179,20 +187,25 @@ class Camera(object):
         return vmobject.get_fill_color()
 
     def get_pathstring(self, vmobject):
+        """ get_pathstring takes as input a vectorized mobject, 
+            and ... I aint reading 
+        """
         result = ""        
         for mob in [vmobject]+vmobject.get_subpath_mobjects():
             points = mob.points
-            # points = self.adjust_out_of_range_points(points)            
+            # points = self.adjust_out_of_range_points(points)
             if len(points) == 0:
                 continue
-            points = self.align_points_to_camera(points)
-            coords = self.points_to_pixel_coords(points)
+            points = self.align_points_to_camera(points) # why isn't this defined above the first call
+            coords = self.points_to_pixel_coords(points) # why
             start = "M%d %d"%tuple(coords[0])
-            #(handle1, handle2, anchor) tripletes
+            #(handle1, handle2, anchor) triplets
+            # somethingsomething V E C T O R graphics
             triplets = zip(*[
                 coords[i+1::3]
                 for i in range(3)
             ])
+            # make them into a vectorized path string?
             cubics = [
                 "C" + " ".join(map(str, it.chain(*triplet)))
                 for triplet in triplets
@@ -202,26 +215,35 @@ class Camera(object):
         return result
 
     def display_point_cloud(self, points, rgbs, thickness):
+        """ Takes as input an array of points, rgb values, and the 
+            pixel thickness for the points.  
+        """
         if len(points) == 0:
             return
         points = self.align_points_to_camera(points)
         pixel_coords = self.points_to_pixel_coords(points)
+        # why keep calling things before they're defined :(
+        # ...I guess thicken the objects 
         pixel_coords = self.thickened_coordinates(
             pixel_coords, thickness
         )
 
         rgbs = (255*rgbs).astype('uint8')
         target_len = len(pixel_coords)
+        # how many points did we add when thickening ? 
         factor = target_len/len(rgbs)
+        # use it to adjust the rgb array to correspond too 
         rgbs = np.array([rgbs]*factor).reshape((target_len, 3))
 
-        on_screen_indices = self.on_screen_pixels(pixel_coords)        
+        on_screen_indices = self.on_screen_pixels(pixel_coords) 
+        # which... points are in the display window???? #####
         pixel_coords = pixel_coords[on_screen_indices]        
         rgbs = rgbs[on_screen_indices]
 
         ph, pw = self.pixel_shape
 
-        flattener = np.array([1, pw], dtype = 'int')
+        #####
+        flattener = np.array([1, pw], dtype = 'int') 
         flattener = flattener.reshape((2, 1))
         indices = np.dot(pixel_coords, flattener)[:,0]
         indices = indices.astype('int')
@@ -236,6 +258,7 @@ class Camera(object):
         return points - self.space_center
 
     def adjust_out_of_range_points(self, points):
+        #####
         if not np.any(points > self.max_allowable_norm):
             return points
         norms = np.apply_along_axis(np.linalg.norm, 1, points)
@@ -251,6 +274,10 @@ class Camera(object):
         return points
 
     def points_to_pixel_coords(self, points):
+        """ takes in an array of points in our defined space (floats) 
+            and maps them to discrete pixel values, returning this 
+            pixel array 
+        """
         result = np.zeros((len(points), 2))
         ph, pw = self.pixel_shape
         sh, sw = self.space_shape
@@ -266,6 +293,7 @@ class Camera(object):
         return result.astype('int')
 
     def on_screen_pixels(self, pixel_coords):
+        #####
         return reduce(op.and_, [
             pixel_coords[:,0] >= 0,
             pixel_coords[:,0] < self.pixel_shape[1],
@@ -274,11 +302,13 @@ class Camera(object):
         ])
 
     def adjusted_thickness(self, thickness):
+        #####
         big_shape = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_shape"]
         factor = sum(big_shape)/sum(self.pixel_shape)
         return 1 + (thickness-1)/factor
 
     def get_thickening_nudges(self, thickness):
+        ##### I'm too tired to think this one through atm 
         _range = range(-thickness/2+1, thickness/2+1)
         return np.array(
             list(it.product([0], _range))+
@@ -309,7 +339,7 @@ class MovingCamera(Camera):
         Camera.__init__(self, **kwargs)
 
     def capture_mobjects(self, *args, **kwargs):
-        """ 
+        """ Centers the space on the mobject in question 
         """
         self.space_center = self.mobject.get_center()
         self.realign_space_shape()        
