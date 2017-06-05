@@ -268,24 +268,37 @@ class Mobject(object):
         return self
 
     def do_in_place(self, method, *args, **kwargs):
-        """ do_in_place 
+        """ This method applies another method to self without re-shifting it 
+            to be centered on a point. The input "method" should be a function, 
+            and *args and **kwargs should be its positional and keyword arguments
+            respectively.  
         """
         self.do_about_point(self.get_center(), method, *args, **kwargs)
         return self
 
     def rotate_in_place(self, angle, axis = OUT, axes = []):
+        """ Takes as input an angle in radians, and an axis (or list 
+            of axes) about which to rotate.  Axes are stored as arrays. 
+        """
         self.do_in_place(self.rotate, angle, axis, axes)
         return self
 
     def flip(self, axis = UP):
+        """ This method reflects the mobject across the given axis
+        """
         self.rotate_in_place(np.pi, axis)
         return self
 
     def scale_in_place(self, scale_factor):
+        """ Basically scales mobject by a float scale_factor 
+        """
         self.do_in_place(self.scale, scale_factor)
         return self
 
     def scale_about_point(self, scale_factor, point):
+        """ Takes as input a float scale_factor, and an array
+            defining a point to scale about (point)
+        """
         self.do_about_point(point, self.scale, scale_factor)
         return self
 
@@ -294,6 +307,7 @@ class Mobject(object):
         return self
 
     def center(self):
+        # redefines all points relative to the center 
         self.shift(-self.get_center())
         return self
 
@@ -302,7 +316,9 @@ class Mobject(object):
         Direction just needs to be a vector pointing towards side or
         corner in the 2d plane.
         """
+        # get point direction we want the border to be 
         target_point = np.sign(direction) * (SPACE_WIDTH, SPACE_HEIGHT, 0)
+        #####
         point_to_align = self.get_critical_point(direction)
         shift_val = target_point - point_to_align - buff * np.array(direction)
         shift_val = shift_val * abs(np.sign(direction))
@@ -310,6 +326,8 @@ class Mobject(object):
         return self
 
     def to_corner(self, corner = LEFT+DOWN, buff = DEFAULT_MOBJECT_TO_EDGE_BUFFER):
+        """ aligns the mobject in a specified corner 
+        """
         return self.align_on_border(corner, buff)
 
     def to_edge(self, edge = LEFT, buff = DEFAULT_MOBJECT_TO_EDGE_BUFFER):
@@ -321,6 +339,7 @@ class Mobject(object):
                 aligned_edge = ORIGIN,
                 align_using_submobjects = False,
                 ):
+        #####
         if isinstance(mobject_or_point, Mobject):
             mob = mobject_or_point
             target_point = mob.get_critical_point(
@@ -338,14 +357,18 @@ class Mobject(object):
 
 
     def shift_onto_screen(self, **kwargs):
-        space_lengths = [SPACE_WIDTH, SPACE_HEIGHT]
+        space_lengths = [SPACE_WIDTH, SPACE_HEIGHT] # get space parameters
         for vect in UP, DOWN, LEFT, RIGHT:
-            dim = np.argmax(np.abs(vect))
+            # get which np array dimension this vect corresponds to 
+            dim = np.argmax(np.abs(vect)) 
+            # sees if kwargs has an attribute "buff," and if not use default
             buff = kwargs.get("buff", DEFAULT_MOBJECT_TO_EDGE_BUFFER)
+            # finds the maximum possible value in the dim axis we can have
             max_val = space_lengths[dim] - buff
+            #####
             edge_center = self.get_edge_center(vect)
-            if np.dot(edge_center, vect) > max_val:
-                self.to_edge(vect, **kwargs)
+            if np.dot(edge_center, vect) > max_val: # if the edge is off the screen
+                self.to_edge(vect, **kwargs) # send mobject to the edge in vect 
         return self
 
     def is_off_screen(self):
@@ -373,7 +396,7 @@ class Mobject(object):
             return self
         if stretch:
             self.stretch_in_place(length/old_length, dim)
-        else:
+        else: # fit self into the specified length in dim dim
             self.scale_in_place(length/old_length)
         return self
 
@@ -540,7 +563,8 @@ class Mobject(object):
             return self.get_submobject_critical_point(direction)
         result = np.zeros(self.dim)
         for dim in range(self.dim):
-            if direction[dim] <= 0:
+            if direction[dim] <= 0: # if we're pointing at all in a negative dir
+                # I just don't understand why functions would ever be defined before calls
                 min_point = self.reduce_across_dimension(np.min, np.min, dim)
             if direction[dim] >= 0:
                 max_point = self.reduce_across_dimension(np.max, np.max, dim)

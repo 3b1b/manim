@@ -45,7 +45,7 @@ SPACE_HEIGHT = 4.0
 # define a float value for space width in terms of aspect ratio
 SPACE_WIDTH = SPACE_HEIGHT * DEFAULT_WIDTH / DEFAULT_HEIGHT
 
-# I think this is time buffer between things...??
+# Space buffer between mobjects 
 SMALL_BUFF = 0.1
 MED_SMALL_BUFF = 0.25
 MED_LARGE_BUFF = 0.5
