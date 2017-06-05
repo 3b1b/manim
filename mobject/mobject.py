@@ -93,27 +93,35 @@ class Mobject(object):
         return self
 
     def apply_over_attr_arrays(self, func):
-        """
+        """ applies a function func to each of the arrays 
+            of attributes 
         """ 
         for attr in self.get_array_attrs():
             setattr(self, attr, func(getattr(self, attr)))
         return self
 
     def get_image(self):
+        """ get_image uses camera to capture a pixel array of 
+            the mobject and then feeds it to Image to generate
+            an ouptut image 
+        """
         from camera import Camera
         camera = Camera()
         camera.capture_mobject(self)
         return Image.fromarray(camera.get_image())
 
     def show(self):
+        # ... show the image 
         self.get_image().show()
 
     def save_image(self, name = None):
+        # save the image to 
         self.get_image().save(
             os.path.join(MOVIE_DIR, (name or str(self)) + ".png")
         )
 
     def copy(self):
+        # creates a deep copy of the mobject 
         copy_mobject = copy.copy(self)
         copy_mobject.points = np.array(self.points)
         copy_mobject.submobjects = [
@@ -125,6 +133,7 @@ class Mobject(object):
         return copy.deepcopy(self)
 
     def generate_target(self):
+        ##### no idea what this does
         self.target = None #Prevent exponential explosion
         self.target = self.copy()
         return self.target
@@ -132,10 +141,15 @@ class Mobject(object):
     #### Transforming operations ######
 
     def apply_to_family(self, func):
+        # apply a function func to all nonempty family members
         for mob in self.family_members_with_points():
             func(mob)
 
     def shift(self, *vectors):
+        """ Takes as input some sort of array (or list) of vectors, 
+            and adds together all the given vectors into a total shift 
+            vector and then apply it to shift each of the mobject points
+        """
         total_vector = reduce(op.add, vectors)
         for mob in self.family_members_with_points():
            mob.points = mob.points.astype('float')
@@ -144,6 +158,12 @@ class Mobject(object):
 
 
     def scale(self, scale_factor, about_point = None):
+        """ The scale method scales an mobject by a given float 
+            factor, scale_factor.  If about_point is not none, 
+            about_point should be some tuple (or array) identifying
+            the point about which the scaling should occur (the 
+            point that'll be acting as the origin during scaling). 
+        """ 
         if about_point is not None:
             self.shift(-about_point)
         for mob in self.family_members_with_points():
@@ -153,6 +173,12 @@ class Mobject(object):
         return self
 
     def rotate_about_origin(self, angle, axis = OUT, axes = []):
+        """ This method takes a float input angle (in radians), 
+            and optional arguments defining a rotation axis (or axes) 
+            about which to rotate the space.  Then, it applies a 
+            rotation matrix to each of the points in the mobject, and
+            returns this rotated mobject. 
+        """
         if len(axes) == 0:
             axes = [axis]
         rot_matrix = np.identity(self.dim)
@@ -164,6 +190,9 @@ class Mobject(object):
         return self
 
     def rotate(self, angle, axis = OUT, axes = [], about_point = None):
+        """ same as rotate_about_origin(), but can rotate about an 
+            arbitrary point.  
+        """
         if about_point is None:
             self.rotate_about_origin(angle, axis, axes)
         else:
@@ -171,6 +200,9 @@ class Mobject(object):
         return self
 
     def stretch(self, factor, dim):
+        """ I'm not sure #####, but I think this takes some dimension 
+            of the object and...stretches it along that axis?????
+        """
         for mob in self.family_members_with_points():
             mob.points[:,dim] *= factor
         return self
@@ -181,11 +213,17 @@ class Mobject(object):
         return self
 
     def wag(self, direction = RIGHT, axis = DOWN, wag_factor = 1.0):
+        """ 
+        """
         for mob in self.family_members_with_points():
-            alphas = np.dot(mob.points, np.transpose(axis))
-            alphas -= min(alphas)
-            alphas /= max(alphas)
+            alphas = np.dot(mob.points, np.transpose(axis)) # get the values 
+            # of the components of the points (defined by arrays) in direction axis 
+            alphas -= min(alphas) # define them in terms of distance from the smallest
+            # alpha.  E.g., [-1.,-4.,-7.,-10.,-13.] --> [12., 9., 6., 3., 0.]
+            alphas /= max(alphas) # scale in terms of largest alpha value.  E.g., 
+            # [12., 9., 6., 3., 0.] --> [1., 0.75, 0.5, 0.25, 0.]
             alphas = alphas**wag_factor
+            # adds alphas values to each of the points' components in the direction 
             mob.points += np.dot(
                 alphas.reshape((len(alphas), 1)),
                 np.array(direction).reshape((1, mob.dim))
@@ -203,11 +241,14 @@ class Mobject(object):
         """
         This can make transition animations nicer
         """
+        # repeat_array will make a new array of the input array appended 
+        # to itself count many times. 
         def repeat_array(array):
             return reduce(
                 lambda a1, a2 : np.append(a1, a2, axis = 0),
                 [array]*count
             )
+        # apply repeat to each of the atributes 
         for mob in self.family_members_with_points():
             mob.apply_over_attr_arrays(repeat_array)
         return self
@@ -215,12 +256,20 @@ class Mobject(object):
     #### In place operations ######
 
     def do_about_point(self, point, method, *args, **kwargs):
+        """ This method takes as input an array definint a point, 
+            a function method to do, and the optional positional and
+            keyword arguments for the method.  Then, it shifts the 
+            mobject such that point is the origin, and applies method 
+            to the mobject, and finally returns it to its starting point.
+        """
         self.shift(-point)
         method(*args, **kwargs)
         self.shift(point)
         return self
 
     def do_in_place(self, method, *args, **kwargs):
+        """ do_in_place 
+        """
         self.do_about_point(self.get_center(), method, *args, **kwargs)
         return self
 

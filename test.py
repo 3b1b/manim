@@ -1806,6 +1806,6 @@ class MatrixToBlank(Scene):
 class ExampleTransformation(LinearTransformationScene):
     def construct(self):
         self.setup()
-        self.apply_transposed_matrix([[3, 4], [7, 8]])
+        self.apply_transposed_matrix([[1, 2], [-1, 2]])
         self.dither(2)
 

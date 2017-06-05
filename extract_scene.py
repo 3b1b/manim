@@ -96,6 +96,8 @@ def get_configuration(sys_argv):
    return config
 
 def handle_scene(scene, **config):
+   """ handle scene takes an 
+   """
    if config["quiet"]:
       curr_stdout = sys.stdout
       sys.stdout = open(os.devnull, "w")

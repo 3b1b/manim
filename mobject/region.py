@@ -20,10 +20,13 @@ class Region(Mobject):
         a function from R^2 to {True, False}, but & and | must be
         used in place of "and" and "or"
         """
-        Mobject.__init__(self, **kwargs)
+        Mobject.__init__(self, **kwargs) # literally what
         self.condition = condition
 
     def _combine(self, region, op):
+        """ general method for interactions btwn regions 
+            (union, intersect, complement)
+        """
         self.condition = lambda x, y : op(
             self.condition(x, y),
             region.condition(x, y)
