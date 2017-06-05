@@ -708,6 +708,8 @@ class Mobject(object):
         return self
 
     def sort_submobjects(self, point_to_num_func = lambda p : p[0]):
+        """ #####
+        """
         self.submobjects.sort(
             lambda *mobs : cmp(*[
                 point_to_num_func(mob.get_center())
@@ -718,6 +720,7 @@ class Mobject(object):
 
     ## Alignment
     def align_data(self, mobject):
+        # WHY ARE ALL YOUR FUNCTIONS DEFINED AFTER BEING CALLED AAAAAAAAAHHHHH
         self.align_submobjects(mobject)
         self.align_points(mobject)
         #Recurse
@@ -745,6 +748,9 @@ class Mobject(object):
         raise Exception("Not implemented")
 
     def align_submobjects(self, mobject):
+        """ This method takes as input an object mobject, and checks whether 
+            either self or mobject is empty.  If so, then #####
+        """
         #If one is empty, and the other is not,
         #push it into its submobject list
         self_has_points, mob_has_points = [
@@ -767,7 +773,7 @@ class Mobject(object):
     def null_point_align(self, mobject):
         """
         If self has no points, but needs to align
-        with mobject, which has points
+        with mobject, which has points #####
         """
         if self.submobjects:
             mobject.push_self_into_submobjects()
@@ -777,6 +783,8 @@ class Mobject(object):
 
 
     def push_self_into_submobjects(self):
+        """ makes self a submobject of itself #####
+        """
         copy = self.copy()
         copy.submobjects = []
         self.init_points()
