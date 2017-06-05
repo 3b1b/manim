@@ -442,6 +442,7 @@ class Mobject(object):
         return self
 
     def replace(self, mobject, dim_to_match = 0, stretch = False):
+        #####
         if not mobject.get_num_points() and not mobject.submobjects:
             raise Warning("Attempting to replace mobject with no points")
             return self
@@ -458,6 +459,7 @@ class Mobject(object):
         return self
 
     def position_endpoints_on(self, start, end):
+        #####
         curr_vect = self.points[-1] - self.points[0]
         if np.all(curr_vect == 0):
             raise Exception("Cannot position endpoints of closed loop")
@@ -564,6 +566,8 @@ class Mobject(object):
             return 0
 
     def get_merged_array(self, array_attr):
+        """ #####
+        """
         result = np.zeros((0, self.dim))
         for mob in self.family_members_with_points():
             result = np.append(result, getattr(mob, array_attr), 0)

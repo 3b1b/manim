@@ -114,7 +114,9 @@ class PMobject(Mobject):
         return self
 
     def fade_to(self, color, alpha):
-        """ 
+        """ This method takes an input color defined by a string, rgb, etc. 
+            and then fades to a color alpha of the way between the current 
+            color and the input color. 
         """
         self.rgbs = interpolate(self.rgbs, np.array(Color(color).rgb), alpha)
         for mob in self.submobjects:
@@ -126,9 +128,9 @@ class PMobject(Mobject):
 
     def ingest_submobjects(self):
         attrs = self.get_array_attrs()
-        arrays = map(self.get_merged_array, attrs)
+        arrays = map(self.get_merged_array, attrs) # get attr arrays from submobjects
         for attr, array in zip(attrs, arrays):
-            setattr(self, attr, array)
+            setattr(self, attr, array) #####
         self.submobjects = []
         return self
 
@@ -136,6 +138,8 @@ class PMobject(Mobject):
         return Color(rgb = self.rgbs[0, :])
 
     def point_from_proportion(self, alpha):
+        """ 
+        """
         index = alpha*(self.get_num_points()-1)
         return self.points[index]
 
