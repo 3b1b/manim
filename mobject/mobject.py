@@ -339,6 +339,15 @@ class Mobject(object):
                 aligned_edge = ORIGIN,
                 align_using_submobjects = False,
                 ):
+        """ This method takes in mobject_or_point (an mobject or point array),
+            direction (an array defining a direction vector), buff (a float
+            giving the spacing bewteen self and other stuff), aligned_edge (
+            an array defining the direction we're aligning relative to), and 
+            align_using_submobjects, a bool indicating whether we should use 
+            submobjects in getting critical points and stuff. Then, next_to
+            positions self next to mobject_or_point on the direction side, 
+            etc. 
+        """
         #####
         if isinstance(mobject_or_point, Mobject):
             mob = mobject_or_point
@@ -349,9 +358,10 @@ class Mobject(object):
         else:
             target_point = mobject_or_point
         point_to_align = self.get_critical_point(
-            aligned_edge-direction,
-            use_submobject = align_using_submobjects
+            aligned_edge-direction, 
+            use_submobject = align_using_submobjects # bool, true or false
         )
+        # puts mobject next to input mobject_or_point, 
         self.shift(target_point - point_to_align + buff*direction)
         return self
 
@@ -671,7 +681,9 @@ class Mobject(object):
         return result + self.submobjects # return list of all stuff with points 
 
     def submobject_family(self):
+        # recursively get submobject families 
         sub_families = map(Mobject.submobject_family, self.submobjects)
+        # put all submobject familes into the list
         all_mobjects = [self] + list(it.chain(*sub_families))
         return remove_list_redundancies(all_mobjects)
 
@@ -685,10 +697,14 @@ class Mobject(object):
         )
 
     def arrange_submobjects(self, direction = RIGHT, center = True, **kwargs):
+        """ This method puts all of the submobjects in self next to each other, 
+            sequentially placing each additional mobject to the "direction" of 
+            self.  
+        """
         for m1, m2 in zip(self.submobjects, self.submobjects[1:]):
             m2.next_to(m1, direction, **kwargs)
-        if center:
-            self.center()
+        if center: 
+            self.center() # center-alignment of resulting line of submobjects
         return self
 
     def sort_submobjects(self, point_to_num_func = lambda p : p[0]):
