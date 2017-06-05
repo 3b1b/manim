@@ -413,6 +413,10 @@ class Mobject(object):
         return self.rescale_to_fit(height, 1, stretch = False)
 
     def space_out_submobjects(self, factor = 1.5, **kwargs):
+        """ Why are **kwargs in the function definition when they appear 
+            to just not be used at all here?  Anyways, spaces out submojbects
+            by scaling each down by factor.  
+        """
         self.scale_in_place(factor)
         for submob in self.submobjects:
             submob.scale_in_place(1./factor)
@@ -527,6 +531,14 @@ class Mobject(object):
         )
 
     def reduce_across_dimension(self, points_func, reduce_func, dim):
+        """ Takes as input two functions, points_func and reduce_func, 
+            then tries to apply points_func over the points defining
+            mobject's boundary in dimension dim.  If this works, then 
+            it tries applying reduce_func to all these modified points. 
+            If it didn't work, that's probably because the mobject 
+            has no points itself and the points are all contained 
+            in submobjects.  
+        """
         try:
             points = self.get_points_defining_boundary()
             values = [points_func(points[:, dim])]
@@ -559,16 +571,19 @@ class Mobject(object):
         return len(self.points)
 
     def get_critical_point(self, direction, use_submobject = False):
+        """ Gets relative max, min, or average of both in the direction
+            direction 
+        """
         if use_submobject:
             return self.get_submobject_critical_point(direction)
-        result = np.zeros(self.dim)
-        for dim in range(self.dim):
+        result = np.zeros(self.dim) # create an array of 0s of correct dim tow rite to
+        for dim in range(self.dim): # for each of the dims 
             if direction[dim] <= 0: # if we're pointing at all in a negative dir
                 # I just don't understand why functions would ever be defined before calls
                 min_point = self.reduce_across_dimension(np.min, np.min, dim)
+                # finds the global minimum in dimension dim 
             if direction[dim] >= 0:
                 max_point = self.reduce_across_dimension(np.max, np.max, dim)
-
             if direction[dim] == 0:
                 result[dim] = (max_point+min_point)/2
             elif direction[dim] < 0:
@@ -578,6 +593,7 @@ class Mobject(object):
         return result
 
     def get_submobject_critical_point(self, direction):
+        #####
         if len(self.split()) == 1:
             return self.get_critical_point(direction)
         with_points = self.family_members_with_points()
@@ -599,9 +615,15 @@ class Mobject(object):
         return self.get_critical_point(np.zeros(self.dim))
 
     def get_center_of_mass(self):
+        """ This method takes the average of all the points comprising self 
+        """
         return np.apply_along_axis(np.mean, 0, self.get_all_points())
 
     def get_boundary_point(self, direction):
+        """ This method takes as input an array direction defining 
+            the direction we'll be checking in, and then returns the 
+            points maximally in that direciton 
+        """
         all_points = self.get_all_points()
         return all_points[np.argmax(np.dot(all_points, direction))]
 
@@ -636,17 +658,17 @@ class Mobject(object):
     ## Family matters
 
     def __getitem__(self, index):
-        return self.split()[index]
+        return self.split()[index] # returns the value given index
 
     def __iter__(self):
-        return iter(self.split())
+        return iter(self.split()) # uses __getitem__ to get the "next" item
 
     def __len__(self):
-        return len(self.split())
+        return len(self.split()) # gives number of things 
 
     def split(self):
-        result = [self] if len(self.points) > 0 else []
-        return result + self.submobjects
+        result = [self] if len(self.points) > 0 else [] 
+        return result + self.submobjects # return list of all stuff with points 
 
     def submobject_family(self):
         sub_families = map(Mobject.submobject_family, self.submobjects)
