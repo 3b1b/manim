@@ -35,28 +35,33 @@ class PMobject(Mobject):
         return self
 
     def highlight(self, color = YELLOW_C, family = True, condition = None):
-        """ 
+        """ This method changes the color of a mobject depending on whether
+            a passed condition (condition) is true.  
         """
         rgb = Color(color).get_rgb()
         mobs = self.family_members_with_points() if family else [self]
         for mob in mobs:
-            if condition:
-                to_change = np.apply_along_axis(condition, 1, mob.points)
+            if condition: # if there's some sort of thing to check, then 
+                # change only the values that satisfy the condition 
+                to_change = np.apply_along_axis(condition, 1, mob.points) 
                 mob.rgbs[to_change, :] = rgb
             else:
                 mob.rgbs[:,:] = rgb
         return self
 
     def gradient_highlight(self, start_color, end_color):
-        """ 
+        """ Why not call color_gradient here?  Anyways, takes as input two 
+            rgb values (start_color and end_color) and interpolates an 
+            array of rgb values between the two colors.  Each point should
+            have a distinct rgb value. 
         """
         start_rgb, end_rgb = [
             np.array(Color(color).get_rgb())
             for color in start_color, end_color
         ]
         for mob in self.family_members_with_points():
-            num_points = mob.get_num_points()
-            mob.rgbs = np.array([
+            num_points = mob.get_num_points() 
+            mob.rgbs = np.array([# get the rgb values in a gradient between start+stop
                 interpolate(start_rgb, end_rgb, alpha)
                 for alpha in np.arange(num_points)/float(num_points)
             ])
@@ -64,15 +69,21 @@ class PMobject(Mobject):
 
 
     def match_colors(self, mobject):
+        """ This method takes as input an mobject, and then ... wait it might 
+            not be implemented yet. 
+        """
         Mobject.align_data(self, mobject)
         self.rgbs = np.array(mobject.rgbs)
         return self
 
     def filter_out(self, condition):
+        """ Takes as input a function condition.  ~np.apply_along_axis uses
+            condition to select the points to filter out.  
+        """
         for mob in self.family_members_with_points():
             to_eliminate = ~np.apply_along_axis(condition, 1, mob.points)
-            mob.points = mob.points[to_eliminate]
-            mob.rgbs = mob.rgbs[to_eliminate]
+            mob.points = mob.points[to_eliminate] # should this be to_keep?
+            mob.rgbs = mob.rgbs[to_eliminate] # should this be to_keep? 
         return self
 
     def thin_out(self, factor = 5):
@@ -90,16 +101,21 @@ class PMobject(Mobject):
 
     def sort_points(self, function = lambda p : p[0]):
         """
+        Sorts the points in self and its submobjects by function
+
         function is any map from R^3 to R
         """
         for mob in self.family_members_with_points():
+            # first applies a function along the axis, then sorts all the resulting pts 
             indices = np.argsort(
                 np.apply_along_axis(function, 1, mob.points)
             )
-            mob.apply_over_attr_arrays(lambda arr : arr[indices])
+            mob.apply_over_attr_arrays(lambda arr : arr[indices]) # overwrite 
         return self
 
     def fade_to(self, color, alpha):
+        """ 
+        """
         self.rgbs = interpolate(self.rgbs, np.array(Color(color).rgb), alpha)
         for mob in self.submobjects:
             mob.fade_to(color, alpha)

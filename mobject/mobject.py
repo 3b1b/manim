@@ -721,8 +721,8 @@ class Mobject(object):
     ## Alignment
     def align_data(self, mobject):
         # WHY ARE ALL YOUR FUNCTIONS DEFINED AFTER BEING CALLED AAAAAAAAAHHHHH
-        self.align_submobjects(mobject)
-        self.align_points(mobject)
+        self.align_submobjects(mobject) # 
+        self.align_points(mobject) # 
         #Recurse
         for m1, m2 in zip(self.submobjects, mobject.submobjects):
             m1.align_data(m2)
@@ -745,6 +745,7 @@ class Mobject(object):
         return self
 
     def align_points_with_larger(self, larger_mobject):
+        # oh.  I see.  Exciting.  
         raise Exception("Not implemented")
 
     def align_submobjects(self, mobject):
