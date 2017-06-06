@@ -63,7 +63,6 @@ class TexMobject(SVGMobject):
         #specialized path_string mobject
         return TexSymbol(path_string)
 
-
     def generate_points(self):
         SVGMobject.generate_points(self)
         if len(self.args) > 1:

@@ -1,11 +1,51 @@
 from helpers import *
 
+from scene import Scene
+
+from animation.animation import Animation
+from animation.transform import Transform
+
 from mobject import Mobject
 from mobject.vectorized_mobject import VGroup, VMobject, VectorizedPoint
 from mobject.svg_mobject import SVGMobject
-from mobject.tex_mobject import TextMobject, TexMobject
+from mobject.tex_mobject import TextMobject, TexMobject, Brace
 
 from topics.geometry import Circle, Line, Rectangle, Square, Arc, Polygon
+
+EPSILON = 0.0001
+
+class SampleSpaceScene(Scene):
+    def get_sample_space(self, **config):
+        self.sample_space = SampleSpace(**config)
+        return self.sample_space
+
+    def add_sample_space(self, **config):
+        self.add(self.get_sample_space(**config))
+
+    def change_horizontal_division(self, p_list, **kwargs):
+        assert(hasattr(self.sample_space, "horizontal_parts"))
+        added_anims = kwargs.pop("added_anims", [])
+        new_division_kwargs = kwargs.pop("new_division_kwargs", {})
+        added_label_kwargs = kwargs.pop("label_kwargs", {})
+
+        curr_parts = self.sample_space.horizontal_parts
+        new_division_kwargs["colors"] = [
+            part.get_color() for part in curr_parts
+        ]
+        new_parts = self.sample_space.get_horizontal_division(
+            p_list, **new_division_kwargs
+        )
+        anims = [Transform(curr_parts, new_parts)]
+        if hasattr(curr_parts, "labels"):
+            label_kwargs = curr_parts.label_kwargs
+            label_kwargs.update(added_label_kwargs)
+            new_labels = self.sample_space.get_subdivision_labels(
+                new_parts, **label_kwargs
+            )
+            anims.append(Transform(curr_parts.labels, new_labels))
+        anims += added_anims
+
+        self.play(*anims, **kwargs)
 
 
 class SampleSpace(VGroup):
@@ -16,7 +56,8 @@ class SampleSpace(VGroup):
             "fill_color" : DARK_GREY,
             "fill_opacity" : 0.8,
             "stroke_width" : 0,
-        }
+        },
+        "default_label_scale_val" : 0.7,
     }
     def __init__(self, **kwargs):
         VGroup.__init__(self, **kwargs)
@@ -31,31 +72,84 @@ class SampleSpace(VGroup):
         title_mob.next_to(self.full_space, UP, buff = buff)
         self.title = title_mob
         self.add(title_mob)
+
+    def add_label(self, label):
+        self.label = label
     
-    def divide_along_dimension(self, p, dim, colors):
+    def get_division_along_dimension(self, p_list, dim, colors, vect):
+        p_list = list(tuplify(p_list))
+        if abs(1.0 - sum(p_list)) > EPSILON:
+            p_list.append(1.0 - sum(p_list))
+        colors = color_gradient(colors, len(p_list))
         perp_dim = 1-dim
-        if dim == 0:
-            vects = [UP, DOWN]
-        else:
-            vects = [LEFT, RIGHT]
+
+        last_point = self.full_space.get_edge_center(-vect)
         parts = VGroup()
-        for factor, vect, color in zip([p, 1-p], vects, colors):
-            part = self.full_space.copy()
+        for factor, color in zip(p_list, colors):
+            part = SampleSpace()
             part.set_fill(color, 1)
+            part.replace(self.full_space, stretch = True)
             part.stretch(factor, perp_dim)
-            part.move_to(self.full_space, vect)
+            part.move_to(last_point, -vect)
+            last_point = part.get_edge_center(vect)
             parts.add(part)
         return parts
 
-    def divide_horizontally(self, p, colors = [GREEN_E, RED_E]):
-        result = self.divide_along_dimension(p, 0, colors)
-        self.top_part, self.bottom_part = result
-        return result
+    def get_horizontal_division(
+        self, p_list, 
+        colors = [GREEN_E, BLUE],
+        vect = DOWN 
+        ):
+        return self.get_division_along_dimension(p_list, 0, colors, vect)
 
-    def divide_vertically(self, p, colors = [MAROON_B, YELLOW]):
-        result = self.divide_along_dimension(p, 1, colors)
-        self.left_part, self.right_part = result
-        return result
+    def get_vertical_division(
+        self, p_list, 
+        colors = [MAROON_B, YELLOW],
+        vect = RIGHT
+        ):
+        return self.get_division_along_dimension(p_list, 1, colors, vect)
+
+    def divide_horizontally(self, *args, **kwargs):
+        self.horizontal_parts = self.get_horizontal_division(*args, **kwargs)
+        self.add(self.horizontal_parts)
+
+    def divide_vertically(self, *args, **kwargs):
+        self.vertical_parts = self.get_vertical_division(*args, **kwargs)
+        self.add(self.vertical_parts)
+
+    def get_subdivision_labels(self, parts, labels, direction, buff = SMALL_BUFF):
+        label_brace_groups = VGroup()
+        for label, part in zip(labels, parts):
+            brace = Brace(part, direction, min_num_quads = 1, buff = buff)
+            label_mob = TexMobject(label)
+            label_mob.scale(self.default_label_scale_val)
+            label_mob.next_to(brace, direction, buff)
+            full_label = VGroup(brace, label_mob)
+            part.add_label(full_label)
+            label_brace_groups.add(full_label)
+        parts.labels = label_brace_groups
+        parts.label_kwargs = {
+            "labels" : labels, 
+            "direction" : direction, 
+            "buff" : buff,
+        }
+        return label_brace_groups
+
+    def get_side_labels(self, labels, direction = LEFT, **kwargs):
+        assert(hasattr(self, "horizontal_parts"))
+        parts = self.horizontal_parts
+        return self.get_subdivision_labels(parts, labels, direction, **kwargs)
+
+    def get_top_labels(self, labels, **kwargs):
+        assert(hasattr(self, "vertical_parts"))
+        parts = self.vertical_parts
+        return self.get_subdivision_labels(parts, labels, UP, **kwargs)
+
+    def get_bototm_labels(self, labels, **kwargs):
+        assert(hasattr(self, "vertical_parts"))
+        parts = self.vertical_parts
+        return self.get_subdivision_labels(parts, labels, DOWN, **kwargs)
+
 
 ### Cards ###
 
@@ -225,7 +319,8 @@ class PlayingCard(VGroup):
         )
         sub_rect.move_to(self)
 
-        pi_color = average_color(symbol.get_color(), GREY)
+        # pi_color = average_color(symbol.get_color(), GREY)
+        pi_color = symbol.get_color()
         pi_mode = {
             "J" : "plain",
             "Q" : "thinking",
@@ -305,3 +400,22 @@ class SuitSymbol(SVGMobject):
         self.set_stroke(width = 0)
         self.set_fill(color, 1)
         self.scale_to_fit_height(self.height)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

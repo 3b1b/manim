@@ -40,21 +40,23 @@ class BayesOpeningQuote(OpeningQuote):
         "author" : "Dennis V. Lindley",
     }
 
-class IntroducePokerHand(PiCreatureScene):
+class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
     CONFIG = {
         "community_cards_center" : 1.5*DOWN,
         "community_card_values" : ["AS", "QH", "10H", "2C", "5H"],
         "your_hand_values" : ["JS", "KC"],
     }
     def construct(self):
-        self.force_skipping()
-
         self.add_cards()
-        # self.indicate_straight()
+        self.indicate_straight()
         self.show_flush_potential()
         self.compute_flush_probability()
         self.show_flush_sample_space()
+        self.talk_through_sample_space()
         self.place_high_bet()
+        self.change_belief()
+        self.move_community_cards_out_of_the_way()
+        self.name_bayes_rule()
 
     def add_cards(self):
         you, her = self.you, self.her
@@ -86,6 +88,7 @@ class IntroducePokerHand(PiCreatureScene):
         self.dither()
 
         self.community_cards = community_cards
+        self.deck = deck
 
     def indicate_straight(self):
         you = self.you
@@ -234,7 +237,6 @@ class IntroducePokerHand(PiCreatureScene):
             color = BLUE, buff = SMALL_BUFF
         )
 
-        self.revert_to_original_skipping_status()
         self.play(LaggedStart(FadeIn, equation))
         self.dither(2)
         self.play(
@@ -262,23 +264,159 @@ class IntroducePokerHand(PiCreatureScene):
         you, her = self.you, self.her
         percentage = self.percentage
 
-        sample_space = SampleSpace()
-        sample_space.add_title()
+        sample_space = self.get_sample_space()
+        sample_space.add_title("Your belief")
         sample_space.move_to(VGroup(you.hand, her.hand))
         sample_space.to_edge(UP, buff = MED_SMALL_BUFF)
-        sample_space.shift(RIGHT)
         p = 1./22
-        top_part, bottom_part = sample_space.divide_horizontally(
+        sample_space.divide_horizontally(
             p, colors = [SuitSymbol.CONFIG["red"], BLUE_E]
         )
+        top_label, bottom_label = sample_space.get_side_labels([
+            percentage.get_tex_string(), "95.5\\%"
+        ])
 
-        self.revert_to_original_skipping_status()
-        self.play(FadeIn(sample_space))
+        self.play(
+            FadeIn(sample_space),
+            ReplacementTransform(percentage, top_label[1])
+        )
+        self.play(*map(GrowFromCenter, [
+            label[0] for label in top_label, bottom_label
+        ]))
+        self.dither(2)
+        self.play(Write(bottom_label[1]))
+        self.dither(2)
+
+        self.sample_space = sample_space
+
+    def talk_through_sample_space(self):
+        her = self.her
+        sample_space = self.sample_space
+        top_part, bottom_part = self.sample_space.horizontal_parts
+
+        flush_hands, non_flush_hands = hand_lists = [
+            [self.get_hand(her, keys) for keys in key_list]
+            for key_list in [
+                [("3H", "8H"), ("4H", "AH"), ("JH", "KH")],
+                [("AC", "6D"), ("3D", "6S"), ("JH", "4C")],
+            ]
+        ]   
+        for hand_list, part in zip(hand_lists, [top_part, bottom_part]):
+            self.play(Indicate(part, scale_factor = 1))
+            for hand in hand_list:
+                hand.save_state()
+                hand.scale(0.01)
+                hand.move_to(part.get_right())
+                self.play(hand.restore)
+            self.dither()
         self.dither()
-        self.add(top_part, bottom_part)
+        self.play(*map(FadeOut, it.chain(*hand_lists)))
 
     def place_high_bet(self):
-        pass
+        you, her = self.you, self.her
+        pre_money = VGroup(*[
+            VGroup(*[
+                TexMobject("\\$")
+                for x in range(10)
+            ]).arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+            for y in range(4)
+        ]).arrange_submobjects(UP, buff = SMALL_BUFF)
+        money = VGroup(*it.chain(*pre_money))
+        money.highlight(GREEN)
+        money.scale(0.8)
+        money.next_to(her.hand, DOWN)
+        for dollar in money:
+            dollar.save_state()
+            dollar.scale(0.01)
+            dollar.move_to(her.get_boundary_point(RIGHT))
+            dollar.set_fill(opacity = 0)
+
+        self.play(LaggedStart(
+            ApplyMethod,
+            money,
+            lambda m : (m.restore,),
+            run_time = 5,
+        ))
+        self.play(you.change_mode, "confused")
+        self.dither()
+
+        self.money = money
+
+    def change_belief(self):
+        numbers = VGroup(*[
+            label[1]
+            for label in self.sample_space.horizontal_parts.labels
+        ])
+        rect = Rectangle(stroke_width = 0)
+        rect.set_fill(BLACK, 1)
+        rect.stretch_to_fit_width(numbers.get_width())
+        rect.stretch_to_fit_height(self.sample_space.get_height())
+        rect.move_to(numbers, UP)
+
+        self.play(FadeIn(rect))
+        self.change_horizontal_division(
+            0.2,
+            run_time = 3,
+            rate_func = there_and_back,
+            added_anims = [Animation(rect)]
+        )
+        self.play(FadeOut(rect))
+
+    def move_community_cards_out_of_the_way(self):
+        cards = self.community_cards
+        cards.generate_target()
+        cards.target.arrange_submobjects(
+            RIGHT, buff = -cards[0].get_width() + MED_SMALL_BUFF,
+        )
+        cards.target.move_to(self.deck)
+        cards.target.to_edge(LEFT)
+
+        self.sample_space.add(self.sample_space.horizontal_parts.labels)
+
+        self.play(
+            self.deck.scale, 0.7,
+            self.deck.next_to, cards.target, UP,
+            self.deck.to_edge, LEFT,
+            self.sample_space.shift, 3*DOWN,
+            MoveToTarget(cards)
+        )
+
+    def name_bayes_rule(self):
+        title = TextMobject("Bayes' rule")
+        title.highlight(BLUE)
+        title.to_edge(UP)
+        subtitle = TextMobject("Update ", "prior ", "beliefs")
+        subtitle.scale(0.8)
+        subtitle.next_to(title, DOWN)
+        prior_word = subtitle.get_part_by_tex("prior")
+        numbers = VGroup(*[
+            label[1] for label in self.sample_space.horizontal_parts.labels
+        ])
+        rect = SurroundingRectangle(numbers, color = GREEN)
+        arrow = Arrow(prior_word.get_bottom(), rect.get_top())
+        arrow.highlight(GREEN)
+
+        words = TextMobject(
+            "Maybe she really \\\\ does have a flush $\\dots$",
+            alignment = ""
+        )
+        words.scale(0.7)
+        words.next_to(self.money, DOWN, aligned_edge = LEFT)
+
+        self.play(
+            Write(title, run_time = 2),
+            self.you.change_mode, "pondering"
+        )
+        self.dither()
+        self.play(FadeIn(subtitle))
+        self.play(prior_word.highlight, GREEN)
+        self.play(
+            ShowCreation(rect),
+            ShowCreation(arrow)
+        )
+        self.dither(3)
+        self.play(Write(words))
+        self.dither(3)
 
 
     ######
@@ -337,9 +475,14 @@ class HowDoesPokerWork(TeacherStudentsScene):
         self.change_student_modes(*["confused"]*3)
         self.dither(2)
 
-class ShowCountingArgument(IntroducePokerHand):
+class YourGutKnowsBayesRule(TeacherStudentsScene):
     def construct(self):
-        pass
+        self.teacher_says(
+            "Your gut knows \\\\ Bayes' rule.",
+            run_time = 1
+        )
+        self.change_student_modes("confused", "gracious", "guilty")
+        self.dither(3)
 
 
 
