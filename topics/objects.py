@@ -1,7 +1,7 @@
 from helpers import *
 
 from mobject import Mobject
-from mobject.vectorized_mobject import VGroup, VMobject
+from mobject.vectorized_mobject import VGroup, VMobject, VectorizedPoint
 from mobject.svg_mobject import SVGMobject
 from mobject.tex_mobject import TextMobject, TexMobject
 
@@ -26,13 +26,21 @@ class PlayingCard(VGroup):
     CONFIG = {
         "value" : None,
         "suit" : None,
-        "height" : 1.5,
+        "key" : None, ##String like "8H" or "KS"
+        "height" : 2,
         "height_to_width" : 3.5/2.5,
         "card_height_to_symbol_height" : 7,
         "card_width_to_corner_num_width" : 10,
         "card_height_to_corner_num_height" : 10,
         "color" : LIGHT_GREY,
+        "turned_over" : False,
+        "possible_suits" : ["hearts", "diamonds", "spades", "clubs"],
+        "possible_values" : map(str, range(2, 11)) + ["J", "Q", "K", "A"],
     }
+
+    def __init__(self, key = None, **kwargs):
+        VGroup.__init__(self, key = key, **kwargs)
+
     def generate_points(self):
         self.add(Rectangle(
             height = self.height,
@@ -42,32 +50,58 @@ class PlayingCard(VGroup):
             fill_color = self.color,
             fill_opacity = 1,
         ))
-        value = self.get_value()
-        symbol = self.get_symbol()
-        design = self.get_design(value, symbol)
-        corner_numbers = self.get_corner_numbers(value, symbol)
-        self.add(design, corner_numbers)
+        if self.turned_over:
+            self.set_fill(DARK_GREY)
+            self.set_stroke(LIGHT_GREY)
+            contents = VectorizedPoint(self.get_center())
+        else:
+            value = self.get_value()
+            symbol = self.get_symbol()
+            design = self.get_design(value, symbol)
+            corner_numbers = self.get_corner_numbers(value, symbol)
+            contents = VGroup(design, corner_numbers)
+            self.design = design
+            self.corner_numbers = corner_numbers
+        self.add(contents)
 
     def get_value(self):
         value = self.value
-        possible_values = map(str, range(1, 11)) + ["J", "Q", "K"]
         if value is None:
-            value = random.choice(possible_values)
-        value = str(value)
-        if value not in possible_values:
-            raise Exception("Invalid card value")
-        value = value.capitalize()
+            if self.key is not None:
+                value = self.key[:-1]
+            else:
+                value = random.choice(self.possible_values)
+        value = string.upper(str(value))
         if value == "1":
             value = "A"
+        if value not in self.possible_values:
+            raise Exception("Invalid card value")
+
+        face_card_to_value = {
+            "J" : 11, 
+            "Q" : 12, 
+            "K" : 13, 
+            "A" : 14, 
+        }
+        try:
+            self.numerical_value = int(value)
+        except:
+            self.numerical_value = face_card_to_value[value]
         return value
 
     def get_symbol(self):
         suit = self.suit
-        possible_suits = ["hearts", "diamonds", "spades", "clubs"]
         if suit is None:
-            suit = random.choice(possible_suits)
-        if suit not in possible_suits:
+            if self.key is not None:
+                suit = dict([
+                    (string.upper(s[0]), s)
+                    for s in self.possible_suits
+                ])[string.upper(self.key[-1])]
+            else:
+                suit = random.choice(self.possible_suits)
+        if suit not in self.possible_suits:
             raise Exception("Invalud suit value")
+        self.suit = suit
         symbol_height = float(self.height) / self.card_height_to_symbol_height
         symbol = SuitSymbol(suit, height = symbol_height)
         return symbol
@@ -224,7 +258,6 @@ class SuitSymbol(SVGMobject):
         self.set_stroke(width = 0)
         self.set_fill(color, 1)
         self.scale_to_fit_height(self.height)
-
 
 class Speedometer(VMobject):
     CONFIG = {
