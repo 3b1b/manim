@@ -402,7 +402,9 @@ class Scene(object):
     def open_movie_pipe(self):
         name = str(self)
         file_path = self.get_movie_file_path(name, ".mp4")
-        print "Writing to %s"%file_path
+        temp_file_path = file_path.replace(".mp4", "Temp.mp4")
+        print "Writing to %s"%temp_file_path
+        self.args_to_rename_file = (temp_file_path, file_path)
 
         fps = int(1/self.frame_duration)
         height, width = self.camera.pixel_shape
@@ -421,13 +423,15 @@ class Scene(object):
             '-c:v', 'libx264',
             '-pix_fmt', 'yuv420p',
             '-loglevel', 'error',
-            file_path,
+            temp_file_path,
         ]
         self.writing_process = sp.Popen(command, stdin=sp.PIPE)
 
     def close_movie_pipe(self):
         self.writing_process.stdin.close()
         self.writing_process.wait()
+        os.rename(*self.args_to_rename_file)
+
 
 
 
