@@ -1,7 +1,9 @@
-from vectorized_mobject import VMobject, VGroup
+from helpers import *
+
+from vectorized_mobject import VMobject, VGroup, VectorizedPoint
 from svg_mobject import SVGMobject, VMobjectFromSVGPathstring
 from topics.geometry import BackgroundRectangle
-from helpers import *
+
 import collections
 import sys
 
@@ -80,9 +82,9 @@ class TexMobject(SVGMobject):
 
     def modify_special_strings(self, tex):
         tex = self.remove_stray_braces(tex)
-        if tex == "\\over":
+        if tex in ["\\over", "\\overline"]:
             #fraction line needs something to be over
-            tex = "\\over\\,"
+            tex += "\\,"
         for t1, t2 in ("\\left", "\\right"), ("\\right", "\\left"):
             if t1 in tex and t2 not in tex:
                 tex = tex.replace(t1, "\\big")
@@ -107,14 +109,24 @@ class TexMobject(SVGMobject):
         return self.tex_string
 
     def handle_multiple_args(self):
+        """
+        Reorganize existing submojects one layer 
+        deeper based on the structure of args (as a list of strings)
+        """
         new_submobjects = []
         curr_index = 0
         self.expression_parts = list(self.args)
         for expr in self.args:
             sub_tex_mob = TexMobject(expr, **self.CONFIG)
             sub_tex_mob.tex_string = expr ##Want it unmodified
-            new_index = curr_index + len(sub_tex_mob.submobjects)
-            sub_tex_mob.submobjects = self.submobjects[curr_index:new_index]
+            num_submobs = len(sub_tex_mob.submobjects)
+            new_index = curr_index + num_submobs
+            if num_submobs == 0:
+                sub_tex_mob.submobjects = [VectorizedPoint(
+                    self.submobjects[curr_index].get_right()
+                )]
+            else:
+                sub_tex_mob.submobjects = self.submobjects[curr_index:new_index]
             new_submobjects.append(sub_tex_mob)
             curr_index = new_index
         self.submobjects = new_submobjects
