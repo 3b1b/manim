@@ -498,7 +498,10 @@ class UpdatePokerPrior(SampleSpaceScene):
         self.write_P_flush_given_bet()
         self.reshape_rectangles()
         self.compare_prior_to_posterior()
-        self.tweak_estimates()
+        self.preview_tweaks()
+        self.tweak_non_flush_case()
+        self.tweak_flush_case()
+        self.tweak_prior()
         self.compute_posterior()
 
     def add_sample_space(self):
@@ -848,12 +851,8 @@ class UpdatePokerPrior(SampleSpaceScene):
         self.dither(2)
         self.play(*map(FadeOut, [post_words, post_arrow]))
 
-    def tweak_estimates(self):
+    def preview_tweaks(self):
         post_rects = self.post_rects
-        self.revert_to_original_skipping_status()
-        self.preview_tweaks(post_rects)
-
-    def preview_tweaks(self, post_rects):
         new_value_lists = [
             (0.85, 0.1, 0.11),
             (0.97, 0.3, 1./22),
@@ -866,7 +865,72 @@ class UpdatePokerPrior(SampleSpaceScene):
             self.play(*self.get_prior_change_anims(
                 new_values[-1], post_rects
             ))
-            self.dither()
+        self.dither(2)
+
+    def tweak_non_flush_case(self):
+        her = self.her
+        her.scale_in_place(0.7)
+        her.change_mode("plain")
+        her.shift(DOWN)
+        her.glasses = SunGlasses(her)
+        post_rects = self.post_rects
+        risk_averse_words = TextMobject(
+            "Suppose risk \\\\ averse \\dots"
+        )
+        risk_averse_words.scale(0.7)
+        risk_averse_words.next_to(her, DOWN)
+        risk_averse_words.shift_onto_screen()
+
+        self.dither(2)
+        self.play(*map(FadeIn, [her, her.glasses]))
+        self.play(LaggedStart(FadeIn, risk_averse_words))
+        self.play(her.change_mode, "sad", Animation(her.glasses))
+        self.dither()
+        self.play(
+            *self.get_conditional_change_anims(1, 0.1, post_rects),
+            run_time = 3
+        )
+        self.dither(3)
+        self.play(
+            FadeOut(risk_averse_words),
+            *self.get_conditional_change_anims(1, 0.3, post_rects),
+            run_time = 2
+        )
+
+    def tweak_flush_case(self):
+        her = self.her
+        post_rects = self.post_rects
+
+        self.play(
+            her.change_mode, "erm", Animation(her.glasses)
+        )
+        self.play(
+            *self.get_conditional_change_anims(0, 0.5, post_rects),
+            run_time = 3
+        )
+        self.dither(3)
+        self.play(*self.get_conditional_change_anims(
+            0, 0.97, post_rects
+        ))
+        self.dither()
+
+    def tweak_prior(self):
+        her = self.her
+        post_rects = self.post_rects
+
+        self.play(
+            her.change_mode, "happy", Animation(her.glasses)
+        )
+        self.play(
+            *self.get_prior_change_anims(0.3, post_rects),
+            run_time = 2
+        )
+        self.dither(3)
+        self.play(
+            *self.get_prior_change_anims(1./22, post_rects),
+            run_time = 2
+        )
+        self.play(*map(FadeOut, [her, her.glasses]))
 
     def compute_posterior(self):
         pass
