@@ -376,6 +376,8 @@ class VGroup(VMobject):
 class VectorizedPoint(VMobject):
     CONFIG = {
         "color" : BLACK,
+        "fill_opacity" : 0,
+        "stroke_width" : 0,
         "artificial_width" : 0.01,
         "artificial_height" : 0.01,
     }
