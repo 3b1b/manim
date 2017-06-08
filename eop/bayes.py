@@ -486,14 +486,12 @@ class UpdatePokerPrior(SampleSpaceScene):
         "cash_string" : "\\$\\$\\$",
     }
     def construct(self):
-        self.force_skipping()
-
         self.add_sample_space()
         self.add_top_conditionals()
         self.react_to_top_conditionals()
         self.add_bottom_conditionals()
-        # self.ask_where_conditionals_come_from()
-        # self.vary_conditionals()
+        self.ask_where_conditionals_come_from()
+        self.vary_conditionals()
         self.show_restricted_space()
         self.write_P_flush_given_bet()
         self.reshape_rectangles()
@@ -515,7 +513,7 @@ class UpdatePokerPrior(SampleSpaceScene):
         braces_and_labels = sample_space.get_side_braces_and_labels(labels)
 
         self.play(
-            DrawBorderThenFill(sample_space),
+            LaggedStart(FadeIn, sample_space),
             Write(braces_and_labels)
         )
         self.dither()
@@ -541,10 +539,10 @@ class UpdatePokerPrior(SampleSpaceScene):
 
         self.play(
             FadeIn(top_part.vertical_parts),
-            Write(explanation, run_time = 3),
+            FadeIn(label),
             GrowFromCenter(brace),
         )
-        self.play(LaggedStart(FadeIn, label, run_time = 2, lag_ratio = 0.7))
+        self.play(Write(explanation, run_time = 3))
         self.dither(2)
 
         self.sample_space.add(brace, label)
@@ -589,17 +587,19 @@ class UpdatePokerPrior(SampleSpaceScene):
         explanation.next_to(label, DOWN)
 
         self.play(DrawBorderThenFill(bottom_part.vertical_parts))
-        self.play(GrowFromCenter(brace))
+        self.play(
+            GrowFromCenter(brace),
+            FadeIn(label)
+        )
         self.play(
             her.change_mode, "shruggie",
             MaintainPositionRelativeTo(her.glasses, her.eyes)
         )
-        self.play(Write(explanation))
         self.dither()
         self.play(*[
             ReplacementTransform(
-                VGroup(explanation[j].copy()),
-                VGroup(*label[i1:i2]),
+                VGroup(*label[i1:i2]).copy(),
+                VGroup(explanation[j]),
                 run_time = 2,
                 rate_func = squish_rate_func(smooth, a, a+0.5)
             )
@@ -610,6 +610,7 @@ class UpdatePokerPrior(SampleSpaceScene):
                 (3, 6, 3),
             ])
         ])
+        self.dither()
         self.play(Write(VGroup(*label[-2:])))
         self.dither(2)
         self.play(*map(FadeOut, [her, her.glasses]))
@@ -780,7 +781,7 @@ class UpdatePokerPrior(SampleSpaceScene):
         group.arrange_submobjects(DOWN)
         group.to_corner(UP+RIGHT)
 
-        self.play(Write(posterior_tex))
+        self.play(LaggedStart(FadeIn, posterior_tex))
         self.play(Write(arrow))
         self.play(MoveToTarget(rects[0]))
         self.dither()
@@ -789,22 +790,21 @@ class UpdatePokerPrior(SampleSpaceScene):
             map(MoveToTarget, rects[1:])
         ))
         self.dither(3)
+        self.play(*map(FadeOut, [arrow, fraction] + rects))
 
         self.posterior_tex = posterior_tex
-        self.to_fade = VGroup(arrow, frac_line, plus)
-        self.to_post_rects = VGroup(VGroup(*rects[:2]),rects[2])
 
     def reshape_rectangles(self):
         post_rects = self.get_posterior_rectangles()
+        prior_rects = self.get_prior_rectangles()
         braces, labels = self.get_posterior_rectangle_braces_and_labels(
             post_rects, [self.posterior_tex.copy()]
         )
         height_rect = SurroundingRectangle(braces)
 
         self.play(
-            FadeOut(self.to_fade),
             ReplacementTransform(
-                self.to_post_rects, post_rects,
+                prior_rects.copy(), post_rects,
                 run_time = 2,
             ),
         )
@@ -881,15 +881,24 @@ class UpdatePokerPrior(SampleSpaceScene):
         risk_averse_words.next_to(her, DOWN)
         risk_averse_words.shift_onto_screen()
 
+        arrows = VGroup(*[
+            Arrow(ORIGIN, LEFT, tip_length = SMALL_BUFF)
+            for x in range(3)
+        ])
+        arrows.arrange_submobjects(DOWN)
+        arrows.next_to(post_rects[1], RIGHT, SMALL_BUFF)
+
         self.dither(2)
         self.play(*map(FadeIn, [her, her.glasses]))
         self.play(LaggedStart(FadeIn, risk_averse_words))
         self.play(her.change_mode, "sad", Animation(her.glasses))
         self.dither()
+        self.play(ShowCreation(arrows))
         self.play(
             *self.get_conditional_change_anims(1, 0.1, post_rects),
             run_time = 3
         )
+        self.play(FadeOut(arrows))
         self.dither(3)
         self.play(
             FadeOut(risk_averse_words),
@@ -905,7 +914,7 @@ class UpdatePokerPrior(SampleSpaceScene):
             her.change_mode, "erm", Animation(her.glasses)
         )
         self.play(
-            *self.get_conditional_change_anims(0, 0.5, post_rects),
+            *self.get_conditional_change_anims(0, 0.47, post_rects),
             run_time = 3
         )
         self.dither(3)
@@ -933,7 +942,87 @@ class UpdatePokerPrior(SampleSpaceScene):
         self.play(*map(FadeOut, [her, her.glasses]))
 
     def compute_posterior(self):
-        pass
+        prior_rects = self.get_prior_rectangles()
+        post_tex = self.posterior_tex
+        prior_rhs_group = self.get_prior_rhs_group()
+
+        fraction = TexMobject(
+            "{(0.045)", "(0.97)", "\\over", 
+            "(0.995)", "(0.3)", "+", "(0.045)", "(0.97)}"
+        )
+        products = [
+            VGroup(*[
+                fraction.get_parts_by_tex(tex)[i]
+                for tex in tex_list
+            ])
+            for i, tex_list in [
+                (0, ["0.045", "0.97"]),
+                (0, ["0.995", "0.3"]),
+                (1, ["0.045", "0.97"]),
+            ]
+        ]
+        for i in 0, 2:
+            products[i].highlight(prior_rects[0].get_color())
+        products[1].highlight(prior_rects[1].get_color())
+        fraction.scale(0.65)
+        fraction.to_corner(UP+RIGHT, buff = MED_SMALL_BUFF)
+        arrow_kwargs = {
+            "color" : WHITE,
+            "tip_length" : 0.15,
+        }
+        rhs = TexMobject("\\approx", "0.13")
+        rhs.scale(0.8)
+        rhs.next_to(post_tex, RIGHT)
+        to_rhs_arrow = Arrow(
+            fraction.get_bottom(), rhs.get_top(),
+            **arrow_kwargs
+        )
+
+        pre_top_rect_products = VGroup(
+            prior_rhs_group[0], self.top_conditional_rhs
+        )
+        pre_bottom_rect_products = VGroup(
+            prior_rhs_group[1], self.bottom_conditional_rhs
+        )
+
+        self.play(Indicate(prior_rects[0], scale_factor = 1))
+        self.play(*[
+            ReplacementTransform(
+                mob.copy(), term,
+                run_time = 2,
+            )
+            for mob, term in zip(
+                pre_top_rect_products, products[0]
+            )
+        ])
+        self.play(Write(fraction.get_part_by_tex("over")))
+        for pair in zip(pre_top_rect_products, products[0]):
+            self.play(*map(Indicate, pair))
+            self.dither()
+        self.dither()
+        self.play(Indicate(prior_rects[1], scale_factor = 1))
+        self.play(*[
+            ReplacementTransform(
+                mob.copy(), term,
+                run_time = 2,
+            )
+            for mob, term in zip(
+                pre_bottom_rect_products, products[1]
+            )
+        ])
+        self.dither()
+        for pair in zip(pre_bottom_rect_products, products[1]):
+            self.play(*map(Indicate, pair))
+            self.dither()
+        self.play(
+            Write(fraction.get_part_by_tex("+")),
+            ReplacementTransform(products[0].copy(), products[2])
+        )
+        self.dither()
+        self.play(ShowCreation(to_rhs_arrow))
+        self.play(Write(rhs))
+        self.dither(3)
+
 
     ######
 
@@ -950,7 +1039,12 @@ class UpdatePokerPrior(SampleSpaceScene):
         for label in labels:
             label.scale(0.7)
             self.insert_double_heart(label)
+
         return labels
+
+    def get_prior_rhs_group(self):
+        labels = self.sample_space.horizontal_parts.labels
+        return VGroup(*[label[-1] for label in labels])
 
     def get_conditional_label(self, value, given_flush = True):
         label = TexMobject(
@@ -990,99 +1084,12 @@ class UpdatePokerPrior(SampleSpaceScene):
         self, sub_sample_space_index, value,
         post_rects = None
         ):
-        parts = self.sample_space.horizontal_parts
-        sub_sample_space = parts[sub_sample_space_index]
         given_flush = (sub_sample_space_index == 0)
         label = self.get_conditional_label(value, given_flush)
-
-        anims = self.get_division_change_animations(
-            sub_sample_space, sub_sample_space.vertical_parts, value,
-            dimension = 0,
+        return SampleSpaceScene.get_conditional_change_anims(
+            self, sub_sample_space_index, value, post_rects,
             new_label_kwargs = {"labels" : [label]},
         )
-
-        if post_rects is not None:
-            anims += self.get_posterior_rectangle_change_anims(post_rects)
-
-        return anims
-
-    def get_top_conditional_change_anims(self, *args, **kwargs):
-        return self.get_conditional_change_anims(0, *args, **kwargs)
-
-    def get_bottom_conditional_change_anims(self, *args, **kwargs):
-        return self.get_conditional_change_anims(1, *args, **kwargs)
-
-    def get_prior_rectangles(self):
-        return VGroup(*[
-            self.sample_space.horizontal_parts[i].vertical_parts[0]
-            for i in range(2)
-        ])
-
-    def get_posterior_rectangles(self):
-        prior_rects = self.get_prior_rectangles()
-        areas = [
-            rect.get_width()*rect.get_height()
-            for rect in prior_rects
-        ]
-        total_area = sum(areas)
-        total_height = prior_rects.get_height()
-
-        post_rects = prior_rects.copy()
-        for rect, area in zip(post_rects, areas):
-            rect.stretch_to_fit_height(total_height * area/total_area)
-            rect.stretch_to_fit_width(
-                area/rect.get_height()
-            )
-        post_rects.arrange_submobjects(DOWN, buff = 0)
-        post_rects.next_to(
-            self.sample_space.full_space, RIGHT, MED_LARGE_BUFF
-        )
-        return post_rects
-
-    def get_posterior_rectangle_braces_and_labels(self, post_rects, labels):
-        braces = VGroup()
-        label_mobs = VGroup()
-        for label, rect in zip(labels, post_rects):
-            if not isinstance(label, Mobject):
-                label_mob = TexMobject(label)
-                label_mob.scale(0.7)
-            else:
-                label_mob = label
-            brace = Brace(
-                rect, RIGHT, 
-                buff = SMALL_BUFF, 
-                min_num_quads = 2
-            )
-            label_mob.next_to(brace, RIGHT, SMALL_BUFF)
-
-            label_mobs.add(label_mob)
-            braces.add(brace)
-        post_rects.braces = braces
-        post_rects.labels = label_mobs
-        return VGroup(braces, label_mobs)
-
-    def update_posterior_braces(self, post_rects):
-        braces = post_rects.braces
-        labels = post_rects.labels
-        for rect, brace, label in zip(post_rects, braces, labels):
-            brace.stretch_to_fit_height(rect.get_height())
-            brace.next_to(rect, RIGHT, SMALL_BUFF)
-            label.next_to(brace, RIGHT, SMALL_BUFF)
-
-    def get_posterior_rectangle_change_anims(self, post_rects):
-        def update_rects(rects):
-            new_rects = self.get_posterior_rectangles() 
-            Transform(rects, new_rects).update(1)
-            if hasattr(rects, "braces"):
-                self.update_posterior_braces(rects)
-            return rects
-
-        anims = [UpdateFromFunc(post_rects, update_rects)]
-        if hasattr(post_rects, "braces"):
-            anims += map(Animation, [
-                post_rects.labels, post_rects.braces
-            ])
-        return anims
 
 
 class NextVideoWrapper(TeacherStudentsScene):
@@ -1105,6 +1112,301 @@ class NextVideoWrapper(TeacherStudentsScene):
         self.play(Animation(screen))
         self.dither(5)
 
+class GeneralizeBayesRule(SampleSpaceScene):
+    def construct(self):
+        self.add_sample_space()
+        self.add_title()
+        self.add_posterior_rectangles()
+        self.add_bayes_rule()
+        self.talk_through_terms()
+        self.name_likelihood()
+        self.dont_memorize()
+        self.show_space_restriction()
+
+    def add_sample_space(self):
+        sample_space = SampleSpace(
+            full_space_config = {
+                "height" : 3,
+                "width" : 3,
+                "fill_opacity" : 0
+            }
+        )
+        sample_space.divide_horizontally(0.4)
+        sample_space.horizontal_parts.set_fill(opacity = 0)
+        labels = [
+            TexMobject("P(", "B", ")"),
+            TexMobject("P(\\text{not }", "B", ")"),
+        ]
+        for label in labels:
+            label.scale(0.7)
+            self.color_label(label)
+        sample_space.get_side_braces_and_labels(labels)
+        sample_space.add_braces_and_labels()
+
+        parts = sample_space.horizontal_parts
+        values = [0.8, 0.4]
+        given_strs = ["", "\\text{not }"]
+        color_pairs = [(GREEN, BLUE), (GREEN_E, BLUE_E)]
+        vects = [UP, DOWN]
+        for tup in zip(parts, values, given_strs, color_pairs, vects):
+            part, value, given_str, colors, vect = tup
+            part.divide_vertically(value, colors = colors)
+            part.vertical_parts.set_fill(opacity = 0.8)
+            label = TexMobject(
+                "P(", "I", "|", given_str, "B", ")"
+            )
+            label.scale(0.7)
+            self.color_label(label)
+            part.get_subdivision_braces_and_labels(
+                part.vertical_parts, [label], vect
+            )
+            sample_space.add(
+                part.vertical_parts.braces,
+                part.vertical_parts.labels,
+            )
+        sample_space.to_edge(LEFT)
+
+        self.add(sample_space)
+        self.sample_space = sample_space
+
+    def add_title(self):
+        title = TextMobject(
+            "Updating", "Beliefs", "from new", "Information"
+        )
+        self.color_label(title)
+        title.scale(0.8)
+        title.to_corner(UP+LEFT)
+
+        self.add(title)
+
+    def add_posterior_rectangles(self):
+        prior_rects = self.get_prior_rectangles()
+        post_rects = self.get_posterior_rectangles()
+
+        label = TexMobject("P(", "B", "|", "I", ")")
+        label.scale(0.7)
+        self.color_label(label)
+        braces, labels = self.get_posterior_rectangle_braces_and_labels(
+            post_rects, [label]
+        )
+
+        self.play(ReplacementTransform(
+            prior_rects.copy(), post_rects,
+            run_time = 2
+        ))
+        self.play(
+            GrowFromCenter(braces),
+            Write(label)
+        )
+        self.dither(2)
+
+        self.post_rects = post_rects
+        self.posterior_tex = label
+
+    def add_bayes_rule(self):
+        rule = TexMobject(
+             "=", "{P(", "B", ")", "P(", "I", "|", "B", ")",
+            "\\over", "P(", "I", ")}",
+        )
+        self.color_label(rule)
+        rule.scale(0.7)
+        rule.next_to(self.posterior_tex, RIGHT)
+
+        bayes_rule_words = TextMobject("Bayes' rule")
+        bayes_rule_words.next_to(VGroup(*rule[1:]), UP, LARGE_BUFF)
+        bayes_rule_words.shift_onto_screen()
+
+        self.play(FadeIn(rule))
+        self.play(Write(bayes_rule_words))
+        self.dither(2)
+
+        self.bayes_rule_words = bayes_rule_words
+        self.bayes_rule = rule
+
+    def talk_through_terms(self):
+        prior = self.sample_space.horizontal_parts.labels[0]
+        posterior = self.posterior_tex
+        prior_target = VGroup(*self.bayes_rule[1:4])
+        likelihood = VGroup(*self.bayes_rule[4:9])
+        P_I = VGroup(*self.bayes_rule[-3:])
+
+        prior_word = TextMobject("Prior")
+        posterior_word = TextMobject("Posterior")
+        words = [prior_word, posterior_word]
+        for word in words:
+            word.highlight(YELLOW)
+            word.scale(0.7)
+        prior_rect = SurroundingRectangle(prior)
+        posterior_rect = SurroundingRectangle(posterior)
+        for rect in prior_rect, posterior_rect:
+            rect.set_stroke(YELLOW, 2)
+
+        prior_word.next_to(prior, UP, LARGE_BUFF)
+        posterior_word.next_to(posterior, DOWN, LARGE_BUFF)
+        for word in words:
+            word.shift_onto_screen()
+        prior_arrow = Arrow(
+            prior_word.get_bottom(), prior.get_top(),
+            tip_length = 0.15
+        )
+        posterior_arrow = Arrow(
+            posterior_word.get_top(), posterior.get_bottom(),
+            tip_length = 0.15
+        )
+
+        self.play(
+            Write(prior_word), 
+            ShowCreation(prior_arrow), 
+            ShowCreation(prior_rect),
+        ) 
+        self.play(
+            Write(posterior_word), 
+            ShowCreation(posterior_arrow), 
+            ShowCreation(posterior_rect),
+        )
+        self.dither()
+        self.play(Transform(
+            prior.copy(), prior_target,
+            run_time = 2,
+            path_arc = -np.pi/3,
+            remover = True,
+        ))
+        self.dither()
+        parts = self.sample_space[0].vertical_parts
+        self.play(
+            Indicate(likelihood),
+            Indicate(parts.labels),
+            Indicate(parts.braces),
+        )
+        self.dither()
+        self.play(Indicate(P_I))
+        self.play(FocusOn(self.sample_space[0][0]))
+        for i in range(2):
+            self.play(Indicate(
+                self.sample_space[i][0], 
+                scale_factor = 1
+            ))
+        self.dither()
+
+        self.prior_label = VGroup(prior_word, prior_arrow, prior_rect)
+        self.posterior_label = VGroup(posterior_word, posterior_arrow, posterior_rect)
+        self.likelihood = likelihood
+
+    def name_likelihood(self):
+        likelihoods = [
+            self.sample_space[0].vertical_parts.labels[0],
+            self.likelihood
+        ]
+        rects = [
+            SurroundingRectangle(mob, buff = SMALL_BUFF)
+            for mob in likelihoods
+        ]
+        name = TextMobject("Likelihood")
+        name.scale(0.7)
+        name.next_to(self.posterior_tex, UP, 1.5*LARGE_BUFF)
+        arrows = [
+            Arrow(
+                name, rect.get_edge_center(vect), 
+                tip_length = 0.15
+            )
+            for rect, vect in zip(rects, [RIGHT, UP])
+        ]
+        VGroup(name, *arrows+rects).highlight(YELLOW)
+
+        morty = Mortimer()
+        morty.scale(0.5)
+        morty.next_to(rects[1], UP, buff = 0)
+        morty.shift(SMALL_BUFF*RIGHT)
+
+        self.play(
+            self.bayes_rule_words.to_edge, UP,
+            Write(name),
+            *map(ShowCreation, arrows+rects)
+        )
+        self.dither()
+
+        self.play(FadeIn(morty))
+        self.play(morty.change, "confused", name)
+        self.play(Blink(morty))
+        self.play(morty.look, DOWN)
+        self.dither()
+        self.play(morty.look_at, name)
+        self.play(Blink(morty))
+        self.play(morty.change, "shruggie")
+
+        self.play(FadeOut(VGroup(name, *arrows+rects)))
+        self.play(FadeOut(morty))
+        self.play(FadeOut(self.posterior_label))
+        self.play(FadeOut(self.prior_label))
+
+    def dont_memorize(self):
+        rule = VGroup(*self.bayes_rule[1:])
+        word = TextMobject("Memorize")
+        word.scale(0.7)
+        word.next_to(rule, DOWN)
+        cross = VGroup(
+            Line(UP+LEFT, DOWN+RIGHT),
+            Line(UP+RIGHT, DOWN+LEFT),
+        )
+        cross.set_stroke(RED, 6)
+        cross.replace(word, stretch = True)
+
+        self.play(Write(word))
+        self.dither()
+        self.play(ShowCreation(cross))
+        self.dither()
+        self.play(FadeOut(VGroup(cross, word)))
+        self.play(FadeOut(self.bayes_rule))
+        self.play(
+            FadeOut(self.post_rects),
+            FadeOut(self.post_rects.braces),
+            FadeOut(self.post_rects.labels),
+        )
+
+    def show_space_restriction(self):
+        prior_rects = self.get_prior_rectangles()
+        non_I_rects = VGroup(*[
+            self.sample_space[i][1]
+            for i in range(2)
+        ])
+        post_rects = self.post_rects
+
+        self.play(non_I_rects.fade, 0.8)
+        self.play(LaggedStart(
+            ApplyMethod,
+            prior_rects,
+            lambda m : (m.highlight, YELLOW),
+            rate_func = there_and_back,
+            lag_ratio = 0.7
+        ))
+        self.dither(2)
+        self.play(ReplacementTransform(
+            prior_rects.copy(), post_rects,
+            run_time = 2
+        ))
+        self.play(*map(FadeIn, [
+            post_rects.braces, post_rects.labels
+        ]))
+        self.dither()
+        self.play(*self.get_conditional_change_anims(1, 0.2, post_rects))
+        self.play(*self.get_conditional_change_anims(0, 0.6, post_rects))
+        self.dither()
+        self.play(*it.chain(
+            self.get_division_change_animations(
+                self.sample_space, 
+                self.sample_space.horizontal_parts,
+                0.1
+            ),
+            self.get_posterior_rectangle_change_anims(post_rects)
+        ))
+        self.dither(3)
+
+
+    ####
+
+    def color_label(self, label):
+        label.highlight_by_tex("B", RED)
+        label.highlight_by_tex("I", GREEN)
 
 
 

@@ -4,6 +4,7 @@ from scene import Scene
 
 from animation.animation import Animation
 from animation.transform import Transform, MoveToTarget
+from animation.simple_animations import UpdateFromFunc
 
 from mobject import Mobject
 from mobject.vectorized_mobject import VGroup, VMobject, VectorizedPoint
@@ -69,6 +70,84 @@ class SampleSpaceScene(Scene):
             dimension = 0,
             **kwargs
         )
+    
+    def get_conditional_change_anims(
+        self, sub_sample_space_index, value, post_rects = None,
+        **kwargs
+        ):
+        parts = self.sample_space.horizontal_parts
+        sub_sample_space = parts[sub_sample_space_index]
+        anims = self.get_division_change_animations(
+            sub_sample_space, sub_sample_space.vertical_parts, value,
+            dimension = 0,
+            **kwargs
+        )
+        if post_rects is not None:
+            anims += self.get_posterior_rectangle_change_anims(post_rects)
+        return anims
+
+    def get_top_conditional_change_anims(self, *args, **kwargs):
+        return self.get_conditional_change_anims(0, *args, **kwargs)
+
+    def get_bottom_conditional_change_anims(self, *args, **kwargs):
+        return self.get_conditional_change_anims(1, *args, **kwargs)
+
+    def get_prior_rectangles(self):
+        return VGroup(*[
+            self.sample_space.horizontal_parts[i].vertical_parts[0]
+            for i in range(2)
+        ])
+
+    def get_posterior_rectangles(self, buff = MED_LARGE_BUFF):
+        prior_rects = self.get_prior_rectangles()
+        areas = [
+            rect.get_width()*rect.get_height()
+            for rect in prior_rects
+        ]
+        total_area = sum(areas)
+        total_height = prior_rects.get_height()
+
+        post_rects = prior_rects.copy()
+        for rect, area in zip(post_rects, areas):
+            rect.stretch_to_fit_height(total_height * area/total_area)
+            rect.stretch_to_fit_width(
+                area/rect.get_height()
+            )
+        post_rects.arrange_submobjects(DOWN, buff = 0)
+        post_rects.next_to(
+            self.sample_space.full_space, RIGHT, buff
+        )
+        return post_rects
+
+    def get_posterior_rectangle_braces_and_labels(
+        self, post_rects, labels, direction = RIGHT, **kwargs
+        ):
+        return self.sample_space.get_subdivision_braces_and_labels(
+            post_rects, labels, direction, **kwargs
+        )
+
+    def update_posterior_braces(self, post_rects):
+        braces = post_rects.braces
+        labels = post_rects.labels
+        for rect, brace, label in zip(post_rects, braces, labels):
+            brace.stretch_to_fit_height(rect.get_height())
+            brace.next_to(rect, RIGHT, SMALL_BUFF)
+            label.next_to(brace, RIGHT, SMALL_BUFF)
+
+    def get_posterior_rectangle_change_anims(self, post_rects):
+        def update_rects(rects):
+            new_rects = self.get_posterior_rectangles() 
+            Transform(rects, new_rects).update(1)
+            if hasattr(rects, "braces"):
+                self.update_posterior_braces(rects)
+            return rects
+
+        anims = [UpdateFromFunc(post_rects, update_rects)]
+        if hasattr(post_rects, "braces"):
+            anims += map(Animation, [
+                post_rects.labels, post_rects.braces
+            ])
+        return anims
 
 
 class SampleSpace(VGroup):
@@ -145,12 +224,19 @@ class SampleSpace(VGroup):
         self.vertical_parts = self.get_vertical_division(*args, **kwargs)
         self.add(self.vertical_parts)
 
-    def get_subdivision_braces_and_labels(self, parts, labels, direction, buff = SMALL_BUFF):
-        label_brace_groups = VGroup()
+    def get_subdivision_braces_and_labels(
+        self, parts, labels, direction,
+        buff = SMALL_BUFF,
+        min_num_quads = 1
+        ):
         label_mobs = VGroup()
         braces = VGroup()
         for label, part in zip(labels, parts):
-            brace = Brace(part, direction, min_num_quads = 1, buff = buff)
+            brace = Brace(
+                part, direction, 
+                min_num_quads = min_num_quads, 
+                buff = buff
+            )
             if isinstance(label, Mobject):
                 label_mob = label
             else:
@@ -163,7 +249,7 @@ class SampleSpace(VGroup):
         parts.braces = braces
         parts.labels = label_mobs
         parts.label_kwargs = {
-            "labels" : labels, 
+            "labels" : label_mobs.copy(),
             "direction" : direction, 
             "buff" : buff,
         }
@@ -193,6 +279,12 @@ class SampleSpace(VGroup):
                 if hasattr(parts, subattr):
                     self.add(getattr(parts, subattr))
 
+    def __getitem__(self, index):
+        if hasattr(self, "horizontal_parts"):
+            return self.horizontal_parts[index]
+        elif hasattr(self, "vertical_parts"):
+            return self.vertical_parts[index]
+        return self.split()[index]
 
 ### Cards ###
 
