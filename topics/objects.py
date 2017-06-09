@@ -38,7 +38,6 @@ class SunGlasses(SVGMobject):
         )
         self.move_to(pi_creature.eyes, UP)
 
-
 class Speedometer(VMobject):
     CONFIG = {
         "arc_angle" : 4*np.pi/3,
@@ -280,13 +279,18 @@ class Headphones(SVGMobject):
         "y_stretch_factor" : 0.5,
         "color" : GREY,
     }
-    def __init__(self, **kwargs):
+    def __init__(self, pi_creature = None, **kwargs):
         digest_config(self, kwargs)
         SVGMobject.__init__(self, file_name = self.file_name, **kwargs)
         self.stretch(self.y_stretch_factor, 1)        
         self.scale_to_fit_height(self.height)
         self.set_stroke(width = 0)
         self.set_fill(color = self.color)
+        if pi_creature is not None:
+            eyes = pi_creature.eyes
+            self.scale_to_fit_height(3*eyes.get_height())
+            self.move_to(eyes, DOWN)
+            self.shift(DOWN*eyes.get_height()/4)
 
 class Clock(VGroup):
     CONFIG = {

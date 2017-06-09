@@ -156,7 +156,7 @@ class SampleSpace(VGroup):
             "height" : 3,
             "width" : 3,
             "fill_color" : DARK_GREY,
-            "fill_opacity" : 0.8,
+            "fill_opacity" : 1,
             "stroke_width" : 0.5,
             "stroke_color" : LIGHT_GREY,
         },
@@ -204,7 +204,7 @@ class SampleSpace(VGroup):
 
     def get_horizontal_division(
         self, p_list, 
-        colors = [GREEN_E, BLUE],
+        colors = [GREEN_E, BLUE_E],
         vect = DOWN 
         ):
         return self.get_division_along_dimension(p_list, 1, colors, vect)
