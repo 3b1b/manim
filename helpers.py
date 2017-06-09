@@ -10,38 +10,38 @@ import operator as op
 ##### Allows manipulation of Images through class Image
 from PIL import Image
 
-# Easy manipulation of colors with RGB values etc. 
+# Easy manipulation of colors with RGB values etc.
 from colour import Color
 import random
 
-##### Allows us to get live info from modules, classes, methods, tracebacks, frame objects, 
-# and code objects. 
+##### Allows us to get live info from modules, classes, methods, tracebacks, frame objects,
+# and code objects.
 import inspect
 
-##### More control over string formatting 
+##### More control over string formatting
 import string
 
-##### For regular expressions?  Find more 
+##### For regular expressions?  Find more
 import re
 
-##### For path joining, etc. 
+##### For path joining, etc.
 import os
 
-##### 
+#####
 from scipy import linalg
 
 #####
 from constants import *
 
-# For use later in defining the threshold displacement between the first 
-# and final points on the curve defining some vector graphics object 
+# For use later in defining the threshold displacement between the first
+# and final points on the curve defining some vector graphics object
 # at which we will say the curve is indeed "closed"
 CLOSED_THRESHOLD = 0.01
-STRAIGHT_PATH_THRESHOLD = 0.01  
+STRAIGHT_PATH_THRESHOLD = 0.01
 
 def play_chord(*nums):
     """ GRANT WTF IS THIS???  Appears to take in some number of frequencies
-        And executes a shell command given w/ some sine wave of that freq. 
+        And executes a shell command given w/ some sine wave of that freq.
     """
     commands = [
         "play",
@@ -53,7 +53,7 @@ def play_chord(*nums):
         "sin %-"+str(num)
         for num in nums
     ] + [
-        "fade h 0.5 1 0.5", 
+        "fade h 0.5 1 0.5",
         "> /dev/null"
     ]
     try:
@@ -69,9 +69,9 @@ def play_finish_sound():
     play_chord(12, 9, 5, 2)
 
 def get_smooth_handle_points(points):
-    """ ##### not sure.  From what I can tell, this uses bezier curves to 
+    """ ##### not sure.  From what I can tell, this uses bezier curves to
         define some smooth vector graphic curve thing that can then be used
-        for animating objects.  
+        for animating objects.
     """
     points = np.array(points)       # create an array of points
     num_handles = len(points) - 1   ##### Off by one error?
@@ -81,11 +81,11 @@ def get_smooth_handle_points(points):
     #Must solve 2*num_handles equations to get the handles.
     #l and u are the number of lower an upper diagonal rows
     #in the matrix to solve.
-    l, u = 2, 1    
+    l, u = 2, 1
     #diag is a representation of the matrix in diagonal form
     #See https://www.particleincell.com/2012/bezier-splines/
     #for how to arive at these equations
-    ##### I have basically 0 idea what's happening here. 
+    ##### I have basically 0 idea what's happening here.
     diag = np.zeros((l+u+1, 2*num_handles))
     diag[0,1::2] = -1
     diag[0,2::2] = 1
@@ -124,7 +124,7 @@ def get_smooth_handle_points(points):
 
 def diag_to_matrix(l_and_u, diag):
     """
-    Converts array whose rows represent diagonal 
+    Converts array whose rows represent diagonal
     entries of a matrix into the matrix itself.
     See scipy.linalg.solve_banded
     """
@@ -139,78 +139,78 @@ def diag_to_matrix(l_and_u, diag):
     return matrix
 
 def is_closed(points):
-    """ is_closed takes in an array, points, and checks the norm of 
-        the displacement between the first and final point.  If the 
-        threshold is small enough, then the curve will appear (for 
-        all intents and purposes) to be closed. 
+    """ is_closed takes in an array, points, and checks the norm of
+        the displacement between the first and final point.  If the
+        threshold is small enough, then the curve will appear (for
+        all intents and purposes) to be closed.
     """
     return np.linalg.norm(points[0] - points[-1]) < CLOSED_THRESHOLD
 
 def color_to_rgb(color):
     """ color_to_rgb takes in a color string, then internally converts
-        it to a hue, saturation, lightness tuple (e.g. (120, 100%, 50%)) 
-        and then converts it to an RGB tuple representation.  
+        it to a hue, saturation, lightness tuple (e.g. (120, 100%, 50%))
+        and then converts it to an RGB tuple representation.
     """
     return np.array(Color(color).get_rgb())
 
 def rgb_to_color(rgb):
     """ rbg_to_color takes in an rgb tuple, and returns a Color object
-        with that rgb value.  This is useful, because it allows us to 
-        easily convert between HSL, RGB, HEX, WEB, and partial 
-        representations. 
-    """ 
+        with that rgb value.  This is useful, because it allows us to
+        easily convert between HSL, RGB, HEX, WEB, and partial
+        representations.
+    """
     try:
         return Color(rgb = rgb)
     except:
         return Color(WHITE)
 
 def invert_color(color):
-    """ invert_color takes as input an rgb tuple, color, and returns 
-        an object of class Color corresponding to the inverse color 
-        of said rgb tuple, if one exists.  
+    """ invert_color takes as input an rgb tuple, color, and returns
+        an object of class Color corresponding to the inverse color
+        of said rgb tuple, if one exists.
     """
     return rgb_to_color(1.0 - color_to_rgb(color))
 
 def color_to_int_rgb(color):
-    """ color_to_int_rgb takes as input a color string, color, 
-        and returns an integer rgb array (the values should 
-        be strictly positive, so we can cast to an 8-bit 
-        unsigned integer, which can have values from 0 to 
+    """ color_to_int_rgb takes as input a color string, color,
+        and returns an integer rgb array (the values should
+        be strictly positive, so we can cast to an 8-bit
+        unsigned integer, which can have values from 0 to
         255)
     """
-    return (255*color_to_rgb(color)).astype('uint8') 
+    return (255*color_to_rgb(color)).astype('uint8')
 
 def interpolate(start, end, alpha):
     """ interpolate takes in two arrays (or ints, etc.)
-        start and end, then returns an array (or float 
+        start and end, then returns an array (or float
         etc.) alpha of the way between start and end
     """
     return (1-alpha)*start + alpha*end
 
 def color_gradient(reference_colors, length_of_output):
     """ color_gradient takes as input a list of colors (
-        reference_colors), and length_of_output, an int.  
+        reference_colors), and length_of_output, an int.
         It applies color_to_rgb to each of the reference_colors,
-        then, uses np.linspace to interpolate evenly-spaced 
-        "positions" between the colors, and uses these positions 
-        to get length_of_output many rgb tuples corresponding to 
-        colors "between" the reference colors. It then outputs a 
-        list of these colors.  
+        then, uses np.linspace to interpolate evenly-spaced
+        "positions" between the colors, and uses these positions
+        to get length_of_output many rgb tuples corresponding to
+        colors "between" the reference colors. It then outputs a
+        list of these colors.
     """
     if length_of_output == 0:       # if we want only one color
         return reference_colors[0]  # ...just return it
     rgbs = map(color_to_rgb, reference_colors) # get rgb tuples
     print(rgbs)
-    # get alphas --> interpolating values between the colors for 
+    # get alphas --> interpolating values between the colors for
     # smooth transitions between 'adjacent' colors in list
-    alphas = np.linspace(0, (len(rgbs) - 1), length_of_output) 
-    floors = alphas.astype('int') 
+    alphas = np.linspace(0, (len(rgbs) - 1), length_of_output)
+    floors = alphas.astype('int')
     # alphas_mod1 are used to give a fractional 'distance' between
-    # two adjacent colors in the reference list, so we want them 
-    # all to be between 0 and 1.  Taking %1 will get rid of the 
-    # whole number component in front, and make interpolate 
+    # two adjacent colors in the reference list, so we want them
+    # all to be between 0 and 1.  Taking %1 will get rid of the
+    # whole number component in front, and make interpolate
     # useable.  (if you're confused, print statements are helpful)
-    alphas_mod1 = alphas % 1 
+    alphas_mod1 = alphas % 1
     #End edge case --> alphas_mod1[-1] = 0. because last alpha was 1
     alphas_mod1[-1] = 1
     floors[-1] = len(rgbs) - 2 # fixes an off-by-one thing (?)
@@ -223,8 +223,8 @@ def color_gradient(reference_colors, length_of_output):
 def average_color(*colors):
     """ average_color takes in an array of colors (colors),
         then finds the mean of the rgb values of these input
-        colors.  Then, it returns a string representing the 
-        name of the color corresponding to this mean value. 
+        colors.  Then, it returns a string representing the
+        name of the color corresponding to this mean value.
 
     """
     rgbs = np.array(map(color_to_rgb, colors))
@@ -233,7 +233,7 @@ def average_color(*colors):
 
 def compass_directions(n = 4, start_vect = RIGHT):
     """ Takes as input an int n and a starting vector,
-        then returns a length n array of evenly-spaced 
+        then returns a length n array of evenly-spaced
         vectors that together form an n-pointed compass
         rose, of sorts.
     """
@@ -244,7 +244,7 @@ def compass_directions(n = 4, start_vect = RIGHT):
     ])
 
 def choose(n, k):
-    """ Efficient n choose k 
+    """ Efficient n choose k
     """
     if n < k: return 0
     if k == 0: return 1
@@ -262,12 +262,12 @@ def bezier(points):
         ((1-t)**(n-k))*(t**k)*choose(n, k)*point
         for k, point in enumerate(points)
     ])
-    
+
 def partial_bezier_points(points, a, b):
     """
-    Given an array of points which define 
+    Given an array of points which define
     a bezier curve, and two numbers 0<=a<b<=1,
-    return an array of the same size, which 
+    return an array of the same size, which
     describes the portion of the original bezier
     curve on the interval [a, b].
 
@@ -285,44 +285,44 @@ def partial_bezier_points(points, a, b):
 
 def remove_list_redundancies(l):
     """
-    Takes as input a list l, and removes redundant entries without 
-    disturbing the order of the elements in the list.  This 
-    non-redundant list is then returned. 
+    Takes as input a list l, and removes redundant entries without
+    disturbing the order of the elements in the list.  This
+    non-redundant list is then returned.
     """
     return sorted(list(set(l)), lambda a, b : l.index(a) - l.index(b))
 
 def list_update(l1, l2):
     """
-    Takes as input two lists, l1 and l2, and returns a non-redundant 
-    ordered list with elements taken from l1 and l2.  Here, l2 
+    Takes as input two lists, l1 and l2, and returns a non-redundant
+    ordered list with elements taken from l1 and l2.  Here, l2
     will be the list to append to l1 (I think...?)
     """
     return filter(lambda e : e not in l2, l1) + list(l2)
 
 def list_difference_update(l1, l2):
-    """ takes as input two lists l1 and l2, and returns 
+    """ takes as input two lists l1 and l2, and returns
         a list of the elements of l1 that are not in l2
     """
     return filter(lambda e : e not in l2, l1)
 
 def all_elements_are_instances(iterable, Class):
-    """ Takes as input an array of iterables and a Class, and 
-        returns True if all of the iterables are instances of 
-        the Class. 
+    """ Takes as input an array of iterables and a Class, and
+        returns True if all of the iterables are instances of
+        the Class.
     """
     return all(map(lambda e : isinstance(e, Class), iterable))
 
 def adjascent_pairs(objects):
     """ IDK whether to fix the typo here!  Anyways, adja(s)cent_pairs
         Takes as input an array of objects (objects), and returns a list
-        of adjacent elements. 
+        of adjacent elements.
     """
     return zip(objects, list(objects[1:])+[objects[0]])
 
 def complex_to_R3(complex_num):
-    """ complex_to_R3 takes as input a complex number (complex_num), 
+    """ complex_to_R3 takes as input a complex number (complex_num),
         and maps it to a point in the x-y plane in R3 (represented as
-        an array).  
+        an array).
     """
     return np.array((complex_num.real, complex_num.imag, 0))
 
@@ -338,18 +338,18 @@ def tuplify(obj):
 
 def instantiate(obj):
     """
-    Instantiate takes as input an object obj, and returns an 
-    instance obj if obj is of some type, else returns... the 
+    Instantiate takes as input an object obj, and returns an
+    instance obj if obj is of some type, else returns... the
     obj itself????  GRANT?????
 
-    Useful so that classes or instance of those classes can be 
+    Useful so that classes or instance of those classes can be
     included in configuration, which can prevent defaults from
     getting created during compilation/importing
     """
     return obj() if isinstance(obj, type) else obj
 
 def get_all_descendent_classes(Class):
-    """ get_all_descendent_classes takes as input a class Class, 
+    """ get_all_descendent_classes takes as input a class Class,
         and iterates through all the subclasses of Class, eventually
         returning a list of all such subclasses (including the original)
     """
@@ -362,8 +362,8 @@ def get_all_descendent_classes(Class):
     return result
 
 def filtered_locals(local_args):
-    """ filtered_locals takes as input some local arguments for 
-        ##### OK NO IDEA 
+    """ filtered_locals takes as input some local arguments for
+        ##### OK NO IDEA
     """
     result = local_args.copy()
     ignored_local_args = ["self", "kwargs"]
@@ -373,12 +373,12 @@ def filtered_locals(local_args):
 
 def digest_config(obj, kwargs, local_args = {}):
     """
-    Can't tell yet what kwargs or local_args _really_ are 
+    Can't tell yet what kwargs or local_args _really_ are
 
     Sets init args and CONFIG values as local variables
 
-    The purpose of this function is to ensure that all 
-    configuration of any object is inheritable, able to 
+    The purpose of this function is to ensure that all
+    configuration of any object is inheritable, able to
     be easily passed into instantiation, and is attached
     as an attribute of the object.
     """
@@ -388,19 +388,19 @@ def digest_config(obj, kwargs, local_args = {}):
     while len(classes_in_hierarchy) > 0:
         Class = classes_in_hierarchy.pop()      # remove the last class from hierarchy
         classes_in_hierarchy += Class.__bases__ # get the classes used in constructing Class
-        if hasattr(Class, "CONFIG"):            # add the config for Class, if it has one, 
+        if hasattr(Class, "CONFIG"):            # add the config for Class, if it has one,
             configs.append(Class.CONFIG)        # to our overall config
 
-    ##### I DON'T KNOW WHAT THIS IS DOING, but I imagine it makes sense.  
+    ##### I DON'T KNOW WHAT THIS IS DOING, but I imagine it makes sense.
     #Order matters a lot here, first dicts have higher priority
     all_dicts = [kwargs, filtered_locals(local_args), obj.__dict__]
     all_dicts += configs
     obj.__dict__ = merge_config(all_dicts)
 
 def merge_config(all_dicts):
-    """ merge_config takes as input an array of dictionaries, all_dicts, 
-        and merges them all into a list all_config.  Then, it loops through 
-        all the entries of the dicitonaries and merges them. 
+    """ merge_config takes as input an array of dictionaries, all_dicts,
+        and merges them all into a list all_config.  Then, it loops through
+        all the entries of the dicitonaries and merges them.
     """
     all_config = reduce(op.add, [d.items() for d in all_dicts])
     config = dict()
@@ -415,8 +415,8 @@ def merge_config(all_dicts):
     return config
 
 def digest_locals(obj, keys = None):
-    """ digest_locals takes as input an object, obj, and works some of 
-        ##### Grant's black magic ##### on them. 
+    """ digest_locals takes as input an object, obj, and works some of
+        ##### Grant's black magic ##### on them.
     """
     caller_locals = filtered_locals(
         inspect.currentframe().f_back.f_locals
@@ -428,8 +428,8 @@ def digest_locals(obj, keys = None):
 
 
 def center_of_mass(points):
-    """ center_of_mass takes as input an array of points (points), 
-        and then finds the unweighted center of mass of the points 
+    """ center_of_mass takes as input an array of points (points),
+        and then finds the unweighted center of mass of the points
         (essentially the average displacement of all the points)
     """
     points = [np.array(point).astype("float") for point in points]
@@ -439,7 +439,7 @@ def center_of_mass(points):
 def is_on_line(p0, p1, p2, threshold = 0.01):
     """
     is_on_line takes as input three points, p0, p1, and p2, and returns
-    true if p0 is within threshold = 0.01 of the line. 
+    true if p0 is within threshold = 0.01 of the line.
     """
     p0, p1, p2 = map(lambda tup : np.array(tup[:2]), [p0, p1, p2])
     p1 -= p0
@@ -449,8 +449,8 @@ def is_on_line(p0, p1, p2, threshold = 0.01):
 
 def intersection(line1, line2):
     """
-    intersection takes as input two arrays of tuples corresponding 
-    to two points on the lines.  Then, it returns the 
+    intersection takes as input two arrays of tuples corresponding
+    to two points on the lines.  Then, it returns the
 
     A "line" should come in the form [(x0, y0), (x1, y1)] for two
     points it runs through
@@ -458,16 +458,16 @@ def intersection(line1, line2):
     p0, p1, p2, p3 = map(
         lambda tup : np.array(tup[:2]),
         [line1[0], line1[1], line2[0], line2[1]]
-    ) # get the y values 
-    p1, p2, p3 = map(lambda x : x - p0, [p1, p2, p3]) # shift them down to p0 
+    ) # get the y values
+    p1, p2, p3 = map(lambda x : x - p0, [p1, p2, p3]) # shift them down to p0
     transform = np.zeros((2, 2))  # get an empty 2 x 2 array
     transform[:,0], transform[:,1] = p1, p2 # make into [[x1,x2],[y1,y2]]
-    if np.linalg.det(transform) == 0: return # test for linear dependence 
+    if np.linalg.det(transform) == 0: return # test for linear dependence
     inv = np.linalg.inv(transform)           # else matrix is invertible; so find inv
     new_p3 = np.dot(inv, p3.reshape((2, 1))) # dot the inverse with the column vec p3
     #####
     #Where does line connecting (0, 1) to new_p3 hit x axis
-    x_intercept = new_p3[0] / (1 - new_p3[1]) 
+    x_intercept = new_p3[0] / (1 - new_p3[1])
     result = np.dot(transform, [[x_intercept], [0]])
     result = result.reshape((2,)) + p0
     return result
@@ -475,7 +475,7 @@ def intersection(line1, line2):
 def random_bright_color():
     """ random_bright_color() takes no inputs.  It picks a color from
         the current palette, and then interpolates an rgb value halfway
-        between the color and white, and returns this color. 
+        between the color and white, and returns this color.
     """
     color = random_color()
     curr_rgb = color_to_rgb(color)
@@ -485,7 +485,7 @@ def random_bright_color():
     return Color(rgb = new_rgb)
 
 def random_color():
-    """ random_color() takes no inputs, and outputs a pseudo-random 
+    """ random_color() takes no inputs, and outputs a pseudo-random
         color from the palette
     """
     return random.choice(PALETTE)
@@ -495,23 +495,23 @@ def random_color():
 
 def straight_path(start_points, end_points, alpha):
     """ straight_path takes as inputs two arrays of points,
-        start_points and end_points, as well as a float alpha. 
-        Then, straight_path calls interpolate to obtain an 
-        array of points alpha of the way between each start 
+        start_points and end_points, as well as a float alpha.
+        Then, straight_path calls interpolate to obtain an
+        array of points alpha of the way between each start
         and end point pair.
     """
     return interpolate(start_points, end_points, alpha)
 
 def path_along_arc(arc_angle, axis = OUT):
     """
-    path_along_art takes one argument arc_angle, and an optional 
-    argument axis (defaults to OUT).  I assume ##### arc_angle 
-    is in radians, but I'm not surejust based on this section. 
-    
-    Also, recall that OUT is defined in constants.py as the unit 
-    vector out of the screen. 
+    path_along_art takes one argument arc_angle, and an optional
+    argument axis (defaults to OUT).  I assume ##### arc_angle
+    is in radians, but I'm not surejust based on this section.
 
-    If vect is vector from start to end, [vect[:,1], -vect[:,0]] is 
+    Also, recall that OUT is defined in constants.py as the unit
+    vector out of the screen.
+
+    If vect is vector from start to end, [vect[:,1], -vect[:,0]] is
     perpendicualr to vect in the left direction.
     """
     if abs(arc_angle) < STRAIGHT_PATH_THRESHOLD: # if the path is pretty much straight...
@@ -519,11 +519,11 @@ def path_along_arc(arc_angle, axis = OUT):
     if np.linalg.norm(axis) == 0: # If the 'length' of the axis is 0
         axis = OUT # default to [0 0 1]
     unit_axis = axis/np.linalg.norm(axis) # get directioned axis w/ unit vec
-    def path(start_points, end_points, alpha): # generate path func. for arc_angle 
+    def path(start_points, end_points, alpha): # generate path func. for arc_angle
         vects = end_points - start_points
         # get vector corresponding to halfway pts
         centers = start_points + 0.5*vects
-        # get midpoints 
+        # get midpoints
         if arc_angle != np.pi:
             ##### Rotate the vector in the direction of the angle???
             centers += np.cross(unit_axis, vects/2.0)/np.tan(arc_angle/2)
@@ -532,13 +532,13 @@ def path_along_arc(arc_angle, axis = OUT):
     return path
 
 def clockwise_path():
-    """ clockwise_path() takes no arguments, and returns a function that 
+    """ clockwise_path() takes no arguments, and returns a function that
         can construct a path in the clockwise direction
     """
     return path_along_arc(-np.pi)
 
 def counterclockwise_path():
-    """ clockwise_path() takes no arguments, and returns a function that 
+    """ clockwise_path() takes no arguments, and returns a function that
         can construct a path in the counterclockwise direction
     """
     return path_along_arc(np.pi)
@@ -547,9 +547,9 @@ def counterclockwise_path():
 ################################################
 
 def to_cammel_case(name):
-    """ Seems like a typo (to camel case vs cammel case) but not sure. 
-        changes from snake case (e.g., this_variable) to camelCase (would 
-        now be thisVariable).  
+    """ Seems like a typo (to camel case vs cammel case) but not sure.
+        changes from snake case (e.g., this_variable) to camelCase (would
+        now be thisVariable).
 
         Takes a string and outputs a string, I think.
     """
@@ -561,11 +561,11 @@ def to_cammel_case(name):
     ])
 
 def initials(name, sep_values = [" ", "_"]):
-    """ initials takes as input a string name, and strings corresponding 
-        to 'separation' characters (e.g. space, or _ ).  
+    """ initials takes as input a string name, and strings corresponding
+        to 'separation' characters (e.g. space, or _ ).
     """
     return "".join([
-        (s[0] if s else "") 
+        (s[0] if s else "")
         for s in re.split("|".join(sep_values), name)
     ])
 
@@ -577,13 +577,13 @@ def cammel_case_initials(name):
 ################################################
 
 def drag_pixels(frames):
-    """ drag_pixels takes as input a frame of pixels, and 
-        ##### I really don't know what this does in any meaningful sense. 
-        It seems to do something with replacing 0 entries in a frame with 
+    """ drag_pixels takes as input a frame of pixels, and
+        ##### I really don't know what this does in any meaningful sense.
+        It seems to do something with replacing 0 entries in a frame with
         something that comes next
 
         But what kind of data is frame?  An array of pixels?  Not sure how
-        to document this. 
+        to document this.
     """
     curr = frames[0]
     new_frames = []
@@ -593,39 +593,39 @@ def drag_pixels(frames):
     return new_frames
 
 def invert_image(image):
-    """ invert_image takes as input an image (image), and returns an 
-        array of rgb values corresponding to the inverses of the rgb 
-        values for the pixels in the image. 
+    """ invert_image takes as input an image (image), and returns an
+        array of rgb values corresponding to the inverses of the rgb
+        values for the pixels in the image.
     """
     arr = np.array(image)
     arr = (255 * np.ones(arr.shape)).astype(arr.dtype) - arr
     return Image.fromarray(arr)
 
 def streth_array_to_length(nparray, length):
-    """ is this supposed to be stretch_array_to_length? Either way, 
-        streth_array_to_length takes as input an array, nparray, and 
-        a number, length.  
+    """ is this supposed to be stretch_array_to_length? Either way,
+        streth_array_to_length takes as input an array, nparray, and
+        a number, length.
 
-        ##### Also not exactly sure how this supposed to work / how 
-        inputs/outputs are meant to be formatted. 
+        ##### Also not exactly sure how this supposed to work / how
+        inputs/outputs are meant to be formatted.
 
-        It seems like in order for the final part to work, there should 
+        It seems like in order for the final part to work, there should
         be some kind of loop before the return to go through and change
-        each nparray index... But more likely, I'm just misunderstanding 
+        each nparray index... But more likely, I'm just misunderstanding
         how this is supposed to work.
     """
     curr_len = len(nparray)
     if curr_len > length:
         raise Warning("Trying to stretch array to a length shorter than its own")
     # scales an array of evenly spaced values between 0 and 1
-    indices = np.arange(length)/ float(length) 
+    indices = np.arange(length)/ float(length)
     indices *= curr_len
-    # 
+    #
     return nparray[indices.astype('int')]
 
 def make_even(iterable_1, iterable_2):
-    """ make_even takes as input two iterables, iterable_1 and iterable_2. 
-        then, make_even generates more terms in the shorter iterable 
+    """ make_even takes as input two iterables, iterable_1 and iterable_2.
+        then, make_even generates more terms in the shorter iterable
         until it is even with the second iterable (?)
     """
     list_1, list_2 = list(iterable_1), list(iterable_2)
@@ -636,10 +636,10 @@ def make_even(iterable_1, iterable_2):
     )
 
 def make_even_by_cycling(iterable_1, iterable_2):
-    """ make_even_by_cycling takes as input two iterables, iterable_1 
-        and iterable_2, then if one is shorter than the other, it returns 
-        a list with the other unmodified, and the shorter one extendede 
-        by cycling back to the first element.  
+    """ make_even_by_cycling takes as input two iterables, iterable_1
+        and iterable_2, then if one is shorter than the other, it returns
+        a list with the other unmodified, and the shorter one extendede
+        by cycling back to the first element.
     """
     length = max(len(iterable_1), len(iterable_2))
     cycle1 = it.cycle(iterable_1)
@@ -652,16 +652,16 @@ def make_even_by_cycling(iterable_1, iterable_2):
 ### Rate Functions ###
 
 def sigmoid(x):
-    """ sigmoid takes as argument a float x, and returns the sigmoid 
-        function evaluated at that x (returns float; graph looks like 
+    """ sigmoid takes as argument a float x, and returns the sigmoid
+        function evaluated at that x (returns float; graph looks like
         smoothed step function)
     """
     return 1.0/(1 + np.exp(-x))
 
 def smooth(t, inflection = 10.0):
-    """ smooth takes as input a (float?) t, and returns... something 
-        related to it and... inflection???  Seems like there should 
-        be a fairly simple explanation for what this does. 
+    """ smooth takes as input a (float?) t, and returns... something
+        related to it and... inflection???  Seems like there should
+        be a fairly simple explanation for what this does.
         #####
     """
     error = sigmoid(-inflection / 2)
@@ -679,10 +679,10 @@ def rush_from(t):
 
 def slow_into(t):
     """ why not np.sqrt(2t-t^2)?  What kinds of inputs does this take?
-        What does this function do?  I imagine it's something with 
+        What does this function do?  I imagine it's something with
         smoothing animations...maybe it scales the "times" at which
         each frame is rendered?  Something like that? #####
-    """ 
+    """
     return np.sqrt(1-(1-t)*(1-t))
 
 def double_smooth(t):
@@ -728,15 +728,15 @@ def squish_rate_func(func, a = 0.4, b = 0.6):
 
 def composition(func_list):
     """
-    composition takes as argument a list of functions, func_list, and composes 
-    them (I think it's f1(f2(f3(f4(....))))), but could be wrong).  
+    composition takes as argument a list of functions, func_list, and composes
+    them (I think it's f1(f2(f3(f4(....))))), but could be wrong).
 
     func_list should contain elements of the form (f, args)
 
     Are the functions in the input lambda functions??? what's going on ????
     """
     return reduce(
-        lambda (f1, args1), (f2, args2) : (lambda x : f1(f2(x, *args2), *args1)), 
+        lambda (f1, args1), (f2, args2) : (lambda x : f1(f2(x, *args2), *args1)),
         func_list,
         lambda x : x
     )
@@ -749,8 +749,8 @@ def remove_nones(sequence):
 
 #Matrix operations
 def thick_diagonal(dim, thickness = 2):
-    """ thick_diagonal takes as input an int dim, and an optional 'thickness' 
-        argument.  Then, it returns a square array of shape (dim,dim), with 
+    """ thick_diagonal takes as input an int dim, and an optional 'thickness'
+        argument.  Then, it returns a square array of shape (dim,dim), with
         a diagonal of thickness 'thickness.'
     """
     row_indices = np.arange(dim).repeat(dim).reshape((dim, dim))
@@ -758,7 +758,7 @@ def thick_diagonal(dim, thickness = 2):
     return (np.abs(row_indices - col_indices)<thickness).astype('uint8')
 
 def rotation_about_z(angle):
-    """ Takes as input an angle 'angle' in radians, and outputs the rotation matrix 
+    """ Takes as input an angle 'angle' in radians, and outputs the rotation matrix
         corresponding to rotating angle around some axis
     """
     return [
@@ -768,8 +768,8 @@ def rotation_about_z(angle):
     ]
 
 def z_to_vector(vector):
-    """ Takes as input a vector (represented as an array), and 
-        returns some matrix in SO(3) which takes the z-axis to the 
+    """ Takes as input a vector (represented as an array), and
+        returns some matrix in SO(3) which takes the z-axis to the
         (normalized) vector provided as an argument
     """
     norm = np.linalg.norm(vector)
@@ -797,7 +797,7 @@ def rotation_matrix(angle, axis):
     Takes as input an angle (angle) in radians, and axis,
     an array denoting the direction vector of the axis of rotation.
 
-    Outputs the rotation matrix for the specified rotation.  (Can 
+    Outputs the rotation matrix for the specified rotation.  (Can
     then use this rotation matrix to obtain a rotated vector around
     axis)
 
@@ -813,12 +813,12 @@ def rotate_vector(vector, angle, axis = OUT):
     return np.dot(rotation_matrix(angle, axis), vector)
 
 def angle_between(v1, v2):
-    """ 
+    """
     Takes as input two arrays v1 and v2, and uses the dot product
     to solve for the subtended angle
     """
     return np.arccos(np.dot(
-        v1 / np.linalg.norm(v1), 
+        v1 / np.linalg.norm(v1),
         v2 / np.linalg.norm(v2)
     ))
 

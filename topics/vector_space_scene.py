@@ -4,7 +4,7 @@ from scene import Scene
 from mobject import Mobject
 from mobject.vectorized_mobject import VMobject, VGroup
 from mobject.tex_mobject import TexMobject, TextMobject
-from animation import Animation    
+from animation import Animation
 from animation.transform import ApplyPointwiseFunction, Transform, \
     ApplyMethod, FadeOut, ApplyFunction
 from animation.simple_animations import ShowCreation, Write
@@ -23,7 +23,7 @@ Z_COLOR = BLUE_D
 
 class VectorScene(Scene):
     CONFIG = {
-        "basis_vector_stroke_width" : 6
+        "basis_vector_stroke_width" : 1
     }
     def add_plane(self, animate = False, **kwargs):
         plane = NumberPlane(**kwargs)
@@ -64,11 +64,11 @@ class VectorScene(Scene):
     def get_basis_vectors(self):
         return [
             Vector(
-                vect, color = color, 
+                vect, color = color,
                 stroke_width = self.basis_vector_stroke_width
             )
             for vect, color in [
-                ([1, 0], X_COLOR), 
+                ([1, 0], X_COLOR),
                 ([0, 1], Y_COLOR)
             ]
         ]
@@ -77,7 +77,7 @@ class VectorScene(Scene):
         i_hat, j_hat = self.get_basis_vectors()
         return VGroup(*[
             self.get_vector_label(
-                vect, label, color = color, 
+                vect, label, color = color,
                 label_scale_factor = 1,
                 **kwargs
             )
@@ -87,10 +87,10 @@ class VectorScene(Scene):
             ]
         ])
 
-    def get_vector_label(self, vector, label, 
-                         direction = "left", 
+    def get_vector_label(self, vector, label,
+                         direction = "left",
                          rotate = False,
-                         color = None, 
+                         color = None,
                          label_scale_factor = VECTOR_LABEL_SCALE_FACTOR):
         if not isinstance(label, TexMobject):
             if len(label) == 1:
@@ -265,9 +265,9 @@ class LinearTransformationScene(VectorScene):
         self.has_already_setup = True
         ##^This is to not break all the old Scenes
         self.background_mobjects = []
-        self.foreground_mobjects = []        
+        self.foreground_mobjects = []
         self.transformable_mobjects = []
-        self.moving_vectors = []        
+        self.moving_vectors = []
         self.transformable_labels = []
         self.moving_mobjects = []
 
@@ -278,7 +278,7 @@ class LinearTransformationScene(VectorScene):
 
         if self.show_coordinates:
             self.background_plane.add_coordinates()
-        if self.include_background_plane:                
+        if self.include_background_plane:
             self.add_background_mobject(self.background_plane)
         if self.include_foreground_plane:
             self.plane = NumberPlane(**self.foreground_plane_kwargs)
@@ -305,7 +305,7 @@ class LinearTransformationScene(VectorScene):
 
     def add_foreground_mobject(self, *mobjects):
         self.add_special_mobjects(self.foreground_mobjects, *mobjects)
-            
+
     def add_transformable_mobject(self, *mobjects):
         self.add_special_mobjects(self.transformable_mobjects, *mobjects)
 
@@ -323,7 +323,7 @@ class LinearTransformationScene(VectorScene):
         else:
             square.set_fill(color, opacity)
         self.add_transformable_mobject(square)
-        self.bring_to_front(*self.moving_vectors)        
+        self.bring_to_front(*self.moving_vectors)
         self.square = square
         return self
 
@@ -374,7 +374,7 @@ class LinearTransformationScene(VectorScene):
         return lambda point: np.dot(point, transposed_matrix)
 
     def get_piece_movement(self, pieces):
-        start = VMobject(*pieces)       
+        start = VMobject(*pieces)
         target = VMobject(*[mob.target for mob in pieces])
         if self.leave_ghost_vectors:
             self.add(start.copy().fade(0.7))
@@ -436,14 +436,3 @@ class LinearTransformationScene(VectorScene):
             for f_mob in self.foreground_mobjects
         ] + added_anims
         self.play(*anims, **kwargs)
-
-
-
-
-
-
-
-
-
-
-

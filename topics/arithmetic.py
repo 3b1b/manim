@@ -8,9 +8,9 @@ from mobject.tex_mobject import TexMobject
 
 class RearrangeEquation(Scene):
     def construct(
-        self, 
-        start_terms, 
-        end_terms, 
+        self,
+        start_terms,
+        end_terms,
         index_map,
         path_arc = np.pi,
         start_transform = None,
@@ -18,6 +18,9 @@ class RearrangeEquation(Scene):
         leave_start_terms = False,
         transform_kwargs = {},
         ):
+        """
+        def takes as input
+        """
         transform_kwargs["path_func"] = path
         start_mobs, end_mobs = self.get_mobs_from_terms(
             start_terms, end_terms
@@ -45,7 +48,7 @@ class RearrangeEquation(Scene):
             mobject_pairs += [
                 (start_mobs[a], Point(start_mobs[a].get_center()))
                 for a in unmatched_start_indices
-            ] 
+            ]
 
         self.add(*start_mobs)
         if leave_start_terms:
@@ -101,6 +104,3 @@ class FlipThroughSymbols(Animation):
             self.mobject.center().shift(
                 (1-alpha)*self.start_center + alpha*self.end_center
             )
-
-
-

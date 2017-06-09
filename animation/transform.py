@@ -28,7 +28,7 @@ class Transform(Animation):
         self.init_path_func()
 
         Animation.__init__(self, mobject, **kwargs)
-        self.name += "To" + str(target_mobject)  
+        self.name += "To" + str(target_mobject)
 
     def update_config(self, **kwargs):
         Animation.update_config(self, **kwargs)
@@ -115,7 +115,7 @@ class ShrinkToCenter(Transform):
     def __init__(self, mobject, **kwargs):
         Transform.__init__(
             self, mobject,
-            Point(mobject.get_center()), 
+            Point(mobject.get_center()),
             **kwargs
         )
 
@@ -144,7 +144,7 @@ class ApplyMethod(Transform):
 
 class FadeOut(Transform):
     CONFIG = {
-        "remover" : True, 
+        "remover" : True,
     }
     def __init__(self, mobject, **kwargs):
         target = mobject.copy()
@@ -222,7 +222,7 @@ class Rotate(ApplyMethod):
         if self.in_place:
             self.about_point = mobject.get_center()
         target.rotate(
-            angle, 
+            angle,
             axis = axis,
             about_point = self.about_point,
         )
@@ -252,8 +252,8 @@ class ApplyFunction(Transform):
     }
     def __init__(self, function, mobject, **kwargs):
         Transform.__init__(
-            self, 
-            mobject, 
+            self,
+            mobject,
             function(mobject.copy()),
             **kwargs
         )
@@ -287,7 +287,7 @@ class TransformAnimations(Transform):
             self.run_time = max(start_anim.run_time, end_anim.run_time)
         for anim in start_anim, end_anim:
             anim.set_run_time(self.run_time)
-            
+
         if start_anim.starting_mobject.get_num_points() != end_anim.starting_mobject.get_num_points():
             start_anim.starting_mobject.align_data(end_anim.starting_mobject)
             for anim in start_anim, end_anim:
@@ -303,6 +303,3 @@ class TransformAnimations(Transform):
         self.start_anim.update(alpha)
         self.end_anim.update(alpha)
         Transform.update(self, alpha)
-
-
-

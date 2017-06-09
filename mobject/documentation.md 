@@ -1,0 +1,16 @@
+# Mobjects
+Mobjects are (as far as I can tell) Grant's general class of
+mathematical objects.  Mobjects store arrays of points
+
+## Submobjects
+Mobjects can be nested in other Mobjects,
+as instances of *submobjects*.  This allows for applying mobject
+transformations and/or functions to a large group of mobjects, by
+applying said functions etc. to the parent Mobject.  Any special
+parameters given in the config for the parent mobject will be
+digested by the submobjects upon initialization, allowing them
+to inherit traits from parent mobjects without re-specifying
+all the configs upon initialization.
+
+## VMobjects
+## PMojbects

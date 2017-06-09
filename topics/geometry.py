@@ -4,6 +4,9 @@ from mobject import Mobject
 from mobject.vectorized_mobject import VMobject
 
 class Arc(VMobject):
+    """
+    Arc is a Vector Mobject defining a (circular?) arc
+    """
     CONFIG = {
         "radius"           : 1.0,
         "start_angle"      : 0,
@@ -11,10 +14,13 @@ class Arc(VMobject):
         "anchors_span_full_range" : True,
     }
     def __init__(self, angle, **kwargs):
-        digest_locals(self)
+        digest_locals(self) # inherit VMobject config and/or some other stuff
         VMobject.__init__(self, **kwargs)
 
     def generate_points(self):
+        """
+
+        """
         self.set_anchor_points(
             self.get_unscaled_anchor_points(),
             mode = "smooth"
@@ -22,11 +28,15 @@ class Arc(VMobject):
         self.scale(self.radius)
 
     def get_unscaled_anchor_points(self):
+        """
+        iterate through the angles in steps determined
+        by num anchor points
+        """
         return [
             np.cos(a)*RIGHT+np.sin(a)*UP
             for a in np.linspace(
-                self.start_angle, 
-                self.start_angle + self.angle, 
+                self.start_angle,
+                self.start_angle + self.angle,
                 self.num_anchors
             )
         ]
@@ -273,9 +283,9 @@ class Cross(VMobject):
     }
     def generate_points(self):
         p1, p2, p3, p4 = self.radius * np.array([
-            UP+LEFT, 
+            UP+LEFT,
             DOWN+RIGHT,
-            UP+RIGHT, 
+            UP+RIGHT,
             DOWN+LEFT,
         ])
         self.add(Line(p1, p2), Line(p3, p4))
@@ -340,7 +350,7 @@ class Square(Rectangle):
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
         Rectangle.__init__(
-            self, 
+            self,
             height = self.side_length,
             width = self.side_length,
             **kwargs
@@ -412,7 +422,7 @@ class PictureInPictureFrame(Rectangle):
             **kwargs
         )
         self.scale_to_fit_height(height)
-        
+
 
 class Grid(VMobject):
     CONFIG = {
@@ -438,6 +448,3 @@ class Grid(VMobject):
                 [-self.width/2., y-self.height/2., 0],
                 [self.width/2., y-self.height/2., 0]
             ))
-
-
-

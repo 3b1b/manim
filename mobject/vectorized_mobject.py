@@ -23,7 +23,7 @@ class VMobject(Mobject):
         self.set_style_data(
            stroke_color = self.stroke_color or self.color,
            stroke_width = self.stroke_width,
-           fill_color = self.fill_color or self.color, 
+           fill_color = self.fill_color or self.color,
            fill_opacity = self.fill_opacity,
            family = self.propogate_style_to_family
         )
@@ -33,10 +33,10 @@ class VMobject(Mobject):
         for mob in self.submobject_family():
             setattr(mob, attr, value)
 
-    def set_style_data(self, 
-                       stroke_color = None, 
+    def set_style_data(self,
+                       stroke_color = None,
                        stroke_width = None,
-                       fill_color = None, 
+                       fill_color = None,
                        fill_opacity = None,
                        family = True):
         if stroke_color is not None:
@@ -63,21 +63,21 @@ class VMobject(Mobject):
         if probably_meant_to_change_opacity:
             opacity = 1
         return self.set_style_data(
-            fill_color = color, 
-            fill_opacity = opacity, 
+            fill_color = color,
+            fill_opacity = opacity,
             family = family
         )
 
     def set_stroke(self, color = None, width = None, family = True):
         return self.set_style_data(
-            stroke_color = color, 
-            stroke_width = width, 
+            stroke_color = color,
+            stroke_width = width,
             family = family
         )
 
     def highlight(self, color, family = True):
         self.set_style_data(
-            stroke_color = color, 
+            stroke_color = color,
             fill_color = color,
             family = family
         )
@@ -132,6 +132,9 @@ class VMobject(Mobject):
         return is_closed(self.points)
 
     def set_anchors_and_handles(self, anchors, handles1, handles2):
+        """
+
+        """
         assert(len(anchors) == len(handles1)+1)
         assert(len(anchors) == len(handles2)+1)
         total_len = 3*(len(anchors)-1) + 1
@@ -262,7 +265,7 @@ class VMobject(Mobject):
     def get_points_defining_boundary(self):
         return self.get_anchors()
 
-        
+
     ## Alignment
 
     def align_points(self, mobject):
@@ -291,10 +294,10 @@ class VMobject(Mobject):
             return self
         points = np.array([self.points[0]])
         num_curves = curr-1
-        #Curves in self are buckets, and we need to know 
-        #how many new anchor points to put into each one.  
-        #Each element of index_allocation is like a bucket, 
-        #and its value tells you the appropriate index of 
+        #Curves in self are buckets, and we need to know
+        #how many new anchor points to put into each one.
+        #Each element of index_allocation is like a bucket,
+        #and its value tells you the appropriate index of
         #the smaller curve.
         index_allocation = (np.arange(curr+n-1) * num_curves)/(curr+n-1)
         for index in range(num_curves):
@@ -323,9 +326,9 @@ class VMobject(Mobject):
 
     def interpolate_color(self, mobject1, mobject2, alpha):
         attrs = [
-            "stroke_rgb", 
-            "stroke_width",            
-            "fill_rgb", 
+            "stroke_rgb",
+            "stroke_width",
+            "fill_rgb",
             "fill_opacity",
         ]
         for attr in attrs:
@@ -371,7 +374,7 @@ class VMobject(Mobject):
 
 class VGroup(VMobject):
     #Alternate name to improve readability during use
-    pass 
+    pass
 
 class VectorizedPoint(VMobject):
     CONFIG = {
@@ -388,9 +391,3 @@ class VectorizedPoint(VMobject):
 
     def get_height(self):
         return self.artificial_height
-
-
-
-
-
-
