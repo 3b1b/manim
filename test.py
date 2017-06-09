@@ -1,25 +1,6 @@
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import VMobject
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.number_line import *
-from topics.numerals import *
-from scene import Scene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-from mobject.vectorized_mobject import *
-
 from topics.matrix import *
 from topics.vector_space_scene import *
-from mobject.tex_mobject import TexMobject
+from mobject.tex_mobject import TexMobject#, TextMobject
 from mobject import Mobject
 from mobject.image_mobject import ImageMobject
 from mobject.vectorized_mobject import VMobject
@@ -42,25 +23,29 @@ from topics.matrix import *
 from topics.vector_space_scene import *
 
 def curvy_squish(point):
+    """ transforms a point (x, y, z) into
+        the point (x+cos(y), y+sin(x), 0)
+    """
     x, y, z = point
     return (x+np.cos(y))*RIGHT + (y+np.sin(x))*UP
 
 
-class TransformJustOneVector(VectorScene):
+class TransformJustOneVector(VectorScene): #subclass of VectorScene, which is defined in topics.vector_space_scene
     def construct(self):
-        self.lock_in_faded_grid()
-        v1_coords = [-3, 1]
-        t_matrix = [[0, -1], [2, -1]]
-        v1 = Vector(v1_coords)
+        self.lock_in_faded_grid()       #puts a faded grid on the plane
+        v1_coords = [-3, 1]             #sets example vector
+        t_matrix = [[0, -1], [2, -1]]   #sets transformation matrix
+        v1 = Vector(v1_coords)          #makes example vector a proper Vector
         v2 = Vector(
-            np.dot(np.array(t_matrix).transpose(), v1_coords),
+            np.dot(np.array(t_matrix).transpose(), v1_coords), 
+            #multiplies v1 by the transformation matrix to get v2 = the transformation of v1
             color = PINK
         )
         for v, word in (v1, "Input"), (v2, "Output"):
-            v.label = TextMobject("%s vector"%word)
-            v.label.next_to(v.get_end(), UP)
-            v.label.highlight(v.get_color())
-            self.play(ShowCreation(v))
+            v.label = TextMobject("%s vector"%word) #creates TextMobject "In/Output Vector" 
+            v.label.next_to(v.get_end(), UP) #places v.label on top of the end of v
+            v.label.highlight(v.get_color()) #colors v.label appropriately
+            self.play(ShowCreation(v)) #plays animation
             self.play(Write(v.label))
         self.dither()
         self.remove(v2)
