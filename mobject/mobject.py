@@ -66,17 +66,22 @@ class Mobject(object):
             to the front of the list.
         """
         self.remove(*mobjects) # what does the * do???? why is it not in the next line?
+        #the * means that mobjects is an input that is a list of undetermined length
+        #in the next line, list(mobjects) doesn't need to know how long it is? i think?
         self.submobjects = list(mobjects) + self.submobjects
         return self
 
     def remove(self, *mobjects):
+        """ removes the elements of the list mobjects
+            from the submobjects of self
+        """
         for mobject in mobjects:
             if mobject in self.submobjects:
                 self.submobjects.remove(mobject)
         return self
 
     def get_array_attrs(self):
-        return ["points"]
+        return ["points"] #????
 
     def digest_mobject_attrs(self):
         """
@@ -208,6 +213,11 @@ class Mobject(object):
         return self
 
     def apply_function(self, function):
+        """ looks like this applies a function to the same slice
+            of all family members?
+            i think maybe like stretch(self,factor,dim), but instead
+            of stretching, it's applying a function
+        """
         for mob in self.family_members_with_points():
             mob.points = np.apply_along_axis(function, 1, mob.points)
         return self
