@@ -76,7 +76,8 @@ class SVGMobject(VMobject):
         elif element.tagName in ['polygon', 'polyline']:
             result.append(self.polygon_to_mobject(element))
         else:
-            warnings.warn("Unknown element type: " + element.tagName)
+            pass ##TODO
+            # warnings.warn("Unknown element type: " + element.tagName)
         result = filter(lambda m : m is not None, result)
         self.handle_transforms(element, VMobject(*result))
         return result

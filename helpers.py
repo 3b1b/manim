@@ -289,7 +289,13 @@ def remove_list_redundancies(l):
     disturbing the order of the elements in the list.  This
     non-redundant list is then returned.
     """
-    return sorted(list(set(l)), lambda a, b : l.index(a) - l.index(b))
+    result = []
+    used = set()
+    for x in l:
+        if not x in used:
+            result.append(x)
+            used.add(x)
+    return result
 
 def list_update(l1, l2):
     """
@@ -312,7 +318,7 @@ def all_elements_are_instances(iterable, Class):
     """
     return all(map(lambda e : isinstance(e, Class), iterable))
 
-def adjascent_pairs(objects):
+def adjacent_pairs(objects):
     """ IDK whether to fix the typo here!  Anyways, adja(s)cent_pairs
         Takes as input an array of objects (objects), and returns a list
         of adjacent elements.
@@ -546,7 +552,7 @@ def counterclockwise_path():
 
 ################################################
 
-def to_cammel_case(name):
+def to_camel_case(name):
     """ Seems like a typo (to camel case vs cammel case) but not sure.
         changes from snake case (e.g., this_variable) to camelCase (would
         now be thisVariable).
@@ -601,7 +607,8 @@ def invert_image(image):
     arr = (255 * np.ones(arr.shape)).astype(arr.dtype) - arr
     return Image.fromarray(arr)
 
-def streth_array_to_length(nparray, length):
+
+def stretch_array_to_length(nparray, length):
     """ is this supposed to be stretch_array_to_length? Either way,
         streth_array_to_length takes as input an array, nparray, and
         a number, length.

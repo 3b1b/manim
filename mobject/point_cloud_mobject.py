@@ -147,7 +147,7 @@ class PMobject(Mobject):
     def align_points_with_larger(self, larger_mobject):
         assert(isinstance(larger_mobject, PMobject))
         self.apply_over_attr_arrays(
-            lambda a : streth_array_to_length(
+            lambda a : stretch_array_to_length(
                 a, larger_mobject.get_num_points()
             )
         )

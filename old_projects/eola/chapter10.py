@@ -293,7 +293,7 @@ class IHatAsEigenVector(ExampleTranformationScene):
         ]
         lines = [
             Line(v1.get_end(), v2.get_end(), color = YELLOW)
-            for v1, v2 in adjascent_pairs([self.i_hat]+targets)
+            for v1, v2 in adjacent_pairs([self.i_hat]+targets)
         ]
         for target, line in zip(targets, lines):
             self.play(

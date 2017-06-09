@@ -37,7 +37,7 @@ class ImageMobject(PMobject):
     def __init__(self, image_file, **kwargs):
         digest_locals(self)
         Mobject.__init__(self, **kwargs)
-        self.name = to_cammel_case(
+        self.name = to_camel_case(
             os.path.split(image_file)[-1].split(".")[0]
         )
         possible_paths = [

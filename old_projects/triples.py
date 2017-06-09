@@ -3070,6 +3070,45 @@ class Thumbnail(DrawRadialLines):
         triples.next_to(rect.get_top(), DOWN)
         self.add(rect, triples)
 
+class Poster(DrawRadialLines):
+    CONFIG = {
+        "final_unit_size" : 0.1,
+        "plane_center" : ORIGIN,
+    }
+    def construct(self):
+        self.force_skipping()
+        self.add_plane()
+        self.add_transformed_color_grid()
+        self.color_grid.set_stroke(width = 5)
+        self.resize_plane()
+        self.add_dots()
+        self.create_lines()
+        self.show_single_line()
+        self.show_all_lines()
+
+        for dot_group in self.dots, self.new_dots:
+            for dot in dot_group.family_members_with_points():
+                dot.scale_in_place(0.5)
+        self.remove(self.coordinate_labels)
+
+        # rect = Rectangle(
+        #     height = 4.3, width = 4.2,
+        #     stroke_width = 3,
+        #     stroke_color = WHITE,
+        #     fill_color = BLACK,
+        #     fill_opacity = 1,
+        # )
+        # rect.to_corner(UP+RIGHT, buff = 0.01)
+        # triples = VGroup(*map(TexMobject, [
+        #     "3^2 + 4^2 = 5^2",
+        #     "5^2 + 12^2 = 13^2",
+        #     "8^2 + 15^2 = 17^2",
+        #     "\\vdots"
+        # ]))
+        # triples.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        # triples.next_to(rect.get_top(), DOWN)
+        # self.add(rect, triples)
+
 
 
 
