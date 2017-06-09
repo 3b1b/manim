@@ -36,6 +36,9 @@ class PiCreature(SVGMobject):
         "flip_at_start" : False,
         "is_looking_direction_purposeful" : False,
         "start_corner" : None,
+        #Range of proportions along body where arms are
+        "right_arm_range" : [0.55, 0.7],
+        "left_arm_range" : [.34, .462],
     }
     def __init__(self, mode = "plain", **kwargs):
         self.parts_named = False
@@ -191,6 +194,14 @@ class PiCreature(SVGMobject):
         ]
         self.look(top_mouth_point - bottom_mouth_point)
         return self
+
+    def get_arm_copies(self):
+        body = self.body
+        return VGroup(*[
+            body.copy().pointwise_become_partial(body, *alpha_range)
+            for alpha_range in self.right_arm_range, self.left_arm_range
+        ])
+
             
 def get_all_pi_creature_modes():
     result = []

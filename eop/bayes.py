@@ -1198,7 +1198,6 @@ class GeneralizeBayesRule(SampleSpaceScene):
             GrowFromCenter(braces),
             Write(label)
         )
-        self.dither(2)
 
         self.post_rects = post_rects
         self.posterior_tex = label
@@ -1259,11 +1258,6 @@ class GeneralizeBayesRule(SampleSpaceScene):
             ShowCreation(prior_arrow), 
             ShowCreation(prior_rect),
         ) 
-        self.play(
-            Write(posterior_word), 
-            ShowCreation(posterior_arrow), 
-            ShowCreation(posterior_rect),
-        )
         self.dither()
         self.play(Transform(
             prior.copy(), prior_target,
@@ -1287,6 +1281,11 @@ class GeneralizeBayesRule(SampleSpaceScene):
                 scale_factor = 1
             ))
         self.dither()
+        self.play(
+            Write(posterior_word), 
+            ShowCreation(posterior_arrow), 
+            ShowCreation(posterior_rect),
+        )
 
         self.prior_label = VGroup(prior_word, prior_arrow, prior_rect)
         self.posterior_label = VGroup(posterior_word, posterior_arrow, posterior_rect)
@@ -1408,9 +1407,139 @@ class GeneralizeBayesRule(SampleSpaceScene):
         label.highlight_by_tex("B", RED)
         label.highlight_by_tex("I", GREEN)
 
+class MoreExamples(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("More examples!", target_mode = "hooray")
+        self.change_student_modes(*["hooray"]*3)
+        self.dither(2)
 
+class MusicExample(SampleSpaceScene, PiCreatureScene):
+    def construct(self):
+        self.force_skipping()
 
+        self.introduce_musician()
+        self.add_prior()
+        self.record_track()
+        self.add_bottom_conditionl()
+        self.add_top_conditionl()
+        self.get_positive_review()
+        self.restrict_space()
+        self.show_posterior_rectangles()
+        self.show_posterior_probability()
+        self.intuition_of_positive_feedback()
+        self.make_friends_honest()
+        self.get_negative_feedback()
+        self.show_negative_feedback_posterior()
+        self.intuition_of_negative_feedback()
 
+    def introduce_musician(self):
+        randy = self.pi_creature
+        randy.change_mode("soulful_musician")
+        randy.arms = randy.get_arm_copies()
+        guitar = randy.guitar = Guitar()
+        guitar.move_to(randy)
+        guitar.shift(0.35*RIGHT + 0.6*UP)
+
+        randy.change_mode("plain")
+        self.play(
+            randy.change_mode, "soulful_musician",
+            path_arc = np.pi/6,
+        )
+        self.play(
+            Animation(randy),
+            DrawBorderThenFill(guitar),
+            Animation(randy.arms)
+        )
+        randy.add(guitar, randy.arms)
+        self.dither()
+        self.play_notes(guitar)
+        self.change_pi_creature_with_guitar("concerned_musician")
+        self.dither(2)
+        self.play(
+            randy.scale, 0.5,
+            randy.to_corner, UP+LEFT,
+        )
+        self.play_notes(guitar)
+
+    def add_prior(self):
+        pass
+
+    def record_track(self):
+        pass
+
+    def add_bottom_conditionl(self):
+        pass
+
+    def add_top_conditionl(self):
+        pass
+
+    def get_positive_review(self):
+        pass
+
+    def restrict_space(self):
+        pass
+
+    def show_posterior_rectangles(self):
+        pass
+
+    def show_posterior_probability(self):
+        pass
+
+    def intuition_of_positive_feedback(self):
+        pass
+
+    def make_friends_honest(self):
+        pass
+
+    def get_negative_feedback(self):
+        pass
+
+    def show_negative_feedback_posterior(self):
+        pass
+
+    def intuition_of_negative_feedback(self):
+        pass
+
+    ######
+
+    def create_pi_creature(self):
+        randy = Randolph()
+        randy.left_arm_range = [.36, .45]
+        return randy
+
+    def change_pi_creature_with_guitar(self, target_mode):
+        randy = self.pi_creature
+        randy.remove(randy.arms, randy.guitar)
+        target = randy.copy()
+        target.change_mode(target_mode)
+        target.arms = target.get_arm_copies()
+        target.guitar = randy.guitar.copy()
+        for pi in randy, target:
+            pi.add(pi.guitar, pi.arms)
+        self.play(Transform(randy, target))
+
+    def play_notes(self, guitar):
+        note = SVGMobject(file_name = "8th_note")
+        note.scale_to_fit_height(0.5)
+        note.set_stroke(width = 0)
+        note.set_fill(BLUE, 1)
+        note.move_to(guitar)
+        notes = VGroup(*[note.copy() for x in range(10)])
+        sine_wave = FunctionGraph(np.sin, x_min = -5, x_max = 5)
+        sine_wave.scale(0.75)
+        sine_wave.rotate(np.pi/6)
+        sine_wave.shift(
+            notes.get_center() - \
+            sine_wave.point_from_proportion(0)
+        )
+        self.play(LaggedStart(
+            MoveAlongPath, notes, 
+            lambda n : (n, sine_wave),
+            path_arc = np.pi/2,
+            run_time = 4,
+            lag_ratio = 0.5,
+            rate_func = lambda t : t,
+        ))
 
 
 

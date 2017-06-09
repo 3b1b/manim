@@ -11,6 +11,19 @@ from animation.simple_animations import Rotating
 from topics.geometry import Circle, Line, Rectangle, Square, Arc, Polygon
 from topics.three_dimensions import Cube
 
+class Guitar(SVGMobject):
+    CONFIG = {
+        "file_name" : "guitar",
+        "height" : 2.5,
+        "fill_color" : DARK_GREY,
+        "fill_opacity" : 1,
+        "stroke_color" : WHITE,
+        "stroke_width" : 0.5,
+    }
+    def __init__(self, **kwargs):
+        SVGMobject.__init__(self, **kwargs)
+        self.scale_to_fit_height(self.height)
+
 class SunGlasses(SVGMobject):
     CONFIG = {
         "file_name" : "sunglasses",
