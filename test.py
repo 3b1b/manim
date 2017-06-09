@@ -46,12 +46,12 @@ class TransformJustOneVector(VectorScene): #subclass of VectorScene, which is de
             v.label = TextMobject("%s vector"%word) #creates TextMobject "In/Output Vector" 
             v.label.next_to(v.get_end(), UP) #places v.label on top of the end of v
             v.label.highlight(v.get_color()) #colors v.label appropriately
-            self.play(ShowCreation(v)) #plays animation
+            self.play(ShowCreation(v)) 
             self.play(Write(v.label))
         self.dither()
         self.remove(v2)
         self.play(
-            Transform(
+            Transform(          #animation of transformation
                 v1.copy(), v2,
                 path_arc = -np.pi/2, run_time = 3
             ),
