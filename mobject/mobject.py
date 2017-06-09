@@ -55,7 +55,7 @@ class Mobject(object):
         pass
 
     def add(self, *mobjects):
-        """ The add method allows for on-the-fly updating of what mobjects
+        """ The add method allows for on-the-fly updating of what mobjectsa
             are contained in mobject
         """
         self.submobjects = list_update(self.submobjects, mobjects)

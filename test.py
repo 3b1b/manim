@@ -19,27 +19,8 @@ from mobject.vectorized_mobject import *
 
 from topics.matrix import *
 from topics.vector_space_scene import *
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import VMobject
 
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.number_line import *
-from topics.numerals import *
-from scene import Scene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-from mobject.vectorized_mobject import *
-
-from topics.matrix import *
-from topics.vector_space_scene import *
+import math
 
 def curvy_squish(point):
     x, y, z = point
@@ -358,21 +339,26 @@ class FollowIHatJHat(LinearTransformationScene):
         self.apply_transposed_matrix([[-1, 1], [-2, -1]])
         self.dither()
 
+global_v_coords = [-2,2]
+global_transposed_matrix = [[1,-2], [2,1]]
+global_result = np.dot(np.array(global_v_coords), np.array(global_transposed_matrix))
 class TrackBasisVectorsExample(LinearTransformationScene):
+    global global_v_coords
+    global global_transposed_matrix
     CONFIG = {
-        "transposed_matrix" : [[1, -2], [3, 0]],
-        "v_coords" : [-1, 2],
-        "v_coord_strings" : ["-1", "2"],
+        "transposed_matrix" : global_transposed_matrix,
+        "v_coords" : global_v_coords,
+        "v_coord_strings" : [str(global_v_coords[0]), str(global_v_coords[1])],
         "result_coords_string" : """
             =
             \\left[ \\begin{array}{c}
-                -1(1) + 2(3) \\\\
-                -1(-2) + 2(0)
+                """+str(global_v_coords[0])+"""("""+str(global_transposed_matrix[0][0])+""") + """+str(global_v_coords[1])+"""("""+str(global_transposed_matrix[1][0])+""") \\\\
+                """+str(global_v_coords[0])+"""("""+str(global_transposed_matrix[0][1])+""") + """+str(global_v_coords[1])+"""("""+str(global_transposed_matrix[1][1])+""")
             \\end{array}\\right]
             =
             \\left[ \\begin{array}{c}
-                5 \\\\
-                2
+                """+str(global_result[0])+""" \\\\
+                """+str(global_result[1])+"""
             \\end{array}\\right]
         """
     }
@@ -429,20 +415,33 @@ class TrackBasisVectorsExample(LinearTransformationScene):
 
     def show_linear_combination(self, clean_up = True):
         i_hat_copy, j_hat_copy = [m.copy() for m in self.i_hat, self.j_hat]
-        self.play(ApplyFunction(
-            lambda m : m.scale(self.v_coords[0]).fade(0.3),
-            i_hat_copy
-        ))
-        self.play(ApplyFunction(
-            lambda m : m.scale(self.v_coords[1]).fade(0.3),
-            j_hat_copy
-        ))
-        i_hat_neg = Vector([-1,0], color=GREEN_C, stroke_width=1)
-        self.play(ApplyMethod(j_hat_copy.shift, i_hat_copy.get_end()))
-        self.dither(2)
+        #self.play(ApplyFunction(
+        #    lambda m : m.scale(self.v_coords[0]).fade(0.3),
+        #    i_hat_copy
+        #))
+        #self.play(ApplyFunction(
+        #    lambda m : m.scale(self.v_coords[1]).fade(0.3),
+        #    j_hat_copy
+        #))
+        j_list = []
+        total_j_vec = np.array([0,-1])
+        for j in range(abs(self.v_coords[1])):
+            j_vec = self.j_hat.copy()
+            j_list += j_vec
+            total_j_vec += np.array([0,1])
+            self.play(ApplyMethod(j_vec.shift, Vector(np.array([self.v_coords[0],0])).get_end()))
+            self.play(ApplyMethod(j_vec.shift, Vector(total_j_vec).get_end()))
+
+        i_list = []
+        total_i_vec = np.array([-1,0])
+        for i in range(abs(self.v_coords[0])):
+            i_vec = self.i_hat.copy()
+            i_list += i_vec
+            total_i_vec += np.array([1,0])
+            self.play(ApplyMethod(i_vec.shift, Vector(np.array([0,self.v_coords[1]])).get_end()))
+            self.play(ApplyMethod(i_vec.shift, Vector(total_i_vec).get_start()))
         if clean_up:
             self.play(FadeOut(i_hat_copy), FadeOut(j_hat_copy))
-
 
     def get_v_definition(self):
         v_def = TexMobject([

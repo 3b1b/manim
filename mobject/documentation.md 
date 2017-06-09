@@ -1,6 +1,7 @@
 # Mobjects
 Mobjects are (as far as I can tell) Grant's general class of
-mathematical objects.  Mobjects store arrays of points
+mathematical objects.  By default, Mobjects store arrays of points
+defining themselves
 
 ## Submobjects
 Mobjects can be nested in other Mobjects,
