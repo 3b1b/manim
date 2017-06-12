@@ -37,7 +37,6 @@ class TexMobject(SVGMobject):
         "fill_color"        : WHITE,
         "should_center"     : True,
         "arg_separator"     : " ",
-        "enforce_new_line_structure" : False,
         "initial_scale_factor" : TEX_MOB_SCALE_FACTOR,
         "organize_left_to_right" : False,
         "propogate_style_to_family" : True,
@@ -59,7 +58,6 @@ class TexMobject(SVGMobject):
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
 
-
     def path_string_to_mobject(self, path_string):
         #Overwrite superclass default to use
         #specialized path_string mobject
@@ -72,8 +70,6 @@ class TexMobject(SVGMobject):
 
     def get_modified_expression(self):
         result = self.arg_separator.join(self.args)
-        if self.enforce_new_line_structure:
-            result = result.replace("\n", " \\\\ \n ")
         result = " ".join([self.alignment, result])
         result = result.strip()
         result = self.modify_special_strings(result)
@@ -86,7 +82,12 @@ class TexMobject(SVGMobject):
             #fraction line needs something to be over
             tex += "\\,"
         for t1, t2 in ("\\left", "\\right"), ("\\right", "\\left"):
-            if t1 in tex and t2 not in tex:
+            should_replace = reduce(op.and_, [
+                t1 in tex,
+                t2 not in tex,
+                len(tex) > len(t1) and tex[len(t1)] in "()[]\\"
+            ])
+            if should_replace:
                 tex = tex.replace(t1, "\\big")
         return tex
 
@@ -185,7 +186,6 @@ class TextMobject(TexMobject):
     CONFIG = {
         "template_tex_file" : TEMPLATE_TEXT_FILE,
         "initial_scale_factor" : TEXT_MOB_SCALE_FACTOR,
-        "enforce_new_line_structure" : True,
         "alignment" : "\\centering",
     }
 
@@ -269,7 +269,6 @@ def tex_to_svg_file(expression, template_tex_file):
     dvi_file = tex_to_dvi(tex_file)
     return dvi_to_svg(dvi_file)
 
-
 def generate_tex_file(expression, template_tex_file):
     result = os.path.join(
         TEX_DIR, 
@@ -304,8 +303,6 @@ def tex_to_dvi(tex_file):
             if os.path.exists(log_file):
                 with open(log_file, 'r') as f:
                     latex_output = f.read()
-            if latex_output:
-                sys.stderr.write(latex_output)
             raise Exception(
                 "Latex error converting to dvi. "
                 "See log output above or the log file: %s" % log_file)
