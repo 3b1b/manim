@@ -39,15 +39,15 @@ class TransformJustOneVector(VectorScene):
             color = PINK
         )
         for v, word in (v1, "Input"), (v2, "Output"):
-            v.label = TextMobject("%s vector"%word)
-            v.label.next_to(v.get_end(), UP)
-            v.label.highlight(v.get_color())
-            self.play(ShowCreation(v))
+            v.label = TextMobject("%s vector"%word) #creates TextMobject "In/Output Vector"
+            v.label.next_to(v.get_end(), UP) #places v.label on top of the end of v
+            v.label.highlight(v.get_color()) #colors v.label appropriately
+            self.play(ShowCreation(v)) #plays animation
             self.play(Write(v.label))
         self.dither()
         self.remove(v2)
         self.play(
-            Transform(
+            Transform(          #animation of transformation
                 v1.copy(), v2,
                 path_arc = -np.pi/2, run_time = 3
             ),
