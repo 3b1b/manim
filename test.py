@@ -340,7 +340,7 @@ class FollowIHatJHat(LinearTransformationScene):
         self.apply_transposed_matrix([[-1, 1], [-2, -1]])
         self.dither()
 
-global_v_coords = [-1,4]
+global_v_coords = [-2,-4]
 global_transposed_matrix = [[5,3], [-2,0]]
 global_result = np.dot(np.array(global_v_coords), np.array(global_transposed_matrix))
 class TrackBasisVectorsExample(LinearTransformationScene):
@@ -415,53 +415,67 @@ class TrackBasisVectorsExample(LinearTransformationScene):
         i_hat_copy, j_hat_copy = [m.copy() for m in self.i_hat, self.j_hat]
         global i_list
         global j_list
+        i_vector = [int(self.i_hat.copy().get_end()[0]),int(self.i_hat.copy().get_end()[1])]
+        j_vector = [int(self.j_hat.copy().get_end()[0]),int(self.j_hat.copy().get_end()[1])]
+
+
         i_list = []
+        total_i_vec = np.array([0,0])
         if self.v_coords[0] < 0:
-            total_i_vec = np.array([0,0])
-            print(total_i_vec)
-            for i in range(abs(self.v_coords[0])):
-                i_vec = Vector([-self.i_hat.copy().get_end()[0], -self.i_hat.copy().get_end()[1]])
+            i_vector = [-1*i_vector[0],-1*i_vector[1]]
+            #total_i_vec = np.array([0,0])
+            #print(total_i_vec)
+            for i in range(abs(self.v_coords[0])): #assumes input vectors of the form (a,b) have integer a, b
+                i_vec = Vector(i_vector)
                 i_list += i_vec
                 i_vec.highlight(X_COLOR)
                 self.add_vector(i_vec)
                 self.play(ApplyMethod(i_vec.shift, Vector(total_i_vec).get_end()))
-                total_i_vec += np.array([-int(self.i_hat.get_end()[0]),-int(self.i_hat.get_end()[1])])
+                total_i_vec += np.array(i_vector)
 
         else:
-            total_i_vec = np.array([-1,0])
-            for i in range(abs(self.v_coords[0])):
+            #total_i_vec = np.array([0,0]) #([-1,0])
+            for i in range(abs(self.v_coords[0])-1):
                 i_vec = self.i_hat.copy()
                 i_list += i_vec
                 i_vec.highlight(X_COLOR)
                 self.add_vector(i_vec)
-                total_i_vec += np.array([1,0])
                 self.play(ApplyMethod(i_vec.shift, Vector(total_i_vec).get_end()))
+                total_i_vec += np.array(i_vector)
+
+
         j_list = []
-        total_j_vec = np.array([-int(self.i_hat.get_end()[0])-int(self.j_hat.get_end()[0])+1,-int(self.i_hat.get_end()[1])-int(self.j_hat.get_end()[1])])
-        if self.v_coords[1] > 0:
+        total_j_vec = total_i_vec
+        #total_j_vec = np.array([-int(self.i_hat.get_end()[0])-int(self.j_hat.get_end()[0])+1,-int(self.i_hat.get_end()[1])-int(self.j_hat.get_end()[1])])
+        if self.v_coords[1] < 0:
+            #for element in j_vector: element *= -1
+            j_vector = [-1*j_vector[0],-1*j_vector[1]]
             for j in range(abs(self.v_coords[1])):
-                j_vec = self.j_hat.copy()
+                j_vec = Vector(j_vector)
                 j_list += j_vec
                 j_vec.highlight(Y_COLOR)
                 self.add_vector(j_vec)
-                self.play(ApplyMethod(j_vec.shift, Vector(np.array([self.v_coords[0],0])).get_end()))
-                total_j_vec += np.array([int(self.j_hat.get_end()[0]),int(self.j_hat.get_end()[1])])
+                #self.play(ApplyMethod(j_vec.shift, Vector(np.array([self.v_coords[0],0])).get_end()))
+                #total_j_vec += np.array([int(self.j_hat.get_end()[0]),int(self.j_hat.get_end()[1])])
                 self.play(ApplyMethod(j_vec.shift, Vector(total_j_vec).get_end()))
+                total_j_vec += np.array(j_vector)
+
         else:
-            total_j_vec = np.array([0,1])
+            total_j_vec = np.array([0,0]) #([0,1])
             for j in range(abs(self.v_coords[1])):
-                j_vec = self.j_hat.copy()
+                #j_vec = self.j_hat.copy()
                 j_vec = Vector(np.array([0,-1]))
                 j_list += j_vec
                 j_vec.highlight(Y_COLOR)
                 self.add_vector(j_vec)
-                self.play(ApplyMethod(j_vec.shift, Vector(np.array([self.v_coords[0],0])).get_end()))
-                total_j_vec += np.array([int(self.j_hat.get_end()[0]),int(self.j_hat.get_end()[1])])
+                #self.play(ApplyMethod(j_vec.shift, Vector(np.array([self.v_coords[0],0])).get_end()))
+                #total_j_vec += np.array([int(self.j_hat.get_end()[0]),-1*int(self.j_hat.get_end()[1])])
+                total_j_vec += np.array([0,-1])
                 self.play(ApplyMethod(j_vec.shift, Vector(total_j_vec).get_end()))
-        for i_vec in i_list:
-            i_vec.highlight(YELLOW)
-        for j_vec in j_list:
-            j_vec.highlight(YELLOW)
+        #for i_vec in i_list:
+        #    i_vec.highlight(YELLOW)
+        #for j_vec in j_list:
+        #    j_vec.highlight(YELLOW)
         self.dither()
         if clean_up:
             total_list = i_list + j_list
