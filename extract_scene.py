@@ -71,6 +71,9 @@ def get_configuration(sys_argv):
       if opt == '-m':
          config["camera_config"] = MEDIUM_QUALITY_CAMERA_CONFIG
          config["frame_duration"] = MEDIUM_QUALITY_FRAME_DURATION
+      if opt == '-k':
+         config["camera_config"] = PRODUCTION_QUALITY_CAMERA_CONFIG
+         config["frame_duration"] = PRODUCTION_QUALITY_FRAME_DURATION
       if opt == '-w':
          config["write_to_movie"] = True
       if opt == '-s':

@@ -24,29 +24,25 @@ import helpers
 import math
 
 def curvy_squish(point):
-    """ transforms a point (x, y, z) into
-        the point (x+cos(y), y+sin(x), 0)
-    """
     x, y, z = point
     return (x+np.cos(y))*RIGHT + (y+np.sin(x))*UP
 
 
-class TransformJustOneVector(VectorScene): #subclass of VectorScene, which is defined in topics.vector_space_scene
+class TransformJustOneVector(VectorScene):
     def construct(self):
-        self.lock_in_faded_grid()       #puts a faded grid on the plane
-        v1_coords = [-3, 1]             #sets example vector
-        t_matrix = [[0, -1], [2, -1]]   #sets transformation matrix
-        v1 = Vector(v1_coords)          #makes example vector a proper Vector
+        self.lock_in_faded_grid()
+        v1_coords = [-3, 1]
+        t_matrix = [[0, -1], [2, -1]]
+        v1 = Vector(v1_coords)
         v2 = Vector(
-            np.dot(np.array(t_matrix).transpose(), v1_coords), 
-            #multiplies v1 by the transformation matrix to get v2 = the transformation of v1
+            np.dot(np.array(t_matrix).transpose(), v1_coords),
             color = PINK
         )
         for v, word in (v1, "Input"), (v2, "Output"):
-            v.label = TextMobject("%s vector"%word) #creates TextMobject "In/Output Vector" 
-            v.label.next_to(v.get_end(), UP) #places v.label on top of the end of v
-            v.label.highlight(v.get_color()) #colors v.label appropriately
-            self.play(ShowCreation(v)) #plays animation
+            v.label = TextMobject("%s vector"%word)
+            v.label.next_to(v.get_end(), UP)
+            v.label.highlight(v.get_color())
+            self.play(ShowCreation(v))
             self.play(Write(v.label))
         self.dither()
         self.remove(v2)
@@ -344,8 +340,8 @@ class FollowIHatJHat(LinearTransformationScene):
         self.apply_transposed_matrix([[-1, 1], [-2, -1]])
         self.dither()
 
-global_v_coords = [3,-2]
-global_transposed_matrix = [[-2,2.5], [2,2]]
+global_v_coords = [-1,4]
+global_transposed_matrix = [[5,3], [-2,0]]
 global_result = np.dot(np.array(global_v_coords), np.array(global_transposed_matrix))
 class TrackBasisVectorsExample(LinearTransformationScene):
     global global_v_coords
@@ -371,9 +367,8 @@ class TrackBasisVectorsExample(LinearTransformationScene):
         self.setup()
         self.label_bases()
         self.introduce_vector()
-        self.dither()
         self.apply_transposed_matrix(self.transposed_matrix)
-        self.dither()
+        self.show_linear_combination(clean_up=False)
         self.write_linear_map_rule()
         self.show_basis_vector_coords()
 
@@ -413,7 +408,7 @@ class TrackBasisVectorsExample(LinearTransformationScene):
         ))
         self.remove(pre_def)
         self.add_foreground_mobject(v_def)
-        self.show_linear_combination()
+        self.show_linear_combination(clean_up=True)
         self.remove(coords)
 
     def show_linear_combination(self, clean_up = True):
@@ -422,53 +417,56 @@ class TrackBasisVectorsExample(LinearTransformationScene):
         global j_list
         i_list = []
         if self.v_coords[0] < 0:
-            total_i_vec = np.array([1,0])
+            total_i_vec = np.array([0,0])
+            print(total_i_vec)
             for i in range(abs(self.v_coords[0])):
-                i_vec = Vector(np.array([-1,0]))
+                i_vec = Vector([-self.i_hat.copy().get_end()[0], -self.i_hat.copy().get_end()[1]])
                 i_list += i_vec
                 i_vec.highlight(X_COLOR)
                 self.add_vector(i_vec)
-                total_i_vec += np.array([-1,0])
                 self.play(ApplyMethod(i_vec.shift, Vector(total_i_vec).get_end()))
+                total_i_vec += np.array([-int(self.i_hat.get_end()[0]),-int(self.i_hat.get_end()[1])])
+
         else:
             total_i_vec = np.array([-1,0])
             for i in range(abs(self.v_coords[0])):
-                i_vec = Vector(np.array([1,0]))
+                i_vec = self.i_hat.copy()
                 i_list += i_vec
                 i_vec.highlight(X_COLOR)
                 self.add_vector(i_vec)
                 total_i_vec += np.array([1,0])
                 self.play(ApplyMethod(i_vec.shift, Vector(total_i_vec).get_end()))
-
         j_list = []
-        total_j_vec = np.array([0,0])
+        total_j_vec = np.array([-int(self.i_hat.get_end()[0])-int(self.j_hat.get_end()[0])+1,-int(self.i_hat.get_end()[1])-int(self.j_hat.get_end()[1])])
         if self.v_coords[1] > 0:
             for j in range(abs(self.v_coords[1])):
-                j_vec = Vector(np.array([0,1]))
+                j_vec = self.j_hat.copy()
                 j_list += j_vec
                 j_vec.highlight(Y_COLOR)
                 self.add_vector(j_vec)
                 self.play(ApplyMethod(j_vec.shift, Vector(np.array([self.v_coords[0],0])).get_end()))
-                if total_j_vec[1] == 1:
-                    pass
-                else:
-                    total_j_vec += np.array([0,1])
-                    self.play(ApplyMethod(j_vec.shift, Vector(total_j_vec).get_end()))
+                total_j_vec += np.array([int(self.j_hat.get_end()[0]),int(self.j_hat.get_end()[1])])
+                self.play(ApplyMethod(j_vec.shift, Vector(total_j_vec).get_end()))
         else:
             total_j_vec = np.array([0,1])
             for j in range(abs(self.v_coords[1])):
+                j_vec = self.j_hat.copy()
                 j_vec = Vector(np.array([0,-1]))
                 j_list += j_vec
                 j_vec.highlight(Y_COLOR)
                 self.add_vector(j_vec)
                 self.play(ApplyMethod(j_vec.shift, Vector(np.array([self.v_coords[0],0])).get_end()))
-                total_j_vec += np.array([0,-1])
+                total_j_vec += np.array([int(self.j_hat.get_end()[0]),int(self.j_hat.get_end()[1])])
                 self.play(ApplyMethod(j_vec.shift, Vector(total_j_vec).get_end()))
-
+        for i_vec in i_list:
+            i_vec.highlight(YELLOW)
+        for j_vec in j_list:
+            j_vec.highlight(YELLOW)
+        self.dither()
         if clean_up:
-            total_list = [i_hat_copy] + [j_hat_copy] + i_list + j_list
-            self.play(FadeOut(i_hat_copy), FadeOut(j_hat_copy))
-
+            total_list = i_list + j_list
+            for vec in total_list:
+                self.remove(vec)
 
     def get_v_definition(self):
         v_def = TexMobject([

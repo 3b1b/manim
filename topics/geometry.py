@@ -270,6 +270,79 @@ class Vector(Arrow):
             direction = np.append(np.array(direction), 0)
         Arrow.__init__(self, ORIGIN, direction, **kwargs)
 
+class DashedArrow(DashedLine):
+    CONFIG = {
+        "color"      : YELLOW_C,
+        "tip_length" : 0.25,
+        "tip_angle"  : np.pi/6,
+        "buff"       : MED_SMALL_BUFF,
+        "propogate_style_to_family" : False,
+        "preserve_tip_size_when_scaling" : True,
+    }
+    def __init__(self, *args, **kwargs):
+        points = map(self.pointify, args)
+        if len(args) == 1:
+            args = (points[0]+UP+LEFT, points[0])
+        DashedLine.__init__(self, *args, **kwargs)
+        self.add_tip()
+
+    def add_tip(self, add_at_end = True):
+        tip = VMobject(
+            close_new_points = True,
+            mark_paths_closed = True,
+            fill_color = self.color,
+            fill_opacity = 1,
+            stroke_color = self.color,
+        )
+        self.set_tip_points(tip, add_at_end)
+        self.tip = tip
+        self.add(self.tip)
+        self.init_colors()
+
+    def set_tip_points(self, tip, add_at_end = True):
+        start, end = self.get_start_and_end()
+        anchors = self.get_anchors()
+        vect = anchors[-1] - anchors[-2]
+        vect *= -self.tip_length / np.linalg.norm(vect)
+        if not add_at_end:
+            start, end = end, start
+            vect = -vect
+        tip_points = [
+            end+rotate_vector(vect, u*self.tip_angle)
+            for u in 1, -1
+        ]
+        tip.set_anchor_points(
+            [tip_points[0], end, tip_points[1]],
+            mode = "corners"
+        )
+        return self
+
+    def get_end(self):
+        if hasattr(self, "tip"):
+            return self.tip.get_anchors()[1]
+        else:
+            return DashedLine.get_end(self)
+
+    def get_tip(self):
+        return self.tip
+
+    def scale(self, scale_factor, **kwargs):
+        DashedLine.scale(self, scale_factor, **kwargs)
+        if self.preserve_tip_size_when_scaling and self.get_length() > self.tip_length:
+            self.set_tip_points(self.tip)
+        return self
+
+class DashedVector(DashedArrow):
+    CONFIG = {
+        "color" : YELLOW,
+        "buff"  : 0,
+    }
+    def __init__(self, direction, **kwargs):
+        if len(direction) == 2:
+            direction = np.append(np.array(direction), 0)
+        DashedArrow.__init__(self, ORIGIN, direction, **kwargs)
+
+
 class DoubleArrow(Arrow):
     def __init__(self, *args, **kwargs):
         Arrow.__init__(self, *args, **kwargs)
