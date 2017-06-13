@@ -45,7 +45,7 @@ class NiceVector(Vector):
         
         return self
     
-    def lin_combo(self):
+    def linear_decomposition(self):
         """ returns a list of basis vectors
             such that when the list is added up,
             we get the vector
