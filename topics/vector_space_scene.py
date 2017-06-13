@@ -9,7 +9,7 @@ from animation.transform import ApplyPointwiseFunction, Transform, \
     ApplyMethod, FadeOut, ApplyFunction
 from animation.simple_animations import ShowCreation, Write
 from topics.number_line import NumberPlane, Axes
-from topics.geometry import Vector, Line, Circle, Arrow, Dot, \
+from topics.geometry import NiceVector, Vector, Line, Circle, Arrow, Dot, \
     BackgroundRectangle, Square
 
 from helpers import *
@@ -51,6 +51,14 @@ class VectorScene(Scene):
     def add_vector(self, vector, color = YELLOW, animate = True, **kwargs):
         if not isinstance(vector, Arrow):
             vector = Vector(vector, color = color, **kwargs)
+        if animate:
+            self.play(ShowCreation(vector))
+        self.add(vector)
+        return vector
+
+    def add_nice_vector(self, vector, color = YELLOW, animate = True, **kwargs):
+        if not isinstance(vector, Arrow):
+            vector = NiceVector(vector, color = color, **kwargs)
         if animate:
             self.play(ShowCreation(vector))
         self.add(vector)
