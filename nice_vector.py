@@ -36,10 +36,11 @@ class NiceVector(Vector):
         """
         inverse = np.linalg.inv(matrix) #inverts the matrix
         self.coords = np.dot(inverse, self.coords) # find new coords as linear combo of new basis
-        new_basis = np.zeros((self.dim, self.dim))
+        new_basis = np.zeros((self.dim, self.dim)) #
         for i in range(self.dim):
             for j in range(self.dim):
-                new_basis[i][j] = np.dot(inverse[i][j],self.basis[j][i]) #reconstructs new basis from given matrix and old basis
+                new_basis[i][j] = np.dot(inverse[i][j],self.basis[j][i])
+                #reconstructs new basis from given matrix and old basis
         self.basis = new_basis #resets basis
         return self
 
@@ -48,20 +49,21 @@ class NiceVector(Vector):
             such that when the list is added up,
             we get the vector
         """
-        vec_list = np.empty((0,self.dim))
+        vec_list = np.empty((0,self.dim)) # initialize empty array for storing stuff
         for i in range(self.dim): #loop over dimensions
-            print(i, self.coords)
             for j in range(abs(int(np.floor(self.coords[i])))): #whole basis vectors
                 if self.coords[i] < 0: #if coordinate is negative...
-                    vec_list = np.concatenate((vec_list, -1*self.basis[i].reshape((1,self.dim))))#switch the direction of the basis vector
+                    vec_list = np.concatenate((vec_list, -1*self.basis[i].reshape((1,self.dim))))
+                    #switch the direction of the basis vector and add it properly
                 else:
-                    vec_list = np.concatenate((vec_list, self.basis[i].reshape((1,self.dim)))) #otherwise just use the normal one
+                    vec_list = np.concatenate((vec_list, self.basis[i].reshape((1,self.dim))))
+                    #otherwise just use the normal one
             leftover = self.coords[i]%1 #leftover, if coordinates are noninteger
             if leftover != 0: #check if nonzero leftover
                 leftover_vec = np.zeros((1,dim))
                 for k in range(self.dim):
-                    np.concatenate((leftover_vec, leftover*self.basis[k].reshape(1,self.dim)))#create scaled leftover vector
-                    #we don't need to check its sign because
+                    np.concatenate((leftover_vec, leftover*self.basis[k].reshape(1,self.dim)))
+                    #create scaled leftover vector. we don't need to check sign
                 np.concatenate((vec_list, leftover_vec)) #add leftover vector to overall vector list
         vector_list = []
         for vec in vec_list:
@@ -79,6 +81,6 @@ class NiceVector(Vector):
         self.start = coords
         return self
 
-vect = NiceVector(np.array([6,2,0]))
-vect.linear_decomposition()
-vect.put_at(np.array([3,0,0]))
+#vect = NiceVector(np.array([6,2,0]))
+#vect.linear_decomposition()
+#vect.put_at(np.array([3,0,0]))
