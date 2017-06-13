@@ -40,7 +40,7 @@ class NiceVector(Vector):
         new_basis = np.array(self.dim) 
         for i in range(self.dim):
             for j in range(self.dim):
-                new_basis[i][j] = inverse[i][j]*self.basis[j] #reconstructs new basis from given matrix and old basis
+                new_basis[i][j] = np.dot(inverse[i][j],self.basis[j]) #reconstructs new basis from given matrix and old basis
         self.basis = new_basis #resets basis
         
         return self
