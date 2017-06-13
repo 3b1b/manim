@@ -20,14 +20,17 @@ from mobject.vectorized_mobject import *
 from topics.matrix import *
 from topics.vector_space_scene import *
 
+from nice_vector import NiceVector
+
 import helpers
-import myhelpers
+#import myhelpers
 import math
 
 def curvy_squish(point):
     x, y, z = point
     return (x+np.cos(y))*RIGHT + (y+np.sin(x))*UP
 
+    
 class Test(VectorScene):
     def construct(self):
         self.setup()
@@ -115,7 +118,7 @@ class Test2(LinearTransformationScene):
         self.remove(coords)
 
     def show_linear_combination(self, clean_up = True):
-        i_hat_copy, j_hat_copy = [m.copy() for m in self.i_hat, self.j_hat]
+        """i_hat_copy, j_hat_copy = [m.copy() for m in self.i_hat, self.j_hat]
         global i_list
         global j_list
         i_list = []
@@ -165,11 +168,23 @@ class Test2(LinearTransformationScene):
             i_vec.highlight(YELLOW)
         for j_vec in j_list:
             j_vec.highlight(YELLOW)
-        self.dither()
+        self.dither()"""
+        vector = NiceVector(np.append(self.v_coords, [0]))#, basis = np.array([[1.,0,],[0.,1.]]), dim = 2)
+        vectorlist = vector.linear_decomposition()
+        total_vec = np.array([0,0,0])
+        for vec in vectorlist:
+            vec.highlight(Y_COLOR)
+            self.add_vector(vec)
+            #self.play(ApplyMethod(vec.shift, Vector(np.array([self.v_coords[0],0])).get_end()))
+            
+            self.play(ApplyMethod(vec.shift, Vector(total_vec).get_end()))
+            total_vec = np.array([int(vec.get_end()[0]), int(vec.get_end()[1]), int(vec.get_end()[2])])
+
         if clean_up:
-            total_list = i_list + j_list
-            for vec in total_list:
+            for vec in vectorlist:
                 self.remove(vec)
+        
+        
 
     def get_v_definition(self):
         v_def = TexMobject([

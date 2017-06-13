@@ -83,4 +83,4 @@ class NiceVector(Vector):
 
 #vect = NiceVector(np.array([6,2,0]))
 #vect.linear_decomposition()
-#vect.put_at(np.array([3,0,0]))
+#vect.put_at(np.array([3,0,0])
