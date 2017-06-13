@@ -47,25 +47,28 @@ class NiceVector(Vector):
             such that when the list is added up,
             we get the vector
         """
-        vec_list = []
+        vec_list = np.zeros((1,2))
         for i in range(self.dim): #loop over dimensions
-            for j in range(abs(np.floor(self.coords[i]))): #whole basis vectors
+            for j in range(abs(int(np.floor(self.coords[i])))): #whole basis vectors
+                print(i,j)
                 if self.coords[i] < 0: #if coordinate is negative...
-                    vec_list += -1*np.array(self.basis[i]) #switch the direction of the basis vector
+                    np.append(vec_list, -1*np.array(self.basis[i]))#switch the direction of the basis vector
                 else:
-                    vec_list += self.basis[i] #otherwise just use the normal one
-            leftover = self.coords[i] - np.floor(self.coords[i]) #leftover, if coordinates are noninteger
+                    np.append(vec_list, np.array(self.basis[i])) #otherwise just use the normal one
+            leftover = self.coords[i]%1 #leftover, if coordinates are noninteger
             if leftover != 0: #check if nonzero leftover
-                leftover_vec = []
+                leftover_vec = np.zeros((1,2))
                 for k in range(self.dim):
-                    leftover_vec += [leftover*np.array(self.basis[k])] #create scaled leftover vector
+                    np.append(leftover_vec, leftover*np.array(self.basis[k]))#create scaled leftover vector
                     #we don't need to check its sign because
-                vec_list += leftover_vec #add leftover vector to overall vector list
-
+                np.append(vec_list, leftover_vec) #add leftover vector to overall vector list
+            print(vec_list)
         vector_list = []
         for vec in vec_list:
-            vector_list += [Vector([vec])] #convert vectors into Vector objects
+            vector_list += [Vector(vec)] #convert vectors into Vector objects
+        print(vector_list)
         return vector_list
 
 vect = NiceVector(np.array([6,2]))
 vect.change_of_basis(np.array([[3,0],[0,2]]))
+vect.linear_decomposition()
