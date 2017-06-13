@@ -46,23 +46,26 @@ class NiceVector(Vector):
         return self
     
     def linear_decomposition(self):
-        """ returns a list of basis vectors
+        """ returns a list of basis Vectors
             such that when the list is added up,
             we get the vector
         """
         vec_list = []
         for i in range(self.dim): #loop over dimensions
             for j in range(abs(np.floor(self.coords[i]))): #whole basis vectors
-                vec_list += self.basis[i]
+                if self.coords[i] < 0: #if coordinate is negative...
+                    vec_list += -1*np.array(self.basis[i]) #switch the direction of the basis vector
+                else:
+                    vec_list += self.basis[i] #otherwise just use the normal one
             leftover = self.coords[i] - np.floor(self.coords[i]) #leftover, if coordinates are noninteger
             if leftover != 0: #check if nonzero leftover
                 leftover_vec = []
                 for k in range(self.dim):
-                    leftover_vec += [leftover*self.coords[k]] #create scaled leftover vector
+                    leftover_vec += [leftover*np.array(self.basis[k])] #create scaled leftover vector
+                    #we don't need to check its sign because 
                 vec_list += leftover_vec #add leftover vector to overall vector list
 
         vector_list = []
         for vec in vec_list:
             vector_list += [Vector([vec])] #convert vectors into Vector objects
         return vector_list
-
