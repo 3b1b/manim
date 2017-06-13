@@ -24,10 +24,11 @@ import helpers
 import math
 
 class NiceVector(Vector):
-    def __init__(self, coords, basis=np.array([[1.,0.],[0.,1.]]), dim = 2):
+    def __init__(self, coords, basis=np.array([[1.,0.,0.],[0.,1.,0.],[0.,0.,1.]]), dim = 3):
         self.coords = coords
         self.basis = basis
         self.dim = dim
+        Vector.__init__(self, coords)
 
     def change_of_basis(self, matrix):
         """ changes the basis that self is expressed in,
@@ -49,6 +50,7 @@ class NiceVector(Vector):
         """
         vec_list = np.empty((0,self.dim))
         for i in range(self.dim): #loop over dimensions
+            print(i, self.coords)
             for j in range(abs(int(np.floor(self.coords[i])))): #whole basis vectors
                 if self.coords[i] < 0: #if coordinate is negative...
                     vec_list = np.concatenate((vec_list, -1*self.basis[i].reshape((1,self.dim))))#switch the direction of the basis vector
@@ -62,11 +64,21 @@ class NiceVector(Vector):
                     #we don't need to check its sign because
                 np.concatenate((vec_list, leftover_vec)) #add leftover vector to overall vector list
         vector_list = []
-        print(vec_list)
         for vec in vec_list:
             vector_list += [Vector(vec)] #convert vectors into Vector objects
-        print(vector_list)
         return vector_list
 
-vect = NiceVector(np.array([6,2]))
+    def put_at(self, coords):
+        """
+        put_vector_at takes as input "vector," an object
+        of class Vector, and "coords," an array defining
+        a point in R^3.  Then, put_vector_at shifts
+        vector such that its tail sits on coords.
+        """
+        self.shift(coords)
+        self.start = coords
+        return self
+
+vect = NiceVector(np.array([6,2,0]))
 vect.linear_decomposition()
+vect.put_at(np.array([3,0,0]))
