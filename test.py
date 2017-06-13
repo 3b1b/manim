@@ -24,6 +24,7 @@ import helpers
 import myhelpers
 import math
 
+
 def curvy_squish(point):
     x, y, z = point
     return (x+np.cos(y))*RIGHT + (y+np.sin(x))*UP
@@ -46,7 +47,7 @@ class Test(VectorScene):
         self.add_vector(another_vector)
 
 global_v_coords = [-1,4]
-global_transposed_matrix = [[5,3], [-2,0]]
+global_transposed_matrix = np.array([[5,3], [-2,0]])
 global_result = np.dot(np.array(global_v_coords), np.array(global_transposed_matrix))
 class Test2(LinearTransformationScene):
     global global_v_coords
@@ -73,6 +74,9 @@ class Test2(LinearTransformationScene):
         self.label_bases()
         self.introduce_vector()
         self.apply_transposed_matrix(self.transposed_matrix)
+        new_matrix = np.dot(np.linalg.inv(self.transposed_matrix), self.transposed_matrix.T)
+        self.apply_transposed_matrix(new_matrix)
+
         self.show_linear_combination(clean_up=False)
 
     def label_bases(self):
@@ -120,6 +124,7 @@ class Test2(LinearTransformationScene):
         global j_list
         i_list = []
         if self.v_coords[0] < 0:
+            total_j_vec = np.array([-self.i_hat.get_end()[0], 0])
             total_i_vec = np.array([0,0])
             print(total_i_vec)
             for i in range(abs(self.v_coords[0])):
@@ -131,6 +136,7 @@ class Test2(LinearTransformationScene):
                 total_i_vec += np.array([-int(self.i_hat.get_end()[0]),-int(self.i_hat.get_end()[1])])
 
         else:
+            total_j_vec = np.array([self.i_hat.get_end()[0],0])
             total_i_vec = np.array([-1,0])
             for i in range(abs(self.v_coords[0])):
                 i_vec = self.i_hat.copy()
@@ -140,7 +146,7 @@ class Test2(LinearTransformationScene):
                 total_i_vec += np.array([1,0])
                 self.play(ApplyMethod(i_vec.shift, Vector(total_i_vec).get_end()))
         j_list = []
-        total_j_vec = np.array([0,0])
+        total_j_vec += np.array([0, -self.j_hat.get_end()[1]])
         if self.v_coords[1] > 0:
             for j in range(abs(self.v_coords[1])):
                 j_vec = self.j_hat.copy()

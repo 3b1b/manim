@@ -270,6 +270,64 @@ class Vector(Arrow):
             direction = np.append(np.array(direction), 0)
         Arrow.__init__(self, ORIGIN, direction, **kwargs)
 
+class NiceVector(Vector):
+    def __init__(self, coords, basis=np.array([[1.,0.,0.],[0.,1.,0.],[0.,0.,1.]]), dim = 3, **kwargs):
+        self.coords = coords
+        self.basis = basis
+        self.dim = dim
+        Vector.__init__(self, coords, **kwargs)
+
+    def change_of_basis(self, matrix):
+        """ changes the basis that self is expressed in,
+            using the given change of base matrix.
+        """
+        inverse = np.linalg.inv(matrix) #inverts the matrix
+        self.coords = np.dot(inverse, self.coords) # find new coords as linear combo of new basis
+        new_basis = np.zeros((self.dim, self.dim)) #
+        for i in range(self.dim):
+            for j in range(self.dim):
+                new_basis[i][j] = np.dot(inverse[i][j],self.basis[j][i])
+                #reconstructs new basis from given matrix and old basis
+        self.basis = new_basis #resets basis
+        return self
+
+    def linear_decomposition(self):
+        """ returns a list of basis Vectors
+            such that when the list is added up,
+            we get the vector
+        """
+        vec_list = np.empty((0,self.dim)) # initialize empty array for storing stuff
+        for i in range(self.dim): #loop over dimensions
+            for j in range(abs(int(np.floor(self.coords[i])))): #whole basis vectors
+                if self.coords[i] < 0: #if coordinate is negative...
+                    vec_list = np.concatenate((vec_list, -1*self.basis[i].reshape((1,self.dim))))
+                    #switch the direction of the basis vector and add it properly
+                else:
+                    vec_list = np.concatenate((vec_list, self.basis[i].reshape((1,self.dim))))
+                    #otherwise just use the normal one
+            leftover = self.coords[i]%1 #leftover, if coordinates are noninteger
+            if leftover != 0: #check if nonzero leftover
+                leftover_vec = np.zeros((1,dim))
+                for k in range(self.dim):
+                    np.concatenate((leftover_vec, leftover*self.basis[k].reshape(1,self.dim)))
+                    #create scaled leftover vector. we don't need to check sign
+                np.concatenate((vec_list, leftover_vec)) #add leftover vector to overall vector list
+        vector_list = []
+        for vec in vec_list:
+            vector_list += [Vector(vec)] #convert vectors into Vector objects
+        return vector_list
+
+    def put_at(self, coords):
+        """
+        put_vector_at takes as input "vector," an object
+        of class Vector, and "coords," an array defining
+        a point in R^3.  Then, put_vector_at shifts
+        vector such that its tail sits on coords.
+        """
+        self.shift(coords)
+        self.start = coords
+        return self
+
 class DashedArrow(DashedLine):
     CONFIG = {
         "color"      : YELLOW_C,
