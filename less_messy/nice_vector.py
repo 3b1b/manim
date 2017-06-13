@@ -24,7 +24,7 @@ import helpers
 import math
 
 class NiceVector(Vector):
-    def __init__(self, coords, basis=[[1,0],[0,1]], dim = 2):
+    def __init__(self, coords, basis=([1,0],[0,1]) , dim = 2):
         self.coords = coords
         self.basis = basis
         self.dim = dim
@@ -50,14 +50,19 @@ class NiceVector(Vector):
             such that when the list is added up,
             we get the vector
         """
-        vector_list = []
+        vec_list = []
         for i in range(self.dim): #loop over dimensions
             for j in range(abs(np.floor(self.coords[i]))): #whole basis vectors
-                vector_list += self.basis[i]
+                vec_list += self.basis[i]
             leftover = self.coords[i] - np.floor(self.coords[i]) #leftover, if coordinates are noninteger
             if leftover != 0: #check if nonzero leftover
                 leftover_vec = []
                 for k in range(self.dim):
                     leftover_vec += [leftover*self.coords[k]] #create scaled leftover vector
-                vector_list += leftover_vec #add leftover vector to overall vector list
-        return vector_list 
+                vec_list += leftover_vec #add leftover vector to overall vector list
+
+        vector_list = []
+        for vec in vec_list:
+            vector_list += [Vector([vec])] #convert vectors into Vector objects
+        return vector_list
+
