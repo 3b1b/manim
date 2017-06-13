@@ -21,11 +21,234 @@ from topics.matrix import *
 from topics.vector_space_scene import *
 
 import helpers
+import myhelpers
 import math
 
 def curvy_squish(point):
     x, y, z = point
     return (x+np.cos(y))*RIGHT + (y+np.sin(x))*UP
+
+class Test(VectorScene):
+    def construct(self):
+        self.setup()
+        self.test()
+        self.dither()
+
+    def test(self):
+        a_vector = Vector(np.array([1,1]))
+        myhelpers.put_vector_at(a_vector, np.array([2,2,0]))
+        self.add_vector(a_vector)
+        self.dither()
+        self.dither()
+        another_vector = Vector(np.array([-2,2]))
+        another_vector = myhelpers.put_vector_at(another_vector, np.array([-3,-1,0]))
+        print(another_vector.points)
+        self.add_vector(another_vector)
+
+global_v_coords = [-1,4]
+global_transposed_matrix = [[5,3], [-2,0]]
+global_result = np.dot(np.array(global_v_coords), np.array(global_transposed_matrix))
+class Test2(LinearTransformationScene):
+    global global_v_coords
+    global global_transposed_matrix
+    CONFIG = {
+        "transposed_matrix" : global_transposed_matrix,
+        "v_coords" : global_v_coords,
+        "v_coord_strings" : [str(global_v_coords[0]), str(global_v_coords[1])],
+        "result_coords_string" : """
+            =
+            \\left[ \\begin{array}{c}
+                """+str(global_v_coords[0])+"""("""+str(global_transposed_matrix[0][0])+""") + """+str(global_v_coords[1])+"""("""+str(global_transposed_matrix[1][0])+""") \\\\
+                """+str(global_v_coords[0])+"""("""+str(global_transposed_matrix[0][1])+""") + """+str(global_v_coords[1])+"""("""+str(global_transposed_matrix[1][1])+""")
+            \\end{array}\\right]
+            =
+            \\left[ \\begin{array}{c}
+                """+str(global_result[0])+""" \\\\
+                """+str(global_result[1])+"""
+            \\end{array}\\right]
+        """
+    }
+    def construct(self):
+        self.setup()
+        self.label_bases()
+        self.introduce_vector()
+        self.apply_transposed_matrix(self.transposed_matrix)
+        self.show_linear_combination(clean_up=False)
+
+    def label_bases(self):
+        triplets = [
+            (self.i_hat, "\\hat{\\imath}", X_COLOR),
+            (self.j_hat, "\\hat{\\jmath}", Y_COLOR),
+        ]
+        label_mobs = []
+        for vect, label, color in triplets:
+            label_mobs.append(self.add_transformable_label(
+                vect, label, "\\text{Transformed } " + label,
+                color = color,
+                direction = "right",
+            ))
+        self.i_label, self.j_label = label_mobs
+
+    def introduce_vector(self):
+        v = self.add_vector(self.v_coords)
+        coords = Matrix(self.v_coords)
+        coords.scale(VECTOR_LABEL_SCALE_FACTOR)
+        coords.next_to(v.get_end(), np.sign(self.v_coords[0])*RIGHT)
+
+        self.play(Write(coords, run_time = 1))
+        v_def = self.get_v_definition()
+        pre_def = VMobject(
+            VectorizedPoint(coords.get_center()),
+            VMobject(*[
+                mob.copy()
+                for mob in coords.get_mob_matrix().flatten()
+            ])
+        )
+        self.play(Transform(
+            pre_def, v_def,
+            run_time = 2,
+            submobject_mode = "all_at_once"
+        ))
+        self.remove(pre_def)
+        self.add_foreground_mobject(v_def)
+        self.show_linear_combination(clean_up=True)
+        self.remove(coords)
+
+    def show_linear_combination(self, clean_up = True):
+        i_hat_copy, j_hat_copy = [m.copy() for m in self.i_hat, self.j_hat]
+        global i_list
+        global j_list
+        i_list = []
+        if self.v_coords[0] < 0:
+            total_i_vec = np.array([0,0])
+            print(total_i_vec)
+            for i in range(abs(self.v_coords[0])):
+                i_vec = Vector([-self.i_hat.copy().get_end()[0], -self.i_hat.copy().get_end()[1]])
+                i_list += i_vec
+                i_vec.highlight(X_COLOR)
+                self.add_vector(i_vec)
+                self.play(ApplyMethod(i_vec.shift, Vector(total_i_vec).get_end()))
+                total_i_vec += np.array([-int(self.i_hat.get_end()[0]),-int(self.i_hat.get_end()[1])])
+
+        else:
+            total_i_vec = np.array([-1,0])
+            for i in range(abs(self.v_coords[0])):
+                i_vec = self.i_hat.copy()
+                i_list += i_vec
+                i_vec.highlight(X_COLOR)
+                self.add_vector(i_vec)
+                total_i_vec += np.array([1,0])
+                self.play(ApplyMethod(i_vec.shift, Vector(total_i_vec).get_end()))
+        j_list = []
+        total_j_vec = np.array([0,0])
+        if self.v_coords[1] > 0:
+            for j in range(abs(self.v_coords[1])):
+                j_vec = self.j_hat.copy()
+                j_list += j_vec
+                j_vec.highlight(Y_COLOR)
+                self.add_vector(j_vec)
+                self.play(ApplyMethod(j_vec.shift, Vector(np.array([self.v_coords[0],0])).get_end()))
+                total_j_vec += np.array([int(self.j_hat.get_end()[0]),int(self.j_hat.get_end()[1])])
+                self.play(ApplyMethod(j_vec.shift, Vector(total_j_vec).get_end()))
+        else:
+            total_j_vec = np.array([0,1])
+            for j in range(abs(self.v_coords[1])):
+                j_vec = self.j_hat.copy()
+                j_vec = Vector(np.array([0,-1]))
+                j_list += j_vec
+                j_vec.highlight(Y_COLOR)
+                self.add_vector(j_vec)
+                self.play(ApplyMethod(j_vec.shift, Vector(np.array([self.v_coords[0],0])).get_end()))
+                total_j_vec += np.array([int(self.j_hat.get_end()[0]),int(self.j_hat.get_end()[1])])
+                self.play(ApplyMethod(j_vec.shift, Vector(total_j_vec).get_end()))
+        for i_vec in i_list:
+            i_vec.highlight(YELLOW)
+        for j_vec in j_list:
+            j_vec.highlight(YELLOW)
+        self.dither()
+        if clean_up:
+            total_list = i_list + j_list
+            for vec in total_list:
+                self.remove(vec)
+
+    def get_v_definition(self):
+        v_def = TexMobject([
+            "\\vec{\\textbf{v}}",
+            " = %s"%self.v_coord_strings[0],
+            "\\hat{\\imath}",
+            "+%s"%self.v_coord_strings[1],
+            "\\hat{\\jmath}",
+        ])
+        v, equals_neg_1, i_hat, plus_2, j_hat = v_def.split()
+        v.highlight(YELLOW)
+        i_hat.highlight(X_COLOR)
+        j_hat.highlight(Y_COLOR)
+        v_def.add_background_rectangle()
+        v_def.to_corner(UP + LEFT)
+        self.v_def = v_def
+        return v_def
+
+    def write_linear_map_rule(self):
+        rule = TexMobject([
+            "\\text{Transformed } \\vec{\\textbf{v}}",
+            " = %s"%self.v_coord_strings[0],
+            "(\\text{Transformed }\\hat{\\imath})",
+            "+%s"%self.v_coord_strings[1],
+            "(\\text{Transformed } \\hat{\\jmath})",
+        ])
+        v, equals_neg_1, i_hat, plus_2, j_hat = rule.split()
+        v.highlight(YELLOW)
+        i_hat.highlight(X_COLOR)
+        j_hat.highlight(Y_COLOR)
+        rule.scale(0.85)
+        rule.next_to(self.v_def, DOWN, buff = 0.2)
+        rule.to_edge(LEFT)
+        rule.add_background_rectangle()
+
+        self.play(Write(rule, run_time = 2))
+        self.dither()
+        self.linear_map_rule = rule
+
+
+    def show_basis_vector_coords(self):
+        i_coords = matrix_to_mobject(self.transposed_matrix[0])
+        j_coords = matrix_to_mobject(self.transposed_matrix[1])
+        i_coords.highlight(X_COLOR)
+        j_coords.highlight(Y_COLOR)
+        for coords in i_coords, j_coords:
+            coords.add_background_rectangle()
+            coords.scale(0.7)
+        i_coords.next_to(self.i_hat.get_end(), RIGHT)
+        j_coords.next_to(self.j_hat.get_end(), RIGHT)
+
+        calculation = TexMobject([
+            " = %s"%self.v_coord_strings[0],
+            matrix_to_tex_string(self.transposed_matrix[0]),
+            "+%s"%self.v_coord_strings[1],
+            matrix_to_tex_string(self.transposed_matrix[1]),
+        ])
+        equals_neg_1, i_hat, plus_2, j_hat = calculation.split()
+        i_hat.highlight(X_COLOR)
+        j_hat.highlight(Y_COLOR)
+        calculation.scale(0.8)
+        calculation.next_to(self.linear_map_rule, DOWN)
+        calculation.to_edge(LEFT)
+        calculation.add_background_rectangle()
+
+        result = TexMobject(self.result_coords_string)
+        result.scale(0.8)
+        result.add_background_rectangle()
+        result.next_to(calculation, DOWN)
+        result.to_edge(LEFT)
+
+        self.play(Write(i_coords, run_time = 1))
+        self.dither()
+        self.play(Write(j_coords, run_time = 1))
+        self.dither()
+        self.play(Write(calculation))
+        self.dither()
+        self.play(Write(result))
+        self.dither()
 
 
 class TransformJustOneVector(VectorScene):

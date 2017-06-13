@@ -213,6 +213,14 @@ class VectorScene(Scene):
             self.add(*starting_mobjects)
         return array, x_line, y_line
 
+    def vector_in_terms_of_basis(self, vector):
+        """
+        takes as input a vector, and redefines it as
+        an object formed by taking a linear combination
+        of the basis vectors
+        """
+        pass
+
     def show_ghost_movement(self, vector):
         if isinstance(vector, Arrow):
             vector = vector.get_end() - vector.get_start()
@@ -390,7 +398,7 @@ class LinearTransformationScene(VectorScene):
 
     def get_vector_movement(self, func):
         for v in self.moving_vectors:
-            v.target = Vector(func(v.get_end()), color = v.get_color())
+            v.target = Vector(func(v.get_end()), color = v.get_color()).shift(v.start)
             norm = np.linalg.norm(v.target.get_end())
             if norm < 0.1:
                 v.target.get_tip().scale_in_place(norm)
