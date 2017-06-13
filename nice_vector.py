@@ -24,7 +24,7 @@ import helpers
 import math
 
 class NiceVector(Vector):
-    def __init__(self, coords, basis=np.array([[1,0],[0,1]]), dim = 2):
+    def __init__(self, coords, basis=np.array([[1.,0.],[0.,1.]]), dim = 2):
         self.coords = coords
         self.basis = basis
         self.dim = dim
@@ -47,28 +47,26 @@ class NiceVector(Vector):
             such that when the list is added up,
             we get the vector
         """
-        vec_list = np.zeros((1,2))
+        vec_list = np.empty((0,self.dim))
         for i in range(self.dim): #loop over dimensions
             for j in range(abs(int(np.floor(self.coords[i])))): #whole basis vectors
-                print(i,j)
                 if self.coords[i] < 0: #if coordinate is negative...
-                    np.append(vec_list, -1*np.array(self.basis[i]))#switch the direction of the basis vector
+                    vec_list = np.concatenate((vec_list, -1*self.basis[i].reshape((1,self.dim))))#switch the direction of the basis vector
                 else:
-                    np.append(vec_list, np.array(self.basis[i])) #otherwise just use the normal one
+                    vec_list = np.concatenate((vec_list, self.basis[i].reshape((1,self.dim)))) #otherwise just use the normal one
             leftover = self.coords[i]%1 #leftover, if coordinates are noninteger
             if leftover != 0: #check if nonzero leftover
-                leftover_vec = np.zeros((1,2))
+                leftover_vec = np.zeros((1,dim))
                 for k in range(self.dim):
-                    np.append(leftover_vec, leftover*np.array(self.basis[k]))#create scaled leftover vector
+                    np.concatenate((leftover_vec, leftover*self.basis[k].reshape(1,self.dim)))#create scaled leftover vector
                     #we don't need to check its sign because
-                np.append(vec_list, leftover_vec) #add leftover vector to overall vector list
-            print(vec_list)
+                np.concatenate((vec_list, leftover_vec)) #add leftover vector to overall vector list
         vector_list = []
+        print(vec_list)
         for vec in vec_list:
             vector_list += [Vector(vec)] #convert vectors into Vector objects
         print(vector_list)
         return vector_list
 
 vect = NiceVector(np.array([6,2]))
-vect.change_of_basis(np.array([[3,0],[0,2]]))
 vect.linear_decomposition()
