@@ -77,10 +77,12 @@ class Test2(LinearTransformationScene):
         self.label_bases()
         self.introduce_vector()
         self.apply_transposed_matrix(self.transposed_matrix)
-        new_matrix = np.dot(np.linalg.inv(self.transposed_matrix), self.transposed_matrix.T)
-        self.apply_transposed_matrix(new_matrix)
+        #new_matrix = np.dot(np.linalg.inv(self.transposed_matrix), self.transposed_matrix.T)
+        #self.apply_transposed_matrix(new_matrix)
 
         self.show_linear_combination(clean_up=False)
+        self.write_linear_map_rule()
+        self.show_basis_vector_coords()
 
     def label_bases(self):
         triplets = [
@@ -118,7 +120,7 @@ class Test2(LinearTransformationScene):
         ))
         self.remove(pre_def)
         self.add_foreground_mobject(v_def)
-        self.show_linear_combination(clean_up=True)
+        self.show_linear_combination(clean_up=False)
         self.remove(coords)
 
     def show_linear_combination(self, clean_up = True):
@@ -178,13 +180,15 @@ class Test2(LinearTransformationScene):
         vector = NiceVector(np.append(self.v_coords, [0]))#, basis = np.array([[1.,0,],[0.,1.]]), dim = 2)
         vectorlist = vector.linear_decomposition()
         total_vec = np.array([0,0,0])
-        for vec in vectorlist:
+        for i in range(len(vectorlist)):
+            vec = vectorlist[i]
             vec.highlight(Y_COLOR)
-            self.add_vector(vec)
-            #self.play(ApplyMethod(vec.shift, Vector(np.array([self.v_coords[0],0])).get_end()))
-            
+            self.add_nice_vector(vec)            
             self.play(ApplyMethod(vec.shift, Vector(total_vec).get_end()))
             total_vec = np.array([int(vec.get_end()[0]), int(vec.get_end()[1]), int(vec.get_end()[2])])
+            if i != 0:
+                prev_vec = vectorlist[i-1]
+                vec.put_at(np.array([int(prev_vec.get_end()[0]), int(prev_vec.get_end()[1]), int(prev_vec.get_end()[2])]))
 
         if clean_up:
             for vec in vectorlist:

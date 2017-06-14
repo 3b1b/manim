@@ -67,7 +67,7 @@ class NiceVector(Vector):
                 np.concatenate((vec_list, leftover_vec)) #add leftover vector to overall vector list
         vector_list = []
         for vec in vec_list:
-            vector_list += [Vector(vec)] #convert vectors into Vector objects
+            vector_list += [NiceVector(vec)] #convert vectors into Vector objects
         return vector_list
 
     def put_at(self, coords):
@@ -77,7 +77,7 @@ class NiceVector(Vector):
         a point in R^3.  Then, put_vector_at shifts
         vector such that its tail sits on coords.
         """
-        self.shift(coords)
+        #self.shift(coords)
         self.start = coords
         return self
 
