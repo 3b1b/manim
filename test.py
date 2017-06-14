@@ -29,6 +29,24 @@ def curvy_squish(point):
     x, y, z = point
     return (x+np.cos(y))*RIGHT + (y+np.sin(x))*UP
 
+def get_det_text(matrix, determinant = None, background_rect = True):
+    parens = TexMobject(["(", ")"])
+    parens.scale(2)
+    parens.stretch_to_fit_height(matrix.get_height())
+    l_paren, r_paren = parens.split()
+    l_paren.next_to(matrix, LEFT, buff = 0.1)
+    r_paren.next_to(matrix, RIGHT, buff = 0.1)
+    det = TextMobject("det").next_to(l_paren, LEFT, buff = 0.1)
+    if background_rect:
+        det.add_background_rectangle()
+    det_text = VMobject(det, l_paren, r_paren)
+    if determinant is not None:
+        eq = TexMobject("=")
+        eq.next_to(r_paren, RIGHT, buff = 0.1)
+        result = TexMobject(str(determinant))
+        result.next_to(eq, RIGHT, buff = 0.2)
+        det_text.add(eq, result)
+    return det_text
 
 class Test(VectorScene):
     def construct(self):
@@ -46,6 +64,148 @@ class Test(VectorScene):
         another_vector = myhelpers.put_vector_at(another_vector, np.array([-3,-1,0]))
         print(another_vector.points)
         self.add_vector(another_vector)
+
+class Det2(LinearTransformationScene):
+    def construct(self):
+        self.setup()
+        self.add_unit_square()
+        a, b, c, d = 3, 2, 3.5, 2
+        self.dither()
+        self.apply_transposed_matrix([[a, 0], [0, 1]])
+        i_brace = Brace(self.i_hat, DOWN)
+        width = TexMobject("a").scale(1.5)
+        i_brace.put_at_tip(width)
+        width.highlight(X_COLOR)
+        width.add_background_rectangle()
+        self.play(GrowFromCenter(i_brace), Write(width))
+        self.dither()
+
+        self.apply_transposed_matrix([[1, 0], [0, d]])
+        side_brace = Brace(self.square, RIGHT)
+        height = TexMobject("d").scale(1.5)
+        side_brace.put_at_tip(height)
+        height.highlight(Y_COLOR)
+        height.add_background_rectangle()
+        self.play(GrowFromCenter(side_brace), Write(height))
+        self.dither()
+
+        self.apply_transposed_matrix(
+            [[1, 0], [float(b)/d, 1]],
+            added_anims = [
+                ApplyMethod(m.shift, b*RIGHT)
+                for m in side_brace, height
+            ]
+        )
+        self.dither()
+        self.play(*map(FadeOut, [i_brace, side_brace, width, height]))
+        matrix1 = np.dot(
+            [[a, b], [c, d]],
+            np.linalg.inv([[a, b], [0, d]])
+        )
+        matrix2 = np.dot(
+            [[a, b], [-c, d]],
+            np.linalg.inv([[a, b], [c, d]])
+        )
+        self.apply_transposed_matrix(matrix1.transpose(), path_arc = 0)
+        self.dither()
+        self.apply_transposed_matrix(matrix2.transpose(), path_arc = 0)
+        self.dither()
+class Det3(LinearTransformationScene):
+    def construct(self):
+        self.setup()
+        self.add_unit_square()
+        self.apply_transposed_matrix([[3, 1], [1, 2]], run_time = 0)
+        self.add_braces()
+        self.add_polygons()
+        self.show_formula()
+
+    def get_matrix(self):
+        matrix = Matrix([["a", "b"], ["c", "d"]])
+        matrix.highlight_columns(X_COLOR, Y_COLOR)
+        ma, mb, mc, md = matrix.get_entries().split()
+        ma.shift(0.1*DOWN)
+        mc.shift(0.7*mc.get_height()*DOWN)
+        matrix.shift(2*DOWN+4*LEFT)
+        return matrix
+
+    def add_polygons(self):
+        a = self.i_hat.get_end()[0]*RIGHT
+        b = self.j_hat.get_end()[0]*RIGHT
+        c = self.i_hat.get_end()[1]*UP
+        d = self.j_hat.get_end()[1]*UP
+
+        shapes_colors_and_tex = [
+            (Polygon(ORIGIN, a, a+c), MAROON, "ac/2"),
+            (Polygon(ORIGIN, d+b, d, d), TEAL, "\\dfrac{bd}{2}"),
+            (Polygon(a+c, a+b+c, a+b+c, a+b+c+d), TEAL, "\\dfrac{bd}{2}"),
+            (Polygon(b+d, a+b+c+d, b+c+d), MAROON, "ac/2"),
+            (Polygon(a, a+b, a+b+c, a+c), PINK, "bc"),
+            (Polygon(d, d+b, d+b+c, d+c), PINK, "bc"),
+        ]
+        everyone = VMobject()
+        for shape, color, tex in shapes_colors_and_tex:
+            shape.set_stroke(width = 0)
+            shape.set_fill(color = color, opacity = 0.7)
+            tex_mob = TexMobject(tex)
+            tex_mob.scale(0.7)
+            tex_mob.move_to(shape.get_center_of_mass())
+            everyone.add(shape, tex_mob)
+        self.play(FadeIn(
+            everyone,
+            submobject_mode = "lagged_start",
+            run_time = 1
+        ))
+
+
+
+    def add_braces(self):
+        a = self.i_hat.get_end()[0]*RIGHT
+        b = self.j_hat.get_end()[0]*RIGHT
+        c = self.i_hat.get_end()[1]*UP
+        d = self.j_hat.get_end()[1]*UP
+
+        quads = [
+            (ORIGIN, a, DOWN, "a"),
+            (a, a+b, DOWN, "b"),
+            (a+b, a+b+c, RIGHT, "c"),
+            (a+b+c, a+b+c+d, RIGHT, "d"),
+            (a+b+c+d, b+c+d, UP, "a"),
+            (b+c+d, d+c, UP, "b"),
+            (d+c, d, LEFT, "c"),
+            (d, ORIGIN, LEFT, "d"),
+        ]
+        everyone = VMobject()
+        for p1, p2, direction, char in quads:
+            line = Line(p1, p2)
+            brace = Brace(line, direction, buff = 0)
+            text = brace.get_text(char)
+            text.add_background_rectangle()
+            if char in ["a", "c"]:
+                text.highlight(X_COLOR)
+            else:
+                text.highlight(Y_COLOR)
+            everyone.add(brace, text)
+        self.play(Write(everyone), run_time = 1)
+
+
+    def show_formula(self):
+        matrix = self.get_matrix()
+        det_text = get_det_text(matrix)
+        f_str = "=(a+b)(c+d)-ac-bd-2bc=ad-bc"
+        formula = TexMobject(f_str)
+
+        formula.next_to(det_text, RIGHT)
+        everyone = VMobject(det_text, matrix, formula)
+        everyone.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        everyone.next_to(DOWN, DOWN)
+        background_rect = BackgroundRectangle(everyone)
+        self.play(
+            ShowCreation(background_rect),
+            Write(everyone)
+        )
+        self.dither()
+
+
 
 global_v_coords = [2,1]
 global_transposed_matrix = np.array([[1,3], [-1,-3]])
