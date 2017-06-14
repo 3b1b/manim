@@ -110,14 +110,21 @@ class Det2(LinearTransformationScene):
         self.dither()
         self.apply_transposed_matrix(matrix2.transpose(), path_arc = 0)
         self.dither()
+
+a_mat, b_mat, c_mat, d_mat = 3,1,-1,2
 class Det3(LinearTransformationScene):
+    global a_mat
+    global b_mat
+    global c_mat
+    global d_mat
     def construct(self):
         self.setup()
         self.add_unit_square()
-        self.apply_transposed_matrix([[3, 1], [1, 2]], run_time = 0)
+        self.apply_transposed_matrix([[a_mat, b_mat], [c_mat, d_mat]], run_time = 0)
         self.add_braces()
         self.add_polygons()
         self.show_formula()
+        self.dither()
 
     def get_matrix(self):
         matrix = Matrix([["a", "b"], ["c", "d"]])
@@ -142,6 +149,14 @@ class Det3(LinearTransformationScene):
             (Polygon(a, a+b, a+b+c, a+c), PINK, "bc"),
             (Polygon(d, d+b, d+b+c, d+c), PINK, "bc"),
         ]
+        if a_mat < 0:
+            shapes_colors_and_tex[1], shapes_colors_and_tex[2], shapes_colors_and_tex[4], shapes_colors_and_tex[5]= [
+                (Polygon(ORIGIN, d+b, d, d),TEAL, "\\dfrac{bd}{2}"),
+                (Polygon(a+c, a+b+c, a+b+c, a+b+c+d), TEAL, "\\dfrac{bd}{2}"),
+                (Polygon(a,a+b,a+b+c,a+c), PINK, "bc"),
+                (Polygon(d,d+b,d+b+c,d+c), PINK, "bc"),
+
+            ]
         everyone = VMobject()
         for shape, color, tex in shapes_colors_and_tex:
             shape.set_stroke(width = 0)
@@ -155,8 +170,6 @@ class Det3(LinearTransformationScene):
             submobject_mode = "lagged_start",
             run_time = 1
         ))
-
-
 
     def add_braces(self):
         a = self.i_hat.get_end()[0]*RIGHT
@@ -174,6 +187,16 @@ class Det3(LinearTransformationScene):
             (d+c, d, LEFT, "c"),
             (d, ORIGIN, LEFT, "d"),
         ]
+
+        if a_mat < 0:
+            quads[2],quads[3],quads[6],quads[7] = [
+                (a+b, a+b+c, LEFT,"2"),
+                (a+b+c,a+b+c+d, LEFT, "3"),
+                (d+c, d, RIGHT, "6"),
+                (d, ORIGIN, RIGHT, "7")
+            ]
+
+
         everyone = VMobject()
         for p1, p2, direction, char in quads:
             line = Line(p1, p2)
