@@ -117,6 +117,8 @@ class Det3(LinearTransformationScene):
     global b_mat
     global c_mat
     global d_mat
+    #shows geometric derivation of formula for determinant
+
     def construct(self):
         self.setup()
         self.add_unit_square()
@@ -234,6 +236,7 @@ global_v_coords = [2,1]
 global_transposed_matrix = np.array([[1,3], [-1,-3]])
 global_result = np.dot(np.array(global_v_coords), np.array(global_transposed_matrix))
 class Det1(LinearTransformationScene):
+    #shows transformation by a matrix with determinant zero
     global global_v_coords
     global global_transposed_matrix
     CONFIG = {
@@ -406,6 +409,7 @@ global_v_coords = [-1,4]
 global_transposed_matrix = np.array([[4,3], [-2,1]])
 global_result = np.dot(np.array(global_v_coords), np.array(global_transposed_matrix))
 class Test2(LinearTransformationScene):
+    #shows linear transformation of a vector wrt its linear decomposition into basis vectors
     global global_v_coords
     global global_transposed_matrix
     CONFIG = {
@@ -804,10 +808,10 @@ class EigenTest(LinearTransformationScene):
             coords = r*np.array([math.cos(angle), math.sin(angle)])
             theta = float(theta)
             vec = Vector(coords, color = Color(hue=theta/n, saturation=1, luminance=.5))
-            #self.add_vector(vec)
-            self.add_transformable_mobject(vec)
-        self.add_transformable_mobject(Vector([1,1], color=WHITE))
-        self.add_transformable_mobject(Vector([1,-1.5], color=WHITE))
+            self.add_vector(vec, animate=False)
+            #self.add_transformable_mobject(vec)
+        self.add_vector(Vector([1,1], color=WHITE, animate= False))
+        self.add_vector(Vector([1,-1.5], color=WHITE, animate=False))
 
 global_transposed_matrix = np.array([[4,-2], [2,0]])
 class EigenTest1(LinearTransformationScene):
