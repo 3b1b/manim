@@ -128,10 +128,9 @@ class Test2(LinearTransformationScene):
             vec = vectorlist[i]
             vec_stuff = np.array([int(val) for val in vec.get_end()])
             if abs(int(vectorlist[i].get_end()[0])):
-                vec.highlight(X_COLOR)
+                vec = NiceVector(vec.get_end()).highlight(X_COLOR)
             else:
-                vec.highlight(Y_COLOR)
-            vec = NiceVector(vec.get_end())
+                vec = NiceVector(vec.get_end()).highlight(Y_COLOR)
             vec.put_at(total_vec)
             self.add_nice_vector(vec)
             total_vec += np.array([vec_stuff[0]*i_hat[0] + vec_stuff[1]*j_hat[0], vec_stuff[0]*i_hat[1] + vec_stuff[1]*j_hat[1], 0])

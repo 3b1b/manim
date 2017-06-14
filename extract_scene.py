@@ -190,14 +190,15 @@ def main():
    for SceneClass in get_scene_classes(scene_names_to_classes, config):
       try:
          handle_scene(SceneClass(**scene_kwargs), **config)
-         play_finish_sound()
+         #play_finish_sound()
       except RuntimeError:
-         play_finish_sound()
+         pass
+         #play_finish_sound()
       except:
          print "\n\n"
          traceback.print_exc()
          print "\n\n"
-         play_error_sound()
+         #play_error_sound()
 
 
 if __name__ == "__main__":
