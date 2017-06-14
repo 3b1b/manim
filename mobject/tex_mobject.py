@@ -123,8 +123,12 @@ class TexMobject(SVGMobject):
             num_submobs = len(sub_tex_mob.submobjects)
             new_index = curr_index + num_submobs
             if num_submobs == 0:
+                if len(self) > curr_index:
+                    last_submob_index = curr_index
+                else:
+                    last_submob_index = -1
                 sub_tex_mob.submobjects = [VectorizedPoint(
-                    self.submobjects[curr_index].get_right()
+                    self.submobjects[last_submob_index].get_right()
                 )]
             else:
                 sub_tex_mob.submobjects = self.submobjects[curr_index:new_index]

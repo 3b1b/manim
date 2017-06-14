@@ -265,7 +265,7 @@ class OneInOneThousandHaveDisease(Scene):
         )
         self.dither()
 
-class TestScene(Scene):
+class TestScene(PiCreatureScene):
     def get_result(self, creature, word, color):
         arrow = self.get_test_arrow()
         test_result = TextMobject(word)
@@ -292,16 +292,20 @@ class TestScene(Scene):
         arrow.add(word)
         return arrow
 
+    def create_pi_creature(self):
+        randy = Randolph()
+        randy.next_to(ORIGIN, LEFT)
+        return randy
+
 class TestDiseaseCase(TestScene):
     def construct(self):
-        randy = Randolph(
-            mode = "sick",
-            color = SICKLY_GREEN
-        )
-        randy.next_to(ORIGIN, LEFT)
+        randy = self.pi_creature
+        randy.change_mode("sick")
+        randy.highlight(SICKLY_GREEN)
         result = self.get_positive_result(randy)
         accuracy = TextMobject("100\\% Accuracy")
-        accuracy.next_to(VGroup(randy, result), UP, LARGE_BUFF)
+        accuracy.next_to(VGroup(randy, result), UP)
+        accuracy.to_edge(UP)
 
         self.add(randy)
         self.play(FadeIn(result[0]))
@@ -311,15 +315,974 @@ class TestDiseaseCase(TestScene):
 
 class TestNonDiseaseCase(TestScene):
     def construct(self):
-        pass
+        randy = self.pi_creature
+        randy.change_mode("happy")
+        randy.next_to(ORIGIN, LEFT)
+        result = self.get_negative_result(randy)
+        accuracy = TextMobject("99\\% Accuracy")
+        accuracy.next_to(VGroup(randy, result), UP)
+        accuracy.to_edge(UP)
+
+        all_creatures = VGroup(*[
+            VGroup(*[
+                randy.copy()
+                for y in range(10)
+            ]).arrange_submobjects(DOWN)
+            for y in range(10)
+        ]).arrange_submobjects(RIGHT)
+        all_creatures.scale_to_fit_height(6)
+        all_creatures.to_corner(DOWN+LEFT)
+        last_guy = all_creatures[-1][-1]
+        rect = SurroundingRectangle(last_guy, buff = 0)
+        rect.highlight(YELLOW)
+
+        self.add(randy, accuracy)
+        self.play(FadeIn(result[0]))
+        self.play(Write(result[1]))
+        self.play(Blink(randy))
+        self.play(
+            ReplacementTransform(randy, all_creatures[0][0]),
+            LaggedStart(FadeIn, all_creatures, run_time = 2),
+            FadeOut(result)
+        )
+        self.play(ShowCreation(rect))
+        self.play(
+            last_guy.scale_to_fit_height, 2,
+            last_guy.next_to, all_creatures, RIGHT
+        )
+        result = self.get_positive_result(last_guy)
+        false_positive = TextMobject("False positive")
+        false_positive.scale(0.8)
+        false_positive.next_to(result, UP, LARGE_BUFF)
+        false_positive.to_edge(RIGHT)
+        arrow = Arrow(
+            false_positive.get_bottom(), result[1].get_top(),
+            buff = SMALL_BUFF
+        )
+        self.play(FadeIn(result))
+        self.play(
+            FadeIn(false_positive),
+            ShowCreation(arrow),
+            last_guy.change, "confused", result,
+        )
+        for x in range(2):
+            self.play(Blink(last_guy))
+            self.dither(2)
 
 class ReceivePositiveResults(TestScene):
     def construct(self):
-        pass
+        status = TextMobject("Health status: ???")
+        status.to_edge(UP)
+
+        randy = self.pi_creature
+        result = self.get_positive_result(randy)
+        accuracy = TextMobject("99\% Accuracy")
+        accuracy.next_to(result[1], DOWN, LARGE_BUFF)
+        accuracy.highlight(YELLOW)
+
+        self.add(status, randy)
+        self.play(FadeIn(result[0]))
+        self.dither()
+        self.play(Write(result[1]))
+        self.play(randy.change, "maybe", result)
+        self.dither(2)
+        self.play(
+            randy.change, "pleading", accuracy,
+            Write(accuracy, run_time = 1)
+        )
+        self.dither()
+        self.play(randy.change, "sad", accuracy)
+        self.dither(2)
 
 class RephraseQuestion(Scene):
     def construct(self):
-        pass
+        words = VGroup(*map(TextMobject, [
+            r"1 in $1{,000}$ chance \\ of having disease",
+            r"1 in $100$ \\ false positive rate.",
+            r"""\underline{\phantom{1 in 10}} chance \\
+                of having disease \\
+                after testing positive.
+            """,
+        ]))
+        words.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        words.scale_to_fit_width(2*(SPACE_WIDTH - MED_LARGE_BUFF))
+
+        prior = TextMobject("Prior")
+        prior.highlight(GREEN)
+        prior.next_to(words[0], UP, 1.5*LARGE_BUFF)
+        prior_arrow = Arrow(prior, words[0])
+        prior_arrow.highlight(prior.get_color())
+
+        posterior = TextMobject("Posterior")
+        posterior.next_to(words[2], UP)
+        posterior.shift(
+            (prior.get_center() - posterior.get_center())[1]*UP
+        )
+        posterior.highlight(YELLOW)
+        posterior_arrow = Arrow(posterior, words[2])
+        posterior_arrow.highlight(posterior.get_color())
+
+        self.add(words[0])
+        self.play(
+            LaggedStart(FadeIn, prior),
+            ShowCreation(prior_arrow),
+            run_time = 1
+        )
+        self.dither()
+        self.play(FadeIn(words[1]))
+        self.dither()
+        self.play(FadeIn(words[2]))
+        self.play(
+            LaggedStart(FadeIn, posterior),
+            ShowCreation(posterior_arrow),
+            run_time = 1
+        )
+        self.dither(2)
+
+class TryUnitSquareVisual(SampleSpaceScene):
+    def construct(self):
+        sample_space = self.get_sample_space()
+        sample_space.divide_horizontally(0.1)
+        for part in sample_space.horizontal_parts:
+            part.set_stroke(part.get_fill_color(), width = 3)
+        initial_labels, final_labels = [
+            VGroup(
+                TexMobject("P(\\text{Disease})", s1),
+                TexMobject("P(\\text{Not disease})", s2),
+            ).scale(0.7)
+            for s1, s2 in ("", ""), ("= 0.001", "= 0.999")
+        ]
+        sample_space.get_side_braces_and_labels(initial_labels)
+        sample_space.add_braces_and_labels()
+
+        hard_to_see = TextMobject("Hard to see")
+        hard_to_see.scale(0.7)
+        hard_to_see.next_to(sample_space.full_space, UP)
+        hard_to_see.to_edge(UP)
+        arrow = Arrow(hard_to_see, sample_space.full_space)
+
+        self.add(sample_space)
+        self.dither()
+        anims = self.get_division_change_animations(
+            sample_space, sample_space.horizontal_parts,
+            0.001, new_label_kwargs = {"labels" : final_labels}
+        )
+        self.play(*anims, run_time = 2)
+        self.dither()
+        self.play(
+            Write(hard_to_see, run_time = 2),
+            ShowCreation(arrow)
+        )
+        self.dither(2)
+
+class ShowRestrictedSpace(Scene):
+    CONFIG = {
+        "n_rows" : 25,
+        "n_cols" : 40,
+        "n_false_positives" : 10,
+        "false_positive_color" : YELLOW_E,
+    }
+    def construct(self):
+        self.add_all_creatures()
+        self.show_accurate_positive_result()
+        self.show_false_positive_conditional()
+        self.show_false_positive_individuals()
+        self.fade_out_negative_result_individuals()
+        self.show_posterior_probability()
+        self.contrast_with_prior()
+
+    def add_all_creatures(self):
+        title = TextMobject("$1{,}000$ individuals")
+        title.to_edge(UP)
+        all_creatures = self.get_all_creatures()
+        sick_one = all_creatures.sick_one
+        healthy_creatures = all_creatures.healthy_creatures
+
+        sick_one.save_state()
+        sick_one_words = TextMobject("1 sick")
+        sick_one_words.next_to(sick_one, RIGHT)
+        sick_one_words.to_edge(RIGHT)
+        sick_one_words.highlight(SICKLY_GREEN)
+        sick_one_arrow = Arrow(
+            sick_one_words, sick_one,
+            color = SICKLY_GREEN
+        )
+
+        healthy_words = TextMobject("999 healthy")
+        healthy_words.next_to(sick_one_words, UP, MED_LARGE_BUFF)
+        healthy_words.shift_onto_screen()
+        healthy_words.highlight(BLUE)
+
+        self.add(title)
+        self.play(LaggedStart(FadeIn, all_creatures))
+        self.play(
+            FadeIn(sick_one_words),
+            ShowCreation(sick_one_arrow)
+        )
+        self.play(
+            sick_one.scale_to_fit_height, 2,
+            sick_one.next_to, sick_one_words, DOWN,
+            sick_one.to_edge, RIGHT,
+        )
+        self.dither()
+        self.play(sick_one.restore)
+        self.play(
+            Write(healthy_words),
+            LaggedStart(
+                ApplyMethod, healthy_creatures,
+                lambda m : (m.shift, MED_SMALL_BUFF*UP),
+                rate_func = there_and_back,
+                lag_ratio = 0.2,
+            )
+        )
+        self.dither()
+        self.play(FadeOut(title))
+
+        self.all_creatures = all_creatures
+        self.healthy_creatures = healthy_creatures
+        self.sick_one = sick_one
+        self.sick_one_label = VGroup(sick_one_words, sick_one_arrow)
+        self.healthy_ones_label = healthy_words
+
+    def show_accurate_positive_result(self):
+        equation = TexMobject(
+            "P(", "\\text{Test positive }", "|", 
+            "\\text{ sick}", ")", "=", "100\\%"
+        )
+        equation.highlight_by_tex("positive", YELLOW)
+        equation.highlight_by_tex("sick", SICKLY_GREEN)
+        equation.to_corner(UP+LEFT)
+
+        self.play(Write(equation, run_time = 1))
+        self.dither(2)
+
+        self.disease_conditional = equation
+
+    def show_false_positive_conditional(self):
+        equation = TexMobject(
+            "P(", "\\text{Test positive }", "|", 
+            "\\text{ healthy}", ")", "=", "1\\%"
+        )
+        equation.highlight_by_tex("positive", YELLOW)
+        equation.highlight_by_tex("healthy", BLUE)
+        equation.to_corner(UP+LEFT)
+
+        self.play(ReplacementTransform(
+            self.disease_conditional, equation
+        ))
+        self.dither()
+
+        self.healthy_conditional = equation
+
+    def show_false_positive_individuals(self):
+        all_creatures = self.all_creatures
+        false_positives = VGroup(
+            *all_creatures[-1][1:1+self.n_false_positives]
+        )
+        self.healthy_creatures.remove(*false_positives)
+        brace = Brace(false_positives, RIGHT)
+        words = TextMobject("10 False positives")
+        words.scale(0.8)
+        words.next_to(brace, RIGHT)
+
+        self.play(
+            GrowFromCenter(brace),
+            LaggedStart(
+                ApplyMethod, false_positives,
+                lambda pi : (pi.highlight, self.false_positive_color),
+                run_time = 1
+            )
+        )
+        self.play(Write(words))
+        self.dither()
+
+        self.false_positives = false_positives
+        self.false_positives_brace = brace
+        self.false_positives_words = words
+
+    def fade_out_negative_result_individuals(self):
+        to_fade = VGroup(
+            self.healthy_creatures,
+            self.healthy_conditional,
+            self.sick_one_label,
+            self.healthy_ones_label,
+        )
+        movers = VGroup(self.sick_one, *self.false_positives)
+        movers.generate_target()
+        movers.target.scale_to_fit_width(1)
+        movers.target.arrange_submobjects(RIGHT)
+        movers.target.shift(DOWN)
+        brace = Brace(VGroup(*movers.target[1:]))
+
+        words = TextMobject("You are one of these")
+        words.to_edge(UP)
+        arrows = [
+            Arrow(words.get_bottom(), movers.target[i].get_top())
+            for i in 0, -1
+        ]
+
+        self.play(FadeOut(to_fade))
+        self.play(
+            MoveToTarget(movers),
+            ReplacementTransform(self.false_positives_brace, brace),
+            self.false_positives_words.next_to, brace, DOWN
+        )
+        self.play(
+            Write(words, run_time = 2),
+            ShowCreation(arrows[0])
+        )
+        self.play(Transform(
+            *arrows, run_time = 4, rate_func = there_and_back
+        ))
+        self.play(*map(FadeOut, [words, arrows[0]]))
+
+        self.brace = brace
+
+    def show_posterior_probability(self):
+        posterior = TexMobject(
+            "P(", "\\text{Sick }", "|", 
+            "\\text{ Positive test result}", ")",
+            "\\approx \\frac{1}{11}", "\\approx 9\\%"
+        )
+        posterior.highlight_by_tex("Sick", SICKLY_GREEN)
+        posterior.highlight_by_tex("Positive", YELLOW)
+        posterior.to_edge(UP)
+        posterior.shift(LEFT)
+
+        self.play(FadeIn(posterior))
+        self.dither(2)
+
+        self.posterior = posterior
+
+    def contrast_with_prior(self):
+        prior = TexMobject(
+            "P(", "\\text{Sick}", ")", "= 0.1\\%"
+        )
+        prior.highlight_by_tex("Sick", SICKLY_GREEN)
+        prior.move_to(self.posterior, UP+RIGHT)
+
+        self.revert_to_original_skipping_status()
+        self.play(
+            Write(prior, run_time = 1),
+            self.posterior.shift, DOWN,
+        )
+        arrow = Arrow(
+            prior.get_right(), self.posterior.get_right(),
+            path_arc = -np.pi,
+        )
+        times_90 = TexMobject("\\times 90")
+        times_90.next_to(arrow, RIGHT)
+        self.play(ShowCreation(arrow))
+        self.play(Write(times_90, run_time = 1))
+        self.dither(2)
+
+    ######
+
+    def get_all_creatures(self):
+        creature = PiCreature()
+        all_creatures = VGroup(*[
+            VGroup(*[
+                creature.copy()
+                for y in range(self.n_rows)
+            ]).arrange_submobjects(DOWN, SMALL_BUFF)
+            for x in range(self.n_cols)
+        ]).arrange_submobjects(RIGHT, SMALL_BUFF)
+        all_creatures.scale_to_fit_height(5)
+        all_creatures.center().to_edge(LEFT)
+
+        healthy_creatures = VGroup(*it.chain(*all_creatures))
+        sick_one = all_creatures[-1][0]
+        sick_one.change_mode("sick")
+        sick_one.highlight(SICKLY_GREEN)
+        healthy_creatures.remove(sick_one)
+        all_creatures.sick_one = sick_one
+        all_creatures.healthy_creatures = healthy_creatures
+        return all_creatures
+
+class DepressingForMedicalTestDesigners(TestScene):
+    def construct(self):
+        self.remove(self.pi_creature)
+        self.show_99_percent_accuracy()
+        self.reject_test()
+
+    def show_99_percent_accuracy(self):
+        title = TextMobject("99\\% Accuracy")
+        title.to_edge(UP)
+        title.generate_target()
+        title.target.to_corner(UP+LEFT)
+
+        checks = VGroup(*[
+            VGroup(*[
+                TexMobject("\\checkmark").highlight(GREEN)
+                for y in range(10)
+            ]).arrange_submobjects(DOWN)
+            for x in range(10)
+        ]).arrange_submobjects(RIGHT)
+        cross = TexMobject("\\times")
+        cross.replace(checks[-1][-1])
+        cross.highlight(RED)
+        Transform(checks[-1][-1], cross).update(1)
+        checks.scale_to_fit_height(6)
+        checks.next_to(title, DOWN)
+        checks.generate_target()
+        checks.target.scale(0.5)
+        checks.target.next_to(title.target, DOWN)
+
+        self.add(title)
+        self.play(Write(checks))
+        self.dither(2)
+        self.play(*map(MoveToTarget, [title, checks]))
+
+    def reject_test(self):
+        randy = self.pi_creature
+        randy.to_edge(DOWN)
+        result = self.get_positive_result(randy)
+
+        self.play(FadeIn(randy))
+        self.play(
+            FadeIn(result),
+            randy.change_mode, "pondering"
+        )
+        self.dither()
+        self.say(
+            "Whatever, I'm 91\\% \\\\ sure that's wrong",
+            target_mode = "shruggie"
+        )
+        self.dither(2)
+
+class HowMuchCanYouChangeThisPrior(ShowRestrictedSpace, PiCreatureScene):
+    def construct(self):
+        self.play(LaggedStart(
+            FadeIn, self.pi_creatures, 
+            run_time = 4,
+            lag_ratio = 0.7,
+        ))
+        for x in range(2):
+            self.joint_blink(shuffle = False)
+            self.dither(2)
+
+    def create_pi_creatures(self):
+        title = TextMobject("Tiny, tiny prior")
+        title.to_edge(UP)
+        creatures = self.get_all_creatures()
+        creatures.submobjects  = list(it.chain(*creatures))
+        creatures.scale_to_fit_height(6.5)
+        creatures.next_to(title, DOWN)
+        self.add(title)
+        return creatures
+
+class ShowTheFormula(TeacherStudentsScene):
+    CONFIG = {
+        "seconds_to_blink" : 3,
+    }
+    def construct(self):
+        scale_factor = 0.7
+        sick = "\\text{sick}"
+        positive = "\\text{positive}"
+        formula = TexMobject(
+            "P(", sick, "\\,|\\,", positive, ")", "=",
+            "{\\quad P(", sick, "\\text{ and }", positive, ") \\quad",
+            "\\over",
+            "P(", positive, ")}", "=",
+            "{1/1{,}000", "\\over", "1/1{,}000", "+", "(999/1{,}000)(0.01)}"
+        )
+        formula.scale(scale_factor)
+        formula.next_to(self.pi_creatures, UP, LARGE_BUFF)
+        formula.shift_onto_screen(buff = MED_LARGE_BUFF)
+        equals_group = formula.get_parts_by_tex("=")
+        equals_indices = [
+            formula.index_of_part(equals)
+            for equals in equals_group
+        ]
+
+        lhs = VGroup(*formula[:equals_indices[0]])
+        initial_formula = VGroup(*formula[:equals_indices[1]])
+        initial_formula.save_state()
+        initial_formula.shift(3*RIGHT)
+
+        over = formula.get_part_by_tex("\\over")
+        num_start_index = equals_indices[0] + 1
+        num_end_index = formula.index_of_part(over)
+        numerator = VGroup(
+            *formula[num_start_index:num_end_index]
+        )
+        numerator_rect = SurroundingRectangle(numerator)
+
+        alt_numerator = TexMobject(
+            "P(", sick, ")", "P(", positive, "\\,|\\,", sick, ")"
+        )
+        alt_numerator.scale(scale_factor)
+        alt_numerator.move_to(numerator)
+
+        number_fraction = VGroup(*formula[equals_indices[-1]:])
+
+        rhs = TexMobject("\\approx 0.09")
+        rhs.scale(scale_factor)
+        rhs.move_to(equals_group[-1], LEFT)
+        rhs.highlight(YELLOW)
+
+        for mob in formula, alt_numerator:
+            mob.highlight_by_tex(sick, SICKLY_GREEN)
+            mob.highlight_by_tex(positive, YELLOW)
+
+
+        #Ask question
+        self.student_says("What does the \\\\ formula look like here?")
+        self.play(self.teacher.change, "happy")
+        self.dither()
+        self.play(
+            Write(lhs),
+            RemovePiCreatureBubble(
+                self.students[1], target_mode = "pondering",
+            ),
+            self.teacher.change, "raise_right_hand",
+            self.students[0].change, "pondering",
+            self.students[2].change, "pondering",
+        )
+        self.dither()
+
+        #Show initial formula
+        lhs_copy = lhs.copy()
+        self.play(
+            LaggedStart(
+                FadeIn, initial_formula, 
+                lag_ratio = 0.7
+            ),
+            Animation(lhs_copy, remover = True),
+        )
+        self.dither(2)
+        self.play(ShowCreation(numerator_rect))
+        self.play(FadeOut(numerator_rect))
+        self.dither()
+        self.play(Transform(numerator, alt_numerator))
+        initial_formula.add(*numerator)
+        formula.add(*numerator)
+        self.dither(3)
+
+        #Show number_fraction
+        self.play(
+            initial_formula.move_to, initial_formula.saved_state,
+            FadeIn(VGroup(*number_fraction[:3]))
+        )
+        self.dither(2)
+        self.play(LaggedStart(
+            FadeIn, VGroup(*number_fraction[3:]),
+            run_time = 3,
+            lag_ratio = 0.7
+        ))
+        self.dither(2)
+
+        #Show rhs
+        self.play(formula.shift, UP)
+        self.play(Write(rhs))
+        self.change_student_modes(*["happy"]*3)
+        self.look_at(rhs)
+        self.dither(2)
+
+class SourceOfConfusion(Scene):
+    CONFIG = {
+        "arrow_width" : 5,
+    }
+    def construct(self):
+        self.add_progression()
+        self.ask_question()
+        self.write_bayes_rule()
+        self.shift_arrow()
+
+    def add_progression(self):
+        prior = TexMobject("P(", "S", ")", "= 0.001")
+        arrow = Arrow(ORIGIN, self.arrow_width*RIGHT)
+        posterior = TexMobject("P(", "S", "|", "+", ")", "= 0.09")
+        for mob in prior, posterior:
+            mob.highlight_by_tex("S", SICKLY_GREEN)
+            mob.highlight_by_tex("+", YELLOW)
+        progression = VGroup(prior, arrow, posterior)
+        progression.arrange_submobjects(RIGHT)
+        progression.shift(DOWN)
+
+        bayes_rule_words = TextMobject("Bayes' rule")
+        bayes_rule_words.next_to(arrow, UP, buff = 0)
+        arrow.add(bayes_rule_words)
+
+        for mob, word in (prior, "Prior"), (posterior, "Posterior"):
+            brace = Brace(mob, DOWN)
+            label = brace.get_text(word)
+            mob.add(brace, label)
+
+        self.add(progression)
+        self.progression = progression
+        self.bayes_rule_words = bayes_rule_words
+
+    def ask_question(self):
+        question = TextMobject(
+            "Where do math and \\\\ intuition disagree?"
+        )
+        question.to_corner(UP+LEFT)
+        question_arrow = Arrow(
+            question.get_bottom(),
+            self.bayes_rule_words.get_top(),
+            color = WHITE
+        )
+
+        self.play(Write(question))
+        self.dither()
+        self.play(ShowCreation(question_arrow))
+
+        self.question = question
+        self.question_arrow = question_arrow
+
+    def write_bayes_rule(self):
+        words = self.bayes_rule_words
+        words_rect = SurroundingRectangle(words)
+        rule = TexMobject(
+            "P(", "S", "|", "+", ")", "=", 
+            "P(", "S", ")", 
+            "{P(", "+", "|", "S", ")", "\\over",
+            "P(", "+", ")}"
+        )
+        rule.highlight_by_tex("S", SICKLY_GREEN)
+        rule.highlight_by_tex("+", YELLOW)
+        rule.to_corner(UP+RIGHT)
+        rule_rect = SurroundingRectangle(rule)
+        rule_rect.highlight(BLUE)
+        rule.save_state()
+        rule.replace(words_rect)
+        rule.scale_in_place(0.9)
+        rule.set_fill(opacity = 0)
+
+        self.play(ShowCreation(words_rect))
+        self.play(
+            ReplacementTransform(words_rect, rule_rect),
+            rule.restore,
+            run_time = 2
+        )
+        self.dither(3)
+
+    def shift_arrow(self):
+        new_arrow = Arrow(
+            self.question.get_bottom(),
+            self.progression[0].get_top(),
+            color = WHITE
+        )
+
+        self.play(Transform(
+            self.question_arrow,
+            new_arrow
+        ))
+        self.dither(2)
+
+class StatisticsVsEmpathy(PiCreatureScene):
+    def construct(self):
+        randy, morty = self.randy, self.morty
+        sick_one = PiCreature()
+        sick_one.scale(0.5)
+        sick_group = VGroup(
+            sick_one, VectorizedPoint(sick_one.get_bottom())
+        )
+
+        self.play(PiCreatureSays(
+            morty, 
+            "1 in 1{,}000 people \\\\ have this disease.",
+            look_at_arg = randy.eyes
+        ))
+        self.play(randy.change, "pondering", morty.eyes)
+        self.dither()
+        self.play(
+            PiCreatureBubbleIntroduction(
+                randy, sick_group,
+                target_mode = "guilty",
+                bubble_class = ThoughtBubble,
+                content_introduction_class = FadeIn,
+                look_at_arg = sick_one,
+            ),
+            RemovePiCreatureBubble(morty)
+        )
+        self.play(
+            sick_one.change_mode, "sick",
+            sick_one.highlight, SICKLY_GREEN
+        )
+        self.dither()
+
+        probably_me = TextMobject("That's probably \\\\ me")
+        probably_me.next_to(sick_one, DOWN)
+        target_sick_group = VGroup(
+            sick_one.copy(),
+            probably_me
+        )
+        target_sick_group.scale(0.8)
+        self.pi_creature_thinks(
+            target_sick_group,
+            target_mode = "pleading",
+        )
+        self.dither(3)
+
+    ######
+
+    def create_pi_creatures(self):
+        randy = self.randy = Randolph()
+        morty = self.morty = Mortimer()
+        randy.to_edge(DOWN).shift(3*LEFT)
+        morty.to_edge(DOWN).shift(3*RIGHT)
+        return VGroup(randy, morty)
+
+class PlaneCrashProbability(Scene):
+    def construct(self):
+        plane_prob = TexMobject(
+            "P(\\text{Dying in a }", "\\text{plane}", "\\text{ crash})", 
+            "\\approx", "1/", "11{,}000{,}000"
+        )
+        plane_prob.highlight_by_tex("plane", BLUE)
+        car_prob = TexMobject(
+            "P(\\text{Dying in a }", "\\text{car}", "\\text{ crash})", 
+            "\\approx", "1/", "5{,}000"
+        )
+        car_prob.highlight_by_tex("car", YELLOW)
+        plane_prob.shift(UP)
+        car_prob.shift(
+            plane_prob.get_part_by_tex("approx").get_center() -\
+            car_prob.get_part_by_tex("approx").get_center() +\
+            DOWN
+        )
+
+        self.play(Write(plane_prob))
+        self.dither(2)
+        self.play(ReplacementTransform(
+            plane_prob.copy(), car_prob
+        ))
+        self.dither(2)
+
+class IntroduceTelepathyExample(StatisticsVsEmpathy):
+    def construct(self):
+        self.show_mind_reading_powers()
+        self.generate_random_number()
+        self.guess_number_correctly()
+        self.ask_about_chances()
+        self.say_you_probably_got_lucky()
+
+    def show_mind_reading_powers(self):
+        randy, morty = self.randy, self.morty
+        title = TextMobject("1 in 1{,}000 read minds")
+        title.to_edge(UP)
+
+        self.add(title)
+        self.read_mind(randy, morty)
+        self.play(randy.change, "happy", morty.eyes)
+
+        self.title = title
+
+    def generate_random_number(self):
+        morty = self.morty
+        bubble = morty.get_bubble("", direction = LEFT)
+        numbers = [
+            Integer(
+                random.choice(range(100)),
+            ).next_to(morty, UP, LARGE_BUFF, RIGHT)
+            for x in range(30)
+        ]
+
+
+        for number in numbers:
+            self.add(number)
+            Scene.dither(self, 0.1)
+            self.remove(number)
+        self.play(
+            ShowCreation(bubble),
+            number.move_to, bubble.get_bubble_center(), DOWN+LEFT,
+            morty.change, "pondering", 
+        )
+        self.dither()
+
+        morty.bubble = bubble
+        self.number = number
+
+    def guess_number_correctly(self):
+        randy, morty = self.randy, self.morty
+        number_copy = self.number.copy()
+
+        self.read_mind(randy, morty)
+        self.play(PiCreatureSays(
+            randy, number_copy,
+            target_mode = "hooray",
+            look_at_arg = morty.eyes
+        ))
+        self.dither()
+        self.play(morty.change, "confused", randy.eyes)
+        self.dither()
+
+    def ask_about_chances(self):
+        probability = TexMobject(
+            "P(", "\\text{Telepath }", "|", "\\text{ Correct}", ")",
+            "=", "???"
+        )
+        probability.highlight_by_tex("Telepath", BLUE)
+        probability.highlight_by_tex("Correct", GREEN)
+        probability.to_edge(UP)
+
+        self.play(ReplacementTransform(
+            self.title, VGroup(*it.chain(*probability))
+        ))
+        self.dither()
+
+    def say_you_probably_got_lucky(self):
+        randy, morty = self.randy, self.morty
+
+        self.play(
+            PiCreatureSays(
+                morty, "You probably \\\\ got lucky.",
+                target_mode = "sassy",
+                look_at_arg = randy.eyes,
+                bubble_kwargs = {"height" : 3, "width" : 4}
+            ),
+            RemovePiCreatureBubble(
+                randy, 
+                target_mode = "plain",
+                look_at_arg = morty.eyes,
+            )
+        )
+        self.dither(2)
+
+
+    ###
+
+    def read_mind(self, pi1, pi2):
+        self.play(pi1.change, "telepath", pi2.eyes)
+        self.send_mind_waves(pi1, pi2)
+        self.send_mind_waves(pi2, pi1)
+        self.dither()
+
+    def send_mind_waves(self, pi1, pi2):
+        angle = np.pi/3
+        n_arcs = 5
+        vect = pi2.eyes.get_center() - pi1.eyes.get_center()
+        vect[1] = 0
+
+        arc = Arc(angle = angle)
+        arc.rotate(-angle/2 + angle_of_vector(vect))
+        arc.scale(3)
+        arcs = VGroup(*[arc.copy() for x in range(n_arcs)])
+        arcs.move_to(pi2.eyes.get_center(), vect)
+        arcs.set_stroke(BLACK, 0)
+        for arc in arcs:
+            arc.save_state()
+        arcs.scale(0.1)
+        arcs.move_to(pi1.eyes, vect)
+        arcs.set_stroke(WHITE, 4)
+
+        self.play(LaggedStart(
+            ApplyMethod, arcs,
+            lambda m : (m.restore,),
+            lag_ratio = 0.7,
+        ))
+        self.remove(arcs)
+
+class NonchalantReactionToPositiveTest(TestScene):
+    def construct(self):
+        randy = self.pi_creature
+        randy.shift(DOWN+2*RIGHT)
+        result = self.get_positive_result(randy)
+        accuracy = TextMobject("99\\% Accuracy")
+        accuracy.highlight(YELLOW)
+        accuracy.next_to(result, DOWN, LARGE_BUFF, RIGHT)
+
+        self.add(accuracy)
+        self.play(Write(result, run_time = 2))
+        self.play(randy.change, "pondering", result)
+        self.dither()
+        words = TextMobject("Pssht, I'm probably fine.")
+        words.scale(0.8)
+        self.pi_creature_says(
+            words,
+            target_mode = "shruggie",
+            bubble_kwargs = {
+                "direction" : RIGHT,
+                "width" : 6,
+                "height" : 3,
+            },
+            content_introduction_class = FadeIn,
+        )
+        self.dither(4)
+
+class OneInOneThousandHaveDiseaseCopy(OneInOneThousandHaveDisease):
+    pass
+
+class ExampleMeasuresDisbeliefInStatistics(Introduction):
+    def construct(self):
+        self.teacher.shift(LEFT)
+        self.hold_up_example()
+        self.write_counter_intuitive()
+        self.write_new_theory()
+        self.either_way()
+
+    def write_new_theory(self):
+        bayes_to_intuition = self.bayes_to_intuition
+        cross = bayes_to_intuition[-1]
+        bayes_to_intuition.remove(cross)
+        statistics_to_belief = TextMobject(
+            "Statistics ", "$\\leftrightarrow$", " Belief"
+        )
+        statistics_to_belief.scale(0.8)
+        arrow = statistics_to_belief.get_part_by_tex("arrow")
+        statistics_to_belief.next_to(self.example, UP)
+
+        self.revert_to_original_skipping_status()
+        self.play(bayes_to_intuition.to_edge, UP)
+        self.play(
+            LaggedStart(FadeIn, statistics_to_belief),
+            cross.move_to, arrow
+        )
+        self.change_student_modes(
+            *["pondering"]*3,
+            look_at_arg = statistics_to_belief
+        )
+        self.dither(3)
+
+        statistics_to_belief.add(cross)
+        self.statistics_to_belief = statistics_to_belief
+
+    def either_way(self):
+        b_to_i = self.bayes_to_intuition
+        s_to_b = self.statistics_to_belief
+        
+        self.play(FadeOut(self.example))
+        self.play(
+            self.teacher.change_mode, "raise_left_hand",
+            self.teacher.look, UP+RIGHT,
+            b_to_i.next_to, self.teacher, UP,
+            b_to_i.to_edge, RIGHT, MED_SMALL_BUFF,
+        )
+        self.dither(2)
+        self.play(
+            self.teacher.change_mode, "raise_right_hand",
+            self.teacher.look, UP+LEFT,
+            s_to_b.next_to, self.teacher, UP,
+            s_to_b.shift, LEFT,
+            b_to_i.shift, 2*UP
+        )
+        self.dither(2)
+
+
+class AlwaysPictureTheSpaceOfPossibilities(PiCreatureScene):
+    def construct(self):
+        self.pi_creature_thinks(
+            "", bubble_kwargs = {
+                "height" : 4.5,
+                "width" : 8,
+            }
+        )
+        self.dither(3)
+
+    def create_pi_creature(self):
+        return Randolph().to_corner(DOWN+LEFT)
+
+
+
+
+
+
+
+
+
+
 
 
 

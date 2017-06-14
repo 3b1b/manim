@@ -315,7 +315,8 @@ class PiCreatureBubbleIntroduction(AnimationGroup):
         "bubble_creation_class" : ShowCreation,
         "bubble_creation_kwargs" : {},
         "bubble_kwargs" : {},
-        "write_kwargs" : {},
+        "content_introduction_class" : Write,
+        "content_introduction_kwargs" : {},
         "look_at_arg" : None,
     }
     def __init__(self, pi_creature, *content, **kwargs):
@@ -335,9 +336,11 @@ class PiCreatureBubbleIntroduction(AnimationGroup):
         bubble_creation = self.bubble_creation_class(
             bubble, **self.bubble_creation_kwargs
         )
-        writing = Write(bubble.content, **self.write_kwargs)
+        content_introduction = self.content_introduction_class(
+            bubble.content, **self.content_introduction_kwargs
+        )
         AnimationGroup.__init__(
-            self, change_mode, bubble_creation, writing,
+            self, change_mode, bubble_creation, content_introduction,
             **kwargs
         )
 
