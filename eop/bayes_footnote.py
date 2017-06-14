@@ -32,10 +32,20 @@ from eop.bayes import IntroducePokerHand
 
 SICKLY_GREEN = "#9BBD37"
 
+
+class BayesClassicExampleOpeningQuote(OpeningQuote):
+    CONFIG = {
+        "quote" : [
+            "",
+        ],
+        "author" : "",
+    }
+
 class Introduction(TeacherStudentsScene):
     def construct(self):
         self.hold_up_example()
         self.write_counter_intuitive()
+        self.comment_on_crazy_results()
         self.put_it_first()
         self.swap_example_order()
         self.other_culprit()
@@ -98,14 +108,32 @@ class Introduction(TeacherStudentsScene):
 
         self.bayes_to_intuition = group
 
+    def comment_on_crazy_results(self):
+        disease_group = VGroup(self.example, self.bayes_to_intuition)
+        disease_group.save_state()
+
+        self.teacher_says(
+            "Who doesn't love \\\\ crazy results?",
+            target_mode = "hooray",
+            added_anims = [disease_group.to_corner, UP+LEFT]
+        )
+        self.dither(2)
+
+        self.disease_group = disease_group
+
     def put_it_first(self):
         poker_example = self.get_poker_example()
         music_example = self.get_music_example()
-        disease_group = VGroup(
-            self.example, self.bayes_to_intuition
-        )
+        disease_group = self.disease_group
 
-        self.play(disease_group.to_edge, LEFT)
+        self.play(
+            disease_group.restore,
+            disease_group.to_edge, LEFT,
+            RemovePiCreatureBubble(
+                self.teacher,
+                target_mode = "hesitant"
+            )
+        )
         self.change_student_modes(
             *["pondering"]*3, 
             look_at_arg = disease_group
@@ -394,6 +422,14 @@ class ReceivePositiveResults(TestScene):
         self.play(randy.change, "sad", accuracy)
         self.dither(2)
 
+class AskAboutRephrasingQuestion(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "What if we rephrased \\\\ the question?",
+            run_time = 1
+        )
+        self.dither(3)
+
 class RephraseQuestion(Scene):
     def construct(self):
         words = VGroup(*map(TextMobject, [
@@ -442,26 +478,19 @@ class RephraseQuestion(Scene):
 class TryUnitSquareVisual(SampleSpaceScene):
     def construct(self):
         sample_space = self.get_sample_space()
-        sample_space.divide_horizontally(0.1)
-        for part in sample_space.horizontal_parts:
-            part.set_stroke(part.get_fill_color(), width = 3)
-        initial_labels, final_labels = [
-            VGroup(
-                TexMobject("P(\\text{Disease})", s1),
-                TexMobject("P(\\text{Not disease})", s2),
-            ).scale(0.7)
-            for s1, s2 in ("", ""), ("= 0.001", "= 0.999")
-        ]
-        sample_space.get_side_braces_and_labels(initial_labels)
-        sample_space.add_braces_and_labels()
+        self.add_prior_division()
+        self.add(sample_space)
+        self.add_conditional_divisions()
+        prior_label = sample_space.horizontal_parts.labels[0]
+        final_labels = self.final_labels
 
         hard_to_see = TextMobject("Hard to see")
         hard_to_see.scale(0.7)
-        hard_to_see.next_to(sample_space.full_space, UP)
+        hard_to_see.next_to(prior_label, UP)
         hard_to_see.to_edge(UP)
-        arrow = Arrow(hard_to_see, sample_space.full_space)
+        hard_to_see.highlight(YELLOW)
+        arrow = Arrow(hard_to_see, prior_label)
 
-        self.add(sample_space)
         self.dither()
         anims = self.get_division_change_animations(
             sample_space, sample_space.horizontal_parts,
@@ -474,6 +503,57 @@ class TryUnitSquareVisual(SampleSpaceScene):
             ShowCreation(arrow)
         )
         self.dither(2)
+
+    def add_prior_division(self):
+        sample_space = self.sample_space
+        sample_space.divide_horizontally(0.1)
+        initial_labels, final_labels = [
+            VGroup(
+                TexMobject("P(\\text{Disease})", s1),
+                TexMobject("P(\\text{Not disease})", s2),
+            ).scale(0.7)
+            for s1, s2 in ("", ""), ("= 0.001", "= 0.999")
+        ]
+        sample_space.get_side_braces_and_labels(initial_labels)
+        sample_space.add_braces_and_labels()
+
+        self.final_labels = final_labels
+
+    def add_conditional_divisions(self):
+        sample_space = self.sample_space
+        top_part, bottom_part = sample_space.horizontal_parts
+
+        top_brace = Brace(top_part, UP)
+        top_label = TexMobject(
+            "P(", "+", "|", "\\text{Disease}", ")", "=", "1"
+        )
+        top_label.scale(0.7)
+        top_label.next_to(top_brace, UP)
+        top_label.highlight_by_tex("+", GREEN)
+
+        self.play(GrowFromCenter(top_brace))
+        self.play(FadeIn(top_label))
+        self.dither()
+
+        bottom_part.divide_vertically(
+            0.95, colors = [BLUE_E, YELLOW_E]
+        )
+        bottom_label = TexMobject(
+            "P(", "+", "|", "\\text{Not disease}", ")", "=", "1"
+        )
+        bottom_label.scale(0.7)
+        bottom_label.highlight_by_tex("+", GREEN)
+        braces, labels = bottom_part.get_bottom_braces_and_labels(
+            [bottom_label]
+        )
+        bottom_brace = braces[0]
+
+        self.play(
+            FadeIn(bottom_part.vertical_parts),
+            GrowFromCenter(bottom_brace),
+        )
+        self.play(FadeIn(bottom_label))
+        self.dither()
 
 class ShowRestrictedSpace(Scene):
     CONFIG = {

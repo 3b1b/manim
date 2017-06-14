@@ -486,8 +486,6 @@ class UpdatePokerPrior(SampleSpaceScene):
         "cash_string" : "\\$\\$\\$",
     }
     def construct(self):
-        self.force_skipping()
-
         self.add_sample_space()
         self.add_top_conditionals()
         self.react_to_top_conditionals()
@@ -499,11 +497,7 @@ class UpdatePokerPrior(SampleSpaceScene):
         self.reshape_rectangles()
         self.compare_prior_to_posterior()
         self.preview_tweaks()
-
-        self.revert_to_original_skipping_status()
         self.tweak_non_flush_case()
-        return
-
         self.tweak_flush_case()
         self.tweak_prior()
         self.compute_posterior()
@@ -1910,10 +1904,21 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
             ratio.get_top(), rhs[1].get_bottom(), **arrow_kwargs
         )
 
+        prior_rects = self.get_prior_rectangles()
+
         self.play(
             ShowCreation(to_ratio_arrow),
             FadeIn(ratio)
         )
+        self.dither(2)
+        for mob in prior_rects, prior_rects[0]:
+            self.play(
+                mob.highlight, YELLOW,
+                Animation(self.products),
+                rate_func = there_and_back,
+                run_time = 2
+            )
+            self.dither()
         self.dither()
         self.play(ShowCreation(to_rhs_arrow))
         self.play(Write(rhs, run_time = 1))
@@ -1925,19 +1930,18 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
     def intuition_of_positive_feedback(self):
         friends = self.friends
         prior_num = self.sample_space.horizontal_parts.labels[0][-1]
+        prior_num_ghost = prior_num.copy().set_fill(opacity = 0.5)
         post_num = self.post_rhs[-1]
         prior_rect = SurroundingRectangle(prior_num)
         post_rect = SurroundingRectangle(post_num)
-        dot = Dot(prior_rect.get_center())
-        dot.set_fill(WHITE, 0.5)
 
         self.play(ShowCreation(prior_rect))
-        self.play(
-            dot.move_to, post_rect,
-            dot.set_fill, None, 0,
+        self.play(Transform(
+            prior_num_ghost, post_num,
+            remover = True,
             path_arc = -np.pi/6,
             run_time = 2,
-        )
+        ))
         self.play(ShowCreation(post_rect))
         self.dither(2)
         for mode, time in ("shruggie", 2), ("hesitant", 0):
