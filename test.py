@@ -192,10 +192,10 @@ class Det3(LinearTransformationScene):
 
         if a_mat < 0:
             quads[2],quads[3],quads[6],quads[7] = [
-                (a+b, a+b+c, LEFT,"2"),
-                (a+b+c,a+b+c+d, LEFT, "3"),
-                (d+c, d, RIGHT, "6"),
-                (d, ORIGIN, RIGHT, "7")
+                (a+b, a+b+c, LEFT,"c"),
+                (a+b+c,a+b+c+d, LEFT, "d"),
+                (d+c, d, RIGHT, "c"),
+                (d, ORIGIN, RIGHT, "d")
             ]
 
 
