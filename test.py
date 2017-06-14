@@ -20,8 +20,6 @@ from mobject.vectorized_mobject import *
 from topics.matrix import *
 from topics.vector_space_scene import *
 
-from nice_vector import NiceVector
-
 import helpers
 #import myhelpers
 import math
@@ -31,7 +29,7 @@ def curvy_squish(point):
     x, y, z = point
     return (x+np.cos(y))*RIGHT + (y+np.sin(x))*UP
 
-    
+
 class Test(VectorScene):
     def construct(self):
         self.setup()
@@ -79,8 +77,6 @@ class Test2(LinearTransformationScene):
         self.apply_transposed_matrix(self.transposed_matrix)
         #new_matrix = np.dot(np.linalg.inv(self.transposed_matrix), self.transposed_matrix.T)
         #self.apply_transposed_matrix(new_matrix)
-
-        self.show_linear_combination(clean_up=False)
         self.write_linear_map_rule()
         self.show_basis_vector_coords()
 
@@ -103,7 +99,6 @@ class Test2(LinearTransformationScene):
         coords = Matrix(self.v_coords)
         coords.scale(VECTOR_LABEL_SCALE_FACTOR)
         coords.next_to(v.get_end(), np.sign(self.v_coords[0])*RIGHT)
-
         self.play(Write(coords, run_time = 1))
         v_def = self.get_v_definition()
         pre_def = VMobject(
@@ -124,77 +119,27 @@ class Test2(LinearTransformationScene):
         self.remove(coords)
 
     def show_linear_combination(self, clean_up = True):
-        """i_hat_copy, j_hat_copy = [m.copy() for m in self.i_hat, self.j_hat]
-        global i_list
-        global j_list
-        i_list = []
-        if self.v_coords[0] < 0:
-            total_j_vec = np.array([-self.i_hat.get_end()[0], 0])
-            total_i_vec = np.array([0,0])
-            print(total_i_vec)
-            for i in range(abs(self.v_coords[0])):
-                i_vec = Vector([-self.i_hat.copy().get_end()[0], -self.i_hat.copy().get_end()[1]])
-                i_list += i_vec
-                i_vec.highlight(X_COLOR)
-                self.add_vector(i_vec)
-                self.play(ApplyMethod(i_vec.shift, Vector(total_i_vec).get_end()))
-                total_i_vec += np.array([-int(self.i_hat.get_end()[0]),-int(self.i_hat.get_end()[1])])
-
-        else:
-            total_j_vec = np.array([self.i_hat.get_end()[0],0])
-            total_i_vec = np.array([-1,0])
-            for i in range(abs(self.v_coords[0])):
-                i_vec = self.i_hat.copy()
-                i_list += i_vec
-                i_vec.highlight(X_COLOR)
-                self.add_vector(i_vec)
-                total_i_vec += np.array([1,0])
-                self.play(ApplyMethod(i_vec.shift, Vector(total_i_vec).get_end()))
-        j_list = []
-        total_j_vec += np.array([0, -self.j_hat.get_end()[1]])
-        if self.v_coords[1] > 0:
-            for j in range(abs(self.v_coords[1])):
-                j_vec = self.j_hat.copy()
-                j_list += j_vec
-                j_vec.highlight(Y_COLOR)
-                self.add_vector(j_vec)
-                self.play(ApplyMethod(j_vec.shift, Vector(np.array([self.v_coords[0],0])).get_end()))
-                total_j_vec += np.array([int(self.j_hat.get_end()[0]),int(self.j_hat.get_end()[1])])
-                self.play(ApplyMethod(j_vec.shift, Vector(total_j_vec).get_end()))
-        else:
-            total_j_vec = np.array([0,1])
-            for j in range(abs(self.v_coords[1])):
-                j_vec = self.j_hat.copy()
-                j_vec = Vector(np.array([0,-1]))
-                j_list += j_vec
-                j_vec.highlight(Y_COLOR)
-                self.add_vector(j_vec)
-                self.play(ApplyMethod(j_vec.shift, Vector(np.array([self.v_coords[0],0])).get_end()))
-                total_j_vec += np.array([int(self.j_hat.get_end()[0]),int(self.j_hat.get_end()[1])])
-                self.play(ApplyMethod(j_vec.shift, Vector(total_j_vec).get_end()))
-        for i_vec in i_list:
-            i_vec.highlight(YELLOW)
-        for j_vec in j_list:
-            j_vec.highlight(YELLOW)
-        self.dither()"""
-        vector = NiceVector(np.append(self.v_coords, [0]))#, basis = np.array([[1.,0,],[0.,1.]]), dim = 2)
+        vector = NiceVector(np.append(self.v_coords, [0]))
         vectorlist = vector.linear_decomposition()
         total_vec = np.array([0,0,0])
+        i_hat = [int(val) for val in self.i_hat.get_end()]
+        j_hat = [int(val) for val in self.j_hat.get_end()]
         for i in range(len(vectorlist)):
             vec = vectorlist[i]
-            vec.highlight(Y_COLOR)
-            self.add_nice_vector(vec)            
-            self.play(ApplyMethod(vec.shift, Vector(total_vec).get_end()))
-            total_vec = np.array([int(vec.get_end()[0]), int(vec.get_end()[1]), int(vec.get_end()[2])])
-            if i != 0:
-                prev_vec = vectorlist[i-1]
-                vec.put_at(np.array([int(prev_vec.get_end()[0]), int(prev_vec.get_end()[1]), int(prev_vec.get_end()[2])]))
-
+            vec_stuff = np.array([int(val) for val in vec.get_end()])
+            if abs(int(vectorlist[i].get_end()[0])):
+                vec.highlight(X_COLOR)
+            else:
+                vec.highlight(Y_COLOR)
+            vec = NiceVector(vec.get_end())
+            vec.put_at(total_vec)
+            self.add_nice_vector(vec)
+            total_vec += np.array([vec_stuff[0]*i_hat[0] + vec_stuff[1]*j_hat[0], vec_stuff[0]*i_hat[1] + vec_stuff[1]*j_hat[1], 0])
+            vectorlist[i] = vec
+            self.add_transformable_mobject(vec)
         if clean_up:
             for vec in vectorlist:
                 self.remove(vec)
-        
-        
 
     def get_v_definition(self):
         v_def = TexMobject([

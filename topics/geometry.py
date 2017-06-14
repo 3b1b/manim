@@ -326,6 +326,7 @@ class NiceVector(Vector):
         """
         self.shift(coords)
         self.start = coords
+        self.end = self.coords+self.start
         return self
 
 class DashedArrow(DashedLine):
