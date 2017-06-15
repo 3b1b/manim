@@ -1,7 +1,7 @@
 from helpers import *
 
 from mobject import Mobject
-from mobject.vectorized_mobject import VMobject
+from mobject.vectorized_mobject import VMobject, VGroup
 
 class Arc(VMobject):
     CONFIG = {
@@ -413,6 +413,18 @@ class PictureInPictureFrame(Rectangle):
         )
         self.scale_to_fit_height(height)
         
+class Cross(VGroup):
+    CONFIG = {
+        "stroke_color" : RED,
+        "stroke_width" : 6,
+    }
+    def __init__(self, mobject, **kwargs):
+        VGroup.__init__(self, 
+            Line(UP+LEFT, DOWN+RIGHT),
+            Line(UP+RIGHT, DOWN+LEFT),
+        )
+        self.replace(mobject, stretch = True)
+        self.set_stroke(self.stroke_color, self.stroke_width)
 
 class Grid(VMobject):
     CONFIG = {

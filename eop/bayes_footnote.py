@@ -36,9 +36,11 @@ SICKLY_GREEN = "#9BBD37"
 class BayesClassicExampleOpeningQuote(OpeningQuote):
     CONFIG = {
         "quote" : [
-            "",
+            "When faced with a difficult question, we often " \
+            "answer an easier one instead, usually without " \
+            "noticing the substitution.",
         ],
-        "author" : "",
+        "author" : "Daniel Kahneman",
     }
 
 class Introduction(TeacherStudentsScene):
@@ -832,24 +834,80 @@ class DepressingForMedicalTestDesigners(TestScene):
 
 class HowMuchCanYouChangeThisPrior(ShowRestrictedSpace, PiCreatureScene):
     def construct(self):
-        self.play(LaggedStart(
-            FadeIn, self.pi_creatures, 
-            run_time = 4,
-            lag_ratio = 0.7,
-        ))
-        for x in range(2):
-            self.joint_blink(shuffle = False)
-            self.dither(2)
+        self.single_out_new_sick_one()
+        self.show_subgroups()
+        self.isolate_special_group()
 
     def create_pi_creatures(self):
-        title = TextMobject("Tiny, tiny prior")
-        title.to_edge(UP)
         creatures = self.get_all_creatures()
-        creatures.submobjects  = list(it.chain(*creatures))
         creatures.scale_to_fit_height(6.5)
-        creatures.next_to(title, DOWN)
-        self.add(title)
+        creatures.center()
+        creatures.submobjects  = list(it.chain(*creatures))
+
+        self.add(creatures)
+        self.sick_one = creatures.sick_one
         return creatures
+
+    def single_out_new_sick_one(self):
+        creatures = self.pi_creatures
+        sick_one = self.sick_one
+        new_sick_one = sick_one.copy()
+        new_sick_one.shift(1.3*sick_one.get_width()*RIGHT)
+        sick_one.change_mode("plain")
+        sick_one.highlight(BLUE_E)
+
+        self.add(new_sick_one)
+        self.sick_one = new_sick_one
+
+    def show_subgroups(self):
+        subgroups = VGroup(*[
+            VGroup(*it.chain(
+                self.pi_creatures[i:i+5],
+                self.pi_creatures[i+25:i+25+5:]
+            ))
+            for i in range(0, 1000)
+            if i%5 == 0 and (i/25)%2 == 0
+        ])
+        special_group = subgroups[-5]
+        special_group.add(self.sick_one)
+        subgroups.generate_target()
+        width_factor = 2*SPACE_WIDTH/subgroups.get_width()
+        height_factor = 2*SPACE_HEIGHT/subgroups.get_height()
+        subgroups.target.stretch_in_place(width_factor, 0)
+        subgroups.target.stretch_in_place(height_factor, 1)
+        for subgroup in subgroups.target:
+            subgroup.stretch_in_place(1./width_factor, 0)
+            subgroup.stretch_in_place(1./height_factor, 1)
+
+        self.dither()
+        self.play(MoveToTarget(subgroups))
+        subgroups.remove(special_group)
+
+        rects = VGroup(*[
+            SurroundingRectangle(
+                group, buff = 0, color = GREEN
+            )
+            for group in subgroups
+        ])
+        special_rect = SurroundingRectangle(
+            special_group, buff = 0, color = RED
+        )
+        self.play(FadeIn(rects), FadeIn(special_rect))
+        self.dither()
+
+        self.to_fade = VGroup(subgroups, rects)
+        self.special_group = special_group
+        self.special_rect = special_rect
+
+    def isolate_special_group(self):
+        to_fade, special_group = self.to_fade, self.special_group
+        self.play(FadeOut(to_fade))
+        self.play(
+            FadeOut(self.special_rect),
+            special_group.scale_to_fit_height, 6,
+            special_group.center,
+        )
+        self.dither()
 
 class ShowTheFormula(TeacherStudentsScene):
     CONFIG = {
@@ -1059,6 +1117,13 @@ class StatisticsVsEmpathy(PiCreatureScene):
         sick_group = VGroup(
             sick_one, VectorizedPoint(sick_one.get_bottom())
         )
+        priors = VGroup(*[
+            TexMobject("%.1f"%p+ "\\%").move_to(ORIGIN, RIGHT)
+            for p in np.arange(0.1, 2.0, 0.1)
+        ])
+        priors.next_to(randy, UP+LEFT, LARGE_BUFF)
+        prior = priors[0]
+        prior.save_state()
 
         self.play(PiCreatureSays(
             morty, 
@@ -1066,6 +1131,14 @@ class StatisticsVsEmpathy(PiCreatureScene):
             look_at_arg = randy.eyes
         ))
         self.play(randy.change, "pondering", morty.eyes)
+        self.dither()
+        self.play(Write(prior))
+        self.dither()
+        self.play(
+            prior.scale, 0.1,
+            prior.set_fill, None, 0,
+            prior.move_to, randy.eyes
+        )
         self.dither()
         self.play(
             PiCreatureBubbleIntroduction(
@@ -1094,7 +1167,12 @@ class StatisticsVsEmpathy(PiCreatureScene):
             target_sick_group,
             target_mode = "pleading",
         )
-        self.dither(3)
+        self.dither(2)
+
+        self.play(prior.restore)
+        for new_prior in priors[1:]:
+            self.play(Transform(prior, new_prior, run_time = 0.5))
+        self.dither()
 
     ######
 
@@ -1104,6 +1182,21 @@ class StatisticsVsEmpathy(PiCreatureScene):
         randy.to_edge(DOWN).shift(3*LEFT)
         morty.to_edge(DOWN).shift(3*RIGHT)
         return VGroup(randy, morty)
+
+class LessMedicalExample(Scene):
+    def construct(self):
+        disease = TexMobject("P(\\text{Having a disease})")
+        telepathy = TexMobject("P(\\text{Telepathy})")
+        cross = Cross(disease)
+
+        self.add(disease)
+        self.dither()
+        self.play(ShowCreation(cross))
+        self.play(
+            FadeIn(telepathy),
+            VGroup(disease, cross).shift, 2*UP
+        )
+        self.dither()
 
 class PlaneCrashProbability(Scene):
     def construct(self):
@@ -1133,10 +1226,14 @@ class PlaneCrashProbability(Scene):
 
 class IntroduceTelepathyExample(StatisticsVsEmpathy):
     def construct(self):
+        self.force_skipping()
+
         self.show_mind_reading_powers()
+        self.claim_mind_reading_powers()
         self.generate_random_number()
         self.guess_number_correctly()
-        self.ask_about_chances()
+        # self.ask_about_chances()
+        self.revert_to_original_skipping_status()
         self.say_you_probably_got_lucky()
 
     def show_mind_reading_powers(self):
@@ -1146,19 +1243,33 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
 
         self.add(title)
         self.read_mind(randy, morty)
-        self.play(randy.change, "happy", morty.eyes)
 
         self.title = title
+
+    def claim_mind_reading_powers(self):
+        randy, morty = self.randy, self.morty
+        self.play(PiCreatureSays(
+            randy, "I have the gift.",
+            run_time = 1,
+            look_at_arg = morty.eyes,
+        ))
+        self.dither()
+        self.play(RemovePiCreatureBubble(
+            randy,
+            target_mode = "happy",
+            look_at_arg = morty.eyes
+        ))
 
     def generate_random_number(self):
         morty = self.morty
         bubble = morty.get_bubble("", direction = LEFT)
         numbers = [
-            Integer(
-                random.choice(range(100)),
-            ).next_to(morty, UP, LARGE_BUFF, RIGHT)
+            Integer(random.choice(range(100)))
             for x in range(30)
         ]
+        numbers.append(Integer(67))
+        for number in numbers:
+            number.next_to(morty, UP, LARGE_BUFF, RIGHT)
 
 
         for number in numbers:
@@ -1186,8 +1297,6 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
             look_at_arg = morty.eyes
         ))
         self.dither()
-        self.play(morty.change, "confused", randy.eyes)
-        self.dither()
 
     def ask_about_chances(self):
         probability = TexMobject(
@@ -1198,6 +1307,8 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
         probability.highlight_by_tex("Correct", GREEN)
         probability.to_edge(UP)
 
+        self.play(morty.change, "confused", randy.eyes)
+        self.dither()
         self.play(ReplacementTransform(
             self.title, VGroup(*it.chain(*probability))
         ))
@@ -1254,6 +1365,53 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
             lag_ratio = 0.7,
         ))
         self.remove(arcs)
+
+class CompareNumbersInBothExamples(Scene):
+    def construct(self):
+        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        v_line.shift(MED_LARGE_BUFF*LEFT)
+        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line.to_edge(UP, buff = 1.25*LARGE_BUFF)
+        titles = VGroup()
+        for word, vect in ("Disease", LEFT), ("Telepathy", RIGHT):
+            title = TextMobject("%s example"%word)
+            title.shift(vect*SPACE_WIDTH/2.0)
+            title.to_edge(UP)
+            titles.add(title)
+        priors = VGroup(*[
+            TexMobject(
+                "P(", "\\text{%s}"%s, ")", "= 1/1{,}000}"
+            )
+            for s in "Sick", "Powers"
+        ])
+        likelihoods = VGroup(*[
+            TexMobject(
+                "P(", "\\text{%s}"%s1, "|", 
+                "\\text{Not }", "\\text{%s}"%s2, ")",
+                "=", "1/100"
+            )
+            for s1, s2 in ("+", "Sick"), ("Correct", "Powers")
+        ])
+        priors.next_to(likelihoods, UP, LARGE_BUFF)
+        for group in priors, likelihoods:
+            for mob, vect in zip(group, [LEFT, RIGHT]):
+                mob.highlight_by_tex("Sick", BLUE)
+                mob.highlight_by_tex("Powers", BLUE)
+                mob.highlight_by_tex("+", GREEN)
+                mob.highlight_by_tex("Correct", GREEN)
+                mob.scale(0.8)
+                mob.shift(vect*SPACE_WIDTH/2)
+
+        self.play(
+            LaggedStart(FadeIn, titles, lag_ratio = 0.7),
+            *map(ShowCreation, [h_line, v_line])
+        )
+        self.dither()
+        self.play(FadeIn(priors))
+        self.dither()
+        self.play(FadeIn(likelihoods))
+        self.dither(3)
+
 
 class NonchalantReactionToPositiveTest(TestScene):
     def construct(self):

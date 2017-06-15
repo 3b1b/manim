@@ -8,7 +8,8 @@ from mobject.tex_mobject import TextMobject, TexMobject
 from animation import Animation
 from animation.simple_animations import Rotating
 
-from topics.geometry import Circle, Line, Rectangle, Square, Arc, Polygon
+from topics.geometry import Circle, Line, Rectangle, Square, \
+    Arc, Polygon, SurroundingRectangle
 from topics.three_dimensions import Cube
 
 class Guitar(SVGMobject):
@@ -228,20 +229,16 @@ class Laptop(VGroup):
 class PatreonLogo(SVGMobject):
     CONFIG = {
         "file_name" : "patreon_logo",
-        "fill_color" : "#ff5900",
+        "fill_color" : "#F96854",
+        # "fill_color" : WHITE,
         "fill_opacity" : 1,
         "stroke_width" : 0,
-        "height" : 2,
+        "width" : 4,
         "propogate_style_to_family" : True
     }
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, **kwargs)
-        outer, inner = self.split()
-        # outer.add_subpath(inner.points)
-        # self.remove(inner)
-        inner.set_fill(BLACK, opacity = 1)
-        inner.set_stroke(self.fill_color, width = 0.5)
-        self.scale_to_fit_height(self.height)
+        self.scale_to_fit_width(self.width)
         self.center()
 
 class VideoIcon(SVGMobject):

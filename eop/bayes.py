@@ -2193,8 +2193,88 @@ class FootnoteWrapper(NextVideoWrapper):
         "title" : "Thoughts on the classic Bayes example"
     }
 
+class PatreonThanks(PatreonThanks):
+    CONFIG = {
+        "specific_patrons" : [
+            "Ali Yahya",
+            "Burt Humburg",
+            "CrypticSwarm",
+            "Juan Benet",
+            "Mark Zollo",
+            "James Park",
+            "Erik Sundell",
+            "Yana Chernobilsky",
+            "Kaustuv DeBiswas",
+            "Kathryn Schmiedicke",
+            "Karan Bhargava",
+            "Ankit Agarwal",
+            "Yu Jun",
+            "Dave Nicponski",
+            "Damion Kistler",
+            "Markus Persson",
+            "Yoni Nazarathy",
+            "Ed Kellett",
+            "Joseph John Cox",
+            "Dan Buchoff",
+            "Luc Ritchie",
+            "Michael McGuffin",
+            "John Haley",
+            "Mourits de Beer",
+            "Ankalagon",
+            "Eric Lavault",
+            "Tomohiro Furusawa",
+            "Boris Veselinovich",
+            "Julian Pulgarin",
+            "Jeff Linse",
+            "Cooper Jones",
+            "Ryan Dahl",
+            "Mark Govea",
+            "Robert Teed",
+            "Jason Hise",
+            "Meshal Alshammari",
+            "Bernd Sing",
+            "Nils Schneider",
+            "James Thornton",
+            "Mustafa Mahdi",
+            "Mathew Bramson",
+            "Jerry Ling",
+            "Vecht",
+            "Shimin Kuang",
+            "Rish Kundalia",
+            "Achille Brighton",
+            "Ripta Pasay",
+        ]
+    }
 
+class Thumbnail(SampleSpaceScene):
+    def construct(self):
+        title = TextMobject("Bayes' rule")
+        title.scale(2)
+        title.to_edge(UP)
+        self.add(title)
 
+        prior_label = TexMobject("P(", "H", ")")
+        post_label = TexMobject("P(", "H", "|", "D", ")")
+        for label in prior_label, post_label:
+            label.highlight_by_tex("H", YELLOW)
+            label.highlight_by_tex("D", GREEN)
+            label.scale(1.5)
+
+        sample_space = self.get_sample_space()
+        sample_space.scale_to_fit_height(5)
+        sample_space.divide_horizontally(0.3)
+        sample_space[0].divide_vertically(0.8, colors = [GREEN, BLUE])
+        sample_space[1].divide_vertically(0.3, colors = [GREEN_E, BLUE_E])
+        sample_space.get_side_braces_and_labels([prior_label])
+        sample_space.add_braces_and_labels()
+        post_rects = self.get_posterior_rectangles()
+        group = self.get_posterior_rectangle_braces_and_labels(
+            post_rects, [post_label]
+        )
+        post_rects.add(group)
+
+        VGroup(sample_space, post_rects).next_to(title, DOWN, LARGE_BUFF)
+        self.add(sample_space, post_rects)
 
 
 
