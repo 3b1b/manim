@@ -23,11 +23,97 @@ from topics.vector_space_scene import *
 import helpers
 #import myhelpers
 import math
+import decimal
 
 
 def curvy_squish(point):
     x, y, z = point
     return (x+np.cos(y))*RIGHT + (y+np.sin(x))*UP
+
+def get_orthonormal_eigenbasis(matrix):
+    """ given a matrix, returns a list of eigenvectors
+        that form an orthogonal basis of the space
+        the matrix lives in 
+    """
+    eigenvals, eigenvecs = np.linalg.eig(matrix)
+    eigenvals = clean(eigenvals)
+    eigenvecs = clean1(eigenvecs)
+    eigenvecs = [[j[i] for j in eigenvecs] for i in range(len(eigenvecs))]
+    repeat_dict = repeats(eigenvals)
+    if not repeat_dict:
+        return eigenvecs
+    else:
+        for key in repeat_dict:
+            evecs = []
+            for i in repeat_dict[key]:
+                evecs += [eigenvecs[i]]
+            print(evecs)
+            print(repeat_vector(evecs))
+            if not repeat_vector(evecs): #need a different way to evaluate if contains parallel vectors
+                for i in range(len(evecs)): #gram-schmidt process (orthogonalizes vectors)
+                    for j in range(i-1):
+                        scalar = (np.dot(evecs[j], evecs[i])/np.dot(evecs[j], evecs[j]))
+                        evecs[i] -= np.multiply(scalar, evecs[j])
+                    evecs[i] = np.multiply(1/np.linalg.norm(evecs[i]), evecs[i]).tolist()
+                for i in range(len(repeat_dict[key])):
+                    eigenvecs[repeat_dict[key][i]] = evecs[i]
+            else:
+                return False
+        return eigenvecs
+
+
+def repeat_vector(L):
+    """ returns True if L, a list of lists, 
+        contains two of the same list, and 
+        False otherwise
+    """
+    for i in range(len(L)):
+        if L[i] in L[:i]:
+            return True
+        elif np.multiply(-1, L[i]).tolist() in L[:i]:
+            return True
+    return False
+
+def repeats(L):
+    """ returns the elements of L that 
+        are repeated twice (or more); 
+        returns False otherwise
+    """ 
+    out = {}
+    for i in range(len(L)):
+        if (L[i] in L[:i]) or (L[i] in L[(i+1):]):
+            if L[i] not in out:
+                out[L[i]] = [i]
+            else:
+                out[L[i]] += [i]
+    if out == {}:
+        return False
+    else:
+        return out
+
+def clean(L):
+    """ removes floating point error smaller than 10^-6
+    """
+    out = []
+    for i in range(len(L)):
+        a = round(decimal.Decimal(L[i].real),6)
+        b = round(decimal.Decimal(L[i].imag),6)
+        if b == 0:
+            out += [a]
+        elif a == 0: 
+            out += [b*1j]
+        else:
+            out += [a+b*1j]
+    return out
+
+def clean1(L):
+    """ clean(L) for 2d lists
+    """
+    out = []
+    for i in range(len(L)):
+        out += [clean(L[i])]
+    return out
+
 
 def get_det_text(matrix, determinant = None, background_rect = True):
     parens = TexMobject(["(", ")"])
