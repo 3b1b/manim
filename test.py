@@ -753,7 +753,8 @@ class Test3(LinearTransformationScene):
         self.play(Write(result))
         self.dither()
 
-global_transposed_matrix = np.array([[1,0], [1/math.sqrt(10),3/math.sqrt(10)]])
+global_transposed_matrix = np.array([[0,1], [-2,3]])
+eigen_vals, eigen_vecs = np.linalg.eig(global_transposed_matrix.T)
 class EigenTest(LinearTransformationScene):
     global global_transposed_matrix
     CONFIG = {
@@ -766,11 +767,9 @@ class EigenTest(LinearTransformationScene):
         self.apply_transposed_matrix(self.transposed_matrix)
         self.apply_transposed_matrix(self.transposed_matrix)
         self.apply_transposed_matrix(self.transposed_matrix)
-        self.apply_transposed_matrix(self.transposed_matrix)
-        self.apply_transposed_matrix(self.transposed_matrix)
         #new_matrix = np.dot(np.linalg.inv(self.transposed_matrix), self.transposed_matrix.T)
         #self.apply_transposed_matrix(new_matrix)
-        self.show_basis_vector_coords()
+        #self.show_basis_vector_coords()
 
     def label_bases(self):
         triplets = [
@@ -807,7 +806,8 @@ class EigenTest(LinearTransformationScene):
         self.dither()
 
     def draw_eigenvectors(self):
-        n = 50
+        global eigen_vecs
+        n = 150
         r = 3
         for theta in range(n):
             angle = theta*2*np.pi/n
@@ -815,8 +815,12 @@ class EigenTest(LinearTransformationScene):
             theta = float(theta)
             vec = Vector(coords, color = Color(hue=theta/n, saturation=1, luminance=.5))
             self.add_vector(vec, animate=False)
-        self.add_vector(Vector([1,1], color=WHITE, animate= False))
-        self.add_vector(Vector([1,-1.5], color=WHITE, animate=False))
+        for vec  in eigen_vecs:
+            vec = np.array([vec[0], vec[1], 0])
+            self.add_vector(Vector(vec), color=WHITE, animate=False)
+            self.add_transformable_mobject(DashedLine(10*vec, -10*vec))
+        #self.add_vector(Vector([1,1], color=WHITE, animate= False))
+        #self.add_vector(Vector([1,-1.5], color=WHITE, animate=False))
 
 global_transposed_matrix = np.array([[4,-2], [2,0]])
 class EigenTest1(LinearTransformationScene):
