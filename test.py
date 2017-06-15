@@ -35,31 +35,30 @@ def get_orthonormal_eigenbasis(matrix):
         that form an orthogonal basis of the space
         the matrix lives in 
     """
-    eigenvals, eigenvecs = np.linalg.eig(matrix)
-    eigenvals = clean(eigenvals)
-    eigenvecs = clean1(eigenvecs)
+    eigenvals, eigenvecs = np.linalg.eig(matrix) #get eigenvalues and eigenvalues of the matrix
+    eigenvals = clean(eigenvals) #remove weird floats
+    eigenvecs = clean1(eigenvecs) #^^
+    #transpose the matrix of eigenvectors so each element is an eigenvector
     eigenvecs = [[j[i] for j in eigenvecs] for i in range(len(eigenvecs))]
-    repeat_dict = repeats(eigenvals)
-    if not repeat_dict:
+    repeat_dict = repeats(eigenvals) #get dictionary of repeated eigenvalues/locations or False
+    if not repeat_dict: #if no repeated eigenvalues, eigenvectors form an orthogonal basis
         return eigenvecs
     else:
-        for key in repeat_dict:
+        for key in repeat_dict: #for each repeated eigenvalue
             evecs = []
-            for i in repeat_dict[key]:
-                evecs += [eigenvecs[i]]
-            print(evecs)
-            print(repeat_vector(evecs))
+            for i in repeat_dict[key]: #get list of associated eigenvectors
+                evecs += [eigenvecs[i]] 
             if not repeat_vector(evecs): #need a different way to evaluate if contains parallel vectors
                 for i in range(len(evecs)): #gram-schmidt process (orthogonalizes vectors)
-                    for j in range(i-1):
-                        scalar = (np.dot(evecs[j], evecs[i])/np.dot(evecs[j], evecs[j]))
-                        evecs[i] -= np.multiply(scalar, evecs[j])
-                    evecs[i] = np.multiply(1/np.linalg.norm(evecs[i]), evecs[i]).tolist()
+                    for j in range(i-1): 
+                        scalar = (np.dot(evecs[j], evecs[i])/np.dot(evecs[j], evecs[j])) # (j dot i)/(j dot j)
+                        evecs[i] -= np.multiply(scalar, evecs[j]) #subtract component in direction of evecs[j]
+                    evecs[i] = np.multiply(1/np.linalg.norm(evecs[i]), evecs[i]).tolist() #normalize
                 for i in range(len(repeat_dict[key])):
-                    eigenvecs[repeat_dict[key][i]] = evecs[i]
-            else:
-                return False
-        return eigenvecs
+                    eigenvecs[repeat_dict[key][i]] = evecs[i] # replace in list of eigenvectors
+            else: #there is a repeated vector in the list of associated eigenvectors
+                return False #the eigenvalue is incomplete and thus the matrix is deficient
+        return eigenvecs #all eigenvalues are complete, so we can return list of orthogonalized eigenvectors
 
 
 def repeat_vector(L):
@@ -68,9 +67,9 @@ def repeat_vector(L):
         False otherwise
     """
     for i in range(len(L)):
-        if L[i] in L[:i]:
+        if L[i] in L[:i]: #if there exists earlier in the list another identical vector
             return True
-        elif np.multiply(-1, L[i]).tolist() in L[:i]:
+        elif np.multiply(-1, L[i]).tolist() in L[:i]: #or an antiparallel vector
             return True
     return False
 
@@ -81,14 +80,15 @@ def repeats(L):
     """ 
     out = {}
     for i in range(len(L)):
-        if (L[i] in L[:i]) or (L[i] in L[(i+1):]):
-            if L[i] not in out:
-                out[L[i]] = [i]
-            else:
-                out[L[i]] += [i]
-    if out == {}:
+        #if somewhere else in the list there exists an identical element
+        if (L[i] in L[:i]) or (L[i] in L[(i+1):]): 
+            if L[i] not in out: #that is not in our dictionary
+                out[L[i]] = [i] #add its location
+            else: #that is in our dictionary
+                out[L[i]] += [i] #add its location
+    if out == {}: #if we have no repeated values
         return False
-    else:
+    else: #otherwise return the dictionary of locations of repeats
         return out
 
 def clean(L):
@@ -96,13 +96,13 @@ def clean(L):
     """
     out = []
     for i in range(len(L)):
-        a = round(decimal.Decimal(L[i].real),6)
-        b = round(decimal.Decimal(L[i].imag),6)
-        if b == 0:
-            out += [a]
-        elif a == 0: 
-            out += [b*1j]
-        else:
+        a = round(decimal.Decimal(L[i].real),6) #find the real part that is probably not a float error
+        b = round(decimal.Decimal(L[i].imag),6) #same as above, but imaginary
+        if b == 0: # if no imaginary part
+            out += [a] #add real to output
+        elif a == 0: #if no real part
+            out += [b*1j] #add imaginary to output
+        else: #add complex to output
             out += [a+b*1j]
     return out
 
@@ -110,8 +110,8 @@ def clean1(L):
     """ clean(L) for 2d lists
     """
     out = []
-    for i in range(len(L)):
-        out += [clean(L[i])]
+    for i in range(len(L)): 
+        out += [clean(L[i])] #clean elements (that are lists) individually
     return out
 
 
