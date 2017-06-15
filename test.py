@@ -37,6 +37,7 @@ def get_orthonormal_eigenbasis(matrix):
     """
     eigenvals, eigenvecs = np.linalg.eig(matrix) #get eigenvalues and eigenvalues of the matrix
     eigenvals = clean(eigenvals) #remove weird floats
+    print(eigenvals)
     eigenvecs = clean1(eigenvecs) #^^
     #transpose the matrix of eigenvectors so each element is an eigenvector
     eigenvecs = [[j[i] for j in eigenvecs] for i in range(len(eigenvecs))]
@@ -841,6 +842,9 @@ class Test3(LinearTransformationScene):
 
 global_transposed_matrix = np.array([[0,1], [-2,3]])
 eigen_vals, eigen_vecs = np.linalg.eig(global_transposed_matrix.T)
+eigen_vals = clean(eigen_vals) 
+eigen_vecs = clean1(eigen_vecs) 
+eigen_vecs = [[j[i] for j in eigen_vecs] for i in range(len(eigen_vecs))]
 class EigenTest(LinearTransformationScene):
     global global_transposed_matrix
     CONFIG = {
@@ -850,9 +854,9 @@ class EigenTest(LinearTransformationScene):
         self.setup()
         self.label_bases()
         self.draw_eigenvectors()
-        self.apply_transposed_matrix(self.transposed_matrix)
-        self.apply_transposed_matrix(self.transposed_matrix)
-        self.apply_transposed_matrix(self.transposed_matrix)
+        self.apply_transposed_matrix(self.transposed_matrix, path_arc = 0)
+        #self.apply_transposed_matrix(self.transposed_matrix)
+        #self.apply_transposed_matrix(self.transposed_matrix)
         #new_matrix = np.dot(np.linalg.inv(self.transposed_matrix), self.transposed_matrix.T)
         #self.apply_transposed_matrix(new_matrix)
         #self.show_basis_vector_coords()
@@ -901,7 +905,7 @@ class EigenTest(LinearTransformationScene):
             theta = float(theta)
             vec = Vector(coords, color = Color(hue=theta/n, saturation=1, luminance=.5))
             self.add_vector(vec, animate=False)
-        for vec  in eigen_vecs:
+        for vec in eigen_vecs:
             vec = np.array([vec[0], vec[1], 0])
             self.add_vector(Vector(vec), color=WHITE, animate=False)
             self.add_transformable_mobject(DashedLine(10*vec, -10*vec))
