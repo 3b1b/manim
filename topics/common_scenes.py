@@ -2,7 +2,7 @@
 from helpers import *
 
 from scene.scene import Scene
-from animation.simple_animations import Write, DrawBorderThenFill
+from animation.simple_animations import Write, DrawBorderThenFill, LaggedStart
 from animation.transform import FadeIn, FadeOut, ApplyMethod
 from mobject.vectorized_mobject import VGroup
 from mobject.tex_mobject import TexMobject, TextMobject
@@ -91,7 +91,7 @@ class PatreonThanks(Scene):
             "Ripta   Pasay",
             "Felipe  Diniz",
         ],
-        "patron_group_size" : 10,
+        "max_patron_group_size" : 20,
         "patron_scale_val" : 0.7,
 
     }
@@ -99,16 +99,12 @@ class PatreonThanks(Scene):
         morty = Mortimer()
         morty.next_to(ORIGIN, DOWN)
 
-        n_patrons = len(self.specific_patrons)
-        special_thanks = TextMobject("Special thanks")
-        special_thanks.highlight(YELLOW)
-        special_thanks.to_edge(UP)
-
         patreon_logo = PatreonLogo()
-        patreon_logo.next_to(morty, UP, buff = MED_LARGE_BUFF)
+        patreon_logo.to_edge(UP)
 
+        n_patrons = len(self.specific_patrons)
         patrons = map(TextMobject, self.specific_patrons)
-        num_groups = float(len(patrons)) / self.patron_group_size
+        num_groups = float(len(patrons)) / self.max_patron_group_size
         proportion_range = np.linspace(0, 1, num_groups + 1)
         indices = (len(patrons)*proportion_range).astype('int')
         patron_groups = [
@@ -117,30 +113,38 @@ class PatreonThanks(Scene):
         ]        
 
         for i, group in enumerate(patron_groups):
-            group.arrange_submobjects(DOWN, aligned_edge = LEFT)
-            group.scale(self.patron_scale_val)
-            group.to_edge(LEFT if i%2 == 0 else RIGHT)
+            left_group = VGroup(*group[:len(group)/2])
+            right_group = VGroup(*group[len(group)/2:])
+            for subgroup, vect in (left_group, LEFT), (right_group, RIGHT):
+                subgroup.arrange_submobjects(DOWN, aligned_edge = LEFT)
+                subgroup.scale(self.patron_scale_val)
+                subgroup.to_edge(vect)
 
-        self.play(
-            morty.change_mode, "gracious",
-            DrawBorderThenFill(patreon_logo),
-        )
-        self.play(Write(special_thanks, run_time = 1))
-        print len(patron_groups)
+        last_group = None
         for i, group in enumerate(patron_groups):
-            anims = [
-                FadeIn(
-                    group, run_time = 2,
-                    submobject_mode = "lagged_start",
-                    lag_factor = 4,
+            anims = []
+            if last_group is not None:
+                self.play(
+                    FadeOut(last_group),
+                    morty.look, UP+LEFT
+                )
+            else:
+                anims += [
+                    DrawBorderThenFill(patreon_logo),
+                ]
+            self.play(
+                LaggedStart(
+                    FadeIn, group, 
+                    run_time = 2,
                 ),
-                morty.look_at, group.get_top(),
-            ]
-            if i >= 2:
-                anims.append(FadeOut(patron_groups[i-2]))
-            self.play(*anims)
-            self.play(morty.look_at, group.get_bottom())
+                morty.change, "gracious", group.get_corner(UP+LEFT),
+                *anims
+            )
+            self.play(morty.look_at, group.get_corner(DOWN+LEFT))
+            self.play(morty.look_at, group.get_corner(UP+RIGHT))
+            self.play(morty.look_at, group.get_corner(DOWN+RIGHT))
             self.play(Blink(morty))
+            last_group = group
 
 
 

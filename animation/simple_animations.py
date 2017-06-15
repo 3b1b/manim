@@ -320,7 +320,6 @@ class LaggedStart(Animation):
             anim.update(alpha)
         return self
 
-
 class DelayByOrder(Animation):
     """
     Modifier of animation.
