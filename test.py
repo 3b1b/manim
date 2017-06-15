@@ -157,7 +157,7 @@ class Det3(LinearTransformationScene):
                 (Polygon(a+c, a+c+d, a+c+d, a+b+c+d), TEAL, "\\dfrac{bd}{2}"),
                 (Polygon(a+d,a+d+b,a+d+b+c,a+c+d), PINK, "bc"),
                 (Polygon(ORIGIN,b,b+c,c), PINK, "bc"),
-                (Polygon(b+d, a+b+c+d, b+c+d), MAROON, "ac/2"),
+                (Polygon(a+d+b, a+b+c+d, b+d), MAROON, "ac/2"),
                 (Polygon(ORIGIN, c, a+c), MAROON, "ac/2"),
             ]
             print(a,b,c,d)
