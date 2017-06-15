@@ -751,7 +751,7 @@ class Test3(LinearTransformationScene):
         self.play(Write(result))
         self.dither()
 
-global_transposed_matrix = np.array([[1,3], [2,0]])
+global_transposed_matrix = np.array([[1,0], [1/math.sqrt(10),3/math.sqrt(10)]])
 class EigenTest(LinearTransformationScene):
     global global_transposed_matrix
     CONFIG = {
@@ -761,6 +761,10 @@ class EigenTest(LinearTransformationScene):
         self.setup()
         self.label_bases()
         self.draw_eigenvectors()
+        self.apply_transposed_matrix(self.transposed_matrix)
+        self.apply_transposed_matrix(self.transposed_matrix)
+        self.apply_transposed_matrix(self.transposed_matrix)
+        self.apply_transposed_matrix(self.transposed_matrix)
         self.apply_transposed_matrix(self.transposed_matrix)
         #new_matrix = np.dot(np.linalg.inv(self.transposed_matrix), self.transposed_matrix.T)
         #self.apply_transposed_matrix(new_matrix)
@@ -801,8 +805,8 @@ class EigenTest(LinearTransformationScene):
         self.dither()
 
     def draw_eigenvectors(self):
-        n = 100
-        r = 2.5
+        n = 50
+        r = 3
         for theta in range(n):
             angle = theta*2*np.pi/n
             coords = r*np.array([math.cos(angle), math.sin(angle)])
