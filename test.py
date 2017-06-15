@@ -23,11 +23,98 @@ from topics.vector_space_scene import *
 import helpers
 #import myhelpers
 import math
+import decimal
 
 
 def curvy_squish(point):
     x, y, z = point
     return (x+np.cos(y))*RIGHT + (y+np.sin(x))*UP
+
+def get_orthonormal_eigenbasis(matrix):
+    """ given a matrix, returns a list of eigenvectors
+        that form an orthogonal basis of the space
+        the matrix lives in 
+    """
+    eigenvals, eigenvecs = np.linalg.eig(matrix) #get eigenvalues and eigenvalues of the matrix
+    eigenvals = clean(eigenvals) #remove weird floats
+    print(eigenvals)
+    eigenvecs = clean1(eigenvecs) #^^
+    #transpose the matrix of eigenvectors so each element is an eigenvector
+    eigenvecs = [[j[i] for j in eigenvecs] for i in range(len(eigenvecs))]
+    repeat_dict = repeats(eigenvals) #get dictionary of repeated eigenvalues/locations or False
+    if not repeat_dict: #if no repeated eigenvalues, eigenvectors form an orthogonal basis
+        return eigenvecs
+    else:
+        for key in repeat_dict: #for each repeated eigenvalue
+            evecs = []
+            for i in repeat_dict[key]: #get list of associated eigenvectors
+                evecs += [eigenvecs[i]] 
+            if not repeat_vector(evecs): #need a different way to evaluate if contains parallel vectors
+                for i in range(len(evecs)): #gram-schmidt process (orthogonalizes vectors)
+                    for j in range(i-1): 
+                        scalar = (np.dot(evecs[j], evecs[i])/np.dot(evecs[j], evecs[j])) # (j dot i)/(j dot j)
+                        evecs[i] -= np.multiply(scalar, evecs[j]) #subtract component in direction of evecs[j]
+                    evecs[i] = np.multiply(1/np.linalg.norm(evecs[i]), evecs[i]).tolist() #normalize
+                for i in range(len(repeat_dict[key])):
+                    eigenvecs[repeat_dict[key][i]] = evecs[i] # replace in list of eigenvectors
+            else: #there is a repeated vector in the list of associated eigenvectors
+                return False #the eigenvalue is incomplete and thus the matrix is deficient
+        return eigenvecs #all eigenvalues are complete, so we can return list of orthogonalized eigenvectors
+
+
+def repeat_vector(L):
+    """ returns True if L, a list of lists, 
+        contains two of the same list, and 
+        False otherwise
+    """
+    for i in range(len(L)):
+        if L[i] in L[:i]: #if there exists earlier in the list another identical vector
+            return True
+        elif np.multiply(-1, L[i]).tolist() in L[:i]: #or an antiparallel vector
+            return True
+    return False
+
+def repeats(L):
+    """ returns the elements of L that 
+        are repeated twice (or more); 
+        returns False otherwise
+    """ 
+    out = {}
+    for i in range(len(L)):
+        #if somewhere else in the list there exists an identical element
+        if (L[i] in L[:i]) or (L[i] in L[(i+1):]): 
+            if L[i] not in out: #that is not in our dictionary
+                out[L[i]] = [i] #add its location
+            else: #that is in our dictionary
+                out[L[i]] += [i] #add its location
+    if out == {}: #if we have no repeated values
+        return False
+    else: #otherwise return the dictionary of locations of repeats
+        return out
+
+def clean(L):
+    """ removes floating point error smaller than 10^-6
+    """
+    out = []
+    for i in range(len(L)):
+        a = round(decimal.Decimal(L[i].real),6) #find the real part that is probably not a float error
+        b = round(decimal.Decimal(L[i].imag),6) #same as above, but imaginary
+        if b == 0: # if no imaginary part
+            out += [a] #add real to output
+        elif a == 0: #if no real part
+            out += [b*1j] #add imaginary to output
+        else: #add complex to output
+            out += [a+b*1j]
+    return out
+
+def clean1(L):
+    """ clean(L) for 2d lists
+    """
+    out = []
+    for i in range(len(L)): 
+        out += [clean(L[i])] #clean elements (that are lists) individually
+    return out
+
 
 def get_det_text(matrix, determinant = None, background_rect = True):
     parens = TexMobject(["(", ")"])
@@ -755,6 +842,9 @@ class Test3(LinearTransformationScene):
 
 global_transposed_matrix = np.array([[0,1], [-2,3]])
 eigen_vals, eigen_vecs = np.linalg.eig(global_transposed_matrix.T)
+eigen_vals = clean(eigen_vals) 
+eigen_vecs = clean1(eigen_vecs) 
+eigen_vecs = [[j[i] for j in eigen_vecs] for i in range(len(eigen_vecs))]
 class EigenTest(LinearTransformationScene):
     global global_transposed_matrix
     CONFIG = {
@@ -764,9 +854,9 @@ class EigenTest(LinearTransformationScene):
         self.setup()
         self.label_bases()
         self.draw_eigenvectors()
-        self.apply_transposed_matrix(self.transposed_matrix)
-        self.apply_transposed_matrix(self.transposed_matrix)
-        self.apply_transposed_matrix(self.transposed_matrix)
+        self.apply_transposed_matrix(self.transposed_matrix, path_arc = 0)
+        #self.apply_transposed_matrix(self.transposed_matrix)
+        #self.apply_transposed_matrix(self.transposed_matrix)
         #new_matrix = np.dot(np.linalg.inv(self.transposed_matrix), self.transposed_matrix.T)
         #self.apply_transposed_matrix(new_matrix)
         #self.show_basis_vector_coords()
@@ -815,7 +905,7 @@ class EigenTest(LinearTransformationScene):
             theta = float(theta)
             vec = Vector(coords, color = Color(hue=theta/n, saturation=1, luminance=.5))
             self.add_vector(vec, animate=False)
-        for vec  in eigen_vecs:
+        for vec in eigen_vecs:
             vec = np.array([vec[0], vec[1], 0])
             self.add_vector(Vector(vec), color=WHITE, animate=False)
             self.add_transformable_mobject(DashedLine(10*vec, -10*vec))
