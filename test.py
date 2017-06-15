@@ -111,7 +111,7 @@ class Det2(LinearTransformationScene):
         self.apply_transposed_matrix(matrix2.transpose(), path_arc = 0)
         self.dither()
 
-a_mat, b_mat, c_mat, d_mat = 3,1,-1,2
+a_mat, b_mat, c_mat, d_mat = -3,-1,1,2
 class Det3(LinearTransformationScene):
     global a_mat
     global b_mat
@@ -151,14 +151,16 @@ class Det3(LinearTransformationScene):
             (Polygon(a, a+b, a+b+c, a+c), PINK, "bc"),
             (Polygon(d, d+b, d+b+c, d+c), PINK, "bc"),
         ]
-        if a_mat < 0:
-            shapes_colors_and_tex[1], shapes_colors_and_tex[2], shapes_colors_and_tex[4], shapes_colors_and_tex[5]= [
-                (Polygon(ORIGIN, d+b, d, d),TEAL, "\\dfrac{bd}{2}"),
-                (Polygon(a+c, a+b+c, a+b+c, a+b+c+d), TEAL, "\\dfrac{bd}{2}"),
-                (Polygon(a,a+b,a+b+c,a+c), PINK, "bc"),
-                (Polygon(d,d+b,d+b+c,d+c), PINK, "bc"),
-
+        if a_mat < 0 and b_mat < 0 and c_mat>0 and d_mat>0:
+            shapes_colors_and_tex = [
+                (Polygon(ORIGIN, d+b, b, b),TEAL, "\\dfrac{bd}{2}"),
+                (Polygon(a+c, a+c+d, a+c+d, a+b+c+d), TEAL, "\\dfrac{bd}{2}"),
+                (Polygon(a+d,a+d+b,a+d+b+c,a+c+d), PINK, "bc"),
+                (Polygon(ORIGIN,b,b+c,c), PINK, "bc"),
+                (Polygon(b+d, a+b+c+d, b+c+d), MAROON, "ac/2"),
+                (Polygon(ORIGIN, c, a+c), MAROON, "ac/2"),
             ]
+            print(a,b,c,d)
         everyone = VMobject()
         for shape, color, tex in shapes_colors_and_tex:
             shape.set_stroke(width = 0)
@@ -813,7 +815,6 @@ class EigenTest(LinearTransformationScene):
             theta = float(theta)
             vec = Vector(coords, color = Color(hue=theta/n, saturation=1, luminance=.5))
             self.add_vector(vec, animate=False)
-            #self.add_transformable_mobject(vec)
         self.add_vector(Vector([1,1], color=WHITE, animate= False))
         self.add_vector(Vector([1,-1.5], color=WHITE, animate=False))
 
