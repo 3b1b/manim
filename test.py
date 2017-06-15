@@ -197,16 +197,22 @@ class Det2(LinearTransformationScene):
         self.apply_transposed_matrix(matrix2.transpose(), path_arc = 0)
         self.dither()
 
-
+a_mat, b_mat, c_mat, d_mat = -3,-1,1,2
 class Det3(LinearTransformationScene):
+    global a_mat
+    global b_mat
+    global c_mat
+    global d_mat
     #shows geometric derivation of formula for determinant
+
     def construct(self):
         self.setup()
         self.add_unit_square()
-        self.apply_transposed_matrix([[3, 1], [1, 2]], run_time = 0)
+        self.apply_transposed_matrix([[a_mat, b_mat], [c_mat, d_mat]], run_time = 0)
         self.add_braces()
         self.add_polygons()
         self.show_formula()
+        self.dither()
 
     def get_matrix(self):
         matrix = Matrix([["a", "b"], ["c", "d"]])
@@ -231,6 +237,16 @@ class Det3(LinearTransformationScene):
             (Polygon(a, a+b, a+b+c, a+c), PINK, "bc"),
             (Polygon(d, d+b, d+b+c, d+c), PINK, "bc"),
         ]
+        if a_mat < 0 and b_mat < 0 and c_mat>0 and d_mat>0:
+            shapes_colors_and_tex = [
+                (Polygon(ORIGIN, d+b, b, b),TEAL, "\\dfrac{bd}{2}"),
+                (Polygon(a+c, a+c+d, a+c+d, a+b+c+d), TEAL, "\\dfrac{bd}{2}"),
+                (Polygon(a+d,a+d+b,a+d+b+c,a+c+d), PINK, "bc"),
+                (Polygon(ORIGIN,b,b+c,c), PINK, "bc"),
+                (Polygon(a+d+b, a+b+c+d, b+d), MAROON, "ac/2"),
+                (Polygon(ORIGIN, c, a+c), MAROON, "ac/2"),
+            ]
+            print(a,b,c,d)
         everyone = VMobject()
         for shape, color, tex in shapes_colors_and_tex:
             shape.set_stroke(width = 0)
@@ -244,8 +260,6 @@ class Det3(LinearTransformationScene):
             submobject_mode = "lagged_start",
             run_time = 1
         ))
-
-
 
     def add_braces(self):
         a = self.i_hat.get_end()[0]*RIGHT
@@ -263,6 +277,16 @@ class Det3(LinearTransformationScene):
             (d+c, d, LEFT, "c"),
             (d, ORIGIN, LEFT, "d"),
         ]
+
+        if a_mat < 0:
+            quads[2],quads[3],quads[6],quads[7] = [
+                (a+b, a+b+c, LEFT,"c"),
+                (a+b+c,a+b+c+d, LEFT, "d"),
+                (d+c, d, RIGHT, "c"),
+                (d, ORIGIN, RIGHT, "d")
+            ]
+
+
         everyone = VMobject()
         for p1, p2, direction, char in quads:
             line = Line(p1, p2)
@@ -472,7 +496,7 @@ class Det1(LinearTransformationScene):
 global_v_coords = [-1,4]
 global_transposed_matrix = np.array([[4,3], [-2,1]])
 global_result = np.dot(np.array(global_v_coords), np.array(global_transposed_matrix))
-class Test2(LinearTransformationScene): 
+class Test2(LinearTransformationScene):
     #shows linear transformation of a vector wrt its linear decomposition into basis vectors
     global global_v_coords
     global global_transposed_matrix
@@ -815,7 +839,8 @@ class Test3(LinearTransformationScene):
         self.play(Write(result))
         self.dither()
 
-global_transposed_matrix = np.array([[1,3], [2,0]])
+global_transposed_matrix = np.array([[0,1], [-2,3]])
+eigen_vals, eigen_vecs = np.linalg.eig(global_transposed_matrix.T)
 class EigenTest(LinearTransformationScene):
     global global_transposed_matrix
     CONFIG = {
@@ -826,9 +851,11 @@ class EigenTest(LinearTransformationScene):
         self.label_bases()
         self.draw_eigenvectors()
         self.apply_transposed_matrix(self.transposed_matrix)
+        self.apply_transposed_matrix(self.transposed_matrix)
+        self.apply_transposed_matrix(self.transposed_matrix)
         #new_matrix = np.dot(np.linalg.inv(self.transposed_matrix), self.transposed_matrix.T)
         #self.apply_transposed_matrix(new_matrix)
-        self.show_basis_vector_coords()
+        #self.show_basis_vector_coords()
 
     def label_bases(self):
         triplets = [
@@ -865,17 +892,21 @@ class EigenTest(LinearTransformationScene):
         self.dither()
 
     def draw_eigenvectors(self):
-        n = 100
-        r = 2.5
+        global eigen_vecs
+        n = 150
+        r = 3
         for theta in range(n):
             angle = theta*2*np.pi/n
             coords = r*np.array([math.cos(angle), math.sin(angle)])
             theta = float(theta)
             vec = Vector(coords, color = Color(hue=theta/n, saturation=1, luminance=.5))
             self.add_vector(vec, animate=False)
-            #self.add_transformable_mobject(vec)
-        self.add_vector(Vector([1,1], color=WHITE, animate= False))
-        self.add_vector(Vector([1,-1.5], color=WHITE, animate=False))
+        for vec  in eigen_vecs:
+            vec = np.array([vec[0], vec[1], 0])
+            self.add_vector(Vector(vec), color=WHITE, animate=False)
+            self.add_transformable_mobject(DashedLine(10*vec, -10*vec))
+        #self.add_vector(Vector([1,1], color=WHITE, animate= False))
+        #self.add_vector(Vector([1,-1.5], color=WHITE, animate=False))
 
 global_transposed_matrix = np.array([[4,-2], [2,0]])
 class EigenTest1(LinearTransformationScene):

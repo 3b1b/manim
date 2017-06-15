@@ -22,6 +22,7 @@ class SVGMobject(VMobject):
         "should_center" : True,
         #Must be filled in in a subclass, or when called
         "file_name" : None, 
+        "propogate_style_to_family" : True,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs, locals())

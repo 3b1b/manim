@@ -1776,7 +1776,7 @@ class TheoryHeavy(TeacherStudentsScene):
         self.student_says(
             "Too much theory!",
             target_mode = "angry",
-            write_kwargs = {"run_time" : 2},
+            content_introduction_kwargs = {"run_time" : 2},
         )
         self.dither()
         student = self.get_students()[1]
