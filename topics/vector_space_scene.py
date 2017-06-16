@@ -283,6 +283,7 @@ class LinearTransformationScene(VectorScene):
         self.background_mobjects = []
         self.foreground_mobjects = []
         self.transformable_mobjects = []
+        self.transformable_mobjects_a = []
         self.moving_vectors = []
         self.transformable_labels = []
         self.moving_mobjects = []
@@ -324,6 +325,9 @@ class LinearTransformationScene(VectorScene):
 
     def add_transformable_mobject(self, *mobjects):
         self.add_special_mobjects(self.transformable_mobjects, *mobjects)
+
+    def add_transformable_mobject_a(self, *mobjects):
+        self.add_special_mobjects(self.transformable_mobjects_a, *mobjects)
 
     def add_moving_mobject(self, mobject, target_mobject = None):
         mobject.target = target_mobject

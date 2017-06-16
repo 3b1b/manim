@@ -70,7 +70,7 @@ class NumberLine(VMobject):
             return np.dot(p-left_point, full_vect)/np.linalg.norm(full_vect)
 
         return interpolate(
-            self.x_min, self.x_max, 
+            self.x_min, self.x_max,
             distance_from_left(point)/distance_from_left(right_point)
         )
 
@@ -141,29 +141,29 @@ class NumberPlane(VMobject):
         "written_coordinate_height" : 0.2,
         "propogate_style_to_family" : False,
     }
-    
+
     def generate_points(self):
         if self.x_radius is None:
-            center_to_edge = (SPACE_WIDTH + abs(self.center_point[0])) 
+            center_to_edge = (SPACE_WIDTH + abs(self.center_point[0]))
             self.x_radius = center_to_edge / self.x_unit_size
         if self.y_radius is None:
-            center_to_edge = (SPACE_HEIGHT + abs(self.center_point[1])) 
+            center_to_edge = (SPACE_HEIGHT + abs(self.center_point[1]))
             self.y_radius = center_to_edge / self.y_unit_size
         self.axes = VMobject()
         self.main_lines = VMobject()
         self.secondary_lines = VMobject()
         tuples = [
             (
-                self.x_radius, 
-                self.x_line_frequency, 
-                self.y_radius*DOWN, 
+                self.x_radius,
+                self.x_line_frequency,
+                self.y_radius*DOWN,
                 self.y_radius*UP,
                 RIGHT
             ),
             (
-                self.y_radius, 
-                self.y_line_frequency, 
-                self.x_radius*LEFT, 
+                self.y_radius,
+                self.y_line_frequency,
+                self.x_radius*LEFT,
                 self.x_radius*RIGHT,
                 UP,
             ),
@@ -173,7 +173,7 @@ class NumberPlane(VMobject):
             step = freq/float(freq + self.secondary_line_ratio)
             for v in np.arange(0, radius, step):
                 line1 = Line(start+v*unit, end+v*unit)
-                line2 = Line(start-v*unit, end-v*unit)                
+                line2 = Line(start-v*unit, end-v*unit)
                 if v == 0:
                     self.axes.add(line1)
                 elif v in main_range:
@@ -277,14 +277,155 @@ class NumberPlane(VMobject):
                 mob.make_smooth()
         return self
 
+class DumberPlane(VMobject):
+    CONFIG = {
+        "color" : RED_D,
+        "secondary_color" : RED_E,
+        "axes_color" : ORANGE,
+        "secondary_stroke_width" : 1,
+        "x_radius": None,
+        "y_radius": None,
+        "x_unit_size" : 1,
+        "y_unit_size" : 1,
+        "center_point" : ORIGIN,
+        "x_line_frequency" : 1,
+        "y_line_frequency" : 1,
+        "secondary_line_ratio" : 1,
+        "written_coordinate_height" : 0.2,
+        "propogate_style_to_family" : False,
+    }
 
+    def generate_points(self):
+        if self.x_radius is None:
+            center_to_edge = (SPACE_WIDTH + abs(self.center_point[0]))
+            self.x_radius = center_to_edge / self.x_unit_size
+        if self.y_radius is None:
+            center_to_edge = (SPACE_HEIGHT + abs(self.center_point[1]))
+            self.y_radius = center_to_edge / self.y_unit_size
+        self.axes = VMobject()
+        self.main_lines = VMobject()
+        self.secondary_lines = VMobject()
+        tuples = [
+            (
+                self.x_radius,
+                self.x_line_frequency,
+                self.y_radius*DOWN,
+                self.y_radius*UP,
+                RIGHT
+            ),
+            (
+                self.y_radius,
+                self.y_line_frequency,
+                self.x_radius*LEFT,
+                self.x_radius*RIGHT,
+                UP,
+            ),
+        ]
+        for radius, freq, start, end, unit in tuples:
+            main_range = np.arange(0, radius, freq)
+            step = freq/float(freq + self.secondary_line_ratio)
+            for v in np.arange(0, radius, step):
+                line1 = Line(start+v*unit, end+v*unit)
+                line2 = Line(start-v*unit, end-v*unit)
+                if v == 0:
+                    self.axes.add(line1)
+                elif v in main_range:
+                    self.main_lines.add(line1, line2)
+                else:
+                    self.secondary_lines.add(line1, line2)
+        self.add(self.secondary_lines, self.main_lines, self.axes)
+        self.stretch(self.x_unit_size, 0)
+        self.stretch(self.y_unit_size, 1)
+        self.shift(self.center_point)
+        #Put x_axis before y_axis
+        y_axis, x_axis = self.axes.split()
+        self.axes = VMobject(x_axis, y_axis)
 
+    def init_colors(self):
+        VMobject.init_colors(self)
+        self.axes.set_stroke(self.axes_color, self.stroke_width)
+        self.main_lines.set_stroke(self.color, self.stroke_width)
+        self.secondary_lines.set_stroke(
+            self.secondary_color, self.secondary_stroke_width
+        )
+        return self
 
+    def get_center_point(self):
+        return self.coords_to_point(0, 0)
 
+    def coords_to_point(self, x, y):
+        x, y = np.array([x, y])
+        result = self.axes.get_center()
+        result += x*self.get_x_unit_size()*RIGHT
+        result += y*self.get_y_unit_size()*UP
+        return result
 
+    def point_to_coords(self, point):
+        new_point = point - self.axes.get_center()
+        x = new_point[0]/self.get_x_unit_size()
+        y = new_point[1]/self.get_y_unit_size()
+        return x, y
 
+    def get_x_unit_size(self):
+        return self.axes.get_width() / (2.0*self.x_radius)
 
+    def get_y_unit_size(self):
+        return self.axes.get_height() / (2.0*self.y_radius)
 
+    def get_coordinate_labels(self, x_vals = None, y_vals = None):
+        result = []
+        if x_vals == None and y_vals == None:
+            x_vals = range(-int(self.x_radius), int(self.x_radius))
+            y_vals = range(-int(self.y_radius), int(self.y_radius))
+        for index, vals in enumerate([x_vals, y_vals]):
+            num_pair = [0, 0]
+            for val in vals:
+                if val == 0:
+                    continue
+                num_pair[index] = val
+                point = self.coords_to_point(*num_pair)
+                num = TexMobject(str(val))
+                num.add_background_rectangle()
+                num.scale_to_fit_height(
+                    self.written_coordinate_height
+                )
+                vect = DOWN if index == 0 else LEFT
+                num.next_to(point, vect, buff = SMALL_BUFF)
+                result.append(num)
+        return result
 
+    def get_axes(self):
+        return self.axes
 
+    def get_axis_labels(self, x_label = "x", y_label = "y"):
+        x_axis, y_axis = self.get_axes().split()
+        quads = [
+            (x_axis, x_label, UP, RIGHT),
+            (y_axis, y_label, RIGHT, UP),
+        ]
+        labels = VGroup()
+        for axis, tex, vect, edge in quads:
+            label = TexMobject(tex)
+            label.add_background_rectangle()
+            label.next_to(axis, vect)
+            label.to_edge(edge)
+            labels.add(label)
+        self.axis_labels = labels
+        return labels
 
+    def add_coordinates(self, x_vals = None, y_vals = None):
+        self.add(*self.get_coordinate_labels(x_vals, y_vals))
+        return self
+
+    def get_vector(self, coords, **kwargs):
+        point = coords[0]*RIGHT + coords[1]*UP
+        arrow = Arrow(ORIGIN, coords, **kwargs)
+        return arrow
+
+    def prepare_for_nonlinear_transform(self, num_inserted_anchor_points = 50):
+        for mob in self.family_members_with_points():
+            num_anchors = mob.get_num_anchor_points()
+            if num_inserted_anchor_points > num_anchors:
+                mob.insert_n_anchor_points(num_inserted_anchor_points-num_anchors)
+                mob.make_smooth()
+        return self
