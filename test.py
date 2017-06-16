@@ -674,6 +674,7 @@ class Test3(LinearTransformationScene):
     global global_v_coords
     global global_transposed_matrix
     CONFIG = {
+        "include_background_plane" : False,
         "transposed_matrix" : global_transposed_matrix,
         "v_coords" : global_v_coords,
         "v_coord_strings" : [str(global_v_coords[0]), str(global_v_coords[1])],
@@ -694,13 +695,17 @@ class Test3(LinearTransformationScene):
         self.setup()
         self.add_transformable_mobject_a(DumberPlane())
         self.label_bases()
-        self.introduce_vector()
+        self.add_vector(self.v_coords)
         self.transposed_matrix = self.transposed_matrix.T
         self.apply_transposed_matrix(self.transposed_matrix, path_arc = 0)
-        #new_matrix = np.dot(np.linalg.inv(self.transposed_matrix), self.transposed_matrix.T)
-        #self.apply_transposed_matrix(new_matrix, path_arc = 0)
-        self.write_linear_map_rule()
-        self.show_basis_vector_coords()
+        self.write_matrices()
+        self.dither()
+        self.dither()
+        self.dither()
+        self.dither()
+        self.dither()
+        self.dither()
+        self.dither()
 
     def label_bases(self):
         triplets = [
@@ -716,29 +721,19 @@ class Test3(LinearTransformationScene):
             ))
         self.i_label, self.j_label = label_mobs
 
-    def introduce_vector(self):
-        v = self.add_vector(self.v_coords)
-        coords = Matrix(self.v_coords)
-        coords.scale(VECTOR_LABEL_SCALE_FACTOR)
-        coords.next_to(v.get_end(), np.sign(self.v_coords[0])*RIGHT)
-        self.play(Write(coords, run_time = 1))
-        v_def = self.get_v_definition()
-        pre_def = VMobject(
-            VectorizedPoint(coords.get_center()),
-            VMobject(*[
-                mob.copy()
-                for mob in coords.get_mob_matrix().flatten()
-            ])
-        )
-        self.play(Transform(
-            pre_def, v_def,
-            run_time = 2,
-            submobject_mode = "all_at_once"
-        ))
-        self.remove(pre_def)
-        self.add_foreground_mobject(v_def)
-        self.show_linear_combination(clean_up=False)
-        self.remove(coords)
+    def write_matrices(self):
+        matrix = matrix_to_mobject(self.transposed_matrix)
+        transposed_matrix = matrix_to_mobject(self.transposed_matrix.T)
+        matrix.scale(0.85)
+        transposed_matrix.scale(0.85)
+        matrix.to_edge(LEFT)
+        transposed_matrix.to_edge(RIGHT)
+        matrix.add_background_rectangle()
+        transposed_matrix.add_background_rectangle()
+
+        self.play(Write(matrix, run_time = 2))
+        self.play(Write(transposed_matrix, run_time=2))
+        return self
 
     def show_linear_combination(self, clean_up = True):
         vector = NiceVector(np.append(self.v_coords, [0]))
@@ -761,45 +756,6 @@ class Test3(LinearTransformationScene):
         if clean_up:
             for vec in vectorlist:
                 self.remove(vec)
-
-    def get_v_definition(self):
-        v_def = TexMobject([
-            "\\vec{\\textbf{v}}",
-            " = %s"%self.v_coord_strings[0],
-            "\\hat{\\imath}",
-            "+%s"%self.v_coord_strings[1],
-            "\\hat{\\jmath}",
-        ])
-        v, equals_neg_1, i_hat, plus_2, j_hat = v_def.split()
-        v.highlight(YELLOW)
-        i_hat.highlight(X_COLOR)
-        j_hat.highlight(Y_COLOR)
-        v_def.add_background_rectangle()
-        v_def.to_corner(UP + LEFT)
-        self.v_def = v_def
-        return v_def
-
-    def write_linear_map_rule(self):
-        rule = TexMobject([
-            "\\text{Transformed } \\vec{\\textbf{v}}",
-            " = %s"%self.v_coord_strings[0],
-            "(\\text{Transformed }\\hat{\\imath})",
-            "+%s"%self.v_coord_strings[1],
-            "(\\text{Transformed } \\hat{\\jmath})",
-        ])
-        v, equals_neg_1, i_hat, plus_2, j_hat = rule.split()
-        v.highlight(YELLOW)
-        i_hat.highlight(X_COLOR)
-        j_hat.highlight(Y_COLOR)
-        rule.scale(0.85)
-        rule.next_to(self.v_def, DOWN, buff = 0.2)
-        rule.to_edge(LEFT)
-        rule.add_background_rectangle()
-
-        self.play(Write(rule, run_time = 2))
-        self.dither()
-        self.linear_map_rule = rule
-
 
     def show_basis_vector_coords(self):
         i_coords = matrix_to_mobject(self.transposed_matrix[0])

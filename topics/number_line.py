@@ -279,8 +279,8 @@ class NumberPlane(VMobject):
 
 class DumberPlane(VMobject):
     CONFIG = {
-        "color" : RED_D,
-        "secondary_color" : RED_E,
+        "color" : GREEN_D,
+        "secondary_color" : GREEN_E,
         "axes_color" : ORANGE,
         "secondary_stroke_width" : 1,
         "x_radius": None,
