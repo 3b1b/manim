@@ -285,6 +285,7 @@ class LinearTransformationScene(VectorScene):
         self.transformable_mobjects = []
         self.transformable_mobjects_a = []
         self.moving_vectors = []
+        self.moving_vectors_a = []
         self.transformable_labels = []
         self.moving_mobjects = []
 
@@ -352,6 +353,13 @@ class LinearTransformationScene(VectorScene):
             self, vector, color = color, **kwargs
         )
         self.moving_vectors.append(vector)
+        return vector
+
+    def add_vector_a(self, vector, color = YELLOW, **kwargs):
+        vector = VectorScene.add_vector(
+            self, vector, color = color, **kwargs
+        )
+        self.moving_vectors_a.append(vector)
         return vector
 
     def write_vector_coordinates(self, vector, **kwargs):
@@ -426,6 +434,14 @@ class LinearTransformationScene(VectorScene):
                 v.target.get_tip().scale_in_place(norm)
         return self.get_piece_movement(self.moving_vectors)
 
+    def get_vector_movement_a(self, func):
+        for v in self.moving_vectors_a:
+            v.target = Vector(func(v.get_end()), color = v.get_color()).shift(v.start)
+            norm = np.linalg.norm(v.target.get_end())
+            if norm < 0.1:
+                v.target.get_tip().scale_in_place(norm)
+        return self.get_piece_movement(self.moving_vectors_a)
+
     def get_transformable_label_movement(self):
         for l in self.transformable_labels:
             l.target = self.get_vector_label(
@@ -475,5 +491,7 @@ class LinearTransformationScene(VectorScene):
         anims = [
             ApplyPointwiseFunction(function, t_mob)
             for t_mob in self.transformable_mobjects_a
+        ] + [
+            self.get_vector_movement_a(function)
         ]
         self.play(*anims, **kwargs)
