@@ -6,8 +6,8 @@ import numpy as np
 
 
 # Set default animation resolution
-DEFAULT_HEIGHT = 1440
-DEFAULT_WIDTH  = 2560
+DEFAULT_HEIGHT = 2160
+DEFAULT_WIDTH  = 3840
 
 # Set FPS
 LOW_QUALITY_FRAME_DURATION = 1./20
