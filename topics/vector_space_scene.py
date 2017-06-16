@@ -8,7 +8,7 @@ from animation import Animation
 from animation.transform import ApplyPointwiseFunction, Transform, \
     ApplyMethod, FadeOut, ApplyFunction
 from animation.simple_animations import ShowCreation, Write
-from topics.number_line import NumberPlane, Axes
+from topics.number_line import NumberPlane, DumberPlane, Axes
 from topics.geometry import NiceVector, Vector, Line, Circle, Arrow, Dot, \
     BackgroundRectangle, Square
 
@@ -260,7 +260,7 @@ class LinearTransformationScene(VectorScene):
         "foreground_plane_kwargs" : {
             "x_radius" : 2*SPACE_WIDTH,
             "y_radius" : 2*SPACE_HEIGHT,
-            "secondary_line_ratio" : 0
+            "secondary_line_ratio" : 1
         },
         "background_plane_kwargs" : {
             "color" : GREY,
@@ -283,7 +283,9 @@ class LinearTransformationScene(VectorScene):
         self.background_mobjects = []
         self.foreground_mobjects = []
         self.transformable_mobjects = []
+        self.transformable_mobjects_a = []
         self.moving_vectors = []
+        self.moving_vectors_a = []
         self.transformable_labels = []
         self.moving_mobjects = []
 
@@ -325,6 +327,9 @@ class LinearTransformationScene(VectorScene):
     def add_transformable_mobject(self, *mobjects):
         self.add_special_mobjects(self.transformable_mobjects, *mobjects)
 
+    def add_transformable_mobject_a(self, *mobjects):
+        self.add_special_mobjects(self.transformable_mobjects_a, *mobjects)
+
     def add_moving_mobject(self, mobject, target_mobject = None):
         mobject.target = target_mobject
         self.add_special_mobjects(self.moving_mobjects, mobject)
@@ -348,6 +353,13 @@ class LinearTransformationScene(VectorScene):
             self, vector, color = color, **kwargs
         )
         self.moving_vectors.append(vector)
+        return vector
+
+    def add_vector_a(self, vector, color = YELLOW, **kwargs):
+        vector = VectorScene.add_vector(
+            self, vector, color = color, **kwargs
+        )
+        self.moving_vectors_a.append(vector)
         return vector
 
     def write_vector_coordinates(self, vector, **kwargs):
@@ -389,6 +401,16 @@ class LinearTransformationScene(VectorScene):
             raise "Matrix has bad dimensions"
         return lambda point: np.dot(point, transposed_matrix)
 
+    def get_matrix_transformation_a(self, transposed_matrix):
+        transposed_matrix = np.array(transposed_matrix).T
+        if transposed_matrix.shape == (2, 2):
+            new_matrix = np.identity(3)
+            new_matrix[:2, :2] = transposed_matrix
+            transposed_matrix = new_matrix
+        elif transposed_matrix.shape != (3, 3):
+            raise "Matrix has bad dimensions"
+        return lambda point: np.dot(point, transposed_matrix)
+
     def get_piece_movement(self, pieces):
         start = VMobject(*pieces)
         target = VMobject(*[mob.target for mob in pieces])
@@ -412,6 +434,14 @@ class LinearTransformationScene(VectorScene):
                 v.target.get_tip().scale_in_place(norm)
         return self.get_piece_movement(self.moving_vectors)
 
+    def get_vector_movement_a(self, func):
+        for v in self.moving_vectors_a:
+            v.target = Vector(func(v.get_end()), color = v.get_color()).shift(v.start)
+            norm = np.linalg.norm(v.target.get_end())
+            if norm < 0.1:
+                v.target.get_tip().scale_in_place(norm)
+        return self.get_piece_movement(self.moving_vectors_a)
+
     def get_transformable_label_movement(self):
         for l in self.transformable_labels:
             l.target = self.get_vector_label(
@@ -421,6 +451,7 @@ class LinearTransformationScene(VectorScene):
 
     def apply_transposed_matrix(self, transposed_matrix, **kwargs):
         func = self.get_matrix_transformation(transposed_matrix)
+        func_a = self.get_matrix_transformation_a(transposed_matrix)
         if "path_arc" not in kwargs:
             net_rotation = np.mean([
                 angle_of_vector(func(RIGHT)),
@@ -428,6 +459,7 @@ class LinearTransformationScene(VectorScene):
             ])
             kwargs["path_arc"] = net_rotation
         self.apply_function(func, **kwargs)
+        self.apply_function_a(func_a, **kwargs)
 
     def apply_inverse_transpose(self, t_matrix, **kwargs):
         t_inv = np.linalg.inv(np.array(t_matrix).T).T
@@ -451,4 +483,15 @@ class LinearTransformationScene(VectorScene):
             Animation(f_mob)
             for f_mob in self.foreground_mobjects
         ] + added_anims
+        self.play(*anims, **kwargs)
+
+    def apply_function_a(self, function, added_anims=[], **kwargs):
+        if "run_time" not in kwargs:
+            kwargs["run_time"] = 3
+        anims = [
+            ApplyPointwiseFunction(function, t_mob)
+            for t_mob in self.transformable_mobjects_a
+        ] + [
+            self.get_vector_movement_a(function)
+        ]
         self.play(*anims, **kwargs)

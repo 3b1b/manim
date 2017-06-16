@@ -33,11 +33,11 @@ def curvy_squish(point):
 def get_orthonormal_eigenbasis(matrix):
     """ given a matrix, returns a list of eigenvectors
         that form an orthogonal basis of the space
-        the matrix lives in 
+        the matrix lives in
     """
     eigenvals, eigenvecs = np.linalg.eig(matrix) #get eigenvalues and eigenvalues of the matrix
     eigenvals = clean(eigenvals) #remove weird floats
-    #print(eigenvals)
+    print(eigenvals)
     eigenvecs = clean1(eigenvecs) #^^
     #transpose the matrix of eigenvectors so each element is an eigenvector
     eigenvecs = [[j[i] for j in eigenvecs] for i in range(len(eigenvecs))]
@@ -48,10 +48,10 @@ def get_orthonormal_eigenbasis(matrix):
         for key in repeat_dict: #for each repeated eigenvalue
             evecs = []
             for i in repeat_dict[key]: #get list of associated eigenvectors
-                evecs += [eigenvecs[i]] 
+                evecs += [eigenvecs[i]]
             if not repeat_vector(evecs): #need a different way to evaluate if contains parallel vectors
                 for i in range(len(evecs)): #gram-schmidt process (orthogonalizes vectors)
-                    for j in range(i-1): 
+                    for j in range(i-1):
                         scalar = (np.dot(evecs[j], evecs[i])/np.dot(evecs[j], evecs[j])) # (j dot i)/(j dot j)
                         evecs[i] -= np.multiply(scalar, evecs[j]) #subtract component in direction of evecs[j]
                     evecs[i] = np.multiply(1/np.linalg.norm(evecs[i]), evecs[i]).tolist() #normalize
@@ -63,8 +63,8 @@ def get_orthonormal_eigenbasis(matrix):
 
 
 def repeat_vector(L):
-    """ returns True if L, a list of lists, 
-        contains two of the same list, and 
+    """ returns True if L, a list of lists,
+        contains two of the same list, and
         False otherwise
     """
     for i in range(len(L)):
@@ -75,14 +75,14 @@ def repeat_vector(L):
     return False
 
 def repeats(L):
-    """ returns the elements of L that 
-        are repeated twice (or more); 
+    """ returns the elements of L that
+        are repeated twice (or more);
         returns False otherwise
-    """ 
+    """
     out = {}
     for i in range(len(L)):
         #if somewhere else in the list there exists an identical element
-        if (L[i] in L[:i]) or (L[i] in L[(i+1):]): 
+        if (L[i] in L[:i]) or (L[i] in L[(i+1):]):
             if L[i] not in out: #that is not in our dictionary
                 out[L[i]] = [i] #add its location
             else: #that is in our dictionary
@@ -101,9 +101,9 @@ def clean(L):
         b = round(decimal.Decimal(L[i].imag),6) #same as above, but imaginary
         if b == 0: # if no imaginary part
             out += [a] #add real to output
-        elif a == 0 or a+0 == 0: #if no real part
+        elif a == 0: #if no real part
             out += [b*1j] #add imaginary to output
-        elif a!=0 and b!=0: #add complex to output
+        else: #add complex to output
             out += [a+b*1j]
     return out
 
@@ -111,7 +111,7 @@ def clean1(L):
     """ clean(L) for 2d lists
     """
     out = []
-    for i in range(len(L)): 
+    for i in range(len(L)):
         out += [clean(L[i])] #clean elements (that are lists) individually
     return out
 
@@ -209,7 +209,7 @@ class Det3(LinearTransformationScene):
     def construct(self):
         self.setup()
         self.add_unit_square()
-        self.apply_transposed_matrix([[a_mat, b_mat], [c_mat, d_mat]], run_time = 0)
+        self.apply_transposed_matrix([[a_mat, b_mat], [c_mat, d_mat]], path_arc = 0, run_time = 0)
         self.add_braces()
         self.add_polygons()
         self.show_formula()
@@ -322,7 +322,7 @@ class Det3(LinearTransformationScene):
 
 
 global_v_coords = [2,1]
-global_transposed_matrix = np.array([[1,3], [-1,-3]])
+global_transposed_matrix = np.array([[3,2], [-3,-2]])
 global_result = np.dot(np.array(global_v_coords), np.array(global_transposed_matrix))
 class Det1(LinearTransformationScene):
     #shows transformation by a matrix with determinant zero
@@ -349,7 +349,7 @@ class Det1(LinearTransformationScene):
         self.setup()
         self.label_bases()
         self.introduce_vector()
-        self.apply_transposed_matrix(self.transposed_matrix)
+        self.apply_transposed_matrix(self.transposed_matrix, path_arc = 0)
         #new_matrix = np.dot(np.linalg.inv(self.transposed_matrix), self.transposed_matrix.T)
         #self.apply_transposed_matrix(new_matrix)
         self.write_linear_map_rule()
@@ -522,7 +522,7 @@ class Test2(LinearTransformationScene):
         self.setup()
         self.label_bases()
         self.introduce_vector()
-        self.apply_transposed_matrix(self.transposed_matrix)
+        self.apply_transposed_matrix(self.transposed_matrix, path_arc=0)
         #new_matrix = np.dot(np.linalg.inv(self.transposed_matrix), self.transposed_matrix.T)
         #self.apply_transposed_matrix(new_matrix)
         self.write_linear_map_rule()
@@ -670,10 +670,12 @@ class Test2(LinearTransformationScene):
 global_v_coords = [-1,4]
 global_transposed_matrix = np.array([[4,3], [-2,1]]).T
 global_result = np.dot(np.array(global_v_coords), np.array(global_transposed_matrix))
-class Test3(LinearTransformationScene):
+class Test3c(LinearTransformationScene):
     global global_v_coords
     global global_transposed_matrix
     CONFIG = {
+        "show_basis_vectors" : False,
+        "include_background_plane" : False,
         "transposed_matrix" : global_transposed_matrix,
         "v_coords" : global_v_coords,
         "v_coord_strings" : [str(global_v_coords[0]), str(global_v_coords[1])],
@@ -691,15 +693,25 @@ class Test3(LinearTransformationScene):
         """
     }
     def construct(self):
+        self.add_transformable_mobject_a(DumberPlane())
         self.setup()
-        self.label_bases()
-        self.introduce_vector()
+        #self.label_bases()
+        self.add_vector(self.v_coords)
+        self.add_vector_a(self.v_coords)
+        self.add_vector(Vector([0,1], color=WHITE))
+        self.add_vector(Vector([1,0], color=WHITE))
+        self.add_vector_a(Vector([0,1], color=ORANGE))
+        self.add_vector_a(Vector([1,0], color=ORANGE))
         self.transposed_matrix = self.transposed_matrix.T
-        self.apply_transposed_matrix(self.transposed_matrix)
-        new_matrix = np.dot(np.linalg.inv(self.transposed_matrix), self.transposed_matrix.T)
-        self.apply_transposed_matrix(new_matrix)
-        self.write_linear_map_rule()
-        self.show_basis_vector_coords()
+        self.apply_transposed_matrix(self.transposed_matrix, path_arc = 0)
+        self.write_matrices()
+        self.dither()
+        self.dither()
+        self.dither()
+        self.dither()
+        self.dither()
+        self.dither()
+        self.dither()
 
     def label_bases(self):
         triplets = [
@@ -715,29 +727,19 @@ class Test3(LinearTransformationScene):
             ))
         self.i_label, self.j_label = label_mobs
 
-    def introduce_vector(self):
-        v = self.add_vector(self.v_coords)
-        coords = Matrix(self.v_coords)
-        coords.scale(VECTOR_LABEL_SCALE_FACTOR)
-        coords.next_to(v.get_end(), np.sign(self.v_coords[0])*RIGHT)
-        self.play(Write(coords, run_time = 1))
-        v_def = self.get_v_definition()
-        pre_def = VMobject(
-            VectorizedPoint(coords.get_center()),
-            VMobject(*[
-                mob.copy()
-                for mob in coords.get_mob_matrix().flatten()
-            ])
-        )
-        self.play(Transform(
-            pre_def, v_def,
-            run_time = 2,
-            submobject_mode = "all_at_once"
-        ))
-        self.remove(pre_def)
-        self.add_foreground_mobject(v_def)
-        self.show_linear_combination(clean_up=False)
-        self.remove(coords)
+    def write_matrices(self):
+        matrix = matrix_to_mobject(self.transposed_matrix)
+        transposed_matrix = matrix_to_mobject(self.transposed_matrix.T)
+        matrix.scale(0.85)
+        transposed_matrix.scale(0.85)
+        matrix.to_edge(LEFT)
+        transposed_matrix.to_edge(RIGHT)
+        matrix.add_background_rectangle()
+        transposed_matrix.add_background_rectangle()
+
+        self.play(Write(matrix, run_time = 2))
+        self.play(Write(transposed_matrix, run_time=2))
+        return self
 
     def show_linear_combination(self, clean_up = True):
         vector = NiceVector(np.append(self.v_coords, [0]))
@@ -760,45 +762,6 @@ class Test3(LinearTransformationScene):
         if clean_up:
             for vec in vectorlist:
                 self.remove(vec)
-
-    def get_v_definition(self):
-        v_def = TexMobject([
-            "\\vec{\\textbf{v}}",
-            " = %s"%self.v_coord_strings[0],
-            "\\hat{\\imath}",
-            "+%s"%self.v_coord_strings[1],
-            "\\hat{\\jmath}",
-        ])
-        v, equals_neg_1, i_hat, plus_2, j_hat = v_def.split()
-        v.highlight(YELLOW)
-        i_hat.highlight(X_COLOR)
-        j_hat.highlight(Y_COLOR)
-        v_def.add_background_rectangle()
-        v_def.to_corner(UP + LEFT)
-        self.v_def = v_def
-        return v_def
-
-    def write_linear_map_rule(self):
-        rule = TexMobject([
-            "\\text{Transformed } \\vec{\\textbf{v}}",
-            " = %s"%self.v_coord_strings[0],
-            "(\\text{Transformed }\\hat{\\imath})",
-            "+%s"%self.v_coord_strings[1],
-            "(\\text{Transformed } \\hat{\\jmath})",
-        ])
-        v, equals_neg_1, i_hat, plus_2, j_hat = rule.split()
-        v.highlight(YELLOW)
-        i_hat.highlight(X_COLOR)
-        j_hat.highlight(Y_COLOR)
-        rule.scale(0.85)
-        rule.next_to(self.v_def, DOWN, buff = 0.2)
-        rule.to_edge(LEFT)
-        rule.add_background_rectangle()
-
-        self.play(Write(rule, run_time = 2))
-        self.dither()
-        self.linear_map_rule = rule
-
 
     def show_basis_vector_coords(self):
         i_coords = matrix_to_mobject(self.transposed_matrix[0])
@@ -840,10 +803,140 @@ class Test3(LinearTransformationScene):
         self.play(Write(result))
         self.dither()
 
-global_transposed_matrix = np.array([[0,2], [-2,0]])
+global_v_coords = [-1,4]
+global_transposed_matrix = np.array([[4,3], [-2,1]]).T
+global_result = np.dot(np.array(global_v_coords), np.array(global_transposed_matrix))
+class Test3b(LinearTransformationScene):
+    global global_v_coords
+    global global_transposed_matrix
+    CONFIG = {
+        "include_background_plane" : False,
+        "transposed_matrix" : global_transposed_matrix,
+        "v_coords" : global_v_coords,
+        "v_coord_strings" : [str(global_v_coords[0]), str(global_v_coords[1])],
+        "result_coords_string" : """
+            =
+            \\left[ \\begin{array}{c}
+                """+str(global_v_coords[0])+"""("""+str(global_transposed_matrix[0][0])+""") + """+str(global_v_coords[1])+"""("""+str(global_transposed_matrix[1][0])+""") \\\\
+                """+str(global_v_coords[0])+"""("""+str(global_transposed_matrix[0][1])+""") + """+str(global_v_coords[1])+"""("""+str(global_transposed_matrix[1][1])+""")
+            \\end{array}\\right]
+            =
+            \\left[ \\begin{array}{c}
+                """+str(global_result[0])+""" \\\\
+                """+str(global_result[1])+"""
+            \\end{array}\\right]
+        """
+    }
+    def construct(self):
+        self.setup()
+        self.add_transformable_mobject_a(DumberPlane())
+        self.label_bases()
+        self.add_vector(self.v_coords)
+        self.transposed_matrix = self.transposed_matrix.T
+        self.apply_transposed_matrix(self.transposed_matrix, path_arc = 0)
+        self.write_matrices()
+        self.dither()
+        self.dither()
+        self.dither()
+        self.dither()
+        self.dither()
+        self.dither()
+        self.dither()
+
+    def label_bases(self):
+        triplets = [
+            (self.i_hat, "\\hat{\\imath}", X_COLOR),
+            (self.j_hat, "\\hat{\\jmath}", Y_COLOR),
+        ]
+        label_mobs = []
+        for vect, label, color in triplets:
+            label_mobs.append(self.add_transformable_label(
+                vect, label, "\\text{Transformed } " + label,
+                color = color,
+                direction = "right",
+            ))
+        self.i_label, self.j_label = label_mobs
+
+    def write_matrices(self):
+        matrix = matrix_to_mobject(self.transposed_matrix)
+        transposed_matrix = matrix_to_mobject(self.transposed_matrix.T)
+        matrix.scale(0.85)
+        transposed_matrix.scale(0.85)
+        matrix.to_edge(LEFT)
+        transposed_matrix.to_edge(RIGHT)
+        matrix.add_background_rectangle()
+        transposed_matrix.add_background_rectangle()
+
+        self.play(Write(matrix, run_time = 2))
+        self.play(Write(transposed_matrix, run_time=2))
+        return self
+
+    def show_linear_combination(self, clean_up = True):
+        vector = NiceVector(np.append(self.v_coords, [0]))
+        vectorlist = vector.linear_decomposition()
+        total_vec = np.array([0,0,0])
+        i_hat = [int(val) for val in self.i_hat.get_end()]
+        j_hat = [int(val) for val in self.j_hat.get_end()]
+        for i in range(len(vectorlist)):
+            vec = vectorlist[i]
+            vec_stuff = np.array([int(val) for val in vec.get_end()])
+            if abs(int(vectorlist[i].get_end()[0])):
+                vec = NiceVector(vec.get_end()).highlight(X_COLOR)
+            else:
+                vec = NiceVector(vec.get_end()).highlight(Y_COLOR)
+            vec.put_at(total_vec)
+            self.add_nice_vector(vec)
+            total_vec += np.array([vec_stuff[0]*i_hat[0] + vec_stuff[1]*j_hat[0], vec_stuff[0]*i_hat[1] + vec_stuff[1]*j_hat[1], 0])
+            vectorlist[i] = vec
+            self.add_transformable_mobject(vec)
+        if clean_up:
+            for vec in vectorlist:
+                self.remove(vec)
+
+    def show_basis_vector_coords(self):
+        i_coords = matrix_to_mobject(self.transposed_matrix[0])
+        j_coords = matrix_to_mobject(self.transposed_matrix[1])
+        i_coords.highlight(X_COLOR)
+        j_coords.highlight(Y_COLOR)
+        for coords in i_coords, j_coords:
+            coords.add_background_rectangle()
+            coords.scale(0.7)
+        i_coords.next_to(self.i_hat.get_end(), RIGHT)
+        j_coords.next_to(self.j_hat.get_end(), RIGHT)
+
+        calculation = TexMobject([
+            " = %s"%self.v_coord_strings[0],
+            matrix_to_tex_string(self.transposed_matrix[0]),
+            "+%s"%self.v_coord_strings[1],
+            matrix_to_tex_string(self.transposed_matrix[1]),
+        ])
+        equals_neg_1, i_hat, plus_2, j_hat = calculation.split()
+        i_hat.highlight(X_COLOR)
+        j_hat.highlight(Y_COLOR)
+        calculation.scale(0.8)
+        calculation.next_to(self.linear_map_rule, DOWN)
+        calculation.to_edge(LEFT)
+        calculation.add_background_rectangle()
+
+        result = TexMobject(self.result_coords_string)
+        result.scale(0.8)
+        result.add_background_rectangle()
+        result.next_to(calculation, DOWN)
+        result.to_edge(LEFT)
+
+        self.play(Write(i_coords, run_time = 1))
+        self.dither()
+        self.play(Write(j_coords, run_time = 1))
+        self.dither()
+        self.play(Write(calculation))
+        self.dither()
+        self.play(Write(result))
+        self.dither()
+
+global_transposed_matrix = np.array([[0,1], [-2,3]])
 eigen_vals, eigen_vecs = np.linalg.eig(global_transposed_matrix.T)
-#eigen_vals = clean(eigen_vals) 
-#eigen_vecs = clean1(eigen_vecs) 
+eigen_vals = clean(eigen_vals)
+eigen_vecs = clean1(eigen_vecs)
 eigen_vecs = [[j[i] for j in eigen_vecs] for i in range(len(eigen_vecs))]
 class EigenTest(LinearTransformationScene):
     global global_transposed_matrix
@@ -855,7 +948,7 @@ class EigenTest(LinearTransformationScene):
         self.label_bases()
         self.draw_eigenvectors()
         self.apply_transposed_matrix(self.transposed_matrix, path_arc = 0)
-        #self.apply_transposed_matrix(self.transposed_matrix)
+        self.apply_transposed_matrix(self.transposed_matrix, path_arc = 0)
         #self.apply_transposed_matrix(self.transposed_matrix)
         #new_matrix = np.dot(np.linalg.inv(self.transposed_matrix), self.transposed_matrix.T)
         #self.apply_transposed_matrix(new_matrix)
@@ -922,7 +1015,7 @@ class EigenTest1(LinearTransformationScene):
         self.setup()
         self.label_bases()
         self.draw_eigenvectors()
-        self.apply_transposed_matrix(self.transposed_matrix)
+        self.apply_transposed_matrix(self.transposed_matrix, path_arc = 0)
         #new_matrix = np.dot(np.linalg.inv(self.transposed_matrix), self.transposed_matrix.T)
         #self.apply_transposed_matrix(new_matrix)
         self.show_basis_vector_coords()
@@ -1079,7 +1172,7 @@ class TransformInfiniteGrid(LinearTransformationScene):
             self.plane, run_time = 3, submobject_mode = "lagged_start"
         ))
         self.dither()
-        self.apply_transposed_matrix([[2, 1], [1, 2]])
+        self.apply_transposed_matrix([[2, 1], [1, 2]], path_arc = 0)
         self.dither()
 
 class TransformInfiniteGridWithBackground(TransformInfiniteGrid):
