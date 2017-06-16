@@ -37,7 +37,7 @@ def get_orthonormal_eigenbasis(matrix):
     """
     eigenvals, eigenvecs = np.linalg.eig(matrix) #get eigenvalues and eigenvalues of the matrix
     eigenvals = clean(eigenvals) #remove weird floats
-    print(eigenvals)
+    #print(eigenvals)
     eigenvecs = clean1(eigenvecs) #^^
     #transpose the matrix of eigenvectors so each element is an eigenvector
     eigenvecs = [[j[i] for j in eigenvecs] for i in range(len(eigenvecs))]
@@ -101,9 +101,9 @@ def clean(L):
         b = round(decimal.Decimal(L[i].imag),6) #same as above, but imaginary
         if b == 0: # if no imaginary part
             out += [a] #add real to output
-        elif a == 0: #if no real part
+        elif a == 0 or a+0 == 0: #if no real part
             out += [b*1j] #add imaginary to output
-        else: #add complex to output
+        elif a!=0 and b!=0: #add complex to output
             out += [a+b*1j]
     return out
 
@@ -840,10 +840,10 @@ class Test3(LinearTransformationScene):
         self.play(Write(result))
         self.dither()
 
-global_transposed_matrix = np.array([[0,1], [-2,3]])
+global_transposed_matrix = np.array([[0,2], [-2,0]])
 eigen_vals, eigen_vecs = np.linalg.eig(global_transposed_matrix.T)
-eigen_vals = clean(eigen_vals) 
-eigen_vecs = clean1(eigen_vecs) 
+#eigen_vals = clean(eigen_vals) 
+#eigen_vecs = clean1(eigen_vecs) 
 eigen_vecs = [[j[i] for j in eigen_vecs] for i in range(len(eigen_vecs))]
 class EigenTest(LinearTransformationScene):
     global global_transposed_matrix
