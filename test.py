@@ -19,6 +19,7 @@ from mobject.vectorized_mobject import *
 
 from topics.matrix import *
 from topics.vector_space_scene import *
+from topics.complex_numbers import *
 
 import helpers
 #import myhelpers
@@ -117,6 +118,7 @@ def clean1(L):
 
 
 def get_det_text(matrix, determinant = None, background_rect = True):
+
     parens = TexMobject(["(", ")"])
     parens.scale(2)
     parens.stretch_to_fit_height(matrix.get_height())
@@ -135,6 +137,34 @@ def get_det_text(matrix, determinant = None, background_rect = True):
         det_text.add(eq, result)
     return det_text
 
+global_transposed_matrix = np.array(([3,-2],[5,1]))
+class ComplexTest(LinearTransformationScene):
+    global global_transposed_matrix
+    CONFIG = {
+        "transposed_matrix" : global_transposed_matrix,
+        "show_basis_vectors" : False
+    }
+    def construct(self):
+        self.setup()
+        self.draw_eigenvectors()
+        self.apply_transposed_matrix(global_transposed_matrix, path_arc=0)
+        self.dither()
+    
+    def draw_eigenvectors(self):
+        eigen_vals, eigen_vecs = np.linalg.eig(self.transposed_matrix.T)
+        eigen_vals = clean(eigen_vals)
+        eigen_vecs = clean1(eigen_vecs)
+        eigenvecs = [[j[i] for j in eigen_vecs] for i in range(len(eigen_vecs))]
+        #print(eigenvecs) 
+        vec = eigenvecs[0]
+        #print(vec)
+        real_vec = np.array([vec[0].real, vec[1].real, 0])
+        imag_vec = np.array([vec[0].imag, vec[1].imag, 0])
+        #print(imag_vec)
+        self.add_vector(Vector(real_vec, color=PINK, animate=False))
+        self.add_vector(Vector(imag_vec, color=GREY, animate=False))
+
+    
 class Test(VectorScene):
     def construct(self):
         self.setup()
