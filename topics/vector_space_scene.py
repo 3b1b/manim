@@ -260,7 +260,7 @@ class LinearTransformationScene(VectorScene):
         "foreground_plane_kwargs" : {
             "x_radius" : 2*SPACE_WIDTH,
             "y_radius" : 2*SPACE_HEIGHT,
-            "secondary_line_ratio" : 0
+            "secondary_line_ratio" : 1
         },
         "background_plane_kwargs" : {
             "color" : GREY,
