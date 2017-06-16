@@ -692,12 +692,13 @@ class Test3(LinearTransformationScene):
     }
     def construct(self):
         self.setup()
+        self.add_transformable_mobject_a(DumberPlane())
         self.label_bases()
         self.introduce_vector()
         self.transposed_matrix = self.transposed_matrix.T
         self.apply_transposed_matrix(self.transposed_matrix, path_arc = 0)
-        new_matrix = np.dot(np.linalg.inv(self.transposed_matrix), self.transposed_matrix.T)
-        self.apply_transposed_matrix(new_matrix, path_arc = 0)
+        #new_matrix = np.dot(np.linalg.inv(self.transposed_matrix), self.transposed_matrix.T)
+        #self.apply_transposed_matrix(new_matrix, path_arc = 0)
         self.write_linear_map_rule()
         self.show_basis_vector_coords()
 

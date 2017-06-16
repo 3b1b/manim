@@ -8,7 +8,7 @@ from animation import Animation
 from animation.transform import ApplyPointwiseFunction, Transform, \
     ApplyMethod, FadeOut, ApplyFunction
 from animation.simple_animations import ShowCreation, Write
-from topics.number_line import NumberPlane, Axes
+from topics.number_line import NumberPlane, DumberPlane, Axes
 from topics.geometry import NiceVector, Vector, Line, Circle, Arrow, Dot, \
     BackgroundRectangle, Square
 
@@ -393,6 +393,16 @@ class LinearTransformationScene(VectorScene):
             raise "Matrix has bad dimensions"
         return lambda point: np.dot(point, transposed_matrix)
 
+    def get_matrix_transformation_a(self, transposed_matrix):
+        transposed_matrix = np.array(transposed_matrix).T
+        if transposed_matrix.shape == (2, 2):
+            new_matrix = np.identity(3)
+            new_matrix[:2, :2] = transposed_matrix
+            transposed_matrix = new_matrix
+        elif transposed_matrix.shape != (3, 3):
+            raise "Matrix has bad dimensions"
+        return lambda point: np.dot(point, transposed_matrix)
+
     def get_piece_movement(self, pieces):
         start = VMobject(*pieces)
         target = VMobject(*[mob.target for mob in pieces])
@@ -425,6 +435,7 @@ class LinearTransformationScene(VectorScene):
 
     def apply_transposed_matrix(self, transposed_matrix, **kwargs):
         func = self.get_matrix_transformation(transposed_matrix)
+        func_a = self.get_matrix_transformation_a(transposed_matrix)
         if "path_arc" not in kwargs:
             net_rotation = np.mean([
                 angle_of_vector(func(RIGHT)),
@@ -432,6 +443,7 @@ class LinearTransformationScene(VectorScene):
             ])
             kwargs["path_arc"] = net_rotation
         self.apply_function(func, **kwargs)
+        self.apply_function_a(func_a, **kwargs)
 
     def apply_inverse_transpose(self, t_matrix, **kwargs):
         t_inv = np.linalg.inv(np.array(t_matrix).T).T
@@ -455,4 +467,13 @@ class LinearTransformationScene(VectorScene):
             Animation(f_mob)
             for f_mob in self.foreground_mobjects
         ] + added_anims
+        self.play(*anims, **kwargs)
+
+    def apply_function_a(self, function, added_anims=[], **kwargs):
+        if "run_time" not in kwargs:
+            kwargs["run_time"] = 3
+        anims = [
+            ApplyPointwiseFunction(function, t_mob)
+            for t_mob in self.transformable_mobjects_a
+        ]
         self.play(*anims, **kwargs)
