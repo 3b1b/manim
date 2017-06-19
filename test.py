@@ -698,10 +698,10 @@ class Test2(LinearTransformationScene):
         self.play(Write(result))
         self.dither()
 
-global_v_coords = [-1,4]
-global_transposed_matrix = np.array([[4,3], [-2,1]]).T
+global_v_coords = [-1,2]
+global_transposed_matrix = np.array([[1,2], [-2,1]]).T
 global_result = np.dot(np.array(global_v_coords), np.array(global_transposed_matrix))
-class Test3c(LinearTransformationScene):
+class Test3d(LinearTransformationScene):
     global global_v_coords
     global global_transposed_matrix
     CONFIG = {
