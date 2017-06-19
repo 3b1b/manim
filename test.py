@@ -137,7 +137,7 @@ def get_det_text(matrix, determinant = None, background_rect = True):
         det_text.add(eq, result)
     return det_text
 
-global_transposed_matrix = np.array(([3,-2],[5,1]))
+global_transposed_matrix = np.array(([-1,-2],[1,1]))
 class ComplexTest(LinearTransformationScene):
     global global_transposed_matrix
     CONFIG = {
@@ -155,12 +155,13 @@ class ComplexTest(LinearTransformationScene):
         eigen_vals = clean(eigen_vals)
         eigen_vecs = clean1(eigen_vecs)
         eigenvecs = [[j[i] for j in eigen_vecs] for i in range(len(eigen_vecs))]
-        #print(eigenvecs) 
+        print(eigenvecs) 
         vec = eigenvecs[0]
-        #print(vec)
+        print(vec)
         real_vec = np.array([vec[0].real, vec[1].real, 0])
+        print(real_vec)
         imag_vec = np.array([vec[0].imag, vec[1].imag, 0])
-        #print(imag_vec)
+        print(imag_vec)
         self.add_vector(Vector(real_vec, color=PINK, animate=False))
         self.add_vector(Vector(imag_vec, color=GREY, animate=False))
 
