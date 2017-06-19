@@ -1,8 +1,22 @@
+# Gotta go fast!
 import numpy as np
+
+# For efficient iterative processes
 import itertools as it
+
+
+# For path manipulation 
 import os
+
+
+# Import Python Image library, adds image processing capabilities to Python interpreter.  
+# The image module allows you to load and manipulate images, through the class Image, 
+# Which has methods 
 from PIL import Image
+
+
 from random import random
+
 
 from helpers import *
 from mobject import Mobject

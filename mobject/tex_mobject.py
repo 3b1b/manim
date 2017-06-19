@@ -12,7 +12,11 @@ TEXT_MOB_SCALE_FACTOR = 0.05
 
 
 class TexSymbol(VMobjectFromSVGPathstring):
+    """ 
+    """
     def pointwise_become_partial(self, mobject, a, b):
+        """ 
+        """
         #TODO, this assumes a = 0
         if b < 0.5:
             b = 2*b 

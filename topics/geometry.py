@@ -4,6 +4,9 @@ from mobject import Mobject
 from mobject.vectorized_mobject import VMobject, VGroup
 
 class Arc(VMobject):
+    """
+    Arc is a Vector Mobject defining a (circular?) arc
+    """
     CONFIG = {
         "radius"           : 1.0,
         "start_angle"      : 0,
@@ -11,10 +14,13 @@ class Arc(VMobject):
         "anchors_span_full_range" : True,
     }
     def __init__(self, angle, **kwargs):
-        digest_locals(self)
+        digest_locals(self) # inherit VMobject config and/or some other stuff
         VMobject.__init__(self, **kwargs)
 
     def generate_points(self):
+        """
+
+        """
         self.set_anchor_points(
             self.get_unscaled_anchor_points(),
             mode = "smooth"
@@ -22,11 +28,15 @@ class Arc(VMobject):
         self.scale(self.radius)
 
     def get_unscaled_anchor_points(self):
+        """
+        iterate through the angles in steps determined
+        by num anchor points
+        """
         return [
             np.cos(a)*RIGHT+np.sin(a)*UP
             for a in np.linspace(
-                self.start_angle, 
-                self.start_angle + self.angle, 
+                self.start_angle,
+                self.start_angle + self.angle,
                 self.num_anchors
             )
         ]
@@ -260,6 +270,138 @@ class Vector(Arrow):
             direction = np.append(np.array(direction), 0)
         Arrow.__init__(self, ORIGIN, direction, **kwargs)
 
+class NiceVector(Vector):
+    def __init__(self, coords, basis=np.array([[1.,0.,0.],[0.,1.,0.],[0.,0.,1.]]), dim = 3, **kwargs):
+        self.coords = coords
+        self.basis = basis
+        self.dim = dim
+        Vector.__init__(self, coords, **kwargs)
+
+    def change_of_basis(self, matrix):
+        """ changes the basis that self is expressed in,
+            using the given change of base matrix.
+        """
+        inverse = np.linalg.inv(matrix) #inverts the matrix
+        self.coords = np.dot(inverse, self.coords) # find new coords as linear combo of new basis
+        new_basis = np.zeros((self.dim, self.dim)) #
+        for i in range(self.dim):
+            for j in range(self.dim):
+                new_basis[i][j] = np.dot(inverse[i][j],self.basis[j][i])
+                #reconstructs new basis from given matrix and old basis
+        self.basis = new_basis #resets basis
+        return self
+
+    def linear_decomposition(self):
+        """ returns a list of basis Vectors
+            such that when the list is added up,
+            we get the vector
+        """
+        vec_list = np.empty((0,self.dim)) # initialize empty array for storing stuff
+        for i in range(self.dim): #loop over dimensions
+            for j in range(abs(int(np.floor(self.coords[i])))): #whole basis vectors
+                if self.coords[i] < 0: #if coordinate is negative...
+                    vec_list = np.concatenate((vec_list, -1*self.basis[i].reshape((1,self.dim))))
+                    #switch the direction of the basis vector and add it properly
+                else:
+                    vec_list = np.concatenate((vec_list, self.basis[i].reshape((1,self.dim))))
+                    #otherwise just use the normal one
+            leftover = self.coords[i]%1 #leftover, if coordinates are noninteger
+            if leftover != 0: #check if nonzero leftover
+                leftover_vec = np.zeros((1,dim))
+                for k in range(self.dim):
+                    np.concatenate((leftover_vec, leftover*self.basis[k].reshape(1,self.dim)))
+                    #create scaled leftover vector. we don't need to check sign
+                np.concatenate((vec_list, leftover_vec)) #add leftover vector to overall vector list
+        vector_list = []
+        for vec in vec_list:
+            vector_list += [Vector(vec)] #convert vectors into Vector objects
+        return vector_list
+
+    def put_at(self, coords):
+        """
+        put_vector_at takes as input "vector," an object
+        of class Vector, and "coords," an array defining
+        a point in R^3.  Then, put_vector_at shifts
+        vector such that its tail sits on coords.
+        """
+        self.shift(coords)
+        self.start = coords
+        self.end = self.coords+self.start
+        return self
+
+class DashedArrow(DashedLine):
+    CONFIG = {
+        "color"      : YELLOW_C,
+        "tip_length" : 0.25,
+        "tip_angle"  : np.pi/6,
+        "buff"       : MED_SMALL_BUFF,
+        "propogate_style_to_family" : False,
+        "preserve_tip_size_when_scaling" : True,
+    }
+    def __init__(self, *args, **kwargs):
+        points = map(self.pointify, args)
+        if len(args) == 1:
+            args = (points[0]+UP+LEFT, points[0])
+        DashedLine.__init__(self, *args, **kwargs)
+        self.add_tip()
+
+    def add_tip(self, add_at_end = True):
+        tip = VMobject(
+            close_new_points = True,
+            mark_paths_closed = True,
+            fill_color = self.color,
+            fill_opacity = 1,
+            stroke_color = self.color,
+        )
+        self.set_tip_points(tip, add_at_end)
+        self.tip = tip
+        self.add(self.tip)
+        self.init_colors()
+
+    def set_tip_points(self, tip, add_at_end = True):
+        start, end = self.get_start_and_end()
+        anchors = self.get_anchors()
+        vect = anchors[-1] - anchors[-2]
+        vect *= -self.tip_length / np.linalg.norm(vect)
+        if not add_at_end:
+            start, end = end, start
+            vect = -vect
+        tip_points = [
+            end+rotate_vector(vect, u*self.tip_angle)
+            for u in 1, -1
+        ]
+        tip.set_anchor_points(
+            [tip_points[0], end, tip_points[1]],
+            mode = "corners"
+        )
+        return self
+
+    def get_end(self):
+        if hasattr(self, "tip"):
+            return self.tip.get_anchors()[1]
+        else:
+            return DashedLine.get_end(self)
+
+    def get_tip(self):
+        return self.tip
+
+    def scale(self, scale_factor, **kwargs):
+        DashedLine.scale(self, scale_factor, **kwargs)
+        if self.preserve_tip_size_when_scaling and self.get_length() > self.tip_length:
+            self.set_tip_points(self.tip)
+        return self
+
+class DashedVector(DashedArrow):
+    CONFIG = {
+        "color" : YELLOW,
+        "buff"  : 0,
+    }
+    def __init__(self, direction, **kwargs):
+        if len(direction) == 2:
+            direction = np.append(np.array(direction), 0)
+        DashedArrow.__init__(self, ORIGIN, direction, **kwargs)
+
+
 class DoubleArrow(Arrow):
     def __init__(self, *args, **kwargs):
         Arrow.__init__(self, *args, **kwargs)
@@ -273,9 +415,9 @@ class Cross(VMobject):
     }
     def generate_points(self):
         p1, p2, p3, p4 = self.radius * np.array([
-            UP+LEFT, 
+            UP+LEFT,
             DOWN+RIGHT,
-            UP+RIGHT, 
+            UP+RIGHT,
             DOWN+LEFT,
         ])
         self.add(Line(p1, p2), Line(p3, p4))
@@ -340,7 +482,7 @@ class Square(Rectangle):
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
         Rectangle.__init__(
-            self, 
+            self,
             height = self.side_length,
             width = self.side_length,
             **kwargs
@@ -412,19 +554,20 @@ class PictureInPictureFrame(Rectangle):
             **kwargs
         )
         self.scale_to_fit_height(height)
-        
+
 class Cross(VGroup):
     CONFIG = {
         "stroke_color" : RED,
         "stroke_width" : 6,
     }
     def __init__(self, mobject, **kwargs):
-        VGroup.__init__(self, 
+        VGroup.__init__(self,
             Line(UP+LEFT, DOWN+RIGHT),
             Line(UP+RIGHT, DOWN+LEFT),
         )
         self.replace(mobject, stretch = True)
         self.set_stroke(self.stroke_color, self.stroke_width)
+
 
 class Grid(VMobject):
     CONFIG = {
@@ -450,6 +593,3 @@ class Grid(VMobject):
                 [-self.width/2., y-self.height/2., 0],
                 [self.width/2., y-self.height/2., 0]
             ))
-
-
-

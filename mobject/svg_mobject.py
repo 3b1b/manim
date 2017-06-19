@@ -6,6 +6,8 @@ from topics.geometry import Rectangle, Circle
 from helpers import *
 
 def string_to_numbers(num_string):
+    """ 
+    """
     num_string = num_string.replace("-",",-")
     num_string = num_string.replace("e,-","e-")
     return [

@@ -13,7 +13,7 @@ from scene import Scene
 from camera import Camera
 
 HELP_MESSAGE = """
-   Usage: 
+   Usage:
    python extract_scene.py <module> [<scene name>]
 
    -p preview in low quality
@@ -40,7 +40,7 @@ NO_SCENE_MESSAGE = """
 
 
 def get_configuration(sys_argv):
-   try:
+   try:  # get everything but the script name, and pass in the possible flags?
       opts, args = getopt.getopt(sys_argv[1:], 'hlmpwsqao:')
    except getopt.GetoptError as err:
       print str(err)
@@ -84,7 +84,7 @@ def get_configuration(sys_argv):
    #By default, write to file
    actions = ["write_to_movie", "preview", "save_image"]
    if not any([config[key] for key in actions]):
-      config["write_to_movie"] = True   
+      config["write_to_movie"] = True
    config["skip_animations"] = config["save_image"] and not config["write_to_movie"]
 
    if len(args) == 0:
@@ -96,10 +96,12 @@ def get_configuration(sys_argv):
    return config
 
 def handle_scene(scene, **config):
+   """ handle scene takes an
+   """
    if config["quiet"]:
       curr_stdout = sys.stdout
       sys.stdout = open(os.devnull, "w")
-      
+
    if config["preview"]:
       scene.preview()
    if config["save_image"]:
@@ -166,7 +168,7 @@ def main():
       inspect.getmembers(module, is_scene)
    )
    config["output_directory"] = os.path.join(
-      MOVIE_DIR, 
+      MOVIE_DIR,
       config["file"].replace(".py", "")
    )
 
@@ -185,19 +187,16 @@ def main():
    for SceneClass in get_scene_classes(scene_names_to_classes, config):
       try:
          handle_scene(SceneClass(**scene_kwargs), **config)
-         play_finish_sound()
-      # except RuntimeError as e:
-      #    play_finish_sound()
+         #play_finish_sound()
+      except RuntimeError:
+         pass
+         #play_finish_sound()
       except:
          print "\n\n"
          traceback.print_exc()
          print "\n\n"
-         play_error_sound()
+         #play_error_sound()
 
 
 if __name__ == "__main__":
    main()
-
-
-
-

@@ -1,44 +1,59 @@
+# For path joining
 import os
+
+# GGOTTA GO FASTTTTT
 import numpy as np
 
-DEFAULT_HEIGHT = 1080
-DEFAULT_WIDTH  = 1920
 
+# Set default animation resolution
+DEFAULT_HEIGHT = 2160
+DEFAULT_WIDTH  = 3840
+
+# Set FPS
 LOW_QUALITY_FRAME_DURATION = 1./20
 MEDIUM_QUALITY_FRAME_DURATION = 1./30
 PRODUCTION_QUALITY_FRAME_DURATION = 1./60
+# For all you MLG's out there ;)
+SUPER_QUALITY_FRAME_DURATION = 1./144
 
-#There might be other configuration than pixel_shape later...
+# There might be other configuration than pixel_shape later...
+# Set the resolution of the final output animation
 PRODUCTION_QUALITY_CAMERA_CONFIG = {
     "pixel_shape" : (DEFAULT_HEIGHT, DEFAULT_WIDTH),
 }
 
+# Describes the dimensions for medium quality resolution
 MEDIUM_QUALITY_CAMERA_CONFIG = {
     "pixel_shape" : (720, 1280),
 }
 
+# Same, but for low quality
 LOW_QUALITY_CAMERA_CONFIG = {
     "pixel_shape" : (480, 853),
 }
 
-DEFAULT_POINT_DENSITY_2D = 25 
+# The density of points in point-cloud mobjects.
+DEFAULT_POINT_DENSITY_2D = 25
 DEFAULT_POINT_DENSITY_1D = 250
 
-DEFAULT_POINT_THICKNESS = 4
+# point thickness for point-cloud mobjects
+DEFAULT_POINT_THICKNESS = 2
 
+# float parameter for height/width of the space
 #TODO, Make sure these are not needed
-SPACE_HEIGHT = 4.0
+SPACE_HEIGHT = 8.0
+# define a float value for space width in terms of aspect ratio
 SPACE_WIDTH = SPACE_HEIGHT * DEFAULT_WIDTH / DEFAULT_HEIGHT
 
-
+# Space buffer between mobjects
 SMALL_BUFF = 0.1
 MED_SMALL_BUFF = 0.25
 MED_LARGE_BUFF = 0.5
 LARGE_BUFF = 1
 
+#
 DEFAULT_MOBJECT_TO_EDGE_BUFFER = MED_LARGE_BUFF
 DEFAULT_MOBJECT_TO_MOBJECT_BUFFER = MED_SMALL_BUFF
-
 
 #All in seconds
 DEFAULT_ANIMATION_RUN_TIME = 1.0
@@ -46,44 +61,47 @@ DEFAULT_POINTWISE_FUNCTION_RUN_TIME = 3.0
 DEFAULT_DITHER_TIME = 1.0
 
 
+# Set the coordinates of the origin in our animation space, and also define a basis
 ORIGIN = np.array(( 0, 0, 0))
 UP     = np.array(( 0, 1, 0))
 DOWN   = np.array(( 0,-1, 0))
 RIGHT  = np.array(( 1, 0, 0))
 LEFT   = np.array((-1, 0, 0))
-IN     = np.array(( 0, 0,-1))
 OUT    = np.array(( 0, 0, 1))
+IN     = np.array(( 0, 0,-1))
 
+# Defines the directioned top of the animation frame
 TOP        = SPACE_HEIGHT*UP
 BOTTOM     = SPACE_HEIGHT*DOWN
 LEFT_SIDE  = SPACE_WIDTH*LEFT
 RIGHT_SIDE = SPACE_WIDTH*RIGHT
 
+# Obtain the current path name for use in creating new files
+# That way we can append the current path to the relative generated path
 THIS_DIR          = os.path.dirname(os.path.realpath(__file__))
-FILE_DIR          = os.path.join(THIS_DIR, "files")
-IMAGE_DIR         = os.path.join(FILE_DIR, "images")
-GIF_DIR           = os.path.join(FILE_DIR, "gifs")
+FILE_DIR          = os.path.join(THIS_DIR, "files")         # Dir for project files
+IMAGE_DIR         = os.path.join(FILE_DIR, "images")        # Project images
+GIF_DIR           = os.path.join(FILE_DIR, "gifs")          # Etc. for gif
 MOVIE_DIR         = os.path.join(FILE_DIR, "movies")
 STAGED_SCENES_DIR = os.path.join(FILE_DIR, "staged_scenes")
-TEX_DIR           = os.path.join(FILE_DIR, "Tex")
-TEX_IMAGE_DIR     = os.path.join(IMAGE_DIR, "Tex")
+TEX_DIR           = os.path.join(FILE_DIR, "Tex")           # For LaTeX annotations
+TEX_IMAGE_DIR     = os.path.join(IMAGE_DIR, "Tex")          # Make subdir for TeX in images
 MOBJECT_DIR       = os.path.join(FILE_DIR, "mobjects")
 IMAGE_MOBJECT_DIR = os.path.join(MOBJECT_DIR, "image")
 
 for folder in [FILE_DIR, IMAGE_DIR, GIF_DIR, MOVIE_DIR, TEX_DIR,
                TEX_IMAGE_DIR, MOBJECT_DIR, IMAGE_MOBJECT_DIR,
                STAGED_SCENES_DIR]:
-    if not os.path.exists(folder):
-        os.mkdir(folder)
+    if not os.path.exists(folder):     # check if the directories above exist
+        os.mkdir(folder)               # if not... no problem!  Make one.
 
 TEX_TEXT_TO_REPLACE = "YourTextHere"
-TEMPLATE_TEX_FILE  = os.path.join(THIS_DIR, "template.tex")
-TEMPLATE_TEXT_FILE = os.path.join(THIS_DIR, "text_template.tex")
+TEMPLATE_TEX_FILE  = os.path.join(THIS_DIR, "template.tex")         # Add template.tex
+TEMPLATE_TEXT_FILE = os.path.join(THIS_DIR, "text_template.tex")    # ..and text temp.
 
+LOGO_PATH = os.path.join(IMAGE_DIR, "logo.png")     # Add our logo in the Image dir
 
-LOGO_PATH = os.path.join(IMAGE_DIR, "logo.png")
-
-FFMPEG_BIN = "ffmpeg"
+FFMPEG_BIN = "ffmpeg"  # Binary for ffmpeg
 
 
 ### Colors ###
@@ -146,17 +164,10 @@ COLOR_MAP = {
     "GREEN_SCREEN": "#00FF00",
     "ORANGE"      : "#FF862F",
 }
-PALETTE = COLOR_MAP.values()
-locals().update(COLOR_MAP)
-for name in filter(lambda s : s.endswith("_C"), COLOR_MAP.keys()):
-    locals()[name.replace("_C", "")] = locals()[name]
-
-
-
-
-
-
-
-
-
-
+#####
+PALETTE = COLOR_MAP.values()        # Set the color palette we can choose from
+locals().update(COLOR_MAP)          # Update the local symbol table to add our colors
+for name in filter(lambda s : s.endswith("_C"), COLOR_MAP.keys()): #For all colors ending in _C,
+    locals()[name.replace("_C", "")] = locals()[name] # I'm not sure what this is doing.
+                                                      # shouldn't the order of these two sides be
+                                                      # switched??

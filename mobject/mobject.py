@@ -1,10 +1,16 @@
+# For array manipulation
 import numpy as np
+# For use with reduce
 import operator as op
+#
 import os
+#####
 import copy
+######
 from PIL import Image
+# For easy switching between color representations, etc.
 from colour import Color
-
+# general helper functions
 from helpers import *
 
 
@@ -22,7 +28,7 @@ class Mobject(object):
         "target"       : None,
     }
     def __init__(self, *submobjects, **kwargs):
-        digest_config(self, kwargs)
+        digest_config(self, kwargs) # inherit config from parent mobjects
         if not all(map(lambda m : isinstance(m, Mobject), submobjects)):
             raise Exception("All submobjects must be of type Mobject")
         self.submobjects = list(submobjects)
@@ -37,6 +43,7 @@ class Mobject(object):
         return str(self.name)
 
     def init_points(self):
+        # initialize an empty array of dim-dimensional points
         self.points = np.zeros((0, self.dim))
 
     def init_colors(self):
@@ -48,55 +55,78 @@ class Mobject(object):
         pass
 
     def add(self, *mobjects):
+        """ The add method allows for on-the-fly updating of what mobjectsa
+            are contained in mobject
+        """
         self.submobjects = list_update(self.submobjects, mobjects)
         return self
 
     def add_to_back(self, *mobjects):
-        self.remove(*mobjects)
+        """ This time, remove the objects before adding them
+            to the front of the list.
+        """
+        self.remove(*mobjects) # what does the * do???? why is it not in the next line?
+        #the * means that mobjects is an input that is a list of undetermined length
+        #in the next line, list(mobjects) doesn't need to know how long it is? i think?
         self.submobjects = list(mobjects) + self.submobjects
         return self
 
     def remove(self, *mobjects):
+        """ removes the elements of the list mobjects
+            from the submobjects of self
+        """
         for mobject in mobjects:
             if mobject in self.submobjects:
                 self.submobjects.remove(mobject)
         return self
 
     def get_array_attrs(self):
-        return ["points"]
+        return ["points"] #????
 
     def digest_mobject_attrs(self):
         """
         Ensures all attributes which are mobjects are included
         in the submobjects list.
         """
+        # get a list of all the mobjects
         mobject_attrs = filter(
             lambda x : isinstance(x, Mobject),
             self.__dict__.values()
         )
+        # ensure submobjects list contains these
         self.submobjects = list_update(self.submobjects, mobject_attrs)
         return self
 
     def apply_over_attr_arrays(self, func):
+        """ applies a function func to each of the arrays
+            of attributes
+        """
         for attr in self.get_array_attrs():
             setattr(self, attr, func(getattr(self, attr)))
         return self
 
     def get_image(self):
+        """ get_image uses camera to capture a pixel array of
+            the mobject and then feeds it to Image to generate
+            an ouptut image
+        """
         from camera import Camera
         camera = Camera()
         camera.capture_mobject(self)
         return Image.fromarray(camera.get_image())
 
     def show(self):
+        # ... show the image
         self.get_image().show()
 
     def save_image(self, name = None):
+        # save the image to
         self.get_image().save(
             os.path.join(MOVIE_DIR, (name or str(self)) + ".png")
         )
 
     def copy(self):
+        # creates a deep copy of the mobject
         copy_mobject = copy.copy(self)
         copy_mobject.points = np.array(self.points)
         copy_mobject.submobjects = [
@@ -108,6 +138,7 @@ class Mobject(object):
         return copy.deepcopy(self)
 
     def generate_target(self):
+        ##### no idea what this does
         self.target = None #Prevent exponential explosion
         self.target = self.copy()
         return self.target
@@ -115,10 +146,15 @@ class Mobject(object):
     #### Transforming operations ######
 
     def apply_to_family(self, func):
+        # apply a function func to all nonempty family members
         for mob in self.family_members_with_points():
             func(mob)
 
     def shift(self, *vectors):
+        """ Takes as input some sort of array (or list) of vectors,
+            and adds together all the given vectors into a total shift
+            vector and then apply it to shift each of the mobject points
+        """
         total_vector = reduce(op.add, vectors)
         for mob in self.family_members_with_points():
            mob.points = mob.points.astype('float')
@@ -127,6 +163,12 @@ class Mobject(object):
 
 
     def scale(self, scale_factor, about_point = None):
+        """ The scale method scales an mobject by a given float
+            factor, scale_factor.  If about_point is not none,
+            about_point should be some tuple (or array) identifying
+            the point about which the scaling should occur (the
+            point that'll be acting as the origin during scaling).
+        """
         if about_point is not None:
             self.shift(-about_point)
         for mob in self.family_members_with_points():
@@ -136,6 +178,12 @@ class Mobject(object):
         return self
 
     def rotate_about_origin(self, angle, axis = OUT, axes = []):
+        """ This method takes a float input angle (in radians),
+            and optional arguments defining a rotation axis (or axes)
+            about which to rotate the space.  Then, it applies a
+            rotation matrix to each of the points in the mobject, and
+            returns this rotated mobject.
+        """
         if len(axes) == 0:
             axes = [axis]
         rot_matrix = np.identity(self.dim)
@@ -147,6 +195,9 @@ class Mobject(object):
         return self
 
     def rotate(self, angle, axis = OUT, axes = [], about_point = None):
+        """ same as rotate_about_origin(), but can rotate about an
+            arbitrary point.
+        """
         if about_point is None:
             self.rotate_about_origin(angle, axis, axes)
         else:
@@ -154,21 +205,35 @@ class Mobject(object):
         return self
 
     def stretch(self, factor, dim):
+        """ I'm not sure #####, but I think this takes some dimension
+            of the object and...stretches it along that axis?????
+        """
         for mob in self.family_members_with_points():
             mob.points[:,dim] *= factor
         return self
 
     def apply_function(self, function):
+        """ looks like this applies a function to the same slice
+            of all family members?
+            i think maybe like stretch(self,factor,dim), but instead
+            of stretching, it's applying a function
+        """
         for mob in self.family_members_with_points():
             mob.points = np.apply_along_axis(function, 1, mob.points)
         return self
 
     def wag(self, direction = RIGHT, axis = DOWN, wag_factor = 1.0):
+        """
+        """
         for mob in self.family_members_with_points():
-            alphas = np.dot(mob.points, np.transpose(axis))
-            alphas -= min(alphas)
-            alphas /= max(alphas)
+            alphas = np.dot(mob.points, np.transpose(axis)) # get the values
+            # of the components of the points (defined by arrays) in direction axis
+            alphas -= min(alphas) # define them in terms of distance from the smallest
+            # alpha.  E.g., [-1.,-4.,-7.,-10.,-13.] --> [12., 9., 6., 3., 0.]
+            alphas /= max(alphas) # scale in terms of largest alpha value.  E.g.,
+            # [12., 9., 6., 3., 0.] --> [1., 0.75, 0.5, 0.25, 0.]
             alphas = alphas**wag_factor
+            # adds alphas values to each of the points' components in the direction
             mob.points += np.dot(
                 alphas.reshape((len(alphas), 1)),
                 np.array(direction).reshape((1, mob.dim))
@@ -186,11 +251,14 @@ class Mobject(object):
         """
         This can make transition animations nicer
         """
+        # repeat_array will make a new array of the input array appended
+        # to itself count many times.
         def repeat_array(array):
             return reduce(
                 lambda a1, a2 : np.append(a1, a2, axis = 0),
                 [array]*count
             )
+        # apply repeat to each of the atributes
         for mob in self.family_members_with_points():
             mob.apply_over_attr_arrays(repeat_array)
         return self
@@ -198,28 +266,49 @@ class Mobject(object):
     #### In place operations ######
 
     def do_about_point(self, point, method, *args, **kwargs):
+        """ This method takes as input an array definint a point,
+            a function method to do, and the optional positional and
+            keyword arguments for the method.  Then, it shifts the
+            mobject such that point is the origin, and applies method
+            to the mobject, and finally returns it to its starting point.
+        """
         self.shift(-point)
         method(*args, **kwargs)
         self.shift(point)
         return self
 
     def do_in_place(self, method, *args, **kwargs):
+        """ This method applies another method to self without re-shifting it
+            to be centered on a point. The input "method" should be a function,
+            and *args and **kwargs should be its positional and keyword arguments
+            respectively.
+        """
         self.do_about_point(self.get_center(), method, *args, **kwargs)
         return self
 
     def rotate_in_place(self, angle, axis = OUT, axes = []):
+        """ Takes as input an angle in radians, and an axis (or list
+            of axes) about which to rotate.  Axes are stored as arrays.
+        """
         self.do_in_place(self.rotate, angle, axis, axes)
         return self
 
     def flip(self, axis = UP):
+        """ This method reflects the mobject across the given axis
+        """
         self.rotate_in_place(np.pi, axis)
         return self
 
     def scale_in_place(self, scale_factor):
+        """ Basically scales mobject by a float scale_factor
+        """
         self.do_in_place(self.scale, scale_factor)
         return self
 
     def scale_about_point(self, scale_factor, point):
+        """ Takes as input a float scale_factor, and an array
+            defining a point to scale about (point)
+        """
         self.do_about_point(point, self.scale, scale_factor)
         return self
 
@@ -228,6 +317,7 @@ class Mobject(object):
         return self
 
     def center(self):
+        # redefines all points relative to the center
         self.shift(-self.get_center())
         return self
 
@@ -236,7 +326,9 @@ class Mobject(object):
         Direction just needs to be a vector pointing towards side or
         corner in the 2d plane.
         """
+        # get point direction we want the border to be
         target_point = np.sign(direction) * (SPACE_WIDTH, SPACE_HEIGHT, 0)
+        #####
         point_to_align = self.get_critical_point(direction)
         shift_val = target_point - point_to_align - buff * np.array(direction)
         shift_val = shift_val * abs(np.sign(direction))
@@ -244,6 +336,8 @@ class Mobject(object):
         return self
 
     def to_corner(self, corner = LEFT+DOWN, buff = DEFAULT_MOBJECT_TO_EDGE_BUFFER):
+        """ aligns the mobject in a specified corner
+        """
         return self.align_on_border(corner, buff)
 
     def to_edge(self, edge = LEFT, buff = DEFAULT_MOBJECT_TO_EDGE_BUFFER):
@@ -255,6 +349,16 @@ class Mobject(object):
                 aligned_edge = ORIGIN,
                 align_using_submobjects = False,
                 ):
+        """ This method takes in mobject_or_point (an mobject or point array),
+            direction (an array defining a direction vector), buff (a float
+            giving the spacing bewteen self and other stuff), aligned_edge (
+            an array defining the direction we're aligning relative to), and
+            align_using_submobjects, a bool indicating whether we should use
+            submobjects in getting critical points and stuff. Then, next_to
+            positions self next to mobject_or_point on the direction side,
+            etc.
+        """
+        #####
         if isinstance(mobject_or_point, Mobject):
             mob = mobject_or_point
             target_point = mob.get_critical_point(
@@ -265,21 +369,26 @@ class Mobject(object):
             target_point = mobject_or_point
         point_to_align = self.get_critical_point(
             aligned_edge-direction,
-            use_submobject = align_using_submobjects
+            use_submobject = align_using_submobjects # bool, true or false
         )
+        # puts mobject next to input mobject_or_point,
         self.shift(target_point - point_to_align + buff*direction)
         return self
 
 
     def shift_onto_screen(self, **kwargs):
-        space_lengths = [SPACE_WIDTH, SPACE_HEIGHT]
+        space_lengths = [SPACE_WIDTH, SPACE_HEIGHT] # get space parameters
         for vect in UP, DOWN, LEFT, RIGHT:
+            # get which np array dimension this vect corresponds to
             dim = np.argmax(np.abs(vect))
+            # sees if kwargs has an attribute "buff," and if not use default
             buff = kwargs.get("buff", DEFAULT_MOBJECT_TO_EDGE_BUFFER)
+            # finds the maximum possible value in the dim axis we can have
             max_val = space_lengths[dim] - buff
+            #####
             edge_center = self.get_edge_center(vect)
-            if np.dot(edge_center, vect) > max_val:
-                self.to_edge(vect, **kwargs)
+            if np.dot(edge_center, vect) > max_val: # if the edge is off the screen
+                self.to_edge(vect, **kwargs) # send mobject to the edge in vect
         return self
 
     def is_off_screen(self):
@@ -307,7 +416,7 @@ class Mobject(object):
             return self
         if stretch:
             self.stretch_in_place(length/old_length, dim)
-        else:
+        else: # fit self into the specified length in dim dim
             self.scale_in_place(length/old_length)
         return self
 
@@ -324,6 +433,10 @@ class Mobject(object):
         return self.rescale_to_fit(height, 1, stretch = False)
 
     def space_out_submobjects(self, factor = 1.5, **kwargs):
+        """ Why are **kwargs in the function definition when they appear
+            to just not be used at all here?  Anyways, spaces out submojbects
+            by scaling each down by factor.
+        """
         self.scale_in_place(factor)
         for submob in self.submobjects:
             submob.scale_in_place(1./factor)
@@ -339,6 +452,7 @@ class Mobject(object):
         return self
 
     def replace(self, mobject, dim_to_match = 0, stretch = False):
+        #####
         if not mobject.get_num_points() and not mobject.submobjects:
             raise Warning("Attempting to replace mobject with no points")
             return self
@@ -355,6 +469,7 @@ class Mobject(object):
         return self
 
     def position_endpoints_on(self, start, end):
+        #####
         curr_vect = self.points[-1] - self.points[0]
         if np.all(curr_vect == 0):
             raise Exception("Cannot position endpoints of closed loop")
@@ -438,6 +553,14 @@ class Mobject(object):
         )
 
     def reduce_across_dimension(self, points_func, reduce_func, dim):
+        """ Takes as input two functions, points_func and reduce_func,
+            then tries to apply points_func over the points defining
+            mobject's boundary in dimension dim.  If this works, then
+            it tries applying reduce_func to all these modified points.
+            If it didn't work, that's probably because the mobject
+            has no points itself and the points are all contained
+            in submobjects.
+        """
         try:
             points = self.get_points_defining_boundary()
             values = [points_func(points[:, dim])]
@@ -453,6 +576,8 @@ class Mobject(object):
             return 0
 
     def get_merged_array(self, array_attr):
+        """ #####
+        """
         result = np.zeros((0, self.dim))
         for mob in self.family_members_with_points():
             result = np.append(result, getattr(mob, array_attr), 0)
@@ -470,15 +595,19 @@ class Mobject(object):
         return len(self.points)
 
     def get_critical_point(self, direction, use_submobject = False):
+        """ Gets relative max, min, or average of both in the direction
+            direction
+        """
         if use_submobject:
             return self.get_submobject_critical_point(direction)
-        result = np.zeros(self.dim)
-        for dim in range(self.dim):
-            if direction[dim] <= 0:
+        result = np.zeros(self.dim) # create an array of 0s of correct dim tow rite to
+        for dim in range(self.dim): # for each of the dims
+            if direction[dim] <= 0: # if we're pointing at all in a negative dir
+                # I just don't understand why functions would ever be defined before calls
                 min_point = self.reduce_across_dimension(np.min, np.min, dim)
+                # finds the global minimum in dimension dim
             if direction[dim] >= 0:
                 max_point = self.reduce_across_dimension(np.max, np.max, dim)
-
             if direction[dim] == 0:
                 result[dim] = (max_point+min_point)/2
             elif direction[dim] < 0:
@@ -488,6 +617,7 @@ class Mobject(object):
         return result
 
     def get_submobject_critical_point(self, direction):
+        #####
         if len(self.split()) == 1:
             return self.get_critical_point(direction)
         with_points = self.family_members_with_points()
@@ -509,9 +639,15 @@ class Mobject(object):
         return self.get_critical_point(np.zeros(self.dim))
 
     def get_center_of_mass(self):
+        """ This method takes the average of all the points comprising self
+        """
         return np.apply_along_axis(np.mean, 0, self.get_all_points())
 
     def get_boundary_point(self, direction):
+        """ This method takes as input an array direction defining
+            the direction we'll be checking in, and then returns the
+            points maximally in that direciton
+        """
         all_points = self.get_all_points()
         return all_points[np.argmax(np.dot(all_points, direction))]
 
@@ -546,37 +682,48 @@ class Mobject(object):
     ## Family matters
 
     def __getitem__(self, index):
-        return self.split()[index]
+        return self.split()[index] # returns the value given index
 
     def __iter__(self):
-        return iter(self.split())
+        return iter(self.split()) # uses __getitem__ to get the "next" item
 
     def __len__(self):
-        return len(self.split())
+        return len(self.split()) # gives number of things
 
     def split(self):
         result = [self] if len(self.points) > 0 else []
-        return result + self.submobjects
+        return result + self.submobjects # return list of all stuff with points
 
     def submobject_family(self):
+        # recursively get submobject families
         sub_families = map(Mobject.submobject_family, self.submobjects)
+        # put all submobject familes into the list
         all_mobjects = [self] + list(it.chain(*sub_families))
         return remove_list_redundancies(all_mobjects)
 
     def family_members_with_points(self):
+        """ This method checks all of the submobjects in self, and
+            returns a list of all the submobjects with defined points
+        """
         return filter(
             lambda m : m.get_num_points() > 0,
             self.submobject_family()
         )
 
     def arrange_submobjects(self, direction = RIGHT, center = True, **kwargs):
+        """ This method puts all of the submobjects in self next to each other,
+            sequentially placing each additional mobject to the "direction" of
+            self.
+        """
         for m1, m2 in zip(self.submobjects, self.submobjects[1:]):
             m2.next_to(m1, direction, **kwargs)
         if center:
-            self.center()
+            self.center() # center-alignment of resulting line of submobjects
         return self
 
     def sort_submobjects(self, point_to_num_func = lambda p : p[0]):
+        """ #####
+        """
         self.submobjects.sort(
             lambda *mobs : cmp(*[
                 point_to_num_func(mob.get_center())
@@ -587,8 +734,9 @@ class Mobject(object):
 
     ## Alignment
     def align_data(self, mobject):
-        self.align_submobjects(mobject)
-        self.align_points(mobject)
+        # WHY ARE ALL YOUR FUNCTIONS DEFINED AFTER BEING CALLED AAAAAAAAAHHHHH
+        self.align_submobjects(mobject) #
+        self.align_points(mobject) #
         #Recurse
         for m1, m2 in zip(self.submobjects, mobject.submobjects):
             m1.align_data(m2)
@@ -611,9 +759,13 @@ class Mobject(object):
         return self
 
     def align_points_with_larger(self, larger_mobject):
+        # oh.  I see.  Exciting.
         raise Exception("Not implemented")
 
     def align_submobjects(self, mobject):
+        """ This method takes as input an object mobject, and checks whether
+            either self or mobject is empty.  If so, then #####
+        """
         #If one is empty, and the other is not,
         #push it into its submobject list
         self_has_points, mob_has_points = [
@@ -636,7 +788,7 @@ class Mobject(object):
     def null_point_align(self, mobject):
         """
         If self has no points, but needs to align
-        with mobject, which has points
+        with mobject, which has points #####
         """
         if self.submobjects:
             mobject.push_self_into_submobjects()
@@ -646,6 +798,8 @@ class Mobject(object):
 
 
     def push_self_into_submobjects(self):
+        """ makes self a submobject of itself #####
+        """
         copy = self.copy()
         copy.submobjects = []
         self.init_points()
