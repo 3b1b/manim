@@ -26,21 +26,11 @@ class ImageMobject(PMobject):
         self.name = to_camel_case(
             os.path.split(image_file)[-1].split(".")[0]
         )
-        possible_paths = [
-            image_file,
-            os.path.join(IMAGE_DIR, image_file),
-            os.path.join(IMAGE_DIR, image_file + ".jpg"),
-            os.path.join(IMAGE_DIR, image_file + ".png"),
-            os.path.join(IMAGE_DIR, image_file + ".gif"),
-        ]
-        for path in possible_paths:
-            if os.path.exists(path):
-                self.generate_points_from_file(path)
-                self.scale(self.scale_factorue)
-                if self.should_center:
-                    self.center()
-                return
-        raise IOError("File not Found")
+        path = get_full_image_path(image_file)
+        self.generate_points_from_file(path)
+        self.scale(self.scale_factorue)
+        if self.should_center:
+            self.center()
                 
     def generate_points_from_file(self, path):
         if self.use_cache and self.read_in_cached_attrs(path):

@@ -146,7 +146,9 @@ class PatreonThanks(Scene):
             self.play(Blink(morty))
             last_group = group
 
-
+class ExternallyAnimatedScene(Scene):
+    def construct(self):
+        raise Exception("Don't actually run this class.")
 
 
 

@@ -11,7 +11,7 @@ from mobject import PMobject, VMobject
 
 class Camera(object):
     CONFIG = {
-        #background of a different shape will overwrite this
+        "background_image" : None,
         "pixel_shape" : (DEFAULT_HEIGHT, DEFAULT_WIDTH),
         #this will be resized to match pixel_shape
         "space_shape" : (SPACE_HEIGHT, SPACE_WIDTH),
@@ -44,8 +44,13 @@ class Camera(object):
         self.space_shape = (space_height, space_width)
 
     def init_background(self):
-        if self.background is not None:
-            self.pixel_shape = self.background.shape[:2]
+        if self.background_image is not None:
+            path = get_full_image_path(self.background_image)
+            image = Image.open(path).convert('RGB')
+            height, width = self.pixel_shape
+            #TODO, how to gracefully handle backgrounds 
+            #with different sizes?
+            self.background = np.array(image)[:height, :width]
         else:
             background_rgb = color_to_int_rgb(self.background_color)
             self.background = np.zeros(

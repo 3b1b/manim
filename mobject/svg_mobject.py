@@ -16,8 +16,9 @@ def string_to_numbers(num_string):
 
 class SVGMobject(VMobject):
     CONFIG = {
-        "initial_scale_factor" : 1,
         "should_center" : True,
+        "height" : 2,
+        "width" : None,
         #Must be filled in in a subclass, or when called
         "file_name" : None, 
         "propogate_style_to_family" : True,
@@ -175,7 +176,11 @@ class SVGMobject(VMobject):
     def move_into_position(self):
         if self.should_center:
             self.center()
-        self.scale_in_place(self.initial_scale_factor)
+        if self.height is not None:
+            self.scale_to_fit_height(self.height)
+        if self.width is not None:
+            self.scale_to_fit_width(self.width)
+
 
 
 class VMobjectFromSVGPathstring(VMobject):

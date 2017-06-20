@@ -394,6 +394,20 @@ def cammel_case_initials(name):
 
 ################################################
 
+def get_full_image_path(image_file_name):
+    possible_paths = [
+        image_file_name,
+        os.path.join(IMAGE_DIR, image_file_name),
+        os.path.join(IMAGE_DIR, image_file_name + ".jpg"),
+        os.path.join(IMAGE_DIR, image_file_name + ".png"),
+        os.path.join(IMAGE_DIR, image_file_name + ".gif"),
+    ]
+    for path in possible_paths:
+        if os.path.exists(path):
+            return path
+    raise IOError("File not Found")
+
+
 def drag_pixels(frames):
     curr = frames[0]
     new_frames = []

@@ -7,9 +7,7 @@ from topics.geometry import BackgroundRectangle
 import collections
 import sys
 
-TEX_MOB_SCALE_FACTOR = 0.05
-TEXT_MOB_SCALE_FACTOR = 0.05
-
+TEX_MOB_SCALE_FACTOR = 0.04
 
 class TexSymbol(VMobjectFromSVGPathstring):
     def pointwise_become_partial(self, mobject, a, b):
@@ -37,7 +35,7 @@ class TexMobject(SVGMobject):
         "fill_color"        : WHITE,
         "should_center"     : True,
         "arg_separator"     : " ",
-        "initial_scale_factor" : TEX_MOB_SCALE_FACTOR,
+        "height" : None,
         "organize_left_to_right" : False,
         "propogate_style_to_family" : True,
         "alignment" : "",
@@ -55,6 +53,7 @@ class TexMobject(SVGMobject):
             self.template_tex_file
         )
         SVGMobject.__init__(self, file_name = file_name, **kwargs)
+        self.scale(TEX_MOB_SCALE_FACTOR)
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
 
@@ -189,7 +188,6 @@ class TexMobject(SVGMobject):
 class TextMobject(TexMobject):
     CONFIG = {
         "template_tex_file" : TEMPLATE_TEXT_FILE,
-        "initial_scale_factor" : TEXT_MOB_SCALE_FACTOR,
         "alignment" : "\\centering",
     }
 

@@ -12,6 +12,20 @@ from topics.geometry import Circle, Line, Rectangle, Square, \
     Arc, Polygon, SurroundingRectangle
 from topics.three_dimensions import Cube
 
+class BitcoinLogo(SVGMobject):
+    CONFIG = {
+        "file_name" : "Bitcoin_logo",
+        "height" : 1,
+        "fill_color" : "#f7931a",
+        "inner_color" : WHITE,
+        "fill_opacity" : 1,
+        "stroke_width" : 0,
+    }
+    def __init__(self, **kwargs):
+        SVGMobject.__init__(self, **kwargs)
+        self[0].set_fill(self.fill_color, self.fill_opacity)
+        self[1].set_fill(self.inner_color, 1)
+
 class Guitar(SVGMobject):
     CONFIG = {
         "file_name" : "guitar",
@@ -21,9 +35,6 @@ class Guitar(SVGMobject):
         "stroke_color" : WHITE,
         "stroke_width" : 0.5,
     }
-    def __init__(self, **kwargs):
-        SVGMobject.__init__(self, **kwargs)
-        self.scale_to_fit_height(self.height)
 
 class SunGlasses(SVGMobject):
     CONFIG = {
