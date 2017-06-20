@@ -1232,7 +1232,7 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
         self.claim_mind_reading_powers()
         self.generate_random_number()
         self.guess_number_correctly()
-        # self.ask_about_chances()
+        self.ask_about_chances()
         self.revert_to_original_skipping_status()
         self.say_you_probably_got_lucky()
 
@@ -1498,7 +1498,6 @@ class ExampleMeasuresDisbeliefInStatistics(Introduction):
         )
         self.dither(2)
 
-
 class AlwaysPictureTheSpaceOfPossibilities(PiCreatureScene):
     def construct(self):
         self.pi_creature_thinks(
@@ -1512,7 +1511,25 @@ class AlwaysPictureTheSpaceOfPossibilities(PiCreatureScene):
     def create_pi_creature(self):
         return Randolph().to_corner(DOWN+LEFT)
 
+class Thumbnail(Scene):
+    def construct(self):
+        title = TextMobject("Why is this \\\\ counterintuitive?")
+        title.scale(2)
+        title.to_edge(UP)
 
+        randy = Randolph(mode = "sick",  color = SICKLY_GREEN)
+        # randy.look_at(title)
+        randy.scale(1.5)
+        randy.shift(3*LEFT)
+        randy.to_edge(DOWN)
+
+        prob = TexMobject("P(", "\\text{Sick}", "|", "\\text{Test+}", ")")
+        prob.scale(2)
+        prob.highlight_by_tex("Sick", YELLOW)
+        prob.highlight_by_tex("Test", GREEN)
+        prob.next_to(randy, RIGHT)
+
+        self.add(title, randy, prob)
 
 
 

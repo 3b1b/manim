@@ -2261,7 +2261,7 @@ class Thumbnail(SampleSpaceScene):
             label.scale(1.5)
 
         sample_space = self.get_sample_space()
-        sample_space.scale_to_fit_height(5)
+        sample_space.scale_to_fit_height(4.5)
         sample_space.divide_horizontally(0.3)
         sample_space[0].divide_vertically(0.8, colors = [GREEN, BLUE])
         sample_space[1].divide_vertically(0.3, colors = [GREEN_E, BLUE_E])
