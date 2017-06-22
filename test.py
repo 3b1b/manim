@@ -964,7 +964,7 @@ class Test3b(LinearTransformationScene):
         self.play(Write(result))
         self.dither()
 
-global_transposed_matrix = np.array([[0,1], [-2,3]])
+global_transposed_matrix = np.array([[0,2], [-1,3]])
 eigen_vals, eigen_vecs = np.linalg.eig(global_transposed_matrix.T)
 eigen_vals = clean(eigen_vals)
 eigen_vecs = clean1(eigen_vecs)
@@ -976,10 +976,11 @@ class EigenTest(LinearTransformationScene):
     }
     def construct(self):
         self.setup()
-        self.label_bases()
+        #self.label_bases()
         self.draw_eigenvectors()
+        self.dither()
         self.apply_transposed_matrix(self.transposed_matrix, path_arc = 0)
-        self.apply_transposed_matrix(self.transposed_matrix, path_arc = 0)
+        #self.apply_transposed_matrix(self.transposed_matrix, path_arc = 0)
         #self.apply_transposed_matrix(self.transposed_matrix)
         #new_matrix = np.dot(np.linalg.inv(self.transposed_matrix), self.transposed_matrix.T)
         #self.apply_transposed_matrix(new_matrix)
@@ -1032,7 +1033,7 @@ class EigenTest(LinearTransformationScene):
         for vec in eigen_vecs:
             vec = np.array([vec[0], vec[1], 0])
             self.add_vector(Vector(vec), color=WHITE, animate=False)
-            self.add_transformable_mobject(DashedLine(10*vec, -10*vec))
+            self.add_mobject(DashedLine(10*vec, -10*vec))
         #self.add_vector(Vector([1,1], color=WHITE, animate= False))
         #self.add_vector(Vector([1,-1.5], color=WHITE, animate=False))
 

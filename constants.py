@@ -41,7 +41,7 @@ DEFAULT_POINT_THICKNESS = 2
 
 # float parameter for height/width of the space
 #TODO, Make sure these are not needed
-SPACE_HEIGHT = 8.0
+SPACE_HEIGHT = 10.0
 # define a float value for space width in terms of aspect ratio
 SPACE_WIDTH = SPACE_HEIGHT * DEFAULT_WIDTH / DEFAULT_HEIGHT
 
