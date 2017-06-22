@@ -33,6 +33,11 @@ from mobject.tex_mobject import *
 
 BITCOIN_COLOR = "#f7931a"
 
+def get_cursive_name(name):
+    result = TextMobject("\\normalfont\\calligra %s"%name)
+    result.set_stroke(width = 0.5)
+    return result
+
 ##################
 
 class AskQuestion(Scene):
@@ -163,6 +168,9 @@ class LedgerScene(PiCreatureScene):
         PiCreatureScene.setup(self)
         self.remove(self.pi_creatures)
 
+    def add_ledger_and_network(self):
+        self.add(self.get_ledger(), self.get_network())
+
     def get_ledger(self):
         title = TextMobject("Ledger")
         rect = Rectangle(
@@ -206,15 +214,13 @@ class LedgerScene(PiCreatureScene):
             amount_str += " " + self.denomination
         line = TextMobject(
             from_name.capitalize(), 
-            "pays" if from_name.lower() is not "you" else "pay",
+            "pays" if from_name.lower() != "you" else "pay",
             to_name.capitalize(),
             amount_str
         )
         for name in from_name, to_name:
-            if hasattr(self, name.lower()):
-                creature = getattr(self, name.lower())
-                color = creature.get_color()
-                line.highlight_by_tex(name.capitalize(), color)
+            color = self.get_color_from_name(name)
+            line.highlight_by_tex(name.capitalize(), color)
         if self.denomination == "USD":
             line.highlight_by_tex(amount_str, GREEN_D)
         elif self.denomination == "BTC":
@@ -222,11 +228,20 @@ class LedgerScene(PiCreatureScene):
 
         return self.add_line_to_ledger(line)
 
+    def get_color_from_name(self, name):
+        if hasattr(self, name.lower()):
+            creature = getattr(self, name.lower())
+            color = creature.get_color()
+            if np.mean(color.get_rgb()) < 0.5:
+                color = average_color(color, color, WHITE)
+            return color
+        return WHITE
+
     def animate_payment_addition(self, *args, **kwargs):
         line = self.add_payment_line_to_ledger(*args, **kwargs)
         self.play(LaggedStart(
             FadeIn, 
-            VGroup(*line.family_members_with_points()),
+            VGroup(*it.chain(*line)),
             run_time = 1
         ))
 
@@ -241,24 +256,24 @@ class LedgerScene(PiCreatureScene):
             for pi1, pi2 in it.combinations(creatures, 2)
         ])
         labels = VGroup(*[pi.label for pi in creatures])
-
-        return VGroup(creatures, labels, lines)
+        self.network = VGroup(creatures, labels, lines)
+        return self.network
 
     def create_pi_creatures(self):
         creatures = VGroup(*[
             PiCreature(color = color, height = 1).shift(2*vect)
             for color, vect in zip(
-                [BLUE_B, MAROON_D, GREY_BROWN, BLUE_E],
+                [BLUE_C, MAROON_D, GREY_BROWN, BLUE_E],
                 [UP+LEFT, UP+RIGHT, DOWN+LEFT, DOWN+RIGHT],
             )
         ])
         creatures.to_edge(RIGHT)
-        names = ["alice", "bob", "charlie", "you"]
+        names = self.get_names()
         for name, creature in zip(names, creatures):
             setattr(self, name, creature)
             label = TextMobject(name.capitalize())
-            label.scale(0.5)
-            label.next_to(creature, DOWN)
+            label.scale(0.75)
+            label.next_to(creature, DOWN, SMALL_BUFF)
             creature.label = label
             if (creature.get_center() - creatures.get_center())[0] > 0:
                 creature.flip()
@@ -266,6 +281,8 @@ class LedgerScene(PiCreatureScene):
 
         return creatures
 
+    def get_names(self):
+        return ["alice", "bob", "charlie", "you"]
 
 class LayOutPlan(LedgerScene):
     def construct(self):
@@ -404,25 +421,575 @@ class UnderlyingSystemVsUserFacing(Scene):
         self.play(DrawBorderThenFill(phone))
         self.dither(2)
         
+class CryptoPrefix(Scene):
+    def construct(self):
+        cryptocurrency = TextMobject(
+            "Crypto", "currency",
+            arg_separator = ""
+        )
+        crypto = cryptocurrency.get_part_by_tex("Crypto")
+        brace = Brace(crypto, UP)
+        explanation = TextMobject(
+            "Built using the math \\\\ from cryptography"
+        )
+        explanation.next_to(brace, UP)
+
+        self.add(cryptocurrency)
+        self.play(
+            crypto.highlight, YELLOW,
+            GrowFromCenter(brace)
+        )
+        self.play(Write(explanation))
+        self.dither(3)
+
+class IntroduceLedgerSystem(LedgerScene):
+    CONFIG = {
+        "payments" : [
+            ("Alice", "Bob", 20),
+            ("Bob", "Charlie", 40),
+            ("Charlie", "You", 30),
+            ("You", "Alice", 10),
+        ]
+    }
+    def construct(self):
+        self.add(self.get_network())
+        self.exchange_money()
+        self.add_ledger()
+        self.tally_it_all_up()
 
 
+    def exchange_money(self):
+        for from_name, to_name, num in self.payments:
+            from_pi = getattr(self, from_name.lower())
+            to_pi = getattr(self, to_name.lower())
+            cash = TexMobject("\\$"*(num/10)).highlight(GREEN)
+            cash.scale_to_fit_height(0.5)
+            cash.move_to(from_pi)
+            self.play(
+                cash.move_to, to_pi,
+                to_pi.change_mode, "hooray"
+            )
+            self.play(FadeOut(cash))
+        self.dither()
+
+    def add_ledger(self):
+        ledger = self.get_ledger()
+
+        self.play(
+            Write(ledger),
+            *[
+                ApplyMethod(pi.change, "pondering", ledger)
+                for pi in self.pi_creatures
+            ]
+        )
+        for payment in self.payments:
+            self.animate_payment_addition(*payment)
+        self.dither(3)
+
+    def tally_it_all_up(self):
+        accounts = dict()
+        names = "alice", "bob", "charlie", "you"
+        for name in names:
+            accounts[name] = 0
+        for from_name, to_name, amount in self.payments:
+            accounts[from_name.lower()] -= amount
+            accounts[to_name.lower()] += amount
+
+        results = VGroup()
+        debtors = VGroup()
+        creditors = VGroup()
+        for name in names:
+            amount = accounts[name]
+            creature = getattr(self, name)
+            creature.cash = TexMobject("\\$"*abs(amount/10))
+            creature.cash.next_to(creature, UP+LEFT, SMALL_BUFF)
+            creature.cash.highlight(GREEN)
+            if amount < 0:
+                verb = "Owes"
+                debtors.add(creature)
+            else:
+                verb = "Gets"
+                creditors.add(creature)
+            if name == "you":
+                verb = verb[:-1]
+            result = TextMobject(
+                verb, "\\$%d"%abs(amount)
+            )
+            result.highlight_by_tex("Owe", RED)
+            result.highlight_by_tex("Get", GREEN)
+            result.add_background_rectangle()
+            result.scale(0.7)
+            result.next_to(creature.label, DOWN)
+            results.add(result)
+
+        brace = Brace(VGroup(*self.ledger.content[1:]), RIGHT)
+        tally_up = brace.get_text("Tally up")
+        tally_up.add_background_rectangle()
+
+        self.play(
+            GrowFromCenter(brace), 
+            FadeIn(tally_up)
+        )
+        self.play(
+            LaggedStart(FadeIn, results),
+            *[
+                ApplyMethod(pi.change, "happy")
+                for pi in creditors
+            ] + [
+                ApplyMethod(pi.change, "plain")
+                for pi in debtors
+            ]
+        )
+        self.dither()
+        debtor_cash, creditor_cash = [
+            VGroup(*it.chain(*[pi.cash for pi in group]))
+            for group in debtors, creditors
+        ]
+        self.play(FadeIn(debtor_cash))
+        self.play(
+            debtor_cash.arrange_submobjects, RIGHT, SMALL_BUFF,
+            debtor_cash.move_to, self.pi_creatures,
+        )
+        self.dither()
+        self.play(ReplacementTransform(
+            debtor_cash, creditor_cash
+        ))
+        self.dither(2)
+
+class InitialProtocol(Scene):
+    def construct(self):
+        title = TextMobject("Protocol")
+        title.scale(1.5)
+        title.to_edge(UP)
+        h_line = Line(LEFT, RIGHT).scale(4)
+        h_line.next_to(title, DOWN)
+
+        items = VGroup(*map(TextMobject, [
+            "$\\cdot$ Anyone can add lines to the Ledger",
+            "$\\cdot$ Settle up with real money each month"
+        ]))
+        items.arrange_submobjects(
+            DOWN, 
+            buff = MED_LARGE_BUFF, 
+            aligned_edge = LEFT
+        )
+        items.next_to(h_line, DOWN, MED_LARGE_BUFF)
 
 
+        self.add(title, h_line)
+        for item in items:
+            self.dither()
+            self.play(LaggedStart(FadeIn, item))
+        self.dither(2)
+
+        self.title = title
+        self.items = items
+
+class AddFraudulentLine(LedgerScene):
+    def construct(self):
+        self.add_ledger_and_network()
+        self.bob_adds_lines()
+        self.alice_reacts()
+
+    def bob_adds_lines(self):
+        line = self.add_payment_line_to_ledger("Alice", "Bob", 100)
+        line.save_state()
+        line.scale(0.001)
+        line.move_to(self.bob)
+
+        self.play(self.bob.change, "conniving")
+        self.play(line.restore)
+        self.dither()
+
+    def alice_reacts(self):
+        bubble = SpeechBubble(
+            height = 1.5, width = 2, direction = LEFT,
+        )
+        bubble.next_to(self.alice, UP+RIGHT, buff = 0)
+        bubble.write("Hey!")
+        self.play(
+            Animation(self.bob.pupils),
+            self.alice.change, "angry",
+            FadeIn(bubble),
+            Write(bubble.content, run_time = 1)
+        )
+        self.dither(3)
+        self.play(
+            FadeOut(bubble),
+            FadeOut(bubble.content),
+            self.alice.change_mode, "pondering"
+        )
+
+class AnnounceDigitalSignatures(TeacherStudentsScene):
+    def construct(self):
+        words = TextMobject("Digital \\\\ signatures!")
+        words.scale(1.5)
+        self.force_skipping()
+        self.teacher_says(
+            words,
+            target_mode = "hooray",
+        )
+        self.revert_to_original_skipping_status()
+
+        self.change_student_modes(*["hooray"]*3)
+        self.dither(2)
+
+class IntroduceSignatures(LedgerScene):
+    CONFIG = {
+        "payments" : [
+            ("Alice", "Bob", 100),
+            ("Charlie", "You", 20),
+            ("Bob", "You", 30),
+        ],
+    }
+    def construct(self):
+        self.add_ledger_and_network()
+        self.add_transactions()
+        self.add_signatures()
+
+    def add_transactions(self):
+        transactions = VGroup(*[
+            self.add_payment_line_to_ledger(*payment)
+            for payment in self.payments
+        ])
+        self.play(LaggedStart(FadeIn, transactions))
+        self.dither()
+
+    def add_signatures(self):
+        signatures = VGroup(*[
+            get_cursive_name(payments[0].capitalize())
+            for payments in self.payments
+        ])
+        for signature, transaction in zip(signatures, self.ledger.content[1:]):
+            signature.next_to(transaction, RIGHT)
+            signature.highlight(transaction[0].get_color())
+            self.play(Write(signature, run_time = 2))
+            transaction.add(signature)
+        self.dither(2)
+
+        rect = SurroundingRectangle(self.ledger.content[1])
+        self.play(ShowCreation(rect))
+        self.play(FadeOut(rect))
+        self.dither()
+        self.play(Indicate(signatures[0]))
+        self.dither()
+
+class AskHowDigitalSignaturesArePossible(TeacherStudentsScene):
+    def construct(self):
+        signature = get_cursive_name("Alice")
+        signature.scale(1.5)
+        signature.highlight(BLUE_C)
+        signature.to_corner(UP+LEFT)
+        signature_copy = signature.copy()
+        signature_copy.shift(3*RIGHT)
+
+        bits = TexMobject("01100001")
+        bits.next_to(signature, DOWN)
+        bits.shift_onto_screen()
+        bits_copy = bits.copy()
+        bits_copy.next_to(signature_copy, DOWN)
 
 
+        self.add(signature)
+
+        self.student_says(
+            "Couldn't you just \\\\ copy the signature?",
+            target_mode = "confused",
+            run_time = 1
+        )
+        self.change_student_modes("pondering", "confused", "erm")
+        self.play(LaggedStart(FadeIn, bits, run_time = 1))
+        self.dither()
+        self.play(ReplacementTransform(
+            bits.copy(), bits_copy,
+            path_arc = np.pi/2
+        ))
+        self.play(Write(signature_copy))
+        self.dither(3)
+
+class DescribeDigitalSignatures(LedgerScene):
+    CONFIG = {
+        "public_color" : GREEN,
+        "private_color" : RED,
+        "signature_color" : BLUE_C,
+    }
+    def construct(self):
+        self.reorganize_pi_creatures()
+        self.generate_key_pairs()
+        self.keep_secret_key_secret()
+        self.show_handwritten_signatures()
+        self.show_digital_signatures()
+        self.show_signing_functions()
+
+    def reorganize_pi_creatures(self):
+        self.pi_creatures.remove(self.you)
+        creature_groups = VGroup(*[
+            VGroup(pi, pi.label).scale(1.7)
+            for pi in self.pi_creatures
+        ])
+        creature_groups.arrange_submobjects(RIGHT, buff = 2)
+        creature_groups.to_edge(DOWN)
+        self.add(creature_groups)
+        for pi in self.pi_creatures:
+            if pi.is_flipped():
+                pi.flip()
+
+    def generate_key_pairs(self):
+        title = TextMobject("Private", "key /", "Public", "key")
+        title.to_edge(UP)
+        private, public = map(title.get_part_by_tex, ["Private", "Public"])
+        private.highlight(self.private_color)
+        public.highlight(self.public_color)
+        secret = TextMobject("Secret")
+        secret.move_to(private, RIGHT)
+        secret.highlight(self.private_color)
+
+        names = self.get_names()[:-1]
+        public_key_strings = [
+            bin(256+ord(name[0].capitalize()))[3:]
+            for name in names
+        ]
+        private_key_strings = [
+            bin(hash(name))[2:10]
+            for name in names
+        ]
+        public_keys, private_keys = [
+            VGroup(*[
+                TextMobject(key_name+":"," $%s\\dots$"%key)
+                for key in keys
+            ])
+            for key_name, keys in [
+                ("pk", public_key_strings),
+                ("sk", private_key_strings)
+            ]
+        ]
+        key_pairs = [
+            VGroup(*pair).arrange_submobjects(DOWN, aligned_edge = LEFT)
+            for pair in zip(public_keys, private_keys)
+        ]
+        for key_pair, pi in zip(key_pairs, self.pi_creatures):
+            key_pair.next_to(pi, UP, MED_LARGE_BUFF)
+            for key in key_pair:
+                key.highlight_by_tex("sk", self.private_color)
+                key.highlight_by_tex("pk", self.public_color)
+
+        self.play(Write(title, run_time = 2))
+        self.play(ReplacementTransform(
+            VGroup(VGroup(public.copy())),
+            public_keys
+        ))
+        self.play(ReplacementTransform(
+            VGroup(VGroup(private.copy())),
+            private_keys
+        ))
+        self.dither()
+        self.play(private.shift, DOWN)
+        self.play(FadeIn(secret))
+        self.play(FadeOut(private))
+        self.dither()
+
+        title.remove(private)
+        title.add(secret)
+        self.title = title
+        self.private_keys = private_keys
+        self.public_keys = public_keys
+
+    def keep_secret_key_secret(self):
+        keys = self.private_keys
+        rects = VGroup(*map(SurroundingRectangle, keys))
+        rects.highlight(self.private_color)
+        lock = SVGMobject(
+            file_name = "lock",
+            height = rects.get_height(),
+            fill_color = LIGHT_GREY,
+            fill_opacity = 1,
+            stroke_width = 0,
+        )
+        locks = VGroup(*[
+            lock.copy().next_to(rect, LEFT, SMALL_BUFF)
+            for rect in rects
+        ])
+
+        self.play(ShowCreation(rects))
+        self.play(LaggedStart(DrawBorderThenFill, locks))
+        self.dither()
+
+        self.private_key_rects = rects
+        self.locks = locks
+
+    def show_handwritten_signatures(self):
+        lines = VGroup(*[Line(LEFT, RIGHT) for x in range(5)])
+        lines.arrange_submobjects(DOWN)
+        last_line = lines[-1]
+        last_line.scale(0.7, about_point = last_line.get_left())
+
+        signature_line = lines[0].copy()
+        signature_line.set_stroke(width = 2)
+        signature_line.next_to(lines, DOWN, LARGE_BUFF)
+        ex = TexMobject("\\times")
+        ex.scale(0.7)
+        ex.next_to(signature_line, UP, SMALL_BUFF, LEFT)
+        lines.add(ex, signature_line)
+
+        rect = SurroundingRectangle(
+            lines, 
+            color = LIGHT_GREY, 
+            buff = MED_SMALL_BUFF
+        )
+        document = VGroup(rect, lines)
+        documents = VGroup(*[
+            document.copy()
+            for x in range(2)
+        ])
+        documents.arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
+        documents.to_corner(UP+LEFT)
+
+        signatures = VGroup()
+        for document in documents:
+            signature = get_cursive_name("Alice")
+            signature.highlight(self.signature_color)
+            line = document[1][-1]
+            signature.next_to(line, UP, SMALL_BUFF)
+            signatures.add(signature)
+
+        self.play(
+            FadeOut(self.title),
+            LaggedStart(FadeIn, documents, run_time = 1)
+        )
+        self.play(Write(signatures))
+        self.dither()
+
+        self.signatures = signatures
+        self.documents = documents
+
+    def show_digital_signatures(self):
+        rect = SurroundingRectangle(VGroup(
+            self.public_keys[0],
+            self.private_key_rects[0],
+            self.locks[0]
+        ))
+        digital_signatures = VGroup()
+        for i, signature in enumerate(self.signatures):
+            bits = bin(hash(str(i)))[-8:]
+            digital_signature = TexMobject(bits + "\\dots")
+            digital_signature.scale(0.7)
+            digital_signature.highlight(signature.get_color())
+            digital_signature.move_to(signature, DOWN)
+            digital_signatures.add(digital_signature)
+
+        arrows = VGroup(*[
+            Arrow(
+                rect.get_corner(UP), sig.get_bottom(),
+                tip_length = 0.15,
+                color = WHITE
+            )
+            for sig in digital_signatures
+        ])
+
+        words = VGroup(*map(
+            TextMobject,
+            ["Different messages", "Completely different signatures"]
+        ))
+        words.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        words.scale(1.3)
+        words.next_to(self.documents, RIGHT)
+
+        self.play(FadeIn(rect))
+        self.play(*map(ShowCreation, arrows))
+        self.play(Transform(self.signatures, digital_signatures))
+        self.play(*[
+            ApplyMethod(pi.change, "pondering", digital_signatures)
+            for pi in self.pi_creatures
+        ])
+        for word in words:
+            self.play(FadeIn(word))
+        self.dither()
+        self.play(FadeOut(words))
+
+    def show_signing_functions(self):
+        sign = TextMobject(
+            "Sign(", "Message", ", ", "sk", ") = ", "Signature",
+            arg_separator = ""
+        )
+        sign.to_corner(UP+RIGHT)
+        verify = TextMobject(
+            "Verify(", "Message", ", ", "Signature", ", ", "pk", ") = ", "T/F",
+            arg_separator = ""
+        )
+        for mob in sign, verify:
+            mob.highlight_by_tex("sk", self.private_color)
+            mob.highlight_by_tex("pk", self.public_color)
+            mob.highlight_by_tex(
+                "Signature", self.signature_color,
+            )
+            for name in "Message", "sk", "Signature", "pk":
+                part = mob.get_part_by_tex(name)
+                if part is not None:
+                    setattr(mob, name.lower(), part)
+        verify.next_to(sign, DOWN, MED_LARGE_BUFF, LEFT)
+        VGroup(sign, verify).to_corner(UP+RIGHT)
+
+        private_key = self.private_key_rects[0]
+        public_key = self.public_keys[0]
+        message = self.documents[0]
+        signature = self.signatures[0]
+
+        self.play(*[
+            FadeIn(part)
+            for part in sign
+            if part not in [sign.message, sign.sk, sign.signature]
+        ])
+        self.play(ReplacementTransform(
+            message.copy(), VGroup(sign.message)
+        ))
+        self.dither()
+        self.play(ReplacementTransform(
+            private_key.copy(), sign.sk
+        ))
+        self.dither()
+        self.play(ReplacementTransform(
+            VGroup(sign.sk, sign.message).copy(),
+            VGroup(sign.signature)
+        ))
+        self.dither()
+        self.play(Indicate(sign.sk))
+        self.dither()
+        self.play(Indicate(sign.message))
+        self.dither()
+        self.play(*[
+            FadeIn(part)
+            for part in verify
+            if part not in [
+                verify.message, verify.signature, 
+                verify.pk, verify[-1]
+            ]
+        ])
+        self.dither()
+        self.play(
+            ReplacementTransform(
+                sign.message.copy(), verify.message
+            ),
+            ReplacementTransform(
+                sign.signature.copy(), verify.signature
+            )
+        )
+        self.dither()
+        self.play(ReplacementTransform(
+            public_key.copy(), VGroup(verify.pk)
+        ))
+        self.dither()
+        self.play(Write(verify[-1]))
+        self.dither()
 
 
+class TryGuessingDigitalSignature(Scene):
+    def construct(self):
+        pass
 
 
-
-
-
-
-
-
-
-
-
+class SupplementVideoWrapper(Scene):
+    def construct(self):
+        pass
 
 
 

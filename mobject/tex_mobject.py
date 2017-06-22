@@ -14,16 +14,16 @@ class TexSymbol(VMobjectFromSVGPathstring):
         #TODO, this assumes a = 0
         if b < 0.5:
             b = 2*b 
-            width = 1
+            added_width = 1
             opacity = 0
         else:
-            width = 2 - 2*b
+            added_width = 2 - 2*b
             opacity = 2*b - 1
             b = 1
         VMobjectFromSVGPathstring.pointwise_become_partial(
             self, mobject, 0, b
         )
-        self.set_stroke(width = width)
+        self.set_stroke(width = added_width + mobject.get_stroke_width())
         self.set_fill(opacity = opacity)
 
 
@@ -191,7 +191,6 @@ class TextMobject(TexMobject):
         "alignment" : "\\centering",
     }
 
-
 class Brace(TexMobject):
     CONFIG = {
         "buff" : 0.2,
@@ -254,9 +253,6 @@ class Brace(TexMobject):
         vect = self.get_tip() - self.get_center()
         return vect/np.linalg.norm(vect)
 
-
-
-    
 def tex_hash(expression, template_tex_file):
     return str(hash(expression + template_tex_file))
 
