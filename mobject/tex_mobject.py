@@ -7,7 +7,7 @@ from topics.geometry import BackgroundRectangle
 import collections
 import sys
 
-TEX_MOB_SCALE_FACTOR = 0.04
+TEX_MOB_SCALE_FACTOR = 0.05
 
 class TexSymbol(VMobjectFromSVGPathstring):
     def pointwise_become_partial(self, mobject, a, b):
