@@ -265,22 +265,6 @@ class DoubleArrow(Arrow):
         Arrow.__init__(self, *args, **kwargs)
         self.add_tip(add_at_end = False)
 
-
-class Cross(VMobject):
-    CONFIG = {
-        "color"  : YELLOW,
-        "radius" : 0.3
-    }
-    def generate_points(self):
-        p1, p2, p3, p4 = self.radius * np.array([
-            UP+LEFT, 
-            DOWN+RIGHT,
-            UP+RIGHT, 
-            DOWN+LEFT,
-        ])
-        self.add(Line(p1, p2), Line(p3, p4))
-        self.init_colors()
-
 class CubicBezier(VMobject):
     def __init__(self, points, **kwargs):
         VMobject.__init__(self, **kwargs)

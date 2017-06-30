@@ -28,6 +28,9 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
+from hashlib import sha256
+import binascii
+
 #force_skipping
 #revert_to_original_skipping_status
 
@@ -36,6 +39,30 @@ BITCOIN_COLOR = "#f7931a"
 def get_cursive_name(name):
     result = TextMobject("\\normalfont\\calligra %s"%name)
     result.set_stroke(width = 0.5)
+    return result
+
+def sha256_bit_string(message):
+    hexdigest = sha256(message).hexdigest()
+    return bin(int(hexdigest, 16))[2:]
+
+def sha256_tex_mob(message, n_forced_start_zeros = 0):
+    line = TexMobject("0"*32)
+    pre_result = VGroup(*[
+        line.copy() for row in range(8)
+    ])
+    pre_result.arrange_submobjects(DOWN, buff = SMALL_BUFF)
+    result = VGroup(*it.chain(*pre_result))
+    result.scale(0.7)
+
+    true_bit_string = sha256_bit_string(message)
+    n = n_forced_start_zeros
+    bit_string = "0"*n + true_bit_string[n:]
+    for i, (bit, part) in enumerate(zip(bit_string, result)):
+        if bit == "1":
+            one = TexMobject("1")[0]
+            one.replace(part, dim_to_match = 1)
+            result.submobjects[i] = one
+
     return result
 
 class TenDollarBill(VGroup):
@@ -348,6 +375,7 @@ class LedgerScene(PiCreatureScene):
         ])
         labels = VGroup(*[pi.label for pi in creatures])
         self.network = VGroup(creatures, labels, lines)
+        self.network.lines = lines
         return self.network
 
     def create_pi_creatures(self):
@@ -2009,19 +2037,873 @@ class YouListeningToBroadcasts(LedgerScene):
             )
         self.dither()
 
+class AskWhatToAddToProtocol(InitialProtocol):
+    def construct(self):
+        self.add_title()
+        items = VGroup(*map(self.get_new_item, [
+            "Broadcast transactions",
+            "Only accept signed transactions",
+            "No overspending",
+        ] + [""]*6))
+        brace = Brace(VGroup(*items[3:]), LEFT)
+        question = TextMobject("What to \\\\ add here?")
+        question.highlight(RED)
+        question.scale(1.5)
+        brace.highlight(RED)
+        question.next_to(brace, LEFT)
+
+        self.add(*items[:3])
+        self.play(GrowFromCenter(brace))
+        self.play(Write(question))
+        self.dither()
+
+class TrustComputationalWork(DistributedLedgerScene):
+    def construct(self):
+        self.add_ledger()
+        self.show_work()
+
+    def add_ledger(self):
+        ledgers = self.get_distributed_ledgers()
+        ledger = ledgers[0]
+        ledger.scale(3)
+        ledger[1].scale_in_place(2./3)
+        ledger.center().to_edge(UP).shift(4*LEFT)
+        plus = TexMobject("+")
+        plus.next_to(ledger, RIGHT)
+
+        self.add(ledger, plus)
+        self.ledger = ledger
+        self.plus = plus
+
+    def show_work(self):
+        zeros = TexMobject("0"*32)
+        zeros.next_to(self.plus, RIGHT)
+        brace = Brace(zeros, DOWN)
+        words = brace.get_text("Computational work")
+        self.add(brace, words)
+
+        for n in range(2**12):
+            binary = bin(n)[2:]
+            for i, bit_str in enumerate(reversed(binary)):
+                curr_bit = zeros.submobjects[-i-1]
+                new_bit = TexMobject(bit_str)
+                new_bit.replace(curr_bit, dim_to_match = 1)
+                if bit_str == "1":
+                    new_bit.highlight(YELLOW)
+                zeros.submobjects[-i-1] = new_bit
+                self.remove(curr_bit)
+            self.add(zeros)
+            self.dither(1./30)
+
+class TrustComputationalWorkSupplement(Scene):
+    def construct(self):
+        words = TextMobject(
+            "Main tool: ", "Cryptographic hash functions"
+        )
+        words[1].highlight(YELLOW)
+        self.add(words[0])
+        self.play(Write(words[1]))
+        self.dither()
+
+class ThisIsWellIntoTheWeeds(TeacherStudentsScene):
+    def construct(self):
+        idea = TextMobject("Proof of work")
+        idea.move_to(self.teacher.get_corner(UP+LEFT))
+        idea.shift(MED_LARGE_BUFF*UP)
+        idea.save_state()
+        lightbulb = Lightbulb()
+        lightbulb.next_to(idea, UP)
+        idea.shift(DOWN)
+        idea.set_fill(opacity = 0)
+
+        self.teacher_says(
+            "We're well into \\\\ the weeds now",
+            target_mode = "sassy",
+            added_anims = [
+                ApplyMethod(pi.change, mode)
+                for pi, mode in zip(self.students, [
+                    "hooray", "sad", "erm"
+                ])
+            ],
+        )
+        self.dither()
+        self.play(
+            idea.restore,
+            RemovePiCreatureBubble(
+                self.teacher, target_mode = "hooray",
+                look_at_arg = lightbulb
+            ),
+        )
+        self.change_student_modes(
+            *["pondering"]*3,
+            added_anims = [LaggedStart(FadeIn, lightbulb)]
+        )
+        self.play(LaggedStart(
+            ApplyMethod, lightbulb,
+            lambda b : (b.highlight, YELLOW_A),
+            rate_func = there_and_back
+        ))
+        self.dither(2)
+
+class IntroduceSHA256(Scene):
+    def construct(self):
+        self.introduce_evaluation()
+        self.inverse_function_question()
+        self.issue_challenge()
+        self.shift_everything_down()
+        self.guess_and_check()
+
+    def introduce_evaluation(self):
+        messages = [
+            "3Blue1Brown",
+            "3Blue1Crown",
+            "Mathologer",
+            "Infinite Series",
+            "Numberphile",
+            "Welch Labs",
+            "3Blue1Brown",
+        ]
+        groups = VGroup()
+        for message in messages:
+            lhs = TextMobject(
+                "SHA256", "(``", message, "'') =",
+                arg_separator = ""
+            )
+            lhs.highlight_by_tex(message, BLUE)
+            digest = sha256_tex_mob(message)
+            digest.next_to(lhs, RIGHT)
+            group = VGroup(lhs, digest)
+            group.to_corner(UP+RIGHT)
+            group.shift(MED_LARGE_BUFF*DOWN)
+            groups.add(group)
+
+        group = groups[0]
+        lhs, digest = group
+        sha, lp, message, lp = lhs
+        sha_brace = Brace(sha, UP)
+        message_brace = Brace(message, DOWN)
+        digest_brace = Brace(digest, DOWN)
+        sha_text = sha_brace.get_text("", "Hash function")
+        sha_text.highlight(YELLOW)
+        message_text = message_brace.get_text("Message/file")
+        message_text.highlight(BLUE)
+        digest_text = digest_brace.get_text("``Hash'' or ``Digest''")
+        brace_text_pairs = [
+            (sha_brace, sha_text),
+            (message_brace, message_text),
+            (digest_brace, digest_text),
+        ]   
+
+        self.add(group)
+        for brace, text in brace_text_pairs:
+            self.play(
+                GrowFromCenter(brace),
+                Write(text, run_time = 2)
+            )
+            self.dither()
+        self.dither()
+        for mob in digest, message:
+            self.play(LaggedStart(
+                ApplyMethod, mob,
+                lambda m : (m.highlight, YELLOW),
+                rate_func = there_and_back,
+                run_time = 1
+            ))
+        self.dither()
+
+        new_lhs, new_digest = groups[1]
+        char = new_lhs[2][-5]
+        arrow = Arrow(UP, ORIGIN, buff = 0)
+        arrow.next_to(char, UP)
+        arrow.highlight(RED)
+        self.play(ShowCreation(arrow))
+        for new_group in groups[1:]:
+            new_lhs, new_digest = new_group
+            new_message = new_lhs[2]
+            self.play(
+                Transform(lhs, new_lhs),
+                message_brace.stretch_to_fit_width, new_message.get_width(),
+                message_brace.next_to, new_message, DOWN,
+                MaintainPositionRelativeTo(message_text, message_brace),
+                MaintainPositionRelativeTo(sha_brace, lhs[0]),
+                MaintainPositionRelativeTo(sha_text, sha_brace)
+            )
+            self.play(Transform(
+                digest, new_digest,
+                run_time = 2,
+                submobject_mode = "lagged_start",
+                path_arc = np.pi/2
+            ))
+            if arrow in self.get_mobjects():
+                self.dither()
+                self.play(FadeOut(arrow))
+        self.dither()
+
+        new_sha_text = TextMobject(
+            "Cryptographic", "hash function"
+        )
+        new_sha_text.next_to(sha_brace, UP)
+        new_sha_text.shift_onto_screen()
+        new_sha_text.highlight(YELLOW)
+        new_sha_text[0].highlight(GREEN)
+        self.play(Transform(sha_text, new_sha_text))
+        self.dither()
+
+        self.lhs = lhs
+        self.message = message
+        self.digest = digest
+        self.digest_text = digest_text
+        self.message_text = message_text
+
+    def inverse_function_question(self):
+        arrow = Arrow(3*RIGHT, 3*LEFT, buff = 0)
+        arrow.set_stroke(width = 8)
+        arrow.highlight(RED)
+        everything = VGroup(*self.get_mobjects())
+        arrow.next_to(everything, DOWN)
+        words = TextMobject("Inverse is infeasible")
+        words.highlight(RED)
+        words.next_to(arrow, DOWN)
+
+        self.play(ShowCreation(arrow))
+        self.play(Write(words))
+        self.dither()
+
+    def issue_challenge(self):
+        desired_output_text = TextMobject("Desired output")
+        desired_output_text.move_to(self.digest_text)
+        desired_output_text.highlight(YELLOW)
+        new_digest = sha256_tex_mob("Challenge")
+        new_digest.replace(self.digest)
+        q_marks = TextMobject("???")
+        q_marks.move_to(self.message_text)
+        q_marks.highlight(BLUE)
+
+        self.play(
+            Transform(
+                self.digest, new_digest,
+                run_time = 2,
+                submobject_mode = "lagged_start",
+                path_arc = np.pi/2
+            ),
+            Transform(self.digest_text, desired_output_text)
+        )
+        self.play(
+            FadeOut(self.message),
+            Transform(self.message_text, q_marks)
+        )
+        self.dither()
+
+    def shift_everything_down(self):
+        everything = VGroup(*self.get_top_level_mobjects())
+        self.play(
+            everything.scale, 0.85,
+            everything.to_edge, DOWN
+        )
+
+    def guess_and_check(self):
+        groups = VGroup()
+        for x in range(32):
+            message = "Guess \\#%d"%x
+            lhs = TextMobject(
+                "SHA256(``", message, "'') = ",
+                arg_separator = ""
+            )
+            lhs.highlight_by_tex("Guess", BLUE)
+            digest = sha256_tex_mob(message)
+            digest.next_to(lhs, RIGHT)
+            group = VGroup(lhs, digest)
+            group.scale(0.85)
+            group.next_to(self.digest, UP, aligned_edge = RIGHT)
+            group.to_edge(UP)
+            groups.add(group)
+
+        group = groups[0]
+        self.play(FadeIn(group))
+        for new_group in groups[1:]:
+            self.play(Transform(
+                group[0], new_group[0],
+                run_time = 0.5,
+            ))
+            self.play(Transform(
+                group[1], new_group[1],
+                run_time = 1,
+                submobject_mode = "lagged_start"
+            ))
+
+class PonderScematic(Scene):
+    def construct(self):
+        randy = Randolph()
+        randy.to_corner(DOWN+LEFT)
+        self.play(randy.change, "confused", ORIGIN)
+        for x in range(3):
+            self.play(Blink(randy))
+            self.dither(2)
+
+class ViewingSLLCertificate(ExternallyAnimatedScene):
+    pass
+
+class SHA256ToProofOfWork(TeacherStudentsScene):
+    def construct(self):
+        sha = TextMobject("SHA256")
+        proof = TextMobject("Proof of work")
+        arrow = Arrow(LEFT, RIGHT)
+        group = VGroup(sha, arrow, proof)
+        group.arrange_submobjects(RIGHT)
+        group.next_to(self.teacher, UP, buff = LARGE_BUFF)
+        group.to_edge(RIGHT, buff = LARGE_BUFF)
+
+        self.play(
+            Write(sha, run_time = 1),
+            self.teacher.change, "raise_right_hand"
+        )
+        self.play(ShowCreation(arrow))
+        self.play(Write(proof, run_time = 1))
+        self.dither(3)
+
+class IntroduceNonceOnTrasactions(LedgerScene):
+    CONFIG = {
+        "denomination" : "LD",
+        "ledger_width" : 5,
+        "ledger_line_height" : 0.3,
+    }
+    def construct(self):
+        self.add(self.get_ledger())
+        self.hash_with_nonce()
+        self.write_probability()
+        self.guess_and_check()
+        self.name_proof_of_work()
+        self.change_ledger()
+        self.guess_and_check()
+
+    def hash_with_nonce(self):
+        ledger = self.ledger
+        self.add(*[
+            self.add_payment_line_to_ledger(*payment)
+            for payment in [
+                ("Alice", "Bob", 20),
+                ("Alice", "You", 30),
+                ("Charlie", "You", 100),
+            ]
+        ])
+
+        nonce = TexMobject(str(2**30 + hash("Hey there")%(2**15)))
+        nonce.next_to(ledger, RIGHT, LARGE_BUFF)
+        nonce.highlight(GREEN_C)
+        nonce_brace = Brace(nonce, DOWN)
+        special_word = nonce_brace.get_text("Special number")
+        arrow = Arrow(LEFT, RIGHT, buff = 0)
+        arrow.next_to(ledger, RIGHT)
+        arrow.shift(MED_LARGE_BUFF*DOWN)
+        sha = TextMobject("SHA256")
+        sha.next_to(arrow, UP)
+        digest = sha256_tex_mob(
+            """Man, you're reading this deeply into
+            the code behind videos?  I'm touched,
+            really touched.  Keeping loving math, my
+            friend. """,
+            n_forced_start_zeros = 30,
+        )
+        digest.next_to(arrow, RIGHT)
+        zeros = VGroup(*digest[:30])
+        zeros_brace = Brace(zeros, UP)
+        zeros_words = zeros_brace.get_text("30 zeros")
+
+        self.play(LaggedStart(
+            FadeIn, VGroup(special_word, nonce_brace, nonce)
+        ))
+        self.dither()
+        self.play(
+            nonce.next_to, ledger.content, DOWN, MED_SMALL_BUFF, LEFT,
+            FadeOut(special_word),
+            FadeOut(nonce_brace)
+        )
+        ledger.content.add(nonce)
+        decomposed_ledger = VGroup(*filter(
+            lambda m : not m.is_subpath,
+            ledger.family_members_with_points()
+        ))
+        self.play(
+            ShowCreation(arrow),
+            FadeIn(sha)
+        )
+        self.play(LaggedStart(
+            ApplyMethod, decomposed_ledger,
+            lambda m : (m.highlight, YELLOW),
+            rate_func = there_and_back
+        ))
+        point = VectorizedPoint(sha.get_center())
+        point.set_fill(opacity = 1)
+        self.play(LaggedStart(
+            Transform, decomposed_ledger.copy(),
+            lambda m : (m, point),
+            run_time = 1
+        ))
+        bit_iter = iter(digest)
+        self.play(LaggedStart(
+            ReplacementTransform, 
+            VGroup(*[point.copy() for x in range(256)]),
+            lambda m : (m, bit_iter.next()),
+        ))
+        self.remove(*self.get_mobjects_from_last_animation())
+        self.add(digest)
+        self.play(
+            GrowFromCenter(zeros_brace),
+            Write(zeros_words, run_time = 1)
+        )
+        self.play(LaggedStart(
+            ApplyMethod, zeros,
+            lambda m : (m.highlight, YELLOW)
+        ))
+        self.dither(2)
+
+        self.nonce = nonce
+        self.digest = digest
+        self.zeros_brace = zeros_brace
+        self.zeros_words = zeros_words
+
+    def write_probability(self):
+        probability = TextMobject(
+            "Probability: $\\frac{1}{2^{30}}$",
+            "$\\approx \\frac{1}{1{,}000{,}000{,}000}$",
+        )
+        probability.next_to(self.zeros_words, UP, MED_LARGE_BUFF)
+
+        self.play(FadeIn(probability[0]))
+        self.dither()
+        self.play(Write(probability[1], run_time = 2))
+        self.dither(2)
+
+    def guess_and_check(self):
+        q_mark = TexMobject("?")
+        q_mark.highlight(RED)
+        q_mark.next_to(self.zeros_words, RIGHT, SMALL_BUFF)
+
+        self.digest.save_state()
+        self.nonce.save_state()
+
+        self.play(FadeIn(q_mark))
+        for x in range(1, 13):
+            nonce = TexMobject(str(x))
+            nonce.move_to(self.nonce)
+            nonce.highlight(GREEN_C)
+            digest = sha256_tex_mob(str(x))
+            digest.replace(self.digest)
+
+            self.play(Transform(
+                self.nonce, nonce,
+                run_time = 1 if x == 1 else 0.3
+            ))
+            self.play(Transform(
+                self.digest, digest,
+                run_time = 1,
+                submobject_mode = "lagged_start"
+            ))
+        self.dither()
+        self.play(self.nonce.restore)
+        self.play(
+            self.digest.restore, 
+            submobject_mode = "lagged_start",
+            run_time = 2
+        )
+        self.play(FadeOut(q_mark))
+        self.dither()
+
+    def name_proof_of_work(self):
+        words = TextMobject("``Proof of work''")
+        words.next_to(self.nonce, DOWN, LARGE_BUFF)
+        words.shift(MED_LARGE_BUFF*RIGHT)
+        words.highlight(GREEN)
+        arrow = Arrow(
+            words.get_top(), self.nonce.get_bottom(),
+            color = WHITE,
+            tip_length = 0.15
+        )
+        self.play(Write(words, run_time = 2))
+        self.play(ShowCreation(arrow))
+        self.dither()
+
+    def change_ledger(self):
+        amount = self.ledger.content[2][-1]
+        new_amount = TextMobject("300 LD")
+        new_amount.scale_to_fit_height(amount.get_height())
+        new_amount.highlight(amount.get_color())
+        new_amount.move_to(amount, LEFT)
+
+        new_digest = sha256_tex_mob("Ah shucks")
+        new_digest.replace(self.digest)
+
+        dot = Dot(amount.get_center())
+        dot.set_fill(opacity = 0.5)
+
+        self.play(FocusOn(amount))
+        self.play(Transform(amount, new_amount))
+        self.play(
+            dot.move_to, new_digest,
+            dot.set_fill, None, 0
+        )
+        self.play(Transform(
+            self.digest, new_digest,
+            submobject_mode = "lagged_start",
+        ))
+
+class ShowSomeBroadcasting(DistributedLedgerScene):
+    def construct(self):
+        self.add_large_network_and_distributed_ledger()
+        lines = self.network.lines.copy()
+        lines.add(*[
+            line.copy().rotate(np.pi)
+            for line in lines
+        ])
+
+        point = VectorizedPoint(self.pi_creatures.get_center())
+        last_pi = None
+        for pi in self.pi_creatures:
+            outgoing_lines = []
+            for line in lines:
+                vect = line.get_start() - pi.get_center()
+                dist = np.linalg.norm(vect)
+                if dist < 2:
+                    outgoing_lines.append(line)
+            dots = VGroup()
+            for line in outgoing_lines:
+                dot = Dot(line.get_start())
+                dot.highlight(YELLOW)
+                dot.generate_target()
+                dot.target.move_to(line.get_end())
+                for alt_pi in self.pi_creatures:
+                    vect = line.get_end() - alt_pi.get_center()
+                    dist = np.linalg.norm(vect)
+                    if dist < 2:
+                        dot.ledger = alt_pi.ledger
+                dots.add(dot)
+            self.play(
+                Animation(point),
+                Broadcast(pi),
+                *[
+                    Succession(
+                        FadeIn(dot),
+                        MoveToTarget(dot, run_time = 2),
+                    )
+                    for dot in dots
+                ]
+            )
+            self.play(*it.chain(*[
+                [dot.move_to, dot.ledger, dot.set_fill, None, 0]
+                for dot in dots
+            ]))
+
+class IntroduceBlockChain(Scene):
+    CONFIG = {
+        "transaction_color" : YELLOW,
+        "proof_of_work_color" : GREEN,
+        "prev_hash_color" : BLUE,
+        "block_width" : 3,
+        "block_height" : 3.5,
+        "n_transaction_lines" : 8,
+        "payment_height_to_block_height" : 0.15,
+    }
+    def setup(self):
+        ls = LedgerScene()
+        self.names = [
+            name.capitalize()
+            for name in ls.get_names()
+        ]
+        self.name_colors = [
+            ls.get_color_from_name(name)
+            for name in self.names
+        ]
+
+    def construct(self):
+        self.divide_ledger_into_blocks()
+        self.show_proofs_of_work()
+        self.chain_blocks_together()
+        self.mess_with_early_block()
+        self.propogate_hash_change()
+        self.redo_proof_of_work()
+        self.write_block_chain()
 
 
+    def divide_ledger_into_blocks(self):
+        blocks = VGroup(*[
+            self.get_block() for x in range(3)
+        ])
+        blocks.arrange_submobjects(RIGHT, buff = 1.5)
+        blocks.to_edge(UP)
+
+        all_payments = VGroup()
+        all_proofs_of_work = VGroup()
+        for block in blocks:
+            block.remove(block.prev_hash)
+            all_payments.add(*block.payments)
+            all_proofs_of_work.add(block.proof_of_work)
+
+        blocks_word = TextMobject("Blocks")
+        blocks_word.scale(1.5)
+        blocks_word.shift(2*DOWN)
+        arrows = VGroup(*[
+            Arrow(
+                blocks_word.get_top(), block.get_bottom(),
+                buff = MED_LARGE_BUFF,
+                color = WHITE
+            )
+            for block in blocks
+        ])
+
+        self.play(LaggedStart(FadeIn, blocks))
+        self.play(
+            Write(blocks_word),
+            LaggedStart(
+                ShowCreation, arrows, 
+                run_time = 1,
+                lag_factor = 0.6,
+            )
+        )
+        self.dither()
+        for group in all_payments, all_proofs_of_work:
+            self.play(LaggedStart(
+                Indicate, group,
+                rate_func = there_and_back,
+                scale_factor = 1.1,
+            ))
+        self.play(*map(FadeOut, [blocks_word, arrows]))
+
+        self.blocks = blocks
+
+    def show_proofs_of_work(self):
+        random.seed(0)
+        blocks = self.blocks
+
+        proofs_of_work = VGroup()
+        new_proofs_of_work = VGroup()
+        digests = VGroup()
+        arrows = VGroup()
+        sha_words = VGroup()
+        signatures = VGroup()
+
+        for block in blocks:
+            proofs_of_work.add(block.proof_of_work)
+            num_str = str(random.randint(0, 10**12))
+            number = TexMobject(num_str)
+            number.highlight(self.proof_of_work_color)
+            number.replace(block.proof_of_work, dim_to_match = 1)
+            new_proofs_of_work.add(number)
+
+            digest = sha256_tex_mob(num_str, 60)
+            digest.scale(0.7)
+            digest.move_to(block).to_edge(DOWN)
+            VGroup(*digest[:60]).highlight(YELLOW)
+            arrow = Arrow(block, digest)
+            sha = TextMobject("SHA256")
+            sha.scale(0.7)
+            point = arrow.get_center()
+            sha.next_to(point, UP, SMALL_BUFF)
+            sha.rotate(-np.pi/2, about_point = point)
+            sha.shift(SMALL_BUFF*UP)
+            digests.add(digest)
+            arrows.add(arrow)
+            sha_words.add(sha)
+
+            for payment in block.payments[:2]:
+                signatures.add(payment[-1])
+
+        proofs_of_work.save_state()
+
+        self.play(Transform(
+            proofs_of_work, new_proofs_of_work,
+            submobject_mode = "lagged_start"
+        ))
+        self.play(
+            ShowCreation(arrows),
+            Write(sha_words),
+            run_time = 2
+        )
+        self.play(Write(digests))
+        self.dither()
+        for group in signatures, proofs_of_work:
+            self.play(LaggedStart(
+                Indicate, group,
+                run_time = 2,
+                rate_func = there_and_back,
+            ))
+            self.dither()
+        self.play(
+            proofs_of_work.restore,
+            FadeOut(sha_words)
+        )
+
+        self.digests = digests
+        self.sha_arrows = arrows
+
+    def chain_blocks_together(self):
+        blocks = self.blocks
+        digests = self.digests
+        sha_arrows = self.sha_arrows
+        block_spacing = blocks[1].get_center() - blocks[0].get_center()
+        prev_hashes = VGroup(*[
+            block.prev_hash for block in blocks
+        ])
+
+        prev_hashes.add(
+            prev_hashes[-1].copy().shift(block_spacing).fade(1)
+        )
+
+        new_arrows = VGroup()
+        for block in blocks:
+            end = np.array([
+                block.get_left()[0] + block_spacing[0],
+                block.prev_hash.get_center()[1],
+                0
+            ])
+            arrow = Arrow(end+LEFT, end, buff = SMALL_BUFF)
+            arrow.points[0] = block.get_right()
+            arrow.points[1] = block.get_right() + RIGHT
+            arrow.points[2] = end + LEFT + SMALL_BUFF*UP
+            new_arrows.add(arrow)
+
+        for i in range(3):
+            self.play(
+                ReplacementTransform(digests[i], prev_hashes[i+1]),
+                Transform(sha_arrows[i], new_arrows[i])
+            )
+        arrow = new_arrows[0].copy().shift(-block_spacing)
+        sha_arrows.add_to_back(arrow)
+        self.play(*map(FadeIn, [arrow, prev_hashes[0]]))
+        self.dither(2)
+
+        self.prev_hashes = prev_hashes
+
+    def mess_with_early_block(self):
+        blocks = self.blocks
+        amount = blocks[0].payments[1][3]
+        new_amount = TextMobject("400 LD")
+        new_amount.scale_to_fit_height(amount.get_height())
+        new_amount.highlight(RED)
+        new_amount.move_to(amount, LEFT)
+
+        self.play(FocusOn(amount))
+        self.play(Transform(amount, new_amount))
+        self.dither()
+        self.play(Swap(*blocks[:2]))
+        self.dither()
+
+        blocks.submobjects[:2] = blocks.submobjects[1::-1]
+
+    def propogate_hash_change(self):
+        alt_prev_hashes = self.prev_hashes.copy()
+        alt_prev_hashes.highlight(RED)
+
+        for block, prev_hash in zip(self.blocks, alt_prev_hashes[1:]):
+            rect = block.rect.copy()
+            rect.set_stroke(RED, 8)
+            self.play(ShowCreation(rect))
+            self.play(ReplacementTransform(rect, prev_hash))
+        self.alt_prev_hashes = alt_prev_hashes
+
+    def redo_proof_of_work(self):
+        proofs_of_work = VGroup(*[
+            block.proof_of_work for block in self.blocks
+        ])
+        hashes = self.alt_prev_hashes[1:]
+
+        self.play(FadeOut(proofs_of_work))
+        for proof_of_work, prev_hash in zip(proofs_of_work, hashes):
+            num_pow_group = VGroup(*[
+                Integer(random.randint(10**9, 10**10))
+                for x in range(50)
+            ])
+            num_pow_group.highlight(proof_of_work.get_color())
+            num_pow_group.scale_to_fit_width(proof_of_work.get_width())
+            num_pow_group.move_to(proof_of_work)
+            for num_pow in num_pow_group:
+                self.add(num_pow)
+                self.dither(1./20)
+                self.remove(num_pow)
+            self.add(num_pow)
+            prev_hash.highlight(BLUE)
+
+    def write_block_chain(self):
+        ledger = TextMobject("Ledger")
+        ledger.next_to(self.blocks, DOWN)
+        cross = Cross(ledger)
+        block_chain = TextMobject("``Block Chain''")
+        block_chain.next_to(ledger, DOWN)
+
+        self.play(FadeIn(ledger))
+        self.play(
+            ShowCreation(cross),
+            Write(block_chain)
+        )
+        self.dither(2)
 
 
+    ######
 
+    def get_block(self):
+        block = VGroup()
+        rect = Rectangle(
+            color = WHITE,
+            height = self.block_height,
+            width = self.block_width,
+        )
+        h_line1, h_line2 = [
+            Line(
+                rect.get_left(), rect.get_right()
+            ).shift(0.3*rect.get_height()*vect)
+            for vect in UP, DOWN
+        ]
 
+        payments = VGroup()
+        if not hasattr(self, "transaction_counter"):
+            self.transaction_counter = 0
+        for x in range(2):
+            hashes = [
+                hash("%d %d"%(seed, self.transaction_counter))
+                for seed in range(3)
+            ]
+            payment = TextMobject(
+                self.names[hashes[0]%3],
+                "pays",
+                self.names[hashes[1]%4],
+                "%d0 LD"%(hashes[2]%9 + 1),
+            )
+            payment.highlight_by_tex("LD", YELLOW)
+            for name, color in zip(self.names, self.name_colors):
+                payment.highlight_by_tex(name, color)
+            signature = TextMobject("$\\langle$ Signature $\\rangle$")
+            signature.highlight(payment[0].get_color())
+            signature.next_to(payment, DOWN, SMALL_BUFF)
+            payment.add(signature)
 
+            factor = self.payment_height_to_block_height
+            payment.scale_to_fit_height(factor*rect.get_height())
+            payments.add(payment)
+            self.transaction_counter += 1
+        payments.add(TexMobject("\\dots").scale(0.5))
+        payments.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+        payments.next_to(h_line1, DOWN)
 
+        proof_of_work = TextMobject("Proof of work")
+        proof_of_work.highlight(self.proof_of_work_color)
+        proof_of_work.scale(0.8)
+        proof_of_work.move_to(
+            VGroup(h_line2, VectorizedPoint(rect.get_bottom()))
+        )
 
+        prev_hash = TextMobject("Prev hash")
+        prev_hash.scale(0.8)
+        prev_hash.highlight(self.prev_hash_color)
+        prev_hash.move_to(
+            VGroup(h_line1, VectorizedPoint(rect.get_top()))
+        )
 
-
-
-
+        block.rect = rect
+        block.h_lines = VGroup(h_line1, h_line2)
+        block.payments = payments
+        block.proof_of_work = proof_of_work
+        block.prev_hash = prev_hash
+        block.digest_mobject_attrs()
+        return block
 
 
 

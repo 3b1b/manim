@@ -12,6 +12,13 @@ from topics.geometry import Circle, Line, Rectangle, Square, \
     Arc, Polygon, SurroundingRectangle
 from topics.three_dimensions import Cube
 
+class Lightbulb(SVGMobject):
+    CONFIG = {
+        "file_name" : "lightbulb",
+        "height" : 1,
+        "stroke_color" : YELLOW,
+    }
+
 class BitcoinLogo(SVGMobject):
     CONFIG = {
         "file_name" : "Bitcoin_logo",

@@ -563,7 +563,7 @@ class PiCreatureScene(Scene):
         return self
 
     def dither(self, time = 1, blink = True):
-        while time > 0:
+        while time >= 1:
             time_to_blink = self.total_dither_time%self.seconds_to_blink == 0
             if blink and self.any_pi_creatures_on_screen() and time_to_blink:
                 self.blink()
@@ -571,6 +571,8 @@ class PiCreatureScene(Scene):
                 Scene.dither(self)
             time -= 1
             self.total_dither_time += 1
+        if time > 0:
+            Scene.dither(self, time)
         return self
 
     def change_mode(self, mode):
