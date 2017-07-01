@@ -2699,7 +2699,7 @@ class IntroduceBlockChain(Scene):
             point = arrow.get_center()
             sha.next_to(point, UP, SMALL_BUFF)
             sha.rotate(-np.pi/2, about_point = point)
-            sha.shift(SMALL_BUFF*UP)
+            sha.shift(SMALL_BUFF*(UP+RIGHT))
             digests.add(digest)
             arrows.add(arrow)
             sha_words.add(sha)
@@ -2790,21 +2790,24 @@ class IntroduceBlockChain(Scene):
         blocks.submobjects[:2] = blocks.submobjects[1::-1]
 
     def propogate_hash_change(self):
-        alt_prev_hashes = self.prev_hashes.copy()
-        alt_prev_hashes.highlight(RED)
+        prev_hashes = self.prev_hashes
 
-        for block, prev_hash in zip(self.blocks, alt_prev_hashes[1:]):
+        for block, prev_hash in zip(self.blocks, prev_hashes[1:]):
             rect = block.rect.copy()
             rect.set_stroke(RED, 8)
+            rect.target = SurroundingRectangle(prev_hash)
+            rect.target.set_stroke(rect.get_color(), 0)
             self.play(ShowCreation(rect))
-            self.play(ReplacementTransform(rect, prev_hash))
-        self.alt_prev_hashes = alt_prev_hashes
+            self.play(
+                MoveToTarget(rect),
+                prev_hash.highlight, RED
+            )
 
     def redo_proof_of_work(self):
         proofs_of_work = VGroup(*[
             block.proof_of_work for block in self.blocks
         ])
-        hashes = self.alt_prev_hashes[1:]
+        hashes = self.prev_hashes[1:]
 
         self.play(FadeOut(proofs_of_work))
         for proof_of_work, prev_hash in zip(proofs_of_work, hashes):
@@ -2818,13 +2821,14 @@ class IntroduceBlockChain(Scene):
             for num_pow in num_pow_group:
                 self.add(num_pow)
                 self.dither(1./20)
+                prev_hash.highlight(random_bright_color())
                 self.remove(num_pow)
             self.add(num_pow)
             prev_hash.highlight(BLUE)
 
     def write_block_chain(self):
         ledger = TextMobject("Ledger")
-        ledger.next_to(self.blocks, DOWN)
+        ledger.next_to(self.blocks, DOWN, LARGE_BUFF)
         cross = Cross(ledger)
         block_chain = TextMobject("``Block Chain''")
         block_chain.next_to(ledger, DOWN)
@@ -2905,12 +2909,340 @@ class IntroduceBlockChain(Scene):
         block.digest_mobject_attrs()
         return block
 
+class DistributedBlockChainScene(DistributedLedgerScene):
+    CONFIG = {
+        "block_height" : 0.5,
+        "block_width" : 0.5,
+        "n_blocks" : 3,
+    }
+    def get_distributed_ledgers(self):
+        ledgers = VGroup()
+        point = self.pi_creatures.get_center()
+        for pi in self.pi_creatures:
+            vect = pi.get_center() - point
+            vect[0] = 0
+            block_chain = self.get_block_chain()
+            block_chain.next_to(
+                VGroup(pi, pi.label), vect, SMALL_BUFF
+            )
+            pi.block_chain = pi.ledger = block_chain
+            ledgers.add(block_chain)
+        self.ledgers = self.block_chains = ledgers
+        return ledgers
+
+    def get_block_chain(self):
+        blocks = VGroup(*[
+            self.get_block() 
+            for x in range(self.n_blocks)
+        ])
+        blocks.arrange_submobjects(RIGHT, buff = MED_SMALL_BUFF)
+        arrows = VGroup()
+
+        for b1, b2 in zip(blocks, blocks[1:]):
+            arrow = Arrow(
+                LEFT, RIGHT,
+                preserve_tip_size_when_scaling = False,
+                tip_length = 0.15,
+            )
+            arrow.scale_to_fit_width(b1.get_width())
+            target_point = interpolate(
+                b2.get_left(), b2.get_corner(UP+LEFT), 0.8
+            )
+            arrow.next_to(target_point, LEFT, 0.5*SMALL_BUFF)
+            arrow.points[0] = b1.get_right()
+            arrow.points[1] = b2.get_left()
+            arrow.points[2] = b1.get_corner(UP+RIGHT)
+            arrow.points[2] += SMALL_BUFF*LEFT
+            arrows.add(arrow)
+        block_chain = VGroup(blocks, arrows)
+        block_chain.blocks = blocks
+        block_chain.arrows = arrows
+        return block_chain
+
+    def get_block(self):
+        block = Rectangle(
+            color = WHITE,
+            height = self.block_height,
+            width = self.block_width,
+        )
+        for vect in UP, DOWN:
+            line = Line(block.get_left(), block.get_right())
+            line.shift(0.3*block.get_height()*vect)
+            block.add(line)
+        return block
+
+    def create_pi_creatures(self):
+        creatures = DistributedLedgerScene.create_pi_creatures(self)
+        VGroup(
+            self.alice, self.alice.label,
+            self.charlie, self.charlie.label,
+        ).shift(LEFT)
+        return creatures
+
+
+class IntroduceBlockCreator(DistributedBlockChainScene):
+    CONFIG = {
+        "n_block_creators" : 3,
+        # "n_pow_guesses" : 60,
+        "n_pow_guesses" : 10,
+    }
+    def construct(self):
+        self.add_network()
+        self.add_block_creators()
+        self.broadcast_transactions()
+        self.collect_transactions()
+        self.find_proof_of_work()
+        self.add_block_reward()
+        self.comment_on_block_reward()
+        self.write_miners()
+        self.broadcast_block()
+
+    def add_network(self):
+        network = self.get_large_network()
+        network.remove(network.lines)
+        network.scale(0.7)
+        ledgers = self.get_distributed_ledgers()
+        self.add(network, ledgers)
+        VGroup(network, ledgers).to_edge(RIGHT)
+
+    def add_block_creators(self):
+        block_creators = VGroup()
+        labels = VGroup()
+        everything = VGroup()
+        for x in range(self.n_block_creators):
+            block_creator = PiCreature(color = GREY)
+            block_creator.scale_to_fit_height(self.alice.get_height())
+            label = TextMobject("Block creator %d"%(x+1))
+            label.scale(0.7)
+            label.next_to(block_creator, DOWN, SMALL_BUFF)
+            block_creator.label = label
+            block_creators.add(block_creator)
+            labels.add(label)
+            everything.add(VGroup(block_creator, label))
+        everything.arrange_submobjects(DOWN, buff = LARGE_BUFF)
+        everything.to_edge(LEFT)
+
+        self.play(LaggedStart(FadeIn, everything))
+        self.pi_creatures.add(*block_creators)
+        self.dither()
+
+        self.block_creators = block_creators
+        self.block_creator_labels = labels
+
+    def broadcast_transactions(self):
+        payment_parts = [
+            ("Alice", "Bob", 20),
+            ("Bob", "Charlie", 10),
+            ("Charlie", "You", 50),
+            ("You", "Alice", 30),
+        ]
+        payments = VGroup()
+        payment_targets = VGroup()
+        for from_name, to_name, amount in payment_parts:
+            verb = "pay" if from_name == "You" else "pays"
+            payment = TextMobject(
+                from_name, verb, to_name, "%d LD"%amount
+            )
+            payment.highlight_by_tex("LD", YELLOW)
+            for name in self.get_names():
+                payment.highlight_by_tex(
+                    name.capitalize(),
+                    self.get_color_from_name(name)
+                )
+            payment.scale(0.7)
+            payment.generate_target()
+            payment_targets.add(payment.target)
+
+            pi = getattr(self, from_name.lower())
+            payment.scale(0.1)
+            payment.set_fill(opacity = 0)
+            payment.move_to(pi)
+            payments.add(payment)
+        payment_targets.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        payment_targets.next_to(
+            self.block_creator_labels, RIGHT,
+            MED_LARGE_BUFF
+        )
+        payment_targets.shift(UP)
+
+        anims = []
+        alpha_range = np.linspace(0, 0.5, len(payments))
+        for pi, payment, alpha in zip(self.pi_creatures, payments, alpha_range):
+            rf1 = squish_rate_func(smooth, alpha, alpha+0.5)
+            rf2 = squish_rate_func(smooth, alpha, alpha+0.5)
+            anims.append(Broadcast(
+                pi, rate_func = rf1,
+                big_radius = 3,
+            ))
+            anims.append(MoveToTarget(payment, rate_func = rf2))
+
+        self.play(*anims, run_time = 5)
+        self.payments = payments
+
+    def collect_transactions(self):
+        creator = self.block_creators[0]
+        block = self.get_block()
+        block.stretch_to_fit_height(4)
+        block.stretch_to_fit_width(3.5)
+        block.next_to(creator.label, RIGHT, MED_LARGE_BUFF)
+        block.to_edge(UP)
+
+        payments = self.payments
+        payments.generate_target()
+        payments.target.scale_to_fit_height(1.5)
+        payments.target.move_to(block)
+
+        prev_hash = TextMobject("Prev hash")
+        prev_hash.highlight(BLUE)
+        prev_hash.scale_to_fit_height(0.3)
+        prev_hash.next_to(block.get_top(), DOWN, MED_SMALL_BUFF)
+        block.add(prev_hash)
+
+        self.play(
+            FadeIn(block),
+            MoveToTarget(payments),
+            creator.change, "raise_right_hand"
+        )
+        self.dither()
+        block.add(payments)
+
+        self.block = block
+
+    def find_proof_of_work(self):
+        block = self.block
+
+        arrow = Arrow(UP, ORIGIN, buff = 0)
+        arrow.next_to(block, DOWN)
+        sha = TextMobject("SHA256")
+        sha.scale(0.7)
+        sha.next_to(arrow, RIGHT)
+        arrow.add(sha)
+
+        self.add(arrow)
+        for x in range(self.n_pow_guesses):
+            guess = Integer(random.randint(10**11, 10**12))
+            guess.highlight(GREEN)
+            guess.scale_to_fit_height(0.3)
+            guess.next_to(block.get_bottom(), UP, MED_SMALL_BUFF)
+
+            if x == self.n_pow_guesses - 1:
+                digest = sha256_tex_mob(str(x), 60)
+                VGroup(*digest[:60]).highlight(YELLOW)
+            else:
+                digest = sha256_tex_mob(str(x))
+            digest.scale_to_fit_width(block.get_width())
+            digest.next_to(arrow.get_end(), DOWN)
+
+            self.add(guess, digest)
+            self.dither(1./20)
+            self.remove(guess, digest)
+        proof_of_work = guess
+        self.add(proof_of_work, digest)
+        block.add(proof_of_work)
+        self.dither()
+
+        self.hash_group = VGroup(arrow, digest)
+
+    def add_block_reward(self):
+        payments = self.payments
+        new_transaction = TextMobject(
+            self.block_creator_labels[0].get_tex_string(),
+            "gets", "10 LD"
+        )
+        new_transaction[0].highlight(LIGHT_GREY)
+        new_transaction.highlight_by_tex("LD", YELLOW)
+        new_transaction.scale_to_fit_height(payments[0].get_height())
+        new_transaction.move_to(payments.get_top())
+        payments.generate_target()
+        payments.target.next_to(new_transaction, DOWN, SMALL_BUFF, LEFT)
+        new_transaction.shift(SMALL_BUFF*UP)
+
+        self.play(
+            MoveToTarget(payments),
+            Write(new_transaction)
+        )
+        payments.add_to_back(new_transaction)
+        self.dither()
+
+    def comment_on_block_reward(self):
+        reward = self.payments[0]
+        reward_rect = SurroundingRectangle(reward)
+        big_rect = SurroundingRectangle(self.ledgers)
+        big_rect.set_stroke(width = 0)
+        big_rect.set_fill(BLACK, opacity = 1)
+
+        comments = VGroup(*map(TextMobject, [
+            "- ``Block reward''",
+            "- No sender/signature",
+            "- Adds to total money supply",
+        ]))
+        comments.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        comments.move_to(big_rect, UP+LEFT)
+
+        pi_creatures = self.pi_creatures
+        self.pi_creatures = VGroup()
+
+        self.play(ShowCreation(reward_rect))
+        self.play(FadeIn(big_rect))
+        for comment in comments:
+            self.play(FadeIn(comment))
+            self.dither(2)
+        self.play(*map(FadeOut, [big_rect, comments, reward_rect]))
+
+        self.pi_creatures = pi_creatures
+
+    def write_miners(self):
+        for label in self.block_creator_labels:
+            tex = label.get_tex_string()
+            new_label = TextMobject("Miner " + tex[-1])
+            new_label.highlight(label.get_color())
+            new_label.replace(label, dim_to_match = 1)
+            self.play(Transform(label, new_label))
+        top_payment = self.payments[0]
+        new_top_payment = TextMobject("Miner 1", "gets", "10 LD")
+        new_top_payment[0].highlight(LIGHT_GREY)
+        new_top_payment[-1].highlight(YELLOW)
+        new_top_payment.scale_to_fit_height(top_payment.get_height())
+        new_top_payment.move_to(top_payment, LEFT)
+        self.play(Transform(top_payment, new_top_payment))
+        self.dither()
+
+    def broadcast_block(self):
+        old_chains = self.block_chains
+        self.n_blocks = 4
+        new_chains = self.get_distributed_ledgers()
+        block_target_group = VGroup()
+        anims = []
+        for old_chain, new_chain  in zip(old_chains, new_chains):
+            for attr in "blocks", "arrows":
+                pairs = zip(
+                    getattr(old_chain, attr), 
+                    getattr(new_chain, attr), 
+                )
+                for m1, m2 in pairs:
+                    anims.append(Transform(m1, m2))
+            anims.append(ShowCreation(new_chain.arrows[-1]))
+            block_target = self.block.copy()
+            block_target.replace(new_chain.blocks[-1], stretch = True)
+            block_target_group.add(block_target)
+        anims.append(Transform(
+            VGroup(self.block),
+            block_target_group
+        ))
+        anims.append(Broadcast(self.block, n_circles = 4))
+        anims.append(FadeOut(self.hash_group))
+
+        self.play(*anims, run_time = 2)
+        self.dither()
 
 
 
+class MinersInLiterature(ExternallyAnimatedScene):
+    pass
 
-
-
+class MiningIsALottery(Scene):
+    def construct(self):
+        pass
 
 
 
