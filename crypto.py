@@ -730,7 +730,6 @@ class InitialProtocol(Scene):
             self.items.add(item)
         return item
 
-
 class AddFraudulentLine(LedgerScene):
     def construct(self):
         self.add_ledger_and_network()
@@ -2979,12 +2978,10 @@ class DistributedBlockChainScene(DistributedLedgerScene):
         ).shift(LEFT)
         return creatures
 
-
 class IntroduceBlockCreator(DistributedBlockChainScene):
     CONFIG = {
         "n_block_creators" : 3,
-        # "n_pow_guesses" : 60,
-        "n_pow_guesses" : 10,
+        "n_pow_guesses" : 60,
     }
     def construct(self):
         self.add_network()
@@ -3213,6 +3210,7 @@ class IntroduceBlockCreator(DistributedBlockChainScene):
         new_chains = self.get_distributed_ledgers()
         block_target_group = VGroup()
         anims = []
+        arrow_creations = []
         for old_chain, new_chain  in zip(old_chains, new_chains):
             for attr in "blocks", "arrows":
                 pairs = zip(
@@ -3221,7 +3219,7 @@ class IntroduceBlockCreator(DistributedBlockChainScene):
                 )
                 for m1, m2 in pairs:
                     anims.append(Transform(m1, m2))
-            anims.append(ShowCreation(new_chain.arrows[-1]))
+            arrow_creations.append(ShowCreation(new_chain.arrows[-1]))
             block_target = self.block.copy()
             block_target.replace(new_chain.blocks[-1], stretch = True)
             block_target_group.add(block_target)
@@ -3231,18 +3229,315 @@ class IntroduceBlockCreator(DistributedBlockChainScene):
         ))
         anims.append(Broadcast(self.block, n_circles = 4))
         anims.append(FadeOut(self.hash_group))
+        anims.append(ApplyMethod(
+            self.block_creators[0].change, "happy"
+        ))
 
         self.play(*anims, run_time = 2)
+        self.play(*it.chain(
+            arrow_creations,
+            [
+                ApplyMethod(
+                    pi.change, "hooray", 
+                    pi.block_chain.get_right()
+                )
+                for pi in self.pi_creatures
+            ]
+        ))
+        self.dither(3)
+
+class MiningIsALottery(IntroduceBlockCreator):
+    CONFIG = {
+        "n_miners" : 3,
+        "denomination" : "LD",
+        "n_guesses" : 90,
+        "n_nonce_digits" : 15,
+    }
+    def construct(self):
+        self.add_blocks()
+        self.add_arrows()
+        self.make_guesses()
+
+    def create_pi_creatures(self):
+        IntroduceBlockCreator.create_pi_creatures(self)
+        miners = VGroup(*[
+            PiCreature(color = GREY)
+            for n in range(self.n_miners)
+        ])
+        miners.scale(0.5)
+        miners.arrange_submobjects(DOWN, buff = LARGE_BUFF)
+        miners.to_edge(LEFT)
+        for x, miner in enumerate(miners):
+            label = TextMobject("Miner %d"%(x+1))
+            label.scale(0.7)
+            label.next_to(miner, DOWN, SMALL_BUFF)
+            miner.label = label
+            self.add(label)
+        self.miners = miners
+        return miners
+
+    def add_blocks(self):
+        self.add(self.miners)
+
+        blocks = VGroup()
+        for miner in self.miners:
+            block = self.get_block()
+            block.stretch_to_fit_height(2)
+            block.stretch_to_fit_width(3)
+            block.next_to(miner, RIGHT)
+
+            payments = self.get_payments(miner)
+            payments.scale_to_fit_height(1)
+            payments.move_to(block)
+            block.add(payments)
+
+            prev_hash = TextMobject("Prev hash")
+            prev_hash.highlight(BLUE)
+            prev_hash.scale_to_fit_height(0.2)
+            prev_hash.next_to(block.get_top(), DOWN, SMALL_BUFF)
+            block.add(prev_hash)
+
+            miner.block = block
+            miner.change("pondering", block)
+            blocks.add(block)
+
+        self.blocks = blocks
+        self.add(blocks)
+
+    def add_arrows(self):
+        self.arrows = VGroup()
+        for block in self.blocks:
+            arrow = Arrow(LEFT, RIGHT)
+            arrow.next_to(block)
+            label = TextMobject("SHA256")
+            label.scale(0.7)
+            label.next_to(arrow, UP, buff = SMALL_BUFF)
+            self.add(arrow, label)
+            block.arrow = arrow
+            self.arrows.add(VGroup(arrow, label))
+
+    def make_guesses(self):
+        for x in range(self.n_guesses):
+            e = self.n_nonce_digits
+            nonces = VGroup()
+            digests = VGroup()
+            for block in self.blocks:
+                nonce = Integer(random.randint(10**e, 10**(e+1)))
+                nonce.scale_to_fit_height(0.2)
+                nonce.next_to(block.get_bottom(), UP, SMALL_BUFF)
+                nonces.add(nonce)
+                digest = sha256_tex_mob(str(x) + str(block))
+                digest.scale_to_fit_height(block.get_height())
+                digest.next_to(block.arrow, RIGHT)
+                digests.add(digest)
+            self.add(nonces, digests)
+            self.dither(1./20)
+            self.remove(nonces, digests)
+        self.add(nonces, digests)
+
+        winner_index = 1
+        winner = self.miners[winner_index]
+        losers = VGroup(*filter(
+            lambda m : m is not winner,
+            self.miners
+        ))
+
+        nonces[winner_index].highlight(GREEN)
+        new_digest = sha256_tex_mob("Winner", 60)
+        VGroup(*new_digest[:60]).highlight(YELLOW)
+        old_digest = digests[winner_index]
+        new_digest.replace(old_digest)
+        Transform(old_digest, new_digest).update(1)
+
+        self.play(
+            winner.change, "hooray",
+            *[
+                ApplyMethod(VGroup(
+                    self.blocks[i], self.arrows[i], 
+                    nonces[i], digests[i]
+                ).fade, 0.7)
+                for i in range(len(self.blocks))
+                if i is not winner_index
+            ]
+        )
+        self.play(*[
+            ApplyMethod(loser.change, "angry", winner)
+            for loser in losers
+        ])
+        self.dither(2)
+
+    #####
+
+    def get_payments(self, miner):
+        if not hasattr(self, "ledger"):
+            self.get_ledger() ##Unused
+        self.ledger.content.remove(*self.ledger.content[1:])
+
+        lines = VGroup()
+
+        miner_name = miner.label.get_tex_string()
+        top_line = TextMobject(miner_name, "gets", "10 LD")
+        top_line.highlight_by_tex(miner_name, LIGHT_GREY)
+        top_line.highlight_by_tex("LD", YELLOW)
+        lines.add(top_line)
+        payments = [
+            ("Alice", "Bob", 20),
+            ("Charlie", "You", 50),
+        ]
+        for payment in payments:
+            lines.add(self.add_payment_line_to_ledger(*payment))
+        lines.add(TexMobject("\\vdots"))
+        for line in lines:
+            line.scale_to_fit_height(0.5)
+        lines.arrange_submobjects(
+            DOWN, buff = SMALL_BUFF, aligned_edge = LEFT
+        )
+        lines[-1].next_to(lines[-2], DOWN, buff = SMALL_BUFF)
+        return lines
+
+class TwoBlockChains(DistributedBlockChainScene):
+    CONFIG = {
+        "n_blocks" : 4,
+    }
+    def construct(self):
+        self.defer_to_longer()
+        self.break_tie()
+
+    def defer_to_longer(self):
+        randy = self.randy
+        block_chains = VGroup()
+        block_chains.add(self.get_block_chain())
+        self.n_blocks += 1
+        block_chains.add(self.get_block_chain())
+        block_chains.scale(1.5)
+
+        block_chains[0].next_to(randy, UP+LEFT)
+        block_chains[1].next_to(randy, UP+RIGHT)
+        for block_chain in block_chains:
+            block_chain.shift_onto_screen()
+
+        conflicting = TextMobject("Conflicting")
+        conflicting.to_edge(UP)
+        conflicting.highlight(RED)
+        arrows = VGroup(*[
+            Arrow(
+                conflicting.get_bottom(), block_chain.get_top(),
+                color = RED,
+                buff = MED_LARGE_BUFF
+            )
+            for block_chain in block_chains
+        ])
+
+        longer_chain_rect = SurroundingRectangle(block_chains[1])
+        longer_chain_rect.set_stroke(GREEN, 8)
+        checkmark = TexMobject("\\checkmark")
+        checkmark.highlight(GREEN)
+        checkmark.next_to(longer_chain_rect, UP)
+        checkmark.shift(RIGHT)
+
+        self.add(randy)
+        for side, chain in zip(["left", "right"], block_chains):
+            self.play(
+                randy.change, "raise_%s_hand"%side, chain,
+                LaggedStart(FadeIn, chain.blocks),
+                LaggedStart(FadeIn, chain.arrows),
+            )
+        self.play(
+            Write(conflicting),
+            *map(ShowCreation, arrows)
+        )
+        self.dither()
+        self.play(ShowCreation(longer_chain_rect))
+        self.play(Write(checkmark, run_time = 1))
+        self.play(randy.change, "thinking", checkmark)
         self.dither()
 
+        self.to_fade = VGroup(
+            conflicting, arrows, 
+            longer_chain_rect, checkmark
+        )
+        self.block_chains = block_chains
+
+    def break_tie(self):
+        to_fade = self.to_fade
+        block_chains = self.block_chains
+        randy = self.randy
+
+        arrow = block_chains[1].arrows[-1]
+        block = block_chains[1].blocks[-1]
+        arrow_block = VGroup(arrow, block).copy()
+
+        block_chains.generate_target()
+        block_chains.target.arrange_submobjects(
+            DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT
+        )
+        block_chains.target.next_to(randy, UP)
+        block_chains.target.to_edge(LEFT)
+
+        self.play(
+            MoveToTarget(block_chains),
+            FadeOut(to_fade),
+            run_time = 1
+        )
+        arrow_block.next_to(block_chains[0], RIGHT, buff = 0)
+        block_chains[0].add(arrow_block)
+        self.play(
+            randy.change, "confused", block_chains,
+            FadeIn(arrow_block),
+        )
+        self.dither()
+
+        arrow_block = arrow_block.copy()
+        arrow_block.next_to(SPACE_WIDTH*RIGHT, RIGHT)
+        self.play(
+            ApplyMethod(
+                arrow_block.next_to, block_chains[0], RIGHT, 0,
+                run_time = 3,
+                rate_func = squish_rate_func(smooth, 0.3, 0.8)
+            ),
+            Broadcast(arrow_block),
+        )
+        block_chains[0].add(arrow_block)
+        rect = SurroundingRectangle(block_chains[0])
+        rect.set_stroke(GREEN, 8)
+        checkmark = TexMobject("\\checkmark")
+        checkmark.next_to(rect, UP)
+        checkmark.highlight(GREEN)
+
+        self.play(
+            ShowCreation(rect),
+            Write(checkmark),
+            randy.change, "happy", arrow_block
+        )
+        self.dither(2)
 
 
-class MinersInLiterature(ExternallyAnimatedScene):
-    pass
+    ####
 
-class MiningIsALottery(Scene):
-    def construct(self):
-        pass
+    def create_pi_creatures(self):
+        randy = Randolph()
+        randy.to_edge(DOWN)
+        self.randy = randy
+        return VGroup(randy)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
