@@ -159,11 +159,11 @@ class AskQuestion(Scene):
             self.dither(self.time_per_char*n_spaces)
         self.dither(2)
 
-class BitcoinPaperHighlightTitle(ExternallyAnimatedScene):
-    pass
+# class BitcoinPaperHighlightTitle(ExternallyAnimatedScene):
+#     pass
 
-class TimeBitcoinCover(ExternallyAnimatedScene):
-    pass
+# class TimeBitcoinCover(ExternallyAnimatedScene):
+#     pass
 
 class ListOfAttributes(Scene):
     def construct(self):
@@ -217,13 +217,84 @@ class UnknownAuthor(Scene):
         )
         self.dither()
 
-class NameCryptoCurrencies(TeacherStudentsScene):
+class DisectQuestion(TeacherStudentsScene):
     def construct(self):
-        words = TextMobject("It's called a", "``cryptocurrency''")
-        words.highlight_by_tex("cryptocurrency", YELLOW)
-        self.teacher_says(words)
+        self.hold_up_question()
+        self.list_topics()
+        self.isolate_you()
+
+    def hold_up_question(self):
+        question = TextMobject(
+            "What does it mean to", "have", "a", "Bitcoin?"
+        )
+        question.highlight_by_tex("have", YELLOW)
+        question.next_to(self.teacher, UP)
+        question.to_edge(RIGHT, buff = LARGE_BUFF)
+        question.save_state()
+        question.shift(DOWN)
+        question.set_fill(opacity = 0)
+
+        self.play(
+            self.teacher.change, "raise_right_hand",
+            question.restore
+        )
         self.change_student_modes(*["pondering"]*3)
         self.dither()
+
+        self.bitcoin_word = question.get_part_by_tex("Bitcoin")
+
+    def list_topics(self):
+        topics = TextMobject(
+            "Digital signatures, ",
+            "Proof of work, ",
+            "Cryptographic hash functions, \\dots"
+        )
+        topics.scale_to_fit_width(2*SPACE_WIDTH - LARGE_BUFF)
+        topics.to_edge(UP)
+        topics.highlight_by_tex("Digital", BLUE)
+        topics.highlight_by_tex("Proof", GREEN)
+        topics.highlight_by_tex("hash", YELLOW)
+
+        for word in topics:
+            anims = [Write(word, run_time = 1)]
+            self.change_student_modes(
+                *["confused"]*3,
+                added_anims = anims,
+                look_at_arg = word
+            )
+
+    def isolate_you(self):
+        self.pi_creatures = VGroup()
+        you = self.students[1]
+        rect = FullScreenFadeRectangle()
+        words = TextMobject("Invent your own")
+        arrow = Arrow(UP, DOWN)
+        arrow.next_to(you, UP)
+        words.next_to(arrow, UP)
+
+        self.play(FadeIn(rect), Animation(you))
+        self.play(
+            Write(words),
+            ShowCreation(arrow),
+            you.change, "erm", words
+        )
+        self.play(Blink(you))
+        self.dither()
+
+class CryptocurrencyEquation(Scene):
+    def construct(self):
+        parts = TextMobject(
+            "Ledger", 
+            "- Trust",
+            "+ Cryptography",
+            "= Cryptocurrency"
+        )
+        VGroup(*parts[-1][1:]).highlight(YELLOW)
+        parts.scale_to_fit_width(2*SPACE_WIDTH - LARGE_BUFF)
+
+        for part in parts:
+            self.play(FadeIn(part))
+            self.dither(2)
 
 class CryptocurrencyMarketCaps(ExternallyAnimatedScene):
     pass
@@ -249,9 +320,6 @@ class Hype(TeacherStudentsScene):
                 FadeIn(bubble),
             )
         self.dither(3)
-
-class AskQuestionCopy(AskQuestion):
-    pass
 
 class LedgerScene(PiCreatureScene):
     CONFIG = {
@@ -3800,7 +3868,6 @@ class AliceRacesOtherMiners(DoubleSpendingAttack):
         ff_arrow.target[1].shift(dist*UP)
         ff_arrow.target.points[-2:] += dist*UP
 
-        self.revert_to_original_skipping_status()
         self.play(
             Broadcast(block),
             *[
@@ -3837,8 +3904,9 @@ class AliceRacesOtherMiners(DoubleSpendingAttack):
             "Alice", "Miners", "Miners"
         ]
 
+        self.revert_to_original_skipping_status()
         for winner in winners:
-            self.dither(2)
+            self.dither()
             if winner == "Alice":
                 block = self.fraud_block
                 prev_block = last_fraud_block
@@ -3867,7 +3935,9 @@ class AliceRacesOtherMiners(DoubleSpendingAttack):
             else:
                 last_valid_block = block_copy
                 anims.append(Broadcast(block, run_time = 2))
+            self.proofs_of_work.remove(block.proof_of_work)
             self.play(*anims)
+            self.proofs_of_work.add(block.proof_of_work)
 
 
     #####
@@ -3907,6 +3977,257 @@ class AliceRacesOtherMiners(DoubleSpendingAttack):
         result.scale_to_fit_width(0.8*block.get_width())
         result.move_to(block)
         return result
+
+class WhenToTrustANewBlock(DistributedBlockChainScene):
+    def construct(self):
+        chain = self.block_chain = self.get_block_chain()
+        chain.scale(2)
+        chain.to_edge(LEFT)
+        self.add(chain)
+
+        words = map(TextMobject, [
+            "Don't trust yet",
+            "Still don't trust",
+            "...a little more...",
+            "Maybe trust",
+            "Probably safe",
+            "Alright, you're good."
+        ])
+        colors = [RED, RED, YELLOW, YELLOW, GREEN, GREEN]
+        self.add_new_block()
+        arrow = Arrow(UP, DOWN, color = RED)
+        arrow.next_to(chain.blocks[-1], UP)
+        for word, color in zip(words, colors):
+            word.highlight(color)
+            word.next_to(arrow, UP)
+        word = words[0]
+        self.play(
+            FadeIn(word),
+            ShowCreation(arrow)
+        )
+        for new_word in words[1:]:
+            kwargs = {
+                "run_time" : 3,
+                "rate_func" : squish_rate_func(smooth, 0.7, 1)
+            }
+            self.add_new_block(
+                Transform(word, new_word, **kwargs),
+                ApplyMethod(
+                    arrow.highlight, new_word.get_color(),
+                    **kwargs
+                )
+            )
+        self.dither(2)
+
+    def get_block(self):
+        block = DistributedBlockChainScene.get_block(self)
+        tuples = [
+            ("Prev hash", UP, BLUE), 
+            ("Proof of work", DOWN, GREEN),
+        ]
+        for word, vect, color in tuples:
+            mob = TextMobject(word)
+            mob.highlight(color)
+            mob.scale_to_fit_height(0.07*block.get_height())
+            mob.next_to(
+                block.get_edge_center(vect), -vect,
+                buff = 0.06*block.get_height()
+            )
+            block.add(mob)
+            attr = word.lower().replace(" ", "_")
+            setattr(block, attr, mob)
+        transactions = TextMobject("$\\langle$Transactions$\\rangle$")
+        transactions.scale_to_fit_width(0.8*block.get_width())
+        transactions.move_to(block)
+        block.add(transactions)
+        return block
+
+    def add_new_block(self, *added_anims):
+        blocks = self.block_chain.blocks
+        arrows = self.block_chain.arrows
+        block = blocks[-1].copy()
+        arrow = arrows[-1].copy()
+        VGroup(block, arrow).next_to(blocks[-1], RIGHT, buff = 0)
+        corner = SPACE_WIDTH*RIGHT + SPACE_HEIGHT*UP
+        block.save_state()
+        block.next_to(corner, UP+RIGHT)
+
+        self.play(
+            Broadcast(block),
+            ApplyMethod(
+                block.restore,
+                run_time = 3,
+                rate_func = squish_rate_func(smooth, 0.3, 0.8),
+            ),
+            ShowCreation(
+                arrow,
+                run_time = 3,
+                rate_func = squish_rate_func(smooth, 0.7, 1),
+            ),
+            *added_anims
+        )
+        arrows.add(arrow)
+        blocks.add(block)
+
+class VariableProofOfWork(WhenToTrustANewBlock):
+    CONFIG = {
+        "block_height" : 3,
+        "block_width" : 3,
+        "n_guesses" : 60,
+        "n_proof_of_work_digits" : 11,
+        "n_miners" : 6,
+    }
+    def construct(self):
+        self.add_miner_and_hash()
+        self.change_requirement()
+        self.add_more_miners()
+
+    def add_miner_and_hash(self):
+        miner = PiCreature(color = GREY)
+        miner.scale(0.7)
+        miner.to_edge(LEFT)
+
+        block = self.get_block()
+        block.next_to(miner, RIGHT)
+        old_proof_of_work = block.proof_of_work
+        proof_of_work = self.get_rand_int_mob()
+        proof_of_work.replace(old_proof_of_work, dim_to_match = 1)
+        block.remove(old_proof_of_work)
+        block.add(proof_of_work)
+        block.proof_of_work = proof_of_work
+
+        arrow = Arrow(LEFT, RIGHT)
+        arrow.next_to(block)
+        sha_tex = TextMobject("SHA256")
+        sha_tex.scale(0.7)
+        sha_tex.next_to(arrow, UP, SMALL_BUFF)
+        sha_tex.highlight(YELLOW)
+        arrow.add(sha_tex)
+
+        digest = sha256_tex_mob("Random")
+        digest.next_to(arrow.get_end(), RIGHT)
+
+        miner.change("pondering", digest)
+
+        self.add(miner, block, arrow, digest)
+        for x in range(self.n_guesses):
+            new_pow = self.get_rand_int_mob()
+            new_pow.replace(proof_of_work, dim_to_match = 1)
+            Transform(proof_of_work, new_pow).update(1)
+            if x == self.n_guesses-1:
+                n_zeros = 60
+            else:
+                n_zeros = 0
+            new_digest = sha256_tex_mob(str(x+1), n_zeros)
+            new_digest.replace(digest)
+            Transform(digest, new_digest).update(1)
+            self.dither(1./20)
+        proof_of_work.highlight(GREEN)
+        VGroup(*digest[:60]).highlight(YELLOW)
+
+        self.miner = miner
+        self.block = block
+        self.arrow = arrow
+        self.digest = digest
+
+    def change_requirement(self):
+        digest = self.digest
+        requirement = TextMobject(
+            "Must start with \\\\",
+            "60", "zeros"
+        )
+        requirement.next_to(digest, UP, MED_LARGE_BUFF)
+        self.n_zeros_mob = requirement.get_part_by_tex("60")
+        self.n_zeros_mob.highlight(YELLOW)
+
+        self.play(Write(requirement, run_time = 2))
+        self.dither(2)
+        for n_zeros in 30, 32, 35, 37, 42:
+            self.change_challenge(n_zeros)
+            self.dither()
+
+    def add_more_miners(self):
+        miner = self.miner
+        block = self.block
+        miner_block = VGroup(miner, block)
+        target = miner_block.copy()
+        target[1].scale(
+            0.5, about_point = miner.get_right()
+        )
+        copies = VGroup(*[
+            target.copy() 
+            for x in range(self.n_miners - 1)
+        ])
+        everyone = VGroup(target, *copies)
+        everyone.arrange_submobjects(DOWN)
+        everyone.scale_to_fit_height(2*SPACE_HEIGHT - LARGE_BUFF)
+        everyone.to_corner(UP+LEFT)
+
+        self.play(Transform(miner_block, target))
+        self.play(LaggedStart(FadeIn, copies))
+        self.change_challenge(72)
+        self.dither(2)
+
+    ###
+    def change_challenge(self, n_zeros):
+        digest = self.digest
+        proof_of_work = self.block.proof_of_work
+        n_zeros_mob = self.n_zeros_mob
+
+        new_digest = sha256_tex_mob(str(n_zeros), n_zeros)
+        new_digest.move_to(digest)
+        VGroup(*new_digest[:n_zeros]).highlight(YELLOW)
+        new_n_zeros_mob = TexMobject(str(n_zeros))
+        new_n_zeros_mob.move_to(n_zeros_mob)
+        new_n_zeros_mob.highlight(n_zeros_mob.get_color())
+        new_pow = self.get_rand_int_mob()
+        new_pow.replace(proof_of_work, dim_to_match = 1)
+        new_pow.highlight(proof_of_work.get_color())
+
+        self.play(
+            Transform(n_zeros_mob, new_n_zeros_mob),
+            Transform(
+                digest, new_digest,
+                submobject_mode = "lagged_start"
+            ),
+            Transform(proof_of_work, new_pow),
+        )
+
+    def get_rand_int_mob(self):
+        e = self.n_proof_of_work_digits
+        return Integer(random.randint(10**e, 10**(e+1)))
+
+class CompareBLockTimes(Scene):
+    def construct(self):
+        pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

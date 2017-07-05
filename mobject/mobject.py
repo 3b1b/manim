@@ -125,7 +125,6 @@ class Mobject(object):
            mob.points += total_vector
         return self
 
-
     def scale(self, scale_factor, about_point = None):
         if about_point is not None:
             self.shift(-about_point)
