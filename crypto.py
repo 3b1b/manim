@@ -718,26 +718,8 @@ class UnderlyingSystemVsUserFacing(Scene):
         self.play(DrawBorderThenFill(phone))
         self.dither(2)
         
-class CryptoPrefix(Scene):
-    def construct(self):
-        cryptocurrency = TextMobject(
-            "Crypto", "currency",
-            arg_separator = ""
-        )
-        crypto = cryptocurrency.get_part_by_tex("Crypto")
-        brace = Brace(crypto, UP)
-        explanation = TextMobject(
-            "Built using the math \\\\ from cryptography"
-        )
-        explanation.next_to(brace, UP)
-
-        self.add(cryptocurrency)
-        self.play(
-            crypto.highlight, YELLOW,
-            GrowFromCenter(brace)
-        )
-        self.play(Write(explanation))
-        self.dither(3)
+class FromBankToDecentralizedSystemCopy(ExternallyAnimatedScene):
+    pass
 
 class IntroduceLedgerSystem(LedgerScene):
     CONFIG = {
@@ -3136,6 +3118,103 @@ class DistributedBlockChainScene(DistributedLedgerScene):
             self.charlie, self.charlie.label,
         ).shift(LEFT)
         return creatures
+
+#Out of order
+class FromBankToDecentralizedSystem(DistributedBlockChainScene):
+    CONFIG = {
+        "n_blocks" : 5,
+        "ledger_height" : 3,
+    }
+    def construct(self):
+        self.remove_bank()
+        self.show_block_chains()
+        self.add_crypto_terms()
+        self.set_aside_everything()
+
+    def remove_bank(self):
+        bank = SVGMobject(
+            file_name = "bank_building",
+            color = LIGHT_GREY,
+            height = 3,
+        )
+        cross = Cross(bank)
+        group = VGroup(bank, cross)
+
+        self.play(LaggedStart(DrawBorderThenFill, bank))
+        self.play(ShowCreation(cross))
+        self.dither()
+        self.play(
+            group.next_to, SPACE_WIDTH*RIGHT, RIGHT,
+            rate_func = running_start,
+            path_arc = -np.pi/6,
+        )
+        self.dither()
+
+    def show_block_chains(self):
+        creatures = self.pi_creatures
+        creatures.center()
+        VGroup(self.charlie, self.you).to_edge(DOWN)
+        chains = self.get_distributed_ledgers()
+        for pi, chain in zip(creatures, chains):
+            pi.scale_in_place(1.5)
+            pi.shift(0.5*pi.get_center()[0]*RIGHT)
+            chain.next_to(pi, UP)
+        center_chain = self.get_block_chain()
+        center_chain.scale(2)
+        center_chain.center()
+
+        self.play(LaggedStart(FadeIn, creatures, run_time = 1))
+        self.play(
+            LaggedStart(FadeIn, center_chain.blocks, run_time = 1),
+            ShowCreation(center_chain.arrows),
+        )
+        self.dither()
+        self.play(
+            ReplacementTransform(VGroup(center_chain), chains),
+            *[
+                ApplyMethod(pi.change, "pondering", pi.ledger)
+                for pi in creatures
+            ]
+        )
+        self.dither()
+
+    def add_crypto_terms(self):
+        terms = TextMobject(
+            "Digital signatures \\\\",
+            "Cryptographic hash functions",
+        )
+        terms.highlight_by_tex("signature", BLUE)
+        terms.highlight_by_tex("hash", YELLOW)
+        for term in terms:
+            self.play(Write(term, run_time = 1))
+            self.dither()
+        self.digital_signature = terms[0]
+
+    def set_aside_everything(self):
+        digital_signature = self.digital_signature
+        ledger = LedgerScene.get_ledger(self)
+        LedgerScene.add_payment_line_to_ledger(self, 
+            "Alice", "Bob", "40",
+        )
+        LedgerScene.add_payment_line_to_ledger(self,
+            "Charlie", "Alice", "60",
+        )
+        ledger.next_to(ORIGIN, LEFT)
+
+        self.remove(digital_signature)
+        everything = VGroup(*self.get_top_level_mobjects())
+
+        self.play(
+            Animation(digital_signature),
+            everything.scale, 0.1,
+            everything.to_corner, DOWN+LEFT,
+        )
+        self.play(
+            Write(ledger),
+            digital_signature.next_to, ORIGIN, RIGHT
+        )
+        self.dither(2)
+
 
 class IntroduceBlockCreator(DistributedBlockChainScene):
     CONFIG = {

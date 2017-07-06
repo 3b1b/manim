@@ -21,6 +21,9 @@ class SVGMobject(VMobject):
         "width" : None,
         #Must be filled in in a subclass, or when called
         "file_name" : None, 
+        "stroke_width" : 0,
+        "fill_opacity" : 1,
+        # "fill_color" : LIGHT_GREY,
         "propogate_style_to_family" : True,
     }
     def __init__(self, **kwargs):
