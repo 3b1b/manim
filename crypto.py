@@ -315,6 +315,46 @@ class CryptocurrencyEquation(Scene):
 class CryptocurrencyMarketCaps(ExternallyAnimatedScene):
     pass
 
+class ListRecentCurrencies(Scene):
+    def construct(self):
+        footnote = TextMobject("$^*$Listed by market cap")
+        footnote.scale(0.5)
+        footnote.to_corner(DOWN+RIGHT)
+        self.add(footnote)
+
+        logos = VGroup(
+            BitcoinLogo(),
+            EthereumLogo(),
+            ImageMobject("ripple_logo"),
+            LitecoinLogo(),
+            EthereumLogo().gradient_highlight(GREEN_B, GREEN_D),
+        )
+        for logo in logos:
+            logo.scale_to_fit_height(0.75)
+        logos.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        logos.shift(LEFT)
+        logos.to_edge(UP)
+        names = map(
+            TextMobject, 
+            [
+                "Bitcoin", "Ethereum", "Ripple", 
+                "Litecoin", "Ethereum Classic"
+            ],
+        )
+        for logo, name in zip(logos, names):
+            name.next_to(logo, RIGHT)
+            anims = []
+            if isinstance(logo, SVGMobject):
+                anims.append(DrawBorderThenFill(logo, run_time = 1))
+            else:
+                anims.append(FadeIn(logo))
+            anims.append(Write(name, run_time = 2))
+            self.play(*anims)
+        dots = TexMobject("\\vdots")
+        dots.next_to(logos, DOWN)
+        self.play(LaggedStart(FadeIn, dots, run_time = 1))
+        self.dither()
+
 class Hype(TeacherStudentsScene):
     def construct(self):
         self.teacher.change_mode("guilty")
@@ -874,8 +914,27 @@ class InitialProtocol(Scene):
 class AddFraudulentLine(LedgerScene):
     def construct(self):
         self.add_ledger_and_network()
+        self.anyone_can_add_a_line()
         self.bob_adds_lines()
         self.alice_reacts()
+
+    def anyone_can_add_a_line(self):
+        words = TextMobject("Anyone can add a line")
+        words.to_corner(UP+RIGHT)
+        words.highlight(YELLOW)
+        arrow = Arrow(
+            words.get_left(), 
+            self.ledger.content.get_center() + DOWN,
+        )
+
+        self.play(Write(words, run_time = 1))
+        self.play(ShowCreation(arrow))
+        self.dither()
+        self.play(
+            FadeOut(words),
+            FadeOut(arrow),
+            FocusOn(self.bob),
+        )
 
     def bob_adds_lines(self):
         line = self.add_payment_line_to_ledger("Alice", "Bob", 100)
@@ -910,13 +969,10 @@ class AnnounceDigitalSignatures(TeacherStudentsScene):
     def construct(self):
         words = TextMobject("Digital \\\\ signatures!")
         words.scale(1.5)
-        self.force_skipping()
         self.teacher_says(
             words,
             target_mode = "hooray",
         )
-        self.revert_to_original_skipping_status()
-
         self.change_student_modes(*["hooray"]*3)
         self.dither(2)
 
@@ -976,14 +1032,13 @@ class AskHowDigitalSignaturesArePossible(TeacherStudentsScene):
         bits_copy.next_to(signature_copy, DOWN)
 
 
-        self.add(signature)
-
         self.student_says(
             "Couldn't you just \\\\ copy the signature?",
             target_mode = "confused",
             run_time = 1
         )
         self.change_student_modes("pondering", "confused", "erm")
+        self.play(Write(signature))
         self.play(LaggedStart(FadeIn, bits, run_time = 1))
         self.dither()
         self.play(ReplacementTransform(
@@ -1308,6 +1363,16 @@ class TryGuessingDigitalSignature(Scene):
             self.add(last_row)
             self.dither(1./30)
 
+class WriteTwoTo256PossibleSignatures(Scene):
+    def construct(self):
+        words = TextMobject(
+            "$2^{256}$", "possible\\\\", "signatures"
+        )
+        words.scale(2)
+        words.highlight_by_tex("256", BLUE)
+        self.play(Write(words))
+        self.dither()
+
 class SupplementVideoWrapper(Scene):
     def construct(self):
         title = TextMobject("How secure is 256 bit security?")
@@ -1318,6 +1383,73 @@ class SupplementVideoWrapper(Scene):
         self.add(title)
         self.play(ShowCreation(rect))
         self.dither()
+
+class FeelConfidentWithVerification(PiCreatureScene):
+    def construct(self):
+        self.show_verification()
+        self.show_secret_key()
+
+    def show_verification(self):
+        verify = TextMobject(
+            "Verify(", "Message", ", ", 
+            "256 bit Signature", ", ", "pk", ")",
+            arg_separator = ""
+        )
+        signature_word = verify.get_part_by_tex("Signature")
+        verify.highlight_by_tex("Signature", BLUE)
+        verify.highlight_by_tex("pk", GREEN)
+        brace = Brace(signature_word, UP)
+        signature = sha256_tex_mob("Signature")
+        signature.next_to(brace, UP)
+        signature.highlight(BLUE_C)
+
+        rhs = TextMobject("=", "True")
+        rhs.highlight_by_tex("True", YELLOW)
+        rhs.next_to(verify, RIGHT)
+
+        pk = verify.get_part_by_tex("pk")
+        sk = TextMobject("sk")
+        sk.highlight(RED)
+        arrow = TexMobject("\\Updownarrow")
+        arrow.next_to(pk, DOWN)
+        sk.next_to(arrow, DOWN)
+        sk_group = VGroup(arrow, sk)
+        lock_box = SurroundingRectangle(sk_group, buff = SMALL_BUFF)
+        lock_box.highlight(RED)
+        lock = SVGMobject(
+            file_name = "lock", 
+            fill_color = LIGHT_GREY,
+            height = 0.5,
+        )
+        lock.next_to(lock_box, LEFT, SMALL_BUFF)
+
+        self.add(verify)
+        self.play(
+            GrowFromCenter(brace),
+            Write(signature),
+            self.pi_creature.change, "pondering"
+        )
+        self.play(ReplacementTransform(
+            verify.copy(), rhs
+        ))
+        self.dither()
+        self.play(self.pi_creature.change, "happy")
+        self.play(Write(sk_group))
+        self.play(
+            ShowCreation(lock_box),
+            DrawBorderThenFill(lock, run_time = 1)
+        )
+        self.dither(2)
+
+
+    def show_secret_key(self):
+        pass
+
+
+    #####
+
+    def create_pi_creature(self):
+        return Randolph().to_corner(DOWN+LEFT)
 
 class IncludeTransactionNumber(LedgerScene):
     CONFIG = {
@@ -3138,6 +3270,7 @@ class FromBankToDecentralizedSystem(DistributedBlockChainScene):
             height = 3,
         )
         cross = Cross(bank)
+        cross.set_stroke(width = 10)
         group = VGroup(bank, cross)
 
         self.play(LaggedStart(DrawBorderThenFill, bank))
@@ -3149,6 +3282,7 @@ class FromBankToDecentralizedSystem(DistributedBlockChainScene):
             path_arc = -np.pi/6,
         )
         self.dither()
+        self.remove(group)
 
     def show_block_chains(self):
         creatures = self.pi_creatures
@@ -3214,7 +3348,6 @@ class FromBankToDecentralizedSystem(DistributedBlockChainScene):
             digital_signature.next_to, ORIGIN, RIGHT
         )
         self.dither(2)
-
 
 class IntroduceBlockCreator(DistributedBlockChainScene):
     CONFIG = {

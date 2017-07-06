@@ -377,6 +377,8 @@ class Bubble(SVGMobject):
         "propogate_style_to_family" : True,
         "fill_color" : BLACK,
         "fill_opacity" : 0.8,
+        "stroke_color" : WHITE,
+        "stroke_width" : 3,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs, locals())
