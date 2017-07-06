@@ -92,7 +92,7 @@ class PatreonThanks(Scene):
             "Felipe  Diniz",
         ],
         "max_patron_group_size" : 20,
-        "patron_scale_val" : 0.7,
+        "patron_scale_val" : 0.8,
 
     }
     def construct(self):

@@ -65,6 +65,28 @@ def sha256_tex_mob(message, n_forced_start_zeros = 0):
 
     return result
 
+class EthereumLogo(SVGMobject):
+    CONFIG = {
+        "file_name" : "ethereum_logo",
+        "stroke_width" : 0,
+        "fill_opacity" : 1,
+        "color_chars" : "8B8B48",
+        "height" : 0.5,
+    }
+    def __init__(self, **kwargs):
+        SVGMobject.__init__(self, **kwargs)
+        for part, char in zip(self.submobjects, self.color_chars):
+            part.highlight("#" + 6*char)
+
+class LitecoinLogo(SVGMobject):
+    CONFIG = {
+        "file_name" : "litecoin_logo",
+        "stroke_width" : 0,
+        "fill_opacity" : 1,
+        "fill_color" : LIGHT_GREY,
+        "height" : 0.5,
+    }
+
 class TenDollarBill(VGroup):
     CONFIG = {
         "color" : GREEN,
@@ -158,12 +180,6 @@ class AskQuestion(Scene):
             )
             self.dither(self.time_per_char*n_spaces)
         self.dither(2)
-
-# class BitcoinPaperHighlightTitle(ExternallyAnimatedScene):
-#     pass
-
-# class TimeBitcoinCover(ExternallyAnimatedScene):
-#     pass
 
 class ListOfAttributes(Scene):
     def construct(self):
@@ -321,6 +337,81 @@ class Hype(TeacherStudentsScene):
             )
         self.dither(3)
 
+class NoCommentOnSpeculation(TeacherStudentsScene):
+    def construct(self):
+        axes = VGroup(
+            Line(0.25*LEFT, 4*RIGHT),
+            Line(0.25*DOWN, 3*UP),
+        )
+        times = np.arange(0, 4.25, 0.25)
+        prices = [
+            0.1, 0.5, 1.75, 1.5,
+            2.75, 2.2, 1.3, 0.8,
+            1.1, 1.3, 1.2, 1.4,
+            1.5, 1.7, 1.2, 1.3,
+        ]
+        graph = VMobject()
+        graph.set_points_as_corners([
+            time*RIGHT + price*UP
+            for time, price in zip(times, prices)
+        ])
+        graph.set_stroke(BLUE)
+        group = VGroup(axes, graph)
+        group.next_to(self.teacher, UP+LEFT)
+
+        cross = Cross(group)
+
+        mining_graphic = ImageMobject("bitcoin_mining_graphic")
+        mining_graphic.scale_to_fit_height(2)
+        mining_graphic.next_to(self.teacher, UP+LEFT)
+        mining_cross = Cross(mining_graphic)
+        mining_cross.set_stroke(RED, 8)
+
+        axes.save_state()
+        axes.shift(DOWN)
+        axes.fade(1)
+        self.play(
+            self.teacher.change, "sassy",
+            axes.restore,
+        )
+        self.play(ShowCreation(
+            graph, run_time = 2,
+            rate_func = None
+        ))
+        self.dither()
+        self.play(ShowCreation(cross))
+        group.add(cross)
+        self.play(
+            group.shift, 2*SPACE_WIDTH*RIGHT,
+            self.teacher.change, "happy"
+        )
+        self.dither()
+
+        self.student_says(
+            "But...what are they?",
+            student_index = 0,
+            target_mode = "confused"
+        )
+        self.dither(2)
+        self.play(
+            FadeIn(mining_graphic),
+            RemovePiCreatureBubble(self.students[0]),
+            self.teacher.change, "sassy",
+        )
+        self.play(ShowCreation(mining_cross))
+        self.dither()
+        self.play(
+            VGroup(mining_graphic, mining_cross).shift,
+            2*SPACE_WIDTH*RIGHT
+        )
+        black_words = TextMobject("Random words\\\\Blah blah")
+        black_words.highlight(BLACK)
+        self.teacher_thinks(black_words)
+        self.zoom_in_on_thought_bubble()
+
+class MiningIsALotteryCopy(ExternallyAnimatedScene):
+    pass
+
 class LedgerScene(PiCreatureScene):
     CONFIG = {
         "ledger_width" : 6,
@@ -407,7 +498,7 @@ class LedgerScene(PiCreatureScene):
 
         amount_color = {
             "USD" : GREEN,
-            "BTC" : BITCOIN_COLOR,
+            "BTC" : YELLOW,
             "LD" : YELLOW,
         }.get(self.denomination, WHITE)
         line.highlight_by_tex(amount_str, amount_color)
@@ -4197,29 +4288,514 @@ class VariableProofOfWork(WhenToTrustANewBlock):
         e = self.n_proof_of_work_digits
         return Integer(random.randint(10**e, 10**(e+1)))
 
-class CompareBLockTimes(Scene):
+class CompareBlockTimes(Scene):
     def construct(self):
-        pass
+        title = TextMobject("Average block time")
+        title.scale(1.5)
+        title.to_edge(UP)
+        h_line = Line(LEFT, RIGHT)
+        h_line.scale_to_fit_width(SPACE_WIDTH)
+        h_line.next_to(title, DOWN, SMALL_BUFF)
 
+        examples = VGroup(
+            TextMobject("BTC: ", "10 minutes"),
+            TextMobject("ETH: ", "15 Seconds"),
+            TextMobject("XRP: ", "3.5 Seconds"),
+            TextMobject("LTC: ", "2.5 Minutes"),
+        )
+        examples.arrange_submobjects(
+            DOWN, 
+            buff = LARGE_BUFF,
+            aligned_edge = LEFT,
+        )
+        examples.next_to(h_line, DOWN)
+        logos = VGroup(
+            BitcoinLogo(),
+            ImageMobject("ethereum_logo"),
+            ImageMobject("ripple_logo"),
+            SVGMobject(
+                file_name = "litecoin_logo",
+                stroke_width = 0,
+                fill_opacity = 1,
+                fill_color = LIGHT_GREY,
+            ),
+        )
+        colors = [BITCOIN_COLOR, BLUE_D, BLUE_B, LIGHT_GREY]
+        for logo, example, color in zip(logos, examples, colors):
+            logo.scale_to_fit_height(0.5)
+            logo.next_to(example, LEFT)
+            example[0].highlight(color)
 
+        self.add(title, h_line)
+        self.play(
+            FadeIn(examples[0]),
+            DrawBorderThenFill(logos[0])
+        )
+        self.dither()
+        self.play(*[
+            LaggedStart(FadeIn, VGroup(*group[1:]))
+            for group in examples, logos
+        ])
+        self.dither(2)
 
+    # def get_ethereum_logo(self):
+    #     logo = SVGMobject(
+    #         file_name = "ethereum_logo",
+    #         height = 1,
+    #     )
+    #     logo.set_fill(GREEN, 1)
+    #     logo.set_stroke(WHITE, 3)
+    #     logo.gradient_highlight(GREEN_B, GREEN_D)
+    #     logo.scale_to_fit_width(1)
+    #     logo.center()
+    #     self.add(SurroundingRectangle(logo))
+    #     return logo
 
+class BlockRewards(Scene):
+    def construct(self):
+        title = TextMobject("Block rewards")
+        title.scale(1.5)
+        logo = BitcoinLogo()
+        logo.scale_to_fit_height(0.75)
+        logo.next_to(title, LEFT)
+        title.add(logo)
+        title.to_edge(UP)
+        h_line = Line(LEFT, RIGHT)
+        h_line.scale_to_fit_width(SPACE_WIDTH)
+        h_line.next_to(title, DOWN)
+        self.add(title, logo, h_line)
 
+        rewards = VGroup(
+            TextMobject("Jan 2009 - Nov 2012:", "50", "BTC"),
+            TextMobject("Nov 2012 - Jul 2016:", "25", "BTC"),
+            TextMobject("Jul 2016 - Feb 2020$^*$:", "12.5", "BTC"),
+            TextMobject("Feb 2020$^*$ - Sep 2023$^*$:", "6.25", "BTC"),
+        )
+        rewards.arrange_submobjects(
+            DOWN, 
+            buff = MED_LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+        rewards.next_to(h_line, DOWN)
+        for reward in rewards:
+            reward[1].highlight(YELLOW)
 
+        footnote = TextMobject(
+            "$^*$ Extrapolating from the 25 BTC reward period"
+        )
+        footnote.scale(0.5)
+        footnote.to_corner(DOWN+RIGHT)
 
+        self.play(LaggedStart(
+            FadeIn, rewards,
+            run_time = 4,
+            lag_ratio = 0.5
+        ))
+        self.play(FadeIn(footnote))
+        self.dither(3)
 
+class ShowFirstFewBlocks(ExternallyAnimatedScene):
+    pass
 
+class ShowGeometricSum(Scene):
+    def construct(self):
+        equation = TexMobject(
+            "210{,}000", "(", 
+            "50", "+", "25", "+", "12.5", "+", 
+            "6.25", "+\\cdots", ")", "=", "21{,}000{,}000"
+        )
+        numbers = ["50", "25", "12.5", "6.25"]
+        colors = color_gradient([BLUE_D, BLUE_B], 4)
+        for tex, color in zip(numbers, colors):
+            equation.highlight_by_tex(tex, color)
+        equation[-1].highlight(YELLOW)
 
+        self.add(*equation[:2] + equation[-3:-1])
+        for i in range(2, 9, 2):
+            self.play(FadeIn(VGroup(*equation[i:i+2])))
+        self.dither()
+        self.play(Write(equation[-1]))
+        self.dither(2)
 
+class TransactionFeeExample(PiCreatureScene):
+    def construct(self):
+        alice = self.pi_creature
+        payment = TextMobject(
+            "Alice", "pays", "Bob", "0.42 BTC",
+        )
+        payment.highlight_by_tex("Alice", BLUE_C)
+        payment.highlight_by_tex("Bob", MAROON)
+        payment.highlight_by_tex("BTC", YELLOW)
+        payment.move_to(2.5*UP)
 
+        fee = TextMobject("And leaves", "0.001 BTC", "to the miner")
+        fee.highlight_by_tex("BTC", YELLOW)
+        fee.next_to(payment, DOWN)
 
+        signature = TextMobject(
+            "$\\langle$Alice's digital signature$\\rangle$"
+        )
+        signature.highlight(BLUE_C)
+        signature.next_to(fee, DOWN)
 
+        group = VGroup(payment, fee, signature)
+        rect = SurroundingRectangle(group, color = BLUE_B)
 
+        incentive_words = TextMobject(
+            "Incentivizes miner \\\\ to include"
+        )
+        incentive_words.next_to(rect, DOWN, buff = 1.5)
+        incentive_words.shift(2*RIGHT)
+        arrow = Arrow(
+            incentive_words.get_top(),
+            rect.get_bottom(),
+            buff = MED_LARGE_BUFF
+        )
 
+        fee.save_state()
+        fee.shift(DOWN)
+        fee.set_fill(opacity = 0)
 
+        self.play(Write(payment))
+        self.dither()
+        self.play(
+            alice.change, "raise_right_hand", payment,
+            fee.restore,
+        )
+        self.play(Write(signature))
+        self.play(
+            ShowCreation(rect),
+            alice.change_mode, "happy"
+        )
+        self.dither()
+        self.play(
+            Write(incentive_words),
+            ShowCreation(arrow),
+            alice.change, "pondering"
+        )
+        self.dither(2)
 
+    def create_pi_creature(self):
+        alice = PiCreature(color = BLUE_C)
+        alice.to_edge(DOWN)
+        alice.shift(SPACE_WIDTH*LEFT/2)
+        return alice
 
+class ShowBitcoinBlockSize(LedgerScene):
+    CONFIG = {
+        "denomination" : "BTC"
+    }
+    def construct(self):
+        block = VGroup()
+        ledger = self.get_ledger()
 
+        payments = VGroup(*[
+            self.add_payment_line_to_ledger(*args)
+            for args in [
+                ("Alice", "Bob", "0.42"),
+                ("You", "Charlie", "3.14"),
+                ("Bob", "You", "2.72"),
+                ("Alice", "Charlie", "4.67"),
+            ]
+        ])
+        dots = TexMobject("\\vdots")
+        dots.next_to(payments, DOWN)
+        payments.add(dots)
+        payments.to_edge(LEFT)
+        payments.shift(DOWN+0.5*RIGHT)
+        payments_rect = SurroundingRectangle(
+            payments, color = WHITE, buff = MED_LARGE_BUFF
+        )
+        block.add(payments_rect, payments)
+
+        tuples = [
+            ("Prev hash", UP, BLUE_C), 
+            ("Proof of work", DOWN, GREEN),
+        ]
+        for word, vect, color in tuples:
+            mob = TextMobject(word)
+            mob.highlight(color)
+            rect = SurroundingRectangle(
+                mob, color = WHITE, buff = MED_SMALL_BUFF
+            )
+            VGroup(mob, rect).next_to(payments_rect, vect, 0)
+            rect.stretch_to_fit_width(payments_rect.get_width())
+            block.add(mob, rect)
+
+        title = VGroup(
+            BitcoinLogo(height = 0.75), 
+            TextMobject("Block").scale(1.5)
+        )
+        title.arrange_submobjects(RIGHT, SMALL_BUFF)
+        title.next_to(block, UP)
+
+        brace = Brace(payments_rect, RIGHT)
+        limit = brace.get_text(
+            "Limited to\\\\", 
+            "$\\sim 2{,}400$", "transactions"
+        )
+        limit.highlight_by_tex("2{,}400", RED)
+
+        self.add(title, block)
+        self.remove(payments)
+        self.play(
+            GrowFromCenter(brace),
+            Write(limit)
+        )
+        self.play(LaggedStart(FadeIn, payments))
+        self.dither()
+
+        ####Visa
+
+        visa_logo = SVGMobject(
+            file_name = "visa_logo",
+            height = 0.5,
+            stroke_width = 0,
+            fill_color = BLUE_D,
+            fill_opacity = 1,
+        )
+        visa_logo[-1].highlight("#faa61a")
+        visa_logo.sort_submobjects()
+        avg_rate = TextMobject("Avg: $1{,}700$/second")
+        max_rate = TextMobject("Max: $>24{,}000$/second")
+        rates = VGroup(avg_rate, max_rate)
+        rates.scale(0.8)
+        rates.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        rates.next_to(visa_logo, RIGHT, buff = MED_SMALL_BUFF)
+        visa = VGroup(visa_logo, rates)
+        visa.to_corner(UP+RIGHT)
+
+        self.play(LaggedStart(DrawBorderThenFill, visa_logo))
+        self.play(LaggedStart(FadeIn, avg_rate))
+        self.dither()
+        self.play(LaggedStart(FadeIn, max_rate))
+        self.dither(2)
+
+class CurrentAverageFees(Scene):
+    def construct(self):
+        fees = TextMobject(
+            "Current average fees: ",
+            "$\\sim 0.0013$ BTC", 
+            "$\\approx$", "\\$3.39"
+        )
+        fees.highlight_by_tex("BTC", YELLOW)
+        fees.highlight_by_tex("\\$", GREEN)
+        fees.to_edge(UP)
+
+        self.play(Write(fees))
+        self.dither()
+
+class HighlightingAFewFees(ExternallyAnimatedScene):
+    pass
+
+class TopicsNotCovered(TeacherStudentsScene):
+    def construct(self):
+        title = TextMobject("Topics not covered:")
+        title.to_corner(UP+LEFT)
+        title.highlight(YELLOW)
+        title.save_state()
+        title.shift(DOWN)
+        title.set_fill(opacity = 0)
+
+        topics = VGroup(*map(TextMobject, [
+            "Merkle trees",
+            "Alternatives to proof of work",
+            "Scripting",
+            "$\\vdots$",
+            "(See links in description)",
+        ]))
+        topics.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        topics[-2].next_to(topics[-3], DOWN)
+        topics.next_to(title, RIGHT)
+        topics.to_edge(UP)
+
+        self.play(
+            title.restore,
+            self.teacher.change_mode, "raise_right_hand"
+        )
+        for topic in topics:
+            self.change_student_modes(
+                "confused", "thinking","pondering",
+                look_at_arg = topic,
+                added_anims = [LaggedStart(FadeIn, topic)]
+            )
+            self.dither()
+
+class Exchange(Animation):
+    CONFIG = {
+        "rate_func" : None,
+    }
+    def __init__(self, exchange, **kwargs):
+        self.swap = Swap(
+            exchange.left,
+            exchange.right,
+        )
+        self.changed_symbols_yet = False
+        Animation.__init__(self, exchange, **kwargs)
+
+    def update_mobject(self, alpha):
+        exchange = self.mobject
+        if alpha < 1./3:
+            self.swap.update(3*alpha)
+        elif alpha < 2./3:
+            sub_alpha = alpha*3 - 1
+            group = VGroup(exchange.left, exchange.right)
+            group.set_fill(opacity = 1-smooth(sub_alpha))
+        else:
+            if not self.changed_symbols_yet:
+                new_left = random.choice(
+                    exchange.cryptocurrencies
+                ).copy()
+                new_left.move_to(exchange.right)
+                new_right = random.choice(
+                    exchange.currencies
+                ).copy()
+                new_right.move_to(exchange.left)
+                Transform(exchange.left, new_left).update(1)
+                Transform(exchange.right, new_right).update(1)
+                self.changed_symbols_yet = True
+            sub_alpha = 3*alpha - 2
+            group = VGroup(exchange.left, exchange.right)
+            group.set_fill(opacity = smooth(sub_alpha))
+
+class ShowManyExchanges(Scene):
+    CONFIG = {
+        "n_rows" : 2,
+        "n_cols" : 8,
+        "shift_radius" : 0.5,
+        "run_time" : 30,
+    }
+    def construct(self):
+        cryptocurrencies = [
+            BitcoinLogo(),
+            BitcoinLogo(),
+            BitcoinLogo(),
+            EthereumLogo(),
+            LitecoinLogo()
+        ]
+        currencies = [
+            TexMobject("\\$").highlight(GREEN),
+            TexMobject("\\$").highlight(GREEN),
+            TexMobject("\\$").highlight(GREEN),
+            SVGMobject(
+                file_name = "euro_symbol",
+                stroke_width = 0,
+                fill_opacity = 1,
+                fill_color = BLUE,
+            ),
+            SVGMobject(
+                file_name = "yen_symbol",
+                stroke_width = 0,
+                fill_opacity = 1,
+                fill_color = RED,
+            )
+        ]
+        for currency in it.chain(currencies, cryptocurrencies):
+            currency.scale_to_fit_height(0.5)
+            currency.align_data(EthereumLogo())
+        exchange = VGroup(*[
+            Arrow(
+                p1, p2,
+                path_arc = np.pi,
+                buff = MED_LARGE_BUFF
+            )
+            for p1, p2 in (LEFT, RIGHT), (RIGHT, LEFT)
+        ]).highlight(WHITE)
+        exchanges = VGroup(*[
+            VGroup(*[
+                exchange.copy()
+                for x in range(3)
+            ]).arrange_submobjects(RIGHT, buff = 2*LARGE_BUFF)
+            for y in range(3)
+        ]).arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        exchanges = VGroup(*it.chain(*exchanges))
+        self.add(exchanges)
+        start_times = list(np.linspace(0, 2, len(exchanges)))
+        random.shuffle(start_times)
+        for exchange, start_time in zip(exchanges, start_times):
+            left = random.choice(cryptocurrencies).copy()
+            right = random.choice(currencies).copy()
+            left.move_to(exchange.get_left())
+            right.move_to(exchange.get_right())
+
+            exchange.left = left
+            exchange.right = right
+            exchange.start_time = start_time
+            exchange.add(left, right)
+            exchange.currencies = currencies
+            exchange.cryptocurrencies = cryptocurrencies
+            exchange.animation = Exchange(exchange)
+
+        times = np.arange(0, self.run_time, self.frame_duration)
+        from scene.scene import ProgressDisplay
+        for t in ProgressDisplay(times):
+            for exchange in exchanges:
+                sub_t = t - exchange.start_time
+                if sub_t < 0:
+                    continue
+                elif sub_t > 3:
+                    exchange.start_time = t
+                    sub_t = 0
+                    exchange.animation = Exchange(exchange)
+                exchange.animation.update(sub_t/3.0)
+            self.update_frame(
+                self.extract_mobject_family_members(exchanges)
+            )
+            self.add_frames(self.get_frame())
+
+class CryptoPatreonThanks(PatreonThanks):
+    CONFIG = {
+        "specific_patrons" : [
+            "Ali Yahya",
+            "Desmos",
+            "Burt Humburg",
+            "CrypticSwarm",
+            "Juan Benet",
+            "Samantha D. Suplee",
+            "James Park",
+            "Erik Sundell",
+            "Yana Chernobilsky",
+            "Kaustuv DeBiswas",
+            "Kathryn Schmiedicke",
+            "Karan Bhargava",
+            "Yu Jun",
+            "Dave Nicponski",
+            "Damion Kistler",
+            "Markus Persson",
+            "Yoni Nazarathy",
+            "Ed Kellett",
+            "Joseph John Cox",
+            "Dan Buchoff",
+            "Luc Ritchie",
+            "Andrew Busey",
+            "Michael McGuffin",
+            "John Haley",
+            "Mourits de Beer",
+            "Ankalagon",
+            "Eric Lavault",
+            "Tomohiro Furusawa",
+            "Boris Veselinovich",
+            "Julian Pulgarin",
+            "Jeff Linse",
+            "Cooper Jones",
+            "Ryan Dahl",
+            "Mark Govea",
+            "Robert Teed",
+            "Jason Hise",
+            "Meshal Alshammari",
+            "Bernd Sing",
+            "Nils Schneider",
+            "James Thornton",
+            "Mustafa Mahdi",
+            "Mathew Bramson",
+            "Jerry Ling",
+            "Vecht",
+            "Shimin Kuang",
+            "Rish Kundalia",
+            "Achille Brighton",
+            "Ripta Pasay",
+        ]
+    }
 
 
 
