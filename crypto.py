@@ -1458,6 +1458,7 @@ class IncludeTransactionNumber(LedgerScene):
     def construct(self):
         self.add_ledger_and_network()
         self.add_signed_payment()
+        self.fail_to_sign_new_transaction()
         self.copy_payment_many_times()
         self.add_ids()
 
@@ -1466,6 +1467,7 @@ class IncludeTransactionNumber(LedgerScene):
             "Alice", "Bob", 100
         )
         signature = self.get_signature()
+        signature.scale(0.7)
         signature.next_to(line, RIGHT)
         signature.save_state()
         signature.scale(0.1)
@@ -1481,6 +1483,28 @@ class IncludeTransactionNumber(LedgerScene):
         self.dither()
 
         line.add(signature)
+
+    def fail_to_sign_new_transaction(self):
+        payment = self.add_payment_line_to_ledger("Alice", "Bob", 3000)
+        q_marks = TexMobject("???")
+        q_marks.next_to(payment, RIGHT)
+        cross = Cross(payment)
+        payment.save_state()
+        payment.move_to(self.bob.get_corner(UP+LEFT))
+        payment.set_fill(opacity = 0)
+
+        self.play(
+            self.bob.change, "raise_right_hand",
+            payment.restore,
+        )
+        self.play(
+            self.bob.change, "confused",
+            Write(q_marks)
+        )
+        self.play(ShowCreation(cross))
+        self.dither()
+        self.play(*map(FadeOut, [payment, cross, q_marks]))
+        self.ledger.content.remove(payment)
 
     def copy_payment_many_times(self):
         line = self.ledger.content[-1]
@@ -1595,6 +1619,17 @@ class CharlieRacksUpDebt(SignedLedgerScene):
         ])
         self.dither()
 
+class CharlieFeelsGuilty(Scene):
+    def construct(self):
+        charlie = PiCreature(color = GREY_BROWN)
+        charlie.scale(2)
+
+        self.play(FadeIn(charlie))
+        self.play(charlie.change, "sad")
+        for x in range(2):
+            self.play(Blink(charlie))
+            self.dither(2)
+
 class ThinkAboutSettlingUp(Scene):
     def construct(self):
         randy = Randolph()
@@ -1608,6 +1643,21 @@ class ThinkAboutSettlingUp(Scene):
             target_mode = "thinking"
         ))
         self.play(Blink(randy))
+        self.dither()
+
+class DontAllowOverdrawing(InitialProtocol):
+    def construct(self):
+        self.add_title()
+        lines = map(self.get_new_item, [
+            "Anyone can add lines to the Ledger \\,",
+            "Only signed transactions are valid \\,",
+            "No overspending"
+        ])
+        lines[2].highlight(YELLOW)
+
+        self.add(*lines[:2])
+        self.dither()
+        self.play(Write(lines[2]))
         self.dither()
 
 class LedgerWithInitialBuyIn(SignedLedgerScene):
@@ -1998,7 +2048,7 @@ class BitcoinIsALedger(Scene):
             equation[1].get_center() + 2*UP
         )
 
-        for part in equation:
+        for part in reversed(equation):
             self.play(FadeIn(part))
         self.dither()
 
@@ -2016,6 +2066,37 @@ class BitcoinIsALedger(Scene):
         lines.stretch_to_fit_width(title.get_width())
         lines.next_to(title, DOWN)
         return VGroup(rect, title, lines)
+
+class BigDifferenceBetweenLDAndCryptocurrencies(Scene):
+    def construct(self):
+        ld = TextMobject("LD").scale(1.5).highlight(YELLOW)
+        btc = BitcoinLogo()
+        eth = EthereumLogo()
+        ltc = LitecoinLogo()
+        logos = VGroup(ltc, eth, ld, btc)
+        cryptos = VGroup(btc, eth, ltc)
+        for logo in cryptos:
+            logo.scale_to_fit_height(1)
+        vects = compass_directions(4, DOWN+LEFT)
+        for logo, vect in zip(logos, vects):
+            logo.move_to(0.75*vect)
+
+        centralized = TextMobject("Centralized")
+        decentralized = TextMobject("Decentralized")
+        words = VGroup(centralized, decentralized)
+        words.scale(1.5)
+        words.to_edge(UP)
+        for word, vect in zip(words, [RIGHT, LEFT]):
+            word.shift(SPACE_WIDTH*vect/2)
+
+        self.add(logos)
+        self.dither()
+        self.play(
+            cryptos.next_to, decentralized, DOWN, LARGE_BUFF,
+            ld.next_to, centralized, DOWN, LARGE_BUFF,
+        )
+        self.play(*map(Write, words))
+        self.dither(2)
 
 class DistributedLedgerScene(LedgerScene):
     def get_large_network(self):
@@ -2377,6 +2458,19 @@ class TrustComputationalWorkSupplement(Scene):
         self.play(Write(words[1]))
         self.dither()
 
+class FraudIsInfeasible(Scene):
+    def construct(self):
+        words = TextMobject(
+            "Fraud", "$\\Leftrightarrow$",
+            "Computationally infeasible"
+        )
+        words.highlight_by_tex("Fraud", RED)
+        words.to_edge(UP)
+        self.play(FadeIn(words[0]))
+        self.play(FadeIn(words[2]))
+        self.play(Write(words[1]))
+        self.dither()
+
 class ThisIsWellIntoTheWeeds(TeacherStudentsScene):
     def construct(self):
         idea = TextMobject("Proof of work")
@@ -2464,16 +2558,29 @@ class IntroduceSHA256(Scene):
             (sha_brace, sha_text),
             (message_brace, message_text),
             (digest_brace, digest_text),
-        ]   
+        ]
+
+        looks_random = TextMobject("Looks random")
+        looks_random.highlight(MAROON_B)
+        looks_random.next_to(digest_text, DOWN)
 
         self.add(group)
+        self.remove(digest)
         for brace, text in brace_text_pairs:
+            if brace is digest_brace:
+                self.play(LaggedStart(
+                    FadeIn, digest,
+                    run_time = 4,
+                    lag_ratio = 0.05
+                ))
+                self.dither()
             self.play(
                 GrowFromCenter(brace),
                 Write(text, run_time = 2)
             )
             self.dither()
-        self.dither()
+        self.play(Write(looks_random))
+        self.dither(2)
         for mob in digest, message:
             self.play(LaggedStart(
                 ApplyMethod, mob,
@@ -2482,6 +2589,7 @@ class IntroduceSHA256(Scene):
                 run_time = 1
             ))
         self.dither()
+        self.play(FadeOut(looks_random))
 
         new_lhs, new_digest = groups[1]
         char = new_lhs[2][-5]
@@ -3768,24 +3876,57 @@ class MiningIsALottery(IntroduceBlockCreator):
 
 class TwoBlockChains(DistributedBlockChainScene):
     CONFIG = {
-        "n_blocks" : 4,
+        "n_blocks" : 5,
     }
     def construct(self):
+        self.listen_for_new_blocks()
         self.defer_to_longer()
         self.break_tie()
 
+    def listen_for_new_blocks(self):
+        randy = self.randy
+        chain = self.get_block_chain()
+        chain.scale(1.5)
+        chain.next_to(randy, UP+RIGHT)
+        chain.shift_onto_screen()
+        randy.change("raise_right_hand", chain)
+
+        corners = [
+            u1*SPACE_WIDTH*RIGHT + u2*SPACE_HEIGHT*UP
+            for u1, u2 in it.product(*[[-1, 1]]*2)
+        ]
+        moving_blocks = chain.blocks[1:]
+
+        self.add(randy, chain.blocks[0])
+        for corner, block, arrow in zip(corners, moving_blocks, chain.arrows):
+            block.save_state()
+            block.next_to(corner, corner)
+            self.play(
+                ApplyMethod(
+                    block.restore,
+                    rate_func = squish_rate_func(smooth, 0.3, 0.8),
+                    run_time = 3,
+                ),
+                Broadcast(corner, run_time = 3),
+                ShowCreation(
+                    arrow, 
+                    rate_func = squish_rate_func(smooth, 0.8, 1),
+                    run_time = 3,
+                ),
+            )
+        self.dither()
+
+        self.block_chain = chain
+
     def defer_to_longer(self):
         randy = self.randy
-        block_chains = VGroup()
-        block_chains.add(self.get_block_chain())
-        self.n_blocks += 1
-        block_chains.add(self.get_block_chain())
-        block_chains.scale(1.5)
-
-        block_chains[0].next_to(randy, UP+LEFT)
-        block_chains[1].next_to(randy, UP+RIGHT)
-        for block_chain in block_chains:
-            block_chain.shift_onto_screen()
+        self.n_blocks -= 1
+        block_chains = VGroup(
+            self.block_chain,
+            self.get_block_chain().scale(1.5)
+        )
+        block_chains[1].next_to(randy, UP+LEFT)
+        block_chains[1].shift_onto_screen()
 
         conflicting = TextMobject("Conflicting")
         conflicting.to_edge(UP)
@@ -3799,20 +3940,26 @@ class TwoBlockChains(DistributedBlockChainScene):
             for block_chain in block_chains
         ])
 
-        longer_chain_rect = SurroundingRectangle(block_chains[1])
+        longer_chain_rect = SurroundingRectangle(block_chains[0])
         longer_chain_rect.set_stroke(GREEN, 8)
         checkmark = TexMobject("\\checkmark")
         checkmark.highlight(GREEN)
         checkmark.next_to(longer_chain_rect, UP)
         checkmark.shift(RIGHT)
 
-        self.add(randy)
-        for side, chain in zip(["left", "right"], block_chains):
-            self.play(
-                randy.change, "raise_%s_hand"%side, chain,
-                LaggedStart(FadeIn, chain.blocks),
-                LaggedStart(FadeIn, chain.arrows),
+        chain = block_chains[1]
+        chain.save_state()
+        corner = SPACE_WIDTH*LEFT + SPACE_HEIGHT*UP
+        chain.next_to(corner, UP+LEFT)
+        self.play(
+            randy.change, "confused", chain,
+            Broadcast(corner),
+            ApplyMethod(
+                chain.restore,
+                rate_func = squish_rate_func(smooth, 0.3, 0.7),
+                run_time = 3
             )
+        )
         self.play(
             Write(conflicting),
             *map(ShowCreation, arrows)
@@ -3850,8 +3997,8 @@ class TwoBlockChains(DistributedBlockChainScene):
             FadeOut(to_fade),
             run_time = 1
         )
-        arrow_block.next_to(block_chains[0], RIGHT, buff = 0)
-        block_chains[0].add(arrow_block)
+        arrow_block.next_to(block_chains[1], RIGHT, buff = 0)
+        block_chains[1].add(arrow_block)
         self.play(
             randy.change, "confused", block_chains,
             FadeIn(arrow_block),
@@ -3919,6 +4066,11 @@ class AskAboutTrustingWork(TeacherStudentsScene):
         )
         self.change_student_modes("confused", mode, "erm")
         self.dither(3)
+        self.teacher_says(
+            "Well, let's try\\\\ fooling someone",
+            target_mode = "speaking"
+        )
+        self.dither(2)
 
 class DoubleSpendingAttack(DistributedBlockChainScene):
     CONFIG = {
@@ -4372,6 +4524,40 @@ class WhenToTrustANewBlock(DistributedBlockChainScene):
         arrows.add(arrow)
         blocks.add(block)
 
+class MainIdeas(Scene):
+    def construct(self):
+        title = TextMobject("Main ideas")
+        title.scale(1.5)
+        h_line = Line(LEFT, RIGHT)
+        h_line.scale_to_fit_width(SPACE_WIDTH)
+        h_line.next_to(title, DOWN)
+        VGroup(title, h_line).to_corner(UP+LEFT)
+
+        ideas = VGroup(*[
+            TextMobject("$\\cdot$ " + words)
+            for words in [
+                "Digital signatures",
+                "The ledger is the currency",
+                "Decentralize",
+                "Proof of work",
+                "Block chain",
+            ]
+        ])
+        colors = BLUE, WHITE, RED, GREEN, YELLOW
+        for idea, color in zip(ideas, colors):
+            idea.highlight(color)
+        ideas.arrange_submobjects(
+            DOWN,
+            buff = MED_LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+        ideas.next_to(h_line, DOWN)
+
+        self.add(title, h_line)
+        for idea in ideas:
+            self.play(LaggedStart(FadeIn, idea))
+        self.dither()
+
 class VariableProofOfWork(WhenToTrustANewBlock):
     CONFIG = {
         "block_height" : 3,
@@ -4523,16 +4709,11 @@ class CompareBlockTimes(Scene):
         examples.next_to(h_line, DOWN)
         logos = VGroup(
             BitcoinLogo(),
-            ImageMobject("ethereum_logo"),
+            EthereumLogo(),
             ImageMobject("ripple_logo"),
-            SVGMobject(
-                file_name = "litecoin_logo",
-                stroke_width = 0,
-                fill_opacity = 1,
-                fill_color = LIGHT_GREY,
-            ),
+            LitecoinLogo(),
         )
-        colors = [BITCOIN_COLOR, BLUE_D, BLUE_B, LIGHT_GREY]
+        colors = [BITCOIN_COLOR, GREEN, BLUE_B, LIGHT_GREY]
         for logo, example, color in zip(logos, examples, colors):
             logo.scale_to_fit_height(0.5)
             logo.next_to(example, LEFT)
@@ -4878,30 +5059,8 @@ class ShowManyExchanges(Scene):
         "run_time" : 30,
     }
     def construct(self):
-        cryptocurrencies = [
-            BitcoinLogo(),
-            BitcoinLogo(),
-            BitcoinLogo(),
-            EthereumLogo(),
-            LitecoinLogo()
-        ]
-        currencies = [
-            TexMobject("\\$").highlight(GREEN),
-            TexMobject("\\$").highlight(GREEN),
-            TexMobject("\\$").highlight(GREEN),
-            SVGMobject(
-                file_name = "euro_symbol",
-                stroke_width = 0,
-                fill_opacity = 1,
-                fill_color = BLUE,
-            ),
-            SVGMobject(
-                file_name = "yen_symbol",
-                stroke_width = 0,
-                fill_opacity = 1,
-                fill_color = RED,
-            )
-        ]
+        cryptocurrencies = self.get_cryptocurrencies()
+        currencies = self.get_currencies()
         for currency in it.chain(currencies, cryptocurrencies):
             currency.scale_to_fit_height(0.5)
             currency.align_data(EthereumLogo())
@@ -4954,6 +5113,61 @@ class ShowManyExchanges(Scene):
                 self.extract_mobject_family_members(exchanges)
             )
             self.add_frames(self.get_frame())
+
+    def get_cryptocurrencies(self):
+        return [
+            BitcoinLogo(),
+            BitcoinLogo(),
+            BitcoinLogo(),
+            EthereumLogo(),
+            LitecoinLogo()
+        ]
+
+    def get_currencies(self):
+        return [
+            TexMobject("\\$").highlight(GREEN),
+            TexMobject("\\$").highlight(GREEN),
+            TexMobject("\\$").highlight(GREEN),
+            SVGMobject(
+                file_name = "euro_symbol",
+                stroke_width = 0,
+                fill_opacity = 1,
+                fill_color = BLUE,
+            ),
+            SVGMobject(
+                file_name = "yen_symbol",
+                stroke_width = 0,
+                fill_opacity = 1,
+                fill_color = RED,
+            )
+        ]
+
+class ShowLDAndOtherCurrencyExchanges(ShowManyExchanges):
+    CONFIG = {
+        "run_time" : 15,
+    }
+    def get_cryptocurrencies(self):
+        euro = SVGMobject(
+            file_name = "euro_symbol",
+            stroke_width = 0,
+            fill_opacity = 1,
+            fill_color = BLUE,
+        )
+        return [
+            TextMobject("LD").highlight(YELLOW),
+            TextMobject("LD").highlight(YELLOW),
+            euro, euro.copy(),
+            SVGMobject(
+                file_name = "yen_symbol",
+                stroke_width = 0,
+                fill_opacity = 1,
+                fill_color = RED,
+            ),
+            BitcoinLogo(),
+        ]
+
+    def get_currencies(self):
+        return [TexMobject("\\$").highlight(GREEN)]
 
 class CryptoPatreonThanks(PatreonThanks):
     CONFIG = {
@@ -5008,6 +5222,81 @@ class CryptoPatreonThanks(PatreonThanks):
             "Ripta Pasay",
         ]
     }
+
+class ProtocolLabs(PiCreatureScene):
+    def construct(self):
+        morty = self.pi_creature
+        logo = self.get_logo()
+        logo.next_to(morty, UP)
+        logo.shift_onto_screen()
+        screen_rect = ScreenRectangle()
+        screen_rect.scale_to_fit_height(5)
+        screen_rect.to_edge(LEFT)
+
+        self.play(
+            DrawBorderThenFill(logo[0]),
+            LaggedStart(FadeIn, logo[1]),
+            morty.change, "raise_right_hand",
+        )
+        self.dither()
+        self.play(
+            logo.scale, 0.5,
+            logo.to_corner, UP+LEFT,
+            ShowCreation(screen_rect)
+        )
+        modes = ["pondering", "happy", "happy"]
+        for mode in modes:
+            for x in range(2):
+                self.play(Blink(morty))
+                self.dither(3)
+            self.play(morty.change, mode, screen_rect)
+
+    def get_logo(self):
+        logo = SVGMobject(
+            file_name = "protocol_labs_logo",
+            height = 1.5,
+            fill_color = WHITE,
+        )
+        name = SVGMobject(
+            file_name = "protocol_labs_name",
+            height = 0.5*logo.get_height(),
+            fill_color = LIGHT_GREY,
+        )
+        for mob in logo, name:
+            for submob in mob:
+                submob.is_subpath = False
+        name.next_to(logo, RIGHT)
+        return VGroup(logo, name)
+
+class Thumbnail(DistributedBlockChainScene):
+    CONFIG = {
+        "n_blocks" : 4,
+    }
+    def construct(self):
+        title = TextMobject("Crypto", "currencies", arg_separator = "")
+        title.scale(2.5)
+        title.to_edge(UP)
+        title[0].highlight(BLUE)
+        self.add(title)
+
+        # logos = VGroup(
+        #     BitcoinLogo(), EthereumLogo(), LitecoinLogo()
+        # )
+        # for logo in logos:
+        #     logo.scale_to_fit_height(1)
+        # logos.add(TexMobject("\\dots").scale(2))
+        # logos.arrange_submobjects(RIGHT)
+        # logos.next_to(title, RIGHT, LARGE_BUFF)
+        # self.add(logos)
+
+        block_chain = self.get_block_chain()
+        block_chain.arrows.highlight(RED)
+        block_chain.blocks.gradient_highlight(BLUE, GREEN)
+        block_chain.scale_to_fit_width(2*SPACE_WIDTH-1)
+        block_chain.set_stroke(width = 8)
+        self.add(block_chain)
+
+
 
 
 
