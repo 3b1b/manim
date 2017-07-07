@@ -45,7 +45,7 @@ def sha256_bit_string(message):
     hexdigest = sha256(message).hexdigest()
     return bin(int(hexdigest, 16))[2:]
 
-def sha256_tex_mob(message, n_forced_start_zeros = 0):
+def bit_string_to_mobject(bit_string):
     line = TexMobject("0"*32)
     pre_result = VGroup(*[
         line.copy() for row in range(8)
@@ -53,10 +53,8 @@ def sha256_tex_mob(message, n_forced_start_zeros = 0):
     pre_result.arrange_submobjects(DOWN, buff = SMALL_BUFF)
     result = VGroup(*it.chain(*pre_result))
     result.scale(0.7)
+    bit_string = (256 - len(bit_string))*"0" + bit_string
 
-    true_bit_string = sha256_bit_string(message)
-    n = n_forced_start_zeros
-    bit_string = "0"*n + true_bit_string[n:]
     for i, (bit, part) in enumerate(zip(bit_string, result)):
         if bit == "1":
             one = TexMobject("1")[0]
@@ -64,6 +62,12 @@ def sha256_tex_mob(message, n_forced_start_zeros = 0):
             result.submobjects[i] = one
 
     return result
+
+def sha256_tex_mob(message, n_forced_start_zeros = 0):
+    true_bit_string = sha256_bit_string(message)
+    n = n_forced_start_zeros
+    bit_string = "0"*n + true_bit_string[n:]
+    return bit_string_to_mobject(bit_string)
 
 class EthereumLogo(SVGMobject):
     CONFIG = {
@@ -288,6 +292,7 @@ class DisectQuestion(TeacherStudentsScene):
         arrow.next_to(you, UP)
         words.next_to(arrow, UP)
 
+        self.revert_to_original_skipping_status()
         self.play(FadeIn(rect), Animation(you))
         self.play(
             Write(words),
@@ -5276,7 +5281,8 @@ class Thumbnail(DistributedBlockChainScene):
         title = TextMobject("Crypto", "currencies", arg_separator = "")
         title.scale(2.5)
         title.to_edge(UP)
-        title[0].highlight(BLUE)
+        title[0].highlight(YELLOW)
+        title[0].set_stroke(RED, 2)
         self.add(title)
 
         # logos = VGroup(
