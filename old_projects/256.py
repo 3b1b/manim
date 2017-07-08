@@ -28,7 +28,7 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
-from crypto import sha256_tex_mob, bit_string_to_mobject, BitcoinLogo
+from old_projects.crypto import sha256_tex_mob, bit_string_to_mobject, BitcoinLogo
 
 def get_google_logo():
     result = SVGMobject(
