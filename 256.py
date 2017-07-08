@@ -206,6 +206,13 @@ class BreakUp2To256(PiCreatureScene):
             Transform(bit_mob, new_mob).update(1)
         Scene.update_frame(self, *args, **kwargs)
 
+class ShowTwoTo32(Scene):
+    def construct(self):
+        mob = TexMobject("2^{32} = 4{,}294{,}967{,}296")
+        mob.scale(1.5)
+        self.add(mob)
+        self.dither()
+
 class MainBreakdown(Scene):
     CONFIG = {
         "n_group_rows" : 8,
@@ -871,7 +878,43 @@ class QAndA(PiCreatureScene):
             FadeOut(powers_of_two)
         )
 
+class Thumbnail(Scene):
+    def construct(self):
+        num = TexMobject("2^{256}")
+        num.scale_to_fit_height(2)
+        num.highlight(BLUE_C)
+        num.set_stroke(BLUE_B, 3)
+        num.shift(MED_SMALL_BUFF*UP)
+        num.add_background_rectangle(opacity = 1)
+        num.background_rectangle.scale_in_place(1.5)
+        self.add(num)
 
+        background_num_str = "115792089237316195423570985008687907853269984665640564039457584007913129639936"
+        n_chars = len(background_num_str)
+        new_str = ""
+        for i, char in enumerate(background_num_str):
+            new_str += char
+            # if i%3 == 1:
+            #     new_str += "{,}"
+            if i%(n_chars/4) == 0:
+                new_str += " \\\\ "
+        background_num = TexMobject(new_str)
+        background_num.scale_to_fit_width(2*SPACE_WIDTH - LARGE_BUFF)
+        background_num.set_fill(opacity = 0.2)
+
+        secure = TextMobject("Secure?")
+        secure.scale(4)
+        secure.shift(SPACE_HEIGHT*DOWN/2)
+        secure.highlight(RED)
+        secure.set_stroke(RED_A, 3)
+
+        lock = SVGMobject(
+            file_name = "shield_locked",
+            fill_color = WHITE,
+        )
+        lock.scale_to_fit_height(6)
+
+        self.add(background_num, num)
 
 
 
