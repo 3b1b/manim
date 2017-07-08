@@ -42,6 +42,19 @@ def get_google_logo():
     result.gradient_highlight(*colors)
     return result
 
+class LastVideo(Scene):
+    def construct(self):
+        title = TextMobject("Crypto", "currencies", arg_separator = "")
+        title[0].highlight(YELLOW)
+        title.scale(1.5)
+        title.to_edge(UP)
+        screen_rect = ScreenRectangle(height = 6)
+        screen_rect.next_to(title, DOWN)
+
+        self.add(title)
+        self.play(ShowCreation(screen_rect))
+        self.dither()
+
 class BreakUp2To256(PiCreatureScene):
     def construct(self):
         self.initialize_bits()
@@ -657,6 +670,14 @@ class MainBreakdown(Scene):
             height = 1,
         )
         
+class WriteTWoTo160(Scene):
+    def construct(self):
+        mob = TextMobject("$2^{160}$ ", "Hashes/sec")
+        mob[0].highlight(BLUE)
+        mob.scale(2)
+        self.play(Write(mob))
+        self.dither()
+
 class StateOfBitcoin(TeacherStudentsScene):
     def construct(self):
         title = TextMobject("Total", "B", "mining")
@@ -765,7 +786,90 @@ class StateOfBitcoin(TeacherStudentsScene):
         ))
         self.dither()
 
+class QAndA(PiCreatureScene):
+    def construct(self):
+        self.pi_creature.center().to_edge(DOWN)
+        self.show_powers_of_two()
 
+        num_subscriber_words = TexMobject(
+            "> 2^{18} = 262{,}144", "\\text{ subscribers}"
+        )
+        num_subscriber_words.to_edge(UP)
+        num_subscriber_words.shift(RIGHT)
+        num_subscriber_words.highlight_by_tex("subscribers", RED)
+
+        q_and_a = TextMobject("Q\\&A")
+        q_and_a.next_to(self.pi_creature.get_corner(UP+LEFT), UP)
+        q_and_a.save_state()
+        q_and_a.shift(DOWN)
+        q_and_a.set_fill(opacity = 0)
+
+        reddit = TextMobject("reddit.com/r/3blue1brown")
+        reddit.next_to(num_subscriber_words, DOWN, LARGE_BUFF)
+        twitter = TextMobject("@3blue1brown")
+        twitter.highlight(BLUE_C)
+        twitter.next_to(reddit, DOWN)
+
+        self.play(Write(num_subscriber_words))
+        self.play(self.pi_creature.change, "gracious", num_subscriber_words)
+        self.dither()
+        self.play(
+            q_and_a.restore,
+            self.pi_creature.change, "raise_right_hand",
+        )
+        self.dither()
+        self.play(Write(reddit))
+        self.dither()
+        self.play(
+            FadeIn(twitter),
+            self.pi_creature.change_mode, "shruggie"
+        )
+        self.dither(2)
+
+    def show_powers_of_two(self):
+        rows = 16
+        cols = 64
+        dots = VGroup(*[
+            VGroup(*[
+                Dot() for x in range(rows)
+            ]).arrange_submobjects(DOWN, buff = SMALL_BUFF)
+            for y in range(cols)
+        ]).arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        dots.scale_to_fit_width(2*SPACE_WIDTH - 2*LARGE_BUFF)
+        dots.next_to(self.pi_creature, UP)
+        dots = VGroup(*it.chain(*dots))
+        top = dots.get_top()
+        dots.sort_submobjects(
+            lambda p : np.linalg.norm(p-top)
+        )
+
+        powers_of_two = VGroup(*[
+            Integer(2**i)
+            for i in range(int(np.log2(rows*cols))+1)
+        ])
+
+        curr_power = powers_of_two[0]
+        curr_power.to_edge(UP)
+        self.play(
+            Write(curr_power),
+            FadeIn(dots[0])
+        )
+        for i, power_of_two in enumerate(powers_of_two):
+            if i == 0:
+                continue
+            power_of_two.to_edge(UP)
+            self.play(
+                FadeIn(VGroup(*dots[2**(i-1) : 2**i])),
+                Transform(
+                    curr_power, power_of_two,
+                    rate_func = squish_rate_func(smooth, 0, 0.5)
+                )
+            )
+        self.dither()
+        self.play(
+            FadeOut(dots),
+            FadeOut(powers_of_two)
+        )
 
 
 

@@ -141,6 +141,11 @@ class ShowPassingFlash(ShowPartial):
         upper = min(1, alpha + self.time_width/2)
         return (lower, upper)
 
+    def clean_up(self, *args, **kwargs):
+        ShowPartial.clean_up(self, *args, **kwargs)
+        for submob, start_submob in self.get_all_families_zipped():
+            submob.pointwise_become_partial(start_submob, 0, 1)
+
 class MoveAlongPath(Animation):
     def __init__(self, mobject, vmobject, **kwargs):
         digest_config(self, kwargs, locals())
