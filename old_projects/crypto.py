@@ -5299,7 +5299,7 @@ class Thumbnail(DistributedBlockChainScene):
         block_chain.arrows.highlight(RED)
         block_chain.blocks.gradient_highlight(BLUE, GREEN)
         block_chain.scale_to_fit_width(2*SPACE_WIDTH-1)
-        block_chain.set_stroke(width = 8)
+        block_chain.set_stroke(width = 12)
         self.add(block_chain)
 
 
