@@ -60,7 +60,6 @@ class DiamondFractalCreation(FractalCreation):
         "fractal_kwargs" : {"height" : 6}
     }
 
-
 class PiCreatureFractalCreation(FractalCreation):
     CONFIG = {
         "fractal_class" : PiCreatureFractal,
@@ -108,7 +107,6 @@ class KochSnowFlakeFractalCreation(FractalCreation):
         },
     }
 
-
 class WonkyHexagonFractalCreation(FractalCreation):
     CONFIG = {
         "fractal_class" : WonkyHexagonFractal,
@@ -116,7 +114,15 @@ class WonkyHexagonFractalCreation(FractalCreation):
         "fractal_kwargs" : {"height" : 6},
     }
 
-
+class SierpinskiFractalCreation(FractalCreation):
+    CONFIG = {
+        "fractal_class" : Sierpinski,
+        "max_order" : 6,
+        "fractal_kwargs" : {"height" : 6},
+        "transform_kwargs" : {
+            "path_arc" : 0,
+        },
+    }
 
 class CircularFractalCreation(FractalCreation):
     CONFIG = {

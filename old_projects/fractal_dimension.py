@@ -22,7 +22,7 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
-from fractal_charm import FractalCreation
+from old_projects.fractal_charm import FractalCreation
 
 from topics.graph_scene import GraphScene
 from topics.common_scenes import PatreonThanks
@@ -198,6 +198,9 @@ class IntroduceVonKochCurve(Scene):
         self.play(Write(name, run_time = 2))
         curve = self.isolate_one_curve(snowflake)
         self.dither()
+        
+        self.zoom_in_on(curve)
+        self.zoom_in_on(curve)
         self.zoom_in_on(curve)
 
     def get_snowflake(self):
@@ -234,7 +237,10 @@ class IntroduceVonKochCurve(Scene):
         return snowflake[0]
 
     def zoom_in_on(self, curve):
-        larger_curve = KochCurve(order = self.order+1)
+        larger_curve = KochCurve(
+            order = self.order+1,
+            stroke_width = self.stroke_width
+        )
         larger_curve.replace(curve)
         larger_curve.scale(3, about_point = curve.get_corner(DOWN+LEFT))
         larger_curve.gradient_highlight(
