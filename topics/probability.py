@@ -33,17 +33,17 @@ class SampleSpaceScene(Scene):
             new_label_kwargs = {}
         anims = []
         p_list = sample_space.complete_p_list(p_list)
-        full_space = sample_space.full_space
+        space_copy = sample_space.copy()
 
         vect = DOWN if dimension == 1 else RIGHT
         parts.generate_target()
         for part, p in zip(parts.target, p_list):
-            part.replace(full_space, stretch = True)
+            part.replace(space_copy, stretch = True)
             part.stretch(p, dimension)
         parts.target.arrange_submobjects(vect, buff = 0)
-        parts.target.move_to(full_space)
+        parts.target.move_to(space_copy)
         anims.append(MoveToTarget(parts))
-        if hasattr(parts, "labels"):
+        if hasattr(parts,  "labels") and parts.labels is not None:
             label_kwargs = parts.label_kwargs
             label_kwargs.update(new_label_kwargs)
             new_braces, new_labels = sample_space.get_subdivision_braces_and_labels(
@@ -115,7 +115,7 @@ class SampleSpaceScene(Scene):
             )
         post_rects.arrange_submobjects(DOWN, buff = 0)
         post_rects.next_to(
-            self.sample_space.full_space, RIGHT, buff
+            self.sample_space, RIGHT, buff
         )
         return post_rects
 
@@ -150,29 +150,26 @@ class SampleSpaceScene(Scene):
         return anims
 
 
-class SampleSpace(VGroup):
+class SampleSpace(Rectangle):
     CONFIG = {
-        "full_space_config" : {
-            "height" : 3,
-            "width" : 3,
-            "fill_color" : DARK_GREY,
-            "fill_opacity" : 1,
-            "stroke_width" : 0.5,
-            "stroke_color" : LIGHT_GREY,
-        },
-        "default_label_scale_val" : 0.7,
+        "height" : 3,
+        "width" : 3,
+        "fill_color" : DARK_GREY,
+        "fill_opacity" : 1,
+        "stroke_width" : 0.5,
+        "stroke_color" : LIGHT_GREY,
+        ##
+        "default_label_scale_val" : 1,
     }
-    def __init__(self, **kwargs):
-        VGroup.__init__(self, **kwargs)
-        full_space = Rectangle(**self.full_space_config)
-        self.full_space = full_space
-        self.add(full_space)
+    # def __init__(self, **kwargs):
+    #     Rectangle.__init__(self, **kwargs)
 
     def add_title(self, title = "Sample space", buff = MED_SMALL_BUFF):
+        ##TODO, should this really exist in SampleSpaceScene
         title_mob = TextMobject(title)
         if title_mob.get_width() > self.get_width():
             title_mob.scale_to_fit_width(self.get_width())
-        title_mob.next_to(self.full_space, UP, buff = buff)
+        title_mob.next_to(self, UP, buff = buff)
         self.title = title_mob
         self.add(title_mob)
 
@@ -190,12 +187,12 @@ class SampleSpace(VGroup):
         p_list = self.complete_p_list(p_list)
         colors = color_gradient(colors, len(p_list))
 
-        last_point = self.full_space.get_edge_center(-vect)
+        last_point = self.get_edge_center(-vect)
         parts = VGroup()
         for factor, color in zip(p_list, colors):
             part = SampleSpace()
             part.set_fill(color, 1)
-            part.replace(self.full_space, stretch = True)
+            part.replace(self, stretch = True)
             part.stretch(factor, dim)
             part.move_to(last_point, -vect)
             last_point = part.get_edge_center(vect)
