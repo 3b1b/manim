@@ -161,6 +161,11 @@ class TexMobject(SVGMobject):
             part.highlight(color)
         return self
 
+    def highlight_by_tex_to_color_map(self, tex_to_color_map):
+        for tex, color in tex_to_color_map.items():
+            self.highlight_by_tex(tex, color)
+        return self
+
     def index_of_part(self, part):
         split_self = self.split()
         if part not in split_self:

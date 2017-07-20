@@ -201,7 +201,6 @@ class PiCreature(SVGMobject):
             body.copy().pointwise_become_partial(body, *alpha_range)
             for alpha_range in self.right_arm_range, self.left_arm_range
         ])
-
             
 def get_all_pi_creature_modes():
     result = []
@@ -588,7 +587,7 @@ class PiCreatureScene(Scene):
 
 class TeacherStudentsScene(PiCreatureScene):
     CONFIG = {
-        "student_colors" : [BLUE_D, BLUE_C, BLUE_E],
+        "student_colors" : [BLUE_D, BLUE_E, BLUE_C],
         "student_scale_factor" : 0.8,
         "seconds_to_blink" : 2,
     }

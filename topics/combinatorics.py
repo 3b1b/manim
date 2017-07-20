@@ -92,8 +92,8 @@ class PascalsTriangle(VMobject):
         "portion_to_fill" : 0.7
     }    
     def generate_points(self):
-        self.cell_height = self.height / self.nrows
-        self.cell_width = self.width / self.nrows
+        self.cell_height = float(self.height) / self.nrows
+        self.cell_width = float(self.width) / self.nrows
         self.bottom_left = (self.cell_width * self.nrows / 2.0)*LEFT + \
                            (self.cell_height * self.nrows / 2.0)*DOWN
         num_to_num_mob   = {} 

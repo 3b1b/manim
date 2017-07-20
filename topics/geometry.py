@@ -38,7 +38,6 @@ class Arc(VMobject):
         self.highlight(self.get_color())
         return self
 
-
 class Circle(Arc):
     CONFIG = {
         "color" : RED,
@@ -48,7 +47,7 @@ class Circle(Arc):
     def __init__(self, **kwargs):
         Arc.__init__(self, 2*np.pi, **kwargs)
 
-class Dot(Circle): #Use 1D density, even though 2D
+class Dot(Circle):
     CONFIG = {
         "radius"       : 0.08,
         "stroke_width" : 0,
@@ -59,7 +58,6 @@ class Dot(Circle): #Use 1D density, even though 2D
         Circle.__init__(self, **kwargs)
         self.shift(point)
         self.init_colors()
-
 
 class Line(VMobject):
     CONFIG = {
@@ -187,7 +185,6 @@ class DashedLine(Line):
         else:
             return self.end
 
-
 class Arrow(Line):
     CONFIG = {
         "color"      : YELLOW_C,
@@ -298,7 +295,6 @@ class RegularPolygon(Polygon):
         vertices = compass_directions(n, start_vect)
         Polygon.__init__(self, *vertices, **kwargs)
 
-
 class Rectangle(VMobject):
     CONFIG = {
         "color"  : WHITE,
@@ -359,7 +355,6 @@ class BackgroundRectangle(SurroundingRectangle):
 
     def get_fill_color(self):
         return Color(self.color)
-
 
 class FullScreenFadeRectangle(Rectangle):
     CONFIG = {

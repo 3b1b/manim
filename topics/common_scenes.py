@@ -40,7 +40,7 @@ class OpeningQuote(Scene):
         if isinstance(self.quote, str):
             quote = TextMobject("``%s''"%self.quote.strip(), **text_mobject_kwargs)
         else:
-            words = ["``"] + list(self.quote) + ["''"]
+            words = ["\\Large ``"] + list(self.quote) + ["''"]
             quote = TextMobject(*words, **text_mobject_kwargs)
             ##TODO, make less hacky
             if self.quote_arg_separator == " ":
@@ -54,7 +54,7 @@ class OpeningQuote(Scene):
         return quote
 
     def get_author(self, quote):
-        author = TextMobject("-" + self.author)
+        author = TextMobject("\\Large -" + self.author)
         author.next_to(quote, DOWN)
         author.highlight(YELLOW)
         return author

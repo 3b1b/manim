@@ -149,7 +149,6 @@ class SampleSpaceScene(Scene):
             ])
         return anims
 
-
 class SampleSpace(Rectangle):
     CONFIG = {
         "height" : 3,
@@ -161,9 +160,6 @@ class SampleSpace(Rectangle):
         ##
         "default_label_scale_val" : 1,
     }
-    # def __init__(self, **kwargs):
-    #     Rectangle.__init__(self, **kwargs)
-
     def add_title(self, title = "Sample space", buff = MED_SMALL_BUFF):
         ##TODO, should this really exist in SampleSpaceScene
         title_mob = TextMobject(title)
@@ -282,6 +278,91 @@ class SampleSpace(Rectangle):
         elif hasattr(self, "vertical_parts"):
             return self.vertical_parts[index]
         return self.split()[index]
+
+class BarChart(VGroup):
+    CONFIG = {
+        "height" : 4,
+        "width" : 6,
+        "n_ticks" : 4,
+        "tick_width" : 0.2,
+        "label_y_axis" : True,
+        "y_axis_label_height" : 0.25,
+        "max_value" : 1,
+        "bar_colors" : [BLUE, YELLOW],
+        "bar_fill_opacity" : 0.8,
+        "bar_stroke_width" : 3,
+        "bar_names" : [],
+        "bar_label_scale_val" : 0.75,
+    }
+    def __init__(self, values, **kwargs):
+        VGroup.__init__(self, **kwargs)
+        if self.max_value is None:
+            self.max_value = max(values)
+
+        self.add_axes()
+        self.add_bars(values)
+        self.center()
+
+    def add_axes(self):
+        x_axis = Line(self.tick_width*LEFT/2, self.width*RIGHT)
+        y_axis = Line(MED_LARGE_BUFF*DOWN, self.height*UP)
+        ticks = VGroup()
+        labels = VGroup()
+        heights = np.linspace(0, self.height, self.n_ticks+1)
+        values = np.linspace(0, self.max_value, self.n_ticks+1)
+        for y, value in zip(heights, values):
+            tick = Line(LEFT, RIGHT)
+            tick.scale_to_fit_width(self.tick_width)
+            tick.move_to(y*UP)
+            ticks.add(tick)
+            label = TexMobject(str(np.round(value, 2)))
+            label.scale_to_fit_height(self.y_axis_label_height)
+            label.next_to(tick, LEFT, SMALL_BUFF)
+            labels.add(label)
+        y_axis.add(ticks)
+
+        self.add(x_axis, y_axis, labels)
+        self.x_axis, self.y_axis = x_axis, y_axis
+        self.y_axis_labels = labels
+
+    def add_bars(self, values):
+        buff = float(self.width) / (2*len(values) + 1)
+        bars = VGroup()
+        for i, value in enumerate(values):
+            bar = Rectangle(
+                height = (value/self.max_value)*self.height,
+                width = buff,
+                stroke_width = self.bar_stroke_width,
+                fill_opacity = self.bar_fill_opacity,
+            )
+            bar.move_to((2*i+1)*buff*RIGHT, DOWN+LEFT)
+            bars.add(bar)
+        bars.gradient_highlight(*self.bar_colors)
+
+        bar_labels = VGroup()
+        for bar, name in zip(bars, self.bar_names):
+            label = TexMobject(str(name))
+            label.scale(self.bar_label_scale_val)
+            label.next_to(bar, DOWN, SMALL_BUFF)
+            bar_labels.add(label)
+
+        self.add(bars, bar_labels)
+        self.bars = bars
+        self.bar_labels = bar_labels
+
+    def change_bar_values(self, values):
+        for bar, value in zip(self.bars, values):
+            bar_bottom = bar.get_bottom()
+            bar.stretch_to_fit_height(
+                (value/self.max_value)*self.height
+            )
+            bar.move_to(bar_bottom, DOWN)
+
+    def copy(self):
+        return self.deepcopy()
+
+
+
 
 ### Cards ###
 
