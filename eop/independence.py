@@ -83,20 +83,36 @@ def get_slot_group(bool_list, buff = MED_LARGE_BUFF, include_qs = True):
     base = 2.3
 
     for i, line in enumerate(lines):
-        if i < len(bool_list):
-            if bool_list[i]:
-                mob = TexMobject("\\checkmark")
-                mob.highlight(GREEN)
-                slot_group.shift(total_height*DOWN / (base**(i+1)))
-            else:
-                mob = TexMobject("\\times")
-                mob.highlight(RED)
-                slot_group.shift(total_height*UP / (base**(i+1)))
-        else:
+        if i >= len(bool_list) or bool_list[i] is None:
             mob = VectorizedPoint()
+        elif bool_list[i]:
+            mob = TexMobject("\\checkmark")
+            mob.highlight(GREEN)
+            slot_group.shift(total_height*DOWN / (base**(i+1)))
+        else:
+            mob = TexMobject("\\times")
+            mob.highlight(RED)
+            slot_group.shift(total_height*UP / (base**(i+1)))
         mob.next_to(line, UP, SMALL_BUFF)
         slot_group.content.add(mob)
     return slot_group
+
+def get_probability_of_slot_group(bool_list, conditioned_list = None):
+    filler_tex = "Filler"
+    if conditioned_list is None:
+        result = TexMobject("P(", filler_tex, ")")
+    else:
+        result = TexMobject("P(", filler_tex, "|", filler_tex, ")")
+    fillers = result.get_parts_by_tex(filler_tex)
+    for filler, bl in zip(fillers, [bool_list, conditioned_list]):
+        slot_group = get_slot_group(
+            bl, buff = SMALL_BUFF, include_qs = False,
+        )
+        slot_group.replace(filler, dim_to_match = 0)
+        slot_group.shift(0.5*SMALL_BUFF*DOWN)
+        index = result.index_of_part(filler)
+        result.submobjects[index] = slot_group
+    return result
 
 
 #########
@@ -339,7 +355,7 @@ class IntroduceBinomial(Scene):
         self.bar_chart = chart
 
         self.play(LaggedStart(
-            FadeIn, VGroup(*chart.family_members_with_points()), 
+            FadeIn, VGroup(*it.chain(*chart)), 
             run_time = 2
         ))
 
@@ -1422,6 +1438,599 @@ class ShowIndependenceSymbolically(Scene):
             self.play(Transform(condition, slot_group))
             self.dither()
             
+class ComputeProbabilityOfOneWrong(Scene):
+    CONFIG = {
+        "score" : 2,
+        "final_result_rhs_tex" : [
+            "3", "(0.8)", "^2", "(0.2)", "=", "0.384",
+        ],
+        "default_bool" : True,
+        "default_p" : "0.8",
+        "default_q" : "0.2",
+    }
+    def construct(self):
+        self.show_all_three_patterns()
+        self.show_final_result()
+
+    def show_all_three_patterns(self):
+        probabilities = VGroup()
+        point_8s = VGroup()
+        point_2s = VGroup()
+        for i in reversed(range(3)):
+            bool_list = [self.default_bool]*3
+            bool_list[i] = not self.default_bool
+            probs = ["(%s)"%self.default_p]*3
+            probs[i] = "(%s)"%self.default_q
+            lhs = get_probability_of_slot_group(bool_list)
+            rhs = TexMobject("=", *probs)
+            rhs.highlight_by_tex("0.8", GREEN)
+            rhs.highlight_by_tex("0.2", RED)
+            point_8s.add(*rhs.get_parts_by_tex("0.8"))
+            point_2s.add(*rhs.get_parts_by_tex("0.2"))
+            rhs.next_to(lhs, RIGHT)
+            probabilities.add(VGroup(lhs, rhs))
+        probabilities.arrange_submobjects(DOWN, buff = LARGE_BUFF)
+        probabilities.center()
+
+        self.play(Write(probabilities[0]))
+        self.dither(2)
+        for i in range(2):
+            self.play(ReplacementTransform(
+                probabilities[i].copy(),
+                probabilities[i+1]
+            ))
+        self.dither()
+        for group in point_8s, point_2s:
+            self.play(LaggedStart(
+                Indicate, group,
+                rate_func = there_and_back,
+                lag_ratio = 0.7
+            ))
+            self.dither()
+
+    def show_final_result(self):
+        result = TexMobject(
+            "P(", "\\text{Score} = %s"%self.score, ")", "=",
+            *self.final_result_rhs_tex
+        )
+        result.highlight_by_tex_to_color_map({
+            "0.8" : GREEN,
+            "0.2" : RED,
+            "Score" : YELLOW,
+        })
+        result[-1].highlight(YELLOW)
+        result.highlight_by_tex("0.8", GREEN)
+        result.highlight_by_tex("0.2", RED)
+        result.to_edge(UP)
+
+        self.play(Write(result))
+        self.dither()
+
+class ComputeProbabilityOfOneRight(ComputeProbabilityOfOneWrong):
+    CONFIG = {
+        "score" : 1,
+        "final_result_rhs_tex" : [
+            "3", "(0.8)", "(0.2)", "^2", "=", "0.096",
+        ],
+        "default_bool" : False,
+        "default_p" : "0.2",
+        "default_q" : "0.8",
+    }
+
+class ShowFullDistribution(Scene):
+    def construct(self):
+        self.add_scores_one_and_two()
+        self.add_scores_zero_and_three()
+        self.show_bar_chart()
+        self.compare_to_binomial_pattern()
+        self.show_alternate_values_of_p()
+
+    def add_scores_one_and_two(self):
+        scores = VGroup(
+            TexMobject(
+                "P(", "\\text{Score} = 0", ")",
+                "=", "(0.2)", "^3",
+                "=", "0.008",
+            ),
+            TexMobject(
+                "P(", "\\text{Score} = 1", ")",
+                "=", "3", "(0.8)", "(0.2)", "^2", 
+                "=", "0.096",
+            ),
+            TexMobject(
+                "P(", "\\text{Score} = 2", ")",
+                "=", "3", "(0.8)", "^2", "(0.2)",
+                "=", "0.384",
+            ),
+            TexMobject(
+                "P(", "\\text{Score} = 3", ")",
+                "=", "(0.8)", "^3",
+                "=", "0.512",
+            ),
+        )
+        scores.arrange_submobjects(
+            DOWN, 
+            buff = MED_LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+        scores.shift(MED_LARGE_BUFF*UP)
+        scores.to_edge(LEFT)
+        for score in scores:
+            score.highlight_by_tex_to_color_map({
+                "0.8" : GREEN,
+                "0.2" : RED,
+            })
+            score[-1].highlight(YELLOW)
+
+        self.add(*scores[1:3])
+        self.scores = scores
+
+    def add_scores_zero_and_three(self):
+        self.p_slot_groups = VGroup()
+
+        self.dither()
+        self.add_edge_score(0, UP, False)
+        self.add_edge_score(3, DOWN, True)
+
+    def add_edge_score(self, index, vect, q_bool):
+        score = self.scores[index]
+        prob = VGroup(*score[:3])
+        brace = Brace(prob, vect)
+        p_slot_group = get_probability_of_slot_group([q_bool]*3)
+        p_slot_group.next_to(brace, vect)
+        group = VGroup(*it.chain(p_slot_group, brace, score))
+
+        self.play(LaggedStart(
+            FadeIn, group,
+            run_time = 2,
+            lag_ratio = 0.7,
+        ))
+        self.dither(2)
+        self.p_slot_groups.add(brace, p_slot_group)
+
+    def show_bar_chart(self):
+        p_terms = VGroup()
+        to_fade = VGroup(self.p_slot_groups)
+        value_mobs = VGroup()
+        for score in self.scores:
+            p_terms.add(VGroup(*score[:3]))
+            to_fade.add(VGroup(*score[3:-1]))
+            value_mobs.add(score[-1])
+        dist = get_binomial_distribution(3, 0.8)
+        values = map(dist, range(4))
+        chart = BarChart(
+            values, bar_names = range(4),
+        )
+        chart.shift(DOWN)
+
+        new_p_terms = VGroup(*[
+            TexMobject("P(", "S=%d"%k, ")")
+            for k in range(4)
+        ])
+        for term, bar in zip(new_p_terms, chart.bars):
+            term[1].highlight(YELLOW)
+            term.scale_to_fit_width(1.5*bar.get_width())
+            term.next_to(bar, UP)
+
+        self.play(
+            ReplacementTransform(
+                value_mobs, chart.bars,
+                submobject_mode = "lagged_start",
+                run_time = 2
+            )
+        )
+        self.play(
+            LaggedStart(FadeIn, VGroup(*it.chain(*[
+                submob 
+                for submob in chart
+                if submob is not chart.bars
+            ]))),
+            Transform(p_terms, new_p_terms),
+            FadeOut(to_fade),
+        )
+        self.dither(2)
+
+        chart.bar_top_labels = p_terms
+        chart.add(p_terms)
+        self.bar_chart = chart
+
+    def compare_to_binomial_pattern(self):
+        dist = get_binomial_distribution(3, 0.5)
+        values = map(dist, range(4))
+        alt_chart = BarChart(values)
+        alt_chart.move_to(self.bar_chart)
+        bars = alt_chart.bars
+        bars.set_fill(GREY, opacity = 0.5)
+        vect = 4*UP
+        bars.shift(vect)
+        nums = VGroup(*map(TexMobject, map(str, [1, 3, 3, 1])))
+        for num, bar in zip(nums, bars):
+            num.next_to(bar, UP)
+        bars_copy = bars.copy()
+
+        self.play(
+            LaggedStart(FadeIn, bars),
+            LaggedStart(FadeIn, nums),
+        )
+        self.dither(2)
+        self.play(bars_copy.shift, -vect)
+        self.play(ReplacementTransform(
+            bars_copy, self.bar_chart.bars
+        ))
+        self.dither(2)
+        self.play(
+            VGroup(self.bar_chart, bars, nums).to_edge, LEFT
+        )
+
+        self.alt_bars = bars
+        self.alt_bars_labels = nums
+
+    def show_alternate_values_of_p(self):
+        new_prob = TexMobject(
+            "P(", "\\text{Correct}", ")", "=", "0.8"
+        )
+        new_prob.highlight_by_tex("Correct", GREEN)
+        new_prob.shift(SPACE_WIDTH*RIGHT/2)
+        new_prob.to_edge(UP)
+
+        alt_ps = 0.5, 0.65, 0.25
+        alt_rhss = VGroup()
+        alt_charts = VGroup()
+        for p in alt_ps:
+            rhs = TexMobject(str(p))
+            rhs.highlight(YELLOW)
+            rhs.move_to(new_prob[-1])
+            alt_rhss.add(rhs)
+
+            dist = get_binomial_distribution(3, p)
+            values = map(dist, range(4))
+            chart = self.bar_chart.copy()
+            chart.change_bar_values(values)
+            for label, bar in zip(chart.bar_top_labels, chart.bars):
+                label.next_to(bar, UP)
+            alt_charts.add(chart)
+
+        self.play(FadeIn(new_prob))
+        self.play(Transform(new_prob[-1], alt_rhss[0]))
+        point_5_probs = self.show_point_5_probs(new_prob)
+        self.dither()
+        self.play(Transform(self.bar_chart, alt_charts[0]))
+        self.dither()
+        self.play(FadeOut(point_5_probs))
+        for rhs, chart in zip(alt_rhss, alt_charts)[1:]:
+            self.play(Transform(new_prob[-1], rhs))
+            self.play(Transform(self.bar_chart, chart))
+            self.dither(2)
+
+    def show_point_5_probs(self, mob):
+        probs = VGroup()
+        last = mob
+        for k in range(4):
+            buff = MED_LARGE_BUFF
+            for indices in it.combinations(range(3), k):
+                bool_list = np.array([False]*3)
+                bool_list[list(indices)] = True
+                prob = get_probability_of_slot_group(bool_list)
+                rhs = TexMobject("= (0.5)^3")
+                rhs.next_to(prob, RIGHT)
+                prob.add(rhs)
+                prob.scale(0.9)
+                prob.next_to(last, DOWN, buff)
+                probs.add(prob)
+                last = prob
+                buff = SMALL_BUFF
+
+        self.play(LaggedStart(FadeIn, probs))
+        self.dither()
+        return probs
+
+class ProbablyWrong(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Probably wrong!",
+            run_time = 1,
+        )
+        self.change_student_modes(
+            *["angry"]*3,
+            run_time = 1
+        )
+        self.dither()
+
+class ShowTrueDistribution(PiCreatureScene):
+    def construct(self):
+        self.remove(self.randy)
+        self.add_title()
+        self.show_distributions()
+        self.show_emotion()
+        self.imagine_score_0()
+
+    def add_title(self):
+        title = TexMobject("P(", "\\text{Correct}", ")", "=", "0.65")
+        title.to_edge(UP)
+        title.highlight_by_tex("Correct", GREEN)
+
+        self.add(title)
+        self.title = title
+
+    def show_distributions(self):
+        dist = get_binomial_distribution(3, 0.65)
+        values = np.array(map(dist, range(4)))
+        alt_values = values + [0.2, 0, 0, 0.2]
+        alt_values /= sum(alt_values)
+        chart = BarChart(values, bar_names = range(4))
+        bars = chart.bars
+        old_bars = bars.copy()
+        arrows = VGroup()
+        for bar, old_bar in zip(bars, old_bars):
+            for mob, vect in (bar, RIGHT), (old_bar, LEFT):
+                mob.generate_target()
+                mob.target.do_about_point(
+                    mob.get_corner(DOWN+vect),
+                    mob.target.stretch, 0.5, 0
+                )
+            old_bar.target.highlight(average_color(RED_E, BLACK))
+            old_bar.target.set_stroke(width = 0)
+            arrow = Arrow(ORIGIN, UP, buff = 0, color = GREEN)
+            arrow.move_to(bar.get_bottom())
+            arrow.shift(3*UP)
+            arrows.add(arrow)
+        for arrow in arrows[1:3]:
+            arrow.rotate_in_place(np.pi)
+            arrow.highlight(RED)
+        arrows.gradient_highlight(BLUE, YELLOW)
+
+        self.add(chart)
+        self.play(*map(MoveToTarget, it.chain(bars, old_bars)))
+        self.play(
+            chart.change_bar_values, alt_values,
+            *map(ShowCreation, arrows)
+        )
+        self.dither(2)
+
+        self.bar_chart = chart
+        self.old_bars = old_bars
+
+    def show_emotion(self):
+        randy = self.randy
+
+        self.play(FadeIn(randy))
+        self.play(randy.change, "sad")
+        self.play(Blink(randy))
+
+    def imagine_score_0(self):
+        prob_rect = SurroundingRectangle(self.title[-1])
+        bar_rect = SurroundingRectangle(VGroup(
+            self.bar_chart.bars[0], self.old_bars[0],
+            self.bar_chart.bar_labels[0],
+        ))
+
+        self.play(ShowCreation(prob_rect))
+        self.dither()
+        self.play(ReplacementTransform(
+            prob_rect, bar_rect
+        ))
+        self.dither()
+        self.play(FadeOut(bar_rect))
+
+
+    #####
+
+    def create_pi_creature(self):
+        self.randy = Randolph()
+        self.randy.to_corner(DOWN+LEFT)
+        return self.randy
+
+class TeacherAssessingLiklihoodOfZero(TeacherStudentsScene):
+    def construct(self):
+        self.add_title()
+        self.fade_other_students()
+        self.show_independence_probability()
+        self.teacher_reacts()
+
+    def add_title(self):
+        title = TexMobject("P(", "\\text{Correct}", ")", "=", "0.65")
+        title.to_edge(UP)
+        title.highlight_by_tex("Correct", GREEN)
+        q_mark = TexMobject("?")
+        q_mark.next_to(title[-2], UP, SMALL_BUFF)
+        title.add(q_mark)
+
+        self.add(title)
+        self.title = title
+
+    def fade_other_students(self):
+        for student in self.students[0::2]:
+            student.fade(0.7)
+            self.pi_creatures.remove(student)
+
+    def show_independence_probability(self):
+        prob = get_probability_of_slot_group(3*[False])
+        rhs = TexMobject("=", "(0.35)", "^3", "\\approx 4.3\\%")
+        rhs.highlight_by_tex("0.35", RED)
+        rhs.next_to(prob, RIGHT)
+        prob.add(rhs)
+        prob.next_to(self.teacher, UP+LEFT)
+        words = TextMobject("Assuming independence")
+        words.next_to(prob, UP)
+
+        self.play(
+            self.teacher.change, "raise_right_hand",
+            FadeIn(words),
+            Write(prob)
+        )
+        self.dither()
+
+        self.ind_group = VGroup(prob, words)
+
+    def teacher_reacts(self):
+        ind_group = self.ind_group
+        box = SurroundingRectangle(ind_group)
+        box.set_stroke(WHITE, 0)
+        ind_group.add(box)
+        ind_group.generate_target()
+        ind_group.target.scale(0.7)
+        ind_group.target.to_corner(UP+RIGHT, MED_SMALL_BUFF)
+        ind_group.target[-1].set_stroke(WHITE, 2)
+
+        randy = self.students[1]
+
+        self.teacher_says(
+            "Highly unlikely",
+            target_mode = "sassy",
+            added_anims = [MoveToTarget(ind_group)],
+            run_time = 2,
+        )
+        self.play(randy.change, "sad")
+        self.dither(2)
+        self.play(
+            RemovePiCreatureBubble(
+                self.teacher, target_mode = "guilty",
+            ),
+            PiCreatureSays(randy, "Wait!", target_mode = "surprised"),
+            run_time = 1
+        )
+        self.dither(1)
+
+class CorrelationsWith35Percent(ThousandPossibleQuizzes):
+    def construct(self):
+        self.add_top_calculation()
+        self.show_first_split()
+        self.show_second_split()
+        self.show_third_split()
+        self.comment_on_final_size()
+
+    def add_top_calculation(self):
+        equation = VGroup(
+            get_probability_of_slot_group(3*[False]),
+            TexMobject("="),
+            get_probability_of_slot_group([False]),
+            get_probability_of_slot_group(2*[False], [False]),
+            get_probability_of_slot_group(3*[False], 2*[False]),
+        )
+        equation.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        equation.to_edge(UP)
+
+        self.add(equation)
+        self.equation = equation
+
+    def show_first_split(self):
+        quizzes = self.get_thousand_quizzes()
+        n = int(0.65*len(quizzes))
+        top_part = VGroup(*quizzes[:n])
+        bottom_part = VGroup(*quizzes[n:])
+        parts = [top_part, bottom_part]
+        for part, color in zip(parts, [GREEN, RED]):
+            part.generate_target()
+            for quiz in part.target:
+                quiz[0].highlight(color)
+        top_part.target.shift(UP)
+        brace = Brace(bottom_part, LEFT)
+        prop = TexMobject("0.35")
+        prop.next_to(brace, LEFT)
+
+        term = self.equation[2]
+        term_brace = Brace(term, DOWN)
+
+        self.add(quizzes)
+        self.dither()
+        self.play(
+            GrowFromCenter(brace), 
+            FadeIn(prop),
+            *map(MoveToTarget, parts)
+        )
+        self.dither()
+        self.play(
+            top_part.fade, 0.8,
+            Transform(brace, term_brace),
+            prop.next_to, term_brace, DOWN,
+        )
+        self.dither()
+
+        self.quizzes = bottom_part
+        self.quizzes.sort_submobjects(lambda p : p[0])
+
+    def show_second_split(self):
+        n = int(0.45*len(self.quizzes))
+        left_part = VGroup(*self.quizzes[:n])
+        right_part = VGroup(*self.quizzes[n:])
+        parts = [left_part, right_part]
+        for part, color in zip(parts, [GREEN, RED_E]):
+            part.generate_target()
+            for quiz in part.target:
+                quiz[1].highlight(color)
+        left_part.target.shift(LEFT)
+        brace = Brace(right_part, UP)
+        prop = TexMobject(">0.35")
+        prop.next_to(brace, UP)
+
+        term = self.equation[3]
+        term_brace = Brace(term, DOWN)
+
+        self.play(
+            GrowFromCenter(brace),
+            FadeIn(prop),
+            *map(MoveToTarget, parts)
+        )
+        self.dither()
+        self.play(
+            Transform(brace, term_brace),
+            prop.next_to, term_brace, DOWN
+        )
+        self.play(left_part.fade, 0.8)
+
+        self.quizzes = right_part
+        self.quizzes.sort_submobjects(lambda p : -p[1])
+
+    def show_third_split(self):
+        quizzes = self.quizzes
+        n = int(0.22*len(quizzes))
+        top_part = VGroup(*quizzes[:n])
+        bottom_part = VGroup(*quizzes[n:])
+        parts = [top_part, bottom_part]
+        for part, color in zip(parts, [GREEN, RED_B]):
+            part.generate_target()
+            for quiz in part.target:
+                quiz[2].highlight(color)
+        top_part.target.shift(0.5*UP)
+        brace = Brace(bottom_part, LEFT)
+        prop = TexMobject("\\gg 0.35")
+        prop.next_to(brace, LEFT)
+
+        term = self.equation[4]
+        term_brace = Brace(term, DOWN)
+
+        self.play(
+            GrowFromCenter(brace), 
+            FadeIn(prop),
+            *map(MoveToTarget, parts)
+        )
+        self.dither()
+        self.play(
+            Transform(brace, term_brace),
+            prop.next_to, term_brace, DOWN,
+        )
+        self.play(top_part.fade, 0.8)
+        self.dither()
+
+        self.quizzes = bottom_part
+
+    def comment_on_final_size(self):
+        rect = SurroundingRectangle(self.quizzes)
+        words = TextMobject(
+            "Much more than ", "$(0.35)^3 \\approx 4.3\\%$"
+        )
+        words.next_to(rect, LEFT)
+
+        self.play(
+            ShowCreation(rect),
+            FadeIn(words)
+        )
+        self.dither()
+
+
+
+
+
 
 
 
