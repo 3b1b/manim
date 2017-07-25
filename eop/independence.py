@@ -29,6 +29,7 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
 from scene.scene import ProgressDisplay
+import scipy
 
 #revert_to_original_skipping_status
 
@@ -59,17 +60,18 @@ def get_quiz(*questions):
     return quiz
 
 def get_slot_group(bool_list, buff = MED_LARGE_BUFF, include_qs = True):
+    n = len(bool_list)
     lines = VGroup(*[
         Line(ORIGIN, MED_LARGE_BUFF*RIGHT)
-        for x in range(3)
+        for x in range(n)
     ])
     lines.arrange_submobjects(RIGHT, buff = buff)
     if include_qs:
         labels = VGroup(*[
-            TextMobject("Q%d"%d) for d in range(1, 4)
+            TextMobject("Q%d"%d) for d in range(1, n+1)
         ])
     else:
-        labels = VGroup(*[VectorizedPoint() for d in range(3)])
+        labels = VGroup(*[VectorizedPoint() for d in range(n)])
     for label, line in zip(labels, lines):
         label.scale(0.7)
         label.next_to(line, DOWN, SMALL_BUFF)
@@ -100,7 +102,7 @@ def get_slot_group(bool_list, buff = MED_LARGE_BUFF, include_qs = True):
     return slot_group
 
 def get_probability_of_slot_group(bool_list, conditioned_list = None):
-    filler_tex = "Filler"
+    filler_tex = "Fi"*len(bool_list)
     if conditioned_list is None:
         result = TexMobject("P(", filler_tex, ")")
     else:
@@ -2748,8 +2750,6 @@ class CorrectForDependence(NameBinomial):
         self.revert_to_original_skipping_status()
 
     def construct(self):
-        self.force_skipping()
-
         self.mention_dependence()
         self.show_tendency_to_align()
         self.adjust_chart()
@@ -2757,12 +2757,16 @@ class CorrectForDependence(NameBinomial):
     def mention_dependence(self):
         brace = Brace(self.checkmarks, LEFT)
         words = brace.get_text("What if there's \\\\ correlation?")
+        formula = self.formula
+        cross = Cross(formula)
 
         self.play(
             GrowFromCenter(brace),
             Write(words)
         )
-        self.dither(2)
+        self.dither()
+        self.play(ShowCreation(cross))
+        self.dither()
 
     def show_tendency_to_align(self):
         checkmarks = self.checkmarks
@@ -2776,15 +2780,52 @@ class CorrectForDependence(NameBinomial):
         top_rect.highlight(GREEN)
         indices_to_follow = [1, 4, 5, 7]
 
-        self.revert_to_original_skipping_status()
         self.play(ShowCreation(top_rect))
         self.play(*self.get_arrow_flip_anims([0]))
         self.dither()
         self.play(*self.get_arrow_flip_anims(indices_to_follow))
-        self.dither()
+        self.play(FocusOn(self.chart.bars))
 
     def adjust_chart(self):
-        pass
+        chart = self.chart
+        bars = chart.bars
+        old_bars = bars.copy()
+        old_bars.generate_target()
+        bars.generate_target()
+        for group, vect in (old_bars, LEFT), (bars, RIGHT):
+            for bar in group.target:
+                side = bar.get_edge_center(vect)
+                bar.stretch(0.5, 0)
+                bar.move_to(side, vect)
+        for bar in old_bars.target:
+            bar.highlight(average_color(RED_E, BLACK))
+
+        dist = get_binomial_distribution(10, 0.65)
+        values = np.array(map(dist, range(11)))
+        alt_values = values + 0.1
+        alt_values[0] -= 0.06
+        alt_values[1] -= 0.03
+        alt_values /= sum(alt_values)
+        arrows = VGroup()
+        arrow_template = Arrow(
+            0.5*UP, ORIGIN, buff = 0, 
+            tip_length = 0.15,
+            color = WHITE
+        )
+        for value, alt_value, bar in zip(values, alt_values, bars):
+            arrow = arrow_template.copy()
+            if value < alt_value:
+                arrow.rotate(np.pi)
+            arrow.next_to(bar, UP)
+            arrows.add(arrow)
+
+        self.play(
+            MoveToTarget(old_bars),
+            MoveToTarget(bars),
+        )
+        self.dither()
+        self.play(*map(ShowCreation, arrows))
+        self.play(chart.change_bar_values, alt_values)
 
     ######
 
@@ -2825,18 +2866,362 @@ class CorrectForDependence(NameBinomial):
             for mover in movers
         ]
 
+class ButWhatsTheAnswer(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "But what's the \\\\ actual answer?",
+            target_mode = "confused"
+        )
+        self.change_student_modes(*["confused"]*3)
+        self.dither()
+        self.play(self.teacher.change, "pondering")
+        self.dither(3)
+
+class AssumeOrderDoesntMatter(Scene):
+    def construct(self):
+        self.add_title()
+        self.show_equality()
+        self.mention_correlation()
+
+    def add_title(self):
+        title = TextMobject(
+            "Softer simplifying assumption: " +\
+            "Order doesn't matter"
+        )
+        title.to_edge(UP)
+
+        self.add(title)
+        self.title = title
+
+    def show_equality(self):
+        n = 3
+        prob_groups = VGroup(*[
+            VGroup(*map(
+                get_probability_of_slot_group,
+                filter(
+                    lambda t : sum(t) == k,
+                    it.product(*[[True, False]]*n)
+                )
+            ))
+            for k in range(n+1)
+        ])
+        for prob_group in prob_groups:
+            for prob in prob_group[:-1]:
+                equals = TexMobject("=")
+                equals.next_to(prob, RIGHT)
+                prob.add(equals)
+            prob_group.arrange_submobjects(RIGHT)
+            max_width = 2*SPACE_WIDTH - 1
+            if prob_group.get_width() > max_width:
+                prob_group.scale_to_fit_width(max_width)
+        prob_groups.arrange_submobjects(DOWN, buff = 0.7)
+        prob_groups.next_to(self.title, DOWN, MED_LARGE_BUFF)
+
+        self.play(FadeIn(
+            prob_groups[1],
+            run_time = 2,
+            submobject_mode = "lagged_start"
+        ))
+        self.dither(2)
+        self.play(FadeIn(
+            VGroup(prob_groups[0], *prob_groups[2:]),
+            run_time = 3,
+            submobject_mode = "lagged_start"
+        ))
+        self.dither()
+
+        self.prob_groups = prob_groups
+
+    def mention_correlation(self):
+        everything = VGroup(*self.get_top_level_mobjects())
+        question = TextMobject("But what is ``correlation''?")
+        question.highlight(BLUE)
+        question.to_edge(UP)
+        bottom = question.get_bottom()
+
+        self.play(
+            Write(question),
+            everything.next_to, bottom, DOWN, LARGE_BUFF
+        )
+        self.dither()
+
+class FormulaCanBeRediscovered(PointOutSimplicityOfFormula):
+    def construct(self):
+        prob = self.get_probability_expression(full = False)
+        corner = self.teacher.get_corner(UP+LEFT)
+        prob.next_to(corner, UP, MED_LARGE_BUFF)
+        brace = Brace(prob, UP)
+        rediscover = brace.get_text("Rediscover")
+
+        self.play(
+            Write(prob),
+            self.teacher.change, "hesitant", prob
+        )
+        self.dither()
+        self.play(
+            GrowFromCenter(brace),
+            Write(rediscover, run_time = 1)
+        )
+        self.change_student_modes(*["happy"]*3)
+        self.dither(2)
+
+class CompareTwoSituations(PiCreatureScene):
+    def construct(self):
+        randy = self.randy
+        top_left, top_right = screens = [
+            ScreenRectangle(height = 3).to_corner(vect)
+            for vect in UP+LEFT, UP+RIGHT
+        ]
+        arrow = DoubleArrow(*screens, buff = SMALL_BUFF)
+        arrow.highlight(BLUE)
+
+        for screen, s in zip(screens, ["left", "right"]):
+            self.play(
+                randy.change, "raise_%s_hand"%s, screen,
+                ShowCreation(screen)
+            )
+            self.dither(3)
+        self.play(
+            randy.change, "pondering", arrow,
+            ShowCreation(arrow)
+        )
+        self.dither(2)
+
+    ####
+
+    def create_pi_creature(self):
+        self.randy = Randolph().to_edge(DOWN)
+        return self.randy
+
+class SkepticalOfDistributions(TeacherStudentsScene):
+    CONFIG = {
+        "chart_height" : 3,
+    }
+    def construct(self):
+        self.show_binomial()
+        self.show_alternate_distributions()
+        self.emphasize_underweighted_tails()
+
+    def show_binomial(self):
+        binomial = self.get_binomial()
+        binomial.next_to(self.teacher.get_corner(UP+LEFT), UP)
+        title = TextMobject("Probable scores")
+        title.scale(0.85)
+        title.next_to(binomial.bars, UP, 1.5*LARGE_BUFF)
+
+        self.play(
+            Write(title, run_time = 1),
+            FadeIn(binomial, run_time = 1, submobject_mode = "lagged_start"),
+            self.teacher.change, "raise_right_hand"
+        )
+        for values in binomial.values_list:
+            self.play(binomial.change_bar_values, values)
+            self.dither()
+        self.student_says(
+            "Is that valid?", target_mode = "sassy",
+            student_index = 0,
+            run_time = 1
+        )
+        self.play(self.teacher.change, "guilty")
+        self.dither()
+
+        binomial.add(title)
+        self.binomial = binomial
+
+    def show_alternate_distributions(self):
+        poisson = self.get_poisson()
+        VGroup(poisson, poisson.title).next_to(
+            self.students, UP, LARGE_BUFF
+        ).shift(RIGHT)
+        gaussian = self.get_gaussian()
+        VGroup(gaussian, gaussian.title).next_to(
+            poisson, RIGHT, LARGE_BUFF
+        )
 
 
+        self.play(
+            FadeIn(poisson, submobject_mode = "lagged_start"),
+            RemovePiCreatureBubble(self.students[0]),
+            self.teacher.change, "raise_right_hand",
+            self.binomial.scale, 0.5,
+            self.binomial.to_corner, UP+LEFT,
+        )
+        self.play(Write(poisson.title, run_time = 1))
+        self.play(FadeIn(gaussian, submobject_mode = "lagged_start"))
+        self.play(Write(gaussian.title, run_time = 1))
+        self.dither(2)
+        self.change_student_modes(
+            *["sassy"]*3,
+            added_anims = [self.teacher.change, "plain"]
+        )
+        self.dither(2)
 
+        self.poisson = poisson
+        self.gaussian = gaussian
 
+    def emphasize_underweighted_tails(self):
+        poisson_arrows = VGroup()
+        arrow_template = Arrow(
+            ORIGIN, UP, color = GREEN,
+            tip_length = 0.15
+        )
+        for bar in self.poisson.bars[-4:]:
+            arrow = arrow_template.copy()
+            arrow.next_to(bar, UP, SMALL_BUFF)
+            poisson_arrows.add(arrow)
 
+        gaussian_arrows = VGroup()
+        for prop in 0.2, 0.8:
+            point = self.gaussian[0][0].point_from_proportion(prop)
+            arrow = arrow_template.copy()
+            arrow.next_to(point, UP, SMALL_BUFF)
+            gaussian_arrows.add(arrow)
 
+        for arrows in poisson_arrows, gaussian_arrows:
+            self.play(
+                ShowCreation(
+                    arrows, 
+                    submobject_mode = "lagged_start",
+                    run_time = 2
+                ),
+                *[
+                    ApplyMethod(pi.change, "thinking", arrows)
+                    for pi in self.pi_creatures
+                ]
+            )
+            self.dither()
+        self.dither(2)
 
+    ####
 
+    def get_binomial(self):
+        k_range = range(11)
+        dists = [
+            get_binomial_distribution(10, p)
+            for p in 0.2, 0.8, 0.5
+        ]
+        values_list = [
+            map(dist, k_range)
+            for dist in dists
+        ]
+        chart = BarChart(
+            values = values_list[-1],
+            bar_names = k_range
+        )
+        chart.scale_to_fit_height(self.chart_height)
+        chart.values_list = values_list
+        return chart
 
+    def get_poisson(self):
+        k_range = range(11)
+        L = 2
+        values = [
+            np.exp(-L) * (L**k) / (scipy.special.gamma(k+1))
+            for k in k_range
+        ]
+        chart = BarChart(
+            values = values,
+            bar_names = k_range,
+            bar_colors = [RED, YELLOW]
+        )
+        chart.scale_to_fit_height(self.chart_height)
+        title = TextMobject(
+            "Poisson distribution \\\\",
+            "$e^{-\\lambda}\\frac{\\lambda^k}{k!}$"
+        )
+        title.scale(0.75)
+        title.move_to(chart, UP)
+        title.shift(MED_SMALL_BUFF*RIGHT)
+        title[0].shift(SMALL_BUFF*UP)
+        chart.title = title
 
+        return chart
 
+    def get_gaussian(self):
+        axes = VGroup(self.binomial.x_axis, self.binomial.y_axis).copy()
+        graph = FunctionGraph(
+            lambda x : 5*np.exp(-x**2),
+            mark_paths_closed = True,
+            fill_color = BLUE_E,
+            fill_opacity = 1,
+            stroke_color = BLUE,
+        )
+        graph.scale_to_fit_width(axes.get_width())
+        graph.move_to(axes[0], DOWN)
 
+        title = TextMobject(
+            "Gaussian distribution \\\\ ",
+            "$\\frac{1}{\\sqrt{2\\pi \\sigma^2}} e^{-\\frac{(x-\\mu)^2}{2\\sigma^2}}$"
+        )
+        title.scale(0.75)
+        title.move_to(axes, UP)
+        title.shift(MED_SMALL_BUFF*RIGHT)
+        title[0].shift(SMALL_BUFF*UP)
+        result = VGroup(axes, graph)
+        result.title = title
+
+        return result
+
+class IndependencePatreonThanks(PatreonThanks):
+    CONFIG = {
+        "specific_patrons" : [
+            "Ali Yahya",
+            "Desmos",
+            "Burt Humburg",
+            "CrypticSwarm",
+            "Juan Benet",
+            "Mayank M. Mehrotra",
+            "Lukas Biewald",
+            "Samantha D. Suplee",
+            "James Park",
+            "Erik Sundell",
+            "Yana Chernobilsky",
+            "Kaustuv DeBiswas",
+            "Kathryn Schmiedicke",
+            "Karan Bhargava",
+            "Yu Jun",
+            "Dave Nicponski",
+            "Damion Kistler",
+            "Markus Persson",
+            "Yoni Nazarathy",
+            "Corey Ogburn",
+            "Ed Kellett",
+            "Joseph John Cox",
+            "Dan Buchoff",
+            "Luc Ritchie",
+            "Tianyu Ge",
+            "Ted Suzman",
+            "Amir Fayazi",
+            "Linh Tran",
+            "Andrew Busey",
+            "Michael McGuffin",
+            "John Haley",
+            "Mourits de Beer",
+            "Ankalagon",
+            "Eric Lavault",
+            "Tomohiro Furusawa",
+            "Boris Veselinovich",
+            "Julian Pulgarin",
+            "Jeff Linse",
+            "Cooper Jones",
+            "Ryan Dahl",
+            "Mark Govea",
+            "Robert Teed",
+            "Jason Hise",
+            "Meshal Alshammari",
+            "Bernd Sing",
+            "Nils Schneider",
+            "James Thornton",
+            "Mustafa Mahdi",
+            "Mathew Bramson",
+            "Jerry Ling",
+            "Vecht",
+            "Shimin Kuang",
+            "Rish Kundalia",
+            "Achille Brighton",
+            "Ripta Pasay",
+        ],
+    }
 
 
 
