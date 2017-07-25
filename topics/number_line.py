@@ -86,9 +86,11 @@ class NumberLine(VMobject):
         #TODO, handle decimals
         if len(numbers) == 0:
             numbers = self.default_numbers_to_display()
+        if "force_integers" in kwargs and kwargs["force_integers"]:
+            numbers = map(int, numbers)
         result = VGroup()
         for number in numbers:
-            mob = TexMobject(str(int(number)))
+            mob = TexMobject(str(number))
             mob.scale_to_fit_height(3*self.tick_size)
             mob.shift(
                 self.number_to_point(number),

@@ -28,6 +28,8 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
+from scene.scene import ProgressDisplay
+
 #revert_to_original_skipping_status
 
 def get_binomial_distribution(n, p):
@@ -2027,14 +2029,801 @@ class CorrelationsWith35Percent(ThousandPossibleQuizzes):
         )
         self.dither()
 
+class NameBinomial(Scene):
+    CONFIG = {
+        "flip_indices" : [1, 2, 4, 5, 7, 9],
+    }
+    def construct(self):
+        self.name_distribution()
+        self.add_quiz_questions()
+        self.change_to_gender()
+        self.change_bar_chart_for_gender_example()
+        self.point_out_example_input()
+        self.write_probability_of_girl()
+        self.think_through_probabilities()
 
+    def name_distribution(self):
+        ns = [3, 10]
+        p = 0.65
+        charts = VGroup()
+        for n in ns:
+            dist = get_binomial_distribution(n, p)
+            values = map(dist, range(n+1))
+            chart = BarChart(values, bar_names = range(n+1))
+            chart.to_edge(LEFT)
+            charts.add(chart)
 
+        probability = TexMobject(
+            "P(", "\\checkmark", ")", "=", str(p)
+        )
+        probability.highlight_by_tex("checkmark", GREEN)
+        probability.move_to(charts, UP)
 
+        title = TextMobject("``Binomial distribution''")
+        title.next_to(charts, UP)
+        title.to_edge(UP)
+        formula = TexMobject(
+            "P(X=", "k", ")=", 
+            "{n \\choose k}", 
+            "p", "^k",
+            "(1-", "p", ")", "^{n-", "k}",
+            arg_separator = ""
+        )
+        formula.highlight_by_tex("p", YELLOW)
+        formula.highlight_by_tex("k", GREEN)
+        choose_part = formula.get_part_by_tex("choose")
+        choose_part.highlight(WHITE)
+        choose_part[-2].highlight(GREEN)
+        formula.to_corner(UP+RIGHT)
 
+        self.add(charts[0], probability)
+        self.dither()
+        self.play(Write(title))
+        self.dither()
+        self.play(ReplacementTransform(*charts))
+        self.play(Write(formula))
+        self.dither()
+        self.play(
+            formula.scale, 0.7,
+            formula.next_to, charts, DOWN,
+        )
 
+        self.chart = charts[1]
+        self.probability = probability
+        self.title = title
+        self.formula = formula
 
+    def add_quiz_questions(self):
+        n = 10
+        checkmarks = VGroup(*[
+            TexMobject("\\checkmark").highlight(GREEN)
+            for x in range(n)
+        ])
+        checkmarks.arrange_submobjects(DOWN, buff = 0.3)
+        crosses = VGroup()
+        arrows = VGroup()
+        for checkmark in checkmarks:
+            cross = TexMobject("\\times")
+            cross.highlight(RED)
+            cross.next_to(checkmark, RIGHT, LARGE_BUFF)
+            crosses.add(cross)
+            arrow = Arrow(
+                checkmark, cross,
+                tip_length = 0.15,
+                color = WHITE
+            )
+            arrows.add(arrow)
+        full_group = VGroup(checkmarks, crosses, arrows)
+        full_group.center().to_corner(UP + RIGHT, buff = MED_LARGE_BUFF)
+        flip_indices = self.flip_indices
+        flipped_arrows, faded_crosses, full_checks = [
+            VGroup(*[group[i] for i in flip_indices])
+            for group in arrows, crosses, checkmarks
+        ]
+        faded_checkmarks = VGroup(*filter(
+            lambda m : m not in full_checks,
+            checkmarks
+        ))
 
+        self.play(*[
+            LaggedStart(
+                Write, mob,
+                run_time = 3,
+                lag_ratio = 0.3
+            )
+            for mob in full_group
+        ])
+        self.dither()
+        self.play(
+            LaggedStart(
+                Rotate, flipped_arrows,
+                angle = np.pi,
+                in_place = True,
+                run_time = 2,
+                lag_ratio = 0.5
+            ),
+            faded_crosses.set_fill, None, 0.5,
+            faded_checkmarks.set_fill, None, 0.5,
+        )
+        self.dither()
 
+        self.checkmarks = checkmarks
+        self.crosses = crosses
+        self.arrows = arrows
+
+    def change_to_gender(self):
+        flip_indices = self.flip_indices
+        male = self.get_male()
+        female = self.get_female()
+
+        girls, boys = [
+            VGroup(*[
+                template.copy().move_to(mob)
+                for mob in group
+            ])
+            for template, group in [
+                (female, self.checkmarks), (male, self.crosses)
+            ]
+        ]
+        for i in range(len(boys)):
+            mob = boys[i] if i in flip_indices else girls[i]
+            mob.set_fill(opacity = 0.5)
+
+        brace = Brace(girls, LEFT)
+        words = brace.get_text("$n$ children")
+
+        self.play(
+            GrowFromCenter(brace),
+            FadeIn(words)
+        )
+        for m1, m2 in (self.checkmarks, girls), (self.crosses, boys):
+            self.play(ReplacementTransform(
+                m1, m2,
+                submobject_mode = "lagged_start"
+            ))
+        self.dither()
+
+        self.boys = boys
+        self.girls = girls
+        self.children_brace = brace
+        self.n_children_words = words
+
+    def change_bar_chart_for_gender_example(self):
+        checkmark = self.probability.get_part_by_tex("checkmark")
+        p_mob = self.probability[-1]
+
+        female = self.get_female()
+        female.move_to(checkmark)
+        new_p_mob = TexMobject("0.49")
+        new_p_mob.move_to(p_mob, LEFT)
+
+        dist = get_binomial_distribution(10, 0.49)
+        values = map(dist, range(11))
+
+        self.play(
+            Transform(checkmark, female),
+            Transform(p_mob, new_p_mob),
+        )
+        self.play(self.chart.change_bar_values, values)
+        self.dither()
+
+    def point_out_example_input(self):
+        boy_girl_groups = VGroup(*[
+            VGroup(boy, girl)
+            for boy, girl in zip(self.boys, self.girls)
+        ])
+        girl_rects = VGroup(*[
+            SurroundingRectangle(
+                boy_girl_groups[i], 
+                color = MAROON_B,
+                buff = SMALL_BUFF,
+            )
+            for i in sorted(self.flip_indices)
+        ])
+
+        chart = self.chart
+        n_girls = len(girl_rects)
+        chart_rect = SurroundingRectangle(
+            VGroup(chart.bars[n_girls], chart.bar_labels[n_girls]),
+            buff = SMALL_BUFF
+        )
+
+        self.play(ShowCreation(chart_rect))
+        self.play(LaggedStart(
+            ShowCreation, girl_rects,
+            run_time = 2,
+            lag_ratio = 0.5,
+        ))
+        self.dither()
+
+        self.chart_rect = chart_rect
+        self.girl_rects = girl_rects
+
+    def write_probability_of_girl(self):
+        probability = self.probability
+        probability_copies = VGroup(*[
+            probability.copy().scale(0.7).next_to(
+                girl, LEFT, MED_LARGE_BUFF
+            )
+            for girl in self.girls
+        ])
+
+        self.play(FocusOn(probability))
+        self.play(Indicate(probability[-1]))
+        self.dither()
+        self.play(
+            ReplacementTransform(
+                VGroup(probability.copy()), probability_copies
+            ),
+            FadeOut(self.children_brace),
+            FadeOut(self.n_children_words),
+        )
+        self.dither()
+
+        self.probability_copies = probability_copies
+
+    def think_through_probabilities(self):
+        randy = Randolph().scale(0.5)
+        randy.next_to(self.probability_copies, LEFT, LARGE_BUFF)
+
+        self.play(FadeIn(randy))
+        self.play(randy.change, "pondering")
+        self.play(Blink(randy))
+        self.dither()
+
+    ##
+
+    def get_male(self):
+        return TexMobject("\\male").scale(1.3).highlight(BLUE)
+
+    def get_female(self):
+        return TexMobject("\\female").scale(1.3).highlight(MAROON_B)
+
+class CycleThroughPatterns(NameBinomial):
+    CONFIG = {
+        "n_patterns_shown" : 100,
+        "pattern_scale_value" : 2.7,
+        "n" : 10,
+        "k" : 6,
+    }
+    def construct(self):
+        n = self.n
+        k = self.k
+        question = TextMobject(
+            "How many patterns have \\\\ %d "%k, 
+            "$\\female$",
+            " and %d "%(n-k),
+            "$\\male$",
+            "?",
+            arg_separator = ""
+        )
+        question.highlight_by_tex("male", BLUE)
+        question.highlight_by_tex("female", MAROON_B)
+        question.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        question.to_edge(UP, buff = LARGE_BUFF)
+        self.add(question)
+
+        all_combinations = list(it.combinations(range(n), k))
+        shown_combinations = all_combinations[:self.n_patterns_shown]
+        patterns = VGroup(*[
+            self.get_pattern(indicies)
+            for indicies in shown_combinations
+        ])
+        patterns.to_edge(DOWN, buff = LARGE_BUFF)
+        pattern = patterns[0]
+        self.add(pattern)
+        for new_pattern in ProgressDisplay(patterns[1:]):
+            self.play(*[
+                Transform(
+                    getattr(pattern, attr),
+                    getattr(new_pattern, attr),
+                    path_arc = np.pi
+                )
+                for attr in "boys", "girls"
+            ])
+
+    ####
+
+    def get_pattern(self, indices):
+        pattern = VGroup()
+        pattern.boys = VGroup()
+        pattern.girls = VGroup()
+        for i in range(self.n):
+            if i in indices:
+                mob = self.get_female()  
+                pattern.girls.add(mob)
+            else:
+                mob = self.get_male()
+                pattern.boys.add(mob)
+            mob.shift(i*MED_LARGE_BUFF*RIGHT)
+            pattern.add(mob)
+        pattern.scale(self.pattern_scale_value)
+        pattern.to_edge(LEFT)
+        return pattern
+
+class Compute6of10GirlsProbability(CycleThroughPatterns):
+    def construct(self):
+        self.show_combinations()
+        self.write_n_choose_k()
+
+    def show_combinations(self):
+        pattern_rect = ScreenRectangle(height = 4)
+        pattern_rect.center()
+        pattern_rect.to_edge(UP, buff = MED_SMALL_BUFF)
+
+        self.add(pattern_rect)
+        self.dither(5)
+
+        self.pattern_rect = pattern_rect
+
+    def write_n_choose_k(self):
+        brace = Brace(self.pattern_rect, DOWN)
+        ten_choose_six = brace.get_tex("{10 \\choose 6}")
+        see_chapter_one = TextMobject("(See chapter 1)")
+        see_chapter_one.next_to(ten_choose_six, DOWN)
+        see_chapter_one.highlight(GREEN)
+        computation = TexMobject(
+            "=\\frac{%s}{%s}"%(
+                 "\\cdot ".join(map(str, range(10, 4, -1))),
+                 "\\cdot ".join(map(str, range(1, 7))),
+            )
+        )
+        computation.move_to(ten_choose_six, UP)
+        rhs = TexMobject("=", "210")
+        rhs.next_to(computation, RIGHT)
+
+        self.play(
+            FadeIn(see_chapter_one),
+            GrowFromCenter(brace)
+        )
+        self.play(Write(ten_choose_six))
+        self.dither(2)
+        self.play(
+            ten_choose_six.next_to, computation.copy(), LEFT,
+            Write(VGroup(computation, rhs))
+        )
+        self.dither()
+
+        self.ten_choose_six = ten_choose_six
+        self.rhs = rhs
+
+class ProbabilityOfAGivenBoyGirlPattern(CycleThroughPatterns):
+    def construct(self):
+        self.write_total_count()
+        self.write_example_probability()
+        self.write_total_probability()
+
+    def write_total_count(self):
+        count = TextMobject(
+            "${10 \\choose 6}$", " $= 210$",
+            "total patterns."
+        )
+        count.to_edge(UP)
+        self.add(count)
+
+        self.count = count
+
+    def write_example_probability(self):
+        prob = TexMobject("P\\big(", "O "*15, "\\big)", "=")
+        indices = [1, 2, 4, 6, 8, 9]
+        pattern = self.get_pattern(indices)
+        pattern.replace(prob[1], dim_to_match = 0)
+        prob.submobjects[1] = pattern
+        prob.next_to(self.count, DOWN, LARGE_BUFF)
+
+        gp = TexMobject("(0.49)").highlight(MAROON_B)
+        bp = TexMobject("(0.51)").highlight(BLUE)
+        factored = VGroup()
+        gps = VGroup()
+        bps = VGroup()
+        for i in range(10):
+            if i in indices:
+                mob = gp.copy()
+                gps.add(mob)
+            else:
+                mob = bp.copy()
+                bps.add(mob)
+            factored.add(mob)
+        factored.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        factored.next_to(prob, DOWN, MED_LARGE_BUFF)
+        gps.save_state()
+        bps.save_state()
+
+        final_probability = TexMobject(
+            "(0.49)^6", "(0.51)^4"
+        )
+        final_probability.highlight_by_tex("0.49", MAROON_B)
+        final_probability.highlight_by_tex("0.51", BLUE)
+        final_probability.next_to(factored, DOWN, LARGE_BUFF)
+
+        self.play(FadeIn(prob))
+        self.dither()
+        self.play(ReplacementTransform(
+            pattern.copy(), factored,
+            run_time = 1.5,
+        ))
+        self.dither(2)
+        for group, tex in (gps, "0.49"), (bps, "0.51"):
+            part = final_probability.get_part_by_tex(tex)
+            self.play(group.shift, MED_LARGE_BUFF*DOWN)
+            self.play(
+                ReplacementTransform(
+                    group.copy(), VGroup(VGroup(*part[:-1]))
+                ),
+                Write(part[-1])
+            )
+            self.dither()
+            self.play(group.restore)
+        self.dither()
+
+        self.final_probability = final_probability
+
+    def write_total_probability(self):
+        ten_choose_six = self.count[0].copy()
+        ten_choose_six.generate_target()
+        ten_choose_six.target.move_to(self.final_probability)
+        p_tex = TexMobject("P(", "\\text{6 Girls}", ")", "=")
+        p_tex.highlight_by_tex("Girls", MAROON_B)
+        p_tex.next_to(ten_choose_six.target, LEFT)
+
+        self.play(
+            Write(p_tex, run_time = 2),
+            self.final_probability.next_to, 
+            ten_choose_six.target, RIGHT
+        )
+        self.play(MoveToTarget(ten_choose_six))
+        self.dither()
+
+class CycleThroughPatternsForThree(CycleThroughPatterns):
+    CONFIG = {
+        "k" : 3,
+        "n_patterns_shown" : 20,
+    }
+
+class GeneralBinomialDistributionValues(Scene):
+    CONFIG = {
+        "n" : 10,
+        "alt_n" : 8,
+        "p" : 0.49,
+    }
+    def construct(self):
+        self.add_chart()
+        self.show_a_few_values()
+        self.compare_to_pascal_row()
+        self.mention_center_concentration()
+        self.generalize()
+        self.play_with_p_value()
+
+    def add_chart(self):
+        dist = get_binomial_distribution(self.n, self.p)
+        values = map(dist, range(self.n+1))
+        chart = BarChart(
+            values,
+            bar_names = range(self.n+1)
+        )
+        chart.to_edge(LEFT)
+
+        full_probability = self.get_probability_expression(
+            "10", "k", "(0.49)", "(0.51)"
+        )
+        full_probability.next_to(chart, UP, aligned_edge = LEFT)
+
+        self.add(chart, full_probability)
+
+        self.chart = chart
+        self.full_probability = full_probability
+
+    def show_a_few_values(self):
+        chart = self.chart
+        probabilities = VGroup()
+        for i, bar in enumerate(chart.bars):
+            prob = self.get_probability_expression(
+                "10", str(i), "(0.49)", "(0.51)",
+                full = False
+            )
+            arrow = Arrow(
+                UP, DOWN, 
+                color = WHITE,
+                tip_length = 0.15
+            )
+            arrow.next_to(bar, UP, SMALL_BUFF)
+            prob.next_to(arrow, UP, SMALL_BUFF)
+            ##
+            prob.shift(LEFT)
+            prob.shift_onto_screen()
+            prob.shift(RIGHT)
+            ##
+            prob.add(arrow)            
+            probabilities.add(prob)
+        shown_prob = probabilities[6].copy()
+
+        self.play(FadeIn(shown_prob))
+        self.dither()
+        last_k = 6
+        for k in 3, 8, 5, 9, 6:
+            self.play(Transform(
+                shown_prob, probabilities[k],
+                path_arc = -np.pi/6 if k > last_k else np.pi/6
+            ))
+            self.dither(2)
+            last_k = k
+
+        self.shown_prob = shown_prob
+
+    def compare_to_pascal_row(self):
+        triangle = PascalsTriangle(nrows = 11)
+        triangle.scale_to_fit_width(6)
+        triangle.to_corner(UP+RIGHT)
+        last_row = VGroup(*[
+            triangle.coords_to_mobs[10][k]
+            for k in range(11)
+        ])
+        ten_choose_ks = VGroup()
+        for k, mob in enumerate(last_row):
+            ten_choose_k = TexMobject("10 \\choose %s"%k)
+            ten_choose_k.scale(0.5)
+            ten_choose_k.stretch(0.8, 0)
+            ten_choose_k.next_to(mob, DOWN)
+            ten_choose_ks.add(ten_choose_k)
+        ten_choose_ks.gradient_highlight(BLUE, YELLOW)
+
+        self.play(
+            LaggedStart(FadeIn, triangle),
+            FadeOut(self.shown_prob)
+        )
+        self.play(
+            last_row.gradient_highlight, BLUE, YELLOW,
+            Write(ten_choose_ks, run_time = 2)
+        )
+        self.dither()
+        self.play(ApplyWave(self.chart.bars, direction = UP))
+        self.play(FocusOn(last_row))
+        self.play(LaggedStart(
+            ApplyMethod, last_row,
+            lambda m : (m.scale_in_place, 1.2),
+            rate_func = there_and_back,
+        ))
+        self.dither()
+
+        self.pascals_triangle = triangle
+        self.ten_choose_ks = ten_choose_ks
+
+    def mention_center_concentration(self):
+        bars = self.chart.bars
+        bars.generate_target()
+        bars.save_state()
+        bars.target.arrange_submobjects(UP, buff = 0)
+        bars.target.stretch_to_fit_height(self.chart.height)
+        bars.target.move_to(
+            self.chart.x_axis.point_from_proportion(0.05),
+            DOWN
+        )
+        brace = Brace(VGroup(*bars.target[4:7]), RIGHT)
+        words = brace.get_text("Most probability \\\\ in middle values")
+
+        self.play(MoveToTarget(bars))
+        self.play(
+            GrowFromCenter(brace),
+            FadeIn(words)
+        )
+        self.dither(2)
+        self.play(
+            bars.restore,
+            *map(FadeOut, [
+                brace, words, 
+                self.pascals_triangle,
+                self.ten_choose_ks
+            ])
+        )
+
+    def generalize(self):
+        alt_n = self.alt_n
+        dist = get_binomial_distribution(alt_n, self.p)
+        values = map(dist, range(alt_n + 1))
+        alt_chart = BarChart(
+            values, bar_names = range(alt_n + 1)
+        )
+        alt_chart.move_to(self.chart)
+
+        alt_probs = [
+            self.get_probability_expression("n", "k", "(0.49)", "(0.51)"),
+            self.get_probability_expression("n", "k", "p", "(1-p)"),
+        ]
+        for prob in alt_probs:
+            prob.move_to(self.full_probability)
+
+        self.play(FocusOn(
+            self.full_probability.get_part_by_tex("choose")
+        ))
+        self.play(
+            ReplacementTransform(self.chart, alt_chart),
+            Transform(self.full_probability, alt_probs[0])
+        )
+        self.chart = alt_chart
+        self.dither(2)
+        self.play(Transform(self.full_probability, alt_probs[1]))
+        self.dither()
+
+    def play_with_p_value(self):
+        p = self.p
+        interval = UnitInterval(color = WHITE)
+        interval.scale_to_fit_width(5)
+        interval.next_to(self.full_probability, DOWN, LARGE_BUFF)
+        interval.add_numbers(0, 0.5, 1)
+        triangle = RegularPolygon(
+            n=3, start_angle = -np.pi/2,
+            fill_color = MAROON_B,
+            fill_opacity = 1,
+            stroke_width = 0,
+        )
+        triangle.scale_to_fit_height(0.25)
+        triangle.move_to(interval.number_to_point(p), DOWN)
+        p_mob = TexMobject("p")
+        p_mob.highlight(MAROON_B)
+        p_mob.next_to(triangle, UP, SMALL_BUFF)
+        triangle.add(p_mob)
+
+        new_p_values = [0.8, 0.4, 0.2, 0.9, 0.97, 0.6]
+
+        self.play(
+            ShowCreation(interval),
+            Write(triangle, run_time = 1)
+        )
+        self.dither()
+        for new_p in new_p_values:
+            p = new_p
+            dist = get_binomial_distribution(self.alt_n, p)
+            values = map(dist, range(self.alt_n + 1))
+            self.play(
+                self.chart.change_bar_values, values,
+                triangle.move_to, interval.number_to_point(p), DOWN
+            )
+            self.dither()
+
+    #######
+
+    def get_probability_expression(
+        self, n = "n", k = "k", p = "p", q = "(1-p)",
+        full = True
+        ):
+        args = []
+        if full:
+            args += ["P(", "\\# \\text{Girls}", "=", k, ")", "="]
+        args += [
+            "{%s \\choose %s}"%(n, k),
+            p, "^%s"%k,
+            q, "^{%s"%n, "-", "%s}"%k,
+        ]
+        result = TexMobject(*args, arg_separator = "")
+        color_map = {
+            "Girls" : MAROON_B,
+            n : WHITE,
+            k : YELLOW,
+            p : MAROON_B,
+            q : BLUE,
+        }
+        result.highlight_by_tex_to_color_map(color_map)
+        choose_part = result.get_part_by_tex("choose")
+        choose_part.highlight(WHITE)
+        VGroup(*choose_part[1:1+len(n)]).highlight(color_map[n])
+        VGroup(*choose_part[-1-len(k):-1]).highlight(color_map[k])
+        return result
+
+class PointOutSimplicityOfFormula(TeacherStudentsScene, GeneralBinomialDistributionValues):
+    def construct(self):
+        prob = self.get_probability_expression(full = False)
+        corner = self.teacher.get_corner(UP+LEFT)
+        prob.next_to(corner, UP, MED_LARGE_BUFF)
+        prob.save_state()
+        prob.move_to(corner)
+        prob.set_fill(opacity = 0)
+
+        self.play(
+            prob.restore,
+            self.teacher.change_mode, "raise_right_hand"
+        )
+        self.change_student_modes(
+            *["pondering"]*3,
+            look_at_arg = prob
+        )
+        self.dither()
+        self.student_says(
+            "Simpler than I feared",
+            target_mode = "hooray",
+            student_index = 0,
+            added_anims = [prob.to_corner, UP+RIGHT]
+        )
+        self.dither()
+        self.teacher_says("Due to \\\\ independence")
+        self.dither(2)
+
+class CorrectForDependence(NameBinomial):
+    CONFIG = {
+        "flip_indices" : [3, 6, 8],
+    }
+    def setup(self):
+        self.force_skipping()
+        self.name_distribution()
+        self.add_quiz_questions()
+        self.revert_to_original_skipping_status()
+
+    def construct(self):
+        self.force_skipping()
+
+        self.mention_dependence()
+        self.show_tendency_to_align()
+        self.adjust_chart()
+
+    def mention_dependence(self):
+        brace = Brace(self.checkmarks, LEFT)
+        words = brace.get_text("What if there's \\\\ correlation?")
+
+        self.play(
+            GrowFromCenter(brace),
+            Write(words)
+        )
+        self.dither(2)
+
+    def show_tendency_to_align(self):
+        checkmarks = self.checkmarks
+        arrows = self.arrows
+        crosses = self.crosses
+        groups = [
+            VGroup(*trip)
+            for trip in zip(checkmarks, arrows, crosses)
+        ]
+        top_rect = SurroundingRectangle(groups[0])
+        top_rect.highlight(GREEN)
+        indices_to_follow = [1, 4, 5, 7]
+
+        self.revert_to_original_skipping_status()
+        self.play(ShowCreation(top_rect))
+        self.play(*self.get_arrow_flip_anims([0]))
+        self.dither()
+        self.play(*self.get_arrow_flip_anims(indices_to_follow))
+        self.dither()
+
+    def adjust_chart(self):
+        pass
+
+    ######
+
+    def get_arrow_flip_anims(self, indices):
+        checkmarks, arrows, crosses = movers = [
+            VGroup(*[
+                group[i]
+                for i in range(len(group))
+                if i in indices
+            ])
+            for group in self.checkmarks, self.arrows, self.crosses
+        ]
+        for arrow in arrows:
+            arrow.target = arrow.deepcopy()
+            arrow.target.rotate_in_place(np.pi)
+        for group in checkmarks, crosses:
+            for mob, arrow in zip(group, arrows):
+                mob.generate_target()
+                c = mob.get_center()
+                start, end = arrow.target.get_start_and_end()
+                to_end = np.linalg.norm(c - end)
+                to_start = np.linalg.norm(c - start)
+                if to_end < to_start:
+                    mob.target.set_fill(opacity = 1)
+                else:
+                    mob.target.set_fill(opacity = 0.5)
+        for checkmark in checkmarks:
+            checkmark.target.scale_in_place(1.2)
+
+        kwargs = {"path_arc" : np.pi}
+        if len(indices) > 1:
+            kwargs.update({"run_time" : 2})
+        return [
+            LaggedStart(
+                MoveToTarget, mover,
+                **kwargs
+            )
+            for mover in movers
+        ]
 
 
 
