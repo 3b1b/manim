@@ -224,7 +224,7 @@ class VMobject(Mobject):
             self.submobjects
         )
 
-    def apply_function(self, function, maintain_smoothness = True):
+    def apply_function(self, function, maintain_smoothness = False):
         Mobject.apply_function(self, function)
         if maintain_smoothness and self.considered_smooth:
             self.make_smooth()

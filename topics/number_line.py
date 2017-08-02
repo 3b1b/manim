@@ -279,6 +279,9 @@ class NumberPlane(VMobject):
                 mob.make_smooth()
         return self
 
+    def apply_function(self, function, maintain_smoothness = True):
+        SVGMobject.apply_function(self, function, maintain_smoothness = maintain_smoothness)
+
 
 
 
