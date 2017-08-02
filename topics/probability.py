@@ -307,7 +307,6 @@ class BarChart(VGroup):
         x_axis = Line(self.tick_width*LEFT/2, self.width*RIGHT)
         y_axis = Line(MED_LARGE_BUFF*DOWN, self.height*UP)
         ticks = VGroup()
-        labels = VGroup()
         heights = np.linspace(0, self.height, self.n_ticks+1)
         values = np.linspace(0, self.max_value, self.n_ticks+1)
         for y, value in zip(heights, values):
@@ -315,15 +314,21 @@ class BarChart(VGroup):
             tick.scale_to_fit_width(self.tick_width)
             tick.move_to(y*UP)
             ticks.add(tick)
-            label = TexMobject(str(np.round(value, 2)))
-            label.scale_to_fit_height(self.y_axis_label_height)
-            label.next_to(tick, LEFT, SMALL_BUFF)
-            labels.add(label)
         y_axis.add(ticks)
 
-        self.add(x_axis, y_axis, labels)
+        self.add(x_axis, y_axis)
         self.x_axis, self.y_axis = x_axis, y_axis
-        self.y_axis_labels = labels
+
+        if self.label_y_axis:
+            labels = VGroup()
+            for tick, value in zip(ticks, values):
+                label = TexMobject(str(np.round(value, 2)))
+                label.scale_to_fit_height(self.y_axis_label_height)
+                label.next_to(tick, LEFT, SMALL_BUFF)
+                labels.add(label)
+            self.y_axis_labels = labels
+            self.add(labels)
+
 
     def add_bars(self, values):
         buff = float(self.width) / (2*len(values) + 1)

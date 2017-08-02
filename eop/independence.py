@@ -56,11 +56,20 @@ def get_quiz(*questions):
     rect.shift(MED_SMALL_BUFF*DOWN)
     rect.highlight(WHITE)
     quiz = VGroup(rect, content)
+    quiz.questions = q_mobs
     quiz.scale(0.7)
     return quiz
 
-def get_slot_group(bool_list, buff = MED_LARGE_BUFF, include_qs = True):
+def get_slot_group(
+    bool_list, 
+    buff = MED_LARGE_BUFF, 
+    include_qs = True,
+    min_bool_list_len = 3,
+    ):
+    if len(bool_list) < min_bool_list_len:
+        bool_list += [None]*(min_bool_list_len - len(bool_list))
     n = len(bool_list)
+
     lines = VGroup(*[
         Line(ORIGIN, MED_LARGE_BUFF*RIGHT)
         for x in range(n)
@@ -102,7 +111,7 @@ def get_slot_group(bool_list, buff = MED_LARGE_BUFF, include_qs = True):
     return slot_group
 
 def get_probability_of_slot_group(bool_list, conditioned_list = None):
-    filler_tex = "Fi"*len(bool_list)
+    filler_tex = "Fi"*max(len(bool_list), 3)
     if conditioned_list is None:
         result = TexMobject("P(", filler_tex, ")")
     else:
@@ -735,6 +744,33 @@ class AssociatePatternsWithScores(BreakDownQuestionPatterns):
         self.play(row.highlight, YELLOW)
         self.dither(4)
 
+class BeforeCounting(TeacherStudentsScene):
+    def construct(self):
+        triangle = PascalsTriangle(nrows = 7)
+        triangle.scale_to_fit_height(4)
+        triangle.next_to(self.teacher, UP+LEFT)
+
+        prob = get_probability_of_slot_group([True, True, False])
+        prob.to_edge(UP)
+        brace = Brace(prob, DOWN)
+        q_marks = brace.get_text("???")
+
+        self.teacher.change_mode("raise_right_hand")
+        self.add(triangle)
+        self.change_student_modes(*["hooray"]*3)
+        self.play(
+            triangle.scale, 0.5,
+            triangle.to_corner, UP+RIGHT,
+            self.teacher.change_mode, "sassy"
+        )
+        self.change_student_modes(*["confused"]*3)
+        self.play(Write(prob))
+        self.play(
+            GrowFromCenter(brace),
+            LaggedStart(FadeIn, q_marks)
+        )
+        self.dither(2)
+
 class TemptingButWrongCalculation(BreakDownQuestionPatterns):
     def construct(self):
         self.add_title()
@@ -745,6 +781,7 @@ class TemptingButWrongCalculation(BreakDownQuestionPatterns):
         title.scale(1.5)
         title.to_edge(UP)
         self.add(title)
+        self.title = title
 
     def write_simple_product(self):
         lhs = TexMobject("P\\big(", "Filler Blah", "\\big)", "= ")
@@ -807,6 +844,9 @@ class TemptingButWrongCalculation(BreakDownQuestionPatterns):
         )
         self.dither(3)
 
+        self.question = question
+        self.rhs = rhs
+
 class ThousandPossibleQuizzes(Scene):
     CONFIG = {
         "n_quiz_rows" : 25,
@@ -820,6 +860,7 @@ class ThousandPossibleQuizzes(Scene):
     def construct(self):
         self.draw_all_quizzes()
         self.show_division_by_first_question()
+        self.ask_about_second_question()
         self.show_uncorrelated_division_by_second()
         self.increase_second_correct_slice()
         self.second_division_among_first_wrong()
@@ -852,8 +893,8 @@ class ThousandPossibleQuizzes(Scene):
         full_quizzes.arrange_submobjects(RIGHT)
         target_quizzes = VGroup(*quizzes[:len(full_quizzes)])
 
-        self.add(full_quizzes)
-        self.dither()
+        for quiz in full_quizzes:
+            self.play(FadeIn(quiz, run_time = 3, submobject_mode = "lagged_start"))
         self.play(
             Transform(full_quizzes, target_quizzes),
             FadeIn(title)
@@ -903,6 +944,43 @@ class ThousandPossibleQuizzes(Scene):
 
         self.splits = VGroup(top_split, bottom_split)
         self.q1_split_labels = labels
+
+    def ask_about_second_question(self):
+        top_split = self.splits[0]
+        sg1, sg2 = slot_groups = VGroup(*[
+            get_slot_group(
+                [True, b], 
+                include_qs = False,
+                buff = SMALL_BUFF
+            )
+            for b in True, False
+        ])
+        question = VGroup(
+            TextMobject("Where are"), sg1,
+            TextMobject("and"), sg2, TextMobject("?"),
+        )
+        question.arrange_submobjects(RIGHT, aligned_edge = DOWN)
+        question[-1].next_to(question[-2], RIGHT, SMALL_BUFF)
+        question.next_to(top_split, UP, MED_LARGE_BUFF)
+        slot_groups.shift(SMALL_BUFF*DOWN)
+        little_rects = VGroup(*[
+            SurroundingRectangle(
+                VGroup(sg.lines[1], sg.content[1])
+            )
+            for sg in slot_groups
+        ])
+        big_rect = SurroundingRectangle(top_split)
+
+        self.play(Write(question))
+        self.play(ShowCreation(little_rects))
+        self.dither()
+        self.play(FadeOut(little_rects))
+        self.play(ShowCreation(big_rect))
+        self.play(
+            FadeOut(big_rect),
+            FadeOut(question),
+        )
+        self.dither()
 
     def show_uncorrelated_division_by_second(self):
         top_split = self.splits[0]
@@ -1167,6 +1245,86 @@ class ThousandPossibleQuizzes(Scene):
         quizzes.to_edge(RIGHT)
         quizzes.shift(MED_LARGE_BUFF*DOWN)
         return quizzes
+
+class ExampleConditional(Scene):
+    def construct(self):
+        prob = get_probability_of_slot_group(
+            [True, True], [True]
+        )
+        rhs = TexMobject("=", "0.925", ">", "0.8")
+        rhs.highlight_by_tex("0.925", YELLOW)
+        rhs.next_to(prob, RIGHT)
+        expression = VGroup(prob, rhs)
+        expression.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        expression.center().to_edge(DOWN)
+
+        self.play(Write(expression))
+        self.dither()
+
+class HarderQuizzes(Scene):
+    def construct(self):
+        quizzes = VGroup(
+            get_quiz(
+                "Find all primes $p$ \\\\ where $p+2$ is prime.",
+                "Find all primes $p$ \\\\ where $2^{p}-1$ is prime.",
+                "Solve $\\zeta(s) = 0$",
+            ),
+            get_quiz(
+                "Find $S$ such that \\\\ $\\#\\mathds{N} < \\#S < \\#\\mathcal{P}(\\mathds{N})$",
+                "Describe ``forcing''",
+                "Prove from ZFC that $S \\notin S$.",
+            ),
+        )
+        quizzes.arrange_submobjects(RIGHT)
+        quizzes.to_edge(DOWN)
+        crosses = VGroup(*[
+            Cross(quiz.questions[0])
+            for quiz in quizzes
+        ])
+
+        for quiz in quizzes:
+            self.play(FadeIn(quiz))
+        self.dither()
+        for cross in crosses:
+            self.play(ShowCreation(cross))
+        self.dither()
+
+class WritePSecond(Scene):
+    def construct(self):
+        prob = get_probability_of_slot_group([None, True, None])
+        rhs = TexMobject("= 0.8")
+        rhs.next_to(prob, RIGHT)
+        prob.add(rhs)
+        prob.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        prob.center().to_edge(DOWN)
+        self.play(Write(prob))
+
+class SubmitToTemptation(TemptingButWrongCalculation):
+    def construct(self):
+        self.force_skipping()
+        TemptingButWrongCalculation.construct(self)
+        self.revert_to_original_skipping_status()
+
+        title = self.title
+        question = self.question
+        title.generate_target()
+        title.target.scale_in_place(1./1.5)
+        new_words = TextMobject("and", "okay", "assuming independence.")
+        new_words.highlight_by_tex("okay", GREEN)
+        new_words.next_to(title.target, RIGHT)
+        VGroup(title.target, new_words).center().to_edge(UP)
+
+        self.play(
+            MoveToTarget(title),
+            FadeOut(question)
+        )
+        self.play(
+            Write(new_words, run_time = 2),
+            self.randy.change, "hooray"
+        )
+        for part in self.rhs:
+            self.play(Indicate(part.value))
+        self.dither()
 
 class AccurateProductRule(SampleSpaceScene, ThreeDScene):
     def construct(self):
@@ -1742,11 +1900,16 @@ class ProbablyWrong(TeacherStudentsScene):
 
 class ShowTrueDistribution(PiCreatureScene):
     def construct(self):
+        self.force_skipping()
+
         self.remove(self.randy)
         self.add_title()
         self.show_distributions()
         self.show_emotion()
         self.imagine_score_0()
+
+        self.revert_to_original_skipping_status()
+        self.get_angry()
 
     def add_title(self):
         title = TexMobject("P(", "\\text{Correct}", ")", "=", "0.65")
@@ -1816,6 +1979,17 @@ class ShowTrueDistribution(PiCreatureScene):
         self.dither()
         self.play(FadeOut(bar_rect))
 
+    def get_angry(self):
+        randy = self.randy
+
+        self.play(randy.change, "angry")
+        self.dither(2)
+        self.play(PiCreatureSays(
+            randy, "It's not representative!",
+            target_mode = "pleading",
+            bubble_kwargs = {"fill_opacity" : 1}
+        ))
+        self.dither(2)
 
     #####
 
@@ -2031,9 +2205,48 @@ class CorrelationsWith35Percent(ThousandPossibleQuizzes):
         )
         self.dither()
 
+class WeighingIndependenceAssumption(PiCreatureScene):
+    def construct(self):
+        randy = self.randy
+
+        title = TextMobject("Independence")
+        title.scale(1.5)
+        title.to_edge(UP)
+        self.add(title)
+        formula = TexMobject(
+            "P(", "A", "B", ")", "="
+            "P(", "A", ")", "P(", "B", ")"
+        )
+        formula.highlight_by_tex("A", BLUE)
+        formula.highlight_by_tex("B", GREEN)
+
+        clean = TextMobject("Clean")
+        clean.next_to(formula, UP)
+        VGroup(clean, formula).next_to(randy, UP+LEFT)
+        clean.save_state()
+        clean.shift(2*(DOWN+RIGHT))
+        clean.set_fill(opacity = 0)
+
+        self.play(
+            randy.change, "raise_left_hand", clean,
+            clean.restore
+        )
+        self.play(Write(formula))
+        self.play(
+            randy.change, "raise_right_hand",
+            randy.look, UP+RIGHT,
+        )
+        self.dither(2)
+
+    ####
+
+    def create_pi_creature(self):
+        self.randy = Randolph().to_edge(DOWN)
+        return self.randy
+
 class NameBinomial(Scene):
     CONFIG = {
-        "flip_indices" : [1, 2, 4, 5, 7, 9],
+        "flip_indices" : [0, 2, 4, 5, 6, 7],
     }
     def construct(self):
         self.name_distribution()
@@ -2178,10 +2391,11 @@ class NameBinomial(Scene):
             GrowFromCenter(brace),
             FadeIn(words)
         )
-        for m1, m2 in (self.checkmarks, girls), (self.crosses, boys):
+        for m1, m2 in (self.crosses, boys), (self.checkmarks, girls):
             self.play(ReplacementTransform(
                 m1, m2,
-                submobject_mode = "lagged_start"
+                submobject_mode = "lagged_start",
+                run_time = 3
             ))
         self.dither()
 
@@ -2230,12 +2444,34 @@ class NameBinomial(Scene):
             buff = SMALL_BUFF
         )
 
+        prob = TexMobject(
+            "P(", "\\# \\text{Girls}", "=", "6", ")"
+        )
+        prob.highlight_by_tex("Girls", MAROON_B)
+        arrow = Arrow(UP, ORIGIN, tip_length = 0.15)
+        arrow.highlight(MAROON_B)
+        arrow.next_to(prob, DOWN)
+        prob.add(arrow)
+        prob.next_to(chart_rect, UP)
+        girls = VGroup(*[self.girls[i] for i in self.flip_indices])
+
+
         self.play(ShowCreation(chart_rect))
         self.play(LaggedStart(
             ShowCreation, girl_rects,
             run_time = 2,
             lag_ratio = 0.5,
         ))
+        self.dither()
+
+        self.play(Write(prob))
+        self.play(LaggedStart(
+            Indicate, girls,
+            run_time = 3,
+            lag_ratio = 0.3,
+            rate_func = there_and_back
+        ))
+        self.play(FadeOut(prob))
         self.dither()
 
         self.chart_rect = chart_rect
@@ -2413,30 +2649,39 @@ class ProbabilityOfAGivenBoyGirlPattern(CycleThroughPatterns):
         prob.submobjects[1] = pattern
         prob.next_to(self.count, DOWN, LARGE_BUFF)
 
-        gp = TexMobject("(0.49)").highlight(MAROON_B)
-        bp = TexMobject("(0.51)").highlight(BLUE)
+        gp = TexMobject("P(\\female)")
+        gp[2].highlight(MAROON_B)
+        bp = TexMobject("P(\\male)")
+        bp[2].highlight(BLUE)
+        gp_num = TexMobject("(0.49)").highlight(MAROON_B)
+        bp_num = TexMobject("(0.51)").highlight(BLUE)
+        gp_nums = VGroup()
+        bp_nums = VGroup()
         factored = VGroup()
-        gps = VGroup()
-        bps = VGroup()
+        factored_in_nums = VGroup()
         for i in range(10):
             if i in indices:
-                mob = gp.copy()
-                gps.add(mob)
+                num_mob = gp_num.copy()
+                gp_nums.add(num_mob)
+                p_mob = gp.copy()
             else:
-                mob = bp.copy()
-                bps.add(mob)
-            factored.add(mob)
-        factored.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
-        factored.next_to(prob, DOWN, MED_LARGE_BUFF)
-        gps.save_state()
-        bps.save_state()
+                num_mob = bp_num.copy()
+                bp_nums.add(num_mob)
+                p_mob = bp.copy()
+            factored_in_nums.add(num_mob)
+            factored.add(p_mob)
+        for group in factored, factored_in_nums:
+            group.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+            group.next_to(prob, DOWN, MED_LARGE_BUFF)
+        gp_nums.save_state()
+        bp_nums.save_state()
 
         final_probability = TexMobject(
             "(0.49)^6", "(0.51)^4"
         )
         final_probability.highlight_by_tex("0.49", MAROON_B)
         final_probability.highlight_by_tex("0.51", BLUE)
-        final_probability.next_to(factored, DOWN, LARGE_BUFF)
+        final_probability.next_to(factored_in_nums, DOWN, LARGE_BUFF)
 
         self.play(FadeIn(prob))
         self.dither()
@@ -2445,7 +2690,13 @@ class ProbabilityOfAGivenBoyGirlPattern(CycleThroughPatterns):
             run_time = 1.5,
         ))
         self.dither(2)
-        for group, tex in (gps, "0.49"), (bps, "0.51"):
+        self.play(ReplacementTransform(
+            factored, factored_in_nums,
+            run_time = 2,
+            submobject_mode = "lagged_start"
+        ))
+        self.dither(2)
+        for group, tex in (gp_nums, "0.49"), (bp_nums, "0.51"):
             part = final_probability.get_part_by_tex(tex)
             self.play(group.shift, MED_LARGE_BUFF*DOWN)
             self.play(
@@ -2510,7 +2761,7 @@ class GeneralBinomialDistributionValues(Scene):
         )
         full_probability.next_to(chart, UP, aligned_edge = LEFT)
 
-        self.add(chart, full_probability)
+        self.add(chart)
 
         self.chart = chart
         self.full_probability = full_probability
@@ -2540,6 +2791,12 @@ class GeneralBinomialDistributionValues(Scene):
         shown_prob = probabilities[6].copy()
 
         self.play(FadeIn(shown_prob))
+        self.dither()
+        self.play(LaggedStart(
+            FadeIn, self.full_probability,
+            run_time = 4,
+            lag_ratio = 0.5,
+        ))
         self.dither()
         last_k = 6
         for k in 3, 8, 5, 9, 6:
@@ -2877,11 +3134,42 @@ class ButWhatsTheAnswer(TeacherStudentsScene):
         self.play(self.teacher.change, "pondering")
         self.dither(3)
 
+class PermuteQuizQuestions(Scene):
+    def construct(self):
+        quiz = get_quiz(
+            "Define ``Brachistochrone''",
+            "Define ``Tautochrone''",
+            "Define ``Cycloid''",
+        )
+        questions = [
+            VGroup(*q[2:])
+            for q in quiz.questions
+        ]
+        colors = [BLUE, GREEN, RED]
+        for color, question in zip(colors, questions):
+            question.highlight(color)
+        quiz.scale(2)
+
+        self.add(quiz)
+        self.dither()
+        for m1, m2 in it.combinations(questions, 2):
+            self.play(
+                m1.move_to, m2, LEFT,
+                m2.move_to, m1, LEFT,
+                path_arc = np.pi
+            )
+            self.dither()
+
 class AssumeOrderDoesntMatter(Scene):
     def construct(self):
+        self.force_skipping()
+
         self.add_title()
         self.show_equality()
         self.mention_correlation()
+
+        self.revert_to_original_skipping_status()
+        self.coming_soon()
 
     def add_title(self):
         title = TextMobject(
@@ -2933,17 +3221,49 @@ class AssumeOrderDoesntMatter(Scene):
         self.prob_groups = prob_groups
 
     def mention_correlation(self):
-        everything = VGroup(*self.get_top_level_mobjects())
-        question = TextMobject("But what is ``correlation''?")
+        assumption_group = VGroup(*self.get_top_level_mobjects())
+        question = TextMobject(
+            "But what is ", "``correlation''", "?",
+            arg_separator = ""
+        )
         question.highlight(BLUE)
         question.to_edge(UP)
         bottom = question.get_bottom()
 
         self.play(
             Write(question),
-            everything.next_to, bottom, DOWN, LARGE_BUFF
+            assumption_group.next_to, bottom, DOWN, LARGE_BUFF
         )
         self.dither()
+
+        self.assumption_group = assumption_group
+        self.question = question
+
+    def coming_soon(self):
+        self.play(
+            LaggedStart(
+                ApplyMethod, self.assumption_group,
+                lambda m : (m.shift, 2*SPACE_HEIGHT*DOWN),
+                remover = True,
+            ),
+            ApplyMethod(
+                self.question.center,
+                rate_func = squish_rate_func(smooth, 0.5, 1),
+                run_time = 2
+            )
+        )
+
+        part = self.question.get_part_by_tex("correlation")
+        brace = Brace(part, UP)
+        words = brace.get_text("Coming soon!")
+        self.play(
+            GrowFromCenter(brace),
+            part.highlight, YELLOW
+        )
+        self.play(Write(words))
+        self.dither()
+
+
 
 class FormulaCanBeRediscovered(PointOutSimplicityOfFormula):
     def construct(self):
@@ -3222,6 +3542,48 @@ class IndependencePatreonThanks(PatreonThanks):
             "Ripta Pasay",
         ],
     }
+
+class Thumbnail(DangerInProbability):
+    def construct(self):
+        n, p = 15, 0.5
+        dist = get_binomial_distribution(n, p)
+        values = np.array(map(dist, range(n+1)))
+        values *= 2
+        chart = BarChart(
+            values = values,
+            label_y_axis = False,
+            width = 2*SPACE_WIDTH - 3,
+            height = 1.5*SPACE_HEIGHT
+        )
+        chart.to_edge(DOWN)
+        self.add(chart)
+
+
+        warning = self.get_warning_sign()
+        warning.scale_to_fit_height(2)
+        warning.to_edge(UP)
+        self.add(warning)
+
+
+        words = TextMobject("Independence")
+        words.scale(2.5)
+        words.next_to(warning, DOWN)
+        self.add(words)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
