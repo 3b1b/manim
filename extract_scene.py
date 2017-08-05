@@ -7,6 +7,7 @@ import itertools as it
 import inspect
 import traceback
 import imp
+import os
 
 from helpers import *
 from scene import Scene
@@ -151,13 +152,27 @@ def get_scene_classes(scene_names_to_classes, config):
       return scene_names_to_classes.values()
    return prompt_user_for_choice(scene_names_to_classes)
 
-def get_module(file_name):
+def get_module_windows(file_name):
    module_name = file_name.replace(".py", "")
-   last_module = imp.load_module(".", *imp.find_module("."))
+   last_module = imp.load_module("__init__", *imp.find_module("__init__", ['.']))
    for part in module_name.split(os.sep):
-      load_args = imp.find_module(part, last_module.__path__)
+      load_args = imp.find_module(part, [os.path.dirname(last_module.__file__)])
       last_module = imp.load_module(part, *load_args)
    return last_module
+
+def get_module_posix(file_name):
+    module_name = file_name.replace(".py", "")
+    last_module = imp.load_module(".", *imp.find_module("."))
+    for part in module_name.split(os.sep):
+        load_args = imp.find_module(part, last_module.__path__)
+        last_module = imp.load_module(part, *load_args)
+    return last_module
+   
+def get_module(file_name):
+    if os.name == 'nt':
+        return get_module_windows(file_name)
+    return get_module_posix(file_name)
+
 
 def main():
    config = get_configuration(sys.argv)
