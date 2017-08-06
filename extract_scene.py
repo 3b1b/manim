@@ -186,8 +186,8 @@ def main():
       try:
          handle_scene(SceneClass(**scene_kwargs), **config)
          play_finish_sound()
-      # except RuntimeError as e:
-      #    play_finish_sound()
+      except RuntimeError as e:
+         play_finish_sound()
       except:
          print "\n\n"
          traceback.print_exc()

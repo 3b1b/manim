@@ -267,7 +267,6 @@ class MaintainPositionRelativeTo(Animation):
             self.diff
         )
 
-
 ### Animation modifiers ###
 
 class ApplyToCenters(Animation):

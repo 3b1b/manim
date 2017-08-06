@@ -222,10 +222,11 @@ class NumberPlane(VMobject):
         return self.axes.get_height() / (2.0*self.y_radius)
 
     def get_coordinate_labels(self, x_vals = None, y_vals = None):
-        result = []
-        if x_vals == None and y_vals == None:
-            x_vals = range(-int(self.x_radius), int(self.x_radius))
-            y_vals = range(-int(self.y_radius), int(self.y_radius))
+        coordinate_labels = VGroup()
+        if x_vals == None:
+            x_vals = range(-int(self.x_radius), int(self.x_radius)+1)
+        if y_vals == None:
+            y_vals = range(-int(self.y_radius), int(self.y_radius)+1)
         for index, vals in enumerate([x_vals, y_vals]):
             num_pair = [0, 0]
             for val in vals:
@@ -238,10 +239,10 @@ class NumberPlane(VMobject):
                 num.scale_to_fit_height(
                     self.written_coordinate_height
                 )
-                vect = DOWN if index == 0 else LEFT
-                num.next_to(point, vect, buff = SMALL_BUFF)
-                result.append(num)
-        return result
+                num.next_to(point, DOWN+LEFT, buff = SMALL_BUFF)
+                coordinate_labels.add(num)
+        self.coordinate_labels = coordinate_labels
+        return coordinate_labels
 
     def get_axes(self):
         return self.axes

@@ -1,6 +1,5 @@
 
-
-from mobject.vectorized_mobject import VMobject, VGroup
+from mobject.vectorized_mobject import VMobject, VGroup, VectorizedPoint
 from mobject.tex_mobject import TexMobject
 from animation import Animation
 from scene import Scene
@@ -44,61 +43,55 @@ class Integer(VGroup):
 
 #Todo, this class is now broken
 
-class RangingValue(Animation):
+class ChangingDecimal(Animation):
     CONFIG = {
         "num_decimal_points" : 2,
-        "rate_func" : None,
+        "spare_parts" : 2,
+        "position_update_func" : None,
         "tracked_mobject" : None,
-        "tracked_mobject_next_to_kwargs" : {},
-        "scale_factor" : None,
-        "color" : WHITE,
     }
-    def __init__(self, value_function, **kwargs):
-        """
-        Value function should return a real value 
-        depending on the state of the surrounding scene    
-        """
+    def __init__(self, decimal_number, number_update_func, **kwargs):
         digest_config(self, kwargs, locals())
-        self.update_mobject()
-        Animation.__init__(self, self.mobject, **kwargs)
-
-    def update_mobject(self, alpha = 0):
-        mobject = DecimalNumber(
-            self.value_function(alpha),
-            num_decimal_points = self.num_decimal_points,
-            color = self.color,
+        decimal_number.add(*[
+            VectorizedPoint(decimal_number.get_corner(DOWN+LEFT))
+            for x in range(self.spare_parts)]
         )
-        if not hasattr(self, "mobject"):
-            self.mobject = mobject
-        else:
-            self.mobject.points = mobject.points
-            self.mobject.submobjects = mobject.submobjects
-        if self.scale_factor:
-            self.mobject.scale(self.scale_factor)
-        elif self.tracked_mobject:
-            self.mobject.next_to(
-                self.tracked_mobject,
-                **self.tracked_mobject_next_to_kwargs
-            )
-        return self
+        Animation.__init__(self, decimal_number, **kwargs)
+
+    def update_mobject(self, alpha):
+        self.update_number(alpha)
+        self.update_position()
+
+    def update_number(self, alpha):
+        decimal = self.decimal_number
+        new_decimal = DecimalNumber(self.number_update_func(alpha))
+        new_decimal.replace(decimal, dim_to_match = 1)
+        new_decimal.highlight(decimal.get_color())
+        decimal.align_data(new_decimal)
+        families = [
+            mob.family_members_with_points()
+            for mob in decimal, new_decimal
+        ]
+        for sm1, sm2 in zip(*families):
+            sm1.interpolate(sm1, sm2, 1)
+
+    def update_position(self):
+        if self.position_update_func is not None:
+            self.position_update_func(self.decimal_number)
+        elif self.tracked_mobject is not None:
+            self.decimal_number.move_to(self.tracked_mobject)
 
 
-class RangingValueScene(Scene):
-    CONFIG = {
-        "ranging_values" : []
-    }
 
-    def add_ranging_value(self, value_function, **kwargs):
-        self.ranging_values.append(
-            RangingValue(value_function, **kwargs)
-        )
 
-    def update_frame(self, *args, **kwargs):
-        for val in self.ranging_values:
-            self.remove(val.mobject)
-            val.update_mobject()
-            self.add(val.mobject)
-        return Scene.update_frame(self, *args, **kwargs)
+
+
+
+
+
+
+
+
 
 
 

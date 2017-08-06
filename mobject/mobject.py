@@ -643,7 +643,6 @@ class Mobject(object):
             self.points = np.array([mobject.points[0]])
         return self
 
-
     def push_self_into_submobjects(self):
         copy = self.copy()
         copy.submobjects = []

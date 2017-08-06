@@ -72,6 +72,7 @@ class PiCreature(SVGMobject):
             self.submobjects[LEFT_EYE_INDEX],
             self.submobjects[RIGHT_EYE_INDEX]
         ])
+        self.eye_parts = VGroup(self.eyes, self.pupils)
         self.parts_named = True
 
     def init_colors(self):
@@ -151,11 +152,11 @@ class PiCreature(SVGMobject):
                self.eyes.submobjects[1].get_center()[0]
 
     def blink(self):
-        eye_bottom_y = self.eyes.get_bottom()[1]
-        for mob in self.eyes, self.pupils:
-            mob.apply_function(
-                lambda p : [p[0], eye_bottom_y, p[2]]
-            )
+        eye_parts = self.eye_parts
+        eye_bottom_y = eye_parts.get_bottom()[1]
+        eye_parts.apply_function(
+            lambda p : [p[0], eye_bottom_y, p[2]]
+        )
         return self
 
     def to_corner(self, vect = None, **kwargs):

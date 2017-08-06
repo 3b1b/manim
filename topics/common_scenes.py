@@ -150,7 +150,13 @@ class ExternallyAnimatedScene(Scene):
     def construct(self):
         raise Exception("Don't actually run this class.")
 
-
+class TODOStub(Scene):
+    CONFIG = {
+        "message" : ""
+    }
+    def construct(self):
+        self.add(TextMobject("TODO: %s"%self.message))
+        self.dither()
 
 
 
