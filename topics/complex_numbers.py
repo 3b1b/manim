@@ -196,10 +196,10 @@ class ComplexPlane(NumberPlane):
         result = VGroup()
         nudge = 0.1*(DOWN+RIGHT)
         if len(numbers) == 0:
-            numbers = range(-int(self.x_radius), int(self.x_radius))
+            numbers = range(-int(self.x_radius), int(self.x_radius)+1)
             numbers += [
                 complex(0, y)
-                for y in range(-int(self.y_radius), int(self.y_radius))
+                for y in range(-int(self.y_radius), int(self.y_radius)+1)
             ]
         for number in numbers:
             point = self.number_to_point(number)

@@ -19,7 +19,10 @@ class NumberLine(VMobject):
         "numbers_to_show" : None,
         "longer_tick_multiple" : 2,
         "number_at_center" : 0,
-        "propogate_style_to_family" : True
+        "number_scale_val" : 0.5,
+        "line_to_number_vect" : DOWN,
+        "line_to_number_buff" : MED_SMALL_BUFF,
+        "propogate_style_to_family" : True,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
@@ -38,12 +41,16 @@ class NumberLine(VMobject):
         self.stretch(self.unit_size, 0)
         self.shift(-self.number_to_point(self.number_at_center))
 
-    def add_tick(self, x, size):
-        self.tick_marks.add(Line(
-            x*RIGHT+size*DOWN,
-            x*RIGHT+size*UP,
-        ))
+    def add_tick(self, x, size = None):
+        self.tick_marks.add(self.get_tick(x, size))
         return self
+
+    def get_tick(self, x, size = None):
+        if size is None: size = self.tick_size
+        result = Line(size*DOWN, size*UP)
+        result.rotate(self.main_line.get_angle())
+        result.move_to(self.number_to_point(x))
+        return result
 
     def get_tick_marks(self):
         return self.tick_marks
@@ -77,10 +84,7 @@ class NumberLine(VMobject):
     def default_numbers_to_display(self):
         if self.numbers_to_show is not None:
             return self.numbers_to_show
-        return np.arange(self.leftmost_tick, self.x_max, 1)
-
-    def get_vertical_number_offset(self, direction = DOWN):
-        return 4*direction*self.tick_size
+        return np.arange(int(self.leftmost_tick), int(self.x_max)+1)
 
     def get_number_mobjects(self, *numbers, **kwargs):
         #TODO, handle decimals
@@ -91,10 +95,11 @@ class NumberLine(VMobject):
         result = VGroup()
         for number in numbers:
             mob = TexMobject(str(number))
-            mob.scale_to_fit_height(3*self.tick_size)
-            mob.shift(
+            mob.scale(self.number_scale_val)
+            mob.next_to(
                 self.number_to_point(number),
-                self.get_vertical_number_offset(**kwargs)
+                self.line_to_number_vect,
+                self.line_to_number_buff,
             )
             result.add(mob)
         return result

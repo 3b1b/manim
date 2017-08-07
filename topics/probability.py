@@ -367,8 +367,6 @@ class BarChart(VGroup):
         return self.deepcopy()
 
 
-
-
 ### Cards ###
 
 class DeckOfCards(VGroup):

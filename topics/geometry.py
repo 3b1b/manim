@@ -391,7 +391,7 @@ class PictureInPictureFrame(Rectangle):
             **kwargs
         )
         self.scale_to_fit_height(height)
-        
+
 class Cross(VGroup):
     CONFIG = {
         "stroke_color" : RED,
