@@ -42,6 +42,7 @@ class Slider(NumberLine):
         "unit_size" : 2,
         "center_value" : 0,
         "number_scale_val" : 0.75,
+        "label_scale_val" : 0.75,
         "numbers_with_elongated_ticks" : [],
         "line_to_number_vect" : LEFT,
         "line_to_number_buff" : MED_LARGE_BUFF,
@@ -69,6 +70,14 @@ class Slider(NumberLine):
         self.dial = dial
         self.re_dial = re_dial
         self.last_sign = -1
+
+    def add_label(self, tex):
+        label = TexMobject(tex)
+        label.scale(self.label_scale_val)
+        label.move_to(self.main_line.get_top())
+        label.shift(MED_LARGE_BUFF*UP)
+        self.add(label)
+        self.label = label
 
     def add_real_estate_ticks(
         self, 
@@ -153,9 +162,19 @@ class SliderScene(Scene):
         sliders.arrange_submobjects(RIGHT, buff = self.slider_spacing)
         sliders[0].add_numbers()
         sliders[0].set_value(np.sqrt(self.total_real_estate))
-
-        self.add(sliders)
         self.sliders = sliders
+        
+        self.add_labels_to_sliders()
+        self.add(sliders)
+
+    def add_labels_to_sliders(self):
+        if len(self.sliders) <= 4:
+            for slider, char in zip(self.sliders, "xyzw"):
+                slider.add_label(char)
+        else:
+            for i, slider in enumerate(self.sliders):
+                slider.add_label("x_{%d}"%(i+1))
+        return self
 
     def reset_dials(self, values, fixed_sliders = None):
         if fixed_sliders is None: fixed_sliders = []
@@ -259,7 +278,7 @@ class SliderScene(Scene):
         if self.ambiently_change_sliders:
             self.play(Animation(self.sliders, run_time = time))
         else:
-            self.dither(time)
+            Scene.dither(self,time)
 
 ##########
 
@@ -726,17 +745,52 @@ class Professionals(PiCreatureScene):
         return pi_creatures
 
 class OfferAHybrid(SliderScene):
+    CONFIG = {
+        "n_sliders" : 3,
+    }
     def construct(self):
-        slider = self.sliders[0]
-        
+        self.remove(self.sliders)
+        titles = self.get_titles()
+        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line.next_to(titles, DOWN)
+        v_lines = VGroup(*[
+            Line(UP, DOWN).scale(SPACE_HEIGHT)
+            for x in range(2)
+        ])
+        v_lines.generate_target()
+        for line, vect in zip(v_lines.target, [LEFT, RIGHT]):
+            line.shift(vect*SPACE_WIDTH/3)
+
+        equation = TexMobject("x^2 + y^2 + z^2 = 1")
+        equation.generate_target()
+        equation.shift(SPACE_WIDTH*LEFT/2)
+        equation.target.shift(2*SPACE_WIDTH*LEFT/3)
+
+        self.add(titles, h_line, v_lines, equation)
+        self.dither()
+        self.play(*map(MoveToTarget, [titles, v_lines, equation]))
+        self.play(Write(self.sliders, run_time = 1))
         self.initialize_ambiant_slider_movement()
-        self.dither(3)
-        self.play(slider.shift, 3*LEFT)
-        self.dither(2)
+        self.dither(10)
         self.wind_down_ambient_movement()
-        self.dither(2)
+
+    def get_titles(self):
+        titles = VGroup(*map(TextMobject, [
+            "Analytic", "Hybrid", "Geometric"
+        ]))
+        titles.to_edge(UP)
+        titles[1].highlight(BLUE)
+        titles.generate_target()
+        titles[1].scale_in_place(0.001)
+        titles[0].shift(SPACE_WIDTH*LEFT/2)
+        titles.target[0].shift(2*SPACE_WIDTH*LEFT/3)
+        titles[2].shift(SPACE_WIDTH*RIGHT/2)
+        titles.target[2].shift(2*SPACE_WIDTH*RIGHT/3)
+        return titles
 
 
+class RotatingSphereWithWanderingPoint(ExternallyAnimatedScene):
+    pass
 
 
 
