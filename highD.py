@@ -42,7 +42,7 @@ class Slider(NumberLine):
         "unit_size" : 2,
         "center_value" : 0,
         "number_scale_val" : 0.75,
-        "label_scale_val" : 0.75,
+        "label_scale_val" : 1,
         "numbers_with_elongated_ticks" : [],
         "line_to_number_vect" : LEFT,
         "line_to_number_buff" : MED_LARGE_BUFF,
@@ -85,8 +85,8 @@ class Slider(NumberLine):
         colors = [BLUE, RED],
         ):
         self.real_estate_ticks = VGroup(*[   
-            self.get_tick(u*np.sqrt(x))
-            for x in np.arange(re_per_tick, 1, re_per_tick)
+            self.get_tick(u*np.sqrt(x + re_per_tick))
+            for x in np.arange(0, 1, re_per_tick)
             for u in [-1, 1]
         ])
         self.real_estate_ticks.set_stroke(width = 3)
@@ -176,26 +176,39 @@ class SliderScene(Scene):
                 slider.add_label("x_{%d}"%(i+1))
         return self
 
-    def reset_dials(self, values, fixed_sliders = None):
-        if fixed_sliders is None: fixed_sliders = []
-        unspecified_sliders = [
-            self.sliders[i]
-            for i in range(len(self.sliders))
-            if i  >= len(values) or values[i] is None
-            if self.sliders[i] not in fixed_sliders
-        ]
-        for value, slider in zip(values, self.sliders):
-            if value is not None:
-                slider.set_value(value)
-        #Readjust sliers with unspecified values that are not fixed
-        real_estate_diff = self.total_real_estate - self.get_current_total_real_estate()
-        for i, slider in enumerate(unspecified_sliders):
-            n_remaining = len(unspecified_sliders[i:])
-            d_re = real_estate_diff / n_remaining
-            left_over = slider.change_real_estate(d_re)
-            real_estate_diff -= (d_re - left_over)
-        if real_estate_diff > 0.001:
+    def reset_dials(self, values, run_time = 1, **kwargs):
+        target_vector = self.get_target_vect_from_subset_of_values(values, **kwargs)
+        self.play(*[
+            ApplyMethod(slider.set_value, value)
+            for value, slider in zip(target_vector, self.sliders)
+        ] + [
+            slider.get_dial_supplement_animation()
+            for slider in self.sliders
+        ], run_time = run_time)
+
+    def get_target_vect_from_subset_of_values(self, values, fixed_indices = None):
+        if fixed_indices is None: fixed_indices = []
+        n = len(self.sliders)
+        curr_vector = self.get_vector()
+        target_vector = np.zeros(n)
+        unspecified_vector = np.zeros(n)
+        for i in range(n):
+            if i < len(values) and values[i] is not None:
+                target_vector[i] = values[i]
+            else:
+                unspecified_vector[i] = curr_vector[i]
+        left_over_re = self.total_real_estate - np.linalg.norm(target_vector)**2
+        if left_over_re < 0:
             raise Exception("Overspecified reset")
+        uv_norm = np.linalg.norm(unspecified_vector)
+        if uv_norm > 0:
+            unspecified_vector *= np.sqrt(left_over_re)/uv_norm
+        return target_vector + unspecified_vector
+
+    def set_to_vector(self, vect):
+        assert len(vect) == len(self.sliders)
+        for slider, value in zip(self.sliders, vect):
+            slider.set_value(value)
 
     def get_vector(self):
         return np.array([slider.get_value() for slider in self.sliders])
@@ -227,10 +240,17 @@ class SliderScene(Scene):
                 self.ambient_jerk_magnitude,
             ]
         ]
+        ##Ensure counterclockwise rotations in 2D
+        if len(self.ambient_velocity) == 2:
+            cross = np.cross(self.get_vector(), self.ambient_velocity)
+            if cross < 0:
+                self.ambient_velocity *= -1
         self.add_foreground_mobjects(self.sliders)
 
-    def wind_down_ambient_movement(self, time = 1):
+    def wind_down_ambient_movement(self, time = 1, dither = True):
         self.ambient_change_end_time = self.ambient_change_time + time
+        if dither:
+            self.dither(time)
 
     def ambient_slider_movement_update(self):
         #Set velocity_magnitude based on start up or wind down
@@ -240,7 +260,7 @@ class SliderScene(Scene):
         time_until_end = self.ambient_change_end_time - self.ambient_change_time
         if time_until_end <= 1:
             velocity_magnitude *= smooth(time_until_end)
-        if time_until_end <= 0:
+        if time_until_end < 0:
             self.ambiently_change_sliders = False
             return
 
@@ -261,7 +281,7 @@ class SliderScene(Scene):
             vect *= mag/np.linalg.norm(vect)
             deriv = vect
 
-        self.reset_dials(target_vector + center_point)
+        self.set_to_vector(target_vector + center_point)
         self.ambient_change_time += self.frame_duration
 
     def get_random_vector(self, magnitude):
@@ -773,6 +793,7 @@ class OfferAHybrid(SliderScene):
         self.initialize_ambiant_slider_movement()
         self.dither(10)
         self.wind_down_ambient_movement()
+        self.dither()
 
     def get_titles(self):
         titles = VGroup(*map(TextMobject, [
@@ -788,18 +809,389 @@ class OfferAHybrid(SliderScene):
         titles.target[2].shift(2*SPACE_WIDTH*RIGHT/3)
         return titles
 
-
 class RotatingSphereWithWanderingPoint(ExternallyAnimatedScene):
     pass
 
+class DismissProjection(PiCreatureScene):
+    CONFIG = { 
+        "screen_rect_color" : WHITE,
+        "example_vect" : np.array([0.52, 0.26, 0.53, 0.60]),
+    }
+    def construct(self):
+        self.remove(self.pi_creature)
+        self.show_all_spheres()
+        self.discuss_4d_sphere_definition()
+        self.talk_through_animation()
+        self.transition_to_next_scene()
+        
+    def show_all_spheres(self):
+        equations = VGroup(*map(TexMobject, [
+            "x^2 + y^2 = 1",
+            "x^2 + y^2 + z^2 = 1",
+            "x^2 + y^2 + z^2 + w^2 = 1",
+        ]))
+        colors = [YELLOW, GREEN, BLUE]
+        for equation, edge, color in zip(equations, [LEFT, ORIGIN, RIGHT], colors):
+            equation.highlight(color)
+            equation.shift(3*UP)
+            equation.to_edge(edge)
+        equations[1].shift(LEFT)
+
+        spheres = VGroup(
+            self.get_circle(equations[0]),
+            self.get_sphere_screen(equations[1], DOWN),
+            self.get_sphere_screen(equations[2], DOWN),
+        )
+        
+        for equation, sphere in zip(equations, spheres):
+            self.play(
+                Write(equation),
+                LaggedStart(ShowCreation, sphere),
+            )
+        self.dither()
+
+        self.equations = equations
+        self.spheres = spheres
+
+    def get_circle(self, equation):
+        result = VGroup(
+            NumberPlane(
+                x_radius = 2.5,
+                y_radius = 2,
+            ).fade(0.4),
+            Circle(color = YELLOW, radius = 1),
+        )
+        result.scale(0.7)
+        result.next_to(equation, DOWN)
+        return result
+
+    def get_sphere_screen(self, equation, vect):
+        square = Rectangle()
+        square.scale_to_fit_width(equation.get_width())
+        square.stretch_to_fit_height(3)
+        square.next_to(equation, vect)
+        square.highlight(self.screen_rect_color)
+        return square
+
+    def discuss_4d_sphere_definition(self):
+        sphere = self.spheres[-1]
+        equation = self.equations[-1]
+
+        sphere_words = TextMobject("``4-dimensional sphere''")
+        sphere_words.next_to(sphere, DOWN+LEFT, buff = LARGE_BUFF)
+        arrow = Arrow(
+            sphere_words.get_right(), sphere.get_bottom(), 
+            path_arc = np.pi/3, 
+            color = BLUE
+        )
+        descriptor = TexMobject(
+            "\\text{Just lists of numbers like }", 
+            "(%.02f \\,, %.02f \\,, %.02f \\,, %.02f \\,)"%tuple(self.example_vect)
+        )
+        descriptor[1].highlight(BLUE)
+        descriptor.next_to(sphere_words, DOWN)
+        dot = Dot(descriptor[1].get_top())
+        dot.set_fill(WHITE, opacity = 0.75)
+
+        self.play(
+            Write(sphere_words),
+            ShowCreation(
+                arrow,
+                rate_func = squish_rate_func(smooth, 0.5, 1)
+            ),
+            run_time = 3,
+        )
+        self.dither()
+        self.play(Write(descriptor, run_time = 2))
+        self.dither()
+        self.play(
+            dot.move_to, equation.get_left(),
+            dot.set_fill, None, 0,
+            path_arc = -np.pi/12
+        )
+        self.dither(2)
+
+        self.sphere_words = sphere_words
+        self.sphere_arrow = arrow
+        self.descriptor = descriptor
+
+    def talk_through_animation(self):
+        sphere = self.spheres[-1]
+
+        morty = self.pi_creature
+        alt_dims = VGroup(*map(TextMobject, ["5D", "6D", "7D"]))
+        alt_dims.next_to(morty.eyes, UP, SMALL_BUFF)
+        alt_dim = alt_dims[0]
+
+        self.play(FadeIn(morty))
+        self.play(morty.change, "raise_right_hand", sphere)
+        self.dither(3)
+        self.play(morty.change, "confused", sphere)
+        self.dither(3)
+        self.play(
+            morty.change, "erm", alt_dims,
+            FadeIn(alt_dim)
+        )
+        for new_alt_dim in alt_dims[1:]:
+            self.dither()
+            self.play(Transform(alt_dim, new_alt_dim))
+        self.dither()
+        self.play(morty.change, "concerned_musician")
+        self.play(FadeOut(alt_dim))
+        self.dither()
+        self.play(morty.change, "angry", sphere)
+        self.dither(2)
+
+    def transition_to_next_scene(self):
+        equation = self.equations[-1]
+        self.equations.remove(equation)
+        tup = self.descriptor[1]
+        self.descriptor.remove(tup)
+
+        equation.generate_target()
+        equation.target.center().to_edge(UP)
+        tup.generate_target()
+        tup.target.next_to(equation.target, DOWN)
+        tup.target.highlight(WHITE)
+
+        self.play(LaggedStart(FadeOut, VGroup(*[
+            self.equations, self.spheres,
+            self.sphere_words, self.sphere_arrow,
+            self.descriptor,
+            self.pi_creature
+        ])))
+        self.play(*map(MoveToTarget, [equation, tup]))
+        self.dither()
+
+    ###
+
+    def create_pi_creature(self):
+        return Mortimer().scale(0.8).to_corner(DOWN+RIGHT)
+
+class RotatingSphere(ExternallyAnimatedScene):
+    pass
+
+class Introduce4DSliders(SliderScene):
+    CONFIG = {
+        "slider_config" : {
+            "include_real_estate_ticks" : False,
+            "numbers_with_elongated_ticks" : [-1, 0, 1],
+            "tick_frequency" : 0.25,
+            "tick_size" : 0.05,
+            "dial_color" : YELLOW,
+        },
+        "slider_spacing" : LARGE_BUFF,
+    }
+    def construct(self):
+        self.match_last_scene()
+        self.introduce_sliders()
+        self.ask_about_constraint()
+
+    def match_last_scene(self):
+        self.start_vect = DismissProjection.CONFIG["example_vect"]
+        self.remove(self.sliders)
+
+        equation = TexMobject("x^2 + y^2 + z^2 + w^2 = 1")
+        x, y, z, w = self.start_vect
+        tup = TexMobject(
+            "(", "%.02f \\,"%x, 
+            ",", "%.02f \\,"%y, 
+            ",", "%.02f \\,"%z, 
+            ",", "%.02f \\,"%w, ")"
+        )
+        equation.center().to_edge(UP)
+        equation.highlight(BLUE)
+        tup.next_to(equation, DOWN)
+
+        self.sliders.next_to(tup, DOWN)
+        self.sliders.shift(0.8*LEFT)
+
+        self.add(equation, tup)
+        self.dither()
+        self.equation = equation
+        self.tup = tup
+
+    def introduce_sliders(self):
+        self.set_to_vector(self.start_vect)
+
+        numbers = self.tup.get_parts_by_tex(".")
+        self.tup.remove(*numbers)
+        dials = VGroup(*[slider.dial for slider in self.sliders])
+        dial_copies = dials.copy()
+        dials.set_fill(opacity = 0)
+
+        self.play(LaggedStart(FadeIn, self.sliders))
+        self.play(*[
+            Transform(
+                num, dial,
+                run_time = 3,
+                rate_func = squish_rate_func(smooth, a, a+0.5),
+                remover = True
+            )
+            for num, dial, a in zip(
+                numbers, dial_copies, 
+                np.linspace(0, 0.5, len(numbers))
+            )
+        ])
+        dials.set_fill(opacity = 1)
+        self.initialize_ambiant_slider_movement()
+        self.play(FadeOut(self.tup))
+        self.dither(10)
+
+    def ask_about_constraint(self):
+        equation = self.equation
+        rect = SurroundingRectangle(equation, color = GREEN)
+        randy = Randolph().scale(0.5)
+        randy.next_to(rect, DOWN+LEFT, LARGE_BUFF)
+
+        self.play(ShowCreation(rect))
+        self.play(FadeIn(randy))
+        self.play(randy.change, "pondering", rect)
+        self.dither()
+        for mob in self.sliders, rect:
+            self.play(randy.look_at, mob)
+            self.play(Blink(randy))
+            self.dither()
+        self.dither()
+
+class TwoDimensionalCase(Introduce4DSliders):
+    CONFIG = {
+        "n_sliders" : 2,
+    }
+    def setup(self):
+        SliderScene.setup(self)
+        self.sliders.shift(RIGHT)
+
+        plane = NumberPlane(
+            x_radius = 2.5,
+            y_radius = 2.5,
+        )
+        plane.fade(0.25)
+        plane.axes.highlight(GREY)
+        plane.add_coordinates()
+        plane.to_edge(LEFT)
+        origin = plane.coords_to_point(0, 0)
+
+        circle = Circle(radius = 1, color = WHITE)
+        circle.move_to(origin)
+
+        dot = Dot(color = YELLOW)
+        dot.move_to(plane.coords_to_point(1, 0))
+
+        equation = TexMobject("x^2 + y^2 = 1")
+        equation.to_corner(UP + RIGHT)
+
+        self.add(plane, circle, dot, equation)
+        self.add_foreground_mobjects(dot)
+
+        self.plane = plane
+        self.circle = circle
+        self.dot = dot
+        self.equation = equation
+
+    def construct(self):
+        self.force_skipping()
+
+        self.let_values_wander()
+        self.introduce_real_estate()
+        self.let_values_wander(6)
+        self.comment_on_cheap_vs_expensive_real_estate()
+        self.nudge_x_from_one_example()
+
+    def let_values_wander(self, total_time = 5):
+        self.initialize_ambiant_slider_movement()
+        self.dither(total_time - 1)
+        self.wind_down_ambient_movement()
+
+    def introduce_real_estate(self):
+        x_squared_mob = VGroup(*self.equation[:2])
+        y_squared_mob = VGroup(*self.equation[3:5])
+        x_rect = SurroundingRectangle(x_squared_mob)
+        y_rect = SurroundingRectangle(y_squared_mob)
+        rects = VGroup(x_rect, y_rect)
+
+        decimals = VGroup(*[
+            DecimalNumber(num**2) 
+            for num in self.get_vector()
+        ])
+        decimals.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        decimals.next_to(rects, DOWN, LARGE_BUFF)
+
+        real_estate_word = TextMobject("``Real estate''")
+        real_estate_word.next_to(decimals, DOWN, MED_LARGE_BUFF)
+        self.play(FadeIn(real_estate_word))
+
+        colors = GREEN, RED
+        arrows = VGroup()
+        for rect, decimal, color in zip(rects, decimals, colors):
+            rect.highlight(color)
+            decimal.highlight(color)
+            arrow = Arrow(
+                rect.get_bottom()+SMALL_BUFF*UP, decimal.get_top(),
+                tip_length = 0.2,
+            )
+            arrow.highlight(color)
+            arrows.add(arrow)
+
+            self.play(ShowCreation(rect))
+            self.play(
+                ShowCreation(arrow),
+                Write(decimal)
+            )
+            self.dither()
+
+        def create_update_func(i):
+            return lambda alpha : self.get_vector()[i]**2
+
+        self.add_foreground_mobjects(decimals)
+        self.decimals = decimals
+        self.decimal_update_anims = [
+            ChangingDecimal(decimal, create_update_func(i))
+            for i, decimal in enumerate(decimals)
+        ]
+        self.real_estate_word = real_estate_word
+
+    def comment_on_cheap_vs_expensive_real_estate(self):
+        blue_rects = VGroup()
+        red_rects = VGroup()
+        for slider in self.sliders:
+            for x1, x2 in (-0.25, 0.25), (0.75, 1.0), (-1.0, -0.75):
+                p1, p2 = map(slider.number_to_point, [x1, x2])
+                rect = Rectangle(
+                    stroke_width = 0,
+                    fill_opacity = 0.5,
+                    width = 0.25,
+                    height = (p2-p1)[1]
+                )
+                rect.move_to((p1+p2)/2)
+                if np.mean([x1, x2]) == 0:
+                    rect.highlight(BLUE)
+                    blue_rects.add(rect)
+                else:
+                    rect.highlight(RED)
+                    red_rects.add(rect)
+
+        self.play(DrawBorderThenFill(blue_rects))
+        self.dither()
+        self.play(ReplacementTransform(blue_rects, red_rects))
+        self.dither()
+        self.play(FadeOut(red_rects))
+
+    def nudge_x_from_one_example(self):
+        
+
+        self.revert_to_original_skipping_status()
 
 
+    #####
 
-
-
-
-
-
+    def update_frame(self, *args, **kwargs):
+        x, y = self.get_vector()
+        self.dot.move_to(self.plane.coords_to_point(x, y))
+        if hasattr(self, "decimals"):
+            for anim in self.decimal_update_anims:
+                anim.update(0)
+        SliderScene.update_frame(self, *args, **kwargs)
 
 
 
