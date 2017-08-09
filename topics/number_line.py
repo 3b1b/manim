@@ -32,7 +32,7 @@ class NumberLine(VMobject):
 
     def generate_points(self):
         self.main_line = Line(self.x_min*RIGHT, self.x_max*RIGHT)
-        self.tick_marks = VMobject()
+        self.tick_marks = VGroup()
         self.add(self.main_line, self.tick_marks)
         for x in self.get_tick_numbers():
             self.add_tick(x, self.tick_size)

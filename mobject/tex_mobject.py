@@ -80,6 +80,8 @@ class TexMobject(SVGMobject):
         if tex in ["\\over", "\\overline"]:
             #fraction line needs something to be over
             tex += "\\,"
+        if tex == "\\sqrt":
+            tex += "{\\quad}"
         for t1, t2 in ("\\left", "\\right"), ("\\right", "\\left"):
             should_replace = reduce(op.and_, [
                 t1 in tex,

@@ -12,7 +12,7 @@ class DecimalNumber(VMobject):
     }
     def __init__(self, float_num, **kwargs):
         digest_config(self, kwargs)
-        num_string = '%.*f' % (self.num_decimal_points, float_num)
+        num_string = '%.*f'%(self.num_decimal_points, float_num)
         VMobject.__init__(self, *[
             TexMobject(char)
             for char in num_string
@@ -64,7 +64,10 @@ class ChangingDecimal(Animation):
 
     def update_number(self, alpha):
         decimal = self.decimal_number
-        new_decimal = DecimalNumber(self.number_update_func(alpha))
+        new_decimal = DecimalNumber(
+            self.number_update_func(alpha),
+            num_decimal_points = self.num_decimal_points
+        )
         new_decimal.replace(decimal, dim_to_match = 1)
         new_decimal.highlight(decimal.get_color())
         decimal.align_data(new_decimal)
