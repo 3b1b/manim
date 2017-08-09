@@ -269,6 +269,15 @@ class Mobject(object):
         self.shift(target_point - point_to_align + buff*direction)
         return self
 
+    def align_to(self, mobject_or_point, direction = UP):
+        if isinstance(mobject_or_point, Mobject):
+            mob = mobject_or_point
+            point = mob.get_edge_center(direction)
+        else:
+            point = mobject_or_point
+        diff = point - self.get_edge_center(direction) 
+        self.shift(direction*np.dot(diff, direction))
+        return self
 
     def shift_onto_screen(self, **kwargs):
         space_lengths = [SPACE_WIDTH, SPACE_HEIGHT]
