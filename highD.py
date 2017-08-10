@@ -102,6 +102,10 @@ class Slider(NumberLine):
             dial.move_to(self.number_to_point(val))
         return self
 
+    def set_center_value(self, x):
+        self.center_value = x
+        return self
+
     def change_real_estate(self, d_re):
         left_over = 0
         curr_re = self.get_real_estate()
@@ -175,6 +179,8 @@ class SliderScene(Scene):
         if len(self.sliders) <= 4:
             for slider, char in zip(self.sliders, "xyzw"):
                 slider.add_label(char)
+            for slider in self.sliders[1:]:
+                slider.label.align_to(self.sliders[0].label, UP)
         else:
             for i, slider in enumerate(self.sliders):
                 slider.add_label("x_{%d}"%(i+1))
@@ -182,12 +188,21 @@ class SliderScene(Scene):
 
     def reset_dials(self, values, run_time = 1, **kwargs):
         target_vector = self.get_target_vect_from_subset_of_values(values, **kwargs)
+
+        radius = np.sqrt(self.total_real_estate)
+        def update_sliders(sliders):
+            curr_vect = self.get_vector()
+            curr_vect -= self.center_point
+            curr_vect *= radius/np.linalg.norm(curr_vect)
+            curr_vect += self.center_point
+            self.set_to_vector(curr_vect)
+            return sliders
+
         self.play(*[
             ApplyMethod(slider.set_value, value)
             for value, slider in zip(target_vector, self.sliders)
         ] + [
-            slider.get_dial_supplement_animation()
-            for slider in self.sliders
+            UpdateFromFunc(self.sliders, update_sliders)
         ], run_time = run_time)
 
     def get_target_vect_from_subset_of_values(self, values, fixed_indices = None):
@@ -205,7 +220,7 @@ class SliderScene(Scene):
                 unspecified_vector[i] = curr_vector[i]
         used_re = np.linalg.norm(target_vector - self.center_point)**2
         left_over_re = self.total_real_estate - used_re
-        if left_over_re < 0:
+        if left_over_re < -0.001:
             raise Exception("Overspecified reset")
         uv_norm = np.linalg.norm(unspecified_vector - self.center_point)
         if uv_norm == 0 and left_over_re > 0:
@@ -227,6 +242,12 @@ class SliderScene(Scene):
 
     def get_center_point(self):
         return np.array([slider.center_value for slider in self.sliders])
+
+    def set_center_point(self, new_center_point):
+        self.center_point = np.array(new_center_point)
+        for x, slider in zip(new_center_point, self.sliders):
+            slider.set_center_value(x)
+        return self
 
     def get_current_total_real_estate(self):
         return sum([
@@ -1876,6 +1897,8 @@ class TenSliders(SliderScene):
     CONFIG = {
         "n_sliders" : 10,
         "run_time": 30,
+        "slider_spacing" : 0.75,
+        "ambient_acceleration_magnitude" : 2.0,
     }
     def construct(self):
         self.initialize_ambiant_slider_movement()
@@ -1906,7 +1929,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
             value = int(number.get_tex_string())
             number.next_to(
                 x_slider.number_to_point(value), 
-                LEFT, MED_LARGE_BUFF
+                LEFT, MED_SMALL_BUFF
             )
         self.plane.axes.highlight(BLUE)
 
@@ -1929,14 +1952,15 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         self.corner_circles = corner_circles
 
     def construct(self):
-        self.force_skipping()
-
         self.ask_about_off_center_circle()
         self.recenter_circle()
         self.write_x_and_y_real_estate()
         self.swap_with_top_right_circle()
         self.show_center_circle()
         self.describe_tangent_point()
+        self.perterb_point()
+        self.wander_on_inner_circle()
+        self.ask_about_inner_real_estate()
 
     def ask_about_off_center_circle(self):
         question = TextMobject("Off-center circles?")
@@ -2051,32 +2075,985 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         self.play(FocusOn(circle))
         self.play(GrowFromCenter(circle, run_time = 2))
         self.dither(3)
-        self.wind_down_ambient_movement()
 
     def describe_tangent_point(self):
-        
-        self.revert_to_original_skipping_status()
-        self.reset_dials([
+        target_vector = np.array([
             1-np.sqrt(2)/2, 1-np.sqrt(2)/2
         ])
+        point = self.plane.coords_to_point(*target_vector)
+        origin = self.plane.coords_to_point(0, 0)
+        h_line = Line(point[1]*UP + origin[0]*RIGHT, point)
+        v_line = Line(point[0]*RIGHT+origin[1]*UP, point)
+
+        while np.linalg.norm(self.get_vector()-target_vector) > 0.5:
+            self.dither()
+        self.wind_down_ambient_movement(0)
+        self.reset_dials(target_vector)
+        self.play(*map(ShowCreation, [h_line, v_line]))
         self.dither()
 
+        re_line = DashedLine(
+            self.sliders[0].dial.get_left() + MED_SMALL_BUFF*LEFT,
+            self.sliders[1].dial.get_right() + MED_SMALL_BUFF*RIGHT,
+        )
+        words = TextMobject("Evenly shared \\\\ real estate")
+        words.scale(0.8)
+        words.next_to(re_line, RIGHT)
+        self.play(ShowCreation(re_line))
+        self.play(Write(words))
+        self.dither()
 
+        self.evenly_shared_words = words
+        self.re_line = re_line
 
+    def perterb_point(self):
+        #Perturb dials
+        target_vector = np.array([
+            1 - np.sqrt(0.7),
+            1 - np.sqrt(0.3),
+        ])
+        ghost_dials = VGroup(*[
+            slider.dial.copy()
+            for slider in self.sliders
+        ])
+        ghost_dials.set_fill(WHITE, opacity = 0.75)
 
+        self.add_foreground_mobjects(ghost_dials)
+        self.reset_dials(target_vector)
+        self.dither()
 
+        #Comment on real estate exchange
+        x_words = TextMobject("Gain expensive \\\\", "real estate")
+        y_words = TextMobject("Give up cheap \\\\", "real estate")
+        VGroup(x_words, y_words).scale(0.8)
+        x_words.next_to(self.re_line, UP+LEFT)
+        x_words.shift(SMALL_BUFF*(DOWN+LEFT))
+        y_words.next_to(self.re_line, UP+RIGHT)
+        y_words.shift(MED_LARGE_BUFF*UP)
 
+        x_arrow, y_arrow = [
+            Arrow(
+                words[1].get_edge_center(vect), self.sliders[i].dial,
+                tip_length = 0.15,
+            )
+            for i, words, vect in zip(
+                (0, 1), [x_words, y_words], [RIGHT, LEFT]
+            )
+        ]
 
+        self.play(
+            Write(x_words, run_time = 2),
+            ShowCreation(x_arrow)
+        )
+        self.dither()
+        self.play(FadeOut(self.evenly_shared_words))
+        self.play(
+            Write(y_words, run_time = 2),
+            ShowCreation(y_arrow)
+        )
+        self.dither(2)
 
+        #Swap perspective
+        word_starts = VGroup(y_words[0], x_words[0])
+        crosses = VGroup()
+        new_words = VGroup()
+        for w1, w2 in zip(word_starts, reversed(word_starts)):
+            crosses.add(Cross(w1))
+            w1_copy = w1.copy()
+            w1_copy.generate_target()
+            w1_copy.target.next_to(w2, UP, SMALL_BUFF)
+            new_words.add(w1_copy)
 
+        self.play(*[
+            ApplyMethod(
+                slider.real_estate_ticks.shift,
+                slider.number_to_point(0)-slider.number_to_point(1)
+            )
+            for slider in self.sliders
+        ])
+        self.dither()
+        self.play(ShowCreation(crosses))
+        self.play(
+            LaggedStart(MoveToTarget, new_words),
+            Animation(crosses)
+        )
+        self.dither(3)
 
+        #Return to original position
+        target_vector = np.array(2*[1-np.sqrt(0.5)])
+        self.play(LaggedStart(FadeOut, VGroup(*[
+            ghost_dials, 
+            x_words, y_words, 
+            x_arrow, y_arrow, 
+            crosses, new_words, 
+        ])))
+        self.remove_foreground_mobjects(ghost_dials)
+        self.reset_dials(target_vector)
+        self.center_point = np.zeros(2)
+        for x, slider in zip(self.center_point, self.sliders):
+            slider.center_value = x
+        self.set_to_vector(target_vector)
+        self.total_real_estate = self.get_current_total_real_estate()
+        self.dither(2)
 
+    def wander_on_inner_circle(self):
+        self.initialize_ambiant_slider_movement()
+        self.dither(9)
 
+    def ask_about_inner_real_estate(self):
+        question = TextMobject("What is \\\\ $x^2 + y^2$?")
+        question.next_to(self.re_line, RIGHT)
 
+        rhs = TexMobject("<0.5^2 + 0.5^2")
+        rhs.scale(0.8)
+        rhs.next_to(question, DOWN)
+        rhs.to_edge(RIGHT)
 
+        half_line = Line(*[
+            slider.number_to_point(0.5) + MED_LARGE_BUFF*vect
+            for slider, vect in zip(self.sliders, [LEFT, RIGHT])
+        ])
+        half = TexMobject("0.5")
+        half.scale(self.sliders[0].number_scale_val)
+        half.next_to(half_line, LEFT, SMALL_BUFF)
 
+        target_vector = np.array(2*[1-np.sqrt(0.5)])
+        while np.linalg.norm(target_vector - self.get_vector()) > 0.5:
+            self.dither()
+        self.wind_down_ambient_movement(0)
+        self.reset_dials(target_vector)
+        self.play(Write(question))
+        self.dither(3)
+        self.play(
+            ShowCreation(half_line),
+            Write(half)
+        )
+        self.dither()
+        self.play(Write(rhs))
+        self.dither(3)
 
+class ThreeDBoxExampleWithSliders(SliderScene):
+    CONFIG = {
+        "n_sliders" : 3,
+        "slider_config" : {
+            "x_min" : -2,
+            "x_max" : 2,
+            "unit_size" : 1.5,
+        },
+        "center_point" : np.ones(3),
+    }
+    def setup(self):
+        SliderScene.setup(self)
+        self.sliders.shift(2*RIGHT)
 
+    def construct(self):
+        self.initialize_ambiant_slider_movement()
+        self.name_corner_sphere()
+        self.point_out_closest_point()
+        self.compare_to_halfway_point()
+        self.reframe_as_inner_sphere_point()
+        self.place_bound_on_inner_real_estate()
+        self.comment_on_inner_sphere_smallness()
+
+    def name_corner_sphere(self):
+        sphere_name = TextMobject(
+            """Sphere with radius 1\\\\
+            centered at (1, 1, 1)"""
+        )
+        sphere_name.to_corner(UP+LEFT)
+        arrow = Arrow(
+            sphere_name, VGroup(*self.sliders[0].numbers[-2:]),
+            color = BLUE
+        )
+
+        self.play(
+            LaggedStart(FadeIn, sphere_name,),
+            ShowCreation(arrow, rate_func = squish_rate_func(smooth, 0.7, 1)),
+            run_time = 3
+        )
+        self.dither(5)
+
+        self.sphere_name = sphere_name
+        self.arrow = arrow
+
+    def point_out_closest_point(self):
+        target_x = 1-np.sqrt(1./3)
+        target_vector = np.array(3*[target_x])
+        re_words = TextMobject(
+            "$x$, $y$ and $z$ each have \\\\",
+            "$\\frac{1}{3}$", "units of real estate"
+        )
+        re_words.to_corner(UP+LEFT)
+        re_line = DashedLine(*[
+            self.sliders[i].number_to_point(target_x) + MED_SMALL_BUFF*vect
+            for i, vect in (0, LEFT), (2, RIGHT)
+        ])
+        new_arrow = Arrow(
+            re_words.get_corner(DOWN+RIGHT), re_line.get_left(),
+            color = BLUE
+        )
+
+        self.wind_down_ambient_movement()
+        self.play(*[
+            ApplyMethod(slider.set_value, x)
+            for x, slider in zip(target_vector, self.sliders)
+        ])
+        self.play(ShowCreation(re_line))
+        self.play(
+            FadeOut(self.sphere_name),
+            Transform(self.arrow, new_arrow),
+        )
+        self.play(LaggedStart(FadeIn, re_words))
+        self.dither(2)
+
+        self.re_words = re_words
+        self.re_line = re_line
+
+    def compare_to_halfway_point(self):
+        half_line = Line(*[
+            self.sliders[i].number_to_point(0.5)+MED_SMALL_BUFF*vect
+            for i, vect in (0, LEFT), (2, RIGHT)
+        ])
+        half_line.set_stroke(MAROON_B, 6)
+        half_label = TexMobject("0.5")
+        half_label.scale(self.sliders[0].number_scale_val)
+        half_label.next_to(half_line, LEFT, MED_SMALL_BUFF)
+        half_label.highlight(half_line.get_color())
+
+        curr_vector = self.get_vector()
+        target_vector = 0.5*np.ones(3)
+        ghost_dials = VGroup(*[
+            slider.dial.copy().set_fill(WHITE, 0.5)
+            for slider in self.sliders
+        ])
+
+        cross = Cross(self.re_words.get_parts_by_tex("frac"))
+        new_re = TexMobject("(0.5)^2 = 0.25")
+        new_re.next_to(cross, DOWN, MED_SMALL_BUFF, LEFT)
+        new_re.highlight(MAROON_B)
+
+        self.play(
+            FadeOut(self.arrow),
+            Write(half_label, run_time = 1),
+            ShowCreation(half_line)
+        )
+        self.dither()
+        self.add(ghost_dials)
+        self.play(*[
+            ApplyMethod(slider.set_value, 0.5)
+            for slider in self.sliders
+        ])
+        self.play(ShowCreation(cross))
+        self.play(Write(new_re))
+        self.dither(3)
+        self.play(
+            FadeOut(new_re),
+            FadeOut(cross),
+            *[
+                ApplyMethod(slider.set_value, x)
+                for x, slider in zip(curr_vector, self.sliders)
+            ]
+        )
+
+    def reframe_as_inner_sphere_point(self):
+        s = self.sliders[0]
+        shift_vect = s.number_to_point(0)-s.number_to_point(1)
+        curr_vector = self.get_vector()
+        self.set_center_point(np.zeros(3))
+        self.set_to_vector(curr_vector)
+        self.total_real_estate = self.get_current_total_real_estate()
+
+        all_re_ticks = VGroup(*[
+            slider.real_estate_ticks
+            for slider in self.sliders
+        ])
+        inner_sphere_words = TextMobject(
+            "Also a point on \\\\", "the inner sphere"
+        )
+        inner_sphere_words.next_to(self.re_line, RIGHT)
+        question = TextMobject("How much \\\\", "real estate?")
+        question.next_to(self.re_line, RIGHT, MED_LARGE_BUFF)
+
+        self.play(
+            Animation(self.sliders),
+            FadeOut(self.re_words),
+            LaggedStart(
+                ApplyMethod, all_re_ticks,
+                lambda m : (m.shift, shift_vect)
+            )
+        )
+        self.initialize_ambiant_slider_movement()
+        self.play(Write(inner_sphere_words))
+        self.dither(5)
+        self.wind_down_ambient_movement(0)
+        self.play(*[
+            ApplyMethod(slider.set_value, x)
+            for slider, x in zip(self.sliders, curr_vector)
+        ])
+        self.play(ReplacementTransform(
+            inner_sphere_words, question
+        ))
+        self.dither(2)
+
+        self.re_question = question
+
+    def place_bound_on_inner_real_estate(self):
+        bound = TexMobject(
+            "&< 3(0.5)^2 ",
+            "= 0.75"
+        )
+        bound.next_to(self.re_question, DOWN)
+        bound.to_edge(RIGHT)
+
+        self.play(Write(bound))
+        self.dither(2)
+
+    def comment_on_inner_sphere_smallness(self):
+        self.initialize_ambiant_slider_movement()
+        self.dither(15)
+
+class Rotating3DCornerSphere(ExternallyAnimatedScene):
+    pass
+
+class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
+    CONFIG = {
+        "n_sliders" : 4,
+        "center_point" : np.ones(4),
+    }
+    def construct(self):
+        self.list_corner_coordinates()
+        self.show_16_corner_spheres()
+        self.show_closest_point()
+        self.show_real_estate_at_closest_point()
+        self.reframe_as_inner_sphere_point()
+        self.compute_inner_radius_numerically()
+        self.inner_sphere_touches_box()
+
+    def list_corner_coordinates(self):
+        title = TextMobject(
+            "$2 \\!\\times\\! 2 \\!\\times\\! 2 \\!\\times\\! 2$ box vertices:"
+        )
+        title.shift(SPACE_WIDTH*LEFT/2)
+        title.to_edge(UP)
+
+        coordinates = list(it.product(*4*[[1, -1]]))
+        coordinate_mobs = VGroup(*[
+            TexMobject("(%d, %d, %d, %d)"%tup)
+            for tup in coordinates
+        ])
+        coordinate_mobs.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        coordinate_mobs.scale(0.8)
+        left_column = VGroup(*coordinate_mobs[:8])
+        right_column = VGroup(*coordinate_mobs[8:])
+        right_column.next_to(left_column, RIGHT)
+        coordinate_mobs.next_to(title, DOWN)
+
+        self.play(Write(title))
+        self.play(LaggedStart(FadeIn, coordinate_mobs))
+        self.dither()
+
+        self.coordinate_mobs = coordinate_mobs
+        self.coordinates = coordinates
+        self.box_vertices_title = title
+
+    def show_16_corner_spheres(self):
+        sphere_words = VGroup(TextMobject("Sphere centered at"))
+        sphere_words.scale(0.8)
+        sphere_words.next_to(self.sliders, RIGHT)
+        sphere_words.shift(2*UP)
+
+        self.add(sphere_words)
+        pairs = zip(self.coordinate_mobs, self.coordinates)
+        for coord_mob, coords in pairs[1:] + [pairs[0]]:
+            coord_mob.highlight(GREEN)
+            coord_mob_copy = coord_mob.copy()
+            coord_mob_copy.next_to(sphere_words, DOWN)
+            for slider, x in zip(self.sliders, coords):
+                point = slider.number_to_point(x)
+                slider.real_estate_ticks.move_to(point)
+                slider.dial.move_to(point)
+            self.sliders[0].dial.move_to(
+                self.sliders[0].number_to_point(coords[0]+1)
+            )
+            self.add(coord_mob_copy)
+            self.dither()
+            self.remove(coord_mob_copy)
+            coord_mob.highlight(WHITE)
+        self.add(coord_mob_copy)
+        sphere_words.add(coord_mob_copy)
+        self.sphere_words = sphere_words
+
+        self.play(
+            self.sliders.center,
+            sphere_words.shift, LEFT,
+            *map(FadeOut, [
+                self.coordinate_mobs, self.box_vertices_title
+            ])
+        )
+        self.initialize_ambiant_slider_movement()
+        self.dither(4)
+
+    def show_closest_point(self):
+        target_vector = 0.5*np.ones(4)
+        re_line = DashedLine(*[
+            self.sliders[i].number_to_point(0.5)+MED_SMALL_BUFF*vect
+            for i, vect in (0, LEFT), (-1, RIGHT)
+        ])
+        half_label = TexMobject("0.5")
+        half_label.scale(self.sliders[0].number_scale_val)
+        half_label.next_to(re_line, LEFT, MED_SMALL_BUFF)
+        half_label.highlight(MAROON_B)
+
+        self.wind_down_ambient_movement()
+        self.play(*[
+            ApplyMethod(slider.set_value, x)
+            for x, slider in zip(target_vector, self.sliders)
+        ])
+        self.play(ShowCreation(re_line))
+        self.play(Write(half_label))
+        self.dither(2)
+
+        self.re_line = re_line
+        self.half_label = half_label
+
+    def show_real_estate_at_closest_point(self):
+        words = TextMobject("Total real estate:")
+        value = TexMobject("4(0.5)^2 = 4(0.25) = 1")
+        value.next_to(words, DOWN)
+        re_words = VGroup(words, value)
+        re_words.scale(0.8)
+        re_words.next_to(self.sphere_words, DOWN, MED_LARGE_BUFF)
+
+        re_rects = VGroup()
+        for slider in self.sliders:
+            rect = Rectangle(
+                width = 2*slider.tick_size,
+                height = 0.5*slider.unit_size,
+                stroke_width = 0,
+                fill_color = MAROON_B,
+                fill_opacity = 0.75,
+            )
+            rect.move_to(slider.number_to_point(0.75))
+            re_rects.add(rect)
+
+        self.play(FadeIn(re_words))
+        self.play(LaggedStart(DrawBorderThenFill, re_rects, run_time = 3))
+        self.dither(2)
+
+        self.re_words = re_words
+        self.re_rects = re_rects
+
+    def reframe_as_inner_sphere_point(self):
+        sphere_words = self.sphere_words
+        sphere_words.generate_target()
+        sphere_words.target.shift(2*DOWN)
+        old_coords = sphere_words.target[1]
+        new_coords = TexMobject("(0, 0, 0, 0)")
+        new_coords.replace(old_coords, dim_to_match = 1)
+        new_coords.highlight(old_coords.get_color())
+        Transform(old_coords, new_coords).update(1)
+
+        self.play(Animation(self.sliders), *[
+            ApplyMethod(
+                s.real_estate_ticks.move_to, s.number_to_point(0),
+                run_time = 2,
+                rate_func = squish_rate_func(smooth, a, a+0.5)
+            )
+            for s, a in zip(self.sliders, np.linspace(0, 0.5, 4))
+        ])
+        self.play(
+            MoveToTarget(sphere_words),
+            self.re_words.next_to, sphere_words.target, UP, MED_LARGE_BUFF,
+            path_arc = np.pi
+        )
+        self.dither(2)
+        re_shift_vect = 0.5*self.sliders[0].unit_size*DOWN
+        self.play(LaggedStart(
+            ApplyMethod, self.re_rects,
+            lambda m : (m.shift, re_shift_vect),
+            path_arc = np.pi
+        ))
+        self.dither()
+        re_words_rect = SurroundingRectangle(self.re_words)
+        self.play(ShowCreation(re_words_rect))
+        self.dither()
+        self.play(FadeOut(re_words_rect))
+        self.dither()
+
+        self.set_center_point(np.zeros(4))
+        self.initialize_ambiant_slider_movement()
+        self.dither(2)
+
+    def compute_inner_radius_numerically(self):
+        computation = TexMobject(
+            "R_\\text{Inner}", 
+            "&= ||(1, 1, 1, 1)|| - 1 \\\\",
+            # "&= \\sqrt{1^2 + 1^2 + 1^2 + 1^2} - 1 \\\\",
+            "&= \\sqrt{4} - 1 \\\\",
+            "&= 1"
+        )
+        computation.scale(0.8)
+        computation.to_corner(UP+LEFT)
+        computation.shift(DOWN)
+        brace = Brace(VGroup(*computation[1][1:-2]), UP)
+        brace_text = brace.get_text("Distance to corner")
+        brace_text.scale(0.8, about_point = brace_text.get_bottom())
+        VGroup(brace, brace_text).highlight(RED)
+
+        self.play(LaggedStart(FadeIn, computation, run_time = 3))
+        self.play(GrowFromCenter(brace))
+        self.play(Write(brace_text, run_time = 2))
+        self.dither(8)
+
+        computation.add(brace, brace_text)
+        self.computation = computation
+
+    def inner_sphere_touches_box(self):
+        touching_words = TextMobject(
+            "This point touches\\\\",
+            "the $2 \\!\\times\\! 2 \\!\\times\\! 2 \\!\\times\\! 2$ box!"
+        )
+        touching_words.to_corner(UP+LEFT)
+        arrow = Arrow(MED_SMALL_BUFF*DOWN, 3*RIGHT+DOWN)
+        arrow.highlight(BLUE)
+        arrow.shift(touching_words.get_bottom())
+
+        self.wind_down_ambient_movement(dither = False)
+        self.play(FadeOut(self.computation))
+        self.reset_dials([1])
+        self.play(Write(touching_words))
+        self.play(ShowCreation(arrow))
+        self.dither(2)
+
+class TwoDInnerSphereTouchingBox(TwoDBoxWithSliders, PiCreatureScene):
+    def setup(self):
+        TwoDBoxWithSliders.setup(self)
+        PiCreatureScene.setup(self)
+        self.remove(self.sliders)
+        self.remove(self.dot)
+        self.circle.highlight(GREY)
+        self.randy.next_to(self.plane, RIGHT, LARGE_BUFF, DOWN)
+
+    def construct(self):
+        little_inner_circle, big_inner_circle = [
+            Circle(
+                radius = radius*self.plane.x_unit_size,
+                color = GREEN
+            ).move_to(self.plane.coords_to_point(0, 0))
+            for radius in np.sqrt(2)-1, 1
+        ]
+        randy = self.randy
+        tangency_points = VGroup(*[
+            Dot(self.plane.coords_to_point(x, y))
+            for x, y in (1, 0), (0, 1), (-1, 0), (0, -1)
+        ])
+        tangency_points.set_fill(YELLOW, 0.5)
+
+        self.play(
+            ShowCreation(little_inner_circle),
+            randy.change, "pondering", little_inner_circle
+        )
+        self.dither()
+        self.play(
+            ReplacementTransform(
+                little_inner_circle.copy(), big_inner_circle
+            ),
+            little_inner_circle.fade,
+            randy.change, "confused"
+        )
+        big_inner_circle.save_state()
+        self.play(big_inner_circle.move_to, self.circle)
+        self.play(big_inner_circle.restore)
+        self.dither()
+        self.play(LaggedStart(
+            DrawBorderThenFill, tangency_points,
+            rate_func = double_smooth
+        ))
+        self.play(randy.change, "maybe")
+        self.play(randy.look_at, self.circle)
+        self.dither()
+        self.play(randy.look_at, little_inner_circle)
+        self.dither()
+
+    ####
+
+    def create_pi_creature(self):
+        self.randy = Randolph().flip()
+        return self.randy
+
+class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
+    CONFIG = {
+        "n_sliders" : 5,
+        "center_point" : np.ones(5),
+    }
+    def setup(self):
+        FourDBoxExampleWithSliders.setup(self)
+        self.sliders.center()
+
+    def construct(self):
+        self.show_32_corner_spheres()
+        self.show_closest_point()
+        self.show_halfway_point()
+        self.reframe_as_inner_sphere_point()
+        self.compute_radius()
+        self.poke_out_of_box()
+
+    def show_32_corner_spheres(self):
+        sphere_words = VGroup(TextMobject("Sphere centered at"))
+        sphere_words.next_to(self.sliders, RIGHT, MED_LARGE_BUFF)
+        sphere_words.shift(2.5*UP)
+        self.add(sphere_words)
+
+        n_sphere_words = TextMobject("32 corner spheres")
+        n_sphere_words.to_edge(LEFT)
+        n_sphere_words.shift(2*UP)
+        self.add(n_sphere_words)
+
+        for coords in it.product(*5*[[-1, 1]]):
+            s = str(tuple(coords))
+            s = s.replace("1", "+1")
+            s = s.replace("-+1", "-1")
+            coords_mob = TexMobject(s)
+            coords_mob.highlight(GREEN)
+            coords_mob.next_to(sphere_words, DOWN)
+            for slider, x in zip(self.sliders, coords):
+                for mob in slider.real_estate_ticks, slider.dial:
+                    mob.move_to(slider.number_to_point(x))
+            self.sliders[0].dial.move_to(
+                self.sliders[0].number_to_point(coords[0]+1)
+            )
+            self.add(coords_mob)
+            self.dither(0.25)
+            self.remove(coords_mob)
+        self.add(coords_mob)
+        sphere_words.add(coords_mob)
+        self.sphere_words = sphere_words
+
+        self.initialize_ambiant_slider_movement()
+        self.play(FadeOut(n_sphere_words))
+        self.dither(3)
+
+    def show_closest_point(self):
+        target_x = 1-np.sqrt(0.2)
+        re_line = DashedLine(*[
+            self.sliders[i].number_to_point(target_x)+MED_SMALL_BUFF*vect
+            for i, vect in (0, LEFT), (-1, RIGHT)
+        ])
+        re_words = TextMobject(
+            "$0.2$", "units of real \\\\ estate each"
+        )
+        re_words.next_to(self.sphere_words, DOWN, MED_LARGE_BUFF)
+
+        re_rects = VGroup()
+        for slider in self.sliders:
+            rect = Rectangle(
+                width = 2*slider.tick_size,
+                height = (1-target_x)*slider.unit_size,
+                stroke_width = 0,
+                fill_color = GREEN,
+                fill_opacity = 0.75,
+            )
+            rect.move_to(slider.number_to_point(1), UP)
+            re_rects.add(rect)
+        
+        self.wind_down_ambient_movement()
+        self.reset_dials(5*[target_x])
+        self.play(
+            ShowCreation(re_line),
+            Write(re_words, run_time = 2)
+        )
+        self.play(LaggedStart(
+            DrawBorderThenFill, re_rects,
+            rate_func = double_smooth
+        ))
+        self.dither()
+
+        self.re_rects = re_rects
+        self.re_words = re_words
+        self.re_line = re_line
+
+    def show_halfway_point(self):
+        half_line = Line(*[
+            self.sliders[i].number_to_point(0.5)+MED_SMALL_BUFF*vect
+            for i, vect in (0, LEFT), (-1, RIGHT)
+        ])
+        half_line.highlight(MAROON_B)
+        half_label = TexMobject("0.5")
+        half_label.scale(self.sliders[0].number_scale_val)
+        half_label.next_to(half_line, LEFT, MED_SMALL_BUFF)
+        half_label.highlight(half_line.get_color())
+
+        curr_vector = self.get_vector()
+        ghost_dials = VGroup(*[
+            slider.dial.copy().set_fill(WHITE, 0.75)
+            for slider in self.sliders
+        ])
+        point_25 = TexMobject("0.25")
+        point_25.highlight(half_label.get_color())
+        point_25.move_to(self.re_words[0], RIGHT)
+        self.re_words.save_state()
+
+        self.play(
+            Write(half_label),
+            ShowCreation(half_line)
+        )
+        self.dither(2)
+        self.add(ghost_dials)
+        self.play(*[
+            ApplyMethod(slider.set_value, 0.5)
+            for slider in self.sliders
+        ])
+        self.play(Transform(self.re_words[0], point_25))
+        self.dither(2)
+        self.play(*[
+            ApplyMethod(slider.set_value, x)
+            for x, slider in zip(curr_vector, self.sliders)
+        ])
+        self.play(self.re_words.restore)
+
+    def reframe_as_inner_sphere_point(self):
+        s = self.sliders[0]
+        shift_vect = s.number_to_point(0)-s.number_to_point(1)
+        re_ticks = VGroup(*[
+            slider.real_estate_ticks
+            for slider in self.sliders
+        ])
+
+        re_rects = self.re_rects
+        re_rects.generate_target()
+        for rect, slider in zip(re_rects.target, self.sliders):
+            height = slider.unit_size*(1-np.sqrt(0.2))
+            rect.scale_to_fit_height(height)
+            rect.move_to(slider.number_to_point(0), DOWN)
+
+        self.sphere_words.generate_target()
+        old_coords = self.sphere_words.target[1]
+        new_coords = TexMobject(str(tuple(5*[0])))
+        new_coords.replace(old_coords, dim_to_match = 1)
+        new_coords.highlight(old_coords.get_color())
+        Transform(old_coords, new_coords).update(1)
+
+        self.re_words.generate_target()
+        new_re = TexMobject("0.31")
+        new_re.highlight(GREEN)
+        old_re = self.re_words.target[0]
+        new_re.move_to(old_re, RIGHT)
+        Transform(old_re, new_re).update(1)
+
+        self.play(
+            Animation(self.sliders),
+            LaggedStart(
+                ApplyMethod, re_ticks,
+                lambda m : (m.shift, shift_vect),
+                path_arc = np.pi
+            ),
+            MoveToTarget(self.sphere_words),
+        )
+        self.play(
+            MoveToTarget(
+                re_rects, 
+                run_time = 2,
+                submobject_mode = "lagged_start",
+                path_arc = np.pi
+            ),
+            MoveToTarget(self.re_words),
+        )
+        self.dither(2)
+
+        self.set_center_point(np.zeros(5))
+        self.total_real_estate = (np.sqrt(5)-1)**2
+        self.initialize_ambiant_slider_movement()
+        self.dither(10)
+
+    def compute_radius(self):
+        computation = TexMobject(
+            "R_{\\text{inner}} &= \\sqrt{5}-1 \\\\",
+            "&\\approx 1.24"
+        )
+        computation.to_corner(UP+LEFT)
+
+        self.play(Write(computation, run_time = 2))
+        self.dither(3)
+
+    def poke_out_of_box(self):
+        self.wind_down_ambient_movement(0)
+        self.reset_dials([np.sqrt(5)-1])
+
+        words = TextMobject("Poking outside \\\\ the box!")
+        words.to_edge(LEFT)
+        words.highlight(RED)
+        arrow = Arrow(
+            words.get_top(),
+            self.sliders[0].dial,
+            path_arc = -np.pi/3,
+            color = words.get_color()
+        )
+
+        self.play(
+            ShowCreation(arrow),
+            Write(words)
+        )
+        self.dither(2)
+
+class SkipAheadTo10(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Let's skip ahead \\\\ to 10 dimensions",
+            target_mode = "hooray"
+        )
+        self.change_student_modes(
+            "pleading", "confused", "horrified"
+        )
+        self.dither(3)
+
+class TenDBoxExampleWithSliders(FiveDBoxExampleWithSliders):
+    CONFIG = {
+        "n_sliders" : 10,
+        "center_point" : np.ones(10),
+        "ambient_velocity_magnitude" : 2.0,
+        "ambient_acceleration_magnitude" : 3.0,
+    }
+    def setup(self):
+        FourDBoxExampleWithSliders.setup(self)
+        self.sliders.to_edge(RIGHT)
+
+    def construct(self):
+        self.initial_wandering()
+        self.show_closest_point()
+        self.reframe_as_inner_sphere_point()
+        self.compute_inner_radius_numerically()
+        self.wander_on_inner_sphere()
+        self.poke_outside_outer_box()
+
+    def initial_wandering(self):
+        self.initialize_ambiant_slider_movement()
+        self.dither(9)
+
+    def show_closest_point(self):
+        target_x = 1-np.sqrt(1./self.n_sliders)
+        re_line = DashedLine(*[
+            self.sliders[i].number_to_point(target_x)+MED_SMALL_BUFF*vect
+            for i, vect in (0, LEFT), (-1, RIGHT)
+        ])
+
+        re_rects = VGroup()
+        for slider in self.sliders:
+            rect = Rectangle(
+                width = 2*slider.tick_size,
+                height = (1-target_x)*slider.unit_size,
+                stroke_width = 0,
+                fill_color = GREEN,
+                fill_opacity = 0.75,
+            )
+            rect.move_to(slider.number_to_point(1), UP)
+            re_rects.add(rect)
+        
+        self.wind_down_ambient_movement()
+        self.reset_dials(self.n_sliders*[target_x])
+        self.play(ShowCreation(re_line))
+        self.play(LaggedStart(
+            DrawBorderThenFill, re_rects,
+            rate_func = double_smooth
+        ))
+        self.dither(2)
+
+        self.re_line = re_line
+        self.re_rects = re_rects
+
+    def reframe_as_inner_sphere_point(self):
+        s = self.sliders[0]
+        shift_vect = s.number_to_point(0)-s.number_to_point(1)
+        re_ticks = VGroup(*[
+            slider.real_estate_ticks
+            for slider in self.sliders
+        ])
+
+        re_rects = self.re_rects
+        re_rects.generate_target()
+        for rect, slider in zip(re_rects.target, self.sliders):
+            height = slider.unit_size*(1-np.sqrt(1./self.n_sliders))
+            rect.stretch_to_fit_height(height)
+            rect.move_to(slider.number_to_point(0), DOWN)
+
+        self.play(
+            Animation(self.sliders),
+            LaggedStart(
+                ApplyMethod, re_ticks,
+                lambda m : (m.shift, shift_vect),
+                path_arc = np.pi
+            ),
+        )
+        self.play(
+            MoveToTarget(
+                re_rects, 
+                run_time = 2,
+                submobject_mode = "lagged_start",
+                path_arc = np.pi
+            ),
+        )
+        self.dither(2)
+
+        self.set_center_point(np.zeros(self.n_sliders))
+        self.total_real_estate = (np.sqrt(self.n_sliders)-1)**2
+        self.initialize_ambiant_slider_movement()
+        self.dither(5)
+
+    def compute_inner_radius_numerically(self):
+        computation = TexMobject(
+            "R_{\\text{inner}} &= \\sqrt{10}-1 \\\\",
+            "&\\approx 2.16"
+        )
+        computation.to_corner(UP+LEFT)
+
+        self.play(Write(computation, run_time = 2))
+
+    def wander_on_inner_sphere(self):
+        self.dither(10)
+
+    def poke_outside_outer_box(self):
+        self.wind_down_ambient_movement()
+        self.reset_dials([np.sqrt(10)-1])
+
+        words = TextMobject(
+            "Outside the \\emph{outer} \\\\",
+            "bounding box!"
+        )
+        words.to_edge(LEFT)
+        words.highlight(RED)
+        arrow = Arrow(
+            words.get_top(), 
+            self.sliders[0].dial,
+            path_arc = -np.pi/3,
+            color = words.get_color()
+        )
+        self.play(
+            Write(words, run_time = 2),
+            ShowCreation(arrow)
+        )
+        self.dither(3)
+
+class TwoDOuterBox(TwoDInnerSphereTouchingBox):
+    def construct(self):
+        words = TextMobject("$4 \\!\\times\\! 4$ outer bounding box")
+        words.next_to(self.plane, UP)
+        words.highlight(MAROON_B)
+        line = Line(
+            self.plane.coords_to_point(-2, -2),
+            self.plane.coords_to_point(2, 2),
+        )
+        box = Square(color = words.get_color())
+        box.replace(line, stretch = True)
+        box.set_stroke(width = 8)
+
+        self.play(
+            Write(words),
+            ShowCreation(box),
+            self.randy.change, "pondering",
+        )
+        self.dither(3)
+
+class ThreeDOuterBoundingBox(ExternallyAnimatedScene):
+    pass
 
 
 
