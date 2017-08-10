@@ -21,6 +21,7 @@ from topics.objects import *
 from topics.probability import *
 from topics.complex_numbers import *
 from topics.common_scenes import *
+from topics.graph_scene import GraphScene
 from scene.scene import Scene, ProgressDisplay
 from scene.reconfigurable_scene import ReconfigurableScene
 from scene.zoomed_scene import *
@@ -676,51 +677,6 @@ class Professionals(PiCreatureScene):
         self.add_equation()
         self.analogies()
 
-    def add_equation(self):
-        quaternion = TexMobject(
-            "\\frac{1}{2}", "+", 
-            "0", "\\textbf{i}", "+",
-            "\\frac{\\sqrt{6}}{4}", "\\textbf{j}", "+",
-            "\\frac{\\sqrt{6}}{4}", "\\textbf{k}",
-        )
-        quaternion.shift(SPACE_WIDTH*LEFT/2)
-        equation = TexMobject(
-            "\\textbf{i}", "^2", "=",
-            "\\textbf{j}", "^2", "=",
-            "\\textbf{k}", "^2", "=",
-            "\\textbf{i}", "\\textbf{j}", "\\textbf{k}", "=",
-            "-1"
-        )
-        equation.shift(SPACE_WIDTH*RIGHT/2)
-        VGroup(quaternion, equation).to_edge(UP)
-        for mob in quaternion, equation:
-            mob.highlight_by_tex_to_color_map({
-                "i" : RED,
-                "j" : GREEN,
-                "k" : BLUE,
-            })
-
-        brace = Brace(quaternion, DOWN)
-        words = brace.get_text("4 numbers")
-
-        self.play(
-            Write(quaternion),
-            Write(equation),
-            GrowFromCenter(brace),
-            FadeIn(words),
-            run_time = 2
-        )
-        self.play(*[
-            ApplyMethod(pi.change, "pondering", quaternion)
-            for pi in self.pi_creatures
-        ])
-        self.dither()
-        self.play(FadeOut(VGroup(brace, words)))
-
-
-        self.quaternion = quaternion
-        self.equation = equation
-
     def introduce_characters(self):
         titles = VGroup(*map(TextMobject, [
             "Mathematician",
@@ -737,6 +693,47 @@ class Professionals(PiCreatureScene):
             )
         self.dither()
 
+    def add_equation(self):
+        quaternion = TexMobject(
+            "\\frac{1}{2}", "+", 
+            "0", "\\textbf{i}", "+",
+            "\\frac{\\sqrt{6}}{4}", "\\textbf{j}", "+",
+            "\\frac{\\sqrt{6}}{4}", "\\textbf{k}",
+        )
+        quaternion.scale(0.7)
+        quaternion.next_to(self.mathy, UP)
+        quaternion.highlight_by_tex_to_color_map({
+            "i" : RED,
+            "j" : GREEN,
+            "k" : BLUE,
+        })
+
+        array = TexMobject("[a_1, a_2, \\dots, a_{100}]")
+        array.next_to(self.compy, UP)
+
+        kets = TexMobject(
+            "\\alpha",
+            "|\\!\\uparrow\\rangle + ",
+            "\\beta",
+            "|\\!\\downarrow\\rangle"
+        )
+        kets.highlight_by_tex_to_color_map({
+            "\\alpha" : GREEN,
+            "\\beta" : RED,
+        })
+        kets.next_to(self.physy, UP)
+
+
+        terms = VGroup(quaternion, array, kets)
+        for term, pi in zip(terms, self.pi_creatures):
+            self.play(
+                Write(term, run_time = 1),
+                pi.change, "pondering", term
+            )
+        self.dither(2)
+
+        self.terms = terms
+
     def analogies(self):
         examples = VGroup()
         plane = ComplexPlane(
@@ -749,7 +746,7 @@ class Professionals(PiCreatureScene):
         examples.add(plane)
         examples.add(Circle())
         examples.arrange_submobjects(RIGHT, buff = 2)
-        examples.next_to(self.pi_creatures, UP, MED_LARGE_BUFF)
+        examples.to_edge(UP, buff = LARGE_BUFF)
         labels = VGroup(*map(TextMobject, ["2D", "3D"]))
 
         title = TextMobject("Fly by instruments")
@@ -767,12 +764,12 @@ class Professionals(PiCreatureScene):
         self.dither()
         self.play(
             FadeOut(examples),
-            VGroup(self.quaternion, self.equation).shift, 2*DOWN,
+            self.terms.shift, UP,
             Write(title, run_time = 2)
         )
         self.play(*[
             ApplyMethod(
-                pi.change, mode, self.equation,
+                pi.change, mode, self.terms.get_left(),
                 run_time = 2,
                 rate_func = squish_rate_func(smooth, a, a+0.5)
             )
@@ -783,18 +780,16 @@ class Professionals(PiCreatureScene):
             )
         ])
         self.dither()
-        self.play(Animation(self.quaternion))
+        self.play(Animation(self.terms[-1]))
         self.dither(2)
-
-
 
     ######
 
     def create_pi_creatures(self):
-        mathy = Mathematician()
-        physy = PiCreature(color = PINK)
-        compy = PiCreature(color = PURPLE)
-        pi_creatures = VGroup(mathy, compy, physy)
+        self.mathy = Mathematician()
+        self.physy = PiCreature(color = PINK)
+        self.compy = PiCreature(color = PURPLE)
+        pi_creatures = VGroup(self.mathy, self.compy, self.physy)
         for pi in pi_creatures:
             pi.scale(0.7)
         pi_creatures.arrange_submobjects(RIGHT, buff = 3)
@@ -845,6 +840,11 @@ class OfferAHybrid(SliderScene):
         titles[2].shift(SPACE_WIDTH*RIGHT/2)
         titles.target[2].shift(2*SPACE_WIDTH*RIGHT/3)
         return titles
+
+class TODOBoxExample(TODOStub):
+    CONFIG = {
+        "message" : "Box Example"
+    }
 
 class RotatingSphereWithWanderingPoint(ExternallyAnimatedScene):
     pass
@@ -1541,6 +1541,10 @@ class FourDCase(SliderScene, TeacherStudentsScene):
         )
         self.dither(7)
 
+    #####
+    def non_blink_dither(self, time = 1):
+        SliderScene.dither(self, time)
+
 class TwoDBoxExample(Scene):
     def setup(self):
         scale_factor = 1.7
@@ -1903,6 +1907,7 @@ class TenSliders(SliderScene):
     def construct(self):
         self.initialize_ambiant_slider_movement()
         self.dither(self.run_time)
+        self.wind_down_ambient_movement()
 
 class TwoDBoxWithSliders(TwoDimensionalCase):
     CONFIG = {
@@ -3052,9 +3057,427 @@ class TwoDOuterBox(TwoDInnerSphereTouchingBox):
         )
         self.dither(3)
 
+        self.outer_box = box
+
 class ThreeDOuterBoundingBox(ExternallyAnimatedScene):
     pass
 
+class ThreeDOuterBoundingBoxWords(Scene):
+    def construct(self):
+        words = TextMobject(
+            "$4 \\!\\times\\! 4\\!\\times\\! 4$ outer\\\\",
+            "bounding box"
+        )
+        words.scale_to_fit_width(2*SPACE_WIDTH-1)
+        words.to_edge(DOWN)
+        words.highlight(MAROON_B)
+
+        self.play(Write(words))
+        self.dither(4)
+
+class FaceDistanceDoesntDependOnDimension(TwoDOuterBox):
+    def construct(self):
+        self.force_skipping()
+        TwoDOuterBox.construct(self)
+        self.randy.change("confused")
+        self.revert_to_original_skipping_status()
+
+        line = Line(
+            self.plane.coords_to_point(0, 0),
+            self.outer_box.get_right(),
+            buff = 0,
+            stroke_width = 6,
+            color = YELLOW
+        )
+        length_words = TextMobject("Always 2, in all dimensions")
+        length_words.next_to(self.plane, RIGHT, MED_LARGE_BUFF, UP)
+        arrow = Arrow(length_words[4].get_bottom(), line.get_center())
+
+        self.play(ShowCreation(line))
+        self.play(
+            Write(length_words),
+            ShowCreation(arrow)
+        )
+        self.play(self.randy.change, "thinking")
+        self.dither(3)
+
+class TenDCornerIsVeryFarAway(TenDBoxExampleWithSliders):
+    CONFIG = {
+        "center_point" : np.zeros(10)
+    }
+    def construct(self):
+        self.show_re_rects()
+
+    def show_re_rects(self):
+        re_rects = VGroup()
+        for slider in self.sliders:
+            rect = Rectangle(
+                width = 2*slider.tick_size,
+                height = slider.unit_size,
+                stroke_width = 0,
+                fill_color = GREEN,
+                fill_opacity = 0.75,
+            )
+            rect.move_to(slider.number_to_point(0), DOWN)
+            re_rects.add(rect)
+            rect.save_state()
+            rect.stretch_to_fit_height(0)
+            rect.move_to(rect.saved_state, DOWN)
+
+        self.set_to_vector(np.zeros(10))
+        self.play(
+            LaggedStart(
+                ApplyMethod, re_rects,
+                lambda m : (m.restore,),
+                lag_ratio = 0.3,
+            ),
+            LaggedStart(
+                ApplyMethod, self.sliders,
+                lambda m : (m.set_value, 1),
+                lag_ratio = 0.3,
+            ),
+            run_time = 10,
+        )
+        self.dither()
+
+class InnerRadiusIsUnbounded(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("Inner radius \\\\ is unbounded")
+        self.change_student_modes(*["erm"]*3)
+        self.dither(3)
+
+class ProportionOfSphereInBox(GraphScene):
+    CONFIG = {
+        "x_axis_label" : "Dimension",
+        "y_axis_label" : "",
+        "y_max" : 1.5,
+        "y_min" : 0,
+        "y_tick_frequency" : 0.25,
+        "y_labeled_nums" : np.linspace(0.25, 1, 4),
+        "x_min" : 0,
+        "x_max" : 50,
+        "x_tick_frequency" : 5,
+        "x_labeled_nums" : range(10, 50, 10),
+        "num_graph_anchor_points" : 100,
+    }
+    def construct(self):
+        self.setup_axes()
+        title = TextMobject(
+            "Proportion of inner sphere \\\\ inside box"
+        )
+        title.next_to(self.y_axis, RIGHT, MED_SMALL_BUFF, UP)
+        self.add(title)
+
+        graph = self.get_graph(lambda x : np.exp(0.1*(9-x)))
+        max_y = self.coords_to_point(0, 1)[1]
+        too_high = graph.points[:,1] > max_y
+        graph.points[too_high, 1] = max_y
+
+        footnote = TextMobject("""
+            \\begin{flushleft}
+            *I may or may not have used an easy-to-compute \\\\
+            but not-totally-accurate curve here, due to \\\\
+            the surprising difficulty in computing the real \\\\
+            proportion :)
+            \\end{flushleft}
+        """,)
+        footnote.scale(0.75)
+        footnote.next_to(
+            graph.point_from_proportion(0.3),
+            UP+RIGHT, SMALL_BUFF
+        )
+        footnote.highlight(YELLOW)
+
+        self.play(ShowCreation(graph, run_time = 5, rate_func = None))
+        self.dither()
+        self.add(footnote)
+        self.dither(0.25)
+
+class ShowingToFriend(PiCreatureScene, SliderScene):
+    CONFIG = {
+        "n_sliders" : 10,
+        "ambient_acceleration_magnitude" : 3.0,
+        "seconds_to_blink" : 4,
+    }
+    def setup(self):
+        PiCreatureScene.setup(self)
+        SliderScene.setup(self)
+        self.sliders.scale(0.75)
+        self.sliders.next_to(
+            self.morty.get_corner(UP+LEFT), UP, MED_LARGE_BUFF
+        )
+        self.initialize_ambiant_slider_movement()
+
+    def construct(self):
+        morty, randy = self.morty, self.randy
+        self.play(morty.change, "raise_right_hand", self.sliders)
+        self.play(randy.change, "happy", self.sliders)
+        self.dither(7)
+        self.play(randy.change, "skeptical", morty.eyes)
+        self.dither(3)
+        self.play(randy.change, "thinking", self.sliders)
+        self.dither(6)
+
+    ###
+
+    def create_pi_creatures(self):
+        self.morty = Mortimer()
+        self.morty.to_edge(DOWN).shift(4*RIGHT)
+        self.randy = Randolph()
+        self.randy.to_edge(DOWN).shift(4*LEFT)
+        return VGroup(self.morty, self.randy)
+
+    def non_blink_dither(self, time = 1):
+        SliderScene.dither(self, time)
+
+class FunHighDSpherePhenomena(Scene):
+    def construct(self):
+        title = TextMobject(
+            "Fun high-D sphere phenomena"
+        )
+        title.to_edge(UP)
+        title.highlight(BLUE)
+        h_line = Line(LEFT, RIGHT).scale(5)
+        h_line.next_to(title, DOWN)
+        self.add(title, h_line)
+
+        items = VGroup(*map(TextMobject, [
+            "$\\cdot$ Most volume is near the equator",
+            "$\\cdot$ Most volume is near the surface",
+            "$\\cdot$ Sphere packing in 8 dimensions",
+            "$\\cdot$ Sphere packing in 24 dimensions",
+        ]))
+        items.arrange_submobjects(
+            DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT
+        )
+        items.next_to(h_line, DOWN)
+
+        for item in items:
+            self.play(LaggedStart(FadeIn, item, run_time = 2))
+        self.dither()
+
+class TODOBugOnSurface(TODOStub):
+    CONFIG = {
+        "message" : "Bug on surface"
+    }
+
+class CoordinateFree(PiCreatureScene):
+    def construct(self):
+        plane = NumberPlane(x_radius = 2.5, y_radius = 2.5)
+        plane.add_coordinates()
+        plane.to_corner(UP+LEFT)
+        self.add(plane)
+
+        circles = VGroup(*[
+            Circle(color = YELLOW).move_to(
+                plane.coords_to_point(*coords)
+            )
+            for coords in it.product(*2*[[-1, 1]])
+        ])
+        inner_circle = Circle(
+            radius = np.sqrt(2)-1,
+            color = GREEN
+        ).move_to(plane.coords_to_point(0, 0))
+
+        self.add_foreground_mobjects(circles, inner_circle)
+
+        self.play(PiCreatureSays(
+            self.pi_creature, "Lose the \\\\ coordinates!",
+            target_mode = "hooray"
+        ))
+        self.play(FadeOut(plane, run_time = 2))
+        self.dither(3)
+
+class Skeptic(TeacherStudentsScene, SliderScene):
+    def setup(self):
+        SliderScene.setup(self)
+        TeacherStudentsScene.setup(self)
+
+        self.sliders.scale(0.7)
+        self.sliders.next_to(self.teacher, UP, aligned_edge = LEFT)
+        self.sliders.to_edge(UP)
+        self.initialize_ambiant_slider_movement()
+
+    def construct(self):
+        analytic_thought = VGroup(TextMobject("No different from"))
+        equation = TexMobject(
+            "x", "^2 + ", "y", "^2 + ", "z", "^2 + ", "w", "^2 = 1"
+        )
+        variables = VGroup(*[
+            equation.get_part_by_tex(tex)
+            for tex in "xyzw"
+        ])
+        slider_labels = VGroup(*[
+            slider.label for slider in self.sliders
+        ])
+        equation.next_to(analytic_thought, DOWN)
+        analytic_thought.add(equation)
+
+        all_real_estate_ticks = VGroup(*it.chain(*[
+            slider.real_estate_ticks
+            for slider in self.sliders
+        ]))
+
+        box = Square(color = RED)
+        box.next_to(self.sliders, LEFT)
+        line = Line(box.get_center(), box.get_corner(UP+RIGHT))
+        line.highlight(YELLOW)
+
+        self.student_says(
+            analytic_thought,
+            student_index = 0,
+            target_mode = "sassy",
+            added_anims = [self.teacher.change, "guilty"]
+        )
+        self.dither(2)
+        equation.remove(*variables)
+        self.play(ReplacementTransform(variables, slider_labels))
+        self.play(
+            self.teacher.change, "pondering", slider_labels,
+            RemovePiCreatureBubble(
+                self.students[0], target_mode = "hesitant"
+            ),
+        )
+        self.dither(4)
+        bubble = self.teacher.get_bubble(
+            "It's much \\\\ more playful!",
+            bubble_class = SpeechBubble
+        )
+        bubble.resize_to_content()
+        VGroup(bubble, bubble.content).next_to(self.teacher, UP+LEFT)
+        self.play(
+            self.teacher.change, "hooray",
+            ShowCreation(bubble),
+            Write(bubble.content)
+        )
+        self.dither(3)
+        self.play(
+            RemovePiCreatureBubble(
+                self.teacher, target_mode = "raise_right_hand",
+                look_at_arg = self.sliders
+            ),
+            *[
+                ApplyMethod(pi.change, "pondering")
+                for pi in self.students
+            ]
+        )
+        self.play(Animation(self.sliders), LaggedStart(
+            ApplyMethod, all_real_estate_ticks,
+            lambda m : (m.shift, SMALL_BUFF*LEFT),
+            rate_func = wiggle,
+            lag_ratio = 0.3,
+            run_time = 4,
+        ))
+        self.play(
+            ShowCreation(box),
+            self.teacher.change, "happy"
+        )
+        self.play(ShowCreation(line))
+        self.dither(3)
+
+    #####
+    def non_blink_dither(self, time = 1):
+        SliderScene.dither(self, time)
+
+class ClipFrom4DBoxExampleTODO(TODOStub):
+    CONFIG = {
+        "message" : "Clip from 4d box example"
+    }
+
+class JustBecauseYouCantVisualize(Scene):
+    def construct(self):
+        phrase = "\\raggedright "
+        phrase += "Just because you can't visualize\\\\ "
+        phrase += "something   doesn't mean you can't\\\\ "
+        phrase += "still think about it visually."
+        phrase_mob = TextMobject(*phrase.split(" "))
+        phrase_mob.highlight_by_tex("visual", YELLOW)
+        phrase_mob.next_to(ORIGIN, UP)
+
+        for part in phrase_mob:
+            self.play(LaggedStart(
+                FadeIn, part,
+                run_time = 0.05*len(part)
+            ))
+        self.dither(2)
+
+class Announcements(TeacherStudentsScene):
+    def construct(self):
+        title = TextMobject("Announcements")
+        title.scale(1.5)
+        title.to_edge(UP, buff = MED_SMALL_BUFF)
+        h_line = Line(LEFT, RIGHT).scale(3)
+        h_line.next_to(title, DOWN)
+        self.add(title, h_line)
+
+        items = VGroup(*map(TextMobject, [
+            "$\\cdot$ Where to learn more",
+            "$\\cdot$ Q\\&A Followup (podcast!)",
+        ]))
+        items.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        items.next_to(h_line, DOWN)
+
+        self.play(
+            Write(items[0], run_time = 2),
+        )
+        self.play(*[
+            ApplyMethod(pi.change, "hooray", items)
+            for pi in self.pi_creatures
+        ])
+        self.play(Write(items[1], run_time = 2))
+        self.dither(2)
+
+class Promotion(PiCreatureScene):
+    CONFIG = {
+        "seconds_to_blink" : 5,
+    }
+    def construct(self):
+        url = TextMobject("https://brilliant.org/3b1b/")
+        url.to_corner(UP+LEFT)
+
+        rect = Rectangle(height = 9, width = 16)
+        rect.scale_to_fit_height(5.5)
+        rect.next_to(url, DOWN)
+        rect.to_edge(LEFT)
+
+        self.play(
+            Write(url),
+            self.pi_creature.change, "raise_right_hand"
+        )
+        self.play(ShowCreation(rect))
+        self.dither(2)
+        self.change_mode("thinking")
+        self.dither()
+        self.look_at(url)
+        self.dither(10)
+        self.change_mode("happy")
+        self.dither(10)
+        self.change_mode("raise_right_hand")
+        self.dither(10)
+
+
+class BrilliantGeometryQuiz(ExternallyAnimatedScene):
+    pass
+
+class BrilliantScrollThroughCourses(ExternallyAnimatedScene):
+    pass
+
+class Thumbnail(SliderScene):
+    CONFIG = {
+        "n_sliders" : 10,
+    }
+    def construct(self):
+        for slider in self.sliders:
+            self.remove(slider.label)
+            slider.remove(slider.label)
+        vect = np.random.random(10) - 0.5
+        vect /= np.linalg.norm(vect)
+        self.set_to_vector(vect)
+
+        title = TextMobject("10D Sphere?")
+        title.scale(2)
+        title.to_edge(UP)
+        self.add(title)
 
 
 
