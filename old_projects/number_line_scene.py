@@ -1,3 +1,5 @@
+import numpy as np
+
 class NumberLineScene(Scene):
     def construct(self, **number_line_config):
         self.number_line = NumberLine(**number_line_config)
