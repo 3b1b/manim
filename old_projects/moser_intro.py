@@ -27,7 +27,7 @@ def logo_to_circle():
     )
     big_circle = Circle(density = CIRCLE_DENSITY).scale(RADIUS)
     sc.add(small_circle)
-    sc.dither()`
+    sc.dither()
     sc.animate(Transform(small_circle, big_circle))
     return sc
 
