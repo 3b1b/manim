@@ -28,7 +28,7 @@ class SceneFromVideo(Scene):
         print "Reading in " + file_name + "..."
         for count in show_progress(range(start_frame, end_frame+1)):
             returned, frame = cap.read()
-            if not returned
+            if not returned:
                 break
             # b, g, r = cv2.split(frame)
             # self.frames.append(cv2.merge([r, g, b]))
