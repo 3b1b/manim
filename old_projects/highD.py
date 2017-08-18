@@ -1332,6 +1332,11 @@ class TwoDimensionalCase(Introduce4DSliders):
                 anim.update(0)
         SliderScene.update_frame(self, *args, **kwargs)
 
+class TwoDimensionalCaseIntro(TwoDimensionalCase):
+    def construct(self):
+        self.initialize_ambiant_slider_movement()
+        self.dither(10)
+
 class ThreeDCase(TwoDimensionalCase):
     CONFIG = { 
         "n_sliders" : 3,
@@ -1351,12 +1356,16 @@ class ThreeDCase(TwoDimensionalCase):
         self.add(self.equation)
 
     def construct(self):
+        self.force_skipping()
+
         self.add_real_estate_decimals()
         self.initialize_ambiant_slider_movement()
         self.point_out_third_slider()
         self.dither(3)
         self.hold_x_at(0.5, 12)
-        self.hold_x_at(0.85, 5)
+        self.revert_to_original_skipping_status()
+        self.hold_x_at(0.85, 12)
+        return
         self.hold_x_at(1, 5)
 
     def add_real_estate_decimals(self):
@@ -1402,8 +1411,10 @@ class ThreeDCase(TwoDimensionalCase):
 
     def point_out_third_slider(self):
         rect = SurroundingRectangle(self.sliders[-1])
+        self.dither(4)
         self.play(ShowCreation(rect))
         self.play(FadeOut(rect))
+        self.dither(8)
 
     def hold_x_at(self, x_val, wait_time):
         #Save these
@@ -1422,8 +1433,20 @@ class ThreeDCase(TwoDimensionalCase):
 
     ####
 
+class ThreeDCaseInsert(ThreeDCase):
+    def construct(self):
+        self.add_real_estate_decimals()
+        self.reset_dials([0.85, np.sqrt(1-0.85**2)], run_time = 0)
+        self.reset_dials([1], run_time = 3)
+        self.dither()
+
 class SphereAtRest(ExternallyAnimatedScene):
     pass
+
+class BugOnASurface(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("You're a bug \\\\ on a surface")
+        self.dither(3)
 
 class SphereWithWanderingDotAtX0point5(ExternallyAnimatedScene):
     pass
@@ -2237,6 +2260,24 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         self.play(Write(rhs))
         self.dither(3)
 
+class AskWhy(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Wait, why?",
+            target_mode = "confused"
+        )
+        self.dither(3)
+
+class MentionComparisonToZeroPointFive(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Comparing to $0.5$ will \\\\"+\
+            "be surprisingly useful!",
+            target_mode = "hooray"
+        )
+        self.change_student_modes(*["happy"]*3)
+        self.dither(3)
+
 class ThreeDBoxExampleWithSliders(SliderScene):
     CONFIG = {
         "n_sliders" : 3,
@@ -2587,7 +2628,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
 
         self.set_center_point(np.zeros(4))
         self.initialize_ambiant_slider_movement()
-        self.dither(2)
+        self.dither(4)
 
     def compute_inner_radius_numerically(self):
         computation = TexMobject(
@@ -2608,7 +2649,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         self.play(LaggedStart(FadeIn, computation, run_time = 3))
         self.play(GrowFromCenter(brace))
         self.play(Write(brace_text, run_time = 2))
-        self.dither(8)
+        self.dither(16)
 
         computation.add(brace, brace_text)
         self.computation = computation
@@ -2868,7 +2909,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
         self.set_center_point(np.zeros(5))
         self.total_real_estate = (np.sqrt(5)-1)**2
         self.initialize_ambiant_slider_movement()
-        self.dither(10)
+        self.dither(12)
 
     def compute_radius(self):
         computation = TexMobject(
@@ -2878,7 +2919,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
         computation.to_corner(UP+LEFT)
 
         self.play(Write(computation, run_time = 2))
-        self.dither(3)
+        self.dither(12)
 
     def poke_out_of_box(self):
         self.wind_down_ambient_movement(0)
@@ -3230,6 +3271,33 @@ class ShowingToFriend(PiCreatureScene, SliderScene):
     def non_blink_dither(self, time = 1):
         SliderScene.dither(self, time)
 
+class QuestionsFromStudents(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Is 10-dimensional \\\\ space real?",
+            target_mode = "sassy",
+            run_time = 2,
+        )
+        self.dither()
+        self.teacher_says(
+            "No less real \\\\ than reals",
+            target_mode = "shruggie",
+            content_introduction_class = FadeIn,
+        )
+        self.dither(2)
+        self.student_says(
+            "How do you think \\\\ about volume?",
+            student_index = 0,
+            content_introduction_class = FadeIn,
+        )
+        self.dither()
+        self.student_says(
+            "How do cubes work?",
+            student_index = 2,
+            run_time = 2,
+        )
+        self.dither(2)
+
 class FunHighDSpherePhenomena(Scene):
     def construct(self):
         title = TextMobject(
@@ -3455,12 +3523,107 @@ class Promotion(PiCreatureScene):
         self.change_mode("raise_right_hand")
         self.dither(10)
 
+        self.remove(rect)
+        self.play(
+            url.next_to, self.pi_creature, UP+LEFT
+        )
+        url_rect = SurroundingRectangle(url)
+        self.play(ShowCreation(url_rect))
+        self.play(FadeOut(url_rect))
+        self.dither(3)
 
 class BrilliantGeometryQuiz(ExternallyAnimatedScene):
     pass
 
 class BrilliantScrollThroughCourses(ExternallyAnimatedScene):
     pass
+
+class Podcast(TeacherStudentsScene):
+    def construct(self):
+        title = TextMobject("Podcast!")
+        title.scale(1.5)
+        title.to_edge(UP)
+        title.shift(SPACE_WIDTH*LEFT/2)
+        self.add(title)
+
+        q_and_a = TextMobject("Q\\&A Followup")
+        q_and_a.next_to(self.teacher.get_corner(UP+LEFT), UP, LARGE_BUFF)
+
+        self.play(
+            LaggedStart(
+                ApplyMethod, self.pi_creatures,
+                lambda pi : (pi.change, "hooray", title)
+            ), 
+            Write(title)
+        )
+        self.dither(5)
+        self.play(
+            Write(q_and_a),
+            self.teacher.change, "raise_right_hand",
+        )
+        self.dither(4)
+
+class HighDPatreonThanks(PatreonThanks):
+    CONFIG = {
+        "specific_patrons" : [
+            "Desmos",
+            "Burt Humburg",
+            "CrypticSwarm",
+            "Juan Benet",
+            "Ali Yahya",
+            "William",
+            "Mayank M. Mehrotra",
+            "Lukas Biewald",
+            "Samantha D. Suplee",
+            "James Park",
+            "Yana Chernobilsky",
+            "Kaustuv DeBiswas",
+            "Kathryn Schmiedicke",
+            "Yu Jun",
+            "dave nicponski",
+            "Damion Kistler",
+            "Markus Persson",
+            "Yoni Nazarathy",
+            "Corey Ogburn",
+            "Ed Kellett",
+            "Joseph John Cox",
+            "Dan Buchoff",
+            "Luc Ritchie",
+            "Erik Sundell",
+            "Xueqi Li",
+            "David Stork",
+            "Tianyu Ge",
+            "Ted Suzman",
+            "Amir Fayazi",
+            "Linh Tran",
+            "Andrew Busey",
+            "Michael McGuffin",
+            "John Haley",
+            "Ankalagon",
+            "Eric Lavault",
+            "Tomohiro Furusawa",
+            "Boris Veselinovich",
+            "Julian Pulgarin",
+            "Jeff Linse",
+            "Cooper Jones",
+            "Ryan Dahl",
+            "Mark Govea",
+            "Robert Teed",
+            "Jason Hise",
+            "Meshal Alshammari",
+            "Bernd Sing",
+            "Nils Schneider",
+            "James Thornton",
+            "Mustafa Mahdi",
+            "Mathew Bramson",
+            "Jerry Ling",
+            "Vecht",
+            "Shimin Kuang",
+            "Rish Kundalia",
+            "Achille Brighton",
+            "Ripta Pasay",
+        ]
+    }
 
 class Thumbnail(SliderScene):
     CONFIG = {
