@@ -45,7 +45,7 @@ class OscillatingVector(ContinualAnimation):
 
     def update_mobject(self, dt):
         f = self.frequency
-        t = self.total_time
+        t = self.internal_time
         angle = 2*np.pi*f*t
         vect = np.array([
             self.A_x*np.exp(complex(0, angle + self.phi_x)),
@@ -73,10 +73,14 @@ class Test(Scene):
         )
         randy = Randolph()
 
-        self.add(randy, wiggle)
-        self.dither(2)
-        self.play(FadeOut(E_vect))
-        self.dither(2)
+        self.add(randy)
+        self.play(ShowCreation(wiggle.mobject))
+        self.add(wiggle)
+        self.dither(4)
+        self.wind_down(wiggle)
+        self.dither()
+        # self.play(FadeOut(E_vect))
+        # self.dither(2)
 
 
 

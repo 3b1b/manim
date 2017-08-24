@@ -126,12 +126,16 @@ class Scene(object):
             continual_animation.update(dt_multiplier*self.frame_duration)
 
     def wind_down(self, *continual_animations, **kwargs):
-        run_time = kwargs.get("run_time", 1)
+        wind_down_time = kwargs.get("wind_down_time", 1)
         for continual_animation in continual_animations:
-            continual_animation.begin_wind_down(run_time)
-        self.dither(run_time)
-        ##TODO
-
+            continual_animation.begin_wind_down(wind_down_time)
+        self.dither(wind_down_time)
+        #TODO, this is not done with the remove method so as to
+        #keep the relevant mobjects.  Better way?
+        self.continual_animations = filter(
+            lambda ca : ca in continual_animations,
+            self.continual_animations
+        )
     # 
 
     def extract_mobject_family_members(self, *mobjects):
