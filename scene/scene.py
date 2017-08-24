@@ -18,6 +18,7 @@ from mobject import Mobject, VMobject
 from animation import Animation
 from animation.animation import sync_animation_run_times_and_rate_funcs
 from animation.transform import MoveToTarget
+from animation.continual_animation import ContinualAnimation
 
 class Scene(object):
     CONFIG = {
@@ -35,6 +36,7 @@ class Scene(object):
         digest_config(self, kwargs)
         self.camera = self.camera_class(**self.camera_config)
         self.mobjects = []
+        self.continual_animations = []
         self.foreground_mobjects = []
         self.num_plays = 0
         self.saved_frames = []
@@ -110,6 +112,7 @@ class Scene(object):
             self.set_camera_image(background)
         else:
             self.reset_camera()
+
         self.capture_mobjects_in_camera(mobjects, **kwargs)
 
     def freeze_background(self):
@@ -117,6 +120,19 @@ class Scene(object):
         self.set_camera(Camera(self.get_frame()))
         self.clear()
     ###
+
+    def update_continual_animations(self, dt_multiplier = 1):
+        for continual_animation in self.continual_animations:
+            continual_animation.update(dt_multiplier*self.frame_duration)
+
+    def wind_down(self, *continual_animations, **kwargs):
+        run_time = kwargs.get("run_time", 1)
+        for continual_animation in continual_animations:
+            continual_animation.begin_wind_down(run_time)
+        self.dither(run_time)
+        ##TODO
+
+    # 
 
     def extract_mobject_family_members(self, *mobjects):
         return remove_list_redundancies(list(
@@ -140,7 +156,23 @@ class Scene(object):
             return num_families == 1
         return filter(is_top_level, mobjects)
         
-    def add(self, *mobjects_to_add):
+    def separate_mobjects_and_continual_animations(self, mobjects_or_continual_animations):
+        mobjects = []
+        continual_animations = []
+        for item in mobjects_or_continual_animations:
+            if isinstance(item, Mobject):
+                mobjects.append(item)
+            elif isinstance(item, ContinualAnimation):
+                mobjects.append(item.mobject)
+                continual_animations.append(item)
+            else:
+                raise Exception("""
+                    Adding/Removing something which is 
+                    not a Mobject or a ContinualAnimation
+                 """)
+        return mobjects, continual_animations
+
+    def add(self, *mobjects_or_continual_animations):
         """
         Mobjects will be displayed, from background to foreground,
         in the order with which they are entered.
@@ -148,10 +180,14 @@ class Scene(object):
         Scene class keeps track not just of the mobject directly added,
         but also of every family member therein.
         """
-        if not all_elements_are_instances(mobjects_to_add, Mobject):
-            raise Exception("Adding something which is not a mobject")
-        mobjects_to_add = self.extract_mobject_family_members(*mobjects_to_add)
-        self.mobjects = list_update(self.mobjects, mobjects_to_add)
+        mobjects, continual_animations = self.separate_mobjects_and_continual_animations(
+            mobjects_or_continual_animations
+        )
+        mobjects = self.extract_mobject_family_members(*mobjects)
+        self.mobjects = list_update(self.mobjects, mobjects)
+        self.continual_animations = list_update(
+            self.continual_animations, continual_animations
+        )
         return self
 
     def add_mobjects_among(self, values):
@@ -163,16 +199,24 @@ class Scene(object):
         self.add(*mobjects)
         return self
 
-    def remove(self, *mobjects_to_remove):
-        if not all_elements_are_instances(mobjects_to_remove, Mobject):
-            raise Exception("Removing something which is not a mobject")
-        mobjects_to_remove = self.extract_mobject_family_members(*mobjects_to_remove)
+    def remove(self, *mobjects_or_continual_animations):
+        mobjects, continual_animations = self.separate_mobjects_and_continual_animations(
+            mobjects_or_continual_animations
+        )
+        mobjects = self.extract_mobject_family_members(*mobjects)
         self.mobjects = filter(
-            lambda m : m not in mobjects_to_remove,
+            lambda m : m not in mobjects,
             self.mobjects
         )
         self.remove_mobjects_not_completely_on_screen()
-        self.remove_foreground_mobjects(*mobjects_to_remove)
+        self.remove_foreground_mobjects(*mobjects)
+
+        self.continual_animations = filter(
+            lambda ca : ca not in continual_animations and \
+                        ca.mobject not in mobjects,
+            self.continual_animations
+        )
+
         return self
 
     def remove_mobjects_not_completely_on_screen(self):
@@ -217,6 +261,8 @@ class Scene(object):
 
     def clear(self):
         self.mobjects = []
+        self.foreground_mobjects = []
+        self.continual_animation = []
         return self
 
     def get_mobjects(self):
@@ -226,8 +272,6 @@ class Scene(object):
         return [m.copy() for m in self.mobjects]
 
     def separate_moving_and_static_mobjects(self, *animations):
-        """
-        """
         moving_mobjects = self.extract_mobject_family_members(
             *[anim.mobject for anim in animations] + \
             self.foreground_mobjects
@@ -238,10 +282,14 @@ class Scene(object):
         )
         return moving_mobjects, static_mobjects
 
-    def get_time_progression(self, animations):
-        run_time = animations[0].run_time
+    def get_time_progression(self, run_time):
         times = np.arange(0, run_time, self.frame_duration)
         time_progression = ProgressDisplay(times)
+        return time_progression
+
+    def get_animation_time_progression(self, animations):
+        run_time = animations[0].run_time
+        time_progression = self.get_time_progression(run_time)
         time_progression.set_description("".join([
             "Animation %d: "%self.num_plays,
             str(animations[0]),
@@ -317,9 +365,10 @@ class Scene(object):
             self.separate_moving_and_static_mobjects(*animations)
         self.update_frame(static_mobjects)
         static_image = self.get_frame()
-        for t in self.get_time_progression(animations):
+        for t in self.get_animation_time_progression(animations):
             for animation in animations:
                 animation.update(t / animation.run_time)
+            self.update_continual_animations()
             self.update_frame(moving_mobjects, static_image)
             self.add_frames(self.get_frame())
         self.add(*moving_mobjects)
@@ -341,8 +390,16 @@ class Scene(object):
     def dither(self, duration = DEFAULT_DITHER_TIME):
         if self.skip_animations:
             return self
-        self.update_frame()
-        self.add_frames(*[self.get_frame()]*int(duration / self.frame_duration))
+
+        if self.continual_animations:
+            self.play(*[
+                Animation(ca.mobject, run_time = duration)
+                for ca in self.continual_animations
+            ])
+        else:
+            self.update_frame()
+            self.add_frames(*[self.get_frame()]*int(duration / self.frame_duration))
+
         return self
 
     def force_skipping(self):
@@ -362,18 +419,7 @@ class Scene(object):
         if self.save_frames:
             self.saved_frames += list(frames)
 
-    def repeat_frames(self, num = 1):
-        assert(self.save_frames)
-        self.add_frames(*self.saved_frames*num)
-        return self
-
-    def invert_colors(self):
-        white_frame = 255*np.ones(self.get_frame().shape, dtype = 'uint8')
-        self.saved_frames = [
-            white_frame-frame
-            for frame in self.saved_frames
-        ]
-        return self
+    #Display methods
 
     def show_frame(self):
         self.update_frame()
