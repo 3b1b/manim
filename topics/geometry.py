@@ -218,7 +218,7 @@ class Arrow(Line):
             fill_color = self.tip.get_fill_color(),
             fill_opacity = self.tip.get_fill_opacity()
         )
-        self.add(self.rect)
+        self.add_to_back(self.rect)
         self.set_stroke(width = 0)
         self.set_rectangular_stem_points()
 
@@ -232,10 +232,10 @@ class Arrow(Line):
         perp_vect /= np.linalg.norm(perp_vect)
         width = self.rectangular_stem_width 
         self.rect.set_points_as_corners([
-            start + perp_vect*width/2,
             tip_base + perp_vect*width/2,
-            tip_base - perp_vect*width/2,
+            start + perp_vect*width/2,
             start - perp_vect*width/2,
+            tip_base - perp_vect*width/2,
         ])
         return self
 
