@@ -1,5 +1,6 @@
 from helpers import *
-from mobject import Mobject
+from mobject import Mobject, Group
+import copy
 
 class ContinualAnimation(object):
     CONFIG = {
@@ -45,10 +46,32 @@ class ContinualAnimation(object):
         #To implement in subclass
         pass
 
+    def copy(self):
+        return copy.deepcopy(self)
+
+class ContinualAnimationGroup(ContinualAnimation):
+    CONFIG = {
+        "start_up_time" : 0,
+        "wind_down_time" : 0,
+    }
+    def __init__(self, *continual_animations, **kwargs):
+        digest_config(self, kwargs, locals())
+        self.group = Group(*[ca.mobject for ca in continual_animations])
+        ContinualAnimation.__init__(self, self.group, **kwargs)
+
+    def update_mobject(self, dt):
+        for continual_animation in self.continual_animations:
+            continual_animation.update(dt)
 
 
+class AmbientRotation(ContinualAnimation):
+    CONFIG = {
+        "axis" : OUT,
+        "rate" : np.pi/12, #Radians per second
+    }
 
-
+    def update_mobject(self, dt):
+        self.mobject.rotate(dt*self.rate, axis = self.axis)
 
 
 

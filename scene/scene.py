@@ -31,6 +31,7 @@ class Scene(object):
         "save_frames"      : False,
         "output_directory" : MOVIE_DIR,
         "name" : None,
+        "always_continually_update" : False,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
@@ -121,9 +122,9 @@ class Scene(object):
         self.clear()
     ###
 
-    def update_continual_animations(self, dt_multiplier = 1):
+    def continual_update(self):
         for continual_animation in self.continual_animations:
-            continual_animation.update(dt_multiplier*self.frame_duration)
+            continual_animation.update(self.frame_duration)
 
     def wind_down(self, *continual_animations, **kwargs):
         wind_down_time = kwargs.get("wind_down_time", 1)
@@ -136,7 +137,11 @@ class Scene(object):
             lambda ca : ca in continual_animations,
             self.continual_animations
         )
-    # 
+
+    def should_continually_update(self):
+        return len(self.continual_animations) > 0 or self.always_continually_update
+
+    ###
 
     def extract_mobject_family_members(self, *mobjects):
         return remove_list_redundancies(list(
@@ -276,10 +281,11 @@ class Scene(object):
         return [m.copy() for m in self.mobjects]
 
     def separate_moving_and_static_mobjects(self, *animations):
-        moving_mobjects = self.extract_mobject_family_members(
-            *[anim.mobject for anim in animations] + \
-            self.foreground_mobjects
-        )
+        moving_mobjects = self.extract_mobject_family_members(*it.chain(
+            [anim.mobject for anim in animations],
+            [ca.mobject for ca in self.continual_animations],
+            self.foreground_mobjects,
+        ))
         static_mobjects = filter(
             lambda m : m not in moving_mobjects,
             self.mobjects
@@ -372,7 +378,7 @@ class Scene(object):
         for t in self.get_animation_time_progression(animations):
             for animation in animations:
                 animation.update(t / animation.run_time)
-            self.update_continual_animations()
+            self.continual_update()
             self.update_frame(moving_mobjects, static_image)
             self.add_frames(self.get_frame())
         self.add(*moving_mobjects)
@@ -395,11 +401,11 @@ class Scene(object):
         if self.skip_animations:
             return self
 
-        if self.continual_animations:
-            self.play(*[
-                Animation(ca.mobject, run_time = duration)
-                for ca in self.continual_animations
-            ])
+        if self.should_continually_update():
+            for t in self.get_time_progression(duration):
+                self.continual_update()
+                self.update_frame()
+                self.add_frames(self.get_frame())
         else:
             self.update_frame()
             self.add_frames(*[self.get_frame()]*int(duration / self.frame_duration))
