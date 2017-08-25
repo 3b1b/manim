@@ -123,13 +123,21 @@ class UnitInterval(NumberLine):
 
 class Axes(VGroup):
     CONFIG = {
-        "propogate_style_to_family" : True
+        "propogate_style_to_family" : True,
+        "three_d" : True,
+        "color" : LIGHT_GREY
     }
     def __init__(self, **kwargs):
-        VGroup.__init__(self)
+        digest_config(self, kwargs)
+        parts = []
         self.x_axis = NumberLine(**kwargs)
         self.y_axis = NumberLine(**kwargs).rotate(np.pi/2)
-        self.add(self.x_axis, self.y_axis)
+        parts = [self.x_axis, self.y_axis]
+        if self.three_d:
+            self.z_axis = NumberLine(**kwargs)
+            self.z_axis.rotate(np.pi/2, UP)
+            parts.append(self.z_axis)
+        VGroup.__init__(self, *parts, **kwargs)
 
 class NumberPlane(VMobject):
     CONFIG = {
