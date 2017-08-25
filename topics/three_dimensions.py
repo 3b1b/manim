@@ -30,7 +30,7 @@ class ThreeDCamera(CameraWithPerspective):
         "shading_factor" : 0.5,
         "distance" : 5,
         "phi" : 0, #Angle off z axis
-        "theta" : 0, #Rotation about z axis
+        "theta" : -np.pi/2, #Rotation about z axis
     }
     def __init__(self, *args, **kwargs):
         Camera.__init__(self, *args, **kwargs)
@@ -41,7 +41,7 @@ class ThreeDCamera(CameraWithPerspective):
     def get_color(self, method):
         color = method()
         vmobject = method.im_self
-        if is_3d(vmobject):
+        if should_shade_in_3d(vmobject):
             return Color(rgb = self.get_shaded_rgb(
                 color_to_rgb(color),
                 normal_vect = self.get_unit_normal_vect(vmobject)
@@ -80,7 +80,7 @@ class ThreeDCamera(CameraWithPerspective):
         def z_cmp(*vmobs):
             #Compare to three dimensional mobjects based on their
             #z value, otherwise don't compare.
-            three_d_status = map(is_3d, vmobs)
+            three_d_status = map(should_shade_in_3d, vmobs)
             has_points = [vm.get_num_points() > 0 for vm in vmobs]
             if all(three_d_status) and all(has_points):
                 cmp_vect = self.get_unit_normal_vect(vmobs[1])
@@ -128,7 +128,7 @@ class ThreeDCamera(CameraWithPerspective):
     def get_view_transformation_matrix(self):
         return np.dot(
             rotation_matrix(self.get_phi(), LEFT),
-            rotation_about_z(self.get_theta()),
+            rotation_about_z(-self.get_theta() - np.pi/2),
         )
 
     def points_to_pixel_coords(self, points):
@@ -144,7 +144,7 @@ class ThreeDScene(Scene):
     def set_camera_position(self, phi = None, theta = None, distance = None):
         self.camera.set_position(phi, theta, distance)
 
-    def begin_ambient_camera_rotation(self, rate = -0.02*np.pi):
+    def begin_ambient_camera_rotation(self, rate = -0.01*np.pi):
         self.ambient_camera_rotation = AmbientRotation(
             self.camera.position_mobject,
             axis = OUT, 
@@ -159,7 +159,6 @@ class ThreeDScene(Scene):
         **kwargs
         ):
         target_point = self.camera.spherical_coords_to_point(phi, theta, distance)
-        print phi, theta, distance
         movement = ApplyMethod(
             self.camera.position_mobject.move_to,
             target_point,
@@ -177,23 +176,19 @@ class ThreeDScene(Scene):
             return moving + static, []
         return moving, static
 
-
-
-
 ##############
 
-def is_3d(mobject):
-    return hasattr(mobject, "part_of_3d_mobject")
+def should_shade_in_3d(mobject):
+    return hasattr(mobject, "shade_in_3d")
 
-def make_3d(mobject):
+def shade_in_3d(mobject):
     for submob in mobject.submobject_family():
-        submob.part_of_3d_mobject = True
+        submob.shade_in_3d = True
 
 class ThreeDMobject(VMobject):
     def __init__(self, *args, **kwargs):
         VMobject.__init__(self, *args, **kwargs)
-        for submobject in self.submobject_family():
-            submobject.part_of_3d_mobject = True
+        shade_in_3d(self)
 
 class Cube(ThreeDMobject):
     CONFIG = {
