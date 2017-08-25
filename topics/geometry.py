@@ -139,17 +139,9 @@ class Line(VMobject):
         return angle_of_vector(end-start)
 
     def put_start_and_end_on(self, new_start, new_end):
-        epsilon = 0.01
-        if self.get_length() == 0:
-            #TODO, this is hacky
-            self.points[0] += epsilon*LEFT
-        new_length = np.linalg.norm(new_end - new_start)
-        new_length = max(new_length, epsilon)
-        new_angle = angle_of_vector(new_end - new_start)
-        self.scale(new_length / self.get_length())
-        self.rotate(new_angle - self.get_angle())
-        self.shift(new_start - self.get_start())
-        return self
+        self.set_start_and_end(new_start, new_end)
+        self.buff = 0
+        self.generate_points()
 
 class DashedLine(Line):
     CONFIG = {
@@ -189,7 +181,8 @@ class Arrow(Line):
     CONFIG = {
         "color"      : YELLOW_C,
         "tip_length" : 0.25,
-        "tip_angle"  : np.pi/6,
+        "tip_width_to_length_ratio"  : 1,
+        "max_tip_length_to_length_ratio" : 0.25,
         "buff"       : MED_SMALL_BUFF,
         "propogate_style_to_family" : False,
         "preserve_tip_size_when_scaling" : True,
@@ -214,22 +207,34 @@ class Arrow(Line):
         self.add(self.tip)
         self.init_colors()
 
-    def set_tip_points(self, tip, add_at_end = True):
-        start, end = self.get_start_and_end()
-        anchors = self.get_anchors()
-        vect = anchors[-1] - anchors[-2]
-        vect *= -self.tip_length / np.linalg.norm(vect)
-        if not add_at_end:
-            start, end = end, start
-            vect = -vect
-        tip_points = [
-            end+rotate_vector(vect, u*self.tip_angle)
-            for u in 1, -1
-        ]
-        tip.set_anchor_points(
-            [tip_points[0], end, tip_points[1]],
-            mode = "corners"
+    def set_tip_points(self, tip, add_at_end = True, tip_length = None):
+        if tip_length is None:
+            tip_length = self.tip_length
+        line_length = np.linalg.norm(self.points[-1]-self.points[0])
+        tip_length = min(
+            tip_length, self.max_tip_length_to_length_ratio*line_length
         )
+
+        indices = (-2, -1) if add_at_end else (1, 0)
+        pre_end_point, end_point = [
+            self.points[index]
+            for index in indices
+        ]
+        vect = end_point - pre_end_point
+        perp_vect = np.cross(vect, OUT)
+        for v in vect, perp_vect:
+            if np.linalg.norm(v) == 0:
+                v[0] = 1
+            v *= tip_length/np.linalg.norm(v)
+
+        ratio = self.tip_width_to_length_ratio
+        tip.set_points_as_corners([
+            end_point, 
+            end_point-vect+perp_vect*ratio/2,
+            end_point-vect-perp_vect*ratio/2,
+        ])
+        # tip.scale(tip_length, about_point = end_point)
+
         return self
 
     def get_end(self):
@@ -241,9 +246,13 @@ class Arrow(Line):
     def get_tip(self):
         return self.tip
 
+    def put_start_and_end_on(self, *args, **kwargs):
+        Line.put_start_and_end_on(self, *args, **kwargs)
+        self.set_tip_points(self.tip)
+
     def scale(self, scale_factor, **kwargs):
         Line.scale(self, scale_factor, **kwargs)
-        if self.preserve_tip_size_when_scaling and self.get_length() > self.tip_length:
+        if self.preserve_tip_size_when_scaling:
             self.set_tip_points(self.tip)
         return self
 
