@@ -162,6 +162,12 @@ class Mobject(object):
             mob.points = np.apply_along_axis(function, 1, mob.points)
         return self
 
+    def apply_matrix(self, matrix):
+        matrix = np.array(matrix)
+        for mob in self.family_members_with_points():
+            mob.points = np.dot(mob.points, matrix.T)
+        return self
+
     def wag(self, direction = RIGHT, axis = DOWN, wag_factor = 1.0):
         for mob in self.family_members_with_points():
             alphas = np.dot(mob.points, np.transpose(axis))
@@ -705,8 +711,6 @@ class Mobject(object):
 
     def pointwise_become_partial(self, mobject, a, b):
         pass #To implement in subclass
-
-
 
 class Group(Mobject):
     #Alternate name to improve readibility in cases where
