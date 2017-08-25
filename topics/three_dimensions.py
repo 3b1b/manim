@@ -1,10 +1,12 @@
 
 from helpers import *
 
-from mobject.vectorized_mobject import VGroup, VMobject
-from topics.geometry import Square
+from mobject.vectorized_mobject import VGroup, VMobject, VectorizedPoint
+from topics.geometry import Square, Line
 from scene import Scene
 from camera import Camera
+from animation.continual_animation import AmbientRotation
+from animation.transform import ApplyMethod
 
 class CameraWithPerspective(Camera):
     CONFIG = {
@@ -26,10 +28,15 @@ class ThreeDCamera(CameraWithPerspective):
     CONFIG = {
         "sun_vect" : 5*UP+LEFT,
         "shading_factor" : 0.5,
+        "distance" : 5,
+        "phi" : 0, #Angle off z axis
+        "theta" : 0, #Rotation about z axis
     }
     def __init__(self, *args, **kwargs):
         Camera.__init__(self, *args, **kwargs)
         self.unit_sun_vect = self.sun_vect/np.linalg.norm(self.sun_vect)
+        self.position_mobject = VectorizedPoint()
+        self.set_position(self.phi, self.theta, self.distance)
 
     def get_color(self, method):
         color = method()
@@ -87,15 +94,100 @@ class ThreeDCamera(CameraWithPerspective):
             self, sorted(vmobjects, cmp = z_cmp)
         )
 
+    def get_position(self):
+        return self.position_mobject.points[0]
+
+    def get_phi(self):
+        x, y, z = self.get_position()
+        return angle_of_vector([z, np.sqrt(x**2 + y**2)])
+
+    def get_theta(self):
+        x, y, z = self.get_position()
+        return angle_of_vector([x, y])
+
+    def get_distance(self):
+        return np.linalg.norm(self.get_position())
+
+    def spherical_coords_to_point(self, phi, theta, distance):
+        phi = phi or self.get_phi()
+        theta = theta or self.get_theta()
+        distance = distance or self.get_distance()
+        return distance*np.array([
+            np.sin(phi)*np.cos(theta),
+            np.sin(phi)*np.sin(theta),
+            np.cos(phi)
+        ])
+
+    def set_position(self, phi = None, theta = None, distance = None):
+        point = self.spherical_coords_to_point(phi, theta, distance)
+        self.position_mobject.move_to(point)
+        self.phi = self.get_phi()
+        self.theta = self.get_theta()
+        self.distance = self.get_distance()
+
+    def get_view_transformation_matrix(self):
+        return np.dot(
+            rotation_matrix(self.get_phi(), LEFT),
+            rotation_about_z(self.get_theta()),
+        )
+
+    def points_to_pixel_coords(self, points):
+        matrix = self.get_view_transformation_matrix()
+        new_points = np.dot(points, matrix.T)
+        return Camera.points_to_pixel_coords(self, new_points)
+
 class ThreeDScene(Scene):
     CONFIG = {
         "camera_class" : ThreeDCamera,
     }
 
+    def set_camera_position(self, phi = None, theta = None, distance = None):
+        self.camera.set_position(phi, theta, distance)
+
+    def begin_ambient_camera_rotation(self, rate = -0.02*np.pi):
+        self.ambient_camera_rotation = AmbientRotation(
+            self.camera.position_mobject,
+            axis = OUT, 
+            rate = rate
+        )
+        self.add(self.ambient_camera_rotation)
+
+    def move_camera(
+        self, 
+        phi = None, theta = None, distance = None,
+        added_anims = [],
+        **kwargs
+        ):
+        target_point = self.camera.spherical_coords_to_point(phi, theta, distance)
+        print phi, theta, distance
+        movement = ApplyMethod(
+            self.camera.position_mobject.move_to,
+            target_point,
+            **kwargs
+        )
+        if hasattr(self, "ambient_camera_rotation"):
+            self.remove(self.ambient_camera_rotation)
+        self.play(movement, *added_anims)
+        if hasattr(self, "ambient_camera_rotation"):
+            self.add(self.ambient_camera_rotation)
+
+    def separate_moving_and_static_mobjects(self, *animations):
+        moving, static = Scene.separate_moving_and_static_mobjects(self, *animations)
+        if self.camera.position_mobject in moving:
+            return moving + static, []
+        return moving, static
+
+
+
+
 ##############
 
 def is_3d(mobject):
     return hasattr(mobject, "part_of_3d_mobject")
+
+def make_3d(mobject):
+    for submob in mobject.submobject_family():
+        submob.part_of_3d_mobject = True
 
 class ThreeDMobject(VMobject):
     def __init__(self, *args, **kwargs):
