@@ -186,6 +186,9 @@ class Arrow(Line):
         "buff"       : MED_SMALL_BUFF,
         "propogate_style_to_family" : False,
         "preserve_tip_size_when_scaling" : True,
+        "normal_vector" : OUT,
+        "use_rectangular_stem" : True,
+        "rectangular_stem_width" : 0.05,
     }
     def __init__(self, *args, **kwargs):
         points = map(self.pointify, args)
@@ -193,6 +196,8 @@ class Arrow(Line):
             args = (points[0]+UP+LEFT, points[0])
         Line.__init__(self, *args, **kwargs)
         self.add_tip()
+        if self.use_rectangular_stem and not hasattr(self, "rect"):
+            self.add_rectangular_stem()
 
     def add_tip(self, add_at_end = True):
         tip = VMobject(
@@ -206,6 +211,33 @@ class Arrow(Line):
         self.tip = tip
         self.add(self.tip)
         self.init_colors()
+
+    def add_rectangular_stem(self):
+        self.rect = Rectangle(
+            stroke_width = 0,
+            fill_color = self.tip.get_fill_color(),
+            fill_opacity = self.tip.get_fill_opacity()
+        )
+        self.add(self.rect)
+        self.set_stroke(width = 0)
+        self.set_rectangular_stem_points()
+
+    def set_rectangular_stem_points(self):
+        start, end = self.get_start_and_end()
+        vect = end - start
+        tip_base_points = self.tip.get_anchors()[1:]
+        tip_base = center_of_mass(tip_base_points)
+        tbp1, tbp2 = tip_base_points
+        perp_vect = tbp2 - tbp1
+        perp_vect /= np.linalg.norm(perp_vect)
+        width = self.rectangular_stem_width 
+        self.rect.set_points_as_corners([
+            start + perp_vect*width/2,
+            tip_base + perp_vect*width/2,
+            tip_base - perp_vect*width/2,
+            start - perp_vect*width/2,
+        ])
+        return self
 
     def set_tip_points(self, tip, add_at_end = True, tip_length = None):
         if tip_length is None:
@@ -221,7 +253,7 @@ class Arrow(Line):
             for index in indices
         ]
         vect = end_point - pre_end_point
-        perp_vect = np.cross(vect, OUT)
+        perp_vect = np.cross(vect, self.normal_vector)
         for v in vect, perp_vect:
             if np.linalg.norm(v) == 0:
                 v[0] = 1
@@ -239,7 +271,7 @@ class Arrow(Line):
 
     def get_end(self):
         if hasattr(self, "tip"):
-            return self.tip.get_anchors()[1]
+            return self.tip.get_anchors()[0]
         else:
             return Line.get_end(self)
 
@@ -249,9 +281,11 @@ class Arrow(Line):
     def put_start_and_end_on(self, *args, **kwargs):
         Line.put_start_and_end_on(self, *args, **kwargs)
         self.set_tip_points(self.tip)
+        self.set_rectangular_stem_points()
 
     def scale(self, scale_factor, **kwargs):
         Line.scale(self, scale_factor, **kwargs)
+        self.set_rectangular_stem_points()
         if self.preserve_tip_size_when_scaling:
             self.set_tip_points(self.tip)
         return self
