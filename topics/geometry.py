@@ -182,7 +182,8 @@ class Arrow(Line):
         "color"      : YELLOW_C,
         "tip_length" : 0.25,
         "tip_width_to_length_ratio"  : 1,
-        "max_tip_length_to_length_ratio" : 0.25,
+        "max_tip_length_to_length_ratio" : 0.35,
+        "max_stem_width_to_tip_width_ratio" : 0.3,
         "buff"       : MED_SMALL_BUFF,
         "propogate_style_to_family" : False,
         "preserve_tip_size_when_scaling" : True,
@@ -229,8 +230,12 @@ class Arrow(Line):
         tip_base = center_of_mass(tip_base_points)
         tbp1, tbp2 = tip_base_points
         perp_vect = tbp2 - tbp1
-        perp_vect /= np.linalg.norm(perp_vect)
-        width = self.rectangular_stem_width 
+        tip_base_width = np.linalg.norm(perp_vect)
+        perp_vect /= tip_base_width
+        width = min(
+            self.rectangular_stem_width,
+            self.max_stem_width_to_tip_width_ratio*tip_base_width,
+        )
         self.rect.set_points_as_corners([
             tip_base + perp_vect*width/2,
             start + perp_vect*width/2,

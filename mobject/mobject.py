@@ -82,14 +82,15 @@ class Mobject(object):
             setattr(self, attr, func(getattr(self, attr)))
         return self
 
-    def get_image(self):
-        from camera import Camera
-        camera = Camera()
+    def get_image(self, camera = None):
+        if camera is None:
+            from camera import Camera
+            camera = Camera()
         camera.capture_mobject(self)
         return Image.fromarray(camera.get_image())
 
-    def show(self):
-        self.get_image().show()
+    def show(self, camera = None):
+        self.get_image(camera = camera).show()
 
     def save_image(self, name = None):
         self.get_image().save(

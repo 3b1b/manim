@@ -29,7 +29,7 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
 E_COLOR = BLUE
-M_COLOR = RED
+M_COLOR = YELLOW
 
 class OscillatingVector(ContinualAnimation):
     CONFIG = {
@@ -107,7 +107,7 @@ class OscillatingVectorComponents(ContinualAnimationGroup):
 
 class EMWave(ContinualAnimationGroup):
     CONFIG = {
-        "wave_number" : 3,
+        "wave_number" : 1,
         "frequency" : 0.25,
         "n_vectors" : 40,
         "propogation_direction" : RIGHT,
@@ -134,7 +134,7 @@ class EMWave(ContinualAnimationGroup):
 
         for alpha in np.linspace(0, 1, self.n_vectors):
             tail = interpolate(ORIGIN, self.length*OUT, alpha)
-            phase = alpha*self.length*self.wave_number
+            phase = -alpha*self.length*self.wave_number
             E_ov = OscillatingVector(
                 Vector(UP, color = E_COLOR),
                 tail = np.array(tail),
@@ -163,10 +163,6 @@ class EMWave(ContinualAnimationGroup):
 
     def update_mobject(self, dt):
         ContinualAnimationGroup.update_mobject(self, dt)
-        # for vect in self.E_vects:
-        #     vect.rotate_in_place(np.pi/2, RIGHT)
-        # for vect in self.M_vects:
-        #     vect.rotate_in_place(np.pi/2, UP)
         self.mobject.rotate(self.rotation, OUT)
         self.mobject.apply_matrix(self.matrix_transform)
         self.mobject.shift(self.start_point)
@@ -176,7 +172,10 @@ class WavePacket(Animation):
         "EMWave_config" : {
             "wave_number" : 0,
             "start_point" : SPACE_WIDTH*LEFT,
+            "phi_x" : np.pi/4,
+            "phi_y" : np.pi/4,
         },
+        "em_wave" : None,
         "run_time" : 4,
         "rate_func" : None,
         "packet_width" : 6,
@@ -184,12 +183,15 @@ class WavePacket(Animation):
         "include_M_vects" : True,
         "filter_distance" : SPACE_WIDTH,
         "get_filtered" : False,
+        "remover" : True,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
-        em_wave = EMWave(**self.EMWave_config)
-        em_wave.update(0)
-        self.em_wave = em_wave
+        em_wave = self.em_wave
+        if em_wave is None:
+            em_wave = EMWave(**self.EMWave_config)
+            em_wave.update(0)
+            self.em_wave = em_wave
 
         self.vects = VGroup()
         if self.include_E_vects:
@@ -219,17 +221,15 @@ class WavePacket(Animation):
                 tail - packet_center,
                 em_wave.propogation_direction
             )
-            A = em_wave.amplitude*self.func(distance_from_packet)
-            if np.abs(A) < 0.1:
-                A = 0
+            A = em_wave.amplitude*self.E_func(distance_from_packet)
             distance_from_start = np.linalg.norm(tail - em_wave.start_point)
             if self.get_filtered and distance_from_start > self.filter_distance:
                 A = 0
             vect.restore()
             vect.scale(A/vect.get_length(), about_point = tail)
 
-    def func(self, x):
-        return np.sin(x)*np.exp(-0.5*x*x)
+    def E_func(self, x):
+        return np.sin(2*x)*np.exp(-0.25*x*x)
 
 class FilterLabel(TexMobject):
     def __init__(self, tex, degrees, **kwargs):
@@ -243,6 +243,7 @@ class PolarizingFilter(Circle):
         "fill_opacity" : 0.5,
         "label_tex" : None,
         "filter_angle" : 0,
+        "include_arrow_label" : True,
     }
     def __init__(self, **kwargs):
         Circle.__init__(self, **kwargs)
@@ -252,25 +253,31 @@ class PolarizingFilter(Circle):
             self.label.next_to(self.get_top(), DOWN, SMALL_BUFF)
             self.add(self.label)
 
-        arrow = Arrow(ORIGIN, MED_LARGE_BUFF*UP, buff = 0)
+        arrow = Arrow(
+            ORIGIN, 0.7*UP, 
+            color = WHITE,
+            buff = 0,
+        )
         arrow.shift(self.get_top())
         arrow.rotate(-self.filter_angle)
         self.add(arrow)
         self.arrow = arrow
+        shade_in_3d(self)
 
-        arrow_label = TexMobject(
-            "%.1f^\\circ"%(self.filter_angle*180/np.pi)
-        )
-        arrow_label.next_to(arrow.get_tip(), UP)
-        self.add(arrow_label)
-        self.arrow_label = arrow_label
+        if self.include_arrow_label:
+            arrow_label = TexMobject(
+                "%.1f^\\circ"%(self.filter_angle*180/np.pi)
+            )
+            arrow_label.add_background_rectangle()
+            arrow_label.next_to(arrow.get_tip(), UP)
+            self.add(arrow_label)
+            self.arrow_label = arrow_label
 
 class EMScene(Scene):
     def construct(self):
         pass
 
-
-class TestCircularPolarization(ThreeDScene):
+class TestPhoton(ThreeDScene):
     def construct(self):
         self.add(ThreeDAxes())
 
@@ -288,20 +295,15 @@ class TestCircularPolarization(ThreeDScene):
         # shade_in_3d(pol_filter)
         # self.add(pol_filter)
 
-        wave = EMWave(wave_number = 1, A_y = 1, phi_y = np.pi/2)
-        shade_in_3d(wave.mobject)
-        self.add(wave)
-        self.dither(20)
-        # self.dither()
-        # self.move_camera(theta = -1.2*np.pi/2)
-        # self.play(WavePacket(
-        #     run_time = 3,
-        #     get_filtered = True,
-        #     EMWave_config = {
-        #         "start_point" : SPACE_WIDTH*LEFT + DOWN+OUT
-        #     }            
-        # ))
-        # self.dither()
+        self.move_camera(theta = -1.2*np.pi/2)
+        self.play(WavePacket(
+            run_time = 2,
+            # get_filtered = True,
+            EMWave_config = {
+                "start_point" : SPACE_WIDTH*LEFT + DOWN+OUT
+            }            
+        ))
+        self.dither()
 
 
 

@@ -144,7 +144,7 @@ class ThreeDScene(Scene):
     def set_camera_position(self, phi = None, theta = None, distance = None):
         self.camera.set_position(phi, theta, distance)
 
-    def begin_ambient_camera_rotation(self, rate = -0.01*np.pi):
+    def begin_ambient_camera_rotation(self, rate = 0.01):
         self.ambient_camera_rotation = AmbientRotation(
             self.camera.position_mobject,
             axis = OUT, 
