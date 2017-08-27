@@ -179,11 +179,15 @@ class ThreeDScene(Scene):
 ##############
 
 def should_shade_in_3d(mobject):
-    return hasattr(mobject, "shade_in_3d")
+    return hasattr(mobject, "shade_in_3d") and mobject.shade_in_3d
 
 def shade_in_3d(mobject):
     for submob in mobject.submobject_family():
         submob.shade_in_3d = True
+
+def turn_off_3d_shading(mobject):
+    for submob in mobject.submobject_family():
+        submob.shade_in_3d = False
 
 class ThreeDMobject(VMobject):
     def __init__(self, *args, **kwargs):

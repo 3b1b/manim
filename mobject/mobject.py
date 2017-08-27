@@ -542,6 +542,12 @@ class Mobject(object):
     def get_left(self):
         return self.get_edge_center(LEFT)
 
+    def get_zenith(self):
+        return self.get_edge_center(OUT)
+
+    def get_nadir(self):
+        return self.get_edge_center(IN)
+
     def length_over_dim(self, dim):
         return (
             self.reduce_across_dimension(np.max, np.max, dim) -
@@ -553,6 +559,9 @@ class Mobject(object):
 
     def get_height(self):
         return self.length_over_dim(1)
+
+    def get_depth(self):
+        return self.length_over_dim(2)
 
     def point_from_proportion(self, alpha):
         raise Exception("Not implemented")
@@ -589,6 +598,25 @@ class Mobject(object):
             m2.next_to(m1, direction, **kwargs)
         if center:
             self.center()
+        return self
+
+    def arrange_submobjects_in_grid(self, n_rows = None, n_cols = None, **kwargs):
+        submobs = self.submobjects
+        if n_rows is None and n_cols is None:
+            n_cols = int(np.sqrt(len(submobs)))
+            
+        if n_rows is not None:
+            v1 = RIGHT
+            v2 = DOWN
+            n = n_rows
+        elif n_cols is not None:
+            v1 = DOWN
+            v2 = RIGHT
+            n = n_cols
+        Group(*[
+            Group(*submobs[i:i+n]).arrange_submobjects(v1, **kwargs)
+            for i in range(0, len(submobs), n)
+        ]).arrange_submobjects(v2, **kwargs)
         return self
 
     def sort_submobjects(self, point_to_num_func = lambda p : p[0]):
