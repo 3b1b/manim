@@ -409,11 +409,10 @@ class SecondVideoWrapper(Scene):
 class BasicsOfPolarization(DirectionOfPolarization):
     def construct(self):
         self.show_continual_wave()
-        # self.show_photons()
+        self.show_photons()
 
     def show_continual_wave(self):
         em_wave = self.em_wave
-        # em_wave.M_vects.set_fill(opacity = 0.25)
 
         title = TextMobject("Waves in the ``electromagnetic field''")
         title.to_edge(UP)
@@ -495,10 +494,59 @@ class BasicsOfPolarization(DirectionOfPolarization):
 
 class AngleToProbabilityChart(Scene):
     def construct(self):
-        TextMobject("Angle between filters")
-        TextMobject(
-            "Probability that one"
+        left_title = TextMobject("Angle between \\\\ filters")
+        left_title.to_corner(UP+LEFT)
+        right_title = TextMobject(
+            "Probability that photons passing \\\\",
+            "through the first pass through the second"
         )
+        right_title.next_to(left_title, RIGHT, LARGE_BUFF)
+
+        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line.to_edge(UP, buff = 2)
+        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        v_line.next_to(left_title, RIGHT, MED_LARGE_BUFF)
+        v_line.to_edge(UP, buff = 0)
+        VGroup(h_line, v_line).highlight(BLUE)
+        self.add(left_title, right_title, h_line, v_line)
+
+        angles = [0, 22.5, 30, 45, 60, 67.5, 90]
+        angle_mobs = VGroup(*[
+            TexMobject(str(angle) + "^\\circ")
+            for angle in angles
+        ])
+        angle_mobs.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        angle_mobs.scale(0.8)
+        angle_mobs.next_to(left_title, DOWN, LARGE_BUFF)
+
+        probs = [
+            np.cos(angle*np.pi/180.0)**2
+            for angle in angles
+        ]
+        prob_mobs = VGroup(*[
+            TexMobject("%.1f"%(100*prob) + "\\%")
+            for prob in probs
+        ])
+        prob_mobs.highlight(YELLOW)
+        prob_mobs.scale(0.8)
+
+        angle_prob_pairs = zip(angle_mobs, prob_mobs)
+        for angle_mob, prob_mob in angle_prob_pairs:
+            prob_mob.next_to(angle_mob, RIGHT, buff = 3)
+        for prob_mob in prob_mobs[1:]:
+            prob_mob.align_to(prob_mobs[0], LEFT)
+
+
+        for i in [0, 6, 3, 1, 2, 4, 5]:
+            self.play(FadeIn(angle_mobs[i]))
+            self.play(ReplacementTransform(
+                angle_mobs[i].copy(), prob_mobs[i]
+            ))
+
+        explanation = TextMobject("Based on $\\cos(\\theta)^2$")
+        explanation.next_to(prob_mobs, RIGHT, LARGE_BUFF)
+        self.play(Write(explanation, run_time = 2))
+        self.dither()
 
 class ShowVariousFilterPairs(PhotonsThroughPerpendicularFilters):
     CONFIG = {
@@ -507,6 +555,7 @@ class ShowVariousFilterPairs(PhotonsThroughPerpendicularFilters):
             {"filter_angle" : angle}
             for angle in 0, 0, np.pi/2, np.pi/4, np.pi/8
         ],
+        "apply_filter" : False,
     }
     def construct(self):
         self.photons = self.get_photons()
@@ -565,9 +614,10 @@ class ShowVariousFilterPairs(PhotonsThroughPerpendicularFilters):
         )
 
         photons = [
-            copy.deepcopy(self.photons[2 if random.random() < p else 1])
-            for x in range(n_photons)
+            copy.deepcopy(self.photons[2 if q <= p else 1])
+            for q in np.arange(0, 1, 1./n_photons)
         ]
+        random.shuffle(photons)
         for photon in photons:
             photon.rate_func = squish_rate_func(
                 lambda x : x, 0.5, 1
@@ -662,6 +712,80 @@ class ForgetPreviousActions(PhotonsThroughPerpendicularFilters):
                 self.pol_filters[2], photon
             ))
         self.play(photon, *added_anims, run_time = 1.5)
+
+class IntroduceLabeledFilters(PhotonsThroughPerpendicularFilters):
+    CONFIG = {
+        "filter_x_coordinates" : [-3, 0, 3],
+        "pol_filter_configs" : [
+            {"filter_angle" : angle}
+            for angle in [0, np.pi/8, np.pi/4]
+        ],
+        "start_phi" : 0.9*np.pi/2,
+        "start_theta" : -0.85*np.pi,
+    }
+    def setup(self):
+        PhotonsThroughPerpendicularFilters.setup(self)
+        self.remove(self.axes)
+
+    def construct(self):
+        self.add_letters_to_labels()
+        self.introduce_filters()
+        self.reposition_camera()
+        self.separate_cases()
+        self.half_blocked_by_C()
+        self.show_those_blocked_with_B()
+
+    def add_letters_to_labels(self):
+        for char, pf, color in zip("ABC", self.pol_filters, [RED, GREEN, BLUE]):
+            label = TextMobject(char)
+            label.scale(0.9)
+            label.add_background_rectangle()
+            label.highlight(color)
+            label.rotate(np.pi/2, RIGHT)
+            label.rotate(np.pi/2, IN)
+            label.next_to(pf.arrow_label, UP)
+            pf.arrow_label.add(label)
+            pf.arrow_label.next_to(pf.arrow, OUT, SMALL_BUFF)
+        self.remove(*self.pol_filters)
+
+    def introduce_filters(self):
+        self.A_filter, self.B_filter, self.C_filter = self.pol_filters
+        for pf in self.pol_filters:
+            pf.save_state()
+            pf.shift(4*OUT)
+            pf.fade(1)
+            self.play(pf.restore)
+            self.dither(2)
+
+    def reposition_camera(self):
+        self.move_camera(
+            theta = -0.6*np.pi, 
+            added_anims = list(it.chain(*[
+                [
+                    pf.arrow_label.rotate, np.pi/2, OUT,
+                    pf.arrow_label.next_to, pf.arrow, RIGHT
+                ]
+                for pf in self.pol_filters
+            ]))
+        )
+        self.dither()
+
+    def separate_cases(self):
+        self.lower_pol_filters = VGroup(
+            self.A_filter.copy(),
+            self.C_filter.copy(),
+        )
+        self.play(
+            self.lower_pol_filters.shift, 3*IN,
+            self.pol_filters.shift, OUT,
+        )
+        self.dither()
+
+    def half_blocked_by_C(self):
+        pass
+
+    def show_those_blocked_with_B(self):
+        pass
 
 class NumbersSuggestHiddenVariablesAreImpossible(TeacherStudentsScene):
     def construct(self):
@@ -992,7 +1116,7 @@ class VennDiagramProofByContradiction(Scene):
         self.play(Write(terms[2], run_time = 1))
         self.play(LaggedStart(
             Indicate, all_out_of_C,
-            color = MAROON_B,
+            color = TEAL,
             run_time = 2,
             rate_func = smooth,
         ))

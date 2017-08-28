@@ -143,7 +143,7 @@ class Axes(VGroup):
         },
         "x_axis_radius" : SPACE_WIDTH,
         "y_axis_radius" : SPACE_HEIGHT,
-        "z_axis_radius" : 3,
+        "z_axis_radius" : 3.5,
     }
     def __init__(self, **kwargs):
         VGroup.__init__(self, **kwargs)
