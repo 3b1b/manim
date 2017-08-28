@@ -126,13 +126,10 @@ class DirectionOfPolarization(FilterScene):
         )
 
     def continual_update(self):
+        reference_angle = self.reference_line.get_angle()
+        self.em_wave.rotation = reference_angle
         FilterScene.continual_update(self)
-        wave = self.em_wave.mobject
-        angle = self.reference_line.get_angle()
-        wave.rotate(
-            angle, self.em_wave.propogation_direction,
-            about_point = self.em_wave.start_point,
-        )
+        vect_groups = [self.em_wave.E_vects, self.em_wave.M_vects]
         if self.apply_filter:
             filters = sorted(
                 self.pol_filters,
@@ -143,7 +140,7 @@ class DirectionOfPolarization(FilterScene):
             )
             for pol_filter in filters:
                 filter_x = pol_filter.get_center()[0]
-                for vect_group, angle in (self.em_wave.E_vects, 0), (self.em_wave.M_vects, -np.pi/2):
+                for vect_group, angle in zip(vect_groups, [0, -np.pi/2]):
                     proj_vect = rotate_vector(
                         OUT, pol_filter.filter_angle + angle, RIGHT,
                     )
@@ -156,6 +153,8 @@ class DirectionOfPolarization(FilterScene):
                         if start[0] > filter_x:
                             vect.apply_matrix(proj_matrix)
                             vect.shift(start - vect.get_start())
+                            vect.set_tip_points(vect.tip)
+                            vect.set_rectangular_stem_points()
 
 class PhotonPassesCompletelyOrNotAtAll(DirectionOfPolarization):
     CONFIG = {
@@ -410,11 +409,11 @@ class SecondVideoWrapper(Scene):
 class BasicsOfPolarization(DirectionOfPolarization):
     def construct(self):
         self.show_continual_wave()
-        self.show_photons()
+        # self.show_photons()
 
     def show_continual_wave(self):
         em_wave = self.em_wave
-        em_wave.M_vects.set_fill(opacity = 0.5)
+        # em_wave.M_vects.set_fill(opacity = 0.25)
 
         title = TextMobject("Waves in the ``electromagnetic field''")
         title.to_edge(UP)
@@ -1059,6 +1058,7 @@ class VennDiagramProofByContradiction(Scene):
             photon.scale_to_fit_width(0.7)
             photon.move_to(x*RIGHT + y*UP)
         return photons
+
 
 
 

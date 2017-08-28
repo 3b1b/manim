@@ -231,7 +231,8 @@ class Arrow(Line):
         tbp1, tbp2 = tip_base_points
         perp_vect = tbp2 - tbp1
         tip_base_width = np.linalg.norm(perp_vect)
-        perp_vect /= tip_base_width
+        if tip_base_width > 0:
+            perp_vect /= tip_base_width
         width = min(
             self.rectangular_stem_width,
             self.max_stem_width_to_tip_width_ratio*tip_base_width,
@@ -283,8 +284,8 @@ class Arrow(Line):
         return self
 
     def get_normal_vector(self):
-        p1, p2, p3 = self.tip.get_anchors()
-        result = np.cross(p2 - p1, p3 - p2)
+        p0, p1, p2 = self.tip.get_anchors()
+        result = np.cross(p2 - p1, p1 - p0)
         norm = np.linalg.norm(result)
         if norm == 0:
             return self.normal_vector
@@ -306,7 +307,7 @@ class Arrow(Line):
 
     def put_start_and_end_on(self, *args, **kwargs):
         Line.put_start_and_end_on(self, *args, **kwargs)
-        self.set_tip_points(self.tip)
+        self.set_tip_points(self.tip, preserve_normal = False)
         self.set_rectangular_stem_points()
 
     def scale(self, scale_factor, **kwargs):

@@ -117,10 +117,13 @@ class EMWave(ContinualAnimationGroup):
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
-        self.matrix_transform = np.dot(
-            z_to_vector(self.propogation_direction),
-            np.linalg.inv(z_to_vector(RIGHT)),
-        )
+        if not all(self.propogation_direction == RIGHT):
+            self.matrix_transform = np.dot(
+                z_to_vector(self.propogation_direction),
+                np.linalg.inv(z_to_vector(RIGHT)),
+            )
+        else:
+            self.matrix_transform = None
 
         vector_oscillations = []
         self.E_vects = VGroup()
@@ -161,7 +164,8 @@ class EMWave(ContinualAnimationGroup):
     def update_mobject(self, dt):
         ContinualAnimationGroup.update_mobject(self, dt)
         self.mobject.rotate(self.rotation, RIGHT)
-        self.mobject.apply_matrix(self.matrix_transform)
+        if self.matrix_transform:
+            self.mobject.apply_matrix(self.matrix_transform)
         self.mobject.shift(self.start_point)
 
 class WavePacket(Animation):
