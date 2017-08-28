@@ -4,6 +4,7 @@ import numpy as np
 DEFAULT_HEIGHT = 1080
 DEFAULT_WIDTH  = 1920
 
+
 LOW_QUALITY_FRAME_DURATION = 1./20
 MEDIUM_QUALITY_FRAME_DURATION = 1./30
 PRODUCTION_QUALITY_FRAME_DURATION = 1./60
@@ -63,8 +64,7 @@ THIS_DIR          = os.path.dirname(os.path.realpath(__file__))
 FILE_DIR          = os.path.join(THIS_DIR, "files")
 IMAGE_DIR         = os.path.join(FILE_DIR, "images")
 GIF_DIR           = os.path.join(FILE_DIR, "gifs")
-# MOVIE_DIR         = os.path.join(FILE_DIR, "movies")
-MOVIE_DIR         = os.path.join("/Users/grant/Dropbox/Bell's Project/", "manimations")
+MOVIE_DIR         = os.path.join(FILE_DIR, "movies")
 STAGED_SCENES_DIR = os.path.join(FILE_DIR, "staged_scenes")
 TEX_DIR           = os.path.join(FILE_DIR, "Tex")
 TEX_IMAGE_DIR     = os.path.join(IMAGE_DIR, "Tex")
