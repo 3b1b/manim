@@ -161,11 +161,11 @@ class Axes(VGroup):
         self.add(self.x_axis, self.y_axis)
         if self.three_d:
             self.z_axis = NumberLine(
-                x_min = -self.y_axis_radius,
-                x_max = self.y_axis_radius,
+                x_min = -self.z_axis_radius,
+                x_max = self.z_axis_radius,
                 **self.number_line_config
             )
-            self.z_axis.rotate(np.pi/2, UP)
+            self.z_axis.rotate(-np.pi/2, UP)
             self.add(self.z_axis)
 
 class ThreeDAxes(Axes):

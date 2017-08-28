@@ -184,7 +184,7 @@ class Arrow(Line):
         "tip_width_to_length_ratio"  : 1,
         "max_tip_length_to_length_ratio" : 0.35,
         "max_stem_width_to_tip_width_ratio" : 0.3,
-        "buff"       : MED_SMALL_BUFF,
+        "buff" : MED_SMALL_BUFF,
         "propogate_style_to_family" : False,
         "preserve_tip_size_when_scaling" : True,
         "normal_vector" : OUT,
@@ -208,7 +208,7 @@ class Arrow(Line):
             fill_opacity = 1,
             stroke_color = self.color,
         )
-        self.set_tip_points(tip, add_at_end)
+        self.set_tip_points(tip, add_at_end, preserve_normal = False)
         self.tip = tip
         self.add(self.tip)
         self.init_colors()
@@ -244,9 +244,18 @@ class Arrow(Line):
         ])
         return self
 
-    def set_tip_points(self, tip, add_at_end = True, tip_length = None):
+    def set_tip_points(
+        self, tip, 
+        add_at_end = True, 
+        tip_length = None,
+        preserve_normal = True,
+        ):
         if tip_length is None:
             tip_length = self.tip_length
+        if preserve_normal:
+            normal_vector = self.get_normal_vector()
+        else:
+            normal_vector = self.normal_vector
         line_length = np.linalg.norm(self.points[-1]-self.points[0])
         tip_length = min(
             tip_length, self.max_tip_length_to_length_ratio*line_length
@@ -258,7 +267,7 @@ class Arrow(Line):
             for index in indices
         ]
         vect = end_point - pre_end_point
-        perp_vect = np.cross(vect, self.normal_vector)
+        perp_vect = np.cross(vect, normal_vector)
         for v in vect, perp_vect:
             if np.linalg.norm(v) == 0:
                 v[0] = 1
@@ -270,8 +279,20 @@ class Arrow(Line):
             end_point-vect+perp_vect*ratio/2,
             end_point-vect-perp_vect*ratio/2,
         ])
-        # tip.scale(tip_length, about_point = end_point)
 
+        return self
+
+    def get_normal_vector(self):
+        p1, p2, p3 = self.tip.get_anchors()
+        result = np.cross(p2 - p1, p3 - p2)
+        norm = np.linalg.norm(result)
+        if norm == 0:
+            return self.normal_vector
+        else:
+            return result/norm
+
+    def reset_normal_vector(self):
+        self.normal_vector = self.get_normal_vector()
         return self
 
     def get_end(self):
@@ -290,9 +311,9 @@ class Arrow(Line):
 
     def scale(self, scale_factor, **kwargs):
         Line.scale(self, scale_factor, **kwargs)
-        self.set_rectangular_stem_points()
         if self.preserve_tip_size_when_scaling:
             self.set_tip_points(self.tip)
+        self.set_rectangular_stem_points()
         return self
 
 class Vector(Arrow):

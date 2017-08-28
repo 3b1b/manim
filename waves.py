@@ -35,10 +35,8 @@ class OscillatingVector(ContinualAnimation):
     CONFIG = {
         "tail" : ORIGIN,
         "frequency" : 1,
-        "A_x" : 1,
-        "A_y" : 0,
-        "phi_x" : 0,
-        "phi_y" : 0,
+        "A_vect" : [1, 0, 0],
+        "phi_vect" : [0, 0, 0],
         "vector_to_be_added_to" : None,
     }
     def setup(self):
@@ -49,9 +47,8 @@ class OscillatingVector(ContinualAnimation):
         t = self.internal_time
         angle = 2*np.pi*f*t
         vect = np.array([
-            self.A_x*np.exp(complex(0, angle + self.phi_x)),
-            self.A_y*np.exp(complex(0, angle + self.phi_y)),
-            0,
+            A*np.exp(complex(0, angle + phi))
+            for A, phi in zip(self.A_vect, self.phi_vect)
         ]).real
         self.update_tail()
         self.vector.put_start_and_end_on(self.tail, self.tail+vect)
@@ -115,55 +112,55 @@ class EMWave(ContinualAnimationGroup):
         "length" : 2*SPACE_WIDTH,
         "amplitude" : 1,
         "rotation" : 0,
-        "A_x" : 1,
-        "A_y" : 0,
-        "phi_x" : 0,
-        "phi_y" : 0,
+        "A_vect" : [0, 0, 1],
+        "phi_vect" : [0, 0, 0],
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
-        self.matrix_transform = z_to_vector(self.propogation_direction)
+        self.matrix_transform = np.dot(
+            z_to_vector(self.propogation_direction),
+            np.linalg.inv(z_to_vector(RIGHT)),
+        )
 
         vector_oscillations = []
         self.E_vects = VGroup()
         self.M_vects = VGroup()
 
-        A_multiplier = float(self.amplitude) / (self.A_x**2 + self.A_y**2)
-        self.A_x *= A_multiplier
-        self.A_y *= A_multiplier
+        self.A_vect = np.array(self.A_vect)/np.linalg.norm(self.A_vect)
+        self.A_vect *= self.amplitude
 
         for alpha in np.linspace(0, 1, self.n_vectors):
-            tail = interpolate(ORIGIN, self.length*OUT, alpha)
+            tail = interpolate(ORIGIN, self.length*RIGHT, alpha)
             phase = -alpha*self.length*self.wave_number
+            kwargs = {
+                "phi_vect" : np.array(self.phi_vect) + phase,
+                "frequency" : self.frequency,
+                "tail" : np.array(tail),
+            }
             E_ov = OscillatingVector(
-                Vector(UP, color = E_COLOR),
-                tail = np.array(tail),
-                A_x = self.A_x,
-                A_y = self.A_y,
-                phi_x = self.phi_x + phase,
-                phi_y = self.phi_y + phase,
-                frequency = self.frequency
+                Vector(
+                    OUT, color = E_COLOR,
+                    normal_vector = UP,
+                ),
+                A_vect = self.A_vect,
+                **kwargs
             )
             M_ov = OscillatingVector(
-                Vector(UP, color = M_COLOR),
-                tail = np.array(tail),
-                A_x = -self.A_y,
-                A_y = self.A_x,
-                phi_x = self.phi_y + phase,
-                phi_y = self.phi_x + phase,
-                frequency = self.frequency
+                Vector(
+                    UP, color = M_COLOR,
+                    normal_vector = OUT,
+                ),
+                A_vect = rotate_vector(self.A_vect, np.pi/2, RIGHT),
+                **kwargs
             )
             vector_oscillations += [E_ov, M_ov]
-            E_ov.vector.normal_vector = UP
-            M_ov.vector.normal_vector = RIGHT
             self.E_vects.add(E_ov.vector)
             self.M_vects.add(M_ov.vector)
         ContinualAnimationGroup.__init__(self, *vector_oscillations)
-        # make_3d(self.mobject)
 
     def update_mobject(self, dt):
         ContinualAnimationGroup.update_mobject(self, dt)
-        self.mobject.rotate(self.rotation, OUT)
+        self.mobject.rotate(self.rotation, RIGHT)
         self.mobject.apply_matrix(self.matrix_transform)
         self.mobject.shift(self.start_point)
 
@@ -172,8 +169,7 @@ class WavePacket(Animation):
         "EMWave_config" : {
             "wave_number" : 0,
             "start_point" : SPACE_WIDTH*LEFT,
-            "phi_x" : np.pi/4,
-            "phi_y" : np.pi/4,
+            "phi_vect" : np.ones(3)*np.pi/4,
         },
         "em_wave" : None,
         "run_time" : 4,
@@ -229,7 +225,7 @@ class WavePacket(Animation):
             vect.scale(A/vect.get_length(), about_point = tail)
 
     def E_func(self, x):
-        return np.sin(2*x)*np.exp(-0.25*x*x)
+        return np.sin(x)*np.exp(-0.25*x*x)
 
 class FilterLabel(TexMobject):
     def __init__(self, tex, degrees, **kwargs):
@@ -277,12 +273,16 @@ class EMScene(Scene):
     def construct(self):
         pass
 
-class TestPhoton(ThreeDScene):
+class Test(ThreeDScene):
     def construct(self):
         self.add(ThreeDAxes())
 
         self.set_camera_position(0.8*np.pi/2, -0.6*np.pi)
         self.begin_ambient_camera_rotation(rate = 0.01)
+        self.add(EMWave(A_vect = [0, 1, 1]))
+        self.dither(2)
+        self.move_camera(theta = -1.1*np.pi)
+        self.dither(2)
 
         # pol_filter = PolarizingFilter(
         #     label_tex = "C",
@@ -295,15 +295,19 @@ class TestPhoton(ThreeDScene):
         # shade_in_3d(pol_filter)
         # self.add(pol_filter)
 
-        self.move_camera(theta = -1.2*np.pi/2)
-        self.play(WavePacket(
-            run_time = 2,
-            # get_filtered = True,
-            EMWave_config = {
-                "start_point" : SPACE_WIDTH*LEFT + DOWN+OUT
-            }            
-        ))
-        self.dither()
+        # photon = WavePacket(
+        #     run_time = 2,
+        #     # get_filtered = True,
+        #     EMWave_config = {
+        #         "start_point" : SPACE_WIDTH*LEFT + DOWN+OUT,
+        #         "A_vect" : [0, 1, 0],
+        #     },
+        # )
+        # photon.update(0.5)
+        # photon.mobject.show(self.camera)
+
+        # self.move_camera(theta = -1.2*np.pi/2)
+        # self.play(photon)
 
 
 
