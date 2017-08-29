@@ -304,7 +304,6 @@ class Eyes(VMobject):
             kwargs["rate_func"] = squish_rate_func(there_and_back)
         return Transform(self, target, **kwargs)
 
-
 #######################
 
 class PiCreatureBubbleIntroduction(AnimationGroup):

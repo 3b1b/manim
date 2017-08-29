@@ -92,6 +92,8 @@ class TexMobject(SVGMobject):
             ])
             if should_replace:
                 tex = tex.replace(t1, "\\big")
+        if tex == "":
+            tex = "\\quad"
         return tex
 
     def remove_stray_braces(self, tex):

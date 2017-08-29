@@ -139,6 +139,10 @@ def color_gradient(reference_colors, length_of_output):
         for i, alpha in zip(floors, alphas_mod1)
     ]
 
+def interpolate_color(color1, color2, alpha):
+    rgb = interpolate(color_to_rgb(color1), color_to_rgb(color2), alpha)
+    return rgb_to_color(rgb)
+
 def average_color(*colors):
     rgbs = np.array(map(color_to_rgb, colors))
     mean_rgb = np.apply_along_axis(np.mean, 0, rgbs)

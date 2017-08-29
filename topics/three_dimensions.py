@@ -152,6 +152,9 @@ class ThreeDScene(Scene):
         )
         self.add(self.ambient_camera_rotation)
 
+    def stop_ambient_camera_rotation(self):
+        self.remove(self.ambient_camera_rotation)
+
     def move_camera(
         self, 
         phi = None, theta = None, distance = None,
