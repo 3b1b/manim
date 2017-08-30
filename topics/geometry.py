@@ -120,6 +120,9 @@ class Line(VMobject):
     def get_start_and_end(self):
         return self.get_start(), self.get_end()
 
+    def get_vector(self):
+        return self.get_end() - self.get_start()
+
     def get_start(self):
         return np.array(self.points[0])
 

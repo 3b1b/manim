@@ -75,6 +75,17 @@ class AmbientRotation(ContinualAnimation):
 
 
 
+class AmbientMovement(ContinualAnimation):
+    CONFIG = {
+        "direction" : RIGHT,
+        "rate" : 0.05, #Units per second
+    }
+
+    def update_mobject(self, dt):
+        self.mobject.shift(dt*self.rate*self.direction)
+
+
+
 
 
 

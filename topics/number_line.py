@@ -166,12 +166,13 @@ class Axes(VGroup):
                 **self.number_line_config
             )
             self.z_axis.rotate(-np.pi/2, UP)
+            self.z_axis.rotate(np.pi/2, OUT)
             self.add(self.z_axis)
 
 class ThreeDAxes(Axes):
     CONFIG = {
-        "x_axis_radius" : 5,
-        "y_axis_radius" : 5,
+        "x_axis_radius" : 5.5,
+        "y_axis_radius" : 4.5,
         "three_d" : True,
     }
 

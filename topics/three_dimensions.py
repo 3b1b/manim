@@ -5,7 +5,7 @@ from mobject.vectorized_mobject import VGroup, VMobject, VectorizedPoint
 from topics.geometry import Square, Line
 from scene import Scene
 from camera import Camera
-from animation.continual_animation import AmbientRotation
+from animation.continual_animation import AmbientMovement
 from animation.transform import ApplyMethod
 
 class CameraWithPerspective(Camera):
@@ -35,7 +35,8 @@ class ThreeDCamera(CameraWithPerspective):
     def __init__(self, *args, **kwargs):
         Camera.__init__(self, *args, **kwargs)
         self.unit_sun_vect = self.sun_vect/np.linalg.norm(self.sun_vect)
-        self.position_mobject = VectorizedPoint()
+        ## Lives in the phi-theta-distance space
+        self.rotation_mobject = VectorizedPoint()
         self.set_position(self.phi, self.theta, self.distance)
 
     def get_color(self, method):
@@ -94,24 +95,23 @@ class ThreeDCamera(CameraWithPerspective):
             self, sorted(vmobjects, cmp = z_cmp)
         )
 
-    def get_position(self):
-        return self.position_mobject.points[0]
+    def get_spherical_coords(self, phi = None, theta = None, distance = None):
+        curr_phi, curr_theta, curr_d = self.rotation_mobject.points[0]
+        phi = phi or curr_phi
+        theta = theta or curr_theta
+        distance = distance or curr_d
+        return np.array([phi, theta, distance])
 
     def get_phi(self):
-        x, y, z = self.get_position()
-        return angle_of_vector([z, np.sqrt(x**2 + y**2)])
+        return self.get_spherical_coords()[0]
 
     def get_theta(self):
-        x, y, z = self.get_position()
-        return angle_of_vector([x, y])
+        return self.get_spherical_coords()[1]
 
     def get_distance(self):
-        return np.linalg.norm(self.get_position())
+        return self.get_spherical_coords()[2]
 
     def spherical_coords_to_point(self, phi, theta, distance):
-        phi = phi or self.get_phi()
-        theta = theta or self.get_theta()
-        distance = distance or self.get_distance()
         return distance*np.array([
             np.sin(phi)*np.cos(theta),
             np.sin(phi)*np.sin(theta),
@@ -119,11 +119,9 @@ class ThreeDCamera(CameraWithPerspective):
         ])
 
     def set_position(self, phi = None, theta = None, distance = None):
-        point = self.spherical_coords_to_point(phi, theta, distance)
-        self.position_mobject.move_to(point)
-        self.phi = self.get_phi()
-        self.theta = self.get_theta()
-        self.distance = self.get_distance()
+        point = self.get_spherical_coords(phi, theta, distance)
+        self.rotation_mobject.move_to(point)
+        self.phi, self.theta, self.distance = point
 
     def get_view_transformation_matrix(self):
         return np.dot(
@@ -145,9 +143,9 @@ class ThreeDScene(Scene):
         self.camera.set_position(phi, theta, distance)
 
     def begin_ambient_camera_rotation(self, rate = 0.01):
-        self.ambient_camera_rotation = AmbientRotation(
-            self.camera.position_mobject,
-            axis = OUT, 
+        self.ambient_camera_rotation = AmbientMovement(
+            self.camera.rotation_mobject,
+            direction = UP,
             rate = rate
         )
         self.add(self.ambient_camera_rotation)
@@ -161,9 +159,9 @@ class ThreeDScene(Scene):
         added_anims = [],
         **kwargs
         ):
-        target_point = self.camera.spherical_coords_to_point(phi, theta, distance)
+        target_point = self.camera.get_spherical_coords(phi, theta, distance)
         movement = ApplyMethod(
-            self.camera.position_mobject.move_to,
+            self.camera.rotation_mobject.move_to,
             target_point,
             **kwargs
         )
@@ -175,7 +173,7 @@ class ThreeDScene(Scene):
 
     def separate_moving_and_static_mobjects(self, *animations):
         moving, static = Scene.separate_moving_and_static_mobjects(self, *animations)
-        if self.camera.position_mobject in moving:
+        if self.camera.rotation_mobject in moving:
             return moving + static, []
         return moving, static
 

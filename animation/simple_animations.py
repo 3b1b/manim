@@ -248,7 +248,7 @@ class UpdateFromFunc(Animation):
 class UpdateFromAlphaFunc(UpdateFromFunc):
     def update_mobject(self, alpha):
         self.update_function(self.mobject, alpha)
-        
+
 class MaintainPositionRelativeTo(Animation):
     CONFIG = {
         "tracked_critical_point" : ORIGIN

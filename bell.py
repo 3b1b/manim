@@ -828,7 +828,7 @@ class ForgetPreviousActions(PhotonsThroughPerpendicularFilters):
         prob_words.next_to(rect1, OUT)
 
         self.add(rect1)
-        self.play(Write(prob_words))
+        self.play(FadeIn(prob_words))
         # for x in range(2):
         #     self.shoot_photon()
 
@@ -845,10 +845,9 @@ class ForgetPreviousActions(PhotonsThroughPerpendicularFilters):
             ShowCreation(rect2), 
             Write(ignore_words, run_time = 1)
         )
-        self.shoot_photon()
-        self.dither(2)
-        # for x in range(4):
-        #     self.shoot_photon()
+        for x in range(3):
+            self.shoot_photon()
+            self.dither()
 
 
     def shoot_photon(self):
@@ -1117,9 +1116,12 @@ class VennDiagramProofByContradiction(Scene):
         ])
         venn_diagram.center()
         props = [1./12, 0.5, 0]
-        for circle, char, prop in zip(venn_diagram, "ABC", props):
-            label = TextMobject("Would pass \\\\ through", char)
+        angles = [0, np.pi/8, np.pi/4]
+        for circle, char, prop, angle in zip(venn_diagram, "ABC", props, angles):
+            label = TextMobject("Would pass \\\\ through", char + "$\\! \\uparrow$")
             label.highlight_by_tex(char, circle.get_color())
+            label[1][1].rotate_in_place(-angle)
+            label[1][1].shift(0.5*SMALL_BUFF*UP)
             center = circle.get_center()
             label.move_to(center)
             label.generate_target()
@@ -1146,7 +1148,6 @@ class VennDiagramProofByContradiction(Scene):
         self.venn_diagram = venn_diagram
         for part in self.venn_diagram:
             part.save_state()
-
         if send_to_corner:
             self.play(
                 self.venn_diagram.scale, 0.25,
@@ -1839,7 +1840,7 @@ class NoFirstMeasurementPreferenceBasedOnDirection(ShowVariousFilterPairs):
             added_anims = list(it.chain(*[
                 [
                     pf.arrow_label.rotate, np.pi/2, OUT,
-                    pf.arrow_label.next_to, pf.arrow, OUT+RIGHT
+                    pf.arrow_label.next_to, pf.arrow, OUT+RIGHT, SMALL_BUFF
                 ]
                 for pf in self.pol_filters
             ] + [[FadeIn(words)]]))
@@ -1857,12 +1858,17 @@ class NoFirstMeasurementPreferenceBasedOnDirection(ShowVariousFilterPairs):
             all_pre_lines.add(*pre_lines)
             all_post_lines.add(*post_lines)
 
-        for lines in all_pre_lines, all_post_lines:
-            self.play(ShowCreation(
-                lines, 
-                rate_func = None,
-                submobject_mode = "all_at_once"
-            ))
+        kwargs = {
+            "rate_func" : None,
+            "submobject_mode" : "all_at_once"
+        }
+        self.play(ShowCreation(all_pre_lines, **kwargs))
+        self.play(
+            ShowCreation(all_post_lines, **kwargs),
+            Animation(self.pol_filters),
+            Animation(all_pre_lines),
+        )
+        self.add_foreground_mobject(all_pre_lines)
         self.dither(7)
 
 

@@ -109,7 +109,10 @@ class PiCreature(SVGMobject):
         return self
 
     def look(self, direction):
-        direction = direction/np.linalg.norm(direction)
+        norm = np.linalg.norm(direction)
+        if norm == 0:
+            return
+        direction /= norm
         self.purposeful_looking_direction = direction
         for pupil, eye in zip(self.pupils.split(), self.eyes.split()):
             pupil_radius = pupil.get_width()/2.

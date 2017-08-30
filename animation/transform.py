@@ -114,9 +114,7 @@ class SpinInFromNothing(GrowFromCenter):
 class ShrinkToCenter(Transform):
     def __init__(self, mobject, **kwargs):
         Transform.__init__(
-            self, mobject,
-            Point(mobject.get_center()), 
-            **kwargs
+            self, mobject, mobject.get_point_mobject(), **kwargs
         )
 
 class ApplyMethod(Transform):
@@ -140,7 +138,6 @@ class ApplyMethod(Transform):
         target = method.im_self.deepcopy()
         method.im_func(target, *args, **method_kwargs)
         Transform.__init__(self, method.im_self, target, **kwargs)
-
 
 class FadeOut(Transform):
     CONFIG = {
@@ -166,7 +163,6 @@ class FadeIn(Transform):
         if isinstance(self.starting_mobject, VMobject):
             self.starting_mobject.set_stroke(width = 0)
             self.starting_mobject.set_fill(opacity = 0)
-
 
 class ShimmerIn(DelayByOrder):
     def __init__(self, mobject, **kwargs):

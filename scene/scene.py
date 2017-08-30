@@ -332,7 +332,7 @@ class Scene(object):
                 animations.pop()
                 #method should already have target then.
             else:
-                mobject.target = mobject.copy()
+                mobject.target = mobject.deepcopy()
             state["curr_method"].im_func(
                 mobject.target, *state["method_args"]
             )
