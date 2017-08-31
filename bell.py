@@ -178,7 +178,6 @@ class PhotonPassesCompletelyOrNotAtAll(DirectionOfPolarization):
         self.remove(self.em_wave)
 
     def construct(self):
-
         pol_filter = self.pol_filter
         label = pol_filter.label
         pol_filter.remove(label)
@@ -314,29 +313,46 @@ class MoreFiltersMoreLight(FilterScene):
     }
     def construct(self):
         self.remove(self.axes)
-        pfs = self.pol_filters
+        pfs = VGroup(*reversed(self.pol_filters))
         self.color_filters(pfs)
         self.remove(pfs)
         self.build_color_map(pfs)
-        self.add(pfs[4], pfs[2], pfs[0])
+        self.add(pfs[0], pfs[2], pfs[4])
+        pfs.center().scale(1.5)
 
         self.move_camera(
             phi = 0.9*np.pi/2,
             theta = -0.95*np.pi,
         )
+        self.play(
+            Animation(pfs[0]),
+            pfs[2].shift, 3*OUT,
+            Animation(pfs[4]),
+        )
         self.dither()
-        for i in 1, 3:
-            pf = pfs[i]
-            foreground = VGroup(*reversed(pfs[:i]))
-            pf.save_state()
-            pf.shift(6*OUT)
-            self.remove(foreground)
-            self.play(
-                pf.restore,
-                Animation(foreground),
-                run_time = 2
-            )
-            self.dither()
+        self.play(
+            Animation(pfs[0]),
+            pfs[2].shift, 3*IN,
+            Animation(pfs[4]),
+        )
+
+        pfs[1].shift(8*OUT)
+        self.play(
+            Animation(pfs[0]),
+            pfs[1].shift, 8*IN,
+            Animation(VGroup(pfs[2], pfs[4])),
+            run_time = 2
+        )
+        self.dither()
+
+        pfs[3].shift(8*OUT)
+        self.play(
+            Animation(VGroup(*pfs[:3])),
+            pfs[3].shift, 8*IN,
+            Animation(VGroup(*pfs[4:])),
+            run_time = 2
+        )
+        self.dither()
 
     def color_filters(self, pfs):
         colors = [RED, GREEN, BLUE, MAROON_B, PURPLE_C]
@@ -354,7 +370,7 @@ class MoreFiltersMoreLight(FilterScene):
         for bool_array in it.product(*5*[[True, False]]):
             pfs_to_use = VGroup(*[
                 pf
-                for pf, b in reversed(zip(pfs, bool_array))
+                for pf, b in zip(pfs, bool_array)
                 if b
             ])
             self.camera.capture_mobject(pfs_to_use)
@@ -387,9 +403,8 @@ class MoreFiltersMoreLight(FilterScene):
             lambda b1, b2 : b1 | b2,
             bool_arrays
         )
-        frame[~covered] = [127, 127, 127]
+        frame[~covered] = [65, 65, 65]
         return frame
-
 
 class ConfusedPiCreature(Scene):
     def construct(self):
