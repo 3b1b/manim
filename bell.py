@@ -315,11 +315,9 @@ class MoreFiltersMoreLight(FilterScene):
     def construct(self):
         self.remove(self.axes)
         pfs = self.pol_filters
-        for pf in pfs:
-            pf.set_fill(WHITE, opacity = 0.25)
-            pf.arrow.set_fill(opacity = 1)
-        turn_off_3d_shading(pfs)
+        self.color_filters(pfs)
         self.remove(pfs)
+        self.build_color_map(pfs)
         self.add(pfs[4], pfs[2], pfs[0])
 
         self.move_camera(
@@ -339,6 +337,59 @@ class MoreFiltersMoreLight(FilterScene):
                 run_time = 2
             )
             self.dither()
+
+    def color_filters(self, pfs):
+        colors = [RED, GREEN, BLUE, MAROON_B, PURPLE_C]
+        for pf, color in zip(pfs, colors):
+            pf.set_fill(color, 0.5)
+            pf.arrow.set_fill(WHITE, 1)
+        turn_off_3d_shading(pfs)
+
+    def build_color_map(self, pfs):
+        phi, theta = self.camera.get_phi(), self.camera.get_theta()
+        self.set_camera_position(np.pi/2, -np.pi)
+
+        self.original_rgbs = [(255, 255, 255)]
+        self.new_rgbs = [(255, 255, 255)]
+        for bool_array in it.product(*5*[[True, False]]):
+            pfs_to_use = VGroup(*[
+                pf
+                for pf, b in reversed(zip(pfs, bool_array))
+                if b
+            ])
+            self.camera.capture_mobject(pfs_to_use)
+            frame = self.camera.get_image()
+            h, w, three = frame.shape
+            rgb = frame[3*h/8, 7*w/12]
+            self.original_rgbs.append(rgb)
+
+            angles = [pf.filter_angle for pf in pfs_to_use]
+            p = 0.5
+            for a1, a2 in zip(angles, angles[1:]):
+                p *= np.cos(a2 - a1)**2
+            new_rgb = (255*p*np.ones(3)).astype(int)
+            if not any(bool_array):
+                new_rgb = [0, 0, 0]
+
+            self.new_rgbs.append(new_rgb)
+            self.camera.reset()
+        self.set_camera_position(phi, theta)
+
+    def get_frame(self):
+        frame = FilterScene.get_frame(self)
+        bool_arrays = [
+            (frame[:,:,0] == r) & (frame[:,:,1] == g) & (frame[:,:,2] == b)
+            for (r, g, b) in self.original_rgbs
+        ]
+        for ba, new_rgb in zip(bool_arrays, self.new_rgbs):
+            frame[ba] = new_rgb
+        covered = reduce(
+            lambda b1, b2 : b1 | b2,
+            bool_arrays
+        )
+        frame[~covered] = [127, 127, 127]
+        return frame
+
 
 class ConfusedPiCreature(Scene):
     def construct(self):

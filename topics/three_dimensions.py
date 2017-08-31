@@ -97,9 +97,9 @@ class ThreeDCamera(CameraWithPerspective):
 
     def get_spherical_coords(self, phi = None, theta = None, distance = None):
         curr_phi, curr_theta, curr_d = self.rotation_mobject.points[0]
-        phi = phi or curr_phi
-        theta = theta or curr_theta
-        distance = distance or curr_d
+        if phi is None: phi = curr_phi
+        if theta is None: theta = curr_theta
+        if distance is None: distance = curr_d
         return np.array([phi, theta, distance])
 
     def get_phi(self):
@@ -137,6 +137,7 @@ class ThreeDCamera(CameraWithPerspective):
 class ThreeDScene(Scene):
     CONFIG = {
         "camera_class" : ThreeDCamera,
+        "ambient_camera_rotation" : None,
     }
 
     def set_camera_position(self, phi = None, theta = None, distance = None):
@@ -152,6 +153,7 @@ class ThreeDScene(Scene):
 
     def stop_ambient_camera_rotation(self):
         self.remove(self.ambient_camera_rotation)
+        self.ambient_camera_rotation = None
 
     def move_camera(
         self, 
@@ -165,10 +167,11 @@ class ThreeDScene(Scene):
             target_point,
             **kwargs
         )
-        if hasattr(self, "ambient_camera_rotation"):
+        is_camera_rotating = self.ambient_camera_rotation in self.continual_animations
+        if is_camera_rotating:
             self.remove(self.ambient_camera_rotation)
         self.play(movement, *added_anims)
-        if hasattr(self, "ambient_camera_rotation"):
+        if is_camera_rotating:
             self.add(self.ambient_camera_rotation)
 
     def separate_moving_and_static_mobjects(self, *animations):

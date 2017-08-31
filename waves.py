@@ -801,9 +801,99 @@ class ListRelevantWaveIdeas(TeacherStudentsScene):
         )
         self.dither(5)
 
+class DirectWaveOutOfScreen(IntroduceEMWave):
+    CONFIG = {
+        "EMWave_config" : {
+            "requires_start_up" : False,
+            "amplitude" : 2,
+            "start_point" : SPACE_WIDTH*LEFT,
+            "A_vect" : [0, 1, 0],
+            "start_up_time" : 0,
+        }
+    }
+    def setup(self):
+        IntroduceEMWave.setup(self)
+        self.remove(self.axes)
+        for ov in self.em_wave.continual_animations:
+            ov.vector.normal_vector = RIGHT
+        self.set_camera_position(0.9*np.pi/2, -0.3*np.pi)
 
+    def construct(self):
+        self.move_into_position()
 
+    def move_into_position(self):
+        self.dither(2)
+        self.continual_update()
+        faded_vectors = VGroup(*[
+            ov.vector
+            for ov in self.em_wave.continual_animations[:-2]
+        ])
+        self.move_camera(
+            0.99*np.pi/2, -0.01,
+            run_time = 2,
+            added_anims = [faded_vectors.set_fill, None, 0.5]
+        )
+        self.stop_ambient_camera_rotation()
+        self.move_camera(
+            np.pi/2, 0,
+            added_anims = [faded_vectors.set_fill, None, 0.05],
+            run_time = 2,
+        )
+        self.play(
+            self.em_wave.M_vects.set_fill, None, 0
+        )
+        self.dither(2)
+        self.play(faded_vectors.set_fill, None, 0)
+        self.dither(4)
 
+class ShowVectorEquation(Scene):
+    def construct(self):
+        self.force_skipping()
+
+        self.add_vector()
+        self.add_plane()
+        self.write_horizontally_polarized()
+        self.write_components()
+        self.show_graph()
+        self.add_phi()
+        self.add_amplitude()
+        self.add_kets()
+        self.switch_to_vertically_polarized_light()
+
+    def add_vector(self):
+        self.vector = Vector(2*RIGHT, color = E_COLOR)
+        self.oscillating_vector = OscillatingVector(
+            self.vector,
+            A_vect = [2, 0, 0],
+            frequency = 0.25,
+        )
+        self.add(self.oscillating_vector)
+        self.revert_to_original_skipping_status()        
+        self.dither(3)
+
+    def add_plane(self):
+        pass
+
+    def write_horizontally_polarized(self):
+        pass
+
+    def write_components(self):
+        pass
+
+    def show_graph(self):
+        pass
+
+    def add_phi(self):
+        pass
+
+    def add_amplitude(self):
+        pass
+
+    def add_kets(self):
+        pass
+
+    def switch_to_vertically_polarized_light(self):
+        pass
 
 
 
