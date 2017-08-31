@@ -165,10 +165,12 @@ class PhotonPassesCompletelyOrNotAtAll(DirectionOfPolarization):
         "EMWave_config" : {
             "wave_number" : 0,
             "A_vect" : [0, 1, 1],
+            "start_point" : SPACE_WIDTH*LEFT + DOWN + 1.5*OUT,
         },
         "start_theta" : -0.9*np.pi,
         "target_theta" : -0.6*np.pi,
         "apply_filter" : True,
+        "lower_portion_shift" : 3*IN
     }
     def setup(self):
         DirectionOfPolarization.setup(self)
@@ -179,9 +181,10 @@ class PhotonPassesCompletelyOrNotAtAll(DirectionOfPolarization):
 
     def construct(self):
         pol_filter = self.pol_filter
-        label = pol_filter.label
-        pol_filter.remove(label)
-        label.shift(SMALL_BUFF*IN)
+        pol_filter.shift(0.5*OUT)
+        lower_filter = pol_filter.copy()
+        lower_filter.save_state()
+        pol_filter.remove(pol_filter.label)
 
         passing_words = TextMobject("Photon", "passes through")
         passing_words.highlight(GREEN)
@@ -192,36 +195,44 @@ class PhotonPassesCompletelyOrNotAtAll(DirectionOfPolarization):
             words.shift(2*UP)
             words.add_background_rectangle()
             words.rotate(np.pi/2, RIGHT)
-        self.continual_update()
+        filtered_words.shift(self.lower_portion_shift)
 
         passing_photon = WavePacket(
             run_time = 2,
             get_filtered = False,
             em_wave = self.em_wave.copy()
         )
+        lower_em_wave = self.em_wave.copy()
+        lower_em_wave.mobject.shift(self.lower_portion_shift)
+        lower_em_wave.start_point += self.lower_portion_shift
         filtered_photon = WavePacket(
             run_time = 2,
             get_filtered = True,
-            em_wave = self.em_wave.copy()
+            em_wave = lower_em_wave.copy()
         )
 
         self.play(
             DrawBorderThenFill(pol_filter),
-            Write(label, run_time = 2)
+            Write(pol_filter.label, run_time = 2)
         )
         self.move_camera(theta = self.target_theta)
-        self.play(Write(passing_words, run_time = 1))
-        self.play(passing_photon)
-        self.play(Transform(passing_words, filtered_words))
         self.play(
-            filtered_photon,
-            ApplyMethod(
-                pol_filter.set_fill, RED,
-                rate_func = squish_rate_func(there_and_back, 0.4, 0.6),
-                run_time = filtered_photon.run_time
-            )
+            lower_filter.restore,
+            lower_filter.shift, self.lower_portion_shift,
+            FadeIn(passing_words),
+            FadeIn(filtered_words)
         )
-        self.dither(3)
+        for x in range(3):
+            self.play(
+                passing_photon,
+                filtered_photon,
+                ApplyMethod(
+                    lower_filter.set_fill, RED,
+                    rate_func = squish_rate_func(there_and_back, 0.4, 0.6),
+                    run_time = filtered_photon.run_time
+                )
+            )
+            self.dither()
 
 class PhotonsThroughPerpendicularFilters(PhotonPassesCompletelyOrNotAtAll):
     CONFIG = {
@@ -234,30 +245,40 @@ class PhotonsThroughPerpendicularFilters(PhotonPassesCompletelyOrNotAtAll):
         "target_theta" : -0.6*np.pi,
         "EMWave_config" : {
             "A_vect" : [0, 0, 1],
+            "start_point" : SPACE_WIDTH*LEFT + DOWN + OUT,
         }
     }
     def construct(self):
-        photons = self.get_photons()[:2]
+        photons = self.get_photons()
         prob_text = self.get_probability_text()
         self.pol_filters = VGroup(*reversed(self.pol_filters))
 
         self.play(LaggedStart(DrawBorderThenFill, self.pol_filters))
+        self.add_foreground_mobject(self.pol_filters)
         self.move_camera(
             theta = self.target_theta,
-            added_anims = [
-                FadeIn(prob_text)
-            ]
+            added_anims = list(it.chain(*[
+                [
+                    pf.arrow_label.rotate_in_place, np.pi/2, OUT,
+                    pf.arrow_label.next_to, pf.arrow, RIGHT,
+                ]
+                for pf in self.pol_filters
+            ]))
         )
-        for x in range(4):
-            pairs = zip(photons, reversed(self.pol_filters))
-            random.shuffle(pairs)
-            for photon, pol_filter in pairs:
-                self.play(
-                    photon,
-                    self.get_filter_absorbtion_animation(
-                        pol_filter, photon
-                    )
-                )
+        self.shoot_photon()
+        self.dither()
+        self.shoot_photon()
+        self.play(FadeIn(prob_text))
+        for x in range(8):
+            self.shoot_photon()
+
+
+    def shoot_photon(self, *added_anims):
+        photon = self.get_photons()[1]
+        pol_filter = self.pol_filters[0]
+        absorbtion = self.get_filter_absorbtion_animation(pol_filter, photon)
+        self.play(photon, absorbtion)
+
 
     def get_photons(self):
         self.reference_line.rotate(np.pi/4)
@@ -310,6 +331,8 @@ class MoreFiltersMoreLight(FilterScene):
             for angle in np.linspace(0, np.pi/2, 5)
         ],
         "ambient_rotation_rate" : 0,
+        "arrow_rgb" : (0, 0, 0),
+        "background_rgb" : (245, 245, 245), 
     }
     def construct(self):
         self.remove(self.axes)
@@ -366,7 +389,7 @@ class MoreFiltersMoreLight(FilterScene):
         self.set_camera_position(np.pi/2, -np.pi)
 
         self.original_rgbs = [(255, 255, 255)]
-        self.new_rgbs = [(255, 255, 255)]
+        self.new_rgbs = [self.arrow_rgb]
         for bool_array in it.product(*5*[[True, False]]):
             pfs_to_use = VGroup(*[
                 pf
@@ -385,11 +408,14 @@ class MoreFiltersMoreLight(FilterScene):
                 p *= np.cos(a2 - a1)**2
             new_rgb = (255*p*np.ones(3)).astype(int)
             if not any(bool_array):
-                new_rgb = [0, 0, 0]
+                new_rgb = self.background_rgb
 
             self.new_rgbs.append(new_rgb)
             self.camera.reset()
         self.set_camera_position(phi, theta)
+
+    def update_frame(self, mobjects = None, image = None):
+        FilterScene.update_frame(self, mobjects)
 
     def get_frame(self):
         frame = FilterScene.get_frame(self)
@@ -406,6 +432,12 @@ class MoreFiltersMoreLight(FilterScene):
         frame[~covered] = [65, 65, 65]
         return frame
 
+class MoreFiltersMoreLightBlackBackground(MoreFiltersMoreLight):
+    CONFIG = {
+        "arrow_rgb" : (255, 255, 255),
+        "background_rgb" : (0, 0, 0),    
+    }
+        
 class ConfusedPiCreature(Scene):
     def construct(self):
         randy = Randolph()
@@ -432,33 +464,44 @@ class AngryPiCreature(PiCreatureScene):
 
 class ShowALittleMath(TeacherStudentsScene):
     def construct(self):
-        expression = TexMobject(
-            "\\alpha", "| \\! \\uparrow \\rangle", "+",
-            "\\beta", "| \\! \\rightarrow \\rangle",
+        exp1 = TexMobject(
+            "|", "\\psi", "\\rangle = ",
+            "\\alpha", "|\\uparrow\\rangle", 
+            "+", "\\beta", "|\\rightarrow\\rangle"
         )
-        expression.highlight_by_tex("uparrow", GREEN)
-        expression.highlight_by_tex("rightarrow", RED)
-        expression.next_to(self.teacher, UP+LEFT, LARGE_BUFF)
+        exp2 = TexMobject(
+            "|| \\langle", "\\psi", "|", "\\psi", "\\rangle ||^2",
+            "= ", "\\alpha", "^2", "+", "\\beta", "^2"
+        )
+        color_map = {
+            "alpha" : GREEN,
+            "beta" : RED,
+            "psi" : BLUE
+        }
+        for exp in exp1, exp2:
+            exp.highlight_by_tex_to_color_map(color_map)
+        exp1.next_to(self.teacher.get_corner(UP+LEFT), UP, LARGE_BUFF)
 
-        prob = TexMobject("\\text{Probability}", "=", "|", "\\alpha", "|^2")
-        prob.next_to(expression, UP, LARGE_BUFF)
+        exp2.move_to(exp1)
 
         self.play(
-            Write(expression, run_time = 2),
+            Write(exp1, run_time = 2),
             self.teacher.change, "raise_right_hand"
         )
-        target_alpha = prob.get_part_by_tex("alpha")
-        prob.remove(target_alpha)
+        self.play(exp1.shift, UP)
         self.play(
-            ReplacementTransform(
-                expression.get_part_by_tex("alpha").copy(),
-                target_alpha,
-            ),
-            Write(prob, run_time = 2)
+            Write(exp2, run_time = 2),
+            *[
+                ReplacementTransform(
+                    exp1.get_parts_by_tex(tex).copy(),
+                    exp2.get_parts_by_tex(tex).copy(),
+                )
+                for tex in color_map.keys()
+            ]
         )
         self.change_student_modes(
             *["pondering"]*3,
-            look_at_arg = prob
+            look_at_arg = exp2
         )
         self.dither(2)
 

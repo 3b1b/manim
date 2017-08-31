@@ -264,17 +264,18 @@ class PolarizingFilter(Circle):
         "label_tex" : None,
         "filter_angle" : 0,
         "include_arrow_label" : True,
+        "arrow_length" : 1,
     }
     def __init__(self, **kwargs):
         Circle.__init__(self, **kwargs)
 
         if self.label_tex:
             self.label = TexMobject(self.label_tex)
-            self.label.next_to(self.get_top(), DOWN, SMALL_BUFF)
+            self.label.next_to(self.get_top(), DOWN, MED_SMALL_BUFF)
             self.add(self.label)
 
         arrow = Arrow(
-            ORIGIN, 0.7*UP, 
+            ORIGIN, self.arrow_length*UP, 
             color = WHITE,
             buff = 0,
         )
