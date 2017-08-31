@@ -489,16 +489,13 @@ class ShowALittleMath(TeacherStudentsScene):
             self.teacher.change, "raise_right_hand"
         )
         self.play(exp1.shift, UP)
-        self.play(
-            Write(exp2, run_time = 2),
-            *[
+        self.play(*[
                 ReplacementTransform(
                     exp1.get_parts_by_tex(tex).copy(),
                     exp2.get_parts_by_tex(tex).copy(),
                 )
                 for tex in color_map.keys()
-            ]
-        )
+        ] + [Write(exp2, run_time = 2)])
         self.change_student_modes(
             *["pondering"]*3,
             look_at_arg = exp2
@@ -521,8 +518,27 @@ class BasicsOfPolarization(DirectionOfPolarization):
         "apply_filter" : True,
     }
     def construct(self):
+        self.setup_rectangles()
         self.show_continual_wave()
         self.show_photons()
+
+    def setup_rectangles(self):
+        rect1 = Rectangle(
+            height = 2*self.em_wave.amplitude,
+            width = SPACE_WIDTH + 0.25,
+            stroke_color = BLUE,
+            fill_color = BLUE,
+            fill_opacity = 0.2,
+        )
+        rect1.rotate(np.pi/2, RIGHT)
+        pf_copy = self.pol_filter.deepcopy()
+        pf_copy.remove(pf_copy.arrow)
+        center = pf_copy.get_center()
+        rect1.move_to(center, RIGHT)
+        rect2 = rect1.copy()
+        rect2.move_to(center, LEFT)
+
+        self.rectangles = VGroup(rect1, rect2)
 
     def show_continual_wave(self):
         em_wave = self.em_wave
@@ -530,7 +546,7 @@ class BasicsOfPolarization(DirectionOfPolarization):
         title = TextMobject("Waves in the ``electromagnetic field''")
         title.to_edge(UP)
         subtitle = TextMobject("Polarization = Direction of", "wiggling")
-        subtitle.highlight_by_tex("wiggling", YELLOW)
+        subtitle.highlight_by_tex("wiggling", BLUE)
         subtitle.next_to(title, DOWN)
         for words in title, subtitle:
             words.add_background_rectangle()
@@ -538,18 +554,24 @@ class BasicsOfPolarization(DirectionOfPolarization):
 
         self.play(Write(title))
         self.dither(2)
-        self.play(Write(subtitle, run_time = 2))
+        self.play(
+            Write(subtitle, run_time = 2),
+            FadeIn(self.rectangles)
+        )
         self.change_polarization_direction(np.pi/2, run_time = 3)
-        self.dither(2)
+        self.dither()
         self.change_polarization_direction(-np.pi/12, run_time = 2)
-        self.dither()
         self.move_camera(theta = -0.95*np.pi)
-        self.dither()
         self.change_polarization_direction(-np.pi/6, run_time = 2)
-        self.dither()
+        self.change_polarization_direction(np.pi/6, run_time = 2)
         self.move_camera(theta = -0.6*np.pi)
-        self.dither()
-        self.play(FadeOut(em_wave.mobject))
+        self.change_polarization_direction(-np.pi/6, run_time = 2)
+        self.change_polarization_direction(np.pi/6, run_time = 2)
+        self.change_polarization_direction(-5*np.pi/12, run_time = 2)
+        self.play(
+            FadeOut(em_wave.mobject),
+            FadeOut(self.rectangles),
+        )
         self.remove(em_wave)
         self.reference_line.put_start_and_end_on(ORIGIN, RIGHT)
 
@@ -570,6 +592,18 @@ class BasicsOfPolarization(DirectionOfPolarization):
         quantum_words = VGroup(quantum_left_words, quantum_right_words)
         quantum_words.rotate(np.pi/2, RIGHT)
 
+        prob_eq = TexMobject(
+            "&P(", "\\text{Pass}", ")", "=", "p\\\\",
+            "&P(", "\\text{Blocked}", ")", "=", "1-p",
+        )
+        prob_eq.highlight_by_tex_to_color_map({
+            "Pass" : GREEN,
+            "Blocked" : RED,
+        })
+        prob_eq.next_to(ORIGIN, DOWN+RIGHT)
+        prob_eq.shift(RIGHT)
+        prob_eq.rotate(np.pi/2, RIGHT)
+
         config = dict(self.EMWave_config)
         config.update({
             "wave_number" : 0,
@@ -579,12 +613,12 @@ class BasicsOfPolarization(DirectionOfPolarization):
         self.continual_update()
         passing_photon = WavePacket(
             em_wave = self.em_wave.copy(),
-            run_time = 2,
+            run_time = 1.5,
         )
         filtered_photon = WavePacket(
             em_wave = self.em_wave.copy(),
             get_filtered = True,
-            run_time = 2,
+            run_time = 1.5,
         )
 
         self.play(FadeIn(
@@ -602,8 +636,36 @@ class BasicsOfPolarization(DirectionOfPolarization):
                 )
             ],
         ]
-        for index in 0, 1, 0, 0, 1:
+
+        for index in 0, 1:
             self.play(*anim_sets[index])
+        self.play(
+            FadeIn(prob_eq, submobject_mode = "lagged_start"),
+            passing_photon
+        )
+        for index in 1, 0, 0, 1:
+            self.play(*anim_sets[index])
+
+    def continual_update(self):
+        DirectionOfPolarization.continual_update(self)
+        if self.rectangles not in self.mobjects:
+            return
+
+        r1, r2 = self.rectangles
+
+        target_angle = self.reference_line.get_angle()
+        anchors = r1.get_anchors()
+        vect = anchors[0] - anchors[3]
+        curr_angle = angle_of_vector([vect[2], -vect[1]])
+        r1.rotate_in_place(target_angle - curr_angle, RIGHT)
+
+        curr_depth = r2.get_depth()
+        target_depth = 2*self.em_wave.amplitude*np.cos(target_angle)
+        if target_depth == 0:
+            target_depth = 0.001
+        r2.stretch_in_place(target_depth/curr_depth, 2)
+
+
 
 class AngleToProbabilityChart(Scene):
     def construct(self):
@@ -773,110 +835,127 @@ class ShowVariousFilterPairsWithPhotonsOverTime(PhotonsThroughPerpendicularFilte
 
 class ShowVariousFilterPairs(ShowVariousFilterPairsWithPhotonsOverTime):
     CONFIG = {
-        "filter_x_coordinates" : [-4, 0, 0, 0, 0],
+        "filter_x_coordinates" : [],
+        "filter_z_coordinates" : [2.5, 0, -2.5],
+        "angles" : [0, np.pi/4, np.pi/2],
         "n_lines" : 20,
         "line_start_length" : 16,
         "line_end_length" : 16,
         "new_group_shift_val" : 2.5*IN,
         "prev_group_shift_val" : 1.75*IN,
         "ambient_rotation_rate" : 0.015,
-        "lines_depth" : 1.7,
-        "lines_shift_vect" : MED_SMALL_BUFF*OUT,
+        "lines_depth" : 1.2,
+        "lines_shift_vect" : SMALL_BUFF*OUT,
     }
     def setup(self):
         ShowVariousFilterPairsWithPhotonsOverTime.setup(self)
+        self.remove(*self.pol_filters)
         self.prev_groups = VGroup()
         self.remove(self.axes)
+        self.setup_filters()
+        self.stop_ambient_camera_rotation()
+        self.prob_texts = VGroup()
 
+    def setup_filters(self):
+        self.filter_pairs = []
+        zs = self.filter_z_coordinates
+        for non_zero_angle, z in zip(self.angles, zs):
+            filter_pair = VGroup()
+            for angle, x in (0, -3), (non_zero_angle, 3):
+                pf = PolarizingFilter(filter_angle = angle)
+                pf.scale(0.7)
+                pf.rotate(np.pi/2, RIGHT)
+                pf.rotate(np.pi/2, IN)
+                pf.shift(x*RIGHT + z*OUT)
+                pf.arrow_label.rotate(np.pi/2, OUT)
+                pf.arrow_label.next_to(pf.arrow, RIGHT, SMALL_BUFF)
+
+                filter_pair.add(pf)
+            self.filter_pairs.append(filter_pair)
 
     def construct(self):
-        self.add_filters()
-        self.add_light()
-        self.show_probability()
-        self.shift_filters()
-        for pol_filter in self.new_filters:
-            self.change_to_new_filter(pol_filter)
-            self.dither(4)
-        self.dither(6)
+        self.add_top_filters()
+        self.show_light(self.filter_pairs[0])
+        self.turn_one_filter_pair_into_another(0, 2)
+        self.show_light(self.filter_pairs[2])
+        self.turn_one_filter_pair_into_another(2, 1)
+        self.show_light(self.filter_pairs[1])
 
-    def add_light(self):
-        A, C = self.pol_filters
-        lines_to_A = self.get_lines(None, A)
-        vect = lines_to_A[1].get_center() - lines_to_A[0].get_center()
-        lines_to_A.add(*lines_to_A.copy().shift(vect/2))
-        lines_to_C = self.get_lines(A, C)
-        lines_from_C = self.get_lines(C)
+    def add_top_filters(self):
+        pf1, pf2 = pair = self.filter_pairs[0]
+        for pf in pair:
+            pf.save_state()
+            pf.arrow_label.rotate(np.pi/2, IN)
+            pf.arrow_label.next_to(pf.arrow, UP, SMALL_BUFF)
+            pf.shift(2*IN)
+
+        self.add(pf1)
+        self.play(
+            ReplacementTransform(pf1.copy().fade(1), pf2),
+            Animation(pf1)
+        )
+        self.move_camera(
+            0.9*np.pi/2, -0.6*np.pi,
+            added_anims = [
+                pf.restore 
+                for pf in pair
+            ]
+        )
+
+    def show_light(self, filter_pair):
+        pf1, pf2 = filter_pair
+        lines_to_pf1 = self.get_lines(None, pf1)
+        vect = lines_to_pf1[1].get_center() - lines_to_pf1[0].get_center()
+        lines_to_pf1.add(*lines_to_pf1.copy().shift(vect/2))
+        lines_to_pf2 = self.get_lines(pf1, pf2)
+        lines_from_pf2 = self.get_lines(pf2)
+
+        prob = self.get_prob(pf2)
+        n_black = int(prob*len(lines_from_pf2))
+        VGroup(*lines_from_pf2[n_black:]).set_stroke(BLACK, 0)
 
         kwargs = {
             "rate_func" : None,
             "submobject_mode" : "all_at_once",
         }
 
-        self.play(ShowCreation(lines_to_A, run_time = 2./3, **kwargs))
+        self.play(ShowCreation(lines_to_pf1, run_time = 2./3, **kwargs))
         self.play(
-            ShowCreation(lines_to_C, **kwargs),
-            Animation(VGroup(A, lines_to_A)),
+            ShowCreation(lines_to_pf2, **kwargs),
+            Animation(VGroup(pf1, lines_to_pf1)),
             run_time = 1./6,
         )
         self.play(
-            ShowCreation(lines_from_C, **kwargs),
-            Animation(VGroup(C, lines_to_C, A, lines_to_A)),
+            ShowCreation(lines_from_pf2, **kwargs),
+            Animation(VGroup(pf2, lines_to_pf2, pf1, lines_to_pf1)),
             run_time = 2./3,
         )
 
-        self.lines_group = VGroup(
-            lines_from_C, C, lines_to_C, A, lines_to_A
+        group = VGroup(
+            lines_from_pf2, pf2, lines_to_pf2, pf1, lines_to_pf2
         )
-        self.remove(*self.lines_group)
-        self.add_foreground_mobject(self.lines_group)
+        self.remove(filter_pair, *group)
+        self.add_foreground_mobject(group)
 
-    def show_probability(self):
-        self.prob_text = self.get_probability_text()
-        self.play(Write(self.prob_text), run_time = 2)
-        self.lines_group.add(self.prob_text)
-        self.dither(1)
+        #Write probability
+        prob_text = self.get_probability_text(pf2)
+        self.play(Write(prob_text, run_time = 1))
+        self.dither()
 
-    def shift_filters(self):
-        self.play(
-            self.lines_group.shift, 1.5*OUT,
-        )
-        VGroup(*self.new_filters).shift(1.5*OUT)
+        self.prob_texts.add(prob_text)
 
-    def change_to_new_filter(self, pol_filter):
-        prob = self.get_prob(pol_filter)
-        lines = self.lines_group[0]
-        alphas = np.arange(0, 1, 1./len(lines)) + 1./len(lines)
-        line_shade_anims = [
-            ApplyMethod(
-                line.set_stroke,
-                YELLOW if alpha < prob else BLACK,
-                2 if alpha < prob else 0,
-            )
-            for line, alpha in zip(lines, alphas)
-        ]
-        new_prob_text = self.get_probability_text(pol_filter)
-
-        full_group = self.lines_group.copy()
-        full_group.save_state()
-        full_group.fade(1)
-
-        self.play(
-            full_group.restore,
-            full_group.scale_in_place, 0.5,
-            full_group.shift, self.new_group_shift_val,
-            self.prev_groups.shift, self.prev_group_shift_val,
-            Transform(self.second_filter, pol_filter),
-            Transform(self.prob_text, new_prob_text),
-            *line_shade_anims
-        )
-        self.prev_groups.add(full_group)
-        self.second_filter.filter_angle = pol_filter.filter_angle
+    def turn_one_filter_pair_into_another(self, i1, i2):
+        self.play(ReplacementTransform(
+            self.filter_pairs[i1].copy().fade(1),
+            self.filter_pairs[i2]
+        ))
 
     def get_probability_text(self, pol_filter = None):
         if pol_filter is None:
             pol_filter = self.second_filter
         prob = self.get_prob(pol_filter)
         prob_mob = TextMobject(str(int(prob*100)) + "\\%", " pass")
+        prob_mob.scale(0.7)
         prob_mob.rotate(np.pi/2, RIGHT)
         prob_mob.next_to(pol_filter.arrow_label, RIGHT)
         prob_mob.highlight(
@@ -890,7 +969,7 @@ class ShowVariousFilterPairs(ShowVariousFilterPairsWithPhotonsOverTime):
     def get_lines(self, filter1 = None, filter2 = None, ratio = 1.0):
         n = int(ratio*self.n_lines)
         start, end = [
-            (f.get_corner(IN+LEFT) if f is not None else None)
+            (f.point_from_proportion(0.75) if f is not None else None)
             for f in filter1, filter2
         ]
         if start is None:
@@ -907,23 +986,85 @@ class ShowVariousFilterPairs(ShowVariousFilterPairsWithPhotonsOverTime):
         lines.shift(self.lines_shift_vect)
         return lines
 
-class ForgetPreviousActions(PhotonsThroughPerpendicularFilters):
+class ShowVariousFilterPairsFrom0To45(ShowVariousFilterPairs):
     CONFIG = {
-        "filter_x_coordinates" : [-6, -2, 2],
-        "pol_filter_configs" : [
-            {"filter_angle" : angle}
-            for angle in np.pi/4, 0, np.pi/4
-        ],
-        "start_theta" : -0.6*np.pi
+        "angles" : [0, np.pi/8, np.pi/4]
     }
     def construct(self):
-        self.photons = self.get_photons()[1:]
+        ShowVariousFilterPairs.construct(self)
+        self.mention_probabilities()
+
+    def mention_probabilities(self):
+        rects = VGroup()
+        for prob_text in self.prob_texts:
+            prob_text.rotate(np.pi/2, LEFT)
+            rect = SurroundingRectangle(prob_text, color = BLUE)
+            VGroup(prob_text, rect).rotate(np.pi/2, RIGHT)
+            rects.add(rect)
+
+        cosines = VGroup(*[
+            TexMobject("\\cos^2(%s^\\circ)"%str(x))
+            for x in 45, 22.5
+        ])
+        cosines.scale(0.8)
+        # cosines.highlight(BLUE)
+        cosines.rotate(np.pi/2, RIGHT)
+        for cos, rect in zip(cosines, rects[1:]):
+            cos.next_to(rect, OUT, SMALL_BUFF)
+
+        self.play(LaggedStart(ShowCreation, rects))
+        self.dither()
+        self.play(*map(Write, cosines), run_time = 2)
+        self.dither()
+
+class ForgetPreviousActions(ShowVariousFilterPairs):
+    CONFIG = {
+        "filter_x_coordinates" : [-6, -2, 2, 2, 2],
+        "pol_filter_configs" : [
+            {"filter_angle" : angle}
+            for angle in np.pi/4, 0, np.pi/4, np.pi/3, np.pi/6
+        ],
+        "start_theta" : -0.6*np.pi,
+        "EMWave_config" : {
+            "wave_number" : 0,
+            "start_point" : SPACE_WIDTH*LEFT + DOWN,
+        },
+        "apply_filter" : False,
+    }
+    def setup(self):
+        PhotonsThroughPerpendicularFilters.setup(self)
+        self.remove(self.axes)
+
+        VGroup(*self.pol_filters).shift(IN)
 
         for pf in self.pol_filters:
             pf.arrow_label.rotate_in_place(np.pi/2, OUT)
             pf.arrow_label.next_to(pf.arrow, RIGHT)
 
-        group = VGroup(*self.pol_filters[1:])
+        self.stop_ambient_camera_rotation()
+
+    def construct(self):
+        front_filter = self.pol_filters[0]
+        first_filter = self.pol_filters[1]
+        possible_second_filters = self.pol_filters[2:]
+        for pf in possible_second_filters:
+            prob_text = self.get_probability_text(pf)
+            prob_text.scale(1.3, about_point = prob_text.get_left())
+            pf.add(prob_text)
+
+        second_filter = possible_second_filters[0].copy()
+        self.second_filter = second_filter
+        self.pol_filters = VGroup(
+            first_filter, second_filter
+        )
+        self.remove(front_filter)
+        self.remove(*possible_second_filters)
+        self.add(second_filter)
+        self.apply_filter = True
+        self.continual_update()
+        self.photons = self.get_photons()[1:]
+
+        group = VGroup(*self.pol_filters)
         rect1 = SurroundingRectangle(group)
         rect1.rotate_in_place(np.pi/2, RIGHT)
         rect1.rescale_to_fit(group.get_depth()+MED_SMALL_BUFF, 2, True)
@@ -938,12 +1079,15 @@ class ForgetPreviousActions(PhotonsThroughPerpendicularFilters):
 
         self.add(rect1)
         self.play(FadeIn(prob_words))
-        # for x in range(2):
-        #     self.shoot_photon()
+        for index in 1, 2:
+            self.shoot_photon()
+            self.play(Transform(
+                second_filter, possible_second_filters[index]
+            ))
 
-        rect2 = SurroundingRectangle(self.pol_filter, color = RED)
+        rect2 = SurroundingRectangle(front_filter, color = RED)
         rect2.rotate_in_place(np.pi/2, RIGHT)
-        rect2.rescale_to_fit(self.pol_filter.get_depth()+MED_SMALL_BUFF, 2, True)
+        rect2.rescale_to_fit(front_filter.get_depth()+MED_SMALL_BUFF, 2, True)
         rect2.stretch_in_place(1.5, 0)
         ignore_words = TextMobject("Photon \\\\", "``forgets'' this")
         ignore_words.add_background_rectangle()
@@ -952,20 +1096,27 @@ class ForgetPreviousActions(PhotonsThroughPerpendicularFilters):
 
         self.play(
             ShowCreation(rect2), 
-            Write(ignore_words, run_time = 1)
+            Write(ignore_words, run_time = 1),
+            FadeIn(front_filter),
+            run_time = 1.5,
         )
-        for x in range(3):
+        self.shoot_photon()
+        for index in 0, 1, 2:
+            self.play(Transform(
+                second_filter, possible_second_filters[index]
+            ))
             self.shoot_photon()
-            self.dither()
-
 
     def shoot_photon(self):
         photon = random.choice(self.photons)
         added_anims = []
         if photon.filter_distance == SPACE_WIDTH + 2:
-            added_anims.append(self.get_filter_absorbtion_animation(
-                self.pol_filters[2], photon
-            ))
+            added_anims.append(
+                ApplyMethod(
+                    self.second_filter.highlight, RED,
+                    rate_func = squish_rate_func(there_and_back, 0.5, 0.7)
+                )
+            )
         self.play(photon, *added_anims, run_time = 1.5)
 
 class IntroduceLabeledFilters(ShowVariousFilterPairs):
@@ -977,6 +1128,8 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
         ],
         "start_phi" : 0.9*np.pi/2,
         "start_theta" : -0.85*np.pi,
+        "lines_depth" : 1.7,
+        "lines_shift_vect" : MED_SMALL_BUFF*OUT,
         "line_start_length" : 3,
         "line_end_length" : 9,
     }
@@ -1049,12 +1202,10 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
     def show_bottom_lines(self):
         A, C = self.lower_pol_filters
         lines_to_A = self.get_lines(None, A)
-        lines_to_A.shift(0.01*OUT)
         vect = lines_to_A[1].get_center() - lines_to_A[0].get_center()
         lines_to_A.add(*lines_to_A.copy().shift(vect/2))
         lines_to_C = self.get_lines(A, C)
         lines_from_C = self.get_lines(C, ratio = 0.5)
-        lines_from_C.shift(0.009*OUT+0.02*LEFT)
         kwargs = {
             "rate_func" : None,
             "submobject_mode" : "all_at_once",
@@ -1110,9 +1261,7 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
         lines_to_A.add(*lines_to_A.copy().shift(vect/2))
         lines_to_B = self.get_lines(A, B)
         lines_to_C = self.get_lines(B, C, ratio = 0.85)
-        lines_to_C.shift(0.01*IN)
         lines_from_C = self.get_lines(C, ratio = 0.85**2)
-        lines_from_C.shift(0.02*LEFT)
 
         kwargs = {
             "rate_func" : None,

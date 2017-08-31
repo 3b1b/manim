@@ -152,7 +152,8 @@ class ThreeDScene(Scene):
         self.add(self.ambient_camera_rotation)
 
     def stop_ambient_camera_rotation(self):
-        self.remove(self.ambient_camera_rotation)
+        if self.ambient_camera_rotation is not None:
+            self.remove(self.ambient_camera_rotation)
         self.ambient_camera_rotation = None
 
     def move_camera(

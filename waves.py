@@ -264,7 +264,7 @@ class PolarizingFilter(Circle):
         "label_tex" : None,
         "filter_angle" : 0,
         "include_arrow_label" : True,
-        "arrow_length" : 1,
+        "arrow_length" : 0.7,
     }
     def __init__(self, **kwargs):
         Circle.__init__(self, **kwargs)
