@@ -141,28 +141,31 @@ class Axes(VGroup):
             "color" : LIGHT_GREY,
             "include_tip" : True,
         },
-        "x_axis_radius" : SPACE_WIDTH,
-        "y_axis_radius" : SPACE_HEIGHT,
-        "z_axis_radius" : 3.5,
+        "x_min" : -SPACE_WIDTH,
+        "x_max" : SPACE_WIDTH,
+        "y_min" : -SPACE_HEIGHT,
+        "y_max" : SPACE_HEIGHT,
+        "z_min" : -3.5,
+        "z_max" : 3.5,
     }
     def __init__(self, **kwargs):
         VGroup.__init__(self, **kwargs)
         self.x_axis = NumberLine(
-            x_min = -self.x_axis_radius,
-            x_max = self.x_axis_radius,
+            x_min = self.x_min,
+            x_max = self.x_max,
             **self.number_line_config
         )
         self.y_axis = NumberLine(
-            x_min = -self.y_axis_radius,
-            x_max = self.y_axis_radius,
+            x_min = self.y_min,
+            x_max = self.y_max,
             **self.number_line_config
         )
         self.y_axis.rotate(np.pi/2)
         self.add(self.x_axis, self.y_axis)
         if self.three_d:
             self.z_axis = NumberLine(
-                x_min = -self.z_axis_radius,
-                x_max = self.z_axis_radius,
+                x_min = self.min,
+                x_max = self.max,
                 **self.number_line_config
             )
             self.z_axis.rotate(-np.pi/2, UP)
@@ -171,8 +174,10 @@ class Axes(VGroup):
 
 class ThreeDAxes(Axes):
     CONFIG = {
-        "x_axis_radius" : 5.5,
-        "y_axis_radius" : 4.5,
+        "x_min" : -5.5,
+        "x_max" : 5.5,
+        "y_min" : -4.5,
+        "y_max" : -4.5,
         "three_d" : True,
     }
 

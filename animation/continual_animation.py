@@ -1,5 +1,6 @@
 from helpers import *
 from mobject import Mobject, Group
+from simple_animations import MaintainPositionRelativeTo
 import copy
 
 class ContinualAnimation(object):
@@ -63,7 +64,6 @@ class ContinualAnimationGroup(ContinualAnimation):
         for continual_animation in self.continual_animations:
             continual_animation.update(dt)
 
-
 class AmbientRotation(ContinualAnimation):
     CONFIG = {
         "axis" : OUT,
@@ -72,8 +72,6 @@ class AmbientRotation(ContinualAnimation):
 
     def update_mobject(self, dt):
         self.mobject.rotate(dt*self.rate, axis = self.axis)
-
-
 
 class AmbientMovement(ContinualAnimation):
     CONFIG = {
@@ -84,9 +82,21 @@ class AmbientMovement(ContinualAnimation):
     def update_mobject(self, dt):
         self.mobject.shift(dt*self.rate*self.direction)
 
+class ContinualUpdateFromFunc(ContinualAnimation):
+    def __init__(self, mobject, func, **kwargs):
+        self.func = func
+        ContinualAnimation.__init__(self, mobject, **kwargs)
 
+    def update_mobject(self, dt):
+        self.func(self.mobject)
 
+class ContinualMaintainPositionRelativeTo(ContinualAnimation):
+    def __init__(self, mobject, tracked_mobject, **kwargs):
+        self.anim = MaintainPositionRelativeTo(mobject, tracked_mobject, **kwargs)
+        ContinualAnimation.__init__(self, mobject, **kwargs)
 
+    def update_mobject(self, dt):
+        self.anim.update(0)
 
 
 

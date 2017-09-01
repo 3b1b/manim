@@ -762,7 +762,7 @@ class ListRelevantWaveIdeas(TeacherStudentsScene):
         topics = VGroup(*map(TextMobject, [
             "- Superposition",
             "- Amplitudes",
-            "- Phase influences addition",
+            "- How phase influences addition",
         ]))
         topics.scale(0.8)
         topics.arrange_submobjects(DOWN, aligned_edge = LEFT)
@@ -848,6 +848,11 @@ class DirectWaveOutOfScreen(IntroduceEMWave):
         self.dither(4)
 
 class ShowVectorEquation(Scene):
+    CONFIG = {
+        "f_color" : RED,
+        "phi_color" : MAROON_B,
+        "A_color" : GREEN,
+    }
     def construct(self):
         self.force_skipping()
 
@@ -869,26 +874,288 @@ class ShowVectorEquation(Scene):
             frequency = 0.25,
         )
         self.add(self.oscillating_vector)
-        self.revert_to_original_skipping_status()        
         self.dither(3)
 
     def add_plane(self):
-        pass
+        xy_plane = NumberPlane(
+            axes_color = LIGHT_GREY,
+            color = DARK_GREY,
+            secondary_color = DARK_GREY,
+            x_unit_size = 2,
+            y_unit_size = 2,
+        )
+        xy_plane.add_coordinates()
+        xy_plane.add(xy_plane.get_axis_labels())
+
+        self.play(
+            Write(xy_plane),
+            Animation(self.vector)
+        )
+        self.dither(2)
 
     def write_horizontally_polarized(self):
-        pass
+        words = TextMobject("``Horizontally polarized''")
+        words.next_to(ORIGIN, LEFT)
+        words.to_edge(UP)
+        words.add_background_rectangle()
+
+        self.play(Write(words, run_time = 3))
+        self.dither()
+
+        self.horizontally_polarized_words = words
 
     def write_components(self):
-        pass
+        x, y = components = VGroup(
+            TexMobject("\\cos(", "2\\pi", "f_x", "t", "+ ", "\\phi_x", ")"),
+            TexMobject("0")
+        )
+        components.arrange_submobjects(DOWN)
+        lb, rb = brackets = TexMobject("[]")
+        brackets.scale_to_fit_height(components.get_height() + SMALL_BUFF)
+        lb.next_to(components, LEFT, buff = 0.3)
+        rb.next_to(components, RIGHT, buff = 0.3)
+        E, equals = E_equals = TexMobject(
+            "\\vec{\\textbf{E}}", "="
+        )
+        E.highlight(E_COLOR)
+        E_equals.next_to(brackets, LEFT)
+        E_equals.add_background_rectangle()
+        brackets.add_background_rectangle()
+        group = VGroup(E_equals, brackets, components)
+        group.next_to(
+            self.horizontally_polarized_words, 
+            DOWN, MED_LARGE_BUFF, RIGHT
+        )
+
+        x_without_phi = TexMobject("\\cos(", "2\\pi", "f_x", "t", ")")
+        x_without_phi.move_to(x)
+        for mob in x, x_without_phi:
+            mob.highlight_by_tex_to_color_map({
+                "f_x" : self.f_color,
+                "phi_x" : self.phi_color,
+            })
+
+        def update_brace(brace):
+            brace.stretch_to_fit_width(
+                max(self.vector.get_width(), 0.001)
+            )
+            brace.next_to(self.vector.get_center(), DOWN, SMALL_BUFF)
+            return brace
+        moving_brace = ContinualUpdateFromFunc(
+            Brace(Line(LEFT, RIGHT), DOWN), update_brace
+        )
+        moving_x_without_phi = ContinualUpdateFromFunc(
+            x_without_phi.copy().add_background_rectangle(),
+            lambda m : m.next_to(moving_brace.mobject, DOWN, SMALL_BUFF)
+        )
+
+        self.play(Write(E_equals), Write(brackets))
+        y.save_state()
+        y.move_to(self.horizontally_polarized_words)
+        y.set_fill(opacity = 0)
+        self.play(y.restore)
+        self.dither()
+        self.add(moving_brace, moving_x_without_phi)
+        self.play(
+            FadeIn(moving_brace.mobject),
+            FadeIn(x_without_phi),
+            FadeIn(moving_x_without_phi.mobject),
+            submobject_mode = "lagged_start",
+            run_time = 2,
+        )
+        self.dither(3)
+        self.play(
+            FadeOut(moving_brace.mobject),
+            FadeOut(moving_x_without_phi.mobject),
+        )
+        self.remove(moving_brace, moving_x_without_phi)
+
+        self.E_equals = E_equals
+        self.brackets = brackets
+        self.x_without_phi = x_without_phi
+        self.components = components
 
     def show_graph(self):
-        pass
+        axes = Axes(
+            x_min = -0.5,
+            x_max = 5.2,
+            y_min = -1.5,
+            y_max = 1.5,
+        )
+        axes.x_axis.add_numbers(*range(1, 6))
+        t = TexMobject("t")
+        t.next_to(axes.x_axis, UP, SMALL_BUFF, RIGHT)
+        cos = self.x_without_phi.copy()
+        cos.next_to(axes.y_axis, RIGHT, SMALL_BUFF, UP)
+        cos_arg = VGroup(*cos[1:-1])
+        fx_equals_1 = TexMobject("f_x", "= 1")
+        fx_equals_fourth = TexMobject("f_x", "= 0.25")
+        fx_group = VGroup(fx_equals_1, fx_equals_fourth)
+        for fx in fx_group:
+            fx[0].highlight(self.f_color)
+            fx.move_to(axes, UP+RIGHT)
+        high_f_graph, low_f_graph = graphs = VGroup(*[
+            FunctionGraph(
+                lambda x : np.cos(2*np.pi*f*x),
+                color = E_COLOR,
+                x_min = 0,
+                x_max = 4/f,
+                num_steps = 20/f,
+            )
+            for f in 1, 0.25,
+        ])
+
+        group = VGroup(axes, t, cos, high_f_graph, *fx_group)
+        rect = SurroundingRectangle(
+            group,
+            buff = MED_LARGE_BUFF,
+            stroke_color = WHITE,
+            stroke_width = 3,
+            fill_color = BLACK,
+            fill_opacity = 0.9
+        )
+        group.add_to_back(rect)
+        group.scale(0.8)
+        group.to_corner(UP+RIGHT, buff = -SMALL_BUFF)
+        group.remove(*it.chain(fx_group, graphs))
+        low_f_graph.scale(0.8)
+        low_f_graph.move_to(high_f_graph, LEFT)
+
+        cos_arg_rect = SurroundingRectangle(cos_arg)
+
+        new_ov = OscillatingVector(
+            Vector(RIGHT, color = E_COLOR),
+            A_vect = [2, 0, 0],
+            frequency = 1,
+            start_up_time = 0,
+        )
+
+        self.play(FadeIn(group))
+        self.play(
+            ReplacementTransform(
+                self.components[0].get_part_by_tex("f_x").copy(),
+                fx_equals_1
+            ),
+        )
+        self.dither(4 - (self.oscillating_vector.internal_time%4))
+        self.remove(self.oscillating_vector)
+        self.add(new_ov)
+        self.play(ShowCreation(
+            high_f_graph, run_time = 4,
+            rate_func = None,
+        ))
+        self.dither()
+        self.play(FadeOut(new_ov.vector))
+        self.remove(new_ov)
+        self.add(self.oscillating_vector)
+        self.play(
+            ReplacementTransform(*fx_group),
+            ReplacementTransform(*graphs),
+            FadeOut(new_ov.vector),
+            FadeIn(self.vector)
+        )
+        self.dither(4)
+        self.play(ShowCreation(cos_arg_rect))
+        self.play(FadeOut(cos_arg_rect))
+        self.dither(5)
+
+        self.corner_group = group
+        self.fx_equals_fourth = fx_equals_fourth
+        self.corner_cos = cos
+        self.low_f_graph = low_f_graph
+        self.graph_axes = axes
 
     def add_phi(self):
-        pass
+        corner_cos = self.corner_cos
+        corner_phi = TexMobject("+", "\\phi_x")
+        corner_phi.highlight_by_tex("phi", self.phi_color)
+        corner_phi.scale(0.8)
+        corner_phi.next_to(corner_cos[-2], RIGHT, SMALL_BUFF)
+
+        x, y = self.components
+        x_without_phi = self.x_without_phi
+
+        words = TextMobject("``Phase shift''")
+        words.next_to(ORIGIN, UP+LEFT)
+        words.highlight(self.phi_color)
+        words.add_background_rectangle()
+        arrow = Arrow(words.get_top(), x[-2])
+        arrow.highlight(WHITE)
+
+        self.play(
+            ReplacementTransform(
+                VGroup(*x_without_phi[:-1]),
+                VGroup(*x[:-3]),
+            ),
+            ReplacementTransform(x_without_phi[-1], x[-1]),
+            Write(VGroup(*x[-3:-1])),
+            corner_cos[-1].next_to, corner_phi.copy(), RIGHT, SMALL_BUFF,
+            Write(corner_phi),
+            FadeOut(self.fx_equals_fourth),
+        )
+        self.play(self.low_f_graph.shift, MED_LARGE_BUFF*LEFT)
+        self.play(
+            Write(words, run_time = 1),
+            ShowCreation(arrow)
+        )
+        self.dither(3)
+        self.play(*map(FadeOut, [words, arrow]))
+
+        self.corner_cos.add(corner_phi)
 
     def add_amplitude(self):
-        pass
+        x, y = self.components
+        corner_cos = self.corner_cos
+        graph = self.low_f_graph
+        graph_y_axis = self.graph_axes.y_axis
+
+        A = TexMobject("A_x")
+        A.highlight(self.A_color)
+        A.move_to(x.get_left())
+        corner_A = A.copy()
+        corner_A.scale(0.8)
+        corner_A.move_to(corner_cos, LEFT)
+
+        h_brace = Brace(Line(ORIGIN, 2*RIGHT), UP)
+        v_brace = Brace(Line(
+            graph_y_axis.number_to_point(0),
+            graph_y_axis.number_to_point(1),
+        ), LEFT, buff = SMALL_BUFF)
+        for brace in h_brace, v_brace:
+            brace.A = brace.get_tex("A_x")
+            brace.A.highlight(self.A_color)
+        v_brace.A.scale(0.5, about_point = v_brace.get_center())
+        all_As = VGroup(A, corner_A, h_brace.A, v_brace.A)
+
+        def update_vect(vect):
+            self.oscillating_vector.A_vect[0] = h_brace.get_width()
+            return vect
+
+        self.revert_to_original_skipping_status()
+        self.play(
+            GrowFromCenter(h_brace),
+            GrowFromCenter(v_brace),
+        )
+        self.dither(2)
+        self.play(
+            x.next_to, A, RIGHT, SMALL_BUFF,
+            corner_cos.next_to, corner_A, RIGHT, SMALL_BUFF,
+            FadeIn(all_As)
+        )
+        self.dither()
+        factor = 0.5
+        self.play(
+            v_brace.stretch_in_place, factor, 1,
+            v_brace.move_to, v_brace.copy(), DOWN,
+            MaintainPositionRelativeTo(v_brace.A, v_brace),
+            h_brace.stretch_in_place, factor, 0,
+            h_brace.move_to, h_brace.copy(), LEFT,
+            MaintainPositionRelativeTo(h_brace.A, h_brace),
+            UpdateFromFunc(self.vector, update_vect),
+            graph.stretch_in_place, factor, 1,
+        )
+        self.dither(4)
+
 
     def add_kets(self):
         pass

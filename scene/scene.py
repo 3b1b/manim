@@ -122,9 +122,11 @@ class Scene(object):
         self.clear()
     ###
 
-    def continual_update(self):
+    def continual_update(self, dt = None):
+        if dt is None:
+            dt = self.frame_duration
         for continual_animation in self.continual_animations:
-            continual_animation.update(self.frame_duration)
+            continual_animation.update(dt)
 
     def wind_down(self, *continual_animations, **kwargs):
         wind_down_time = kwargs.get("wind_down_time", 1)
@@ -384,6 +386,7 @@ class Scene(object):
         self.add(*moving_mobjects)
         self.mobjects_from_last_animation = moving_mobjects
         self.clean_up_animations(*animations)
+        self.continual_update(0)
         return self
 
     def clean_up_animations(self, *animations):
