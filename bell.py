@@ -34,131 +34,7 @@ from waves import *
 #force_skipping
 #revert_to_original_skipping_status
 
-class FilterScene(ThreeDScene):
-    CONFIG = {
-        "filter_x_coordinates" : [0],
-        "pol_filter_configs" : [{}],
-        "EMWave_config" : {
-            "start_point" : SPACE_WIDTH*LEFT + DOWN+OUT
-        },
-        "start_phi" : 0.8*np.pi/2,
-        "start_theta" : -0.6*np.pi,
-        "ambient_rotation_rate" : 0.01,
-    }
-    def setup(self):
-        self.axes = ThreeDAxes()
-        self.add(self.axes)
-        for x in range(len(self.filter_x_coordinates) - len(self.pol_filter_configs)):
-            self.pol_filter_configs.append({})
-        self.pol_filters = VGroup(*[
-            PolarizingFilter(**config)
-            for config in self.pol_filter_configs
-        ])
-        self.pol_filters.rotate(np.pi/2, RIGHT)
-        self.pol_filters.rotate(-np.pi/2, OUT)
-        self.pol_filters.shift(DOWN+OUT)
-        for x, pf in zip(self.filter_x_coordinates, self.pol_filters):
-            pf.shift(x*RIGHT)
-        self.add(self.pol_filters)
-        self.pol_filter = self.pol_filters[0]
-
-        self.set_camera_position(self.start_phi, self.start_theta)
-        if self.ambient_rotation_rate > 0:
-            self.begin_ambient_camera_rotation(self.ambient_rotation_rate)
-
-    def get_filter_absorbtion_animation(self, pol_filter, photon):
-        x = pol_filter.get_center()[0]
-        alpha = (x + SPACE_WIDTH) / (2*SPACE_WIDTH)
-        return ApplyMethod(
-            pol_filter.set_fill, RED,
-            run_time = photon.run_time,
-            rate_func = squish_rate_func(there_and_back, alpha - 0.1, alpha + 0.1)
-        )
-
-class DirectionOfPolarization(FilterScene):
-    CONFIG = {
-        "pol_filter_configs" : [{
-            "include_arrow_label" : False,
-        }],
-        "target_theta" : -0.97*np.pi,
-        "target_phi" : 0.9*np.pi/2,
-        "ambient_rotation_rate" : 0.005,
-        "apply_filter" : False,
-    }
-    def setup(self):
-        self.reference_line = Line(ORIGIN, RIGHT)
-        self.reference_line.set_stroke(width = 0)
-        self.em_wave = EMWave(**self.EMWave_config)
-        self.add(self.em_wave)
-
-        FilterScene.setup(self)
-
-    def construct(self):
-        self.remove(self.pol_filter)
-        words = TextMobject("Polarization direction")
-        words.next_to(ORIGIN, UP+RIGHT, LARGE_BUFF)
-        words.shift(2*UP)
-        words.rotate(np.pi/2, RIGHT)
-        words.rotate(-np.pi/2, OUT)
-
-        em_wave = self.em_wave
-
-        self.add(em_wave)
-        self.dither(2)
-        self.move_camera(
-            phi = self.target_phi,
-            theta = self.target_theta
-        )
-        self.play(Write(words, run_time = 1))
-        self.change_polarization_direction(
-            2*np.pi/3,
-            run_time = 6,
-            rate_func = there_and_back
-        )
-        self.dither(2)
-
-    def change_polarization_direction(self, angle, **kwargs):
-        added_anims = kwargs.get("added_anims", [])
-        self.play(
-            ApplyMethod(
-                self.reference_line.rotate, angle,
-                **kwargs
-            ),
-            *added_anims
-        )
-
-    def continual_update(self):
-        reference_angle = self.reference_line.get_angle()
-        self.em_wave.rotation = reference_angle
-        FilterScene.continual_update(self)
-        vect_groups = [self.em_wave.E_vects, self.em_wave.M_vects]
-        if self.apply_filter:
-            filters = sorted(
-                self.pol_filters,
-                lambda pf1, pf2 : cmp(
-                    pf1.get_center()[0], 
-                    pf2.get_center()[0],
-                )
-            )
-            for pol_filter in filters:
-                filter_x = pol_filter.get_center()[0]
-                for vect_group, angle in zip(vect_groups, [0, -np.pi/2]):
-                    proj_vect = rotate_vector(
-                        OUT, pol_filter.filter_angle + angle, RIGHT,
-                    )
-                    proj_matrix = np.array([RIGHT] + [
-                        proj_vect*np.dot(proj_vect, basis)
-                        for basis in UP, OUT
-                    ]).T
-                    for vect in vect_group:
-                        start, end = vect.get_start_and_end()
-                        if start[0] > filter_x:
-                            vect.apply_matrix(proj_matrix)
-                            vect.shift(start - vect.get_start())
-                            vect.set_tip_points(vect.tip)
-                            vect.set_rectangular_stem_points()
-
-class PhotonPassesCompletelyOrNotAtAll(DirectionOfPolarization):
+class PhotonPassesCompletelyOrNotAtAll(DirectionOfPolarizationScene):
     CONFIG = {
         "pol_filter_configs" : [{
             "include_arrow_label" : False,
@@ -235,6 +111,31 @@ class PhotonPassesCompletelyOrNotAtAll(DirectionOfPolarization):
                 )
             )
             self.dither()
+
+class DirectionOfPolarization(DirectionOfPolarizationScene):
+    def construct(self):
+        self.remove(self.pol_filter)
+        words = TextMobject("Polarization direction")
+        words.next_to(ORIGIN, UP+RIGHT, LARGE_BUFF)
+        words.shift(2*UP)
+        words.rotate(np.pi/2, RIGHT)
+        words.rotate(-np.pi/2, OUT)
+
+        em_wave = self.em_wave
+
+        self.add(em_wave)
+        self.dither(2)
+        self.move_camera(
+            phi = self.target_phi,
+            theta = self.target_theta
+        )
+        self.play(Write(words, run_time = 1))
+        self.change_polarization_direction(
+            2*np.pi/3,
+            run_time = 6,
+            rate_func = there_and_back
+        )
+        self.dither(2)
 
 class PhotonsThroughPerpendicularFilters(PhotonPassesCompletelyOrNotAtAll):
     CONFIG = {
@@ -515,7 +416,7 @@ class SecondVideoWrapper(Scene):
         self.play(ShowCreation(screen_rect))
         self.dither(3)
 
-class BasicsOfPolarization(DirectionOfPolarization):
+class BasicsOfPolarization(DirectionOfPolarizationScene):
     CONFIG = {
         "apply_filter" : True,
     }
@@ -648,8 +549,8 @@ class BasicsOfPolarization(DirectionOfPolarization):
         for index in 1, 0, 0, 1:
             self.play(*anim_sets[index])
 
-    def continual_update(self):
-        DirectionOfPolarization.continual_update(self)
+    def continual_update(self, *args, **kwargs):
+        DirectionOfPolarization.continual_update(self, *args, **kwargs)
         if self.rectangles not in self.mobjects:
             return
 

@@ -164,8 +164,8 @@ class Axes(VGroup):
         self.add(self.x_axis, self.y_axis)
         if self.three_d:
             self.z_axis = NumberLine(
-                x_min = self.min,
-                x_max = self.max,
+                x_min = self.z_min,
+                x_max = self.z_max,
                 **self.number_line_config
             )
             self.z_axis.rotate(-np.pi/2, UP)
@@ -177,7 +177,7 @@ class ThreeDAxes(Axes):
         "x_min" : -5.5,
         "x_max" : 5.5,
         "y_min" : -4.5,
-        "y_max" : -4.5,
+        "y_max" : 4.5,
         "three_d" : True,
     }
 

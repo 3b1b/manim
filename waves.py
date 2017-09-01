@@ -296,6 +296,110 @@ class PolarizingFilter(Circle):
 
 ################
 
+
+class FilterScene(ThreeDScene):
+    CONFIG = {
+        "filter_x_coordinates" : [0],
+        "pol_filter_configs" : [{}],
+        "EMWave_config" : {
+            "start_point" : SPACE_WIDTH*LEFT + DOWN+OUT
+        },
+        "start_phi" : 0.8*np.pi/2,
+        "start_theta" : -0.6*np.pi,
+        "ambient_rotation_rate" : 0.01,
+    }
+    def setup(self):
+        self.axes = ThreeDAxes()
+        self.add(self.axes)
+        for x in range(len(self.filter_x_coordinates) - len(self.pol_filter_configs)):
+            self.pol_filter_configs.append({})
+        self.pol_filters = VGroup(*[
+            PolarizingFilter(**config)
+            for config in self.pol_filter_configs
+        ])
+        self.pol_filters.rotate(np.pi/2, RIGHT)
+        self.pol_filters.rotate(-np.pi/2, OUT)
+        self.pol_filters.shift(DOWN+OUT)
+        for x, pf in zip(self.filter_x_coordinates, self.pol_filters):
+            pf.shift(x*RIGHT)
+        self.add(self.pol_filters)
+        self.pol_filter = self.pol_filters[0]
+
+        self.set_camera_position(self.start_phi, self.start_theta)
+        if self.ambient_rotation_rate > 0:
+            self.begin_ambient_camera_rotation(self.ambient_rotation_rate)
+
+    def get_filter_absorbtion_animation(self, pol_filter, photon):
+        x = pol_filter.get_center()[0]
+        alpha = (x + SPACE_WIDTH) / (2*SPACE_WIDTH)
+        return ApplyMethod(
+            pol_filter.set_fill, RED,
+            run_time = photon.run_time,
+            rate_func = squish_rate_func(there_and_back, alpha - 0.1, alpha + 0.1)
+        )
+
+class DirectionOfPolarizationScene(FilterScene):
+    CONFIG = {
+        "pol_filter_configs" : [{
+            "include_arrow_label" : False,
+        }],
+        "target_theta" : -0.97*np.pi,
+        "target_phi" : 0.9*np.pi/2,
+        "ambient_rotation_rate" : 0.005,
+        "apply_filter" : False,
+    }
+    def setup(self):
+        self.reference_line = Line(ORIGIN, RIGHT)
+        self.reference_line.set_stroke(width = 0)
+        self.em_wave = EMWave(**self.EMWave_config)
+        self.add(self.em_wave)
+
+        FilterScene.setup(self)
+
+    def change_polarization_direction(self, angle, **kwargs):
+        added_anims = kwargs.get("added_anims", [])
+        self.play(
+            ApplyMethod(
+                self.reference_line.rotate, angle,
+                **kwargs
+            ),
+            *added_anims
+        )
+
+    def continual_update(self, *args, **kwargs):
+        reference_angle = self.reference_line.get_angle()
+        self.em_wave.rotation = reference_angle
+        FilterScene.continual_update(self, *args, **kwargs)
+        vect_groups = [self.em_wave.E_vects, self.em_wave.M_vects]
+        if self.apply_filter:
+            filters = sorted(
+                self.pol_filters,
+                lambda pf1, pf2 : cmp(
+                    pf1.get_center()[0], 
+                    pf2.get_center()[0],
+                )
+            )
+            for pol_filter in filters:
+                filter_x = pol_filter.get_center()[0]
+                for vect_group, angle in zip(vect_groups, [0, -np.pi/2]):
+                    proj_vect = rotate_vector(
+                        OUT, pol_filter.filter_angle + angle, RIGHT,
+                    )
+                    proj_matrix = np.array([RIGHT] + [
+                        proj_vect*np.dot(proj_vect, basis)
+                        for basis in UP, OUT
+                    ]).T
+                    for vect in vect_group:
+                        start, end = vect.get_start_and_end()
+                        if start[0] > filter_x:
+                            vect.apply_matrix(proj_matrix)
+                            vect.shift(start - vect.get_start())
+                            vect.set_tip_points(vect.tip)
+                            vect.set_rectangular_stem_points()
+
+
+################
+
 class IntroduceElectricField(PiCreatureScene):
     CONFIG = {
         "vector_field_colors" : [BLUE_B, BLUE_D],
@@ -412,8 +516,8 @@ class IntroduceElectricField(PiCreatureScene):
 
     ###
 
-    def continual_update(self):
-        Scene.continual_update(self)
+    def continual_update(self, *args, **kwargs):
+        Scene.continual_update(self, *args, **kwargs)
         if hasattr(self, "moving_particles"):
             dt = self.frame_duration
             for p in self.moving_particles:
@@ -574,8 +678,8 @@ class IntroduceMagneticField(IntroduceElectricField, ThreeDScene):
         
     ###
 
-    def continual_update(self):
-        Scene.continual_update(self)
+    def continual_update(self, *args, **kwargs):
+        Scene.continual_update(self, *args, **kwargs)
         if hasattr(self, "moving_particles"):
             dt = self.frame_duration
             for p in self.moving_particles:
@@ -854,8 +958,6 @@ class ShowVectorEquation(Scene):
         "A_color" : GREEN,
     }
     def construct(self):
-        self.force_skipping()
-
         self.add_vector()
         self.add_plane()
         self.write_horizontally_polarized()
@@ -894,7 +996,10 @@ class ShowVectorEquation(Scene):
         self.dither(2)
 
     def write_horizontally_polarized(self):
-        words = TextMobject("``Horizontally polarized''")
+        words = TextMobject(
+            "``", "Horizontally", " polarized", "''",
+            arg_separator = ""
+        )
         words.next_to(ORIGIN, LEFT)
         words.to_edge(UP)
         words.add_background_rectangle()
@@ -907,7 +1012,7 @@ class ShowVectorEquation(Scene):
     def write_components(self):
         x, y = components = VGroup(
             TexMobject("\\cos(", "2\\pi", "f_x", "t", "+ ", "\\phi_x", ")"),
-            TexMobject("0")
+            TexMobject("0", "")
         )
         components.arrange_submobjects(DOWN)
         lb, rb = brackets = TexMobject("[]")
@@ -1131,7 +1236,6 @@ class ShowVectorEquation(Scene):
             self.oscillating_vector.A_vect[0] = h_brace.get_width()
             return vect
 
-        self.revert_to_original_skipping_status()
         self.play(
             GrowFromCenter(h_brace),
             GrowFromCenter(v_brace),
@@ -1142,6 +1246,8 @@ class ShowVectorEquation(Scene):
             corner_cos.next_to, corner_A, RIGHT, SMALL_BUFF,
             FadeIn(all_As)
         )
+        x.add(A)
+        corner_cos.add(corner_A)
         self.dither()
         factor = 0.5
         self.play(
@@ -1156,12 +1262,125 @@ class ShowVectorEquation(Scene):
         )
         self.dither(4)
 
+        self.h_brace = h_brace 
+        self.v_brace = v_brace
 
     def add_kets(self):
-        pass
+        x, y = self.components
+        E_equals = self.E_equals
+        for mob in x, y, E_equals:
+            mob.add_background_rectangle()
+            mob.generate_target()
+
+        right_ket = TexMobject("|\\rightarrow\\rangle")
+        up_ket = TexMobject("|\\uparrow\\rangle")
+        kets = VGroup(right_ket, up_ket)
+        kets.highlight(YELLOW)
+        for ket in kets:
+            ket.add_background_rectangle()
+        plus = TextMobject("+")
+        group = VGroup(
+            E_equals.target, 
+            x.target, right_ket, plus,
+            y.target, up_ket,
+        )
+        group.arrange_submobjects(RIGHT)
+        E_equals.target.shift(SMALL_BUFF*UP)
+        group.scale(0.8)
+        group.move_to(self.brackets, DOWN)
+        group.to_edge(LEFT, buff = MED_SMALL_BUFF)
+
+        kets_word = TextMobject("``kets''")
+        kets_word.next_to(kets, DOWN, buff = 0.8)
+        arrows = VGroup(*[
+            Arrow(kets_word.get_top(), ket, color = ket.get_color())
+            for ket in kets
+        ])
+        ket_rects = VGroup(*map(SurroundingRectangle, kets))
+        ket_rects.highlight(WHITE)
+        unit_vectors = VGroup(*[Vector(2*vect) for vect in RIGHT, UP])
+        unit_vectors.set_fill(YELLOW)
+
+        self.play(
+            FadeOut(self.brackets),
+            *map(MoveToTarget, [E_equals, x, y])
+        )
+        self.play(*map(Write, [right_ket, plus, up_ket]), run_time = 1)
+        self.play(
+            Write(kets_word),
+            LaggedStart(ShowCreation, arrows, lag_ratio = 0.7),
+            run_time = 2,
+        )
+        self.dither()
+        for ket, ket_rect, unit_vect in zip(kets, ket_rects, unit_vectors):
+            self.play(ShowCreation(ket_rect))
+            self.play(FadeOut(ket_rect))
+            self.play(ReplacementTransform(ket[1][1].copy(), unit_vect))
+            self.dither()
+        self.play(FadeOut(unit_vectors))
+        self.play(*map(FadeOut, [kets_word, arrows]))
+
+        self.kets = kets
+        self.plus = plus
 
     def switch_to_vertically_polarized_light(self):
+        x, y = self.components
+        x_ket, y_ket = self.kets
+        plus = self.plus
+
+        x.target = TexMobject("0", "").add_background_rectangle()
+        y.target = TexMobject(
+            "A_y", "\\cos(", "2\\pi", "f_y", "t", "+", "\\phi_y", ")"
+        )
+        y.target.highlight_by_tex_to_color_map({
+            "A" : self.A_color,            
+            "f" : self.f_color,
+            "phi" : self.phi_color,
+        })
+        y.target.add_background_rectangle()
+        VGroup(x.target, y.target).scale(0.8)
+        for mob in [plus] + list(self.kets):
+            mob.generate_target()
+
+        movers = x, x_ket, plus, y, y_ket
+        group = VGroup(*[m.target for m in movers])
+        group.arrange_submobjects(RIGHT)
+        group.move_to(x, LEFT)
+
+        vector_A_vect = np.array(self.oscillating_vector.A_vect)
+        def update_vect(vect, alpha):
+            self.oscillating_vector.A_vect = rotate_vector(
+                vector_A_vect, alpha*np.pi/2
+            )
+            return vect
+
+        new_h_brace = Brace(Line(ORIGIN, UP), RIGHT)
+
+        words = TextMobject(
+            "``", "Vertically", " polarized", "''",
+            arg_separator = "",
+        )
+        words.add_background_rectangle()
+        words.move_to(self.horizontally_polarized_words)
+
+        self.play(
+            UpdateFromAlphaFunc(self.vector, update_vect),
+            Transform(self.h_brace, new_h_brace),
+            self.h_brace.A.next_to, new_h_brace, RIGHT, SMALL_BUFF,
+            Transform(self.horizontally_polarized_words, words),
+            *map(FadeOut, [
+                self.corner_group, self.v_brace, 
+                self.v_brace.A, self.low_f_graph,
+            ])
+        )
+        self.play(*map(MoveToTarget, movers))
+        self.dither(5)
+
+class ChangeFromHorizontalToVerticallyPolarized(Scene):
+    def construct(self):
         pass
+
+
 
 
 
