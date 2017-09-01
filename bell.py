@@ -27,6 +27,8 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
+from tqdm import tqdm as ProgressDisplay
+
 from waves import *
 
 #force_skipping
@@ -665,8 +667,6 @@ class BasicsOfPolarization(DirectionOfPolarization):
             target_depth = 0.001
         r2.stretch_in_place(target_depth/curr_depth, 2)
 
-
-
 class AngleToProbabilityChart(Scene):
     def construct(self):
         left_title = TextMobject("Angle between \\\\ filters")
@@ -966,7 +966,11 @@ class ShowVariousFilterPairs(ShowVariousFilterPairsWithPhotonsOverTime):
 
     #####
 
-    def get_lines(self, filter1 = None, filter2 = None, ratio = 1.0):
+    def get_lines(
+        self, filter1 = None, filter2 = None, 
+        ratio = 1.0,
+        remove_from_bottom = False,
+        ):
         n = int(ratio*self.n_lines)
         start, end = [
             (f.point_from_proportion(0.75) if f is not None else None)
@@ -978,12 +982,14 @@ class ShowVariousFilterPairs(ShowVariousFilterPairsWithPhotonsOverTime):
             end = start + self.line_end_length*RIGHT
         nudge = (float(self.lines_depth)/self.n_lines)*OUT
         lines = VGroup(*[
-            Line(start, end).shift(x*nudge)
-            for x in range(n)
+            Line(start, end).shift(z*nudge)
+            for z in range(n)
         ])
         lines.set_stroke(YELLOW, 2)
         lines.move_to(start, IN+LEFT)
         lines.shift(self.lines_shift_vect)
+        if remove_from_bottom:
+            lines.shift((self.n_lines - n)*nudge)
         return lines
 
 class ShowVariousFilterPairsFrom0To45(ShowVariousFilterPairs):
@@ -1128,10 +1134,12 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
         ],
         "start_phi" : 0.9*np.pi/2,
         "start_theta" : -0.85*np.pi,
+        "target_theta" : -0.65*np.pi,
         "lines_depth" : 1.7,
         "lines_shift_vect" : MED_SMALL_BUFF*OUT,
         "line_start_length" : 3,
         "line_end_length" : 9,
+        "ambient_rotation_rate" : 0.005,
     }
     def setup(self):
         PhotonsThroughPerpendicularFilters.setup(self)
@@ -1146,6 +1154,7 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
         self.comment_on_half_blocked_by_C()
         self.show_top_lines()
         self.comment_on_those_blocked_by_B()
+        self.show_sum()
 
     def add_letters_to_labels(self):
         for char, pf, color in zip("ABC", self.pol_filters, [RED, GREEN, BLUE]):
@@ -1171,7 +1180,7 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
 
     def reposition_camera(self):
         self.move_camera(
-            theta = -0.65*np.pi, 
+            theta = self.target_theta, 
             added_anims = list(it.chain(*[
                 [
                     pf.arrow_label.rotate, np.pi/2, OUT,
@@ -1180,9 +1189,6 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
                 for pf in self.pol_filters
             ]))
         )
-        # self.stop_ambient_camera_rotation()
-        self.ambient_rotation_rate = 0.005
-        self.dither()
 
     def separate_cases(self):
         self.lower_pol_filters = VGroup(
@@ -1233,7 +1239,7 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
 
     def comment_on_half_blocked_by_C(self):
         arrow = Arrow(
-            ORIGIN, 3.5*RIGHT+0.5*DOWN, 
+            ORIGIN, 3.5*RIGHT,
             path_arc = -0.9*np.pi,
             use_rectangular_stem = False,
             color = BLUE,
@@ -1260,8 +1266,8 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
         vect = lines_to_A[1].get_center() - lines_to_A[0].get_center()
         lines_to_A.add(*lines_to_A.copy().shift(vect/2))
         lines_to_B = self.get_lines(A, B)
-        lines_to_C = self.get_lines(B, C, ratio = 0.85)
-        lines_from_C = self.get_lines(C, ratio = 0.85**2)
+        lines_to_C = self.get_lines(B, C, ratio = 0.85, remove_from_bottom = True)
+        lines_from_C = self.get_lines(C, ratio = 0.85**2, remove_from_bottom = True)
 
         kwargs = {
             "rate_func" : None,
@@ -1296,6 +1302,14 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
         self.add_foreground_mobject(line_group)
 
     def comment_on_those_blocked_by_B(self):
+        arrow0 = Arrow(
+            2*LEFT, 0.5*(UP+RIGHT),
+            path_arc = 0.8*np.pi,
+            use_rectangular_stem = False,
+            color = WHITE,
+            stroke_width = 5,
+            buff = 0
+        )
         arrow1 = Arrow(
             2*LEFT, ORIGIN,
             path_arc = 0.8*np.pi,
@@ -1316,25 +1330,73 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
         words0 = TextMobject("85\\%", "pass")
         words0.move_to(words1)
 
-        group = VGroup(arrow1, arrow2, words0, words1, words2)
+        group = VGroup(arrow0, arrow1, arrow2, words0, words1, words2)
         group.rotate(np.pi/2, RIGHT)
         group.shift(0.8*LEFT+1.5*OUT)
 
         self.play(
-            ShowCreation(arrow1),
+            ShowCreation(arrow0),
             Write(words0, run_time = 1)
         )
         self.dither()
-        self.play(ReplacementTransform(words0, words1))
+        self.play(
+            ReplacementTransform(words0, words1),
+            ReplacementTransform(arrow0, arrow1),
+        )
         self.dither()
         self.play(
             ShowCreation(arrow2),
             Write(words2)
         )
         self.dither(2)
-        for words in words1, words2, self.blocked_at_C_words:
-            self.play(Indicate(words))
-        self.dither(6)
+
+        self.fifteens = VGroup(words1, words2)
+
+    def show_sum(self):
+        fifteen1, fifteen2 = self.fifteens
+        fifty = self.blocked_at_C_words
+        plus = TexMobject("+").rotate(np.pi/2, RIGHT)
+        plus.move_to(Line(fifteen1.get_right(), fifteen2.get_left()))
+        equals = TexMobject("=").rotate(np.pi/2, RIGHT)
+        equals.next_to(fifteen2, RIGHT, 2*SMALL_BUFF)
+        q_mark = TexMobject("?").rotate(np.pi/2, RIGHT)
+        q_mark.next_to(equals, OUT, SMALL_BUFF)
+        q_mark.highlight(RED)
+        randy = Randolph(mode = "confused").flip()
+        randy.scale(0.7)
+        randy.rotate(np.pi/2, RIGHT)
+        randy.move_to(fifty)
+        randy.shift(0.5*RIGHT)
+        randy.look_at(equals)
+        blinked = randy.copy()
+        blinked.rotate(np.pi/2, LEFT)
+        blinked.blink()
+        blinked.rotate(np.pi/2, RIGHT)
+
+        self.play(
+            fifteen1.highlight, YELLOW,
+            Write(plus)
+        )
+        self.play(
+            fifteen2.highlight, YELLOW,
+            Write(equals)
+        )
+        self.play(
+            fifty.next_to, equals, RIGHT, 2*SMALL_BUFF,
+            Write(q_mark),
+            FadeIn(randy)
+        )
+        self.play(Transform(
+            randy, blinked, 
+            rate_func = squish_rate_func(there_and_back)
+        ))
+        self.dither(3)
+
+class IntroduceLabeledFiltersNoRotation(IntroduceLabeledFilters):
+    CONFIG = {
+        "ambient_rotation_rate" : 0,
+        "target_theta" : -0.55*np.pi,
+    }
 
 class NumbersSuggestHiddenVariablesAreImpossible(TeacherStudentsScene):
     def construct(self):
@@ -1350,6 +1412,7 @@ class VennDiagramProofByContradiction(Scene):
         "circle_colors" : [RED, GREEN, BLUE]
     }
     def construct(self):
+        self.setup_venn_diagram_sections()
         self.draw_venn_diagram()
         self.show_100_photons()
         self.show_one_photon_answering_questions()
@@ -1359,7 +1422,7 @@ class VennDiagramProofByContradiction(Scene):
         self.show_two_relevant_subsets()
 
     def draw_venn_diagram(self, send_to_corner = True):
-        venn_diagram = VGroup(*[
+        A, B, C = venn_diagram = VGroup(*[
             Circle(
                 radius = 3,
                 stroke_width = 3,
@@ -1372,21 +1435,37 @@ class VennDiagramProofByContradiction(Scene):
                 compass_directions(3, UP)
             )
         ])
+        self.A_to_B_vect = B.get_center() - A.get_center()
+        self.A_to_C_vect = C.get_center() - A.get_center()
+
         venn_diagram.center()
+        labels = VGroup()
+        alt_labels = VGroup()
         props = [1./12, 0.5, 0]
         angles = [0, np.pi/8, np.pi/4]
         for circle, char, prop, angle in zip(venn_diagram, "ABC", props, angles):
-            label = TextMobject("Would pass \\\\ through", char + "$\\! \\uparrow$")
-            label.highlight_by_tex(char, circle.get_color())
-            label[1][1].rotate_in_place(-angle)
-            label[1][1].shift(0.5*SMALL_BUFF*UP)
+            label, alt_label = [
+                TextMobject(
+                    "%s \\\\"%start,
+                    "through", char + "$\\! \\uparrow$"
+                ).highlight_by_tex(char, circle.get_color())
+                for start in "Would pass", "Pass"
+            ]
+            for mob in label, alt_label:
+                mob[-1][-1].rotate_in_place(-angle)
+                mob[-1][-1].shift(0.5*SMALL_BUFF*UP)
             center = circle.get_center()
             label.move_to(center)
             label.generate_target()
             point = circle.point_from_proportion(prop)
-            label.target.next_to(point, point-center, SMALL_BUFF)
+            alt_label.scale(2)
+            for mob in label.target, alt_label:
+                mob.next_to(point, point-center, SMALL_BUFF)
 
             circle.label = label
+            circle.alt_label = alt_label
+            labels.add(label)
+            alt_labels.add(alt_label)
 
         last_circle = None
         for circle in venn_diagram:
@@ -1402,15 +1481,25 @@ class VennDiagramProofByContradiction(Scene):
         self.play(MoveToTarget(last_circle.label))
         self.dither()
 
-        venn_diagram.add(*[c.label for c in venn_diagram])
-        self.venn_diagram = venn_diagram
-        for part in self.venn_diagram:
-            part.save_state()
+        if hasattr(self, "in_A_out_B"):
+            A.add(self.in_A_out_B)
+            A.add(self.in_A_in_B_out_C)
+            A.add(self.in_A_out_C)
+
         if send_to_corner:
-            self.play(
-                self.venn_diagram.scale, 0.25,
-                self.venn_diagram.to_corner, UP+RIGHT
-            )
+            group = VGroup(venn_diagram, labels)
+            target = VGroup(venn_diagram.copy(), alt_labels)
+            target.scale(0.25)
+            target.to_corner(UP+RIGHT)
+            self.play(Transform(group, target))
+            self.remove(group)
+            for circle in venn_diagram:
+                circle.label = circle.alt_label
+                self.add(circle)
+        for circle in venn_diagram:
+            self.add(circle.label)
+
+        self.venn_diagram = venn_diagram
 
     def show_100_photons(self):
         photon = FunctionGraph(
@@ -1456,11 +1545,9 @@ class VennDiagramProofByContradiction(Scene):
         self.photon_words = words
 
     def show_one_photon_answering_questions(self):
-        photon = self.photons[-1]
+        photon = self.photons[89]
         photon.save_state()
         photon.generate_target()
-        photon.target.scale(4)
-        photon.target.next_to(self.photons, RIGHT)
 
         answers = TextMobject(
             "Pass through A?", "Yes\\\\",
@@ -1471,20 +1558,33 @@ class VennDiagramProofByContradiction(Scene):
             "Yes" : GREEN,
             "No" : RED,
         })
-        answers.next_to(photon.target, RIGHT)
+        bubble = ThoughtBubble()
+        bubble.add_content(answers)
+        bubble.resize_to_content() 
+        answers.shift(SMALL_BUFF*(RIGHT+UP))
+        bubble_group = VGroup(bubble, answers)
+        bubble_group.scale(0.25)
+        bubble_group.next_to(photon, UP+RIGHT, buff = 0)
+
+        group = VGroup(photon, bubble_group)
+        group.save_state()
+        bubble_group.set_fill(opacity = 0)
+        bubble_group.set_stroke(width = 0)
 
         self.play(
-            MoveToTarget(photon),
-            FadeIn(answers)
+            group.restore,
+            group.scale, 4,
+            group.to_corner, DOWN + RIGHT,
         )
-        self.dither(2)
+        self.play(photon.eyes.blink_anim())
+        self.dither()
         self.play(
-            FadeOut(answers),
+            FadeOut(bubble_group),
             photon.restore,
         )
 
     def put_all_photons_in_A(self):
-        A_circle, B_circle, C_circle = circles = self.venn_diagram[:3]
+        A, B, C = circles = self.venn_diagram[:3]
         A_group, B_group, C_group = [
             VGroup(circle, circle.label)
             for circle in circles
@@ -1492,22 +1592,29 @@ class VennDiagramProofByContradiction(Scene):
         B_group.save_state()
         C_group.save_state()
 
-        A_group.generate_target()
-        A_group.target.scale(4)
-        A_group.target.shift(
+        A.generate_target()
+        A.target.scale(4)
+        A.target.shift(
             (SPACE_HEIGHT-MED_LARGE_BUFF)*UP - \
-            A_group.target[0].get_top()
+            A.target.get_top()
         )
-        A_group.target[1].scale_in_place(0.8)
+        A.label.generate_target()
+        A.label.target.scale(2)
+        A.label.target.next_to(
+            A.target.point_from_proportion(0.1),
+            UP+RIGHT, SMALL_BUFF
+        )
 
         self.play(
             B_group.fade, 1,
             C_group.fade, 1,
-            MoveToTarget(A_group),
+            MoveToTarget(A),
+            MoveToTarget(A.label),
             FadeOut(self.photon_words),
-            self.photons.scale_to_fit_height, 
-                0.85*A_group.target.get_height(),
-            self.photons.move_to, A_group.target[0].get_center(),
+            self.photons.scale_to_fit_height,
+                0.85*A.target.get_height(),
+            self.photons.space_out_submobjects, 0.8,
+            self.photons.move_to, A.target,
         )
         self.dither()
 
@@ -1519,15 +1626,19 @@ class VennDiagramProofByContradiction(Scene):
         A_group = self.A_group
         B_group = self.B_group
         photons = self.photons
-        B_circle = B_group[0]
+        B = B_group[0]
 
-        B_group.target = B_group.saved_state
-        B_group.target.scale(4)
-        B_group.target.move_to(A_group)
-        B_group.target.shift(1.25*DOWN+3.25*LEFT)
-        B_group.target[1].shift(DOWN)
-        B_group.target[1].scale_in_place(0.8)
-        B_center = B_group.target[0].get_center()
+        B.target, B.label.target = B_group.saved_state
+        B.target.scale(4)
+        B.target.move_to(A_group[0])
+        B.target.shift(self.A_to_B_vect)
+        B.label.target.scale(2)
+        B.label.target.next_to(
+            B.target.point_from_proportion(0.55),
+            LEFT, SMALL_BUFF
+        )
+
+        B_center = B.target.get_center()
         photons.sort_submobjects(
             lambda p : np.linalg.norm(p-B_center)
         )
@@ -1535,28 +1646,33 @@ class VennDiagramProofByContradiction(Scene):
         out_of_B = VGroup(*photons[85:])
         out_of_B.sort_submobjects(lambda p : np.dot(p, 2*UP+LEFT))
 
+        self.play(
+            MoveToTarget(B),
+            MoveToTarget(B.label),
+            in_B.shift, 0.5*DOWN+0.2*LEFT,
+            out_of_B.scale_in_place, 1./0.8,
+            out_of_B.shift, 0.15*(UP+RIGHT),
+        )
+
         words = TextMobject("15 blocked \\\\ by ", "B")
         words.highlight_by_tex("B", GREEN)
         words.scale(0.8)
-        words.next_to(A_group, LEFT, LARGE_BUFF, UP)
+        words.next_to(A_group, LEFT, MED_LARGE_BUFF, UP)
         arrow = Arrow(words.get_right(), out_of_B[-1])
         arrow.highlight(RED)
 
         self.play(
-            MoveToTarget(B_group),
-            in_B.space_out_submobjects, 0.8,
-            in_B.shift, MED_SMALL_BUFF*(DOWN+LEFT),
-        )
-        self.play(
             Write(words, run_time = 1),
             ShowCreation(arrow)
         )
-        self.play(LaggedStart(
-            Indicate, out_of_B, 
-            rate_func = there_and_back,
-            color = RED,
-            scale_factor = 2,
-        ))
+        self.play(
+            self.in_A_out_B.set_fill, RED, 0.5,
+            LaggedStart(
+                Indicate, out_of_B, 
+                rate_func = there_and_back,
+                color = RED,
+            ),
+        )
         self.dither()
 
         self.in_B = in_B
@@ -1565,25 +1681,32 @@ class VennDiagramProofByContradiction(Scene):
         self.out_of_B_arrow = arrow
 
     def separate_by_C(self):
+        A_group = self.A_group
         B_group = self.B_group
         C_group = self.C_group
         in_B = self.in_B
+        A, B, C = self.venn_diagram
 
-        C_group.target = C_group.saved_state
-        C_group.target.scale(4)
-        C_group.target.move_to(B_group, DOWN)
-        C_group.target.shift(4.5*RIGHT)
-        C_center = C_group.target[0].get_center()
-        C_group.target[1].scale_in_place(0.8)
+        C.target, C.label.target = C_group.saved_state
+        C.target.scale(4)
+        C.target.move_to(A)
+        C.target.shift(self.A_to_C_vect)
+        C_center = C.target.get_center()
+        C.label.target.scale(2)
+        C.label.target.next_to(
+            C.target.point_from_proportion(0),
+            DOWN+RIGHT, buff = SMALL_BUFF
+        )
 
         in_B.sort_submobjects(
             lambda p : np.linalg.norm(p - C_center)
         )
         in_C = VGroup(*in_B[:-11])
         out_of_C = VGroup(*in_B[-11:])
+        in_C_out_B = VGroup(*self.out_of_B[:6])
 
         words = TextMobject(
-            "$<$ 15 passing", "B \\\\",
+            "$15\\%$", "passing", "B \\\\",
             "get blocked by ", "C",
         )
         words.scale(0.8)
@@ -1593,121 +1716,176 @@ class VennDiagramProofByContradiction(Scene):
         })
         words.next_to(self.out_of_B_words, DOWN, LARGE_BUFF)
         words.to_edge(LEFT)
+        percent = words[0]
+        pound = TexMobject("\\#")
+        pound.move_to(percent, RIGHT)
+        less_than_15 = TexMobject("<15")
+        less_than_15.next_to(words, DOWN)
+
+
         arrow = Arrow(words.get_right(), out_of_C)
         arrow.highlight(GREEN)
 
         self.play(
-            MoveToTarget(C_group),
-            in_C.shift, MED_SMALL_BUFF*(DOWN+RIGHT),
+            MoveToTarget(C),
+            MoveToTarget(C.label),
+            in_C.shift, 0.2*DOWN+0.15*RIGHT,
             out_of_C.shift, SMALL_BUFF*(UP+LEFT),
+            in_C_out_B.shift, 0.3*DOWN
         )
         self.play(
+            self.in_A_in_B_out_C.set_fill, GREEN, 0.5,
             Write(words, run_time = 1),
-            ShowCreation(arrow)
+            ShowCreation(arrow),
+        )
+        self.play(
+            LaggedStart(
+                Indicate, out_of_C, 
+                rate_func = there_and_back,
+                color = GREEN,
+            )
         )
         self.dither()
-        self.play(LaggedStart(
-            Indicate, out_of_C, 
-            rate_func = there_and_back,
-            color = GREEN,
-            scale_factor = 2,
-        ))
+        self.play(Transform(percent, pound))
+        self.play(Write(less_than_15, run_time = 1))
         self.dither()
 
         self.in_C = in_C
         self.out_of_C = out_of_C
+        words.add(less_than_15)
         self.out_of_C_words = words
         self.out_of_C_arrow = arrow
 
     def show_two_relevant_subsets(self):
-        terms = VGroup(
-            TexMobject("N(", "A+", ",", "B-", ")"),
-            TexMobject("+ N(", "A+", ",", "B+", ",", "C-", ")"),
-            TexMobject("\\ge", "N(", "A+", ",", "C-", ")"),
-        )
-        terms.arrange_submobjects(RIGHT)
-        terms.to_edge(UP)
-        for term in terms:
-            term.highlight_by_tex_to_color_map({
-                "A" : RED,    
-                "B" : GREEN,
-                "C" : BLUE,
-            })
-
         all_out_of_C = VGroup(*it.chain(
             self.out_of_B[6:],
             self.out_of_C,
         ))
+        everything = VGroup(*self.get_top_level_mobjects())
+        photon_groups = [all_out_of_C, self.out_of_B, self.out_of_C]
+        regions = [self.in_A_out_C, self.in_A_out_B, self.in_A_in_B_out_C]
+
+        terms = VGroup(
+            TexMobject("N(", "A", "\\checkmark", ",", "C", ") \\le"),
+            TexMobject("N(", "A", "\\checkmark", ",", "B", ")"),
+            TexMobject(
+                "+\\, N(", "A", "\\checkmark", ",", 
+                "B", "\\checkmark", ",", "C", ")"
+            ),
+        )
+        terms.arrange_submobjects(RIGHT)
+        terms.to_edge(UP)
+        for term, group in zip(terms, photon_groups):
+            term.highlight_by_tex("checkmark", "#00ff00")
+            cross = Cross(term[-2], color = "#ff0000")
+            cross.set_stroke(width = 8)
+            term[-2].add(cross)
 
         self.play(*[
             ApplyMethod(
-                m.scale, 0.8, 
+                m.scale, 0.7, 
                 method_kwargs = {
                     "about_point" : SPACE_HEIGHT*DOWN
                 }
             )
-            for m in self.get_top_level_mobjects()
+            for m in everything
         ])
-        self.dither()
-        for term, group in zip(terms[:2], [self.out_of_B, self.out_of_C]):
-            self.play(LaggedStart(
-                ApplyFunction, group,
-                lambda mob : (lambda m : m.set_stroke(WHITE).scale_in_place(1.5), mob),
-                run_time = 1,
-            ))
-            self.play(Write(term, run_time = 1))
-            self.play(
-                LaggedStart(
-                    ApplyMethod, group,
-                    lambda m : (m.scale_in_place, 1/1.5)
-                ),
-                self.in_C.fade,
-            )
-        self.dither()
-        self.play(Write(terms[2], run_time = 1))
-        self.play(LaggedStart(
-            ApplyFunction, all_out_of_C,
-            lambda mob : (
-                lambda m : m.scale_in_place(1.5).set_style_data(
-                    stroke_color = TEAL, 
-                    stroke_width = 1.5, 
-                    family = False,
-                ), mob
-            ),
-            run_time = 2,
-        ))
 
-        words = [self.out_of_B_words, self.out_of_C_words]
-        arrows = [self.out_of_B_arrow, self.out_of_C_arrow]
-        indices = [2, 3]
-        for word, arrow, index, term in zip(words, arrows, indices, terms):
-            num = VGroup(*word[0][:index])
-            word[0].remove(*num)
-
-            self.play(
-                FadeOut(word),
-                FadeOut(arrow),
-                num.scale, 2,
-                num.next_to, term, DOWN
-            )
-        self.dither()
-
-        rect = SurroundingRectangle(VGroup(*terms[2][1:]))
-        should_be_50 = TextMobject("Should be 50...somehow")
-        should_be_50.scale(0.8)
-        should_be_50.next_to(rect, DOWN, MED_SMALL_BUFF, LEFT)
+        everything_copy = everything.copy().scale(1./3)
+        braces = VGroup(
+            Brace(everything_copy, LEFT),
+            Brace(everything_copy, RIGHT),
+        ).scale(3)
+        funny_business = TextMobject("Funny business")
+        funny_business.scale(1.5)
+        funny_business.to_edge(UP)
 
         self.play(
-            ShowCreation(rect),
-            Write(should_be_50, run_time = 1)
+            FadeIn(funny_business),
+            *map(Write, braces),
+            run_time = 1
         )
         self.dither()
+
+        for term, group, region in zip(terms, photon_groups, regions)[1:]:
+            added_anims = []
+            if term is terms[1]:
+                added_anims += [
+                    FadeOut(funny_business), 
+                    FadeOut(braces),
+                ]
+            group.set_stroke(WHITE)
+            self.play(
+                ApplyMethod(
+                    VGroup(region, group).shift, 0.5*UP,
+                    rate_func = wiggle,
+                    run_time = 1.5,
+                ),
+                *added_anims
+            )
+            # self.play(term.restore)
+            self.play(Write(term, run_time = 1))
+            self.dither()
+        self.dither()
+
+        regions[0].set_fill(YELLOW, 0.5)
+        self.play(
+            VGroup(regions[0], all_out_of_C).shift, 0.5*UP,
+            run_time = 1.5,
+            rate_func = wiggle,
+        )
+        # self.play(terms[0].restore)
+        self.play(Write(terms[0], run_time = 1))
+        self.dither()
+
+        less_than = terms[0][-1][-1]
+        terms[0][-1].remove(less_than)
+        terms[2][0].remove(terms[2][0][0])
+        rects = map(SurroundingRectangle, terms)
+        last_rects = VGroup(*rects[1:])
+
+        fifteen = VGroup(*self.out_of_B_words[0][:2]).copy()
+        lt_fifteen = self.out_of_C_words[-1]
+        something_lt_15 = TextMobject("(Something", "$<15$", ")")
+        something_lt_15[1].set_fill(BLACK, 0)
+        something_lt_15.scale(0.8)
+        something_lt_15.next_to(rects[2], DOWN)
+
+        should_be_50 = TextMobject("Should be 50 \\\\", "...somehow")
+        should_be_50.scale(0.8)
+        should_be_50.next_to(rects[0], DOWN)
+
+        cross = Cross(less_than)
+        cross.highlight("#ff0000")
+        cross.set_stroke(width = 8)
+
+        self.play(
+            fifteen.scale, 1.5,
+            fifteen.next_to, rects[1].copy(), DOWN,
+            ShowCreation(rects[1]),
+        )
+        self.play(
+            FadeIn(something_lt_15),
+            lt_fifteen.scale, 1.3,
+            lt_fifteen.move_to, something_lt_15[1],
+            ShowCreation(rects[2])
+        )
+        self.dither()
+        self.play(Transform(last_rects, rects[0]))
+        self.play(FadeOut(rects[0]))
+        self.dither(2)
+        self.play(Write(should_be_50[0], run_time = 1))
+        self.play(
+            FadeIn(should_be_50[1]),
+            ShowCreation(cross)
+        )
 
         morty = Mortimer()
         morty.to_corner(DOWN+RIGHT)
         contradiction = TextMobject("Contradiction!")
         contradiction.next_to(morty, UP, aligned_edge = RIGHT)
         contradiction.highlight(RED)
+
         self.play(FadeIn(morty))
         self.play(
             morty.change, "hooray",
@@ -1718,6 +1896,32 @@ class VennDiagramProofByContradiction(Scene):
 
 
     #######
+
+    def setup_venn_diagram_sections(self):
+        in_A_out_B, in_A_in_B_out_C, in_A_out_C = segments = VGroup(*[
+            SVGMobject(
+                file_name = "VennDiagram_" + s,
+                stroke_width = 0,
+                fill_opacity = 0.5,
+                fill_color = YELLOW,
+            )
+            for s in "in_A_out_B", "in_A_in_B_out_C", "in_A_out_C"
+        ])
+
+        in_A_out_B.scale(2.59)
+        in_A_out_B.move_to(3.74*UP + 2.97*RIGHT, UP+RIGHT)
+
+        in_A_in_B_out_C.scale(1.84)
+        in_A_in_B_out_C.move_to(2.23*UP, UP+RIGHT)
+
+        in_A_out_C.scale(2.56)
+        in_A_out_C.move_to(3*LEFT + (3.69)*UP, UP+LEFT)
+
+        segments.set_fill(BLACK, opacity = 0)
+
+        self.in_A_out_B = in_A_out_B
+        self.in_A_in_B_out_C = in_A_in_B_out_C
+        self.in_A_out_C = in_A_out_C
 
     def arrange_photons_in_circle(self, photons):
         R = np.sqrt(len(photons) / np.pi)
@@ -1763,12 +1967,15 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
         self.adjust_circles()
 
     def rescale_diagram(self):
+        group = VGroup(self.venn_diagram, *[
+            c.label for c in self.venn_diagram
+        ])
         self.play(
-            self.venn_diagram.scale, 0.7,
-            self.venn_diagram.to_edge, DOWN, MED_SMALL_BUFF,
+            group.scale, 0.7,
+            group.to_edge, DOWN, MED_SMALL_BUFF,
         )
         self.clear()
-        self.add_foreground_mobject(self.venn_diagram)
+        self.add_foreground_mobjects(*group)
 
     def setup_faded_circles(self):
         self.circles = self.venn_diagram[:3]
@@ -1865,36 +2072,44 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
         A, B, C = self.circles
         A0, B0, C0 = self.black_circles
         A1, B1, C1 = self.filled_circles
+        for circle in A, B, C:
+            circle.pre_label = VGroup(*circle.label[:-1])
+            circle.letter = circle.label[-1]
 
         inequality = VGroup(
-            TexMobject("N(", "A", "+", ",", "C", "-", ")"),
+            TexMobject("N(", "A", "\\checkmark", ",", "C", ")"),
             TexMobject("\\le"),
-            TexMobject("N(", "B", "+", ",", "C", "-", ")"),
+            TexMobject("N(", "B", "\\checkmark", ",", "C", ")"),
             TexMobject("+"),
-            TexMobject("N(", "A", "+", ",", "B-", ")"),
+            TexMobject("N(", "A", "\\checkmark", ",", "B", ")"),
         )
         inequality.arrange_submobjects(RIGHT)
         for tex in inequality:
-            tex.highlight_by_tex_to_color_map({
-                "A" : RED,
-                "B" : GREEN,
-                "C" : BLUE,
-            })
+            tex.highlight_by_tex("checkmark", "#00ff00")
+            if len(tex) > 1:
+                cross = Cross(tex[-2], color = "#ff0000")
+                cross.set_stroke(width = 8)
+                tex[-2].add(cross)
         inequality.to_edge(UP)
 
         self.play(
             Write(inequality),
-            A.label[0].fade, 1,
-            A.label[1].move_to, A.label[0], LEFT,
-            B.label[0].fade, 1,
-            C.label[0].fade, 1,
-            C.label[1].move_to, C.label[0], LEFT,
-            self.in_A_out_B_words.fade, 1,
-            self.in_A_out_B_arrow.fade, 1,
+            A.pre_label.fade, 1,
+            A.letter.scale, 2,
+            A.letter.move_to, A.pre_label, LEFT,
+            B.pre_label.fade, 1,
+            B.letter.scale, 2, B.letter.get_right(),
+            C.pre_label.fade, 1,
+            C.letter.scale, 2,
+            C.letter.move_to, C.pre_label, LEFT,
+            self.in_A_out_B_words.set_fill, None, 0,
+            self.in_A_out_B_arrow.set_fill, None, 0,
         )
         for circle in A, B, C:
-            circle.label.remove(circle.label[0])
-            self.remove(circle.label[0])
+            circle.remove(circle.label)
+            self.remove(circle.label)
+            circle.add(circle.letter)
+            self.add(circle.letter)
 
 
         self.inequality = inequality
@@ -1908,7 +2123,7 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
         groups = VGroup(*[
             VGroup(
                 m2.copy(), m1.copy(),
-                self.venn_diagram.copy()
+                VGroup(*self.circles).copy()
             )
             for m1, m2 in (C0, A1), (C0, B1), (B0, A1)
         ])
@@ -1918,7 +2133,8 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
             group.fade(1)
 
 
-        self.remove(self.venn_diagram, self.black_circles, self.filled_circles)
+        self.clear()
+        self.add(inequality)
         self.play(
             groups[0].restore,
             groups[0].scale_in_place, 0.5,
@@ -2030,22 +2246,31 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
             groups[1][2][2],
             groups[2][2][2],
         )
+
+        def center_of_mass(mob):
+            return np.apply_along_axis(np.mean, 0, mob.points)
+
         movers = [A_group, B_group, C_group]
-        vects = [UP, UP+LEFT, UP+RIGHT]
-        phases = [0, np.pi/8, np.pi/4]
-        amplitude = MED_SMALL_BUFF
+        A_ref, B_ref, C_ref = [g[4] for g in movers]
+        B_center = center_of_mass(B_ref)
+        B_to_A = center_of_mass(A_ref) - B_center
+        B_to_C = center_of_mass(C_ref) - B_center
+
+        A_freq = 1
+        C_freq = -0.7
 
         self.time = 0
         dt = self.frame_duration
-        freqs = [1.5, 2, 1]
 
         def move_around(total_time):
             self.time
-            for x in range(int(total_time/dt)):
+            t_range = range(int(total_time/dt))
+            for x in ProgressDisplay(t_range):
                 self.time += dt
-                for mover, vect, phase, freq in zip(movers, vects, phases, freqs):
-                    cos_val = np.cos(freq*self.time + phase)
-                    mover.shift(amplitude*cos_val*vect*dt)
+                new_B_to_A = rotate_vector(B_to_A, self.time*A_freq)
+                new_B_to_C = rotate_vector(B_to_C, self.time*C_freq)
+                A_group.shift(B_center + new_B_to_A - center_of_mass(A_ref))
+                C_group.shift(B_center + new_B_to_C - center_of_mass(C_ref))
                 self.dither(self.frame_duration)
 
         move_around(3)
