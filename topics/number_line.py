@@ -117,7 +117,7 @@ class NumberLine(VMobject):
     def add_tip(self):
         start, end = self.main_line.get_start_and_end()
         vect = (end - start)/np.linalg.norm(end-start)
-        arrow = Arrow(start, end + MED_LARGE_BUFF*vect)
+        arrow = Arrow(start, end + MED_SMALL_BUFF*vect, buff = 0)
         tip = arrow.tip
         tip.highlight(self.color)
         self.tip = tip
@@ -147,6 +147,7 @@ class Axes(VGroup):
         "y_max" : SPACE_HEIGHT,
         "z_min" : -3.5,
         "z_max" : 3.5,
+        "z_normal" : DOWN,
     }
     def __init__(self, **kwargs):
         VGroup.__init__(self, **kwargs)
@@ -169,7 +170,7 @@ class Axes(VGroup):
                 **self.number_line_config
             )
             self.z_axis.rotate(-np.pi/2, UP)
-            self.z_axis.rotate(np.pi/2, OUT)
+            self.z_axis.rotate(angle_of_vector(self.z_normal), OUT)
             self.add(self.z_axis)
 
 class ThreeDAxes(Axes):

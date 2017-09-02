@@ -98,13 +98,17 @@ class CyclicReplace(Transform):
 class Swap(CyclicReplace):
     pass #Renaming, more understandable for two entries
 
-class GrowFromCenter(Transform):
-    def __init__(self, mobject, **kwargs):
+class GrowFromPoint(Transform):
+    def __init__(self, mobject, point, **kwargs):
         target = mobject.copy()
-        point = Point(mobject.get_center())
-        mobject.replace(point)
-        mobject.highlight(point.get_color())
+        point_mob = Point(point)
+        mobject.replace(point_mob)
+        mobject.highlight(point_mob.get_color())
         Transform.__init__(self, mobject, target, **kwargs)
+
+class GrowFromCenter(GrowFromPoint):
+    def __init__(self, mobject, **kwargs):
+        GrowFromPoint.__init__(self, mobject, mobject.get_center(), **kwargs)
 
 class SpinInFromNothing(GrowFromCenter):
     CONFIG = {

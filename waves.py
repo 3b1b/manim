@@ -304,12 +304,13 @@ class FilterScene(ThreeDScene):
         "EMWave_config" : {
             "start_point" : SPACE_WIDTH*LEFT + DOWN+OUT
         },
+        "axes_config" : {},
         "start_phi" : 0.8*np.pi/2,
         "start_theta" : -0.6*np.pi,
         "ambient_rotation_rate" : 0.01,
     }
     def setup(self):
-        self.axes = ThreeDAxes()
+        self.axes = ThreeDAxes(**self.axes_config)
         self.add(self.axes)
         for x in range(len(self.filter_x_coordinates) - len(self.pol_filter_configs)):
             self.pol_filter_configs.append({})
@@ -1376,18 +1377,329 @@ class ShowVectorEquation(Scene):
         self.play(*map(MoveToTarget, movers))
         self.dither(5)
 
-class ChangeFromHorizontalToVerticallyPolarized(Scene):
+class ChangeFromHorizontalToVerticallyPolarized(DirectionOfPolarizationScene):
+    CONFIG = {
+        "filter_x_coordinates" : [],
+        "EMWave_config" : {
+            "start_point" : SPACE_WIDTH*LEFT,
+            "A_vect" : [0, 2, 0],
+        }
+    }
+    def setup(self):
+        DirectionOfPolarizationScene.setup(self)
+        self.axes.z_axis.rotate(np.pi/2, OUT)
+        self.axes.y_axis.rotate(np.pi/2, UP)
+        self.remove(self.pol_filter)
+        self.em_wave.M_vects.set_fill(opacity = 0)
+        for vect in self.em_wave.E_vects:
+            vect.normal_vector = RIGHT
+            vect.set_fill(opacity = 0.5)
+        self.em_wave.E_vects[-1].set_fill(opacity = 1)
+
+        self.set_camera_position(0.9*np.pi/2, -0.05*np.pi)        
+
     def construct(self):
-        pass
+        self.dither(3)
+        self.change_polarization_direction(np.pi/2)
+        self.dither(10)
+
+class SumOfTwoWaves(ChangeFromHorizontalToVerticallyPolarized):
+    CONFIG = {
+        "axes_config" : {
+            "y_max" : 1.5,
+            "y_min" : -1.5,
+            "z_max" : 1.5,
+            "z_min" : -1.5,
+        },
+        "EMWave_config" : {
+            "A_vect" : [0, 0, 1],
+        }
+    }
+    def setup(self):
+        ChangeFromHorizontalToVerticallyPolarized.setup(self)
+        for vect in self.em_wave.E_vects[:-1]:
+            vect.set_fill(opacity = 0.3)
+        self.side_em_waves = []
+        for shift_vect, A_vect in (5*DOWN, [0, 1, 0]), (5*UP, [0, 1, 1]):
+            axes = self.axes.copy()
+            em_wave = copy.deepcopy(self.em_wave)
+            axes.shift(shift_vect)
+            em_wave.mobject.shift(shift_vect)
+            em_wave.start_point += shift_vect
+            for ov in em_wave.continual_animations:
+                ov.A_vect = np.array(A_vect)
+            self.add(axes, em_wave)
+            self.side_em_waves.append(em_wave)
+
+        self.set_camera_position(0.95*np.pi/2, -0.03*np.pi)
+
+    def construct(self):
+        plus, equals = pe = VGroup(*map(TexMobject, "+="))
+        pe.scale(2)
+        pe.rotate(np.pi/2, RIGHT)
+        pe.rotate(np.pi/2, OUT)
+        plus.shift(2.5*DOWN)
+        equals.shift(2.5*UP)
+        self.add(pe)
+
+        self.dither(32)
+
+class ShowTipToTailSum(ShowVectorEquation):
+    def construct(self):
+        self.force_skipping()
+        self.add_vector()
+        self.add_plane()
+        self.add_vertial_vector()
+        self.revert_to_original_skipping_status()
+
+        self.add_kets()
+        self.show_vector_sum()
+        self.write_superposition()
+        self.add_amplitudes()
+        self.add_phase_shift()
+
+    def add_vertial_vector(self):
+        self.h_vector = self.vector
+        self.h_oscillating_vector = self.oscillating_vector
+        self.h_oscillating_vector.start_up_time = 0
+
+        self.v_oscillating_vector = self.h_oscillating_vector.copy()
+        self.v_vector = self.v_oscillating_vector.vector
+        self.v_oscillating_vector.A_vect = [0, 2, 0]
+        self.v_oscillating_vector.update(0)
+
+        self.d_oscillating_vector = ContinualUpdateFromFunc(
+            Vector(UP+RIGHT, color = E_COLOR),
+            lambda v : v.put_start_and_end_on(
+                ORIGIN,
+                self.v_vector.get_end()+ self.h_vector.get_end(),
+            )
+        )
+        self.d_vector = self.d_oscillating_vector.mobject
+        self.d_oscillating_vector.update(0)
+
+        self.add(self.v_oscillating_vector)
+        self.add_foreground_mobject(self.v_vector)
+
+    def add_kets(self):
+        h_ket, v_ket = kets = VGroup(*[
+            TexMobject(
+                "\\cos(", "2\\pi", "f", "t", ")",
+                "|\\!\\%sarrow\\rangle"%s
+            )
+            for s in "right", "up"
+        ])
+        for ket in kets:
+            ket.highlight_by_tex_to_color_map({
+                "f" : self.f_color,    
+                "rangle" : YELLOW,
+            })
+            ket.add_background_rectangle(opacity = 1)
+            ket.scale(0.8)
+
+        h_ket.next_to(2*RIGHT, UP, SMALL_BUFF)
+        v_ket.next_to(2*UP, UP, SMALL_BUFF)
+        self.add_foreground_mobject(kets)
+
+        self.kets = kets
+
+    def show_vector_sum(self):
+        h_line = DashedLine(ORIGIN, 2*RIGHT)
+        v_line = DashedLine(ORIGIN, 2*UP)
+
+        def generate_update_func(v1, v2):
+            def update_line(line):
+                line.put_start_and_end_on(
+                    *v1.get_start_and_end()
+                )
+                line.shift(v2.get_end())
+            return update_line
+        h_line.update = generate_update_func(self.h_vector, self.v_vector)
+        v_line.update = generate_update_func(self.v_vector, self.h_vector)
+
+        h_ket, v_ket = self.kets
+        for ket in self.kets:
+            ket.generate_target()
+        plus = TexMobject("+")
+        ket_sum = VGroup(h_ket.target, plus, v_ket.target)
+        ket_sum.arrange_submobjects(RIGHT)
+        ket_sum.next_to(3*RIGHT + 2*UP, UP, SMALL_BUFF)
+
+        self.dither(4)
+        self.remove(self.h_oscillating_vector, self.v_oscillating_vector)
+        self.add(self.h_vector, self.v_vector)
+        h_line.update(h_line)
+        v_line.update(v_line)
+        self.play(*it.chain(
+            map(MoveToTarget, self.kets),
+            [Write(plus)],
+            map(ShowCreation, [h_line, v_line]),
+        ))
+        blue_black = average_color(BLUE, BLACK)
+        self.play(
+            GrowFromPoint(self.d_vector, ORIGIN),
+            self.h_vector.set_fill, blue_black,
+            self.v_vector.set_fill, blue_black,
+        )
+        self.dither()
+        self.add(
+            self.h_oscillating_vector,
+            self.v_oscillating_vector,
+            self.d_oscillating_vector,
+            ContinualUpdateFromFunc(h_line, h_line.update),
+            ContinualUpdateFromFunc(v_line, v_line.update),
+        )
+        self.dither(4)
+
+        self.ket_sum = VGroup(h_ket, plus, v_ket)
+
+    def write_superposition(self):
+        superposition_words = TextMobject(
+            "``Superposition''", "of",
+            "$|\\!\\rightarrow\\rangle$", "and", 
+            "$|\\!\\uparrow\\rangle$",
+        )
+        superposition_words.scale(0.8)
+        superposition_words.highlight_by_tex("rangle", YELLOW)
+        superposition_words.add_background_rectangle()
+        superposition_words.to_corner(UP+LEFT)
+        ket_sum = self.ket_sum
+        ket_sum.generate_target()
+        ket_sum.target.move_to(superposition_words)
+        ket_sum.target.align_to(ket_sum, UP)
+
+        sum_word = TextMobject("", "Sum")
+        weighted_sum_word = TextMobject("Weighted", "sum")
+        for word in sum_word, weighted_sum_word:
+            word.scale(0.8)
+            word.highlight(GREEN)
+            word.add_background_rectangle()
+            word.move_to(superposition_words.get_part_by_tex("Super"))
+
+        self.play(
+            Write(superposition_words, run_time = 2),
+            MoveToTarget(ket_sum)
+        )
+        self.dither(2)
+        self.play(
+            FadeIn(sum_word),
+            superposition_words.shift, MED_LARGE_BUFF*DOWN,
+            ket_sum.shift, MED_LARGE_BUFF*DOWN,
+        )
+        self.dither()
+        self.play(ReplacementTransform(
+            sum_word, weighted_sum_word
+        ))
+        self.dither(2)
+
+    def add_amplitudes(self):
+        h_ket, plus, r_ket = self.ket_sum
+        for mob in self.ket_sum:
+            mob.generate_target()
+        h_A, v_A = 2, 0.5
+        h_A_mob, v_A_mob = A_mobs = VGroup(*[
+            TexMobject(str(A)).add_background_rectangle()
+            for A in [h_A, v_A]
+        ])
+        A_mobs.scale(0.8)
+        A_mobs.highlight(GREEN)
+        h_A_mob.move_to(h_ket, LEFT)
+        VGroup(h_ket.target, plus.target).next_to(
+            h_A_mob, RIGHT, SMALL_BUFF
+        )
+        v_A_mob.next_to(plus.target, RIGHT, SMALL_BUFF)
+        r_ket.target.next_to(v_A_mob, RIGHT, SMALL_BUFF)
+        A_mobs.shift(0.4*SMALL_BUFF*UP)
+
+        h_ov = self.h_oscillating_vector
+        v_ov = self.v_oscillating_vector
+
+        def generate_update(ov, A, prev_A_vect):
+            def update(vect, alpha):
+                ov.A_vect = interpolate(
+                    np.array(prev_A_vect),
+                    A * np.array(prev_A_vect),
+                    alpha
+                )
+                return vect
+            return update
+
+        self.play(*it.chain(
+            map(MoveToTarget, self.ket_sum),
+            map(Write, A_mobs),
+            [
+                UpdateFromAlphaFunc(
+                    ov.vector,
+                    generate_update(ov, A, np.array(ov.A_vect))
+                )
+                for ov, A in (h_ov, h_A), (v_ov, v_A)
+            ]
+        ))
+        self.dither(4)
+
+        self.A_mobs = A_mobs
+        self.generate_A_update = generate_update
+
+    def add_phase_shift(self):
+        h_ket, plus, v_ket = self.ket_sum
+
+        plus_phi = TexMobject("+", "\\pi/2")
+        plus_phi.highlight_by_tex("pi", self.phi_color)
+        plus_phi.scale(0.8)
+        plus_phi.next_to(v_ket.get_part_by_tex("t"), RIGHT, SMALL_BUFF)
+        v_ket.generate_target()
+        VGroup(*v_ket.target[1][-2:]).next_to(plus_phi, RIGHT, SMALL_BUFF)
+        v_ket.target[0].replace(v_ket.target[1])
 
 
+        h_ov = self.h_oscillating_vector
+        v_ov = self.v_oscillating_vector
 
+        def generate_update(ov, phi_vect, prev_phi_vect):
+            def update(vect, alpha):
+                ov.phi_vect = interpolate(
+                    prev_phi_vect, phi_vect, alpha
+                )
+                return vect
+            return update
 
+        ellipse = Circle()
+        ellipse.stretch_to_fit_height(2)
+        ellipse.stretch_to_fit_width(8)
+        ellipse.highlight(self.phi_color)
 
+        self.add_foreground_mobject(plus_phi)
+        self.play(
+            MoveToTarget(v_ket),
+            Write(plus_phi),
+            UpdateFromAlphaFunc(
+                v_ov.vector,
+                generate_update(
+                    v_ov, 
+                    np.array([0, np.pi/2, 0]), 
+                    np.array(v_ov.phi_vect)
+                )
+            )
+        )
+        self.play(FadeIn(ellipse))
+        self.dither(5)
+        self.play(
+            UpdateFromAlphaFunc(
+                h_ov.vector,
+                self.generate_A_update(
+                    h_ov, 0.25, np.array(h_ov.A_vect)
+                )
+            ),
+            ellipse.stretch, 0.25, 0
+        )
+        self.dither(8)
 
-
-
-
+class CircularlyPolarizedLight(SumOfTwoWaves):
+    CONFIG = {
+        "EMWave_config" : {
+            "phi_vect" : [0, np.pi/2, 0],
+        }
+    }
 
 
 
