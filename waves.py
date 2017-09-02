@@ -1698,9 +1698,28 @@ class CircularlyPolarizedLight(SumOfTwoWaves):
     CONFIG = {
         "EMWave_config" : {
             "phi_vect" : [0, np.pi/2, 0],
-        }
+        },
     }
 
+class AlternateBasis(ShowTipToTailSum):
+    def construct(self):
+        self.force_skipping()
+        self.add_vector()
+        self.add_plane()
+        self.add_vertial_vector()
+        self.add_kets()
+        self.show_vector_sum()
+        self.remove(self.ket_sum)
+        self.reset_amplitude()
+        self.revert_to_original_skipping_status()
+
+        self.rotate_plane()
+
+    def reset_amplitude(self):
+        self.h_oscillating_vector.A_vect = np.array([1, 0, 0])
+
+    def rotate_plane(self):
+        pass
 
 
 
