@@ -83,9 +83,10 @@ class VMobject(Mobject):
         )
         return self
 
-    # def fade(self, darkness = 0.5):
-    #     Mobject.fade(self, darkness)
-    #     return self
+    def fade(self, darkness = 0.5):
+        self.set_stroke(width = (1-darkness)*self.get_stroke_width())
+        self.set_fill(opacity = (1-darkness))
+        return self
 
     def get_fill_color(self):
         try:

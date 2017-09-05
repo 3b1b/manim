@@ -254,7 +254,7 @@ class ApplyFunction(Transform):
         Transform.__init__(
             self, 
             mobject, 
-            function(mobject.copy()),
+            function(mobject.deepcopy()),
             **kwargs
         )
         self.name = "ApplyFunctionTo"+str(mobject)

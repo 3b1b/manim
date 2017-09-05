@@ -147,31 +147,39 @@ class Line(VMobject):
     #     self.generate_points()
 
     def put_start_and_end_on(self, new_start, new_end):
-        target_vect = np.array(new_end) - np.array(new_start)
-        curr_vect = self.get_vector()
-        target_norm = np.linalg.norm(target_vect)
-        ##TODO, what if current length is 0?
-        curr_norm = np.linalg.norm(curr_vect)
-        if target_norm == 0:
-            epsilon = 0.001
-            self.scale(epsilon/curr_norm)
-            self.move_to(new_start)
-            return
-        unit_target = target_vect / target_norm
-        unit_curr = curr_vect / curr_norm
-        normal = np.cross(unit_target, unit_curr)
-        if np.linalg.norm(normal) == 0:
-            if unit_curr[0] == 0 and unit_curr[1] == 0:
-                normal = UP
-            else:
-                normal = OUT
-        angle_diff = np.arccos(
-            np.clip(np.dot(unit_target, unit_curr), -1, 1)
-        )
-        self.scale(target_norm/curr_norm)
-        self.rotate(-angle_diff, normal)
-        self.shift(new_start - self.get_start())
-        return self
+        self.start = new_start
+        self.end = new_end
+        self.generate_points()
+        return
+
+        # target_vect = np.array(new_end) - np.array(new_start)
+        # curr_vect = self.get_vector()
+        # curr_norm = np.linalg.norm(curr_vect)
+        # if curr_norm == 0:
+        #     self.generate_points()
+        #     curr_vect = self.get_vector()
+        #     curr_norm = np.linalg.norm(curr_vect)
+        # target_norm = np.linalg.norm(target_vect)
+        # if target_norm == 0:
+        #     epsilon = 0.001
+        #     self.scale(epsilon/curr_norm)
+        #     self.move_to(new_start)
+        #     return
+        # unit_target = target_vect / target_norm
+        # unit_curr = curr_vect / curr_norm
+        # normal = np.cross(unit_target, unit_curr)
+        # if np.linalg.norm(normal) == 0:
+        #     if unit_curr[0] == 0 and unit_curr[1] == 0:
+        #         normal = UP
+        #     else:
+        #         normal = OUT
+        # angle_diff = np.arccos(
+        #     np.clip(np.dot(unit_target, unit_curr), -1, 1)
+        # )
+        # self.scale(target_norm/curr_norm)
+        # self.rotate(-angle_diff, normal)
+        # self.shift(new_start - self.get_start())
+        # return self
 
 class DashedLine(Line):
     CONFIG = {

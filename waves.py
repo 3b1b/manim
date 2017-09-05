@@ -381,7 +381,7 @@ class DirectionOfPolarizationScene(FilterScene):
                 )
             )
             for pol_filter in filters:
-                filter_x = pol_filter.get_center()[0]
+                filter_x = pol_filter.arrow.get_center()[0]
                 for vect_group, angle in zip(vect_groups, [0, -np.pi/2]):
                     proj_vect = rotate_vector(
                         OUT, pol_filter.filter_angle + angle, RIGHT,

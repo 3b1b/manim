@@ -19,7 +19,7 @@ class Camera(object):
         "background_color" : BLACK,
         #Points in vectorized mobjects with norm greater
         #than this value will be rescaled.
-        "max_allowable_norm" : 5*SPACE_WIDTH,
+        "max_allowable_norm" : 2*SPACE_WIDTH,
     }
 
     def __init__(self, background = None, **kwargs):
