@@ -2,6 +2,7 @@
 from mobject.vectorized_mobject import VMobject, VGroup, VectorizedPoint
 from mobject.tex_mobject import TexMobject
 from animation import Animation
+from animation.continual_animation import ContinualAnimation
 from scene import Scene
 from helpers import *
 
@@ -84,7 +85,17 @@ class ChangingDecimal(Animation):
         elif self.tracked_mobject is not None:
             self.decimal_number.move_to(self.tracked_mobject)
 
+class ContinualChangingDecimal(ContinualAnimation):
+    def __init__(self, decimal_number, number_update_func, **kwargs):
+        self.anim = ChangingDecimal(decimal_number, number_update_func, **kwargs)
+        ContinualAnimation.__init__(self, decimal_number, **kwargs)
 
+    def update_mobject(self, dt):
+        self.anim.update(self.internal_time)
+        
+
+
+        
 
 
 

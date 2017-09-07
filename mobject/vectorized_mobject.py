@@ -84,8 +84,15 @@ class VMobject(Mobject):
         return self
 
     def fade(self, darkness = 0.5):
-        self.set_stroke(width = (1-darkness)*self.get_stroke_width())
-        self.set_fill(opacity = (1-darkness))
+        for submob in self.submobject_family():
+            submob.set_stroke(
+                width = (1-darkness)*submob.get_stroke_width(),
+                family = False
+            )
+            submob.set_fill(
+                opacity = (1-darkness),
+                family = False
+            )
         return self
 
     def get_fill_color(self):

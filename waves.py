@@ -28,6 +28,7 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
+
 E_COLOR = BLUE
 M_COLOR = YELLOW
 
@@ -320,7 +321,9 @@ class FilterScene(ThreeDScene):
         ])
         self.pol_filters.rotate(np.pi/2, RIGHT)
         self.pol_filters.rotate(-np.pi/2, OUT)
-        self.pol_filters.shift(DOWN+OUT)
+        pol_filter_shift = np.array(self.EMWave_config["start_point"])
+        pol_filter_shift[0] = 0
+        self.pol_filters.shift(pol_filter_shift)
         for x, pf in zip(self.filter_x_coordinates, self.pol_filters):
             pf.shift(x*RIGHT)
         self.add(self.pol_filters)
@@ -367,37 +370,78 @@ class DirectionOfPolarizationScene(FilterScene):
             *added_anims
         )
 
+    def setup_rectangles(self):
+        rect1 = Rectangle(
+            height = 2*self.em_wave.amplitude,
+            width = SPACE_WIDTH + 0.25,
+            stroke_color = BLUE,
+            fill_color = BLUE,
+            fill_opacity = 0.2,
+        )
+        rect1.rotate(np.pi/2, RIGHT)
+        pf_copy = self.pol_filter.deepcopy()
+        pf_copy.remove(pf_copy.arrow)
+        center = pf_copy.get_center()
+        rect1.move_to(center, RIGHT)
+        rect2 = rect1.copy()
+        rect2.move_to(center, LEFT)
+
+        self.rectangles = VGroup(rect1, rect2)
+
     def continual_update(self, *args, **kwargs):
         reference_angle = self.reference_line.get_angle()
         self.em_wave.rotation = reference_angle
         FilterScene.continual_update(self, *args, **kwargs)
-        vect_groups = [self.em_wave.E_vects, self.em_wave.M_vects]
         if self.apply_filter:
-            filters = sorted(
-                self.pol_filters,
-                lambda pf1, pf2 : cmp(
-                    pf1.get_center()[0], 
-                    pf2.get_center()[0],
-                )
-            )
-            for pol_filter in filters:
-                filter_x = pol_filter.arrow.get_center()[0]
-                for vect_group, angle in zip(vect_groups, [0, -np.pi/2]):
-                    proj_vect = rotate_vector(
-                        OUT, pol_filter.filter_angle + angle, RIGHT,
-                    )
-                    proj_matrix = np.array([RIGHT] + [
-                        proj_vect*np.dot(proj_vect, basis)
-                        for basis in UP, OUT
-                    ]).T
-                    for vect in vect_group:
-                        start, end = vect.get_start_and_end()
-                        if start[0] > filter_x:
-                            vect.apply_matrix(proj_matrix)
-                            vect.shift(start - vect.get_start())
-                            vect.set_tip_points(vect.tip)
-                            vect.set_rectangular_stem_points()
+            self.apply_filters()
+        self.update_rectangles()
 
+    def apply_filters(self):
+        vect_groups = [self.em_wave.E_vects, self.em_wave.M_vects]
+        filters = sorted(
+            self.pol_filters,
+            lambda pf1, pf2 : cmp(
+                pf1.get_center()[0], 
+                pf2.get_center()[0],
+            )
+        )
+        for pol_filter in filters:
+            filter_x = pol_filter.arrow.get_center()[0]
+            for vect_group, angle in zip(vect_groups, [0, -np.pi/2]):
+                proj_vect = rotate_vector(
+                    OUT, pol_filter.filter_angle + angle, RIGHT,
+                )
+                proj_matrix = np.array([RIGHT] + [
+                    proj_vect*np.dot(proj_vect, basis)
+                    for basis in UP, OUT
+                ]).T
+                for vect in vect_group:
+                    start, end = vect.get_start_and_end()
+                    if start[0] > filter_x:
+                        vect.apply_matrix(proj_matrix)
+                        vect.shift(start - vect.get_start())
+                        vect.set_tip_points(vect.tip)
+                        vect.set_rectangular_stem_points()
+
+    def update_rectangles(self):
+        if self.rectangles not in self.mobjects:
+            return
+
+        r1, r2 = self.rectangles
+
+        target_angle = self.reference_line.get_angle()
+        anchors = r1.get_anchors()
+        vect = anchors[0] - anchors[3]
+        curr_angle = angle_of_vector([vect[2], -vect[1]])
+        r1.rotate_in_place(target_angle - curr_angle, RIGHT)
+
+        epsilon = 0.001
+        curr_depth = max(r2.get_depth(), epsilon)
+        target_depth = max(
+            2*self.em_wave.amplitude*abs(np.cos(target_angle)),
+            epsilon
+        )
+        r2.stretch_in_place(target_depth/curr_depth, 2)
 
 ################
 
@@ -789,7 +833,6 @@ class CurlRelationBetweenFields(ThreeDScene):
         )
         self.dither(3)
 
-
 class WriteCurlEquations(Scene):
     def construct(self):
         eq1 = TexMobject(
@@ -926,6 +969,8 @@ class DirectWaveOutOfScreen(IntroduceEMWave):
 
     def construct(self):
         self.move_into_position()
+        self.fade_M_vects()
+        self.fade_all_but_last_E_vects()
 
     def move_into_position(self):
         self.dither(2)
@@ -945,10 +990,14 @@ class DirectWaveOutOfScreen(IntroduceEMWave):
             added_anims = [faded_vectors.set_fill, None, 0.05],
             run_time = 2,
         )
+
+    def fade_M_vects(self):
         self.play(
             self.em_wave.M_vects.set_fill, None, 0
         )
         self.dither(2)
+
+    def fade_all_but_last_E_vects(self):
         self.play(faded_vectors.set_fill, None, 0)
         self.dither(4)
 
@@ -995,6 +1044,7 @@ class ShowVectorEquation(Scene):
             Animation(self.vector)
         )
         self.dither(2)
+        self.xy_plane = xy_plane
 
     def write_horizontally_polarized(self):
         words = TextMobject(
@@ -1507,15 +1557,12 @@ class ShowTipToTailSum(ShowVectorEquation):
         h_line = DashedLine(ORIGIN, 2*RIGHT)
         v_line = DashedLine(ORIGIN, 2*UP)
 
-        def generate_update_func(v1, v2):
-            def update_line(line):
-                line.put_start_and_end_on(
-                    *v1.get_start_and_end()
-                )
-                line.shift(v2.get_end())
-            return update_line
-        h_line.update = generate_update_func(self.h_vector, self.v_vector)
-        v_line.update = generate_update_func(self.v_vector, self.h_vector)
+        h_line.update = self.generate_dashed_line_update(
+            self.h_vector, self.v_vector
+        )
+        v_line.update = self.generate_dashed_line_update(
+            self.v_vector, self.h_vector
+        )
 
         h_ket, v_ket = self.kets
         for ket in self.kets:
@@ -1614,15 +1661,6 @@ class ShowTipToTailSum(ShowVectorEquation):
         h_ov = self.h_oscillating_vector
         v_ov = self.v_oscillating_vector
 
-        def generate_update(ov, A, prev_A_vect):
-            def update(vect, alpha):
-                ov.A_vect = interpolate(
-                    np.array(prev_A_vect),
-                    A * np.array(prev_A_vect),
-                    alpha
-                )
-                return vect
-            return update
 
         self.play(*it.chain(
             map(MoveToTarget, self.ket_sum),
@@ -1630,7 +1668,11 @@ class ShowTipToTailSum(ShowVectorEquation):
             [
                 UpdateFromAlphaFunc(
                     ov.vector,
-                    generate_update(ov, A, np.array(ov.A_vect))
+                    self.generate_A_update(
+                        ov, 
+                        A*np.array(ov.A_vect), 
+                        np.array(ov.A_vect)
+                    )
                 )
                 for ov, A in (h_ov, h_A), (v_ov, v_A)
             ]
@@ -1638,7 +1680,6 @@ class ShowTipToTailSum(ShowVectorEquation):
         self.dither(4)
 
         self.A_mobs = A_mobs
-        self.generate_A_update = generate_update
 
     def add_phase_shift(self):
         h_ket, plus, v_ket = self.ket_sum
@@ -1655,18 +1696,14 @@ class ShowTipToTailSum(ShowVectorEquation):
         h_ov = self.h_oscillating_vector
         v_ov = self.v_oscillating_vector
 
-        def generate_update(ov, phi_vect, prev_phi_vect):
-            def update(vect, alpha):
-                ov.phi_vect = interpolate(
-                    prev_phi_vect, phi_vect, alpha
-                )
-                return vect
-            return update
-
         ellipse = Circle()
         ellipse.stretch_to_fit_height(2)
         ellipse.stretch_to_fit_width(8)
         ellipse.highlight(self.phi_color)
+
+        h_A_mob, v_A_mob = self.A_mobs
+        new_h_A_mob = v_A_mob.copy()
+        new_h_A_mob.move_to(h_A_mob, RIGHT)
 
         self.add_foreground_mobject(plus_phi)
         self.play(
@@ -1674,7 +1711,7 @@ class ShowTipToTailSum(ShowVectorEquation):
             Write(plus_phi),
             UpdateFromAlphaFunc(
                 v_ov.vector,
-                generate_update(
+                self.generate_phi_update(
                     v_ov, 
                     np.array([0, np.pi/2, 0]), 
                     np.array(v_ov.phi_vect)
@@ -1687,12 +1724,43 @@ class ShowTipToTailSum(ShowVectorEquation):
             UpdateFromAlphaFunc(
                 h_ov.vector,
                 self.generate_A_update(
-                    h_ov, 0.25, np.array(h_ov.A_vect)
+                    h_ov, 
+                    0.25*np.array(h_ov.A_vect), 
+                    np.array(h_ov.A_vect),
                 )
             ),
-            ellipse.stretch, 0.25, 0
+            ellipse.stretch, 0.25, 0,
+            Transform(h_A_mob, new_h_A_mob)
         )
         self.dither(8)
+
+    #####
+
+    def generate_A_update(self, ov, A_vect, prev_A_vect):
+        def update(vect, alpha):
+            ov.A_vect = interpolate(
+                np.array(prev_A_vect),
+                A_vect,
+                alpha
+            )
+            return vect
+        return update
+
+    def generate_phi_update(self, ov, phi_vect, prev_phi_vect):
+        def update(vect, alpha):
+            ov.phi_vect = interpolate(
+                prev_phi_vect, phi_vect, alpha
+            )
+            return vect
+        return update
+
+    def generate_dashed_line_update(self, v1, v2):
+        def update_line(line):
+            line.put_start_and_end_on_with_projection(
+                *v1.get_start_and_end()
+            )
+            line.shift(v2.get_end() - line.get_start())
+        return update_line
 
 class CircularlyPolarizedLight(SumOfTwoWaves):
     CONFIG = {
@@ -1709,17 +1777,785 @@ class AlternateBasis(ShowTipToTailSum):
         self.add_vertial_vector()
         self.add_kets()
         self.show_vector_sum()
-        self.remove(self.ket_sum)
+        self.remove(self.ket_sum, self.kets)
         self.reset_amplitude()
         self.revert_to_original_skipping_status()
 
+        self.add_superposition_text()
         self.rotate_plane()
+        self.show_vertically_polarized()
 
     def reset_amplitude(self):
         self.h_oscillating_vector.A_vect = np.array([1, 0, 0])
 
+    def add_superposition_text(self):
+        self.hv_superposition, self.da_superposition = superpositions = [
+            TexMobject(
+                "\\vec{\\textbf{E}}", "=",
+                "(\\dots)",
+                "|\\!\\%sarrow\\rangle"%s1,
+                "+",
+                "(\\dots)",
+                "|\\!\\%sarrow\\rangle"%s2,
+            )
+            for s1, s2 in ("right", "up"), ("ne", "nw")
+        ]
+        for superposition in superpositions:
+            superposition.highlight_by_tex("rangle", YELLOW)
+            superposition.highlight_by_tex("E", E_COLOR)
+            superposition.add_background_rectangle(opacity = 1)
+            superposition.to_edge(UP)
+        self.add(self.hv_superposition)
+
     def rotate_plane(self):
+        new_plane = NumberPlane(
+            x_unit_size = 2,
+            y_unit_size = 2,
+            y_radius = SPACE_WIDTH,
+            secondary_line_ratio = 0,
+        )
+        new_plane.add_coordinates()
+        new_plane.save_state()
+        new_plane.fade(1)
+
+        d = (RIGHT + UP)/np.sqrt(2)
+        a = (LEFT + UP)/np.sqrt(2)
+
+        self.dither(4)
+        self.play(
+            self.xy_plane.fade, 0.5,
+            self.xy_plane.coordinate_labels.fade, 1,
+            new_plane.restore,
+            new_plane.rotate, np.pi/4,
+            UpdateFromAlphaFunc(
+                self.h_vector,
+                self.generate_A_update(
+                    self.h_oscillating_vector,
+                    2*d*np.dot(0.5*RIGHT + UP, d),
+                    np.array(self.h_oscillating_vector.A_vect)
+                )
+            ),
+            UpdateFromAlphaFunc(
+                self.v_vector,
+                self.generate_A_update(
+                    self.v_oscillating_vector,
+                    2*a*np.dot(0.5*RIGHT + UP, a),
+                    np.array(self.v_oscillating_vector.A_vect)
+                )
+            ),
+            Transform(self.hv_superposition, self.da_superposition),
+            run_time = 2,
+        )
+        self.dither(4)
+
+    def show_vertically_polarized(self):
+        self.play(
+            UpdateFromAlphaFunc(
+                self.h_vector,
+                self.generate_A_update(
+                    self.h_oscillating_vector,
+                    np.array([0.7, 0.7, 0]),
+                    np.array(self.h_oscillating_vector.A_vect)
+                )
+            ),
+            UpdateFromAlphaFunc(
+                self.v_vector,
+                self.generate_A_update(
+                    self.v_oscillating_vector,
+                    np.array([-0.7, 0.7, 0]),
+                    np.array(self.v_oscillating_vector.A_vect)
+                )
+            ),
+        )
+        self.dither(8)
+
+class WriteBasis(Scene):
+    def construct(self):
+        words = TextMobject("Choice of ``basis''")
+        words.scale_to_fit_width(2*SPACE_WIDTH-1)
+        words.to_edge(DOWN)
+        self.play(Write(words))
+        self.dither()
+
+class ShowPolarizingFilter(DirectionOfPolarizationScene):
+    CONFIG = {
+        "EMWave_config" : {
+            "start_point" : SPACE_WIDTH*LEFT,
+        },
+        "apply_filter" : True,
+    }
+    def construct(self):
+        self.setup_rectangles()
+        self.fade_M_vects()
+        self.axes.fade(0.5)
+
+        self.initial_rotation()
+        self.mention_energy_absorption()
+        self.write_as_superposition()
+        self.diagonal_filter()
+
+    def setup_rectangles(self):
+        DirectionOfPolarizationScene.setup_rectangles(self)
+        self.rectangles[-1].fade(1)
+
+    def fade_M_vects(self):
+        self.em_wave.M_vects.set_fill(opacity = 0)
+
+    def initial_rotation(self):
+        self.dither()
+        self.play(FadeIn(self.rectangles))
+        self.dither()
+        self.change_polarization_direction(np.pi/2, run_time = 3)
+        self.move_camera(phi = 0.9*np.pi/2, theta = -0.05*np.pi)
+
+    def mention_energy_absorption(self):
+        words = TextMobject("Absorbs horizontal \\\\ energy")
+        words.highlight(RED)
+        words.next_to(ORIGIN, UP+RIGHT, MED_LARGE_BUFF)
+        words.rotate(np.pi/2, RIGHT)
+        words.rotate(np.pi/2, OUT)
+
+        lines = VGroup(*[
+            Line(
+                np.sin(a)*RIGHT + np.cos(a)*UP,
+                np.sin(a)*LEFT + np.cos(a)*UP,
+                color = RED,
+                stroke_width = 2,
+            )
+            for a in np.linspace(0, np.pi, 15)
+        ])
+        lines.rotate(np.pi/2, RIGHT)
+        lines.rotate(np.pi/2, OUT)
+
+        self.play(
+            Write(words, run_time = 2),
+            *map(GrowFromCenter, lines)
+        )
+        self.play(FadeOut(lines))
+        self.play(FadeOut(words))
+        self.dither()
+
+    def write_as_superposition(self):
+        superposition, continual_updates = self.get_superposition_tex(0, "right", "up")
+        rect = superposition.rect
+
+        self.play(Write(superposition, run_time = 2))
+        self.add(*continual_updates)
+        for angle in np.pi/4, -np.pi/6:
+            self.change_polarization_direction(angle)
+            self.dither()
+
+        self.move_camera(
+            theta = -0.6*np.pi,
+            added_anims = [
+                Rotate(superposition, -0.6*np.pi, axis = OUT)
+            ]
+        )
+        rect.set_stroke(YELLOW, 3)
+        self.play(ShowCreation(rect))
+        arrow = Arrow(
+            rect.get_nadir(), 3*RIGHT + 0.5*OUT,
+            normal_vector = DOWN
+        )
+        self.play(ShowCreation(arrow))
+
+        for angle in np.pi/3, -np.pi/3, np.pi/6:
+            self.change_polarization_direction(angle)
+            self.dither(2)
+        self.play(
+            FadeOut(superposition),
+            FadeOut(arrow),
+        )
+        self.move_camera(theta = -0.1*np.pi)
+
+    def diagonal_filter(self):
+        superposition, continual_updates = self.get_superposition_tex(-np.pi/4, "nw", "ne")
+
+        def update_filter_angle(pf, alpha):
+            pf.filter_angle = interpolate(0, -np.pi/4, alpha)
+
+        self.play(
+            Rotate(self.pol_filter, np.pi/4, axis = LEFT),
+            UpdateFromAlphaFunc(self.pol_filter, update_filter_angle),
+            Animation(self.em_wave.mobject)
+        )
+        superposition.rect.set_stroke(YELLOW, 2)
+        self.play(Write(superposition, run_time = 2))
+        self.add(*continual_updates)
+        for angle in np.pi/4, -np.pi/3, -np.pi/6:
+            self.change_polarization_direction(np.pi/4)
+            self.dither(2)
+
+    #######
+
+    def get_superposition_tex(self, angle, s1, s2):
+        superposition = TexMobject(
+            "0.00", "\\cos(", "2\\pi", "f", ")",
+            "|\\! \\%sarrow \\rangle"%s1,
+            "+",
+            "1.00", "\\cos(", "2\\pi", "f", ")",
+            "|\\! \\%sarrow \\rangle"%s2,
+        )
+
+        A_x = DecimalNumber(0)
+        A_y = DecimalNumber(1)
+        A_x.move_to(superposition[0])
+        A_y.move_to(superposition[7])
+        superposition.submobjects[0] = A_x
+        superposition.submobjects[7] = A_y
+        VGroup(A_x, A_y).highlight(GREEN)
+        superposition.highlight_by_tex("f", RED)
+        superposition.highlight_by_tex("rangle", YELLOW)
+        plus = superposition.get_part_by_tex("+")
+        plus.add_to_back(BackgroundRectangle(plus))
+
+        v_part = VGroup(*superposition[7:])
+        rect = SurroundingRectangle(v_part)
+        rect.fade(1)
+        superposition.rect = rect
+        superposition.add(rect)
+
+        superposition.shift(3*UP + SMALL_BUFF*LEFT)
+        superposition.rotate(np.pi/2, RIGHT)
+        superposition.rotate(np.pi/2, OUT)
+
+        def generate_decimal_update(trig_func):
+            def update_decimal(decimal):
+                new_decimal = DecimalNumber(abs(trig_func(
+                    self.reference_line.get_angle() - angle
+                )))
+                new_decimal.rotate(np.pi/2, RIGHT)
+                new_decimal.rotate(np.pi/2, OUT)
+                new_decimal.rotate(self.camera.get_theta(), OUT)
+                new_decimal.scale_to_fit_depth(decimal.get_depth())
+                new_decimal.move_to(decimal, UP)
+                new_decimal.highlight(decimal.get_color())
+                decimal.align_data(new_decimal)
+                families = [
+                    mob.family_members_with_points()
+                    for mob in decimal, new_decimal
+                ]
+                for sm1, sm2 in zip(*families):
+                    sm1.interpolate(sm1, sm2, 1)
+                return decimal
+            return update_decimal
+
+        continual_updates = [
+            ContinualUpdateFromFunc(
+                A_x, generate_decimal_update(np.sin),
+            ),
+            ContinualUpdateFromFunc(
+                A_y, generate_decimal_update(np.cos),
+            ),
+        ]
+
+        return superposition, continual_updates
+
+class EnergyOfWavesWavePortion(DirectWaveOutOfScreen):
+    CONFIG = {
+        "EMWave_config" : {
+            "A_vect" : [0, 1, 1],
+            "amplitude" : 4,
+            "start_point" : SPACE_WIDTH*LEFT + 2*DOWN,
+        }
+    }
+    def construct(self):
+        self.grow_arrows()
+        self.move_into_position()
+        self.fade_M_vects()
+        self.label_A()
+        self.add_components()
+        self.scale_up_and_down()
+
+    def grow_arrows(self):
+        for ov in self.em_wave.continual_animations:
+            ov.vector.rectangular_stem_width = 0.1
+            ov.vector.tip_length = 0.5
+
+    def label_A(self):
+        brace = Brace(Line(ORIGIN, 4*RIGHT))
+        brace.rotate(np.pi/4, OUT)
+        brace.A = brace.get_tex("A", buff = MED_SMALL_BUFF)
+        brace.A.scale_in_place(2)
+        brace.A.highlight(GREEN)
+        brace_group = VGroup(brace, brace.A)
+        self.position_brace_group(brace_group)
+        self.play(Write(brace_group, run_time = 1))
+        self.dither(4)
+
+        self.brace = brace
+
+    def add_components(self):
+        h_wave = self.em_wave.copy()
+        h_wave.A_vect = [0, 1, 0]
+        v_wave = self.em_wave.copy()
+        v_wave.A_vect = [0, 0, 1]
+        length = 4/np.sqrt(2)
+        for wave in h_wave, v_wave:
+            for ov in wave.continual_animations:
+                ov.A_vect = length*np.array(wave.A_vect)
+
+        h_brace = Brace(Line(ORIGIN, length*RIGHT))
+        v_brace = Brace(Line(ORIGIN, length*UP), LEFT)
+        for brace, c in (h_brace, "x"), (v_brace, "y"):
+            brace.A = brace.get_tex("A_%s"%c, buff = MED_LARGE_BUFF)
+            brace.A.scale_in_place(2)
+            brace.A.highlight(GREEN)
+        brace_group = VGroup(h_brace, h_brace.A, v_brace, v_brace.A)
+        self.position_brace_group(brace_group)
+
+        rhs = TexMobject("= \\sqrt{A_x^2 + A_y^2}")
+        rhs.scale(2)
+        for i in 3, 5, 7, 9:
+            rhs[i].highlight(GREEN)
+        rhs.rotate(np.pi/2, RIGHT)
+        rhs.rotate(np.pi/2, OUT)
+
+        period = 1./self.em_wave.frequency
+        self.add(h_wave, v_wave)
+        self.play(
+            FadeIn(h_wave.mobject),
+            FadeIn(v_wave.mobject),
+            self.brace.A.move_to, self.brace,
+            self.brace.A.shift, SMALL_BUFF*(2*UP+IN),
+            ReplacementTransform(self.brace, h_brace),
+            Write(h_brace.A)
+        )
+        self.dither(2)
+
+        self.play(
+            ReplacementTransform(h_brace.copy(), v_brace),
+            Write(v_brace.A)
+        )
+        self.dither(period - 1)
+        rhs.next_to(self.brace.A, UP, SMALL_BUFF)
+        self.play(Write(rhs))
+        self.dither(period)
+
+        self.h_brace = h_brace
+        self.v_brace = v_brace
+        self.h_wave = h_wave
+        self.v_wave = v_wave
+
+    def scale_up_and_down(self):
+        for scale_factor in 1.25, 0.4, 1.5, 0.5:
+            self.scale_wave(scale_factor)
+            self.dither()
+
+    ######
+
+    def position_brace_group(self, brace_group):
+        brace_group.rotate(np.pi/2, RIGHT)
+        brace_group.rotate(np.pi/2, OUT)
+        brace_group.shift(2*DOWN)
+
+    def scale_wave(self, factor):
+        def generate_vect_update(ov):
+            prev_A = np.array(ov.A_vect)
+            new_A = factor*prev_A
+            def update(vect, alpha):
+                ov.A_vect = interpolate(
+                    prev_A, new_A, alpha
+                )
+                return vect
+            return update
+        h_brace = self.h_brace
+        v_brace = self.v_brace
+
+        h_brace.generate_target()
+        h_brace.target.stretch_about_point(
+            factor, 1, h_brace.get_bottom()
+        )
+        v_brace.generate_target()
+        v_brace.target.stretch_about_point(
+            factor, 2, v_brace.get_nadir()
+        )
+        self.play(
+            MoveToTarget(h_brace),
+            MoveToTarget(v_brace),
+            *[
+                UpdateFromAlphaFunc(ov.vector, generate_vect_update(ov))
+                for ov in it.chain(
+                    self.em_wave.continual_animations,
+                    self.h_wave.continual_animations,
+                    self.v_wave.continual_animations,
+                )
+            ]
+        )
+
+class EnergyOfWavesTeacherPortion(TeacherStudentsScene):
+    def construct(self):
+        self.show_energy_equation()
+        self.show_both_ways_of_thinking_about_it()
+
+    def show_energy_equation(self):
+        dot = Dot(self.teacher.get_top() + 2*(UP+LEFT))
+        dot.fade(1)
+        self.dot = dot
+
+        energy = TexMobject(
+            "\\frac{\\text{Energy}}{\\text{Volume}}",
+            "=", 
+            "\\epsilon_0", "A", "^2"
+        )
+        energy.highlight_by_tex("A", GREEN)
+        energy.to_corner(UP+LEFT)
+
+        component_energy = TexMobject(
+            "=", "\\epsilon_0", "A_x", "^2", 
+            "+", "\\epsilon_0", "A_y", "^2", 
+        )
+        for i in 2, 6:
+            component_energy[i][0].highlight(GREEN)
+            component_energy[i+1].highlight(GREEN)
+        component_energy.next_to(energy[1], DOWN, MED_LARGE_BUFF, LEFT)
+
+        self.play(
+            Animation(dot),
+            self.teacher.change, "raise_right_hand", dot,
+        )
+        self.change_student_modes(
+            *["pondering"]*3,
+            look_at_arg = dot
+        )
+        self.dither(2)
+        self.play(Write(energy))
+        self.play(self.teacher.change, "happy")
+        self.dither(3)
+        self.play(
+            ReplacementTransform(
+                VGroup(*energy[-4:]).copy(),
+                VGroup(*component_energy[:4])
+            ),
+            ReplacementTransform(
+                VGroup(*energy[-4:]).copy(),
+                VGroup(*component_energy[4:])
+            )
+        )
+        self.change_student_modes(*["happy"]*3, look_at_arg = energy)
+        self.dither()
+
+    def show_both_ways_of_thinking_about_it(self):
+        s1, s2 = self.get_students()[:2]
+        b1, b2 = [
+            ThoughtBubble(direction = v).scale(0.5)
+            for v in LEFT, RIGHT
+        ]
+        b1.pin_to(s1)
+        b2.pin_to(s2)
+
+        b1.write("Add \\\\ components")
+        b2.write("Pythagorean \\\\ theorem")
+
+        for b, s in (b1, s1), (b2, s2):
+            self.play(
+                ShowCreation(b),
+                Write(b.content, run_time = 2),
+                s.change, "thinking"
+            )
+            self.dither(2)
+        self.change_student_modes(
+            *["plain"]*3,
+            look_at_arg = self.dot,
+            added_anims = [
+                self.teacher.change, "raise_right_hand", self.dot
+            ]
+
+        )
+        self.play(self.teacher.look_at, self.dot)
+        self.dither(5)
+
+class DescribePhoton(ThreeDScene):
+    def setup(self):
+        self.axes = ThreeDAxes()
+        self.add(self.axes)
+
+        self.set_camera_position(phi = 0.8*np.pi/2, theta = -np.pi/4)
+        em_wave = EMWave(
+            start_point = SPACE_WIDTH*LEFT,
+            A_vect = [0, 1, 1],
+            wave_number = 0,
+            amplitude = 3,
+        )
+        for ov in em_wave.continual_animations:
+            ov.vector.normal_vector = RIGHT
+            ov.vector.set_fill(opacity = 0.7)
+        for M_vect in em_wave.M_vects:
+            M_vect.set_fill(opacity = 0)
+        em_wave.update(0)
+        photon = WavePacket(
+            em_wave = em_wave,
+            run_time = 2,
+        )
+
+        self.photon = photon
+        self.em_wave = em_wave
+
+    def construct(self):
+        self.force_skipping()
+
+        self.add_ket_equation()
+        self.shoot_a_few_photons()
+        self.freeze_photon()
+        self.reposition_to_face_photon_head_on()
+        self.show_components()
+        self.change_basis()
+        self.show_amplitude_and_phase()
+        self.write_different_meaning()
+        self.write_components()
+        self.describe_via_energy()
+        self.components_not_possible_in_isolation()
+        self.ask_what_they_mean()
+
+    def add_ket_equation(self):
+        equation = TexMobject(
+            "|\\!\\psi\\rangle", 
+            "=",
+            "\\alpha", "|\\!\\rightarrow \\rangle", "+",
+            "\\beta", "|\\!\\uparrow \\rangle",
+        )
+        equation.to_edge(UP).shift(MED_SMALL_BUFF*RIGHT)
+        equation.highlight_by_tex("psi", E_COLOR)
+        equation.highlight_by_tex("alpha", GREEN)
+        equation.highlight_by_tex("beta", RED)
+        rect = SurroundingRectangle(equation.get_part_by_tex("psi"))
+        rect.highlight(E_COLOR)
+        words = TextMobject("Polarization\\\\", "state")
+        words.next_to(rect, DOWN)
+        for part in words:
+            bg_rect = BackgroundRectangle(part)
+            bg_rect.stretch_in_place(2, 1)
+            part.add_to_back(bg_rect)
+        equation.rect = rect
+        equation.words = words
+        equation.add_background_rectangle()
+        equation.add(rect, words)
+        VGroup(rect, words).fade(1)
+
+        equation.rotate(np.pi/2, RIGHT)
+        equation.rotate(np.pi/2 + self.camera.get_theta(), OUT)
+
+        self.add(equation)
+        self.equation = equation
+
+    def shoot_a_few_photons(self):
+        for x in range(2):
+            self.play(self.photon)
+
+    def freeze_photon(self):
+        self.play(
+            self.photon,
+            rate_func = lambda x : 0.5*x,
+            run_time = 1
+        )
+        self.add(self.photon.mobject)
+        self.photon.rate_func = lambda x : x
+        self.photon.run_time = 2
+
+    def reposition_to_face_photon_head_on(self):
+        plane = NumberPlane(
+            color = LIGHT_GREY,
+            secondary_color = DARK_GREY,
+            x_unit_size = 2,
+            y_unit_size = 2,
+            y_radius = SPACE_WIDTH,
+        )
+        plane.add_coordinates(x_vals = range(-3, 4), y_vals = [])
+        plane.rotate(np.pi/2, RIGHT)
+        plane.rotate(np.pi/2, OUT)
+
+        self.play(self.em_wave.M_vects.set_fill, None, 0)
+        self.move_camera(
+            phi = np.pi/2, theta = 0,
+            added_anims = [
+                Rotate(self.equation, -self.camera.get_theta())
+            ]
+        )
+        self.play(
+            Write(plane, run_time = 1), 
+            Animation(self.equation)
+        )
+
+        self.xy_plane = plane
+
+    def show_components(self):
+        h_arrow, v_arrow = [
+            Vector(
+                1.38*direction, 
+                color = color,
+                normal_vector = RIGHT,
+            )
+            for color, direction in (GREEN, UP), (RED, OUT)
+        ]
+        v_arrow.move_to(h_arrow.get_end(), IN)
+        h_part = VGroup(*self.equation[1][2:4]).copy()
+        v_part = VGroup(*self.equation[1][5:7]).copy()
+
+        self.play(
+            self.equation.rect.set_stroke, BLUE, 4,
+            self.equation.words.set_fill, WHITE, 1,
+        )
+        for part, arrow, d in (h_part, h_arrow, IN), (v_part, v_arrow, UP):
+            self.play(
+                part.next_to, arrow.get_center(), d,
+                ShowCreation(arrow)
+            )
+            part.rotate(np.pi/2, DOWN)
+            bg_rect = BackgroundRectangle(part)
+            bg_rect.stretch_in_place(1.3, 0)
+            part.add_to_back(bg_rect)
+            part.rotate(np.pi/2, UP)
+            self.add(part)
+        self.dither()
+
+        self.h_part_tex = h_part
+        self.h_arrow = h_arrow
+        self.v_part_tex = v_part
+        self.v_arrow = v_arrow
+
+    def show_amplitude_and_phase(self):
+        alpha = self.h_part_tex[1]
+        new_alpha = alpha.copy().shift(IN)
+        rhs = TexMobject(
+            "=", "A_x", "e", 
+            "^{2\\pi", "f", "t", "+", "\\phi_x }"
+        )
+        A_rect = SurroundingRectangle(rhs.get_part_by_tex("A_x"), buff = 0.5*SMALL_BUFF)
+        A_word = TextMobject("Amplitude")
+        A_word.add_background_rectangle()
+        A_word.next_to(A_rect, DOWN, aligned_edge = LEFT)
+        A_group = VGroup(A_rect, A_word)
+        A_group.highlight(YELLOW)
+        phase_rect = SurroundingRectangle(VGroup(*rhs[3:]), buff = 0.5*SMALL_BUFF)
+        phase_word = TextMobject("Phase")
+        phase_word.add_background_rectangle()
+        phase_word.next_to(phase_rect, UP)
+        phase_group = VGroup(phase_word, phase_rect)
+        phase_group.highlight(MAROON_B)
+        rhs.add_background_rectangle()
+
+        group = VGroup(rhs, A_group, phase_group)
+        group.rotate(np.pi/2, RIGHT)
+        group.rotate(np.pi/2, OUT)
+        group.next_to(new_alpha, UP, SMALL_BUFF)
+
+        self.play(
+            ReplacementTransform(alpha.copy(), new_alpha),
+            FadeIn(rhs)
+        )
+        for word, rect in A_group, phase_group:
+            self.play(
+                ShowCreation(rect),
+                Write(word, run_time = 1)
+            )
+        self.dither()
+        self.play(*map(FadeOut, [new_alpha, group]))
+
+    def change_basis(self):
+        superposition = VGroup(*self.equation[1][2:])
+        plane = self.xy_plane
+        h_arrow = self.h_arrow
+        v_arrow = self.v_arrow
+        h_part = self.h_part_tex
+        v_part = self.v_part_tex
+        axes = self.axes
+        movers = [
+            plane, axes,
+            h_arrow, v_arrow, 
+            h_part, v_part, 
+            self.equation,
+            superposition, 
+        ]
+        for mob in movers:
+            mob.save_state()
+
+        superposition.target = TexMobject(
+            "\\gamma", "|\\! \\nearrow \\rangle", "+",
+            "\\delta", "|\\! \\nwarrow \\rangle",
+        )
+        superposition.target.highlight_by_tex("gamma", TEAL_D)
+        superposition.target.highlight_by_tex("delta", MAROON)
+        for part in superposition.target.get_parts_by_tex("rangle"):
+            part[1].rotate_in_place(-np.pi/12)
+        superposition.target.rotate(np.pi/2, RIGHT)
+        superposition.target.rotate(np.pi/2, OUT)
+        superposition.target.move_to(superposition)
+
+        for mob in plane, axes:
+            mob.generate_target()
+            mob.target.rotate(np.pi/6, RIGHT)
+
+        A = 1.9
+        h_arrow.target = Vector(
+            A*np.cos(np.pi/12)*rotate_vector(UP, np.pi/6, RIGHT),
+            normal_vector = RIGHT,
+            color = TEAL
+        )
+        v_arrow.target = Vector(
+            A*np.sin(np.pi/12)*rotate_vector(OUT, np.pi/6, RIGHT),
+            normal_vector = RIGHT,
+            color = MAROON
+        )
+        v_arrow.target.shift(h_arrow.target.get_vector())
+
+        h_part.target = VGroup(*superposition.target[:2]).copy()
+        v_part.target = VGroup(*superposition.target[3:]).copy()
+        h_part.target.next_to(
+            h_arrow.target.get_center(), IN+UP, SMALL_BUFF
+        )
+        v_part.target.next_to(
+            v_arrow.target.get_center(), UP, SMALL_BUFF
+        )
+        for part in h_part.target, v_part.target:
+            part.rotate(np.pi/2, DOWN)
+            part.add_to_back(BackgroundRectangle(part))
+            part.rotate(np.pi/2, UP)
+
+        self.equation.generate_target()
+
+        self.revert_to_original_skipping_status()
+        self.play(*map(MoveToTarget, movers))
+        self.dither(2)
+        self.play(*[mob.restore for mob in movers])
+        self.dither()
+
+    def write_different_meaning(self):
         pass
+
+    def write_components(self):
+        pass
+
+    def describe_via_energy(self):
+        pass
+
+    def components_not_possible_in_isolation(self):
+        pass
+
+    def ask_what_they_mean(self):
+        pass
+
+
+class SuperpositionHasDifferentInterpretation(TeacherStudentsScene):
+    def construct(self):
+        pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

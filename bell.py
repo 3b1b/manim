@@ -443,24 +443,6 @@ class BasicsOfPolarization(DirectionOfPolarizationScene):
         self.show_continual_wave()
         self.show_photons()
 
-    def setup_rectangles(self):
-        rect1 = Rectangle(
-            height = 2*self.em_wave.amplitude,
-            width = SPACE_WIDTH + 0.25,
-            stroke_color = BLUE,
-            fill_color = BLUE,
-            fill_opacity = 0.2,
-        )
-        rect1.rotate(np.pi/2, RIGHT)
-        pf_copy = self.pol_filter.deepcopy()
-        pf_copy.remove(pf_copy.arrow)
-        center = pf_copy.get_center()
-        rect1.move_to(center, RIGHT)
-        rect2 = rect1.copy()
-        rect2.move_to(center, LEFT)
-
-        self.rectangles = VGroup(rect1, rect2)
-
     def show_continual_wave(self):
         em_wave = self.em_wave
 
@@ -566,27 +548,6 @@ class BasicsOfPolarization(DirectionOfPolarizationScene):
         )
         for index in 1, 0, 0, 1:
             self.play(*anim_sets[index])
-
-    def continual_update(self, *args, **kwargs):
-        DirectionOfPolarizationScene.continual_update(self, *args, **kwargs)
-        if self.rectangles not in self.mobjects:
-            return
-
-        r1, r2 = self.rectangles
-
-        target_angle = self.reference_line.get_angle()
-        anchors = r1.get_anchors()
-        vect = anchors[0] - anchors[3]
-        curr_angle = angle_of_vector([vect[2], -vect[1]])
-        r1.rotate_in_place(target_angle - curr_angle, RIGHT)
-
-        epsilon = 0.001
-        curr_depth = max(r2.get_depth(), epsilon)
-        target_depth = max(
-            2*self.em_wave.amplitude*np.cos(target_angle),
-            epsilon
-        )
-        r2.stretch_in_place(target_depth/curr_depth, 2)
 
 class AngleToProbabilityChart(Scene):
     def construct(self):
@@ -1749,6 +1710,10 @@ class VennDiagramProofByContradiction(Scene):
         C_copy.set_fill(BLACK, opacity = 1)
 
         self.play(
+            self.in_A_in_B.set_fill, GREEN, 0.5,
+            rate_func = there_and_back,
+        )
+        self.play(
             MoveToTarget(C),
             MoveToTarget(C.label),
             in_C.shift, 0.2*DOWN+0.15*RIGHT,
@@ -1761,7 +1726,6 @@ class VennDiagramProofByContradiction(Scene):
             ShowCreation(arrow),
             Animation(out_of_C),
         )
-        self.dither()
         self.play(ApplyMethod(
             VGroup(self.in_A_in_B_out_C, out_of_C).shift,
             MED_LARGE_BUFF*UP,
@@ -1815,7 +1779,8 @@ class VennDiagramProofByContradiction(Scene):
         terms.to_edge(UP)
         for term, index, group in zip(terms, [-3, -2, -2], photon_groups):
             term.highlight_by_tex("checkmark", "#00ff00")
-            cross = Cross(term[index], color = "#ff0000")
+            cross = Cross(term[index])
+            cross.highlight("#ff0000")
             cross.set_stroke(width = 8)
             term[index].add(cross)
 
@@ -1848,6 +1813,13 @@ class VennDiagramProofByContradiction(Scene):
         cross.highlight("#ff0000")
         cross.set_stroke(width = 8)
 
+        tweaser_group = VGroup(
+            self.in_A_in_B_out_C.copy(),
+            self.in_A_out_B.copy(),
+        )
+        tweaser_group.set_fill(TEAL, 1)
+        tweaser_group.set_stroke(TEAL, 5)
+
         #Fade out B circle
         faders = VGroup(
             B, B.label,
@@ -1856,12 +1828,13 @@ class VennDiagramProofByContradiction(Scene):
             *regions[1:]
         )
         faders.save_state()
-        regions[0].set_stroke(YELLOW, width = 8)
-        regions[0].set_fill(YELLOW, opacity = 0.25)
 
         self.play(faders.fade, 1)
         self.play(Write(terms[0]), run_time = 1)
         self.dither()
+        self.photon_thinks_in_A_out_C()
+        regions[0].set_stroke(YELLOW, width = 8)
+        regions[0].set_fill(YELLOW, opacity = 0.25)
         self.play(
             VGroup(regions[0], all_out_of_C).shift, 0.5*UP,
             run_time = 1.5,
@@ -1930,7 +1903,21 @@ class VennDiagramProofByContradiction(Scene):
         )
         self.dither()
         self.play(Transform(rects[0], last_rects))
-        self.play(FadeOut(rects[0]))
+        self.in_A_out_B.save_state()
+        self.in_A_in_B_out_C.save_state()
+        self.play(
+            self.in_A_out_B.set_fill, YELLOW, 0.5,
+            self.in_A_in_B_out_C.set_fill, YELLOW, 0.5,
+            Animation(self.photons)
+        )
+        self.dither()
+        self.play(
+            FadeOut(rects[0]),
+            self.in_A_out_B.restore,
+            self.in_A_in_B_out_C.restore,
+            Animation(self.in_A_out_C),
+            Animation(self.photons)
+        )
         self.dither()
         self.play(
             FadeIn(should_be_50[1]),
@@ -1964,6 +1951,38 @@ class VennDiagramProofByContradiction(Scene):
             path_arc = np.pi,
             lag_ratio = 0.3
         ))
+
+    def photon_thinks_in_A_out_C(self):
+        photon = self.photons[-1]
+        photon.save_state()
+        photon.generate_target()
+        photon.target.scale(4)
+        photon.target.center().to_edge(LEFT).shift(DOWN)
+        bubble = ThoughtBubble()
+        content = TexMobject("A", "\\checkmark", ",", "C")
+        content.highlight_by_tex("checkmark", "#00ff00")
+        cross = Cross(content[-1])
+        cross.highlight("#ff0000")
+        content.add(cross)
+        bubble.add_content(content)
+        bubble.resize_to_content()
+        bubble.add(bubble.content)
+        bubble.pin_to(photon.target).shift(SMALL_BUFF*RIGHT)
+        bubble.save_state()
+        bubble.scale(0.25)
+        bubble.move_to(photon.get_corner(UP+RIGHT), DOWN+LEFT)
+        bubble.fade()
+
+        self.play(
+            MoveToTarget(photon),
+            bubble.restore,
+        )
+        self.play(photon.eyes.blink_anim())
+        self.play(
+            photon.restore, 
+            FadeOut(bubble)
+        )
+
 
     #######
 

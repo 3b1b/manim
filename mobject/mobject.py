@@ -338,6 +338,9 @@ class Mobject(object):
     def scale_to_fit_height(self, height):
         return self.rescale_to_fit(height, 1, stretch = False)
 
+    def scale_to_fit_depth(self, depth):
+        return self.rescale_to_fit(depth, 2, stretch = False)
+
     def space_out_submobjects(self, factor = 1.5, **kwargs):
         self.scale_in_place(factor)
         for submob in self.submobjects:
