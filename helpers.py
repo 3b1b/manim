@@ -478,6 +478,14 @@ def there_and_back(t, inflection = 10.0):
     new_t = 2*t if t < 0.5 else 2*(1 - t)
     return smooth(new_t, inflection)
 
+def there_and_back_with_pause(t):
+    if t < 1./3:
+        return smooth(3*t)
+    elif t < 2./3:
+        return 1
+    else:
+        return smooth(3 - 3*t)
+
 def running_start(t, pull_factor = -0.5):
     return bezier([0, 0, pull_factor, pull_factor, 1, 1, 1])(t)
 

@@ -91,7 +91,6 @@ class TexMobject(SVGMobject):
                 len(tex) > len(t1) and tex[len(t1)] in "()[]\\"
             ])
             if should_replace:
-                print len(t1)
                 tex = tex.replace(t1, "\\big")
         if tex == "":
             tex = "\\quad"

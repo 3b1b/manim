@@ -48,10 +48,14 @@ class PhotonPassesCompletelyOrNotAtAll(DirectionOfPolarizationScene):
         "start_theta" : -0.9*np.pi,
         "target_theta" : -0.6*np.pi,
         "apply_filter" : True,
-        "lower_portion_shift" : 3*IN
+        "lower_portion_shift" : 3*IN,
+        "show_M_vects" : True,
     }
     def setup(self):
         DirectionOfPolarizationScene.setup(self)
+        if not self.show_M_vects:
+            for M_vect in self.em_wave.M_vects:
+                M_vect.set_fill(opacity = 0)
         self.continual_update()
         for vect in it.chain(self.em_wave.E_vects, self.em_wave.M_vects):
             vect.reset_normal_vector()
@@ -64,9 +68,9 @@ class PhotonPassesCompletelyOrNotAtAll(DirectionOfPolarizationScene):
         lower_filter.save_state()
         pol_filter.remove(pol_filter.label)
 
-        passing_words = TextMobject("Photon", "passes through")
+        passing_words = TextMobject("Photon", "passes through\\\\", "entirely")
         passing_words.highlight(GREEN)
-        filtered_words = TextMobject("Photon", "is blocked")
+        filtered_words = TextMobject("Photon", "is blocked\\\\", "entirely")
         filtered_words.highlight(RED)
         for words in passing_words, filtered_words:
             words.next_to(ORIGIN, UP+LEFT)
@@ -114,7 +118,7 @@ class PhotonPassesCompletelyOrNotAtAll(DirectionOfPolarizationScene):
             rate_func = squish_rate_func(there_and_back, 0.4, 0.6),
             run_time = filtered_photon.run_time
         )
-        for x in range(3):
+        for x in range(4):
             self.play(
                 passing_photon,
                 filtered_photon,
@@ -122,6 +126,11 @@ class PhotonPassesCompletelyOrNotAtAll(DirectionOfPolarizationScene):
                 red_flash,
             )
             self.dither()
+
+class PhotonPassesCompletelyOrNotAtAllForWavesVideo(PhotonPassesCompletelyOrNotAtAll):
+    CONFIG = {
+        "show_M_vects" : False,
+    }    
 
 class DirectionOfPolarization(DirectionOfPolarizationScene):
     def construct(self):
@@ -197,8 +206,8 @@ class PhotonsThroughPerpendicularFilters(PhotonPassesCompletelyOrNotAtAll):
     def shoot_photon(self, *added_anims):
         photon = self.get_photons()[1]
         pol_filter = self.pol_filters[0]
-        absorbtion = self.get_filter_absorbtion_animation(pol_filter, photon)
-        self.play(photon, absorbtion)
+        absorption = self.get_filter_absorption_animation(pol_filter, photon)
+        self.play(photon, absorption)
 
 
     def get_photons(self):
@@ -533,7 +542,7 @@ class BasicsOfPolarization(DirectionOfPolarizationScene):
             [passing_photon],
             [
                 filtered_photon,
-                self.get_filter_absorbtion_animation(
+                self.get_filter_absorption_animation(
                     self.pol_filter,
                     filtered_photon
                 )
@@ -663,11 +672,11 @@ class ShowVariousFilterPairsWithPhotonsOverTime(PhotonsThroughPerpendicularFilte
         blocked_photon.rate_func = squish_rate_func(
             lambda x : x, 0, 0.5,
         )
-        first_absorbtion = self.get_filter_absorbtion_animation(
+        first_absorption = self.get_filter_absorption_animation(
             self.pol_filters[0], blocked_photon
         )
-        first_absorbtion.rate_func = squish_rate_func(
-            first_absorbtion.rate_func, 0, 0.5,
+        first_absorption.rate_func = squish_rate_func(
+            first_absorption.rate_func, 0, 0.5,
         )
 
         photons = [
@@ -681,16 +690,16 @@ class ShowVariousFilterPairsWithPhotonsOverTime(PhotonsThroughPerpendicularFilte
             )
             added_anims = []
             if photon.filter_distance == SPACE_WIDTH + 2:
-                absorbtion = self.get_filter_absorbtion_animation(
+                absorption = self.get_filter_absorption_animation(
                     self.second_filter, photon
                 )
-                absorbtion.rate_func = squish_rate_func(
-                    absorbtion.rate_func, 0.5, 1
+                absorption.rate_func = squish_rate_func(
+                    absorption.rate_func, 0.5, 1
                 )
-                added_anims.append(absorbtion)
+                added_anims.append(absorption)
             self.play(
                 blocked_photon,
-                first_absorbtion,
+                first_absorption,
                 photon, 
                 *added_anims
             )
@@ -721,11 +730,11 @@ class ShowVariousFilterPairs(ShowVariousFilterPairsWithPhotonsOverTime):
         "filter_z_coordinates" : [2.5, 0, -2.5],
         "angles" : [0, np.pi/4, np.pi/2],
         "n_lines" : 20,
-        "line_start_length" : 16,
-        "line_end_length" : 16,
         "new_group_shift_val" : 2.5*IN,
         "prev_group_shift_val" : 1.75*IN,
         "ambient_rotation_rate" : 0.015,
+        "line_start_length" : 16,
+        "line_end_length" : 16,
         "lines_depth" : 1.2,
         "lines_shift_vect" : SMALL_BUFF*OUT,
     }

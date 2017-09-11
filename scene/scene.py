@@ -108,7 +108,10 @@ class Scene(object):
         if "include_submobjects" not in kwargs:
             kwargs["include_submobjects"] = False
         if mobjects is None:
-            mobjects = self.mobjects
+            mobjects = list_update(
+                self.foreground_mobjects,
+                self.mobjects,
+            )
         if background is not None:
             self.set_camera_image(background)
         else:
