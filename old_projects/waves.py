@@ -251,8 +251,6 @@ class WavePacket(Animation):
             if abs(A) < epsilon:
                 A = 0
             vect.restore()
-            if vect.get_length() < epsilon:
-                pass
             vect.scale(A/vect.get_length(), about_point = tail)
 
     def E_func(self, x):
@@ -303,7 +301,6 @@ class PolarizingFilter(Circle):
             self.arrow_label = arrow_label
 
 ################
-
 
 class FilterScene(ThreeDScene):
     CONFIG = {
@@ -423,11 +420,15 @@ class DirectionOfPolarizationScene(FilterScene):
                         vect[2], -vect[1]
                     ])
                     angle_diff = target_angle - vect_angle
+                    angle_diff = (angle_diff+np.pi/2)%np.pi - np.pi/2
                     start, end = vect_mob.get_start_and_end()
                     if start[0] > filter_x:
                         vect_mob.rotate(angle_diff, RIGHT)
                         if not self.quantum:
-                            vect_mob.scale(np.cos(angle_diff))
+                            vect_mob.scale(
+                                np.cos(angle_diff),
+                                about_point = start,
+                            )
 
     def update_rectangles(self):
         if not hasattr(self, "rectangles") or self.rectangles not in self.mobjects:
@@ -450,6 +451,89 @@ class DirectionOfPolarizationScene(FilterScene):
         r2.stretch_in_place(target_depth/curr_depth, 2)
 
 ################
+
+class WantToLearnQM(TeacherStudentsScene):
+    def construct(self):
+        question1 = TexMobject(
+            "\\text{What does }\\qquad \\\\", 
+            "|\\!\\psi \\rangle", "=",
+            "\\frac{1}{\\sqrt{2}}", "|\\!\\uparrow \\rangle", "+",
+            "\\frac{1}{\\sqrt{2}}", "|\\!\\downarrow \\rangle \\\\",
+            "\\text{mean?}\\qquad\\quad"
+        )
+        question1.highlight_by_tex_to_color_map({
+            "psi" : BLUE,
+            "uparrow" : GREEN,
+            "downarrow" : RED,
+        })
+        question2 = TextMobject(
+            "Why are complex \\\\ numbers involved?"
+        )
+        question3 = TextMobject(
+            "How do you compute \\\\ quantum probabilities?"
+        )
+        questions = [question1, question2, question3]
+        bubbles = VGroup()
+
+        for i, question in zip([1, 2, 0], questions):
+            self.student_says(
+                question, 
+                content_introduction_kwargs = {"run_time" : 2},
+                student_index = i,
+                bubble_kwargs = {"fill_opacity" : 1},
+                bubble_creation_class = FadeIn,
+            )
+            bubble = self.students[i].bubble
+            bubble.add(bubble.content)
+            bubbles.add(bubble)
+            self.students
+            self.students[i].bubble = None
+        self.dither(2)
+        self.teacher_says(
+            "First, lots and lots \\\\ of linear algebra",
+            added_anims = map(FadeOut, bubbles)
+        )
+        self.dither()
+
+class Goal(PiCreatureScene):
+    def construct(self):
+        randy = self.pi_creature
+
+        goal = TextMobject("Goal: ")
+        goal.highlight(YELLOW)
+        goal.shift(SPACE_WIDTH*LEFT/2 + UP)
+        weirdness = TextMobject("Eye-catching quantum weirdness")
+        weirdness.next_to(goal, RIGHT)
+        cross = Cross(weirdness)
+        foundations = TextMobject("Foundational intuitions")
+        foundations.next_to(goal, RIGHT)
+
+        goal.save_state()
+        goal.scale(0.01)
+        goal.move_to(randy.get_right())
+
+        self.play(
+            goal.restore,
+            randy.change, "raise_right_hand"
+        )
+        self.play(Write(weirdness, run_time = 2))
+        self.play(
+            ShowCreation(cross),
+            randy.change, "sassy"
+        )
+        self.dither()
+        self.play(
+            VGroup(weirdness, cross).shift, DOWN,
+            Write(foundations, run_time = 2),
+            randy.change, "happy"
+        )
+        self.dither(2)
+
+
+    ####
+
+    def create_pi_creature(self):
+        return Randolph().to_corner(DOWN+LEFT)
 
 class AskWhatsDifferentInQM(TeacherStudentsScene):
     def construct(self):
@@ -888,16 +972,18 @@ class WriteCurlEquations(Scene):
             "\\frac{1}{c}", 
             "\\frac{\\partial \\textbf{E}}{\\partial t}"
         )
-        footnote = TextMobject("*Ignoring currents")
-        footnote.scale(0.7)
-        eqs = VGroup(eq1, eq2, footnote)
+        eqs = VGroup(eq1, eq2)
         eqs.arrange_submobjects(DOWN, buff = LARGE_BUFF)
         eqs.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        eqs.to_edge(LEFT)
         for eq in eqs:
             eq.highlight_by_tex_to_color_map({
                 "E" : E_COLOR,            
                 "B" : M_COLOR,
             })
+        footnote = TextMobject("*Ignoring currents")
+        footnote.next_to(eqs[1], RIGHT)
+        footnote.to_edge(RIGHT)
 
         self.play(Write(eq1, run_time = 2))
         self.dither(3)
@@ -1033,6 +1119,7 @@ class DirectWaveOutOfScreen(IntroduceEMWave):
             added_anims = [faded_vectors.set_fill, None, 0.05],
             run_time = 2,
         )
+        self.faded_vectors = faded_vectors
 
     def fade_M_vects(self):
         self.play(
@@ -1041,7 +1128,7 @@ class DirectWaveOutOfScreen(IntroduceEMWave):
         self.dither(2)
 
     def fade_all_but_last_E_vects(self):
-        self.play(faded_vectors.set_fill, None, 0)
+        self.play(self.faded_vectors.set_fill, None, 0)
         self.dither(4)
 
 class ShowVectorEquation(Scene):
@@ -1506,7 +1593,8 @@ class SumOfTwoWaves(ChangeFromHorizontalToVerticallyPolarized):
         },
         "EMWave_config" : {
             "A_vect" : [0, 0, 1],
-        }
+        },
+        "ambient_rotation_rate" : 0,
     }
     def setup(self):
         ChangeFromHorizontalToVerticallyPolarized.setup(self)
@@ -1535,7 +1623,7 @@ class SumOfTwoWaves(ChangeFromHorizontalToVerticallyPolarized):
         equals.shift(2.5*UP)
         self.add(pe)
 
-        self.dither(32)
+        self.dither(16)
 
 class ShowTipToTailSum(ShowVectorEquation):
     def construct(self):
@@ -1805,6 +1893,22 @@ class ShowTipToTailSum(ShowVectorEquation):
             line.shift(v2.get_end() - line.get_start())
         return update_line
 
+class FromBracketFootnote(Scene):
+    def construct(self):
+        words = TextMobject(
+            "From, ``Bra", "ket", "''",
+            arg_separator = ""
+        )
+        words.highlight_by_tex("ket", YELLOW)
+        words.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        self.add(words)
+
+class Ay(Scene):
+    def construct(self):
+        sym = TexMobject("A_y").highlight(GREEN)
+        sym.scale(5)
+        self.add(sym)
+
 class CircularlyPolarizedLight(SumOfTwoWaves):
     CONFIG = {
         "EMWave_config" : {
@@ -1916,7 +2020,6 @@ class WriteBasis(Scene):
     def construct(self):
         words = TextMobject("Choice of ``basis''")
         words.scale_to_fit_width(2*SPACE_WIDTH-1)
-        words.to_edge(DOWN)
         self.play(Write(words))
         self.dither()
 
@@ -1974,9 +2077,9 @@ class ShowPolarizingFilter(DirectionOfPolarizationScene):
             Write(words, run_time = 2),
             *map(GrowFromCenter, lines)
         )
+        self.dither(6)
         self.play(FadeOut(lines))
         self.play(FadeOut(words))
-        self.dither()
 
     def write_as_superposition(self):
         superposition, continual_updates = self.get_superposition_tex(0, "right", "up")
@@ -1986,7 +2089,7 @@ class ShowPolarizingFilter(DirectionOfPolarizationScene):
         self.add(*continual_updates)
         for angle in np.pi/4, -np.pi/6:
             self.change_polarization_direction(angle)
-            self.dither()
+            self.dither(3)
 
         self.move_camera(
             theta = -0.6*np.pi,
@@ -2008,6 +2111,10 @@ class ShowPolarizingFilter(DirectionOfPolarizationScene):
         self.play(
             FadeOut(superposition),
             FadeOut(arrow),
+            *[
+                FadeOut(cu.mobject)
+                for cu in continual_updates
+            ]
         )
         self.move_camera(theta = -0.1*np.pi)
 
@@ -2033,26 +2140,26 @@ class ShowPolarizingFilter(DirectionOfPolarizationScene):
 
     def get_superposition_tex(self, angle, s1, s2):
         superposition = TexMobject(
-            "0.00", "\\cos(", "2\\pi", "f", ")",
+            "0.00", "\\cos(", "2\\pi", "f", "t", ")",
             "|\\! \\%sarrow \\rangle"%s1,
             "+",
-            "1.00", "\\cos(", "2\\pi", "f", ")",
+            "1.00", "\\cos(", "2\\pi", "f", "t", ")",
             "|\\! \\%sarrow \\rangle"%s2,
         )
 
         A_x = DecimalNumber(0)
         A_y = DecimalNumber(1)
         A_x.move_to(superposition[0])
-        A_y.move_to(superposition[7])
+        A_y.move_to(superposition[8])
         superposition.submobjects[0] = A_x
-        superposition.submobjects[7] = A_y
+        superposition.submobjects[8] = A_y
         VGroup(A_x, A_y).highlight(GREEN)
         superposition.highlight_by_tex("f", RED)
         superposition.highlight_by_tex("rangle", YELLOW)
         plus = superposition.get_part_by_tex("+")
         plus.add_to_back(BackgroundRectangle(plus))
 
-        v_part = VGroup(*superposition[7:])
+        v_part = VGroup(*superposition[8:])
         rect = SurroundingRectangle(v_part)
         rect.fade(1)
         superposition.rect = rect
@@ -2094,6 +2201,13 @@ class ShowPolarizingFilter(DirectionOfPolarizationScene):
 
         return superposition, continual_updates
 
+class NamePolarizingFilter(Scene):
+    def construct(self):
+        words = TextMobject("Polarizing filter")
+        words.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        self.play(Write(words))
+        self.dither()
+
 class EnergyOfWavesWavePortion(DirectWaveOutOfScreen):
     CONFIG = {
         "EMWave_config" : {
@@ -2124,7 +2238,7 @@ class EnergyOfWavesWavePortion(DirectWaveOutOfScreen):
         brace_group = VGroup(brace, brace.A)
         self.position_brace_group(brace_group)
         self.play(Write(brace_group, run_time = 1))
-        self.dither(4)
+        self.dither(12)
 
         self.brace = brace
 
@@ -2164,16 +2278,16 @@ class EnergyOfWavesWavePortion(DirectWaveOutOfScreen):
             ReplacementTransform(self.brace, h_brace),
             Write(h_brace.A)
         )
-        self.dither(2)
+        self.dither(6)
 
         self.play(
             ReplacementTransform(h_brace.copy(), v_brace),
             Write(v_brace.A)
         )
-        self.dither(period - 1)
+        self.dither(6)
         rhs.next_to(self.brace.A, UP, SMALL_BUFF)
         self.play(Write(rhs))
-        self.dither(period)
+        self.dither(2*period)
 
         self.h_brace = h_brace
         self.v_brace = v_brace
@@ -2778,6 +2892,26 @@ class DescribePhoton(ThreeDScene):
         self.play(self.photon)
         self.dither()
 
+class SeeCommentInDescription(Scene):
+    def construct(self):
+        words = TextMobject("""
+            \\begin{flushleft}
+            $^*$See comment in the \\\\
+            description on single-headed \\\\
+            vs. double-headed arrows
+            \\end{flushleft}
+        """)
+        words.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        words.to_corner(DOWN+LEFT)
+        self.add(words)
+
+class SeeCommentInDescriptionAgain(Scene):
+    def construct(self):
+        words = TextMobject("$^*$Again, see description")
+        words.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        words.to_corner(DOWN+LEFT)
+        self.add(words)
+
 class GetExperimental(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("Get experimental!", target_mode = "hooray")
@@ -2807,11 +2941,13 @@ class ShootPhotonThroughFilter(DirectionOfPolarizationScene):
         self.remove(self.em_wave)
 
     def construct(self):
+        self.force_skipping()
+
         self.add_superposition_tex()
         self.ask_what_would_happen()
         self.expect_half_energy_to_be_absorbed()
         self.probabalistic_passing_and_blocking()
-        self.note_change_in_polarization()
+        # self.note_change_in_polarization()
 
     def add_superposition_tex(self):
         superposition_tex = TexMobject(
@@ -2960,7 +3096,8 @@ class ShootPhotonThroughFilter(DirectionOfPolarizationScene):
             self.get_blocked_photon(),
             absorption
         )
-        bools = 4*[True] + 4*[False]
+        bools = 6*[True] + 6*[False]
+        self.revert_to_original_skipping_status()
         random.shuffle(bools)
         for should_pass in bools:
             if should_pass:
@@ -3001,10 +3138,20 @@ class ShootPhotonThroughFilter(DirectionOfPolarizationScene):
         return WavePacket(em_wave = self.em_wave.copy(), **kwargs)
 
     def get_blocked_photon(self, **kwargs):
-        return self.get_photon(self, get_filtered = True, **kwargs)
+        kwargs["get_filtered"] = True
+        return self.get_photon(self, **kwargs)
 
 class PhotonPassesCompletelyOrNotAtAllStub(ExternallyAnimatedScene):
     pass
+
+class YouCanSeeTheCollapse(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "You can literally \\\\ \\emph{see} the collapse",
+            target_mode = "hooray"
+        )
+        self.change_student_modes("confused", "hooray", "erm")
+        self.dither(3)
 
 class ThreeFilters(ShootPhotonThroughFilter):
     CONFIG = {
@@ -3143,6 +3290,8 @@ class ThreeFilters(ShootPhotonThroughFilter):
             phi = np.pi/2,
             theta = 0,
             added_anims = [
+                Animation(VGroup(*self.pol_filters[:2]))
+            ] + [
                 Rotate(
                     v, np.pi/2, 
                     axis = v.get_vector(),
@@ -3151,6 +3300,7 @@ class ThreeFilters(ShootPhotonThroughFilter):
                 )
                 for v in photon.mobject
             ] + [
+                Animation(self.pol_filters[2]),
                 Rotate(
                     label, np.pi/2, 
                     axis = OUT,
@@ -3288,19 +3438,873 @@ class ThreeFilters(ShootPhotonThroughFilter):
         VGroup(*[lines[i] for i in indices_to_block]).set_stroke(width = 0)
         return lines
 
+class PhotonAtSlightAngle(ThreeFilters):
+    CONFIG = {
+        "filter_x_coordinates" : [3],
+        "pol_filter_configs" : [{
+            "label_tex" : "",
+            "include_arrow_label" : False,
+            "radius" : 1.4,
+        }],
+        "EMWave_config" : {
+            "wave_number" : 0,
+            "A_vect" : [0, np.sin(np.pi/8), np.cos(np.pi/8)],
+            "start_point" : SPACE_WIDTH*LEFT,
+            "amplitude" : 2,
+        },
+        "axes_config" : {
+            "z_max" : 2.5,
+        },
+        "radius" : 1.3,
+        "lines_depth" : 2.5,
+        "line_start_length" : 12,
+    }
+    def construct(self):
+        self.force_skipping()
 
+        self.shoot_photon()
+        self.reposition_camera_to_head_on()
+        self.write_angle()
+        self.write_components()
+        self.classical_energy_conception()
+        self.reposition_camera_back()
+        self.rewrite_15_percent_meaning()
+        self.probabalistic_passing()
 
+    def shoot_photon(self):
+        photon = self.get_photon(
+            rate_func = lambda x : 0.5*x,
+            remover = False,
+        )
+        self.play(photon)
+        self.photon = photon
 
+    def reposition_camera_to_head_on(self):
+        self.move_camera(
+            phi = np.pi/2, theta = 0,
+            added_anims = list(it.chain(*[
+                [
+                    v.rotate_in_place, np.pi/2, v.get_vector(),
+                    v.set_fill, None, 0.7,
+                ]
+                for v in self.photon.mobject
+            ])) + [Animation(self.pol_filter)]
+        )
 
+    def write_angle(self):
+        arc = Arc(
+            start_angle = np.pi/2, angle = -np.pi/8,
+            radius = self.pol_filter.radius,
+        )
+        label = TexMobject("22.5^\\circ")
+        label.next_to(arc.get_center(), UP+RIGHT, SMALL_BUFF)
 
+        group = VGroup(arc, label)
+        group.rotate(np.pi/2, RIGHT)
+        group.rotate(np.pi/2, OUT)
 
+        self.play(
+            FadeOut(self.pol_filter),
+            ShowCreation(arc),
+            Write(label, run_time = 1)
+        )
+        self.dither()
 
+        self.arc = arc
+        self.angle_label = label
 
+    def write_components(self):
+        d_brace = Brace(Line(ORIGIN, self.radius*RIGHT), UP, buff = SMALL_BUFF)
+        d_brace.rotate(np.pi/2 - np.pi/8)
+        d_brace.label = d_brace.get_tex("1", buff = SMALL_BUFF)
+        d_brace.label.add_background_rectangle()
 
+        h_arrow = Vector(
+            self.radius*np.sin(np.pi/8)*RIGHT,
+            color = RED,
+        )
+        h_label = TexMobject("\\sin(22.5^\\circ)")
+        h_label.scale(0.7)
+        h_label.highlight(RED)
+        h_label.next_to(h_arrow.get_center(), DOWN, aligned_edge = LEFT)
 
+        v_arrow = Vector(
+            self.radius*np.cos(np.pi/8)*UP,
+            color = GREEN
+        )
+        v_arrow.shift(h_arrow.get_vector())
+        v_label = TexMobject("\\cos(22.5^\\circ)")
+        v_label.scale(0.7)
+        v_label.highlight(GREEN)
+        v_label.next_to(v_arrow, RIGHT, SMALL_BUFF)
 
+        state = TexMobject(
+            "|\\!\\psi\\rangle", 
+            "=", "\\sin(22.5^\\circ)", "|\\!\\rightarrow\\rangle", 
+            "+", "\\cos(22.5^\\circ)", "|\\!\\uparrow\\rangle",
+        )
+        state.highlight_by_tex_to_color_map({
+            "psi" : BLUE,
+            "rightarrow" : RED,
+            "uparrow" : GREEN,
+        })
+        # state.add_background_rectangle()
+        state.to_edge(UP)
 
+        sin_brace = Brace(state.get_part_by_tex("sin"), DOWN, buff = SMALL_BUFF)
+        sin_brace.label = sin_brace.get_tex("%.2f"%np.sin(np.pi/8), buff = SMALL_BUFF)
+        cos_brace = Brace(state.get_part_by_tex("cos"), DOWN, buff = SMALL_BUFF)
+        cos_brace.label = cos_brace.get_tex("%.2f"%np.cos(np.pi/8), buff = SMALL_BUFF)
 
+        group = VGroup(
+            d_brace, d_brace.label, 
+            h_arrow, h_label,
+            v_arrow, v_label,
+            state,
+            sin_brace, sin_brace.label,
+            cos_brace, cos_brace.label,
+        )
+        group.rotate(np.pi/2, RIGHT)
+        group.rotate(np.pi/2, OUT)
+
+        self.play(
+            GrowFromCenter(d_brace),
+            Write(d_brace.label)
+        )
+        self.dither()
+        self.play(
+            GrowFromPoint(h_arrow, ORIGIN),
+            Write(h_label, run_time = 1)
+        )
+        self.play(
+            Write(VGroup(*state[:2])),
+            ReplacementTransform(
+                h_label.copy(), 
+                state.get_part_by_tex("sin")
+            ),
+            ReplacementTransform(
+                h_arrow.copy(), 
+                state.get_part_by_tex("rightarrow")
+            ),
+            Write(state.get_part_by_tex("+"))
+        )
+        self.play(
+            GrowFromCenter(sin_brace),
+            Write(sin_brace.label, run_time = 1)
+        )
+        self.dither()
+        self.play(
+            GrowFromPoint(v_arrow, h_arrow.get_end()),
+            Write(v_label, run_time = 1)
+        )
+        self.play(
+            ReplacementTransform(
+                v_label.copy(), 
+                state.get_part_by_tex("cos")
+            ),
+            ReplacementTransform(
+                v_arrow.copy(), 
+                state.get_part_by_tex("uparrow")
+            ),
+        )
+        self.play(
+            GrowFromCenter(cos_brace),
+            Write(cos_brace.label, run_time = 1)
+        )
+        self.dither()
+
+        self.d_brace = d_brace
+        self.state_equation = state
+        self.state_equation.add(
+            sin_brace, sin_brace.label,
+            cos_brace, cos_brace.label,
+        )
+        self.sin_brace = sin_brace
+        self.cos_brace = cos_brace
+        self.h_arrow = h_arrow
+        self.h_label = h_label
+        self.v_arrow = v_arrow
+        self.v_label = v_label
+
+    def classical_energy_conception(self):
+        randy = Randolph(mode = "pondering").flip()
+        randy.scale(0.7)
+        randy.next_to(ORIGIN, LEFT)
+        randy.to_edge(DOWN)
+
+        bubble = ThoughtBubble(direction = RIGHT)
+        h_content = TexMobject(
+            "0.38", "^2", "= 0.15", "\\text{ energy}\\\\",
+            "\\text{in the }", "\\rightarrow", "\\text{ direction}"
+        )
+        alt_h_content = TexMobject(
+            "0.38", "^2", "=& 15\\%", "\\text{ of energy}\\\\",
+            "&\\text{absorbed}", "", "",
+        )
+        h_content.highlight_by_tex("rightarrow", RED)
+        alt_h_content.highlight_by_tex("rightarrow", RED)
+        alt_h_content.scale(0.8)
+        v_content = TexMobject(
+            "0.92", "^2", "= 0.85", "\\text{ energy}\\\\",
+            "\\text{in the }", "\\uparrow", "\\text{ direction}"
+        )
+        v_content.highlight_by_tex("uparrow", GREEN)
+
+        bubble.add_content(h_content)
+        bubble.resize_to_content()
+        v_content.move_to(h_content)
+        bubble_group = VGroup(bubble, h_content, v_content)
+        bubble_group.scale(0.8)
+        bubble_group.next_to(randy, UP+LEFT, SMALL_BUFF)
+
+        classically = TextMobject("Classically...")
+        classically.next_to(bubble[-1], UP)
+        classically.highlight(YELLOW)
+        alt_h_content.next_to(classically, DOWN)
+
+        group = VGroup(randy, bubble_group, classically, alt_h_content)
+        group.rotate(np.pi/2, RIGHT)
+        group.rotate(np.pi/2, OUT)
+
+        filter_lines = self.get_filter_lines(self.pol_filter)
+
+        self.play(
+            FadeIn(randy),
+            FadeIn(classically),
+            ShowCreation(bubble),
+        )
+        self.play(
+            ReplacementTransform(
+                self.sin_brace.label.copy(),
+                h_content[0]
+            ),
+            ReplacementTransform(
+                self.state_equation.get_part_by_tex("rightarrow").copy(),
+                h_content.get_part_by_tex("rightarrow")
+            )
+        )
+        self.play(
+            Write(VGroup(*h_content[1:5])),
+            Write(h_content.get_part_by_tex("direction")),
+            run_time = 2,
+        )
+        self.dither(2)
+        self.play(h_content.shift, 2*IN)
+        self.play(
+            ReplacementTransform(
+                self.cos_brace.label.copy(),
+                v_content[0]
+            ),
+            ReplacementTransform(
+                self.state_equation.get_part_by_tex("uparrow").copy(),
+                v_content.get_part_by_tex("uparrow")
+            )
+        )
+        self.play(
+            Write(VGroup(*v_content[1:5])),
+            Write(v_content.get_part_by_tex("direction")),
+            run_time = 2,
+        )
+        self.dither(2)
+        self.play(
+            FadeOut(randy),
+            FadeOut(bubble),
+            FadeOut(v_content),
+            Transform(h_content, alt_h_content),
+            FadeIn(self.pol_filter),
+            Animation(self.arc)
+        )
+        self.play(ShowCreation(filter_lines, submobject_mode = "all_at_once"))
+        self.play(FadeOut(filter_lines))
+        self.dither()
+
+        self.classically = VGroup(classically, h_content)
+
+    def reposition_camera_back(self):
+        self.move_camera(
+            phi = 0.8*np.pi/2, theta = -0.6*np.pi,
+            added_anims = [
+                FadeOut(self.h_arrow),
+                FadeOut(self.h_label),
+                FadeOut(self.v_arrow),
+                FadeOut(self.v_label),
+                FadeOut(self.d_brace),
+                FadeOut(self.d_brace.label),
+                FadeOut(self.arc),
+                FadeOut(self.angle_label),
+                Rotate(self.state_equation, np.pi/2, IN),
+                Rotate(self.classically, np.pi/2, IN),
+            ] + [
+                Rotate(
+                    v, np.pi/2, 
+                    axis = v.get_vector(),
+                    in_place = True,
+                )
+                for v in self.photon.mobject
+            ],
+            run_time = 1.5
+        )
+
+    def rewrite_15_percent_meaning(self):
+        self.classically.rotate(np.pi/2, LEFT)
+        cross = Cross(self.classically)
+        cross.highlight("#ff0000")
+        VGroup(self.classically, cross).rotate(np.pi/2, RIGHT)
+
+        new_conception = TextMobject(
+            "$0.38^2 = 15\\%$ chance of \\\\ getting blocked"
+        )
+        new_conception.scale(0.8)
+        new_conception.rotate(np.pi/2, RIGHT)
+        new_conception.move_to(self.classically, OUT)
+
+        a = self.photon.rate_func(1)
+        finish_photon = self.get_blocked_photon(
+            rate_func = lambda t : a + (1-a)*t
+        )
+        finish_photon.mobject.set_fill(opacity = 0.7)
+
+        self.play(ShowCreation(cross))
+        self.classically.add(cross)
+        self.play(
+            self.classically.shift, 4*IN,
+            FadeIn(new_conception),
+        )
+        self.remove(self.photon.mobject)
+        self.revert_to_original_skipping_status()
+        self.play(
+            finish_photon,
+            ApplyMethod(
+                self.pol_filter.highlight, RED,
+                rate_func = squish_rate_func(there_and_back, 0, 0.3),
+                run_time = finish_photon.run_time
+            )
+        )
+
+    def probabalistic_passing(self):
+        # photons = [
+        #     self.get_photon()
+        #     for x in range(3)
+        # ] + [self.get_blocked_photon()]
+        # random.shuffle(photons)
+        # for photon in photons:
+        #     added_anims = []
+        #     if photon.get_filtered:
+        #         added_anims.append(
+        #             self.get_filter_absorption_animation(
+        #                 self.pol_filter, photon, 
+        #             )
+        #         )
+        #     self.play(photon, *added_anims)
+        # self.dither()
+
+        l1 = self.get_lines(None, self.pol_filter)
+        l2 = self.get_lines(self.pol_filter, None, 0.85)
+        for line in it.chain(l1, l2):
+            if line.get_stroke_width() > 0:
+                line.set_stroke(width = 3)
+
+        arrow = Arrow(
+            2*LEFT, 2*RIGHT, 
+            path_arc = 0.8*np.pi,
+            use_rectangular_stem = False,
+        )
+        label = TexMobject("15\\% \\text{ absorbed}")
+        label.next_to(arrow, DOWN)
+        group = VGroup(arrow, label)
+        group.highlight(RED)
+        group.rotate(np.pi/2, RIGHT)
+        group.shift(3*RIGHT + 1.5*IN)
+
+        kwargs = {
+            "rate_func" : None,
+            "submobject_mode" : "all_at_once",
+        }
+        self.play(
+            ShowCreation(arrow),
+            Write(label, run_time = 1),
+            ShowCreation(l1, **kwargs)
+        )
+        self.play(
+            ShowCreation(l2, run_time = 0.5, **kwargs),
+            Animation(self.pol_filter),
+            Animation(l1)
+        )
+        self.dither()
+
+    ###
+
+    def get_filter_lines(self, pol_filter):
+        lines = VGroup(*[
+            Line(
+                np.sin(a)*RIGHT + np.cos(a)*UP,
+                np.sin(a)*LEFT + np.cos(a)*UP,
+                color = RED,
+                stroke_width = 2,
+            )
+            for a in np.linspace(0, np.pi, 15)
+        ])
+        lines.scale(pol_filter.radius)
+        lines.rotate(np.pi/2, RIGHT)
+        lines.rotate(np.pi/2, OUT)
+        lines.shift(pol_filter.get_center()[0]*RIGHT)
+        return lines
+
+    def get_blocked_photon(self, **kwargs):
+        return self.get_photon(
+            filter_distance = SPACE_WIDTH + 3, 
+            get_filtered = True,
+            **kwargs
+        )
+
+class CompareWaveEquations(TeacherStudentsScene):
+    def construct(self):
+        self.add_equation()
+        self.show_complex_plane()
+        self.show_interpretations()
+
+    def add_equation(self):
+        equation = TexMobject(
+            "|\\!\\psi\\rangle",
+            "=", "\\alpha", "|\\!\\rightarrow\\rangle",
+            "+", "\\beta", "|\\!\\uparrow\\rangle",
+        )
+        equation.highlight_by_tex_to_color_map({
+            "psi" : BLUE,
+            "rightarrow" : RED,
+            "uparrow" : GREEN,
+        })
+        equation.next_to(ORIGIN, LEFT)
+        equation.to_edge(UP)
+
+        psi_rect = SurroundingRectangle(equation.get_part_by_tex("psi"))
+        psi_rect.highlight(WHITE)
+        state_words = TextMobject("Polarization \\\\ state")
+        state_words.highlight(BLUE)
+        state_words.scale(0.8)
+        state_words.next_to(psi_rect, DOWN)
+
+        equation.save_state()
+        equation.scale(0.01)
+        equation.fade(1)
+        equation.move_to(self.teacher.get_left())
+        equation.shift(SMALL_BUFF*UP)
+
+        self.play(
+            equation.restore,
+            self.teacher.change, "raise_right_hand",
+        )
+        self.change_student_modes(
+            *["pondering"]*3,
+            look_at_arg = psi_rect,
+            added_anims = [
+                ShowCreation(psi_rect),
+                Write(state_words, run_time = 1)
+            ],
+            run_time = 1
+        )
+        self.play(FadeOut(psi_rect))
+
+        self.equation = equation
+        self.state_words = state_words
+
+    def show_complex_plane(self):
+        new_alpha, new_beta = terms = [
+            self.equation.get_part_by_tex(tex).copy()
+            for tex in "alpha", "beta"
+        ]
+        for term in terms:
+            term.save_state()
+            term.generate_target()
+            term.target.scale(0.7)
+
+        plane = ComplexPlane(
+            x_radius = 1.5,
+            y_radius = 1.5,
+        )
+        plane.add_coordinates()
+        plane.scale(1.3)
+        plane.next_to(ORIGIN, RIGHT, MED_LARGE_BUFF)
+        plane.to_edge(UP)
+
+        alpha_dot, beta_dot = [
+            Dot(
+                plane.coords_to_point(x, 0.5), 
+                radius = 0.05,
+                color = color
+            )
+            for x, color in (-0.5, RED), (0.5, GREEN)
+        ]
+        new_alpha.target.next_to(alpha_dot, UP+LEFT, 0.5*SMALL_BUFF)
+        new_alpha.target.highlight(RED)
+        new_beta.target.next_to(beta_dot, UP+RIGHT, 0.5*SMALL_BUFF)
+        new_beta.target.highlight(GREEN)
+
+        rhs = TexMobject(
+            "=", "A_y", "e", "^{i(", 
+            "2\\pi", "f", "t", "+", "\\phi_y", ")}"
+        )
+        rhs.scale(0.7)
+        rhs.next_to(new_beta.target, RIGHT, SMALL_BUFF)
+        rhs.shift(0.5*SMALL_BUFF*UP)
+        rhs.highlight_by_tex_to_color_map({
+            "A_y" : GREEN,
+            "phi" : MAROON_B,
+        })
+        A_copy = rhs.get_part_by_tex("A_y").copy()
+        phi_copy = rhs.get_part_by_tex("phi_y").copy()
+        A_line = Line(
+            plane.coords_to_point(0, 0),
+            plane.coords_to_point(0.5, 0.5),
+            color = GREEN,
+            stroke_width = 2,
+        )
+
+        arc = Arc(angle = np.pi/4, radius = 0.5)
+        arc.shift(plane.get_center())
+
+        self.play(
+            Write(plane, run_time = 2),
+            MoveToTarget(new_alpha),
+            MoveToTarget(new_beta),
+            DrawBorderThenFill(alpha_dot, run_time = 1),
+            DrawBorderThenFill(beta_dot, run_time = 1),
+        )
+        self.play(
+            Write(rhs),
+            ShowCreation(A_line),
+            ShowCreation(arc)
+        )
+        self.play(
+            phi_copy.next_to, arc, RIGHT, SMALL_BUFF,
+            phi_copy.shift, 0.5*SMALL_BUFF*UP
+        )
+        self.play(
+            A_copy.next_to, A_line.get_center(), 
+                UP, SMALL_BUFF,
+            A_copy.shift, 0.5*SMALL_BUFF*(UP+LEFT),
+        )
+        self.dither()
+
+    def show_interpretations(self):
+        c_words = TexMobject(
+            "\\text{Classically: }", "&|\\beta|^2",
+            "\\rightarrow",
+            "\\text{Component of} \\\\",
+            "&\\text{energy in }", "|\\!\\uparrow\\rangle", 
+            "\\text{ direction}",
+        )
+        qm_words = TexMobject(
+            "\\text{Quantum: }", "&|\\beta|^2",
+            "\\rightarrow",
+            "\\text{Probability that}", "\\text{ \\emph{all}} \\\\",
+            "&\\text{energy is measured in }", "|\\!\\uparrow\\rangle", 
+            "\\text{ direction}",
+        )
+        for words in c_words, qm_words:
+            words.highlight_by_tex_to_color_map({
+                "Classically" : YELLOW,
+                "Quantum" : BLUE,
+                "{all}" : BLUE,
+                "beta" : GREEN,
+                "uparrow" : GREEN,
+            })
+            words.scale(0.7)
+        c_words.to_edge(LEFT)
+        c_words.shift(2*UP)
+        qm_words.next_to(c_words, DOWN, MED_LARGE_BUFF, LEFT)
+
+        self.play(
+            FadeOut(self.state_words),
+            Write(c_words),
+            self.teacher.change, "happy"
+        )
+        self.change_student_modes(
+            *["happy"]*3, look_at_arg = c_words
+        )
+        self.play(Write(qm_words))
+        self.change_student_modes(
+            "erm", "confused", "pondering",
+            look_at_arg = qm_words
+        )
+        self.dither()
+
+class CircularPhotons(ShootPhotonThroughFilter):
+    CONFIG = {
+        "EMWave_config" : {
+            "phi_vect" : [0, -np.pi/2, 0],
+            "wave_number" : 1,
+            "start_point" : 10*LEFT,
+            "length" : 20,
+            "n_vectors" : 60,
+        },
+        "apply_filter" : False,
+    }
+    def construct(self):
+        self.set_camera_position(theta = -0.75*np.pi)
+        self.setup_filter()
+        self.show_phase_difference()
+        self.shoot_circular_photons()
+        self.show_filter()
+        self.show_vertically_polarized_light()
+
+    def setup_filter(self):
+        pf = self.pol_filter
+        pf.remove(pf.label)
+        pf.remove(pf.arrow)
+        self.remove(pf.label, pf.arrow)
+        arrows = VGroup(*[
+            Arrow(
+                v1, v2,
+                use_rectangular_stem = False,
+                color = WHITE,
+                path_arc = np.pi,
+            )
+            for v1, v2 in [(LEFT, RIGHT), (RIGHT, LEFT)]
+        ])
+        arrows.scale(0.7)
+        arrows.rotate(np.pi/2, RIGHT)
+        arrows.rotate(np.pi/2, OUT)
+        arrows.move_to(center_of_mass(pf.points))
+
+        pf.label = arrows
+        pf.add(arrows)
+        self.remove(pf)
+
+    def show_phase_difference(self):
+        equation = TexMobject(
+            "|\\!\\circlearrowright\\rangle", 
+            "=", "\\frac{1}{\\sqrt{2}}", "|\\!\\rightarrow\\rangle",
+            "+", "\\frac{i}{\\sqrt{2}}", "|\\!\\uparrow\\rangle",
+        )
+        equation.highlight_by_tex_to_color_map({
+            "circlearrowright" : BLUE,
+            "rightarrow" : RED,
+            "uparrow" : GREEN,
+        })
+        equation.next_to(ORIGIN, LEFT, LARGE_BUFF)
+        equation.to_edge(UP)
+        rect = SurroundingRectangle(equation.get_part_by_tex("frac{i}"))
+        words = TextMobject("Phase shift")
+        words.next_to(rect, DOWN)
+        words.highlight(YELLOW)
+
+        group = VGroup(equation, rect, words)
+        group.rotate(np.pi/2, RIGHT)
+        group.rotate(np.pi/4, IN)
+
+        self.play(FadeIn(equation))
+        self.play(self.get_circular_photon())
+        self.play(
+            ShowCreation(rect),
+            Write(words, run_time = 1)
+        )
+
+        self.circ_equation_group = group
+
+    def shoot_circular_photons(self):
+        for x in range(2):
+            self.play(self.get_circular_photon())
+
+    def show_filter(self):
+        pf = self.pol_filter
+        pf.save_state()
+        pf.shift(4*OUT)
+        pf.fade(1)
+
+        self.play(pf.restore)
+        self.play(
+            self.get_circular_photon(),
+            Animation(self.circ_equation_group)
+        )
+        self.play(FadeOut(self.circ_equation_group))
+
+    def show_vertically_polarized_light(self):
+        equation = TexMobject(
+            "|\\!\\uparrow \\rangle", 
+            "=", "\\frac{i}{\\sqrt{2}}", "|\\!\\circlearrowleft \\rangle",
+            "+", "\\frac{-i}{\\sqrt{2}}", "|\\!\\circlearrowright \\rangle",
+        )
+        equation.highlight_by_tex_to_color_map({
+            "circlearrowright" : BLUE,
+            "frac{-i}" : BLUE,
+            "circlearrowleft" : YELLOW,
+            "frac{i}" : YELLOW,
+            "uparrow" : GREEN,
+        })
+        equation.next_to(ORIGIN, LEFT, LARGE_BUFF)
+        equation.to_edge(UP)
+
+        prob = TexMobject(
+            "P(", "\\text{passing}", ")",
+            "=", "\\left(", "\\frac{-i}{\\sqrt{2}}", "\\right)^2"
+        )
+        prob.highlight_by_tex("sqrt{2}", BLUE)
+        prob.next_to(equation, DOWN)
+
+        group = VGroup(equation, prob)
+        group.rotate(np.pi/2, RIGHT)
+        group.rotate(np.pi/4, IN)
+
+        em_wave = EMWave(
+            wave_number = 0,
+            amplitude = 2,
+            start_point = 10*LEFT,
+            length = 20,
+        )
+        v_photon = WavePacket(
+            em_wave = em_wave, 
+            include_M_vects = False,
+            run_time = 2
+        )
+        c_photon = self.get_circular_photon()
+        for v_vect in v_photon.mobject:
+            v_vect.saved_state.set_fill(GREEN)
+            if v_vect.get_start()[0] > 0:
+                v_vect.saved_state.set_fill(opacity = 0)
+        for c_vect in c_photon.mobject:
+            if c_vect.get_start()[0] < 0:
+                c_vect.saved_state.set_fill(opacity = 0)
+        blocked_v_photon = copy.deepcopy(v_photon)
+        blocked_v_photon.get_filtered = True
+        blocked_v_photon.filter_distance = 10
+
+        self.play(Write(equation, run_time = 1))
+        self.play(v_photon, c_photon)
+        self.play(FadeIn(prob))
+        bools = 3*[True] + 3*[False]
+        random.shuffle(bools)
+        for should_pass in bools:
+            if should_pass:
+                self.play(v_photon, c_photon)
+            else:
+                self.play(
+                    blocked_v_photon,
+                    self.get_filter_absorption_animation(
+                        self.pol_filter, blocked_v_photon
+                    )
+                )
+        self.dither()
+
+    ####
+
+    def get_circular_photon(self, **kwargs):
+        kwargs["run_time"] = kwargs.get("run_time", 2)
+        photon = ShootPhotonThroughFilter.get_photon(self, **kwargs)
+        photon.E_func = lambda x : np.exp(-0.25*(2*np.pi*x/photon.width)**2)
+        return photon
+
+class ClockwisePhotonInsert(Scene):
+    def construct(self):
+        eq = TexMobject(
+            "\\left| \\frac{-i}{\\sqrt{2}} \\right|^2"
+        )
+        eq.highlight(BLUE)
+        VGroup(*it.chain(eq[:4], eq[-5:])).highlight(WHITE)
+        eq.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        eq.to_edge(LEFT)
+        self.add(eq)
+
+class OrClickHere(Scene):
+    def construct(self):
+        words = TextMobject("Or click here")
+        words.scale(3)
+        arrow = Vector(
+            2*UP + 2*RIGHT,
+            rectangular_stem_width = 0.1,
+            tip_length = 0.5
+        )
+        arrow.next_to(words, UP).shift(RIGHT)
+
+        self.play(
+            Write(words),
+            ShowCreation(arrow)
+        )
+        self.dither()
+
+class WavesPatreonThanks(PatreonThanks):
+    CONFIG = {
+        "specific_patrons" : [
+            "Desmos",
+            "CrypticSwarm",
+            "Burt Humburg",
+            "Charlotte",
+            "Juan Batiz-Benet",
+            "Ali Yahya",
+            "William",
+            "Mayank M. Mehrotra",
+            "Lukas Biewald",
+            "Samantha D. Suplee",
+            "James Park",
+            "Yana Chernobilsky",
+            "Kaustuv DeBiswas",
+            "Kathryn Schmiedicke",
+            "Yu Jun",
+            "dave nicponski",
+            "Damion Kistler",
+            "Markus Persson",
+            "Yoni Nazarathy",
+            "Ed Kellett",
+            "Joseph John Cox",
+            "Dan Rose",
+            "Luc Ritchie",
+            "Harsev Singh",
+            "Mads Elvheim",
+            "Erik Sundell",
+            "Xueqi Li",
+            "David G. Stork",
+            "Tianyu Ge",
+            "Ted Suzman",
+            "Linh Tran",
+            "Andrew Busey",
+            "Michael McGuffin",
+            "John Haley",
+            "Ankalagon",
+            "Eric Lavault",
+            "Boris Veselinovich",
+            "Julian Pulgarin",
+            "Jeff Linse",
+            "Cooper Jones",
+            "Ryan Dahl",
+            "Mark Govea",
+            "Robert Teed",
+            "Jason Hise",
+            "Meshal Alshammari",
+            "Bernd Sing",
+            "Nils Schneider",
+            "James Thornton",
+            "Mustafa Mahdi",
+            "Mathew Bramson",
+            "Jerry Ling",
+            "Vecht",
+            "Shimin Kuang",
+            "Rish Kundalia",
+            "Achille Brighton",
+            "Ripta Pasay",
+        ],
+    }
+
+class Footnote(Scene):
+    def construct(self):
+        words = TextMobject("""
+            \\begin{flushleft}
+            \\Large
+            By the way, in the quantum mechanical description
+            of polarization, states are written like 
+            $|\\! \\leftrightarrow \\rangle$ with a double-headed
+            arrow, rather than $|\\! \\rightarrow \\rangle$ with
+            a single-headed arrow.  This conveys how there's no distinction
+            between left and right; they each have the same measurable 
+            state: horizontal. \\\\
+            \\quad \\\\
+            Because of how I chose to motivate things with classical waves,
+            I'll stick with the single-headed $|\\! \\rightarrow \\rangle$
+            for this video, but just keep in mind that this differs
+            from quantum mechanics conventions.
+            \\end{flushleft}
+        """)
+        words.scale_to_fit_width(2*SPACE_WIDTH - 2)
+        self.add(words)
 
 
 
