@@ -109,8 +109,13 @@ def diag_to_matrix(l_and_u, diag):
 def is_closed(points):
     return np.linalg.norm(points[0] - points[-1]) < CLOSED_THRESHOLD
 
+## Color
+
 def color_to_rgb(color):
     return np.array(Color(color).get_rgb())
+
+def color_to_rgba(color, alpha = 1):
+    return np.append(color_to_rgb(color), [alpha])
 
 def rgb_to_color(rgb):
     try:
@@ -118,11 +123,17 @@ def rgb_to_color(rgb):
     except:
         return Color(WHITE)
 
+def rgba_to_color(rgba):
+    return rgb_to_color(rgba[:3])
+
 def invert_color(color):
     return rgb_to_color(1.0 - color_to_rgb(color))
 
 def color_to_int_rgb(color):
     return (255*color_to_rgb(color)).astype('uint8')
+
+def color_to_int_rgba(color, alpha = 255):
+    return np.append(color_to_int_rgb(color), alpha)
 
 def color_gradient(reference_colors, length_of_output):
     if length_of_output == 0:
@@ -147,6 +158,8 @@ def average_color(*colors):
     rgbs = np.array(map(color_to_rgb, colors))
     mean_rgb = np.apply_along_axis(np.mean, 0, rgbs)
     return rgb_to_color(mean_rgb)
+
+###
 
 def compass_directions(n = 4, start_vect = RIGHT):
     angle = 2*np.pi/n

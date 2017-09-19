@@ -330,7 +330,7 @@ class FermatsPrincipleStatement(Scene):
         norms -= np.min(norms)
         norms /= np.max(norms)
         alphas = 0.25 + 0.75 * norms * (1 + np.sin(12*angles))/2
-        everything.rgbs = alphas.repeat(3).reshape((len(alphas), 3))
+        everything.rgbas = alphas.repeat(3).reshape((len(alphas), 3))
 
         Mobject(everything, words).show()
 

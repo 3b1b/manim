@@ -3,49 +3,50 @@ from helpers import *
 
 class PMobject(Mobject):
     def init_points(self):
-        self.rgbs = np.zeros((0, 3))
+        self.rgbas = np.zeros((0, 4))
         self.points = np.zeros((0, 3))
         return self
 
     def get_array_attrs(self):
-        return Mobject.get_array_attrs(self) + ["rgbs"]
+        return Mobject.get_array_attrs(self) + ["rgbas"]
 
-    def add_points(self, points, rgbs = None, color = None):
+    def add_points(self, points, rgbas = None, color = None, alpha = 1):
         """
-        points must be a Nx3 numpy array, as must rgbs if it is not None
+        points must be a Nx3 numpy array, as must rgbas if it is not None
         """
         if not isinstance(points, np.ndarray):
             points = np.array(points)
-        num_new_points = points.shape[0]
+        num_new_points = len(points)
         self.points = np.append(self.points, points, axis = 0)
-        if rgbs is None:
+        if rgbas is None:
             color = Color(color) if color else self.color
-            rgbs = np.array([color.get_rgb()] * num_new_points)
-        elif rgbs.shape != points.shape:
-            raise Exception("points and rgbs must have same shape")
-        self.rgbs = np.append(self.rgbs, rgbs, axis = 0)
+            rgbas = np.repeat(
+                [color_to_rgba(color, alpha)],
+                num_new_points,
+                axis = 0
+            )
+        elif len(rgbas) != len(points):
+            raise Exception("points and rgbas must have same shape")
+        self.rgbas = np.append(self.rgbas, rgbas, axis = 0)
         return self
 
     def highlight(self, color = YELLOW_C, family = True, condition = None):
-        rgb = Color(color).get_rgb()
+        rgba = color_to_rgba(color)
         mobs = self.family_members_with_points() if family else [self]
         for mob in mobs:
             if condition:
                 to_change = np.apply_along_axis(condition, 1, mob.points)
-                mob.rgbs[to_change, :] = rgb
+                mob.rgbas[to_change, :] = rgba
             else:
-                mob.rgbs[:,:] = rgb
+                mob.rgbas[:,:] = rgba
         return self
 
     def gradient_highlight(self, start_color, end_color):
-        start_rgb, end_rgb = [
-            np.array(Color(color).get_rgb())
-            for color in start_color, end_color
-        ]
+        start_rgba, end_rgba = map(color_to_rgba, [start_color, end_color])
         for mob in self.family_members_with_points():
             num_points = mob.get_num_points()
-            mob.rgbs = np.array([
-                interpolate(start_rgb, end_rgb, alpha)
+            mob.rgbas = np.array([
+                interpolate(start_rgba, end_rgba, alpha)
                 for alpha in np.arange(num_points)/float(num_points)
             ])
         return self
@@ -53,14 +54,14 @@ class PMobject(Mobject):
 
     def match_colors(self, mobject):
         Mobject.align_data(self, mobject)
-        self.rgbs = np.array(mobject.rgbs)
+        self.rgbas = np.array(mobject.rgbas)
         return self
 
     def filter_out(self, condition):
         for mob in self.family_members_with_points():
             to_eliminate = ~np.apply_along_axis(condition, 1, mob.points)
             mob.points = mob.points[to_eliminate]
-            mob.rgbs = mob.rgbs[to_eliminate]
+            mob.rgbas = mob.rgbas[to_eliminate]
         return self
 
     def thin_out(self, factor = 5):
@@ -88,13 +89,13 @@ class PMobject(Mobject):
         return self
 
     def fade_to(self, color, alpha):
-        self.rgbs = interpolate(self.rgbs, np.array(Color(color).rgb), alpha)
+        self.rgbas = interpolate(self.rgbas, color_to_rgba(color), alpha)
         for mob in self.submobjects:
             mob.fade_to(color, alpha)
         return self
 
-    def get_all_rgbs(self):
-        return self.get_merged_array("rgbs")
+    def get_all_rgbas(self):
+        return self.get_merged_array("rgbas")
 
     def ingest_submobjects(self):
         attrs = self.get_array_attrs()
@@ -105,7 +106,7 @@ class PMobject(Mobject):
         return self
 
     def get_color(self):
-        return Color(rgb = self.rgbs[0, :])
+        return rgba_to_color(self.rgbas[0, :])
 
     def point_from_proportion(self, alpha):
         index = alpha*(self.get_num_points()-1)
@@ -126,8 +127,8 @@ class PMobject(Mobject):
         return Point(center)
 
     def interpolate_color(self, mobject1, mobject2, alpha):
-        self.rgbs = interpolate(
-            mobject1.rgbs, mobject2.rgbs, alpha
+        self.rgbas = interpolate(
+            mobject1.rgbas, mobject2.rgbas, alpha
         )
 
     def pointwise_become_partial(self, mobject, a, b):

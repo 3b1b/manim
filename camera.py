@@ -20,6 +20,8 @@ class Camera(object):
         #Points in vectorized mobjects with norm greater
         #than this value will be rescaled.
         "max_allowable_norm" : 2*SPACE_WIDTH,
+        "image_mode" : "RGBA",
+        "n_rgb_coords" : 4,
     }
 
     def __init__(self, background = None, **kwargs):
@@ -46,18 +48,20 @@ class Camera(object):
     def init_background(self):
         if self.background_image is not None:
             path = get_full_image_path(self.background_image)
-            image = Image.open(path).convert('RGB')
+            image = Image.open(path).convert(self.image_mode)
             height, width = self.pixel_shape
             #TODO, how to gracefully handle backgrounds 
             #with different sizes?
             self.background = np.array(image)[:height, :width]
         else:
-            background_rgb = color_to_int_rgb(self.background_color)
+            background_rgba = color_to_int_rgba(
+                self.background_color, alpha = 0
+            )
             self.background = np.zeros(
-                list(self.pixel_shape)+[3],
+                list(self.pixel_shape)+[self.n_rgb_coords],
                 dtype = 'uint8'
             )
-            self.background[:,:] = background_rgb
+            self.background[:,:] = background_rgba
 
     def get_image(self):
         return np.array(self.pixel_array)
@@ -88,7 +92,7 @@ class Camera(object):
                 self.display_multiple_vectorized_mobjects(vmobjects)
                 vmobjects = []
                 self.display_point_cloud(
-                    mobject.points, mobject.rgbs, 
+                    mobject.points, mobject.rgbas, 
                     self.adjusted_thickness(mobject.stroke_width)
                 )
             elif isinstance(mobject, ImageMobject):
@@ -102,11 +106,12 @@ class Camera(object):
         if len(vmobjects) == 0:
             return
         #More efficient to bundle together in one "canvas"
-        image = Image.fromarray(self.pixel_array, mode = "RGB")        
+        image = Image.fromarray(self.pixel_array, mode = self.image_mode)
         canvas = aggdraw.Draw(image)
         for vmobject in vmobjects:
             self.display_vectorized(vmobject, canvas)
         canvas.flush()
+
         self.pixel_array[:,:] = image
 
     def display_vectorized(self, vmobject, canvas):
@@ -159,7 +164,7 @@ class Camera(object):
             result += " ".join([start] + cubics + [end])
         return result
 
-    def display_point_cloud(self, points, rgbs, thickness):
+    def display_point_cloud(self, points, rgbas, thickness):
         if len(points) == 0:
             return
         points = self.align_points_to_camera(points)
@@ -167,15 +172,16 @@ class Camera(object):
         pixel_coords = self.thickened_coordinates(
             pixel_coords, thickness
         )
+        rgb_len = self.pixel_array.shape[2]
 
-        rgbs = (255*rgbs).astype('uint8')
+        rgbas = (255*rgbas).astype('uint8')
         target_len = len(pixel_coords)
-        factor = target_len/len(rgbs)
-        rgbs = np.array([rgbs]*factor).reshape((target_len, 3))
+        factor = target_len/len(rgbas)
+        rgbas = np.array([rgbas]*factor).reshape((target_len, rgb_len))
 
         on_screen_indices = self.on_screen_pixels(pixel_coords)        
         pixel_coords = pixel_coords[on_screen_indices]        
-        rgbs = rgbs[on_screen_indices]
+        rgbas = rgbas[on_screen_indices]
 
         ph, pw = self.pixel_shape
 
@@ -184,9 +190,9 @@ class Camera(object):
         indices = np.dot(pixel_coords, flattener)[:,0]
         indices = indices.astype('int')
         
-        new_pa = self.pixel_array.reshape((ph*pw, 3))
-        new_pa[indices] = rgbs
-        self.pixel_array = new_pa.reshape((ph, pw, 3))
+        new_pa = self.pixel_array.reshape((ph*pw, rgb_len))
+        new_pa[indices] = rgbas
+        self.pixel_array = new_pa.reshape((ph, pw, rgb_len))
 
     def display_image_mobject(self, image_mobject):
         corner_coords = self.points_to_pixel_coords(image_mobject.points)
@@ -211,7 +217,7 @@ class Camera(object):
         recentered_coords = all_pixel_coords - ul_coords
         coord_norms = np.linalg.norm(recentered_coords, axis = 1)
 
-        with np.errstate(divide='ignore'):
+        with np.errstate(divide = 'ignore'):
             ix_coords, iy_coords = [
                 np.divide(
                     dim*np.dot(recentered_coords, vect),
@@ -226,11 +232,26 @@ class Camera(object):
         n_to_change = np.sum(to_change)
         inner_flat_coords = iw*iy_coords[to_change] + ix_coords[to_change]
         flat_impa = impa.reshape((iw*ih, rgb_len))
-        target_rgbs = flat_impa[inner_flat_coords, :]
+        target_rgbas = flat_impa[inner_flat_coords, :]
 
-        flat_pa = self.pixel_array.reshape((ow*oh, rgb_len))
-        flat_pa[to_change] = target_rgbs
+        image = np.zeros((ow*oh, rgb_len), dtype = 'uint8')
+        image[to_change] = target_rgbas
+        image = image.reshape((oh, ow, rgb_len))
+        self.overlay_rgba_array(image)
 
+    def overlay_rgba_array(self, arr):
+        """ Overlays arr onto self.pixel_array with relevant alphas"""
+        bg, fg = self.pixel_array/255.0, arr/255.0
+        A = 1 - (1 - bg[:,:,3])*(1 - fg[:,:,3])
+        alpha_sum = bg[:,:,3] + fg[:,:,3]
+        for i in range(3):
+            with np.errstate(divide = 'ignore', invalid='ignore'):
+                bg[:,:,i] = reduce(op.add, [
+                    np.divide(arr[:,:,i]*arr[:,:,3], alpha_sum)
+                    for arr in fg, bg
+                ])
+        bg[:,:,3] = A
+        self.pixel_array = (255*bg).astype('uint8')
 
     def align_points_to_camera(self, points):
         ## This is where projection should live

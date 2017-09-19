@@ -318,8 +318,8 @@ class MoreFiltersMoreLight(FilterScene):
         phi, theta = self.camera.get_phi(), self.camera.get_theta()
         self.set_camera_position(np.pi/2, -np.pi)
 
-        self.original_rgbs = [(255, 255, 255)]
-        self.new_rgbs = [self.arrow_rgb]
+        self.original_rgbas = [(255, 255, 255)]
+        self.new_rgbas = [self.arrow_rgb]
         for bool_array in it.product(*5*[[True, False]]):
             pfs_to_use = VGroup(*[
                 pf
@@ -330,7 +330,7 @@ class MoreFiltersMoreLight(FilterScene):
             frame = self.camera.get_image()
             h, w, three = frame.shape
             rgb = frame[3*h/8, 7*w/12]
-            self.original_rgbs.append(rgb)
+            self.original_rgbas.append(rgb)
 
             angles = [pf.filter_angle for pf in pfs_to_use]
             p = 0.5
@@ -340,7 +340,7 @@ class MoreFiltersMoreLight(FilterScene):
             if not any(bool_array):
                 new_rgb = self.background_rgb
 
-            self.new_rgbs.append(new_rgb)
+            self.new_rgbas.append(new_rgb)
             self.camera.reset()
         self.set_camera_position(phi, theta)
 
@@ -351,9 +351,9 @@ class MoreFiltersMoreLight(FilterScene):
         frame = FilterScene.get_frame(self)
         bool_arrays = [
             (frame[:,:,0] == r) & (frame[:,:,1] == g) & (frame[:,:,2] == b)
-            for (r, g, b) in self.original_rgbs
+            for (r, g, b) in self.original_rgbas
         ]
-        for ba, new_rgb in zip(bool_arrays, self.new_rgbs):
+        for ba, new_rgb in zip(bool_arrays, self.new_rgbas):
             frame[ba] = new_rgb
         covered = reduce(
             lambda b1, b2 : b1 | b2,

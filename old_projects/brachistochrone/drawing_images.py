@@ -63,9 +63,9 @@ def sort_by_color(mob):
     indices = np.argsort(np.apply_along_axis(
         lambda p : -np.linalg.norm(p),
         1,
-        mob.rgbs
+        mob.rgbas
     ))
-    mob.rgbs = mob.rgbs[indices]    
+    mob.rgbas = mob.rgbas[indices]    
     mob.points = mob.points[indices]
 
 
@@ -108,7 +108,7 @@ def nearest_neighbor_align(mobject1, mobject2):
         )
         new_mob2.add_points(
             mobject2.points[indices],
-            rgbs = mobject2.rgbs[indices]
+            rgbas = mobject2.rgbas[indices]
         )
     return new_mob1, new_mob2
 

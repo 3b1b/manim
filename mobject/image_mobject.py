@@ -17,11 +17,13 @@ class ImageMobject(Mobject):
         "invert" : False,
         # "use_cache" : True,
         "height": 2.0,
+        "image_mode" : "RGBA"
     }
     def __init__(self, filename_or_array, **kwargs):
+        digest_config(self, kwargs)
         if isinstance(filename_or_array, str):
             path = get_full_image_path(filename_or_array)
-            image = Image.open(path).convert("RGB")
+            image = Image.open(path).convert(self.image_mode)
             self.pixel_array = np.array(image)
         else:
             self.pixel_array = np.array(filename_or_array)
@@ -41,9 +43,13 @@ class ImageMobject(Mobject):
         h, w = self.pixel_array.shape[:2]
         self.stretch_to_fit_width(self.height*w/h)
 
+    def set_opacity(self, alpha):
+        self.pixel_array[:,:,3] = int(255*alpha)
+        return self
 
-
-
+    def fade(self, darkness = 0.5):
+        self.set_opacity(1 - darkness)
+        return self
 
 
 

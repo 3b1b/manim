@@ -474,12 +474,12 @@ class TauPoem(Scene):
         )
         blue_rgb = np.array(Color("blue").get_rgb())
         white_rgb = np.ones(3)
-        circle.rgbs = np.array([
+        circle.rgbas = np.array([
             alpha * blue_rgb + (1 - alpha) * white_rgb
-            for alpha in np.arange(0, 1, 1.0/len(circle.rgbs))
+            for alpha in np.arange(0, 1, 1.0/len(circle.rgbas))
         ])
         for index in range(circle.points.shape[0]):
-            circle.rgbs
+            circle.rgbas
         def trianglify((x, y, z)):
             norm = np.linalg.norm((x, y, z))
             comp = complex(x, y)*complex(0, 1)
