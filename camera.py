@@ -7,7 +7,7 @@ from colour import Color
 import aggdraw
 
 from helpers import *
-from mobject import PMobject, VMobject
+from mobject import PMobject, VMobject, ImageMobject
 
 class Camera(object):
     CONFIG = {
@@ -91,6 +91,10 @@ class Camera(object):
                     mobject.points, mobject.rgbs, 
                     self.adjusted_thickness(mobject.stroke_width)
                 )
+            elif isinstance(mobject, ImageMobject):
+                self.display_image_mobject(mobject)
+            else:
+                raise Exception("Unknown mobject type: " + type(mobject))
             #TODO, more?  Call out if it's unknown?
         self.display_multiple_vectorized_mobjects(vmobjects)
 
@@ -183,6 +187,50 @@ class Camera(object):
         new_pa = self.pixel_array.reshape((ph*pw, 3))
         new_pa[indices] = rgbs
         self.pixel_array = new_pa.reshape((ph, pw, 3))
+
+    def display_image_mobject(self, image_mobject):
+        corner_coords = self.points_to_pixel_coords(image_mobject.points)
+        ul_coords, ur_coords, dl_coords = corner_coords
+        right_vect = ur_coords - ul_coords
+        down_vect = dl_coords - ul_coords
+
+        impa = image_mobject.pixel_array
+
+        oh, ow = self.pixel_array.shape[:2] #Outer width and height
+        ih, iw = impa.shape[:2] #inner with and height
+        rgb_len = self.pixel_array.shape[2]
+
+        # List of all coordinates of pixels, given as (x, y), 
+        # which matches the return type of points_to_pixel_coords,
+        # even though np.array indexing naturally happens as (y, x)
+        all_pixel_coords = np.zeros((oh*ow, 2), dtype = 'int')
+        a = np.arange(oh*ow, dtype = 'int')
+        all_pixel_coords[:,0] = a%ow
+        all_pixel_coords[:,1] = a/ow
+
+        recentered_coords = all_pixel_coords - ul_coords
+        coord_norms = np.linalg.norm(recentered_coords, axis = 1)
+
+        with np.errstate(divide='ignore'):
+            ix_coords, iy_coords = [
+                np.divide(
+                    dim*np.dot(recentered_coords, vect),
+                    np.dot(vect, vect),
+                )
+                for vect, dim in (right_vect, iw), (down_vect, ih)
+            ]
+        to_change = reduce(op.and_, [
+            ix_coords >= 0, ix_coords < iw,
+            iy_coords >= 0, iy_coords < ih,
+        ])
+        n_to_change = np.sum(to_change)
+        inner_flat_coords = iw*iy_coords[to_change] + ix_coords[to_change]
+        flat_impa = impa.reshape((iw*ih, rgb_len))
+        target_rgbs = flat_impa[inner_flat_coords, :]
+
+        flat_pa = self.pixel_array.reshape((ow*oh, rgb_len))
+        flat_pa[to_change] = target_rgbs
+
 
     def align_points_to_camera(self, points):
         ## This is where projection should live
