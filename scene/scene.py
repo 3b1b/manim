@@ -5,6 +5,7 @@ import itertools as it
 import warnings
 import time
 import os
+import shutil
 import copy
 from tqdm import tqdm as ProgressDisplay
 import inspect
@@ -497,7 +498,10 @@ class Scene(object):
     def close_movie_pipe(self):
         self.writing_process.stdin.close()
         self.writing_process.wait()
-        os.rename(*self.args_to_rename_file)
+        if os.name == 'nt':
+            shutil.move(*self.args_to_rename_file)
+        else:
+            os.rename(*self.args_to_rename_file)
 
 
 
