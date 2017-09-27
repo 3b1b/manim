@@ -294,6 +294,11 @@ def generate_tex_file(expression, template_tex_file):
             outfile.write(body)
     return result
 
+def get_null():
+    if os.name == "nt":
+        return "NUL"
+    return "/dev/null"
+
 def tex_to_dvi(tex_file):
     result = tex_file.replace(".tex", ".dvi")
     if not os.path.exists(result):
@@ -303,7 +308,8 @@ def tex_to_dvi(tex_file):
             "-halt-on-error",
             "-output-directory=" + TEX_DIR,
             tex_file,
-            "> /dev/null"
+            ">",
+            get_null()
         ]
         exit_code = os.system(" ".join(commands))
         if exit_code != 0:
@@ -334,7 +340,8 @@ def dvi_to_svg(dvi_file, regen_if_exists = False):
             "0",
             "-o",
             result,
-            "> /dev/null"
+            ">",
+            get_null()
         ]
         os.system(" ".join(commands))
     return result
