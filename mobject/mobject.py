@@ -87,7 +87,7 @@ class Mobject(object):
             from camera import Camera
             camera = Camera()
         camera.capture_mobject(self)
-        return Image.fromarray(camera.get_image())
+        return camera.get_image()
 
     def show(self, camera = None):
         self.get_image(camera = camera).show()
@@ -611,11 +611,11 @@ class Mobject(object):
         if n_rows is not None:
             v1 = RIGHT
             v2 = DOWN
-            n = n_rows
+            n = len(submobs) / n_rows
         elif n_cols is not None:
             v1 = DOWN
             v2 = RIGHT
-            n = n_cols
+            n = len(submobs) / n_cols
         Group(*[
             Group(*submobs[i:i+n]).arrange_submobjects(v1, **kwargs)
             for i in range(0, len(submobs), n)

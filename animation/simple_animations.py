@@ -136,15 +136,21 @@ class ShowPassingFlash(ShowPartial):
     }
     def get_bounds(self, alpha):
         alpha *= (1+self.time_width)
-        alpha -= self.time_width/2
-        lower = max(0, alpha - self.time_width/2)
-        upper = min(1, alpha + self.time_width/2)
+        alpha -= self.time_width/2.0
+        lower = max(0, alpha - self.time_width/2.0)
+        upper = min(1, alpha + self.time_width/2.0)
         return (lower, upper)
 
     def clean_up(self, *args, **kwargs):
         ShowPartial.clean_up(self, *args, **kwargs)
         for submob, start_submob in self.get_all_families_zipped():
             submob.pointwise_become_partial(start_submob, 0, 1)
+
+class ShowCreationThenDestruction(ShowPassingFlash):
+    CONFIG = {
+        "time_width" : 2.0,
+        "run_time" : 1,
+    }
 
 class MoveAlongPath(Animation):
     def __init__(self, mobject, vmobject, **kwargs):

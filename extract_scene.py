@@ -42,7 +42,7 @@ NO_SCENE_MESSAGE = """
 
 def get_configuration(sys_argv):
    try:
-      opts, args = getopt.getopt(sys_argv[1:], 'hlmpwsqao:')
+      opts, args = getopt.getopt(sys_argv[1:], 'hlmpwstqao:')
    except getopt.GetoptError as err:
       print str(err)
       sys.exit(2)
@@ -55,6 +55,8 @@ def get_configuration(sys_argv):
       "write_to_movie"  : False,
       "save_frames"     : False,
       "save_image"      : False,
+      #If -t is passed in (for transparent), this will be RGBA
+      "saved_image_mode": "RGB",
       "quiet"           : False,
       "write_all"       : False,
       "output_name"     : None,
@@ -76,6 +78,8 @@ def get_configuration(sys_argv):
          config["write_to_movie"] = True
       if opt == '-s':
          config["save_image"] = True
+      if opt == '-t':
+         config["saved_image_mode"] = "RGBA"
       if opt in ['-q', '-a']:
          config["quiet"] = True
       if opt == '-a':
@@ -106,7 +110,7 @@ def handle_scene(scene, **config):
    if config["save_image"]:
       if not config["write_all"]:
          scene.show_frame()
-      scene.save_image()
+      scene.save_image(mode = config["saved_image_mode"])
 
    if config["quiet"]:
       sys.stdout.close()

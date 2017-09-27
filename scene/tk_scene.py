@@ -34,7 +34,7 @@ class TkSceneRoot(Tkinter.Tk):
         self.mainloop()
 
     def show_new_image(self, frame):
-        image = Image.fromarray(frame).convert('RGB')
+        image = Image.fromarray(frame.astype('uint8')).convert('RGB')
         photo = ImageTk.PhotoImage(image)
         self.canvas.delete(Tkinter.ALL)
         self.canvas.create_image(

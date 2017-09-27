@@ -648,7 +648,13 @@ class TeacherStudentsScene(PiCreatureScene):
         return self.pi_creature_thinks(student, *content, **kwargs)
 
     def change_student_modes(self, *modes, **kwargs):
-        added_anims = kwargs.get("added_anims", [])
+        added_anims = kwargs.pop("added_anims", [])
+        self.play(
+            self.get_student_changes(*modes, **kwargs),
+            *added_anims
+        )
+
+    def get_student_changes(self, *modes, **kwargs):
         pairs = zip(self.get_students(), modes)
         pairs = [(s, m) for s, m in pairs if m is not None]
         start = VGroup(*[s for s, m in pairs])
@@ -656,13 +662,11 @@ class TeacherStudentsScene(PiCreatureScene):
         if "look_at_arg" in kwargs:
             for pi in target:
                 pi.look_at(kwargs["look_at_arg"])
-        self.play(
-            Transform(
-                start, target, 
-                submobject_mode = "lagged_start",
-                run_time = 2
-            ),
-            *added_anims
+        submobject_mode = kwargs.get("submobject_mode", "lagged_start")
+        return Transform(
+            start, target, 
+            submobject_mode = submobject_mode,
+            run_time = 2
         )
 
     def zoom_in_on_thought_bubble(self, bubble = None, radius = SPACE_HEIGHT+SPACE_WIDTH):

@@ -100,7 +100,7 @@ class Swap(CyclicReplace):
 
 class GrowFromPoint(Transform):
     def __init__(self, mobject, point, **kwargs):
-        target = mobject.copy()
+        target = mobject.deepcopy()
         point_mob = Point(point)
         mobject.replace(point_mob)
         mobject.highlight(point_mob.get_color())

@@ -90,10 +90,13 @@ class Scene(object):
         self.camera = camera
 
     def get_frame(self):
+        return np.array(self.camera.get_pixel_array())
+
+    def get_image(self):
         return self.camera.get_image()
 
-    def set_camera_image(self, pixel_array):
-        self.camera.set_image(pixel_array)
+    def set_camera_pixel_array(self, pixel_array):
+        self.camera.set_pixel_array(pixel_array)
 
     def set_camera_background(self, background):
         self.camera.set_background(background)
@@ -113,7 +116,7 @@ class Scene(object):
                 self.mobjects,
             )
         if background is not None:
-            self.set_camera_image(background)
+            self.set_camera_pixel_array(background)
         else:
             self.reset_camera()
 
@@ -439,19 +442,21 @@ class Scene(object):
 
     def show_frame(self):
         self.update_frame()
-        Image.fromarray(self.get_frame()).show()
+        self.get_image().show()
 
     def preview(self):
         TkSceneRoot(self)
 
-    def save_image(self, name = None):
+    def save_image(self, name = None, mode = "RGB"):
         path = os.path.join(self.output_directory, "images")
         file_name = (name or str(self)) + ".png"
         full_path = os.path.join(path, file_name)
         if not os.path.exists(path):
             os.makedirs(path)
         self.update_frame()
-        Image.fromarray(self.get_frame()).save(full_path)
+        image = self.get_image()
+        image = image.convert(mode)
+        image.save(full_path)
 
     def get_movie_file_path(self, name, extension):
         file_path = os.path.join(self.output_directory, name)

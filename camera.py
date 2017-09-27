@@ -7,7 +7,7 @@ from colour import Color
 import aggdraw
 
 from helpers import *
-from mobject import PMobject, VMobject, ImageMobject
+from mobject import Mobject, PMobject, VMobject, ImageMobject, Group
 
 class Camera(object):
     CONFIG = {
@@ -22,6 +22,8 @@ class Camera(object):
         "max_allowable_norm" : 2*SPACE_WIDTH,
         "image_mode" : "RGBA",
         "n_rgb_coords" : 4,
+        "background_alpha" : 0, #Out of 255
+        "pixel_array_dtype" : 'uint8'
     }
 
     def __init__(self, background = None, **kwargs):
@@ -53,27 +55,34 @@ class Camera(object):
             #TODO, how to gracefully handle backgrounds 
             #with different sizes?
             self.background = np.array(image)[:height, :width]
+            self.background = self.background.astype(self.pixel_array_dtype)
         else:
             background_rgba = color_to_int_rgba(
-                self.background_color, alpha = 0
+                self.background_color, alpha = self.background_alpha
             )
             self.background = np.zeros(
                 list(self.pixel_shape)+[self.n_rgb_coords],
-                dtype = 'uint8'
+                dtype = self.pixel_array_dtype
             )
             self.background[:,:] = background_rgba
 
     def get_image(self):
-        return np.array(self.pixel_array)
+        return Image.fromarray(
+            self.pixel_array,
+            mode = self.image_mode
+        )
 
-    def set_image(self, pixel_array):
+    def get_pixel_array(self):
+        return self.pixel_array
+
+    def set_pixel_array(self, pixel_array):
         self.pixel_array = np.array(pixel_array)
 
     def set_background(self, pixel_array):
         self.background = np.array(pixel_array)
 
     def reset(self):
-        self.set_image(np.array(self.background))
+        self.set_pixel_array(np.array(self.background))
 
     def capture_mobject(self, mobject):
         return self.capture_mobjects([mobject])
@@ -97,8 +106,12 @@ class Camera(object):
                 )
             elif isinstance(mobject, ImageMobject):
                 self.display_image_mobject(mobject)
+            elif isinstance(mobject, Mobject):
+                pass #Remainder of loop will handle submobjects
             else:
-                raise Exception("Unknown mobject type: " + type(mobject))
+                raise Exception(
+                    "Unknown mobject type: " + mobject.__class__.__name__
+                )
             #TODO, more?  Call out if it's unknown?
         self.display_multiple_vectorized_mobjects(vmobjects)
 
@@ -206,52 +219,73 @@ class Camera(object):
         ih, iw = impa.shape[:2] #inner with and height
         rgb_len = self.pixel_array.shape[2]
 
-        # List of all coordinates of pixels, given as (x, y), 
-        # which matches the return type of points_to_pixel_coords,
-        # even though np.array indexing naturally happens as (y, x)
-        all_pixel_coords = np.zeros((oh*ow, 2), dtype = 'int')
-        a = np.arange(oh*ow, dtype = 'int')
-        all_pixel_coords[:,0] = a%ow
-        all_pixel_coords[:,1] = a/ow
+        image = np.zeros((oh, ow, rgb_len), dtype = self.pixel_array_dtype)
 
-        recentered_coords = all_pixel_coords - ul_coords
-        coord_norms = np.linalg.norm(recentered_coords, axis = 1)
+        if right_vect[1] == 0 and down_vect[0] == 0:
+            rv0 = right_vect[0]
+            dv1 = down_vect[1]
+            x_indices = np.arange(rv0, dtype = 'int')*iw/rv0
+            y_indices = np.arange(dv1, dtype = 'int')*ih/dv1
+            stretched_impa = impa[y_indices][:,x_indices]
 
-        with np.errstate(divide = 'ignore'):
-            ix_coords, iy_coords = [
-                np.divide(
-                    dim*np.dot(recentered_coords, vect),
-                    np.dot(vect, vect),
-                )
-                for vect, dim in (right_vect, iw), (down_vect, ih)
-            ]
-        to_change = reduce(op.and_, [
-            ix_coords >= 0, ix_coords < iw,
-            iy_coords >= 0, iy_coords < ih,
-        ])
-        n_to_change = np.sum(to_change)
-        inner_flat_coords = iw*iy_coords[to_change] + ix_coords[to_change]
-        flat_impa = impa.reshape((iw*ih, rgb_len))
-        target_rgbas = flat_impa[inner_flat_coords, :]
+            x0, x1 = ul_coords[0], ur_coords[0] 
+            y0, y1 = ul_coords[1], dl_coords[1]
+            if x0 >= ow or x1 < 0 or y0 >= oh or y1 < 0:
+                return
+            siy0 = max(-y0, 0) #stretched_impa y0
+            siy1 = dv1 - max(y1-oh, 0)
+            six0 = max(-x0, 0)
+            six1 = rv0 - max(x1-ow, 0)
+            x0 = max(x0, 0)
+            y0 = max(y0, 0)
+            image[y0:y1, x0:x1] = stretched_impa[siy0:siy1, six0:six1]
+        else:
+            # Alternate (slower) tactice if image is tilted
+            # List of all coordinates of pixels, given as (x, y), 
+            # which matches the return type of points_to_pixel_coords,
+            # even though np.array indexing naturally happens as (y, x)
+            all_pixel_coords = np.zeros((oh*ow, 2), dtype = 'int')
+            a = np.arange(oh*ow, dtype = 'int')
+            all_pixel_coords[:,0] = a%ow
+            all_pixel_coords[:,1] = a/ow
 
-        image = np.zeros((ow*oh, rgb_len), dtype = 'uint8')
-        image[to_change] = target_rgbas
-        image = image.reshape((oh, ow, rgb_len))
+            recentered_coords = all_pixel_coords - ul_coords
+            coord_norms = np.linalg.norm(recentered_coords, axis = 1)
+
+            with np.errstate(divide = 'ignore'):
+                ix_coords, iy_coords = [
+                    np.divide(
+                        dim*np.dot(recentered_coords, vect),
+                        np.dot(vect, vect),
+                    )
+                    for vect, dim in (right_vect, iw), (down_vect, ih)
+                ]
+            to_change = reduce(op.and_, [
+                ix_coords >= 0, ix_coords < iw,
+                iy_coords >= 0, iy_coords < ih,
+            ])
+            n_to_change = np.sum(to_change)
+            inner_flat_coords = iw*iy_coords[to_change] + ix_coords[to_change]
+            flat_impa = impa.reshape((iw*ih, rgb_len))
+            target_rgbas = flat_impa[inner_flat_coords, :]
+
+            image = image.reshape((ow*oh, rgb_len))
+            image[to_change] = target_rgbas
+            image = image.reshape((oh, ow, rgb_len))
         self.overlay_rgba_array(image)
 
     def overlay_rgba_array(self, arr):
-        """ Overlays arr onto self.pixel_array with relevant alphas"""
+        # """ Overlays arr onto self.pixel_array with relevant alphas"""
         bg, fg = self.pixel_array/255.0, arr/255.0
-        A = 1 - (1 - bg[:,:,3])*(1 - fg[:,:,3])
-        alpha_sum = bg[:,:,3] + fg[:,:,3]
-        for i in range(3):
-            with np.errstate(divide = 'ignore', invalid='ignore'):
-                bg[:,:,i] = reduce(op.add, [
-                    np.divide(arr[:,:,i]*arr[:,:,3], alpha_sum)
-                    for arr in fg, bg
-                ])
-        bg[:,:,3] = A
-        self.pixel_array = (255*bg).astype('uint8')
+        bga, fga = [arr[:,:,3:] for arr in bg, fg]
+        alpha_sum = fga + (1-fga)*bga
+        with np.errstate(divide = 'ignore', invalid='ignore'):
+            bg[:,:,:3] = reduce(op.add, [
+                np.divide(fg[:,:,:3]*fga, alpha_sum),
+                np.divide(bg[:,:,:3]*bga*(1-fga), alpha_sum),
+            ])
+        bg[:,:,3:] = 1 - (1 - bga)*(1 - fga)
+        self.pixel_array = (255*bg).astype(self.pixel_array_dtype)
 
     def align_points_to_camera(self, points):
         ## This is where projection should live
