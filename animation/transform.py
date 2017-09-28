@@ -161,7 +161,7 @@ class FadeOut(Transform):
 
 class FadeIn(Transform):
     def __init__(self, mobject, **kwargs):
-        target = mobject.copy()
+        target = mobject.deepcopy()
         Transform.__init__(self, mobject, target, **kwargs)
         self.starting_mobject.fade(1)
         if isinstance(self.starting_mobject, VMobject):

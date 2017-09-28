@@ -97,9 +97,11 @@ class Camera(object):
         for mobject in mobjects:
             if isinstance(mobject, VMobject):
                 vmobjects.append(mobject)
-            elif isinstance(mobject, PMobject):
+            elif len(vmobjects) > 0:
                 self.display_multiple_vectorized_mobjects(vmobjects)
                 vmobjects = []
+                
+            if isinstance(mobject, PMobject):
                 self.display_point_cloud(
                     mobject.points, mobject.rgbas, 
                     self.adjusted_thickness(mobject.stroke_width)
@@ -282,7 +284,7 @@ class Camera(object):
         with np.errstate(divide = 'ignore', invalid='ignore'):
             bg[:,:,:3] = reduce(op.add, [
                 np.divide(fg[:,:,:3]*fga, alpha_sum),
-                np.divide(bg[:,:,:3]*bga*(1-fga), alpha_sum),
+                np.divide(bg[:,:,:3]*(1-fga)*bga, alpha_sum),
             ])
         bg[:,:,3:] = 1 - (1 - bga)*(1 - fga)
         self.pixel_array = (255*bg).astype(self.pixel_array_dtype)

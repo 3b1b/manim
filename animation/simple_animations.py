@@ -360,6 +360,9 @@ class DelayByOrder(Animation):
         self.animation.update_mobject(alpha_array)
 
 class Succession(Animation):
+    CONFIG = {
+        "rate_func" : None,
+    }
     def __init__(self, *animations, **kwargs):
         if "run_time" in kwargs:
             run_time = kwargs.pop("run_time")

@@ -91,11 +91,15 @@ class NetworkMobject(VGroup):
         "neuron_to_neuron_buff" : MED_SMALL_BUFF,
         "layer_to_layer_buff" : LARGE_BUFF,
         "neuron_stroke_color" : BLUE,
+        "neuron_stroke_width" : 3,
         "neuron_fill_color" : GREEN,
         "edge_color" : LIGHT_GREY,
         "edge_stroke_width" : 2,
+        "edge_propogation_color" : GREEN,
+        "edge_propogation_time" : 1,
         "max_shown_neurons" : 16,
         "brace_for_large_layers" : True,
+        "average_shown_activation_of_large_layer" : True,
     }
     def __init__(self, neural_network, **kwargs):
         VGroup.__init__(self, **kwargs)
@@ -122,6 +126,7 @@ class NetworkMobject(VGroup):
             Circle(
                 radius = self.neuron_radius,
                 stroke_color = self.neuron_stroke_color,
+                stroke_width = self.neuron_stroke_width,
             )
             for x in range(n_neurons)
         ])   
@@ -176,8 +181,24 @@ class NetworkMobject(VGroup):
         layer = self.layers[layer_index].deepcopy()
         n_neurons = len(layer.neurons)
         av = activation_vector
+        def arr_to_num(arr):
+            return (np.sum(arr > 0.1) / float(len(arr)))**(1./3)
+
         if len(av) > n_neurons:
-            av = av[av > 0][:n_neurons]
+            if self.average_shown_activation_of_large_layer:
+                indices = np.arange(n_neurons)
+                indices *= int(len(av)/n_neurons)
+                indices = list(indices)
+                indices.append(len(av))
+                av = np.array([
+                    arr_to_num(av[i1:i2])
+                    for i1, i2 in zip(indices[:-1], indices[1:])
+                ])
+            else:
+                av = np.append(
+                    av[:n_neurons/2],
+                    av[-n_neurons/2:],
+                )
         for activation, neuron in zip(av, layer.neurons):
             neuron.set_fill(
                 color = self.neuron_fill_color,
@@ -194,12 +215,18 @@ class NetworkMobject(VGroup):
         return self
 
     def get_edge_propogation_animations(self, index):
-            edge_group_copy = self.edge_groups[index].copy()
-            edge_group_copy.set_stroke(
-                self.neuron_fill_color,
-                width = 1.5*self.edge_stroke_width
+        edge_group_copy = self.edge_groups[index].copy()
+        edge_group_copy.set_stroke(
+            self.edge_propogation_color,
+            width = 1.5*self.edge_stroke_width
+        )
+        return [
+            ShowCreationThenDestruction(
+                mob, 
+                run_time = self.edge_propogation_time
             )
-            return map(ShowCreationThenDestruction, edge_group_copy)
+            for mob in edge_group_copy
+        ]
 
 class MNistNetworkMobject(NetworkMobject):
     CONFIG = {
@@ -218,13 +245,14 @@ class MNistNetworkMobject(NetworkMobject):
         for n, neuron in enumerate(self.layers[-1].neurons):
             label = TexMobject(str(n))
             label.scale_to_fit_height(0.75*neuron.get_height())
-            label.next_to(neuron, RIGHT, SMALL_BUFF)
+            label.move_to(neuron)
+            label.shift(neuron.get_width()*RIGHT)
             self.output_labels.add(label)
         self.add(self.output_labels)
 
 class NetworkScene(Scene):
     CONFIG = {
-        "layer_sizes" : [8, 6, 6, 4]
+        "layer_sizes" : [8, 6, 6, 4],
     }
     def setup(self):
         self.add_network()
@@ -234,7 +262,9 @@ class NetworkScene(Scene):
         self.network_mob = NetworkMobject(self.network)
         self.add(self.network_mob)
 
-    def feed_forward(self, input_vector, false_confidence = False):
+    def feed_forward(self, input_vector, false_confidence = False, added_anims = None):
+        if added_anims is None:
+            added_anims = []
         activations = self.network.get_activation_of_all_layers(
             input_vector
         )
@@ -243,9 +273,12 @@ class NetworkScene(Scene):
             activations[-1] *= 0
             activations[-1][i] = 1.0
         for i, activation in enumerate(activations):
-            self.show_activation_of_layer(i, activation)
+            self.show_activation_of_layer(i, activation, added_anims)
+            added_anims = []
 
-    def show_activation_of_layer(self, layer_index, activation_vector):
+    def show_activation_of_layer(self, layer_index, activation_vector, added_anims = None):
+        if added_anims is None:
+            added_anims = []
         layer = self.network_mob.layers[layer_index]
         active_layer = self.network_mob.get_active_layer(
             layer_index, activation_vector
@@ -255,7 +288,14 @@ class NetworkScene(Scene):
             anims += self.network_mob.get_edge_propogation_animations(
                 layer_index-1
             )
+        anims += added_anims
         self.play(*anims)
+
+    def remove_random_edges(self, prop = 0.9):
+        for edge_group in self.network_mob.edge_groups:
+            for edge in list(edge_group):
+                if np.random.random() < prop:
+                    edge_group.remove(edge)
 
 ###############################
 
@@ -632,55 +672,906 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
             self.play(MoveToTarget(edge_group))
         self.dither()
 
-
 class PreviewMNistNetwork(NetworkScene):
+    CONFIG = {
+        "n_examples" : 15,
+        "network_mob_config" : {},
+    }
     def construct(self):
+        self.remove_random_edges(0.7) #Remove?
+
         training_data, validation_data, test_data = load_data_wrapper()
-        for data in test_data[:1]:
+        for data in test_data[:self.n_examples]:
             self.feed_in_image(data[0])
 
     def feed_in_image(self, in_vect):
         image = PixelsFromVect(in_vect)
         image.next_to(self.network_mob, LEFT, LARGE_BUFF, UP)
-        rect = SurroundingRectangle(image, color = BLUE)
+        big_rect = SurroundingRectangle(image, color = BLUE)
+        start_neurons = self.network_mob.layers[0].neurons.copy()
+        start_neurons.set_stroke(WHITE, width = 0)
+        start_neurons.set_fill(WHITE, 0)
 
-        self.play(FadeIn(image), FadeIn(rect))
-        print in_vect.shape
-        # self.feed_forward(in_vect)
-        # self.play(FadeOut(image))
+        self.play(FadeIn(image), FadeIn(big_rect))
+        self.feed_forward(in_vect, added_anims = [
+            self.get_image_to_layer_one_animation(image, start_neurons)
+        ])
+        n = np.argmax([
+            neuron.get_fill_opacity()
+            for neuron in self.network_mob.layers[-1].neurons
+        ])
+        rect = SurroundingRectangle(VGroup(
+            self.network_mob.layers[-1].neurons[n],
+            self.network_mob.output_labels[n],
+        ))
+        self.play(ShowCreation(rect))
+        self.play(FadeOut(rect))
+        self.play(
+            FadeOut(image),
+            FadeOut(big_rect),
+            self.network_mob.deactivate_layers,
+        )
 
-
-
-
+    def get_image_to_layer_one_animation(self, image, start_neurons):
+        image_mover = VGroup(*[
+            pixel.copy()
+            for pixel in image
+            if pixel.fill_rgb[0] > 0.1
+        ])
+        return Transform(
+            image_mover, start_neurons, 
+            remover = True,
+            run_time = 1,
+        )
 
     ###
 
     def add_network(self):
-        self.network_mob = MNistNetworkMobject()
+        self.network_mob = MNistNetworkMobject(**self.network_mob_config)
         self.network = self.network_mob.neural_network
         self.add(self.network_mob)
 
+class AlternateNeuralNetworks(PiCreatureScene):
+    def construct(self):
+        morty = self.pi_creature
+        examples = VGroup(
+            VGroup(
+                TextMobject("Convolutional neural network"),
+                TextMobject("Good for image recognition"),
+            ),
+            VGroup(
+                TextMobject("Long short-term memory network"),
+                TextMobject("Good for speech recognition"),
+            )
+        )
+        for ex in examples:
+            arrow = Arrow(LEFT, RIGHT, color = BLUE)
+            ex[0].next_to(arrow, LEFT)
+            ex[1].next_to(arrow, RIGHT)
+            ex.submobjects.insert(1, arrow)
+        examples.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        examples.next_to(morty, UP).to_edge(RIGHT)
 
+        maybe_words = TextMobject("Maybe future videos?")
+        maybe_words.scale(0.8)
+        maybe_words.next_to(morty, UP)
+        maybe_words.to_edge(RIGHT)
+        maybe_words.highlight(YELLOW)
 
+        self.play(
+            Write(examples[0], run_time = 2),
+            morty.change, "raise_right_hand"
+        )
+        self.dither()
+        self.play(
+            examples[0].shift, MED_LARGE_BUFF*UP,
+            FadeIn(examples[1], submobject_mode = "lagged_start"),
+        )
+        self.dither()
+        self.play(
+            examples.shift, UP,
+            FadeIn(maybe_words),
+            morty.change, "maybe"
+        )
+        self.dither(2)
 
+class PlainVanillaWrapper(Scene):
+    def construct(self):
+        title = TextMobject("Plain vanilla")
+        subtitle = TextMobject("(aka ``multilayer perceptron'')")
+        title.scale(1.5)
+        title.to_edge(UP)
+        subtitle.next_to(title, DOWN)
 
+        self.add(title)
+        self.dither(2)
+        self.play(Write(subtitle, run_time = 2))
+        self.dither(2)
 
+class NotPerfectAddOn(Scene):
+    def construct(self):
+        words = TextMobject("Not perfect!")
+        words.scale(1.5)
+        arrow = Arrow(UP+RIGHT, DOWN+LEFT, color = RED)
+        words.highlight(RED)
+        arrow.to_corner(DOWN+LEFT)
+        words.next_to(arrow, UP+RIGHT)
 
+        self.play(
+            Write(words),
+            ShowCreation(arrow),
+            run_time = 1
+        )
+        self.dither(2)
 
+class MoreAThanI(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "More \\\\ A than I",
+            target_mode = "hesitant"
+        )
+        self.change_student_modes("sad", "erm", "tired")
+        self.dither(2)
 
+class BreakDownName(Scene):
+    def construct(self):
+        self.ask_questions()
+        self.show_neuron()
 
+    def ask_questions(self):
+        name = TextMobject("Neural", "network")
+        name.to_edge(UP)
+        q1 = TextMobject(
+            "What are \\\\ the ", "neuron", "s?",
+            arg_separator = ""
+        )
+        q2 = TextMobject("How are \\\\ they connected?")
+        q1.next_to(name[0].get_bottom(), DOWN, buff = LARGE_BUFF)
+        q2.next_to(name[1].get_bottom(), DOWN+RIGHT, buff = LARGE_BUFF)
+        a1 = Arrow(q1.get_top(), name[0].get_bottom())
+        a2 = Arrow(q2.get_top(), name.get_corner(DOWN+RIGHT))
+        VGroup(q1, a1).highlight(BLUE)
+        VGroup(q2, a2).highlight(YELLOW)
 
+        randy = Randolph().to_corner(DOWN+LEFT)
+        brain = SVGMobject(file_name = "brain")
+        brain.set_fill(LIGHT_GREY, opacity = 0)
+        brain.replace(randy.eyes, dim_to_match = 1)
 
+        self.add(name)
+        self.play(randy.change, "pondering")
+        self.play(
+            brain.scale_to_fit_height, 2,
+            brain.shift, 2*UP,
+            brain.set_fill, None, 1,
+            randy.look, UP
+        )
+        brain_outline = brain.copy()
+        brain_outline.set_fill(opacity = 0)
+        brain_outline.set_stroke(BLUE_B, 3)
+        self.play(
+            ShowPassingFlash(
+                brain_outline, 
+                time_width = 0.5,
+                run_time = 2
+            )
+        )
+        self.play(Blink(randy))
+        self.dither()
+        self.play(
+            Write(q1, run_time = 1),
+            ShowCreation(a1),
+            name[0].highlight, q1.get_color(),
+        )
+        self.play(
+            Write(q2, run_time = 1),
+            ShowCreation(a2),
+            name[1].highlight, q2.get_color()
+        )
+        self.dither(2)
 
+        self.play(*map(FadeOut, [
+            name, randy, brain, 
+            q2, a1, a2,
+            q1[0], q1[2]
+        ]))
 
+        self.neuron_word = q1[1]
 
+    def show_neuron(self):
+        neuron_word = TextMobject("Neuron")
+        arrow = TexMobject("\\rightarrow")
+        arrow.shift(LEFT)
+        description = TextMobject("Thing that holds a number")
+        neuron_word.highlight(BLUE)
+        neuron_word.next_to(arrow, LEFT)
+        neuron_word.shift(0.5*SMALL_BUFF*UP)
+        description.next_to(arrow, RIGHT)
 
+        neuron = Circle(radius = 0.35, color = BLUE)
+        neuron.next_to(neuron_word, UP, MED_LARGE_BUFF)
+        num = TexMobject("0.2")
+        num.scale_to_fit_width(0.7*neuron.get_width())
+        num.move_to(neuron)
+        num.save_state()
+        num.move_to(description.get_right())
+        num.set_fill(opacity = 1)
 
+        self.play(
+            ReplacementTransform(self.neuron_word, neuron_word),
+            ShowCreation(neuron)
+        )
+        self.play(
+            ShowCreation(arrow),
+            Write(description, run_time = 1)
+        )
+        self.dither()
+        self.play(
+            neuron.set_fill, None, 0.2,
+            num.restore
+        )
+        self.dither()
+        for value in 0.8, 0.4, 0.1, 0.5:
+            mob = TexMobject(str(value))
+            mob.replace(num)
+            self.play(
+                neuron.set_fill, None, value,
+                Transform(num, mob)
+            )
+            self.dither()
 
+class IntroduceEachLayer(PreviewMNistNetwork):
+    CONFIG = {
+        "network_mob_config" : {
+            "neuron_stroke_color" : WHITE,
+            "neuron_stroke_width" : 2,
+            "neuron_fill_color" : WHITE,
+            "average_shown_activation_of_large_layer" : False,
+            "edge_propogation_color" : YELLOW,
+            "edge_propogation_time" : 2,
+        }
+    }
+    def construct(self):
+        self.setup_network_mob()
+        self.break_up_image_as_neurons()
+        self.show_activation_of_one_neuron()
+        self.transform_into_full_network()
+        self.show_output_layer()
+        self.show_hidden_layers()
+        self.show_propogation()
 
+    def setup_network_mob(self):
+        self.remove(self.network_mob)
 
+    def break_up_image_as_neurons(self):
+        self.image_map = get_organized_images()
+        image = self.image_map[9][0]
+        image_mob = PixelsFromVect(image)
+        image_mob.scale_to_fit_height(4)
+        image_mob.next_to(ORIGIN, LEFT)
+        rect = SurroundingRectangle(image_mob, color = BLUE)
+        neurons = VGroup()
+        for pixel in image_mob:
+            pixel.set_fill(WHITE, opacity = pixel.fill_rgb[0])
+            neuron = Circle(
+                color = WHITE,
+                stroke_width = 1,
+                radius = pixel.get_width()/2
+            )
+            neuron.move_to(pixel)
+            neuron.set_fill(WHITE, pixel.get_fill_opacity())
+            neurons.add(neuron)
+        neurons.scale_in_place(1.2)
+        neurons.space_out_submobjects(1.3)
+        neurons.to_edge(DOWN)
 
+        braces = VGroup(*[Brace(neurons, vect) for vect in LEFT, UP])
+        labels = VGroup(*[
+            brace.get_tex("28", buff = SMALL_BUFF) 
+            for brace in braces
+        ])
 
+        equation = TexMobject("28", "\\times", "28", "=", "784")
+        equation.next_to(neurons, RIGHT, LARGE_BUFF, UP)
+
+        self.corner_image = MNistMobject(image)
+        self.corner_image.to_corner(UP+LEFT)
+
+        self.add(image_mob, rect)
+        self.dither()
+        self.play(
+            ReplacementTransform(image_mob, neurons),
+            FadeOut(rect),
+            FadeIn(braces),
+            FadeIn(labels),
+        )
+        self.dither()
+        self.play(
+            ReplacementTransform(labels[0].copy(), equation[0]),
+            Write(equation[1]),
+            ReplacementTransform(labels[1].copy(), equation[2]),
+            Write(equation[3]),
+            Write(equation[4]),
+        )
+        self.dither()
+
+        self.neurons = neurons
+        self.braces = braces
+        self.brace_labels = labels
+        self.num_pixels_equation = equation
+        self.image_vect = image
+
+    def show_activation_of_one_neuron(self):
+        neurons = self.neurons
+        numbers = VGroup()
+        example_neuron = None
+        example_num = None
+        for neuron in neurons:
+            o = neuron.get_fill_opacity()
+            num = DecimalNumber(o, num_decimal_points = 1)
+            num.scale_to_fit_width(0.7*neuron.get_width())
+            num.move_to(neuron)
+            if o > 0.8:
+                num.set_fill(BLACK)
+            numbers.add(num)
+            if o > 0.25 and o < 0.75 and example_neuron is None:
+                example_neuron = neuron
+                example_num = num
+                example_neuron.save_state()
+                example_num.save_state()
+        example_neuron.generate_target()
+        example_neuron.target.scale_to_fit_height(1.5)
+        example_neuron.target.next_to(neurons, RIGHT)
+        example_num.target = DecimalNumber(
+            example_neuron.get_fill_opacity()
+        )
+        example_num.target.move_to(example_neuron.target)
+
+        def change_activation(num):
+            self.play(
+                example_neuron.set_fill, None, num,
+                ChangingDecimal(
+                    example_num,
+                    lambda a : example_neuron.get_fill_opacity(),
+                ),
+                UpdateFromFunc(
+                    example_num,
+                    lambda m : m.set_fill(
+                        BLACK if example_neuron.get_fill_opacity() > 0.8 else WHITE
+                    )
+                )
+            )
+
+        self.play(LaggedStart(FadeIn, numbers))
+        self.play(
+            MoveToTarget(example_neuron),
+            MoveToTarget(example_num)
+        )
+        self.dither()
+        curr_opacity = example_neuron.get_fill_opacity()
+        for num in 0.3, 0.01, 1.0, curr_opacity:
+            change_activation(num)
+            self.dither()
+
+        rect = SurroundingRectangle(example_num, color = YELLOW)
+        activation = TextMobject("``Activation''")
+        activation.next_to(example_neuron, RIGHT)
+        activation.highlight(rect.get_color())
+        self.play(ShowCreation(rect))
+        self.play(Write(activation, run_time = 1))
+        self.dither()
+        change_activation(1.0)
+        self.dither()
+        change_activation(0.2)
+        self.dither()
+
+        self.play(
+            example_neuron.restore,
+            example_num.restore,
+            FadeOut(activation),
+            FadeOut(rect),
+        )
+        self.play(FadeOut(numbers))
+
+    def transform_into_full_network(self):
+        network_mob = self.network_mob
+        neurons = self.neurons
+        layer = network_mob.layers[0]
+        n = network_mob.max_shown_neurons/2
+
+        self.play(
+            FadeOut(self.braces),
+            FadeOut(self.brace_labels),
+            FadeOut(VGroup(*self.num_pixels_equation[:-1]))
+        )
+        self.play(
+            ReplacementTransform(
+                VGroup(*neurons[:n]), 
+                VGroup(*layer.neurons[:n]),
+            ),
+            ReplacementTransform(
+                VGroup(*neurons[n:-n]), 
+                layer.dots,
+            ),
+            ReplacementTransform(
+                VGroup(*neurons[-n:]), 
+                VGroup(*layer.neurons[-n:]),
+            ),
+            FadeIn(self.corner_image)
+        )
+        self.play(
+            ReplacementTransform(
+                self.num_pixels_equation[-1],
+                layer.brace_label
+            ),
+            FadeIn(layer.brace)
+        )
+        self.dither()
+        for edge_group, layer in zip(network_mob.edge_groups, network_mob.layers[1:]):
+            self.play(
+                LaggedStart(FadeIn, layer, run_time = 1),
+                ShowCreation(edge_group),
+            )
+        self.dither()
+
+    def show_output_layer(self):
+        layer = self.network_mob.layers[-1]
+        labels = self.network_mob.output_labels
+        rect = SurroundingRectangle(
+            VGroup(layer, labels)
+        )
+        neuron = layer.neurons[-1]
+        neuron.set_fill(WHITE, 0)
+        label = labels[-1]
+        for mob in neuron, label:
+            mob.save_state()
+            mob.generate_target()
+        neuron.target.scale_in_place(4)
+        neuron.target.shift(1.5*RIGHT)
+        label.target.scale(1.5)
+        label.target.next_to(neuron.target, RIGHT)
+
+        activation = DecimalNumber(0)
+        activation.move_to(neuron.target)
+
+        def change_activation(num):
+            self.play(
+                neuron.set_fill, None, num,
+                ChangingDecimal(
+                    activation,
+                    lambda a : neuron.get_fill_opacity(),
+                ),
+                UpdateFromFunc(
+                    activation,
+                    lambda m : m.set_fill(
+                        BLACK if neuron.get_fill_opacity() > 0.8 else WHITE
+                    )
+                )
+            )
+
+        self.play(ShowCreation(rect))
+        self.play(LaggedStart(FadeIn, labels))
+        self.dither()
+        self.play(
+            MoveToTarget(neuron),
+            MoveToTarget(label),
+        )
+        self.play(FadeIn(activation))
+        for num in 0.5, 0.38, 0.97:
+            change_activation(num)
+            self.dither()
+        self.play(
+            neuron.restore,
+            neuron.set_fill, None, 1,
+            label.restore,
+            FadeOut(activation),
+            FadeOut(rect),
+        )
+        self.dither()
+
+    def show_hidden_layers(self):
+        hidden_layers = VGroup(*self.network_mob.layers[1:3])
+        rect = SurroundingRectangle(hidden_layers, color = YELLOW)
+        name = TextMobject("``Hidden layers''")
+        name.next_to(rect, UP, SMALL_BUFF)
+        name.highlight(YELLOW)
+        q_marks = VGroup()
+        for layer in hidden_layers:
+            for neuron in layer.neurons:
+                q_mark = TextMobject("?")
+                q_mark.scale_to_fit_height(0.8*neuron.get_height())
+                q_mark.move_to(neuron)
+                q_marks.add(q_mark)
+        q_marks.gradient_highlight(BLUE, YELLOW)
+        q_mark = TextMobject("?").scale(4)
+        q_mark.move_to(hidden_layers)
+        q_mark.highlight(YELLOW)
+        q_marks.add(q_mark)
+
+        self.play(
+            ShowCreation(rect),
+            Write(name)
+        )
+        self.dither()
+        self.play(Write(q_marks))
+        self.dither()
+        self.play(
+            FadeOut(q_marks),
+            Animation(q_marks[-1].copy())
+        )
+
+    def show_propogation(self):
+        self.revert_to_original_skipping_status()
+        self.remove_random_edges(0.7)
+        self.feed_forward(self.image_vect)
+
+class MoreHonestMNistNetworkPreview(IntroduceEachLayer):
+    CONFIG = {
+        "network_mob_config" : {
+            "edge_propogation_time" : 1.5,
+        }
+    }
+    def construct(self):
+        PreviewMNistNetwork.construct(self)
+
+    def get_image_to_layer_one_animation(self, image, start_neurons):
+        neurons = VGroup()
+        for pixel in image:
+            neuron = Circle(
+                radius = pixel.get_width()/2,
+                stroke_width = 1,
+                stroke_color = WHITE,
+                fill_color = WHITE,
+                fill_opacity = pixel.fill_rgb[0]
+            )
+            neuron.move_to(pixel)
+            neurons.add(neuron)
+        neurons.scale(1.2)
+        neurons.next_to(image, DOWN)
+        n = len(start_neurons)
+        point = VectorizedPoint(start_neurons.get_center())
+        target = VGroup(*it.chain(
+            start_neurons[:n/2],
+            [point.copy() for x in range(len(neurons)-n)],
+            start_neurons[n/2:],
+        ))
+        mover = image.copy()
+        self.play(Transform(mover, neurons))
+        return Transform(
+            mover, target, 
+            run_time = 2,
+            submobject_mode = "lagged_start",
+            remover = True
+        )
+
+class AskAboutPropogationAndTraining(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "How does one layer \\\\ influence the next?",
+            student_index = 0,
+            run_time = 1
+        )
+        self.dither()
+        self.student_says(
+            "How does \\\\ training work?",
+            student_index = 2,
+            run_time = 1
+        )
+        self.dither(3)
+
+class AskAboutLayers(PreviewMNistNetwork):
+    def construct(self):
+        self.play(
+            self.network_mob.scale, 0.8,
+            self.network_mob.to_edge, DOWN,
+        )
+
+        question = TextMobject("Why the", "layers?")
+        question.to_edge(UP)
+        neuron_groups = [
+            layer.neurons
+            for layer in self.network_mob.layers
+        ]
+        arrows = VGroup(*[
+            Arrow(
+                question[1].get_bottom(),
+                group.get_top()
+            )
+            for group in neuron_groups
+        ])
+        rects = map(SurroundingRectangle, neuron_groups[1:3])
+
+        self.play(
+            Write(question, run_time = 1),
+            LaggedStart(
+                GrowFromPoint, arrows,
+                lambda a : (a, a.get_start()),
+                run_time = 2
+            )
+        )
+        self.dither()
+        self.play(*map(ShowCreation, rects))
+        self.dither()
+
+class BreakUpMacroPatterns(IntroduceEachLayer):
+    CONFIG = {
+        "camera_config" : {"background_alpha" : 255},
+        "prefixes" : [
+            "nine", "eight", "four",
+            "upper_loop", "right_line",
+            "lower_loop", "horizontal_line",
+            "upper_left_line"
+        ]
+    }
+    def construct(self):
+        self.setup_network_mob()
+        self.setup_needed_patterns()
+        self.setup_added_patterns()
+        self.show_nine()
+        self.show_eight()
+        self.show_four()
+        self.show_second_to_last_layer()
+        self.show_upper_loop_activation()
+        self.show_what_learning_is_required()
+
+    def setup_needed_patterns(self):
+        prefixes = self.prefixes
+        vects = [
+            np.array(Image.open(
+                get_full_image_path("handwritten_" + p),
+            ))[:,:,0].flatten()/255.0
+            for p in prefixes
+        ]
+        mobjects = map(MNistMobject, vects)
+        for mob in mobjects:
+            image = mob[1]
+            self.make_transparent(image)
+        for prefix, mob in zip(prefixes, mobjects):
+            setattr(self, prefix, mob)
+
+    def setup_added_patterns(self):
+        image_map = get_organized_images()
+        two, three, five = mobs = [
+            MNistMobject(image_map[n][0])
+            for n in 2, 3, 5
+        ]
+        self.added_patterns = VGroup()
+        for mob in mobs:
+            for i, j in it.product([0, 14], [0, 14]):
+                pattern = mob.deepcopy()
+                pa = pattern[1].pixel_array
+                temp = np.array(pa[i:i+14,j:j+14,:], dtype = 'uint8')
+                pa[:,:] = 0
+                pa[i:i+14,j:j+14,:] = temp
+                self.make_transparent(pattern[1])
+                pattern[1].highlight(random_bright_color())
+                self.added_patterns.add(pattern)
+        self.image_map = image_map
+
+    def show_nine(self):
+        nine = self.nine
+        upper_loop = self.upper_loop
+        right_line = self.right_line
+        equation = self.get_equation(nine, upper_loop, right_line)
+        equation.to_edge(UP)
+        equation.shift(LEFT)
+
+        parts = [upper_loop[1], right_line[1]]
+        for mob, color in zip(parts, [YELLOW, RED]):
+            mob.highlight(color)
+            mob.save_state()
+            mob.move_to(nine)
+        right_line[1].pixel_array[:14,:,3] = 0
+
+        self.play(FadeIn(nine))
+        self.dither()
+        self.play(*map(FadeIn, parts))
+        self.dither()
+        self.play(
+            Write(equation[1]),
+            upper_loop[1].restore,
+            FadeIn(upper_loop[0])
+        )
+        self.dither()
+        self.play(
+            Write(equation[3]),
+            right_line[1].restore,
+            FadeIn(right_line[0]),
+        )
+        self.dither()
+
+        self.nine_equation = equation
+
+    def show_eight(self):
+        eight = self.eight
+        upper_loop = self.upper_loop.deepcopy()
+        lower_loop = self.lower_loop
+        lower_loop[1].highlight(GREEN)
+
+        equation = self.get_equation(eight, upper_loop, lower_loop)
+        equation.next_to(self.nine_equation, DOWN)
+
+        lower_loop[1].save_state()
+        lower_loop[1].move_to(eight[1])
+
+        self.play(
+            FadeIn(eight),
+            Write(equation[1]),
+        )
+        self.play(ReplacementTransform(
+            self.upper_loop.copy(),
+            upper_loop
+        ))
+        self.dither()
+        self.play(FadeIn(lower_loop[1]))
+        self.play(
+            Write(equation[3]),
+            lower_loop[1].restore,
+            FadeIn(lower_loop[0]),
+        )
+        self.dither()
+
+        self.eight_equation = equation
+
+    def show_four(self):
+        four = self.four
+        upper_left_line = self.upper_left_line
+        upper_left_line[1].highlight(BLUE)
+        horizontal_line = self.horizontal_line
+        horizontal_line[1].highlight(MAROON_B)
+        right_line = self.right_line.deepcopy()
+        equation = self.get_equation(four, right_line, upper_left_line, horizontal_line)
+        equation.next_to(
+            self.eight_equation, DOWN, aligned_edge = LEFT
+        )
+
+        self.play(
+            FadeIn(four),
+            Write(equation[1])
+        )
+        self.play(ReplacementTransform(
+            self.right_line.copy(), right_line
+        ))
+        self.play(LaggedStart(
+            FadeIn, VGroup(*equation[3:])
+        ))
+        self.dither(2)
+
+        self.four_equation = equation
+
+    def show_second_to_last_layer(self):
+        everything = VGroup(*it.chain(
+            self.nine_equation,
+            self.eight_equation,
+            self.four_equation,
+        ))
+        patterns = VGroup(
+            self.upper_loop,
+            self.lower_loop,
+            self.right_line,
+            self.upper_left_line,
+            self.horizontal_line,
+            *self.added_patterns[:11]
+        )
+        for pattern in patterns:
+            pattern.add_to_back(
+                pattern[1].copy().highlight(BLACK, alpha = 1)
+            )
+        everything.remove(*patterns)
+        network_mob = self.network_mob
+        layer = network_mob.layers[-2]
+        patterns.generate_target()
+        for pattern, neuron in zip(patterns.target, layer.neurons):
+            pattern.scale_to_fit_height(neuron.get_height())
+            pattern.next_to(neuron, RIGHT, SMALL_BUFF)
+        for pattern in patterns[5:]:
+            pattern.fade(1)
+
+        self.play(*map(FadeOut, everything))
+        self.play(
+            FadeIn(
+                network_mob,
+                submobject_mode = "lagged_start",
+                run_time = 3,
+            ),
+            MoveToTarget(patterns)
+        )
+        self.dither(2)
+
+        self.patterns = patterns
+
+    def show_upper_loop_activation(self):
+        neuron = self.network_mob.layers[-2].neurons[0]
+        words = TextMobject("Upper loop neuron...mabye...")
+        words.scale(0.8)
+        words.next_to(neuron, UP)
+        words.shift(RIGHT)
+        rect = SurroundingRectangle(VGroup(
+            neuron, self.patterns[0]
+        ))
+        nine = self.nine
+        upper_loop = self.upper_loop.copy()
+        upper_loop.remove(upper_loop[0])
+        upper_loop.replace(nine)
+        nine.add(upper_loop)
+        nine.to_corner(UP+LEFT)
+        self.remove_random_edges(0.7)
+        self.network.get_activation_of_all_layers = lambda v : [
+            np.zeros(784),
+            sigmoid(6*(np.random.random(16)-0.5)),
+            np.array([1, 0, 1] + 13*[0]),
+            np.array(9*[0] + [1])
+        ]
+
+        self.play(FadeIn(nine))
+        self.add_foreground_mobject(self.patterns)
+        self.play(
+            ShowCreation(rect),
+            Write(words)
+        )
+        self.feed_forward(np.random.random(784))
+        self.dither(2)
+
+    def show_what_learning_is_required(self):
+        edge_group = self.network_mob.edge_groups[-1].copy()
+        edge_group.set_stroke(YELLOW, 4)
+        for x in range(3):
+            self.play(LaggedStart(
+                ShowCreationThenDestruction, edge_group,
+                run_time = 3
+            ))
+            self.dither()
+
+    ######
+
+    def get_equation(self, *mobs):
+        equation = VGroup(
+            mobs[0], TexMobject("=").scale(2),
+            *list(it.chain(*[
+                [m, TexMobject("+").scale(2)]
+                for m in mobs[1:-1]
+            ])) + [mobs[-1]]
+        )
+        equation.arrange_submobjects(RIGHT)
+        return equation
+
+    def make_transparent(self, image_mob):
+        alpha_vect = np.array(
+            image_mob.pixel_array[:,:,0],
+            dtype = 'uint8'
+        )
+        image_mob.highlight(WHITE)
+        image_mob.pixel_array[:,:,3] = alpha_vect
+        return image_mob
+
+class HowWouldYouRecognizeSubcomponent(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Okay, but recognizing loops \\\\",
+            "is just as hard!",
+            target_mode = "sassy"
+        )
+        self.play(
+            self.teacher.change, "guilty"
+        )
+        self.dither()
+
+class BreakUpMicroPatterns(BreakUpMacroPatterns):
+    CONFIG = {
+        "prefixes" : [
+            "loop",
+            "loop_edge1",
+            "loop_edge2",
+            "loop_edge3",
+            "loop_edge4",
+            "loop_edge5",
+            "right_line"
+        ]
+    }
+    def construct(self):
+        self.setup_network_mob()
+        self.setup_needed_patterns()
+        self.break_down_loop()
 
 
 

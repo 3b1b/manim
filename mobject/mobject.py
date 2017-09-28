@@ -48,6 +48,8 @@ class Mobject(object):
         pass
 
     def add(self, *mobjects):
+        if self in mobjects:
+            raise Exception("Mobject cannot contain self")
         self.submobjects = list_update(self.submobjects, mobjects)
         return self
 
@@ -438,7 +440,7 @@ class Mobject(object):
         if hasattr(self, "saved_state"):
             #Prevent exponential growth of data
             self.saved_state = None
-        self.saved_state = self.copy()
+        self.saved_state = self.deepcopy()
         return self
 
     def restore(self):

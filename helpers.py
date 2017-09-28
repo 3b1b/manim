@@ -424,7 +424,6 @@ def get_full_image_path(image_file_name):
             return path
     raise IOError("File not Found")
 
-
 def drag_pixels(frames):
     curr = frames[0]
     new_frames = []

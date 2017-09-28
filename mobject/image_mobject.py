@@ -45,9 +45,11 @@ class ImageMobject(Mobject):
             pa = np.append(pa, alphas, axis = 2)
         self.pixel_array = pa
 
-    def highlight(self, color, alpha = 1, family = True):
-        rgba = color_to_int_rgba(color, alpha = int(255*alpha))
-        self.pixel_array[:,:] = rgba
+    def highlight(self, color, alpha = None, family = True):
+        rgb = color_to_int_rgb(color)
+        self.pixel_array[:,:,:3] = rgb
+        if alpha is not None:
+            self.pixel_array[:,:,3] = int(255*alpha)
         for submob in self.submobjects:
             submob.highlight(color, alpha, family)
         return self
@@ -73,12 +75,13 @@ class ImageMobject(Mobject):
         self.set_opacity(1 - darkness)
         return self
 
-
     def interpolate_color(self, mobject1, mobject2, alpha):
         assert(mobject1.pixel_array.shape == mobject2.pixel_array.shape)
         self.pixel_array = interpolate(
             mobject1.pixel_array, mobject2.pixel_array, alpha
-        )
+        ).astype(self.pixel_array_dtype)
 
+    def copy(self):
+        return self.deepcopy()
 
 
