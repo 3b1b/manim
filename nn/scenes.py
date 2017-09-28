@@ -1,5 +1,6 @@
 import sys
 import os.path
+import cv2
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from helpers import *
@@ -40,13 +41,13 @@ from nn.network import *
 
 DEFAULT_GAUSS_BLUR_CONFIG = {
     "ksize"  : (5, 5), 
-    "sigmaX" : 6, 
-    "sigmaY" : 6,
+    "sigmaX" : 10, 
+    "sigmaY" : 10,
 }
 
 DEFAULT_CANNY_CONFIG = {
-    "threshold1" : 50,
-    "threshold2" : 100,
+    "threshold1" : 100,
+    "threshold2" : 200,
 }
 
 
@@ -643,6 +644,7 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
                 *["confused"]*3,
                 submobject_mode = "all_at_once"
             ),
+            self.teacher.change, "plain",
             run_time = 1
         )
         self.play(ShowCreation(
@@ -652,10 +654,8 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
             lag_factor = 8,
             rate_func = None,
         ))
-        self.play(self.teacher.change, "plain")
         in_vect = np.random.random(self.network.sizes[0])
         self.feed_forward(in_vect)
-        self.dither()
 
     def show_math(self):
         equation = TexMobject(
@@ -673,6 +673,8 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
         self.play(Write(equation, run_time = 2))
         self.dither()
 
+        self.equation = equation
+
     def ask_about_layers(self):
         self.student_says(
             "Why the layers?",
@@ -683,18 +685,28 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
         self.play(RemovePiCreatureBubble(self.students[2]))
 
     def show_learning(self):
-        rect = SurroundingRectangle(self.words[0][1], color = YELLOW)
+        word = self.words[0][1].copy()
+        rect = SurroundingRectangle(word, color = YELLOW)
         self.network_mob.neuron_fill_color = YELLOW
 
         layer = self.network_mob.layers[-1]
-        activation = np.zeros(len(layer))
+        activation = np.zeros(len(layer.neurons))
         activation[1] = 1.0
         active_layer = self.network_mob.get_active_layer(
             -1, activation
         )
+        word_group = VGroup(word, rect)
+        word_group.generate_target()
+        word_group.target.move_to(self.equation, LEFT)
+        word_group.target[0].highlight(YELLOW)
+        word_group.target[1].set_stroke(width = 0)
 
         self.play(ShowCreation(rect))
-        self.play(Transform(layer, active_layer))
+        self.play(
+            Transform(layer, active_layer),
+            FadeOut(self.equation),
+            MoveToTarget(word_group),
+        )
         for edge_group in reversed(self.network_mob.edge_groups):
             edge_group.generate_target()
             for edge in edge_group.target:
@@ -1913,6 +1925,113 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
             submobject_mode = "lagged_start",
             run_time = 2,
         ))
+
+class EdgeDetection(Scene):
+    CONFIG = {
+        "camera_config" : {"background_alpha" : 255}
+    }
+    def construct(self):
+        lion = ImageMobject("Lion")
+        edges_array = get_edges(lion.pixel_array)
+        edges = ImageMobject(edges_array)
+        group = Group(lion, edges)
+        group.scale_to_fit_height(4)
+        group.arrange_submobjects(RIGHT)
+        lion_copy = lion.copy()
+
+        self.play(FadeIn(lion))
+        self.play(lion_copy.move_to, edges)
+        self.play(Transform(lion_copy, edges, run_time = 3))
+        self.dither(2)
+
+class ManyTasksBreakDownLikeThis(TeacherStudentsScene):
+    def construct(self):
+        audio = self.get_wave_form()
+        audio_label = TextMobject("Raw audio")
+        letters = TextMobject(" ".join("recognition"))
+        syllables = TextMobject("$\\cdot$".join([
+            "re", "cog", "ni", "tion"
+        ]))
+        word = TextMobject(
+            "re", "cognition",
+            arg_separator = ""
+        )
+        word[1].highlight(BLUE)
+        arrows = VGroup()
+        def get_arrow():
+            arrow = Arrow(ORIGIN, RIGHT, color = BLUE)
+            arrows.add(arrow)
+            return arrow
+        sequence = VGroup(
+            audio, get_arrow(),
+            letters, get_arrow(),
+            syllables, get_arrow(),
+            word
+        )
+        sequence.arrange_submobjects(RIGHT)
+        sequence.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        sequence.to_edge(UP)
+
+        audio_label.next_to(audio, DOWN)
+        VGroup(audio, audio_label).highlight(YELLOW)
+        audio.save_state()
+
+        self.teacher_says(
+            "Many", "recognition", "tasks\\\\",
+            "break down like this"
+        )
+        self.change_student_modes(*["pondering"]*3)
+        self.dither()
+        content = self.teacher.bubble.content
+        pre_word = content[1]
+        content.remove(pre_word)
+        audio.move_to(pre_word)
+        self.play(
+            self.teacher.bubble.content.fade, 1,
+            ShowCreation(audio),
+            pre_word.shift, MED_SMALL_BUFF, DOWN
+        )
+        self.dither(2)
+        self.play(
+            RemovePiCreatureBubble(self.teacher),
+            audio.restore,
+            FadeIn(audio_label),
+            *[
+                ReplacementTransform(
+                    m1, m2
+                )
+                for m1, m2 in zip(pre_word, letters)
+            ]
+        )
+        self.play(
+            GrowFromPoint(arrows[0], arrows[0].get_start()),
+        )
+        self.dither()
+        self.play(
+            GrowFromPoint(arrows[1], arrows[1].get_start()),
+            LaggedStart(FadeIn, syllables, run_time = 1)
+        )
+        self.dither()
+        self.play(
+            GrowFromPoint(arrows[2], arrows[2].get_start()),
+            LaggedStart(FadeIn, word, run_time = 1)
+        )
+        self.dither()
+
+    def get_wave_form(self):
+        func = lambda x : abs(sum([
+            (1./n)*np.sin((n+3)*x)
+            for n in range(1, 5)
+        ]))
+        result = VGroup(*[
+            Line(func(x)*DOWN, func(x)*UP)
+            for x in np.arange(0, 4, 0.1)
+        ])
+        result.set_stroke(width = 2)
+        result.arrange_submobjects(RIGHT, buff = MED_SMALL_BUFF)
+        result.scale_to_fit_height(1)
+
+        return result
 
 
 

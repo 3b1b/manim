@@ -47,13 +47,13 @@ DEFAULT_POINTWISE_FUNCTION_RUN_TIME = 3.0
 DEFAULT_DITHER_TIME = 1.0
 
 
-ORIGIN = np.array(( 0, 0, 0))
-UP     = np.array(( 0, 1, 0))
-DOWN   = np.array(( 0,-1, 0))
-RIGHT  = np.array(( 1, 0, 0))
-LEFT   = np.array((-1, 0, 0))
-IN     = np.array(( 0, 0,-1))
-OUT    = np.array(( 0, 0, 1))
+ORIGIN = np.array(( 0., 0., 0.))
+UP     = np.array(( 0., 1., 0.))
+DOWN   = np.array(( 0.,-1., 0.))
+RIGHT  = np.array(( 1., 0., 0.))
+LEFT   = np.array((-1., 0., 0.))
+IN     = np.array(( 0., 0.,-1.))
+OUT    = np.array(( 0., 0., 1.))
 
 TOP        = SPACE_HEIGHT*UP
 BOTTOM     = SPACE_HEIGHT*DOWN
