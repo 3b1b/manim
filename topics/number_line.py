@@ -19,7 +19,7 @@ class NumberLine(VMobject):
         "numbers_to_show" : None,
         "longer_tick_multiple" : 2,
         "number_at_center" : 0,
-        "number_scale_val" : 0.5,
+        "number_scale_val" : 0.75,
         "line_to_number_vect" : DOWN,
         "line_to_number_buff" : MED_SMALL_BUFF,
         "include_tip" : False,

@@ -100,12 +100,15 @@ class Mobject(object):
         )
 
     def copy(self):
-        copy_mobject = copy.copy(self)
-        copy_mobject.points = np.array(self.points)
-        copy_mobject.submobjects = [
-            submob.copy() for submob in self.submobjects
-        ]
-        return copy_mobject
+        #TODO, either justify reason for shallow copy, or
+        #remove this redundancy everywhere
+        return self.deepcopy() 
+        # copy_mobject = copy.copy(self)
+        # copy_mobject.points = np.array(self.points)
+        # copy_mobject.submobjects = [
+        #     submob.copy() for submob in self.submobjects
+        # ]
+        # return copy_mobject
 
     def deepcopy(self):
         return copy.deepcopy(self)

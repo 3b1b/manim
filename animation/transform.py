@@ -110,6 +110,10 @@ class GrowFromCenter(GrowFromPoint):
     def __init__(self, mobject, **kwargs):
         GrowFromPoint.__init__(self, mobject, mobject.get_center(), **kwargs)
 
+class GrowArrow(GrowFromPoint):
+    def __init__(self, arrow, **kwargs):
+        GrowFromPoint.__init__(self, arrow, arrow.get_start(), **kwargs)
+
 class SpinInFromNothing(GrowFromCenter):
     CONFIG = {
         "path_func" : counterclockwise_path()

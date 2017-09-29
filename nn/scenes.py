@@ -26,6 +26,7 @@ from topics.three_dimensions import *
 from topics.objects import *
 from topics.probability import *
 from topics.complex_numbers import *
+from topics.graph_scene import *
 from scene import Scene
 from scene.reconfigurable_scene import ReconfigurableScene
 from scene.zoomed_scene import *
@@ -245,13 +246,11 @@ class NetworkMobject(VGroup):
             self.edge_propogation_color,
             width = 1.5*self.edge_stroke_width
         )
-        return [
-            ShowCreationThenDestruction(
-                mob, 
-                run_time = self.edge_propogation_time
-            )
-            for mob in edge_group_copy
-        ]
+        return [ShowCreationThenDestruction(
+            edge_group_copy, 
+            run_time = self.edge_propogation_time,
+            submobject_mode = "lagged_start"
+        )]
 
 class MNistNetworkMobject(NetworkMobject):
     CONFIG = {
@@ -2033,10 +2032,1002 @@ class ManyTasksBreakDownLikeThis(TeacherStudentsScene):
 
         return result
 
+class AskAboutWhatEdgesAreDoing(IntroduceEachLayer):
+    CONFIG = {
+        "network_mob_config" : {
+            "layer_to_layer_buff" : 2,
+        }
+    }
+    def construct(self):
+        self.add_question()
+        self.show_propogation()
 
+    def add_question(self):
+        self.network_mob.scale(0.8)
+        self.network_mob.to_edge(DOWN)
+        edge_groups = self.network_mob.edge_groups
+        self.remove_random_edges(0.7)
 
+        question = TextMobject(
+            "What are these connections actually doing?"
+        )
+        question.to_edge(UP)
+        question.shift(RIGHT)
+        arrows = VGroup(*[
+            Arrow(
+                question.get_bottom(),
+                edge_group.get_top()
+            )
+            for edge_group in edge_groups
+        ])
 
+        self.add(question, arrows)
 
+    def show_propogation(self):
+        in_vect = get_organized_images()[6][3]
+        image = MNistMobject(in_vect)
+        image.next_to(self.network_mob, LEFT, MED_SMALL_BUFF, UP)
+
+        self.add(image)
+        self.feed_forward(in_vect)
+        self.dither()
+
+class IntroduceWeights(IntroduceEachLayer):
+    CONFIG = {
+        "weights_color" : GREEN,
+        "negative_weights_color" : RED,
+    }
+    def construct(self):
+        self.zoom_in_on_one_neuron()
+        self.show_desired_pixel_region()
+        self.ask_about_parameters()
+        self.show_weights()
+        self.show_weighted_sum()
+        self.organize_weights_as_grid()
+        self.make_most_weights_0()
+        self.add_negative_weights_around_the_edge()
+
+    def zoom_in_on_one_neuron(self):
+        self.network_mob.to_edge(LEFT)
+        layers = self.network_mob.layers
+        edge_groups = self.network_mob.edge_groups
+
+        neuron = layers[1].neurons[7].deepcopy()
+
+        self.play(
+            FadeOut(edge_groups),
+            FadeOut(VGroup(*layers[1:])),
+            FadeOut(self.network_mob.output_labels),
+            Animation(neuron),
+            neuron.edges_in.set_stroke, None, 2,
+            submobject_mode = "lagged_start",
+            run_time = 2
+        )
+
+        self.neuron = neuron
+
+    def show_desired_pixel_region(self):
+        neuron = self.neuron
+        d = 28
+
+        pixels = PixelsAsSquares(ImageMobject(
+            np.zeros((d, d, 4))
+        ))
+        pixels.set_stroke(width = 0.5)
+        pixels.set_fill(WHITE, 0)
+        pixels.scale_to_fit_height(4)
+        pixels.next_to(neuron, RIGHT, LARGE_BUFF)
+        rect = SurroundingRectangle(pixels, color = BLUE)
+
+        pixels_to_detect = self.get_pixels_to_detect()
+
+        self.play(
+            FadeIn(rect),
+            ShowCreation(
+                pixels, 
+                submobject_mode = "lagged_start",
+                run_time = 2,
+            )
+        )
+        self.play(
+            pixels_to_detect.set_fill, WHITE, 1,
+            submobject_mode = "lagged_start",
+            run_time = 2
+        )
+        self.dither(2)
+
+        self.pixels = pixels
+        self.pixels_to_detect = pixels_to_detect
+        self.pixels_group = VGroup(rect, pixels)
+
+    def ask_about_parameters(self):
+        pixels = self.pixels
+        pixels_group = self.pixels_group
+        neuron = self.neuron
+
+        question = TextMobject("What", "parameters", "should exist?")
+        parameter_word = question.get_part_by_tex("parameters")
+        parameter_word.highlight(self.weights_color)
+        question.move_to(neuron.edges_in.get_top(), LEFT)
+        arrow = Arrow(
+            parameter_word.get_bottom(),
+            neuron.edges_in[0].get_center(),
+            color = self.weights_color
+        )
+
+        p_labels = VGroup(*[
+            TexMobject("p_%d\\!:"%(i+1)).highlight(self.weights_color)
+            for i in range(8)
+        ] + [TexMobject("\\vdots")])
+        p_labels.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        p_labels.next_to(parameter_word, DOWN, LARGE_BUFF)
+        p_labels[-1].shift(SMALL_BUFF*RIGHT)
+
+        def get_alpha_func(i, start = 0):
+            m = int(5*np.sin(2*np.pi*i/128.))
+            return lambda a : start + (1-2*start)*np.sin(np.pi*a*m)**2
+
+        decimals = VGroup()
+        changing_decimals = []
+        for i, p_label in enumerate(p_labels[:-1]):
+            decimal = DecimalNumber(0)
+            decimal.next_to(p_label, RIGHT, MED_SMALL_BUFF)
+            decimals.add(decimal)
+            changing_decimals.append(ChangingDecimal(
+                decimal, get_alpha_func(i + 5)
+            ))
+        for i, pixel in enumerate(pixels):
+            pixel.func = get_alpha_func(i, pixel.get_fill_opacity())
+        pixel_updates = [
+            UpdateFromAlphaFunc(
+                pixel,
+                lambda p, a : p.set_fill(opacity = p.func(a))
+            )
+            for pixel in pixels
+        ]
+
+        self.play(
+            Write(question, run_time = 2),
+            GrowFromPoint(arrow, arrow.get_start()),
+            pixels_group.scale_to_fit_height, 3,
+            pixels_group.to_edge, RIGHT,
+            LaggedStart(FadeIn, p_labels),
+            LaggedStart(FadeIn, decimals),
+        )
+        self.dither()
+        self.play(
+            *changing_decimals + pixel_updates,
+            run_time = 5,
+            rate_func = None
+        )
+
+        self.question = question
+        self.weight_arrow = arrow
+        self.p_labels = p_labels
+        self.decimals = decimals
+
+    def show_weights(self):
+        p_labels = self.p_labels
+        decimals = self.decimals
+        arrow = self.weight_arrow
+        question = self.question
+        neuron = self.neuron
+        edges = neuron.edges_in
+
+        parameter_word = question.get_part_by_tex("parameters")
+        question.remove(parameter_word)
+        weights_word = TextMobject("Weights", "")[0]
+        weights_word.highlight(self.weights_color)
+        weights_word.move_to(parameter_word)
+
+        w_labels = VGroup()
+        for p_label in p_labels:
+            w_label = TexMobject(
+                p_label.get_tex_string().replace("p", "w")
+            )
+            w_label.highlight(self.weights_color)
+            w_label.move_to(p_label)
+            w_labels.add(w_label)
+
+        edges.generate_target()
+        random_numbers = 1.5*np.random.random(len(edges))-0.5
+        self.make_edges_weighted(edges.target, random_numbers)
+        def get_alpha_func(r):
+            return lambda a : (4*r)*a
+
+        self.play(
+            FadeOut(question),
+            ReplacementTransform(parameter_word, weights_word),
+            ReplacementTransform(p_labels, w_labels)
+        )
+        self.play(
+            MoveToTarget(edges),
+            *[
+                ChangingDecimal(
+                    decimal,
+                    get_alpha_func(r)
+                )
+                for decimal, r in zip(decimals, random_numbers)
+            ]
+        )
+        self.play(LaggedStart(
+            ApplyMethod, edges,
+            lambda m : (m.rotate_in_place, np.pi/24),
+            rate_func = wiggle,
+            run_time = 2
+        ))
+        self.dither()
+
+        self.w_labels = w_labels
+        self.weights_word = weights_word
+        self.random_numbers = random_numbers
+
+    def show_weighted_sum(self):
+        weights_word = self.weights_word
+        weight_arrow = self.weight_arrow
+        w_labels = VGroup(*[
+            VGroup(*label[:-1]).copy()
+            for label in self.w_labels
+        ])
+        layer = self.network_mob.layers[0]
+
+        a_vect = np.random.random(16)
+        active_layer = self.network_mob.get_active_layer(0, a_vect)
+
+        a_labels = VGroup(*[
+            TexMobject("a_%d"%d)
+            for d in range(1, 5)
+        ])
+
+        weighted_sum = VGroup(*it.chain(*[
+            [w, a, TexMobject("+")]
+            for w, a in zip(w_labels, a_labels)
+        ]))
+        weighted_sum.add(
+            TexMobject("\\cdots"),
+            TexMobject("+"),
+            TexMobject("w_n").highlight(self.weights_color),
+            TexMobject("a_n")
+        )
+        weighted_sum.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        weighted_sum.to_edge(UP)
+
+        self.play(Transform(layer, active_layer))
+        self.play(
+            FadeOut(weights_word),
+            FadeOut(weight_arrow),
+            *[
+                ReplacementTransform(n.copy(), a)
+                for n, a in zip(layer.neurons, a_labels)
+            ] + [
+                ReplacementTransform(n.copy(), weighted_sum[-4])
+                for n in layer.neurons[4:-1]
+            ] + [
+                ReplacementTransform(
+                    layer.neurons[-1].copy(), 
+                    weighted_sum[-1]
+                )
+            ] + [
+                Write(weighted_sum[i])
+                for i in range(2, 12, 3) + [-4, -3]
+            ],
+            run_time = 1.5
+        )
+        self.dither()
+        self.play(*[
+            ReplacementTransform(w1.copy(), w2)
+            for w1, w2 in zip(self.w_labels, w_labels)[:4]
+        ]+[
+            ReplacementTransform(w.copy(), weighted_sum[-4])
+            for w in self.w_labels[4:-1]
+        ]+[
+            ReplacementTransform(
+                self.w_labels[-1].copy(), weighted_sum[-2]
+            )
+        ], run_time = 2)
+        self.dither(2)
+
+        self.weighted_sum = weighted_sum
+
+    def organize_weights_as_grid(self):
+        pixels = self.pixels
+        w_labels = self.w_labels
+        decimals = self.decimals
+
+        weights = 2*np.sqrt(np.random.random(784))-1
+        weights[:8] = self.random_numbers[:8]
+        weights[-8:] = self.random_numbers[-8:]
+
+        weight_grid = PixelsFromVect(np.abs(weights))
+        weight_grid.replace(pixels)
+        weight_grid.next_to(pixels, LEFT)
+        for weight, pixel in zip(weights, weight_grid):
+            if weight >= 0:
+                color = self.weights_color
+            else:
+                color = self.negative_weights_color
+            pixel.set_fill(color, opacity = abs(weight))
+
+        self.play(FadeOut(w_labels))
+        self.play(
+            FadeIn(
+                VGroup(*weight_grid[len(decimals):]),
+                submobject_mode = "lagged_start",
+                run_time = 3
+            ),
+            *[
+                ReplacementTransform(decimal, pixel)
+                for decimal, pixel in zip(decimals, weight_grid)
+            ]
+        )
+        self.dither()
+
+        self.weight_grid = weight_grid
+
+    def make_most_weights_0(self):
+        weight_grid = self.weight_grid
+        pixels = self.pixels
+        pixels_group = self.pixels_group
+
+        weight_grid.generate_target()
+        for w, p in zip(weight_grid.target, pixels):
+            if p.get_fill_opacity() > 0.1:
+                w.set_fill(GREEN, 0.5)
+            else:
+                w.set_fill(BLACK, 0.5)
+            w.set_stroke(WHITE, 0.5)
+
+        digit = self.get_digit()
+        digit.replace(pixels)
+
+        self.play(MoveToTarget(
+            weight_grid,
+            run_time = 2,
+            submobject_mode = "lagged_start"
+        ))
+        self.dither()
+        self.play(Transform(
+            pixels, digit,
+            run_time = 2,
+            submobject_mode = "lagged_start"
+        ))
+        self.dither()
+        self.play(weight_grid.move_to, pixels)
+        self.dither()
+        self.play(
+            ReplacementTransform(
+                self.pixels_to_detect.copy(),
+                self.weighted_sum,
+                run_time = 3,
+                submobject_mode = "lagged_start"
+            ),
+            Animation(weight_grid),
+        )
+        self.dither()
+
+    def add_negative_weights_around_the_edge(self):
+        weight_grid = self.weight_grid
+        pixels = self.pixels
+
+        self.play(weight_grid.next_to, pixels, LEFT)
+        self.play(*[
+            ApplyMethod(
+                weight_grid[28*y + x].set_fill, 
+                self.negative_weights_color,
+                0.5
+            )
+            for y in 6, 10
+            for x in range(14-4, 14+4)
+        ])
+        self.dither(2)
+        self.play(weight_grid.move_to, pixels)
+        self.dither(2)
+
+    ####
+
+    def get_digit(self):
+        digit_vect = get_organized_images()[7][4]
+        digit = PixelsFromVect(digit_vect)
+        digit.set_stroke(width = 0.5)
+        return digit
+
+    def get_pixels_to_detect(self, pixels):
+        d = int(np.sqrt(len(pixels)))
+        return VGroup(*it.chain(*[
+            pixels[d*n + d/2 - 4 : d*n + d/2 + 4]
+            for n in range(7, 10)
+        ]))
+
+    def get_surrounding_pixels_for_edge(self, pixels):
+        d = int(np.sqrt(len(pixels)))
+        return VGroup(*it.chain(*[
+            pixels[d*n + d/2 - 4 : d*n + d/2 + 4]
+            for n in 6, 10
+        ]))
+
+    def make_edges_weighted(self, edges, weights):
+        for edge, r in zip(edges, weights):
+            if r > 0:
+                color = self.weights_color 
+            else:
+                color = self.negative_weights_color
+            edge.set_stroke(color, 6*abs(r))
+
+class MotivateSquishing(Scene):
+    def construct(self):
+        self.add_weighted_sum()
+        self.show_real_number_line()
+        self.show_interval()
+        self.squish_into_interval()
+
+    def add_weighted_sum(self):
+        weighted_sum = TexMobject(*it.chain(*[
+            ["w_%d"%d, "a_%d"%d, "+"]
+            for d in range(1, 5)
+        ] + [
+            ["\\cdots", "+", "w_n", "a_n"]
+        ]))
+        weighted_sum.highlight_by_tex("w_", GREEN)
+        weighted_sum.to_edge(UP)
+        self.add(weighted_sum)
+        self.weighted_sum = weighted_sum
+
+    def show_real_number_line(self):
+        weighted_sum = self.weighted_sum
+        number_line = NumberLine(unit_size = 1.5)
+        number_line.add_numbers()
+        number_line.shift(UP)
+        arrow1, arrow2 = [
+            Arrow(
+                weighted_sum.get_bottom(),
+                number_line.number_to_point(n),
+            )
+            for n in -3, 3
+        ]
+
+        self.play(Write(number_line))
+        self.play(GrowFromPoint(arrow1, arrow1.get_start()))
+        self.play(Transform(
+            arrow1, arrow2,
+            run_time = 5,
+            rate_func = there_and_back
+        ))
+        self.play(FadeOut(arrow1))
+
+        self.number_line = number_line
+
+    def show_interval(self):
+        lower_number_line = self.number_line.copy()
+        lower_number_line.shift(2*DOWN)
+        lower_number_line.highlight(LIGHT_GREY)
+        lower_number_line.numbers.highlight(WHITE)
+        interval = Line(
+            lower_number_line.number_to_point(0),
+            lower_number_line.number_to_point(1),
+            color = YELLOW,
+            stroke_width = 5
+        )
+        brace = Brace(interval, DOWN, buff = 0.7)
+        words = TextMobject("Activations should be in this range")
+        words.next_to(brace, DOWN, SMALL_BUFF)
+
+        self.play(ReplacementTransform(
+            self.number_line.copy(), lower_number_line
+        ))
+        self.play(
+            GrowFromCenter(brace),
+            GrowFromCenter(interval),
+        )
+        self.play(Write(words, run_time = 2))
+        self.dither()
+
+        self.lower_number_line = lower_number_line
+
+    def squish_into_interval(self):
+        line = self.number_line
+        line.remove(*line.numbers)
+        ghost_line = line.copy()
+        ghost_line.fade(0.5)
+        ghost_line.highlight(BLUE_E)
+        self.add(ghost_line, line)
+        lower_line = self.lower_number_line
+
+        line.generate_target()
+        u = line.unit_size
+        line.target.apply_function(
+            lambda p : np.array([u*sigmoid(p[0])]+list(p[1:]))
+        )
+        line.target.move_to(lower_line.number_to_point(0.5))
+
+        arrow = Arrow(
+            line.numbers.get_bottom(),
+            line.target.get_top(),
+            color = YELLOW
+        )
+
+        self.play(
+            MoveToTarget(line),
+            GrowFromPoint(arrow, arrow.get_start())
+        )
+        self.dither(2)
+
+class IntroduceSigmoid(GraphScene):
+    CONFIG = {
+        "x_min" : -5,
+        "x_max" : 5,
+        "x_axis_width" : 12,
+        "y_min" : -1,
+        "y_max" : 2,
+        "y_axis_label" : "",
+        "graph_origin" : DOWN,
+        "x_labeled_nums" : range(-4, 5),
+        "y_labeled_nums" : range(-1, 3),
+    }
+    def construct(self):
+        self.setup_axes()
+        self.add_title()
+        self.add_graph()
+        self.show_part(-5, -2, RED)
+        self.show_part(2, 5, GREEN)
+        self.show_part(-2, 2, BLUE)
+
+    def add_title(self):
+        name = TextMobject("Sigmoid")
+        name.next_to(ORIGIN, RIGHT, LARGE_BUFF)
+        name.to_edge(UP)
+        equation = TexMobject(
+            "\\sigma(x) = \\frac{1}{1+e^{-x}}"
+        )
+        equation.next_to(name, DOWN)
+        self.add(equation, name)
+
+    def add_graph(self):
+        graph = self.get_graph(
+            lambda x : 1./(1+np.exp(-x)),
+            color = YELLOW
+        )
+
+        self.play(ShowCreation(graph))
+        self.dither()
+
+    ###
+
+    def show_part(self, x_min, x_max, color):
+        line, graph_part = [
+            self.get_graph(
+                func,
+                x_min = x_min, 
+                x_max = x_max,
+                color = color,
+            ).set_stroke(width = 4)
+            for func in lambda x : 0, sigmoid
+        ]
+
+        self.play(ShowCreation(line))
+        self.dither()
+        self.play(Transform(line, graph_part))
+        self.dither()
+
+class IncludeBias(IntroduceWeights):
+    def construct(self):
+        self.force_skipping()
+        self.zoom_in_on_one_neuron()
+        self.setup_start()
+        self.revert_to_original_skipping_status()
+
+        self.words_on_activation()
+        self.comment_on_need_for_bias()
+        self.add_bias()
+        self.summarize_weights_and_biases()
+
+    def setup_start(self):
+        self.weighted_sum = self.get_weighted_sum()
+        digit = self.get_digit()
+        rect = SurroundingRectangle(digit)
+        d_group = VGroup(digit, rect)
+        d_group.scale_to_fit_height(3)
+        d_group.to_edge(RIGHT)
+        weight_grid = digit.copy()
+        weight_grid.set_fill(BLACK, 0.5)
+        self.get_pixels_to_detect(weight_grid).set_fill(
+            GREEN, 0.5
+        )
+        self.get_surrounding_pixels_for_edge(weight_grid).set_fill(
+            RED, 0.5
+        )
+        weight_grid.move_to(digit)
+
+        edges = self.neuron.edges_in
+        self.make_edges_weighted(
+            edges, 1.5*np.random.random(len(edges)) - 0.5
+        )
+
+        Transform(
+            self.network_mob.layers[0],
+            self.network_mob.get_active_layer(0, np.random.random(16))
+        ).update(1)
+
+        self.add(self.weighted_sum, digit, weight_grid)
+        self.add_sigmoid_label()
+        self.digit = digit
+        self.weight_grid = weight_grid
+
+    def words_on_activation(self):
+        neuron = self.neuron
+        weighted_sum = self.weighted_sum
+
+        activation_word = TextMobject("Activation")
+        activation_word.next_to(neuron, RIGHT)
+        arrow = Arrow(neuron, weighted_sum.get_bottom())
+        arrow.highlight(WHITE)
+        words = TextMobject("How positive is this?")
+        words.next_to(self.weighted_sum, UP, SMALL_BUFF)
+
+        self.play(
+            FadeIn(activation_word),
+            neuron.set_fill, WHITE, 0.8,
+        )
+        self.dither()
+        self.play(
+            GrowArrow(arrow),
+            ReplacementTransform(activation_word, words),
+        )
+        self.dither(2)
+        self.play(FadeOut(arrow))
+
+        self.how_positive_words = words
+
+    def comment_on_need_for_bias(self):
+        neuron = self.neuron
+        weight_grid = self.weight_grid
+        colored_pixels = VGroup(
+            self.get_pixels_to_detect(weight_grid),
+            self.get_surrounding_pixels_for_edge(weight_grid),
+        )
+
+        words = TextMobject(
+            "Only activate meaningfully \\\\ when",
+            "weighted sum", "$> 10$"
+        )
+        words.highlight_by_tex("weighted", GREEN)
+        words.next_to(neuron, RIGHT)
+
+        self.play(Write(words, run_time = 2))
+        self.play(LaggedStart(
+            ApplyMethod, colored_pixels,
+            lambda p : (p.shift, MED_LARGE_BUFF*UP),
+            rate_func = there_and_back,
+            run_time = 2
+        ))
+        self.dither()
+
+        self.gt_ten = words[-1]
+
+    def add_bias(self):
+        bias = TexMobject("-10")
+        wn, rp = self.weighted_sum[-2:]
+        bias.next_to(wn, RIGHT, SMALL_BUFF)
+        bias.shift(0.02*UP)
+        rp.generate_target()
+        rp.target.next_to(bias, RIGHT, SMALL_BUFF)
+
+        rect = SurroundingRectangle(bias, buff = 0.5*SMALL_BUFF)
+        name = TextMobject("``bias''")
+        name.next_to(rect, DOWN)
+        VGroup(rect, name).highlight(BLUE)
+
+        self.play(
+            ReplacementTransform(
+                self.gt_ten.copy(), bias,
+                run_time = 2
+            ),
+            MoveToTarget(rp),
+        )
+        self.dither(2)
+        self.play(
+            ShowCreation(rect),
+            Write(name)
+        )
+        self.dither(2)
+
+        self.bias_name = name
+
+    def summarize_weights_and_biases(self):
+        weight_grid = self.weight_grid
+        bias_name = self.bias_name
+
+        self.play(LaggedStart(
+            ApplyMethod, weight_grid,
+            lambda p : (p.set_fill, 
+                random.choice([GREEN, GREEN, RED]),
+                random.random()
+            ),
+            rate_func = there_and_back,
+            lag_ratio = 0.4,
+            run_time = 4
+        ))
+        self.dither()
+        self.play(Indicate(bias_name))
+        self.dither(2)
+
+    ###
+
+    def get_weighted_sum(self):
+        args = ["\\sigma \\big("]
+        for d in range(1, 4):
+            args += ["w_%d"%d, "a_%d"%d, "+"]
+        args += ["\\cdots", "+", "w_n", "a_n"]
+        args += ["\\big)"]
+        weighted_sum = TexMobject(*args)
+        weighted_sum.highlight_by_tex("w_", GREEN)
+        weighted_sum.highlight_by_tex("\\big", YELLOW)
+        weighted_sum.to_edge(UP, LARGE_BUFF)
+        weighted_sum.shift(RIGHT)
+
+        return weighted_sum
+
+    def add_sigmoid_label(self):
+        name = TextMobject("Sigmoid")
+        sigma = self.weighted_sum[0][0]
+        name.next_to(sigma, UP)
+        name.to_edge(UP, SMALL_BUFF)
+
+        arrow = Arrow(
+            name.get_bottom(), sigma.get_top(), 
+            buff = SMALL_BUFF,
+            use_rectangular_stem = False,
+            max_tip_length_to_length_ratio = 0.3
+        )
+
+        self.add(name, arrow)
+        self.sigmoid_name = name
+        self.sigmoid_arrow = arrow
+
+class ContinualEdgeUpdate(ContinualAnimation):
+    def __init__(self, network_mob, **kwargs):
+        n_cycles = 5
+        edges = VGroup(*it.chain(*network_mob.edge_groups))
+        for edge in edges:
+            edge.colors = [edge.get_color()] + [
+                random.choice([GREEN, GREEN, GREEN, RED])
+                for x in range(n_cycles)
+            ]
+            edge.widths = [edge.get_stroke_width()] + [
+                3*random.random()**7
+                for x in range(n_cycles)
+            ]
+            edge.cycle_time = 1 + random.random()
+        self.edges = edges
+        ContinualAnimation.__init__(self, edges, **kwargs)
+
+    def update_mobject(self, dt):
+        for edge in self.edges:
+            t = self.internal_time/edge.cycle_time
+            alpha = (self.internal_time%edge.cycle_time)/edge.cycle_time
+            low_n = int(t)%len(edge.colors)
+            high_n = int(t+1)%len(edge.colors)
+            color = interpolate_color(edge.colors[low_n], edge.colors[high_n], alpha)
+            width = interpolate(edge.widths[low_n], edge.widths[high_n], alpha)
+            edge.set_stroke(color, width)
+
+class ShowRemainingNetwork(IntroduceWeights):
+    def construct(self):
+        self.force_skipping()
+        self.zoom_in_on_one_neuron()
+        self.revert_to_original_skipping_status()
+
+        self.show_all_of_second_layer()
+        self.count_in_biases()
+        self.compute_layer_two_of_weights_and_biases_count()
+        self.show_remaining_layers()
+        self.show_final_number()
+        self.tweak_weights()
+
+    def show_all_of_second_layer(self):
+        example_neuron = self.neuron
+        layer = self.network_mob.layers[1]
+
+        neurons = VGroup(*layer.neurons)
+        neurons.remove(example_neuron)
+
+        words = TextMobject("784", "weights", "per neuron")
+        words.next_to(layer.neurons[0], RIGHT)
+        words.to_edge(UP)
+
+        self.play(FadeIn(words))
+        last_edges = None
+        for neuron in neurons[:7]:
+            edges = neuron.edges_in
+            added_anims = []
+            if last_edges is not None:
+                added_anims += [
+                    last_edges.set_stroke, None, 1
+                ]
+            edges.set_stroke(width = 2)
+            self.play(
+                ShowCreation(edges, submobject_mode = "lagged_start"),
+                FadeIn(neuron),
+                *added_anims,
+                run_time = 1.5
+            )
+            last_edges = edges
+        self.play(
+            LaggedStart(
+                ShowCreation, VGroup(*[
+                    n.edges_in for n in neurons[7:]
+                ]),
+                run_time = 3,
+            ),
+            LaggedStart(
+                FadeIn, VGroup(*neurons[7:]),
+                run_time = 3,
+            ),
+            VGroup(*last_edges[1:]).set_stroke, None, 1
+        )
+        self.dither()
+
+        self.weights_words = words
+
+    def count_in_biases(self):
+        neurons = self.network_mob.layers[1].neurons
+        words = TextMobject("One", "bias","for each")
+        words.next_to(neurons, RIGHT, buff = 2)
+        arrows = VGroup(*[
+            Arrow(
+                words.get_left(),
+                neuron.get_center(),
+                color = BLUE
+            )
+            for neuron in neurons
+        ])
+
+        self.play(
+            FadeIn(words),
+            LaggedStart(
+                GrowArrow, arrows, 
+                run_time = 3,
+                lag_ratio = 0.3,
+            )
+        )
+        self.dither()
+
+        self.bias_words = words
+        self.bias_arrows = arrows
+
+    def compute_layer_two_of_weights_and_biases_count(self):
+        ww1, ww2, ww3 = weights_words = self.weights_words
+        bb1, bb2, bb3 = bias_words = self.bias_words
+        bias_arrows = self.bias_arrows
+
+        times_16 = TexMobject("\\times 16")
+        times_16.next_to(ww1, RIGHT, SMALL_BUFF)
+        ww2.generate_target()
+        ww2.target.next_to(times_16, RIGHT)
+
+        bias_count = TextMobject("16", "biases")
+        bias_count.next_to(ww2.target, RIGHT, LARGE_BUFF)
+
+        self.play(
+            Write(times_16),
+            MoveToTarget(ww2),
+            FadeOut(ww3)
+        )
+        self.dither()
+        self.play(
+            ReplacementTransform(times_16.copy(), bias_count[0]),
+            FadeOut(bb1),
+            ReplacementTransform(bb2, bias_count[1]),
+            FadeOut(bb3),
+            LaggedStart(FadeOut, bias_arrows)
+        )
+        self.dither()
+
+        self.weights_count = VGroup(ww1, times_16, ww2)
+        self.bias_count = bias_count
+
+    def show_remaining_layers(self):
+        weights_count = self.weights_count
+        bias_count = self.bias_count
+        for count in weights_count, bias_count:
+            count.generate_target()
+            count.prefix = VGroup(*count.target[:-1])
+
+        added_weights = TexMobject(
+            "+16\\!\\times\\! 16 + 16 \\!\\times\\! 10"
+        )
+        added_weights.to_corner(UP+RIGHT)
+        weights_count.prefix.next_to(added_weights, LEFT, SMALL_BUFF)
+        weights_count.target[-1].next_to(
+            VGroup(weights_count.prefix, added_weights),
+            DOWN
+        )
+
+        added_biases = TexMobject("+ 16 + 10")
+        group = VGroup(bias_count.prefix, added_biases)
+        group.arrange_submobjects(RIGHT, SMALL_BUFF)
+        group.next_to(weights_count.target[-1], DOWN, LARGE_BUFF)
+        bias_count.target[-1].next_to(group, DOWN)
+
+        network_mob = self.network_mob
+        edges = VGroup(*it.chain(*network_mob.edge_groups[1:]))
+        neurons = VGroup(*it.chain(*[
+            layer.neurons for layer in network_mob.layers[2:]
+        ]))
+
+        self.play(
+            MoveToTarget(weights_count),
+            MoveToTarget(bias_count),
+            Write(added_weights, run_time = 1),
+            Write(added_biases, run_time = 1),
+            LaggedStart(
+                ShowCreation, edges,
+                run_time = 4,
+                lag_ratio = 0.3,
+            ),
+            LaggedStart(
+                FadeIn, neurons,
+                run_time = 4,
+                lag_ratio = 0.3,
+            )
+        )
+        self.dither(2)
+
+        weights_count.add(added_weights)
+        bias_count.add(added_biases)
+
+    def show_final_number(self):
+        group = VGroup(
+            self.weights_count,
+            self.bias_count,
+        )
+        group.generate_target()
+        group.target.scale_in_place(0.8)
+        rect = SurroundingRectangle(group.target, buff = MED_SMALL_BUFF)
+        num_mob = TexMobject("13{,}002")
+        num_mob.scale(1.5)
+        num_mob.next_to(rect, DOWN)
+
+        self.play(
+            ShowCreation(rect),
+            MoveToTarget(group),
+        )
+        self.play(Write(num_mob))
+        self.dither()
+
+        self.final_number = num_mob
+
+    def tweak_weights(self):
+        learning = TextMobject("Learning $\\rightarrow$")
+        finding_words = TextMobject(
+            "Finding the right \\\\ weights and biases"
+        )
+        group = VGroup(learning, finding_words)
+        group.arrange_submobjects(RIGHT)
+        group.scale(0.8)
+        group.next_to(self.final_number, DOWN, MED_LARGE_BUFF)
+
+        self.add(ContinualEdgeUpdate(self.network_mob))
+        self.dither(5)
+        self.play(Write(group))
+        self.dither(10)
+
+    ###
+
+    def get_edge_weight_wandering_anim(self, edges):
+        for edge in edges:
+            edge.generate_target()
+            edge.target.set_stroke(
+                color = random.choice([GREEN, GREEN, GREEN, RED]),
+                width = 3*random.random()**7
+            )
+        self.play(
+            LaggedStart(
+                MoveToTarget, edges,
+                lag_ratio = 0.6,
+                run_time = 2,
+            ),
+            *added_anims
+        )
 
 
 
