@@ -84,11 +84,7 @@ class Line(VMobject):
         self.account_for_buff()
 
     def account_for_buff(self):
-        anchors = self.get_anchors()
-        length = sum([
-            np.linalg.norm(a2-a1)
-            for a1, a2 in zip(anchors, anchors[1:])
-        ])
+        length = self.get_arc_length()
         if length < 2*self.buff or self.buff == 0:
             return
         buff_proportion = self.buff / length
@@ -116,6 +112,16 @@ class Line(VMobject):
     def get_length(self):
         start, end = self.get_start_and_end()
         return np.linalg.norm(start - end)
+
+    def get_arc_length(self):
+        if self.path_arc:
+            anchors = self.get_anchors()
+            return sum([
+                np.linalg.norm(a2-a1)
+                for a1, a2 in zip(anchors, anchors[1:])
+            ])
+        else:
+            return self.get_length()
 
     def get_start_and_end(self):
         return self.get_start(), self.get_end()

@@ -330,6 +330,10 @@ class LaggedStart(Animation):
             anim.update(alpha)
         return self
 
+    def clean_up(self, *args, **kwargs):
+        for anim in self.subanimations:
+            anim.clean_up(*args, **kwargs)
+
 class DelayByOrder(Animation):
     """
     Modifier of animation.
