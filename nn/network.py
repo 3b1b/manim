@@ -21,13 +21,14 @@ import cPickle
 from nn.mnist_loader import load_data_wrapper
 
 NN_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
+# PRETRAINED_DATA_FILE = os.path.join(NN_DIRECTORY, "pretrained_weights_and_biases_36")
 PRETRAINED_DATA_FILE = os.path.join(NN_DIRECTORY, "pretrained_weights_and_biases")
 IMAGE_MAP_DATA_FILE = os.path.join(NN_DIRECTORY, "image_map")
 # PRETRAINED_DATA_FILE = "/Users/grant/cs/manim/nn/pretrained_weights_and_biases_on_zero"
+# DEFAULT_LAYER_SIZES = [28**2, 36, 10]
 DEFAULT_LAYER_SIZES = [28**2, 16, 16, 10]
 
 class Network(object):
-
     def __init__(self, sizes):
         """The list ``sizes`` contains the number of neurons in the
         respective layers of the network.  For example, if the list
@@ -192,12 +193,12 @@ def test_network():
     network = get_pretrained_network()    
     training_data, validation_data, test_data = load_data_wrapper()
     n_right, n_wrong = 0, 0
-    for test_in, test_out in test_data[:30]:
+    for test_in, test_out in test_data:
         if np.argmax(network.feedforward(test_in)) == test_out:
             n_right += 1
         else:
             n_wrong += 1
-    print float(n_right)/(n_right + n_wrong)
+    print n_right, n_wrong, float(n_right)/(n_right + n_wrong)
 
 def layer_to_image_array(layer):
     w = int(np.ceil(np.sqrt(len(layer))))

@@ -63,12 +63,12 @@ RIGHT_SIDE = SPACE_WIDTH*RIGHT
 # Change this to point to where you want 
 # animation files to output
 MOVIE_DIR         = os.path.join(os.path.expanduser('~'), "Dropbox/3b1b_videos/animations/")
+STAGED_SCENES_DIR = os.path.join(MOVIE_DIR, "staged_scenes")
 ###
 THIS_DIR          = os.path.dirname(os.path.realpath(__file__))
 FILE_DIR          = os.path.join(THIS_DIR, "files")
 IMAGE_DIR         = os.path.join(FILE_DIR, "images")
 GIF_DIR           = os.path.join(FILE_DIR, "gifs")
-STAGED_SCENES_DIR = os.path.join(FILE_DIR, "staged_scenes")
 TEX_DIR           = os.path.join(FILE_DIR, "Tex")
 TEX_IMAGE_DIR     = os.path.join(IMAGE_DIR, "Tex")
 MOBJECT_DIR       = os.path.join(FILE_DIR, "mobjects")
