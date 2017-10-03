@@ -100,7 +100,7 @@ class Swap(CyclicReplace):
 
 class GrowFromPoint(Transform):
     def __init__(self, mobject, point, **kwargs):
-        target = mobject.deepcopy()
+        target = mobject.copy()
         point_mob = Point(point)
         mobject.replace(point_mob)
         mobject.highlight(point_mob.get_color())
@@ -143,7 +143,7 @@ class ApplyMethod(Transform):
         )
         assert(isinstance(method.im_self, Mobject))
         method_kwargs = kwargs.get("method_kwargs", {})
-        target = method.im_self.deepcopy()
+        target = method.im_self.copy()
         method.im_func(target, *args, **method_kwargs)
         Transform.__init__(self, method.im_self, target, **kwargs)
 
@@ -165,7 +165,7 @@ class FadeOut(Transform):
 
 class FadeIn(Transform):
     def __init__(self, mobject, **kwargs):
-        target = mobject.deepcopy()
+        target = mobject.copy()
         Transform.__init__(self, mobject, target, **kwargs)
         self.starting_mobject.fade(1)
         if isinstance(self.starting_mobject, VMobject):
@@ -232,7 +232,6 @@ class Rotate(ApplyMethod):
         )
         Transform.__init__(self, mobject, target, **kwargs)
 
-
 class ApplyPointwiseFunction(ApplyMethod):
     CONFIG = {
         "run_time" : DEFAULT_POINTWISE_FUNCTION_RUN_TIME
@@ -258,7 +257,7 @@ class ApplyFunction(Transform):
         Transform.__init__(
             self, 
             mobject, 
-            function(mobject.deepcopy()),
+            function(mobject.copy()),
             **kwargs
         )
         self.name = "ApplyFunctionTo"+str(mobject)

@@ -102,13 +102,17 @@ class Mobject(object):
     def copy(self):
         #TODO, either justify reason for shallow copy, or
         #remove this redundancy everywhere
-        return self.deepcopy() 
-        # copy_mobject = copy.copy(self)
-        # copy_mobject.points = np.array(self.points)
-        # copy_mobject.submobjects = [
-        #     submob.copy() for submob in self.submobjects
-        # ]
-        # return copy_mobject
+        # return self.deepcopy() 
+        copy_mobject = copy.copy(self)
+        copy_mobject.points = np.array(self.points)
+        copy_mobject.submobjects = [
+            submob.copy() for submob in self.submobjects
+        ]
+        family = self.submobject_family()
+        for attr, value in self.__dict__.items():
+            if isinstance(value, Mobject) and value in family and value is not self:
+                setattr(copy_mobject, attr, value.copy())
+        return copy_mobject
 
     def deepcopy(self):
         return copy.deepcopy(self)
@@ -443,7 +447,7 @@ class Mobject(object):
         if hasattr(self, "saved_state"):
             #Prevent exponential growth of data
             self.saved_state = None
-        self.saved_state = self.deepcopy()
+        self.saved_state = self.copy()
         return self
 
     def restore(self):
