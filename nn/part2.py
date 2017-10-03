@@ -206,7 +206,6 @@ class PreviewLearning(NetworkScene):
 
         reversed_delta_edges = VGroup(*it.chain(*reversed(delta_edge_groups)))
         reversed_delta_neurons = VGroup(*reversed(delta_neuron_groups))
-        edge_groups.save_state()
 
         self.play(
             LaggedStart(
@@ -223,6 +222,7 @@ class PreviewLearning(NetworkScene):
                 rate_func = None,
             )
         )
+        edge_groups.save_state()
         self.color_network_edges()
         self.remove(edge_groups)
         self.play(*it.chain(
@@ -395,15 +395,34 @@ class FunctionMinmization(GraphScene):
     }
     def construct(self):
         self.setup_axes()
+        title = TextMobject("Finding minima")
+        title.to_edge(UP)
+        self.add(title)
+
         def func(x):
-            x -= 5
-            return 0.1*(x**3 - 9*x) + 4
+            x -= 4.5
+            return 0.03*(x**4 - 16*x**2) + 0.3*x + 4
         graph = self.get_graph(func)
         graph_label = self.get_graph_label(graph, "C(x)")
         self.add(graph, graph_label)
 
-        dot = Dot(color = YELLOW)
-        x = 
+        dots = VGroup(*[
+            Dot().move_to(self.input_to_graph_point(x, graph))
+            for x in range(10)
+        ])
+        dots.gradient_highlight(YELLOW, RED)
+
+        def update_dot(dot, dt):
+            x = self.x_axis.point_to_number(dot.get_center())
+            slope = self.slope_of_tangent(x, graph)
+            x -= slope*dt
+            dot.move_to(self.input_to_graph_point(x, graph))
+
+        self.add(*[
+            ContinualUpdateFromFunc(dot, update_dot)
+            for dot in dots
+        ])
+        self.dither(10)
 
 
 

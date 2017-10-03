@@ -85,10 +85,14 @@ class AmbientMovement(ContinualAnimation):
 class ContinualUpdateFromFunc(ContinualAnimation):
     def __init__(self, mobject, func, **kwargs):
         self.func = func
+        self.func_arg_count = func.func_code.co_argcount
+        if self.func_arg_count > 2:
+            raise Exception("ContinualUpdateFromFunc function must take 1 or 2 args")
         ContinualAnimation.__init__(self, mobject, **kwargs)
 
     def update_mobject(self, dt):
-        self.func(self.mobject)
+        args = (self.mobject, dt)
+        self.func(*args[:self.func_arg_count])
 
 class ContinualMaintainPositionRelativeTo(ContinualAnimation):
     def __init__(self, mobject, tracked_mobject, **kwargs):

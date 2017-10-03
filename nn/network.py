@@ -22,6 +22,7 @@ from nn.mnist_loader import load_data_wrapper
 
 NN_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
 # PRETRAINED_DATA_FILE = os.path.join(NN_DIRECTORY, "pretrained_weights_and_biases_36")
+# PRETRAINED_DATA_FILE = os.path.join(NN_DIRECTORY, "pretrained_weights_and_biases_ReLU")
 PRETRAINED_DATA_FILE = os.path.join(NN_DIRECTORY, "pretrained_weights_and_biases")
 IMAGE_MAP_DATA_FILE = os.path.join(NN_DIRECTORY, "image_map")
 # PRETRAINED_DATA_FILE = "/Users/grant/cs/manim/nn/pretrained_weights_and_biases_on_zero"
@@ -29,7 +30,7 @@ IMAGE_MAP_DATA_FILE = os.path.join(NN_DIRECTORY, "image_map")
 DEFAULT_LAYER_SIZES = [28**2, 16, 16, 10]
 
 class Network(object):
-    def __init__(self, sizes):
+    def __init__(self, sizes, non_linearity = "sigmoid"):
         """The list ``sizes`` contains the number of neurons in the
         respective layers of the network.  For example, if the list
         was [2, 3, 1] then it would be a three-layer network, with the
@@ -45,11 +46,19 @@ class Network(object):
         self.biases = [np.random.randn(y, 1) for y in sizes[1:]]
         self.weights = [np.random.randn(y, x)
                         for x, y in zip(sizes[:-1], sizes[1:])]
+        if non_linearity == "sigmoid":
+            self.non_linearity = sigmoid
+            self.d_non_linearity = sigmoid_prime
+        elif non_linearity == "ReLU":
+            self.non_linearity = ReLU
+            self.d_non_linearity = ReLU_prime
+        else:
+            raise Exception("Invalid non_linearity")
 
     def feedforward(self, a):
         """Return the output of the network if ``a`` is input."""
         for b, w in zip(self.biases, self.weights):
-            a = sigmoid(np.dot(w, a)+b)
+            a = self.non_linearity(np.dot(w, a)+b)
         return a
 
     def get_activation_of_all_layers(self, input_a, n_layers = None):
@@ -58,7 +67,7 @@ class Network(object):
         activations = [input_a.reshape((input_a.size, 1))]
         for bias, weight in zip(self.biases, self.weights)[:n_layers]:
             last_a = activations[-1]
-            new_a = sigmoid(np.dot(weight, last_a) + bias)
+            new_a = self.non_linearity(np.dot(weight, last_a) + bias)
             new_a = new_a.reshape((new_a.size, 1))
             activations.append(new_a)
         return activations
@@ -118,11 +127,11 @@ class Network(object):
         for b, w in zip(self.biases, self.weights):
             z = np.dot(w, activation)+b
             zs.append(z)
-            activation = sigmoid(z)
+            activation = self.non_linearity(z)
             activations.append(activation)
         # backward pass
         delta = self.cost_derivative(activations[-1], y) * \
-            sigmoid_prime(zs[-1])
+            self.d_non_linearity(zs[-1])
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
         # Note that the variable l in the loop below is used a little
@@ -133,7 +142,7 @@ class Network(object):
         # that Python can use negative indices in lists.
         for l in xrange(2, self.num_layers):
             z = zs[-l]
-            sp = sigmoid_prime(z)
+            sp = self.d_non_linearity(z)
             delta = np.dot(self.weights[-l+1].transpose(), delta) * sp
             nabla_b[-l] = delta
             nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
@@ -169,6 +178,14 @@ def sigmoid_inverse(z):
     return np.log(np.true_divide(
         1.0, (np.true_divide(1.0, z) - 1)
     ))
+
+def ReLU(z):
+    result = np.array(z)
+    result[result < 0] = 0
+    return result
+
+def ReLU_prime(z):
+    return (np.array(z) > 0).astype('int')
 
 def get_pretrained_network():
     data_file = open(PRETRAINED_DATA_FILE)
