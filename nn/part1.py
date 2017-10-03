@@ -127,6 +127,7 @@ class NetworkMobject(VGroup):
         "max_shown_neurons" : 16,
         "brace_for_large_layers" : True,
         "average_shown_activation_of_large_layer" : True,
+        "include_output_labels" : False,
     }
     def __init__(self, neural_network, **kwargs):
         VGroup.__init__(self, **kwargs)
@@ -143,6 +144,8 @@ class NetworkMobject(VGroup):
         layers.arrange_submobjects(RIGHT, buff = self.layer_to_layer_buff)
         self.layers = layers
         self.add(self.layers)
+        if self.include_output_labels:
+            self.add_output_labels()
 
     def get_layer(self, size):
         layer = VGroup()
@@ -255,18 +258,6 @@ class NetworkMobject(VGroup):
             submobject_mode = "lagged_start"
         )]
 
-class MNistNetworkMobject(NetworkMobject):
-    CONFIG = {
-        "neuron_to_neuron_buff" : SMALL_BUFF,
-        "layer_to_layer_buff" : 1.5,
-        "edge_stroke_width" : 1,
-    }
-
-    def __init__(self, **kwargs):
-        network = get_pretrained_network()
-        NetworkMobject.__init__(self, network, **kwargs)
-        self.add_output_labels()
-
     def add_output_labels(self):
         self.output_labels = VGroup()
         for n, neuron in enumerate(self.layers[-1].neurons):
@@ -276,6 +267,18 @@ class MNistNetworkMobject(NetworkMobject):
             label.shift(neuron.get_width()*RIGHT)
             self.output_labels.add(label)
         self.add(self.output_labels)
+
+class MNistNetworkMobject(NetworkMobject):
+    CONFIG = {
+        "neuron_to_neuron_buff" : SMALL_BUFF,
+        "layer_to_layer_buff" : 1.5,
+        "edge_stroke_width" : 1,
+        "include_output_labels" : True,
+    }
+
+    def __init__(self, **kwargs):
+        network = get_pretrained_network()
+        NetworkMobject.__init__(self, network, **kwargs)
 
 class NetworkScene(Scene):
     CONFIG = {
