@@ -328,6 +328,7 @@ class PiCreatureBubbleIntroduction(AnimationGroup):
             bubble_class = self.bubble_class,
             **self.bubble_kwargs
         )
+        Group(bubble, bubble.content).shift_onto_screen()
 
         pi_creature.generate_target()
         pi_creature.target.change_mode(self.target_mode)

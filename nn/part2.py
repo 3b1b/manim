@@ -102,9 +102,9 @@ class PreviewLearning(NetworkScene):
         "n_examples" : 15,
         "max_stroke_width" : 3,
         "stroke_width_exp" : 3,
-        "eta" : 5.0,
-        "positive_change_color" : GREEN_B,
-        "negative_change_color" : RED_B,
+        "eta" : 3.0,
+        "positive_change_color" : average_color(*2*[GREEN] + [YELLOW]),
+        "negative_change_color" : average_color(*2*[RED] + [YELLOW]),
     }
     def construct(self):
         self.initialize_network()
@@ -197,31 +197,20 @@ class PreviewLearning(NetworkScene):
                 edge.rotate_in_place(np.pi)
             if i == 2:
                 delta_edges.submobjects = [
-                    delta_edges[-(j+1)]
+                    delta_edges[j]
                     for j in np.argsort(shown_nw.T.flatten())
                 ]
             network = self.network
             network.weights[i] -= self.eta*nw
             network.biases[i] -= self.eta*nb
 
-        reversed_delta_edges = VGroup(*it.chain(*reversed(delta_edge_groups)))
-        reversed_delta_neurons = VGroup(*reversed(delta_neuron_groups))
-
-        self.play(
-            LaggedStart(
-                ShowCreation,
-                reversed_delta_edges,
-                run_time = 1.5,
-                lag_ratio = 0.15,
-            ),
-            FadeIn(
-                reversed_delta_neurons,
-                run_time = 2,
-                submobject_mode = "lagged_start",
-                lag_factor = 4,
-                rate_func = None,
+            self.play(
+                ShowCreation(
+                    delta_edges, submobject_mode = "all_at_once"
+                ),
+                FadeIn(delta_neurons),
+                run_time = 0.5
             )
-        )
         edge_groups.save_state()
         self.color_network_edges()
         self.remove(edge_groups)
@@ -229,7 +218,7 @@ class PreviewLearning(NetworkScene):
             [ReplacementTransform(
                 edge_groups.saved_state, edge_groups,
             )],
-            map(FadeOut, [reversed_delta_edges, reversed_delta_neurons]),
+            map(FadeOut, [delta_edge_groups, delta_neuron_groups]),
             added_outro_anims,
         ))
 
@@ -424,7 +413,164 @@ class FunctionMinmization(GraphScene):
         ])
         self.dither(10)
 
+class IntroduceCostFunction(PreviewLearning):
+    def construct(self):
+        self.force_skipping()
 
+        self.isolate_one_neuron()
+        self.reminder_of_weights_and_bias()
+        self.initialize_randomly()
+        self.feed_in_example()
+        self.make_fun_of_output()
+        self.need_a_cost_function()
+        self.show_cost_function()
+
+    def isolate_one_neuron(self):
+        network_mob = self.network_mob
+        network_mob.shift(LEFT)
+        neuron_groups = VGroup(*[
+            layer.neurons
+            for layer in network_mob.layers[1:]
+        ])
+        edge_groups = network_mob.edge_groups
+        neuron = neuron_groups[0][7].deepcopy()
+        output_labels = network_mob.output_labels
+        kwargs = {
+            "submobject_mode" : "lagged_start",
+            "run_time" : 2,
+        }
+        self.play(
+            FadeOut(edge_groups, **kwargs),
+            FadeOut(neuron_groups, **kwargs),
+            FadeOut(output_labels, **kwargs),
+            Animation(neuron),
+            neuron.edges_in.set_stroke, None, 2,
+        )
+        self.dither()
+
+        self.neuron = neuron
+
+    def reminder_of_weights_and_bias(self):
+        neuron = self.neuron
+        layer0 = self.network_mob.layers[0]
+        active_layer0 = self.network_mob.get_active_layer(
+            0, np.random.random(len(layer0.neurons))
+        )
+        prev_neurons = layer0.neurons
+
+        weights = 4*(np.random.random(len(neuron.edges_in))-0.5)
+        weighted_edges = VGroup(*[
+            edge.copy().set_stroke(
+                color = GREEN if w > 0 else RED,
+                width = abs(w)
+            )
+            for w, edge in zip(weights, neuron.edges_in)
+        ])
+
+        formula = TexMobject(
+            "=", "\\sigma(",
+            "w_1", "a_1", "+",
+            "w_2", "a_2", "+",
+            "\\cdots", "+",
+            "w_n", "a_n", "+", "b", ")"
+        )
+        w_labels = formula.get_parts_by_tex("w_")
+        a_labels = formula.get_parts_by_tex("a_")
+        b = formula.get_part_by_tex("b")
+        sigma = VGroup(
+            formula.get_part_by_tex("\\sigma"),
+            formula.get_part_by_tex(")"),
+        )
+        symbols = VGroup(*[
+            formula.get_parts_by_tex(tex)
+            for tex in "=", "+", "dots"
+        ])
+
+        w_labels.highlight(GREEN)
+        b.highlight(BLUE)
+        sigma.highlight(YELLOW)
+        # formula.to_edge(UP)
+        formula.next_to(neuron, RIGHT)
+
+        weights_word = TextMobject("Weights")
+        weights_word.next_to(neuron.edges_in, RIGHT, aligned_edge = UP)
+        weights_word.highlight(GREEN)
+        weights_arrow = Arrow(
+            weights_word.get_bottom(),
+            neuron.edges_in[0].get_center(),
+            color = GREEN
+        )
+
+        alt_weights_arrows = VGroup(*[
+            Arrow(
+                weights_word.get_bottom(),
+                w_label.get_top(),
+                color = GREEN
+            )
+            for w_label in w_labels
+        ])
+
+        bias_word = TextMobject("Bias")
+        bias_arrow = Vector(DOWN, color = BLUE)
+        bias_arrow.next_to(b, UP, SMALL_BUFF)
+        bias_word.next_to(bias_arrow, UP, SMALL_BUFF)
+        bias_word.highlight(BLUE)
+
+        self.revert_to_original_skipping_status()
+        self.play(
+            Transform(layer0, active_layer0),
+            FadeIn(a_labels),
+            FadeIn(symbols),
+            run_time = 2,
+            submobject_mode = "lagged_start"
+        )
+        self.play(
+            Write(weights_word),
+            GrowArrow(weights_arrow),
+            Transform(neuron.edges_in, weighted_edges),
+            run_time = 1,
+        )
+        self.dither()
+        self.play(
+            ReplacementTransform(
+                weighted_edges.copy(), w_labels,
+            ),
+            ReplacementTransform(
+                VGroup(weights_arrow),
+                alt_weights_arrows
+            )
+        )
+        self.dither()
+        self.play(
+            Write(b),
+            Write(bias_word),
+            GrowArrow(bias_arrow),
+            run_time = 1
+        )
+        self.play(Write(sigma))
+        self.dither(2)
+
+    def initialize_randomly(self):
+        pass
+
+    def feed_in_example(self):
+        pass
+
+    def make_fun_of_output(self):
+        pass
+
+    def need_a_cost_function(self):
+        pass
+
+    def show_cost_function(self):
+        pass
+
+
+    ####
+
+    def activate_network(self, train_in, *added_anims):
+        ##TODO
+        PreviewLearning.activate_network(self, train_in, *added_anims)
 
 
 

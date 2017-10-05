@@ -117,9 +117,12 @@ class Mobject(object):
     def deepcopy(self):
         return copy.deepcopy(self)
 
-    def generate_target(self):
+    def generate_target(self, use_deepcopy = False):
         self.target = None #Prevent exponential explosion
-        self.target = self.copy()
+        if use_deepcopy:
+            self.target = self.deepcopy()
+        else:
+            self.target = self.copy()
         return self.target
 
     #### Transforming operations ######
