@@ -168,12 +168,12 @@ class Scene(object):
         families = [m.submobject_family() for m in mobjects]
         def is_top_level(mobject):
             num_families = sum([
-                (mobject in family) 
+                (mobject in family)
                 for family in families
             ])
             return num_families == 1
         return filter(is_top_level, mobjects)
-        
+
     def separate_mobjects_and_continual_animations(self, mobjects_or_continual_animations):
         mobjects = []
         continual_animations = []
@@ -185,7 +185,7 @@ class Scene(object):
                 continual_animations.append(item)
             else:
                 raise Exception("""
-                    Adding/Removing something which is 
+                    Adding/Removing something which is
                     not a Mobject or a ContinualAnimation
                  """)
         return mobjects, continual_animations
@@ -249,7 +249,7 @@ class Scene(object):
 
     def add_foreground_mobjects(self, *mobjects):
         self.foreground_mobjects = list_update(
-            self.foreground_mobjects, 
+            self.foreground_mobjects,
             mobjects
         )
         self.add(*mobjects)
@@ -319,12 +319,12 @@ class Scene(object):
     def compile_play_args_to_animation_list(self, *args):
         """
         Eacn arg can either be an animation, or a mobject method
-        followed by that methods arguments.  
+        followed by that methods arguments.
 
-        This animation list is built by going through the args list, 
-        and each animation is simply added, but when a mobject method 
-        s hit, a MoveToTarget animation is built using the args that 
-        follow up until either another animation is hit, another method 
+        This animation list is built by going through the args list,
+        and each animation is simply added, but when a mobject method
+        s hit, a MoveToTarget animation is built using the args that
+        follow up until either another animation is hit, another method
         is hit, or the args list runs out.
         """
         animations = []
@@ -361,7 +361,7 @@ class Scene(object):
                 state["method_args"].append(arg)
             elif isinstance(arg, Mobject):
                 raise Exception("""
-                    I think you may have invoked a method 
+                    I think you may have invoked a method
                     you meant to pass in as a Scene.play argument
                 """)
             else:
@@ -471,7 +471,7 @@ class Scene(object):
         name = str(self)
         file_path = self.get_movie_file_path(name, ".mp4")
         temp_file_path = file_path.replace(".mp4", "Temp.mp4")
-        print "Writing to %s"%temp_file_path
+        print("Writing to %s"%temp_file_path)
         self.args_to_rename_file = (temp_file_path, file_path)
 
         fps = int(1/self.frame_duration)
@@ -502,29 +502,3 @@ class Scene(object):
             shutil.move(*self.args_to_rename_file)
         else:
             os.rename(*self.args_to_rename_file)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

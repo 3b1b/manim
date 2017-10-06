@@ -92,10 +92,10 @@ class Network(object):
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta)
             if test_data:
-                print "Epoch {0}: {1} / {2}".format(
-                    j, self.evaluate(test_data), n_test)
+                print("Epoch {0}: {1} / {2}".format(
+                    j, self.evaluate(test_data), n_test))
             else:
-                print "Epoch {0} complete".format(j)
+                print("Epoch {0} complete".format(j))
 
     def update_mini_batch(self, mini_batch, eta):
         """Update the network's weights and biases by applying
@@ -207,7 +207,7 @@ def save_pretrained_network(epochs = 30, mini_batch_size = 10, eta = 3.0):
     data_file.close()
 
 def test_network():
-    network = get_pretrained_network()    
+    network = get_pretrained_network()
     training_data, validation_data, test_data = load_data_wrapper()
     n_right, n_wrong = 0, 0
     for test_in, test_out in test_data:
@@ -215,7 +215,7 @@ def test_network():
             n_right += 1
         else:
             n_wrong += 1
-    print n_right, n_wrong, float(n_right)/(n_right + n_wrong)
+    print(n_right, n_wrong, float(n_right)/(n_right + n_wrong))
 
 def layer_to_image_array(layer):
     w = int(np.ceil(np.sqrt(len(layer))))
@@ -254,8 +254,8 @@ def maximizing_input(network, layer_index, layer_vect, n_steps = 100, seed_guess
         norms.append(norm)
         old_pre_sig_guess = np.array(pre_sig_guess)
         pre_sig_guess += 0.1*gradient
-        print np.linalg.norm(old_pre_sig_guess - pre_sig_guess)
-    print ""
+        print(np.linalg.norm(old_pre_sig_guess - pre_sig_guess))
+    print("")
     return sigmoid(pre_sig_guess)
 
 def save_organized_images(n_images_per_number = 10):
@@ -299,41 +299,3 @@ def get_organized_images():
 #     prev_vect /= np.max(np.abs(prev_vect))
 #     # prev_vect /= 1.1
 #     return maximizing_input(network, layer_index - 1, prev_vect)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -7,7 +7,7 @@ from scene import Scene
 
 
 class SceneFromVideo(Scene):
-    def construct(self, file_name, 
+    def construct(self, file_name,
                   freeze_last_frame = True,
                   time_range = None):
         cap = cv2.VideoCapture(file_name)
@@ -25,7 +25,7 @@ class SceneFromVideo(Scene):
             start_frame, end_frame = map(lambda t : fps*t, time_range)
 
         frame_count = end_frame - start_frame
-        print "Reading in " + file_name + "..."
+        print("Reading in " + file_name + "...")
         for count in show_progress(range(start_frame, end_frame+1)):
             returned, frame = cap.read()
             if not returned
@@ -52,6 +52,3 @@ class SceneFromVideo(Scene):
         for index in range(len(self.frames)):
             for i in range(3):
                 self.frames[index][:,:,i] = edged_frames[index]
-
-        
-            

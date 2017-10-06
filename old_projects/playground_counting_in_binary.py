@@ -50,7 +50,7 @@ COUNT_TO_FRAME_NUM = {
     31 : 1224,
     32 : 1239,
 }
-    
+
 class Hand(ImageMobject):
     def __init__(self, num, **kwargs):
         Mobject2D.__init__(self, **kwargs)
@@ -101,11 +101,11 @@ class BufferedCounting(SceneFromVideo):
         threshold2 = 70
 
         matrices = [
-            thick_diagonal(dim, spread) 
+            thick_diagonal(dim, spread)
             for dim, spread in zip(self.shape, spreads)
         ]
         for frame, index in zip(self.frames, it.count()):
-            print index, "of", len(self.frames)
+            print(index + "of" + len(self.frames))
             blurred = cv2.GaussianBlur(frame, ksize, sigmaX)
             edged = cv2.Canny(blurred, threshold1, threshold2)
             buffed = reduce(np.dot, [matrices[0], edged, matrices[1]])
@@ -133,7 +133,7 @@ class ClearLeftSide(SceneFromVideo):
         self.highlight_region_over_time_range(
             Region(lambda x, y : x < -1, shape = self.shape)
         )
-        
+
 
 
 class DraggedPixels(SceneFromVideo):
@@ -159,7 +159,7 @@ class DraggedPixels(SceneFromVideo):
                     index
                 )
             ], axis = 0)
-    
+
 
 class SaveEachNumber(SceneFromVideo):
     def construct(self):
@@ -167,7 +167,7 @@ class SaveEachNumber(SceneFromVideo):
         SceneFromVideo.construct(self, path)
         for count in COUNT_TO_FRAME_NUM:
             path = os.path.join(
-                MOVIE_DIR, MOVIE_PREFIX, "images", 
+                MOVIE_DIR, MOVIE_PREFIX, "images",
                 "Hand%d.png"%count
             )
             Image.fromarray(self.frames[COUNT_TO_FRAME_NUM[count]]).save(path)
@@ -186,13 +186,13 @@ class ShowCounting(SceneFromVideo):
         SceneFromVideo.construct(self, path)
         total_time = len(self.frames)*self.frame_duration
         for count in range(32):
-            print count
+            print(count)
             mob = TexMobject(str(count)).scale(1.5)
             mob.shift(0.3*LEFT).to_edge(UP, buff = 0.1)
             index_range = range(
                 max(COUNT_TO_FRAME_NUM[count]-10, 0),
                 COUNT_TO_FRAME_NUM[count+1]-10
-            ) 
+            )
             for index in index_range:
                 self.frames[index] = disp.paint_mobject(
                     mob, self.frames[index]
@@ -210,7 +210,7 @@ class ShowFrameNum(SceneFromVideo):
         path = os.path.join(MOVIE_DIR, MOVIE_PREFIX, filename+".mp4")
         SceneFromVideo.construct(self, path)
         for frame, count in zip(self.frames, it.count()):
-            print count, "of", len(self.frames)
+            print(count + "of" + len(self.frames))
             mob = Mobject(*[
                 TexMobject(char).shift(0.3*x*RIGHT)
                 for char, x, in zip(str(count), it.count())
