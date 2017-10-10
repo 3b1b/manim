@@ -337,7 +337,7 @@ class NumberPlane(VMobject):
         return self
 
     def apply_function(self, function, maintain_smoothness = True):
-        SVGMobject.apply_function(self, function, maintain_smoothness = maintain_smoothness)
+        VMobject.apply_function(self, function, maintain_smoothness = maintain_smoothness)
 
 
 
