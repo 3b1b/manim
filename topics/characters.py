@@ -276,7 +276,7 @@ class Eyes(VMobject):
 
         pi = Randolph(mode = mode)
         eyes = VGroup(pi.eyes, pi.pupils)
-        eyes.scale_to_fit_height(self.height)
+        pi.scale(self.height/eyes.get_height())
         if self.submobjects:
             eyes.move_to(self, DOWN)
         else:

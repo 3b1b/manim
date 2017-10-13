@@ -2569,7 +2569,7 @@ class InterpretFirstWeightMatrixRows(TestPerformance):
                     color = self.positive_edge_color
                 else:
                     color = self.negative_edge_color
-                pixel.set_fill(color, opacity = abs(shade))
+                pixel.set_fill(color, opacity = abs(shade)**(0.3))
             pixel_arrays.add(pixel_array)
         pixel_arrays.arrange_submobjects_in_grid(buff = MED_LARGE_BUFF)
         pixel_arrays.scale_to_fit_height(2*SPACE_HEIGHT - 2.5)
@@ -2594,7 +2594,7 @@ class InterpretFirstWeightMatrixRows(TestPerformance):
         self.play(
             VGroup(*neurons[1:]).set_stroke, None, 0.5,
             FadeIn(self.words),
-            neurons[0].set_stroke, None, 2,
+            neurons[0].edges_in.set_stroke, None, 2,
             *[
                 ApplyMethod(edge.set_stroke, None, 0.25)
                 for edge in edges
@@ -2619,8 +2619,149 @@ class InterpretFirstWeightMatrixRows(TestPerformance):
             self.play(ShowCreation(pixel_array.rect))
             last_neuron = neuron
 
+class InputRandomData(TestPerformance):
+    def construct(self):
+        self.color_network_edges()
+        self.show_random_image()
+        self.show_expected_outcomes()
+        self.feed_in_random_data()
+        self.network_speaks()
 
+    def show_random_image(self):
+        np.random.seed(4)
+        rand_vect = np.random.random(28*28)
+        image = PixelsFromVect(rand_vect)
+        image.to_edge(LEFT)
+        image.shift(UP)
+        rect = SurroundingRectangle(image)
 
+        arrow = Arrow(
+            rect.get_top(),
+            self.network_mob.layers[0].neurons.get_top(),
+            path_arc = -2*np.pi/3,
+            use_rectangular_stem = False,
+        )
+        arrow.tip.set_stroke(width = 3)
+
+        self.play(
+            ShowCreation(rect),
+            LaggedStart(
+                DrawBorderThenFill, image, 
+                stroke_width = 0.5
+            )
+        )
+        self.play(ShowCreation(arrow))
+        self.dither()
+
+        self.image = image
+        self.rand_vect = rand_vect
+        self.image_rect = rect
+        self.arrow = arrow
+
+    def show_expected_outcomes(self):
+        neurons = self.network_mob.layers[-1].neurons
+
+        words = TextMobject("What might you expect?")
+        words.to_corner(UP+RIGHT)
+        arrow = Arrow(
+            words.get_bottom(), neurons.get_top(),
+            color = WHITE
+        )
+
+        self.play(
+            Write(words, run_time = 1),
+            GrowArrow(arrow)
+        )
+        vects = [np.random.random(10) for x in range(2)]
+        vects += [np.zeros(10), 0.4*np.ones(10)]
+        for vect in vects:
+            neurons.generate_target()
+            for neuron, o in zip(neurons, vect):
+                neuron.generate_target()
+                neuron.target.set_fill(WHITE, opacity = o)
+            self.play(LaggedStart(
+                MoveToTarget, neurons,
+                run_time = 1
+            ))
+            self.dither()
+        self.play(FadeOut(VGroup(words, arrow)))
+
+    def feed_in_random_data(self):
+        neurons = self.network_mob.layers[0].neurons
+        rand_vect = self.rand_vect
+        image = self.image.copy()
+        output_labels = self.network_mob.output_labels
+
+        opacities = it.chain(rand_vect[:8], rand_vect[-8:])
+        target_neurons = neurons.copy()
+        for n, o in zip(target_neurons, opacities):
+            n.set_fill(WHITE, opacity = o)
+
+        point = VectorizedPoint(neurons.get_center())
+        image.target = VGroup(*it.chain(
+            target_neurons[:len(neurons)/2],
+            [point]*(len(image) - len(neurons)),
+            target_neurons[-len(neurons)/2:]
+        ))
+
+        self.play(MoveToTarget(
+            image, 
+            run_time = 2,
+            submobject_mode = "lagged_start"
+        ))
+        self.activate_network(rand_vect, FadeOut(image))
+
+        ### React ###
+        neurons = self.network_mob.layers[-1].neurons
+        choice = np.argmax([n.get_fill_opacity() for n in neurons])
+        rect = SurroundingRectangle(VGroup(
+            neurons[choice], output_labels[choice]
+        ))
+        word = TextMobject("What?!?")
+        word.highlight(YELLOW)
+        word.next_to(rect, RIGHT)
+
+        self.play(ShowCreation(rect))
+        self.play(Write(word, run_time = 1))
+        self.dither()
+
+        self.network_mob.add(rect, word)
+        self.choice = choice
+
+    def network_speaks(self):
+        network_mob = self.network_mob
+        network_mob.generate_target(use_deepcopy = True)
+        network_mob.target.scale(0.7)
+        network_mob.target.to_edge(DOWN)
+        eyes = Eyes(
+            network_mob.target.edge_groups[1],
+            height = 0.45,
+        )
+        eyes.shift(0.5*SMALL_BUFF*UP)
+
+        bubble = SpeechBubble(
+            height = 3, width = 5,
+            direction = LEFT
+        )
+        bubble.pin_to(network_mob.target.edge_groups[-1])
+        bubble.write("Looks like a \\\\ %d to me!"%self.choice)
+
+        self.play(
+            MoveToTarget(network_mob),
+            FadeIn(eyes)
+        )
+        self.play(eyes.look_at_anim(self.image))
+        self.play(
+            ShowCreation(bubble),
+            Write(bubble.content, run_time = 1)
+        )
+        self.play(eyes.blink_anim())
+        self.dither()
+
+class TODOShowCostFunctionDef(TODOStub):
+    CONFIG = {
+        "message" : "Insert cost function averaging portion"
+    }
 
 
 
