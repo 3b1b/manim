@@ -37,6 +37,9 @@ from mobject.tex_mobject import *
 from nn.network import *
 from nn.part1 import *
 
+POSITIVE_COLOR = BLUE
+NEGATIVE_COLOR = RED
+
 def get_training_image_group(train_in, train_out):
     image = MNistMobject(train_in)
     image.scale_to_fit_height(1)
@@ -47,6 +50,35 @@ def get_training_image_group(train_in, train_out):
     result.arrange_submobjects(RIGHT)
     result.to_edge(UP)
     return result
+
+def get_decimal_vector(nums, with_dots = True):
+    decimals = VGroup()
+    for num in nums:
+        decimal = DecimalNumber(num)
+        if num > 0:
+            decimal.highlight(POSITIVE_COLOR)
+        else:
+            decimal.highlight(NEGATIVE_COLOR)
+        decimals.add(decimal)
+    contents = VGroup(*decimals)
+    if with_dots:
+        dots = TexMobject("\\vdots")
+        contents.submobjects.insert(len(decimals)/2, dots)
+    contents.arrange_submobjects(DOWN)
+    lb, rb = brackets = TexMobject("\\big[", "\\big]")
+    brackets.scale(2)
+    brackets.stretch_to_fit_height(1.2*contents.get_height())
+    lb.next_to(contents, LEFT, SMALL_BUFF)
+    rb.next_to(contents, RIGHT, SMALL_BUFF)
+
+    result = VGroup(lb, contents, brackets)
+    result.lb = lb
+    result.rb = rb
+    result.brackets = brackets
+    result.decimals = decimals
+    result.contents = contents
+    return result
+
 
 ########
 
@@ -436,6 +468,7 @@ class IntroduceCostFunction(PreviewLearning):
         "max_stroke_width" : 2,
         "full_edges_exp" : 5,
         "n_training_examples" : 100,
+        "bias_color" : MAROON_B
     }
     def construct(self):
         self.network_mob.shift(LEFT)
@@ -506,35 +539,34 @@ class IntroduceCostFunction(PreviewLearning):
             for tex in "=", "+", "dots"
         ])
 
-        w_labels.highlight(GREEN)
-        b.highlight(BLUE)
+        w_labels.highlight(self.positive_edge_color)
+        b.highlight(self.bias_color)
         sigma.highlight(YELLOW)
-        # formula.to_edge(UP)
         formula.next_to(neuron, RIGHT)
 
         weights_word = TextMobject("Weights")
         weights_word.next_to(neuron.edges_in, RIGHT, aligned_edge = UP)
-        weights_word.highlight(GREEN)
+        weights_word.highlight(self.positive_edge_color)
         weights_arrow_to_edges = Arrow(
             weights_word.get_bottom(),
             neuron.edges_in[0].get_center(),
-            color = GREEN
+            color = self.positive_edge_color
         )
 
         weights_arrow_to_syms = VGroup(*[
             Arrow(
                 weights_word.get_bottom(),
                 w_label.get_top(),
-                color = GREEN
+                color = self.positive_edge_color
             )
             for w_label in w_labels
         ])
 
         bias_word = TextMobject("Bias")
-        bias_arrow = Vector(DOWN, color = BLUE)
+        bias_arrow = Vector(DOWN, color = self.bias_color)
         bias_arrow.next_to(b, UP, SMALL_BUFF)
         bias_word.next_to(bias_arrow, UP, SMALL_BUFF)
-        bias_word.highlight(BLUE)
+        bias_word.highlight(self.bias_color)
 
         self.play(
             Transform(layer0, active_layer0),
@@ -643,12 +675,12 @@ class IntroduceCostFunction(PreviewLearning):
         layer0= self.network_mob.layers[0]
         n = self.network_mob.max_shown_neurons
         neurons.target = VGroup(*it.chain(
-            layer0.neurons[:n/2],
+            VGroup(*layer0.neurons[:n/2]).set_fill(opacity = 0),
             [
                 VectorizedPoint(layer0.dots.get_center())
                 for x in xrange(len(neurons)-n)
             ],
-            layer0.neurons[-n/2:]
+            VGroup(*layer0.neurons[-n/2:]).set_fill(opacity = 0),
         ))
 
         self.play(
@@ -658,10 +690,13 @@ class IntroduceCostFunction(PreviewLearning):
             LaggedStart(DrawBorderThenFill, neurons),
             run_time = 1
         )
-        self.play(MoveToTarget(
-            neurons, submobject_mode = "lagged_start",
-            remover = True
-        ))
+        self.play(
+            MoveToTarget(
+                neurons, submobject_mode = "lagged_start",
+                remover = True
+            ),
+            layer0.neurons.set_fill, None, 0,
+        )
         self.activate_network(vect, run_time = 2)
 
         self.image = image
@@ -1078,7 +1113,6 @@ class EmphasizeComplexityOfCostFunction(IntroduceCostFunction):
         result.in_vect = in_vect
         return result
 
-
 class YellAtNetwork(PiCreatureScene, PreviewLearning):
     def setup(self):
         PiCreatureScene.setup(self)
@@ -1484,6 +1518,1126 @@ class SingleVariableCostFunction(GraphScene):
         graph = self.graph
         line.rotate(self.angle_of_tangent(x, graph) - line.get_angle())
         line.move_to(self.input_to_graph_point(x, graph))
+
+class TwoVariableInputSpace(Scene):
+    def construct(self):
+        self.add_plane()
+        self.ask_about_direction()
+        self.show_gradient()
+
+    def add_plane(self):
+        plane = NumberPlane(
+            x_radius = SPACE_WIDTH/2
+        )
+        plane.add_coordinates()
+        name = TextMobject("Input space")
+        name.add_background_rectangle()
+        name.next_to(plane.get_corner(UP+LEFT), DOWN+RIGHT)
+        x, y = map(TexMobject, ["x", "y"])
+        x.next_to(plane.coords_to_point(3.25, 0), UP, SMALL_BUFF)
+        y.next_to(plane.coords_to_point(0, 3.6), RIGHT, SMALL_BUFF)
+
+        self.play(
+            *map(Write, [plane, name, x, y]),
+            run_time = 1
+        )
+        self.dither()
+
+        self.plane = plane
+
+    def ask_about_direction(self):
+        point = self.plane.coords_to_point(2, 1)
+        dot = Dot(point, color = YELLOW)
+        dot.save_state()
+        dot.move_to(SPACE_HEIGHT*UP + SPACE_WIDTH*RIGHT/2)
+        dot.fade(1)
+        arrows = VGroup(*[
+            Arrow(ORIGIN, vect).shift(point)
+            for vect in compass_directions(8)
+        ])
+        arrows.highlight(WHITE)
+        question = TextMobject(
+            "Which direction decreases \\\\",
+            "$C(x, y)$", "most quickly?"
+        )
+        question.scale(0.7)
+        question.highlight(YELLOW)
+        question.highlight_by_tex("C(x, y)", RED)
+        question.add_background_rectangle()
+        question.next_to(arrows, LEFT)
+
+        self.play(dot.restore)
+        self.play(
+            FadeIn(question),
+            LaggedStart(GrowArrow, arrows)
+        )
+        self.dither()
+
+        self.arrows = arrows
+        self.dot = dot
+        self.question = question
+
+    def show_gradient(self):
+        arrows = self.arrows
+        dot = self.dot
+        question = self.question
+
+        arrow = arrows[3]
+        new_arrow = Arrow(
+            dot.get_center(), arrow.get_end(),
+            buff = 0,
+            color = GREEN
+        )
+        new_arrow.highlight(GREEN)
+        arrow.save_state()
+
+        gradient = TexMobject("\\nabla C(x, y)")
+        gradient.add_background_rectangle()
+        gradient.next_to(arrow.get_end(), UP, SMALL_BUFF)
+
+        gradient_words = TextMobject(
+            "``Gradient'', the direction\\\\ of",
+            "steepest increase"
+        )
+        gradient_words.scale(0.7)
+        gradient_words[-1].highlight(GREEN)
+        gradient_words.next_to(gradient, UP, SMALL_BUFF)
+        gradient_words.add_background_rectangle(opacity = 1)
+        gradient_words.shift(LEFT)
+
+        anti_arrow = new_arrow.copy()
+        anti_arrow.rotate(np.pi, about_point = dot.get_center())
+        anti_arrow.highlight(RED)
+
+        self.play(
+            Transform(arrow, new_arrow),
+            Animation(dot),
+            *[FadeOut(a) for a in arrows if a is not arrow]
+        )
+        self.play(FadeIn(gradient))
+        self.play(Write(gradient_words, run_time = 2))
+        self.dither(2)
+        self.play(
+            arrow.fade,
+            ReplacementTransform(
+                arrow.copy(),
+                anti_arrow
+            )
+        )
+        self.dither(2)
+
+class CostSurface(ExternallyAnimatedScene):
+    pass
+
+class KhanAcademyMVCWrapper(PiCreatureScene):
+    def construct(self):
+        screen = ScreenRectangle(height = 5)
+        screen.to_corner(UP+LEFT)
+        morty = self.pi_creature
+
+        self.play(
+            ShowCreation(screen),
+            morty.change, "raise_right_hand",
+        )
+        self.dither(3)
+        self.play(morty.change, "happy", screen)
+        self.dither(5)
+
+class ShowFullCostFunctionGradient(PreviewLearning):
+    def construct(self):
+        self.organize_weights_as_column_vector()
+        self.show_gradient()
+
+    def organize_weights_as_column_vector(self):
+        network_mob = self.network_mob
+        edges = VGroup(*it.chain(*network_mob.edge_groups))
+        layers = VGroup(*network_mob.layers)
+        layers.add(network_mob.output_labels)
+        self.color_network_edges()
+
+        nums = [2.25, -1.57,  1.98, -1.16,  3.82, 1.21]
+        decimals = VGroup(*[
+            DecimalNumber(num).highlight(
+                BLUE_D if num > 0 else RED
+            )
+            for num in nums
+        ])
+        dots = TexMobject("\\vdots")
+        decimals.submobjects.insert(3, dots)
+        decimals.arrange_submobjects(DOWN)
+        decimals.shift(2*LEFT + 0.5*DOWN)
+        lb, rb = brackets = TexMobject("\\big[", "\\big]")
+        brackets.scale(2)
+        brackets.stretch_to_fit_height(1.2*decimals.get_height())
+        lb.next_to(decimals, LEFT, SMALL_BUFF)
+        rb.next_to(decimals, RIGHT, SMALL_BUFF)
+        column_vect = VGroup(lb, decimals, rb)
+
+        edges_target = VGroup(*it.chain(
+            decimals[:3],
+            [dots]*(len(edges) - 6),
+            decimals[-3:]
+        ))
+
+        words = TextMobject("$13{,}002$ weights and biases")
+        words.next_to(column_vect, UP)
+
+        lhs = TexMobject("\\vec{\\textbf{W}}", "=")
+        lhs[0].highlight(YELLOW)
+        lhs.next_to(column_vect, LEFT)
+
+        self.play(
+            FadeOut(layers),
+            edges.space_out_submobjects, 1.2,
+        )
+        self.play(
+            ReplacementTransform(
+                edges, edges_target,
+                run_time = 2,
+                submobject_mode = "lagged_start"
+            ),
+            LaggedStart(FadeIn, words),
+        )
+        self.play(*map(Write, [lb, rb, lhs]), run_time = 1)
+        self.dither()
+
+        self.column_vect = column_vect
+
+    def show_gradient(self):
+        column_vect = self.column_vect
+
+        lhs = TexMobject(
+            "-", "\\nabla", "C(", "\\vec{\\textbf{W}}", ")", "="
+        )
+        lhs.shift(2*RIGHT)
+        lhs.highlight_by_tex("W", YELLOW)
+        old_decimals = VGroup(*filter(
+            lambda m : isinstance(m, DecimalNumber),
+            column_vect[1]
+        ))
+        new_decimals = VGroup()
+        new_nums = [0.18, 0.45, -0.51, 0.4, -0.32, 0.82]
+        for decimal, new_num in zip(old_decimals, new_nums):
+            new_decimal = DecimalNumber(new_num)
+            new_decimal.highlight(BLUE if new_num > 0 else RED_B)
+            new_decimal.move_to(decimal)
+            new_decimals.add(new_decimal)
+        rhs = VGroup(
+            column_vect[0].copy(),
+            new_decimals, 
+            column_vect[2].copy(),
+        )
+        rhs.to_edge(RIGHT, buff = 1.75)
+        lhs.next_to(rhs, LEFT)
+
+        words = TextMobject("How to nudge all \\\\ weights and biases")
+        words.next_to(rhs, UP)
+
+        self.play(Write(VGroup(lhs, rhs)))
+        self.play(FadeIn(words))
+        for od, nd in zip(old_decimals, new_decimals):
+            nd = nd.deepcopy()
+            od_num = od.number
+            nd_num = nd.number
+            self.play(
+                nd.move_to, od, 
+                nd.shift, 1.5*RIGHT
+            )
+            self.play(
+                Transform(
+                    nd, VectorizedPoint(od.get_center()),
+                    submobject_mode = "lagged_start",
+                    remover = True
+                ),
+                ChangingDecimal(
+                    od,
+                    lambda a : interpolate(od_num, od_num+nd_num, a)
+                )
+            )
+        self.dither()
+
+class HowMinimizingCostMeansBetterTrainingPerformance(IntroduceCostFunction):
+    def construct(self):
+        IntroduceCostFunction.construct(self)
+        self.improve_last_layer()
+
+    def improve_last_layer(self):
+        decimals = self.decimal_groups[0]
+        neurons = self.network_mob.layers[-1].neurons
+
+        values = [d.number for d in decimals]
+        target_values = 0.1*np.random.random(10)
+        target_values[3] = 0.98
+
+        words = TextMobject("Minimize cost $\\dots$")
+        words.next_to(decimals, UP, MED_LARGE_BUFF)
+        words.highlight(YELLOW)
+        # words.shift(LEFT)
+
+        def generate_update(n1, n2):
+            return lambda a : interpolate(n1, n2, a)
+        updates = [
+            generate_update(n1, n2)
+            for n1, n2 in zip(values, target_values)
+        ]
+
+        self.play(LaggedStart(FadeIn, words, run_time = 1))
+        self.play(*[
+            ChangingDecimal(d, update)
+            for d, update in zip(decimals, updates)
+        ] + [
+            UpdateFromFunc(
+                d,
+                lambda mob: mob.set_fill(
+                    interpolate_color(BLACK, WHITE, 0.5+0.5*mob.number),
+                    opacity = 1
+                )
+            )
+            for d in decimals
+        ] + [
+            ApplyMethod(neuron.set_fill, WHITE, target_value)
+            for neuron, target_value in zip(neurons, target_values)
+        ], run_time = 3)
+        self.dither()
+
+    ###
+
+    def average_over_all_training_data(self):
+        pass #So that IntroduceCostFunction.construct doesn't do this
+
+class CostSurfaceSteps(ExternallyAnimatedScene):
+    pass
+
+class ConfusedAboutHighDimension(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "13{,}002-dimensional \\\\ nudge?",
+            target_mode = "confused"
+        )
+        self.change_student_modes(*["confused"]*3)
+        self.dither(2)
+        self.teacher_thinks(
+            "",
+            bubble_kwargs = {"width" : 6, "height" : 4},
+            added_anims = [self.get_student_changes(*["plain"]*3)]
+        )
+        self.zoom_in_on_thought_bubble()
+
+class NonSpatialGradientIntuition(Scene):
+    CONFIG = {
+        "w_color" : YELLOW,
+        "positive_color" : BLUE,
+        "negative_color" : RED,
+        "vect_height" : SPACE_HEIGHT - MED_LARGE_BUFF,
+        "text_scale_value" : 0.7,
+    }
+    def construct(self):
+        self.add_vector()
+        self.add_gradient()
+        self.show_sign_interpretation()
+        self.show_magnitude_interpretation()
+
+    def add_vector(self):
+        lhs = TexMobject("\\vec{\\textbf{W}}", "=")
+        lhs[0].highlight(self.w_color)
+        lhs.to_edge(LEFT)
+
+        ws = VGroup(*[
+            VGroup(TexMobject(tex))
+            for tex in it.chain(
+                ["w_%d"%d for d in range(3)],
+                ["\\vdots"],
+                ["w_{13{,}00%d}"%d for d in range(3)]
+            )
+        ])
+        ws.highlight(self.w_color)
+        ws.arrange_submobjects(DOWN)
+        lb, rb = brackets = TexMobject("\\big[", "\\big]").scale(2)
+        brackets.stretch_to_fit_height(1.2*ws.get_height())
+        lb.next_to(ws, LEFT)
+        rb.next_to(ws, RIGHT)
+        vect = VGroup(lb, ws, rb)
+
+        vect.scale_to_fit_height(self.vect_height)
+        vect.to_edge(UP).shift(2*LEFT)
+        lhs.next_to(vect, LEFT)
+
+        self.add(lhs, vect)
+        self.vect = vect
+        self.top_lhs = lhs
+
+    def add_gradient(self):
+        lb, ws, rb = vect = self.vect
+        ws = VGroup(*ws)
+        dots = ws[len(ws)/2]
+        ws.remove(dots)
+
+        lhs = TexMobject(
+            "-\\nabla", "C(", "\\vec{\\textbf{W}}", ")", "="
+        )
+        lhs.next_to(vect, RIGHT, LARGE_BUFF)
+        lhs.highlight_by_tex("W", self.w_color)
+
+        decimals = VGroup()
+        nums = [0.31, 0.03, -1.25, 0.78, -0.37, 0.16]
+        for num, w in zip(nums, ws):
+            decimal = DecimalNumber(num)
+            decimal.scale(self.text_scale_value)
+            if num > 0:
+                decimal.highlight(self.positive_color)
+            else:
+                decimal.highlight(self.negative_color)
+            decimal.move_to(w)
+            decimals.add(decimal)
+        new_dots = dots.copy()
+
+        grad_content = VGroup(*it.chain(
+            decimals[:3], new_dots, decimals[3:]
+        ))
+        grad_vect = VGroup(lb.copy(), grad_content, rb.copy())
+        VGroup(grad_vect[0], grad_vect[-1]).space_out_submobjects(0.8)
+        grad_vect.scale_to_fit_height(self.vect_height)
+        grad_vect.next_to(self.vect, DOWN)
+        lhs.next_to(grad_vect, LEFT)
+
+        brace = Brace(grad_vect, RIGHT)
+        words = brace.get_text("Example gradient")
+
+        self.dither()
+        self.play(
+            ReplacementTransform(self.top_lhs.copy(), lhs),
+            ReplacementTransform(self.vect.copy(), grad_vect),
+            GrowFromCenter(brace),
+            FadeIn(words)
+        )
+        self.dither()
+        self.play(FadeOut(VGroup(brace, words)))
+
+        self.ws = ws
+        self.grad_lhs = lhs
+        self.grad_vect = grad_vect
+        self.decimals = decimals
+
+    def show_sign_interpretation(self):
+        ws = self.ws.copy()
+        decimals = self.decimals
+
+        direction_phrases = VGroup()
+        for w, decimal in zip(ws, decimals):
+            if decimal.number > 0:
+                verb = "increase"
+                color = self.positive_color
+            else:
+                verb = "decrease"
+                color = self.negative_color
+            phrase = TextMobject("should", verb)
+            phrase.scale(self.text_scale_value)
+            phrase.highlight_by_tex(verb, color)
+            w.generate_target()
+            group = VGroup(w.target, phrase)
+            group.arrange_submobjects(RIGHT)
+            w.target.shift(0.7*SMALL_BUFF*DOWN)
+            group.move_to(decimal.get_center() + RIGHT, LEFT)
+            direction_phrases.add(phrase)
+
+        self.play(
+            LaggedStart(MoveToTarget, ws),
+            LaggedStart(FadeIn, direction_phrases)
+        )
+        self.dither(2)
+
+        self.direction_phrases = direction_phrases
+        self.ws = ws
+
+    def show_magnitude_interpretation(self):
+        direction_phrases = self.direction_phrases
+        ws = self.ws
+        decimals = self.decimals
+
+        magnitude_words = VGroup()
+        rects = VGroup()
+        for phrase, decimal in zip(direction_phrases, decimals):
+            if abs(decimal.number) < 0.2:
+                adj = "a little"
+                color = interpolate_color(BLACK, WHITE, 0.5)
+            elif abs(decimal.number) < 0.5:
+                adj = "somewhat"
+                color = LIGHT_GREY
+            else:
+                adj = "a lot"
+                color =  WHITE
+            words = TextMobject(adj)
+            words.scale(self.text_scale_value)
+            words.highlight(color)
+            words.next_to(phrase, RIGHT, SMALL_BUFF)
+            magnitude_words.add(words)
+
+            rect = SurroundingRectangle(
+                VGroup(*decimal[-4:]), 
+                buff = SMALL_BUFF,
+                color = LIGHT_GREY
+            )
+            rect.target = words
+            rects.add(rect)
+
+        self.play(LaggedStart(ShowCreation, rects))
+        self.play(LaggedStart(MoveToTarget, rects))
+        self.dither(2)
+
+class SomeConnectionsMatterMoreThanOthers(PreviewLearning):
+    def setup(self):
+        np.random.seed(1)
+        PreviewLearning.setup(self)
+        self.color_network_edges()
+
+        ex_in = get_organized_images()[3][4]
+        image = MNistMobject(ex_in)
+        image.to_corner(UP+LEFT)
+        self.add(image)
+        self.ex_in = ex_in
+
+    def construct(self):
+        self.activate_network(self.ex_in)
+        self.fade_edges()
+        self.show_important_connection()
+        self.show_unimportant_connection()
+
+    def fade_edges(self):
+        edges = VGroup(*it.chain(*self.network_mob.edge_groups))
+        self.play(*[
+            ApplyMethod(
+                edge.set_stroke, BLACK, 0,
+                rate_func = lambda a : 0.5*smooth(a)
+            )
+            for edge in edges
+        ])
+
+    def show_important_connection(self):
+        layers = self.network_mob.layers
+        edge = self.get_edge(2, 3)
+        edge.set_stroke(YELLOW, 4)
+        words = TextMobject("This weight \\\\ matters a lot")
+        words.next_to(layers[-1], UP).to_edge(UP)
+        words.highlight(YELLOW)
+        arrow = Arrow(words.get_bottom(), edge.get_center())
+
+        self.play(
+            ShowCreation(edge),
+            GrowArrow(arrow),
+            FadeIn(words)
+        )
+        self.dither()
+
+    def show_unimportant_connection(self):
+        color = TEAL
+        edge = self.get_edge(11, 6)
+        edge.set_stroke(color, 5)
+        words = TextMobject("Who even cares \\\\ about this weight?")
+        words.next_to(self.network_mob.layers[-1], DOWN)
+        words.to_edge(DOWN)
+        words.highlight(color)
+        arrow = Arrow(words.get_top(), edge.get_center(), buff = SMALL_BUFF)
+        arrow.highlight(color)
+
+        self.play(
+            ShowCreation(edge),
+            GrowArrow(arrow),
+            FadeIn(words)
+        )
+        self.dither()
+    ###
+
+    def get_edge(self, i1, i2):
+        layers = self.network_mob.layers
+        n1 = layers[-2].neurons[i1]
+        n2 = layers[-1].neurons[i2]
+        return self.network_mob.get_edge(n1, n2)
+
+class TwoGradientInterpretationsIn2D(Scene):
+    def construct(self):
+        self.setup_plane()
+        self.add_function_definitions()
+        self.point_out_direction()
+        self.point_out_relative_importance()
+
+    def setup_plane(self):
+        plane = NumberPlane()
+        plane.add_coordinates()
+        self.add(plane)
+        self.plane = plane
+
+    def add_function_definitions(self):
+        func = TexMobject(
+            "C(", "x, y", ")", "=", 
+            "\\frac{3}{2}x^2", "+", "\\frac{1}{2}y^2",
+        )
+        func.shift(SPACE_WIDTH*LEFT/2).to_edge(UP)
+
+        grad = TexMobject("\\nabla", "C(", "1, 1", ")", "=")
+        vect = TexMobject(
+            "\\left[\\begin{array}{c} 3 \\\\ 1 \\end{array}\\right]"
+        )
+        vect.next_to(grad, RIGHT, SMALL_BUFF)
+        grad_group = VGroup(grad, vect)
+        grad_group.next_to(ORIGIN, RIGHT).to_edge(UP, buff = MED_SMALL_BUFF)
+        # grad_group.next_to(func, DOWN)
+        # for mob in grad, func:
+        #     mob.highlight_by_tex("C(", RED)
+        #     mob.highlight_by_tex(")", RED)
+        for mob in grad, vect, func:
+            mob.add_background_rectangle()
+            mob.background_rectangle.scale_in_place(1.1)
+
+        self.play(Write(func, run_time = 1))
+        self.play(Write(grad_group, run_time = 2))
+        self.dither()
+
+        self.func = func
+        self.grad = grad
+        self.vect = vect
+
+    def point_out_direction(self):
+        coords = self.grad.get_part_by_tex("1, 1").copy()
+        vect = self.vect[1].copy()
+        coords.highlight(YELLOW)
+        vect.highlight(GREEN)
+
+        dot = Dot(self.plane.coords_to_point(1, 1))
+        dot.highlight(coords.get_color())
+        arrow = Arrow(
+            self.plane.coords_to_point(1, 1),
+            self.plane.coords_to_point(4, 2),
+            buff = 0,
+            color = vect.get_color()
+        )
+        words = TextMobject("Direction of \\\\ steepest ascent")
+        words.add_background_rectangle()
+        words.next_to(ORIGIN, DOWN)
+        words.rotate(arrow.get_angle())
+        words.shift(arrow.get_center())
+
+        self.play(DrawBorderThenFill(coords, run_time = 1))
+        self.play(ReplacementTransform(coords.copy(), dot))
+        self.play(DrawBorderThenFill(vect, run_time = 1))
+        self.play(
+            ReplacementTransform(vect.copy(), arrow),
+            Animation(dot)
+        )
+        self.play(Write(words))
+        self.dither()
+
+        self.remove(vect)
+        self.vect[1].highlight(vect.get_color())
+        self.remove(coords)
+        self.grad.get_part_by_tex("1, 1").highlight(coords.get_color())
+
+    def point_out_relative_importance(self):
+        func = self.func
+        grad_group = VGroup(self.grad, self.vect)
+        x_part = func.get_part_by_tex("x^2")
+        y_part = func.get_part_by_tex("y^2")
+
+        self.play(func.shift, 1.5*DOWN)
+
+        x_rect = SurroundingRectangle(x_part, color = YELLOW)
+        y_rect = SurroundingRectangle(y_part, color = TEAL)
+        x_words = TextMobject("$x$ has 3 times \\\\ the impact...")
+        x_words.highlight(x_rect.get_color())
+        x_words.add_background_rectangle()
+        x_words.next_to(x_rect, UP)
+        # x_words.to_edge(LEFT)
+        y_words = TextMobject("...as $y$")
+        y_words.highlight(y_rect.get_color())
+        y_words.add_background_rectangle()
+        y_words.next_to(y_rect, DOWN)
+
+        self.play(
+            Write(x_words, run_time = 2),
+            ShowCreation(x_rect)
+        )
+        self.dither()
+        self.play(
+            Write(y_words, run_time = 1),
+            ShowCreation(y_rect)
+        )
+        self.dither(2)
+
+class ParaboloidGraph(ExternallyAnimatedScene):
+    pass
+
+class TODOInsertEmphasizeComplexityOfCostFunctionCopy(TODOStub):
+    CONFIG = {
+        "message" : "Insert EmphasizeComplexityOfCostFunction copy"
+    }
+
+class GradientNudging(PreviewLearning):
+    CONFIG = {
+        "n_steps" : 10
+    }
+    def construct(self):
+        self.setup_network_mob()
+        self.add_gradient()
+        self.change_weights_repeatedly()
+
+    def setup_network_mob(self):
+        network_mob = self.network_mob
+        self.color_network_edges()
+        network_mob.scale(0.7)
+        network_mob.to_corner(DOWN+RIGHT)
+
+    def add_gradient(self):
+        lhs = TexMobject(
+            "-", "\\nabla", "C(", "\\dots", ")", "="
+        )
+        lhs.to_edge(LEFT)
+        brace = Brace(lhs.get_part_by_tex("dots"), DOWN)
+        words = brace.get_text("All weights \\\\ and biases")
+        words.scale(0.8, about_point = words.get_top())
+        np.random.seed(3)
+        nums = 4*(np.random.random(8)-0.5)
+        vect = get_decimal_vector(nums)
+        vect.next_to(lhs, RIGHT)
+
+        self.add(lhs, brace, words, vect)
+
+        self.grad_vect = vect
+
+    def change_weights_repeatedly(self):
+        network_mob = self.network_mob
+        edges = VGroup(*reversed(list(
+            it.chain(*network_mob.edge_groups)
+        )))
+
+        decimals = self.grad_vect.decimals
+
+        words = TextMobject(
+            "Change by some small\\\\",
+            "multiple of $-\\nabla C(\\dots)$"
+        )
+        words.next_to(network_mob, UP).to_edge(UP)
+        arrows = VGroup(*[
+            Arrow(
+                words.get_bottom(),
+                edge_group.get_top(),
+                color = WHITE
+            )
+            for edge_group in network_mob.edge_groups
+        ])
+
+        self.play(
+            ReplacementTransform(
+                decimals.copy().set_fill(opacity = 0).set_stroke(width = 1), 
+                self.network_mob.edge_groups
+            ),
+            FadeIn(words),
+            LaggedStart(GrowArrow, arrows, run_time = 1)
+        )
+        self.play(self.get_edge_change_anim(edges))
+        self.play(*self.get_decimal_change_anims(decimals))
+        for x in range(self.n_steps):
+            self.play(self.get_edge_change_anim(edges))
+            self.play(*self.get_decimal_change_anims(decimals))
+        self.dither()
+
+    ###
+
+    def get_edge_change_anim(self, edges):
+        target_nums = 6*(np.random.random(len(edges))-0.5)
+        edges.generate_target()
+        for edge, target_num in zip(edges.target, target_nums):
+            curr_num = edge.get_stroke_width()
+            if Color(edge.get_stroke_color()) == Color(self.negative_edge_color):
+                curr_num *= -1
+            new_num = interpolate(curr_num, target_num, 0.2)
+            if new_num > 0:
+                new_color = self.positive_edge_color
+            else:
+                new_color = self.negative_edge_color
+            edge.set_stroke(new_color, abs(new_num))
+            edge.rotate_in_place(np.pi)
+        return MoveToTarget(
+            edges,
+            submobject_mode = "lagged_start",
+            lag_factor = 8,
+            run_time = 1.5
+        )
+
+    def get_decimal_change_anims(self, decimals):
+        changes = 0.2*(np.random.random(len(decimals))-0.5)
+        def generate_change_func(x, dx):
+            return lambda a : interpolate(x, x+dx, a)
+        return [
+            ChangingDecimal(
+                decimal, 
+                generate_change_func(decimal.number, change)
+            )
+            for decimal, change in zip(decimals, changes)
+        ]
+
+class BackPropWrapper(PiCreatureScene):
+    def construct(self):
+        morty = self.pi_creature
+        screen = ScreenRectangle(height = 5)
+        screen.to_corner(UP+LEFT)
+        screen.shift(MED_LARGE_BUFF*DOWN)
+
+        title = TextMobject("Backpropagation", "(next video)")
+        title.next_to(screen, UP)
+
+        self.play(
+            morty.change, "raise_right_hand", screen,
+            ShowCreation(screen)
+        )
+        self.play(Write(title[0], run_time = 1))
+        self.dither()
+        self.play(Write(title[1], run_time = 1))
+        self.play(morty.change, "happy", screen)
+        self.dither(5)
+
+class TODOInsertCostSurfaceSteps(TODOStub):
+    CONFIG = {
+        "message" : "Insert CostSurfaceSteps"
+    }
+
+class ContinuouslyRangingNeuron(PreviewLearning):
+    def construct(self):
+        self.color_network_edges()
+        network_mob = self.network_mob
+        network_mob.scale(0.8)
+        network_mob.to_edge(DOWN)
+        neuron = self.network_mob.layers[2].neurons[6]
+        decimal = DecimalNumber(0)
+        decimal.scale_to_fit_width(0.8*neuron.get_width())
+        decimal.move_to(neuron)
+
+        decimal.generate_target()
+        neuron.generate_target()
+        group = VGroup(neuron.target, decimal.target)
+        group.scale_to_fit_height(1)
+        group.next_to(network_mob, UP)
+        decimal.set_fill(opacity = 0)
+
+        def update_decimal_color(decimal):
+            if neuron.get_fill_opacity() > 0.8:
+                decimal.highlight(BLACK)
+            else:
+                decimal.highlight(WHITE)
+        decimal_color_anim = UpdateFromFunc(decimal, update_decimal_color)
+
+        self.play(*map(MoveToTarget, [neuron, decimal]))
+        for x in 0.7, 0.35, 0.97, 0.23, 0.54:
+            curr_num = neuron.get_fill_opacity()
+            self.play(
+                neuron.set_fill, None, x,
+                ChangingDecimal(
+                    decimal, lambda a : interpolate(curr_num, x, a)
+                ),
+                decimal_color_anim
+            )
+            self.dither()
+
+class AskHowItDoes(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "How well \\\\ does it do?",
+            student_index = 0
+        )
+        self.dither(5)
+
+class TestPerformance(PreviewLearning):
+    CONFIG = {
+        "n_examples" : 200,
+        "time_per_example" : 0.1,
+        "wrong_dither_time" : 0.5
+    }
+    def construct(self):
+        self.init_testing_data()
+        self.add_title()
+        self.add_fraction()
+        self.run_through_examples()
+
+    def init_testing_data(self):
+        training_data, validation_data, test_data = load_data_wrapper()
+        self.test_data = iter(test_data[:self.n_examples])
+
+    def add_title(self):
+        title = TextMobject("Testing data")
+        title.to_corner(UP+LEFT)
+        self.add(title)
+
+    def add_fraction(self):
+        self.n_correct = 0
+        self.total = 0
+        self.decimal = DecimalNumber(0)
+        word_frac = TexMobject(
+            "{\\text{Number correct}", "\\over", 
+            "\\text{total}}", "=",
+        )
+        word_frac[0].highlight(GREEN)
+        self.frac = self.get_frac()
+        self.equals = TexMobject("=")
+        fracs = VGroup(
+            word_frac, self.frac, 
+            self.equals, self.decimal
+        )
+        fracs.arrange_submobjects(RIGHT)
+        fracs.to_edge(UP)
+        self.add(fracs)
+
+    def run_through_examples(self):
+        rects = [
+            SurroundingRectangle(VGroup(neuron, label))
+            for neuron, label in zip(
+                self.network_mob.layers[-1].neurons,
+                self.network_mob.output_labels
+            )
+        ]
+        wrong = TextMobject("Wrong!")
+        wrong.highlight(RED)
+
+
+        for test_in, test_out in self.test_data:
+            self.total += 1
+            image = MNistMobject(test_in)
+            image.to_edge(LEFT)
+            image.shift(UP)
+            self.add(image)
+
+            activations = self.activate_layers(test_in)
+            choice = np.argmax(activations[-1])
+            rect = rects[choice]
+            self.add(rect)
+
+            correct = (choice == test_out)
+            if correct:
+                self.n_correct += 1
+            else:
+                wrong.next_to(rect, RIGHT)
+                self.add(wrong)
+            new_frac = self.get_frac()
+            new_frac.shift(
+                self.frac[1].get_left() - \
+                new_frac[1].get_left()
+            )
+            self.remove(self.frac)
+            self.add(new_frac)
+            self.frac = new_frac
+            self.equals.next_to(new_frac, RIGHT)
+
+            new_decimal = DecimalNumber(float(self.n_correct)/self.total)
+            new_decimal.next_to(self.equals, RIGHT)
+            self.remove(self.decimal)
+            self.add(new_decimal)
+            self.decimal = new_decimal
+
+            self.dither(self.time_per_example)
+            if not correct:
+                self.dither(self.wrong_dither_time)
+
+            self.remove(rect, wrong, image)
+
+        self.add(rect, image)
+
+    ###
+    def add_network(self):
+        self.network_mob = MNistNetworkMobject(**self.network_mob_config)
+        self.network_mob.scale(0.8)
+        self.network_mob.to_edge(DOWN)
+        self.network = self.network_mob.neural_network
+        self.add(self.network_mob)
+        self.color_network_edges()
+
+    def get_frac(self):
+        frac = TexMobject("{%d"%self.n_correct, "\\over", "%d}"%self.total)
+        frac[0].highlight(GREEN)
+        return frac
+
+    def activate_layers(self, test_in):
+        activations = self.network.get_activation_of_all_layers(test_in)
+        layers = self.network_mob.layers
+        for layer, activation in zip(layers, activations)[1:]:
+            for neuron, a in zip(layer.neurons, activation):
+                neuron.set_fill(opacity = a)
+        return activations
+
+class ReactToPerformance(TeacherStudentsScene):
+    def construct(self):
+        title = VGroup(
+            TextMobject("Play with network structure"),
+            Arrow(LEFT, RIGHT, color = WHITE),
+            TextMobject("98\\%", "testing accuracy")
+        )
+        title.arrange_submobjects(RIGHT)
+        title.to_edge(UP)
+        title[-1][0].highlight(GREEN)
+        self.play(Write(title, run_time = 2))
+
+        last_words = TextMobject(
+            "State of the art \\\\ is", 
+            "99.79\\%"
+        )
+        last_words[-1].highlight(GREEN)
+
+        self.teacher_says(
+            "That's pretty", "good!",
+            target_mode = "surprised",
+            run_time = 1
+        )
+        self.change_student_modes(*["hooray"]*3)
+        self.dither()
+        self.teacher_says(last_words, target_mode = "hesitant")
+        self.change_student_modes(
+            *["pondering"]*3,
+            look_at_arg = self.teacher.bubble
+        )
+        self.dither()
+
+class WrongExamples(TestPerformance):
+    CONFIG = {
+        "time_per_example" : 0
+    }
+
+class TODOBreakUpNineByPatterns(TODOStub):
+    CONFIG = {
+        "message" : "Insert the scene with 9 \\\\ broken up by patterns"
+    }
+
+class NotAtAll(TeacherStudentsScene, PreviewLearning):
+    def setup(self):
+        TeacherStudentsScene.setup(self)
+        PreviewLearning.setup(self)
+
+    def construct(self):
+        words = TextMobject("Well...\\\\", "not at all!")
+        words[1].highlight(BLACK)
+        network_mob = self.network_mob
+        network_mob.scale_to_fit_height(4)
+        network_mob.to_corner(UP+LEFT)
+        self.add(network_mob)
+        self.color_network_edges()
+
+        self.teacher_says(
+            words, target_mode = "guilty",
+            run_time = 1
+        )
+        self.change_student_modes(*["sassy"]*3)
+        self.play(
+            self.teacher.change, "concerned_musician",
+            words[1].highlight, WHITE
+        )
+        self.dither(2)
+
+class InterpretFirstWeightMatrixRows(TestPerformance):
+    CONFIG = {
+        "stroke_width_exp" : 1,
+    }
+    def construct(self):
+        self.slide_network_to_side()
+        self.prepare_pixel_arrays()
+        self.show_all_pixel_array()
+
+    def slide_network_to_side(self):
+        network_mob = self.network_mob
+        network_mob.generate_target()
+        to_fade = VGroup(*it.chain(
+            network_mob.edge_groups[1:],
+            network_mob.layers[2:],
+            network_mob.output_labels
+        ))
+        to_keep = VGroup(*it.chain(
+            network_mob.edge_groups[0],
+            network_mob.layers[:2]
+        ))
+        shift_val = SPACE_WIDTH*LEFT + MED_LARGE_BUFF*RIGHT - \
+                    to_keep.get_left()
+        self.play(
+            to_fade.shift, shift_val,
+            to_fade.fade, 1,
+            to_keep.shift, shift_val
+        )
+        self.remove(to_fade)
+
+    def prepare_pixel_arrays(self):
+        pixel_arrays = VGroup()
+        w_matrix = self.network.weights[0]
+        for row in w_matrix:
+            max_val = np.max(np.abs(row))
+            shades = np.array(row)/max_val
+            pixel_array = PixelsFromVect(np.zeros(row.size))
+            for pixel, shade in zip(pixel_array, shades):
+                if shade > 0:
+                    color = self.positive_edge_color
+                else:
+                    color = self.negative_edge_color
+                pixel.set_fill(color, opacity = abs(shade))
+            pixel_arrays.add(pixel_array)
+        pixel_arrays.arrange_submobjects_in_grid(buff = MED_LARGE_BUFF)
+        pixel_arrays.scale_to_fit_height(2*SPACE_HEIGHT - 2.5)
+        pixel_arrays.to_corner(DOWN+RIGHT)
+
+        for pixel_array in pixel_arrays:
+            rect = SurroundingRectangle(pixel_array)
+            rect.highlight(WHITE)
+            pixel_array.rect = rect
+
+        words = TextMobject("What second layer \\\\ neurons look for")
+        words.next_to(pixel_arrays, UP).to_edge(UP)
+
+        self.pixel_arrays = pixel_arrays
+        self.words = words
+
+    def show_all_pixel_array(self):
+        edges = self.network_mob.edge_groups[0]
+        neurons = self.network_mob.layers[1].neurons
+        edges.remove(neurons[0].edges_in)
+
+        self.play(
+            VGroup(*neurons[1:]).set_stroke, None, 0.5,
+            FadeIn(self.words),
+            neurons[0].set_stroke, None, 2,
+            *[
+                ApplyMethod(edge.set_stroke, None, 0.25)
+                for edge in edges
+                if edge not in neurons[0].edges_in
+            ]
+        )
+        self.dither()
+        last_neuron = None
+
+        for neuron, pixel_array in zip(neurons, self.pixel_arrays):
+            if last_neuron:
+                self.play(
+                    last_neuron.edges_in.set_stroke, None, 0.25,
+                    last_neuron.set_stroke, None, 0.5,
+                    neuron.set_stroke, None, 3,
+                    neuron.edges_in.set_stroke, None, 2,
+                )
+            self.play(ReplacementTransform(
+                neuron.edges_in.copy().set_fill(opacity = 0),
+                pixel_array,
+            ))
+            self.play(ShowCreation(pixel_array.rect))
+            last_neuron = neuron
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

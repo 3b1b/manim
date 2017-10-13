@@ -242,9 +242,13 @@ class Arrow(Line):
         if len(args) == 1:
             args = (points[0]+UP+LEFT, points[0])
         Line.__init__(self, *args, **kwargs)
-        self.add_tip()
+        self.init_tip()
         if self.use_rectangular_stem and not hasattr(self, "rect"):
             self.add_rectangular_stem()
+        self.init_colors()
+
+    def init_tip(self):
+        self.tip = self.add_tip()
 
     def add_tip(self, add_at_end = True):
         tip = VMobject(
@@ -253,11 +257,11 @@ class Arrow(Line):
             fill_color = self.color,
             fill_opacity = 1,
             stroke_color = self.color,
+            stroke_width = 0,
         )
         self.set_tip_points(tip, add_at_end, preserve_normal = False)
-        self.tip = tip
-        self.add(self.tip)
-        self.init_colors()
+        self.add(tip)
+        return tip
 
     def add_rectangular_stem(self):
         self.rect = Rectangle(
@@ -283,6 +287,10 @@ class Arrow(Line):
             self.rectangular_stem_width,
             self.max_stem_width_to_tip_width_ratio*tip_base_width,
         )
+        if hasattr(self, "second_tip"):
+            start = center_of_mass(
+                self.second_tip.get_anchors()[1:]
+            )
         self.rect.set_points_as_corners([
             tip_base + perp_vect*width/2,
             start + perp_vect*width/2,
@@ -319,7 +327,6 @@ class Arrow(Line):
             if np.linalg.norm(v) == 0:
                 v[0] = 1
             v *= tip_length/np.linalg.norm(v)
-
         ratio = self.tip_width_to_length_ratio
         tip.set_points_as_corners([
             end_point, 
@@ -374,9 +381,9 @@ class Vector(Arrow):
         Arrow.__init__(self, ORIGIN, direction, **kwargs)
 
 class DoubleArrow(Arrow):
-    def __init__(self, *args, **kwargs):
-        Arrow.__init__(self, *args, **kwargs)
-        self.add_tip(add_at_end = False)
+    def init_tip(self):
+        self.tip = self.add_tip()
+        self.second_tip = self.add_tip(add_at_end = False)
 
 class CubicBezier(VMobject):
     def __init__(self, points, **kwargs):

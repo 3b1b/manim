@@ -196,18 +196,21 @@ class NetworkMobject(VGroup):
         for l1, l2 in zip(self.layers[:-1], self.layers[1:]):
             edge_group = VGroup()
             for n1, n2 in it.product(l1.neurons, l2.neurons):
-                edge = Line(
-                    n1.get_center(),
-                    n2.get_center(),
-                    buff = self.neuron_radius,
-                    stroke_color = self.edge_color,
-                    stroke_width = self.edge_stroke_width,
-                )
+                edge = self.get_edge(n1, n2)
                 edge_group.add(edge)
                 n1.edges_out.add(edge)
                 n2.edges_in.add(edge)
             self.edge_groups.add(edge_group)
         self.add_to_back(self.edge_groups)
+
+    def get_edge(self, neuron1, neuron2):
+        return Line(
+            neuron1.get_center(),
+            neuron2.get_center(),
+            buff = self.neuron_radius,
+            stroke_color = self.edge_color,
+            stroke_width = self.edge_stroke_width,
+        )
 
     def get_active_layer(self, layer_index, activation_vector):
         layer = self.layers[layer_index].deepcopy()
@@ -2980,6 +2983,7 @@ class ContinualEdgeUpdate(ContinualAnimation):
         "max_stroke_width" : 3,
         "stroke_width_exp" : 7,
         "n_cycles" : 5,
+        "colors" : [GREEN, GREEN, GREEN, RED],
     }
     def __init__(self, network_mob, **kwargs):
         digest_config(self, kwargs)
@@ -2988,7 +2992,7 @@ class ContinualEdgeUpdate(ContinualAnimation):
         self.move_to_targets = []
         for edge in edges:
             edge.colors = [
-                random.choice([GREEN, GREEN, GREEN, RED])
+                random.choice(self.colors)
                 for x in range(n_cycles)
             ]
             msw = self.max_stroke_width

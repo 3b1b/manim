@@ -446,11 +446,14 @@ class Mobject(object):
         return self.color
     ##
 
-    def save_state(self):
+    def save_state(self, use_deepcopy = False):
         if hasattr(self, "saved_state"):
             #Prevent exponential growth of data
             self.saved_state = None
-        self.saved_state = self.copy()
+        if use_deepcopy:
+            self.saved_state = self.deepcopy()
+        else:
+            self.saved_state = self.copy()
         return self
 
     def restore(self):

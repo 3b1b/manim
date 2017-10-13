@@ -11,9 +11,9 @@ class DecimalNumber(VMobject):
         "num_decimal_points" : 2,
         "digit_to_digit_buff" : 0.05
     }
-    def __init__(self, float_num, **kwargs):
-        digest_config(self, kwargs)
-        num_string = '%.*f'%(self.num_decimal_points, float_num)
+    def __init__(self, number, **kwargs):
+        digest_config(self, kwargs, locals())
+        num_string = '%.*f'%(self.num_decimal_points, number)
         VMobject.__init__(self, *[
             TexMobject(char)
             for char in num_string
@@ -22,7 +22,7 @@ class DecimalNumber(VMobject):
             buff = self.digit_to_digit_buff,
             aligned_edge = DOWN
         )
-        if float_num < 0:
+        if number < 0:
             minus = self.submobjects[0]
             minus.next_to(
                 self.submobjects[1], LEFT,
@@ -65,9 +65,9 @@ class ChangingDecimal(Animation):
 
     def update_number(self, alpha):
         decimal = self.decimal_number
+        new_number = self.number_update_func(alpha)
         new_decimal = DecimalNumber(
-            self.number_update_func(alpha),
-            num_decimal_points = self.num_decimal_points
+            new_number, num_decimal_points = self.num_decimal_points
         )
         new_decimal.replace(decimal, dim_to_match = 1)
         new_decimal.highlight(decimal.get_color())
@@ -78,6 +78,7 @@ class ChangingDecimal(Animation):
         ]
         for sm1, sm2 in zip(*families):
             sm1.interpolate(sm1, sm2, 1)
+        self.mobject.number = new_number
 
     def update_position(self):
         if self.position_update_func is not None:
