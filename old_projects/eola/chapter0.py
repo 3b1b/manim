@@ -260,12 +260,12 @@ class AboutLinearAlgebra(Scene):
 
 class NumericVsGeometric(Scene):
     def construct(self):
-        self.setup()
+        self.setup_1()
         self.specifics_concepts()
         self.clear_way_for_geometric()
         self.list_geometric_benefits()
 
-    def setup(self):
+    def setup_1(self):
         numeric = TextMobject("Numeric operations")
         geometric = TextMobject("Geometric intuition")
         for mob in numeric, geometric:
@@ -366,7 +366,7 @@ class ExampleTransformation(LinearTransformationScene):
     def construct(self):
         self.setup()
         self.add_vector(np.array(TRANFORMED_VECTOR).flatten())
-        self.apply_matrix(EXAMPLE_TRANFORM)
+        self.apply_transposed_matrix(EXAMPLE_TRANFORM)
         self.dither()
 
 
@@ -502,12 +502,12 @@ class ThoughtBubbleTransformation(LinearTransformationScene):
     def construct(self):
         self.setup()
         rotation = rotation_about_z(np.pi/3)
-        self.apply_matrix(
+        self.apply_transposed_matrix(
             np.linalg.inv(rotation), 
             path_arc = -np.pi/3,
         )
-        self.apply_matrix(EXAMPLE_TRANFORM)
-        self.apply_matrix(
+        self.apply_transposed_matrix(EXAMPLE_TRANFORM)
+        self.apply_transposed_matrix(
             rotation, 
             path_arc = np.pi/3,
         )
@@ -713,7 +713,7 @@ class MatricesAre(Scene):
 class ExampleTransformationForIntuitionList(LinearTransformationScene):
     def construct(self):
         self.setup()
-        self.apply_matrix([[1, -1], [1, 2]])
+        self.apply_transposed_matrix([[1, -1], [1, 2]])
         self.dither()
 
 class MatrixMultiplicationIs(Scene):
@@ -753,9 +753,9 @@ class MatrixMultiplicationIs(Scene):
 class ComposedTransformsForIntuitionList(LinearTransformationScene):
     def construct(self):
         self.setup()
-        self.apply_matrix([[1, -1], [1, 2]])
+        self.apply_transposed_matrix([[1, -1], [1, 2]])
         self.dither()
-        self.apply_matrix([[2, 1], [1, 2]])
+        self.apply_transposed_matrix([[2, 1], [1, 2]])
         self.dither()
 
 class DeterminantsAre(Scene):
@@ -787,7 +787,7 @@ class TransformationForDeterminant(LinearTransformationScene):
         square.shift(-square.get_corner(DOWN+LEFT))
         square.set_fill(YELLOW_A, 0.5)
         self.add_transformable_mobject(square)
-        self.apply_matrix([[1, -1], [1, 2]])
+        self.apply_transposed_matrix([[1, -1], [1, 2]])
 
 class ProfessorsTry(Scene):
     def construct(self):
