@@ -422,7 +422,7 @@ def get_full_image_path(image_file_name):
     for path in possible_paths:
         if os.path.exists(path):
             return path
-    raise IOError("File not Found")
+    raise IOError("File %s not Found"%image_file_name)
 
 def drag_pixels(frames):
     curr = frames[0]
