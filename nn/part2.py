@@ -116,6 +116,57 @@ class ShowLastVideo(TeacherStudentsScene):
         )
         self.dither(5)
 
+class ShowPlan(Scene):
+    def construct(self):
+        title = TextMobject("Plan").scale(1.5)
+        title.to_edge(UP)
+        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line.highlight(WHITE)
+        h_line.next_to(title, DOWN)
+        self.add(title, h_line)
+
+        items = VGroup(*[
+            TextMobject("$\\cdot$ %s"%s)
+            for s in [
+                "Recap",
+                "Gradient descent",
+                "Analyze this network",
+                "Where to learn more",
+                "Research corner",
+            ]
+        ])
+        items.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
+        items.to_edge(LEFT, buff = LARGE_BUFF)
+
+        rect = SurroundingRectangle(VGroup(*items[1:3]))
+
+        self.add(items)
+        self.dither()
+        self.play(ShowCreation(rect))
+        self.play(FadeOut(rect))
+        for item in items[1:]:
+            to_fade = VGroup(*[i for i in items if i is not item])
+            self.play(
+                to_fade.set_fill, None, 0.5,
+                item.set_fill, None, 1,
+            )
+            self.dither()
+
+class BeginAndEndRecap(Scene):
+    def construct(self):
+        recap = TexMobject(
+            "\\langle", "\\text{Recap}", "\\rangle"
+        )
+        new_langle = TexMobject("\\langle/")
+        new_langle.scale(2)
+        recap.scale(2)
+        new_langle.move_to(recap[0], RIGHT)
+
+        self.add(recap)
+        self.dither(2)
+        self.play(Transform(recap[0], new_langle))
+        self.dither(2)
+
 class PreviewLearning(NetworkScene):
     CONFIG = {
         "layer_sizes" : DEFAULT_LAYER_SIZES,
@@ -137,7 +188,7 @@ class PreviewLearning(NetworkScene):
         "eta" : 3.0,
         "positive_edge_color" : BLUE,
         "negative_edge_color" : RED,
-        "positive_change_color" : average_color(*2*[BLUE] + [YELLOW]),
+        "positive_change_color" : BLUE_C,
         "negative_change_color" : average_color(*2*[RED] + [YELLOW]),
         "default_activate_run_time" : 1.5,
     }
@@ -297,6 +348,13 @@ class PreviewLearning(NetworkScene):
             rate_func = wiggle
         )
 
+class BackpropComingLaterWords(Scene):
+    def construct(self):
+        words = TextMobject("(Backpropagation be \\\\ the next video)")
+        words.scale_to_fit_width(2*SPACE_WIDTH-1)
+        words.to_edge(DOWN)
+        self.add(words)
+
 class TrainingVsTestData(Scene):
     CONFIG = {
         "n_examples" : 10,
@@ -392,6 +450,86 @@ class TrainingVsTestData(Scene):
                 self.dither(1./30)
             training_examples = new_examples
 
+class MNistDescription(Scene):
+    CONFIG = {
+        "n_grids" : 5,
+        "n_rows_per_grid" : 10,
+        "n_cols_per_grid" : 8,
+        "time_per_example" : 1./120,
+    }
+    def construct(self):
+        title = TextMobject("MNIST Database")
+        title.scale(1.5)
+        title.highlight(BLUE)
+        authors = TextMobject("LeCun, Cortes and Burges")
+        authors.next_to(title, DOWN)
+        link_words = TextMobject("(links in the description)")
+        link_words.next_to(authors, DOWN, MED_LARGE_BUFF)
+        arrows = VGroup(*[Vector(DOWN) for x in range(4)])
+        arrows.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        arrows.next_to(link_words, DOWN)
+        arrows.highlight(BLUE)
+
+        word_group = VGroup(title, authors, link_words, arrows)
+        word_group.center()
+
+        self.add(title, authors)
+        self.play(
+            Write(link_words, run_time = 2),
+            LaggedStart(GrowArrow, arrows),
+        )
+        self.dither()
+
+        training_data, validation_data, test_data = load_data_wrapper()
+        epc = self.n_rows_per_grid*self.n_cols_per_grid
+        training_data_groups = [
+            training_data[i*epc:(i+1)*epc]
+            for i in range(self.n_grids)
+        ]
+
+        for i, td_group in enumerate(training_data_groups):
+            print i
+            group = Group(*[
+                self.get_digit_pair(v_in, v_out)
+                for v_in, v_out in td_group
+            ])
+            group.arrange_submobjects_in_grid(
+                n_rows = self.n_rows_per_grid,
+            )
+            group.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+            if i == 0:
+                self.play(
+                    LaggedStart(FadeIn, group),
+                    FadeOut(word_group),
+                )
+            else:
+                pairs = zip(last_group, group)
+                random.shuffle(pairs)
+                time = 0
+                for t1, t2 in pairs:
+                    time += self.time_per_example
+                    self.remove(t1)
+                    self.add(t2)
+                    if time > self.frame_duration:
+                        self.dither(self.frame_duration)
+                        time = 0
+            last_group = group
+
+
+    def get_digit_pair(self, v_in, v_out):
+        tup = Group(*TexMobject("(", "00", ",", "0", ")"))
+        tup.scale(2)
+        # image = PixelsFromVect(v_in)
+        # image.add(SurroundingRectangle(image, color = BLUE, buff = SMALL_BUFF))
+        image = MNistMobject(v_in)
+        label = TexMobject(str(np.argmax(v_out)))
+        image.replace(tup[1])
+        tup.submobjects[1] = image
+        label.replace(tup[3], dim_to_match = 1)
+        tup.submobjects[3] = label
+
+        return tup
+
 class NotSciFi(TeacherStudentsScene):
     def construct(self):
         students = self.students
@@ -463,6 +601,15 @@ class FunctionMinmization(GraphScene):
         ])
         self.dither(10)
 
+class ChangingDecimalWithColor(ChangingDecimal):
+    def update_mobject(self, alpha):
+        ChangingDecimal.update_mobject(self, alpha)
+        num = self.number_update_func(alpha)
+        self.decimal_number.set_fill(
+            interpolate_color(BLACK, WHITE, 0.5+num*0.5), 
+            opacity = 1
+        )
+
 class IntroduceCostFunction(PreviewLearning):
     CONFIG = {
         "max_stroke_width" : 2,
@@ -480,6 +627,7 @@ class IntroduceCostFunction(PreviewLearning):
         self.need_a_cost_function()
         self.fade_all_but_last_layer()
         self.break_down_cost_function()
+        self.show_small_cost_output()
         self.average_over_all_training_data()
 
     def isolate_one_neuron(self):
@@ -817,6 +965,101 @@ class IntroduceCostFunction(PreviewLearning):
         self.decimal_groups = decimal_groups
         self.image_group = image_group
         self.cost_group = VGroup(cost_of, image_group)
+        self.brace = brace
+
+    def show_small_cost_output(self):
+        decimals, desired_decimals = self.decimal_groups
+        neurons = self.network_mob.layers[-1].neurons
+        brace = self.brace
+        cost_group = self.cost_group
+
+        neurons.save_state()
+        cost_group.save_state()
+        brace.save_state()
+        brace.generate_target()
+
+        arrows = VGroup(*[
+            Arrow(ORIGIN, LEFT).next_to(d, LEFT, MED_LARGE_BUFF)
+            for d in decimals
+        ])
+        arrows.highlight(WHITE)
+
+        def generate_term_update_func(decimal, desired_decimal):
+            return lambda a : (decimal.number - desired_decimal.number)**2
+
+        terms = VGroup()
+        term_updates = []
+        for arrow, d1, d2 in zip(arrows, *self.decimal_groups):
+            term = DecimalNumber(0, num_decimal_points = 4)
+            term.scale_to_fit_height(d1.get_height())
+            term.next_to(arrow, LEFT)
+            term.num_update_func = generate_term_update_func(d1, d2)
+            terms.add(term)
+            term_updates.append(ChangingDecimalWithColor(
+                term, term.num_update_func,
+                num_decimal_points = 4
+            ))
+        brace.target.next_to(terms, LEFT)
+
+        sum_term = DecimalNumber(0)
+        sum_term.next_to(brace.target, LEFT)
+        sum_term.highlight(RED)
+        def sum_update(alpha):
+            return sum([
+                (d1.number - d2.number)**2
+                for d1, d2 in zip(*self.decimal_groups)
+            ])
+        term_updates.append(ChangingDecimal(sum_term, sum_update))
+        for update in term_updates:
+            update.update_mobject(0)
+
+        target_vect = 0.1*np.random.random(10)
+        target_vect[3] = 0.97
+
+        def generate_decimal_update_func(start, target):
+            return lambda a : interpolate(start, target, a)
+
+        update_decimals = [
+            ChangingDecimalWithColor(
+                decimal, 
+                generate_decimal_update_func(decimal.number, t)
+            )
+            for decimal, t in zip(decimals, target_vect)
+        ]
+
+        self.play(
+            cost_group.scale, 0.5,
+            cost_group.to_corner, UP+LEFT,
+            MoveToTarget(brace),
+            LaggedStart(GrowArrow, arrows),
+            LaggedStart(FadeIn, terms),
+            FadeIn(sum_term),
+            Animation(decimals)
+        )
+        self.play(*it.chain(
+            update_decimals,
+            term_updates,
+            [
+                ApplyMethod(neuron.set_fill, None, t)
+                for neuron, t in zip(neurons, target_vect)
+            ]
+        ))
+        self.dither()
+        self.play(LaggedStart(Indicate, decimals, rate_func = there_and_back))
+        self.dither()
+        for update in update_decimals:
+            update.rate_func = lambda a : smooth(1-a)
+        self.play(*it.chain(
+            update_decimals,
+            term_updates,
+            [neurons.restore]
+        ), run_time = 2)
+        self.dither()
+        self.play(
+            cost_group.restore,
+            brace.restore,
+            FadeOut(VGroup(terms, sum_term, arrows)),
+        )
 
     def average_over_all_training_data(self):
         image_group = self.image_group
@@ -904,6 +1147,87 @@ class IntroduceCostFunction(PreviewLearning):
         result.brackets = brackets
         result.decimals = decimals
         return result
+
+class YellAtNetwork(PiCreatureScene, PreviewLearning):
+    def setup(self):
+        PiCreatureScene.setup(self)
+        PreviewLearning.setup(self)
+
+    def construct(self):
+        randy = self.randy
+        network_mob, eyes = self.get_network_and_eyes()
+
+        three_vect = get_organized_images()[3][5]
+        self.activate_network(three_vect)
+
+        image = PixelsFromVect(three_vect)
+        image.add(SurroundingRectangle(image, color = BLUE))
+        arrow = Arrow(LEFT, RIGHT, color = WHITE)
+
+        layer = network_mob.layers[-1]
+        layer.add(network_mob.output_labels)
+        layer_copy = layer.deepcopy()
+        for neuron in layer_copy.neurons:
+            neuron.set_fill(WHITE, opacity = 0)
+        layer_copy.neurons[3].set_fill(WHITE, 1)
+        layer_copy.scale(1.5)
+        desired = Group(image, arrow, layer_copy)
+        desired.arrange_submobjects(RIGHT)
+        desired.to_edge(UP)
+
+        q_marks = TexMobject("???").highlight(RED)
+        q_marks.next_to(arrow, UP, SMALL_BUFF)
+
+        self.play(
+            PiCreatureBubbleIntroduction(
+                randy, "Bad network!",
+                target_mode = "angry", 
+                look_at_arg = eyes,
+                run_time = 1,
+            ),
+            eyes.look_at_anim(randy.eyes)
+        )
+        self.play(eyes.change_mode_anim("sad"))
+        self.play(eyes.look_at_anim(3*DOWN + 3*RIGHT))
+        self.play(
+            FadeIn(desired),
+            RemovePiCreatureBubble(
+                randy, target_mode = "sassy",
+                look_at_arg = desired
+            ),
+            eyes.look_at_anim(desired)
+        )
+        self.play(eyes.blink_anim())
+        rect = SurroundingRectangle(
+            VGroup(layer_copy.neurons[3], layer_copy[-1][3]),
+        )
+        self.play(ShowCreation(rect))
+        layer_copy.add(rect)
+        self.dither()
+        self.play(
+            layer.copy().replace, layer_copy, 1,
+            Write(q_marks, run_time = 1),
+            layer_copy.shift, 1.5*RIGHT,
+            randy.change, "angry", eyes,
+        )
+        self.play(eyes.look_at_anim(3*RIGHT + 3*RIGHT))
+        self.dither()
+
+    ####
+
+    def get_network_and_eyes(self):
+        randy = self.randy
+        network_mob = self.network_mob
+        network_mob.scale(0.5)
+        network_mob.next_to(randy, RIGHT, LARGE_BUFF)
+        self.color_network_edges()
+        eyes = Eyes(network_mob.edge_groups[1])
+        return network_mob, eyes
+
+    def create_pi_creature(self):
+        randy = self.randy = Randolph()
+        randy.shift(3*LEFT).to_edge(DOWN)
+        return randy
 
 class ThisIsVeryComplicated(TeacherStudentsScene):
     def construct(self):
@@ -1113,41 +1437,33 @@ class EmphasizeComplexityOfCostFunction(IntroduceCostFunction):
         result.in_vect = in_vect
         return result
 
-class YellAtNetwork(PiCreatureScene, PreviewLearning):
-    def setup(self):
-        PiCreatureScene.setup(self)
-        PreviewLearning.setup(self)
-
+class NetworkGrowthMindset(YellAtNetwork):
     def construct(self):
-        randy = self.randy
-
-        network_mob = self.network_mob
-        network_mob.scale(0.5)
-        network_mob.next_to(randy, RIGHT, LARGE_BUFF)
-        self.color_network_edges()
-        eyes = Eyes(network_mob.edge_groups[1])
+        randy = self.pi_creature
+        network_mob, eyes = self.get_network_and_eyes()
+        eyes.look_at_anim(randy.eyes).update(1)
+        edge_update = ContinualEdgeUpdate(
+            network_mob,
+            colors = [BLUE, RED]
+        )
 
         self.play(
-            PiCreatureBubbleIntroduction(
-                randy, "Horrible!",
-                target_mode = "angry", 
+            PiCreatureSays(
+                randy, "Awful, just awful!",
+                target_mode = "angry",
                 look_at_arg = eyes,
                 run_time = 1,
             ),
-            eyes.look_at_anim(randy.eyes)
+            eyes.change_mode_anim("concerned_musician")
         )
-        self.play(eyes.change_mode_anim("sad"))
-        self.play(eyes.look_at_anim(3*DOWN + 3*RIGHT))
         self.dither()
-        self.play(eyes.blink_anim())
-        self.dither()
-
-    ####
-
-    def create_pi_creature(self):
-        randy = self.randy = Randolph()
-        randy.shift(3*LEFT + DOWN)
-        return randy
+        self.add(edge_update)
+        self.pi_creature_says(
+            "But we can do better! \\\\ Growth mindset!",
+            target_mode = "hooray"
+        )
+        self.play(eyes.change_mode_anim("happy"))
+        self.dither(3)
 
 class SingleVariableCostFunction(GraphScene):
     CONFIG = {
@@ -1519,6 +1835,15 @@ class SingleVariableCostFunction(GraphScene):
         line.rotate(self.angle_of_tangent(x, graph) - line.get_angle())
         line.move_to(self.input_to_graph_point(x, graph))
 
+class LocalVsGlobal(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("""
+            Local minimum = Doable \\\\
+            Global minimum = Crazy hard
+        """)
+        self.change_student_modes(*["pondering"]*3)
+        self.dither(2)
+
 class TwoVariableInputSpace(Scene):
     def construct(self):
         self.add_plane()
@@ -1643,6 +1968,37 @@ class KhanAcademyMVCWrapper(PiCreatureScene):
         self.play(morty.change, "happy", screen)
         self.dither(5)
 
+class KAGradientPreview(ExternallyAnimatedScene):
+    pass
+
+class GradientDescentAlgorithm(Scene):
+    def construct(self):
+        words = VGroup(
+            TextMobject("Compute", "$\\nabla C$"),
+            TextMobject("Small step in", "$-\\nabla C$", "direction"),
+            TextMobject("Repeat."),
+        )
+        words.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        words.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        words.to_corner(DOWN+LEFT)
+
+        for word in words[:2]:
+            word[1].highlight(RED)
+
+        for word in words:
+            self.play(Write(word, run_time = 1))
+            self.dither()
+
+class GradientDescentName(Scene):
+    def construct(self):
+        words = TextMobject("Gradient descent")
+        words.highlight(BLUE)
+        words.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        words.to_edge(DOWN)
+
+        self.play(Write(words, run_time = 2))
+        self.dither()
+
 class ShowFullCostFunctionGradient(PreviewLearning):
     def construct(self):
         self.organize_weights_as_column_vector()
@@ -1755,6 +2111,12 @@ class ShowFullCostFunctionGradient(PreviewLearning):
                 )
             )
         self.dither()
+
+class DotsInsert(Scene):
+    def construct(self):
+        dots = TexMobject("\\vdots")
+        dots.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        self.add(dots)
 
 class HowMinimizingCostMeansBetterTrainingPerformance(IntroduceCostFunction):
     def construct(self):
@@ -2053,12 +2415,59 @@ class SomeConnectionsMatterMoreThanOthers(PreviewLearning):
         n2 = layers[-1].neurons[i2]
         return self.network_mob.get_edge(n1, n2)
 
+class SpinningVectorWithLabel(Scene):
+    def construct(self):
+        plane = NumberPlane(
+            x_unit_size = 2,
+            y_unit_size = 2,
+        )
+        plane.add_coordinates()
+        self.add(plane)
+
+        vector = Vector(2*RIGHT)
+        label = get_decimal_vector([-1, -1], with_dots = False)
+        label.add_to_back(BackgroundRectangle(label))
+        label.next_to(vector.get_end(), UP+RIGHT)
+        label.decimals.set_fill(opacity = 0)
+        decimals = label.decimals.copy()
+        decimals.set_fill(WHITE, 1)
+
+        cd1 = ChangingDecimal(
+            decimals[0],
+            lambda a : np.cos(vector.get_angle()),
+            tracked_mobject = label.decimals[0],
+        )
+        cd2 = ChangingDecimal(
+            decimals[1],
+            lambda a : np.sin(vector.get_angle()),
+            tracked_mobject = label.decimals[1],
+        )
+
+        self.play(
+            Rotate(
+                vector, 
+                0.999*np.pi,
+                in_place = False,
+                run_time = 8,
+                rate_func = there_and_back
+            ),
+            UpdateFromFunc(
+                label,
+                lambda m : m.next_to(vector.get_end(), UP+RIGHT)
+            ),
+            cd1, cd2,
+        )
+        self.dither()
+
 class TwoGradientInterpretationsIn2D(Scene):
     def construct(self):
+        self.force_skipping()
+
         self.setup_plane()
         self.add_function_definitions()
         self.point_out_direction()
         self.point_out_relative_importance()
+        self.wiggle_in_neighborhood()
 
     def setup_plane(self):
         plane = NumberPlane()
@@ -2080,10 +2489,6 @@ class TwoGradientInterpretationsIn2D(Scene):
         vect.next_to(grad, RIGHT, SMALL_BUFF)
         grad_group = VGroup(grad, vect)
         grad_group.next_to(ORIGIN, RIGHT).to_edge(UP, buff = MED_SMALL_BUFF)
-        # grad_group.next_to(func, DOWN)
-        # for mob in grad, func:
-        #     mob.highlight_by_tex("C(", RED)
-        #     mob.highlight_by_tex(")", RED)
         for mob in grad, vect, func:
             mob.add_background_rectangle()
             mob.background_rectangle.scale_in_place(1.1)
@@ -2131,6 +2536,9 @@ class TwoGradientInterpretationsIn2D(Scene):
         self.remove(coords)
         self.grad.get_part_by_tex("1, 1").highlight(coords.get_color())
 
+        self.steepest_words = words
+        self.dot = dot
+
     def point_out_relative_importance(self):
         func = self.func
         grad_group = VGroup(self.grad, self.vect)
@@ -2161,6 +2569,32 @@ class TwoGradientInterpretationsIn2D(Scene):
             ShowCreation(y_rect)
         )
         self.dither(2)
+
+    def wiggle_in_neighborhood(self):
+        dot = self.dot
+        steepest_words = self.steepest_words
+
+        neighborhood = Circle(
+            fill_color = BLUE,
+            fill_opacity = 0.25,
+            stroke_width = 0,
+            radius = 0.5,
+        )
+        neighborhood.move_to(dot)
+
+        self.revert_to_original_skipping_status()
+        self.play(
+            FadeOut(steepest_words),
+            GrowFromCenter(neighborhood)
+        )
+        self.dither()
+        for vect in RIGHT, UP, 0.3*(3*RIGHT + UP):
+            self.play(
+                dot.shift, 0.5*vect,
+                rate_func = lambda t : wiggle(t, 4),
+                run_time = 3,
+            )
+            self.dither()
 
 class ParaboloidGraph(ExternallyAnimatedScene):
     pass
@@ -2346,15 +2780,25 @@ class AskHowItDoes(TeacherStudentsScene):
 
 class TestPerformance(PreviewLearning):
     CONFIG = {
-        "n_examples" : 200,
+        "n_examples" : 300,
         "time_per_example" : 0.1,
-        "wrong_dither_time" : 0.5
+        "wrong_dither_time" : 0.5,
+        "stroke_width_exp" : 2,
+        "decimal_kwargs" : {
+            "num_decimal_points" : 3,
+        }
     }
     def construct(self):
+        self.setup_network_mob()
         self.init_testing_data()
         self.add_title()
         self.add_fraction()
         self.run_through_examples()
+
+    def setup_network_mob(self):
+        self.network_mob.scale_to_fit_height(5)
+        self.network_mob.to_corner(DOWN+LEFT)
+        self.network_mob.to_edge(DOWN, buff = MED_SMALL_BUFF)
 
     def init_testing_data(self):
         training_data, validation_data, test_data = load_data_wrapper()
@@ -2362,13 +2806,15 @@ class TestPerformance(PreviewLearning):
 
     def add_title(self):
         title = TextMobject("Testing data")
-        title.to_corner(UP+LEFT)
+        title.to_edge(UP, buff = MED_SMALL_BUFF)
+        title.to_edge(LEFT, buff = LARGE_BUFF)
         self.add(title)
+        self.title = title
 
     def add_fraction(self):
         self.n_correct = 0
         self.total = 0
-        self.decimal = DecimalNumber(0)
+        self.decimal = DecimalNumber(0, **self.decimal_kwargs)
         word_frac = TexMobject(
             "{\\text{Number correct}", "\\over", 
             "\\text{total}}", "=",
@@ -2381,30 +2827,49 @@ class TestPerformance(PreviewLearning):
             self.equals, self.decimal
         )
         fracs.arrange_submobjects(RIGHT)
-        fracs.to_edge(UP)
+        fracs.to_corner(UP+RIGHT, buff = LARGE_BUFF)
         self.add(fracs)
 
     def run_through_examples(self):
+        title = self.title
         rects = [
-            SurroundingRectangle(VGroup(neuron, label))
+            SurroundingRectangle(
+                VGroup(neuron, label),
+                buff = 0.5*SMALL_BUFF
+            )
             for neuron, label in zip(
                 self.network_mob.layers[-1].neurons,
                 self.network_mob.output_labels
             )
         ]
-        wrong = TextMobject("Wrong!")
-        wrong.highlight(RED)
+        rect_wrong = TextMobject("Wrong!")
+        rect_wrong.highlight(RED)
+        num_wrong = rect_wrong.copy()
 
+        arrow = Arrow(LEFT, RIGHT, color = WHITE)
+        guess_word = TextMobject("Guess")
+        self.add(arrow, guess_word)
 
-        for test_in, test_out in self.test_data:
+        from tqdm import tqdm as ProgressDisplay
+        for test_in, test_out in ProgressDisplay(list(self.test_data)):
             self.total += 1
-            image = MNistMobject(test_in)
-            image.to_edge(LEFT)
-            image.shift(UP)
-            self.add(image)
 
             activations = self.activate_layers(test_in)
             choice = np.argmax(activations[-1])
+
+            image = MNistMobject(test_in)
+            image.scale_to_fit_height(1.5)
+            choice_mob = TexMobject(str(choice))
+            choice_mob.scale(1.5)
+            group = VGroup(image, arrow, choice_mob)
+            group.arrange_submobjects(RIGHT)
+            group.shift(
+                self.title.get_bottom()+MED_SMALL_BUFF*DOWN -\
+                image.get_top()
+            )
+            self.add(image, choice_mob)
+            guess_word.next_to(arrow, UP, SMALL_BUFF)
+
             rect = rects[choice]
             self.add(rect)
 
@@ -2412,8 +2877,9 @@ class TestPerformance(PreviewLearning):
             if correct:
                 self.n_correct += 1
             else:
-                wrong.next_to(rect, RIGHT)
-                self.add(wrong)
+                rect_wrong.next_to(rect, RIGHT)
+                num_wrong.next_to(choice_mob, DOWN)
+                self.add(rect_wrong, num_wrong)
             new_frac = self.get_frac()
             new_frac.shift(
                 self.frac[1].get_left() - \
@@ -2424,7 +2890,10 @@ class TestPerformance(PreviewLearning):
             self.frac = new_frac
             self.equals.next_to(new_frac, RIGHT)
 
-            new_decimal = DecimalNumber(float(self.n_correct)/self.total)
+            new_decimal = DecimalNumber(
+                float(self.n_correct)/self.total,
+                **self.decimal_kwargs
+            )
             new_decimal.next_to(self.equals, RIGHT)
             self.remove(self.decimal)
             self.add(new_decimal)
@@ -2434,9 +2903,9 @@ class TestPerformance(PreviewLearning):
             if not correct:
                 self.dither(self.wrong_dither_time)
 
-            self.remove(rect, wrong, image)
+            self.remove(rect, rect_wrong, num_wrong, image, choice_mob)
 
-        self.add(rect, image)
+        self.add(rect, image, choice_mob)
 
     ###
     def add_network(self):
@@ -2491,6 +2960,14 @@ class ReactToPerformance(TeacherStudentsScene):
             look_at_arg = self.teacher.bubble
         )
         self.dither()
+
+class NoticeWhereItMessesUp(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Look where it \\\\ messes up",
+            run_time = 1
+        )
+        self.dither(2)
 
 class WrongExamples(TestPerformance):
     CONFIG = {
@@ -2758,18 +3235,540 @@ class InputRandomData(TestPerformance):
         self.play(eyes.blink_anim())
         self.dither()
 
+class CannotDraw(PreviewLearning):
+    def construct(self):
+        network_mob = self.network_mob
+        self.color_network_edges()
+        network_mob.scale(0.5)
+        network_mob.to_corner(DOWN+RIGHT)
+        eyes = Eyes(network_mob.edge_groups[1])
+        eyes.shift(SMALL_BUFF*UP)
+        self.add(eyes)
+
+        bubble = SpeechBubble(
+            height = 3, width = 4,
+            direction = RIGHT
+        )
+        bubble.pin_to(network_mob.edge_groups[0])
+        bubble.write("Uh...I'm really \\\\ more of a multiple \\\\ choice guy")
+
+        randy = Randolph()
+        randy.to_corner(DOWN+LEFT)
+        eyes.look_at_anim(randy.eyes).update(1)
+
+        self.play(PiCreatureSays(
+            randy, "Draw a \\\\ 5 for me",
+            look_at_arg = eyes,
+            run_time = 1
+        ))
+        self.play(eyes.change_mode_anim("concerned_musician"))
+        self.play(
+            ShowCreation(bubble),
+            Write(bubble.content),
+            eyes.look_at_anim(network_mob.get_corner(DOWN+RIGHT))
+        )
+        self.play(eyes.blink_anim())
+        self.play(Blink(randy))
+        self.dither()
+
 class TODOShowCostFunctionDef(TODOStub):
     CONFIG = {
         "message" : "Insert cost function averaging portion"
     }
 
+class TODOBreakUpNineByPatterns2(TODOBreakUpNineByPatterns):
+    pass
+
+class SomethingToImproveUpon(PiCreatureScene, TestPerformance):
+    CONFIG = {
+        "n_examples" : 15,
+        "time_per_example" : 0.15,
+    }
+    def setup(self):
+        self.setup_bases()
+        self.color_network_edges()
+        self.network_mob.to_edge(LEFT)
+        edge_update = ContinualEdgeUpdate(
+            self.network_mob,
+            colors = [BLUE, BLUE, RED]
+        )
+        edge_update.internal_time = 1
+        self.add(edge_update)
+
+    def construct(self):
+        self.show_path()
+        self.old_news()
+        self.recognizing_digits()
+        self.hidden_layers()
+
+    def show_path(self):
+        network_mob = self.network_mob
+        morty = self.pi_creature
+
+        line = Line(LEFT, RIGHT).scale(5)
+        line.shift(UP)
+        dots = VGroup(*[
+            Dot(line.point_from_proportion(a))
+            for a in np.linspace(0, 1, 5)
+        ])
+        dots.gradient_highlight(BLUE, YELLOW)
+        path = VGroup(line, dots)
+        words = TextMobject("This series")
+        words.next_to(line, DOWN)
+
+        self.play(
+            network_mob.scale, 0.25,
+            network_mob.next_to, path.get_right(), UP,
+            ShowCreation(path),
+            Write(words, run_time = 1),
+            morty.change, "sassy", 
+        )
+        self.dither(2)
+        self.play(
+            ApplyMethod(
+                network_mob.next_to, path.get_left(), UP,
+                path_arc = np.pi/2,
+            ),
+            Rotate(path, np.pi, in_place = True),
+            morty.change, "raise_right_hand"
+        )
+        self.dither(3)
+
+        self.line = line
+        self.path = path
+        self.this_series = words
+
+    def old_news(self):
+        network_mob = self.network_mob
+        morty = self.pi_creature
+        line = self.line
+
+        words = TextMobject("Old technology!")
+        words.to_edge(UP)
+        arrow = Arrow(words.get_left(), network_mob.get_right())
+
+        name = TextMobject("``Multilayer perceptron''")
+        name.next_to(words, DOWN)
+
+        cnn = TextMobject("Convolutional NN")
+        lstm = TextMobject("LSTM")
+        cnn.next_to(line.get_center(), UP)
+        lstm.next_to(line.get_right(), UP)
+
+        modern_variants = VGroup(cnn, lstm)
+        modern_variants.highlight(YELLOW)
+
+        self.play(
+            Write(words, run_time = 1),
+            GrowArrow(arrow),
+            morty.change_mode, "hesitant"
+        )
+        self.play(Write(name))
+        self.dither()
+        self.play(
+            FadeIn(modern_variants),
+            FadeOut(VGroup(words, arrow, name)),
+            morty.change, "thinking"
+        )
+        self.dither(2)
+
+        self.modern_variants = modern_variants
+
+    def recognizing_digits(self):
+        training_data, validation_data, test_data = load_data_wrapper()
+
+        for v_in, choice in validation_data[:self.n_examples]:
+            image = MNistMobject(v_in)
+            image.scale_to_fit_height(1)
+            choice = TexMobject(str(choice))
+            choice.scale(2)
+            arrow = Vector(RIGHT, color = WHITE)
+            group = Group(image, arrow, choice)
+            group.arrange_submobjects(RIGHT)
+            group.next_to(self.line, DOWN, LARGE_BUFF)
+            group.to_edge(LEFT, buff = LARGE_BUFF)
+
+            self.add(group)
+            self.dither(self.time_per_example)
+            self.remove(group)
+
+    def hidden_layers(self):
+        morty = self.pi_creature
+        network_mob = self.network_mob
+
+        self.play(
+            network_mob.scale, 4, 
+            network_mob.center, 
+            network_mob.to_edge, LEFT,
+            FadeOut(VGroup(self.path, self.modern_variants, self.this_series)),
+            morty.change, "confused",
+        )
+
+        hidden_layers = network_mob.layers[1:3]
+        rects = VGroup(*map(SurroundingRectangle, hidden_layers))
+        np.random.seed(0)
+
+        self.play(ShowCreation(rects))
+        self.activate_network(np.random.random(28*28))
+        self.dither(3)
+
+class ShiftingFocus(Scene):
+    def construct(self):
+        how, do, networks, learn = words = TextMobject(
+            "How", "do", "neural networks", "learn?"
+        )
+        networks.highlight(BLUE)
+        cross = Cross(networks)
+        viewers = TextMobject("video viewers")
+        viewers.move_to(networks)
+        viewers.highlight(YELLOW)
+        cap_do = TextMobject("Do")
+        cap_do.move_to(do, DOWN+LEFT)
+
+        self.play(Write(words, run_time = 1))
+        self.dither()
+        self.play(ShowCreation(cross))
+        self.play(
+            VGroup(networks, cross).shift, DOWN,
+            Write(viewers, run_time = 1)
+        )
+        self.dither(2)
+        self.play(
+            FadeOut(how),
+            Transform(do, cap_do)
+        )
+        self.dither(2)
+
+class PauseAndPonder(TeacherStudentsScene):
+    def construct(self):
+        screen = ScreenRectangle(height = 3.5)
+        screen.to_edge(UP+LEFT)
+
+        self.teacher_says(
+            "Pause and \\\\ ponder!",
+            target_mode = "hooray",
+            run_time = 1
+        )
+        self.play(
+            ShowCreation(screen),
+            self.get_student_changes(*["pondering"]*3),
+        )
+        self.dither(6)
+
+class ConvolutionalNetworkPreview(Scene):
+    def construct(self):
+        vect = get_organized_images()[9][0]
+        image = PixelsFromVect(vect)
+        image.set_stroke(width = 1)
+        image.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        self.add(image)
+
+        kernels = [
+            PixelsFromVect(np.zeros(16))
+            for x in range(2)
+        ]
+        for i, pixel in enumerate(kernels[0]):
+            x = i%4
+            y = i//4
+            if x == y:
+                pixel.set_fill(BLUE, 1)
+            elif abs(x - y) == 1:
+                pixel.set_fill(BLUE, 0.5)
+        for i, pixel in enumerate(kernels[1]):
+            x = i%4
+            if x == 1:
+                pixel.set_fill(BLUE, 1)
+            elif x == 2:
+                pixel.set_fill(RED, 1)
+        for kernel in kernels:
+            kernel.set_stroke(width = 1)
+            kernel.scale(image[0].get_height()/kernel[0].get_height())
+            kernel.add(SurroundingRectangle(
+                kernel, color = YELLOW, buff = 0
+            ))
+            self.add(kernel)
+            for i, pixel in enumerate(image):
+                x = i%28
+                y = i//28
+                if x > 24 or y > 24:
+                    continue
+                kernel.move_to(pixel, UP+LEFT)
+                self.dither(self.frame_duration)
+            self.remove(kernel)
+
+class RandomlyLabeledImageData(Scene):
+    CONFIG = {
+        "image_label_pairs" : [
+            ("lion", "Lion"),
+            ("Newton", "Genius"),
+            ("Fork", "Fork"),
+            ("Trilobite", "Trilobite"),
+            ("Puppy", "Puppy"),
+            ("Astrolabe", "Astrolabe"),
+            ("Adele", "Songbird of \\\\ our generation"),
+            ("Cow", "Cow"),
+            ("Sculling", "Sculling"),
+            ("Pierre_de_Fermat", "Tease"),
+        ]
+    }
+    def construct(self):
+        groups = Group()
+        labels = VGroup()
+        for i, (image_name, label_name) in enumerate(self.image_label_pairs):
+            x = i//5
+            y = i%5
+            group = self.get_training_group(image_name, label_name)
+            group.shift(4.5*LEFT + x*SPACE_WIDTH*RIGHT)
+            group.shift(3*UP + 1.5*y*DOWN)
+            groups.add(group)
+            labels.add(group[-1])
+        permutation = range(len(labels))
+        while any(np.arange(len(labels)) == permutation):
+            random.shuffle(permutation)
+        for label, i in zip(labels, permutation):
+            label.generate_target()
+            label.target.move_to(labels[i], LEFT)
+            label.target.highlight(YELLOW)
+
+        self.play(LaggedStart(
+            FadeIn, groups,
+            run_time = 3,
+            lag_ratio = 0.3,
+        ))
+        self.dither()
+        self.play(LaggedStart(
+            MoveToTarget, labels, 
+            run_time = 4,
+            lag_ratio = 0.5,
+            path_arc = np.pi/3,
+        ))
+        self.dither()
+
+    def get_training_group(self, image_name, label_name):
+        arrow = Vector(RIGHT, color = WHITE)
+        image = ImageMobject(image_name)
+        image.scale_to_fit_height(1.3)
+        image.next_to(arrow, LEFT)
+        label = TextMobject(label_name)
+        label.next_to(arrow, RIGHT)
+        group = Group(image, arrow, label)
+        return group
+
+class TrainOnImages(PreviewLearning, RandomlyLabeledImageData):
+    CONFIG = {
+        "layer_sizes" : [17, 17, 17, 17, 17, 17],
+        "network_mob_config" : {
+            "brace_for_large_layers" : False,
+            "include_output_labels" : False,
+        },
+    }
+    def construct(self):
+        self.setup_network_mob()
+
+        image_names, label_names = zip(*self.image_label_pairs)
+        label_names = list(label_names)
+        random.shuffle(label_names)
+        groups = [
+            self.get_training_group(image_name, label_name)
+            for image_name, label_name in zip(image_names, label_names)
+        ]
 
 
+        edges = VGroup(*reversed(list(
+            it.chain(*self.network_mob.edge_groups)
+        )))
+
+        for group in groups:
+            for edge in edges:
+                edge.generate_target()
+                edge.target.rotate_in_place(np.pi)
+                alt_edge = random.choice(edges)
+                color = alt_edge.get_stroke_color()
+                width = alt_edge.get_stroke_width()
+                edge.target.set_stroke(color, width)
+
+            group.to_edge(UP)
+            self.add(group)
+            self.play(LaggedStart(
+                MoveToTarget, edges,
+                lag_ratio = 0.4,
+                run_time = 2,
+            ))
+            self.remove(group)
+
+    def setup_network_mob(self):
+        self.network_mob.scale_to_fit_height(5)
+        self.network_mob.to_edge(DOWN)
+        self.color_network_edges()
+
+class IntroduceDeepNetwork(Scene):
+    def construct(self):
+        pass
+
+class AskNetworkAboutMemorizing(YellAtNetwork):
+    def construct(self):
+        randy = self.pi_creature
+        network_mob, eyes = self.get_network_and_eyes()
+        eyes.look_at_anim(randy.eyes).update(1)
+        self.add(eyes)
+
+        self.pi_creature_says(
+            "Are you just \\\\ memorizing?",
+            target_mode = "sassy",
+            look_at_arg = eyes,
+            run_time = 2
+        )
+        self.dither()
+        self.play(eyes.change_mode_anim("sad"))
+        self.play(eyes.blink_anim())
+        self.dither()
+
+class CompareLearningCurves(GraphScene):
+    CONFIG = {
+        "x_min" : 0,
+        "y_axis_label" : "Value of \\\\ cost function",
+        "x_axis_label" : "Number of gradient \\\\ descent steps",
+        "graph_origin" : 2*DOWN + 3.5*LEFT,
+    }
+    def construct(self):
+        self.setup_axes()
+        self.x_axis_label_mob.to_edge(DOWN)
+        self.y_axis_label_mob.to_edge(LEFT)
+        self.y_axis_label_mob.highlight(RED)
+
+        slow_decrease = self.get_graph(
+            lambda x : 9 - 0.25*x
+        )
+        faster_decrease = self.get_graph(
+            lambda x : 4.3*sigmoid(5*(2-x)) + 3 + 0.5*ReLU(3-x)
+        )
+        for decrease, p in (slow_decrease, 0.2), (faster_decrease, 0.07):
+            y_vals = decrease.get_anchors()[:,1]
+            y_vals -= np.cumsum(p*np.random.random(len(y_vals)))
+            decrease.make_jagged()
+        faster_decrease.move_to(slow_decrease, UP+LEFT)
+
+        slow_label = TextMobject("Randomly-labeled data")
+        slow_label.highlight(slow_decrease.get_color())
+        slow_label.to_corner(UP+RIGHT)
+        slow_line = Line(ORIGIN, RIGHT)
+        slow_line.set_stroke(slow_decrease.get_color(), 5)
+        slow_line.next_to(slow_label, LEFT)
+
+        fast_label = TextMobject("Properly-labeled data")
+        fast_label.highlight(faster_decrease.get_color())
+        fast_label.next_to(slow_label, DOWN)
+        fast_line = slow_line.copy()
+        fast_line.highlight(faster_decrease.get_color())
+        fast_line.next_to(fast_label, LEFT)
+
+        self.play(FadeIn(slow_label), ShowCreation(slow_line))
+        self.play(ShowCreation(
+            slow_decrease,
+            run_time = 12,
+            rate_func = None,
+        ))
+        self.play(FadeIn(fast_label), ShowCreation(fast_line))
+        self.play(ShowCreation(
+            faster_decrease,
+            run_time = 12,
+            rate_func = None,
+        ))
+        self.dither()
+
+        ####
+
+        line = Line(
+            self.coords_to_point(1, 2),
+            self.coords_to_point(3, 9),
+        )
+        rect = Rectangle()
+        rect.set_fill(YELLOW, 0.3)
+        rect.set_stroke(width = 0)
+        rect.replace(line, stretch = True)
+
+        words = TextMobject("Learns structured data more quickly")
+        words.highlight(YELLOW)
+        words.next_to(rect, DOWN)
+        words.add_background_rectangle()
+
+        self.play(DrawBorderThenFill(rect))
+        self.play(Write(words))
+        self.dither()
+
+class ManyMinimaWords(Scene):
+    def construct(self):
+        words = TextMobject(
+            "Many local minima,\\\\",
+            "roughly equal quality"
+        )
+        words.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        words.to_edge(UP)
+        self.play(Write(words))
+        self.dither()
 
 
-
-
-
+class NNPart2PatreonThanks(PatreonThanks):
+    CONFIG = {
+        "specific_patrons" : [
+            "Desmos",
+            "Burt Humburg",
+            "CrypticSwarm",
+            "Juan Benet",
+            "Ali Yahya",
+            "William",
+            "Mayank M. Mehrotra",
+            "Lukas Biewald",
+            "Samantha D. Suplee",
+            "Yana Chernobilsky",
+            "Kaustuv DeBiswas",
+            "Kathryn Schmiedicke",
+            "Yu Jun",
+            "Dave Nicponski",
+            "Damion Kistler",
+            "Markus Persson",
+            "Yoni Nazarathy",
+            "Ed Kellett",
+            "Joseph John Cox",
+            "Luc Ritchie",
+            "Eric Chow",
+            "Mathias Jansson",
+            "Pedro Perez Sanchez",
+            "David Clark",
+            "Michael Gardner",
+            "Harsev Singh",
+            "Mads Elvheim",
+            "Erik Sundell",
+            "Xueqi Li",
+            "David G. Stork",
+            "Tianyu Ge",
+            "Ted Suzman",
+            "Linh Tran",
+            "Andrew Busey",
+            "John Haley",
+            "Ankalagon",
+            "Eric Lavault",
+            "Boris Veselinovich",
+            "Julian Pulgarin",
+            "Jeff Linse",
+            "Cooper Jones",
+            "Ryan Dahl",
+            "Mark Govea",
+            "Robert Teed",
+            "Jason Hise",
+            "Meshal Alshammari",
+            "Bernd Sing",
+            "James Thornton",
+            "Mustafa Mahdi",
+            "Mathew Bramson",
+            "Jerry Ling",
+            "Vecht",
+            "Shimin Kuang",
+            "Rish Kundalia",
+            "Achille Brighton",
+            "Ripta Pasay",
+        ]
+    }
 
 
 
