@@ -526,18 +526,17 @@ class PiCreatureScene(Scene):
                 lambda anim : pi_creature in anim.mobject.submobject_family(),
                 animations
             )
-            if anims_with_pi_creature:
-                for anim in anims_with_pi_creature:
-                    if isinstance(anim, Transform):
-                        index = anim.mobject.submobject_family().index(pi_creature)
-                        target_family = anim.target_mobject.submobject_family()
-                        target = target_family[index]
-                        if isinstance(target, PiCreature):
-                            target.look_at(point_of_interest)
-                continue
-            animations.append(
-                ApplyMethod(pi_creature.look_at, point_of_interest)
-            )
+            for anim in anims_with_pi_creature:
+                if isinstance(anim, Transform):
+                    index = anim.mobject.submobject_family().index(pi_creature)
+                    target_family = anim.target_mobject.submobject_family()
+                    target = target_family[index]
+                    if isinstance(target, PiCreature):
+                        target.look_at(point_of_interest)
+            if not anims_with_pi_creature:
+                animations.append(
+                    ApplyMethod(pi_creature.look_at, point_of_interest)
+                )
         return animations
 
     def blink(self):
