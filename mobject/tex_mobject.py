@@ -26,7 +26,6 @@ class TexSymbol(VMobjectFromSVGPathstring):
         self.set_stroke(width = added_width + mobject.get_stroke_width())
         self.set_fill(opacity = opacity)
 
-
 class TexMobject(SVGMobject):
     CONFIG = {
         "template_tex_file" : TEMPLATE_TEX_FILE,
@@ -263,6 +262,43 @@ class Brace(TexMobject):
     def get_direction(self):
         vect = self.get_tip() - self.get_center()
         return vect/np.linalg.norm(vect)
+
+class BulletedList(TextMobject):
+    CONFIG = {
+        "buff" : MED_LARGE_BUFF,
+        "dot_scale_factor" : 2,
+        #Have to include because of handle_multiple_args implementation
+        "template_tex_file" : TEMPLATE_TEXT_FILE,
+        "alignment" : "",
+    }
+    def __init__(self, *items, **kwargs):
+        line_separated_items = [s + "\\\\" for s in items]
+        TextMobject.__init__(self, *line_separated_items, **kwargs)
+        for part in self:
+            dot = TexMobject("\\cdot").scale(self.dot_scale_factor)
+            dot.next_to(part[0], LEFT, SMALL_BUFF)
+            part.add_to_back(dot)
+        self.arrange_submobjects(
+            DOWN, 
+            aligned_edge = LEFT,
+            buff = self.buff
+        )
+
+    def fade_all_but(self, index_or_string, opacity = 0.5):
+        arg = index_or_string
+        if isinstance(arg, str):
+            part = self.get_part_by_tex(arg)
+        elif isinstance(arg, int):
+            part = self.submobjects[arg]
+        else:
+            raise Exception("Expected int or string, got {0}".format(arg))
+        for other_part in self.submobjects:
+            if other_part is part:
+                other_part.set_fill(opacity = 1)
+            else:
+                other_part.set_fill(opacity = opacity)
+
+##########
 
 def tex_hash(expression, template_tex_file):
     return str(hash(expression + template_tex_file))
