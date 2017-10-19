@@ -2658,11 +2658,12 @@ class GradientNudging(PreviewLearning):
             for edge_group in network_mob.edge_groups
         ])
 
+        mover = VGroup(*decimals.family_members_with_points()).copy()
+        mover.set_fill(opacity = 0)
+        mover.set_stroke(width = 1)
+        target = VGroup(*self.network_mob.edge_groups.family_members_with_points())
         self.play(
-            ReplacementTransform(
-                decimals.copy().set_fill(opacity = 0).set_stroke(width = 1), 
-                self.network_mob.edge_groups
-            ),
+            ReplacementTransform(mover, target),
             FadeIn(words),
             LaggedStart(GrowArrow, arrows, run_time = 1)
         )
