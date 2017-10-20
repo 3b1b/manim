@@ -75,19 +75,22 @@ class Scene(object):
         self.name = name
         return self
 
-    def update_shared_locals(self, *keys):
+    def set_variables_as_attrs(self, *objects, **newly_named_objects):
         """
-        Often in constructing a scene, it's nice to refer to
-        what was a local variable from a previous subroutine,
-        so a dict of shared_locals is recorded, and it can be updated
-        by passing in the objects directly.
+        This method is slightly hacky, making it a little easier
+        for certain methods (typically subroutines of construct)
+        to share local variables.
         """
         caller_locals = inspect.currentframe().f_back.f_locals
-        self.shared_locals.update(dict([
-            (key, caller_locals[key])
-            for key in keys
-        ]))
+        for key, value in caller_locals.items():
+            if value in objects:
+                setattr(self, key, value)
+        for key, value in newly_named_objects.items():
+            setattr(self, key, value)
         return self
+
+    def get_attrs(self, *keys):
+        return [getattr(self, key) for key in keys]
 
     ### Only these methods should touch the camera
 
