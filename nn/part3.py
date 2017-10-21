@@ -338,10 +338,79 @@ class InterpretGradientComponents(GradientNudging):
             )
         ]
 
+class GetLostInNotation(PiCreatureScene):
+    def construct(self):
+        morty = self.pi_creature
+        equations = VGroup(
+            TexMobject(
+                "\\delta", "^L", "=", "\\nabla_a", "C", 
+                "\\odot \\sigma'(", "z", "^L)"
+            ),
+            TexMobject(
+                "\\delta", "^l = ((", "w", "^{l+1})^T", 
+                "\\delta", "^{l+1}) \\odot \\sigma'(", "z", "^l)"
+            ),
+            TexMobject(
+                "{\\partial", "C", "\\over \\partial", "b", 
+                "_j^l} =", "\\delta", "_j^l"
+            ),
+            TexMobject(
+                "{\\partial", "C", " \\over \\partial", 
+                "w", "_{jk}^l} = ", "a", "_k^{l-1}", "\\delta", "_j^l"
+            ),
+        )
+        for equation in equations:
+            equation.highlight_by_tex_to_color_map({
+                "\\delta" : YELLOW,
+                "C" : RED,
+                "b" : MAROON_B,
+                "w" : BLUE,
+                "z" : TEAL,
+            })
+            equation.highlight_by_tex("nabla", WHITE)
+        equations.arrange_submobjects(
+            DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT
+        )
+
+        circle = Circle(radius = 3*SPACE_WIDTH)
+        circle.set_fill(WHITE, 0)
+        circle.set_stroke(WHITE, 0)
+
+        self.play(
+            Write(equations),
+            morty.change, "confused", equations
+        )
+        self.dither()
+        self.play(morty.change, "pleading")
+        self.dither(2)
+
+        ##
+        movers = VGroup(*equations.family_members_with_points())
+        random.shuffle(movers.submobjects)
+        for mover in list(movers):
+            if mover.is_subpath:
+                movers.remove(mover)
+                continue
+            mover.set_stroke(WHITE, width = 0)
+            mover.target = Circle()
+            mover.target.scale(0.5)
+            mover.target.set_fill(mover.get_color(), opacity = 0)
+            mover.target.set_stroke(BLACK, width = 1)
+            mover.target.move_to(mover)
+        self.play(
+            LaggedStart(
+                MoveToTarget, movers,
+                run_time = 2,
+            ),
+            morty.change, "pondering",
+        )
+        self.dither()
 
 
-
-
+class TODOInsertPreviewLearning(TODOStub):
+    CONFIG = {
+        "message" : "Insert PreviewLearning"
+    }
 
 
 
