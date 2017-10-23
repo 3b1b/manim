@@ -214,6 +214,10 @@ class NetworkMobject(VGroup):
 
     def get_active_layer(self, layer_index, activation_vector):
         layer = self.layers[layer_index].deepcopy()
+        self.activate_layer(layer)
+        return layer
+
+    def activate_layer(self, layer, activation_vector):
         n_neurons = len(layer.neurons)
         av = activation_vector
         def arr_to_num(arr):
@@ -240,6 +244,11 @@ class NetworkMobject(VGroup):
                 opacity = activation
             )
         return layer
+
+    def activate_layers(self, input_vector):
+        activations = self.neural_network.get_activation_of_all_layers(input_vector)
+        for activation, layer in zip(activations, self.layers):
+            self.activate_layer(layer, activation)
 
     def deactivate_layers(self):
         all_neurons = VGroup(*it.chain(*[
