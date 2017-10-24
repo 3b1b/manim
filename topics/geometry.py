@@ -155,6 +155,7 @@ class Line(VMobject):
     def put_start_and_end_on(self, new_start, new_end):
         self.start = new_start
         self.end = new_end
+        self.buff = 0
         self.generate_points()
         return
 

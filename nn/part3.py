@@ -466,15 +466,15 @@ class ShowAveragingCost(PreviewLearning):
 
     def show_many_examples(self):
         training_data, validation_data, test_data = load_data_wrapper()
-        training_data_iter = iter(training_data)
 
         average_words = TextMobject("Average over all training examples")
         average_words.next_to(LEFT, RIGHT)
         average_words.to_edge(UP)
         self.add(average_words)
 
-        for x in xrange(int(self.start_examples_time/self.time_per_example)):
-            train_in, train_out = training_data_iter.next()
+        n_start_examples = int(self.start_examples_time/self.time_per_example)
+        n_examples_per_adjustment = int(self.examples_per_adjustment_time/self.time_per_example)
+        for train_in, train_out in training_data[:n_start_examples]:
             self.show_one_example(train_in, train_out)
             self.dither(self.time_per_example)
 
@@ -502,8 +502,9 @@ class ShowAveragingCost(PreviewLearning):
         words.to_corner(UP+LEFT)
 
         for x in xrange(self.n_adjustments):
-            for y in xrange(int(self.examples_per_adjustment_time/self.time_per_example)):
-                train_in, train_out = training_data_iter.next()
+            if x < 2:
+                self.play(FadeIn(words[x]))
+            for train_in, train_out in training_data[:n_examples_per_adjustment]:
                 self.show_one_example(train_in, train_out)
                 self.dither(self.time_per_example)
             self.play(LaggedStart(
@@ -512,9 +513,7 @@ class ShowAveragingCost(PreviewLearning):
                 run_time = 1,
                 lag_ratio = 0.2,
             ))
-            if x < 2:
-                self.play(FadeIn(words[x]))
-            else:
+            if x >= 2:
                 self.dither()
 
     ####
@@ -536,56 +535,514 @@ class ShowAveragingCost(PreviewLearning):
         self.last_layer_copy.neurons[index].set_fill(WHITE, opacity = 1)
         self.add(self.last_layer_copy)
 
-        self.curr_iamge = image
+        self.curr_image = image
 
 
 class WalkThroughTwoExample(ShowAveragingCost):
+    CONFIG = {
+        "random_seed" : 0,
+    }
+    def setup(self):
+        np.random.seed(self.random_seed)
+        random.seed(self.random_seed)
+        self.setup_bases()
+
     def construct(self):
         self.force_skipping()
 
         self.setup_network()
         self.setup_diff_words()
         self.show_single_example()
+        # self.single_example_influencing_weights()
         self.expand_last_layer()
-        self.cannot_directly_affect_activations()
-        self.show_desired_activation_nudges()
-        self.focus_on_one_neuron()
         self.show_activation_formula()
         self.three_ways_to_increase()
         self.note_connections_to_brightest_neurons()
+        self.fire_together_wire_together()
 
     def show_single_example(self):
         two_vect = get_organized_images()[2][0]
-        two_out = np.zeroes(10)
+        two_out = np.zeros(10)
         two_out[2] = 1.0
         self.show_one_example(two_vect, two_out)
         for layer in self.network_mob.layers:
             layer.neurons.set_fill(opacity = 0)
 
-        self.revert_to_original_skipping_status()
-        self.feed_forward(two_vect)
+        self.activate_network(two_vect)
+        self.dither()
+
+    def single_example_influencing_weights(self):
+        two = self.curr_image
+        two.save_state()
+
+        edge_groups = self.network_mob.edge_groups
+        def adjust_edge_group_anim(edge_group):
+            return LaggedStart(
+                ApplyFunction, edge_group,
+                lambda edge : (
+                    lambda m : m.rotate_in_place(np.pi/12).highlight(YELLOW),
+                    edge
+                ),
+                rate_func = wiggle,
+                run_time = 1,
+            )
+
+
+        self.play(
+            two.next_to, edge_groups[0].get_corner(DOWN+RIGHT), DOWN,
+            adjust_edge_group_anim(edge_groups[0])
+        )
+        self.play(
+            ApplyMethod(
+                two.next_to, edge_groups[1].get_corner(UP+RIGHT), UP,
+                path_arc = np.pi/6,
+            ),
+            adjust_edge_group_anim(VGroup(*reversed(edge_groups[1])))
+        )
+        self.play(
+            ApplyMethod(
+                two.next_to, edge_groups[2].get_corner(DOWN+RIGHT), DOWN,
+                path_arc = -np.pi/6,
+            ),
+            adjust_edge_group_anim(edge_groups[2])
+        )
+        self.play(two.restore)
+        self.dither()
 
     def expand_last_layer(self):
-        pass
+        neurons = self.network_mob.layers[-1].neurons
+        alt_neurons = self.last_layer_copy.neurons
+        output_labels = self.network_mob.output_labels
+        alt_output_labels = self.last_layer_copy[-1]
+        edges = self.network_mob.edge_groups[-1]
+
+        movers = VGroup(
+            neurons, alt_neurons, 
+            output_labels, alt_output_labels, 
+            *edges
+        )
+        to_fade = VGroup(self.brace, self.cost_words, self.double_arrow)
+        for mover in movers:
+            mover.save_state()
+            mover.generate_target()
+            mover.target.scale_in_place(2)
+
+        neurons.target.to_edge(DOWN, MED_LARGE_BUFF)
+        output_labels.target.next_to(neurons.target, RIGHT, MED_SMALL_BUFF)
+        alt_neurons.target.next_to(neurons.target, RIGHT, buff = 2)
+        alt_output_labels.target.next_to(alt_neurons.target, RIGHT, MED_SMALL_BUFF)
+
+        n_pairs = it.product(
+            self.network_mob.layers[-2].neurons, 
+            neurons.target
+        )
+        for edge, (n1, n2) in zip(edges, n_pairs):
+            r1 = n1.get_width()/2.0
+            r2 = n2.get_width()/2.0
+            c1 = n1.get_center()
+            c2 = n2.get_center()
+            vect = c2 - c1
+            norm = np.linalg.norm(vect)
+            unit_vect = vect / norm
+
+            edge.target.put_start_and_end_on(
+                c1 + unit_vect*r1,
+                c2 - unit_vect*r2
+            )
+
+        self.play(
+            FadeOut(to_fade),
+            *map(MoveToTarget, movers)
+        )
+        self.show_decimals(neurons)
+        self.cannot_directly_affect_activations()
+        self.show_desired_activation_nudges(neurons, output_labels, alt_output_labels)
+        self.focus_on_one_neuron(movers)
+
+    def show_decimals(self, neurons):
+        decimals = VGroup()
+        for neuron in neurons:
+            activation = neuron.get_fill_opacity()
+            decimal = DecimalNumber(activation, num_decimal_points = 1)
+            decimal.scale_to_fit_width(0.7*neuron.get_width())
+            decimal.move_to(neuron)
+            if activation > 0.8:
+                decimal.highlight(BLACK)
+            decimals.add(decimal)
+
+        self.play(Write(decimals, run_time = 2))
+        self.dither()
+        self.decimals = decimals
 
     def cannot_directly_affect_activations(self):
-        pass
+        words = TextMobject("You can only adjust weights and biases")
+        words.next_to(self.curr_image, RIGHT, MED_SMALL_BUFF, UP)
 
-    def show_desired_activation_nudges(self):
-        pass
+        edges = VGroup(*self.network_mob.edge_groups.family_members_with_points())
+        random.shuffle(edges.submobjects)
+        for edge in edges:
+            edge.generate_target()
+            edge.target.set_stroke(
+                random.choice([BLUE, RED]),
+                2*random.random()**2,
+            )
 
-    def focus_on_one_neuron(self):
-        pass
+        self.play(
+            LaggedStart(
+                Transform, edges,
+                lambda e : (e, e.target),
+                run_time = 4, 
+                rate_func = there_and_back,
+            ),
+            Write(words, run_time = 2)
+        )
+        self.play(FadeOut(words))
+
+    def show_desired_activation_nudges(self, neurons, output_labels, alt_output_labels):
+        arrows = VGroup()
+        rects = VGroup()
+        for i, neuron, label in zip(it.count(), neurons, alt_output_labels):
+            activation = neuron.get_fill_opacity()
+            target_val = 1 if i == 2 else 0
+            diff = abs(activation - target_val)
+            arrow = Arrow(
+                ORIGIN, diff*neuron.get_height()*DOWN,
+                color = RED,
+            )
+            arrow.move_to(neuron.get_right())
+            arrow.shift(0.175*RIGHT)
+            if i == 2:
+                arrow.highlight(BLUE)
+                arrow.rotate_in_place(np.pi)
+            arrows.add(arrow)
+
+            rect = SurroundingRectangle(VGroup(neuron, label))
+            if i == 2:
+                rect.highlight(BLUE)
+            else:
+                rect.highlight(RED)
+            rects.add(rect)
+
+        self.play(
+            output_labels.shift, SMALL_BUFF*RIGHT,
+            LaggedStart(GrowArrow, arrows, run_time = 1)
+        )
+        self.dither()
+
+        two_rect = rects[2]
+        eight_rect = rects[8].copy()
+        non_two_rects = VGroup(*[r for r in rects if r is not two_rect])
+        self.play(ShowCreation(two_rect))
+        self.dither()
+        self.remove(two_rect)
+        self.play(ReplacementTransform(two_rect.copy(), non_two_rects))
+        self.dither()
+        self.play(LaggedStart(FadeOut, non_two_rects, run_time = 1))
+        self.play(LaggedStart(
+            ApplyFunction, arrows,
+            lambda arrow : (
+                lambda m : m.scale_in_place(0.5).highlight(YELLOW),
+                arrow,
+            ),
+            rate_func = wiggle
+        ))
+        self.play(ShowCreation(two_rect))
+        self.dither()
+        self.play(ReplacementTransform(two_rect, eight_rect))
+        self.dither()
+        self.play(FadeOut(eight_rect))
+
+        self.arrows = arrows
+
+    def focus_on_one_neuron(self, expanded_mobjects):
+        network_mob = self.network_mob
+        neurons = network_mob.layers[-1].neurons
+        labels = network_mob.output_labels
+        two_neuron = neurons[2]
+        neurons.remove(two_neuron)
+        two_label = labels[2]
+        labels.remove(two_label)
+        expanded_mobjects.remove(*two_neuron.edges_in)
+        two_decimal = self.decimals[2]
+        self.decimals.remove(two_decimal)
+        two_arrow = self.arrows[2]
+        self.arrows.remove(two_arrow)
+
+        to_fade = VGroup(*it.chain(
+            network_mob.layers[:2],
+            network_mob.edge_groups[:2],
+            expanded_mobjects,
+            self.decimals,
+            self.arrows
+        ))
+
+        self.play(FadeOut(to_fade))
+        self.dither()
+        for mob in expanded_mobjects:
+            if mob in [neurons, labels]:
+                mob.scale(0.5)
+                mob.move_to(mob.saved_state)
+            else:
+                mob.restore()
+        for d, a, n in zip(self.decimals, self.arrows, neurons):
+            d.scale(0.5)
+            d.move_to(n)
+            a.scale(0.5)
+            a.move_to(n.get_right())
+            a.shift(SMALL_BUFF*RIGHT)
+        labels.shift(SMALL_BUFF*RIGHT)
+
+        self.set_variables_as_attrs(
+            two_neuron, two_label, two_arrow, two_decimal,
+        )
 
     def show_activation_formula(self):
-        pass
+        rhs = TexMobject(
+            "=", "\\sigma(",
+            "w_0", "a_0", "+",
+            "w_1", "a_1", "+",
+            "\\cdots", "+",
+            "w_{n-1}", "a_{n-1}", "+",
+            "b", ")"
+        )
+        equals = rhs[0]
+        sigma = VGroup(rhs[1], rhs[-1])
+        w_terms = rhs.get_parts_by_tex("w_")
+        a_terms = rhs.get_parts_by_tex("a_")
+        plus_terms = rhs.get_parts_by_tex("+")
+        b = rhs.get_part_by_tex("b", substring = False)
+        dots = rhs.get_part_by_tex("dots")
+
+        w_terms.highlight(BLUE)
+        b.highlight(MAROON_B)
+        sigma.highlight(YELLOW)
+
+        rhs.to_corner(UP+RIGHT)
+        sigma.save_state()
+        sigma.shift(DOWN)
+        sigma.set_fill(opacity = 0)
+
+        prev_neurons = self.network_mob.layers[-2].neurons
+        edges = self.two_neuron.edges_in
+
+        neuron_copy = VGroup(
+            self.two_neuron.copy(),
+            self.two_decimal.copy(),
+        )
+
+        self.play(
+            neuron_copy.next_to, equals.get_left(), LEFT,
+            self.curr_image.to_corner, UP+LEFT,
+            Write(equals)
+        )
+        self.play(
+            ReplacementTransform(edges.copy(), w_terms),
+            Write(VGroup(*plus_terms[:-1])),
+            Write(dots),
+            run_time = 1.5
+        )
+        self.dither()
+        self.play(ReplacementTransform(
+            prev_neurons.copy(), a_terms,
+            path_arc = np.pi/2
+        ))
+        self.dither()
+        self.play(
+            Write(plus_terms[-1]),
+            Write(b)
+        )
+        self.dither()
+        self.play(sigma.restore)
+        self.dither(2)
+
+        self.set_variables_as_attrs(
+            rhs, w_terms, a_terms, b,
+            lhs = neuron_copy
+        )
 
     def three_ways_to_increase(self):
-        pass
+        w_terms = self.w_terms
+        a_terms = self.a_terms
+        b = self.b
+        increase_words = VGroup(
+            TextMobject("Increase", "$b$"),
+            TextMobject("Increase", "$w_i$"),
+            TextMobject("Increase", "$a_i$"),
+        )
+        for words in increase_words:
+            words.highlight_by_tex_to_color_map({
+                "b" : b.get_color(),
+                "w_" : w_terms.get_color(),
+                "a_" : a_terms.get_color(),
+            })
+        increase_words.arrange_submobjects(
+            DOWN, aligned_edge = LEFT,
+            buff = LARGE_BUFF
+        )
+        increase_words.to_edge(LEFT)
+
+        mobs = [b, w_terms[0], a_terms[0]]
+        for words, mob in zip(increase_words, mobs):
+            self.play(
+                Write(words[0], run_time = 1),
+                ReplacementTransform(mob.copy(), words[1])
+            )
+            self.dither()
+
+        self.increase_words = increase_words
 
     def note_connections_to_brightest_neurons(self):
-        pass
+        w_terms = self.w_terms
+        a_terms = self.a_terms
+        increase_words = self.increase_words
+        prev_neurons = self.network_mob.layers[-2].neurons
+        edges = self.two_neuron.edges_in
 
+        prev_activations = np.array([n.get_fill_opacity() for n in prev_neurons])
+        sorted_indices = np.argsort(prev_activations.flatten())
+        bright_neurons = VGroup()
+        edges_to_bright_neurons = VGroup()
+        for i in sorted_indices[-4:]:
+            bright_neurons.add(prev_neurons[i].copy())
+            bright_neurons.set_stroke(YELLOW, 3)
+            edges_to_bright_neurons.add(edges[i])
+        bright_edges = edges_to_bright_neurons.copy()
+        bright_edges.set_stroke(YELLOW, 4)
+
+        added_words = TextMobject("in proportion to $a_i$")
+        added_words.next_to(
+            increase_words[1], DOWN, 
+            1.5*SMALL_BUFF, LEFT
+        )
+        added_words.highlight(YELLOW)
+
+        terms_rect = SurroundingRectangle(
+            VGroup(w_terms[0], a_terms[0]),
+            color = WHITE
+        )
+
+        self.play(LaggedStart(
+            ApplyFunction, edges,
+            lambda edge : (
+                lambda m : m.rotate_in_place(np.pi/12).highlight(YELLOW),
+                edge
+            ),
+            rate_func = wiggle
+        ))
+        self.dither()
+        self.play(
+            ShowCreation(bright_edges),
+            ShowCreation(bright_neurons)
+        )
+        self.dither()
+        self.play(
+            ReplacementTransform(bright_edges[0].copy(), w_terms[0]),
+            ReplacementTransform(bright_neurons[0].copy(), a_terms[0]),
+            ShowCreation(terms_rect)
+        )
+        self.play(FadeOut(terms_rect))
+        self.dither()
+        self.play(
+            self.curr_image.shift, MED_LARGE_BUFF*RIGHT,
+            rate_func = wiggle
+        )
+        self.dither()
+        self.play(Write(added_words))
+        self.dither()
+
+        self.set_variables_as_attrs(
+            bright_neurons, bright_edges,
+            in_proportion_to_a = added_words
+        )
+
+    def fire_together_wire_together(self):
+        bright_neurons = self.bright_neurons
+        bright_edges = self.bright_edges
+        two_neuron = self.two_neuron
+        two_decimal = self.two_decimal
+        two_activation = two_decimal.number
+
+        edge_animation = LaggedStart(
+            ShowCreationThenDestruction, bright_edges,
+            lag_ratio = 0.7
+        )
+        neuron_arrows = VGroup(*[
+            Vector(MED_LARGE_BUFF*RIGHT).next_to(n, LEFT)
+            for n in bright_neurons
+        ])
+        two_neuron_arrow = Vector(MED_LARGE_BUFF*DOWN)
+        two_neuron_arrow.next_to(two_neuron, UP)
+        VGroup(neuron_arrows, two_neuron_arrow).highlight(YELLOW)
+
+        neuron_rects = VGroup(*map(
+            SurroundingRectangle, bright_neurons
+        ))
+        two_neuron_rect = SurroundingRectangle(two_neuron)
+        seeing_words = TextMobject("Seeing a 2")
+        thinking_words = TextMobject("Thinking about a 2")
+        seeing_words.next_to(neuron_rects, UP)
+        thinking_words.next_to(two_neuron_rect, UP, aligned_edge = LEFT)
+
+        morty = Mortimer()
+        morty.scale(0.8)
+        morty.to_corner(DOWN+RIGHT)
+        words = TextMobject("""
+            ``Neurons that \\\\
+            fire together \\\\
+            wire together''
+        """)
+        words.to_edge(RIGHT)
+
+        self.revert_to_original_skipping_status()
+        self.play(FadeIn(morty))
+        self.play(
+            Write(words),
+            morty.change, "speaking", words
+        )
+        self.play(Blink(morty))
+        self.play(
+            edge_animation,
+            morty.change, "pondering", bright_edges
+        )
+        self.play(edge_animation)
+        self.play(
+            LaggedStart(GrowArrow, neuron_arrows),
+            edge_animation,
+        )
+        self.play(
+            GrowArrow(two_neuron_arrow),
+            morty.change, "raise_right_hand", two_neuron
+        )
+        self.play(
+            ApplyMethod(two_neuron.set_fill, WHITE, 1, **kwargs),
+            ChangingDecimal(
+                two_decimal,
+                lambda a : interpolate(two_activation, 1, a),
+                num_decimal_points = 1,
+            ),
+            UpdateFromFunc(
+                two_decimal,
+                lambda m : m.highlight(WHITE if m.number < 0.8 else BLACK),
+            ),
+            ShowCreation(bright_edges),
+        )
+        self.dither()
+        self.play(
+            LaggedStart(ShowCreation, neuron_rects),
+            Write(seeing_words, run_time = 2),
+            morty.change, "thinking", seeing_words
+        )
+        self.play(
+            ShowCreation(two_neuron_rect),
+            Write(thinking_words, run_time = 2),
+            morty.look_at, thinking_words
+        )
+        self.dither()
+        self.play(LaggedStart(FadeOut, VGroup(
+            neuron_rects, two_neuron_rect,
+            seeing_words, thinking_words,
+            words, morty
+        )))
 
 
 
