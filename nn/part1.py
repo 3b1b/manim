@@ -122,7 +122,7 @@ class NetworkMobject(VGroup):
         "neuron_fill_color" : GREEN,
         "edge_color" : LIGHT_GREY,
         "edge_stroke_width" : 2,
-        "edge_propogation_color" : GREEN,
+        "edge_propogation_color" : YELLOW,
         "edge_propogation_time" : 1,
         "max_shown_neurons" : 16,
         "brace_for_large_layers" : True,
@@ -214,7 +214,7 @@ class NetworkMobject(VGroup):
 
     def get_active_layer(self, layer_index, activation_vector):
         layer = self.layers[layer_index].deepcopy()
-        self.activate_layer(layer)
+        self.activate_layer(layer, activation_vector)
         return layer
 
     def activate_layer(self, layer, activation_vector):
