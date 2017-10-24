@@ -83,8 +83,9 @@ class Scene(object):
         """
         caller_locals = inspect.currentframe().f_back.f_locals
         for key, value in caller_locals.items():
-            if value in objects:
-                setattr(self, key, value)
+            for o in objects:
+                if value is o:
+                    setattr(self, key, value)
         for key, value in newly_named_objects.items():
             setattr(self, key, value)
         return self
@@ -348,7 +349,7 @@ class Scene(object):
                 animations.pop()
                 #method should already have target then.
             else:
-                mobject.target = mobject.deepcopy()
+                mobject.target = mobject.copy()
             state["curr_method"].im_func(
                 mobject.target, *state["method_args"]
             )
