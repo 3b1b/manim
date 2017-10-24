@@ -152,6 +152,11 @@ class ShowCreationThenDestruction(ShowPassingFlash):
         "run_time" : 1,
     }
 
+    def clean_up(self, *args, **kwargs):
+        ShowPassingFlash.clean_up(self, *args, **kwargs)
+        for submob, start_submob in self.get_all_families_zipped():
+            submob.pointwise_become_partial(start_submob, 0, 1)
+
 class MoveAlongPath(Animation):
     def __init__(self, mobject, vmobject, **kwargs):
         digest_config(self, kwargs, locals())
