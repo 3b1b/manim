@@ -152,11 +152,6 @@ class ShowCreationThenDestruction(ShowPassingFlash):
         "run_time" : 1,
     }
 
-    def clean_up(self, *args, **kwargs):
-        ShowPassingFlash.clean_up(self, *args, **kwargs)
-        for submob, start_submob in self.get_all_families_zipped():
-            submob.pointwise_become_partial(start_submob, 0, 1)
-
 class MoveAlongPath(Animation):
     def __init__(self, mobject, vmobject, **kwargs):
         digest_config(self, kwargs, locals())
@@ -335,9 +330,9 @@ class LaggedStart(Animation):
             anim.update(alpha)
         return self
 
-    # def clean_up(self, *args, **kwargs):
-    #     for anim in self.subanimations:
-    #         anim.clean_up(*args, **kwargs)
+    def clean_up(self, *args, **kwargs):
+        for anim in self.subanimations:
+            anim.clean_up(*args, **kwargs)
 
 class DelayByOrder(Animation):
     """
