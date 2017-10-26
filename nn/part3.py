@@ -1339,7 +1339,11 @@ class NotANeuroScientist(TeacherStudentsScene):
         group = VGroup(brain, double_arrow, q_marks, network)
         group.next_to(self.students, UP, buff = 1.5)
         self.add(group)
-        self.add(ContinualEdgeUpdate(network))
+        self.add(ContinualEdgeUpdate(
+            network,
+            stroke_width_exp = 0.5,
+            color = [BLUE, RED],
+        ))
 
         rect = SurroundingRectangle(group)
         no_claim_words = TextMobject("No claims here...")
@@ -1370,29 +1374,537 @@ class NotANeuroScientist(TeacherStudentsScene):
         )
         self.dither()
         self.play(brain_anim)
+        self.play(FocusOn(asterisks))
         self.play(Write(asterisks, run_time = 1))
         for x in range(2):
             self.play(brain_anim)
             self.dither()
 
+class ConstructGradientFromAllTrainingExamples(Scene):
+    CONFIG = { 
+        "image_height" : 0.9,
+        "eyes_height" : 0.25,
+        "n_examples" : 6,
+        "change_scale_val" : 0.8,
+    }
+    def construct(self):
+        self.setup_grid()
+        self.setup_weights()
+        self.show_two_requesting_changes()
+        self.show_all_examples_requesting_changes()
+        self.average_together()
+        self.collapse_into_gradient_vector()
+
+    def setup_grid(self):
+        h_lines = VGroup(*[
+            Line(LEFT, RIGHT).scale(0.85*SPACE_WIDTH)
+            for x in range(6)
+        ])
+        h_lines.arrange_submobjects(DOWN, buff = 1)
+        h_lines.set_stroke(LIGHT_GREY, 2)
+        h_lines.to_edge(DOWN, buff = MED_LARGE_BUFF)
+        h_lines.to_edge(LEFT, buff = 0)
+
+        v_lines = VGroup(*[
+            Line(UP, DOWN).scale(SPACE_HEIGHT - MED_LARGE_BUFF)
+            for x in range(self.n_examples + 1)
+        ])
+        v_lines.arrange_submobjects(RIGHT, buff = 1.4)
+        v_lines.set_stroke(LIGHT_GREY, 2)
+        v_lines.to_edge(LEFT, buff = 2)
+
+        # self.add(h_lines, v_lines)
+        self.h_lines = h_lines
+        self.v_lines = v_lines
+
+    def setup_weights(self):
+        weights = VGroup(*map(TexMobject, [
+            "w_0", "w_1", "w_2", "\\vdots", "w_{13{,}001}"
+        ]))
+        for i, weight in enumerate(weights):
+            weight.move_to(self.get_grid_position(i, 0))
+        weights.to_edge(LEFT, buff = MED_SMALL_BUFF)
+
+        brace = Brace(weights, RIGHT)
+        weights_words = brace.get_text("All weights and biases")
+
+        self.add(weights, brace, weights_words)
+        self.set_variables_as_attrs(
+            weights, brace, weights_words,
+            dots = weights[-2]
+        )
+
+    def show_two_requesting_changes(self):
+        two = self.get_example(get_organized_images()[2][0], 0)
+        self.two = two
+        self.add(two)
+
+        self.two_changes = VGroup()
+        for i in range(3) + [4]:
+            weight = self.weights[i]
+            bubble, change = self.get_requested_change_bubble(two)
+            weight.save_state()
+            weight.generate_target()
+            weight.target.next_to(two, RIGHT, aligned_edge = DOWN)
+
+            self.play(
+                MoveToTarget(weight),
+                two.eyes.look_at_anim(weight.target),
+                FadeIn(bubble),
+                Write(change, run_time = 1),
+            )
+            if random.random() < 0.5:
+                self.play(two.eyes.blink_anim())
+            else:
+                self.dither()
+            if i == 0:
+                added_anims = [
+                    FadeOut(self.brace),
+                    FadeOut(self.weights_words),
+                ]
+            elif i == 4:
+                dots_copy = self.dots.copy()
+                added_anims = [
+                    dots_copy.move_to,
+                    self.get_grid_position(3, 0)
+                ]
+                self.first_column_dots = dots_copy
+            else:
+                added_anims = []
+            self.play(
+                FadeOut(bubble),
+                weight.restore,
+                two.eyes.look_at_anim(weight.saved_state),
+                change.restore,
+                change.scale, self.change_scale_val,
+                change.move_to, self.get_grid_position(i, 0),
+                *added_anims
+            )
+            self.two_changes.add(change)
+        self.dither()
+
+    def show_all_examples_requesting_changes(self):
+        training_data, validation_data, test_data = load_data_wrapper()
+        data = training_data[:self.n_examples-1]
+        examples = VGroup(*[
+            self.get_example(t[0], j)
+            for t, j in zip(data, it.count(1))
+        ])
+        h_dots = TexMobject("\\dots")
+        h_dots.next_to(examples, RIGHT, MED_LARGE_BUFF)
+        more_h_dots = VGroup(*[
+            TexMobject("\\dots").move_to(
+                self.get_grid_position(i, self.n_examples)
+            )
+            for i in range(5)
+        ])
+        more_h_dots.shift(MED_LARGE_BUFF*RIGHT)
+        more_h_dots[-2].rotate_in_place(-np.pi/4)
+        more_v_dots = VGroup(*[
+            self.dots.copy().move_to(
+                self.get_grid_position(3, j)
+            )
+            for j in range(1, self.n_examples)
+        ])
+
+        changes = VGroup(*[
+            self.get_random_decimal().move_to(
+                self.get_grid_position(i, j)
+            )
+            for i in range(3) + [4]
+            for j in range(1, self.n_examples)
+        ])
+        for change in changes:
+            change.scale_in_place(self.change_scale_val)
+
+        self.play(
+            LaggedStart(FadeIn, examples),
+            LaggedStart(ShowCreation, self.h_lines),
+            LaggedStart(ShowCreation, self.v_lines),
+            Write(
+                h_dots, 
+                run_time = 2, 
+                rate_func = squish_rate_func(smooth, 0.7, 1)
+            )
+        )
+        self.play(
+            Write(changes),
+            Write(more_v_dots),
+            Write(more_h_dots),
+            *[
+                example.eyes.look_at_anim(random.choice(changes))
+                for example in examples
+            ]
+        )
+        for x in range(2):
+            self.play(random.choice(examples).eyes.blink_anim())
+
+        k = self.n_examples - 1
+        self.change_rows = VGroup(*[
+            VGroup(two_change, *changes[k*i:k*(i+1)])
+            for i, two_change in enumerate(self.two_changes)
+        ])
+        for i in range(3) + [-1]:
+            self.change_rows[i].add(more_h_dots[i])
+
+        self.all_eyes = VGroup(*[
+            m.eyes for m in [self.two] + list(examples)
+        ])
+
+        self.set_variables_as_attrs(
+            more_h_dots, more_v_dots,
+            h_dots, changes,
+        )
+
+    def average_together(self):
+        rects = VGroup()
+        arrows = VGroup()
+        averages = VGroup()
+        for row in self.change_rows:
+            rect = SurroundingRectangle(row)
+            arrow = Arrow(ORIGIN, RIGHT)
+            arrow.next_to(rect, RIGHT)
+            rect.arrow = arrow
+            average = self.get_colored_decimal(3*np.mean([
+                m.number for m in row 
+                if isinstance(m, DecimalNumber)
+            ]))
+            average.scale(self.change_scale_val)
+            average.next_to(arrow, RIGHT)
+            row.target = VGroup(average)
+
+            rects.add(rect)
+            arrows.add(arrow)
+            averages.add(average)
+
+        words = TextMobject("Average over \\\\ all training data")
+        words.scale(0.8)
+        words.to_corner(UP+RIGHT)
+        arrow_to_averages = Arrow(
+            words.get_bottom(), averages.get_top(),
+            color = WHITE
+        )
+
+        dots = self.dots.copy()
+        dots.move_to(VGroup(*averages[-2:]))
+
+        look_at_anims = self.get_look_at_anims
+
+        self.play(Write(words, run_time = 1), *look_at_anims(words))
+        self.play(ShowCreation(rects[0]), *look_at_anims(rects[0]))
+        self.play(
+            ReplacementTransform(rects[0].copy(), arrows[0]),
+            rects[0].set_stroke, WHITE, 1,
+            ReplacementTransform(
+                self.change_rows[0].copy(),
+                self.change_rows[0].target
+            ),
+            *look_at_anims(averages[0])
+        )
+        self.play(GrowArrow(arrow_to_averages))
+        self.play(
+            LaggedStart(ShowCreation, VGroup(*rects[1:])),
+            *look_at_anims(rects[1])
+        )
+        self.play(
+            LaggedStart(
+                ReplacementTransform, VGroup(*rects[1:]).copy(),
+                lambda m : (m, m.arrow),
+                lag_ratio = 0.7,
+            ),
+            VGroup(*rects[1:]).set_stroke, WHITE, 1,
+            LaggedStart(
+                ReplacementTransform, VGroup(*self.change_rows[1:]).copy(),
+                lambda m : (m, m.target),
+                lag_ratio = 0.7,
+            ),
+            Write(dots),
+            *look_at_anims(averages[1])
+        )
+        self.blink(3)
+        self.dither()
+
+        averages.add(dots)
+        self.set_variables_as_attrs(
+            rects, arrows, averages,
+            arrow_to_averages
+        )
+
+    def collapse_into_gradient_vector(self):
+        averages = self.averages
+        lb, rb = brackets = TexMobject("[]")
+        brackets.scale(2)
+        brackets.stretch_to_fit_height(1.2*averages.get_height())
+        lb.next_to(averages, LEFT, SMALL_BUFF)
+        rb.next_to(averages, RIGHT, SMALL_BUFF)
+        brackets.set_fill(opacity = 0)
+
+        shift_vect = 2*LEFT
+
+        lhs = TexMobject(
+            "-", "\\nabla", "C(",
+            "w_1,", "w_2,", "\\dots", "w_{13{,}001}",
+            ")", "="
+        )
+        lhs.next_to(lb, LEFT)
+        lhs.shift(shift_vect)
+        minus = lhs[0]
+        w_terms = lhs.get_parts_by_tex("w_")
+        dots_term = lhs.get_part_by_tex("dots")
+        eta = TexMobject("\\eta")
+        eta.move_to(minus, RIGHT)
+        eta.highlight(MAROON_B)
+
+        to_fade = VGroup(*it.chain(
+            self.h_lines, self.v_lines,
+            self.more_h_dots, self.more_v_dots,
+            self.change_rows, 
+            self.first_column_dots,
+            self.rects,
+            self.arrows,
+        ))
+        arrow = self.arrow_to_averages
+
+        self.play(LaggedStart(FadeOut, to_fade))
+        self.play(
+            brackets.shift, shift_vect,
+            brackets.set_fill, WHITE, 1,
+            averages.shift, shift_vect,
+            Transform(arrow, Arrow(
+                arrow.get_start(),
+                arrow.get_end() + shift_vect,
+                buff = 0,
+                color = arrow.get_color(),
+            )),
+            FadeIn(VGroup(*lhs[:3])),
+            FadeIn(VGroup(*lhs[-2:])),
+            *self.get_look_at_anims(lhs)
+        )
+        self.play(
+            ReplacementTransform(self.weights, w_terms),
+            ReplacementTransform(self.dots, dots_term),
+            *self.get_look_at_anims(w_terms)
+        )
+        self.blink(2)
+        self.play(
+            GrowFromCenter(eta),
+            minus.shift, MED_SMALL_BUFF*LEFT
+        )
+        self.dither()
+
+    ####
+
+    def get_example(self, in_vect, index):
+        result = MNistMobject(in_vect)
+        result.scale_to_fit_height(self.image_height)
+
+        eyes = Eyes(result, height = self.eyes_height)
+        result.eyes = eyes
+        result.add(eyes)
+        result.move_to(self.get_grid_position(0, index))
+        result.to_edge(UP, buff = LARGE_BUFF)
+        return result
+
+    def get_grid_position(self, i, j):
+        x = VGroup(*self.v_lines[j:j+2]).get_center()[0]
+        y = VGroup(*self.h_lines[i:i+2]).get_center()[1]
+        return x*RIGHT + y*UP
+
+    def get_requested_change_bubble(self, example_mob):
+        change = self.get_random_decimal()
+        words = TextMobject("Change by")
+        change.next_to(words, RIGHT)
+        change.save_state()
+        content = VGroup(words, change)
+
+        bubble = SpeechBubble(height = 1.5, width = 3)
+        bubble.add_content(content)
+        group = VGroup(bubble, content)
+        group.shift(
+            example_mob.get_right() + SMALL_BUFF*RIGHT \
+            -bubble.get_corner(DOWN+LEFT)
+        )
+
+        return VGroup(bubble, words), change
+
+    def get_random_decimal(self):
+        return self.get_colored_decimal(
+            0.3*(random.random() - 0.5)
+        )
+
+    def get_colored_decimal(self, number):
+        result = DecimalNumber(number)
+        if result.number > 0:
+            plus = TexMobject("+")
+            plus.next_to(result, LEFT, SMALL_BUFF)
+            result.add_to_back(plus)
+            result.highlight(BLUE)
+        else:
+            result.highlight(RED)
+        return result
+
+    def get_look_at_anims(self, mob):
+        return [eyes.look_at_anim(mob) for eyes in self.all_eyes]
+
+    def blink(self, n):
+        for x in range(n):
+            self.play(random.choice(self.all_eyes).blink_anim())
+
+class OpenCloseSGD(Scene):
+    def construct(self):
+        term = TexMobject(
+            "\\langle", "\\text{Stochastic gradient descent}",
+            "\\rangle"
+        )
+        alt_term0 = TexMobject("\\langle /")
+        alt_term0.move_to(term[0], RIGHT)
+
+        term.save_state()
+        center = term.get_center()
+        term[0].move_to(center, RIGHT)
+        term[2].move_to(center, LEFT)
+        term[1].scale(0.0001).move_to(center)
+
+        self.play(term.restore)
+        self.dither(2)
+        self.play(Transform(term[0], alt_term0))
+        self.dither(2)
+
+class OrganizeDataIntoMiniBatches(Scene):
+    CONFIG = {
+        "n_rows" : 5,
+        "n_cols" : 12,
+        "example_height" : 1,
+    }
+    def construct(self):
+        self.add_examples()
+        self.shuffle_examples()
+        self.divide_into_minibatches()
+        self.one_step_per_batch()
+
+    def add_examples(self):
+        examples = self.get_examples()
+        self.arrange_examples_in_grid(examples)
+        for example in examples:
+            example.save_state()
+        random.shuffle(examples.submobjects)
+        self.arrange_examples_in_grid(examples)
+
+        self.play(LaggedStart(
+            FadeIn, examples,
+            lag_ratio = 0.2,
+            run_time = 4
+        ))
+        self.dither()
+
+        self.examples = examples
+
+    def shuffle_examples(self):
+        self.play(LaggedStart(
+            ApplyMethod, self.examples,
+            lambda m : (m.restore,),
+            lag_ratio = 0.3,
+            run_time = 3,
+            path_arc = np.pi/3,
+        ))
+        self.dither()
+
+    def divide_into_minibatches(self):
+        examples = self.examples
+        examples.sort_submobjects(lambda p : -p[1])
+        rows = Group(*[
+            Group(*examples[i*self.n_cols:(i+1)*self.n_cols])
+            for i in range(self.n_rows)
+        ])
+
+        mini_batches_words = TextMobject("``Mini-batches''")
+        mini_batches_words.to_edge(UP)
+        mini_batches_words.highlight(YELLOW)
+
+        self.play(
+            rows.space_out_submobjects, 1.5,
+            rows.to_edge, UP, 1.5,
+            Write(mini_batches_words, run_time = 1)
+        )
+
+        rects = VGroup(*[
+            SurroundingRectangle(
+                row, 
+                stroke_width = 0,
+                fill_color = YELLOW,
+                fill_opacity = 0.25,
+            )
+            for row in rows
+        ])
+        self.play(LaggedStart(
+            FadeIn, rects,
+            lag_ratio = 0.7,
+            rate_func = there_and_back
+        ))
+        self.dither()
+
+        self.set_variables_as_attrs(rows, rects, mini_batches_words)
+
+    def one_step_per_batch(self):
+        rows = self.rows
+        brace = Brace(rows[0], UP, buff = SMALL_BUFF)
+        text = brace.get_text(
+            "Compute gradient descent step (using backprop)",
+            buff = SMALL_BUFF
+        )
+        def indicate_row(row):
+            row.sort_submobjects(lambda p : p[0])
+            return LaggedStart(
+                ApplyFunction, row,
+                lambda row : (
+                    lambda m : m.scale_in_place(0.75).highlight(YELLOW),
+                    row
+                ),
+                rate_func = wiggle
+            )
+
+        self.play(
+            FadeOut(self.mini_batches_words),
+            GrowFromCenter(brace),
+            Write(text, run_time = 2),
+        )
+        self.play(indicate_row(rows[0]))
+        brace.add(text)
+        for last_row, row in zip(rows, rows[1:-1]):
+            self.play(
+                last_row.shift, UP,
+                brace.next_to, row, UP, SMALL_BUFF
+            )
+            self.play(indicate_row(row))
+        self.dither()
 
 
+    ###
 
+    def get_examples(self):
+        n_examples = self.n_rows*self.n_cols
+        height = self.example_height
+        training_data, validation_data, test_data = load_data_wrapper()
+        return Group(*[
+            MNistMobject(
+                t[0],
+                rect_kwargs = {"stroke_width" : 2}
+            ).scale_to_fit_height(height)
+            for t in training_data[:n_examples]
+        ])
+        # return Group(*[
+        #     Square(
+        #         color = BLUE, 
+        #         stroke_width = 2
+        #     ).scale_to_fit_height(height)
+        #     for x in range(n_examples)
+        # ])
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    def arrange_examples_in_grid(self, examples):
+        examples.arrange_submobjects_in_grid(
+            n_rows = self.n_rows,
+            buff = SMALL_BUFF
+        )
 
 
 
