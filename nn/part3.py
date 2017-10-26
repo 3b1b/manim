@@ -1787,11 +1787,13 @@ class OrganizeDataIntoMiniBatches(Scene):
         self.arrange_examples_in_grid(examples)
         for example in examples:
             example.save_state()
-        random.shuffle(examples.submobjects)
+        alt_order_examples = VGroup(*examples)
+        for mob in examples, alt_order_examples:
+            random.shuffle(mob.submobjects)
         self.arrange_examples_in_grid(examples)
 
         self.play(LaggedStart(
-            FadeIn, examples,
+            FadeIn, alt_order_examples,
             lag_ratio = 0.2,
             run_time = 4
         ))
@@ -1905,6 +1907,170 @@ class OrganizeDataIntoMiniBatches(Scene):
             n_rows = self.n_rows,
             buff = SMALL_BUFF
         )
+
+class SGDSteps(ExternallyAnimatedScene):
+    pass
+
+class GradientDescentSteps(ExternallyAnimatedScene):
+    pass
+
+class SwimmingInTerms(TeacherStudentsScene):
+    def construct(self):
+        terms = VGroup(
+            TextMobject("Cost surface"),
+            TextMobject("Stochastic gradient descent"),
+            TextMobject("Mini-batches"),
+            TextMobject("Backpropagation"),
+        )
+        terms.arrange_submobjects(DOWN)
+        terms.to_edge(UP)
+        self.play(
+            LaggedStart(FadeIn, terms),
+            self.get_student_changes(*["horrified"]*3)
+        )
+        self.dither()
+        self.play(
+            terms[-1].next_to, self.teacher.get_corner(UP+LEFT), UP,
+            FadeOut(VGroup(*terms[:-1])),
+            self.teacher.change, "raise_right_hand",
+            self.get_student_changes(*["pondering"]*3)
+        )
+        self.dither()
+
+class BackpropCode(ExternallyAnimatedScene):
+    pass
+
+class BackpropCodeAddOn(PiCreatureScene):
+    def construct(self):
+        words = TextMobject(
+            "The code you'd find \\\\ in Nielsen's book"
+        )
+        words.to_corner(DOWN+LEFT)
+        morty = self.pi_creature
+        morty.next_to(words, UP)
+        self.add(words)
+        for mode in ["pondering", "thinking", "happy"]:
+            self.play(
+                morty.change, "pondering",
+                morty.look, UP+LEFT
+            )
+            self.play(morty.look, DOWN+LEFT)
+            self.dither(2)
+
+class CannotFollowCode(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "I...er...can't follow\\\\ that code at all.",
+            target_mode = "confused",
+            student_index = 1
+        )
+        self.play(self.students[1].change, "sad")
+        self.change_student_modes(
+            "angry", "sad", "angry",
+            look_at_arg = self.teacher.eyes
+        )
+        self.play(self.teacher.change, "hesitant")
+        self.dither(2)
+        self.teacher_says(
+            "Let's get to the \\\\ calculus then",
+            target_mode = "hooray",
+            added_anims = [self.get_student_changes(*3*["plain"])],
+            run_time = 1
+        )
+        self.dither(2)
+
+class EOCWrapper(Scene):
+    def construct(self):
+        title = TextMobject("Essence of calculus")
+        title.to_edge(UP)
+        screen = ScreenRectangle(height = 6)
+        screen.next_to(title, DOWN)
+
+        self.add(title)
+        self.play(ShowCreation(screen))
+        self.dither()
+
+class SimplestNetworkExample(Scene):
+    def construct(self):
+        self.collapse_ordinary_network()
+        self.focus_just_on_last_two_layers()
+        self.label_neurons()
+        self.show_desired_output()
+        self.show_cost()
+        self.show_activation_formula()
+        self.introduce_z()
+        self.break_into_computational_graph()
+        self.show_preceding_layer_in_computational_graph()
+        self.show_number_lines()
+        self.ask_about_w_sensitivity()
+        self.show_derivative_wrt_w()
+        self.show_chain_of_events()
+        self.show_chain_rule()
+        self.compute_derivatives()
+        self.fire_together_wire_together()
+        self.show_derivative_wrt_b()
+        self.show_derivative_wrt_a()
+        self.show_previous_weight_and_bias()
+
+    def collapse_ordinary_network(self):
+        pass
+        
+    def focus_just_on_last_two_layers(self):
+        pass
+        
+    def label_neurons(self):
+        pass
+        
+    def show_desired_output(self):
+        pass
+        
+    def show_cost(self):
+        pass
+        
+    def show_activation_formula(self):
+        pass
+        
+    def introduce_z(self):
+        pass
+        
+    def break_into_computational_graph(self):
+        pass
+        
+    def show_preceding_layer_in_computational_graph(self):
+        pass
+        
+    def show_number_lines(self):
+        pass
+        
+    def ask_about_w_sensitivity(self):
+        pass
+        
+    def show_derivative_wrt_w(self):
+        pass
+        
+    def show_chain_of_events(self):
+        pass
+        
+    def show_chain_rule(self):
+        pass
+        
+    def compute_derivatives(self):
+        pass
+        
+    def fire_together_wire_together(self):
+        pass
+        
+    def show_derivative_wrt_b(self):
+        pass
+        
+    def show_derivative_wrt_a(self):
+        pass
+        
+    def show_previous_weight_and_bias(self):
+        pass
+        
+
+
 
 
 
