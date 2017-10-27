@@ -319,7 +319,7 @@ class Arrow(Line):
 
         indices = (-2, -1) if add_at_end else (1, 0)
         pre_end_point, end_point = [
-            self.points[index]
+            self.get_anchors()[index]
             for index in indices
         ]
         vect = end_point - pre_end_point
