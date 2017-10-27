@@ -2590,6 +2590,7 @@ class SimplestNetworkExample(PreviewLearning):
 
     def show_derivative_wrt_w(self):
         pass
+        
 
     def show_chain_of_events(self):
         pass
