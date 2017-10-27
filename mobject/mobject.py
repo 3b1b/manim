@@ -399,11 +399,17 @@ class Mobject(object):
 
     ## Color functions
 
-    def highlight(self, color = YELLOW_C, family = True, condition = None):
+    def highlight(self, color = YELLOW_C, family = True):
         """
         Condition is function which takes in one arguments, (x, y, z).
+        Here it just recurses to submobjects, but in subclasses this 
+        should be further implemented based on the the inner workings
+        of color
         """
-        raise Exception("Not implemented")
+        if family:
+            for submob in self.submobjects:
+                submob.highlight(color, family = family)
+        return self
 
     def gradient_highlight(self, *colors):
         self.submobject_gradient_highlight(*colors)
