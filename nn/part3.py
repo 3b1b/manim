@@ -1775,12 +1775,19 @@ class OrganizeDataIntoMiniBatches(Scene):
         "n_rows" : 5,
         "n_cols" : 12,
         "example_height" : 1,
+        "random_seed" : 0,
     }
     def construct(self):
+        self.frame_duration = 1./24
+        self.seed_random_libraries()
         self.add_examples()
         self.shuffle_examples()
         self.divide_into_minibatches()
         self.one_step_per_batch()
+
+    def seed_random_libraries(self):
+        random.seed(self.random_seed)
+        np.random.seed(self.random_seed)
 
     def add_examples(self):
         examples = self.get_examples()
@@ -1990,8 +1997,11 @@ class EOCWrapper(Scene):
         self.play(ShowCreation(screen))
         self.dither()
 
-class SimplestNetworkExample(Scene):
+class SimplestNetworkExample(PreviewLearning):
     def construct(self):
+        self.force_skipping()
+
+        self.seed_random_libraries()
         self.collapse_ordinary_network()
         self.focus_just_on_last_two_layers()
         self.label_neurons()
@@ -2012,63 +2022,245 @@ class SimplestNetworkExample(Scene):
         self.show_derivative_wrt_a()
         self.show_previous_weight_and_bias()
 
+    def seed_random_libraries(self):
+        np.random.seed(0)
+        random.seed(0)
+
     def collapse_ordinary_network(self):
-        pass
-        
+        network_mob = self.network_mob
+        config = dict(self.network_mob_config)
+        config.pop("include_output_labels")
+        config.update({
+            "edge_stroke_width" : 3,
+            "edge_propogation_color" : YELLOW,
+            "edge_propogation_time" : 1,
+            "neuron_radius" : 0.3,
+        })
+        simple_network = Network(sizes = [1, 1, 1, 1])
+        simple_network_mob = NetworkMobject(simple_network, **config)
+        self.color_network_edges()
+        s_edges = simple_network_mob.edge_groups
+        for edge, weight_matrix in zip(s_edges, simple_network.weights):
+            weight = weight_matrix[0][0]
+            width = 2*abs(weight)
+            color = BLUE if weight > 0 else RED
+            edge.set_stroke(color, width)
+
+        def edge_collapse_anims(edges, left_attachment_target):
+            return [
+                ApplyMethod(
+                    e.put_start_and_end_on_with_projection,
+                    left_attachment_target.get_right(), 
+                    e.get_end()
+                )
+                for e in edges
+            ]
+
+        neuron = simple_network_mob.layers[0].neurons[0]
+        self.play(
+            ReplacementTransform(network_mob.layers[0], neuron),
+            *edge_collapse_anims(network_mob.edge_groups[0], neuron)
+        )
+        for i, layer in enumerate(network_mob.layers[1:]):
+            neuron = simple_network_mob.layers[i+1].neurons[0]
+            prev_edges = network_mob.edge_groups[i]
+            prev_edge_target = simple_network_mob.edge_groups[i]
+            if i+1 < len(network_mob.edge_groups):
+                edges = network_mob.edge_groups[i+1]
+                added_anims = edge_collapse_anims(edges, neuron)
+            else:
+                added_anims = [FadeOut(network_mob.output_labels)]
+            self.play(
+                ReplacementTransform(layer, neuron),
+                ReplacementTransform(prev_edges, prev_edge_target),
+                *added_anims
+            )
+        self.remove(network_mob)
+        self.add(simple_network_mob)
+        self.network_mob = simple_network_mob
+        self.network = self.network_mob.neural_network
+        self.feed_forward(np.array([0.5]))
+        self.dither()
+
     def focus_just_on_last_two_layers(self):
-        pass
-        
+        to_fade = VGroup(*it.chain(*zip(
+            self.network_mob.layers[:2],
+            self.network_mob.edge_groups[:2],
+        )))
+        for mob in to_fade:
+            mob.save_state()
+        self.play(LaggedStart(
+            ApplyMethod, to_fade,
+            lambda m : (m.fade, 0.9)
+        ))
+        self.dither()
+
     def label_neurons(self):
-        pass
-        
+        neurons = [
+            self.network_mob.layers[i].neurons[0]
+            for i in -1, -2
+        ]
+        decimals = VGroup()
+        a_labels = VGroup()
+        a_label_arrows = VGroup()
+        superscripts = ["L", "L-1"]
+        superscript_rects = VGroup()
+        for neuron, superscript in zip(neurons, superscripts):
+            decimal = self.get_neuron_activation_decimal(neuron)
+            label = TexMobject("a^{(%s)}"%superscript)
+            label.next_to(neuron, DOWN, buff = LARGE_BUFF)
+            superscript_rect = SurroundingRectangle(VGroup(*label[1:]))
+            arrow = Arrow(
+                label[0].get_top(),
+                neuron.get_bottom(),
+                buff = SMALL_BUFF,
+                color = WHITE
+            )
+
+            decimal.save_state()
+            decimal.set_fill(opacity = 0)
+            decimal.move_to(label)
+
+            decimals.add(decimal)
+            a_labels.add(label)
+            a_label_arrows.add(arrow)
+            superscript_rects.add(superscript_rect)
+
+            self.play(
+                Write(label, run_time = 1),
+                GrowArrow(arrow),
+            )
+            self.play(decimal.restore)
+            opacity = neuron.get_fill_opacity()
+            self.play(
+                neuron.set_fill, None, 0,
+                ChangingDecimal(
+                    decimal, 
+                    lambda a : interpolate(opacity, 0.01, a)
+                ),
+                UpdateFromFunc(
+                    decimal,
+                    lambda d : d.set_fill(WHITE if d.number < 0.8 else BLACK)
+                ),
+                run_time = 2,
+                rate_func = there_and_back,
+            )
+            self.dither()
+
+        not_exponents = TextMobject("Not exponents")
+        not_exponents.next_to(superscript_rects, DOWN, MED_LARGE_BUFF)
+        not_exponents.highlight(YELLOW)
+
+        self.play(
+            LaggedStart(
+                ShowCreation, superscript_rects,
+                lag_ratio = 0.8, run_time = 1.5
+            ),
+            Write(not_exponents, run_time = 2)
+        )
+        self.dither()
+        self.play(*map(FadeOut, [not_exponents, superscript_rects]))
+
+        self.set_variables_as_attrs(
+            a_labels, a_label_arrows, decimals
+        )
+
     def show_desired_output(self):
-        pass
-        
+        neuron = self.network_mob.layers[-1].neurons[0].copy()
+        neuron.shift(2*RIGHT)
+        neuron.set_fill(opacity = 1)
+        decimal = self.get_neuron_activation_decimal(neuron)
+
+        rect = SurroundingRectangle(neuron)
+        words = TextMobject("Desired \\\\ output")
+        words.next_to(rect, UP)
+        VGroup(words, rect).highlight(YELLOW)
+
+        y_label = TexMobject("y")
+        y_label.next_to(neuron, DOWN, LARGE_BUFF)
+        y_label.align_to(self.a_labels, DOWN)
+        y_label_arrow = Arrow(
+            y_label, neuron, 
+            color = WHITE,
+            buff = SMALL_BUFF
+        )
+
+        self.play(*map(FadeIn, [neuron, decimal]))
+        self.play(
+            ShowCreation(rect),
+            Write(words, run_time = 1)
+        )
+        self.dither()
+        self.play(
+            Write(y_label, run_time = 1),
+            GrowArrow(y_label_arrow)
+        )
+        self.dither()
+
+        self.set_variables_as_attrs(
+            y_label, y_label_arrow,
+            desired_output_neuron = neuron,
+            desired_output_decimal = decimal,
+            desired_output_rect = rect,
+            desired_output_words = words,
+        )
+
     def show_cost(self):
         pass
-        
+
     def show_activation_formula(self):
         pass
-        
+
     def introduce_z(self):
         pass
-        
+
     def break_into_computational_graph(self):
         pass
-        
+
     def show_preceding_layer_in_computational_graph(self):
         pass
-        
+
     def show_number_lines(self):
         pass
-        
+
     def ask_about_w_sensitivity(self):
         pass
-        
+
     def show_derivative_wrt_w(self):
         pass
-        
+
     def show_chain_of_events(self):
         pass
-        
+
     def show_chain_rule(self):
         pass
-        
+
     def compute_derivatives(self):
         pass
-        
+
     def fire_together_wire_together(self):
         pass
-        
+
     def show_derivative_wrt_b(self):
         pass
-        
+
     def show_derivative_wrt_a(self):
         pass
-        
+
     def show_previous_weight_and_bias(self):
         pass
-        
+
+    ###
+
+    def get_neuron_activation_decimal(self, neuron):
+        opacity = neuron.get_fill_opacity()
+        decimal = DecimalNumber(opacity, num_decimal_points = 2)
+        decimal.scale_to_fit_width(0.85*neuron.get_width())
+        if decimal.number > 0.8:
+            decimal.set_fill(BLACK)
+        decimal.move_to(neuron)
+        return decimal
+
 
 
 
