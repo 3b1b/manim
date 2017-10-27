@@ -46,13 +46,15 @@ class Integer(VGroup):
 
 class ChangingDecimal(Animation):
     CONFIG = {
-        "num_decimal_points" : 2,
+        "num_decimal_points" : None,
         "spare_parts" : 2,
         "position_update_func" : None,
         "tracked_mobject" : None,
     }
     def __init__(self, decimal_number, number_update_func, **kwargs):
         digest_config(self, kwargs, locals())
+        if self.num_decimal_points is None:
+            self.num_decimal_points = decimal_number.num_decimal_points
         decimal_number.add(*[
             VectorizedPoint(decimal_number.get_corner(DOWN+LEFT))
             for x in range(self.spare_parts)]
