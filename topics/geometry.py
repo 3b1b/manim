@@ -368,7 +368,8 @@ class Arrow(Line):
         Line.scale(self, scale_factor, **kwargs)
         if self.preserve_tip_size_when_scaling:
             self.set_tip_points(self.tip)
-        self.set_rectangular_stem_points()
+        if self.use_rectangular_stem:
+            self.set_rectangular_stem_points()
         return self
 
 class Vector(Arrow):
