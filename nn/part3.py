@@ -3263,7 +3263,7 @@ class SimplestNetworkExample(PreviewLearning):
         dz_daLm1.shift(0.7*SMALL_BUFF*UP)
         dz_daLm1[0].highlight(self.z_color)
         wL = self.zL_formula[2].copy()
-        wL.next_to(self.chain_rule_rhs, LEFT, SMALL_BUFF)
+        wL.next_to(self.chain_rule_rhs[0], LEFT, SMALL_BUFF)
 
         arrow = Arrow(
             dz_daLm1.get_bottom(), wL.get_bottom(),
@@ -3387,7 +3387,192 @@ class SimplestNetworkExample(PreviewLearning):
         self.all_comp_graph_parts = result
         return result
 
+class IsntThatOverSimplified(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Isn't that over-simplified?", 
+            target_mode = "raise_right_hand",
+            run_time = 1
+        )
+        self.change_student_modes(
+            "pondering", "raise_right_hand", "pondering"
+        )
+        self.dither()
+        self.teacher_says(
+            "Not that much, actually!",
+            run_time = 1,
+            target_mode = "hooray"
+        )
+        self.dither(2)
 
+class GeneralFormulas(SimplestNetworkExample):
+    CONFIG = {
+        "layer_sizes" : [3, 3, 2],
+        "network_mob_config" : {
+            "include_output_labels" : False,
+            "neuron_to_neuron_buff" : LARGE_BUFF,
+            "neuron_radius" : 0.3,
+        },
+        "stroke_width_exp" : 0.5,
+        "random_seed" : 1,
+    }
+    def setup(self):
+        self.seed_random_libraries()
+        self.setup_bases()
+
+    def construct(self):
+        self.force_skipping()
+
+        self.setup_network_mob()
+        self.show_all_a_labels()
+        self.only_show_abstract_a_labels()
+        self.add_desired_output()
+        self.show_cost()
+        self.show_example_weight()
+        self.show_values_between_weight_and_cost()
+        self.show_weight_chain_rule()
+        self.show_multiple_paths_from_prev_layer_neuron()
+        self.show_derivative_wrt_prev_activation()
+
+    def setup_network_mob(self):
+        self.color_network_edges()
+        self.network_mob.to_edge(LEFT)
+        in_vect = np.random.random(self.layer_sizes[0])
+        self.network_mob.activate_layers(in_vect)
+        self.remove(self.network_mob.layers[0])
+        self.remove(self.network_mob.edge_groups[0])
+
+    def show_all_a_labels(self):
+        Lm1_neurons = self.network_mob.layers[-2].neurons
+        L_neurons = self.network_mob.layers[-1].neurons
+        all_arrows = VGroup()
+        all_labels = VGroup()
+        all_decimals = VGroup()
+        all_subscript_rects = VGroup()
+        for neurons in L_neurons, Lm1_neurons:
+            is_L = neurons is L_neurons
+            vect = LEFT if is_L else RIGHT
+            s = "L" if is_L else "L-1"
+            arrows = VGroup()
+            labels = VGroup()
+            decimals = VGroup()
+            subscript_rects = VGroup()
+            for i, neuron in enumerate(neurons):
+                arrow = Arrow(ORIGIN, vect)
+                arrow.next_to(neuron, -vect)
+                arrow.set_fill(WHITE)
+                label = TexMobject("a^{(%s)}_%d"%(s, i))
+                label.next_to(arrow, -vect)
+                rect = SurroundingRectangle(label[-1], buff = 0.5*SMALL_BUFF)
+                decimal = self.get_neuron_activation_decimal(neuron)
+                neuron.arrow = arrow
+                neuron.label = label
+                neuron.decimal = decimal
+                arrows.add(arrow)
+                labels.add(label)
+                decimals.add(decimal)
+                subscript_rects.add(rect)
+            all_arrows.add(arrows)
+            all_labels.add(labels)
+            all_decimals.add(decimals)
+            all_subscript_rects.add(subscript_rects)
+
+        start_labels, start_arrows = [
+            VGroup(*map(VGroup, [group[i][0] for i in 0, 1])).copy()
+            for group in all_labels, all_arrows
+        ]
+        for label in start_labels:
+            label[0][-1].highlight(BLACK)
+
+        self.add(all_decimals)
+        self.play(*it.chain(
+            map(Write, start_labels),
+            [GrowArrow(a[0]) for a in start_arrows]
+        ))
+        self.dither()
+        self.play(
+            ReplacementTransform(start_labels, all_labels),
+            ReplacementTransform(start_arrows, all_arrows),
+        )
+        self.play(LaggedStart(
+            ShowCreationThenDestruction,
+            VGroup(*all_subscript_rects.family_members_with_points()),
+            lag_ratio = 0.7
+        ))
+        self.dither()
+
+        self.set_variables_as_attrs(
+            L_neurons, Lm1_neurons,
+            all_arrows, all_labels,
+            all_decimals, all_subscript_rects,
+        )
+
+    def only_show_abstract_a_labels(self):
+        arrows_to_fade = VGroup()
+        labels_to_fade = VGroup()
+        labels_to_change = VGroup()
+        self.chosen_neurons = VGroup()
+        rects = VGroup()
+        for x, layer in enumerate(self.network_mob.layers[-2:]):
+            for y, neuron in enumerate(layer.neurons):
+                if (x == 0 and y == 2) or (x == 1 and y == 0):
+                    tex = "k" if x == 0 else "j"
+                    neuron.label.generate_target()
+                    self.replace_subscript(neuron.label.target, tex)
+                    self.chosen_neurons.add(neuron)
+                    labels_to_change.add(neuron.label)
+                    rects.add(SurroundingRectangle(
+                        neuron.label.target[-1], 
+                        buff = 0.5*SMALL_BUFF
+                    ))
+                else:
+                    labels_to_fade.add(neuron.label)
+                    arrows_to_fade.add(neuron.arrow)
+
+        self.play(
+            LaggedStart(FadeOut, labels_to_fade),
+            LaggedStart(FadeOut, arrows_to_fade),
+            run_time = 1
+        )
+        for neuron, rect in zip(self.chosen_neurons, rects):
+            self.play(
+                MoveToTarget(neuron.label),
+                ShowCreation(rect)
+            )
+            self.play(FadeOut(rect))
+            self.dither()
+        self.dither()
+
+    def add_desired_output(self):
+        pass
+
+    def show_cost(self):
+        pass
+
+    def show_example_weight(self):
+        pass
+
+    def show_values_between_weight_and_cost(self):
+        pass
+
+    def show_weight_chain_rule(self):
+        pass
+
+    def show_multiple_paths_from_prev_layer_neuron(self):
+        pass
+
+    def show_derivative_wrt_prev_activation(self):
+        pass
+
+    ####
+
+    def replace_subscript(self, label, tex):
+        subscript = label[-1]
+        new_subscript = TexMobject(tex)
+        new_subscript.replace(subscript)
+        label.remove(subscript)
+        label.add(new_subscript)
+        return label
 
 
 
