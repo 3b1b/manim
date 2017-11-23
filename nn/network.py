@@ -21,12 +21,12 @@ import cPickle
 from nn.mnist_loader import load_data_wrapper
 
 NN_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
-# PRETRAINED_DATA_FILE = os.path.join(NN_DIRECTORY, "pretrained_weights_and_biases_36")
+# PRETRAINED_DATA_FILE = os.path.join(NN_DIRECTORY, "pretrained_weights_and_biases_80")
 # PRETRAINED_DATA_FILE = os.path.join(NN_DIRECTORY, "pretrained_weights_and_biases_ReLU")
 PRETRAINED_DATA_FILE = os.path.join(NN_DIRECTORY, "pretrained_weights_and_biases")
 IMAGE_MAP_DATA_FILE = os.path.join(NN_DIRECTORY, "image_map")
 # PRETRAINED_DATA_FILE = "/Users/grant/cs/manim/nn/pretrained_weights_and_biases_on_zero"
-# DEFAULT_LAYER_SIZES = [28**2, 36, 10]
+# DEFAULT_LAYER_SIZES = [28**2, 80, 10]
 DEFAULT_LAYER_SIZES = [28**2, 16, 16, 10]
 
 class Network(object):

@@ -399,11 +399,17 @@ class Mobject(object):
 
     ## Color functions
 
-    def highlight(self, color = YELLOW_C, family = True, condition = None):
+    def highlight(self, color = YELLOW_C, family = True):
         """
         Condition is function which takes in one arguments, (x, y, z).
+        Here it just recurses to submobjects, but in subclasses this 
+        should be further implemented based on the the inner workings
+        of color
         """
-        raise Exception("Not implemented")
+        if family:
+            for submob in self.submobjects:
+                submob.highlight(color, family = family)
+        return self
 
     def gradient_highlight(self, *colors):
         self.submobject_gradient_highlight(*colors)
@@ -446,11 +452,14 @@ class Mobject(object):
         return self.color
     ##
 
-    def save_state(self):
+    def save_state(self, use_deepcopy = False):
         if hasattr(self, "saved_state"):
             #Prevent exponential growth of data
             self.saved_state = None
-        self.saved_state = self.copy()
+        if use_deepcopy:
+            self.saved_state = self.deepcopy()
+        else:
+            self.saved_state = self.copy()
         return self
 
     def restore(self):

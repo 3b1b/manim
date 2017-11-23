@@ -61,6 +61,10 @@ class Scene(object):
         """
         pass
 
+    def setup_bases(self):
+        for base in self.__class__.__bases__:
+            base.setup(self)
+
     def construct(self):
         pass #To be implemented in subclasses
 
@@ -71,19 +75,23 @@ class Scene(object):
         self.name = name
         return self
 
-    def update_shared_locals(self, *keys):
+    def set_variables_as_attrs(self, *objects, **newly_named_objects):
         """
-        Often in constructing a scene, it's nice to refer to
-        what was a local variable from a previous subroutine,
-        so a dict of shared_locals is recorded, and it can be updated
-        by passing in the objects directly.
+        This method is slightly hacky, making it a little easier
+        for certain methods (typically subroutines of construct)
+        to share local variables.
         """
         caller_locals = inspect.currentframe().f_back.f_locals
-        self.shared_locals.update(dict([
-            (key, caller_locals[key])
-            for key in keys
-        ]))
+        for key, value in caller_locals.items():
+            for o in objects:
+                if value is o:
+                    setattr(self, key, value)
+        for key, value in newly_named_objects.items():
+            setattr(self, key, value)
         return self
+
+    def get_attrs(self, *keys):
+        return [getattr(self, key) for key in keys]
 
     ### Only these methods should touch the camera
 
@@ -341,7 +349,7 @@ class Scene(object):
                 animations.pop()
                 #method should already have target then.
             else:
-                mobject.target = mobject.deepcopy()
+                mobject.target = mobject.copy()
             state["curr_method"].im_func(
                 mobject.target, *state["method_args"]
             )
@@ -479,14 +487,14 @@ class Scene(object):
 
         command = [
             FFMPEG_BIN,
-            '-y',                 # overwrite output file if it exists
+            '-y', # overwrite output file if it exists
             '-f', 'rawvideo',
             '-vcodec','rawvideo',
             '-s', '%dx%d'%(width, height), # size of one frame
             '-pix_fmt', 'rgba',
             '-r', str(fps), # frames per second
-            '-i', '-',      # The imput comes from a pipe
-            '-an',          # Tells FFMPEG not to expect any audio
+            '-i', '-', # The imput comes from a pipe
+            '-an', # Tells FFMPEG not to expect any audio
             '-vcodec', 'mpeg',
             '-c:v', 'libx264',
             '-pix_fmt', 'yuv420p',
