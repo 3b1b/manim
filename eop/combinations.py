@@ -36,6 +36,8 @@ def get_stack(
     obj1, obj2, n, k,
     fixed_start = None,
     fixed_end = None,
+    obj_to_obj_buff = SMALL_BUFF,
+    vertical_buff = MED_SMALL_BUFF,
     ):
     stack = VGroup()
     for indices in it.combinations(range(n), k):
@@ -47,9 +49,9 @@ def get_stack(
             term.add_to_back(fixed_start.copy())
         if fixed_end:
             term.add(fixed_end.copy())
-        term.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        term.arrange_submobjects(RIGHT, buff = obj_to_obj_buff)
         stack.add(term)
-    stack.arrange_submobjects(DOWN)
+    stack.arrange_submobjects(DOWN, buff = vertical_buff)
     return stack
 
 def get_stacks(obj1, obj2, n, **kwargs):
@@ -802,12 +804,13 @@ class ProbabilityOfThreeWomenInGroupOfFive(Scene):
         ])
         return lineup
 
-    def get_lineup(self, *mobjects):
+    def get_lineup(self, *mobjects, **kwargs):
+        buff = kwargs.get("buff", MED_SMALL_BUFF)
         lines = VGroup(*[
             Line(ORIGIN, self.item_line_width*RIGHT)
             for mob in mobjects
         ])
-        lines.arrange_submobjects(RIGHT)
+        lines.arrange_submobjects(RIGHT, buff = buff)
         items = VGroup()
         for line, mob in zip(lines, mobjects):
             item = VectorizedPoint() if mob is None else mob.copy()
@@ -823,6 +826,337 @@ class RememberThisSensation(TeacherStudentsScene):
         self.teacher_says("Remember this \\\\ sensation")
         self.change_student_modes("confused", "pondering", "erm")
         self.dither(2)
+
+class GroupsOf6(Scene):
+    def construct(self):
+        title = TexMobject("2^6 =", "64", "\\text{ Possibilities}")
+        title.to_edge(UP, buff = MED_SMALL_BUFF)
+        title.highlight_by_tex("64", YELLOW)
+        man, woman = Male(), Female()
+        stacks = get_stacks(man, woman, 6, vertical_buff = SMALL_BUFF)
+        stacks.scale_to_fit_height(6.25)
+        stacks.to_edge(DOWN, buff = MED_SMALL_BUFF)
+        women_groups = VGroup()
+        for stack in stacks:
+            for lineup in stack:
+                group = VGroup()
+                for item in lineup:
+                    if "female" in item.get_tex_string():
+                        group.add(item)
+                women_groups.add(group)
+
+        numbers = VGroup()
+        for stack in stacks:
+            number = TexMobject(str(len(stack)))
+            number.next_to(stack, UP, SMALL_BUFF)
+            numbers.add(number)
+
+        self.add(title)
+        self.play(LaggedStart(
+            LaggedStart, stacks,
+            lambda s : (FadeIn, s),
+            run_time = 3,
+        ))
+        self.play(Write(numbers, run_time = 3))
+        self.dither()
+        self.play(LaggedStart(
+            ApplyMethod, women_groups,
+            lambda m : (m.highlight, PINK),
+            lag_ratio = 0.1,
+            rate_func = wiggle,
+            run_time = 6,
+        ))
+
+class GroupsOf7(Scene):
+    def construct(self):
+        stack = get_stack(Male(), Female(), 7, 3)
+        question = TextMobject(
+            "How many groups \\\\ of 7 with 3 ", "$\\female$", "?"
+        )
+        question.highlight_by_tex("female", MAROON_B)
+        question.shift(1.5*UP)
+
+        self.add(question)
+        for n, item in enumerate(stack):
+            item.center()
+            number = TexMobject(str(n))
+            number.next_to(ORIGIN, DOWN, LARGE_BUFF)
+            self.add(item, number)
+            self.dither(0.2)
+            self.remove(item, number)
+        self.add(item, number)
+        self.dither(2)
+
+class BuildFiveFromFour(ProbabilityOfThreeWomenInGroupOfFive):
+    def construct(self):
+        self.show_all_configurations_of_four()
+        self.organize_into_stacks()
+        self.walk_through_stacks()
+        self.split_into_two_possibilities()
+        self.combine_stacks()
+
+    def show_all_configurations_of_four(self):
+        man, woman = Male(), Female()
+        n = 4
+        vects = [
+            1.5*UP,
+            0.5*UP,
+            3.5*RIGHT,
+            1.5*RIGHT,
+        ]
+        lineup_groups = VGroup()
+        for k in range(n+1):
+            lineup_group = VGroup()
+            for tup in it.product(*[[man, woman]]*k):
+                lineup = self.get_lineup(*list(tup) + (n-k)*[None])
+                lineup.scale(1.4*(0.9)**k)
+                lineup.move_to(0.5*DOWN)
+                for mob, vect in zip(tup, vects):
+                    if mob is woman:
+                        lineup.shift(vect)
+                    else:
+                        lineup.shift(-vect)
+                lineup_group.add(lineup)
+            lineup_groups.add(lineup_group)
+
+        n_possibilities = TexMobject(
+            "2 \\cdot", "2 \\cdot", "2 \\cdot", "2",
+            "\\text{ Possibilities}"
+        )
+        n_possibilities.to_edge(UP)
+        twos = VGroup(*n_possibilities[-2::-1])
+        two_anims = [
+            ReplacementTransform(
+                VectorizedPoint(twos[0].get_center()), 
+                twos[0]
+            )
+        ] + [
+            ReplacementTransform(t1.copy(), t2)
+            for t1, t2 in zip(twos, twos[1:])
+        ]
+
+        curr_lineup_group = lineup_groups[0]
+        self.play(
+            ShowCreation(curr_lineup_group[0]),
+        )
+        for i, lineup_group in enumerate(lineup_groups[1:]):
+            anims = [ReplacementTransform(curr_lineup_group, lineup_group)]
+            anims += two_anims[:i+1]
+            if i == 0:
+                anims.append(FadeIn(n_possibilities[-1]))
+            self.remove(twos)
+            self.play(*anims)
+            self.dither()
+            curr_lineup_group = lineup_group
+        self.lineups = curr_lineup_group
+
+        eq_16 = TexMobject("=", "16")
+        eq_16.move_to(twos.get_right())
+        eq_16.highlight_by_tex("16", YELLOW)
+        self.play(
+            n_possibilities[-1].next_to, eq_16, RIGHT,
+            twos.next_to, eq_16, LEFT,
+            FadeIn(eq_16),
+        )
+        self.dither()
+
+        n_possibilities.add(eq_16)
+        self.n_possibilities = n_possibilities
+
+    def organize_into_stacks(self):
+        lineups = self.lineups
+        stacks = VGroup(*[VGroup() for x in range(5)])
+        for lineup in lineups:
+            women = filter(
+                lambda m : "female" in m.get_tex_string(),
+                lineup.items
+            )
+            stacks[len(women)].add(lineup)
+        stacks.generate_target()
+        stacks.target.scale(0.75)
+        for stack in stacks.target:
+            stack.arrange_submobjects(DOWN, buff = SMALL_BUFF)
+        stacks.target.arrange_submobjects(
+            RIGHT, buff = MED_LARGE_BUFF, aligned_edge = DOWN
+        )
+        stacks.target.to_edge(DOWN, buff = MED_SMALL_BUFF)
+
+        self.play(MoveToTarget(
+            stacks, 
+            run_time = 2,
+            path_arc = np.pi/2
+        ))
+        self.dither()
+
+        self.stacks = stacks
+
+    def walk_through_stacks(self):
+        stacks = self.stacks
+        numbers = VGroup()
+
+        for stack in stacks:
+            rect = SurroundingRectangle(stack)
+            rect.set_stroke(WHITE, 2)
+            self.play(ShowCreation(rect))
+            for n, lineup in enumerate(stack):
+                lineup_copy = lineup.copy()
+                lineup_copy.highlight(YELLOW)
+                number = TexMobject(str(n+1))
+                number.next_to(stack, UP)
+                self.add(lineup_copy, number)
+                self.dither(0.25)
+                self.remove(lineup_copy, number)
+            self.add(number)
+            numbers.add(number)
+            self.play(FadeOut(rect))
+        self.dither()
+
+        stacks.numbers = numbers
+
+    def split_into_two_possibilities(self):
+        bottom_stacks = self.stacks
+        top_stacks = bottom_stacks.deepcopy()
+        top_group = VGroup(top_stacks, top_stacks.numbers)
+
+        h_line = DashedLine(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+
+        #Initial split
+        self.play(
+            FadeOut(self.n_possibilities),
+            top_group.to_edge, UP, MED_SMALL_BUFF,
+        )
+        self.play(ShowCreation(h_line))
+
+        #Add extra slot
+        for stacks, sym in (top_stacks, Female()), (bottom_stacks, Male()):
+            sym.set_fill(opacity = 0)
+            new_stacks = VGroup()
+            to_fade_in = VGroup()
+            for stack in stacks:
+                new_stack = VGroup()
+                for lineup in stack:
+                    new_lineup = self.get_lineup(*[
+                        Female() if "female" in item.get_tex_string() else Male()
+                        for item in lineup.items
+                    ] + [sym], buff = SMALL_BUFF)
+                    new_lineup.replace(lineup, dim_to_match = 1)
+                    new_stack.add(new_lineup)
+                    for group in lineup.items, lineup.lines:
+                        point = VectorizedPoint(group[-1].get_center())
+                        group.add(point)
+                    to_fade_in.add(lineup.items[-1])
+                new_stacks.add(new_stack)
+            new_stacks.arrange_submobjects(
+                RIGHT, buff = MED_LARGE_BUFF, aligned_edge = DOWN
+            )
+            new_stacks.move_to(stacks, DOWN)
+            stacks.target = new_stacks
+            stacks.to_fade_in = to_fade_in
+
+            stacks.numbers.generate_target()
+            for number, stack in zip(stacks.numbers.target, new_stacks):
+                number.next_to(stack, UP)
+
+        for stacks in top_stacks, bottom_stacks:
+            self.play(
+                MoveToTarget(stacks),
+                MoveToTarget(stacks.numbers)
+            )
+        self.dither()
+
+        #Fill extra slot
+        add_man = TextMobject("Add", "$\\male$")
+        add_man.highlight_by_tex("male", BLUE)
+        add_woman = TextMobject("Add", "$\\female$")
+        add_woman.highlight_by_tex("female", MAROON_B)
+
+        add_man.next_to(ORIGIN, DOWN).to_edge(LEFT)
+        add_woman.to_corner(UP+LEFT)
+
+        for stacks, words in (bottom_stacks, add_man), (top_stacks, add_woman):
+            to_fade_in = stacks.to_fade_in
+            to_fade_in.set_fill(opacity = 1)
+            to_fade_in.save_state()
+            Transform(to_fade_in, VGroup(words[-1])).update(1)
+
+            self.play(Write(words, run_time = 1))
+            self.play(to_fade_in.restore)
+            self.dither()
+
+        #Perform shift
+        dist = top_stacks[1].get_center()[0] - top_stacks[0].get_center()[0]
+        self.play(
+            top_stacks.shift, dist*RIGHT/2,
+            top_stacks.numbers.shift, dist*RIGHT/2,
+            bottom_stacks.shift, dist*LEFT/2,
+            bottom_stacks.numbers.shift, dist*LEFT/2,
+        )
+        self.dither()
+        self.play(*map(FadeOut, [add_man, add_woman, h_line]))
+
+        self.set_variables_as_attrs(top_stacks, bottom_stacks)
+
+    def combine_stacks(self):
+        top_stacks = self.top_stacks
+        bottom_stacks = self.bottom_stacks
+
+        rects = VGroup()
+        for stacks, color in (top_stacks, MAROON_C), (bottom_stacks, BLUE_D):
+            for stack in stacks:
+                rect = SurroundingRectangle(stack)
+                rect.set_stroke(color, 2)
+                rects.add(rect)
+                stack.add(rect)
+
+        new_numbers = VGroup()
+
+        self.play(LaggedStart(ShowCreation, rects, run_time = 1))
+        for i, top_stack in enumerate(top_stacks[:-1]):
+            bottom_stack = bottom_stacks[i+1]
+            top_number = top_stacks.numbers[i]
+            bottom_number = bottom_stacks.numbers[i+1]
+            movers = top_stack, top_number, bottom_number
+            for mob in movers:
+                mob.generate_target()
+            top_stack.target.move_to(bottom_stack.get_top(), DOWN)
+            plus = TexMobject("+")
+            expr = VGroup(top_number.target, plus, bottom_number.target)
+            expr.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+            expr.next_to(top_stack.target.get_top(), UP)
+
+            new_number = TexMobject(str(
+                len(top_stack) + len(bottom_stack) - 2
+            ))
+            new_number.next_to(expr, UP)
+            new_numbers.add(new_number)
+
+            self.play(
+                Write(plus),
+                *map(MoveToTarget, movers)
+            )
+        self.play(
+            VGroup(top_stacks[-1], top_stacks.numbers[-1]).align_to,
+            bottom_stacks, DOWN
+        )
+        self.dither()
+
+        new_numbers.add_to_back(bottom_stacks.numbers[0].copy())
+        new_numbers.add(top_stacks.numbers[-1].copy())
+        new_numbers.highlight(PINK)
+        self.play(Write(new_numbers, run_time = 3))
+        self.dither()
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
