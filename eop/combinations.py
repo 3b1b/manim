@@ -1146,10 +1146,417 @@ class BuildFiveFromFour(ProbabilityOfThreeWomenInGroupOfFive):
         self.play(Write(new_numbers, run_time = 3))
         self.dither()
 
+class BuildUpFromStart(Scene):
+    CONFIG = {
+        "n_iterations" : 7,
+    }
+    def construct(self):
+        stacks = VGroup(VGroup(Male()), VGroup(Female()))
+        stacks.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        stacks.numbers = self.get_numbers(stacks)
+
+        max_width = 2*SPACE_WIDTH - 3
+        max_height = SPACE_HEIGHT - 1
+
+        self.add(stacks, stacks.numbers)
+        for x in range(self.n_iterations):
+            if x < 2:
+                dither_time = 1
+            else:
+                dither_time = 0.2
+            #Divide
+            low_stacks = stacks
+            low_group = VGroup(low_stacks, low_stacks.numbers)
+            top_stacks = stacks.deepcopy()
+            top_group = VGroup(top_stacks, top_stacks.numbers)
+            for group, vect in (top_group, UP), (low_group, DOWN):
+                group.generate_target()
+                if group[0].get_height() > max_height:
+                    group.target[0].stretch_to_fit_height(max_height)
+                    for stack, num in zip(*group.target):
+                        num.next_to(stack, UP)
+                group.target.next_to(ORIGIN, vect)
+            self.play(*map(MoveToTarget, [top_group, low_group]))
+            self.dither(dither_time)
+
+            #Expand
+            for stacks, i in (low_stacks, 0), (top_stacks, -1):
+                sym = stacks[i][i][i]
+                new_stacks = VGroup()
+                for stack in stacks:
+                    new_stack = VGroup()
+                    for line in stack:
+                        new_line = line.copy()
+                        new_sym = sym.copy()
+                        buff = 0.3*line.get_height()
+                        new_sym.next_to(line, RIGHT, buff = buff)
+                        new_line.add(new_sym)
+                        line.add(VectorizedPoint(line[-1].get_center()))
+                        new_stack.add(new_line)
+                    new_stacks.add(new_stack)
+                new_stacks.arrange_submobjects(
+                    RIGHT, buff = LARGE_BUFF, aligned_edge = DOWN
+                )
+                if new_stacks.get_width() > max_width:
+                    new_stacks.stretch_to_fit_width(max_width)
+                if new_stacks.get_height() > max_height:
+                    new_stacks.stretch_to_fit_height(max_height)
+                new_stacks.move_to(stacks, DOWN)
+                stacks.target = new_stacks
+                stacks.numbers.generate_target()
+
+                for num, stack in zip(stacks.numbers.target, new_stacks):
+                    num.next_to(stack, UP)
+            self.play(*map(MoveToTarget, [
+                top_stacks, low_stacks,
+                top_stacks.numbers, low_stacks.numbers,
+            ]))
+            self.dither(dither_time)
+
+            #Shift
+            dist = top_stacks[1].get_center()[0] - top_stacks[0].get_center()[0]
+            self.play(
+                top_group.shift, dist*RIGHT/2,
+                low_group.shift, dist*LEFT/2,
+            )
+            self.dither(dither_time)
+
+            #Stack
+            all_movers = VGroup()
+            plusses = VGroup()
+            expressions = VGroup(low_stacks.numbers[0])
+            stacks = VGroup(low_stacks[0])
+            v_buff = 0.25*stacks[0][0].get_height()
+
+            for i, top_stack in enumerate(top_stacks[:-1]):
+                low_stack = low_stacks[i+1]
+                top_num = top_stacks.numbers[i]
+                low_num = low_stacks.numbers[i+1]
+                movers = [top_stack, top_num, low_num]
+                for mover in movers:
+                    mover.generate_target()
+                plus = TexMobject("+")
+                expr = VGroup(top_num.target, plus, low_num.target)
+                expr.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+                top_stack.target.next_to(low_stack, UP, buff = v_buff)
+                expr.next_to(top_stack.target, UP)
+
+                all_movers.add(*movers)
+                plusses.add(plus)
+                expressions.add(VGroup(top_num, plus, low_num))
+                stacks.add(VGroup(*it.chain(low_stack, top_stack)))
+
+            last_group = VGroup(top_stacks[-1], top_stacks.numbers[-1])
+            last_group.generate_target()
+            last_group.target.align_to(low_stacks, DOWN)
+            all_movers.add(last_group)
+            stacks.add(top_stacks[-1])
+            expressions.add(top_stacks.numbers[-1])
+
+            self.play(*it.chain(
+                map(MoveToTarget, all_movers),
+                map(Write, plusses),
+            ))
+
+            #Add
+            new_numbers = self.get_numbers(stacks)
+            self.play(ReplacementTransform(
+                expressions, VGroup(*map(VGroup, new_numbers))
+            ))
+            self.dither(dither_time)
+            stacks.numbers = new_numbers
 
 
+    ####
 
+    def get_numbers(self, stacks):
+        return VGroup(*[
+            TexMobject(str(len(stack))).next_to(stack, UP)
+            for stack in stacks
+        ])
 
+class PascalsTriangle(Scene):
+    CONFIG = {
+        "max_n" : 9,
+    }
+    def construct(self):
+        self.show_triangle()
+        self.show_sum_of_two_over_rule()
+        self.keep_in_mind_what_these_mean()
+        self.issolate_9_choose_4_term()
+        self.show_9_choose_4_pattern()
+        self.cap_off_triangle()
+
+    def show_triangle(self):
+        distance = 0.8
+        max_width = 0.7*distance
+        angle = 0.2*np.pi
+        t_down = rotate_vector(distance*DOWN, -angle)
+        t_right = 2*distance*np.sin(angle)*RIGHT
+
+        rows = VGroup()
+        for n in range(self.max_n + 1):
+            row = VGroup()
+            for k in range(n+1):
+                num = TexMobject(str(choose(n, k)))
+                # if num.get_width() > max_width:
+                #     num.scale_to_fit_width(max_width)
+                num.shift(n*t_down + k*t_right)
+                row.add(num)
+            rows.add(row)
+        rows.to_edge(UP)
+
+        self.play(FadeIn(rows[1]))
+        for last_row, curr_row in zip(rows[1:], rows[2:]):
+            self.play(*[
+                Transform(
+                    last_row.copy(), VGroup(*mobs),
+                    remover = True
+                )
+                for mobs in curr_row[1:], curr_row[:-1]
+            ])
+            self.add(curr_row)
+        self.dither()
+
+        self.rows = rows
+
+    def show_sum_of_two_over_rule(self):
+        rows = self.rows
+
+        example = rows[5][3]
+        ex_top1 = rows[4][2]
+        ex_top2 = rows[4][3]
+
+        rects = VGroup()
+        for mob, color in (example, GREEN), (ex_top1, BLUE), (ex_top2, YELLOW):
+            mob.rect = SurroundingRectangle(mob, color = color)
+            rects.add(mob.rect)
+
+        rows_to_fade = VGroup(*rows[1:4] + rows[6:])
+        rows_to_fade.save_state()
+
+        top_row = rows[4]
+        low_row = rows[5]
+        top_row_copy = top_row.copy()
+        top_row.save_state()
+        top_row.add(ex_top2.rect)
+        top_row_copy.add(ex_top1.rect)
+        h_line = Line(LEFT, RIGHT)
+        h_line.stretch_to_fit_width(low_row.get_width() + 2)
+        h_line.next_to(low_row, UP, 1.5*SMALL_BUFF)
+        plus = TexMobject("+")
+        plus.next_to(h_line.get_left(), UP+RIGHT, buff = 1.5*SMALL_BUFF)
+
+        self.play(ShowCreation(example.rect))
+        self.play(
+            ReplacementTransform(example.rect.copy(), ex_top1.rect),
+            ReplacementTransform(example.rect.copy(), ex_top2.rect),
+        )
+        self.dither(2)
+        self.play(rows_to_fade.fade, 1)
+        self.play(
+            top_row.align_to, low_row, LEFT,
+            top_row_copy.next_to, top_row, UP,
+            top_row_copy.align_to, low_row, RIGHT,
+        )
+        self.play(
+            ShowCreation(h_line),
+            Write(plus)
+        )
+        self.dither(2)
+        for row in top_row, top_row_copy:
+            row.remove(row[-1])
+        self.play(
+            rows_to_fade.restore,
+            top_row.restore,
+            Transform(
+                top_row_copy, top_row.saved_state,
+                remover = True
+            ),
+            FadeOut(VGroup(h_line, plus)),
+            FadeOut(rects),
+        )
+        self.dither()
+
+    def keep_in_mind_what_these_mean(self):
+        morty = Mortimer().flip()
+        morty.scale(0.7)
+        morty.to_edge(LEFT)
+        morty.shift(DOWN)
+
+        numbers = VGroup(*it.chain(*self.rows[1:]))
+        random.shuffle(numbers.submobjects)
+
+        self.play(FadeIn(morty))
+        self.play(PiCreatureSays(
+            morty, "Keep in mind \\\\ what these mean.",
+            bubble_kwargs = {
+                "width" : 3.5,
+                "height" : 2.5,
+            }
+        ))
+        self.play(
+            Blink(morty),
+            LaggedStart(
+                Indicate, numbers,
+                rate_func = wiggle,
+                color = PINK,
+            )
+        )
+        self.play(*map(FadeOut, [
+            morty, morty.bubble, morty.bubble.content
+        ]))
+
+    def issolate_9_choose_4_term(self):
+        rows = self.rows
+
+        for n in range(1, self.max_n+1):
+            num = rows[n][0]
+            line = get_stack(Female(), Male(), n, 0)[0]
+            if n < self.max_n:
+                line.next_to(num, LEFT)
+            else:
+                line.next_to(num, DOWN, MED_LARGE_BUFF)
+            self.highlight_num(num)
+            self.add(line)
+            if n < self.max_n:
+                self.dither(0.25)
+            else:
+                self.dither(1.25)
+            self.dehighlight_num(num)
+            self.remove(line)
+        for k in range(1, 5):
+            num = rows[self.max_n][k]
+            line = get_stack(Female(), Male(), self.max_n, k)[0]
+            line.next_to(num, DOWN, MED_LARGE_BUFF)
+            self.highlight_num(num)
+            self.add(line)
+            self.dither(0.5)
+            self.dehighlight_num(num)
+            self.remove(line)
+        num.highlight(YELLOW)
+        num.scale_in_place(1.2)
+        self.add(line)
+        self.dither()
+
+        self.nine_choose_four_term = num
+        self.nine_choose_four_line = line
+
+    def show_9_choose_4_pattern(self):
+        rows = VGroup(*self.rows[1:])
+        all_stacks = get_stacks(Female(), Male(), 9)
+        stack = all_stacks[4]
+        all_lines = VGroup(*it.chain(*all_stacks))
+
+        self.play(
+            rows.shift, 3*UP,
+            self.nine_choose_four_line.shift, 2.5*UP,
+        )
+        self.remove(self.nine_choose_four_line)
+
+        for n, line in enumerate(stack):
+            line.next_to(self.nine_choose_four_term, DOWN, LARGE_BUFF)
+            num = Integer(n+1)
+            num.next_to(line, DOWN, MED_LARGE_BUFF)
+            self.add(line, num)
+            self.dither(0.1)
+            self.remove(line, num)
+        self.add(line, num)
+        self.dither()
+        self.curr_line = line
+
+        #Probability
+        expr = TexMobject(
+            "P(4", "\\female", "\\text{ out of }", "9", ")", "="
+        )
+        expr.move_to(num.get_left())
+        expr.highlight_by_tex("female", MAROON_B)
+        nine_choose_four_term = self.nine_choose_four_term.copy()
+        nine_choose_four_term.generate_target()
+        nine_choose_four_term.target.scale(1./1.2)
+        over_512 = TexMobject("\\quad \\over 2^9")
+        frac = VGroup(nine_choose_four_term.target, over_512)
+        frac.arrange_submobjects(DOWN, buff = SMALL_BUFF)
+        frac.next_to(expr, RIGHT, SMALL_BUFF)
+        eq_result = TexMobject("\\approx 0.246")
+        eq_result.next_to(frac, RIGHT)
+
+        def show_random_lines(n, dither_time = 1):
+            for x in range(n):
+                if x == n-1:
+                    dither_time = 0
+                new_line = random.choice(all_lines)
+                new_line.move_to(self.curr_line)
+                self.remove(self.curr_line)
+                self.curr_line = new_line
+                self.add(self.curr_line)
+                self.dither(dither_time)
+
+        self.play(FadeOut(num), FadeIn(expr))
+        show_random_lines(4)
+        self.play(
+            MoveToTarget(nine_choose_four_term),
+            Write(over_512)
+        )
+        show_random_lines(4)
+        self.play(Write(eq_result))
+        show_random_lines(6)
+        self.play(
+            self.nine_choose_four_term.scale_in_place, 1./1.2,
+            self.nine_choose_four_term.highlight, WHITE,
+            *map(FadeOut, [
+                expr, nine_choose_four_term,
+                over_512, eq_result, self.curr_line
+            ])
+        )
+        self.play(rows.shift, 3*DOWN)
+
+    def cap_off_triangle(self):
+        top_row = self.rows[0]
+        circle = Circle(color = YELLOW)
+        circle.replace(top_row, dim_to_match = 1)
+        circle.scale_in_place(1.5)
+
+        line_groups = VGroup()
+        for n in range(4, -1, -1):
+            line = VGroup(*[
+                random.choice([Male, Female])()
+                for k in range(n)
+            ])
+            if n == 0:
+                line.add(Line(LEFT, RIGHT).scale(0.1).set_stroke(BLACK, 0))
+            line.arrange_submobjects(RIGHT, SMALL_BUFF)
+            line.shift(SPACE_WIDTH*RIGHT/2 + SPACE_HEIGHT*UP/2)
+            brace = Brace(line, UP)
+            if n == 1:
+                label = "1 Person"
+            else:
+                label = "%d People"%n
+            brace_text = brace.get_text(label)
+            line_group = VGroup(line, brace, brace_text)
+            line_groups.add(line_group)
+
+        self.play(ShowCreation(circle))
+        self.play(Write(top_row))
+        self.dither()
+        curr_line_group = line_groups[0]
+        self.play(FadeIn(curr_line_group))
+        for line_group in line_groups[1:]:
+            self.play(ReplacementTransform(
+                curr_line_group, line_group
+            ))
+            curr_line_group = line_group
+        self.dither()
+
+    ###
+
+    def highlight_num(self, num):
+        num.highlight(YELLOW)
+        num.scale_in_place(1.2)
+
+    def dehighlight_num(self, num):
+        num.highlight(WHITE)
+        num.scale_in_place(1.0/1.2)
 
 
 
