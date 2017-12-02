@@ -1558,8 +1558,165 @@ class PascalsTriangle(Scene):
         num.highlight(WHITE)
         num.scale_in_place(1.0/1.2)
 
+class StacksApproachBellCurve(Scene):
+    CONFIG = {
+        "n_iterations" : 30,
+    }
+    def construct(self):
+        bar = Square(side_length = 1)
+        bar.set_fill(BLUE)
+        bar.set_stroke(width = 0)
+        bars = VGroup(bar)
 
+        numbers = VGroup(Integer(1))
+        numbers.next_to(bars, UP, SMALL_BUFF)
 
+        max_width = 2*SPACE_WIDTH - 2
+        max_height = SPACE_HEIGHT - 1.5
+
+        for x in range(self.n_iterations):
+            if x == 0:
+                distance = 1.5
+            else:
+                distance = bars[1].get_center()[0] - bars[0].get_center()[0]
+
+            bars_copy = bars.copy()
+
+            #Copy and shift
+            for mob, vect in (bars, DOWN), (bars_copy, UP):
+                mob.generate_target()
+                if mob.target.get_height() > max_height:
+                    mob.target.stretch_to_fit_height(max_height)
+                if mob.target.get_width() > max_width:
+                    mob.target.stretch_to_fit_width(max_width)
+                mob.target.next_to(ORIGIN, vect, MED_LARGE_BUFF)
+            colors = color_gradient([BLUE, YELLOW], len(bars)+1)
+            for color, bar in zip(colors, bars.target):
+                bar.set_fill(color)
+            for color, bar in zip(colors[1:], bars_copy.target):
+                bar.set_fill(color)
+            bars_copy.set_fill(opacity = 0)
+
+            numbers_copy = numbers.copy()
+            for bs, ns in (bars, numbers), (bars_copy, numbers_copy):
+                ns.generate_target()
+                for bar, number in zip(bs.target, ns.target):
+                    # if number.get_width() > bar.get_width():
+                    #     number.scale_to_fit_width(bar.get_width())
+                    number.next_to(bar, UP, SMALL_BUFF)
+
+            self.play(*map(MoveToTarget, [
+                bars, bars_copy,
+                numbers, numbers_copy
+            ]))
+            self.play(
+                bars.shift, distance*LEFT/2,
+                numbers.shift, distance*LEFT/2,
+                bars_copy.shift, distance*RIGHT/2,
+                numbers_copy.shift, distance*RIGHT/2,
+            )
+
+            #Stack
+            bars_copy.generate_target()
+            numbers.generate_target()
+            numbers_copy.generate_target()
+            new_numbers = VGroup()
+            min_scale_val = 1
+            for i in range(len(bars)-1):
+                top_bar = bars_copy.target[i]
+                low_bar = bars[i+1]
+                top_num = numbers_copy.target[i]
+                low_num = numbers.target[i+1]
+                new_num = Integer(top_num.number + low_num.number)
+                if new_num.get_width() > top_bar.get_width():
+                    min_scale_val = min(
+                        min_scale_val, 
+                        top_bar.get_width() / new_num.get_width()
+                    )
+                new_numbers.add(new_num)
+
+                top_bar.move_to(low_bar.get_top(), DOWN)
+                new_num.next_to(top_bar, UP, SMALL_BUFF)
+                Transform(low_num, new_num).update(1)
+                Transform(top_num, new_num).update(1)
+            for group in new_numbers, numbers.target[1:], numbers_copy.target[:-1]:
+                for num in group:
+                    num.scale(min_scale_val, about_point = num.get_bottom())
+            if x > 1:
+                height = numbers.target[1].get_height()
+                for mob in numbers.target[0], numbers_copy.target[-1]:
+                    mob.scale_to_fit_height(height)
+
+            bars_copy.target[-1].align_to(bars, DOWN)
+            numbers_copy.target[-1].next_to(bars_copy.target[-1], UP, SMALL_BUFF)
+
+            self.play(*[
+                MoveToTarget(mob, submobject_mode = "lagged_start")
+                for mob in bars_copy, numbers, numbers_copy
+            ])
+            self.remove(numbers, numbers_copy)
+            numbers = VGroup(numbers[0])
+            numbers.add(*new_numbers)
+            numbers.add(numbers_copy[-1])
+
+            #Resize lower bars
+            for top_bar, low_bar in zip(bars_copy[:-1], bars[1:]):
+                bottom = low_bar.get_bottom()
+                low_bar.replace(
+                    VGroup(low_bar, top_bar),
+                    stretch = True
+                )
+                low_bar.move_to(bottom, DOWN)
+            bars.add(bars_copy[-1])
+            self.remove(bars_copy)
+            self.add(bars)
+
+        self.add(numbers)
+        self.dither()
+
+class IsThereABetterWayToCompute(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Is there a better \\\\ way to compute these?",
+            target_mode = "raise_left_hand",
+        )
+        self.change_student_modes("confused", "raise_left_hand", "erm")
+        self.dither()
+        self.play(self.teacher.change_mode, "happy")
+        self.dither()
+        self.teacher_says(
+            "There is!  But first...",
+            target_mode = "hooray"
+        )
+        self.dither(2)
+
+class ChooseThreeFromFive(Scene):
+    def construct(self):
+        self.add_people()
+        self.choose_random_triplets()
+        self.mention_equivalence_to_previous_question()
+        self.show_association_with_binary()
+        self.show_how_many_have_ali()
+        self.show_four_choose_two_in_binary()
+
+    def add_people(self):
+        pass
+        
+    def choose_random_triplets(self):
+        pass
+        
+    def mention_equivalence_to_previous_question(self):
+        pass
+        
+    def show_association_with_binary(self):
+        pass
+        
+    def show_how_many_have_ali(self):
+        pass
+        
+    def show_four_choose_two_in_binary(self):
+        pass
+        
 
 
 

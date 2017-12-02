@@ -34,6 +34,7 @@ class Integer(VGroup):
         "digit_buff" : 0.8*SMALL_BUFF
     }
     def __init__(self, integer, **kwargs):
+        self.number = integer
         num_str = str(integer)
         VGroup.__init__(self, *map(TexMobject, num_str), **kwargs)
         self.arrange_submobjects(
