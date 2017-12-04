@@ -17,6 +17,9 @@ class Lightbulb(SVGMobject):
         "file_name" : "lightbulb",
         "height" : 1,
         "stroke_color" : YELLOW,
+        "stroke_width" : 3,
+        "fill_color" : YELLOW,
+        "fill_opacity" : 0,
     }
 
 class BitcoinLogo(SVGMobject):
