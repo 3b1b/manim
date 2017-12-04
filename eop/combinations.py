@@ -110,7 +110,6 @@ class PascalsTraingle(VGroup):
 
 ######################
 
-
 class ExperienceProblemSolver(PiCreatureScene):
     def construct(self):
         self.add_equation()
@@ -226,32 +225,38 @@ class ExperienceProblemSolver(PiCreatureScene):
         self.randy, self.jenny = randy, jenny
         return randy, jenny
 
-class Introduction(Scene):
+class InitialFiveChooseThreeExample(Scene):
     CONFIG = {
-        "start_n" : 4,
+        "n" : 5,
+        "zero_color" : BLUE,
+        "one_color" : PINK,
     }
     def construct(self):
-        self.write_n_choose_k()
-        self.show_binomial_coefficients()
-        self.perform_shift()
+        self.add_title()
+        self.show_all_stacks()
+        self.show_binomial_name()
+        self.issolate_single_stack()
+        self.count_chosen_stack()
+        self.count_ways_to_fill_slots()
+        self.walk_though_notation()
+        self.emphasize_pattern_over_number()
 
-    def write_n_choose_k(self):
+    def add_title(self):
         symbol = TexMobject("n \\choose k")
         words = TextMobject("``n choose k''")
         group = VGroup(symbol, words)
         group.arrange_submobjects(RIGHT)
+        group.to_edge(UP)
 
-        self.play(
-            FadeIn(symbol),
-            Write(words)
-        )
-        self.dither()
+        self.add(group)
+        self.n_choose_k = symbol
+        self.n_choose_k_words = words
 
-        self.set_variables_as_attrs(n_choose_k_group = group)
+    def show_all_stacks(self):
+        n = self.n
+        n_choose_k = self.n_choose_k
+        n_choose_k_words = self.n_choose_k_words
 
-    def show_binomial_coefficients(self):
-        n = self.start_n
-        n_choose_k, n_choose_k_words = self.n_choose_k_group
         binomials = VGroup(*[
             TexMobject("%d \\choose %d"%(n, k))
             for k in range(n+1)
@@ -265,137 +270,338 @@ class Introduction(Scene):
             equation.highlight(YELLOW)
             equation[1].highlight(WHITE)
             binomial_equations.add(equation)
-        new_words = TextMobject("``Binomial coefficients''")
 
         stacks = get_stacks(
-            TexMobject("x").highlight(BLUE),
-            TexMobject("y").highlight(RED),
-            n
+            self.get_obj1(), self.get_obj2(), n,
+            vertical_buff = SMALL_BUFF
         )
-        stacks.to_edge(DOWN, buff = LARGE_BUFF)
+        stacks.to_edge(DOWN, buff = MED_LARGE_BUFF)
         for stack, eq in zip(stacks, binomial_equations):
             eq.scale_to_fit_width(0.9*stack.get_width())
             eq.next_to(stack, UP)
 
-        self.play(
-            FadeIn(stacks, run_time = 2, submobject_mode = "lagged_start"),
-            self.n_choose_k_group.to_edge, UP
-        )
-        new_words.move_to(n_choose_k_words, LEFT)
-        self.play(Transform(n_choose_k_words, new_words))
+        mover = VGroup()
         for eq in binomial_equations:
             point = VectorizedPoint(n_choose_k.get_center())
-            self.play(ReplacementTransform(
-                VGroup(n_choose_k, point, point).copy(),
-                eq
-            ))
-            self.dither()
+            group = VGroup(n_choose_k, point, point).copy()
+            group.target = eq
+            mover.add(group)
+
+        self.play(FadeIn(
+            stacks, 
+            run_time = 2, 
+            submobject_mode = "lagged_start"
+        ))
+        self.play(LaggedStart(
+            MoveToTarget, mover,
+            run_time = 3,
+        ))
+        self.remove(mover)
+        self.add(binomial_equations)
+        self.dither()
 
         self.set_variables_as_attrs(stacks, binomial_equations)
 
-    def perform_shift(self):
-        n = self.start_n
-        to_fade = VGroup(
-            self.n_choose_k_group,
-            self.binomial_equations
-        )
-        stacks = self.stacks
-        top_stacks = stacks.copy()
-        top_stacks.to_edge(UP, buff = MED_SMALL_BUFF)
+    def show_binomial_name(self):
+        new_words = TextMobject("``Binomial coefficients''")
+        new_words.move_to(self.n_choose_k_words, LEFT)
 
-        line = Line(LEFT, RIGHT, color = WHITE)
-        line.scale(SPACE_WIDTH)
-        line.next_to(top_stacks, DOWN)
+        self.play(Transform(self.n_choose_k_words, new_words))
+        self.dither(2)
 
-        x = TexMobject("x").highlight(BLUE)
-        y = TexMobject("y").highlight(RED)
-        add_x, add_y = [
-            TextMobject("Prepend", "$%s$"%s).highlight_by_tex(s, color)
-            for s, color in ("x", BLUE), ("y", RED)
-        ]
-        add_x.to_corner(UP+LEFT)
-        add_y.to_edge(LEFT).shift(MED_SMALL_BUFF*DOWN)
+    def issolate_single_stack(self):
+        stack = self.stacks[3]
+        equation = self.binomial_equations[3]
 
-        new_stacks, new_top_stacks = [
-            get_stacks(x, y, n, fixed_start = var)
-            for var in y, x
-        ]
-        new_top_stacks.to_edge(UP, buff = MED_SMALL_BUFF)
-        new_stacks.to_edge(DOWN)
-        for s in new_stacks, new_top_stacks:
-            s.start_terms = VGroup()
-            for stack in s:
-                for term in stack:
-                    s.start_terms.add(term[0])
-
-        s_to_s_distance = \
-            new_stacks[1].get_center()[0] - \
-            new_stacks[0].get_center()[0]
+        to_fade = VGroup(*self.stacks)
+        to_fade.add(*self.binomial_equations)
+        to_fade.add(self.n_choose_k, self.n_choose_k_words)
+        to_fade.remove(stack, equation)
 
         self.play(
             FadeOut(to_fade),
-            stacks.to_edge, DOWN,
-            ReplacementTransform(stacks.copy(), top_stacks),
+            equation.scale, 1.5, equation.get_bottom(),
         )
-        self.play(ShowCreation(line))
-        self.play(Write(add_x, run_time = 1))
-        self.play(Transform(top_stacks, new_top_stacks))
-        self.play(LaggedStart(
-            Indicate, new_top_stacks.start_terms,
-            rate_func = there_and_back,
-            run_time = 1,
-            remover = True
-        ))
         self.dither()
-        self.play(Write(add_y, run_time = 1))
-        self.play(Transform(stacks, new_stacks))
-        self.play(LaggedStart(
-            Indicate, new_stacks.start_terms,
-            rate_func = there_and_back,
-            run_time = 1,
-            remover = True
-        ))
+        for line in stack:
+            ones = VGroup(*filter(
+                lambda mob : "1" in mob.get_tex_string(),
+                line
+            ))
+            line.ones = ones
+            self.play(LaggedStart(
+                ApplyMethod, ones,
+                lambda mob : (mob.highlight, YELLOW),
+                rate_func = there_and_back,
+                lag_ratio = 0.7,
+                run_time = 1,
+            ))
+
+    def count_chosen_stack(self):
+        stack = self.stacks[3]
+        for i, line in enumerate(stack):
+            number = TexMobject(str(i+1))
+            number.next_to(stack, LEFT)
+            brace = Brace(VGroup(*stack[:i+1]), LEFT)
+            number.next_to(brace, LEFT)
+            line.save_state()
+            line.highlight(YELLOW)
+            self.add(number, brace)
+            self.dither(0.25)
+            self.remove(number, brace)
+            line.restore()
+        self.add(number, brace)
         self.dither()
 
+        self.set_variables_as_attrs(
+            stack_brace = brace,
+            stack_count = number
+        )
+
+    def count_ways_to_fill_slots(self):
+        lines = VGroup(*[Line(ORIGIN, 0.25*RIGHT) for x in range(5)])
+        lines.arrange_submobjects(RIGHT)
+        lines.next_to(self.stacks[3], LEFT, LARGE_BUFF, UP)
+
+        self.play(ShowCreation(lines))
+        count = 1
+        for indices in it.combinations(range(5), 3):
+            ones = VGroup(*[
+                self.get_obj1().next_to(lines[i], UP)
+                for i in indices
+            ])
+            num = TexMobject(str(count))
+            num.next_to(lines, DOWN)
+            self.add(ones, num)
+            self.dither(0.35)
+            self.remove(ones, num)
+            count += 1
+        self.add(num, ones)
+        self.dither()
+        self.play(*map(FadeOut, [lines, num, ones]))
+
+    def walk_though_notation(self):
+        equation = self.binomial_equations[3]
+        rect = SurroundingRectangle(equation[0])
+        rect.highlight(WHITE)
+        words = TextMobject("``5 choose 3''")
+        words.next_to(rect, UP)
+
+        self.play(Write(words))
+        self.play(ShowCreation(rect))
+        self.play(FadeOut(rect))
+        self.dither(2)
+
+    def emphasize_pattern_over_number(self):
+        morty = Mortimer().flip()
+        morty.to_corner(DOWN+LEFT)
+        words = TextMobject("Remember the pattern \\\\ not the number")
+        words.next_to(morty, UP)
+        words.shift_onto_screen()
+
+        self.play(FadeIn(morty))
         self.play(
-            top_stacks.shift, s_to_s_distance*RIGHT/2,
-            stacks.shift, s_to_s_distance*LEFT/2,
+            morty.change, "speaking",
+            Write(words, run_time = 2)
         )
-        self.play(*map(FadeOut, [add_x, add_y, line]))
+        self.play(
+            Blink(morty),
+            morty.change, "happy"
+        )
+        self.revert_to_original_skipping_status()
+        last_ones = VGroup()
+        last_ones.save_state()
+        for x in range(2):
+            for line in self.stacks[3]:
+                ones = line.ones
+                ones.save_state()
+                self.play(
+                    ones.highlight, YELLOW,
+                    last_ones.restore,
+                    morty.look_at, ones,
+                    run_time = 0.25
+                )
+                last_ones = ones
+            self.dither()
 
-        point = VectorizedPoint()
-        point.move_to(top_stacks[0].get_bottom())
-        point.shift(s_to_s_distance*LEFT)
-        top_stacks.add_to_back(point)
+    ####
 
-        point = VectorizedPoint()
-        point.move_to(stacks[-1].get_bottom())
-        point.shift(s_to_s_distance*RIGHT)
-        point.shift(MED_SMALL_BUFF*DOWN)
-        stacks.add(point)
+    def get_obj1(self):
+        return TexMobject("1").highlight(self.one_color)
 
-        for k, stack, top_stack in zip(it.count(), stacks, top_stacks):
-            top_stack.generate_target()
-            top_stack.target.next_to(stack, UP, MED_SMALL_BUFF)
-            # term = TexMobject(
-            #     str(choose(n+1, k)),
-            #     "x^%d"%(n+1-k),
-            #     "y^%d"%k
-            # )
-            term = TexMobject(
-                "{%d \\choose %d}"%(n+1, k),
-                "=",
-                str(choose(n+1, k))
-            )
-            term[0].scale(0.85, about_point = term[0].get_right())
-            term[0].highlight(YELLOW)
-            term[2].highlight(YELLOW)
-            term.scale(0.85)
-            term.next_to(top_stack.target, UP)
+    def get_obj2(self):
+        return TexMobject("0").highlight(self.zero_color)
 
-            self.play(MoveToTarget(top_stack))
-            self.play(Write(term))
-        self.dither()
+# class Introduction(Scene):
+#     CONFIG = {
+#         "start_n" : 4,
+#     }
+#     def construct(self):
+#         self.write_n_choose_k()
+#         self.show_binomial_coefficients()
+#         self.perform_shift()
+
+#     def write_n_choose_k(self):
+#         symbol = TexMobject("n \\choose k")
+#         words = TextMobject("``n choose k''")
+#         group = VGroup(symbol, words)
+#         group.arrange_submobjects(RIGHT)
+
+#         self.play(
+#             FadeIn(symbol),
+#             Write(words)
+#         )
+#         self.dither()
+
+#         self.set_variables_as_attrs(n_choose_k_group = group)
+
+#     def show_binomial_coefficients(self):
+#         n = self.start_n
+#         n_choose_k, n_choose_k_words = self.n_choose_k_group
+#         binomials = VGroup(*[
+#             TexMobject("%d \\choose %d"%(n, k))
+#             for k in range(n+1)
+#         ])
+#         binomial_equations = VGroup()
+#         for k, binomial in enumerate(binomials):
+#             binomial.scale(0.75)
+#             number = TexMobject(str(choose(n, k)))
+#             equation = VGroup(binomial, TexMobject("="), number)
+#             equation.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+#             equation.highlight(YELLOW)
+#             equation[1].highlight(WHITE)
+#             binomial_equations.add(equation)
+#         new_words = TextMobject("``Binomial coefficients''")
+
+#         stacks = get_stacks(
+#             TexMobject("x").highlight(BLUE),
+#             TexMobject("y").highlight(RED),
+#             n
+#         )
+#         stacks.to_edge(DOWN, buff = LARGE_BUFF)
+#         for stack, eq in zip(stacks, binomial_equations):
+#             eq.scale_to_fit_width(0.9*stack.get_width())
+#             eq.next_to(stack, UP)
+
+#         self.play(
+#             FadeIn(stacks, run_time = 2, submobject_mode = "lagged_start"),
+#             self.n_choose_k_group.to_edge, UP
+#         )
+#         new_words.move_to(n_choose_k_words, LEFT)
+#         self.play(Transform(n_choose_k_words, new_words))
+#         for eq in binomial_equations:
+#             point = VectorizedPoint(n_choose_k.get_center())
+#             self.play(ReplacementTransform(
+#                 VGroup(n_choose_k, point, point).copy(),
+#                 eq
+#             ))
+#             self.dither()
+
+#         self.set_variables_as_attrs(stacks, binomial_equations)
+
+#     def perform_shift(self):
+#         n = self.start_n
+#         to_fade = VGroup(
+#             self.n_choose_k_group,
+#             self.binomial_equations
+#         )
+#         stacks = self.stacks
+#         top_stacks = stacks.copy()
+#         top_stacks.to_edge(UP, buff = MED_SMALL_BUFF)
+
+#         line = Line(LEFT, RIGHT, color = WHITE)
+#         line.scale(SPACE_WIDTH)
+#         line.next_to(top_stacks, DOWN)
+
+#         x = TexMobject("x").highlight(BLUE)
+#         y = TexMobject("y").highlight(RED)
+#         add_x, add_y = [
+#             TextMobject("Prepend", "$%s$"%s).highlight_by_tex(s, color)
+#             for s, color in ("x", BLUE), ("y", RED)
+#         ]
+#         add_x.to_corner(UP+LEFT)
+#         add_y.to_edge(LEFT).shift(MED_SMALL_BUFF*DOWN)
+
+#         new_stacks, new_top_stacks = [
+#             get_stacks(x, y, n, fixed_start = var)
+#             for var in y, x
+#         ]
+#         new_top_stacks.to_edge(UP, buff = MED_SMALL_BUFF)
+#         new_stacks.to_edge(DOWN)
+#         for s in new_stacks, new_top_stacks:
+#             s.start_terms = VGroup()
+#             for stack in s:
+#                 for term in stack:
+#                     s.start_terms.add(term[0])
+
+#         s_to_s_distance = \
+#             new_stacks[1].get_center()[0] - \
+#             new_stacks[0].get_center()[0]
+
+#         self.play(
+#             FadeOut(to_fade),
+#             stacks.to_edge, DOWN,
+#             ReplacementTransform(stacks.copy(), top_stacks),
+#         )
+#         self.play(ShowCreation(line))
+#         self.play(Write(add_x, run_time = 1))
+#         self.play(Transform(top_stacks, new_top_stacks))
+#         self.play(LaggedStart(
+#             Indicate, new_top_stacks.start_terms,
+#             rate_func = there_and_back,
+#             run_time = 1,
+#             remover = True
+#         ))
+#         self.dither()
+#         self.play(Write(add_y, run_time = 1))
+#         self.play(Transform(stacks, new_stacks))
+#         self.play(LaggedStart(
+#             Indicate, new_stacks.start_terms,
+#             rate_func = there_and_back,
+#             run_time = 1,
+#             remover = True
+#         ))
+#         self.dither()
+
+#         self.play(
+#             top_stacks.shift, s_to_s_distance*RIGHT/2,
+#             stacks.shift, s_to_s_distance*LEFT/2,
+#         )
+#         self.play(*map(FadeOut, [add_x, add_y, line]))
+
+#         point = VectorizedPoint()
+#         point.move_to(top_stacks[0].get_bottom())
+#         point.shift(s_to_s_distance*LEFT)
+#         top_stacks.add_to_back(point)
+
+#         point = VectorizedPoint()
+#         point.move_to(stacks[-1].get_bottom())
+#         point.shift(s_to_s_distance*RIGHT)
+#         point.shift(MED_SMALL_BUFF*DOWN)
+#         stacks.add(point)
+
+#         for k, stack, top_stack in zip(it.count(), stacks, top_stacks):
+#             top_stack.generate_target()
+#             top_stack.target.next_to(stack, UP, MED_SMALL_BUFF)
+#             # term = TexMobject(
+#             #     str(choose(n+1, k)),
+#             #     "x^%d"%(n+1-k),
+#             #     "y^%d"%k
+#             # )
+#             term = TexMobject(
+#                 "{%d \\choose %d}"%(n+1, k),
+#                 "=",
+#                 str(choose(n+1, k))
+#             )
+#             term[0].scale(0.85, about_point = term[0].get_right())
+#             term[0].highlight(YELLOW)
+#             term[2].highlight(YELLOW)
+#             term.scale(0.85)
+#             term.next_to(top_stack.target, UP)
+
+#             self.play(MoveToTarget(top_stack))
+#             self.play(Write(term))
+#         self.dither()
 
 class DifferentWaysToThinkAboutNChooseK(Scene):
     CONFIG = {
