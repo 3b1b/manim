@@ -1161,8 +1161,6 @@ class RevisitTwoDCase(TwoDCase):
         for x in range(2):
             do_the_rounds()
 
-
-
 class ThisIsWhereItGetsGood(TeacherStudentsScene):
     def construct(self):
         self.teacher_says(
@@ -1172,27 +1170,309 @@ class ThisIsWhereItGetsGood(TeacherStudentsScene):
         self.change_student_modes(*["hooray"]*3)
         self.dither(2)
 
+class ContrastTwoRandomProcesses(TwoDCase):
+    CONFIG = {
+        "radius" : 1.5,
+        "random_seed" : 0,
+    }
+    def construct(self):
+        circle = Circle(color = WHITE, radius = self.radius)
+        point_mobs = self.get_point_mobs()
+        for point in point_mobs:
+            point.scale_in_place(1.5)
+            point.set_stroke(RED, 1)
+        labels = self.get_point_mob_labels()
+        self.get_labels_update(point_mobs, labels).update(1)
+        center_lines = self.get_center_lines()
+        point_label_groups = VGroup(*[
+            VGroup(*pair) for pair in zip(point_mobs, labels)
+        ])
 
+        left_circles = VGroup(*[
+            VGroup(circle, *point_label_groups[:i+1]).copy()
+            for i in range(3)
+        ])
+        right_circles = VGroup(
+            VGroup(circle, center_lines).copy(),
+            VGroup(
+                circle, center_lines, 
+                point_label_groups[2]
+            ).copy(),
+            VGroup(
+                circle, center_lines, 
+                *point_label_groups[2::-1]
+            ).copy(),
+        )
+        for circles in left_circles, right_circles:
+            circles.scale(0.5)
+            circles[0].to_edge(UP, buff = MED_LARGE_BUFF)
+            circles[2].to_edge(DOWN, buff = MED_LARGE_BUFF)
+            for c1, c2 in zip(circles, circles[1:]):
+                circles.add(Arrow(c1[0], c2[0], color = GREEN))
+        left_circles.shift(3*LEFT)
+        right_circles.shift(3*RIGHT)
 
+        vs = TextMobject("vs.")
+        self.show_creation_of_circle_group(left_circles)
+        self.play(Write(vs))
+        self.show_creation_of_circle_group(right_circles)
+        self.dither()
 
+    def show_creation_of_circle_group(self, group):
+        circles = group[:3]
+        arrows = group[3:]
 
+        self.play(
+            ShowCreation(circles[0][0]),
+            FadeIn(VGroup(*circles[0][1:])),
+        )
+        for c1, c2, arrow in zip(circles, circles[1:], arrows):
+            self.play(
+                GrowArrow(arrow),
+                ApplyMethod(
+                    c1.copy().shift, 
+                    c2[0].get_center() - c1[0].get_center(),
+                    remover = True
+                )
+            )
+            self.add(c2)
+            n = len(c2) - len(c1)
+            self.play(*map(GrowFromCenter, c2[-n:]))
 
+class Rewrite3DRandomProcedure(Scene):
+    def construct(self):
+        random_procedure = TextMobject("Random procedure")
+        underline = Line(LEFT, RIGHT)
+        underline.stretch_to_fit_width(random_procedure.get_width())
+        underline.scale(1.1)
+        underline.next_to(random_procedure, DOWN)
+        group = VGroup(random_procedure, underline)
+        group.to_corner(UP+LEFT)
+        
+        words = VGroup(*map(TextMobject, [
+            "Choose 4 random points",
+            "Choose 3 random lines",
+            "Choose $P_4$ at random",
+            "Flip coin for each line \\\\ to get $P_1$, $P_2$, $P_3$",
+        ]))
+        words.scale(0.8)
+        words.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        words.next_to(underline, DOWN)
+        words[1].highlight(YELLOW)
+        cross = Cross(words[0])
+        cross.set_stroke(RED, 6)
 
+        self.play(
+            Write(random_procedure),
+            ShowCreation(underline)
+        )
+        self.play(FadeIn(words[0]))
+        self.play(ShowCreation(cross))
+        self.dither()
+        self.play(LaggedStart(FadeIn, words[1]))
+        self.play(LaggedStart(FadeIn, words[2]))
+        self.dither(2)
+        self.play(Write(words[3]))
+        self.dither(3)
 
+class AntipodalViewOfThreeDCase(ExternallyAnimatedScene):
+    pass
 
+class ThreeDAnswer(Scene):
+    def construct(self):
+        words = TextMobject(
+            "Probability that the tetrahedron contains center:", 
+            "$\\frac{1}{8}$"
+        )
+        words.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        words.to_edge(DOWN)
+        words[1].highlight(BLUE)
 
+        self.play(Write(words))
+        self.dither(2)
 
+class FormalWriteupScreenCapture(ExternallyAnimatedScene):
+    pass
 
+class Formality(TeacherStudentsScene):
+    def construct(self):
+        words = TextMobject(
+            "Write-up by Ralph Howard and Paul Sisson (link below)"
+        )
+        words.scale(0.7)
+        words.to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
 
+        self.student_says(
+            "How would you \\\\ write that down?",
+            target_mode = "sassy"
+        )
+        self.change_student_modes("confused", "sassy", "erm")
+        self.dither()
+        self.play(
+            Write(words),
+            FadeOut(self.students[1].bubble),
+            FadeOut(self.students[1].bubble.content),
+            self.teacher.change, "raise_right_hand"
+        )
+        self.change_student_modes(
+            *["pondering"]*3,
+            look_at_arg = words
+        )
+        self.dither(8)
 
+class BrilliantPuzzle(PiCreatureScene):
+    CONFIG = {
+        "random_seed" : 2,
+    }
+    def construct(self):
+        students = self.students
+        tests = VGroup()
+        for student in students:
+            test = self.get_test()
+            test.move_to(0.75*student.get_center())
+            tests.add(test)
+            student.test = test
+        arrows = VGroup()
+        for s1, s2 in adjacent_pairs(self.students):
+            arrow = Arrow(
+                s1.get_center(), s2.get_center(), 
+                buff = LARGE_BUFF
+            )
+            arrow.shift(-MED_SMALL_BUFF*arrow.get_vector())
+            arrow.highlight(RED)
+            arrows.add(arrow)
+            s1.right_arrow = arrow
+            s2.left_arrow = arrow
+            arrow.counterclockwise = True
 
+        title = TextMobject("Puzzle from Brilliant")
+        title.scale(0.75)
+        title.to_corner(UP+LEFT)
 
+        question = TextMobject("Expecte number of \\\\ circled students?")
+        question.to_corner(UP+RIGHT)
 
+        self.remove(students)
+        self.play(Write(title))
+        self.play(LaggedStart(GrowFromCenter, students))
+        self.play(
+            LaggedStart(Write, tests),
+            LaggedStart(
+                ApplyMethod, students,
+                lambda m : (m.change, "horrified", m.test)
+            )
+        )
+        self.dither()
+        self.play(LaggedStart(
+            ApplyMethod, students,
+            lambda m : (m.change, "conniving")
+        ))
+        self.play(LaggedStart(GrowArrow, arrows))
+        for x in range(2):
+            self.swap_arrows_randomly(arrows)
+        self.dither()
+        circles = self.circle_students()
+        self.play(Write(question))
+        for x in range(10):
+            self.swap_arrows_randomly(arrows, FadeOut(circles))
+            circles = self.circle_students()
+            self.dither()
 
+    ####
 
+    def get_test(self):
+        lines = VGroup(*[Line(ORIGIN, 0.5*RIGHT) for x in range(6)])
+        lines.arrange_submobjects(DOWN, buff = SMALL_BUFF)
+        rect = SurroundingRectangle(lines)
+        rect.set_stroke(WHITE)
+        lines.set_stroke(WHITE, 2)
+        test = VGroup(rect, lines)
+        test.scale_to_fit_height(0.5)
+        return test
 
+    def create_pi_creatures(self):
+        self.students = VGroup(*[
+            PiCreature(
+                color = random.choice([BLUE_C, BLUE_D, BLUE_E, GREY_BROWN])
+            ).scale(0.25).move_to(3*vect)
+            for vect in compass_directions(8)
+        ])
+        return self.students
 
+    def get_arrow_swap_anim(self, arrow):
+        arrow.generate_target()
+        arrow.target.rotate_in_place(np.pi)
+        if arrow.counterclockwise:
+            arrow.target.highlight(GREEN)
+        else:
+            arrow.target.highlight(RED)
+        arrow.counterclockwise = not arrow.counterclockwise
+        return MoveToTarget(arrow, path_arc = np.pi)
 
+    def swap_arrows_randomly(self, arrows, *added_anims):
+        anims = []
+        for arrow in arrows:
+            if random.choice([True, False]):
+                anims.append(self.get_arrow_swap_anim(arrow))
+        self.play(*anims + list(added_anims))
+
+    def circle_students(self):
+        circles = VGroup()
+        for student in self.students:
+            ra, la = student.right_arrow, student.left_arrow
+            if ra.counterclockwise and not la.counterclockwise:
+                circle = Circle(color = YELLOW)
+                circle.scale_to_fit_height(1.2*student.get_height())
+                circle.move_to(student)
+                circles.add(circle)
+                self.play(
+                    ShowCreation(circle),
+                    Indicate(VGroup(ra, la))
+                )
+        return circles
+
+class ScrollThroughBrilliantCourses(ExternallyAnimatedScene):
+    pass
+
+class BrilliantProbability(ExternallyAnimatedScene):
+    pass
+
+class Promotion(PiCreatureScene):
+    CONFIG = {
+        "seconds_to_blink" : 5,
+    }
+    def construct(self):
+        url = TextMobject("https://brilliant.org/3b1b/")
+        url.to_corner(UP+LEFT)
+
+        rect = Rectangle(height = 9, width = 16)
+        rect.scale_to_fit_height(5.5)
+        rect.next_to(url, DOWN)
+        rect.to_edge(LEFT)
+
+        self.play(
+            Write(url),
+            self.pi_creature.change, "raise_right_hand"
+        )
+        self.play(ShowCreation(rect))
+        self.dither(2)
+        self.change_mode("thinking")
+        self.dither()
+        self.look_at(url)
+        self.dither(10)
+        self.change_mode("happy")
+        self.dither(10)
+        self.change_mode("raise_right_hand")
+        self.dither(10)
+
+        self.remove(rect)
+        self.play(
+            url.next_to, self.pi_creature, UP+LEFT
+        )
+        url_rect = SurroundingRectangle(url)
+        self.play(ShowCreation(url_rect))
+        self.play(FadeOut(url_rect))
+        self.dither(3)
 
 
 
