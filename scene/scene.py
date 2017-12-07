@@ -33,7 +33,7 @@ class Scene(object):
         "output_directory" : MOVIE_DIR,
         "name" : None,
         "always_continually_update" : False,
-        "random_seed" : None,
+        "random_seed" : 0,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
