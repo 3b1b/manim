@@ -277,6 +277,7 @@ class HowDoYouStart(TeacherStudentsScene):
 
 class TwoDCase(Scene):
     CONFIG = {
+        "center" : ORIGIN,
         "random_seed" : 4,
         "radius" : 2.5,
         "center_color" : BLUE,
@@ -311,12 +312,13 @@ class TwoDCase(Scene):
         circle = Circle(radius = self.radius, color = WHITE)
         center_dot = Dot(color = self.center_color).center()
         radius = DashedLine(ORIGIN, circle.radius*RIGHT)
+        VGroup(circle, center_dot, radius).shift(self.center)
 
         self.add(center_dot)
         self.play(ShowCreation(radius))
         self.play(
             ShowCreation(circle),
-            Rotating(radius, angle = 2*np.pi, about_point = ORIGIN),
+            Rotating(radius, angle = 2*np.pi, about_point = self.center),
             rate_func = smooth,
             run_time = 2,
         )
@@ -330,27 +332,10 @@ class TwoDCase(Scene):
         self.set_variables_as_attrs(circle, center_dot)
 
     def choose_three_random_points(self):
-        points = np.array([
-            rotate_vector(self.radius*RIGHT, theta)
-            for theta in 2*np.pi*np.random.random(3)
-        ])
-        for index in 0, 1, 0:
-            if self.points_contain_center(points):
-                break
-            points[index] *= -1
-
-        point_mobs = self.point_mobs = VGroup(*[
-            Dot().move_to(point) for point in points            
-        ])
-        point_mobs.highlight(self.point_color)
-        point_labels = VGroup(*[
-            TexMobject("P_%d"%(i+1))
-            for i in range(len(point_mobs))
-        ])
-        point_labels.highlight(point_mobs.get_color())
+        point_mobs = self.get_point_mobs()
+        point_labels = self.get_point_mob_labels()
+        triangle = self.get_triangle()
         self.point_labels_update = self.get_labels_update(point_mobs, point_labels)
-        triangle = self.triangle = RegularPolygon(n = 3)
-        triangle.set_fill(WHITE, opacity = self.triangle_fill_opacity)
         self.triangle_update = self.get_triangle_update(point_mobs, triangle)
         self.update_animations = [
             self.triangle_update,
@@ -453,6 +438,7 @@ class TwoDCase(Scene):
             line = Line(LEFT, RIGHT).scale(SMALL_BUFF)
             line.shift(self.radius*RIGHT)
             line.rotate(angle + np.pi)
+            line.shift(self.center)
             line.set_stroke(arc.get_color())
             arc_lines.add(line)
 
@@ -473,14 +459,7 @@ class TwoDCase(Scene):
         angles = self.get_point_mob_angles()
         all_arcs = self.all_arcs
 
-        lines = VGroup()
-        for angle in angles[:2]:
-            line = DashedLine(
-                self.radius*RIGHT, self.radius*LEFT
-            )
-            line.rotate(angle)
-            line.highlight(self.point_color)
-            lines.add(line)
+        lines = self.get_center_lines()
 
         self.add_foreground_mobjects(self.center_dot)
         for line in lines:
@@ -502,8 +481,6 @@ class TwoDCase(Scene):
         for x in range(3):
             self.change_point_mobs([0, 0, np.pi/2])
         self.dither()
-
-        self.center_lines = lines
 
     def ask_about_probability_p3_lands_in_this_arc(self):
         arc = self.arc
@@ -567,6 +544,7 @@ class TwoDCase(Scene):
             Line(DOWN+RIGHT, RIGHT),
         )
         elbow.scale(0.25)
+        elbow.shift(self.center)
         ninety_degrees = TexMobject("90^\\circ")
         ninety_degrees.next_to(elbow, DOWN+RIGHT, buff = 0)
         proportion = DecimalNumber(0.25)
@@ -666,11 +644,56 @@ class TwoDCase(Scene):
 
     #####
 
+    def get_point_mobs(self):
+        points = np.array([
+            self.center + rotate_vector(self.radius*RIGHT, theta)
+            for theta in 2*np.pi*np.random.random(3)
+        ])
+        for index in 0, 1, 0:
+            if self.points_contain_center(points):
+                break
+            points[index] -= self.center
+            points[index] *= -1
+            points[index] += self.center
+        point_mobs = self.point_mobs = VGroup(*[
+            Dot().move_to(point) for point in points            
+        ])
+        point_mobs.highlight(self.point_color)
+        return point_mobs
+
+    def get_point_mob_labels(self):
+        point_labels = VGroup(*[
+            TexMobject("P_%d"%(i+1))
+            for i in range(len(self.point_mobs))
+        ])
+        point_labels.highlight(self.point_mobs.get_color())
+        self.point_labels = point_labels
+        return point_labels
+
+    def get_triangle(self):
+        triangle = self.triangle = RegularPolygon(n = 3)
+        triangle.set_fill(WHITE, opacity = self.triangle_fill_opacity)
+        return triangle
+
+    def get_center_lines(self):
+        angles = self.get_point_mob_angles()
+        lines = VGroup()
+        for angle in angles[:2]:
+            line = DashedLine(
+                self.radius*RIGHT, self.radius*LEFT
+            )
+            line.rotate(angle)
+            line.shift(self.center)
+            line.highlight(self.point_color)
+            lines.add(line)
+        self.center_lines = lines
+        return lines
+
     def get_labels_update(self, point_mobs, labels):
         def update_labels(labels):
             for point_mob, label in zip(point_mobs, labels):
                 label.move_to(point_mob)
-                vect = point_mob.get_center()
+                vect = point_mob.get_center() - self.center
                 vect /= np.linalg.norm(vect)
                 label.shift(MED_LARGE_BUFF*vect)
             return labels
@@ -690,10 +713,11 @@ class TwoDCase(Scene):
     def get_center_lines_update(self, point_mobs, center_lines):
         def update_lines(center_lines):
             for point_mob, line in zip(point_mobs, center_lines):
-                line.rotate(
-                    angle_of_vector(point_mob.get_center()) - \
-                    line.get_angle()
+                point = point_mob.get_center() - self.center
+                line.rotate_in_place(
+                    angle_of_vector(point) - line.get_angle()
                 )
+                line.move_to(self.center)
             return center_lines
         return UpdateFromFunc(center_lines, update_lines)
 
@@ -716,28 +740,30 @@ class TwoDCase(Scene):
                 radius = self.radius,
                 stroke_width = 5,
             )
+            arc.shift(self.center)
             all_arcs.add(arc)
         all_arcs.gradient_highlight(RED, MAROON_B, PINK, BLUE)
+        self.all_arcs = all_arcs
         return all_arcs
 
     def points_contain_center(self, points):
         p0, p1, p2 = points
         v1 = p1 - p0
         v2 = p2 - p0
-        c = -p0
+        c = self.center - p0
         M = np.matrix([v1[:2], v2[:2]]).T
         M_inv = np.linalg.inv(M)
         coords = np.dot(M_inv, c[:2])
         return np.all(coords > 0) and (np.sum(coords.flatten()) <= 1)
 
     def get_point_mob_theta_change_anim(self, point_mob, d_theta):
-        curr_theta = angle_of_vector(point_mob.get_center())
+        curr_theta = angle_of_vector(point_mob.get_center() - self.center)
         d_theta = (d_theta + np.pi)%(2*np.pi) - np.pi
         new_theta = curr_theta + d_theta
 
         def update_point(point_mob, alpha):
             theta = interpolate(curr_theta, new_theta, alpha)
-            point_mob.move_to(self.radius*(
+            point_mob.move_to(self.center + self.radius*(
                 np.cos(theta)*RIGHT + np.sin(theta)*UP
             ))
             return point_mob
@@ -771,7 +797,7 @@ class TwoDCase(Scene):
 
     def get_point_mob_angles(self):
         point_mobs = self.point_mobs
-        points = [pm.get_center() for pm in point_mobs]
+        points = [pm.get_center() - self.center for pm in point_mobs]
         return np.array(map(angle_of_vector, points))
 
     def have_p3_jump_around_randomly(self, n_jumps, dither_time = 0.75, run_time = 0):
@@ -813,6 +839,378 @@ class TryASurfaceIntegral(TeacherStudentsScene):
             target_mode = "sassy",
         )
         self.dither(2)
+
+class RevisitTwoDCase(TwoDCase):
+    CONFIG = {
+        "random_seed" : 4,
+        "center" : 3*LEFT + 0.5*DOWN,
+        "radius" : 2,
+        "n_random_trials" : 200,
+    }
+    def construct(self):
+        self.setup_circle()
+        self.show_probability()
+        self.add_lines_and_comment_on_them()
+        self.rewrite_random_procedure()
+        self.four_possibilities_for_coin_flips()
+
+    def setup_circle(self):
+        point_mobs = self.get_point_mobs()
+        point_labels = self.get_point_mob_labels()
+        triangle = self.get_triangle()
+        circle = Circle(radius = self.radius, color = WHITE)
+        center_dot = Dot(color = self.center_color)
+        VGroup(circle, center_dot).shift(self.center)
+
+        self.point_labels_update = self.get_labels_update(point_mobs, point_labels)
+        self.triangle_update = self.get_triangle_update(point_mobs, triangle)
+        self.update_animations = [
+            self.triangle_update,
+            self.point_labels_update,
+        ]
+        for anim in self.update_animations:
+            anim.update(1)
+
+        self.add(
+            center_dot, circle, triangle, 
+            point_mobs, point_labels
+        )
+        self.add_foreground_mobjects(center_dot)
+        self.set_variables_as_attrs(circle, center_dot)
+
+    def show_probability(self):
+        title = TexMobject(
+            "P(\\text{triangle contains the center})",
+            "=", "1/4"
+        )
+        title.to_edge(UP, buff = MED_SMALL_BUFF)
+        title.highlight_by_tex("1/4", BLUE)
+        four = title[-1][-1]
+        four_circle = Circle(color = YELLOW)
+        four_circle.replace(four, dim_to_match = 1)
+        four_circle.scale_in_place(1.2)
+
+        self.n_in = 0
+        self.n_out = 0
+        frac = TexMobject(
+            "{0", "\\over", "\\quad 0", "+", "0 \\quad}", "="
+        )
+        placeholders = frac.get_parts_by_tex("0")
+        positions = [ORIGIN, RIGHT, LEFT]
+        frac.next_to(self.circle, RIGHT, 1.5*LARGE_BUFF)
+
+        def place_random_triangles(n, dither_time):
+            for x in range(n):
+                self.change_point_mobs_randomly(run_time = 0)
+                contain_center = self.points_contain_center(
+                    [pm.get_center() for pm in self.point_mobs]
+                )
+                if contain_center:
+                    self.n_in += 1
+                else:
+                    self.n_out += 1
+                nums = map(Integer, [self.n_in, self.n_in, self.n_out])
+                VGroup(*nums[:2]).highlight(self.positive_triangle_color)
+                VGroup(*nums[2:]).highlight(self.negative_triangle_color)
+                for num, placeholder, position in zip(nums, placeholders, positions):
+                    num.move_to(placeholder, position)
+                decimal = DecimalNumber(float(self.n_in)/(self.n_in + self.n_out))
+                decimal.next_to(frac, RIGHT, SMALL_BUFF)
+
+                self.add(decimal, *nums)
+                self.dither(dither_time)
+                self.remove(decimal, *nums)
+            return VGroup(decimal, *nums)
+
+
+        self.play(Write(title))
+        self.add(frac)
+        self.remove(*placeholders)
+        place_random_triangles(10, 0.25)
+        nums = place_random_triangles(self.n_random_trials, 0.05)
+        self.add(nums)
+        self.dither()
+        self.play(*map(FadeOut, [frac, nums, title]))
+
+    def add_lines_and_comment_on_them(self):
+        center_lines = self.get_center_lines()
+        center_lines.save_state()
+        center_line_shadows = center_lines.copy()
+        center_line_shadows.set_stroke(LIGHT_GREY, 2)
+        arcs = self.get_all_arcs()
+
+        center_lines.generate_target()
+        center_lines.target.to_edge(RIGHT, buff = LARGE_BUFF)
+        rect = SurroundingRectangle(center_lines.target, buff = MED_SMALL_BUFF)
+        rect.set_stroke(WHITE, 2)
+
+        words1 = TextMobject("Helpful new objects")
+        words2 = TextMobject("Reframe problem around these")
+        for words in words1, words2:
+            words.scale(0.8)
+            words.next_to(rect, UP)
+            words.shift_onto_screen()
+
+        self.play(LaggedStart(ShowCreation, center_lines, run_time = 1))
+        self.play(
+            LaggedStart(FadeIn, arcs, run_time = 1),
+            Animation(self.point_mobs),
+        )
+        self.dither()
+        self.add(center_line_shadows)
+        self.play(MoveToTarget(center_lines))
+        self.play(ShowCreation(rect), Write(words1))
+        self.dither(2)
+        self.play(ReplacementTransform(words1, words2))
+        self.dither(2)
+        self.play(
+            center_lines.restore,
+            center_lines.fade, 1,
+            *map(FadeOut, [
+                rect, words2, center_line_shadows,
+                self.triangle, arcs,
+                self.point_mobs,
+                self.point_labels,
+            ])
+        )
+        center_lines.restore()
+        self.remove(center_lines)
+
+    def rewrite_random_procedure(self):
+        point_mobs = self.point_mobs
+        center_lines = self.center_lines 
+
+        random_procedure = TextMobject("Random procedure")
+        underline = Line(LEFT, RIGHT)
+        underline.stretch_to_fit_width(random_procedure.get_width())
+        underline.scale(1.1)
+        underline.next_to(random_procedure, DOWN)
+        group = VGroup(random_procedure, underline)
+        group.to_corner(UP+RIGHT)
+
+        words = VGroup(*map(TextMobject, [
+            "Choose 3 random points",
+            "Choose 2 random lines",
+            "Flip coin for each line \\\\ to get $P_1$ and $P_2$",
+            "Choose $P_3$ at random"
+        ]))
+        words.scale(0.8)
+        words.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        words.next_to(underline, DOWN)
+        words[1].highlight(YELLOW)
+
+        point_label_groups = VGroup()
+        for point_mob, label in zip(self.point_mobs, self.point_labels):
+            group = VGroup(point_mob, label)
+            group.save_state()
+            group.move_to(words[0], LEFT)
+            group.fade(1)
+            point_label_groups.add(group)
+        self.point_label_groups = point_label_groups
+
+        cross = Cross(words[0])
+        cross.set_stroke(RED, 6)
+
+        self.center_lines_update = self.get_center_lines_update(
+            point_mobs, center_lines
+        )
+        self.update_animations.append(self.center_lines_update)
+        self.update_animations.remove(self.triangle_update)
+
+        #Choose random points
+        self.play(
+            Write(random_procedure),
+            ShowCreation(underline)
+        )
+        self.play(FadeIn(words[0]))
+        self.play(LaggedStart(
+            ApplyMethod, point_label_groups,
+            lambda mob : (mob.restore,),
+        ))
+        self.play(
+            ShowCreation(cross), 
+            point_label_groups.fade, 1,
+        )
+        self.dither()
+
+        #Choose two random lines
+        self.center_lines_update.update(1)
+        self.play(
+            FadeIn(words[1]),
+            LaggedStart(GrowFromCenter, center_lines)
+        )
+        for x in range(3):
+            self.change_point_mobs_randomly(run_time = 1)
+        self.change_point_mobs_to_angles([0.8*np.pi, 1.3*np.pi])
+
+        #Flip a coin for each line
+        def flip_point_label_back_and_forth(point_mob, label):
+            for x in range(6):
+                point_mob.rotate(np.pi, about_point = self.center)
+                self.point_labels_update.update(1)
+                self.dither(0.5)
+            self.dither(0.5)
+
+        def choose_p1_and_p2():
+            for group in point_label_groups[:2]:
+                group.set_fill(self.point_color, 1)
+                flip_point_label_back_and_forth(*group)
+
+        choose_p1_and_p2()
+        self.play(Write(words[2]))
+
+        #Seems convoluted
+        randy = Randolph().flip()
+        randy.scale(0.5)
+        randy.to_edge(DOWN)
+        randy.shift(2*RIGHT)
+
+        self.play(point_label_groups.fade, 1)
+        self.change_point_mobs_randomly(run_time = 1)
+        choose_p1_and_p2()
+        point_label_groups.fade(1)
+        self.change_point_mobs_randomly(FadeIn(randy))
+        self.play(
+            PiCreatureSays(
+                randy, "Seems \\\\ convoluted",
+                bubble_kwargs = {"height" : 2, "width" : 2},
+                target_mode = "confused"
+            )
+        )
+        choose_p1_and_p2()
+        self.play(
+            FadeOut(randy.bubble),
+            FadeOut(randy.bubble.content),
+            randy.change, "pondering",
+        )
+        self.play(Blink(randy))
+        self.play(FadeOut(randy))
+
+        #Choosing the third point
+        self.change_point_mobs([0, 0, -np.pi/2], run_time = 0)
+        p3_group = point_label_groups[2]
+        p3_group.save_state()
+        p3_group.move_to(words[3], LEFT)
+
+        self.play(Write(words[3], run_time = 1))
+        self.play(
+            p3_group.restore,
+            p3_group.set_fill, YELLOW, 1
+        )
+        self.dither()
+        self.play(Swap(*words[2:4]))
+        self.dither()
+
+        #Once the continuous randomness is handled
+        rect = SurroundingRectangle(VGroup(words[1], words[3]))
+        rect.set_stroke(WHITE, 2)
+        brace = Brace(words[2], DOWN)
+        brace_text = brace.get_text("4 equally likely outcomes")
+        brace_text.scale_in_place(0.8)
+
+        self.play(ShowCreation(rect))
+        self.play(GrowFromCenter(brace))
+        self.play(Write(brace_text))
+        self.dither()
+
+        self.random_procedure_words = words
+
+    def four_possibilities_for_coin_flips(self):
+        arcs = self.all_arcs
+        point_mobs = self.point_mobs
+        arc = arcs[-1]
+        point_label_groups = self.point_label_groups
+        arc_update = self.get_arcs_update(arcs)
+        arc_update.update(1)
+        self.update_animations.append(arc_update)
+
+        def second_arc_update_func(arcs):
+            VGroup(*arcs[:-1]).set_stroke(width = 0)
+            arcs[-1].set_stroke(BLUE, 5)
+            return arcs
+        second_arc_update = UpdateFromFunc(arcs, second_arc_update_func)
+        second_arc_update.update(1)
+        self.update_animations.append(second_arc_update)
+        self.update_animations.append(Animation(point_label_groups))
+
+        def do_the_rounds():
+            for index in 0, 1, 0, 1:
+                point_mob = point_mobs[index]
+                point_mob.generate_target()
+                point_mob.target.rotate(
+                    np.pi, about_point = self.center,
+                )
+                self.play(
+                    MoveToTarget(point_mob),
+                    *self.update_animations,
+                    run_time = 0.5
+                )
+                self.dither()
+
+        do_the_rounds()
+        self.triangle_update.update(1)
+        self.remove(arcs)
+        self.update_animations.remove(arc_update)
+        self.update_animations.remove(second_arc_update)
+        self.play(FadeIn(self.triangle))
+        self.dither()
+        self.update_animations.insert(0, self.triangle_update)
+        do_the_rounds()
+        self.dither()
+        self.change_point_mobs_randomly()
+        for x in range(2):
+            do_the_rounds()
+
+
+
+class ThisIsWhereItGetsGood(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "This is where \\\\ things get good",
+            target_mode = "hooray"
+        )
+        self.change_student_modes(*["hooray"]*3)
+        self.dither(2)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
