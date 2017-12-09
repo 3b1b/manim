@@ -152,7 +152,8 @@ class IntroducePutnam(Scene):
             Write(median_words)
         )
         self.play(Write(median))
-        self.play(Write(difficulties, run_time = 3))
+        for difficulty in difficulties:
+            self.play(FadeIn(difficulty))
         self.dither()
 
 class NatureOf5sAnd6s(TeacherStudentsScene):
@@ -848,6 +849,8 @@ class RevisitTwoDCase(TwoDCase):
         "n_random_trials" : 200,
     }
     def construct(self):
+        self.force_skipping()
+
         self.setup_circle()
         self.show_probability()
         self.add_lines_and_comment_on_them()
@@ -1126,7 +1129,7 @@ class RevisitTwoDCase(TwoDCase):
 
         def second_arc_update_func(arcs):
             VGroup(*arcs[:-1]).set_stroke(width = 0)
-            arcs[-1].set_stroke(BLUE, 5)
+            arcs[-1].set_stroke(PINK, 6)
             return arcs
         second_arc_update = UpdateFromFunc(arcs, second_arc_update_func)
         second_arc_update.update(1)
@@ -1143,10 +1146,11 @@ class RevisitTwoDCase(TwoDCase):
                 self.play(
                     MoveToTarget(point_mob),
                     *self.update_animations,
-                    run_time = 0.5
+                    run_time = np.sqrt(2)/4 #Hacky reasons to be irrational
                 )
                 self.dither()
 
+        self.revert_to_original_skipping_status()
         do_the_rounds()
         self.triangle_update.update(1)
         self.remove(arcs)
@@ -1188,11 +1192,11 @@ class ContrastTwoRandomProcesses(TwoDCase):
             VGroup(*pair) for pair in zip(point_mobs, labels)
         ])
 
-        left_circles = VGroup(*[
+        right_circles = VGroup(*[
             VGroup(circle, *point_label_groups[:i+1]).copy()
             for i in range(3)
         ])
-        right_circles = VGroup(
+        left_circles = VGroup(
             VGroup(circle, center_lines).copy(),
             VGroup(
                 circle, center_lines, 
@@ -1320,6 +1324,36 @@ class Formality(TeacherStudentsScene):
         )
         self.dither(8)
 
+class ProblemSolvingTakeaways(Scene):
+    def construct(self):
+        title = TextMobject("Problem solving takeaways")
+        underline = Line(LEFT, RIGHT)
+        underline.scale_to_fit_width(title.get_width()*1.1)
+        underline.next_to(title, DOWN)
+        group = VGroup(title, underline)
+        group.to_corner(UP+LEFT)
+
+        points = VGroup(*[
+            TextMobject(string, alignment = "")
+            for string in [
+                "Ask a simpler version \\\\ of the question",
+                "Try reframing the question \\\\ around new constructs",
+            ]
+        ])
+        points[0].highlight(BLUE)
+        points[1].highlight(YELLOW)
+        points.arrange_submobjects(
+            DOWN, buff = LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+        points.next_to(group, DOWN, LARGE_BUFF)
+
+        self.play(Write(title), ShowCreation(underline))
+        self.dither()
+        for point in points:
+            self.play(Write(point))
+            self.dither(3)
+
 class BrilliantPuzzle(PiCreatureScene):
     CONFIG = {
         "random_seed" : 2,
@@ -1332,24 +1366,31 @@ class BrilliantPuzzle(PiCreatureScene):
             test.move_to(0.75*student.get_center())
             tests.add(test)
             student.test = test
+        for i, student in enumerate(students):
+            student.right = students[(i+1)%len(students)]
+            student.left = students[(i-1)%len(students)]
         arrows = VGroup()
         for s1, s2 in adjacent_pairs(self.students):
             arrow = Arrow(
                 s1.get_center(), s2.get_center(), 
-                buff = LARGE_BUFF
+                use_rectangular_stem = False,
+                path_arc = np.pi/2,
+                buff = 0.8
             )
-            arrow.shift(-MED_SMALL_BUFF*arrow.get_vector())
+            arrow.tip.shift(SMALL_BUFF*arrow.get_vector())
+            arrow.tip.shift(-0.1*SMALL_BUFF*arrow.tip.get_center())
+            # arrow.shift(-MED_SMALL_BUFF*arrow.get_vector())
             arrow.highlight(RED)
+            arrow.pointing_right = True
             arrows.add(arrow)
-            s1.right_arrow = arrow
-            s2.left_arrow = arrow
-            arrow.counterclockwise = True
+            s1.arrow = arrow
+            arrow.student = s1
 
         title = TextMobject("Puzzle from Brilliant")
         title.scale(0.75)
         title.to_corner(UP+LEFT)
 
-        question = TextMobject("Expecte number of \\\\ circled students?")
+        question = TextMobject("Expected number of \\\\ circled students?")
         question.to_corner(UP+RIGHT)
 
         self.remove(students)
@@ -1367,7 +1408,7 @@ class BrilliantPuzzle(PiCreatureScene):
             ApplyMethod, students,
             lambda m : (m.change, "conniving")
         ))
-        self.play(LaggedStart(GrowArrow, arrows))
+        self.play(LaggedStart(ShowCreation, arrows))
         for x in range(2):
             self.swap_arrows_randomly(arrows)
         self.dither()
@@ -1401,12 +1442,18 @@ class BrilliantPuzzle(PiCreatureScene):
 
     def get_arrow_swap_anim(self, arrow):
         arrow.generate_target()
-        arrow.target.rotate_in_place(np.pi)
-        if arrow.counterclockwise:
-            arrow.target.highlight(GREEN)
+        if arrow.pointing_right:
+            target_color = GREEN
+            target_angle = np.pi - np.pi/4
         else:
-            arrow.target.highlight(RED)
-        arrow.counterclockwise = not arrow.counterclockwise
+            target_color = RED
+            target_angle = np.pi + np.pi/4
+        arrow.target.highlight(target_color)
+        arrow.target.rotate(
+            target_angle, 
+            about_point = arrow.student.get_center()
+        )
+        arrow.pointing_right = not arrow.pointing_right
         return MoveToTarget(arrow, path_arc = np.pi)
 
     def swap_arrows_randomly(self, arrows, *added_anims):
@@ -1418,17 +1465,20 @@ class BrilliantPuzzle(PiCreatureScene):
 
     def circle_students(self):
         circles = VGroup()
+        circled_students = list(self.students)
         for student in self.students:
-            ra, la = student.right_arrow, student.left_arrow
-            if ra.counterclockwise and not la.counterclockwise:
-                circle = Circle(color = YELLOW)
-                circle.scale_to_fit_height(1.2*student.get_height())
-                circle.move_to(student)
-                circles.add(circle)
-                self.play(
-                    ShowCreation(circle),
-                    Indicate(VGroup(ra, la))
-                )
+            if student.arrow.pointing_right:
+                to_remove = student.right
+            else:
+                to_remove = student.left
+            if to_remove in circled_students:
+                circled_students.remove(to_remove)
+        for student in circled_students:
+            circle = Circle(color = YELLOW)
+            circle.scale_to_fit_height(1.2*student.get_height())
+            circle.move_to(student)
+            circles.add(circle)
+            self.play(ShowCreation(circle))
         return circles
 
 class ScrollThroughBrilliantCourses(ExternallyAnimatedScene):
@@ -1474,7 +1524,89 @@ class Promotion(PiCreatureScene):
         self.play(FadeOut(url_rect))
         self.dither(3)
 
+class AddedPromoWords(Scene):
+    def construct(self):
+        words = TextMobject(
+            "First", "$2^8$", "vistors get",
+            "$(e^\\pi - \\pi)\\%$", "off"
+        )
+        words.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        words.to_edge(DOWN)
+        words.highlight_by_tex("2^8", YELLOW)
+        words.highlight_by_tex("pi", PINK)
 
+        self.play(Write(words))
+        self.dither()
+
+class PatreonThanks(PatreonEndScreen):
+    CONFIG = {
+        "specific_patrons" : [
+            "Randall Hunt",
+            "Burt Humburg",
+            "CrypticSwarm",
+            "Juan Benet",
+            "David Kedmey",
+            "Marcus Schiebold",
+            "Ali Yahya",
+            "Mayank M. Mehrotra",
+            "Lukas Biewald",
+            "Yana Chernobilsky",
+            "Kaustuv DeBiswas",
+            "Kathryn Schmiedicke",
+            "Yu Jun",
+            "Dave Nicponski",
+            "Damion Kistler",
+            "Jordan Scales",
+            "Markus Persson",
+            "Egor Gumenuk",
+            "Yoni Nazarathy",
+            "Ryan Atallah",
+            "Joseph John Cox",
+            "Luc Ritchie",
+            "James Park",
+            "Samantha D. Suplee",
+            "Delton",
+            "Thomas Tarler",
+            "Jake Alzapiedi",
+            "Jonathan Eppele",
+            "Taro Yoshioka",
+            "1stViewMaths",
+            "Jacob Magnuson",
+            "Mark Govea",
+            "Dagan Harrington",
+            "Clark Gaebel",
+            "Eric Chow",
+            "Mathias Jansson",
+            "David Clark",
+            "Michael Gardner",
+            "Erik Sundell",
+            "Awoo",
+            "Dr. David G. Stork",
+            "Tianyu Ge",
+            "Ted Suzman",
+            "Linh Tran",
+            "Andrew Busey",
+            "John Haley",
+            "Ankalagon",
+            "Eric Lavault",
+            "Boris Veselinovich",
+            "Julian Pulgarin",
+            "Jeff Linse",
+            "Cooper Jones",
+            "Ryan Dahl",
+            "Robert Teed",
+            "Jason Hise",
+            "Meshal Alshammari",
+            "Bernd Sing",
+            "Mustafa Mahdi",
+            "Mathew Bramson",
+            "Jerry Ling",
+            "Shimin Kuang",
+            "Rish Kundalia",
+            "Achille Brighton",
+            "Ripta Pasay",
+        ]
+    }
 
 
 
