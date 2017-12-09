@@ -43,3 +43,11 @@ Look through the old_projects folder to see the code for previous 3b1b videos.
 While developing a scene, the `-s` flag is helpful to just see what things look like at the end without having to generate the full animation.  It can also be helpful to put `self.force_skipping()` at the top of the construct method, and `self.revert_to_original_skipping_status()` before the portion of the scene that you want to test, and run with the `-p` flag to just see a preview of one part of the scene.
 
 Scene with `PiCreatures` are somewhat 3b1b specific, so the specific designs for various expressions are not part of the public repo.  You should still be able to run them, but they will fall back on using the "plain" expression for the creature.
+
+## Docker Method
+Since its a bit tricky to get all the dependencies set up just right, there is
+a Dockerfile provided.
+
+1. [Install Docker](https://www.docker.com/products/overview)
+2. Build docker image. `docker build -t manim .`
+3. Run it! `docker run --rm -v "$PWD/files":/app/files manim example_scenes.py WarpSquare`
