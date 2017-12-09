@@ -13,7 +13,7 @@ class TexSymbol(VMobjectFromSVGPathstring):
     def pointwise_become_partial(self, mobject, a, b):
         #TODO, this assumes a = 0
         if b < 0.5:
-            b = 2*b 
+            b = 2*b
             added_width = 1
             opacity = 0
         else:
@@ -115,7 +115,7 @@ class TexMobject(SVGMobject):
 
     def handle_multiple_args(self):
         """
-        Reorganize existing submojects one layer 
+        Reorganize existing submojects one layer
         deeper based on the structure of args (as a list of strings)
         """
         new_submobjects = []
@@ -188,7 +188,7 @@ class TexMobject(SVGMobject):
 
     def add_background_rectangle(self, color = BLACK, opacity = 0.75):
         self.background_rectangle = BackgroundRectangle(
-            self, color = color, 
+            self, color = color,
             fill_opacity = opacity
         )
         letters = VMobject(*self.submobjects)
@@ -232,8 +232,8 @@ class Brace(TexMobject):
     def put_at_tip(self, mob, use_next_to = True, **kwargs):
         if use_next_to:
             mob.next_to(
-                self.get_tip(), 
-                np.round(self.get_direction()), 
+                self.get_tip(),
+                np.round(self.get_direction()),
                 **kwargs
             )
         else:
@@ -305,7 +305,7 @@ def tex_hash(expression, template_tex_file):
 
 def tex_to_svg_file(expression, template_tex_file):
     image_dir = os.path.join(
-        TEX_IMAGE_DIR, 
+        TEX_IMAGE_DIR,
         tex_hash(expression, template_tex_file)
     )
     if os.path.exists(image_dir):
@@ -316,13 +316,13 @@ def tex_to_svg_file(expression, template_tex_file):
 
 def generate_tex_file(expression, template_tex_file):
     result = os.path.join(
-        TEX_DIR, 
+        TEX_DIR,
         tex_hash(expression, template_tex_file)
     ) + ".tex"
     if not os.path.exists(result):
-        print "Writing \"%s\" to %s"%(
+        print("Writing \"%s\" to %s"%(
             "".join(expression), result
-        )
+        ))
         with open(template_tex_file, "r") as infile:
             body = infile.read()
             body = body.replace(TEX_TEXT_TO_REPLACE, expression)
@@ -339,8 +339,8 @@ def tex_to_dvi(tex_file):
     result = tex_file.replace(".tex", ".dvi")
     if not os.path.exists(result):
         commands = [
-            "latex", 
-            "-interaction=batchmode", 
+            "latex",
+            "-interaction=batchmode",
             "-halt-on-error",
             "-output-directory=" + TEX_DIR,
             tex_file,
@@ -361,7 +361,7 @@ def tex_to_dvi(tex_file):
 
 def dvi_to_svg(dvi_file, regen_if_exists = False):
     """
-    Converts a dvi, which potentially has multiple slides, into a 
+    Converts a dvi, which potentially has multiple slides, into a
     directory full of enumerated pngs corresponding with these slides.
     Returns a list of PIL Image objects for these images sorted as they
     where in the dvi
@@ -381,17 +381,3 @@ def dvi_to_svg(dvi_file, regen_if_exists = False):
         ]
         os.system(" ".join(commands))
     return result
-
-
-
-
-
-
-
-
-
-
-
-
-
-

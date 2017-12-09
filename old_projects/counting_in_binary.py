@@ -82,7 +82,7 @@ COUNT_TO_TIP_POS = {
 
 def finger_tip_power_of_2(finger_no):
     return TexMobject(str(2**finger_no)).shift(COUNT_TO_TIP_POS[finger_no])
-    
+
 class Hand(ImageMobject):
     STARTING_BOTTOM_RIGHT = [4.61111111e+00,  -3.98888889e+00, 9.80454690e-16]
     def __init__(self, num, small = False, **kwargs):
@@ -115,7 +115,7 @@ class Hand(ImageMobject):
 
 def get_algorithm():
     return TextMobject(ALGORITHM_TEXT)
-    
+
 def get_finger_colors():
     return list(Color("yellow").range_to("red", 5))
 
@@ -133,7 +133,7 @@ class LeftHand(Hand):
     def __init__(self, num, **kwargs):
         Hand.__init__(
             self,
-            read_reversed_binary(five_char_binary(num)), 
+            read_reversed_binary(five_char_binary(num)),
             **kwargs
         )
         self.rotate(np.pi, UP)
@@ -145,7 +145,7 @@ def get_hand_map(which_hand = "right"):
     elif which_hand == "left":
         Class = LeftHand
     else:
-        print "Bad arg, bro"
+        print("Bad arg, bro")
         return
     return dict([
         (num, Class(num, small=True))
@@ -164,13 +164,13 @@ class SaveEachNumber(OverHand):
         OverHand.construct(self)
         for count in COUNT_TO_FRAME_NUM:
             path = os.path.join(
-                MOVIE_DIR, MOVIE_PREFIX, "images", 
+                MOVIE_DIR, MOVIE_PREFIX, "images",
                 "Hand%d.png"%count
             )
             Image.fromarray(self.frames[COUNT_TO_FRAME_NUM[count]]).save(path)
 
     def write_to_movie(self, name = None):
-        print "Why bother writing to movie..."
+        print("Why bother writing to movie...")
 
 class ShowCounting(OverHand):
     def construct(self):
@@ -197,7 +197,7 @@ class ShowFrameNum(OverHand):
     def construct(self):
         OverHand.construct(self)
         for frame, count in zip(self.frames, it.count()):
-            print count, "of", len(self.frames)
+            print(count + "of" + len(self.frames))
             mob = Mobject(*[
                 TexMobject(char).shift(0.3*x*RIGHT)
                 for char, x, in zip(str(count), it.count())
@@ -241,7 +241,7 @@ class Introduction(Scene):
 
 class ShowReadingRule(Scene):
     def construct(self):
-        sample_counts = [6, 17, 27, 31]        
+        sample_counts = [6, 17, 27, 31]
         question = TextMobject("""
             How do you recognize what number a given configuration represents?
         """, size = "\\Huge").scale(0.75).to_corner(UP+LEFT)
@@ -284,7 +284,7 @@ class ShowReadingRule(Scene):
         self.add(hand, *count_mobs)
         self.dither()
         self.play(*[
-            Transform(count_mobs[n/2], sum_mobs[n]) 
+            Transform(count_mobs[n/2], sum_mobs[n])
             if n%2 == 0 and n/2 < len(counts)
             else FadeIn(sum_mobs[n])
             for n in range(len(sum_mobs))
@@ -380,13 +380,13 @@ class MindFindsShortcuts(Scene):
         sum421 = TexMobject("4+2+1").shift(DOWN+2*RIGHT)
         seven = TexMobject("7").shift(DOWN+6*RIGHT)
         compound = Mobject(
-            Arrow(hand, sum421), 
+            Arrow(hand, sum421),
             sum421,
             Arrow(sum421, seven)
         )
         self.add(
             words1,
-            hand, 
+            hand,
             compound,
             seven
         )
@@ -415,11 +415,11 @@ class MindFindsShortcuts(Scene):
         self.dither()
         self.play(
             Transform(
-                deepcopy(hands[16]).highlight("black").center().shift(hands[23].get_center()), 
+                deepcopy(hands[16]).highlight("black").center().shift(hands[23].get_center()),
                 hands[16]
             ),
             Transform(
-                deepcopy(hands[7]).highlight("black").center().shift(hands[23].get_center()), 
+                deepcopy(hands[7]).highlight("black").center().shift(hands[23].get_center()),
                 hands[7]
             ),
             Animation(hands[23]),
@@ -480,14 +480,3 @@ class WithToes(Scene):
 
 if __name__ == "__main__":
     command_line_create_scene(MOVIE_PREFIX)
-
-
-
-
-
-
-
-
-
-
-
