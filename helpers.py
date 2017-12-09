@@ -182,7 +182,7 @@ def partial_bezier_points(points, a, b):
         for i in range(len(points))
     ])
     return np.array([
-        bezier(a_to_1[:i+1])(b)
+        bezier(a_to_1[:i+1])((b-a)/(1.-a))
         for i in range(len(points))
     ])
 
