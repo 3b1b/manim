@@ -48,6 +48,8 @@ class Mobject(object):
         pass
 
     def add(self, *mobjects):
+        if self in mobjects:
+            raise Exception("Mobject cannot contain self")
         self.submobjects = list_update(self.submobjects, mobjects)
         return self
 
@@ -82,14 +84,15 @@ class Mobject(object):
             setattr(self, attr, func(getattr(self, attr)))
         return self
 
-    def get_image(self):
-        from camera import Camera
-        camera = Camera()
+    def get_image(self, camera = None):
+        if camera is None:
+            from camera import Camera
+            camera = Camera()
         camera.capture_mobject(self)
-        return Image.fromarray(camera.get_image())
+        return camera.get_image()
 
-    def show(self):
-        self.get_image().show()
+    def show(self, camera = None):
+        self.get_image(camera = camera).show()
 
     def save_image(self, name = None):
         self.get_image().save(
@@ -97,19 +100,29 @@ class Mobject(object):
         )
 
     def copy(self):
+        #TODO, either justify reason for shallow copy, or
+        #remove this redundancy everywhere
+        # return self.deepcopy() 
         copy_mobject = copy.copy(self)
         copy_mobject.points = np.array(self.points)
         copy_mobject.submobjects = [
             submob.copy() for submob in self.submobjects
         ]
+        family = self.submobject_family()
+        for attr, value in self.__dict__.items():
+            if isinstance(value, Mobject) and value in family and value is not self:
+                setattr(copy_mobject, attr, value.copy())
         return copy_mobject
 
     def deepcopy(self):
         return copy.deepcopy(self)
 
-    def generate_target(self):
+    def generate_target(self, use_deepcopy = False):
         self.target = None #Prevent exponential explosion
-        self.target = self.copy()
+        if use_deepcopy:
+            self.target = self.deepcopy()
+        else:
+            self.target = self.copy()
         return self.target
 
     #### Transforming operations ######
@@ -160,6 +173,12 @@ class Mobject(object):
     def apply_function(self, function):
         for mob in self.family_members_with_points():
             mob.points = np.apply_along_axis(function, 1, mob.points)
+        return self
+
+    def apply_matrix(self, matrix):
+        matrix = np.array(matrix)
+        for mob in self.family_members_with_points():
+            mob.points = np.dot(mob.points, matrix.T)
         return self
 
     def wag(self, direction = RIGHT, axis = DOWN, wag_factor = 1.0):
@@ -331,6 +350,9 @@ class Mobject(object):
     def scale_to_fit_height(self, height):
         return self.rescale_to_fit(height, 1, stretch = False)
 
+    def scale_to_fit_depth(self, depth):
+        return self.rescale_to_fit(depth, 2, stretch = False)
+
     def space_out_submobjects(self, factor = 1.5, **kwargs):
         self.scale_in_place(factor)
         for submob in self.submobjects:
@@ -377,11 +399,17 @@ class Mobject(object):
 
     ## Color functions
 
-    def highlight(self, color = YELLOW_C, family = True, condition = None):
+    def highlight(self, color = YELLOW_C, family = True):
         """
         Condition is function which takes in one arguments, (x, y, z).
+        Here it just recurses to submobjects, but in subclasses this 
+        should be further implemented based on the the inner workings
+        of color
         """
-        raise Exception("Not implemented")
+        if family:
+            for submob in self.submobjects:
+                submob.highlight(color, family = family)
+        return self
 
     def gradient_highlight(self, *colors):
         self.submobject_gradient_highlight(*colors)
@@ -424,11 +452,14 @@ class Mobject(object):
         return self.color
     ##
 
-    def save_state(self):
+    def save_state(self, use_deepcopy = False):
         if hasattr(self, "saved_state"):
             #Prevent exponential growth of data
             self.saved_state = None
-        self.saved_state = self.copy()
+        if use_deepcopy:
+            self.saved_state = self.deepcopy()
+        else:
+            self.saved_state = self.copy()
         return self
 
     def restore(self):
@@ -535,6 +566,12 @@ class Mobject(object):
     def get_left(self):
         return self.get_edge_center(LEFT)
 
+    def get_zenith(self):
+        return self.get_edge_center(OUT)
+
+    def get_nadir(self):
+        return self.get_edge_center(IN)
+
     def length_over_dim(self, dim):
         return (
             self.reduce_across_dimension(np.max, np.max, dim) -
@@ -546,6 +583,9 @@ class Mobject(object):
 
     def get_height(self):
         return self.length_over_dim(1)
+
+    def get_depth(self):
+        return self.length_over_dim(2)
 
     def point_from_proportion(self, alpha):
         raise Exception("Not implemented")
@@ -582,6 +622,25 @@ class Mobject(object):
             m2.next_to(m1, direction, **kwargs)
         if center:
             self.center()
+        return self
+
+    def arrange_submobjects_in_grid(self, n_rows = None, n_cols = None, **kwargs):
+        submobs = self.submobjects
+        if n_rows is None and n_cols is None:
+            n_cols = int(np.sqrt(len(submobs)))
+            
+        if n_rows is not None:
+            v1 = RIGHT
+            v2 = DOWN
+            n = len(submobs) / n_rows
+        elif n_cols is not None:
+            v1 = DOWN
+            v2 = RIGHT
+            n = len(submobs) / n_cols
+        Group(*[
+            Group(*submobs[i:i+n]).arrange_submobjects(v1, **kwargs)
+            for i in range(0, len(submobs), n)
+        ]).arrange_submobjects(v2, **kwargs)
         return self
 
     def sort_submobjects(self, point_to_num_func = lambda p : p[0]):
@@ -705,8 +764,6 @@ class Mobject(object):
 
     def pointwise_become_partial(self, mobject, a, b):
         pass #To implement in subclass
-
-
 
 class Group(Mobject):
     #Alternate name to improve readibility in cases where

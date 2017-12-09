@@ -59,7 +59,8 @@ class Transform(Animation):
         Animation.clean_up(self, surrounding_scene)
         if self.replace_mobject_with_target_in_scene and surrounding_scene is not None:
             surrounding_scene.remove(self.mobject)
-            surrounding_scene.add(self.original_target_mobject)
+            if not self.remover:
+                surrounding_scene.add(self.original_target_mobject)
 
 class ReplacementTransform(Transform):
     CONFIG = {
@@ -98,13 +99,21 @@ class CyclicReplace(Transform):
 class Swap(CyclicReplace):
     pass #Renaming, more understandable for two entries
 
-class GrowFromCenter(Transform):
-    def __init__(self, mobject, **kwargs):
+class GrowFromPoint(Transform):
+    def __init__(self, mobject, point, **kwargs):
         target = mobject.copy()
-        point = Point(mobject.get_center())
-        mobject.replace(point)
-        mobject.highlight(point.get_color())
+        point_mob = Point(point)
+        mobject.replace(point_mob)
+        mobject.highlight(point_mob.get_color())
         Transform.__init__(self, mobject, target, **kwargs)
+
+class GrowFromCenter(GrowFromPoint):
+    def __init__(self, mobject, **kwargs):
+        GrowFromPoint.__init__(self, mobject, mobject.get_center(), **kwargs)
+
+class GrowArrow(GrowFromPoint):
+    def __init__(self, arrow, **kwargs):
+        GrowFromPoint.__init__(self, arrow, arrow.get_start(), **kwargs)
 
 class SpinInFromNothing(GrowFromCenter):
     CONFIG = {
@@ -114,9 +123,7 @@ class SpinInFromNothing(GrowFromCenter):
 class ShrinkToCenter(Transform):
     def __init__(self, mobject, **kwargs):
         Transform.__init__(
-            self, mobject,
-            Point(mobject.get_center()), 
-            **kwargs
+            self, mobject, mobject.get_point_mobject(), **kwargs
         )
 
 class ApplyMethod(Transform):
@@ -137,10 +144,9 @@ class ApplyMethod(Transform):
         )
         assert(isinstance(method.im_self, Mobject))
         method_kwargs = kwargs.get("method_kwargs", {})
-        target = method.im_self.deepcopy()
+        target = method.im_self.copy()
         method.im_func(target, *args, **method_kwargs)
         Transform.__init__(self, method.im_self, target, **kwargs)
-
 
 class FadeOut(Transform):
     CONFIG = {
@@ -166,7 +172,6 @@ class FadeIn(Transform):
         if isinstance(self.starting_mobject, VMobject):
             self.starting_mobject.set_stroke(width = 0)
             self.starting_mobject.set_fill(opacity = 0)
-
 
 class ShimmerIn(DelayByOrder):
     def __init__(self, mobject, **kwargs):
@@ -227,7 +232,6 @@ class Rotate(ApplyMethod):
             about_point = self.about_point,
         )
         Transform.__init__(self, mobject, target, **kwargs)
-
 
 class ApplyPointwiseFunction(ApplyMethod):
     CONFIG = {

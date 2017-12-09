@@ -109,7 +109,10 @@ class PiCreature(SVGMobject):
         return self
 
     def look(self, direction):
-        direction = direction/np.linalg.norm(direction)
+        norm = np.linalg.norm(direction)
+        if norm == 0:
+            return
+        direction /= norm
         self.purposeful_looking_direction = direction
         for pupil, eye in zip(self.pupils.split(), self.eyes.split()):
             pupil_radius = pupil.get_width()/2.
@@ -273,7 +276,7 @@ class Eyes(VMobject):
 
         pi = Randolph(mode = mode)
         eyes = VGroup(pi.eyes, pi.pupils)
-        eyes.scale_to_fit_height(self.height)
+        pi.scale(self.height/eyes.get_height())
         if self.submobjects:
             eyes.move_to(self, DOWN)
         else:
@@ -304,7 +307,6 @@ class Eyes(VMobject):
             kwargs["rate_func"] = squish_rate_func(there_and_back)
         return Transform(self, target, **kwargs)
 
-
 #######################
 
 class PiCreatureBubbleIntroduction(AnimationGroup):
@@ -326,6 +328,7 @@ class PiCreatureBubbleIntroduction(AnimationGroup):
             bubble_class = self.bubble_class,
             **self.bubble_kwargs
         )
+        Group(bubble, bubble.content).shift_onto_screen()
 
         pi_creature.generate_target()
         pi_creature.target.change_mode(self.target_mode)
@@ -523,18 +526,17 @@ class PiCreatureScene(Scene):
                 lambda anim : pi_creature in anim.mobject.submobject_family(),
                 animations
             )
-            if anims_with_pi_creature:
-                for anim in anims_with_pi_creature:
-                    if isinstance(anim, Transform):
-                        index = anim.mobject.submobject_family().index(pi_creature)
-                        target_family = anim.target_mobject.submobject_family()
-                        target = target_family[index]
-                        if isinstance(target, PiCreature):
-                            target.look_at(point_of_interest)
-                continue
-            animations.append(
-                ApplyMethod(pi_creature.look_at, point_of_interest)
-            )
+            for anim in anims_with_pi_creature:
+                if isinstance(anim, Transform):
+                    index = anim.mobject.submobject_family().index(pi_creature)
+                    target_family = anim.target_mobject.submobject_family()
+                    target = target_family[index]
+                    if isinstance(target, PiCreature):
+                        target.look_at(point_of_interest)
+            if not anims_with_pi_creature:
+                animations.append(
+                    ApplyMethod(pi_creature.look_at, point_of_interest)
+                )
         return animations
 
     def blink(self):
@@ -568,11 +570,15 @@ class PiCreatureScene(Scene):
             if blink and self.any_pi_creatures_on_screen() and time_to_blink:
                 self.blink()
             else:
-                Scene.dither(self)
+                self.non_blink_dither()
             time -= 1
             self.total_dither_time += 1
         if time > 0:
-            Scene.dither(self, time)
+            self.non_blink_dither(time)
+        return self
+
+    def non_blink_dither(self, time = 1):
+        Scene.dither(self, time)
         return self
 
     def change_mode(self, mode):
@@ -642,7 +648,13 @@ class TeacherStudentsScene(PiCreatureScene):
         return self.pi_creature_thinks(student, *content, **kwargs)
 
     def change_student_modes(self, *modes, **kwargs):
-        added_anims = kwargs.get("added_anims", [])
+        added_anims = kwargs.pop("added_anims", [])
+        self.play(
+            self.get_student_changes(*modes, **kwargs),
+            *added_anims
+        )
+
+    def get_student_changes(self, *modes, **kwargs):
         pairs = zip(self.get_students(), modes)
         pairs = [(s, m) for s, m in pairs if m is not None]
         start = VGroup(*[s for s, m in pairs])
@@ -650,13 +662,11 @@ class TeacherStudentsScene(PiCreatureScene):
         if "look_at_arg" in kwargs:
             for pi in target:
                 pi.look_at(kwargs["look_at_arg"])
-        self.play(
-            Transform(
-                start, target, 
-                submobject_mode = "lagged_start",
-                run_time = 2
-            ),
-            *added_anims
+        submobject_mode = kwargs.get("submobject_mode", "lagged_start")
+        return Transform(
+            start, target, 
+            submobject_mode = submobject_mode,
+            run_time = 2
         )
 
     def zoom_in_on_thought_bubble(self, bubble = None, radius = SPACE_HEIGHT+SPACE_WIDTH):

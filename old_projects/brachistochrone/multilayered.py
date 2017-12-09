@@ -334,7 +334,7 @@ class ShowLightAndSlidingObject(MultilayeredScene, TryManyPaths, PhotonScene):
             if path.get_height() > self.total_glass_height:
                 path.stretch(0.7, 1)
                 path.shift(self.top - path.get_top())
-            path.rgbs[:,2] = 0
+            path.rgbas[:,2] = 0
         loop = paths.pop(1) ##Bad!
         randy = Randolph()
         randy.scale(RANDY_SCALE_FACTOR)

@@ -36,6 +36,8 @@ python extract_scene.py -p example_scenes.py SquareToCircle
 
 `-p` gives a preview of an animation, `-w` will write it to a file, and `-s` will show/save the final image in the animation.
 
+You will probably want to change the MOVIE_DIR constant to be whatever direction you want video files to output to.
+
 Look through the old_projects folder to see the code for previous 3b1b videos.  
 
 While developing a scene, the `-s` flag is helpful to just see what things look like at the end without having to generate the full animation.  It can also be helpful to put `self.force_skipping()` at the top of the construct method, and `self.revert_to_original_skipping_status()` before the portion of the scene that you want to test, and run with the `-p` flag to just see a preview of one part of the scene.

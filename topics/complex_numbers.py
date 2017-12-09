@@ -203,14 +203,20 @@ class ComplexPlane(NumberPlane):
             ]
         for number in numbers:
             point = self.number_to_point(number)
-            if number == 0:
+            num_str = str(number).replace("j", "i")
+            if num_str.startswith("0"):
                 num_str = "0"
+            elif num_str in ["1i", "-1i"]:
+                num_str = num_str.replace("1", "")
+            num_mob = TexMobject(num_str)
+            num_mob.add_background_rectangle()
+            num_mob.scale(self.number_scale_factor)
+            if complex(number).imag != 0:
+                vect = DOWN+RIGHT
             else:
-                num_str = str(number).replace("j", "i")
-            num = TexMobject(num_str)
-            num.scale(self.number_scale_factor)
-            num.shift(point-num.get_corner(UP+LEFT)+nudge)
-            result.add(num)
+                vect = DOWN+RIGHT
+            num_mob.next_to(point, vect, SMALL_BUFF)
+            result.add(num_mob)
         return result
 
     def add_coordinates(self, *numbers):

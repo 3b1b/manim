@@ -71,7 +71,7 @@ class ZetaTransformationScene(ComplexTransformationScene):
             #See how big this line will become
             diameter = abs(zeta(complex(*closest_to_one[:2])))
             target_num_anchors = np.clip(
-                int(self.anchor_density*np.pi*diameter),                
+                int(self.anchor_density*np.pi*diameter),
                 self.min_added_anchors,
                 self.max_added_anchors,
             )
@@ -91,12 +91,12 @@ class ZetaTransformationScene(ComplexTransformationScene):
         epsilon = 0.1
         x_range = np.arange(
             max(self.x_min, self.extra_lines_x_min),
-            min(self.x_max, self.extra_lines_x_max), 
+            min(self.x_max, self.extra_lines_x_max),
             step_size
         )
         y_range = np.arange(
             max(self.y_min, self.extra_lines_y_min),
-            min(self.y_max, self.extra_lines_y_max), 
+            min(self.y_max, self.extra_lines_y_max),
             step_size
         )
         vert_lines = VGroup(*[
@@ -158,11 +158,11 @@ class TestZetaOnHalfPlane(ZetaTransformationScene):
         self.add_transformable_plane()
         self.add_extra_plane_lines_for_zeta()
         self.prepare_for_transformation(self.plane)
-        print sum([
+        print(sum([
             mob.get_num_points()
             for mob in self.plane.family_members_with_points()
-        ])
-        print len(self.plane.family_members_with_points())
+        ]))
+        print(len(self.plane.family_members_with_points()))
         self.apply_zeta_function()
         self.dither()
 
@@ -347,7 +347,7 @@ class PreviewZetaAndContinuation(ZetaTransformationScene):
                 alignment = "",
             )
             for s in [
-                "$\\displaystyle \\sum_{n=1}^\\infty \\frac{1}{n^s}$", 
+                "$\\displaystyle \\sum_{n=1}^\\infty \\frac{1}{n^s}$",
                 "analytic continuation"
             ]
         ]
@@ -409,7 +409,7 @@ class AssumeKnowledgeOfComplexNumbers(ComplexTransformationScene):
             ShowCreation(x_line),
             ShowCreation(y_line),
             ShowCreation(VGroup(line, dot)),
-            Write(complex_number_label),        
+            Write(complex_number_label),
         )
         self.play(Write(text[2]))
         self.dither(2)
@@ -457,7 +457,7 @@ class DefineForRealS(PiCreatureScene):
     def plug_in_two(self, zeta_def):
         two_def = self.get_definition("2")[0]
         number_line = NumberLine(
-            x_min = 0, 
+            x_min = 0,
             x_max = 3,
             tick_frequency = 0.25,
             numbers_with_elongated_ticks = range(4),
@@ -480,7 +480,7 @@ class DefineForRealS(PiCreatureScene):
                 frac.shift(0.5*RIGHT + 0.2*UP)
                 arrow = Arrow(
                     frac.get_bottom(), brace.get_top(),
-                    tip_length = 0.1, 
+                    tip_length = 0.1,
                     buff = 0.1
                 )
                 arrow.highlight(line.get_color())
@@ -489,7 +489,7 @@ class DefineForRealS(PiCreatureScene):
         pi_term = TexMobject("= \\frac{\\pi^2}{6}")
         pi_term.next_to(zeta_def[1], RIGHT)
         pi_arrow = Arrow(
-            pi_term[-1].get_bottom(), pi_dot, 
+            pi_term[-1].get_bottom(), pi_dot,
             color = pi_dot.get_color()
         )
         approx = TexMobject("\\approx 1.645")
@@ -762,7 +762,7 @@ class IgnoreNegatives(TeacherStudentsScene):
         self.add(definition)
         brace = Brace(definition, DOWN)
         only_s_gt_1 = brace.get_text("""
-            Only defined 
+            Only defined
             for $s > 1$
         """)
         only_s_gt_1[-3].highlight(YELLOW)
@@ -795,7 +795,7 @@ class RiemannFatherOfComplex(ComplexTransformationScene):
         )
         name.to_corner(UP+LEFT)
         name.shift(0.25*DOWN)
-        name.add_background_rectangle()        
+        name.add_background_rectangle()
         # photo = Square()
         photo = ImageMobject("Riemann", invert = False)
         photo.scale_to_fit_width(5)
@@ -862,7 +862,7 @@ class FromRealToComplex(ComplexTransformationScene):
     def show_real_to_real(self):
         zeta = self.get_zeta_definition("2",  "\\frac{\\pi^2}{6}")
         number_line = NumberLine(
-            unit_size = 2, 
+            unit_size = 2,
             tick_frequency = 0.5,
             numbers_with_elongated_ticks = range(-2, 3)
         )
@@ -1093,7 +1093,7 @@ class FromRealToComplex(ComplexTransformationScene):
 
         domain_words = TextMobject("""
             $\\zeta(s)$ happily
-            converges and 
+            converges and
             makes sense
         """)
         domain_words.to_corner(UP+RIGHT, buff = MED_LARGE_BUFF)
@@ -1164,7 +1164,7 @@ class FromRealToComplex(ComplexTransformationScene):
         ])
         sum_terms = VGroup(*it.chain(*[
             [
-                VGroup(*term[:3]), 
+                VGroup(*term[:3]),
                 VGroup(*term[3:-1]),
                 term[-1],
             ]
@@ -1187,7 +1187,7 @@ class FromRealToComplex(ComplexTransformationScene):
 
     def get_sum_lines(self, exponent, line_thickness = 6):
         powers = [0] + [
-            x**(-exponent) 
+            x**(-exponent)
             for x in range(1, self.num_lines_in_spiril_sum)
         ]
         power_sums = np.cumsum(powers)
@@ -1411,7 +1411,7 @@ class ComplexExponentiation(Scene):
         self.dither()
         walk_up_and_down()
         self.dither()
-        curr_base = 1./9        
+        curr_base = 1./9
         self.play(Transform(denom, nine))
         walk_up_and_down()
         self.dither()
@@ -1576,8 +1576,8 @@ class ComplexFunctionsAsTransformations(ComplexTransformationScene):
         input_dots, output_dots, arrows = self.get_dots()
 
         self.play(FadeIn(
-            input_dots, 
-            run_time = 2, 
+            input_dots,
+            run_time = 2,
             submobject_mode = "lagged_start"
         ))
         for in_dot, out_dot, arrow in zip(input_dots, output_dots, arrows):
@@ -1847,7 +1847,7 @@ class ShowZetaOnHalfPlane(ZetaTransformationScene):
         right_i_lines, left_i_lines = [
             VGroup(*[
                 Line(
-                    vert_vect+RIGHT, 
+                    vert_vect+RIGHT,
                     vert_vect+(SPACE_WIDTH+1)*horiz_vect
                 )
                 for vert_vect in UP, DOWN
@@ -2060,9 +2060,9 @@ class SquiggleOnExtensions(ZetaTransformationScene):
                 0
             ])
         funcs = [
-            shear, 
-            mixed_scalar_func, 
-            alt_mixed_scalar_func, 
+            shear,
+            mixed_scalar_func,
+            alt_mixed_scalar_func,
             sinusoidal_func,
         ]
         for mob in self.left_plane.family_members_with_points():
@@ -2080,7 +2080,7 @@ class SquiggleOnExtensions(ZetaTransformationScene):
         self.left_plane.save_state()
         for plane, dot in zip(new_left_planes, new_dots):
             self.play(
-                Transform(self.left_plane, plane), 
+                Transform(self.left_plane, plane),
                 Transform(self.dot, dot),
                 run_time = 3
             )
@@ -2100,9 +2100,9 @@ class SquiggleOnExtensions(ZetaTransformationScene):
     def lock_into_place(self):
         words = TextMobject(
             """Only one extension
-            has a """, 
+            has a """,
             "\\emph{derivative}",
-            "everywhere", 
+            "everywhere",
             alignment = ""
         )
         words.to_corner(UP+LEFT)
@@ -2126,7 +2126,7 @@ class DontKnowDerivatives(TeacherStudentsScene):
         self.random_blink(2)
         self.student_says(
             """
-            I get $\\frac{df}{dx}$, just not 
+            I get $\\frac{df}{dx}$, just not
             for complex functions
             """,
             target_mode = "confused",
@@ -2206,8 +2206,8 @@ class IntroduceAnglePreservation(VisualizingSSquared):
         self.play(Blink(randy))
         self.dither()
         self.play(*map(FadeOut, [
-            randy, morty, 
-            randy.bubble, randy.bubble.content,            
+            randy, morty,
+            randy.bubble, randy.bubble.content,
             morty.bubble, morty.bubble.content,
         ]))
 
@@ -2253,7 +2253,7 @@ class IntroduceAnglePreservation(VisualizingSSquared):
     def name_analytic(self):
         equiv = TextMobject("``Analytic'' $\\Leftrightarrow$ Angle-preserving")
         kind_of = TextMobject("...kind of")
-        for text in equiv, kind_of:       
+        for text in equiv, kind_of:
             text.scale(1.2)
             text.add_background_rectangle()
         equiv.highlight(YELLOW)
@@ -2316,7 +2316,7 @@ class IntroduceAnglePreservation(VisualizingSSquared):
         angle_tex.add_background_rectangle()
         self.put_angle_tex_next_to_arc(angle_tex, arc)
         angle_arrow = Arrow(
-            angle_tex, arc, 
+            angle_tex, arc,
             color = arc.get_color(),
             buff = 0.1,
         )
@@ -2577,7 +2577,7 @@ class ThatsHowZetaIsDefined(TeacherStudentsScene):
     def construct(self):
         self.add_zeta_definition()
         self.teacher_says("""
-            So that's how 
+            So that's how
             $\\zeta(s)$ is defined
         """)
         self.change_student_modes(*["hooray"]*3)
@@ -2647,11 +2647,11 @@ class ManyIntersectingLinesPreZeta(ZetaTransformationScene):
 
 class ManyIntersectingLinesPostZeta(ManyIntersectingLinesPreZeta):
     CONFIG = {
-        "apply_zeta" : True, 
+        "apply_zeta" : True,
         # "anchor_density" : 5
     }
     def get_modified_line_anims(self, lines):
-        n_inserted_points = 30        
+        n_inserted_points = 30
         new_lines = lines.copy()
         new_lines.set_stroke(width = 5)
         def update_new_lines(lines_to_update):
@@ -2686,7 +2686,7 @@ class ManyIntersectingLinesPostSSquared(ManyIntersectingLinesPreSSquared):
         "apply_zeta" : True,
     }
     def get_modified_line_anims(self, lines):
-        n_inserted_points = 30        
+        n_inserted_points = 30
         new_lines = lines.copy()
         new_lines.set_stroke(width = 5)
         def update_new_lines(lines_to_update):
@@ -2699,7 +2699,7 @@ class ManyIntersectingLinesPostSSquared(ManyIntersectingLinesPreSSquared):
                 if start.get_num_points() > 0:
                     start.points = np.array(end.points)
         return [UpdateFromFunc(new_lines, update_new_lines)]
-                
+
 class ButWhatIsTheExensions(TeacherStudentsScene):
     def construct(self):
         self.student_says(
@@ -2725,7 +2725,7 @@ class MathematiciansLookingAtFunctionEquation(Scene):
             "\\zeta(s)",
             "= 2^s \\pi ^{s-1}",
             "\\sin\\left(\\frac{\\pi s}{2}\\right)",
-            "\\Gamma(1-s)", 
+            "\\Gamma(1-s)",
             "\\zeta(1-s)",
         )
         equation.shift(UP)
@@ -2789,7 +2789,7 @@ class DiscussZeros(ZetaTransformationScene):
 
         for mob in dots, arrows, q_marks:
             self.play(ShowCreation(mob))
-        self.play(Write(question))  
+        self.play(Write(question))
         self.dither(2)
         dots.generate_target()
         for i, dot in enumerate(dots.target):
@@ -2865,7 +2865,7 @@ class DiscussZeros(ZetaTransformationScene):
         name.to_edge(UP)
         arrow = Arrow(name.get_bottom(), 0.5*RIGHT+UP)
         primes = TexMobject("2, 3, 5, 7, 11, 13, 17, \\dots")
-        primes.to_corner(UP+RIGHT)       
+        primes.to_corner(UP+RIGHT)
         # photo = Square()
         photo = ImageMobject("Riemann", invert = False)
         photo.scale_to_fit_width(5)
@@ -2885,7 +2885,7 @@ class DiscussZeros(ZetaTransformationScene):
 
         self.play(FadeIn(strip), *self.get_dot_wandering_anims())
         self.play(
-            Write(name, run_time = 1), 
+            Write(name, run_time = 1),
             ShowCreation(arrow),
             *self.get_dot_wandering_anims()
         )
@@ -2919,7 +2919,7 @@ class DiscussZeros(ZetaTransformationScene):
             result = (np.sin(6*2*np.pi*t) + 1)*RIGHT/2
             result += 3*np.cos(2*2*np.pi*t)*UP
             return result
-            
+
         self.wandering_path = ParametricFunction(func)
         for i, dot in enumerate(self.dots):
             dot.target = dot.copy()
@@ -2940,7 +2940,7 @@ class DiscussZeros(ZetaTransformationScene):
             return lambda t : (float(self.dot_anim_count + 2*index + t)/denom)%1
         return [
             MoveAlongPath(
-                dot, self.wandering_path, 
+                dot, self.wandering_path,
                 rate_func = get_rate_func(i)
             )
             for i, dot in enumerate(self.dots)
@@ -2988,7 +2988,7 @@ class AskAboutRelationToPrimes(TeacherStudentsScene):
         """, target_mode = "confused")
         self.random_blink(3)
         self.teacher_says("""
-            Perhaps in a 
+            Perhaps in a
             different video.
         """, target_mode = "hesitant")
         self.random_blink(3)
@@ -3056,7 +3056,7 @@ class DiscussSumOfNaturals(Scene):
         neg_twelfth, eq, zeta_neg_1, sum_naturals = equation = TexMobject(
             "-\\frac{1}{12}",
             "=",
-            "\\zeta(-1)", 
+            "\\zeta(-1)",
             "= 1 + 2 + 3 + 4 + \\cdots"
         )
         neg_twelfth.highlight(GREEN_B)
@@ -3141,7 +3141,7 @@ class FinalAnimationTease(Scene):
         morty = Mortimer().shift(2*(DOWN+RIGHT))
         bubble = morty.get_bubble(SpeechBubble)
         bubble.write("""
-            Want to know what 
+            Want to know what
             $\\zeta'(s)$ looks like?
         """)
 
@@ -3188,10 +3188,10 @@ class PatreonThanks(Scene):
         patreon_logo.scale_to_fit_height(1.5)
         patreon_logo.next_to(special_thanks, DOWN)
 
-        left_patrons = VGroup(*map(TextMobject, 
+        left_patrons = VGroup(*map(TextMobject,
             self.specific_patrons[:n_patrons/2]
         ))
-        right_patrons = VGroup(*map(TextMobject, 
+        right_patrons = VGroup(*map(TextMobject,
             self.specific_patrons[n_patrons/2:]
         ))
         for patrons, vect in (left_patrons, LEFT), (right_patrons, RIGHT):
@@ -3225,7 +3225,7 @@ class CreditTwo(Scene):
         brother = PiCreature(color = GOLD_E)
         brother.next_to(morty, LEFT)
         brother.look_at(morty.eyes)
-        
+
         headphones = Headphones(height = 1)
         headphones.move_to(morty.eyes, aligned_edge = DOWN)
         headphones.shift(0.1*DOWN)
@@ -3236,7 +3236,7 @@ class CreditTwo(Scene):
         self.add(morty)
         self.play(Blink(morty))
         self.play(
-            FadeIn(headphones), 
+            FadeIn(headphones),
             Write(url),
             Animation(morty)
         )
@@ -3359,8 +3359,3 @@ class ZetaPartialSums(ZetaTransformationScene):
                 Transform(symbol, sigma)
             )
             self.dither()
-
-
-
-
-

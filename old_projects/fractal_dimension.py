@@ -74,7 +74,7 @@ class SierpinskiTest(Scene):
         )
 
         self.play(FadeIn(
-            sierp, 
+            sierp,
             run_time = 5,
             submobject_mode = "lagged_start",
         ))
@@ -146,7 +146,7 @@ class ZoomInOnFractal(PiCreatureScene):
                 run_time = 2
             )
             self.dither()
-            grower_target = grower.copy()            
+            grower_target = grower.copy()
             grower = grower[self.index_to_replace]
 
 
@@ -198,7 +198,7 @@ class IntroduceVonKochCurve(Scene):
         self.play(Write(name, run_time = 2))
         curve = self.isolate_one_curve(snowflake)
         self.dither()
-        
+
         self.zoom_in_on(curve)
         self.zoom_in_on(curve)
         self.zoom_in_on(curve)
@@ -266,9 +266,9 @@ class IntroduceSierpinskiTriangle(PiCreatureScene):
         sierp.save_state()
 
         self.play(FadeIn(
-            sierp, 
+            sierp,
             run_time = 2,
-            submobject_mode = "lagged_start" 
+            submobject_mode = "lagged_start"
         ))
         self.dither()
         self.play(
@@ -285,7 +285,7 @@ class IntroduceSierpinskiTriangle(PiCreatureScene):
         self.play(sierp.restore)
         self.change_mode("happy")
         self.dither()
-        
+
 class SelfSimilarFractalsAsSubset(Scene):
     CONFIG = {
         "fractal_width" : 1.5
@@ -349,7 +349,7 @@ class SelfSimilarFractalsAsSubset(Scene):
         fractalify(randy.target, order = 2)
 
         self.play(
-            ShowCreation(big_rectangle), 
+            ShowCreation(big_rectangle),
             Write(title),
         )
         self.play(ShowCreation(britain), run_time = 5)
@@ -404,8 +404,8 @@ class ConstrastSmoothAndFractal(Scene):
             self.britain_zoom_point_proportion
         )
         fractalify(
-            britain, 
-            order = self.fractalification_order, 
+            britain,
+            order = self.fractalification_order,
             dimension = self.fractal_dimension,
         )
 
@@ -421,15 +421,15 @@ class ConstrastSmoothAndFractal(Scene):
         self.dither()
         self.play(
             ApplyMethod(
-                smooth_britain.scale, 
-                self.scale_factor, 
+                smooth_britain.scale,
+                self.scale_factor,
                 smooth_britain.zoom_point
             ),
             Animation(v_line),
             Animation(background_rectangle),
             ApplyMethod(
-                britain.scale, 
-                self.scale_factor, 
+                britain.scale,
+                self.scale_factor,
                 britain.zoom_point
             ),
             Animation(smooth),
@@ -454,7 +454,7 @@ class InfiniteKochZoom(Scene):
 
     def get_curve(self, order):
         koch_curve = KochCurve(
-            monochromatic = True, 
+            monochromatic = True,
             order = order,
             color = BLUE,
             stroke_width = 2,
@@ -464,7 +464,7 @@ class InfiniteKochZoom(Scene):
             self.left_point - koch_curve.points[0]
         )
         return koch_curve
-        
+
 class ShowIdealizations(Scene):
     def construct(self):
         arrow = DoubleArrow(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
@@ -472,8 +472,8 @@ class ShowIdealizations(Scene):
         left_words = TextMobject("Idealization \\\\ as smooth")
         middle_words = TextMobject("Nature")
         right_words = TextMobject("""
-            Idealization 
-            as perfectly 
+            Idealization
+            as perfectly
             self-similar
         """)
         for words in left_words, middle_words, right_words:
@@ -695,11 +695,11 @@ class FourSelfSimilarShapes(Scene):
 
         self.play(line.shift, 3*DOWN)
         self.play(ApplyFunction(break_up, line))
-        self.dither()        
+        self.dither()
         brace = Brace(line[0], DOWN)
         brace_text = brace.get_text("1/2")
         self.play(
-            GrowFromCenter(brace), 
+            GrowFromCenter(brace),
             Write(brace_text)
         )
         brace.add(brace_text)
@@ -728,8 +728,8 @@ class FourSelfSimilarShapes(Scene):
         line, square, cube, sierpinski = self.shapes_copy
 
         labels = map(TextMobject, [
-            "$1/2$ length", 
-            "$1/4$ area", 
+            "$1/2$ length",
+            "$1/4$ area",
             "$1/8$ volume",
             "You'll see...",
         ])
@@ -770,7 +770,7 @@ class GeneralWordForMeasurement(Scene):
             word.highlight(color)
         lines = VGroup(*[
             Line(
-                measure.get_bottom(), word.get_top(), 
+                measure.get_bottom(), word.get_top(),
                 color = word.get_color(),
                 buff = MED_SMALL_BUFF
             )
@@ -794,8 +794,8 @@ class ImagineShapesAsMetal(FourSelfSimilarShapes):
         descriptions = VGroup(*[
             TextMobject(*words, arg_separator = "\\\\")
             for shape, words in zip(shapes, [
-                ["Thin", "wire"], 
-                ["Flat", "sheet"], 
+                ["Thin", "wire"],
+                ["Flat", "sheet"],
                 ["Solid", "cube"],
                 ["Sierpinski", "mesh"]
             ])
@@ -848,7 +848,7 @@ class ScaledLineMass(Scene):
         )
         mass_scaling_label[1].highlight(GREEN)
         mass_scaling_label.next_to(
-            scaling_factor_label, DOWN, 
+            scaling_factor_label, DOWN,
             aligned_edge = LEFT,
             buff = LARGE_BUFF
         )
@@ -916,7 +916,7 @@ class ScaledSquareMass(ScaledLineMass):
     def get_shape(self):
         return VGroup(*[
             Square(
-                stroke_width = 0, 
+                stroke_width = 0,
                 fill_color =  BLUE,
                 fill_opacity = 0.7
             ).shift(vect)
@@ -995,13 +995,13 @@ class DefineTwoDimensional(PiCreatureScene):
         top_length = TextMobject("Length:", "$L$")
         top_mass = TextMobject("Mass:", "$M$")
         bottom_length = TextMobject(
-            "Length: ", "$%s$"%self.scalar, "$L$", 
+            "Length: ", "$%s$"%self.scalar, "$L$",
             arg_separator = ""
         )
         bottom_mass = TextMobject(
-            "Mass: ", 
-            "$%s^%s$"%(self.scalar, self.dimension), 
-            "$M$", 
+            "Mass: ",
+            "$%s^%s$"%(self.scalar, self.dimension),
+            "$M$",
             arg_separator = ""
         )
         self.dimension_in_exp = VGroup(
@@ -1013,7 +1013,7 @@ class DefineTwoDimensional(PiCreatureScene):
         bottom_group = VGroup(bottom_length, bottom_mass)
         for group in top_group, bottom_group:
             group.arrange_submobjects(
-                DOWN, 
+                DOWN,
                 buff = MED_LARGE_BUFF,
                 aligned_edge = LEFT
             )
@@ -1044,15 +1044,15 @@ class DefineTwoDimensional(PiCreatureScene):
     def perform_scaling(self):
         group = VGroup(self.shape, self.brace).copy()
         self.play(
-            group.shift, 
+            group.shift,
             (group.get_top()[1]+self.bottom_shape_buff)*DOWN
         )
 
         shape, brace = group
-        bottom_L = self.bottom_L.copy()        
+        bottom_L = self.bottom_L.copy()
         shape.generate_target()
         shape.target.scale_in_place(
-            self.scale_factor, 
+            self.scale_factor,
         )
         brace.target = Brace(shape.target, LEFT)
         self.play(*map(MoveToTarget, group))
@@ -1063,7 +1063,7 @@ class DefineTwoDimensional(PiCreatureScene):
         top_dimension = self.dimension_in_title.copy()
         self.play(self.pi_creature.look_at, top_dimension)
         self.play(Transform(
-            top_dimension, 
+            top_dimension,
             self.dimension_in_exp,
             run_time = 2,
         ))
@@ -1136,7 +1136,7 @@ class DefineSierpinskiDimension(DefineTwoDimensional):
         self.remove(*keepers_copies)
         for mob in keepers:
             ApplyMethod(mob.restore).update(1)
-        self.add(*keepers) 
+        self.add(*keepers)
         self.play(
             self.pi_creature.change_mode, "confused",
             self.pi_creature.look_at, self.equation
@@ -1255,7 +1255,7 @@ class FractionalAnalogOfLengthAndArea(Scene):
         morty.to_corner(DOWN+RIGHT)
         self.play(FadeIn(morty))
         self.play(PiCreatureSays(
-            morty, 
+            morty,
             """
             Better described with a
             1.585-dimensional measure.
@@ -1288,7 +1288,7 @@ class DimensionOfKoch(Scene):
 
     def add_labels(self):
         scaling_factor = TextMobject(
-            "Scaling factor:", 
+            "Scaling factor:",
             "$\\frac{1}{%d}$"%self.scaling_factor,
         )
         scaling_factor.next_to(ORIGIN, UP)
@@ -1297,7 +1297,7 @@ class DimensionOfKoch(Scene):
         self.add(scaling_factor[0])
 
         mass_scaling = TextMobject(
-            "Mass scaling factor:", 
+            "Mass scaling factor:",
             "$\\frac{1}{%d}$"%self.mass_scaling_factor
         )
         mass_scaling.next_to(ORIGIN, DOWN)
@@ -1371,7 +1371,7 @@ class DimensionOfKoch(Scene):
 
         simpler_formula = TexMobject(
             str(self.scaling_factor),
-            "^D", "=", 
+            "^D", "=",
             str(self.mass_scaling_factor)
         )
         simpler_formula.move_to(formula, UP)
@@ -1393,7 +1393,7 @@ class DimensionOfKoch(Scene):
         log_expression[7].highlight(self.mass_scaling_color)
         log_expression.next_to(
             simpler_formula, DOWN,
-            aligned_edge = LEFT, 
+            aligned_edge = LEFT,
             buff = MED_LARGE_BUFF
         )
 
@@ -1438,7 +1438,7 @@ class DimensionOfQuadraticKoch(DimensionOfKoch):
 
     def get_curve(self, order):
         curve = self.curve_class(
-            order = order, 
+            order = order,
             monochromatic = True
         )
         curve.scale_to_fit_width(self.koch_curve_width)
@@ -1520,7 +1520,7 @@ class ShowSeveralSelfSimilarityDimensions(Scene):
     def construct(self):
         vects = [
             4*LEFT,
-            ORIGIN, 
+            ORIGIN,
             4*RIGHT,
         ]
         fractal_classes = [
@@ -1529,8 +1529,8 @@ class ShowSeveralSelfSimilarityDimensions(Scene):
             DiamondFractal,
         ]
         max_orders = [
-            4, 
-            4, 
+            4,
+            4,
             5,
         ]
         dimensions = [
@@ -1591,7 +1591,7 @@ class SeparateFractals(Scene):
         curves.save_state()
         self.play(*[
             ApplyFunction(
-                lambda m : break_up(m, 2), 
+                lambda m : break_up(m, 2),
                 curve
             )
             for curve in curves
@@ -1641,7 +1641,7 @@ class ShowDiskScaling(Scene):
     def isolate_disk(self):
         disk = self.disk
         self.play(
-            FadeOut(self.to_fade),            
+            FadeOut(self.to_fade),
             disk.scale_to_fit_width, 2,
             disk.next_to, ORIGIN, LEFT, 2,
             disk.set_fill, BLUE_D, 0.7
@@ -1794,7 +1794,7 @@ class BoxCountingScene(Scene):
         points = np.array(points)
         rounded_points = np.floor(points/self.box_width)*self.box_width
         unique_rounded_points = np.vstack({
-            tuple(row) for 
+            tuple(row) for
             row in rounded_points
         })
 
@@ -1810,7 +1810,7 @@ class BoxCountingScene(Scene):
 
     def get_corner_rect(self):
         rect = Rectangle(
-            height = SPACE_HEIGHT/2, 
+            height = SPACE_HEIGHT/2,
             width = SPACE_WIDTH+self.corner_rect_left_extension,
             stroke_width = 0,
             fill_color = BLACK,
@@ -1824,7 +1824,7 @@ class BoxCountingScene(Scene):
         label.next_to(ORIGIN, RIGHT)
         label.to_edge(UP)
         label.shift(self.corner_rect_left_extension*LEFT)
-        self.counting_num_reference = label[-1]        
+        self.counting_num_reference = label[-1]
         rect = BackgroundRectangle(label)
         rect.stretch(1.3, 0)
         rect.move_to(label, LEFT)
@@ -1875,7 +1875,7 @@ class BoxCountingWithDisk(BoxCountingScene):
 
         self.add(disk, one)
         self.play(
-            ShowCreation(grid), 
+            ShowCreation(grid),
             Animation(disk),
         )
         self.dither()
@@ -1933,7 +1933,7 @@ class FinerBoxCountingWithDisk(BoxCountingWithDisk):
         "num_boundary_check_points" : 1000,
         "disk_stroke_width" : 0.5,
         "decimal_string" : "= %.2f",
-    } 
+    }
 
 class PlotDiskBoxCounting(GraphScene):
     CONFIG = {
@@ -1969,7 +1969,7 @@ class PlotDiskBoxCounting(GraphScene):
         self.dither()
         self.play(ShowCreation(self.graph))
         self.label_graph(
-            self.graph, 
+            self.graph,
             self.func_label,
             direction = RIGHT+DOWN,
             buff = SMALL_BUFF,
@@ -2104,11 +2104,11 @@ class BoxCountingWithBritain(BoxCountingScene):
     def show_formula(self):
         corner_rect = self.get_corner_rect()
         equation = TextMobject("""
-            Number of boxes $\\approx$ 
+            Number of boxes $\\approx$
             \\quad $c(\\text{scaling factor})^{1.21}$
         """)
         equation.next_to(
-            corner_rect.get_corner(UP+LEFT), DOWN+RIGHT 
+            corner_rect.get_corner(UP+LEFT), DOWN+RIGHT
         )
 
         N = equation[0].copy()
@@ -2128,7 +2128,7 @@ class BoxCountingWithBritain(BoxCountingScene):
         simpler_eq.target.move_to(N, LEFT)
         simpler_eq.target[-1].next_to(
             simpler_eq.target[-2].get_corner(UP+RIGHT),
-            RIGHT, 
+            RIGHT,
             buff = SMALL_BUFF
         )
 
@@ -2151,7 +2151,7 @@ class BoxCountingWithBritain(BoxCountingScene):
             "\\log(", "c", "s", "^{1.21}", ")"
         )
         log_expression2 = TexMobject(
-            "\\log(", "N", ")", "=", 
+            "\\log(", "N", ")", "=",
             "\\log(", "c", ")", "+",
             "1.21", "\\log(", "s", ")"
         )
@@ -2397,7 +2397,7 @@ class DifferentSlopesAtDifferentScales(IntroduceLogLogPlot):
         self.y_axis_label_mob[-2].highlight(YELLOW)
         self.graph_function(
             lambda x : 0.01*(x-5)**3 + 0.3*x + 3
-        ) 
+        )
         self.remove(self.graph)
 
         words = TextMobject("""
@@ -2451,12 +2451,12 @@ class HoldUpCoilExample(TeacherStudentsScene):
 class SmoothHilbertZoom(Scene):
     def construct(self):
         hilbert = HilbertCurve(
-            order = 7, 
+            order = 7,
             color = MAROON_B,
             monochromatic = True
         )
         hilbert.make_smooth()
-        self.add(hilbert)        
+        self.add(hilbert)
 
         two_d_title = TextMobject("2D at a distance...")
         one_d_title = TextMobject("1D up close")
@@ -2467,7 +2467,7 @@ class SmoothHilbertZoom(Scene):
         self.dither()
         self.play(
             ApplyMethod(
-                hilbert.scale, 100, 
+                hilbert.scale, 100,
                 hilbert.point_from_proportion(0.3),
             ),
             Transform(
@@ -2507,12 +2507,12 @@ class ZoomInOnBritain(Scene):
         anchors = britain.get_anchors()
 
         key_value = int(0.3*len(anchors))
-        point = anchors[key_value]        
+        point = anchors[key_value]
         thinning_factor = 100
         num_neighbors_kept = 1000
 
         britain.set_points_as_corners(reduce(
-            lambda a1, a2 : np.append(a1, a2, axis = 0), 
+            lambda a1, a2 : np.append(a1, a2, axis = 0),
             [
             anchors[:key_value-num_neighbors_kept:thinning_factor,:],
             anchors[key_value-num_neighbors_kept:key_value+num_neighbors_kept,:],
@@ -2639,7 +2639,7 @@ class BritainBoxCountHighZoom(BoxCountingWithBritain):
         self.play(ShowCreation(boxes))
         self.dither()
         self.play(FadeOut(boxes))
-        
+
 class IfBritainWasEventuallySmooth(Scene):
     def construct(self):
         britain = Britain()
@@ -2671,7 +2671,7 @@ class SmoothBritainLogLogPlot(IntroduceLogLogPlot):
         interim_point1 = p2[0]*RIGHT + p1[1]*UP
         interim_point2 = p4[0]*RIGHT + p3[1]*UP
 
-        print self.func(2)
+        print(self.func(2))
 
         slope_lines1, slope_lines2 = VMobject(), VMobject()
         slope_lines1.set_points_as_corners(
@@ -2736,7 +2736,7 @@ class CompareBritainAndNorway(Scene):
         fractalify(norway, order = 1, dimension = 1.5)
         anchors = list(norway.get_anchors())
         anchors.append(SPACE_WIDTH*RIGHT+SPACE_HEIGHT*UP)
-        norway.set_points_as_corners(anchors)        
+        norway.set_points_as_corners(anchors)
 
         britain = Britain(
             fill_opacity = 0,
@@ -2751,7 +2751,7 @@ class CompareBritainAndNorway(Scene):
             1.21-dimensional
         """)
         norway_label = TextMobject("""
-            Norway coast: 
+            Norway coast:
             1.52-dimensional
         """)
         britain_label.next_to(britain, DOWN)
@@ -2766,7 +2766,7 @@ class CompareBritainAndNorway(Scene):
         self.dither()
         self.play(*it.chain(*[
             [
-                mob.set_stroke, None, 0, 
+                mob.set_stroke, None, 0,
                 mob.set_fill, BLUE, 1
             ]
             for mob in britain, norway
@@ -2945,7 +2945,7 @@ class MortyLookingAtRectangle(Scene):
 class Thumbnail(Scene):
     def construct(self):
         title = TextMobject("1.5-dimensional")
-        title.scale(2)        
+        title.scale(2)
         title.to_edge(UP)
 
 
@@ -2956,19 +2956,3 @@ class Thumbnail(Scene):
         koch_curve.to_edge(DOWN, buff = SMALL_BUFF)
 
         self.add(koch_curve, title)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

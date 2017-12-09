@@ -1,0 +1,45 @@
+framerate  3200
+domino thickness  7.5438
+domino spacing  9.38
+friction  high
+2713    
+X    offscreen
+X    offscreen
+X    offscreen
+X    offscreen
+X    offscreen
+X    offscreen
+3367    
+3424    
+3455    
+3503    
+3561    
+3600    
+3650    
+3696    
+3735    
+3775    
+3815    
+3865    
+3906    
+3941    twist
+3968    twist
+4007    twist
+4041    twist
+4081    twist
+4123    twist
+4158    
+4217    
+4243    
+4276    
+4309    
+4367    
+4413    
+4458    
+4499    
+4543    
+4583    
+4618    
+4650    
+4693    
+4732    

@@ -1,0 +1,48 @@
+framerate  5000
+domino thickness  7.5438
+domino spacing  9.38
+friction  high
+1173    
+1270    
+1322    twist
+1389    twist
+1445    twist
+1521    twist
+1583    twist
+1657    
+1715    
+1776    
+1837    
+1895    
+1956    twist
+2037    
+2091    
+2148    
+2204    twist
+2264    twist
+2326    twist
+2383    twist
+2462    
+2523    
+2587    twist
+2651    
+2733    
+2789    twist
+2850    
+2906    
+2966    
+3024    
+3082    
+3149    
+3206    
+3266    
+3331    
+3405    
+3461    
+3524    
+3590    
+3655    
+3730    
+3788    
+3850    
+3913    

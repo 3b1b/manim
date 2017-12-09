@@ -14,7 +14,7 @@ from scene import Scene
 from camera import Camera
 
 HELP_MESSAGE = """
-   Usage: 
+   Usage:
    python extract_scene.py <module> [<scene name>]
 
    -p preview in low quality
@@ -42,9 +42,9 @@ NO_SCENE_MESSAGE = """
 
 def get_configuration(sys_argv):
    try:
-      opts, args = getopt.getopt(sys_argv[1:], 'hlmpwsqao:')
+      opts, args = getopt.getopt(sys_argv[1:], 'hlmpwstqao:')
    except getopt.GetoptError as err:
-      print str(err)
+      print(str(err))
       sys.exit(2)
    config = {
       "file"            : None,
@@ -55,13 +55,15 @@ def get_configuration(sys_argv):
       "write_to_movie"  : False,
       "save_frames"     : False,
       "save_image"      : False,
+      #If -t is passed in (for transparent), this will be RGBA
+      "saved_image_mode": "RGB",
       "quiet"           : False,
       "write_all"       : False,
       "output_name"     : None,
    }
    for opt, arg in opts:
       if opt == '-h':
-         print HELP_MESSAGE
+         print(HELP_MESSAGE)
          return
       if opt in ['-l', '-p']:
          config["camera_config"] = LOW_QUALITY_CAMERA_CONFIG
@@ -76,6 +78,8 @@ def get_configuration(sys_argv):
          config["write_to_movie"] = True
       if opt == '-s':
          config["save_image"] = True
+      if opt == '-t':
+         config["saved_image_mode"] = "RGBA"
       if opt in ['-q', '-a']:
          config["quiet"] = True
       if opt == '-a':
@@ -85,11 +89,11 @@ def get_configuration(sys_argv):
    #By default, write to file
    actions = ["write_to_movie", "preview", "save_image"]
    if not any([config[key] for key in actions]):
-      config["write_to_movie"] = True   
+      config["write_to_movie"] = True
    config["skip_animations"] = config["save_image"] and not config["write_to_movie"]
 
    if len(args) == 0:
-      print HELP_MESSAGE
+      print(HELP_MESSAGE)
       sys.exit()
    config["file"] = args[0]
    if len(args) > 1:
@@ -100,13 +104,13 @@ def handle_scene(scene, **config):
    if config["quiet"]:
       curr_stdout = sys.stdout
       sys.stdout = open(os.devnull, "w")
-      
+
    if config["preview"]:
       scene.preview()
    if config["save_image"]:
       if not config["write_all"]:
          scene.show_frame()
-      scene.save_image()
+      scene.save_image(mode = config["saved_image_mode"])
 
    if config["quiet"]:
       sys.stdout.close()
@@ -125,7 +129,7 @@ def prompt_user_for_choice(name_to_obj):
    num_to_name = {}
    names = sorted(name_to_obj.keys())
    for count, name in zip(it.count(1), names):
-      print "%d: %s"%(count, name)
+      print("%d: %s"%(count, name))
       num_to_name[count] = name
    try:
       user_input = raw_input(CHOOSE_NUMBER_MESSAGE)
@@ -134,19 +138,19 @@ def prompt_user_for_choice(name_to_obj):
          for num_str in user_input.split(",")
       ]
    except:
-      print INVALID_NUMBER_MESSAGE
+      print(INVALID_NUMBER_MESSAGE)
       sys.exit()
 
 def get_scene_classes(scene_names_to_classes, config):
    if len(scene_names_to_classes) == 0:
-      print NO_SCENE_MESSAGE
+      print(NO_SCENE_MESSAGE)
       return []
    if len(scene_names_to_classes) == 1:
       return scene_names_to_classes.values()
    if config["scene_name"] in scene_names_to_classes:
       return [scene_names_to_classes[config["scene_name"]] ]
    if config["scene_name"] != "":
-      print SCENE_NOT_FOUND_MESSAGE
+      print(SCENE_NOT_FOUND_MESSAGE)
       return []
    if config["write_all"]:
       return scene_names_to_classes.values()
@@ -167,7 +171,7 @@ def get_module_posix(file_name):
         load_args = imp.find_module(part, last_module.__path__)
         last_module = imp.load_module(part, *load_args)
     return last_module
-   
+
 def get_module(file_name):
     if os.name == 'nt':
         return get_module_windows(file_name)
@@ -181,7 +185,7 @@ def main():
       inspect.getmembers(module, is_scene)
    )
    config["output_directory"] = os.path.join(
-      MOVIE_DIR, 
+      MOVIE_DIR,
       config["file"].replace(".py", "")
    )
 
@@ -202,15 +206,11 @@ def main():
          handle_scene(SceneClass(**scene_kwargs), **config)
          play_finish_sound()
       except:
-         print "\n\n"
+         print("\n\n")
          traceback.print_exc()
-         print "\n\n"
+         print("\n\n")
          play_error_sound()
 
 
 if __name__ == "__main__":
    main()
-
-
-
-

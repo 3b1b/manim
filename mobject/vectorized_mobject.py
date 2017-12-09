@@ -83,19 +83,27 @@ class VMobject(Mobject):
         )
         return self
 
-    # def fade(self, darkness = 0.5):
-    #     Mobject.fade(self, darkness)
-    #     return self
+    def fade(self, darkness = 0.5):
+        for submob in self.submobject_family():
+            submob.set_stroke(
+                width = (1-darkness)*submob.get_stroke_width(),
+                family = False
+            )
+            submob.set_fill(
+                opacity = (1-darkness),
+                family = False
+            )
+        return self
 
     def get_fill_color(self):
         try:
-            self.fill_rgb = np.clip(self.fill_rgb, 0, 1)
+            self.fill_rgb = np.clip(self.fill_rgb, 0.0, 1.0)
             return Color(rgb = self.fill_rgb)
         except:
             return Color(WHITE)
 
     def get_fill_opacity(self):
-        return self.fill_opacity
+        return np.clip(self.fill_opacity, 0, 1)
 
     def get_stroke_color(self):
         try:
@@ -105,7 +113,7 @@ class VMobject(Mobject):
             return Color(WHITE)
 
     def get_stroke_width(self):
-        return self.stroke_width
+        return max(0, self.stroke_width)
 
     def get_color(self):
         if self.fill_opacity == 0:

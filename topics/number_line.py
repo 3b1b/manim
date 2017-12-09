@@ -19,9 +19,10 @@ class NumberLine(VMobject):
         "numbers_to_show" : None,
         "longer_tick_multiple" : 2,
         "number_at_center" : 0,
-        "number_scale_val" : 0.5,
+        "number_scale_val" : 0.75,
         "line_to_number_vect" : DOWN,
         "line_to_number_buff" : MED_SMALL_BUFF,
+        "include_tip" : False,
         "propogate_style_to_family" : True,
     }
     def __init__(self, **kwargs):
@@ -29,6 +30,8 @@ class NumberLine(VMobject):
         if self.leftmost_tick is None:
             self.leftmost_tick = np.ceil(self.x_min)
         VMobject.__init__(self, **kwargs)
+        if self.include_tip:
+            self.add_tip()
 
     def generate_points(self):
         self.main_line = Line(self.x_min*RIGHT, self.x_max*RIGHT)
@@ -111,6 +114,15 @@ class NumberLine(VMobject):
         self.add(*self.numbers)
         return self
 
+    def add_tip(self):
+        start, end = self.main_line.get_start_and_end()
+        vect = (end - start)/np.linalg.norm(end-start)
+        arrow = Arrow(start, end + MED_SMALL_BUFF*vect, buff = 0)
+        tip = arrow.tip
+        tip.highlight(self.color)
+        self.tip = tip
+        self.add(tip)
+
 class UnitInterval(NumberLine):
     CONFIG = {
         "x_min" : 0,
@@ -123,13 +135,52 @@ class UnitInterval(NumberLine):
 
 class Axes(VGroup):
     CONFIG = {
-        "propogate_style_to_family" : True
+        "propogate_style_to_family" : True,
+        "three_d" : False,
+        "number_line_config" : {
+            "color" : LIGHT_GREY,
+            "include_tip" : True,
+        },
+        "x_min" : -SPACE_WIDTH,
+        "x_max" : SPACE_WIDTH,
+        "y_min" : -SPACE_HEIGHT,
+        "y_max" : SPACE_HEIGHT,
+        "z_min" : -3.5,
+        "z_max" : 3.5,
+        "z_normal" : DOWN,
     }
     def __init__(self, **kwargs):
-        VGroup.__init__(self)
-        self.x_axis = NumberLine(**kwargs)
-        self.y_axis = NumberLine(**kwargs).rotate(np.pi/2)
+        VGroup.__init__(self, **kwargs)
+        self.x_axis = NumberLine(
+            x_min = self.x_min,
+            x_max = self.x_max,
+            **self.number_line_config
+        )
+        self.y_axis = NumberLine(
+            x_min = self.y_min,
+            x_max = self.y_max,
+            **self.number_line_config
+        )
+        self.y_axis.rotate(np.pi/2)
         self.add(self.x_axis, self.y_axis)
+        if self.three_d:
+            self.z_axis = NumberLine(
+                x_min = self.z_min,
+                x_max = self.z_max,
+                **self.number_line_config
+            )
+            self.z_axis.rotate(-np.pi/2, UP)
+            self.z_axis.rotate(angle_of_vector(self.z_normal), OUT)
+            self.add(self.z_axis)
+
+class ThreeDAxes(Axes):
+    CONFIG = {
+        "x_min" : -5.5,
+        "x_max" : 5.5,
+        "y_min" : -4.5,
+        "y_max" : 4.5,
+        "three_d" : True,
+    }
 
 class NumberPlane(VMobject):
     CONFIG = {
@@ -286,7 +337,7 @@ class NumberPlane(VMobject):
         return self
 
     def apply_function(self, function, maintain_smoothness = True):
-        SVGMobject.apply_function(self, function, maintain_smoothness = maintain_smoothness)
+        VMobject.apply_function(self, function, maintain_smoothness = maintain_smoothness)
 
 
 

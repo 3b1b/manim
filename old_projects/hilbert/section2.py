@@ -80,10 +80,10 @@ class HilbertCurveIsPerfect(Scene):
         closest_point_indices = np.apply_along_axis(
             np.argmin, 1, distance_matrix
         )
-        colored_curve.rgbs = sparce_lion.rgbs[closest_point_indices]
+        colored_curve.rgbas = sparce_lion.rgbas[closest_point_indices]
         line = Line(5*LEFT, 5*RIGHT)
         Mobject.align_data(line, colored_curve)
-        line.rgbs = colored_curve.rgbs
+        line.rgbas = colored_curve.rgbas
 
         self.add(lion)
         self.play(ShowCreation(curve, run_time = 3))
@@ -332,7 +332,7 @@ class PseudoHilbertCurvesDontFillSpace(Scene):
         square.digest_mobject_attrs()
         square.scale(2**(-5))
         square.corner.highlight(
-            Color(rgb = curve.rgbs[curve.get_num_points()/3])
+            Color(rgb = curve.rgbas[curve.get_num_points()/3])
         )
         square.shift(
             grid.get_corner(UP+LEFT)-\

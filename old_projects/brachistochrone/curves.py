@@ -92,7 +92,7 @@ class SlideWordDownCycloid(Animation):
             time = min(time, 1)
             if time < cut_offs[0]:
                 brightness = time/cut_offs[0]
-                letter.rgbs = brightness*np.ones(letter.rgbs.shape)
+                letter.rgbas = brightness*np.ones(letter.rgbas.shape)
                 position = self.path.points[0]
                 angle = 0
             elif time < cut_offs[1]:

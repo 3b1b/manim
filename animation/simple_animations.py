@@ -82,12 +82,10 @@ class Write(ShowCreation):
 
     def establish_run_time(self, mobject):
         num_subs = len(mobject.family_members_with_points())
-        if num_subs < 5:
+        if num_subs < 15:
             self.run_time = 1
-        elif num_subs < 15:
-            self.run_time = 2
         else:
-            self.run_time = 3
+            self.run_time = 2
 
 class DrawBorderThenFill(Animation):
     CONFIG = {
@@ -136,15 +134,21 @@ class ShowPassingFlash(ShowPartial):
     }
     def get_bounds(self, alpha):
         alpha *= (1+self.time_width)
-        alpha -= self.time_width/2
-        lower = max(0, alpha - self.time_width/2)
-        upper = min(1, alpha + self.time_width/2)
+        alpha -= self.time_width/2.0
+        lower = max(0, alpha - self.time_width/2.0)
+        upper = min(1, alpha + self.time_width/2.0)
         return (lower, upper)
 
     def clean_up(self, *args, **kwargs):
         ShowPartial.clean_up(self, *args, **kwargs)
         for submob, start_submob in self.get_all_families_zipped():
             submob.pointwise_become_partial(start_submob, 0, 1)
+
+class ShowCreationThenDestruction(ShowPassingFlash):
+    CONFIG = {
+        "time_width" : 2.0,
+        "run_time" : 1,
+    }
 
 class MoveAlongPath(Animation):
     def __init__(self, mobject, vmobject, **kwargs):
@@ -248,7 +252,8 @@ class UpdateFromFunc(Animation):
 class UpdateFromAlphaFunc(UpdateFromFunc):
     def update_mobject(self, alpha):
         self.update_function(self.mobject, alpha)
-        
+
+
 class MaintainPositionRelativeTo(Animation):
     CONFIG = {
         "tracked_critical_point" : ORIGIN
@@ -324,6 +329,10 @@ class LaggedStart(Animation):
             anim.update(alpha)
         return self
 
+    def clean_up(self, *args, **kwargs):
+        for anim in self.subanimations:
+            anim.clean_up(*args, **kwargs)
+
 class DelayByOrder(Animation):
     """
     Modifier of animation.
@@ -354,6 +363,9 @@ class DelayByOrder(Animation):
         self.animation.update_mobject(alpha_array)
 
 class Succession(Animation):
+    CONFIG = {
+        "rate_func" : None,
+    }
     def __init__(self, *animations, **kwargs):
         if "run_time" in kwargs:
             run_time = kwargs.pop("run_time")

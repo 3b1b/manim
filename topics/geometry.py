@@ -84,11 +84,7 @@ class Line(VMobject):
         self.account_for_buff()
 
     def account_for_buff(self):
-        anchors = self.get_anchors()
-        length = sum([
-            np.linalg.norm(a2-a1)
-            for a1, a2 in zip(anchors, anchors[1:])
-        ])
+        length = self.get_arc_length()
         if length < 2*self.buff or self.buff == 0:
             return
         buff_proportion = self.buff / length
@@ -117,8 +113,21 @@ class Line(VMobject):
         start, end = self.get_start_and_end()
         return np.linalg.norm(start - end)
 
+    def get_arc_length(self):
+        if self.path_arc:
+            anchors = self.get_anchors()
+            return sum([
+                np.linalg.norm(a2-a1)
+                for a1, a2 in zip(anchors, anchors[1:])
+            ])
+        else:
+            return self.get_length()
+
     def get_start_and_end(self):
         return self.get_start(), self.get_end()
+
+    def get_vector(self):
+        return self.get_end() - self.get_start()
 
     def get_start(self):
         return np.array(self.points[0])
@@ -138,16 +147,44 @@ class Line(VMobject):
         start, end = self.get_start_and_end()
         return angle_of_vector(end-start)
 
+    # def put_start_and_end_on(self, new_start, new_end):
+    #     self.set_start_and_end(new_start, new_end)
+    #     self.buff = 0
+    #     self.generate_points()
+
     def put_start_and_end_on(self, new_start, new_end):
-        epsilon = 0.01
-        if self.get_length() == 0:
-            #TODO, this is hacky
-            self.points[0] += epsilon*LEFT
-        new_length = np.linalg.norm(new_end - new_start)
-        new_length = max(new_length, epsilon)
-        new_angle = angle_of_vector(new_end - new_start)
-        self.scale(new_length / self.get_length())
-        self.rotate(new_angle - self.get_angle())
+        self.start = new_start
+        self.end = new_end
+        self.buff = 0
+        self.generate_points()
+        return
+
+    def put_start_and_end_on_with_projection(self, new_start, new_end):
+        target_vect = np.array(new_end) - np.array(new_start)
+        curr_vect = self.get_vector()
+        curr_norm = np.linalg.norm(curr_vect)
+        if curr_norm == 0:
+            self.put_start_and_end_on(new_start, new_end)
+            return
+        target_norm = np.linalg.norm(target_vect)
+        if target_norm == 0:
+            epsilon = 0.001
+            self.scale(epsilon/curr_norm)
+            self.move_to(new_start)
+            return
+        unit_target = target_vect / target_norm
+        unit_curr = curr_vect / curr_norm
+        normal = np.cross(unit_target, unit_curr)
+        if np.linalg.norm(normal) == 0:
+            if unit_curr[0] == 0 and unit_curr[1] == 0:
+                normal = UP
+            else:
+                normal = OUT
+        angle_diff = np.arccos(
+            np.clip(np.dot(unit_target, unit_curr), -1, 1)
+        )
+        self.scale(target_norm/curr_norm)
+        self.rotate(-angle_diff, normal)
         self.shift(new_start - self.get_start())
         return self
 
@@ -167,10 +204,12 @@ class DashedLine(Line):
             for alpha in np.linspace(0, 1, num_interp_points)
         ]
         includes = it.cycle([True, False])
-        for p1, p2, include in zip(points, points[1:], includes):
-            if include:
-                self.add(Line(p1, p2, **self.init_kwargs))
-        self.put_start_and_end_on(self.start, self.end)
+        self.submobjects = [
+            Line(p1, p2, **self.init_kwargs)
+            for p1, p2, include in zip(points, points[1:], includes)
+            if include
+        ]
+        self.put_start_and_end_on_with_projection(self.start, self.end)
         return self
 
     def get_start(self):
@@ -189,17 +228,28 @@ class Arrow(Line):
     CONFIG = {
         "color"      : YELLOW_C,
         "tip_length" : 0.25,
-        "tip_angle"  : np.pi/6,
-        "buff"       : MED_SMALL_BUFF,
+        "tip_width_to_length_ratio"  : 1,
+        "max_tip_length_to_length_ratio" : 0.35,
+        "max_stem_width_to_tip_width_ratio" : 0.3,
+        "buff" : MED_SMALL_BUFF,
         "propogate_style_to_family" : False,
         "preserve_tip_size_when_scaling" : True,
+        "normal_vector" : OUT,
+        "use_rectangular_stem" : True,
+        "rectangular_stem_width" : 0.05,
     }
     def __init__(self, *args, **kwargs):
         points = map(self.pointify, args)
         if len(args) == 1:
             args = (points[0]+UP+LEFT, points[0])
         Line.__init__(self, *args, **kwargs)
-        self.add_tip()
+        self.init_tip()
+        if self.use_rectangular_stem and not hasattr(self, "rect"):
+            self.add_rectangular_stem()
+        self.init_colors()
+
+    def init_tip(self):
+        self.tip = self.add_tip()
 
     def add_tip(self, add_at_end = True):
         tip = VMobject(
@@ -208,43 +258,118 @@ class Arrow(Line):
             fill_color = self.color,
             fill_opacity = 1,
             stroke_color = self.color,
+            stroke_width = 0,
         )
-        self.set_tip_points(tip, add_at_end)
-        self.tip = tip
-        self.add(self.tip)
-        self.init_colors()
+        self.set_tip_points(tip, add_at_end, preserve_normal = False)
+        self.add(tip)
+        return tip
 
-    def set_tip_points(self, tip, add_at_end = True):
-        start, end = self.get_start_and_end()
-        anchors = self.get_anchors()
-        vect = anchors[-1] - anchors[-2]
-        vect *= -self.tip_length / np.linalg.norm(vect)
-        if not add_at_end:
-            start, end = end, start
-            vect = -vect
-        tip_points = [
-            end+rotate_vector(vect, u*self.tip_angle)
-            for u in 1, -1
-        ]
-        tip.set_anchor_points(
-            [tip_points[0], end, tip_points[1]],
-            mode = "corners"
+    def add_rectangular_stem(self):
+        self.rect = Rectangle(
+            stroke_width = 0,
+            fill_color = self.tip.get_fill_color(),
+            fill_opacity = self.tip.get_fill_opacity()
         )
+        self.add_to_back(self.rect)
+        self.set_stroke(width = 0)
+        self.set_rectangular_stem_points()
+
+    def set_rectangular_stem_points(self):
+        start, end = self.get_start_and_end()
+        vect = end - start
+        tip_base_points = self.tip.get_anchors()[1:]
+        tip_base = center_of_mass(tip_base_points)
+        tbp1, tbp2 = tip_base_points
+        perp_vect = tbp2 - tbp1
+        tip_base_width = np.linalg.norm(perp_vect)
+        if tip_base_width > 0:
+            perp_vect /= tip_base_width
+        width = min(
+            self.rectangular_stem_width,
+            self.max_stem_width_to_tip_width_ratio*tip_base_width,
+        )
+        if hasattr(self, "second_tip"):
+            start = center_of_mass(
+                self.second_tip.get_anchors()[1:]
+            )
+        self.rect.set_points_as_corners([
+            tip_base + perp_vect*width/2,
+            start + perp_vect*width/2,
+            start - perp_vect*width/2,
+            tip_base - perp_vect*width/2,
+        ])
+        return self
+
+    def set_tip_points(
+        self, tip, 
+        add_at_end = True, 
+        tip_length = None,
+        preserve_normal = True,
+        ):
+        if tip_length is None:
+            tip_length = self.tip_length
+        if preserve_normal:
+            normal_vector = self.get_normal_vector()
+        else:
+            normal_vector = self.normal_vector
+        line_length = np.linalg.norm(self.points[-1]-self.points[0])
+        tip_length = min(
+            tip_length, self.max_tip_length_to_length_ratio*line_length
+        )
+
+        indices = (-2, -1) if add_at_end else (1, 0)
+        pre_end_point, end_point = [
+            self.get_anchors()[index]
+            for index in indices
+        ]
+        vect = end_point - pre_end_point
+        perp_vect = np.cross(vect, normal_vector)
+        for v in vect, perp_vect:
+            if np.linalg.norm(v) == 0:
+                v[0] = 1
+            v *= tip_length/np.linalg.norm(v)
+        ratio = self.tip_width_to_length_ratio
+        tip.set_points_as_corners([
+            end_point, 
+            end_point-vect+perp_vect*ratio/2,
+            end_point-vect-perp_vect*ratio/2,
+        ])
+
+        return self
+
+    def get_normal_vector(self):
+        p0, p1, p2 = self.tip.get_anchors()
+        result = np.cross(p2 - p1, p1 - p0)
+        norm = np.linalg.norm(result)
+        if norm == 0:
+            return self.normal_vector
+        else:
+            return result/norm
+
+    def reset_normal_vector(self):
+        self.normal_vector = self.get_normal_vector()
         return self
 
     def get_end(self):
         if hasattr(self, "tip"):
-            return self.tip.get_anchors()[1]
+            return self.tip.get_anchors()[0]
         else:
             return Line.get_end(self)
 
     def get_tip(self):
         return self.tip
 
+    def put_start_and_end_on(self, *args, **kwargs):
+        Line.put_start_and_end_on(self, *args, **kwargs)
+        self.set_tip_points(self.tip, preserve_normal = False)
+        self.set_rectangular_stem_points()
+
     def scale(self, scale_factor, **kwargs):
         Line.scale(self, scale_factor, **kwargs)
-        if self.preserve_tip_size_when_scaling and self.get_length() > self.tip_length:
+        if self.preserve_tip_size_when_scaling:
             self.set_tip_points(self.tip)
+        if self.use_rectangular_stem:
+            self.set_rectangular_stem_points()
         return self
 
 class Vector(Arrow):
@@ -258,9 +383,9 @@ class Vector(Arrow):
         Arrow.__init__(self, ORIGIN, direction, **kwargs)
 
 class DoubleArrow(Arrow):
-    def __init__(self, *args, **kwargs):
-        Arrow.__init__(self, *args, **kwargs)
-        self.add_tip(add_at_end = False)
+    def init_tip(self):
+        self.tip = self.add_tip()
+        self.second_tip = self.add_tip(add_at_end = False)
 
 class CubicBezier(VMobject):
     def __init__(self, points, **kwargs):

@@ -37,7 +37,6 @@ def play_chord(*nums):
 def play_error_sound():
     play_chord(11, 8, 6, 1)
 
-
 def play_finish_sound():
     play_chord(12, 9, 5, 2)
 
@@ -109,8 +108,13 @@ def diag_to_matrix(l_and_u, diag):
 def is_closed(points):
     return np.linalg.norm(points[0] - points[-1]) < CLOSED_THRESHOLD
 
+## Color
+
 def color_to_rgb(color):
     return np.array(Color(color).get_rgb())
+
+def color_to_rgba(color, alpha = 1):
+    return np.append(color_to_rgb(color), [alpha])
 
 def rgb_to_color(rgb):
     try:
@@ -118,11 +122,17 @@ def rgb_to_color(rgb):
     except:
         return Color(WHITE)
 
+def rgba_to_color(rgba):
+    return rgb_to_color(rgba[:3])
+
 def invert_color(color):
     return rgb_to_color(1.0 - color_to_rgb(color))
 
 def color_to_int_rgb(color):
     return (255*color_to_rgb(color)).astype('uint8')
+
+def color_to_int_rgba(color, alpha = 255):
+    return np.append(color_to_int_rgb(color), alpha)
 
 def color_gradient(reference_colors, length_of_output):
     if length_of_output == 0:
@@ -139,10 +149,16 @@ def color_gradient(reference_colors, length_of_output):
         for i, alpha in zip(floors, alphas_mod1)
     ]
 
+def interpolate_color(color1, color2, alpha):
+    rgb = interpolate(color_to_rgb(color1), color_to_rgb(color2), alpha)
+    return rgb_to_color(rgb)
+
 def average_color(*colors):
     rgbs = np.array(map(color_to_rgb, colors))
     mean_rgb = np.apply_along_axis(np.mean, 0, rgbs)
     return rgb_to_color(mean_rgb)
+
+###
 
 def compass_directions(n = 4, start_vect = RIGHT):
     angle = 2*np.pi/n
@@ -166,7 +182,7 @@ def partial_bezier_points(points, a, b):
         for i in range(len(points))
     ])
     return np.array([
-        bezier(a_to_1[:i+1])(b)
+        bezier(a_to_1[:i+1])((b-a)/(1.-a))
         for i in range(len(points))
     ])
 
@@ -405,8 +421,7 @@ def get_full_image_path(image_file_name):
     for path in possible_paths:
         if os.path.exists(path):
             return path
-    raise IOError("File not Found")
-
+    raise IOError("File %s not Found"%image_file_name)
 
 def drag_pixels(frames):
     curr = frames[0]
@@ -473,6 +488,14 @@ def double_smooth(t):
 def there_and_back(t, inflection = 10.0):
     new_t = 2*t if t < 0.5 else 2*(1 - t)
     return smooth(new_t, inflection)
+
+def there_and_back_with_pause(t):
+    if t < 1./3:
+        return smooth(3*t)
+    elif t < 2./3:
+        return 1
+    else:
+        return smooth(3 - 3*t)
 
 def running_start(t, pull_factor = -0.5):
     return bezier([0, 0, pull_factor, pull_factor, 1, 1, 1])(t)

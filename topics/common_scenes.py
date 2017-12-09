@@ -2,12 +2,14 @@
 from helpers import *
 
 from scene.scene import Scene
+from animation import Animation
 from animation.simple_animations import Write, DrawBorderThenFill, LaggedStart
 from animation.transform import FadeIn, FadeOut, ApplyMethod
 from mobject.vectorized_mobject import VGroup
 from mobject.tex_mobject import TexMobject, TextMobject
-from topics.characters import Mortimer, Blink
+from topics.characters import Mortimer, Randolph, Blink
 from topics.objects import PatreonLogo
+from topics.geometry import Square, Rectangle, DashedLine
 
 
 class OpeningQuote(Scene):
@@ -61,39 +63,9 @@ class OpeningQuote(Scene):
 
 class PatreonThanks(Scene):
     CONFIG = {
-        "specific_patrons" : [
-            "Ali Yahya",
-            "Meshal Alshammari",
-            "CrypticSwarm    ",
-            "Justin Helps",
-            "Ankit Agarwal",
-            "Yu Jun",
-            "Shelby Doolittle",
-            "Dave Nicponski",
-            "Damion Kistler",
-            "Juan Benet",
-            "Othman Alikhan",
-            "Markus Persson",
-            "Dan Buchoff",
-            "Derek Dai",
-            "Joseph John Cox",
-            "Luc Ritchie",
-            "Nils Schneider",
-            "Mathew Bramson",
-            "Guido Gambardella",
-            "Jerry Ling",
-            "Mark Govea",
-            "Vecht",
-            "Shimin Kuang",
-            "Rish Kundalia",
-            "Achille Brighton",
-            "Kirk Werklund",
-            "Ripta Pasay",
-            "Felipe Diniz",
-        ],
+        "specific_patrons" : [],
         "max_patron_group_size" : 20,
         "patron_scale_val" : 0.8,
-
     }
     def construct(self):
         morty = Mortimer()
@@ -145,6 +117,76 @@ class PatreonThanks(Scene):
             self.play(morty.look_at, group.get_corner(DOWN+RIGHT))
             self.play(Blink(morty))
             last_group = group
+
+class PatreonEndScreen(PatreonThanks):
+    CONFIG = {
+        "n_patron_columns" : 3,
+        "max_patron_width" : 3,
+        "run_time" : 20,
+    }
+    def construct(self):
+        self.add_title()
+        self.scroll_through_patrons()
+
+    def add_title(self):
+        title = TextMobject("Clicky Stuffs")
+        title.scale(1.5)
+        title.to_edge(UP, buff = MED_SMALL_BUFF)
+
+        randy, morty = Randolph(), Mortimer()
+        for pi, vect in (randy, LEFT), (morty, RIGHT):
+            pi.scale_to_fit_height(title.get_height())
+            pi.change_mode("thinking")
+            pi.look(DOWN)
+            pi.next_to(title, vect, buff = MED_LARGE_BUFF)
+        self.add_foreground_mobjects(title, randy, morty)
+
+
+    def scroll_through_patrons(self):
+        logo_box = Square(side_length = 2.5)
+        logo_box.to_corner(DOWN+LEFT, buff = MED_LARGE_BUFF)
+        total_width = SPACE_WIDTH - logo_box.get_right()[0]
+
+        black_rect = Rectangle(
+            fill_color = BLACK,
+            fill_opacity = 1,
+            stroke_width = 0,
+            width = 2*SPACE_WIDTH,
+            height = 1.1*SPACE_HEIGHT
+        )
+        black_rect.to_edge(UP, buff = 0)
+        line = DashedLine(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        line.move_to(black_rect, DOWN)
+        line.shift(SMALL_BUFF*SMALL_BUFF*DOWN)
+        self.add(line)
+
+        patrons = VGroup(*map(TextMobject, self.specific_patrons))
+        patrons.scale(self.patron_scale_val)
+        for patron in patrons:
+            if patron.get_width() > self.max_patron_width:
+                patron.scale_to_fit_width(self.max_patron_width)
+        columns = VGroup(*[
+            VGroup(
+                *patrons[i::self.n_patron_columns]
+            ).arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+            for i in range(self.n_patron_columns)
+        ])
+        columns.arrange_submobjects(
+            RIGHT, buff = LARGE_BUFF,
+            aligned_edge = UP,
+        )
+        columns.scale_to_fit_width(total_width - 1)
+        columns.next_to(black_rect, DOWN, LARGE_BUFF)
+        columns.to_edge(RIGHT)
+
+        self.play(
+            columns.next_to, SPACE_HEIGHT*DOWN, UP, LARGE_BUFF,
+            columns.to_edge, RIGHT, 
+            Animation(black_rect),
+            rate_func = None,
+            run_time = self.run_time,
+        )
+
 
 class ExternallyAnimatedScene(Scene):
     def construct(self):

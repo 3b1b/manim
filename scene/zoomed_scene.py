@@ -99,10 +99,10 @@ class ZoomedScene(Scene):
         return frame
 
     def set_camera_image(self, pixel_array):
-        self.camera.set_image(pixel_array)
+        self.camera.set_pixel_array(pixel_array)
         if self.zoom_activated:
             (up, left), (down, right) = self.zoomed_canvas_pixel_indices
-            self.zoomed_camera.set_image(pixel_array[left:right, up:down])
+            self.zoomed_camera.set_pixel_array(pixel_array[left:right, up:down])
 
     def set_camera_background(self, background):
         self.set_camera_image(self, background)
