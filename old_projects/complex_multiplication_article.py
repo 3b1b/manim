@@ -15,6 +15,7 @@ from topics.complex_numbers import *
 
 DEFAULT_PLANE_CONFIG = {
     "stroke_width" : 2*DEFAULT_POINT_THICKNESS
+    }
 
 
 class SuccessiveComplexMultiplications(ComplexMultiplication):
