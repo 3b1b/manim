@@ -2161,13 +2161,12 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
         ],
     }
     def construct(self):
-        self.force_skipping()
-
         self.remove(self.people)
         self.show_binary_strings()
         self.add_people()
         self.choose_triplets()
-        self.show_association_with_binary()
+        self.show_association_with_binary(3)
+        self.show_association_with_binary(5)
         self.order_doesnt_matter()
         self.that_phrase_is_confusing()
         self.pattern_is_unambiguous()
@@ -2203,19 +2202,8 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
     def add_people(self):
         people = self.people
 
-        names = VGroup(*map(TextMobject, [
-            "Ali", "Ben", "Cam", "Denis", "Evan"
-        ]))
-        for name, pi in zip(names, people):
-            name.scale(0.75)
-            name.next_to(pi, UP, 2*SMALL_BUFF)
-        group = VGroup(people, names)
-
-        lb, rb = braces = TexMobject("\\{ \\}")
-        braces.scale(2)
-        braces.stretch_to_fit_height(1.3*group.get_height())
-        lb.next_to(group, LEFT, SMALL_BUFF)
-        rb.next_to(group, RIGHT, SMALL_BUFF)
+        names = self.get_names(people)
+        braces = self.get_people_braces(people)
 
         self.play(
             Write(braces),
@@ -2227,19 +2215,224 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
         self.set_variables_as_attrs(names, braces)
 
     def choose_triplets(self):
-        pass
+        movers = VGroup()
+        movers.generate_target()
+        max_name_width = max([n.get_width() for n in self.names])
+        for name_triplet in it.combinations(self.names, 3):
+            mover = VGroup(*name_triplet).copy()
+            mover.generate_target()
+            if hasattr(self, "stack"):
+                mover.target.scale_to_fit_height(self.stack[0].get_height())
+            for name in mover.target[:2]:
+                name[-1].set_fill(opacity = 1)
+            mover.target.arrange_submobjects(RIGHT, MED_SMALL_BUFF)
+            movers.add(mover)
+            movers.target.add(mover.target)
+        movers.target.arrange_submobjects(
+            DOWN, buff = SMALL_BUFF,
+            aligned_edge = LEFT,
+        )
+        movers.target.next_to(self.people, DOWN, MED_LARGE_BUFF)
+        if hasattr(self, "stack"):
+            movers.target.align_to(self.stack, UP)
+
+        self.play(LaggedStart(
+            MoveToTarget, movers,
+            lag_ratio = 0.2,
+            run_time = 4,
+        ))
+        self.dither()
+
+        self.name_triplets = movers
         
-    def show_association_with_binary(self):
-        pass
+    def show_association_with_binary(self, index):
+        people = self.people
+        names = self.names
+        for mob in people, names:
+            mob.save_state()
+            mob.generate_target()
+
+        line = self.stack[index].copy()
+        triplet = self.name_triplets[index]
+        triplet.save_state()
+        line.generate_target()
+        for bit, name in zip(line.target, self.names):
+            bit.next_to(name, UP)
+
+        line_rect = SurroundingRectangle(line)
+        full_line_rect = SurroundingRectangle(VGroup(line, triplet))
+        people_rects = VGroup()
+        for pi, name, obj in zip(people.target, names.target, line):
+            if "1" in obj.get_tex_string():
+                rect = SurroundingRectangle(VGroup(pi, name))
+                people_rects.add(rect)
+                pi.change_mode("hooray")
+            else:
+                pi.fade(0.5)
+                name.fade(0.5)
+
+        self.play(ShowCreation(line_rect))
+        self.play(MoveToTarget(line))
+        self.play(
+            LaggedStart(ShowCreation, people_rects),
+            MoveToTarget(people),
+            MoveToTarget(names),
+        )
+        self.dither()
+        self.play(
+            ReplacementTransform(line_rect, full_line_rect),
+            triplet.highlight, YELLOW
+        )
+        self.dither(2)
+        self.play(
+            people.restore,
+            names.restore,
+            triplet.restore,
+            FadeOut(line),
+            FadeOut(full_line_rect),
+            FadeOut(people_rects),
+        )
 
     def order_doesnt_matter(self):
-        pass
+        triplet = self.name_triplets[0].copy()
+        triplet.set_fill(opacity = 1)
+        triplet.next_to(
+            self.name_triplets, RIGHT,
+            buff = LARGE_BUFF,
+            aligned_edge = UP,
+        )
+        updownarrow = TexMobject("\\Updownarrow")
+        updownarrow.highlight(YELLOW)
+        updownarrow.next_to(triplet, DOWN, SMALL_BUFF)
+        permutations = VGroup()
+        for indices in it.permutations(range(len(triplet))):
+            perm = triplet.copy()
+            resorter = VGroup(*[
+                perm[i] for i in indices
+            ])
+            resorter.arrange_submobjects(RIGHT, MED_SMALL_BUFF)
+            resorter.next_to(updownarrow, DOWN)
+            permutations.add(perm)
+
+        words = TextMobject("``Order doesn't matter''")
+        words.scale(0.75)
+        words.highlight(BLUE)
+        words.next_to(permutations, DOWN)
+
+        self.play(ReplacementTransform(
+            self.name_triplets[0].copy(), triplet
+        ))
+        curr_perm = permutations[0]
+        self.play(
+            ReplacementTransform(triplet.copy(), curr_perm),
+            Write(updownarrow)
+        )
+        for i in range(8):
+            new_perm = permutations[i%(len(permutations)-1)+1]
+            anims = [
+                Transform(
+                    curr_perm, new_perm,
+                    path_arc = np.pi,
+                )
+            ]
+            if i == 1:
+                self.dither()
+            if i == 4:
+                anims.append(Write(words, run_time = 1))
+            self.play(*anims)
+        self.play(*map(FadeOut, [triplet, curr_perm, updownarrow]))
+
+        self.order_doesnt_matter_words = words
 
     def that_phrase_is_confusing(self):
-        pass
+        odm_words = self.order_doesnt_matter_words
+        odm_words_outline = VGroup()
+        for letter in odm_words:
+            mob = VMobject()
+            mob.points = letter.points
+            odm_words_outline.add(mob)
+        odm_words_outline.set_fill(opacity = 0)
+        odm_words_outline.set_stroke(YELLOW, 1)
+
+        line = self.stack[0].copy()
+
+        self.play(
+            LaggedStart(
+                ShowCreationThenDestruction, odm_words_outline,
+                lag_ratio = 0.2,
+                run_time = 1,
+            ),
+            LaggedStart(
+                ApplyMethod, self.people,
+                lambda pi : (pi.change, "confused", odm_words,)
+            )
+        )
+        self.play(line.next_to, odm_words, UP)
+        for x in range(6):
+            line.generate_target()
+            resorter = VGroup(*line.target)
+            resorter.sort_submobjects(lambda p : random.random())
+            resorter.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+            resorter.move_to(line)
+            self.play(MoveToTarget(line, path_arc = np.pi))
+        self.dither()
+
+        line.sort_submobjects(lambda p : p[0])
+        words = VGroup(*map(TextMobject, ["First", "Second", "Fifth"]))
+        words.highlight(YELLOW)
+        words.scale(0.75)
+        word_arrow_groups = VGroup()
+        for i, word in zip([0, 1, 4], words):
+            arrow = Vector(0.5*DOWN)
+            arrow.highlight(YELLOW)
+            arrow.next_to(line[i], UP, SMALL_BUFF)
+            word.next_to(arrow, UP, SMALL_BUFF)
+            word_arrow_groups.add(VGroup(word, arrow))
+
+        for x in range(2):
+            for i in range(len(word_arrow_groups)+1):
+                anims = []
+                if i > 0:
+                    anims.append(FadeOut(word_arrow_groups[i-1]))
+                if i < len(word_arrow_groups):
+                    anims.append(FadeIn(word_arrow_groups[i]))
+                self.play(*anims)
+            self.dither()
+            word_arrow_groups.submobjects = [
+                word_arrow_groups[j]
+                for j in 1, 2, 0
+            ]
+        self.play(*map(FadeOut, [line, odm_words]))
 
     def pattern_is_unambiguous(self):
-        pass
+        all_ones = VGroup()
+        for line in self.stack:
+            ones = VGroup(*filter(
+                lambda m : "1" in m.get_tex_string(),
+                line
+            )).copy()
+            ones.highlight(YELLOW)
+            all_ones.add(ones)
+
+        self.play(
+            LaggedStart(
+                FadeIn, all_ones,
+                lag_ratio = 0.2,
+                run_time = 3,
+                rate_func = there_and_back
+            ),
+            LaggedStart(
+                ApplyMethod, self.people,
+                lambda pi : (pi.change, "happy", ones),
+            )
+        )
+        self.dither()
+        for trip in it.combinations(self.people, 3):
+            rects = VGroup(*map(SurroundingRectangle, trip))
+            self.add(rects)
+            self.dither(0.3)
+            self.remove(rects)
+        self.dither()
 
     ###
 
@@ -2249,12 +2442,192 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
             for color in self.people_colors
         ])
         people.arrange_submobjects(RIGHT)
-        people.shift(SPACE_WIDTH*LEFT/2)
-        people.to_edge(UP, buff = LARGE_BUFF)
+        people.shift(3*LEFT)
+        people.to_edge(UP, buff = 1.25)
         self.people = people
         return people
 
+    def get_names(self, people):
+        names = VGroup(*[
+            TextMobject(name + ",")
+            for name in "Ali", "Ben", "Cam", "Denis", "Evan"
+        ])
+        for name, pi in zip(names, people):
+            name[-1].set_fill(opacity = 0)
+            name.scale(0.75)
+            name.next_to(pi, UP, 2*SMALL_BUFF)
+            pi.name = name
+        return names
 
+    def get_people_braces(self, people):
+        group = VGroup(people, *[pi.name for pi in people])
+        lb, rb = braces = TexMobject("\\{ \\}")
+        braces.scale(2)
+        braces.stretch_to_fit_height(1.3*group.get_height())
+        lb.next_to(group, LEFT, SMALL_BUFF)
+        rb.next_to(group, RIGHT, SMALL_BUFF)
+        return braces
+
+class SubsetProbabilityExample(ChooseThreeFromFive):
+    CONFIG = {
+        "random_seed" : 1,
+    }
+    def construct(self):
+        self.setup_people()
+        self.ask_question()
+        self.show_all_triplets()
+        self.circle_those_with_ali()
+
+    def setup_people(self):
+        people = self.people
+        names = self.get_names(people)
+        braces = self.get_people_braces(people)
+        group = VGroup(people, names, braces)
+
+        self.play(group.shift, -group.get_center()[0]*RIGHT)
+        self.dither()
+
+        self.set_variables_as_attrs(names, braces)
+
+    def ask_question(self):
+        pi_name_groups = VGroup(*[
+            VGroup(pi, pi.name)
+            for pi in self.people
+        ])
+
+        words = TextMobject(
+            "Choose 3 people randomly.\\\\",
+            "Probability", "Ali", "is one of them?"
+        )
+        words.highlight_by_tex("Ali", self.people[0].get_color())
+        words.next_to(pi_name_groups, DOWN, 2*LARGE_BUFF)
+
+        checkmark = TexMobject("\\checkmark").highlight(GREEN)
+        cross = TexMobject("\\times").highlight(RED)
+        for mob in checkmark, cross:
+            mob.scale(2)
+            mob.next_to(self.braces, DOWN, aligned_edge = LEFT)
+            mob.shift(MED_SMALL_BUFF*LEFT)
+
+        ali = pi_name_groups[0]
+
+        self.play(FadeIn(words))
+        for x in range(4):
+            group = VGroup(*random.sample(pi_name_groups, 3))
+            group.save_state()
+            group.generate_target()
+            group.target.shift(LARGE_BUFF*DOWN)
+            for pi, name in group.target:
+                pi.change("hooray", checkmark)
+            if ali in group:
+                symbol = checkmark
+                rect = SurroundingRectangle(
+                    group.target[group.submobjects.index(ali)]
+                )
+                rect.set_stroke(GREEN)
+            else:
+                symbol = cross
+                rect = VGroup()
+
+            run_time = 1
+            self.play(
+                MoveToTarget(group),
+                FadeIn(symbol),
+                ShowCreation(rect),
+                run_time = run_time,
+            )
+            self.dither(0.5)
+            self.play(
+                group.restore,
+                FadeOut(symbol),
+                FadeOut(rect),
+                run_time = run_time,
+            )
+
+        self.question = words
+        self.set_variables_as_attrs(pi_name_groups)
+
+    def show_all_triplets(self):
+        self.play(
+            self.question.scale, 0.75,
+            self.question.to_corner, UP+RIGHT,
+            VGroup(self.people, self.names, self.braces).to_edge, LEFT,
+        )
+        self.choose_triplets()
+
+        brace = Brace(self.name_triplets, RIGHT)
+        total_count = brace.get_tex(
+            "{5 \\choose 3}", "=", "10",
+            buff = MED_LARGE_BUFF
+        )
+        total_count.highlight(BLUE)
+        self.play(
+            GrowFromCenter(brace),
+            Write(total_count),
+        )
+        self.dither()
+
+        self.set_variables_as_attrs(brace, total_count)
+
+    def circle_those_with_ali(self):
+        name_triplets = self.name_triplets
+        five_choose_three, equals, ten = self.total_count
+        names = self.names
+
+        with_ali = VGroup(*name_triplets[:6])
+        alis = VGroup(*[group[0] for group in with_ali])
+        rect = SurroundingRectangle(with_ali)
+
+        frac_lines = VGroup()
+        for vect in LEFT, RIGHT:
+            frac_line = TexMobject("\\quad \\over \\quad")
+            if vect is LEFT:
+                frac_line.stretch(1.5, 0)
+            frac_line.next_to(equals, vect)
+            frac_lines.add(frac_line)
+        four_choose_two = TexMobject("4 \\choose 2")
+        four_choose_two.next_to(frac_lines[0], UP, SMALL_BUFF)
+        six = TexMobject("6")
+        six.next_to(frac_lines[1], UP, SMALL_BUFF)
+
+        self.play(
+            ShowCreation(rect),
+            alis.highlight, YELLOW
+        )
+        for pair in it.combinations(names[1:], 2):
+            arrows = VGroup()
+            for pi in pair:
+                arrow = Vector(0.5*DOWN, color = YELLOW)
+                arrow.next_to(pi, UP)
+                arrows.add(arrow)
+            self.add(arrows)
+            self.dither(0.5)
+            self.remove(arrows)
+        self.add(arrows)
+        self.dither()
+        self.play(
+            FadeIn(frac_lines),
+            five_choose_three.next_to, frac_lines[0], DOWN, SMALL_BUFF,
+            ten.next_to, frac_lines[1], DOWN, SMALL_BUFF,
+            Write(four_choose_two)
+        )
+        self.dither()
+        self.play(ReplacementTransform(
+            four_choose_two.copy(), six
+        ))
+        self.play(FadeOut(arrows))
+
+        for x in range(20):
+            name_rect = SurroundingRectangle(random.choice(name_triplets))
+            name_rect.highlight(BLUE)
+            name_rect.set_fill(BLUE, opacity = 0.25)
+            self.play(Animation(name_rect, run_time = 0))
+            self.dither(0.25)
+            self.remove(name_rect)
+
+class HowToComputeNChooseK(ChooseThreeFromFive):
+    def construct(self):
+        pass
 
 
 
