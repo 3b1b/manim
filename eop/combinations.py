@@ -2356,6 +2356,10 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
 
         line = self.stack[0].copy()
 
+        q_marks = TextMobject("???")
+        q_marks.next_to(odm_words, DOWN)
+        q_marks.highlight(YELLOW)
+
         self.play(
             LaggedStart(
                 ShowCreationThenDestruction, odm_words_outline,
@@ -2365,7 +2369,8 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
             LaggedStart(
                 ApplyMethod, self.people,
                 lambda pi : (pi.change, "confused", odm_words,)
-            )
+            ),
+            LaggedStart(FadeIn, q_marks),
         )
         self.play(line.next_to, odm_words, UP)
         for x in range(6):
@@ -2375,7 +2380,7 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
             resorter.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
             resorter.move_to(line)
             self.play(MoveToTarget(line, path_arc = np.pi))
-        self.dither()
+        self.play(FadeOut(q_marks))
 
         line.sort_submobjects(lambda p : p[0])
         words = VGroup(*map(TextMobject, ["First", "Second", "Fifth"]))
@@ -2626,13 +2631,296 @@ class SubsetProbabilityExample(ChooseThreeFromFive):
             self.remove(name_rect)
 
 class HowToComputeNChooseK(ChooseThreeFromFive):
+    CONFIG = {
+        "n" : 5,
+        "k" : 3,
+        "line_colors" : [GREEN, YELLOW]
+    }
     def construct(self):
-        pass
+        self.setup_people()
+        self.choose_example_ordered_triplets()
+        self.count_possibilities()
+        self.show_permutations_of_ABC()
+        self.count_permutations_of_ABC()
+        self.reset_stage()
+        self.show_whats_being_counted()
 
+    def setup_people(self):
+        people = self.people
+        names = self.get_names(people)
+        braces = self.get_people_braces(people)
+        people_group = VGroup(people, names, braces)
+        people_group.center().to_edge(UP, buff = MED_LARGE_BUFF)
 
+        self.add(people_group)
+        self.set_variables_as_attrs(
+            names, people_group,
+            people_braces = braces
+        )
 
+    def choose_example_ordered_triplets(self):
+        n, k = self.n, self.k
+        names = self.names
 
+        width = max([n.get_width() for n in self.names]) + 2*SMALL_BUFF
+        lines = VGroup(*[
+            Line(ORIGIN, width*RIGHT)
+            for x in range(k)
+        ])
+        lines.arrange_submobjects(RIGHT)
+        lines.next_to(ORIGIN, DOWN, buff = LARGE_BUFF)
+        place_words = VGroup(*[
+            TexMobject("%d^\\text{%s}"%(i+1, s))
+            for i, s in zip(
+                range(k), 
+                it.chain(["st", "nd", "rd"], it.repeat("th"))
+            )
+        ])
+        for mob in place_words, lines:
+            mob.gradient_highlight(*self.line_colors)
+        for word, line in zip(place_words, lines):
+            word.next_to(line, DOWN, SMALL_BUFF)
 
+        for x in range(3):
+            chosen_names = VGroup(*random.sample(names, k))
+            chosen_names.save_state()
+            for name, line, word in zip(chosen_names, lines, place_words):
+                name.generate_target()
+                name.target.next_to(line, UP, SMALL_BUFF)
+                anims = [MoveToTarget(name)]
+                if x == 0:
+                    anims += [ShowCreation(line), FadeIn(word)]
+                self.play(*anims)
+            self.dither()
+            self.play(chosen_names.restore)
+        self.dither()
+
+        self.set_variables_as_attrs(lines, place_words)
+
+    def count_possibilities(self):
+        n, k = self.n, self.k
+        lines = self.lines
+
+        choice_counts = self.get_choice_counts(n, k)
+        arrows = self.get_choice_count_arrows(choice_counts)
+
+        name_rects = VGroup()
+        for name in self.names:
+            name.rect = SurroundingRectangle(name)
+            name_rects.add(name.rect)
+
+        chosen_names = VGroup(*random.sample(self.names, k))
+        self.names.save_state()
+
+        for name, line, count, arrow in zip(chosen_names, lines, choice_counts, arrows):
+            self.play(
+                FadeIn(count),
+                LaggedStart(
+                    FadeIn, name_rects,
+                    rate_func = there_and_back,
+                    remover = True,
+                )
+            )
+            self.play(
+                name.next_to, line, UP, SMALL_BUFF,
+                GrowArrow(arrow)
+            )
+            self.dither()
+
+            name_rects.remove(name.rect)
+            name_rects.set_stroke(YELLOW, 3)
+
+        #Consolidate choice counts
+        choice_numbers = VGroup(*[
+            cc.submobjects.pop(1) 
+            for cc in choice_counts
+        ])
+        choice_numbers.generate_target()
+        dots = VGroup(*[TexMobject("\\cdot") for x in range(k-1)])
+        product = VGroup(*it.chain(*zip(choice_numbers.target, dots)))
+        product.add(choice_numbers.target[-1])
+        product.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        chosen_names_brace = Brace(chosen_names, UP)
+        product.next_to(chosen_names_brace, UP)
+
+        self.play(
+            FadeOut(choice_counts),
+            FadeOut(arrows),
+            MoveToTarget(choice_numbers),
+            Write(dots),
+            GrowFromCenter(chosen_names_brace),
+        )
+        self.dither()
+
+        self.set_variables_as_attrs(
+            chosen_names, chosen_names_brace, choice_numbers,
+            choice_numbers_dots = dots,
+        )
+
+    def show_permutations_of_ABC(self):
+        chosen_names = self.chosen_names
+        lines = self.lines
+
+        for indices in list(it.permutations(range(3)))[1:]:
+            self.play(*[
+                ApplyMethod(
+                    name.next_to, lines[i], UP, SMALL_BUFF,
+                    path_arc = np.pi
+                )
+                for i, name in zip(indices, chosen_names)
+            ])
+            self.dither(0.5)
+
+    def count_permutations_of_ABC(self):
+        n, k = self.n, self.k
+        lines = self.lines
+
+        chosen_names = self.chosen_names
+        brace = self.chosen_names_brace
+        numerator = VGroup(
+            self.choice_numbers, self.choice_numbers_dots,
+        )
+        frac_line = Line(LEFT, RIGHT)
+        frac_line.replace(numerator, dim_to_match = 0)
+        frac_line.to_edge(RIGHT)
+
+        choice_counts = self.get_choice_counts(k, k)
+        arrows = self.get_choice_count_arrows(choice_counts)
+
+        self.play(
+            chosen_names.shift, UP,
+            chosen_names.to_edge, LEFT,
+            numerator.next_to, frac_line, UP, SMALL_BUFF,
+            FadeOut(brace),
+        )
+        shuffled_names = random.sample(chosen_names, k)
+        for line, name, count, arrow in zip(lines, shuffled_names, choice_counts, arrows):
+            self.play(FadeIn(count), GrowArrow(arrow))
+            self.play(
+                name.next_to, line, UP, SMALL_BUFF,
+                path_arc = -np.pi/3,
+            )
+            self.dither()
+
+        #Consolidate choice counts
+        choice_numbers = VGroup(*[
+            cc.submobjects.pop(1) 
+            for cc in choice_counts
+        ])
+        choice_numbers.generate_target()
+        dots = VGroup(*[TexMobject("\\cdot") for x in range(k-1)])
+        product = VGroup(*it.chain(*zip(choice_numbers.target, dots)))
+        product.add(choice_numbers.target[-1])
+        product.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        product.next_to(frac_line, DOWN, SMALL_BUFF)
+
+        self.play(
+            FadeOut(choice_counts),
+            FadeOut(arrows),
+            MoveToTarget(choice_numbers),
+            Write(dots),
+            ShowCreation(frac_line),
+        )
+        self.dither()
+
+        self.fraction = VGroup(
+            numerator, frac_line, VGroup(choice_numbers, dots)
+        )
+
+    def reset_stage(self):
+        n, k = self.n, self.k
+        n_choose_k_equals = TexMobject(
+            "{%d \\choose %d} ="%(n, k)
+        )
+        n_choose_k_equals.next_to(ORIGIN, RIGHT, LARGE_BUFF)
+        n_choose_k_equals.to_edge(UP, LARGE_BUFF)
+
+        self.play(
+            self.names.restore,
+            FadeOut(self.lines),
+            FadeOut(self.place_words),
+        )
+        self.play(
+            self.people_group.to_edge, LEFT,
+            FadeIn(n_choose_k_equals),
+            self.fraction.next_to, n_choose_k_equals, RIGHT, SMALL_BUFF
+        )
+
+    def show_whats_being_counted(self):
+        n, k = self.n, self.k
+        letters = VGroup(*[name[0] for name in self.names])
+
+        rhs = TexMobject("=", "{60", "\\over", "6}")
+        rhs.next_to(self.fraction, RIGHT)
+
+        all_groups = VGroup()
+        lines = VGroup()
+        for ordered_triplet in it.combinations(letters, k):
+            line = VGroup()
+            for triplet in it.permutations(ordered_triplet):
+                group = VGroup(*triplet).copy()
+                group.save_state()
+                group.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+                line.add(group)
+                all_groups.add(group)
+            line.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+            lines.add(line)
+        lines.arrange_submobjects(DOWN)
+        lines.scale(0.8)
+        lines.to_edge(DOWN)
+        rects = VGroup(*[
+            SurroundingRectangle(
+                line, buff = 0,
+                stroke_width = 0,
+                fill_color = BLUE,
+                fill_opacity = 0.5,
+            )
+            for line in lines
+        ])
+
+        self.play(
+            Write(VGroup(*rhs[:-1])),
+            LaggedStart(
+                ApplyMethod, all_groups,
+                lambda g : (g.restore,),
+                rate_func = lambda t : smooth(1-t),
+                run_time = 4,
+                lag_ratio = 0.2,
+            ),
+        )
+        self.dither()
+        self.play(
+            LaggedStart(FadeIn, rects),
+            Write(rhs[-1])
+        )
+        self.dither()
+
+    ####
+
+    def get_choice_counts(self, n, k):
+        people_braces = self.people_braces
+        choice_counts = VGroup(*[
+            TextMobject(
+                "(", str(n0), " choices", ")",
+                arg_separator = ""
+            )
+            for n0 in range(n, n-k, -1)
+        ])
+        choice_counts.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        choice_counts.gradient_highlight(*self.line_colors)
+        choice_counts.next_to(people_braces, DOWN)
+        return choice_counts
+
+    def get_choice_count_arrows(self, choice_counts):
+        lines = self.lines
+        return VGroup(*[
+            Arrow(
+                count.get_bottom(), 
+                line.get_center() + MED_LARGE_BUFF*UP,
+                color = line.get_color()
+            )
+            for count, line in zip(choice_counts, lines)
+        ])
 
 
 
