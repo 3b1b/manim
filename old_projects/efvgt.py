@@ -92,6 +92,30 @@ class ConfettiSpiril(Animation):
         self.mobject.rotate(angle, axis = UP, about_point = start_center)
         self.mobject.shift(vert_shift*DOWN)
 
+def get_confetti_animations(num_confetti_squares):
+    colors = [RED, YELLOW, GREEN, BLUE, PURPLE, RED]
+    confetti_squares = [
+        Square(
+            side_length = 0.2,
+            stroke_width = 0,
+            fill_opacity = 0.75,
+            fill_color = random.choice(colors),
+        )
+        for x in range(num_confetti_squares)
+    ]
+    confetti_spirils = [
+        ConfettiSpiril(
+            square,
+            x_start = 2*random.random()*SPACE_WIDTH - SPACE_WIDTH,
+            rate_func = squish_rate_func(lambda t : t, a, a+0.5)
+        )
+        for a, square in zip(
+            np.linspace(0, 0.5, num_confetti_squares),
+            confetti_squares
+        )
+    ]
+    return confetti_spirils
+
 class Anniversary(TeacherStudentsScene):
     CONFIG = {
         "num_confetti_squares" : 50,
@@ -118,7 +142,9 @@ class Anniversary(TeacherStudentsScene):
         first_video.add(formula)
 
         hats = self.get_party_hats()
-        confetti_spirils = self.get_confetti_animations()
+        confetti_spirils = get_confetti_animations(
+            self.num_confetti_squares
+        )
         self.play(
             Write(title, run_time = 2),
             *[
@@ -185,30 +211,6 @@ class Anniversary(TeacherStudentsScene):
                 about_point = hat.get_bottom()
             )
         return hats
-
-    def get_confetti_animations(self):
-        colors = [RED, YELLOW, GREEN, BLUE, PURPLE, RED]
-        confetti_squares = [
-            Square(
-                side_length = 0.2,
-                stroke_width = 0,
-                fill_opacity = 0.5,
-                fill_color = random.choice(colors),
-            )
-            for x in range(self.num_confetti_squares)
-        ]
-        confetti_spirils = [
-            ConfettiSpiril(
-                square,
-                x_start = 2*random.random()*SPACE_WIDTH - SPACE_WIDTH,
-                rate_func = squish_rate_func(lambda t : t, a, a+0.5)
-            )
-            for a, square in zip(
-                np.linspace(0, 0.5, self.num_confetti_squares),
-                confetti_squares
-            )
-        ]
-        return confetti_spirils
 
 class HomomophismPreview(Scene):
     def construct(self):
