@@ -2634,7 +2634,8 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
     CONFIG = {
         "n" : 5,
         "k" : 3,
-        "line_colors" : [GREEN, YELLOW]
+        "line_colors" : [GREEN, YELLOW],
+        "n_permutaitons_to_show" : 5,
     }
     def construct(self):
         self.setup_people()
@@ -2662,24 +2663,7 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
         n, k = self.n, self.k
         names = self.names
 
-        width = max([n.get_width() for n in self.names]) + 2*SMALL_BUFF
-        lines = VGroup(*[
-            Line(ORIGIN, width*RIGHT)
-            for x in range(k)
-        ])
-        lines.arrange_submobjects(RIGHT)
-        lines.next_to(ORIGIN, DOWN, buff = LARGE_BUFF)
-        place_words = VGroup(*[
-            TexMobject("%d^\\text{%s}"%(i+1, s))
-            for i, s in zip(
-                range(k), 
-                it.chain(["st", "nd", "rd"], it.repeat("th"))
-            )
-        ])
-        for mob in place_words, lines:
-            mob.gradient_highlight(*self.line_colors)
-        for word, line in zip(place_words, lines):
-            word.next_to(line, DOWN, SMALL_BUFF)
+        lines, place_words = self.get_lines_and_place_words()
 
         for x in range(3):
             chosen_names = VGroup(*random.sample(names, k))
@@ -2761,7 +2745,8 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
         chosen_names = self.chosen_names
         lines = self.lines
 
-        for indices in list(it.permutations(range(3)))[1:]:
+        n_perms = self.n_permutaitons_to_show + 1
+        for indices in list(it.permutations(range(3)))[1:n_perms]:
             self.play(*[
                 ApplyMethod(
                     name.next_to, lines[i], UP, SMALL_BUFF,
@@ -2922,9 +2907,185 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
             for count, line in zip(choice_counts, lines)
         ])
 
+    def get_lines_and_place_words(self):
+        n, k = self.n, self.k
+        width = max([n.get_width() for n in self.names]) + MED_SMALL_BUFF
+        lines = VGroup(*[
+            Line(ORIGIN, width*RIGHT)
+            for x in range(k)
+        ])
+        lines.arrange_submobjects(RIGHT)
+        lines.next_to(ORIGIN, DOWN, buff = LARGE_BUFF)
+        place_words = VGroup(*[
+            TexMobject("%d^\\text{%s}"%(i+1, s))
+            for i, s in zip(
+                range(k), 
+                it.chain(["st", "nd", "rd"], it.repeat("th"))
+            )
+        ])
+        for mob in place_words, lines:
+            mob.gradient_highlight(*self.line_colors)
+        for word, line in zip(place_words, lines):
+            word.next_to(line, DOWN, SMALL_BUFF)
 
+        self.set_variables_as_attrs(lines, place_words)
+        return lines, place_words
 
+class NineChooseFourExample(HowToComputeNChooseK):
+    CONFIG = {
+        "random_seed" : 2,
+        "n" : 9,
+        "k" : 4,
+        "line_colors" : [RED, MAROON_B],
+        "n_permutaitons_to_show" : 3,
+    }
+    def construct(self):
+        self.setup_people()
+        self.show_n_choose_k()
+        self.show_n_choose_k_pattern()
+        self.choose_k_people()
+        self.count_how_to_choose_k()
+        self.show_permutations()
+        self.finish_computation()
 
+    def setup_people(self):
+        self.remove(self.people)
+        self.people = TextMobject(" ".join([
+            chr(ord('A') + i )
+            for i in range(self.n)
+        ]))
+        self.people.gradient_highlight(BLUE, YELLOW)
+        self.names = self.people
+        self.people.to_edge(UP, buff = LARGE_BUFF + MED_SMALL_BUFF)
+        lb, rb = braces = TextMobject("\\{\\}")
+        braces.scale(1.5)
+        lb.next_to(self.people, LEFT, SMALL_BUFF)
+        rb.next_to(self.people, RIGHT, SMALL_BUFF)
+
+        self.people_group = VGroup(braces, self.people)
+        self.people_braces = braces
+
+    def show_n_choose_k(self):
+        n, k = self.n, self.k
+        n_choose_k = TexMobject("{%d \\choose %d}"%(n, k))
+        n_choose_k.to_corner(UP + LEFT)
+        self.play(FadeIn(n_choose_k))
+        self.set_variables_as_attrs(n_choose_k)
+
+    def show_n_choose_k_pattern(self):
+        n, k = self.n, self.k
+        stack = get_stack(
+            TexMobject("1").highlight(PINK),
+            TexMobject("0").highlight(BLUE),
+            n, k
+        )
+        l = len(stack)
+        n_stacks = 6
+        columns = VGroup(*[
+            VGroup(*stack[(i*l)/n_stacks:((i+1)*l)/n_stacks])
+            for i in range(n_stacks)
+        ])
+        columns.arrange_submobjects(
+            RIGHT, 
+            aligned_edge = UP,
+            buff = MED_LARGE_BUFF
+        )
+        columns.scale_to_fit_height(7)
+        columns.to_corner(DOWN + RIGHT)
+
+        for line in stack:
+            self.play(FadeIn(line, run_time = 0.1))
+        self.dither(2)
+        self.play(FadeOut(
+            stacks, submobject_mode = "lagged_start", run_time = 2
+        ))
+
+    def choose_k_people(self):
+        n, k = self.n, self.k
+        people = self.people
+        braces = self.people_braces
+
+        n_items = TextMobject("%d items"%n)
+        choose_k = TextMobject("choose %d"%k)
+        n_items.next_to(people, UP, buff = MED_LARGE_BUFF)
+        choose_k.next_to(people, DOWN, buff = LARGE_BUFF)
+
+        chosen_subset = VGroup(*random.sample(people, k))
+
+        self.play(
+            Write(braces),
+            LaggedStart(FadeIn, people, run_time = 1),
+            FadeIn(n_items),
+        )
+        self.dither()
+        self.play(
+            FadeIn(choose_k),
+            LaggedStart(
+                ApplyMethod, chosen_subset,
+                lambda m : (m.shift, MED_LARGE_BUFF*DOWN)
+            )
+        )
+        self.dither()
+        self.play(
+            chosen_subset.shift, MED_LARGE_BUFF*UP,
+            n_items.next_to, n_items.get_center(), LEFT,
+            choose_k.next_to, n_items.get_center(), RIGHT,
+        )
+
+    def count_how_to_choose_k(self):
+        lines, place_words = self.get_lines_and_place_words()
+        self.play(
+            LaggedStart(FadeIn, lines),
+            LaggedStart(FadeIn, place_words),
+            run_time = 1
+        )
+        self.count_possibilities()
+
+    def show_permutations(self):
+        self.show_permutations_of_ABC()
+        self.count_permutations_of_ABC()
+
+    def finish_computation(self):
+        equals = TexMobject("=")
+        fraction = self.fraction
+        six = fraction[0][0][3]
+        eight = fraction[0][0][1]
+        two_three = VGroup(*fraction[2][0][1:3])
+        four = fraction[2][0][0]
+
+        rhs = TexMobject("= 9 \\cdot 2 \\cdot 7 = 126")
+
+        self.play(
+            self.names.restore,
+            FadeOut(self.lines),
+            FadeOut(self.place_words),
+            self.n_choose_k.next_to, equals, LEFT,
+            self.fraction.next_to, equals, RIGHT,
+            FadeIn(equals),
+        )
+        self.dither()
+
+        for mob in six, eight, two_three, four:
+            mob.cross = Cross(mob)
+            mob.cross.set_stroke("red", 5)
+        two = TexMobject("2")
+        two.highlight(eight.get_fill_color())
+        two.next_to(eight, UP)
+        rhs.next_to(fraction, RIGHT)
+
+        self.play(
+            ShowCreation(six.cross),
+            ShowCreation(two_three.cross),
+        )
+        self.dither()
+        self.play(
+            ShowCreation(eight.cross),
+            ShowCreation(four.cross),
+            FadeIn(two)
+        )
+        self.dither()
+        self.play(Write(rhs))
+        self.dither()
 
 
 
