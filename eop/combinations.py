@@ -2997,7 +2997,7 @@ class NineChooseFourExample(HowToComputeNChooseK):
             self.play(FadeIn(line, run_time = 0.1))
         self.dither(2)
         self.play(FadeOut(
-            stacks, submobject_mode = "lagged_start", run_time = 2
+            stack, submobject_mode = "lagged_start", run_time = 2
         ))
 
     def choose_k_people(self):
@@ -3047,6 +3047,7 @@ class NineChooseFourExample(HowToComputeNChooseK):
 
     def finish_computation(self):
         equals = TexMobject("=")
+        equals.shift(2*LEFT)
         fraction = self.fraction
         six = fraction[0][0][3]
         eight = fraction[0][0][1]
@@ -3086,6 +3087,340 @@ class NineChooseFourExample(HowToComputeNChooseK):
         self.dither()
         self.play(Write(rhs))
         self.dither()
+
+class WeirdKindOfCancelation(TeacherStudentsScene):
+    def construct(self):
+        fraction = TexMobject(
+            "{5 \\cdot 4 \\cdot 3", 
+            "\\text{ ordered}", "\\text{ triplets}",
+            "\\over",
+            "1 \\cdot 2 \\cdot 3", "\\text{ orderings \\;\\qquad}}"
+        )
+        top_numbers, ordered, triplets, frac_line, bottom_numbers, orderings = fraction
+        for mob in top_numbers, bottom_numbers:
+            mob.gradient_highlight(GREEN, YELLOW)
+        fraction.next_to(self.teacher, UP+LEFT)
+
+        names = VGroup(*map(TextMobject, [
+            "Ali", "Ben", "Cam", "Denis", "Evan"
+        ]))
+        names.arrange_submobjects(RIGHT)
+        names.to_edge(UP, buff = LARGE_BUFF)
+        names.save_state()
+        lb, rb = braces = TexMobject("\\{\\}")
+        braces.scale(2)
+        lb.next_to(names, LEFT, SMALL_BUFF)
+        rb.next_to(names, RIGHT, SMALL_BUFF)
+
+        chosen_names = VGroup(*random.sample(names, 3))
+        chosen_names.generate_target()
+        chosen_names.target.arrange_submobjects(RIGHT)
+        chosen_names.target.next_to(top_numbers, UP, MED_LARGE_BUFF)
+        for name, name_target in zip(chosen_names, chosen_names.target):
+            name.target = name_target
+
+        self.teacher_says("It's like unit cancellation.")
+        self.change_student_modes(*["confused"]*3)
+        self.play(
+            RemovePiCreatureBubble(
+                self.teacher, target_mode = "raise_right_hand"
+            ),
+            LaggedStart(FadeIn, fraction, run_time = 1),
+            FadeIn(braces),
+            LaggedStart(FadeIn, names)
+        )
+        self.change_student_modes(
+            *["pondering"]*3,
+            look_at_arg = fraction
+        )
+
+        #Go through numerators
+        for num, name in zip(top_numbers[::2], chosen_names):
+            rect = SurroundingRectangle(num)
+            name.target.highlight(num.get_color())
+            self.play(
+                ShowCreationThenDestruction(rect),
+                MoveToTarget(name),
+            )
+        self.dither(2)
+
+        #Go through denominators
+        permutations = list(it.permutations(range(3)))[1:]
+
+        self.shuffle(chosen_names, permutations[:2])
+        self.play(LaggedStart(
+            ShowCreationThenDestruction,
+            VGroup(*map(SurroundingRectangle, bottom_numbers[::2]))
+        ))
+        self.shuffle(chosen_names, permutations[2:])
+        self.dither()
+
+        #Show cancelation
+        top_cross = Cross(ordered)
+        bottom_cross = Cross(orderings)
+
+        self.play(
+            ShowCreation(top_cross),
+            self.teacher.change, "maybe",
+        )
+        self.play(ShowCreation(bottom_cross))
+        self.change_student_modes(*["happy"]*3)
+        self.dither(3)
+
+    ###
+
+    def shuffle(self, mobject, permutations):
+        for permutation in permutations:
+            self.play(*[
+                ApplyMethod(
+                    m.move_to, mobject[i].get_center(),
+                    path_arc = np.pi,
+                )
+                for i, m in zip(permutation, mobject)
+            ])
+
+class SumsToPowerOf2(Scene):
+    CONFIG = {
+        "n" : 5,
+        "alt_n" : 7,
+    }
+    def construct(self):
+        self.setup_stacks()
+        self.count_32()
+        self.show_sum_as_n_choose_k()
+        self.show_alternate_sum()
+
+    def setup_stacks(self):
+        stacks = get_stacks(
+            TexMobject("1").highlight(PINK),
+            TexMobject("0").highlight(BLUE),
+            n = self.n,
+            vertical_buff = SMALL_BUFF,
+        )
+        stacks.to_corner(DOWN+LEFT)
+        numbers = VGroup(*[
+            TexMobject(str(choose(self.n, k)))
+            for k in range(self.n + 1)
+        ])
+        for number, stack in zip(numbers, stacks):
+            number.next_to(stack, UP)
+
+        self.play(
+            LaggedStart(FadeIn, stacks),
+            LaggedStart(FadeIn, numbers),
+        )
+        self.dither()
+
+        self.set_variables_as_attrs(stacks, numbers)
+
+    def count_32(self):
+        lines = VGroup(*it.chain(*self.stacks))
+        rhs = TexMobject("= 2^{%d}"%self.n)
+        rhs.to_edge(UP, buff = LARGE_BUFF)
+        rhs.to_edge(RIGHT, buff = 2)
+
+        numbers = self.numbers.copy()
+        numbers.target = VGroup(*[
+            TexMobject("{%d \\choose %d}"%(self.n, k))
+            for k in range(self.n + 1)
+        ])
+        plusses = VGroup(*[TexMobject("+") for n in numbers])
+        plusses.remove(plusses[-1])
+        plusses.add(TexMobject("="))
+        sum_group = VGroup(*it.chain(*zip(
+            numbers.target, plusses
+        )))
+        sum_group.arrange_submobjects(RIGHT, SMALL_BUFF)
+        sum_group.next_to(numbers, UP, LARGE_BUFF)
+        sum_group.shift(MED_LARGE_BUFF*RIGHT)
+
+        for i, line in zip(it.count(1), lines):
+            line_copy = line.copy().highlight(YELLOW)
+            number = Integer(i)
+            number.scale(1.5)
+            number.to_edge(UP)
+            VGroup(number, line_copy).highlight(YELLOW)
+            self.add(line_copy, number)
+            self.dither(0.15)
+            self.remove(line_copy, number)
+        sum_result = number
+        self.add(sum_result)
+        self.dither()
+
+        sum_result.target = TexMobject(str(2**self.n))
+        sum_result.target.highlight(sum_result.get_color())
+        sum_result.target.next_to(sum_group, RIGHT)
+        rhs.next_to(sum_result.target, RIGHT, aligned_edge = DOWN)
+        self.play(
+            MoveToTarget(sum_result),
+            MoveToTarget(numbers),
+            Write(plusses),
+            Write(rhs),
+        )
+        self.dither()
+
+        self.set_variables_as_attrs(
+            plusses, sum_result, rhs,
+            n_choose_k_terms = numbers
+        )
+
+    def show_sum_as_n_choose_k(self):
+        numbers = self.numbers
+        plusses = self.plusses
+        n_choose_k_terms = self.n_choose_k_terms
+        rhs = VGroup(self.sum_result, self.rhs)
+        n = self.n
+
+
+        fractions = self.get_fractions(n)
+        plusses.generate_target()
+        sum_group = VGroup(*it.chain(*zip(
+            fractions, plusses.target
+        )))
+        sum_group.arrange_submobjects(RIGHT, buff = 2*SMALL_BUFF)
+        sum_group.next_to(rhs, LEFT)
+        sum_group.shift(0.5*SMALL_BUFF*DOWN)
+
+        self.play(
+            Transform(n_choose_k_terms, fractions),
+            MoveToTarget(plusses),
+            submobject_mode = "lagged_start",
+            run_time = 2
+        )
+        self.dither()
+
+    def show_alternate_sum(self):
+        fractions = self.get_fractions(self.alt_n)
+        fractions.remove(*fractions[4:-1])
+        fractions.submobjects.insert(4, TexMobject("\\cdots"))
+        plusses = VGroup(*[
+            TexMobject("+") for f in fractions[:-1]
+        ] + [TexMobject("=")])
+        sum_group = VGroup(*it.chain(*zip(
+            fractions, plusses
+        )))
+        sum_group.arrange_submobjects(RIGHT)
+        sum_group.next_to(
+            self.n_choose_k_terms, DOWN,
+            aligned_edge = LEFT, buff = LARGE_BUFF
+        )
+        sum_group.shift(SMALL_BUFF*DOWN)
+        rhs = TexMobject(
+            str(2**self.alt_n), 
+            "=", "2^{%d}"%(self.alt_n)
+        )
+        rhs[0].highlight(YELLOW)
+        rhs.next_to(sum_group, RIGHT)
+
+        self.play(
+            LaggedStart(FadeOut, self.stacks),
+            LaggedStart(FadeOut, self.numbers),
+            LaggedStart(FadeIn, sum_group),
+        )
+        self.play(LaggedStart(FadeIn, rhs))
+        self.dither(2)
+
+    ####
+
+    def get_fractions(self, n):
+        fractions = VGroup(TexMobject("1"))
+        dot_str = " \\!\\cdot\\! "
+        for k in range(1, n+1):
+            ts = str(n)
+            bs = "1"
+            for i in range(1, k):
+                ts += dot_str + str(n-i)
+                bs += dot_str + str(i+1)
+            fraction = TexMobject("{%s \\over %s}"%(ts, bs))
+            fractions.add(fraction)
+        return fractions
+
+class AskWhyTheyAreCalledBinomial(TeacherStudentsScene):
+    def construct(self):
+        example_binomials = VGroup(*[
+            TexMobject("(x+y)^%d"%d)
+            for d in range(2, 7)
+        ])
+        example_binomials.arrange_submobjects(UP)
+        example_binomials.next_to(
+            self.teacher.get_corner(UP+LEFT), UP 
+        )
+
+        pascals = PascalsTraingle(n_rows = 6)
+        pascals.scale_to_fit_height(3)
+        pascals.to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
+        pascals.gradient_highlight(BLUE, YELLOW)
+
+        binomial_word = TextMobject(
+            "Bi", "nomials",
+            arg_separator = "",
+        )
+        binomial_word.highlight_by_tex("Bi", YELLOW)
+        binomial_word.highlight_by_tex("nomials", WHITE)
+        binomial_word.next_to(example_binomials, LEFT, buff = 1.5)
+        arrows = VGroup(*[
+            Arrow(binomial_word.get_right(), binom.get_left())
+            for binom in example_binomials
+        ])
+        arrows.highlight(BLUE)
+
+        two_variables = TextMobject("Two", "variables")
+        two_variables.next_to(binomial_word, DOWN)
+        two_variables.shift(SMALL_BUFF*LEFT)
+        for tv, bw in zip(two_variables, binomial_word):
+            tv.highlight(bw.get_color())
+
+        self.student_says(
+            "Why are they called \\\\ ``binomial coefficients''?"
+        )
+        self.play(LaggedStart(FadeIn, pascals))
+        self.dither()
+        self.play(
+            FadeIn(example_binomials[0]),
+            RemovePiCreatureBubble(self.students[1]),
+            self.teacher.change, "raise_right_hand",
+        )
+        moving_binom = example_binomials[0].copy()
+        for binom in example_binomials[1:]:
+            self.play(Transform(moving_binom, binom))
+            self.add(binom)
+        self.dither()
+
+        #Name themn
+        self.play(
+            Write(binomial_word),
+            LaggedStart(GrowArrow, arrows)
+        )
+        self.change_student_modes(*["pondering"]*3)
+        self.play(Write(two_variables))
+        self.dither(2)
+
+class NextVideo(Scene):
+    def construct(self):
+        title = TextMobject("Next video: Binomial distribution")
+        title.to_edge(UP)
+        screen = ScreenRectangle(height = 6)
+        screen.next_to(title, DOWN)
+
+        self.play(
+            Write(title),
+            ShowCreation(screen)
+        )
+        self.dither()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
