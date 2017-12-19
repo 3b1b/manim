@@ -30,8 +30,9 @@ This doesn't install freetype, but I don't think it's required for this project
 
 If you have any issues, you may want to check [THIS](http://nikov-exploring.blogspot.mk/2017/12/animation-engine-for-explanatory-math.html) blog post from Mitko Nikov that goes
 in step by step on installing and running the Manim.
-We would like to have documentation and if you stumble upon any issues that 
-aren't covered and you find a way to fix them, writing about them is going to
+We would like to have documentation in separate files about main functions
+and if you stumble upon any issues that aren't covered and 
+you find a way to fix them, writing about them is going to
 help the community.
 
 ## How to Use
