@@ -30,6 +30,8 @@ class Scene(object):
         "skip_animations"  : False,
         "write_to_movie"   : False,
         "save_frames"      : False,
+        "save_pngs"        : False,
+        "pngs_mode"        : "RGBA",
         "output_directory" : MOVIE_DIR,
         "name" : None,
         "always_continually_update" : False,
@@ -44,6 +46,7 @@ class Scene(object):
         self.num_plays = 0
         self.saved_frames = []
         self.shared_locals = {}
+        self.frame_num = 0
         if self.name is None:
             self.name = self.__class__.__name__
         if self.random_seed is not None:
@@ -447,6 +450,9 @@ class Scene(object):
     def add_frames(self, *frames):
         if self.write_to_movie:
             for frame in frames:
+                if self.save_pngs:
+                    self.save_image("frame" + str(self.frame_num), self.pngs_mode, True)
+                    self.frame_num = self.frame_num + 1
                 self.writing_process.stdin.write(frame.tostring())
         if self.save_frames:
             self.saved_frames += list(frames)
@@ -459,14 +465,19 @@ class Scene(object):
 
     def preview(self):
         TkSceneRoot(self)
+    
+    def save_image(self, name = None, mode = "RGB", dont_update = False):
+        folder = "images"
+        if dont_update:
+            folder = str(self)
 
-    def save_image(self, name = None, mode = "RGB"):
-        path = os.path.join(self.output_directory, "images")
+        path = os.path.join(self.output_directory, folder)
         file_name = (name or str(self)) + ".png"
         full_path = os.path.join(path, file_name)
         if not os.path.exists(path):
             os.makedirs(path)
-        self.update_frame()
+        if not dont_update:
+            self.update_frame()
         image = self.get_image()
         image = image.convert(mode)
         image.save(full_path)
@@ -505,7 +516,8 @@ class Scene(object):
             '-loglevel', 'error',
             temp_file_path,
         ]
-        self.writing_process = sp.Popen(command, stdin=sp.PIPE)
+        
+        self.writing_process = sp.Popen(command, stdin=sp.PIPE, shell=True)
 
     def close_movie_pipe(self):
         self.writing_process.stdin.close()

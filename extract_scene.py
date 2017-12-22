@@ -24,6 +24,8 @@ HELP_MESSAGE = """
    -m use medium quality
    -a run and save every scene in the script, or all args for the given scene
    -q don't print progress
+   -f when writing to a movie file, export the frames in png sequence
+   -t use transperency when exporting images
 """
 SCENE_NOT_FOUND_MESSAGE = """
    That scene is not in the script
@@ -42,7 +44,7 @@ NO_SCENE_MESSAGE = """
 
 def get_configuration(sys_argv):
    try:
-      opts, args = getopt.getopt(sys_argv[1:], 'hlmpwstqao:')
+      opts, args = getopt.getopt(sys_argv[1:], 'hlmpwfstqao:')
    except getopt.GetoptError as err:
       print(str(err))
       sys.exit(2)
@@ -55,6 +57,7 @@ def get_configuration(sys_argv):
       "write_to_movie"  : False,
       "save_frames"     : False,
       "save_image"      : False,
+      "save_pngs"       : False,
       #If -t is passed in (for transparent), this will be RGBA
       "saved_image_mode": "RGB",
       "quiet"           : False,
@@ -76,6 +79,8 @@ def get_configuration(sys_argv):
          config["frame_duration"] = MEDIUM_QUALITY_FRAME_DURATION
       if opt == '-w':
          config["write_to_movie"] = True
+      if opt == '-f': #pngs
+         config["save_pngs"] = True
       if opt == '-s':
          config["save_image"] = True
       if opt == '-t':
@@ -86,6 +91,7 @@ def get_configuration(sys_argv):
          config["write_all"] = True
       if opt == '-o':
          config["output_name"] = arg
+         
    #By default, write to file
    actions = ["write_to_movie", "preview", "save_image"]
    if not any([config[key] for key in actions]):
@@ -184,6 +190,7 @@ def main():
    scene_names_to_classes = dict(
       inspect.getmembers(module, is_scene)
    )
+
    config["output_directory"] = os.path.join(
       MOVIE_DIR,
       config["file"].replace(".py", "")
@@ -198,9 +205,16 @@ def main():
          "write_to_movie",
          "save_frames",
          "output_directory",
+         "save_pngs"
       ]
    ])
+   
    scene_kwargs["name"] = config["output_name"]
+   if config["save_pngs"]:
+      print "We are going to save a PNG sequence as well..."
+      scene_kwargs["save_pngs"] = True
+      scene_kwargs["pngs_mode"] = config["saved_image_mode"]
+      
    for SceneClass in get_scene_classes(scene_names_to_classes, config):
       try:
          handle_scene(SceneClass(**scene_kwargs), **config)
