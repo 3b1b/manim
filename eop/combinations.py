@@ -29,6 +29,7 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from topics.graph_scene import *
 from topics.probability import *
+from topics.common_scenes import *
 
 #revert_to_original_skipping_status
 
@@ -232,8 +233,8 @@ class InitialFiveChooseThreeExample(Scene):
         "one_color" : PINK,
     }
     def construct(self):
-        self.add_title()
         self.show_all_stacks()
+        self.add_title()
         self.show_binomial_name()
         self.issolate_single_stack()
         self.count_chosen_stack()
@@ -241,21 +242,32 @@ class InitialFiveChooseThreeExample(Scene):
         self.walk_though_notation()
         self.emphasize_pattern_over_number()
 
-    def add_title(self):
-        symbol = TexMobject("n \\choose k")
-        words = TextMobject("``n choose k''")
-        group = VGroup(symbol, words)
-        group.arrange_submobjects(RIGHT)
-        group.to_edge(UP)
-
-        self.add(group)
-        self.n_choose_k = symbol
-        self.n_choose_k_words = words
-
     def show_all_stacks(self):
+        stacks = get_stacks(
+            self.get_obj1(), self.get_obj2(), self.n,
+            vertical_buff = SMALL_BUFF
+        )
+        stacks.to_edge(DOWN, buff = MED_LARGE_BUFF)
+
+        for stack in stacks:
+            self.play(FadeIn(
+                stack, 
+                run_time = 0.2*len(stack),
+                submobject_mode = "lagged_start"
+            ))
+        self.dither()
+
+        self.set_variables_as_attrs(stacks)
+
+    def add_title(self):
         n = self.n
-        n_choose_k = self.n_choose_k
-        n_choose_k_words = self.n_choose_k_words
+        stacks = self.stacks
+
+        n_choose_k = TexMobject("n \\choose k")
+        n_choose_k_words = TextMobject("``n choose k''")
+        nCk_group = VGroup(n_choose_k, n_choose_k_words)
+        nCk_group.arrange_submobjects(RIGHT)
+        nCk_group.to_edge(UP)
 
         binomials = VGroup(*[
             TexMobject("%d \\choose %d"%(n, k))
@@ -271,11 +283,6 @@ class InitialFiveChooseThreeExample(Scene):
             equation[1].highlight(WHITE)
             binomial_equations.add(equation)
 
-        stacks = get_stacks(
-            self.get_obj1(), self.get_obj2(), n,
-            vertical_buff = SMALL_BUFF
-        )
-        stacks.to_edge(DOWN, buff = MED_LARGE_BUFF)
         for stack, eq in zip(stacks, binomial_equations):
             eq.scale_to_fit_width(0.9*stack.get_width())
             eq.next_to(stack, UP)
@@ -287,11 +294,7 @@ class InitialFiveChooseThreeExample(Scene):
             group.target = eq
             mover.add(group)
 
-        self.play(FadeIn(
-            stacks, 
-            run_time = 2, 
-            submobject_mode = "lagged_start"
-        ))
+        self.play(FadeIn(nCk_group))
         self.play(LaggedStart(
             MoveToTarget, mover,
             run_time = 3,
@@ -300,7 +303,10 @@ class InitialFiveChooseThreeExample(Scene):
         self.add(binomial_equations)
         self.dither()
 
-        self.set_variables_as_attrs(stacks, binomial_equations)
+        self.set_variables_as_attrs(
+            n_choose_k, n_choose_k_words,
+            binomial_equations
+        )
 
     def show_binomial_name(self):
         new_words = TextMobject("``Binomial coefficients''")
@@ -466,10 +472,12 @@ class SixChooseThreeExample(InitialFiveChooseThreeExample):
         equation.highlight_by_tex("=", WHITE)
         equation.next_to(stack, RIGHT, LARGE_BUFF)
 
-        self.play(
-            FadeIn(equation),
-            LaggedStart(FadeIn, stack)
-        )
+        self.add(equation)
+        self.play(LaggedStart(
+            FadeIn, stack,
+            lag_ratio = 0.1,
+            run_time = 10,
+        ))
         self.dither()
 
         self.set_variables_as_attrs(stack)
@@ -987,11 +995,10 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
     CONFIG = {
         "random_seed" : 0,
         "n_people_per_lineup" : 5,
-        "n_examples" : 16,
+        "n_examples" : 18,
         "item_line_width" : 0.4,
     }
     def construct(self):
-        random.seed(self.random_seed)
         self.ask_question()
         self.show_all_possibilities()
         self.stack_all_choices_by_number_of_women()
@@ -1022,19 +1029,15 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
             return lineup
 
         last_lineup = get_lineup()
-        self.play(
-            LaggedStart(FadeIn, last_lineup),
-            LaggedStart(FadeIn, prob_words),
-        )
+        self.play(LaggedStart(FadeIn, last_lineup, run_time = 1))
 
         for x in xrange(self.n_examples):
             lineup = get_lineup()
-            self.play(
-                # last_lineup.items.shift, UP,
-                last_lineup.items.fade, 1,
-                *map(GrowFromCenter, lineup.items),
-                run_time = 0.75
-            )
+            anims = [last_lineup.items.fade, 1]
+            anims += map(GrowFromCenter, lineup.items)
+            if x >= 12 and x-12 < len(prob_words):
+                anims.append(FadeIn(prob_words[x-12]))
+            self.play(*anims, run_time = 0.75)
             self.remove(last_lineup)
             self.add(lineup)
             self.dither(0.25)
@@ -1299,11 +1302,41 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
         result.items = items
         return result
 
+class AskAboutAllPossibilities(ProbabilityOfKWomenInGroupOfFive):
+    def construct(self):
+        man, woman = Male(), Female()
+        all_lineups = VGroup()
+        for bits in it.product(*[[False, True]]*5):
+            mobs = [
+                woman.copy() if bit else man.copy()
+                for bit in bits
+            ]
+            all_lineups.add(self.get_lineup(*mobs))
+        brace = Brace(all_lineups, UP)
+        question = brace.get_text("What are all possibilities?")
+
+        self.add(brace, question)
+        for lineup in all_lineups:
+            self.add(lineup)
+            self.dither(0.25)
+            self.remove(lineup)
+
 class RememberThisSensation(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("Remember this \\\\ sensation")
         self.change_student_modes("confused", "pondering", "erm")
         self.dither(2)
+
+class TeacherHoldingSomething(TeacherStudentsScene):
+    def construct(self):
+        self.play(
+            self.teacher.change, "raise_right_hand",
+        )
+        self.change_student_modes(
+            *["pondering"]*3,
+            look_at_arg = 2*UP+2*RIGHT
+        )
+        self.dither(6)
 
 # class GroupsOf6(Scene):
 #     def construct(self):
@@ -2630,6 +2663,57 @@ class SubsetProbabilityExample(ChooseThreeFromFive):
             self.dither(0.25)
             self.remove(name_rect)
 
+class StudentsGetConfused(PiCreatureScene):
+    def construct(self):
+        pi1, pi2 = self.pi_creatures
+        line = VGroup(
+            Male(), Female(), Female(), Male(), Female()
+        )
+        width = line.get_width()
+        for i, mob in enumerate(line):
+            mob.shift((i*width+SMALL_BUFF)*RIGHT)
+        line.scale(1.5)
+        line.arrange_submobjects(RIGHT, SMALL_BUFF)
+        line.move_to(self.pi_creatures, UP)
+
+        self.add(line)
+        self.play(
+            self.get_shuffle_anim(line),
+            PiCreatureSays(
+                pi1, "Wait \\dots order matters now?",
+                target_mode = "confused",
+                look_at_arg = line
+            )
+        )
+        self.play(
+            self.get_shuffle_anim(line),
+            *[
+                ApplyMethod(pi.change, "confused", line)
+                for pi in self.pi_creatures
+            ]
+        )
+        for x in range(4):
+            self.play(self.get_shuffle_anim(line))
+        self.dither()
+
+    def create_pi_creatures(self):
+        pis = VGroup(*[
+            Randolph(color = color)
+            for color in BLUE_D, BLUE_B
+        ])
+        pis[1].flip()
+        pis.arrange_submobjects(RIGHT, buff = 5)
+        pis.to_edge(DOWN)
+        return pis
+
+    def get_shuffle_anim(self, line):
+        indices = range(len(line))
+        random.shuffle(indices)
+        line.generate_target()
+        for i, m in zip(indices, line.target):
+            m.move_to(line[i])
+        return MoveToTarget(line, path_arc = np.pi)
+
 class HowToComputeNChooseK(ChooseThreeFromFive):
     CONFIG = {
         "n" : 5,
@@ -2638,6 +2722,8 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
         "n_permutaitons_to_show" : 5,
     }
     def construct(self):
+        self.force_skipping()
+
         self.setup_people()
         self.choose_example_ordered_triplets()
         self.count_possibilities()
@@ -2645,6 +2731,9 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
         self.count_permutations_of_ABC()
         self.reset_stage()
         self.show_whats_being_counted()
+
+        self.revert_to_original_skipping_status()
+        self.indicate_final_answer()
 
     def setup_people(self):
         people = self.people
@@ -2879,6 +2968,30 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
             Write(rhs[-1])
         )
         self.dither()
+
+        self.ordered_triplets = lines
+        self.triplet_group_rects = rects
+        self.rhs = rhs
+
+    def indicate_final_answer(self):
+        ordered_triplets = self.ordered_triplets
+        rects = self.triplet_group_rects
+        fraction = VGroup(*self.rhs[1:])
+        frac_rect = SurroundingRectangle(fraction)
+
+        brace = Brace(rects, LEFT)
+        brace_tex = brace.get_tex("10")
+
+        self.play(FocusOn(fraction))
+        self.play(ShowCreation(frac_rect))
+        self.play(FadeOut(frac_rect))
+        self.dither()
+        self.play(
+            GrowFromCenter(brace),
+            Write(brace_tex),
+        )
+        self.dither()
+
 
     ####
 
@@ -3179,6 +3292,55 @@ class WeirdKindOfCancelation(TeacherStudentsScene):
                 for i, m in zip(permutation, mobject)
             ])
 
+class ABCNotBCA(Scene):
+    def construct(self):
+        words = TextMobject("If order mattered:")
+        equation = TextMobject("(A, B, C) $\\ne$ (B, C, A)")
+        equation.highlight(YELLOW)
+        equation.next_to(words, DOWN)
+        group = VGroup(words, equation)
+        group.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        group.to_edge(DOWN)
+        self.add(words, equation)
+
+class ShowFormula(Scene):
+    def construct(self):
+        specific_formula = TexMobject(
+            "{9 \\choose 4}", "=",
+            "{9 \\cdot 8 \\cdot 7 \\cdot 6", "\\over",
+            "4 \\cdot 3 \\cdot 2 \\cdot 1}"
+        )
+        general_formula = TexMobject(
+            "{n \\choose k}", "=",
+            "{n \\cdot (n-1) \\cdots (n-k+1)", "\\over",
+            "k \\cdot (k-1) \\cdots 2 \\cdot 1}"
+        )
+        for i, j in (0, 1), (2, 0), (2, 3), (2, 11):
+            general_formula[i][j].highlight(BLUE)
+        for i, j in (0, 2), (2, 13), (4, 0), (4, 3):
+            general_formula[i][j].highlight(YELLOW)
+        formulas = VGroup(specific_formula, general_formula)
+        formulas.arrange_submobjects(DOWN, buff = 2)
+        formulas.to_edge(UP)
+
+        self.play(FadeIn(specific_formula))
+        self.play(FadeIn(general_formula))
+        self.dither(3)
+
+class ConfusedPi(Scene):
+    def construct(self):
+        morty = Mortimer()
+        morty.scale(2.5)
+        morty.to_corner(UP+LEFT)
+        morty.look(UP+LEFT)
+
+        self.add(morty)
+        self.play(Blink(morty))
+        self.play(morty.change, "confused")
+        self.dither()
+        self.play(Blink(morty))
+        self.dither(2)
+
 class SumsToPowerOf2(Scene):
     CONFIG = {
         "n" : 5,
@@ -3408,9 +3570,94 @@ class NextVideo(Scene):
         )
         self.dither()
 
+class CombinationsPatreonEndScreen(PatreonEndScreen):
+    CONFIG = {
+        "specific_patrons" : [
+            "Randall Hunt",
+            "Desmos",
+            "Burt Humburg",
+            "CrypticSwarm",
+            "Juan Benet",
+            "David Kedmey",
+            "Ali Yahya",
+            "Mayank M. Mehrotra",
+            "Lukas Biewald",
+            "Yana Chernobilsky",
+            "Kaustuv DeBiswas",
+            "Kathryn Schmiedicke",
+            "Yu Jun",
+            "Dave Nicponski",
+            "Damion Kistler",
+            "Jordan Scales",
+            "Markus Persson",
+            "Egor Gumenuk",
+            "Yoni Nazarathy",
+            "Ryan Atallah",
+            "Joseph John Cox",
+            "Luc Ritchie",
+            "Supershabam",
+            "James Park",
+            "Samantha D. Suplee",
+            "Delton Ding",
+            "Thomas Tarler",
+            "Jonathan Eppele",
+            "Isak Hietala",
+            "1stViewMaths",
+            "Jacob Magnuson",
+            "Mark Govea",
+            "Dagan Harrington",
+            "Clark Gaebel",
+            "Eric Chow",
+            "Mathias Jansson",
+            "David Clark",
+            "Michael Gardner",
+            "Mads Elvheim",
+            "Erik Sundell",
+            "Awoo",
+            "Dr. David G. Stork",
+            "Tianyu Ge",
+            "Ted Suzman",
+            "Linh Tran",
+            "Andrew Busey",
+            "John Haley",
+            "Ankalagon",
+            "Eric Lavault",
+            "Boris Veselinovich",
+            "Julian Pulgarin",
+            "Jeff Linse",
+            "Cooper Jones",
+            "Ryan Dahl",
+            "Robert Teed",
+            "Jason Hise",
+            "Meshal Alshammari",
+            "Bernd Sing",
+            "James Thornton",
+            "Mustafa Mahdi",
+            "Mathew Bramson",
+            "Jerry Ling",
+            "Shimin Kuang",
+            "Rish Kundalia",
+            "Achille Brighton",
+            "Ripta Pasay",
+        ]
+    }
 
+class Thumbnail(Scene):
+    def construct(self):
+        n_choose_k = TexMobject("n \\choose k")
+        n_choose_k[1].highlight(YELLOW)
+        n_choose_k[2].highlight(YELLOW)
+        n_choose_k.scale(2)
+        n_choose_k.to_edge(UP)
+        stacks = get_stacks(
+            TexMobject("1").highlight(PINK),
+            TexMobject("0").highlight(BLUE),
+            n = 5, vertical_buff = SMALL_BUFF,
+        )
+        stacks.to_edge(DOWN)
+        stacks.shift(MED_SMALL_BUFF*LEFT)
 
-
+        self.add(n_choose_k, stacks)
 
 
 

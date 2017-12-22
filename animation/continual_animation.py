@@ -68,10 +68,21 @@ class AmbientRotation(ContinualAnimation):
     CONFIG = {
         "axis" : OUT,
         "rate" : np.pi/12, #Radians per second
+        "in_place" : True,
+        "about_point" : None,
     }
 
     def update_mobject(self, dt):
-        self.mobject.rotate(dt*self.rate, axis = self.axis)
+        if self.about_point:
+            about_point = self.about_point
+        elif self.in_place:
+            about_point = self.mobject.get_center()
+        else:
+            about_point = ORIGIN
+        self.mobject.rotate(
+            dt*self.rate, axis = self.axis,
+            about_point = about_point
+        )
 
 class AmbientMovement(ContinualAnimation):
     CONFIG = {
@@ -102,7 +113,19 @@ class ContinualMaintainPositionRelativeTo(ContinualAnimation):
     def update_mobject(self, dt):
         self.anim.update(0)
 
+class NormalAnimationAsContinualAnimation(ContinualAnimation):
+    CONFIG = {
+        "start_up_time" : 0,
+        "wind_down_time" : 0,
+    }
+    def __init__(self, animation, **kwargs):
+        self.animation = animation
+        ContinualAnimation.__init__(self, animation.mobject, **kwargs)
 
+    def update_mobject(self, dt):
+        self.animation.update(
+            min(float(self.internal_time)/self.animation.run_time, 1)
+        )
 
 
 
