@@ -31,6 +31,7 @@ from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from topics.graph_scene import *
+from topics.common_scenes import *
 
 from old_projects.efvgt import ConfettiSpiril
 
@@ -231,6 +232,15 @@ class UtilitiesPuzzleScene(Scene):
             mob.target.move_to(mob)
         self.play(LaggedStart(MoveToTarget, group, run_time = run_time))
 
+class PauseIt(PiCreatureScene):
+    def construct(self):
+        morty = self.pi_creatures
+        morty.center().to_edge(DOWN)
+        self.pi_creature_says(
+            "Pause it!", target_mode = "surprised"
+        )
+        self.dither(2)
+        
 class AboutToyPuzzles(UtilitiesPuzzleScene, TeacherStudentsScene, ThreeDScene):
     def construct(self):
         self.remove(self.pi_creatures)
@@ -1037,6 +1047,9 @@ class NewRegionClosedOnlyForNodesWithEdges(UtilitiesPuzzleScene):
         self.dither(2)
 
 class LightUpNodes(IntroduceRegions):
+    CONFIG = {
+        "vertices_word" : "Lit vertices",
+    }
     def construct(self):
         self.setup_configuration()
         self.setup_regions()
@@ -1046,7 +1059,7 @@ class LightUpNodes(IntroduceRegions):
 
     def setup_configuration(self):
         IntroduceRegions.setup_configuration(self)
-        self.convert_objects_to_dots(run_time = 1)
+        self.convert_objects_to_dots(run_time = 0)
         self.objects.shift(DOWN)
 
     def setup_regions(self):
@@ -1060,7 +1073,7 @@ class LightUpNodes(IntroduceRegions):
 
     def setup_counters(self):
         titles = [
-            TextMobject("\\# Lit vertices"),
+            TextMobject("\\# %s"%self.vertices_word),
             TextMobject("\\# Edges"),
             TextMobject("\\# Regions"),
         ]
@@ -1072,6 +1085,7 @@ class LightUpNodes(IntroduceRegions):
             underline.next_to(title, DOWN, SMALL_BUFF)
             title.add(underline)
             self.add(title)
+        self.count_titles = titles
         self.v_count, self.e_count, self.f_count = self.counts = map(
             Integer, [1, 0, 1]
         )
@@ -1257,7 +1271,7 @@ class ShowRule(TeacherStudentsScene):
         new_vertex.next_to(new_edge, UP+RIGHT, MED_LARGE_BUFF)
         new_region = TextMobject("New region")
         new_region.next_to(new_edge, DOWN+RIGHT, MED_LARGE_BUFF)
-        VGroup(new_vertex, new_region).shift(MED_LARGE_BUFF*RIGHT)
+        VGroup(new_vertex, new_region).shift(RIGHT)
         arrows = VGroup(*[
             Arrow(
                 new_edge.get_right(), mob.get_left(), 
@@ -1266,23 +1280,824 @@ class ShowRule(TeacherStudentsScene):
             )
             for mob in new_vertex, new_region
         ])
+        for word, arrow in zip(["Either", "or"], arrows):
+            word_mob = TextMobject(word)
+            word_mob.scale(0.65)
+            word_mob.next_to(ORIGIN, UP, SMALL_BUFF)
+            word_mob.rotate(arrow.get_angle())
+            word_mob.shift(arrow.get_center())
+            word_mob.highlight(GREEN)
+            arrow.add(word_mob)
         new_vertex.highlight(YELLOW)
         new_edge.highlight(BLUE)
         new_region.highlight(RED)
         rule = VGroup(new_edge, arrows, new_vertex, new_region)
         rule.center().to_edge(UP)
 
-        self.add(rule)
+        nine_total = TextMobject("(9 total)")
+        nine_total.next_to(new_edge, DOWN)
+
+        self.play(
+            Animation(rule),
+            self.teacher.change, "raise_right_hand"
+        )
+        self.change_student_modes(
+            *["confused"]*3,
+            look_at_arg = rule
+        )
+        self.dither(2)
+        self.play(
+            Write(nine_total),
+            self.teacher.change, "happy",
+        )
+        self.change_student_modes(
+            *["thinking"]*3, 
+            look_at_arg = rule
+        )
+        self.dither(3)
 
 class ConcludeFiveRegions(LightUpNodes):
     def construct(self):
         self.setup_configuration()
         self.setup_regions()
         self.setup_counters()
-        self.show_new_region_creation()
-        self.show_rule()
+
+        self.describe_start_setup()
         self.show_nine_lines_to_start()
+        self.show_five_to_lit_up_nodes()
+        self.relate_four_lines_to_regions()
         self.conclude_about_five_regions()
+
+    def describe_start_setup(self):
+        to_dim = VGroup(*it.chain(self.houses, self.utilities[1:]))
+        to_dim.set_stroke(width = 1)
+        to_dim.set_fill(opacity = 0)
+
+        full_screen_rect = FullScreenFadeRectangle(
+            fill_color = LIGHT_GREY,
+            fill_opacity = 0.25,
+        )
+
+        self.play(
+            Indicate(self.v_count),
+            *self.get_lit_vertex_animations(self.utilities[0])
+        )
+        self.play(
+            FadeIn(
+                full_screen_rect,
+                rate_func = there_and_back,
+                remover = True,
+            ),
+            Indicate(self.f_count),
+            *map(Animation, self.mobjects)
+        )
+        self.dither()
+
+    def show_nine_lines_to_start(self):
+        line_sets = self.get_straight_lines()
+        line_sets.target = VGroup()
+        for lines in line_sets:
+            lines.generate_target()
+            for line in lines.target:
+                line.rotate(-line.get_angle())
+                line.scale_to_fit_width(1.5)
+            lines.target.arrange_submobjects(DOWN)
+            line_sets.target.add(lines.target)
+        line_sets.target.arrange_submobjects(DOWN)
+        line_sets.target.center()
+        line_sets.target.to_edge(RIGHT)
+
+        for lines in line_sets:
+            self.play(LaggedStart(ShowCreation, lines, run_time = 1))
+            self.play(MoveToTarget(lines))
+        self.dither()
+
+        ghost_lines = line_sets.copy()
+        ghost_lines.fade(0.9)
+        self.add(ghost_lines, line_sets)
+        self.side_lines = VGroup(*it.chain(*line_sets))
+
+    def show_five_to_lit_up_nodes(self):
+        side_lines = self.side_lines
+        lines = self.lines
+        vertices = VGroup(*it.chain(self.houses, self.utilities))
+        line_indices = [0, 1, 4, 6, 7]
+        vertex_indices = [0, 1, 4, 5, 2]
+
+        for li, vi in zip(line_indices, vertex_indices):
+            side_line = side_lines[li]
+            line = lines[li]
+            vertex = vertices[vi]
+            self.play(ReplacementTransform(side_line, line))
+            self.play(*it.chain(
+                self.get_count_change_animations(1, 1, 0),
+                self.get_lit_vertex_animations(vertex),
+            ))
+
+    def relate_four_lines_to_regions(self):
+        f_rect = SurroundingRectangle(
+            VGroup(self.count_titles[-1], self.f_count)
+        )
+        on_screen_side_lines = VGroup(*filter(
+            lambda m : m in self.mobjects,
+            self.side_lines
+        ))
+        side_lines_rect = SurroundingRectangle(on_screen_side_lines)
+        side_lines_rect.highlight(WHITE)
+
+        self.play(ShowCreation(side_lines_rect))
+        self.dither()
+        self.play(ReplacementTransform(side_lines_rect, f_rect))
+        self.play(FadeOut(f_rect))
+        self.dither()
+
+    def conclude_about_five_regions(self):
+        lines = self.lines
+        side_lines = self.side_lines
+        regions = self.regions[1:]
+        line_groups = self.line_groups
+        line_indices = [3, 5, 2]
+        objects = self.objects
+
+        for region, line_group, li in zip(regions, line_groups, line_indices):
+            self.play(ReplacementTransform(
+                side_lines[li], lines[li]
+            ))
+            self.play(
+                FadeIn(region), 
+                Animation(line_group), 
+                Animation(objects),
+                *self.get_count_change_animations(0, 1, 1)
+            )
+        self.dither()
+
+        #Conclude
+        words = TextMobject("Last line must \\\\ introduce 5th region")
+        words.scale(0.8)
+        words.highlight(BLUE)
+        rect = SurroundingRectangle(self.f_count)
+        rect.highlight(BLUE)
+        words.next_to(rect, DOWN)
+        randy = Randolph().flip()
+        randy.scale(0.5)
+        randy.next_to(words, RIGHT, SMALL_BUFF, DOWN)
+        self.play(ShowCreation(rect), Write(words))
+        self.play(FadeIn(randy))
+        self.play(randy.change, "pondering")
+        self.play(Blink(randy))
+        self.dither(2)
+
+class WhatsWrongWithFive(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "What's wrong with \\\\ 5 regions?",
+            target_mode = "maybe"
+        )
+        self.dither(2)
+
+class CyclesHaveAtLeastFour(UtilitiesPuzzleScene):
+    def construct(self):
+        self.setup_configuration()
+        houses, utilities = self.houses, self.utilities
+        vertices = VGroup(
+            houses[0], utilities[0],
+            houses[1], utilities[1], houses[0],
+        )
+        lines = [
+            VectorizedPoint(),
+            self.get_line(0, 0),
+            self.get_line(0, 1),
+            self.get_line(1, 1),
+            self.get_line(1, 0, self.objects.get_corner(DOWN+LEFT)),
+        ]
+        for line in lines[1::2]:
+            line.points = line.points[::-1]
+        arrows = VGroup()
+        for vertex in vertices:
+            vect = vertices.get_center() - vertex.get_center()
+            arrow = Vector(vect, color = WHITE)
+            arrow.next_to(vertex, -vect, buff = 0)
+            vertex.arrow = arrow
+            arrows.add(arrow)
+        word_strings = [
+            "Start at a house",
+            "Go to a utility",
+            "Go to another house",
+            "Go to another utility",
+            "Back to the start",
+        ]
+        words = VGroup()
+        for word_string, arrow in zip(word_strings, arrows):
+            vect = arrow.get_vector()[1]*UP
+            word = TextMobject(word_string)
+            word.next_to(arrow.get_start(), -vect)
+            words.add(word)
+
+        count = Integer(-1)
+        count.fade(1)
+        count.to_edge(UP)
+
+        last_word = None
+        last_arrow = None
+
+        for line, word, arrow in zip(lines, words, arrows):
+            anims = []
+            for mob in last_word, last_arrow:
+                if mob:
+                    anims.append(FadeOut(mob))
+            new_count = Integer(count.number + 1)
+            new_count.move_to(count)
+            anims += [
+                FadeIn(word),
+                GrowArrow(arrow),
+                ShowCreation(line),
+                FadeOut(count),
+                FadeIn(new_count),
+            ]
+            self.play(*anims)
+            self.dither()
+            last_word = word
+            last_arrow = arrow
+            count = new_count
+        self.dither(2)
+
+class FiveRegionsFourEdgesEachGraph(Scene):
+    CONFIG = {
+        "v_color" : WHITE,
+        "e_color" : YELLOW,
+        "f_colors" : (BLUE, RED_E, BLUE_E),
+        "n_edge_double_count_examples" : 6,
+        "random_seed" : 1,
+    }
+    def construct(self):
+        self.draw_squares()
+        self.transition_to_graph()
+        self.count_edges_per_region()
+        self.each_edges_has_two_regions()
+        self.ten_total_edges()
+
+    def draw_squares(self):
+        words = VGroup(
+            TextMobject("5", "regions"),
+            TextMobject("4", "edges each"),
+        )
+        words.arrange_submobjects(DOWN)
+        words.to_edge(UP)
+        words[0][0].highlight(self.f_colors[0])
+        words[1][0].highlight(self.e_color)
+
+        squares = VGroup(*[Square() for x in range(5)])
+        squares.scale(0.5)
+        squares.set_stroke(width = 0)
+        squares.set_fill(opacity = 1)
+        squares.gradient_highlight(*self.f_colors)
+        squares.arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
+        squares.next_to(words, DOWN, LARGE_BUFF)
+        all_edges = VGroup()
+        all_vertices = VGroup()
+        for square in squares:
+            corners = square.get_anchors()[:4]
+            square.edges = VGroup(*[
+                Line(c1, c2, color = self.e_color)
+                for c1, c2 in adjacent_pairs(corners)
+            ])
+            square.vertices = VGroup(*[
+                Dot(color = self.v_color).move_to(c)
+                for c in corners
+            ])
+            all_edges.add(*square.edges)
+            all_vertices.add(*square.vertices)
+
+        self.play(
+            FadeIn(words[0]),
+            LaggedStart(FadeIn, squares, run_time = 1.5)
+        )
+        self.play(
+            FadeIn(words[1]),
+            LaggedStart(ShowCreation, all_edges),
+            LaggedStart(GrowFromCenter, all_vertices),
+        )
+        self.dither()
+
+        self.add_foreground_mobjects(words)
+        self.set_variables_as_attrs(words, squares)
+
+    def transition_to_graph(self):
+        squares = self.squares
+        words = self.words
+
+        points = np.array([
+            UP+LEFT,
+            UP+RIGHT,
+            DOWN+RIGHT,
+            DOWN+LEFT,
+            3*(UP+RIGHT),
+            3*(DOWN+LEFT),
+            3*(DOWN+RIGHT),
+        ])
+        points *= 0.75
+
+        regions = VGroup(*[
+            Square().set_anchor_points(
+                points[indices], mode = "corners"
+            )
+            for indices in [
+                [0, 1, 2, 3],
+                [0, 4, 2, 1],
+                [5, 0, 3, 2],
+                [5, 2, 4, 6],
+                [6, 4, 0, 5],
+            ]
+        ])
+        regions.set_stroke(width = 0)
+        regions.set_fill(opacity = 1)
+        regions.gradient_highlight(*self.f_colors)
+
+        all_edges = VGroup()
+        all_movers = VGroup()
+        for region, square in zip(regions, squares):
+            corners = region.get_anchors()[:4]
+            region.edges = VGroup(*[
+                Line(c1, c2, color = self.e_color)
+                for c1, c2 in adjacent_pairs(corners)
+            ])
+            all_edges.add(*region.edges)
+            region.vertices = VGroup(*[
+                Dot(color = self.v_color).move_to(c)
+                for c in corners
+            ])
+            mover = VGroup(
+                square, square.edges, square.vertices,
+            )
+            mover.target = VGroup(
+                region, region.edges, region.vertices
+            )
+            all_movers.add(mover)
+
+        back_region = FullScreenFadeRectangle()
+        back_region.set_fill(regions[-1].get_color(), 0.5)
+        regions[-1].set_fill(opacity = 0)
+        back_region.add(regions[-1].copy().set_fill(BLACK, 1))
+        back_region.edges = regions[-1].edges
+
+        self.play(
+            FadeIn(
+                back_region,
+                rate_func = squish_rate_func(smooth, 0.7, 1),
+                run_time = 3,
+            ),
+            LaggedStart(
+                MoveToTarget, all_movers,
+                run_time = 3,
+                replace_mobject_with_target_in_scene = True,
+            ),
+        )
+        self.dither(2)
+
+        self.set_variables_as_attrs(
+            regions, all_edges, back_region,
+            graph = VGroup(*[m.target for m in all_movers])
+        )
+
+    def count_edges_per_region(self):
+        all_edges = self.all_edges
+        back_region = self.back_region
+        regions = self.regions
+        graph = self.graph
+        all_vertices = VGroup(*[r.vertices for r in regions])
+
+        ghost_edges = all_edges.copy()
+        ghost_edges.set_stroke(LIGHT_GREY, 1)
+
+        count = Integer(0)
+        count.scale(2)
+        count.next_to(graph, RIGHT, buff = 2)
+        count.set_fill(YELLOW, opacity = 0)
+
+        last_region = VGroup(back_region, *regions[1:])
+        last_region.add(all_edges)
+
+        for region in list(regions[:-1]) + [back_region]:
+            self.play(
+                FadeIn(region),
+                Animation(ghost_edges),
+                FadeOut(last_region),
+                Animation(count),
+                Animation(all_vertices),
+            )
+            for edge in region.edges:
+                new_count = Integer(count.number + 1)
+                new_count.replace(count, dim_to_match = 1)
+                new_count.highlight(count.get_color())
+                self.play(
+                    ShowCreation(edge),
+                    FadeOut(count),
+                    FadeIn(new_count),
+                    run_time = 0.5
+                )
+                count = new_count
+            last_region = VGroup(region, region.edges)
+        self.dither()
+        self.add_foreground_mobjects(count)
+        self.play(
+            FadeOut(last_region),
+            Animation(ghost_edges),
+            Animation(all_vertices),
+        )
+
+        self.set_variables_as_attrs(count, ghost_edges, all_vertices)
+
+    def each_edges_has_two_regions(self):
+        regions = list(self.regions[:-1]) + [self.back_region]
+        back_region = self.back_region
+        self.add_foreground_mobjects(self.ghost_edges, self.all_vertices)
+
+        edge_region_pair_groups = []
+        for r1, r2 in it.combinations(regions, 2):
+            for e1 in r1.edges:
+                for e2 in r2.edges:
+                    diff = e1.get_center()-e2.get_center()
+                    if np.linalg.norm(diff) < 0.01:
+                        edge_region_pair_groups.append(VGroup(
+                            e1, r1, r2
+                        ))
+
+        for x in range(self.n_edge_double_count_examples):
+            edge, r1, r2 = random.choice(edge_region_pair_groups)
+            if r2 is back_region:
+                #Flip again, maybe you're still unlucky, maybe not
+                edge, r1, r2 = random.choice(edge_region_pair_groups)
+            self.play(ShowCreation(edge))
+            self.add_foreground_mobjects(edge)
+            self.play(FadeIn(r1), run_time = 0.5)
+            self.play(FadeIn(r2), Animation(r1), run_time = 0.5)
+            self.dither(0.5)
+            self.play(*map(FadeOut, [r2, r1, edge]), run_time = 0.5)
+            self.remove_foreground_mobjects(edge)
+
+    def ten_total_edges(self):
+        double_count = self.count
+        brace = Brace(double_count, UP)
+        words = brace.get_text("Double-counts \\\\ edges")
+        regions = self.regions
+
+        edges = VGroup(*it.chain(
+            regions[0].edges,
+            regions[-1].edges,
+            [regions[1].edges[1]],
+            [regions[2].edges[3]],
+        ))
+
+        count = Integer(0)
+        count.scale(2)
+        count.set_fill(WHITE, 0)
+        count.next_to(self.graph, LEFT, LARGE_BUFF)
+
+        self.play(
+            GrowFromCenter(brace),
+            Write(words)
+        )
+        self.dither()
+        for edge in edges:
+            new_count = Integer(count.number + 1)
+            new_count.replace(count, dim_to_match = 1)
+            self.play(
+                ShowCreation(edge),
+                FadeOut(count),
+                FadeIn(new_count),
+                run_time = 0.5
+            )
+            count = new_count
+        self.dither()
+
+class EulersFormulaForGeneralPlanarGraph(LightUpNodes, ThreeDScene):
+    CONFIG = {
+        "vertices_word" : "Vertices"
+    }
+    def construct(self):
+        self.setup_counters()
+        self.show_creation_of_graph()
+        self.show_formula()
+        self.transform_into_cube()
+
+    def show_creation_of_graph(self):
+        points = np.array([
+            UP+LEFT,
+            UP+RIGHT,
+            DOWN+RIGHT,
+            DOWN+LEFT,
+            3*(UP+LEFT),
+            3*(UP+RIGHT),
+            3*(DOWN+RIGHT),
+            3*(DOWN+LEFT),
+        ])
+        points *= 0.75
+        points += DOWN
+        vertices = VGroup(*map(Dot, points))
+        vertices.highlight(YELLOW)
+        edges = VGroup(*[
+            VGroup(*[
+                Line(p1, p2, color = WHITE)
+                for p2 in points
+            ])
+            for p1 in points
+        ])
+        regions = self.get_cube_faces(points)
+        regions.set_stroke(width = 0)
+        regions.set_fill(opacity = 1)
+        regions.gradient_highlight(GREEN, RED, BLUE_E)
+        regions[-1].set_fill(opacity = 0)
+
+        pairs = [
+            (edges[0][1], vertices[1]),
+            (edges[1][2], vertices[2]),
+            (edges[2][6], vertices[6]),
+            (edges[6][5], vertices[5]),
+            (edges[5][1], regions[2]),
+            (edges[0][4], vertices[4]),
+            (edges[4][5], regions[1]),
+            (edges[0][3], vertices[3]),
+            (edges[3][2], regions[0]),
+            (edges[4][7], vertices[7]),
+            (edges[7][3], regions[4]),
+            (edges[7][6], regions[3]),
+        ]
+
+        self.add_foreground_mobjects(vertices[0])
+        self.dither()
+        for edge, obj in pairs:
+            anims = [ShowCreation(edge)]
+            if obj in vertices:
+                obj.save_state()
+                obj.move_to(edge.get_start())
+                anims.append(ApplyMethod(obj.restore))
+                anims += self.get_count_change_animations(1, 1, 0)
+                self.add_foreground_mobjects(obj)
+            else:
+                anims = [FadeIn(obj)] + anims
+                anims += self.get_count_change_animations(0, 1, 1)
+            self.play(*anims)
+            self.add_foreground_mobjects(edge)
+        self.dither()
+
+        self.set_variables_as_attrs(edges, vertices, regions)
+
+    def show_formula(self):
+        counts = VGroup(*self.counts)
+        count_titles = VGroup(*self.count_titles)
+        groups = [count_titles, counts]
+
+        for group in groups:
+            group.symbols = VGroup(*map(TexMobject, ["-", "+", "="]))
+            group.generate_target()
+            line = VGroup(*it.chain(*zip(group.target, group.symbols)))
+            line.arrange_submobjects(RIGHT)
+            line.to_edge(UP, buff = MED_SMALL_BUFF)
+        VGroup(counts.target, counts.symbols).shift(0.75*DOWN)
+        for mob in count_titles.target:
+            mob[-1].fade(1)
+        count_titles.symbols.shift(0.5*SMALL_BUFF*UP)
+        twos = VGroup(*[
+            TexMobject("2").next_to(group.symbols, RIGHT)
+            for group in groups
+        ])
+        twos.shift(0.5*SMALL_BUFF*UP)
+
+        words = TextMobject("``Euler's characteristic formula''")
+        words.next_to(counts.target, DOWN)
+        words.shift(MED_LARGE_BUFF*RIGHT)
+        words.highlight(YELLOW)
+
+        for group in groups:
+            self.play(
+                MoveToTarget(group),
+                Write(group.symbols)
+            )
+        self.dither()
+        self.play(Write(twos))
+        self.dither()
+        self.play(Write(words))
+        self.dither()
+
+        self.top_formula = VGroup(count_titles, count_titles.symbols, twos[0])
+        self.bottom_formula = VGroup(counts, counts.symbols, twos[1])
+
+    def transform_into_cube(self):
+        regions = self.regions
+        points = np.array([
+            UP+LEFT,
+            UP+RIGHT,
+            DOWN+RIGHT,
+            DOWN+LEFT,
+            UP+LEFT+2*IN,
+            UP+RIGHT+2*IN,
+            DOWN+RIGHT+2*IN,
+            DOWN+LEFT+2*IN,
+        ])
+        cube = self.get_cube_faces(points)
+        cube.shift(OUT)
+        cube.rotate_in_place(np.pi/12, RIGHT)
+        cube.rotate_in_place(np.pi/6, UP)
+        cube.shift(MED_LARGE_BUFF*DOWN)
+        shade_in_3d(cube)
+
+        for face, region in zip(cube, regions):
+            face.set_fill(region.get_color(), opacity = 0.8)
+
+        self.remove(self.edges)
+        regions.set_stroke(WHITE, 3)
+        cube.set_stroke(WHITE, 3)
+
+        new_formula = TexMobject("V - E + F = 2")
+        new_formula.to_edge(UP, buff = MED_SMALL_BUFF)
+        new_formula.align_to(self.bottom_formula, RIGHT)
+
+        self.play(FadeOut(self.vertices))
+        self.play(ReplacementTransform(regions, cube, run_time = 2))
+        cube.sort_submobjects(lambda p : -p[2])
+        self.add(AmbientRotation(cube, axis = UP, in_place = False))
+        self.dither(3)
+        self.play(
+            FadeOut(self.top_formula),
+            FadeIn(new_formula)
+        )
+        self.dither(10)
+
+
+    ###
+
+    def get_cube_faces(self, eight_points):
+        return VGroup(*[
+            Square().set_anchor_points(
+                eight_points[indices], mode = "corners"
+            )
+            for indices in [
+                [0, 1, 2, 3],
+                [0, 4, 5, 1],
+                [1, 5, 6, 2],
+                [2, 6, 7, 3],
+                [3, 7, 4, 0],
+                [4, 5, 6, 7],
+            ]
+        ])
+
+class YouGaveFriendsAnImpossiblePuzzle(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "You gave friends \\\\ an impossible puzzle?",
+            target_mode = "sassy",
+        )
+        self.change_student_modes(
+            "angry", "sassy", "angry",
+            added_anims = [self.teacher.change, "happy"]
+        )
+        self.dither(2)
+
+class FunnyStory(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("Funny story", target_mode = "hooray")
+        self.dither()
+        self.change_student_modes(
+            *["happy"]*3,
+            added_anims = [RemovePiCreatureBubble(
+                self.teacher,
+                target_mode = "raise_right_hand"
+            )],
+            look_at_arg = UP+2*RIGHT
+        )
+        self.dither(5)
+
+class QuestionWrapper(Scene):
+    def construct(self):
+        question = TextMobject(
+            "Where", "\\emph{specifically}", "does\\\\", 
+            "this proof break down?",
+        )
+        question.to_edge(UP)
+        question.highlight_by_tex("specifically", YELLOW)
+        screen_rect = ScreenRectangle(height = 5.5)
+        screen_rect.next_to(question, DOWN)
+
+        self.play(ShowCreation(screen_rect))
+        self.dither()
+        for word in question:
+            self.play(LaggedStart(
+                FadeIn, word,
+                run_time = 0.05*len(word)
+            ))
+            self.dither(0.05)
+        self.dither()
+
+class Homework(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("Consider this \\\\ homework")
+        self.change_student_modes(*["pondering"]*3)
+        self.dither(2)
+        self.student_says(
+            "$V-E+F=0$ on \\\\ a torus!",
+            target_mode = "hooray"
+        )
+        self.dither()
+        self.teacher_says("Not good enough!", target_mode = "surprised")
+        self.change_student_modes(*["confused"]*3)
+        self.dither(2)
+
+class WantToLearnMore(Scene):
+    def construct(self):
+        text = TextMobject("Want to learn more?")
+        self.play(Write(text))
+        self.dither()
+
+class PatreonThanks(PatreonEndScreen):
+    CONFIG = {
+        "specific_patrons" : [
+            "Randall Hunt",
+            "Desmos",
+            "Burt Humburg",
+            "CrypticSwarm",
+            "Juan Benet",
+            "David Kedmey",
+            "Ali Yahya",
+            "Mayank M. Mehrotra",
+            "Lukas Biewald",
+            "Yana Chernobilsky",
+            "Kaustuv DeBiswas",
+            "Kathryn Schmiedicke",
+            "Yu Jun",
+            "Dave Nicponski",
+            "Damion Kistler",
+            "Jordan Scales",
+            "Markus Persson",
+            "Egor Gumenuk",
+            "Yoni Nazarathy",
+            "Ryan Atallah",
+            "Joseph John Cox",
+            "Luc Ritchie",
+            "Onuralp Soylemez",
+            "John Bjorn Nelson",
+            "Yaw Etse",
+            "David Barbetta",
+            "Julio Cesar Campo Neto",
+            "Waleed Hamied",
+            "Oliver Steele",
+            "George Chiesa",
+            "supershabam",
+            "James Park",
+            "Samantha D. Suplee",
+            "Delton Ding",
+            "Thomas Tarler",
+            "Jonathan Eppele",
+            "Isak Hietala",
+            "1stViewMaths",
+            "Jacob Magnuson",
+            "Mark Govea",
+            "Dagan Harrington",
+            "Clark Gaebel",
+            "Eric Chow",
+            "Mathias Jansson",
+            "David Clark",
+            "Michael Gardner",
+            "Mads Elvheim",
+            "Erik Sundell",
+            "Awoo",
+            "Dr. David G. Stork",
+            "Tianyu Ge",
+            "Ted Suzman",
+            "Linh Tran",
+            "Andrew Busey",
+            "John Haley",
+            "Ankalagon",
+            "Eric Lavault",
+            "Boris Veselinovich",
+            "Julian Pulgarin",
+            "Jeff Linse",
+            "Cooper Jones",
+            "Ryan Dahl",
+            "Robert Teed",
+            "Jason Hise",
+            "Meshal Alshammari",
+            "Bernd Sing",
+            "James Thornton",
+            "Mustafa Mahdi",
+            "Mathew Bramson",
+            "Jerry Ling",
+            "Shimin  Kuang",
+            "Rish Kundalia",
+            "Achille Brighton",
+            "Ripta Pasay",
+        ]
+    }
+
+
+
+
+
+
+
+
+
+
+
 
 
 
