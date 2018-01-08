@@ -517,7 +517,8 @@ class Scene(object):
             temp_file_path,
         ]
         
-        self.writing_process = sp.Popen(command, stdin=sp.PIPE, shell=True)
+        # self.writing_process = sp.Popen(command, stdin=sp.PIPE, shell=True)
+        self.writing_process = sp.Popen(command, stdin=sp.PIPE)
 
     def close_movie_pipe(self):
         self.writing_process.stdin.close()
