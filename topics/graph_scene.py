@@ -123,6 +123,10 @@ class GraphScene(Scene):
         result += self.y_axis.number_to_point(y)[1]*UP
         return result
 
+    def point_to_coords(self, point):
+        return (self.x_axis.point_to_number(point), 
+                self.y_axis.point_to_number(point))
+
     def get_graph(
         self, func, 
         color = None,
