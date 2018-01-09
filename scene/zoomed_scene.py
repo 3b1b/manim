@@ -98,15 +98,15 @@ class ZoomedScene(Scene):
             frame[left:right, up:down, :] = self.zoomed_camera.get_image()
         return frame
 
-    def set_camera_image(self, pixel_array):
+    def set_camera_pixel_array(self, pixel_array):
         self.camera.set_pixel_array(pixel_array)
         if self.zoom_activated:
             (up, left), (down, right) = self.zoomed_canvas_pixel_indices
             self.zoomed_camera.set_pixel_array(pixel_array[left:right, up:down])
 
     def set_camera_background(self, background):
-        self.set_camera_image(self, background)
-        #TODO, check this..
+        self.set_camera_pixel_array(self, background)
+        #TODO, check this...
 
     def reset_camera(self):
         self.camera.reset()
@@ -122,7 +122,6 @@ class ZoomedScene(Scene):
             self.zoomed_camera.capture_mobjects(
                 mobjects, **kwargs
             )
-
     def separate_moving_and_static_mobjects(self, *animations):
         moving_mobjects, static_mobjects = Scene.separate_moving_and_static_mobjects(
             self, *animations
