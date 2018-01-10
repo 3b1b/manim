@@ -50,24 +50,27 @@ class ChangingDecimal(Animation):
         "num_decimal_points" : None,
         "spare_parts" : 2,
         "position_update_func" : None,
-        "tracked_mobject" : None,
+        "tracked_mobject" : None
     }
-    def __init__(self, decimal_number, number_update_func, **kwargs):
+    def __init__(self, decimal_number_mobject, number_update_func, **kwargs):
         digest_config(self, kwargs, locals())
         if self.num_decimal_points is None:
-            self.num_decimal_points = decimal_number.num_decimal_points
-        decimal_number.add(*[
-            VectorizedPoint(decimal_number.get_corner(DOWN+LEFT))
+            self.num_decimal_points = decimal_number_mobject.num_decimal_points
+        decimal_number_mobject.add(*[
+            VectorizedPoint(decimal_number_mobject.get_corner(DOWN+LEFT))
             for x in range(self.spare_parts)]
         )
-        Animation.__init__(self, decimal_number, **kwargs)
+        if self.tracked_mobject:
+            self.diff_from_tracked_mobject = \
+                decimal_number_mobject.get_center() - self.tracked_mobject.get_center()
+        Animation.__init__(self, decimal_number_mobject, **kwargs)
 
     def update_mobject(self, alpha):
         self.update_number(alpha)
         self.update_position()
 
     def update_number(self, alpha):
-        decimal = self.decimal_number
+        decimal = self.decimal_number_mobject
         new_number = self.number_update_func(alpha)
         new_decimal = DecimalNumber(
             new_number, num_decimal_points = self.num_decimal_points
@@ -85,14 +88,14 @@ class ChangingDecimal(Animation):
 
     def update_position(self):
         if self.position_update_func is not None:
-            self.position_update_func(self.decimal_number)
+            self.position_update_func(self.decimal_number_mobject)
         elif self.tracked_mobject is not None:
-            self.decimal_number.move_to(self.tracked_mobject)
+            self.decimal_number_mobject.move_to(self.tracked_mobject.get_center() + self.diff_from_tracked_mobject)
 
 class ContinualChangingDecimal(ContinualAnimation):
-    def __init__(self, decimal_number, number_update_func, **kwargs):
-        self.anim = ChangingDecimal(decimal_number, number_update_func, **kwargs)
-        ContinualAnimation.__init__(self, decimal_number, **kwargs)
+    def __init__(self, decimal_number_mobject, number_update_func, **kwargs):
+        self.anim = ChangingDecimal(decimal_number_mobject, number_update_func, **kwargs)
+        ContinualAnimation.__init__(self, decimal_number_mobject, **kwargs)
 
     def update_mobject(self, dt):
         self.anim.update(self.internal_time)
