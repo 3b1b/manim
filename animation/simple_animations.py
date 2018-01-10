@@ -150,17 +150,6 @@ class ShowCreationThenDestruction(ShowPassingFlash):
         "run_time" : 1,
     }
 
-class MoveAlongPath(Animation):
-    def __init__(self, mobject, vmobject, **kwargs):
-        digest_config(self, kwargs, locals())
-        Animation.__init__(self, mobject, **kwargs)
-
-    def update_mobject(self, alpha):
-        self.mobject.shift(
-            self.vmobject.point_from_proportion(alpha) - \
-            self.mobject.get_center()
-        )
-
 class Homotopy(Animation):
     CONFIG = {
         "run_time" : 3,
