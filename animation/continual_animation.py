@@ -127,7 +127,13 @@ class NormalAnimationAsContinualAnimation(ContinualAnimation):
             min(float(self.internal_time)/self.animation.run_time, 1)
         )
 
+class CycleAnimation(ContinualAnimation):
+    def __init__(self, *animation, **kwargs):
+        self.animation = animation
+        ContinualAnimation.__init__(self, animation.mobject, **kwargs)
 
+    def update_mobject(self, dt):
+        sef.animation.update(self.internal_time % self.animation.run_time)
 
 
 
