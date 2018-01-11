@@ -238,7 +238,39 @@ class SecondSqrtScene(FirstSqrtScene, ReconfigurableScene):
             graph_origin = newOrigin)
         self.solveEquation()
 
+class LinePulser(ContinualAnimation):
+    def __init__(self, line, bullet_template, num_bullets, pulse_time, **kwargs):
+        self.line = line
+        self.num_bullets = num_bullets
+        self.pulse_time = pulse_time
+        self.bullets = [bullet_template.copy() for i in range(num_bullets)]
+        ContinualAnimation.__init__(self, VGroup(line, VGroup(*self.bullets)), **kwargs)
+
+    def update_mobject(self, dt):
+        alpha = self.external_time % self.pulse_time
+        start = self.line.get_start()
+        end = self.line.get_end()
+        for i in range(self.num_bullets):
+            self.bullets[i].move_to(interpolate(start, end, 
+                np.true_divide((i + alpha),(self.num_bullets))))
+            self.bullets[i].shift((0, 0, 1)) # Temporary hack for z-buffer fidgetiness
+
 class LoopSplitScene(Scene):
+    # def LinePulser(self, line, bullet_template, num_bullets):
+    #     start, end = line.get_start(), line.get_end()
+    #     bullets = [
+    #         bullet_template.copy().move_to(interpolate(start, end, i/float(num_bullets))) 
+    #         for i in range(num_bullets)
+    #         ]
+    #     bullets_group = VGroup(*bullets)
+    #     return ApplyMethod(bullets_group.shift, (end - start)/float(num_bullets), 
+    #         rate_func = None, run_time = 0.5)
+
+    def PulsedLine(self, start, end, bullet_template, num_bullets = 4, pulse_time = 1, **kwargs):
+        line = Line(start, end, **kwargs)
+        anim = LinePulser(line, bullet_template, num_bullets, pulse_time, **kwargs)
+        return [VGroup(line, *anim.bullets), anim]
+
     def construct(self):
         # Original loop
         tl = UP + LEFT
@@ -252,52 +284,64 @@ class LoopSplitScene(Scene):
 
         loop_color = BLUE
 
-        top_line = Line(tl, tr, color = loop_color)
-        right_line = Line(tr, br, color = loop_color)
-        bottom_line = Line(br, bl, color = loop_color)
-        left_line = Line(bl, tl, color = loop_color)
-        loop = Group(top_line, right_line, bottom_line, left_line)
-        self.add(loop)
-        
+        default_bullet = TexMobject("*", stroke_color = RED, stroke_width = 1)
+
+        def SGroup(*args):
+            return VGroup(*[arg[0] for arg in args])
+
+        top_line = self.PulsedLine(tl, tr, default_bullet, color = BLUE)
+        right_line = self.PulsedLine(tr, br, default_bullet, color = BLUE)
+        bottom_line = self.PulsedLine(br, bl, default_bullet, color = BLUE)
+        left_line = self.PulsedLine(bl, tl, default_bullet, color = BLUE)
+        line_list = [top_line, right_line, bottom_line, left_line]
+        loop = SGroup(*line_list)
+        for line in line_list:
+            self.add(*line)
+        self.dither()
+
         # TODO: Make the following a continual animation, and on all split loops do the same
-        bullet = TexMobject("*", fill_color = RED)
-        bullet.move_to(tl)
-        self.add(bullet)
-        list_of_args = reduce(op.add, 
-            [
-                [ApplyMethod, bullet.move_to, point, {"rate_func" : None}] for 
-                point in [tr, br, bl, tl]
-            ]
-            )
-        succ_anim = Succession(*list_of_args)
-        self.add(CycleAnimation(succ_anim))
+        # bullet = TexMobject("*", fill_color = RED)
+        # bullet.move_to(tl)
+        # self.add(bullet)
+        # list_of_args = reduce(op.add, 
+        #     [
+        #         [ApplyMethod, bullet.move_to, point, {"rate_func" : None}] for 
+        #         point in [tr, br, bl, tl]
+        #     ]
+        #     )
+        # succ_anim = Succession(*list_of_args)
+        # self.add(CycleAnimation(succ_anim))
 
         # Splits in middle
         split_line = DashedLine(interpolate(tl, tr, 0.5), interpolate(bl, br, 0.5))
         self.play(ShowCreation(split_line))
+        self.dither()
 
-        self.remove(split_line)
-        mid_line_left = Line(tm, bm, color = loop_color)
-        mid_line_right = Line(tm, bm, color = loop_color)
-        self.add(mid_line_left, mid_line_right)
+        self.remove(*split_line)
+        mid_line_left = self.PulsedLine(tm, bm, default_bullet, color = loop_color)
+        mid_line_right = self.PulsedLine(bm, tm, default_bullet, color = loop_color)
+        self.add(*mid_line_left)
+        self.add(*mid_line_right)
 
-        top_line_left_half = Line(tl, tm, color = loop_color)
-        top_line_right_half = Line(tm, tr, color = loop_color)
+        top_line_left_half = self.PulsedLine(tl, tm, default_bullet, 2, 1, color = loop_color)
+        top_line_right_half = self.PulsedLine(tm, tr, default_bullet, 2, 1, color = loop_color)
 
-        bottom_line_left_half = Line(bl, bm, color = loop_color)
-        bottom_line_right_half = Line(bm, br, color = loop_color)
+        bottom_line_left_half = self.PulsedLine(bm, bl, default_bullet, 2, 1, color = loop_color)
+        bottom_line_right_half = self.PulsedLine(br, bm, default_bullet, 2, 1, color = loop_color)
 
-        self.remove(top_line)
-        self.add(top_line_left_half)
-        self.add(top_line_right_half)
-        self.remove(bottom_line)
-        self.add(bottom_line_left_half)
-        self.add(bottom_line_right_half)
+        self.remove(*top_line)
+        self.add(*top_line_left_half)
+        self.add(*top_line_right_half)
+        self.remove(*bottom_line)
+        self.add(*bottom_line_left_half)
+        self.add(*bottom_line_right_half)
 
-        left_open_loop = VGroup(top_line_left_half, left_line, bottom_line_left_half)
-        left_closed_loop = VGroup(left_open_loop, mid_line_left)
-        right_open_loop = VGroup(top_line_right_half, right_line, bottom_line_right_half)
-        right_closed_loop = VGroup(right_open_loop, mid_line_right)
+        left_open_loop = SGroup(top_line_left_half, left_line, bottom_line_left_half)
+        left_closed_loop = VGroup(left_open_loop, mid_line_left[0])
+        right_open_loop = SGroup(top_line_right_half, right_line, bottom_line_right_half)
+        right_closed_loop = VGroup(right_open_loop, mid_line_right[0])
+
+        self.dither()
 
         self.play(
             ApplyMethod(left_closed_loop.shift, LEFT), 
@@ -313,12 +357,18 @@ class LoopSplitScene(Scene):
 
         self.dither()
 
-        mid_lines = VGroup(mid_line_left, mid_line_right)
+        mid_lines = SGroup(mid_line_left, mid_line_right)
 
-        circle = Circle()
-        circle.surround(mid_lines)
-        self.play(ShowCreation(circle))
+        highlight_circle = Circle(color = YELLOW_A) # Perhaps make this a dashed circle?
+        highlight_circle.surround(mid_lines)
+        self.play(Indicate(mid_lines), ShowCreation(highlight_circle, run_time = 0.5))
+        
+        self.dither()
 
+        self.play(FadeOut(highlight_circle), FadeOut(mid_lines))
+
+        self.dither()        
+        
 class EquationSolver2d(ZoomedScene):
     #TODO
     CONFIG = {}
