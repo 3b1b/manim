@@ -29,64 +29,40 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from topics.graph_scene import *
 
-class Test(Scene):
-    def construct(self):
-        firstname = TextMobject("Sridhar")
-        lastname = TextMobject("Ramesh")
-        texObject1 = TexMobject(r"\sum_{x = 0}^{n} \frac{1}{x^2}")
-        texObject2 = TexMobject(r"\int_{x = 0}^{n} \frac{1}{x^2}")
-        squareObject = Square(side_length = 2)
-        squareGroup = Group(*[Square(side_length = x) for x in range(3)])
-        squareGroup.arrange_submobjects(RIGHT)
-        #self.play(ReplacementTransform(texObject1, texObject2), run_time = 5)
-        #self.play(texObject2.shift, 2*RIGHT)
-        #self.play(Write(firstname))
-        #self.play(Write(squareGroup))
-        polygonObject = Polygon(ORIGIN, UP + RIGHT, UP + LEFT)
-        polygonObject.set_stroke(color = YELLOW, width = 3)
-        polygonObject.set_fill(color = WHITE, opacity = 0.5)
-        self.play(DrawBorderThenFill(polygonObject), run_time = 5)
-
-class GraphTest(GraphScene, ZoomedScene):
+class EquationSolver1d(GraphScene, ZoomedScene, ReconfigurableScene):
     CONFIG = {
-    "x_min" : 0,
-    "x_max" : 6,
-    "y_min" : -1,
-    "y_max" : 20,
-    "graph_origin" : 2*DOWN + 5 * LEFT,
-    "x_axis_width" : 12,
-    "zoom_factor" : 3,
-    "zoomed_canvas_center" : 2 * UP + 1.5 * LEFT
+    "graph_func" : lambda x : x,
+    "targetX" : 0,
+    "targetY" : 0,
+    "initial_lower_x" : 0,
+    "initial_upper_x" : 10,
+    "num_iterations" : 10,
+    "iteration_at_which_to_start_zoom" : None,
+    "graph_label" : None,
+    "show_target_line" : True
     }
-    def construct(self):
-        
-        # Convenient for skipping animations:
-        # self.force_skipping()
-        # self.revert_to_original_skipping_status()
 
+    def drawGraph(self):
         self.setup_axes()
-        graphFunc = lambda x : x**2
-        graph = self.get_graph(graphFunc)
-        self.add(graph)
+        self.graph = self.get_graph(self.graph_func)
+        self.add(self.graph)
 
-        inverseZoomFactor = 1/float(self.zoom_factor)
-
-        graphLabel = self.get_graph_label(graph, "y = x^2", 
-            x_val = 4, direction = RIGHT)
-        self.add(graphLabel)
-
-        targetY = 6
+        if self.graph_label != None:
+            self.add(self.get_graph_label(self.graph, self.graph_label, 
+                x_val = 4, direction = RIGHT))
         
-        targetYLine = DashedLine(
-            self.coords_to_point(self.x_min, targetY), 
-            self.coords_to_point(self.x_max, targetY),
-            dashed_segment_length = 0.1)
-        self.add(targetYLine)
+        if self.show_target_line:
+            target_line_object = DashedLine(
+                self.coords_to_point(self.x_min, self.targetY), 
+                self.coords_to_point(self.x_max, self.targetY),
+                dashed_segment_length = 0.1)
+            self.add(target_line_object)
 
-        targetYLineLabel = TexMobject("y = " + str(targetY))
-        targetYLineLabel.next_to(targetYLine.get_left(), UP + RIGHT)
-        self.add(targetYLineLabel)
+            target_line_label = TexMobject("y = " + str(self.targetY))
+            target_line_label.next_to(target_line_object.get_left(), UP + RIGHT)
+            self.add(target_line_label)
 
+    def solveEquation(self):
         leftBrace, rightBrace = xBraces = TexMobject("||")
         xBraces.stretch(2, 0)
 
@@ -94,10 +70,10 @@ class GraphTest(GraphScene, ZoomedScene):
         yBraces.stretch(2, 0)
         yBraces.rotate(np.pi/2)
 
-        lowerX = 1
-        lowerY = graphFunc(lowerX)
-        upperX = 5
-        upperY = graphFunc(upperX)
+        lowerX = self.initial_lower_x
+        lowerY = self.graph_func(lowerX)
+        upperX = self.initial_upper_x
+        upperY = self.graph_func(upperX)
 
         leftBrace.move_to(self.coords_to_point(lowerX, 0))
         leftBraceLabel = DecimalNumber(lowerX)
@@ -131,14 +107,14 @@ class GraphTest(GraphScene, ZoomedScene):
             tracked_mobject = upBrace)
         self.add(upBraceLabelAnimation)
 
-        lowerDotPoint = self.input_to_graph_point(lowerX, graph)
+        lowerDotPoint = self.input_to_graph_point(lowerX, self.graph)
         lowerDotXPoint = self.coords_to_point(lowerX, 0)
-        lowerDotYPoint = self.coords_to_point(0, graphFunc(lowerX))
+        lowerDotYPoint = self.coords_to_point(0, self.graph_func(lowerX))
         lowerDot = Dot(lowerDotPoint)
-        upperDotPoint = self.input_to_graph_point(upperX, graph)
+        upperDotPoint = self.input_to_graph_point(upperX, self.graph)
         upperDot = Dot(upperDotPoint)
         upperDotXPoint = self.coords_to_point(upperX, 0)
-        upperDotYPoint = self.coords_to_point(0, graphFunc(upperX))
+        upperDotYPoint = self.coords_to_point(0, self.graph_func(upperX))
 
         lowerXLine = Line(lowerDotXPoint, lowerDotPoint, stroke_width = 1, color = YELLOW)
         upperXLine = Line(upperDotXPoint, upperDotPoint, stroke_width = 1, color = YELLOW)
@@ -146,16 +122,14 @@ class GraphTest(GraphScene, ZoomedScene):
         upperYLine = Line(upperDotYPoint, upperDotPoint, stroke_width = 1, color = YELLOW)
         self.add(lowerXLine, upperXLine, lowerYLine, upperYLine)
 
-        # TODO: Display lines at start, not just on update
-
         self.add(xBraces, yBraces, lowerDot, upperDot)
 
-        zoomStage = 5
-        for i in range(10):
-            if i == zoomStage:
+        for i in range(self.num_iterations):
+            if i == self.iteration_at_which_to_start_zoom:
                 self.activate_zooming()
                 self.little_rectangle.move_to(
-                    self.coords_to_point(np.sqrt(targetY), targetY))
+                    self.coords_to_point(self.targetX, self.targetY))
+                inverseZoomFactor = 1/float(self.zoom_factor)
                 self.play(
                     lowerDot.scale_in_place, inverseZoomFactor,
                     upperDot.scale_in_place, inverseZoomFactor)
@@ -165,9 +139,9 @@ class GraphTest(GraphScene, ZoomedScene):
                 def updater(group, alpha):
                     dot, xBrace, yBrace, xLine, yLine = group
                     newX = interpolate(xAtStart, midX, alpha)
-                    newY = graphFunc(newX)
+                    newY = self.graph_func(newX)
                     graphPoint = self.input_to_graph_point(newX, 
-                            graph)
+                            self.graph)
                     dot.move_to(graphPoint)
                     xAxisPoint = self.coords_to_point(newX, 0)
                     xBrace.move_to(xAxisPoint)
@@ -179,7 +153,7 @@ class GraphTest(GraphScene, ZoomedScene):
                 return updater
 
             midX = (lowerX + upperX)/float(2)
-            midY = graphFunc(midX)
+            midY = self.graph_func(midX)
 
             midCoords = self.coords_to_point(midX, midY)
             midColor = RED
@@ -190,13 +164,14 @@ class GraphTest(GraphScene, ZoomedScene):
             midXLine = Line(self.coords_to_point(midX, 0), midCoords, color = midColor)
             self.play(ShowCreation(midXLine))
             midDot = Dot(midCoords, color = midColor)
-            if(i >= zoomStage):
+            if(self.iteration_at_which_to_start_zoom != None and 
+                i >= self.iteration_at_which_to_start_zoom):
                 midDot.scale_in_place(inverseZoomFactor)
             self.add(midDot)
             midYLine = Line(midCoords, self.coords_to_point(0, midY), color = midColor)
             self.play(ShowCreation(midYLine))
 
-            if midY < targetY:
+            if midY < self.targetY:
                 movingGroup = Group(lowerDot, 
                     leftBrace, downBrace,
                     lowerXLine, lowerYLine)
@@ -216,3 +191,134 @@ class GraphTest(GraphScene, ZoomedScene):
             self.remove(midXLine, midDot, midYLine)
 
         self.dither()
+
+    def construct(self):
+        self.drawGraph()
+        self.solveEquation()
+
+class FirstSqrtScene(EquationSolver1d):
+    CONFIG = {
+    "x_min" : 0,
+    "x_max" : 2,
+    "y_min" : 0,
+    "y_max" : 4,
+    "graph_origin" : 2*DOWN + 5 * LEFT,
+    "x_axis_width" : 12,
+    "zoom_factor" : 3,
+    "zoomed_canvas_center" : 2.25 * UP + 1.75 * LEFT,
+    "graph_func" : lambda x : x**2,
+    "targetX" : np.sqrt(2),
+    "targetY" : 2,
+    "initial_lower_x" : 1,
+    "initial_upper_x" : 2,
+    "num_iterations" : 2,
+    "iteration_at_which_to_start_zoom" : 1,
+    "graph_label" : "y = x^2",
+    "show_target_line" : True,
+    }
+
+class SecondSqrtScene(FirstSqrtScene, ReconfigurableScene):
+
+    def setup(self):
+        FirstSqrtScene.setup(self)
+        ReconfigurableScene.setup(self)
+
+    def construct(self):
+        shiftVal = self.targetY
+
+        self.drawGraph()
+        newOrigin = self.coords_to_point(0, shiftVal)
+        self.transition_to_alt_config(
+            graph_func = lambda x : x**2 - shiftVal,
+            targetY = 0,
+            graph_label = "y = x^2 - " + str(shiftVal),
+            y_min = self.y_min - shiftVal,
+            y_max = self.y_max - shiftVal,
+            show_target_line = False,
+            graph_origin = newOrigin)
+        self.solveEquation()
+
+class LoopSplitScene(Scene):
+    def construct(self):
+        # Original loop
+        tl = UP + LEFT
+        tm = UP
+        tr = UP + RIGHT
+        mr = RIGHT
+        br = DOWN + RIGHT
+        bm = DOWN
+        bl = DOWN + LEFT
+        lm = LEFT
+
+        loop_color = BLUE
+
+        top_line = Line(tl, tr, color = loop_color)
+        right_line = Line(tr, br, color = loop_color)
+        bottom_line = Line(br, bl, color = loop_color)
+        left_line = Line(bl, tl, color = loop_color)
+        loop = Group(top_line, right_line, bottom_line, left_line)
+        self.add(loop)
+        
+        # TODO: Make the following a continual animation, and on all split loops do the same
+        bullet = TexMobject("*", fill_color = RED)
+        bullet.move_to(tl)
+        self.add(bullet)
+        list_of_args = reduce(op.add, 
+            [
+                [ApplyMethod, bullet.move_to, point, {"rate_func" : None}] for 
+                point in [tr, br, bl, tl]
+            ]
+            )
+        succ_anim = Succession(*list_of_args)
+        self.add(CycleAnimation(succ_anim))
+
+        # Splits in middle
+        split_line = DashedLine(interpolate(tl, tr, 0.5), interpolate(bl, br, 0.5))
+        self.play(ShowCreation(split_line))
+
+        self.remove(split_line)
+        mid_line_left = Line(tm, bm, color = loop_color)
+        mid_line_right = Line(tm, bm, color = loop_color)
+        self.add(mid_line_left, mid_line_right)
+
+        top_line_left_half = Line(tl, tm, color = loop_color)
+        top_line_right_half = Line(tm, tr, color = loop_color)
+
+        bottom_line_left_half = Line(bl, bm, color = loop_color)
+        bottom_line_right_half = Line(bm, br, color = loop_color)
+
+        self.remove(top_line)
+        self.add(top_line_left_half)
+        self.add(top_line_right_half)
+        self.remove(bottom_line)
+        self.add(bottom_line_left_half)
+        self.add(bottom_line_right_half)
+
+        left_open_loop = VGroup(top_line_left_half, left_line, bottom_line_left_half)
+        left_closed_loop = VGroup(left_open_loop, mid_line_left)
+        right_open_loop = VGroup(top_line_right_half, right_line, bottom_line_right_half)
+        right_closed_loop = VGroup(right_open_loop, mid_line_right)
+
+        self.play(
+            ApplyMethod(left_closed_loop.shift, LEFT), 
+            ApplyMethod(right_closed_loop.shift, RIGHT)
+            )
+
+        self.dither()
+
+        self.play(
+            ApplyMethod(left_open_loop.shift, LEFT), 
+            ApplyMethod(right_open_loop.shift, RIGHT)
+            )
+
+        self.dither()
+
+        mid_lines = VGroup(mid_line_left, mid_line_right)
+
+        circle = Circle()
+        circle.surround(mid_lines)
+        self.play(ShowCreation(circle))
+
+class EquationSolver2d(ZoomedScene):
+    #TODO
+    CONFIG = {}
