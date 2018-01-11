@@ -7,7 +7,6 @@ import warnings
 from helpers import *
 
 from animation import Animation
-from simple_animations import DelayByOrder
 from mobject import Mobject, Point, VMobject, Group
 from topics.geometry import Dot
 
@@ -48,6 +47,7 @@ class Transform(Animation):
                 self.path_arc,
                 self.path_arc_axis,
             )
+            
     def get_all_mobjects(self):
         return self.mobject, self.starting_mobject, self.target_mobject
 
@@ -172,11 +172,6 @@ class FadeIn(Transform):
         if isinstance(self.starting_mobject, VMobject):
             self.starting_mobject.set_stroke(width = 0)
             self.starting_mobject.set_fill(opacity = 0)
-
-class ShimmerIn(DelayByOrder):
-    def __init__(self, mobject, **kwargs):
-        mobject.sort_points(lambda p : np.dot(p, DOWN+RIGHT))
-        DelayByOrder.__init__(self, FadeIn(mobject, **kwargs))
 
 class FocusOn(Transform):
     CONFIG = {

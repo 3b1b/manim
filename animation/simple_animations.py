@@ -3,12 +3,12 @@ import itertools as it
 
 from helpers import *
 
-from mobject import Mobject
+from mobject import Mobject, Group
 from mobject.vectorized_mobject import VMobject
 from mobject.tex_mobject import TextMobject
 from animation import Animation
 from animation import sync_animation_run_times_and_rate_funcs
-
+from transform import Transform
 
 class Rotating(Animation):
     CONFIG = {
@@ -322,67 +322,83 @@ class LaggedStart(Animation):
         for anim in self.subanimations:
             anim.clean_up(*args, **kwargs)
 
-class DelayByOrder(Animation):
-    """
-    Modifier of animation.
-
-    Warning: This will not work on all animation types.
-    """
-    CONFIG = {
-        "max_power" : 5
-    }
-    def __init__(self, animation, **kwargs):
-        digest_locals(self)
-        self.num_mobject_points = animation.mobject.get_num_points()        
-        kwargs.update(dict([
-            (attr, getattr(animation, attr))
-            for attr in Animation.CONFIG
-        ]))
-        Animation.__init__(self, animation.mobject, **kwargs)
-        self.name = str(self) + str(self.animation)
-
-    def update_mobject(self, alpha):
-        dim = self.mobject.DIM
-        alpha_array = np.array([
-            [alpha**power]*dim
-            for n in range(self.num_mobject_points)
-            for prop in [(n+1.0)/self.num_mobject_points]
-            for power in [1+prop*(self.max_power-1)]
-        ])
-        self.animation.update_mobject(alpha_array)
-
 class Succession(Animation):
     CONFIG = {
         "rate_func" : None,
     }
-    def __init__(self, *animations, **kwargs):
+    def __init__(self, *args, **kwargs):
+        """
+        Each arg will either be an animation, or an animation class 
+        followed by its arguments (and potentially a dict for 
+        configuraiton).
+
+        For example, 
+        Succession(
+            ShowCreation(circle),
+            Transform, circle, square,
+            Transform, circle, triangle,
+            ApplyMethod, circle.shift, 2*UP, {"run_time" : 2},
+        )
+        """
+        animations = []
+        state = {
+            "animations" : animations,
+            "curr_class" : None,
+            "curr_class_args" : [],
+            "curr_class_config" : {},
+        }
+        def invoke_curr_class(state):
+            if state["curr_class"] is None:
+                return
+            anim = state["curr_class"](
+                *state["curr_class_args"], 
+                **state["curr_class_config"]
+            )
+            state["animations"].append(anim)
+            anim.update(1)
+            state["curr_class"] = None
+            state["curr_class_args"] = []
+            state["curr_class_config"] = {}
+
+        for arg in args:
+            if isinstance(arg, Animation):
+                animations.append(arg)
+                arg.update(1)
+                invoke_curr_class(state)
+            elif isinstance(arg, type) and issubclass(arg, Animation):
+                invoke_curr_class(state)
+                state["curr_class"] = arg
+            elif isinstance(arg, dict):
+                state["curr_class_config"] = arg
+            else:
+                state["curr_class_args"].append(arg)
+        invoke_curr_class(state)
+        for anim in animations:
+            anim.update(0)
+
+        self.run_times = [anim.run_time for anim in animations]
         if "run_time" in kwargs:
             run_time = kwargs.pop("run_time")
         else:
-            run_time = sum([anim.run_time for anim in animations])
+            run_time = sum(self.run_times)
         self.num_anims = len(animations)
-        self.anims = (animations)
-        mobject = Mobject(*[anim.mobject for anim in self.anims])
-        self.last_index = 0
+        self.animations = animations
+
+        mobject = Group(*[anim.mobject for anim in self.animations])
         Animation.__init__(self, mobject, run_time = run_time, **kwargs)
 
     def update_mobject(self, alpha):
-        scaled_alpha = alpha*self.num_anims
-        index = min(int(scaled_alpha), len(self.anims)-1)
-        curr_anim = self.anims[index]
-        if index != self.last_index:
-            last_anim = self.anims[self.last_index]
-            last_anim.clean_up()
-            if last_anim.mobject is curr_anim.mobject:
-                #TODO, is there a way to do this that doesn't
-                #require leveraging implementation details of 
-                #Animations, and knowing about the different
-                #struction of Transform?
-                if hasattr(curr_anim, "target_mobject"):
-                    curr_anim.mobject.align_data(curr_anim.target_mobject)
-                curr_anim.starting_mobject = curr_anim.mobject.copy()
-        curr_anim.update(scaled_alpha - index)
-        self.last_index = index
+        if alpha >= 1.0:
+            self.animations[-1].update(1)
+            return
+        run_times = self.run_times
+        index = 0
+        time = alpha*self.run_time
+        while sum(run_times[:index+1]) < time:
+            index += 1
+        curr_anim = self.animations[index]
+        sub_alpha = (time - sum(run_times[:index]))/run_times[index]
+        curr_anim.update(sub_alpha)
 
 class AnimationGroup(Animation):
     CONFIG = {
