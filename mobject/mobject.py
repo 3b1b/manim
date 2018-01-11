@@ -384,6 +384,10 @@ class Mobject(object):
         self.shift(mobject.get_center() - self.get_center())
         return self
 
+    def surround(self, mobject, dim_to_match = 0, stretch = False, buffer_factor = 1.2):
+        self.replace(mobject, dim_to_match, stretch)
+        self.scale_in_place(buffer_factor)
+
     def position_endpoints_on(self, start, end):
         curr_vect = self.points[-1] - self.points[0]
         if np.all(curr_vect == 0):
