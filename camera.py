@@ -388,11 +388,25 @@ class MovingCamera(Camera):
         )
 
 
+class MappingCamera(Camera):
+    CONFIG = {
+        "mapping_func" : lambda p : p,
+        "min_anchor_points" : 20,
+        "allow_object_intrusion" : False
+    }
 
-
-
-
-
-
+    def points_to_pixel_coords(self, points):
+        return Camera.points_to_pixel_coords(self, np.apply_along_axis(self.mapping_func, 1, points))
+    
+    def capture_mobjects(self, mobjects, **kwargs):
+        if self.allow_object_intrusion:
+            mobject_copies = mobjects
+        else:
+            mobject_copies = [mobject.copy() for mobject in mobjects]
+        for mobject in mobject_copies:
+            if isinstance(mobject, VMobject) and \
+            0 < mobject.get_num_anchor_points() < self.min_anchor_points:
+                mobject.insert_n_anchor_points(self.min_anchor_points)
+        Camera.capture_mobjects(self, mobject_copies, **kwargs)
 
 
