@@ -148,7 +148,6 @@ class Axes(VGroup):
         "z_min" : -3.5,
         "z_max" : 3.5,
         "z_normal" : DOWN,
-        "num_graph_points" : 20,
     }
     def __init__(self, **kwargs):
         VGroup.__init__(self, **kwargs)
@@ -180,15 +179,15 @@ class Axes(VGroup):
         y_axis_projection = self.y_axis.number_to_point(y)
         return x_axis_projection + y_axis_projection - origin
 
-    def get_graph(self, function, **kwargs):
+    def get_graph(self, function, num_graph_points = 40, **kwargs):
         kwargs["fill_opacity"] = kwargs.get("fill_opacity", 0)
         graph = VMobject(**kwargs)
         graph.set_points_smoothly([
             self.coords_to_point(x, function(x))
-            for x in np.linspace(self.x_min, self.x_max)
+            for x in np.linspace(self.x_min, self.x_max, num_graph_points)
         ])
+        graph.underlying_function = function
         return graph
-        
 
 class ThreeDAxes(Axes):
     CONFIG = {
