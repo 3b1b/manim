@@ -148,6 +148,7 @@ class Axes(VGroup):
         "z_min" : -3.5,
         "z_max" : 3.5,
         "z_normal" : DOWN,
+        "num_graph_points" : 20,
     }
     def __init__(self, **kwargs):
         VGroup.__init__(self, **kwargs)
@@ -172,6 +173,22 @@ class Axes(VGroup):
             self.z_axis.rotate(-np.pi/2, UP)
             self.z_axis.rotate(angle_of_vector(self.z_normal), OUT)
             self.add(self.z_axis)
+
+    def coords_to_point(self, x, y):
+        origin = self.x_axis.number_to_point(0)
+        x_axis_projection = self.x_axis.number_to_point(x)
+        y_axis_projection = self.y_axis.number_to_point(y)
+        return x_axis_projection + y_axis_projection - origin
+
+    def get_graph(self, function, **kwargs):
+        kwargs["fill_opacity"] = kwargs.get("fill_opacity", 0)
+        graph = VMobject(**kwargs)
+        graph.set_points_smoothly([
+            self.coords_to_point(x, function(x))
+            for x in np.linspace(self.x_min, self.x_max)
+        ])
+        return graph
+        
 
 class ThreeDAxes(Axes):
     CONFIG = {
@@ -199,7 +216,6 @@ class NumberPlane(VMobject):
         "written_coordinate_height" : 0.2,
         "propogate_style_to_family" : False,
     }
-    
     def generate_points(self):
         if self.x_radius is None:
             center_to_edge = (SPACE_WIDTH + abs(self.center_point[0])) 
