@@ -6,7 +6,8 @@ from mobject.svg_mobject import SVGMobject
 from mobject.tex_mobject import TextMobject, TexMobject
 
 from animation import Animation
-from animation.simple_animations import Rotating
+from animation.simple_animations import Rotating, LaggedStart
+from animation.transform import ApplyMethod
 
 from topics.geometry import Circle, Line, Rectangle, Square, \
     Arc, Polygon, SurroundingRectangle
@@ -483,3 +484,35 @@ class ThoughtBubble(Bubble):
     def make_green_screen(self):
         self.submobjects[-1].set_fill(GREEN_SCREEN, opacity = 1)
         return self
+
+
+#TODO: Where should this live?
+class Broadcast(LaggedStart):
+    CONFIG = {
+        "small_radius" : 0.0,
+        "big_radius" : 5,
+        "n_circles" : 5,
+        "remover" : True,
+        "lag_ratio" : 0.7,
+        "run_time" : 3,
+        "remover" : True,
+    }
+    def __init__(self, focal_point, **kwargs):
+        digest_config(self, kwargs)
+        circles = VGroup()
+        for x in range(self.n_circles):
+            circle = Circle(
+                radius = self.big_radius, 
+                stroke_color = BLACK,
+                stroke_width = 0,
+            )
+            circle.move_to(focal_point)
+            circle.save_state()
+            circle.scale_to_fit_width(self.small_radius*2)
+            circle.set_stroke(WHITE, 8)
+            circles.add(circle)
+        LaggedStart.__init__(
+            self, ApplyMethod, circles,
+            lambda c : (c.restore,),
+            **kwargs
+        )
