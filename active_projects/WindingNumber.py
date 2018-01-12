@@ -29,6 +29,62 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from topics.graph_scene import *
 
+class DualScene(Scene):
+    CONFIG = {
+    "num_needed_anchor_points" : 10
+    }
+
+    def setup(self):
+        split_line = DashedLine(SPACE_HEIGHT * UP, SPACE_HEIGHT * DOWN)
+        self.num_plane = NumberPlane(x_radius = SPACE_WIDTH/2)
+        self.num_plane.to_edge(LEFT, buff = 0)
+        self.num_plane.prepare_for_nonlinear_transform()
+        self.add(self.num_plane, split_line)
+
+    def apply_function(self, func, run_time = 3):
+        self.func = func
+        right_plane = self.num_plane.copy()
+        right_plane.center()
+        right_plane.prepare_for_nonlinear_transform()
+        right_plane.apply_function(func)
+        right_plane.shift(SPACE_WIDTH/2 * RIGHT)
+        self.right_plane = right_plane
+        crappy_cropper = FullScreenFadeRectangle(fill_opacity = 1)
+        crappy_cropper.stretch_to_fit_width(SPACE_WIDTH)
+        crappy_cropper.to_edge(LEFT, buff = 0)
+        self.play(
+            ReplacementTransform(self.num_plane.copy(), right_plane),
+            FadeIn(crappy_cropper), 
+            Animation(self.num_plane),
+            run_time = run_time
+        )
+
+    def squash_onto_left(self, object):
+        object.shift(SPACE_WIDTH/2 * LEFT)
+
+    def squash_onto_right(self, object):
+        object.shift(SPACE_WIDTH/2 * RIGHT)
+
+    def path_draw(self, input_object, run_time = 3):
+        output_object = input_object.copy()
+        if input_object.get_num_anchor_points() < self.num_needed_anchor_points:
+            input_object.insert_n_anchor_points(self.num_needed_anchor_points)
+        output_object.apply_function(self.func)
+        self.squash_onto_left(input_object)
+        self.squash_onto_right(output_object)
+        self.play(
+            ShowCreation(input_object), 
+            ShowCreation(output_object),
+            run_time = run_time
+            )
+        
+class TestDual(DualScene):
+    def construct(self):
+        self.force_skipping()
+        self.apply_function(lambda (x, y, z) : complex_to_R3(complex(x,y)**2))
+        self.revert_to_original_skipping_status()
+        self.path_draw(Line(LEFT + DOWN, RIGHT + DOWN))
+        
 class EquationSolver1d(GraphScene, ZoomedScene, ReconfigurableScene):
     CONFIG = {
     "graph_func" : lambda x : x,
@@ -284,7 +340,8 @@ class LoopSplitScene(Scene):
 
         loop_color = BLUE
 
-        default_bullet = TexMobject("*", stroke_color = RED, stroke_width = 1)
+        default_bullet = PiCreature(color = RED)
+        default_bullet.scale(0.15)
 
         def SGroup(*args):
             return VGroup(*[arg[0] for arg in args])
@@ -315,7 +372,6 @@ class LoopSplitScene(Scene):
         # Splits in middle
         split_line = DashedLine(interpolate(tl, tr, 0.5), interpolate(bl, br, 0.5))
         self.play(ShowCreation(split_line))
-        self.dither()
 
         self.remove(*split_line)
         mid_line_left = self.PulsedLine(tm, bm, default_bullet, color = loop_color)
@@ -341,8 +397,6 @@ class LoopSplitScene(Scene):
         right_open_loop = SGroup(top_line_right_half, right_line, bottom_line_right_half)
         right_closed_loop = VGroup(right_open_loop, mid_line_right[0])
 
-        self.dither()
-
         self.play(
             ApplyMethod(left_closed_loop.shift, LEFT), 
             ApplyMethod(right_closed_loop.shift, RIGHT)
@@ -359,7 +413,7 @@ class LoopSplitScene(Scene):
 
         mid_lines = SGroup(mid_line_left, mid_line_right)
 
-        highlight_circle = Circle(color = YELLOW_A) # Perhaps make this a dashed circle?
+        highlight_circle = Circle(color = YELLOW_E) # Perhaps make this a dashed circle?
         highlight_circle.surround(mid_lines)
         self.play(Indicate(mid_lines), ShowCreation(highlight_circle, run_time = 0.5))
         
