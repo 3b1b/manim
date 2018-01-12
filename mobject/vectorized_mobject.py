@@ -90,7 +90,7 @@ class VMobject(Mobject):
                 family = False
             )
             submob.set_fill(
-                opacity = (1-darkness),
+                opacity = (1-darkness)*submob.get_fill_opacity(),
                 family = False
             )
         return self
