@@ -13,7 +13,7 @@ from animation.simple_animations import Write, ShowCreation, AnimationGroup
 from scene import Scene
 
 
-PI_CREATURE_DIR = os.path.join(IMAGE_DIR, "PiCreature")
+PI_CREATURE_DIR = os.path.join(MEDIA_DIR, "designs", "PiCreature")
 PI_CREATURE_SCALE_FACTOR = 0.5
 
 LEFT_EYE_INDEX    = 0
@@ -51,7 +51,7 @@ class PiCreature(SVGMobject):
         except:
             warnings.warn("No PiCreature design with mode %s"%mode)
             svg_file = os.path.join(
-                PI_CREATURE_DIR, 
+                FILE_DIR, 
                 "PiCreatures_plain.svg"
             )
             SVGMobject.__init__(self, file_name = svg_file, **kwargs)

@@ -190,7 +190,7 @@ def main():
    )
 
    config["output_directory"] = os.path.join(
-      MOVIE_DIR,
+      ANIMATIONS_DIR,
       config["file"].replace(".py", "")
    )
 

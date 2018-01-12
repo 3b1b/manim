@@ -96,7 +96,7 @@ class Mobject(object):
 
     def save_image(self, name = None):
         self.get_image().save(
-            os.path.join(MOVIE_DIR, (name or str(self)) + ".png")
+            os.path.join(ANIMATIONS_DIR, (name or str(self)) + ".png")
         )
 
     def copy(self):

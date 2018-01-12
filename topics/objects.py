@@ -388,7 +388,11 @@ class Bubble(SVGMobject):
         digest_config(self, kwargs, locals())
         if self.file_name is None:
             raise Exception("Must invoke Bubble subclass")
-        SVGMobject.__init__(self, **kwargs)
+        try:
+            SVGMobject.__init__(self, **kwargs)
+        except IOError as err:
+            self.file_name = os.path.join(FILE_DIR, self.file_name)
+            SVGMobject.__init__(self, **kwargs)
         self.center()
         self.stretch_to_fit_height(self.height)
         self.stretch_to_fit_width(self.width)
@@ -515,4 +519,22 @@ class Broadcast(LaggedStart):
             self, ApplyMethod, circles,
             lambda c : (c.restore,),
             **kwargs
+
         )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

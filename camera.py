@@ -49,7 +49,7 @@ class Camera(object):
 
     def init_background(self):
         if self.background_image is not None:
-            path = get_full_image_path(self.background_image)
+            path = get_full_raster_image_path(self.background_image)
             image = Image.open(path).convert(self.image_mode)
             height, width = self.pixel_shape
             #TODO, how to gracefully handle backgrounds 

@@ -1532,7 +1532,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
         prefixes = self.prefixes
         vects = [
             np.array(Image.open(
-                get_full_image_path("handwritten_" + p),
+                get_full_raster_image_path("handwritten_" + p),
             ))[:,:,0].flatten()/255.0
             for p in prefixes
         ]
@@ -1921,7 +1921,7 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
     def setup_activations_and_nines(self):
         layers = self.network_mob.layers
         nine_im, loop_im, line_im = images = [
-            Image.open(get_full_image_path("handwritten_%s"%s))
+            Image.open(get_full_raster_image_path("handwritten_%s"%s))
             for s in "nine", "upper_loop", "right_line"
         ]
         nine_array, loop_array, line_array = [

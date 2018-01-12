@@ -61,19 +61,23 @@ RIGHT_SIDE = SPACE_WIDTH*RIGHT
 
 # Change this to point to where you want 
 # animation files to output
-MOVIE_DIR         = os.path.join(os.path.expanduser('~'), "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder/animations")
-STAGED_SCENES_DIR = os.path.join(MOVIE_DIR, "staged_scenes")
+MEDIA_DIR = os.path.join(os.path.expanduser('~'), "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder")
+
+ANIMATIONS_DIR = os.path.join(MEDIA_DIR, "animations")
+RASTER_IMAGE_DIR = os.path.join(MEDIA_DIR, "designs", "raster_images")
+SVG_IMAGE_DIR = os.path.join(MEDIA_DIR, "designs", "svg_images")
+#TODO, staged scenes should really go into a subdirectory of a given scenes directory
+STAGED_SCENES_DIR = os.path.join(ANIMATIONS_DIR, "staged_scenes") 
 ###
 THIS_DIR          = os.path.dirname(os.path.realpath(__file__))
 FILE_DIR          = os.path.join(THIS_DIR, "files")
-IMAGE_DIR         = os.path.join(FILE_DIR, "images")
-GIF_DIR           = os.path.join(FILE_DIR, "gifs")
 TEX_DIR           = os.path.join(FILE_DIR, "Tex")
-TEX_IMAGE_DIR     = os.path.join(IMAGE_DIR, "Tex")
+TEX_IMAGE_DIR     = TEX_DIR #TODO, What is this doing?
+#These two may be depricated now.
 MOBJECT_DIR       = os.path.join(FILE_DIR, "mobjects")
 IMAGE_MOBJECT_DIR = os.path.join(MOBJECT_DIR, "image")
 
-for folder in [FILE_DIR, IMAGE_DIR, GIF_DIR, MOVIE_DIR, TEX_DIR,
+for folder in [FILE_DIR, RASTER_IMAGE_DIR, SVG_IMAGE_DIR, ANIMATIONS_DIR, TEX_DIR,
                TEX_IMAGE_DIR, MOBJECT_DIR, IMAGE_MOBJECT_DIR,
                STAGED_SCENES_DIR]:
     if not os.path.exists(folder):
@@ -83,8 +87,6 @@ TEX_TEXT_TO_REPLACE = "YourTextHere"
 TEMPLATE_TEX_FILE  = os.path.join(THIS_DIR, "template.tex")
 TEMPLATE_TEXT_FILE = os.path.join(THIS_DIR, "text_template.tex")
 
-
-LOGO_PATH = os.path.join(IMAGE_DIR, "logo.png")
 
 FFMPEG_BIN = "ffmpeg"
 

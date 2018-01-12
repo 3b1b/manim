@@ -32,7 +32,7 @@ class Scene(object):
         "save_frames"      : False,
         "save_pngs"        : False,
         "pngs_mode"        : "RGBA",
-        "output_directory" : MOVIE_DIR,
+        "output_directory" : ANIMATIONS_DIR,
         "name" : None,
         "always_continually_update" : False,
         "random_seed" : 0,

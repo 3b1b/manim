@@ -23,7 +23,7 @@ class ImageMobject(Mobject):
     def __init__(self, filename_or_array, **kwargs):
         digest_config(self, kwargs)
         if isinstance(filename_or_array, str):
-            path = get_full_image_path(filename_or_array)
+            path = get_full_raster_image_path(filename_or_array)
             image = Image.open(path).convert(self.image_mode)
             self.pixel_array = np.array(image)
         else:

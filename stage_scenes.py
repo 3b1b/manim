@@ -4,7 +4,7 @@ import os
 import shutil
 import itertools as it
 from extract_scene import is_scene, get_module
-from constants import MOVIE_DIR, STAGED_SCENES_DIR
+from constants import ANIMATIONS_DIR, STAGED_SCENES_DIR
 
 
 def get_sorted_scene_names(module_name):
@@ -22,15 +22,15 @@ def get_sorted_scene_names(module_name):
 
 def stage_animaions(module_name):
     scene_names = get_sorted_scene_names(module_name)
-    movie_dir = os.path.join(
-        MOVIE_DIR, module_name.replace(".py", "")
+    animation_dir = os.path.join(
+        ANIMATIONS_DIR, module_name.replace(".py", "")
     )
-    files = os.listdir(movie_dir)
+    files = os.listdir(animation_dir)
     sorted_files = []
     for scene in scene_names:
         for clip in filter(lambda f : f.startswith(scene), files):
             sorted_files.append(
-                os.path.join(movie_dir, clip)
+                os.path.join(animation_dir, clip)
             )
     for f in os.listdir(STAGED_SCENES_DIR):
         os.remove(os.path.join(STAGED_SCENES_DIR, f))

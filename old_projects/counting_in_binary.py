@@ -14,7 +14,7 @@ from scene import Scene, SceneFromVideo
 from script_wrapper import command_line_create_scene
 
 MOVIE_PREFIX = "counting_in_binary/"
-BASE_HAND_FILE = os.path.join(MOVIE_DIR, MOVIE_PREFIX, "Base.mp4")
+BASE_HAND_FILE = os.path.join(ANIMATIONS_DIR, MOVIE_PREFIX, "Base.mp4")
 FORCED_FRAME_DURATION = 0.02
 TIME_RANGE = (0, 42)
 INITIAL_PADDING = 27
@@ -88,7 +88,7 @@ class Hand(ImageMobject):
     def __init__(self, num, small = False, **kwargs):
         Mobject2D.__init__(self, **kwargs)
         path = os.path.join(
-            MOVIE_DIR, MOVIE_PREFIX, "images", "Hand%d.png"%num
+            ANIMATIONS_DIR, MOVIE_PREFIX, "images", "Hand%d.png"%num
         )
         invert = False
         if not self.read_in_cached_attrs(path, invert):
@@ -164,7 +164,7 @@ class SaveEachNumber(OverHand):
         OverHand.construct(self)
         for count in COUNT_TO_FRAME_NUM:
             path = os.path.join(
-                MOVIE_DIR, MOVIE_PREFIX, "images",
+                ANIMATIONS_DIR, MOVIE_PREFIX, "images",
                 "Hand%d.png"%count
             )
             Image.fromarray(self.frames[COUNT_TO_FRAME_NUM[count]]).save(path)
