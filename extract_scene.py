@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 import sys
-import getopt
+# import getopt
+import argparse
 import imp
 import itertools as it
 import inspect
@@ -42,68 +43,65 @@ NO_SCENE_MESSAGE = """
 """
 
 
-def get_configuration(sys_argv):
+def get_configuration():
    try:
-      opts, args = getopt.getopt(sys_argv[1:], 'hlmpwfstqao:')
-   except getopt.GetoptError as err:
+      parser = argparse.ArgumentParser()
+      parser.add_argument(
+         "file", help = "path to file holding the python code for the scene"
+      )
+      parser.add_argument(
+         "scene_name", help = "Name of the Scene class you want to see"
+      )
+      optional_args = [
+         ("-p", "--preview"),
+         ("-w", "--write_to_movie"),
+         ("-s", "--show_last_frame"),
+         ("-l", "--low_quality"),
+         ("-m", "--medium_quality"),
+         ("-f", "--save_pngs"),
+         ("-t", "--transparent"),
+         ("-q", "--quiet"),
+         ("-a", "--write_all")
+      ]
+      for short_arg, long_arg in optional_args:
+         parser.add_argument(short_arg, long_arg, action = "store_true")
+      parser.add_argument("-o", "--output_name")
+      args = parser.parse_args()
+   except argparse.ArgumentError as err:
       print(str(err))
       sys.exit(2)
    config = {
-      "file"            : None,
-      "scene_name"      : "",
-      "camera_config"   : PRODUCTION_QUALITY_CAMERA_CONFIG,
-      "frame_duration"  : PRODUCTION_QUALITY_FRAME_DURATION,
-      "preview"         : False,
-      "write_to_movie"  : False,
-      "save_frames"     : False,
-      "save_image"      : False,
-      "save_pngs"       : False,
+      "file"            : args.file,
+      "scene_name"      : args.scene_name,
+      "camera_config"   : PRODUCTION_QUALITY_CAMERA_CONFIG, #TODO
+      "frame_duration"  : PRODUCTION_QUALITY_FRAME_DURATION, #TODO
+      "preview"         : args.preview,
+      "write_to_movie"  : args.write_to_movie,
+      "save_frames"     : args.preview, #Scenes only save frame when previewing
+      "show_last_frame" : args.show_last_frame,
+      "save_pngs"       : args.save_pngs,
       #If -t is passed in (for transparent), this will be RGBA
-      "saved_image_mode": "RGB",
-      "quiet"           : False,
-      "write_all"       : False,
-      "output_name"     : None,
+      "saved_image_mode": "RGBA" if args.transparent else "RGB",
+      "quiet"           : args.quiet or args.write_all,
+      "write_all"       : args.write_all,
+      "output_name"     : args.output_name,
    }
-   for opt, arg in opts:
-      if opt == '-h':
-         print(HELP_MESSAGE)
-         return
-      if opt in ['-l', '-p']:
-         config["camera_config"] = LOW_QUALITY_CAMERA_CONFIG
-         config["frame_duration"] = LOW_QUALITY_FRAME_DURATION
-      if opt == '-p':
-         config["preview"] = True
-         config["save_frames"] = True
-      if opt == '-m':
-         config["camera_config"] = MEDIUM_QUALITY_CAMERA_CONFIG
-         config["frame_duration"] = MEDIUM_QUALITY_FRAME_DURATION
-      if opt == '-w':
-         config["write_to_movie"] = True
-      if opt == '-f': #pngs
-         config["save_pngs"] = True
-      if opt == '-s':
-         config["save_image"] = True
-      if opt == '-t':
-         config["saved_image_mode"] = "RGBA"
-      if opt in ['-q', '-a']:
-         config["quiet"] = True
-      if opt == '-a':
-         config["write_all"] = True
-      if opt == '-o':
-         config["output_name"] = arg
-         
+   if args.low_quality or args.preview:
+      config["camera_config"] = LOW_QUALITY_CAMERA_CONFIG
+      config["frame_duration"] = LOW_QUALITY_FRAME_DURATION
+   elif args.medium_quality:
+      config["camera_config"] = MEDIUM_QUALITY_CAMERA_CONFIG
+      config["frame_duration"] = MEDIUM_QUALITY_FRAME_DURATION
+   else:
+      config["camera_config"] = PRODUCTION_QUALITY_CAMERA_CONFIG
+      config["frame_duration"] = PRODUCTION_QUALITY_FRAME_DURATION
+
    #By default, write to file
-   actions = ["write_to_movie", "preview", "save_image"]
+   actions = ["write_to_movie", "preview", "show_last_frame"]
    if not any([config[key] for key in actions]):
       config["write_to_movie"] = True
-   config["skip_animations"] = config["save_image"] and not config["write_to_movie"]
+   config["skip_animations"] = config["show_last_frame"] and not config["write_to_movie"]
 
-   if len(args) == 0:
-      print(HELP_MESSAGE)
-      sys.exit()
-   config["file"] = args[0]
-   if len(args) > 1:
-      config["scene_name"] = args[1]
    return config
 
 def handle_scene(scene, **config):
@@ -113,7 +111,7 @@ def handle_scene(scene, **config):
 
    if config["preview"]:
       scene.preview()
-   if config["save_image"]:
+   if config["show_last_frame"]:
       if not config["write_all"]:
          scene.show_frame()
       scene.save_image(mode = config["saved_image_mode"])
@@ -185,7 +183,7 @@ def get_module(file_name):
 
 
 def main():
-   config = get_configuration(sys.argv)
+   config = get_configuration()
    module = get_module(config["file"])
    scene_names_to_classes = dict(
       inspect.getmembers(module, is_scene)
