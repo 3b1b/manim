@@ -220,7 +220,7 @@ class DashedLine(Line):
         return self
 
     def get_start(self):
-        if len(self) > 0:
+        if len(self.points) > 0:
             return self[0].points[0]
         else:
             return self.start
