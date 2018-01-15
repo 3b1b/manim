@@ -382,6 +382,10 @@ class Succession(Animation):
             run_time = sum(self.run_times)
         self.num_anims = len(animations)
         self.animations = animations
+        self.last_index = 0
+        #Have to keep track of this run_time, because Scene.play
+        #might very well mess with it.
+        self.original_run_time = run_time
 
         mobject = Group(*[anim.mobject for anim in self.animations])
         Animation.__init__(self, mobject, run_time = run_time, **kwargs)
@@ -392,11 +396,17 @@ class Succession(Animation):
             return
         run_times = self.run_times
         index = 0
-        time = alpha*self.run_time
+        time = alpha*self.original_run_time
         while sum(run_times[:index+1]) < time:
             index += 1
+        if index > self.last_index:
+            self.animations[self.last_index].update(1)
+            self.animations[self.last_index].clean_up()
+            self.last_index = index
         curr_anim = self.animations[index]
-        sub_alpha = (time - sum(run_times[:index]))/run_times[index]
+        sub_alpha = np.clip(
+            (time - sum(run_times[:index]))/run_times[index], 0, 1
+        )
         curr_anim.update(sub_alpha)
 
 class AnimationGroup(Animation):
