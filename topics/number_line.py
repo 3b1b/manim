@@ -141,6 +141,9 @@ class Axes(VGroup):
             "color" : LIGHT_GREY,
             "include_tip" : True,
         },
+        "x_axis_config" : {},
+        "y_axis_config" : {},
+        "z_axis_config" : {},
         "x_min" : -SPACE_WIDTH,
         "x_max" : SPACE_WIDTH,
         "y_min" : -SPACE_HEIGHT,
@@ -151,27 +154,20 @@ class Axes(VGroup):
     }
     def __init__(self, **kwargs):
         VGroup.__init__(self, **kwargs)
-        self.x_axis = NumberLine(
-            x_min = self.x_min,
-            x_max = self.x_max,
-            **self.number_line_config
-        )
-        self.y_axis = NumberLine(
-            x_min = self.y_min,
-            x_max = self.y_max,
-            **self.number_line_config
-        )
+        self.x_axis = self.get_axis(self.x_min, self.x_max, self.x_axis_config)
+        self.y_axis = self.get_axis(self.y_min, self.y_max, self.y_axis_config)
         self.y_axis.rotate(np.pi/2)
         self.add(self.x_axis, self.y_axis)
         if self.three_d:
-            self.z_axis = NumberLine(
-                x_min = self.z_min,
-                x_max = self.z_max,
-                **self.number_line_config
-            )
+            self.z_axis = self.get_axis(self.z_min, self.z_max, self.z_axis_config)
             self.z_axis.rotate(-np.pi/2, UP)
             self.z_axis.rotate(angle_of_vector(self.z_normal), OUT)
             self.add(self.z_axis)
+
+    def get_axis(self, min_val, max_val, extra_config):
+        config = dict(self.number_line_config)
+        config.update(extra_config)
+        return NumberLine(x_min = min_val, x_max = max_val, **config)
 
     def coords_to_point(self, x, y):
         origin = self.x_axis.number_to_point(0)
