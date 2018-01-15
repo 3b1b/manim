@@ -35,12 +35,12 @@ class AddingPureFrequencies(PiCreatureScene):
         "A_frequency" : 2.1,
         "A_color" : YELLOW,
         "D_color" : PINK,
+        "F_color" : TEAL,
+        "C_color" : RED,
         "sum_color" : GREEN,
         "equilibrium_height" : 1.5,
     }
     def construct(self):
-        self.force_skipping()
-
         self.add_speaker()
         self.play_A440()
         self.measure_air_pressure()
@@ -66,9 +66,12 @@ class AddingPureFrequencies(PiCreatureScene):
 
         self.broadcast(
             FadeIn(A_label),
-            randy.change, "pondering"
+            Succession(
+                ApplyMethod, randy.change, "pondering",
+                Animation, randy,
+                Blink, randy
+            )
         )
-        self.dither()
 
         self.set_variables_as_attrs(A_label)
 
@@ -121,12 +124,12 @@ class AddingPureFrequencies(PiCreatureScene):
         )
         self.dither()
         self.broadcast(
-            randy.change, "erm", graph,
             ShowCreation(graph, run_time = 4, rate_func = None),
             ShowCreation(equilibrium_line),
         )
         axes.add(equilibrium_line)
         self.play(
+            randy.change, "erm", graph,
             GrowFromCenter(brace),
             Write(words)
         )
@@ -235,35 +238,27 @@ class AddingPureFrequencies(PiCreatureScene):
         top_axes_point = axes.coords_to_point(x, self.equilibrium_height)
         x_point = np.array(top_axes_point)
         x_point[1] = 0
-        l_rect, r_rect = rects = VGroup(*[
-            FullScreenFadeRectangle().next_to(x_point, vect, SMALL_BUFF)
-            for vect in LEFT, RIGHT
-        ])
-        rects.save_state()
-        for rect, vect in zip(rects, [LEFT, RIGHT]):
-            rect.next_to(SPACE_WIDTH*vect, vect)
+        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT).move_to(x_point)
 
-        self.play(rects.restore)
+        self.revert_to_original_skipping_status()
+        self.play(GrowFromCenter(v_line))
+        self.play(FadeOut(v_line))
         self.play(*map(ShowCreation, lines))
         self.dither()
         self.play(MoveToTarget(sum_lines, path_arc = np.pi/4))
         self.dither(2)
-        self.play(
-            l_rect.next_to, SPACE_WIDTH*LEFT, LEFT,
-            r_rect.next_to, SPACE_WIDTH*RIGHT, RIGHT,
-            *[
-                Transform(
-                    line, 
-                    VectorizedPoint(axes.coords_to_point(0, self.equilibrium_height)),
-                    remover = True
-                )
-                for line, axes in [
-                    (A_line, A_axes),
-                    (D_line, D_axes),
-                    (sum_lines, axes),
-                ]
+        self.play(*[
+            Transform(
+                line, 
+                VectorizedPoint(axes.coords_to_point(0, self.equilibrium_height)),
+                remover = True
+            )
+            for line, axes in [
+                (A_line, A_axes),
+                (D_line, D_axes),
+                (sum_lines, axes),
             ]
-        )
+        ])
 
     def draw_full_sum(self):
         axes = self.axes
@@ -274,43 +269,82 @@ class AddingPureFrequencies(PiCreatureScene):
             result -= self.equilibrium_height
             return result
 
-        graph = axes.get_graph(new_func)
-        graph.highlight(self.sum_color)
-        graph_copy = graph.deepcopy()
+        sum_graph = axes.get_graph(new_func)
+        sum_graph.highlight(self.sum_color)
 
-        all_v_lines = VGroup(
-            self.get_A_graph_v_line(0),
-            self.get_D_graph_v_line(0),
-            self.get_graph_v_line(0, axes, graph)
-        )
-        x_max = axes.x_max
-        def update_all_v_lines(v_lines, alpha):
-            A_line, D_line, sum_line = v_lines
-            x = alpha*x_max
-            Transform(A_line, self.get_A_graph_v_line(x)).update(1)
-            Transform(D_line, self.get_D_graph_v_line(x)).update(1)
-            Transform(
-                sum_line, 
-                self.get_graph_v_line(x, axes, graph_copy)
-            ).update(1)
-            return v_lines
-
+        ##TODO
         self.play(
-            UpdateFromAlphaFunc(all_v_lines, update_all_v_lines),
-            ShowCreation(graph),
+            self.get_graph_line_animation(self.A_axes, self.A_graph),
+            self.get_graph_line_animation(self.D_axes, self.D_graph),
+            self.get_graph_line_animation(axes, sum_graph.deepcopy()),
+            ShowCreation(sum_graph),
             run_time = 15,
             rate_func = None
         )
         self.dither()
 
+        self.sum_graph = sum_graph
+
     def add_more_notes(self):
         axes = self.axes
-        A_label = self.A_label
-        D_label = self.D_label
-        
-        A_group = VGroup(self.A_axes, self.A_graph)
-        D_group = VGroup(self.D_axes, self.D_graph)
 
+        A_group = VGroup(self.A_axes, self.A_graph, self.A_label)
+        D_group = VGroup(self.D_axes, self.D_graph, self.D_label)
+        squish_group = VGroup(A_group, D_group)
+        squish_group.generate_target()
+        squish_group.target.stretch(0.5, 1)
+        squish_group.target.next_to(axes, DOWN, buff = -SMALL_BUFF)
+        for group in squish_group.target:
+            label = group[-1]
+            bottom = label.get_bottom()
+            label.stretch_in_place(0.5, 0)
+            label.move_to(bottom, DOWN)
+
+        self.play(MoveToTarget(squish_group))
+
+        F_axes = self.D_axes.deepcopy()
+        C_axes = self.A_axes.deepcopy()
+        VGroup(F_axes, C_axes).next_to(squish_group, DOWN)
+        F_graph = self.get_wave_graph(self.A_frequency*4.0/5, F_axes)
+        F_graph.highlight(self.F_color)
+        C_graph = self.get_wave_graph(self.A_frequency*6.0/5, C_axes)
+        C_graph.highlight(self.C_color)
+
+        F_label = TextMobject("F349")
+        C_label = TextMobject("C523")
+        for label, graph in (F_label, F_graph), (C_label, C_graph):
+            label.scale(0.5)
+            label.highlight(graph.get_stroke_color())
+            label.next_to(graph, UP, SMALL_BUFF)
+
+        graphs = [self.A_graph, self.D_graph, F_graph, C_graph]
+        def new_sum_func(x):
+            result = sum([
+                graph.underlying_function(x) - self.equilibrium_height
+                for graph in graphs
+            ])
+            result *= 0.5
+            return result + self.equilibrium_height
+        new_sum_graph = self.axes.get_graph(new_sum_func)
+        new_sum_graph.highlight(BLUE_C)
+
+        self.play(*it.chain(
+            map(ShowCreation, [F_axes, C_axes, F_graph, C_graph,]),
+            map(Write, [F_label, C_label]),
+            [FadeOut(self.sum_graph)]
+        ))
+        kwargs = {"rate_func" : None, "run_time" : 10}
+        self.play(ShowCreation(new_sum_graph.copy(), **kwargs), *[
+            self.get_graph_line_animation(curr_axes, graph, **kwargs)
+            for curr_axes, graph in [
+                (self.A_axes, self.A_graph),
+                (self.D_axes, self.D_graph),
+                (F_axes, F_graph),
+                (C_axes, C_graph),
+                (axes, new_sum_graph),
+            ]
+        ])
+        self.dither()
 
     ####
 
@@ -364,8 +398,16 @@ class AddingPureFrequencies(PiCreatureScene):
     def create_pi_creature(self):
         return Randolph().to_corner(DOWN+LEFT)
 
+    def get_graph_line_animation(self, axes, graph, **kwargs):
+        line = self.get_graph_v_line(0, axes, graph)
+        x_max = axes.x_max
+        def update_line(line, alpha):
+            x = alpha*x_max
+            Transform(line, self.get_graph_v_line(x, axes, graph)).update(1)
+            return line
 
-
+        return UpdateFromAlphaFunc(line, update_line, **kwargs)
+        
 
 
 
