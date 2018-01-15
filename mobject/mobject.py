@@ -496,9 +496,12 @@ class Mobject(object):
             return 0
 
     def get_merged_array(self, array_attr):
-        result = np.zeros((0, self.dim))
+        result = None
         for mob in self.family_members_with_points():
-            result = np.append(result, getattr(mob, array_attr), 0)
+            if result is None:
+                result = getattr(mob, array_attr)
+            else:
+                result = np.append(result, getattr(mob, array_attr), 0)
         return result
 
     def get_all_points(self):

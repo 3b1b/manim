@@ -47,7 +47,6 @@ class PMobject(Mobject):
             ])
         return self
 
-
     def match_colors(self, mobject):
         Mobject.align_data(self, mobject)
         self.rgbas = np.array(mobject.rgbas)
