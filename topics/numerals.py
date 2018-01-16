@@ -43,8 +43,6 @@ class Integer(VGroup):
         if num_str[0] == "-":
             self[0].next_to(self[1], LEFT, buff = SMALL_BUFF)
 
-#Todo, this class is now broken
-
 class ChangingDecimal(Animation):
     CONFIG = {
         "num_decimal_points" : None,

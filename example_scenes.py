@@ -50,3 +50,13 @@ class WriteStuff(Scene):
         self.play(Write(TextMobject("Stuff").scale(3)))
 
 
+
+
+
+
+
+
+
+
+
+

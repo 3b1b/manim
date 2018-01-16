@@ -519,7 +519,7 @@ class Quadrant(Mobject1D):
     CONFIG = {
         "radius" : 2,
         "stroke_width": 2,
-        "density" : 75,
+        "density" : 45,
     }
     def generate_points(self):
         self.add_points([
@@ -541,11 +541,8 @@ class UnmixMixedPaint(Scene):
         quadrants.ingest_submobjects()
         quadrants.sort_points(lambda p : np.random.random())
 
-        start_rgbas = np.array(quadrants.rgbas)
-        target_rgbas = np.zeros(start_rgbas.shape)
-        mud_color = average_color(*self.colors)
-        target_rgbas[:,:] = color_to_rgba(mud_color)
 
+        mud_color = average_color(*self.colors)
         background_circle = Circle(
             radius = 2, 
             stroke_width = 0,
@@ -553,28 +550,111 @@ class UnmixMixedPaint(Scene):
             fill_opacity = 1
         )
 
-        def update_color(quadrants, alpha):
-            quadrants.rgbas = interpolate(start_rgbas, target_rgbas, alpha)
+        # start_rgbas = np.array(quadrants.rgbas)
+        # target_rgbas = np.zeros(start_rgbas.shape)
+        # target_rgbas[:,:] = color_to_rgba(mud_color)
+        # def update_color(quadrants, alpha):
+        #     quadrants.rgbas = interpolate(start_rgbas, target_rgbas, alpha)
 
-        self.add(background_circle, quadrants)
+        dot = Dot()
+        permutation = range(len(quadrants.points))
+        random.shuffle(permutation)
+        def update_quadrants(quadrants, alpha):
+            points = quadrants.points
+            points += dot.get_center()
+            points[:,0] -= points[:,1]
+            points -= dot.get_center()
+
+            quadrants.points = interpolate(
+                quadrants.points, quadrants.points[permutation],
+                0.01,
+            )
+
+
+        self.add(quadrants)
         self.play(
-            PhaseFlow(
-                lambda p : rotate_vector(p, np.pi/2+0.01)/(max(np.linalg.norm(p), 0.001)),
-                quadrants,
-                virtual_time = 20,
-            ),
-            UpdateFromAlphaFunc(quadrants, update_color),
-            run_time = 10,
+            # PhaseFlow(
+            #     lambda p : rotate_vector(p, np.pi/2+0.01)/(max(np.linalg.norm(p), 0.001)),
+            #     quadrants,
+            #     virtual_time = 20,
+            # ),
+            # UpdateFromAlphaFunc(quadrants, update_color),
+            UpdateFromAlphaFunc(quadrants, update_quadrants),
+            run_time = 3,
         )
 
+#Incomplete, and probably not useful
+class MachineThatTreatsOneFrequencyDifferently(Scene):
+    def construct(self):
+        graph = self.get_cosine_graph(0.5)
+        frequency_mob = DecimalNumber(220, num_decimal_points = 0)
+        frequency_mob.next_to(graph, UP, buff = MED_LARGE_BUFF)
+
+        self.graph = graph
+        self.frequency_mob = frequency_mob
+        self.add(graph, frequency_mob)
+
+        arrow1, q_marks, arrow2 = group = VGroup(
+            Vector(DOWN), TextMobject("???").scale(1.5), Vector(DOWN)
+        )
+        group.highlight(WHITE)
+        group.arrange_submobjects(DOWN)
+        group.next_to(graph, DOWN)
+        self.add(group)
+
+        self.change_graph_frequency(1)
+        graph.highlight(GREEN)
+        self.dither()
+        graph.highlight(YELLOW)
+        self.change_graph_frequency(2)
+        self.dither()
 
 
+    def change_graph_frequency(self, frequency, run_time = 2):
+        graph = self.graph
+        frequency_mob = self.frequency_mob
+        curr_frequency = graph.frequency
+        self.play(
+            UpdateFromAlphaFunc(
+                graph, self.get_signal_update_func(graph, frequency),
+            ),
+            ChangingDecimal(
+                frequency_mob, 
+                lambda a : 440*interpolate(curr_frequency, frequency, a)
+            ),
+            run_time = run_time,
+        )
+        graph.frequency = frequency
+
+    def get_signal_update_func(self, graph, target_frequency):
+        curr_frequency = graph.frequency
+        def update(graph, alpha):
+            frequency = interpolate(curr_frequency, target_frequency, alpha)
+            new_graph = self.get_cosine_graph(frequency)
+            Transform(graph, new_graph).update(1)
+            return graph
+        return update
+
+    def get_cosine_graph(self, frequency, num_steps = 200, color = YELLOW):
+        result = FunctionGraph(
+            lambda x : 0.5*np.cos(2*np.pi*frequency*x),
+            num_steps = num_steps
+        )
+        result.frequency = frequency
+        result.shift(2*UP)
+        return result
+
+class FourierMachineScene(Scene):
+    CONFIG = {
+
+    }
+    def get_time_graph_axes(self):
+        pass
 
 
-
-
-
-
+class FourierMachineSceneTest(FourierMachineScene):
+    def construct(self):
+        pass
 
 
 
