@@ -175,6 +175,12 @@ class Axes(VGroup):
         y_axis_projection = self.y_axis.number_to_point(y)
         return x_axis_projection + y_axis_projection - origin
 
+    def point_to_coords(self, point):
+        return (
+            self.x_axis.point_to_number(point), 
+            self.y_axis.point_to_number(point),
+        )
+
     def get_graph(self, function, num_graph_points = 40, **kwargs):
         kwargs["fill_opacity"] = kwargs.get("fill_opacity", 0)
         graph = VMobject(**kwargs)
@@ -184,6 +190,9 @@ class Axes(VGroup):
         ])
         graph.underlying_function = function
         return graph
+
+    def input_to_graph_point(self, x, graph):
+        return self.coords_to_point(x, graph.underlying_function(x))
 
 class ThreeDAxes(Axes):
     CONFIG = {
