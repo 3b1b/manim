@@ -63,9 +63,9 @@ class ShowMultiplication(NumberLineScene):
         NumberLineScene.construct(self, **config)
         if show_original_line:
             self.copy_original_line()
-        self.dither()
+        self.wait()
         self.show_multiplication(num, run_time = 1.5)
-        self.dither()
+        self.wait()
 
     def copy_original_line(self):
         copied_line = deepcopy(self.number_line)
@@ -79,7 +79,7 @@ class ShowMultiplication(NumberLineScene):
                 for mob in copied_num_mobs
             ]
         )
-        self.dither()
+        self.wait()
 
 class ExamplesOfOneDimensionalLinearTransforms(ShowMultiplication):
     args_list = []
@@ -108,7 +108,7 @@ class ExamplesOfNonlinearOneDimensionalTransforms(NumberLineScene):
         ]
         for func, explanation in pairs:
             self.run_function(func, explanation)
-            self.dither(3)
+            self.wait(3)
 
     def run_function(self, function, explanation):
         self.clear()
@@ -149,9 +149,9 @@ class ShowTwoThenThree(ShowMultiplication):
         NumberLineScene.construct(self, **config)
         self.copy_original_line()
         self.show_multiplication(2)
-        self.dither()
+        self.wait()
         self.show_multiplication(3)
-        self.dither()
+        self.wait()
 
 
 ########################################################
@@ -234,7 +234,7 @@ class ShowMatrixTransform(TransformScene2D):
             mobject.points[:, :2] = np.dot(mobject.points[:, :2], np.transpose(matrix))
             return mobject
 
-        self.dither()
+        self.wait()
         kwargs = {
             "run_time" : 2.0,
             "path_func" : self.get_path_func(matrix)
@@ -255,7 +255,7 @@ class ShowMatrixTransform(TransformScene2D):
                 new_arrow.add_tip()
                 anims.append(Transform(arrow, new_arrow, **kwargs))
         self.play(*anims)
-        self.dither()
+        self.wait()
 
     def get_density_factor(self, matrix):
         max_norm = max([
@@ -328,7 +328,7 @@ class ExamplesOfNonlinearTwoDimensionalTransformations(Scene):
 
         self.add(number_plane, *numbers)
         self.add(self.blackness, self.nonlinear, words)
-        self.dither()
+        self.wait()
         self.play(
             ApplyPointwiseFunction(function, number_plane),
             *[
@@ -344,7 +344,7 @@ class ExamplesOfNonlinearTwoDimensionalTransformations(Scene):
             ],
             run_time = 2.0
         )
-        self.dither(3)
+        self.wait(3)
 
     def get_blackness(self):
         vertices = [
@@ -407,13 +407,13 @@ class TrickyExamplesOfNonlinearTwoDimensionalTransformations(Scene):
     def run_function(self, function, plane, phrase, remove_plane = True):
         number_plane = deepcopy(plane)
         self.add(number_plane, self.blackness, phrase)
-        self.dither()
+        self.wait()
         self.play(
             ApplyPointwiseFunction(function, number_plane, run_time = 2.0),
             Animation(self.blackness),            
             Animation(phrase),
         )
-        self.dither(3)
+        self.wait(3)
         if remove_plane:
             self.remove(number_plane)
 
@@ -472,7 +472,7 @@ class ShowMatrixTransformWithDot(TransformScene2D):
 
         self.play(ApplyMethod(x_arrow_copy.rotate, np.pi))
         self.play(ShowCreation(y_arrow_copy))
-        self.dither()
+        self.wait()
         self.remove(x_arrow_copy, y_arrow_copy)
         kwargs = {
             "run_time" : 2.0,
@@ -497,13 +497,13 @@ class ShowMatrixTransformWithDot(TransformScene2D):
                 new_arrow.add_tip()
                 anims.append(Transform(arrow, new_arrow, **kwargs))
         self.play(*anims)
-        self.dither()
+        self.wait()
 
         x_arrow_copy = deepcopy(self.x_arrow)
         y_arrow_copy = Arrow(LEFT+2*UP, 5*RIGHT+2*UP, color = LIGHT_RED, **ARROW_CONFIG)
         self.play(ApplyMethod(x_arrow_copy.rotate, np.pi))
         self.play(ShowCreation(y_arrow_copy))
-        self.dither(3)
+        self.wait(3)
         self.remove(x_arrow_copy, y_arrow_copy)        
 
     def get_density_factor(self, matrix):
@@ -534,10 +534,10 @@ class Show90DegreeRotation(TransformScene2D):
         self.add_background()
         self.add_x_y_arrows()
 
-        self.dither()
+        self.wait()
         self.play(*[
             RotationAsTransform(mob, run_time = 2.0)
             for mob in self.number_plane, self.x_arrow, self.y_arrow
         ])
-        self.dither()
+        self.wait()
 

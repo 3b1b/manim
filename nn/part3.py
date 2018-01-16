@@ -30,7 +30,7 @@ class LayOutPlan(Scene):
         )
         for i in range(len(items)):
             self.play(items.fade_all_but, i)
-            self.dither(2)
+            self.wait(2)
 
 class TODOInsertFeedForwardAnimations(TODOStub):
     CONFIG = {
@@ -145,7 +145,7 @@ class InterpretGradientComponents(GradientNudging):
         self.play(FadeIn(randy))
         self.play(randy.change, "confused", words)
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [randy, words, arrow]))
 
     def circle_magnitudes(self):
@@ -199,10 +199,10 @@ class InterpretGradientComponents(GradientNudging):
         )
         self.play(GrowArrow(d1.arrow))
         self.play(ShowCreation(edge1))
-        self.dither()
+        self.wait()
         self.play(GrowArrow(d2.arrow))
         self.play(ShowCreation(edge2))
-        self.dither(2)
+        self.wait(2)
 
         self.cost_expression.remove(w_terms)
         self.cost_expression.add(new_w_terms)
@@ -285,7 +285,7 @@ class InterpretGradientComponents(GradientNudging):
                     rate_func = lambda t : wiggle(t, 4),
                     run_time = 2,
                 )
-                self.dither()
+                self.wait()
             self.play(*map(FadeOut, [
                 w.dot, w.brace, w.number_line, w.words
             ]))
@@ -389,9 +389,9 @@ class GetLostInNotation(PiCreatureScene):
             Write(equations),
             morty.change, "confused", equations
         )
-        self.dither()
+        self.wait()
         self.play(morty.change, "pleading")
-        self.dither(2)
+        self.wait(2)
 
         ##
         movers = VGroup(*equations.family_members_with_points())
@@ -413,7 +413,7 @@ class GetLostInNotation(PiCreatureScene):
             ),
             morty.change, "pondering",
         )
-        self.dither()
+        self.wait()
 
 class TODOInsertPreviewLearning(TODOStub):
     CONFIG = {
@@ -476,7 +476,7 @@ class ShowAveragingCost(PreviewLearning):
         n_examples_per_adjustment = int(self.examples_per_adjustment_time/self.time_per_example)
         for train_in, train_out in training_data[:n_start_examples]:
             self.show_one_example(train_in, train_out)
-            self.dither(self.time_per_example)
+            self.wait(self.time_per_example)
 
         #Wiggle all edges
         edges = VGroup(*it.chain(*self.network_mob.edge_groups))
@@ -506,7 +506,7 @@ class ShowAveragingCost(PreviewLearning):
                 self.play(FadeIn(words[x]))
             for train_in, train_out in training_data[:n_examples_per_adjustment]:
                 self.show_one_example(train_in, train_out)
-                self.dither(self.time_per_example)
+                self.wait(self.time_per_example)
             self.play(LaggedStart(
                 ApplyMethod, reversed_edges,
                 lambda m : (m.rotate_in_place, np.pi),
@@ -514,7 +514,7 @@ class ShowAveragingCost(PreviewLearning):
                 lag_ratio = 0.2,
             ))
             if x >= 2:
-                self.dither()
+                self.wait()
 
     ####
 
@@ -540,7 +540,7 @@ class ShowAveragingCost(PreviewLearning):
 class FocusOnOneExample(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("Focus on just \\\\ one example")
-        self.dither(2)
+        self.wait(2)
 
 class WalkThroughTwoExample(ShowAveragingCost):
     CONFIG = {
@@ -577,7 +577,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
             layer.neurons.set_fill(opacity = 0)
 
         self.activate_network(two_vect)
-        self.dither()
+        self.wait()
 
     def single_example_influencing_weights(self):
         two = self.curr_image
@@ -614,7 +614,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
             adjust_edge_group_anim(edge_groups[2])
         )
         self.play(two.restore)
-        self.dither()
+        self.wait()
 
     def expand_last_layer(self):
         neurons = self.network_mob.layers[-1].neurons
@@ -679,7 +679,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
             decimals.add(decimal)
 
         self.play(Write(decimals, run_time = 2))
-        self.dither()
+        self.wait()
         self.decimals = decimals
 
     def cannot_directly_affect_activations(self):
@@ -735,7 +735,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
             output_labels.shift, SMALL_BUFF*RIGHT,
             LaggedStart(GrowArrow, arrows, run_time = 1)
         )
-        self.dither()
+        self.wait()
 
         #Show changing activations
         anims = []
@@ -765,10 +765,10 @@ class WalkThroughTwoExample(ShowAveragingCost):
         eight_rect = rects[8].copy()
         non_two_rects = VGroup(*[r for r in rects if r is not two_rect])
         self.play(ShowCreation(two_rect))
-        self.dither()
+        self.wait()
         self.remove(two_rect)
         self.play(ReplacementTransform(two_rect.copy(), non_two_rects))
-        self.dither()
+        self.wait()
         self.play(LaggedStart(FadeOut, non_two_rects, run_time = 1))
         self.play(LaggedStart(
             ApplyFunction, arrows,
@@ -779,9 +779,9 @@ class WalkThroughTwoExample(ShowAveragingCost):
             rate_func = wiggle
         ))
         self.play(ShowCreation(two_rect))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(two_rect, eight_rect))
-        self.dither()
+        self.wait()
         self.play(FadeOut(eight_rect))
 
         self.arrows = arrows
@@ -809,7 +809,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
         ))
 
         self.play(FadeOut(to_fade))
-        self.dither()
+        self.wait()
         for mob in expanded_mobjects:
             if mob in [neurons, labels]:
                 mob.scale(0.5)
@@ -873,19 +873,19 @@ class WalkThroughTwoExample(ShowAveragingCost):
             Write(dots),
             run_time = 1.5
         )
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             prev_neurons.copy(), a_terms,
             path_arc = np.pi/2
         ))
-        self.dither()
+        self.wait()
         self.play(
             Write(plus_terms[-1]),
             Write(b)
         )
-        self.dither()
+        self.wait()
         self.play(sigma.restore)
-        self.dither()
+        self.wait()
         for mob in b, w_terms, a_terms:
             self.play(
                 mob.shift, MED_SMALL_BUFF*DOWN,
@@ -893,7 +893,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
                 submobject_mode = "lagged_start",
                 run_time = 1.5
             )
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(
             rhs, w_terms, a_terms, b,
@@ -927,7 +927,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
                 Write(words[0], run_time = 1),
                 ReplacementTransform(mob.copy(), words[1])
             )
-            self.dither()
+            self.wait()
 
         self.increase_words = increase_words
 
@@ -971,7 +971,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
             ),
             rate_func = wiggle
         ))
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(bright_edges),
             ShowCreation(bright_neurons)
@@ -981,13 +981,13 @@ class WalkThroughTwoExample(ShowAveragingCost):
             lambda m : (m.shift, MED_LARGE_BUFF*LEFT),
             rate_func = there_and_back
         ))
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(bright_edges[0].copy(), w_terms[0]),
             ReplacementTransform(bright_neurons[0].copy(), a_terms[0]),
             ShowCreation(terms_rect)
         )
-        self.dither()
+        self.wait()
         for x in range(2):
             self.play(LaggedStart(ShowCreationThenDestruction, bright_edges))
         self.play(LaggedStart(ShowCreation, bright_edges))
@@ -997,14 +997,14 @@ class WalkThroughTwoExample(ShowAveragingCost):
             rate_func = there_and_back
         ))
         self.play(FadeOut(terms_rect))
-        self.dither()
+        self.wait()
         self.play(
             self.curr_image.shift, MED_LARGE_BUFF*RIGHT,
             rate_func = wiggle
         )
-        self.dither()
+        self.wait()
         self.play(Write(added_words))
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(
             bright_neurons, bright_edges,
@@ -1085,19 +1085,19 @@ class WalkThroughTwoExample(ShowAveragingCost):
             LaggedStart(ShowCreation, bright_edges),
             run_time = 2,
         )
-        self.dither()
+        self.wait()
         self.play(
             LaggedStart(ShowCreation, neuron_rects),
             Write(seeing_words, run_time = 2),
             morty.change, "thinking", seeing_words
         )
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(two_neuron_rect),
             Write(thinking_words, run_time = 2),
             morty.look_at, thinking_words
         )
-        self.dither()
+        self.wait()
         self.play(LaggedStart(FadeOut, VGroup(
             neuron_rects, two_neuron_rect,
             seeing_words, thinking_words,
@@ -1169,7 +1169,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
             ),
             rate_func = wiggle
         ))
-        self.dither()
+        self.wait()
         for positive in [True, False]:
             if positive:
                 arrows = positive_arrows
@@ -1183,7 +1183,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
                 color = self.negative_edge_color
             s_edges.save_state()
             self.play(Transform(s_edges, s_edges.alt_position))
-            self.dither(0.5)
+            self.wait(0.5)
             self.play(s_edges.restore)
             self.play(
                 LaggedStart(GrowArrow, arrows),
@@ -1193,7 +1193,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
                 neurons.set_fill, color, 1,
                 rate_func = there_and_back,
             ))
-        self.dither()
+        self.wait()
         self.play(
             two_neuron.set_fill, None, 0.8,
             ChangingDecimal(
@@ -1203,7 +1203,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
             run_time = 3,
             rate_func = there_and_back
         )
-        self.dither()
+        self.wait()
         self.play(*[
             ApplyMethod(
                 edge.set_stroke, None, 3*edge.get_stroke_width(),
@@ -1212,7 +1212,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
             )
             for edge in edges
         ])
-        self.dither()
+        self.wait()
         self.play(Write(added_words, run_time = 1))
         self.play(prev_neurons.set_stroke, WHITE, 2)
 
@@ -1239,12 +1239,12 @@ class WalkThroughTwoExample(ShowAveragingCost):
             Indicate, prev_neurons,
             rate_func = wiggle
         ))
-        self.dither()
+        self.wait()
         self.play(LaggedStart(
             ShowCreationThenDestruction, edges
         ))
         self.play(Transform(words1, words2))
-        self.dither()
+        self.wait()
         self.play(FadeOut(VGroup(words1, rect)))
 
     def show_other_output_neurons(self):
@@ -1318,7 +1318,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
             Write(all_dots_plus),
             run_time = 3,
         )
-        self.dither(2)
+        self.wait(2)
 
         ##
         words = TextMobject("Propagate backwards")
@@ -1333,7 +1333,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
         rect.set_fill(BLACK, 1)
         rect.set_stroke(BLACK, 0)
         self.play(Write(words))
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(self.network_mob.edge_groups[-1]),
             FadeIn(rect),
@@ -1359,7 +1359,7 @@ class WalkThroughTwoExample(ShowAveragingCost):
             FadeIn(prev_neurons),
             LaggedStart(ShowCreation, edges),
         )
-        self.dither()
+        self.wait()
         for neuron, arrow in zip(neurons, self.prev_neuron_arrows):
             edge_copies = neuron.edges_in.copy()
             for edge in edge_copies:
@@ -1393,7 +1393,7 @@ class WriteHebbian(Scene):
         words.scale_to_fit_width(2*SPACE_WIDTH - 1)
         words.to_edge(UP)
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
 class NotANeuroScientist(TeacherStudentsScene):
     def construct(self):
@@ -1452,13 +1452,13 @@ class NotANeuroScientist(TeacherStudentsScene):
             Write(no_claim_words, run_time = 1),
             brain_anim
         )
-        self.dither()
+        self.wait()
         self.play(brain_anim)
         self.play(FocusOn(asterisks))
         self.play(Write(asterisks, run_time = 1))
         for x in range(2):
             self.play(brain_anim)
-            self.dither()
+            self.wait()
 
 class ConstructGradientFromAllTrainingExamples(Scene):
     CONFIG = { 
@@ -1536,7 +1536,7 @@ class ConstructGradientFromAllTrainingExamples(Scene):
             if random.random() < 0.5:
                 self.play(two.eyes.blink_anim())
             else:
-                self.dither()
+                self.wait()
             if i == 0:
                 added_anims = [
                     FadeOut(self.brace),
@@ -1561,7 +1561,7 @@ class ConstructGradientFromAllTrainingExamples(Scene):
                 *added_anims
             )
             self.two_changes.add(change)
-        self.dither()
+        self.wait()
 
     def show_all_examples_requesting_changes(self):
         training_data, validation_data, test_data = load_data_wrapper()
@@ -1702,7 +1702,7 @@ class ConstructGradientFromAllTrainingExamples(Scene):
             *look_at_anims(averages[1])
         )
         self.blink(3)
-        self.dither()
+        self.wait()
 
         averages.add(dots)
         self.set_variables_as_attrs(
@@ -1770,7 +1770,7 @@ class ConstructGradientFromAllTrainingExamples(Scene):
             GrowFromCenter(eta),
             minus.shift, MED_SMALL_BUFF*LEFT
         )
-        self.dither()
+        self.wait()
 
     ####
 
@@ -1843,7 +1843,7 @@ class WatchPreviousScene(TeacherStudentsScene):
             ),
             ShowCreation(screen)
         )
-        self.dither(10)
+        self.wait(10)
 
 class OpenCloseSGD(Scene):
     def construct(self):
@@ -1861,9 +1861,9 @@ class OpenCloseSGD(Scene):
         term[1].scale(0.0001).move_to(center)
 
         self.play(term.restore)
-        self.dither(2)
+        self.wait(2)
         self.play(Transform(term[0], alt_term0))
-        self.dither(2)
+        self.wait(2)
 
 class OrganizeDataIntoMiniBatches(Scene):
     CONFIG = {
@@ -1898,7 +1898,7 @@ class OrganizeDataIntoMiniBatches(Scene):
             lag_ratio = 0.2,
             run_time = 4
         ))
-        self.dither()
+        self.wait()
 
         self.examples = examples
 
@@ -1910,7 +1910,7 @@ class OrganizeDataIntoMiniBatches(Scene):
             run_time = 3,
             path_arc = np.pi/3,
         ))
-        self.dither()
+        self.wait()
 
     def divide_into_minibatches(self):
         examples = self.examples
@@ -1944,7 +1944,7 @@ class OrganizeDataIntoMiniBatches(Scene):
             lag_ratio = 0.7,
             rate_func = there_and_back
         ))
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(rows, rects, mini_batches_words)
 
@@ -1979,7 +1979,7 @@ class OrganizeDataIntoMiniBatches(Scene):
                 brace.next_to, row, UP, SMALL_BUFF
             )
             self.play(indicate_row(row))
-        self.dither()
+        self.wait()
 
 
     ###
@@ -2029,14 +2029,14 @@ class SwimmingInTerms(TeacherStudentsScene):
             LaggedStart(FadeIn, terms),
             self.get_student_changes(*["horrified"]*3)
         )
-        self.dither()
+        self.wait()
         self.play(
             terms[-1].next_to, self.teacher.get_corner(UP+LEFT), UP,
             FadeOut(VGroup(*terms[:-1])),
             self.teacher.change, "raise_right_hand",
             self.get_student_changes(*["pondering"]*3)
         )
-        self.dither()
+        self.wait()
 
 class BackpropCode(ExternallyAnimatedScene):
     pass
@@ -2056,7 +2056,7 @@ class BackpropCodeAddOn(PiCreatureScene):
                 morty.look, UP+LEFT
             )
             self.play(morty.look, LEFT)
-            self.dither(2)
+            self.wait(2)
 
 class CannotFollowCode(TeacherStudentsScene):
     def construct(self):
@@ -2071,14 +2071,14 @@ class CannotFollowCode(TeacherStudentsScene):
             look_at_arg = self.teacher.eyes
         )
         self.play(self.teacher.change, "hesitant")
-        self.dither(2)
+        self.wait(2)
         self.teacher_says(
             "Let's get to the \\\\ calculus then",
             target_mode = "hooray",
             added_anims = [self.get_student_changes(*3*["plain"])],
             run_time = 1
         )
-        self.dither(2)
+        self.wait(2)
 
 class EOCWrapper(Scene):
     def construct(self):
@@ -2089,7 +2089,7 @@ class EOCWrapper(Scene):
 
         self.add(title)
         self.play(ShowCreation(screen))
-        self.dither()
+        self.wait()
 
 class SimplestNetworkExample(PreviewLearning):
     CONFIG = {
@@ -2189,7 +2189,7 @@ class SimplestNetworkExample(PreviewLearning):
         self.network_mob = simple_network_mob
         self.network = self.network_mob.neural_network
         self.feed_forward(np.array([0.5]))
-        self.dither()
+        self.wait()
 
     def show_weights_and_biases(self):
         network_mob = self.network_mob
@@ -2219,9 +2219,9 @@ class SimplestNetworkExample(PreviewLearning):
         random.shuffle(variables.submobjects)
 
         self.play(ReplacementTransform(edges.copy(), w_terms))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(neurons.copy(), b_terms))
-        self.dither()
+        self.wait()
         self.play(Write(other_terms))
         for x in range(2):
             self.play(LaggedStart(
@@ -2229,7 +2229,7 @@ class SimplestNetworkExample(PreviewLearning):
                 rate_func = wiggle,
                 run_time = 4,
             ))
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(other_terms),
             ReplacementTransform(w_terms, edges),
@@ -2248,7 +2248,7 @@ class SimplestNetworkExample(PreviewLearning):
             ApplyMethod, to_fade,
             lambda m : (m.fade, 0.9)
         ))
-        self.dither()
+        self.wait()
 
         self.prev_layers = to_fade
 
@@ -2302,7 +2302,7 @@ class SimplestNetworkExample(PreviewLearning):
                 run_time = 2,
                 rate_func = there_and_back,
             )
-            self.dither()
+            self.wait()
 
         not_exponents = TextMobject("Not exponents")
         not_exponents.next_to(superscript_rects, DOWN, MED_LARGE_BUFF)
@@ -2315,7 +2315,7 @@ class SimplestNetworkExample(PreviewLearning):
             ),
             Write(not_exponents, run_time = 2)
         )
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [not_exponents, superscript_rects]))
 
         self.set_variables_as_attrs(
@@ -2348,12 +2348,12 @@ class SimplestNetworkExample(PreviewLearning):
             ShowCreation(rect),
             Write(words, run_time = 1)
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(y_label, run_time = 1),
             GrowArrow(y_label_arrow)
         )
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(
             y_label, y_label_arrow,
@@ -2418,13 +2418,13 @@ class SimplestNetworkExample(PreviewLearning):
             MoveToTarget(decimals),
             FadeIn(non_numbers)
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(cost_word, run_time = 1),
             GrowArrow(cost_arrow)
         )
         self.play(C0.shift, MED_SMALL_BUFF*UP, rate_func = wiggle)
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [decimals, non_numbers]))
 
         self.set_variables_as_attrs(
@@ -2458,13 +2458,13 @@ class SimplestNetworkExample(PreviewLearning):
         self.play(ReplacementTransform(
             edge.copy(), wL
         ))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(pre_aLm1, aLm1))
-        self.dither()
+        self.wait()
         self.play(Write(VGroup(plus, bL), run_time = 1))
-        self.dither()
+        self.wait()
         self.play(sigma_group.restore)
-        self.dither()
+        self.wait()
 
         weighted_sum_terms = VGroup(wL, aLm1, plus, bL)
         self.set_variables_as_attrs(
@@ -2506,7 +2506,7 @@ class SimplestNetworkExample(PreviewLearning):
             MoveToTarget(aL_start),
             MoveToTarget(rp),
         )
-        self.dither()
+        self.wait()
 
         zL_formula = VGroup(z_label, equals, *terms)
         aL_formula = VGroup(*list(aL_start) + [z_label2, rp])
@@ -2559,27 +2559,27 @@ class SimplestNetworkExample(PreviewLearning):
             mob.flash = ShowCreationThenDestruction(yellow_copy)
 
         self.play(MoveToTarget(top_terms))
-        self.dither()
+        self.wait()
         self.play(MoveToTarget(zL))
         self.play(
             ShowCreation(top_lines, submobject_mode = "all_at_once"),
             top_lines.flash
         )
-        self.dither()
+        self.wait()
         self.play(MoveToTarget(aL))
         self.play(
             network_early_layers.fade, 1,
             ShowCreation(z_to_a_line),
             z_to_a_line.flash
         )
-        self.dither()
+        self.wait()
         self.play(MoveToTarget(y))
         self.play(MoveToTarget(C0))
         self.play(*it.chain(*[
             [ShowCreation(line), line.flash]
             for line in a_to_c_line, y_to_c_line
         ]))
-        self.dither(2)
+        self.wait(2)
 
         comp_graph = VGroup()
         comp_graph.wL, comp_graph.aLm1, comp_graph.bL = top_terms
@@ -2646,7 +2646,7 @@ class SimplestNetworkExample(PreviewLearning):
             MoveToTarget(comp_graph),
             rect.shift, shift_vect
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             FadeOut(new_subgraph),
             FadeOut(prev_neuron),
@@ -2657,7 +2657,7 @@ class SimplestNetworkExample(PreviewLearning):
         )
         VGroup(prev_neuron, prev_edge).fade(1)
         self.remove(rect)
-        self.dither()
+        self.wait()
 
         self.prev_comp_subgraph = new_subgraph
 
@@ -2726,7 +2726,7 @@ class SimplestNetworkExample(PreviewLearning):
                     path_arc = path_arc
                 )
             )
-        self.dither()
+        self.wait()
 
     def ask_about_w_sensitivity(self):
         wL, aLm1, bL, zL, aL, C0 = [
@@ -2788,7 +2788,7 @@ class SimplestNetworkExample(PreviewLearning):
                 Write(sym, run_time = 1)
             )
             shake_dot()
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(
             shake_dot, del_wL, del_C0,
@@ -2831,7 +2831,7 @@ class SimplestNetworkExample(PreviewLearning):
             ShowCreation(full_rect),
             Write(words, run_time = 1),
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             FadeOut(words),
             ReplacementTransform(full_rect, denom_rect)
@@ -2841,10 +2841,10 @@ class SimplestNetworkExample(PreviewLearning):
         self.play(ReplacementTransform(denom_rect, numer_rect))
         self.play(Transform(dC_dw[0].copy(), del_C0, remover = True))
         shake_dot()
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(numer_rect, full_rect_copy))
         self.play(FadeOut(full_rect_copy))
-        self.dither()
+        self.wait()
 
         self.dC_dw = dC_dw
 
@@ -2886,8 +2886,8 @@ class SimplestNetworkExample(PreviewLearning):
                 ReplacementTransform(s1.brace.copy(), s2.brace),
             )
             self.shake_dot(run_time = 1.5)
-            self.dither(0.5)
-        self.dither()
+            self.wait(0.5)
+        self.wait()
 
         self.set_variables_as_attrs(del_zL, del_aL)
 
@@ -2931,9 +2931,9 @@ class SimplestNetworkExample(PreviewLearning):
             self.play(ReplacementTransform(
                 bot_sym.copy(), frac[2]
             ))
-            self.dither()
+            self.wait()
         self.shake_dot()
-        self.dither()
+        self.wait()
 
         self.chain_rule_equation = VGroup(dC_dw, *group)
 
@@ -2954,7 +2954,7 @@ class SimplestNetworkExample(PreviewLearning):
             Write(words, run_time = 1),
             graph_parts.scale, 0.7, graph_parts.get_bottom()
         )
-        self.dither(2)
+        self.wait(2)
         self.play(*map(FadeOut, [rect, words]))
 
     def indicate_everything_on_screen(self):
@@ -2969,7 +2969,7 @@ class SimplestNetworkExample(PreviewLearning):
             lag_ratio = 0.2,
             run_time = 5
         ))
-        self.dither()
+        self.wait()
 
     def prepare_for_derivatives(self):
         zL_formula = self.zL_formula
@@ -3038,14 +3038,14 @@ class SimplestNetworkExample(PreviewLearning):
             cost_equation.next_to, dC_da.rhs,
             DOWN, MED_LARGE_BUFF, LEFT
         )
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             cost_rhs.copy(), dC_da.rhs,
             path_arc = np.pi/2,
         ))
-        self.dither()
+        self.wait()
         self.play(cost_equation.restore)
-        self.dither()
+        self.wait()
 
         #show_difference
         neuron = self.last_neurons[0]
@@ -3079,11 +3079,11 @@ class SimplestNetworkExample(PreviewLearning):
         self.play(ReplacementTransform(
             dC_da.rhs.copy(), double_arrow
         ))
-        self.dither()
+        self.wait()
         self.play(MoveToTarget(moving_decimals))
         opacity = neuron.get_fill_opacity()
         for target_o in 0, opacity:
-            self.dither(2)
+            self.wait(2)
             self.play(
                 neuron.set_fill, None, target_o,
                 *[
@@ -3111,13 +3111,13 @@ class SimplestNetworkExample(PreviewLearning):
             aL_formula.next_to, da_dz.rhs,
             DOWN, MED_LARGE_BUFF, LEFT
         )
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             a_rhs.copy(), da_dz.rhs,
         ))
-        self.dither()
+        self.wait()
         self.play(aL_formula.restore)
-        self.dither()
+        self.wait()
 
         #dz_dw
         self.play(
@@ -3133,16 +3133,16 @@ class SimplestNetworkExample(PreviewLearning):
             zL_formula.next_to, dz_dw.rhs,
                 DOWN, MED_LARGE_BUFF, LEFT,
         )
-        self.dither()
+        self.wait()
         rect = SurroundingRectangle(VGroup(*zL_formula[2:4]))
         self.play(ShowCreation(rect))
         self.play(FadeOut(rect))
         self.play(ReplacementTransform(
             z_rhs[1].copy(), dz_dw.rhs,
         ))
-        self.dither()
+        self.wait()
         self.play(zL_formula.restore)
-        self.dither()
+        self.wait()
 
         self.derivative_equations = VGroup(dC_da, da_dz, dz_dw)
 
@@ -3192,7 +3192,7 @@ class SimplestNetworkExample(PreviewLearning):
             rate_func = wiggle,
             run_time = 3,
         )
-        self.dither()
+        self.wait()
         self.play(rhs.shift, MED_LARGE_BUFF*UP, rate_func = wiggle)
         self.play(
             rhs_copy.move_to, neuron,
@@ -3205,7 +3205,7 @@ class SimplestNetworkExample(PreviewLearning):
             run_time = 3,
             rate_func = there_and_back
         )
-        self.dither()
+        self.wait()
 
         #Fire together wire together
         opacity = neuron.get_fill_opacity()
@@ -3219,7 +3219,7 @@ class SimplestNetworkExample(PreviewLearning):
             *get_decimal_anims()
         )
         self.play(edge.restore, FadeOut(del_wL))
-        self.dither(3)
+        self.wait(3)
 
     def organize_chain_rule_rhs(self):
         fracs = self.derivative_equations
@@ -3252,7 +3252,7 @@ class SimplestNetworkExample(PreviewLearning):
             FadeOut(equals_group),
             right_group.to_corner, DOWN+RIGHT
         )
-        self.dither()
+        self.wait()
 
         rhs_group.add(equals)
         self.chain_rule_rhs = rhs_group
@@ -3290,7 +3290,7 @@ class SimplestNetworkExample(PreviewLearning):
                 GrowFromCenter(brace),
                 Write(text, run_time = 2),
             )
-            self.dither(2)
+            self.wait(2)
         self.cycle_through_altnernate_training_examples()
         self.play(*map(FadeOut, [
             VGroup(*full_derivative[3:]), 
@@ -3319,7 +3319,7 @@ class SimplestNetworkExample(PreviewLearning):
                 Transform(
                     d, self.get_neuron_activation_decimal(n)
                 ).update(1)
-            self.dither(0.2)
+            self.wait(0.2)
         self.play(group.restore, run_time = 0.2)
 
     def show_gradient(self):
@@ -3359,7 +3359,7 @@ class SimplestNetworkExample(PreviewLearning):
         )
         terms.add(dC_dw)
         self.play(Write(lhs))
-        self.dither(2)
+        self.wait(2)
         self.play(FadeOut(VGroup(lhs, vect)))
 
     def transition_to_derivative_wrt_b(self):
@@ -3389,7 +3389,7 @@ class SimplestNetworkExample(PreviewLearning):
                 run_time = 1.5,
                 lag_ratio = 0.7,
             ))
-        self.dither()
+        self.wait()
 
     def show_derivative_wrt_b(self):
         comp_graph = self.comp_graph
@@ -3455,11 +3455,11 @@ class SimplestNetworkExample(PreviewLearning):
         self.play(Transform(del_w, del_b))
         self.play(FadeIn(dz_db))
         self.play(get_path_animation())
-        self.dither()
+        self.wait()
         self.play(ShowCreation(z_formula_rect))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(z_formula_rect, b_in_z_rect))
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(b_in_z_formula.copy(), one),
             FadeOut(b_in_z_rect)
@@ -3471,7 +3471,7 @@ class SimplestNetworkExample(PreviewLearning):
                 path_arc = arrow.path_arc
             )
         )
-        self.dither(2)
+        self.wait(2)
         self.play(*map(FadeOut, [dz_db, arrow, one]))
 
         self.dz_db = dz_db
@@ -3528,13 +3528,13 @@ class SimplestNetworkExample(PreviewLearning):
             FadeIn(dz_daLm1),
             VGroup(*self.chain_rule_equation[-2:]).shift, SMALL_BUFF*RIGHT,
         )
-        self.dither()
+        self.wait()
         self.play(ShowCreation(dz_daLm1_rect))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             dz_daLm1_rect, z_formula_rect
         ))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(z_formula_rect, a_in_z_rect))
         self.play(
             ReplacementTransform(wL_in_z.copy(), wL),
@@ -3547,7 +3547,7 @@ class SimplestNetworkExample(PreviewLearning):
                 path_arc = arrow.path_arc
             )
         )
-        self.dither(2)
+        self.wait(2)
 
         self.chain_rule_rhs.add(wL, arrow)
         self.chain_rule_equation.add(dz_daLm1)
@@ -3607,7 +3607,7 @@ class SimplestNetworkExample(PreviewLearning):
                 run_time = 1.5,
                 lag_ratio = 0.4,
             ))
-        self.dither(2)
+        self.wait(2)
 
     ###
 
@@ -3644,13 +3644,13 @@ class IsntThatOverSimplified(TeacherStudentsScene):
         self.change_student_modes(
             "pondering", "raise_right_hand", "pondering"
         )
-        self.dither()
+        self.wait()
         self.teacher_says(
             "Not that much, actually!",
             run_time = 1,
             target_mode = "hooray"
         )
-        self.dither(2)
+        self.wait(2)
 
 class GeneralFormulas(SimplestNetworkExample):
     CONFIG = {
@@ -3737,7 +3737,7 @@ class GeneralFormulas(SimplestNetworkExample):
             map(Write, start_labels),
             [GrowArrow(a[0]) for a in start_arrows]
         ))
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(start_labels, all_labels),
             ReplacementTransform(start_arrows, all_arrows),
@@ -3747,7 +3747,7 @@ class GeneralFormulas(SimplestNetworkExample):
             VGroup(*all_subscript_rects.family_members_with_points()),
             lag_ratio = 0.7
         ))
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(
             L_neurons, Lm1_neurons,
@@ -3788,8 +3788,8 @@ class GeneralFormulas(SimplestNetworkExample):
                 ShowCreation(rect)
             )
             self.play(FadeOut(rect))
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
 
     def add_desired_output(self):
         layer = self.network_mob.layers[-1]
@@ -3826,7 +3826,7 @@ class GeneralFormulas(SimplestNetworkExample):
                 for n1, n2 in zip(layer.neurons, desired_output.neurons)
             ] + map(GrowArrow, arrows)
         )
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(
             desired_output,
@@ -3859,15 +3859,15 @@ class GeneralFormulas(SimplestNetworkExample):
             for mob in aj, yj
         ])
         self.play(LaggedStart(FadeIn, to_fade_in))
-        self.dither(2)
+        self.wait(2)
         self.play(LaggedStart(
             Indicate, sum_part,
             rate_func = wiggle,
         ))
-        self.dither()
+        self.wait()
         for mob in aj.target, yj.target, cost_equation[-1]:
             self.play(Indicate(mob))
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(cost_equation)
 
@@ -3913,11 +3913,11 @@ class GeneralFormulas(SimplestNetworkExample):
         for neuron in self.chosen_neurons:
             self.play(Indicate(neuron), Animation(neuron.decimal))
         self.play(Write(w_label))
-        self.dither()
+        self.wait()
         self.play(Indicate(subscripts))
         for x in range(2):
             self.play(Swap(*subscripts))
-            self.dither()
+            self.wait()
 
         self.set_variables_as_attrs(faded_edges, w_label)
 
@@ -3978,7 +3978,7 @@ class GeneralFormulas(SimplestNetworkExample):
             lambda m : m not in [w_part, aLm1_part],
             z_formula
         ))))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             self.chosen_neurons[1].label.copy(),
             aL_part
@@ -3990,7 +3990,7 @@ class GeneralFormulas(SimplestNetworkExample):
                 a_formula.get_part_by_tex("z^")
             )
         )
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(z_formula, compact_z_formula, a_formula)
 
@@ -4016,13 +4016,13 @@ class GeneralFormulas(SimplestNetworkExample):
             self.z_formula, self.compact_z_formula
         ))
         self.play(Write(chain_rule))
-        self.dither()
+        self.wait()
         self.play(LaggedStart(
             ShowCreationThenDestruction, rects,
             lag_ratio = 0.7,
             run_time = 3
         ))
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(chain_rule)
 
@@ -4042,7 +4042,7 @@ class GeneralFormulas(SimplestNetworkExample):
             self.chain_rule, VGroup(*chain_rule[:n] + chain_rule[n+1:])
         ))
         self.play(Write(chain_rule[n], run_time = 1))
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(chain_rule)
 
@@ -4111,7 +4111,7 @@ class GeneralFormulas(SimplestNetworkExample):
                     GrowFromCenter(brace)
                 ]
             self.play(*anims)
-            self.dither()
+            self.wait()
         for path, path_line in zip(paths, path_lines):
             label = path[-1]
             self.play(
@@ -4123,14 +4123,14 @@ class GeneralFormulas(SimplestNetworkExample):
                 ShowCreation(path_line),
                 Animation(label)
             )
-            self.dither()
+            self.wait()
             group = VGroup(label, cost_aL)
             self.play(
                 group.shift, MED_SMALL_BUFF*UP, 
                 rate_func = wiggle
             )
             self.play(FadeOut(path_line))
-        self.dither()
+        self.wait()
 
     def show_previous_layer(self):
         mid_neurons = self.network_mob.layers[1].neurons
@@ -4193,7 +4193,7 @@ class GeneralFormulas(SimplestNetworkExample):
         for x in range(3):
             for edges_out in all_edges_out:
                 self.play(ShowCreationThenDestruction(edges_out))
-        self.dither()
+        self.wait()
 
     ####
 
@@ -4223,7 +4223,7 @@ class ThatsPrettyMuchIt(TeacherStudentsScene):
             target_mode = "hooray",
             run_time = 1,
         )
-        self.dither(2)
+        self.wait(2)
 
 class PatYourselfOnTheBack(TeacherStudentsScene):
     def construct(self):
@@ -4232,7 +4232,7 @@ class PatYourselfOnTheBack(TeacherStudentsScene):
             target_mode = "hooray"
         )
         self.change_student_modes(*["hooray"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class ThatsALotToThinkAbout(TeacherStudentsScene):
     def construct(self):
@@ -4241,7 +4241,7 @@ class ThatsALotToThinkAbout(TeacherStudentsScene):
             target_mode = "surprised"
         )
         self.change_student_modes(*["thinking"]*3)
-        self.dither(4)
+        self.wait(4)
 
 class LayersOfComplexity(Scene):
     def construct(self):
@@ -4260,7 +4260,7 @@ class LayersOfComplexity(Scene):
         self.play(GrowFromCenter(brace))
         self.play(GrowArrow(arrow))
         self.play(Write(gradient))
-        self.dither()
+        self.wait()
 
 
     def get_chain_rule_equations(self):
@@ -4330,7 +4330,7 @@ class SponsorFrame(PiCreatureScene):
             morty.change, "hooray", t_shirt_words,
             Write(t_shirt_words, run_time = 2)
         )
-        self.dither()
+        self.wait()
         self.play(
             morty.change, "raise_right_hand", screen,
             ShowCreation(screen)
@@ -4341,13 +4341,13 @@ class SponsorFrame(PiCreatureScene):
         )
         self.play(Write(url))
         self.play(GrowArrow(arrow))
-        self.dither(2)
+        self.wait(2)
         self.play(morty.change, "thinking", url)
-        self.dither(3)
+        self.wait(3)
         self.play(Write(human_in_the_loop))
         self.play(morty.change, "happy", url)
         self.play(morty.look_at, screen)
-        self.dither(7)
+        self.wait(7)
         t_shirt_words_outline = t_shirt_words.copy()
         t_shirt_words_outline.set_fill(opacity = 0)
         t_shirt_words_outline.set_stroke(GREEN, 3)
@@ -4362,7 +4362,7 @@ class SponsorFrame(PiCreatureScene):
             color = PINK,
             run_time = 3
         ))
-        self.dither(3)
+        self.wait(3)
 
 class NN3PatreonThanks(PatreonThanks):
     CONFIG = {

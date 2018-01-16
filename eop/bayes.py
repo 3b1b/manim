@@ -84,8 +84,8 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
                 card.scale(0.01)
                 card.move_to(deck[-1], UP+RIGHT)
             self.play(LaggedStart(MoveToTarget, group, lag_ratio = 0.8))
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
 
         self.community_cards = community_cards
         self.deck = deck
@@ -136,13 +136,13 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
             remover = True,
         ))
         self.play(you.change, "hooray", straight_cards)
-        self.dither(2)
+        self.wait(2)
         self.play(
             selected_community_cards.restore,
             you.hand.restore,
             you.change_mode, "happy"
         )
-        self.dither()
+        self.wait()
 
     def show_flush_potential(self):
         you, her = self.you, self.her
@@ -200,7 +200,7 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
                 hearts, new_symbols,
                 submobject_mode = "lagged_start"
             ))
-            self.dither()
+            self.wait()
         self.play(FadeOut(heart_qs))
         self.play(
             heart_cards.restore,
@@ -244,7 +244,7 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
         )
 
         self.play(LaggedStart(FadeIn, equation))
-        self.dither(2)
+        self.wait(2)
         self.play(
             FadeIn(num_hearts), 
             ShowCreation(num_hearts_arrow),
@@ -255,7 +255,7 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
             ShowCreation(num_cards_arrow),
             fourty_five.highlight, BLUE
         )
-        self.dither(3)
+        self.wait(3)
         equation.remove(percentage)
         self.play(*map(FadeOut, [
             equation, 
@@ -290,9 +290,9 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
         self.play(*map(GrowFromCenter, [
             brace for brace in braces
         ]))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(bottom_label))
-        self.dither(2)
+        self.wait(2)
 
         self.sample_space = sample_space
 
@@ -315,8 +315,8 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
                 hand.scale(0.01)
                 hand.move_to(part.get_right())
                 self.play(hand.restore)
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
         self.play(*map(FadeOut, it.chain(*hand_lists)))
 
     def place_high_bet(self):
@@ -345,7 +345,7 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
             run_time = 5,
         ))
         self.play(you.change_mode, "confused")
-        self.dither()
+        self.wait()
 
         self.money = money
 
@@ -410,16 +410,16 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
             Write(title, run_time = 2),
             self.you.change_mode, "pondering"
         )
-        self.dither()
+        self.wait()
         self.play(FadeIn(subtitle))
         self.play(prior_word.highlight, GREEN)
         self.play(
             ShowCreation(rect),
             ShowCreation(arrow)
         )
-        self.dither(3)
+        self.wait(3)
         self.play(Write(words))
-        self.dither(3)
+        self.wait(3)
 
 
     ######
@@ -469,7 +469,7 @@ class HowDoesPokerWork(TeacherStudentsScene):
             run_time = 1
         )
         self.change_student_modes(*["confused"]*3)
-        self.dither(2)
+        self.wait(2)
 
 class YourGutKnowsBayesRule(TeacherStudentsScene):
     def construct(self):
@@ -478,7 +478,7 @@ class YourGutKnowsBayesRule(TeacherStudentsScene):
             run_time = 1
         )
         self.change_student_modes("confused", "gracious", "guilty")
-        self.dither(3)
+        self.wait(3)
 
 class UpdatePokerPrior(SampleSpaceScene):
     CONFIG = {
@@ -516,7 +516,7 @@ class UpdatePokerPrior(SampleSpaceScene):
             LaggedStart(FadeIn, sample_space),
             Write(braces_and_labels)
         )
-        self.dither()
+        self.wait()
 
         sample_space.add(braces_and_labels)
         self.sample_space = sample_space
@@ -543,7 +543,7 @@ class UpdatePokerPrior(SampleSpaceScene):
             GrowFromCenter(brace),
         )
         self.play(Write(explanation, run_time = 3))
-        self.dither(2)
+        self.wait(2)
 
         self.sample_space.add(brace, label)
 
@@ -566,7 +566,7 @@ class UpdatePokerPrior(SampleSpaceScene):
             her.change_mode, "happy", 
             Animation(glasses)
         )
-        self.dither(2)
+        self.wait(2)
 
         self.her = her
         
@@ -595,7 +595,7 @@ class UpdatePokerPrior(SampleSpaceScene):
             her.change_mode, "shruggie",
             MaintainPositionRelativeTo(her.glasses, her.eyes)
         )
-        self.dither()
+        self.wait()
         self.play(*[
             ReplacementTransform(
                 VGroup(*label[i1:i2]).copy(),
@@ -610,9 +610,9 @@ class UpdatePokerPrior(SampleSpaceScene):
                 (3, 6, 3),
             ])
         ])
-        self.dither()
+        self.wait()
         self.play(Write(VGroup(*label[-2:])))
-        self.dither(2)
+        self.wait(2)
         self.play(*map(FadeOut, [her, her.glasses]))
 
         self.sample_space.add(brace, label)
@@ -677,9 +677,9 @@ class UpdatePokerPrior(SampleSpaceScene):
                 FadeIn(question),
                 randy.look_at, question
             )
-        self.dither()
+        self.wait()
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(
             randy.change_mode, "pondering",
             FadeOut(questions)
@@ -715,7 +715,7 @@ class UpdatePokerPrior(SampleSpaceScene):
                 *self.get_conditional_change_anims(i%2, value)
             )
             if i%2 == 1:
-                self.dither()
+                self.wait()
         self.play(FadeOut(randy))
 
     def show_restricted_space(self):
@@ -748,7 +748,7 @@ class UpdatePokerPrior(SampleSpaceScene):
             Write(words),
             *map(ShowCreation, arrows)
         )
-        self.dither()
+        self.wait()
         for rect in high_bet_space:
             self.play(Indicate(rect, scale_factor = 1))
         self.play(*map(FadeOut, [words, arrows]))
@@ -784,12 +784,12 @@ class UpdatePokerPrior(SampleSpaceScene):
         self.play(LaggedStart(FadeIn, posterior_tex))
         self.play(Write(arrow))
         self.play(MoveToTarget(rects[0]))
-        self.dither()
+        self.wait()
         self.play(*it.chain(
             map(Write, [frac_line, plus]),
             map(MoveToTarget, rects[1:])
         ))
-        self.dither(3)
+        self.wait(3)
         self.play(*map(FadeOut, [arrow, fraction] + rects))
 
         self.posterior_tex = posterior_tex
@@ -808,14 +808,14 @@ class UpdatePokerPrior(SampleSpaceScene):
                 run_time = 2,
             ),
         )
-        self.dither(2)
+        self.wait(2)
         self.play(ReplacementTransform(self.posterior_tex, labels[0]))
         self.posterior_tex = labels[0]
         self.play(GrowFromCenter(braces))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(height_rect))
         self.play(FadeOut(height_rect))
-        self.dither()
+        self.wait()
 
         self.post_rects = post_rects
 
@@ -836,19 +836,19 @@ class UpdatePokerPrior(SampleSpaceScene):
         )
 
         self.play(ShowCreation(prior_rect))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(prior_rect, post_rect))
-        self.dither()
+        self.wait()
         self.play(FadeOut(post_rect))
         self.play(Indicate(post_tex.get_part_by_tex(self.cash_string)))
-        self.dither()
+        self.wait()
         self.play(
             Write(post_words),
             ShowCreation(post_arrow)
         )
-        self.dither()
+        self.wait()
         self.play(post_words[1].fade, 0.8)
-        self.dither(2)
+        self.wait(2)
         self.play(*map(FadeOut, [post_words, post_arrow]))
 
     def preview_tweaks(self):
@@ -865,7 +865,7 @@ class UpdatePokerPrior(SampleSpaceScene):
             self.play(*self.get_prior_change_anims(
                 new_values[-1], post_rects
             ))
-        self.dither(2)
+        self.wait(2)
 
     def tweak_non_flush_case(self):
         her = self.her
@@ -890,11 +890,11 @@ class UpdatePokerPrior(SampleSpaceScene):
         arrows.arrange_submobjects(DOWN)
         arrows.next_to(prior_rects[1], RIGHT, SMALL_BUFF)
 
-        self.dither(2)
+        self.wait(2)
         self.play(*map(FadeIn, [her, her.glasses]))
         self.play(LaggedStart(FadeIn, risk_averse_words))
         self.play(her.change_mode, "sad", Animation(her.glasses))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(arrows))
         self.play(
             *it.chain(
@@ -904,11 +904,11 @@ class UpdatePokerPrior(SampleSpaceScene):
             run_time = 3
         )
         self.play(FadeOut(arrows))
-        self.dither(2)
+        self.wait(2)
         post_surrounding_rect = SurroundingRectangle(posterior)
         self.play(ShowCreation(post_surrounding_rect))
         self.play(FadeOut(post_surrounding_rect))
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(risk_averse_words),
             *self.get_conditional_change_anims(1, 0.3, post_rects),
@@ -926,11 +926,11 @@ class UpdatePokerPrior(SampleSpaceScene):
             *self.get_conditional_change_anims(0, 0.47, post_rects),
             run_time = 3
         )
-        self.dither(3)
+        self.wait(3)
         self.play(*self.get_conditional_change_anims(
             0, 0.97, post_rects
         ))
-        self.dither()
+        self.wait()
 
     def tweak_prior(self):
         her = self.her
@@ -943,7 +943,7 @@ class UpdatePokerPrior(SampleSpaceScene):
             *self.get_prior_change_anims(0.3, post_rects),
             run_time = 2
         )
-        self.dither(3)
+        self.wait(3)
         self.play(
             *self.get_prior_change_anims(1./22, post_rects),
             run_time = 2
@@ -1007,8 +1007,8 @@ class UpdatePokerPrior(SampleSpaceScene):
         self.play(Write(fraction.get_part_by_tex("over")))
         for pair in zip(pre_top_rect_products, products[0]):
             self.play(*map(Indicate, pair))
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
         self.play(Indicate(prior_rects[1], scale_factor = 1))
         self.play(*[
             ReplacementTransform(
@@ -1019,18 +1019,18 @@ class UpdatePokerPrior(SampleSpaceScene):
                 pre_bottom_rect_products, products[1]
             )
         ])
-        self.dither()
+        self.wait()
         for pair in zip(pre_bottom_rect_products, products[1]):
             self.play(*map(Indicate, pair))
-            self.dither()
+            self.wait()
         self.play(
             Write(fraction.get_part_by_tex("+")),
             ReplacementTransform(products[0].copy(), products[2])
         )
-        self.dither()
+        self.wait()
         self.play(ShowCreation(to_rhs_arrow))
         self.play(Write(rhs))
-        self.dither(3)
+        self.wait(3)
 
 
     ######
@@ -1132,11 +1132,11 @@ class BayesRuleInMemory(Scene):
             MoveToTarget(rule),
             randy.change, "pondering",
         )
-        self.dither()
+        self.wait()
         self.play(rule.fade, 0.7, run_time = 2)
         self.play(randy.change, "confused", rule)
         self.play(Blink(randy))
-        self.dither(2)
+        self.wait(2)
         self.play(
             FadeOut(VGroup(bubble, rule)),
             randy.change, "pondering", screen_rect,
@@ -1145,7 +1145,7 @@ class BayesRuleInMemory(Scene):
             randy.look_at, screen_rect.get_right(),
             ShowCreation(screen_rect),
         )
-        self.dither(4)
+        self.wait(4)
 
 class NextVideoWrapper(TeacherStudentsScene):
     CONFIG = {
@@ -1171,7 +1171,7 @@ class NextVideoWrapper(TeacherStudentsScene):
             look_at_arg = screen
         )
         self.play(Animation(screen))
-        self.dither(5)
+        self.wait(5)
 
 class BayesianNetworkPreview(Scene):
     def construct(self):
@@ -1259,7 +1259,7 @@ class BayesianNetworkPreview(Scene):
                 self.play(*anims)
             covered_nodes.update(curr_nodes)
             curr_nodes = list(next_nodes)
-        self.dither()
+        self.wait()
         self.play(FadeOut(all_ghosts))
 
 
@@ -1379,7 +1379,7 @@ class GeneralizeBayesRule(SampleSpaceScene):
 
         self.play(FadeIn(rule))
         self.play(Write(bayes_rule_words))
-        self.dither(2)
+        self.wait(2)
 
         self.bayes_rule_words = bayes_rule_words
         self.bayes_rule = rule
@@ -1420,21 +1420,21 @@ class GeneralizeBayesRule(SampleSpaceScene):
             ShowCreation(prior_arrow), 
             ShowCreation(prior_rect),
         ) 
-        self.dither()
+        self.wait()
         self.play(Transform(
             prior.copy(), prior_target,
             run_time = 2,
             path_arc = -np.pi/3,
             remover = True,
         ))
-        self.dither()
+        self.wait()
         parts = self.sample_space[0].vertical_parts
         self.play(
             Indicate(likelihood),
             Indicate(parts.labels),
             Indicate(parts.braces),
         )
-        self.dither()
+        self.wait()
         self.play(Indicate(P_I))
         self.play(FocusOn(self.sample_space[0][0]))
         for i in range(2):
@@ -1442,7 +1442,7 @@ class GeneralizeBayesRule(SampleSpaceScene):
                 self.sample_space[i][0], 
                 scale_factor = 1
             ))
-        self.dither()
+        self.wait()
         self.play(
             Write(posterior_word), 
             ShowCreation(posterior_arrow), 
@@ -1484,13 +1484,13 @@ class GeneralizeBayesRule(SampleSpaceScene):
             Write(name),
             *map(ShowCreation, arrows+rects)
         )
-        self.dither()
+        self.wait()
 
         self.play(FadeIn(morty))
         self.play(morty.change, "confused", name)
         self.play(Blink(morty))
         self.play(morty.look, DOWN)
-        self.dither()
+        self.wait()
         self.play(morty.look_at, name)
         self.play(Blink(morty))
         self.play(morty.change, "shruggie")
@@ -1513,9 +1513,9 @@ class GeneralizeBayesRule(SampleSpaceScene):
         cross.replace(word, stretch = True)
 
         self.play(Write(word))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(cross))
-        self.dither()
+        self.wait()
         self.play(FadeOut(VGroup(cross, word)))
         self.play(FadeOut(self.bayes_rule))
         self.play(
@@ -1540,7 +1540,7 @@ class GeneralizeBayesRule(SampleSpaceScene):
             rate_func = there_and_back,
             lag_ratio = 0.7
         ))
-        self.dither(2)
+        self.wait(2)
         self.play(ReplacementTransform(
             prior_rects.copy(), post_rects,
             run_time = 2
@@ -1548,10 +1548,10 @@ class GeneralizeBayesRule(SampleSpaceScene):
         self.play(*map(FadeIn, [
             post_rects.braces, post_rects.labels
         ]))
-        self.dither()
+        self.wait()
         self.play(*self.get_conditional_change_anims(1, 0.2, post_rects))
         self.play(*self.get_conditional_change_anims(0, 0.6, post_rects))
-        self.dither()
+        self.wait()
         self.play(*it.chain(
             self.get_division_change_animations(
                 self.sample_space, 
@@ -1560,7 +1560,7 @@ class GeneralizeBayesRule(SampleSpaceScene):
             ),
             self.get_posterior_rectangle_change_anims(post_rects)
         ))
-        self.dither(3)
+        self.wait(3)
 
 
     ####
@@ -1573,7 +1573,7 @@ class MoreExamples(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("More examples!", target_mode = "hooray")
         self.change_student_modes(*["hooray"]*3)
-        self.dither(2)
+        self.wait(2)
 
 class MusicExample(SampleSpaceScene, PiCreatureScene):
     def construct(self):
@@ -1616,10 +1616,10 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
             Animation(randy.arms)
         )
         randy.add(guitar, randy.arms)
-        self.dither()
+        self.wait()
         self.play_notes(guitar)
         self.change_pi_creature_with_guitar("concerned_musician")
-        self.dither(2)
+        self.wait(2)
         self.play(
             randy.scale, 0.7,
             randy.to_corner, UP+LEFT,
@@ -1648,12 +1648,12 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
         self.play(*map(GrowFromCenter, braces))
         for label in labels:
             self.play(Write(label, run_time = 2))
-            self.dither()
+            self.wait()
         for word, mode in zip(words, ["maybe", "soulful_musician"]):
             self.play(LaggedStart(FadeIn, word, run_time = 1))
             self.change_pi_creature_with_guitar(mode)
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
         self.play(*map(FadeOut, words))
 
         self.sample_space = sample_space
@@ -1700,7 +1700,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
         self.play(FadeIn(bottom_part.vertical_parts))
         self.play(GrowFromCenter(brace))
         self.play(Write(label))
-        self.dither()
+        self.wait()
 
     def friend_gives_compliment(self):
         friends = self.friends
@@ -1718,7 +1718,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
             ApplyMethod, friends,
             lambda pi : (pi.change_mode, "conniving")
         ))
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(bubble),
             Write(bubble.content, run_time = 1),
@@ -1728,7 +1728,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
                 lambda pi : (pi.change_mode, "happy")
             ),
         )
-        self.dither(2)
+        self.wait(2)
         self.play(*map(FadeOut, [bubble, content]))
 
     def friends_dont_like(self):
@@ -1744,7 +1744,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
             MoveToTarget, friends
         ))
         self.change_pi_creature_with_guitar("concerned_musician")
-        self.dither()
+        self.wait()
 
     def false_compliment(self):
         friend = self.friends[0]
@@ -1764,7 +1764,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
             Write(content)
         )
         self.change_pi_creature_with_guitar("happy")
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [bubble, content]))
 
         self.bubble = bubble
@@ -1780,7 +1780,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
         self.play(FadeIn(top_part.vertical_parts))
         self.play(GrowFromCenter(brace))
         self.play(Write(label, run_time = 2))
-        self.dither()
+        self.wait()
 
     def get_positive_review(self):
         friends = self.friends
@@ -1813,7 +1813,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
             run_time = 2,
             lag_ratio = 0.7,
         ))
-        self.dither()
+        self.wait()
 
         self.negative_space = negative_space
 
@@ -1834,7 +1834,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
         ))
         self.play(GrowFromCenter(brace))
         self.play(Write(label))
-        self.dither()
+        self.wait()
 
         self.post_rects = post_rects
         self.post_tex = label
@@ -1864,7 +1864,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
             ),
             Write(VGroup(*top_product[::2]))
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             ReplacementTransform(
                 side_labels[1][-1].copy(),
@@ -1876,7 +1876,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
             ),
             Write(VGroup(*bottom_product[::2]))
         )
-        self.dither(2)
+        self.wait(2)
 
         self.products = products
 
@@ -1910,7 +1910,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
             ShowCreation(to_ratio_arrow),
             FadeIn(ratio)
         )
-        self.dither(2)
+        self.wait(2)
         for mob in prior_rects, prior_rects[0]:
             self.play(
                 mob.highlight, YELLOW,
@@ -1918,11 +1918,11 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
                 rate_func = there_and_back,
                 run_time = 2
             )
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
         self.play(ShowCreation(to_rhs_arrow))
         self.play(Write(rhs, run_time = 1))
-        self.dither(2)
+        self.wait(2)
 
         self.post_rhs = rhs
         self.ratio_group = VGroup(ratio, to_ratio_arrow, to_rhs_arrow)
@@ -1943,14 +1943,14 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
             run_time = 2,
         ))
         self.play(ShowCreation(post_rect))
-        self.dither(2)
+        self.wait(2)
         for mode, time in ("shruggie", 2), ("hesitant", 0):
             self.play(LaggedStart(
                 ApplyMethod, friends,
                 lambda pi : (pi.change, mode),
                 run_time = 2,
             ))
-            self.dither(time)
+            self.wait(time)
         self.play(*map(FadeOut, [
             prior_rect, post_rect,
             self.ratio_group, self.post_rhs
@@ -1968,7 +1968,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
                 value, post_rects, 
                 new_label_kwargs = {"labels" : [label]},
             ), run_time = 2)
-            self.dither(2)
+            self.wait(2)
 
     def fade_out_post_rect(self):
         self.play(*map(FadeOut, [
@@ -2002,15 +2002,15 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
             lambda pi : (pi.change, "pondering", post_rects),
             run_time = 1
         ))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             new_prior_rects.copy(), post_rects,
             run_time = 2            
         ))
         self.play(GrowFromCenter(brace))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(label))
-        self.dither(3)
+        self.wait(3)
 
         self.post_rects = post_rects
 
@@ -2019,9 +2019,9 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
         post_num_rect = SurroundingRectangle(post_num)
 
         self.play(ShowCreation(self.prior_num_rect))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(post_num_rect))
-        self.dither()
+        self.wait()
 
         self.post_num_rect = post_num_rect
 
@@ -2044,9 +2044,9 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
             Write(bubble.content)
         )
         self.change_pi_creature_with_guitar("sad")
-        self.dither()
+        self.wait()
         self.change_pi_creature_with_guitar("concerned_musician")
-        self.dither(3)
+        self.wait(3)
 
     ######
 
@@ -2166,7 +2166,7 @@ class FinalWordsOnRule(SampleSpaceScene):
         uses.to_edge(UP)
         for use in uses:
             self.play(Write(use, run_time = 2))
-        self.dither()
+        self.wait()
 
     def tweak_values(self):
         post_rects = self.post_rects
@@ -2180,13 +2180,13 @@ class FinalWordsOnRule(SampleSpaceScene):
                 self.play(*self.get_conditional_change_anims(
                     i, value, post_rects
                 ))
-                self.dither()
+                self.wait()
             self.play(*it.chain(
                 self.get_horizontal_division_change_animations(new_values[-1]),
                 self.get_posterior_rectangle_change_anims(post_rects)
             ))
-            self.dither()
-        self.dither(2)
+            self.wait()
+        self.wait(2)
 
 class FootnoteWrapper(NextVideoWrapper):
     CONFIG = {

@@ -92,7 +92,7 @@ class TwoToMany(MultilayeredScene):
         layers = self.get_layers()
 
         self.add(glass)
-        self.dither()
+        self.wait()
         self.play(*[
             FadeIn(
                 layer,
@@ -102,7 +102,7 @@ class TwoToMany(MultilayeredScene):
         ]+[
             Transform(glass, layers[0])
         ])
-        self.dither()
+        self.wait()
 
     def get_glass(self):
         return self.RectClass(
@@ -147,13 +147,13 @@ class ShowDiscretePath(MultilayeredScene, PhotonScene):
 
         self.generate_discrete_path()
         self.play(ShowCreation(self.discrete_path))
-        self.dither()
+        self.wait()
         self.play(self.photon_run_along_path(
             self.discrete_path,
             rate_func = rush_into,
             run_time = 3
         ))
-        self.dither()
+        self.wait()
 
 
     def generate_discrete_path(self):
@@ -198,7 +198,7 @@ class NLayers(MultilayeredScene):
         n_layers = TextMobject("$n$ layers")
         n_layers.next_to(brace)
 
-        self.dither()
+        self.wait()
 
         self.add(brace)
         self.show_frame()
@@ -207,7 +207,7 @@ class NLayers(MultilayeredScene):
             GrowFromCenter(brace),
             GrowFromCenter(n_layers)
         )
-        self.dither()
+        self.wait()
 
 class ShowLayerVariables(MultilayeredScene, PhotonScene):
     CONFIG = {
@@ -260,7 +260,7 @@ class ShowLayerVariables(MultilayeredScene, PhotonScene):
                 photon_run,
                 run_time = time
             )
-        self.dither()
+        self.wait()
 
         starts = [0, 0.3, 0.6]
         self.play(*it.chain(*[
@@ -273,7 +273,7 @@ class ShowLayerVariables(MultilayeredScene, PhotonScene):
             ]
             for mobs in start_ys, braces
         ]))
-        self.dither()
+        self.wait()
 
         triplets = zip(v_equations, start_ys, end_ys)
         anims = []
@@ -284,7 +284,7 @@ class ShowLayerVariables(MultilayeredScene, PhotonScene):
                 Transform(start_y.copy(), end_y)
             ]
         self.play(*anims)
-        self.dither()
+        self.wait()
 
 
 class LimitingProcess(MultilayeredScene):
@@ -312,16 +312,16 @@ class LimitingProcess(MultilayeredScene):
         curr_set = glass_sets[0]
         self.add(curr_set)
         for layer_set in glass_sets[1:]:
-            self.dither()
+            self.wait()
             self.play(Transform(curr_set, layer_set))
-        self.dither()
+        self.wait()
 
 
 
 class ShowLightAndSlidingObject(MultilayeredScene, TryManyPaths, PhotonScene):
     CONFIG = {
         "show_time" : False,
-        "dither_and_add" : False,
+        "wait_and_add" : False,
         "RectClass" : FilledRectangle
     }
     def construct(self):
@@ -347,12 +347,12 @@ class ShowLightAndSlidingObject(MultilayeredScene, TryManyPaths, PhotonScene):
         text = self.get_text().to_edge(UP, buff = 0.2)
 
         self.play(ShowCreation(loop))
-        self.dither()
+        self.wait()
         self.play(photon_run)
         self.remove(photon_run.mobject)
         randy = self.slide(randy, loop)
         self.add(randy)
-        self.dither()
+        self.wait()
         self.remove(randy)
         self.play(ShimmerIn(text))
         for path in paths:
@@ -412,7 +412,7 @@ class ContinuouslyObeyingSnellsLaw(MultilayeredScene):
             Transform(snells, new_snells),
             Transform(rest, colon)
         )
-        self.dither()
+        self.wait()
         return colon
 
     def get_marks(self, point1, point2):
@@ -466,17 +466,17 @@ class ContinuouslyObeyingSnellsLaw(MultilayeredScene):
         )
         self.play(ShowCreation(vert_line))
         self.play(ShowCreation(tangent_line))
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(sqrt_y),
             GrowFromCenter(brace),
             GrowFromCenter(y_mob)
         )
-        self.dither()
+        self.wait()
         self.play(Transform(
             Point(const.get_left()), const
         ))
-        self.dither()
+        self.wait()
 
 
 

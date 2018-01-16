@@ -389,7 +389,7 @@ class ExampleThrees(PiCreatureScene):
             FadeIn(three_mob[0]),
             LaggedStart(FadeIn, three_mob[1])
         )
-        self.dither()
+        self.wait()
         self.play(
             LaggedStart(
                 DrawBorderThenFill, three_mob_copy,
@@ -403,7 +403,7 @@ class ExampleThrees(PiCreatureScene):
                 map(FadeIn, brace_labels)
             )
         )
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(bubble),
             MoveToTarget(three_mob),
@@ -415,7 +415,7 @@ class ExampleThrees(PiCreatureScene):
             ShowCreation(arrow),
             Write(real_three)
         )
-        self.dither()
+        self.wait()
 
         self.bubble = bubble
         self.arrow = arrow
@@ -442,7 +442,7 @@ class ExampleThrees(PiCreatureScene):
 
         for alt_three in alt_threes:
             self.add(alt_three)
-            self.dither(0.5)
+            self.wait(0.5)
         self.play(
             randy.change, "plain",
             *map(FadeOut, [
@@ -451,7 +451,7 @@ class ExampleThrees(PiCreatureScene):
         )
         for alt_three in alt_threes[:2]:
             self.play(three.replace, alt_three)
-            self.dither()
+            self.wait()
         for moving_three in three, alt_threes[1]:
             moving_three.generate_target()
             moving_three.target.next_to(alt_threes, LEFT, LARGE_BUFF)
@@ -492,7 +492,7 @@ class ExampleThrees(PiCreatureScene):
             MoveToTarget(right_three),
             Write(equals),
         )
-        self.dither()
+        self.wait()
 
         self.equals = equals
 
@@ -518,10 +518,10 @@ class ExampleThrees(PiCreatureScene):
             Transform(three, alt_mobs[0]),
             ShowCreation(cross)
         )
-        self.dither()
+        self.wait()
         for mob in alt_mobs[1:]:
             self.play(Transform(three, mob))
-            self.dither()
+            self.wait()
 
     ######
 
@@ -568,7 +568,7 @@ class BrainAndHow(Scene):
                     run_time = 2
                 )
             )
-        self.dither()
+        self.wait()
 
 class WriteAProgram(Scene):
     def construct(self):
@@ -625,7 +625,7 @@ class WriteAProgram(Scene):
                 rect.move_to, choices[n],
                 MaintainPositionRelativeTo(q_mark, rect)
             )
-            self.dither(1)
+            self.wait(1)
         choice = choices[3]
         choices.remove(choice)
         choice.add(rect)
@@ -635,7 +635,7 @@ class WriteAProgram(Scene):
             FadeOut(choices),
             FadeOut(q_mark),
         )
-        self.dither(2)
+        self.wait(2)
 
 class LayOutPlan(TeacherStudentsScene, NetworkScene):
     def setup(self):
@@ -720,7 +720,7 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
         equation.to_edge(UP)
 
         self.play(Write(equation, run_time = 2))
-        self.dither()
+        self.wait()
 
         self.equation = equation
 
@@ -730,7 +730,7 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
             student_index = 2,
             bubble_kwargs = {"direction" : LEFT}
         )
-        self.dither()
+        self.wait()
         self.play(RemovePiCreatureBubble(self.students[2]))
 
     def show_learning(self):
@@ -764,7 +764,7 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
                     width = 4*np.random.random()**2
                 )
             self.play(MoveToTarget(edge_group))
-        self.dither()
+        self.wait()
 
         self.learning_word = word
 
@@ -799,9 +799,9 @@ class LayOutPlan(TeacherStudentsScene, NetworkScene):
             FadeIn(structure),
             self.get_student_changes(*["pondering"]*3)
         )
-        self.dither()
+        self.wait()
         self.play(DrawBorderThenFill(videos[1]))
-        self.dither()
+        self.wait()
 
 class PreviewMNistNetwork(NetworkScene):
     CONFIG = {
@@ -897,18 +897,18 @@ class AlternateNeuralNetworks(PiCreatureScene):
             Write(examples[0], run_time = 2),
             morty.change, "raise_right_hand"
         )
-        self.dither()
+        self.wait()
         self.play(
             examples[0].shift, MED_LARGE_BUFF*UP,
             FadeIn(examples[1], submobject_mode = "lagged_start"),
         )
-        self.dither()
+        self.wait()
         self.play(
             examples.shift, UP,
             FadeIn(maybe_words),
             morty.change, "maybe"
         )
-        self.dither(2)
+        self.wait(2)
 
 class PlainVanillaWrapper(Scene):
     def construct(self):
@@ -919,9 +919,9 @@ class PlainVanillaWrapper(Scene):
         subtitle.next_to(title, DOWN)
 
         self.add(title)
-        self.dither(2)
+        self.wait(2)
         self.play(Write(subtitle, run_time = 2))
-        self.dither(2)
+        self.wait(2)
 
 class NotPerfectAddOn(Scene):
     def construct(self):
@@ -937,7 +937,7 @@ class NotPerfectAddOn(Scene):
             ShowCreation(arrow),
             run_time = 1
         )
-        self.dither(2)
+        self.wait(2)
 
 class MoreAThanI(TeacherStudentsScene):
     def construct(self):
@@ -946,7 +946,7 @@ class MoreAThanI(TeacherStudentsScene):
             target_mode = "hesitant"
         )
         self.change_student_modes("sad", "erm", "tired")
-        self.dither(2)
+        self.wait(2)
 
 class BreakDownName(Scene):
     def construct(self):
@@ -992,7 +992,7 @@ class BreakDownName(Scene):
             )
         )
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(
             Write(q1, run_time = 1),
             ShowCreation(a1),
@@ -1003,7 +1003,7 @@ class BreakDownName(Scene):
             ShowCreation(a2),
             name[1].highlight, q2.get_color()
         )
-        self.dither(2)
+        self.wait(2)
 
         self.play(*map(FadeOut, [
             name, randy, brain, 
@@ -1040,12 +1040,12 @@ class BreakDownName(Scene):
             ShowCreation(arrow),
             Write(description, run_time = 1)
         )
-        self.dither()
+        self.wait()
         self.play(
             neuron.set_fill, None, 0.2,
             num.restore
         )
-        self.dither()
+        self.wait()
         for value in 0.8, 0.4, 0.1, 0.5:
             mob = TexMobject(str(value))
             mob.replace(num)
@@ -1053,7 +1053,7 @@ class BreakDownName(Scene):
                 neuron.set_fill, None, value,
                 Transform(num, mob)
             )
-            self.dither()
+            self.wait()
 
 class IntroduceEachLayer(PreviewMNistNetwork):
     CONFIG = {
@@ -1113,14 +1113,14 @@ class IntroduceEachLayer(PreviewMNistNetwork):
         self.corner_image.to_corner(UP+LEFT)
 
         self.add(image_mob, rect)
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(image_mob, neurons),
             FadeOut(rect),
             FadeIn(braces),
             FadeIn(labels),
         )
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(labels[0].copy(), equation[0]),
             Write(equation[1]),
@@ -1128,7 +1128,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
             Write(equation[3]),
             Write(equation[4]),
         )
-        self.dither()
+        self.wait()
 
         self.neurons = neurons
         self.braces = braces
@@ -1182,11 +1182,11 @@ class IntroduceEachLayer(PreviewMNistNetwork):
             MoveToTarget(example_neuron),
             MoveToTarget(example_num)
         )
-        self.dither()
+        self.wait()
         curr_opacity = example_neuron.get_fill_opacity()
         for num in 0.3, 0.01, 1.0, curr_opacity:
             change_activation(num)
-            self.dither()
+            self.wait()
 
         rect = SurroundingRectangle(example_num, color = YELLOW)
         activation = TextMobject("``Activation''")
@@ -1194,11 +1194,11 @@ class IntroduceEachLayer(PreviewMNistNetwork):
         activation.highlight(rect.get_color())
         self.play(ShowCreation(rect))
         self.play(Write(activation, run_time = 1))
-        self.dither()
+        self.wait()
         change_activation(1.0)
-        self.dither()
+        self.wait()
         change_activation(0.2)
-        self.dither()
+        self.wait()
 
         self.play(
             example_neuron.restore,
@@ -1257,13 +1257,13 @@ class IntroduceEachLayer(PreviewMNistNetwork):
             FadeIn(layer.brace),
         )
         self.play(layer.restore, FadeIn(self.corner_image))
-        self.dither()
+        self.wait()
         for edge_group, layer in zip(network_mob.edge_groups, network_mob.layers[1:]):
             self.play(
                 LaggedStart(FadeIn, layer, run_time = 1),
                 ShowCreation(edge_group),
             )
-        self.dither()
+        self.wait()
 
     def show_output_layer(self):
         layer = self.network_mob.layers[-1]
@@ -1302,7 +1302,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
 
         self.play(ShowCreation(rect))
         self.play(LaggedStart(FadeIn, labels))
-        self.dither()
+        self.wait()
         self.play(
             MoveToTarget(neuron),
             MoveToTarget(label),
@@ -1310,7 +1310,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
         self.play(FadeIn(activation))
         for num in 0.5, 0.38, 0.97:
             change_activation(num)
-            self.dither()
+            self.wait()
         self.play(
             neuron.restore,
             neuron.set_fill, None, 1,
@@ -1318,7 +1318,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
             FadeOut(activation),
             FadeOut(rect),
         )
-        self.dither()
+        self.wait()
 
     def show_hidden_layers(self):
         hidden_layers = VGroup(*self.network_mob.layers[1:3])
@@ -1343,9 +1343,9 @@ class IntroduceEachLayer(PreviewMNistNetwork):
             ShowCreation(rect),
             Write(name)
         )
-        self.dither()
+        self.wait()
         self.play(Write(q_marks))
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(q_marks),
             Animation(q_marks[-1].copy())
@@ -1388,16 +1388,16 @@ class DiscussChoiceForHiddenLayers(TeacherStudentsScene):
             Write(two_words, run_time = 1),
             self.teacher.change, "raise_right_hand",
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(rects),
             ReplacementTransform(two_words, sixteen_words),
             neurons_anim
         )
-        self.dither()
+        self.wait()
         self.play(self.teacher.change, "shruggie")
         self.change_student_modes("erm", "confused", "sassy")
-        self.dither()
+        self.wait()
         self.student_says(
             "Why 2 \\\\ layers?",
             student_index = 1,
@@ -1406,7 +1406,7 @@ class DiscussChoiceForHiddenLayers(TeacherStudentsScene):
             target_mode = "raise_left_hand",
         )
         self.play(self.teacher.change, "happy")
-        self.dither()
+        self.wait()
         self.student_says(
             "Why 16?",
             student_index = 0,
@@ -1417,7 +1417,7 @@ class DiscussChoiceForHiddenLayers(TeacherStudentsScene):
             self.teacher.change, "shruggie",
             RemovePiCreatureBubble(self.students[0]),
         )
-        self.dither()
+        self.wait()
 
 class MoreHonestMNistNetworkPreview(IntroduceEachLayer):
     CONFIG = {
@@ -1465,13 +1465,13 @@ class AskAboutPropogationAndTraining(TeacherStudentsScene):
             student_index = 0,
             run_time = 1
         )
-        self.dither()
+        self.wait()
         self.student_says(
             "How does \\\\ training work?",
             student_index = 2,
             run_time = 1
         )
-        self.dither(3)
+        self.wait(3)
 
 class AskAboutLayers(PreviewMNistNetwork):
     def construct(self):
@@ -1503,9 +1503,9 @@ class AskAboutLayers(PreviewMNistNetwork):
                 run_time = 2
             )
         )
-        self.dither()
+        self.wait()
         self.play(*map(ShowCreation, rects))
-        self.dither()
+        self.wait()
 
 class BreakUpMacroPatterns(IntroduceEachLayer):
     CONFIG = {
@@ -1578,21 +1578,21 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
         right_line[1].pixel_array[:14,:,3] = 0
 
         self.play(FadeIn(nine))
-        self.dither()
+        self.wait()
         self.play(*map(FadeIn, parts))
-        self.dither()
+        self.wait()
         self.play(
             Write(equation[1]),
             upper_loop[1].restore,
             FadeIn(upper_loop[0])
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(equation[3]),
             right_line[1].restore,
             FadeIn(right_line[0]),
         )
-        self.dither()
+        self.wait()
 
         self.nine_equation = equation
 
@@ -1616,14 +1616,14 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
             self.upper_loop.copy(),
             upper_loop
         ))
-        self.dither()
+        self.wait()
         self.play(FadeIn(lower_loop[1]))
         self.play(
             Write(equation[3]),
             lower_loop[1].restore,
             FadeIn(lower_loop[0]),
         )
-        self.dither()
+        self.wait()
 
         self.eight_equation = equation
 
@@ -1649,7 +1649,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
         self.play(LaggedStart(
             FadeIn, VGroup(*equation[3:])
         ))
-        self.dither(2)
+        self.wait(2)
 
         self.four_equation = equation
 
@@ -1690,7 +1690,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
             ),
             MoveToTarget(patterns)
         )
-        self.dither(2)
+        self.wait(2)
 
         self.patterns = patterns
 
@@ -1724,7 +1724,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
         )
         self.add_foreground_mobject(self.patterns)
         self.feed_forward(np.random.random(784))
-        self.dither(2)
+        self.wait(2)
 
     def show_what_learning_is_required(self):
         edge_group = self.network_mob.edge_groups[-1].copy()
@@ -1734,7 +1734,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
                 ShowCreationThenDestruction, edge_group,
                 run_time = 3
             ))
-            self.dither()
+            self.wait()
 
     ######
 
@@ -1770,7 +1770,7 @@ class GenerallyLoopyPattern(Scene):
         for image in images:
             image.to_corner(DOWN+RIGHT)
             self.add(image)
-            self.dither(0.2)
+            self.wait(0.2)
             self.remove(image)
 
 class HowWouldYouRecognizeSubcomponent(TeacherStudentsScene):
@@ -1783,7 +1783,7 @@ class HowWouldYouRecognizeSubcomponent(TeacherStudentsScene):
         self.play(
             self.teacher.change, "guilty"
         )
-        self.dither()
+        self.wait()
 
 class BreakUpMicroPatterns(BreakUpMacroPatterns):
     CONFIG = {
@@ -1838,20 +1838,20 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
             randy.change, "pondering", loop
         )
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(LaggedStart(
             ApplyMethod, edges,
             lambda e : (e.restore,),
             run_time = 4
         ))
-        self.dither()
+        self.wait()
         self.play(
             MoveToTarget(loop, run_time = 2),
             MoveToTarget(edges, run_time = 2),
             Write(symbols),
             randy.change, "happy", equation,
         )
-        self.dither()
+        self.wait()
 
         self.loop_equation = equation
         self.randy = randy
@@ -1888,12 +1888,12 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
         )
         self.play(Blink(randy))
         self.play(LaggedStart(FadeIn, digits))
-        self.dither()
+        self.wait()
         self.play(
             LaggedStart(FadeIn, Group(*equation[1:])),
             randy.change, "pondering", equation
         )
-        self.dither(3)
+        self.wait(3)
 
 class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
     CONFIG = {
@@ -1984,7 +1984,7 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
             ShowCreation(rect),
             Write(words, run_time = 2)
         )
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [rect, words]))
 
     def show_propogation(self):
@@ -2051,14 +2051,14 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
         activate_layer(1)
         self.play(edge_colored_nine.restore)
         self.separate_parts(edge_colored_nine)
-        self.dither()
+        self.wait()
 
         activate_layer(2)
         self.play(pattern_colored_nine.restore)
         self.separate_parts(pattern_colored_nine)
 
         activate_layer(3)
-        self.dither(2)
+        self.wait(2)
 
     def ask_question(self):
         question = TextMobject(
@@ -2072,12 +2072,12 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
         arrow.highlight(BLUE)
 
         self.play(Write(question, run_time = 2))
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(later),
             GrowFromPoint(arrow, arrow.get_start())
         )
-        self.dither()
+        self.wait()
 
     ###
 
@@ -2125,7 +2125,7 @@ class EdgeDetection(Scene):
         self.play(FadeIn(lion))
         self.play(lion_copy.move_to, edges)
         self.play(Transform(lion_copy, edges, run_time = 3))
-        self.dither(2)
+        self.wait(2)
 
 class ManyTasksBreakDownLikeThis(TeacherStudentsScene):
     def construct(self):
@@ -2164,7 +2164,7 @@ class ManyTasksBreakDownLikeThis(TeacherStudentsScene):
             "break down like this"
         )
         self.change_student_modes(*["pondering"]*3)
-        self.dither()
+        self.wait()
         content = self.teacher.bubble.content
         pre_word = content[1]
         content.remove(pre_word)
@@ -2174,7 +2174,7 @@ class ManyTasksBreakDownLikeThis(TeacherStudentsScene):
             ShowCreation(audio),
             pre_word.shift, MED_SMALL_BUFF, DOWN
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             RemovePiCreatureBubble(self.teacher),
             audio.restore,
@@ -2189,17 +2189,17 @@ class ManyTasksBreakDownLikeThis(TeacherStudentsScene):
         self.play(
             GrowFromPoint(arrows[0], arrows[0].get_start()),
         )
-        self.dither()
+        self.wait()
         self.play(
             GrowFromPoint(arrows[1], arrows[1].get_start()),
             LaggedStart(FadeIn, syllables, run_time = 1)
         )
-        self.dither()
+        self.wait()
         self.play(
             GrowFromPoint(arrows[2], arrows[2].get_start()),
             LaggedStart(FadeIn, word, run_time = 1)
         )
-        self.dither()
+        self.wait()
 
     def get_wave_form(self):
         func = lambda x : abs(sum([
@@ -2254,7 +2254,7 @@ class AskAboutWhatEdgesAreDoing(IntroduceEachLayer):
 
         self.add(image)
         self.feed_forward(in_vect)
-        self.dither()
+        self.wait()
 
 class IntroduceWeights(IntroduceEachLayer):
     CONFIG = {
@@ -2318,7 +2318,7 @@ class IntroduceWeights(IntroduceEachLayer):
             submobject_mode = "lagged_start",
             run_time = 2
         )
-        self.dither(2)
+        self.wait(2)
 
         self.pixels = pixels
         self.pixels_to_detect = pixels_to_detect
@@ -2379,7 +2379,7 @@ class IntroduceWeights(IntroduceEachLayer):
             LaggedStart(FadeIn, p_labels),
             LaggedStart(FadeIn, decimals),
         )
-        self.dither()
+        self.wait()
         self.play(
             *changing_decimals + pixel_updates,
             run_time = 5,
@@ -2441,7 +2441,7 @@ class IntroduceWeights(IntroduceEachLayer):
             rate_func = wiggle,
             run_time = 2
         ))
-        self.dither()
+        self.wait()
 
         self.w_labels = w_labels
         self.weights_word = weights_word
@@ -2498,7 +2498,7 @@ class IntroduceWeights(IntroduceEachLayer):
             ],
             run_time = 1.5
         )
-        self.dither()
+        self.wait()
         self.play(*[
             ReplacementTransform(w1.copy(), w2)
             for w1, w2 in zip(self.w_labels, w_labels)[:4]
@@ -2510,7 +2510,7 @@ class IntroduceWeights(IntroduceEachLayer):
                 self.w_labels[-1].copy(), weighted_sum[-2]
             )
         ], run_time = 2)
-        self.dither(2)
+        self.wait(2)
 
         self.weighted_sum = weighted_sum
 
@@ -2545,7 +2545,7 @@ class IntroduceWeights(IntroduceEachLayer):
                 for decimal, pixel in zip(decimals, weight_grid)
             ]
         )
-        self.dither()
+        self.wait()
 
         self.weight_grid = weight_grid
 
@@ -2570,15 +2570,15 @@ class IntroduceWeights(IntroduceEachLayer):
             run_time = 2,
             submobject_mode = "lagged_start"
         ))
-        self.dither()
+        self.wait()
         self.play(Transform(
             pixels, digit,
             run_time = 2,
             submobject_mode = "lagged_start"
         ))
-        self.dither()
+        self.wait()
         self.play(weight_grid.move_to, pixels)
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(
                 self.pixels_to_detect.copy(),
@@ -2588,7 +2588,7 @@ class IntroduceWeights(IntroduceEachLayer):
             ),
             Animation(weight_grid),
         )
-        self.dither()
+        self.wait()
 
     def add_negative_weights_around_the_edge(self):
         weight_grid = self.weight_grid
@@ -2604,9 +2604,9 @@ class IntroduceWeights(IntroduceEachLayer):
             for y in 6, 10
             for x in range(14-4, 14+4)
         ])
-        self.dither(2)
+        self.wait(2)
         self.play(weight_grid.move_to, pixels)
-        self.dither(2)
+        self.wait(2)
 
     ####
 
@@ -2704,7 +2704,7 @@ class MotivateSquishing(Scene):
             GrowFromCenter(interval),
         )
         self.play(Write(words, run_time = 2))
-        self.dither()
+        self.wait()
 
         self.lower_number_line = lower_number_line
 
@@ -2734,7 +2734,7 @@ class MotivateSquishing(Scene):
             MoveToTarget(line),
             GrowFromPoint(arrow, arrow.get_start())
         )
-        self.dither(2)
+        self.wait(2)
 
 class IntroduceSigmoid(GraphScene):
     CONFIG = {
@@ -2777,7 +2777,7 @@ class IntroduceSigmoid(GraphScene):
         )
 
         self.play(ShowCreation(graph))
-        self.dither()
+        self.wait()
 
         self.sigmoid_graph = graph
 
@@ -2795,9 +2795,9 @@ class IntroduceSigmoid(GraphScene):
         ]
 
         self.play(ShowCreation(line))
-        self.dither()
+        self.wait()
         self.play(Transform(line, graph_part))
-        self.dither()
+        self.wait()
 
 class IncludeBias(IntroduceWeights):
     def construct(self):
@@ -2878,12 +2878,12 @@ class IncludeBias(IntroduceWeights):
             FadeIn(activation_word),
             neuron.set_fill, WHITE, 0.8,
         )
-        self.dither()
+        self.wait()
         self.play(
             GrowArrow(arrow),
             ReplacementTransform(activation_word, words),
         )
-        self.dither(2)
+        self.wait(2)
         self.play(FadeOut(arrow))
 
         self.how_positive_words = words
@@ -2910,7 +2910,7 @@ class IncludeBias(IntroduceWeights):
             run_time = 2,
             submobject_mode = "lagged_start"
         ))
-        self.dither()
+        self.wait()
 
         self.gt_ten = words[-1]
 
@@ -2934,12 +2934,12 @@ class IncludeBias(IntroduceWeights):
             ),
             MoveToTarget(rp),
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             ShowCreation(rect),
             Write(name)
         )
-        self.dither(2)
+        self.wait(2)
 
         self.bias_name = name
 
@@ -2957,9 +2957,9 @@ class IncludeBias(IntroduceWeights):
             lag_ratio = 0.4,
             run_time = 4
         ))
-        self.dither()
+        self.wait()
         self.play(Indicate(bias_name))
-        self.dither(2)
+        self.wait(2)
 
     ###
 
@@ -2985,7 +2985,7 @@ class BiasForInactiviyWords(Scene):
         words.to_edge(UP)
 
         self.play(Write(words))
-        self.dither(3)
+        self.wait(3)
 
 class ContinualEdgeUpdate(ContinualAnimation):
     CONFIG = {
@@ -3086,7 +3086,7 @@ class ShowRemainingNetwork(IntroduceWeights):
             ),
             VGroup(*last_edges[1:]).set_stroke, None, 1
         )
-        self.dither()
+        self.wait()
 
         self.weights_words = words
 
@@ -3111,7 +3111,7 @@ class ShowRemainingNetwork(IntroduceWeights):
                 lag_ratio = 0.3,
             )
         )
-        self.dither()
+        self.wait()
 
         self.bias_words = words
         self.bias_arrows = arrows
@@ -3134,7 +3134,7 @@ class ShowRemainingNetwork(IntroduceWeights):
             MoveToTarget(ww2),
             FadeOut(ww3)
         )
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(times_16.copy(), bias_count[0]),
             FadeOut(bb1),
@@ -3142,7 +3142,7 @@ class ShowRemainingNetwork(IntroduceWeights):
             FadeOut(bb3),
             LaggedStart(FadeOut, bias_arrows)
         )
-        self.dither()
+        self.wait()
 
         self.weights_count = VGroup(ww1, times_16, ww2)
         self.bias_count = bias_count
@@ -3192,7 +3192,7 @@ class ShowRemainingNetwork(IntroduceWeights):
                 lag_ratio = 0.3,
             )
         )
-        self.dither(2)
+        self.wait(2)
 
         weights_count.add(added_weights)
         bias_count.add(added_biases)
@@ -3214,7 +3214,7 @@ class ShowRemainingNetwork(IntroduceWeights):
             MoveToTarget(group),
         )
         self.play(Write(num_mob))
-        self.dither()
+        self.wait()
 
         self.final_number = num_mob
 
@@ -3229,9 +3229,9 @@ class ShowRemainingNetwork(IntroduceWeights):
         group.next_to(self.final_number, DOWN, MED_LARGE_BUFF)
 
         self.add(ContinualEdgeUpdate(self.network_mob))
-        self.dither(5)
+        self.wait(5)
         self.play(Write(group))
-        self.dither(10)
+        self.wait(10)
 
     ###
 
@@ -3269,12 +3269,12 @@ class ImagineSettingByHand(Scene):
         self.add(randy, bubble, network_mob)
         self.add(ContinualEdgeUpdate(network_mob))
         self.play(randy.change, "pondering")
-        self.dither()
+        self.wait()
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(randy.change, "horrified", network_mob)
         self.play(Blink(randy))
-        self.dither(10)
+        self.wait(10)
 
 class WhenTheNetworkFails(MoreHonestMNistNetworkPreview):
     CONFIG = {
@@ -3306,7 +3306,7 @@ class WhenTheNetworkFails(MoreHonestMNistNetworkPreview):
             Write(words, run_time = 2),
             DrawBorderThenFill(box)
         )
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [words, box]))
 
     def incorrect_classification(self):
@@ -3332,7 +3332,7 @@ class WhenTheNetworkFails(MoreHonestMNistNetworkPreview):
 
         self.add(ContinualEdgeUpdate(self.network_mob))
         self.play(Write(question))
-        self.dither(10)
+        self.wait(10)
 
 
     ###
@@ -3347,7 +3347,7 @@ class EvenWhenItWorks(TeacherStudentsScene):
             "dig into why."
         )
         self.change_student_modes(*["pondering"]*3)
-        self.dither(7)
+        self.wait(7)
 
 class IntroduceWeightMatrix(NetworkScene):
     CONFIG = {
@@ -3569,12 +3569,12 @@ class IntroduceWeightMatrix(NetworkScene):
             Transform(pre_brackets, post_bracketes),
             run_time = 2
         )
-        self.dither()
+        self.wait()
         self.play(*[
             LaggedStart(Indicate, mob, rate_func = there_and_back)
             for mob in a_labels, a_labels_in_sum
         ])
-        self.dither()
+        self.wait()
 
         self.a_column = a_labels
         self.a_column_brackets = pre_brackets
@@ -3629,7 +3629,7 @@ class IntroduceWeightMatrix(NetworkScene):
             run_time = 3,
             submobject_mode = "lagged_start",
         ))
-        self.dither()
+        self.wait()
 
         self.top_matrix_row = w_labels
         self.lower_matrix_rows = lower_rows
@@ -3647,7 +3647,7 @@ class IntroduceWeightMatrix(NetworkScene):
                 ShowCreationThenDestruction, edges,
                 lag_ratio = 0.8
             ))
-        self.dither()
+        self.wait()
 
         self.top_row_rect = rect
 
@@ -3697,7 +3697,7 @@ class IntroduceWeightMatrix(NetworkScene):
         self.play(LaggedStart(
             FadeIn, VGroup(*result_terms[1:])
         ))
-        self.dither(2)
+        self.wait(2)
         self.show_meaning_of_lower_rows(
             arrow, brace, top_row_rect, result_terms
         )
@@ -3788,7 +3788,7 @@ class IntroduceWeightMatrix(NetworkScene):
         self.play(LaggedStart(
             FadeIn, VGroup(*b_column[1:])
         ))
-        self.dither()
+        self.wait()
 
         self.bias_plus = plus
         self.b_brackets = b_brackets
@@ -3814,7 +3814,7 @@ class IntroduceWeightMatrix(NetworkScene):
             Transform(slp, big_lp),
             Transform(srp, big_rp),
         )
-        self.dither(2)
+        self.wait(2)
 
         self.big_sigma_group = VGroup(VGroup(sigma), slp, srp)
 
@@ -3876,13 +3876,13 @@ class IntroduceWeightMatrix(NetworkScene):
             self.big_sigma_group.copy(),
             VGroup(sigma, lp, rp)
         ))
-        self.dither()
+        self.wait()
         self.play(*neuron_anims, run_time = 2)
         self.play(
             ReplacementTransform(neurons.copy(), a1),
             FadeIn(equals)
         )
-        self.dither(2)
+        self.wait(2)
 
     def fade_weighted_sum(self):
         self.play(*map(FadeOut, [
@@ -3916,7 +3916,7 @@ class HorrifiedMorty(Scene):
                 morty.look, UP,
             )
             self.play(Blink(morty))
-            self.dither(2)
+            self.wait(2)
 
 class SigmoidAppliedToVector(Scene):
     def construct(self):
@@ -3941,7 +3941,7 @@ class SigmoidAppliedToVector(Scene):
         for i in indices:
             tex[i].highlight(YELLOW)
         self.add(tex)
-        self.dither()
+        self.wait()
 
 class EoLA3Wrapper(PiCreatureScene):
     def construct(self):
@@ -3957,7 +3957,7 @@ class EoLA3Wrapper(PiCreatureScene):
             FadeIn(title),
             morty.change, "raise_right_hand", rect
         )
-        self.dither(4)
+        self.wait(4)
 
 class FeedForwardCode(ExternallyAnimatedScene):
     pass
@@ -3978,7 +3978,7 @@ class NeuronIsFunction(MoreHonestMNistNetworkPreview):
         self.fade_network_back_in()
         self.network_is_a_function()
         self.feed_in_new_image(9, 4)
-        self.dither(2)
+        self.wait(2)
 
 
     def setup_network_mob(self):
@@ -4029,7 +4029,7 @@ class NeuronIsFunction(MoreHonestMNistNetworkPreview):
                 rate_func = squish_rate_func(smooth, 0.3, 1)
             )
         )
-        self.dither()
+        self.wait()
         self.play(neuron_group.restore)
 
         self.neuron_word = neuron_word
@@ -4064,7 +4064,7 @@ class NeuronIsFunction(MoreHonestMNistNetworkPreview):
             FadeIn(function_word),
             VGroup(thing_words, cross).to_edge, DOWN,
         )
-        self.dither()
+        self.wait()
 
         self.function_word = function_word
 
@@ -4090,7 +4090,7 @@ class NeuronIsFunction(MoreHonestMNistNetworkPreview):
             GrowArrow(arrow),
             Transform(self.decimal, decimal)
         )
-        self.dither(2)
+        self.wait(2)
 
         self.non_faded_network_parts = VGroup(
             neuron, edges, prev_layer
@@ -4154,7 +4154,7 @@ class ComplicationIsReassuring(TeacherStudentsScene):
             student_index = 0
         )
         self.play(self.teacher.change, "happy")
-        self.dither(4)
+        self.wait(4)
 
 class NextVideo(MoreHonestMNistNetworkPreview, PiCreatureScene):
     CONFIG = {
@@ -4200,10 +4200,10 @@ class NextVideo(MoreHonestMNistNetworkPreview, PiCreatureScene):
 
         self.add(edge_update)
         self.play(morty.change, "confused", network_mob)
-        self.dither(2)
+        self.wait(2)
         for data_mob in data_mobs:
             self.add(data_mob)
-            self.dither(0.2)
+            self.wait(0.2)
             self.remove(data_mob)
 
         self.content = network_mob
@@ -4235,9 +4235,9 @@ class NextVideo(MoreHonestMNistNetworkPreview, PiCreatureScene):
             FadeIn(video),
         )
         self.add_foreground_mobjects(rect, video)
-        self.dither(2)
+        self.wait(2)
         self.play(Write(words))
-        self.dither(2)
+        self.wait(2)
 
         self.video = Group(content, rect, video, words)
 
@@ -4271,10 +4271,10 @@ class NextVideo(MoreHonestMNistNetworkPreview, PiCreatureScene):
             MoveToTarget(morty),
         )
         self.play(GrowArrow(arrow))
-        self.dither(2)
+        self.wait(2)
         self.play(morty.change, "maybe", arrow)
         self.play(Transform(bang, q_mark))
-        self.dither(3)
+        self.wait(3)
 
     def show_video_neural_network(self):
         morty = self.pi_creature
@@ -4313,7 +4313,7 @@ class NextVideo(MoreHonestMNistNetworkPreview, PiCreatureScene):
             run_time = 3
         ))
         self.play(morty.change, "shruggie")
-        self.dither(10)
+        self.wait(10)
 
     ###
 
@@ -4379,9 +4379,9 @@ class NNPatreonThanks(PatreonThanks):
 class PiCreatureGesture(PiCreatureScene):
     def construct(self):
         self.play(self.pi_creature.change, "raise_right_hand")
-        self.dither(5)
+        self.wait(5)
         self.play(self.pi_creature.change, "happy")
-        self.dither(4)
+        self.wait(4)
 
 class IntroduceReLU(IntroduceSigmoid):
     CONFIG = {
@@ -4416,7 +4416,7 @@ class IntroduceReLU(IntroduceSigmoid):
             Write(old_school, run_time = 1),
             GrowArrow(arrow)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             ApplyMethod(
                 VGroup(cross, sigmoid_title).shift, 
@@ -4455,12 +4455,12 @@ class IntroduceReLU(IntroduceSigmoid):
 
         self.play(Write(equation))
         self.play(ShowCreation(graph), Animation(equation))
-        self.dither(2)
+        self.wait(2)
         self.play(
             Write(name),
             equation.shift, DOWN
         )
-        self.dither(2)
+        self.wait(2)
 
         self.ReLU_graph = graph
 
@@ -4480,10 +4480,10 @@ class IntroduceReLU(IntroduceSigmoid):
         self.revert_to_original_skipping_status()
         self.play(ShowCreation(l1.copy().highlight(RED)))
         self.play(Write(neg_words))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(l2.copy().highlight(GREEN)))
         self.play(Write(pos_words))
-        self.dither(2)
+        self.wait(2)
 
 class CompareSigmoidReLUOnDeepNetworks(PiCreatureScene):
     def construct(self):
@@ -4539,7 +4539,7 @@ class CompareSigmoidReLUOnDeepNetworks(PiCreatureScene):
             Write(slow_learner, run_time = 1),
             GrowArrow(slow_arrow)
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(relu_name),
             ShowCreation(relu_graph),
@@ -4548,7 +4548,7 @@ class CompareSigmoidReLUOnDeepNetworks(PiCreatureScene):
         )
         self.play(FadeIn(network_mob))
         self.add(edge_update)
-        self.dither(10)
+        self.wait(10)
 
 
 
@@ -4574,10 +4574,10 @@ class ShowAmplify(PiCreatureScene):
             ShowCreation(rect),
             morty.change, "raise_right_hand"
         )
-        self.dither(2)
+        self.wait(2)
         self.play(Write(email))
         self.play(morty.change, "happy", rect)
-        self.dither(10)
+        self.wait(10)
 
 class Thumbnail(NetworkScene):
     CONFIG = {

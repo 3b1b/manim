@@ -55,7 +55,7 @@ class PoseAbstractDerivative(TeacherStudentsScene):
         """)
         content_copy = self.teacher.bubble.content.copy()
         self.change_student_modes("sad", "confused", "erm")
-        self.dither()
+        self.wait()
         self.student_says(
             "Why?", target_mode = "sassy",
             added_anims = [
@@ -64,7 +64,7 @@ class PoseAbstractDerivative(TeacherStudentsScene):
             ]
         )
         self.play(self.teacher.change_mode, "pondering")
-        self.dither(2)
+        self.wait(2)
 
 class ContrastAbstractAndConcrete(Scene):
     def construct(self):
@@ -95,7 +95,7 @@ class ContrastAbstractAndConcrete(Scene):
         self.add(l_title, r_title)
         self.play(*map(ShowCreation, [h_line, v_line]))
         self.play(Write(functions))
-        self.dither()
+        self.wait()
         anims = [
             method(func_mob)
             for func_mob, method in zip(functions, [
@@ -203,7 +203,7 @@ class ApplicationNames(Scene):
             mob = TextMobject(name)
             mob.scale(2)
             self.play(Write(mob))
-            self.dither(2)
+            self.wait(2)
             self.play(FadeOut(mob))
 
 class ListOfRules(PiCreatureScene):
@@ -232,7 +232,7 @@ class ListOfRules(PiCreatureScene):
             self.pi_creature.change_mode, "pleading",
         )
         self.change_mode("tired")
-        self.dither()
+        self.wait()
 
 class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
     CONFIG = {
@@ -261,7 +261,7 @@ class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
         )
         self.play(ShowCreation(graph))
         self.play(Write(label))
-        self.dither()
+        self.wait()
         self.graph = graph
 
     def ask_about_df_dx(self):
@@ -301,17 +301,17 @@ class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
             Write(derivative_q, run_time = 1),
             self.pi_creature.change_mode, "speaking"
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(derivative_q),
             self.pi_creature.change_mode, "plain"
         )
         self.play(ShowCreation(v_line))
-        self.dither()
+        self.wait()
         self.play(Transform(v_line.copy(), nudged_v_line))
         self.remove(self.get_mobjects_from_last_animation()[0])
         self.add(nudged_v_line)
-        self.dither()
+        self.wait()
         self.activate_zooming()
         self.little_rectangle.replace(self.big_rectangle)
         self.play(
@@ -330,14 +330,14 @@ class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
             ShowCreation(ss_group.dx_line),
             Write(ss_group.dx_label),
         )
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(ss_group.df_line),
             Write(ss_group.df_label),
         )
-        self.dither()
+        self.wait()
         self.play(Write(df_dx))
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [
             v_line, nudged_v_line,
         ]))
@@ -363,7 +363,7 @@ class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
             self.pi_creature.change_mode, "thinking"
         )
         ss_group.add(ss_group.secant_line)
-        self.dither()
+        self.wait()
         for target_x in self.big_x, -self.dx/2, 1, 2:
             self.animate_secant_slope_group_change(
                 ss_group, target_x = target_x,
@@ -371,7 +371,7 @@ class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
                     UpdateFromFunc(self.little_rectangle, rect_update)
                 ]
             )
-            self.dither()
+            self.wait()
 
     def mention_alternate_view(self):
         self.remove(self.pi_creature)
@@ -386,7 +386,7 @@ class DerivativeOfXSquaredAsGraph(GraphScene, ZoomedScene, PiCreatureScene):
             self.pi_creature.change_mode, "happy"
         )
         self.say("Let's try \\\\ another view.", target_mode = "speaking")
-        self.dither(2)
+        self.wait(2)
 
 class NudgeSideLengthOfSquare(PiCreatureScene):
     CONFIG = {
@@ -446,7 +446,7 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
         self.play(*map(GrowFromCenter, braces))
         self.play(Write(x_squared))
         self.change_mode("pondering")
-        self.dither()
+        self.wait()
 
         self.square = square
         self.side_braces = braces
@@ -507,7 +507,7 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
         self.remove(corner_point, bottom_line, right_line)
         self.add(corner_square, bottom_rect, right_rect)
         self.play(*map(GrowFromCenter, little_braces))
-        self.dither()
+        self.wait()
         self.play(*it.chain(*[
             [mob.shift, vect*SMALL_BUFF]
             for mob, vect in [
@@ -520,7 +520,7 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
             ]
         ]))
         self.change_mode("thinking")
-        self.dither()
+        self.wait()
         self.right_rect = right_rect
         self.bottom_rect = bottom_rect
         self.corner_square = corner_square
@@ -558,7 +558,7 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
             mover.save_state()
             Transform(mover, origin).update(1)
         self.play(df.restore)
-        self.dither()
+        self.wait()
         self.play(
             *[
                 mob.restore
@@ -570,7 +570,7 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
             run_time = 2
         )
         self.change_mode("happy")
-        self.dither()
+        self.wait()
 
         self.df_equation = df_equation
 
@@ -589,7 +589,7 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
                 ]), 
                 rate_func = there_and_back
             )
-            self.dither()
+            self.wait()
 
     def examine_thin_rectangles(self):
         df, equals, r1, plus1, r2, plus2, s = self.df_equation
@@ -611,7 +611,7 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
             Write(text),
             self.pi_creature.change_mode, "pondering"
         )
-        self.dither()
+        self.wait()
 
         xs = VGroup(*[
             brace[-1] 
@@ -631,11 +631,11 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
                 Transform(submob, number).update(1)
         self.play(MoveToTarget(xs))
         self.play(MoveToTarget(dxs))
-        self.dither()
+        self.wait()
         self.play(Transform(text, alt_text))
-        self.dither()
+        self.wait()
         self.play(Write(example_value))
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(example_value),
             *[
@@ -647,7 +647,7 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
         text.restore()
         self.add(text)
 
-        self.dither()
+        self.wait()
         self.dxs = dxs
         self.thin_rect_brace = thin_rect_brace
         self.thin_rect_area = text        
@@ -662,7 +662,7 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
 
         self.play(Write(text))
         self.change_mode("surprised")
-        self.dither()
+        self.wait()
         self.play(
             MoveToTarget(self.dxs),
             self.pi_creature.change_mode, "plain"
@@ -677,7 +677,7 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
             Transform(text, alt_text),
             self.pi_creature.change_mode, "raise_right_hand"
         )
-        self.dither(2)
+        self.wait(2)
         self.play(*[
             mob.restore
             for mob in self.dxs, text
@@ -707,13 +707,13 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
                 alt_scene.mobjects_at_start_of_show_smaller_dx,
             )
         ])
-        self.dither()
+        self.wait()
         self.play(*[
             mob.restore
             for mob in self.get_mobjects()
         ])
         self.change_mode("happy")
-        self.dither()
+        self.wait()
 
     def rule_of_thumb(self):
         circle = Circle(color = RED)
@@ -737,7 +737,7 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
             dx_squared_group.to_corner, UP+RIGHT,
             self.pi_creature.change_mode, "plain"
         )
-        self.dither()
+        self.wait()
 
     def write_out_derivative(self):
         df, equals, r1, plus1, r2, plus2, s = self.df_equation
@@ -758,14 +758,14 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
             RIGHT, MED_SMALL_BUFF, UP,
             self.pi_creature.change_mode, "thinking"
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             ApplyMethod(df.next_to, frac_line, UP, SMALL_BUFF),
             ApplyMethod(dx.next_to, frac_line, DOWN, SMALL_BUFF),
             Write(frac_line),            
             path_arc = -np.pi
         )
-        self.dither()
+        self.wait()
 
         brace_xs = [
             brace[-1]
@@ -781,7 +781,7 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
             x_mob.save_state()
             x_mob.target = number
         self.play(*map(MoveToTarget, xs))
-        self.dither(2)
+        self.wait(2)
 
         #Recursively transform to what would have happened
         #with a wider square width
@@ -801,7 +801,7 @@ class NudgeSideLengthOfSquare(PiCreatureScene):
             )
         ])
         self.change_mode("happy")
-        self.dither(2)
+        self.wait(2)
 
 class ChangeInAreaOverChangeInX(Scene):
     def construct(self):
@@ -821,9 +821,9 @@ class ChangeInAreaOverChangeInX(Scene):
 
         self.play(Write(words[0], run_time = 1))
         self.play(*map(Write, words[1:]), run_time = 1)
-        self.dither()
+        self.wait()
         self.play(Transform(words, symbols))
-        self.dither()
+        self.wait()
 
 class NudgeSideLengthOfCube(Scene):
     CONFIG = {
@@ -859,7 +859,7 @@ class NudgeSideLengthOfCube(Scene):
         title.shift(SPACE_WIDTH*LEFT/2)
         title.to_edge(UP)
         self.play(Write(title))
-        self.dither()
+        self.wait()
 
     def introduce_cube(self):
         cube = self.get_cube()
@@ -890,12 +890,12 @@ class NudgeSideLengthOfCube(Scene):
 
         self.play(DrawBorderThenFill(cube))
         self.play(GrowFromCenter(x_brace))
-        self.dither()
+        self.wait()
         self.play(Transform(alt_dv_pieces, dv_pieces))
         self.remove(alt_dv_pieces)
         self.add(dv_pieces)
         self.play(GrowFromCenter(dx_brace))
-        self.dither()
+        self.wait()
         for piece in dv_pieces:
             piece.on_cube_state = piece.copy()
         self.play(*[
@@ -907,7 +907,7 @@ class NudgeSideLengthOfCube(Scene):
         ]+[
             ApplyMethod(dx_brace.shift, 0.7*UP)
         ])
-        self.dither()
+        self.wait()
 
         self.cube = cube
         self.dx_brace = dx_brace
@@ -952,21 +952,21 @@ class NudgeSideLengthOfCube(Scene):
 
         self.play(*map(Write, [df, equals]))
         self.grab_pieces(self.faces, faces)
-        self.dither()
+        self.wait()
         self.shrink_dx("Faces are introduced")
         face = self.faces[0]
         face.save_state()
         self.play(face.shift, SPACE_WIDTH*RIGHT)
         x_squared_dx.next_to(face, LEFT)
         self.play(Write(x_squared_dx, run_time = 1))
-        self.dither()
+        self.wait()
         for submob, sides in zip(x_squared_dx, [face[0], VGroup(*face[1:])]):
             self.play(
                 submob.highlight, RED,
                 sides.highlight, RED,
                 rate_func = there_and_back
             )
-            self.dither()
+            self.wait()
         self.play(
             face.restore,
             Transform(
@@ -975,14 +975,14 @@ class NudgeSideLengthOfCube(Scene):
             ),
             GrowFromCenter(faces_brace)
         )
-        self.dither()
+        self.wait()
         self.grab_pieces(self.bars, bars, plus1)
         self.grab_pieces(self.corner_cube, corner_cube, plus2)
         self.play(
             GrowFromCenter(extras_brace),
             Write(ignore_text)
         )
-        self.dither()
+        self.wait()
         self.play(*[
             ApplyMethod(mob.fade, 0.7)
             for mob in [
@@ -990,7 +990,7 @@ class NudgeSideLengthOfCube(Scene):
                 extras_brace, ignore_text
             ]
         ])
-        self.dither()
+        self.wait()
 
         self.df_equation = df_equation
         self.derivative = derivative
@@ -1016,7 +1016,7 @@ class NudgeSideLengthOfCube(Scene):
             df_equals.shift, 0.07*DOWN
         )
         self.play(Write(extra_stuff))
-        self.dither()
+        self.wait()
 
         frac_line = TexMobject("-")
         frac_line.replace(df)
@@ -1039,7 +1039,7 @@ class NudgeSideLengthOfCube(Scene):
             Write(dx_below_dx_squared),
             path_arc = -np.pi
         )
-        self.dither()
+        self.wait()
         inner_dx = VGroup(*dx_squared[:-1])
         self.play(
             FadeOut(frac_line2),
@@ -1047,13 +1047,13 @@ class NudgeSideLengthOfCube(Scene):
             dx_squared[-1].highlight, BLACK,
             inner_dx.next_to, extra_stuff[0], RIGHT, SMALL_BUFF
         )
-        self.dither()
+        self.wait()
         self.shrink_dx("Derivative is written", restore = False)
         self.play(*[
             ApplyMethod(mob.fade, 0.7)
             for mob in extra_stuff, inner_dx
         ])
-        self.dither(2)
+        self.wait(2)
 
         anims = []
         for mob in list(self.faces)+list(self.bars)+list(self.corner_cube):
@@ -1063,7 +1063,7 @@ class NudgeSideLengthOfCube(Scene):
             ]
         anims += self.dx_brace.shift, 0.7*DOWN
         self.play(*anims)
-        self.dither()
+        self.wait()
 
     def grab_pieces(self, start_pieces, end_pices, to_write = None):
         for piece in start_pieces:
@@ -1073,7 +1073,7 @@ class NudgeSideLengthOfCube(Scene):
             )
             piece.target.highlight(RED)
         self.play(*map(MoveToTarget, start_pieces), rate_func = wiggle)
-        self.dither()
+        self.wait()
         added_anims = []
         if to_write is not None:
             added_anims.append(Write(to_write))
@@ -1109,7 +1109,7 @@ class NudgeSideLengthOfCube(Scene):
                 self.alt_scene.states[state_name]
             )
         ])
-        self.dither()
+        self.wait()
         if restore:
             self.play(*[m.restore for m in movers])
             self.remove(*movers)
@@ -1279,7 +1279,7 @@ class GraphOfXCubed(GraphScene):
 
         self.play(ShowCreation(graph))
         self.play(Write(label, run_time = 1))
-        self.dither()
+        self.wait()
         self.play(Write(deriv_label, run_time = 1))
         self.play(ShowCreation(ss_group, submobject_mode = "all_at_once"))
         self.animate_secant_slope_group_change(
@@ -1291,7 +1291,7 @@ class GraphOfXCubed(GraphScene):
             ]
         )
         self.play(FadeIn(full_deriv_graph))
-        self.dither()
+        self.wait()
         for x_val in -2, -self.dx/2, 2:
             self.animate_secant_slope_group_change(
                 ss_group,
@@ -1340,7 +1340,7 @@ class PatternForPowerRule(PiCreatureScene):
                 replace_mobject_with_target_in_scene = True  
             ))
         self.change_mode("thinking")
-        self.dither()
+        self.wait()
         for derivative in derivatives[-2:]:
             derivative.save_state()
             self.play(
@@ -1348,7 +1348,7 @@ class PatternForPowerRule(PiCreatureScene):
                 derivative.next_to, derivative,
                 RIGHT, SMALL_BUFF, DOWN,
             )
-            self.dither(2)
+            self.wait(2)
             self.play(derivative.restore)
             self.remove(derivative)
             derivative.restore()
@@ -1386,14 +1386,14 @@ class PatternForPowerRule(PiCreatureScene):
             submobject_mode = "lagged_start",
             run_time = 2,
         )
-        self.dither()
+        self.wait()
         self.play(Write(power_rule[1]))
-        self.dither()
+        self.wait()
         self.play(
             Write(title),
             self.pi_creature.change_mode, "speaking"
         )
-        self.dither()
+        self.wait()
 
     def show_hopping(self):
         exp_range = range(2, 2+self.num_exponents-1)
@@ -1419,7 +1419,7 @@ class PatternForPowerRule(PiCreatureScene):
                 lhs_copy.move_to, rhs, DOWN+LEFT,
                 Write(arrow)
             )
-            self.dither()
+            self.wait()
             self.play(
                 ApplyMethod(
                     lhs_copy[1].replace, form[3],
@@ -1431,7 +1431,7 @@ class PatternForPowerRule(PiCreatureScene):
                     rate_func = squish_rate_func(smooth, 0.5, 1)
                 )   
             )
-            self.dither()
+            self.wait()
             self.play(
                 self.pi_creature.change_mode, "hesitant",
                 self.pi_creature.look_at, lhs_copy
@@ -1479,7 +1479,7 @@ class PowerRuleAlgebra(Scene):
             GrowFromCenter(nudge_brace),
             GrowFromCenter(nudged_output)
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(VGroup(equals, full_product)),
             GrowFromCenter(
@@ -1488,7 +1488,7 @@ class PowerRuleAlgebra(Scene):
             ),
             run_time = 3
         )
-        self.dither()
+        self.wait()
         self.workout_product(equals2, full_product)
 
     def workout_product(self, equals, full_product):
@@ -1518,11 +1518,11 @@ class PowerRuleAlgebra(Scene):
             Write(equals),
             Transform(xs_copy, x_to_n)
         )
-        self.dither()
+        self.wait()
         brace, derivative_term = self.pull_out_linear_terms(
             x_to_n, product_part_tex_pairs, xs, dxs
         )
-        self.dither()
+        self.wait()
 
         circle = Circle(color = DERIVATIVE_COLOR)
         circle.replace(derivative_term, stretch = True)
@@ -1537,9 +1537,9 @@ class PowerRuleAlgebra(Scene):
         extra_stuff.next_to(brace, aligned_edge = UP)
 
         self.play(Write(extra_stuff), full_product.restore)
-        self.dither()
+        self.wait()
         self.play(ShowCreation(circle))
-        self.dither()
+        self.wait()
 
     def pull_out_linear_terms(self, x_to_n, product_part_tex_pairs, xs, dxs):
         last_group = None
@@ -1620,10 +1620,10 @@ class ReactToFullExpansion(Scene):
         self.play(randy.change_mode, "pleading")
         self.play(Blink(randy))
         self.play(randy.change_mode, "angry")
-        self.dither()
+        self.wait()
         self.play(randy.change_mode, "thinking")
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class OneOverX(PiCreatureScene, GraphScene):
     CONFIG = {
@@ -1679,7 +1679,7 @@ class OneOverX(PiCreatureScene, GraphScene):
             Write(func),
             self.pi_creature.change_mode, "pondering"
         )
-        self.dither()
+        self.wait()
         self.play(
             recip_copy.next_to, self.pi_creature, UP+LEFT,
             self.pi_creature.change_mode, "raise_right_hand"
@@ -1687,7 +1687,7 @@ class OneOverX(PiCreatureScene, GraphScene):
         x_to_neg_one.move_to(recip_copy)
         neg_two.replace(neg_one)
         self.play(ReplacementTransform(recip_copy, x_to_neg_one))
-        self.dither()
+        self.wait()
         self.play(
             neg_one.scale, 1.5,
             neg_one.next_to, x_to_neg_one, LEFT, SMALL_BUFF, DOWN,
@@ -1695,7 +1695,7 @@ class OneOverX(PiCreatureScene, GraphScene):
             path_arc = np.pi
         )
         self.play(FadeIn(neg_two))
-        self.dither()
+        self.wait()
         self.say(
             "More geometry!",
             target_mode = "hooray",
@@ -1705,7 +1705,7 @@ class OneOverX(PiCreatureScene, GraphScene):
             ],
             run_time = 2
         )
-        self.dither()
+        self.wait()
         self.play(RemovePiCreatureBubble(self.pi_creature))
 
     def introduce_puddle(self):
@@ -1720,13 +1720,13 @@ class OneOverX(PiCreatureScene, GraphScene):
             GrowFromCenter(rect_group.x_brace),
             Write(rect_group.x_label),
         )
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(rect_group.recip_brace),
             Write(rect_group.recip_label),
         )
         self.setup_axes(animate = True)
-        self.dither()
+        self.wait()
 
         for d in 2, 3:
             self.change_rectangle_group(
@@ -1737,9 +1737,9 @@ class OneOverX(PiCreatureScene, GraphScene):
                 },
                 run_time = 2
             )
-            self.dither()
+            self.wait()
         self.change_rectangle_group(rect_group, 3)
-        self.dither()
+        self.wait()
 
         self.rect_group = rect_group
 
@@ -1757,7 +1757,7 @@ class OneOverX(PiCreatureScene, GraphScene):
         )
         self.change_mode("happy")
         self.change_rectangle_group(rect_group, self.start_x_value)
-        self.dither()
+        self.wait()
 
         self.graph = graph
 
@@ -1878,37 +1878,37 @@ class OneOverX(PiCreatureScene, GraphScene):
             GrowFromCenter(dx_brace),
             *map(ShowCreation, v_lines)
         )
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(df_brace),
             *map(ShowCreation, h_lines)
         )
         self.change_mode("confused")
-        self.dither()
+        self.wait()
 
         self.play(
             FadeIn(area_gained),
             Write(area_gained_label, run_time = 2),
             ShowCreation(area_gained_arrow)
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(area_lost),
             Write(area_lost_label, run_time = 2),
             ShowCreation(area_lost_arrow)
         )
-        self.dither()
+        self.wait()
         self.revert_to_original_skipping_status()###
         self.play(
             Write(negative),
             ShowCreation(negative_arrow)
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(question),
             self.pi_creature.change_mode, "raise_right_hand"
         )
-        self.dither(2)
+        self.wait(2)
 
 
     ########
@@ -1928,7 +1928,7 @@ class OneOverX(PiCreatureScene, GraphScene):
         rect_group = self.get_rectangle_group(0.5)
 
         self.add(rect_group)
-        self.dither()
+        self.wait()
         self.change_rectangle_group(
             rect_group, 2,
             target_group_kwargs = {
@@ -1937,7 +1937,7 @@ class OneOverX(PiCreatureScene, GraphScene):
             },
             added_anims = [ShowCreation(graph)]
         )
-        self.dither()
+        self.wait()
 
     def get_rectangle_group(
         self, x, 
@@ -2034,7 +2034,7 @@ class AskRecipriocalQuestion(Scene):
         arrow.move_to(tex[0].get_top(), DOWN+LEFT)
         self.play(Write(tex))
         self.play(ShowCreation(arrow))
-        self.dither()
+        self.wait()
 
 class SquareRootOfX(Scene):
     CONFIG = {
@@ -2087,7 +2087,7 @@ class SquareRootOfX(Scene):
             Write(area_label)
         )
         self.play(*map(FadeIn, braces))
-        self.dither()
+        self.wait()
 
         self.square = square
         self.area_label = area_label
@@ -2150,13 +2150,13 @@ class SquareRootOfX(Scene):
             map(FadeIn, little_braces)
         ))
         self.play(Write(question))
-        self.dither()
+        self.wait()
 
 class MentionSine(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("Let's tackle $\\sin(\\theta)$")
         self.change_student_modes("pondering", "hooray", "erm")
-        self.dither(2)
+        self.wait(2)
         self.student_thinks("")
         self.zoom_in_on_thought_bubble()
 
@@ -2166,7 +2166,7 @@ class NameUnitCircle(Scene):
         words.scale(2)
         words.highlight(BLUE)
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
 class DerivativeOfSineIsSlope(Scene):
     def construct(self):
@@ -2180,7 +2180,7 @@ class DerivativeOfSineIsSlope(Scene):
         VGroup(*tex[1][-9:]).highlight(BLUE)
 
         self.play(Write(tex, run_time = 2))
-        self.dither()
+        self.wait()
 
 class IntroduceUnitCircleWithSine(GraphScene):
     CONFIG = {
@@ -2233,7 +2233,7 @@ class IntroduceUnitCircleWithSine(GraphScene):
             Rotate(radial_line, 2*np.pi),
             run_time = 2,
         )
-        self.dither()
+        self.wait()
 
         self.circle = circle
         self.radial_line = radial_line
@@ -2266,18 +2266,18 @@ class IntroduceUnitCircleWithSine(GraphScene):
             GrowFromCenter(brace),
         )
         self.play(Write(brace_text))
-        self.dither()
+        self.wait()
         self.play(
             line.move_to, radial_line.get_end(), DOWN,
             FadeOut(brace)
         )
         self.play(ReplacementTransform(line, arc))
-        self.dither()
+        self.wait()
         self.play(
             Rotate(radial_line, self.example_radians),
             ShowCreation(arc_copy)
         )
-        self.dither()
+        self.wait()
         arc_copy.generate_target()
         arc_copy.target.scale(0.2)
         theta_copy.generate_target()
@@ -2288,7 +2288,7 @@ class IntroduceUnitCircleWithSine(GraphScene):
         )
         theta_copy.target.shift(SMALL_BUFF*UP)
         self.play(*map(MoveToTarget, [arc_copy, theta_copy]))
-        self.dither()
+        self.wait()
 
         self.angle_label = VGroup(arc_copy, theta_copy)
         self.example_theta_equation = brace_text
@@ -2307,7 +2307,7 @@ class IntroduceUnitCircleWithSine(GraphScene):
             GrowFromCenter(brace),
             Write(brace_text)
         )
-        self.dither()
+        self.wait()
         faders = [brace, brace_text, self.example_theta_equation]
         if self.remove_angle_label:
             faders += self.angle_label
@@ -2392,7 +2392,7 @@ class DerivativeIntuitionFromSineGraph(GraphScene):
             run_time = 2./rps,
             rate_func = None
         )
-        self.dither()
+        self.wait()
         self.graph = graph
 
     def draw_derivative_from_slopes(self):
@@ -2409,7 +2409,7 @@ class DerivativeIntuitionFromSineGraph(GraphScene):
 
         self.play(ShowCreation(ss_group, submobject_mode = "all_at_once"))
         self.play(ShowCreation(v_line))
-        self.dither()
+        self.wait()
         last_theta = 0
         next_theta = np.pi/2
         while last_theta < self.x_max:
@@ -2434,7 +2434,7 @@ class DerivativeIntuitionFromSineGraph(GraphScene):
                     ),
                 ]
             )
-            self.dither()
+            self.wait()
             if next_theta == 2*np.pi:
                 words = TextMobject("Looks a lot like $\\cos(\\theta)$")
                 words.next_to(self.graph_origin, RIGHT)
@@ -2468,7 +2468,7 @@ class DerivativeIntuitionFromSineGraph(GraphScene):
                 Transform(self.deriv_graph, new_graph),
                 run_time = 2
             )
-            self.dither()
+            self.wait()
 
     ######
 
@@ -2498,7 +2498,7 @@ class LookToFunctionsMeaning(TeacherStudentsScene):
             actual meaning
         """)
         self.change_student_modes(*["pondering"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
     CONFIG = {
@@ -2536,7 +2536,7 @@ class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
             self.little_rectangle.shift, 
             SMALL_BUFF*(DOWN+RIGHT)
         )
-        self.dither()
+        self.wait()
 
     def perform_nudge(self):
         d_theta_arc = Arc(
@@ -2582,7 +2582,7 @@ class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
             GrowFromCenter(d_theta_brace),
             FadeIn(d_theta_label)
         )
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(h_line),
             ShowCreation(d_sine_line)
@@ -2591,7 +2591,7 @@ class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
             GrowFromCenter(d_sine_brace),
             Write(d_sine)
         )
-        self.dither()
+        self.wait()
 
         self.little_triangle = Polygon(
             nudged_point, point, interim_point
@@ -2635,7 +2635,7 @@ class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
             little_triangle.highlight, YELLOW,
             rate_func = there_and_back
         )
-        self.dither()
+        self.wait()
         groups = [self.d_theta_group, self.d_sine_group]
         for group, line in zip(groups, little_triangle_lines):
             self.play(ApplyMethod(
@@ -2648,7 +2648,7 @@ class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
                 group.highlight, YELLOW,
                 rate_func = there_and_back,
             )
-            self.dither()
+            self.wait()
 
         self.play(ReplacementTransform(
             little_triangle.copy().set_fill(opacity = 0), 
@@ -2656,18 +2656,18 @@ class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
             path_arc = np.pi/2,
             run_time = 2
         ))
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(big_triangle_copy, big_triangle),
             Animation(self.angle_label)
         )
-        self.dither()
+        self.wait()
         self.play(
             self.radial_line.rotate_in_place, np.pi/12,
             Animation(big_triangle),
             rate_func = wiggle,
         )
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(
                 big_triangle.copy().set_fill(opacity = 0), 
@@ -2687,7 +2687,7 @@ class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
             new_angle_label.highlight, RED,
             rate_func = there_and_back
         )
-        self.dither()
+        self.wait()
 
     def analyze_ratios(self):
         d_ratio = TexMobject("\\frac{d(\\sin(\\theta))}{d\\theta} = ")
@@ -2709,14 +2709,14 @@ class DerivativeFromZoomingInOnSine(IntroduceUnitCircleWithSine, ZoomedScene):
 
         for mob in group:
             self.play(Write(mob))
-            self.dither()
+            self.wait()
 
 class TryWithCos(Scene):
     def construct(self):
         words = TextMobject("What about $\\cos(\\theta)$?")
         words.highlight(YELLOW)
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
 class NextVideo(TeacherStudentsScene):
     def construct(self):
@@ -2747,7 +2747,7 @@ class NextVideo(TeacherStudentsScene):
             next_video.highlight, YELLOW,
             next_video.shift, MED_LARGE_BUFF*DOWN
         )
-        self.dither()
+        self.wait()
         for mob in group:
             self.play(
                 Write(mob, run_time = 1),
@@ -2756,7 +2756,7 @@ class NextVideo(TeacherStudentsScene):
                     for pi in self.get_pi_creatures()
                 ]
             )
-        self.dither(3)
+        self.wait(3)
 
 class Chapter3PatreonThanks(PatreonThanks):
     CONFIG = {
@@ -2806,15 +2806,15 @@ class Promotion(PiCreatureScene):
             self.pi_creature.change, "raise_right_hand"
         )
         self.play(ShowCreation(rect))
-        self.dither(2)
+        self.wait(2)
         self.change_mode("thinking")
-        self.dither()
+        self.wait()
         self.look_at(url)
-        self.dither(10)
+        self.wait(10)
         self.change_mode("happy")
-        self.dither(10)
+        self.wait(10)
         self.change_mode("raise_right_hand")
-        self.dither(10)
+        self.wait(10)
 
 class Thumbnail(NudgeSideLengthOfCube):
     def construct(self):

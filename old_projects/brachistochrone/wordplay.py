@@ -37,7 +37,7 @@ class Intro(Scene):
             ShimmerIn(part)
             for part in new_text.split()
         ])
-        self.dither()
+        self.wait()
         with_word, steve = new_text.split()
         steve_copy = steve.copy().center().to_edge(UP)
         # logo.sort_points(lambda p : -np.linalg.norm(p))
@@ -102,7 +102,7 @@ class IntroduceSteve(Scene):
         self.play(ShimmerIn(contributions))
         for logo in logos:
             self.play(FadeIn(logo))
-        self.dither()
+        self.wait()
 
 class ShowTweets(Scene):
     def construct(self):
@@ -122,7 +122,7 @@ class ShowTweets(Scene):
                 Transform(Point(tweets[x-1].get_center()), tweets[x]),
                 Animation(tweets[x-1])
             )
-        self.dither()
+        self.wait()
 
 class LetsBeHonest(Scene):
     def construct(self):
@@ -130,7 +130,7 @@ class LetsBeHonest(Scene):
             Let's be honest about who benefits 
             from this collaboration...
         """)))
-        self.dither()
+        self.wait()
 
 
 class WhatIsTheBrachistochrone(Scene):
@@ -138,7 +138,7 @@ class WhatIsTheBrachistochrone(Scene):
         self.play(ShimmerIn(TextMobject("""
             So \\dots what is the Brachistochrone?
         """)))
-        self.dither()
+        self.wait()
 
 
 class DisectBrachistochroneWord(Scene):
@@ -203,22 +203,22 @@ class DisectBrachistochroneWord(Scene):
 
         self.play(Transform(original_word, word), ShowCreation(dots))
         self.play(ShimmerIn(pronunciation))
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(overbrace1),
             GrowFromCenter(overbrace2)
         )
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(latin))
         self.play(FadeIn(question_mark))
         self.play(Transform(
             latin, greek,
             path_func = counterclockwise_path()
         ))
-        self.dither()
+        self.wait()
         self.play(Transform(question_mark, stars))
         self.remove(stars)
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(shortest))
         self.play(ShimmerIn(time))
         for ex, ar in [(chrono_example, chrono_arrow), (brachy_example, brachy_arrow)]:
@@ -226,7 +226,7 @@ class DisectBrachistochroneWord(Scene):
                 ShowCreation(ar),
                 ShimmerIn(ex)
             )
-        self.dither()
+        self.wait()
 
 class OneSolutionTwoInsights(Scene):
     def construct(self):
@@ -242,10 +242,10 @@ class OneSolutionTwoInsights(Scene):
         name = TextMobject("Mark Levi").to_edge(UP)
 
         self.play(*map(ShimmerIn, one_solution.split()))
-        self.dither()
+        self.wait()
         for pair in zip(one_solution.split(), two_insights.split()):
             self.play(Transform(*pair, path_func = path_along_arc(np.pi)))
-        self.dither()
+        self.wait()
         self.clear()
         self.add(two, insights)
         for word, man in [(two, johann), (insights, mark)]:
@@ -253,11 +253,11 @@ class OneSolutionTwoInsights(Scene):
                 Transform(word, Point(word.get_left())),                
                 GrowFromCenter(man)
             )
-            self.dither()
+            self.wait()
         self.clear()
         self.play(ApplyMethod(mark.center))
         self.play(ShimmerIn(name))
-        self.dither()
+        self.wait()
 
 class CircleOfIdeas(Scene):
     def construct(self):
@@ -292,7 +292,7 @@ class CircleOfIdeas(Scene):
         ]+[
             GrowFromCenter(brachistochrone)
         ])
-        self.dither()
+        self.wait()
 
     def get_spinning_anims(self, words, angle = np.pi/6):
         anims = []
@@ -343,7 +343,7 @@ class FermatsPrincipleStatement(Scene):
         self.play(
             ApplyMethod(everything.highlight, WHITE),
         )
-        self.dither()
+        self.wait()
 
 class VideoProgression(Scene):
     def construct(self):
@@ -365,7 +365,7 @@ class VideoProgression(Scene):
         point = Point(DOWN)
 
         self.play(ShimmerIn(brachy))
-        self.dither()
+        self.wait()
         self.play(
             ApplyMethod(brachy.shift, spacing),
             Transform(point, optics)
@@ -373,13 +373,13 @@ class VideoProgression(Scene):
         optics = point
         arrow1 = Arrow(optics, brachy)
         self.play(ShowCreation(arrow1))
-        self.dither()
+        self.wait()
         arrow2 = Arrow(light_in_two, optics)        
         self.play(
             ShowCreation(arrow2),
             ShimmerIn(light_in_two)
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(light_in_two),
             GrowFromCenter(snells),
@@ -387,7 +387,7 @@ class VideoProgression(Scene):
                 ApplyMethod(arrow2.highlight, BLUE_D)
             )
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(optics),
             GrowFromCenter(multi),
@@ -395,7 +395,7 @@ class VideoProgression(Scene):
                 ApplyMethod(arrow1.highlight, BLUE_D)
             )
         )
-        self.dither()
+        self.wait()
 
 
 
@@ -442,19 +442,19 @@ class BalanceCompetingFactors(Scene):
         self.add(triangle, self.balancers)
         self.rotate(1)
         self.rotate(-2)
-        self.dither()
+        self.wait()
         self.play(Transform(
             factor1, real_factor1, 
             path_func = path_along_arc(np.pi/4)
         ))
         self.rotate(2)
-        self.dither()
+        self.wait()
         self.play(Transform(
             factor2, real_factor2,
             path_func = path_along_arc(np.pi/4)
         ))
         self.rotate(-2)
-        self.dither()
+        self.wait()
         self.rotate(1)
 
     def rotate(self, factor):
@@ -478,14 +478,14 @@ class Challenge(Scene):
             curves look like straight lines in 
             $t$-$\\theta$ space?
         """))
-        self.dither()
+        self.wait()
 
 
 
 class Section1(Scene):
     def construct(self):
         self.add(TextMobject("Section 1: Johann Bernoulli's insight"))
-        self.dither()
+        self.wait()
 
 class Section2(Scene):
     def construct(self):
@@ -493,7 +493,7 @@ class Section2(Scene):
             "Section 2: Mark Levi's insight, and a challenge",
             size = "\\large"
         ))
-        self.dither()
+        self.wait()
 
 
 
@@ -502,10 +502,10 @@ class NarratorInterjection(Scene):
         words1 = TexMobject("<\\text{Narrator interjection}>")
         words2 = TexMobject("<\\!/\\text{Narrator interjection}>")
         self.add(words1)
-        self.dither()
+        self.wait()
         self.clear()
         self.add(words2)
-        self.dither()
+        self.wait()
 
 
 class ThisCouldBeTheEnd(Scene):
@@ -516,30 +516,30 @@ class ThisCouldBeTheEnd(Scene):
         ])
         for part in words.split():
             self.play(ShimmerIn(part))
-            self.dither()
+            self.wait()
 
 
 class MyOwnChallenge(Scene):
     def construct(self):
         self.add(TextMobject("My own challenge:"))
-        self.dither()
+        self.wait()
 
 
 class WarmupChallenge(Scene):
     def construct(self):
         self.add(TextMobject("\\large Warm-up challenge: Confirm this for yourself"))
-        self.dither()
+        self.wait()
 
 class FindAnotherSolution(Scene):
     def construct(self):
         self.add(TextMobject("Find another brachistochrone solution\\dots"))
-        self.dither()
+        self.wait()
 
 
 class ProofOfSnellsLaw(Scene):
     def construct(self):
         self.add(TextMobject("Proof of Snell's law:"))
-        self.dither()
+        self.wait()
 
 
 class CondensedVersion(Scene):
@@ -554,11 +554,11 @@ class CondensedVersion(Scene):
         condensed = TextMobject("condensed")
 
         self.add(snells)
-        self.dither()
+        self.wait()
         self.play(DelayByOrder(
             Transform(snells, condensed, run_time = 2)
         ))
-        self.dither()
+        self.wait()
 
 
 

@@ -159,7 +159,7 @@ class DangerInProbability(Scene):
             warning.next_to, probability, UP, LARGE_BUFF,
             LaggedStart(FadeIn, probability)
         )
-        self.dither()
+        self.wait()
 
 
     #####
@@ -249,7 +249,7 @@ class MeaningOfIndependence(SampleSpaceScene):
             ShowCreation(line),
             Write(word, run_time = 1)
         )
-        self.dither()
+        self.wait()
 
         self.independence_word = word
         self.independence_line = line
@@ -274,7 +274,7 @@ class MeaningOfIndependence(SampleSpaceScene):
             self.independence_word.next_to, equation, UP, MED_LARGE_BUFF,
             Write(equation)
         )
-        self.dither()
+        self.wait()
 
         self.equation = equation
 
@@ -296,9 +296,9 @@ class MeaningOfIndependence(SampleSpaceScene):
             morty.change, "hooray", everything,
             ShowCreation(bubble)
         )
-        self.dither()
+        self.wait()
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
         self.morty = morty
 
@@ -315,7 +315,7 @@ class MeaningOfIndependence(SampleSpaceScene):
                 FadeOut(self.independence_line)
             ]
         ))
-        self.dither()
+        self.wait()
 
 class IntroduceBinomial(Scene):
     CONFIG = {
@@ -398,7 +398,7 @@ class IntroduceBinomial(Scene):
     def play_with_p_value(self, *values):
         for value in values:
             self.change_p(value)
-            self.dither()
+            self.wait()
 
     def write_independence_assumption(self):
         assumption = TextMobject("Independence assumption")
@@ -407,7 +407,7 @@ class IntroduceBinomial(Scene):
         assumption.highlight(GREEN_C)
 
         self.play(Write(assumption, run_time = 2))
-        self.dither()
+        self.wait()
 
         self.assumption = assumption
 
@@ -418,7 +418,7 @@ class IntroduceBinomial(Scene):
 
         self.play(ShowCreation(cross))
         self.play(self.bar_chart.fade, 0.7)
-        self.dither(2)
+        self.wait(2)
         self.play(self.bar_chart.restore)
 
     def shift_weight_to_tails(self):
@@ -450,7 +450,7 @@ class IntroduceBinomial(Scene):
         self.play(
             chart_copy.change_bar_values, values
         )
-        self.dither(2)
+        self.wait(2)
 
 
 
@@ -484,7 +484,7 @@ class IntroduceQuiz(PiCreatureScene):
             Write(quiz),
             self.randy.change, "pondering", quiz
         )
-        self.dither()
+        self.wait()
 
         self.quiz = quiz
 
@@ -518,7 +518,7 @@ class IntroduceQuiz(PiCreatureScene):
             self.quiz.next_to, self.randy, RIGHT,
             self.randy.change, "confused", probabilities
         )
-        self.dither()
+        self.wait()
 
         self.probabilities = probabilities
         self.abbreviated_probabilities = abbreviated_probabilities
@@ -555,7 +555,7 @@ class IntroduceQuiz(PiCreatureScene):
                 self.abbreviated_probabilities,
             )
         ])
-        self.dither()
+        self.wait()
 
         self.bar_chart = chart
 
@@ -573,7 +573,7 @@ class IntroduceQuiz(PiCreatureScene):
             self.randy.change, "happy", prob
         )
         self.play(ShowCreation(rect))
-        self.dither()
+        self.wait()
 
         self.single_question_probability = VGroup(
             prob, rect
@@ -635,10 +635,10 @@ class BreakDownQuestionPatterns(IntroduceQuiz):
         group_group = slot_group_groups[0]
         self.revert_to_original_skipping_status()
         self.play(Write(group_group, run_time = 1))
-        self.dither()
+        self.wait()
         for new_group_group in slot_group_groups[1:]:
             self.play(Transform(group_group, new_group_group))
-            self.dither(2)
+            self.wait(2)
 
         self.slot_groups = slot_group_groups[-1]
 
@@ -651,7 +651,7 @@ class BreakDownQuestionPatterns(IntroduceQuiz):
             GrowFromCenter(brace),
             Write(count)
         )
-        self.dither()
+        self.wait()
 
     #######
 
@@ -702,7 +702,7 @@ class AssociatePatternsWithScores(BreakDownQuestionPatterns):
         for score, score_group in zip(scores, score_groups):
             score_group.save_state()
             self.play(score_group.next_to, score_group, LEFT, MED_LARGE_BUFF)
-            self.dither()
+            self.wait()
             self.play(
                 ReplacementTransform(
                     score_group.copy(), score_group.organized
@@ -710,7 +710,7 @@ class AssociatePatternsWithScores(BreakDownQuestionPatterns):
                 LaggedStart(FadeIn, score, run_time = 1)
             )
             self.play(score_group.restore)
-        self.dither()
+        self.wait()
 
     def think_about_binomial_patterns(self):
         triangle = PascalsTriangle(
@@ -742,7 +742,7 @@ class AssociatePatternsWithScores(BreakDownQuestionPatterns):
             LaggedStart(FadeIn, triangle, run_time = 4),
         )
         self.play(row.highlight, YELLOW)
-        self.dither(4)
+        self.wait(4)
 
 class BeforeCounting(TeacherStudentsScene):
     def construct(self):
@@ -769,7 +769,7 @@ class BeforeCounting(TeacherStudentsScene):
             GrowFromCenter(brace),
             LaggedStart(FadeIn, q_marks)
         )
-        self.dither(2)
+        self.wait(2)
 
 class TemptingButWrongCalculation(BreakDownQuestionPatterns):
     def construct(self):
@@ -823,7 +823,7 @@ class TemptingButWrongCalculation(BreakDownQuestionPatterns):
             LaggedStart(FadeIn, slot_group.content, run_time = 3),
             self.randy.change, "pondering"
         )
-        self.dither(2)
+        self.wait(2)
         for part, mob in zip(rhs, slot_group.content):
             self.play(*[
                 ReplacementTransform(
@@ -836,13 +836,13 @@ class TemptingButWrongCalculation(BreakDownQuestionPatterns):
             ])
             self.play(GrowFromCenter(part.brace))
             self.play(FadeIn(part.value))
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
         self.play(
             Write(question),
             self.randy.change, "confused"
         )
-        self.dither(3)
+        self.wait(3)
 
         self.question = question
         self.rhs = rhs
@@ -907,7 +907,7 @@ class ThousandPossibleQuizzes(Scene):
             ),
             Animation(full_quizzes, remover = True)
         )
-        self.dither()
+        self.wait()
 
         self.quizzes = quizzes
         self.title = title
@@ -940,7 +940,7 @@ class ThousandPossibleQuizzes(Scene):
         )
         for label in labels:
             self.play(FadeIn(label))
-            self.dither()
+            self.wait()
 
         self.splits = VGroup(top_split, bottom_split)
         self.q1_split_labels = labels
@@ -973,14 +973,14 @@ class ThousandPossibleQuizzes(Scene):
 
         self.play(Write(question))
         self.play(ShowCreation(little_rects))
-        self.dither()
+        self.wait()
         self.play(FadeOut(little_rects))
         self.play(ShowCreation(big_rect))
         self.play(
             FadeOut(big_rect),
             FadeOut(question),
         )
-        self.dither()
+        self.wait()
 
     def show_uncorrelated_division_by_second(self):
         top_split = self.splits[0]
@@ -1013,7 +1013,7 @@ class ThousandPossibleQuizzes(Scene):
             rate_func = there_and_back,
             lag_ratio = 0.2,
         ))
-        self.dither()
+        self.wait()
 
         self.top_left_label = left_label
         self.top_splits = VGroup(left_split, right_split)
@@ -1042,9 +1042,9 @@ class ThousandPossibleQuizzes(Scene):
             ),
             Transform(left_label_equation, new_equation)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(Indicate(left_label_equation[0]))
-        self.dither()
+        self.wait()
 
         left_split.add(*movers)
         right_split.remove(*movers)
@@ -1089,7 +1089,7 @@ class ThousandPossibleQuizzes(Scene):
             *map(MoveToTarget, [left_split, right_split])
         )
         self.play(FadeIn(label))
-        self.dither()
+        self.wait()
         self.play(
             MoveToTarget(
                 movers, 
@@ -1098,7 +1098,7 @@ class ThousandPossibleQuizzes(Scene):
             ),
             Transform(equation, alt_equation)
         )
-        self.dither()
+        self.wait()
 
         left_split.remove(*movers)
         right_split.add(*movers)
@@ -1153,7 +1153,7 @@ class ThousandPossibleQuizzes(Scene):
             *map(Animation, [num1, num2])
         )
         self.remove(num1, num2)
-        self.dither()
+        self.wait()
         self.play(FadeOut(rects))
 
     def emphasize_disproportionate_divide(self):
@@ -1177,9 +1177,9 @@ class ThousandPossibleQuizzes(Scene):
         self.play(*map(MoveToTarget, both_movers))
         self.play(ShowCreation(line))
         self.play(FadeOut(line))
-        self.dither()
+        self.wait()
         self.play(both_movers.restore)
-        self.dither()
+        self.wait()
 
     def show_third_question_results(self):
         all_splits = VGroup(
@@ -1210,7 +1210,7 @@ class ThousandPossibleQuizzes(Scene):
         )
         for split in all_splits:
             self.play(MoveToTarget(split))
-        self.dither()
+        self.wait()
         self.play(LaggedStart(
             ApplyMethod, all_right,
             lambda m : (m.highlight, YELLOW),
@@ -1218,7 +1218,7 @@ class ThousandPossibleQuizzes(Scene):
             lag_ratio = 0.2,
             run_time = 2
         ))
-        self.dither(2)
+        self.wait(2)
 
     #####
 
@@ -1259,7 +1259,7 @@ class ExampleConditional(Scene):
         expression.center().to_edge(DOWN)
 
         self.play(Write(expression))
-        self.dither()
+        self.wait()
 
 class HarderQuizzes(Scene):
     def construct(self):
@@ -1284,10 +1284,10 @@ class HarderQuizzes(Scene):
 
         for quiz in quizzes:
             self.play(FadeIn(quiz))
-        self.dither()
+        self.wait()
         for cross in crosses:
             self.play(ShowCreation(cross))
-        self.dither()
+        self.wait()
 
 class WritePSecond(Scene):
     def construct(self):
@@ -1324,13 +1324,13 @@ class SubmitToTemptation(TemptingButWrongCalculation):
         )
         for part in self.rhs:
             self.play(Indicate(part.value))
-        self.dither()
+        self.wait()
 
 class AccurateProductRule(SampleSpaceScene, ThreeDScene):
     def construct(self):
         self.setup_terms()
         self.add_sample_space()
-        self.dither()
+        self.wait()
         self.show_first_division()
         self.show_second_division()
         self.move_to_third_dimension()
@@ -1402,9 +1402,9 @@ class AccurateProductRule(SampleSpaceScene, ThreeDScene):
         self.play(ReplacementTransform(
             top_label.copy(), self.terms[1]
         ))
-        self.dither()
+        self.wait()
         self.play(Write(self.terms[1].value))
-        self.dither()
+        self.wait()
 
         space.add(braces_and_labels)
         self.top_part = space.horizontal_parts[0]
@@ -1428,9 +1428,9 @@ class AccurateProductRule(SampleSpaceScene, ThreeDScene):
         self.play(ReplacementTransform(
             label.copy(), self.terms[2]
         ))
-        self.dither()
+        self.wait()
         self.play(Write(self.terms[2].value))
-        self.dither()
+        self.wait()
 
         space.add(braces_and_labels)
         self.top_left_part = top_part.vertical_parts[0]
@@ -1462,7 +1462,7 @@ class AccurateProductRule(SampleSpaceScene, ThreeDScene):
             cubes[1].set_fill, None, 0.5,
             cubes[1].set_stroke, WHITE, 1,
         )
-        self.dither()
+        self.wait()
 
         self.cubes = cubes
 
@@ -1480,11 +1480,11 @@ class AccurateProductRule(SampleSpaceScene, ThreeDScene):
             GrowFromCenter(brace),
             FadeIn(label),
         )
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             label.copy(), self.terms[3]
         ))
-        self.dither()
+        self.wait()
 
     def show_confusion(self):
         randy = Randolph()
@@ -1495,7 +1495,7 @@ class AccurateProductRule(SampleSpaceScene, ThreeDScene):
         self.play(randy.look_at, self.cubes)
         self.play(Blink(randy))
         self.play(randy.look_at, self.terms)
-        self.dither()
+        self.wait()
 
 class ShowAllEightConditionals(Scene):
     def construct(self):
@@ -1539,10 +1539,10 @@ class ShowAllEightConditionals(Scene):
             run_time = 5,
             lag_ratio = 0.3
         ))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(rect, run_time = 2))
         self.play(FadeOut(rect))
-        self.dither()
+        self.wait()
 
     def suggest_independence(self):
         full_screen_rect = FullScreenFadeRectangle()
@@ -1559,7 +1559,7 @@ class ShowAllEightConditionals(Scene):
             target_mode = "shruggie"
         ))
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class ShowIndependenceSymbolically(Scene):
     def construct(self):
@@ -1592,13 +1592,13 @@ class ShowIndependenceSymbolically(Scene):
         words.next_to(arrow, UP)
 
         self.add(rhs, lhs, arrow, words)
-        self.dither()
+        self.wait()
         for bool_list in bool_lists:
             slot_group = get_slot_group(bool_list, SMALL_BUFF, False)
             slot_group.replace(condition)
             slot_group.move_to(condition, DOWN)
             self.play(Transform(condition, slot_group))
-            self.dither()
+            self.wait()
             
 class ComputeProbabilityOfOneWrong(Scene):
     CONFIG = {
@@ -1635,20 +1635,20 @@ class ComputeProbabilityOfOneWrong(Scene):
         probabilities.center()
 
         self.play(Write(probabilities[0]))
-        self.dither(2)
+        self.wait(2)
         for i in range(2):
             self.play(ReplacementTransform(
                 probabilities[i].copy(),
                 probabilities[i+1]
             ))
-        self.dither()
+        self.wait()
         for group in point_8s, point_2s:
             self.play(LaggedStart(
                 Indicate, group,
                 rate_func = there_and_back,
                 lag_ratio = 0.7
             ))
-            self.dither()
+            self.wait()
 
     def show_final_result(self):
         result = TexMobject(
@@ -1666,7 +1666,7 @@ class ComputeProbabilityOfOneWrong(Scene):
         result.to_edge(UP)
 
         self.play(Write(result))
-        self.dither()
+        self.wait()
 
 class ComputeProbabilityOfOneRight(ComputeProbabilityOfOneWrong):
     CONFIG = {
@@ -1730,7 +1730,7 @@ class ShowFullDistribution(Scene):
     def add_scores_zero_and_three(self):
         self.p_slot_groups = VGroup()
 
-        self.dither()
+        self.wait()
         self.add_edge_score(0, UP, False)
         self.add_edge_score(3, DOWN, True)
 
@@ -1747,7 +1747,7 @@ class ShowFullDistribution(Scene):
             run_time = 2,
             lag_ratio = 0.7,
         ))
-        self.dither(2)
+        self.wait(2)
         self.p_slot_groups.add(brace, p_slot_group)
 
     def show_bar_chart(self):
@@ -1790,7 +1790,7 @@ class ShowFullDistribution(Scene):
             Transform(p_terms, new_p_terms),
             FadeOut(to_fade),
         )
-        self.dither(2)
+        self.wait(2)
 
         chart.bar_top_labels = p_terms
         chart.add(p_terms)
@@ -1814,12 +1814,12 @@ class ShowFullDistribution(Scene):
             LaggedStart(FadeIn, bars),
             LaggedStart(FadeIn, nums),
         )
-        self.dither(2)
+        self.wait(2)
         self.play(bars_copy.shift, -vect)
         self.play(ReplacementTransform(
             bars_copy, self.bar_chart.bars
         ))
-        self.dither(2)
+        self.wait(2)
         self.play(
             VGroup(self.bar_chart, bars, nums).to_edge, LEFT
         )
@@ -1855,14 +1855,14 @@ class ShowFullDistribution(Scene):
         self.play(FadeIn(new_prob))
         self.play(Transform(new_prob[-1], alt_rhss[0]))
         point_5_probs = self.show_point_5_probs(new_prob)
-        self.dither()
+        self.wait()
         self.play(Transform(self.bar_chart, alt_charts[0]))
-        self.dither()
+        self.wait()
         self.play(FadeOut(point_5_probs))
         for rhs, chart in zip(alt_rhss, alt_charts)[1:]:
             self.play(Transform(new_prob[-1], rhs))
             self.play(Transform(self.bar_chart, chart))
-            self.dither(2)
+            self.wait(2)
 
     def show_point_5_probs(self, mob):
         probs = VGroup()
@@ -1883,7 +1883,7 @@ class ShowFullDistribution(Scene):
                 buff = SMALL_BUFF
 
         self.play(LaggedStart(FadeIn, probs))
-        self.dither()
+        self.wait()
         return probs
 
 class ProbablyWrong(TeacherStudentsScene):
@@ -1896,7 +1896,7 @@ class ProbablyWrong(TeacherStudentsScene):
             *["angry"]*3,
             run_time = 1
         )
-        self.dither()
+        self.wait()
 
 class ShowTrueDistribution(PiCreatureScene):
     def construct(self):
@@ -1952,7 +1952,7 @@ class ShowTrueDistribution(PiCreatureScene):
             chart.change_bar_values, alt_values,
             *map(ShowCreation, arrows)
         )
-        self.dither(2)
+        self.wait(2)
 
         self.bar_chart = chart
         self.old_bars = old_bars
@@ -1972,24 +1972,24 @@ class ShowTrueDistribution(PiCreatureScene):
         ))
 
         self.play(ShowCreation(prob_rect))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             prob_rect, bar_rect
         ))
-        self.dither()
+        self.wait()
         self.play(FadeOut(bar_rect))
 
     def get_angry(self):
         randy = self.randy
 
         self.play(randy.change, "angry")
-        self.dither(2)
+        self.wait(2)
         self.play(PiCreatureSays(
             randy, "It's not representative!",
             target_mode = "pleading",
             bubble_kwargs = {"fill_opacity" : 1}
         ))
-        self.dither(2)
+        self.wait(2)
 
     #####
 
@@ -2036,7 +2036,7 @@ class TeacherAssessingLiklihoodOfZero(TeacherStudentsScene):
             FadeIn(words),
             Write(prob)
         )
-        self.dither()
+        self.wait()
 
         self.ind_group = VGroup(prob, words)
 
@@ -2059,7 +2059,7 @@ class TeacherAssessingLiklihoodOfZero(TeacherStudentsScene):
             run_time = 2,
         )
         self.play(randy.change, "sad")
-        self.dither(2)
+        self.wait(2)
         self.play(
             RemovePiCreatureBubble(
                 self.teacher, target_mode = "guilty",
@@ -2067,7 +2067,7 @@ class TeacherAssessingLiklihoodOfZero(TeacherStudentsScene):
             PiCreatureSays(randy, "Wait!", target_mode = "surprised"),
             run_time = 1
         )
-        self.dither(1)
+        self.wait(1)
 
 class CorrelationsWith35Percent(ThousandPossibleQuizzes):
     def construct(self):
@@ -2110,19 +2110,19 @@ class CorrelationsWith35Percent(ThousandPossibleQuizzes):
         term_brace = Brace(term, DOWN)
 
         self.add(quizzes)
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(brace), 
             FadeIn(prop),
             *map(MoveToTarget, parts)
         )
-        self.dither()
+        self.wait()
         self.play(
             top_part.fade, 0.8,
             Transform(brace, term_brace),
             prop.next_to, term_brace, DOWN,
         )
-        self.dither()
+        self.wait()
 
         self.quizzes = bottom_part
         self.quizzes.sort_submobjects(lambda p : p[0])
@@ -2149,7 +2149,7 @@ class CorrelationsWith35Percent(ThousandPossibleQuizzes):
             FadeIn(prop),
             *map(MoveToTarget, parts)
         )
-        self.dither()
+        self.wait()
         self.play(
             Transform(brace, term_brace),
             prop.next_to, term_brace, DOWN
@@ -2182,13 +2182,13 @@ class CorrelationsWith35Percent(ThousandPossibleQuizzes):
             FadeIn(prop),
             *map(MoveToTarget, parts)
         )
-        self.dither()
+        self.wait()
         self.play(
             Transform(brace, term_brace),
             prop.next_to, term_brace, DOWN,
         )
         self.play(top_part.fade, 0.8)
-        self.dither()
+        self.wait()
 
         self.quizzes = bottom_part
 
@@ -2203,7 +2203,7 @@ class CorrelationsWith35Percent(ThousandPossibleQuizzes):
             ShowCreation(rect),
             FadeIn(words)
         )
-        self.dither()
+        self.wait()
 
 class WeighingIndependenceAssumption(PiCreatureScene):
     def construct(self):
@@ -2236,7 +2236,7 @@ class WeighingIndependenceAssumption(PiCreatureScene):
             randy.change, "raise_right_hand",
             randy.look, UP+RIGHT,
         )
-        self.dither(2)
+        self.wait(2)
 
     ####
 
@@ -2292,12 +2292,12 @@ class NameBinomial(Scene):
         formula.to_corner(UP+RIGHT)
 
         self.add(charts[0], probability)
-        self.dither()
+        self.wait()
         self.play(Write(title))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(*charts))
         self.play(Write(formula))
-        self.dither()
+        self.wait()
         self.play(
             formula.scale, 0.7,
             formula.next_to, charts, DOWN,
@@ -2348,7 +2348,7 @@ class NameBinomial(Scene):
             )
             for mob in full_group
         ])
-        self.dither()
+        self.wait()
         self.play(
             LaggedStart(
                 Rotate, flipped_arrows,
@@ -2360,7 +2360,7 @@ class NameBinomial(Scene):
             faded_crosses.set_fill, None, 0.5,
             faded_checkmarks.set_fill, None, 0.5,
         )
-        self.dither()
+        self.wait()
 
         self.checkmarks = checkmarks
         self.crosses = crosses
@@ -2397,7 +2397,7 @@ class NameBinomial(Scene):
                 submobject_mode = "lagged_start",
                 run_time = 3
             ))
-        self.dither()
+        self.wait()
 
         self.boys = boys
         self.girls = girls
@@ -2421,7 +2421,7 @@ class NameBinomial(Scene):
             Transform(p_mob, new_p_mob),
         )
         self.play(self.chart.change_bar_values, values)
-        self.dither()
+        self.wait()
 
     def point_out_example_input(self):
         boy_girl_groups = VGroup(*[
@@ -2462,7 +2462,7 @@ class NameBinomial(Scene):
             run_time = 2,
             lag_ratio = 0.5,
         ))
-        self.dither()
+        self.wait()
 
         self.play(Write(prob))
         self.play(LaggedStart(
@@ -2472,7 +2472,7 @@ class NameBinomial(Scene):
             rate_func = there_and_back
         ))
         self.play(FadeOut(prob))
-        self.dither()
+        self.wait()
 
         self.chart_rect = chart_rect
         self.girl_rects = girl_rects
@@ -2488,7 +2488,7 @@ class NameBinomial(Scene):
 
         self.play(FocusOn(probability))
         self.play(Indicate(probability[-1]))
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(
                 VGroup(probability.copy()), probability_copies
@@ -2496,7 +2496,7 @@ class NameBinomial(Scene):
             FadeOut(self.children_brace),
             FadeOut(self.n_children_words),
         )
-        self.dither()
+        self.wait()
 
         self.probability_copies = probability_copies
 
@@ -2507,7 +2507,7 @@ class NameBinomial(Scene):
         self.play(FadeIn(randy))
         self.play(randy.change, "pondering")
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
     ##
 
@@ -2590,7 +2590,7 @@ class Compute6of10GirlsProbability(CycleThroughPatterns):
         pattern_rect.to_edge(UP, buff = MED_SMALL_BUFF)
 
         self.add(pattern_rect)
-        self.dither(5)
+        self.wait(5)
 
         self.pattern_rect = pattern_rect
 
@@ -2615,12 +2615,12 @@ class Compute6of10GirlsProbability(CycleThroughPatterns):
             GrowFromCenter(brace)
         )
         self.play(Write(ten_choose_six))
-        self.dither(2)
+        self.wait(2)
         self.play(
             ten_choose_six.next_to, computation.copy(), LEFT,
             Write(VGroup(computation, rhs))
         )
-        self.dither()
+        self.wait()
 
         self.ten_choose_six = ten_choose_six
         self.rhs = rhs
@@ -2684,18 +2684,18 @@ class ProbabilityOfAGivenBoyGirlPattern(CycleThroughPatterns):
         final_probability.next_to(factored_in_nums, DOWN, LARGE_BUFF)
 
         self.play(FadeIn(prob))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             pattern.copy(), factored,
             run_time = 1.5,
         ))
-        self.dither(2)
+        self.wait(2)
         self.play(ReplacementTransform(
             factored, factored_in_nums,
             run_time = 2,
             submobject_mode = "lagged_start"
         ))
-        self.dither(2)
+        self.wait(2)
         for group, tex in (gp_nums, "0.49"), (bp_nums, "0.51"):
             part = final_probability.get_part_by_tex(tex)
             self.play(group.shift, MED_LARGE_BUFF*DOWN)
@@ -2705,9 +2705,9 @@ class ProbabilityOfAGivenBoyGirlPattern(CycleThroughPatterns):
                 ),
                 Write(part[-1])
             )
-            self.dither()
+            self.wait()
             self.play(group.restore)
-        self.dither()
+        self.wait()
 
         self.final_probability = final_probability
 
@@ -2725,7 +2725,7 @@ class ProbabilityOfAGivenBoyGirlPattern(CycleThroughPatterns):
             ten_choose_six.target, RIGHT
         )
         self.play(MoveToTarget(ten_choose_six))
-        self.dither()
+        self.wait()
 
 class CycleThroughPatternsForThree(CycleThroughPatterns):
     CONFIG = {
@@ -2791,20 +2791,20 @@ class GeneralBinomialDistributionValues(Scene):
         shown_prob = probabilities[6].copy()
 
         self.play(FadeIn(shown_prob))
-        self.dither()
+        self.wait()
         self.play(LaggedStart(
             FadeIn, self.full_probability,
             run_time = 4,
             lag_ratio = 0.5,
         ))
-        self.dither()
+        self.wait()
         last_k = 6
         for k in 3, 8, 5, 9, 6:
             self.play(Transform(
                 shown_prob, probabilities[k],
                 path_arc = -np.pi/6 if k > last_k else np.pi/6
             ))
-            self.dither(2)
+            self.wait(2)
             last_k = k
 
         self.shown_prob = shown_prob
@@ -2834,7 +2834,7 @@ class GeneralBinomialDistributionValues(Scene):
             last_row.gradient_highlight, BLUE, YELLOW,
             Write(ten_choose_ks, run_time = 2)
         )
-        self.dither()
+        self.wait()
         self.play(ApplyWave(self.chart.bars, direction = UP))
         self.play(FocusOn(last_row))
         self.play(LaggedStart(
@@ -2842,7 +2842,7 @@ class GeneralBinomialDistributionValues(Scene):
             lambda m : (m.scale_in_place, 1.2),
             rate_func = there_and_back,
         ))
-        self.dither()
+        self.wait()
 
         self.pascals_triangle = triangle
         self.ten_choose_ks = ten_choose_ks
@@ -2865,7 +2865,7 @@ class GeneralBinomialDistributionValues(Scene):
             GrowFromCenter(brace),
             FadeIn(words)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             bars.restore,
             *map(FadeOut, [
@@ -2899,9 +2899,9 @@ class GeneralBinomialDistributionValues(Scene):
             Transform(self.full_probability, alt_probs[0])
         )
         self.chart = alt_chart
-        self.dither(2)
+        self.wait(2)
         self.play(Transform(self.full_probability, alt_probs[1]))
-        self.dither()
+        self.wait()
 
     def play_with_p_value(self):
         p = self.p
@@ -2928,7 +2928,7 @@ class GeneralBinomialDistributionValues(Scene):
             ShowCreation(interval),
             Write(triangle, run_time = 1)
         )
-        self.dither()
+        self.wait()
         for new_p in new_p_values:
             p = new_p
             dist = get_binomial_distribution(self.alt_n, p)
@@ -2937,7 +2937,7 @@ class GeneralBinomialDistributionValues(Scene):
                 self.chart.change_bar_values, values,
                 triangle.move_to, interval.number_to_point(p), DOWN
             )
-            self.dither()
+            self.wait()
 
     #######
 
@@ -2985,16 +2985,16 @@ class PointOutSimplicityOfFormula(TeacherStudentsScene, GeneralBinomialDistribut
             *["pondering"]*3,
             look_at_arg = prob
         )
-        self.dither()
+        self.wait()
         self.student_says(
             "Simpler than I feared",
             target_mode = "hooray",
             student_index = 0,
             added_anims = [prob.to_corner, UP+RIGHT]
         )
-        self.dither()
+        self.wait()
         self.teacher_says("Due to \\\\ independence")
-        self.dither(2)
+        self.wait(2)
 
 class CorrectForDependence(NameBinomial):
     CONFIG = {
@@ -3021,9 +3021,9 @@ class CorrectForDependence(NameBinomial):
             GrowFromCenter(brace),
             Write(words)
         )
-        self.dither()
+        self.wait()
         self.play(ShowCreation(cross))
-        self.dither()
+        self.wait()
 
     def show_tendency_to_align(self):
         checkmarks = self.checkmarks
@@ -3039,7 +3039,7 @@ class CorrectForDependence(NameBinomial):
 
         self.play(ShowCreation(top_rect))
         self.play(*self.get_arrow_flip_anims([0]))
-        self.dither()
+        self.wait()
         self.play(*self.get_arrow_flip_anims(indices_to_follow))
         self.play(FocusOn(self.chart.bars))
 
@@ -3080,7 +3080,7 @@ class CorrectForDependence(NameBinomial):
             MoveToTarget(old_bars),
             MoveToTarget(bars),
         )
-        self.dither()
+        self.wait()
         self.play(*map(ShowCreation, arrows))
         self.play(chart.change_bar_values, alt_values)
 
@@ -3130,9 +3130,9 @@ class ButWhatsTheAnswer(TeacherStudentsScene):
             target_mode = "confused"
         )
         self.change_student_modes(*["confused"]*3)
-        self.dither()
+        self.wait()
         self.play(self.teacher.change, "pondering")
-        self.dither(3)
+        self.wait(3)
 
 class PermuteQuizQuestions(Scene):
     def construct(self):
@@ -3151,14 +3151,14 @@ class PermuteQuizQuestions(Scene):
         quiz.scale(2)
 
         self.add(quiz)
-        self.dither()
+        self.wait()
         for m1, m2 in it.combinations(questions, 2):
             self.play(
                 m1.move_to, m2, LEFT,
                 m2.move_to, m1, LEFT,
                 path_arc = np.pi
             )
-            self.dither()
+            self.wait()
 
 class AssumeOrderDoesntMatter(Scene):
     def construct(self):
@@ -3210,13 +3210,13 @@ class AssumeOrderDoesntMatter(Scene):
             run_time = 2,
             submobject_mode = "lagged_start"
         ))
-        self.dither(2)
+        self.wait(2)
         self.play(FadeIn(
             VGroup(prob_groups[0], *prob_groups[2:]),
             run_time = 3,
             submobject_mode = "lagged_start"
         ))
-        self.dither()
+        self.wait()
 
         self.prob_groups = prob_groups
 
@@ -3234,7 +3234,7 @@ class AssumeOrderDoesntMatter(Scene):
             Write(question),
             assumption_group.next_to, bottom, DOWN, LARGE_BUFF
         )
-        self.dither()
+        self.wait()
 
         self.assumption_group = assumption_group
         self.question = question
@@ -3261,7 +3261,7 @@ class AssumeOrderDoesntMatter(Scene):
             part.highlight, YELLOW
         )
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
 
 
@@ -3277,13 +3277,13 @@ class FormulaCanBeRediscovered(PointOutSimplicityOfFormula):
             Write(prob),
             self.teacher.change, "hesitant", prob
         )
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(brace),
             Write(rediscover, run_time = 1)
         )
         self.change_student_modes(*["happy"]*3)
-        self.dither(2)
+        self.wait(2)
 
 class CompareTwoSituations(PiCreatureScene):
     def construct(self):
@@ -3300,12 +3300,12 @@ class CompareTwoSituations(PiCreatureScene):
                 randy.change, "raise_%s_hand"%s, screen,
                 ShowCreation(screen)
             )
-            self.dither(3)
+            self.wait(3)
         self.play(
             randy.change, "pondering", arrow,
             ShowCreation(arrow)
         )
-        self.dither(2)
+        self.wait(2)
 
     ####
 
@@ -3336,14 +3336,14 @@ class SkepticalOfDistributions(TeacherStudentsScene):
         )
         for values in binomial.values_list:
             self.play(binomial.change_bar_values, values)
-            self.dither()
+            self.wait()
         self.student_says(
             "Is that valid?", target_mode = "sassy",
             student_index = 0,
             run_time = 1
         )
         self.play(self.teacher.change, "guilty")
-        self.dither()
+        self.wait()
 
         binomial.add(title)
         self.binomial = binomial
@@ -3369,12 +3369,12 @@ class SkepticalOfDistributions(TeacherStudentsScene):
         self.play(Write(poisson.title, run_time = 1))
         self.play(FadeIn(gaussian, submobject_mode = "lagged_start"))
         self.play(Write(gaussian.title, run_time = 1))
-        self.dither(2)
+        self.wait(2)
         self.change_student_modes(
             *["sassy"]*3,
             added_anims = [self.teacher.change, "plain"]
         )
-        self.dither(2)
+        self.wait(2)
 
         self.poisson = poisson
         self.gaussian = gaussian
@@ -3409,8 +3409,8 @@ class SkepticalOfDistributions(TeacherStudentsScene):
                     for pi in self.pi_creatures
                 ]
             )
-            self.dither()
-        self.dither(2)
+            self.wait()
+        self.wait(2)
 
     ####
 

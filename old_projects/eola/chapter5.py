@@ -96,9 +96,9 @@ class OpeningQuote(Scene):
         author.next_to(words, DOWN, buff = 0.5)
 
         self.play(FadeIn(words))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(author, run_time = 3))
-        self.dither()
+        self.wait()
 
 class MovingForward(TeacherStudentsScene):
     def construct(self):
@@ -118,14 +118,14 @@ class MovingForward(TeacherStudentsScene):
             ShowCreation(bubble),
             student.change_mode, "pondering"
         )
-        self.dither(2)
+        self.wait(2)
 
 class StretchingTransformation(LinearTransformationScene):
     def construct(self):
         self.setup()
         self.add_title("Generally stretches space")
         self.apply_transposed_matrix([[3, 1], [-1, 2]])
-        self.dither()
+        self.wait()
 
 class SquishingTransformation(LinearTransformationScene):
     CONFIG = {
@@ -139,7 +139,7 @@ class SquishingTransformation(LinearTransformationScene):
         self.setup()
         self.add_title("Generally squishes space")
         self.apply_transposed_matrix([[1./2, -0.5], [1, 1./3]])
-        self.dither()
+        self.wait()
 
 class AskAboutStretching(LinearTransformationScene):
     def construct(self):
@@ -155,7 +155,7 @@ class AskAboutStretching(LinearTransformationScene):
             [[2, 1], [-1, 3]],
             added_anims = [Write(words)]
         )
-        self.dither()
+        self.wait()
 
 class AskAboutStretchingSpecifically(LinearTransformationScene):
     def construct(self):
@@ -174,17 +174,17 @@ class AskAboutStretchingSpecifically(LinearTransformationScene):
 
         self.add_transformable_mobject(blob)
         self.add_moving_mobject(label, target_label)
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix([[2, -1], [1, 1]])
         arrow = Arrow(scaled, label.target.split()[0])
         self.play(ShowCreation(arrow))
-        self.dither()
+        self.wait()
 
 class BeautyNowUsesLater(TeacherStudentsScene):
     def construct(self):
         self.setup()
         self.teacher_says("Beauty now, uses later")
-        self.dither()
+        self.wait()
 
 class DiagonalExample(LinearTransformationScene):
     CONFIG = {
@@ -202,10 +202,10 @@ class DiagonalExample(LinearTransformationScene):
         if self.show_square:
             self.add_unit_square(animate = True)
         self.add_foreground_mobject(matrix_background, matrix)
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix([self.transposed_matrix[0], [0, 1]])
         self.apply_transposed_matrix([[1, 0], self.transposed_matrix[1]])
-        self.dither()
+        self.wait()
         if self.show_square:
 
 
@@ -218,7 +218,7 @@ class DiagonalExample(LinearTransformationScene):
             for mob in bottom_brace, width, right_brace, height:
                 mob.add_background_rectangle()
                 self.play(Write(mob, run_time = 0.5))
-            self.dither()
+            self.wait()
 
             width_target, height_target = width.copy(), height.copy()
             det = np.linalg.det(self.transposed_matrix)
@@ -238,7 +238,7 @@ class DiagonalExample(LinearTransformationScene):
                 Transform(height.copy(), height_target),
                 *map(Write, [words, times, eq_det])
             )
-            self.dither()
+            self.wait()
 
 class DiagonalExampleWithSquare(DiagonalExample):
     CONFIG = {
@@ -279,9 +279,9 @@ class ThisSquareTellsEverything(LinearTransformationScene):
         self.play(Write(words, run_time = 2))
         self.play(ShowCreation(arrow))
         self.add_foreground_mobject(words, arrow)
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix([[1.5, -0.5], [1, 1.5]])
-        self.dither()
+        self.wait()
 
 class WhatHappensToOneSquareHappensToAll(LinearTransformationScene):
     def construct(self):
@@ -307,7 +307,7 @@ class WhatHappensToOneSquareHappensToAll(LinearTransformationScene):
         ))
         self.add_transformable_mobject(squares)
         self.apply_transposed_matrix([[1, -1], [0.5, 1]])
-        self.dither()
+        self.wait()
 
 class BreakBlobIntoGridSquares(LinearTransformationScene):
     CONFIG = {
@@ -340,9 +340,9 @@ class BreakBlobIntoGridSquares(LinearTransformationScene):
             run_time = 2,
         ))
         self.add_transformable_mobject(squares)
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix([[1, -1], [0.5, 1]])
-        self.dither()
+        self.wait()
 
 class BreakBlobIntoGridSquaresGranular(BreakBlobIntoGridSquares):
     CONFIG = {
@@ -390,9 +390,9 @@ class NameDeterminant(LinearTransformationScene):
         area_label_target.arrange_submobjects(RIGHT, buff = 0.1)
         self.add_moving_mobject(area_label, area_label_target)
         
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix(self.t_matrix)
-        self.dither()
+        self.wait()
         det_mob_copy = area_label.split()[0].copy()
         new_det_mob = det_mob_copy.copy().scale_to_fit_height(
             det_text.split()[0].get_height()
@@ -402,7 +402,7 @@ class NameDeterminant(LinearTransformationScene):
         det_mob_copy.add_background_rectangle(opacity = 0)
         self.play(Write(det_text))
         self.play(Transform(det_mob_copy, new_det_mob))
-        self.dither()
+        self.wait()
 
 
     def get_matrix(self):
@@ -462,7 +462,7 @@ class NextFewVideos(Scene):
             FadeIn(icons, submobject_mode = "lagged_start"),
             run_time = 3
         )
-        self.dither()
+        self.wait()
 
 class UnderstandingBeforeApplication(TeacherStudentsScene):
     def construct(self):
@@ -472,7 +472,7 @@ class UnderstandingBeforeApplication(TeacherStudentsScene):
             understanding for now
         """)
         self.random_blink()
-        self.dither()
+        self.wait()
 
 class WhatIveSaidSoFar(TeacherStudentsScene):
     def construct(self):
@@ -481,7 +481,7 @@ class WhatIveSaidSoFar(TeacherStudentsScene):
             What I've said so far
             is not quite right...
         """)
-        self.dither()
+        self.wait()
 
 class NegativeDeterminant(Scene):
     def construct(self):
@@ -500,13 +500,13 @@ class NegativeDeterminant(Scene):
 
         self.add(matrix)
         self.play(Write(det_text))
-        self.dither()
+        self.wait()
         self.play(
             Write(words, run_time = 2),
             ShowCreation(arrow)
         )
         self.play(det_num.highlight, YELLOW)
-        self.dither()
+        self.wait()
 
 class FlipSpaceOver(Scene):
     def construct(self):
@@ -529,7 +529,7 @@ class FlipSpaceOver(Scene):
             plane1, submobject_mode = "lagged_start",
             run_time = 1
         ))
-        self.dither()
+        self.wait()
         self.play(Rotate(
             plane1, axis = axis,
             rate_func = lambda t : smooth(t/2),
@@ -543,7 +543,7 @@ class FlipSpaceOver(Scene):
             run_time = 1.5,
             path_arc = np.pi/2,
         ))
-        self.dither()
+        self.wait()
 
 class RandyThinking(Scene):
     def construct(self):
@@ -555,9 +555,9 @@ class RandyThinking(Scene):
             randy.change_mode, "pondering",
             ShowCreation(bubble)
         )
-        self.dither()
+        self.wait()
         self.play(Blink(randy))
-        self.dither(2)
+        self.wait(2)
         self.play(Blink(randy))
 
 class NegativeDeterminantTransformation(LinearTransformationScene):
@@ -567,9 +567,9 @@ class NegativeDeterminantTransformation(LinearTransformationScene):
     def construct(self):
         self.setup()
         self.add_title("Feels like flipping space")
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix(self.t_matrix)
-        self.dither()
+        self.wait()
 
 class ThinkAboutFlippingPaper(Scene):
     def construct(self):
@@ -618,7 +618,7 @@ class IHatJHatOrientation(NegativeDeterminantTransformation):
 
         self.play(ShowCreation(arc))
         self.play(Write(words1))
-        self.dither()
+        self.wait()
         self.remove(words1, arc)
         self.apply_transposed_matrix(self.t_matrix)
         arc.submobjects = []
@@ -629,12 +629,12 @@ class IHatJHatOrientation(NegativeDeterminantTransformation):
             ShowCreation(arc),
             Write(words2, run_time = 2),
         )
-        self.dither()
+        self.wait()
         title = TextMobject("Orientation has been reversed")
         title.to_edge(UP)
         title.add_background_rectangle()
         self.play(Write(title, run_time = 1))
-        self.dither()
+        self.wait()
 
 class WriteNegativeDeterminant(NegativeDeterminantTransformation):
     def construct(self):
@@ -659,11 +659,11 @@ class WriteNegativeDeterminant(NegativeDeterminantTransformation):
             Write(det_text),
         )
         self.add_foreground_mobject(matrix_background, matrix, det_text)
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix(self.t_matrix)
 
         self.play(three.copy().move_to, self.square)
-        self.dither()
+        self.wait()
 
 class AltWriteNegativeDeterminant(WriteNegativeDeterminant):
     CONFIG = {
@@ -683,7 +683,7 @@ class WhyNegativeScaling(TeacherStudentsScene):
             for student in other_students
         ])
         self.random_blink()
-        self.dither()
+        self.wait()
         self.random_blink()
 
 class SlowlyRotateIHat(LinearTransformationScene):
@@ -739,7 +739,7 @@ class WhatAboutThreeDimensions(TeacherStudentsScene):
             transformations?
         """)
         self.random_blink()
-        self.dither()
+        self.wait()
         self.random_blink()
 
 class Transforming3DCube(Scene):
@@ -755,7 +755,7 @@ class NameParallelepiped(Scene):
         pp_part1.submobject_gradient_highlight(X_COLOR, Y_COLOR)
         pp_part2.submobject_gradient_highlight(Y_COLOR, Z_COLOR)
         self.play(Write(word))
-        self.dither(2)
+        self.wait(2)
 
 class DeterminantIsVolumeOfParallelepiped(Scene):
     def construct(self):
@@ -778,9 +778,9 @@ class DeterminantIsVolumeOfParallelepiped(Scene):
         words.next_to(eq, RIGHT)
 
         self.play(Write(matrix))
-        self.dither()
+        self.wait()
         self.play(Write(det_text), Write(words), Write(eq))
-        self.dither()
+        self.wait()
 
 class Degenerate3DTransformation(Scene):
     def construct(self):
@@ -801,14 +801,14 @@ class WriteZeroDeterminant(Scene):
         words.next_to(brace, DOWN)
 
         self.play(Write(matrix))
-        self.dither()
+        self.wait()
         self.play(Write(det_text))
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(brace),
             Write(words, run_time = 2)
         )
-        self.dither()
+        self.wait()
 
 class AskAboutNegaive3DDeterminant(TeacherStudentsScene):
     def construct(self):
@@ -818,7 +818,7 @@ class AskAboutNegaive3DDeterminant(TeacherStudentsScene):
         """)
         self.random_blink()
         self.play(self.teacher.change_mode, "pondering")
-        self.dither()
+        self.wait()
         self.random_blink()
 
 class OrientationReversing3DTransformation(Scene):
@@ -855,14 +855,14 @@ class RightHandRule(Scene):
             ShowCreation(hand.outline, run_time = 2, rate_func = None),
             FadeIn(hand.inlines)
         )
-        self.dither()
+        self.wait()
         for vect, label, color in zip(vects, labels, self.colors):
             vect.highlight(color)
             label.highlight(color)
             vect.set_stroke(width = 8)
             self.play(ShowCreation(vect))
             self.play(Write(label))
-            self.dither()
+            self.wait()
 
 class LeftHandRule(RightHandRule):
     CONFIG = {
@@ -876,7 +876,7 @@ class AskHowToCompute(TeacherStudentsScene):
         self.student_says("How do you \\\\ compute this?")
         self.play(student.change_mode, "confused")
         self.random_blink()
-        self.dither()
+        self.wait()
         self.random_blink()
 
 class TwoDDeterminantFormula(Scene):
@@ -910,18 +910,18 @@ class TwoDDeterminantFormula(Scene):
         self.add(matrix)
         self.play(Write(det_text, run_time = 1))
         self.play(Write(eq), Write(formula))
-        self.dither()
+        self.wait()
         self.play(*[
             Transform(m, m.zero)
             for m in mb, mc, b, c
         ])
-        self.dither()
+        self.wait()
         for pair in (mb, b), (mc, c):
             self.play(*[
                 Transform(m, m.original)
                 for m in pair
             ])
-            self.dither()
+            self.wait()
 
 class TwoDDeterminantFormulaIntuition(LinearTransformationScene):
     def construct(self):
@@ -929,7 +929,7 @@ class TwoDDeterminantFormulaIntuition(LinearTransformationScene):
         self.add_unit_square()
         a, b, c, d = 3, 2, 3.5, 2
 
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix([[a, 0], [0, 1]])
         i_brace = Brace(self.i_hat, DOWN)
         width = TexMobject("a").scale(1.5)
@@ -937,7 +937,7 @@ class TwoDDeterminantFormulaIntuition(LinearTransformationScene):
         width.highlight(X_COLOR)
         width.add_background_rectangle()
         self.play(GrowFromCenter(i_brace), Write(width))
-        self.dither()
+        self.wait()
 
         self.apply_transposed_matrix([[1, 0], [0, d]])
         side_brace = Brace(self.square, RIGHT)
@@ -946,7 +946,7 @@ class TwoDDeterminantFormulaIntuition(LinearTransformationScene):
         height.highlight(Y_COLOR)
         height.add_background_rectangle()
         self.play(GrowFromCenter(side_brace), Write(height))
-        self.dither()
+        self.wait()
 
         self.apply_transposed_matrix(
             [[1, 0], [float(b)/d, 1]],
@@ -955,7 +955,7 @@ class TwoDDeterminantFormulaIntuition(LinearTransformationScene):
                 for m in side_brace, height
             ]
         )
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [i_brace, side_brace, width, height]))
         matrix1 = np.dot(
             [[a, b], [c, d]],
@@ -966,9 +966,9 @@ class TwoDDeterminantFormulaIntuition(LinearTransformationScene):
             np.linalg.inv([[a, b], [c, d]])
         )
         self.apply_transposed_matrix(matrix1.transpose(), path_arc = 0)
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix(matrix2.transpose(), path_arc = 0)
-        self.dither()
+        self.wait()
 
 class FullFormulaExplanation(LinearTransformationScene):
     def construct(self):
@@ -1063,7 +1063,7 @@ class FullFormulaExplanation(LinearTransformationScene):
             ShowCreation(background_rect),
             Write(everyone)
         )
-        self.dither()
+        self.wait()
 
 class ThreeDDetFormula(Scene):
     def construct(self):
@@ -1095,14 +1095,14 @@ class ThreeDDetFormula(Scene):
         everyone.center().to_edge(UP)
         for part in parts:
             self.play(Write(part))
-        self.dither(2)
+        self.wait(2)
 
 class QuizTime(TeacherStudentsScene):
     def construct(self):
         self.setup()
         self.teacher_says("Quiz time!")
         self.random_blink()
-        self.dither()
+        self.wait()
         self.random_blink()
 
 class ProductProperty(Scene):
@@ -1137,12 +1137,12 @@ class ProductProperty(Scene):
 
         self.play(Write(m1))
         self.play(Write(m2))
-        self.dither()
+        self.wait()
         self.play(Write(det), Write(rp))
         self.play(Write(rhs))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(title))
-        self.dither(2)
+        self.wait(2)
 
 class NextVideo(Scene):
     def construct(self):
@@ -1157,7 +1157,7 @@ class NextVideo(Scene):
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.dither()  
+        self.wait()  
 
 
 

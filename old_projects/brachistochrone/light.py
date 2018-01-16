@@ -80,7 +80,7 @@ class SimplePhoton(PhotonScene):
         self.play(self.photon_run_along_path(
             Cycloid(), rate_func = None
         ))
-        self.dither()
+        self.wait()
 
 
 class MultipathPhotonScene(PhotonScene):
@@ -105,7 +105,7 @@ class MultipathPhotonScene(PhotonScene):
                 ), 
                 **kwargs
             )
-        self.dither()
+        self.wait()
 
     def generate_paths(self):
         raise Exception("Not Implemented")
@@ -236,7 +236,7 @@ class ShowMultiplePathsScene(PhotonScene):
         self.remove(curr_path_copy)
         for path in paths[1:] + [paths[0]]:
             self.play(Transform(curr_path, path, run_time = 4))
-        self.dither()
+        self.wait()
         self.path = curr_path.ingest_submobjects()
 
     def generate_start_and_end_points(self):
@@ -320,21 +320,21 @@ class ShowMultiplePathsInWater(ShowMultiplePathsScene):
         self.add(glass)
         self.play(GrowFromCenter(air))
         self.play(GrowFromCenter(water))
-        self.dither()
+        self.wait()
         self.remove(air, water)
         ShowMultiplePathsScene.construct(self)
         self.play(
             Transform(self.path, straight)
         )
-        self.dither()
+        self.wait()
         self.play(GrowFromCenter(slow))
-        self.dither()
+        self.wait()
         self.remove(slow)
         self.leftmost.ingest_submobjects()
         self.play(Transform(self.path, self.leftmost, run_time = 3))
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(too_long))
-        self.dither()
+        self.wait()
 
 
     def generate_start_and_end_points(self):
@@ -375,7 +375,7 @@ class StraightLinesFastestInConstantMedium(PhotonScene):
             path_func = path_along_arc(np.pi)
         ))
         self.play(self.photon_run_along_path(line, rate_func = None))
-        self.dither()
+        self.wait()
 
 
     def get_paths(self):
@@ -418,13 +418,13 @@ class PhtonBendsInWater(PhotonScene, ZoomedScene):
         self.add(glass)
         self.play(ShowCreation(path1))
         self.play(Transform(path1, path2))
-        self.dither()
+        self.wait()
         # self.activate_zooming()
-        self.dither()        
+        self.wait()        
         self.play(ShowPassingFlash(
             wave, run_time = 3, rate_func = None
         ))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(extension))
         self.play(
             ShowCreation(arc),
@@ -442,14 +442,14 @@ class LightIsFasterInAirThanWater(ShowMultiplePathsInWater):
 
         self.add(glass)
         self.play(ShimmerIn(equation))
-        self.dither()
+        self.wait()
         photon_runs = []
         photon_runs.append(self.photon_run_along_path(
             path1, rate_func = lambda t : min(1, 1.2*t)
         ))
         photon_runs.append(self.photon_run_along_path(path2))
         self.play(*photon_runs, **{"run_time" : 2})
-        self.dither()
+        self.wait()
 
 
 class GeometryOfGlassSituation(ShowMultiplePathsInWater):
@@ -523,7 +523,7 @@ class GeometryOfGlassSituation(ShowMultiplePathsInWater):
         self.add(glass, point_a, point_b, A, B)
         line = Mobject(top_line, bottom_line).ingest_submobjects()
         self.play(ShowCreation(line))
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(left_brace), 
             GrowFromCenter(x_mob)
@@ -536,7 +536,7 @@ class GeometryOfGlassSituation(ShowMultiplePathsInWater):
         self.play(ShowCreation(right_line), GrowFromCenter(h_2))
         self.play(ShimmerIn(top_dist))
         self.play(GrowFromCenter(bottom_dist))
-        self.dither(3)
+        self.wait(3)
         self.clear()
         self.add(glass, point_a, point_b, A, B, 
                  top_line, bottom_line, left_brace, x_mob)
@@ -553,7 +553,7 @@ class GeometryOfGlassSituation(ShowMultiplePathsInWater):
                 (x_mob, end_x_mob)
             ]
         ]+[ShowCreation(graph, **kwargs)])
-        self.dither()
+        self.wait()
         self.show_derivatives(graph)
         line = self.show_derivatives(new_graph)
         self.add(line)
@@ -561,7 +561,7 @@ class GeometryOfGlassSituation(ShowMultiplePathsInWater):
             Transform(*pair, rate_func = lambda x : 0.3*smooth(x))
             for pair in pairs_for_end_transform
         ])
-        self.dither()
+        self.wait()
 
     def show_derivatives(self, graph, run_time = 2):
         step = self.frame_duration/run_time
@@ -572,7 +572,7 @@ class GeometryOfGlassSituation(ShowMultiplePathsInWater):
             line.rotate(angle_of_vector(p2-p1))
             line.shift(p1)
             self.add(line)
-            self.dither(self.frame_duration)
+            self.wait(self.frame_duration)
             self.remove(line)
         return line
 
@@ -630,7 +630,7 @@ class SpringSetup(ShowMultiplePathsInWater):
 
         self.add_rod_and_ring(rod, ring)
         self.slide_ring(ring)
-        self.dither()
+        self.wait()
         self.add_springs()
         self.add_force_definitions()
         self.slide_system(ring)
@@ -662,14 +662,14 @@ class SpringSetup(ShowMultiplePathsInWater):
         rod_word.next_to(Point(), UP)
         ring_word = TextMobject("Ring")
         ring_word.next_to(ring, UP)
-        self.dither()
+        self.wait()
         self.add(rod)
         self.play(ShimmerIn(rod_word))
-        self.dither()
+        self.wait()
         self.remove(rod_word)
         self.play(ShowCreation(ring))
         self.play(ShimmerIn(ring_word))
-        self.dither()
+        self.wait()
         self.remove(ring_word)
 
     def slide_ring(self, ring):
@@ -689,7 +689,7 @@ class SpringSetup(ShowMultiplePathsInWater):
             self.play(Transform(circle, spring))
             self.remove(circle)
             self.add(spring)
-            self.dither()
+            self.wait()
 
     def add_force_definitions(self):
         top_force = TexMobject("F_1 = \\dfrac{1}{v_{\\text{air}}}")
@@ -704,9 +704,9 @@ class SpringSetup(ShowMultiplePathsInWater):
         words.to_corner(UP+RIGHT)
         for force in top_force, bottom_force:
             self.play(GrowFromCenter(force))
-            self.dither()
+            self.wait()
         self.play(ShimmerIn(words))
-        self.dither(3)
+        self.wait(3)
         self.remove(top_force, bottom_force, words)
 
     def slide_system(self, ring):
@@ -724,13 +724,13 @@ class SpringSetup(ShowMultiplePathsInWater):
         )
         for kwargs in self.slide_kwargs, equilibrium_slide_kwargs:
             self.play(Transform(start, end, **kwargs))
-            self.dither()
+            self.wait()
     
     def show_horizontal_component(self, ring):
         v_right = Vector(ring.get_top(), RIGHT)
         v_left = Vector(ring.get_bottom(), LEFT)
         self.play(*map(ShowCreation, [v_right, v_left]))
-        self.dither()
+        self.wait()
         self.remove(v_right, v_left)
 
     def show_angles(self, ring):
@@ -769,7 +769,7 @@ class SpringSetup(ShowMultiplePathsInWater):
                 GrowFromCenter(theta)
             ]
         self.play(*anims)
-        self.dither()
+        self.wait()
 
     def show_equation(self):
         equation = TexMobject([
@@ -813,7 +813,7 @@ class SpringSetup(ShowMultiplePathsInWater):
         for mob in f1, sin1, equals, f2, sin2_start:
             anims.append(ShimmerIn(mob))
         self.play(*anims)
-        self.dither()
+        self.wait()
         for f, frac in (f1, frac1), (f2, frac2):
             target = frac.copy().ingest_submobjects()
             also = []
@@ -823,7 +823,7 @@ class SpringSetup(ShowMultiplePathsInWater):
             self.play(Transform(f, target), *also)
             self.remove(f)
             self.add(frac)
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(frac1),
             FadeOut(frac2),
@@ -832,16 +832,16 @@ class SpringSetup(ShowMultiplePathsInWater):
             ShowCreation(bars),
             Transform(equals, new_eq)
         )
-        self.dither()
+        self.wait()
         frac1 = Mobject(sin1, bar1, v_air)
         frac2 = Mobject(sin2, bar2, v_water)
         for frac, vect in (frac1, LEFT), (frac2, RIGHT):
             self.play(ApplyMethod(
                 frac.next_to, equals, vect
             ))
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(snells))
-        self.dither()
+        self.wait()
 
 class WhatGovernsTheSpeedOfLight(PhotonScene, PathSlidingScene):
     def construct(self):
@@ -854,7 +854,7 @@ class WhatGovernsTheSpeedOfLight(PhotonScene, PathSlidingScene):
         self.slide(randy, self.cycloid)
         self.play(self.photon_run_along_path(self.cycloid))
 
-        self.dither()
+        self.wait()
 
 class WhichPathWouldLightTake(PhotonScene, TryManyPaths):
     def construct(self):
@@ -919,18 +919,18 @@ class StateSnellsLaw(PhotonScene):
         snells_law.to_edge(UP)
 
         self.play(ShimmerIn(snells_law))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(path))
         self.play(self.photon_run_along_path(path))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(vert_line))
         self.play(*map(ShowCreation, arcs))
         self.play(*map(GrowFromCenter, thetas))
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(exp1))
-        self.dither()
+        self.wait()
         self.play(*map(ShimmerIn, [equals, exp2]))
-        self.dither()
+        self.wait()
         
 
 

@@ -125,7 +125,7 @@ class ExperienceProblemSolver(PiCreatureScene):
         equation.to_edge(UP)
 
         self.play(Write(equation))
-        self.dither()
+        self.wait()
 
         self.equation = equation
 
@@ -140,7 +140,7 @@ class ExperienceProblemSolver(PiCreatureScene):
             target_mode = "hooray",
             bubble_kwargs = {"height" : 2, "width" : 3}
         )
-        self.dither()
+        self.wait()
         self.play(
             randy.change, "confused", self.equation,
             Write(randy_words)
@@ -149,7 +149,7 @@ class ExperienceProblemSolver(PiCreatureScene):
         self.play(randy.look_at, jenny.eyes)
         self.play(jenny.change, "happy")
         self.play(randy.change, "tired")
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [
             jenny.bubble, jenny_words, randy_words
         ]))
@@ -168,7 +168,7 @@ class ExperienceProblemSolver(PiCreatureScene):
             jenny.change, "sassy", cross,
             randy.change, "happy"
         )
-        self.dither(2)
+        self.wait(2)
 
         self.to_fade = VGroup(lightbulb, cross)
 
@@ -209,7 +209,7 @@ class ExperienceProblemSolver(PiCreatureScene):
                 for mobs in curr_row[1:], curr_row[:-1]
             ])
             self.add(curr_row)
-        self.dither(3)
+        self.wait(3)
 
 
 
@@ -255,7 +255,7 @@ class InitialFiveChooseThreeExample(Scene):
                 run_time = 0.2*len(stack),
                 submobject_mode = "lagged_start"
             ))
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(stacks)
 
@@ -301,7 +301,7 @@ class InitialFiveChooseThreeExample(Scene):
         ))
         self.remove(mover)
         self.add(binomial_equations)
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(
             n_choose_k, n_choose_k_words,
@@ -313,7 +313,7 @@ class InitialFiveChooseThreeExample(Scene):
         new_words.move_to(self.n_choose_k_words, LEFT)
 
         self.play(Transform(self.n_choose_k_words, new_words))
-        self.dither(2)
+        self.wait(2)
 
     def issolate_single_stack(self):
         stack = self.stacks[3]
@@ -328,7 +328,7 @@ class InitialFiveChooseThreeExample(Scene):
             FadeOut(to_fade),
             equation.scale, 1.5, equation.get_bottom(),
         )
-        self.dither()
+        self.wait()
         for line in stack:
             ones = VGroup(*filter(
                 lambda mob : "1" in mob.get_tex_string(),
@@ -353,11 +353,11 @@ class InitialFiveChooseThreeExample(Scene):
             line.save_state()
             line.highlight(YELLOW)
             self.add(number, brace)
-            self.dither(0.25)
+            self.wait(0.25)
             self.remove(number, brace)
             line.restore()
         self.add(number, brace)
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(
             stack_brace = brace,
@@ -379,11 +379,11 @@ class InitialFiveChooseThreeExample(Scene):
             num = TexMobject(str(count))
             num.next_to(lines, DOWN)
             self.add(ones, num)
-            self.dither(0.35)
+            self.wait(0.35)
             self.remove(ones, num)
             count += 1
         self.add(num, ones)
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [lines, num, ones]))
 
     def walk_though_notation(self):
@@ -396,7 +396,7 @@ class InitialFiveChooseThreeExample(Scene):
         self.play(Write(words))
         self.play(ShowCreation(rect))
         self.play(FadeOut(rect))
-        self.dither(2)
+        self.wait(2)
 
     def emphasize_pattern_over_number(self):
         morty = Mortimer().flip()
@@ -428,7 +428,7 @@ class InitialFiveChooseThreeExample(Scene):
                     run_time = 0.25
                 )
                 last_ones = ones
-            self.dither()
+            self.wait()
 
     ####
 
@@ -478,7 +478,7 @@ class SixChooseThreeExample(InitialFiveChooseThreeExample):
             lag_ratio = 0.1,
             run_time = 10,
         ))
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(stack)
 
@@ -511,7 +511,7 @@ class SixChooseThreeExample(InitialFiveChooseThreeExample):
             LaggedStart(GrowArrow, arrows),
             Write(choose_k, run_time = 1)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             line.restore,
             *map(FadeOut, [brace, n_options, arrows, choose_k])
@@ -527,11 +527,11 @@ class SixChooseThreeExample(InitialFiveChooseThreeExample):
             line.ones.highlight(YELLOW)
             line.ones.set_stroke(RED, 1)
             self.add(brace, num)
-            self.dither(0.15)
+            self.wait(0.15)
             self.remove(brace, num)
             line.ones.restore()
         self.add(brace, num)
-        self.dither()
+        self.wait()
 
         lhs = TexMobject(
             "\\frac{6 \\cdot 5 \\cdot 3}{1 \\cdot 2 \\cdot 3} ="
@@ -542,7 +542,7 @@ class SixChooseThreeExample(InitialFiveChooseThreeExample):
         coming_soon.highlight(MAROON_B)
 
         self.play(*map(FadeIn, [lhs, coming_soon]))
-        self.dither()
+        self.wait()
         self.play(
             ApplyMethod(
                 lhs.shift, 0.65*SPACE_WIDTH*(LEFT+UP),
@@ -552,7 +552,7 @@ class SixChooseThreeExample(InitialFiveChooseThreeExample):
             ),
             *map(FadeOut, [brace, num, coming_soon])
         )
-        self.dither()
+        self.wait()
 
     def think_about_pattern(self):
         self.revert_to_original_skipping_status()
@@ -569,7 +569,7 @@ class SixChooseThreeExample(InitialFiveChooseThreeExample):
                     run_time = 0.2
                 )
                 last_ones = ones
-        self.dither()
+        self.wait()
 
 class SixChooseThreeInOtherContext(Scene):
     def construct(self):
@@ -633,7 +633,7 @@ class SixChooseThreeInOtherContext(Scene):
             last_rights = rights
             last_ups = ups
             last_line = line
-        self.dither()
+        self.wait()
 
 # class Introduction(Scene):
 #     CONFIG = {
@@ -654,7 +654,7 @@ class SixChooseThreeInOtherContext(Scene):
 #             FadeIn(symbol),
 #             Write(words)
 #         )
-#         self.dither()
+#         self.wait()
 
 #         self.set_variables_as_attrs(n_choose_k_group = group)
 
@@ -698,7 +698,7 @@ class SixChooseThreeInOtherContext(Scene):
 #                 VGroup(n_choose_k, point, point).copy(),
 #                 eq
 #             ))
-#             self.dither()
+#             self.wait()
 
 #         self.set_variables_as_attrs(stacks, binomial_equations)
 
@@ -755,7 +755,7 @@ class SixChooseThreeInOtherContext(Scene):
 #             run_time = 1,
 #             remover = True
 #         ))
-#         self.dither()
+#         self.wait()
 #         self.play(Write(add_y, run_time = 1))
 #         self.play(Transform(stacks, new_stacks))
 #         self.play(LaggedStart(
@@ -764,7 +764,7 @@ class SixChooseThreeInOtherContext(Scene):
 #             run_time = 1,
 #             remover = True
 #         ))
-#         self.dither()
+#         self.wait()
 
 #         self.play(
 #             top_stacks.shift, s_to_s_distance*RIGHT/2,
@@ -804,7 +804,7 @@ class SixChooseThreeInOtherContext(Scene):
 
 #             self.play(MoveToTarget(top_stack))
 #             self.play(Write(term))
-#         self.dither()
+#         self.wait()
 
 # class DifferentWaysToThinkAboutNChooseK(Scene):
 #     CONFIG = {
@@ -823,7 +823,7 @@ class SixChooseThreeInOtherContext(Scene):
 #         term = TexMobject("{5 \\choose 3} = 10")
 #         term.to_edge(UP)
 #         self.play(FadeIn(term, submobject_mode = "lagged_start"))
-#         self.dither()
+#         self.wait()
 
 #         self.n_choose_k_term = term
 
@@ -846,9 +846,9 @@ class SixChooseThreeInOtherContext(Scene):
 #             self.add(term, number)
 #             if last_number:
 #                 self.remove(last_number)
-#             self.dither(0.25)
+#             self.wait(0.25)
 #             last_number = number
-#         self.dither()
+#         self.wait()
 
 #         self.stack = stack
 #         self.stack_count = last_number
@@ -891,12 +891,12 @@ class SixChooseThreeInOtherContext(Scene):
 #             Write(choose_words, run_time = 1),
 #             LaggedStart(FadeIn, subset_mobs)
 #         )
-#         self.dither()
+#         self.wait()
 #         for subset, subset_mob in zip(letter_subsets, subset_mobs):
 #             VGroup(subset_mob, *subset).highlight(BLUE)
-#             self.dither(0.5)
+#             self.wait(0.5)
 #             VGroup(*subset).highlight(WHITE)
-#         self.dither()
+#         self.wait()
 
 #         self.set_variables_as_attrs(
 #             subset_mobs, letter_set, choose_words,
@@ -930,7 +930,7 @@ class SixChooseThreeInOtherContext(Scene):
 #                 Write(brace_tex),
 #                 ShowCreation(rect)
 #             )
-#             self.dither()
+#             self.wait()
 
 #     def split_choices_by_start(self):
 #         subset_mobs = self.subset_mobs
@@ -947,7 +947,7 @@ class SixChooseThreeInOtherContext(Scene):
 #             GrowFromCenter(brace)
 #         )
 #         self.play(Write(expression))
-#         self.dither()
+#         self.wait()
 
 # class FormulaVsPattern(TeacherStudentsScene):
 #     def construct(self):
@@ -965,7 +965,7 @@ class SixChooseThreeInOtherContext(Scene):
 
 #         self.student_thinks(formula, student_index = 1)
 #         self.play(self.teacher.change, "sassy")
-#         self.dither(2)
+#         self.wait(2)
 #         self.play(
 #             FadeOut(self.students[1].bubble),
 #             FadeOut(formula),
@@ -989,7 +989,7 @@ class SixChooseThreeInOtherContext(Scene):
 
 #         self.play(LaggedStart(DrawBorderThenFill, cards))
 #         self.play(Write(words))
-#         self.dither(3)
+#         self.wait(3)
 
 class ProbabilityOfKWomenInGroupOfFive(Scene):
     CONFIG = {
@@ -1040,7 +1040,7 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
             self.play(*anims, run_time = 0.75)
             self.remove(last_lineup)
             self.add(lineup)
-            self.dither(0.25)
+            self.wait(0.25)
             last_lineup = lineup
 
         self.title = title
@@ -1117,7 +1117,7 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
                     lag_ratio = 0.9**i,
                     run_time = 1,
                 ))
-            self.dither()
+            self.wait()
             curr_lineup_group = lineup_group
         self.lineups = curr_lineup_group
 
@@ -1129,7 +1129,7 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
             twos.next_to, eq_32, LEFT,
             FadeIn(eq_32),
         )
-        self.dither()
+        self.wait()
 
         n_possibilities.add(*eq_32)
         self.set_variables_as_attrs(n_possibilities)
@@ -1157,7 +1157,7 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
             run_time = 2,
             path_arc = np.pi/2
         ))
-        self.dither()
+        self.wait()
 
         self.stacks = stacks
 
@@ -1193,7 +1193,7 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
                 Write(equation, run_time = 1)
             )
             self.play(LaggedStart(Indicate, women, rate_func = there_and_back))
-        self.dither()
+        self.wait()
 
         self.equations = equations
         self.numbers = VGroup(*[eq[-1] for eq in equations])
@@ -1212,7 +1212,7 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
         self.play(FadeOut(n_possibilities_rect))
         for number in numbers:
             self.play(Indicate(number, color = PINK, run_time = 0.5))
-        self.dither()
+        self.wait()
 
     def show_answer_to_question(self):
         stacks = self.stacks
@@ -1254,7 +1254,7 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
                 FadeIn(prob_words)
             )
             self.play(ShowCreation(rect))
-            self.dither(2)
+            self.wait(2)
             self.play(
                 num.restore,
                 FadeOut(rect),
@@ -1273,7 +1273,7 @@ class ProbabilityOfKWomenInGroupOfFive(Scene):
 
         self.play(LaggedStart(FadeIn, question))
         self.play(LaggedStart(ShowCreationThenDestruction, circles))
-        self.dither(2)
+        self.wait(2)
 
     ######
 
@@ -1318,14 +1318,14 @@ class AskAboutAllPossibilities(ProbabilityOfKWomenInGroupOfFive):
         self.add(brace, question)
         for lineup in all_lineups:
             self.add(lineup)
-            self.dither(0.25)
+            self.wait(0.25)
             self.remove(lineup)
 
 class RememberThisSensation(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("Remember this \\\\ sensation")
         self.change_student_modes("confused", "pondering", "erm")
-        self.dither(2)
+        self.wait(2)
 
 class TeacherHoldingSomething(TeacherStudentsScene):
     def construct(self):
@@ -1336,7 +1336,7 @@ class TeacherHoldingSomething(TeacherStudentsScene):
             *["pondering"]*3,
             look_at_arg = 2*UP+2*RIGHT
         )
-        self.dither(6)
+        self.wait(6)
 
 # class GroupsOf6(Scene):
 #     def construct(self):
@@ -1369,7 +1369,7 @@ class TeacherHoldingSomething(TeacherStudentsScene):
 #             run_time = 3,
 #         ))
 #         self.play(Write(numbers, run_time = 3))
-#         self.dither()
+#         self.wait()
 #         self.play(LaggedStart(
 #             ApplyMethod, women_groups,
 #             lambda m : (m.highlight, PINK),
@@ -1393,10 +1393,10 @@ class TeacherHoldingSomething(TeacherStudentsScene):
 #             number = TexMobject(str(n))
 #             number.next_to(ORIGIN, DOWN, LARGE_BUFF)
 #             self.add(item, number)
-#             self.dither(0.2)
+#             self.wait(0.2)
 #             self.remove(item, number)
 #         self.add(item, number)
-#         self.dither(2)
+#         self.wait(2)
 
 class BuildFiveFromFour(ProbabilityOfKWomenInGroupOfFive):
     def construct(self):
@@ -1457,7 +1457,7 @@ class BuildFiveFromFour(ProbabilityOfKWomenInGroupOfFive):
                 anims.append(FadeIn(n_possibilities[-1]))
             self.remove(twos)
             self.play(*anims)
-            self.dither()
+            self.wait()
             curr_lineup_group = lineup_group
         self.lineups = curr_lineup_group
 
@@ -1469,7 +1469,7 @@ class BuildFiveFromFour(ProbabilityOfKWomenInGroupOfFive):
             twos.next_to, eq_16, LEFT,
             FadeIn(eq_16),
         )
-        self.dither()
+        self.wait()
 
         n_possibilities.add(eq_16)
         self.n_possibilities = n_possibilities
@@ -1497,7 +1497,7 @@ class BuildFiveFromFour(ProbabilityOfKWomenInGroupOfFive):
             run_time = 2,
             path_arc = np.pi/2
         ))
-        self.dither()
+        self.wait()
 
         self.stacks = stacks
 
@@ -1515,12 +1515,12 @@ class BuildFiveFromFour(ProbabilityOfKWomenInGroupOfFive):
                 number = TexMobject(str(n+1))
                 number.next_to(stack, UP)
                 self.add(lineup_copy, number)
-                self.dither(0.25)
+                self.wait(0.25)
                 self.remove(lineup_copy, number)
             self.add(number)
             numbers.add(number)
             self.play(FadeOut(rect))
-        self.dither()
+        self.wait()
 
         stacks.numbers = numbers
 
@@ -1573,7 +1573,7 @@ class BuildFiveFromFour(ProbabilityOfKWomenInGroupOfFive):
                 MoveToTarget(stacks),
                 MoveToTarget(stacks.numbers)
             )
-        self.dither()
+        self.wait()
 
         #Fill extra slot
         add_man = TextMobject("Add", "$\\male$")
@@ -1592,7 +1592,7 @@ class BuildFiveFromFour(ProbabilityOfKWomenInGroupOfFive):
 
             self.play(Write(words, run_time = 1))
             self.play(to_fade_in.restore)
-            self.dither()
+            self.wait()
 
         #Perform shift
         dist = top_stacks[1].get_center()[0] - top_stacks[0].get_center()[0]
@@ -1602,7 +1602,7 @@ class BuildFiveFromFour(ProbabilityOfKWomenInGroupOfFive):
             bottom_stacks.shift, dist*LEFT/2,
             bottom_stacks.numbers.shift, dist*LEFT/2,
         )
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [add_man, add_woman, h_line]))
 
         self.set_variables_as_attrs(top_stacks, bottom_stacks)
@@ -1649,13 +1649,13 @@ class BuildFiveFromFour(ProbabilityOfKWomenInGroupOfFive):
             VGroup(top_stacks[-1], top_stacks.numbers[-1]).align_to,
             bottom_stacks, DOWN
         )
-        self.dither()
+        self.wait()
 
         new_numbers.add_to_back(bottom_stacks.numbers[0].copy())
         new_numbers.add(top_stacks.numbers[-1].copy())
         new_numbers.highlight(PINK)
         self.play(Write(new_numbers, run_time = 3))
-        self.dither()
+        self.wait()
 
 class BuildUpFromStart(Scene):
     CONFIG = {
@@ -1672,9 +1672,9 @@ class BuildUpFromStart(Scene):
         self.add(stacks, stacks.numbers)
         for x in range(self.n_iterations):
             if x < 2:
-                dither_time = 1
+                wait_time = 1
             else:
-                dither_time = 0.2
+                wait_time = 0.2
             #Divide
             low_stacks = stacks
             low_group = VGroup(low_stacks, low_stacks.numbers)
@@ -1688,7 +1688,7 @@ class BuildUpFromStart(Scene):
                         num.next_to(stack, UP)
                 group.target.next_to(ORIGIN, vect)
             self.play(*map(MoveToTarget, [top_group, low_group]))
-            self.dither(dither_time)
+            self.wait(wait_time)
 
             #Expand
             for stacks, i in (low_stacks, 0), (top_stacks, -1):
@@ -1722,7 +1722,7 @@ class BuildUpFromStart(Scene):
                 top_stacks, low_stacks,
                 top_stacks.numbers, low_stacks.numbers,
             ]))
-            self.dither(dither_time)
+            self.wait(wait_time)
 
             #Shift
             dist = top_stacks[1].get_center()[0] - top_stacks[0].get_center()[0]
@@ -1730,7 +1730,7 @@ class BuildUpFromStart(Scene):
                 top_group.shift, dist*RIGHT/2,
                 low_group.shift, dist*LEFT/2,
             )
-            self.dither(dither_time)
+            self.wait(wait_time)
 
             #Stack
             all_movers = VGroup()
@@ -1774,7 +1774,7 @@ class BuildUpFromStart(Scene):
             self.play(ReplacementTransform(
                 expressions, VGroup(*map(VGroup, new_numbers))
             ))
-            self.dither(dither_time)
+            self.wait(wait_time)
             stacks.numbers = new_numbers
 
 
@@ -1810,7 +1810,7 @@ class IntroducePascalsTriangle(Scene):
                 for mobs in curr_row[1:], curr_row[:-1]
             ])
             self.add(curr_row)
-        self.dither()
+        self.wait()
 
         self.rows = rows
 
@@ -1846,7 +1846,7 @@ class IntroducePascalsTriangle(Scene):
             ReplacementTransform(example.rect.copy(), ex_top1.rect),
             ReplacementTransform(example.rect.copy(), ex_top2.rect),
         )
-        self.dither(2)
+        self.wait(2)
         self.play(rows_to_fade.fade, 1)
         self.play(
             top_row.align_to, low_row, LEFT,
@@ -1857,7 +1857,7 @@ class IntroducePascalsTriangle(Scene):
             ShowCreation(h_line),
             Write(plus)
         )
-        self.dither(2)
+        self.wait(2)
         for row in top_row, top_row_copy:
             row.remove(row[-1])
         self.play(
@@ -1870,7 +1870,7 @@ class IntroducePascalsTriangle(Scene):
             FadeOut(VGroup(h_line, plus)),
             FadeOut(rects),
         )
-        self.dither()
+        self.wait()
 
     def keep_in_mind_what_these_mean(self):
         morty = Mortimer().flip()
@@ -1914,9 +1914,9 @@ class IntroducePascalsTriangle(Scene):
             self.highlight_num(num)
             self.add(line)
             if n < self.max_n:
-                self.dither(0.25)
+                self.wait(0.25)
             else:
-                self.dither(1.25)
+                self.wait(1.25)
             self.dehighlight_num(num)
             self.remove(line)
         for k in range(1, 5):
@@ -1925,13 +1925,13 @@ class IntroducePascalsTriangle(Scene):
             line.next_to(num, DOWN, MED_LARGE_BUFF)
             self.highlight_num(num)
             self.add(line)
-            self.dither(0.5)
+            self.wait(0.5)
             self.dehighlight_num(num)
             self.remove(line)
         num.highlight(YELLOW)
         num.scale_in_place(1.2)
         self.add(line)
-        self.dither()
+        self.wait()
 
         self.nine_choose_four_term = num
         self.nine_choose_four_line = line
@@ -1953,10 +1953,10 @@ class IntroducePascalsTriangle(Scene):
             num = Integer(n+1)
             num.next_to(line, DOWN, MED_LARGE_BUFF)
             self.add(line, num)
-            self.dither(0.1)
+            self.wait(0.1)
             self.remove(line, num)
         self.add(line, num)
-        self.dither()
+        self.wait()
         self.curr_line = line
 
         #Probability
@@ -1975,16 +1975,16 @@ class IntroducePascalsTriangle(Scene):
         eq_result = TexMobject("\\approx 0.246")
         eq_result.next_to(frac, RIGHT)
 
-        def show_random_lines(n, dither_time = 1):
+        def show_random_lines(n, wait_time = 1):
             for x in range(n):
                 if x == n-1:
-                    dither_time = 0
+                    wait_time = 0
                 new_line = random.choice(all_lines)
                 new_line.move_to(self.curr_line)
                 self.remove(self.curr_line)
                 self.curr_line = new_line
                 self.add(self.curr_line)
-                self.dither(dither_time)
+                self.wait(wait_time)
 
         self.play(FadeOut(num), FadeIn(expr))
         show_random_lines(4)
@@ -2032,7 +2032,7 @@ class IntroducePascalsTriangle(Scene):
 
         self.play(ShowCreation(circle))
         self.play(Write(top_row))
-        self.dither()
+        self.wait()
         curr_line_group = line_groups[0]
         self.play(FadeIn(curr_line_group))
         for line_group in line_groups[1:]:
@@ -2040,7 +2040,7 @@ class IntroducePascalsTriangle(Scene):
                 curr_line_group, line_group
             ))
             curr_line_group = line_group
-        self.dither()
+        self.wait()
 
     ###
 
@@ -2166,7 +2166,7 @@ class StacksApproachBellCurve(Scene):
             self.add(bars)
 
         self.add(numbers)
-        self.dither()
+        self.wait()
 
 # class IsThereABetterWayToCompute(TeacherStudentsScene):
 #     def construct(self):
@@ -2175,14 +2175,14 @@ class StacksApproachBellCurve(Scene):
 #             target_mode = "raise_left_hand",
 #         )
 #         self.change_student_modes("confused", "raise_left_hand", "erm")
-#         self.dither()
+#         self.wait()
 #         self.play(self.teacher.change_mode, "happy")
-#         self.dither()
+#         self.wait()
 #         self.teacher_says(
 #             "There is!  But first...",
 #             target_mode = "hooray"
 #         )
-#         self.dither(2)
+#         self.wait(2)
 
 class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
     CONFIG = {
@@ -2222,13 +2222,13 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
             num = TexMobject(str(i+1))
             num.next_to(stack, UP)
             self.add(line, num)
-            self.dither(0.25)
+            self.wait(0.25)
             self.remove(num)
         self.play(
             Write(VGroup(*equation[:-1])),
             ReplacementTransform(num, equation[-1])
         )
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(stack, equation)
 
@@ -2274,7 +2274,7 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
             lag_ratio = 0.2,
             run_time = 4,
         ))
-        self.dither()
+        self.wait()
 
         self.name_triplets = movers
         
@@ -2311,12 +2311,12 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
             MoveToTarget(people),
             MoveToTarget(names),
         )
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(line_rect, full_line_rect),
             triplet.highlight, YELLOW
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             people.restore,
             names.restore,
@@ -2369,7 +2369,7 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
                 )
             ]
             if i == 1:
-                self.dither()
+                self.wait()
             if i == 4:
                 anims.append(Write(words, run_time = 1))
             self.play(*anims)
@@ -2435,7 +2435,7 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
                 if i < len(word_arrow_groups):
                     anims.append(FadeIn(word_arrow_groups[i]))
                 self.play(*anims)
-            self.dither()
+            self.wait()
             word_arrow_groups.submobjects = [
                 word_arrow_groups[j]
                 for j in 1, 2, 0
@@ -2464,13 +2464,13 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
                 lambda pi : (pi.change, "happy", ones),
             )
         )
-        self.dither()
+        self.wait()
         for trip in it.combinations(self.people, 3):
             rects = VGroup(*map(SurroundingRectangle, trip))
             self.add(rects)
-            self.dither(0.3)
+            self.wait(0.3)
             self.remove(rects)
-        self.dither()
+        self.wait()
 
     ###
 
@@ -2523,7 +2523,7 @@ class SubsetProbabilityExample(ChooseThreeFromFive):
         group = VGroup(people, names, braces)
 
         self.play(group.shift, -group.get_center()[0]*RIGHT)
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(names, braces)
 
@@ -2574,7 +2574,7 @@ class SubsetProbabilityExample(ChooseThreeFromFive):
                 ShowCreation(rect),
                 run_time = run_time,
             )
-            self.dither(0.5)
+            self.wait(0.5)
             self.play(
                 group.restore,
                 FadeOut(symbol),
@@ -2603,7 +2603,7 @@ class SubsetProbabilityExample(ChooseThreeFromFive):
             GrowFromCenter(brace),
             Write(total_count),
         )
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(brace, total_count)
 
@@ -2639,17 +2639,17 @@ class SubsetProbabilityExample(ChooseThreeFromFive):
                 arrow.next_to(pi, UP)
                 arrows.add(arrow)
             self.add(arrows)
-            self.dither(0.5)
+            self.wait(0.5)
             self.remove(arrows)
         self.add(arrows)
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(frac_lines),
             five_choose_three.next_to, frac_lines[0], DOWN, SMALL_BUFF,
             ten.next_to, frac_lines[1], DOWN, SMALL_BUFF,
             Write(four_choose_two)
         )
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             four_choose_two.copy(), six
         ))
@@ -2660,7 +2660,7 @@ class SubsetProbabilityExample(ChooseThreeFromFive):
             name_rect.highlight(BLUE)
             name_rect.set_fill(BLUE, opacity = 0.25)
             self.play(Animation(name_rect, run_time = 0))
-            self.dither(0.25)
+            self.wait(0.25)
             self.remove(name_rect)
 
 class StudentsGetConfused(PiCreatureScene):
@@ -2694,7 +2694,7 @@ class StudentsGetConfused(PiCreatureScene):
         )
         for x in range(4):
             self.play(self.get_shuffle_anim(line))
-        self.dither()
+        self.wait()
 
     def create_pi_creatures(self):
         pis = VGroup(*[
@@ -2764,9 +2764,9 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
                 if x == 0:
                     anims += [ShowCreation(line), FadeIn(word)]
                 self.play(*anims)
-            self.dither()
+            self.wait()
             self.play(chosen_names.restore)
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(lines, place_words)
 
@@ -2798,7 +2798,7 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
                 name.next_to, line, UP, SMALL_BUFF,
                 GrowArrow(arrow)
             )
-            self.dither()
+            self.wait()
 
             name_rects.remove(name.rect)
             name_rects.set_stroke(YELLOW, 3)
@@ -2823,7 +2823,7 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
             Write(dots),
             GrowFromCenter(chosen_names_brace),
         )
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(
             chosen_names, chosen_names_brace, choice_numbers,
@@ -2843,7 +2843,7 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
                 )
                 for i, name in zip(indices, chosen_names)
             ])
-            self.dither(0.5)
+            self.wait(0.5)
 
     def count_permutations_of_ABC(self):
         n, k = self.n, self.k
@@ -2874,7 +2874,7 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
                 name.next_to, line, UP, SMALL_BUFF,
                 path_arc = -np.pi/3,
             )
-            self.dither()
+            self.wait()
 
         #Consolidate choice counts
         choice_numbers = VGroup(*[
@@ -2895,7 +2895,7 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
             Write(dots),
             ShowCreation(frac_line),
         )
-        self.dither()
+        self.wait()
 
         self.fraction = VGroup(
             numerator, frac_line, VGroup(choice_numbers, dots)
@@ -2962,12 +2962,12 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
                 lag_ratio = 0.2,
             ),
         )
-        self.dither()
+        self.wait()
         self.play(
             LaggedStart(FadeIn, rects),
             Write(rhs[-1])
         )
-        self.dither()
+        self.wait()
 
         self.ordered_triplets = lines
         self.triplet_group_rects = rects
@@ -2985,12 +2985,12 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
         self.play(FocusOn(fraction))
         self.play(ShowCreation(frac_rect))
         self.play(FadeOut(frac_rect))
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(brace),
             Write(brace_tex),
         )
-        self.dither()
+        self.wait()
 
 
     ####
@@ -3108,7 +3108,7 @@ class NineChooseFourExample(HowToComputeNChooseK):
 
         for line in stack:
             self.play(FadeIn(line, run_time = 0.1))
-        self.dither(2)
+        self.wait(2)
         self.play(FadeOut(
             stack, submobject_mode = "lagged_start", run_time = 2
         ))
@@ -3130,7 +3130,7 @@ class NineChooseFourExample(HowToComputeNChooseK):
             LaggedStart(FadeIn, people, run_time = 1),
             FadeIn(n_items),
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(choose_k),
             LaggedStart(
@@ -3138,7 +3138,7 @@ class NineChooseFourExample(HowToComputeNChooseK):
                 lambda m : (m.shift, MED_LARGE_BUFF*DOWN)
             )
         )
-        self.dither()
+        self.wait()
         self.play(
             chosen_subset.shift, MED_LARGE_BUFF*UP,
             n_items.next_to, n_items.get_center(), LEFT,
@@ -3177,7 +3177,7 @@ class NineChooseFourExample(HowToComputeNChooseK):
             self.fraction.next_to, equals, RIGHT,
             FadeIn(equals),
         )
-        self.dither()
+        self.wait()
 
         for mob in six, eight, two_three, four:
             mob.cross = Cross(mob)
@@ -3191,15 +3191,15 @@ class NineChooseFourExample(HowToComputeNChooseK):
             ShowCreation(six.cross),
             ShowCreation(two_three.cross),
         )
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(eight.cross),
             ShowCreation(four.cross),
             FadeIn(two)
         )
-        self.dither()
+        self.wait()
         self.play(Write(rhs))
-        self.dither()
+        self.wait()
 
 class WeirdKindOfCancelation(TeacherStudentsScene):
     def construct(self):
@@ -3255,7 +3255,7 @@ class WeirdKindOfCancelation(TeacherStudentsScene):
                 ShowCreationThenDestruction(rect),
                 MoveToTarget(name),
             )
-        self.dither(2)
+        self.wait(2)
 
         #Go through denominators
         permutations = list(it.permutations(range(3)))[1:]
@@ -3266,7 +3266,7 @@ class WeirdKindOfCancelation(TeacherStudentsScene):
             VGroup(*map(SurroundingRectangle, bottom_numbers[::2]))
         ))
         self.shuffle(chosen_names, permutations[2:])
-        self.dither()
+        self.wait()
 
         #Show cancelation
         top_cross = Cross(ordered)
@@ -3278,7 +3278,7 @@ class WeirdKindOfCancelation(TeacherStudentsScene):
         )
         self.play(ShowCreation(bottom_cross))
         self.change_student_modes(*["happy"]*3)
-        self.dither(3)
+        self.wait(3)
 
     ###
 
@@ -3325,7 +3325,7 @@ class ShowFormula(Scene):
 
         self.play(FadeIn(specific_formula))
         self.play(FadeIn(general_formula))
-        self.dither(3)
+        self.wait(3)
 
 class ConfusedPi(Scene):
     def construct(self):
@@ -3337,9 +3337,9 @@ class ConfusedPi(Scene):
         self.add(morty)
         self.play(Blink(morty))
         self.play(morty.change, "confused")
-        self.dither()
+        self.wait()
         self.play(Blink(morty))
-        self.dither(2)
+        self.wait(2)
 
 class SumsToPowerOf2(Scene):
     CONFIG = {
@@ -3371,7 +3371,7 @@ class SumsToPowerOf2(Scene):
             LaggedStart(FadeIn, stacks),
             LaggedStart(FadeIn, numbers),
         )
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(stacks, numbers)
 
@@ -3403,11 +3403,11 @@ class SumsToPowerOf2(Scene):
             number.to_edge(UP)
             VGroup(number, line_copy).highlight(YELLOW)
             self.add(line_copy, number)
-            self.dither(0.15)
+            self.wait(0.15)
             self.remove(line_copy, number)
         sum_result = number
         self.add(sum_result)
-        self.dither()
+        self.wait()
 
         sum_result.target = TexMobject(str(2**self.n))
         sum_result.target.highlight(sum_result.get_color())
@@ -3419,7 +3419,7 @@ class SumsToPowerOf2(Scene):
             Write(plusses),
             Write(rhs),
         )
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(
             plusses, sum_result, rhs,
@@ -3449,7 +3449,7 @@ class SumsToPowerOf2(Scene):
             submobject_mode = "lagged_start",
             run_time = 2
         )
-        self.dither()
+        self.wait()
 
     def show_alternate_sum(self):
         fractions = self.get_fractions(self.alt_n)
@@ -3480,7 +3480,7 @@ class SumsToPowerOf2(Scene):
             LaggedStart(FadeIn, sum_group),
         )
         self.play(LaggedStart(FadeIn, rhs))
-        self.dither(2)
+        self.wait(2)
 
     ####
 
@@ -3536,7 +3536,7 @@ class AskWhyTheyAreCalledBinomial(TeacherStudentsScene):
             "Why are they called \\\\ ``binomial coefficients''?"
         )
         self.play(LaggedStart(FadeIn, pascals))
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(example_binomials[0]),
             RemovePiCreatureBubble(self.students[1]),
@@ -3546,7 +3546,7 @@ class AskWhyTheyAreCalledBinomial(TeacherStudentsScene):
         for binom in example_binomials[1:]:
             self.play(Transform(moving_binom, binom))
             self.add(binom)
-        self.dither()
+        self.wait()
 
         #Name themn
         self.play(
@@ -3555,7 +3555,7 @@ class AskWhyTheyAreCalledBinomial(TeacherStudentsScene):
         )
         self.change_student_modes(*["pondering"]*3)
         self.play(Write(two_variables))
-        self.dither(2)
+        self.wait(2)
 
 class NextVideo(Scene):
     def construct(self):
@@ -3568,7 +3568,7 @@ class NextVideo(Scene):
             Write(title),
             ShowCreation(screen)
         )
-        self.dither()
+        self.wait()
 
 class CombinationsPatreonEndScreen(PatreonEndScreen):
     CONFIG = {

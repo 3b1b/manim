@@ -53,7 +53,7 @@ class LastVideo(Scene):
 
         self.add(title)
         self.play(ShowCreation(screen_rect))
-        self.dither()
+        self.wait()
 
 class BreakUp2To256(PiCreatureScene):
     def construct(self):
@@ -92,17 +92,17 @@ class BreakUp2To256(PiCreatureScene):
             GrowFromCenter(brace),
             Write(expression, run_time = 1)
         )
-        self.dither()
+        self.wait()
         self.play(
             self.pi_creature.change, "maybe",
             Write(words)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             self.pi_creature.change, "happy",
             FadeOut(words)
         )
-        self.dither()
+        self.wait()
 
         self.expression = expression
         self.bits_brace = brace
@@ -133,7 +133,7 @@ class BreakUp2To256(PiCreatureScene):
             MoveToTarget(bits)
         )
         self.play(self.pi_creature.change, "pondering")
-        self.dither()
+        self.wait()
 
 
         self.subexpressions = subexpressions
@@ -156,7 +156,7 @@ class BreakUp2To256(PiCreatureScene):
             ),
             FadeOut(self.pi_creature)
         )
-        self.dither(3)
+        self.wait(3)
 
     def reorganize_four_billions(self):
         target = VGroup(*[
@@ -185,11 +185,11 @@ class BreakUp2To256(PiCreatureScene):
             LaggedStart(FadeIn, parens),
             FadeOut(to_fade)
         )
-        self.dither()
+        self.wait()
 
     ######
 
-    def dither(self, time = 1):
+    def wait(self, time = 1):
         self.play(Animation(self.bits, run_time = time))
 
     def update_frame(self, *args, **kwargs):
@@ -211,7 +211,7 @@ class ShowTwoTo32(Scene):
         mob = TexMobject("2^{32} = 4{,}294{,}967{,}296")
         mob.scale(1.5)
         self.add(mob)
-        self.dither()
+        self.wait()
 
 class MainBreakdown(Scene):
     CONFIG = {
@@ -357,7 +357,7 @@ class MainBreakdown(Scene):
             ),
             Transform(rate_words, new_rate_words)
         )
-        self.dither()
+        self.wait()
         self.play(
             LaggedStart(
                 ApplyFunction, gpus,
@@ -368,7 +368,7 @@ class MainBreakdown(Scene):
                 remover = True
             )
         )
-        self.dither()
+        self.wait()
         self.play(
             Transform(
                 rate_words[0], four_billion.copy().highlight(BLUE),
@@ -381,7 +381,7 @@ class MainBreakdown(Scene):
             Transform(laptop, target_laptop),
             ShowCreation(h_line),
         )
-        self.dither()
+        self.wait()
 
     def kilo_google(self):
         self.create_four_billion_copies(1, Laptop())
@@ -409,9 +409,9 @@ class MainBreakdown(Scene):
 
         self.revert_to_original_skipping_status()
         self.play(DrawBorderThenFill(google))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(millions))
-        self.dither(2)
+        self.wait(2)
         self.play(LaggedStart(
             Indicate, self.group_of_four_billion_things,
             run_time = 4,
@@ -420,7 +420,7 @@ class MainBreakdown(Scene):
         ))
         self.play(FadeOut(millions), FadeIn(plus_plus))
         self.play(Write(kilo))
-        self.dither()
+        self.wait()
         self.play(
             four_billion.restore,
             FadeOut(self.group_of_four_billion_things)
@@ -430,7 +430,7 @@ class MainBreakdown(Scene):
             FadeIn(laptop),
             FadeIn(h_line),
         )
-        self.dither()
+        self.wait()
 
     def half_all_people_on_earth(self):
         earth = self.get_earth()
@@ -448,9 +448,9 @@ class MainBreakdown(Scene):
             GrowFromCenter(earth),
             Write(people)
         )
-        self.dither()
+        self.wait()
         self.create_four_billion_copies(2, self.get_kilogoogle())
-        self.dither()
+        self.wait()
         self.play(
             self.four_billions[2].restore,
             Transform(earth, target_earth),
@@ -459,7 +459,7 @@ class MainBreakdown(Scene):
             FadeOut(self.group_of_four_billion_things),
             FadeOut(people)
         )
-        self.dither()
+        self.wait()
 
     def four_billion_earths(self):
         self.create_four_billion_copies(
@@ -481,14 +481,14 @@ class MainBreakdown(Scene):
         self.revert_to_original_skipping_status()
         self.play(FadeIn(milky_way))
         self.play(Write(n_stars_estimate))
-        self.dither()
+        self.wait()
         self.play(LaggedStart(
             Indicate, self.group_of_four_billion_things,
             rate_func = there_and_back,
             lag_ratio = 0.2,
             run_time = 3,
         ))
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(
                 self.group_of_four_billion_things,
@@ -500,7 +500,7 @@ class MainBreakdown(Scene):
             FadeOut(milky_way),
             FadeOut(n_stars_estimate),
         )
-        self.dither()
+        self.wait()
 
     def four_billion_galxies(self):
         self.create_four_billion_copies(4, self.get_galaxy())
@@ -517,7 +517,7 @@ class MainBreakdown(Scene):
         name.next_to(self.group_of_four_billion_things, UP)
 
         self.play(Write(name))
-        self.dither()
+        self.wait()
         self.play(
             self.four_billions[4].restore,
             ReplacementTransform(
@@ -530,7 +530,7 @@ class MainBreakdown(Scene):
                 name, denom
             ),
         )
-        self.dither()
+        self.wait()
 
     def show_time_scale(self):
         fb1, fb2 = self.four_billions[5:7]
@@ -556,9 +556,9 @@ class MainBreakdown(Scene):
                 fb.highlight, BLUE,
                 Write(words)
             )
-            self.dither()
+            self.wait()
         self.play(Write(universe_lifetimes))
-        self.dither()
+        self.wait()
 
     def show_probability(self):
         four_billion = self.four_billions[7]
@@ -574,7 +574,7 @@ class MainBreakdown(Scene):
             Write(VGroup(*words[::2])),
             Transform(four_billion, words[1])
         )
-        self.dither()
+        self.wait()
 
 
     ############
@@ -614,7 +614,7 @@ class MainBreakdown(Scene):
                 lag_ratio = 0.2
             )
         )
-        self.dither()
+        self.wait()
 
         group.add_to_back(brace)
         self.group_of_four_billion_things = group
@@ -683,7 +683,7 @@ class WriteTWoTo160(Scene):
         mob[0].highlight(BLUE)
         mob.scale(2)
         self.play(Write(mob))
-        self.dither()
+        self.wait()
 
 class StateOfBitcoin(TeacherStudentsScene):
     def construct(self):
@@ -761,7 +761,7 @@ class StateOfBitcoin(TeacherStudentsScene):
         self.change_student_modes(*["pondering"]*3)
         self.play(LaggedStart(FadeIn, kilogoogle))
         self.change_student_modes(*["surprised"]*3)
-        self.dither()
+        self.wait()
         self.change_student_modes(
             *["plain"]*3,
             added_anims = [
@@ -775,7 +775,7 @@ class StateOfBitcoin(TeacherStudentsScene):
             DrawBorderThenFill(gpu)
         )
         self.play(ShowCreation(cross))
-        self.dither()
+        self.wait()
         self.play(
             Write(asic),
             gpu_group.to_edge, DOWN,
@@ -791,7 +791,7 @@ class StateOfBitcoin(TeacherStudentsScene):
             run_time = 3,
             lag_ratio = 0.2,
         ))
-        self.dither()
+        self.wait()
 
 class QAndA(PiCreatureScene):
     def construct(self):
@@ -819,19 +819,19 @@ class QAndA(PiCreatureScene):
 
         self.play(Write(num_subscriber_words))
         self.play(self.pi_creature.change, "gracious", num_subscriber_words)
-        self.dither()
+        self.wait()
         self.play(
             q_and_a.restore,
             self.pi_creature.change, "raise_right_hand",
         )
-        self.dither()
+        self.wait()
         self.play(Write(reddit))
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(twitter),
             self.pi_creature.change_mode, "shruggie"
         )
-        self.dither(2)
+        self.wait(2)
 
     def show_powers_of_two(self):
         rows = 16
@@ -872,7 +872,7 @@ class QAndA(PiCreatureScene):
                     rate_func = squish_rate_func(smooth, 0, 0.5)
                 )
             )
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(dots),
             FadeOut(powers_of_two)

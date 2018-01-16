@@ -129,7 +129,7 @@ class CircleScene(PiCreatureScene):
             Write(nudge_label),
             run_time = run_time/2.
         )
-        self.dither(run_time/2.)
+        self.wait(run_time/2.)
         self.nudge_line = nudge_line
         self.nudge_arrow = nudge_arrow
         self.nudge_label = nudge_label
@@ -300,7 +300,7 @@ class Introduction(TeacherStudentsScene):
                 for pi in self.get_pi_creatures()
             ]
         )
-        self.dither(3)
+        self.wait(3)
 
         self.series = series
         self.essence_words = essence_words
@@ -347,12 +347,12 @@ class Introduction(TeacherStudentsScene):
                 self.teacher.change_mode, "plain"
             ]
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             Write(rules[0]),
             self.teacher.change_mode, "raise_right_hand",
         )
-        self.dither()
+        self.wait()
         alt_rules_list = list(rules[1:]) + [VectorizedPoint(self.teacher.eyes.get_top())]
         for last_rule, rule, video_index in zip(rules, alt_rules_list, video_indices):
             video = self.series[video_index]
@@ -361,7 +361,7 @@ class Introduction(TeacherStudentsScene):
                 FadeIn(rule),
             )
             self.play(Animation(rule))
-            self.dither()
+            self.wait()
         self.play(
             self.teacher.change_mode, "happy",
             self.teacher.look_at, student.eyes
@@ -404,7 +404,7 @@ class Introduction(TeacherStudentsScene):
             student.look_at, calculus
         )
         self.play(ShowCreation(arrow))
-        self.dither(2)
+        self.wait(2)
 
 class PreviewFrame(Scene):
     def construct(self):
@@ -425,10 +425,10 @@ class PreviewFrame(Scene):
         frame.next_to(title, DOWN)
 
         self.add(frame, title)
-        self.dither(3)
+        self.wait(3)
         for next_title in titles[1:]:
             self.play(Transform(title, next_title))
-            self.dither(3)
+            self.wait(3)
 
 class ProductRuleDiagram(Scene):
     def construct(self):
@@ -516,7 +516,7 @@ class ProductRuleDiagram(Scene):
             ReplacementTransform(d_rect.line, d_rect)
             for d_rect in d_rects
         ])
-        self.dither()
+        self.wait()
         self.play(
             d_rects.space_out_submobjects, 1.2,
             MaintainPositionRelativeTo(
@@ -528,7 +528,7 @@ class ProductRuleDiagram(Scene):
                 dg_rect
             ),
         )
-        self.dither()
+        self.wait()
 
         deriv = TexMobject(
             "d(", "fg", ")", "=", 
@@ -556,7 +556,7 @@ class ProductRuleDiagram(Scene):
                 for tex in "d(", ")", "=", "\\cdot", "+"
             ])))
         ], run_time = 3)
-        self.dither()
+        self.wait()
 
 class IntroduceCircle(CircleScene):
     CONFIG = {
@@ -580,7 +580,7 @@ class IntroduceCircle(CircleScene):
             self.pi_creature.look_at, self.circle
         )
         self.introduce_circle()
-        self.dither()
+        self.wait()
         R_copy = self.radius_label.copy()
         self.play(
             self.pi_creature.change_mode, "raise_right_hand",
@@ -589,7 +589,7 @@ class IntroduceCircle(CircleScene):
         )
         self.play(Write(area))
         self.remove(R_copy)
-        self.dither()
+        self.wait()
 
         self.area = area
 
@@ -614,14 +614,14 @@ class IntroduceCircle(CircleScene):
             self.pi_creature.change_mode, "confused",
             self.pi_creature.look_at, self.area,
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(rings, **ring_anim_kwargs),
             Animation(self.radius_group),
             FadeOut(q_marks),
             self.pi_creature.change_mode, "thinking"
         )
-        self.dither()
+        self.wait()
         self.play(
             rings.rotate, np.pi/2,
             rings.move_to, unwrapped_rings.get_top(),
@@ -632,7 +632,7 @@ class IntroduceCircle(CircleScene):
         self.play(
             Transform(rings, unwrapped_rings, **ring_anim_kwargs),
         )
-        self.dither()
+        self.wait()
 
     def show_calculus_symbols(self):
         ftc = TexMobject(
@@ -648,7 +648,7 @@ class IntroduceCircle(CircleScene):
             ),
             self.pi_creature.change_mode, "plain"
         )
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(
                 self.area.get_part_by_tex("Area").copy(),
@@ -659,9 +659,9 @@ class IntroduceCircle(CircleScene):
                 ftc.get_part_by_tex("\\,dr")
             )
         )
-        self.dither()
+        self.wait()
         self.play(Write(VGroup(*ftc[-2:])))
-        self.dither(2)
+        self.wait(2)
 
 class ApproximateOneRing(CircleScene, ReconfigurableScene):
     CONFIG = {
@@ -698,7 +698,7 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
             self.radius_label, three,
             path_arc = np.pi
         ))
-        self.dither()
+        self.wait()
 
     def try_to_understand_area(self):
         line_sets = [
@@ -729,14 +729,14 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
             Animation(self.radius_group),
             self.pi_creature.change_mode, "maybe"
         )
-        self.dither(2)
+        self.wait(2)
         for new_lines in line_sets[1:]:
             self.play(
                 Transform(lines, new_lines),
                 Animation(self.radius_group)
             )
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
         self.play(FadeOut(lines), Animation(self.radius_group))
 
     def slice_into_rings(self):
@@ -753,14 +753,14 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
             self.pi_creature.change_mode, "pondering",
             self.pi_creature.look_at, self.circle
         )
-        self.dither(2)
+        self.wait(2)
         for x in range(2):
             self.play(
                 Rotate(rings, np.pi, in_place = True, run_time = 2),
                 Animation(self.radius_group),
                 self.pi_creature.change_mode, "happy"
             )
-        self.dither(2)
+        self.wait(2)
 
         self.rings = rings
 
@@ -789,9 +789,9 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
 
         self.play(ShowCreation(radius))
         self.play(Write(r_label))
-        self.dither()
+        self.wait()
         self.play(Write(area_q))
-        self.dither()
+        self.wait()
         self.play(*[
             ApplyMethod(
                 r.set_fill, YELLOW, 
@@ -802,9 +802,9 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
         ]+[
             Animation(self.radius_group)
         ])
-        self.dither()
+        self.wait()
         self.change_mode("thinking")
-        self.dither()
+        self.wait()
 
         self.original_ring = original_ring
         self.ring = ring
@@ -823,9 +823,9 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
 
         self.unwrap_ring(ring, to_edge = RIGHT)
         self.change_mode("pondering")
-        self.dither()
+        self.wait()
         self.play(Write(trapezoid))
-        self.dither()
+        self.wait()
         self.play(trapezoid.shift, DOWN)
         strike = Line(
             trapezoid.get_left(), trapezoid.get_right(),
@@ -837,7 +837,7 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
             ShowCreation(strike),
             self.pi_creature.change_mode, "happy"
         )
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [trapezoid, strike]))
 
         self.unwrapped_ring = ring
@@ -894,13 +894,13 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
                 width_label.get_part_by_tex("r")
             )
         )
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(side_brace),
             Write(q_marks)
         )
         self.change_mode("confused")
-        self.dither()
+        self.wait()
         for num_rings in 20, 7:
             self.show_alternate_width(num_rings)
         self.play(ReplacementTransform(q_marks, dr_label))
@@ -909,19 +909,19 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
             ReplacementTransform(dr_label.copy(), alt_dr_label),
             run_time = 2
         )
-        self.dither()
+        self.wait()
         self.play(
             dr_label.next_to, concrete_dr.copy(), LEFT, SMALL_BUFF, DOWN,
             Write(concrete_dr, run_time = 2),
             self.pi_creature.change_mode, "pondering"
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             MoveToTarget(two_pi_r_dr),
             FadeIn(approx),
             self.area_q.get_part_by_tex("?").fade, 1,
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(concrete_dr),
             dr_label.restore
@@ -931,7 +931,7 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
             transformation_kwargs = {"run_time" : 4},
             return_to_original_configuration = False,
         )
-        self.dither(2)
+        self.wait(2)
         self.look_at(self.circle)
         self.play(
             ApplyWave(self.rings, amplitude = 0.1),
@@ -941,7 +941,7 @@ class ApproximateOneRing(CircleScene, ReconfigurableScene):
             run_time = 3,
             submobject_mode = "lagged_start"
         )
-        self.dither(2)
+        self.wait(2)
 
     def show_alternate_width(self, num_rings, **kwargs):
         self.transition_to_alt_config(
@@ -955,7 +955,7 @@ class MoveForwardWithApproximation(TeacherStudentsScene):
             "the", "approximation"
         )
         self.change_student_modes("hesitant", "erm", "sassy")
-        self.dither()
+        self.wait()
         words = TextMobject(
             "It gets better", 
             "\\\\ for smaller ",
@@ -963,7 +963,7 @@ class MoveForwardWithApproximation(TeacherStudentsScene):
         )
         words.highlight_by_tex("dr", BLUE)
         self.teacher_says(words, target_mode = "shruggie")
-        self.dither(3)
+        self.wait(3)
 
 class GraphRectangles(CircleScene, GraphScene):
     CONFIG = {
@@ -1033,11 +1033,11 @@ class GraphRectangles(CircleScene, GraphScene):
         
         self.add(rings, self.radius_group)
         self.remove(self.circle)
-        self.dither()
+        self.wait()
         self.play(*draw_ring_sum_anims)
         self.play(Write(area_label, run_time = 2))
         self.play(ShowCreation(arrows))
-        self.dither()
+        self.wait()
 
         self.ring_sum = ring_sum
         area_label.add(arrows)
@@ -1096,16 +1096,16 @@ class GraphRectangles(CircleScene, GraphScene):
             ShowCreation(first_tick),
         )
         self.play(Indicate(self.rings[0]))
-        self.dither()
+        self.wait()
         self.play(
             Transform(moving_arrow, arrows[-1]),
             ShowCreation(r_ticks, submobject_mode = "lagged_start"),
             run_time = 2
         )
         self.play(Indicate(self.rings[-1]))
-        self.dither()
+        self.wait()
         self.play(FadeIn(dr_group))
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [moving_arrow, values_of_r]))
 
         self.x_axis.add(r_ticks)
@@ -1171,7 +1171,7 @@ class GraphRectangles(CircleScene, GraphScene):
             ),
             Animation(self.x_axis),
         )
-        self.dither(2)
+        self.wait(2)
         self.play(*[
             MoveToTarget(
                 ring,
@@ -1184,7 +1184,7 @@ class GraphRectangles(CircleScene, GraphScene):
                 np.linspace(0, 0.75, len(transformed_rings))
             )
         ] + foreground_animations)
-        self.dither()
+        self.wait()
 
         ##Demonstrate height of one rect
         highlighted_ring = transformed_rings[6].copy()
@@ -1207,16 +1207,16 @@ class GraphRectangles(CircleScene, GraphScene):
             self.dr_group.next_to, highlighted_ring, 
             DOWN, SMALL_BUFF
         )
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(side_brace),
             Write(height_label)
         )
-        self.dither()
+        self.wait()
         self.play(Transform(highlighted_ring, original_ring))
-        self.dither()
+        self.wait()
         self.play(highlighted_ring.restore)
-        self.dither()
+        self.wait()
         self.play(
             transformed_rings.set_fill, None, 1,
             FadeOut(side_brace),
@@ -1224,7 +1224,7 @@ class GraphRectangles(CircleScene, GraphScene):
             *foreground_animations
         )
         self.remove(highlighted_ring)
-        self.dither()
+        self.wait()
 
         ##Rescale
         self.play(*[
@@ -1239,7 +1239,7 @@ class GraphRectangles(CircleScene, GraphScene):
         ] + foreground_animations)
         self.remove(transformed_rings)
         self.add(rects)
-        self.dither()
+        self.wait()
 
         self.rects = rects
 
@@ -1253,7 +1253,7 @@ class GraphRectangles(CircleScene, GraphScene):
 
         self.play(ShowCreation(self.graph))
         self.play(Write(graph_label))
-        self.dither()
+        self.wait()
         self.play(*[
             Transform(
                 rect, flat_rect,
@@ -1270,7 +1270,7 @@ class GraphRectangles(CircleScene, GraphScene):
             )
         ] + map(Animation, [self.x_axis, self.graph])
         )
-        self.dither(2)
+        self.wait(2)
 
     def point_out_approximation(self):
         rect = self.rects[10]
@@ -1286,12 +1286,12 @@ class GraphRectangles(CircleScene, GraphScene):
             MoveToTarget(rect),
             Write(approximation),
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             rect.restore,
             FadeOut(approximation)
         )
-        self.dither()
+        self.wait()
 
     def let_dr_approah_zero(self):
         thinner_rects_list = [
@@ -1319,14 +1319,14 @@ class GraphRectangles(CircleScene, GraphScene):
                 Animation(self.axes),
                 Animation(self.graph),
             )
-            self.dither()
+            self.wait()
         self.play(ApplyWave(
             self.rects,
             direction = RIGHT,
             run_time = 2,
             submobject_mode = "lagged_start",
         ))
-        self.dither()
+        self.wait()
 
     def compute_area_under_graph(self):
         formula, formula_with_R = formulas = [
@@ -1355,29 +1355,29 @@ class GraphRectangles(CircleScene, GraphScene):
         self.play(Write(formula.top_line, run_time = 2))
         self.play(FocusOn(base_line))
         self.play(ShowCreation(base_line))
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(brace),
             Write(height_label)
         )
-        self.dither()
+        self.wait()
         self.play(FocusOn(formula))
         self.play(Write(formula.mid_line))
-        self.dither()
+        self.wait()
         self.play(Write(formula.bottom_line))
-        self.dither(2)
+        self.wait(2)
 
         self.play(*map(FadeOut, [
             self.ghost_rings,
             self.ring_sum.tex_mobs
         ]))
         self.play(*map(FadeIn, [fresh_rings, self.radius_group]))
-        self.dither()
+        self.wait()
         self.play(
             Transform(formula, formula_with_R),
             Transform(height_label, height_label_with_R),
         )
-        self.dither(2)
+        self.wait(2)
 
         self.fresh_rings = fresh_rings
 
@@ -1414,7 +1414,7 @@ class GraphRectangles(CircleScene, GraphScene):
             ),
             Animation(self.radius_group)
         )
-        self.dither()
+        self.wait()
 
     #####
 
@@ -1500,7 +1500,7 @@ class ThinkLikeAMathematician(TeacherStudentsScene):
             pi_R_squraed.set_fill, None, 1
         )
         self.change_student_modes(*["hooray"]*3)
-        self.dither(2)
+        self.wait(2)
         self.change_student_modes(
             *["pondering"]*3,
             look_at_arg = self.teacher.eyes,
@@ -1510,7 +1510,7 @@ class ThinkLikeAMathematician(TeacherStudentsScene):
         )
         self.play(FadeOut(pi_R_squraed))
         self.look_at(2*UP+4*LEFT)
-        self.dither(5)
+        self.wait(5)
 
 class TwoThingsToNotice(TeacherStudentsScene):
     def construct(self):
@@ -1520,7 +1520,7 @@ class TwoThingsToNotice(TeacherStudentsScene):
         )
         words.highlight_by_tex("dr", GREEN)
         self.teacher_says(words, run_time = 1)
-        self.dither(3)
+        self.wait(3)
 
 class RecapCircleSolution(GraphRectangles, ReconfigurableScene):
     def setup(self):
@@ -1555,7 +1555,7 @@ class RecapCircleSolution(GraphRectangles, ReconfigurableScene):
             integral_condition, 
             submobject_mode = "lagged_start"
         ))
-        self.dither()
+        self.wait()
         self.play(*draw_ring_sum_anims)
 
         self.rings = rings
@@ -1613,12 +1613,12 @@ class RecapCircleSolution(GraphRectangles, ReconfigurableScene):
                 for approximation in approximations
             ]
         )
-        self.dither()
+        self.wait()
         self.play(Write(VGroup(*[
             approximation[0]
             for approximation in approximations
         ])))
-        self.dither()
+        self.wait()
 
         self.area_label = area_label
         self.area_arrows = arrows
@@ -1652,15 +1652,15 @@ class RecapCircleSolution(GraphRectangles, ReconfigurableScene):
             run_time = 2,
             path_arc = np.pi/2,
         ))
-        self.dither()
+        self.wait()
         self.play(FadeIn(self.x_axis))
         self.play(Write(r_ticks, run_time = 1))
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(dr_brace),
             dr_copy.next_to, dr_brace.copy(), UP
         )
-        self.dither()
+        self.wait()
 
         self.r_ticks = r_ticks
         self.dr_brace_group = VGroup(dr_brace, dr_copy)
@@ -1702,7 +1702,7 @@ class RecapCircleSolution(GraphRectangles, ReconfigurableScene):
         )
         self.play(ShowCreation(graph))
         self.play(Write(graph_label))
-        self.dither()
+        self.wait()
 
         self.graph = graph
         self.graph_label = graph_label
@@ -1732,7 +1732,7 @@ class RecapCircleSolution(GraphRectangles, ReconfigurableScene):
                 Animation(self.axes),
                 Animation(self.graph),
             )
-            self.dither()
+            self.wait()
 
     def full_precision(self):
         words = TextMobject("Area under \\\\ a graph")
@@ -1756,9 +1756,9 @@ class RecapCircleSolution(GraphRectangles, ReconfigurableScene):
         arc.next_to(arc_next_to_group, LEFT, SMALL_BUFF)
 
         self.play(Write(group))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(arc))
-        self.dither()
+        self.wait()
 
 class ExampleIntegralProblems(PiCreatureScene, GraphScene):
     CONFIG = {
@@ -1787,7 +1787,7 @@ class ExampleIntegralProblems(PiCreatureScene, GraphScene):
             Write(words),
             self.pi_creature.change_mode, "raise_right_hand"
         )
-        self.dither()
+        self.wait()
 
         self.words = words
 
@@ -1837,10 +1837,10 @@ class ExampleIntegralProblems(PiCreatureScene, GraphScene):
             ),
             run_time = self.t_max
         )
-        self.dither()
+        self.wait()
         for mob in v_dt:
             self.play(Indicate(mob))
-            self.dither(2)
+            self.wait(2)
 
         self.v_dt_brace_group = v_dt_brace_group
         self.line = line
@@ -1895,14 +1895,14 @@ class ExampleIntegralProblems(PiCreatureScene, GraphScene):
         )
         self.play(ShowCreation(v_graph))
         self.change_mode("pondering")
-        self.dither()
+        self.wait()
         self.play(
             v_t.next_to, brace, LEFT, SMALL_BUFF,
             dt.next_to, special_rect, DOWN,
             special_rect.set_fill, None, 1,
             ReplacementTransform(start_brace, brace),
         )
-        self.dither(3)
+        self.wait(3)
 
         self.v_graph = v_graph
         self.rects = rects
@@ -1926,7 +1926,7 @@ class ExampleIntegralProblems(PiCreatureScene, GraphScene):
             FadeOut(self.v_dt_brace_group_copy),
         )
         self.change_mode("thinking")
-        self.dither()
+        self.wait()
         for thinner_rects in thinner_rects_list:
             self.play(
                 Transform(
@@ -1935,7 +1935,7 @@ class ExampleIntegralProblems(PiCreatureScene, GraphScene):
                     submobject_mode = "lagged_start"
                 )
             )
-            self.dither()
+            self.wait()
 
     def show_confusion(self):
         randy = Randolph(color = BLUE_C)
@@ -1952,7 +1952,7 @@ class ExampleIntegralProblems(PiCreatureScene, GraphScene):
             self.pi_creature.look_at, randy.eyes
         )
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class MathematicianPonderingAreaUnderDifferentCurves(PiCreatureScene):
     def construct(self):
@@ -1960,17 +1960,17 @@ class MathematicianPonderingAreaUnderDifferentCurves(PiCreatureScene):
             self.pi_creature.change_mode, "raise_left_hand",
             self.pi_creature.look, UP+LEFT
         )
-        self.dither(4)
+        self.wait(4)
         self.play(
             self.pi_creature.change_mode, "raise_right_hand",
             self.pi_creature.look, UP+RIGHT
         )
-        self.dither(4)
+        self.wait(4)
         self.play(
             self.pi_creature.change_mode, "pondering",
             self.pi_creature.look, UP+LEFT
         )
-        self.dither(2)
+        self.wait(2)
 
     def create_pi_creature(self):
         self.pi_creature = Randolph(color = BLUE_C)
@@ -2010,7 +2010,7 @@ class AreaUnderParabola(GraphScene):
 
         self.play(ShowCreation(graph))
         self.play(Write(graph_label))
-        self.dither()
+        self.wait()
 
         self.graph = graph
         self.graph_label = graph_label
@@ -2039,7 +2039,7 @@ class AreaUnderParabola(GraphScene):
             ),
             *map(Animation, foreground_mobjects)
         )
-        self.dither()
+        self.wait()
         for new_rects in rect_lists[1:]:
             self.play(
                 Transform(
@@ -2048,7 +2048,7 @@ class AreaUnderParabola(GraphScene):
                 ), 
                 *map(Animation, foreground_mobjects)
             )
-        self.dither()
+        self.wait()
 
         self.rects = rects
         self.dx = dx_list[-1]
@@ -2073,9 +2073,9 @@ class AreaUnderParabola(GraphScene):
             Write(question),
             ShowCreation(arrow)
         )
-        self.dither()
+        self.wait()
         self.play(ShowCreation(v_lines, run_time = 2))
-        self.dither()
+        self.wait()
 
         self.foreground_mobjects += [question, arrow]
         self.question = question
@@ -2094,7 +2094,7 @@ class AreaUnderParabola(GraphScene):
         self.play(morty.look_at, self.rects.get_bottom())
         self.play(Blink(morty))
         self.play(morty.look_at, self.question)
-        self.dither()
+        self.wait()
         self.play(Blink(morty))
         self.play(FadeOut(morty))
 
@@ -2120,11 +2120,11 @@ class AreaUnderParabola(GraphScene):
         self.foreground_mobjects.remove(self.axes)
         self.play(DrawBorderThenFill(self.right_point_slider))
         self.move_right_point_to(2)
-        self.dither()
+        self.wait()
         self.move_right_point_to(self.default_right_x)
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(self.question, A_func))
-        self.dither()
+        self.wait()
 
         self.A_func = A_func
 
@@ -2139,7 +2139,7 @@ class AreaUnderParabola(GraphScene):
             Write(words),
             GrowFromCenter(brace)
         )
-        self.dither()
+        self.wait()
         for x in 4, 2, self.default_right_x:
             self.move_right_point_to(x, run_time = 2)
 
@@ -2186,7 +2186,7 @@ class WhoCaresAboutArea(TeacherStudentsScene):
             "Who cares!?!", target_mode = "angry",
         )
         self.play(self.teacher.change_mode, "guilty")
-        self.dither()
+        self.wait()
         self.play(
             RemovePiCreatureBubble(self.students[1]),
             self.teacher.change_mode, "raise_right_hand",
@@ -2198,7 +2198,7 @@ class WhoCaresAboutArea(TeacherStudentsScene):
             added_anims = [self.teacher.look_at, point]
 
         )
-        self.dither(3)
+        self.wait(3)
 
 class PlayWithThisIdea(TeacherStudentsScene):
     def construct(self):
@@ -2207,12 +2207,12 @@ class PlayWithThisIdea(TeacherStudentsScene):
             target_mode = "hooray"
         )
         self.change_student_modes(*["happy"]*3)
-        self.dither()
+        self.wait()
         equation = TexMobject("A(x)", "\\leftrightarrow", "x^2")
         equation.highlight_by_tex("x^2", BLUE)
         self.teacher_says(equation, target_mode = "sassy")
         self.change_student_modes(*["thinking"]*3)
-        self.dither(2)
+        self.wait(2)
 
 class PlayingTowardsDADX(AreaUnderParabola, ReconfigurableScene):
     CONFIG = {
@@ -2299,26 +2299,26 @@ class PlayingTowardsDADX(AreaUnderParabola, ReconfigurableScene):
             FadeIn(dx_group)
         )
         self.play(Indicate(dx_label))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(dA_arrow))
-        self.dither()
+        self.wait()
         self.play(Write(dA_label, run_time = 2))
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(dA_label[0].copy(), difference_in_area[0]),
             ReplacementTransform(dA_label[1].copy(), difference_in_area[2]),
             *map(FadeIn, [difference_in_area[1], difference_in_area[3]])
         )
-        self.dither(2)
+        self.wait(2)
         self.play(FadeIn(dA_rect), Animation(dA_arrow))
         self.play(GrowFromCenter(side_brace))
         self.play(
             graph_label_copy.highlight, WHITE,
             graph_label_copy.next_to, side_brace, LEFT, SMALL_BUFF
         )
-        self.dither()
+        self.wait()
         self.play(Indicate(dx_group))
-        self.dither()
+        self.wait()
         self.play(FadeOut(difference_in_area))
 
         self.dx_group = dx_group
@@ -2360,13 +2360,13 @@ class PlayingTowardsDADX(AreaUnderParabola, ReconfigurableScene):
             for mob, tex in (x_squared, f_tex), (dx, "dx"), (dA, "dA")
         ])
         self.play(Write(equation.get_part_by_tex("approx")))
-        self.dither()
+        self.wait()
         for tex, mob in (f_tex, x_squared), ("dx", dx):
             self.play(*map(Indicate, [
                 equation.get_part_by_tex(tex),
                 mob
             ]))
-            self.dither(2)
+            self.wait(2)
         self.play(*[
             ReplacementTransform(
                 equation.get_part_by_tex(tex),
@@ -2377,9 +2377,9 @@ class PlayingTowardsDADX(AreaUnderParabola, ReconfigurableScene):
         ] + [
             Write(deriv_equation.get_part_by_tex("over"))
         ])
-        self.dither(2)
+        self.wait(2)
         self.shrink_dx(return_to_original_configuration = False)
-        self.dither()
+        self.wait()
 
         self.deriv_equation = deriv_equation
 
@@ -2407,14 +2407,14 @@ class PlayingTowardsDADX(AreaUnderParabola, ReconfigurableScene):
         )
         self.play(Write(q_marks, run_time = 2))
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(
             randy.change_mode, "surprised",
             randy.look_at, dA_circle,
             ReplacementTransform(A_circle, dA_circle)
         )
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [randy, q_marks, dA_circle]))
 
     def write_example_inputs(self):
@@ -2446,7 +2446,7 @@ class PlayingTowardsDADX(AreaUnderParabola, ReconfigurableScene):
                 ShowCreation(line_copy)
             )
             self.play(FadeOut(line_copy))
-        self.dither()
+        self.wait()
 
         self.three = three 
         self.three_plus_dx = three_plus_dx
@@ -2474,7 +2474,7 @@ class PlayingTowardsDADX(AreaUnderParabola, ReconfigurableScene):
                 expression.get_part_by_tex(")"),
             )),
         )
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(
                 self.three.get_part_by_tex("%d"%d).copy(),
@@ -2485,7 +2485,7 @@ class PlayingTowardsDADX(AreaUnderParabola, ReconfigurableScene):
                 expression.get_parts_by_tex(")")[1],
             )),
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             Write(expression.get_part_by_tex("over")),
             ReplacementTransform(
@@ -2494,7 +2494,7 @@ class PlayingTowardsDADX(AreaUnderParabola, ReconfigurableScene):
             )
             
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(expression.get_part_by_tex("approx")),
             ReplacementTransform(
@@ -2503,7 +2503,7 @@ class PlayingTowardsDADX(AreaUnderParabola, ReconfigurableScene):
                 run_time = 2
             )
         )
-        self.dither()
+        self.wait()
 
     def show_smaller_x(self):
         self.transition_to_alt_config(
@@ -2558,7 +2558,7 @@ class AlternateAreaUnderCurve(PlayingTowardsDADX):
             ShowCreation(arrow),
             FadeIn(dx_to_zero_words),
         )
-        self.dither()
+        self.wait()
         self.transition_to_alt_config(
             deriv_dx = self.deriv_dx/4.0,
             transformation_kwargs = {"run_time" : 2}
@@ -2597,12 +2597,12 @@ class AlternateAreaUnderCurve(PlayingTowardsDADX):
         dx_to_zero = self.dx_to_zero_words[1]
 
         self.play(*map(FadeIn, [box, brace]))
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(faders),
             dx_to_zero.next_to, box, DOWN
         )
-        self.dither()
+        self.wait()
 
 
     ########
@@ -2629,9 +2629,9 @@ class NextVideoWrapper(Scene):
 
         self.add(titles[0])
         self.play(ShowCreation(rect))
-        self.dither(3)
+        self.wait(3)
         self.play(Transform(*titles))
-        self.dither(3)
+        self.wait(3)
 
 class ProblemSolvingTool(TeacherStudentsScene):
     def construct(self):
@@ -2639,7 +2639,7 @@ class ProblemSolvingTool(TeacherStudentsScene):
             The derivative is a
             problem-solving tool
         """)
-        self.dither(3)
+        self.wait(3)
 
 class FundamentalTheorem(Scene):
     def construct(self):
@@ -2655,11 +2655,11 @@ class FundamentalTheorem(Scene):
         deriv.next_to(arrow, RIGHT)
 
         self.play(ShowCreation(arrow))
-        self.dither()
+        self.wait()
         self.play(Write(deriv))
-        self.dither()
+        self.wait()
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
 class NextVideos(TeacherStudentsScene):
     def construct(self):
@@ -2672,7 +2672,7 @@ class NextVideos(TeacherStudentsScene):
         self.teacher_says(
             "That's a high-level view"
         )
-        self.dither()
+        self.wait()
         self.play(
             RemovePiCreatureBubble(
                 self.teacher,
@@ -2698,7 +2698,7 @@ class NextVideos(TeacherStudentsScene):
             )
             for video, alpha in zip(series, np.linspace(0, 0.7, len(series)))
         ])
-        self.dither()
+        self.wait()
 
         student = self.get_students()[1]
         self.remove(student)
@@ -2723,9 +2723,9 @@ class NextVideos(TeacherStudentsScene):
             student.change_mode, "confused",
             student.look_at, words
         )
-        self.dither(3)
+        self.wait(3)
         self.play(student.change_mode, "thinking")
-        self.dither(4)
+        self.wait(4)
 
 class Chapter1PatreonThanks(PatreonThanks):
     CONFIG = {
@@ -2766,7 +2766,7 @@ class EndScreen(PiCreatureScene):
             ),
             self.pi_creature.change_mode, "hooray"
         )
-        self.dither()
+        self.wait()
         mode_point_pairs = [
             ("raise_left_hand", 5*LEFT+3*UP),
             ("raise_right_hand", 5*RIGHT+3*UP),
@@ -2778,8 +2778,8 @@ class EndScreen(PiCreatureScene):
         ]
         for mode, point in mode_point_pairs:
             self.play(self.pi_creature.change, mode, point)
-            self.dither()
-        self.dither(3)
+            self.wait()
+        self.wait(3)
 
 
     def create_pi_creature(self):

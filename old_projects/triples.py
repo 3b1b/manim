@@ -148,7 +148,7 @@ class IntroduceTriples(TeacherStudentsScene):
                 ))
             self.play(Write(equation))
             self.play(c_square.highlight, C_COLOR)
-            self.dither()
+            self.wait()
             self.play(*map(FadeOut, [full_group, equation]))
 
 class CompareToFermatsLastTheorem(TeacherStudentsScene):
@@ -191,7 +191,7 @@ class CompareToFermatsLastTheorem(TeacherStudentsScene):
                 for pi in self.get_students()
             ]
         )
-        self.dither()
+        self.wait()
         self.play(Transform(low_expression, expressions[2]))
         self.play(
             GrowFromCenter(low_brace),
@@ -204,7 +204,7 @@ class CompareToFermatsLastTheorem(TeacherStudentsScene):
         )
         for expression in expressions[4:]:
             self.play(Transform(low_expression, expression))
-            self.dither()
+            self.wait()
 
 class WritePythagoreanTriple(Scene):
     def construct(self):
@@ -212,7 +212,7 @@ class WritePythagoreanTriple(Scene):
         words.scale_to_fit_width(2*SPACE_WIDTH - LARGE_BUFF)
         words.to_corner(DOWN+LEFT)
         self.play(Write(words))
-        self.dither(2)
+        self.wait(2)
 
 class ShowManyTriples(Scene):
     def construct(self):
@@ -266,7 +266,7 @@ class ShowManyTriples(Scene):
             Write(title),
             run_time = 2,
         )
-        self.dither()
+        self.wait()
         self.play(MoveToTarget(title))
         for i in range(1, 17):
             new_triangle = triangles[i]
@@ -276,14 +276,14 @@ class ShowManyTriples(Scene):
                     Transform(triangle, new_triangle),
                     FadeIn(new_title)
                 )
-                self.dither()
+                self.wait()
                 self.play(MoveToTarget(new_title))
             else:
                 self.play(
                     Transform(triangle, new_triangle),
                     FadeIn(new_title.target)
                 )
-                self.dither()
+                self.wait()
         self.play(FadeOut(triangle))
         self.play(LaggedStart(
             FadeIn, 
@@ -294,7 +294,7 @@ class ShowManyTriples(Scene):
             run_time = 5
         ))
 
-        self.dither(2)
+        self.wait(2)
 
 class BabylonianTablets(Scene):
     def construct(self):
@@ -331,9 +331,9 @@ class BabylonianTablets(Scene):
         triples.to_edge(RIGHT)
 
         self.add(title)
-        self.dither()
+        self.wait()
         self.play(LaggedStart(FadeIn, triples, run_time = 5))
-        self.dither()
+        self.wait()
 
 class AskAboutFavoriteProof(TeacherStudentsScene):
     def construct(self):
@@ -343,7 +343,7 @@ class AskAboutFavoriteProof(TeacherStudentsScene):
         )
         self.change_student_modes("happy", "raise_right_hand", "happy")
         self.teacher_thinks("", target_mode = "thinking")
-        self.dither()
+        self.wait()
         self.zoom_in_on_thought_bubble()
 
 class PythagoreanProof(Scene):
@@ -377,10 +377,10 @@ class PythagoreanProof(Scene):
 
         self.add(triangle, triangle_copy)
         self.play(Write(side_labels))
-        self.dither()
+        self.wait()
         self.play(*map(DrawBorderThenFill, squares))
         self.add_labels_to_squares(squares, side_labels)
-        self.dither()
+        self.wait()
         self.play(
             VGroup(triangle_copy, a_square, b_square).move_to, 
                 4*LEFT+2*DOWN, DOWN,
@@ -389,17 +389,17 @@ class PythagoreanProof(Scene):
             run_time = 2,
             path_arc = np.pi/2,
         )
-        self.dither()
+        self.wait()
         self.add_new_triangles(
             triangle, 
             self.get_added_triangles_to_c_square(triangle, c_square)
         )
-        self.dither()
+        self.wait()
         self.add_new_triangles(
             triangle_copy,
             self.get_added_triangles_to_ab_squares(triangle_copy, a_square)
         )
-        self.dither()
+        self.wait()
 
         big_squares = VGroup(*map(
             self.get_big_square,
@@ -419,12 +419,12 @@ class PythagoreanProof(Scene):
             ShowCreation(double_arrow),
             *map(FadeOut, squares)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(*it.chain(
             map(FadeIn, squares),
             map(Animation, big_squares),
         ))
-        self.dither(2)
+        self.wait(2)
 
     def add_labels_to_squares(self, squares, side_labels):
         for label, square in zip(side_labels, squares):
@@ -575,17 +575,17 @@ class ReframeOnLattice(PiCreatureScene):
         all_dots = self.get_all_plane_dots()
 
         self.play(Write(dot_tuple_group, run_time = 2))
-        self.dither()
+        self.wait()
         for new_group in dot_tuple_groups[1:len(initial_examples)]:
             self.play(Transform(dot_tuple_group, new_group))
-            self.dither()
+            self.wait()
         self.play(LaggedStart(
             FadeIn, all_dots,
             rate_func = there_and_back,
             run_time = 3,
             lag_ratio = 0.2,
         ))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             dot_tuple_group, final_group
         ))
@@ -623,14 +623,14 @@ class ReframeOnLattice(PiCreatureScene):
 
         self.play(Write(group.line))
         self.play(FadeIn(group.triangle), Animation(group.line))
-        self.dither(2)
+        self.wait(2)
         for new_group in dot_tuple_groups[1:]:
             self.play(
                 Transform(group, new_group),
                 Transform(group.triangle, new_group.triangle),
                 Transform(group.line, new_group.line),
             )
-            self.dither(2)
+            self.wait(2)
         self.play(*map(FadeOut, [group, group.triangle, group.line]))
 
     def resize_plane(self):
@@ -673,7 +673,7 @@ class ReframeOnLattice(PiCreatureScene):
         self.plane = new_plane
         self.plane.coordinate_labels = coordinate_labels 
         self.add(self.plane, coordinate_labels)
-        self.dither()
+        self.wait()
 
     def show_root_example(self):
         x, y = (2, 1)
@@ -714,11 +714,11 @@ class ReframeOnLattice(PiCreatureScene):
             )
         )
         self.play(Write(tuple_label))
-        self.dither()
+        self.wait()
         self.play(FadeIn(distance_labels[0]))
-        self.dither(2)
+        self.wait(2)
         self.play(Transform(*distance_labels))
-        self.dither(2)
+        self.wait(2)
 
         self.distance_label = distance_labels[0]
         self.example_dot = dot
@@ -747,10 +747,10 @@ class ReframeOnLattice(PiCreatureScene):
         )
 
         self.play(Write(imag_coords))
-        self.dither()
+        self.wait()
         self.play(FadeOut(tuple_label))
         self.play(FadeIn(new_label))
-        self.dither(2)
+        self.wait(2)
 
         self.example_label = new_label
         self.plane.coordinate_labels.add(*imag_coords)
@@ -783,7 +783,7 @@ class ReframeOnLattice(PiCreatureScene):
             ShowCreation(arrow),
             Write(square_label)
         )
-        self.dither()
+        self.wait()
         self.play(RemovePiCreatureBubble(
             morty, target_mode = "pondering",
             look_at_arg = self.example_label
@@ -820,7 +820,7 @@ class ReframeOnLattice(PiCreatureScene):
             ),
             run_time = 2
         )
-        self.dither()
+        self.wait()
 
         #From top line to second line
         index_alignment_lists = [
@@ -836,7 +836,7 @@ class ReframeOnLattice(PiCreatureScene):
                 )
                 for i, j, k in index_alignment
             ])
-        self.dither(2)
+        self.wait(2)
 
         #From second line to final line
         index_alignment_lists = [
@@ -851,7 +851,7 @@ class ReframeOnLattice(PiCreatureScene):
                 )
                 for i, j in index_alignment
             ])
-            self.dither()
+            self.wait()
 
         #Move result to appropriate place
         result_label = final_line.copy()
@@ -866,7 +866,7 @@ class ReframeOnLattice(PiCreatureScene):
             stroke_width = 4,
             stroke_color = PINK
         ))
-        self.dither(2)
+        self.wait(2)
 
     def walk_through_square_geometrically(self):
         line = self.example_line
@@ -899,14 +899,14 @@ class ReframeOnLattice(PiCreatureScene):
         self.play(ShowCreation(alt_line))
         self.play(ShowCreation(line))
         self.remove(alt_line)
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(arc),
             Write(theta)
         )
-        self.dither()
+        self.wait()
         self.play(Indicate(distance_label))
-        self.dither()
+        self.wait()
 
         #Multiply full plane under everything
         everything = VGroup(*self.get_top_level_mobjects())
@@ -925,7 +925,7 @@ class ReframeOnLattice(PiCreatureScene):
                 Animation(everything),
                 run_time = 1.5
             )
-            self.dither()
+            self.wait()
 
         #Multiply number by itself
         ghost_arc = arc.copy().fade()
@@ -940,7 +940,7 @@ class ReframeOnLattice(PiCreatureScene):
             Transform(arc, double_arc),
             Transform(theta, two_theta),
         )
-        self.dither()
+        self.wait()
         five = distance_label[2]
         distance_label.remove(five)
         for mob in five, line, dot:
@@ -953,7 +953,7 @@ class ReframeOnLattice(PiCreatureScene):
             *map(MoveToTarget, [five, line, dot]),
             run_time = 2
         )
-        self.dither(2)
+        self.wait(2)
 
     ####
 
@@ -985,7 +985,7 @@ class TimeToGetComplex(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("Time to \\\\ get complex")
         self.change_student_modes("angry", "sassy", "pleading")
-        self.dither(2)
+        self.wait(2)
 
 class OneMoreExample(Scene):
     CONFIG = {
@@ -1061,9 +1061,9 @@ class OneMoreExample(Scene):
             DrawBorderThenFill(dot)
         )
         self.play(Write(distance_labels[0]))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(*distance_labels))
-        self.dither()
+        self.wait()
 
         self.distance_label = distance_labels[1]
         self.line = line
@@ -1110,7 +1110,7 @@ class OneMoreExample(Scene):
             Transform(VGroup(number), top_line),
             run_time = 2
         )
-        self.dither()
+        self.wait()
 
         index_alignment_lists = [
             [(0, 0, 0), (0, 1, 1), (1, 1, 2), (1, 5, 9)],
@@ -1136,7 +1136,7 @@ class OneMoreExample(Scene):
                 )
                 for i, j, k in index_alignment
             ])
-            self.dither()
+            self.wait()
         self.play(
             Transform(second_line[3], minus),
             FadeOut(VGroup(*[
@@ -1146,7 +1146,7 @@ class OneMoreExample(Scene):
             second_line[5].shift, 0.35*RIGHT,
         )
         self.play(VGroup(*second_line[:4]).shift, 0.55*RIGHT)
-        self.dither()
+        self.wait()
         for index_alignment in index_alignment_lists[2:]:
             self.play(*[
                 ReplacementTransform(
@@ -1155,9 +1155,9 @@ class OneMoreExample(Scene):
                 )
                 for i, j, k in index_alignment
             ])
-            self.dither()
+            self.wait()
         self.play(FadeIn(final_line))
-        self.dither()
+        self.wait()
 
         self.final_line = final_line
 
@@ -1178,7 +1178,7 @@ class OneMoreExample(Scene):
             Animation(self.final_line),
             DrawBorderThenFill(dot)
         )
-        self.dither()
+        self.wait()
         self.play(*[
             ReplacementTransform(m1.copy(), m2)
             for m1, m2 in [
@@ -1186,7 +1186,7 @@ class OneMoreExample(Scene):
                 (self.distance_label, distance_label)
             ]
         ])
-        self.dither()
+        self.wait()
 
     def show_triangle(self):
         triangle = Polygon(*[
@@ -1204,7 +1204,7 @@ class OneMoreExample(Scene):
             )),
             run_time = 2
         )
-        self.dither(2)
+        self.wait(2)
 
 class ThisIsMagic(TeacherStudentsScene):
     def construct(self):
@@ -1212,7 +1212,7 @@ class ThisIsMagic(TeacherStudentsScene):
             "This is magic", target_mode = "hooray"
         )
         self.play(self.teacher.change, "happy")
-        self.dither(2)
+        self.wait(2)
 
 class GeneralExample(OneMoreExample):
     CONFIG = {
@@ -1275,7 +1275,7 @@ class GeneralExample(OneMoreExample):
             ShowCreation(line),
             DrawBorderThenFill(dot)
         )
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(arrow),
             FadeIn(z_to_z_squared),
@@ -1293,9 +1293,9 @@ class GeneralExample(OneMoreExample):
                 (label, square_label),
             ]
         ])
-        self.dither()
+        self.wait()
         self.play(Write(result_length_label))
-        self.dither()
+        self.wait()
 
         self.example_dot = dot
         self.example_label = label
@@ -1339,9 +1339,9 @@ class BoringExample(GeneralExample):
         )
         self.play(Blink(morty))
         self.play(morty.change, "tired")
-        self.dither(2)
+        self.wait(2)
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
 class FiveTwoExample(GeneralExample):
     CONFIG = {
@@ -1448,13 +1448,13 @@ class WriteGeneralFormula(GeneralExample):
 
 
         self.play(*map(FadeIn, [rect, top_line, second_line]))
-        self.dither()
+        self.wait()
         self.play(
             real_part.copy().next_to, real_part_line.copy(), 
                 DOWN, SMALL_BUFF,
             ShowCreation(real_part_line)
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(VGroup(
                 self.example_label, self.example_dot, self.example_line,
@@ -1464,7 +1464,7 @@ class WriteGeneralFormula(GeneralExample):
                 RIGHT, SMALL_BUFF,
             ShowCreation(imag_part_line)
         )
-        self.dither()
+        self.wait()
 
         self.corner_rect = rect
 
@@ -1488,9 +1488,9 @@ class WriteGeneralFormula(GeneralExample):
         triangle.replace(line, stretch = True)
 
         self.play(Write(hyp_length))
-        self.dither()
+        self.wait()
         self.play(FadeIn(triangle))
-        self.dither()
+        self.wait()
 
     def show_uv_to_triples(self):
         rect = self.corner_rect.copy()
@@ -1620,7 +1620,7 @@ class VisualizeZSquared(Scene):
         z_to_z_squared.shift(2*RIGHT)
 
         self.play(Write(z_to_z_squared))
-        self.dither()
+        self.wait()
         self.z_to_z_squared = z_to_z_squared
 
     def draw_arrows(self):
@@ -1673,14 +1673,14 @@ class VisualizeZSquared(Scene):
                 label.add_background_rectangle()
 
             self.play(*map(FadeIn, [z_label, z_dot]))
-            self.dither()
+            self.wait()
             self.play(ShowCreation(arrow))
             self.play(ReplacementTransform(
                 z_dot.copy(), square_dot,
                 path_arc = angle
             ))
             self.play(FadeIn(square_label))
-            self.dither()
+            self.wait()
             self.play(
                 FadeOut(z_label),
                 FadeOut(square_label),
@@ -1689,7 +1689,7 @@ class VisualizeZSquared(Scene):
 
             arrows.add(arrow)
             dots.add(z_dot, square_dot)
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [
             dots, arrows, self.z_to_z_squared
         ]))
@@ -1723,7 +1723,7 @@ class VisualizeZSquared(Scene):
             run_time = 3,
             lag_ratio = 0.2
         ))
-        self.dither()
+        self.wait()
 
         self.dots = dots
 
@@ -1738,7 +1738,7 @@ class VisualizeZSquared(Scene):
             ),
             Animation(self.dots),
         )
-        self.dither()
+        self.wait()
 
         self.color_grid = color_grid
 
@@ -1757,9 +1757,9 @@ class VisualizeZSquared(Scene):
             ],
             run_time = 3
         )
-        self.dither(2)
+        self.wait(2)
         self.play(self.color_grid.set_stroke, None, 3)
-        self.dither()
+        self.wait()
         scale_factor = self.big_dot_radius/self.dot_radius
         self.play(LaggedStart(
             ApplyMethod, self.dots,
@@ -1767,7 +1767,7 @@ class VisualizeZSquared(Scene):
             rate_func = there_and_back,
             run_time = 3
         ))
-        self.dither()
+        self.wait()
 
     def show_triangles(self):
         z_list = [
@@ -1780,10 +1780,10 @@ class VisualizeZSquared(Scene):
         triangle.scale(0.01, about_point = triangle.tip)
 
         self.play(triangle.restore, run_time = 2)
-        self.dither(2)
+        self.wait(2)
         for new_triangle in triangles[1:]:
             self.play(Transform(triangle, new_triangle))
-            self.dither(2)
+            self.wait(2)
         self.play(FadeOut(triangle))
 
     def zoom_out(self):
@@ -1810,7 +1810,7 @@ class VisualizeZSquared(Scene):
             *map(MoveToTarget, movers),
             run_time = 3
         )
-        self.dither(2)
+        self.wait(2)
 
     def show_more_triangles(self):
         z_list = [
@@ -1822,10 +1822,10 @@ class VisualizeZSquared(Scene):
         triangle = triangles[0]
 
         self.play(FadeOut(triangle))
-        self.dither(2)
+        self.wait(2)
         for new_triangle in triangles[1:]:
             self.play(Transform(triangle, new_triangle))
-            self.dither(2)
+            self.wait(2)
 
     ###
 
@@ -1895,10 +1895,10 @@ class AskAboutHittingAllPoints(TeacherStudentsScene):
             "Does this hit \\\\ all pythagorean triples?",
             target_mode = "raise_left_hand"
         )
-        self.dither()
+        self.wait()
         self.teacher_says("No", target_mode = "sad")
         self.change_student_modes(*["hesitant"]*3)
-        self.dither()
+        self.wait()
 
 class PointsWeMiss(VisualizeZSquared):
     CONFIG = {
@@ -1973,18 +1973,18 @@ class PointsWeMiss(VisualizeZSquared):
         self.play(FocusOn(dots[0]))
         self.play(ShowCreation(dots[0]))
         self.play(Write(labels[0]))
-        self.dither()
+        self.wait()
         self.play(FadeIn(triangles[0]))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(rhss[0]))
-        self.dither(2)
+        self.wait(2)
         groups = triangles, dots, labels, rhss
         for i in 1, 2:
             self.play(*[
                 Transform(group[0], group[i])
                 for group in groups
             ])
-            self.dither(3)
+            self.wait(3)
         self.play(*[
             FadeOut(group[0])
             for group in groups
@@ -2024,11 +2024,11 @@ class PointsWeMiss(VisualizeZSquared):
         self.play(ShowCreation(dots[0]))
         self.play(Write(VGroup(labels[0], rhss[0])))
         self.play(FadeIn(triangles[0]))
-        self.dither(3)
+        self.wait(3)
         self.play(*[Transform(*group) for group in groups])
-        self.dither(3)
+        self.wait(3)
         self.play(*[group[0].restore for group in groups])
-        self.dither(2)
+        self.wait(2)
 
     def mention_one_half_rule(self):
         morty = Mortimer()
@@ -2041,7 +2041,7 @@ class PointsWeMiss(VisualizeZSquared):
             "Never need to scale \\\\ by less than $\\frac{1}{2}$"
         ))
         self.play(Blink(morty))
-        self.dither(2)
+        self.wait(2)
 
 class PointsWeMissAreMultiplesOfOnesWeHit(TeacherStudentsScene):
     def construct(self):
@@ -2055,7 +2055,7 @@ class PointsWeMissAreMultiplesOfOnesWeHit(TeacherStudentsScene):
         words.highlight_by_tex("hit", GREEN)
         self.teacher_says(words)
         self.change_student_modes(*["pondering"]*3)
-        self.dither(2)
+        self.wait(2)
 
 class DrawSingleRadialLine(PointsWeMiss):
     def construct(self):
@@ -2083,14 +2083,14 @@ class DrawSingleRadialLine(PointsWeMiss):
         self.play(GrowFromCenter(dot))
         self.play(Indicate(dot))
         self.play(ShowCreation(line), Animation(dot))
-        self.dither()
+        self.wait()
         self.play(LaggedStart(
             DrawBorderThenFill, added_dots,
             stroke_color = PINK,
             stroke_width = 4,
             run_time = 3
         ))
-        self.dither()
+        self.wait()
 
 class DrawRadialLines(PointsWeMiss):
     CONFIG = {
@@ -2176,14 +2176,14 @@ class DrawRadialLines(PointsWeMiss):
             dot.highlight, RED
         )
         self.play(ReplacementTransform(dot, line))
-        self.dither()
+        self.wait()
         self.play(LaggedStart(
             DrawBorderThenFill, line.new_dots,
             stroke_width = 4,
             stroke_color = PINK,
             run_time = 3,
         ))
-        self.dither()
+        self.wait()
 
     def show_all_lines(self):
         seed_dots = VGroup(*[line.seed_dot for line in self.lines])
@@ -2208,7 +2208,7 @@ class DrawRadialLines(PointsWeMiss):
             stroke_color = PINK,
             run_time = 3,
         ))
-        self.dither()
+        self.wait()
 
         self.new_dots = new_dots
 
@@ -2224,10 +2224,10 @@ class DrawRadialLines(PointsWeMiss):
         triangle = triangles[0]
 
         self.play(FadeIn(triangle))
-        self.dither(2)
+        self.wait(2)
         for new_triangle in triangles[1:]:
             self.play(Transform(triangle, new_triangle))
-            self.dither(2)
+            self.wait(2)
 
 class RationalPointsOnUnitCircle(DrawRadialLines):
     CONFIG = {
@@ -2282,10 +2282,10 @@ class RationalPointsOnUnitCircle(DrawRadialLines):
 
         self.add(circle, self.coordinate_labels)
         self.play(FadeIn(group))
-        self.dither()
+        self.wait()
         for new_group in groups[1:]:
             self.play(Transform(group, new_group))
-            self.dither()
+            self.wait()
 
         self.curr_example_point_group = group
         self.next_rational_point_example = groups[0]
@@ -2325,7 +2325,7 @@ class RationalPointsOnUnitCircle(DrawRadialLines):
         )
 
         self.play(FadeIn(top_rect), FadeIn(top_line))
-        self.dither()
+        self.wait()
         self.play(*[
             ReplacementTransform(top_rect, second_rect)
         ] + [
@@ -2350,10 +2350,10 @@ class RationalPointsOnUnitCircle(DrawRadialLines):
             )
             for tex in "(", ")", "over",
         ])
-        self.dither(2)
+        self.wait(2)
         self.play(Write(circle_label))
         self.play(ShowCreation(circle_arrow))
-        self.dither(2)
+        self.wait(2)
         self.play(FadeOut(circle_arrow))
 
         self.algebra = VGroup(
@@ -2368,7 +2368,7 @@ class RationalPointsOnUnitCircle(DrawRadialLines):
             self.curr_example_point_group,
             rational_point_group
         ))
-        self.dither(2)
+        self.wait(2)
         self.play(*[
             ApplyMethod(
                 mob.scale_about_point, 
@@ -2408,7 +2408,7 @@ class RationalPointsOnUnitCircle(DrawRadialLines):
             integer_point_group
         ))
         self.play(Write(distance_label))
-        self.dither(2)
+        self.wait(2)
 
     ###
 
@@ -2493,7 +2493,7 @@ class ProjectPointsOntoUnitCircle(DrawRadialLines):
             group.scale, scale_factor,
             run_time = 2
         )
-        self.dither(2)
+        self.wait(2)
 
     def draw_infinitely_many_lines(self):
         lines = VGroup(*[
@@ -2506,7 +2506,7 @@ class ProjectPointsOntoUnitCircle(DrawRadialLines):
             run_time = 3
         ))
         self.play(FadeOut(lines))
-        self.dither()
+        self.wait()
 
 class ICanOnlyDrawFinitely(TeacherStudentsScene):
     def construct(self):
@@ -2514,7 +2514,7 @@ class ICanOnlyDrawFinitely(TeacherStudentsScene):
             "I can only \\\\ draw finitely",
             run_time = 2
         )
-        self.dither(2)
+        self.wait(2)
 
 class SupposeMissingPoint(PointsWeMiss):
     def construct(self):
@@ -2550,7 +2550,7 @@ class SupposeMissingPoint(PointsWeMiss):
 
         self.add(triangle, line, dot)
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
         self.words = words
         self.triangle = triangle
@@ -2590,18 +2590,18 @@ class SupposeMissingPoint(PointsWeMiss):
         self.add(dot.copy().fade())
         self.add(line.copy().set_stroke(GREY, 1))
         self.play(*map(MoveToTarget, [dot, line]))
-        self.dither()
+        self.wait()
         self.play(
             Write(rational_point_word),
             ShowCreation(arrow)
         )
-        self.dither(2)
+        self.wait(2)
 
 class ProofTime(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("Proof time!", target_mode = "hooray")
         self.change_student_modes(*["hooray"]*3)
-        self.dither(2)
+        self.wait(2)
 
 class FinalProof(RationalPointsOnUnitCircle):
     def construct(self):
@@ -2631,7 +2631,7 @@ class FinalProof(RationalPointsOnUnitCircle):
             Write(label, run_time = 2),
             DrawBorderThenFill(dot)
         )
-        self.dither()
+        self.wait()
 
         self.example_dot = dot
         self.example_label = label
@@ -2650,7 +2650,7 @@ class FinalProof(RationalPointsOnUnitCircle):
             Animation(self.example_label)
         )
         self.play(DrawBorderThenFill(neg_one_dot))
-        self.dither()
+        self.wait()
 
         self.neg_one_dot = neg_one_dot
         self.secant_line = line
@@ -2672,17 +2672,17 @@ class FinalProof(RationalPointsOnUnitCircle):
         rise_text.add_background_rectangle()
 
         self.play(*map(ShowCreation, [h_line, v_line]))
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(rise_brace),
             FadeIn(rise_text)
         )
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(run_brace),
             FadeIn(run_text)
         )
-        self.dither(3)
+        self.wait(3)
         self.play(*map(FadeOut, [
             self.example_dot, self.example_label,
             self.secant_line,
@@ -2728,13 +2728,13 @@ class FinalProof(RationalPointsOnUnitCircle):
             ShowCreation(line),
             FadeIn(label)
         )
-        self.dither()
+        self.wait()
         for new_line, new_label in zip(lines, labels)[1:]:
             self.play(
                 Transform(line, new_line),
                 Transform(label, new_label),
             )
-            self.dither()
+            self.wait()
         self.play(*map(FadeOut, [line, label]))
 
     def square_example_point(self):
@@ -2807,7 +2807,7 @@ class FinalProof(RationalPointsOnUnitCircle):
         self.play(ShowCreation(uv_line))
         self.play(ShowCreation(uv_arc))
         self.play(Write(theta))
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(z_to_z_squared_arrow),
             FadeIn(z_to_z_squared)
@@ -2824,12 +2824,12 @@ class FinalProof(RationalPointsOnUnitCircle):
                 (uv_arc, square_arc),
             ]
         ])
-        self.dither()
+        self.wait()
         self.play(
             Write(two_theta),
             ShowCreation(two_theta_arrow)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(FadeOut(self.two_theta_group))
 
         self.theta_group = VGroup(uv_arc, theta)
@@ -2858,11 +2858,11 @@ class FinalProof(RationalPointsOnUnitCircle):
             MoveToTarget(line),
             MoveToTarget(dot),
         )
-        self.dither()
+        self.wait()
         self.play(FadeIn(self.two_theta_group))
-        self.dither()
+        self.wait()
         self.play(FadeOut(self.two_theta_group))
-        self.dither(6) ##circle geometry
+        self.wait(6) ##circle geometry
 
         self.rational_point_dot = dot
 
@@ -2884,17 +2884,17 @@ class FinalProof(RationalPointsOnUnitCircle):
         line_copies.target.next_to(same_slope_words, DOWN)
 
         self.play(ShowCreation(line))
-        self.dither()
+        self.wait()
         self.play(
             theta_group_copy.shift,
             line.get_start() - self.uv_line.get_start()
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(same_slope_words),
             MoveToTarget(line_copies)
         )
-        self.dither()
+        self.wait()
 
         self.same_slope_words = same_slope_words
 
@@ -2914,7 +2914,7 @@ class FinalProof(RationalPointsOnUnitCircle):
 
         self.play(ShowCreation(h_line))
         self.play(ShowCreation(v_line))
-        self.dither()
+        self.wait()
         self.play(*[
             ReplacementTransform(
                 self.uv_label.get_part_by_tex(tex).copy(),
@@ -2926,7 +2926,7 @@ class FinalProof(RationalPointsOnUnitCircle):
             Write(rhs.get_part_by_tex(tex))
             for tex in "=", "over"
         ])
-        self.dither(2)
+        self.wait(2)
         self.play(
             ShowCreation(rect),
             FadeIn(morty)
@@ -2938,7 +2938,7 @@ class FinalProof(RationalPointsOnUnitCircle):
             look_at_arg = rect
         ))
         self.play(Blink(morty))
-        self.dither(2)
+        self.wait(2)
 
 class BitOfCircleGeometry(Scene):
     def construct(self):
@@ -2982,11 +2982,11 @@ class BitOfCircleGeometry(Scene):
                 self.play(FadeIn(label))
             groups.add(group)
 
-        self.dither(2)
+        self.wait(2)
         self.play(ReplacementTransform(
             groups[0].copy(), groups[1]
         ))
-        self.dither(2)
+        self.wait(2)
 
 class PatreonThanksTriples(PatreonThanks):
     CONFIG = {

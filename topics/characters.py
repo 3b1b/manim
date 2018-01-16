@@ -385,7 +385,7 @@ class RemovePiCreatureBubble(AnimationGroup):
 
 class PiCreatureScene(Scene):
     CONFIG = {
-        "total_dither_time" : 0,
+        "total_wait_time" : 0,
         "seconds_to_blink" : 3,
         "pi_creatures_start_on_screen" : True,
     }
@@ -564,21 +564,21 @@ class PiCreatureScene(Scene):
         ])
         return self
 
-    def dither(self, time = 1, blink = True):
+    def wait(self, time = 1, blink = True):
         while time >= 1:
-            time_to_blink = self.total_dither_time%self.seconds_to_blink == 0
+            time_to_blink = self.total_wait_time%self.seconds_to_blink == 0
             if blink and self.any_pi_creatures_on_screen() and time_to_blink:
                 self.blink()
             else:
-                self.non_blink_dither()
+                self.non_blink_wait()
             time -= 1
-            self.total_dither_time += 1
+            self.total_wait_time += 1
         if time > 0:
-            self.non_blink_dither(time)
+            self.non_blink_wait(time)
         return self
 
-    def non_blink_dither(self, time = 1):
-        Scene.dither(self, time)
+    def non_blink_wait(self, time = 1):
+        Scene.wait(self, time)
         return self
 
     def change_mode(self, mode):

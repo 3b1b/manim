@@ -39,7 +39,7 @@ from helpers import *
 class SectionThree(Scene):
     def construct(self):
         self.add(TextMobject("A few words on the usefulness of infinite math"))
-        self.dither()
+        self.wait()
 
 
 class InfiniteResultsFiniteWorld(Scene):
@@ -78,17 +78,17 @@ class InfiniteResultsFiniteWorld(Scene):
         self.play(ShimmerIn(left_words))
         self.play(ShowCreation(arrow))
         self.play(ShimmerIn(right_words))
-        self.dither()
+        self.wait()
         self.play(
             ShimmerIn(left_formula),
             ApplyMethod(left_words.next_to, left_formula, UP)
         )
-        self.dither()
+        self.wait()
         self.play(
             ShimmerIn(right_formula),
             Transform(right_words, right_overwords)
         )
-        self.dither()
+        self.wait()
         self.finite_analog(
             Mobject(left_formula, left_words),
             arrow,
@@ -126,7 +126,7 @@ class InfiniteResultsFiniteWorld(Scene):
             mob.sort_points(np.linalg.norm)
 
         self.play(GrowFromCenter(ex))
-        self.dither()
+        self.wait()
         self.play(
             Transform(left_mob, new_left),
             Transform(arrow.copy(), left_arrow),
@@ -138,7 +138,7 @@ class InfiniteResultsFiniteWorld(Scene):
             GrowFromCenter(brace),
             ShimmerIn(finite_analog)
         )
-        self.dither()
+        self.wait()
         self.equivalence(
             left_mob,
             left_arrow, 
@@ -167,7 +167,7 @@ class InfiniteResultsFiniteWorld(Scene):
             Transform(arrow, words),
             ApplyMethod(right_mob.to_edge, RIGHT)
         )
-        self.dither()
+        self.wait()
 
 
 class HilbertCurvesStayStable(Scene):
@@ -185,7 +185,7 @@ class HilbertCurvesStayStable(Scene):
         words.to_edge(UP)
 
         self.add(curve, grid)
-        self.dither()
+        self.wait()
         for n in range(3, 7):
             if n == 5:
                 self.play(ShimmerIn(words))
@@ -200,7 +200,7 @@ class HilbertCurvesStayStable(Scene):
             self.remove(grid)
             grid = new_grid
             self.play(Transform(curve, new_curve))
-            self.dither()
+            self.wait()
 
 
 
@@ -259,16 +259,16 @@ class InfiniteObjectsEncapsulateFiniteObjects(Scene):
             finite.next_to(words[2], DOWN, buff = n)
 
         self.play(ShimmerIn(words[0]))
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(infinite_objects[0]))
         self.play(ShowCreation(infinite_objects[1]))
         self.play(ShimmerIn(infinite_objects[2]))
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(words[1]), ShimmerIn(words[2]))
         self.play(ShimmerIn(finite_objects[0]))
         self.play(ShowCreation(finite_objects[1]))
         self.play(ShimmerIn(finite_objects[2]))
-        self.dither()
+        self.wait()
 
 
 class StatementRemovedFromReality(Scene):

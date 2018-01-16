@@ -132,7 +132,7 @@ class AddingPureFrequencies(PiCreatureScene):
             GrowFromCenter(brace),
             Write(words)
         )
-        self.dither()
+        self.wait()
         graph.save_state()
         self.play(
             FadeOut(brace),
@@ -167,7 +167,7 @@ class AddingPureFrequencies(PiCreatureScene):
             n_circles = 6,
         )
         self.play(randy.change, "confused", graph)
-        self.dither(2)
+        self.wait(2)
 
         self.set_variables_as_attrs(
             D_label,
@@ -184,7 +184,7 @@ class AddingPureFrequencies(PiCreatureScene):
                 for graph in self.A_graph, self.D_graph
             ]
         )
-        self.dither()
+        self.wait()
 
     def separate_out_parts(self):
         axes = self.axes
@@ -215,7 +215,7 @@ class AddingPureFrequencies(PiCreatureScene):
                 for mob in  randy, speaker
             ]
         ))
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(A_axes, D_axes)
 
@@ -243,9 +243,9 @@ class AddingPureFrequencies(PiCreatureScene):
         self.play(GrowFromCenter(v_line))
         self.play(FadeOut(v_line))
         self.play(*map(ShowCreation, lines))
-        self.dither()
+        self.wait()
         self.play(MoveToTarget(sum_lines, path_arc = np.pi/4))
-        self.dither(2)
+        self.wait(2)
         self.play(*[
             Transform(
                 line, 
@@ -280,7 +280,7 @@ class AddingPureFrequencies(PiCreatureScene):
             run_time = 15,
             rate_func = None
         )
-        self.dither()
+        self.wait()
 
         self.sum_graph = sum_graph
 
@@ -346,7 +346,7 @@ class AddingPureFrequencies(PiCreatureScene):
                 (axes, new_sum_graph),
             ]
         ])
-        self.dither()
+        self.wait()
 
     ####
 
@@ -484,7 +484,7 @@ class BreakApartSum(Scene):
         self.play(ShowCreation(h_line))
         for pure_graph in reversed(pure_graphs):
             self.play(ReplacementTransform(graph.copy(), pure_graph))
-        self.dither()
+        self.wait()
 
         self.all_graphs = VGroup(graph, h_line, pure_graphs)
         self.pure_graphs = pure_graphs
@@ -513,7 +513,7 @@ class BreakApartSum(Scene):
         )
         self.play(FadeOut(rect))
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class Quadrant(Mobject1D):
     CONFIG = {
@@ -604,10 +604,10 @@ class MachineThatTreatsOneFrequencyDifferently(Scene):
 
         self.change_graph_frequency(1)
         graph.highlight(GREEN)
-        self.dither()
+        self.wait()
         graph.highlight(YELLOW)
         self.change_graph_frequency(2)
-        self.dither()
+        self.wait()
 
 
     def change_graph_frequency(self, frequency, run_time = 2):

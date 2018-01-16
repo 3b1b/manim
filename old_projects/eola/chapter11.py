@@ -68,9 +68,9 @@ class OpeningQuote(Scene):
         author.next_to(words, DOWN, buff = MED_LARGE_BUFF)
 
         self.play(Write(words, run_time = 8))
-        self.dither()
+        self.wait()
         self.play(FadeIn(author))
-        self.dither(3)
+        self.wait(3)
 
 class RevisitOriginalQuestion(TeacherStudentsScene):
     def construct(self):
@@ -125,7 +125,7 @@ class WhatIsA2DVector(LinearTransformationScene):
             Write(coords),
             run_time = 2
         )
-        self.dither()
+        self.wait()
         self.v, self.coords = v, coords
 
     def bring_in_students(self):
@@ -143,7 +143,7 @@ class WhatIsA2DVector(LinearTransformationScene):
             )
         self.play(*map(FadeIn, students))
         self.play(Blink(physics_student))
-        self.dither()
+        self.wait()
         for student, vect in zip(students, [RIGHT, LEFT]):
             for mob in v, coords:
                 mob.target = mob.copy()
@@ -163,7 +163,7 @@ class WhatIsA2DVector(LinearTransformationScene):
                 Transform(student.coords, coords.target),
             )
             self.play(Blink(student))
-            self.dither()
+            self.wait()
         anims = []
         for student in students:
             v, coords = student.v, student.coords
@@ -188,7 +188,7 @@ class WhatIsA2DVector(LinearTransformationScene):
         self.play(*anims)
         for student in students:
             self.play(Blink(student))
-        self.dither()
+        self.wait()
         self.play(*it.chain(
             map(FadeOut, everything + [
                 physics_student.bubble,
@@ -212,7 +212,7 @@ class WhatIsA2DVector(LinearTransformationScene):
             Write(bubble.content)
         )
         self.play(Blink(physics_student))
-        self.dither()
+        self.wait()
 
 class HigherDimensionalVectorsNumerically(Scene):
     def construct(self):
@@ -237,7 +237,7 @@ class HigherDimensionalVectorsNumerically(Scene):
         for word in words:
             self.play(FadeIn(word))
         self.play(Write(vectors))
-        self.dither()
+        self.wait()
         for index, dim, direction in (0, 4, RIGHT), (2, 100, LEFT):
             v = vectors[index]
             v.target = v.copy()
@@ -265,7 +265,7 @@ class HigherDimensionalVectorsNumerically(Scene):
                 )
                 for i in range(num_entries)
             ])
-            self.dither()
+            self.wait()
 
 class HyperCube(VMobject):
     CONFIG = {
@@ -330,9 +330,9 @@ class AskAbout4DPhysicsStudent(Scene):
             if i%2 == 1:
                 self.play(Blink(physy))
             else:
-                self.dither()
+                self.wait()
         self.play(Blink(compy))
-        self.dither()
+        self.wait()
 
 class ManyCoordinateSystems(LinearTransformationScene):
     CONFIG = {
@@ -404,11 +404,11 @@ class ManyCoordinateSystems(LinearTransformationScene):
             )
 
         self.play(Write(array, run_time = 1))
-        self.dither()
+        self.wait()
         self.play(*map(MoveToTarget, [self.i_hat, coord1]))
         self.play(*map(MoveToTarget, [self.j_hat, coord2]))
         self.play(VGroup(self.j_hat, coord2).shift, self.i_hat.get_end())
-        self.dither(2)
+        self.wait(2)
         self.play(
             self.i_hat.restore,
             self.j_hat.restore,
@@ -460,7 +460,7 @@ class DeterminantAndEigenvectorDontCare(LinearTransformationScene):
         eigenvectors = VGroup(*self.get_eigenvectors())
 
         self.add_foreground_mobject(words)
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(blob),
             Write(det_label)
@@ -473,7 +473,7 @@ class DeterminantAndEigenvectorDontCare(LinearTransformationScene):
             ),
             Animation(words)
         )
-        self.dither()
+        self.wait()
         
         self.add_transformable_mobject(blob)
         self.add_moving_mobject(det_label, det_label_target)
@@ -506,7 +506,7 @@ class DeterminantAndEigenvectorDontCare(LinearTransformationScene):
                     FadeIn(self.plane),
                     *map(Animation, non_plane_mobs)
                 )
-                self.dither()
+                self.wait()
             self.apply_transposed_matrix(
                 self.t_matrix,
                 rate_func = special_rate_func,
@@ -557,9 +557,9 @@ class WhatIsSpace(Scene):
             Write(compy.bubble.content)
         )
         self.play(Blink(physy))
-        self.dither()
+        self.wait()
         self.play(Blink(compy))
-        self.dither()
+        self.wait()
 
 class OtherVectorishThings(TeacherStudentsScene):
     def construct(self):
@@ -691,11 +691,11 @@ class AddTwoFunctions(FunctionGraphScene):
             Write(prefix, run_time = 2),
             FadeIn(brace)
         )
-        self.dither()        
+        self.wait()        
         for lines in f_lines, g_lines:
             self.add_lines(lines)
         self.play(*map(FadeOut, [f_graph, g_graph]))
-        self.dither()
+        self.wait()
         self.play(FadeOut(brace))
         fg_group = VGroup(*list(f_label)+list(g_label))
         self.play(
@@ -708,7 +708,7 @@ class AddTwoFunctions(FunctionGraphScene):
         self.play(ShowCreation(arrow))
 
         self.show_line_addition(f_lines[0], g_lines[0], sum_lines[0])
-        self.dither()
+        self.wait()
 
         curr_x_point = f_lines[1].get_start()
         new_sum_def = self.get_sum_definition(DecimalNumber(curr_x_point[0]))
@@ -719,7 +719,7 @@ class AddTwoFunctions(FunctionGraphScene):
             Transform(arrow, new_arrow),
         )
         self.show_line_addition(f_lines[1], g_lines[1], sum_lines[1])
-        self.dither()
+        self.wait()
 
         final_sum_def = self.get_sum_definition(TexMobject("x"))
         final_sum_def.to_corner(UP+LEFT)
@@ -781,7 +781,7 @@ class AddTwoFunctions(FunctionGraphScene):
         #     *[mob.fade for mob in g_lines, f_lines]+[
         #     Animation(dots)
         # ])
-        self.dither()
+        self.wait()
 
 class AddVectorsCoordinateByCoordinate(Scene):
     def construct(self):
@@ -796,7 +796,7 @@ class AddVectorsCoordinateByCoordinate(Scene):
         VGroup(v1, plus, v2, equals, v_sum).arrange_submobjects()
 
         self.add(v1, plus, v2)
-        self.dither()
+        self.wait()
         self.play(
             Write(equals),
             Write(v_sum.get_brackets())
@@ -805,7 +805,7 @@ class AddVectorsCoordinateByCoordinate(Scene):
             Transform(v1.get_entries().copy(), v_sum.get_entries()),
             Transform(v2.get_entries().copy(), v_sum.get_entries()),
         )
-        self.dither()
+        self.wait()
 
 class ScaleFunction(FunctionGraphScene):
     def construct(self):
@@ -832,12 +832,12 @@ class ScaleFunction(FunctionGraphScene):
         self.add(title)
 
         self.add_lines(graph_lines)
-        self.dither()
+        self.wait()
         self.play(Transform(graph_lines, scaled_lines))
         self.play(ShowCreation(scaled_graph))
         self.play(Write(two_f_label))
         self.play(FadeOut(graph_lines))
-        self.dither()
+        self.wait()
 
 class ScaleVectorByCoordinates(Scene):
     def construct(self):
@@ -862,7 +862,7 @@ class ScaleVectorByCoordinates(Scene):
             Transform(two.copy(), two_targets),
             Transform(v1.get_entries().copy(), v2.get_entries())
         )
-        self.dither()
+        self.wait()
 
 class ShowSlopes(Animation):
     CONFIG = {
@@ -906,7 +906,7 @@ class FromVectorsToFunctions(VectorScene):
         w.save_state()
         self.play(w.shift, v.get_end())
         vw_sum = self.add_vector(w.get_end(), color = PINK)
-        self.dither()
+        self.wait()
         self.play(
             Transform(words1, words2),
             FadeOut(vw_sum),
@@ -918,7 +918,7 @@ class FromVectorsToFunctions(VectorScene):
         )
         self.play(v.scale, 2)
         self.play(w.scale, -0.5)
-        self.dither()
+        self.wait()
 
     def bring_in_functions(self):
         everything = VGroup(*self.get_mobjects())
@@ -949,7 +949,7 @@ class FromVectorsToFunctions(VectorScene):
             submobject_mode = "lagged_start",
             run_time = 3
         ))
-        self.dither()
+        self.wait()
         self.play(*[
             ApplyMethod(mob.shift, 2*SPACE_WIDTH*RIGHT)
             for mob in axes, everything
@@ -957,7 +957,7 @@ class FromVectorsToFunctions(VectorScene):
         )
         self.play(ShowCreation(graph), Animation(words))
         self.play(Write(func_tex, run_time = 2))
-        self.dither(2)
+        self.wait(2)
 
         top_word = words[0]
         words.remove(top_word)
@@ -965,7 +965,7 @@ class FromVectorsToFunctions(VectorScene):
             FadeOut(words),
             top_word.shift, top_word.get_center()[0]*LEFT
         )
-        self.dither()
+        self.wait()
         self.func_tex = func_tex
         self.graph = graph
 
@@ -997,17 +997,17 @@ class FromVectorsToFunctions(VectorScene):
         )
         self.remove(func_tex)
         self.add(func_tex.target)
-        self.dither()
+        self.wait()
         faded_graph = graph.copy().fade()
         self.add(faded_graph)
         self.play(
             Transform(graph, new_graph, run_time = 2),
             Animation(group)
         )
-        self.dither()
+        self.wait()
         self.play(Transform(L, deriv))
         self.play(ShowSlopes(faded_graph))
-        self.dither()
+        self.wait()
 
 class TransformationsAndOperators(TeacherStudentsScene):
     def construct(self):
@@ -1034,7 +1034,7 @@ class ManyFunctions(FunctionGraphScene):
         for i in range(100):
             if i < 3:
                 run_time = 1
-                self.dither()
+                self.wait()
             elif i < 10:
                 run_time = 0.4
             else:
@@ -1136,10 +1136,10 @@ class FormalDefinitionOfLinear(LinearTransformationScene):
         properties.next_to(h_line, DOWN, buff = MED_LARGE_BUFF).to_edge(LEFT)
 
         self.play(Write(title), ShowCreation(h_line))
-        self.dither()
+        self.wait()
         for words in properties:
             self.play(Write(words))
-        self.dither()
+        self.wait()
         self.add_foreground_mobject(title, h_line, *properties)
         self.additivity, self.scaling = properties
 
@@ -1193,7 +1193,7 @@ class FormalDefinitionOfLinear(LinearTransformationScene):
             self.t_matrix, 
             added_anims = [MoveToTarget(vw_label)]
         )
-        self.dither()
+        self.wait()
         self.play(w_group.shift, v.get_end())
         v_label_copy, w_label_copy = v_label.copy(), w_label.copy()
         v_label_copy.generate_target()
@@ -1213,7 +1213,7 @@ class FormalDefinitionOfLinear(LinearTransformationScene):
         to_fade = [self.plane, v, v_label, w_group, vw_label, vw_sum]
         to_fade += self.get_mobjects_from_last_animation()
 
-        self.dither()
+        self.wait()
         self.play(*it.chain(
             map(FadeOut, to_fade),
             map(Animation, self.foreground_mobjects)
@@ -1244,7 +1244,7 @@ class FormalDefinitionOfLinear(LinearTransformationScene):
         self.remove(v_copy, v_label_copy)
         self.add(scaled_v_label)
         self.add_vector(scaled_v, animate = False)
-        self.dither()
+        self.wait()
 
         transform = self.get_matrix_transformation(self.t_matrix)
         point = transform(scaled_v.get_end())
@@ -1259,7 +1259,7 @@ class FormalDefinitionOfLinear(LinearTransformationScene):
             self.t_matrix, 
             added_anims = [MoveToTarget(scaled_v_label)]
         )
-        self.dither()
+        self.wait()
         scaled_v = v.copy().scale(2)
         rhs = TexMobject("=", "c", "L(", "\\vec{\\textbf{v}}", ")")
         rhs.highlight_by_tex("c", GREEN)
@@ -1271,7 +1271,7 @@ class FormalDefinitionOfLinear(LinearTransformationScene):
         self.add(v_copy)
         self.play(Transform(v, scaled_v))
         self.play(Write(rhs))
-        self.dither()
+        self.wait()
         faders = [
             scaled_v_label, scaled_v, v_copy, 
             v, rhs
@@ -1300,7 +1300,7 @@ class FormalDefinitionOfLinear(LinearTransformationScene):
             randy.change_mode, "speaking",
         )
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class CalcStudentsKnowThatDerivIsLinear(TeacherStudentsScene):
     def construct(self):
@@ -1377,14 +1377,14 @@ class DerivativeIsLinear(Scene):
         outer_deriv2 = VGroup(deriv[12], deriv[13], deriv[15])
 
         self.play(FadeIn(group))
-        self.dither()
+        self.wait()
         self.point_out(inner_sum)
         self.point_out(outer_sum_deriv)
-        self.dither()
+        self.wait()
         self.point_out(outer_deriv1, outer_deriv2)        
         self.point_out(inner_func1, inner_func2)
         self.point_out(plus)
-        self.dither()
+        self.wait()
         self.play(FadeOut(group))
 
     def show_scaling(self):
@@ -1398,13 +1398,13 @@ class DerivativeIsLinear(Scene):
         outer_scaling = deriv[6]
 
         self.play(FadeIn(group))
-        self.dither()
+        self.wait()
         self.point_out(inner_scaling)
         self.point_out(lhs_deriv)
-        self.dither()
+        self.wait()
         self.point_out(rhs_deriv)
         self.point_out(outer_scaling)
-        self.dither()
+        self.wait()
 
     def point_out(self, *terms):
         anims = []
@@ -1458,13 +1458,13 @@ class PolynomialsHaveArbitrarilyLargeDegree(Scene):
         polys.next_to(arrow, LEFT)
 
         self.play(Write(polys))
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(arrow),
             Write(words),
             GrowFromCenter(brace)
         )
-        self.dither()
+        self.wait()
 
 class GeneneralPolynomialCoordinates(Scene):
     def construct(self):
@@ -1503,18 +1503,18 @@ class GeneneralPolynomialCoordinates(Scene):
         )
 
         self.add(poly, equals, array.get_brackets())
-        self.dither()
+        self.wait()
         self.play(
             Transform(pre_entries.copy(), array.get_entries())
         )
-        self.dither()
+        self.wait()
 
 class SimplePolynomialCoordinates(Scene):
     def construct(self):
         matrix = Matrix(["5", "3", "1", "0", "\\vdots"])
         matrix.to_edge(LEFT)
         self.play(Write(matrix))
-        self.dither()
+        self.wait()
 
 class IntroducePolynomialSpace(Scene):
     def construct(self):
@@ -1530,7 +1530,7 @@ class IntroducePolynomialSpace(Scene):
         title.to_edge(UP)
         title[1].highlight(BLUE)
         self.play(Write(title))
-        self.dither()
+        self.wait()
         self.title = title
 
     def show_polynomial_cloud(self):
@@ -1554,7 +1554,7 @@ class IntroducePolynomialSpace(Scene):
         self.play(ShowCreation(cloud))
         for poly in polys:
             self.play(Write(poly), run_time = 1)
-        self.dither()
+        self.wait()
         self.poly1, self.poly2 = polys[0], polys[1]
         polys.remove(self.poly1)
         self.play(
@@ -1591,7 +1591,7 @@ class IntroducePolynomialSpace(Scene):
                 for index, color in index_to_color.items()
             ]
         )
-        self.dither()
+        self.wait()
         self.brace = brace
 
     def list_basis_functions(self):
@@ -1637,7 +1637,7 @@ class IntroducePolynomialSpace(Scene):
         for basis_func in basis_functions:
             self.play(Write(basis_func, run_time = 1))
         self.play(Write(dots))
-        self.dither()
+        self.wait()
         self.basis = basis_group
         self.basis_functions = basis_functions
 
@@ -1666,7 +1666,7 @@ class IntroducePolynomialSpace(Scene):
             submobject_mode = "lagged_start",
             run_time = 3
         )
-        self.dither()
+        self.wait()
         target = self.poly1.copy()
         terms = [
             VGroup(*target[6:8]),
@@ -1685,13 +1685,13 @@ class IntroducePolynomialSpace(Scene):
         more_terms[-1].shift(MED_SMALL_BUFF*LEFT)
 
         self.play(Transform(self.poly1, target))
-        self.dither()
+        self.wait()
         self.play(FadeIn(
             VGroup(*more_terms), 
             submobject_mode = "lagged_start",
             run_time = 2
         ))
-        self.dither()
+        self.wait()
 
         self.play(*map(FadeOut, [self.poly1]+more_terms))
         self.poly2.next_to(equals, LEFT)
@@ -1708,7 +1708,7 @@ class IntroducePolynomialSpace(Scene):
             Write(self.poly2),
             Transform(coords, new_coords)
         )
-        self.dither()
+        self.wait()
         for i, mob in (2, VGroup(*self.poly2[3:5])), (7, self.poly2[0]):
             self.play(
                 new_coords.get_entries()[i].scale_in_place, 1.3,
@@ -1717,7 +1717,7 @@ class IntroducePolynomialSpace(Scene):
             )
             self.remove(*self.get_mobjects_from_last_animation())
             self.add(self.poly2)
-            self.dither()
+            self.wait()
         self.play(*map(FadeOut, [self.poly2, coords, equals]))
 
     def derivative_as_matrix(self):
@@ -1750,7 +1750,7 @@ class IntroducePolynomialSpace(Scene):
 
         self.play(FadeIn(deriv), FadeIn(equals))
         self.play(Write(matrix))
-        self.dither()
+        self.wait()
         diag_entries.save_state()
         diag_entries.generate_target()
         diag_entries.target.scale_in_place(1.2)
@@ -1761,7 +1761,7 @@ class IntroducePolynomialSpace(Scene):
                 submobject_mode = "lagged_start",
                 run_time = 1.5,
             )
-        self.dither()
+        self.wait()
         matrix.generate_target()
         matrix.target.to_corner(DOWN+LEFT).shift(0.25*UP)
         deriv.generate_target()
@@ -1866,7 +1866,7 @@ class IntroducePolynomialSpace(Scene):
         self.play(Write(result_array.get_brackets()))
         for entry, diag_entry, result_entry, rect, result_term, coef in tuples:
             self.play(FadeIn(rect), FadeIn(vert_rect))
-            self.dither()
+            self.wait()
             self.play(
                 entry.scale_in_place, 1.2,
                 diag_entry.scale_in_place, 1.2,
@@ -1879,12 +1879,12 @@ class IntroducePolynomialSpace(Scene):
                 diag_entry.scale_in_place, 1/1.2,
                 Write(dot)
             )
-            self.dither()
+            self.wait()
             self.play(Transform(coef.copy(), VGroup(result_term)))
-            self.dither()
+            self.wait()
             self.play(FadeOut(rect), FadeOut(vert_rect))
         self.play(*map(Write, result_array.get_entries()[3:]))
-        self.dither()
+        self.wait()
 
 class MatrixVectorMultiplicationAndDerivative(TeacherStudentsScene):
     def construct(self):
@@ -1945,7 +1945,7 @@ class CompareTermsInLinearAlgebraToFunction(Scene):
 
         self.add(l_title, r_title)
         self.play(*map(ShowCreation, [h_line, v_line]))
-        self.dither()
+        self.wait()
 
         lin_alg_concepts = VGroup(*map(TextMobject, [
             "Linear transformations",
@@ -1965,7 +1965,7 @@ class CompareTermsInLinearAlgebraToFunction(Scene):
 
             for concept in concepts:
                 self.play(Write(concept, run_time = 1))
-            self.dither()
+            self.wait()
 
 class BackToTheQuestion(TeacherStudentsScene):
     def construct(self):
@@ -2006,7 +2006,7 @@ class YouAsAMathematician(Scene):
             mathy.look, OUT
         )
         self.play(Blink(mathy))
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(words),
             FadeOut(arrow),
@@ -2015,7 +2015,7 @@ class YouAsAMathematician(Scene):
         )
         self.play(Write(equations))
         self.play(Blink(mathy))
-        self.dither()
+        self.wait()
 
         bubble.write("Does this make any sense \\\\ for functions too?")
         self.play(
@@ -2024,7 +2024,7 @@ class YouAsAMathematician(Scene):
             mathy.look, RIGHT,
             Write(bubble.content)
         )
-        self.dither()
+        self.wait()
         self.play(Blink(mathy))
 
     def get_content(self):
@@ -2071,7 +2071,7 @@ class ShowVectorSpaces(Scene):
         ))
         self.play(Write(arrays))
         self.play(Write(functions))
-        self.dither()
+        self.wait()
         self.play(Write(title))
 
     def get_vectors(self, n_vectors = 10):
@@ -2133,7 +2133,7 @@ class ToolsOfLinearAlgebra(Scene):
             submobject_mode = "lagged_start",
             run_time = 3
         ))
-        self.dither()
+        self.wait()
 
 class MathematicianSpeakingToAll(Scene):
     def construct(self):
@@ -2161,7 +2161,7 @@ class MathematicianSpeakingToAll(Scene):
             mathy.look_at, others
         )
         self.play(Blink(others[3]))
-        self.dither()
+        self.wait()
         thought_bubble = mathy.get_bubble(ThoughtBubble)
         self.play(
             FadeOut(bubble.content),
@@ -2251,13 +2251,13 @@ class ListAxioms(Scene):
             submobject_mode = "lagged_start",
             run_time = 5
         ))
-        self.dither()
+        self.wait()
         axioms_word = TextMobject("``Axioms''")
         axioms_word.highlight(YELLOW)
         axioms_word.scale(2)
         axioms_word.shift(SPACE_WIDTH*RIGHT/2, SPACE_HEIGHT*DOWN/2)
         self.play(Write(axioms_word, run_time = 3))
-        self.dither()
+        self.wait()
 
 class AxiomsAreInterface(Scene):
     def construct(self):
@@ -2293,13 +2293,13 @@ class AxiomsAreInterface(Scene):
         )
 
         self.play(Write(words))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(red_line))
         self.play(Transform(
             rules_of_nature.copy(),
             an_interface
         ))
-        self.dither()
+        self.wait()
         self.play(FadeIn(mathy))
         self.play(
             ShowCreation(double_arrow),
@@ -2307,7 +2307,7 @@ class AxiomsAreInterface(Scene):
         )
         self.play(axioms.copy().next_to, double_arrow, UP)
         self.play(Blink(mathy))
-        self.dither()
+        self.wait()
 
 class VectorSpaceOfPiCreatures(Scene):
     def construct(self):
@@ -2350,7 +2350,7 @@ class VectorSpaceOfPiCreatures(Scene):
             submobject_mode = "lagged_start",
             run_time = 3
         ))
-        self.dither()
+        self.wait()
         return creatures
 
     def show_sum(self, creatures):
@@ -2420,13 +2420,13 @@ class MathematicianDoesntHaveToThinkAboutThat(Scene):
             Write(words)
         )
         self.play(Blink(mathy))
-        self.dither()
+        self.wait()
         self.play(
             mathy.change_mode, "pondering",
             Transform(words, new_words)
         )
         self.play(Blink(mathy))
-        self.dither()
+        self.wait()
 
 class TextbooksAreAbstract(TeacherStudentsScene):
     def construct(self):
@@ -2484,7 +2484,7 @@ class WhatIsThree(Scene):
         )
         words.scale(1.5)
         self.play(Write(words))
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(what_is),
             FadeOut(q_mark),
@@ -2519,7 +2519,7 @@ class WhatIsThree(Scene):
                 m3.next_to(VGroup(m1, m2), DOWN, buff = MED_SMALL_BUFF)
             group.next_to(three, vect, buff = LARGE_BUFF)
             self.play(FadeIn(group))
-        self.dither()
+        self.wait()
         self.play(*[
             Transform(
                 trip, three, 
@@ -2548,7 +2548,7 @@ class AbstractionIsThePrice(Scene):
         words.highlight_by_tex("Abstractness", YELLOW)
         words.highlight_by_tex("generality", BLUE)
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
 class ThatsAWrap(TeacherStudentsScene):
     def construct(self):

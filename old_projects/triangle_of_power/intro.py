@@ -96,7 +96,7 @@ class Notation(Scene):
 
         self.play(Write(notation))
         self.play(Write(self.symbols))
-        self.dither()
+        self.wait()
         self.add(notation, self.symbols)
 
 
@@ -148,12 +148,12 @@ class Notation(Scene):
             self.symbols, good_symbols, 
             path_arc = np.pi
         ))
-        self.dither(3)
+        self.wait(3)
         self.play(Transform(
             self.symbols, bad_symbols,
             path_arc = np.pi
         ))
-        self.dither()
+        self.wait()
 
 
     def shift_to_visuals(self):
@@ -185,7 +185,7 @@ class Notation(Scene):
             Write(sum_lines)
         )
         self.play(trig_anim)
-        self.dither()
+        self.wait()
 
     def get_harmonic_sum_lines(self):
         result = VMobject()
@@ -221,7 +221,7 @@ class ButDots(Scene):
         but.shift(20*RIGHT)
         self.play(ApplyMethod(but.shift, 20*LEFT))
         self.play(Write(dots, run_time = 5))
-        self.dither()
+        self.wait()
 
 
 class ThreesomeOfNotation(Scene):
@@ -243,13 +243,13 @@ class ThreesomeOfNotation(Scene):
         self.play(Write(log))
         self.play(Transform(vars1, vars3, path_arc = -np.pi))
         self.play(Write(rad))
-        self.dither()
+        self.wait()
 
         words = TextMobject("Artificially unrelated")
         words.to_corner(UP+RIGHT)
         words.highlight(YELLOW)
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
 
 class TwoThreeEightExample(Scene):
@@ -280,7 +280,7 @@ class TwoThreeEightExample(Scene):
             Write(three),
             run_time = 1
         )
-        self.dither()
+        self.wait()
 
         exp = TexMobject("2^3")
         exp.next_to(eq, LEFT)
@@ -296,7 +296,7 @@ class TwoThreeEightExample(Scene):
         )
         self.clear()
         self.add(base_two, exp_three, eq, eight)
-        self.dither(3)
+        self.wait(3)
 
         rad_three, rad1, rad2, rad_eight, rad_eq, rad_two = \
             TexMobject("\\sqrt[3]{8} = 2").split()
@@ -311,14 +311,14 @@ class TwoThreeEightExample(Scene):
                 (base_two, rad_two)
             ]
         ])
-        self.dither()
+        self.wait()
         self.play(ApplyMethod(
             VMobject(rad1, rad2).highlight, RED,
             rate_func = there_and_back,
             run_time = 2
         ))
         self.remove(rad1, rad2)
-        self.dither()
+        self.wait()
 
         l, o, g, log_two, p1, log_eight, p2, log_eq, log_three = \
             TexMobject("\\log_2(8) = 3").split()
@@ -337,13 +337,13 @@ class TwoThreeEightExample(Scene):
                 (rad_three, log_three)
             ]
         ])
-        self.dither()
+        self.wait()
         self.play(ApplyMethod(
             VMobject(l, o, g).highlight, RED,
             rate_func = there_and_back,
             run_time = 2
         ))
-        self.dither()
+        self.wait()
 
 class WhatTheHell(Scene):
     def construct(self):
@@ -391,10 +391,10 @@ class WhatTheHell(Scene):
             ShowCreationPerSubmobject(arrow2)
         )
         self.play(Write(q_marks))
-        self.dither()
+        self.wait()
         self.remove(randy)
         self.play(Write(VMobject(*phrases)))
-        self.dither()
+        self.wait()
 
 class Countermathematical(Scene):
     def construct(self):
@@ -404,9 +404,9 @@ class Countermathematical(Scene):
         mathematical.shift(intuitive.get_left()-mathematical.get_left())
 
         self.add(counterintuitive)
-        self.dither()
+        self.wait()
         self.play(Transform(intuitive, mathematical))
-        self.dither()
+        self.wait()
 
 
 class PascalsCollision(Scene):
@@ -431,14 +431,14 @@ class PascalsCollision(Scene):
 
         self.add(pascals_triangle, n_choose_k, formula)
         self.play(Write(words))
-        self.dither()
+        self.wait()
         self.play(
             Transform(pascals_triangle, final_triangle),
             Transform(n_choose_k, final_triangle),
             FadeOut(formula),
             ApplyMethod(to_remove.shift, 5*DOWN)
         )
-        self.dither()
+        self.wait()
 
 
 class LogarithmProperties(Scene):
@@ -470,7 +470,7 @@ class LogarithmProperties(Scene):
             if i%2 == 0:
                 self.play(Blink(randy))
             else:
-                self.dither()
+                self.wait()
 
 
 class HaveToShare(Scene):
@@ -495,9 +495,9 @@ class HaveToShare(Scene):
 
         for word in words:
             self.play(FadeIn(word))
-        self.dither()
+        self.wait()
         self.play(Write(share, run_time = 1))
-        self.dither()
+        self.wait()
 
 
 

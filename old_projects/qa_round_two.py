@@ -71,7 +71,7 @@ class Announcements(PiCreatureScene):
             self.pi_creature.change, "hooray", underline,
         )
         self.play(self.pi_creature.change, "confused", announcements)
-        self.dither(2)
+        self.wait(2)
 
 
 class PowersOfTwo(Scene):
@@ -174,17 +174,17 @@ class PiHoldingScreen(PiCreatureScene):
             ShowCreation(screen),
             morty.change, "raise_right_hand", screen
         )
-        self.dither(10)
+        self.wait(10)
         self.play(
             morty.change, "hooray", words[0],
             Write(words[0])
         )
-        self.dither(10)
+        self.wait(10)
         self.play(
             morty.change, "pondering", words[1],
             Transform(words[0], words[1])
         )
-        self.dither(10)
+        self.wait(10)
 
 class QuestionsLink(Scene):
     def construct(self):
@@ -192,7 +192,7 @@ class QuestionsLink(Scene):
         link.scale_to_fit_width(2*SPACE_WIDTH)
         link.to_edge(DOWN)
         self.play(Write(link))
-        self.dither()
+        self.wait()
 
 class Thumbnail(Scene):
     def construct(self):

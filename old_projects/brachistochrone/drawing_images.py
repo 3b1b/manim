@@ -170,7 +170,7 @@ class TracePicture(Scene):
             )
         )
         self.remove(edge_mobject)
-        self.dither()
+        self.wait()
 
 
     def get_edge_mobject(self, image_array):
@@ -235,7 +235,7 @@ class JohannThinksHeIsBetter(Scene):
         lightbulb.next_to(upper_point, RIGHT)
 
         self.add(johann)
-        self.dither()
+        self.wait()
         self.play(
             Transform(johann, pensive_johann),
             Transform(point, bubble),
@@ -249,7 +249,7 @@ class JohannThinksHeIsBetter(Scene):
             ShowCreation(greater_than),
             FadeIn(weakling)
         )
-        self.dither(2)
+        self.wait(2)
         for guy in guys[2:]:
             self.play(DelayByOrder(Transform(
                 weakling, upper_point
@@ -258,12 +258,12 @@ class JohannThinksHeIsBetter(Scene):
                 FadeIn(guy),
                 ShimmerIn(guy.name_mob)
             )
-            self.dither(3)
+            self.wait(3)
             self.remove(guy.name_mob)
             weakling = guy
         self.play(FadeOut(weakling), FadeOut(greater_than))
         self.play(ShowCreation(lightbulb))
-        self.dither()
+        self.wait()
         self.play(FadeOut(comparitive_johann), FadeOut(lightbulb))
         self.play(ApplyMethod(
             Mobject(johann, bubble).scale, 10,
@@ -290,7 +290,7 @@ class NewtonVsJohann(Scene):
                 ApplyMethod(newton.replace, johann, **kwargs),
                 ApplyMethod(johann.replace, newton, **kwargs),
             )
-            self.dither()
+            self.wait()
 
 
 class JohannThinksOfFermat(Scene):
@@ -310,9 +310,9 @@ class JohannThinksOfFermat(Scene):
 
 
         self.add(johann, bubble)
-        self.dither()
+        self.wait()
         self.play(FadeIn(fermat))
-        self.dither()
+        self.wait()
 
 
 class MathematiciansOfEurope(Scene):
@@ -359,7 +359,7 @@ class OldNewtonIsDispleased(Scene):
 
         self.play(ShimmerIn(words))
         self.play(ShowCreation(arrow))
-        self.dither()
+        self.wait()
 
 
 class NewtonConsideredEveryoneBeneathHim(Scene):
@@ -397,9 +397,9 @@ class NewtonConsideredEveryoneBeneathHim(Scene):
             Transform(newton, new_newton),
             GrowFromCenter(johann)
         )
-        self.dither()
+        self.wait()
         self.play(FadeIn(Mobject(*mathematicians)))
-        self.dither()
+        self.wait()
 
 
 

@@ -85,8 +85,8 @@ class AverageOfContinuousVariable(GraphScene):
                 v_line, graph, bound, 
                 run_time = 3,
             ))
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
 
     def get_v_line_change_anim(self, v_line, graph, target_x, **kwargs):
         start_x = self.x_axis.point_to_number(v_line.get_bottom())
@@ -115,7 +115,7 @@ class ThisVideo(TeacherStudentsScene):
             ]
         )
         self.change_student_modes(*["pondering"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class AverageOfSineStart(AverageOfContinuousVariable):
     CONFIG = {
@@ -264,7 +264,7 @@ class LengthOfDayGraph(GraphScene):
             ),
             run_time = 3,
         )
-        self.dither()
+        self.wait()
 
         self.graph = graph 
         self.graph_label = graph_label
@@ -347,7 +347,7 @@ class LengthOfDayGraph(GraphScene):
                 FadeIn(rect),
                 Write(words, run_time = 2)
             )
-        self.dither()
+        self.wait()
 
     def mention_constants(self):
         #2.7\\sin(2\\pi t/365) + 12.4
@@ -368,7 +368,7 @@ class LengthOfDayGraph(GraphScene):
                 np.linspace(0, 0.3, len(constants))
             )
         ])
-        self.dither()
+        self.wait()
 
 
     #####
@@ -381,7 +381,7 @@ class AskAboutAverageOfContinuousVariables(TeacherStudentsScene):
         )
         self.change_student_modes("confused", "sassy", "confused")
         self.play(self.teacher.change_mode, "happy")
-        self.dither(2)
+        self.wait(2)
 
 class AverageOfFiniteSet(Scene):
     CONFIG = {
@@ -450,21 +450,21 @@ class AverageOfFiniteSet(Scene):
             submobject_mode = "lagged_start",
             run_time = 3
         ))
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(brace),
             *map(MoveToTarget, [lines, labels, symbols]),
             run_time = 2
         )
         self.play(Write(sum_mob))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(dividing_lines, run_time = 2))
         self.play(*it.chain(
             map(Write, averages),
             map(GrowFromCenter, lower_braces)
         ))
         self.play(ShowCreation(circle))
-        self.dither(2)
+        self.wait(2)
 
 class TryToAddInfinitelyManyPoints(AverageOfSineStart):
     CONFIG = {
@@ -520,7 +520,7 @@ class TryToAddInfinitelyManyPoints(AverageOfSineStart):
             run_time = 3,
         ))
         self.add(ghost_lines, v_lines)
-        self.dither(2)
+        self.wait(2)
         self.play(
             MoveToTarget(
                 v_lines,
@@ -531,7 +531,7 @@ class TryToAddInfinitelyManyPoints(AverageOfSineStart):
         )
         self.play(ShowCreation(h_line))
         self.play(Write(infinity))
-        self.dither()
+        self.wait()
 
     def show_continuum(self):
         arrow = Arrow(ORIGIN, UP+LEFT)
@@ -558,7 +558,7 @@ class TryToAddInfinitelyManyPoints(AverageOfSineStart):
             run_time = 3
         )
         self.play(FadeOut(arrow))
-        self.dither()
+        self.wait()
 
     def mention_integral(self):
         randy = Randolph()
@@ -580,7 +580,7 @@ class TryToAddInfinitelyManyPoints(AverageOfSineStart):
             randy.change_mode, "shruggie",
         )
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class FiniteSample(TryToAddInfinitelyManyPoints):
     CONFIG = {
@@ -617,7 +617,7 @@ class FiniteSample(TryToAddInfinitelyManyPoints):
         denominator.next_to(frac_line, DOWN)
 
         self.play(ShowCreation(v_lines, run_time = 3))
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(
                 v_lines.copy(),
@@ -632,7 +632,7 @@ class FiniteSample(TryToAddInfinitelyManyPoints):
         )
         self.play(Write(frac_line, run_time = 1))
         self.play(Write(denominator))
-        self.dither()
+        self.wait()
 
         self.plusses = plusses
         self.average = VGroup(numerator, frac_line, denominator)
@@ -666,7 +666,7 @@ class FeelsRelatedToAnIntegral(TeacherStudentsScene):
             target_mode = "maybe"
         )
         self.play(self.teacher.change_mode, "happy")
-        self.dither(2)
+        self.wait(2)
 
 class IntegralOfSine(FiniteSample):
     CONFIG = {
@@ -704,7 +704,7 @@ class IntegralOfSine(FiniteSample):
         integral.to_edge(UP)
 
         self.play(Write(integral))
-        self.dither(2)
+        self.wait(2)
 
         self.integral = integral
 
@@ -747,7 +747,7 @@ class IntegralOfSine(FiniteSample):
             replace_mobject_with_target_in_scene = True,
         )
         self.remove(self.v_lines)
-        self.dither()
+        self.wait()
 
         rects.save_state()
         self.play(*it.chain(
@@ -762,7 +762,7 @@ class IntegralOfSine(FiniteSample):
             map(GrowFromCenter, [side_brace, bottom_brace]),
             map(Write, [sin_x, dx]),
         ))
-        self.dither()
+        self.wait()
         for i in range(start_index+1, end_index):
             self.play(
                 rects[i-1].set_fill, None, low_opacity,
@@ -773,7 +773,7 @@ class IntegralOfSine(FiniteSample):
                 MaintainPositionRelativeTo(sin_x, side_brace),
                 MaintainPositionRelativeTo(dx, bottom_brace),
             )
-            self.dither()
+            self.wait()
         self.play(
             rects.restore,
             *map(FadeOut, [sin_x, dx, side_brace, bottom_brace])
@@ -789,7 +789,7 @@ class IntegralOfSine(FiniteSample):
             self.rects, self.thin_rects,
             run_time = 3
         )
-        self.dither(2)
+        self.wait(2)
         if restore:
             self.transform_between_riemann_rects(
                 self.rects, start_state.copy(),
@@ -802,7 +802,7 @@ class IntegralOfSine(FiniteSample):
                 self.rects.set_fill, None,
                     self.rect_opacity,
             )
-            self.dither()
+            self.wait()
 
     def bring_back_average(self):
         num_samples = self.average[-1]
@@ -824,21 +824,21 @@ class IntegralOfSine(FiniteSample):
             self.integral.to_edge, DOWN,
             run_time = 2
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(self.dx_brace),
             Write(self.dx_label),
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(self.dx_label),
             FadeIn(example_dx)
         )
         self.play(Indicate(example_dx))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(input_range))
         self.play(FadeOut(input_range))
-        self.dither()
+        self.wait()
 
         #Ask how many there are
         num_samples_copy = num_samples.copy()
@@ -860,7 +860,7 @@ class IntegralOfSine(FiniteSample):
             num_samples_copy.highlight, GREEN
         ])
         self.play(FadeOut(v_lines))
-        self.dither()
+        self.wait()
 
         #Count number of samples
         num_samples_copy.generate_target()
@@ -884,7 +884,7 @@ class IntegralOfSine(FiniteSample):
             ),
             Write(rhs.get_part_by_tex("/"))
         )
-        self.dither(2)
+        self.wait(2)
 
         #Substitute number of samples
         self.play(ReplacementTransform(
@@ -894,7 +894,7 @@ class IntegralOfSine(FiniteSample):
         self.play(Transform(
             dx, TexMobject("dx").move_to(dx)
         ))
-        self.dither(2)
+        self.wait(2)
         approx = rhs.get_part_by_tex("approx")
         rhs.remove(approx)
         self.play(
@@ -903,7 +903,7 @@ class IntegralOfSine(FiniteSample):
             FadeOut(approx),
             rhs.next_to, self.average[1], DOWN
         )
-        self.dither()
+        self.wait()
 
         self.pi_over_dx = rhs
 
@@ -927,7 +927,7 @@ class IntegralOfSine(FiniteSample):
             frac_line.shift, dx.get_width()*RIGHT/2,
             FadeOut(over)
         )
-        self.dither(2)
+        self.wait(2)
 
         average = VGroup(parens, numerator, dx, frac_line, pi)
         integral.generate_target()
@@ -947,7 +947,7 @@ class IntegralOfSine(FiniteSample):
             Write(over_pi),
             MoveToTarget(integral, run_time = 2)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(*map(FadeOut, [self.dx_label, self.dx_brace]))
 
         self.integral_over_pi = VGroup(integral, over_pi)
@@ -971,7 +971,7 @@ class IntegralOfSine(FiniteSample):
         average_height.next_to(area_over_width, LEFT)
 
         self.play(*map(FadeIn, [average_height, area_over_width]))
-        self.dither()
+        self.wait()
 
     def show_moving_v_line(self):
         mean = np.mean(self.bounds)
@@ -994,7 +994,7 @@ class Approx31(Scene):
         tex.scale_to_fit_width(2*SPACE_WIDTH - LARGE_BUFF)
         tex.to_edge(LEFT)
         self.play(Write(tex))
-        self.dither(3)
+        self.wait(3)
 
 class LetsSolveThis(TeacherStudentsScene):
     def construct(self):
@@ -1012,9 +1012,9 @@ class LetsSolveThis(TeacherStudentsScene):
         self.add(expression)
 
         self.teacher_says("Let's compute it.")
-        self.dither()
+        self.wait()
         self.student_thinks(question)
-        self.dither(2)
+        self.wait(2)
 
 class Antiderivative(AverageOfSineStart):
     CONFIG = {
@@ -1087,8 +1087,8 @@ class Antiderivative(AverageOfSineStart):
                 ),
                 run_time = 2
             )
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
         self.play(*[
             ReplacementTransform(*pair)
             for pair in [
@@ -1099,7 +1099,7 @@ class Antiderivative(AverageOfSineStart):
                 (neg_sin.label, sin.label),
             ]
         ])
-        self.dither(2)
+        self.wait(2)
 
         self.neg_cos = neg_cos
         self.sin = sin
@@ -1136,7 +1136,7 @@ class Antiderivative(AverageOfSineStart):
             ApplyMethod(m.fade, 0.6)
             for m in faders
         ])
-        self.dither()
+        self.wait()
         self.play(*map(ShowCreation, ss_group), run_time = 2)
         kwargs = {
             "run_time" : 20,
@@ -1158,7 +1158,7 @@ class Antiderivative(AverageOfSineStart):
         self.play(
             *map(FadeOut, [ss_group, v_line, sin_copy])
         )
-        self.dither()
+        self.wait()
 
         self.ss_group = ss_group
 
@@ -1195,7 +1195,7 @@ class Antiderivative(AverageOfSineStart):
             self.deriv.to_edge, LEFT, MED_SMALL_BUFF,
             self.deriv.shift, UP,
         )
-        self.dither()
+        self.wait()
 
         self.play(FadeIn(
             VGroup(*filter(
@@ -1205,14 +1205,14 @@ class Antiderivative(AverageOfSineStart):
             submobject_mode = "lagged_start",
             run_time = 2,
         ))
-        self.dither()
+        self.wait()
         for start, end in start_end_pairs:
             self.play(ReplacementTransform(
                 start.copy(), end,
                 path_arc = np.pi/6,
                 run_time = 2
             ))
-            self.dither()
+            self.wait()
 
         self.integral = integral
         self.rhs = rhs
@@ -1245,7 +1245,7 @@ class Antiderivative(AverageOfSineStart):
         self.play(ReplacementTransform(
             cos_tex.copy(), pi_dot
         ))
-        self.dither()
+        self.wait()
         moving_dot = pi_dot.copy()
         self.play(
             ShowCreation(v_line),
@@ -1258,9 +1258,9 @@ class Antiderivative(AverageOfSineStart):
             ReplacementTransform(moving_dot, zero_dot)
         )
         self.play(GrowFromCenter(v_line_brace))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(two_height_label))
-        self.dither(2)
+        self.wait(2)
 
         self.v_line = v_line
         self.h_line = h_line
@@ -1283,9 +1283,9 @@ class Antiderivative(AverageOfSineStart):
         )
 
         self.play(Write(rects))
-        self.dither()
+        self.wait()
         self.play(area_two.move_to, rects)
-        self.dither(2)
+        self.wait(2)
 
         self.rects = rects
         self.area_two = area_two
@@ -1342,7 +1342,7 @@ class Antiderivative(AverageOfSineStart):
             )
             for tex in "\\pi", "-", "0"
         ])
-        self.dither(2)
+        self.wait(2)
 
         full_equation = VGroup(
             integral, frac_lines, rhs, pi_minus_zeros
@@ -1355,7 +1355,7 @@ class Antiderivative(AverageOfSineStart):
             (answer.get_width()+MED_LARGE_BUFF)*LEFT
         )
         self.play(Write(answer))
-        self.dither()
+        self.wait()
 
         self.antiderivative_fraction = VGroup(
             rhs_without_eq,
@@ -1388,7 +1388,7 @@ class Antiderivative(AverageOfSineStart):
         )
         self.play(morty.change, "raise_right_hand", fraction)
         self.play(Blink(morty))
-        self.dither(2)
+        self.wait(2)
         self.play(
             FadeOut(big_rect),
             FadeOut(morty),
@@ -1418,9 +1418,9 @@ class Antiderivative(AverageOfSineStart):
             ShowCreation(new_h_line),
             Write(pi)
         )
-        self.dither()
+        self.wait()
         self.play(ShowCreation(line, run_time = 2))
-        self.dither()
+        self.wait()
 
     def bring_back_derivative(self):
         self.play(
@@ -1429,7 +1429,7 @@ class Antiderivative(AverageOfSineStart):
             self.deriv.to_corner, UP+LEFT, MED_LARGE_BUFF,
             self.deriv.shift, MED_SMALL_BUFF*DOWN,
         )
-        self.dither()
+        self.wait()
 
     def show_tangent_slope(self):
         ss_group = self.get_secant_slope_group(
@@ -1497,7 +1497,7 @@ class GeneralAverage(AverageOfContinuousVariable):
                 Write(label),
                 ShowCreation(line)
             )
-        self.dither()
+        self.wait()
 
         self.graph = graph
         self.graph_label = graph_label
@@ -1611,7 +1611,7 @@ class GeneralAverage(AverageOfContinuousVariable):
             self.transform_between_riemann_rects(rects, new_rects)
         self.play(Write(plus))
         self.play(Write(minus))
-        self.dither(2)
+        self.wait(2)
 
         self.area = VGroup(rects, plus, minus)
 
@@ -1621,7 +1621,7 @@ class GeneralAverage(AverageOfContinuousVariable):
             self.average_expression.scale, 0.75,
             self.average_expression.to_corner, DOWN+RIGHT,
         )
-        self.dither()
+        self.wait()
 
     def show_finite_sample(self):
         v_lines = self.get_vertical_lines_to_graph(
@@ -1658,12 +1658,12 @@ class GeneralAverage(AverageOfContinuousVariable):
 
         self.play(ShowCreation(v_lines, run_time = 2))
         self.play(*map(Write, [brace, dx]))
-        self.dither()
+        self.wait()
         self.play(Write(VGroup(num_samples, approx, *rhs[:-1])))
         self.play(ReplacementTransform(
             dx.copy(), rhs.get_part_by_tex("dx")
         ))
-        self.dither(2)
+        self.wait(2)
 
         self.play(
             FadeIn(add_up_f_over),
@@ -1688,7 +1688,7 @@ class GeneralAverage(AverageOfContinuousVariable):
         ])
         self.play(*[vl.restore for vl in v_lines])
         self.play(rhs_copy.next_to, add_up_f_over, DOWN)
-        self.dither(2)
+        self.wait(2)
         frac_line = add_up_f_over[1]
         self.play(
             FadeOut(rhs_copy.get_part_by_tex("over")),
@@ -1698,7 +1698,7 @@ class GeneralAverage(AverageOfContinuousVariable):
             frac_line.stretch_to_fit_height, frac_line.get_height(),
         )
         rhs_copy.remove(rhs_copy.get_part_by_tex("over"))
-        self.dither(2)
+        self.wait(2)
 
         int_fraction = self.average_expression[1].copy()
         int_fraction.generate_target()
@@ -1717,7 +1717,7 @@ class GeneralAverage(AverageOfContinuousVariable):
         self.play(*map(FadeOut, [
             dx, brace, num_samples, approx, rhs
         ]))
-        self.dither()
+        self.wait()
 
         self.v_lines = v_lines
 
@@ -1745,7 +1745,7 @@ class GeneralAverage(AverageOfContinuousVariable):
                 run_time = 2,
                 submobject_mode = "lagged_start"
             ))
-        self.dither()
+        self.wait()
 
     ####
 
@@ -1819,9 +1819,9 @@ class GeneralAntiderivative(GeneralAverage):
             ),
             run_time = 2,
         )
-        self.dither()
+        self.wait()
         self.play(Write(deriv))
-        self.dither()
+        self.wait()
 
         self.antideriv_graph = antideriv_graph
 
@@ -1860,12 +1860,12 @@ class GeneralAntiderivative(GeneralAverage):
                 self.bounds_labels, "ab", [0, 0.3]
             )
         ])
-        self.dither()
+        self.wait()
 
         self.show_change_in_height(numerator.copy())
         self.shift_antideriv_graph_up_and_down()
         self.play(Write(VGroup(*new_fraction[-4:])))
-        self.dither()
+        self.wait()
 
         h_line_brace = Brace(self.h_line, DOWN)
         denominator_copy = denominator.copy()
@@ -1879,7 +1879,7 @@ class GeneralAntiderivative(GeneralAverage):
             denominator_copy.next_to, h_line_brace, 
             DOWN, SMALL_BUFF
         )
-        self.dither(3)
+        self.wait(3)
 
     def show_change_in_height(self, numerator):
         numerator.add_to_back(BackgroundRectangle(numerator))
@@ -1917,7 +1917,7 @@ class GeneralAntiderivative(GeneralAverage):
             numerator.next_to, brace.copy(), RIGHT, SMALL_BUFF,
             GrowFromCenter(brace),
         )
-        self.dither(2)
+        self.wait(2)
 
         self.antideriv_graph.add(
             graph_within_bounds, v_line, h_line, numerator, brace
@@ -1931,7 +1931,7 @@ class GeneralAntiderivative(GeneralAverage):
                 self.antideriv_graph.shift, vect,
                 run_time = 2
             )
-        self.dither()
+        self.wait()
 
     def draw_slope(self):
         line = Line(*self.graph_points_at_bounds)
@@ -1939,7 +1939,7 @@ class GeneralAntiderivative(GeneralAverage):
         line.scale_in_place(1.3)
 
         self.play(ShowCreation(line, run_time = 2))
-        self.dither()
+        self.wait()
 
     def show_tangent_line_slopes(self):
         ss_group = self.get_secant_slope_group(
@@ -1969,7 +1969,7 @@ class LastVideoWrapper(Scene):
         rect.next_to(title, DOWN)
 
         self.play(Write(title), ShowCreation(rect))
-        self.dither(5)
+        self.wait(5)
 
 class ASecondIntegralSensation(TeacherStudentsScene):
     def construct(self):
@@ -2001,7 +2001,7 @@ class ASecondIntegralSensation(TeacherStudentsScene):
             "A second integral \\\\ sensation"
         )
         self.change_student_modes(*["erm"]*3)
-        self.dither()
+        self.wait()
         self.play(
             Write(numbers),
             RemovePiCreatureBubble(self.teacher),
@@ -2011,9 +2011,9 @@ class ASecondIntegralSensation(TeacherStudentsScene):
             look_at_arg = numbers
         )
         self.play(Write(plusses))
-        self.dither()
+        self.wait()
         self.play(Write(denominator))
-        self.dither()
+        self.wait()
 
         self.change_student_modes(
             *["confused"]*3,
@@ -2028,7 +2028,7 @@ class ASecondIntegralSensation(TeacherStudentsScene):
             run_time = 2
         )
         self.play(*map(FadeOut, [arrow]))
-        self.dither(2)
+        self.wait(2)
         self.change_student_modes(
             *["pondering"]*3,
             look_at_arg = sigma_to_integral,
@@ -2037,7 +2037,7 @@ class ASecondIntegralSensation(TeacherStudentsScene):
                 self.teacher.change_mode, "raise_right_hand"
             ]
         )
-        self.dither(3)
+        self.wait(3)
 
 class Chapter9PatreonThanks(PatreonThanks):
     CONFIG = {

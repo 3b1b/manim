@@ -116,7 +116,7 @@ class ShowLastVideo(TeacherStudentsScene):
             GrowArrow(arrow),
             FadeIn(assumption_words)
         )
-        self.dither(5)
+        self.wait(5)
 
 class ShowPlan(Scene):
     def construct(self):
@@ -143,7 +143,7 @@ class ShowPlan(Scene):
         rect = SurroundingRectangle(VGroup(*items[1:3]))
 
         self.add(items)
-        self.dither()
+        self.wait()
         self.play(ShowCreation(rect))
         self.play(FadeOut(rect))
         for item in items[1:]:
@@ -152,7 +152,7 @@ class ShowPlan(Scene):
                 to_fade.set_fill, None, 0.5,
                 item.set_fill, None, 1,
             )
-            self.dither()
+            self.wait()
 
 class BeginAndEndRecap(Scene):
     def construct(self):
@@ -165,9 +165,9 @@ class BeginAndEndRecap(Scene):
         new_langle.move_to(recap[0], RIGHT)
 
         self.add(recap)
-        self.dither(2)
+        self.wait(2)
         self.play(Transform(recap[0], new_langle))
-        self.dither(2)
+        self.wait(2)
 
 class PreviewLearning(NetworkScene):
     CONFIG = {
@@ -430,14 +430,14 @@ class TrainingVsTestData(Scene):
             GrowFromCenter(train_brace),
             FadeIn(train_words)
         )
-        self.dither()
+        self.wait()
         self.play(
             MoveToTarget(test_examples),
             GrowFromCenter(test_brace),
             FadeIn(test_words)
         )
         self.play(Write(marks))
-        self.dither()
+        self.wait()
 
     def scroll_through_much_data(self):
         training_examples = self.training_examples
@@ -449,7 +449,7 @@ class TrainingVsTestData(Scene):
                 self.remove(train_ex)
                 self.add(new_ex)
                 new_ex[0][0].highlight(color)
-                self.dither(1./30)
+                self.wait(1./30)
             training_examples = new_examples
 
 class MNistDescription(Scene):
@@ -480,7 +480,7 @@ class MNistDescription(Scene):
             Write(link_words, run_time = 2),
             LaggedStart(GrowArrow, arrows),
         )
-        self.dither()
+        self.wait()
 
         training_data, validation_data, test_data = load_data_wrapper()
         epc = self.n_rows_per_grid*self.n_cols_per_grid
@@ -513,7 +513,7 @@ class MNistDescription(Scene):
                     self.remove(t1)
                     self.add(t2)
                     if time > self.frame_duration:
-                        self.dither(self.frame_duration)
+                        self.wait(self.frame_duration)
                         time = 0
             last_group = group
 
@@ -549,14 +549,14 @@ class NotSciFi(TeacherStudentsScene):
             bubble_kwargs = {"direction" : LEFT},
             run_time = 1,
         )
-        self.dither()
+        self.wait()
         students[0].bubble = bubble
         self.teacher_says(
             "It's actually \\\\ just calculus.",
             run_time = 1
         )
         self.teacher.bubble = None
-        self.dither()
+        self.wait()
         self.student_says(
             "Even worse!", 
             target_mode = "horrified",
@@ -566,7 +566,7 @@ class NotSciFi(TeacherStudentsScene):
                 "height" : 2,
             },
         )
-        self.dither(2)
+        self.wait(2)
 
 class FunctionMinmization(GraphScene):
     CONFIG = {
@@ -601,7 +601,7 @@ class FunctionMinmization(GraphScene):
             ContinualUpdateFromFunc(dot, update_dot)
             for dot in dots
         ])
-        self.dither(10)
+        self.wait(10)
 
 class ChangingDecimalWithColor(ChangingDecimal):
     def update_mobject(self, alpha):
@@ -737,7 +737,7 @@ class IntroduceCostFunction(PreviewLearning):
             *map(GrowArrow, weights_arrow_to_syms),
             run_time = 1
         )
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(
                 w_labels.copy(), weighted_edges,
@@ -749,13 +749,13 @@ class IntroduceCostFunction(PreviewLearning):
                 VGroup(weights_arrow_to_edges),
             )
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(bias_word),
             GrowArrow(bias_arrow),
             run_time = 1
         )
-        self.dither(2)
+        self.wait(2)
 
         ## Initialize randomly
         w_random = TextMobject("Initialize randomly")
@@ -864,7 +864,7 @@ class IntroduceCostFunction(PreviewLearning):
             ShowCreation(rect),
             Write(words, run_time = 2)
         )
-        self.dither()
+        self.wait()
 
         self.trash_rect = rect
         self.trash_words = words
@@ -896,7 +896,7 @@ class IntroduceCostFunction(PreviewLearning):
         self.play(FadeIn(words))
         self.play(ReplacementTransform(layer.copy(), desired_layer))
         self.play(GrowFromCenter(double_arrow))
-        self.dither(2)
+        self.wait(2)
 
         self.desired_last_layer = desired_layer
         self.diff_arrow = double_arrow
@@ -962,7 +962,7 @@ class IntroduceCostFunction(PreviewLearning):
             FadeIn(cost_of),
             GrowFromCenter(brace),
         )
-        self.dither()
+        self.wait()
 
         self.decimal_groups = decimal_groups
         self.image_group = image_group
@@ -1046,9 +1046,9 @@ class IntroduceCostFunction(PreviewLearning):
                 for neuron, t in zip(neurons, target_vect)
             ]
         ))
-        self.dither()
+        self.wait()
         self.play(LaggedStart(Indicate, decimals, rate_func = there_and_back))
-        self.dither()
+        self.wait()
         for update in update_decimals:
             update.rate_func = lambda a : smooth(1-a)
         self.play(*it.chain(
@@ -1056,7 +1056,7 @@ class IntroduceCostFunction(PreviewLearning):
             term_updates,
             [neurons.restore]
         ), run_time = 2)
-        self.dither()
+        self.wait()
         self.play(
             cost_group.restore,
             brace.restore,
@@ -1070,7 +1070,7 @@ class IntroduceCostFunction(PreviewLearning):
         random_neurons = self.network_mob.layers[-1].neurons
         desired_neurons = self.desired_last_layer.neurons
 
-        dither_times = iter(it.chain(
+        wait_times = iter(it.chain(
             4*[0.5],
             4*[0.25],
             8*[0.125],
@@ -1107,7 +1107,7 @@ class IntroduceCostFunction(PreviewLearning):
             self.add(new_image_group)
             image_group = new_image_group
 
-            self.dither(dither_times.next())
+            self.wait(wait_times.next())
 
     ####
 
@@ -1205,7 +1205,7 @@ class YellAtNetwork(PiCreatureScene, PreviewLearning):
         )
         self.play(ShowCreation(rect))
         layer_copy.add(rect)
-        self.dither()
+        self.wait()
         self.play(
             layer.copy().replace, layer_copy, 1,
             Write(q_marks, run_time = 1),
@@ -1213,7 +1213,7 @@ class YellAtNetwork(PiCreatureScene, PreviewLearning):
             randy.change, "angry", eyes,
         )
         self.play(eyes.look_at_anim(3*RIGHT + 3*RIGHT))
-        self.dither()
+        self.wait()
 
     ####
 
@@ -1239,7 +1239,7 @@ class ThisIsVeryComplicated(TeacherStudentsScene):
             run_time = 1,
         )
         self.change_student_modes(*3*["guilty"])
-        self.dither(2)
+        self.wait(2)
 
 class EmphasizeComplexityOfCostFunction(IntroduceCostFunction):
     CONFIG = {
@@ -1310,12 +1310,12 @@ class EmphasizeComplexityOfCostFunction(IntroduceCostFunction):
             FadeIn(output),
             FadeIn(output_words[1])
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(parameter_words[1]), 
             self.get_edge_animation()
         )
-        self.dither(2)
+        self.wait(2)
 
         self.to_fade = group
         self.curr_words = words
@@ -1380,18 +1380,18 @@ class EmphasizeComplexityOfCostFunction(IntroduceCostFunction):
             ),
             self.get_edge_animation()
         )
-        self.dither()
+        self.wait()
         self.play(
             GrowArrow(arrow),
             Write(cost, run_time = 1)
         )
         self.play(Write(new_output_word, run_time = 1))
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(new_parameter_word),
             FadeIn(training_examples[0])
         )
-        self.dither(0.5)
+        self.wait(0.5)
         for last_ex, ex in zip(training_examples, training_examples[1:]):
             activations = self.network.get_activation_of_all_layers(
                 ex.in_vect
@@ -1402,7 +1402,7 @@ class EmphasizeComplexityOfCostFunction(IntroduceCostFunction):
                 Transform(layer, active_layer).update(1)
             self.remove(last_ex)
             self.add(ex)
-            self.dither(0.25)
+            self.wait(0.25)
 
     ####
 
@@ -1458,14 +1458,14 @@ class NetworkGrowthMindset(YellAtNetwork):
             ),
             eyes.change_mode_anim("concerned_musician")
         )
-        self.dither()
+        self.wait()
         self.add(edge_update)
         self.pi_creature_says(
             "But we can do better! \\\\ Growth mindset!",
             target_mode = "hooray"
         )
         self.play(eyes.change_mode_anim("happy"))
-        self.dither(3)
+        self.wait(3)
 
 class SingleVariableCostFunction(GraphScene):
     CONFIG = {
@@ -1508,7 +1508,7 @@ class SingleVariableCostFunction(GraphScene):
             GrowFromCenter(big_brace),
             FadeIn(big_brace_text)
         )
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(big_brace, lil_brace),
             ReplacementTransform(big_brace_text, lil_brace_text),
@@ -1541,7 +1541,7 @@ class SingleVariableCostFunction(GraphScene):
                 self.input_to_graph_point(5, graph), RIGHT,
             ShowCreation(graph)
         )
-        self.dither()
+        self.wait()
 
         self.graph = graph
 
@@ -1575,10 +1575,10 @@ class SingleVariableCostFunction(GraphScene):
         )
         self.play(ShowCreation(line))
         self.play(DrawBorderThenFill(dot, run_time = 1))
-        self.dither()
+        self.wait()
         self.play(Write(formula, run_time = 2))
         self.play(GrowArrow(arrow))
-        self.dither()
+        self.wait()
 
         self.dot = dot
         self.line = line
@@ -1616,7 +1616,7 @@ class SingleVariableCostFunction(GraphScene):
             Write(words, run_time = 1),
             GrowFromCenter(brace)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(FadeOut(VGroup(words, brace, deriv_group)))
 
     def take_steps(self):
@@ -1658,12 +1658,12 @@ class SingleVariableCostFunction(GraphScene):
             line_update_anim, 
             dot_update_anim,
         )
-        self.dither()
+        self.wait()
         self.play(*it.chain(
             map(GrowArrow, arrows),
             map(FadeIn, q_marks),
         ))
-        self.dither()
+        self.wait()
 
         self.arrow_group = VGroup(arrows, q_marks)
         self.line_update_anim = line_update_anim
@@ -1691,7 +1691,7 @@ class SingleVariableCostFunction(GraphScene):
             MaintainPositionRelativeTo(arrow_group, w_mob),
             line_update_anim, dot_update_anim,
         )
-        self.dither()
+        self.wait()
 
         new_x = 0.3
         new_point = self.coords_to_point(new_x, 0)
@@ -1711,7 +1711,7 @@ class SingleVariableCostFunction(GraphScene):
             Animation(dot),
             Animation(arrow_group),
         )
-        self.dither()
+        self.wait()
         self.play(VGroup(arrows[0], q_marks).set_fill, None, 0)
         self.play(
             w_mob.shift, MED_SMALL_BUFF*RIGHT,
@@ -1722,14 +1722,14 @@ class SingleVariableCostFunction(GraphScene):
             FadeOut(VGroup(new_tangent_line, arrow_group)),
             Animation(dot),
         )
-        self.dither()
+        self.wait()
         for x in 0.8, 1.1, 0.95:
             self.play(
                 w_mob.next_to, self.coords_to_point(x, 0), DOWN,
                 line_update_anim,
                 dot_update_anim,
             )
-        self.dither()
+        self.wait()
 
     def ball_rolling_down_hill(self):
         ball = self.dot
@@ -1768,7 +1768,7 @@ class SingleVariableCostFunction(GraphScene):
             UpdateFromFunc(ball, update_ball),
             run_time = 3,
         )
-        self.dither(2)
+        self.wait(2)
 
         points = [
             VectorizedPoint(self.coords_to_point(x, 0))
@@ -1788,7 +1788,7 @@ class SingleVariableCostFunction(GraphScene):
 
         self.play(ReplacementTransform(ball, balls))
         self.add(*updates)
-        self.dither(5)
+        self.wait(5)
         self.remove(*updates)
         self.remove(*points)
         self.play(FadeOut(balls))
@@ -1821,8 +1821,8 @@ class SingleVariableCostFunction(GraphScene):
                 line_update_anim,
                 UpdateFromFunc(line, update_line),
             )
-            self.dither(0.5)
-        self.dither()
+            self.wait(0.5)
+        self.wait()
 
     ###
 
@@ -1844,7 +1844,7 @@ class LocalVsGlobal(TeacherStudentsScene):
             Global minimum = Crazy hard
         """)
         self.change_student_modes(*["pondering"]*3)
-        self.dither(2)
+        self.wait(2)
 
 class TwoVariableInputSpace(Scene):
     def construct(self):
@@ -1868,7 +1868,7 @@ class TwoVariableInputSpace(Scene):
             *map(Write, [plane, name, x, y]),
             run_time = 1
         )
-        self.dither()
+        self.wait()
 
         self.plane = plane
 
@@ -1898,7 +1898,7 @@ class TwoVariableInputSpace(Scene):
             FadeIn(question),
             LaggedStart(GrowArrow, arrows)
         )
-        self.dither()
+        self.wait()
 
         self.arrows = arrows
         self.dot = dot
@@ -1943,7 +1943,7 @@ class TwoVariableInputSpace(Scene):
         )
         self.play(FadeIn(gradient))
         self.play(Write(gradient_words, run_time = 2))
-        self.dither(2)
+        self.wait(2)
         self.play(
             arrow.fade,
             ReplacementTransform(
@@ -1951,7 +1951,7 @@ class TwoVariableInputSpace(Scene):
                 anti_arrow
             )
         )
-        self.dither(2)
+        self.wait(2)
 
 class CostSurface(ExternallyAnimatedScene):
     pass
@@ -1966,9 +1966,9 @@ class KhanAcademyMVCWrapper(PiCreatureScene):
             ShowCreation(screen),
             morty.change, "raise_right_hand",
         )
-        self.dither(3)
+        self.wait(3)
         self.play(morty.change, "happy", screen)
-        self.dither(5)
+        self.wait(5)
 
 class KAGradientPreview(ExternallyAnimatedScene):
     pass
@@ -1989,7 +1989,7 @@ class GradientDescentAlgorithm(Scene):
 
         for word in words:
             self.play(Write(word, run_time = 1))
-            self.dither()
+            self.wait()
 
 class GradientDescentName(Scene):
     def construct(self):
@@ -1999,7 +1999,7 @@ class GradientDescentName(Scene):
         words.to_edge(DOWN)
 
         self.play(Write(words, run_time = 2))
-        self.dither()
+        self.wait()
 
 class ShowFullCostFunctionGradient(PreviewLearning):
     def construct(self):
@@ -2057,7 +2057,7 @@ class ShowFullCostFunctionGradient(PreviewLearning):
             LaggedStart(FadeIn, words),
         )
         self.play(*map(Write, [lb, rb, lhs]), run_time = 1)
-        self.dither()
+        self.wait()
 
         self.column_vect = column_vect
 
@@ -2112,7 +2112,7 @@ class ShowFullCostFunctionGradient(PreviewLearning):
                     lambda a : interpolate(od_num, od_num+nd_num, a)
                 )
             )
-        self.dither()
+        self.wait()
 
 class DotsInsert(Scene):
     def construct(self):
@@ -2162,7 +2162,7 @@ class HowMinimizingCostMeansBetterTrainingPerformance(IntroduceCostFunction):
             ApplyMethod(neuron.set_fill, WHITE, target_value)
             for neuron, target_value in zip(neurons, target_values)
         ], run_time = 3)
-        self.dither()
+        self.wait()
 
     ###
 
@@ -2179,7 +2179,7 @@ class ConfusedAboutHighDimension(TeacherStudentsScene):
             target_mode = "confused"
         )
         self.change_student_modes(*["confused"]*3)
-        self.dither(2)
+        self.wait(2)
         self.teacher_thinks(
             "",
             bubble_kwargs = {"width" : 6, "height" : 4},
@@ -2267,14 +2267,14 @@ class NonSpatialGradientIntuition(Scene):
         brace = Brace(grad_vect, RIGHT)
         words = brace.get_text("Example gradient")
 
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(self.top_lhs.copy(), lhs),
             ReplacementTransform(self.vect.copy(), grad_vect),
             GrowFromCenter(brace),
             FadeIn(words)
         )
-        self.dither()
+        self.wait()
         self.play(FadeOut(VGroup(brace, words)))
 
         self.ws = ws
@@ -2308,7 +2308,7 @@ class NonSpatialGradientIntuition(Scene):
             LaggedStart(MoveToTarget, ws),
             LaggedStart(FadeIn, direction_phrases)
         )
-        self.dither(2)
+        self.wait(2)
 
         self.direction_phrases = direction_phrases
         self.ws = ws
@@ -2346,7 +2346,7 @@ class NonSpatialGradientIntuition(Scene):
 
         self.play(LaggedStart(ShowCreation, rects))
         self.play(LaggedStart(MoveToTarget, rects))
-        self.dither(2)
+        self.wait(2)
 
 class SomeConnectionsMatterMoreThanOthers(PreviewLearning):
     def setup(self):
@@ -2390,7 +2390,7 @@ class SomeConnectionsMatterMoreThanOthers(PreviewLearning):
             GrowArrow(arrow),
             FadeIn(words)
         )
-        self.dither()
+        self.wait()
 
     def show_unimportant_connection(self):
         color = TEAL
@@ -2408,7 +2408,7 @@ class SomeConnectionsMatterMoreThanOthers(PreviewLearning):
             GrowArrow(arrow),
             FadeIn(words)
         )
-        self.dither()
+        self.wait()
     ###
 
     def get_edge(self, i1, i2):
@@ -2459,7 +2459,7 @@ class SpinningVectorWithLabel(Scene):
             ),
             cd1, cd2,
         )
-        self.dither()
+        self.wait()
 
 class TwoGradientInterpretationsIn2D(Scene):
     def construct(self):
@@ -2497,7 +2497,7 @@ class TwoGradientInterpretationsIn2D(Scene):
 
         self.play(Write(func, run_time = 1))
         self.play(Write(grad_group, run_time = 2))
-        self.dither()
+        self.wait()
 
         self.func = func
         self.grad = grad
@@ -2531,7 +2531,7 @@ class TwoGradientInterpretationsIn2D(Scene):
             Animation(dot)
         )
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
         self.remove(vect)
         self.vect[1].highlight(vect.get_color())
@@ -2565,12 +2565,12 @@ class TwoGradientInterpretationsIn2D(Scene):
             Write(x_words, run_time = 2),
             ShowCreation(x_rect)
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(y_words, run_time = 1),
             ShowCreation(y_rect)
         )
-        self.dither(2)
+        self.wait(2)
 
     def wiggle_in_neighborhood(self):
         dot = self.dot
@@ -2589,14 +2589,14 @@ class TwoGradientInterpretationsIn2D(Scene):
             FadeOut(steepest_words),
             GrowFromCenter(neighborhood)
         )
-        self.dither()
+        self.wait()
         for vect in RIGHT, UP, 0.3*(3*RIGHT + UP):
             self.play(
                 dot.shift, 0.5*vect,
                 rate_func = lambda t : wiggle(t, 4),
                 run_time = 3,
             )
-            self.dither()
+            self.wait()
 
 class ParaboloidGraph(ExternallyAnimatedScene):
     pass
@@ -2684,7 +2684,7 @@ class GradientNudging(PreviewLearning):
         for x in range(self.n_steps):
             self.play(self.get_edge_change_anim(edges))
             self.play(*self.get_decimal_change_anims(decimals))
-        self.dither()
+        self.wait()
 
     ###
 
@@ -2748,10 +2748,10 @@ class BackPropWrapper(PiCreatureScene):
             ShowCreation(screen)
         )
         self.play(Write(title[0], run_time = 1))
-        self.dither()
+        self.wait()
         self.play(Write(title[1], run_time = 1))
         self.play(morty.change, "happy", screen)
-        self.dither(5)
+        self.wait(5)
 
 class TODOInsertCostSurfaceSteps(TODOStub):
     CONFIG = {
@@ -2793,7 +2793,7 @@ class ContinuouslyRangingNeuron(PreviewLearning):
                 ),
                 decimal_color_anim
             )
-            self.dither()
+            self.wait()
 
 class AskHowItDoes(TeacherStudentsScene):
     def construct(self):
@@ -2801,13 +2801,13 @@ class AskHowItDoes(TeacherStudentsScene):
             "How well \\\\ does it do?",
             student_index = 0
         )
-        self.dither(5)
+        self.wait(5)
 
 class TestPerformance(PreviewLearning):
     CONFIG = {
         "n_examples" : 300,
         "time_per_example" : 0.1,
-        "wrong_dither_time" : 0.5,
+        "wrong_wait_time" : 0.5,
         "stroke_width_exp" : 2,
         "decimal_kwargs" : {
             "num_decimal_points" : 3,
@@ -2924,9 +2924,9 @@ class TestPerformance(PreviewLearning):
             self.add(new_decimal)
             self.decimal = new_decimal
 
-            self.dither(self.time_per_example)
+            self.wait(self.time_per_example)
             if not correct:
-                self.dither(self.wrong_dither_time)
+                self.wait(self.wrong_wait_time)
 
             self.remove(rect, rect_wrong, num_wrong, image, choice_mob)
 
@@ -2978,13 +2978,13 @@ class ReactToPerformance(TeacherStudentsScene):
             run_time = 1
         )
         self.change_student_modes(*["hooray"]*3)
-        self.dither()
+        self.wait()
         self.teacher_says(last_words, target_mode = "hesitant")
         self.change_student_modes(
             *["pondering"]*3,
             look_at_arg = self.teacher.bubble
         )
-        self.dither()
+        self.wait()
 
 class NoticeWhereItMessesUp(TeacherStudentsScene):
     def construct(self):
@@ -2992,7 +2992,7 @@ class NoticeWhereItMessesUp(TeacherStudentsScene):
             "Look where it \\\\ messes up",
             run_time = 1
         )
-        self.dither(2)
+        self.wait(2)
 
 class WrongExamples(TestPerformance):
     CONFIG = {
@@ -3027,7 +3027,7 @@ class NotAtAll(TeacherStudentsScene, PreviewLearning):
             self.teacher.change, "concerned_musician",
             words[1].highlight, WHITE
         )
-        self.dither(2)
+        self.wait(2)
 
 class InterpretFirstWeightMatrixRows(TestPerformance):
     CONFIG = {
@@ -3103,7 +3103,7 @@ class InterpretFirstWeightMatrixRows(TestPerformance):
                 if edge not in neurons[0].edges_in
             ]
         )
-        self.dither()
+        self.wait()
         last_neuron = None
 
         for neuron, pixel_array in zip(neurons, self.pixel_arrays):
@@ -3153,7 +3153,7 @@ class InputRandomData(TestPerformance):
             )
         )
         self.play(ShowCreation(arrow))
-        self.dither()
+        self.wait()
 
         self.image = image
         self.rand_vect = rand_vect
@@ -3185,7 +3185,7 @@ class InputRandomData(TestPerformance):
                 MoveToTarget, neurons,
                 run_time = 1
             ))
-            self.dither()
+            self.wait()
         self.play(FadeOut(VGroup(words, arrow)))
 
     def feed_in_random_data(self):
@@ -3225,7 +3225,7 @@ class InputRandomData(TestPerformance):
 
         self.play(ShowCreation(rect))
         self.play(Write(word, run_time = 1))
-        self.dither()
+        self.wait()
 
         self.network_mob.add(rect, word)
         self.choice = choice
@@ -3258,7 +3258,7 @@ class InputRandomData(TestPerformance):
             Write(bubble.content, run_time = 1)
         )
         self.play(eyes.blink_anim())
-        self.dither()
+        self.wait()
 
 class CannotDraw(PreviewLearning):
     def construct(self):
@@ -3294,7 +3294,7 @@ class CannotDraw(PreviewLearning):
         )
         self.play(eyes.blink_anim())
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class TODOShowCostFunctionDef(TODOStub):
     CONFIG = {
@@ -3348,7 +3348,7 @@ class SomethingToImproveUpon(PiCreatureScene, TestPerformance):
             Write(words, run_time = 1),
             morty.change, "sassy", 
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             ApplyMethod(
                 network_mob.next_to, path.get_left(), UP,
@@ -3357,7 +3357,7 @@ class SomethingToImproveUpon(PiCreatureScene, TestPerformance):
             Rotate(path, np.pi, in_place = True),
             morty.change, "raise_right_hand"
         )
-        self.dither(3)
+        self.wait(3)
 
         self.line = line
         self.path = path
@@ -3389,13 +3389,13 @@ class SomethingToImproveUpon(PiCreatureScene, TestPerformance):
             morty.change_mode, "hesitant"
         )
         self.play(Write(name))
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(modern_variants),
             FadeOut(VGroup(words, arrow, name)),
             morty.change, "thinking"
         )
-        self.dither(2)
+        self.wait(2)
 
         self.modern_variants = modern_variants
 
@@ -3414,7 +3414,7 @@ class SomethingToImproveUpon(PiCreatureScene, TestPerformance):
             group.to_edge(LEFT, buff = LARGE_BUFF)
 
             self.add(group)
-            self.dither(self.time_per_example)
+            self.wait(self.time_per_example)
             self.remove(group)
 
     def hidden_layers(self):
@@ -3435,7 +3435,7 @@ class SomethingToImproveUpon(PiCreatureScene, TestPerformance):
 
         self.play(ShowCreation(rects))
         self.activate_network(np.random.random(28*28))
-        self.dither(3)
+        self.wait(3)
 
 class ShiftingFocus(Scene):
     def construct(self):
@@ -3451,18 +3451,18 @@ class ShiftingFocus(Scene):
         cap_do.move_to(do, DOWN+LEFT)
 
         self.play(Write(words, run_time = 1))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(cross))
         self.play(
             VGroup(networks, cross).shift, DOWN,
             Write(viewers, run_time = 1)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             FadeOut(how),
             Transform(do, cap_do)
         )
-        self.dither(2)
+        self.wait(2)
 
 class PauseAndPonder(TeacherStudentsScene):
     def construct(self):
@@ -3478,7 +3478,7 @@ class PauseAndPonder(TeacherStudentsScene):
             ShowCreation(screen),
             self.get_student_changes(*["pondering"]*3),
         )
-        self.dither(6)
+        self.wait(6)
 
 class ConvolutionalNetworkPreview(Scene):
     def construct(self):
@@ -3518,7 +3518,7 @@ class ConvolutionalNetworkPreview(Scene):
                 if x > 24 or y > 24:
                     continue
                 kernel.move_to(pixel, UP+LEFT)
-                self.dither(self.frame_duration)
+                self.wait(self.frame_duration)
             self.remove(kernel)
 
 class RandomlyLabeledImageData(Scene):
@@ -3560,14 +3560,14 @@ class RandomlyLabeledImageData(Scene):
             run_time = 3,
             lag_ratio = 0.3,
         ))
-        self.dither()
+        self.wait()
         self.play(LaggedStart(
             MoveToTarget, labels, 
             run_time = 4,
             lag_ratio = 0.5,
             path_arc = np.pi/3,
         ))
-        self.dither()
+        self.wait()
 
     def get_training_group(self, image_name, label_name):
         arrow = Vector(RIGHT, color = WHITE)
@@ -3643,10 +3643,10 @@ class AskNetworkAboutMemorizing(YellAtNetwork):
             look_at_arg = eyes,
             run_time = 2
         )
-        self.dither()
+        self.wait()
         self.play(eyes.change_mode_anim("sad"))
         self.play(eyes.blink_anim())
-        self.dither()
+        self.wait()
 
 class CompareLearningCurves(GraphScene):
     CONFIG = {
@@ -3699,7 +3699,7 @@ class CompareLearningCurves(GraphScene):
             run_time = 12,
             rate_func = None,
         ))
-        self.dither()
+        self.wait()
 
         ####
 
@@ -3719,7 +3719,7 @@ class CompareLearningCurves(GraphScene):
 
         self.play(DrawBorderThenFill(rect))
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
 class ManyMinimaWords(Scene):
     def construct(self):
@@ -3730,7 +3730,7 @@ class ManyMinimaWords(Scene):
         words.scale_to_fit_width(2*SPACE_WIDTH - 1)
         words.to_edge(UP)
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
 
 class NNPart2PatreonThanks(PatreonThanks):

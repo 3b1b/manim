@@ -73,9 +73,9 @@ class OpeningQuote(Scene):
         author.next_to(words, DOWN, buff = 0.5)
 
         self.play(FadeIn(words))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(author, run_time = 3))
-        self.dither(2)
+        self.wait(2)
 
 class LinearCombinationScene(LinearTransformationScene):
     CONFIG = {
@@ -134,7 +134,7 @@ class LinearCombinationScene(LinearTransformationScene):
             self.play(*map(MoveToTarget, [
                 coord, basis, basis.label
             ]))
-            self.dither()
+            self.wait()
         self.play(*[
             ApplyMethod(m.shift, basis_vectors[0].get_end())
             for m in self.get_mobjects_from_last_animation()
@@ -145,7 +145,7 @@ class LinearCombinationScene(LinearTransformationScene):
                 color = sum_vect_color
             )
             self.play(ShowCreation(sum_vect))
-        self.dither(2)
+        self.wait(2)
         if revert_to_original:
             self.play(*it.chain(
                 [basis.restore for basis in basis_vectors],
@@ -182,8 +182,8 @@ class RemindOfCoordinates(LinearCombinationScene):
                 coord.next_to, line.get_center(), direction,
                 ShowCreation(line),                
             )
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
         self.play(*map(FadeOut, [x_coord, y_coord, x_line, y_line]))
 
 
@@ -212,16 +212,16 @@ class RemindOfCoordinates(LinearCombinationScene):
             Write(words)
         )
         self.play(*map(FadeIn, [self.i_hat, self.j_hat]))
-        self.dither()
+        self.wait()
         self.play(Transform(self.i_hat, scaled_i))
         self.play(Transform(self.j_hat, scaled_j))
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(words),
             FadeIn(everything),
             *[mob.restore for mob in to_save]
         )
-        self.dither()
+        self.wait()
 
     def scale_basis_vectors(self, x_coord, y_coord):
         self.play(*map(Write, [self.i_hat.label, self.j_hat.label]))
@@ -257,7 +257,7 @@ class RemindOfCoordinates(LinearCombinationScene):
             words.add_to_back(BackgroundRectangle(words))
 
         self.play(Write(title))
-        self.dither()
+        self.wait()
         self.play(
             Write(ass1),
             ApplyFunction(
@@ -266,7 +266,7 @@ class RemindOfCoordinates(LinearCombinationScene):
                 rate_func = wiggle
             )
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(ass2),
             ApplyFunction(
@@ -275,9 +275,9 @@ class RemindOfCoordinates(LinearCombinationScene):
                 rate_func = wiggle
             )
         )
-        self.dither()
+        self.wait()
         self.play(Write(ass3))
-        self.dither(2)
+        self.wait(2)
         keepers = VGroup(*[
             self.i_hat, self.j_hat,
             self.i_hat.label, self.j_hat.label
@@ -287,7 +287,7 @@ class RemindOfCoordinates(LinearCombinationScene):
             Animation(keepers.copy()),
             Animation(group)
         )
-        self.dither()
+        self.wait()
 
 class NameCoordinateSystem(Scene):
     def construct(self):
@@ -317,12 +317,12 @@ class NameCoordinateSystem(Scene):
 
         self.play(Write(coords))
         self.play(Write(arrow), ShowCreation(vector))
-        self.dither()
+        self.wait()
         self.play(Write(coordinate_system))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(basis_group))
         self.play(Write(basis_words))
-        self.dither()
+        self.wait()
 
 class WhatAboutOtherBasis(TeacherStudentsScene):
     def construct(self):
@@ -404,7 +404,7 @@ class IntroduceJennifer(JenniferScene):
             jenny.look, UP+RIGHT,
             FadeOut(name)
         )
-        self.dither()
+        self.wait()
 
     def add_basis_vectors(self):
         words = TextMobject("Alternate basis vectors")
@@ -415,7 +415,7 @@ class IntroduceJennifer(JenniferScene):
                 ShowCreation(vect),
                 Write(vect.label)
             )
-            self.dither()
+            self.wait()
         self.play(FadeOut(words))
 
     def show_v_from_both_perspectives(self):
@@ -441,7 +441,7 @@ class IntroduceJennifer(JenniferScene):
                 entry.add_background_rectangle()
 
         self.play(ShowCreation(v))
-        self.dither()
+        self.wait()
         self.play(*it.chain(
             map(FadeIn, [
                 self.plane, self.i_hat, self.j_hat, 
@@ -523,7 +523,7 @@ class IntroduceJennifer(JenniferScene):
             self.play(*map(MoveToTarget, [
                 coord, basis, basis.label
             ]))
-            self.dither()
+            self.wait()
         self.play(*[
             ApplyMethod(m.shift, basis_vectors[0].get_end())
             for m in self.get_mobjects_from_last_animation()
@@ -534,7 +534,7 @@ class IntroduceJennifer(JenniferScene):
                 color = sum_vect_color
             )
             self.play(ShowCreation(sum_vect))
-        self.dither(2)
+        self.wait(2)
 
 
         b1, b2 = basis_vectors
@@ -570,7 +570,7 @@ class IntroduceJennifer(JenniferScene):
             ])
         )
         self.play(Blink(self.you))
-        self.dither()
+        self.wait()
 
         self.play(*it.chain(
             map(FadeOut, [
@@ -607,7 +607,7 @@ class IntroduceJennifer(JenniferScene):
             b1_coords.mover.highlight, X_COLOR
         )
         self.play(Blink(you))
-        self.dither()
+        self.wait()
         self.play(Transform(b1_coords, b2_coords))
         self.play(
             b2_coords.mover.next_to, self.b2.get_end(), LEFT,
@@ -675,7 +675,7 @@ class SpeakingDifferentLanguages(JenniferScene):
                 Write(pi.coords)
             )
             self.play(Blink(pi))
-        self.dither()
+        self.wait()
 
 class ShowGrid(LinearTransformationScene):
     CONFIG = {
@@ -683,14 +683,14 @@ class ShowGrid(LinearTransformationScene):
     }
     def construct(self):
         self.remove(self.i_hat, self.j_hat)
-        self.dither()
+        self.wait()
         self.plane.prepare_for_nonlinear_transform()
         self.plane.save_state()
         self.play(Homotopy(plane_wave_homotopy, self.plane))
         self.play(self.plane.restore)
         for vect in self.i_hat, self.j_hat:
             self.play(ShowCreation(vect))
-        self.dither()
+        self.wait()
 
 class GridIsAConstruct(TeacherStudentsScene):
     def construct(self):
@@ -714,7 +714,7 @@ class SpaceHasNoGrid(LinearTransformationScene):
             FadeOut(self.plane),
             *map(Animation, [self.i_hat, self.j_hat])
         )
-        self.dither()
+        self.wait()
 
 class JennysGrid(JenniferScene):
     def construct(self):
@@ -738,7 +738,7 @@ class JennysGrid(JenniferScene):
                 ShowCreation(vect),
                 Write(vect.label)
             )
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(
                 self.jenny_plane, 
@@ -785,18 +785,18 @@ class ShowOriginOfGrid(JenniferScene):
             ShowCreation(arrow)
         )
         self.play(ShowCreation(origin_dot))
-        self.dither()
+        self.wait()
         self.play(
             Transform(self.jenny_plane, self.plane),
             *map(Animation, [origin_word, origin_dot, arrow])
         )
-        self.dither()
+        self.wait()
         self.play(Write(coords))
-        self.dither()
+        self.wait()
         self.play(FadeIn(vector))
-        self.dither()
+        self.wait()
         self.play(Transform(vector, Mobject.scale(vector.copy(), 0)))
-        self.dither()
+        self.wait()
         self.play(
             self.jenny_plane.restore, 
             *map(Animation, [origin_word, origin_dot, arrow, coords])
@@ -806,7 +806,7 @@ class ShowOriginOfGrid(JenniferScene):
                 ShowCreation(vect),
                 Write(vect.label)
             )
-        self.dither()
+        self.wait()
 
 class AskAboutTranslation(TeacherStudentsScene):
     def construct(self):
@@ -861,7 +861,7 @@ class TranslateFromJenny(JenniferScene):
             revert_to_original = False,
             show_sum_vect = True,
         )
-        self.dither()
+        self.wait()
         everything = self.get_mobjects()
         for submob in self.jenny_plane.submobject_family():
             everything.remove(submob)
@@ -874,7 +874,7 @@ class TranslateFromJenny(JenniferScene):
             ShowCreation(self.you.bubble),
             Write(self.you.coords)
         )
-        self.dither()
+        self.wait()
 
     def establish_coordinates(self):
         b1, b2 = self.basis_vectors_copy[:2]
@@ -919,7 +919,7 @@ class TranslateFromJenny(JenniferScene):
         ]
         for mover_set in mover_sets:
             self.play(*map(MoveToTarget, mover_set))
-            self.dither()
+            self.wait()
         self.play(
             MoveToTarget(equals2),
             Transform(self.b1_coords_mob.copy(), result.target),
@@ -928,7 +928,7 @@ class TranslateFromJenny(JenniferScene):
         self.remove(*self.get_mobjects_from_last_animation())
         result = result.target
         self.add(equals2, result)
-        self.dither()
+        self.wait()
 
         result_copy = result.copy()
         self.you.bubble.add_content(result_copy)
@@ -937,7 +937,7 @@ class TranslateFromJenny(JenniferScene):
             Transform(result.copy(), result_copy)
         )
         self.play(Blink(self.you))
-        self.dither()
+        self.wait()
 
         matrix = Matrix(np.array([self.b1_coords, self.b2_coords]).T)
         matrix.highlight_columns(X_COLOR, Y_COLOR)
@@ -954,7 +954,7 @@ class TranslateFromJenny(JenniferScene):
             MoveToTarget(self.jenny.coords),
             FadeIn(matrix)
         )
-        self.dither()
+        self.wait()
 
 class WatchChapter3(TeacherStudentsScene):
     def construct(self):
@@ -1021,7 +1021,7 @@ class TalkThroughChangeOfBasisMatrix(JenniferScene):
             Write(basis_coords_pair)
         )
         self.play(Blink(self.you))
-        self.dither()
+        self.wait()
 
         self.add_foreground_mobject(
             self.jenny, self.you, self.you.bubble, 
@@ -1069,7 +1069,7 @@ class TalkThroughChangeOfBasisMatrix(JenniferScene):
         self.add_foreground_mobject(b2_coords)
         basis_coords_pair.target = basis_coords_pair.copy()
         self.jenny.bubble.add_content(basis_coords_pair.target)
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(b1_coords),
             FadeOut(b2_coords),
@@ -1168,13 +1168,13 @@ class FeelsBackwards(Scene):
             ShowCreation(top_arrow),
             Write(jenny_grid)
         )
-        self.dither()
+        self.wait()
         self.play(Write(jenny_language))
         self.play(
             ShowCreation(bottom_arrow),
             Write(our_language)
         )
-        self.dither()
+        self.wait()
 
         ##Swap things
         inverse_word = TextMobject("Inverse")
@@ -1193,7 +1193,7 @@ class FeelsBackwards(Scene):
             bottom_arrow.scale_in_place, 0.8,
             bottom_arrow.shift, 0.8*RIGHT
         )
-        self.dither()
+        self.wait()
 
 class AskAboutOtherWayAround(TeacherStudentsScene):
     def construct(self):
@@ -1237,16 +1237,16 @@ class RecallInverse(JenniferScene):
             Write(inverse_exponent)
         )
         self.add_foreground_mobject(*self.get_mobjects_from_last_animation())
-        self.dither()
+        self.wait()
         self.apply_inverse_transpose(numerical_t_matrix)
-        self.dither()
+        self.wait()
         self.play(
             Write(equals),
             Transform(matrix.copy(), inv_matrix)
         )
         self.remove(*self.get_mobjects_from_last_animation())
         self.add_foreground_mobject(equals, inv_matrix)
-        self.dither()
+        self.wait()
         for mob in self.plane, self.i_hat, self.j_hat:
             self.add(mob.copy().fade(0.7))
         self.apply_transposed_matrix(numerical_t_matrix)
@@ -1261,7 +1261,7 @@ class RecallInverse(JenniferScene):
             )
             for mob in inv_matrix.get_mob_matrix()[:,0]
         ])
-        self.dither()
+        self.wait()
         inv_matrix.highlight_columns(X_COLOR, Y_COLOR)
         self.play(*[
             ApplyMethod(
@@ -1270,7 +1270,7 @@ class RecallInverse(JenniferScene):
             )
             for mob in inv_matrix.get_mob_matrix()[:,1]
         ])
-        self.dither()
+        self.wait()
 
 class WorkOutInverseComputation(Scene):
     def construct(self):
@@ -1317,13 +1317,13 @@ class WorkOutInverseComputation(Scene):
             GrowFromCenter(our_vector_brace),
             Write(our_text)
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(matrix),
             GrowFromCenter(matrix_brace),
             Write(matrix_text)
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(equals),
             Write(her_vector)
@@ -1332,7 +1332,7 @@ class WorkOutInverseComputation(Scene):
             GrowFromCenter(her_vector_brace),
             Write(her_text)
         )
-        self.dither()
+        self.wait()
 
 class SoThatsTranslation(TeacherStudentsScene):
     def construct(self):
@@ -1413,14 +1413,14 @@ class SummarizeTranslationProcess(Scene):
             Write(our_words),
             ShowCreation(our_arrow)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             VGroup(her_vector, equals).next_to, A_inv, LEFT,
             her_arrow.rotate_in_place, -np.pi/6,
             her_arrow.shift, MED_SMALL_BUFF*LEFT,
             Transform(A, A_inv, path_arc = np.pi)
         )
-        self.dither()
+        self.wait()
 
 class VectorsAreNotTheOnlyOnes(TeacherStudentsScene):
     def construct(self):
@@ -1454,7 +1454,7 @@ class Prerequisites(Scene):
                 Write(words),
                 ShowCreation(rect)
             )
-        self.dither()
+        self.wait()
 
 class RotationExample(LinearTransformationScene):
     CONFIG = {
@@ -1475,16 +1475,16 @@ class RotationExample(LinearTransformationScene):
 
         self.play(Write(words))
         self.add_foreground_mobject(words)
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix(self.t_matrix)
-        self.dither()
+        self.wait()
         self.play(
             self.i_hat.rotate, np.pi/12,
             self.j_hat.rotate, -np.pi/12,
             rate_func = wiggle,
             run_time = 2
         )
-        self.dither()
+        self.wait()
 
         i_coords, j_coords = coord_arrays = map(Matrix, self.t_matrix)
         for coords, vect in zip(coord_arrays, [self.i_hat, self.j_hat]):
@@ -1495,7 +1495,7 @@ class RotationExample(LinearTransformationScene):
             direction = UP if vect is self.j_hat else RIGHT
             coords.next_to(vect.get_end(), direction, buff = MED_SMALL_BUFF)
             self.play(Write(coords))
-            self.dither()
+            self.wait()
 
         self.play(
             Transform(i_coords.rect, matrix.rect),
@@ -1513,7 +1513,7 @@ class RotationExample(LinearTransformationScene):
                 VGroup(*matrix.get_mob_matrix()[:, 1])
             ),
         )
-        self.dither()
+        self.wait()
         self.add_words(matrix)
 
     def add_words(self, matrix):
@@ -1541,9 +1541,9 @@ class RotationExample(LinearTransformationScene):
         )
 
         self.play(Write(follow_basis))
-        self.dither()
+        self.wait()
         self.play(Write(record))
-        self.dither()
+        self.wait()
         
 class JennyWatchesRotation(JenniferScene):
     def construct(self):
@@ -1574,7 +1574,7 @@ class JennyWatchesRotation(JenniferScene):
         ))
         self.play(jenny.change_mode, "pondering")
         self.play(Blink(jenny))
-        self.dither()
+        self.wait()
 
 class AksAboutTranslatingColumns(TeacherStudentsScene):
     def construct(self):
@@ -1678,26 +1678,26 @@ class HowToTranslateAMatrix(Scene):
                 Transform(brace, array.brace),
                 Transform(bottom_words, array.brace.text)
             )
-            self.dither()
+            self.wait()
         def echo_introduce(array):
             self.play(
                 Transform(top_brace, array.top_brace),
                 Transform(top_words, array.top_brace.text)
             )
-            self.dither()
+            self.wait()
 
         self.play(Write(her_vector))
         self.play(
             GrowFromCenter(brace),
             Write(bottom_words)
         )
-        self.dither()
+        self.wait()
         introduce(cob_matrix)
         self.play(
             GrowFromCenter(top_brace),
             Write(top_words)
         )
-        self.dither()
+        self.wait()
         introduce(transform)
         echo_introduce(transform)
         introduce(inv_cob),
@@ -1712,12 +1712,12 @@ class HowToTranslateAMatrix(Scene):
             FadeOut(bottom_words),
             FadeOut(brace),
         )
-        self.dither()
+        self.wait()
         self.play(
             Transform(top_brace, final_top_brace),
             Transform(top_brace.text, final_top_brace.text),
         )
-        self.dither()
+        self.wait()
 
         equals = TexMobject("=")
         equals.replace(v)
@@ -1726,7 +1726,7 @@ class HowToTranslateAMatrix(Scene):
             Transform(her_vector, equals),
             Write(result)
         )
-        self.dither(2)
+        self.wait(2)
 
         everything = VGroup(*self.get_mobjects())
         self.play(
@@ -1734,7 +1734,7 @@ class HowToTranslateAMatrix(Scene):
             result.to_corner, UP+LEFT
         )
         self.add(result)
-        self.dither()
+        self.wait()
 
 
     def add_title(self):
@@ -1744,7 +1744,7 @@ class HowToTranslateAMatrix(Scene):
         h_line.next_to(title, DOWN)
         self.add(title)
         self.play(ShowCreation(h_line))
-        self.dither()
+        self.wait()
 
 class JennyWatchesRotationWithMatrixAndVector(JenniferScene):
     def construct(self):
@@ -1787,7 +1787,7 @@ class JennyWatchesRotationWithMatrixAndVector(JenniferScene):
             Write(result)
         )
         self.play(Blink(self.jenny))
-        self.dither()
+        self.wait()
 
 class MathematicalEmpathy(TeacherStudentsScene):
     def construct(self):
@@ -1820,7 +1820,7 @@ class NextVideo(Scene):
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.dither()
+        self.wait()
 
 
 

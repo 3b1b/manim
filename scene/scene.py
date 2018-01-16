@@ -154,7 +154,7 @@ class Scene(object):
         wind_down_time = kwargs.get("wind_down_time", 1)
         for continual_animation in continual_animations:
             continual_animation.begin_wind_down(wind_down_time)
-        self.dither(wind_down_time)
+        self.wait(wind_down_time)
         #TODO, this is not done with the remove method so as to
         #keep the relevant mobjects.  Better way?
         self.continual_animations = filter(
@@ -422,7 +422,7 @@ class Scene(object):
             return self.mobjects_from_last_animation
         return []
 
-    def dither(self, duration = DEFAULT_DITHER_TIME):
+    def wait(self, duration = DEFAULT_wait_TIME):
         if self.skip_animations:
             return self
 

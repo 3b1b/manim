@@ -27,7 +27,7 @@ def logo_to_circle():
     )
     big_circle = Circle(density = CIRCLE_DENSITY).scale(RADIUS)
     sc.add(small_circle)
-    sc.dither()
+    sc.wait()
     sc.animate(Transform(small_circle, big_circle))
     return sc
 
@@ -53,7 +53,7 @@ def count_sections(*radians):
         ])
         sc.animate(Transform(deepcopy(dots[x]), new_lines, run_time = 2.0))
         sc.add(new_lines)
-        sc.dither()
+        sc.wait()
         regions = plane_partition_from_points(*points[:x+1])
         for reg in regions:
             reg.intersect(interior)
@@ -67,11 +67,11 @@ def count_sections(*radians):
             sc.add(number)
             sc.remove(last_num)
             last_num = number
-            sc.dither(rt)
+            sc.wait(rt)
             sc.reset_background()
         sc.remove(last_num)
         sc.animate(Transform(last_num, deepcopy(last_num).center()))
-        sc.dither()
+        sc.wait()
         sc.remove(last_num)
     return sc
 
@@ -99,7 +99,7 @@ def summarize_pattern(*radians):
         sc.remove(last_num)
         last_num = num
         sc.add(num, dots[x], new_lines)
-        sc.dither()
+        sc.wait()
     return sc
 
 def connect_points(*radians):
@@ -121,7 +121,7 @@ def connect_points(*radians):
         all_lines.append(lines)
     sc.animate(*anims)
     sc.add(*all_lines)
-    sc.dither()
+    sc.wait()
     return sc
 
 def interesting_problems():
@@ -143,7 +143,7 @@ def interesting_problems():
     sc.add(face, tb)
     sc.animate(ShowCreation(fermat, run_time = 1))
     sc.add(fermat)
-    sc.dither()
+    sc.wait()
     sc.animate(
         Transform(
             deepcopy(fermat).repeat(len(locales)),
@@ -152,7 +152,7 @@ def interesting_problems():
         FadeIn(face_copies, run_time = 1.0)
     )
     sc.animate(FadeIn(tb_copies))
-    sc.dither()
+    sc.wait()
     sc.animate(
         Transform(tb, sb),
         Transform(tb_copies, sb_copies)
@@ -172,10 +172,10 @@ def response_invitation():
     ])
 
     sc.add(video_icon)
-    sc.dither()
+    sc.wait()
     sc.animate(Transform(deepcopy(video_icon).repeat(3), mini_videos))
     sc.add(mini_videos)
-    sc.dither()
+    sc.wait()
     sc.animate(ShowCreation(comments, run_time = 1.0))
     return sc
 
@@ -209,7 +209,7 @@ def different_points(radians1, radians2):
             for line1, line2 in zip(lines1, lines2)
         ]
     )
-    sc.dither()
+    sc.wait()
     return sc
 
 def next_few_videos(*radians):
@@ -235,7 +235,7 @@ def next_few_videos(*radians):
     frame.shift((-5, 0, 0))
 
     sc.add(thumbnail)
-    sc.dither()
+    sc.wait()
     sc.animate(
         Transform(big_frame, frame),
         Transform(
@@ -244,7 +244,7 @@ def next_few_videos(*radians):
         )
     )
     sc.add(frame, thumbnail)
-    sc.dither()
+    sc.wait()
     last = frame
     for x in [-2, 1, 4]:
         vi = VideoIcon().shift((x, 0, 0))

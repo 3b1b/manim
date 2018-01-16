@@ -256,7 +256,7 @@ class CountTo27InTernary(CountInTernary):
     def construct(self):
         for x in range(27):
             self.increment()
-        self.dither()
+        self.wait()
 
 class CountInBinaryTo256(BinaryCountingScene):
     def construct(self):
@@ -472,17 +472,17 @@ def get_ternary_ruler_sequence(order = 4):
 
 class SolveHanoi(TowersOfHanoiScene):
     def construct(self):
-        self.dither()
+        self.wait()
         for x in get_ruler_sequence(self.num_disks-1):
             self.move_disk(x, stay_on_peg = False)
-        self.dither()
+        self.wait()
 
 class SolveConstrainedHanoi(ConstrainedTowersOfHanoiScene):
     def construct(self):
-        self.dither()
+        self.wait()
         for x in get_ternary_ruler_sequence(self.num_disks-1):
             self.move_disk(x, run_time = 0.5, stay_on_peg = False)
-        self.dither()
+        self.wait()
 
 class Keith(PiCreature):
     CONFIG = {
@@ -581,7 +581,7 @@ class IntroduceKeith(Scene):
             morty.look_at, bubble
         )
         self.play(Blink(keith))
-        self.dither()
+        self.wait()
         original_content = bubble.content
         bubble.write("I'm usually meh \\\\ on puzzles")
         self.play(
@@ -600,7 +600,7 @@ class IntroduceKeith(Scene):
             Transform(original_content, bubble.content)
         )
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
         self.play(FadeIn(randy))
         self.play(
             randy.change_mode, "confused",
@@ -619,7 +619,7 @@ class IntroduceKeith(Scene):
             keith.change_mode, "hooray",
             keith.look_at, randy.eyes
         )
-        self.dither()
+        self.wait()
 
 class IntroduceTowersOfHanoi(TowersOfHanoiScene):
     def construct(self):
@@ -651,9 +651,9 @@ class IntroduceTowersOfHanoi(TowersOfHanoiScene):
             ),
             Write(self.peg_labels)
         )
-        self.dither()
+        self.wait()
         self.bring_in_disks()
-        self.dither()
+        self.wait()
 
     def bring_in_disks(self):
         peg = self.pegs[0]
@@ -704,7 +704,7 @@ class IntroduceTowersOfHanoi(TowersOfHanoiScene):
             )
             last = label
         self.play(last.restore)
-        self.dither()
+        self.wait()
 
     def show_more_disk_possibility(self):
         original_num_disks = self.num_disks
@@ -721,27 +721,27 @@ class IntroduceTowersOfHanoi(TowersOfHanoiScene):
         self.remove(new_disks)
 
         self.play(Transform(self.disks, new_disks))
-        self.dither()
+        self.wait()
         self.play(Transform(self.disks, original_disks_copy))
 
         self.remove(self.disks)
         self.disks = original_disks_copy
         self.add(self.disks)
-        self.dither()
+        self.wait()
 
         self.num_disks = original_num_disks
         self.disk_height = original_disk_height
 
     def move_full_tower(self):
         self.move_subtower_to_peg(self.num_disks, 1, run_time = 2)
-        self.dither()
+        self.wait()
         self.reset_disks(run_time = 1, submobject_mode = "lagged_start")
-        self.dither()
+        self.wait()
 
     def move_single_disk(self):
         for x in 0, 1, 0:
             self.move_disk(x)
-        self.dither()
+        self.wait()
 
     def cannot_move_disk_onto_smaller_disk(self):
         also_not_allowed = TextMobject("Not allowed")
@@ -757,13 +757,13 @@ class IntroduceTowersOfHanoi(TowersOfHanoiScene):
         ])
         cross.replace(disk)
         self.play(FadeIn(cross))
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(cross),
             FadeOut(self.title),
             disk.restore
         )
-        self.dither()
+        self.wait()
 
 class ExampleFirstMoves(TowersOfHanoiScene):
     def construct(self):
@@ -771,14 +771,14 @@ class ExampleFirstMoves(TowersOfHanoiScene):
         cross = TexMobject("\\times")
         cross.set_fill(RED, 0.7)
 
-        self.dither()
+        self.wait()
         self.play(
             self.disks[0].set_fill, YELLOW,
             self.disks[0].label.highlight, BLACK
         )
-        self.dither()
+        self.wait()
         self.move_disk(0)
-        self.dither()
+        self.wait()
         self.play(
             self.disks[1].set_fill, YELLOW_D,
             self.disks[1].label.highlight, BLACK
@@ -786,14 +786,14 @@ class ExampleFirstMoves(TowersOfHanoiScene):
         self.move_disk_to_peg(1, 1)
         cross.replace(self.disks[1])
         self.play(FadeIn(cross))
-        self.dither()
+        self.wait()
         self.move_disk_to_peg(1, 2, added_anims = [FadeOut(cross)])
-        self.dither()
+        self.wait()
         for x in ruler_sequence[2:9]:
             self.move_disk(x)
         for x in ruler_sequence[9:]:
             self.move_disk(x, run_time = 0.5, stay_on_peg = False)
-        self.dither()
+        self.wait()
 
 class KeithShowingBinary(Scene):
     def construct(self):
@@ -840,7 +840,7 @@ class KeithShowingBinary(Scene):
                 else:
                     added_anims.append(Blink(morty))
             self.play(get_bit_flip(), *added_anims)
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(randy),
             morty.change_mode, "plain",
@@ -854,10 +854,10 @@ class KeithShowingBinary(Scene):
             Write(randy.bubble.content)
         )
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(morty.change_mode, "hooray")
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
 class FocusOnRhythm(Scene):
     def construct(self):
@@ -914,7 +914,7 @@ class IntroduceBase10(Scene):
             run_time = 2
         )
         self.play(Write(title))
-        self.dither()
+        self.wait()
         self.title = title
 
     def list_digits(self):
@@ -925,7 +925,7 @@ class IntroduceBase10(Scene):
         digits.next_to(self.title, DOWN, buff = LARGE_BUFF)
         digits.shift(2*RIGHT)
         self.play(Write(digits, lag_factor = 5))
-        self.dither()
+        self.wait()
 
 class RhythmOfDecimalCounting(CountingScene):
     CONFIG = {
@@ -945,18 +945,18 @@ class RhythmOfDecimalCounting(CountingScene):
             GrowFromCenter(brace),
             Write(two_digits, run_time = 1)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             Transform(brace, one_brace),
             Transform(two_digits, tens_place)
         )
-        self.dither()
+        self.wait()
         ten_group.save_state()
         self.play(
             ten_group.scale_in_place, 7,
             ten_group.shift, 2*(DOWN+LEFT),
         )
-        self.dither()
+        self.wait()
         self.play(
             ten_group.restore,
             *map(FadeOut, [brace, two_digits])
@@ -965,7 +965,7 @@ class RhythmOfDecimalCounting(CountingScene):
         for x in range(89):
             self.increment(run_time_per_anim = 0.25)
         self.increment(run_time_per_anim = 1)
-        self.dither()
+        self.wait()
 
         hundred_group = self.curr_configurations[2][0]
         hundred_group.save_state()
@@ -973,9 +973,9 @@ class RhythmOfDecimalCounting(CountingScene):
             hundred_group.scale, 14,
             hundred_group.to_corner, DOWN+LEFT
         )
-        self.dither()
+        self.wait()
         self.play(hundred_group.restore)
-        self.dither()
+        self.wait()
         groups = [
             VGroup(*pair)
             for pair in zip(self.dot_templates, self.curr_configurations)
@@ -1044,12 +1044,12 @@ class IntroduceBinaryCounting(BinaryCountingScene):
             GrowFromCenter(brace),
             Write(bits)
         )
-        self.dither()
+        self.wait()
         bits.save_state()
         self.play(Transform(bits, binary_digits))
-        self.dither()
+        self.wait()
         self.play(bits.restore)
-        self.dither()
+        self.wait()
 
     def initial_counting(self):
         randy = Randolph().to_corner(DOWN+LEFT)
@@ -1061,7 +1061,7 @@ class IntroduceBinaryCounting(BinaryCountingScene):
 
         self.play(self.number_mob.set_fill, self.power_colors[0], 1)
         self.increment()
-        self.dither()
+        self.wait()
         self.start_dot = self.curr_configurations[0][0]
 
         ##Up to 10
@@ -1081,7 +1081,7 @@ class IntroduceBinaryCounting(BinaryCountingScene):
             randy.look_at, self.number_mob,
             Write(bubble.content)
         )
-        self.dither()
+        self.wait()
         curr_content = bubble.content
         bubble.write("$1 \\! \\cdot \\! 2+$", "$0$")
         bubble.content[0][0].highlight(self.power_colors[1])
@@ -1100,7 +1100,7 @@ class IntroduceBinaryCounting(BinaryCountingScene):
         one.highlight(zero.get_color())
         self.play(Blink(randy))
         self.increment(added_anims = [Transform(zero, one)])
-        self.dither()
+        self.wait()
 
         #Up to 100
         curr_content = bubble.content
@@ -1134,7 +1134,7 @@ class IntroduceBinaryCounting(BinaryCountingScene):
         )
         for x in range(8):
             self.increment(total_run_time = 1)
-        self.dither()
+        self.wait()
         for x in range(8):
             self.increment(total_run_time = 1.5)
 
@@ -1208,12 +1208,12 @@ class BinaryCountingAtEveryScale(Scene):
             submobject_mode = "lagged_start",
             lag_factor = self.num_bits
         ))
-        self.dither()
+        self.wait()
         self.play(
             get_run_through(bit_mobs[2**(self.num_bits-1)+1:]),
             Write(again)
         )
-        self.dither()
+        self.wait()
 
 class BinaryCountingAtSmallestScale(BinaryCountingAtEveryScale):
     CONFIG = {
@@ -1271,7 +1271,7 @@ class IntroduceSolveByCounting(TowersOfHanoiScene):
             disk[1].set_fill, BLACK,
             last_bit.set_fill, YELLOW,
         )
-        self.dither()
+        self.wait()
         self.move_disk(0, run_time = 2)
         self.play(
             last_bit.restore,
@@ -1294,13 +1294,13 @@ class IntroduceSolveByCounting(TowersOfHanoiScene):
             twos_bit.set_fill, MAROON_B,
         )
         self.move_disk(1, run_time = 2)
-        self.dither()
+        self.wait()
         self.move_disk_to_peg(1, 1, stay_on_peg = False)
         cross = TexMobject("\\times")
         cross.replace(disk)
         cross.set_fill(RED, opacity = 0.5)
         self.play(FadeIn(cross))
-        self.dither()
+        self.wait()
         self.move_disk_to_peg(
             1, 2, stay_on_peg = False, 
             added_anims = [FadeOut(cross)]
@@ -1317,7 +1317,7 @@ class IntroduceSolveByCounting(TowersOfHanoiScene):
             added_anims = [self.get_increment_animation()],
             run_time = 2
         )
-        self.dither()
+        self.wait()
 
         ##Fourth increment
         self.play(
@@ -1341,11 +1341,11 @@ class IntroduceSolveByCounting(TowersOfHanoiScene):
             FadeOut(brace),
             FadeOut(words)
         )
-        self.dither()
+        self.wait()
         for disk_index in 0, 1, 0:
             self.play(self.get_increment_animation())
             self.move_disk(disk_index)
-        self.dither()
+        self.wait()
 
         ##Eighth incremement
         brace = braces[3]
@@ -1373,7 +1373,7 @@ class IntroduceSolveByCounting(TowersOfHanoiScene):
         for disk_index in get_ruler_sequence(2):
             self.play(self.get_increment_animation())
             self.move_disk(disk_index, stay_on_peg = False)
-        self.dither()
+        self.wait()
 
     def initialize_bit_mobs(self):
         bit_mobs = VGroup(*[
@@ -1420,7 +1420,7 @@ class SolveSixDisksByCounting(IntroduceSolveByCounting):
                 stay_on_peg = self.stay_on_peg,
                 run_time = self.run_time_per_move,
             )
-        self.dither()
+        self.wait()
 
 class RecursionTime(Scene):
     def construct(self):
@@ -1452,7 +1452,7 @@ class RecursionTime(Scene):
             bubble.content.gradient_highlight, BLUE_A, BLUE_E
         )
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
 class RecursiveSolution(TowersOfHanoiScene):
     CONFIG = {
@@ -1497,13 +1497,13 @@ class RecursiveSolution(TowersOfHanoiScene):
         )
         big_disk.add(self.eyes)        
         self.blink()
-        self.dither()
+        self.wait()
         self.change_mode("angry")
         for x in range(2):
-            self.dither()
+            self.wait()
             self.shake(big_disk)
             self.blink()
-            self.dither()
+            self.wait()
         self.change_mode("plain")
         self.look_at(self.peg_labels[2])
         self.look_at(self.disks[0])
@@ -1515,7 +1515,7 @@ class RecursiveSolution(TowersOfHanoiScene):
             FadeIn(sub_step_brace),
             Write(sub_steps[0], run_time = 1)
         ])
-        self.dither()
+        self.wait()
         self.move_disk_to_peg(0, 0, run_time = 2, added_anims = [
             self.eyes.look_at_anim(self.pegs[0].get_top())
         ])
@@ -1545,7 +1545,7 @@ class RecursiveSolution(TowersOfHanoiScene):
             ShowCreation(bubble),
             Write(bubble.content)
         )
-        self.dither()
+        self.wait()
         self.blink()
         self.play(*map(FadeOut, [bubble, bubble.content]))
         big_disk.remove(self.eyes)
@@ -1554,7 +1554,7 @@ class RecursiveSolution(TowersOfHanoiScene):
             Write(sub_steps[2])
         ])
         self.play(FadeOut(self.eyes))
-        self.dither()
+        self.wait()
 
         #Highlight subproblem
         self.play(
@@ -1575,7 +1575,7 @@ class RecursiveSolution(TowersOfHanoiScene):
             Write(q_mark),
             sub_steps[-1].highlight, YELLOW
         )
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(sub_sub_steps_brace),
             *map(FadeOut, [arc, q_mark])
@@ -1668,9 +1668,9 @@ class KeithSaysBigToSmall(Scene):
             ShowCreation(bubble),
             Write(bubble.content)
         )
-        self.dither()
+        self.wait()
         self.play(Blink(keith))
-        self.dither()
+        self.wait()
 
 class CodeThisUp(Scene):
     def construct(self):
@@ -1693,15 +1693,15 @@ class CodeThisUp(Scene):
             morty.look_at, point
         )
         self.play(Blink(keith))
-        self.dither(2)
+        self.wait(2)
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
         self.play(
             keith.change_mode, "hooray",
             keith.look_at, morty.eyes
         )
         self.play(Blink(keith))
-        self.dither()
+        self.wait()
         self.play(
             keith.change_mode, "speaking",
             keith.look_at, morty.eyes,
@@ -1710,9 +1710,9 @@ class CodeThisUp(Scene):
             morty.change_mode, "happy",
             morty.look_at, keith.eyes,
         )
-        self.dither()
+        self.wait()
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
 class HanoiSolutionCode(Scene):
     def construct(self):
@@ -1733,7 +1733,7 @@ class NoRoomForInefficiency(Scene):
             Write(bubble.content)
         )
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
 class WhyDoesBinaryAchieveThis(Scene):
     def construct(self):
@@ -1756,9 +1756,9 @@ class WhyDoesBinaryAchieveThis(Scene):
             Write(bubble.content)
         )
         self.play(keith.change_mode, "happy")
-        self.dither()
+        self.wait()
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
 class BothAreSelfSimilar(Scene):
     def construct(self):
@@ -1774,7 +1774,7 @@ class BothAreSelfSimilar(Scene):
             Write(bubble.content)
         )
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
 class LargeScaleHanoiDecomposition(TowersOfHanoiScene):
     CONFIG = {
@@ -1785,11 +1785,11 @@ class LargeScaleHanoiDecomposition(TowersOfHanoiScene):
     }
     def construct(self):
         self.move_subtower_to_peg(7, 1, stay_on_peg = False)
-        self.dither()
+        self.wait()
         self.move_disk(7, stay_on_peg = False)
-        self.dither()
+        self.wait()
         self.move_subtower_to_peg(7, 2, stay_on_peg = False)
-        self.dither()
+        self.wait()
 
 class SolveTwoDisksByCounting(SolveSixDisksByCounting):
     CONFIG = {
@@ -1806,7 +1806,7 @@ class SolveTwoDisksByCounting(SolveSixDisksByCounting):
                 disk_index, 
                 stay_on_peg = False,
             )
-            self.dither()
+            self.wait()
 
 class ShowFourDiskFourBitsParallel(IntroduceSolveByCounting):
     CONFIG = {
@@ -1816,19 +1816,19 @@ class ShowFourDiskFourBitsParallel(IntroduceSolveByCounting):
     def construct(self):
         self.initialize_bit_mobs()
         self.counting_subtask()
-        self.dither()
+        self.wait()
         self.disk_subtask()
-        self.dither()
+        self.wait()
         self.play(self.get_increment_animation())
         self.move_disk(
             self.num_disks-1, 
             stay_on_peg = False,
         )
-        self.dither()
+        self.wait()
         self.counting_subtask()
-        self.dither()
+        self.wait()
         self.disk_subtask()
-        self.dither()
+        self.wait()
 
     def disk_subtask(self):
         sequence = get_ruler_sequence(self.num_disks-2)
@@ -1899,7 +1899,7 @@ class CoolRight(Scene):
             Write(bubble.content)
         )
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
         curr_content = bubble.content
         bubble.write("It gets \\\\ better...")
         self.play(
@@ -1907,9 +1907,9 @@ class CoolRight(Scene):
             morty.change_mode, "hooray",
             morty.look, OUT
         )
-        self.dither()
+        self.wait()
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
 ############ Part 2 ############
 
@@ -1940,17 +1940,17 @@ class MentionLastVideo(Scene):
         self.play(Write(name))
         self.play(ShowCreation(arrow))
         self.play(Blink(morty))
-        self.dither(2)
+        self.wait(2)
         self.play(
             morty.change_mode, "confused",
             morty.look_at, point
         )
         self.play(Blink(keith))
-        self.dither(2)
+        self.wait(2)
         self.play(
             morty.change_mode, "surprised"
         )
-        self.dither()
+        self.wait()
 
 class IntroduceConstrainedTowersOfHanoi(ConstrainedTowersOfHanoiScene):
     CONFIG = {
@@ -1966,12 +1966,12 @@ class IntroduceConstrainedTowersOfHanoi(ConstrainedTowersOfHanoiScene):
         self.disks.save_state()
         for index in 0, 0, 1, 0:
             self.move_disk(index)
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
 
         self.play(self.disks.restore)
         self.disk_tracker = [set(range(self.num_disks)), set([]), set([])]
-        self.dither()
+        self.wait()
         self.move_disk_to_peg(0, 1)
         self.move_disk_to_peg(1, 2)
         self.play(ShowCreation(self.big_curved_arrow))
@@ -1984,7 +1984,7 @@ class IntroduceConstrainedTowersOfHanoi(ConstrainedTowersOfHanoiScene):
         big_cross.set_fill(opacity = 0.5)
         self.play(FadeIn(cross))
         self.play(FadeIn(big_cross))
-        self.dither()
+        self.wait()
 
 
     def add_arcs(self):
@@ -2004,7 +2004,7 @@ class IntroduceConstrainedTowersOfHanoi(ConstrainedTowersOfHanoiScene):
 
         self.play(ShowCreation(curved_arrow1))
         self.play(ShowCreation(curved_arrow2))
-        self.dither()
+        self.wait()
 
         big_curved_arrow = Arc(start_angle = 5*np.pi/6, angle = -2*np.pi/3)
         big_curved_arrow.scale_to_fit_width(0.9*self.pegs.get_width())
@@ -2032,9 +2032,9 @@ class StillRecruse(Scene):
         )
         self.play(morty.change_mode, "hooray")
         self.play(Blink(keith))
-        self.dither()
+        self.wait()
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
 class RecursiveSolutionToConstrained(RecursiveSolution):
     CONFIG = {
@@ -2098,7 +2098,7 @@ class RecursiveSolutionToConstrained(RecursiveSolution):
         self.look_at(self.pegs[0].get_top())
         self.change_mode("angry")
         self.shake(big_disk)
-        self.dither()
+        self.wait()
 
         #Talk about tower blocking
         tower = VGroup(*self.disks[:self.num_disks-1])
@@ -2117,16 +2117,16 @@ class RecursiveSolutionToConstrained(RecursiveSolution):
         self.shake(tower, RIGHT, added_anims = [Animation(big_disk)])
         self.blink()
         self.shake(big_disk)
-        self.dither()
+        self.wait()
         self.move_subtower_to_peg(self.num_disks-1, 1, added_anims = [
             Transform(arrow, new_arrow),
             self.eyes.look_at_anim(self.pegs[1])
         ])
         self.play(Write(blocking[0]))
         self.shake(big_disk, RIGHT)
-        self.dither()
+        self.wait()
         self.blink()
-        self.dither()
+        self.wait()
         self.play(FadeIn(sub_steps_brace))
         self.move_subtower_to_peg(self.num_disks-1, 2, added_anims = [
             FadeOut(blocking),
@@ -2140,7 +2140,7 @@ class RecursiveSolutionToConstrained(RecursiveSolution):
         self.move_disk_to_peg(self.num_disks-1, 1, added_anims = [
             Write(sub_steps[1], run_time = 1),
         ])
-        self.dither()
+        self.wait()
         self.move_subtower_to_peg(self.num_disks-1, 0, added_anims = [
             self.eyes.look_at_anim(self.pegs[0]),
             Write(sub_steps[2], run_time = 1),
@@ -2149,7 +2149,7 @@ class RecursiveSolutionToConstrained(RecursiveSolution):
         self.move_disk_to_peg(self.num_disks-1, 2, added_anims = [
             Write(sub_steps[3], run_time = 1),
         ])
-        self.dither()
+        self.wait()
         big_disk.remove(self.eyes)
         self.move_subtower_to_peg(self.num_disks-1, 2, added_anims = [
             self.eyes.look_at_anim(self.pegs[2].get_top()),
@@ -2186,7 +2186,7 @@ class RecursiveSolutionToConstrained(RecursiveSolution):
         self.move_disk_to_peg(num_disks-1, 1, added_anims = [
             Write(sub_sub_steps[1], run_time = 1)
         ])
-        self.dither()
+        self.wait()
         self.move_subtower_to_peg(num_disks-1, 0, added_anims = [
             self.eyes.look_at_anim(self.pegs[0]),
             Write(sub_sub_steps[2], run_time = 1)
@@ -2195,13 +2195,13 @@ class RecursiveSolutionToConstrained(RecursiveSolution):
         self.move_disk_to_peg(num_disks-1, 2, added_anims = [
             Write(sub_sub_steps[3], run_time = 1)
         ])
-        self.dither()
+        self.wait()
         big_disk.remove(self.eyes)
         self.move_subtower_to_peg(num_disks-1, 2, added_anims = [
             self.eyes.look_at_anim(self.pegs[2].get_top()),
             Write(sub_sub_steps[4], run_time = 1)
         ])
-        self.dither()
+        self.wait()
 
         #Show smallest subdivisions
         smaller_subdivision = VGroup(
@@ -2234,7 +2234,7 @@ class RecursiveSolutionToConstrained(RecursiveSolution):
             )
         self.blink()
         self.play(FadeOut(self.eyes))
-        self.dither()
+        self.wait()
 
         #final movements
         movements = [
@@ -2252,7 +2252,7 @@ class RecursiveSolutionToConstrained(RecursiveSolution):
                 disk_index, peg_index, 
                 stay_on_peg = False
             )
-        self.dither()
+        self.wait()
 
 class SimpleConstrainedBreakdown(TowersOfHanoiScene):
     CONFIG = {
@@ -2260,15 +2260,15 @@ class SimpleConstrainedBreakdown(TowersOfHanoiScene):
     }
     def construct(self):
         self.move_subtower_to_peg(self.num_disks-1, 2)
-        self.dither()
+        self.wait()
         self.move_disk(self.num_disks-1)
-        self.dither()
+        self.wait()
         self.move_subtower_to_peg(self.num_disks-1, 0)
-        self.dither()
+        self.wait()
         self.move_disk(self.num_disks-1)
-        self.dither()
+        self.wait()
         self.move_subtower_to_peg(self.num_disks-1, 2)
-        self.dither()
+        self.wait()
 
 class SolveConstrainedByCounting(ConstrainedTowersOfHanoiScene):
     CONFIG = {
@@ -2348,7 +2348,7 @@ class CompareNumberSystems(Scene):
                     FadeIn(symbol.name)
                 ]
             self.play(Write(symbol, run_time = 2), *added_anims)
-            self.dither()
+            self.wait()
         self.play(FadeIn(keith))
         self.play(keith.change_mode, "confused")
         self.play(keith.look_at, zero_to_nine)
@@ -2366,14 +2366,14 @@ class CompareNumberSystems(Scene):
             morty.look_at, zero_one_two
         )
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
         self.play(
             morty.shrug,
             morty.look_at, keith.eyes,
             keith.shrug,
             keith.look_at, morty.eyes
         )
-        self.dither()
+        self.wait()
         self.play(
             morty.change_mode, "hesitant",
             morty.look_at, zero_one.name,
@@ -2382,7 +2382,7 @@ class CompareNumberSystems(Scene):
         )
         self.play(Blink(morty))
         self.play(Write(dots, run_time = 3))
-        self.dither()
+        self.wait()
 
 class IntroduceTernaryCounting(CountingScene):
     CONFIG = {
@@ -2397,7 +2397,7 @@ class IntroduceTernaryCounting(CountingScene):
     def construct(self):
         for x in range(2):
             self.increment()
-        self.dither()
+        self.wait()
         self.increment()
         brace = Brace(self.number_mob[-1])
         threes_place = brace.get_text("Three's place")
@@ -2405,17 +2405,17 @@ class IntroduceTernaryCounting(CountingScene):
             GrowFromCenter(brace),
             Write(threes_place)
         )
-        self.dither()
+        self.wait()
         for x in range(6):
             self.increment()
-            self.dither()
+            self.wait()
         new_brace = Brace(self.number_mob[-1])
         nines_place = new_brace.get_text("Nine's place")
         self.play(
             Transform(brace, new_brace),
             Transform(threes_place, nines_place),
         )
-        self.dither()
+        self.wait()
         for x in range(9):
             self.increment()
 
@@ -2481,7 +2481,7 @@ class TernaryCountingSelfSimilarPattern(Scene):
                 )
             else:
                 self.play(get_increment())
-            self.dither()
+            self.wait()
 
 class TernaryCountingSelfSimilarPatternFiveTrits(TernaryCountingSelfSimilarPattern):
     CONFIG = {
@@ -2493,7 +2493,7 @@ class CountInTernary(IntroduceTernaryCounting):
     def construct(self):
         for x in range(9):
             self.increment()
-        self.dither()
+        self.wait()
 
 class SolveConstrainedWithTernaryCounting(ConstrainedTowersOfHanoiScene):
     CONFIG = {
@@ -2502,7 +2502,7 @@ class SolveConstrainedWithTernaryCounting(ConstrainedTowersOfHanoiScene):
     def construct(self):
         for x in range(3**self.num_disks-1):
             self.increment(run_time = 0.75)
-        self.dither()
+        self.wait()
 
     def setup(self):
         ConstrainedTowersOfHanoiScene.setup(self)
@@ -2569,17 +2569,17 @@ class DescribeSolutionByCountingToConstrained(SolveConstrainedWithTernaryCountin
             Write(word, run_time = 1),
             self.curr_ternary_mob[0].highlight, color
         )
-        self.dither()
+        self.wait()
         self.play(
             self.disks[0].set_fill, color,
             self.disks[0].label.set_fill, BLACK,
         )
         self.move_next_disk(stay_on_peg = True)
-        self.dither()
+        self.wait()
         self.ternary_mobs[2][0].highlight(color)
         self.increment_number()
         self.move_next_disk(stay_on_peg = True)
-        self.dither()
+        self.wait()
         
         #Count 10
         color = MAROON_B
@@ -2590,25 +2590,25 @@ class DescribeSolutionByCountingToConstrained(SolveConstrainedWithTernaryCountin
             Transform(word, words[1]),
             self.curr_ternary_mob[1].highlight, color
         )
-        self.dither()
+        self.wait()
         self.play(
             self.disks[1].set_fill, color,
             self.disks[1].label.set_fill, BLACK,
         )
         self.move_next_disk(stay_on_peg = True)
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [brace, word]))
 
         #Count up to 22
         for x in range(5):
             self.increment()
-            self.dither()
+            self.wait()
 
         #Count to 100
         color = RED
         words[2].highlight(color)
 
-        self.dither()
+        self.wait()
         self.increment_number()
         self.play(
             FadeIn(braces[2]),
@@ -2617,9 +2617,9 @@ class DescribeSolutionByCountingToConstrained(SolveConstrainedWithTernaryCountin
             self.disks[2].set_fill, color,
             self.disks[2].label.set_fill, BLACK,
         )
-        self.dither()
+        self.wait()
         self.move_next_disk(stay_on_peg = True)
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [braces[2], words[2]]))
 
         for x in range(20):
@@ -2633,10 +2633,10 @@ class Describe2222(Scene):
         VGroup(ternary_mob, brace, description).scale(1.5)
 
         self.add(ternary_mob)
-        self.dither()
+        self.wait()
         self.play(GrowFromCenter(brace))
         self.play(Write(description))
-        self.dither()
+        self.wait()
 
 class KeithAsksAboutConfigurations(Scene):
     def construct(self):
@@ -2655,7 +2655,7 @@ class KeithAsksAboutConfigurations(Scene):
         )
         self.play(Blink(morty))
         self.play(morty.change_mode, "pondering")
-        self.dither()
+        self.wait()
 
 class AskAboutConfigurations(SolveConstrainedWithTernaryCounting):
     def construct(self):
@@ -2666,7 +2666,7 @@ class AskAboutConfigurations(SolveConstrainedWithTernaryCounting):
 
         for x in range(15):
             self.remove(self.curr_ternary_mob)
-            self.dither(2)
+            self.wait(2)
             for y in range(7):
                 self.increment(run_time = 0)
 
@@ -2704,7 +2704,7 @@ class AnswerConfigurationsCount(TowersOfHanoiScene):
                 disk.shift, x_diff*RIGHT
             )
             self.play(disk.restore)
-            self.dither()
+            self.wait()
 
     def get_parentheticals(self, top_mob):
         parentheticals = VGroup(*reversed([
@@ -2760,7 +2760,7 @@ class ThisIsMostEfficientText(Scene):
         text.scale_to_fit_width(2*SPACE_WIDTH - 1)
         text.to_edge(DOWN)
         self.play(Write(text))
-        self.dither(2)
+        self.wait(2)
 
 class RepeatingConfiguraiton(Scene):
     def construct(self):
@@ -2788,7 +2788,7 @@ class RepeatingConfiguraiton(Scene):
             ShowCreation(special_arrows),
             special_dots.highlight, RED
         )
-        self.dither()
+        self.wait()
         self.play(
             mid_mobs.shift, 2*DOWN,
             FadeOut(special_arrows)
@@ -2797,7 +2797,7 @@ class RepeatingConfiguraiton(Scene):
             ShowCreation(mid_arrow),
             Write(more_efficient)
         )
-        self.dither()
+        self.wait()
 
 class ShowSomeGraph(Scene):
     def construct(self):
@@ -2838,7 +2838,7 @@ class ShowSomeGraph(Scene):
                 submobject_mode = "lagged_start",
                 run_time = 2,
             ))
-        self.dither()
+        self.wait()
 
 class SierpinskiGraphScene(Scene):
     CONFIG = {
@@ -2976,7 +2976,7 @@ class SierpinskiGraphScene(Scene):
         )
         self.remove(everything)
         self.add(*everything)
-        self.dither()
+        self.wait()
 
 class IntroduceGraphStructure(SierpinskiGraphScene):
     CONFIG = {
@@ -3005,7 +3005,7 @@ class IntroduceGraphStructure(SierpinskiGraphScene):
                 node.scale_to_fit_height, 2*SPACE_HEIGHT-2,
                 node.next_to, ORIGIN, vect
             )
-            self.dither()
+            self.wait()
             self.play(node.restore)
             node.saved_state = None
             vect = -vect
@@ -3035,10 +3035,10 @@ class IntroduceGraphStructure(SierpinskiGraphScene):
         )
         edge.target = self.node_indices_to_edge(12, 14)
         self.play(ShowCreation(edge))
-        self.dither()
+        self.wait()
         for node in nodes:
             self.play(ShowCreation(node.arc))
-        self.dither()
+        self.wait()
         self.play(*[
             FadeOut(node.arc)
             for node in nodes
@@ -3047,9 +3047,9 @@ class IntroduceGraphStructure(SierpinskiGraphScene):
             MoveToTarget(edge),
             *[node.restore for node in nodes]
         )
-        self.dither()
+        self.wait()
         self.play(ShowCreation(self.edges, run_time = 3))
-        self.dither()
+        self.wait()
 
     def tour_structure(self):
         for n in range(3):
@@ -3062,12 +3062,12 @@ class IntroduceGraphStructure(SierpinskiGraphScene):
                 for disk in self.disks[0]
             ]
         )
-        self.dither()
+        self.wait()
         self.zoom_into_node(0, 3)
         self.zoom_into_node(15, 1)
-        self.dither()
+        self.wait()
         self.zoom_into_node(20, 1)
-        self.dither()
+        self.wait()
 
 class DescribeTriforcePattern(SierpinskiGraphScene):
     CONFIG = {
@@ -3096,16 +3096,16 @@ class DescribeTriforcePattern(SierpinskiGraphScene):
             node.target.center().next_to(ORIGIN, vect)
 
         self.play(*map(MoveToTarget, nodes))
-        self.dither()
+        self.wait()
         self.play(*[node.restore for node in nodes])
         bold_edges = [
             self.node_indices_to_edge(*pair).copy().set_stroke(self.disk_color, 6)
             for pair in self.index_pairs
         ]
         self.play(ShowCreation(bold_edges[0]))
-        self.dither()
+        self.wait()
         self.play(*map(ShowCreation, bold_edges[1:]))
-        self.dither()
+        self.wait()
 
         power_of_three = 3**(self.scale-1)
         index_sets = [
@@ -3126,13 +3126,13 @@ class DescribeTriforcePattern(SierpinskiGraphScene):
                 rate_func = wiggle
             )
         self.play(*map(wiggle_island, islands[:2]))
-        self.dither()
+        self.wait()
         self.play(wiggle_island(islands[2]))
-        self.dither()
+        self.wait()
         for index_set in index_sets:
             self.zoom_into_nodes(index_set)
         self.zoom_into_nodes(list(it.chain(*index_sets)))
-        self.dither()
+        self.wait()
 
 class TriforcePatternWord(Scene):
     def construct(self):
@@ -3140,7 +3140,7 @@ class TriforcePatternWord(Scene):
         word.scale(2)
         word.to_corner(DOWN+RIGHT)
         self.play(Write(word))
-        self.dither(2)
+        self.wait(2)
 
 class DescribeOrderTwoPattern(DescribeTriforcePattern):
     CONFIG = {
@@ -3173,13 +3173,13 @@ class ShowPathThroughGraph(SierpinskiGraphScene):
             )
             for n1, n2 in zip(self.nodes, self.nodes[1:])
         ])
-        self.dither()
+        self.wait()
         self.play(ShowCreation(
             arrows,
             rate_func = None,
             run_time = 5
         ))
-        self.dither(2)
+        self.wait(2)
         for index in range(9):
             self.zoom_into_node(index)
 
@@ -3191,7 +3191,7 @@ class MentionFinalAnimation(Scene):
         bubble.write("Before the final\\\\ animation...")
 
         self.add(morty)
-        self.dither()
+        self.wait()
         self.play(
             morty.change_mode, "speaking",
             morty.look_at, bubble.content,
@@ -3199,9 +3199,9 @@ class MentionFinalAnimation(Scene):
             Write(bubble.content)
         )
         self.play(Blink(morty))
-        self.dither(2)
+        self.wait(2)
         self.play(Blink(morty))
-        self.dither(2)
+        self.wait(2)
 
 class PatreonThanks(Scene):
     CONFIG = {
@@ -3255,7 +3255,7 @@ class PatreonThanks(Scene):
         for patrons in left_patrons, right_patrons:
             for index in 0, -1:
                 self.play(morty.look_at, patrons[index])
-                self.dither()
+                self.wait()
 
 class MortyLookingAtRectangle(Scene):
     def construct(self):
@@ -3273,15 +3273,15 @@ class MortyLookingAtRectangle(Scene):
         self.play(morty.change_mode, "raise_right_hand")
         self.play(Write(url))
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
         self.play(
             url.restore,
             morty.change_mode, "happy"
         )
         self.play(ShowCreation(rect))
-        self.dither()
+        self.wait()
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
 class ShowSierpinskiCurvesOfIncreasingOrder(Scene):
     CONFIG = {
@@ -3310,20 +3310,20 @@ class ShowSierpinskiCurvesOfIncreasingOrder(Scene):
         graph, path = graphs[0], paths[0]
 
         self.add(graph)
-        self.dither()
+        self.wait()
         self.play(ShowCreation(path, run_time = 3, rate_func = None))
-        self.dither()   
+        self.wait()   
         self.play(graph.fade, 0.5, Animation(path))
         for other_graph in graphs[1:]:
             other_graph.fade(0.5)
-        self.dither()
+        self.wait()
         for new_graph, new_path in zip(graphs[1:], paths[1:]):
             self.play(
                 Transform(graph, new_graph),
                 Transform(path, new_path),
                 run_time = 2
             )
-            self.dither()
+            self.wait()
         self.path = path
 
     def get_path(self, graph_scene):

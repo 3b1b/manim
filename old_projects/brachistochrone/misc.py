@@ -52,7 +52,7 @@ class PhysicalIntuition(Scene):
 
         for term in terms.split():
             self.play(ShimmerIn(term, run_time = 0.5))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(plane), ShowCreation(axes))
         self.play(*[
             Transform(*pair)
@@ -100,7 +100,7 @@ class TimeLine(Scene):
         timeline.shift(-centers[0].get_center())
 
         self.add(timeline)
-        self.dither()
+        self.wait()
         run_times = iter([3, 1])
         for point, event in zip(centers[1:], dated_events):
             self.play(ApplyMethod(
@@ -122,7 +122,7 @@ class TimeLine(Scene):
                 ShimmerIn(date_mob)
             )
             self.play(FadeIn(picture))
-            self.dither(3)
+            self.wait(3)
             self.play(*map(FadeOut, [event_mob, date_mob, line, picture]))
 
 
@@ -198,29 +198,29 @@ class StayedUpAllNight(Scene):
             Rotating(minute_hand, radians = -12*2*np.pi, **kwargs),
             run_time = 5
         )
-        self.dither()
+        self.wait()
         self.clear()
         self.add(newton)
         clock.ingest_submobjects()
         self.play(Transform(clock, solution))
         self.remove(clock)
         self.add(solution)
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(phil_trans),
             Transform(solution, new_solution)
         )
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(not_newton))
         phil_trans.add(solution, not_newton)
-        self.dither()
+        self.wait()
         self.play(*map(ShimmerIn, newton_complaint.split()))
-        self.dither()
+        self.wait()
         self.play(
             ShimmerIn(dunned_def),
             ShowCreation(dunned_arrow)
         )
-        self.dither()
+        self.wait()
         self.remove(dunned_def, dunned_arrow)
         self.play(FadeOut(newton_complaint))
         self.remove(newton_complaint)
@@ -229,9 +229,9 @@ class StayedUpAllNight(Scene):
             GrowFromCenter(johann)
         )
         self.remove(newton)        
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(johann_quote))
-        self.dither()
+        self.wait()
 
 
 class ThetaTGraph(Scene):
@@ -270,14 +270,14 @@ class ThetaTGraph(Scene):
             ShimmerIn(q_mark),
             ShowCreation(graph)
         )
-        self.dither()
+        self.wait()
         self.play(
             Transform(q_mark, stars),
             Transform(graph, line)
         )
-        self.dither()
+        self.wait()
         self.play(Transform(graph, squiggle))
-        self.dither()
+        self.wait()
 
 
 class SolutionsToTheBrachistochrone(Scene):
@@ -318,7 +318,7 @@ class SolutionsToTheBrachistochrone(Scene):
         self.play(ShowCreation(x_axis), ShimmerIn(x_label))
         self.play(ShowCreation(y_axis), ShimmerIn(y_label))
         self.play(ShowCreation(cycloids))
-        self.dither()
+        self.wait()
         self.play(
             Transform(cycloids, lines),
             Transform(x_axis, t_axis),
@@ -326,9 +326,9 @@ class SolutionsToTheBrachistochrone(Scene):
             Transform(y_label, theta_label),
             run_time = 2
         )
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(words))
-        self.dither()
+        self.wait()
 
 
 class VideoLayout(Scene):
@@ -376,10 +376,10 @@ class VideoLayout(Scene):
         self.play(ShowCreation(line))
         for brace in left_brace, right_brace:
             self.play(GrowFromCenter(brace))
-            self.dither()
+            self.wait()
             for word in brace.words:
                 self.play(ShimmerIn(word))
-                self.dither()
+                self.wait()
 
 
 
@@ -416,7 +416,7 @@ class ShortestPathProblem(Scene):
             path, line,
             path_func = path_along_arc(np.pi)
         ))
-        self.dither()
+        self.wait()
 
 
 class MathBetterThanTalking(Scene):
@@ -430,7 +430,7 @@ class MathBetterThanTalking(Scene):
         self.add(mathy)
         self.play(ShowCreation(bubble))
         self.play(ShimmerIn(bubble.content))
-        self.dither()
+        self.wait()
         self.play(ApplyMethod(
             mathy.blink, 
             rate_func = squish_rate_func(there_and_back, 0.4, 0.6)
@@ -447,7 +447,7 @@ class DetailsOfProofBox(Scene):
             ShowCreation(rect),
             ShimmerIn(words)
         )
-        self.dither()
+        self.wait()
 
 
 
@@ -479,7 +479,7 @@ class TalkedAboutSnellsLaw(Scene):
                 talker.blink, 
                 rate_func = squish_rate_func(there_and_back)
             ))
-            self.dither()
+            self.wait()
             self.remove(talker.bubble, talker.bubble.content)
 
 
@@ -493,7 +493,7 @@ class YetAnotherMarkLevi(Scene):
 
         self.add(levi)
         self.play(ShimmerIn(words))
-        self.dither(2)
+        self.wait(2)
 
 
 

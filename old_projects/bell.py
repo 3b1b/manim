@@ -125,7 +125,7 @@ class PhotonPassesCompletelyOrNotAtAll(DirectionOfPolarizationScene):
                 green_flash,
                 red_flash,
             )
-            self.dither()
+            self.wait()
 
 class PhotonPassesCompletelyOrNotAtAllForWavesVideo(PhotonPassesCompletelyOrNotAtAll):
     CONFIG = {
@@ -145,7 +145,7 @@ class DirectionOfPolarization(DirectionOfPolarizationScene):
         em_wave = self.em_wave
 
         self.add(em_wave)
-        self.dither(2)
+        self.wait(2)
         self.move_camera(
             phi = self.target_phi,
             theta = self.target_theta
@@ -153,8 +153,8 @@ class DirectionOfPolarization(DirectionOfPolarizationScene):
         self.play(Write(words, run_time = 1))
         for angle in 2*np.pi/3, -np.pi/3, np.pi/4:
             self.change_polarization_direction(angle)
-            self.dither()
-        self.dither(2)
+            self.wait()
+        self.wait(2)
 
 class PhotonsThroughPerpendicularFilters(PhotonPassesCompletelyOrNotAtAll):
     CONFIG = {
@@ -282,7 +282,7 @@ class MoreFiltersMoreLight(FilterScene):
             pfs[2].shift, 3*OUT,
             Animation(pfs[4]),
         )
-        self.dither()
+        self.wait()
         self.play(
             Animation(pfs[0]),
             pfs[2].shift, 3*IN,
@@ -296,7 +296,7 @@ class MoreFiltersMoreLight(FilterScene):
             Animation(VGroup(pfs[2], pfs[4])),
             run_time = 2
         )
-        self.dither()
+        self.wait()
 
         pfs[3].shift(8*OUT)
         self.play(
@@ -305,7 +305,7 @@ class MoreFiltersMoreLight(FilterScene):
             Animation(VGroup(*pfs[4:])),
             run_time = 2
         )
-        self.dither()
+        self.wait()
 
     def color_filters(self, pfs):
         colors = [RED, GREEN, BLUE, MAROON_B, PURPLE_C]
@@ -375,9 +375,9 @@ class ConfusedPiCreature(Scene):
             randy.change, "confused", 3*(UP+RIGHT),
         )
         self.play(Blink(randy))
-        self.dither(2)
+        self.wait(2)
         self.play(Blink(randy))
-        self.dither(2)
+        self.wait(2)
 
 class AngryPiCreature(PiCreatureScene):
     def construct(self):
@@ -387,7 +387,7 @@ class AngryPiCreature(PiCreatureScene):
             look_at_arg = 2*RIGHT,
             run_time = 1
         )
-        self.dither(3)
+        self.wait(3)
 
     def create_pi_creature(self):
         return Randolph().shift(DOWN+3*LEFT)
@@ -430,7 +430,7 @@ class ShowALittleMath(TeacherStudentsScene):
             *["pondering"]*3,
             look_at_arg = exp2
         )
-        self.dither(2)
+        self.wait(2)
 
 class SecondVideoWrapper(Scene):
     def construct(self):
@@ -441,7 +441,7 @@ class SecondVideoWrapper(Scene):
         screen_rect = ScreenRectangle(height = 6)
         screen_rect.next_to(title, DOWN)
         self.play(ShowCreation(screen_rect))
-        self.dither(3)
+        self.wait(3)
 
 class BasicsOfPolarization(DirectionOfPolarizationScene):
     CONFIG = {
@@ -465,13 +465,13 @@ class BasicsOfPolarization(DirectionOfPolarizationScene):
             words.rotate(np.pi/2, RIGHT)
 
         self.play(Write(title))
-        self.dither(2)
+        self.wait(2)
         self.play(
             Write(subtitle, run_time = 2),
             FadeIn(self.rectangles)
         )
         self.change_polarization_direction(np.pi/2, run_time = 3)
-        self.dither()
+        self.wait()
         self.change_polarization_direction(-np.pi/12, run_time = 2)
         self.move_camera(theta = -0.95*np.pi)
         self.change_polarization_direction(-np.pi/6, run_time = 2)
@@ -610,7 +610,7 @@ class AngleToProbabilityChart(Scene):
         explanation = TextMobject("Based on $\\cos(\\theta)^2$")
         explanation.next_to(prob_mobs, RIGHT, LARGE_BUFF)
         self.play(Write(explanation, run_time = 2))
-        self.dither()
+        self.wait()
 
 class ShowVariousFilterPairsWithPhotonsOverTime(PhotonsThroughPerpendicularFilters):
     CONFIG = {
@@ -639,7 +639,7 @@ class ShowVariousFilterPairsWithPhotonsOverTime(PhotonsThroughPerpendicularFilte
 
     def add_filters(self):
         self.remove(*self.pol_filters[1:])
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             self.pol_filters[0].copy().set_fill(BLACK, 1),
             self.pol_filters[1]
@@ -703,7 +703,7 @@ class ShowVariousFilterPairsWithPhotonsOverTime(PhotonsThroughPerpendicularFilte
                 photon, 
                 *added_anims
             )
-        self.dither()
+        self.wait()
         
     def change_to_new_filter(self, pol_filter, added_anims = None):
         if added_anims is None:
@@ -829,7 +829,7 @@ class ShowVariousFilterPairs(ShowVariousFilterPairsWithPhotonsOverTime):
         #Write probability
         prob_text = self.get_probability_text(pf2)
         self.play(Write(prob_text, run_time = 1))
-        self.dither()
+        self.wait()
 
         self.prob_texts.add(prob_text)
 
@@ -914,9 +914,9 @@ class ShowVariousFilterPairsFrom0To45(ShowVariousFilterPairs):
             cos.next_to(rect, OUT, SMALL_BUFF)
 
         self.play(LaggedStart(ShowCreation, rects))
-        self.dither()
+        self.wait()
         self.play(*map(Write, cosines), run_time = 2)
-        self.dither()
+        self.wait()
 
 class ForgetPreviousActions(ShowVariousFilterPairs):
     CONFIG = {
@@ -1071,7 +1071,7 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
             pf.shift(4*OUT)
             pf.fade(1)
             self.play(pf.restore)
-            self.dither()
+            self.wait()
 
     def reposition_camera(self):
         self.move_camera(
@@ -1098,7 +1098,7 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
             self.lower_pol_filters.shift, 3*IN,
             self.pol_filters.shift, 1.5*OUT,
         )
-        self.dither()
+        self.wait()
 
     def show_bottom_lines(self):
         A, C = self.lower_pol_filters
@@ -1153,7 +1153,7 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
             Write(words, run_time = 2),
             ShowCreation(arrow)
         )
-        self.dither(2)
+        self.wait(2)
 
         self.blocked_at_C_words = words
         self.blocked_at_C_label_group = VGroup(arrow, words)
@@ -1238,17 +1238,17 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
             ShowCreation(arrow0),
             Write(words0, run_time = 1)
         )
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(words0, words1),
             ReplacementTransform(arrow0, arrow1),
         )
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(arrow2),
             Write(words2)
         )
-        self.dither(2)
+        self.wait(2)
 
         self.fifteens = VGroup(words1, words2)
         self.blocked_at_B_label_group = VGroup(
@@ -1293,7 +1293,7 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
             randy, blinked, 
             rate_func = squish_rate_func(there_and_back)
         ))
-        self.dither(3)
+        self.wait(3)
 
 class IntroduceLabeledFiltersNoRotation(IntroduceLabeledFilters):
     CONFIG = {
@@ -1347,7 +1347,7 @@ class RemoveBFromLabeledFilters(IntroduceLabeledFiltersNoRotation):
             mover.restore,
             mover.shift, 2.5*IN,
         )
-        self.dither()
+        self.wait()
         self.play(
             ApplyMethod(sB.shift, 4*IN, rate_func = running_start),
             FadeOut(sl1),
@@ -1360,14 +1360,14 @@ class RemoveBFromLabeledFilters(IntroduceLabeledFiltersNoRotation):
             Animation(sC),
             Animation(tl2),
         )
-        self.dither()
+        self.wait()
 
     def fade_in_labels(self):
         self.play(*map(FadeIn, [
             self.blocked_at_B_label_group,
             self.blocked_at_C_label_group,
         ]))
-        self.dither()
+        self.wait()
 
 class NumbersSuggestHiddenVariablesAreImpossible(TeacherStudentsScene):
     def construct(self):
@@ -1376,7 +1376,7 @@ class NumbersSuggestHiddenVariablesAreImpossible(TeacherStudentsScene):
             "no hidden variables"
         )
         self.change_student_modes("erm", "sassy", "confused")
-        self.dither(3)
+        self.wait(3)
 
 class VennDiagramProofByContradiction(Scene):
     CONFIG = {
@@ -1450,7 +1450,7 @@ class VennDiagramProofByContradiction(Scene):
             )
             last_circle = circle
         self.play(MoveToTarget(last_circle.label))
-        self.dither()
+        self.wait()
 
         if hasattr(self, "A_segments"):
             A.add(self.A_segments)
@@ -1546,7 +1546,7 @@ class VennDiagramProofByContradiction(Scene):
             group.to_corner, DOWN + RIGHT,
         )
         self.play(photon.eyes.blink_anim())
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(bubble_group),
             photon.restore,
@@ -1585,7 +1585,7 @@ class VennDiagramProofByContradiction(Scene):
             self.photons.space_out_submobjects, 0.8,
             self.photons.move_to, A.target,
         )
-        self.dither()
+        self.wait()
 
         self.A_group = A_group
         self.B_group = B_group
@@ -1646,7 +1646,7 @@ class VennDiagramProofByContradiction(Scene):
             self.in_A_in_B.set_fill, GREEN, 0.5,
             Animation(in_B),
         )
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(words1, words2),
             ReplacementTransform(arrow1, arrow2),
@@ -1655,14 +1655,14 @@ class VennDiagramProofByContradiction(Scene):
             self.in_A_out_B.set_fill, RED, 0.5,
             Animation(out_of_B)
         )
-        self.dither()
+        self.wait()
         self.play(ApplyMethod(
             VGroup(self.in_A_out_B, out_of_B).shift,
             MED_LARGE_BUFF*UP, 
             rate_func = wiggle,
             run_time = 1.5,
         ))
-        self.dither(0.5)
+        self.wait(0.5)
 
         self.in_B = in_B
         self.out_of_B = out_of_B
@@ -1740,15 +1740,15 @@ class VennDiagramProofByContradiction(Scene):
             MED_LARGE_BUFF*UP,
             rate_func = wiggle
         ))
-        self.dither()
+        self.wait()
         C.save_state()
         self.play(C.set_fill, BLACK, 1)
-        self.dither()
+        self.wait()
         self.play(C.restore)
-        self.dither(2)
+        self.wait(2)
         self.play(Transform(percent, pound))
         self.play(Write(less_than_15, run_time = 1))
-        self.dither()
+        self.wait()
 
         self.in_C = in_C
         self.out_of_C = out_of_C
@@ -1840,7 +1840,7 @@ class VennDiagramProofByContradiction(Scene):
 
         self.play(faders.fade, 1)
         self.play(Write(terms[0]), run_time = 1)
-        self.dither()
+        self.wait()
         self.photon_thinks_in_A_out_C()
         regions[0].set_stroke(YELLOW, width = 8)
         regions[0].set_fill(YELLOW, opacity = 0.25)
@@ -1849,13 +1849,13 @@ class VennDiagramProofByContradiction(Scene):
             run_time = 1.5,
             rate_func = wiggle,
         )
-        self.dither(2)
+        self.wait(2)
 
         #Photons jump
         self.photons.save_state()
         self.play(Write(should_be_50[0], run_time = 1))
         self.photons_jump_to_A_not_C_region()
-        self.dither()
+        self.wait()
         self.play(
             faders.restore,
             self.photons.restore,
@@ -1883,7 +1883,7 @@ class VennDiagramProofByContradiction(Scene):
             *map(Write, braces),
             run_time = 1
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(less_than),
             *map(FadeOut, [funny_business, braces])
@@ -1892,7 +1892,7 @@ class VennDiagramProofByContradiction(Scene):
         for term, group, region, num in zip(terms, photon_groups, regions, nums)[1:]:
             group.set_stroke(WHITE)
             self.play(Write(term, run_time = 1))
-            self.dither()
+            self.wait()
             self.play(
                 ApplyMethod(
                     VGroup(region, group).shift, 0.5*UP,
@@ -1901,8 +1901,8 @@ class VennDiagramProofByContradiction(Scene):
                 ),
             )
             self.play(MoveToTarget(num))
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
 
         self.play(ShowCreation(rects[0]))
         self.play(
@@ -1910,7 +1910,7 @@ class VennDiagramProofByContradiction(Scene):
             run_time = 1.5,
             rate_func = wiggle,
         )
-        self.dither()
+        self.wait()
         self.play(Transform(rects[0], last_rects))
         self.in_A_out_B.save_state()
         self.in_A_in_B_out_C.save_state()
@@ -1919,7 +1919,7 @@ class VennDiagramProofByContradiction(Scene):
             self.in_A_in_B_out_C.set_fill, YELLOW, 0.5,
             Animation(self.photons)
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(rects[0]),
             self.in_A_out_B.restore,
@@ -1927,7 +1927,7 @@ class VennDiagramProofByContradiction(Scene):
             Animation(self.in_A_out_C),
             Animation(self.photons)
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(should_be_50[1]),
             ShowCreation(cross)
@@ -1945,7 +1945,7 @@ class VennDiagramProofByContradiction(Scene):
             Write(contradiction, run_time = 1)
         )
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
     def photons_jump_to_A_not_C_region(self):
         in_C = self.in_C
@@ -2051,9 +2051,9 @@ class PonderingPiCreature(Scene):
         randy.to_edge(DOWN).shift(3*LEFT)
         self.play(randy.change, "pondering", UP+RIGHT)
         self.play(Blink(randy))
-        self.dither(2)
+        self.wait(2)
         self.play(Blink(randy))
-        self.dither(2)
+        self.wait(2)
 
 class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
     def construct(self):
@@ -2114,7 +2114,7 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
             FadeIn(words, submobject_mode = "lagged_start"),
             ShowCreation(arrow)
         )
-        self.dither()
+        self.wait()
         vect = 0.6*(A.get_center() - B.get_center())
         self.play(
             B0.shift, vect,
@@ -2124,7 +2124,7 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
             rate_func = running_start,
         )
         B1.shift(vect)
-        self.dither()
+        self.wait()
 
         self.in_A_out_B_words = words
         self.in_A_out_B_arrow = arrow
@@ -2157,7 +2157,7 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
             ShowCreation(arrow)
         )
         self.play(FadeIn(C0))
-        self.dither(2)
+        self.wait(2)
         vect = 0.5*(B.get_center() - C.get_center())
         self.play(
             C0.shift, vect,
@@ -2167,7 +2167,7 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
             rate_func = running_start,
         )
         C1.shift(vect)
-        self.dither()
+        self.wait()
 
         for mob in words, arrow:
             mob.save_state()
@@ -2188,7 +2188,7 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
             FadeIn(A1_yellow_copy)
         )
         self.play(FadeIn(C0))
-        self.dither()
+        self.wait()
         self.A1_yellow_copy = A1_yellow_copy
 
     def shorten_labels(self):
@@ -2266,7 +2266,7 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
             Write(inequality[0], run_time = 1),
             FadeIn(big_le),
         )
-        self.dither()
+        self.wait()
         self.play(FadeIn(groups[1]))
         self.play(
             groups[1].restore, 
@@ -2280,7 +2280,7 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
             FadeIn(inequality[2]),
             FadeIn(self.in_A_out_B_words),
         )
-        self.dither(2)
+        self.wait(2)
 
         self.groups = groups
         self.inequality = inequality
@@ -2316,7 +2316,7 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
             Animation(foreground),
             run_time = 2
         )
-        self.dither()
+        self.wait()
 
     def write_50_percent(self):
         words = TextMobject(
@@ -2328,7 +2328,7 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
         words.move_to(5*LEFT + 2*UP)
 
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
     def write_assumption(self):
         words = TextMobject("Assume circles have the same size$^*$")
@@ -2397,7 +2397,7 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
                 new_B_to_C = rotate_vector(B_to_C, self.time*C_freq)
                 A_group.shift(B_center + new_B_to_A - center_of_mass(A_ref))
                 C_group.shift(B_center + new_B_to_C - center_of_mass(C_ref))
-                self.dither(self.frame_duration)
+                self.wait(self.frame_duration)
 
         move_around(3)
         self.add(self.footnote)
@@ -2478,7 +2478,7 @@ class NoFirstMeasurementPreferenceBasedOnDirection(ShowVariousFilterPairs):
             Animation(all_pre_lines),
         )
         self.add_foreground_mobject(all_pre_lines)
-        self.dither(7)
+        self.wait(7)
 
 
 

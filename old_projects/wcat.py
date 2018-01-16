@@ -260,7 +260,7 @@ class Introduction(TeacherStudentsScene):
         for pi in self.get_students():
             pi.target.look_at(self.get_teacher().eyes)
         self.play(*map(MoveToTarget, self.get_students()))
-        self.dither()
+        self.wait()
 
 class WhenIWasAKid(TeacherStudentsScene):
     def construct(self):
@@ -283,7 +283,7 @@ class WhenIWasAKid(TeacherStudentsScene):
             target_mode = "hooray"
         )
         self.change_student_modes(*["happy"]*3)
-        self.dither()
+        self.wait()
 
         speaker.look_at(children)
         me = children[-1]
@@ -344,10 +344,10 @@ class WhenIWasAKid(TeacherStudentsScene):
         )
         self.random_blink()
         self.play(me.change_mode, "pondering")
-        self.dither()
+        self.wait()
         self.random_blink(2)
         self.play(pi1.change_mode, "raise_left_hand")
-        self.dither()
+        self.wait()
         self.play(pi2.change_mode, "erm")
         self.random_blink()
         self.student_says(
@@ -385,9 +385,9 @@ class WhenIWasAKid(TeacherStudentsScene):
         self.remove(me)
         self.add(morty)
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
         self.play(morty.change_mode, "hooray")
-        self.dither()
+        self.wait()
 
 
     def prepare_everyone(self, children, speaker):
@@ -444,16 +444,16 @@ class DefineInscribedSquareProblem(ClosedLoopScene):
         #Draw loop
         self.remove(self.loop)
         self.play(Write(self.title))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(
             self.loop, 
             run_time = 5, 
             rate_func = None
         ))
-        self.dither()
+        self.wait()
         self.add_rect_dots(square = True)
         self.play(ShowCreation(self.dots, run_time = 2))
-        self.dither()
+        self.wait()
         self.add_connecting_lines(cyclic = True)
         self.play(
             ShowCreation(
@@ -463,7 +463,7 @@ class DefineInscribedSquareProblem(ClosedLoopScene):
             ),
             Animation(self.dots)
         )
-        self.dither(2)
+        self.wait(2)
 
     def cycle_through_shapes(self):
         circle = Circle(radius = 2.5, color = WHITE)
@@ -490,20 +490,20 @@ class DefineInscribedSquareProblem(ClosedLoopScene):
         self.remove(self.loop)
         self.loop = circle
         self.add(self.loop, self.connecting_lines, self.dots)
-        self.dither()
+        self.wait()
         odd_eigths = np.linspace(1./8, 7./8, 4)
         self.move_dots_to_alphas(odd_eigths)
-        self.dither()
+        self.wait()
         for nudge in 0.1, -0.1, 0:
             self.move_dots_to_alphas(odd_eigths+nudge)
-        self.dither()
+        self.wait()
         self.transform_loop(ellipse)
-        self.dither()
+        self.wait()
         nudge = 0.055
         self.move_dots_to_alphas(
             odd_eigths + [nudge, -nudge, nudge, -nudge]
         )
-        self.dither(2)
+        self.wait(2)
         self.transform_loop(pi_loop)
         self.let_dots_wonder()
         randy_anims = [
@@ -539,10 +539,10 @@ class DefineInscribedSquareProblem(ClosedLoopScene):
         self.play(morty.change_mode, "speaking")
         self.play(Transform(self.title, new_title))
         self.move_dots_to_alphas(rect_alphas)
-        self.dither()
+        self.wait()
         self.play(morty.change_mode, "hooray")
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
         self.play(FadeOut(self.connecting_lines))
         self.connecting_lines = VGroup()
         self.play(morty.change_mode, "plain")
@@ -591,12 +591,12 @@ class RectangleProperties(Scene):
 
 
         self.play(ShowCreation(rect))
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(vertex_dots),
             Write(labels)
         )
-        self.dither()
+        self.wait()
         mob_lists = [
             (a, c, dot_pairs[0]),
             (b, d, dot_pairs[1]),
@@ -606,16 +606,16 @@ class RectangleProperties(Scene):
                 ApplyMethod(mob.highlight, color)
                 for mob in mob_list
             ])
-            self.dither()
+            self.wait()
         for line, brace in zip(diag_lines, braces):
             self.play(
                 ShowCreation(line),
                 GrowFromCenter(brace)
             )
-            self.dither()
+            self.wait()
             self.play(FadeOut(brace))
         self.play(FadeIn(midpoint))
-        self.dither()
+        self.wait()
 
 class PairOfPairBecomeRectangle(Scene):
     def construct(self):
@@ -661,7 +661,7 @@ class PairOfPairBecomeRectangle(Scene):
             Write(labels)
         )
         self.play(*map(ShowCreation, lines))
-        self.dither()
+        self.wait()
         self.play(*[
             ApplyMethod(
                 group.shift, 
@@ -684,7 +684,7 @@ class PairOfPairBecomeRectangle(Scene):
 
         self.play(Transform(groups[1], grower))
         self.play(Write(words[1]))
-        self.dither()
+        self.wait()
 
         rectangle = Polygon(*[
             dots[i].get_center()
@@ -696,7 +696,7 @@ class PairOfPairBecomeRectangle(Scene):
             Animation(dots)
         )
         self.play(*map(Write, words[2:]))
-        self.dither()
+        self.wait()
 
 class SearchForRectangleOnLoop(ClosedLoopScene):
     def construct(self):
@@ -715,7 +715,7 @@ class SearchForRectangleOnLoop(ClosedLoopScene):
             color = RED
         )
         self.play(ShowCreation(midpoint))
-        self.dither()
+        self.wait()
         angles = [line.get_angle() for line in self.connecting_lines]
         angle_mean = np.mean(angles)
         self.play(
@@ -727,13 +727,13 @@ class SearchForRectangleOnLoop(ClosedLoopScene):
         )
         self.add(self.connecting_lines.copy(), midpoint)
         self.connecting_lines = VGroup()
-        self.dither()
+        self.wait()
         self.add_connecting_lines(cyclic = True)
         self.play(
             ShowCreation(self.connecting_lines), 
             Animation(self.dots)
         )
-        self.dither()
+        self.wait()
 
 class DeclareFunction(ClosedLoopScene):
     def construct(self):
@@ -763,9 +763,9 @@ class DeclareFunction(ClosedLoopScene):
 
         self.add(tex)
         self.play(Write(ab_brace))
-        self.dither()
+        self.wait()
         self.play(Write(xyz_brace))
-        self.dither()
+        self.wait()
 
 class DefinePairTo3dFunction(Scene):
     def construct(self):
@@ -777,7 +777,7 @@ class LabelMidpoint(Scene):
         words.highlight(RED)
         words.scale(2)
         self.play(Write(words, run_time = 1))
-        self.dither()
+        self.wait()
 
 class LabelDistance(Scene):
     def construct(self):
@@ -785,7 +785,7 @@ class LabelDistance(Scene):
         words.highlight(MAROON_B)
         words.scale(2)
         self.play(Write(words, run_time = 1))
-        self.dither()
+        self.wait()
 
 class DrawingOneLineOfTheSurface(Scene):
     def construct(self):
@@ -805,9 +805,9 @@ class InputPairToFunction(Scene):
         tex.highlight_by_tex("=X", BLUE)
         tex.scale(2)
         self.play(Write(tex[0]))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(tex[1]))
-        self.dither(2)
+        self.wait(2)
 
 class WigglePairUnderSurface(Scene):
     def construct(self):
@@ -816,7 +816,7 @@ class WigglePairUnderSurface(Scene):
 class WriteContinuous(Scene):
     def construct(self):
         self.play(Write(TextMobject("Continuous").scale(2)))
-        self.dither(2)
+        self.wait(2)
 
 class DistinctPairCollisionOnSurface(Scene):
     def construct(self):
@@ -853,7 +853,7 @@ class PairOfRealsToPlane(Scene):
 
         self.add(x_axis, y_axis, dots, pair_label)
         self.play(ShowCreation(arrows, run_time = 2))
-        self.dither()
+        self.wait()
         self.play(
             pair_label.next_to, two_d_point, UP+LEFT, SMALL_BUFF,
             Rotate(y_axis, np.pi/2),
@@ -872,7 +872,7 @@ class PairOfRealsToPlane(Scene):
             Animation(everything),
             Animation(dot2)
         )
-        self.dither()
+        self.wait()
 
 class SeekSurfaceForPairs(ClosedLoopScene):
     def construct(self):
@@ -940,19 +940,19 @@ class DefineOrderedPair(ClosedLoopScene):
         first.next_to(self.dots[0], UP+2*LEFT, LARGE_BUFF)
         arrow = Arrow(first.get_bottom(), self.dots[0], color = GREEN)
 
-        self.dither()
+        self.wait()
         self.play(*[
             Transform(label.copy(), dot.label)
             for label, dot in zip(labels_start, dots)
         ])
         self.remove(*self.get_mobjects_from_last_animation())
         self.add(*[d.label for d in dots])
-        self.dither()
+        self.wait()
         self.play(
             Write(first),
             ShowCreation(arrow)
         )
-        self.dither()
+        self.wait()
 
 class DefineUnorderedPair(ClosedLoopScene):
     def construct(self):
@@ -984,14 +984,14 @@ class DefineUnorderedPair(ClosedLoopScene):
 
         for label, arrow_pair in zip(labels, arrow_pairs):
             self.play(*map(FadeIn, [label, arrow_pair]))
-            self.dither()
+            self.wait()
         for x in range(2):
             self.play(
                 dots[0].move_to, dots[1],
                 dots[1].move_to, dots[0],
                 path_arc = np.pi/2
             )
-            self.dither()
+            self.wait()
 
 class BeginWithOrdered(TeacherStudentsScene):
     def construct(self):
@@ -1019,16 +1019,16 @@ class DeformToInterval(ClosedLoopScene):
 
         #Unwrap loop
         self.transform_loop(cut_loop, path_arc = np.pi)
-        self.dither()
+        self.wait()
         self.transform_loop(
             line,
             run_time = 3,
             path_arc = np.pi/2
         )
-        self.dither()
+        self.wait()
         self.play(ShowCreation(interval))
         self.play(Write(numbers))
-        self.dither()
+        self.wait()
 
         #Follow points
         self.loop = original_loop.copy()
@@ -1049,13 +1049,13 @@ class DeformToInterval(ClosedLoopScene):
 
         self.play(Write(self.dots))
         self.add(dots_copy)
-        self.dither()
+        self.wait()
         self.transform_loop(
             line, 
             added_anims = [MoveToTarget(dot_at_1)],
             run_time = 3
         )
-        self.dither()
+        self.wait()
         self.loop = original_loop
         self.dots = dots_copy
         dot_at_1 = self.dots[-1]
@@ -1064,7 +1064,7 @@ class DeformToInterval(ClosedLoopScene):
             cut_loop,
             added_anims = [MoveToTarget(dot_at_1)]
         )
-        self.dither()
+        self.wait()
         fading_dots.generate_target()
         fading_dots.target.set_fill(opacity = 0.3)
         self.play(MoveToTarget(fading_dots))
@@ -1072,7 +1072,7 @@ class DeformToInterval(ClosedLoopScene):
             end_dots.shift, 0.2*UP, 
             rate_func = wiggle
         )
-        self.dither()
+        self.wait()
 
 class RepresentPairInUnitSquare(ClosedLoopScene):
     def construct(self):
@@ -1111,14 +1111,14 @@ class RepresentPairInUnitSquare(ClosedLoopScene):
             Write(self.dots),
             Write(right_words[0])
         )
-        self.dither()
+        self.wait()
         self.transform_loop(line)
         self.play(
             ShowCreation(interval),
             Write(numbers),
             Animation(self.dots)
         )
-        self.dither()
+        self.wait()
         self.play(*[
             Rotate(mob, np.pi/2, about_point = interval.get_left())
             for mob in vert_interval, self.dots[1]
@@ -1139,7 +1139,7 @@ class RepresentPairInUnitSquare(ClosedLoopScene):
             Animation(self.dots),
             *map(Write, right_words[1:])
         )
-        self.dither()
+        self.wait()
 
         #Shift point in square
 
@@ -1165,7 +1165,7 @@ class RepresentPairInUnitSquare(ClosedLoopScene):
                     inner_dot.target.get_center()
                 )
             self.play(*map(MoveToTarget, movers))
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [dashed_lines, self.dots]))
 
 class EdgesOfSquare(Scene):
@@ -1177,17 +1177,17 @@ class EdgesOfSquare(Scene):
 
         for edge in list(x_edges) + list(y_edges):
             self.play(ShowCreation(edge))
-        self.dither()
+        self.wait()
         for label_group in label_groups:
             for label in label_group[:3]:
                 self.play(FadeIn(label))
-            self.dither()
+            self.wait()
             self.play(Write(VGroup(*label_group[3:])))
-            self.dither()
+            self.wait()
         self.play(FadeOut(VGroup(*label_groups)))
         for arrows in arrow_groups:
             self.play(ShowCreation(arrows, run_time = 2))
-            self.dither()
+            self.wait()
         self.play(*[
             ApplyMethod(
                 n.next_to,
@@ -1198,7 +1198,7 @@ class EdgesOfSquare(Scene):
             )
             for n, vect in zip(self.numbers, [DOWN, UP])
         ])
-        self.dither()
+        self.wait()
 
     def add_square(self):
         interval = UnitInterval(color = WHITE)
@@ -1310,7 +1310,7 @@ class EndpointsGluedTogether(ClosedLoopScene):
 
         self.add(interval, dots)
         self.play(dots.rotate_in_place, np.pi/20, rate_func = wiggle)
-        self.dither()
+        self.wait()
         self.transform_loop(
             original_loop,
             added_anims = [
@@ -1319,7 +1319,7 @@ class EndpointsGluedTogether(ClosedLoopScene):
             ],
             run_time = 3
         )
-        self.dither()
+        self.wait()
 
 class WrapUpToTorus(Scene):
     def construct(self):
@@ -1348,15 +1348,15 @@ class TorusPlaneAnalogy(ClosedLoopScene):
             Dot(number_line.number_to_point(-2), color = RED),
         )
 
-        self.dither()
+        self.wait()
         self.play(ShowCreation(single_pointed_top_arrow))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(top_arrow))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(plane))
         self.play(ShowCreation(low_arrow))
         self.play(ShowCreation(number_line))
-        self.dither()
+        self.wait()
 
 class WigglingPairOfPoints(ClosedLoopScene):
     def construct(self):
@@ -1411,7 +1411,7 @@ class TrivialPairCollision(ClosedLoopScene):
                 randy.look_at, label
             )
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         swappers = [a, b, a_label, b_label]
         for mob in swappers:
             mob.save_state()
@@ -1432,7 +1432,7 @@ class TrivialPairCollision(ClosedLoopScene):
             path_arc = -np.pi
         )
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class NotHelpful(Scene):
     def construct(self):
@@ -1449,7 +1449,7 @@ class NotHelpful(Scene):
             morty.look, OUT
         )
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
 class FoldUnitSquare(EdgesOfSquare):
     def construct(self):    
@@ -1545,7 +1545,7 @@ class FoldUnitSquare(EdgesOfSquare):
                     self.play(Transform(old_y_line, y_line), Animation(dot))
                     self.remove(old_x_line, old_y_line)
                     self.add(x_line, y_line, dot)
-                self.dither(2)
+                self.wait(2)
                 self.play(FadeOut(label))
                 if a < b:
                     start_dots.add(dot)
@@ -1562,13 +1562,13 @@ class FoldUnitSquare(EdgesOfSquare):
         )
 
         self.play(ShowCreation(diag_line))
-        self.dither()
+        self.wait()
         self.play(
             Transform(*self.triangles),
             Transform(self.start_dots, self.end_dots),
             Transform(self.start_arrows, self.end_arrows),
         )
-        self.dither()
+        self.wait()
         self.diag_line = diag_line
 
     def show_singleton_pairs(self):
@@ -1596,7 +1596,7 @@ class FoldUnitSquare(EdgesOfSquare):
                     Transform(old_dot, dot),
                     Transform(old_label, label),
                 )
-            self.dither()
+            self.wait()
         #Some strange bug necesitating this
         self.remove(old_label)
         self.add(label)
@@ -1629,7 +1629,7 @@ class FoldUnitSquare(EdgesOfSquare):
             Write(bubble.content)
         )
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.randy = randy
 
     def clarify_edge_gluing(self):
@@ -1650,7 +1650,7 @@ class FoldUnitSquare(EdgesOfSquare):
                 ShowCreation(dot),
                 self.randy.look_at, dot
             )
-        self.dither()
+        self.wait()
         for dot in dots[2:]:
             dot.highlight(MAROON_B)
             self.play(
@@ -1658,7 +1658,7 @@ class FoldUnitSquare(EdgesOfSquare):
                 self.randy.look_at, dot
             )
         self.play(Blink(self.randy))
-        self.dither()
+        self.wait()
 
     def get_point_from_coords(self, x, y):
         left, right, bottom, top = [
@@ -1736,12 +1736,12 @@ class PrepareForMobiusStrip(Scene):
         self.play(ShowCreation(tri1.cut_arrows))
         for tri in self.triangles:
             tri.add(tri.cut_arrows)
-        self.dither()
+        self.wait()
         self.play(
             tri1.shift, (DOWN+LEFT)/2.,
             tri2.shift, (UP+RIGHT)/2.,
         )
-        self.dither()
+        self.wait()
 
     def rearrange_pieces(self):
         tri1, tri2 = self.triangles
@@ -1750,7 +1750,7 @@ class PrepareForMobiusStrip(Scene):
             tri1.next_to, ORIGIN, RIGHT,
             tri2.next_to, ORIGIN, LEFT,
         )
-        self.dither()
+        self.wait()
         self.play(*[
             ApplyMethod(tri.shift, tri.points[0][0]*LEFT)
             for tri in self.triangles
@@ -1761,12 +1761,12 @@ class PrepareForMobiusStrip(Scene):
         ])
         for tri in self.triangles:
             tri.remove(tri.original_arrows)
-        self.dither()
+        self.wait()
         # self.play(*[
         #     ApplyMethod(tri.rotate, -np.pi/4)
         #     for tri in self.triangles
         # ])
-        # self.dither()
+        # self.wait()
 
 class FoldToMobius(Scene):
     def construct(self):
@@ -1793,13 +1793,13 @@ class MobiusPlaneAnalogy(ClosedLoopScene):
             Dot(number_line.number_to_point(-2), color = RED),
         )
 
-        self.dither()
+        self.wait()
         self.play(ShowCreation(top_arrow))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(plane))
         self.play(ShowCreation(low_arrow))
         self.play(ShowCreation(number_line))
-        self.dither()
+        self.wait()
 
 class DrawRightArrow(Scene):
     CONFIG = {
@@ -1809,7 +1809,7 @@ class DrawRightArrow(Scene):
         arrow = TexMobject(self.tex)
         arrow.scale(4)
         self.play(Write(arrow))
-        self.dither()
+        self.wait()
 
 class DrawLeftrightArrow(DrawRightArrow):
     CONFIG = {
@@ -1839,12 +1839,12 @@ class MobiusToPairToSurface(ClosedLoopScene):
             ShowCreation(top_arrow),
             randy.look_at, self.loop
         )
-        self.dither()
+        self.wait()
         self.look_at(strip_dot, surface_dot)
         self.play(ShowCreation(diag_arrow))
         self.play(Blink(randy))
         self.look_at(strip_dot, self.loop)
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(right_arrow),
             randy.look_at, surface_dot
@@ -1852,7 +1852,7 @@ class MobiusToPairToSurface(ClosedLoopScene):
         self.play(Blink(randy))
         self.play(randy.change_mode, "happy")
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 
     def look_at(self, *things):
@@ -1995,7 +1995,7 @@ class PatreonThanks(Scene):
         for patrons in left_patrons, right_patrons:
             for index in 0, -1:
                 self.play(morty.look_at, patrons[index])
-                self.dither()
+                self.wait()
 
 class CreditTWo(Scene):
     def construct(self):
@@ -2022,23 +2022,23 @@ class CreditTWo(Scene):
             Animation(morty)
         )
         self.play(morty.change_mode, "happy")
-        self.dither()
+        self.wait()
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(brother),
             morty.look_at, brother.eyes
         )
         self.play(brother.change_mode, "surprised")
         self.play(Blink(brother))
-        self.dither()
+        self.wait()
         self.play(
             morty.look, LEFT,
             brother.change_mode, "happy",
             brother.look, LEFT
         )
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
 class CreditThree(Scene):
     def construct(self):
@@ -2070,7 +2070,7 @@ class CreditThree(Scene):
             randy.change_mode, "happy",
             randy.look_at, logo_dot
         )
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(bubble),
             randy.change_mode, "pondering",
@@ -2081,33 +2081,33 @@ class CreditThree(Scene):
             Transform(bubble, VectorizedPoint(randy.get_corner(UP+LEFT))),
             randy.change_mode, "sad"
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(domains, run_time = 5, lag_factor = 5),
             randy.look_at, domains
         )
-        self.dither()
+        self.wait()
         self.play(Blink(randy))
         self.play(
             randy.change_mode, "hooray",
             randy.look_at, logo_dot,
             FadeOut(domains)
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(whois),
             randy.change_mode, "confused",
             randy.look_at, whois
         )
-        self.dither(2)
+        self.wait(2)
         self.play(randy.change_mode, "sassy")
-        self.dither(2)
+        self.wait(2)
         self.play(
             randy.change_mode, "happy",
             randy.look_at, logo_dot
         )
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 
 class ShiftingLoopPairSurface(Scene):

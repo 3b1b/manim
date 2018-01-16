@@ -46,8 +46,8 @@ class FractalCreation(Scene):
                 fractal, new_fractal,
                 **self.transform_kwargs
             ))
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
         self.fractal = fractal
 
 class PentagonalFractalCreation(FractalCreation):
@@ -79,7 +79,7 @@ class PiCreatureFractalCreation(FractalCreation):
         fractal.target.shift(-smallest_pi.get_corner(UP+LEFT))
         fractal.target.scale(zoom_factor)
         self.play(MoveToTarget(fractal, run_time = 10))
-        self.dither()
+        self.wait()
 
 class QuadraticKochFractalCreation(FractalCreation):
     CONFIG = {

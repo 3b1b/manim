@@ -619,7 +619,7 @@ class ContrastTwoGraphs(SimpleVelocityGraph):
             ShowCreation(graph2, run_time = 4, rate_func = None),
             Write(hardwood)
         )
-        self.dither()
+        self.wait()
 
         for g, sg in (graph1, smoothed_graph1), (graph2, smoothed_graph2):
             sg_copy = sg.deepcopy()
@@ -640,9 +640,9 @@ class ContrastTwoGraphs(SimpleVelocityGraph):
         for word in twists, variable_distances:
             word.to_corner(UP+RIGHT)
         self.play(Write(twists))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(twists, variable_distances))
-        self.dither(3)
+        self.wait(3)
         self.play(FadeOut(variable_distances))
 
         self.revert_to_original_skipping_status()
@@ -653,7 +653,7 @@ class ContrastTwoGraphs(SimpleVelocityGraph):
             graph2.move_to, lower_left, DOWN+LEFT,
             FadeOut(words)
         )
-        self.dither()
+        self.wait()
         return
 
         #Show moving averages
@@ -683,18 +683,18 @@ class ContrastTwoGraphs(SimpleVelocityGraph):
             dot2.highlight, PINK,
             rate_func = wiggle
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(arrow),
             ReplacementTransform(pre_rect, rect),
         )
-        self.dither()
+        self.wait()
         self.play(
             Transform(graph1, smoothed_graph1, run_time = 2),
             Animation(rect)
         )
         self.play(FadeOut(rect))
-        self.dither()
+        self.wait()
         self.play(FadeIn(graph2))
         self.play(Transform(graph2, smoothed_graph2))
 
@@ -706,7 +706,7 @@ class ContrastTwoGraphs(SimpleVelocityGraph):
             LaggedStart(FadeIn, hardwood),
             run_time = 1
         )
-        self.dither()
+        self.wait()
 
         #Compare regions
         dot_group1 = VGroup(
@@ -731,7 +731,7 @@ class ContrastTwoGraphs(SimpleVelocityGraph):
                 lag_ratio = 0.05,
                 run_time = 3,
             ))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(rect1, rect2))
         for x in range(2):
             self.play(LaggedStart(
@@ -741,7 +741,7 @@ class ContrastTwoGraphs(SimpleVelocityGraph):
                 lag_ratio = 0.05,
                 run_time = 3,
             ))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(rect1, rect3))
         for x in range(2):
             self.play(LaggedStart(
@@ -751,7 +751,7 @@ class ContrastTwoGraphs(SimpleVelocityGraph):
                 lag_ratio = 0.05,
                 run_time = 3,
             ))
-        self.dither()
+        self.wait()
 
 
     ###

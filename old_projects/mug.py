@@ -57,9 +57,9 @@ class HappyHolidays(TeacherStudentsScene):
             look_at_arg = SPACE_HEIGHT*UP,
         )
         self.look_at(self.teacher.get_corner(UP+LEFT))
-        self.dither(2)
+        self.wait(2)
         self.play(self.teacher.change, "happy")
-        self.dither(2)
+        self.wait(2)
 
     def get_hat(self, pi):
         hat = SVGMobject(
@@ -239,7 +239,7 @@ class PauseIt(PiCreatureScene):
         self.pi_creature_says(
             "Pause it!", target_mode = "surprised"
         )
-        self.dither(2)
+        self.wait(2)
         
 class AboutToyPuzzles(UtilitiesPuzzleScene, TeacherStudentsScene, ThreeDScene):
     def construct(self):
@@ -276,7 +276,7 @@ class AboutToyPuzzles(UtilitiesPuzzleScene, TeacherStudentsScene, ThreeDScene):
             Write(no_crossing_words[0]),
             GrowArrow(no_crossing_words[1]),
         )
-        self.dither()
+        self.wait()
 
         self.objects.add_to_back(lines, no_crossing_words)
 
@@ -325,12 +325,12 @@ class AboutToyPuzzles(UtilitiesPuzzleScene, TeacherStudentsScene, ThreeDScene):
             Write(eulers),
             FadeIn(cube)
         )
-        self.dither(5)
+        self.wait(5)
         self.play(
             GrowArrow(arrow_from_eulers),
             Write(tda)
         )
-        self.dither(2)
+        self.wait(2)
 
         self.set_variables_as_attrs(
             eulers, cube, tda,
@@ -362,7 +362,7 @@ class AboutToyPuzzles(UtilitiesPuzzleScene, TeacherStudentsScene, ThreeDScene):
         self.change_student_modes(
             *["pondering"]*3, look_at_arg = everything
         )
-        self.dither(5)
+        self.wait(5)
 
 class ThisPuzzleIsHard(UtilitiesPuzzleScene, PiCreatureScene):
     def construct(self):
@@ -525,7 +525,7 @@ class ThisPuzzleIsHard(UtilitiesPuzzleScene, PiCreatureScene):
             run_time = 3,
             submobject_mode = "lagged_start"
         ))
-        self.dither()
+        self.wait()
 
     ######
 
@@ -584,7 +584,7 @@ class IntroduceGraph(PiCreatureScene):
             FadeIn(vertex_arrows),
             FadeIn(vertices_word),
         )
-        self.dither()
+        self.wait()
         self.play(LaggedStart(
             ApplyMethod, lines,
             lambda l : (l.rotate_in_place, np.pi/12),
@@ -594,7 +594,7 @@ class IntroduceGraph(PiCreatureScene):
             FadeIn(edge_word),
             GrowArrow(edge_arrow),
         )
-        self.dither(2)
+        self.wait(2)
         line = lines[2]
         self.play(
             line.set_points_smoothly, [
@@ -606,9 +606,9 @@ class IntroduceGraph(PiCreatureScene):
             ],
             VGroup(edge_word, edge_arrow).shift, MED_LARGE_BUFF*LEFT,
         )
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(graph_word, planar_graph_word))
-        self.dither(2)
+        self.wait(2)
 
     ###
 
@@ -653,7 +653,7 @@ class IsK33Planar(UtilitiesPuzzleScene):
             run_time = 3,
             submobject_mode = "lagged_start"
         ))
-        self.dither(2)
+        self.wait(2)
 
 class TwoKindsOfViewers(PiCreatureScene, UtilitiesPuzzleScene):
     def construct(self):
@@ -676,7 +676,7 @@ class TwoKindsOfViewers(PiCreatureScene, UtilitiesPuzzleScene):
         non_eulers = VGroup(*filter(lambda m : m is not eulers, words))
 
         self.add(words)
-        self.dither()
+        self.wait()
         self.play(
             pi1.shift, 2*LEFT,
             pi2.shift, 2*RIGHT,
@@ -697,14 +697,14 @@ class TwoKindsOfViewers(PiCreatureScene, UtilitiesPuzzleScene):
             FadeIn(dont),
             pi2.change, "maybe", eulers,
         )
-        self.dither()
+        self.wait()
         self.pi_creature_thinks(
             pi1, "",
             bubble_kwargs = {"width" : 3, "height" : 2},
             target_mode = "thinking"
         )
         self.play(pi2.change, "confused", eulers)
-        self.dither()
+        self.wait()
 
         ### Out of thin air
         self.play(*map(FadeOut, [
@@ -717,14 +717,14 @@ class TwoKindsOfViewers(PiCreatureScene, UtilitiesPuzzleScene):
             GrowArrow(arrow),
             LaggedStart(DrawBorderThenFill, VGroup(*it.chain(*objects)))
         )
-        self.dither()
+        self.wait()
         self.play(
             objects.move_to, eulers, RIGHT,
             eulers.move_to, objects, LEFT,
             path_arc = np.pi,
             run_time = 1.5,
         )
-        self.dither(2)
+        self.wait(2)
 
     ###
 
@@ -749,14 +749,14 @@ class IntroduceRegions(UtilitiesPuzzleScene):
             run_time = 3,
         ))
         self.add_foreground_mobjects(lines, objects)
-        self.dither()
+        self.wait()
         for region in front_regions:
             self.play(FadeIn(region))
         self.play(
             FadeIn(back_region),
             Animation(front_regions),
         )
-        self.dither()
+        self.wait()
         self.play(FadeOut(regions))
 
         ##Paint bucket
@@ -792,7 +792,7 @@ class IntroduceRegions(UtilitiesPuzzleScene):
         self.add_foreground_mobjects(front_regions, lines, objects)
         click(back_region)
         self.remove_foreground_mobjects(front_regions)
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(back_region),
             FadeOut(front_regions[0]),
@@ -822,7 +822,7 @@ class IntroduceRegions(UtilitiesPuzzleScene):
             for point_set in point_sets
         ])
 
-        self.dither()
+        self.wait()
         for line in escape_lines:
             self.play(ShowCreation(line,
                 rate_func = lambda t : 0.8*smooth(t)
@@ -868,7 +868,7 @@ class FromLastVideo(Scene):
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.dither(2)
+        self.wait(2)
 
 class AskAboutRegions(IntroduceRegions):
     def construct(self):
@@ -897,7 +897,7 @@ class AskAboutRegions(IntroduceRegions):
 
         self.add(front_regions)
         self.add_foreground_mobjects(lines, objects)
-        self.dither()
+        self.wait()
         self.play(MoveToTarget(front_regions))
         self.play(LaggedStart(
             ApplyMethod, front_regions,
@@ -907,7 +907,7 @@ class AskAboutRegions(IntroduceRegions):
             run_time = 1
         ))
         self.play(front_regions.restore)
-        self.dither()
+        self.wait()
 
         #Show missing lines
         for line in missing_lines:
@@ -940,10 +940,10 @@ class AskAboutRegions(IntroduceRegions):
                 anims.append(ApplyMethod(last_region.restore))
             anims.append(Animation(front_regions))
             self.play(*anims, run_time = 0.25)
-            self.dither(0.5)
+            self.wait(0.5)
             last_region = region
         self.play(last_region.restore)
-        self.dither()
+        self.wait()
         self.play(FadeOut(count))
 
         #Count edges per region
@@ -987,7 +987,7 @@ class AskAboutRegions(IntroduceRegions):
             FadeOut(last_region),
             FadeOut(last_line_group),
         )
-        self.dither()
+        self.wait()
 
 class NewRegionClosedOnlyForNodesWithEdges(UtilitiesPuzzleScene):
     def construct(self):
@@ -1022,16 +1022,16 @@ class NewRegionClosedOnlyForNodesWithEdges(UtilitiesPuzzleScene):
             self.play(ShowCreation(line))
         lines[-1].pointwise_become_partial(lines[-1], 0, 0.92)
         lines[-1].save_state()
-        self.dither()
+        self.wait()
         self.play(ShowCreation(lines[-1]))
         self.add(region, lines, objects)
-        self.dither()
+        self.wait()
         self.remove(region)
         self.play(ShowCreation(lines[-1], 
             rate_func = lambda t : smooth(1-2*t*(1-t))
         ))
         self.add(region, lines, objects)
-        self.dither()
+        self.wait()
         self.remove(region)
         self.play(
             ShowCreation(lines[-1],
@@ -1044,7 +1044,7 @@ class NewRegionClosedOnlyForNodesWithEdges(UtilitiesPuzzleScene):
             self.play(ShowCreationThenDestruction(lit_line))
         self.play(lines[-1].restore)
         self.add(region, lines, objects)
-        self.dither(2)
+        self.wait(2)
 
 class LightUpNodes(IntroduceRegions):
     CONFIG = {
@@ -1127,7 +1127,7 @@ class LightUpNodes(IntroduceRegions):
             FadeIn(dim_word),
             LaggedStart(GrowArrow, dim_arrows)
         )
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [
             lit_word, lit_arrow, dim_word, dim_arrows
         ]))
@@ -1149,7 +1149,7 @@ class LightUpNodes(IntroduceRegions):
             self.get_lit_vertex_animations(houses[0]),
             self.get_count_change_animations(1, 0, 0)
         ))
-        self.dither()
+        self.wait()
         for line, vertex in (lines[1], houses[1]), (lines[4], utilities[1]):
             self.play(
                 ShowCreation(line),
@@ -1159,7 +1159,7 @@ class LightUpNodes(IntroduceRegions):
                 self.get_lit_vertex_animations(vertex),
                 self.get_count_change_animations(1, 0, 0),
             ))
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(lines[3], run_time = 2),
             *self.get_count_change_animations(0, 1, 0)
@@ -1170,7 +1170,7 @@ class LightUpNodes(IntroduceRegions):
             FadeIn(region),
             *self.get_count_change_animations(0, 0, 1)
         )
-        self.dither()
+        self.wait()
 
         #Next region, lines 2, 7, 8
         region = regions[3]
@@ -1185,7 +1185,7 @@ class LightUpNodes(IntroduceRegions):
                 ),
                 self.get_count_change_animations(1, 1, 0)
             ))
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(lines[7]),
             *self.get_count_change_animations(0, 1, 1)
@@ -1193,7 +1193,7 @@ class LightUpNodes(IntroduceRegions):
         self.add_foreground_mobjects(line_groups[2])
         self.add_foreground_mobjects(objects)
         self.play(FadeIn(region))
-        self.dither()
+        self.wait()
 
     ####
 
@@ -1305,7 +1305,7 @@ class ShowRule(TeacherStudentsScene):
             *["confused"]*3,
             look_at_arg = rule
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             Write(nine_total),
             self.teacher.change, "happy",
@@ -1314,7 +1314,7 @@ class ShowRule(TeacherStudentsScene):
             *["thinking"]*3, 
             look_at_arg = rule
         )
-        self.dither(3)
+        self.wait(3)
 
 class ConcludeFiveRegions(LightUpNodes):
     def construct(self):
@@ -1351,7 +1351,7 @@ class ConcludeFiveRegions(LightUpNodes):
             Indicate(self.f_count),
             *map(Animation, self.mobjects)
         )
-        self.dither()
+        self.wait()
 
     def show_nine_lines_to_start(self):
         line_sets = self.get_straight_lines()
@@ -1370,7 +1370,7 @@ class ConcludeFiveRegions(LightUpNodes):
         for lines in line_sets:
             self.play(LaggedStart(ShowCreation, lines, run_time = 1))
             self.play(MoveToTarget(lines))
-        self.dither()
+        self.wait()
 
         ghost_lines = line_sets.copy()
         ghost_lines.fade(0.9)
@@ -1406,10 +1406,10 @@ class ConcludeFiveRegions(LightUpNodes):
         side_lines_rect.highlight(WHITE)
 
         self.play(ShowCreation(side_lines_rect))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(side_lines_rect, f_rect))
         self.play(FadeOut(f_rect))
-        self.dither()
+        self.wait()
 
     def conclude_about_five_regions(self):
         lines = self.lines
@@ -1429,7 +1429,7 @@ class ConcludeFiveRegions(LightUpNodes):
                 Animation(objects),
                 *self.get_count_change_animations(0, 1, 1)
             )
-        self.dither()
+        self.wait()
 
         #Conclude
         words = TextMobject("Last line must \\\\ introduce 5th region")
@@ -1445,7 +1445,7 @@ class ConcludeFiveRegions(LightUpNodes):
         self.play(FadeIn(randy))
         self.play(randy.change, "pondering")
         self.play(Blink(randy))
-        self.dither(2)
+        self.wait(2)
 
 class WhatsWrongWithFive(TeacherStudentsScene):
     def construct(self):
@@ -1453,7 +1453,7 @@ class WhatsWrongWithFive(TeacherStudentsScene):
             "What's wrong with \\\\ 5 regions?",
             target_mode = "maybe"
         )
-        self.dither(2)
+        self.wait(2)
 
 class CyclesHaveAtLeastFour(UtilitiesPuzzleScene):
     def construct(self):
@@ -1515,11 +1515,11 @@ class CyclesHaveAtLeastFour(UtilitiesPuzzleScene):
                 FadeIn(new_count),
             ]
             self.play(*anims)
-            self.dither()
+            self.wait()
             last_word = word
             last_arrow = arrow
             count = new_count
-        self.dither(2)
+        self.wait(2)
 
 class FiveRegionsFourEdgesEachGraph(Scene):
     CONFIG = {
@@ -1577,7 +1577,7 @@ class FiveRegionsFourEdgesEachGraph(Scene):
             LaggedStart(ShowCreation, all_edges),
             LaggedStart(GrowFromCenter, all_vertices),
         )
-        self.dither()
+        self.wait()
 
         self.add_foreground_mobjects(words)
         self.set_variables_as_attrs(words, squares)
@@ -1652,7 +1652,7 @@ class FiveRegionsFourEdgesEachGraph(Scene):
                 replace_mobject_with_target_in_scene = True,
             ),
         )
-        self.dither(2)
+        self.wait(2)
 
         self.set_variables_as_attrs(
             regions, all_edges, back_region,
@@ -1697,7 +1697,7 @@ class FiveRegionsFourEdgesEachGraph(Scene):
                 )
                 count = new_count
             last_region = VGroup(region, region.edges)
-        self.dither()
+        self.wait()
         self.add_foreground_mobjects(count)
         self.play(
             FadeOut(last_region),
@@ -1731,7 +1731,7 @@ class FiveRegionsFourEdgesEachGraph(Scene):
             self.add_foreground_mobjects(edge)
             self.play(FadeIn(r1), run_time = 0.5)
             self.play(FadeIn(r2), Animation(r1), run_time = 0.5)
-            self.dither(0.5)
+            self.wait(0.5)
             self.play(*map(FadeOut, [r2, r1, edge]), run_time = 0.5)
             self.remove_foreground_mobjects(edge)
 
@@ -1757,7 +1757,7 @@ class FiveRegionsFourEdgesEachGraph(Scene):
             GrowFromCenter(brace),
             Write(words)
         )
-        self.dither()
+        self.wait()
         for edge in edges:
             new_count = Integer(count.number + 1)
             new_count.replace(count, dim_to_match = 1)
@@ -1768,7 +1768,7 @@ class FiveRegionsFourEdgesEachGraph(Scene):
                 run_time = 0.5
             )
             count = new_count
-        self.dither()
+        self.wait()
 
 class EulersFormulaForGeneralPlanarGraph(LightUpNodes, ThreeDScene):
     CONFIG = {
@@ -1824,7 +1824,7 @@ class EulersFormulaForGeneralPlanarGraph(LightUpNodes, ThreeDScene):
         ]
 
         self.add_foreground_mobjects(vertices[0])
-        self.dither()
+        self.wait()
         for edge, obj in pairs:
             anims = [ShowCreation(edge)]
             if obj in vertices:
@@ -1838,7 +1838,7 @@ class EulersFormulaForGeneralPlanarGraph(LightUpNodes, ThreeDScene):
                 anims += self.get_count_change_animations(0, 1, 1)
             self.play(*anims)
             self.add_foreground_mobjects(edge)
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(edges, vertices, regions)
 
@@ -1873,11 +1873,11 @@ class EulersFormulaForGeneralPlanarGraph(LightUpNodes, ThreeDScene):
                 MoveToTarget(group),
                 Write(group.symbols)
             )
-        self.dither()
+        self.wait()
         self.play(Write(twos))
-        self.dither()
+        self.wait()
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
         self.top_formula = VGroup(count_titles, count_titles.symbols, twos[0])
         self.bottom_formula = VGroup(counts, counts.symbols, twos[1])
@@ -1916,12 +1916,12 @@ class EulersFormulaForGeneralPlanarGraph(LightUpNodes, ThreeDScene):
         self.play(ReplacementTransform(regions, cube, run_time = 2))
         cube.sort_submobjects(lambda p : -p[2])
         self.add(AmbientRotation(cube, axis = UP, in_place = False))
-        self.dither(3)
+        self.wait(3)
         self.play(
             FadeOut(self.top_formula),
             FadeIn(new_formula)
         )
-        self.dither(10)
+        self.wait(10)
 
 
     ###
@@ -1951,12 +1951,12 @@ class YouGaveFriendsAnImpossiblePuzzle(TeacherStudentsScene):
             "angry", "sassy", "angry",
             added_anims = [self.teacher.change, "happy"]
         )
-        self.dither(2)
+        self.wait(2)
 
 class FunnyStory(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("Funny story", target_mode = "hooray")
-        self.dither()
+        self.wait()
         self.change_student_modes(
             *["happy"]*3,
             added_anims = [RemovePiCreatureBubble(
@@ -1965,7 +1965,7 @@ class FunnyStory(TeacherStudentsScene):
             )],
             look_at_arg = UP+2*RIGHT
         )
-        self.dither(5)
+        self.wait(5)
 
 class QuestionWrapper(Scene):
     def construct(self):
@@ -1979,34 +1979,34 @@ class QuestionWrapper(Scene):
         screen_rect.next_to(question, DOWN)
 
         self.play(ShowCreation(screen_rect))
-        self.dither()
+        self.wait()
         for word in question:
             self.play(LaggedStart(
                 FadeIn, word,
                 run_time = 0.05*len(word)
             ))
-            self.dither(0.05)
-        self.dither()
+            self.wait(0.05)
+        self.wait()
 
 class Homework(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("Consider this \\\\ homework")
         self.change_student_modes(*["pondering"]*3)
-        self.dither(2)
+        self.wait(2)
         self.student_says(
             "$V-E+F=0$ on \\\\ a torus!",
             target_mode = "hooray"
         )
-        self.dither()
+        self.wait()
         self.teacher_says("Not good enough!", target_mode = "surprised")
         self.change_student_modes(*["confused"]*3)
-        self.dither(2)
+        self.wait(2)
 
 class WantToLearnMore(Scene):
     def construct(self):
         text = TextMobject("Want to learn more?")
         self.play(Write(text))
-        self.dither()
+        self.wait()
 
 class PatreonThanks(PatreonEndScreen):
     CONFIG = {

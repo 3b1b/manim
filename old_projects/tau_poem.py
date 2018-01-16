@@ -83,7 +83,7 @@ class HappyTauDayWords(Scene):
         pi = PiCreature().move_to(2*RIGHT + 3*DOWN)
         pi.highlight("red")
         self.add(words, tau, pi)
-        self.dither()
+        self.wait()
         self.play(BlinkPiCreature(tau))
         self.play(BlinkPiCreature(pi))
 
@@ -163,7 +163,7 @@ class TauPoem(Scene):
             self.play(ApplyMethod(
                 self.first_digits.shift, shift_val, run_time = 2.0
             ))
-            self.dither(2)
+            self.wait(2)
         self.play_over_time_range(0, 2,
             Transform(
                 deepcopy(self.first_word), self.number_word,
@@ -201,7 +201,7 @@ class TauPoem(Scene):
             0.8
         )
         self.add(two_pi)
-        self.dither()
+        self.wait()
         self.play(CounterclockwiseTransform(
             two_pi, sphere,
             rate_func = lambda t : 2*smooth(t/2)
@@ -213,7 +213,7 @@ class TauPoem(Scene):
         ))
         self.remove(sphere)
         self.add(tau)
-        self.dither()
+        self.wait()
 
     def line2(self):
         tau = TauCreature()
@@ -231,13 +231,13 @@ class TauPoem(Scene):
             for eyes in zip(blinked.eyes, tau.eyes)
         ])
         self.play(ShowCreation(tau.mouth))
-        self.dither(2)
+        self.wait(2)
 
     def line3(self):
         tau = TauCreature().make_sad()
         pi = PiCreature()
         self.add(*tau.parts)
-        self.dither()
+        self.wait()
         self.play(
             Transform(tau.leg, pi.left_leg),
             ShowCreation(pi.right_leg),
@@ -261,7 +261,7 @@ class TauPoem(Scene):
     def line4(self):
         pi, bubble = self.pi_speaking("Conventions matter \\\\ not!")
         self.add(pi)
-        self.dither()
+        self.wait()
         self.play(Transform(
             Point(bubble.tip).highlight("black"),
             bubble
@@ -298,14 +298,14 @@ class TauPoem(Scene):
             mob.sort_points(np.linalg.norm)
 
         self.add(bubble)
-        self.dither()
+        self.wait()
         self.remove(bubble)
         bubble_copy = deepcopy(bubble)
         self.play(CounterclockwiseTransform(bubble_copy, heart))
-        self.dither()
+        self.wait()
         self.remove(bubble_copy)
         self.play(CounterclockwiseTransform(heart, bubble))
-        self.dither()
+        self.wait()
 
 
     def line8(self):
@@ -314,7 +314,7 @@ class TauPoem(Scene):
         two = ImageMobject("big2").scale(0.5).shift(1.6*LEFT + 0.1*DOWN)
 
         self.add(two, *pi.parts)
-        self.dither()
+        self.wait()
         self.play(
             Transform(pi.left_leg, tau.leg),
             Transform(
@@ -341,7 +341,7 @@ class TauPoem(Scene):
         Mobject.highlight(new_pi, "black")
 
         self.add(tau)
-        self.dither()
+        self.wait()
         self.play(Transform(point, pi))
         self.remove(point)
         self.add(pi)
@@ -418,7 +418,7 @@ class TauPoem(Scene):
             FadeOut(sine),
             FadeIn(tau),            
         )
-        self.dither()
+        self.wait()
 
 
     def line13(self):
@@ -433,11 +433,11 @@ class TauPoem(Scene):
         tau.rewire_part_attributes()
 
         self.add(*formula)
-        self.dither()
+        self.wait()
         self.play(CounterclockwiseTransform(two_pi, tau))
         self.remove(two_pi)
         self.play(BlinkPiCreature(tau))
-        self.dither()
+        self.wait()
 
     def line14(self):
         pi, bubble = self.pi_speaking(
@@ -459,7 +459,7 @@ class TauPoem(Scene):
         ]).split()
 
         self.add(pi, bubble, *formula)
-        self.dither(2)
+        self.wait(2)
         self.play(ApplyMethod(half.highlight, "yellow"))
 
     def line16(self):
@@ -503,7 +503,7 @@ class TauPoem(Scene):
             ShowCreation(line, run_time = 1.0)
             for line in lines
         ])
-        self.dither()
+        self.wait()
 
     def line18(self):
         tau = TauCreature()
@@ -519,7 +519,7 @@ class TauPoem(Scene):
         blinked_pi  = deepcopy(pi).blink()
 
         self.add(*pi.parts + tau.parts)
-        self.dither(0.8)
+        self.wait(0.8)
         self.play(*[
             Transform(*eyes, run_time = 0.2, rate_func = rush_into)
             for eyes in [
@@ -567,7 +567,7 @@ class TauPoem(Scene):
             WalkPiCreature(sad_pi, DOWN+4*LEFT),
             run_time = 1.0
         )
-        self.dither()
+        self.wait()
 
     def line19(self):
         pass

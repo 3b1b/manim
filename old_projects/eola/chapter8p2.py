@@ -44,9 +44,9 @@ class OpeningQuote(Scene):
         author.next_to(words, DOWN, buff = 0.5)
 
         self.play(FadeIn(words))
-        self.dither(4)
+        self.wait(4)
         self.play(Write(author, run_time = 3))
-        self.dither()
+        self.wait()
 
 class CrossProductSymbols(Scene):
     def construct(self):
@@ -63,7 +63,7 @@ class CrossProductSymbols(Scene):
         vector_text.highlight(RED)
         self.add(equation)
         self.play(*map(Write, [brace, vector_text]))
-        self.dither()
+        self.wait()
 
 class DeterminantTrickCopy(DeterminantTrick):
     pass
@@ -151,7 +151,7 @@ class BruteForceVerification(Scene):
                 mob.scale_to_fit_width(max_width)
             last_point = mob
             self.play(FadeIn(mob))
-        self.dither()
+        self.wait()
 
 class ButWeCanDoBetter(TeacherStudentsScene):
     def construct(self):
@@ -195,7 +195,7 @@ class Prerequisites(Scene):
             Write(chapter7),
             ShowCreation(right_rect)
         )
-        self.dither()
+        self.wait()
 
 class DualityReview(TeacherStudentsScene):
     def construct(self):
@@ -247,7 +247,7 @@ class DotProductToTransformSymbol(Scene):
             GrowFromCenter(right_brace),
             Write(right_words, run_time = 1)
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(equals),
             Write(dot),
@@ -258,7 +258,7 @@ class DotProductToTransformSymbol(Scene):
             GrowFromCenter(left_brace),
             Write(left_words, run_time = 1)
         )
-        self.dither()
+        self.wait()
 
 class MathematicalWild(Scene):
     def construct(self):
@@ -291,16 +291,16 @@ class MathematicalWild(Scene):
         self.play(FadeIn(bubble))
         self.play(randy.change_mode, "sassy")
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(randy.look, UP+LEFT)
         self.play(
             ShowCreation(vector),
             randy.change_mode, "raise_right_hand"
         )
-        self.dither()
+        self.wait()
         self.play(Write(dual_words))
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class ThreeStepPlan(Scene):
     def construct(self):
@@ -340,7 +340,7 @@ class ThreeStepPlan(Scene):
         self.play(ShowCreation(h_line))
         for step in steps:
             self.play(Write(step, run_time = 2))
-            self.dither()
+            self.wait()
 
         linear_transformation = TextMobject("Linear", "transformation")
         linear_transformation.next_to(h_line, DOWN, MED_SMALL_BUFF)
@@ -360,11 +360,11 @@ class ThreeStepPlan(Scene):
             ),
             *map(FadeOut, steps)
         )
-        self.dither()
+        self.wait()
         self.play(Write(left_right_arrow))
         self.play(Write(det))
         self.play(ShowCreation(rect))
-        self.dither(0)
+        self.wait(0)
 
     def get_det(self):
         matrix = Matrix(np.array([
@@ -460,7 +460,7 @@ class DefineDualTransform(Scene):
             run_time = 2,
             submobject_mode = "lagged_start"
         ))
-        self.dither(2)
+        self.wait(2)
         self.play(*[
             Transform(mob.copy(), mob.target)
             for mob in tex_mobs
@@ -478,7 +478,7 @@ class DefineDualTransform(Scene):
         v_entries = self.get_mobjects_from_last_animation()[3:6]
         w_entries = self.get_mobjects_from_last_animation()[6:9]
         self.play(Write(det_text))
-        self.dither(2)
+        self.wait(2)
 
         self.det_text = det_text
         self.definitions = definitions
@@ -494,13 +494,13 @@ class DefineDualTransform(Scene):
         brace = Brace(self.det_text, DOWN)
         number_text = brace.get_text("Number")
         self.play(Transform(self.title, self.title.not_real))
-        self.dither()
+        self.wait()
         self.play(FadeOut(self.definitions))
         self.play(
             GrowFromCenter(brace),
             Write(number_text)
         )
-        self.dither()
+        self.wait()
 
         x, y, z = variables = map(TexMobject, "xyz")
         for var, entry in zip(variables, self.u_entries):
@@ -550,9 +550,9 @@ class DefineDualTransform(Scene):
             Write(VGroup(vect_brace, vect_brace.tex))
             for vect_brace in v_brace, w_brace
         ])
-        self.dither()
+        self.wait()
         self.play(Write(func_tex))
-        self.dither()
+        self.wait()
 
         self.func_tex = func_tex
         self.variables_text = VGroup(brace, number_text)
@@ -589,7 +589,7 @@ class DefineDualTransform(Scene):
         )
         self.remove(everything)
         self.add(*everything)
-        self.dither()
+        self.wait()
 
         func, func_input = self.func_tex
         func_input.target = func_input.copy()
@@ -610,18 +610,18 @@ class DefineDualTransform(Scene):
             MoveToTarget(func_input),
             FadeOut(self.variables_text),
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(matrix_words),
             ShowCreation(matrix_arrow)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(*map(FadeOut, [matrix_words, matrix_arrow]))
         self.play(
             Transform(func, dual_vector),
             Write(dual_dot[1])
         )
-        self.dither()
+        self.wait()
 
         p_coords = VGroup(*map(TexMobject, [
             "p_%d"%d for d in range(1, 4)
@@ -646,9 +646,9 @@ class DefineDualTransform(Scene):
         ))
         self.remove(func)
         self.add(p_array)
-        self.dither()
+        self.wait()
         self.play(FadeOut(title))
-        self.dither()
+        self.wait()
 
         self.p_array = p_array
         self.input_array = func_input
@@ -691,7 +691,7 @@ class DefineDualTransform(Scene):
             mobs = self.get_mobjects_from_last_animation()
             new_ps.add(mobs[0])
             to_fade.add(*mobs[1:])
-            self.dither()
+            self.wait()
 
         x, y, z = self.u_entries
         v1, v2, v3 = self.v_entries
@@ -727,7 +727,7 @@ class DefineDualTransform(Scene):
                 ApplyMethod(mob.highlight, YELLOW)
                 for mob in quint
             ])
-            self.dither(0.5)
+            self.wait(0.5)
             self.play(*[
                 MoveToTarget(mob)
                 for mob in quint
@@ -735,7 +735,7 @@ class DefineDualTransform(Scene):
                 Write(mob.sym)
                 for mob in quint
             ])
-            self.dither()
+            self.wait()
         self.play(
             ApplyFunction(
                 lambda m : m.arrange_submobjects(
@@ -750,7 +750,7 @@ class DefineDualTransform(Scene):
             for p in new_ps
         ])
         equals = self.get_mobjects_from_last_animation()
-        self.dither(2)
+        self.wait(2)
 
         everything = everything.copy()
         self.play(
@@ -779,7 +779,7 @@ class DefineDualTransform(Scene):
             MoveToTarget(everything),
             Write(question)
         )
-        self.dither()
+        self.wait()
 
 class WhyAreWeDoingThis(TeacherStudentsScene):
     def construct(self):
@@ -847,12 +847,12 @@ class DotProductWords(Scene):
         self.add(dot_product)
         self.play(Write(equals))
         self.play(Write(words[0]))
-        self.dither()
+        self.wait()
         self.play(
             Write(times),
             Write(words[1])
         )
-        self.dither()
+        self.wait()
 
 class ThreeDProjectToPerpendicular(Scene):
     pass #
@@ -879,12 +879,12 @@ class GeometricVolumeWords(Scene):
         words.to_edge(DOWN, buff = SMALL_BUFF)
         for word in words:
             self.play(Write(word))
-            self.dither()
+            self.wait()
 
 class WriteXYZ(Scene):
     def construct(self):
         self.play(Write(Matrix(list("xyz"))))
-        self.dither()
+        self.wait()
 
 class ThreeDDotProductWithCross(Scene):
     pass 
@@ -901,7 +901,7 @@ class CrossVectorEmphasisWords(Scene):
             word.highlight_by_tex(w_tex, W_COLOR)
             word.highlight_by_tex("parallelogram", BLUE)
             self.play(Write(word))
-            self.dither()
+            self.wait()
             self.play(FadeOut(word))
 
 class NextVideo(Scene):
@@ -916,7 +916,7 @@ class NextVideo(Scene):
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.dither()
+        self.wait()
 
 class ChangeOfBasisPreview(LinearTransformationScene):
     CONFIG = {
@@ -982,13 +982,13 @@ class ChangeOfBasisPreview(LinearTransformationScene):
         self.play(self.j_hat.shift, self.i_hat.get_end())
         sum_vect = Vector(self.j_hat.get_end(), color = self.sum_color)
         self.play(ShowCreation(sum_vect))
-        self.dither(2)
+        self.wait(2)
         self.play(
             FadeOut(sum_vect),
             self.i_hat.restore,
             self.j_hat.restore,
         )
-        self.dither()
+        self.wait()
 
 
 

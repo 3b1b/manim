@@ -57,7 +57,7 @@ class BringInPeano(Intro):
         """)
         self.setup(PeanoCurve)
         self.play(ShimmerIn(words1))
-        self.dither(5)
+        self.wait(5)
         self.remove(words1)
         self.add(words2.to_edge(UP))
         for x in range(3):
@@ -132,7 +132,7 @@ class SurpriseFractal(Intro):
 
         self.setup(Sierpinski)
         self.add(TextMobject("Speaking of other fractals\\dots"))
-        self.dither(3)
+        self.wait(3)
         self.clear()
         self.play(ShimmerIn(words))
         for x in range(9):
@@ -160,7 +160,7 @@ class IntroduceKoch(Intro):
             self.increase_order()
         self.remove(words[1])
         self.add(words[2])
-        self.dither(6)
+        self.wait(6)
 
 class StraightKoch(KochCurve):
     CONFIG = {
@@ -212,19 +212,19 @@ class FromKochToSpaceFilling(Scene):
         ))
         self.remove(words[0])
         self.add(words[1])
-        self.dither(4)
+        self.wait(4)
         self.remove(words[1])
         self.add(words[2])
-        self.dither(3)
+        self.wait(3)
         for order in range(2, self.max_order):
             self.play(Transform(
                 curve,
                 StraightKoch(order = order)
             ))
             if order == 2:
-                self.dither(2)
+                self.wait(2)
             elif order == 3:
-                self.dither()
+                self.wait()
         self.clear()
 
 
@@ -257,7 +257,7 @@ class FromKochToSpaceFilling(Scene):
             ShowCreation(arrow),
             ShimmerIn(theta)
         )
-        self.dither(2)
+        self.wait(2)
         self.remove(theta, arrow)
         self.play(
             Transform(koch, duller_koch),
@@ -321,7 +321,7 @@ class FromKochToSpaceFilling(Scene):
             Transform(left_curve, duller, **kwargs),
             Transform(right_curve, duller_f, **kwargs)
         )
-        self.dither()
+        self.wait()
         kwargs["run_time"] = 7
         kwargs["rate_func"] = None
         self.remove(words[1])
@@ -332,7 +332,7 @@ class FromKochToSpaceFilling(Scene):
         )
         self.remove(words[2])
         self.add(words[3])
-        self.dither()
+        self.wait()
 
 
 
