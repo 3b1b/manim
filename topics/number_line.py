@@ -37,10 +37,14 @@ class NumberLine(VMobject):
         self.main_line = Line(self.x_min*RIGHT, self.x_max*RIGHT)
         self.tick_marks = VGroup()
         self.add(self.main_line, self.tick_marks)
+
         for x in self.get_tick_numbers():
-            self.add_tick(x, self.tick_size)
-        for x in self.numbers_with_elongated_ticks:
-            self.add_tick(x, self.longer_tick_multiple*self.tick_size)
+            if x in self.numbers_with_elongated_ticks:
+                tick_size_used = self.longer_tick_multiple*self.tick_size
+            else:
+                tick_size_used = self.tick_size
+            self.add_tick(x, tick_size_used)
+
         self.stretch(self.unit_size, 0)
         self.shift(-self.number_to_point(self.number_at_center))
 
