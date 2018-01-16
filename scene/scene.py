@@ -499,7 +499,7 @@ class Scene(object):
 
         fps = int(1/self.frame_duration)
         height, width = self.camera.pixel_shape
-
+        
         command = [
             FFMPEG_BIN,
             '-y', # overwrite output file if it exists

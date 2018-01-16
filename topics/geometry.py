@@ -239,7 +239,7 @@ class Arrow(Line):
         "max_tip_length_to_length_ratio" : 0.35,
         "max_stem_width_to_tip_width_ratio" : 0.3,
         "buff" : MED_SMALL_BUFF,
-        "propogate_style_to_family" : False,
+        "propagate_style_to_family" : False,
         "preserve_tip_size_when_scaling" : True,
         "normal_vector" : OUT,
         "use_rectangular_stem" : True,

@@ -2974,7 +2974,7 @@ class IntroduceBlockChain(Scene):
         self.show_proofs_of_work()
         self.chain_blocks_together()
         self.mess_with_early_block()
-        self.propogate_hash_change()
+        self.propagate_hash_change()
         self.redo_proof_of_work()
         self.write_block_chain()
 
@@ -3144,7 +3144,7 @@ class IntroduceBlockChain(Scene):
 
         blocks.submobjects[:2] = blocks.submobjects[1::-1]
 
-    def propogate_hash_change(self):
+    def propagate_hash_change(self):
         prev_hashes = self.prev_hashes
 
         for block, prev_hash in zip(self.blocks, prev_hashes[1:]):

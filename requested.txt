@@ -1,0 +1,17 @@
+ffmpeg
+hydra
+hydra
+nmap
+nmap
+py27-game
+py27-ipython
+py27-matplotlib
+py27-mayavi
+py27-pygments
+py27-six
+tor
+tor
+torsocks
+torsocks
+wget
+wget
