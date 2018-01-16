@@ -90,7 +90,7 @@ class ChangingDecimal(Animation):
         elif self.tracked_mobject is not None:
             self.decimal_number_mobject.move_to(self.tracked_mobject.get_center() + self.diff_from_tracked_mobject)
 
-class ChangingDecimalToValue(ChangingDecimal):
+class ChangeDecimalToValue(ChangingDecimal):
     def __init__(self, decimal_number_mobject, target_number, **kwargs):
         start_number = decimal_number_mobject.number
         func = lambda alpha : interpolate(start_number, target_number, alpha)
