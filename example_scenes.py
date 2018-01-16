@@ -26,6 +26,10 @@ from mobject.vectorized_mobject import *
 ## To watch one of these scenes, run the following:
 ## python extract_scene.py -p file_name <SceneName>
 
+
+
+
+
 class SquareToCircle(Scene):
     def construct(self):
         circle = Circle()
