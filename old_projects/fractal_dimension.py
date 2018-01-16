@@ -39,7 +39,7 @@ class Britain(SVGMobject):
         "stroke_width" : 0,
         "fill_color" : BLUE_D,
         "fill_opacity" : 1,
-        "propogate_style_to_family" : True,
+        "propagate_style_to_family" : True,
         "height" : 5,
         "mark_paths_closed" : True,
     }
@@ -2887,7 +2887,7 @@ class AffirmLogo(SVGMobject):
         "fill_opacity" : 1,
         "stroke_color" : "#0FA0EA",
         "stroke_width" : 0,
-        "propogate_style_to_family" : True,
+        "propagate_style_to_family" : True,
         "file_name" : "affirm_logo",
         "width" : 3,
     }

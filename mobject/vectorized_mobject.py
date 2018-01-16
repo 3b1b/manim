@@ -1,6 +1,6 @@
 import re
 
-from .mobject import Mobject
+from mobject import Mobject
 
 from helpers import *
 
@@ -15,7 +15,7 @@ class VMobject(Mobject):
         "close_new_points" : False,
         "mark_paths_closed" : False,
         "considered_smooth" : True,
-        "propogate_style_to_family" : False,
+        "propagate_style_to_family" : False,
     }
 
     ## Colors
@@ -25,7 +25,7 @@ class VMobject(Mobject):
            stroke_width = self.stroke_width,
            fill_color = self.fill_color or self.color, 
            fill_opacity = self.fill_opacity,
-           family = self.propogate_style_to_family
+           family = self.propagate_style_to_family
         )
         return self
 
@@ -199,9 +199,9 @@ class VMobject(Mobject):
 
     def add_subpath(self, points):
         """
-        A VMobject is meant to represnt
+        A VMobject is meant to represent
         a single "path", in the svg sense of the word.
-        However, one such path may really consit of separate
+        However, one such path may really consist of separate
         continuous components if there is a move_to command.
 
         These other portions of the path will be treated as submobjects,
@@ -349,9 +349,9 @@ class VMobject(Mobject):
     def pointwise_become_partial(self, mobject, a, b):
         assert(isinstance(mobject, VMobject))
         #Partial curve includes three portions:
-        #-A middle section, which matches the curve exactly
-        #-A start, which is some ending portion of an inner cubic
-        #-An end, which is the starting portion of a later inner cubic
+        #- A middle section, which matches the curve exactly
+        #- A start, which is some ending portion of an inner cubic
+        #- An end, which is the starting portion of a later inner cubic
         if a <= 0 and b >= 1:
             self.set_points(mobject.points)
             self.mark_paths_closed = mobject.mark_paths_closed

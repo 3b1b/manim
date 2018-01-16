@@ -24,7 +24,7 @@ class SVGMobject(VMobject):
         "stroke_width" : 0,
         "fill_opacity" : 1,
         # "fill_color" : LIGHT_GREY,
-        "propogate_style_to_family" : True,
+        "propagate_style_to_family" : True,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs, locals())

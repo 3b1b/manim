@@ -3293,7 +3293,7 @@ class EmeraldLogo(SVGMobject):
         "file_name" : "emerald_logo",
         "stroke_width" : 0,
         "fill_opacity" : 1,
-        "propogate_style_to_family" : True,
+        "propagate_style_to_family" : True,
         # "helix_color" : "#439271",
         "helix_color" : GREEN_E,
     }

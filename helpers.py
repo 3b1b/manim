@@ -171,7 +171,7 @@ def compass_directions(n = 4, start_vect = RIGHT):
 def partial_bezier_points(points, a, b):
     """
     Given an array of points which define 
-    a bezier curve, and two numbres 0<=a<b<=1,
+    a bezier curve, and two numbers 0<=a<b<=1,
     return an array of the same size, which 
     describes the portion of the original bezier
     curve on the interval [a, b].
@@ -367,7 +367,7 @@ def straight_path(start_points, end_points, alpha):
 def path_along_arc(arc_angle, axis = OUT):
     """
     If vect is vector from start to end, [vect[:,1], -vect[:,0]] is 
-    perpendicualr to vect in the left direction.
+    perpendicular to vect in the left direction.
     """
     if abs(arc_angle) < STRAIGHT_PATH_THRESHOLD:
         return straight_path
@@ -406,7 +406,7 @@ def initials(name, sep_values = [" ", "_"]):
         for s in re.split("|".join(sep_values), name)
     ])
 
-def cammel_case_initials(name):
+def camel_case_initials(name):
     return filter(lambda c : c.isupper(), name)
 
 ################################################
@@ -542,7 +542,7 @@ def thick_diagonal(dim, thickness = 2):
 
 def rotation_matrix(angle, axis):
     """
-    Rotation in R^3 about a specified axess of rotation.
+    Rotation in R^3 about a specified axis of rotation.
     """
     about_z = rotation_about_z(angle)
     z_to_axis = z_to_vector(axis)

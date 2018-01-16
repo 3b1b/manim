@@ -23,7 +23,7 @@ class NumberLine(VMobject):
         "line_to_number_vect" : DOWN,
         "line_to_number_buff" : MED_SMALL_BUFF,
         "include_tip" : False,
-        "propogate_style_to_family" : True,
+        "propagate_style_to_family" : True,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
@@ -135,7 +135,7 @@ class UnitInterval(NumberLine):
 
 class Axes(VGroup):
     CONFIG = {
-        "propogate_style_to_family" : True,
+        "propagate_style_to_family" : True,
         "three_d" : False,
         "number_line_config" : {
             "color" : LIGHT_GREY,
@@ -197,7 +197,7 @@ class NumberPlane(VMobject):
         "y_line_frequency" : 1,
         "secondary_line_ratio" : 1,
         "written_coordinate_height" : 0.2,
-        "propogate_style_to_family" : False,
+        "propagate_style_to_family" : False,
     }
     
     def generate_points(self):
