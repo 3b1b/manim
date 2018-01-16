@@ -250,7 +250,7 @@ class BabyPiCreature(PiCreature):
         for pupil in self.pupils:
             pupil.scale_in_place(self.pupil_scale_factor)
         self.look(looking_direction)
-        
+
 class Blink(ApplyMethod):
     CONFIG = {
         "rate_func" : squish_rate_func(there_and_back)
