@@ -16,6 +16,7 @@ Manim dependencies rely on system libraries you will need to install on your
 operating system:
 * ffmpeg
 * latex
+* sox
 
 Then you can install the python dependencies:
 ```sh
