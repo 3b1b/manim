@@ -74,17 +74,17 @@ class Introduce(TeacherStudentsScene):
             color = WHITE
         )
         self.play(FadeIn(second_deriv))
-        self.dither(2)
+        self.wait(2)
         self.play(Transform(second_deriv, derivs[1]))
-        self.dither(2)
+        self.wait(2)
         self.play(MoveToTarget(card_dot))
         self.play(ShowCreation(arrow))
-        self.dither()
+        self.wait()
         self.play(Transform(second_deriv, derivs[2]))
         self.change_student_modes(*["erm"]*3)
-        self.dither()
+        self.wait()
         self.play(second_deriv.restore)
-        self.dither(2)
+        self.wait(2)
 
 class SecondDerivativeGraphically(GraphScene):
     CONFIG = {
@@ -122,7 +122,7 @@ class SecondDerivativeGraphically(GraphScene):
                 rate_func = squish_rate_func(smooth, 0.5, 1)
             )
         )
-        self.dither()
+        self.wait()
 
         self.graph = graph
         self.graph_label = graph_label
@@ -145,12 +145,12 @@ class SecondDerivativeGraphically(GraphScene):
             ss_group, target_x = self.x3,
             run_time = 5
         )
-        self.dither()
+        self.wait()
         self.animate_secant_slope_group_change(
             ss_group, target_x = self.x2,
             run_time = 3
         )
-        self.dither()
+        self.wait()
 
         self.ss_group = ss_group
         self.deriv = deriv
@@ -173,7 +173,7 @@ class SecondDerivativeGraphically(GraphScene):
         ]
 
         self.play(Write(second_deriv))
-        self.dither()
+        self.wait()
         self.play(
             Write(words),
             ShowCreation(
@@ -227,7 +227,7 @@ class SecondDerivativeGraphically(GraphScene):
             UpdateFromFunc(dot, get_dot_update_func(positive_curve))
         )
         self.play(FadeOut(dot))
-        self.dither()
+        self.wait()
         self.animate_secant_slope_group_change(
             self.ss_group, target_x = self.x3,
             run_time = 4,
@@ -250,7 +250,7 @@ class SecondDerivativeGraphically(GraphScene):
             run_time = 4,
             added_anims = [Animation(negative_curve)]
         )
-        self.dither(2)
+        self.wait(2)
         self.play(*map(FadeOut, [
             self.graph, self.ss_group, 
             negative_curve, self.second_deriv_words
@@ -305,14 +305,14 @@ class SecondDerivativeGraphically(GraphScene):
                 if submob is not graph.arg_rhs.get_part_by_tex(str(x0))
             ]))
         )
-        self.dither()
+        self.wait()
         self.play(FadeIn(graph.ss_group))
         self.animate_secant_slope_group_change(
             graph.ss_group, target_x = x0 + 1,
             run_time = 3,
         )
         self.play(FadeOut(graph.ss_group))
-        self.dither()
+        self.wait()
         for new_graph in graphs[1:]:
             self.play(Transform(graph, new_graph))
             self.play(Transform(
@@ -377,20 +377,20 @@ class IntroduceNotation(TeacherStudentsScene):
             RemovePiCreatureBubble(self.get_students()[1]),
             self.teacher.change_mode, "raise_right_hand"
         )
-        self.dither()
+        self.wait()
         self.play(ShowCreation(numerator.circle))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             numerator.circle,
             denominator.circle,
         ))
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(denominator.circle),
             Write(dx_to_zero),
             dxs.highlight, YELLOW
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(dx_to_zero),
             *[ApplyMethod(pi.change, "plain") for pi in self.get_pi_creatures()]
@@ -401,7 +401,7 @@ class IntroduceNotation(TeacherStudentsScene):
             FadeOut(VGroup(lp, rp)),
             d_over_dx.shift, 0.8*LEFT + 0.05*UP,
         )
-        self.dither()
+        self.wait()
         self.play(*[
             ReplacementTransform(
                 group,
@@ -414,13 +414,13 @@ class IntroduceNotation(TeacherStudentsScene):
                 (VGroup(dxs[1].copy()), "^2}"),
             ]
         ])
-        self.dither(2)
+        self.wait(2)
         self.student_says(
             "How does one... \\\\ read that?",
             student_index = 0,
         )
         self.play(self.teacher.change, "happy")
-        self.dither(2)
+        self.wait(2)
 
 class HowToReadNotation(GraphScene, ReconfigurableScene):
     CONFIG = {
@@ -481,7 +481,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
             brace.dx.next_to(brace, DOWN, SMALL_BUFF)
 
         self.play(ShowCreation(v_lines[0]))
-        self.dither()
+        self.wait()
         for brace, line in zip(braces, v_lines[1:]):
             self.play(
                 ReplacementTransform(
@@ -491,7 +491,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
                 Write(brace.dx, run_time = 1),
             )
             self.play(ShowCreation(line))
-        self.dither()
+        self.wait()
 
         self.v_lines = v_lines
         self.braces = braces
@@ -546,7 +546,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
                 ShowCreation(df_line.arrow),
                 Write(df_line.label)
             )
-            self.dither(2)
+            self.wait(2)
 
         self.df_dx_groups = df_dx_groups
         self.df_labels = df_labels
@@ -598,7 +598,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
         self.play(ShowCreation(h_lines, run_time = 2))
         self.play(GrowFromCenter(ddf_brace))
         self.play(Write(ddf))
-        self.dither(2)
+        self.wait(2)
 
         self.ddf = ddf
 
@@ -620,9 +620,9 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
 
         self.play(MoveToTarget(ddf))
         self.play(Write(rhs))
-        self.dither()
+        self.wait()
         self.play(Write(example_dx))
-        self.dither(2)
+        self.wait(2)
         self.play(FadeOut(example_dx))
 
         self.ddf = ddf
@@ -663,7 +663,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
                 for mob, tex in (self.ddf, "df"), (self.dx_squared, "dx")
             ]
         )
-        self.dither(2)
+        self.wait(2)
         self.play(FadeOut(parens))
         self.play(
             left_shifter.shift, 0.2*LEFT,
@@ -671,7 +671,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
             ReplacementTransform(pre_exp_two, exp_two),
             ddf_over_dx_squared.get_part_by_tex("over").scale_in_place, 0.8
         )
-        self.dither(2)
+        self.wait(2)
 
 class Footnote(Scene):
     def construct(self):
@@ -730,7 +730,7 @@ class SecondDerivativeAsAcceleration(Scene):
         a_words.to_corner(UP+RIGHT )
         self.add(a_words)
         self.show_car_movement()
-        self.dither()
+        self.wait()
 
         self.a_words = a_words
 
@@ -824,32 +824,32 @@ class SecondDerivativeAsAcceleration(Scene):
             s_graph.next_to, s_words, LEFT
         )
         self.play(*map(FadeIn, [v_graph, v_words]) )
-        self.dither(2)
+        self.wait(2)
         self.play(
             v_graph.scale, 0.3,
             v_graph.next_to, v_words, LEFT
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             Indicate(self.a_words),
             FadeIn(a_graph),
         )
-        self.dither()
+        self.wait()
         self.play(FadeIn(positive_rect))
         for x in range(2):
             self.show_car_movement(
                 run_time = 3,
                 rate_func = lambda t : smooth(t/2.0)
             )
-            self.dither()
+            self.wait()
         self.play(FadeIn(negative_rect))
-        self.dither()
+        self.wait()
         self.play(MoveCar(
             self.car, self.line.get_end(),
             run_time = 3,
             rate_func = lambda t : 2*smooth((t+1)/2.0) - 1
         ))
-        self.dither()
+        self.wait()
         self.play(
             a_graph.scale, 0.3,
             a_graph.next_to, self.a_words, LEFT,
@@ -866,7 +866,7 @@ class SecondDerivativeAsAcceleration(Scene):
         self.car.move_to(self.line.get_start())
         self.play(FadeIn(self.car))
         self.show_car_movement()
-        self.dither(2)
+        self.wait(2)
 
     ##########
 
@@ -893,7 +893,7 @@ class NextVideo(Scene):
         rect.next_to(title, DOWN)
         self.add(rect)
         self.play(Write(title))
-        self.dither()
+        self.wait()
 
 class Thumbnail(SecondDerivativeGraphically):
     CONFIG = {

@@ -152,7 +152,7 @@ class IncrementTest(Scene):
         num = TexMobject("0")
         num.shift(UP)
         self.play(IncrementNumber(num))
-        self.dither()
+        self.wait()
 
 
 
@@ -198,7 +198,7 @@ class Introduction(TeacherStudentsScene):
             run_time = 2
         )
         self.play(self.get_teacher().change_mode, "happy")
-        self.dither()
+        self.wait()
         self.teacher_says(
             "It's actually a \\\\",
             "very subtle idea",
@@ -211,7 +211,7 @@ class Introduction(TeacherStudentsScene):
             "Instantaneous rate of change", "?",
             student_index = 0,
         )
-        self.dither()
+        self.wait()
 
         bubble = self.get_students()[0].bubble
         phrase = bubble.content[0]
@@ -233,7 +233,7 @@ class Introduction(TeacherStudentsScene):
                 ])
             ])
         )
-        self.dither()
+        self.wait()
         change = VGroup(*phrase[-len("change"):])
         instantaneous = VGroup(*phrase[:len("instantaneous")])
         change_brace = Brace(change)
@@ -318,7 +318,7 @@ class FathersOfCalculus(Scene):
             GrowFromCenter(rigor_brace),
             Write(rigor, run_time = 1)
         )
-        self.dither()
+        self.wait()
 
 class IntroduceCar(Scene):
     CONFIG = {
@@ -367,7 +367,7 @@ class IntroduceCar(Scene):
                 GrowFromCenter(distance_brace),
                 Write(distance)
             )
-            self.dither()
+            self.wait()
 
         if self.should_transition_to_graph:
             self.play(
@@ -396,7 +396,7 @@ class IntroduceCar(Scene):
             car_line_group.target.rotate(np.pi/2, about_point = point_A)
             car_line_group.target.shift(graph_scene.graph_origin - point_A)
             self.play(MoveToTarget(car_line_group, path_arc = np.pi/2))
-            self.dither()
+            self.wait()
 
     def introduce_added_mobjects(self):
         pass
@@ -473,7 +473,7 @@ class GraphCarTrajectory(GraphScene):
             UpdateFromFunc(v_line, v_update),
             run_time = self.time_of_journey,
         )
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [h_line, v_line, car]))
 
         #Show example vertical distance
@@ -487,13 +487,13 @@ class GraphCarTrajectory(GraphScene):
         brace = Brace(dashed_h, RIGHT)
         brace_text = brace.get_text("Distance traveled")
         self.play(t_dot.restore)
-        self.dither()
+        self.wait()
         self.play(ShowCreation(dashed_h))
         self.play(
             GrowFromCenter(brace),
             Write(brace_text)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(*map(FadeOut, [t_dot, dashed_h, brace, brace_text]))
 
         #Name graph
@@ -509,10 +509,10 @@ class GraphCarTrajectory(GraphScene):
         d.highlight(DISTANCE_COLOR)
 
         self.play(Write(s_of_t))
-        self.dither()
+        self.wait()
         s.save_state()
         self.play(Transform(s, d))
-        self.dither()
+        self.wait()
         self.play(s.restore)
 
     def comment_on_slope(self, graph, origin):
@@ -528,9 +528,9 @@ class GraphCarTrajectory(GraphScene):
 
         change_lines = self.get_change_lines(curr_time, delta_t)
         self.play(FadeIn(rect))
-        self.dither()
+        self.wait()
         self.play(Write(change_lines))
-        self.dither()
+        self.wait()
         for x in range(1, 10):
             curr_time = x
             new_change_lines = self.get_change_lines(curr_time, delta_t)
@@ -543,10 +543,10 @@ class GraphCarTrajectory(GraphScene):
                     "$\\frac{\\text{meters}}{\\text{second}}$"
                 )
                 self.play(Write(text))
-                self.dither()
+                self.wait()
                 self.play(FadeOut(text))
             else:
-                self.dither()
+                self.wait()
         self.play(*map(FadeOut, [rect, change_lines]))
         self.rect = rect
 
@@ -579,10 +579,10 @@ class GraphCarTrajectory(GraphScene):
             return result
         label = get_velocity_label(velocity_graph)
         self.play(Write(label))
-        self.dither()
+        self.wait()
         self.rect.move_to(self.coords_to_point(0, 0), DOWN+LEFT)
         self.play(FadeIn(self.rect))
-        self.dither()
+        self.wait()
         for time, show_slope in (4.5, True), (9, False):
             self.play(
                 self.rect.move_to, self.coords_to_point(time, 0), DOWN+LEFT
@@ -590,10 +590,10 @@ class GraphCarTrajectory(GraphScene):
             if show_slope:
                 change_lines = self.get_change_lines(time)
                 self.play(FadeIn(change_lines))
-                self.dither()
+                self.wait()
                 self.play(FadeOut(change_lines))
             else:
-                self.dither()
+                self.wait()
         self.play(FadeOut(self.rect))
 
         #Change distance and velocity graphs
@@ -630,13 +630,13 @@ class GraphCarTrajectory(GraphScene):
                 Transform(velocity_graph, new_velocity_graph),
                 Transform(label, new_velocity_label),
             )
-            self.dither(2)
+            self.wait(2)
         self.play(self.s_graph.restore)
         self.play(
             velocity_graph.restore,
             label.restore,
         )
-        self.dither(2)
+        self.wait(2)
 
     def ask_critically_about_velocity(self):
         morty = Mortimer().flip()
@@ -646,7 +646,7 @@ class GraphCarTrajectory(GraphScene):
             "what velocity means."
         ))
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
 class ShowSpeedometer(IntroduceCar):
     CONFIG = {
@@ -741,7 +741,7 @@ class VelocityInAMomentMakesNoSense(Scene):
         self.play(Blink(randy))
         self.play(Write(q_marks))
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class SnapshotOfACar(Scene):
     def construct(self):
@@ -782,7 +782,7 @@ class SnapshotOfACar(Scene):
         )
         question.next_to(car, UP, buff = LARGE_BUFF)
         self.play(Write(question, run_time = 2))
-        self.dither(2)
+        self.wait(2)
 
 class CompareTwoTimes(Scene):
     CONFIG = {
@@ -812,11 +812,11 @@ class CompareTwoTimes(Scene):
         dividers.highlight(GREY)
 
         self.add(dividers, state1)
-        self.dither()
+        self.wait()
         copied_state = state1.copy()
         self.play(copied_state.move_to, state2)
         self.play(Transform(copied_state, state2))
-        self.dither(2)
+        self.wait(2)
         self.keeper = state1
 
     def show_equation(self):
@@ -858,7 +858,7 @@ class CompareTwoTimes(Scene):
             group, submobject_mode = "lagged_start",
             run_time = 3
         ))
-        self.dither(3)
+        self.wait(3)
         self.formula = formula
 
     def fade_all_but_one_moment(self):
@@ -868,7 +868,7 @@ class CompareTwoTimes(Scene):
         ]
         anims.append(Animation(self.keeper.copy()))
         self.play(*anims)
-        self.dither()
+        self.wait()
 
     def get_car_state(self, distance, time):
         line = Line(3*LEFT, 3*RIGHT)
@@ -940,13 +940,13 @@ class VelocityAtIndividualPointsVsPairs(GraphCarTrajectory):
             )
 
         self.play(ShowCreation(line))
-        self.dither()
+        self.wait()
         self.play(UpdateFromAlphaFunc(
             line, line_update,
             run_time = 4,
             rate_func = there_and_back
         ))
-        self.dither()
+        self.wait()
         velocity_graph.add(line)
 
     def show_two_times_on_distance(self):
@@ -972,7 +972,7 @@ class VelocityAtIndividualPointsVsPairs(GraphCarTrajectory):
                 GrowFromCenter(brace),
                 Write(text)
             )
-            self.dither()
+            self.wait()
 
     def show_confused_pi_creature(self):
         randy = Randolph()
@@ -981,12 +981,12 @@ class VelocityAtIndividualPointsVsPairs(GraphCarTrajectory):
 
         self.play(randy.change_mode, "confused")
         self.play(Blink(randy))
-        self.dither(2)
+        self.wait(2)
         self.play(Blink(randy))
         self.play(randy.change_mode, "erm")
-        self.dither()
+        self.wait()
         self.play(Blink(randy))
-        self.dither(2)
+        self.wait(2)
 
 class FirstRealWorld(TeacherStudentsScene):
     def construct(self):
@@ -994,7 +994,7 @@ class FirstRealWorld(TeacherStudentsScene):
         self.change_student_modes(
             "happy", "hooray", "happy"
         )
-        self.dither(3)
+        self.wait(3)
 
 class SidestepParadox(Scene):
     def construct(self):
@@ -1018,11 +1018,11 @@ class SidestepParadox(Scene):
 
         self.add(title, car)
         self.play(Write(speedometer))
-        self.dither()
+        self.wait()
         self.play(Write(cross))
-        self.dither()
+        self.wait()
         self.play(Write(new_words))
-        self.dither()
+        self.wait()
 
 class CompareTwoVerySimilarTimes(CompareTwoTimes):
     CONFIG = {
@@ -1056,7 +1056,7 @@ class CompareTwoVerySimilarTimes(CompareTwoTimes):
             Write(dt_text)
         )
         formula.add(dt_brace, dt_text)
-        self.dither(2)
+        self.wait(2)
 
         formula.generate_target()
         VGroup(
@@ -1067,7 +1067,7 @@ class CompareTwoVerySimilarTimes(CompareTwoTimes):
             GrowFromCenter(ds_brace),
             Write(ds_text)
         )
-        self.dither(2)
+        self.wait(2)
 
 class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
     CONFIG = {
@@ -1146,7 +1146,7 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
                 GrowFromCenter(brace),
                 Write(text)
             )
-            self.dither()
+            self.wait()
 
         #Show as function
         frac = TexMobject("\\frac{ds}{dt}")
@@ -1203,7 +1203,7 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
 
         self.play(Write(frac))
         self.play(Write(rise_over_run))
-        self.dither()
+        self.wait()
         def input_point_line_update(line, alpha):
             time = interpolate(self.start_time, self.end_time, alpha)
             line.put_start_and_end_on(
@@ -1221,10 +1221,10 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
             run_time = 6,
         )
         self.play(FadeOut(input_point_line))
-        self.dither()
+        self.wait()
         self.play(FadeOut(rise_over_run))
         self.play(Write(of_t))
-        self.dither(2)
+        self.wait(2)
         self.play(ShowCreation(velocity_graph))
         velocity_label = self.label_graph(
             velocity_graph, 
@@ -1233,9 +1233,9 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
             direction = DOWN+LEFT,
             buff = SMALL_BUFF
         )
-        self.dither(2)
+        self.wait(2)
         self.play(Write(dt_choice))
-        self.dither()
+        self.wait()
         for anim_class in FadeIn, FadeOut:
             self.play(anim_class(
                 t_tick_marks, submobject_mode = "lagged_start",
@@ -1245,18 +1245,18 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
             Write(equals),
             Write(numerator)
         )
-        self.dither()
+        self.wait()
 
         self.play(ShowCreation(v_line_at_t))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(v_line_at_t_plus_dt))
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [v_line_at_t, v_line_at_t_plus_dt]))
         self.play(
             Write(frac_line),
             Write(lower_dt)
         )
-        self.dither(2)
+        self.wait(2)
 
         #Show different curves
         self.disactivate_zooming()
@@ -1292,7 +1292,7 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
 
             self.play(Transform(self.graph, new_graph))
             self.play(Transform(velocity_graph, new_velocity_graph))
-            self.dither(2)
+            self.wait(2)
         self.play(self.graph.restore)
         self.play(
             velocity_graph.restore,
@@ -1306,12 +1306,12 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
 
         self.play(FadeIn(randy))
         self.play(randy.change_mode, "pondering")
-        self.dither()
+        self.wait()
         self.play(Blink(randy))
         self.play(randy.change_mode, "thinking")
-        self.dither()
+        self.wait()
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class DefineTrueDerivative(Scene):
     def construct(self):
@@ -1335,17 +1335,17 @@ class DefineTrueDerivative(Scene):
 
         self.add(lhs, dt_rhs)
         self.play(Write(title))
-        self.dither()
+        self.wait()
         dt_rhs.save_state()
         for num_rhs in numerical_rhs_list:
             self.play(Transform(dt_rhs, num_rhs))
-        self.dither()
+        self.wait()
         self.play(dt_rhs.restore)
         self.play(
             GrowFromCenter(brace),
             Write(dt_to_zero)
         )
-        self.dither()
+        self.wait()
 
     def get_fraction(self, dt_string):
         tex_mob = TexMobject(
@@ -1494,13 +1494,13 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
             ),
             run_time = 4
         ))
-        self.dither()
+        self.wait()
 
     def show_tangent_line(self):
         self.curr_time = self.start_time
 
         ds_dt_group = self.get_ds_dt_group(2, animate = True)
-        self.dither()
+        self.wait()
         def update_ds_dt_group(ds_dt_group, alpha):
             new_dt = interpolate(self.start_dt, self.end_dt, alpha)
             new_group = self.get_ds_dt_group(new_dt)
@@ -1509,7 +1509,7 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
             UpdateFromAlphaFunc(ds_dt_group, update_ds_dt_group),
             run_time = 15
         )
-        self.dither()
+        self.wait()
         def update_as_tangent_line(ds_dt_group, alpha):
             self.curr_time = interpolate(self.start_time, self.end_time, alpha)
             new_group = self.get_ds_dt_group(self.end_dt)
@@ -1519,15 +1519,15 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
             run_time = 8,
             rate_func = there_and_back
         )
-        self.dither()
+        self.wait()
         what_dt_is_not_text = self.what_this_is_not_saying()
-        self.dither()
+        self.wait()
         self.play(
             UpdateFromAlphaFunc(ds_dt_group, update_ds_dt_group),
             run_time = 8,
             rate_func = lambda t : 1-there_and_back(t)
         )
-        self.dither()
+        self.wait()
         self.play(FadeOut(what_dt_is_not_text))
 
         v_line = self.get_vertical_line_to_graph(
@@ -1546,7 +1546,7 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
             )
             return v_line
         self.play(ShowCreation(v_line))
-        self.dither()
+        self.wait()
 
         original_end_time = self.end_time
         for end_time in self.alt_end_time, original_end_time, self.start_time:
@@ -1590,7 +1590,7 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
 
         self.play(Write(words))
         self.play(ShowCreation(circle))        
-        self.dither()
+        self.wait()
 
 class UseOfDImpliesApproaching(TeacherStudentsScene):
     def construct(self):
@@ -1602,7 +1602,7 @@ class UseOfDImpliesApproaching(TeacherStudentsScene):
         VGroup(*statement[-4:-2]).highlight(TIME_COLOR)
         self.teacher_says(statement)
         self.change_student_modes(*["pondering"]*3)
-        self.dither(4)
+        self.wait(4)
 
 class LeadIntoASpecificExample(TeacherStudentsScene, SecantLineToTangentLine):
     def setup(self):
@@ -1615,7 +1615,7 @@ class LeadIntoASpecificExample(TeacherStudentsScene, SecantLineToTangentLine):
         self.remove(deriv_def)
 
         self.teacher_says("An example \\\\ should help.")
-        self.dither()
+        self.wait()
         self.play(
             Write(deriv_def),
             *it.chain(*[
@@ -1634,7 +1634,7 @@ class LeadIntoASpecificExample(TeacherStudentsScene, SecantLineToTangentLine):
         #     height = 3,
         #     target_mode = "hooray"
         # )
-        # self.dither(2)
+        # self.wait(2)
 
 class TCubedExample(SecantLineToTangentLine):
     CONFIG = {
@@ -1674,7 +1674,7 @@ class TCubedExample(SecantLineToTangentLine):
             direction = LEFT,
             buff = SMALL_BUFF
         )
-        self.dither()
+        self.wait()
 
     def show_vertical_lines(self):
         for t in 1, 2:
@@ -1695,7 +1695,7 @@ class TCubedExample(SecantLineToTangentLine):
                 last_group = group
             else:
                 self.play(Transform(last_group, group))
-            self.dither()
+            self.wait()
         self.play(FadeOut(last_group))
 
     def bear_with_me(self):
@@ -1708,7 +1708,7 @@ class TCubedExample(SecantLineToTangentLine):
             target_mode = "sassy"
         ))
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
         self.play(*map(
             FadeOut, 
             [morty, morty.bubble, morty.bubble.content]
@@ -1760,23 +1760,23 @@ class TCubedExample(SecantLineToTangentLine):
             *[mob.restore for mob in ds, dt]
         )
         self.play(ShowCreation(v_lines[0]))
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(arrow),
             Write(nonzero_size),
         )
-        self.dither(2)
+        self.wait(2)
         self.play(*map(FadeOut, [arrow, nonzero_size]))
         self.play(Write(numerator))
         self.play(ShowCreation(v_lines[1]))
-        self.dither()
+        self.wait()
         self.play(
             v_lines[0].highlight, YELLOW,
             rate_func = there_and_back
         )
-        self.dither()
+        self.wait()
         self.play(Write(non_numerator))
-        self.dither(2)
+        self.wait(2)
         self.play(
             *map(MoveToTarget, s_pair),
             **{
@@ -1784,7 +1784,7 @@ class TCubedExample(SecantLineToTangentLine):
             }
         )
         self.play(numerator_non_minus.shift, 0.2*LEFT)
-        self.dither()
+        self.wait()
 
         self.vertical_lines = v_lines
         self.ds_dt_group = ds_dt_group
@@ -1814,14 +1814,14 @@ class TCubedExample(SecantLineToTangentLine):
             morty.look_at, self.rhs
         )
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
         self.play(
             morty.change_mode, "sassy",
             morty.look, OUT
         )
         self.play(Blink(morty))
         self.play(morty.change_mode, "pondering")
-        self.dither()
+        self.wait()
         self.play(FadeOut(morty))
 
     def show_expansion(self):
@@ -1871,7 +1871,7 @@ class TCubedExample(SecantLineToTangentLine):
 
         for term in terms:
             self.play(FadeIn(term))
-            self.dither()
+            self.wait()
 
         #Cancel out two_cubed terms
         self.play(*it.chain(*[
@@ -1890,7 +1890,7 @@ class TCubedExample(SecantLineToTangentLine):
             numerator.scale, 1.4, numerator.get_bottom(),
             terms[-1].scale, 1.4, terms[-1].get_top()
         )
-        self.dither(2)
+        self.wait(2)
 
         #Cancel out dt
         #This is all way too hacky...
@@ -1906,7 +1906,7 @@ class TCubedExample(SecantLineToTangentLine):
             FadeIn(new_exp),
             run_time = 2,
         )
-        self.dither()
+        self.wait()
         terms[3].add(new_exp)
         shift_val = 0.4*DOWN
         self.play(
@@ -1927,12 +1927,12 @@ class TCubedExample(SecantLineToTangentLine):
         VGroup(*brace_text[-2:]).highlight(TIME_COLOR)
 
         self.play(ShowCreation(arrow))
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(brace), 
             Write(brace_text)
         )
-        self.dither(2)
+        self.wait(2)
 
         #Shink dt
         faders = VGroup(*terms[2:4] + [brace, brace_text])        
@@ -1951,7 +1951,7 @@ class TCubedExample(SecantLineToTangentLine):
             faders.fade, 0.7,
             run_time = 5
         )
-        self.dither(2)
+        self.wait(2)
 
         #Show as derivative
         deriv_term = VGroup(*terms[1][:5])
@@ -1982,8 +1982,8 @@ class TCubedExample(SecantLineToTangentLine):
             ShowCreation(arrow),
             Write(approach_text)
         )
-        self.dither(2)
-        self.dither()
+        self.wait(2)
+        self.wait()
 
         #Ephasize slope
         v_line = self.vertical_lines[0]
@@ -1996,7 +1996,7 @@ class TCubedExample(SecantLineToTangentLine):
             rate_func = wiggle
         )
         self.play(ShowCreation(v_line))
-        self.dither()
+        self.wait()
         self.play(FadeOut(v_line))
         self.play(FadeOut(slope_text))
 
@@ -2021,7 +2021,7 @@ class TCubedExample(SecantLineToTangentLine):
             run_time = 5,
             rate_func = there_and_back
         )
-        self.dither(2)
+        self.wait(2)
 
         self.lhs_copy = lhs_copy
         self.deriv_term = deriv_term
@@ -2054,9 +2054,9 @@ class TCubedExample(SecantLineToTangentLine):
                 ),
                 morty.look_at, mob
             )
-            self.dither()
+            self.wait()
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
 class YouWouldntDoThisEveryTime(TeacherStudentsScene):
     def construct(self):
@@ -2068,11 +2068,11 @@ class YouWouldntDoThisEveryTime(TeacherStudentsScene):
             "You wouldn't do this \\\\ every time"
         )
         self.change_student_modes(*["happy"]*3)
-        self.dither(2)
+        self.wait(2)
         self.student_thinks(
             "$\\frac{d(t^3)}{dt} = 3t^2$",
         )
-        self.dither(3)
+        self.wait(3)
 
         series = VideoSeries()
         series.scale_to_fit_width(2*SPACE_WIDTH-1)
@@ -2087,7 +2087,7 @@ class YouWouldntDoThisEveryTime(TeacherStudentsScene):
             next_video.highlight, YELLOW,
             next_video.shift, 0.5*DOWN
         )
-        self.dither(2)
+        self.wait(2)
 
 class ContrastConcreteDtWithLimit(Scene):
     def construct(self):
@@ -2149,7 +2149,7 @@ class ContrastConcreteDtWithLimit(Scene):
                 GrowFromCenter(brace),
                 Write(text)
             )
-            self.dither(2)
+            self.wait(2)
 
 class TimeForAnActualParadox(TeacherStudentsScene):
     def construct(self):
@@ -2174,7 +2174,7 @@ class TimeForAnActualParadox(TeacherStudentsScene):
                 ["pondering", "happy", "hesitant"]
             )
         ]))
-        self.dither(4)
+        self.wait(4)
 
 class ParadoxAtTEquals0(TCubedExample):
     CONFIG = {
@@ -2239,7 +2239,7 @@ class ParadoxAtTEquals0(TCubedExample):
             direction = RIGHT,
             buff = SMALL_BUFF
         )
-        self.dither()
+        self.wait()
 
         self.car = car
 
@@ -2258,10 +2258,10 @@ class ParadoxAtTEquals0(TCubedExample):
 
         self.play(Write(question[0], run_time = 1))
         self.play(MoveCar(self.car, origin))
-        self.dither()
+        self.wait()
         self.play(Write(question[1]))
         self.play(ShowCreation(arrow))
-        self.dither(2)
+        self.wait(2)
 
         self.question = question
 
@@ -2280,10 +2280,10 @@ class ParadoxAtTEquals0(TCubedExample):
         derivative.shift(2*UP)
 
         self.play(Write(derivative[0]))
-        self.dither()
+        self.wait()
         self.play(FadeIn(derivative[1]))
         self.play(*map(FadeIn, derivative[2:]))
-        self.dither(2)
+        self.wait(2)
 
         self.derivative = derivative
 
@@ -2321,7 +2321,7 @@ class ParadoxAtTEquals0(TCubedExample):
             UpdateFromAlphaFunc(dot, dot_update),            
             run_time = 4
         )
-        self.dither(2)
+        self.wait(2)
 
         self.tangent_line = line
 
@@ -2348,7 +2348,7 @@ class ParadoxAtTEquals0(TCubedExample):
         )
         self.play(MoveCar(self.car, self.coords_to_point(0, 0)))
         self.play(Blink(morty))
-        self.dither(2)
+        self.wait(2)
 
         self.morty = morty
 
@@ -2385,7 +2385,7 @@ class ParadoxAtTEquals0(TCubedExample):
                 rate_func = there_and_back,
                 run_time = 1.5
             )
-        self.dither(2)
+        self.wait(2)
         self.play(
             everything.restore,
             FadeOut(question),
@@ -2396,14 +2396,14 @@ class ParadoxAtTEquals0(TCubedExample):
             GrowFromCenter(brace),
             FadeIn(brace_text)
         )
-        self.dither()
+        self.wait()
         self.play(
             self.tangent_line.rotate_in_place, np.pi/24,
             rate_func = wiggle,
             run_time = 1
         )
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
 class TinyMovement(ZoomedScene):
     CONFIG = {
@@ -2462,7 +2462,7 @@ class TinyMovement(ZoomedScene):
             zoom_rect.scale, 0.5,
             zoom_rect.move_to, brace
         )
-        self.dither()
+        self.wait()
 
     def show_ratios(self):
         ratios = [
@@ -2471,10 +2471,10 @@ class TinyMovement(ZoomedScene):
         ]
         ratio = ratios[0]
         self.play(FadeIn(ratio))
-        self.dither(2)
+        self.wait(2)
         for new_ratio in ratios[1:]:
             self.play(Transform(ratio, new_ratio))
-            self.dither()
+            self.wait()
 
     def get_ratio(self, power = 1):
         dt = "0.%s1"%("0"*(power-1))
@@ -2530,9 +2530,9 @@ class NextVideos(TeacherStudentsScene):
                 for pi in self.get_students()
             ])
         )
-        self.dither(2)
+        self.wait(2)
         self.change_student_modes(*["thinking"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class Chapter2PatreonThanks(PatreonThanks):
     CONFIG = {
@@ -2626,9 +2626,9 @@ class Promotion(PiCreatureScene):
             aops_logo.shift, 1.5*UP + 0.5*RIGHT
         )
         self.change_mode("happy")
-        self.dither(2)
+        self.wait(2)
         self.play(Blink(mathy))
-        self.dither()
+        self.wait()
         self.play(
             RemovePiCreatureBubble(
                 mathy, target_mode = "happy"
@@ -2640,28 +2640,28 @@ class Promotion(PiCreatureScene):
             mathy.look_at, morty.eyes,
             morty.look_at, mathy.eyes,
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             Animation(VectorizedPoint(book_spot)),
             mathy.change, "raise_right_hand", book_spot,
             morty.change, "pondering",
         )
-        self.dither(3)
+        self.wait(3)
         self.play(Blink(mathy))
-        self.dither(7)
+        self.wait(7)
         self.play(
             ShowCreation(rect),
             morty.restore,
             morty.change, "happy", rect,
             FadeOut(mathy),
         )
-        self.dither(10)
+        self.wait(10)
         self.play(ShowCreation(url_rect))
         self.play(
             FadeOut(url_rect),
             url.get_part_by_tex("3blue1brown").highlight, BLUE,
         )
-        self.dither(3)
+        self.wait(3)
 
 class Thumbnail(SecantLineToTangentLine):
     def construct(self):

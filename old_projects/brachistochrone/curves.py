@@ -128,7 +128,7 @@ class BrachistochroneWordSliding(Scene):
         anim.path.gradient_highlight(WHITE, BLUE_E)
         self.play(ShowCreation(anim.path))
         self.play(anim)
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(anim.path),
             ApplyMethod(anim.mobject.center)
@@ -140,7 +140,7 @@ class PathSlidingScene(Scene):
     CONFIG = {
         "gravity" : 3,
         "delta_t" : 0.05,
-        "dither_and_add" : True,
+        "wait_and_add" : True,
         "show_time" : True,
     }
     def slide(self, mobject, path, roll = False, ceiling = None):
@@ -166,7 +166,7 @@ class PathSlidingScene(Scene):
             self.add(self.slider)
             if self.show_time:
                 self.write_time(curr_t)
-            self.dither(self.frame_duration)
+            self.wait(self.frame_duration)
             self.remove(self.slider)
             curr_t += self.delta_t
             last_index = curr_index
@@ -174,9 +174,9 @@ class PathSlidingScene(Scene):
                 curr_index += 1
                 if curr_index == len(points):
                     break
-        if self.dither_and_add:
+        if self.wait_and_add:
             self.add(self.slider)
-            self.dither()
+            self.wait()
         else:
             return self.slider
 
@@ -248,7 +248,7 @@ class TryManyPaths(PathSlidingScene):
         for point, tex in [(point_a, A), (point_b, B)]:
             self.play(ShowCreation(point))
             self.play(ShimmerIn(tex))
-            self.dither()
+            self.wait()
         curr_path = None        
         for path in paths:
             new_slider = self.adjust_mobject_to_index(
@@ -260,7 +260,7 @@ class TryManyPaths(PathSlidingScene):
             else:
                 self.play(Transform(curr_path, path))
             self.play(Transform(self.slider, new_slider))
-            self.dither()
+            self.wait()
             self.remove(self.slider)
             self.slide(randy, curr_path)
         self.clear()
@@ -361,7 +361,7 @@ class NotTheCircle(PathSlidingScene):
         self.remove(randy_copy)
         self.slide(randy, path)
         self.play(ShimmerIn(words))
-        self.dither()
+        self.wait()
 
 
 class TransitionAwayFromSlide(PathSlidingScene):
@@ -449,14 +449,14 @@ class MinimalPotentialEnergy(Scene):
             ShowCreation(arrow),
             ShowCreation(min_point)
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(top_words[0]), 
             FadeOut(last_side_words[0]),
             GrowFromCenter(top_words[1]), 
             GrowFromCenter(last_side_words[1])
         )
-        self.dither(3)
+        self.wait(3)
 
 
 
@@ -464,7 +464,7 @@ class MinimalPotentialEnergy(Scene):
 class WhatGovernsSpeed(PathSlidingScene):
     CONFIG = {
         "num_pieces" : 6,
-        "dither_and_add" : False,
+        "wait_and_add" : False,
         "show_time" : False,
     }
     def construct(self):
@@ -497,9 +497,9 @@ class WhatGovernsSpeed(PathSlidingScene):
             self.add(slider, vector)
             sliders.append(slider)
             vectors.append(vector)
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(words))
-        self.dither(3)
+        self.wait(3)
         slider = sliders.pop(1)
         vector = vectors.pop(1)
         faders = sliders+vectors+[words]
@@ -539,7 +539,7 @@ class WhatGovernsSpeed(PathSlidingScene):
             GrowFromCenter(vect_brace),
             ShimmerIn(sqrt_y)
         )
-        self.dither(3)
+        self.wait(3)
         self.solve_energy()
 
     def solve_energy(self):
@@ -573,19 +573,19 @@ class WhatGovernsSpeed(PathSlidingScene):
             ),
             *map(GrowFromCenter, potential.split())
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             FadeOut(loss_in_potential),
             GrowFromCenter(kinetic)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(ApplyMethod(ms.shift, 5*UP))
-        self.dither()
+        self.wait()
         self.play(Transform(
             half, two, 
             path_func = counterclockwise_path()
         ))
-        self.dither()
+        self.wait()
         self.play(
             Transform(
                 squared, sqrt, 
@@ -593,7 +593,7 @@ class WhatGovernsSpeed(PathSlidingScene):
             ),
             Transform(equals, new_eq)
         )
-        self.dither(2)
+        self.wait(2)
 
 
 
@@ -622,7 +622,7 @@ class ThetaTInsteadOfXY(Scene):
         self.play(ShowCreation(cycloid))
         self.play(ShowCreation(dot))
         self.play(ShimmerIn(xy))
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(xy),
             ShowCreation(vect_mob)
@@ -632,7 +632,7 @@ class ThetaTInsteadOfXY(Scene):
             ShowCreation(vert_line),
             ShimmerIn(theta)
         )
-        self.dither()
+        self.wait()
 
 
 class DefineCurveWithKnob(PathSlidingScene):
@@ -658,11 +658,11 @@ class DefineCurveWithKnob(PathSlidingScene):
         self.play(ShimmerIn(words))
         self.play(ShowCreation(arrow))
         self.play(ShowCreation(self.knob))
-        self.dither()
+        self.wait()
         self.add(self.path)
 
         self.slide(randy, self.path)
-        self.dither()
+        self.wait()
 
 
     def get_path(self):

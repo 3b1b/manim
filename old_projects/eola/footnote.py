@@ -41,7 +41,7 @@ class OpeningQuote(Scene):
         three_d.highlight(BLUE)
         self.play(FadeIn(words))
         self.play(Write(three_d))
-        self.dither(2)
+        self.wait(2)
 
 class QuickFootnote(TeacherStudentsScene):
     def construct(self):
@@ -57,11 +57,11 @@ class PeakOutsideFlatland(TeacherStudentsScene):
     def construct(self):
         self.setup()
         self.teacher_says("Peak outside flatland")
-        self.dither()
+        self.wait()
         student = self.get_students()[0]
         self.student_thinks(student_index = 0)
         student.bubble.make_green_screen()
-        self.dither()
+        self.wait()
 
 class SymbolicThreeDTransform(Scene):
     CONFIG = {
@@ -92,12 +92,12 @@ class SymbolicThreeDTransform(Scene):
 
         self.play(Write(func))
         self.play(Write(in_vect), Write(in_words))
-        self.dither()
+        self.wait()
         self.add(in_vect.copy())
         self.play(Transform(in_vect, point, submobject_mode = "lagged_start"))
         self.play(Transform(in_vect, out_vect, submobject_mode = "lagged_start"))
         self.add(out_words)
-        self.dither()
+        self.wait()
 
 class ThreeDLinearTransformExample(Scene):
     pass
@@ -108,10 +108,10 @@ class SingleVectorToOutput(Scene):
 class InputWordOutputWord(Scene):
     def construct(self):
         self.add(TextMobject("Input").scale(2))
-        self.dither()
+        self.wait()
         self.clear()
         self.add(TextMobject("Output").scale(2))
-        self.dither()
+        self.wait()
 
 class TransformOnlyBasisVectors(Scene):
     pass
@@ -123,7 +123,7 @@ class IHatJHatKHatWritten(Scene):
             sym.scale(3)
             sym.highlight(color)
             self.play(Write(sym))
-            self.dither()
+            self.wait()
             self.clear()
  
 class PutTogether3x3Matrix(Scene):
@@ -170,13 +170,13 @@ class PutTogether3x3Matrix(Scene):
 
         for mob in everything.split():
             self.play(Write(mob, run_time = 1))
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(everything),
             Transform(VMobject(*start_entries), VMobject(*target_entries)),
             Transform(start_brackets, target_bracketes)
         )
-        self.dither()
+        self.wait()
 
 class RotateSpaceAboutYAxis(Scene):
     pass
@@ -243,7 +243,7 @@ class ShowVCoordinateMeaning(Scene):
             lin_comb.shift(0.35*UP)
 
         self.play(*map(Write, [v, eq, coords]))
-        self.dither()
+        self.wait()
         self.play(
             Transform(
                 coords.get_entries().copy(),
@@ -254,7 +254,7 @@ class ShowVCoordinateMeaning(Scene):
             Write(VMobject(*[eq2, i, j, k] + list(plusses))),
             run_time = 3
         )
-        self.dither()
+        self.wait()
 
 class ScaleAndAddAfterTransformation(Scene):
     pass
@@ -335,9 +335,9 @@ class ShowMatrixVectorMultiplication(Scene):
                 ),
                 Write(sym)
             )
-            self.dither()
+            self.wait()
         self.play(Write(result_brace, run_time = 1))
-        self.dither()
+        self.wait()
 
 class ShowMatrixMultiplication(Scene):
     def construct(self):
@@ -365,7 +365,7 @@ class ShowMatrixMultiplication(Scene):
         self.add(right, left)
         self.play(Write(right_brace))
         self.play(Write(left_brace))
-        self.dither()
+        self.wait()
 
 class ApplyTwoSuccessiveTransforms(Scene):
     pass
@@ -378,7 +378,7 @@ class ComputerGraphicsAndRobotics(Scene):
         )
         mob.arrange_submobjects(DOWN, buff = 1)
         self.play(Write(mob, run_time = 1))
-        self.dither()
+        self.wait()
 
 class ThreeDRotation(Scene):
     pass
@@ -415,7 +415,7 @@ class QuestionsToPonder(Scene):
         questions.to_edge(LEFT)
         for question in questions.split():
             self.play(Write(question, run_time = 1))
-            self.dither()
+            self.wait()
 
 class NextVideo(Scene):
     def construct(self):
@@ -430,7 +430,7 @@ class NextVideo(Scene):
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.dither()  
+        self.wait()  
 
 
 

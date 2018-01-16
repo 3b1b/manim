@@ -39,9 +39,9 @@ class OpeningQuote(Scene):
         author.next_to(words, DOWN, buff = 0.5)
 
         self.play(FadeIn(words))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(author, run_time = 3))
-        self.dither()
+        self.wait()
 
 class MatrixToBlank(Scene):
     def construct(self):
@@ -51,20 +51,20 @@ class MatrixToBlank(Scene):
         arrow.next_to(matrix, RIGHT)
         matrix.add(arrow)
         self.play(Write(matrix))
-        self.dither()
+        self.wait()
 
 class ExampleTransformation(LinearTransformationScene):
     def construct(self):
         self.setup()
         self.apply_transposed_matrix([[3, 0], [1, 2]])
-        self.dither(2)
+        self.wait(2)
 
 class RecapTime(TeacherStudentsScene):
     def construct(self):
         self.setup()
         self.teacher_says("Quick recap time!")
         self.random_blink()
-        self.dither()
+        self.wait()
         student = self.get_students()[0]
         everyone = self.get_mobjects()
         everyone.remove(student)
@@ -74,13 +74,13 @@ class RecapTime(TeacherStudentsScene):
             ApplyMethod(student.change_mode, "confused")
         )
         self.play(Blink(student))
-        self.dither()
+        self.wait()
         self.play(ApplyFunction(
             lambda m : m.change_mode("pondering").look(LEFT),
             student
         ))
         self.play(Blink(student))
-        self.dither()
+        self.wait()
 
 class DeterminedByTwoBasisVectors(LinearTransformationScene):
     CONFIG = {
@@ -105,10 +105,10 @@ class DeterminedByTwoBasisVectors(LinearTransformationScene):
         matrix1[:,1] = [0, 1]
         matrix2 = np.dot(matrix, np.linalg.inv(matrix1))
 
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix(matrix1.transpose())
         self.apply_transposed_matrix(matrix2.transpose())
-        self.dither()
+        self.wait()
 
 class FollowLinearCombination(LinearTransformationScene):
     def construct(self):
@@ -186,7 +186,7 @@ class FollowLinearCombination(LinearTransformationScene):
             ApplyMethod(mob.shift, scaled_i.get_end())
             for mob in scaled_j, scaled_j_label
         ])
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [
             scaled_i, scaled_j, scaled_i_label, scaled_j_label,
         ]))
@@ -201,7 +201,7 @@ class FollowLinearCombination(LinearTransformationScene):
             background = BackgroundRectangle(mob)
             self.play(ShowCreation(background), Write(mob))
 
-        self.dither()
+        self.wait()
         x, y = vect_array.get_entries().split()
         pre_formula = VMobject(
             x, i_label, TexMobject("+"),
@@ -221,7 +221,7 @@ class FollowLinearCombination(LinearTransformationScene):
             Transform(pre_formula.copy(), post_formula, run_time = 2),
             ApplyMethod(vect.set_stroke, width = 7)
         ])
-        self.dither()
+        self.wait()
 
 class MatrixVectorMultiplicationCopy(MatrixVectorMultiplicationAbstract):
     pass ## Here just for stage_animations.py purposes
@@ -243,7 +243,7 @@ class TwoSuccessiveTransformations(LinearTransformationScene):
         self.setup()
         self.apply_transposed_matrix([[2, 1],[1, 2]])
         self.apply_transposed_matrix([[-1, -0.5],[0, -0.5]])
-        self.dither()
+        self.wait()
 
 class RotationThenShear(LinearTransformationScene):
     CONFIG = {
@@ -270,7 +270,7 @@ class RotationThenShear(LinearTransformationScene):
         self.play(Write(shear_words, run_time = 1))
         self.add_foreground_mobject(shear_words)
         self.apply_transposed_matrix([[1, 0], [1, 1]])
-        self.dither()
+        self.wait()
 
 class IntroduceIdeaOfComposition(RotationThenShear):
     def construct(self):
@@ -301,7 +301,7 @@ class IntroduceIdeaOfComposition(RotationThenShear):
             Animation(self.i_hat),
             Animation(self.j_hat),
         )
-        self.dither()
+        self.wait()
 
     def track_basis_vectors(self):
         last_words = self.get_mobjects_from_last_animation()[1]
@@ -338,21 +338,21 @@ class IntroduceIdeaOfComposition(RotationThenShear):
         matrix_background = BackgroundRectangle(matrix)
 
         self.play(Write(words))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(i_background), Write(i_coords), run_time = 2)
-        self.dither()
+        self.wait()
         self.play(
             Transform(i_background.copy(), matrix_background),
             Transform(i_coords.copy().get_brackets(), matrix.get_brackets()),
             ApplyMethod(i_coords.copy().get_entries().move_to, col1)
         )
-        self.dither()
+        self.wait()
         self.play(ShowCreation(j_background), Write(j_coords), run_time = 2)
-        self.dither()
+        self.wait()
         self.play(
             ApplyMethod(j_coords.copy().get_entries().move_to, col2)
         )
-        self.dither()
+        self.wait()
         matrix = VMobject(matrix_background, matrix)
         return matrix
 
@@ -365,7 +365,7 @@ class IntroduceIdeaOfComposition(RotationThenShear):
         new_matrix = matrix.copy()
         new_matrix.center().to_edge(UP)
         self.play(Transform(matrix, new_matrix))
-        self.dither()        
+        self.wait()        
         self.remove(matrix)
 
         self.setup()
@@ -383,7 +383,7 @@ class IntroduceIdeaOfComposition(RotationThenShear):
             Animation(matrix),
             run_time = 3
         )
-        self.dither()
+        self.wait()
 
 class PumpVectorThroughRotationThenShear(RotationThenShear):
     def construct(self):
@@ -391,7 +391,7 @@ class PumpVectorThroughRotationThenShear(RotationThenShear):
         self.add_vector([2, 3])
         self.apply_transposed_matrix([[0, 1], [-1, 0]], run_time = 2)
         self.apply_transposed_matrix([[1, 0], [1, 1]], run_time = 2)
-        self.dither()
+        self.wait()
 
 class ExplainWhyItsMatrixMultiplication(Scene):
     def construct(self):
@@ -441,7 +441,7 @@ class ExplainWhyItsMatrixMultiplication(Scene):
         ]
         for group in groups:
             self.play(*map(Write, group))
-            self.dither()
+            self.wait()
         self.play(*map(FadeOut, [l_paren, r_paren, vect, vect_copy]))
         comp_matrix.add(equals)
         matrices = VMobject(shear_matrix, rot_matrix, comp_matrix)
@@ -449,7 +449,7 @@ class ExplainWhyItsMatrixMultiplication(Scene):
             matrices.arrange_submobjects, buff = 0.1,
             aligned_edge = UP
         ))
-        self.dither()
+        self.wait()
 
         arrow = Arrow(rot_matrix.get_right(), shear_matrix.get_left())
         arrow.shift((rot_matrix.get_top()[1]+0.2)*UP)
@@ -461,9 +461,9 @@ class ExplainWhyItsMatrixMultiplication(Scene):
 
         self.play(ShowCreation(arrow))
         self.play(Write(words))
-        self.dither()
+        self.wait()
         self.play(Write(functions))
-        self.dither()
+        self.wait()
 
 class MoreComplicatedExampleVisually(LinearTransformationScene):
     CONFIG = {
@@ -481,31 +481,31 @@ class MoreComplicatedExampleVisually(LinearTransformationScene):
 
         self.play(Write(m1_mob))
         self.add_foreground_mobject(m1_mob)
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix(t_matrix1)
-        self.dither()
+        self.wait()
         self.play(Write(m1_mob.label))
         self.add_foreground_mobject(m1_mob.label)
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix(t_m1_inv, run_time = 0)
-        self.dither()
+        self.wait()
 
         self.play(Write(m2_mob))
         self.add_foreground_mobject(m2_mob)
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix(t_matrix2)
-        self.dither()
+        self.wait()
         self.play(Write(m2_mob.label))
         self.add_foreground_mobject(m2_mob.label)
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix(t_m2_inv, run_time = 0)
-        self.dither()
+        self.wait()
 
         for matrix in t_matrix1, t_matrix2:
             self.apply_transposed_matrix(matrix, run_time = 1)
         self.play(Write(comp_matrix))
         self.add_foreground_mobject(comp_matrix)
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [
             self.background_plane,
             self.plane,
@@ -515,7 +515,7 @@ class MoreComplicatedExampleVisually(LinearTransformationScene):
             Animation(m) for m in self.foreground_mobjects
         ])
         self.remove(self.i_hat, self.j_hat)
-        self.dither()
+        self.wait()
 
     def get_matrices(self):       
         m1_mob = Matrix(np.array(self.t_matrix1).transpose())
@@ -619,14 +619,14 @@ class MoreComplicatedExampleNumerically(MoreComplicatedExampleVisually):
             comp_col = VMobject(*comp_matrix.split()[1].get_mob_matrix()[:,i])
 
             self.play(Write(question, run_time = 1 ))
-            self.dither()
+            self.wait()
             self.play(
                 Transform(question, first),
                 ShowCreation(first_arrow),
                 ShowCreation(col.circle),
                 ApplyMethod(col.highlight, col.target_color)
             )
-            self.dither()
+            self.wait()
             self.play(
                 Transform(m2_copy, m2_target, run_time = 2),
                 ApplyMethod(col.copy().move_to, col_vect, run_time = 2),
@@ -634,18 +634,18 @@ class MoreComplicatedExampleNumerically(MoreComplicatedExampleVisually):
                 Transform(first_arrow, second_arrow),
                 Transform(question, second),
             )
-            self.dither()
+            self.wait()
             self.play(*map(FadeOut, [question, first_arrow]))
             self.play(Write(intermediate))
-            self.dither()
+            self.wait()
             self.play(Write(product))
-            self.dither()
+            self.wait()
             product_entries = product.get_entries()
             self.play(
                 ApplyMethod(comp_col.highlight, BLACK),
                 ApplyMethod(product_entries.move_to, comp_col)
             )
-            self.dither()
+            self.wait()
 
             start_state.append(product_entries)
             self.play(*[
@@ -655,7 +655,7 @@ class MoreComplicatedExampleNumerically(MoreComplicatedExampleVisually):
             ] + [
                 Animation(product_entries)
             ])
-            self.dither()
+            self.wait()
 
 class GeneralMultiplication(MoreComplicatedExampleNumerically):
     def get_result(self):
@@ -697,7 +697,7 @@ class GeneralMultiplication(MoreComplicatedExampleNumerically):
             m2_entries, m2_entries_target,
             submobject_mode = "lagged_start"
         ))
-        self.dither()
+        self.wait()
 
         new_comp = Matrix(self.get_result())
         new_comp.next_to(comp.split()[1].submobjects[-1], RIGHT)
@@ -712,7 +712,7 @@ class GeneralMultiplication(MoreComplicatedExampleNumerically):
                 )
             ]
         )
-        self.dither()
+        self.wait()
         self.play(FadeOut(words))
         return m1, m2, comp
 
@@ -726,9 +726,9 @@ class MoreComplicatedExampleWithJustIHat(MoreComplicatedExampleVisually):
         self.setup()
         self.add_vector(self.v_coords, self.v_color)
         self.apply_transposed_matrix(self.t_matrix1)
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix(self.t_matrix2)
-        self.dither()
+        self.wait()
 
 class MoreComplicatedExampleWithJustJHat(MoreComplicatedExampleWithJustIHat):
     CONFIG = {
@@ -777,13 +777,13 @@ class AskAboutCommutativity(Scene):
             run_time = 2
         )
         self.play(Write(q_marks))
-        self.dither()
+        self.wait()
         self.play(Transform(
             VMobject(eq, q_marks),
             VMobject(neq),
             submobject_mode = "lagged_start"
         ))
-        self.dither()
+        self.wait()
 
 class ShowShear(LinearTransformationScene):
     CONFIG = {
@@ -799,9 +799,9 @@ class ShowShear(LinearTransformationScene):
         title.add_background_rectangle()
         self.add_foreground_mobject(title)
 
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix(self.t_matrix)
-        self.dither()
+        self.wait()
 
 class ShowRotation(ShowShear):
     CONFIG = {
@@ -836,11 +836,11 @@ class FirstShearThenRotation(LinearTransformationScene):
         self.apply_transposed_matrix(self.t_matrix1)
         self.apply_transposed_matrix(self.t_matrix2)
         self.i_hat.rotate(-0.01)##Laziness
-        self.dither()
+        self.wait()
         self.write_vector_coordinates(self.i_hat, color = X_COLOR)
-        self.dither()
+        self.wait()
         self.write_vector_coordinates(self.j_hat, color = Y_COLOR)
-        self.dither()
+        self.wait()
 
 class RotationThenShear(FirstShearThenRotation):
     CONFIG = {
@@ -869,7 +869,7 @@ class NoticeTheLackOfComputations(TeacherStudentsScene):
             for i, pi in enumerate(students)
         ])
         self.random_blink()
-        self.dither()
+        self.wait()
 
 class AskAssociativityQuestion(Scene):
     def construct(self):
@@ -899,12 +899,12 @@ class AskAssociativityQuestion(Scene):
 
 
         self.add(morty, title)
-        self.dither()
+        self.wait()
         self.play(Blink(morty))
         self.play(Write(start))
-        self.dither()
+        self.wait()
         self.play(Transform(start, lhs))
-        self.dither()
+        self.wait()
         self.play(
             Transform(lhs, rhs, path_arc = -np.pi),
             Write(eq)
@@ -936,7 +936,7 @@ class AskAssociativityQuestion(Scene):
             ))
             self.remove(*self.get_mobjects_from_last_animation())
             self.add(matrix)
-        self.dither()
+        self.wait()
         self.move_matrix_parentheses(morty, matrices)
 
     def move_matrix_parentheses(self, morty, matrices):
@@ -964,9 +964,9 @@ class AskAssociativityQuestion(Scene):
         self.play(morty.change_mode, "angry")
         for state in state2, state3:
             self.play(Transform(state1, state))
-            self.dither()
+            self.wait()
         self.play(morty.change_mode, "confused")
-        self.dither()
+        self.wait()
 
 class ThreeSuccessiveTransformations(LinearTransformationScene):
     CONFIG = {
@@ -1013,7 +1013,7 @@ class ThreeSuccessiveTransformations(LinearTransformationScene):
             )
             self.apply_transposed_matrix(t_matrix, run_time = 1)
             last = sym
-        self.dither()
+        self.wait()
 
 class ThreeSuccessiveTransformationsAltParens(ThreeSuccessiveTransformations):
     CONFIG = {
@@ -1048,7 +1048,7 @@ class ExplanationTrumpsProof(Scene):
             explanation.scale_in_place, 1.5,
             proof.scale_in_place, 0.7
         )
-        self.dither()
+        self.wait()
 
 class GoPlay(TeacherStudentsScene):
     def construct(self):
@@ -1070,7 +1070,7 @@ class GoPlay(TeacherStudentsScene):
         self.play(student.change_mode, "pondering")
         for x in range(3):
             self.random_blink()
-            self.dither(2)
+            self.wait(2)
 
 class NextVideo(Scene):
     def construct(self):
@@ -1085,7 +1085,7 @@ class NextVideo(Scene):
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.dither()  
+        self.wait()  
 
 
 

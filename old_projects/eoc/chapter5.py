@@ -75,12 +75,12 @@ class LastVideo(TeacherStudentsScene):
             self.get_teacher().change_mode, "raise_right_hand",
         )
         self.play(Write(known_formulas))
-        self.dither()
+        self.wait()
         self.student_says(
             exp_question, student_index = 1,
             added_anims = [self.get_teacher().change_mode, "pondering"]
         )
-        self.dither(3)
+        self.wait(3)
         e_to_x = exp_question.get_part_by_tex("e^x")
         self.play(
             self.teacher.change_mode, "raise_right_hand",
@@ -88,7 +88,7 @@ class LastVideo(TeacherStudentsScene):
             e_to_x.highlight, YELLOW,
             e_to_x.next_to, self.teacher.get_corner(UP+LEFT), UP
         )
-        self.dither(2)
+        self.wait(2)
 
 class PopulationSizeGraphVsPopulationMassGraph(Scene):
     def construct(self):
@@ -137,7 +137,7 @@ class DoublingPopulation(PiCreatureScene):
             brace.text = text
 
         self.play(Write(f_x))
-        self.dither()
+        self.wait()
         self.play(
             Transform(f_x, f_t),
             FadeIn(
@@ -151,7 +151,7 @@ class DoublingPopulation(PiCreatureScene):
             GrowFromCenter(pop_brace),
             Write(pop_brace.text, run_time = 2)
         )
-        self.dither(2)
+        self.wait(2)
 
         self.function = f_x
         self.pop_brace = pop_brace
@@ -167,18 +167,18 @@ class DoublingPopulation(PiCreatureScene):
         self.reset()
         for x in range(num_start_days):
             self.let_one_day_pass()
-        self.dither()
+        self.wait()
         self.play(
             Transform(self.function, self.mass_function),
             Transform(self.pop_brace, self.mass_brace),
             Transform(self.pop_brace.text, self.mass_brace.text),
         )
-        self.dither()
+        self.wait()
         for x in range(total_num_days-num_start_days):
             self.let_one_day_pass()
-            self.dither()
+            self.wait()
         self.joint_blink(shuffle = False)
-        self.dither()
+        self.wait()
 
     def count_through_days(self):
         self.reset()
@@ -186,12 +186,12 @@ class DoublingPopulation(PiCreatureScene):
         days_to_let_pass = 3
 
         self.play(GrowFromCenter(brace))
-        self.dither()
+        self.wait()
         for x in range(days_to_let_pass):
             self.let_one_day_pass()
             new_brace = self.get_population_size_descriptor()
             self.play(Transform(brace, new_brace))
-            self.dither()
+            self.wait()
 
         self.population_size_descriptor = brace
 
@@ -206,10 +206,10 @@ class DoublingPopulation(PiCreatureScene):
             FadeOut(self.pop_brace.text),
             Write(dM_dt_question)
         )
-        self.dither(3)
+        self.wait(3)
         for mob in dM, dt:
             self.play(Indicate(mob))
-            self.dither()
+            self.wait()
 
         self.dM_dt_question = dM_dt_question
 
@@ -248,7 +248,7 @@ class DoublingPopulation(PiCreatureScene):
         rect.stretch_to_fit_width(rect.get_width()+MED_SMALL_BUFF)
         self.play(DrawBorderThenFill(rect))
         self.play(Write(frac))
-        self.dither()
+        self.wait()
         return rect
 
     def relate_growth_rate_to_pop_size(self):
@@ -305,15 +305,15 @@ class DoublingPopulation(PiCreatureScene):
         self.play(*map(FadeIn, [
             false_deriv, false_deriv.brace, false_deriv.brace_text
         ]))
-        self.dither()
+        self.wait()
         self.play(
             Transform(time, new_time),
             FadeOut(fading_creatures)
         )
-        self.dither()
+        self.wait()
         for x in range(3):
             self.let_one_day_pass(run_time = 2)
-            self.dither(2)
+            self.wait(2)
 
         for expression in difference_eq, real_deriv:
             expression.brace_text[1].highlight(GREEN)
@@ -322,11 +322,11 @@ class DoublingPopulation(PiCreatureScene):
                 Transform(false_deriv.brace, expression.brace),
                 Transform(false_deriv.brace_text, expression.brace_text),
             )
-            self.dither(3)
+            self.wait(3)
         self.reset()
         for x in range(self.get_num_days()):
             self.let_one_day_pass()
-        self.dither()
+        self.wait()
 
         rect = Rectangle(color = YELLOW)
         rect.replace(real_deriv)
@@ -346,7 +346,7 @@ class DoublingPopulation(PiCreatureScene):
             for pi in self.get_pi_creatures()
             for a in [0.5*random.random()]
         ])
-        self.dither(3)
+        self.wait(3)
 
     ###########
 
@@ -503,15 +503,15 @@ class GraphOfTwoToT(GraphScene):
         #Draw graph and revert to tangent
         self.play(ShowCreation(graph))
         self.play(Write(graph_label))
-        self.dither()
+        self.wait()
         self.play(Write(ss_group))
-        self.dither()
+        self.wait()
         for target_dx in 0.01, 1, 0.01:
             self.animate_secant_slope_group_change(
                 ss_group,
                 target_dx = target_dx
             )
-            self.dither()
+            self.wait()
 
         #Mark up with values
 
@@ -520,7 +520,7 @@ class GraphOfTwoToT(GraphScene):
             GrowFromCenter(brace),
             Write(height_label, run_time = 1)
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(
                 slope_label, 
@@ -532,7 +532,7 @@ class GraphOfTwoToT(GraphScene):
                 slope_label.get_part_by_tex("2^")
             )
         )
-        self.dither()
+        self.wait()
 
         #Vary value
         threes = VGroup(height_label[1], slope_label[2][1])
@@ -618,7 +618,7 @@ class SimpleGraphOfTwoToT(GraphOfTwoToT):
         self.play(ShowCreation(graph, run_time = 2))
         for pair in line_pairs:
             self.play(ShowCreation(pair))
-        self.dither()
+        self.wait()
 
 class FakeDiagram(TeacherStudentsScene):
     def construct(self):
@@ -680,7 +680,7 @@ class FakeDiagram(TeacherStudentsScene):
             DrawBorderThenFill(foreground_graph),
             Write(two_to_t)
         )
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(
                 foreground_graph.copy(),
@@ -693,7 +693,7 @@ class FakeDiagram(TeacherStudentsScene):
         )
         self.play(GrowFromCenter(side_brace))
         self.play(Write(deriv, run_time = 2))
-        self.dither()
+        self.wait()
 
         self.play(
             ShowCreation(circle),
@@ -705,7 +705,7 @@ class FakeDiagram(TeacherStudentsScene):
             ShowCreation(arrow),
             self.teacher.change_mode, "shruggie"
         )
-        self.dither(3)
+        self.wait(3)
         self.play(
             FadeOut(diagram),
             *[
@@ -716,7 +716,7 @@ class FakeDiagram(TeacherStudentsScene):
         self.teacher_says(
             "More numerical \\\\ than visual..."
         )
-        self.dither(2)
+        self.wait(2)
 
         self.diagram = diagram
 
@@ -776,7 +776,7 @@ class AnalyzeExponentRatio(PiCreatureScene):
             Write(ratio), Write(lhs),
             self.pi_creature.change_mode, "raise_right_hand"
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             two_to_t_plus_dt.next_to, exp_prop_brace, UP,
             self.pi_creature.change_mode, "pondering"
@@ -789,7 +789,7 @@ class AnalyzeExponentRatio(PiCreatureScene):
             ),
             FadeIn(exp_prop_brace)
         )
-        self.dither(2)
+        self.wait(2)
 
         #Talk about exponential property
         add_exp_rect, mult_rect = rects = [
@@ -815,20 +815,20 @@ class AnalyzeExponentRatio(PiCreatureScene):
         ])
 
         self.play(ShowCreation(add_exp_rect))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             add_exp_rect.copy(), mult_rect
         ))
-        self.dither()
+        self.wait()
         self.change_mode("happy")
         self.play(Write(words[0], run_time = 2))
         self.play(ShowCreation(arrows[0]))
-        self.dither()
+        self.wait()
         self.play(
             Transform(*words),
             Transform(*arrows),
         )
-        self.dither(2)
+        self.wait(2)
         self.play(*map(FadeOut, [
             words[0], arrows[0], add_exp_rect, mult_rect,
             two_to_t_plus_dt, exp_prop_brace,
@@ -859,7 +859,7 @@ class AnalyzeExponentRatio(PiCreatureScene):
             shifter.next_to, ratio[7], UP,
             stretcher.stretch_in_place, 0.9, 0
         )
-        self.dither(2)
+        self.wait(2)
 
         #Ask about dt -> 0
         brace = Brace(VGroup(extracted_two_to_t, ratio), DOWN)
@@ -870,7 +870,7 @@ class AnalyzeExponentRatio(PiCreatureScene):
 
         self.play(GrowFromCenter(brace))
         self.play(Write(dt_to_zero))
-        self.dither(2)
+        self.wait(2)
 
         #Who cares
         randy = Randolph()
@@ -886,7 +886,7 @@ class AnalyzeExponentRatio(PiCreatureScene):
             bubble_kwargs = {"direction" : LEFT},
             target_mode = "angry",
         ))
-        self.dither(2)
+        self.wait(2)
         self.play(
             RemovePiCreatureBubble(randy),
             FadeOut(randy),
@@ -897,7 +897,7 @@ class AnalyzeExponentRatio(PiCreatureScene):
             Transform(brace, alt_brace),
             dt_to_zero.next_to, alt_brace, DOWN
         )
-        self.dither()
+        self.wait()
 
         #Highlight separation
         rects = [
@@ -911,10 +911,10 @@ class AnalyzeExponentRatio(PiCreatureScene):
             ]
         ]
         self.play(ShowCreation(rects[0]))
-        self.dither(2)
+        self.wait(2)
         self.play(ReplacementTransform(rects[0].copy(), rects[1]))
         self.change_mode("happy")
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, rects))
 
         #Plug in specific values
@@ -938,15 +938,15 @@ class AnalyzeExponentRatio(PiCreatureScene):
             rp.shift, constant.get_width()*RIGHT,
             constant.next_to, extracted_two_to_t[0], RIGHT, MED_LARGE_BUFF
         )
-        self.dither()
+        self.wait()
         self.change_mode("confused")
-        self.dither()
+        self.wait()
 
         #Indicate distinction between dt group and t group again
         for mob in limit_term, extracted_two_to_t:
             self.play(FocusOn(mob))
             self.play(Indicate(mob))
-        self.dither()
+        self.wait()
 
         #hold_final_value
         derivative = VGroup(
@@ -966,17 +966,17 @@ class AnalyzeExponentRatio(PiCreatureScene):
             func_def_rhs.set_fill, None, 1,
         )
         lhs[0].submobjects[1] = func_def_rhs
-        self.dither()
+        self.wait()
         self.play(
             derivative.next_to, self.pi_creature, UP,
             derivative.to_edge, RIGHT,
             self.pi_creature.change_mode, "raise_right_hand"
         )
-        self.dither(2)
+        self.wait(2)
         for mob in extracted_two_to_t, constant:
             self.play(Indicate(mob))
-            self.dither()
-        self.dither(2)
+            self.wait()
+        self.wait(2)
 
     def try_specific_dt_values(self):
         expressions = []
@@ -1001,10 +1001,10 @@ class AnalyzeExponentRatio(PiCreatureScene):
             Write(curr_expression),
             self.pi_creature.change_mode, "pondering"
         )
-        self.dither(2)
+        self.wait(2)
         for expression in expressions[1:]:
             self.play(Transform(curr_expression, expression))
-            self.dither(2)
+            self.wait(2)
         return curr_expression[-1]
 
 class ExponentRatioWithThree(AnalyzeExponentRatio):
@@ -1050,30 +1050,30 @@ class CompareTwoConstantToEightConstant(PiCreatureScene):
         why.next_to(self.pi_creature, UP, MED_LARGE_BUFF)
 
         self.add(eight_deriv)
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             eight_deriv.copy(),
             two_deriv
         ))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(arrow))
         self.play(
             Write(times_three),
             self.pi_creature.change_mode, "thinking"
         )
-        self.dither(3)
+        self.wait(3)
 
         self.play(
             Animation(derivs),
             Write(why),
             self.pi_creature.change, "confused", derivs
         )
-        self.dither()
+        self.wait()
         for deriv in derivs:
             for index in -5, -2:
                 self.play(Indicate(deriv[index]))
-            self.dither()
-        self.dither(2)
+            self.wait()
+        self.wait(2)
 
     def get_derivative_expression(self, base):
         base_str = str(base)
@@ -1116,9 +1116,9 @@ class AskAboutConstantOne(TeacherStudentsScene):
             "pondering", "raise_right_hand", "thinking",
             # look_at_arg = self.get_students()[1].bubble
         )
-        self.dither(2)
+        self.wait(2)
         self.play(FadeOut(note[-1], run_time = 3))
-        self.dither()
+        self.wait()
 
         self.teacher_says(
             "There is!\\\\",
@@ -1126,7 +1126,7 @@ class AskAboutConstantOne(TeacherStudentsScene):
             target_mode = "hooray"
         )
         self.change_student_modes(*["confused"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class WhyPi(PiCreatureScene):
     def construct(self):
@@ -1151,14 +1151,14 @@ class WhyPi(PiCreatureScene):
         why.next_to(self.pi_creature, UP, MED_LARGE_BUFF)
 
         self.add(ghost_circle, circle, diam, one)
-        self.dither()
+        self.wait()
         self.play(Transform(circle, circum, run_time = 2))
         self.play(
             Write(pi),
             Write(why),
             self.pi_creature.change_mode, "confused",
         )
-        self.dither(3)
+        self.wait(3)
 
 
     #######
@@ -1224,12 +1224,12 @@ class GraphOfExp(GraphScene):
                 rate_func = squish_rate_func(smooth, 0.5, 1),
             )
         )
-        self.dither()
+        self.wait()
         self.play(*map(ShowCreation, ss_group))
         self.play(Write(slope_labels[0]))
         self.play(ShowCreation(v_lines[0]))
         self.play(Write(height_labels[0]))
-        self.dither(2)
+        self.wait(2)
         self.animate_secant_slope_group_change(
             ss_group,
             target_x = target_input,
@@ -1247,7 +1247,7 @@ class GraphOfExp(GraphScene):
                 ]
             ]
         )
-        self.dither(2)
+        self.wait(2)
 
         self.graph = graph
         self.ss_group = ss_group
@@ -1262,7 +1262,7 @@ class Chapter4Wrapper(Scene):
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.dither(3)
+        self.wait(3)
 
 class ApplyChainRule(TeacherStudentsScene):
     def construct(self):
@@ -1288,7 +1288,7 @@ class ApplyChainRule(TeacherStudentsScene):
                 target_mode = "raise_right_hand"
             ),
         )
-        self.dither(2)
+        self.wait(2)
         self.play(*[
             Transform(
                 *deriv_equation.get_parts_by_tex(
@@ -1302,13 +1302,13 @@ class ApplyChainRule(TeacherStudentsScene):
             Write(deriv_equation.get_part_by_tex("="))
         ])
         self.play(self.teacher.change_mode, "happy")
-        self.dither()
+        self.wait()
         self.play(ShowCreation(circle))
         self.play(Transform(
             *deriv_equation.get_parts_by_tex("3").copy()[-1:-3:-1]
         ))
         self.play(FadeOut(circle))
-        self.dither(3)
+        self.wait(3)
 
 class ChainRuleIntuition(ThreeLinesChainRule):
     CONFIG = {
@@ -1394,14 +1394,14 @@ class ChainRuleIntuition(ThreeLinesChainRule):
         dt_brace, d3t_brace, dexp3t_brace = braces
 
         self.play(*map(FadeIn, [nudge_lines, braces]))
-        self.dither()
+        self.wait()
         for count in range(3):
             for dx in self.dx, 0:
                 self.animate_x_change(
                     self.example_x + dx, 
                     run_time = 2
                 )
-        self.dither()
+        self.wait()
 
 class WhyNaturalLogOf2ShowsUp(TeacherStudentsScene):
     def construct(self):
@@ -1420,9 +1420,9 @@ class WhyNaturalLogOf2ShowsUp(TeacherStudentsScene):
             ),
             self.teacher.change, "raise_right_hand"
         )
-        self.dither()
+        self.wait()
         self.look_at(4*LEFT + UP)
-        self.dither(3)
+        self.wait(3)
 
         self.exp_c = exp_c
 
@@ -1477,7 +1477,7 @@ class WhyNaturalLogOf2ShowsUp(TeacherStudentsScene):
             *["pondering"]*3,
             look_at_arg = log_words
         )
-        self.dither(2)
+        self.wait(2)
 
         t_group.save_state()
         t_group.shift(UP)
@@ -1490,10 +1490,10 @@ class WhyNaturalLogOf2ShowsUp(TeacherStudentsScene):
             ),
             self.teacher.change_mode, "speaking"
         )
-        self.dither(2)
+        self.wait(2)
         self.play(FocusOn(self.exp_c))
         self.play(Indicate(self.exp_c, scale_factor = 1.05))
-        self.dither(2)
+        self.wait(2)
 
         self.play(
             equation.next_to, derivative_arrow, UP,
@@ -1506,9 +1506,9 @@ class WhyNaturalLogOf2ShowsUp(TeacherStudentsScene):
             Write(derivative_symbol),
             Write(derivative)
         )
-        self.dither(3)
+        self.wait(3)
         self.play(self.teacher.change_mode, "happy")
-        self.dither(2)
+        self.wait(2)
 
         student = self.get_students()[1]
         ln = derivative.get_part_by_tex("ln(2)").copy()
@@ -1519,7 +1519,7 @@ class WhyNaturalLogOf2ShowsUp(TeacherStudentsScene):
         )
         rhs.next_to(ln, RIGHT)
         self.play(Write(rhs))
-        self.dither(2)
+        self.wait(2)
 
 
     ######
@@ -1597,16 +1597,16 @@ class CompareWaysToWriteExponentials(GraphScene):
         )
         self.play(Write(cross, run_time = 2))
         self.play(Write(e_to_ct, run_time = 2))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(equation))
-        self.dither(2)
+        self.wait(2)
         for new_graph, new_equation in zip(graphs, equations)[1:]:
             self.play(
                 Transform(graph, new_graph),
                 Transform(equation, new_equation)
             )
-            self.dither(2)
-        self.dither()
+            self.wait(2)
+        self.wait()
 
 class ManyExponentialForms(TeacherStudentsScene):
     def construct(self):
@@ -1638,15 +1638,15 @@ class ManyExponentialForms(TeacherStudentsScene):
         rect = BackgroundRectangle(group)
 
         self.add(lhs, rhs_list[0])
-        self.dither()
+        self.wait()
         for rhs in rhs_list[1:]:
             self.play(FadeIn(
                 rhs, 
                 run_time = 2,
                 submobject_mode = 'lagged_start'
             ))
-            self.dither(2)
-        self.dither()
+            self.wait(2)
+        self.wait()
         self.play(
             FadeIn(rect),
             exp.next_to, self.teacher, UP+LEFT,
@@ -1665,7 +1665,7 @@ class ManyExponentialForms(TeacherStudentsScene):
             *["pondering"]*3,
             look_at_arg = exp
         )
-        self.dither(3)
+        self.wait(3)
 
 class TooManySymbols(TeacherStudentsScene):
     def construct(self):
@@ -1674,7 +1674,7 @@ class TooManySymbols(TeacherStudentsScene):
             target_mode = "pleading"
         )
         self.play(self.teacher.change_mode, "guilty")
-        self.dither(3)
+        self.wait(3)
 
 class TemperatureOverTimeOfWarmWater(GraphScene):
     CONFIG = {
@@ -1742,7 +1742,7 @@ class TemperatureOverTimeOfWarmWater(GraphScene):
             Write(delta_T_label),
         )
         self.play(graph_growth, delta_T_group_update, run_time = 15)
-        self.dither(2)
+        self.wait(2)
 
 class TemperatureOverTimeOfWarmWaterWithSolution(TemperatureOverTimeOfWarmWater):
     CONFIG = {
@@ -1802,13 +1802,13 @@ class InvestedMoney(Scene):
 
         self.add(equation)
         self.play(*anims, run_time = run_time)
-        self.dither()
+        self.wait()
         self.play(ShowCreation(arrow))
         self.play(Write(solution, run_time = 2))
-        self.dither()
+        self.wait()
         self.play(FadeOut(cash_pile))
         self.play(*anims, run_time = run_time)
-        self.dither()
+        self.wait()
 
 class NaturalLog(Scene):
     def construct(self):
@@ -1821,13 +1821,13 @@ class NaturalLog(Scene):
             run_time = 3, 
             submobject_mode = "lagged_start"
         ))
-        self.dither()
+        self.wait()
         self.play(
             expressions.set_fill, None, 1,
             run_time = 2,
             submobject_mode = "lagged_start"
         )
-        self.dither()
+        self.wait()
         for i in 0, 2, 1:
             self.show_natural_loggedness(expressions[i])
 
@@ -1869,7 +1869,7 @@ class NaturalLog(Scene):
             run_time = 2
         )
         self.play(Write(ln), Write(log_equals))
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(
                 log_expression.copy(),
@@ -1877,7 +1877,7 @@ class NaturalLog(Scene):
                 run_time = 2,
             )
         )
-        self.dither(2)
+        self.wait(2)
 
         ln_a = expression[-1]
         self.play(
@@ -1886,9 +1886,9 @@ class NaturalLog(Scene):
             ln_a.move_to, constant, LEFT,
             ln_a.highlight, BLUE
         )
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [log_expression, exp_expression]))
-        self.dither()
+        self.wait()
 
     def get_expression(self, base):
         expression = TexMobject(
@@ -1942,7 +1942,7 @@ class NextVideo(TeacherStudentsScene):
         self.play(ReplacementTransform(
             this_tex[1].copy(), this_tex[3]
         ))
-        self.dither()
+        self.wait()
         self.play(
             Write(this_tex[4]),
             ReplacementTransform(
@@ -1952,7 +1952,7 @@ class NextVideo(TeacherStudentsScene):
                 remover = True
             )
         )
-        self.dither(2)
+        self.wait(2)
         self.play(this_tex.replace, this_video)
         self.play(
             brace.next_to, next_video, DOWN,
@@ -1966,7 +1966,7 @@ class NextVideo(TeacherStudentsScene):
             *["pondering"]*3,
             look_at_arg = next_tex
         )
-        self.dither(3)
+        self.wait(3)
 
 class ExpPatreonThanks(PatreonThanks):
     CONFIG = {

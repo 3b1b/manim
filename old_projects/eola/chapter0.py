@@ -67,9 +67,9 @@ class OpeningQuote(Scene):
         author.next_to(words, DOWN)
 
         self.play(FadeIn(words))
-        self.dither(3)
+        self.wait(3)
         self.play(Write(author, run_time = 5))
-        self.dither()
+        self.wait()
 
 class VideoIcon(SVGMobject):
     def __init__(self, **kwargs):
@@ -103,7 +103,7 @@ class UpcomingSeriesOfVidoes(Scene):
             )
             for icon, offset in zip(icons, np.linspace(0, 0.5, len(icons)))
         ])
-        self.dither()
+        self.wait()
 
 
 class AboutLinearAlgebra(Scene):
@@ -134,13 +134,13 @@ class AboutLinearAlgebra(Scene):
         ])
 
         self.play(Write(linalg, run_time = 1))
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(arrows, submobject_mode = "lagged_start"),
             FadeIn(all_subs),
             run_time = 2
         )
-        self.dither()
+        self.wait()
         self.linalg = linalg
 
     def to_thought_bubble(self):
@@ -160,7 +160,7 @@ class AboutLinearAlgebra(Scene):
             Write(bubble),
             FadeIn(randy)
         )
-        self.dither()
+        self.wait()
 
         topics = [
             self.get_matrix_multiplication(),
@@ -191,9 +191,9 @@ class AboutLinearAlgebra(Scene):
 
             if count %3 == 0:
                 self.play(Blink(randy))
-                self.dither()
+                self.wait()
             else:
-                self.dither(2)
+                self.wait(2)
 
 
     def get_matrix_multiplication(self):
@@ -301,10 +301,10 @@ class NumericVsGeometric(Scene):
             FadeIn(matrix_vector_product),
             run_time = 2
         )
-        self.dither()
+        self.wait()
         self.play(Write(self.geometric, run_time = 2))
         ### Paste in linear transformation
-        self.dither()
+        self.wait()
         digest_locals(self)
 
     def clear_way_for_geometric(self):
@@ -359,7 +359,7 @@ class NumericVsGeometric(Scene):
                 )
                 curr_randy = randy
                 curr_thought = thought
-            self.dither(1.5)
+            self.wait(1.5)
 
 
 class ExampleTransformation(LinearTransformationScene):
@@ -367,7 +367,7 @@ class ExampleTransformation(LinearTransformationScene):
         self.setup()
         self.add_vector(np.array(TRANFORMED_VECTOR).flatten())
         self.apply_matrix(EXAMPLE_TRANFORM)
-        self.dither()
+        self.wait()
 
 
 class NumericToComputations(Scene):
@@ -381,7 +381,7 @@ class NumericToComputations(Scene):
         self.add(top)
         self.play(ShowCreation(arrow, submobject_mode = "one_at_a_time"))
         self.play(FadeIn(bottom))
-        self.dither()
+        self.wait()
 
 
 
@@ -399,12 +399,12 @@ class LinAlgPyramid(Scene):
                 ShowCreation(rect),
                 run_time = 1
             )
-        self.dither()
+        self.wait()
         self.play(*[
             ApplyMethod(m.highlight, DARK_GREY)
             for m in words[0], rects[0]
         ])
-        self.dither()
+        self.wait()
         self.list_applications(rects[-1])
 
     def get_rects(self):
@@ -448,7 +448,7 @@ class LinAlgPyramid(Scene):
             else:
                 curr_subject = subject
                 self.play(FadeIn(curr_subject, run_time = 0.5))
-            self.dither()
+            self.wait()
 
 
 class IntimidatingProf(Scene):
@@ -481,21 +481,21 @@ class IntimidatingProf(Scene):
             ShowCreation(arrow, submobject_mode = "one_at_a_time")
         )
         self.play(Transform(morty_name1, morty_name2))
-        self.dither()
+        self.wait()
         self.play(FadeOut(morty_name1), FadeOut(arrow))
         self.play(
             FadeIn(speech_bubble),
             ApplyMethod(morty.change_mode, "speaking")
         )
         self.play(FadeIn(thought_bubble))
-        self.dither()
+        self.wait()
         self.play(
             ApplyMethod(randy.change_mode, "confused"),
             Write(q_marks, run_time = 1)
         )
         self.play(FadeOut(VMobject(speech_bubble, thought_bubble)))
         self.play(FadeIn(randy_bubble))
-        self.dither()
+        self.wait()
 
 
 class ThoughtBubbleTransformation(LinearTransformationScene):
@@ -511,7 +511,7 @@ class ThoughtBubbleTransformation(LinearTransformationScene):
             rotation, 
             path_arc = np.pi/3,
         )
-        self.dither()
+        self.wait()
 
 
 class SineApproximations(Scene):
@@ -529,15 +529,15 @@ class SineApproximations(Scene):
         pi_sixts_approx.next_to(one_approx, DOWN, buff = 1.5)
 
         self.play(Write(series))
-        self.dither()
+        self.wait()
         self.play(FadeIn(words))
-        self.dither(2)
+        self.wait(2)
         self.play(FadeOut(words))
         self.remove(words)
-        self.dither()
+        self.wait()
         self.play(Write(one_approx))
         self.play(Write(pi_sixts_approx))
-        self.dither()
+        self.wait()
 
     def get_series(self):
         return TexMobject("""
@@ -570,7 +570,7 @@ class LooseConnectionToTriangles(Scene):
         self.play(ShowCreation(arrow))
         self.play(ShowCreation(triangle))
         self.play(Write(q_mark))
-        self.dither()
+        self.wait()
 
 
 class PhysicsExample(Scene):
@@ -598,7 +598,7 @@ class PhysicsExample(Scene):
             MoveAlongPath(dot, parabola.copy(), **kwargs),
             ShowCreation(parabola, **kwargs)
         )
-        self.dither()
+        self.wait()
 
 
     def velocity_vector(self, parabola):
@@ -645,7 +645,7 @@ class PhysicsExample(Scene):
         )
         for label in v_label, vx_label, vy_label:
             self.play(Write(label, run_time = 1))
-        self.dither()
+        self.wait()
 
     def approximate_sine(self):
         approx = TexMobject("\\sin(\\theta) \\approx 0.7\\text{-ish}")
@@ -663,7 +663,7 @@ class PhysicsExample(Scene):
             Write(approx),
             run_time = 2
         )
-        self.dither()
+        self.wait()
 
 
 class LinearAlgebraIntuitions(Scene):
@@ -692,10 +692,10 @@ class LinearAlgebraIntuitions(Scene):
             mob.scale(0.7)
             mob.next_to(h_line, DOWN)
             self.play(FadeIn(mob))
-            self.dither(4)
+            self.wait(4)
             self.play(FadeOut(mob))
             self.remove(mob)
-        self.dither()
+        self.wait()
 
 class MatricesAre(Scene):
     def construct(self):
@@ -708,13 +708,13 @@ class MatricesAre(Scene):
 
         self.play(Write(matrix, run_time = 1))
         self.play(ShowCreation(arrow, submobject_mode = "one_at_a_time"))
-        self.dither()
+        self.wait()
 
 class ExampleTransformationForIntuitionList(LinearTransformationScene):
     def construct(self):
         self.setup()
         self.apply_matrix([[1, -1], [1, 2]])
-        self.dither()
+        self.wait()
 
 class MatrixMultiplicationIs(Scene):
     def construct(self):
@@ -741,22 +741,22 @@ class MatrixMultiplicationIs(Scene):
             Write(apply_first),
             run_time = 1
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(matrix2),
             GrowFromCenter(brace2),
             Write(apply_second),
             run_time = 1
         )
-        self.dither()
+        self.wait()
 
 class ComposedTransformsForIntuitionList(LinearTransformationScene):
     def construct(self):
         self.setup()
         self.apply_matrix([[1, -1], [1, 2]])
-        self.dither()
+        self.wait()
         self.apply_matrix([[2, 1], [1, 2]])
-        self.dither()
+        self.wait()
 
 class DeterminantsAre(Scene):
     def construct(self):
@@ -857,7 +857,7 @@ class TableOfContents(Scene):
         for chapter in chapters.split():
             chapter.to_edge(LEFT, buff = 1)
             self.play(FadeIn(chapter))
-        self.dither(2)
+        self.wait(2)
 
         entry3 = chapters.split()[2]
         added_words = TextMobject("(Personally, I'm most excited \\\\ to do this one)")
@@ -873,7 +873,7 @@ class TableOfContents(Scene):
             Write(added_words),
             run_time = 1
         )
-        self.dither()
+        self.wait()
         removeable = VMobject(added_words, arrow, h_line, title)
         self.play(FadeOut(removeable))
         self.remove(removeable)
@@ -908,14 +908,14 @@ class TableOfContents(Scene):
         self.add(icons)
         self.play(FadeIn(randy))
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(bubble),
             Transform(icons, new_icons)
         )
         self.remove(icons)
         bubble.make_green_screen()
-        self.dither()
+        self.wait()
 
 
 class ResourceForTeachers(Scene):
@@ -938,7 +938,7 @@ class ResourceForTeachers(Scene):
         self.play(FadeIn(bubble), Write(words), run_time = 3)
         for randy in np.array(randys.split())[[2,0,1]]:
             self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class AboutPacing(Scene):
     def construct(self):
@@ -947,7 +947,7 @@ class AboutPacing(Scene):
         words.remove(*dots)
         self.play(FadeIn(words))
         self.play(Write(VMobject(*dots)))
-        self.dither()
+        self.wait()
 
 class DifferingBackgrounds(Scene):
     def construct(self):
@@ -982,8 +982,8 @@ class DifferingBackgrounds(Scene):
                 ApplyMethod(student.change_mode, mode)
             )
             self.play(Blink(student))
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
 
 
 
@@ -998,7 +998,7 @@ class PauseAndPonder(Scene):
 
         self.play(FadeIn(pause))
         self.play(ShowCreation(bubble))
-        self.dither()
+        self.wait()
 
 
 class NextVideo(Scene):
@@ -1011,7 +1011,7 @@ class NextVideo(Scene):
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.dither()
+        self.wait()
 
 
 

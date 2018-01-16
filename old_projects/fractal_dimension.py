@@ -65,7 +65,7 @@ class KochTest(Scene):
             koch.scale, 3, koch.get_left(),
             koch.set_stroke, None, 4
         )
-        self.dither()
+        self.wait()
 
 class SierpinskiTest(Scene):
     def construct(self):
@@ -78,9 +78,9 @@ class SierpinskiTest(Scene):
             run_time = 5,
             submobject_mode = "lagged_start",
         ))
-        self.dither()
+        self.wait()
         # self.play(sierp.scale, 2, sierp.get_top())
-        # self.dither(3)
+        # self.wait(3)
 
 
 
@@ -145,7 +145,7 @@ class ZoomInOnFractal(PiCreatureScene):
                 self.pi_creature.change_mode, "thinking",
                 run_time = 2
             )
-            self.dither()
+            self.wait()
             grower_target = grower.copy()
             grower = grower[self.index_to_replace]
 
@@ -161,7 +161,7 @@ class WhatAreFractals(TeacherStudentsScene):
             width = 6
         )
         self.change_student_modes("thinking", "pondering", None)
-        self.dither()
+        self.wait()
 
         name = TextMobject("Benoit Mandelbrot")
         name.to_corner(UP+LEFT)
@@ -177,12 +177,12 @@ class WhatAreFractals(TeacherStudentsScene):
                 for pi in self.get_pi_creatures()
             ]
         )
-        self.dither(2)
+        self.wait(2)
         question = TextMobject("Aren't they", "self-similar", "shapes?")
         question.highlight_by_tex("self-similar", YELLOW)
         self.student_says(question)
         self.play(self.get_teacher().change_mode, "happy")
-        self.dither(2)
+        self.wait(2)
 
 class IntroduceVonKochCurve(Scene):
     CONFIG = {
@@ -197,7 +197,7 @@ class IntroduceVonKochCurve(Scene):
         self.play(ShowCreation(snowflake, run_time = 3))
         self.play(Write(name, run_time = 2))
         curve = self.isolate_one_curve(snowflake)
-        self.dither()
+        self.wait()
 
         self.zoom_in_on(curve)
         self.zoom_in_on(curve)
@@ -228,7 +228,7 @@ class IntroduceVonKochCurve(Scene):
             ApplyMethod(curve.shift, curve.get_center()/2)
             for curve in snowflake
         ])
-        self.dither()
+        self.wait()
         self.play(
             snowflake.scale, 2.1,
             snowflake.next_to, UP, DOWN
@@ -255,7 +255,7 @@ class IntroduceVonKochCurve(Scene):
             sub_portion.highlight, YELLOW,
             rate_func = there_and_back
         )
-        self.dither()
+        self.wait()
 
 class IntroduceSierpinskiTriangle(PiCreatureScene):
     CONFIG = {
@@ -270,7 +270,7 @@ class IntroduceSierpinskiTriangle(PiCreatureScene):
             run_time = 2,
             submobject_mode = "lagged_start"
         ))
-        self.dither()
+        self.wait()
         self.play(
             self.pi_creature.change_mode, "pondering",
             *[
@@ -278,13 +278,13 @@ class IntroduceSierpinskiTriangle(PiCreatureScene):
                 for submob in sierp
             ]
         )
-        self.dither()
+        self.wait()
         for submob in sierp:
             self.play(sierp.shift, -submob.get_center())
-            self.dither()
+            self.wait()
         self.play(sierp.restore)
         self.change_mode("happy")
-        self.dither()
+        self.wait()
 
 class SelfSimilarFractalsAsSubset(Scene):
     CONFIG = {
@@ -322,7 +322,7 @@ class SelfSimilarFractalsAsSubset(Scene):
             run_time = 3
         )
         self.play(ShowCreation(small_rect))
-        self.dither()
+        self.wait()
 
     def add_general_fractals(self):
         big_rectangle = Rectangle(
@@ -360,7 +360,7 @@ class SelfSimilarFractalsAsSubset(Scene):
         )
         self.play(FadeIn(randy))
         self.play(MoveToTarget(randy, run_time = 2))
-        self.dither(2)
+        self.wait(2)
 
 class ConstrastSmoothAndFractal(Scene):
     CONFIG = {
@@ -418,7 +418,7 @@ class ConstrastSmoothAndFractal(Scene):
             britains.set_fill, BLUE, 1,
             britains.set_stroke, None, 0,
         )
-        self.dither()
+        self.wait()
         self.play(
             ApplyMethod(
                 smooth_britain.scale,
@@ -436,7 +436,7 @@ class ConstrastSmoothAndFractal(Scene):
             Animation(fractal),
             run_time = 10,
         )
-        self.dither(2)
+        self.wait(2)
 
 class InfiniteKochZoom(Scene):
     CONFIG = {
@@ -508,18 +508,18 @@ class ShowIdealizations(Scene):
         )
 
         self.play(FadeIn(britain))
-        self.dither()
+        self.wait()
         self.play(Transform(britain.copy(), smooth_britain))
-        self.dither()
+        self.wait()
         self.play(Transform(britain.copy(), koch_snowflake))
-        self.dither()
-        self.dither(2)
+        self.wait()
+        self.wait(2)
 
 class SayFractalDimension(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("Fractal dimension")
         self.change_student_modes("confused", "hesitant", "pondering")
-        self.dither(3)
+        self.wait(3)
 
 class ExamplesOfDimension(Scene):
     def construct(self):
@@ -544,8 +544,8 @@ class ExamplesOfDimension(Scene):
                 Write(label),
                 run_time = 3
             )
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
 
 class FractalDimensionIsNonsense(Scene):
     def construct(self):
@@ -569,7 +569,7 @@ class FractalDimensionIsNonsense(Scene):
             mathy.change_mode, "guilty"
         )
         self.play(Blink(mathy))
-        self.dither()
+        self.wait()
 
 class DimensionForNaturalNumbers(Scene):
     def construct(self):
@@ -588,10 +588,10 @@ class DimensionForNaturalNumbers(Scene):
             Write(labels[0]),
             ShowCreation(line)
         )
-        self.dither()
+        self.wait()
         for label in labels[1:]:
             self.play(Write(label))
-            self.dither()
+            self.wait()
 
 class Show2DPlanein3D(Scene):
     def construct(self):
@@ -608,13 +608,13 @@ class OfCourseItsMadeUp(TeacherStudentsScene):
             \\emph{is} a made up concept...
         """)
         self.change_student_modes(*["hesitant"]*3)
-        self.dither(2)
+        self.wait(2)
         self.teacher_says(
             """But it's useful!""",
             target_mode = "hooray"
         )
         self.change_student_modes(*["happy"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class FourSelfSimilarShapes(Scene):
     CONFIG = {
@@ -675,18 +675,18 @@ class FourSelfSimilarShapes(Scene):
         self.play(GrowFromCenter(square))
         self.play(FadeIn(cube))
         self.play(ShowCreation(sierpinski))
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(brace),
             FadeIn(brace_text)
         )
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [brace, brace_text]))
-        self.dither()
+        self.wait()
 
         for title in titles:
             self.play(Write(title, run_time = 1))
-        self.dither(2)
+        self.wait(2)
 
     def show_self_similarity(self, shapes):
         shapes_copy = shapes.copy()
@@ -695,7 +695,7 @@ class FourSelfSimilarShapes(Scene):
 
         self.play(line.shift, 3*DOWN)
         self.play(ApplyFunction(break_up, line))
-        self.dither()
+        self.wait()
         brace = Brace(line[0], DOWN)
         brace_text = brace.get_text("1/2")
         self.play(
@@ -703,25 +703,25 @@ class FourSelfSimilarShapes(Scene):
             Write(brace_text)
         )
         brace.add(brace_text)
-        self.dither()
+        self.wait()
 
         self.play(square.next_to, square, DOWN, LARGE_BUFF)
         self.play(ApplyFunction(break_up, square))
         subsquare = square[0]
         subsquare.save_state()
         self.play(subsquare.replace, shapes[1])
-        self.dither()
+        self.wait()
         self.play(subsquare.restore)
         self.play(brace.next_to, subsquare, DOWN)
-        self.dither()
+        self.wait()
 
-        self.dither(5)#Handle cube
+        self.wait(5)#Handle cube
 
         self.play(sierpinski.next_to, sierpinski, DOWN, LARGE_BUFF)
         self.play(ApplyFunction(break_up, sierpinski))
-        self.dither()
+        self.wait()
         self.play(brace.next_to, sierpinski[0], DOWN)
-        self.dither(2)
+        self.wait(2)
         self.play(FadeOut(brace))
 
     def mention_measurements(self):
@@ -743,7 +743,7 @@ class FourSelfSimilarShapes(Scene):
                 Write(label, run_time = 1),
                 shape[0].highlight, YELLOW
             )
-            self.dither()
+            self.wait()
 
 class BreakUpCubeIn3D(Scene):
     def construct(self):
@@ -780,11 +780,11 @@ class GeneralWordForMeasurement(Scene):
         for word in words:
             self.play(FadeIn(word))
         self.play(ShowCreation(lines, run_time = 2))
-        self.dither()
+        self.wait()
         self.play(Write(measure))
-        self.dither(2)
+        self.wait(2)
         self.play(Transform(measure, mass))
-        self.dither(2)
+        self.wait(2)
 
 class ImagineShapesAsMetal(FourSelfSimilarShapes):
     def construct(self):
@@ -814,8 +814,8 @@ class ImagineShapesAsMetal(FourSelfSimilarShapes):
                 MoveToTarget(title),
                 MoveToTarget(shape)
             )
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
 
         for shape in shapes:
             self.play(
@@ -823,7 +823,7 @@ class ImagineShapesAsMetal(FourSelfSimilarShapes):
                 run_time = 3,
                 rate_func = there_and_back
             )
-        self.dither()
+        self.wait()
 
 class ScaledLineMass(Scene):
     CONFIG = {
@@ -876,7 +876,7 @@ class ScaledLineMass(Scene):
             GrowFromCenter(big_brace),
             Write(big_brace_text)
         )
-        self.dither()
+        self.wait()
 
         self.play(
             shape.copy().replace, shape_copy[0]
@@ -887,19 +887,19 @@ class ScaledLineMass(Scene):
             GrowFromCenter(little_brace),
             Write(little_brace_text)
         )
-        self.dither()
+        self.wait()
 
         self.play(Write(mass_scaling_label[1], run_time = 1))
-        self.dither()
+        self.wait()
         self.play(FadeIn(
             VGroup(*shape_copy[1:]),
             submobject_mode = "lagged_start"
         ))
-        self.dither()
+        self.wait()
         self.play(Transform(
             shape_copy.copy(), shape
         ))
-        self.dither()
+        self.wait()
 
     def get_shape(self):
         return VGroup(
@@ -1037,7 +1037,7 @@ class DefineTwoDimensional(PiCreatureScene):
 
         self.play(GrowFromCenter(brace))
         self.play(top_L.next_to, brace, LEFT)
-        self.dither()
+        self.wait()
 
         self.brace = brace
 
@@ -1057,7 +1057,7 @@ class DefineTwoDimensional(PiCreatureScene):
         brace.target = Brace(shape.target, LEFT)
         self.play(*map(MoveToTarget, group))
         self.play(bottom_L.next_to, brace, LEFT)
-        self.dither()
+        self.wait()
 
     def show_dimension(self):
         top_dimension = self.dimension_in_title.copy()
@@ -1067,7 +1067,7 @@ class DefineTwoDimensional(PiCreatureScene):
             self.dimension_in_exp,
             run_time = 2,
         ))
-        self.dither(3)
+        self.wait(3)
 
     def get_shape(self):
         return Square(
@@ -1096,7 +1096,7 @@ class DefineSierpinskiDimension(DefineTwoDimensional):
     def construct(self):
         DefineTwoDimensional.construct(self)
         self.change_mode("confused")
-        self.dither()
+        self.wait()
         self.add_one_third()
         self.isolate_equation()
 
@@ -1110,7 +1110,7 @@ class DefineSierpinskiDimension(DefineTwoDimensional):
 
         self.play(Write(equation))
         self.change_mode("pondering")
-        self.dither()
+        self.wait()
 
         self.equation = VGroup(self.bottom_mass, equation)
         self.distilled_equation = VGroup(
@@ -1141,7 +1141,7 @@ class DefineSierpinskiDimension(DefineTwoDimensional):
             self.pi_creature.change_mode, "confused",
             self.pi_creature.look_at, self.equation
         )
-        self.dither()
+        self.wait()
 
         equation = self.distilled_equation
         self.play(
@@ -1150,7 +1150,7 @@ class DefineSierpinskiDimension(DefineTwoDimensional):
             equation.to_corner, UP+RIGHT,
             run_time = 2
         )
-        self.dither(2)
+        self.wait(2)
 
         simpler_equation = TexMobject("2^D = 3")
         simpler_equation[1].highlight(self.dimension_color)
@@ -1165,13 +1165,13 @@ class DefineSierpinskiDimension(DefineTwoDimensional):
 
         self.play(Write(simpler_equation))
         self.change_mode("pondering")
-        self.dither(2)
+        self.wait(2)
         self.play(Write(log_expression))
         self.play(
             self.pi_creature.change_mode, "hooray",
             self.pi_creature.look_at, log_expression
         )
-        self.dither(2)
+        self.wait(2)
 
     def get_shape(self):
         return Sierpinski(
@@ -1191,7 +1191,7 @@ class ShowSierpinskiCurve(Scene):
                 curve, self.get_curve(order),
                 run_time = 2
             ))
-            self.dither()
+            self.wait()
 
     def get_curve(self, order):
         curve = SierpinskiCurve(order = order, monochromatic = True)
@@ -1215,7 +1215,7 @@ class LengthAndAreaOfSierpinski(ShowSierpinskiCurve):
         curve = self.get_curve(order = self.curve_start_order)
         sierp = self.get_sierpinski(order = self.sierpinski_start_order)
         self.add(curve, sierp)
-        self.dither()
+        self.wait()
 
         for x in range(self.n_iterations):
             new_curve = self.get_curve(order = self.curve_start_order+x+1)
@@ -1232,7 +1232,7 @@ class LengthAndAreaOfSierpinski(ShowSierpinskiCurve):
                 run_time = 2
             )
         self.play(sierp.set_fill, None, 0)
-        self.dither()
+        self.wait()
 
     def get_curve(self, order):
         # curve = ShowSierpinskiCurve.get_curve(self, order)
@@ -1262,7 +1262,7 @@ class FractionalAnalogOfLengthAndArea(Scene):
             """
         ))
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
 class DimensionOfKoch(Scene):
     CONFIG = {
@@ -1314,7 +1314,7 @@ class DimensionOfKoch(Scene):
         curve.to_corner(UP+RIGHT, LARGE_BUFF)
 
         self.play(ShowCreation(curve, run_time = 2))
-        self.dither()
+        self.wait()
         self.curve = curve
 
     def break_up_curve(self):
@@ -1331,7 +1331,7 @@ class DimensionOfKoch(Scene):
         break_up(broken_curve.target, self.break_up_factor)
         broken_curve.target.shift_onto_screen
         self.play(MoveToTarget(broken_curve))
-        self.dither()
+        self.wait()
 
         self.add(broken_curve)
         self.broken_curve = broken_curve
@@ -1349,11 +1349,11 @@ class DimensionOfKoch(Scene):
             Write(one),
             Write(one_third),
         )
-        self.dither()
+        self.wait()
         self.play(Write(self.scaling_factor_mob))
-        self.dither()
+        self.wait()
         self.play(Write(self.mass_scaling_factor_mob))
-        self.dither()
+        self.wait()
 
     def show_dimension(self):
         raw_formula = TexMobject("""
@@ -1412,11 +1412,11 @@ class DimensionOfKoch(Scene):
         self.play(*map(FadeIn, formula[1:-1]))
         self.remove(third, fourth)
         self.add(formula)
-        self.dither(2)
+        self.wait(2)
         self.play(Transform(formula, simpler_formula))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(log_expression))
-        self.dither(2)
+        self.wait(2)
 
 class DimensionOfQuadraticKoch(DimensionOfKoch):
     CONFIG = {
@@ -1459,7 +1459,7 @@ class DimensionOfQuadraticKoch(DimensionOfKoch):
         resulting_fractal.shift(SPACE_WIDTH*RIGHT/2)
 
         self.add(seed_label, seed)
-        self.dither()
+        self.wait()
         self.play(
             curve.next_to, resulting_fractal, DOWN, MED_LARGE_BUFF,
             Write(resulting_fractal, run_time = 1)
@@ -1471,7 +1471,7 @@ class DimensionOfQuadraticKoch(DimensionOfKoch):
             curve.insert_n_anchor_points(6*n_anchors)
             curve.make_jagged()
             self.play(Transform(curve, new_curve, run_time = 2))
-        self.dither()
+        self.wait()
 
         self.curve = curve
 
@@ -1502,10 +1502,10 @@ class DimensionOfQuadraticKoch(DimensionOfKoch):
                 run_time = 2
             )
         )
-        self.dither()
+        self.wait()
         self.play(Write(self.scaling_factor_mob))
         self.play(Write(self.mass_scaling_factor_mob))
-        self.dither(2)
+        self.wait(2)
 
 class ThisIsSelfSimilarityDimension(TeacherStudentsScene):
     def construct(self):
@@ -1514,7 +1514,7 @@ class ThisIsSelfSimilarityDimension(TeacherStudentsScene):
             ``self-similarity dimension''
         """)
         self.change_student_modes(*["pondering"]*3)
-        self.dither(2)
+        self.wait(2)
 
 class ShowSeveralSelfSimilarityDimensions(Scene):
     def construct(self):
@@ -1562,7 +1562,7 @@ class ShowSeveralSelfSimilarityDimensions(Scene):
             label.next_to(curve, u*UP, buff = LARGE_BUFF)
             self.add(label)
 
-        self.dither()
+        self.wait()
 
         for order in  range(2, max(max_orders)+1):
             anims = []
@@ -1572,7 +1572,7 @@ class ShowSeveralSelfSimilarityDimensions(Scene):
                     new_curve.replace(curve)
                     anims.append(Transform(curve, new_curve))
             self.play(*anims, run_time = 2)
-        self.dither()
+        self.wait()
         self.curves = curves
 
 class SeparateFractals(Scene):
@@ -1596,9 +1596,9 @@ class SeparateFractals(Scene):
             )
             for curve in curves
         ])
-        self.dither(2)
+        self.wait(2)
         self.play(curves.restore)
-        self.dither()
+        self.wait()
 
 class ShowDiskScaling(Scene):
     def construct(self):
@@ -1631,7 +1631,7 @@ class ShowDiskScaling(Scene):
         shapes.next_to(title, DOWN)
         for shape in shapes:
             self.play(FadeIn(shape))
-        self.dither(2)
+        self.wait(2)
 
         self.disk = disk
         self.to_fade = VGroup(
@@ -1655,7 +1655,7 @@ class ShowDiskScaling(Scene):
 
         self.play(ShowCreation(radius))
         self.play(Write(one))
-        self.dither()
+        self.wait()
 
         self.disk.add(radius, one)
 
@@ -1671,7 +1671,7 @@ class ShowDiskScaling(Scene):
         scaled_disk.target.submobjects[-1] = two
 
         self.play(MoveToTarget(scaled_disk))
-        self.dither()
+        self.wait()
 
         self.scaled_disk = scaled_disk
 
@@ -1682,7 +1682,7 @@ class ShowDiskScaling(Scene):
         mass_scaling.next_to(self.scaled_disk, UP)
         mass_scaling.to_edge(UP)
         self.play(Write(mass_scaling))
-        self.dither()
+        self.wait()
 
     def try_fitting_small_disks(self):
         disk = self.disk.copy()
@@ -1697,16 +1697,16 @@ class ShowDiskScaling(Scene):
         self.play(Transform(disk, foursome))
         self.remove(*self.get_mobjects_from_last_animation())
         self.add(foursome)
-        self.dither()
+        self.wait()
         self.play(ApplyFunction(
             lambda m : break_up(m, 0.2),
             foursome,
             rate_func = there_and_back,
             run_time = 4,
         ))
-        self.dither()
+        self.wait()
         self.play(FadeOut(foursome))
-        self.dither()
+        self.wait()
 
 class WhatDoYouMeanByMass(TeacherStudentsScene):
     def construct(self):
@@ -1715,9 +1715,9 @@ class WhatDoYouMeanByMass(TeacherStudentsScene):
             target_mode = "sassy"
         )
         self.change_student_modes("pondering", "sassy", "confused")
-        self.dither()
+        self.wait()
         self.play(self.get_teacher().change_mode, "thinking")
-        self.dither(2)
+        self.wait(2)
         self.teacher_thinks("")
         self.zoom_in_on_thought_bubble()
 
@@ -1878,15 +1878,15 @@ class BoxCountingWithDisk(BoxCountingScene):
             ShowCreation(grid),
             Animation(disk),
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(corner_rect),
             FadeIn(counting_label)
         )
         counting_mob = self.count_boxes(boxes)
-        self.dither()
+        self.wait()
         self.play(Write(prop_words, run_time = 2))
-        self.dither(2)
+        self.wait(2)
         self.play(FadeOut(prop_words))
 
 
@@ -1902,7 +1902,7 @@ class BoxCountingWithDisk(BoxCountingScene):
         boxes = self.get_highlighted_boxes(disk)
         large_box_count = len(boxes)
         new_counting_mob = self.count_boxes(boxes)
-        self.dither()
+        self.wait()
 
         frac_line = TexMobject("-")
         frac_line.highlight(YELLOW)
@@ -1915,7 +1915,7 @@ class BoxCountingWithDisk(BoxCountingScene):
         approx.shift_onto_screen()
         self.play(*map(Write, [frac_line, decimal]))
         self.play(Write(approx))
-        self.dither()
+        self.wait()
 
         randy = Randolph().shift(3*RIGHT).to_edge(DOWN)
         self.play(FadeIn(randy))
@@ -1925,7 +1925,7 @@ class BoxCountingWithDisk(BoxCountingScene):
             bubble_kwargs = {"direction" : LEFT}
         ))
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class FinerBoxCountingWithDisk(BoxCountingWithDisk):
     CONFIG = {
@@ -1966,7 +1966,7 @@ class PlotDiskBoxCounting(GraphScene):
         ])
 
         self.play(ShowCreation(data_dots))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(self.graph))
         self.label_graph(
             self.graph,
@@ -1975,7 +1975,7 @@ class PlotDiskBoxCounting(GraphScene):
             buff = SMALL_BUFF,
             color = WHITE,
         )
-        self.dither()
+        self.wait()
 
     def describe_better_fit(self):
         words = TextMobject("Better fit at \\\\ higher inputs")
@@ -1986,7 +1986,7 @@ class PlotDiskBoxCounting(GraphScene):
 
         self.play(ShowCreation(arrow))
         self.play(Write(words))
-        self.dither(2)
+        self.wait(2)
 
 class FineGridSameAsLargeScaling(BoxCountingScene):
     CONFIG = {
@@ -2002,18 +2002,18 @@ class FineGridSameAsLargeScaling(BoxCountingScene):
         grid.scale(self.scale_factor)
 
         self.add(grid, disk)
-        self.dither()
+        self.wait()
         self.play(disk.scale, self.scale_factor)
-        self.dither()
+        self.wait()
         self.play(
             grid.scale, 1./self.scale_factor,
             disk.scale, 1./self.scale_factor,
             disk.set_stroke, None, 0.5,
         )
-        self.dither()
+        self.wait()
         boxes = self.get_highlighted_boxes(disk)
         self.play(ShowCreation(boxes, run_time = 3))
-        self.dither(2)
+        self.wait(2)
 
 class BoxCountingSierpinski(BoxCountingScene):
     CONFIG = {
@@ -2036,9 +2036,9 @@ class BoxCountingSierpinski(BoxCountingScene):
 
         self.play(ShowCreation(sierp))
         self.play(*map(FadeIn, [corner_rect, counting_label]))
-        self.dither()
+        self.wait()
         counting_mob = self.count_boxes(boxes)
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(boxes),
             sierp.scale, 2, sierp.get_corner(DOWN+RIGHT),
@@ -2046,7 +2046,7 @@ class BoxCountingSierpinski(BoxCountingScene):
         self.play(counting_mob.next_to, counting_mob, DOWN)
         boxes = self.get_highlighted_boxes(sierp)
         new_counting_mob = self.count_boxes(boxes)
-        self.dither()
+        self.wait()
 
         frac_line = TexMobject("-")
         frac_line.highlight(YELLOW)
@@ -2059,9 +2059,9 @@ class BoxCountingSierpinski(BoxCountingScene):
         equals_exp.shift_onto_screen()
 
         self.play(*map(Write, [frac_line, approx_three]))
-        self.dither()
+        self.wait()
         self.play(Write(equals_exp))
-        self.dither()
+        self.wait()
 
 class PlotSierpinskiBoxCounting(PlotDiskBoxCounting):
     CONFIG = {
@@ -2092,14 +2092,14 @@ class BoxCountingWithBritain(BoxCountingScene):
         boxes = self.get_highlighted_boxes(britain)
 
         self.play(ShowCreation(britain, run_time = 3))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(boxes, run_time = 3))
-        self.dither()
+        self.wait()
         self.play(FadeOut(boxes))
         self.play(britain.scale, 2.5, britain.get_corner(DOWN+RIGHT))
         boxes = self.get_highlighted_boxes(britain)
         self.play(ShowCreation(boxes, run_time = 2))
-        self.dither()
+        self.wait()
 
     def show_formula(self):
         corner_rect = self.get_corner_rect()
@@ -2136,15 +2136,15 @@ class BoxCountingWithBritain(BoxCountingScene):
             FadeIn(corner_rect),
             Write(equation)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(FadeIn(simpler_eq))
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(equation),
             Animation(simpler_eq)
         )
         self.play(MoveToTarget(simpler_eq))
-        self.dither(2)
+        self.wait(2)
 
         log_expression1 = TexMobject(
             "\\log(", "N", ")", "=",
@@ -2173,13 +2173,13 @@ class BoxCountingWithBritain(BoxCountingScene):
         self.play(Write(log_expression1))
         self.remove(log_expression1)
         self.add(rewired_log_expression1)
-        self.dither()
+        self.wait()
         self.play(Transform(
             rewired_log_expression1,
             log_expression2,
             run_time = 2
         ))
-        self.dither(2)
+        self.wait(2)
 
         self.final_expression = VGroup(
             simpler_eq, rewired_log_expression1
@@ -2205,7 +2205,7 @@ class GiveShapeAndPonder(Scene):
         self.play(Blink(morty))
         self.play(randy.change_mode, "pondering")
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class CheapBoxCountingWithBritain(BoxCountingWithBritain):
     CONFIG = {
@@ -2230,7 +2230,7 @@ class ConfusedAtParabolicData(PlotDiskBoxCounting):
         self.play(randy.change_mode, "confused")
         self.play(randy.look_at, self.x_axis_label_mob)
         self.play(Blink(randy))
-        self.dither(2)
+        self.wait(2)
 
 class IntroduceLogLogPlot(GraphScene):
     CONFIG = {
@@ -2275,7 +2275,7 @@ class IntroduceLogLogPlot(GraphScene):
         slope[-1].highlight(GREEN)
         slope.next_to(slope_lines, RIGHT)
 
-        self.dither()
+        self.wait()
         data_points = [
             self.input_to_graph_point(x) + ((random.random()-0.5)/x)*UP
             for x in np.arange(1, 8, 0.7)
@@ -2285,16 +2285,16 @@ class IntroduceLogLogPlot(GraphScene):
             for point in data_points
         ])
         self.play(ShowCreation(data_dots, run_time = 3))
-        self.dither()
+        self.wait()
 
         self.play(
             ShowCreation(graph),
             Animation(expression)
         )
-        self.dither()
+        self.wait()
         self.play(ShowCreation(slope_lines))
         self.play(Write(slope))
-        self.dither()
+        self.wait()
 
 class ManyBritainCounts(BoxCountingWithBritain):
     CONFIG = {
@@ -2316,7 +2316,7 @@ class ManyBritainCounts(BoxCountingWithBritain):
             self.play(britain.scale, 2, britain.point_from_proportion(0.8))
             boxes = self.get_highlighted_boxes(britain)
             self.play(ShowCreation(boxes))
-            self.dither()
+            self.wait()
             self.play(FadeOut(boxes))
 
 class ReadyForRealDefinition(TeacherStudentsScene):
@@ -2326,7 +2326,7 @@ class ReadyForRealDefinition(TeacherStudentsScene):
             fractals really are.
         """)
         self.change_student_modes(*["hooray"]*3)
-        self.dither(2)
+        self.wait(2)
 
 class DefineFractal(TeacherStudentsScene):
     def construct(self):
@@ -2335,7 +2335,7 @@ class DefineFractal(TeacherStudentsScene):
             with a non-integer dimension.
         """)
         self.change_student_modes("thinking", "happy", "erm")
-        self.dither(3)
+        self.wait(3)
         self.teacher_says(
             "Kind of...",
             target_mode = "sassy"
@@ -2345,7 +2345,7 @@ class DefineFractal(TeacherStudentsScene):
             ApplyMethod(pi.look, DOWN)
             for pi in self.get_pi_creatures()
         ])
-        self.dither(3)
+        self.wait(3)
 
 class RoughnessAndFractionalDimension(Scene):
     def construct(self):
@@ -2380,15 +2380,15 @@ class RoughnessAndFractionalDimension(Scene):
             Transform(randy, target, run_time = 2),
             Transform(one, new_dim)
         )
-        self.dither()
+        self.wait()
         self.play(Blink(randy))
         self.play(randy.look, DOWN+RIGHT)
-        self.dither()
+        self.wait()
         self.play(randy.look, DOWN+LEFT)
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(Transform(randy, ponder_target))
-        self.dither()
+        self.wait()
 
 class DifferentSlopesAtDifferentScales(IntroduceLogLogPlot):
     def construct(self):
@@ -2422,12 +2422,12 @@ class DifferentSlopesAtDifferentScales(IntroduceLogLogPlot):
 
         self.play(ShowCreation(data_dots, run_time = 2))
         self.play(ShowCreation(self.graph))
-        self.dither()
+        self.wait()
         self.play(
             Write(words),
             ShowCreation(arrows)
         )
-        self.dither()
+        self.wait()
 
 class HoldUpCoilExample(TeacherStudentsScene):
     def construct(self):
@@ -2440,13 +2440,13 @@ class HoldUpCoilExample(TeacherStudentsScene):
             ApplyMethod(pi.look_at, point)
             for pi in self.get_students()
         ])
-        self.dither(5)
+        self.wait(5)
         self.change_student_modes(*["thinking"]*3)
         self.play(*[
             ApplyMethod(pi.look_at, point)
             for pi in self.get_students()
         ])
-        self.dither(5)
+        self.wait(5)
 
 class SmoothHilbertZoom(Scene):
     def construct(self):
@@ -2464,7 +2464,7 @@ class SmoothHilbertZoom(Scene):
             title.to_edge(UP)
 
         self.add(two_d_title)
-        self.dither()
+        self.wait()
         self.play(
             ApplyMethod(
                 hilbert.scale, 100,
@@ -2476,7 +2476,7 @@ class SmoothHilbertZoom(Scene):
             ),
             run_time = 3
         )
-        self.dither()
+        self.wait()
 
 class ListDimensionTypes(PiCreatureScene):
     CONFIG = {
@@ -2495,7 +2495,7 @@ class ListDimensionTypes(PiCreatureScene):
                 Write(text, run_time = 1),
                 self.pi_creature.change_mode, "pondering"
             )
-        self.dither(3)
+        self.wait(3)
 
 class ZoomInOnBritain(Scene):
     CONFIG = {
@@ -2521,19 +2521,19 @@ class ZoomInOnBritain(Scene):
         ))
 
         self.add(britain)
-        self.dither()
+        self.wait()
         self.play(
             britain.scale, self.zoom_factor, point,
             run_time = 10
         )
-        self.dither()
+        self.wait()
 
 class NoteTheConstantSlope(Scene):
     def construct(self):
         words = TextMobject("Note the \\\\ constant slope")
         words.highlight(YELLOW)
         self.play(Write(words))
-        self.dither(2)
+        self.wait(2)
 
 class FromHandwavyToQuantitative(Scene):
     def construct(self):
@@ -2562,7 +2562,7 @@ class FromHandwavyToQuantitative(Scene):
             randy.change_mode, "happy"
         )
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class WhatSlopeDoesLogLogPlotApproach(IntroduceLogLogPlot):
     CONFIG = {
@@ -2609,7 +2609,7 @@ class WhatSlopeDoesLogLogPlotApproach(IntroduceLogLogPlot):
             morty.change_mode, "speaking"
         )
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
 class BritainBoxCountHighZoom(BoxCountingWithBritain):
     def construct(self):
@@ -2632,12 +2632,12 @@ class BritainBoxCountHighZoom(BoxCountingWithBritain):
                 a, b = 0.25, 0.35
             britain.pointwise_become_partial(britain, a, b)
             self.count_britain(britain)
-            self.dither()
+            self.wait()
 
     def count_britain(self, britain):
         boxes = self.get_highlighted_boxes(britain)
         self.play(ShowCreation(boxes))
-        self.dither()
+        self.wait()
         self.play(FadeOut(boxes))
 
 class IfBritainWasEventuallySmooth(Scene):
@@ -2647,12 +2647,12 @@ class IfBritainWasEventuallySmooth(Scene):
         point = britain.point_from_proportion(0.3)
 
         self.add(britain)
-        self.dither()
+        self.wait()
         self.play(
             britain.scale, 200, point,
             run_time = 10
         )
-        self.dither()
+        self.wait()
 
 class SmoothBritainLogLogPlot(IntroduceLogLogPlot):
     CONFIG = {
@@ -2699,17 +2699,17 @@ class SmoothBritainLogLogPlot(IntroduceLogLogPlot):
 
         self.play(ShowCreation(data_dots, run_time = 3))
         self.play(ShowCreation(self.graph))
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(slope_lines1),
             Write(slope_label1)
         )
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(slope_lines2),
             Write(slope_label2)
         )
-        self.dither()
+        self.wait()
 
 class SlopeAlwaysAboveOne(WhatSlopeDoesLogLogPlotApproach):
     CONFIG = {
@@ -2724,7 +2724,7 @@ class ChangeWorldview(TeacherStudentsScene):
             you see the world.
         """)
         self.change_student_modes(*["thinking"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class CompareBritainAndNorway(Scene):
     def construct(self):
@@ -2763,7 +2763,7 @@ class CompareBritainAndNorway(Scene):
             *map(ShowCreation, [norway, britain]),
             run_time = 3
         )
-        self.dither()
+        self.wait()
         self.play(*it.chain(*[
             [
                 mob.set_stroke, None, 0,
@@ -2771,7 +2771,7 @@ class CompareBritainAndNorway(Scene):
             ]
             for mob in britain, norway
         ]))
-        self.dither(2)
+        self.wait(2)
 
 class CompareOceansLabels(Scene):
     def construct(self):
@@ -2782,9 +2782,9 @@ class CompareOceansLabels(Scene):
         label2.shift(SPACE_WIDTH*RIGHT/2).to_edge(UP)
 
         self.play(Write(label1))
-        self.dither()
+        self.wait()
         self.play(Write(label2))
-        self.dither()
+        self.wait()
 
 class CompareOceans(Scene):
     def construct(self):
@@ -2832,7 +2832,7 @@ class FractalNonFractalFlowChart(Scene):
         self.add(randy)
 
         self.add(is_fractal)
-        self.dither()
+        self.wait()
         for word, arrow, answer in (yes, yes_arrow, nature), (no, no_arrow, man_made):
             self.play(
                 ShowCreation(arrow),
@@ -2840,7 +2840,7 @@ class FractalNonFractalFlowChart(Scene):
             )
             self.play(Write(answer, run_time = 1))
             if word is yes:
-                self.dither()
+                self.wait()
             else:
                 self.play(Blink(randy))
 
@@ -2926,19 +2926,19 @@ class MortyLookingAtRectangle(Scene):
         )
         self.play(Write(url))
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
         self.play(
             url.restore,
             morty.change_mode, "happy"
         )
         self.play(ShowCreation(rect))
-        self.dither()
+        self.wait()
         self.play(Blink(morty))
         for mode in ["wave_2", "hooray", "happy", "pondering", "happy"]:
             self.play(morty.change_mode, mode)
-            self.dither(2)
+            self.wait(2)
             self.play(Blink(morty))
-            self.dither(2)
+            self.wait(2)
 
 
 

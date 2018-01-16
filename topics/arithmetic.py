@@ -50,12 +50,12 @@ class RearrangeEquation(Scene):
         self.add(*start_mobs)
         if leave_start_terms:
             self.add(Mobject(*start_mobs))
-        self.dither()
+        self.wait()
         self.play(*[
             Transform(*pair, **transform_kwargs)
             for pair in mobject_pairs
         ])
-        self.dither()
+        self.wait()
 
 
     def get_mobs_from_terms(self, start_terms, end_terms):

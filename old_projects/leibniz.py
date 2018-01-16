@@ -221,7 +221,7 @@ class Introduction(PiCreatureScene):
             morty.change_mode, "raise_right_hand",
             DrawBorderThenFill(video)
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(primes, run_time = 2),
             morty.change_mode, "happy",
@@ -229,12 +229,12 @@ class Introduction(PiCreatureScene):
             video.center,
             video.set_fill, None, 0
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(plane, run_time = 2),
             morty.change, "raise_right_hand"
         )
-        self.dither()
+        self.wait()
         self.remove(morty)
         morty = morty.copy()
         self.add(morty)
@@ -247,7 +247,7 @@ class Introduction(PiCreatureScene):
             FadeOut(VGroup(morty.eyes, morty.mouth)),
             Write(VGroup(*pi_group[1:]))
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             plane.scale_to_fit_width, pi_group.get_width(),
             plane.next_to, pi_group, DOWN, MED_LARGE_BUFF
@@ -268,9 +268,9 @@ class Introduction(PiCreatureScene):
             FadeIn(titles[0])
         )
         self.show_frame()
-        self.dither(2)
+        self.wait(2)
         self.play(Transform(*titles))
-        self.dither(3)
+        self.wait(3)
 
     def get_primes(self):
         return TexMobject("2, 3, 5, 7, 11, 13, \\dots")
@@ -311,7 +311,7 @@ class ShowSum(TeacherStudentsScene):
         self.change_student_modes(
             "hooray", "sassy", "angry"
         )
-        self.dither(2)
+        self.wait(2)
 
     def show_sum(self):
         line = UnitInterval()
@@ -395,7 +395,7 @@ class ShowSum(TeacherStudentsScene):
             anims.append(FadeIn(fading_term))
             self.play(*anims, run_time = run_time)
             if term:
-                self.dither()
+                self.wait()
             else:
                 run_time *= 0.8
         self.play(
@@ -404,10 +404,10 @@ class ShowSum(TeacherStudentsScene):
             dot.move_to, sum_point
         )
         self.play(ShowCreation(sum_arrow))
-        self.dither()
+        self.wait()
         self.change_student_modes("erm", "confused", "maybe")
         self.play(self.teacher.change_mode, "happy")
-        self.dither(2)
+        self.wait(2)
 
 class FermatsDreamExcerptWrapper(Scene):
     def construct(self):
@@ -417,7 +417,7 @@ class FermatsDreamExcerptWrapper(Scene):
         words.scale(0.8)
         words.to_edge(UP)
         self.add(words)
-        self.dither()
+        self.wait()
 
 class ShowCalculus(PiCreatureScene):
     def construct(self):
@@ -452,18 +452,18 @@ class ShowCalculus(PiCreatureScene):
                 FadeIn(rhs),
                 self.pi_creature.change, mode
             )
-            self.dither()
+            self.wait()
         self.change_mode("maybe")
-        self.dither()
+        self.wait()
         self.look_at(rhs_group[-1])
-        self.dither()
+        self.wait()
         self.pi_creature_says(
             "Where's the \\\\ circle?",
             bubble_kwargs = {"width" : 4, "height" : 3},
             target_mode = "maybe"
         )
         self.look_at(rhs_group[0])
-        self.dither()
+        self.wait()
 
     def create_pi_creature(self):
         return Randolph(color = BLUE_C).to_corner(DOWN+LEFT)
@@ -516,10 +516,10 @@ class CertainRegularityInPrimes(LatticePointScene):
 
         curr_group = groups[0]
         self.play(Write(curr_group, run_time = 2))
-        self.dither()
+        self.wait()
         for group in groups[1:]:
             self.play(Transform(curr_group, group))
-            self.dither(2)
+            self.wait(2)
 
 class Outline(PiCreatureScene):
     def construct(self):
@@ -565,7 +565,7 @@ class Outline(PiCreatureScene):
                 FadeIn(question)
             ]
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             RemovePiCreatureBubble(self.pi_creature),
             question.to_corner, UP+RIGHT
@@ -630,7 +630,7 @@ class Outline(PiCreatureScene):
         self.play(
             FadeIn(step)
         )
-        self.dither()
+        self.wait()
         self.play(
             lattice_group.scale_to_fit_height, 2.5,
             lattice_group.next_to, self.question, DOWN,
@@ -640,8 +640,8 @@ class Outline(PiCreatureScene):
     def write_steps_2_and_3(self):
         for step in self.steps[1:3]:
             self.play(FadeIn(step))
-            self.dither(2)
-        self.dither()
+            self.wait(2)
+        self.wait()
 
     def show_chi(self):
         input_range = range(1, 7)
@@ -676,7 +676,7 @@ class Outline(PiCreatureScene):
             for mob in [chis, arrows, numerators]
         ])
         self.change_mode("pondering")
-        self.dither()
+        self.wait()
 
         self.chis = chis
         self.arrows = arrows
@@ -701,7 +701,7 @@ class Outline(PiCreatureScene):
             Write(rhs)
         )
         self.change_mode("confused")
-        self.dither(2)
+        self.wait(2)
 
         self.complicated_formula = rhs
 
@@ -738,7 +738,7 @@ class Outline(PiCreatureScene):
             Write(expression),
             self.pi_creature.change_mode, "pondering"
         )
-        self.dither(3)
+        self.wait(3)
 
     ########
     def create_pi_creature(self):
@@ -800,7 +800,7 @@ class CountLatticePoints(LatticePointScene):
             DrawBorderThenFill(example_dot),
             run_time = 2,
         )
-        self.dither(2)
+        self.wait(2)
         self.play(*map(FadeOut, [label, lines, example_dot]))
 
     def draw_lattice_points_in_circle(self):
@@ -824,7 +824,7 @@ class CountLatticePoints(LatticePointScene):
         self.play(FadeIn(brace))
         self.add_foreground_mobject(brace)
         self.draw_lattice_points()
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [brace, radius]))
 
         self.circle = circle
@@ -853,7 +853,7 @@ class CountLatticePoints(LatticePointScene):
             ),
             Animation(self.lattice_points)
         )
-        self.dither()
+        self.wait()
         self.play(FadeOut(squares), Animation(self.lattice_points))
 
     def write_pi_R_squared(self):
@@ -887,13 +887,13 @@ class CountLatticePoints(LatticePointScene):
             FadeIn(background),
             Write(radius_10_eq)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(ReplacementTransform(
             radius_10_eq.copy(),
             radius_million_eq
         ))
         self.play(FadeIn(brace))
-        self.dither(3)
+        self.wait(3)
 
         self.radius_10_eq = radius_10_eq
         self.million_group = VGroup(radius_million_eq, brace)
@@ -921,14 +921,14 @@ class CountLatticePoints(LatticePointScene):
                 self.radius_R_eq
             )
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             final_group.arrange_submobjects, RIGHT,
             final_group.next_to, ORIGIN, UP
         )
         rect = BackgroundRectangle(final_group)
         self.play(FadeIn(rect), Animation(final_group))
-        self.dither(2)
+        self.wait(2)
 
 class SoYouPlay(TeacherStudentsScene):
     def construct(self):
@@ -937,9 +937,9 @@ class SoYouPlay(TeacherStudentsScene):
             run_time = 2
         )
         self.change_student_modes("happy", "thinking", "hesitant")
-        self.dither()
+        self.wait()
         self.look_at(Dot().to_corner(UP+LEFT))
-        self.dither(3)
+        self.wait(3)
 
 class CountThroughRings(LatticePointScene):
     CONFIG = {
@@ -982,7 +982,7 @@ class CountThroughRings(LatticePointScene):
             arg_creator = lambda m : (m.set_stroke, PINK, 4),
             rate_func = there_and_back,
         ))
-        self.dither()
+        self.wait()
         self.remove_foreground_mobject(self.lattice_points)
 
         digest_locals(self, ["circles", "radii"])
@@ -1002,7 +1002,7 @@ class CountThroughRings(LatticePointScene):
             self.lattice_points.set_fill, GREY, 0.5,
             Animation(points_on_example_circle)
         )
-        self.dither()
+        self.wait()
 
         digest_locals(self, ["points_on_example_circle", "example_circle"])
 
@@ -1047,7 +1047,7 @@ class CountThroughRings(LatticePointScene):
         )
         self.play(ShowCreation(radial_line))
         self.play(Write(distance))
-        self.dither(2)
+        self.wait(2)
 
         a_num, b_num = [
             TexMobject(str(coord))[0]
@@ -1060,9 +1060,9 @@ class CountThroughRings(LatticePointScene):
             Transform(a, a_num),
             Transform(b, b_num),
         )
-        self.dither()
+        self.wait()
         self.play(Transform(distance, distance_num))
-        self.dither(3)
+        self.wait(3)
         self.play(*map(FadeOut, [
             self.example_circle, self.points_on_example_circle,
             distance, a, b,
@@ -1115,7 +1115,7 @@ class CountThroughRings(LatticePointScene):
                 count_mob,
                 added_anims = [FadeIn(root)]
             )
-            self.dither(2)
+            self.wait(2)
         self.play(
             FadeOut(left_roots),
             FadeIn(top_rect),
@@ -1131,7 +1131,7 @@ class CountThroughRings(LatticePointScene):
             self.show_ring_count(
                 r_squared, top_list[r_squared],
             )
-        self.dither(3)
+        self.wait(3)
 
 
     def show_ring_count(
@@ -1188,7 +1188,7 @@ class CountThroughRings(LatticePointScene):
             *added_anims,
             run_time = run_time
         )
-        self.dither(run_time)
+        self.wait(run_time)
         if len(points) > 0:
             mover = points.copy()  
         else:
@@ -1262,7 +1262,7 @@ class LookAtExampleRing(LatticePointScene):
             FadeIn(points, submobject_mode = "lagged_start"),
             run_time = 2,
         )
-        self.dither()
+        self.wait()
 
         curr_label = labels[0]
         curr_sum_of_squares = sums_of_squares[0]
@@ -1280,7 +1280,7 @@ class LookAtExampleRing(LatticePointScene):
             Animation(VGroup(x, y))
         )
         self.remove(x, y)
-        self.dither()
+        self.wait()
 
         for label, sum_of_squares in zip(labels, sums_of_squares)[1:]:
             self.play(
@@ -1295,7 +1295,7 @@ class LookAtExampleRing(LatticePointScene):
                 )
             )
             curr_sum_of_squares = sum_of_squares
-            self.dither()
+            self.wait()
 
         points.save_state()
         points.generate_target()
@@ -1309,9 +1309,9 @@ class LookAtExampleRing(LatticePointScene):
             points, 
             run_time = 2,
         ))
-        self.dither()
+        self.wait()
         self.play(points.restore, run_time = 2)
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [
             curr_label, curr_sum_of_squares, 
             circle, points,
@@ -1342,9 +1342,9 @@ class LookAtExampleRing(LatticePointScene):
             ),
             run_time = 2,
         )
-        self.dither()
+        self.wait()
         self.play(Write(equation))
-        self.dither(3)
+        self.wait(3)
 
 class Given2DThinkComplex(TeacherStudentsScene):
     def construct(self):
@@ -1359,7 +1359,7 @@ class Given2DThinkComplex(TeacherStudentsScene):
 
         self.teacher_says(tex)
         self.change_student_modes("pondering", "confused", "erm")
-        self.dither()
+        self.wait()
         self.play(
             Write(plane),
             RemovePiCreatureBubble(
@@ -1371,7 +1371,7 @@ class Given2DThinkComplex(TeacherStudentsScene):
             *["thinking"]*3,
             look_at_arg = plane
         )
-        self.dither(3)
+        self.wait(3)
 
 class IntroduceComplexConjugate(LatticePointScene):
     CONFIG = {
@@ -1466,11 +1466,11 @@ class IntroduceComplexConjugate(LatticePointScene):
             Write(y_coord)
         )
         self.play(FadeIn(tuple_label))
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [tuple_label, y_coord]))
         self.play(*map(FadeIn, [complex_label, imag_y_coord]))
         self.play(*map(Write, [imag_coords, ticks]))
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [
             v_arrow, h_arrow, 
             x_coord, imag_y_coord,
@@ -1519,12 +1519,12 @@ class IntroduceComplexConjugate(LatticePointScene):
             run_time = 3,
             submobject_mode = "lagged_start"
         ))
-        self.dither(2)
+        self.wait(2)
         self.play(
             GrowFromCenter(brace),
             Write(conjugate_words, run_time = 2)
         )
-        self.dither()
+        self.wait()
         self.play(*[
             ReplacementTransform(m1.copy(), m2)
             for m1, m2 in [
@@ -1532,7 +1532,7 @@ class IntroduceComplexConjugate(LatticePointScene):
                 (self.complex_label, label),
             ]
         ])
-        self.dither(2)
+        self.wait(2)
 
         self.conjugate_label = VGroup(brace, conjugate_words)
         self.equation = equation
@@ -1549,7 +1549,7 @@ class IntroduceComplexConjugate(LatticePointScene):
             target_mode = "confused",
         ))
         self.play(Blink(randy))
-        self.dither(2)
+        self.wait(2)
         self.play(
             RemovePiCreatureBubble(
                 randy, target_mode = "erm",
@@ -1603,26 +1603,26 @@ class IntroduceComplexConjugate(LatticePointScene):
         self.play(group.shift, vect)
         group = VGroup(x1, y2)
         self.play(group.shift, -vect)
-        self.dither()
+        self.wait()
         self.play(group.shift, vect)
         group = VGroup(x2, y1)
         self.play(group.shift, -vect)
-        self.dither()
+        self.wait()
         self.play(group.shift, vect)
         group = VGroup(*it.chain(y1, y2))
         self.play(group.shift, -vect)
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(expansion[1].rect),
             ReplacementTransform(group.copy(), expansion[1]),
         )
         self.play(group.shift, vect)
-        self.dither(2)
+        self.wait(2)
         self.play(
             Transform(expansion[1].rect, alt_y_term.rect),
             Transform(expansion[1], alt_y_term),
         )
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [
             expansion[0].rect,
             expansion[1].rect,
@@ -1665,7 +1665,7 @@ class IntroduceComplexConjugate(LatticePointScene):
         )
         self.play(Blink(morty))
         self.play(RemovePiCreatureBubble(randy, target_mode = "pondering"))
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [randy, morty, screen]))
 
     def show_geometrically(self):
@@ -1713,9 +1713,9 @@ class IntroduceComplexConjugate(LatticePointScene):
             top_dot.magnitude_word,
             submobject_mode = "lagged_start"
         ))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(top_dot.arc))
-        self.dither(2)
+        self.wait(2)
         self.play(ShowCreation(low_dot.line))
         self.play(
             ReplacementTransform(
@@ -1741,9 +1741,9 @@ class IntroduceComplexConjugate(LatticePointScene):
             mover[1].move_to, self.plane.coords_to_point(25, 0),
             run_time = 2
         )
-        self.dither()
+        self.wait()
         self.play(Write(twenty_five_label))
-        self.dither(3)
+        self.wait(3)
 
 class NameGaussianIntegers(LatticePointScene):
     CONFIG = {
@@ -1802,7 +1802,7 @@ class NameGaussianIntegers(LatticePointScene):
             run_time = 2,
             submobject_mode = "lagged_start"
         ))
-        self.dither(3)
+        self.wait(3)
         self.play(FadeOut(gauss_name))
 
         self.gaussian_integers = gaussian_integers
@@ -1825,7 +1825,7 @@ class NameGaussianIntegers(LatticePointScene):
             *map(GrowFromCenter, dots)
         )
         self.play(Write(root_label))
-        self.dither()
+        self.wait()
 
         self.circle_dots = dots
 
@@ -1894,7 +1894,7 @@ class NameGaussianIntegers(LatticePointScene):
                     ReplacementTransform(last_dot.line_pair, dot.line_pair),
                 ]
             self.play(*anims)
-            self.dither()
+            self.wait()
             last_dot = dot
 
 class FactorOrdinaryNumber(TeacherStudentsScene):
@@ -1927,7 +1927,7 @@ class FactorOrdinaryNumber(TeacherStudentsScene):
             self.teacher.change_mode, "raise_right_hand",
             Write(number)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             number.restore,
             Write(VGroup(*equation[1:])),
@@ -1938,7 +1938,7 @@ class FactorOrdinaryNumber(TeacherStudentsScene):
             look_at_arg = equation,
             added_anims = [self.teacher.change_mode, "happy"]
         )
-        self.dither()
+        self.wait()
         last_alt_rhs = None
         for alt_rhs in alt_rhs_list:
             equation.generate_target()
@@ -1955,7 +1955,7 @@ class FactorOrdinaryNumber(TeacherStudentsScene):
                     look_at_arg = alt_rhs,
                     added_anims = [Write(title[0])]
                 )
-            self.dither(2)
+            self.wait(2)
             last_alt_rhs = alt_rhs
 
         self.play(
@@ -1967,7 +1967,7 @@ class FactorOrdinaryNumber(TeacherStudentsScene):
             )
         )
         self.change_student_modes(*["happy"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
     CONFIG = {
@@ -2076,7 +2076,7 @@ class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
             DrawBorderThenFill(five_dot), 
             FadeIn(five_label)
         )
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(
                 VGroup(five_dot).copy(),
@@ -2084,9 +2084,9 @@ class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
             )
         )
         self.play(*map(Write, [p1_label, p2_label]))
-        self.dither()
+        self.wait()
         self.play(Write(gaussian_prime))
-        self.dither()
+        self.wait()
 
         #Show morty
         self.play(FadeIn(morty))
@@ -2094,7 +2094,7 @@ class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
             morty, "\\emph{Almost} unique",
             bubble_kwargs = {"height" : 2, "width" : 5},
         ))
-        self.dither()
+        self.wait()
         self.play(RemovePiCreatureBubble(morty, target_mode = "pondering"))
 
         #Show neg_alternate expression 
@@ -2110,12 +2110,12 @@ class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
             Transform(p2_label, p6_label),
         )
         self.play(Write(neg_alt_factorization))
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(neg_alt_factorization),
             *[m.restore for m in movers]
         )
-        self.dither()
+        self.wait()
 
         ##Show i_alternate expression
         self.play(
@@ -2132,7 +2132,7 @@ class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
                 ]
             ]
         )
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(times_neg_i_arc),
             FadeIn(times_neg_i),
@@ -2147,10 +2147,10 @@ class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
                 ]
             ]
         )
-        self.dither()
+        self.wait()
         self.play(Write(i_alt_factorization))
         self.change_mode("hesitant")
-        self.dither(3)
+        self.wait(3)
 
 class FromIntegerFactorsToGaussianFactors(TeacherStudentsScene):
     def construct(self):
@@ -2186,12 +2186,12 @@ class FromIntegerFactorsToGaussianFactors(TeacherStudentsScene):
                 ),
                 *map(ShowCreation, mob.arrows)
             )
-            self.dither()
+            self.wait()
         self.play(*[
             ApplyMethod(pi.change, "pondering", expression)
             for pi in self.get_pi_creatures()
         ])
-        self.dither(5)
+        self.wait(5)
         group = VGroup(
             expression, 
             two.arrows, two.factors,
@@ -2201,7 +2201,7 @@ class FromIntegerFactorsToGaussianFactors(TeacherStudentsScene):
             "Now for a \\\\ surprising fact...",
             added_anims = [FadeOut(group)]
         )
-        self.dither(2)
+        self.wait(2)
 
 class FactorizationPattern(Scene):
     def construct(self):
@@ -2267,7 +2267,7 @@ class FactorizationPattern(Scene):
             map(ShowCreation, arrows),
             map(DrawBorderThenFill, dots),
         ))
-        self.dither()
+        self.wait()
         self.play(*[
             MoveToTarget(
                 mover,
@@ -2281,7 +2281,7 @@ class FactorizationPattern(Scene):
             run_time = 2,
             submobject_mode = "lagged_start"
         ))
-        self.dither(4)
+        self.wait(4)
         self.play(*map(FadeOut, [movers, factorizations]))
 
     def show_three_mod_four_primes(self):
@@ -2316,12 +2316,12 @@ class FactorizationPattern(Scene):
             map(ShowCreation, arrows),
             map(DrawBorderThenFill, dots),
         ))
-        self.dither()
+        self.wait()
         self.play(
             Write(words),
             *map(ShowCreation, word_arrows)
         )
-        self.dither(4)
+        self.wait(4)
         self.play(*map(FadeOut, [words, word_arrows]))
 
     def ask_why_this_is_true(self):
@@ -2344,9 +2344,9 @@ class FactorizationPattern(Scene):
             look_at_arg = self.number_line,
         ))
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(FadeIn(links_text))
-        self.dither(2)
+        self.wait(2)
         self.play(*map(FadeOut, [
             randy, randy.bubble, randy.bubble.content,
             links_text
@@ -2384,19 +2384,19 @@ class FactorizationPattern(Scene):
             ShowCreation(arrow),
             DrawBorderThenFill(two_dot)
         )
-        self.dither()
+        self.wait()
         self.play(
             MoveToTarget(mover),
             Write(factorization)
         )
 
         self.revert_to_original_skipping_status()
-        self.dither(2)
+        self.wait(2)
         self.play(ShowCreation(time_i_arrow))
         self.play(Write(times_i))
-        self.dither(2)
+        self.wait(2)
         self.play(FadeIn(words))
-        self.dither(2)
+        self.wait(2)
 
 class RingsWithOneModFourPrimes(CertainRegularityInPrimes):
     CONFIG = {
@@ -2452,12 +2452,12 @@ class FactorTwo(LatticePointScene):
                 (two_dot, factor_dots),
             ]
         ])
-        self.dither(2)
+        self.wait(2)
         dot_copy = factor_dots[1].copy()
         dot_copy.highlight(RED)
         for angle in np.pi/2, -np.pi/2:
             self.play(Rotate(dot_copy, angle, run_time = 2))
-            self.dither(2)
+            self.wait(2)
 
 class CountThroughRingsCopy(CountThroughRings):
     pass
@@ -2531,7 +2531,7 @@ class IntroduceRecipe(Scene):
             path_arc = -np.pi/6
         ))
         self.play(Write(factorization))
-        self.dither()
+        self.wait()
 
         self.factored_N_mob = N_mob
         self.integer_factorization = factorization
@@ -2580,7 +2580,7 @@ class IntroduceRecipe(Scene):
             movers,
             replace_mobject_with_target_in_scene = True
         ))
-        self.dither()
+        self.wait()
 
         self.gaussian_factorization = factorization
 
@@ -2595,10 +2595,10 @@ class IntroduceRecipe(Scene):
         right_factors.target.next_to(T_chart.right_h_line, DOWN)
 
         self.play(ShowCreation(T_chart))
-        self.dither()
+        self.wait()
         self.play(MoveToTarget(left_factors))
         self.play(MoveToTarget(right_factors))
-        self.dither()
+        self.wait()
 
         digest_locals(self, ["left_factors", "right_factors"])
 
@@ -2622,11 +2622,11 @@ class IntroduceRecipe(Scene):
         main_arrow = double_arrows[0]
 
         self.play(Write(main_arrow, run_time = 1))
-        self.dither()
+        self.wait()
         for new_arrow in double_arrows[1:]:
             self.play(Transform(main_arrow, new_arrow))
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
         self.play(FadeOut(main_arrow))
 
     def take_product_of_columns(self):
@@ -2639,8 +2639,8 @@ class IntroduceRecipe(Scene):
             self.play(ReplacementTransform(
                 group.copy(), VGroup(product)
             ))
-            self.dither()
-        self.dither(3)
+            self.wait()
+        self.wait(3)
 
     def mark_left_product_as_result(self):
         rect = self.get_result_surrounding_rect()
@@ -2654,7 +2654,7 @@ class IntroduceRecipe(Scene):
             Write(words, run_time = 2),
             ShowCreation(arrow)
         )
-        self.dither(3)
+        self.wait(3)
         self.play(*map(FadeOut, [words, arrow]))
 
         self.output_label_group = VGroup(words, arrow)
@@ -2662,7 +2662,7 @@ class IntroduceRecipe(Scene):
     def swap_factors(self):
         for i in range(len(self.left_factors)):
             self.swap_factors_at_index(i)
-            self.dither()
+            self.wait()
 
     #########
 
@@ -2756,7 +2756,7 @@ class IntroduceRecipe(Scene):
         ]+[
             ReplacementTransform(rect, new_rect)
         ])
-        self.dither()
+        self.wait()
 
     def get_result_surrounding_rect(self, product = None):
         if product is None:
@@ -2782,14 +2782,14 @@ class IntroduceRecipe(Scene):
             # )
             anims += [ShowCreation(arrow)]
         self.play(*anims)
-        self.dither(2)
+        self.wait(2)
 
 class StateThreeChoices(TeacherStudentsScene):
     def construct(self):
         self.teacher_says(
             "$5^2$ gives 3 choices."
         )
-        self.dither(3)
+        self.wait(3)
 
 class ThreeOutputsAsLatticePoints(LatticePointScene):
     CONFIG = {
@@ -2843,7 +2843,7 @@ class ThreeOutputsAsLatticePoints(LatticePointScene):
                     stroke_width = 4
                 )
             )
-        self.dither(2)
+        self.wait(2)
 
         self.original_dots = dots
 
@@ -2855,7 +2855,7 @@ class LooksLikeYoureMissingSome(TeacherStudentsScene):
             student_index = 0,
         )
         self.play(self.teacher.change, "guilty")
-        self.dither(3)
+        self.wait(3)
 
 class ShowAlternateFactorizationOfTwentyFive(IntroduceRecipe):
     CONFIG = {
@@ -2937,8 +2937,8 @@ class ThreeOutputsAsLatticePointsContinued(ThreeOutputsAsLatticePoints):
                 dots_copy.highlight, color,
                 path_arc = angle
             )
-            self.dither()
-        self.dither(2)
+            self.wait()
+        self.wait(2)
 
 class RecipeFor125(IntroduceRecipe):
     CONFIG = {
@@ -2969,7 +2969,7 @@ class StateFourChoices(TeacherStudentsScene):
         self.teacher_says(
             "$5^3$ gives 4 choices."
         )
-        self.dither(3)
+        self.wait(3)
 
 class Show125Circle(ThreeOutputsAsLatticePointsContinued):
     CONFIG = {
@@ -3039,13 +3039,13 @@ class RecipeFor375(IntroduceRecipe):
             morty.change, "angry", three.target
         )
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
         for factors in self.left_factors, self.right_factors:
             self.play(
                 three.next_to, factors, DOWN,
                 morty.change, "sassy", factors.get_bottom()
             )
-            self.dither()
+            self.wait()
         self.right_factors.add(three)
         self.play(morty.change_mode, "pondering")
 
@@ -3081,7 +3081,7 @@ class Show375Circle(LatticePointScene):
         group = VGroup(
             self.plane, radial_line, root_label, circle
         )
-        self.dither(2)
+        self.wait(2)
 
 class RecipeFor1125(IntroduceRecipe):
     CONFIG = {
@@ -3115,7 +3115,7 @@ class RecipeFor1125(IntroduceRecipe):
         product = self.product_mobjects[0]
 
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
 class Show125CircleSimple(LatticePointScene):
     CONFIG = {
@@ -3150,7 +3150,7 @@ class Show125CircleSimple(LatticePointScene):
             ),
             run_time = 2,
         )
-        self.dither(2)
+        self.wait(2)
 
 class Show1125Circle(Show125CircleSimple):
     CONFIG = {
@@ -3217,7 +3217,7 @@ class SummarizeCountingRule(Show125Circle):
             stroke_width = 4,
             stroke_color = PINK
         ))
-        self.dither(2)
+        self.wait(2)
 
     def add_full_screen_rect(self):
         rect = FullScreenFadeRectangle(
@@ -3269,14 +3269,14 @@ class SummarizeCountingRule(Show125Circle):
 
 
         self.play(FadeIn(factorization))
-        self.dither()
+        self.wait()
         self.play(
             five.highlight, GREEN,
             thirteen.highlight, GREEN,
             FadeIn(five_brace),
             FadeIn(thirteen_brace),
         )
-        self.dither()
+        self.wait()
         for choices, power in (five_choices, five_power), (thirteen_choices, thirteen_power):
             self.play(
                 Write(VGroup(choices[0], *choices[2:])),
@@ -3284,19 +3284,19 @@ class SummarizeCountingRule(Show125Circle):
                     power.copy(), choices[1]
                 )
             )
-        self.dither()
+        self.wait()
         self.play(
             three.highlight, RED,
             FadeIn(three_brace)
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(VGroup(three_choices[0], three_choices[2])),
             ReplacementTransform(
                 three_power.copy(), three_choices[1]
             )
         )
-        self.dither()
+        self.wait()
 
         movers = three_power, three_choices
         for mob in movers:
@@ -3308,12 +3308,12 @@ class SummarizeCountingRule(Show125Circle):
             ),
             Transform(three_choices, alt_three_choices)
         )
-        self.dither()
+        self.wait()
         self.play(
             *[mob.restore for mob in movers],
             path_arc = -np.pi
         )
-        self.dither()
+        self.wait()
 
         equals_four = TexMobject("=", "4")
         four = equals_four.get_part_by_tex("4")
@@ -3343,7 +3343,7 @@ class SummarizeCountingRule(Show125Circle):
             FadeIn(equals_four)
         )
         self.play(*map(FadeIn, [final_choice_words, final_choice_arrow]))
-        self.dither()
+        self.wait()
 
     def ask_about_two(self):
         randy = Randolph(color = BLUE_C)
@@ -3359,14 +3359,14 @@ class SummarizeCountingRule(Show125Circle):
             look_at_arg = self.count_words
         ))
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class ThisIsTheHardestPart(TeacherStudentsScene):
     def construct(self):
         self.change_student_modes("horrified", "confused", "pleading")
         self.teacher_says("This is the \\\\ hardest part")
         self.change_student_modes("thinking", "happy", "pondering")
-        self.dither(2)
+        self.wait(2)
 
 class RecipeFor10(IntroduceRecipe):
     CONFIG = {
@@ -3402,7 +3402,7 @@ class RecipeFor10(IntroduceRecipe):
             ShowCreation(arrow),
             Write(times_i, run_time = 1)
         )
-        self.dither()
+        self.wait()
         self.play(curr_product.to_edge, LEFT)
         self.swap_factors_at_index(0)
         new_arrow = Arrow(
@@ -3413,7 +3413,7 @@ class RecipeFor10(IntroduceRecipe):
             Transform(arrow, new_arrow),
             MaintainPositionRelativeTo(times_i, arrow)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(*map(FadeOut, [arrow, times_i, curr_product]))
 
 class FactorsOfTwoNeitherHelpNorHurt(TeacherStudentsScene):
@@ -3424,7 +3424,7 @@ class FactorsOfTwoNeitherHelpNorHurt(TeacherStudentsScene):
         words.highlight_by_tex("2", YELLOW)
         self.teacher_says(words)
         self.change_student_modes(*["pondering"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class EffectOfPowersOfTwo(LatticePointScene):
     CONFIG = {
@@ -3454,10 +3454,10 @@ class EffectOfPowersOfTwo(LatticePointScene):
             stroke_width = 4,
             stroke_color = PINK
         ))
-        self.dither()
+        self.wait()
         for new_group in groups[1:]:
             self.play(Transform(group, new_group))
-            self.dither(2)
+            self.wait(2)
 
 class NumberTheoryAtItsBest(TeacherStudentsScene):
     def construct(self):
@@ -3467,7 +3467,7 @@ class NumberTheoryAtItsBest(TeacherStudentsScene):
             run_time = 2,
         )
         self.change_student_modes(*["hooray"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class IntroduceChi(FactorizationPattern):
     CONFIG = {
@@ -3521,7 +3521,7 @@ class IntroduceChi(FactorizationPattern):
         chi_expression = self.chi_expressions[index]
 
         self.introduce_dots_arrows_and_labels(dots, arrows, labels)
-        self.dither()
+        self.wait()
         self.play(
             Write(VGroup(*[
                 part 
@@ -3534,7 +3534,7 @@ class IntroduceChi(FactorizationPattern):
                 labels, chi_expression.inputs
             )
         ])
-        self.dither()
+        self.wait()
 
     def fade_out_labels(self):
         self.play(*map(FadeOut, [
@@ -3583,7 +3583,7 @@ class IntroduceChi(FactorizationPattern):
             run_time = 6
         ))
 
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [chis, arrows, numbers]))
 
     def write_multiplicative_label(self):
@@ -3629,10 +3629,10 @@ class IntroduceChi(FactorizationPattern):
             FadeIn(expression),
             self.morty.change, "pondering", expression
         )
-        self.dither(2)
+        self.wait(2)
         for new_expression in expressions[1:]:
             self.play(Transform(expression, new_expression))
-            self.dither(2)
+            self.wait(2)
 
 
 
@@ -3749,7 +3749,7 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
             FadeIn(factorization),
             self.count_words.next_to, count, LEFT
         )
-        self.dither()
+        self.wait()
         self.play(*[
             ReplacementTransform(
                 VGroup(factorization.get_part_by_tex(
@@ -3759,7 +3759,7 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
             )
             for tex, part in zip(["=", "2", "3", "5"], count)
         ])
-        self.dither()
+        self.wait()
 
         self.factorization = factorization
         self.count = count
@@ -3795,12 +3795,12 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
             )
             for c_part, e_part in zip(count_copy, expression)
         ])
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             count_copy, expression,
             run_time = 2
         ))
-        self.dither()
+        self.wait()
 
         self.chi_expression = expression
 
@@ -3836,9 +3836,9 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
                 FadeIn(evaluation_rect),
                 ReplacementTransform(chi_sum.copy(), evaluation),
             )
-            self.dither(2)
+            self.wait(2)
             self.play(Indicate(count, color = PINK))
-            self.dither()
+            self.wait()
             if base.get_tex_string() is "3":
                 new_exp = TexMobject("3")
                 new_exp.replace(exp)
@@ -3871,7 +3871,7 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
                 )
                 self.play(Transform(count_num, new_count))
                 self.play(Indicate(count_num, color = PINK))
-                self.dither()
+                self.wait()
                 self.play(*[mob.restore for mob in to_save])
 
             self.play(
@@ -3887,13 +3887,13 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
 
         self.revert_to_original_skipping_status()
         self.play(ShowCreation(rect))
-        self.dither(3)
+        self.wait(3)
 
 class WeAreGettingClose(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("We're getting close...")
         self.change_student_modes(*["hooray"]*3)
-        self.dither(2)
+        self.wait(2)
 
 class ExpandCountWith45(SummarizeCountingRule):
     CONFIG = {
@@ -3959,7 +3959,7 @@ class ExpandCountWith45(SummarizeCountingRule):
             FadeIn(factorization),
             self.count_words.next_to, expression, LEFT
         )
-        self.dither()
+        self.wait()
         self.play(*[
             ReplacementTransform(
                 VGroup(factorization.get_part_by_tex(
@@ -3970,7 +3970,7 @@ class ExpandCountWith45(SummarizeCountingRule):
             for tex, part in zip(["=", "3", "5"], expression)
         ])
         self.play(FadeIn(braces))
-        self.dither()
+        self.wait()
 
         self.chi_expression = expression
         self.factorization = factorization
@@ -4027,11 +4027,11 @@ class ExpandCountWith45(SummarizeCountingRule):
             ]
         )
         for movers in mover_groups:
-            self.dither()
+            self.wait()
             self.play(movers.next_to, rect, DOWN)
             self.play(*map(MoveToTarget, movers))
         self.play(Write(plusses))
-        self.dither()
+        self.wait()
 
         self.expansion = expansion
         self.prime_pairs = prime_pairs
@@ -4083,7 +4083,7 @@ class ExpandCountWith45(SummarizeCountingRule):
         ))
         self.remove(prime_pairs)
         product_mobs.highlight(YELLOW)
-        self.dither(2)
+        self.wait(2)
         self.play(LaggedStart(
             ApplyMethod,
             product_mobs,
@@ -4095,7 +4095,7 @@ class ExpandCountWith45(SummarizeCountingRule):
             run_time = 2,
             submobject_mode = "lagged_start",
         ))
-        self.dither(2)
+        self.wait(2)
 
 class CountLatticePointsInBigCircle(LatticePointScene):
     CONFIG = {
@@ -4132,7 +4132,7 @@ class CountLatticePointsInBigCircle(LatticePointScene):
         self.play(*map(FadeIn, [circle, radius, R_group]))
         self.add_foreground_mobject(R_group)
         self.draw_lattice_points()
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(R_rect),
             FadeIn(pi_R_squared_rect),
@@ -4144,7 +4144,7 @@ class CountLatticePointsInBigCircle(LatticePointScene):
         )
         self.remove(R_group)
         self.add_foreground_mobject(pi_R_squared_group)
-        self.dither()
+        self.wait()
 
         self.circle = circle
         self.radius = radius
@@ -4180,7 +4180,7 @@ class CountLatticePointsInBigCircle(LatticePointScene):
                 lag_ratio = 0.1,
             ),
         )
-        self.dither()
+        self.wait()
 
         self.rings = rings
 
@@ -4209,7 +4209,7 @@ class CountLatticePointsInBigCircle(LatticePointScene):
         self.play(*map(FadeOut, [circle, arrow]))
         self.play(FadeOut(center_dot))
         self.lattice_points.remove(center_dot)
-        self.dither()
+        self.wait()
         self.play(*[
             ApplyMethod(m.scale, 0.5)
             for m in [
@@ -4236,7 +4236,7 @@ class CountLatticePointsInBigCircle(LatticePointScene):
             ),
             run_time = 4,
         )
-        self.dither(2)
+        self.wait(2)
 
     #####
 
@@ -4294,7 +4294,7 @@ class AddUpGrid(Scene):
         )
 
         self.play(LaggedStart(ShowCreation, row_lines))
-        self.dither()
+        self.wait()
 
         self.row_lines = row_lines
 
@@ -4338,7 +4338,7 @@ class AddUpGrid(Scene):
             run_time = 5,
             rate_func = lambda t : t,
         ))
-        self.dither()
+        self.wait()
 
         digest_locals(self, [
             "chi_sums", "chi_mobs", "plusses", 
@@ -4391,14 +4391,14 @@ class AddUpGrid(Scene):
             FadeIn(composite_rects),
             randy.look_at, composite_rects.get_bottom()
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             FadeOut(composite_rects),
             FadeIn(prime_rects),
             randy.look_at, prime_rects.get_top(),
         )
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [prime_rects, randy]))
 
     def organize_into_columns(self):
@@ -4420,7 +4420,7 @@ class AddUpGrid(Scene):
             map(MoveToTarget, self.chi_mobs),
             map(MoveToTarget, self.plusses),
         ), run_time = 2)
-        self.dither()
+        self.wait()
 
     def add_count_words(self):
         rect = Rectangle(
@@ -4442,7 +4442,7 @@ class AddUpGrid(Scene):
         words.add(approx)
 
         self.play(*map(FadeIn, [rect, words]))
-        self.dither()
+        self.wait()
 
         self.count_rect = rect
         self.count_words = words
@@ -4477,7 +4477,7 @@ class AddUpGrid(Scene):
             rect.set_fill(YELLOW, 0.3)
 
             self.play(FadeIn(rect))
-            self.dither()
+            self.wait()
             self.play(
                 ReplacementTransform(
                     column.copy(),
@@ -4487,7 +4487,7 @@ class AddUpGrid(Scene):
                 Write(term[0]),
                 Write(term[2]),
             )
-            self.dither()
+            self.wait()
             if term is full_sum[2]:
                 vect = sum([
                     self.count_rect.get_left()[0],
@@ -4551,12 +4551,12 @@ class AddUpGrid(Scene):
         ), run_time = 2)
         self.remove(R_movers)
         self.add(R_squared)
-        self.dither()
+        self.wait()
         self.play(
             MoveToTarget(self.corner_four, run_time = 2),
             FadeOut(self.corner_four.rect)
         )
-        self.dither(2)
+        self.wait(2)
         self.remove(self.full_sum, self.corner_four)
         self.add(new_sum)
 
@@ -4587,7 +4587,7 @@ class AddUpGrid(Scene):
             ]
         )
         self.play(Write(alt_rhs))
-        self.dither(2)
+        self.wait(2)
 
         self.alt_rhs = alt_rhs
 
@@ -4619,9 +4619,9 @@ class AddUpGrid(Scene):
         )
 
         self.play(Write(area_rhs))
-        self.dither()
+        self.wait()
         self.play(FadeIn(brace))
-        self.dither(2)
+        self.wait(2)
         self.play(FadeOut(brace))
         self.play(*[
             ReplacementTransform(m.copy(), pi_sum_part)
@@ -4640,10 +4640,10 @@ class AddUpGrid(Scene):
             ApplyMethod(pi.change, "hooray", self.alt_rhs)
             for pi in creatures
         ])
-        self.dither()
+        self.wait()
         for i in 0, 2, 3:
             self.play(Blink(creatures[i]))
-            self.dither()
+            self.wait()
 
 class IntersectionOfTwoFields(TeacherStudentsScene):
     def construct(self):
@@ -4696,7 +4696,7 @@ class IntersectionOfTwoFields(TeacherStudentsScene):
                 DrawBorderThenFill(circle, run_time = 2),
                 self.teacher.change_mode, "raise_right_hand"
             )
-        self.dither()
+        self.wait()
         for circle in circles:
             for word in circle.words:
                 self.play(
@@ -4707,7 +4707,7 @@ class IntersectionOfTwoFields(TeacherStudentsScene):
                         for pi in self.get_students()
                     ]
                 )
-                self.dither()
+                self.wait()
         self.play(
             Write(mid_words),
             self.teacher.change, "raise_right_hand"
@@ -4716,7 +4716,7 @@ class IntersectionOfTwoFields(TeacherStudentsScene):
             *["thinking"]*3,
             look_at_arg = mid_words
         )
-        self.dither(3)
+        self.wait(3)
 
 class LeibnizPatreonThanks(PatreonThanks):
     CONFIG = {
@@ -4788,19 +4788,19 @@ class Sponsorship(PiCreatureScene):
             morty.change_mode, "raise_right_hand",
             LaggedStart(DrawBorderThenFill, logo, run_time = 3)
         )
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(rect),
             logo.scale, 0.8,
             logo.to_corner, UP+RIGHT,
             morty.change, "happy"
         )
-        self.dither()
+        self.wait()
         self.play(Write(url))
-        self.dither(3)
+        self.wait(3)
         for mode in "confused", "pondering", "happy":
             self.play(morty.change_mode, mode)
-            self.dither(3)
+            self.wait(3)
 
 class Thumbnail(Scene):
     def construct(self):

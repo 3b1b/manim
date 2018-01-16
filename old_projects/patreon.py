@@ -56,9 +56,9 @@ class SideGigToFullTime(Scene):
             Write(side_project),
             ShowCreation(rect)
         )
-        self.dither()
+        self.wait()
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
         self.play(Write(dollar_sign))
         self.play(ShowCreation(cross))
 
@@ -113,13 +113,13 @@ class SideGigToFullTime(Scene):
             morty.change_mode, "confused"
         )
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
         self.play(
             morty.change_mode, "happy",
             morty.look, UP+RIGHT
         )
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
 class TakesTime(Scene):
     def construct(self):
@@ -246,14 +246,14 @@ class TwoTypesOfVideos(Scene):
             Write(series, run_time = 2),
         )
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
         self.play(
             morty.change_mode, "raise_right_hand",
             morty.look_at, box,
             ShowCreation(box)
         )
         for x in range(3):
-            self.dither(2)
+            self.wait(2)
             self.play(Blink(morty))            
         self.play(
             morty.change_mode, "raise_left_hand",
@@ -262,11 +262,11 @@ class TwoTypesOfVideos(Scene):
         for i, words in enumerate(series_list):
             self.play(Write(words), run_time = 1)
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
         self.play(series_list[1].highlight, BLUE)
-        self.dither(2)
+        self.wait(2)
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
         pairs = [
             (fridays, "speaking"), 
             (when_done, "wave_2") ,
@@ -278,7 +278,7 @@ class TwoTypesOfVideos(Scene):
                 morty.change_mode, mode,
                 morty.look_at, words
             )
-            self.dither()
+            self.wait()
 
 class ClassWatching(TeacherStudentsScene):
     def construct(self):
@@ -305,15 +305,15 @@ class RandolphWatching(Scene):
         randy.look(RIGHT)
 
         self.add(randy)
-        self.dither()
+        self.wait()
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(
             randy.change_mode, "pondering",
             randy.look, RIGHT
         )
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class RandolphWatchingWithLaptop(Scene):
     pass
@@ -356,11 +356,11 @@ class GrowRonaksSierpinski(Scene):
             #         Write(words),
             #         ShowCreation(arrow)
             #     )
-            #     self.dither()
+            #     self.wait()
             #     self.play(*map(FadeOut, [words, arrow]))
             log2 = np.log2(n)
             if n > 2 and log2-np.round(log2) == 0 and n < self.n_layers:
-                self.dither()
+                self.wait()
                 self.rescale()
                 run_time /= 1.3
             last_dot_layer = dot_layer
@@ -432,9 +432,9 @@ class PatreonLogo(Scene):
             words.scale(2)
             words.to_edge(DOWN)
         self.play(Write(words1))
-        self.dither(2)
+        self.wait(2)
         self.play(Transform(words1, words2))
-        self.dither(2)
+        self.wait(2)
 
 class PatreonLogin(Scene):
     pass
@@ -485,13 +485,13 @@ class PythagoreanTransformation(Scene):
 
         self.play(ShowCreation(tri1, run_time = 2))
         self.play(*map(Write, [a, b, c]))
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(c_square),
             Animation(c)
         )
         self.play(Transform(c, c_square_tex))
-        self.dither(2)
+        self.wait(2)
         mover = tri1.copy()
         for copy in copies:
             self.play(Transform(
@@ -501,7 +501,7 @@ class PythagoreanTransformation(Scene):
             self.add(copy)
         self.remove(mover)
         self.add(big_square, *[tri1]+copies)
-        self.dither(2)
+        self.wait(2)
         self.play(*map(FadeOut, [a, b, c, c_square]))
         self.play(
             tri3.shift,
@@ -510,12 +510,12 @@ class PythagoreanTransformation(Scene):
         )
         self.play(tri2.shift, 2*RIGHT)
         self.play(tri4.shift, 3*UP)
-        self.dither()
+        self.wait()
         self.play(FadeIn(a_square))
         self.play(FadeIn(b_square))
         self.play(Write(a_square_tex))
         self.play(Write(b_square_tex))
-        self.dither(2)
+        self.wait(2)
 
 class KindWordsOnEoLA(TeacherStudentsScene):
     def construct(self):
@@ -564,7 +564,7 @@ class MakeALotOfPiCreaturesHappy(Scene):
 
         self.add(pis)
         pis.generate_target()
-        self.dither()
+        self.wait()
         for pi, color in zip(pis.target, colors):
             pi.change_mode("hooray")
             # pi.scale_in_place(1)
@@ -636,7 +636,7 @@ class IntegrationByParts(Scene):
         self.draw_curve(curve)
         self.play(ShowCreation(rect))
         self.play(*map(Write, [down_brace, left_brace, f_T, g_T]))
-        self.dither()
+        self.wait()
         self.play(FadeIn(upper_right))
         self.play(
             ShowCreation(
@@ -648,7 +648,7 @@ class IntegrationByParts(Scene):
             Animation(rect)
         )
         self.play(Write(equation[0]))
-        self.dither()
+        self.wait()
         self.play(FadeIn(lower_left))
         self.play(
             ShowCreation(
@@ -660,9 +660,9 @@ class IntegrationByParts(Scene):
             Animation(rect)
         )
         self.play(Write(equation[1]))
-        self.dither()
+        self.wait()
         self.play(Write(equation[2]))
-        self.dither()
+        self.wait()
 
     def draw_curve(self, curve):
         lp, lnum, comma, rnum, rp = coords = TexMobject(
@@ -682,7 +682,7 @@ class IntegrationByParts(Scene):
             run_time = 5,
             rate_func = None
         )
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [coords, dot]))
 
 class EndScreen(TeacherStudentsScene):

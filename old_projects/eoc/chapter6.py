@@ -56,12 +56,12 @@ class ThisWasConfusing(TeacherStudentsScene):
             look_at_arg = words,
             added_anims = [Animation(self.get_teacher())]
         )
-        self.dither()
+        self.wait()
         self.play(
             self.get_teacher().change_mode, "confused",
             self.get_teacher().look_at, words,
         )
-        self.dither(3)
+        self.wait(3)
 
 class SlopeOfCircleExample(ZoomedScene):
     CONFIG = {
@@ -114,7 +114,7 @@ class SlopeOfCircleExample(ZoomedScene):
 
         self.play(ShowCreation(circle, run_time = 2))
         self.play(Write(equation))
-        self.dither()
+        self.wait()
 
         self.circle = circle
         self.circle_equation = equation
@@ -174,7 +174,7 @@ class SlopeOfCircleExample(ZoomedScene):
             rate_func = there_and_back,
             run_time = 5,
         ))
-        self.dither(2)
+        self.wait(2)
 
         #Move labels to equation
         movers = labels.copy()
@@ -186,12 +186,12 @@ class SlopeOfCircleExample(ZoomedScene):
             ApplyMethod(m1.replace, m2)
             for m1, m2 in pairs
         ])
-        self.dither()
+        self.wait()
 
         self.play(*map(FadeOut, [lines, labels, movers]))
         self.remove(full_group)
         self.add(dot)
-        self.dither()
+        self.wait()
 
         self.example_point_dot = dot
 
@@ -216,9 +216,9 @@ class SlopeOfCircleExample(ZoomedScene):
 
         self.play(GrowFromCenter(line))
         self.play(Write(word))
-        self.dither()
+        self.wait()
         self.play(Write(coords))
-        self.dither()
+        self.wait()
 
         self.tangent_line = line
         self.slope_word = word
@@ -239,9 +239,9 @@ class SlopeOfCircleExample(ZoomedScene):
 
         self.play(ShowCreation(radial_line))
         self.play(ShowCreation(perp_mark))
-        self.dither()
+        self.wait()
         self.play(Indicate(perp_mark))
-        self.dither()
+        self.wait()
         
         morty =  Mortimer().flip().to_corner(DOWN+LEFT)
         self.play(FadeIn(morty))
@@ -250,11 +250,11 @@ class SlopeOfCircleExample(ZoomedScene):
         ))
         to_fade =self.get_mobjects_from_last_animation()
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
         self.play(*map(FadeOut, to_fade))
         self.play(*map(FadeOut, [radial_line, perp_mark]))
-        self.dither()
+        self.wait()
 
     def show_dx_and_dy(self):
         dot = self.example_point_dot
@@ -294,22 +294,22 @@ class SlopeOfCircleExample(ZoomedScene):
         self.little_rectangle.move_to(step_line.get_center())
         self.little_rectangle.save_state()
         self.little_rectangle.scale_in_place(self.zoom_factor)
-        self.dither()        
+        self.wait()        
         self.play(
             self.little_rectangle.restore,
             dot.scale_in_place, 1./self.zoom_factor,
             run_time = 2
         )
-        self.dither()
+        self.wait()
         self.play(ShowCreation(step_line))
         self.play(GrowFromCenter(brace))
         self.play(Write(step_text))
-        self.dither()
+        self.wait()
         for line in dy_line, dx_line:
             self.play(ShowCreation(line))
             self.play(Write(line.label))
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
 
         self.step_group = step_group
         self.dx_line = dx_line
@@ -330,7 +330,7 @@ class SlopeOfCircleExample(ZoomedScene):
 
         self.play(Transform(slope_word, new_slope_word))
         self.play(Write(dy_dx))
-        self.dither()
+        self.wait()
 
         self.dy_dx = dy_dx
 
@@ -356,21 +356,21 @@ class SlopeOfCircleExample(ZoomedScene):
             GrowFromCenter(brace),
             Write(brace_text)
         )
-        self.dither()
+        self.wait()
         self.play(Indicate(x))
-        self.dither()
+        self.wait()
         self.play(Indicate(y))
-        self.dither()
+        self.wait()
         self.play(Transform(brace_text, alt_brace_text))
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(new_circle, run_time = 2),
             Animation(brace_text)
         )
         self.play(new_circle.set_stroke, None, 0)
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [brace, brace_text]))
-        self.dither()
+        self.wait()
 
     def perform_implicit_derivative(self):
         equation = self.circle_equation
@@ -428,7 +428,7 @@ class SlopeOfCircleExample(ZoomedScene):
             ]
         )
         self.play(Write(dx, run_time = 1))
-        self.dither()
+        self.wait()
         self.play(*[
             ReplacementTransform(
                 equation[1][i].copy(),
@@ -445,16 +445,16 @@ class SlopeOfCircleExample(ZoomedScene):
             )
             for i, j in (-3, -2), (-2, -1), (-1, -1)
         ])
-        self.dither()
+        self.wait()
 
         #React
         self.play(morty.change_mode, "erm")
         self.play(Blink(morty))
         self.play(Write(q_marks))
-        self.dither()
+        self.wait()
         self.play(Indicate(dx), morty.look_at, dx)
         self.play(Indicate(dy), morty.look_at, dy)
-        self.dither()
+        self.wait()
         self.play(
             morty.change_mode, "shruggie",
             FadeOut(q_marks)
@@ -499,7 +499,7 @@ class SlopeOfCircleExample(ZoomedScene):
         ] + [
             morty.look_at, final_form
         ])
-        self.dither(2)
+        self.wait(2)
 
         self.morty = morty
         self.neg_x_over_y = VGroup(*final_form[6:])
@@ -526,7 +526,7 @@ class SlopeOfCircleExample(ZoomedScene):
             morty.look_at, rect,
             run_time = 2,
         )
-        self.dither()
+        self.wait()
         self.play(FocusOn(coords), morty.look_at, coords)
         self.play(Indicate(coords))
         scale_factor = 1.4
@@ -543,7 +543,7 @@ class SlopeOfCircleExample(ZoomedScene):
             morty.look_at, frac,
             run_time = 2
         )
-        self.dither()
+        self.wait()
         self.play(Blink(morty))
 
 class NameImplicitDifferentation(TeacherStudentsScene):
@@ -571,7 +571,7 @@ class NameImplicitDifferentation(TeacherStudentsScene):
             look_at_arg = derivative,
             added_anims = [ReplacementTransform(equation.copy(), derivative)]
         )
-        self.dither(2)
+        self.wait(2)
         self.teacher_says(
             "Don't worry...",
             added_anims = [
@@ -580,7 +580,7 @@ class NameImplicitDifferentation(TeacherStudentsScene):
             ]
         )
         self.change_student_modes(*["happy"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class Ladder(VMobject):
     CONFIG = {
@@ -651,14 +651,14 @@ class RelatedRatesExample(ThreeDScene):
         self.play(
             ShowCreation(ladder, run_time = 2)
         )
-        self.dither()
+        self.wait()
 
         self.play(
             DrawBorderThenFill(wall),
             MoveToTarget(ladder),
             run_time = 2
         )
-        self.dither()
+        self.wait()
 
         self.ladder = ladder
 
@@ -666,7 +666,7 @@ class RelatedRatesExample(ThreeDScene):
         words = TextMobject("Related rates")
         words.to_corner(UP+RIGHT)
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
         self.related_rates_words = words
 
@@ -686,11 +686,11 @@ class RelatedRatesExample(ThreeDScene):
         x_label.highlight(x_line.get_color())
 
         self.play(Write(ladder_brace))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(y_line), Write(y_label))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(x_line), Write(x_label))
-        self.dither(2)
+        self.wait(2)
         self.play(*map(FadeOut, [x_label, y_label]))
 
         self.ladder_brace = ladder_brace
@@ -726,15 +726,15 @@ class RelatedRatesExample(ThreeDScene):
         self.play(ShowCreation(down_arrow))
         self.play(Write(speed_label))
         self.let_ladder_fall(ladder, *added_anims)
-        self.dither()
+        self.wait()
         self.reset_ladder(ladder, *added_anims)
         self.play(ShowCreation(left_arrow))
         self.play(Write(q_marks))
-        self.dither()
+        self.wait()
         self.let_ladder_fall(ladder, *added_anims)
-        self.dither()
+        self.wait()
         self.reset_ladder(ladder, *added_anims)
-        self.dither()
+        self.wait()
 
         self.dy_arrow = down_arrow
         self.dy_label = speed_label
@@ -748,7 +748,7 @@ class RelatedRatesExample(ThreeDScene):
 
         self.play(FadeIn(randy))
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(
             randy.change_mode, "confused",
             randy.look_at, self.ladder.get_top()
@@ -756,7 +756,7 @@ class RelatedRatesExample(ThreeDScene):
         self.play(randy.look_at, self.ladder.get_bottom())
         self.play(randy.look_at, self.ladder.get_top())
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(PiCreatureSays(
             randy, "Give names"
         ))
@@ -778,7 +778,7 @@ class RelatedRatesExample(ThreeDScene):
         equation.to_edge(RIGHT, buff = LARGE_BUFF)
 
         self.play(Write(y_label))
-        self.dither()
+        self.wait()
         self.let_ladder_fall(
             self.ladder,
             y_label.shift, self.start_y*DOWN/2,
@@ -788,20 +788,20 @@ class RelatedRatesExample(ThreeDScene):
         )
         self.play(FocusOn(x_label))
         self.play(Write(x_label))
-        self.dither(2)
+        self.wait(2)
         self.play(
             ReplacementTransform(x_label.copy(), equation[0]),
             ReplacementTransform(y_label.copy(), equation[3]),
             Write(VGroup(*np.array(equation)[[1, 2, 4, 5, 6]]))
         )
-        self.dither(2)
+        self.wait(2)
         self.let_ladder_fall(
             self.ladder,
             *self.get_added_anims_for_ladder_fall(),
             rate_func = there_and_back,
             run_time = 6
         )
-        self.dither()
+        self.wait()
 
         self.equation = equation
 
@@ -844,7 +844,7 @@ class RelatedRatesExample(ThreeDScene):
             ]
         )
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(
             Write(find_dx_dt),
             randy.change_mode, "pondering",
@@ -858,7 +858,7 @@ class RelatedRatesExample(ThreeDScene):
         self.play(*map(FadeOut, [
             randy, find_dx_dt, alt_equation
         ]))
-        self.dither()
+        self.wait()
 
     def discuss_lhs_as_function(self):
         equation = self.equation
@@ -892,14 +892,14 @@ class RelatedRatesExample(ThreeDScene):
             GrowFromCenter(brace),
             Write(function_of_time)
         )
-        self.dither()
+        self.wait()
         self.play(Write(constant_words))
         self.let_ladder_fall(
             self.ladder, *self.get_added_anims_for_ladder_fall(),
             run_time = 6,
             rate_func = lambda t : 0.5*there_and_back(t)
         )
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [
             brace, constant_words, function_of_time
         ]))
@@ -907,7 +907,7 @@ class RelatedRatesExample(ThreeDScene):
             ReplacementTransform(lhs.copy(), derivative_interior),
             Write(derivative_scaffold),
         )
-        self.dither()
+        self.wait()
 
         self.derivative = VGroup(
             derivative_scaffold, derivative_interior
@@ -967,9 +967,9 @@ class RelatedRatesExample(ThreeDScene):
                 Write(label),
                 run_time = 1
             )
-        self.dither()
+        self.wait()
         self.play(Indicate(self.derivative[1]))
-        self.dither()
+        self.wait()
 
         self.dy_group = VGroup(dy_line, dy_brace, dy_label)
         self.dx_group = VGroup(dx_line, dx_brace, dx_label)
@@ -983,10 +983,10 @@ class RelatedRatesExample(ThreeDScene):
         rhs = self.equation[-1]
 
         self.play(Write(equals_zero))
-        self.dither()
+        self.wait()
         self.play(FocusOn(rhs))
         self.play(Indicate(rhs))
-        self.dither()
+        self.wait()
         self.reset_ladder(
             self.ladder, 
             *self.get_added_anims_for_ladder_fall()+[
@@ -996,7 +996,7 @@ class RelatedRatesExample(ThreeDScene):
             rate_func = there_and_back,
             run_time = 3
         )
-        self.dither()
+        self.wait()
 
         self.equals_zero = equals_zero
 
@@ -1035,7 +1035,7 @@ class RelatedRatesExample(ThreeDScene):
 
         perform_replacement(pairs[:2])
         self.play(Write(lhs_derivative[2]))
-        self.dither()
+        self.wait()
         self.play(Indicate(
             VGroup(
                 *list(lhs_derivative[:2])+\
@@ -1044,17 +1044,17 @@ class RelatedRatesExample(ThreeDScene):
             run_time = 2
         ))
         self.play(Indicate(VGroup(*lhs_derivative[2][3:])))
-        self.dither(2)
+        self.wait(2)
         perform_replacement(pairs[2:])
         self.play(Write(lhs_derivative[6]))
-        self.dither()
+        self.wait()
 
         self.play(FocusOn(self.equals_zero))
         self.play(ReplacementTransform(
             self.equals_zero.copy(),
             equals_zero_copy
         ))
-        self.dither(2)
+        self.wait(2)
 
         lhs_derivative.add(equals_zero_copy)
         self.lhs_derivative = lhs_derivative
@@ -1077,9 +1077,9 @@ class RelatedRatesExample(ThreeDScene):
         self.remove(self.shadow_ladder)
         self.play(FadeIn(arrow_group))
         self.let_ladder_fall(*ladder_fall_args)
-        self.dither()
+        self.wait()
         self.reset_ladder(*ladder_fall_args)
-        self.dither()
+        self.wait()
 
     def replace_terms_in_final_form(self):
         x_label, y_label = self.x_and_y_labels
@@ -1113,8 +1113,8 @@ class RelatedRatesExample(ThreeDScene):
         self.play(FadeOut(x_label), FadeIn(num_x_label))
         for indices in [(0, 1), (6,), (2, 7)]:
             fill_in_equation_part(*indices)
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
 
         self.new_lhs_derivative = new_lhs_derivative
 
@@ -1136,9 +1136,9 @@ class RelatedRatesExample(ThreeDScene):
         box.scale_in_place(1.5)
 
         self.play(Write(solution))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(box))
-        self.dither()
+        self.wait()
 
     #########
 
@@ -1298,7 +1298,7 @@ class CompareLadderAndCircle(PiCreatureScene, ThreeDScene):
             self.pi_creature.look_at, circle_mobs,
             Write(circle_mobs, run_time = 2)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             circle_mobs.to_edge, RIGHT,
             ladder_mobs.to_edge, LEFT,
@@ -1321,7 +1321,7 @@ class CompareLadderAndCircle(PiCreatureScene, ThreeDScene):
             self.pi_creature.change_mode, "plain",
             self.pi_creature.look_at, equation
         )
-        self.dither()
+        self.wait()
         self.play(*[
             ReplacementTransform(
                 equation[i].copy(), derivative[j],
@@ -1336,7 +1336,7 @@ class CompareLadderAndCircle(PiCreatureScene, ThreeDScene):
             self.pi_creature.change_mode, "pondering",
             self.pi_creature.look_at, derivative
         )
-        self.dither()
+        self.wait()
 
         self.equation = equation
         self.derivative = derivative
@@ -1363,13 +1363,13 @@ class CompareLadderAndCircle(PiCreatureScene, ThreeDScene):
         derivative.save_state()
 
         self.play(Transform(equation, time_equation))
-        self.dither()
+        self.wait()
         self.play(Transform(derivative, time_derivative))
-        self.dither()
+        self.wait()
         self.play(GrowFromCenter(brace))
         self.play(Write(brace_text))
         self.change_mode("hooray")
-        self.dither(2)
+        self.wait(2)
         self.play(
             equation.restore,
             derivative.restore,
@@ -1377,7 +1377,7 @@ class CompareLadderAndCircle(PiCreatureScene, ThreeDScene):
             FadeOut(brace_text),
             self.pi_creature.change_mode, "confused"
         )
-        self.dither()
+        self.wait()
 
     def comment_on_circle_derivative(self):
         derivative = self.derivative
@@ -1394,13 +1394,13 @@ class CompareLadderAndCircle(PiCreatureScene, ThreeDScene):
                 GrowFromCenter(brace),
                 Write(text)
             )
-            self.dither()
+            self.wait()
 
         self.play(
             self.pi_creature.change_mode, "pondering",
             self.pi_creature.look, DOWN+LEFT
         )
-        self.dither(2)
+        self.wait(2)
 
     #######
 
@@ -1455,13 +1455,13 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
         self.play(Write(equation))
         self.play(GrowFromCenter(brace))
         self.play(Write(s))
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(s_rect),
             s.restore, 
             GrowFromCenter(xy)
         )
-        self.dither()
+        self.wait()
 
         self.equation = equation
         self.s_expression = s_expression
@@ -1491,7 +1491,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
         )
         self.play(ShowCreation(circle), Animation(dot))
         self.play(Write(equals_25))
-        self.dither()
+        self.wait()
 
         self.example_point_dot = dot
         self.example_point_label = VGroup(
@@ -1514,7 +1514,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
             self.example_point_dot.move_to, point,
             Transform(self.example_point_label, point_label)
         )
-        self.dither(2)
+        self.wait(2)
 
     def take_derivative_symbolically(self):
         equation = self.equation
@@ -1547,7 +1547,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
             )
             for i, j in enumerate([2, 1, 4, 6, 5])
         ])
-        self.dither(2)
+        self.wait(2)
 
         self.derivative = derivative
 
@@ -1584,7 +1584,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
         lil_rect.scale_to_fit_height(SPACE_HEIGHT - MED_LARGE_BUFF)
         lil_rect.move_to(s_label, UP)
         lil_rect.shift(MED_SMALL_BUFF*UP)
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(rhs),
             dot.scale, 1./self.zoom_factor, point,
@@ -1592,11 +1592,11 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
             lil_rect.restore,
             run_time = 2
         )
-        self.dither()
+        self.wait()
         for line in dx_line, dy_line:
             self.play(ShowCreation(line))
             self.play(Write(line.label, run_time = 1))
-            self.dither()
+            self.wait()
 
         new_dot = Dot(color = dot.get_color())
         new_s_label = self.get_s_expression(
@@ -1619,12 +1619,12 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
 
         self.play(ShowCreation(new_dot))
         self.play(Write(new_s_label))
-        self.dither()
+        self.wait()
 
         ds = self.derivative[1][0]
         self.play(FocusOn(ds))
         self.play(Indicate(ds))
-        self.dither()
+        self.wait()
 
         self.tiny_step_group = VGroup(
             dx_line, dx_line.label,
@@ -1656,13 +1656,13 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
 
         self.play(FadeIn(deriv_example[0]))
         add_example_parts(0)
-        self.dither()
+        self.wait()
         add_example_parts(1, 2, 4, 5, 6)
-        self.dither(2)
+        self.wait(2)
         add_example_parts(3)
-        self.dither()
+        self.wait()
         add_example_parts(7)
-        self.dither()
+        self.wait()
 
         #React
         randy = Randolph()
@@ -1676,7 +1676,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
         )
         self.play(Blink(randy))
         self.play(randy.look_at, deriv_example.get_right())
-        self.dither()
+        self.wait()
         self.play(
             Indicate(self.equation),
             randy.look_at, self.equation
@@ -1686,16 +1686,16 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
             randy.change_mode, "thinking",
             randy.look_at, self.big_rectangle
         )
-        self.dither(2)
+        self.wait(2)
         self.play(PiCreatureSays(
             randy, "Approximately",
             target_mode = "sassy"
         ))
-        self.dither()
+        self.wait()
         self.play(RemovePiCreatureBubble(randy))
         self.play(randy.look_at, deriv_example)
         self.play(FadeOut(deriv_example))
-        self.dither()
+        self.wait()
 
         self.randy = randy
 
@@ -1713,7 +1713,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
             randy.change_mode, "confused",
             randy.look_at, equals_zero
         )
-        self.dither()
+        self.wait()
         self.play(Blink(randy))
         self.play(
             randy.change_mode, "plain",
@@ -1723,7 +1723,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
             FadeOut(self.tiny_step_group),
             self.little_rectangle.move_to, dot,
         )
-        self.dither()
+        self.wait()
 
         self.equals_zero = equals_zero
 
@@ -1778,13 +1778,13 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
             randy.look_at, self.big_rectangle
         )
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
         self.play(Write(s_label))
         self.play(ShowCreation(arrow1))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(arrow1.copy(), arrow2))
-        self.dither(2)
+        self.wait(2)
 
     def point_out_equalling_zero(self):
         derivative = self.derivative
@@ -1799,7 +1799,7 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
         self.play(Blink(randy))
         self.play(randy.change_mode, "happy")
         self.play(randy.look_at, self.big_rectangle)
-        self.dither(2)
+        self.wait(2)
 
     def show_tangent_line(self):
         randy = self.randy
@@ -1817,13 +1817,13 @@ class TwoVariableFunctionAndDerivative(SlopeOfCircleExample):
             GrowFromCenter(line),
             randy.look_at, line
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             self.little_rectangle.scale_in_place, self.zoom_factor/2,
             run_time = 4,
             rate_func = there_and_back
         )
-        self.dither(2)
+        self.wait(2)
 
     ############
 
@@ -1846,16 +1846,16 @@ class TryOtherExamples(TeacherStudentsScene):
             """Nothing special
             about $x^2 + y^2 = 25$"""
         )
-        self.dither()
+        self.wait()
         self.play(RemovePiCreatureBubble(
             self.get_teacher(),
             target_mode = "raise_right_hand"
         ))
         self.play(Write(formula, run_time = 1))
         self.change_student_modes(*["pondering"]*3)
-        self.dither(2)
+        self.wait(2)
         self.play(formula.to_corner, UP+LEFT)
-        self.dither()
+        self.wait()
 
 class AlternateExample(ZoomedScene):
     CONFIG = {
@@ -1891,7 +1891,7 @@ class AlternateExample(ZoomedScene):
 
         self.add(formula)
         self.play(Write(plane, run_time = 2), Animation(formula))
-        self.dither()
+        self.wait()
 
         self.plane = plane
         self.formula = formula
@@ -1923,7 +1923,7 @@ class AlternateExample(ZoomedScene):
             ),
             Animation(self.formula)
         )
-        self.dither()
+        self.wait()
 
         self.graphs = graphs
 
@@ -1962,7 +1962,7 @@ class AlternateExample(ZoomedScene):
             UpdateFromFunc(label, update_label),
             run_time = 3,
         )
-        self.dither()
+        self.wait()
         self.play(*[
             ApplyMethod(
                 label[1][i].copy().move_to, self.formula[1][j],
@@ -1972,14 +1972,14 @@ class AlternateExample(ZoomedScene):
             for count, (i, j) in enumerate([(1, 4), (1, 9), (3, 6)])
         ])
         movers = self.get_mobjects_from_last_animation()
-        self.dither()
+        self.wait()
         self.play(
             UpdateFromAlphaFunc(dot, update_dot),
             UpdateFromFunc(label, update_label),
             run_time = 3,
             rate_func = lambda t : 1-smooth(t)
         )
-        self.dither()
+        self.wait()
         self.play(*[
             ApplyMethod(mover.set_fill, None, 0, remover = True)
             for mover in movers
@@ -1995,7 +1995,7 @@ class AlternateExample(ZoomedScene):
         self.activate_zooming()
         self.little_rectangle.scale(self.zoom_factor)
         self.little_rectangle.move_to(dot)
-        self.dither()
+        self.wait()
         for mob in VGroup(dot, label), self.little_rectangle:
             self.play(
                 ApplyMethod(
@@ -2004,7 +2004,7 @@ class AlternateExample(ZoomedScene):
                     run_time = 1,
                 )
             )
-        self.dither()
+        self.wait()
 
     def show_tiny_step(self):
         dot = self.dot
@@ -2034,7 +2034,7 @@ class AlternateExample(ZoomedScene):
         for line in dx_line, dy_line:
             self.play(ShowCreation(line), Animation(arrow))
             self.play(Write(line.label, run_time = 1))
-        self.dither()
+        self.wait()
 
         self.step_group = VGroup(
             arrow, dx_line, dx_line.label, dy_line, dy_line.label
@@ -2061,7 +2061,7 @@ class AlternateExample(ZoomedScene):
             Write(word),
             ShowCreation(arrows)
         )
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [word, arrows]))
 
     def differentiate_lhs(self):
@@ -2106,7 +2106,7 @@ class AlternateExample(ZoomedScene):
 
         self.play(GrowFromCenter(brace))
         self.play(Write(mnemonic))
-        self.dither()
+        self.wait()
         pairs = [
             (sine_rect, derivative_rects[0]),
             (sine_x, derivative[0]),
@@ -2121,10 +2121,10 @@ class AlternateExample(ZoomedScene):
                 ReplacementTransform(m1.copy(), m2, path_arc = np.pi/2)
                 for m1, m2 in pairs_subset
             ])
-            self.dither()
+            self.wait()
             self.play(Indicate(pairs_subset[-1][1]))
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
         self.play(FadeOut(mnemonic))
 
         self.lhs_derivative = VGroup(*derivative_rects+[derivative])
@@ -2151,7 +2151,7 @@ class AlternateExample(ZoomedScene):
         self.play(ReplacementTransform(lhs_brace, circle))
         self.play(ShowCreation(arrow))
         self.play(Write(equals_dx))
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [circle, arrow]))
 
         self.equals_dx = equals_dx
@@ -2184,14 +2184,14 @@ class AlternateExample(ZoomedScene):
             lil_rect.shift, lil_rect.get_height()*DOWN/3,
             run_time = 2
         )
-        self.dither(2)
+        self.wait(2)
 
     def emphasize_equality(self):
         self.play(FocusOn(self.lhs))
-        self.dither()
+        self.wait()
         for mob in self.lhs, self.rhs:
             self.play(Indicate(mob))
-        self.dither()
+        self.wait()
 
     def manipulate_to_find_dy_dx(self):
         full_derivative = VGroup(
@@ -2208,7 +2208,7 @@ class AlternateExample(ZoomedScene):
 
         self.play(GrowFromCenter(brace))
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
         randy = Randolph()
         randy.to_corner(DOWN+LEFT)
@@ -2217,10 +2217,10 @@ class AlternateExample(ZoomedScene):
         self.play(FadeIn(randy))
         self.play(randy.change_mode, "confused")
         self.play(Blink(randy))
-        self.dither(2)
+        self.wait(2)
         self.play(randy.change_mode, "pondering")
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class AskAboutNaturalLog(TeacherStudentsScene):
     def construct(self):
@@ -2244,7 +2244,7 @@ class AskAboutNaturalLog(TeacherStudentsScene):
             target_mode = "raise_right_hand"
         ))
         self.play(Write(exp_deriv))
-        self.dither()
+        self.wait()
         self.play(
             Write(log_deriv),
             exp_deriv.next_to, log_deriv, UP, LARGE_BUFF,
@@ -2253,7 +2253,7 @@ class AskAboutNaturalLog(TeacherStudentsScene):
                 for pi in self.get_pi_creatures()
             ]
         )
-        self.dither(3)
+        self.wait(3)
 
 class DerivativeOfNaturalLog(ZoomedScene):
     CONFIG = {
@@ -2298,7 +2298,7 @@ class DerivativeOfNaturalLog(ZoomedScene):
 
         self.add(formula)
         self.play(ShowCreation(graph))
-        self.dither()
+        self.wait()
 
         self.formula = formula
         self.graph = graph
@@ -2335,7 +2335,7 @@ class DerivativeOfNaturalLog(ZoomedScene):
             UpdateFromFunc(label, update_label),
             run_time = 3,
         )
-        self.dither()
+        self.wait()
         xy_start = VGroup(label[1][1], label[1][3]).copy()
         xy_end = VGroup(formula[1][5], formula[1][0]).copy()
         xy_end.highlight(self.example_color)
@@ -2343,7 +2343,7 @@ class DerivativeOfNaturalLog(ZoomedScene):
             xy_start, xy_end,
             run_time = 2,
         ))
-        self.dither()
+        self.wait()
         self.play(
             UpdateFromAlphaFunc(dot, update_dot),
             UpdateFromFunc(label, update_label),
@@ -2392,7 +2392,7 @@ class DerivativeOfNaturalLog(ZoomedScene):
         self.play(ShowCreation(VGroup(dy_line, dx_line)))
         for part in equation:
             self.play(Write(part, run_time = 2))
-        self.dither()
+        self.wait()
 
         self.dx_line, self.dy_line = dx_line, dy_line
         self.slope_equation = equation
@@ -2422,10 +2422,10 @@ class DerivativeOfNaturalLog(ZoomedScene):
             Animation(VGroup(e, new_y, new_eq)),
             ReplacementTransform(x.copy(), new_x)
         )
-        self.dither(2)
+        self.wait(2)
         for mob in e, new_y, new_x:
             self.play(Indicate(mob))
-        self.dither()
+        self.wait()
 
         self.new_formula = new_formula
 
@@ -2452,7 +2452,7 @@ class DerivativeOfNaturalLog(ZoomedScene):
         self.play(FadeIn(derivative[0]), Animation(derivative[1]))
         self.remove(derivative, pairs[0][1])
         self.add(derivative)
-        self.dither()
+        self.wait()
 
         self.derivative = derivative
 
@@ -2481,16 +2481,16 @@ class DerivativeOfNaturalLog(ZoomedScene):
         self.play(lil_rect.scale_in_place, 1./self.zoom_factor)
         self.play(Write(dx_line.label))
         self.play(Write(dy_line.label))
-        self.dither()
+        self.wait()
 
     def note_derivatives(self):
         e, y, dy, eq, dx = self.derivative[1]
 
         self.play(FocusOn(e))
         self.play(Indicate(VGroup(e, y, dy)))
-        self.dither()
+        self.wait()
         self.play(Indicate(dx))
-        self.dither()
+        self.wait()
 
     def solve_for_dy_dx(self):
         e, y, dy, eq, dx = self.derivative[1]
@@ -2523,7 +2523,7 @@ class DerivativeOfNaturalLog(ZoomedScene):
                 (e.copy(), one_over)
             ]
         ])
-        self.dither()
+        self.wait()
 
         #Change denominator
         e, y, eq, x = self.new_formula
@@ -2538,7 +2538,7 @@ class DerivativeOfNaturalLog(ZoomedScene):
             x_copy.highlight, YELLOW
         )
         self.play(x_copy.next_to, one_over, DOWN, MED_SMALL_BUFF)
-        self.dither(2)
+        self.wait(2)
 
         equals_one_over_x = VGroup(
             new_eq, one_over, x_copy
@@ -2552,7 +2552,7 @@ class DerivativeOfNaturalLog(ZoomedScene):
             self.slope_equation, RIGHT, 0,
             run_time = 2
         )
-        self.dither()
+        self.wait()
 
     def show_slope_above_x(self):
         line = self.tangent_line
@@ -2578,15 +2578,15 @@ class DerivativeOfNaturalLog(ZoomedScene):
             rate_func = there_and_back,
             run_time = 6
         ))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(graph, run_time = 3))
-        self.dither()
+        self.wait()
         self.play(UpdateFromAlphaFunc(
             line, update_line,
             rate_func = there_and_back,
             run_time = 6
         ))
-        self.dither()
+        self.wait()
 
 class FinalWords(TeacherStudentsScene):
     def construct(self):
@@ -2610,7 +2610,7 @@ class FinalWords(TeacherStudentsScene):
             Write(formula, run_time = 2),
         )
         self.change_student_modes("pondering", "confused", "thinking")
-        self.dither(3)
+        self.wait(3)
 
         ##Show series
         series = VideoSeries()
@@ -2638,7 +2638,7 @@ class FinalWords(TeacherStudentsScene):
                 for pi in self.get_pi_creatures()
             ])
         )
-        self.dither(3)
+        self.wait(3)
 
 class Chapter6PatreonThanks(PatreonThanks):
     CONFIG = {

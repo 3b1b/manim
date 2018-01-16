@@ -122,7 +122,7 @@ class ConjugateDivisionExample(ComplexMultiplication):
         self.multiplier = 1./(abs(num)**2)
         self.anim_config["path_func"] = straight_path
         self.apply_multiplication()
-        self.dither()
+        self.wait()
 
 class DrawSolutionsToZToTheNEqualsW(Scene):
     @staticmethod

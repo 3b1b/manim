@@ -36,9 +36,9 @@ class OpeningQuote(Scene):
         author.next_to(words, DOWN, buff = 0.5)
 
         self.play(FadeIn(words))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(author, run_time = 3))
-        self.dither()
+        self.wait()
 
 class ListTerms(Scene):
     def construct(self):
@@ -62,8 +62,8 @@ class ListTerms(Scene):
             if i%2 == 0:
                 self.play(Blink(randy))
             else:
-                self.dither()
-        self.dither()
+                self.wait()
+        self.wait()
 
 class NoComputations(TeacherStudentsScene):
     def construct(self):
@@ -85,7 +85,7 @@ class NoComputations(TeacherStudentsScene):
             )
         ])
         self.random_blink()
-        self.dither()
+        self.wait()
         new_words = self.teacher.bubble.position_mobject_inside(
             TextMobject([
                 "Search",
@@ -116,7 +116,7 @@ class UsefulnessOfMatrices(Scene):
         title.highlight(YELLOW)
         title.to_edge(UP)
         self.add(title)
-        self.dither(3) #Play some 3d linear transform over this
+        self.wait(3) #Play some 3d linear transform over this
 
         equations = TexMobject("""
             6x - 3y + 2z &= 7 \\\\
@@ -137,14 +137,14 @@ class UsefulnessOfMatrices(Scene):
         eq_words = eq_brace.get_text("Equations")
 
         self.play(Write(equations))
-        self.dither()
+        self.wait()
         self.play(Transform(syms.copy(), new_syms, path_arc = np.pi/2))
         for brace, words in (sym_brace, unknowns), (eq_brace, eq_words):
             self.play(
                 GrowFromCenter(brace),
                 Write(words)
             )
-            self.dither()
+            self.wait()
 
 class CircuitDiagram(Scene):
     def construct(self):
@@ -166,9 +166,9 @@ class CircuitDiagram(Scene):
         unknowns.highlight(BLUE)
 
         self.play(ShowCreation(circuit))
-        self.dither()
+        self.wait()
         self.play(Write(unknowns))
-        self.dither()
+        self.wait()
 
 class StockLine(VMobject):
     CONFIG = {
@@ -203,7 +203,7 @@ class StockPrices(Scene):
             run_time = 3,
             submobject_mode = "lagged_start"
         ))
-        self.dither()
+        self.wait()
 
 class MachineLearningNetwork(Scene):
     def construct(self):
@@ -230,7 +230,7 @@ class MachineLearningNetwork(Scene):
         lines.submobject_gradient_highlight(BLUE_E, BLUE_A)
         for mob in VMobject(*layers), lines:
             self.play(Write(mob), run_time = 2)
-        self.dither()
+        self.wait()
 
 class ComplicatedSystem(Scene):
     def construct(self):
@@ -248,7 +248,7 @@ class ComplicatedSystem(Scene):
         self.play(Write(system, run_time = 1))
         self.play(randy.change_mode, "sassy")
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class SystemOfEquations(Scene):
     def construct(self):
@@ -313,14 +313,14 @@ class SystemOfEquations(Scene):
             ApplyMethod(m.scale_in_place, 1.2, rate_func = there_and_back)
             for m in scalars.split()
         ])
-        self.dither()
+        self.wait()
         self.remove(scalars)
         self.play(scaled_vars.restore)
         self.play(*[
             ApplyMethod(p.scale_in_place, 1.5, rate_func = there_and_back)
             for p in plusses
         ])
-        self.dither()
+        self.wait()
         self.show_nonlinearity_examples()
         self.play(other_equations.restore)
 
@@ -351,7 +351,7 @@ class SystemOfEquations(Scene):
             circle_slash.replace(mob)
             circle_slash.scale_in_place(1.4)
             self.play(ShowCreation(circle_slash), run_time = 0.5)
-            self.dither(0.5)
+            self.wait(0.5)
             self.play(FadeOut(circle_slash), run_time = 0.5)
 
         self.play(
@@ -364,7 +364,7 @@ class SystemOfEquations(Scene):
             self.play(Transform(squared, mob))
             draw_circle_slash(mob)
         self.play(*map(FadeOut, [words, arrow, squared]))
-        self.dither()
+        self.wait()
 
 
     def describe_organization(self, equations):
@@ -413,20 +413,20 @@ class SystemOfEquations(Scene):
                 FadeIn(mob.square),
                 FadeIn(mob.words)
             )
-            self.dither()
+            self.wait()
             self.play(*map(FadeOut, [mob.square, mob.words]))
         self.play(
             ShowCreation(zero_circles),
             Write(zero_circles.words, run_time = 1)
         )
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [zero_circles, zero_circles.words]))
-        self.dither()
+        self.wait()
         title = TextMobject("``Linear system of equations''")
         title.scale(1.5)
         title.to_edge(UP)
         self.play(Write(title))
-        self.dither()
+        self.wait()
         self.play(FadeOut(title))
 
 
@@ -484,7 +484,7 @@ class SystemOfEquations(Scene):
             Write(mob)
             for mob in all_brackets + [equals]
         ])
-        self.dither()
+        self.wait()
         self.label_matrix_product(matrix, x_array, v_array)
         
     def label_matrix_product(self, matrix, x_array, v_array):
@@ -511,9 +511,9 @@ class SystemOfEquations(Scene):
                 GrowFromCenter(mob.brace),
                 FadeIn(mob.words)
             )
-            self.dither()
+            self.wait()
             self.play(*map(FadeOut, [mob.brace, mob.words]))
-        self.dither()
+        self.wait()
         for mob in parts:
             self.play(
                 FadeIn(mob.brace),
@@ -533,7 +533,7 @@ class SystemOfEquations(Scene):
             compact_equation.copy(), 
             compact_equation.target
         ))
-        self.dither()
+        self.wait()
 
 class LinearSystemTransformationScene(LinearTransformationScene):
     def setup(self):
@@ -565,7 +565,7 @@ class MentionThatItsATransformation(LinearSystemTransformationScene):
         self.play(GrowFromCenter(brace), Write(words, run_time = 1))
         self.add_foreground_mobject(words, brace)
         self.apply_transposed_matrix(self.t_matrix)
-        self.dither()
+        self.wait()
 
 class LookForX(MentionThatItsATransformation):
     CONFIG = {
@@ -591,10 +591,10 @@ class LookForX(MentionThatItsATransformation):
             ShowCreation(x),
             Write(x_label)
         )
-        self.dither()
+        self.wait()
         self.add(VMobject(x, x_label).copy().fade())
         self.apply_transposed_matrix(self.t_matrix)
-        self.dither()
+        self.wait()
 
 class ThinkAboutWhatsHappening(Scene):
     def construct(self):
@@ -611,7 +611,7 @@ class ThinkAboutWhatsHappening(Scene):
         self.play(ShowCreation(bubble))
         self.play(Write(bubble.content, run_time = 2))
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         everything = VMobject(*self.get_mobjects())
         self.play(
             ApplyFunction(
@@ -656,10 +656,10 @@ class SystemOfTwoEquationsTwoUnknowns(Scene):
 
         self.add(system)
         self.play(Write(matrix_system))
-        self.dither()
+        self.wait()
         for mob in matrix, v, x:
             self.play(Write(mob.brace))
-            self.dither()
+            self.wait()
 
 class ShowBijectivity(LinearTransformationScene):
     CONFIG = {
@@ -702,16 +702,16 @@ class ShowBijectivity(LinearTransformationScene):
         anims = map(Animation, self.foreground_mobjects)
         self.play(ShowCreation(vectors, **kwargs), *anims)
         self.play(Transform(vectors, dots, **kwargs), *anims)
-        self.dither()
+        self.wait()
         self.add_transformable_mobject(vectors)
         self.apply_transposed_matrix(self.t_matrix)
-        self.dither()
+        self.wait()
         self.play(Transform(*titles))
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix(
             np.linalg.inv(self.t_matrix.T).T
         )
-        self.dither()
+        self.wait()
 
 class LabeledExample(LinearSystemTransformationScene):
     CONFIG = {
@@ -731,9 +731,9 @@ class LabeledExample(LinearSystemTransformationScene):
             self.add_unit_square()
 
     def construct(self):
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix(self.t_matrix)
-        self.dither()
+        self.wait()
 
 class SquishExmapleWithWords(LabeledExample):
     CONFIG = {
@@ -772,7 +772,7 @@ class StartWithNonzeroDetCase(TeacherStudentsScene):
             random.choice(self.get_students()).change_mode,
             "happy"
         )
-        self.dither()
+        self.wait()
 
 class DeclareNewTransformation(TeacherStudentsScene):
     def construct(self):
@@ -797,7 +797,7 @@ class PlayInReverse(FullRankExmapleDet):
         self.apply_inverse_transpose(self.t_matrix)
         self.play(v.highlight, PINK)
         self.label_vector(v, "x", color = PINK)
-        self.dither()
+        self.wait()
 
 class DescribeInverse(LinearTransformationScene):
     CONFIG = {
@@ -840,10 +840,10 @@ class DescribeInverse(LinearTransformationScene):
 
         self.add_foreground_mobject(title)
         self.apply_transposed_matrix(self.t_matrix)
-        self.dither()
+        self.wait()
         self.play(Transform(title, new_title))
         self.apply_inverse_transpose(self.t_matrix)
-        self.dither()
+        self.wait()
 
 class ClockwiseCounterclockwise(DescribeInverse):
     CONFIG = {
@@ -899,12 +899,12 @@ class MultiplyToIdentity(LinearTransformationScene):
             Transform(text, A_inv.text),
         )
         self.apply_inverse_transpose(self.t_matrix)
-        self.dither()
+        self.wait()
         self.play(
             Transform(brace, product.brace),
             Transform(text, product.text)
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(identity.background),
             Write(identity.get_brackets()),
@@ -912,11 +912,11 @@ class MultiplyToIdentity(LinearTransformationScene):
             Transform(brace, identity.brace),
             Transform(text, identity.text)
         )
-        self.dither()
+        self.wait()
         self.play(Write(col1))
-        self.dither()
+        self.wait()
         self.play(Write(col2))
-        self.dither()
+        self.wait()
 
 class ThereAreComputationMethods(TeacherStudentsScene):
     def construct(self):
@@ -925,7 +925,7 @@ class ThereAreComputationMethods(TeacherStudentsScene):
             to compute $A^{-1}$
         """)
         self.random_blink()
-        self.dither()
+        self.wait()
 
 class TwoDInverseFormula(Scene):
     def construct(self):
@@ -970,12 +970,12 @@ class SymbolicInversion(Scene):
 
         self.add(start)
         self.play(Write(words), FadeIn(inv), run_time = 1)
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(words),
             *[Transform(m, m.interim) for m in interim_mobs]
         )
-        self.dither()
+        self.wait()
 
         product = VMobject(A, inv)
         product.brace = Brace(product)
@@ -988,17 +988,17 @@ class SymbolicInversion(Scene):
             Write(product.words, run_time = 1),
             product.highlight, BLUE
         )
-        self.dither()
+        self.wait()
         self.play(*[
             ApplyMethod(m.highlight, BLACK)
             for m in product, product.brace, product.words
         ])
-        self.dither()
+        self.wait()
         self.play(ApplyFunction(
             lambda m : m.center().to_edge(UP),
             VMobject(x, eq, inv2, v)
         ))
-        self.dither()
+        self.wait()
 
 class PlayInReverseWithSolution(PlayInReverse):
     CONFIG = {
@@ -1038,14 +1038,14 @@ class OneUniqueSolution(Scene):
         words.split()[1].highlight(GREEN)
 
         self.add(system)
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(brace),
             Write(words.split()[0])
         )
-        self.dither()
+        self.wait()
         self.play(Write(words.split()[1], run_time = 1))
-        self.dither()
+        self.wait()
 
 class ThreeDTransformXToV(Scene):
     pass
@@ -1061,10 +1061,10 @@ class DetNEZeroRule(Scene):
         A_inv.shift(DOWN)
         arrow = Arrow(text, A_inv)
         self.play(Write(text))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(arrow))
         self.play(Write(A_inv, run_time = 1))
-        self.dither()
+        self.wait()
 
 
 class ThreeDInverseRule(Scene):
@@ -1076,7 +1076,7 @@ class ThreeDInverseRule(Scene):
         matrix.next_to(form, RIGHT)
         self.add(form)
         self.play(Write(matrix))
-        self.dither()
+        self.wait()
 
 class ThreeDApplyReverseToV(Scene):
     pass
@@ -1085,7 +1085,7 @@ class InversesDontAlwaysExist(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("$A^{-1}$ doesn't always exist")
         self.random_blink()
-        self.dither()
+        self.wait()
         self.random_blink()
 
 class InvertNonInvertable(LinearTransformationScene):
@@ -1108,7 +1108,7 @@ class InvertNonInvertable(LinearTransformationScene):
         grid = VMobject(self.plane, self.i_hat, self.j_hat)
         grid.save_state()
         self.apply_transposed_matrix(self.t_matrix, path_arc = 0)
-        self.dither()
+        self.wait()
         self.play(Write(no_func, run_time = 1))
         self.add_foreground_mobject(no_func)
         self.play(
@@ -1116,7 +1116,7 @@ class InvertNonInvertable(LinearTransformationScene):
             *map(Animation, self.foreground_mobjects),
             run_time = 3
         )
-        self.dither()
+        self.wait()
 
 class OneInputMultipleOutputs(InvertNonInvertable):
     def construct(self):
@@ -1136,7 +1136,7 @@ class OneInputMultipleOutputs(InvertNonInvertable):
         single_input.next_to(output_vector.get_end(), UP)
         single_input.highlight(YELLOW) 
         self.play(Write(single_input))
-        self.dither()
+        self.wait()
         self.remove(single_input, output_vector)
         self.play(
             grid.restore,
@@ -1154,7 +1154,7 @@ class OneInputMultipleOutputs(InvertNonInvertable):
         multiple_outputs.next_to(ORIGIN, DOWN).to_edge(RIGHT)
         multiple_outputs.add_background_rectangle()
         self.play(Write(multiple_outputs, run_time = 2))
-        self.dither()
+        self.wait()
 
 class SolutionsCanStillExist(TeacherStudentsScene):
     def construct(self):
@@ -1180,7 +1180,7 @@ class ShowVInAndOutOfColumnSpace(LinearSystemTransformationScene):
 
 
         self.apply_transposed_matrix(self.t_matrix, path_arc = 0)
-        self.dither()
+        self.wait()
         for v in v_in, v_out:
             self.add_vector(v, animate = True)
             words = TextMobject(v.words)
@@ -1188,7 +1188,7 @@ class ShowVInAndOutOfColumnSpace(LinearSystemTransformationScene):
             words.next_to(v.get_end(), DOWN+RIGHT)
             words.add_background_rectangle()
             self.play(Write(words), run_time = 2)
-        self.dither()
+        self.wait()
 
 class NotAllSquishesAreCreatedEqual(TeacherStudentsScene):
     def construct(self):
@@ -1206,7 +1206,7 @@ class PrepareForRank(Scene):
         )
         rank.highlight(TEAL)
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
 class DefineRank(Scene):
     def construct(self):
@@ -1227,7 +1227,7 @@ class DefineRank(Scene):
             ShowCreation(arrow),
             *map(Write, dims)
         )
-        self.dither()
+        self.wait()
 
 class DefineColumnSpace(Scene):
     def construct(self):
@@ -1247,12 +1247,12 @@ class DefineColumnSpace(Scene):
         everyone.to_edge(UP)
 
         self.play(Write(left_words))
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(arrow),
             Write(right_words)
         )
-        self.dither()
+        self.wait()
 
 class ColumnsRepresentBasisVectors(Scene):
     def construct(self):
@@ -1268,7 +1268,7 @@ class ColumnsRepresentBasisVectors(Scene):
         j_hat_words.next_to(ORIGIN, RIGHT).to_edge(UP)
 
         self.add(matrix)
-        self.dither()
+        self.wait()
         for i, words in enumerate([i_hat_words, j_hat_words]):
 
             arrow = Arrow(
@@ -1284,7 +1284,7 @@ class ColumnsRepresentBasisVectors(Scene):
                     for m in matrix.get_mob_matrix()[:,i]
                 ]
             )
-        self.dither()
+        self.wait()
 
 class ThreeDOntoPlane(Scene):
     pass
@@ -1323,7 +1323,7 @@ class TowDColumnsDontSpan(LinearTransformationScene):
             GrowFromCenter(brace),
             Write(words, run_time = 2)
         )
-        self.dither()
+        self.wait()
         self.play(ApplyFunction(
             lambda m : m.scale(-1).shift(self.i_hat.get_end()),
             self.j_hat
@@ -1373,7 +1373,7 @@ class ThreeDColumnsDontSpan(Scene):
             GrowFromCenter(brace),
             Write(words, run_time = 2)
         )
-        self.dither()
+        self.wait()
 
 class NameColumnSpace(Scene):
     def construct(self):
@@ -1417,7 +1417,7 @@ class NameColumnSpace(Scene):
         text.next_to(matrix, DOWN, buff = 1, aligned_edge = LEFT)
 
         self.add(matrix)
-        self.dither()
+        self.wait()
         self.play(*[
             Transform(
                 VMobject(*matrix.copy().get_mob_matrix()[:,i]),
@@ -1433,7 +1433,7 @@ class NameColumnSpace(Scene):
             ShowCreation(arrow),
             Write(column_space)
         )
-        self.dither()
+        self.wait()
         self.play(FadeOut(matrix))
         self.clear()
         self.add(text)
@@ -1452,7 +1452,7 @@ class NameColumnSpace(Scene):
         words.to_corner(UP+LEFT)
 
         self.play(Write(words))
-        self.dither(2)
+        self.wait(2)
         self.play(FadeOut(words))
 
         brace = Brace(column_space, UP)
@@ -1465,7 +1465,7 @@ class NameColumnSpace(Scene):
             GrowFromCenter(brace),
             Write(rank_words)
         )
-        self.dither()
+        self.wait()
         self.cycle_through_span_possibilities(span_text)
 
     def cycle_through_span_possibilities(self, span_text):
@@ -1492,13 +1492,13 @@ class NameColumnSpace(Scene):
         span_text = span_text.copy().restore()
         ###
         self.add(two_d_span)
-        self.dither()
+        self.wait()
         self.replace_number_matrix(mob_matrix, [[1, 1], [1, 1]])
-        self.dither()
+        self.wait()
         self.replace_number_matrix(mob_matrix, [[0, 0], [0, 0]])
-        self.dither()
+        self.wait()
         self.play(Transform(two_d_span, span_text))
-        self.dither()
+        self.wait()
         self.remove(two_d_span)
         self.add(span_text)
         mob_matrix = np.array([
@@ -1506,13 +1506,13 @@ class NameColumnSpace(Scene):
             for i in 2, 4, 6
         ])
         self.replace_number_matrix(mob_matrix, [[1, 1, 0], [0, 1, 1], [1, 0, 1]])
-        self.dither()
+        self.wait()
         self.replace_number_matrix(mob_matrix, [[1, 1, 0], [0, 1, 1], [-1, -2, -1]])
-        self.dither()
+        self.wait()
         self.replace_number_matrix(mob_matrix, [[1, 1, 0], [2, 2, 0], [3, 3, 0]])
-        self.dither()
+        self.wait()
         self.replace_number_matrix(mob_matrix, np.zeros((3, 3)).astype('int'))
-        self.dither()
+        self.wait()
 
 
     def replace_number_matrix(self, matrix, new_numbers):
@@ -1536,7 +1536,7 @@ class IHatShear(LinearTransformationScene):
     }
     def construct(self):
         self.apply_transposed_matrix([[1, 1], [0, 1]])
-        self.dither()
+        self.wait()
 
 class DiagonalDegenerate(LinearTransformationScene):
     def construct(self):
@@ -1550,7 +1550,7 @@ class ZeroMatirx(LinearTransformationScene):
             origin,
             run_time = 3
         ))
-        self.dither()
+        self.wait()
 
 class RankNumber(Scene):
     CONFIG = {
@@ -1601,9 +1601,9 @@ class NameFullRank(Scene):
             GrowFromCenter(brace),
             Write(top_words)
         )
-        self.dither()
+        self.wait()
         self.play(Write(low_words))
-        self.dither()
+        self.wait()
 
 class OriginIsAlwaysInColumnSpace(LinearTransformationScene):
     def construct(self):
@@ -1621,11 +1621,11 @@ class OriginIsAlwaysInColumnSpace(LinearTransformationScene):
         self.play(ShowCreation(arrow))
         self.play(ShowCreation(dot, run_time = 0.5))
         self.add_foreground_mobject(vector, words, arrow, dot)
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix(self.t_matrix)
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix([[1./3, -1./2], [-1./3, 1./2]])
-        self.dither()
+        self.wait()
 
 class FullRankCase(LinearTransformationScene):
     CONFIG = {
@@ -1662,7 +1662,7 @@ class FullRankCase(LinearTransformationScene):
                 self.add_foreground_mobject(title, arrow, dot)
                 words_on = True
             self.apply_inverse_transpose(t_matrix)
-            self.dither()
+            self.wait()
 
 class NameNullSpace(LinearTransformationScene):
     CONFIG = {
@@ -1683,7 +1683,7 @@ class NameNullSpace(LinearTransformationScene):
             mob.add_background_rectangle()
 
         self.play(ShowCreation(vectors, run_time = 3))
-        self.dither()
+        self.wait()
         vectors.save_state()
         self.plane.save_state()
         self.apply_transposed_matrix(
@@ -1691,7 +1691,7 @@ class NameNullSpace(LinearTransformationScene):
             added_anims = [Transform(vectors, dot)],
             path_arc = 0
         )
-        self.dither()
+        self.wait()
         self.play(
             vectors.restore, 
             self.plane.restore, 
@@ -1703,10 +1703,10 @@ class NameNullSpace(LinearTransformationScene):
             run_time = 2,
             submobject_mode = "lagged_start"
         ))
-        self.dither()
+        self.wait()
         for label in null_space_label, kernel_label:
             self.play(Write(label))
-            self.dither()
+            self.wait()
         self.apply_transposed_matrix(
             self.t_matrix,
             added_anims = [
@@ -1716,7 +1716,7 @@ class NameNullSpace(LinearTransformationScene):
             ],
             path_arc = 0
         )
-        self.dither()
+        self.wait()
 
     def get_vectors(self, offset = 0):
         vect = np.array(UP+RIGHT)
@@ -1749,12 +1749,12 @@ class NullSpaceSolveForVEqualsZero(NameNullSpace):
         equation.add_background_rectangle()
 
         self.play(Write(equation))
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(zero_vector_rect),
             Transform(v, zero_vector)
         )
-        self.dither()
+        self.wait()
         self.add_foreground_mobject(zero_vector_rect, equation)
         NameNullSpace.construct(self)
 
@@ -1786,9 +1786,9 @@ class OffsetNullSpace(NameNullSpace):
         ])
 
         self.play(FadeIn(vectors))
-        self.dither()
+        self.wait()
         self.add_vector(x, animate = True)
-        self.dither()
+        self.wait()
         x_copy = VMobject(x.copy())
         self.play(Transform(x_copy, x_copies))
         self.play(
@@ -1799,19 +1799,19 @@ class OffsetNullSpace(NameNullSpace):
             ]
         )
         self.remove(x_copy)
-        self.dither()
+        self.wait()
         self.play(Transform(vectors, dots))
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix(
             self.t_matrix,
             added_anims = [Transform(vectors, dot)]
         )
-        self.dither()        
+        self.wait()        
         self.play(
             ShowCreation(circle),
             Write(words)
         )
-        self.dither()
+        self.wait()
 
 class ShowAdditivityProperty(LinearTransformationScene):
     CONFIG = {
@@ -1859,10 +1859,10 @@ class ShowAdditivityProperty(LinearTransformationScene):
             self.t_matrix,
             added_anims = [Write(transformer)]
         )
-        self.dither()
+        self.wait()
         self.play(w.copy().shift, v.get_end())
         self.play(Write(final_sum))
-        self.dither()
+        self.wait()
 
 class AddJustOneNullSpaceVector(NameNullSpace):
     def construct(self):
@@ -1909,13 +1909,13 @@ class AddJustOneNullSpaceVector(NameNullSpace):
 
         self.add_vector(x, animate = True)
         self.play(Write(x.label))
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(vectors),
             Animation(null_vector)
         )
         self.play(Write(null_vector.label))
-        self.dither()
+        self.wait()
         x_copy = x.copy()
         self.play(x_copy.shift, null_vector.get_end())
         self.add_vector(sum_vect, animate = True)
@@ -1923,7 +1923,7 @@ class AddJustOneNullSpaceVector(NameNullSpace):
             FadeOut(x_copy),
             Write(sum_vect.label)
         )
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(form_rect),
             sum_vect.label.replace, initial_sum
@@ -1938,9 +1938,9 @@ class AddJustOneNullSpaceVector(NameNullSpace):
             ]
         )
         self.play(Write(final_sum))
-        self.dither()
+        self.wait()
         self.play(Write(brace))
-        self.dither()
+        self.wait()
         words = TextMobject(
             "$\\vec{\\textbf{x}}$",
             "and the",
@@ -1953,7 +1953,7 @@ class AddJustOneNullSpaceVector(NameNullSpace):
         words.next_to(brace, DOWN)
         words.to_edge(RIGHT)
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
 class NullSpaceOffsetRule(Scene):
     def construct(self):
@@ -1983,10 +1983,10 @@ class NullSpaceOffsetRule(Scene):
         self.add(equation)
         self.play(Write(A_text, run_time = 2))
         self.play(ShowCreation(A_arrow))
-        self.dither()
+        self.wait()
         self.play(Write(v_text, run_time = 2))
         self.play(ShowCreation(v_arrow))
-        self.dither()
+        self.wait()
 
 class MuchLeftToLearn(TeacherStudentsScene):
     def construct(self):
@@ -1995,7 +1995,7 @@ class MuchLeftToLearn(TeacherStudentsScene):
             "level overview"
         )
         self.random_blink()
-        self.dither()
+        self.wait()
         self.teacher_says(
             "There is still \\\\",
             "much to learn"
@@ -2006,7 +2006,7 @@ class MuchLeftToLearn(TeacherStudentsScene):
             ])
             self.play(pi.change_mode, target_mode)
         self.random_blink()
-        self.dither()
+        self.wait()
 
 class NotToLearnItAllNow(TeacherStudentsScene):
     def construct(self):
@@ -2015,7 +2015,7 @@ class NotToLearnItAllNow(TeacherStudentsScene):
             learn it all now
         """)
         self.random_blink()
-        self.dither()
+        self.wait()
         self.random_blink()
 
 class NextVideo(Scene):
@@ -2031,7 +2031,7 @@ class NextVideo(Scene):
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.dither()  
+        self.wait()  
 
 class WhatAboutNonsquareMatrices(TeacherStudentsScene):
     def construct(self):

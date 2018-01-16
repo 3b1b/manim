@@ -30,9 +30,9 @@ class OpeningQuote(Scene):
         self.author = self.get_author(self.quote)
 
         self.play(FadeIn(self.quote, **self.fade_in_kwargs))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(self.author, run_time = 3))
-        self.dither()
+        self.wait()
 
     def get_quote(self, max_width = 2*SPACE_WIDTH-1):
         text_mobject_kwargs = {
@@ -198,7 +198,7 @@ class TODOStub(Scene):
     }
     def construct(self):
         self.add(TextMobject("TODO: %s"%self.message))
-        self.dither()
+        self.wait()
 
 
 

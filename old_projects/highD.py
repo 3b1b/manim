@@ -281,10 +281,10 @@ class SliderScene(Scene):
                 self.ambient_velocity *= -1
         self.add_foreground_mobjects(self.sliders)
 
-    def wind_down_ambient_movement(self, time = 1, dither = True):
+    def wind_down_ambient_movement(self, time = 1, wait = True):
         self.ambient_change_end_time = self.ambient_change_time + time
-        if dither:
-            self.dither(time)
+        if wait:
+            self.wait(time)
             if self.skip_animations:
                 self.ambient_change_time += time
 
@@ -332,11 +332,11 @@ class SliderScene(Scene):
             self.ambient_slider_movement_update()
         Scene.update_frame(self, *args, **kwargs)
 
-    def dither(self, time = 1):
+    def wait(self, time = 1):
         if self.ambiently_change_sliders:
             self.play(Animation(self.sliders, run_time = time))
         else:
-            Scene.dither(self,time)
+            Scene.wait(self,time)
 
 ##########
 
@@ -395,7 +395,7 @@ class MathIsATease(Scene):
             ),
             Blink(randy),
         )
-        self.dither()
+        self.wait()
 
 class TODODeterminants(TODOStub):
     CONFIG = {
@@ -472,7 +472,7 @@ class CircleToPairsOfPoints(Scene):
                 )
             ]
         )
-        self.dither()
+        self.wait()
 
         ######### Rotation equations ##########
 
@@ -525,7 +525,7 @@ class CircleToPairsOfPoints(Scene):
             Animation(circle),
             randy.change, "hooray"
         )
-        self.dither()
+        self.wait()
 
 class GreatSourceOfMaterial(TeacherStudentsScene):
     def construct(self):
@@ -534,7 +534,7 @@ class GreatSourceOfMaterial(TeacherStudentsScene):
             target_mode = "hooray"
         )
         self.change_student_modes(*["happy"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class CirclesSpheresSumsSquares(ExternallyAnimatedScene):
     pass
@@ -579,7 +579,7 @@ class BackAndForth(Scene):
         self.play(ShowCreation(plane, run_time = 3))
         self.play(Write(triplet))
         # self.play(ShowCreation(triplet.arrow))
-        self.dither(3)
+        self.wait(3)
         for tup, eq, to_draw in (pair, circle_eq, circle), (triplet, sphere_eq, VMobject()):
             for mob in tup, eq:
                 mob.xyz = VGroup(*filter(
@@ -598,7 +598,7 @@ class BackAndForth(Scene):
                 ))),
                 ShowCreation(to_draw)
             )
-        self.dither(3)
+        self.wait(3)
 
 class SphereForming(ExternallyAnimatedScene):
     pass
@@ -616,10 +616,10 @@ class PreviousVideos(Scene):
 
         title = titles[0]
         self.add(title, screen)
-        self.dither(2)
+        self.wait(2)
         for new_title in titles[1:]:
             self.play(Transform(title, new_title))
-            self.dither(2)
+            self.wait(2)
 
 class TODOTease(TODOStub):
     CONFIG = {
@@ -639,12 +639,12 @@ class AskAboutLongerLists(TeacherStudentsScene):
         ])
 
         self.student_says(question, run_time = 1)
-        self.dither()
+        self.wait()
         for alt_tup in alt_tups:
             alt_tup.move_to(tup)
             self.play(Transform(tup, alt_tup))
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
         self.play(
             RemovePiCreatureBubble(self.students[1]),
             self.teacher.change, "raise_right_hand"
@@ -654,13 +654,13 @@ class AskAboutLongerLists(TeacherStudentsScene):
             look_at_arg = self.teacher.get_top() + 2*UP
         )
         self.play(self.teacher.look, UP)
-        self.dither(5)
+        self.wait(5)
         self.student_says(
             "I...don't see it.",
             target_mode = "maybe",
             student_index = 0
         )
-        self.dither(3)
+        self.wait(3)
 
 class FourDCubeRotation(ExternallyAnimatedScene):
     pass
@@ -691,7 +691,7 @@ class Professionals(PiCreatureScene):
                 FadeIn(pi),
                 Write(title, run_time = 1),
             )
-        self.dither()
+        self.wait()
 
     def add_equation(self):
         quaternion = TexMobject(
@@ -730,7 +730,7 @@ class Professionals(PiCreatureScene):
                 Write(term, run_time = 1),
                 pi.change, "pondering", term
             )
-        self.dither(2)
+        self.wait(2)
 
         self.terms = terms
 
@@ -760,8 +760,8 @@ class Professionals(PiCreatureScene):
                 Write(label, run_time = 1)
             )
             example.add(label)
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
         self.play(
             FadeOut(examples),
             self.terms.shift, UP,
@@ -779,9 +779,9 @@ class Professionals(PiCreatureScene):
                 np.linspace(0, 0.5, len(self.pi_creatures))
             )
         ])
-        self.dither()
+        self.wait()
         self.play(Animation(self.terms[-1]))
-        self.dither(2)
+        self.wait(2)
 
     ######
 
@@ -819,13 +819,13 @@ class OfferAHybrid(SliderScene):
         equation.target.shift(2*SPACE_WIDTH*LEFT/3)
 
         self.add(titles, h_line, v_lines, equation)
-        self.dither()
+        self.wait()
         self.play(*map(MoveToTarget, [titles, v_lines, equation]))
         self.play(Write(self.sliders, run_time = 1))
         self.initialize_ambiant_slider_movement()
-        self.dither(10)
+        self.wait(10)
         self.wind_down_ambient_movement()
-        self.dither()
+        self.wait()
 
     def get_titles(self):
         titles = VGroup(*map(TextMobject, [
@@ -885,7 +885,7 @@ class DismissProjection(PiCreatureScene):
                 Write(equation),
                 LaggedStart(ShowCreation, sphere),
             )
-        self.dither()
+        self.wait()
 
         self.equations = equations
         self.spheres = spheres
@@ -938,15 +938,15 @@ class DismissProjection(PiCreatureScene):
             ),
             run_time = 3,
         )
-        self.dither()
+        self.wait()
         self.play(Write(descriptor, run_time = 2))
-        self.dither()
+        self.wait()
         self.play(
             dot.move_to, equation.get_left(),
             dot.set_fill, None, 0,
             path_arc = -np.pi/12
         )
-        self.dither(2)
+        self.wait(2)
 
         self.sphere_words = sphere_words
         self.sphere_arrow = arrow
@@ -962,22 +962,22 @@ class DismissProjection(PiCreatureScene):
 
         self.play(FadeIn(morty))
         self.play(morty.change, "raise_right_hand", sphere)
-        self.dither(3)
+        self.wait(3)
         self.play(morty.change, "confused", sphere)
-        self.dither(3)
+        self.wait(3)
         self.play(
             morty.change, "erm", alt_dims,
             FadeIn(alt_dim)
         )
         for new_alt_dim in alt_dims[1:]:
-            self.dither()
+            self.wait()
             self.play(Transform(alt_dim, new_alt_dim))
-        self.dither()
+        self.wait()
         self.play(morty.change, "concerned_musician")
         self.play(FadeOut(alt_dim))
-        self.dither()
+        self.wait()
         self.play(morty.change, "angry", sphere)
-        self.dither(2)
+        self.wait(2)
 
     def transition_to_next_scene(self):
         equation = self.equations[-1]
@@ -998,7 +998,7 @@ class DismissProjection(PiCreatureScene):
             self.pi_creature
         ])))
         self.play(*map(MoveToTarget, [equation, tup]))
-        self.dither()
+        self.wait()
 
     ###
 
@@ -1044,7 +1044,7 @@ class Introduce4DSliders(SliderScene):
         self.sliders.shift(0.8*LEFT)
 
         self.add(equation, tup)
-        self.dither()
+        self.wait()
         self.equation = equation
         self.tup = tup
 
@@ -1073,7 +1073,7 @@ class Introduce4DSliders(SliderScene):
         dials.set_fill(opacity = 1)
         self.initialize_ambiant_slider_movement()
         self.play(FadeOut(self.tup))
-        self.dither(10)
+        self.wait(10)
 
     def ask_about_constraint(self):
         equation = self.equation
@@ -1084,12 +1084,12 @@ class Introduce4DSliders(SliderScene):
         self.play(ShowCreation(rect))
         self.play(FadeIn(randy))
         self.play(randy.change, "pondering", rect)
-        self.dither()
+        self.wait()
         for mob in self.sliders, rect:
             self.play(randy.look_at, mob)
             self.play(Blink(randy))
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
 
 class TwoDimensionalCase(Introduce4DSliders):
     CONFIG = {
@@ -1144,7 +1144,7 @@ class TwoDimensionalCase(Introduce4DSliders):
 
     def let_values_wander(self, total_time = 5):
         self.initialize_ambiant_slider_movement()
-        self.dither(total_time - 1)
+        self.wait(total_time - 1)
         self.wind_down_ambient_movement()
 
     def introduce_real_estate(self):
@@ -1182,7 +1182,7 @@ class TwoDimensionalCase(Introduce4DSliders):
                 ShowCreation(arrow),
                 Write(decimal)
             )
-            self.dither()
+            self.wait()
 
         sliders = self.sliders
         def create_update_func(i):
@@ -1218,9 +1218,9 @@ class TwoDimensionalCase(Introduce4DSliders):
 
         blue_rects.save_state()
         self.play(DrawBorderThenFill(blue_rects))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(blue_rects, red_rects))
-        self.dither()
+        self.wait()
         self.play(FadeOut(red_rects))
 
         blue_rects.restore()
@@ -1231,11 +1231,11 @@ class TwoDimensionalCase(Introduce4DSliders):
         rect = SurroundingRectangle(x_re)
 
         self.reset_dials([1, 0])
-        self.dither()
+        self.wait()
         self.play(ShowCreation(rect))
         self.play(FadeOut(rect))
         self.play(FocusOn(self.dot))
-        self.dither()
+        self.wait()
         self.reset_dials([0.9, -np.sqrt(0.19)])
 
         x_brace, y_brace = [
@@ -1255,18 +1255,18 @@ class TwoDimensionalCase(Introduce4DSliders):
         self.play(ReplacementTransform(
             VGroup(x_text.copy()), x_re
         ))
-        self.dither(2)
+        self.wait(2)
         self.play(
             GrowFromCenter(y_brace),
             Write(y_text),
         )
-        self.dither(2)
+        self.wait(2)
         self.play(FadeIn(self.real_estate_rects))
         self.reset_dials([1, 0], run_time = 1)
         self.reset_dials([0.9, -np.sqrt(0.19)], run_time = 2)
         self.play(FadeOut(self.real_estate_rects))
         self.play(*map(FadeOut, [x_brace, y_brace, x_text, y_text]))
-        self.dither()
+        self.wait()
 
     def note_circle_steepness(self):
         line = Line(
@@ -1303,15 +1303,15 @@ class TwoDimensionalCase(Introduce4DSliders):
             Animation(VGroup(*[slider.dial for slider in self.sliders])),
         )
         self.add_foreground_mobjects(self.sliders)
-        self.dither()
+        self.wait()
         for x in np.arange(0.95, 0.05, -0.05):
             self.reset_dials(
                 [np.sqrt(x), np.sqrt(1-x)],
                 run_time = 0.5
             )
-            self.dither(0.5)
+            self.wait(0.5)
         self.initialize_ambiant_slider_movement()
-        self.dither(10)
+        self.wait(10)
 
     def write_distance_squared(self):
         d_squared = TexMobject("(\\text{Distance})^2")
@@ -1319,7 +1319,7 @@ class TwoDimensionalCase(Introduce4DSliders):
         d_squared.highlight(YELLOW)
 
         self.play(Write(d_squared))
-        self.dither(3)
+        self.wait(3)
 
     #####
 
@@ -1335,7 +1335,7 @@ class TwoDimensionalCase(Introduce4DSliders):
 class TwoDimensionalCaseIntro(TwoDimensionalCase):
     def construct(self):
         self.initialize_ambiant_slider_movement()
-        self.dither(10)
+        self.wait(10)
 
 class ThreeDCase(TwoDimensionalCase):
     CONFIG = { 
@@ -1361,7 +1361,7 @@ class ThreeDCase(TwoDimensionalCase):
         self.add_real_estate_decimals()
         self.initialize_ambiant_slider_movement()
         self.point_out_third_slider()
-        self.dither(3)
+        self.wait(3)
         self.hold_x_at(0.5, 12)
         self.revert_to_original_skipping_status()
         self.hold_x_at(0.85, 12)
@@ -1411,10 +1411,10 @@ class ThreeDCase(TwoDimensionalCase):
 
     def point_out_third_slider(self):
         rect = SurroundingRectangle(self.sliders[-1])
-        self.dither(4)
+        self.wait(4)
         self.play(ShowCreation(rect))
         self.play(FadeOut(rect))
-        self.dither(8)
+        self.wait(8)
 
     def hold_x_at(self, x_val, wait_time):
         #Save these
@@ -1425,7 +1425,7 @@ class ThreeDCase(TwoDimensionalCase):
         self.sliders = VGroup(*self.sliders[1:])
         self.total_real_estate = self.total_real_estate-x_val**2
         self.initialize_ambiant_slider_movement()
-        self.dither(wait_time-2)
+        self.wait(wait_time-2)
         self.wind_down_ambient_movement()
         self.sliders = all_sliders
         self.total_real_estate = original_total_real_estate
@@ -1438,7 +1438,7 @@ class ThreeDCaseInsert(ThreeDCase):
         self.add_real_estate_decimals()
         self.reset_dials([0.85, np.sqrt(1-0.85**2)], run_time = 0)
         self.reset_dials([1], run_time = 3)
-        self.dither()
+        self.wait()
 
 class SphereAtRest(ExternallyAnimatedScene):
     pass
@@ -1446,7 +1446,7 @@ class SphereAtRest(ExternallyAnimatedScene):
 class BugOnASurface(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("You're a bug \\\\ on a surface")
-        self.dither(3)
+        self.wait(3)
 
 class SphereWithWanderingDotAtX0point5(ExternallyAnimatedScene):
     pass
@@ -1476,7 +1476,7 @@ class BugOnTheSurfaceSlidersPart(ThreeDCase):
                 np.sin(u)*np.cos(t),
                 np.sin(u)*np.sin(t),
             ])
-            self.dither(self.frame_duration)
+            self.wait(self.frame_duration)
 
 class BugOnTheSurfaceSpherePart(ExternallyAnimatedScene):
     pass
@@ -1500,7 +1500,7 @@ class FourDCase(SliderScene, TeacherStudentsScene):
         dot = Dot(fill_opacity = 0)
         dot.to_corner(UP+LEFT, buff = 2)
         self.play(Animation(dot))
-        self.dither()
+        self.wait()
         self.play(
             Animation(self.sliders),
             self.teacher.change, "raise_right_hand",
@@ -1509,12 +1509,12 @@ class FourDCase(SliderScene, TeacherStudentsScene):
             *["pondering"]*3,
             look_at_arg = self.sliders
         )
-        self.dither(4)
+        self.wait(4)
 
     def fix_one_slider(self):
         x_slider = self.sliders[0]
         dial = x_slider.dial
-        self.wind_down_ambient_movement(dither = False)
+        self.wind_down_ambient_movement(wait = False)
         self.play(self.teacher.change, "speaking")
         self.sliders.remove(x_slider)
         self.total_real_estate = np.linalg.norm(self.get_vector())**2
@@ -1530,7 +1530,7 @@ class FourDCase(SliderScene, TeacherStudentsScene):
             look_at_arg = self.sliders,
             added_anims = [self.teacher.change, "plain"]
         )
-        self.dither(5)
+        self.wait(5)
 
         self.x_slider = x_slider
         self.x_arrow = arrow
@@ -1546,7 +1546,7 @@ class FourDCase(SliderScene, TeacherStudentsScene):
             None, "pondering", "pondering",
             look_at_arg = self.students[0].bubble,
         )
-        self.dither(4)
+        self.wait(4)
         self.play(RemovePiCreatureBubble(self.students[0]))
 
     def set_aside_sliders(self):
@@ -1562,11 +1562,11 @@ class FourDCase(SliderScene, TeacherStudentsScene):
             "Time for some \\\\ high-dimensional \\\\ strangeness!",
             target_mode = "hooray",
         )
-        self.dither(7)
+        self.wait(7)
 
     #####
-    def non_blink_dither(self, time = 1):
-        SliderScene.dither(self, time)
+    def non_blink_wait(self, time = 1):
+        SliderScene.wait(self, time)
 
 class TwoDBoxExample(Scene):
     def setup(self):
@@ -1592,7 +1592,7 @@ class TwoDBoxExample(Scene):
         )
         box.replace(line, stretch = True)
         self.play(ShowCreation(box))
-        self.dither()
+        self.wait()
 
     def label_corner_coordinates(self):
         corner_dots = VGroup()
@@ -1651,9 +1651,9 @@ class TwoDBoxExample(Scene):
                 run_time = 1,
                 rate_func = smooth,
             ))
-            self.dither(0.5)
+            self.wait(0.5)
         self.play(*map(FadeOut, [radius, r_equals_1]))
-        self.dither()
+        self.wait()
 
         self.corner_radius = radius
         self.corner_circles = circles
@@ -1676,7 +1676,7 @@ class TwoDBoxExample(Scene):
         self.play(circle.scale, 1.2, rate_func = wiggle)
         self.play(ShowCreation(radius))
         self.play(Write(r_equals_q))
-        self.dither(2)
+        self.wait(2)
         self.play(FadeOut(r_equals_q[1]))
 
         self.inner_radius = radius
@@ -1730,13 +1730,13 @@ class TwoDBoxExample(Scene):
             FadeIn(triangle),
             Write(VGroup(bottom_one, side_one, sqrt_1_plus_1))
         )
-        self.dither(2)
+        self.wait(2)
         self.play(ReplacementTransform(sqrt_1_plus_1, sqrt_2))
         self.play(
             Write(root_2_value, run_time = 1),
             *map(FadeOut, [bottom_one, side_one])
         )
-        self.dither()
+        self.wait()
         self.play(ShowCreation(corner_radius))
         self.play(Rotating(
             corner_radius, about_point = c0_center,
@@ -1744,13 +1744,13 @@ class TwoDBoxExample(Scene):
             rate_func = smooth
         ))
         self.play(FadeOut(triangle), Animation(corner_radius))
-        self.dither()
+        self.wait()
         self.play(
             Write(rhs),
             Transform(sqrt_2, sqrt_2_target),
         )
         self.play(Write(root_2_minus_1_value))
-        self.dither(2)
+        self.wait(2)
 
 class ThreeDBoxExample(ExternallyAnimatedScene):
     pass
@@ -1770,7 +1770,7 @@ class ThreeDCubeCorners(Scene):
 
         self.play(Write(name, run_time = 2))
         self.play(LaggedStart(FadeIn, coordinates, run_time = 3))
-        self.dither()
+        self.wait()
 
 class ShowDistanceFormula(TeacherStudentsScene):
     def construct(self):
@@ -1799,10 +1799,10 @@ class ShowDistanceFormula(TeacherStudentsScene):
             rule.restore,
             self.teacher.change, "raise_right_hand",
         )
-        self.dither(3)
+        self.wait(3)
         self.student_says("Why?", student_index = 0)
         self.play(self.teacher.change, "thinking")
-        self.dither(3)
+        self.wait(3)
 
 class GeneralizePythagoreanTheoremBeyondTwoD(ThreeDScene):
     def construct(self):
@@ -1845,7 +1845,7 @@ class GeneralizePythagoreanTheoremBeyondTwoD(ThreeDScene):
                 ShowCreation(line),
                 Write(tex, run_time = 1)
             )
-        self.dither()
+        self.wait()
         self.play(
             group.rotate, 0.45*np.pi, LEFT,
             group.shift, 2*DOWN
@@ -1867,7 +1867,7 @@ class GeneralizePythagoreanTheoremBeyondTwoD(ThreeDScene):
             Write(z, run_time = 1)
         )
         self.play(ShowCreation(three_d_diag))
-        self.dither()
+        self.wait()
 
         full_group = VGroup(group, z_line, z, three_d_diag, dot)
         self.play(Rotating(
@@ -1875,7 +1875,7 @@ class GeneralizePythagoreanTheoremBeyondTwoD(ThreeDScene):
             axis = UP, 
             run_time = 10,
         ))
-        self.dither()
+        self.wait()
 
 class ThreeDBoxFormulas(Scene):
     def construct(self):
@@ -1897,11 +1897,11 @@ class ThreeDBoxFormulas(Scene):
         VGroup(question, answer).shift(0.55*RIGHT)
 
         self.play(Write(question))
-        self.dither(2)
+        self.wait(2)
         self.play(ReplacementTransform(question, answer))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(inner_r))
-        self.dither(2)
+        self.wait(2)
 
 class AskAboutHigherDimensions(TeacherStudentsScene):
     def construct(self):
@@ -1909,16 +1909,16 @@ class AskAboutHigherDimensions(TeacherStudentsScene):
             "What happens for \\\\ higher dimensions?"
         )
         self.change_student_modes(*["pondering"]*3)
-        self.dither(2)
+        self.wait(2)
         self.student_thinks(
             "$\\sqrt{N} - 1$",
             target_mode = "happy",
             student_index = 1
         )
-        self.dither()
+        self.wait()
         pi = self.students[1]
         self.play(pi.change, "confused", pi.bubble)
-        self.dither(3)
+        self.wait(3)
 
 class TenSliders(SliderScene):
     CONFIG = {
@@ -1929,7 +1929,7 @@ class TenSliders(SliderScene):
     }
     def construct(self):
         self.initialize_ambiant_slider_movement()
-        self.dither(self.run_time)
+        self.wait(self.run_time)
         self.wind_down_ambient_movement()
 
 class TwoDBoxWithSliders(TwoDimensionalCase):
@@ -1996,7 +1996,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
 
         self.initialize_ambiant_slider_movement()
         self.play(Write(question))
-        self.dither(4)
+        self.wait(4)
         self.wind_down_ambient_movement()
 
         self.question = question
@@ -2020,7 +2020,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         for x, slider in zip(self.center_point, self.sliders):
             slider.center_value = x
         self.initialize_ambiant_slider_movement()
-        self.dither(7)
+        self.wait(7)
         self.wind_down_ambient_movement()
         self.play(
             self.circle.move_to, 
@@ -2040,7 +2040,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
             slider.center_value = x
 
         self.initialize_ambiant_slider_movement()
-        self.dither(5)
+        self.wait(5)
 
     def write_x_and_y_real_estate(self):
         phrases = VGroup(
@@ -2062,13 +2062,13 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
             Write(phrases[0]),
             GrowFromCenter(x_brace)
         )
-        self.dither(3)
+        self.wait(3)
         self.play(
             Transform(*phrases),
             Transform(x_brace, y_brace)
         )
-        self.dither(5)
-        self.wind_down_ambient_movement(dither = False)
+        self.wait(5)
+        self.wind_down_ambient_movement(wait = False)
         self.play(*map(FadeOut, [x_brace, phrases[0]]))
 
     def swap_with_top_right_circle(self):
@@ -2090,7 +2090,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         slider.center_value = 1
         self.center_point[1] = 1
         self.initialize_ambiant_slider_movement()
-        self.dither(3)
+        self.wait(3)
 
     def show_center_circle(self):
         origin = self.plane.coords_to_point(0, 0)
@@ -2102,7 +2102,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
 
         self.play(FocusOn(circle))
         self.play(GrowFromCenter(circle, run_time = 2))
-        self.dither(3)
+        self.wait(3)
 
     def describe_tangent_point(self):
         target_vector = np.array([
@@ -2114,11 +2114,11 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         v_line = Line(point[0]*RIGHT+origin[1]*UP, point)
 
         while np.linalg.norm(self.get_vector()-target_vector) > 0.5:
-            self.dither()
+            self.wait()
         self.wind_down_ambient_movement(0)
         self.reset_dials(target_vector)
         self.play(*map(ShowCreation, [h_line, v_line]))
-        self.dither()
+        self.wait()
 
         re_line = DashedLine(
             self.sliders[0].dial.get_left() + MED_SMALL_BUFF*LEFT,
@@ -2129,7 +2129,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
         words.next_to(re_line, RIGHT)
         self.play(ShowCreation(re_line))
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
         self.evenly_shared_words = words
         self.re_line = re_line
@@ -2148,7 +2148,7 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
 
         self.add_foreground_mobjects(ghost_dials)
         self.reset_dials(target_vector)
-        self.dither()
+        self.wait()
 
         #Comment on real estate exchange
         x_words = TextMobject("Gain expensive \\\\", "real estate")
@@ -2173,13 +2173,13 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
             Write(x_words, run_time = 2),
             ShowCreation(x_arrow)
         )
-        self.dither()
+        self.wait()
         self.play(FadeOut(self.evenly_shared_words))
         self.play(
             Write(y_words, run_time = 2),
             ShowCreation(y_arrow)
         )
-        self.dither(2)
+        self.wait(2)
 
         #Swap perspective
         word_starts = VGroup(y_words[0], x_words[0])
@@ -2199,13 +2199,13 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
             )
             for slider in self.sliders
         ])
-        self.dither()
+        self.wait()
         self.play(ShowCreation(crosses))
         self.play(
             LaggedStart(MoveToTarget, new_words),
             Animation(crosses)
         )
-        self.dither(3)
+        self.wait(3)
 
         #Return to original position
         target_vector = np.array(2*[1-np.sqrt(0.5)])
@@ -2222,11 +2222,11 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
             slider.center_value = x
         self.set_to_vector(target_vector)
         self.total_real_estate = self.get_current_total_real_estate()
-        self.dither(2)
+        self.wait(2)
 
     def wander_on_inner_circle(self):
         self.initialize_ambiant_slider_movement()
-        self.dither(9)
+        self.wait(9)
 
     def ask_about_inner_real_estate(self):
         question = TextMobject("What is \\\\ $x^2 + y^2$?")
@@ -2247,18 +2247,18 @@ class TwoDBoxWithSliders(TwoDimensionalCase):
 
         target_vector = np.array(2*[1-np.sqrt(0.5)])
         while np.linalg.norm(target_vector - self.get_vector()) > 0.5:
-            self.dither()
+            self.wait()
         self.wind_down_ambient_movement(0)
         self.reset_dials(target_vector)
         self.play(Write(question))
-        self.dither(3)
+        self.wait(3)
         self.play(
             ShowCreation(half_line),
             Write(half)
         )
-        self.dither()
+        self.wait()
         self.play(Write(rhs))
-        self.dither(3)
+        self.wait(3)
 
 class AskWhy(TeacherStudentsScene):
     def construct(self):
@@ -2266,7 +2266,7 @@ class AskWhy(TeacherStudentsScene):
             "Wait, why?",
             target_mode = "confused"
         )
-        self.dither(3)
+        self.wait(3)
 
 class MentionComparisonToZeroPointFive(TeacherStudentsScene):
     def construct(self):
@@ -2276,7 +2276,7 @@ class MentionComparisonToZeroPointFive(TeacherStudentsScene):
             target_mode = "hooray"
         )
         self.change_student_modes(*["happy"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class ThreeDBoxExampleWithSliders(SliderScene):
     CONFIG = {
@@ -2317,7 +2317,7 @@ class ThreeDBoxExampleWithSliders(SliderScene):
             ShowCreation(arrow, rate_func = squish_rate_func(smooth, 0.7, 1)),
             run_time = 3
         )
-        self.dither(5)
+        self.wait(5)
 
         self.sphere_name = sphere_name
         self.arrow = arrow
@@ -2350,7 +2350,7 @@ class ThreeDBoxExampleWithSliders(SliderScene):
             Transform(self.arrow, new_arrow),
         )
         self.play(LaggedStart(FadeIn, re_words))
-        self.dither(2)
+        self.wait(2)
 
         self.re_words = re_words
         self.re_line = re_line
@@ -2383,7 +2383,7 @@ class ThreeDBoxExampleWithSliders(SliderScene):
             Write(half_label, run_time = 1),
             ShowCreation(half_line)
         )
-        self.dither()
+        self.wait()
         self.add(ghost_dials)
         self.play(*[
             ApplyMethod(slider.set_value, 0.5)
@@ -2391,7 +2391,7 @@ class ThreeDBoxExampleWithSliders(SliderScene):
         ])
         self.play(ShowCreation(cross))
         self.play(Write(new_re))
-        self.dither(3)
+        self.wait(3)
         self.play(
             FadeOut(new_re),
             FadeOut(cross),
@@ -2430,7 +2430,7 @@ class ThreeDBoxExampleWithSliders(SliderScene):
         )
         self.initialize_ambiant_slider_movement()
         self.play(Write(inner_sphere_words))
-        self.dither(5)
+        self.wait(5)
         self.wind_down_ambient_movement(0)
         self.play(*[
             ApplyMethod(slider.set_value, x)
@@ -2439,7 +2439,7 @@ class ThreeDBoxExampleWithSliders(SliderScene):
         self.play(ReplacementTransform(
             inner_sphere_words, question
         ))
-        self.dither(2)
+        self.wait(2)
 
         self.re_question = question
 
@@ -2452,11 +2452,11 @@ class ThreeDBoxExampleWithSliders(SliderScene):
         bound.to_edge(RIGHT)
 
         self.play(Write(bound))
-        self.dither(2)
+        self.wait(2)
 
     def comment_on_inner_sphere_smallness(self):
         self.initialize_ambiant_slider_movement()
-        self.dither(15)
+        self.wait(15)
 
 class Rotating3DCornerSphere(ExternallyAnimatedScene):
     pass
@@ -2496,7 +2496,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
 
         self.play(Write(title))
         self.play(LaggedStart(FadeIn, coordinate_mobs))
-        self.dither()
+        self.wait()
 
         self.coordinate_mobs = coordinate_mobs
         self.coordinates = coordinates
@@ -2522,7 +2522,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
                 self.sliders[0].number_to_point(coords[0]+1)
             )
             self.add(coord_mob_copy)
-            self.dither()
+            self.wait()
             self.remove(coord_mob_copy)
             coord_mob.highlight(WHITE)
         self.add(coord_mob_copy)
@@ -2537,7 +2537,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
             ])
         )
         self.initialize_ambiant_slider_movement()
-        self.dither(4)
+        self.wait(4)
 
     def show_closest_point(self):
         target_vector = 0.5*np.ones(4)
@@ -2557,7 +2557,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         ])
         self.play(ShowCreation(re_line))
         self.play(Write(half_label))
-        self.dither(2)
+        self.wait(2)
 
         self.re_line = re_line
         self.half_label = half_label
@@ -2584,7 +2584,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
 
         self.play(FadeIn(re_words))
         self.play(LaggedStart(DrawBorderThenFill, re_rects, run_time = 3))
-        self.dither(2)
+        self.wait(2)
 
         self.re_words = re_words
         self.re_rects = re_rects
@@ -2612,23 +2612,23 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
             self.re_words.next_to, sphere_words.target, UP, MED_LARGE_BUFF,
             path_arc = np.pi
         )
-        self.dither(2)
+        self.wait(2)
         re_shift_vect = 0.5*self.sliders[0].unit_size*DOWN
         self.play(LaggedStart(
             ApplyMethod, self.re_rects,
             lambda m : (m.shift, re_shift_vect),
             path_arc = np.pi
         ))
-        self.dither()
+        self.wait()
         re_words_rect = SurroundingRectangle(self.re_words)
         self.play(ShowCreation(re_words_rect))
-        self.dither()
+        self.wait()
         self.play(FadeOut(re_words_rect))
-        self.dither()
+        self.wait()
 
         self.set_center_point(np.zeros(4))
         self.initialize_ambiant_slider_movement()
-        self.dither(4)
+        self.wait(4)
 
     def compute_inner_radius_numerically(self):
         computation = TexMobject(
@@ -2649,7 +2649,7 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         self.play(LaggedStart(FadeIn, computation, run_time = 3))
         self.play(GrowFromCenter(brace))
         self.play(Write(brace_text, run_time = 2))
-        self.dither(16)
+        self.wait(16)
 
         computation.add(brace, brace_text)
         self.computation = computation
@@ -2664,12 +2664,12 @@ class FourDBoxExampleWithSliders(ThreeDBoxExampleWithSliders):
         arrow.highlight(BLUE)
         arrow.shift(touching_words.get_bottom())
 
-        self.wind_down_ambient_movement(dither = False)
+        self.wind_down_ambient_movement(wait = False)
         self.play(FadeOut(self.computation))
         self.reset_dials([1])
         self.play(Write(touching_words))
         self.play(ShowCreation(arrow))
-        self.dither(2)
+        self.wait(2)
 
 class TwoDInnerSphereTouchingBox(TwoDBoxWithSliders, PiCreatureScene):
     def setup(self):
@@ -2699,7 +2699,7 @@ class TwoDInnerSphereTouchingBox(TwoDBoxWithSliders, PiCreatureScene):
             ShowCreation(little_inner_circle),
             randy.change, "pondering", little_inner_circle
         )
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(
                 little_inner_circle.copy(), big_inner_circle
@@ -2710,16 +2710,16 @@ class TwoDInnerSphereTouchingBox(TwoDBoxWithSliders, PiCreatureScene):
         big_inner_circle.save_state()
         self.play(big_inner_circle.move_to, self.circle)
         self.play(big_inner_circle.restore)
-        self.dither()
+        self.wait()
         self.play(LaggedStart(
             DrawBorderThenFill, tangency_points,
             rate_func = double_smooth
         ))
         self.play(randy.change, "maybe")
         self.play(randy.look_at, self.circle)
-        self.dither()
+        self.wait()
         self.play(randy.look_at, little_inner_circle)
-        self.dither()
+        self.wait()
 
     ####
 
@@ -2769,7 +2769,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
                 self.sliders[0].number_to_point(coords[0]+1)
             )
             self.add(coords_mob)
-            self.dither(0.25)
+            self.wait(0.25)
             self.remove(coords_mob)
         self.add(coords_mob)
         sphere_words.add(coords_mob)
@@ -2777,7 +2777,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
 
         self.initialize_ambiant_slider_movement()
         self.play(FadeOut(n_sphere_words))
-        self.dither(3)
+        self.wait(3)
 
     def show_closest_point(self):
         target_x = 1-np.sqrt(0.2)
@@ -2812,7 +2812,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
             DrawBorderThenFill, re_rects,
             rate_func = double_smooth
         ))
-        self.dither()
+        self.wait()
 
         self.re_rects = re_rects
         self.re_words = re_words
@@ -2843,14 +2843,14 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
             Write(half_label),
             ShowCreation(half_line)
         )
-        self.dither(2)
+        self.wait(2)
         self.add(ghost_dials)
         self.play(*[
             ApplyMethod(slider.set_value, 0.5)
             for slider in self.sliders
         ])
         self.play(Transform(self.re_words[0], point_25))
-        self.dither(2)
+        self.wait(2)
         self.play(*[
             ApplyMethod(slider.set_value, x)
             for x, slider in zip(curr_vector, self.sliders)
@@ -2904,12 +2904,12 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
             ),
             MoveToTarget(self.re_words),
         )
-        self.dither(2)
+        self.wait(2)
 
         self.set_center_point(np.zeros(5))
         self.total_real_estate = (np.sqrt(5)-1)**2
         self.initialize_ambiant_slider_movement()
-        self.dither(12)
+        self.wait(12)
 
     def compute_radius(self):
         computation = TexMobject(
@@ -2919,7 +2919,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
         computation.to_corner(UP+LEFT)
 
         self.play(Write(computation, run_time = 2))
-        self.dither(12)
+        self.wait(12)
 
     def poke_out_of_box(self):
         self.wind_down_ambient_movement(0)
@@ -2939,7 +2939,7 @@ class FiveDBoxExampleWithSliders(FourDBoxExampleWithSliders):
             ShowCreation(arrow),
             Write(words)
         )
-        self.dither(2)
+        self.wait(2)
 
 class SkipAheadTo10(TeacherStudentsScene):
     def construct(self):
@@ -2950,7 +2950,7 @@ class SkipAheadTo10(TeacherStudentsScene):
         self.change_student_modes(
             "pleading", "confused", "horrified"
         )
-        self.dither(3)
+        self.wait(3)
 
 class TenDBoxExampleWithSliders(FiveDBoxExampleWithSliders):
     CONFIG = {
@@ -2973,7 +2973,7 @@ class TenDBoxExampleWithSliders(FiveDBoxExampleWithSliders):
 
     def initial_wandering(self):
         self.initialize_ambiant_slider_movement()
-        self.dither(9)
+        self.wait(9)
 
     def show_closest_point(self):
         target_x = 1-np.sqrt(1./self.n_sliders)
@@ -3001,7 +3001,7 @@ class TenDBoxExampleWithSliders(FiveDBoxExampleWithSliders):
             DrawBorderThenFill, re_rects,
             rate_func = double_smooth
         ))
-        self.dither(2)
+        self.wait(2)
 
         self.re_line = re_line
         self.re_rects = re_rects
@@ -3037,12 +3037,12 @@ class TenDBoxExampleWithSliders(FiveDBoxExampleWithSliders):
                 path_arc = np.pi
             ),
         )
-        self.dither(2)
+        self.wait(2)
 
         self.set_center_point(np.zeros(self.n_sliders))
         self.total_real_estate = (np.sqrt(self.n_sliders)-1)**2
         self.initialize_ambiant_slider_movement()
-        self.dither(5)
+        self.wait(5)
 
     def compute_inner_radius_numerically(self):
         computation = TexMobject(
@@ -3054,7 +3054,7 @@ class TenDBoxExampleWithSliders(FiveDBoxExampleWithSliders):
         self.play(Write(computation, run_time = 2))
 
     def wander_on_inner_sphere(self):
-        self.dither(10)
+        self.wait(10)
 
     def poke_outside_outer_box(self):
         self.wind_down_ambient_movement()
@@ -3076,7 +3076,7 @@ class TenDBoxExampleWithSliders(FiveDBoxExampleWithSliders):
             Write(words, run_time = 2),
             ShowCreation(arrow)
         )
-        self.dither(3)
+        self.wait(3)
 
 class TwoDOuterBox(TwoDInnerSphereTouchingBox):
     def construct(self):
@@ -3096,7 +3096,7 @@ class TwoDOuterBox(TwoDInnerSphereTouchingBox):
             ShowCreation(box),
             self.randy.change, "pondering",
         )
-        self.dither(3)
+        self.wait(3)
 
         self.outer_box = box
 
@@ -3114,7 +3114,7 @@ class ThreeDOuterBoundingBoxWords(Scene):
         words.highlight(MAROON_B)
 
         self.play(Write(words))
-        self.dither(4)
+        self.wait(4)
 
 class FaceDistanceDoesntDependOnDimension(TwoDOuterBox):
     def construct(self):
@@ -3140,7 +3140,7 @@ class FaceDistanceDoesntDependOnDimension(TwoDOuterBox):
             ShowCreation(arrow)
         )
         self.play(self.randy.change, "thinking")
-        self.dither(3)
+        self.wait(3)
 
 class TenDCornerIsVeryFarAway(TenDBoxExampleWithSliders):
     CONFIG = {
@@ -3179,13 +3179,13 @@ class TenDCornerIsVeryFarAway(TenDBoxExampleWithSliders):
             ),
             run_time = 10,
         )
-        self.dither()
+        self.wait()
 
 class InnerRadiusIsUnbounded(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("Inner radius \\\\ is unbounded")
         self.change_student_modes(*["erm"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class ProportionOfSphereInBox(GraphScene):
     CONFIG = {
@@ -3230,9 +3230,9 @@ class ProportionOfSphereInBox(GraphScene):
         footnote.highlight(YELLOW)
 
         self.play(ShowCreation(graph, run_time = 5, rate_func = None))
-        self.dither()
+        self.wait()
         self.add(footnote)
-        self.dither(0.25)
+        self.wait(0.25)
 
 class ShowingToFriend(PiCreatureScene, SliderScene):
     CONFIG = {
@@ -3253,11 +3253,11 @@ class ShowingToFriend(PiCreatureScene, SliderScene):
         morty, randy = self.morty, self.randy
         self.play(morty.change, "raise_right_hand", self.sliders)
         self.play(randy.change, "happy", self.sliders)
-        self.dither(7)
+        self.wait(7)
         self.play(randy.change, "skeptical", morty.eyes)
-        self.dither(3)
+        self.wait(3)
         self.play(randy.change, "thinking", self.sliders)
-        self.dither(6)
+        self.wait(6)
 
     ###
 
@@ -3268,8 +3268,8 @@ class ShowingToFriend(PiCreatureScene, SliderScene):
         self.randy.to_edge(DOWN).shift(4*LEFT)
         return VGroup(self.morty, self.randy)
 
-    def non_blink_dither(self, time = 1):
-        SliderScene.dither(self, time)
+    def non_blink_wait(self, time = 1):
+        SliderScene.wait(self, time)
 
 class QuestionsFromStudents(TeacherStudentsScene):
     def construct(self):
@@ -3278,25 +3278,25 @@ class QuestionsFromStudents(TeacherStudentsScene):
             target_mode = "sassy",
             run_time = 2,
         )
-        self.dither()
+        self.wait()
         self.teacher_says(
             "No less real \\\\ than reals",
             target_mode = "shruggie",
             content_introduction_class = FadeIn,
         )
-        self.dither(2)
+        self.wait(2)
         self.student_says(
             "How do you think \\\\ about volume?",
             student_index = 0,
             content_introduction_class = FadeIn,
         )
-        self.dither()
+        self.wait()
         self.student_says(
             "How do cubes work?",
             student_index = 2,
             run_time = 2,
         )
-        self.dither(2)
+        self.wait(2)
 
 class FunHighDSpherePhenomena(Scene):
     def construct(self):
@@ -3322,7 +3322,7 @@ class FunHighDSpherePhenomena(Scene):
 
         for item in items:
             self.play(LaggedStart(FadeIn, item, run_time = 2))
-        self.dither()
+        self.wait()
 
 class TODOBugOnSurface(TODOStub):
     CONFIG = {
@@ -3354,7 +3354,7 @@ class CoordinateFree(PiCreatureScene):
             target_mode = "hooray"
         ))
         self.play(FadeOut(plane, run_time = 2))
-        self.dither(3)
+        self.wait(3)
 
 class Skeptic(TeacherStudentsScene, SliderScene):
     def setup(self):
@@ -3397,7 +3397,7 @@ class Skeptic(TeacherStudentsScene, SliderScene):
             target_mode = "sassy",
             added_anims = [self.teacher.change, "guilty"]
         )
-        self.dither(2)
+        self.wait(2)
         equation.remove(*variables)
         self.play(ReplacementTransform(variables, slider_labels))
         self.play(
@@ -3406,7 +3406,7 @@ class Skeptic(TeacherStudentsScene, SliderScene):
                 self.students[0], target_mode = "hesitant"
             ),
         )
-        self.dither(4)
+        self.wait(4)
         bubble = self.teacher.get_bubble(
             "It's much \\\\ more playful!",
             bubble_class = SpeechBubble
@@ -3418,7 +3418,7 @@ class Skeptic(TeacherStudentsScene, SliderScene):
             ShowCreation(bubble),
             Write(bubble.content)
         )
-        self.dither(3)
+        self.wait(3)
         self.play(
             RemovePiCreatureBubble(
                 self.teacher, target_mode = "raise_right_hand",
@@ -3441,11 +3441,11 @@ class Skeptic(TeacherStudentsScene, SliderScene):
             self.teacher.change, "happy"
         )
         self.play(ShowCreation(line))
-        self.dither(3)
+        self.wait(3)
 
     #####
-    def non_blink_dither(self, time = 1):
-        SliderScene.dither(self, time)
+    def non_blink_wait(self, time = 1):
+        SliderScene.wait(self, time)
 
 class ClipFrom4DBoxExampleTODO(TODOStub):
     CONFIG = {
@@ -3467,7 +3467,7 @@ class JustBecauseYouCantVisualize(Scene):
                 FadeIn, part,
                 run_time = 0.05*len(part)
             ))
-        self.dither(2)
+        self.wait(2)
 
 class Announcements(TeacherStudentsScene):
     def construct(self):
@@ -3493,7 +3493,7 @@ class Announcements(TeacherStudentsScene):
             for pi in self.pi_creatures
         ])
         self.play(Write(items[1], run_time = 2))
-        self.dither(2)
+        self.wait(2)
 
 class Promotion(PiCreatureScene):
     CONFIG = {
@@ -3513,15 +3513,15 @@ class Promotion(PiCreatureScene):
             self.pi_creature.change, "raise_right_hand"
         )
         self.play(ShowCreation(rect))
-        self.dither(2)
+        self.wait(2)
         self.change_mode("thinking")
-        self.dither()
+        self.wait()
         self.look_at(url)
-        self.dither(10)
+        self.wait(10)
         self.change_mode("happy")
-        self.dither(10)
+        self.wait(10)
         self.change_mode("raise_right_hand")
-        self.dither(10)
+        self.wait(10)
 
         self.remove(rect)
         self.play(
@@ -3530,7 +3530,7 @@ class Promotion(PiCreatureScene):
         url_rect = SurroundingRectangle(url)
         self.play(ShowCreation(url_rect))
         self.play(FadeOut(url_rect))
-        self.dither(3)
+        self.wait(3)
 
 class BrilliantGeometryQuiz(ExternallyAnimatedScene):
     pass
@@ -3556,12 +3556,12 @@ class Podcast(TeacherStudentsScene):
             ), 
             Write(title)
         )
-        self.dither(5)
+        self.wait(5)
         self.play(
             Write(q_and_a),
             self.teacher.change, "raise_right_hand",
         )
-        self.dither(4)
+        self.wait(4)
 
 class HighDPatreonThanks(PatreonThanks):
     CONFIG = {

@@ -133,19 +133,19 @@ class IntroducePutnam(Scene):
             ReplacementTransform(six_hours.copy(), three_hours_copy),
             *map(ShowCreation, rects)
         )
-        self.dither()
+        self.wait()
         self.play(LaggedStart(
             DrawBorderThenFill, out_of_tens,
             run_time = 3,
             stroke_color = YELLOW
         ))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             out_of_tens.copy(), VGroup(out_of_120),
             submobject_mode = "lagged_start",
             run_time = 2,
         ))
-        self.dither()
+        self.wait()
         self.play(
             title.next_to, median_words.copy(), LEFT, LARGE_BUFF,
             MoveToTarget(out_of_120),
@@ -154,7 +154,7 @@ class IntroducePutnam(Scene):
         self.play(Write(median))
         for difficulty in difficulties:
             self.play(FadeIn(difficulty))
-        self.dither()
+        self.wait()
 
 class NatureOf5sAnd6s(TeacherStudentsScene):
     CONFIG = {
@@ -173,7 +173,7 @@ class NatureOf5sAnd6s(TeacherStudentsScene):
                 look_at_arg = test
             )
         )
-        self.dither()
+        self.wait()
 
         mover = VGroup(
             test.questions[-1].copy(),
@@ -196,7 +196,7 @@ class NatureOf5sAnd6s(TeacherStudentsScene):
         self.change_student_modes(*["pondering"]*3)
         self.play(Transform(mover[1], new_words))
         self.look_at((SPACE_WIDTH*RIGHT + SPACE_HEIGHT*UP)/2)
-        self.dither(4)
+        self.wait(4)
 
 
     ###
@@ -225,7 +225,7 @@ class OtherVideoClips(Scene):
                 self.play(ReplacementTransform(last_title, title))
             else:
                 self.play(FadeIn(title))
-            self.dither(3)
+            self.wait(3)
             last_title = title
 
 class IntroduceTetrahedron(ExternallyAnimatedScene):
@@ -246,13 +246,13 @@ class IntroduceTetrahedronSupplement(Scene):
             num.replace(title[0], dim_to_match = 1)
             num.highlight(YELLOW)
             self.add(num)
-            self.dither(0.7)
+            self.wait(0.7)
             self.remove(num)
         self.add(title[0])
         self.play(FadeIn(title[1], submobject_mode = "lagged_start"))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(question))
-        self.dither(2)
+        self.wait(2)
 
 class IntroduceTetrahedronFootnote(Scene):
     def construct(self):
@@ -262,7 +262,7 @@ class IntroduceTetrahedronFootnote(Scene):
         """)
         words.to_corner(UP+LEFT)
         self.add(words)
-        self.dither(2)
+        self.wait(2)
 
 class HowDoYouStart(TeacherStudentsScene):
     def construct(self):
@@ -271,10 +271,10 @@ class HowDoYouStart(TeacherStudentsScene):
             target_mode = "raise_left_hand"
         )
         self.change_student_modes("confused", "raise_left_hand", "erm")
-        self.dither()
+        self.wait()
         self.teacher_says("Try a simpler case.")
         self.change_student_modes(*["thinking"]*3)
-        self.dither(2)
+        self.wait(2)
 
 class TwoDCase(Scene):
     CONFIG = {
@@ -328,7 +328,7 @@ class TwoDCase(Scene):
             rate_func = lambda t : smooth(1-t),
             remover = True
         ))
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(circle, center_dot)
 
@@ -357,17 +357,17 @@ class TwoDCase(Scene):
 
         self.play(LaggedStart(DrawBorderThenFill, point_mobs))
         self.play(FadeIn(triangle))
-        self.dither()
+        self.wait()
         self.play(LaggedStart(Write, point_labels))
-        self.dither()
+        self.wait()
         self.play(Write(question))
         for x in range(self.n_initial_random_choices):
             self.change_point_mobs_randomly()
-            self.dither()
+            self.wait()
         angles = self.get_point_mob_angles()
         target_angles = [5*np.pi/8, 7*np.pi/8, 0]
         self.change_point_mobs([ta - a for a, ta in zip(angles, target_angles)])
-        self.dither()
+        self.wait()
 
     def simplify_further(self):
         morty = Mortimer().flip()
@@ -390,7 +390,7 @@ class TwoDCase(Scene):
             Write(bubble.content)
         )
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
         self.play(
             morty.change, "happy",
             morty.fade, 1,
@@ -424,7 +424,7 @@ class TwoDCase(Scene):
         d_thetas = 2*np.pi*np.random.random(self.n_p3_random_moves)
         for d_theta in d_thetas:
             self.change_point_mobs([0, 0, d_theta])
-            self.dither()
+            self.wait()
 
         self.set_variables_as_attrs(push_pins)
 
@@ -451,7 +451,7 @@ class TwoDCase(Scene):
         )
         self.change_point_mobs([0, 0, np.pi/4 - angles[1]])
         self.change_point_mobs([0, 0, 0.99*np.pi], run_time = 4)
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(all_arcs, arc, arc_lines)
 
@@ -467,21 +467,21 @@ class TwoDCase(Scene):
             self.play(ShowCreation(line))
         self.play(FadeIn(all_arcs), Animation(point_mobs))
         self.remove(self.circle)
-        self.dither()
+        self.wait()
         self.play(
             all_arcs.space_out_submobjects, 1.5,
             Animation(point_mobs),
             rate_func = there_and_back,
             run_time = 1.5,
         )
-        self.dither()
+        self.wait()
         self.change_point_mobs(
             [0, 0, np.mean(angles[:2])+np.pi-angles[2]]
         )
-        self.dither()
+        self.wait()
         for x in range(3):
             self.change_point_mobs([0, 0, np.pi/2])
-        self.dither()
+        self.wait()
 
     def ask_about_probability_p3_lands_in_this_arc(self):
         arc = self.arc
@@ -518,7 +518,7 @@ class TwoDCase(Scene):
             [0, 0, 1.35*np.pi - angles[2]],
             run_time = 0,
         )
-        self.dither()
+        self.wait()
 
         question.add(equals)
         self.arc_prob_question = question
@@ -559,7 +559,7 @@ class TwoDCase(Scene):
         proportion_update = ChangingDecimal(proportion, proportion_update_func)
 
         self.play(ShowCreation(elbow), FadeIn(ninety_degrees))
-        self.dither()
+        self.wait()
         self.play(
             ApplyMethod(
                 arc.rotate_in_place, np.pi/12,
@@ -567,7 +567,7 @@ class TwoDCase(Scene):
             )
         )
         self.play(LaggedStart(FadeIn, proportion, run_time = 1))
-        self.dither()
+        self.wait()
 
         #Non right angles
         angle_pairs = [
@@ -582,7 +582,7 @@ class TwoDCase(Scene):
                 VGroup(elbow, ninety_degrees).fade, 1,
             )
             self.remove(elbow, ninety_degrees)
-            self.dither()
+            self.wait()
 
         self.set_variables_as_attrs(proportion, proportion_update)
 
@@ -602,7 +602,7 @@ class TwoDCase(Scene):
         self.change_point_mobs_to_angles(
             [1.2*np.pi, 0.3*np.pi]
         )
-        self.dither()
+        self.wait()
 
         self.set_variables_as_attrs(brace, average)
 
@@ -637,11 +637,11 @@ class TwoDCase(Scene):
             Animation(point_mobs)
         )
         self.update_animations.append(self.triangle_update)
-        self.have_p3_jump_around_randomly(8, dither_time = 0.25)
+        self.have_p3_jump_around_randomly(8, wait_time = 0.25)
         self.play(ReplacementTransform(
             self.proportion.copy(), VGroup(one_fourth)
         ))
-        self.have_p3_jump_around_randomly(32, dither_time = 0.25)
+        self.have_p3_jump_around_randomly(32, wait_time = 0.25)
 
     #####
 
@@ -801,13 +801,13 @@ class TwoDCase(Scene):
         points = [pm.get_center() - self.center for pm in point_mobs]
         return np.array(map(angle_of_vector, points))
 
-    def have_p3_jump_around_randomly(self, n_jumps, dither_time = 0.75, run_time = 0):
+    def have_p3_jump_around_randomly(self, n_jumps, wait_time = 0.75, run_time = 0):
         for x in range(n_jumps):
             self.change_point_mobs(
                 [0, 0, 2*np.pi*random.random()],
                 run_time = run_time
             )
-            self.dither(dither_time)
+            self.wait(wait_time)
 
 class FixThreePointsOnSphere(ExternallyAnimatedScene):
     pass
@@ -828,18 +828,18 @@ class AverageSizeOfSphericalTriangleSectionSupplement(Scene):
         words.scale_to_fit_width(2*SPACE_WIDTH - 1)
         words.to_edge(DOWN)
         self.play(Write(words))
-        self.dither(3)
+        self.wait(3)
 
 class TryASurfaceIntegral(TeacherStudentsScene):
     def construct(self):
         self.student_says("Can you do \\\\ a surface integral?")
         self.change_student_modes("confused", "raise_left_hand", "confused")
-        self.dither()
+        self.wait()
         self.teacher_says(
             "I mean...you can \\emph{try}",
             target_mode = "sassy",
         )
-        self.dither(2)
+        self.wait(2)
 
 class RevisitTwoDCase(TwoDCase):
     CONFIG = {
@@ -902,7 +902,7 @@ class RevisitTwoDCase(TwoDCase):
         positions = [ORIGIN, RIGHT, LEFT]
         frac.next_to(self.circle, RIGHT, 1.5*LARGE_BUFF)
 
-        def place_random_triangles(n, dither_time):
+        def place_random_triangles(n, wait_time):
             for x in range(n):
                 self.change_point_mobs_randomly(run_time = 0)
                 contain_center = self.points_contain_center(
@@ -921,7 +921,7 @@ class RevisitTwoDCase(TwoDCase):
                 decimal.next_to(frac, RIGHT, SMALL_BUFF)
 
                 self.add(decimal, *nums)
-                self.dither(dither_time)
+                self.wait(wait_time)
                 self.remove(decimal, *nums)
             return VGroup(decimal, *nums)
 
@@ -932,7 +932,7 @@ class RevisitTwoDCase(TwoDCase):
         place_random_triangles(10, 0.25)
         nums = place_random_triangles(self.n_random_trials, 0.05)
         self.add(nums)
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [frac, nums, title]))
 
     def add_lines_and_comment_on_them(self):
@@ -959,13 +959,13 @@ class RevisitTwoDCase(TwoDCase):
             LaggedStart(FadeIn, arcs, run_time = 1),
             Animation(self.point_mobs),
         )
-        self.dither()
+        self.wait()
         self.add(center_line_shadows)
         self.play(MoveToTarget(center_lines))
         self.play(ShowCreation(rect), Write(words1))
-        self.dither(2)
+        self.wait(2)
         self.play(ReplacementTransform(words1, words2))
-        self.dither(2)
+        self.wait(2)
         self.play(
             center_lines.restore,
             center_lines.fade, 1,
@@ -1034,7 +1034,7 @@ class RevisitTwoDCase(TwoDCase):
             ShowCreation(cross), 
             point_label_groups.fade, 1,
         )
-        self.dither()
+        self.wait()
 
         #Choose two random lines
         self.center_lines_update.update(1)
@@ -1051,8 +1051,8 @@ class RevisitTwoDCase(TwoDCase):
             for x in range(6):
                 point_mob.rotate(np.pi, about_point = self.center)
                 self.point_labels_update.update(1)
-                self.dither(0.5)
-            self.dither(0.5)
+                self.wait(0.5)
+            self.wait(0.5)
 
         def choose_p1_and_p2():
             for group in point_label_groups[:2]:
@@ -1100,9 +1100,9 @@ class RevisitTwoDCase(TwoDCase):
             p3_group.restore,
             p3_group.set_fill, YELLOW, 1
         )
-        self.dither()
+        self.wait()
         self.play(Swap(*words[2:4]))
-        self.dither()
+        self.wait()
 
         #Once the continuous randomness is handled
         rect = SurroundingRectangle(VGroup(words[1], words[3]))
@@ -1114,7 +1114,7 @@ class RevisitTwoDCase(TwoDCase):
         self.play(ShowCreation(rect))
         self.play(GrowFromCenter(brace))
         self.play(Write(brace_text))
-        self.dither()
+        self.wait()
 
         self.random_procedure_words = words
 
@@ -1148,7 +1148,7 @@ class RevisitTwoDCase(TwoDCase):
                     *self.update_animations,
                     run_time = np.sqrt(2)/4 #Hacky reasons to be irrational
                 )
-                self.dither()
+                self.wait()
 
         self.revert_to_original_skipping_status()
         do_the_rounds()
@@ -1157,10 +1157,10 @@ class RevisitTwoDCase(TwoDCase):
         self.update_animations.remove(arc_update)
         self.update_animations.remove(second_arc_update)
         self.play(FadeIn(self.triangle))
-        self.dither()
+        self.wait()
         self.update_animations.insert(0, self.triangle_update)
         do_the_rounds()
-        self.dither()
+        self.wait()
         self.change_point_mobs_randomly()
         for x in range(2):
             do_the_rounds()
@@ -1172,7 +1172,7 @@ class ThisIsWhereItGetsGood(TeacherStudentsScene):
             target_mode = "hooray"
         )
         self.change_student_modes(*["hooray"]*3)
-        self.dither(2)
+        self.wait(2)
 
 class ContrastTwoRandomProcesses(TwoDCase):
     CONFIG = {
@@ -1220,7 +1220,7 @@ class ContrastTwoRandomProcesses(TwoDCase):
         self.show_creation_of_circle_group(left_circles)
         self.play(Write(vs))
         self.show_creation_of_circle_group(right_circles)
-        self.dither()
+        self.wait()
 
     def show_creation_of_circle_group(self, group):
         circles = group[:3]
@@ -1272,12 +1272,12 @@ class Rewrite3DRandomProcedure(Scene):
         )
         self.play(FadeIn(words[0]))
         self.play(ShowCreation(cross))
-        self.dither()
+        self.wait()
         self.play(LaggedStart(FadeIn, words[1]))
         self.play(LaggedStart(FadeIn, words[2]))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(words[3]))
-        self.dither(3)
+        self.wait(3)
 
 class AntipodalViewOfThreeDCase(ExternallyAnimatedScene):
     pass
@@ -1293,7 +1293,7 @@ class ThreeDAnswer(Scene):
         words[1].highlight(BLUE)
 
         self.play(Write(words))
-        self.dither(2)
+        self.wait(2)
 
 class FormalWriteupScreenCapture(ExternallyAnimatedScene):
     pass
@@ -1311,7 +1311,7 @@ class Formality(TeacherStudentsScene):
             target_mode = "sassy"
         )
         self.change_student_modes("confused", "sassy", "erm")
-        self.dither()
+        self.wait()
         self.play(
             Write(words),
             FadeOut(self.students[1].bubble),
@@ -1322,7 +1322,7 @@ class Formality(TeacherStudentsScene):
             *["pondering"]*3,
             look_at_arg = words
         )
-        self.dither(8)
+        self.wait(8)
 
 class ProblemSolvingTakeaways(Scene):
     def construct(self):
@@ -1349,10 +1349,10 @@ class ProblemSolvingTakeaways(Scene):
         points.next_to(group, DOWN, LARGE_BUFF)
 
         self.play(Write(title), ShowCreation(underline))
-        self.dither()
+        self.wait()
         for point in points:
             self.play(Write(point))
-            self.dither(3)
+            self.wait(3)
 
 class BrilliantPuzzle(PiCreatureScene):
     CONFIG = {
@@ -1403,7 +1403,7 @@ class BrilliantPuzzle(PiCreatureScene):
                 lambda m : (m.change, "horrified", m.test)
             )
         )
-        self.dither()
+        self.wait()
         self.play(LaggedStart(
             ApplyMethod, students,
             lambda m : (m.change, "conniving")
@@ -1411,13 +1411,13 @@ class BrilliantPuzzle(PiCreatureScene):
         self.play(LaggedStart(ShowCreation, arrows))
         for x in range(2):
             self.swap_arrows_randomly(arrows)
-        self.dither()
+        self.wait()
         circles = self.circle_students()
         self.play(Write(question))
         for x in range(10):
             self.swap_arrows_randomly(arrows, FadeOut(circles))
             circles = self.circle_students()
-            self.dither()
+            self.wait()
 
     ####
 
@@ -1505,15 +1505,15 @@ class Promotion(PiCreatureScene):
             self.pi_creature.change, "raise_right_hand"
         )
         self.play(ShowCreation(rect))
-        self.dither(2)
+        self.wait(2)
         self.change_mode("thinking")
-        self.dither()
+        self.wait()
         self.look_at(url)
-        self.dither(10)
+        self.wait(10)
         self.change_mode("happy")
-        self.dither(10)
+        self.wait(10)
         self.change_mode("raise_right_hand")
-        self.dither(10)
+        self.wait(10)
 
         self.remove(rect)
         self.play(
@@ -1522,7 +1522,7 @@ class Promotion(PiCreatureScene):
         url_rect = SurroundingRectangle(url)
         self.play(ShowCreation(url_rect))
         self.play(FadeOut(url_rect))
-        self.dither(3)
+        self.wait(3)
 
 class AddedPromoWords(Scene):
     def construct(self):
@@ -1536,7 +1536,7 @@ class AddedPromoWords(Scene):
         words.highlight_by_tex("pi", PINK)
 
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
 class PatreonThanks(PatreonEndScreen):
     CONFIG = {

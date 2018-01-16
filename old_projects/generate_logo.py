@@ -70,6 +70,6 @@ class LogoGeneration(Scene):
         self.save_image(IMAGE_DIR)
         self.logo = MobjectFromPixelArray(self.frames[-1])
         self.add(self.name_mob)
-        self.dither()
+        self.wait()
 
 

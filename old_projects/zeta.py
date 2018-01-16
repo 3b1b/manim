@@ -164,7 +164,7 @@ class TestZetaOnHalfPlane(ZetaTransformationScene):
         ]))
         print(len(self.plane.family_members_with_points()))
         self.apply_zeta_function()
-        self.dither()
+        self.wait()
 
 class TestZetaOnFullPlane(ZetaTransformationScene):
     def construct(self):
@@ -180,9 +180,9 @@ class TestZetaOnLine(ZetaTransformationScene):
         self.add_transformable_plane()
         self.plane.submobjects = [line]
         self.apply_zeta_function()
-        self.dither(2)
+        self.wait(2)
         self.play(ShowCreation(line, run_time = 10))
-        self.dither(3)
+        self.wait(3)
 
 ######################
 
@@ -215,16 +215,16 @@ class IntroduceZeta(ZetaTransformationScene):
         reflected_plane = self.get_reflected_plane()
         self.play(ShowCreation(reflected_plane, run_time = 2))
         self.plane.add(reflected_plane)
-        self.dither()
+        self.wait()
         self.apply_zeta_function()
-        self.dither(2)
+        self.wait(2)
         self.play(FadeIn(randy))
         self.play(
             randy.change_mode, "confused",
             randy.look_at, func_mob,
         )
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class WhyPeopleMayKnowIt(TeacherStudentsScene):
     def construct(self):
@@ -261,7 +261,7 @@ class WhyPeopleMayKnowIt(TeacherStudentsScene):
         )
         student = self.get_students()[2]
         self.random_blink()
-        self.dither(2)
+        self.wait(2)
         self.student_thinks(
             divergent_sum, student_index = 1,
             added_anims = [student.change_mode, "plain"]
@@ -276,12 +276,12 @@ class WhyPeopleMayKnowIt(TeacherStudentsScene):
             [pi.change_mode, "confused", pi.look_at, divergent_sum]
             for pi in self.get_pi_creatures()
         ]))
-        self.dither()
+        self.wait()
         self.random_blink()
         divergent_sum[1].highlight(WHITE)
         self.play(Write(divergent_sum[1]))
         self.random_blink()
-        self.dither()
+        self.wait()
 
         #Ask about continuation
         self.student_says(
@@ -299,9 +299,9 @@ class WhyPeopleMayKnowIt(TeacherStudentsScene):
             self.get_teacher().look_at, student.eyes,
         )
         self.random_blink()
-        self.dither(2)
+        self.wait(2)
         self.random_blink()
-        self.dither()
+        self.wait()
 
 class ComplexValuedFunctions(ComplexTransformationScene):
     def construct(self):
@@ -321,13 +321,13 @@ class ComplexValuedFunctions(ComplexTransformationScene):
         f_z.highlight(z_out.get_color())
 
         self.add(z_in, z)
-        self.dither()
+        self.wait()
         self.play(ShowCreation(arrow))
         self.play(
             ShowCreation(z_out),
             Write(f_z)
         )
-        self.dither(2)
+        self.wait(2)
 
 class PreviewZetaAndContinuation(ZetaTransformationScene):
     CONFIG = {
@@ -364,15 +364,15 @@ class PreviewZetaAndContinuation(ZetaTransformationScene):
         reflected_plane.apply_complex_function(zeta)
         reflected_plane.make_smooth()
         reflected_plane.set_stroke(width = 2)
-        self.dither()
+        self.wait()
         self.play(Transform(*titles))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(
             reflected_plane,
             submobject_mode = "all_at_once",
             run_time = 2
         ))
-        self.dither()
+        self.wait()
 
 class AssumeKnowledgeOfComplexNumbers(ComplexTransformationScene):
     def construct(self):
@@ -403,7 +403,7 @@ class AssumeKnowledgeOfComplexNumbers(ComplexTransformationScene):
         text.to_corner(UP+LEFT)
 
         self.play(Write(text[0]))
-        self.dither()
+        self.wait()
         self.play(FadeIn(text[1]))
         self.play(
             ShowCreation(x_line),
@@ -412,9 +412,9 @@ class AssumeKnowledgeOfComplexNumbers(ComplexTransformationScene):
             Write(complex_number_label),
         )
         self.play(Write(text[2]))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(text[3]))
-        self.dither()
+        self.wait()
         self.play(text[3].fade)
 
 class DefineForRealS(PiCreatureScene):
@@ -441,18 +441,18 @@ class DefineForRealS(PiCreatureScene):
         )
         self.remove(pre_zeta_s)
         self.add(zeta_s)
-        self.dither()
+        self.wait()
 
         for count, term in enumerate(sum_terms):
             self.play(FadeIn(term), run_time = 0.5)
             if count%2 == 0:
-                self.dither()
+                self.wait()
         self.play(
             GrowFromCenter(brace),
             Write(sigma),
             self.pi_creature.change_mode, "pondering"
         )
-        self.dither()
+        self.wait()
 
     def plug_in_two(self, zeta_def):
         two_def = self.get_definition("2")[0]
@@ -496,7 +496,7 @@ class DefineForRealS(PiCreatureScene):
         approx.next_to(pi_term)
 
         self.play(Transform(zeta_def, two_def))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(number_line))
 
         for frac, brace, line in zip(fracs, braces, lines):
@@ -506,24 +506,24 @@ class DefineForRealS(PiCreatureScene):
                 ShowCreation(line),
                 run_time = 0.7
             )
-            self.dither(0.7)
-        self.dither()
+            self.wait(0.7)
+        self.wait()
         self.play(
             ShowCreation(VGroup(*lines[4:])),
             Write(dots)
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(pi_term),
             ShowCreation(VGroup(pi_arrow, pi_dot)),
             self.pi_creature.change_mode, "hooray"
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(approx),
             self.pi_creature.change_mode, "happy"
         )
-        self.dither(3)
+        self.wait(3)
         self.play(*map(FadeOut, [
             fracs, pi_arrow, pi_dot, approx,
         ]))
@@ -538,7 +538,7 @@ class DefineForRealS(PiCreatureScene):
         sum_terms, brace, sigma = zeta_def[1:]
         for exponent, final_sum in zip([3, 4], final_sums):
             self.transition_to_new_input(zeta_def, exponent, final_sum)
-            self.dither()
+            self.wait()
 
         arrow = Arrow(sum_terms.get_left(), sum_terms.get_right())
         arrow.next_to(sum_terms, DOWN)
@@ -546,13 +546,13 @@ class DefineForRealS(PiCreatureScene):
         smaller_words.next_to(arrow, DOWN)
         self.arrow, self.smaller_words = arrow, smaller_words
 
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(arrow),
             Write(smaller_words)
         )
         self.change_mode("happy")
-        self.dither(2)
+        self.wait(2)
 
     def plug_in_negative_values(self, zeta_def):
         zeta_s, sum_terms, brace, sigma = zeta_def
@@ -583,7 +583,7 @@ class DefineForRealS(PiCreatureScene):
             Transform(smaller_words, bigger_words),
             self.final_sum.next_to, new_sum_terms, RIGHT
         )
-        self.dither(3)
+        self.wait(3)
 
         #plug in -2
         new_sum_terms = TexMobject(
@@ -605,9 +605,9 @@ class DefineForRealS(PiCreatureScene):
             Transform(self.lines, lines),
             Transform(self.braces, braces),
         )
-        self.dither()
+        self.wait()
         self.change_mode("pleading")
-        self.dither(2)
+        self.wait(2)
 
     def get_definition(self, input_string, input_color = YELLOW):
         inputs = VGroup()
@@ -739,7 +739,7 @@ class ReadIntoZetaFunction(Scene):
         )
         self.play(Blink(randy))
         self.play(randy.look_at, statement)
-        self.dither()
+        self.wait()
 
 class ReadIntoZetaFunctionTrivialZero(ReadIntoZetaFunction):
     CONFIG = {
@@ -804,7 +804,7 @@ class RiemannFatherOfComplex(ComplexTransformationScene):
 
         self.add(photo)
         self.play(Write(name))
-        self.dither()
+        self.wait()
 
         input_dot = Dot(2*RIGHT+UP, color = YELLOW)
         arc = Arc(-2*np.pi/3)
@@ -830,7 +830,7 @@ class RiemannFatherOfComplex(ComplexTransformationScene):
             ShowCreation(output_dot),
             Write(output_dot.label)
         )
-        self.dither()
+        self.wait()
 
 class FromRealToComplex(ComplexTransformationScene):
     CONFIG = {
@@ -886,7 +886,7 @@ class FromRealToComplex(ComplexTransformationScene):
         two = zeta[1][2].copy()
         sum_term = zeta[-1]
         self.add(number_line, *zeta[:-1])
-        self.dither()
+        self.wait()
         self.play(Transform(two, input_dot))
         self.remove(two)
         self.add(input_dot)
@@ -895,7 +895,7 @@ class FromRealToComplex(ComplexTransformationScene):
         self.play(Transform(output_dot.copy(), sum_term))
         self.remove(*self.get_mobjects_from_last_animation())
         self.add(sum_term)
-        self.dither(2)
+        self.wait(2)
         self.play(
             ShowCreation(
                 self.background,
@@ -905,7 +905,7 @@ class FromRealToComplex(ComplexTransformationScene):
             Animation(zeta),
             Animation(input_dot)
         )
-        self.dither(2)
+        self.wait(2)
 
         self.zeta = zeta
         self.input_dot = input_dot
@@ -927,12 +927,12 @@ class FromRealToComplex(ComplexTransformationScene):
         self.input_label = input_label
 
         self.play(Transform(self.zeta, complex_zeta))
-        self.dither()
+        self.wait()
         self.play(
             input_label.restore,
             MoveToTarget(input_dot)
         )
-        self.dither(2)
+        self.wait(2)
 
     def single_out_complex_exponent(self):
         frac_scale_factor = 1.2
@@ -979,16 +979,16 @@ class FromRealToComplex(ComplexTransformationScene):
         self.play(Transform(frac, new_frac))
         self.play(Write(words))
         for x in range(2):
-            self.dither(2)
+            self.wait(2)
             self.play(Blink(randy))
         self.play(
             Transform(words, new_words),
             randy.change_mode, "maybe"
         )
-        self.dither()
+        self.wait()
         self.play(Blink(randy))
         self.play(randy.change_mode, "happy")
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [randy, bubble, frac, words]))
 
     def show_s_equals_two_lines(self):
@@ -1017,9 +1017,9 @@ class FromRealToComplex(ComplexTransformationScene):
             self.play(line.restore)
         later_lines = VGroup(*lines[4:])
         transform_and_replace(dots_copy, later_lines)
-        self.dither()
+        self.wait()
         transform_and_replace(pi_copy, output_dot)
-        self.dither()
+        self.wait()
 
         self.lines = lines
         self.output_dot = output_dot
@@ -1034,23 +1034,23 @@ class FromRealToComplex(ComplexTransformationScene):
             self.input_dot.shift, 2*UP,
             self.input_label.restore,
         )
-        self.dither()
+        self.wait()
         self.play(Transform(self.zeta, zeta))
-        self.dither()
+        self.wait()
         self.play(
             Transform(self.lines, lines),
             Transform(self.output_dot, output_dot),
             run_time = 2,
             path_arc = -np.pi/6,
         )
-        self.dither()
+        self.wait()
 
     def vary_complex_input(self):
         zeta = self.get_zeta_definition("s", "")
         zeta[3].highlight(BLACK)
         self.play(Transform(self.zeta, zeta))
         self.play(FadeOut(self.input_label))
-        self.dither(2)
+        self.wait(2)
         inputs = [
             complex(1.5, 1.8),
             complex(1.5, -1),
@@ -1070,8 +1070,8 @@ class FromRealToComplex(ComplexTransformationScene):
                 Transform(self.output_dot, output_dot),
                 run_time = 2
             )
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
 
     def show_domain_of_convergence(self, opacity = 0.2):
         domain = Rectangle(
@@ -1106,10 +1106,10 @@ class FromRealToComplex(ComplexTransformationScene):
 
         self.play(FadeIn(domain))
         self.play(Write(domain_words))
-        self.dither()
+        self.wait()
         self.play(FadeIn(anti_domain))
         self.play(Write(anti_domain_words))
-        self.dither(2)
+        self.wait(2)
         self.play(*map(FadeOut, [
             anti_domain, anti_domain_words,
         ]))
@@ -1133,7 +1133,7 @@ class FromRealToComplex(ComplexTransformationScene):
             Write(bubble.content)
         )
         self.play(Blink(morty))
-        self.dither(3)
+        self.wait(3)
         self.play(
             morty.change_mode, "pondering",
             morty.look_at, self.input_dot,
@@ -1145,7 +1145,7 @@ class FromRealToComplex(ComplexTransformationScene):
         arrow.highlight(WHITE)
         self.play(ShowCreation(arrow))
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
     def get_zeta_definition(self, input_string, output_string, input_color = YELLOW):
         inputs = VGroup()
@@ -1278,7 +1278,7 @@ class ComplexExponentiation(Scene):
         VGroup(brace, we_understand).highlight(GREEN_B)
 
         self.add(original)
-        self.dither()
+        self.wait()
         self.play(*[
             Transform(*pair)
             for pair in [
@@ -1290,18 +1290,18 @@ class ComplexExponentiation(Scene):
         ])
         self.remove(*self.get_mobjects_from_last_animation())
         self.add(real_part, imag_part)
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(brace),
             FadeIn(we_understand),
             real_part.highlight, GREEN_B
         )
-        self.dither()
+        self.wait()
         self.play(
             imag_part.move_to, imag_part.get_left(),
             *map(FadeOut, [brace, we_understand, real_part])
         )
-        self.dither()
+        self.wait()
         self.imag_exponent = imag_part
 
     def add_on_planes(self):
@@ -1360,7 +1360,7 @@ class ComplexExponentiation(Scene):
             run_time = 3
         )
         self.play(ShowCreation(arrow))
-        self.dither()
+        self.wait()
         self.left_plane = left_plane
         self.right_plane = right_plane
 
@@ -1406,15 +1406,15 @@ class ComplexExponentiation(Scene):
         self.play(Transform(exp, new_exp))
         self.play(input_dot.shift, 2*UP)
         self.play(input_dot.shift, 2*DOWN)
-        self.dither()
+        self.wait()
         self.play(output_dot.restore)
-        self.dither()
+        self.wait()
         walk_up_and_down()
-        self.dither()
+        self.wait()
         curr_base = 1./9
         self.play(Transform(denom, nine))
         walk_up_and_down()
-        self.dither()
+        self.wait()
 
     def z_to_point(self, z, is_input = True):
         if is_input:
@@ -1443,7 +1443,7 @@ class SizeAndRotationBreakdown(Scene):
         rotation = rotation_brace.get_text("Rotation")
 
         self.add(original)
-        self.dither()
+        self.wait()
         self.play(*[
             Transform(*pair)
             for pair in [
@@ -1461,7 +1461,7 @@ class SizeAndRotationBreakdown(Scene):
             GrowFromCenter(rotation_brace),
             Write(rotation)
         )
-        self.dither()
+        self.wait()
 
 class SeeLinksInDescription(TeacherStudentsScene):
     def construct(self):
@@ -1495,7 +1495,7 @@ class ShowMultiplicationOfRealAndImaginaryExponentialParts(FromRealToComplex):
         imag_part = VGroup(*split[2:])
 
         self.add(rect, original)
-        self.dither()
+        self.wait()
         self.play(*[
             Transform(*pair)
             for pair in [
@@ -1507,7 +1507,7 @@ class ShowMultiplicationOfRealAndImaginaryExponentialParts(FromRealToComplex):
         ])
         self.remove(*self.get_mobjects_from_last_animation())
         self.add(real_part, imag_part)
-        self.dither()
+        self.wait()
         self.real_part = real_part
         self.imag_part = imag_part
 
@@ -1551,7 +1551,7 @@ class ShowMultiplicationOfRealAndImaginaryExponentialParts(FromRealToComplex):
             GrowFromCenter(brace),
             ShowCreation(fourth_line),
         )
-        self.dither()
+        self.wait()
         self.play(
             imag_part.scale, 0.7,
             imag_part.next_to, imag_power_dot, DOWN+RIGHT, SMALL_BUFF,
@@ -1559,7 +1559,7 @@ class ShowMultiplicationOfRealAndImaginaryExponentialParts(FromRealToComplex):
         )
         self.play(ShowCreation(circle), Animation(imag_power_dot))
         self.play(ShowCreation(imag_power_line))
-        self.dither(2)
+        self.wait(2)
         self.play(
             fourth_group.rotate, imag_power_line.get_angle()
         )
@@ -1568,7 +1568,7 @@ class ShowMultiplicationOfRealAndImaginaryExponentialParts(FromRealToComplex):
         real_part.target.next_to(brace, UP+RIGHT, buff = 0)
         imag_part.target.next_to(real_part.target, buff = 0)
         self.play(*map(MoveToTarget, [real_part, imag_part]))
-        self.dither()
+        self.wait()
 
 class ComplexFunctionsAsTransformations(ComplexTransformationScene):
     def construct(self):
@@ -1585,8 +1585,8 @@ class ComplexFunctionsAsTransformations(ComplexTransformationScene):
                 Transform(in_dot.copy(), out_dot),
                 ShowCreation(arrow)
             )
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
 
 
     def add_title(self):
@@ -1653,7 +1653,7 @@ class VisualizingSSquared(ComplexTransformationScene):
         title.to_corner(UP+LEFT)
         self.play(Write(title))
         self.add_foreground_mobject(title)
-        self.dither()
+        self.wait()
         self.title = title
 
     def plug_in_specific_values(self):
@@ -1695,10 +1695,10 @@ class VisualizingSSquared(ComplexTransformationScene):
             input_dot.set_fill(opacity = 0)
 
             self.play(input_dot.restore)
-            self.dither()
+            self.wait()
             self.play(ShowCreation(arrow))
             self.play(ShowCreation(output_dot))
-            self.dither()
+            self.wait()
         self.add_foreground_mobjects(arrows, output_dots, input_dots)
         self.input_dots = input_dots
         self.output_dots = output_dots
@@ -1717,7 +1717,7 @@ class VisualizingSSquared(ComplexTransformationScene):
         self.add_transformable_plane()
         self.play(ShowCreation(self.plane, run_time = 3))
 
-        self.dither()
+        self.wait()
         self.apply_complex_homotopy(
             lambda z, t : z**(1+t),
             added_anims = [
@@ -1726,7 +1726,7 @@ class VisualizingSSquared(ComplexTransformationScene):
             ],
             run_time = 5
         )
-        self.dither(2)
+        self.wait(2)
 
 
     def comment_on_two_dimensions(self):
@@ -1748,7 +1748,7 @@ class VisualizingSSquared(ComplexTransformationScene):
             Write(bubble.content),
         )
         self.play(Blink(morty))
-        self.dither(2)
+        self.wait(2)
 
 class ShowZetaOnHalfPlane(ZetaTransformationScene):
     CONFIG = {
@@ -1784,12 +1784,12 @@ class ShowZetaOnHalfPlane(ZetaTransformationScene):
 
     def initial_transformation(self):
         self.add_transformable_plane()
-        self.dither()
+        self.wait()
         self.add_extra_plane_lines_for_zeta(animate = True)
-        self.dither(2)
+        self.wait(2)
         self.plane.save_state()
         self.apply_zeta_function()
-        self.dither(2)
+        self.wait(2)
 
     def react_to_transformation(self):
         morty = Mortimer().flip()
@@ -1808,7 +1808,7 @@ class ShowZetaOnHalfPlane(ZetaTransformationScene):
         )
         self.play(Blink(morty))
         self.play(morty.look_at, self.plane.get_top())
-        self.dither()
+        self.wait()
         self.play(
             morty.look_at, self.plane.get_bottom(),
             *map(FadeOut, [bubble, bubble.content])
@@ -1840,7 +1840,7 @@ class ShowZetaOnHalfPlane(ZetaTransformationScene):
             run_time = 2
         )
         self.play(FadeOut(arrows[0]))
-        self.dither(2)
+        self.wait(2)
         self.play(*map(FadeOut, [words, line]))
 
     def highlight_i_line(self):
@@ -1869,17 +1869,17 @@ class ShowZetaOnHalfPlane(ZetaTransformationScene):
         right_i_lines.set_stroke(YELLOW, width = 3)
         self.play(ShowCreation(right_i_lines))
         self.plane.save_state()
-        self.dither(2)
+        self.wait(2)
         self.apply_zeta_function()
-        self.dither(2)
+        self.wait(2)
 
         left_i_lines.save_state()
         left_i_lines.apply_complex_function(zeta)
         self.play(ShowCreation(left_i_lines, run_time = 5))
-        self.dither()
+        self.wait()
         self.restore_mobjects(self.plane, left_i_lines)
         self.play(Transform(self.plane, colored_plane))
-        self.dither()
+        self.wait()
         self.left_i_lines = left_i_lines
 
     def show_continuation(self):
@@ -1887,15 +1887,15 @@ class ShowZetaOnHalfPlane(ZetaTransformationScene):
         self.play(ShowCreation(reflected_plane, run_time = 2))
         self.plane.add(reflected_plane)
         self.remove(self.left_i_lines)
-        self.dither()
+        self.wait()
         self.apply_zeta_function()
-        self.dither(2)
+        self.wait(2)
         self.play(ShowCreation(
             reflected_plane,
             run_time = 6,
             rate_func = lambda t : 1-there_and_back(t)
         ))
-        self.dither(2)
+        self.wait(2)
 
     def emphsize_sum_doesnt_make_sense(self):
         brace = Brace(VGroup(*self.zeta[1][3:]))
@@ -1914,9 +1914,9 @@ class ShowZetaOnHalfPlane(ZetaTransformationScene):
             GrowFromCenter(brace),
             Write(words)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(Write(divergent_sum))
-        self.dither(2)
+        self.wait(2)
 
     def restore_mobjects(self, *mobjects):
         self.play(*it.chain(*[
@@ -1950,14 +1950,14 @@ class ShowConditionalDefinition(Scene):
         sigma.save_state()
         sigma.next_to(zeta)
         self.add(zeta, sigma)
-        self.dither()
+        self.wait()
         self.play(
             sigma.restore,
             GrowFromCenter(brace),
             FadeIn(something_else)
         )
         self.play(Write(conditions))
-        self.dither()
+        self.wait()
 
         underbrace = Brace(something_else)
         question = underbrace.get_text("""
@@ -1970,7 +1970,7 @@ class ShowConditionalDefinition(Scene):
             Write(question),
             something_else.highlight, GREEN_B
         )
-        self.dither(2)
+        self.wait(2)
 
 class SquiggleOnExtensions(ZetaTransformationScene):
     CONFIG = {
@@ -2022,7 +2022,7 @@ class SquiggleOnExtensions(ZetaTransformationScene):
 
         self.play(Write(label, run_time = 1))
         self.play(*map(ShowCreation, [arrow, dot]))
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [arrow, label]))
         return dot
 
@@ -2084,18 +2084,18 @@ class SquiggleOnExtensions(ZetaTransformationScene):
                 Transform(self.dot, dot),
                 run_time = 3
             )
-            self.dither()
+            self.wait()
         self.play(FadeOut(self.dot))
 
         #Squiggle on example
-        self.dither()
+        self.wait()
         self.play(FadeOut(self.left_plane))
         self.play(ShowCreation(
             self.left_plane,
             run_time = 5,
             rate_func = None
         ))
-        self.dither()
+        self.wait()
 
     def lock_into_place(self):
         words = TextMobject(
@@ -2112,7 +2112,7 @@ class SquiggleOnExtensions(ZetaTransformationScene):
         self.play(Write(words))
         self.add_foreground_mobjects(words)
         self.play(self.left_plane.restore)
-        self.dither()
+        self.wait()
 
 class DontKnowDerivatives(TeacherStudentsScene):
     def construct(self):
@@ -2167,11 +2167,11 @@ class IntroduceAnglePreservation(VisualizingSSquared):
         self.add_transformable_plane()
         self.play(Write(title))
         self.add_foreground_mobjects(title)
-        self.dither()
+        self.wait()
 
     def show_initial_transformation(self):
         self.apply_function()
-        self.dither(2)
+        self.wait(2)
         self.reset()
 
     def talk_about_derivative(self):
@@ -2196,7 +2196,7 @@ class IntroduceAnglePreservation(VisualizingSSquared):
             Write(randy.bubble.content)
         )
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
         self.play(
             morty.change_mode, "speaking",
             randy.change_mode, "pondering",
@@ -2204,7 +2204,7 @@ class IntroduceAnglePreservation(VisualizingSSquared):
             Write(morty.bubble.content),
         )
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [
             randy, morty,
             randy.bubble, randy.bubble.content,
@@ -2243,12 +2243,12 @@ class IntroduceAnglePreservation(VisualizingSSquared):
             intersection_inputs
         ))
         self.apply_function()
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(brackets, run_time = 5),
             Animation(self.plane)
         )
-        self.dither()
+        self.wait()
 
     def name_analytic(self):
         equiv = TextMobject("``Analytic'' $\\Leftrightarrow$ Angle-preserving")
@@ -2262,9 +2262,9 @@ class IntroduceAnglePreservation(VisualizingSSquared):
         VGroup(equiv, kind_of).next_to(ORIGIN, UP, buff = 1)
 
         self.play(Write(equiv))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(kind_of, run_time = 1))
-        self.dither(2)
+        self.wait(2)
 
     def reset(self, faded = True):
         self.play(FadeOut(self.plane))
@@ -2329,7 +2329,7 @@ class IntroduceAnglePreservation(VisualizingSSquared):
             ShowCreation(angle_arrow),
             ShowCreation(arc)
         )
-        self.dither()
+        self.wait()
 
         self.play(FadeOut(angle_group))
         self.plane.add(*lines)
@@ -2343,7 +2343,7 @@ class IntroduceAnglePreservation(VisualizingSSquared):
             Write(angle_tex),
             ShowCreation(arrow)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(*map(FadeOut, [arc, angle_tex, arrow]))
 
     def put_angle_tex_next_to_arc(self, angle_tex, arc):
@@ -2383,7 +2383,7 @@ class AngleAtZeroDerivativePoints(IntroduceAnglePreservation):
         self.show_angle_preservation_between_lines(
             line, line.copy().rotate(np.pi/5)
         )
-        self.dither()
+        self.wait()
 
     def add_title(self):
         title = TexMobject("f(", "s", ")=", "s", "^2")
@@ -2427,7 +2427,7 @@ class AnglePreservationAtAnyPairOfPoints(IntroduceAnglePreservation):
                 run_time = 2,
                 path_arc = np.pi
             ))
-            self.dither()
+            self.wait()
         self.show_angle_preservation_between_lines(*line_pair)
         self.show_example_analytic_functions()
 
@@ -2471,7 +2471,7 @@ class AnglePreservationAtAnyPairOfPoints(IntroduceAnglePreservation):
         self.play(Write(words))
         for function in functions:
             self.play(FadeIn(function))
-        self.dither()
+        self.wait()
 
 class NoteZetaFunctionAnalyticOnRightHalf(ZetaTransformationScene):
     CONFIG = {
@@ -2506,7 +2506,7 @@ class NoteZetaFunctionAnalyticOnRightHalf(ZetaTransformationScene):
             intersection_inputs
         ))
         self.play(ShowCreation(brackets, run_time = 3))
-        self.dither()
+        self.wait()
 
     def get_right_angle_bracket(self, input_z):
         output_z = zeta(input_z)
@@ -2555,14 +2555,14 @@ class InfiniteContinuousJigsawPuzzle(ZetaTransformationScene):
         for word in title:
             word.add_to_back(BackgroundRectangle(word))
             self.play(FadeIn(word))
-        self.dither()
+        self.wait()
         self.add_foreground_mobjects(title)
         self.title = title
 
     def show_jigsaw(self):
         for piece in self.pieces:
             self.play(FadeIn(piece, run_time = 0.5))
-        self.dither()
+        self.wait()
 
     def name_analytic_continuation(self):
         words = TextMobject("``Analytic continuation''")
@@ -2571,7 +2571,7 @@ class InfiniteContinuousJigsawPuzzle(ZetaTransformationScene):
         words.next_to(self.title, DOWN, buff = LARGE_BUFF)
         words.add_background_rectangle()
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
 class ThatsHowZetaIsDefined(TeacherStudentsScene):
     def construct(self):
@@ -2748,7 +2748,7 @@ class MathematiciansLookingAtFunctionEquation(Scene):
         ))
         for mathy in mathys:
             self.play(Blink(mathy))
-        self.dither()
+        self.wait()
 
 class DiscussZeros(ZetaTransformationScene):
     def construct(self):
@@ -2790,7 +2790,7 @@ class DiscussZeros(ZetaTransformationScene):
         for mob in dots, arrows, q_marks:
             self.play(ShowCreation(mob))
         self.play(Write(question))
-        self.dither(2)
+        self.wait(2)
         dots.generate_target()
         for i, dot in enumerate(dots.target):
             dot.move_to(2*(i+1)*LEFT)
@@ -2800,7 +2800,7 @@ class DiscussZeros(ZetaTransformationScene):
             FadeOut(question),
             MoveToTarget(dots),
         )
-        self.dither()
+        self.wait()
         self.dots = dots
 
     def show_trivial_zeros(self):
@@ -2824,7 +2824,7 @@ class DiscussZeros(ZetaTransformationScene):
             added_anims = [MoveToTarget(self.dots, run_time = 3)],
             run_time = 3
         )
-        self.dither(3)
+        self.wait(3)
         self.play(
             self.plane.restore,
             self.plane.make_smooth,
@@ -2837,7 +2837,7 @@ class DiscussZeros(ZetaTransformationScene):
         self.add(self.plane, self.dots)
 
         self.play(Write(trivial_zero_words))
-        self.dither()
+        self.wait()
         self.play(FadeIn(randy))
         self.play(
             randy.change_mode, "confused",
@@ -2845,7 +2845,7 @@ class DiscussZeros(ZetaTransformationScene):
             Write(bubble.content)
         )
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(Blink(randy))
         self.play(*map(FadeOut, [
             randy, bubble, bubble.content, trivial_zero_words
@@ -2904,7 +2904,7 @@ class DiscussZeros(ZetaTransformationScene):
         )
         self.play(Transform(self.dots, new_dots))
         self.play(ShowCreation(critical_line))
-        self.dither(3)
+        self.wait(3)
         self.play(
             photo.shift, 7*LEFT,
             *map(FadeOut, [
@@ -2953,14 +2953,14 @@ class DiscussZeros(ZetaTransformationScene):
             rate_func = there_and_back,
             run_time = 2
         )
-        self.dither()
+        self.wait()
         self.play(
             self.plane.set_stroke, GREY, 1,
             Animation(self.critical_line)
         )
         self.plane.add(self.critical_line)
         self.apply_zeta_function()
-        self.dither(2)
+        self.wait(2)
         self.play(
             self.plane.fade,
             Animation(self.critical_line)
@@ -2978,7 +2978,7 @@ class DiscussZeros(ZetaTransformationScene):
             YELLOW, BLUE, GREEN, RED, YELLOW, BLUE, GREEN, RED,
         )
         self.play(ShowCreation(full_line, run_time = 20, rate_func = None))
-        self.dither()
+        self.wait()
 
 class AskAboutRelationToPrimes(TeacherStudentsScene):
     def construct(self):
@@ -3037,13 +3037,13 @@ class HighlightCriticalLineAgain(DiscussZeros):
         )
         self.play(FadeOut(arrow1))
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(randy.look_at, line.get_center())
         self.play(randy.change_mode, "confused")
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(randy.change_mode, "pondering")
-        self.dither()
+        self.wait()
 
 class DiscussSumOfNaturals(Scene):
     def construct(self):
@@ -3085,21 +3085,21 @@ class DiscussSumOfNaturals(Scene):
         words.next_to(brace, DOWN)
 
         self.add(neg_twelfth, eq, zeta_neg_1, randy, title)
-        self.dither()
+        self.wait()
         self.play(
             Write(sum_naturals),
             Write(q_mark),
             randy.change_mode, "confused"
         )
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(randy.change_mode, "angry")
         self.play(
             ShowCreation(sum_to_zeta),
             Write(cross)
         )
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(
             Transform(sum_to_zeta, sum_to_ac),
             FadeOut(cross),
@@ -3109,16 +3109,16 @@ class DiscussSumOfNaturals(Scene):
         )
         self.play(ShowCreation(ac_to_zeta))
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(brace),
             Write(words[0]),
             randy.look_at, words[0],
         )
-        self.dither()
+        self.wait()
         self.play(FadeIn(words[1]))
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class InventingMathPreview(Scene):
     def construct(self):
@@ -3134,7 +3134,7 @@ class InventingMathPreview(Scene):
             Write(title)
         )
         self.play(Write(sum_tex))
-        self.dither()
+        self.wait()
 
 class FinalAnimationTease(Scene):
     def construct(self):
@@ -3153,7 +3153,7 @@ class FinalAnimationTease(Scene):
             Write(bubble.content)
         )
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
 class PatreonThanks(Scene):
     CONFIG = {
@@ -3214,7 +3214,7 @@ class PatreonThanks(Scene):
         for patrons in left_patrons, right_patrons:
             for index in 0, -1:
                 self.play(morty.look_at, patrons[index])
-                self.dither()
+                self.wait()
 
 class CreditTwo(Scene):
     def construct(self):
@@ -3242,16 +3242,16 @@ class CreditTwo(Scene):
         )
         self.play(morty.change_mode, "happy")
         for x in range(4):
-            self.dither()
+            self.wait()
             self.play(Blink(morty))
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(brother),
             morty.look_at, brother.eyes
         )
         self.play(brother.change_mode, "surprised")
         self.play(Blink(brother))
-        self.dither()
+        self.wait()
         self.play(
             morty.look, LEFT,
             brother.change_mode, "happy",
@@ -3259,9 +3259,9 @@ class CreditTwo(Scene):
         )
         for x in range(10):
             self.play(Blink(morty))
-            self.dither()
+            self.wait()
             self.play(Blink(brother))
-            self.dither()
+            self.wait()
 
 class FinalAnimation(ZetaTransformationScene):
     CONFIG = {
@@ -3279,9 +3279,9 @@ class FinalAnimation(ZetaTransformationScene):
 
         self.play(Write(title))
         self.add_foreground_mobjects(title)
-        self.dither()
+        self.wait()
         self.apply_complex_function(d_zeta, run_time = 8)
-        self.dither()
+        self.wait()
 
 class Thumbnail(ZetaTransformationScene):
     CONFIG = {
@@ -3358,4 +3358,4 @@ class ZetaPartialSums(ZetaTransformationScene):
                 Transform(self.plane, plane),
                 Transform(symbol, sigma)
             )
-            self.dither()
+            self.wait()

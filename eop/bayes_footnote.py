@@ -80,7 +80,7 @@ class Introduction(TeacherStudentsScene):
             example.scale, 0.5,
             example.next_to, self.teacher.get_corner(UP+LEFT), UP,
         )
-        self.dither(2)
+        self.wait(2)
 
         self.example = example
 
@@ -106,7 +106,7 @@ class Introduction(TeacherStudentsScene):
         self.play(Write(arrow))
         self.play(ShowCreation(cross))
         self.change_student_modes(*["confused"]*3)
-        self.dither(2)
+        self.wait(2)
 
         self.bayes_to_intuition = group
 
@@ -119,7 +119,7 @@ class Introduction(TeacherStudentsScene):
             target_mode = "hooray",
             added_anims = [disease_group.to_corner, UP+LEFT]
         )
-        self.dither(2)
+        self.wait(2)
 
         self.disease_group = disease_group
 
@@ -156,11 +156,11 @@ class Introduction(TeacherStudentsScene):
 
         for example in examples:
             self.play(FadeIn(example))
-            self.dither()
+            self.wait()
         self.play(GrowFromCenter(brace))
         self.play(FadeIn(bayes_to_intuition))
         self.play(Write(check))
-        self.dither(2)
+        self.wait(2)
 
         self.intuitive_examples = VGroup(
             examples, brace, bayes_to_intuition, check
@@ -199,7 +199,7 @@ class Introduction(TeacherStudentsScene):
             "erm", "confused", "hesitant",
             added_anims = [self.teacher.change_mode, "happy"]
         )
-        self.dither(3)
+        self.wait(3)
 
 
     #####
@@ -293,7 +293,7 @@ class OneInOneThousandHaveDisease(Scene):
             Write(title),
             LaggedStart(FadeIn, all_creatures, run_time = 3)
         )
-        self.dither()
+        self.wait()
 
 class TestScene(PiCreatureScene):
     def get_result(self, creature, word, color):
@@ -341,7 +341,7 @@ class TestDiseaseCase(TestScene):
         self.play(FadeIn(result[0]))
         self.play(Write(result[1]))
         self.play(FadeIn(accuracy))
-        self.dither()
+        self.wait()
 
 class TestNonDiseaseCase(TestScene):
     def construct(self):
@@ -397,7 +397,7 @@ class TestNonDiseaseCase(TestScene):
         )
         for x in range(2):
             self.play(Blink(last_guy))
-            self.dither(2)
+            self.wait(2)
 
 class ReceivePositiveResults(TestScene):
     def construct(self):
@@ -412,17 +412,17 @@ class ReceivePositiveResults(TestScene):
 
         self.add(status, randy)
         self.play(FadeIn(result[0]))
-        self.dither()
+        self.wait()
         self.play(Write(result[1]))
         self.play(randy.change, "maybe", result)
-        self.dither(2)
+        self.wait(2)
         self.play(
             randy.change, "pleading", accuracy,
             Write(accuracy, run_time = 1)
         )
-        self.dither()
+        self.wait()
         self.play(randy.change, "sad", accuracy)
-        self.dither(2)
+        self.wait(2)
 
 class AskAboutRephrasingQuestion(TeacherStudentsScene):
     def construct(self):
@@ -430,7 +430,7 @@ class AskAboutRephrasingQuestion(TeacherStudentsScene):
             "What if we rephrased \\\\ the question?",
             run_time = 1
         )
-        self.dither(3)
+        self.wait(3)
 
 class RephraseQuestion(Scene):
     def construct(self):
@@ -466,16 +466,16 @@ class RephraseQuestion(Scene):
             ShowCreation(prior_arrow),
             run_time = 1
         )
-        self.dither()
+        self.wait()
         self.play(FadeIn(words[1]))
-        self.dither()
+        self.wait()
         self.play(FadeIn(words[2]))
         self.play(
             LaggedStart(FadeIn, posterior),
             ShowCreation(posterior_arrow),
             run_time = 1
         )
-        self.dither(2)
+        self.wait(2)
 
 class TryUnitSquareVisual(SampleSpaceScene):
     def construct(self):
@@ -493,18 +493,18 @@ class TryUnitSquareVisual(SampleSpaceScene):
         hard_to_see.highlight(YELLOW)
         arrow = Arrow(hard_to_see, prior_label)
 
-        self.dither()
+        self.wait()
         anims = self.get_division_change_animations(
             sample_space, sample_space.horizontal_parts,
             0.001, new_label_kwargs = {"labels" : final_labels}
         )
         self.play(*anims, run_time = 2)
-        self.dither()
+        self.wait()
         self.play(
             Write(hard_to_see, run_time = 2),
             ShowCreation(arrow)
         )
-        self.dither(2)
+        self.wait(2)
 
     def add_prior_division(self):
         sample_space = self.sample_space
@@ -535,7 +535,7 @@ class TryUnitSquareVisual(SampleSpaceScene):
 
         self.play(GrowFromCenter(top_brace))
         self.play(FadeIn(top_label))
-        self.dither()
+        self.wait()
 
         bottom_part.divide_vertically(
             0.95, colors = [BLUE_E, YELLOW_E]
@@ -555,7 +555,7 @@ class TryUnitSquareVisual(SampleSpaceScene):
             GrowFromCenter(bottom_brace),
         )
         self.play(FadeIn(bottom_label))
-        self.dither()
+        self.wait()
 
 class ShowRestrictedSpace(Scene):
     CONFIG = {
@@ -606,7 +606,7 @@ class ShowRestrictedSpace(Scene):
             sick_one.next_to, sick_one_words, DOWN,
             sick_one.to_edge, RIGHT,
         )
-        self.dither()
+        self.wait()
         self.play(sick_one.restore)
         self.play(
             Write(healthy_words),
@@ -617,7 +617,7 @@ class ShowRestrictedSpace(Scene):
                 lag_ratio = 0.2,
             )
         )
-        self.dither()
+        self.wait()
         self.play(FadeOut(title))
 
         self.all_creatures = all_creatures
@@ -636,7 +636,7 @@ class ShowRestrictedSpace(Scene):
         equation.to_corner(UP+LEFT)
 
         self.play(Write(equation, run_time = 1))
-        self.dither(2)
+        self.wait(2)
 
         self.disease_conditional = equation
 
@@ -652,7 +652,7 @@ class ShowRestrictedSpace(Scene):
         self.play(ReplacementTransform(
             self.disease_conditional, equation
         ))
-        self.dither()
+        self.wait()
 
         self.healthy_conditional = equation
 
@@ -676,7 +676,7 @@ class ShowRestrictedSpace(Scene):
             )
         )
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
         self.false_positives = false_positives
         self.false_positives_brace = brace
@@ -732,7 +732,7 @@ class ShowRestrictedSpace(Scene):
         posterior.shift(LEFT)
 
         self.play(FadeIn(posterior))
-        self.dither(2)
+        self.wait(2)
 
         self.posterior = posterior
 
@@ -756,7 +756,7 @@ class ShowRestrictedSpace(Scene):
         times_90.next_to(arrow, RIGHT)
         self.play(ShowCreation(arrow))
         self.play(Write(times_90, run_time = 1))
-        self.dither(2)
+        self.wait(2)
 
     ######
 
@@ -812,7 +812,7 @@ class DepressingForMedicalTestDesigners(TestScene):
 
         self.add(title)
         self.play(Write(checks))
-        self.dither(2)
+        self.wait(2)
         self.play(*map(MoveToTarget, [title, checks]))
 
     def reject_test(self):
@@ -825,12 +825,12 @@ class DepressingForMedicalTestDesigners(TestScene):
             FadeIn(result),
             randy.change_mode, "pondering"
         )
-        self.dither()
+        self.wait()
         self.say(
             "Whatever, I'm 91\\% \\\\ sure that's wrong",
             target_mode = "shruggie"
         )
-        self.dither(2)
+        self.wait(2)
 
 class HowMuchCanYouChangeThisPrior(ShowRestrictedSpace, PiCreatureScene):
     def construct(self):
@@ -879,7 +879,7 @@ class HowMuchCanYouChangeThisPrior(ShowRestrictedSpace, PiCreatureScene):
             subgroup.stretch_in_place(1./width_factor, 0)
             subgroup.stretch_in_place(1./height_factor, 1)
 
-        self.dither()
+        self.wait()
         self.play(MoveToTarget(subgroups))
         subgroups.remove(special_group)
 
@@ -893,7 +893,7 @@ class HowMuchCanYouChangeThisPrior(ShowRestrictedSpace, PiCreatureScene):
             special_group, buff = 0, color = RED
         )
         self.play(FadeIn(rects), FadeIn(special_rect))
-        self.dither()
+        self.wait()
 
         self.to_fade = VGroup(subgroups, rects)
         self.special_group = special_group
@@ -907,7 +907,7 @@ class HowMuchCanYouChangeThisPrior(ShowRestrictedSpace, PiCreatureScene):
             special_group.scale_to_fit_height, 6,
             special_group.center,
         )
-        self.dither()
+        self.wait()
 
 class ShowTheFormula(TeacherStudentsScene):
     CONFIG = {
@@ -967,7 +967,7 @@ class ShowTheFormula(TeacherStudentsScene):
         #Ask question
         self.student_says("What does the \\\\ formula look like here?")
         self.play(self.teacher.change, "happy")
-        self.dither()
+        self.wait()
         self.play(
             Write(lhs),
             RemovePiCreatureBubble(
@@ -977,7 +977,7 @@ class ShowTheFormula(TeacherStudentsScene):
             self.students[0].change, "pondering",
             self.students[2].change, "pondering",
         )
-        self.dither()
+        self.wait()
 
         #Show initial formula
         lhs_copy = lhs.copy()
@@ -988,34 +988,34 @@ class ShowTheFormula(TeacherStudentsScene):
             ),
             Animation(lhs_copy, remover = True),
         )
-        self.dither(2)
+        self.wait(2)
         self.play(ShowCreation(numerator_rect))
         self.play(FadeOut(numerator_rect))
-        self.dither()
+        self.wait()
         self.play(Transform(numerator, alt_numerator))
         initial_formula.add(*numerator)
         formula.add(*numerator)
-        self.dither(3)
+        self.wait(3)
 
         #Show number_fraction
         self.play(
             initial_formula.move_to, initial_formula.saved_state,
             FadeIn(VGroup(*number_fraction[:3]))
         )
-        self.dither(2)
+        self.wait(2)
         self.play(LaggedStart(
             FadeIn, VGroup(*number_fraction[3:]),
             run_time = 3,
             lag_ratio = 0.7
         ))
-        self.dither(2)
+        self.wait(2)
 
         #Show rhs
         self.play(formula.shift, UP)
         self.play(Write(rhs))
         self.change_student_modes(*["happy"]*3)
         self.look_at(rhs)
-        self.dither(2)
+        self.wait(2)
 
 class SourceOfConfusion(Scene):
     CONFIG = {
@@ -1063,7 +1063,7 @@ class SourceOfConfusion(Scene):
         )
 
         self.play(Write(question))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(question_arrow))
 
         self.question = question
@@ -1094,7 +1094,7 @@ class SourceOfConfusion(Scene):
             rule.restore,
             run_time = 2
         )
-        self.dither(3)
+        self.wait(3)
 
     def shift_arrow(self):
         new_arrow = Arrow(
@@ -1107,7 +1107,7 @@ class SourceOfConfusion(Scene):
             self.question_arrow,
             new_arrow
         ))
-        self.dither(2)
+        self.wait(2)
 
 class StatisticsVsEmpathy(PiCreatureScene):
     def construct(self):
@@ -1131,15 +1131,15 @@ class StatisticsVsEmpathy(PiCreatureScene):
             look_at_arg = randy.eyes
         ))
         self.play(randy.change, "pondering", morty.eyes)
-        self.dither()
+        self.wait()
         self.play(Write(prior))
-        self.dither()
+        self.wait()
         self.play(
             prior.scale, 0.1,
             prior.set_fill, None, 0,
             prior.move_to, randy.eyes
         )
-        self.dither()
+        self.wait()
         self.play(
             PiCreatureBubbleIntroduction(
                 randy, sick_group,
@@ -1154,7 +1154,7 @@ class StatisticsVsEmpathy(PiCreatureScene):
             sick_one.change_mode, "sick",
             sick_one.highlight, SICKLY_GREEN
         )
-        self.dither()
+        self.wait()
 
         probably_me = TextMobject("That's probably \\\\ me")
         probably_me.next_to(sick_one, DOWN)
@@ -1167,12 +1167,12 @@ class StatisticsVsEmpathy(PiCreatureScene):
             target_sick_group,
             target_mode = "pleading",
         )
-        self.dither(2)
+        self.wait(2)
 
         self.play(prior.restore)
         for new_prior in priors[1:]:
             self.play(Transform(prior, new_prior, run_time = 0.5))
-        self.dither()
+        self.wait()
 
     ######
 
@@ -1190,13 +1190,13 @@ class LessMedicalExample(Scene):
         cross = Cross(disease)
 
         self.add(disease)
-        self.dither()
+        self.wait()
         self.play(ShowCreation(cross))
         self.play(
             FadeIn(telepathy),
             VGroup(disease, cross).shift, 2*UP
         )
-        self.dither()
+        self.wait()
 
 class PlaneCrashProbability(Scene):
     def construct(self):
@@ -1218,11 +1218,11 @@ class PlaneCrashProbability(Scene):
         )
 
         self.play(Write(plane_prob))
-        self.dither(2)
+        self.wait(2)
         self.play(ReplacementTransform(
             plane_prob.copy(), car_prob
         ))
-        self.dither(2)
+        self.wait(2)
 
 class IntroduceTelepathyExample(StatisticsVsEmpathy):
     def construct(self):
@@ -1253,7 +1253,7 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
             run_time = 1,
             look_at_arg = morty.eyes,
         ))
-        self.dither()
+        self.wait()
         self.play(RemovePiCreatureBubble(
             randy,
             target_mode = "happy",
@@ -1274,14 +1274,14 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
 
         for number in numbers:
             self.add(number)
-            Scene.dither(self, 0.1)
+            Scene.wait(self, 0.1)
             self.remove(number)
         self.play(
             ShowCreation(bubble),
             number.move_to, bubble.get_bubble_center(), DOWN+LEFT,
             morty.change, "pondering", 
         )
-        self.dither()
+        self.wait()
 
         morty.bubble = bubble
         self.number = number
@@ -1296,7 +1296,7 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
             target_mode = "hooray",
             look_at_arg = morty.eyes
         ))
-        self.dither()
+        self.wait()
 
     def ask_about_chances(self):
         probability = TexMobject(
@@ -1308,11 +1308,11 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
         probability.to_edge(UP)
 
         self.play(morty.change, "confused", randy.eyes)
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             self.title, VGroup(*it.chain(*probability))
         ))
-        self.dither()
+        self.wait()
 
     def say_you_probably_got_lucky(self):
         randy, morty = self.randy, self.morty
@@ -1330,7 +1330,7 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
                 look_at_arg = morty.eyes,
             )
         )
-        self.dither(2)
+        self.wait(2)
 
 
     ###
@@ -1339,7 +1339,7 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
         self.play(pi1.change, "telepath", pi2.eyes)
         self.send_mind_waves(pi1, pi2)
         self.send_mind_waves(pi2, pi1)
-        self.dither()
+        self.wait()
 
     def send_mind_waves(self, pi1, pi2):
         angle = np.pi/3
@@ -1406,11 +1406,11 @@ class CompareNumbersInBothExamples(Scene):
             LaggedStart(FadeIn, titles, lag_ratio = 0.7),
             *map(ShowCreation, [h_line, v_line])
         )
-        self.dither()
+        self.wait()
         self.play(FadeIn(priors))
-        self.dither()
+        self.wait()
         self.play(FadeIn(likelihoods))
-        self.dither(3)
+        self.wait(3)
 
 
 class NonchalantReactionToPositiveTest(TestScene):
@@ -1425,7 +1425,7 @@ class NonchalantReactionToPositiveTest(TestScene):
         self.add(accuracy)
         self.play(Write(result, run_time = 2))
         self.play(randy.change, "pondering", result)
-        self.dither()
+        self.wait()
         words = TextMobject("Pssht, I'm probably fine.")
         words.scale(0.8)
         self.pi_creature_says(
@@ -1438,7 +1438,7 @@ class NonchalantReactionToPositiveTest(TestScene):
             },
             content_introduction_class = FadeIn,
         )
-        self.dither(4)
+        self.wait(4)
 
 class OneInOneThousandHaveDiseaseCopy(OneInOneThousandHaveDisease):
     pass
@@ -1472,7 +1472,7 @@ class ExampleMeasuresDisbeliefInStatistics(Introduction):
             *["pondering"]*3,
             look_at_arg = statistics_to_belief
         )
-        self.dither(3)
+        self.wait(3)
 
         statistics_to_belief.add(cross)
         self.statistics_to_belief = statistics_to_belief
@@ -1488,7 +1488,7 @@ class ExampleMeasuresDisbeliefInStatistics(Introduction):
             b_to_i.next_to, self.teacher, UP,
             b_to_i.to_edge, RIGHT, MED_SMALL_BUFF,
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             self.teacher.change_mode, "raise_right_hand",
             self.teacher.look, UP+LEFT,
@@ -1496,7 +1496,7 @@ class ExampleMeasuresDisbeliefInStatistics(Introduction):
             s_to_b.shift, LEFT,
             b_to_i.shift, 2*UP
         )
-        self.dither(2)
+        self.wait(2)
 
 class AlwaysPictureTheSpaceOfPossibilities(PiCreatureScene):
     def construct(self):
@@ -1506,7 +1506,7 @@ class AlwaysPictureTheSpaceOfPossibilities(PiCreatureScene):
                 "width" : 8,
             }
         )
-        self.dither(3)
+        self.wait(3)
 
     def create_pi_creature(self):
         return Randolph().to_corner(DOWN+LEFT)

@@ -62,7 +62,7 @@ class ReconfigurableScene(Scene):
 
     def transition_between_states(self, start_state, target_state, **kwargs):
         self.play(Transform(start_state, target_state, **kwargs))
-        self.dither()
+        self.wait()
 
 
 

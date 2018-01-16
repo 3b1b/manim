@@ -246,7 +246,7 @@ class EquationSolver1d(GraphScene, ZoomedScene, ReconfigurableScene):
                 upperY = midY
             self.remove(midXLine, midDot, midYLine)
 
-        self.dither()
+        self.wait()
 
     def construct(self):
         self.drawGraph()
@@ -354,7 +354,7 @@ class LoopSplitScene(Scene):
         loop = SGroup(*line_list)
         for line in line_list:
             self.add(*line)
-        self.dither()
+        self.wait()
 
         # TODO: Make the following a continual animation, and on all split loops do the same
         # bullet = TexMobject("*", fill_color = RED)
@@ -402,14 +402,14 @@ class LoopSplitScene(Scene):
             ApplyMethod(right_closed_loop.shift, RIGHT)
             )
 
-        self.dither()
+        self.wait()
 
         self.play(
             ApplyMethod(left_open_loop.shift, LEFT), 
             ApplyMethod(right_open_loop.shift, RIGHT)
             )
 
-        self.dither()
+        self.wait()
 
         mid_lines = SGroup(mid_line_left, mid_line_right)
 
@@ -417,11 +417,11 @@ class LoopSplitScene(Scene):
         highlight_circle.surround(mid_lines)
         self.play(Indicate(mid_lines), ShowCreation(highlight_circle, run_time = 0.5))
         
-        self.dither()
+        self.wait()
 
         self.play(FadeOut(highlight_circle), FadeOut(mid_lines))
 
-        self.dither()        
+        self.wait()        
         
 class EquationSolver2d(ZoomedScene):
     #TODO

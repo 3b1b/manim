@@ -49,13 +49,13 @@ class CountingScene(Scene):
             if mode == "highlight":
                 original_color = mob.color
                 mob.highlight(color)
-                self.dither(frame_time)
+                self.wait(frame_time)
                 mob.highlight(original_color)
             if mode == "show_creation":
                 self.play(ShowCreation(mob, run_time = frame_time))
             if mode == "show":
                 self.add(mob)
-                self.dither(frame_time)
+                self.wait(frame_time)
             if display_numbers:
                 self.remove(num_mob)
         if display_numbers:
@@ -76,7 +76,7 @@ class CountingScene(Scene):
             num_mob.center().shift(num_offset)
             self.add(num_mob)
             self.highlight_region(region)
-            self.dither(frame_time)
+            self.wait(frame_time)
             if mode == "one_at_a_time":
                 self.reset_background()
             self.remove(num_mob)

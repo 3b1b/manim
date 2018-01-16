@@ -55,9 +55,9 @@ class OpeningQuote(Scene):
         author.next_to(words, DOWN, buff = 0.5)
 
         self.play(FadeIn(words))
-        self.dither(1)
+        self.wait(1)
         self.play(Write(author, run_time = 4))
-        self.dither()
+        self.wait()
 
 
 class DifferentConceptions(Scene):
@@ -82,7 +82,7 @@ class DifferentConceptions(Scene):
                 FadeIn(pi),
                 run_time = 1
             )
-        self.dither(2)
+        self.wait(2)
         self.remove(symbol, coordinates)
         self.physics_conception(creatures, vector)
         self.cs_conception(creatures)
@@ -110,7 +110,7 @@ class DifferentConceptions(Scene):
             Write(coordinates),
             Write(symbol)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             FadeOut(plane),
             FadeOut(labels),
@@ -160,13 +160,13 @@ class DifferentConceptions(Scene):
         )
         self.remove(original_vector)
         self.add(vector )
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(brace),
             Write(length),
             run_time = 1
         )
-        self.dither()
+        self.wait()
         self.remove(brace, length)
         self.play(
             Rotate(vector, np.pi/3, in_place = True),
@@ -183,17 +183,17 @@ class DifferentConceptions(Scene):
         self.remove(direction)
         for point in 2*UP, 4*RIGHT, ORIGIN:
             self.play(ApplyMethod(vector.move_to, point))
-        self.dither()
+        self.wait()
         self.play(
             Write(two_dimensional),
             ApplyMethod(physy.change_mode, "pondering"),
             ShowCreation(random_vectors, submobject_mode = "lagged_start"),
             run_time = 1 
         )
-        self.dither(2)
+        self.wait(2)
         self.remove(random_vectors, vector)
         self.play(Transform(two_dimensional, three_dimensional))
-        self.dither(5)
+        self.wait(5)
         self.remove(two_dimensional)
         self.restore_creatures(creatures)
 
@@ -217,7 +217,7 @@ class DifferentConceptions(Scene):
             Write(title, run_time = 1)
         )
         self.play(Write(vectors))
-        self.dither()
+        self.wait()
         self.play(ApplyMethod(compy.change_mode, "pondering"))
         self.house_example(vectors, title)
         self.restore_creatures(creatures)
@@ -268,7 +268,7 @@ class DifferentConceptions(Scene):
         self.play(Write(square_footage, run_time = 2))
         self.add(price_words)
         self.play(Write(price, run_time = 2))
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(square_footage_words), FadeOut(price_words),
             Transform(square_footage, new_square_footage),
@@ -277,22 +277,22 @@ class DifferentConceptions(Scene):
             run_time = 1
         )
         self.remove(square_footage_words, price_words)
-        self.dither()
+        self.wait()
         self.play(
             Write(not_equals),
             Write(alt_vector),
             run_time = 1
         )
-        self.dither()
+        self.wait()
         self.play(FadeOut(not_equals), FadeOut(alt_vector))
         self.remove(not_equals, alt_vector)
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(brace),
             Write(two_dimensional),
             run_time = 1
         )
-        self.dither()
+        self.wait()
 
         everything = VMobject(
             house, square_footage, price, brackets, brace, 
@@ -355,12 +355,12 @@ class DifferentConceptions(Scene):
         self.add_scaling(arrows, syms, arrays)
         self.play(Write(statement))
         self.play(ApplyMethod(mathy.change_mode, "sad"))
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(circle),
             ApplyMethod(mathy.change_mode, "plain")
         )
-        self.dither()
+        self.wait()
 
 
     def add_scaling(self, arrows, syms, arrays):
@@ -390,7 +390,7 @@ class DifferentConceptions(Scene):
             Write(s_arrows), Write(s_arrays), Write(s_syms),
             run_time = 2
         )
-        self.dither()
+        self.wait()
 
 
 
@@ -450,7 +450,7 @@ class HelpsToHaveOneThought(Scene):
             Transform(morty, new_morty),
             Write(words)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             FadeOut(speech_bubble),
             FadeOut(words),
@@ -458,7 +458,7 @@ class HelpsToHaveOneThought(Scene):
             ShowCreation(thought_bubble),
             Write(thought)
         )
-        self.dither(2)
+        self.wait(2)
 
 
 class HowIWantYouToThinkAboutVectors(Scene):
@@ -481,25 +481,25 @@ class HowIWantYouToThinkAboutVectors(Scene):
         line = Line(tail_word, dot)
 
         self.play(ShowCreation(vector, submobject_mode = "one_at_a_time"))
-        self.dither(2)
+        self.wait(2)
         self.play(
             ShowCreation(plane, summobject_mode = "lagged_start"),
             Animation(vector)
         )
         self.play(Write(axis_labels, run_time = 1))
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(dot),
             ShowCreation(line),
             Write(tail_word, run_time = 1)
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(tail_word),
             ApplyMethod(VMobject(dot, line).scale, 0.01) 
         )
         self.remove(tail_word, line, dot)
-        self.dither()
+        self.wait()
 
         self.play(ApplyMethod(
             vector.shift, shift_val,
@@ -511,14 +511,14 @@ class HowIWantYouToThinkAboutVectors(Scene):
             rate_func = rush_into,
             run_time = 0.5
         ))
-        self.dither(3)
+        self.wait(3)
 
         self.play(ShowCreation(
             other_vectors, 
             submobject_mode = "one_at_a_time",
             run_time = 3
         ))
-        self.dither(3)
+        self.wait(3)
 
         x_axis, y_axis = plane.get_axes().split()
         x_label = axis_labels.split()[0]
@@ -539,7 +539,7 @@ class ListsOfNumbersAddOn(Scene):
         arrays.arrange_submobjects(buff = 0.4)
         arrays.scale(2)
         self.play(Write(arrays))
-        self.dither(2)
+        self.wait(2)
 
 
 class CoordinateSystemWalkthrough(VectorScene):
@@ -571,22 +571,22 @@ class CoordinateSystemWalkthrough(VectorScene):
         one = TexMobject("1").next_to(unit_brace, DOWN)
 
         self.add(x_axis, x_label)
-        self.dither()
+        self.wait()
         self.play(ShowCreation(y_axis))
         self.play(Write(y_label, run_time = 1))
-        self.dither(2)
+        self.wait(2)
         self.play(
             Write(origin_words),
             GrowFromCenter(dot),
             ShowCreation(line),
             run_time = 1
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             FadeOut(VMobject(origin_words, dot, line))
         )
         self.remove(origin_words, dot, line)
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(tick_marks, submobject_mode = "one_at_a_time")
         )
@@ -594,13 +594,13 @@ class CoordinateSystemWalkthrough(VectorScene):
             GrowFromCenter(unit_brace),
             Write(one, run_time = 1)            
         )
-        self.dither(2)
+        self.wait(2)
         self.remove(unit_brace, one)
         self.play(
             *map(GrowFromCenter, plane_lines) + [
             Animation(x_axis), Animation(y_axis)
         ])
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(plane),
             Animation(VMobject(x_axis, y_axis, tick_marks))
@@ -632,24 +632,24 @@ class CoordinateSystemWalkthrough(VectorScene):
 
         self.play(ShowCreation(vector, submobject_mode = "one_at_a_time"))
         self.play(Write(array))
-        self.dither(2)
+        self.wait(2)
         self.play(ApplyMethod(x_label_copy.next_to, x_line, DOWN))
         self.play(ShowCreation(x_line))
-        self.dither(2)
+        self.wait(2)
         self.play(ApplyMethod(y_label_copy.next_to, y_line, LEFT))
         self.play(ShowCreation(y_line))
-        self.dither(2)
+        self.wait(2)
         self.play(FadeIn(point))
-        self.dither()
+        self.wait()
         self.play(ApplyFunction(
             lambda m : m.scale_in_place(1.25).highlight(YELLOW),
             array.get_brackets(),
             rate_func = there_and_back
         ))
-        self.dither()
+        self.wait()
         self.play(FadeOut(point))
         self.remove(point)
-        self.dither()
+        self.wait()
         self.clear()
         self.add(*starting_mobjects)
 
@@ -661,7 +661,7 @@ class WriteZ(Scene):
         z = TexMobject("z").highlight(Z_COLOR)
         z.scale_to_fit_height(4)
         self.play(Write(z, run_time = 2))
-        self.dither(3)
+        self.wait(3)
 
 
 class Write3DVector(Scene):
@@ -676,7 +676,7 @@ class Write3DVector(Scene):
         self.add(brackets)
         for mob in x, y, z:
             self.play(Write(mob), run_time = 2)
-        self.dither()
+        self.wait()
 
 
 class VectorAddition(VectorScene):
@@ -692,13 +692,13 @@ class VectorAddition(VectorScene):
         v2 = self.add_vector([3, -1], color = MAROON_B)
         l1 = self.label_vector(v1, "v")
         l2 = self.label_vector(v2, "w")
-        self.dither()
+        self.wait()
         self.play(ApplyMethod(v2.shift, v1.get_end()))
-        self.dither()
+        self.wait()
         v_sum = self.add_vector(v2.get_end(), color = PINK)
         sum_tex = "\\vec{\\textbf{v}} + \\vec{\\textbf{w}}"
         self.label_vector(v_sum, sum_tex, rotate = True)
-        self.dither(3)
+        self.wait(3)
         return v1, v2, v_sum
 
     def ask_why(self, v1, v2, v_sum):
@@ -721,19 +721,19 @@ class VectorAddition(VectorScene):
         why_not_this.shift(0.5*UP)
 
         self.play(Write(why, run_time = 1))
-        self.dither(2)
+        self.wait(2)
         self.play(
             Transform(v2, new_v2),
             Transform(v_sum, new_v_sum),            
             Transform(why, why_not_this)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             FadeOut(why),
             Transform(v_sum, original_v_sum)
         )
         self.remove(why)
-        self.dither()
+        self.wait()
 
     def answer_why(self, v1, v2, v_sum):
         randy = Randolph(color = PINK)
@@ -744,18 +744,18 @@ class VectorAddition(VectorScene):
             self.show_ghost_movement(v)
             self.remove(v)
         self.add(v1, v2 )
-        self.dither()
+        self.wait()
         self.play(ApplyMethod(randy.scale, 0.3))
         self.play(ApplyMethod(randy.shift, v1.get_end()))
-        self.dither()
+        self.wait()
         self.play(ApplyMethod(v2.shift, v1.get_end()))
         self.play(ApplyMethod(randy.move_to, v2.get_end()))
-        self.dither()
+        self.wait()
         self.remove(randy)
         randy.move_to(ORIGIN)
         self.play(FadeIn(v_sum))
         self.play(ApplyMethod(randy.shift, v_sum.get_end()))
-        self.dither()
+        self.wait()
 
 
 class AddingNumbersOnNumberLine(Scene):
@@ -778,15 +778,15 @@ class AddingNumbersOnNumberLine(Scene):
         sum_mob = TexMobject("2 + 5").shift(3*UP)
 
         self.play(ShowCreation(number_line, submobject_mode = "one_at_a_time"))
-        self.dither()
+        self.wait()
         self.play(Write(sum_mob, run_time = 2))
-        self.dither()
+        self.wait()
         for vect, num in zip(vects, nums):
             self.play(
                 ShowCreation(vect, submobject_mode = "one_at_a_time"),
                 Write(num, run_time = 1)
             )
-            self.dither()
+            self.wait()
 
 
 class VectorAdditionNumerically(VectorScene):
@@ -810,7 +810,7 @@ class VectorAdditionNumerically(VectorScene):
 
         v2 = self.add_vector([3, -1], color = MAROON_B)
         coords2, x_line2, y_line2 = self.vector_to_coords(v2, clean_up = False)
-        self.dither()
+        self.wait()
         self.play(
             ApplyMethod(coords2.next_to, plus, RIGHT),
             Write(plus, run_time = 1), 
@@ -820,12 +820,12 @@ class VectorAdditionNumerically(VectorScene):
             ]
         )
         equals.next_to(coords2, RIGHT)
-        self.dither()
+        self.wait()
 
         self.play(FadeIn(randy))
         for step in [RIGHT, 2*UP, 3*RIGHT, DOWN]:
             self.play(ApplyMethod(randy.shift, step, run_time = 1.5))
-        self.dither()
+        self.wait()
         self.play(ApplyMethod(randy.shift, -randy.get_bottom()))
 
         self.play(ApplyMethod(x_line2.shift, 2*DOWN))
@@ -845,7 +845,7 @@ class VectorAdditionNumerically(VectorScene):
             Write(three),
             run_time = 1
         )
-        self.dither()
+        self.wait()
 
         two_brace = Brace(y_line1, RIGHT)
         two = TexMobject("2").next_to(two_brace, RIGHT)
@@ -856,14 +856,14 @@ class VectorAdditionNumerically(VectorScene):
             GrowFromCenter(two_brace),
             Write(two, run_time = 1)
         )
-        self.dither()
+        self.wait()
         self.play(
             Transform(two_brace, two_minus_one_brace),
             Transform(two, two_minus_one),
             Transform(y_line1, new_y_line),
             Transform(y_line2, new_y_line)
         )
-        self.dither()
+        self.wait()
         self.add_vector(v2.get_end(), color = PINK )
 
         sum_coords = Matrix(["1+3", "2+(-1)"])
@@ -882,7 +882,7 @@ class VectorAdditionNumerically(VectorScene):
             run_time = 1
         )
         self.play(Transform(sum_y_start, sum_y))
-        self.dither(2)
+        self.wait(2)
 
         starters = [x1, y1, x2, y2, sum_x_start, sum_y_start]
         variables = map(TexMobject, [
@@ -904,14 +904,14 @@ class VectorAdditionNumerically(VectorScene):
             FadeOut(sum_y_start)
         )
         sum_x_end, sum_y_end = variables[-2:]
-        self.dither(2)
+        self.wait(2)
         self.play(
             Transform(VMobject(x1, x2).copy(), sum_x_end)
         )
         self.play(
             Transform(VMobject(y1, y2).copy(), sum_y_end)
         )
-        self.dither(3)
+        self.wait(3)
 
 class MultiplicationByANumberIntro(Scene):
     def construct(self):
@@ -930,7 +930,7 @@ class MultiplicationByANumberIntro(Scene):
             else:
                 self.play(FadeIn(num))
                 last = num
-            self.dither()
+            self.wait()
 
 class ShowScalarMultiplication(VectorScene):
     def construct(self):
@@ -976,7 +976,7 @@ class ShowScalarMultiplication(VectorScene):
 
 
         self.play(Write(factor_mob, run_time = 1))
-        self.dither()
+        self.wait()
         self.play(
             ApplyMethod(v.copy().highlight, DARK_GREY),
             ApplyMethod(v_label.copy().highlight, DARK_GREY),
@@ -984,7 +984,7 @@ class ShowScalarMultiplication(VectorScene):
             Transform(v.copy(), scaled_vector),
             Transform(v_label.copy(), label_remainder),
         )
-        self.dither(2)
+        self.wait(2)
 
         self.clear()
         self.add(*starting_mobjects)
@@ -1013,10 +1013,10 @@ class ShowScalarMultiplication(VectorScene):
         )
         self.play(Transform(v, long_minus_v, run_time = 3))
         self.play(Write(scalars))
-        self.dither()
+        self.wait()
         self.play(Write(scalars_word))
         self.play(Transform(v, original_v), run_time = 3)
-        self.dither(2)
+        self.wait(2)
 
 class ScalingNumerically(VectorScene):
     def construct(self):
@@ -1041,7 +1041,7 @@ class ScalingNumerically(VectorScene):
             ApplyMethod(two_v_coords.next_to, equals, RIGHT),
             Write(equals, run_time = 1)
         )
-        self.dither(2)
+        self.wait(2)
 
         x, y = v_coords.get_mob_matrix().flatten()
         two_v_elems = two_v_coords.get_mob_matrix().flatten()
@@ -1058,7 +1058,7 @@ class ScalingNumerically(VectorScene):
             Transform(y, y_sym),
             FadeOut(VMobject(*two_v_elems))
         )
-        self.dither()
+        self.wait()
         self.play(
             Transform(
                 VMobject(two_dot.copy(), x.copy()),
@@ -1069,7 +1069,7 @@ class ScalingNumerically(VectorScene):
                 two_y_sym
             )
         )
-        self.dither(2)
+        self.wait(2)
 
 
 
@@ -1095,7 +1095,7 @@ class FollowingVideos(UpcomingSeriesOfVidoes):
         UpcomingSeriesOfVidoes.construct(self)
         last_video = self.mobjects[-1]
         self.play(ApplyMethod(last_video.highlight, YELLOW))
-        self.dither()
+        self.wait()
         everything = VMobject(*self.mobjects)
         everything.remove(last_video)
         big_last_video = last_video.copy()
@@ -1145,7 +1145,7 @@ class ItDoesntMatterWhich(Scene):
         back_and_forth.arrange_submobjects(LEFT).center()
 
 
-        self.dither()
+        self.wait()
         self.play(
             ApplyMethod(physy.change_mode, "speaking"),
             ShowCreation(physy_speech),
@@ -1160,14 +1160,14 @@ class ItDoesntMatterWhich(Scene):
             ShowCreation(compy_speech),
             Transform(physy_statement, compy_statement, path_arc = np.pi)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             ApplyMethod(physy.change_mode, "pondering"),
             ApplyMethod(compy.change_mode, "pondering"),
             Transform(compy_speech, VectorizedPoint(compy_speech.get_tip())),
             Transform(physy_statement, back_and_forth)
         )
-        self.dither()
+        self.wait()
 
 
 class DataAnalyst(Scene):
@@ -1195,20 +1195,20 @@ class DataAnalyst(Scene):
         vects = VMobject(*map(Vector, ellipse_points))
 
         self.play(Write(string_vects))
-        self.dither(2)
+        self.wait(2)
         self.play(
             FadeIn(plane),
             Transform(string_vects, vects)
         )
         self.remove(string_vects)
         self.add(vects)
-        self.dither()
+        self.wait()
         self.play(
             ApplyMethod(plane.fade, 0.7),
             ApplyMethod(vects.highlight, DARK_GREY),
             ShowCreation(ellipse)
         )
-        self.dither(3)
+        self.wait(3)
 
 
 class ManipulateSpace(LinearTransformationScene):
@@ -1246,15 +1246,15 @@ class ManipulateSpace(LinearTransformationScene):
         self.play(Blink(pi_creature))
         self.plane.add(pi_creature)
         self.play(Homotopy(plane_wave_homotopy, self.plane, run_time = 3))
-        self.dither(2)
+        self.wait(2)
         self.apply_matrix([[2, 1], [1, 2]])
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(self.plane),
             Write(matrix_rule),
             run_time = 2
         )
-        self.dither()
+        self.wait()
 
 class CodingMathyAnimation(Scene):
     pass
@@ -1269,7 +1269,7 @@ class NextVideo(Scene):
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.dither()    
+        self.wait()    
 
 
 

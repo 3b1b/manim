@@ -127,17 +127,17 @@ class IntroduceCycloid(CycloidScene):
         q_mark = TextMobject("?")
 
         self.play(*map(ShimmerIn, equation.split()))
-        self.dither()
+        self.wait()
         self.play(
             ApplyMethod(equation.shift, 2.2*UP),
             ShowCreation(arrow)
         )
         q_mark.next_to(sin_sqrt)
         self.play(ShimmerIn(cycloid_word))
-        self.dither()
+        self.wait()
         self.grow_parts()
         self.draw_cycloid()
-        self.dither()
+        self.wait()
         extra_terms = [const, arrow, cycloid_word]
         self.play(*[
             Transform(mob, q_mark)
@@ -150,7 +150,7 @@ class IntroduceCycloid(CycloidScene):
             ShowCreation(q_marks),
             ShowCreation(arrows)
         )
-        self.dither()
+        self.wait()
 
     def get_q_marks_and_arrows(self, mob, n_marks = 10):
         circle = Circle().replace(mob)
@@ -194,7 +194,7 @@ class LeviSolution(CycloidScene):
         ]
         for method in methods:
             method()
-            self.dither()
+            self.wait()
 
 
     def generate_points(self):
@@ -224,7 +224,7 @@ class LeviSolution(CycloidScene):
         self.remove(radial_line)
         self.add(self.p_dot)
         self.play(ShimmerIn(self.p_label))
-        self.dither()
+        self.wait()
         self.play(Transform(self.ceiling.copy(), self.c_dot))
         self.play(ShimmerIn(self.c_label))
 
@@ -250,7 +250,7 @@ class LeviSolution(CycloidScene):
 
         self.play(ShowCreation(line))
         self.play(ShimmerIn(words))
-        self.dither()
+        self.wait()
         pairs = [    
             (line_angle, arc_angle/2),
             (line_angle+arc_angle/2, -arc_angle),
@@ -275,11 +275,11 @@ class LeviSolution(CycloidScene):
                 run_time = 2
             )
             arcs.append(arc)
-        self.dither()
+        self.wait()
         self.play(Transform(arcs[1], tangent_line))
         self.add(tangent_line)
         self.play(ShowCreation(right_angle_symbol))
-        self.dither()
+        self.wait()
 
         self.tangent_line = tangent_line
         self.right_angle_symbol = right_angle_symbol
@@ -309,11 +309,11 @@ class LeviSolution(CycloidScene):
 
         self.remove(*everything)
         self.play(Transform(everything_copy, dark_everything))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(diameter))
         self.play(GrowFromCenter(brace))
         self.play(ShimmerIn(diameter_word))
-        self.dither()
+        self.wait()
         self.play(*[
             Transform(mob, d_mob)
             for mob in brace, diameter_word
@@ -377,12 +377,12 @@ class LeviSolution(CycloidScene):
             Transform(self.theta.copy(), new_theta),
             run_time = 3
         )
-        self.dither()
+        self.wait()
         self.play(FadeIn(triangle1))
-        self.dither()
+        self.wait()
         self.play(Transform(triangle1, triangle2))
         self.play(ApplyMethod(triangle1.highlight, MAROON))
-        self.dither()
+        self.wait()
         self.remove(triangle1)
         self.add(y_line)
 
@@ -409,7 +409,7 @@ class LeviSolution(CycloidScene):
 
             self.play(Transform(mob, trig_mob))
             self.add(trig_mob)
-            self.dither()
+            self.wait()
 
         self.remove(mob)
         self.d_sin_squared_theta = trig_mob
@@ -456,7 +456,7 @@ class LeviSolution(CycloidScene):
             ApplyMethod(squared.shift, 4*UP),
             ApplyMethod(theta.shift, 1.5* squared.get_width()*LEFT)
         )
-        self.dither()
+        self.wait()
         y_sqrt.add(y)
         d_sqrt.add(d)
         sin.add(theta)
@@ -485,7 +485,7 @@ class LeviSolution(CycloidScene):
             ),
             run_time = 2
         )
-        self.dither()
+        self.wait()
 
         brace = Brace(d_sqrt, DOWN)
         constant = TextMobject("Constant")
@@ -514,12 +514,12 @@ class EquationsForCycloid(CycloidScene):
         self.play(ShimmerIn(equations))
         self.grow_parts()
         self.draw_cycloid(rate_func = None, run_time = 5)
-        self.dither()
+        self.wait()
 
 class SlidingObject(CycloidScene, PathSlidingScene):
     CONFIG = {
         "show_time" : False,
-        "dither_and_add" : False
+        "wait_and_add" : False
     }
 
     args_list = [(True,), (False,)]
@@ -557,17 +557,17 @@ class SlidingObject(CycloidScene, PathSlidingScene):
         self.play(ShowCreation(self.cycloid.copy()))
         self.slide(randy, self.cycloid)
         self.add(self.slider)
-        self.dither()
+        self.wait()
         self.grow_parts()
         self.draw_cycloid()
-        self.dither()
+        self.wait()
         self.play(Transform(self.slider, start_randy))
-        self.dither()
+        self.wait()
         self.roll_back()
-        self.dither()
+        self.wait()
         if with_words:
             self.play(*map(ShimmerIn, [words1, arrow, words2]))
-        self.dither()
+        self.wait()
         self.remove(self.circle)
         start_time = len(self.frames)*self.frame_duration
         self.remove(self.slider)        
@@ -584,7 +584,7 @@ class SlidingObject(CycloidScene, PathSlidingScene):
             )
         )
         self.add(self.circle, self.slider)
-        self.dither()
+        self.wait()
 
 
 

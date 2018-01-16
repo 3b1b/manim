@@ -39,7 +39,7 @@ class DontLearnFromSymbols(Scene):
 
         self.add(randy)
         self.play(FadeIn(bubble))
-        self.dither()
+        self.wait()
         top = bubble.content
         bubble.add_content(equation)
         self.play(
@@ -49,7 +49,7 @@ class DontLearnFromSymbols(Scene):
             Write(q_marks),
             run_time = 1
         )
-        self.dither(3)
+        self.wait(3)
 
 
 class NotationReflectsMath(Scene):
@@ -68,7 +68,7 @@ class NotationReflectsMath(Scene):
             Write(better_questions),
             run_time = 3
         )
-        self.dither(2)
+        self.wait(2)
 
 class AsymmetriesInTheMath(Scene):
     def construct(self):
@@ -89,11 +89,11 @@ class AsymmetriesInTheMath(Scene):
         log.highlight(RED)
 
         self.play(FadeIn(assyms_of_top))
-        self.dither()
+        self.wait()
         self.play(FadeIn(assyms_of_math))
-        self.dither()
+        self.wait()
         self.play(Write(VMobject(rad, log)))
-        self.dither()
+        self.wait()
 
 class AddedVsOplussed(Scene):
     def construct(self):
@@ -110,7 +110,7 @@ class AddedVsOplussed(Scene):
         oplus.highlight(BLUE)
 
         self.add(top, left_dot, plus, right_times)
-        self.dither()
+        self.wait()
         self.play(
             Transform(
                 VMobject(left_dot, plus, right_times),
@@ -118,7 +118,7 @@ class AddedVsOplussed(Scene):
                 path_arc = np.pi/2
             )
         )
-        self.dither()
+        self.wait()
 
 
 
@@ -135,7 +135,7 @@ class ReciprocalTop(Scene):
         end_two.highlight(YELLOW)
 
         self.add(top, start_two, x)
-        self.dither()
+        self.wait()
         self.play(
             Transform(
                 VMobject(start_two, x),
@@ -143,7 +143,7 @@ class ReciprocalTop(Scene):
             ),
             ApplyMethod(top.rotate, np.pi, UP, path_arc = np.pi/7)
         )
-        self.dither()
+        self.wait()
 
 
 
@@ -158,21 +158,21 @@ class NotSymbolicPatterns(Scene):
         substantive_reasoning.to_edge(RIGHT).shift(DOWN)
 
         self.add(randy, symbolic_patterns)
-        self.dither()
+        self.wait()
         self.play(ShowCreation(line))
         self.play(
             Write(substantive_reasoning),
             ApplyMethod(randy.change_mode, "pondering_looking_left"),
             run_time = 1
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             ApplyMethod(line.shift, 10*DOWN),
             ApplyMethod(substantive_reasoning.shift, 10*DOWN),
             ApplyMethod(randy.change_mode, "sad"),
             run_time = 1
         )
-        self.dither(2)
+        self.wait(2)
 
 class ChangeWeCanBelieveIn(Scene):
     def construct(self):
@@ -186,7 +186,7 @@ class ChangeWeCanBelieveIn(Scene):
             FadeOut(change),
             GrowFromCenter(top)
         )
-        self.dither(3)
+        self.wait(3)
 
 
 
@@ -205,7 +205,7 @@ class TriangleOfPowerIsBetter(Scene):
         alts.next_to(greater_than, RIGHT)
 
         self.play(Write(VMobject(top, greater_than, alts)))
-        self.dither()
+        self.wait()
 
 
 class InYourOwnNotes(Scene):
@@ -216,9 +216,9 @@ class InYourOwnNotes(Scene):
         ]
         for anim in anims:
             self.add(anim.mobject)
-        self.dither(2)
+        self.wait(2)
         self.play(*anims)
-        self.dither(2)
+        self.wait(2)
 
 
     def get_log_anim(self, center):
@@ -282,9 +282,9 @@ class Qwerty(Scene):
         d3.shift(0.95*RIGHT)
 
         self.add(qwerty)
-        self.dither(2)
+        self.wait(2)
         self.play(Transform(qwerty, dvorak))
-        self.dither(2)
+        self.wait(2)
 
 
 class ShowLog(Scene):
@@ -300,9 +300,9 @@ class ShowLog(Scene):
         old_eq.to_edge(UP)
         
         self.play(FadeIn(equation))
-        self.dither(3)
+        self.wait(3)
         self.play(FadeIn(old_eq))
-        self.dither(2)
+        self.wait(2)
 
 
 class NoOneWillActuallyDoThis(Scene):
@@ -341,7 +341,7 @@ class NoOneWillActuallyDoThis(Scene):
         )
         self.remove(words)
         self.play(Blink(randy))
-        self.dither(2)
+        self.wait(2)
         self.play(
             FadeOut(bubble),
             FadeIn(morty),
@@ -350,9 +350,9 @@ class NoOneWillActuallyDoThis(Scene):
         )
         morty_bubble.add_content(final_words)
         self.play(Write(final_words))
-        self.dither()
+        self.wait()
         self.play(Blink(morty))
-        self.dither(2)
+        self.wait(2)
         self.play(ShowCreation(lil_thought_bubble))
 
 
