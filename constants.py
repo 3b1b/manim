@@ -59,6 +59,8 @@ BOTTOM     = SPACE_HEIGHT*DOWN
 LEFT_SIDE  = SPACE_WIDTH*LEFT
 RIGHT_SIDE = SPACE_WIDTH*RIGHT
 
+TAU = 2*np.pi
+
 # Change this to point to where you want 
 # animation files to output
 MEDIA_DIR = os.path.join(os.path.expanduser('~'), "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder")
