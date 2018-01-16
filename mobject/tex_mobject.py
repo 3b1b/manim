@@ -36,7 +36,7 @@ class TexMobject(SVGMobject):
         "arg_separator"     : " ",
         "height" : None,
         "organize_left_to_right" : False,
-        "propogate_style_to_family" : True,
+        "propagate_style_to_family" : True,
         "alignment" : "",
     }
     def __init__(self, *args, **kwargs):

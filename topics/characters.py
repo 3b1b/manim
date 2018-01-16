@@ -30,7 +30,7 @@ class PiCreature(SVGMobject):
         "stroke_width" : 0,
         "stroke_color" : BLACK,
         "fill_opacity" : 1.0,
-        "propogate_style_to_family" : True,
+        "propagate_style_to_family" : True,
         "height" : 3,
         "corner_scale_factor" : 0.75,
         "flip_at_start" : False,

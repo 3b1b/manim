@@ -84,7 +84,7 @@ class TOP(VMobject):
         "triangle_height_to_number_height" : 3,
         "offset_multiple" : 1.5,
         "radius" : 1.5,
-        "propogate_style_to_family" : False,
+        "propagate_style_to_family" : False,
     }
     def __init__(self, x = None, y = None, z = None, **kwargs):
         digest_config(self, kwargs, locals())

@@ -204,7 +204,7 @@ class Cube(ThreeDMobject):
         "fill_opacity" : 0.75,
         "fill_color" : BLUE,
         "stroke_width" : 0,
-        "propogate_style_to_family" : True,
+        "propagate_style_to_family" : True,
         "side_length" : 2,
     }
     def generate_points(self):

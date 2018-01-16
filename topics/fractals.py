@@ -65,7 +65,7 @@ class SelfSimilarFractal(VMobject):
         "colors" : [RED, WHITE],
         "stroke_width" : 1,
         "fill_opacity" : 1,
-        "propogate_style_to_family" : True,
+        "propagate_style_to_family" : True,
     }
     def init_colors(self):
         VMobject.init_colors(self)
@@ -293,7 +293,7 @@ class FractalCurve(VMobject):
             4 : 2,
             5 : 1,
         },
-        "propogate_style_to_family" : True,
+        "propagate_style_to_family" : True,
     }
 
     def generate_points(self):
