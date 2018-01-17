@@ -648,7 +648,7 @@ class FourierMachineScene(Scene):
     CONFIG = {
         "time_axes_config" : {
             "x_min" : 0,
-            "x_max" : 3.4,
+            "x_max" : 4.4,
             "x_axis_config" : {
                 "unit_size" : 3,
                 "tick_frequency" : 0.25,
@@ -687,7 +687,7 @@ class FourierMachineScene(Scene):
         labels = VGroup(time_label, intensity_label)
         for label in labels:
             label.scale(self.text_scale_val)
-        time_label.next_to(time_axes.x_axis.get_right(), DOWN)
+        time_label.next_to(time_axes.coords_to_point(3.5,0), DOWN)
         intensity_label.next_to(
             time_axes.y_axis.get_top(), RIGHT,
             aligned_edge = UP,
@@ -791,7 +791,7 @@ class FourierMachineScene(Scene):
         graph_copy = polarized_graph.copy()
         def update_vector(vector, alpha):
             point = graph_copy.point_from_proportion(alpha)
-            vector.put_start_and_end_on(origin, point)
+            vector.put_start_and_end_on_with_projection(origin, point)
             return vector
         return UpdateFromAlphaFunc(vector, update_vector, **config)
 
@@ -858,36 +858,27 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
         self.show_time_sweeps()
         self.compare_two_frequencies()
         self.change_wrapping_frequency()
-        self.match_up_frequencies()
 
     def show_initial_signal(self):
         axes = self.get_time_axes()
         graph = self.get_cosine_wave(freq = self.signal_frequency)
-        peak_points = [
-            axes.input_to_graph_point(x, graph)
-            for x in np.linspace(1, 2, 4)
-        ]
-        braces = VGroup(*[
-            Brace(Line(p1, p2), UP)
-            for p1, p2 in zip(peak_points, peak_points[1:])
-        ])
+        self.graph = graph
+        braces = VGroup(*self.get_peak_braces()[3:6])
         v_lines = VGroup(*[
             DashedLine(
                 ORIGIN, 2*UP, color = RED
             ).move_to(axes.coords_to_point(x, 0), DOWN)
             for x in 1, 2
         ])
-        words = TextMobject("3 beats/second")
-        words.scale_to_fit_width(0.9*braces.get_width())
-        words.next_to(braces, UP, SMALL_BUFF)
+        words = self.get_bps_label()
 
         self.add(axes)
-        self.play(ShowCreation(graph, run_time = 2))
+        self.play(ShowCreation(graph, run_time = 2, rate_func = None))
         self.play(
             FadeIn(words),
+            LaggedStart(FadeIn, braces),
             *map(ShowCreation, v_lines)
         )
-        self.play(LaggedStart(FadeIn, braces))
         self.wait()
         self.play(FadeOut(VGroup(braces, v_lines)))
         self.wait()
@@ -903,7 +894,7 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
         circle_plane = self.get_circle_plane()
         moving_graph = graph.copy()
 
-        self.play(ShowCreation(circle_plane))
+        self.play(ShowCreation(circle_plane, submobject_mode = "all_at_once"))
         self.play(ReplacementTransform(
             moving_graph,
             polarized_graph,
@@ -912,7 +903,11 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
         ))
         self.animate_frequency_change([graph], freq)
         self.wait()
+        pg_copy = polarized_graph.copy()
+        self.remove(polarized_graph)
+        self.play(pg_copy.fade, 0.75)
         self.play(*self.get_vector_animations(graph), run_time = 15)
+        self.remove(pg_copy)
         self.wait()
 
     def show_time_sweeps(self):
@@ -920,14 +915,7 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
         graph = self.graph
 
         v_lines = self.get_v_lines_indicating_periods(freq)
-        winding_freq_label = VGroup(
-            DecimalNumber(freq, num_decimal_points = 2),
-            TextMobject("cycles/second")
-        )
-        winding_freq_label.arrange_submobjects(RIGHT)
-        winding_freq_label.next_to(
-            self.circle_plane, RIGHT, aligned_edge = UP
-        )
+        winding_freq_label = self.get_winding_frequency_label()
 
         self.animate_time_sweep(
             freq = freq,
@@ -941,7 +929,6 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
         )
         self.wait()
 
-        self.winding_freq_label = winding_freq_label
         self.v_lines_indicating_periods = v_lines
 
     def compare_two_frequencies(self):
@@ -953,15 +940,7 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
             )
         graph = self.graph
         freq = self.initial_winding_frequency
-
-        peak_points = [
-            self.time_axes.input_to_graph_point(x, graph)
-            for x in np.arange(0, 3.5, 1./self.signal_frequency)
-        ]
-        braces = VGroup(*[
-            Brace(Line(p1, p2), UP, buff = 0)
-            for p1, p2 in zip(peak_points, peak_points[1:])
-        ])
+        braces = self.get_peak_braces(buff = 0)
 
         self.play(ShowCreation(bps_label.rect))
         self.play(FadeOut(bps_label.rect))
@@ -978,7 +957,7 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
         freq_label = self.winding_freq_label[0]
 
         count = 0
-        for target_freq in [2, 0.2, 1.55, self.signal_frequency]:
+        for target_freq in [1.23, 0.2, 1.55, self.signal_frequency]:
             self.play(
                 Transform(
                     v_lines, 
@@ -1006,13 +985,164 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
             run_time = 15
         )
 
-    def match_up_frequencies(self):
+    ##
+
+    def get_winding_frequency_label(self):
+        freq = self.initial_winding_frequency
+        winding_freq_label = VGroup(
+            DecimalNumber(freq, num_decimal_points = 2),
+            TextMobject("cycles/second")
+        )
+        winding_freq_label.arrange_submobjects(RIGHT)
+        winding_freq_label.next_to(
+            self.circle_plane, RIGHT, aligned_edge = UP
+        )
+        self.winding_freq_label = winding_freq_label
+        return winding_freq_label
+
+    def get_peak_braces(self, **kwargs):
+        peak_points = [
+            self.time_axes.input_to_graph_point(x, self.graph)
+            for x in np.arange(0, 3.5, 1./self.signal_frequency)
+        ]
+        return VGroup(*[
+            Brace(Line(p1, p2), UP, **kwargs)
+            for p1, p2 in zip(peak_points, peak_points[1:])
+        ])
+
+    def get_bps_label(self):
+        braces = VGroup(*self.get_peak_braces()[3:6])
+        words = TextMobject("3 beats/second")
+        words.scale_to_fit_width(0.9*braces.get_width())
+        words.next_to(braces, UP, SMALL_BUFF)
+        return words
+
+class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
+    CONFIG = {
+        "initial_winding_frequency" : 3.0,
+        "center_of_mass_color" : RED,
+    }
+    def construct(self):
+        self.force_skipping()
+
+        self.remove(self.pi_creature)
+        self.setup_graph()
+        self.indicate_weight_of_wire()
+        self.show_center_of_mass_dot()
+        self.change_to_various_frequencies()
+        self.introduce_frequency_plot()
+        self.draw_full_frequency_plot()
+        self.label_as_almost_fourier()
+
+    def setup_graph(self):
+        self.add(self.get_time_axes())
+        self.add(self.get_circle_plane())
+        self.graph = self.get_cosine_wave(self.signal_frequency)
+        self.add(self.graph)
+        self.add(self.get_polarized_mobject(
+            self.graph, self.initial_winding_frequency
+        ))
+        self.add(self.get_winding_frequency_label())
+        self.beats_per_second_label = self.get_bps_label()
+        self.add(self.beats_per_second_label)        
+        self.v_lines_indicating_periods = self.get_v_lines_indicating_periods(
+            self.initial_winding_frequency
+        )
+        self.add(self.v_lines_indicating_periods)
+        self.change_frequency(1.03)
+        self.wait()
+
+    def indicate_weight_of_wire(self):
+        graph = self.graph
+        pol_graph = graph.polarized_mobject.copy()
+        pol_graph.save_state()
+        morty = self.pi_creature
+        morty.change("raise_right_hand")
+        morty.save_state()
+        morty.change("plain")
+        morty.fade(1)
+
+        self.play(
+            morty.restore,
+            pol_graph.scale, 0.5,
+            pol_graph.next_to, morty.get_corner(UP+LEFT), UP, -SMALL_BUFF,
+        )
+        self.play(
+            morty.change, "lower_right_hand", pol_graph.get_bottom(),
+            pol_graph.shift, 0.45*DOWN,
+            rate_func = there_and_back,
+            run_time = 2,
+        )
+        self.wait()
+
+        metal_wire = pol_graph.copy().set_stroke(LIGHT_GREY)
+        self.play(
+            ShowCreationThenDestruction(metal_wire),
+            run_time = 2,
+        )
+        self.play(
+            pol_graph.restore,
+            morty.change, "pondering"
+        )
+        self.remove(pol_graph)
+
+    def show_center_of_mass_dot(self):
+        color = self.center_of_mass_color
+        dot = Dot(self.get_pol_graph_center_of_mass())
+        dot.highlight(color)
+        dot.save_state()
+        arrow = Vector(DOWN+2*LEFT, color = color)
+        arrow.next_to(dot, UP+RIGHT, buff = 0)
+        dot.move_to(arrow.get_start())
+        words = TextMobject("Center of mass")
+        words.next_to(arrow.get_start(), RIGHT)
+        words.highlight(color)
+
+        self.revert_to_original_skipping_status()
+        self.play(
+            GrowArrow(arrow),
+            dot.restore,
+        )
+        self.play(Write(words))
+        self.wait()
+
+    def change_to_various_frequencies(self):
         pass
 
+    def introduce_frequency_plot(self):
+        pass
 
+    def draw_full_frequency_plot(self):
+        pass
 
+    def label_as_almost_fourier(self):
+        pass
 
+    ##
 
+    def get_pol_graph_center_of_mass(self):
+        return center_of_mass(
+            self.graph.polarized_mobject.get_anchors()
+        )
+
+    def change_frequency(self, new_freq, **kwargs):
+        kwargs["run_time"] = kwargs.get("run_time", 3)
+        freq_label = self.winding_freq_label[0]
+        anims = [
+            Transform(
+                self.v_lines_indicating_periods, 
+                self.get_v_lines_indicating_periods(new_freq)
+            ),
+            ChangeDecimalToValue(freq_label, new_freq),
+            self.get_frequency_change_animation(
+                self.graph, new_freq
+            ),
+        ]
+        #TODO, conditionals for center of mass
+        self.play(*anims, **kwargs)
+
+    def create_pi_creature(self):
+        return Mortimer().to_corner(DOWN+RIGHT)
 
 
 
