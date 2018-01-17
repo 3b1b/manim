@@ -184,7 +184,7 @@ class PointCloudDot(Mobject1D):
         "density" : DEFAULT_POINT_DENSITY_1D,
         "color" : YELLOW,
     }
-    def __init__(self, center, **kwargs):
+    def __init__(self, center = ORIGIN, **kwargs):
         Mobject1D.__init__(self, **kwargs)
         self.shift(center)
 
