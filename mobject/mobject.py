@@ -285,13 +285,13 @@ class Mobject(object):
             )
         else:
             target_point = mobject_or_point
-        if submobject_to_align:
+        if submobject_to_align is not None:
             aligner = submobject_to_align
         elif index_of_submobject_to_align is not None:
             aligner = self[index_of_submobject_to_align]
         else:
             aligner = self
-        point_to_align = aligner.get_critical_point(aligned_edge-direction)
+        point_to_align = aligner.get_critical_point(aligned_edge - direction)
         self.shift(target_point - point_to_align + buff*direction)
         return self
 
