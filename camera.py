@@ -193,12 +193,12 @@ class Camera(object):
         pixel_coords = self.thickened_coordinates(
             pixel_coords, thickness
         )
-        rgb_len = self.pixel_array.shape[2]
+        rgba_len = self.pixel_array.shape[2]
 
         rgbas = (255*rgbas).astype('uint8')
         target_len = len(pixel_coords)
         factor = target_len/len(rgbas)
-        rgbas = np.array([rgbas]*factor).reshape((target_len, rgb_len))
+        rgbas = np.array([rgbas]*factor).reshape((target_len, rgba_len))
 
         on_screen_indices = self.on_screen_pixels(pixel_coords)        
         pixel_coords = pixel_coords[on_screen_indices]        
@@ -211,9 +211,9 @@ class Camera(object):
         indices = np.dot(pixel_coords, flattener)[:,0]
         indices = indices.astype('int')
         
-        new_pa = self.pixel_array.reshape((ph*pw, rgb_len))
+        new_pa = self.pixel_array.reshape((ph*pw, rgba_len))
         new_pa[indices] = rgbas
-        self.pixel_array = new_pa.reshape((ph, pw, rgb_len))
+        self.pixel_array = new_pa.reshape((ph, pw, rgba_len))
 
     def display_image_mobject(self, image_mobject):
         corner_coords = self.points_to_pixel_coords(image_mobject.points)
