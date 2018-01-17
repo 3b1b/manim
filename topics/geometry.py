@@ -15,25 +15,35 @@ class Arc(VMobject):
         VMobject.__init__(self, **kwargs)
 
     def generate_points(self):
-        self.set_anchor_points(
-            self.get_unscaled_anchor_points(),
-            mode = "smooth"
-        )
-        self.scale(self.radius)
-
-    def get_unscaled_anchor_points(self):
-        return [
+        anchors = np.array([
             np.cos(a)*RIGHT+np.sin(a)*UP
             for a in np.linspace(
                 self.start_angle, 
                 self.start_angle + self.angle, 
                 self.num_anchors
             )
-        ]
+        ])
+        #Figure out which control points will give the
+        #Appropriate tangent lines to the circle
+        d_theta = self.angle/(self.num_anchors-1.0)
+        tangent_vectors = np.zeros(anchors.shape)
+        tangent_vectors[:,1] = anchors[:,0]
+        tangent_vectors[:,0] = -anchors[:,1]
+        handles1 = anchors[:-1] + (d_theta/3)*tangent_vectors[:-1]
+        handles2 = anchors[1:] - (d_theta/3)*tangent_vectors[1:]
+        self.set_anchors_and_handles(
+            anchors, handles1, handles2
+        )
+        self.scale(self.radius, about_point = ORIGIN)
 
     def add_tip(self, tip_length = 0.25):
         #TODO, do this a better way
-        arrow = Arrow(*self.points[-2:], tip_length = tip_length)
+        p1, p2 = self.points[-2:]
+        arrow = Arrow(
+            p1, 2*p2 - p1, 
+            tip_length = tip_length,
+            max_tip_length_to_length_ratio = 2.0
+        )
         self.add(arrow.split()[-1])
         self.highlight(self.get_color())
         return self
@@ -65,6 +75,41 @@ class Dot(Circle):
         Circle.__init__(self, **kwargs)
         self.shift(point)
         self.init_colors()
+
+class Sector(VMobject):
+    CONFIG = {
+        "inner_radius" : 1,
+        "outer_radius" : 2,
+        "angle" : TAU/4,
+        "start_angle" : 0,
+        "fill_opacity" : 1,
+        "stroke_width" : 0,
+        "color" : WHITE,
+        "mark_paths_closed" : True,
+    }
+    def generate_points(self):
+        arc1 = Arc(
+            angle = self.angle,
+            start_angle = self.start_angle,
+            radius = self.inner_radius,
+        )
+        arc2 = Arc(
+            angle = -1*self.angle,
+            start_angle = self.start_angle+self.angle,
+            radius = self.outer_radius,
+        )
+        a1_to_a2_points = np.array([
+            interpolate(arc1.points[-1], arc2.points[0], alpha)
+            for alpha in np.linspace(0, 1, 4)
+        ])
+        a2_to_a1_points = np.array([
+            interpolate(arc2.points[-1], arc1.points[0], alpha)
+            for alpha in np.linspace(0, 1, 4)
+        ])
+        self.points = np.array(arc1.points)
+        self.add_control_points(a1_to_a2_points[1:])
+        self.add_control_points(arc2.points[1:])
+        self.add_control_points(a2_to_a1_points[1:])
 
 class Line(VMobject):
     CONFIG = {
