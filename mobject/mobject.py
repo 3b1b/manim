@@ -138,13 +138,22 @@ class Mobject(object):
            mob.points += total_vector
         return self
 
-    def scale(self, scale_factor, about_point = None):
-        if about_point is not None:
-            self.shift(-about_point)
+    def scale(self, scale_factor, about_point = None, about_edge = ORIGIN):
+        """
+        Default behavior is to scale about the center of the mobject.
+        The argument about_edge can be a vector, indicating which side of
+        the mobject to scale about, e.g., mob.scale(about_edge = RIGHT) 
+        scales about mob.get_right().
+
+        Otherwise, if about_point is given a value, scaling is done with
+        respect to that point.
+        """
+        if about_point is None:
+            about_point = self.get_critical_point(about_edge)
+        self.shift(-about_point)
         for mob in self.family_members_with_points():
             mob.points *= scale_factor
-        if about_point is not None:
-            self.shift(about_point)
+        self.shift(about_point)
         return self
 
     def rotate_about_origin(self, angle, axis = OUT, axes = []):
@@ -234,6 +243,7 @@ class Mobject(object):
         return self
 
     def scale_in_place(self, scale_factor):
+        #Redundant with default behavior of scale now.
         self.do_in_place(self.scale, scale_factor)
         return self
 
