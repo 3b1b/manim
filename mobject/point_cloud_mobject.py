@@ -154,7 +154,6 @@ class Mobject1D(PMobject):
         self.epsilon = 1.0 / self.density        
         Mobject.__init__(self, **kwargs)
 
-
     def add_line(self, start, end, color = None):
         start, end = map(np.array, [start, end])
         length = np.linalg.norm(end - start)
@@ -178,6 +177,23 @@ class Mobject2D(PMobject):
         Mobject.__init__(self, **kwargs)
 
 
+class PointCloudDot(Mobject1D):
+    CONFIG = {
+        "radius" : 0.075,
+        "stroke_width" : 2,
+        "density" : DEFAULT_POINT_DENSITY_1D,
+        "color" : YELLOW,
+    }
+    def __init__(self, center, **kwargs):
+        Mobject1D.__init__(self, **kwargs)
+        self.shift(center)
+
+    def generate_points(self):
+        self.add_points([
+            r*(np.cos(theta)*RIGHT + np.sin(theta)*UP)
+            for r in np.arange(0, self.radius, self.epsilon)
+            for theta in np.arange(0, 2*np.pi, self.epsilon/r)
+        ])
 
 class Point(PMobject):
     CONFIG = {
