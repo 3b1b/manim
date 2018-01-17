@@ -37,7 +37,14 @@ class PMobject(Mobject):
             mob.rgbas[:,:] = rgba
         return self
 
-    def gradient_highlight(self, start_color, end_color):
+    # def gradient_highlight(self, start_color, end_color):
+    def gradient_highlight(self, *colors):
+        self.rgbas = np.array(map(
+            color_to_rgba, 
+            color_gradient(colors, len(self.points))
+        ))
+        return self
+
         start_rgba, end_rgba = map(color_to_rgba, [start_color, end_color])
         for mob in self.family_members_with_points():
             num_points = mob.get_num_points()
