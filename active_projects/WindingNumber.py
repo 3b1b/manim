@@ -77,7 +77,7 @@ class DualScene(Scene):
             ShowCreation(output_object),
             run_time = run_time
             )
-        
+
 class TestDual(DualScene):
     def construct(self):
         self.force_skipping()
@@ -87,7 +87,7 @@ class TestDual(DualScene):
         
 class EquationSolver1d(GraphScene, ZoomedScene, ReconfigurableScene):
     CONFIG = {
-    "graph_func" : lambda x : x,
+    "func" : lambda x : x,
     "targetX" : 0,
     "targetY" : 0,
     "initial_lower_x" : 0,
@@ -100,7 +100,7 @@ class EquationSolver1d(GraphScene, ZoomedScene, ReconfigurableScene):
 
     def drawGraph(self):
         self.setup_axes()
-        self.graph = self.get_graph(self.graph_func)
+        self.graph = self.get_graph(self.func)
         self.add(self.graph)
 
         if self.graph_label != None:
@@ -127,9 +127,9 @@ class EquationSolver1d(GraphScene, ZoomedScene, ReconfigurableScene):
         yBraces.rotate(np.pi/2)
 
         lowerX = self.initial_lower_x
-        lowerY = self.graph_func(lowerX)
+        lowerY = self.func(lowerX)
         upperX = self.initial_upper_x
-        upperY = self.graph_func(upperX)
+        upperY = self.func(upperX)
 
         leftBrace.move_to(self.coords_to_point(lowerX, 0))
         leftBraceLabel = DecimalNumber(lowerX)
@@ -165,12 +165,12 @@ class EquationSolver1d(GraphScene, ZoomedScene, ReconfigurableScene):
 
         lowerDotPoint = self.input_to_graph_point(lowerX, self.graph)
         lowerDotXPoint = self.coords_to_point(lowerX, 0)
-        lowerDotYPoint = self.coords_to_point(0, self.graph_func(lowerX))
+        lowerDotYPoint = self.coords_to_point(0, self.func(lowerX))
         lowerDot = Dot(lowerDotPoint)
         upperDotPoint = self.input_to_graph_point(upperX, self.graph)
         upperDot = Dot(upperDotPoint)
         upperDotXPoint = self.coords_to_point(upperX, 0)
-        upperDotYPoint = self.coords_to_point(0, self.graph_func(upperX))
+        upperDotYPoint = self.coords_to_point(0, self.func(upperX))
 
         lowerXLine = Line(lowerDotXPoint, lowerDotPoint, stroke_width = 1, color = YELLOW)
         upperXLine = Line(upperDotXPoint, upperDotPoint, stroke_width = 1, color = YELLOW)
@@ -195,7 +195,7 @@ class EquationSolver1d(GraphScene, ZoomedScene, ReconfigurableScene):
                 def updater(group, alpha):
                     dot, xBrace, yBrace, xLine, yLine = group
                     newX = interpolate(xAtStart, midX, alpha)
-                    newY = self.graph_func(newX)
+                    newY = self.func(newX)
                     graphPoint = self.input_to_graph_point(newX, 
                             self.graph)
                     dot.move_to(graphPoint)
@@ -209,7 +209,7 @@ class EquationSolver1d(GraphScene, ZoomedScene, ReconfigurableScene):
                 return updater
 
             midX = (lowerX + upperX)/float(2)
-            midY = self.graph_func(midX)
+            midY = self.func(midX)
 
             midCoords = self.coords_to_point(midX, midY)
             midColor = RED
@@ -255,20 +255,20 @@ class EquationSolver1d(GraphScene, ZoomedScene, ReconfigurableScene):
 class FirstSqrtScene(EquationSolver1d):
     CONFIG = {
     "x_min" : 0,
-    "x_max" : 2,
+    "x_max" : 2.5,
     "y_min" : 0,
-    "y_max" : 4,
+    "y_max" : 2.5**2,
     "graph_origin" : 2*DOWN + 5 * LEFT,
     "x_axis_width" : 12,
     "zoom_factor" : 3,
     "zoomed_canvas_center" : 2.25 * UP + 1.75 * LEFT,
-    "graph_func" : lambda x : x**2,
+    "func" : lambda x : x**2,
     "targetX" : np.sqrt(2),
     "targetY" : 2,
     "initial_lower_x" : 1,
     "initial_upper_x" : 2,
-    "num_iterations" : 2,
-    "iteration_at_which_to_start_zoom" : 1,
+    "num_iterations" : 10,
+    "iteration_at_which_to_start_zoom" : 3,
     "graph_label" : "y = x^2",
     "show_target_line" : True,
     }
@@ -285,7 +285,7 @@ class SecondSqrtScene(FirstSqrtScene, ReconfigurableScene):
         self.drawGraph()
         newOrigin = self.coords_to_point(0, shiftVal)
         self.transition_to_alt_config(
-            graph_func = lambda x : x**2 - shiftVal,
+            func = lambda x : x**2 - shiftVal,
             targetY = 0,
             graph_label = "y = x^2 - " + str(shiftVal),
             y_min = self.y_min - shiftVal,
@@ -294,6 +294,8 @@ class SecondSqrtScene(FirstSqrtScene, ReconfigurableScene):
             graph_origin = newOrigin)
         self.solveEquation()
 
+# TODO: Perhaps have pulses fade out and in at ends of line, instead of jarringly
+# popping out and in?
 class LinePulser(ContinualAnimation):
     def __init__(self, line, bullet_template, num_bullets, pulse_time, **kwargs):
         self.line = line
@@ -312,15 +314,6 @@ class LinePulser(ContinualAnimation):
             self.bullets[i].shift((0, 0, 1)) # Temporary hack for z-buffer fidgetiness
 
 class LoopSplitScene(Scene):
-    # def LinePulser(self, line, bullet_template, num_bullets):
-    #     start, end = line.get_start(), line.get_end()
-    #     bullets = [
-    #         bullet_template.copy().move_to(interpolate(start, end, i/float(num_bullets))) 
-    #         for i in range(num_bullets)
-    #         ]
-    #     bullets_group = VGroup(*bullets)
-    #     return ApplyMethod(bullets_group.shift, (end - start)/float(num_bullets), 
-    #         rate_func = None, run_time = 0.5)
 
     def PulsedLine(self, start, end, bullet_template, num_bullets = 4, pulse_time = 1, **kwargs):
         line = Line(start, end, **kwargs)
@@ -355,19 +348,6 @@ class LoopSplitScene(Scene):
         for line in line_list:
             self.add(*line)
         self.wait()
-
-        # TODO: Make the following a continual animation, and on all split loops do the same
-        # bullet = TexMobject("*", fill_color = RED)
-        # bullet.move_to(tl)
-        # self.add(bullet)
-        # list_of_args = reduce(op.add, 
-        #     [
-        #         [ApplyMethod, bullet.move_to, point, {"rate_func" : None}] for 
-        #         point in [tr, br, bl, tl]
-        #     ]
-        #     )
-        # succ_anim = Succession(*list_of_args)
-        # self.add(CycleAnimation(succ_anim))
 
         # Splits in middle
         split_line = DashedLine(interpolate(tl, tr, 0.5), interpolate(bl, br, 0.5))
@@ -420,9 +400,139 @@ class LoopSplitScene(Scene):
         self.wait()
 
         self.play(FadeOut(highlight_circle), FadeOut(mid_lines))
+        # Because FadeOut didn't remove the continual pulsers, we remove them manually
+        self.remove(mid_line_left[1], mid_line_right[1])
+
+        # Brings loop back together; keep in sync with motions which bring loop apart above
+        self.play(
+            ApplyMethod(left_open_loop.shift, 2 * RIGHT), 
+            ApplyMethod(right_open_loop.shift, 2 * LEFT)
+            )
+
+        self.wait()
+
+class NumberLineScene(Scene):
+    def construct(self):
+        num_line = NumberLine()
+        self.add(num_line)
+        self.wait()
+
+        interval_1d = Line(num_line.number_to_point(-1), num_line.number_to_point(1), 
+            stroke_color = RED, stroke_width = 10)
+        self.play(ShowCreation(interval_1d))
+        self.wait()
+
+        num_plane = NumberPlane()
+
+        random_points = [UP + LEFT, 2 * UP, RIGHT, DOWN, DOWN + RIGHT, LEFT]
+
+        interval_2d = Polygon(
+            *random_points,
+            stroke_color = RED,
+            stroke_width = 10)
+        # TODO: Turn this into a more complicated, curvy loop?
+        # TODO: Illustrate borders and filled interiors with a particular color
+        # on both 1d and 2d region?
+
+        self.play(
+            FadeOut(num_line), 
+            FadeIn(num_plane),
+            ReplacementTransform(interval_1d, interval_2d))
 
         self.wait()        
-        
+
+class ArrowCircleTest(Scene):
+    def construct(self):
+        circle_radius = 3
+        circle = Circle(radius = circle_radius)
+        self.add(circle)
+
+        base_arrow = Arrow(circle_radius * 0.7 * RIGHT, circle_radius * 1.3 * RIGHT)
+
+        def rev_rotate(x, revs):
+            return x.rotate(revs * 2 * np.pi)
+
+        num_arrows = 8 * 3
+        arrows = [rev_rotate(base_arrow.copy(), (np.true_divide(i, num_arrows))) for i in range(num_arrows)]
+        arrows_vgroup = VGroup(*arrows)
+
+        self.play(ShowCreation(arrows_vgroup), run_time = 2.5, rate_func = None)
+
+        self.wait()
+
+class FuncRotater(Animation):
+    CONFIG = {
+        "rotate_func" : lambda x : x # Func from alpha to revolutions
+    }
+
+    # Perhaps abstract this out into an "Animation from base object" class
+    def update_submobject(self, submobject, starting_submobject, alpha):
+        submobject.points = np.array(starting_submobject.points)
+
+    def update_mobject(self, alpha):
+        Animation.update_mobject(self, alpha)
+        self.mobject.rotate(
+            self.rotate_func(alpha) * 2 * np.pi, 
+        )
+        # Will want to have arrow colors change to match direction as well
+
+class TestRotater(Scene):
+    def construct(self):
+        test_line = Line(ORIGIN, RIGHT)
+        self.play(FuncRotater(
+            test_line,
+            rotate_func = lambda x : x % 0.25,
+            run_time = 10))
+
+class OdometerScene(Scene):
+    CONFIG = {
+        "rotate_func" : lambda x : np.sin(x * 2 * np.pi),
+        "run_time" : 5
+    }
+
+    def construct(self):
+        base_arrow = Arrow(ORIGIN, RIGHT)
+        circle = Circle(center = ORIGIN, radius = 1.3)
+        self.add(circle)
+        num_display = DecimalNumber(0)
+        num_display.move_to(2 * DOWN)
+        self.play(
+            FuncRotater(base_arrow, rotate_func = self.rotate_func),
+            ChangingDecimal(num_display, self.rotate_func),
+            run_time = self.run_time,
+            rate_func = None)
+
+def Vect2dToRevAngle(x, y):
+    return np.true_divide(np.arctan2(y, x), 2 * np.pi)
+
+# Returns the value with the same fractional component as x, closest to m
+def resit_near(x, m):
+    frac_diff = (x - m) % 1
+    if frac_diff > 0.5:
+        frac_diff -= 1
+    return m + frac_diff
+
+# Perhaps use modulus of (uniform) continuity instead of num_check_points, calculating 
+# latter as needed from former?
+def winding_func(func, start, end, num_check_points):
+    check_points = [None for i in range(num_check_points)]
+    check_points[0] = func(0)
+    step_size = np.true_divide(end - start, num_check_points)
+    for i in range(num_check_points - 1):
+        check_points[i + 1] = \
+        resit_near(
+            func(start + (i + 1) * step_size),
+            check_points[i])
+    return lambda x : resit_near(func(x), check_points[int((x - start)/step_size)])
+
 class EquationSolver2d(ZoomedScene):
     #TODO
-    CONFIG = {}
+    CONFIG = {
+    "func" : lambda p : p,
+    "target_input" : (0, 0),
+    "target_output" : (0, 0),
+    "initial_top_left_point" : (0, 0),
+    "initial_guess_dimensions" : (0, 0),
+    "num_iterations" : 10,
+    "iteration_at_which_to_start_zoom" : None
+    }
