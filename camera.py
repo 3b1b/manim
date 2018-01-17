@@ -409,4 +409,73 @@ class MappingCamera(Camera):
                 mobject.insert_n_anchor_points(self.min_anchor_points)
         Camera.capture_mobjects(self, mobject_copies, **kwargs)
 
+# TODO: Put this in different utility/helpers file? Convenient for me (Sridhar); I like it.
+class DictAsObject(object):
+    def __init__(self, dict):
+         self.__dict__ = dict
 
+# Note: This allows layering of multiple cameras onto the same portion of the pixel array,
+# the later cameras overwriting the former
+#
+# TODO: Add optional separator borders between cameras (or perhaps peel this off into a 
+# CameraPlusOverlay class)
+class MultiCamera(Camera):
+    def __init__(self, *cameras_with_start_positions, **kwargs):
+        self.shifted_cameras = [
+            DictAsObject(
+            {
+                "camera" : camera_with_start_positions[0], 
+                "start_x" : camera_with_start_positions[1][1],
+                "start_y" : camera_with_start_positions[1][0],
+                "end_x" : camera_with_start_positions[1][1] + camera_with_start_positions[0].pixel_shape[1],
+                "end_y" : camera_with_start_positions[1][0] + camera_with_start_positions[0].pixel_shape[0],
+            })
+            for camera_with_start_positions in cameras_with_start_positions
+        ]
+        Camera.__init__(self, **kwargs)
+
+    def capture_mobjects(self, mobjects, **kwargs):
+        for shifted_camera in self.shifted_cameras:
+            shifted_camera.camera.capture_mobjects(mobjects, **kwargs)
+            
+            self.pixel_array[
+                shifted_camera.start_y:shifted_camera.end_y, 
+                shifted_camera.start_x:shifted_camera.end_x] \
+            = shifted_camera.camera.pixel_array
+
+    def set_background(self, pixel_array):
+        for shifted_camera in self.shifted_cameras:
+            shifted_camera.camera.set_background(
+                pixel_array[
+                    shifted_camera.start_y:shifted_camera.end_y, 
+                    shifted_camera.start_x:shifted_camera.end_x])
+
+    def set_pixel_array(self, pixel_array):
+        Camera.set_pixel_array(self, pixel_array)
+        for shifted_camera in self.shifted_cameras:
+            shifted_camera.camera.set_pixel_array(
+                pixel_array[
+                    shifted_camera.start_y:shifted_camera.end_y, 
+                    shifted_camera.start_x:shifted_camera.end_x])
+
+    def init_background(self):
+        Camera.init_background(self)
+        for shifted_camera in self.shifted_cameras:
+            shifted_camera.camera.init_background()
+
+# A MultiCamera which, when called with two full-size cameras, initializes itself
+# as a splitscreen, also taking care to resize each individual camera within it
+class SplitScreenCamera(MultiCamera):
+    def __init__(self, left_camera, right_camera, **kwargs):
+        digest_config(self, kwargs)
+        self.left_camera = left_camera
+        self.right_camera = right_camera
+        
+        half_width = self.pixel_shape[1] / 2
+        for camera in [self.left_camera, self.right_camera]:
+            camera.pixel_shape = (self.pixel_shape[0], half_width) # TODO: Round up on one if width is odd
+            camera.init_background()
+            camera.resize_space_shape()
+            camera.reset()
+
+        MultiCamera.__init__(self, (left_camera, (0, 0)), (right_camera, (0, half_width)))
