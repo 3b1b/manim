@@ -24,23 +24,19 @@ from mobject.tex_mobject import *
 from mobject.vectorized_mobject import *
 
 ## To watch one of these scenes, run the following:
-## python extract_scene.py -p file_name <SceneName>
-
-
-
+## python extract_scene.py file_name <SceneName> -p
 
 
 class SquareToCircle(Scene):
     def construct(self):
         circle = Circle()
+        # circle.flip(RIGHT)
+        # circle.rotate(3*TAU/8)
         square = Square()
-        square.rotate(np.pi/8)
-        self.add(circle, square)
-        return
 
         self.play(ShowCreation(square))
         self.play(Transform(square, circle))
-        self.wait()
+        self.play(FadeOut(square))
 
 class WarpSquare(Scene):
     def construct(self):
