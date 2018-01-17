@@ -271,20 +271,27 @@ class Mobject(object):
                 direction = RIGHT,
                 buff = DEFAULT_MOBJECT_TO_MOBJECT_BUFFER,
                 aligned_edge = ORIGIN,
-                align_using_submobjects = False,
+                submobject_to_align = None,
+                index_of_submobject_to_align = None,
                 ):
         if isinstance(mobject_or_point, Mobject):
             mob = mobject_or_point
-            target_point = mob.get_critical_point(
-                aligned_edge+direction,
-                use_submobject = align_using_submobjects
+            if index_of_submobject_to_align is not None:
+                target_aligner = mob[index_of_submobject_to_align]
+            else:
+                target_aligner = mob
+            target_point = target_aligner.get_critical_point(
+                aligned_edge + direction
             )
         else:
             target_point = mobject_or_point
-        point_to_align = self.get_critical_point(
-            aligned_edge-direction,
-            use_submobject = align_using_submobjects
-        )
+        if submobject_to_align:
+            aligner = submobject_to_align
+        elif index_of_submobject_to_align is not None:
+            aligner = self[index_of_submobject_to_align]
+        else:
+            aligner = self
+        point_to_align = aligner.get_critical_point(aligned_edge-direction)
         self.shift(target_point - point_to_align + buff*direction)
         return self
 
@@ -515,9 +522,7 @@ class Mobject(object):
     def get_num_points(self):
         return len(self.points)
 
-    def get_critical_point(self, direction, use_submobject = False):
-        if use_submobject:
-            return self.get_submobject_critical_point(direction)
+    def get_critical_point(self, direction):
         result = np.zeros(self.dim)
         for dim in range(self.dim):
             if direction[dim] <= 0:
@@ -532,17 +537,6 @@ class Mobject(object):
             else:
                 result[dim] = max_point
         return result
-
-    def get_submobject_critical_point(self, direction):
-        if len(self.split()) == 1:
-            return self.get_critical_point(direction)
-        with_points = self.family_members_with_points()
-        submob_critical_points = np.array([
-            submob.get_critical_point(direction)
-            for submob in with_points
-        ])
-        index = np.argmax(np.dot(direction, submob_critical_points.T))
-        return submob_critical_points[index]
 
     # Pseudonyms for more general get_critical_point method
     def get_edge_center(self, direction):
