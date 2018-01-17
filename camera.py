@@ -344,10 +344,7 @@ class Camera(object):
 
     def get_thickening_nudges(self, thickness):
         _range = range(-thickness/2+1, thickness/2+1)
-        return np.array(
-            list(it.product([0], _range))+
-            list(it.product(_range, [0]))
-        )
+        return np.array(list(it.product(_range, _range)))
 
     def thickened_coordinates(self, pixel_coords, thickness):
         nudges = self.get_thickening_nudges(thickness)
