@@ -54,6 +54,19 @@ class PMobject(Mobject):
             ])
         return self
 
+    def radial_gradient_highlight(self, center = None, radius = 1, inner_color = WHITE, outer_color = BLACK):
+        start_rgba, end_rgba = map(color_to_rgba, [start_color, end_color])
+        if center == None:
+            center = self.get_center()
+        for mob in self.family_members_with_points():
+            num_points = mob.get_num_points()
+            t = min(1,np.abs(mob.get_center() - center)/radius)
+
+            mob.rgbas = np.array(
+                [ interpolate(start_rgba, end_rgba, t) ] * num_points
+                )
+        return self
+
     def match_colors(self, mobject):
         Mobject.align_data(self, mobject)
         self.rgbas = np.array(mobject.rgbas)

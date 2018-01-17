@@ -436,6 +436,10 @@ class Mobject(object):
         self.submobject_gradient_highlight(*colors)
         return self
 
+    def radial_gradient_highlight(self, center = None, radius = 1, inner_color = WHITE, outer_color = BLACK):
+        self.submobject_radial_gradient_highlight(center, radius, inner_color, outer_color)
+        return self
+
     def submobject_gradient_highlight(self, *colors):
         if len(colors) == 0:
             raise Exception("Need at least one color")
@@ -444,9 +448,27 @@ class Mobject(object):
 
         mobs = self.family_members_with_points()
         new_colors = color_gradient(colors, len(mobs))
+
         for mob, color in zip(mobs, new_colors):
             mob.highlight(color, family = False)
         return self
+
+    def submobject_radial_gradient_highlight(self, center = None, radius = 1, inner_color = WHITE, outer_color = BLACK):
+
+        mobs = self.family_members_with_points()
+        if center == None:
+            center = self.get_center()
+
+        for mob in self.family_members_with_points():
+            t = np.linalg.norm(mob.get_center() - center)/radius
+            t = min(t,1)
+            print t
+            mob_color = interpolate_color(inner_color, outer_color, t)
+            print mob_color
+            mob.highlight(mob_color, family = False)
+
+        return self
+
 
     def set_color(self, color):
         self.highlight(color)
