@@ -28,10 +28,128 @@ from mobject.vectorized_mobject import *
 ## To watch one of these scenes, run the following:
 ## python extract_scene.py -p file_name <SceneName>
 
+inverse_power_law = lambda maxint,cutoff,exponent: \
+    (lambda r: maxint * (cutoff/(r+cutoff))**exponent)
+inverse_quadratic = lambda maxint,cutoff: inverse_power_law(maxint,cutoff,2)
+
+LIGHT_COLOR = YELLOW
+INDICATOR_RADIUS = 0.7
+INDICATOR_STROKE_WIDTH = 1
+INDICATOR_STROKE_COLOR = LIGHT_COLOR
+INDICATOR_TEXT_COLOR = LIGHT_COLOR
+OPACITY_FOR_UNIT_INTENSITY = 0.2
 
 
-class LightCone(Circle):
-    pass
+
+class LightCone(VGroup):
+    CONFIG = {
+        "angle" : TAU/8,
+        "radius" : 5,
+        "opacity_function" : lambda r : 1./max(r, 0.01),
+        "num_sectors" : 10,
+        "color": LIGHT_COLOR,
+    }
+
+    def generate_points(self):
+        radii = np.linspace(0, self.radius, self.num_sectors+1)
+        sectors = [
+            AnnularSector(
+                angle = self.angle,
+                inner_radius = r1,
+                outer_radius = r2,
+                stroke_width = 0,
+                stroke_color = self.color,
+                fill_color = self.color,
+                fill_opacity = self.opacity_function(r1),
+            )
+            for r1, r2 in zip(radii, radii[1:])
+        ]
+        self.add(*sectors)
+
+
+class Candle(VGroup):
+    CONFIG = {
+        "radius" : 5,
+        "opacity_function" : lambda r : 1./max(r, 0.01),
+        "num_sectors" : 10,
+        "color": LIGHT_COLOR,
+    }
+
+    def generate_points(self):
+        radii = np.linspace(0, self.radius, self.num_sectors+1)
+        annuli = [
+            Annulus(
+                inner_radius = r1,
+                outer_radius = r2,
+                stroke_width = 0,
+                stroke_color = self.color,
+                fill_color = self.color,
+                fill_opacity = self.opacity_function(r1),
+            )
+            for r1, r2 in zip(radii, radii[1:])
+        ]
+        self.add(*annuli)
+
+
+
+class SwitchOn(LaggedStart):
+    CONFIG = {
+        "lag_ratio": 0.2,
+        "run_time": 3
+    }
+
+    def __init__(self, light, **kwargs):
+        if not isinstance(light,LightCone) and not isinstance(light,Candle):
+            raise Exception("Only LightCones and Candles can be switched on")
+        LaggedStart.__init__(self,
+            FadeIn, light, **kwargs)
+
+class LightHouse(SVGMobject):
+    CONFIG = {
+        "file_name" : "lighthouse",
+        "height" : 0.5
+    }
+
+class LightIndicator(Mobject):
+    CONFIG = {
+        "radius": 0.5,
+        "intensity": 1,
+        "opacity_for_unit_intensity": 1
+    }
+
+    def generate_points(self):
+        self.background = Circle(color=BLACK, radius = self.radius)
+        self.background.set_fill(opacity=1)
+        self.foreground = Circle(color=self.color, radius = self.radius)
+        self.foreground.set_stroke(color=INDICATOR_STROKE_COLOR,width=INDICATOR_STROKE_WIDTH)
+
+        self.add(self.background, self.foreground)
+        self.reading = DecimalNumber(self.intensity)
+        self.reading.set_fill(color=INDICATOR_TEXT_COLOR)
+        self.reading.move_to(self.get_center())
+        self.add(self.reading)
+
+    def set_intensity(self, new_int):
+        self.intensity = new_int
+        new_opacity = min(1, new_int * self.opacity_for_unit_intensity)
+        self.foreground.set_fill(opacity=new_opacity)
+        ChangeDecimalToValue(self.reading, new_int).update(1)
+        
+
+
+class UpdateLightIndicator(AnimationGroup):
+
+    def __init__(self, indicator, intensity, **kwargs):
+        if not isinstance(indicator,LightIndicator):
+            raise Exception("This transform applies only to LightIndicator")
+        
+        target_foreground = indicator.copy().set_intensity(intensity).foreground
+        change_opacity = Transform(
+            indicator.foreground, target_foreground
+        )
+        changing_decimal = ChangeDecimalToValue(indicator.reading, intensity)
+        AnimationGroup.__init__(self, changing_decimal, change_opacity, **kwargs)
+        self.mobject = indicator
 
 
 class IntroScene(PiCreatureScene):
@@ -47,16 +165,17 @@ class IntroScene(PiCreatureScene):
         morty = self.get_primary_pi_creature()
         morty.scale(0.7).to_corner(DOWN+RIGHT)
 
-        self.build_up_euler_sum()
         self.force_skipping()
+
+        self.build_up_euler_sum()
         self.build_up_sum_on_number_line()
         self.show_pi_answer()
         self.other_pi_formulas()
-        self.refocus_on_euler_sum()
 
         self.revert_to_original_skipping_status()
         
 
+        self.refocus_on_euler_sum()
 
 
 
@@ -122,7 +241,7 @@ class IntroScene(PiCreatureScene):
                 
             self.wait()
 
-        self.q_marks = TextMobject("???").highlight(YELLOW)
+        self.q_marks = TextMobject("???").highlight(LIGHT_COLOR)
         self.q_marks.move_to(self.partial_sum_decimal)
 
         self.play(
@@ -176,7 +295,7 @@ class IntroScene(PiCreatureScene):
             self.rects.add(rect)
             lines.add(line)
 
-        #self.rects.radial_gradient_highlight(ORIGIN, 5, RED, BLUE)
+        #self.rects.radial_gradient_highlight(ORIGIN, 5, YELLOW, BLUE)
         
         for i in range(5):
             self.play(
@@ -254,21 +373,14 @@ class IntroScene(PiCreatureScene):
             ScaleInPlace(pi_squared,2,rate_func = wiggle)
         )
 
-        morty = self.get_primary_pi_creature()
-        bubble = ThoughtBubble(height = 2, width = 5)
-        bubble.pin_to(morty)
+        q_circle = Circle(color=WHITE,radius=0.8)
+        q_mark = TexMobject("?")
+        q_mark.next_to(q_circle)
 
-        thought = Circle()
-        thought.add(TexMobject("?"))
-        thought.next_to(morty,LEFT, LARGE_BUFF, UP)
-        thought.generate_target()
-
-        bubble.add_content(thought.target)
-
-        self.play(
-            morty.change_mode, "confused",
-            FadeIn(bubble)
-        )
+        thought = Group(q_circle, q_mark)
+        q_mark.height *= 2
+        self.pi_creature_thinks(thought,target_mode = "confused",
+            bubble_kwargs = { "height" : 1.5, "width" : 2 })
 
         self.wait()
 
@@ -290,30 +402,65 @@ class FirstLightHouseScene(Scene):
             stroke_width = 1,
             numbers_with_elongated_ticks = [0,1,2,3],
             numbers_to_show = np.arange(0,5),
-            unit_size = 5,
+            unit_size = 2,
             tick_frequency = 0.2,
-            line_to_number_buff = MED_LARGE_BUFF
+            line_to_number_buff = LARGE_BUFF
         )
 
         self.number_line_labels = self.number_line.get_number_mobjects()
         self.add(self.number_line,self.number_line_labels)
         self.wait()
 
-        first_lighthouse_indicator = Circle(
-            stroke_width = 1,
-            stroke_color = WHITE,
-            fill_color = RED,
-            fill_opacity = 1,
-            radius = 0.3
-        )
+        light_indicator = LightIndicator(radius = INDICATOR_RADIUS,
+            opacity_for_unit_intensity = OPACITY_FOR_UNIT_INTENSITY, color = LIGHT_COLOR)
 
         origin_point = self.number_line.number_to_point(0)
-        first_lighthouse_indicator.move_to(origin_point)
+        light_indicator.move_to(origin_point)
+        self.add_foreground_mobject(light_indicator)
 
-        self.add(first_lighthouse_indicator)
+        lighthouses = []
+        lighthouse_pos = []
+        light_cones = []
 
-        lighthouse1 = SVGMobject(file_name = "lighthouse")
-        self.add(lighthouse1)
+        num_cones = 2
+
+        for i in range(1,num_cones+1):
+            lighthouse = LightHouse()
+            point = self.number_line.number_to_point(i)
+            light_cone = LightCone(angle = TAU/8,
+            #light_cone = Candle(
+                opacity_function = inverse_power_law(1,1,2),
+                num_sectors = 10,
+                radius = 10)
+            light_cone.move_to(point)
+            lighthouse.next_to(point,DOWN,0)
+            lighthouses.append(lighthouse)
+            light_cones.append(light_cone)
+            lighthouse_pos.append(point)
+
+
+        for lh in lighthouses:
+            self.add_foreground_mobject(lh)
+
+        light_indicator.set_intensity(0)
+
+        intensities = np.cumsum(np.array([1./n**2 for n in range(1,num_cones+1)]))
+        opacities = intensities * light_indicator.opacity_for_unit_intensity
+
+        self.remove_foreground_mobjects(light_indicator)
+
+
+        for (i,lc) in zip(range(num_cones),light_cones):
+            self.play(
+                SwitchOn(lc),
+                #Animation(light_indicator),
+                ChangeDecimalToValue(light_indicator.reading,intensities[i]),
+                ApplyMethod(light_indicator.foreground.set_fill,None,opacities[i])
+                #UpdateLightIndicator(light_indicator, intensities[i])
+            )
+
+
+            
 
         self.wait()
 

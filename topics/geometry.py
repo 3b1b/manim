@@ -76,7 +76,9 @@ class Dot(Circle):
         self.shift(point)
         self.init_colors()
 
-class Sector(VMobject):
+
+
+class AnnularSector(VMobject):
     CONFIG = {
         "inner_radius" : 1,
         "outer_radius" : 2,
@@ -110,6 +112,42 @@ class Sector(VMobject):
         self.add_control_points(a1_to_a2_points[1:])
         self.add_control_points(arc2.points[1:])
         self.add_control_points(a2_to_a1_points[1:])
+
+class Sector(AnnularSector):
+
+    def __init__(self, radius = 1, **kwargs):
+        self.radius = radius
+        self.inner_radius = 0
+        AnnularSector.__init__(self,**kwargs)
+
+    @property
+    def radius(self):
+        return self.outer_radius
+
+    @radius.setter
+    def radius(self,new_radius):
+        self.outer_radius = new_radius
+
+
+
+class Annulus(Circle):
+    CONFIG = {
+        "inner_radius": 1,
+        "outer_radius": 2,
+        "fill_opacity" : 1,
+        "stroke_width" : 0,
+        "color" : WHITE,
+        "mark_paths_closed" : False,
+        "propagate_style_to_family" : True
+    }
+
+    def generate_points(self):
+        self.radius = self.outer_radius
+        Circle.generate_points(self)
+        inner_circle = Circle(radius=self.inner_radius)
+        inner_circle.flip()
+        self.add_subpath(inner_circle.points)
+
 
 class Line(VMobject):
     CONFIG = {
