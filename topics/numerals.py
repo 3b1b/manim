@@ -85,14 +85,9 @@ class ChangingDecimal(Animation):
         )
         new_decimal.replace(decimal, dim_to_match = 1)
         new_decimal.highlight(decimal.get_color())
-        decimal.align_data(new_decimal)
-        families = [
-            mob.family_members_with_points()
-            for mob in decimal, new_decimal
-        ]
-        for sm1, sm2 in zip(*families):
-            sm1.interpolate(sm1, sm2, 1)
-        self.mobject.number = new_number
+
+        decimal.submobjects = new_decimal.submobjects
+        decimal.number = new_number
 
     def update_position(self):
         if self.position_update_func is not None:
