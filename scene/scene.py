@@ -271,7 +271,7 @@ class Scene(object):
         return self.add_foreground_mobjects(mobject)
 
     def remove_foreground_mobjects(self, *mobjects):
-        self.foreground_mobjects = get_restructured_mobject_list(
+        self.foreground_mobjects = self.get_restructured_mobject_list(
             self.foreground_mobjects, 
             self.camera.extract_mobject_family_members(mobjects)
         )
