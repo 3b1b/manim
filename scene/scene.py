@@ -123,19 +123,23 @@ class Scene(object):
     def capture_mobjects_in_camera(self, mobjects, **kwargs):
         self.camera.capture_mobjects(mobjects, **kwargs)
 
-    def update_frame(self, mobjects = None, background = None, **kwargs):
-        if "include_submobjects" not in kwargs:
-            kwargs["include_submobjects"] = False
+    def update_frame(
+        self, 
+        mobjects = None, 
+        background = None, 
+        include_submobjects = True,
+        **kwargs):
         if mobjects is None:
             mobjects = list_update(
-                self.foreground_mobjects,
                 self.mobjects,
+                self.foreground_mobjects,
             )
         if background is not None:
             self.set_camera_pixel_array(background)
         else:
             self.reset_camera()
 
+        kwargs["include_submobjects"] = include_submobjects
         self.capture_mobjects_in_camera(mobjects, **kwargs)
 
     def freeze_background(self):
@@ -166,15 +170,6 @@ class Scene(object):
         return len(self.continual_animations) > 0 or self.always_continually_update
 
     ###
-
-    def extract_mobject_family_members(self, *mobjects):
-        return remove_list_redundancies(list(
-            it.chain(*[
-                m.submobject_family()
-                for m in mobjects
-                if not (isinstance(m, VMobject) and m.is_subpath)
-            ])
-        ))
 
     def get_top_level_mobjects(self):
         # Return only those which are not in the family
@@ -209,14 +204,10 @@ class Scene(object):
         """
         Mobjects will be displayed, from background to foreground,
         in the order with which they are entered.
-
-        Scene class keeps track not just of the mobject directly added,
-        but also of every family member therein.
         """
         mobjects, continual_animations = self.separate_mobjects_and_continual_animations(
             mobjects_or_continual_animations
         )
-        mobjects = self.extract_mobject_family_members(*mobjects)
         self.mobjects = list_update(self.mobjects, mobjects)
         self.continual_animations = list_update(
             self.continual_animations, continual_animations
@@ -236,23 +227,29 @@ class Scene(object):
         mobjects, continual_animations = self.separate_mobjects_and_continual_animations(
             mobjects_or_continual_animations
         )
-        mobjects = self.extract_mobject_family_members(*mobjects)
-        self.mobjects = filter(
-            lambda m : m not in mobjects,
-            self.mobjects
+        to_remove = self.camera.extract_mobject_family_members(mobjects)
+
+        self.mobjects = list_difference_update(self.mobjects, to_remove)
+        self.restructure_how_mobjects_containing_to_remove_are_stored(
+            self.mobjects, to_remove
         )
-        self.remove_mobjects_not_completely_on_screen()
-        self.remove_foreground_mobjects(*mobjects)
+        self.remove_foreground_mobjects(*to_remove)
 
         self.continual_animations = filter(
             lambda ca : ca not in continual_animations and \
-                        ca.mobject not in mobjects,
+                        ca.mobject not in to_remove,
             self.continual_animations
         )
 
         return self
 
-    def remove_mobjects_not_completely_on_screen(self):
+    def restructure_how_mobjects_containing_to_remove_are_stored(self, mobjects, to_remove):
+        """
+        In cases where the scene contains a group, e.g. Group(m1, m2, m3), but one
+        of its submobjects is removed, e.g. scene.remove(m1), the list of mobjects
+        will be editing to contain other submobjts, but not m1, e.g. it will now
+        insert m2 and m3 to where the group once was.
+        """
         def should_keep(mobject):
             return all([
                 submob in self.mobjects
@@ -274,9 +271,9 @@ class Scene(object):
         return self.add_foreground_mobjects(mobject)
 
     def remove_foreground_mobjects(self, *mobjects):
-        self.foreground_mobjects = filter(
-            lambda m : m not in mobjects,
-            self.foreground_mobjects
+        self.foreground_mobjects = list_difference_update(
+            self.foreground_mobjects, 
+            self.camera.extract_mobject_family_members(mobjects)
         )
         return self
 
@@ -289,7 +286,7 @@ class Scene(object):
 
     def bring_to_back(self, *mobjects):
         self.remove(*mobjects)
-        self.mobjects = mobjects + self.mobjects
+        self.mobjects = list(mobjects) + self.mobjects
         return self
 
     def clear(self):
@@ -304,17 +301,13 @@ class Scene(object):
     def get_mobject_copies(self):
         return [m.copy() for m in self.mobjects]
 
-    def separate_moving_and_static_mobjects(self, *animations):
-        moving_mobjects = self.extract_mobject_family_members(*it.chain(
+    def get_moving_mobjects(self, *animations):
+        moving_mobjects = list(it.chain(
             [anim.mobject for anim in animations],
             [ca.mobject for ca in self.continual_animations],
             self.foreground_mobjects,
         ))
-        static_mobjects = filter(
-            lambda m : m not in moving_mobjects,
-            self.mobjects
-        )
-        return moving_mobjects, static_mobjects
+        return moving_mobjects
 
     def get_time_progression(self, run_time):
         times = np.arange(0, run_time, self.frame_duration)
@@ -395,9 +388,8 @@ class Scene(object):
         self.num_plays += 1
 
         sync_animation_run_times_and_rate_funcs(*animations, **kwargs)
-        moving_mobjects, static_mobjects = \
-            self.separate_moving_and_static_mobjects(*animations)
-        self.update_frame(static_mobjects)
+        moving_mobjects = self.get_moving_mobjects(*animations)
+        self.update_frame(excluded_mobjects = moving_mobjects)
         static_image = self.get_frame()
         for t in self.get_animation_time_progression(animations):
             for animation in animations:
@@ -422,7 +414,7 @@ class Scene(object):
             return self.mobjects_from_last_animation
         return []
 
-    def wait(self, duration = DEFAULT_wait_TIME):
+    def wait(self, duration = DEFAULT_WAIT_TIME):
         if self.skip_animations:
             return self
 
@@ -527,3 +519,7 @@ class Scene(object):
             shutil.move(*self.args_to_rename_file)
         else:
             os.rename(*self.args_to_rename_file)
+
+
+
+

@@ -84,15 +84,38 @@ class Camera(object):
     def reset(self):
         self.set_pixel_array(np.array(self.background))
 
+    ####
+
+    def extract_mobject_family_members(self, mobjects, only_those_with_points = False):
+        if only_those_with_points:
+            method = Mobject.family_members_with_points
+        else:
+            method = Mobject.submobject_family
+        return remove_list_redundancies(list(
+            it.chain(*[
+                method(m)
+                for m in mobjects
+                if not (isinstance(m, VMobject) and m.is_subpath)
+            ])
+        ))
+
     def capture_mobject(self, mobject):
         return self.capture_mobjects([mobject])
 
-    def capture_mobjects(self, mobjects, include_submobjects = True):
+    def capture_mobjects(
+        self, mobjects, 
+        include_submobjects = True,
+        excluded_mobjects = None,
+        ):
         if include_submobjects:
-            mobjects = it.chain(*[
-                mob.family_members_with_points() 
-                for mob in mobjects
-            ])
+            mobjects = self.extract_mobject_family_members(
+                mobjects, only_those_with_points = True
+            )
+            if excluded_mobjects:
+                all_excluded = self.extract_mobject_family_members(
+                    excluded_mobjects
+                )
+                mobjects = list_difference_update(mobjects, all_excluded)
         vmobjects = []
         for mobject in mobjects:
             if isinstance(mobject, VMobject):
