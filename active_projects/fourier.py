@@ -1,5 +1,5 @@
 from helpers import *
-
+import scipy
 
 from animation.animation import Animation
 from animation.transform import *
@@ -663,20 +663,24 @@ class FourierMachineScene(Scene):
             "y_radius" : 2,
         },
         "frequency_axes_config" : {
+            "number_line_config" : {
+                "color" : TEAL,
+            },
             "x_min" : 0,
             "x_max" : 5.0,
             "x_axis_config" : {
-                "unit_size" : 1.5,
+                "unit_size" : 1.4,
             },
-            "y_min" : -0.59,
-            "y_max" : 0.59,
+            "y_min" : -1.0,
+            "y_max" : 1.0,
             "y_axis_config" : {
-                "unit_size" : 3,
-                "tick_frequency" : 0.1,
+                "unit_size" : 1.8,
+                "tick_frequency" : 0.5,
                 "line_to_number_vect" : LEFT,
             },
+            "color" : TEAL,
         },
-        "frequency_axes_box_color" : BLUE,
+        "frequency_axes_box_color" : TEAL_E,
         "text_scale_val" : 0.75,
         "default_graph_config" : {
             "num_graph_points" : 100,
@@ -728,7 +732,7 @@ class FourierMachineScene(Scene):
         frequency_axes = Axes(**self.frequency_axes_config)
         frequency_axes.x_axis.add_numbers(*range(1, 6))
         frequency_axes.y_axis.add_numbers(
-            *self.frequency_y_axis_numbers
+            *frequency_axes.y_axis.get_tick_numbers()
         )
         box = SurroundingRectangle(
             frequency_axes,
@@ -739,6 +743,17 @@ class FourierMachineScene(Scene):
         frequency_axes.add(box)
         frequency_axes.to_corner(DOWN+RIGHT, buff = MED_SMALL_BUFF)
 
+        frequency_label = TextMobject("Frequency")
+        frequency_label.scale(self.text_scale_val)
+        frequency_label.next_to(
+            frequency_axes.x_axis.get_right(), DOWN, 
+            buff = MED_LARGE_BUFF,
+            aligned_edge = RIGHT,
+        )
+        frequency_axes.label = frequency_label
+        frequency_axes.add(frequency_label)
+
+        self.frequency_axes = frequency_axes
         return frequency_axes
 
     def get_time_graph(self, func, **kwargs):
@@ -751,6 +766,35 @@ class FourierMachineScene(Scene):
 
     def get_cosine_wave(self, freq = 1):
         return self.get_time_graph(lambda t : 1 + 0.5*np.cos(TAU*freq*t))
+
+    def get_fourier_transform_graph(self, time_graph, **kwargs):
+        if not hasattr(self, "frequency_axes"):
+            self.get_frequency_axes()
+        func = time_graph.underlying_function
+        t_min = self.time_axes.x_min
+        t_max = self.time_axes.x_max
+        return self.frequency_axes.get_graph(
+            self.get_fourier_transform(func, t_min, t_max, **kwargs),
+            color = self.center_of_mass_color,
+        )
+
+    def get_fourier_transform(
+        self, func, t_min, t_max, 
+        real_part = True, 
+        use_almost_fourier = True,
+        ):
+        part = "real" if real_part else "imag"
+        scalar = 1./(t_max - t_min) if use_almost_fourier else 1.0
+        def fourier_transform(f):
+            return scalar*scipy.integrate.quad(
+                lambda t : getattr(
+                    func(t)*np.exp(complex(0, -TAU*f*t)),
+                    part
+                ),
+                t_min, t_max
+            )[0]
+        return fourier_transform
+
 
     def get_polarized_mobject(self, mobject, freq = 1.0):
         if not hasattr(self, "circle_plane"):
@@ -878,6 +922,7 @@ class FourierMachineScene(Scene):
         ])
         v_lines.set_stroke(LIGHT_GREY)
         return v_lines
+
 
 class WrapCosineGraphAroundCircle(FourierMachineScene):
     CONFIG = {
@@ -1162,13 +1207,15 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
 
         self.revert_to_original_skipping_status()
         self.play(
-            wps_label.move_to, self.circle_plane, UP,
+            wps_label.move_to, self.circle_plane.get_top(),
             com_label.move_to, self.circle_plane, DOWN,
         )
         self.play(FadeIn(frequency_axes))
-
         self.wait()
 
+        fourier_graph = self.get_fourier_transform_graph(self.graph)
+        print fourier_graph.underlying_function(0)
+        self.add(fourier_graph)
 
     def draw_full_frequency_plot(self):
         pass
