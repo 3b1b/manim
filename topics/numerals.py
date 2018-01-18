@@ -9,7 +9,8 @@ from helpers import *
 class DecimalNumber(VMobject):
     CONFIG = {
         "num_decimal_points" : 2,
-        "digit_to_digit_buff" : 0.05
+        "digit_to_digit_buff" : 0.05,
+        "show_ellipsis" : False
     }
     def __init__(self, number, **kwargs):
         digest_config(self, kwargs, locals())
@@ -18,6 +19,10 @@ class DecimalNumber(VMobject):
             TexMobject(char)
             for char in num_string
         ], **kwargs)
+
+        if self.show_ellipsis:
+            self.add(TexMobject("\\dots"))
+    
         self.arrange_submobjects(
             buff = self.digit_to_digit_buff,
             aligned_edge = DOWN
@@ -46,6 +51,7 @@ class Integer(VGroup):
 class ChangingDecimal(Animation):
     CONFIG = {
         "num_decimal_points" : None,
+        "show_ellipsis" : None,
         "spare_parts" : 2,
         "position_update_func" : None,
         "tracked_mobject" : None
@@ -54,6 +60,8 @@ class ChangingDecimal(Animation):
         digest_config(self, kwargs, locals())
         if self.num_decimal_points is None:
             self.num_decimal_points = decimal_number_mobject.num_decimal_points
+        if self.show_ellipsis is None:
+            self.show_ellipsis = decimal_number_mobject.show_ellipsis
         decimal_number_mobject.add(*[
             VectorizedPoint(decimal_number_mobject.get_corner(DOWN+LEFT))
             for x in range(self.spare_parts)]
@@ -71,7 +79,9 @@ class ChangingDecimal(Animation):
         decimal = self.decimal_number_mobject
         new_number = self.number_update_func(alpha)
         new_decimal = DecimalNumber(
-            new_number, num_decimal_points = self.num_decimal_points
+            new_number, 
+            num_decimal_points = self.num_decimal_points,
+            show_ellipsis = self.show_ellipsis
         )
         new_decimal.replace(decimal, dim_to_match = 1)
         new_decimal.highlight(decimal.get_color())
