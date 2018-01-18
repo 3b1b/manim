@@ -304,6 +304,13 @@ def digest_locals(obj, keys = None):
 def interpolate(start, end, alpha):
     return (1-alpha)*start + alpha*end
 
+def clamp(lower, upper, val):
+    if val < lower:
+        return lower
+    elif val > upper:
+        return upper
+    return val
+
 def center_of_mass(points):
     points = [np.array(point).astype("float") for point in points]
     return sum(points) / len(points)
