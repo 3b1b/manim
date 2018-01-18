@@ -208,10 +208,9 @@ class Scene(object):
         mobjects, continual_animations = self.separate_mobjects_and_continual_animations(
             mobjects_or_continual_animations
         )
-        self.mobjects = list_update(self.mobjects, mobjects)
-        self.continual_animations = list_update(
-            self.continual_animations, continual_animations
-        )
+        self.remove(*mobjects_or_continual_animations)
+        self.mobjects += mobjects
+        self.continual_animations += continual_animations
         return self
 
     def add_mobjects_among(self, values):
