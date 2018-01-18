@@ -14,7 +14,7 @@ class NumberLine(VMobject):
         "unit_size" : 1,
         "tick_size" : 0.1,
         "tick_frequency" : 1,
-        "leftmost_tick" : None, #Defaults to ceil(x_min)
+        "leftmost_tick" : None, #Defaults to value near x_min s.t. 0 is a tick
         "numbers_with_elongated_ticks" : [0],
         "numbers_to_show" : None,
         "longer_tick_multiple" : 2,
@@ -28,7 +28,8 @@ class NumberLine(VMobject):
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
         if self.leftmost_tick is None:
-            self.leftmost_tick = np.ceil(self.x_min)
+            tf = self.tick_frequency
+            self.leftmost_tick = tf*np.ceil(self.x_min/tf)
         VMobject.__init__(self, **kwargs)
         if self.include_tip:
             self.add_tip()
