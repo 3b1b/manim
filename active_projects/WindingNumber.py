@@ -514,7 +514,6 @@ class FuncRotater(Animation):
             angle_revs * 2 * np.pi, 
         )
         self.mobject.set_color(color_func(angle_revs))
-        # Will want to have arrow colors change to match direction as well
 
 class TestRotater(Scene):
     def construct(self):
@@ -618,7 +617,7 @@ class RectangleData():
 def complex_to_pair(c):
     return (c.real, c.imag)
 
-class iterative_2d_test(Scene):
+class Iterative2dTest(Scene):
     CONFIG = {
         "func" : lambda (x, y) : complex_to_pair(complex(x, y)**2 - complex(1, 2)**2),
         "initial_lower_x" : -5.1,
@@ -657,50 +656,28 @@ class iterative_2d_test(Scene):
             rebased_winder = lambda alpha: alpha_winder(alpha) - a0 + start_wind
             line = Line(num_plane.coords_to_point(*start), num_plane.coords_to_point(*end),
                 stroke_width = 5,
-                color = "#FF0000")
+                color = RED)
             self.play(
                 ShowCreation(line),
-                #ChangingDecimal(num_display, rebased_winder)
+                ChangingDecimal(num_display, rebased_winder)
             )
-            line.set_color("#00FF00")
+            line.set_color(GREEN) # Temporary hack to see (some) redraws; TODO: figure out a better approach
             return rebased_winder(1)
         
         for i in range(self.num_iterations):
             (explore_rect, alt_rect) = rect.splits_on_dim(dim_to_split)
 
-            top_wind = draw_line_return_wind(
-                explore_rect.get_top_left(),
-                explore_rect.get_top_right(),
-                0
-            )
+            wind_so_far = 0
+            sides = [
+                explore_rect.get_top(), 
+                explore_rect.get_right(), 
+                explore_rect.get_bottom(), 
+                explore_rect.get_left()
+            ]
+            for (start, end) in sides:
+                wind_so_far = draw_line_return_wind(start, end, wind_so_far)
 
-            print(len(self.mobjects))
-
-            right_wind = draw_line_return_wind(
-                explore_rect.get_top_right(),
-                explore_rect.get_bottom_right(),
-                top_wind
-            )
-
-            print(len(self.mobjects))
-
-            bottom_wind = draw_line_return_wind( 
-                explore_rect.get_bottom_right(),
-                explore_rect.get_bottom_left(),
-                right_wind
-            )
-
-            print(len(self.mobjects))
-
-            left_wind = draw_line_return_wind(
-                explore_rect.get_bottom_left(),
-                explore_rect.get_top_left(),
-                bottom_wind
-            )
-
-            print(len(self.mobjects))
-
-            total_wind = round(left_wind)
+            total_wind = round(wind_so_far)
 
             if total_wind == 0:
                 rect = alt_rect
@@ -710,17 +687,4 @@ class iterative_2d_test(Scene):
             dim_to_split = 1 - dim_to_split
 
         self.wait()
-
-
-class EquationSolver2d(ZoomedScene):
-    #TODO
-    CONFIG = {
-    "func" : lambda p : p,
-    "target_input" : (0, 0),
-    "target_output" : (0, 0),
-    "initial_top_left_point" : (0, 0),
-    "initial_guess_dimensions" : (0, 0),
-    "num_iterations" : 10,
-    "iteration_at_which_to_start_zoom" : None
-    }
 
