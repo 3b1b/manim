@@ -223,6 +223,7 @@ class NumberPlane(VMobject):
         "secondary_line_ratio" : 1,
         "written_coordinate_height" : 0.2,
         "propagate_style_to_family" : False,
+        "make_smooth_after_applying_functions" : True,
     }
     def generate_points(self):
         if self.x_radius is None:
@@ -359,9 +360,6 @@ class NumberPlane(VMobject):
                 mob.insert_n_anchor_points(num_inserted_anchor_points-num_anchors)
                 mob.make_smooth()
         return self
-
-    def apply_function(self, function, maintain_smoothness = True):
-        VMobject.apply_function(self, function, maintain_smoothness = maintain_smoothness)
 
 
 

@@ -114,7 +114,6 @@ class Sector(VMobject):
 class Line(VMobject):
     CONFIG = {
         "buff" : 0,
-        "considered_smooth" : False,
         "path_arc" : None,
         "n_arc_anchors" : 10, #Only used if path_arc is not None
     }
@@ -132,7 +131,6 @@ class Line(VMobject):
                 path_func(self.start, self.end, alpha)
                 for alpha in np.linspace(0, 1, self.n_arc_anchors)
             ])
-            self.considered_smooth = True
         self.account_for_buff()
 
     def account_for_buff(self):
@@ -449,7 +447,6 @@ class Polygon(VMobject):
         "color" : GREEN_D,
         "mark_paths_closed" : True,
         "close_new_points" : True,
-        "considered_smooth" : False,
     }
     def __init__(self, *vertices, **kwargs):
         assert len(vertices) > 1
@@ -479,7 +476,6 @@ class Rectangle(VMobject):
         "width"  : 4.0,
         "mark_paths_closed" : True,
         "close_new_points" : True,
-        "considered_smooth" : False,
     }
     def generate_points(self):
         y, x = self.height/2., self.width/2.
@@ -586,7 +582,6 @@ class Grid(VMobject):
     CONFIG = {
         "height" : 6.0,
         "width"  : 6.0,
-        "considered_smooth" : False,
     }
     def __init__(self, rows, columns, **kwargs):
         digest_config(self, kwargs, locals())
