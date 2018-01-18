@@ -122,15 +122,13 @@ class ZoomedScene(Scene):
             self.zoomed_camera.capture_mobjects(
                 mobjects, **kwargs
             )
-    def separate_moving_and_static_mobjects(self, *animations):
-        moving_mobjects, static_mobjects = Scene.separate_moving_and_static_mobjects(
-            self, *animations
-        )
+    def get_moving_mobjects(self, *animations):
+        moving_mobjects = Scene.get_moving_mobjects(self, *animations)
         if self.zoom_activated and self.little_rectangle in moving_mobjects:
             # When the camera is moving, so is everything,
-            return self.get_mobjects(), []
+            return self.mobjects
         else:
-            return moving_mobjects, static_mobjects
+            return moving_mobjects
 
 
 
