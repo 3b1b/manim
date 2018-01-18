@@ -409,7 +409,7 @@ class AddingPureFrequencies(PiCreatureScene):
             return line
 
         return UpdateFromAlphaFunc(line, update_line, **kwargs)
-        
+
 class BreakApartSum(Scene):
     CONFIG = {
         "frequencies" : [0.5, 1.5, 2, 2.5, 5],
@@ -662,6 +662,21 @@ class FourierMachineScene(Scene):
             "x_radius" : 2,
             "y_radius" : 2,
         },
+        "frequency_axes_config" : {
+            "x_min" : 0,
+            "x_max" : 5.0,
+            "x_axis_config" : {
+                "unit_size" : 1.5,
+            },
+            "y_min" : -0.59,
+            "y_max" : 0.59,
+            "y_axis_config" : {
+                "unit_size" : 3,
+                "tick_frequency" : 0.1,
+                "line_to_number_vect" : LEFT,
+            },
+        },
+        "frequency_axes_box_color" : BLUE,
         "text_scale_val" : 0.75,
         "default_graph_config" : {
             "num_graph_points" : 100,
@@ -709,6 +724,23 @@ class FourierMachineScene(Scene):
         self.circle_plane = circle_plane
         return circle_plane
 
+    def get_frequency_axes(self):
+        frequency_axes = Axes(**self.frequency_axes_config)
+        frequency_axes.x_axis.add_numbers(*range(1, 6))
+        frequency_axes.y_axis.add_numbers(
+            *self.frequency_y_axis_numbers
+        )
+        box = SurroundingRectangle(
+            frequency_axes,
+            buff = MED_SMALL_BUFF,
+            color = self.frequency_axes_box_color,
+        )
+        frequency_axes.box = box
+        frequency_axes.add(box)
+        frequency_axes.to_corner(DOWN+RIGHT, buff = MED_SMALL_BUFF)
+
+        return frequency_axes
+
     def get_time_graph(self, func, **kwargs):
         if not hasattr(self, "time_axes"):
             self.get_time_axes()
@@ -725,7 +757,7 @@ class FourierMachineScene(Scene):
             self.get_circle_plane()
         polarized_mobject = mobject.copy()
         polarized_mobject.apply_function(lambda p : self.polarize_point(p, freq))
-        polarized_mobject.make_smooth()
+        # polarized_mobject.make_smooth()
         mobject.polarized_mobject = polarized_mobject
         polarized_mobject.frequency = freq
         return polarized_mobject
@@ -1027,9 +1059,9 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
 
         self.remove(self.pi_creature)
         self.setup_graph()
-        self.indicate_weight_of_wire()
+        # self.indicate_weight_of_wire()
         self.show_center_of_mass_dot()
-        self.change_to_various_frequencies()
+        # self.change_to_various_frequencies()
         self.introduce_frequency_plot()
         self.draw_full_frequency_plot()
         self.label_as_almost_fourier()
@@ -1092,25 +1124,51 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
         dot.highlight(color)
         dot.save_state()
         arrow = Vector(DOWN+2*LEFT, color = color)
-        arrow.next_to(dot, UP+RIGHT, buff = 0)
+        arrow.next_to(dot.get_center(), UP+RIGHT, buff = SMALL_BUFF)
         dot.move_to(arrow.get_start())
         words = TextMobject("Center of mass")
         words.next_to(arrow.get_start(), RIGHT)
         words.highlight(color)
 
-        self.revert_to_original_skipping_status()
         self.play(
             GrowArrow(arrow),
             dot.restore,
         )
         self.play(Write(words))
+        self.play(FadeOut(arrow), FadeOut(self.pi_creature))
         self.wait()
 
+        self.center_of_mass_dot = dot
+        self.center_of_mass_dot_anim = UpdateFromFunc(
+            dot, lambda d : d.move_to(self.get_pol_graph_center_of_mass())
+        )
+        self.center_of_mass_label = words
+
     def change_to_various_frequencies(self):
-        pass
+        for new_freq in [0.5, 0.2, 1.04, 2.21, 3.0]:
+            self.change_frequency(new_freq)
+            self.wait()
+        self.play(
+            *self.get_vector_animations(self.graph),
+            run_time = 15
+        )
 
     def introduce_frequency_plot(self):
-        pass
+        wps_label = self.winding_freq_label
+        wps_label.add_to_back(BackgroundRectangle(wps_label))
+        com_label = self.center_of_mass_label
+        com_label.add_background_rectangle()
+        frequency_axes = self.get_frequency_axes()
+
+        self.revert_to_original_skipping_status()
+        self.play(
+            wps_label.move_to, self.circle_plane, UP,
+            com_label.move_to, self.circle_plane, DOWN,
+        )
+        self.play(FadeIn(frequency_axes))
+
+        self.wait()
+
 
     def draw_full_frequency_plot(self):
         pass
@@ -1121,9 +1179,15 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
     ##
 
     def get_pol_graph_center_of_mass(self):
-        return center_of_mass(
-            self.graph.polarized_mobject.get_anchors()
-        )
+        pg = self.graph.polarized_mobject
+        result = center_of_mass([
+            pg.point_from_proportion(alpha)
+            for alpha in np.linspace(0, 1, 1000)
+        ])
+        result -= self.circle_plane.get_center()
+        result *= 2
+        result += self.circle_plane.get_center()
+        return result
 
     def change_frequency(self, new_freq, **kwargs):
         kwargs["run_time"] = kwargs.get("run_time", 3)
@@ -1139,6 +1203,8 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
             ),
         ]
         #TODO, conditionals for center of mass
+        if hasattr(self, "center_of_mass_dot"):
+            anims.append(self.center_of_mass_dot_anim)
         self.play(*anims, **kwargs)
 
     def create_pi_creature(self):
