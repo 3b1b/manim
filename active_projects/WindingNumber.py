@@ -24,10 +24,14 @@ from topics.complex_numbers import *
 from scene import Scene
 from scene.reconfigurable_scene import ReconfigurableScene
 from scene.zoomed_scene import *
-from camera import Camera
+from camera import *
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from topics.graph_scene import *
+
+# TODO/WARNING: There's a lot of refactoring and cleanup to be done in this code,
+# (and it will be done, but first I'll figure out what I'm doing with all this...)
+# -SR
 
 class DualScene(Scene):
     CONFIG = {
@@ -294,8 +298,10 @@ class SecondSqrtScene(FirstSqrtScene, ReconfigurableScene):
             graph_origin = newOrigin)
         self.solveEquation()
 
-# TODO: Perhaps have pulses fade out and in at ends of line, instead of jarringly
+# TODO: Perhaps have bullets (pulses) fade out and in at ends of line, instead of jarringly
 # popping out and in?
+#
+# TODO: Perhaps have bullets change color corresponding to a function of their coordinates?
 class LinePulser(ContinualAnimation):
     def __init__(self, line, bullet_template, num_bullets, pulse_time, **kwargs):
         self.line = line
@@ -311,7 +317,6 @@ class LinePulser(ContinualAnimation):
         for i in range(self.num_bullets):
             self.bullets[i].move_to(interpolate(start, end, 
                 np.true_divide((i + alpha),(self.num_bullets))))
-            self.bullets[i].shift((0, 0, 1)) # Temporary hack for z-buffer fidgetiness
 
 class LoopSplitScene(Scene):
 
@@ -321,26 +326,37 @@ class LoopSplitScene(Scene):
         return [VGroup(line, *anim.bullets), anim]
 
     def construct(self):
+        num_plane = NumberPlane(color = LIGHT_GREY, stroke_width = 1)
+        num_plane.axes.set_stroke(color = WHITE, width = 2)
+        num_plane.fade()
+        self.add(num_plane)
+
+        scale_factor = 2
+        shift_term = 0
+
         # Original loop
-        tl = UP + LEFT
-        tm = UP
-        tr = UP + RIGHT
-        mr = RIGHT
-        br = DOWN + RIGHT
-        bm = DOWN
-        bl = DOWN + LEFT
-        lm = LEFT
+        tl = scale_factor * (UP + LEFT) + shift_term
+        tm = scale_factor * UP + shift_term
+        tr = scale_factor * (UP + RIGHT) + shift_term
+        mr = scale_factor * RIGHT + shift_term
+        br = scale_factor * (DOWN + RIGHT) + shift_term
+        bm = scale_factor * DOWN + shift_term
+        bl = scale_factor * (DOWN + LEFT) + shift_term
+        lm = scale_factor * LEFT + shift_term
 
         loop_color = BLUE
 
         default_bullet = PiCreature(color = RED)
         default_bullet.scale(0.15)
 
+        modified_bullet = PiCreature(color = PINK)
+        modified_bullet.scale(0.15)
+
         def SGroup(*args):
             return VGroup(*[arg[0] for arg in args])
 
         top_line = self.PulsedLine(tl, tr, default_bullet, color = BLUE)
-        right_line = self.PulsedLine(tr, br, default_bullet, color = BLUE)
+        right_line = self.PulsedLine(tr, br, modified_bullet, color = BLUE)
         bottom_line = self.PulsedLine(br, bl, default_bullet, color = BLUE)
         left_line = self.PulsedLine(bl, tl, default_bullet, color = BLUE)
         line_list = [top_line, right_line, bottom_line, left_line]
@@ -355,15 +371,15 @@ class LoopSplitScene(Scene):
 
         self.remove(*split_line)
         mid_line_left = self.PulsedLine(tm, bm, default_bullet, color = loop_color)
-        mid_line_right = self.PulsedLine(bm, tm, default_bullet, color = loop_color)
+        mid_line_right = self.PulsedLine(bm, tm, modified_bullet, color = loop_color)
         self.add(*mid_line_left)
         self.add(*mid_line_right)
 
         top_line_left_half = self.PulsedLine(tl, tm, default_bullet, 2, 1, color = loop_color)
-        top_line_right_half = self.PulsedLine(tm, tr, default_bullet, 2, 1, color = loop_color)
+        top_line_right_half = self.PulsedLine(tm, tr, modified_bullet, 2, 1, color = loop_color)
 
         bottom_line_left_half = self.PulsedLine(bm, bl, default_bullet, 2, 1, color = loop_color)
-        bottom_line_right_half = self.PulsedLine(br, bm, default_bullet, 2, 1, color = loop_color)
+        bottom_line_right_half = self.PulsedLine(br, bm, modified_bullet, 2, 1, color = loop_color)
 
         self.remove(*top_line)
         self.add(*top_line_left_half)
@@ -377,17 +393,17 @@ class LoopSplitScene(Scene):
         right_open_loop = SGroup(top_line_right_half, right_line, bottom_line_right_half)
         right_closed_loop = VGroup(right_open_loop, mid_line_right[0])
 
-        self.play(
-            ApplyMethod(left_closed_loop.shift, LEFT), 
-            ApplyMethod(right_closed_loop.shift, RIGHT)
-            )
+        # self.play(
+        #     ApplyMethod(left_closed_loop.shift, LEFT), 
+        #     ApplyMethod(right_closed_loop.shift, RIGHT)
+        #     )
 
         self.wait()
 
-        self.play(
-            ApplyMethod(left_open_loop.shift, LEFT), 
-            ApplyMethod(right_open_loop.shift, RIGHT)
-            )
+        # self.play(
+        #     ApplyMethod(left_open_loop.shift, LEFT), 
+        #     ApplyMethod(right_open_loop.shift, RIGHT)
+        #     )
 
         self.wait()
 
@@ -404,12 +420,22 @@ class LoopSplitScene(Scene):
         self.remove(mid_line_left[1], mid_line_right[1])
 
         # Brings loop back together; keep in sync with motions which bring loop apart above
-        self.play(
-            ApplyMethod(left_open_loop.shift, 2 * RIGHT), 
-            ApplyMethod(right_open_loop.shift, 2 * LEFT)
-            )
+        # self.play(
+        #     ApplyMethod(left_open_loop.shift, 2 * RIGHT), 
+        #     ApplyMethod(right_open_loop.shift, 2 * LEFT)
+        #     )
 
         self.wait()
+
+class LoopSplitSceneMapped(LoopSplitScene):
+
+    def setup(self):
+        left_camera = Camera(**self.camera_config)
+        right_camera = MappingCamera(
+            mapping_func = lambda (x, y, z) : complex_to_R3(((complex(x,y) + 3)**1.1) - 3), 
+            **self.camera_config)
+        split_screen_camera = SplitScreenCamera(left_camera, right_camera, **self.camera_config)
+        self.camera = split_screen_camera
 
 class NumberLineScene(Scene):
     def construct(self):
@@ -441,16 +467,28 @@ class NumberLineScene(Scene):
 
         self.wait()        
 
+def color_func(alpha):
+    alpha = alpha % 1
+    colors = ["#FF0000", ORANGE, YELLOW, "#00FF00", "#0000FF", "#FF00FF"]
+    num_colors = len(colors)
+    beta = (alpha % (1.0/num_colors)) * num_colors
+    start_index = int(np.floor(num_colors * alpha)) % num_colors
+    end_index = (start_index + 1) % num_colors
+
+    return interpolate_color(colors[start_index], colors[end_index], beta)
+
 class ArrowCircleTest(Scene):
     def construct(self):
         circle_radius = 3
-        circle = Circle(radius = circle_radius)
+        circle = Circle(radius = circle_radius, color = WHITE)
         self.add(circle)
 
         base_arrow = Arrow(circle_radius * 0.7 * RIGHT, circle_radius * 1.3 * RIGHT)
 
         def rev_rotate(x, revs):
-            return x.rotate(revs * 2 * np.pi)
+            x.rotate(revs * 2 * np.pi)
+            x.set_color(color_func(revs))
+            return x
 
         num_arrows = 8 * 3
         arrows = [rev_rotate(base_arrow.copy(), (np.true_divide(i, num_arrows))) for i in range(num_arrows)]
@@ -471,9 +509,11 @@ class FuncRotater(Animation):
 
     def update_mobject(self, alpha):
         Animation.update_mobject(self, alpha)
+        angle_revs = self.rotate_func(alpha)
         self.mobject.rotate(
-            self.rotate_func(alpha) * 2 * np.pi, 
+            angle_revs * 2 * np.pi, 
         )
+        self.mobject.set_color(color_func(angle_revs))
         # Will want to have arrow colors change to match direction as well
 
 class TestRotater(Scene):
@@ -502,7 +542,7 @@ class OdometerScene(Scene):
             run_time = self.run_time,
             rate_func = None)
 
-def Vect2dToRevAngle(x, y):
+def point_to_rev((x, y)):
     return np.true_divide(np.arctan2(y, x), 2 * np.pi)
 
 # Returns the value with the same fractional component as x, closest to m
@@ -512,18 +552,165 @@ def resit_near(x, m):
         frac_diff -= 1
     return m + frac_diff
 
-# Perhaps use modulus of (uniform) continuity instead of num_check_points, calculating 
+# TODO?: Perhaps use modulus of (uniform) continuity instead of num_checkpoints, calculating 
 # latter as needed from former?
-def winding_func(func, start, end, num_check_points):
-    check_points = [None for i in range(num_check_points)]
-    check_points[0] = func(0)
-    step_size = np.true_divide(end - start, num_check_points)
-    for i in range(num_check_points - 1):
+def make_alpha_winder(func, start, end, num_checkpoints):
+    check_points = [None for i in range(num_checkpoints)]
+    check_points[0] = func(start)
+    step_size = np.true_divide(end - start, num_checkpoints)
+    for i in range(num_checkpoints - 1):
         check_points[i + 1] = \
         resit_near(
             func(start + (i + 1) * step_size),
             check_points[i])
-    return lambda x : resit_near(func(x), check_points[int((x - start)/step_size)])
+    def return_func(alpha):
+        index = clamp(0, num_checkpoints - 1, int(alpha * num_checkpoints))
+        x = interpolate(start, end, alpha)
+        return resit_near(func(x), check_points[index])
+    return return_func
+
+def split_interval((a, b)):
+    mid = (a + b)/2.0
+    return ((a, mid), (mid, b))
+
+class RectangleData():
+    def __init__(self, x_interval, y_interval):
+        self.rect = (x_interval, y_interval)
+
+    def get_top_left(self):
+        return np.array((self.rect[0][0], self.rect[1][0]))
+
+    def get_top_right(self):
+        return np.array((self.rect[0][1], self.rect[1][0]))
+
+    def get_bottom_right(self):
+        return np.array((self.rect[0][1], self.rect[1][1]))
+
+    def get_bottom_left(self):
+        return np.array((self.rect[0][0], self.rect[1][1]))
+
+    def get_top(self):
+        return (self.get_top_left(), self.get_top_right())
+
+    def get_right(self):
+        return (self.get_top_right(), self.get_bottom_right())
+
+    def get_bottom(self):
+        return (self.get_bottom_right(), self.get_bottom_left())
+
+    def get_left(self):
+        return (self.get_bottom_left(), self.get_top_left())
+
+    def splits_on_dim(self, dim):
+        x_interval = self.rect[0]
+        y_interval = self.rect[1]
+
+        # TODO: Can refactor the following; will do later
+        if dim == 0:
+            return_data = [RectangleData(new_interval, y_interval) for new_interval in split_interval(x_interval)]
+        elif dim == 1:
+            return_data = [RectangleData(x_interval, new_interval) for new_interval in split_interval(y_interval)]        
+        else: 
+            print "Error!"
+
+        return tuple(return_data)
+
+def complex_to_pair(c):
+    return (c.real, c.imag)
+
+class iterative_2d_test(Scene):
+    CONFIG = {
+        "func" : lambda (x, y) : complex_to_pair(complex(x, y)**2 - complex(1, 2)**2),
+        "initial_lower_x" : -5.1,
+        "initial_upper_x" : 5.1,
+        "initial_lower_y" : -3.1,
+        "initial_upper_y" : 3.1,
+        "num_iterations" : 20,
+        "num_checkpoints" : 10
+    }
+
+    def construct(self):
+        num_plane = NumberPlane()
+        num_plane.fade()
+        self.add(num_plane)
+
+        num_display = DecimalNumber(0, color = ORANGE)
+        num_display.move_to(UP + RIGHT)
+
+        lower_x = self.initial_lower_x
+        upper_x = self.initial_upper_x
+        lower_y = self.initial_lower_y
+        upper_y = self.initial_upper_y
+
+        x_interval = (lower_x, upper_x)
+        y_interval = (lower_y, upper_y)
+
+        rect = RectangleData(x_interval, y_interval)
+
+        rev_func = lambda p : point_to_rev(self.func(p))
+
+        dim_to_split = 0 # 0 for x, 1 for y
+
+        def draw_line_return_wind(start, end, start_wind):
+            alpha_winder = make_alpha_winder(rev_func, start, end, self.num_checkpoints)
+            a0 = alpha_winder(0)
+            rebased_winder = lambda alpha: alpha_winder(alpha) - a0 + start_wind
+            line = Line(num_plane.coords_to_point(*start), num_plane.coords_to_point(*end),
+                stroke_width = 5,
+                color = "#FF0000")
+            self.play(
+                ShowCreation(line),
+                #ChangingDecimal(num_display, rebased_winder)
+            )
+            line.set_color("#00FF00")
+            return rebased_winder(1)
+        
+        for i in range(self.num_iterations):
+            (explore_rect, alt_rect) = rect.splits_on_dim(dim_to_split)
+
+            top_wind = draw_line_return_wind(
+                explore_rect.get_top_left(),
+                explore_rect.get_top_right(),
+                0
+            )
+
+            print(len(self.mobjects))
+
+            right_wind = draw_line_return_wind(
+                explore_rect.get_top_right(),
+                explore_rect.get_bottom_right(),
+                top_wind
+            )
+
+            print(len(self.mobjects))
+
+            bottom_wind = draw_line_return_wind( 
+                explore_rect.get_bottom_right(),
+                explore_rect.get_bottom_left(),
+                right_wind
+            )
+
+            print(len(self.mobjects))
+
+            left_wind = draw_line_return_wind(
+                explore_rect.get_bottom_left(),
+                explore_rect.get_top_left(),
+                bottom_wind
+            )
+
+            print(len(self.mobjects))
+
+            total_wind = round(left_wind)
+
+            if total_wind == 0:
+                rect = alt_rect
+            else:
+                rect = explore_rect
+
+            dim_to_split = 1 - dim_to_split
+
+        self.wait()
+
 
 class EquationSolver2d(ZoomedScene):
     #TODO
@@ -536,3 +723,4 @@ class EquationSolver2d(ZoomedScene):
     "num_iterations" : 10,
     "iteration_at_which_to_start_zoom" : None
     }
+
