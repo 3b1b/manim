@@ -230,10 +230,11 @@ class Scene(object):
         to_remove = self.camera.extract_mobject_family_members(mobjects)
 
         self.mobjects = list_difference_update(self.mobjects, to_remove)
-        self.restructure_how_mobjects_containing_to_remove_are_stored(
-            self.mobjects, to_remove
-        )
         self.remove_foreground_mobjects(*to_remove)
+        self.mobjects = self.get_restructured_mobject_list(self.mobjects, to_remove)
+        self.foreground_mobjects = self.get_restructured_mobject_list(
+            self.foreground_mobjects, to_remove
+        )
 
         self.continual_animations = filter(
             lambda ca : ca not in continual_animations and \
@@ -243,21 +244,25 @@ class Scene(object):
 
         return self
 
-    def restructure_how_mobjects_containing_to_remove_are_stored(self, mobjects, to_remove):
+    def get_restructured_mobject_list(self, mobjects, to_remove):
         """
         In cases where the scene contains a group, e.g. Group(m1, m2, m3), but one
         of its submobjects is removed, e.g. scene.remove(m1), the list of mobjects
-        will be editing to contain other submobjts, but not m1, e.g. it will now
+        will be editing to contain other submobjects, but not m1, e.g. it will now
         insert m2 and m3 to where the group once was.
         """
-        def should_keep(mobject):
-            return all([
-                submob in self.mobjects
-                for submob in mobject.family_members_with_points()
-            ])
-
-        self.mobjects = filter(should_keep, self.mobjects)
-        return self
+        new_mobjects = []
+        def add_safe_mobjects_from_list(list_to_examine, set_to_remove):
+            for mob in list_to_examine:
+                if mob in set_to_remove:
+                    continue
+                intersect = set_to_remove.intersection(mob.submobject_family())
+                if intersect:
+                    add_safe_mobjects_from_list(mob.submobjects, intersect)
+                else:
+                    new_mobjects.append(mob)
+        add_safe_mobjects_from_list(mobjects, set(to_remove))
+        return new_mobjects
 
     def add_foreground_mobjects(self, *mobjects):
         self.foreground_mobjects = list_update(
