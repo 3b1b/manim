@@ -38,9 +38,15 @@ class NumberLine(VMobject):
         self.main_line = Line(self.x_min*RIGHT, self.x_max*RIGHT)
         self.tick_marks = VGroup()
         self.add(self.main_line, self.tick_marks)
+        rounding_value = int(-np.log10(0.1*self.tick_frequency))
+        rounded_numbers_with_elongated_ticks = np.round(
+            self.numbers_with_elongated_ticks, 
+            rounding_value
+        )
 
         for x in self.get_tick_numbers():
-            if x in self.numbers_with_elongated_ticks:
+            rounded_x = np.round(x, rounding_value)
+            if rounded_x in rounded_numbers_with_elongated_ticks:
                 tick_size_used = self.longer_tick_multiple*self.tick_size
             else:
                 tick_size_used = self.tick_size
