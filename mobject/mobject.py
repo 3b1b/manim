@@ -454,7 +454,6 @@ class Mobject(object):
         return self
 
     def submobject_radial_gradient_highlight(self, center = None, radius = 1, inner_color = WHITE, outer_color = BLACK):
-
         mobs = self.family_members_with_points()
         if center == None:
             center = self.get_center()
@@ -462,13 +461,10 @@ class Mobject(object):
         for mob in self.family_members_with_points():
             t = np.linalg.norm(mob.get_center() - center)/radius
             t = min(t,1)
-            print t
             mob_color = interpolate_color(inner_color, outer_color, t)
-            print mob_color
             mob.highlight(mob_color, family = False)
 
         return self
-
 
     def set_color(self, color):
         self.highlight(color)

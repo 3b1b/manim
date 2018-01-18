@@ -14,8 +14,9 @@ class VMobject(Mobject):
         "is_subpath"       : False,
         "close_new_points" : False,
         "mark_paths_closed" : False,
-        "considered_smooth" : True,
         "propagate_style_to_family" : False,
+        "pre_function_handle_to_anchor_scale_factor" : 0.01,
+        "make_smooth_after_applying_functions" : False,
     }
 
     ## Colors
@@ -191,7 +192,6 @@ class VMobject(Mobject):
         return self
 
     def make_smooth(self):
-        self.considered_smooth = True
         return self.change_anchor_mode("smooth")
 
     def make_jagged(self):
@@ -232,12 +232,35 @@ class VMobject(Mobject):
             self.submobjects
         )
 
-    def apply_function(self, function, maintain_smoothness = False):
+    def apply_function(self, function):
+        factor = self.pre_function_handle_to_anchor_scale_factor
+        self.scale_handle_to_anchor_distances(factor)
         Mobject.apply_function(self, function)
-        if maintain_smoothness and self.considered_smooth:
+        self.scale_handle_to_anchor_distances(1./factor)
+        if self.make_smooth_after_applying_functions:
             self.make_smooth()
         return self
 
+    def scale_handle_to_anchor_distances(self, factor):
+        """
+        If the distance between a given handle point H and its associated
+        anchor point A is d, then it changes H to be a distances factor*d
+        away from A, but so that the line from A to H doesn't change.
+
+        This is mostly useful in the context of applying a (differentiable) 
+        function, to preserve tangency properties.  One would pull all the 
+        handles closer to their anchors, apply the function then push them out
+        again.
+        """
+        if self.get_num_points() == 0:
+            return
+        anchors, handles1, handles2 = self.get_anchors_and_handles()
+        # print len(anchors), len(handles1), len(handles2)
+        a_to_h1 = handles1 - anchors[:-1]
+        a_to_h2 = handles2 - anchors[1:]
+        handles1 = anchors[:-1] + factor*a_to_h1
+        handles2 = anchors[1:] + factor*a_to_h2
+        self.set_anchors_and_handles(anchors, handles1, handles2)
 
     ## Information about line
 
@@ -271,8 +294,7 @@ class VMobject(Mobject):
         return self.get_anchors()
 
         
-    ## Alignment
-
+    ## Alignment    
     def align_points(self, mobject):
         Mobject.align_points(self, mobject)
         is_subpath = self.is_subpath or mobject.is_subpath
@@ -280,7 +302,7 @@ class VMobject(Mobject):
         mark_closed = self.mark_paths_closed and mobject.mark_paths_closed
         self.mark_paths_closed = mobject.mark_paths_closed = mark_closed
         return self
-
+    
     def align_points_with_larger(self, larger_mobject):
         assert(isinstance(larger_mobject, VMobject))
         self.insert_n_anchor_points(
@@ -288,7 +310,7 @@ class VMobject(Mobject):
             self.get_num_anchor_points()
         )
         return self
-
+    
     def insert_n_anchor_points(self, n):
         curr = self.get_num_anchor_points()
         if curr == 0:
@@ -318,17 +340,17 @@ class VMobject(Mobject):
                 )
         self.set_points(points)
         return self
-
+    
     def get_point_mobject(self, center = None):
         if center is None:
             center = self.get_center()
         return VectorizedPoint(center)
-
+    
     def repeat_submobject(self, submobject):
         if submobject.is_subpath:
             return VectorizedPoint(submobject.points[0])
         return submobject.copy()
-
+    
     def interpolate_color(self, mobject1, mobject2, alpha):
         attrs = [
             "stroke_rgb", 
@@ -345,7 +367,7 @@ class VMobject(Mobject):
             if alpha == 1.0:
                 # print getattr(mobject2, attr)
                 setattr(self, attr, getattr(mobject2, attr))
-
+    
     def pointwise_become_partial(self, mobject, a, b):
         assert(isinstance(mobject, VMobject))
         #Partial curve includes three portions:

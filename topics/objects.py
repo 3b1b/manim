@@ -267,7 +267,6 @@ class VideoIcon(SVGMobject):
     CONFIG = {
         "file_name" : "video_icon",
         "width" : 2*SPACE_WIDTH/12.,
-        "considered_smooth" : False,
     }
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, **kwargs)
@@ -275,8 +274,6 @@ class VideoIcon(SVGMobject):
         self.scale_to_fit_width(self.width)
         self.set_stroke(color = WHITE, width = 0)
         self.set_fill(color = WHITE, opacity = 1)
-        for mob in self:
-            mob.considered_smooth = False
 
 class VideoSeries(VGroup):
     CONFIG = {

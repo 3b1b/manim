@@ -175,11 +175,10 @@ class ThreeDScene(Scene):
         if is_camera_rotating:
             self.add(self.ambient_camera_rotation)
 
-    def separate_moving_and_static_mobjects(self, *animations):
-        moving, static = Scene.separate_moving_and_static_mobjects(self, *animations)
+    def get_moving_mobjects(self, *animations):
         if self.camera.rotation_mobject in moving:
-            return moving + static, []
-        return moving, static
+            return self.mobjects
+        return Scene.get_moving_mobjects(self, *animations)
 
 ##############
 
