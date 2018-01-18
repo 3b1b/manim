@@ -260,6 +260,35 @@ class MaintainPositionRelativeTo(Animation):
             self.diff
         )
 
+
+class WiggleOutThenIn(Animation):
+    CONFIG = {
+        "scale_value" : 1.1,
+        "rotation_angle" : 0.01*TAU,
+        "n_wiggles" : 6,
+        "run_time" : 2,
+        "scale_about_point" : None,
+        "rotate_about_point" : None,
+    }
+    def __init__(self, mobject, **kwargs):
+        digest_config(self, kwargs)
+        if self.scale_about_point is None:
+            self.scale_about_point = mobject.get_center()
+        if self.rotate_about_point is None:
+            self.rotate_about_point = mobject.get_center()
+        Animation.__init__(self, mobject, **kwargs)
+
+    def update_submobject(self, submobject, starting_sumobject, alpha):
+        submobject.points[:,:] = starting_sumobject.points
+        submobject.scale(
+            interpolate(1, self.scale_value, there_and_back(alpha)),
+            about_point = self.scale_about_point
+        )
+        submobject.rotate(
+            wiggle(alpha, self.n_wiggles)*self.rotation_angle,
+            about_point = self.rotate_about_point
+        )
+
 ### Animation modifiers ###
 
 class ApplyToCenters(Animation):
