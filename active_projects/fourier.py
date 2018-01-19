@@ -387,7 +387,7 @@ class AddingPureFrequencies(PiCreatureScene):
             buff = 0,
         )
         return result
-    
+
     def stack_v_lines(self, x, lines):
         point = self.axes.coords_to_point(x, self.equilibrium_height)
         A_line, D_line = lines
@@ -911,8 +911,8 @@ class FourierMachineScene(Scene):
             self.remove(v_line.polarized_mobject)
         self.play(FadeOut(VGroup(v_line, v_line.polarized_mobject)))
 
-    def get_v_lines_indicating_periods(self, freq, n_lines = 10):
-        period = np.divide(1., freq)
+    def get_v_lines_indicating_periods(self, freq, n_lines = 20):
+        period = np.divide(1., max(freq, 0.01))
         v_lines = VGroup(*[
             DashedLine(ORIGIN, 1.5*UP).move_to(
                 self.time_axes.coords_to_point(n*period, 0),
@@ -922,6 +922,17 @@ class FourierMachineScene(Scene):
         ])
         v_lines.set_stroke(LIGHT_GREY)
         return v_lines
+
+    def get_period_v_lines_update_anim(self):
+        def update_v_lines(v_lines):
+            freq = self.graph.polarized_mobject.frequency
+            Transform(
+                v_lines,
+                self.get_v_lines_indicating_periods(freq)
+            ).update(1)
+        return UpdateFromFunc(
+            self.v_lines_indicating_periods, update_v_lines
+        )
 
 class WrapCosineGraphAroundCircle(FourierMachineScene):
     CONFIG = {
@@ -1099,8 +1110,6 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
         "center_of_mass_color" : RED,
     }
     def construct(self):
-        self.force_skipping()
-
         self.remove(self.pi_creature)
         self.setup_graph()
         # self.indicate_weight_of_wire()
@@ -1108,6 +1117,8 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
         # self.change_to_various_frequencies()
         self.introduce_frequency_plot()
         self.draw_full_frequency_plot()
+        self.recap_objects_on_screen()
+        self.lower_graph()
         self.label_as_almost_fourier()
 
     def setup_graph(self):
@@ -1219,7 +1230,6 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
             t_min = 0, t_max = TAU,
         )
 
-        self.revert_to_original_skipping_status()
         self.play(
             wps_label.move_to, self.circle_plane.get_top(),
             com_label.move_to, self.circle_plane, DOWN,
@@ -1235,14 +1245,58 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
         ))
         self.wait()
 
-
     def draw_full_frequency_plot(self):
         graph = self.graph
         fourier_graph = self.get_fourier_transform_graph(graph)
+        fourier_graph.save_state()
+        v_line = DashedLine(
+            self.frequency_axes.coords_to_point(0, 0),
+            self.frequency_axes.coords_to_point(0, 1),
+            stroke_width = 6,
+            color = fourier_graph.get_color()
+        )
+        dot = Dot(color = fourier_graph.get_color())
+        def update_dot(dot):
+            f = self.graph.polarized_mobject.frequency
+            dot.move_to(self.frequency_axes.input_to_graph_point(
+                f, fourier_graph
+            ))
+        dot_update_anim = UpdateFromFunc(dot, update_dot)
 
-
-        self.revert_to_original_skipping_status()
         self.change_frequency(0.0)
+        dot_update_anim.update(0)
+        self.wait()
+        self.play(ShowCreation(v_line))
+        self.play(GrowFromCenter(dot), FadeOut(v_line))
+        f_max = int(self.frequency_axes.x_max)
+        for freq in range(1, f_max+1):
+            fourier_graph.restore()
+            self.change_frequency(
+                freq,
+                added_anims = [
+                    ShowCreation(
+                        fourier_graph,
+                        rate_func = lambda t : interpolate(
+                            (freq-1.)/f_max, 
+                            float(freq)/f_max,
+                            smooth(t)
+                        ),
+                    ),
+                    dot_update_anim
+                ],
+                run_time = 5,
+            )
+            self.wait()
+        self.play(FadeOut(dot))
+        self.fourier_graph = fourier_graph
+
+    def recap_objects_on_screen(self):
+        rect = FullScreenFadeRectangle()
+
+        self.play(FadeIn(rect))
+
+    def lower_graph(self):
+        pass
 
     def label_as_almost_fourier(self):
         pass
@@ -1262,20 +1316,19 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
 
     def change_frequency(self, new_freq, **kwargs):
         kwargs["run_time"] = kwargs.get("run_time", 3)
+        added_anims = kwargs.get("added_anims", [])
         freq_label = filter(
             lambda sm : isinstance(sm, DecimalNumber),
             self.winding_freq_label
         )[0]
         anims = [
-            Transform(
-                self.v_lines_indicating_periods, 
-                self.get_v_lines_indicating_periods(new_freq)
-            ),
             ChangeDecimalToValue(freq_label, new_freq),
             self.get_frequency_change_animation(
                 self.graph, new_freq
             ),
+            self.get_period_v_lines_update_anim(),
         ]
+        anims += added_anims
         #TODO, conditionals for center of mass
         if hasattr(self, "center_of_mass_dot"):
             anims.append(self.center_of_mass_dot_anim)

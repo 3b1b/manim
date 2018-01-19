@@ -397,7 +397,6 @@ class Scene(object):
         if self.skip_animations:
             kwargs["run_time"] = 0
 
-
         animations = self.compile_play_args_to_animation_list(*args)
         self.num_plays += 1
 
