@@ -304,6 +304,12 @@ def digest_locals(obj, keys = None):
 def interpolate(start, end, alpha):
     return (1-alpha)*start + alpha*end
 
+def mid(start, end):
+    return (start + end)/2.0
+
+def anti_interpolate(start, end, value):
+    return np.true_divide(value - start, end - start)
+
 def clamp(lower, upper, val):
     if val < lower:
         return lower
