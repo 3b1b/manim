@@ -66,6 +66,7 @@ def get_configuration():
       for short_arg, long_arg in optional_args:
          parser.add_argument(short_arg, long_arg, action = "store_true")
       parser.add_argument("-o", "--output_name")
+      parser.add_argument("-n", "--skip_to_animation_number")
       args = parser.parse_args()
    except argparse.ArgumentError as err:
       print(str(err))
@@ -85,6 +86,7 @@ def get_configuration():
       "quiet"           : args.quiet or args.write_all,
       "write_all"       : args.write_all,
       "output_name"     : args.output_name,
+      "skip_to_animation_number" : args.skip_to_animation_number,
    }
    if args.low_quality or args.preview:
       config["camera_config"] = LOW_QUALITY_CAMERA_CONFIG
@@ -96,12 +98,18 @@ def get_configuration():
       config["camera_config"] = PRODUCTION_QUALITY_CAMERA_CONFIG
       config["frame_duration"] = PRODUCTION_QUALITY_FRAME_DURATION
 
+   stan = config["skip_to_animation_number"]
+   if stan is not None:
+      config["skip_to_animation_number"] = int(stan)
+
    #By default, write to file
    actions = ["write_to_movie", "preview", "show_last_frame"]
    if not any([config[key] for key in actions]):
       config["write_to_movie"] = True
-   config["skip_animations"] = config["show_last_frame"] and not config["write_to_movie"]
-
+   config["skip_animations"] = any([
+      config["show_last_frame"] and not config["write_to_movie"],
+      config["skip_to_animation_number"],
+   ])
    return config
 
 def handle_scene(scene, **config):
@@ -203,7 +211,8 @@ def main():
          "write_to_movie",
          "save_frames",
          "output_directory",
-         "save_pngs"
+         "save_pngs",
+         "skip_to_animation_number",
       ]
    ])
    

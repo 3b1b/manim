@@ -36,6 +36,7 @@ class Scene(object):
         "name" : None,
         "always_continually_update" : False,
         "random_seed" : 0,
+        "skip_to_animation_number" : None,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
@@ -59,6 +60,7 @@ class Scene(object):
         self.construct(*self.construct_args)
         if self.write_to_movie:
             self.close_movie_pipe()
+        print("Played a total of %d animations"%self.num_plays)
 
     def setup(self):
         """
@@ -389,8 +391,12 @@ class Scene(object):
         if len(args) == 0:
             warnings.warn("Called Scene.play with no animations")
             return
+        if self.skip_to_animation_number:
+            if self.num_plays + 1 == self.skip_to_animation_number:
+                self.skip_animations = False
         if self.skip_animations:
             kwargs["run_time"] = 0
+
 
         animations = self.compile_play_args_to_animation_list(*args)
         self.num_plays += 1
