@@ -48,10 +48,7 @@ class Animation(object):
         return deepcopy(self)
 
     def update(self, alpha):
-        if alpha < 0:
-            alpha = 0.0
-        if alpha > 1:
-            alpha = 1.0
+        alpha = np.clip(alpha, 0, 1)
         self.update_mobject(self.rate_func(alpha))
 
     def update_mobject(self, alpha):
