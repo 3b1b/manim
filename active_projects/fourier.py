@@ -1214,7 +1214,6 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
         self.wait()
 
         fourier_graph = self.get_fourier_transform_graph(self.graph)
-        print fourier_graph.underlying_function(0)
         self.add(fourier_graph)
 
     def draw_full_frequency_plot(self):
