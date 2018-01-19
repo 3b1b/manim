@@ -260,7 +260,6 @@ class MaintainPositionRelativeTo(Animation):
             self.diff
         )
 
-
 class WiggleOutThenIn(Animation):
     CONFIG = {
         "scale_value" : 1.1,
