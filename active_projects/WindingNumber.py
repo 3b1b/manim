@@ -542,6 +542,12 @@ class OdometerScene(Scene):
             rate_func = None)
 
 def point_to_rev((x, y)):
+    # Warning: np.arctan2 would happily discontinuously returns the value 0 for (0, 0), due to 
+    # design choices in the underlying atan2 library call, but for our purposes, this is 
+    # illegitimate, and all winding number calculations must be set up to avoid this
+    if (x, y) == (0, 0):
+        print "Error! Angle of (0, 0) computed!"
+        return None
     return np.true_divide(np.arctan2(y, x), 2 * np.pi)
 
 # Returns the value with the same fractional component as x, closest to m
@@ -577,16 +583,16 @@ class RectangleData():
         self.rect = (x_interval, y_interval)
 
     def get_top_left(self):
-        return np.array((self.rect[0][0], self.rect[1][0]))
+        return np.array((self.rect[0][0], self.rect[1][1]))
 
     def get_top_right(self):
-        return np.array((self.rect[0][1], self.rect[1][0]))
-
-    def get_bottom_right(self):
         return np.array((self.rect[0][1], self.rect[1][1]))
 
+    def get_bottom_right(self):
+        return np.array((self.rect[0][1], self.rect[1][0]))
+
     def get_bottom_left(self):
-        return np.array((self.rect[0][0], self.rect[1][1]))
+        return np.array((self.rect[0][0], self.rect[1][0]))
 
     def get_top(self):
         return (self.get_top_left(), self.get_top_right())
@@ -610,22 +616,47 @@ class RectangleData():
         elif dim == 1:
             return_data = [RectangleData(x_interval, new_interval) for new_interval in split_interval(y_interval)]        
         else: 
-            print "Error!"
+            print "RectangleData.splits_on_dim passed illegitimate dimension!"
 
         return tuple(return_data)
+
+    def split_line_on_dim(self, dim):
+        x_interval = self.rect[0]
+        y_interval = self.rect[1]
+
+        if dim == 0:
+            sides = (self.get_top(), self.get_bottom())
+        elif dim == 1:
+            sides = (self.get_left(), self.get_right())
+
+        return tuple([mid(x, y) for (x, y) in sides])
 
 def complex_to_pair(c):
     return (c.real, c.imag)
 
-class Iterative2dTest(Scene):
+def plane_poly_with_roots(*points):
+    def f((x, y)):
+        return complex_to_pair(np.prod([complex(x, y) - complex(a,b) for (a,b) in points]))
+    return f
+
+def plane_func_from_complex_func(f):
+    return lambda (x, y) : complex_to_pair(f(complex(x,y)))
+
+empty_animation = Animation(Mobject())
+def EmptyAnimation():
+    return empty_animation
+
+class EquationSolver2d(Scene):
     CONFIG = {
-        "func" : lambda (x, y) : complex_to_pair(complex(x, y)**2 - complex(1, 2)**2),
+        "func" : plane_poly_with_roots((1, 2), (-1, 3)),
         "initial_lower_x" : -5.1,
         "initial_upper_x" : 5.1,
         "initial_lower_y" : -3.1,
         "initial_upper_y" : 3.1,
-        "num_iterations" : 20,
-        "num_checkpoints" : 10
+        "num_iterations" : 10,
+        "num_checkpoints" : 10,
+        # TODO: Consider adding a "find_all_roots" flag, which could be turned off 
+        # to only explore one of the two candidate subrectangles when both are viable
     }
 
     def construct(self):
@@ -633,8 +664,63 @@ class Iterative2dTest(Scene):
         num_plane.fade()
         self.add(num_plane)
 
-        num_display = DecimalNumber(0, color = ORANGE)
-        num_display.move_to(UP + RIGHT)
+        rev_func = lambda p : point_to_rev(self.func(p))
+
+        def Animate2dSolver(cur_depth, rect, dim_to_split):
+            if cur_depth >= self.num_iterations:
+                return EmptyAnimation()
+
+            def draw_line_return_wind(start, end, start_wind):
+                alpha_winder = make_alpha_winder(rev_func, start, end, self.num_checkpoints)
+                a0 = alpha_winder(0)
+                rebased_winder = lambda alpha: alpha_winder(alpha) - a0 + start_wind
+                line = Line(num_plane.coords_to_point(*start), num_plane.coords_to_point(*end),
+                    stroke_width = 5,
+                    color = RED)
+                thin_line = line.copy()
+                thin_line.set_stroke(width = 1)
+                anim = Succession(ShowCreation, line)#, Transform, line, thin_line)
+                return (anim, rebased_winder(1))
+
+            wind_so_far = 0
+            anim = EmptyAnimation()
+            sides = [
+                rect.get_top(), 
+                rect.get_right(), 
+                rect.get_bottom(), 
+                rect.get_left()
+            ]
+            for (start, end) in sides:
+                (next_anim, wind_so_far) = draw_line_return_wind(start, end, wind_so_far)
+                anim = Succession(anim, next_anim)
+
+            total_wind = round(wind_so_far)
+
+            if total_wind == 0:
+                coords = [
+                    rect.get_top_left(), 
+                    rect.get_top_right(), 
+                    rect.get_bottom_right(), 
+                    rect.get_bottom_left()
+                ]
+                points = [num_plane.coords_to_point(x, y) for (x, y) in coords]
+                fill_rect = polygonObject = Polygon(*points, fill_opacity = 0.8, color = RED)
+                return Succession(anim, FadeIn(fill_rect))
+            else:
+                (sub_rect1, sub_rect2) = rect.splits_on_dim(dim_to_split)
+                sub_rects = [sub_rect1, sub_rect2]
+                sub_anims = [
+                    Animate2dSolver(
+                        cur_depth = cur_depth + 1,
+                        rect = sub_rect,
+                        dim_to_split = 1 - dim_to_split
+                    )
+                    for sub_rect in sub_rects
+                ]
+                mid_line_coords = rect.split_line_on_dim(dim_to_split)
+                mid_line_points = [num_plane.coords_to_point(x, y) for (x, y) in mid_line_coords]
+                mid_line = DashedLine(*mid_line_points)
+                return Succession(anim, ShowCreation(mid_line), AnimationGroup(*sub_anims))
 
         lower_x = self.initial_lower_x
         upper_x = self.initial_upper_x
@@ -646,45 +732,13 @@ class Iterative2dTest(Scene):
 
         rect = RectangleData(x_interval, y_interval)
 
-        rev_func = lambda p : point_to_rev(self.func(p))
+        anim = Animate2dSolver(
+            cur_depth = 0, 
+            rect = rect,
+            dim_to_split = 0,
+        )
 
-        dim_to_split = 0 # 0 for x, 1 for y
-
-        def draw_line_return_wind(start, end, start_wind):
-            alpha_winder = make_alpha_winder(rev_func, start, end, self.num_checkpoints)
-            a0 = alpha_winder(0)
-            rebased_winder = lambda alpha: alpha_winder(alpha) - a0 + start_wind
-            line = Line(num_plane.coords_to_point(*start), num_plane.coords_to_point(*end),
-                stroke_width = 5,
-                color = RED)
-            self.play(
-                ShowCreation(line),
-                ChangingDecimal(num_display, rebased_winder)
-            )
-            line.set_color(GREEN) # Temporary hack to see (some) redraws; TODO: figure out a better approach
-            return rebased_winder(1)
-        
-        for i in range(self.num_iterations):
-            (explore_rect, alt_rect) = rect.splits_on_dim(dim_to_split)
-
-            wind_so_far = 0
-            sides = [
-                explore_rect.get_top(), 
-                explore_rect.get_right(), 
-                explore_rect.get_bottom(), 
-                explore_rect.get_left()
-            ]
-            for (start, end) in sides:
-                wind_so_far = draw_line_return_wind(start, end, wind_so_far)
-
-            total_wind = round(wind_so_far)
-
-            if total_wind == 0:
-                rect = alt_rect
-            else:
-                rect = explore_rect
-
-            dim_to_split = 1 - dim_to_split
+        self.play(anim)
 
         self.wait()
 
