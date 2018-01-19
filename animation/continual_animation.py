@@ -94,16 +94,23 @@ class AmbientMovement(ContinualAnimation):
         self.mobject.shift(dt*self.rate*self.direction)
 
 class ContinualUpdateFromFunc(ContinualAnimation):
+    CONFIG = {
+        "function_depends_on_dt" : False
+    }
     def __init__(self, mobject, func, **kwargs):
         self.func = func
-        self.func_arg_count = func.func_code.co_argcount
-        if self.func_arg_count > 2:
-            raise Exception("ContinualUpdateFromFunc function must take 1 or 2 args")
         ContinualAnimation.__init__(self, mobject, **kwargs)
 
     def update_mobject(self, dt):
-        args = (self.mobject, dt)
-        self.func(*args[:self.func_arg_count])
+        if self.function_depends_on_dt:
+            self.func(self.mobject, dt)
+        else:
+            self.func(self.mobject)
+
+class ContinualUpdateFromTimeFunc(ContinualUpdateFromFunc):
+    CONFIG = {
+        "function_depends_on_dt" : True
+    }
 
 class ContinualMaintainPositionRelativeTo(ContinualAnimation):
     # TODO: Possibly reimplement using CycleAnimation?
