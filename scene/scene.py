@@ -208,7 +208,7 @@ class Scene(object):
         mobjects, continual_animations = self.separate_mobjects_and_continual_animations(
             mobjects_or_continual_animations
         )
-        self.remove(*mobjects_or_continual_animations)
+        self.restructure_mobjects(to_remove = mobjects)
         self.mobjects += mobjects
         self.continual_animations += continual_animations
         return self
@@ -226,12 +226,11 @@ class Scene(object):
         mobjects, continual_animations = self.separate_mobjects_and_continual_animations(
             mobjects_or_continual_animations
         )
-        to_remove = self.camera.extract_mobject_family_members(mobjects)
 
-        self.mobjects = self.get_restructured_mobject_list(self.mobjects, to_remove)
-        self.foreground_mobjects = self.get_restructured_mobject_list(
-            self.foreground_mobjects, to_remove
-        )
+        to_remove = self.camera.extract_mobject_family_members(mobjects)
+        for list_name in "mobjects", "foreground_mobjects":
+            self.restructure_mobjects(mobjects, list_name, False)
+
         self.continual_animations = filter(
             lambda ca : ca not in continual_animations and \
                         ca.mobject not in to_remove,
@@ -239,13 +238,25 @@ class Scene(object):
         )
         return self
 
-    def get_restructured_mobject_list(self, mobjects, to_remove):
+    def restructure_mobjects(
+        self, to_remove, 
+        mobject_list_name = "mobjects", 
+        extract_families = True
+        ):
         """
         In cases where the scene contains a group, e.g. Group(m1, m2, m3), but one
         of its submobjects is removed, e.g. scene.remove(m1), the list of mobjects
         will be editing to contain other submobjects, but not m1, e.g. it will now
         insert m2 and m3 to where the group once was.
         """
+        if extract_families:
+            to_remove = self.camera.extract_mobject_family_members(to_remove)
+        _list = getattr(self, mobject_list_name)
+        new_list = self.get_restructured_mobject_list(_list, to_remove)
+        setattr(self, mobject_list_name, new_list)
+        return self
+
+    def get_restructured_mobject_list(self, mobjects, to_remove):
         new_mobjects = []
         def add_safe_mobjects_from_list(list_to_examine, set_to_remove):
             for mob in list_to_examine:
@@ -270,11 +281,8 @@ class Scene(object):
     def add_foreground_mobject(self, mobject):
         return self.add_foreground_mobjects(mobject)
 
-    def remove_foreground_mobjects(self, *mobjects):
-        self.foreground_mobjects = self.get_restructured_mobject_list(
-            self.foreground_mobjects, 
-            self.camera.extract_mobject_family_members(mobjects)
-        )
+    def remove_foreground_mobjects(self, *to_remove):
+        self.restructure_mobjects(to_remove, "foreground_mobjects")
         return self
 
     def remove_foreground_mobject(self, mobject):
