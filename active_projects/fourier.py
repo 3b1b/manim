@@ -912,7 +912,7 @@ class FourierMachineScene(Scene):
         self.play(FadeOut(VGroup(v_line, v_line.polarized_mobject)))
 
     def get_v_lines_indicating_periods(self, freq, n_lines = 10):
-        period = 1./freq
+        period = np.divide(1., freq)
         v_lines = VGroup(*[
             DashedLine(ORIGIN, 1.5*UP).move_to(
                 self.time_axes.coords_to_point(n*period, 0),
@@ -922,7 +922,6 @@ class FourierMachineScene(Scene):
         ])
         v_lines.set_stroke(LIGHT_GREY)
         return v_lines
-
 
 class WrapCosineGraphAroundCircle(FourierMachineScene):
     CONFIG = {
@@ -1204,21 +1203,46 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
         com_label = self.center_of_mass_label
         com_label.add_background_rectangle()
         frequency_axes = self.get_frequency_axes()
+        x_coord_label = TextMobject("$x$-coordiante for center of mass")
+        x_coord_label.highlight(self.center_of_mass_color)
+        x_coord_label.scale(self.text_scale_val)
+        x_coord_label.next_to(
+            frequency_axes.y_axis.get_top(),
+            RIGHT, aligned_edge = UP, buff = LARGE_BUFF
+        )
+        x_coord_label.add_background_rectangle()
+        flower_path = ParametricFunction(
+            lambda t : self.circle_plane.coords_to_point(
+                np.sin(2*t)*np.cos(t),
+                np.sin(2*t)*np.sin(t),
+            ),
+            t_min = 0, t_max = TAU,
+        )
 
         self.revert_to_original_skipping_status()
         self.play(
             wps_label.move_to, self.circle_plane.get_top(),
             com_label.move_to, self.circle_plane, DOWN,
         )
-        self.play(FadeIn(frequency_axes))
+        self.play(LaggedStart(FadeIn, frequency_axes))
+        self.wait()
+        self.play(MoveAlongPath(
+            self.center_of_mass_dot, flower_path,
+            run_time = 4,
+        ))
+        self.play(ReplacementTransform(
+            com_label.copy(), x_coord_label
+        ))
         self.wait()
 
-        fourier_graph = self.get_fourier_transform_graph(self.graph)
-        print fourier_graph.underlying_function(0)
-        self.add(fourier_graph)
 
     def draw_full_frequency_plot(self):
-        pass
+        graph = self.graph
+        fourier_graph = self.get_fourier_transform_graph(graph)
+
+
+        self.revert_to_original_skipping_status()
+        self.change_frequency(0.0)
 
     def label_as_almost_fourier(self):
         pass
@@ -1231,14 +1255,17 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
             pg.point_from_proportion(alpha)
             for alpha in np.linspace(0, 1, 1000)
         ])
-        result -= self.circle_plane.get_center()
-        result *= 2
-        result += self.circle_plane.get_center()
+        # result -= self.circle_plane.get_center()
+        # result *= 2
+        # result += self.circle_plane.get_center()
         return result
 
     def change_frequency(self, new_freq, **kwargs):
         kwargs["run_time"] = kwargs.get("run_time", 3)
-        freq_label = self.winding_freq_label[0]
+        freq_label = filter(
+            lambda sm : isinstance(sm, DecimalNumber),
+            self.winding_freq_label
+        )[0]
         anims = [
             Transform(
                 self.v_lines_indicating_periods, 

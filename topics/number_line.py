@@ -4,6 +4,7 @@ from mobject import Mobject1D
 from mobject.vectorized_mobject import VMobject, VGroup
 from mobject.tex_mobject import TexMobject
 from topics.geometry import Line, Arrow
+from topics.functions import ParametricFunction
 from scene import Scene
 
 class NumberLine(VMobject):
@@ -162,6 +163,7 @@ class Axes(VGroup):
         "z_min" : -3.5,
         "z_max" : 3.5,
         "z_normal" : DOWN,
+        "default_num_graph_points" : 100,
     }
     def __init__(self, **kwargs):
         VGroup.__init__(self, **kwargs)
@@ -192,13 +194,16 @@ class Axes(VGroup):
             self.y_axis.point_to_number(point),
         )
 
-    def get_graph(self, function, num_graph_points = 40, **kwargs):
+    def get_graph(self, function, num_graph_points = None, **kwargs):
         kwargs["fill_opacity"] = kwargs.get("fill_opacity", 0)
-        graph = VMobject(**kwargs)
-        graph.set_points_smoothly([
-            self.coords_to_point(x, function(x))
-            for x in np.linspace(self.x_min, self.x_max, num_graph_points)
-        ])
+        kwargs["num_anchor_points"] = \
+            num_graph_points or self.default_num_graph_points
+        graph = ParametricFunction(
+            lambda t : self.coords_to_point(t, function(t)),
+            t_min = self.x_min,
+            t_max = self.x_max,
+            **kwargs
+        )
         graph.underlying_function = function
         return graph
 

@@ -15,6 +15,9 @@ class DecimalNumber(VMobject):
     def __init__(self, number, **kwargs):
         digest_config(self, kwargs, locals())
         num_string = '%.*f'%(self.num_decimal_points, number)
+        negative_zero_string = "-%.*f"%(self.num_decimal_points, 0.)
+        if num_string == negative_zero_string:
+            num_string = num_string[1:]
         VMobject.__init__(self, *[
             TexMobject(char)
             for char in num_string
@@ -27,7 +30,7 @@ class DecimalNumber(VMobject):
             buff = self.digit_to_digit_buff,
             aligned_edge = DOWN
         )
-        if number < 0:
+        if num_string.startswith("-"):
             minus = self.submobjects[0]
             minus.next_to(
                 self.submobjects[1], LEFT,
