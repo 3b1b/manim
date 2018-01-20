@@ -211,7 +211,7 @@ class Brace(TexMobject):
     def __init__(self, mobject, direction = DOWN, **kwargs):
         digest_config(self, kwargs, locals())
         angle = -np.arctan2(*direction[:2]) + np.pi
-        mobject.rotate(-angle)
+        mobject.rotate(-angle, about_point = ORIGIN)
         left  = mobject.get_corner(DOWN+LEFT)
         right = mobject.get_corner(DOWN+RIGHT)
         target_width = right[0]-left[0]
@@ -227,7 +227,7 @@ class Brace(TexMobject):
         self.stretch_to_fit_width(target_width)
         self.shift(left - self.get_corner(UP+LEFT) + self.buff*DOWN)
         for mob in mobject, self:
-            mob.rotate(angle)
+            mob.rotate(angle, about_point = ORIGIN)
 
     def put_at_tip(self, mob, use_next_to = True, **kwargs):
         if use_next_to:
