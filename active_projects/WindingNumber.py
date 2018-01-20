@@ -646,6 +646,9 @@ empty_animation = Animation(Mobject())
 def EmptyAnimation():
     return empty_animation
 
+# TODO: Perhaps restructure this to avoid using AnimationGroup/UnsyncedParallels, and instead 
+# use lists of animations or lists or other such data, to be merged and processed into parallel 
+# animations later
 class EquationSolver2d(Scene):
     CONFIG = {
         "func" : plane_poly_with_roots((1, 2), (-1, 3)),
@@ -653,7 +656,7 @@ class EquationSolver2d(Scene):
         "initial_upper_x" : 5.1,
         "initial_lower_y" : -3.1,
         "initial_upper_y" : 3.1,
-        "num_iterations" : 10,
+        "num_iterations" : 5,
         "num_checkpoints" : 10,
         # TODO: Consider adding a "find_all_roots" flag, which could be turned off 
         # to only explore one of the two candidate subrectangles when both are viable
@@ -679,7 +682,10 @@ class EquationSolver2d(Scene):
                     color = RED)
                 thin_line = line.copy()
                 thin_line.set_stroke(width = 1)
-                anim = Succession(ShowCreation, line)#, Transform, line, thin_line)
+                anim = Succession(
+                    ShowCreation, line, 
+                    Transform, line, thin_line
+                )
                 return (anim, rebased_winder(1))
 
             wind_so_far = 0
@@ -720,7 +726,11 @@ class EquationSolver2d(Scene):
                 mid_line_coords = rect.split_line_on_dim(dim_to_split)
                 mid_line_points = [num_plane.coords_to_point(x, y) for (x, y) in mid_line_coords]
                 mid_line = DashedLine(*mid_line_points)
-                return Succession(anim, ShowCreation(mid_line), AnimationGroup(*sub_anims))
+                return Succession(anim, 
+                    ShowCreation(mid_line), 
+                    FadeOut(mid_line), 
+                    UnsyncedParallel(*sub_anims)
+                )
 
         lower_x = self.initial_lower_x
         upper_x = self.initial_upper_x
