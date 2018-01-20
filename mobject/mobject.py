@@ -248,16 +248,6 @@ class Mobject(object):
             mob.points += about_point
         return self
 
-    def do_about_point(self, point, method, *args, **kwargs):
-        self.shift(-point)
-        method(*args, **kwargs)
-        self.shift(point)
-        return self
-
-    def do_in_place(self, method, *args, **kwargs):
-        self.do_about_point(self.get_center(), method, *args, **kwargs)
-        return self
-
     def rotate_in_place(self, angle, axis = OUT, axes = []):
         # redundant with default behavior of rotate now.
         return self.rotate(angle, axis = axis, axes = axes)
@@ -711,7 +701,6 @@ class Mobject(object):
         Should by a point of the appropriate type
         """
         raise Exception("Not implemented")
-
 
     def align_points(self, mobject):
         count1 = self.get_num_points()
