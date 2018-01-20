@@ -314,7 +314,10 @@ class Scene(object):
 
     def get_moving_mobjects(self, *animations):
         moving_mobjects = list(it.chain(
-            [anim.mobject for anim in animations],
+            [
+                anim.mobject for anim in animations
+                if anim.mobject not in self.foreground_mobjects
+            ],
             [ca.mobject for ca in self.continual_animations],
             self.foreground_mobjects,
         ))
