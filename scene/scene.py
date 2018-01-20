@@ -33,6 +33,7 @@ class Scene(object):
         "save_pngs"        : False,
         "pngs_mode"        : "RGBA",
         "output_directory" : ANIMATIONS_DIR,
+        "movie_file_extension" : ".mp4",
         "name" : None,
         "always_continually_update" : False,
         "random_seed" : 0,
@@ -313,7 +314,10 @@ class Scene(object):
 
     def get_moving_mobjects(self, *animations):
         moving_mobjects = list(it.chain(
-            [anim.mobject for anim in animations],
+            [
+                anim.mobject for anim in animations
+                if anim.mobject not in self.foreground_mobjects
+            ],
             [ca.mobject for ca in self.continual_animations],
             self.foreground_mobjects,
         ))
@@ -470,24 +474,31 @@ class Scene(object):
 
     def preview(self):
         TkSceneRoot(self)
-    
-    def save_image(self, name = None, mode = "RGB", dont_update = False):
+
+    def get_image_file_path(self, name = None, dont_update = False):
         folder = "images"
         if dont_update:
             folder = str(self)
-
         path = os.path.join(self.output_directory, folder)
         file_name = (name or str(self)) + ".png"
-        full_path = os.path.join(path, file_name)
-        if not os.path.exists(path):
-            os.makedirs(path)
+        return os.path.join(path, file_name)
+    
+    def save_image(self, name = None, mode = "RGB", dont_update = False):
+        path = self.get_image_file_path(name, dont_update)
+        directory_path = os.path.dirname(path)
+        if not os.path.exists(directory_path):
+            os.makedirs(directory_path)
         if not dont_update:
             self.update_frame()
         image = self.get_image()
         image = image.convert(mode)
-        image.save(full_path)
+        image.save(path)
 
-    def get_movie_file_path(self, name, extension):
+    def get_movie_file_path(self, name = None, extension = None):
+        if extension is None:
+            extension = self.movie_file_extension
+        if name is None:
+            name = self.name
         file_path = os.path.join(self.output_directory, name)
         if not file_path.endswith(extension):
             file_path += extension
@@ -497,8 +508,8 @@ class Scene(object):
 
     def open_movie_pipe(self):
         name = str(self)
-        file_path = self.get_movie_file_path(name, ".mp4")
-        temp_file_path = file_path.replace(".mp4", "Temp.mp4")
+        file_path = self.get_movie_file_path(name)
+        temp_file_path = file_path.replace(name, name + "Temp")
         print("Writing to %s"%temp_file_path)
         self.args_to_rename_file = (temp_file_path, file_path)
 

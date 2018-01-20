@@ -357,7 +357,7 @@ class Succession(Animation):
         """
         Each arg will either be an animation, or an animation class 
         followed by its arguments (and potentially a dict for 
-        configuraiton).
+        configuration).
 
         For example, 
         Succession(
@@ -415,27 +415,36 @@ class Succession(Animation):
         #might very well mess with it.
         self.original_run_time = run_time
 
+        # critical_alphas[i] is the start alpha of self.animations[i]
+        # critical_alphas[i + 1] is the end alpha of self.animations[i]
+        critical_times = np.concatenate(([0], np.cumsum(self.run_times)))
+        self.critical_alphas = map (lambda x : np.true_divide(x, run_time), critical_times)
+
         mobject = Group(*[anim.mobject for anim in self.animations])
         Animation.__init__(self, mobject, run_time = run_time, **kwargs)
 
+    def rewind_to_start(self):
+        for anim in reversed(self.animations):
+            anim.update(0)
+
     def update_mobject(self, alpha):
-        if alpha >= 1.0:
-            self.animations[-1].update(1)
-            return
-        run_times = self.run_times
-        index = 0
-        time = alpha*self.original_run_time
-        while sum(run_times[:index+1]) < time:
-            index += 1
-        if index > self.last_index:
-            self.animations[self.last_index].update(1)
-            self.animations[self.last_index].clean_up()
-            self.last_index = index
-        curr_anim = self.animations[index]
-        sub_alpha = np.clip(
-            (time - sum(run_times[:index]))/run_times[index], 0, 1
-        )
-        curr_anim.update(sub_alpha)
+        self.rewind_to_start()
+
+        for i in range(len(self.animations)):
+            sub_alpha = inverse_interpolate(
+                self.critical_alphas[i], 
+                self.critical_alphas[i + 1], 
+                alpha
+            )
+            if sub_alpha < 0:
+                return
+
+            sub_alpha = clamp(0, 1, sub_alpha) # Could possibly adopt a non-clamping convention here
+            self.animations[i].update(sub_alpha)
+
+    def clean_up(self, *args, **kwargs):
+        for anim in self.animations:
+            anim.clean_up(*args, **kwargs)
 
 class AnimationGroup(Animation):
     CONFIG = {
@@ -452,23 +461,10 @@ class AnimationGroup(Animation):
         for anim in self.sub_anims:
             anim.update(alpha)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# Parallel animations where shorter animations are not stretched out to match the longest
+class UnsyncedParallel(AnimationGroup):
+    def __init__(self, *sub_anims, **kwargs):
+        digest_config(self, kwargs, locals())
+        self.run_time = max([a.run_time for a in sub_anims])
+        everything = Mobject(*[a.mobject for a in sub_anims])
+        Animation.__init__(self, everything, **kwargs)
