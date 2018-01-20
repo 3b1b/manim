@@ -9,6 +9,7 @@ import inspect
 import traceback
 import imp
 import os
+import subprocess as sp
 
 from helpers import *
 from scene import Scene
@@ -58,7 +59,8 @@ def get_configuration():
          ("-s", "--show_last_frame"),
          ("-l", "--low_quality"),
          ("-m", "--medium_quality"),
-         ("-f", "--save_pngs"),
+         ("-g", "--save_pngs"),
+         ("-f", "--show_file_in_finder"),
          ("-t", "--transparent"),
          ("-q", "--quiet"),
          ("-a", "--write_all")
@@ -74,11 +76,10 @@ def get_configuration():
    config = {
       "file"            : args.file,
       "scene_name"      : args.scene_name,
-      "camera_config"   : PRODUCTION_QUALITY_CAMERA_CONFIG, #TODO
-      "frame_duration"  : PRODUCTION_QUALITY_FRAME_DURATION, #TODO
-      "preview"         : args.preview,
-      "write_to_movie"  : args.write_to_movie,
-      "save_frames"     : args.preview, #Scenes only save frame when previewing
+      "open_video_upon_completion" : args.preview,
+      "show_file_in_finder" : args.show_file_in_finder,
+      #By default, write to file
+      "write_to_movie"  : args.write_to_movie or not args.show_last_frame,
       "show_last_frame" : args.show_last_frame,
       "save_pngs"       : args.save_pngs,
       #If -t is passed in (for transparent), this will be RGBA
@@ -88,7 +89,7 @@ def get_configuration():
       "output_name"     : args.output_name,
       "skip_to_animation_number" : args.skip_to_animation_number,
    }
-   if args.low_quality or args.preview:
+   if args.low_quality:
       config["camera_config"] = LOW_QUALITY_CAMERA_CONFIG
       config["frame_duration"] = LOW_QUALITY_FRAME_DURATION
    elif args.medium_quality:
@@ -102,10 +103,6 @@ def get_configuration():
    if stan is not None:
       config["skip_to_animation_number"] = int(stan)
 
-   #By default, write to file
-   actions = ["write_to_movie", "preview", "show_last_frame"]
-   if not any([config[key] for key in actions]):
-      config["write_to_movie"] = True
    config["skip_animations"] = any([
       config["show_last_frame"] and not config["write_to_movie"],
       config["skip_to_animation_number"],
@@ -117,12 +114,23 @@ def handle_scene(scene, **config):
       curr_stdout = sys.stdout
       sys.stdout = open(os.devnull, "w")
 
-   if config["preview"]:
-      scene.preview()
    if config["show_last_frame"]:
-      if not config["write_all"]:
-         scene.show_frame()
       scene.save_image(mode = config["saved_image_mode"])
+   open_file = any([
+      config["show_last_frame"],
+      config["open_video_upon_completion"],
+      config["show_file_in_finder"]
+   ])
+   if open_file:
+      commands = ["open"]
+      if config["show_file_in_finder"]:
+         commands.append("-R")
+      #
+      if config["show_last_frame"]:
+         commands.append(scene.get_image_file_path())
+      else:
+         commands.append(scene.get_movie_file_path())
+      sp.call(commands)
 
    if config["quiet"]:
       sys.stdout.close()
@@ -209,7 +217,6 @@ def main():
          "frame_duration",
          "skip_animations",
          "write_to_movie",
-         "save_frames",
          "output_directory",
          "save_pngs",
          "skip_to_animation_number",
