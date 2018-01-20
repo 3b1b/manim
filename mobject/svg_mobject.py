@@ -218,7 +218,7 @@ class VMobjectFromSVGPathstring(VMobject):
         for command, coord_string in pairs:
             self.handle_command(command, coord_string)
         #people treat y-coordinate differently
-        self.rotate(np.pi, RIGHT)
+        self.rotate(np.pi, RIGHT, about_point = ORIGIN)
 
     def handle_command(self, command, coord_string):
         isLower = command.islower()

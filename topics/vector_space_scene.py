@@ -104,12 +104,12 @@ class VectorScene(Scene):
 
         angle = vector.get_angle()
         if not rotate:
-            label.rotate(-angle)
+            label.rotate(-angle, about_point = ORIGIN)
         if direction is "left":
             label.shift(-label.get_bottom() + 0.1*UP)
         else:
             label.shift(-label.get_top() + 0.1*DOWN)
-        label.rotate(angle)
+        label.rotate(angle, about_point = ORIGIN)
         label.shift((vector.get_end() - vector.get_start())/2)
         return label
 

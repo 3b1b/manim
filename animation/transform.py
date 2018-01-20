@@ -146,7 +146,7 @@ class ApplyMethod(Transform):
         args = list(args) #So that args.pop() works
         if "method_kwargs" in kwargs:
             method_kwargs = kwargs["method_kwargs"]
-        elif isinstance(args[-1], dict):
+        elif len(args) > 0 and isinstance(args[-1], dict):
             method_kwargs = args.pop()
         else:
             method_kwargs = {}
