@@ -395,13 +395,22 @@ class Succession(Animation):
         mobject = Group(*[anim.mobject for anim in self.animations])
         Animation.__init__(self, mobject, run_time = run_time, **kwargs)
 
+    def rewind_to_start(self):
+        for anim in reversed(self.animations):
+            anim.update(0)
+
     def update_mobject(self, alpha):
+        self.rewind_to_start()
+
         for i in range(len(self.animations)):
-            sub_alpha = anti_interpolate(
+            sub_alpha = inverse_interpolate(
                 self.critical_alphas[i], 
                 self.critical_alphas[i + 1], 
                 alpha
             )
+            if sub_alpha < 0:
+                return
+
             sub_alpha = clamp(0, 1, sub_alpha) # Could possibly adopt a non-clamping convention here
             self.animations[i].update(sub_alpha)
 
@@ -424,23 +433,10 @@ class AnimationGroup(Animation):
         for anim in self.sub_anims:
             anim.update(alpha)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# Parallel animations where shorter animations are not stretched out to match the longest
+class UnsyncedParallel(AnimationGroup):
+    def __init__(self, *sub_anims, **kwargs):
+        digest_config(self, kwargs, locals())
+        self.run_time = max([a.run_time for a in sub_anims])
+        everything = Mobject(*[a.mobject for a in sub_anims])
+        Animation.__init__(self, everything, **kwargs)

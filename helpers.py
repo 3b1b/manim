@@ -307,7 +307,7 @@ def interpolate(start, end, alpha):
 def mid(start, end):
     return (start + end)/2.0
 
-def anti_interpolate(start, end, value):
+def inverse_interpolate(start, end, value):
     return np.true_divide(value - start, end - start)
 
 def clamp(lower, upper, val):
