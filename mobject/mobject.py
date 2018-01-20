@@ -164,6 +164,9 @@ class Mobject(object):
         )
         return self
 
+    def flip(self, axis = UP, **kwargs):
+        return self.rotate(TAU/2, axis, **kwargs)
+
     def stretch(self, factor, dim, **kwargs):
         def func(points):
             points[:,dim] *= factor
@@ -193,6 +196,12 @@ class Mobject(object):
             **kwargs
         )
         return self
+
+    def apply_complex_function(self, function, **kwargs):
+        return self.apply_function(
+            lambda (x, y, z) : complex_to_R3(function(complex(x, y))),
+            **kwargs
+        )
 
     def wag(self, direction = RIGHT, axis = DOWN, wag_factor = 1.0):
         for mob in self.family_members_with_points():
@@ -227,6 +236,8 @@ class Mobject(object):
         return self
 
     #### In place operations ######
+    #Note, much of these are now redundant with default behavior of
+    #above methods
 
     def apply_points_function_about_point(self, func, about_point = None, about_edge = ORIGIN):
         if about_point is None:
@@ -251,21 +262,19 @@ class Mobject(object):
         # redundant with default behavior of rotate now.
         return self.rotate(angle, axis = axis, axes = axes)
 
-    def flip(self, axis = UP):
-        self.rotate_in_place(np.pi, axis)
-        return self
-
-    def scale_in_place(self, scale_factor):
+    def scale_in_place(self, scale_factor, **kwargs):
         #Redundant with default behavior of scale now.
-        return self.scale(scale_factor)
+        return self.scale(scale_factor, **kwargs)
 
     def scale_about_point(self, scale_factor, point):
         #Redundant with default behavior of scale now.
         return self.scale(scale_factor, about_point = point)
 
-    def pose_at_angle(self):
-        self.rotate_in_place(np.pi / 7, RIGHT+UP)
+    def pose_at_angle(self, **kwargs):
+        self.rotate(TAU/14, RIGHT+UP, **kwargs)
         return self
+
+    #### Positioning methods ####
 
     def center(self):
         self.shift(-self.get_center())
@@ -350,42 +359,41 @@ class Mobject(object):
         return False
 
     def stretch_about_point(self, factor, dim, point):
-        self.do_about_point(point, self.stretch, factor, dim)
-        return self
+        return self.stretch(factor, dim, about_point = point)
 
     def stretch_in_place(self, factor, dim):
-        self.do_in_place(self.stretch, factor, dim)
-        return self
+        #Now redundant with stretch
+        return self.stretch(factor, dim)
 
-    def rescale_to_fit(self, length, dim, stretch = False):
+    def rescale_to_fit(self, length, dim, stretch = False, **kwargs):
         old_length = self.length_over_dim(dim)
         if old_length == 0:
             return self
         if stretch:
-            self.stretch_in_place(length/old_length, dim)
+            self.stretch(length/old_length, dim, **kwargs)
         else:
-            self.scale_in_place(length/old_length)
+            self.scale(length/old_length, **kwargs)
         return self
 
-    def stretch_to_fit_width(self, width):
-        return self.rescale_to_fit(width, 0, stretch = True)
+    def stretch_to_fit_width(self, width, **kwargs):
+        return self.rescale_to_fit(width, 0, stretch = True, **kwargs)
 
-    def stretch_to_fit_height(self, height):
-        return self.rescale_to_fit(height, 1, stretch = True)
+    def stretch_to_fit_height(self, height, **kwargs):
+        return self.rescale_to_fit(height, 1, stretch = True, **kwargs)
 
-    def scale_to_fit_width(self, width):
-        return self.rescale_to_fit(width, 0, stretch = False)
+    def scale_to_fit_width(self, width, **kwargs):
+        return self.rescale_to_fit(width, 0, stretch = False, **kwargs)
 
-    def scale_to_fit_height(self, height):
-        return self.rescale_to_fit(height, 1, stretch = False)
+    def scale_to_fit_height(self, height, **kwargs):
+        return self.rescale_to_fit(height, 1, stretch = False, **kwargs)
 
-    def scale_to_fit_depth(self, depth):
-        return self.rescale_to_fit(depth, 2, stretch = False)
+    def scale_to_fit_depth(self, depth, **kwargs):
+        return self.rescale_to_fit(depth, 2, stretch = False, **kwargs)
 
     def space_out_submobjects(self, factor = 1.5, **kwargs):
-        self.scale_in_place(factor)
+        self.scale(factor, **kwargs)
         for submob in self.submobjects:
-            submob.scale_in_place(1./factor)
+            submob.scale(1./factor)
         return self
 
     def move_to(self, point_or_mobject, aligned_edge = ORIGIN):
@@ -521,11 +529,7 @@ class Mobject(object):
             sm1.interpolate(sm1, sm2, 1)
         return self
 
-    def apply_complex_function(self, function, **kwargs):
-        return self.apply_function(
-            lambda (x, y, z) : complex_to_R3(function(complex(x, y))),
-            **kwargs
-        )
+    ##
 
     def reduce_across_dimension(self, points_func, reduce_func, dim):
         try:
