@@ -32,16 +32,20 @@ This doesn't install freetype, but I don't think it's required for this project
 ## How to Use
 Try running the following:
 ```sh
-python extract_scene.py -p example_scenes.py SquareToCircle
+python extract_scene.py example_scenes.py SquareToCircle -p
 ```
 
-`-p` gives a preview of an animation, `-w` will write it to a file, and `-s` will show/save the final image in the animation.
+The -p is for previewing, meaning the the video file will automatically open when it is done rendering.
+Use -l for a faster rendering at a lower quality.
+Use -s to skip to the end and just show the final frame.
+Use -n <number> to skip ahead to the n'th animation of a scene.
+Use -f to show the file in finder (for osx)
 
-You will probably want to change the ANIMATIONS_DIR constant to be whatever direction you want video files to output to.
+You will probably want to change the ANIMATIONS_DIR constant to be whatever directory you want video files to output to.
 
-Look through the old_projects folder to see the code for previous 3b1b videos.  
+Look through the old_projects folder to see the code for previous 3b1b videos.  Note, however, that developments are often made to the library without considering backwards compatibility on those old_projects.  To run them with a guarantee that they will work, you will have to go back to the commit which complete that project.
 
-While developing a scene, the `-s` flag is helpful to just see what things look like at the end without having to generate the full animation.  It can also be helpful to put `self.force_skipping()` at the top of the construct method, and `self.revert_to_original_skipping_status()` before the portion of the scene that you want to test, and run with the `-p` flag to just see a preview of one part of the scene.
+While developing a scene, the `-s` flag is helpful to just see what things look like at the end without having to generate the full animation.  It can also be helpful to use the -n flag to skip over some number of animations.
 
 Scene with `PiCreatures` are somewhat 3b1b specific, so the specific designs for various expressions are not part of the public repo.  You should still be able to run them, but they will fall back on using the "plain" expression for the creature.
 
