@@ -11,7 +11,7 @@ class Arc(VMobject):
         "anchors_span_full_range" : True,
     }
     def __init__(self, angle, **kwargs):
-        digest_locals(self)
+        self.angle = angle
         VMobject.__init__(self, **kwargs)
 
     def generate_points(self):
@@ -113,12 +113,31 @@ class AnnularSector(VMobject):
         self.add_control_points(arc2.points[1:])
         self.add_control_points(a2_to_a1_points[1:])
 
+
+    def get_arc_center(self):
+        first_point = self.points[0]
+        last_point = self.points[-2]
+        v = last_point - first_point
+        radial_unit_vector = v/np.linalg.norm(v)
+        arc_center = first_point - self.inner_radius * radial_unit_vector
+
+
+
+        # radial_unit_vector = np.array([np.cos(self.start_angle),
+        #         np.sin(self.start_angle), 0])
+        # arc_center = inner_arc_start_point - inner_arc.radius * radial_unit_vector
+        return arc_center
+
+
+
+
+
 class Sector(AnnularSector):
 
-    def __init__(self, radius = 1, **kwargs):
-        self.radius = radius
-        self.inner_radius = 0
-        AnnularSector.__init__(self,**kwargs)
+    CONFIG = {
+        "outer_radius" : 1,
+        "inner_radius" : 0
+    }
 
     @property
     def radius(self):
