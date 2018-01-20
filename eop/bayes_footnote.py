@@ -1348,7 +1348,7 @@ class IntroduceTelepathyExample(StatisticsVsEmpathy):
         vect[1] = 0
 
         arc = Arc(angle = angle)
-        arc.rotate(-angle/2 + angle_of_vector(vect))
+        arc.rotate(-angle/2 + angle_of_vector(vect), about_point = ORIGIN)
         arc.scale(3)
         arcs = VGroup(*[arc.copy() for x in range(n_arcs)])
         arcs.move_to(pi2.eyes.get_center(), vect)
