@@ -159,7 +159,7 @@ class Mobject(object):
     def rotate(self, angle, axis = OUT, **kwargs):
         rot_matrix = rotation_matrix(angle, axis)
         self.apply_points_function_about_point(
-            lambda points : np.dot(mob.points, rot_matrix.T),
+            lambda points : np.dot(points, rot_matrix.T),
             **kwargs
         )
         return self
@@ -168,20 +168,29 @@ class Mobject(object):
         def func(points):
             points[:,dim] *= factor
             return points
-        self.apply_points_function_about_point(func, about_point)
+        self.apply_points_function_about_point(func, **kwargs)
         return self
 
-    def apply_function(self, function, about_point = ORIGIN, **kwargs):
+    def apply_function(self, function, **kwargs):
+        #Default to applying matrix about the origin, not mobjects center
+        if len(kwargs) == 0:
+            kwargs["about_point"] = ORIGIN
         self.apply_points_function_about_point(
             lambda points : np.apply_along_axis(function, 1, points),
             about_point = about_point, **kwargs
         )
         return self
 
-    def apply_matrix(self, matrix, about_point = ORIGIN, **kwargs):
+    def apply_matrix(self, matrix, **kwargs):
+        #Default to applying matrix about the origin, not mobjects center
+        if len(kwargs) == 0:
+            kwargs["about_point"] = ORIGIN
+        full_matrix = np.identity(self.dim)
+        matrix = np.array(matrix)
+        full_matrix[:matrix.shape[0],:matrix.shape[1]] = matrix
         self.apply_points_function_about_point(
-            lambda points : np.dot(points, matrix.T),
-            about_point = about_point, **kwargs
+            lambda points : np.dot(points, full_matrix.T),
+            **kwargs
         )
         return self
 
