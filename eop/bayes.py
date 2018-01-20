@@ -2089,7 +2089,7 @@ class MusicExample(SampleSpaceScene, PiCreatureScene):
         notes = VGroup(*[note.copy() for x in range(10)])
         sine_wave = FunctionGraph(np.sin, x_min = -5, x_max = 5)
         sine_wave.scale(0.75)
-        sine_wave.rotate(np.pi/6)
+        sine_wave.rotate(np.pi/6, about_point = ORIGIN)
         sine_wave.shift(
             notes.get_center() - \
             sine_wave.point_from_proportion(0)

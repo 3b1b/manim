@@ -169,12 +169,15 @@ class Axes(VGroup):
         VGroup.__init__(self, **kwargs)
         self.x_axis = self.get_axis(self.x_min, self.x_max, self.x_axis_config)
         self.y_axis = self.get_axis(self.y_min, self.y_max, self.y_axis_config)
-        self.y_axis.rotate(np.pi/2)
+        self.y_axis.rotate(np.pi/2, about_point = ORIGIN)
         self.add(self.x_axis, self.y_axis)
         if self.three_d:
             self.z_axis = self.get_axis(self.z_min, self.z_max, self.z_axis_config)
-            self.z_axis.rotate(-np.pi/2, UP)
-            self.z_axis.rotate(angle_of_vector(self.z_normal), OUT)
+            self.z_axis.rotate(-np.pi/2, UP, about_point = ORIGIN)
+            self.z_axis.rotate(
+                angle_of_vector(self.z_normal), OUT,
+                about_point = ORIGIN
+            )
             self.add(self.z_axis)
 
     def get_axis(self, min_val, max_val, extra_config):

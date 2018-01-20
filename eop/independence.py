@@ -3072,7 +3072,7 @@ class CorrectForDependence(NameBinomial):
         for value, alt_value, bar in zip(values, alt_values, bars):
             arrow = arrow_template.copy()
             if value < alt_value:
-                arrow.rotate(np.pi)
+                arrow.rotate(np.pi, about_point = ORIGIN)
             arrow.next_to(bar, UP)
             arrows.add(arrow)
 
