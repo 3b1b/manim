@@ -659,8 +659,10 @@ class FourierMachineScene(Scene):
             "y_axis_config" : {"unit_size" : 0.8},
         },
         "circle_plane_config" : {
-            "x_radius" : 2,
-            "y_radius" : 2,
+            "x_radius" : 2.5,
+            "y_radius" : 2.5,
+            "x_unit_size" : 0.8,
+            "y_unit_size" : 0.8,
         },
         "frequency_axes_config" : {
             "number_line_config" : {
@@ -1120,9 +1122,9 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
         self.change_to_various_frequencies()
         self.introduce_frequency_plot()
         self.draw_full_frequency_plot()
-        # self.recap_objects_on_screen()
-        # self.lower_graph()
-        # self.label_as_almost_fourier()
+        self.recap_objects_on_screen()
+        self.lower_graph()
+        self.label_as_almost_fourier()
 
     def setup_graph(self):
         self.add(self.get_time_axes())
