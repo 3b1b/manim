@@ -482,8 +482,9 @@ class Scene(object):
     
     def save_image(self, name = None, mode = "RGB", dont_update = False):
         path = self.get_image_file_path(name, dont_update)
-        if not os.path.exists(path):
-            os.makedirs(path)
+        directory_path = os.path.dirname(path)
+        if not os.path.exists(directory_path):
+            os.makedirs(directory_path)
         if not dont_update:
             self.update_frame()
         image = self.get_image()
