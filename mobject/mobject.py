@@ -180,7 +180,7 @@ class Mobject(object):
             kwargs["about_point"] = ORIGIN
         self.apply_points_function_about_point(
             lambda points : np.apply_along_axis(function, 1, points),
-            about_point = about_point, **kwargs
+            **kwargs
         )
         return self
 
