@@ -17,6 +17,7 @@ from topics.three_dimensions import *
 from topics.objects import *
 from topics.probability import *
 from topics.complex_numbers import *
+from topics.common_scenes import *
 from scene import Scene
 from scene.reconfigurable_scene import ReconfigurableScene
 from scene.zoomed_scene import *
@@ -1102,9 +1103,9 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
             for p1, p2 in zip(peak_points, peak_points[1:])
         ])
 
-    def get_bps_label(self):
-        braces = VGroup(*self.get_peak_braces()[3:6])
-        words = TextMobject("3 beats/second")
+    def get_bps_label(self, freq = 3):
+        braces = VGroup(*self.get_peak_braces()[freq:2*freq])
+        words = TextMobject("%d beats/second"%freq)
         words.scale_to_fit_width(0.9*braces.get_width())
         words.move_to(braces, DOWN)
         return words
@@ -1199,9 +1200,7 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
         self.wait()
 
         self.center_of_mass_dot = dot
-        self.center_of_mass_dot_anim = UpdateFromFunc(
-            dot, lambda d : d.move_to(self.get_pol_graph_center_of_mass())
-        )
+        self.generate_center_of_mass_dot_update_anim()
         self.center_of_mass_label = words
 
     def change_to_various_frequencies(self):
@@ -1257,21 +1256,15 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
         graph = self.graph
         fourier_graph = self.get_fourier_transform_graph(graph)
         fourier_graph.save_state()
+        fourier_graph_update = self.get_fouier_graph_drawing_update_anim(
+            fourier_graph
+        )
         v_line = DashedLine(
             self.frequency_axes.coords_to_point(0, 0),
             self.frequency_axes.coords_to_point(0, 1),
             stroke_width = 6,
             color = fourier_graph.get_color()
         )
-        fourier_graph_copy = fourier_graph.copy()
-        max_freq = self.frequency_axes.x_max
-        def update_fourier_graph(fg):
-            freq = self.graph.polarized_mobject.frequency
-            fg.pointwise_become_partial(
-                fourier_graph_copy,
-                0, freq/max_freq
-            )
-            return fg
 
         self.change_frequency(0.0)
         self.generate_fourier_dot_transform(fourier_graph)
@@ -1286,10 +1279,8 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
             fourier_graph.restore()
             self.change_frequency(
                 freq,
-                added_anims = [UpdateFromFunc(
-                    fourier_graph, update_fourier_graph
-                )],
-                run_time = 5,
+                added_anims = [fourier_graph_update],
+                run_time = 8,
             )
             self.wait()
         self.fourier_graph = fourier_graph
@@ -1318,8 +1309,10 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
         self.play(FadeIn(rect))
         self.wait()
         for group in groups:
+            graph_copy = group[0].copy().highlight(PINK)
             self.play(FadeIn(group))
-            self.play(ShowCreation(group[0]))
+            self.play(ShowCreation(graph_copy))
+            self.play(FadeOut(graph_copy))
             self.wait()
             self.play(FadeOut(group))
         self.wait()
@@ -1399,9 +1392,6 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
             pg.point_from_proportion(alpha)
             for alpha in np.linspace(0, 1, 1000)
         ])
-        # result -= self.circle_plane.get_center()
-        # result *= 2
-        # result += self.circle_plane.get_center()
         return result
 
     def generate_fourier_dot_transform(self, fourier_graph):
@@ -1415,6 +1405,24 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
             self.fourier_graph_dot, update_dot
         )
         self.fourier_graph_dot_anim.update(0)
+
+    def get_fouier_graph_drawing_update_anim(self, fourier_graph):
+        fourier_graph_copy = fourier_graph.copy()
+        max_freq = self.frequency_axes.x_max
+        def update_fourier_graph(fg):
+            freq = self.graph.polarized_mobject.frequency
+            fg.pointwise_become_partial(
+                fourier_graph_copy,
+                0, freq/max_freq
+            )
+            return fg
+        return UpdateFromFunc(fourier_graph, update_fourier_graph)
+
+    def generate_center_of_mass_dot_update_anim(self):
+        self.center_of_mass_dot_anim = UpdateFromFunc(
+            self.center_of_mass_dot, 
+            lambda d : d.move_to(self.get_pol_graph_center_of_mass())
+        )
 
     def change_frequency(self, new_freq, **kwargs):
         kwargs["run_time"] = kwargs.get("run_time", 3)
@@ -1448,20 +1456,16 @@ class StudentsHorrifiedAtScene(TeacherStudentsScene):
         )
         self.wait(4)
 
-
-class ShowLinearity(DrawFrequencyPlot):
+class ShowLowerFrequency(DrawFrequencyPlot):
     CONFIG = {
-        "lower_signal_frequency" : 2.0,
+        "signal_frequency" : 2.0,
+        "higher_signal_frequency" : 3.0,
         "lower_signal_color" : PINK,
     }
     def construct(self):
         self.setup_all_axes()
         self.show_lower_frequency_signal()
         self.play_with_lower_frequency_signal()
-        self.point_out_fourier_spike()
-        self.show_sum_of_signals()
-        self.play_with_sum_signal()
-        self.point_out_two_spikes()
 
     def setup_all_axes(self):
         self.add(self.get_time_axes())
@@ -1471,38 +1475,213 @@ class ShowLinearity(DrawFrequencyPlot):
 
     def show_lower_frequency_signal(self):
         axes = self.time_axes
-        start_graph = self.get_cosine_wave(freq = self.signal_frequency)
-        graph = self.get_cosine_wave(freq = self.lower_signal_frequency)
+        start_graph = self.get_cosine_wave(freq = self.higher_signal_frequency)
+        graph = self.get_cosine_wave(
+            freq = self.signal_frequency,
+        )
         graph.highlight(self.lower_signal_color)
-        start_graph.generate_target()
-        start_graph.target.stretch(
+        self.graph = graph
+        ratio = float(self.higher_signal_frequency)/self.signal_frequency
 
+        braces = VGroup(*self.get_peak_braces()[2:4])
+        v_lines = VGroup(*[
+            DashedLine(ORIGIN, 1.5*UP).move_to(
+                axes.coords_to_point(x, 0), DOWN
+            )
+            for x in 1, 2
+        ])
+        bps_label = self.get_bps_label(2)
+        bps_label.save_state()
+        bps_label.next_to(braces, UP, SMALL_BUFF)
+
+
+        # self.add(start_graph)
+        self.play(
+            start_graph.stretch, ratio, 0, {"about_edge" : LEFT},
+            start_graph.highlight, graph.get_color(),
+        )
+        self.play(FadeOut(start_graph), Animation(graph))
+        self.remove(start_graph)
+        self.play(
+            Write(bps_label),
+            LaggedStart(FadeIn, braces),
+            *map(ShowCreation, v_lines),
+            run_time = 1
+        )
+        self.wait()
+        self.play(
+            FadeOut(v_lines),
+            FadeOut(braces),
+            bps_label.restore,
         )
 
-        self.add(start_graph)
-        self.play(ReplacementTransform(
-            start_graph, graph, run_time = 3
-        ))
+    def play_with_lower_frequency_signal(self):
+        freq = 0.1
+
+        #Wind up graph
+        graph = self.graph
+        pol_graph = self.get_polarized_mobject(graph, freq)
+        v_lines = self.get_v_lines_indicating_periods(freq)
+        self.v_lines_indicating_periods = v_lines
+        wps_label = self.get_winding_frequency_label()
+        wps_label.add_to_back(BackgroundRectangle(wps_label))
+        wps_label.move_to(self.circle_plane, UP)
+
+        self.play(
+            ReplacementTransform(
+                graph.copy(), pol_graph,
+                run_time = 2,
+                path_arc = -TAU/4,
+            ),
+            FadeIn(wps_label),
+        )
+        self.change_frequency(freq, run_time = 0)
+        self.change_frequency(0.7)
         self.wait()
 
-    def play_with_lower_frequency_signal(self):
-        pass
+        #Show center of mass
+        dot = Dot(
+            self.get_pol_graph_center_of_mass(),
+            color = self.center_of_mass_color
+        )
+        dot.save_state()
+        self.center_of_mass_dot = dot
+        com_words = TextMobject("Center of mass")
+        com_words.add_background_rectangle()
+        com_words.move_to(self.circle_plane, DOWN)
+        arrow = Arrow(
+            com_words.get_top(),
+            dot.get_center(),
+            buff = SMALL_BUFF,
+            color = self.center_of_mass_color
+        )
+        dot.move_to(arrow.get_start())
+        self.generate_center_of_mass_dot_update_anim()
 
-    def point_out_fourier_spike(self):
-        pass
+        self.play(
+            GrowArrow(arrow),
+            dot.restore,
+            Write(com_words)
+        )
+        self.wait()
+        self.play(*map(FadeOut, [arrow, com_words]))
+        self.change_frequency(0.0)
+        self.wait()
+
+        #Show fourier graph
+        fourier_graph = self.get_fourier_transform_graph(graph)
+        fourier_graph_update = self.get_fouier_graph_drawing_update_anim(
+            fourier_graph
+        )
+        x_coord_label = TextMobject(
+            "x-coordinate of center of mass"
+        )
+        x_coord_label.scale(self.text_scale_val)
+        x_coord_label.next_to(
+            self.frequency_axes.input_to_graph_point(
+                self.signal_frequency, fourier_graph
+            ), UP
+        )
+        x_coord_label.highlight(self.center_of_mass_color)
+        self.generate_fourier_dot_transform(fourier_graph)
+
+        self.play(Write(x_coord_label))
+        self.change_frequency(
+            self.signal_frequency,
+            added_anims = [fourier_graph_update],
+            run_time = 10,
+            rate_func = smooth,
+        )
+        self.wait()
+        self.change_frequency(
+            self.frequency_axes.x_max,
+            added_anims = [fourier_graph_update],
+            run_time = 15,
+            rate_func = smooth,
+        )
+        self.wait()
+
+        self.set_variables_as_attrs(
+            fourier_graph,
+            fourier_graph_update,
+        )
+
+class MixingUnmixingTODOStub(TODOStub):
+    CONFIG = {
+        "message" : "Insert mixing and unmixing of signals"
+    }
+
+class ShowLinearity(DrawFrequencyPlot):
+    CONFIG = {
+        "high_freq_color": YELLOW,
+        "low_freq_color": PINK,
+        "sum_color": GREEN,
+    }
+    def construct(self):
+        self.remove(self.pi_creature)
+        self.show_sum_of_signals()
+        self.show_winding_with_sum_graph()
+        self.point_out_two_spikes()
 
     def show_sum_of_signals(self):
-        pass
+        low_freq, high_freq = 2.0, 3.0
+        axes = self.get_time_axes()
+        axes_copy = axes.copy()
+        low_freq_graph = self.get_cosine_wave(
+            freq = low_freq, scale_val = 0.5,
+        )
+        high_freq_graph = self.get_cosine_wave(
+            freq = high_freq, scale_val = 0.5,
+        )
+        sum_graph = self.get_time_graph(
+            lambda t : sum([
+                low_freq_graph.underlying_function(t),
+                high_freq_graph.underlying_function(t),
+            ])
+        )
+        VGroup(axes_copy, high_freq_graph).next_to(
+            axes, DOWN, MED_LARGE_BUFF
+        )
 
-    def play_with_sum_signal(self):
+        low_freq_label = TextMobject("%d Hz"%int(low_freq))
+        high_freq_label = TextMobject("%d Hz"%int(high_freq))
+        sum_label = TextMobject(
+            "%d Hz"%int(low_freq), "+",
+            "%d Hz"%int(high_freq)
+        )
+        trips = [
+            (low_freq_label, low_freq_graph, self.low_freq_color), 
+            (high_freq_label, high_freq_graph, self.high_freq_color),
+            (sum_label, sum_graph, self.sum_color),
+        ]
+        for label, graph, color in trips:
+            label.next_to(graph, UP)
+            graph.highlight(color)
+            label.highlight(color)
+        sum_label[0].match_color(low_freq_graph)
+        sum_label[2].match_color(highlight_freq_graph)
+
+        self.add(axes, low_freq_graph)
+        self.play(
+            FadeIn(axes_copy),
+            ShowCreation(high_freq_graph),
+        )
+        self.play(LaggedStart(
+            FadeIn, VGroup(high_freq_label, low_freq_label)
+        ))
+        self.wait()
+        self.play(
+            ReplacementTransform(axes_copy, axes),
+            ReplacementTransform(high_freq_graph, sum_graph),
+            ReplacementTransform(low_freq_graph, sum_graph),
+        )
+
+
+    def show_winding_with_sum_graph(self):
         pass
 
     def point_out_two_spikes(self):
         pass
-
-
-
-
 
 
 
