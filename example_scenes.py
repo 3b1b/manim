@@ -23,8 +23,13 @@ from mobject.tex_mobject import *
 
 from mobject.vectorized_mobject import *
 
-## To watch one of these scenes, run the following:
-## python extract_scene.py file_name <SceneName> -p
+# To watch one of these scenes, run the following:
+# python extract_scene.py file_name <SceneName> -p
+# 
+# Use the flat -l for a faster rendering at a lower 
+# quality, use -s to skip to the end and just show
+# the final frame, and use -n <number> to skip ahead
+# to the n'th animation of a scene.
 
 
 class SquareToCircle(Scene):

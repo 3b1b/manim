@@ -340,8 +340,9 @@ class Scene(object):
 
     def compile_play_args_to_animation_list(self, *args):
         """
-        Eacn arg can either be an animation, or a mobject method
-        followed by that methods arguments.
+        Each arg can either be an animation, or a mobject method
+        followed by that methods arguments (and potentially follow
+        by a dict of kwargs for that method).
 
         This animation list is built by going through the args list,
         and each animation is simply added, but when a mobject method
@@ -364,8 +365,15 @@ class Scene(object):
                 #method should already have target then.
             else:
                 mobject.target = mobject.copy()
+            #
+            if len(state["method_args"]) > 0 and isinstance(state["method_args"][-1], dict):
+                method_kwargs = state["method_args"].pop()
+            else:
+                method_kwargs = {}
             state["curr_method"].im_func(
-                mobject.target, *state["method_args"]
+                mobject.target, 
+                *state["method_args"],
+                **method_kwargs
             )
             animations.append(MoveToTarget(mobject))
             state["last_method"] = state["curr_method"]
@@ -482,7 +490,7 @@ class Scene(object):
         path = os.path.join(self.output_directory, folder)
         file_name = (name or str(self)) + ".png"
         return os.path.join(path, file_name)
-    
+
     def save_image(self, name = None, mode = "RGB", dont_update = False):
         path = self.get_image_file_path(name, dont_update)
         directory_path = os.path.dirname(path)

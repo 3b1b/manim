@@ -539,7 +539,7 @@ class UnmixMixedPaint(Scene):
     def construct(self):
         angles = np.arange(4)*np.pi/2
         quadrants = VGroup(*[
-            Quadrant().rotate(angle).highlight(color)
+            Quadrant().rotate(angle, about_point = ORIGIN).highlight(color)
             for color, angle in zip(self.colors, angles)
         ])
         quadrants.add(*it.chain(*[
@@ -659,8 +659,10 @@ class FourierMachineScene(Scene):
             "y_axis_config" : {"unit_size" : 0.8},
         },
         "circle_plane_config" : {
-            "x_radius" : 2,
-            "y_radius" : 2,
+            "x_radius" : 2.5,
+            "y_radius" : 2.5,
+            "x_unit_size" : 0.8,
+            "y_unit_size" : 0.8,
         },
         "frequency_axes_config" : {
             "number_line_config" : {
@@ -1261,6 +1263,15 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
             stroke_width = 6,
             color = fourier_graph.get_color()
         )
+        fourier_graph_copy = fourier_graph.copy()
+        max_freq = self.frequency_axes.x_max
+        def update_fourier_graph(fg):
+            freq = self.graph.polarized_mobject.frequency
+            fg.pointwise_become_partial(
+                fourier_graph_copy,
+                0, freq/max_freq
+            )
+            return fg
 
         self.change_frequency(0.0)
         self.generate_fourier_dot_transform(fourier_graph)
@@ -1275,13 +1286,8 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
             fourier_graph.restore()
             self.change_frequency(
                 freq,
-                added_anims = [ShowCreation(
-                    fourier_graph,
-                    rate_func = lambda t : interpolate(
-                        (freq-1.)/f_max, 
-                        float(freq)/f_max,
-                        smooth(t)
-                    ),
+                added_anims = [UpdateFromFunc(
+                    fourier_graph, update_fourier_graph
                 )],
                 run_time = 5,
             )
@@ -1444,10 +1450,56 @@ class StudentsHorrifiedAtScene(TeacherStudentsScene):
 
 
 class ShowLinearity(DrawFrequencyPlot):
+    CONFIG = {
+        "lower_signal_frequency" : 2.0,
+        "lower_signal_color" : PINK,
+    }
     def construct(self):
+        self.setup_all_axes()
         self.show_lower_frequency_signal()
         self.play_with_lower_frequency_signal()
         self.point_out_fourier_spike()
+        self.show_sum_of_signals()
+        self.play_with_sum_signal()
+        self.point_out_two_spikes()
+
+    def setup_all_axes(self):
+        self.add(self.get_time_axes())
+        self.add(self.get_circle_plane())
+        self.add(self.get_frequency_axes())
+        self.remove(self.pi_creature)
+
+    def show_lower_frequency_signal(self):
+        axes = self.time_axes
+        start_graph = self.get_cosine_wave(freq = self.signal_frequency)
+        graph = self.get_cosine_wave(freq = self.lower_signal_frequency)
+        graph.highlight(self.lower_signal_color)
+        start_graph.generate_target()
+        start_graph.target.stretch(
+
+        )
+
+        self.add(start_graph)
+        self.play(ReplacementTransform(
+            start_graph, graph, run_time = 3
+        ))
+        self.wait()
+
+    def play_with_lower_frequency_signal(self):
+        pass
+
+    def point_out_fourier_spike(self):
+        pass
+
+    def show_sum_of_signals(self):
+        pass
+
+    def play_with_sum_signal(self):
+        pass
+
+    def point_out_two_spikes(self):
+        pass
+
 
 
 

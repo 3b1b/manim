@@ -143,7 +143,13 @@ class ApplyMethod(Transform):
             "the method you want to animate"
         )
         assert(isinstance(method.im_self, Mobject))
-        method_kwargs = kwargs.get("method_kwargs", {})
+        args = list(args) #So that args.pop() works
+        if "method_kwargs" in kwargs:
+            method_kwargs = kwargs["method_kwargs"]
+        elif len(args) > 0 and isinstance(args[-1], dict):
+            method_kwargs = args.pop()
+        else:
+            method_kwargs = {}
         target = method.im_self.copy()
         method.im_func(target, *args, **method_kwargs)
         Transform.__init__(self, method.im_self, target, **kwargs)

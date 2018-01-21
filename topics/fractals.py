@@ -127,7 +127,7 @@ class DiamondFractal(SelfSimilarFractal):
         # VGroup(*subparts).rotate(np.pi/4)
         for part, vect in zip(subparts, compass_directions(start_vect = UP+RIGHT)):
             part.next_to(ORIGIN, vect, buff = 0)
-        VGroup(*subparts).rotate(np.pi/4)
+        VGroup(*subparts).rotate(np.pi/4, about_point = ORIGIN)
 
 
 class PentagonalFractal(SelfSimilarFractal):
@@ -142,7 +142,7 @@ class PentagonalFractal(SelfSimilarFractal):
     def arrange_subparts(self, *subparts):
         for x, part in enumerate(subparts):
             part.shift(0.95*part.get_height()*UP)
-            part.rotate(2*np.pi*x/5)
+            part.rotate(2*np.pi*x/5, about_point = ORIGIN)
 
 class PentagonalPiCreatureFractal(PentagonalFractal):
     def init_colors(self):
@@ -163,7 +163,7 @@ class PentagonalPiCreatureFractal(PentagonalFractal):
 
     def arrange_subparts(self, *subparts):
         for part in subparts:
-            part.rotate(2*np.pi/5)
+            part.rotate(2*np.pi/5, about_point = ORIGIN)
         PentagonalFractal.arrange_subparts(self, *subparts)
 
 
@@ -236,7 +236,7 @@ class WonkyHexagonFractal(SelfSimilarFractal):
 
     def arrange_subparts(self, *subparts):
         for i, piece in enumerate(subparts):
-            piece.rotate(i*np.pi/12)
+            piece.rotate(i*np.pi/12, about_point = ORIGIN)
         p1, p2, p3, p4, p5, p6, p7 = subparts
         center_row = VGroup(p1, p4, p7)
         center_row.arrange_submobjects(RIGHT, buff = 0)
@@ -265,7 +265,7 @@ class CircularFractal(SelfSimilarFractal):
                 ORIGIN, UP,
                 buff = self.height/(2*np.tan(theta))
             )
-            part.rotate(i*2*np.pi/self.num_subparts)
+            part.rotate(i*2*np.pi/self.num_subparts, about_point = ORIGIN)
         self.num_subparts -= 1
 
 
@@ -548,7 +548,7 @@ class FlowSnake(LindenmayerCurve):
     }
     def __init__(self, **kwargs):
         LindenmayerCurve.__init__(self, **kwargs)
-        self.rotate(-self.order*np.pi/9)
+        self.rotate(-self.order*np.pi/9, about_point = ORIGIN)
 
 class SierpinskiCurve(LindenmayerCurve):
     CONFIG = {
