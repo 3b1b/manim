@@ -659,6 +659,7 @@ class FourierMachineScene(Scene):
             "y_max" : 2,
             "y_axis_config" : {"unit_size" : 0.8},
         },
+        "time_label_t" : 3.4,
         "circle_plane_config" : {
             "x_radius" : 2.5,
             "y_radius" : 2.5,
@@ -709,7 +710,10 @@ class FourierMachineScene(Scene):
         labels = VGroup(time_label, intensity_label)
         for label in labels:
             label.scale(self.text_scale_val)
-        time_label.next_to(time_axes.coords_to_point(3.5,0), DOWN)
+        time_label.next_to(
+            time_axes.coords_to_point(self.time_label_t,0), 
+            DOWN
+        )
         intensity_label.next_to(time_axes.y_axis.get_top(), RIGHT)
         time_axes.labels = labels
         time_axes.add(labels)
@@ -1524,6 +1528,7 @@ class ShowLowerFrequency(DrawFrequencyPlot):
         v_lines = self.get_v_lines_indicating_periods(freq)
         self.v_lines_indicating_periods = v_lines
         wps_label = self.get_winding_frequency_label()
+        ChangeDecimalToValue(wps_label[0], freq).update(1)
         wps_label.add_to_back(BackgroundRectangle(wps_label))
         wps_label.move_to(self.circle_plane, UP)
 
@@ -1616,6 +1621,8 @@ class ShowLinearity(DrawFrequencyPlot):
         "high_freq_color": YELLOW,
         "low_freq_color": PINK,
         "sum_color": GREEN,
+        "low_freq" : 2.0,
+        "high_freq" : 3.0,
     }
     def construct(self):
         self.remove(self.pi_creature)
@@ -1624,15 +1631,17 @@ class ShowLinearity(DrawFrequencyPlot):
         self.point_out_two_spikes()
 
     def show_sum_of_signals(self):
-        low_freq, high_freq = 2.0, 3.0
+        low_freq, high_freq = self.low_freq, self.high_freq
         axes = self.get_time_axes()
         axes_copy = axes.copy()
-        low_freq_graph = self.get_cosine_wave(
-            freq = low_freq, scale_val = 0.5,
-        )
-        high_freq_graph = self.get_cosine_wave(
-            freq = high_freq, scale_val = 0.5,
-        )
+        low_freq_graph, high_freq_graph = [
+            self.get_cosine_wave(
+                freq = freq, 
+                scale_val = 0.5,
+                shift_val = 0.55,
+            )
+            for freq in low_freq, high_freq
+        ]
         sum_graph = self.get_time_graph(
             lambda t : sum([
                 low_freq_graph.underlying_function(t),
@@ -1659,7 +1668,7 @@ class ShowLinearity(DrawFrequencyPlot):
             graph.highlight(color)
             label.highlight(color)
         sum_label[0].match_color(low_freq_graph)
-        sum_label[2].match_color(highlight_freq_graph)
+        sum_label[2].match_color(high_freq_graph)
 
         self.add(axes, low_freq_graph)
         self.play(
@@ -1674,19 +1683,204 @@ class ShowLinearity(DrawFrequencyPlot):
             ReplacementTransform(axes_copy, axes),
             ReplacementTransform(high_freq_graph, sum_graph),
             ReplacementTransform(low_freq_graph, sum_graph),
+            ReplacementTransform(
+                VGroup(low_freq_label, high_freq_label),
+                sum_label
+            )
         )
-
+        self.wait()
+        self.graph = graph
 
     def show_winding_with_sum_graph(self):
-        pass
+        graph = self.graph
+        circle_plane = self.get_circle_plane()
+        frequency_axes = self.get_frequency_axes()
+        pol_graph = self.get_polarized_mobject(graph, freq = 0.0)
+
+        wps_label = self.get_winding_frequency_label()
+        ChangeDecimalToValue(wps_label[0], 0.0).update(1)
+        wps_label.add_to_back(BackgroundRectangle(wps_label))
+        wps_label.move_to(circle_plane, UP)
+
+        v_lines = self.get_v_lines_indicating_periods(0.001)
+        self.v_lines_indicating_periods = v_lines
+
+        dot = Dot(
+            self.get_pol_graph_center_of_mass(),
+            color = self.center_of_mass_color
+        )
+        self.center_of_mass_dot = dot
+        self.generate_center_of_mass_dot_update_anim()
+
+        fourier_graph = self.get_fourier_transform_graph(graph)
+        fourier_graph_update = self.get_fouier_graph_drawing_update_anim(
+            fourier_graph
+        )
+        x_coord_label = TextMobject(
+            "x-coordinate of center of mass"
+        )
+        x_coord_label.scale(self.text_scale_val)
+        x_coord_label.next_to(
+            self.frequency_axes.input_to_graph_point(
+                self.signal_frequency, fourier_graph
+            ), UP
+        )
+        x_coord_label.highlight(self.center_of_mass_color)
+        almost_fourier_label = TextMobject(
+            "``Almost-Fourier transform''"
+        )
+
+        self.generate_fourier_dot_transform(fourier_graph)                
+
+        self.play(LaggedStart(
+            FadeIn, VGroup(
+                circle_plane, wps_label,
+                frequency_axes, x_coord_label,
+            ),
+            run_time = 1,
+        ))
+        self.play(
+            ReplacementTransform(graph.copy(), pol_graph),
+            GrowFromCenter(dot)
+        )
+        freqs = [
+            self.low_freq, self.high_freq,
+            self.frequency_axes.x_max
+        ]
+        for freq in freqs:
+            self.change_frequency(
+                freq,
+                added_anims = [fourier_graph_update],
+                run_time = 8,
+                rate_func = bezier([0, 0, 1, 1]),
+            )
 
     def point_out_two_spikes(self):
         pass
 
+class ShowCommutativeDiagram(ShowLinearity):
+    CONFIG = {
+        "time_axes_config" : {
+            "x_max" : 1.9,
+            "y_max" : 2.0,
+            "y_min" : -2.0,
+            "y_axis_config" : {
+                "unit_size" : 0.5,
+            },
+            "x_axis_config" : {
+                "numbers_to_show" : [1],
+            }
+        },
+        "time_label_t" : 1.5,
+        "frequency_axes_config" : {
+            "x_min" : 0.0,
+            "x_max" : 4.0,
+            "y_min" : -0.1,
+            "y_max" : 0.5,
+            "y_axis_config" : {
+                "unit_size" : 1.5,
+                "tick_frequency" : 0.5,
+            },
+        }
+    } 
+    def construct(self):
+        self.remove(self.pi_creature)
+
+        #Setup axes
+        time_axes = self.get_time_axes()
+        time_axes.scale(0.8)
+        ta_group = VGroup(
+            time_axes, time_axes.deepcopy(), time_axes.deepcopy(),
+        )
+        ta_group.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        ta_group.to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
+
+        freq_axes = Axes(**self.frequency_axes_config)
+        freq_axes.highlight(TEAL)
+        freq_label = TextMobject("Frequency")
+        freq_label.scale(self.text_scale_val)
+        freq_label.next_to(freq_axes.x_axis, DOWN, SMALL_BUFF, RIGHT)
+        freq_axes.add(freq_label)
+        freq_axes.scale(0.8)
+        fa_group = VGroup(
+            freq_axes, freq_axes.deepcopy(), freq_axes.deepcopy()
+        )
+        VGroup(ta_group[1], fa_group[1]).shift(MED_LARGE_BUFF*UP)
+        for ta, fa in zip(ta_group, fa_group):
+            if ta is not ta_group[0]:
+                ta.remove(ta.labels)
+                fa.remove(fa[-1])
+            fa.next_to(
+                ta.x_axis.main_line, RIGHT,
+                submobject_to_align = fa.x_axis.main_line
+            )
+            fa.to_edge(RIGHT)
+
+        ## Add graphs
+        funcs = [
+            lambda t : np.cos(2*TAU*t),
+            lambda t : np.cos(3*TAU*t),
+        ]
+        funcs.append(lambda t : funcs[0](t)+funcs[1](t))
+        colors = [
+            self.low_freq_color, 
+            self.high_freq_color,
+            self.sum_color,
+        ]
+        labels = [
+            TextMobject("2 Hz"),
+            TextMobject("3 Hz"),
+            # TextMobject("2 Hz", "+", "3 Hz"),
+            VectorizedPoint()
+        ]
+        for func, color, label, ta, fa in zip(funcs, colors, labels, ta_group, fa_group):
+            time_graph = ta.get_graph(func)
+            time_graph.highlight(color)
+            label.highlight(color)
+            label.scale(0.75)
+            label.next_to(time_graph, UP, SMALL_BUFF)
+            fourier = self.get_fourier_transform(
+                func, ta.x_min, 4*ta.x_max
+            )
+            fourier_graph = fa.get_graph(fourier)
+            fourier_graph.highlight(self.center_of_mass_color)
+
+            arrow = Arrow(
+                ta.x_axis.main_line, fa.x_axis.main_line, 
+                color = WHITE,
+                buff = MED_LARGE_BUFF,
+            )
+            words = TextMobject("Almost-Fourier \\\\ transform")
+            words.scale(0.6)
+            words.next_to(arrow, UP)
+            arrow.words = words
+            self.add(arrow, words)
+
+            ta.graph = time_graph
+            ta.graph_label = label
+            ta.arrow = arrow
+            ta.add(time_graph, label)
+            fa.graph = fourier_graph
+            fa.add(fourier_graph)
+        # labels[-1][0].match_color(labels[0])
+        # labels[-1][2].match_color(labels[1])
 
 
+        #Add arrows
+        sum_arrows = VGroup()
+        for group in ta_group, fa_group:
+            arrow = Arrow(
+                group[1].graph, group[2].graph,
+                color = WHITE,
+                buff = SMALL_BUFF
+            )
+            arrow.scale(0.8, about_edge = UP)
+            arrow.words = TextMobject("Sum").scale(0.75)
+            arrow.words.next_to(arrow, RIGHT, buff = MED_SMALL_BUFF)
+            sum_arrows.add(arrow)
+            self.add(arrow, arrow.words)
 
-
+        self.add(ta_group, fa_group)
 
 
 
