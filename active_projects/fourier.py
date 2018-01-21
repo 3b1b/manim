@@ -1800,6 +1800,7 @@ class ShowCommutativeDiagram(ShowLinearity):
         freq_label = TextMobject("Frequency")
         freq_label.scale(self.text_scale_val)
         freq_label.next_to(freq_axes.x_axis, DOWN, SMALL_BUFF, RIGHT)
+        freq_axes.label = freq_label
         freq_axes.add(freq_label)
         freq_axes.scale(0.8)
         fa_group = VGroup(
@@ -1807,14 +1808,13 @@ class ShowCommutativeDiagram(ShowLinearity):
         )
         VGroup(ta_group[1], fa_group[1]).shift(MED_LARGE_BUFF*UP)
         for ta, fa in zip(ta_group, fa_group):
-            if ta is not ta_group[0]:
-                ta.remove(ta.labels)
-                fa.remove(fa[-1])
             fa.next_to(
                 ta.x_axis.main_line, RIGHT,
                 submobject_to_align = fa.x_axis.main_line
             )
             fa.to_edge(RIGHT)
+            ta.remove(ta.labels)
+            fa.remove(fa.label)
 
         ## Add graphs
         funcs = [
@@ -1854,7 +1854,6 @@ class ShowCommutativeDiagram(ShowLinearity):
             words.scale(0.6)
             words.next_to(arrow, UP)
             arrow.words = words
-            self.add(arrow, words)
 
             ta.graph = time_graph
             ta.graph_label = label
@@ -1878,10 +1877,60 @@ class ShowCommutativeDiagram(ShowLinearity):
             arrow.words = TextMobject("Sum").scale(0.75)
             arrow.words.next_to(arrow, RIGHT, buff = MED_SMALL_BUFF)
             sum_arrows.add(arrow)
-            self.add(arrow, arrow.words)
 
-        self.add(ta_group, fa_group)
+        def apply_transform(index):
+            ta = ta_group[index].deepcopy()
+            fa = fa_group[index]
+            anims = [
+                ReplacementTransform(
+                    getattr(ta, attr), getattr(fa, attr)
+                )
+                for attr in "x_axis", "y_axis", "graph"
+            ]
+            anims += [
+                GrowArrow(ta.arrow),
+                Write(ta.arrow.words),
+            ]
+            if index == 0:
+                anims.append(ReplacementTransform(
+                    ta.labels[0],
+                    fa.label
+                ))
+            self.play(*anims, run_time = 1.5)
 
+
+        #Animations
+        self.add(*ta_group[:2])
+        self.add(ta_group[0].labels)
+        self.wait()
+        apply_transform(0)
+        apply_transform(1)
+        self.wait()
+        self.play(
+            GrowArrow(sum_arrows[1]),
+            Write(sum_arrows[1].words),
+            *[
+                ReplacementTransform(
+                    fa.copy(), fa_group[2]
+                )
+                for fa in fa_group[:2]
+            ]
+        )
+        self.wait(2)
+        self.play(
+            GrowArrow(sum_arrows[0]),
+            Write(sum_arrows[0].words),
+            *[
+                ReplacementTransform(
+                    mob.copy(), ta_group[2], 
+                    run_time = 1
+                )
+                for mob in ta_group[:2]
+            ]
+        )
+        self.wait()
+        apply_transform(2)
+        self.wait()
 
 
 
