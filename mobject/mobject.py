@@ -428,6 +428,26 @@ class Mobject(object):
         self.shift(start-self.points[0])
         return self
 
+    ## Match other mobvject properties
+
+    def match_color(self, mobject):
+        return self.highlight(mobject.get_color())
+
+    def match_dim(self, mobject, dim, **kwargs):
+        return self.rescale_to_fit(
+            mobject.length_over_dim(dim), dim,
+            **kwargs
+        )
+
+    def match_width(self, mobject):
+        return self.match_dim(mobject, 0)
+
+    def match_height(self, mobject):
+        return self.match_dim(mobject, 1)
+
+    def match_depth(self, mobject):
+        return self.match_dim(mobject, 2)
+
     ## Color functions
 
     def highlight(self, color = YELLOW_C, family = True):
