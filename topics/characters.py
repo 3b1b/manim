@@ -388,9 +388,13 @@ class PiCreatureScene(Scene):
         "total_wait_time" : 0,
         "seconds_to_blink" : 3,
         "pi_creatures_start_on_screen" : True,
+        "default_pi_creature_kwargs" : {},
+        "default_pi_creature_class" : Mortimer,
     }
     def setup(self):
-        self.pi_creatures = VGroup(*self.create_pi_creatures())
+        self.pi_creatures = VGroup(
+            *self.create_pi_creatures(**self.default_pi_creature_kwargs)
+        )
         self.pi_creature = self.get_primary_pi_creature()
         if self.pi_creatures_start_on_screen:
             self.add(*self.pi_creatures)
@@ -399,10 +403,10 @@ class PiCreatureScene(Scene):
         """ 
         Likely updated for subclasses 
         """
-        return VGroup(self.create_pi_creature())
+        return VGroup(self.create_pi_creature(**self.default_pi_creature_kwargs))
 
     def create_pi_creature(self):
-        return Mortimer().to_corner(DOWN+RIGHT)
+        return self.default_pi_creature_class(**self.default_pi_creature_kwargs).to_corner(DOWN+RIGHT)
 
     def get_pi_creatures(self):
         return self.pi_creatures
