@@ -248,9 +248,9 @@ class Mobject(object):
             mob.points += about_point
         return self
 
-    def rotate_in_place(self, angle, axis = OUT, axes = []):
+    def rotate_in_place(self, angle, axis = OUT):
         # redundant with default behavior of rotate now.
-        return self.rotate(angle, axis = axis, axes = axes)
+        return self.rotate(angle, axis = axis)
 
     def scale_in_place(self, scale_factor, **kwargs):
         #Redundant with default behavior of scale now.
