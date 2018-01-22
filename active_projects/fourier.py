@@ -2177,7 +2177,7 @@ class FilterOutHighPitch(AddingPureFrequencies, ShowCommutativeDiagram):
         self.fourier_graph = fourier_graph
         self.spike_rect = spike_rect
 
-    def filter_out_high_pitch(self):
+    def filter_out_high_pitch(self): 
         fourier_graph = self.fourier_graph
         spike_rect = self.spike_rect
         frequency_axes = self.frequency_axes
@@ -2188,14 +2188,14 @@ class FilterOutHighPitch(AddingPureFrequencies, ShowCommutativeDiagram):
             return result
 
         new_graph = frequency_axes.get_graph(
-            filtered_func, num_graph_points = 200
+            filtered_func, num_graph_points = 300
         )
         new_graph.highlight(RED)
 
-        self.play(spike_rect.stretch, 4)
+        self.play(spike_rect.stretch, 4, 0)
         self.play(
             Transform(fourier_graph, new_graph),
-            spike_rect.stretch, 0.01, {
+            spike_rect.stretch, 0.01, 1, {
                 "about_point" : frequency_axes.coords_to_point(0, 0)
             },
             run_time = 2
@@ -2218,6 +2218,72 @@ class FilterOutHighPitch(AddingPureFrequencies, ShowCommutativeDiagram):
             )
             for n in 5, 7, 10, 12
         ]
+
+
+
+
+
+
+
+
+class CloseWithAPuzzle(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("Close with a puzzle!", run_time = 1)
+        self.change_student_modes(*["hooray"]*3)
+        self.wait(3)
+
+class PuzzleDescription(Scene):
+    def construct(self):
+        lines = VGroup(
+            TextMobject("Convex set", "$C$", "in $\\mathds{R}^3$"),
+            TextMobject("Boundary", "$B$", "$=$", "$\\partial C$"),
+            TextMobject("$D$", "$=\\{p+q | p, q \\in B\\}$"),
+            TextMobject("Prove that", "$D$", "is convex")
+        )
+        for line in lines:
+            line.highlight_by_tex_to_color_map({
+                "$C$" : BLUE_D,
+                "\\partial C" : BLUE_D,
+                "$B$" : BLUE_C,
+                "$D$" : YELLOW,
+            })
+        VGroup(lines[2][1][2], lines[2][1][6]).highlight(RED)
+        VGroup(lines[2][1][4], lines[2][1][8]).highlight(MAROON_B)
+        lines[2][1][10].highlight(BLUE_C)
+        lines.scale(1.25)
+        lines.arrange_submobjects(DOWN, buff = LARGE_BUFF, aligned_edge = LEFT)
+
+        lines.to_corner(UP+RIGHT)
+
+        for line in lines:
+            self.play(Write(line))
+            self.wait(2)
+
+class SponsorScreenGrab(PiCreatureScene):
+    def construct(self):
+        morty = self.pi_creature
+        screen = ScreenRectangle(height = 5)
+        screen.to_corner(UP+LEFT)
+        screen.shift(MED_LARGE_BUFF*DOWN)
+        url = TextMobject("janestreet.com/3b1b")
+        url.next_to(screen, UP)
+
+        self.play(
+            morty.change, "raise_right_hand",
+            ShowCreation(screen)
+        )
+        self.play(Write(url))
+        self.wait(2)
+        for mode in "happy", "thinking", "pondering", "thinking":
+            self.play(morty.change, mode, screen)
+            self.wait(4)
+
+
+
+
+
+
+
 
 
 
