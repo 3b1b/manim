@@ -38,7 +38,7 @@ python extract_scene.py example_scenes.py SquareToCircle -p
 The -p is for previewing, meaning the the video file will automatically open when it is done rendering.
 Use -l for a faster rendering at a lower quality.
 Use -s to skip to the end and just show the final frame.
-Use -n <number> to skip ahead to the n'th animation of a scene.
+Use -n (number) to skip ahead to the n'th animation of a scene.
 Use -f to show the file in finder (for osx)
 
 You will probably want to change the ANIMATIONS_DIR constant to be whatever directory you want video files to output to.

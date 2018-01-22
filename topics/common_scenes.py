@@ -187,7 +187,6 @@ class PatreonEndScreen(PatreonThanks):
             run_time = self.run_time,
         )
 
-
 class ExternallyAnimatedScene(Scene):
     def construct(self):
         raise Exception("Don't actually run this class.")
