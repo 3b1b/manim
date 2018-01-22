@@ -79,6 +79,12 @@ TEX_IMAGE_DIR     = TEX_DIR #TODO, What is this doing?
 MOBJECT_DIR       = os.path.join(FILE_DIR, "mobjects")
 IMAGE_MOBJECT_DIR = os.path.join(MOBJECT_DIR, "image")
 
+if not os.path.exists(MEDIA_DIR):
+    raise Exception("""
+        Redefine MEDIA_DIR in constants.py to point to 
+        a valid directory where movies and images will 
+        be written
+    """)
 for folder in [FILE_DIR, RASTER_IMAGE_DIR, SVG_IMAGE_DIR, ANIMATIONS_DIR, TEX_DIR,
                TEX_IMAGE_DIR, MOBJECT_DIR, IMAGE_MOBJECT_DIR,
                STAGED_SCENES_DIR]:
