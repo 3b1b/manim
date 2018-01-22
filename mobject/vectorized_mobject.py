@@ -84,6 +84,18 @@ class VMobject(Mobject):
         )
         return self
 
+    def match_style(self, vmobject):
+        #TODO: Should this be smart about matching the
+        #style of the family members, if they happen to
+        #be different?
+        self.set_style_data(
+            stroke_color = vmobject.get_stroke_color(),
+            stroke_width = vmobject.get_stroke_width(),
+            fill_color = vmobject.get_fill_color(),
+            fill_opacity = vmobject.get_fill_opacity(),
+        )
+        return
+
     def fade(self, darkness = 0.5):
         for submob in self.submobject_family():
             submob.set_stroke(
