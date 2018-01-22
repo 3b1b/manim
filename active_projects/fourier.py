@@ -247,18 +247,19 @@ class AddingPureFrequencies(PiCreatureScene):
         self.wait()
         self.play(MoveToTarget(sum_lines, path_arc = np.pi/4))
         self.wait(2)
-        self.play(*[
-            Transform(
-                line, 
-                VectorizedPoint(axes.coords_to_point(0, self.equilibrium_height)),
-                remover = True
-            )
-            for line, axes in [
-                (A_line, A_axes),
-                (D_line, D_axes),
-                (sum_lines, axes),
-            ]
-        ])
+        # self.play(*[
+        #     Transform(
+        #         line, 
+        #         VectorizedPoint(axes.coords_to_point(0, self.equilibrium_height)),
+        #         remover = True
+        #     )
+        #     for line, axes in [
+        #         (A_line, A_axes),
+        #         (D_line, D_axes),
+        #         (sum_lines, axes),
+        #     ]
+        # ])
+        self.lines_to_fade = VGroup(A_line, D_line, sum_lines)
 
     def draw_full_sum(self):
         axes = self.axes
@@ -271,8 +272,25 @@ class AddingPureFrequencies(PiCreatureScene):
 
         sum_graph = axes.get_graph(new_func)
         sum_graph.highlight(self.sum_color)
+        thin_sum_graph = sum_graph.copy().fade()
 
-        ##TODO
+        A_graph = self.A_graph
+        D_graph = self.D_graph
+        D_axes = self.D_axes
+
+        rect = Rectangle(
+            height = 2.5*SPACE_HEIGHT,
+            width = MED_SMALL_BUFF,
+            stroke_width = 0,
+            fill_color = YELLOW,
+            fill_opacity = 0.4
+        )
+
+        self.play(
+            ReplacementTransform(A_graph.copy(), thin_sum_graph),
+            ReplacementTransform(D_graph.copy(), thin_sum_graph),
+            # FadeOut(self.lines_to_fade)
+        )
         self.play(
             self.get_graph_line_animation(self.A_axes, self.A_graph),
             self.get_graph_line_animation(self.D_axes, self.D_graph),
@@ -281,7 +299,13 @@ class AddingPureFrequencies(PiCreatureScene):
             run_time = 15,
             rate_func = None
         )
+        self.remove(thin_sum_graph)
         self.wait()
+        for x in 2.85, 3.57:
+            rect.move_to(D_axes.coords_to_point(x, 0))
+            self.play(GrowFromPoint(rect, rect.get_top()))
+            self.wait()
+            self.play(FadeOut(rect))
 
         self.sum_graph = sum_graph
 
@@ -300,7 +324,10 @@ class AddingPureFrequencies(PiCreatureScene):
             label.stretch_in_place(0.5, 0)
             label.move_to(bottom, DOWN)
 
-        self.play(MoveToTarget(squish_group))
+        self.play(
+            MoveToTarget(squish_group),
+            FadeOut(self.lines_to_fade),
+        )
 
         F_axes = self.D_axes.deepcopy()
         C_axes = self.A_axes.deepcopy()
@@ -317,7 +344,7 @@ class AddingPureFrequencies(PiCreatureScene):
             label.highlight(graph.get_stroke_color())
             label.next_to(graph, UP, SMALL_BUFF)
 
-        graphs = [self.A_graph, self.D_graph, F_graph, C_graph]
+        graphs = VGroup(self.A_graph, self.D_graph, F_graph, C_graph)
         def new_sum_func(x):
             result = sum([
                 graph.underlying_function(x) - self.equilibrium_height
@@ -330,11 +357,15 @@ class AddingPureFrequencies(PiCreatureScene):
             num_graph_points = 200
         )
         new_sum_graph.highlight(BLUE_C)
+        thin_new_sum_graph = new_sum_graph.copy().fade()
 
         self.play(*it.chain(
-            map(ShowCreation, [F_axes, C_axes, F_graph, C_graph,]),
+            map(ShowCreation, [F_axes, C_axes, F_graph, C_graph]),
             map(Write, [F_label, C_label]),
-            [FadeOut(self.sum_graph)]
+            map(FadeOut, [self.sum_graph])
+        ))
+        self.play(ReplacementTransform(
+            graphs.copy(), thin_new_sum_graph
         ))
         kwargs = {"rate_func" : None, "run_time" : 10}
         self.play(ShowCreation(new_sum_graph.copy(), **kwargs), *[
@@ -370,7 +401,7 @@ class AddingPureFrequencies(PiCreatureScene):
                 value *= smooth((x_max - x )/tail_len)
             return value + self.equilibrium_height
         ngp = 2*(x_max - x_min)*frequency + 1
-        graph = axes.get_graph(func, num_graph_points = ngp)
+        graph = axes.get_graph(func, num_graph_points = int(ngp))
         return graph
 
     def get_A_graph_v_line(self, x):
@@ -899,6 +930,7 @@ class FourierMachineScene(Scene):
         t_max = t_max or time_axes.x_max
         v_line = DashedLine(
             ctp(0, 0), ctp(0, time_axes.y_max),
+            stroke_width = 6,
         )
         v_line.highlight(RED)
 
@@ -1784,6 +1816,10 @@ class ShowCommutativeDiagram(ShowLinearity):
         }
     } 
     def construct(self):
+        self.show_diagram()
+        self.point_out_spikes()
+
+    def show_diagram(self):
         self.remove(self.pi_creature)
 
         #Setup axes
@@ -1931,6 +1967,53 @@ class ShowCommutativeDiagram(ShowLinearity):
         self.wait()
         apply_transform(2)
         self.wait()
+
+        self.time_axes_group = ta_group
+        self.frequency_axes_group = fa_group
+
+    def point_out_spikes(self):
+        fa_group = self.frequency_axes_group
+        freqs = self.low_freq, self.high_freq
+        flat_rects = VGroup()
+        for freq, axes in zip(freqs, fa_group[:2]):
+            flat_rect = SurroundingRectangle(axes.x_axis)
+            flat_rect.stretch(0.5, 1)
+            spike_rect = self.get_spike_rect(axes, freq)
+            flat_rect.match_style(spike_rect)
+            flat_rect.target = spike_rect
+            flat_rects.add(flat_rect)
+
+        self.play(LaggedStart(GrowFromCenter, flat_rects))
+        self.wait()
+        self.play(LaggedStart(MoveToTarget, flat_rects))
+        self.wait()
+
+        sum_spike_rects = VGroup(*[
+            self.get_spike_rect(fa_group[2], freq)
+            for freq in freqs
+        ])
+        self.play(ReplacementTransform(
+            flat_rects, sum_spike_rects
+        ))
+        self.play(LaggedStart(
+            WiggleOutThenIn, sum_spike_rects,
+            run_time = 1,
+            lag_ratio = 0.7,
+        ))
+        self.wait()
+
+    ##
+
+    def get_spike_rect(self, axes, freq):
+        peak_point = axes.input_to_graph_point(
+            freq, axes.graph
+        )
+        f_axis_point = axes.coords_to_point(freq, 0)
+        line = Line(f_axis_point, peak_point)
+        spike_rect = SurroundingRectangle(line)
+        spike_rect.set_stroke(width = 0)
+        spike_rect.set_fill(YELLOW, 0.5)
+        return spike_rect
 
 
 
