@@ -29,7 +29,23 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from topics.graph_scene import *
 
-#revert_to_original_skipping_status
+
+def get_fourier_transform(
+    func, t_min, t_max, 
+    real_part = True, 
+    use_almost_fourier = True,
+    ):
+    # part = "real" if real_part else "imag"
+    trig = np.cos if real_part else np.sin
+    scalar = 1./(t_max - t_min) if use_almost_fourier else 1.0
+    def fourier_transform(f):
+        return scalar*scipy.integrate.quad(
+            lambda t : func(t)*trig(-TAU*f*t),
+            t_min, t_max
+        )[0]
+    return fourier_transform
+
+##
 
 class AddingPureFrequencies(PiCreatureScene):
     CONFIG = {
@@ -811,26 +827,9 @@ class FourierMachineScene(Scene):
         t_min = self.time_axes.x_min
         t_max = self.time_axes.x_max
         return self.frequency_axes.get_graph(
-            self.get_fourier_transform(func, t_min, t_max, **kwargs),
+            get_fourier_transform(func, t_min, t_max, **kwargs),
             color = self.center_of_mass_color,
         )
-
-    def get_fourier_transform(
-        self, func, t_min, t_max, 
-        real_part = True, 
-        use_almost_fourier = True,
-        ):
-        part = "real" if real_part else "imag"
-        scalar = 1./(t_max - t_min) if use_almost_fourier else 1.0
-        def fourier_transform(f):
-            return scalar*scipy.integrate.quad(
-                lambda t : getattr(
-                    func(t)*np.exp(complex(0, -TAU*f*t)),
-                    part
-                ),
-                t_min, t_max
-            )[0]
-        return fourier_transform
 
     def get_polarized_mobject(self, mobject, freq = 1.0):
         if not hasattr(self, "circle_plane"):
@@ -1290,7 +1289,7 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
 
     def draw_full_frequency_plot(self):
         graph = self.graph
-        fourier_graph = self.get_fourier_transform_graph(graph)
+        fourier_graph = get_fourier_transform_graph(graph)
         fourier_graph.save_state()
         fourier_graph_update = self.get_fouier_graph_drawing_update_anim(
             fourier_graph
@@ -1363,7 +1362,7 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
         new_graph = self.get_cosine_wave(
             self.signal_frequency, shift_val = 0
         )
-        new_fourier_graph = self.get_fourier_transform_graph(new_graph)
+        new_fourier_graph = get_fourier_transform_graph(new_graph)
         for mob in graph, time_axes, fourier_graph:
             mob.save_state()
 
@@ -1606,7 +1605,7 @@ class ShowLowerFrequency(DrawFrequencyPlot):
         self.wait()
 
         #Show fourier graph
-        fourier_graph = self.get_fourier_transform_graph(graph)
+        fourier_graph = get_fourier_transform_graph(graph)
         fourier_graph_update = self.get_fouier_graph_drawing_update_anim(
             fourier_graph
         )
@@ -1744,7 +1743,7 @@ class ShowLinearity(DrawFrequencyPlot):
         self.center_of_mass_dot = dot
         self.generate_center_of_mass_dot_update_anim()
 
-        fourier_graph = self.get_fourier_transform_graph(graph)
+        fourier_graph = get_fourier_transform_graph(graph)
         fourier_graph_update = self.get_fouier_graph_drawing_update_anim(
             fourier_graph
         )
@@ -1831,16 +1830,16 @@ class ShowCommutativeDiagram(ShowLinearity):
         ta_group.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
         ta_group.to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
 
-        freq_axes = Axes(**self.frequency_axes_config)
-        freq_axes.highlight(TEAL)
+        frequency_axes = Axes(**self.frequency_axes_config)
+        frequency_axes.highlight(TEAL)
         freq_label = TextMobject("Frequency")
         freq_label.scale(self.text_scale_val)
-        freq_label.next_to(freq_axes.x_axis, DOWN, SMALL_BUFF, RIGHT)
-        freq_axes.label = freq_label
-        freq_axes.add(freq_label)
-        freq_axes.scale(0.8)
+        freq_label.next_to(frequency_axes.x_axis, DOWN, SMALL_BUFF, RIGHT)
+        frequency_axes.label = freq_label
+        frequency_axes.add(freq_label)
+        frequency_axes.scale(0.8)
         fa_group = VGroup(
-            freq_axes, freq_axes.deepcopy(), freq_axes.deepcopy()
+            frequency_axes, frequency_axes.deepcopy(), frequency_axes.deepcopy()
         )
         VGroup(ta_group[1], fa_group[1]).shift(MED_LARGE_BUFF*UP)
         for ta, fa in zip(ta_group, fa_group):
@@ -1875,7 +1874,7 @@ class ShowCommutativeDiagram(ShowLinearity):
             label.highlight(color)
             label.scale(0.75)
             label.next_to(time_graph, UP, SMALL_BUFF)
-            fourier = self.get_fourier_transform(
+            fourier = get_fourier_transform(
                 func, ta.x_min, 4*ta.x_max
             )
             fourier_graph = fa.get_graph(fourier)
@@ -2015,11 +2014,210 @@ class ShowCommutativeDiagram(ShowLinearity):
         spike_rect.set_fill(YELLOW, 0.5)
         return spike_rect
 
+class BeforeGettingToTheFullMath(TeacherStudentsScene):
+    def construct(self):
+        formula = TexMobject(
+            "\\hat{g}(f) = \\int_{-\\infty}^{\\infty}" + \
+            "g(t)e^{-2\\pi i f t}dt"
+        )
+        formula.next_to(self.teacher, UP+LEFT)
 
+        self.play(
+            Write(formula),
+            self.teacher.change, "raise_right_hand",
+            self.get_student_changes(*["confused"]*3)
+        )
+        self.wait()
+        self.play(
+            ApplyMethod(
+                formula.next_to, SPACE_WIDTH*RIGHT, RIGHT,
+                path_arc = TAU/16,
+                rate_func = running_start,
+            ),
+            self.get_student_changes(*["pondering"]*3)
+        )
+        self.teacher_says("Consider sound editing\\dots")
+        self.wait(3)
 
+class FilterOutHighPitch(AddingPureFrequencies, ShowCommutativeDiagram):
+    def construct(self):
+        self.add_speaker()
+        self.play_sound()
+        self.show_intensity_vs_time_graph()
+        self.take_fourier_transform()
+        self.filter_out_high_pitch()
+        self.mention_inverse_transform()
 
+    def play_sound(self):
+        randy = self.pi_creature
 
+        self.play(
+            Succession(
+                ApplyMethod, randy.look_at, self.speaker,
+                Animation, randy,
+                ApplyMethod, randy.change, "telepath", randy,
+                Animation, randy, 
+                Blink, randy,
+                Animation, randy, {"run_time" : 2},
+            ),
+            *self.get_broadcast_anims(),
+            run_time = 7
+        )
+        self.play(randy.change, "angry", self.speaker)
+        self.wait()
 
+    def show_intensity_vs_time_graph(self):
+        randy = self.pi_creature
+
+        axes = Axes(
+            x_min = 0,
+            x_max = 12,
+            y_min = -6,
+            y_max = 6,
+            y_axis_config = {
+                "unit_size" : 0.15,
+                "tick_frequency" : 3,
+            }
+        )
+        axes.set_stroke(width = 2)
+        axes.to_corner(UP+LEFT)
+        time_label = TextMobject("Time")
+        intensity_label = TextMobject("Intensity")
+        labels = VGroup(time_label, intensity_label)
+        labels.scale(0.75)
+        time_label.next_to(
+            axes.x_axis, DOWN, 
+            aligned_edge = RIGHT,
+            buff = SMALL_BUFF
+        )
+        intensity_label.next_to(
+            axes.y_axis, RIGHT, 
+            aligned_edge = UP,
+            buff = SMALL_BUFF
+        )
+        axes.labels = labels
+
+        func = lambda t : sum([
+            np.cos(TAU*f*t)
+            for f in 0.5, 0.7, 1.0, 1.2, 3.0,
+        ])
+        graph = axes.get_graph(func)
+        graph.highlight(BLUE)
+
+        self.play(
+            FadeIn(axes), 
+            FadeIn(axes.labels), 
+            randy.change, "pondering", axes,
+            ShowCreation(
+                graph, run_time = 4, 
+                rate_func = bezier([0, 0, 1, 1])
+            ),
+            *self.get_broadcast_anims(run_time = 6)
+        )
+        self.wait()
+
+        self.time_axes = axes
+        self.time_graph = graph
+
+    def take_fourier_transform(self):
+        time_axes = self.time_axes
+        time_graph = self.time_graph
+        randy = self.pi_creature
+        speaker = self.speaker
+
+        frequency_axes = Axes(
+            x_min = 0,
+            x_max = 3.5,
+            x_axis_config = {"unit_size" : 3.5},
+            y_min = 0,
+            y_max = 1,
+            y_axis_config = {"unit_size" : 2},
+        )
+        frequency_axes.highlight(TEAL)
+        frequency_axes.next_to(time_axes, DOWN, LARGE_BUFF, LEFT)
+        freq_label = TextMobject("Frequency")
+        freq_label.scale(0.75)
+        freq_label.next_to(frequency_axes.x_axis, DOWN, MED_SMALL_BUFF, RIGHT)
+        frequency_axes.label = freq_label
+
+        fourier_func = get_fourier_transform(
+            time_graph.underlying_function, 
+            t_min = 0, t_max = 30,
+        )
+        def alt_fourier_func(t):
+            bell = smooth(t)*0.3*np.exp(-0.8*(t-0.9)**2)
+            return bell + (smooth(t/3)+0.2)*fourier_func(t)
+        fourier_graph = frequency_axes.get_graph(
+            alt_fourier_func, num_graph_points = 150,
+        )
+        fourier_graph.highlight(RED)
+        frequency_axes.graph = fourier_graph
+
+        arrow = Arrow(time_graph, fourier_graph, color = WHITE)
+        ft_words = TextMobject("Fourier \\\\ transform")
+        ft_words.next_to(arrow, RIGHT)
+
+        spike_rect = self.get_spike_rect(frequency_axes, 3)
+        spike_rect.stretch(2, 0)
+
+        self.play(
+            ReplacementTransform(time_axes.copy(), frequency_axes),
+            ReplacementTransform(time_graph.copy(), fourier_graph),
+            ReplacementTransform(time_axes.labels[0].copy(), freq_label),
+            GrowArrow(arrow),
+            Write(ft_words),
+            VGroup(randy, speaker).shift, SPACE_HEIGHT*DOWN,
+        )
+        self.remove(randy, speaker)
+        self.wait()
+        self.play(DrawBorderThenFill(spike_rect))
+        self.wait()
+
+        self.frequency_axes = frequency_axes
+        self.fourier_graph = fourier_graph
+        self.spike_rect = spike_rect
+
+    def filter_out_high_pitch(self):
+        fourier_graph = self.fourier_graph
+        spike_rect = self.spike_rect
+        frequency_axes = self.frequency_axes
+
+        def filtered_func(f):
+            result = fourier_graph.underlying_function(f)
+            result *= np.clip(smooth(3-f), 0, 1)
+            return result
+
+        new_graph = frequency_axes.get_graph(
+            filtered_func, num_graph_points = 200
+        )
+        new_graph.highlight(RED)
+
+        self.play(spike_rect.stretch, 4)
+        self.play(
+            Transform(fourier_graph, new_graph),
+            spike_rect.stretch, 0.01, {
+                "about_point" : frequency_axes.coords_to_point(0, 0)
+            },
+            run_time = 2
+        )
+        self.wait()
+
+    def mention_inverse_transform(self):
+        pass
+
+    ##
+
+    def get_broadcast_anims(self, run_time = 7, **kwargs):
+        return [
+            self.get_broadcast_animation(
+                n_circles = n,
+                run_time = run_time,
+                big_radius = 7,
+                start_stroke_width = 5,
+                **kwargs
+            )
+            for n in 5, 7, 10, 12
+        ]
 
 
 
