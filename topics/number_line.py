@@ -21,11 +21,12 @@ class NumberLine(VMobject):
         "longer_tick_multiple" : 2,
         "number_at_center" : 0,
         "number_scale_val" : 0.75,
-        "line_to_number_vect" : DOWN,
+        "label_direction" : DOWN,
         "line_to_number_buff" : MED_SMALL_BUFF,
         "include_tip" : False,
         "propagate_style_to_family" : True,
     }
+
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
         if self.leftmost_tick is None:
@@ -113,7 +114,7 @@ class NumberLine(VMobject):
             mob.scale(self.number_scale_val)
             mob.next_to(
                 self.number_to_point(number),
-                self.line_to_number_vect,
+                self.label_direction,
                 self.line_to_number_buff,
             )
             result.add(mob)
@@ -134,6 +135,8 @@ class NumberLine(VMobject):
         tip.highlight(self.color)
         self.tip = tip
         self.add(tip)
+
+
 
 class UnitInterval(NumberLine):
     CONFIG = {
@@ -375,7 +378,6 @@ class NumberPlane(VMobject):
                 mob.insert_n_anchor_points(num_inserted_anchor_points-num_anchors)
                 mob.make_smooth()
         return self
-
 
 
 
