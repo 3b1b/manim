@@ -48,6 +48,27 @@ class Arc(VMobject):
         self.highlight(self.get_color())
         return self
 
+
+
+    def get_arc_center(self):
+        first_point = self.points[0]
+        radial_unit_vector = np.array([np.cos(self.start_angle),np.sin(self.start_angle),0])
+        arc_center = first_point - self.radius * radial_unit_vector
+        return arc_center
+
+
+    def move_arc_center_to(self,point):
+        v = point - self.get_arc_center()
+        self.shift(v)
+        return self
+
+
+    def stop_angle(self):
+        return self.start_angle + self.angle
+
+
+
+
 class Circle(Arc):
     CONFIG = {
         "color" : RED,
@@ -120,15 +141,12 @@ class AnnularSector(VMobject):
         v = last_point - first_point
         radial_unit_vector = v/np.linalg.norm(v)
         arc_center = first_point - self.inner_radius * radial_unit_vector
-
-
-
-        # radial_unit_vector = np.array([np.cos(self.start_angle),
-        #         np.sin(self.start_angle), 0])
-        # arc_center = inner_arc_start_point - inner_arc.radius * radial_unit_vector
         return arc_center
 
-
+    def move_arc_center_to(self,point):
+        v = point - self.get_arc_center()
+        self.shift(v)
+        return self
 
 
 
@@ -171,7 +189,7 @@ class Annulus(Circle):
 class Line(VMobject):
     CONFIG = {
         "buff" : 0,
-        "path_arc" : None,
+        "path_arc" : None, # angle of arc specified here
         "n_arc_anchors" : 10, #Only used if path_arc is not None
     }
     def __init__(self, start, end, **kwargs):
