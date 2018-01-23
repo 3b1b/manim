@@ -316,14 +316,29 @@ class Mobject(object):
         self.shift(target_point - point_to_align + buff*direction)
         return self
 
-    def align_to(self, mobject_or_point, direction = UP):
+    def align_to(self, mobject_or_point, direction = ORIGIN, alignment_vect = UP):
+        """
+        Examples: 
+        mob1.align_to(mob2, UP) moves mob1 vertically so that its
+        top edge lines ups with mob2's top edge.
+
+        mob1.align_to(mob2, alignment_vector = RIGHT) moves mob1
+        horizontally so that it's center is directly above/below
+        the center of mob2
+        """
         if isinstance(mobject_or_point, Mobject):
             mob = mobject_or_point
-            point = mob.get_edge_center(direction)
+            target_point = mob.get_critical_point(direction)
         else:
-            point = mobject_or_point
-        diff = point - self.get_edge_center(direction) 
-        self.shift(direction*np.dot(diff, direction))
+            target_point = mobject_or_point
+        direction_norm = np.linalg.norm(direction)
+        if direction_norm > 0:
+            alignment_vect = np.array(direction)/direction_norm
+            reference_point = self.get_critical_point(direction)
+        else:
+            reference_point = self.get_center()
+        diff = target_point - reference_point
+        self.shift(alignment_vect*np.dot(diff, alignment_vect))
         return self
 
     def shift_onto_screen(self, **kwargs):

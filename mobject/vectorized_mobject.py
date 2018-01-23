@@ -92,9 +92,15 @@ class VMobject(Mobject):
             fill_opacity = vmobject.get_fill_opacity(),
             family = False
         )
-        #TODO: This behaviro may not be optimal when submobject 
-        #lists dont' have the same length
-        for sm1, sm2 in zip(self.submobjects, vmobject.submobjects):
+
+        #Does its best to match up submobject lists, and 
+        #match styles accordingly
+        submobs1, submobs2 = self.submobjects, vmobject.submobjects
+        if len(submobs1) == 0:
+            return
+        elif len(submobs2) == 0:
+            submobs2 = [vmobject]
+        for sm1, sm2 in zip(*make_even(submobs1, submobs2)):
             sm1.match_style(sm2)
         return
 
