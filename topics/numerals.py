@@ -11,7 +11,7 @@ class DecimalNumber(VMobject):
         "num_decimal_points" : 2,
         "digit_to_digit_buff" : 0.05,
         "show_ellipsis" : False,
-        "unit" : None
+        "unit" : None,
     }
     def __init__(self, number, **kwargs):
         digest_config(self, kwargs, locals())
@@ -27,6 +27,8 @@ class DecimalNumber(VMobject):
         if self.show_ellipsis:
             self.add(TexMobject("\\dots"))
 
+        if self.unit is not None:
+            self.add(TexMobject(self.unit))
     
         self.arrange_submobjects(
             buff = self.digit_to_digit_buff,
@@ -39,7 +41,6 @@ class DecimalNumber(VMobject):
                 self.submobjects[1], LEFT,
                 buff = self.digit_to_digit_buff
             )
-
 
         if self.unit != None:
             unit_sign = TexMobject(self.unit)
