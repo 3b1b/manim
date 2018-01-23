@@ -482,6 +482,11 @@ class Scene(object):
 
     def preview(self):
         TkSceneRoot(self)
+    
+    def save_image(self, name = None, mode = "RGB", dont_update = False):
+        folder = "images"
+        if dont_update:
+            folder = str(self)
 
     def get_image_file_path(self, name = None, dont_update = False):
         folder = "images"
