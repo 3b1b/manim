@@ -36,18 +36,32 @@ class Arc(VMobject):
         )
         self.scale(self.radius, about_point = ORIGIN)
 
-    def add_tip(self, tip_length = 0.25, end = 0):
+    def add_tip(self, tip_length = 0.25, at_start = False, at_end = True):
         #TODO, do this a better way
-        if end == 1:
+        p1 = p2 = p3 = p4 = None
+        start_arrow = end_arrow = None
+        if at_start:
             p1, p2 = self.points[-2:]
-        else:
-            p2, p1 = self.points[:2]
-        arrow = Arrow(
-            p1, 2*p2 - p1, 
-            tip_length = tip_length,
-            max_tip_length_to_length_ratio = 2.0
-        )
-        self.add(arrow.split()[-1])
+            start_arrow = Arrow(
+                p1, 2*p2 - p1, 
+                tip_length = tip_length,
+                max_tip_length_to_length_ratio = 2.0
+            )
+            self.add(start_arrow.split()[-1])
+
+        if at_end:
+            p4, p3 = self.points[:2]
+            end_arrow = Arrow(
+                p3, 2*p4 - p3, 
+                tip_length = tip_length,
+                max_tip_length_to_length_ratio = 2.0
+            )
+            self.add(end_arrow.split()[-1])
+        
+
+
+
+        
         self.highlight(self.get_color())
         return self
 
