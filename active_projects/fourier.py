@@ -2455,18 +2455,57 @@ class WhiteComplexExponentialExpression(DrawFrequencyPlot):
         self.generate_center_of_mass_dot_update_anim()
 
         self.add(graph, pol_graph, wps_label)
+        self.set_variables_as_attrs(pol_graph, wps_label)
+        self.time_axes_group = VGroup(self.time_axes, graph)
 
     def show_winding_with_both_coordinates(self):
-        #TODO, tie dashed lines to dot
+        com_dot = self.center_of_mass_dot
+        plane = self.circle_plane
+        v_line = Line(ORIGIN, UP)
+        h_line = Line(ORIGIN, RIGHT)
+        lines = VGroup(v_line, h_line)
+        lines.highlight(PINK)
+        def lines_update(lines):
+            point = com_dot.get_center()
+            x, y = plane.point_to_coords(point)
+            h_line.put_start_and_end_on(
+                plane.coords_to_point(0, y), point
+            )
+            v_line.put_start_and_end_on(
+                plane.coords_to_point(x, 0), point
+            )
+        lines_update_anim = UpdateFromFunc(lines, lines_update)
+        lines_update_anim.update(0)
+        self.add(lines)
 
         self.change_frequency(
-            2.0, run_time = 15,
+            2.04, 
+            added_anims = [
+                lines_update_anim,
+                self.center_of_mass_dot_anim,
+            ],
+            run_time = 15,
             rate_func = bezier([0, 0, 1, 1])
         )
         self.wait()
 
+        self.dot_component_anim = lines_update_anim
+
     def show_plane_as_complex_plane(self):
-        pass
+        to_fade = VGroup(
+            self.time_axes_group, self.pol_graph, self.wps_label
+        )
+        plane = self.circle_plane
+        complex_plane_title = TextMobject("Complex plane")
+        complex_plane_title.add_background_rectangle()
+        complex_plane_title.to_edge(UP)
+        coordinate_labels = plane.get_coordinate_labels()
+
+        self.play(FadeOut(to_fade))
+        self.play(Write(complex_plane_title))
+        self.play(Write(coordinate_labels))
+        self.wait()
+
 
     def show_eulers_formula(self):
         pass
