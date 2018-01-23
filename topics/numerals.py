@@ -11,7 +11,7 @@ class DecimalNumber(VMobject):
         "num_decimal_points" : 2,
         "digit_to_digit_buff" : 0.05,
         "show_ellipsis" : False,
-        "unit" : None
+        "unit" : None,
     }
     def __init__(self, number, **kwargs):
         digest_config(self, kwargs, locals())
@@ -27,7 +27,9 @@ class DecimalNumber(VMobject):
         if self.show_ellipsis:
             self.add(TexMobject("\\dots"))
 
-    
+        if self.unit is not None:
+            self.add(TexMobject(self.unit))
+
         self.arrange_submobjects(
             buff = self.digit_to_digit_buff,
             aligned_edge = DOWN
@@ -39,20 +41,8 @@ class DecimalNumber(VMobject):
                 self.submobjects[1], LEFT,
                 buff = self.digit_to_digit_buff
             )
-
-
-        if self.unit != None:
-            unit_sign = TexMobject(self.unit)
-            unit_sign.next_to(self.submobjects[-1],RIGHT,
-                    buff = self.digit_to_digit_buff)
-
-            if self.unit == "^\\circ":
-                unit_sign.align_to(self,UP)
-            else:
-                unit_sign.align_to(self,DOWN)
-            self.add(unit_sign)
-
-
+        if self.unit == "\\circ":
+            self[-1].align_to(self, UP)
 
 class Integer(VGroup):
     CONFIG = {
@@ -72,20 +62,18 @@ class ChangingDecimal(Animation):
     CONFIG = {
         "num_decimal_points" : None,
         "show_ellipsis" : None,
-        "spare_parts" : 2,
         "position_update_func" : None,
         "tracked_mobject" : None
     }
     def __init__(self, decimal_number_mobject, number_update_func, **kwargs):
         digest_config(self, kwargs, locals())
-        if self.num_decimal_points is None:
-            self.num_decimal_points = decimal_number_mobject.num_decimal_points
-        if self.show_ellipsis is None:
-            self.show_ellipsis = decimal_number_mobject.show_ellipsis
-        decimal_number_mobject.add(*[
-            VectorizedPoint(decimal_number_mobject.get_corner(DOWN+LEFT))
-            for x in range(self.spare_parts)]
+        self.decimal_number_config = dict(
+            decimal_number_mobject.initial_config
         )
+        for attr in "num_decimal_points", "show_ellipsis":
+            value = getattr(self, attr)
+            if value is not None:
+                self.decimal_number_config[attr] = value
         if self.tracked_mobject:
             dmc = decimal_number_mobject.get_center()
             tmc = self.tracked_mobject.get_center()
@@ -100,13 +88,11 @@ class ChangingDecimal(Animation):
         decimal = self.decimal_number_mobject
         new_number = self.number_update_func(alpha)
         new_decimal = DecimalNumber(
-            new_number, 
-            num_decimal_points = self.num_decimal_points,
-            show_ellipsis = self.show_ellipsis,
-            unit = self.decimal_number_mobject.unit
+            new_number, **self.decimal_number_config
         )
-        new_decimal.replace(decimal, dim_to_match = 1)
-        new_decimal.highlight(decimal.get_color())
+        new_decimal.match_height(decimal)
+        new_decimal.move_to(decimal)
+        new_decimal.match_style(decimal)
 
         decimal.submobjects = new_decimal.submobjects
         decimal.number = new_number
