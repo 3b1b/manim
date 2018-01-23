@@ -178,7 +178,6 @@ class AnnularSector(VMobject):
         return self
 
 class Sector(AnnularSector):
-
     CONFIG = {
         "outer_radius" : 1,
         "inner_radius" : 0
