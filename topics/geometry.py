@@ -37,20 +37,27 @@ class Arc(VMobject):
         self.scale(self.radius, about_point = ORIGIN)
 
     def add_tip(self, tip_length = 0.25, at_start = False, at_end = True):
+        # clear out any old tips
+        for submob in self.submobjects:
+            if submob.mark_paths_closed == True: # is a tip
+                self.remove(submob)
+
         #TODO, do this a better way
         p1 = p2 = p3 = p4 = None
         start_arrow = end_arrow = None
         if at_start:
-            p1, p2 = self.points[-2:]
+            p1, p2 = self.points[-3:-1]
+            # self.points[-2:] did overshoot
             start_arrow = Arrow(
                 p1, 2*p2 - p1, 
                 tip_length = tip_length,
                 max_tip_length_to_length_ratio = 2.0
             )
-            self.add(start_arrow.split()[-1])
+            self.add(start_arrow.split()[-1]) # just the tip
 
         if at_end:
-            p4, p3 = self.points[:2]
+            p4, p3 = self.points[1:3]
+            # self.points[:2] did overshoot
             end_arrow = Arrow(
                 p3, 2*p4 - p3, 
                 tip_length = tip_length,
@@ -82,6 +89,13 @@ class Arc(VMobject):
 
     def stop_angle(self):
         return self.start_angle + self.angle
+
+    def set_bound_angles(self,start=0,stop=np.pi):
+        self.start_angle = start
+        self.angle = stop - start
+        
+        return self
+
 
 
 

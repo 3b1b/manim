@@ -10,7 +10,8 @@ class DecimalNumber(VMobject):
     CONFIG = {
         "num_decimal_points" : 2,
         "digit_to_digit_buff" : 0.05,
-        "show_ellipsis" : False
+        "show_ellipsis" : False,
+        "unit" : None
     }
     def __init__(self, number, **kwargs):
         digest_config(self, kwargs, locals())
@@ -25,17 +26,33 @@ class DecimalNumber(VMobject):
 
         if self.show_ellipsis:
             self.add(TexMobject("\\dots"))
+
     
         self.arrange_submobjects(
             buff = self.digit_to_digit_buff,
             aligned_edge = DOWN
         )
+
         if num_string.startswith("-"):
             minus = self.submobjects[0]
             minus.next_to(
                 self.submobjects[1], LEFT,
                 buff = self.digit_to_digit_buff
             )
+
+
+        if self.unit != None:
+            unit_sign = TexMobject(self.unit)
+            unit_sign.next_to(self.submobjects[-1],RIGHT,
+                    buff = self.digit_to_digit_buff)
+
+            if self.unit == "^\\circ":
+                unit_sign.align_to(self,UP)
+            else:
+                unit_sign.align_to(self,DOWN)
+            self.add(unit_sign)
+
+
 
 class Integer(VGroup):
     CONFIG = {
@@ -85,7 +102,8 @@ class ChangingDecimal(Animation):
         new_decimal = DecimalNumber(
             new_number, 
             num_decimal_points = self.num_decimal_points,
-            show_ellipsis = self.show_ellipsis
+            show_ellipsis = self.show_ellipsis,
+            unit = self.decimal_number_mobject.unit
         )
         new_decimal.replace(decimal, dim_to_match = 1)
         new_decimal.highlight(decimal.get_color())
