@@ -85,15 +85,17 @@ class VMobject(Mobject):
         return self
 
     def match_style(self, vmobject):
-        #TODO: Should this be smart about matching the
-        #style of the family members, if they happen to
-        #be different?
         self.set_style_data(
             stroke_color = vmobject.get_stroke_color(),
             stroke_width = vmobject.get_stroke_width(),
             fill_color = vmobject.get_fill_color(),
             fill_opacity = vmobject.get_fill_opacity(),
+            family = False
         )
+        #TODO: This behaviro may not be optimal when submobject 
+        #lists dont' have the same length
+        for sm1, sm2 in zip(self.submobjects, vmobject.submobjects):
+            sm1.match_style(sm2)
         return
 
     def fade(self, darkness = 0.5):
