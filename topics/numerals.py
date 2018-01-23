@@ -26,6 +26,7 @@ class DecimalNumber(VMobject):
 
         if self.show_ellipsis:
             self.add(TexMobject("\\dots"))
+
         if self.unit is not None:
             self.add(TexMobject(self.unit))
 
@@ -33,6 +34,7 @@ class DecimalNumber(VMobject):
             buff = self.digit_to_digit_buff,
             aligned_edge = DOWN
         )
+
         if num_string.startswith("-"):
             minus = self.submobjects[0]
             minus.next_to(
