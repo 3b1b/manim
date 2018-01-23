@@ -128,8 +128,6 @@ class Dot(Circle):
         self.shift(point)
         self.init_colors()
 
-
-
 class AnnularSector(VMobject):
     CONFIG = {
         "inner_radius" : 1,
@@ -174,6 +172,7 @@ class AnnularSector(VMobject):
         arc_center = first_point - self.inner_radius * radial_unit_vector
         return arc_center
 
+<<<<<<< HEAD
     def move_arc_center_to(self,point):
         v = point - self.get_arc_center()
         self.shift(v)
@@ -181,6 +180,8 @@ class AnnularSector(VMobject):
 
 
 
+=======
+>>>>>>> master
 class Sector(AnnularSector):
 
     CONFIG = {
@@ -195,8 +196,6 @@ class Sector(AnnularSector):
     @radius.setter
     def radius(self,new_radius):
         self.outer_radius = new_radius
-
-
 
 class Annulus(Circle):
     CONFIG = {
@@ -215,7 +214,6 @@ class Annulus(Circle):
         inner_circle = Circle(radius=self.inner_radius)
         inner_circle.flip()
         self.add_subpath(inner_circle.points)
-
 
 class Line(VMobject):
     CONFIG = {

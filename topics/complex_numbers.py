@@ -166,11 +166,11 @@ def complex_string(complex_num):
 
 class ComplexPlane(NumberPlane):
     CONFIG = {
-        "color"                : BLUE,
-        "unit_size"            : 1,
-        "line_frequency"       : 1,
+        "color" : BLUE,
+        "unit_size" : 1,
+        "line_frequency" : 1,
         "faded_line_frequency" : 0.5,
-        "number_scale_factor"  : 0.5,
+        "number_scale_factor" : 0.5,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
