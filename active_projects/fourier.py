@@ -2474,14 +2474,13 @@ class WhiteComplexExponentialExpression(DrawFrequencyPlot):
             v_line.put_start_and_end_on(
                 plane.coords_to_point(x, 0), point
             )
-        lines_update_anim = UpdateFromFunc(lines, lines_update)
+        lines_update_anim = ContinualUpdateFromFunc(lines, lines_update)
         lines_update_anim.update(0)
-        self.add(lines)
+        self.add(lines_update_anim)
 
         self.change_frequency(
             2.04, 
             added_anims = [
-                lines_update_anim,
                 self.center_of_mass_dot_anim,
             ],
             run_time = 15,
@@ -2496,15 +2495,60 @@ class WhiteComplexExponentialExpression(DrawFrequencyPlot):
             self.time_axes_group, self.pol_graph, self.wps_label
         )
         plane = self.circle_plane
+        dot = self.center_of_mass_dot
         complex_plane_title = TextMobject("Complex plane")
         complex_plane_title.add_background_rectangle()
         complex_plane_title.to_edge(UP)
         coordinate_labels = plane.get_coordinate_labels()
+        number_label = DecimalNumber(
+            0, include_background_rectangle = True,
+        )
+        number_label_update_anim = ContinualChangingDecimal(
+            number_label, 
+            lambda a : plane.point_to_number(dot.get_center()),
+            position_update_func = lambda l : l.next_to(
+                # plane.coords_to_point(1, 1), DOWN+RIGHT, 
+                dot, DOWN+RIGHT,
+                buff = SMALL_BUFF
+            ),
+        )
+        number_label_update_anim.update(0)
+        arrow = Arrow(RIGHT, LEFT, color = RED)
+        def update_arrow(arrow):
+            arrow.put_start_and_end_on(
+                number_label.get_left(),
+                dot.get_center(),
+            )
+            arrow.scale(0.9)
+            return arrow
+        arrow_update_anim = ContinualUpdateFromFunc(arrow, update_arrow)
+        arrow_update_anim.update(0)
+        flower_path = ParametricFunction(
+            lambda t : plane.coords_to_point(
+                np.sin(2*t)*np.cos(t),
+                np.sin(2*t)*np.sin(t),
+            ),
+            t_min = 0, t_max = TAU,
+        )
+        flower_path.move_to(self.center_of_mass_dot)
 
         self.play(FadeOut(to_fade))
         self.play(Write(complex_plane_title))
         self.play(Write(coordinate_labels))
         self.wait()
+        self.play(
+            FadeIn(number_label),
+            # GrowArrow(arrow)
+        )
+        self.add(number_label_update_anim)
+        # self.add(arrow_update_anim)
+        self.play(MoveAlongPath(
+            dot, flower_path, 
+            run_time = 10,
+            rate_func = bezier([0, 0, 1, 1])
+        ))
+        self.wait()
+
 
 
     def show_eulers_formula(self):
