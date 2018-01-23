@@ -172,18 +172,12 @@ class AnnularSector(VMobject):
         arc_center = first_point - self.inner_radius * radial_unit_vector
         return arc_center
 
-<<<<<<< HEAD
     def move_arc_center_to(self,point):
         v = point - self.get_arc_center()
         self.shift(v)
         return self
 
-
-
-=======
->>>>>>> master
 class Sector(AnnularSector):
-
     CONFIG = {
         "outer_radius" : 1,
         "inner_radius" : 0

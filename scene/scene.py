@@ -32,8 +32,12 @@ class Scene(object):
         "save_frames"      : False,
         "save_pngs"        : False,
         "pngs_mode"        : "RGBA",
+<<<<<<< Updated upstream
         "output_directory" : ANIMATIONS_DIR,
         "movie_file_extension" : ".mp4",
+=======
+        "output_directory" : MOVIE_DIR,
+>>>>>>> Stashed changes
         "name" : None,
         "always_continually_update" : False,
         "random_seed" : 0,
@@ -482,6 +486,8 @@ class Scene(object):
 
     def preview(self):
         TkSceneRoot(self)
+    
+    def save_image(self, name = None, mode = "RGB", dont_update = False):
 
     def get_image_file_path(self, name = None, dont_update = False):
         folder = "images"
@@ -540,7 +546,6 @@ class Scene(object):
             '-loglevel', 'error',
             temp_file_path,
         ]
-        
         # self.writing_process = sp.Popen(command, stdin=sp.PIPE, shell=True)
         self.writing_process = sp.Popen(command, stdin=sp.PIPE)
 
