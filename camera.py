@@ -99,10 +99,7 @@ class Camera(object):
             ])
         ))
 
-    def capture_mobject(self, mobject):
-        return self.capture_mobjects([mobject])
-
-    def capture_mobjects(
+    def get_mobjects_to_display(
         self, mobjects, 
         include_submobjects = True,
         excluded_mobjects = None,
@@ -116,6 +113,13 @@ class Camera(object):
                     excluded_mobjects
                 )
                 mobjects = list_difference_update(mobjects, all_excluded)
+        return mobjects
+
+    def capture_mobject(self, mobject, **kwargs):
+        return self.capture_mobjects([mobject], **kwargs)
+
+    def capture_mobjects(self, mobjects, **kwargs):
+        mobjects = self.get_mobjects_to_display(mobjects, **kwargs)
         vmobjects = []
         for mobject in mobjects:
             if isinstance(mobject, VMobject):
@@ -411,7 +415,7 @@ class MovingCamera(Camera):
 class MappingCamera(Camera):
     CONFIG = {
         "mapping_func" : lambda p : p,
-        "min_anchor_points" : 20,
+        "min_anchor_points" : 50,
         "allow_object_intrusion" : False
     }
 
@@ -419,6 +423,7 @@ class MappingCamera(Camera):
         return Camera.points_to_pixel_coords(self, np.apply_along_axis(self.mapping_func, 1, points))
     
     def capture_mobjects(self, mobjects, **kwargs):
+        mobjects = self.get_mobjects_to_display(mobjects, **kwargs)
         if self.allow_object_intrusion:
             mobject_copies = mobjects
         else:
@@ -427,7 +432,11 @@ class MappingCamera(Camera):
             if isinstance(mobject, VMobject) and \
             0 < mobject.get_num_anchor_points() < self.min_anchor_points:
                 mobject.insert_n_anchor_points(self.min_anchor_points)
-        Camera.capture_mobjects(self, mobject_copies, **kwargs)
+        Camera.capture_mobjects(
+            self, mobject_copies, 
+            include_submobjects = False,
+            excluded_mobjects = None,
+        )
 
 # TODO: Put this in different utility/helpers file? Convenient for me (Sridhar); I like it.
 class DictAsObject(object):
