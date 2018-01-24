@@ -41,15 +41,7 @@ class DecimalNumber(VMobject):
         if self.show_ellipsis:
             self.add(TexMobject("\\dots"))
 
-        if self.unit is not None:
-            self.add(TexMobject(self.unit))
 
-        self.arrange_submobjects(
-            buff = self.digit_to_digit_buff,
-            aligned_edge = DOWN
-        )
-
-<<<<<<< HEAD
         if num_string.startswith("-"):
             minus = self.submobjects[0]
             minus.next_to(
@@ -68,9 +60,13 @@ class DecimalNumber(VMobject):
                 unit_sign.align_to(self,DOWN)
             self.add(unit_sign)
 
+        self.arrange_submobjects(
+            buff = self.digit_to_digit_buff,
+            aligned_edge = DOWN
+        )
+
 
 class Integer(VGroup):
-=======
         #Handle alignment of parts that should be aligned
         #to the bottom
         for i, c in enumerate(num_string):
@@ -89,7 +85,6 @@ class Integer(VGroup):
             ]
 
 class Integer(DecimalNumber):
->>>>>>> master
     CONFIG = {
         "num_decimal_points" : 0,
     }
