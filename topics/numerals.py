@@ -58,13 +58,17 @@ class DecimalNumber(VMobject):
             self[-1].align_to(self, UP)
         #
         if self.include_background_rectangle:
-            #TODO, is this the best way to handle
-            #background rectangles?
-            self.background_rectangle = BackgroundRectangle(self)
-            self.submobjects = [
-                self.background_rectangle,
-                VGroup(*self.submobjects)
-            ]
+            self.add_background_rectangle()
+
+    def add_background_rectangle(self):
+        #TODO, is this the best way to handle
+        #background rectangles?
+        self.background_rectangle = BackgroundRectangle(self)
+        self.submobjects = [
+            self.background_rectangle,
+            VGroup(*self.submobjects)
+        ]
+        return self
 
 class Integer(DecimalNumber):
     CONFIG = {
@@ -87,6 +91,8 @@ class ChangingDecimal(Animation):
             value = getattr(self, attr)
             if value is not None:
                 self.decimal_number_config[attr] = value
+        if hasattr(self.decimal_number_mobject, "background_rectangle"):
+            self.decimal_number_config["include_background_rectangle"] = True
         if self.tracked_mobject:
             dmc = decimal_number_mobject.get_center()
             tmc = self.tracked_mobject.get_center()
