@@ -256,52 +256,12 @@ class EquationSolver1d(GraphScene, ZoomedScene, ReconfigurableScene):
         self.drawGraph()
         self.solveEquation()
 
-class FirstSqrtScene(EquationSolver1d):
-    CONFIG = {
-    "x_min" : 0,
-    "x_max" : 2.5,
-    "y_min" : 0,
-    "y_max" : 2.5**2,
-    "graph_origin" : 2*DOWN + 5 * LEFT,
-    "x_axis_width" : 12,
-    "zoom_factor" : 3,
-    "zoomed_canvas_center" : 2.25 * UP + 1.75 * LEFT,
-    "func" : lambda x : x**2,
-    "targetX" : np.sqrt(2),
-    "targetY" : 2,
-    "initial_lower_x" : 1,
-    "initial_upper_x" : 2,
-    "num_iterations" : 10,
-    "iteration_at_which_to_start_zoom" : 3,
-    "graph_label" : "y = x^2",
-    "show_target_line" : True,
-    }
-
-class SecondSqrtScene(FirstSqrtScene, ReconfigurableScene):
-
-    def setup(self):
-        FirstSqrtScene.setup(self)
-        ReconfigurableScene.setup(self)
-
-    def construct(self):
-        shiftVal = self.targetY
-
-        self.drawGraph()
-        newOrigin = self.coords_to_point(0, shiftVal)
-        self.transition_to_alt_config(
-            func = lambda x : x**2 - shiftVal,
-            targetY = 0,
-            graph_label = "y = x^2 - " + str(shiftVal),
-            y_min = self.y_min - shiftVal,
-            y_max = self.y_max - shiftVal,
-            show_target_line = False,
-            graph_origin = newOrigin)
-        self.solveEquation()
 
 # TODO: Perhaps have bullets (pulses) fade out and in at ends of line, instead of jarringly
 # popping out and in?
 #
 # TODO: Perhaps have bullets change color corresponding to a function of their coordinates?
+# This could involve some merging of functoinality with PiColorWakler
 class LinePulser(ContinualAnimation):
     def __init__(self, line, bullet_template, num_bullets, pulse_time, **kwargs):
         self.line = line
@@ -318,154 +278,6 @@ class LinePulser(ContinualAnimation):
             self.bullets[i].move_to(interpolate(start, end, 
                 np.true_divide((i + alpha),(self.num_bullets))))
 
-class LoopSplitScene(Scene):
-
-    def PulsedLine(self, start, end, bullet_template, num_bullets = 4, pulse_time = 1, **kwargs):
-        line = Line(start, end, **kwargs)
-        anim = LinePulser(line, bullet_template, num_bullets, pulse_time, **kwargs)
-        return [VGroup(line, *anim.bullets), anim]
-
-    def construct(self):
-        num_plane = NumberPlane(color = LIGHT_GREY, stroke_width = 1)
-        num_plane.axes.set_stroke(color = WHITE, width = 2)
-        num_plane.fade()
-        self.add(num_plane)
-
-        scale_factor = 2
-        shift_term = 0
-
-        # Original loop
-        tl = scale_factor * (UP + LEFT) + shift_term
-        tm = scale_factor * UP + shift_term
-        tr = scale_factor * (UP + RIGHT) + shift_term
-        mr = scale_factor * RIGHT + shift_term
-        br = scale_factor * (DOWN + RIGHT) + shift_term
-        bm = scale_factor * DOWN + shift_term
-        bl = scale_factor * (DOWN + LEFT) + shift_term
-        lm = scale_factor * LEFT + shift_term
-
-        loop_color = BLUE
-
-        default_bullet = PiCreature(color = RED)
-        default_bullet.scale(0.15)
-
-        modified_bullet = PiCreature(color = PINK)
-        modified_bullet.scale(0.15)
-
-        def SGroup(*args):
-            return VGroup(*[arg[0] for arg in args])
-
-        top_line = self.PulsedLine(tl, tr, default_bullet, color = BLUE)
-        right_line = self.PulsedLine(tr, br, modified_bullet, color = BLUE)
-        bottom_line = self.PulsedLine(br, bl, default_bullet, color = BLUE)
-        left_line = self.PulsedLine(bl, tl, default_bullet, color = BLUE)
-        line_list = [top_line, right_line, bottom_line, left_line]
-        loop = SGroup(*line_list)
-        for line in line_list:
-            self.add(*line)
-        self.wait()
-
-        # Splits in middle
-        split_line = DashedLine(interpolate(tl, tr, 0.5), interpolate(bl, br, 0.5))
-        self.play(ShowCreation(split_line))
-
-        self.remove(*split_line)
-        mid_line_left = self.PulsedLine(tm, bm, default_bullet, color = loop_color)
-        mid_line_right = self.PulsedLine(bm, tm, modified_bullet, color = loop_color)
-        self.add(*mid_line_left)
-        self.add(*mid_line_right)
-
-        top_line_left_half = self.PulsedLine(tl, tm, default_bullet, 2, 1, color = loop_color)
-        top_line_right_half = self.PulsedLine(tm, tr, modified_bullet, 2, 1, color = loop_color)
-
-        bottom_line_left_half = self.PulsedLine(bm, bl, default_bullet, 2, 1, color = loop_color)
-        bottom_line_right_half = self.PulsedLine(br, bm, modified_bullet, 2, 1, color = loop_color)
-
-        self.remove(*top_line)
-        self.add(*top_line_left_half)
-        self.add(*top_line_right_half)
-        self.remove(*bottom_line)
-        self.add(*bottom_line_left_half)
-        self.add(*bottom_line_right_half)
-
-        left_open_loop = SGroup(top_line_left_half, left_line, bottom_line_left_half)
-        left_closed_loop = VGroup(left_open_loop, mid_line_left[0])
-        right_open_loop = SGroup(top_line_right_half, right_line, bottom_line_right_half)
-        right_closed_loop = VGroup(right_open_loop, mid_line_right[0])
-
-        # self.play(
-        #     ApplyMethod(left_closed_loop.shift, LEFT), 
-        #     ApplyMethod(right_closed_loop.shift, RIGHT)
-        #     )
-
-        self.wait()
-
-        # self.play(
-        #     ApplyMethod(left_open_loop.shift, LEFT), 
-        #     ApplyMethod(right_open_loop.shift, RIGHT)
-        #     )
-
-        self.wait()
-
-        mid_lines = SGroup(mid_line_left, mid_line_right)
-
-        highlight_circle = Circle(color = YELLOW_E) # Perhaps make this a dashed circle?
-        highlight_circle.surround(mid_lines)
-        self.play(Indicate(mid_lines), ShowCreation(highlight_circle, run_time = 0.5))
-        
-        self.wait()
-
-        self.play(FadeOut(highlight_circle), FadeOut(mid_lines))
-        # Because FadeOut didn't remove the continual pulsers, we remove them manually
-        self.remove(mid_line_left[1], mid_line_right[1])
-
-        # Brings loop back together; keep in sync with motions which bring loop apart above
-        # self.play(
-        #     ApplyMethod(left_open_loop.shift, 2 * RIGHT), 
-        #     ApplyMethod(right_open_loop.shift, 2 * LEFT)
-        #     )
-
-        self.wait()
-
-class LoopSplitSceneMapped(LoopSplitScene):
-
-    def setup(self):
-        left_camera = Camera(**self.camera_config)
-        right_camera = MappingCamera(
-            mapping_func = lambda (x, y, z) : complex_to_R3(((complex(x,y) + 3)**1.1) - 3), 
-            **self.camera_config)
-        split_screen_camera = SplitScreenCamera(left_camera, right_camera, **self.camera_config)
-        self.camera = split_screen_camera
-
-class NumberLineScene(Scene):
-    def construct(self):
-        num_line = NumberLine()
-        self.add(num_line)
-        self.wait()
-
-        interval_1d = Line(num_line.number_to_point(-1), num_line.number_to_point(1), 
-            stroke_color = RED, stroke_width = 10)
-        self.play(ShowCreation(interval_1d))
-        self.wait()
-
-        num_plane = NumberPlane()
-
-        random_points = [UP + LEFT, 2 * UP, RIGHT, DOWN, DOWN + RIGHT, LEFT]
-
-        interval_2d = Polygon(
-            *random_points,
-            stroke_color = RED,
-            stroke_width = 10)
-        # TODO: Turn this into a more complicated, curvy loop?
-        # TODO: Illustrate borders and filled interiors with a particular color
-        # on both 1d and 2d region?
-
-        self.play(
-            FadeOut(num_line), 
-            FadeIn(num_plane),
-            ReplacementTransform(interval_1d, interval_2d))
-
-        self.wait()        
 
 def color_func(alpha):
     alpha = alpha % 1
@@ -503,7 +315,7 @@ class FuncRotater(Animation):
         "rotate_func" : lambda x : x # Func from alpha to revolutions
     }
 
-    # Perhaps abstract this out into an "Animation from base object" class
+    # Perhaps abstract this out into an "Animation updating from original object" class
     def update_submobject(self, submobject, starting_submobject, alpha):
         submobject.points = np.array(starting_submobject.points)
 
@@ -512,6 +324,7 @@ class FuncRotater(Animation):
         angle_revs = self.rotate_func(alpha)
         self.mobject.rotate(
             angle_revs * 2 * np.pi, 
+            about_point = ORIGIN
         )
         self.mobject.set_color(color_func(angle_revs))
 
@@ -646,7 +459,7 @@ empty_animation = Animation(Mobject())
 def EmptyAnimation():
     return empty_animation
 
-# TODO: Perhaps restructure this to avoid using AnimationGroup/UnsyncedParallels, and instead 
+# TODO: Perhaps restructure this to avoid using AnimationGroup, and instead 
 # use lists of animations or lists or other such data, to be merged and processed into parallel 
 # animations later
 class EquationSolver2d(Scene):
@@ -729,7 +542,7 @@ class EquationSolver2d(Scene):
                 return Succession(anim, 
                     ShowCreation(mid_line), 
                     FadeOut(mid_line), 
-                    UnsyncedParallel(*sub_anims)
+                    AnimationGroup(*sub_anims)
                 )
 
         lower_x = self.initial_lower_x
@@ -752,3 +565,331 @@ class EquationSolver2d(Scene):
 
         self.wait()
 
+class PiColorWalker(Scene):
+    CONFIG = {
+        "func" : plane_func_from_complex_func(lambda c : c**2),
+        "start_x" : -1,
+        "start_y" : 1,
+        "walk_width" : 2,
+        "walk_height" : 2,
+    }
+
+    def construct(self):
+
+        rev_func = lambda p : point_to_rev(self.func(p))
+
+        num_plane = NumberPlane()
+        num_plane.fade()
+        self.add(num_plane)
+
+        class WalkerAnimation(Animation):
+            CONFIG = {
+                "remover" : True,
+                "rate_func" : None,
+                "start_coords" : None,
+                "end_coords" : None,
+            }
+
+            def __init__(self, start_coords, end_coords, **kwargs):
+                self.start_coords = start_coords
+                self.end_coords = end_coords
+                self.compound_walker = VGroup()
+                self.compound_walker.walker = PiCreature(color = RED)
+                self.compound_walker.walker.scale(0.35)
+                self.compound_walker.arrow = Arrow(ORIGIN, RIGHT) #, buff = 0)
+                self.compound_walker.digest_mobject_attrs()
+                Animation.__init__(self, self.compound_walker, **kwargs)
+
+            # Perhaps abstract this out into an "Animation updating from original object" class
+            def update_submobject(self, submobject, starting_submobject, alpha):
+                submobject.points = np.array(starting_submobject.points)
+
+            def update_mobject(self, alpha):
+                Animation.update_mobject(self, alpha)
+                cur_x, cur_y = cur_coords = interpolate(self.start_coords, self.end_coords, alpha)
+                self.mobject.walker.move_to(num_plane.coords_to_point(cur_x, cur_y))
+                rev = rev_func(cur_coords)
+                self.mobject.walker.set_color(color_func(rev))
+                self.mobject.arrow.set_color(color_func(rev))
+                self.mobject.arrow.rotate(
+                    rev * 2 * np.pi, 
+                    about_point = ORIGIN #self.mobject.arrow.get_start()
+                )
+
+
+        TL = np.array((self.start_x, self.start_y))
+        TR = TL + (self.walk_width, 0)
+        BR = TR + (0, -self.walk_height)
+        BL = BR + (-self.walk_width, 0)
+
+        walk_coords = [TL, TR, BR, BL]
+        for i in range(len(walk_coords)):
+            start_x, start_y = start_coords = walk_coords[i]
+            start_point = num_plane.coords_to_point(start_x, start_y)
+            end_x, end_y = end_coords = walk_coords[(i + 1) % len(walk_coords)]
+            end_point = num_plane.coords_to_point(end_x, end_y)
+            self.play(
+                WalkerAnimation(
+                    start_coords = start_coords, 
+                    end_coords = end_coords,
+                    remover = (i < len(walk_coords) - 1)
+                ),
+                ShowCreation(Line(start_point, end_point)))
+                
+
+        self.wait()
+
+#############
+# Above are mostly general tools; here, we list, in order, finished or near-finished scenes
+
+class FirstSqrtScene(EquationSolver1d):
+    CONFIG = {
+        "x_min" : 0,
+        "x_max" : 2.5,
+        "y_min" : 0,
+        "y_max" : 2.5**2,
+        "graph_origin" : 2*DOWN + 5 * LEFT,
+        "x_axis_width" : 12,
+        "zoom_factor" : 3,
+        "zoomed_canvas_center" : 2.25 * UP + 1.75 * LEFT,
+        "func" : lambda x : x**2,
+        "targetX" : np.sqrt(2),
+        "targetY" : 2,
+        "initial_lower_x" : 1,
+        "initial_upper_x" : 2,
+        "num_iterations" : 10,
+        "iteration_at_which_to_start_zoom" : 3,
+        "graph_label" : "y = x^2",
+        "show_target_line" : True,
+    }
+
+# TODO: Pi creatures intrigued
+
+class ComplexPlaneIs2d(Scene):
+    def construct(self):
+        com_plane = ComplexPlane()
+        self.add(com_plane)
+        # TODO: Add labels to axes, specific complex points
+        self.wait()
+
+class NumberLineScene(Scene):
+    def construct(self):
+        num_line = NumberLine()
+        self.add(num_line)
+        # TODO: Add labels, arrows, specific points
+        self.wait()
+
+        interval_1d = Line(num_line.number_to_point(-1), num_line.number_to_point(1), 
+            stroke_color = RED, stroke_width = 10)
+        self.play(ShowCreation(interval_1d))
+        self.wait()
+
+        num_plane = NumberPlane()
+
+        random_points = [UP + LEFT, 2 * UP, RIGHT, DOWN, DOWN + RIGHT, LEFT]
+
+        interval_2d = Polygon(
+            *random_points,
+            stroke_color = RED,
+            stroke_width = 10)
+        # TODO: Turn this into a more complicated, curvy loop?
+        # TODO: Illustrate borders and filled interiors with a particular color
+        # on both 1d and 2d region?
+
+        self.play(
+            FadeOut(num_line), 
+            FadeIn(num_plane),
+            ReplacementTransform(interval_1d, interval_2d))
+
+        self.wait()
+
+# TODO: Split screen illustration of 2d function (before domain coloring)
+
+# TODO: Illustrations for introducing domain coloring
+
+# TODO: Bunch of Pi walker scenes
+
+# TODO: An odometer scene when introducing winding numbers
+
+class SecondSqrtScene(FirstSqrtScene, ReconfigurableScene):
+# TODO: Don't bother with ReconfigurableScene; just use new config from start
+
+    def setup(self):
+        FirstSqrtScene.setup(self)
+        ReconfigurableScene.setup(self)
+
+    def construct(self):
+        shiftVal = self.targetY
+
+        self.drawGraph()
+        newOrigin = self.coords_to_point(0, shiftVal)
+        self.transition_to_alt_config(
+            func = lambda x : x**2 - shiftVal,
+            targetY = 0,
+            graph_label = "y = x^2 - " + str(shiftVal),
+            y_min = self.y_min - shiftVal,
+            y_max = self.y_max - shiftVal,
+            show_target_line = False,
+            graph_origin = newOrigin)
+        self.solveEquation()
+
+class LoopSplitScene(Scene):
+
+    def PulsedLine(self, start, end, bullet_template, num_bullets = 4, pulse_time = 1, **kwargs):
+        line = Line(start, end, **kwargs)
+        anim = LinePulser(line, bullet_template, num_bullets, pulse_time, **kwargs)
+        return [VGroup(line, *anim.bullets), anim]
+
+    def construct(self):
+        num_plane = NumberPlane(color = LIGHT_GREY, stroke_width = 1)
+
+        # We actually don't want to highlight
+        num_plane.axes.set_stroke(color = WHITE, width = 2)
+        num_plane.fade()
+        self.add(num_plane)
+
+        scale_factor = 2
+        shift_term = 0
+
+        # Original loop
+        tl = scale_factor * (UP + LEFT) + shift_term
+        tm = scale_factor * UP + shift_term
+        tr = scale_factor * (UP + RIGHT) + shift_term
+        mr = scale_factor * RIGHT + shift_term
+        br = scale_factor * (DOWN + RIGHT) + shift_term
+        bm = scale_factor * DOWN + shift_term
+        bl = scale_factor * (DOWN + LEFT) + shift_term
+        lm = scale_factor * LEFT + shift_term
+
+        loop_color = BLUE
+
+        default_bullet = PiCreature(color = RED)
+        default_bullet.scale(0.15)
+
+        modified_bullet = PiCreature(color = PINK)
+        modified_bullet.scale(0.15)
+
+        def SGroup(*args):
+            return VGroup(*[arg[0] for arg in args])
+
+        top_line = self.PulsedLine(tl, tr, default_bullet, color = BLUE)
+        right_line = self.PulsedLine(tr, br, modified_bullet, color = BLUE)
+        bottom_line = self.PulsedLine(br, bl, default_bullet, color = BLUE)
+        left_line = self.PulsedLine(bl, tl, default_bullet, color = BLUE)
+        line_list = [top_line, right_line, bottom_line, left_line]
+        loop = SGroup(*line_list)
+        for line in line_list:
+            self.add(*line)
+        self.wait()
+
+        # Splits in middle
+        split_line = DashedLine(interpolate(tl, tr, 0.5), interpolate(bl, br, 0.5))
+        self.play(ShowCreation(split_line))
+
+        self.remove(*split_line)
+        mid_line_left = self.PulsedLine(tm, bm, default_bullet, color = loop_color)
+        mid_line_right = self.PulsedLine(bm, tm, modified_bullet, color = loop_color)
+        self.add(*mid_line_left)
+        self.add(*mid_line_right)
+
+        top_line_left_half = self.PulsedLine(tl, tm, default_bullet, 2, 1, color = loop_color)
+        top_line_right_half = self.PulsedLine(tm, tr, modified_bullet, 2, 1, color = loop_color)
+
+        bottom_line_left_half = self.PulsedLine(bm, bl, default_bullet, 2, 1, color = loop_color)
+        bottom_line_right_half = self.PulsedLine(br, bm, modified_bullet, 2, 1, color = loop_color)
+
+        self.remove(*top_line)
+        self.add(*top_line_left_half)
+        self.add(*top_line_right_half)
+        self.remove(*bottom_line)
+        self.add(*bottom_line_left_half)
+        self.add(*bottom_line_right_half)
+
+        left_open_loop = SGroup(top_line_left_half, left_line, bottom_line_left_half)
+        left_closed_loop = VGroup(left_open_loop, mid_line_left[0])
+        right_open_loop = SGroup(top_line_right_half, right_line, bottom_line_right_half)
+        right_closed_loop = VGroup(right_open_loop, mid_line_right[0])
+
+        # self.play(
+        #     ApplyMethod(left_closed_loop.shift, LEFT), 
+        #     ApplyMethod(right_closed_loop.shift, RIGHT)
+        #     )
+
+        self.wait()
+
+        # self.play(
+        #     ApplyMethod(left_open_loop.shift, LEFT), 
+        #     ApplyMethod(right_open_loop.shift, RIGHT)
+        #     )
+
+        self.wait()
+
+        mid_lines = SGroup(mid_line_left, mid_line_right)
+
+        highlight_circle = Circle(color = YELLOW_E) # Perhaps make this a dashed circle?
+        highlight_circle.surround(mid_lines)
+        self.play(Indicate(mid_lines), ShowCreation(highlight_circle, run_time = 0.5))
+        
+        self.wait()
+
+        self.play(FadeOut(highlight_circle), FadeOut(mid_lines))
+        # Because FadeOut didn't remove the continual pulsers, we remove them manually
+        self.remove(mid_line_left[1], mid_line_right[1])
+
+        # Brings loop back together; keep in sync with motions which bring loop apart above
+        # self.play(
+        #     ApplyMethod(left_open_loop.shift, 2 * RIGHT), 
+        #     ApplyMethod(right_open_loop.shift, 2 * LEFT)
+        #     )
+
+        self.wait()
+
+class LoopSplitSceneMapped(LoopSplitScene):
+
+    def setup(self):
+        left_camera = Camera(**self.camera_config)
+        right_camera = MappingCamera(
+            mapping_func = lambda (x, y, z) : complex_to_R3(((complex(x,y) + 3)**1.1) - 3), 
+            allow_object_intrusion = False
+            **self.camera_config)
+        split_screen_camera = SplitScreenCamera(left_camera, right_camera, **self.camera_config)
+        self.camera = split_screen_camera
+
+# TODO: Perhaps do extra illustration of zooming out and winding around a large circle, 
+# to illustrate relation between degree and large-scale winding number
+class FundThmAlg(EquationSolver2d):
+    CONFIG = {
+        "func" : plane_poly_with_roots((1, 2), (-1, 3), (-1, 3)),
+    }
+
+# TODO: Borsuk-Ulam visuals
+
+# TODO: "Good enough" property visuals (swinging arrows and odometer, like in odometer scene above)
+
+# TODO: Brouwer's fixed point theorem visuals
+
+# TODO: Pi creatures wide-eyed in amazement
+
+#################
+
+# TODOs, from easiest to hardest:
+
+# Minor fiddling with little things in each animation; placements, colors, timing
+
+# Writing new Pi creature walker scenes off of general template
+
+# Odometer/swinging arrows stuff
+
+# Pi creature emotion stuff
+
+# Split screen illustration of 2d function (before domain coloring)
+
+# Generalizing Pi color walker stuff/making bullets on pulsing lines change colors dynamically according to function traced out
+
+# BFT visuals
+
+# Borsuk-Ulam visuals
+
+# Domain coloring
+
+# FIN
