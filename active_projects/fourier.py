@@ -2396,6 +2396,8 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
     CONFIG = {
         "signal_frequency" : 2.0,
         "default_num_v_lines_indicating_periods" : 0,
+        "time_axes_scale_val" : 0.7,
+        "initial_winding_frequency" : 0.1,
     }
     def construct(self):
         self.remove(self.pi_creature)
@@ -2428,7 +2430,7 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
             fill_opacity = 0.9,
             buff = MED_SMALL_BUFF,
         ))
-        time_axes.scale(0.7)
+        time_axes.scale(self.time_axes_scale_val)
         time_axes.to_corner(UP+LEFT, buff = 0)
         time_axes.set_stroke(color = WHITE, width = 1)
 
@@ -2445,7 +2447,7 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
             scale_val = 0.5,
             shift_val = 0.75,
         )
-        freq = 0.1
+        freq = self.initial_winding_frequency
         pol_graph = self.get_polarized_mobject(graph, freq = freq)
         wps_label = self.get_winding_frequency_label()
         ChangeDecimalToValue(wps_label[0], freq).update(1)
@@ -2970,7 +2972,9 @@ class BuildUpExpressionStepByStep(TeacherStudentsScene):
         frac, integral, g, e, two_pi_i, f, t, dt = expression
         expression.next_to(self.teacher, UP+LEFT)
         t.highlight(YELLOW)
-        f.highlight(RED)
+        g[2].highlight(YELLOW)
+        dt[1].highlight(YELLOW)
+        f.highlight(GREEN)
         t.save_state()
         t.move_to(f, LEFT)
 
@@ -2998,14 +3002,63 @@ class BuildUpExpressionStepByStep(TeacherStudentsScene):
         self.wait(3)
         self.teacher_says(
             "Just one final \\\\ distinction.",
-            added_anims = [expression.to_corner, UP+LEFT]
+            bubble_kwargs = {"height" : 2.5, "width" : 3.5},
+            added_anims = [expression.to_corner, UP+RIGHT]
         )
         self.wait(3)
 
+class ScaleUpCenterOfMass(WriteComplexExponentialExpression):
+    CONFIG = {
+        "time_axes_scale_val" : 0.6,
+        "initial_winding_frequency" : 1.95
+    }
+    def construct(self):
+        self.remove(self.pi_creature)
+        self.setup_plane()
+        self.setup_graph()
+        self.add_expression()
+        self.add_center_of_mass_dot()
+
+        self.cross_out_denominator()
+        self.scale_up_center_of_mass()
+        self.what_this_means_for_various_winding_frequencies()
 
 
+    def add_expression(self):
+        expression = TexMobject(
+            "\\frac{1}{t_2 - t_1}", "\\int_{t_1}^{t_2}",
+            "g(t)", "e", "^{2\\pi i", "f", "t}", "dt"
+        )
+        frac, integral, g, e, two_pi_i, f, t, dt = expression
+        expression.to_corner(UP+RIGHT)
+        t.highlight(YELLOW)
+        g[2].highlight(YELLOW)
+        dt[1].highlight(YELLOW)
+        f.highlight(GREEN)
+        expression.add_background_rectangle()
+        self.expression = expression
+        self.add(expression)
+
+        self.winding_freq_label.to_edge(RIGHT)
+        self.winding_freq_label[1].match_color(f)
+
+    def add_center_of_mass_dot(self):
+        self.center_of_mass_dot = self.get_center_of_mass_dot()
+        self.generate_center_of_mass_dot_update_anim()
+        self.add(self.center_of_mass_dot)
 
 
+    def cross_out_denominator(self):
+        frac = self.expression[0]
+        integral = VGroup(*self.expression[1:])
+        
+
+    def scale_up_center_of_mass(self):
+        pass
+
+
+    def what_this_means_for_various_winding_frequencies(self):
+        pass
 
 
 class CloseWithAPuzzle(TeacherStudentsScene):
