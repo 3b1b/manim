@@ -47,6 +47,88 @@ def get_fourier_transform(
 
 ##
 
+class Introduction(TeacherStudentsScene):
+    def construct(self):
+        title = TextMobject("Fourier Transform")
+        title.scale(1.2)
+        title.to_edge(UP, buff = MED_SMALL_BUFF)
+
+        func = lambda t : np.cos(2*TAU*t) + np.cos(3*TAU*t)
+        graph = FunctionGraph(func, x_min = 0, x_max = 5)
+        graph.stretch(0.25, 1)
+        graph.next_to(title, DOWN)
+        graph.to_edge(LEFT)
+        graph.highlight(BLUE)
+        fourier_graph = FunctionGraph(
+            get_fourier_transform(func, 0, 5),
+            x_min = 0, x_max = 5
+        )
+        fourier_graph.move_to(graph)
+        fourier_graph.to_edge(RIGHT)
+        fourier_graph.highlight(RED)
+        arrow = Arrow(graph, fourier_graph, color = WHITE)
+        self.add(title, graph)
+
+        self.student_thinks(
+            "What's that?",
+            look_at_arg = title,
+            target_mode = "confused",
+            student_index = 1,
+        )
+        self.play(
+            GrowArrow(arrow),
+            ReplacementTransform(graph.copy(), fourier_graph)
+        )
+        self.wait(2)
+        self.student_thinks(
+            "Pssht, I got this",
+            target_mode = "tease",
+            student_index = 2,
+            added_anims = [RemovePiCreatureBubble(self.students[1])]
+        )
+        self.play(self.teacher.change, "hesitant")
+        self.wait(2)
+
+class TODOInsertUnmixingSound(TODOStub):
+    CONFIG = {
+        "message" : "Show unmixing sound"
+    }
+
+class OtherContexts(PiCreatureScene):
+    def construct(self):
+        items = VGroup(*map(TextMobject, [
+            "Extracting frequencies from sound",
+            "Uncertainty principle",
+            "Riemann Zeta function and primes",
+            "Differential equations",
+        ]))
+        items.arrange_submobjects(
+            DOWN, buff = MED_LARGE_BUFF,
+            aligned_edge = LEFT
+        )
+        items.to_corner(UP+LEFT)
+        items[1:].set_fill(opacity = 0.2)
+
+        morty = self.pi_creature
+        morty.to_corner(UP+RIGHT)
+
+        self.add(items)
+        for item in items[1:]:
+            self.play(
+                LaggedStart(
+                    ApplyMethod, item,
+                    lambda m : (m.set_fill, {"opacity" : 1}),
+                ), 
+                morty.change, "thinking",
+            )
+            self.wait()
+
+
+class TODOInsertCosineWrappingAroundCircle(TODOStub):
+    CONFIG = {
+        "message" : "Give a picture-in-picture \\\\ of cosine wrapping around circle",
+    }
+
 class AddingPureFrequencies(PiCreatureScene):
     CONFIG = {
         "A_frequency" : 2.1,
@@ -721,13 +803,14 @@ class FourierMachineScene(Scene):
             "x_max" : 5.0,
             "x_axis_config" : {
                 "unit_size" : 1.4,
+                "numbers_to_show" : range(1, 6),
             },
             "y_min" : -1.0,
             "y_max" : 1.0,
             "y_axis_config" : {
                 "unit_size" : 1.8,
                 "tick_frequency" : 0.5,
-                "line_to_number_vect" : LEFT,
+                "label_direction" : LEFT,
             },
             "color" : TEAL,
         },
@@ -783,7 +866,7 @@ class FourierMachineScene(Scene):
 
     def get_frequency_axes(self):
         frequency_axes = Axes(**self.frequency_axes_config)
-        frequency_axes.x_axis.add_numbers(*range(1, 6))
+        frequency_axes.x_axis.add_numbers()
         frequency_axes.y_axis.add_numbers(
             *frequency_axes.y_axis.get_tick_numbers()
         )
@@ -1089,7 +1172,7 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
         freq_label = self.winding_freq_label[0]
 
         count = 0
-        for target_freq in [1.23, 0.2, 1.55, self.signal_frequency]:
+        for target_freq in [1.23, 0.2, 0.79, 1.55, self.signal_frequency]:
             self.play(
                 Transform(
                     v_lines, 
@@ -1466,10 +1549,14 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
         )
         return self.fourier_graph_drawing_update_anim
 
-    def generate_center_of_mass_dot_update_anim(self):
+    def generate_center_of_mass_dot_update_anim(self, multiplier = 1):
+        origin = self.circle_plane.coords_to_point(0, 0)
+        com = self.get_pol_graph_center_of_mass
         self.center_of_mass_dot_anim = UpdateFromFunc(
             self.center_of_mass_dot, 
-            lambda d : d.move_to(self.get_pol_graph_center_of_mass())
+            lambda d : d.move_to(
+                multiplier*(com()-origin)+origin
+            )
         )
 
     def change_frequency(self, new_freq, **kwargs):
@@ -1478,16 +1565,13 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
             "rate_func", bezier([0, 0, 1, 1])
         )
         added_anims = kwargs.get("added_anims", [])
-        freq_label = filter(
-            lambda sm : isinstance(sm, DecimalNumber),
-            self.winding_freq_label
-        )[0]
-        anims = [
-            ChangeDecimalToValue(freq_label, new_freq),
-            self.get_frequency_change_animation(
-                self.graph, new_freq
-            )
-        ]
+        anims = [self.get_frequency_change_animation(self.graph, new_freq)]
+        if hasattr(self, "winding_freq_label"):
+            freq_label = filter(
+                lambda sm : isinstance(sm, DecimalNumber),
+                self.winding_freq_label
+            )[0]
+            anims.append(ChangeDecimalToValue(freq_label, new_freq))
         if hasattr(self, "v_lines_indicating_periods"):
             anims.append(self.get_period_v_lines_update_anim())
         if hasattr(self, "center_of_mass_dot"):
@@ -2401,6 +2485,11 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
         "default_num_v_lines_indicating_periods" : 0,
         "time_axes_scale_val" : 0.7,
         "initial_winding_frequency" : 0.1,
+        "circle_plane_config" : {
+            "unit_size" : 2,
+            "y_radius" : SPACE_HEIGHT+LARGE_BUFF,
+            "x_radius" : SPACE_WIDTH+LARGE_BUFF
+        }
     }
     def construct(self):
         self.remove(self.pi_creature)
@@ -2413,11 +2502,7 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
         self.find_center_of_mass()
 
     def setup_plane(self):
-        circle_plane = ComplexPlane(
-            unit_size = 2,
-            y_radius = SPACE_HEIGHT+LARGE_BUFF,
-            x_radius = SPACE_WIDTH+LARGE_BUFF
-        )
+        circle_plane = ComplexPlane(**self.circle_plane_config)
         circle_plane.shift(DOWN+LEFT)
         circle = DashedLine(ORIGIN, TAU*UP)
         circle.apply_complex_function(
@@ -3339,8 +3424,416 @@ class TakeAStepBack(TeacherStudentsScene):
         self.play(self.teacher.change, "happy")
         self.wait(3)
 
+class SimpleCosineWrappingAroundCircle(WriteComplexExponentialExpression):
+    CONFIG = {
+        "initial_winding_frequency" : 0,
+        "circle_plane_config" : {
+            "unit_size" : 3,
+        },
+    }
+    def construct(self):
+        self.setup_plane()
+        self.setup_graph()
+        self.remove(self.pi_creature)
+        self.winding_freq_label.shift(7*LEFT)
+        VGroup(self.time_axes, self.graph).shift(4*UP)
+        VGroup(
+            self.circle_plane,
+            self.graph.polarized_mobject
+        ).move_to(ORIGIN)
+        self.add(self.get_center_of_mass_dot())
+        self.generate_center_of_mass_dot_update_anim()
+
+        self.change_frequency(
+            2.0, 
+            rate_func = None, 
+            run_time = 30
+        )
+        self.wait()
+
+class SummarizeTheFullTransform(DrawFrequencyPlot):
+    CONFIG = {
+        "time_axes_config" : {
+            "x_max" : 4.5,
+            "x_axis_config" : {
+                "unit_size" : 1.2,
+                "tick_frequency" : 0.5,
+                # "numbers_with_elongated_ticks" : range(0, 10, 2),
+                # "numbers_to_show" : range(0, 10, 2),
+            }
+        },
+        "frequency_axes_config" : {
+            "x_max" : 5,
+            "x_axis_config" : {
+                "unit_size" : 1,
+                "numbers_to_show" : range(1, 5),
+            },
+            "y_max" : 2,
+            "y_min" : -2,
+            "y_axis_config" : {
+                "unit_size" : 0.75,
+                "tick_frequency" : 1,
+            },
+        },
+    }
+    def construct(self):
+        self.setup_all_axes()
+        self.show_transform_function()
+        self.show_winding()
+
+    def setup_all_axes(self):
+        time_axes = self.get_time_axes()
+        time_label, intensity_label = time_axes.labels
+        time_label.next_to(
+            time_axes.x_axis.get_right(), 
+            DOWN, SMALL_BUFF
+        )
+        intensity_label.next_to(time_axes.y_axis, UP, buff = SMALL_BUFF)
+        intensity_label.to_edge(LEFT)
+
+        frequency_axes = self.get_frequency_axes()
+        frequency_axes.to_corner(UP+RIGHT)
+        frequency_axes.shift(RIGHT)
+        fy_axis = frequency_axes.y_axis
+        for number in fy_axis.numbers:
+            number.add_background_rectangle()
+        fy_axis.remove(*fy_axis.numbers[1::2])
+        frequency_axes.remove(frequency_axes.box)
+        frequency_axes.label.shift_onto_screen()
+
+        circle_plane = self.get_circle_plane()
+
+        self.set_variables_as_attrs(time_axes, frequency_axes, circle_plane)
+        self.add(time_axes)
+
+    def show_transform_function(self):
+        time_axes = self.time_axes
+        frequency_axes = self.frequency_axes
+        def func(t):
+            return 0.5*(2+np.cos(2*TAU*t) + np.cos(3*TAU*t))
+        fourier_func = get_fourier_transform(
+            func, 
+            t_min = time_axes.x_min,
+            t_max = time_axes.x_max,
+            use_almost_fourier = False,
+        )
+
+        graph = time_axes.get_graph(func)
+        graph.highlight(GREEN)
+        fourier_graph = frequency_axes.get_graph(fourier_func)
+        fourier_graph.highlight(RED)
+
+        g_t = TexMobject("g(t)")
+        g_t[-2].match_color(graph)
+        g_t.next_to(graph, UP)
+        g_hat_f = TexMobject("\\hat g(f)")
+        g_hat_f[-2].match_color(fourier_graph)
+        g_hat_f.next_to(
+            frequency_axes.input_to_graph_point(2, fourier_graph),
+            UP
+        )
+
+        morty = self.pi_creature
+
+        time_label = time_axes.labels[0]
+        frequency_label = frequency_axes.label
+        for label in time_label, frequency_label:
+            label.rect = SurroundingRectangle(label)
+        time_label.rect.match_style(graph)
+        frequency_label.rect.match_style(fourier_graph)
+
+        self.add(graph)
+        g_t.save_state()
+        g_t.move_to(morty, UP+LEFT)
+        g_t.fade(1)
+        self.play(
+            morty.change, "raise_right_hand",
+            g_t.restore,
+        )
+        self.wait()
+        self.play(Write(frequency_axes, run_time = 1))
+        self.play(
+            ReplacementTransform(graph.copy(), fourier_graph),
+            ReplacementTransform(g_t.copy(), g_hat_f),
+        )
+        self.wait(2)
+        for label in time_label, frequency_label:
+            self.play(
+                ShowCreation(label.rect),
+                morty.change, "thinking"
+            )
+            self.play(FadeOut(label.rect))
+        self.wait()
+
+        self.set_variables_as_attrs(
+            graph, fourier_graph,
+            g_t, g_hat_f
+        )
+
+    def show_winding(self):
+        plane = self.circle_plane
+        graph = self.graph
+        fourier_graph = self.fourier_graph
+        morty = self.pi_creature
+        g_hat_f = self.g_hat_f
+        g_hat_f_rect = SurroundingRectangle(g_hat_f)
+        g_hat_f_rect.highlight(TEAL)
+        g_hat_rect = SurroundingRectangle(g_hat_f[0])
+        g_hat_rect.match_style(g_hat_f_rect)
+
+        g_hat_f.generate_target()
+        g_hat_f.target.next_to(plane, RIGHT)
+        g_hat_f.target.shift(UP)
+        arrow = Arrow(
+            g_hat_f.target.get_left(),
+            plane.coords_to_point(0, 0),
+            color = self.center_of_mass_color,
+        )
+
+        frequency_axes = self.frequency_axes
+        imaginary_fourier_graph = frequency_axes.get_graph(
+            get_fourier_transform(
+                graph.underlying_function,
+                t_min = self.time_axes.x_min,
+                t_max = self.time_axes.x_max,
+                real_part = False,
+                use_almost_fourier = False,
+            )
+        )
+        imaginary_fourier_graph.highlight(BLUE)
+        imaginary_fourier_graph.shift(
+            frequency_axes.x_axis.main_line.get_right() - \
+            imaginary_fourier_graph.points[-1],
+        )
+
+        real_part = TextMobject(
+            "Real part of", "$\\hat g(f)$"
+        )
+        real_part[1].match_style(g_hat_f)
+        real_part.move_to(g_hat_f)
+        real_part.to_edge(RIGHT)
+
+        self.get_polarized_mobject(graph, freq = 0)
+        update_pol_graph = UpdateFromFunc(
+            graph.polarized_mobject,
+            lambda m : m.set_stroke(width = 2)
+        )
+        com_dot = self.get_center_of_mass_dot()
+
+        winding_run_time = 40.0
+        g_hat_f_indication = Succession(
+            Animation, Mobject(), {"run_time" : 4},
+            FocusOn, g_hat_f,
+            ShowCreation, g_hat_f_rect,
+            Animation, Mobject(),
+            Transform, g_hat_f_rect, g_hat_rect,
+            Animation, Mobject(),
+            FadeOut, g_hat_f_rect,
+            Animation, Mobject(),
+            MoveToTarget, g_hat_f,
+            UpdateFromAlphaFunc, com_dot, lambda m, a : m.set_fill(opacity = a),
+            Animation, Mobject(), {"run_time" : 2},
+            GrowArrow, arrow,
+            FadeOut, arrow,
+            Animation, Mobject(), {"run_time" : 5},
+            Transform, g_hat_f.target.copy().fade(1), real_part[1].copy().fade(1),
+            Write, real_part[0], {"run_time" : 1},
+            Animation, Mobject(), {"run_time" : 3},
+            ShowCreation, imaginary_fourier_graph, {"run_time" : 3},
+            rate_func = squish_rate_func(
+                lambda x : x, 0, 31./winding_run_time
+            ),
+            run_time = winding_run_time
+        )
+
+        self.play(
+            FadeIn(plane),
+            ReplacementTransform(
+                graph.copy(), graph.polarized_mobject
+            ),
+            morty.change, "happy",
+        )
+        self.generate_center_of_mass_dot_update_anim(multiplier = 4.5)
+        self.generate_fourier_dot_transform(fourier_graph)
+        self.change_frequency(
+            5.0, 
+            rate_func = None, 
+            run_time = winding_run_time,
+            added_anims = [
+                g_hat_f_indication, 
+                update_pol_graph,
+                Animation(frequency_axes.x_axis.numbers),
+                Animation(self.fourier_graph_dot),
+            ]
+        )
+        self.wait()
+
+class SummarizeFormula(Scene):
+    def construct(self):
+        expression = self.get_expression()
+        screen_rect = ScreenRectangle(height = 5)
+        screen_rect.to_edge(DOWN)
+
+        exp_rect, g_exp_rect, int_rect = [
+            SurroundingRectangle(VGroup(
+                expression.get_part_by_tex(p1),
+                expression.get_part_by_tex(p2),
+            ))
+            for p1, p2 in ("e", "t}"), ("g({}", "t}"), ("\\int", "dt")
+        ]
+
+        self.add(expression)
+        self.wait()
+        self.play(
+            ShowCreation(screen_rect),
+            ShowCreation(exp_rect),
+        )
+        self.wait(2)
+        self.play(Transform(exp_rect, g_exp_rect))
+        self.wait(2)
+        self.play(Transform(exp_rect, int_rect))
+        self.wait(2)
+
+    def get_expression(self):
+        expression = TexMobject(
+            "\\hat g(", "f", ")", "=", "\\int", "_{t_1}", "^{t_2}",
+            "g({}", "t", ")", "e", "^{2\\pi i", "f", "t}", "dt"
+        )
+        expression.highlight_by_tex(
+            "t", YELLOW, substring = False,
+        )
+        expression.highlight_by_tex("t}", YELLOW)
+        expression.highlight_by_tex(
+            "f", RED, substring = False,
+        )
+        expression.scale(1.2)
+        expression.to_edge(UP)
+        return expression
 
 
+class OneSmallNote(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Just one \\\\ small note...",
+            # target_mode = 
+        )
+        self.change_student_modes("erm", "happy", "sassy")
+        self.wait(2)
+
+class BoundsAtInfinity(SummarizeFormula):
+    def construct(self):
+        expression = self.get_expression()
+        self.add(expression)
+        self.add_graph()
+        axes = self.axes
+        graph = self.graph
+
+        time_interval = self.get_time_interval(-2, 2)
+        wide_interval = self.get_time_interval(-SPACE_WIDTH, SPACE_WIDTH)
+        bounds = VGroup(*reversed(expression.get_parts_by_tex("t_")))
+        bound_rects = VGroup(*[
+            SurroundingRectangle(b, buff = 0.5*SMALL_BUFF)
+            for b in bounds
+        ])
+        bound_rects.highlight(TEAL)
+        inf_bounds = VGroup(*[
+            VGroup(TexMobject(s + "\\infty"))
+            for s in "-", "+"
+        ])
+        decimal_bounds = VGroup(*[DecimalNumber(0) for x in range(2)])
+        for bound, inf_bound, d_bound in zip(bounds, inf_bounds, decimal_bounds):
+            for new_bound in inf_bound, d_bound:
+                new_bound.scale(0.7)
+                new_bound.move_to(bound, LEFT)
+                new_bound.bound = bound
+        def get_db_num_update(vect):
+            return lambda a : axes.x_axis.point_to_number(
+                time_interval.get_edge_center(vect)
+            )
+        decimal_updates = [
+            ChangingDecimal(
+                db, get_db_num_update(vect),
+                position_update_func = lambda m : m.move_to(
+                    m.bound, LEFT
+                )
+            )
+            for db, vect in zip(decimal_bounds, [LEFT, RIGHT])
+        ]
+        for update in decimal_updates:
+            update.update(1)
+
+        time_interval.save_state()
+        self.wait()
+        self.play(ReplacementTransform(
+            self.get_time_interval(0, 0.01), time_interval
+        ))
+        self.play(LaggedStart(ShowCreation, bound_rects))
+        self.wait()
+        self.play(FadeOut(bound_rects))
+        self.play(ReplacementTransform(bounds, inf_bounds))
+        self.play(Transform(
+            time_interval, wide_interval,
+            run_time = 4,
+            rate_func = there_and_back
+        ))
+        self.play(
+            ReplacementTransform(inf_bounds, decimal_bounds),
+            time_interval.restore,
+        )
+        self.play(
+            VGroup(axes, graph).stretch, 0.05, 0,
+            Transform(time_interval, wide_interval),
+            UpdateFromAlphaFunc(
+                axes.x_axis.numbers, 
+                lambda m, a : m.set_fill(opacity = 1-a)
+            ),
+            *decimal_updates,
+            run_time = 8,
+            rate_func = bezier([0, 0, 1, 1])
+        )
+        self.wait()
+
+
+    def add_graph(self):
+        axes = Axes(
+            x_min = -140,
+            x_max = 140,
+            y_min = -2, 
+            y_max = 2,
+            number_line_config = {
+                "include_tip" : False,
+            },
+            default_num_graph_points = 1000,
+        )
+        axes.x_axis.add_numbers(*filter(
+            lambda x : x != 0,
+            range(-8, 10, 2),
+        ))
+        axes.shift(DOWN)
+        self.add(axes)
+
+        def func(x):
+            return np.exp(-0.1*x**2)*(1 + np.cos(TAU*x))
+        graph = axes.get_graph(func)
+        self.add(graph)
+        graph.highlight(YELLOW)
+
+        self.set_variables_as_attrs(axes, graph)
+
+    def get_time_interval(self, t1, t2):
+        line = Line(*[
+            self.axes.coords_to_point(t, 0)
+            for t in t1, t2
+        ])
+        rect = Rectangle(
+            stroke_width = 0,
+            fill_color = TEAL,
+            fill_opacity = 0.5,
+        )
+        rect.match_width(line)
+        rect.stretch_to_fit_height(2.5)
+        rect.move_to(line, DOWN)
+        return rect
 
 
 class CloseWithAPuzzle(TeacherStudentsScene):
