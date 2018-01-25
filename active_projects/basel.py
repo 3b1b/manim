@@ -48,6 +48,7 @@ LIGHT_CONE_NUM_SECTORS = 30
 NUM_CONES = 50 # in first lighthouse scene
 NUM_VISIBLE_CONES = 5 # ibidem
 ARC_TIP_LENGTH = 0.2
+DIM_OPACITY = 0.2
 
 
 def show_line_length(line):
@@ -95,6 +96,7 @@ class LightScreen(VMobject):
 
     def update_light_cone(self,lc):
         lower_angle, upper_angle = self.viewing_angles()
+        #print lower_angle, upper_angle
         self.light_cone.update_opening(start_angle = lower_angle,
             stop_angle = upper_angle)
         return self
@@ -132,6 +134,11 @@ class LightScreen(VMobject):
         outpoint2 = self.screen.points[-1] + ray2
         self.shadow.add_control_points([outpoint2,outpoint1,self.screen.points[0]])
         self.shadow.mark_paths_closed = True
+
+    def move_source_to(self,new_point):
+        self.light_source = new_point
+        #self.update_light_cone(self.light_cone)
+
 
 
 class LightCone(VGroup):
@@ -173,6 +180,7 @@ class LightCone(VGroup):
             return
         source = self.submobjects[0].get_arc_center()
         self.shift(point - source)
+        self.generate_points()
         
     def update_opening(self, start_angle, stop_angle):
         self.start_angle = start_angle
@@ -754,27 +762,31 @@ class SingleLightHouseScene(PiCreatureScene):
         light_screen.screen.color = WHITE
         light_screen.screen.fill_opacity = 1
         light_screen.update_light_cone(light_cone)
-        self.play(
-            FadeIn(light_screen, run_time = 2),
-        # dim the light that misses the screen
-            ApplyMethod(candle.set_brightness,0.3),
-            ApplyMethod(light_screen.update_shadow,light_screen.shadow),
-            FadeIn(light_cone),
-        )
+        # self.play(
+        #     FadeIn(light_screen, run_time = 2),
+        # # dim the light that misses the screen
+        #     ApplyMethod(candle.set_brightness,0.3),
+        #     ApplyMethod(light_screen.update_shadow,light_screen.shadow),
+        #     FadeIn(light_cone),
+        # )
+
 
         lc_updater = lambda lc: light_screen.update_light_cone(lc)
         sh_updater = lambda sh: light_screen.update_shadow(sh)
 
         ca1 = ContinualUpdateFromFunc(light_screen.light_cone,
            lc_updater)
+        ca15 = ContinualUpdateFromFunc(light_screen,
+           lc_updater)
         ca2 = ContinualUpdateFromFunc(light_screen.shadow,
            sh_updater)
 
-        self.add(ca1, ca2)
+        self.add(ca1, ca15, ca2)
         self.add_foreground_mobject(morty)
 
-        pointing_screen_at_source = ApplyMethod(screen.rotate_in_place,TAU/6)
-        self.play(pointing_screen_at_source)
+        pointing_screen_at_source = ApplyMethod(screen.rotate,TAU/6)
+        #self.play(pointing_screen_at_source)
+        #self.wait()
 
         arc_angle = light_cone.angle
         # draw arc arrows to show the opening angle
@@ -791,7 +803,7 @@ class SingleLightHouseScene(PiCreatureScene):
         angle_indicator.next_to(angle_arc,RIGHT)
         self.add_foreground_mobject(angle_indicator)
 
-        angle_update_func = lambda x: light_cone.angle/TAU*360
+        angle_update_func = lambda x: light_cone.angle/TAU * 360
         ca3 = ContinualChangingDecimal(angle_indicator,angle_update_func)
         self.add(ca3)
 
@@ -799,8 +811,18 @@ class SingleLightHouseScene(PiCreatureScene):
         ca4 = AngleUpdater(angle_arc, light_screen.light_cone)
         self.add(ca4)
 
-        rotating_screen = ApplyMethod(light_screen.screen.rotate_in_place, TAU/6, run_time=3, rate_func = wiggle)
-        self.play(rotating_screen)
+        rotating_screen = ApplyMethod(light_screen.screen.rotate, 
+            TAU/8, run_time=1.5)
+        #self.wait(2)
+        rotating_screen_2 = ApplyMethod(light_screen.screen.rotate, 
+            -TAU/4, run_time=3, rate_func = there_and_back)
+        #self.wait(2)
+        rotating_screen_3 = ApplyMethod(light_screen.screen.rotate, 
+            TAU/8, run_time=1.5)
+
+        #self.play(rotating_screen)
+        #self.play(rotating_screen_2)
+        #self.play(rotating_screen_3)
         
         #rotating_screen_back = ApplyMethod(light_screen.screen.rotate_in_place, -TAU/6) #, run_time=3, rate_func = wiggle)
         #self.play(rotating_screen_back)
@@ -815,14 +837,14 @@ class SingleLightHouseScene(PiCreatureScene):
         globe.move_to([2,0,0])
         sun_position = [-100,0,0]
         self.play(
-            ApplyMethod(lighthouse.move_to,sun_position),
-            ApplyMethod(candle.move_to,sun_position),
-            ApplyMethod(light_cone.move_source_to,sun_position),
-            FadeOut(angle_arc),
-            FadeOut(angle_indicator),
-            FadeIn(globe),
-            ApplyMethod(light_screen.move_to,[0,0,0]),
-            ApplyMethod(morty.move_to,[1,0,0])
+            #ApplyMethod(lighthouse.move_to,sun_position),
+            #ApplyMethod(candle.move_to,sun_position),
+            ApplyMethod(light_screen.move_source_to,sun_position),
+            #FadeOut(angle_arc),
+            #FadeOut(angle_indicator),
+            #FadeIn(globe),
+            #ApplyMethod(light_screen.move_to,[0,0,0]),
+            #ApplyMethod(morty.move_to,[1,0,0])
 
         )
 
