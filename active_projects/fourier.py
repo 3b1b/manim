@@ -2392,10 +2392,12 @@ class ApplyFourierToFourier(DrawFrequencyPlot):
         kwargs["scale_val"] = 1.0
         return DrawFrequencyPlot.get_cosine_wave(self, freq, **kwargs)
 
-class WhiteComplexExponentialExpression(DrawFrequencyPlot):
+class WriteComplexExponentialExpression(DrawFrequencyPlot):
     CONFIG = {
         "signal_frequency" : 2.0,
         "default_num_v_lines_indicating_periods" : 0,
+        "time_axes_scale_val" : 0.7,
+        "initial_winding_frequency" : 0.1,
     }
     def construct(self):
         self.remove(self.pi_creature)
@@ -2404,15 +2406,16 @@ class WhiteComplexExponentialExpression(DrawFrequencyPlot):
         self.show_winding_with_both_coordinates()
         self.show_plane_as_complex_plane()
         self.show_eulers_formula()
-        self.reference_other_video()
         self.show_winding_graph_expression()
+        self.find_center_of_mass()
 
     def setup_plane(self):
         circle_plane = ComplexPlane(
             unit_size = 2,
-            y_radius = SPACE_HEIGHT+LARGE_BUFF
+            y_radius = SPACE_HEIGHT+LARGE_BUFF,
+            x_radius = SPACE_WIDTH+LARGE_BUFF
         )
-        circle_plane.shift(DOWN)
+        circle_plane.shift(DOWN+LEFT)
         circle = DashedLine(ORIGIN, TAU*UP)
         circle.apply_complex_function(
             lambda z : R3_to_complex(
@@ -2427,7 +2430,7 @@ class WhiteComplexExponentialExpression(DrawFrequencyPlot):
             fill_opacity = 0.9,
             buff = MED_SMALL_BUFF,
         ))
-        time_axes.scale(0.7)
+        time_axes.scale(self.time_axes_scale_val)
         time_axes.to_corner(UP+LEFT, buff = 0)
         time_axes.set_stroke(color = WHITE, width = 1)
 
@@ -2444,7 +2447,7 @@ class WhiteComplexExponentialExpression(DrawFrequencyPlot):
             scale_val = 0.5,
             shift_val = 0.75,
         )
-        freq = 0.1
+        freq = self.initial_winding_frequency
         pol_graph = self.get_polarized_mobject(graph, freq = freq)
         wps_label = self.get_winding_frequency_label()
         ChangeDecimalToValue(wps_label[0], freq).update(1)
@@ -2474,14 +2477,13 @@ class WhiteComplexExponentialExpression(DrawFrequencyPlot):
             v_line.put_start_and_end_on(
                 plane.coords_to_point(x, 0), point
             )
-        lines_update_anim = UpdateFromFunc(lines, lines_update)
+        lines_update_anim = ContinualUpdateFromFunc(lines, lines_update)
         lines_update_anim.update(0)
-        self.add(lines)
+        self.add(lines_update_anim)
 
         self.change_frequency(
             2.04, 
             added_anims = [
-                lines_update_anim,
                 self.center_of_mass_dot_anim,
             ],
             run_time = 15,
@@ -2496,33 +2498,567 @@ class WhiteComplexExponentialExpression(DrawFrequencyPlot):
             self.time_axes_group, self.pol_graph, self.wps_label
         )
         plane = self.circle_plane
+        dot = self.center_of_mass_dot
         complex_plane_title = TextMobject("Complex plane")
         complex_plane_title.add_background_rectangle()
         complex_plane_title.to_edge(UP)
         coordinate_labels = plane.get_coordinate_labels()
+        number_label = DecimalNumber(
+            0, include_background_rectangle = True,
+        )
+        number_label_update_anim = ContinualChangingDecimal(
+            number_label, 
+            lambda a : plane.point_to_number(dot.get_center()),
+            position_update_func = lambda l : l.next_to(
+                dot, DOWN+RIGHT,
+                buff = SMALL_BUFF
+            ),
+        )
+        number_label_update_anim.update(0)
+        flower_path = ParametricFunction(
+            lambda t : plane.coords_to_point(
+                np.sin(2*t)*np.cos(t),
+                np.sin(2*t)*np.sin(t),
+            ),
+            t_min = 0, t_max = TAU,
+        )
+        flower_path.move_to(self.center_of_mass_dot)
 
         self.play(FadeOut(to_fade))
         self.play(Write(complex_plane_title))
         self.play(Write(coordinate_labels))
         self.wait()
+        self.play(FadeIn(number_label))
+        self.add(number_label_update_anim)
+        self.play(MoveAlongPath(
+            dot, flower_path, 
+            run_time = 10,
+            rate_func = bezier([0, 0, 1, 1])
+        ))
+        self.wait()
+        self.play(ShowCreation(
+            self.pol_graph, run_time = 3,
+        ))
+        self.play(FadeOut(self.pol_graph))
+        self.wait()
+        self.play(FadeOut(VGroup(
+            dot, self.dot_component_anim.mobject, number_label
+        )))
+        self.remove(self.dot_component_anim)
+        self.remove(number_label_update_anim)
 
+        self.set_variables_as_attrs(
+            number_label,
+            number_label_update_anim,
+            complex_plane_title,
+        )
 
     def show_eulers_formula(self):
-        pass
+        plane = self.circle_plane
 
-    def reference_other_video(self):
-        pass
+        ghost_dot = Dot(ORIGIN, fill_opacity = 0)
+        def get_t():
+            return ghost_dot.get_center()[0]
+        def get_circle_point(scalar = 1, t_shift = 0):
+            return plane.number_to_point(
+                scalar*np.exp(complex(0, get_t()+t_shift))
+            )
+        vector = Vector(plane.number_to_point(1), color = GREEN)
+        exp_base = TexMobject("e").scale(1.3)
+        exp_base.add_background_rectangle()
+        exp_decimal = DecimalNumber(0, unit = "i", include_background_rectangle = True)
+        exp_decimal.scale(0.75)
+        VGroup(exp_base, exp_decimal).match_color(vector)
+        exp_decimal_update = ContinualChangingDecimal(
+            exp_decimal, lambda a : get_t(),
+            position_update_func = lambda d : d.move_to(
+                exp_base.get_corner(UP+RIGHT), DOWN+LEFT
+            )
+        )
+        exp_base_update = ContinualUpdateFromFunc(
+            exp_base, lambda e : e.move_to(get_circle_point(
+                scalar = 1.1, t_shift = 0.01*TAU
+            ))
+        )
+        vector_update = ContinualUpdateFromFunc(
+            vector, lambda v : v.put_start_and_end_on(
+                plane.number_to_point(0), get_circle_point()
+            )
+        )
+        updates = [exp_base_update, exp_decimal_update, vector_update]
+        for update in updates:
+            update.update(0)
+
+        #Show initial vector
+        self.play(
+            GrowArrow(vector),
+            FadeIn(exp_base),
+            Write(exp_decimal)
+        )
+        self.add(*updates)
+        self.play(ghost_dot.shift, 2*RIGHT, run_time = 3)
+        self.wait()
+
+        #Show arc
+        arc, circle = [
+            Line(ORIGIN, t*UP)
+            for t in get_t(), TAU
+        ]
+        for mob in arc, circle:
+            mob.insert_n_anchor_points(20)
+            mob.set_stroke(RED, 4)
+            mob.apply_function(
+                lambda p : plane.number_to_point(
+                    np.exp(R3_to_complex(p))
+                )
+            )
+        distance_label = DecimalNumber(
+            exp_decimal.number,
+            unit = "\\text{units}"
+        )
+        distance_label[-1].shift(SMALL_BUFF*RIGHT)
+        distance_label.match_color(arc)
+        distance_label.add_background_rectangle()
+        distance_label.move_to(
+            plane.number_to_point(
+                1.1*np.exp(complex(0, 0.4*get_t())),
+            ),
+            DOWN+LEFT
+        )
+
+        self.play(ShowCreation(arc))
+        self.play(ReplacementTransform(
+            exp_decimal.copy(), distance_label
+        ))
+        self.wait()
+        self.play(FadeOut(distance_label))
+
+        #Show full cycle
+        self.remove(arc)
+        self.play(
+            ghost_dot.move_to, TAU*RIGHT,
+            ShowCreation(
+                circle, 
+                rate_func = lambda a : interpolate(
+                    2.0/TAU, 1, smooth(a)
+                ),
+            ),
+            run_time = 6,
+        )
+        self.wait()
+
+        #Write exponential expression
+        exp_expression = TexMobject("e", "^{-", "2\\pi i", "f", "t}")
+        e, minus, two_pi_i, f, t = exp_expression
+        exp_expression.next_to(
+            plane.coords_to_point(1, 1), 
+            UP+RIGHT
+        )
+        f.highlight(RED)
+        t.highlight(YELLOW)
+        exp_expression.add_background_rectangle()
+        two_pi_i_f_t_group = VGroup(two_pi_i, f, t)
+        two_pi_i_f_t_group.save_state()
+        two_pi_i_f_t_group.move_to(minus, LEFT)
+        exp_expression[1].remove(minus)
+        t.save_state()
+        t.align_to(f, LEFT)
+        exp_expression[1].remove(f)
+
+        labels = VGroup()
+        for sym, word in (t, "Time"), (f, "Frequency"):
+            label = TextMobject(word)
+            label.match_style(sym)
+            label.next_to(sym, UP, buff = MED_LARGE_BUFF)
+            label.add_background_rectangle()
+            label.arrow = Arrow(label, sym, buff = SMALL_BUFF)
+            label.arrow.match_style(sym)
+            labels.add(label)
+        time_label, frequency_label = labels
+        example_frequency = TexMobject("f = 1/10")
+        example_frequency.add_background_rectangle()
+        example_frequency.match_style(frequency_label)
+        example_frequency.move_to(frequency_label, DOWN)
+
+        self.play(ReplacementTransform(
+            VGroup(exp_base[1], exp_decimal[1]).copy(),
+            exp_expression
+        ))
+        self.play(FadeOut(circle))
+        self.wait()
+
+        ghost_dot.move_to(ORIGIN)
+        ambient_ghost_dot_movement = AmbientMovement(
+            ghost_dot, rate = TAU
+        )
+        self.add(ambient_ghost_dot_movement)
+        
+        self.play(
+            Write(time_label),
+            GrowArrow(time_label.arrow),
+        )
+        self.wait(6.5) #Leave time to say let's slow down
+        self.remove(ambient_ghost_dot_movement)
+        self.play(
+            FadeOut(time_label),
+            FadeIn(frequency_label),
+            t.restore,
+            GrowFromPoint(f, frequency_label.get_center()),
+            ReplacementTransform(
+                time_label.arrow,
+                frequency_label.arrow,
+            )
+        )
+        ghost_dot.move_to(ORIGIN)
+        ambient_ghost_dot_movement = AmbientMovement(
+            ghost_dot, rate = 0.1*TAU
+        )
+        self.add(ambient_ghost_dot_movement)
+        self.wait(3)
+        self.play(
+            FadeOut(frequency_label),
+            FadeIn(example_frequency)
+        )
+        self.wait(15) #Give time to reference other video
+        #Reverse directions
+        ambient_ghost_dot_movement.rate *= -1
+        self.play(
+            FadeOut(example_frequency),
+            FadeOut(frequency_label.arrow),
+            GrowFromCenter(minus),
+            two_pi_i_f_t_group.restore
+        )
+        self.wait(4)
+
+        ambient_ghost_dot_movement.rate = 0
+        self.remove(*updates)
+        self.play(*map(FadeOut, [
+            update.mobject
+            for update in updates
+            if update.mobject is not vector
+        ]))
+        self.play(ghost_dot.move_to, ORIGIN)
+
+        exp_expression[1].add(minus, f)
+        exp_expression[1].sort_submobjects(lambda p : p[0])
+
+        self.set_variables_as_attrs(
+            ambient_ghost_dot_movement, ghost_dot,
+            vector, vector_update, exp_expression
+        )
 
     def show_winding_graph_expression(self):
+        ambient_ghost_dot_movement = self.ambient_ghost_dot_movement
+        ghost_dot = self.ghost_dot
+        vector = self.vector
+        exp_expression = self.exp_expression
+        plane = self.circle_plane
+        time_axes_group = self.time_axes_group
+        graph = self.graph
+        pol_graph = self.get_polarized_mobject(graph, freq = 0.2)
+        g_label = TexMobject("g(t)")
+        g_label.match_color(graph)
+        g_label.next_to(graph, UP)
+        g_label.add_background_rectangle()
+        g_scalar = g_label.copy()
+        g_scalar.move_to(exp_expression, DOWN+LEFT)
+
+        vector_animations = self.get_vector_animations(graph)
+        vector_animations[1].mobject = vector
+        graph_y_vector = vector_animations[0].mobject
+
+        self.play(
+            FadeIn(time_axes_group),
+            FadeOut(self.complex_plane_title)
+        )
+        self.play(Write(g_label))
+        self.wait()
+        self.play(
+            ReplacementTransform(g_label.copy(), g_scalar),
+            exp_expression.next_to, g_scalar, RIGHT, SMALL_BUFF,
+            exp_expression.shift, 0.5*SMALL_BUFF*UP,
+        )
+        self.play(*vector_animations, run_time = 15)
+        self.add(*self.mobjects_from_last_animation)
+        self.wait()
+
+        integrand = VGroup(g_scalar, exp_expression)
+        rect = SurroundingRectangle(integrand)
+        morty = Mortimer()
+        morty.next_to(rect, DOWN+RIGHT)
+        morty.shift_onto_screen()
+        self.play(
+            ShowCreation(rect),
+            FadeIn(morty)
+        )
+        self.play(morty.change, "raise_right_hand")
+        self.play(Blink(morty))
+        self.play(morty.change, "hooray", rect)
+        self.wait(2)
+        self.play(*map(FadeOut, [
+            morty, rect, graph_y_vector, vector
+        ]))
+
+        self.integrand = integrand
+
+    def find_center_of_mass(self):
+        integrand = self.integrand
+        integrand.generate_target()
+        integrand.target.to_edge(RIGHT, buff = LARGE_BUFF)
+        integrand.target.shift(MED_LARGE_BUFF*DOWN)
+        sum_expr = TexMobject(
+            "{1", "\\over", "N}",
+            "\\sum", "_{k = 1}", "^N",
+        )
+        sum_expr.add_background_rectangle()
+        sum_expr.shift(SMALL_BUFF*(UP+5*RIGHT))
+        sum_expr.next_to(integrand.target, LEFT)
+
+        integral = TexMobject(
+            "{1", "\\over", "t_2 - t_1}",
+            "\\int", "_{t_1}", "^{t_2}"
+        )
+        integral.move_to(sum_expr, RIGHT)
+        time_interval_indicator = SurroundingRectangle(integral[2])
+        integral.add_background_rectangle()
+        axes = self.time_axes
+        time_interval = Line(
+            axes.coords_to_point(axes.x_min, 0),
+            axes.coords_to_point(axes.x_max, 0),
+        )
+        time_interval.match_style(time_interval_indicator)
+        time_interval_indicator.add(time_interval)
+        dt_mob = TexMobject("dt")
+        dt_mob.next_to(integrand.target, RIGHT, SMALL_BUFF, DOWN)
+        dt_mob.add_background_rectangle()
+
+        dots = self.show_center_of_mass_sampling(20)
+        self.wait()
+        self.play(
+            Write(sum_expr),
+            MoveToTarget(integrand),
+        )
+
+        #Add k subscript to t's
+        t1 = integrand[0][1][2]
+        t2 = integrand[1][1][-1]
+        t_mobs = VGroup(t1, t2)
+        t_mobs.save_state()
+        t_mobs.generate_target()
+        for i, t_mob in enumerate(t_mobs.target):
+            k = TexMobject("k")
+            k.match_style(t_mob)
+            k.match_height(t_mob)
+            k.scale(0.5)
+            k.move_to(t_mob.get_corner(DOWN+RIGHT), LEFT)
+            k.add_background_rectangle()
+            t_mob.add(k)
+            if i == 0:
+                t_mob.shift(0.5*SMALL_BUFF*LEFT)
+
+        self.play(MoveToTarget(t_mobs))
+        self.play(LaggedStart(
+            Indicate, dots[1],
+            rate_func = there_and_back,
+            color = TEAL,
+        ))
+        self.show_center_of_mass_sampling(100)
+        dots = self.show_center_of_mass_sampling(500)
+        self.wait()
+        self.play(FadeOut(dots))
+        self.play(
+            ReplacementTransform(sum_expr, integral),
+            FadeIn(dt_mob),
+            t_mobs.restore,
+        )
+        self.wait()
+        self.play(ShowCreation(time_interval_indicator))
+        self.wait()
+        self.play(FadeOut(time_interval_indicator))
+        self.wait()
+
+        #Show confusion
+        randy = Randolph()
+        randy.flip()
+        randy.next_to(integrand, DOWN, LARGE_BUFF)
+        randy.to_edge(RIGHT)
+        full_expression_rect = SurroundingRectangle(
+            VGroup(integral, dt_mob), color = RED
+        )
+        com_dot = self.center_of_mass_dot
+        self.center_of_mass_dot_anim.update(0)
+        com_arrow = Arrow(
+            full_expression_rect.get_left(), com_dot,
+            buff = SMALL_BUFF
+        )
+        com_arrow.match_color(com_dot)
+
+
+        self.play(FadeIn(randy))
+        self.play(randy.change, "confused", integral)
+        self.play(Blink(randy))
+        self.wait(2)
+        self.play(ShowCreation(full_expression_rect))
+        self.play(
+            randy.change, "thinking", self.pol_graph,
+            GrowArrow(com_arrow),
+            GrowFromCenter(com_dot),
+        )
+        self.play(Blink(randy))
+        self.wait(2)
+
+    def show_center_of_mass_sampling(self, n_dots):
+        time_graph = self.graph
+        pol_graph = self.graph.polarized_mobject
+        axes = self.time_axes
+
+        dot = Dot(radius = 0.05, color = PINK)
+        pre_dots = VGroup(*[
+            dot.copy().move_to(axes.coords_to_point(t, 0))
+            for t in np.linspace(axes.x_min, axes.x_max, n_dots)
+        ])
+        pre_dots.set_fill(opacity = 0)
+        for graph in time_graph, pol_graph:
+            if hasattr(graph, "dots"):
+                graph.dot_fade_anims = [FadeOut(graph.dots)]
+            else:
+                graph.dot_fade_anims = []
+            graph.save_state()
+            graph.generate_target()
+            if not hasattr(graph, "is_faded"):
+                graph.target.fade(0.7)
+            graph.is_faded = True
+            graph.dots = VGroup(*[
+                dot.copy().move_to(graph.point_from_proportion(a))
+                for a in np.linspace(0, 1, n_dots)
+            ])
+
+        self.play(
+            ReplacementTransform(
+                pre_dots, time_graph.dots,
+                submobject_mode = "lagged_start",
+                run_time = 2,
+            ),
+            MoveToTarget(time_graph),
+            *time_graph.dot_fade_anims
+        )
+        self.play(
+            ReplacementTransform(
+                time_graph.copy(), pol_graph.target
+            ),
+            MoveToTarget(pol_graph),
+            ReplacementTransform(
+                time_graph.dots.copy(),
+                pol_graph.dots,
+            ),
+            *pol_graph.dot_fade_anims,
+            run_time = 2
+        )
+        return VGroup(time_graph.dots, pol_graph.dots)
+
+
+class WhyAreYouTellingUsThis(TeacherStudentsScene):
+    def construct(self):
+        self.student_says("Why are you \\\\ telling us this?")
+        self.play(self.teacher.change, "happy")
+        self.wait(2)
+
+class BuildUpExpressionStepByStep(TeacherStudentsScene):
+    def construct(self):
+        expression = TexMobject(
+            "\\frac{1}{t_2 - t_1}", "\\int_{t_1}^{t_2}",
+            "g(t)", "e", "^{2\\pi i", "f", "t}", "dt"
+        )
+        frac, integral, g, e, two_pi_i, f, t, dt = expression
+        expression.next_to(self.teacher, UP+LEFT)
+        t.highlight(YELLOW)
+        g[2].highlight(YELLOW)
+        dt[1].highlight(YELLOW)
+        f.highlight(GREEN)
+        t.save_state()
+        t.move_to(f, LEFT)
+
+        self.play(
+            self.teacher.change, "raise_right_hand",
+            FadeIn(e),
+            FadeIn(two_pi_i),
+        )
+        self.play(
+            self.get_student_changes(*["pondering"]*3),
+            FadeIn(t),
+        )
+        self.play(
+            FadeIn(f),
+            t.restore,
+        )
+        self.wait()
+        self.play(FadeIn(g), Blink(self.students[1]))
+        self.wait()
+        self.play(
+            FadeIn(integral),
+            FadeIn(frac),
+            FadeIn(dt),
+        )
+        self.wait(3)
+        self.teacher_says(
+            "Just one final \\\\ distinction.",
+            bubble_kwargs = {"height" : 2.5, "width" : 3.5},
+            added_anims = [expression.to_corner, UP+RIGHT]
+        )
+        self.wait(3)
+
+class ScaleUpCenterOfMass(WriteComplexExponentialExpression):
+    CONFIG = {
+        "time_axes_scale_val" : 0.6,
+        "initial_winding_frequency" : 1.95
+    }
+    def construct(self):
+        self.remove(self.pi_creature)
+        self.setup_plane()
+        self.setup_graph()
+        self.add_expression()
+        self.add_center_of_mass_dot()
+
+        self.cross_out_denominator()
+        self.scale_up_center_of_mass()
+        self.what_this_means_for_various_winding_frequencies()
+
+
+    def add_expression(self):
+        expression = TexMobject(
+            "\\frac{1}{t_2 - t_1}", "\\int_{t_1}^{t_2}",
+            "g(t)", "e", "^{2\\pi i", "f", "t}", "dt"
+        )
+        frac, integral, g, e, two_pi_i, f, t, dt = expression
+        expression.to_corner(UP+RIGHT)
+        t.highlight(YELLOW)
+        g[2].highlight(YELLOW)
+        dt[1].highlight(YELLOW)
+        f.highlight(GREEN)
+        expression.add_background_rectangle()
+        self.expression = expression
+        self.add(expression)
+
+        self.winding_freq_label.to_edge(RIGHT)
+        self.winding_freq_label[1].match_color(f)
+
+    def add_center_of_mass_dot(self):
+        self.center_of_mass_dot = self.get_center_of_mass_dot()
+        self.generate_center_of_mass_dot_update_anim()
+        self.add(self.center_of_mass_dot)
+
+
+    def cross_out_denominator(self):
+        frac = self.expression[0]
+        integral = VGroup(*self.expression[1:])
+        
+
+    def scale_up_center_of_mass(self):
         pass
 
 
-
-
-
-
-
-
+    def what_this_means_for_various_winding_frequencies(self):
+        pass
 
 
 class CloseWithAPuzzle(TeacherStudentsScene):

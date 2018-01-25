@@ -19,6 +19,9 @@ class VMobject(Mobject):
         "make_smooth_after_applying_functions" : False,
     }
 
+    def get_group_class(self):
+        return VGroup
+
     ## Colors
     def init_colors(self):
         self.set_style_data(

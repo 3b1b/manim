@@ -15,11 +15,11 @@ class Mobject(object):
     Mathematical Object
     """
     CONFIG = {
-        "color"        : WHITE,
+        "color" : WHITE,
         "stroke_width" : DEFAULT_POINT_THICKNESS,
-        "name"         : None,
-        "dim"          : 3,
-        "target"       : None,
+        "name" : None,
+        "dim" : 3,
+        "target" : None,
     }
     def __init__(self, *submobjects, **kwargs):
         digest_config(self, kwargs)
@@ -663,14 +663,21 @@ class Mobject(object):
 
     ## Family matters
 
-    def __getitem__(self, index):
-        return self.split()[index]
+    def __getitem__(self, value):
+        self_list = self.split()
+        if isinstance(value, slice):
+            GroupClass = self.get_group_class()
+            return GroupClass(*self_list.__getitem__(value))
+        return self_list.__getitem__(value)
 
     def __iter__(self):
         return iter(self.split())
 
     def __len__(self):
         return len(self.split())
+
+    def get_group_class(self):
+        return Group
 
     def split(self):
         result = [self] if len(self.points) > 0 else []
