@@ -203,10 +203,12 @@ class Annulus(Circle):
     }
 
     def generate_points(self):
+        self.points = []
         self.radius = self.outer_radius
-        Circle.generate_points(self)
+        outer_circle = Circle(radius = self.outer_radius)
         inner_circle = Circle(radius=self.inner_radius)
         inner_circle.flip()
+        self.points = outer_circle.points
         self.add_subpath(inner_circle.points)
 
 class Line(VMobject):
