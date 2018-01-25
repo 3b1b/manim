@@ -1474,6 +1474,9 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
 
     def change_frequency(self, new_freq, **kwargs):
         kwargs["run_time"] = kwargs.get("run_time", 3)
+        kwargs["rate_func"] = kwargs.get(
+            "rate_func", bezier([0, 0, 1, 1])
+        )
         added_anims = kwargs.get("added_anims", [])
         freq_label = filter(
             lambda sm : isinstance(sm, DecimalNumber),
@@ -2425,11 +2428,12 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
         circle_plane.add(circle)
 
         time_axes = self.get_time_axes()
-        time_axes.add_to_back(BackgroundRectangle(
+        time_axes.background_rectangle = BackgroundRectangle(
             time_axes, 
             fill_opacity = 0.9,
             buff = MED_SMALL_BUFF,
-        ))
+        ) 
+        time_axes.add_to_back(time_axes.background_rectangle)
         time_axes.scale(self.time_axes_scale_val)
         time_axes.to_corner(UP+LEFT, buff = 0)
         time_axes.set_stroke(color = WHITE, width = 1)
@@ -2956,7 +2960,6 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
         )
         return VGroup(time_graph.dots, pol_graph.dots)
 
-
 class WhyAreYouTellingUsThis(TeacherStudentsScene):
     def construct(self):
         self.student_says("Why are you \\\\ telling us this?")
@@ -3010,19 +3013,23 @@ class BuildUpExpressionStepByStep(TeacherStudentsScene):
 class ScaleUpCenterOfMass(WriteComplexExponentialExpression):
     CONFIG = {
         "time_axes_scale_val" : 0.6,
-        "initial_winding_frequency" : 1.95
+        "initial_winding_frequency" : 2.05
     }
     def construct(self):
         self.remove(self.pi_creature)
         self.setup_plane()
         self.setup_graph()
-        self.add_expression()
         self.add_center_of_mass_dot()
+        self.add_expression()
 
         self.cross_out_denominator()
         self.scale_up_center_of_mass()
-        self.what_this_means_for_various_winding_frequencies()
+        self.comment_on_current_signal()
 
+    def add_center_of_mass_dot(self):
+        self.center_of_mass_dot = self.get_center_of_mass_dot()
+        self.generate_center_of_mass_dot_update_anim()
+        self.add(self.center_of_mass_dot)
 
     def add_expression(self):
         expression = TexMobject(
@@ -3035,30 +3042,305 @@ class ScaleUpCenterOfMass(WriteComplexExponentialExpression):
         g[2].highlight(YELLOW)
         dt[1].highlight(YELLOW)
         f.highlight(GREEN)
-        expression.add_background_rectangle()
         self.expression = expression
         self.add(expression)
 
         self.winding_freq_label.to_edge(RIGHT)
         self.winding_freq_label[1].match_color(f)
-
-    def add_center_of_mass_dot(self):
-        self.center_of_mass_dot = self.get_center_of_mass_dot()
-        self.generate_center_of_mass_dot_update_anim()
-        self.add(self.center_of_mass_dot)
-
+        self.winding_freq_label.align_to(
+            self.circle_plane.coords_to_point(0, 0.1), DOWN
+        )
 
     def cross_out_denominator(self):
         frac = self.expression[0]
-        integral = VGroup(*self.expression[1:])
-        
+        integral = self.expression[1:]
+        for mob in frac, integral:
+            mob.add_to_back(BackgroundRectangle(mob))
+            self.add(mob)
+        cross = Cross(frac)
+        brace = Brace(integral, DOWN)
+        label = brace.get_text("The actual \\\\ Fourier transform")
+        label.add_background_rectangle()
+        label.shift_onto_screen()
+        rect = SurroundingRectangle(integral)
+
+        self.play(ShowCreation(cross))
+        self.wait()
+        self.play(ShowCreation(rect))
+        self.play(
+            GrowFromCenter(brace),
+            FadeIn(label)
+        )
+        self.wait(2)
+
+        self.integral = integral
+        self.frac = frac
+        self.frac_cross = cross
+        self.integral_rect = rect
+        self.integral_brace = brace
+        self.integral_label = label
 
     def scale_up_center_of_mass(self):
-        pass
+        plane = self.circle_plane
+        origin = plane.coords_to_point(0, 0)
+        com_dot = self.center_of_mass_dot
+        com_vector = Arrow(
+            origin, com_dot.get_center(), 
+            buff = 0
+        )
+        com_vector.match_style(com_dot)
+        vector_to_scale = com_vector.copy()
+        def get_com_vector_copies(n):
+            com_vector_copies = VGroup(*[
+                com_vector.copy().shift(x*com_vector.get_vector())
+                for x in range(1, n+1)
+            ])
+            com_vector_copies.highlight(TEAL)
+            return com_vector_copies
+        com_vector_update = UpdateFromFunc(
+            com_vector,
+            lambda v : v.put_start_and_end_on(origin, com_dot.get_center())
+        )
+
+        circle = Circle(color = TEAL)
+        circle.surround(com_dot, buffer_factor = 1.2)
+
+        time_span = Rectangle(
+            stroke_width = 0,
+            fill_color = TEAL,
+            fill_opacity = 0.4
+        )
+        axes = self.time_axes
+        time_span.replace(
+            Line(axes.coords_to_point(0, 0), axes.coords_to_point(3, 1.5)),
+            stretch = True
+        )
+        time_span.save_state()
+        time_span.stretch(0, 0, about_edge = LEFT)
+
+        graph = self.graph
+        short_graph, long_graph = [
+            axes.get_graph(
+                graph.underlying_function, x_min = 0, x_max = t_max,
+            ).match_style(graph)
+            for t_max in 3, 6
+        ]
+        for g in short_graph, long_graph:
+            self.get_polarized_mobject(g, freq = self.initial_winding_frequency)
+
+        self.play(
+            FocusOn(circle, run_time = 2),
+            Succession(
+                ShowCreation, circle,
+                FadeOut, circle,
+            ),
+        )
+        self.play(
+            com_dot.fade, 0.5,
+            FadeIn(vector_to_scale)
+        )
+        self.wait()
+        self.play(vector_to_scale.scale, 4, {"about_point" : origin})
+        self.wait()
+        self.play(
+            FadeOut(vector_to_scale),
+            FadeIn(com_vector),
+        )
+        self.remove(graph.polarized_mobject)
+        self.play(
+            com_dot.move_to, 
+            center_of_mass(short_graph.polarized_mobject.points),
+            com_vector_update,
+            time_span.restore,
+            ShowCreation(short_graph.polarized_mobject),
+        )
+        self.wait()
+        # dot = Dot(fill_opacity = 0.5).move_to(time_span)
+        # self.play(
+        #     dot.move_to, com_vector,
+        #     dot.set_fill, {"opacity" : 0},
+        #     remover = True
+        # )
+        com_vector_copies = get_com_vector_copies(2)
+        self.play(*[
+            ReplacementTransform(
+                com_vector.copy(), cvc,
+                path_arc = -TAU/10
+            )
+            for cvc in com_vector_copies
+        ])
+        self.wait()
+
+        #Squish_graph
+        to_squish = VGroup(
+            axes, graph, 
+            time_span,
+        )
+        to_squish.generate_target()
+        squish_factor = 0.75
+        to_squish.target.stretch(squish_factor, 0, about_edge = LEFT)
+        pairs = zip(
+            to_squish.family_members_with_points(), 
+            to_squish.target.family_members_with_points()
+        )
+        to_unsquish = list(axes.x_axis.numbers) + list(axes.labels)
+        for sm, tsm in pairs:
+            if sm in to_unsquish:
+                tsm.stretch(1/squish_factor, 0)
+            if sm is axes.background_rectangle:
+                tsm.stretch(1/squish_factor, 0, about_edge = LEFT)
+
+        long_graph.stretch(squish_factor, 0)
+        self.play(
+            MoveToTarget(to_squish),
+            FadeOut(com_vector_copies)
+        )
+        long_graph.move_to(graph, LEFT)
+        self.play(
+            com_dot.move_to, 
+            center_of_mass(long_graph.polarized_mobject.points),
+            com_vector_update,
+            time_span.stretch, 2, 0, {"about_edge" : LEFT},
+            *[
+                ShowCreation(
+                    mob,
+                    rate_func = lambda a : interpolate(
+                        0.5, 1, smooth(a)
+                    )
+                )
+                for mob in long_graph, long_graph.polarized_mobject
+            ],
+            run_time = 2
+        )
+        self.remove(graph, short_graph.polarized_mobject)
+        self.graph = long_graph
+        self.wait()
+        self.play(FocusOn(com_dot))
+        com_vector_copies = get_com_vector_copies(5)
+        self.play(*[
+            ReplacementTransform(
+                com_vector.copy(), cvc,
+                path_arc = -TAU/10
+            )
+            for cvc in com_vector_copies
+        ])
+        self.wait()
+
+        # Scale graph out even longer
+        to_shift = VGroup(self.integral, self.integral_rect)
+        to_fade = VGroup(
+            self.integral_brace, self.integral_label,
+            self.frac, self.frac_cross
+        )
+        self.play(
+            to_shift.shift, 2*DOWN,
+            FadeOut(to_fade),
+            axes.background_rectangle.stretch, 2, 0, {"about_edge" : LEFT},
+            Animation(axes),
+            Animation(self.graph),
+            FadeOut(com_vector_copies),
+        )
+        self.change_frequency(2.0, added_anims = [com_vector_update])
+        very_long_graph = axes.get_graph(
+            graph.underlying_function,
+            x_min = 0, x_max = 12,
+        )
+        very_long_graph.match_style(graph)
+        self.get_polarized_mobject(very_long_graph, freq = 2.0)
+        self.play(
+            com_dot.move_to,
+            center_of_mass(very_long_graph.polarized_mobject.points),
+            com_vector_update,
+            ShowCreation(
+                very_long_graph,
+                rate_func = lambda a : interpolate(0.5, 1, a)
+            ),
+            ShowCreation(very_long_graph.polarized_mobject)
+        )
+        self.remove(graph, graph.polarized_mobject)
+        self.graph = very_long_graph
+        self.wait()
+        self.play(
+            com_vector.scale, 12, {"about_point" : origin},
+            run_time = 2
+        )
+        # com_vector_copies = get_com_vector_copies(11)
+        # self.play(ReplacementTransform(
+        #     VGroup(com_vector.copy()), 
+        #     com_vector_copies,
+        #     path_arc = TAU/10,
+        #     run_time = 1.5,
+        #     submobject_mode = "lagged_start"
+        # ))
+        self.wait()
+
+        self.com_vector = com_vector
+        self.com_vector_update = com_vector_update
+        self.com_vector_copies = com_vector_copies
+
+    def comment_on_current_signal(self):
+        graph = self.graph
+        com_dot = self.center_of_mass_dot 
+        com_vector = self.com_vector
+        com_vector_update = self.com_vector_update
+        axes = self.time_axes
+        origin = self.circle_plane.coords_to_point(0, 0)
+        wps_label = self.winding_freq_label
+
+        new_com_vector_update = UpdateFromFunc(
+            com_vector, lambda v : v.put_start_and_end_on(
+                origin, com_dot.get_center()
+            ).scale(12, about_point = origin)
+        )
+
+        v_lines = self.get_v_lines_indicating_periods(
+            freq = 1.0, n_lines = 3
+        )[:2]
+        graph_portion = axes.get_graph(
+            graph.underlying_function, x_min = 1, x_max = 2
+        )
+        graph_portion.highlight(TEAL)
+        bps_label = TextMobject("2 beats per second")
+        bps_label.scale(0.75)
+        bps_label.next_to(graph_portion, UP, aligned_edge = LEFT)
+        bps_label.shift(SMALL_BUFF*RIGHT)
+        bps_label.add_background_rectangle()
+
+        self.play(
+            ShowCreation(v_lines, submobject_mode = "all_at_once"),
+            ShowCreation(graph_portion),
+            FadeIn(bps_label),
+        )
+        self.wait()
+        self.play(ReplacementTransform(
+            bps_label[1][0].copy(), wps_label[1]
+        ))
+        self.wait()
+        self.play(
+            com_vector.scale, 0.5, {"about_point" : origin},
+            rate_func = there_and_back,
+            run_time = 2
+        )
+        self.wait(2)
+        self.change_frequency(2.5,
+            added_anims = [new_com_vector_update],
+            run_time = 20,
+            rate_func = None,
+        )
+        self.wait()
+
+class TakeAStepBack(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Hang on, go over \\\\ that again?",
+            target_mode = "confused"
+        ),
+        self.change_student_modes(*["confused"]*3)
+        self.play(self.teacher.change, "happy")
+        self.wait(3)
 
 
-    def what_this_means_for_various_winding_frequencies(self):
-        pass
+
 
 
 class CloseWithAPuzzle(TeacherStudentsScene):
