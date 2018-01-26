@@ -224,6 +224,9 @@ def adjacent_pairs(objects):
 def complex_to_R3(complex_num):
     return np.array((complex_num.real, complex_num.imag, 0))
 
+def R3_to_complex(point):
+    return complex(*point[:2])
+
 def tuplify(obj):
     if isinstance(obj, str):
         return (obj,)
