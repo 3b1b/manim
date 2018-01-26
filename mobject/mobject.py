@@ -15,11 +15,11 @@ class Mobject(object):
     Mathematical Object
     """
     CONFIG = {
-        "color"        : WHITE,
+        "color" : WHITE,
         "stroke_width" : DEFAULT_POINT_THICKNESS,
-        "name"         : None,
-        "dim"          : 3,
-        "target"       : None,
+        "name" : None,
+        "dim" : 3,
+        "target" : None,
     }
     def __init__(self, *submobjects, **kwargs):
         digest_config(self, kwargs)
@@ -316,14 +316,29 @@ class Mobject(object):
         self.shift(target_point - point_to_align + buff*direction)
         return self
 
-    def align_to(self, mobject_or_point, direction = UP):
+    def align_to(self, mobject_or_point, direction = ORIGIN, alignment_vect = UP):
+        """
+        Examples: 
+        mob1.align_to(mob2, UP) moves mob1 vertically so that its
+        top edge lines ups with mob2's top edge.
+
+        mob1.align_to(mob2, alignment_vector = RIGHT) moves mob1
+        horizontally so that it's center is directly above/below
+        the center of mob2
+        """
         if isinstance(mobject_or_point, Mobject):
             mob = mobject_or_point
-            point = mob.get_edge_center(direction)
+            target_point = mob.get_critical_point(direction)
         else:
-            point = mobject_or_point
-        diff = point - self.get_edge_center(direction) 
-        self.shift(direction*np.dot(diff, direction))
+            target_point = mobject_or_point
+        direction_norm = np.linalg.norm(direction)
+        if direction_norm > 0:
+            alignment_vect = np.array(direction)/direction_norm
+            reference_point = self.get_critical_point(direction)
+        else:
+            reference_point = self.get_center()
+        diff = target_point - reference_point
+        self.shift(alignment_vect*np.dot(diff, alignment_vect))
         return self
 
     def shift_onto_screen(self, **kwargs):
@@ -648,14 +663,21 @@ class Mobject(object):
 
     ## Family matters
 
-    def __getitem__(self, index):
-        return self.split()[index]
+    def __getitem__(self, value):
+        self_list = self.split()
+        if isinstance(value, slice):
+            GroupClass = self.get_group_class()
+            return GroupClass(*self_list.__getitem__(value))
+        return self_list.__getitem__(value)
 
     def __iter__(self):
         return iter(self.split())
 
     def __len__(self):
         return len(self.split())
+
+    def get_group_class(self):
+        return Group
 
     def split(self):
         result = [self] if len(self.points) > 0 else []

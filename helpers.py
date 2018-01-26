@@ -252,14 +252,14 @@ def get_all_descendent_classes(Class):
         result.append(Child)
     return result
 
-def filtered_locals(local_args):
-    result = local_args.copy()
+def filtered_locals(caller_locals):
+    result = caller_locals.copy()
     ignored_local_args = ["self", "kwargs"]
     for arg in ignored_local_args:
-        result.pop(arg, local_args)
+        result.pop(arg, caller_locals)
     return result
 
-def digest_config(obj, kwargs, local_args = {}):
+def digest_config(obj, kwargs, caller_locals = {}):
     """
     Sets init args and CONFIG values as local variables
 
@@ -268,19 +268,25 @@ def digest_config(obj, kwargs, local_args = {}):
     be easily passed into instantiation, and is attached
     as an attribute of the object.
     """
-    ### Assemble list of CONFIGs from all super classes
+
+    # Assemble list of CONFIGs from all super classes
     classes_in_hierarchy = [obj.__class__]
-    configs = []
+    static_configs = []
     while len(classes_in_hierarchy) > 0:
         Class = classes_in_hierarchy.pop()
         classes_in_hierarchy += Class.__bases__
         if hasattr(Class, "CONFIG"):
-            configs.append(Class.CONFIG)    
+            static_configs.append(Class.CONFIG)
 
     #Order matters a lot here, first dicts have higher priority
-    all_dicts = [kwargs, filtered_locals(local_args), obj.__dict__]
-    all_dicts += configs
+    caller_locals = filtered_locals(caller_locals)
+    all_dicts = [kwargs, caller_locals, obj.__dict__]
+    all_dicts += static_configs
+    all_new_dicts = [kwargs, caller_locals] + static_configs
     obj.__dict__ = merge_config(all_dicts)
+    #Keep track of the configuration of objects upon 
+    #instantiation
+    obj.initial_config = merge_config(all_new_dicts)
 
 def merge_config(all_dicts):
     all_config = reduce(op.add, [d.items() for d in all_dicts])
@@ -294,6 +300,15 @@ def merge_config(all_dicts):
             if isinstance(value, dict) and isinstance(config[key], dict):
                 config[key] = merge_config([config[key], value])
     return config
+
+def soft_dict_update(d1, d2):
+    """
+    Adds key values pairs of d2 to d1 only when d1 doesn't
+    already have that key
+    """
+    for key, value in d2.items():
+        if key not in d1:
+            d1[key] = value
 
 def digest_locals(obj, keys = None):
     caller_locals = filtered_locals(

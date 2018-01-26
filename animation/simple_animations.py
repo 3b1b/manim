@@ -12,20 +12,19 @@ from transform import Transform
 
 class Rotating(Animation):
     CONFIG = {
-        "axes"       : [],
         "axis"       : OUT,
         "radians"    : 2*np.pi,
         "run_time"   : 5,
         "rate_func"  : None,
         "in_place"   : True,
         "about_point" : None,
+        "about_edge" : None,
     }
     def update_submobject(self, submobject, starting_submobject, alpha):
         submobject.points = np.array(starting_submobject.points)
 
     def update_mobject(self, alpha):
         Animation.update_mobject(self, alpha)
-        axes = self.axes if self.axes else [self.axis]
         about_point = None
         if self.about_point is not None:
             about_point = self.about_point
@@ -33,8 +32,9 @@ class Rotating(Animation):
             self.about_point = self.mobject.get_center()
         self.mobject.rotate(
             alpha*self.radians, 
-            axes = axes,
-            about_point = self.about_point
+            axis = self.axis,
+            about_point = self.about_point,
+            about_edge = self.about_edge,
         )
 
 class ShowPartial(Animation):

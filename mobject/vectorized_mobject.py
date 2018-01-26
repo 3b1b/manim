@@ -19,6 +19,9 @@ class VMobject(Mobject):
         "make_smooth_after_applying_functions" : False,
     }
 
+    def get_group_class(self):
+        return VGroup
+
     ## Colors
     def init_colors(self):
         self.set_style_data(
@@ -85,15 +88,23 @@ class VMobject(Mobject):
         return self
 
     def match_style(self, vmobject):
-        #TODO: Should this be smart about matching the
-        #style of the family members, if they happen to
-        #be different?
         self.set_style_data(
             stroke_color = vmobject.get_stroke_color(),
             stroke_width = vmobject.get_stroke_width(),
             fill_color = vmobject.get_fill_color(),
             fill_opacity = vmobject.get_fill_opacity(),
+            family = False
         )
+
+        #Does its best to match up submobject lists, and 
+        #match styles accordingly
+        submobs1, submobs2 = self.submobjects, vmobject.submobjects
+        if len(submobs1) == 0:
+            return
+        elif len(submobs2) == 0:
+            submobs2 = [vmobject]
+        for sm1, sm2 in zip(*make_even(submobs1, submobs2)):
+            sm1.match_style(sm2)
         return
 
     def fade(self, darkness = 0.5):

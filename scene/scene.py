@@ -482,7 +482,7 @@ class Scene(object):
 
     def preview(self):
         TkSceneRoot(self)
-
+    
     def get_image_file_path(self, name = None, dont_update = False):
         folder = "images"
         if dont_update:
@@ -540,7 +540,6 @@ class Scene(object):
             '-loglevel', 'error',
             temp_file_path,
         ]
-        
         # self.writing_process = sp.Popen(command, stdin=sp.PIPE, shell=True)
         self.writing_process = sp.Popen(command, stdin=sp.PIPE)
 
