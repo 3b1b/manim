@@ -443,7 +443,9 @@ class PiCreatureScene(Scene):
         added_anims = kwargs.pop("added_anims", [])
 
         anims = []
-        on_screen_mobjects = self.get_mobjects()
+        on_screen_mobjects = self.camera.extract_mobject_family_members(
+            self.get_mobjects()
+        )
         def has_bubble(pi):
             return hasattr(pi, "bubble") and \
                    pi.bubble is not None and \
@@ -478,7 +480,7 @@ class PiCreatureScene(Scene):
         ]
         anims += added_anims
 
-        self.play(*anims)
+        self.play(*anims, **kwargs)
 
     def pi_creature_says(self, *args, **kwargs):
         self.introduce_bubble(
