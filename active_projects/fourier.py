@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from helpers import *
 import scipy
 
@@ -1064,6 +1065,7 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
     }
     def construct(self):
         self.show_initial_signal()
+        self.show_finite_interval()
         self.wrap_around_circle()
         self.show_time_sweeps()
         self.compare_two_frequencies()
@@ -1100,6 +1102,38 @@ class WrapCosineGraphAroundCircle(FourierMachineScene):
 
         self.beats_per_second_label = words
         self.graph = graph
+
+    def show_finite_interval(self):
+        axes = self.time_axes
+        v_line = DashedLine(
+            axes.coords_to_point(0, 0),
+            axes.coords_to_point(0, axes.y_max),
+            color = RED,
+            stroke_width = 6,
+        )
+        h_line = Line(
+            axes.coords_to_point(0, 0),
+            axes.coords_to_point(axes.x_max, 0),
+        )
+        rect = Rectangle(
+            stroke_width = 0,
+            fill_color = TEAL,
+            fill_opacity = 0.5,
+        )
+        rect.match_height(v_line)
+        rect.match_width(h_line, stretch = True)
+        rect.move_to(v_line, DOWN+LEFT)
+        right_v_line = v_line.copy()
+        right_v_line.move_to(rect, RIGHT)
+
+        rect.save_state()
+        rect.stretch(0, 0, about_edge = ORIGIN)
+        self.play(rect.restore, run_time = 2)
+        self.play(FadeOut(rect))
+        for line in v_line, right_v_line:
+            self.play(ShowCreation(line))
+            self.play(FadeOut(line))
+        self.wait()
 
     def wrap_around_circle(self):
         graph = self.graph
@@ -1338,7 +1372,7 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
         com_label = self.center_of_mass_label
         com_label.add_background_rectangle()
         frequency_axes = self.get_frequency_axes()
-        x_coord_label = TextMobject("$x$-coordiante for center of mass")
+        x_coord_label = TextMobject("$x$-coordiate for center of mass")
         x_coord_label.highlight(self.center_of_mass_color)
         x_coord_label.scale(self.text_scale_val)
         x_coord_label.next_to(
@@ -1593,6 +1627,20 @@ class StudentsHorrifiedAtScene(TeacherStudentsScene):
             look_at_arg = 2*UP + 3*LEFT
         )
         self.wait(4)
+
+class AskAboutAlmostFouierName(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "``Almost'' Fourier transform?",
+            target_mode = "sassy"
+        )
+        self.change_student_modes("confused", "sassy", "confused")
+        self.wait()
+        self.teacher_says(
+            "We'll get to the real \\\\ one in a few minutes",
+            added_anims = [self.get_student_changes(*["plain"]*3)]
+        )
+        self.wait(2)
 
 class ShowLowerFrequency(DrawFrequencyPlot):
     CONFIG = {
@@ -2125,6 +2173,15 @@ class ShowCommutativeDiagram(ShowLinearity):
         spike_rect.set_stroke(width = 0)
         spike_rect.set_fill(YELLOW, 0.5)
         return spike_rect
+
+class PauseAndPonder(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Pause and \\\\ ponder!",
+            target_mode = "hooray"
+        )
+        self.change_student_modes(*["thinking"]*3)
+        self.wait(4)
 
 class BeforeGettingToTheFullMath(TeacherStudentsScene):
     def construct(self):
@@ -2786,7 +2843,7 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
             Write(time_label),
             GrowArrow(time_label.arrow),
         )
-        self.wait(6.5) #Leave time to say let's slow down
+        self.wait(12.5) #Leave time to say let's slow down
         self.remove(ambient_ghost_dot_movement)
         self.play(
             FadeOut(time_label),
@@ -3044,6 +3101,16 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
             run_time = 2
         )
         return VGroup(time_graph.dots, pol_graph.dots)
+
+class EulersFormulaViaGroupTheoryWrapper(Scene):
+    def construct(self):
+        title = TextMobject("Euler's formula with introductory group theory")
+        title.to_edge(UP)
+        screen_rect = ScreenRectangle(height = 6)
+        screen_rect.next_to(title, DOWN)
+        self.add(title)
+        self.play(ShowCreation(screen_rect))
+        self.wait(2)
 
 class WhyAreYouTellingUsThis(TeacherStudentsScene):
     def construct(self):
@@ -3636,8 +3703,7 @@ class SummarizeTheFullTransform(DrawFrequencyPlot):
             GrowArrow, arrow,
             FadeOut, arrow,
             Animation, Mobject(), {"run_time" : 5},
-            Transform, g_hat_f.target.copy().fade(1), real_part[1].copy().fade(1),
-            Write, real_part[0], {"run_time" : 1},
+            Write, real_part, {"run_time" : 2},
             Animation, Mobject(), {"run_time" : 3},
             ShowCreation, imaginary_fourier_graph, {"run_time" : 3},
             rate_func = squish_rate_func(
@@ -3709,7 +3775,6 @@ class SummarizeFormula(Scene):
         expression.scale(1.2)
         expression.to_edge(UP)
         return expression
-
 
 class OneSmallNote(TeacherStudentsScene):
     def construct(self):
@@ -3788,7 +3853,7 @@ class BoundsAtInfinity(SummarizeFormula):
                 lambda m, a : m.set_fill(opacity = 1-a)
             ),
             *decimal_updates,
-            run_time = 8,
+            run_time = 12,
             rate_func = bezier([0, 0, 1, 1])
         )
         self.wait()
@@ -3834,6 +3899,155 @@ class BoundsAtInfinity(SummarizeFormula):
         rect.stretch_to_fit_height(2.5)
         rect.move_to(line, DOWN)
         return rect
+
+class MoreToCover(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Much more to say...",
+            target_mode = "hooray",
+            run_time = 1,
+        )
+        self.wait()
+        self.teacher_says(
+            "SO MUCH!",
+            target_mode = "surprised",
+            added_anims = [self.get_student_changes(*3*["happy"])],
+            run_time = 0.5
+        )
+        self.wait(2)
+
+class ShowUncertaintyPrinciple(Scene):
+    def construct(self):
+        title = TextMobject("Uncertainty principle")
+        self.add(title)
+        top_axes = Axes(
+            x_min = -SPACE_WIDTH,
+            x_max = SPACE_WIDTH,
+            y_min = 0,
+            y_max = 3,
+            y_axis_config = {
+                "unit_size" : 0.6,
+                "include_tip" : False,
+            }
+        )
+        bottom_axes = top_axes.deepcopy()
+        arrow = Vector(DOWN, color = WHITE)
+        group = VGroup(
+            title, top_axes, arrow, bottom_axes
+        )
+        group.arrange_submobjects(DOWN)
+        title.shift(MED_SMALL_BUFF*UP)
+        group.to_edge(UP)
+        fourier_word = TextMobject("Fourier transform")
+        fourier_word.next_to(arrow, RIGHT)
+        self.add(group, fourier_word)
+
+        ghost_dot = Dot(RIGHT, fill_opacity = 0)
+        def get_bell_func(factor = 1):
+            return lambda x : 2*np.exp(-factor*x**2)
+        top_graph = top_axes.get_graph(get_bell_func())
+        top_graph.highlight(YELLOW)
+        bottom_graph = bottom_axes.get_graph(get_bell_func())
+        bottom_graph.highlight(RED)
+        def get_update_func(axes):
+            def update_graph(graph):
+                f = ghost_dot.get_center()[0]
+                if axes == bottom_axes:
+                    f = 1./f
+                new_graph = axes.get_graph(get_bell_func(f))
+                graph.points = new_graph.points
+            return update_graph
+
+        factors = [0.3, 0.1, 2, 10, 100, 0.01, 0.5]
+
+        self.play(ShowCreation(top_graph))
+        self.play(ReplacementTransform(
+            top_graph.copy(),
+            bottom_graph,
+        ))
+        self.wait(2)
+        self.add(*[
+            ContinualUpdateFromFunc(graph, get_update_func(axes))
+            for graph, axes in (top_graph, top_axes), (bottom_graph, bottom_axes)
+        ])
+        for factor in factors:
+            self.play(
+                ghost_dot.move_to, factor*RIGHT,
+                run_time = 2
+            )
+            self.wait()
+
+class XCoordinateLabelTypoFix(Scene):
+    def construct(self):
+        words = TextMobject("$x$-coordinate for center of mass")
+        words.highlight(RED)
+        self.add(words)
+
+class NextVideoWrapper(Scene):
+    def construct(self):
+        title = TextMobject("Next video")
+        title.to_edge(UP)
+        screen_rect = ScreenRectangle(height = 6)
+        screen_rect.next_to(title, DOWN)
+        self.add(title)
+        self.play(ShowCreation(screen_rect))
+        self.wait(2)
+
+class SubscribeOrBinge(PiCreatureScene):
+    def construct(self):
+        morty = self.pi_creature
+        morty.center().to_edge(DOWN, LARGE_BUFF)
+        subscribe = TextMobject("Subscribe")
+        subscribe.highlight(RED)
+        subscribe.next_to(morty, UP+RIGHT)
+        binge = TextMobject("Binge")
+        binge.highlight(BLUE)
+        binge.next_to(morty, UP+LEFT)
+
+        videos = VGroup(*[VideoIcon() for x in range(30)])
+        colors = it.cycle([BLUE_D, BLUE_E, BLUE_C, GREY_BROWN])
+        for video, color in zip(videos, colors):
+            video.highlight(color)
+        videos.move_to(binge.get_bottom(), UP)
+        video_anim = LaggedStart(
+            Succession, videos, 
+            lambda v : (
+                FadeIn, v,
+                ApplyMethod, v.shift, 5*DOWN, {"run_time" : 6},
+            ),
+            run_time = 10
+        )
+        sub_arrow = Arrow(
+            subscribe.get_bottom(),
+            Dot().to_corner(DOWN+RIGHT, buff = LARGE_BUFF),
+            color = RED
+        )
+
+        for word in subscribe, binge:
+            word.save_state()
+            word.shift(DOWN)
+            word.set_fill(opacity = 0)
+
+        self.play(
+            subscribe.restore,
+            morty.change, "raise_left_hand"
+        )
+        self.play(GrowArrow(sub_arrow))
+        self.wait()
+        self.play(
+            video_anim,
+            Succession(
+                AnimationGroup(
+                    ApplyMethod(binge.restore),
+                    ApplyMethod(morty.change, "raise_right_hand", binge),
+                ),
+                Blink, morty,
+                ApplyMethod, morty.change, "shruggie", videos,
+                Animation, Mobject(), {"run_time" : 2},
+                Blink, morty,
+                Animation, Mobject(), {"run_time" : 4}
+            )
+        )
 
 
 class CloseWithAPuzzle(TeacherStudentsScene):
@@ -3888,7 +4102,89 @@ class SponsorScreenGrab(PiCreatureScene):
             self.play(morty.change, mode, screen)
             self.wait(4)
 
-
+class FourierEndScreen(PatreonEndScreen):
+    CONFIG = {
+        "specific_patrons" : [
+            "CrypticSwarm",
+            "Ali Yahya",
+            "Juan Benet",
+            "Markus Persson",
+            "Damion Kistler",
+            "Burt Humburg",
+            "Yu Jun",
+            "Dave Nicponski",
+            "Kaustuv DeBiswas",
+            "Joseph John Cox",
+            "Luc Ritchie",
+            "Achille Brighton",
+            "Rish Kundalia",
+            "Yana Chernobilsky",
+            "Shìmín Kuang",
+            "Mathew Bramson",
+            "Jerry Ling",
+            "Mustafa Mahdi",
+            "Meshal Alshammari",
+            "Mayank M. Mehrotra",
+            "Lukas Biewald",
+            "Robert Teed",
+            "One on Epsilon",
+            "Samantha D. Suplee",
+            "Mark Govea",
+            "John Haley",
+            "Julian Pulgarin",
+            "Jeff Linse",
+            "Cooper Jones",
+            "Boris Veselinovich",
+            "Ryan Dahl",
+            "Ripta Pasay",
+            "Eric Lavault",
+            "Mads Elvheim",
+            "Andrew Busey",
+            "Randall Hunt",
+            "Desmos",
+            "Tianyu Ge",
+            "Awoo",
+            "Dr David G. Stork",
+            "Linh Tran",
+            "Jason Hise",
+            "Bernd Sing",
+            "Ankalagon",
+            "Mathias Jansson",
+            "David Clark",
+            "Ted Suzman",
+            "Eric Chow",
+            "Michael Gardner",
+            "Jonathan Eppele",
+            "Clark Gaebel",
+            "David Kedmey",
+            "Jordan Scales",
+            "Ryan Atallah",
+            "supershabam",
+            "1stViewMaths",
+            "Jacob Magnuson",
+            "Thomas Tarler",
+            "Isak Hietala",
+            "James Thornton",
+            "Egor Gumenuk",
+            "Waleed Hamied",
+            "Oliver Steele",
+            "Yaw Etse",
+            "David B",
+            "Julio Cesar Campo Neto",
+            "Delton Ding",
+            "George Chiesa",
+            "Chloe Zhou",
+            "Alexander Nye",
+            "Ross Garber",
+            "Wang HaoRan",
+            "Felix Tripier",
+            "Arthur Zey",
+            "Norton",
+            "Kevin Le",
+            "Alexander Feldman",
+            "David MacCumber",
+        ],
+    }
 
 
 
