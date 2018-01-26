@@ -38,13 +38,11 @@ class AmbientLight(VMobject):
 
     # Parameters are:
     # * a source point
-    # * possibly a target
-    # * an opacity function and its inverse
+    # * an opacity function
     # * a light color
     # * a max opacity
-
-    # If the target is None, create annuli.
-    # If there is a target, create annular sectors.
+    # * a radius (larger than the opacity's dropoff length)
+    # * the number of subdivisions (levels, annuli)
 
     CONFIG = {
         "source_point" : ORIGIN,
@@ -57,6 +55,8 @@ class AmbientLight(VMobject):
 
     def generate_points(self):
 
+        # in theory, this method is only called once, right?
+        # so removing submobs shd not be necessary
         for submob in self.submobjects:
             self.remove(submob)
 
@@ -73,47 +73,14 @@ class AmbientLight(VMobject):
             annulus.move_arc_center_to(self.source_point)
             self.add(annulus)
 
-        # else:
-
-        #     # look for the screen and create annular sectors
-        #     lower_angle, upper_angle = self.viewing_angles(self.screen)
-        #     dr = self.radius / self.num_levels
-        #     for r in np.arange(0, self.radius, dr):
-        #         alpha = self.max_opacity * self.opacity_function(r)
-        #         annular_sector = AnnularSector(
-        #             inner_radius = r,
-        #             outer_radius = r + dr,
-        #             color = self.color,
-        #             fill_opacity = alpha,
-        #             start_angle = lower_angle,
-        #             angle = upper_angle - lower_angle
-        #         )
-        #         annular_sector.move_arc_center_to(self.source_point)
-        #         self.add(annular_sector)
-
-
-
-
-
-    # def redraw(self):
-        # if self.screen != None:
-        #     lower_angle, upper_angle = self.viewing_angles(self.screen)
-        #     for submob in self.submobjects:
-        #         if type(submob) == AnnularSector:
-        #             submob.start_angle = lower_angle
-        #             submob.angle = upper_angle - lower_angle
-        #             submob.generate_points()
-        #             submob.move_arc_center_to(self.source_point)
-
-        
-                    #submob.generate_points()
 
 
     def move_source_to(self,point):
+        self.shift(point - self.source_point)
         self.source_point = np.array(point)
-        for submob in self.submobjects:
-             if type(submob) == Annulus:
-                submob.shift(self.source_point - submob.get_center())
+        # for submob in self.submobjects:
+        #      if type(submob) == Annulus:
+        #         submob.shift(self.source_point - submob.get_center())
 
     def dimming(self,new_alpha):
         old_alpha = self.max_opacity
@@ -221,32 +188,6 @@ class SwitchOff(LaggedStart):
         light.submobjects = light.submobjects[::-1]
 
 
-# class LightSource(Mobject):
-
-#     # A light source is composed of:
-#     # * a lighthouse
-#     # * possibly a screen
-#     # * and two light fields:
-#     #    * an undirected one (annuli)
-#     #    * one directed at the screen (annular sectors)
-
-#     CONFIG = {
-#         "location" : ORIGIN,
-#         "icon" : SVGMobject(file_name = 'lighthouse', height = 0.5),
-#         "ambient_light" : LightField(),
-#         "spot_light_field" : LightField(),
-#     }
-
-#     def __init__(self,**kwargs):
-#         Mobject.__init__(self,**kwargs)
-#         self.icon.next_to(self.location, DOWN, buff = 0)
-#         self.spot_light_field.max_opacity = 0
-#         self.ambient_light_field.move_source_to(self.location)
-#         self.spot_light_field.move_source_to(self.location)
-#         self.add(self.icon,self.ambient_light_field,self.spot_light_field)
-
-#     def dim_ambient(self,new_alpha):
-#         self.ambient_light_field.dimming(new_alpha)
 
 
 
@@ -266,15 +207,14 @@ class IntroScene(Scene):
     def construct(self):
         
         screen = Square().shift([4,0,0])
-        #ambient_light = AmbientLight(
-        #    source_point = np.array([-1,1,0]),
-        #    max_opacity = 1.0,
-        #    opacity_function = lambda r: 1.0/(r/1+1)**2,
-        #    num_levels = 10,
-        #)
+        self.add(screen)
 
-        #ambient_light.move_source_to([-5,0,0])
-        self.add(screen)#,ambient_light)
+        ambient_light = AmbientLight(
+            source_point = np.array([-1,1,0]),
+            max_opacity = 1.0,
+            opacity_function = lambda r: 1.0/(r/2+1)**2,
+            num_levels = 10,
+        )
 
         spotlight = Spotlight(
             source_point = np.array([-1,1,0]),
@@ -284,18 +224,18 @@ class IntroScene(Scene):
             screen = screen,
         )
 
-        self.add(spotlight)
+        #self.add(ambient_light)
 
-        ca = ScreenTracker(spotlight,screen)
-        self.add(ca)
+        #ca = ScreenTracker(spotlight,screen)
+        #self.add(ca)
 
-        #self.play(SwitchOn(ambient_light))
+        self.play(SwitchOn(ambient_light))
         #self.play(ApplyMethod(ambient_light.move_source_to,[-3,1,0]))
         #self.play(SwitchOn(spotlight))
         #self.play(ApplyMethod(spotlight.move_source_to,[-3,-1,0]))
         #self.play(ApplyMethod(spotlight.dimming,0.2))
-        self.play(screen.rotate, TAU/8, run_time = 3)
-        self.play(ApplyMethod(spotlight.move_source_to,[-4,0,0]))
+        #self.play(screen.rotate, TAU/8, run_time = 3)
+        #self.play(ApplyMethod(spotlight.move_source_to,[-4,0,0]))
         
         self.wait()
 
