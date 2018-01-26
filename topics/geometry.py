@@ -97,9 +97,6 @@ class Arc(VMobject):
         return self
 
 
-
-
-
 class Circle(Arc):
     CONFIG = {
         "color" : RED,
@@ -511,6 +508,7 @@ class Arrow(Line):
         Line.put_start_and_end_on(self, *args, **kwargs)
         self.set_tip_points(self.tip, preserve_normal = False)
         self.set_rectangular_stem_points()
+        return self
 
     def scale(self, scale_factor, **kwargs):
         Line.scale(self, scale_factor, **kwargs)
@@ -519,6 +517,9 @@ class Arrow(Line):
         if self.use_rectangular_stem:
             self.set_rectangular_stem_points()
         return self
+
+    def copy(self):
+        return self.deepcopy()
 
 class Vector(Arrow):
     CONFIG = {
