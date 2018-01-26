@@ -124,7 +124,6 @@ class OtherContexts(PiCreatureScene):
             )
             self.wait()
 
-
 class TODOInsertCosineWrappingAroundCircle(TODOStub):
     CONFIG = {
         "message" : "Give a picture-in-picture \\\\ of cosine wrapping around circle",
@@ -1358,9 +1357,11 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
         self.center_of_mass_label = words
 
     def change_to_various_frequencies(self):
-        for new_freq in [0.5, 0.2, 1.04, 2.21, 3.0]:
-            self.change_frequency(new_freq)
-            self.wait()
+        self.change_frequency(
+            3.0, run_time = 30,
+            rate_func = bezier([0, 0, 1, 1])
+        )
+        self.wait()
         self.play(
             *self.get_vector_animations(self.graph),
             run_time = 15
@@ -1372,7 +1373,7 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
         com_label = self.center_of_mass_label
         com_label.add_background_rectangle()
         frequency_axes = self.get_frequency_axes()
-        x_coord_label = TextMobject("$x$-coordiate for center of mass")
+        x_coord_label = TextMobject("$x$-coordinate for center of mass")
         x_coord_label.highlight(self.center_of_mass_color)
         x_coord_label.scale(self.text_scale_val)
         x_coord_label.next_to(
@@ -3122,7 +3123,7 @@ class BuildUpExpressionStepByStep(TeacherStudentsScene):
     def construct(self):
         expression = TexMobject(
             "\\frac{1}{t_2 - t_1}", "\\int_{t_1}^{t_2}",
-            "g(t)", "e", "^{2\\pi i", "f", "t}", "dt"
+            "g(t)", "e", "^{-2\\pi i", "f", "t}", "dt"
         )
         frac, integral, g, e, two_pi_i, f, t, dt = expression
         expression.next_to(self.teacher, UP+LEFT)
@@ -3186,7 +3187,7 @@ class ScaleUpCenterOfMass(WriteComplexExponentialExpression):
     def add_expression(self):
         expression = TexMobject(
             "\\frac{1}{t_2 - t_1}", "\\int_{t_1}^{t_2}",
-            "g(t)", "e", "^{2\\pi i", "f", "t}", "dt"
+            "g(t)", "e", "^{-2\\pi i", "f", "t}", "dt"
         )
         frac, integral, g, e, two_pi_i, f, t, dt = expression
         expression.to_corner(UP+RIGHT)
@@ -3763,7 +3764,7 @@ class SummarizeFormula(Scene):
     def get_expression(self):
         expression = TexMobject(
             "\\hat g(", "f", ")", "=", "\\int", "_{t_1}", "^{t_2}",
-            "g({}", "t", ")", "e", "^{2\\pi i", "f", "t}", "dt"
+            "g({}", "t", ")", "e", "^{-2\\pi i", "f", "t}", "dt"
         )
         expression.highlight_by_tex(
             "t", YELLOW, substring = False,
@@ -4186,12 +4187,55 @@ class FourierEndScreen(PatreonEndScreen):
         ],
     }
 
+class Thumbnail(Scene):
+    def construct(self):
+        title = TextMobject("Fourier\\\\", "Visualized")
+        title[1].highlight(YELLOW)
+        title[1].set_stroke(RED, 1)
+        title.highlight(YELLOW)
+        title.set_stroke(RED, 1)
 
+        title.scale(2.5)
+        title.add_background_rectangle()
+        # title.to_edge(UP)
+        # self.add(title)
+        def func(t):
+            return np.cos(2*TAU*t) + np.cos(3*TAU*t) + np.cos(5*t)
+        fourier = get_fourier_transform(func, -5, 5)
 
-
-
-
-
+        graph = FunctionGraph(func, x_min = -5, x_max = 5)
+        graph.highlight(BLUE)
+        fourier_graph = FunctionGraph(fourier, x_min = 0, x_max = 6)
+        fourier_graph.highlight(RED_C)
+        for g in graph, fourier_graph:
+            g.stretch_to_fit_height(2)
+            g.stretch_to_fit_width(10)
+            g.set_stroke(width = 8)
+        arrow = Vector(
+            2.5*DOWN, 
+            rectangular_stem_width = 0.2,
+            tip_length = 0.5,
+            color = WHITE
+        )
+        q_mark = TextMobject("?").scale(2)
+        q_mark.highlight(YELLOW)
+        q_mark.set_stroke(RED, 1)
+        arrows = VGroup(*it.chain(*zip(
+            [q_mark.copy() for x in range(5)],
+            [arrow.copy() for x in range(5)]
+        )))
+        # arrows.submobjects.pop()
+        # arrows.arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
+        group = VGroup(graph, title, fourier_graph)
+        arrows = VGroup(*[arrow.copy() for x in range(2)])
+        arrows.arrange_submobjects(RIGHT, buff = 6*LARGE_BUFF)
+        # group = VGroup(graph, arrows, fourier_graph)
+        group.arrange_submobjects(DOWN)
+        # group.next_to(title, DOWN, MED_LARGE_BUFF)
+        arrows.move_to(title)
+        title.shift(MED_SMALL_BUFF*UP)
+        graph.shift(SMALL_BUFF*UP)
+        self.add(arrows, group)
 
 
 
