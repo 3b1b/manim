@@ -241,9 +241,9 @@ class Spotlight(VMobject):
         ray1 = self.screen.points[0] - use_point
         ray2 = self.screen.points[-1] - use_point
         ray1 = ray1/np.linalg.norm(ray1) * 100
-        ray1 = rotate_vector(ray1,-TAU/16)
+        ray1 = rotate_vector(ray1,-TAU/100)
         ray2 = ray2/np.linalg.norm(ray2) * 100
-        ray2 = rotate_vector(ray2,TAU/16)
+        ray2 = rotate_vector(ray2,TAU/100)
         outpoint1 = self.screen.points[0] + ray1
         outpoint2 = self.screen.points[-1] + ray2
         self.shadow.add_control_points([outpoint2,outpoint1,self.screen.points[0]])
@@ -336,7 +336,8 @@ class LightIndicator(Mobject):
     CONFIG = {
         "radius": 0.5,
         "intensity": 0,
-        "opacity_for_unit_intensity": 1
+        "opacity_for_unit_intensity": 1,
+        "precision": 3
     }
 
     def generate_points(self):
@@ -346,7 +347,7 @@ class LightIndicator(Mobject):
         self.foreground.set_stroke(color=INDICATOR_STROKE_COLOR,width=INDICATOR_STROKE_WIDTH)
 
         self.add(self.background, self.foreground)
-        self.reading = DecimalNumber(self.intensity,num_decimal_points = 3)
+        self.reading = DecimalNumber(self.intensity,num_decimal_points = self.precision)
         self.reading.set_fill(color=INDICATOR_TEXT_COLOR)
         self.reading.move_to(self.get_center())
         self.add(self.reading)
@@ -873,7 +874,7 @@ class SingleLightHouseScene(PiCreatureScene):
         #self.wait()
 
 
-### The following is supposed to morph the scene into the Earth scene,
+### The following is supposed to morph the scene into the Earth scene,
 ### but it doesn't work
 
 
@@ -1045,7 +1046,7 @@ class ScreenShapingScene(Scene):
 
         self.wait()
 
-        # Scene 5: constant screen size, changing opening angle
+
         
         screen = slanted_screen
         source.screen = screen
@@ -1062,27 +1063,57 @@ class ScreenShapingScene(Scene):
 
         self.remove(original_brightness_rect)
 
-        shifted_brightness_rect = brightness_rect.copy()
-        shifted_brightness_rect.shift([-3,0,0]).set_fill(opacity = 0.8)
+
+        # Scene 5: constant screen size, changing opening angle
+
+        # let's use an actual light indicator instead of just rects
+
+        indicator_intensity = 0.25
+        indicator_height = 1.25 * screen_height
+
+        # indicator_origin = Ellipse(width = 0, height = screen_height).move_to(screen.get_center())
+        # indicator_origin.set_fill(opacity = 0)
+        # self.add_foreground_mobject(indicator_origin)
+
+        indicator = LightIndicator(radius = indicator_height/2,
+            opacity_for_unit_intensity = OPACITY_FOR_UNIT_INTENSITY,
+            color = LIGHT_COLOR,
+            precision = 2)
+        indicator.set_intensity(indicator_intensity)
+
+        indicator.move_to(slanted_brightness_rect.get_center())
+
 
         self.play(
-            ApplyMethod(screen.shift,[-3,0,0]),
-            ApplyMethod(morty.shift,[-3,0,0]),
-            #ApplyMethod(brightness_rect.shift,[-3,0,0]),
-            #ApplyMethod(brightness_rect.set_fill,{"opacity": 0.8})
-            ReplacementTransform(brightness_rect,shifted_brightness_rect)
+            FadeOut(slanted_brightness_rect),
+            FadeIn(indicator)
+        )
+
+        self.add_foreground_mobject(indicator.reading)
+
+        new_indicator_intensity = 1.0
+
+        # shifted_brightness_rect = brightness_rect.copy()
+        # shifted_brightness_rect.shift([-3,0,0]).set_fill(opacity = 0.8)
+
+        left_shift = (screen.get_center()[0] - source.source_point[0])/2
+
+        self.play(
+            ApplyMethod(screen.shift,[-left_shift,0,0]),
+            ApplyMethod(morty.shift,[-left_shift,0,0]),
+            ApplyMethod(indicator.shift,[-left_shift,0,0]),
+            ApplyMethod(indicator.set_intensity,new_indicator_intensity),
         )
 
         self.remove(original_screen) # was still hiding behind the shadow
-        self.remove(shifted_brightness_rect) # also one too many
-
+        
         # add distance indicator
 
         left_x = source.source_point[0]
         right_x = screen.get_center()[0]
-        indicator_y = -2
-        line1 = Arrow([left_x,indicator_y,0],[right_x,indicator_y,0])
-        line2 = Arrow([right_x,indicator_y,0],[left_x,indicator_y,0])
+        line_y = -2
+        line1 = Arrow([left_x,line_y,0],[right_x,line_y,0])
+        line2 = Arrow([right_x,line_y,0],[left_x,line_y,0])
         line1.set_fill(color = WHITE)
         line2.set_fill(color = WHITE)
         distance_decimal = Integer(1).next_to(line1,DOWN)
@@ -1093,21 +1124,19 @@ class ScreenShapingScene(Scene):
         # move everything away
         distance_to_source = right_x - left_x
         new_right_x = left_x + 2*distance_to_source
-        new_line1 = Arrow([left_x,indicator_y,0],[new_right_x,indicator_y,0])
-        new_line2 = Arrow([new_right_x,indicator_y,0],[left_x,indicator_y,0])
+        new_line1 = Arrow([left_x,line_y,0],[new_right_x,line_y,0])
+        new_line2 = Arrow([new_right_x,line_y,0],[left_x,line_y,0])
         new_line1.set_fill(color = WHITE)
         new_line2.set_fill(color = WHITE)
         new_distance_decimal = Integer(2).next_to(new_line1,DOWN)
-        new_line = VGroup(new_line1, new_line2,new_distance_decimal)
+        new_line = VGroup(new_line1, new_line2, new_distance_decimal)
 
-        new_brightness_rect = brightness_rect.copy()
-        new_brightness_rect.shift([distance_to_source,0,0])
-        new_brightness_rect.set_fill(opacity = 0.2)
 
         self.play(
             ReplacementTransform(line,new_line),
             ApplyMethod(screen.shift,[distance_to_source,0,0]),
-            Transform(brightness_rect,new_brightness_rect),
+            ApplyMethod(indicator.shift,[left_shift,0,0]),
+            ApplyMethod(indicator.set_intensity,indicator_intensity),
             ApplyMethod(morty.shift,[distance_to_source,0,0]),
         )
 
