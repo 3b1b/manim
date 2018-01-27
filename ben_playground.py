@@ -100,7 +100,8 @@ class Spotlight(VMobject):
         "max_opacity" : 1.0,
         "num_levels" : 10,
         "radius" : 5.0,
-        "screen" : None
+        "screen" : None,
+        "shadow" : VMobject(fill_color = RED, stroke_width = 0, fill_opacity = 1.0)
     }
 
     def track_screen(self):
@@ -128,6 +129,9 @@ class Spotlight(VMobject):
                 annular_sector.move_arc_center_to(self.source_point)
                 self.add(annular_sector)
 
+        self.update_shadow(point = self.source_point)
+        self.add(self.shadow)
+
 
     def viewing_angle_of_point(self,point):
         distance_vector = point - self.source_point
@@ -147,16 +151,51 @@ class Spotlight(VMobject):
 
     def move_source_to(self,point):
         self.source_point = np.array(point)
-        self.shift(np.array(point) - self.source_point)
-        self.generate_points()
+        self.recalculate_sectors(point = point, screen = self.screen)
+        self.update_shadow(point = point)
+
+    def recalculate_sectors(self, point = ORIGIN, screen = None):
+        if screen == None:
+            return
+        for submob in self.submobject_family():
+            if type(submob) == AnnularSector:
+                lower_angle, upper_angle = self.viewing_angles(screen)
+                new_submob = AnnularSector(
+                    start_angle = lower_angle,
+                    angle = upper_angle - lower_angle,
+                    inner_radius = submob.inner_radius,
+                    outer_radius = submob.outer_radius
+                )
+                new_submob.move_arc_center_to(point)
+                submob.points = new_submob.points
+
+    def update_shadow(self,point = ORIGIN):
+        print "updating shadow"
+        use_point = point #self.source_point
+        self.shadow.points = self.screen.points
+        ray1 = self.screen.points[0] - use_point
+        ray2 = self.screen.points[-1] - use_point
+        ray1 = ray1/np.linalg.norm(ray1) * 100
+        ray1 = rotate_vector(ray1,-TAU/16)
+        ray2 = ray2/np.linalg.norm(ray2) * 100
+        ray2 = rotate_vector(ray2,TAU/16)
+        outpoint1 = self.screen.points[0] + ray1
+        outpoint2 = self.screen.points[-1] + ray2
+        self.shadow.add_control_points([outpoint2,outpoint1,self.screen.points[0]])
+        self.shadow.mark_paths_closed = True
+
 
     def dimming(self,new_alpha):
         old_alpha = self.max_opacity
         self.max_opacity = new_alpha
         for submob in self.submobjects:
+            if type(submob) != AnnularSector:
+                # it's the shadow, don't dim it
+                continue
             old_submob_alpha = submob.fill_opacity
             new_submob_alpha = old_submob_alpha * new_alpha/old_alpha
             submob.set_fill(opacity = new_submob_alpha)
+
 
 
 
@@ -192,52 +231,58 @@ class SwitchOff(LaggedStart):
 
 
 class ScreenTracker(ContinualAnimation):
-    def __init__(self, spotlight, screen, **kwargs):
-        self.spotlight = spotlight
-        self.screen = screen
-        ContinualAnimation.__init__(self, self.spotlight, **kwargs)
+    def __init__(self, mobject, **kwargs):
+        ContinualAnimation.__init__(self, mobject, **kwargs)
 
-#    def update_mobject(self, dt):
-        #self.spotlight.generate_points()
-
-
+    def update_mobject(self, dt):
+        self.mobject.recalculate_sectors(
+            point = self.mobject.source_point,
+            screen = self.mobject.screen)
+        self.mobject.update_shadow(self.mobject.source_point)
+        
 
 
 class IntroScene(Scene):
     def construct(self):
         
-        screen = Square().shift([4,0,0])
+        screen = Line([2,-2,0],[1,2,0]).shift([1,0,0])
         self.add(screen)
 
         ambient_light = AmbientLight(
             source_point = np.array([-1,1,0]),
             max_opacity = 1.0,
             opacity_function = lambda r: 1.0/(r/2+1)**2,
-            num_levels = 10,
+            num_levels = 4,
         )
 
         spotlight = Spotlight(
             source_point = np.array([-1,1,0]),
             max_opacity = 1.0,
             opacity_function = lambda r: 1.0/(r/2+1)**2,
-            num_levels = 10,
+            num_levels = 4,
             screen = screen,
         )
 
-        #self.add(ambient_light)
+        self.add(spotlight)
 
-        #ca = ScreenTracker(spotlight,screen)
+        screen_updater = ScreenTracker(spotlight)
         #self.add(ca)
 
-        self.play(SwitchOn(ambient_light))
+        #self.play(SwitchOn(ambient_light))
         #self.play(ApplyMethod(ambient_light.move_source_to,[-3,1,0]))
         #self.play(SwitchOn(spotlight))
-        #self.play(ApplyMethod(spotlight.move_source_to,[-3,-1,0]))
-        #self.play(ApplyMethod(spotlight.dimming,0.2))
-        #self.play(screen.rotate, TAU/8, run_time = 3)
+        
+        self.add(screen_updater)
+        self.play(ApplyMethod(spotlight.screen.rotate,TAU/8))
+        self.remove(screen_updater)
+        self.play(ApplyMethod(spotlight.move_source_to,[-3,-1,0]))
+        self.add(screen_updater)
+        spotlight.source_point = [-3,-1,0]
+        
+        self.play(ApplyMethod(spotlight.dimming,0.2))
         #self.play(ApplyMethod(spotlight.move_source_to,[-4,0,0]))
         
-        self.wait()
+        #self.wait()
 
 
 
