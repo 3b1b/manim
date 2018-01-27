@@ -54,7 +54,7 @@ class DecimalNumber(VMobject):
             unit_sign.next_to(self.submobjects[-1],RIGHT,
                     buff = self.digit_to_digit_buff)
 
-            if self.unit == "^\\circ":
+            if self.unit.startswith("^"):
                 unit_sign.align_to(self,UP)
             else:
                 unit_sign.align_to(self,DOWN)
@@ -66,27 +66,6 @@ class DecimalNumber(VMobject):
         )
 
 
-class Integer(VGroup):
-        #Handle alignment of parts that should be aligned
-        #to the bottom
-        for i, c in enumerate(num_string):
-            if c == "-" and len(num_string) > i+1:
-                self[i].align_to(self[i+1], alignment_vect = UP)
-        if self.unit == "\\circ":
-            self[-1].align_to(self, UP)
-        #
-        if self.include_background_rectangle:
-            self.add_background_rectangle()
-
-    def add_background_rectangle(self):
-        #TODO, is this the best way to handle
-        #background rectangles?
-        self.background_rectangle = BackgroundRectangle(self)
-        self.submobjects = [
-            self.background_rectangle,
-            VGroup(*self.submobjects)
-        ]
-        return self
 
 class Integer(DecimalNumber):
     CONFIG = {
