@@ -234,6 +234,10 @@ class Line(VMobject):
             ])
         self.account_for_buff()
 
+    def set_path_arc(self,new_value):
+        self.path_arc = new_value
+        self.generate_points()
+
     def account_for_buff(self):
         length = self.get_arc_length()
         if length < 2*self.buff or self.buff == 0:
