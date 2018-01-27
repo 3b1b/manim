@@ -128,6 +128,19 @@ class Dot(Circle):
         self.shift(point)
         self.init_colors()
 
+class Ellipse(VMobject):
+    CONFIG = {
+        "width" : 2,
+        "height" : 1
+    }
+
+    def generate_points(self):
+        circle = Circle(radius = 1)
+        circle = circle.stretch_to_fit_width(self.width)
+        circle = circle.stretch_to_fit_height(self.height)
+        self.points = circle.points
+
+
 class AnnularSector(VMobject):
     CONFIG = {
         "inner_radius" : 1,
