@@ -48,7 +48,8 @@ NUM_LEVELS = 30
 NUM_CONES = 50 # in first lighthouse scene
 NUM_VISIBLE_CONES = 5 # ibidem
 ARC_TIP_LENGTH = 0.2
-DIM_OPACITY = 0.2
+AMBIENT_FULL = 1.0
+AMBIENT_DIMMED = 0.2
 
 DEGREES = TAU/360
 
@@ -786,7 +787,7 @@ class SingleLightHouseScene(PiCreatureScene):
 
         lighthouse = LightHouse()
         ambient_light = AmbientLight(
-            opacity_function = inverse_quadratic(1,2,1),
+            opacity_function = inverse_quadratic(AMBIENT_FULL,2,1),
             num_levels = NUM_LEVELS,
             radius = 10,
             brightness = 1,
@@ -817,7 +818,7 @@ class SingleLightHouseScene(PiCreatureScene):
 
 
         self.play(
-            ApplyMethod(ambient_light.dimming,0.2),
+            ApplyMethod(ambient_light.dimming,AMBIENT_DIMMED),
             FadeIn(spotlight))
         self.add(spotlight.shadow)
 
@@ -872,31 +873,29 @@ class SingleLightHouseScene(PiCreatureScene):
         #self.wait()
 
 
+### The following is supposed to morph the scene into the Earth scene,
+### but it doesn't work
 
-        # morph into Earth scene
 
-        globe = Circle(radius = 3)
-        globe.move_to([2,0,0])
-        sun_position = [-100,0,0]
-        #self.add(screen_tracker)
-        print "tuet"
-        self.remove(screen_tracker)
-        new_opacity_function = lambda r: 0.5
-        self.play(
-            ApplyMethod(lighthouse.move_to,sun_position),
-            ApplyMethod(ambient_light.move_to,sun_position),
-            ApplyMethod(spotlight.move_source_to,sun_position),
-            #FadeOut(angle_arc),
-            #FadeOut(angle_indicator),
-            #FadeIn(globe),
-            #ApplyMethod(light_screen.move_to,[0,0,0]),
-            #ApplyMethod(morty.move_to,[1,0,0])
+        # # morph into Earth scene
 
-        )
-        self.play(
-            ApplyMethod(spotlight.change_opacity_function,new_opacity_function))
+        # globe = Circle(radius = 3)
+        # globe.move_to([2,0,0])
+        # sun_position = [-100,0,0]
+        # #self.add(screen_tracker)
+        # print "tuet"
+        # self.remove(screen_tracker)
+        # new_opacity_function = lambda r: 0.5
+        # self.play(
+        #     ApplyMethod(lighthouse.move_to,sun_position),
+        #     ApplyMethod(ambient_light.move_to,sun_position),
+        #     ApplyMethod(spotlight.move_source_to,sun_position),
 
-        self.add(screen_tracker)
+        # )
+        # self.play(
+        #     ApplyMethod(spotlight.change_opacity_function,new_opacity_function))
+
+        # self.add(screen_tracker)
 
 
 
@@ -954,7 +953,10 @@ class ScreenShapingScene(Scene):
 
         DEGREES = TAU / 360
 
-        screen = Line([2,-1,0],[2,1,0], path_arc = 0, num_arc_anchors = 10)
+        screen_height = 1.0
+        brightness_rect_height = 1.0
+
+        screen = Line([3,-screen_height/2,0],[3,screen_height/2,0], path_arc = 0, num_arc_anchors = 10)
 
         source = Spotlight(
             opacity_function = inverse_quadratic(1,5,1),
@@ -968,7 +970,7 @@ class ScreenShapingScene(Scene):
 
         lighthouse = LightHouse()
         ambient_light = AmbientLight(
-            opacity_function = inverse_quadratic(1,1,1),
+            opacity_function = inverse_quadratic(AMBIENT_DIMMED,1,1),
             num_levels = NUM_LEVELS,
             radius = 10,
             brightness = 1,
@@ -1002,16 +1004,21 @@ class ScreenShapingScene(Scene):
 
         # in preparation for the slanting, create a rectangle that show the brightness
 
-        rect_origin = Rectangle(width = 0, height = 2).move_to(screen.get_center())
+        rect_origin = Rectangle(width = 0, height = screen_height).move_to(screen.get_center())
         self.add_foreground_mobject(rect_origin)
 
-        brightness_rect = Rectangle(width = 2, height = 2, fill_color = YELLOW, fill_opacity = 0.5)
+        brightness_rect = Rectangle(width = brightness_rect_height,
+            height = brightness_rect_height, fill_color = YELLOW, fill_opacity = 0.5)
 
-        brightness_rect.move_to([3,3,0])
+        brightness_rect.next_to(screen, UP, buff = 1)
 
         self.play(
             ReplacementTransform(rect_origin,brightness_rect)
         )
+
+        original_screen = screen.copy()
+        original_brightness_rect = brightness_rect.copy()
+        # for unslanting the screen later
 
         lower_screen_point, upper_screen_point = screen.get_start_and_end()
 
@@ -1027,24 +1034,82 @@ class ScreenShapingScene(Scene):
         slanted_brightness_rect.generate_points()
         slanted_brightness_rect.set_fill(opacity = 0.25)
 
-        slanted_screen = Line(lower_slanted_screen_point,upper_slanted_screen_point, path_arc = 0, num_arc_anchors = 10)
+        slanted_screen = Line(lower_slanted_screen_point,upper_slanted_screen_point,
+            path_arc = 0, num_arc_anchors = 10)
+        slanted_brightness_rect.move_to(brightness_rect.get_center())
 
         self.play(
-            ReplacementTransform(screen,slanted_screen),
-            #ApplyMethod(brightness_rect.stretch,2,0), # factor = 2, dim = 0 (x)
-            ReplacementTransform(brightness_rect,slanted_brightness_rect),
-            ApplyMethod(brightness_rect.set_fill,{"opacity" : 0.25}),
+             ReplacementTransform(screen,slanted_screen),
+             ReplacementTransform(brightness_rect,slanted_brightness_rect),
         )
 
+        self.wait()
+
+        # Scene 5: constant screen size, changing opening angle
+        
+        screen = slanted_screen
+        source.screen = screen
+        self.remove(slanted_screen)
+
+        brightness_rect = slanted_brightness_rect
+        self.remove(slanted_brightness_rect)
+
+        
+        self.play(
+            ReplacementTransform(screen,original_screen),
+            ReplacementTransform(brightness_rect,original_brightness_rect),
+        )
+
+        self.remove(original_brightness_rect)
+
+        shifted_brightness_rect = brightness_rect.copy()
+        shifted_brightness_rect.shift([-3,0,0]).set_fill(opacity = 0.8)
+
+        self.play(
+            ApplyMethod(screen.shift,[-3,0,0]),
+            ApplyMethod(morty.shift,[-3,0,0]),
+            #ApplyMethod(brightness_rect.shift,[-3,0,0]),
+            #ApplyMethod(brightness_rect.set_fill,{"opacity": 0.8})
+            ReplacementTransform(brightness_rect,shifted_brightness_rect)
+        )
+
+        self.remove(original_screen) # was still hiding behind the shadow
+        self.remove(shifted_brightness_rect) # also one too many
+
+        # add distance indicator
+
+        left_x = source.source_point[0]
+        right_x = screen.get_center()[0]
+        indicator_y = -2
+        line1 = Arrow([left_x,indicator_y,0],[right_x,indicator_y,0])
+        line2 = Arrow([right_x,indicator_y,0],[left_x,indicator_y,0])
+        line1.set_fill(color = WHITE)
+        line2.set_fill(color = WHITE)
+        distance_decimal = Integer(1).next_to(line1,DOWN)
+        line = VGroup(line1, line2,distance_decimal)
+        self.add(line)
 
 
+        # move everything away
+        distance_to_source = right_x - left_x
+        new_right_x = left_x + 2*distance_to_source
+        new_line1 = Arrow([left_x,indicator_y,0],[new_right_x,indicator_y,0])
+        new_line2 = Arrow([new_right_x,indicator_y,0],[left_x,indicator_y,0])
+        new_line1.set_fill(color = WHITE)
+        new_line2.set_fill(color = WHITE)
+        new_distance_decimal = Integer(2).next_to(new_line1,DOWN)
+        new_line = VGroup(new_line1, new_line2,new_distance_decimal)
 
+        new_brightness_rect = brightness_rect.copy()
+        new_brightness_rect.shift([distance_to_source,0,0])
+        new_brightness_rect.set_fill(opacity = 0.2)
 
-
-
-
-
-
+        self.play(
+            ReplacementTransform(line,new_line),
+            ApplyMethod(screen.shift,[distance_to_source,0,0]),
+            Transform(brightness_rect,new_brightness_rect),
+            ApplyMethod(morty.shift,[distance_to_source,0,0]),
+        )
 
 
 
