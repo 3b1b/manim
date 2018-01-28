@@ -28,6 +28,7 @@ class Scene(object):
         "frame_duration"   : LOW_QUALITY_FRAME_DURATION,
         "construct_args"   : [],
         "skip_animations"  : False,
+        "ignore_waits"     : False,
         "write_to_movie"   : False,
         "save_frames"      : False,
         "save_pngs"        : False,
@@ -49,6 +50,7 @@ class Scene(object):
         self.saved_frames = []
         self.shared_locals = {}
         self.frame_num = 0
+        self.current_scene_time = 0
         if self.name is None:
             self.name = self.__class__.__name__
         if self.random_seed is not None:
@@ -465,6 +467,7 @@ class Scene(object):
         return self
 
     def add_frames(self, *frames):
+        self.current_scene_time += len(frames)*self.frame_duration
         if self.write_to_movie:
             for frame in frames:
                 if self.save_pngs:
@@ -551,6 +554,10 @@ class Scene(object):
         else:
             os.rename(*self.args_to_rename_file)
 
+    def wait_to(self, time, assert_positive = True):
+        if self.ignore_waits: return
+        time -= self.current_scene_time
+        if assert_positive: assert(time >= 0)
+        elif time < 0: return
 
-
-
+        self.dither(time)
