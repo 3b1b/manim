@@ -460,3 +460,9 @@ class AnimationGroup(Animation):
     def update_mobject(self, alpha):
         for anim in self.sub_anims:
             anim.update(alpha)
+
+    def clean_up(self, surrounding_scene = None):
+        if surrounding_scene is not None:
+            surrounding_scene.mobjects.remove(self.everything)
+        for anim in self.sub_anims:
+            anim.clean_up(surrounding_scene = surrounding_scene)
