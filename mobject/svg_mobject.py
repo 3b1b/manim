@@ -1,7 +1,7 @@
 from xml.dom import minidom
 import warnings
 
-from vectorized_mobject import VMobject
+from vectorized_mobject import VMobject, VGroup
 from topics.geometry import Rectangle, Circle
 from helpers import *
 
@@ -21,6 +21,7 @@ class SVGMobject(VMobject):
         "width" : None,
         #Must be filled in in a subclass, or when called
         "file_name" : None, 
+        "unpack_groups" : True, # if False, creates a hierarchy of VGroups
         "stroke_width" : 0,
         "fill_opacity" : 1,
         # "fill_color" : LIGHT_GREY,
@@ -50,7 +51,9 @@ class SVGMobject(VMobject):
         doc = minidom.parse(self.file_path)
         self.ref_to_element = {}
         for svg in doc.getElementsByTagName("svg"):
-            self.add(*self.get_mobjects_from(svg))
+            mobjects = self.get_mobjects_from(svg)
+            if self.unpack_groups: self.add(*mobjects)
+            else: self.add(*mobjects[0].submobjects)
         doc.unlink()
 
     def get_mobjects_from(self, element):
@@ -85,6 +88,9 @@ class SVGMobject(VMobject):
             # warnings.warn("Unknown element type: " + element.tagName)
         result = filter(lambda m : m is not None, result)
         self.handle_transforms(element, VMobject(*result))
+        if len(result) > 1 and not self.unpack_groups:
+            result = [VGroup(*result)]
+
         return result
 
     def g_to_mobjects(self, g_element):
