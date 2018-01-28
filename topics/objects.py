@@ -575,3 +575,22 @@ class BraceText(BraceLabel):
     CONFIG = {
         "label_constructor" : TextMobject
     }
+
+class DashedMobject(VMobject):
+    CONFIG = {
+        "dashes_num" : 15,
+        "spacing"    : 0.5,
+        "color"      : WHITE
+    }
+    def __init__(self, mob, **kwargs):
+        digest_locals(self)
+        VMobject.__init__(self, **kwargs)
+
+        buff = float(self.spacing) / self.dashes_num
+
+        for i in range(self.dashes_num):
+            a = ((1+buff) * i)/self.dashes_num
+            b = 1-((1+buff) * (self.dashes_num-1-i)) / self.dashes_num
+            dash = VMobject(color = self.color)
+            dash.pointwise_become_partial(mob, a, b)
+            self.submobjects.append(dash)
