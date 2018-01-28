@@ -413,6 +413,9 @@ class VMobject(Mobject):
             b_residue = (num_cubics*b)%1
             if b == 1:
                 b_residue = 1
+            elif lower_index == upper_index:
+                b_residue = (b_residue - a_residue)/(1-a_residue)
+
             points[:4] = partial_bezier_points(
                 points[:4], a_residue, 1
             )
