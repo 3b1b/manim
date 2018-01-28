@@ -426,8 +426,18 @@ class VMobject(Mobject):
         return self
 
 class VGroup(VMobject):
-    #Alternate name to improve readability during use
-    pass 
+    def __init__(self, *args, **kwargs):        
+        if len(args) == 1 and isinstance(args[0], (tuple, list)):
+            args = args[0]
+
+        packed_args = []
+        for arg in args:
+            if isinstance(arg, (tuple, list)):
+                packed_args.append(VGroup(arg))
+            else: packed_args.append(arg)
+
+        VMobject.__init__(self, *packed_args, **kwargs)
+
 
 class VectorizedPoint(VMobject):
     CONFIG = {
