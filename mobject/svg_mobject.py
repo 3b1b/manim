@@ -154,7 +154,7 @@ class SVGMobject(VMobject):
             transform = string_to_numbers(transform)
             transform = np.array(transform).reshape([3,2])
             x += transform[2][0]
-            y += transform[2][1]
+            y -= transform[2][1]
             matrix = np.identity(self.dim)
             matrix[:2,:2] = transform[:2,:]
             t_matrix = np.transpose(matrix)
@@ -227,16 +227,25 @@ class VMobjectFromSVGPathstring(VMobject):
         #list. This variable may get modified in the conditionals below.
         points = self.growing_path.points
         new_points = self.string_to_points(coord_string)
+
+        if command == "M": #moveto
+            if isLower and len(points) > 0:
+                new_points[0] += points[-1]
+            if len(points) > 0:
+                self.growing_path = self.add_subpath(new_points[:1])
+            else:
+                self.growing_path.start_at(new_points[0])
+
+            if len(new_points) <= 1: return
+
+            points = self.growing_path.points
+            new_points = new_points[1:]
+            command = "L"
+
         if isLower and len(points) > 0:
             new_points += points[-1]
-        if command == "M": #moveto
-            if len(points) > 0:
-                self.growing_path = self.add_subpath(new_points)
-            else:
-                if isLower: self.growing_path.start_at(np.sum(new_points, axis=0))
-                else: self.growing_path.start_at(new_points[-1])
-            return
-        elif command in ["L", "H", "V"]: #lineto
+
+        if command in ["L", "H", "V"]: #lineto
             if command == "H":
                 new_points[0,1] = points[-1,1]
             elif command == "V":
