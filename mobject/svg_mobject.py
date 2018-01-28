@@ -76,6 +76,8 @@ class SVGMobject(VMobject):
             result.append(self.rect_to_mobject(element))
         elif element.tagName == 'circle':
             result.append(self.circle_to_mobject(element))
+        elif element.tagName == 'ellipse':
+            result.append(self.ellipse_to_mobject(element))
         elif element.tagName in ['polygon', 'polyline']:
             result.append(self.polygon_to_mobject(element))
         else:
@@ -121,6 +123,15 @@ class SVGMobject(VMobject):
             for key in "cx", "cy", "r"
         ]
         return Circle(radius = r).shift(x*RIGHT+y*DOWN)
+
+    def ellipse_to_mobject(self, circle_element):
+        x, y, rx, ry = [
+            float(circle_element.getAttribute(key))
+            if circle_element.hasAttribute(key)
+            else 0.0
+            for key in "cx", "cy", "rx", "ry"
+        ]
+        return Circle().scale(rx*RIGHT + ry*UP).shift(x*RIGHT+y*DOWN)
 
     def rect_to_mobject(self, rect_element):
         if rect_element.hasAttribute("fill"):
