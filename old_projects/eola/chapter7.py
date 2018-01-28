@@ -69,7 +69,7 @@ class OpeningQuote(Scene):
                 run_time = rt,
                 lag_factor = 5 if rt > 3 else 2,
             ))
-        self.dither(2)
+        self.wait(2)
 
 class TraditionalOrdering(RandolphScene):
     def construct(self):
@@ -96,7 +96,7 @@ class TraditionalOrdering(RandolphScene):
             ),
         )
         self.play(topics[1].highlight, PINK)
-        self.dither()
+        self.wait()
 
 class ThisSeriesOrdering(RandolphScene):
     def construct(self):
@@ -145,7 +145,7 @@ class ThisSeriesOrdering(RandolphScene):
         )
         self.play(self.randy.look, UP+LEFT)
         self.play(chapters[6].highlight, PINK)
-        self.dither(6)
+        self.wait(6)
 
 class OneMustViewThroughTransformations(TeacherStudentsScene):
     def construct(self):
@@ -222,14 +222,14 @@ class ShowNumericalDotProduct(Scene):
             FadeIn(inter_array_dot),
             FadeIn(title)
         )
-        self.dither()
+        self.wait()
         if self.write_dot_product_words:
             self.play(
                 inter_array_dot.highlight, YELLOW,
                 ShowCreation(arrow),
                 Write(dot_product_words, run_time = 2)
             )
-            self.dither()
+            self.wait()
         self.play(Transform(
             VGroup(*it.starmap(Group, pairs)).copy(),
             products,
@@ -238,13 +238,13 @@ class ShowNumericalDotProduct(Scene):
         ))
         self.remove(*self.get_mobjects_from_last_animation())
         self.add(products)
-        self.dither()
+        self.wait()
 
         self.play(
             Write(symbols),
             Transform(products, products.target, path_arc = np.pi/2)
         )
-        self.dither()
+        self.wait()
 
 class TwoDDotProductExample(ShowNumericalDotProduct):
     CONFIG = {
@@ -318,7 +318,7 @@ class GeometricInterpretation(VectorScene):
         line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
         line.rotate(self.stable_vect.get_angle())
         self.play(ShowCreation(line), Animation(self.stable_vect))
-        self.dither()
+        self.wait()
 
     def project(self):
         dot_product = np.dot(self.v.get_end(), self.w.get_end())
@@ -340,7 +340,7 @@ class GeometricInterpretation(VectorScene):
         self.play(ShowCreation(projection_line))
         self.add(self.proj_vect.copy().fade())
         self.play(Transform(self.proj_vect, projected))
-        self.dither()
+        self.wait()
 
     def show_lengths(self):
         stable_char = "v" if self.project_onto_v else "w"
@@ -383,7 +383,7 @@ class GeometricInterpretation(VectorScene):
             GrowFromCenter(proj_brace),
             Write(proj_words.start, run_time = 2)
         )
-        self.dither()
+        self.wait()
         self.play(
             Transform(proj_words.start, proj_words),
             FadeOut(proj_brace)
@@ -393,12 +393,12 @@ class GeometricInterpretation(VectorScene):
             Write(stable_words.start, run_time = 2),
             Animation(self.stable_vect)
         )
-        self.dither()
+        self.wait()
         self.play(
             Transform(stable_words.start, stable_words),
             Write(product)
         )
-        self.dither()
+        self.wait()
 
         product.add(stable_words.start, proj_words.start)
         self.product = product
@@ -425,7 +425,7 @@ class GeometricInterpretation(VectorScene):
             VMobject(*self.product[1:]).next_to, neg,
             Write(words)
         )
-        self.dither()
+        self.wait()
 
 class GeometricInterpretationNegative(GeometricInterpretation):
     CONFIG = {
@@ -491,7 +491,7 @@ class ShowQualitativeDotProductValues(VectorScene):
         self.play(FadeOut(proj_line))
 
         self.play(Write(word, run_time = 1))
-        self.dither()
+        self.wait()
         self.play(
             Rotate(w, -np.pi/3),
             shadow.scale, 0
@@ -500,7 +500,7 @@ class ShowQualitativeDotProductValues(VectorScene):
             Transform(comp, equals),
             Transform(word, words[1])
         )
-        self.dither()
+        self.wait()
         self.play(
             Rotate(w, -np.pi/3),
             Transform(shadow, shadow_opposite)
@@ -509,7 +509,7 @@ class ShowQualitativeDotProductValues(VectorScene):
             Transform(comp, less_than),
             Transform(word, words[2])
         )
-        self.dither()
+        self.wait()
 
 class AskAboutSymmetry(TeacherStudentsScene):
     def construct(self):
@@ -560,7 +560,7 @@ class SymmetricVAndW(VectorScene):
         for vect in v, w:
             self.play(ShowCreation(vect))
             self.play(Write(vect.label, run_time = 1))
-        self.dither()
+        self.wait()
         angle = (v.get_angle()-w.get_angle())/2
         self.play(
             Rotate(w, angle), 
@@ -568,12 +568,12 @@ class SymmetricVAndW(VectorScene):
             rate_func = there_and_back,
             run_time = 2
         )
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(line_of_symmetry),
             Write(line_of_symmetry_words, run_time = 1)
         )
-        self.dither(0.5)
+        self.wait(0.5)
         self.remove(line_of_symmetry_words)
         self.play(*map(Uncreate, line_of_symmetry_words))
         for vect in w, v:
@@ -582,7 +582,7 @@ class SymmetricVAndW(VectorScene):
             self.play(Transform(vect_copy, vect.proj))
             self.remove(vect_copy)
             self.add(vect.proj)
-            self.dither()
+            self.wait()
         self.play(*map(FadeOut,[
             v.proj, v.proj_line, w.proj, w.proj_line
         ]))
@@ -631,7 +631,7 @@ class SymmetricVAndW(VectorScene):
         ).update(1)##Hacky
 
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
         two_v_parts = equation[1:3]
         equation.remove(*two_v_parts)
@@ -643,13 +643,13 @@ class SymmetricVAndW(VectorScene):
             )
             self.remove(self.get_mobjects_from_last_animation()[0])
             self.add(projector.proj)
-            self.dither()
+            self.wait()
             if equation not in self.get_mobjects():
                 self.play(
                     Write(equation),
                     Transform(new_v.label.copy(), VMobject(*two_v_parts))
                 )
-                self.dither()
+                self.wait()
             v_parts = [v]
             if full_v:
                 v_parts += [v.proj, v.proj_line]
@@ -658,7 +658,7 @@ class SymmetricVAndW(VectorScene):
                 rate_func = there_and_back,
                 run_time = 2
             )
-            self.dither()
+            self.wait()
             self.play(*map(FadeOut, [
                 projector.proj, projector.proj_line
             ]))
@@ -666,7 +666,7 @@ class SymmetricVAndW(VectorScene):
 class LurkingQuestion(TeacherStudentsScene):
     def construct(self):
         # self.teacher_says("That's the standard intro")
-        # self.dither()
+        # self.wait()
         # self.student_says(
         #     """
         #     Wait, why are the
@@ -723,7 +723,7 @@ class Introduce2Dto1DLinearTransformations(TwoDToOneDScene):
             *[Animation(v) for v in self.i_hat, self.j_hat]
         )
         self.play(*map(Write, [numbers, number_line_words]))
-        self.dither()
+        self.wait()
 
 class Symbolic2To1DTransform(Scene):
     def construct(self):
@@ -773,9 +773,9 @@ class Symbolic2To1DTransform(Scene):
             GrowFromCenter(output_brace),
             Write(output_words)
         )
-        self.dither()
+        self.wait()
         self.play(Write(special_words))
-        self.dither()
+        self.wait()
 
 class RecommendChapter3(Scene):
     def construct(self):
@@ -790,7 +790,7 @@ class RecommendChapter3(Scene):
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.dither()  
+        self.wait()  
 
 class OkayToIgnoreFormalProperties(Scene):
     def construct(self):
@@ -833,7 +833,7 @@ class OkayToIgnoreFormalProperties(Scene):
             randy.look, LEFT,
             morty.look, RIGHT,
         )
-        self.dither()
+        self.wait()
 
 class FormalVsVisual(Scene):
     def construct(self):
@@ -879,7 +879,7 @@ class FormalVsVisual(Scene):
         self.play(*map(ShowCreation, [line, v_line]))
         for mob in formal, visual, additivity, scaling, visual_statement:
             self.play(Write(mob, run_time = 2))
-            self.dither()
+            self.wait()
 
 class AdditivityProperty(TwoDToOneDScene):
     CONFIG = {
@@ -907,7 +907,7 @@ class AdditivityProperty(TwoDToOneDScene):
         symbols.target = symbols.copy().next_to(sum_vect, UP)
         VGroup(L, r_paren).highlight(BLACK)
         self.play(Transform(symbols, symbols.target))
-        self.dither()
+        self.wait()
 
     def play_sum(self, v, w):
         sum_vect = Vector(v.get_end()+w.get_end(), color = SUM_COLOR)
@@ -971,7 +971,7 @@ class ScalingProperty(TwoDToOneDScene):
         self.apply_transposed_matrix(self.t_matrix)
         if not self.scale_before:
             scaled_vect = self.show_scaling(v)
-        self.dither()
+        self.wait()
         self.write_symbols(scaled_vect)
 
     def show_scaling(self, v):
@@ -995,7 +995,7 @@ class ScalingProperty(TwoDToOneDScene):
         tex_mob.highlight_by_tex("c", GREEN)
 
         self.play(Write(tex_mob))
-        self.dither()
+        self.wait()
 
 class ScalingPropertyPart2(ScalingProperty):
     CONFIG = {
@@ -1045,7 +1045,7 @@ class NonLinearFailsDotTest(TwoDTo1DTransformWithDots):
             added_anims = [Transform(dots, new_dots)]
         )
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
 class AlwaysfollowIHatJHat(TeacherStudentsScene):
     def construct(self):
@@ -1100,9 +1100,9 @@ class ShowMatrix(TwoDToOneDScene):
                 Write(vect.words, run_time = 1),
                 ApplyMethod(vect.shift, 0.5*UP, rate_func = there_and_back)
             )
-            self.dither()
+            self.wait()
             self.play(vect.words[1].copy().move_to, entries[i])
-            self.dither()
+            self.wait()
 
 class FollowVectorViaCoordinates(TwoDToOneDScene):
     CONFIG = {
@@ -1136,7 +1136,7 @@ class FollowVectorViaCoordinates(TwoDToOneDScene):
         )
         self.add_foreground_mobject(v_label, array)
         self.add_vector(v, animate = False)
-        self.dither()
+        self.wait()
         to_fade = basis_labels
         for i, anim_tuple in enumerate(scaling_anim_tuples):
             self.play(*anim_tuple)
@@ -1147,7 +1147,7 @@ class FollowVectorViaCoordinates(TwoDToOneDScene):
                     ApplyMethod(m.shift, self.v_coords[0]*RIGHT)
                     for m in movers
                 ])
-            self.dither()
+            self.wait()
         self.play(
             *map(FadeOut, to_fade) + [
                 vect.restore
@@ -1182,22 +1182,22 @@ class FollowVectorViaCoordinates(TwoDToOneDScene):
             label.next_to(vect, direction)
 
         self.play(*map(Write, new_labels))
-        self.dither()
+        self.wait()
         scaling_anim_tuples = self.get_scaling_anim_tuples(
             new_labels, array, [UP, DOWN]
         )
         for i, anim_tuple in enumerate(scaling_anim_tuples):
             self.play(*anim_tuple)
             movers = VMobject(*self.get_mobjects_from_last_animation())
-            self.dither()
+            self.wait()
         self.play(movers.shift, self.i_hat.get_end()[0]*RIGHT)
-        self.dither()
+        self.wait()
         if self.concrete:
             final_label = TexMobject(str(int(v.get_end()[0])))
             final_label.move_to(new_labels[-1])
             final_label.highlight(new_labels[-1].get_color())
             self.play(Transform(new_labels[-1], final_label))
-            self.dither()
+            self.wait()
 
 
     def get_scaling_anim_tuples(self, labels, array, directions):
@@ -1258,7 +1258,7 @@ class TwoDOneDMatrixMultiplication(Scene):
                 Write(m.label),
                 run_time = 1
             )
-            self.dither()
+            self.wait()
         self.show_product(matrix, vector)
 
     def show_product(self, matrix, vector):
@@ -1283,7 +1283,7 @@ class TwoDOneDMatrixMultiplication(Scene):
                 pair, 
                 path_arc = -np.pi/2
             ))
-        self.dither()
+        self.wait()
 
     def color_matrix_and_vector(self, matrix, vector):
         for m in matrix, vector:
@@ -1322,24 +1322,24 @@ class AssociationBetweenMatricesAndVectors(Scene):
 
         self.play(*map(Write, [matrices_words, vectors_words]))
         self.play(ShowCreation(arrow))
-        self.dither()
+        self.wait()
         self.play(FadeIn(vectors))
         vectors.save_state()
-        self.dither()
+        self.wait()
         self.play(Transform(
             vectors, matrices, 
             path_arc = np.pi/2,
             submobject_mode = "lagged_start",
             run_time = 2,
         ))
-        self.dither()
+        self.wait()
         self.play(
             vectors.restore, 
             path_arc = -np.pi/2,
             submobject_mode = "lagged_start",
             run_time = 2
         )
-        self.dither()
+        self.wait()
 
 class WhatAboutTheGeometricView(TeacherStudentsScene):
     def construct(self):
@@ -1410,10 +1410,10 @@ class SomeKindOfConnection(Scene):
                 Animation(plane),
                 run_time = 1,
             )
-        self.dither()
+        self.wait()
         self.play(ShowCreation(vect))
         self.play(Transform(matrix.copy(), v_coords))
-        self.dither()
+        self.wait()
 
 class AnExampleWillClarify(TeacherStudentsScene):
     def construct(self):
@@ -1427,7 +1427,7 @@ class ImagineYouDontKnowThis(Scene):
         words.highlight(RED)
         words.scale(1.5)
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
 class ProjectOntoUnitVectorNumberline(VectorScene):
     CONFIG = {
@@ -1462,12 +1462,12 @@ class ProjectOntoUnitVectorNumberline(VectorScene):
                 Write(numbers),
                 run_time = 3 
             )
-            self.dither()
+            self.wait()
             self.play(ShowCreation(u_hat))
             self.play(FadeIn(u_brace))
             self.play(FadeOut(u_brace))
             self.play(Write(u_hat.label))            
-            self.dither()
+            self.wait()
         else:
             self.add(number_line, numbers, u_hat)
 
@@ -1484,7 +1484,7 @@ class ProjectOntoUnitVectorNumberline(VectorScene):
                 Transform(mob, mob.target)
                 for mob in self.get_mobjects()
             ])
-            self.dither()
+            self.wait()
         self.number_line, self.numbers, self.u_hat = number_line, numbers, u_hat
 
 
@@ -1494,13 +1494,13 @@ class ProjectOntoUnitVectorNumberline(VectorScene):
         proj_dots = self.get_proj_dots(dots)
         proj_lines = self.get_proj_lines(dots, proj_dots)
 
-        self.dither()
+        self.wait()
         self.play(FadeIn(vectors, submobject_mode = "lagged_start"))
-        self.dither()
+        self.wait()
         self.play(Transform(vectors, dots))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(proj_lines))
-        self.dither()
+        self.wait()
         self.play(
             self.number_line.set_stroke, None, 2, 
             Transform(vectors, proj_dots),
@@ -1509,7 +1509,7 @@ class ProjectOntoUnitVectorNumberline(VectorScene):
             submobject_mode = "lagged_start",
             run_time = 2
         )
-        self.dither()
+        self.wait()
 
 
     def get_vectors(self, num_vectors = 10, randomize = True):
@@ -1570,9 +1570,9 @@ class ProjectionFunctionSymbol(Scene):
 
         self.add(VGroup(*equation[:3]))
         self.play(Write(VGroup(*equation[3:])))
-        self.dither()
+        self.wait()
         self.play(Write(words), ShowCreation(arrow))
-        self.dither()
+        self.wait()
 
 class ProjectLineOfDots(ProjectOntoUnitVectorNumberline):
     CONFIG = {
@@ -1607,19 +1607,19 @@ class ProjectSingleVectorOnUHat(ProjectOntoUnitVectorNumberline):
             ShowCreation(v),
             Write(v.label),
         )
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(v.proj_line),
             Transform(v.copy(), v.proj)
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(v),
             FadeOut(v.proj_line),
             FadeOut(v.label),
             Write(dot_product)
         )
-        self.dither()
+        self.wait()
 
 class AskAboutProjectionMatrix(Scene):
     def construct(self):
@@ -1640,13 +1640,13 @@ class AskAboutProjectionMatrix(Scene):
             Write(words), 
             Write(matrix)
         )
-        self.dither()
+        self.wait()
         for b_words in basis_words:
             self.play(
                 Write(b_words),
                 ShowCreation(b_words.arrow)
             )
-        self.dither()
+        self.wait()
 
 class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
     CONFIG = {
@@ -1712,7 +1712,7 @@ class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
         for vect, proj_vect, proj_line, proj_dot in quads:
             self.play(Transform(vect.copy(), proj_vect))
             to_remove += self.get_mobjects_from_last_animation()
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, to_remove))
 
         # self.show_u_coords(u_label)
@@ -1737,7 +1737,7 @@ class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
     #     eq.next_to(u_label, RIGHT)
     #     coords.next_to(eq, RIGHT)
     #     self.play(*map(FadeIn, [eq, coords]))
-    #     self.dither()
+    #     self.wait()
     #     self.u_coords = coords
 
     def show_symmetry(self, vect, coord, coord_landing_spot):
@@ -1772,17 +1772,17 @@ class ProjectBasisVectors(ProjectOntoUnitVectorNumberline):
             self.play(Transform(v.copy(), v.proj))
             self.remove(*self.get_mobjects_from_last_animation())
             self.add(v.proj)
-            self.dither()
+            self.wait()
         for v in vect, self.u_hat:
             self.play(
                 ShowCreation(v.tick),
                 Write(v.q_mark)
             )
-            self.dither()
+            self.wait()
         for v in self.u_hat, vect:
             coord_copy = coord.copy().move_to(v.q_mark)
             self.play(Transform(v.q_mark, coord_copy))
-            self.dither()
+            self.wait()
         final_coord = coord_copy.copy()
         self.play(final_coord.move_to, coord_landing_spot)
 
@@ -1816,13 +1816,13 @@ class ShowSingleProjection(ProjectBasisVectors):
 
         self.play(ShowCreation(vector))
         self.play(Write(coords))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(proj_line))
         self.play(
             Transform(vector.copy(), proj),
             Animation(self.u_hat)
         )
-        self.dither()
+        self.wait()
 
 class GeneralTwoDOneDMatrixMultiplication(TwoDOneDMatrixMultiplication):
     CONFIG = {
@@ -1891,7 +1891,7 @@ class UHatIsTransformInDisguise(Scene):
         words.scale(2)
 
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
 class AskAboutNonUnitVectors(TeacherStudentsScene):
     def construct(self):
@@ -1931,7 +1931,7 @@ class ScaleUpUHat(ProjectOntoUnitVectorNumberline) :
             Transform(self.u_hat, new_u),
             Transform(self.u_hat.coords, new_u.coords)
         )
-        self.dither()
+        self.wait()
 
     def show_matrix(self):
         matrix = Matrix([list(self.u_hat.coords.get_entries().copy())])
@@ -1954,7 +1954,7 @@ class ScaleUpUHat(ProjectOntoUnitVectorNumberline) :
             GrowFromCenter(brace),
             Write(words, run_time = 2)
         )
-        self.dither()
+        self.wait()
         self.matrix_words = words
 
     def transform_basis_vectors(self):
@@ -1981,12 +1981,12 @@ class ScaleUpUHat(ProjectOntoUnitVectorNumberline) :
             self.play(ShowCreation(b.proj_line))
             self.play(Transform(mover, b.proj))
             self.play(Write(b.proj.label))
-            self.dither()
+            self.wait()
             self.play(
                 Transform(mover, b.scaled_proj),
                 Transform(b.proj.label, b.scaled_proj.label)
             )
-            self.dither()
+            self.wait()
         self.play(*map(FadeOut, [
             mob
             for mob in self.get_mobjects()
@@ -2017,12 +2017,12 @@ class ScaleUpUHat(ProjectOntoUnitVectorNumberline) :
             Transform(mover, proj),
             project.highlight, YELLOW
         )
-        self.dither()
+        self.wait()
         self.play(
             mover.scale, self.scalar,
             then_scale.highlight, YELLOW
         )
-        self.dither()
+        self.wait()
 
 class NoticeWhatHappenedHere(TeacherStudentsScene):
     def construct(self):
@@ -2113,11 +2113,11 @@ class TwoDOneDTransformationSeparateSpace(Scene):
                 Animation(start_words),
                 run_time = 1,
             )
-        self.dither()
+        self.wait()
         self.play(Transform(start_words.copy(), end_words))
         self.play(ShowCreation(vect))
         self.play(Transform(matrix.copy(), v_coords))
-        self.dither()
+        self.wait()
 
 class IsntThisBeautiful(TeacherStudentsScene):
     def construct(self):
@@ -2145,7 +2145,7 @@ class RememberGraphDuality(Scene):
         """)
         words.to_edge(UP)
         self.play(Write(words, lag_factor = 4))
-        self.dither()
+        self.wait()
 
 class LooseDualityDescription(Scene):
     def construct(self):
@@ -2159,7 +2159,7 @@ class LooseDualityDescription(Scene):
         self.add(duality)
         self.play(Write(arrow))
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
 class DualOfAVector(ScaleUpUHat):
     pass #Exact copy
@@ -2200,7 +2200,7 @@ class TranslateToTheWorldOfTransformations(TwoDOneDMatrixMultiplication):
         word.highlight(BLUE)
 
         self.play(Write(dot_product))
-        self.dither()
+        self.wait()
         self.play(
             dot.set_fill, BLACK, 0,
             Transform(v1, matrix),
@@ -2209,9 +2209,9 @@ class TranslateToTheWorldOfTransformations(TwoDOneDMatrixMultiplication):
             GrowFromCenter(brace),
             Write(word)
         )
-        self.dither()
+        self.wait()
         self.show_product(v1, v2)
-        self.dither()
+        self.wait()
 
 class NumericalAssociationSilliness(GeneralTwoDOneDMatrixMultiplication):
     pass #copy
@@ -2282,7 +2282,7 @@ class WhatTheVectorWantsToBe(Scene):
         self.add(plane, v_line, number_line, numbers)
         self.play(ShowCreation(vect))
         self.play(Write(v_coords))
-        self.dither()
+        self.wait()
         self.play(
             Transform(v_coords.copy(), matrix),
             Write(words)
@@ -2297,7 +2297,7 @@ class WhatTheVectorWantsToBe(Scene):
                 v_coords
             ])
         )
-        self.dither()
+        self.wait()
 
 class NextVideo(Scene):
     def construct(self):
@@ -2314,7 +2314,7 @@ class NextVideo(Scene):
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.dither()
+        self.wait()
 
 
 

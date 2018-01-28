@@ -46,8 +46,8 @@ class FractalCreation(Scene):
                 fractal, new_fractal,
                 **self.transform_kwargs
             ))
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
         self.fractal = fractal
 
 class PentagonalFractalCreation(FractalCreation):
@@ -59,7 +59,6 @@ class DiamondFractalCreation(FractalCreation):
         "max_order" : 6,
         "fractal_kwargs" : {"height" : 6}
     }
-
 
 class PiCreatureFractalCreation(FractalCreation):
     CONFIG = {
@@ -80,7 +79,7 @@ class PiCreatureFractalCreation(FractalCreation):
         fractal.target.shift(-smallest_pi.get_corner(UP+LEFT))
         fractal.target.scale(zoom_factor)
         self.play(MoveToTarget(fractal, run_time = 10))
-        self.dither()
+        self.wait()
 
 class QuadraticKochFractalCreation(FractalCreation):
     CONFIG = {
@@ -108,7 +107,6 @@ class KochSnowFlakeFractalCreation(FractalCreation):
         },
     }
 
-
 class WonkyHexagonFractalCreation(FractalCreation):
     CONFIG = {
         "fractal_class" : WonkyHexagonFractal,
@@ -116,7 +114,15 @@ class WonkyHexagonFractalCreation(FractalCreation):
         "fractal_kwargs" : {"height" : 6},
     }
 
-
+class SierpinskiFractalCreation(FractalCreation):
+    CONFIG = {
+        "fractal_class" : Sierpinski,
+        "max_order" : 6,
+        "fractal_kwargs" : {"height" : 6},
+        "transform_kwargs" : {
+            "path_arc" : 0,
+        },
+    }
 
 class CircularFractalCreation(FractalCreation):
     CONFIG = {

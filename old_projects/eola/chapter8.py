@@ -47,9 +47,9 @@ class OpeningQuote(Scene):
         author.next_to(words, DOWN, buff = 0.5)
 
         self.play(FadeIn(words))
-        self.dither(1)
+        self.wait(1)
         self.play(Write(author, run_time = 3))
-        self.dither()
+        self.wait()
 
 class LastVideo(Scene):
     def construct(self):
@@ -63,7 +63,7 @@ class LastVideo(Scene):
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.dither()  
+        self.wait()  
 
 class DoTheSameForCross(TeacherStudentsScene):
     def construct(self):
@@ -98,7 +98,7 @@ class ListSteps(Scene):
         self.play(ShowCreation(h_line))
         for step in steps:
             self.play(Write(step))
-            self.dither()
+            self.wait()
         for step in steps:
             target = step.copy()
             target.scale_in_place(1.1)
@@ -120,7 +120,7 @@ class ListSteps(Scene):
             randy.look, LEFT
         )
         self.play(randy.change_mode, "erm")
-        self.dither(2)
+        self.wait(2)
         self.play(randy.change_mode, "pondering")
         self.play(Blink(randy))
 
@@ -159,18 +159,18 @@ class SimpleDefine2dCrossProduct(LinearTransformationScene):
             ShowCreation(self.square),
             *map(Animation, [self.v, self.w])
         )
-        self.dither()
+        self.wait()
         self.play(FadeOut(self.square))
         v_copy = self.v.copy()
         w_copy = self.w.copy()
         self.play(v_copy.shift, self.w.get_end())
         self.play(w_copy.shift, self.v.get_end())
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(self.square),
             *map(Animation, [self.v, self.w, v_copy, w_copy])
         )
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [v_copy, w_copy]))
 
     def write_area_words(self):
@@ -206,16 +206,16 @@ class SimpleDefine2dCrossProduct(LinearTransformationScene):
                 for vect in self.v, self.w
             ]
         )
-        self.dither()
+        self.wait()
         self.play(ApplyFunction(
             lambda m : m.scale_in_place(1.2).highlight(RED),
             times,
             rate_func = there_and_back
         ))
-        self.dither()
+        self.wait()
         self.play(Write(words), Write(equals))
         self.play(ShowCreation(arrow))
-        self.dither()
+        self.wait()
         self.play(FadeOut(arrow))
 
         self.area_words = words
@@ -264,7 +264,7 @@ class SimpleDefine2dCrossProduct(LinearTransformationScene):
         arc = self.get_arc(self.v, self.w, radius = 1.5)
         arc.highlight(GREEN)
         self.play(ShowCreation(arc))
-        self.dither()
+        self.wait()
         self.play(Write(positive), ShowCreation(positive.arrow))
         self.remove(arc)
         self.play(
@@ -281,7 +281,7 @@ class SimpleDefine2dCrossProduct(LinearTransformationScene):
             Write(minus_sign),
             MoveToTarget(self.area_words)
         )
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [negative, negative.arrow, arc]))
 
     def swap_v_and_w(self):
@@ -295,7 +295,7 @@ class SimpleDefine2dCrossProduct(LinearTransformationScene):
             FadeOut(self.area_words),
             Transform(self.cross.copy(), new_cross, path_arc = np.pi/2)
         )
-        self.dither()
+        self.wait()
 
         curr_matrix = np.array([self.v.get_end()[:2], self.w.get_end()[:2]])
         new_matrix = np.array(list(reversed(curr_matrix)))
@@ -310,7 +310,7 @@ class SimpleDefine2dCrossProduct(LinearTransformationScene):
             rate_func = there_and_back,
             run_time = 3
         )
-        self.dither()
+        self.wait()
 
 
     def get_arc(self, v, w, radius = 2):
@@ -344,7 +344,7 @@ class CrossBasisVectors(LinearTransformationScene):
         i_label.target.scale(1.5)
         j_label.target.scale(1.2)
 
-        self.dither()
+        self.wait()
 
         times = TexMobject("\\times")
         cross = VGroup(i_label.target, times, j_label.target)
@@ -362,11 +362,11 @@ class CrossBasisVectors(LinearTransformationScene):
             Write(times),
         )
         self.play(Write(eq))
-        self.dither()
+        self.wait()
         arc = self.get_arc(self.i_hat, self.j_hat, radius = 1)
         # arc.highlight(GREEN)
         self.play(ShowCreation(arc))
-        self.dither()
+        self.wait()
 
 
     def get_arc(self, v, w, radius = 2):
@@ -403,15 +403,15 @@ class VisualExample(SimpleDefine2dCrossProduct):
         minus.move_to(self.area_words, aligned_edge = LEFT)
 
         self.play(ShowCreation(val))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(arc))
-        self.dither()
+        self.wait()
         self.play(FadeOut(self.area_words))
         self.play(
             Transform(arc, minus),
             val.next_to, minus, RIGHT
         )
-        self.dither()
+        self.wait()
 
     def show_coords(self):
         for vect, edge in (self.v, DOWN), (self.w, UP):        
@@ -511,7 +511,7 @@ class ContrastDotAndCross(Scene):
                 ],
                 run_time = 2
             )
-        self.dither()
+        self.wait()
 
     def add_cross_product(self):
         colors = [X_COLOR, Y_COLOR, Z_COLOR]
@@ -586,7 +586,7 @@ class ContrastDotAndCross(Scene):
             *movements,
             run_time = 2
         )
-        self.dither()
+        self.wait()
 
         self.cross_result = result
         self.only_3d_text = brace_text
@@ -627,7 +627,7 @@ class ContrastDotAndCross(Scene):
                 for entry in entries
             ]
         )
-        self.dither()
+        self.wait()
         self.two_d_result = VGroup(*result[1:])
 
     def emphasize_output_type(self):
@@ -640,12 +640,12 @@ class ContrastDotAndCross(Scene):
             GrowFromCenter(two_d_brace),
             Write(number)
         )
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(three_d_brace),
             Write(vector)
         )
-        self.dither()
+        self.wait()
 
 class PrereqDeterminant(Scene):
     def construct(self):
@@ -660,7 +660,7 @@ class PrereqDeterminant(Scene):
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.dither()  
+        self.wait()  
 
 class Define2dCrossProduct(LinearTransformationScene):
     CONFIG = {
@@ -734,7 +734,7 @@ class Define2dCrossProduct(LinearTransformationScene):
             Transform(w.label.copy(), w.label.target),
             Write(times),
         )
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(matrix_background),            
             Write(matrix.get_brackets()), 
@@ -743,17 +743,17 @@ class Define2dCrossProduct(LinearTransformationScene):
         self.play(Transform(v.coords.copy(), v.coords.target))
         self.play(Transform(w.coords.copy(), w.coords.target))
         matrix.add_to_back(matrix_background)
-        self.dither()
+        self.wait()
         self.play(
             Write(equals),
             Write(det_text),
             Animation(matrix),
         )
-        self.dither()
+        self.wait()
         self.play(FadeIn(disclaimer))
-        self.dither()
+        self.wait()
         self.play(FadeOut(disclaimer))
-        self.dither()
+        self.wait()
 
         cross_product.add_to_back(cross_background)
         cross_product.add(equals)
@@ -782,7 +782,7 @@ class Define2dCrossProduct(LinearTransformationScene):
             ShowCreation(j_hat),
             Write(basis_labels)
         )
-        self.dither()
+        self.wait()
 
         side_brace = Brace(matrix, RIGHT)
         transform_words = side_brace.get_text("Linear transformation")
@@ -812,13 +812,13 @@ class Define2dCrossProduct(LinearTransformationScene):
             ShowCreation(i_words.arrow),
             col1.highlight, X_COLOR
         )
-        self.dither()
+        self.wait()
         self.play(
             Transform(i_words, j_words),
             Transform(i_words.arrow, j_words.arrow),
             col2.highlight, Y_COLOR
         )
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [i_words, i_words.arrow, basis_labels]))
 
         self.add_vector(i_hat, animate = False)
@@ -826,7 +826,7 @@ class Define2dCrossProduct(LinearTransformationScene):
         self.play(*map(FadeOut, [side_brace, transform_words]))
         self.add_foreground_mobject(matrix)
         self.apply_transposed_matrix([self.v_coords, self.w_coords])
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(self.plane),
             *map(Animation, [
@@ -845,7 +845,7 @@ class Define2dCrossProduct(LinearTransformationScene):
             FadeIn(self.w.coord_array),
             matrix.highlight_columns, V_COLOR, W_COLOR
         )
-        self.dither()
+        self.wait()
         self.i_hat, self.j_hat = i_hat, j_hat
         self.matrix = matrix
 
@@ -870,11 +870,11 @@ class Define2dCrossProduct(LinearTransformationScene):
         )
         self.add_unit_square(animate = True, opacity = 0.2)
         self.square.save_state()
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix(
             [self.v_coords, self.w_coords]
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(self.plane),
             Animation(self.matrix),
@@ -895,7 +895,7 @@ class Define2dCrossProduct(LinearTransformationScene):
             Write(area_words),
             ShowCreation(area_arrow)
         )
-        self.dither()
+        self.wait()
 
         pm = VGroup(*map(TexMobject, ["+", "-"]))
         pm.gradient_highlight(GREEN, RED)
@@ -906,7 +906,7 @@ class Define2dCrossProduct(LinearTransformationScene):
             Transform(self.square.get_point_mobject(), pm),
             path_arc = -np.pi/2
         )
-        self.dither()
+        self.wait()
         self.play(*map(FadeOut, [
             area_arrow, self.v.coord_array, self.w.coord_array
         ]))
@@ -935,7 +935,7 @@ class Define2dCrossProduct(LinearTransformationScene):
         movers.save_state()
         self.remove(self.square)
         self.play(Transform(movers, movers.target))
-        self.dither()
+        self.wait()
 
         v_tex, w_tex = ["\\vec{\\textbf{%s}}"%s for s in "v", "w"]
         positive_words, negative_words = words_list = [
@@ -955,7 +955,7 @@ class Define2dCrossProduct(LinearTransformationScene):
             Write(positive_words),
             ShowCreation(arc)
         )
-        self.dither()
+        self.wait()
         self.remove(arc)
         self.play(movers.restore)
         arc = self.get_arc(self.v, self.w)
@@ -964,7 +964,7 @@ class Define2dCrossProduct(LinearTransformationScene):
             Transform(positive_words, negative_words),
             ShowCreation(arc)
         )
-        self.dither()
+        self.wait()
 
         anticommute = TexMobject(
             v_tex, "\\times", w_tex, "=-", w_tex, "\\times", v_tex
@@ -992,7 +992,7 @@ class Define2dCrossProduct(LinearTransformationScene):
             rate_func = there_and_back,
             run_time = 2,
         )
-        self.dither()
+        self.wait()
 
     def get_arc(self, v, w, radius = 2):
         v_angle, w_angle = v.get_angle(), w.get_angle()
@@ -1056,7 +1056,7 @@ class TwoDCrossProductExample(Define2dCrossProduct):
                 Write(vect.coords),
                 Write(vect.label)
             )
-            self.dither()
+            self.wait()
         self.play(
             Transform(v.coords.background_rectangle, matrix_background),
             Transform(w.coords.background_rectangle, matrix_background),
@@ -1104,7 +1104,7 @@ class TwoDCrossProductExample(Define2dCrossProduct):
             ),
             run_time = 3
         )
-        self.dither()
+        self.wait()
         self.play(Write(equals_result))
 
         self.add_foreground_mobject(equation_start, equation_end)
@@ -1116,7 +1116,7 @@ class TwoDCrossProductExample(Define2dCrossProduct):
         arc.highlight(RED)
         self.play(Write(det_sym))
         self.play(ShowCreation(arc))
-        self.dither()
+        self.wait()
 
 
     def show_transformation(self, v, w):
@@ -1195,7 +1195,7 @@ class BiggerWhenPerpendicular(LinearTransformationScene):
             *map(Animation, [v, w])
         )
         self.play(GrowFromCenter(bigger))
-        self.dither()
+        self.wait()
         self.play(
             Transform(start_square, end_square),            
             Transform(v, v.target),
@@ -1205,7 +1205,7 @@ class BiggerWhenPerpendicular(LinearTransformationScene):
             Transform(start_words, end_words),
             Transform(bigger, smaller)
         )
-        self.dither()
+        self.wait()
 
 class ScalingRule(LinearTransformationScene):
     CONFIG = {
@@ -1261,20 +1261,20 @@ class ScalingRule(LinearTransformationScene):
             ShowCreation(square),
             *map(Animation, [v, w])
         )
-        self.dither()
+        self.wait()
         self.play(
             Transform(v, new_v),
             Transform(v_tex_mob, three_v),
         )
-        self.dither()
+        self.wait()
         self.play(
             Transform(square, new_squares),
             *map(Animation, [v, w]),
             path_arc = -np.pi/6
         )
-        self.dither()
+        self.wait()
         self.play(Write(rhs))
-        self.dither()
+        self.wait()
 
 class TechnicallyNotTheDotProduct(TeacherStudentsScene):
     def construct(self):
@@ -1302,9 +1302,9 @@ class WriteAreaOfParallelogram(Scene):
         words.remove(result)
 
         self.play(Write(words))
-        self.dither()
+        self.wait()
         self.play(Write(result, run_time = 1))
-        self.dither()
+        self.wait()
 
 class WriteCrossProductProperties(Scene):
     def construct(self):
@@ -1343,11 +1343,11 @@ class WriteCrossProductProperties(Scene):
             GrowFromCenter(brace),
             Write(vector, run_time = 1)
         )
-        self.dither()
+        self.wait()
         self.play(Write(length_words, run_time = 1))
-        self.dither()
+        self.wait()
         self.play(Write(perpendicular))
-        self.dither()
+        self.wait()
 
 def get_cross_product_right_hand_rule_labels():
     v_tex, w_tex = get_vect_tex(*"vw")
@@ -1387,7 +1387,7 @@ class LabelingExampleVectors(Scene):
 
     def fade_in_out(self, mob):            
         self.play(FadeIn(mob))
-        self.dither()
+        self.wait()
         self.play(FadeOut(mob))
 
 class ThreeDTwoPossiblePerpendicularVectors(Scene):
@@ -1455,7 +1455,7 @@ class ShowCrossProductFormula(Scene):
             Write(equals),
             Write(result.get_brackets())
         )
-        self.dither()
+        self.wait()
         movement_sets[2], movement_sets[3] = movement_sets[3], movement_sets[2]
         for e1, e1_target, e2, e2_target, syms in movement_sets:
             e1.save_state()
@@ -1472,7 +1472,7 @@ class ShowCrossProductFormula(Scene):
                 e2.restore,
                 path_arc = -np.pi/2
             )
-        self.dither()
+        self.wait()
 
 class ThisGetsWeird(TeacherStudentsScene):
     def construct(self):
@@ -1523,7 +1523,7 @@ class DeterminantTrick(Scene):
         equation.arrange_submobjects()
 
         self.add(*equation[:-2])
-        self.dither()
+        self.wait()
         self.play(Write(matrix.get_brackets()))
         for col, vect in (col2, v), (col3, w):
             col.save_state()
@@ -1534,16 +1534,16 @@ class DeterminantTrick(Scene):
             )
         for entry in col1:
             self.play(Write(entry))
-        self.dither()
+        self.wait()
         self.play(*map(Write, [equals, det_text]))
-        self.dither()
+        self.wait()
 
         disclaimer = TextMobject("$^*$ See ``Note on conventions'' in description")
         disclaimer.scale(0.7)
         disclaimer.highlight(RED)
         disclaimer.next_to(equation, DOWN)
         self.play(FadeIn(disclaimer))
-        self.dither()
+        self.wait()
         self.play(FadeOut(disclaimer))
 
         circle = Circle()
@@ -1560,7 +1560,7 @@ class DeterminantTrick(Scene):
             ShowCreation(circle)
         )
         self.play(randy.look, RIGHT)
-        self.dither()
+        self.wait()
         self.play(FadeOut(circle))
 
         self.play(
@@ -1603,7 +1603,7 @@ class DeterminantTrick(Scene):
                 [mob.scale_in_place, 1.2]
                 for mob in quint
             ]))
-            self.dither() 
+            self.wait() 
             self.play(*[
                 Transform(mob.copy(), mob.t) 
                 for mob in quint
@@ -1614,9 +1614,9 @@ class DeterminantTrick(Scene):
             ], 
                 run_time = 2
             )
-            self.dither()
+            self.wait()
             paren_sets.append(VGroup(lp, rp))
-        self.dither()
+        self.wait()
         self.play(randy.change_mode, "pondering")
         for parens in paren_sets:
             brace = Brace(parens)
@@ -1626,7 +1626,7 @@ class DeterminantTrick(Scene):
                 GrowFromCenter(brace),
                 Write(text, run_time = 2)
             )
-        self.dither()
+        self.wait()
 
 class ThereIsAReason(TeacherStudentsScene):
     def construct(self):
@@ -1666,7 +1666,7 @@ class NextVideo(Scene):
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.dither()
+        self.wait()
 
 class CrossAndDualWords(Scene):
     def construct(self):
@@ -1708,12 +1708,12 @@ class CrossAndDualWords(Scene):
 
         self.add(vector_word)
         self.play(Write(cross))
-        self.dither()
+        self.wait()
         self.play(FadeIn(transform_word))
         self.play(Write(transform))
-        self.dither()
+        self.wait()
         self.play(Transform(det_text, dot_with_cross))
-        self.dither()
+        self.wait()
 
 
 

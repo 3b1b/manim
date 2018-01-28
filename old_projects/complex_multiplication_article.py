@@ -15,6 +15,7 @@ from topics.complex_numbers import *
 
 DEFAULT_PLANE_CONFIG = {
     "stroke_width" : 2*DEFAULT_POINT_THICKNESS
+    }
 
 
 class SuccessiveComplexMultiplications(ComplexMultiplication):
@@ -121,7 +122,7 @@ class ConjugateDivisionExample(ComplexMultiplication):
         self.multiplier = 1./(abs(num)**2)
         self.anim_config["path_func"] = straight_path
         self.apply_multiplication()
-        self.dither()
+        self.wait()
 
 class DrawSolutionsToZToTheNEqualsW(Scene):
     @staticmethod
@@ -155,7 +156,7 @@ class DrawSolutionsToZToTheNEqualsW(Scene):
             Dot(point, color = BLUE_B, radius = 0.1)
             for point in points
         ]
-        lines = [Line(*pair) for pair in adjascent_pairs(points)]
+        lines = [Line(*pair) for pair in adjacent_pairs(points)]
 
         self.add(plane, circle, *dots+lines)
         self.add(*plane.get_coordinate_labels())

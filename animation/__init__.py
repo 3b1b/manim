@@ -1,6 +1,5 @@
 __all__ = [
     "animation",
-    "meta_animations",
     "simple_animations",
     "transform"
 ]

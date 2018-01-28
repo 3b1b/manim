@@ -4,3 +4,4 @@ Pillow==3.4.2
 progressbar==2.3
 scipy==0.17.1
 tqdm==4.7.1
+git+https://github.com/scottopell/aggdraw-64bits@c95aac4369038706943fd0effb7d888683860e5a#egg=aggdraw

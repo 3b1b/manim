@@ -8,106 +8,80 @@ from helpers import *
 from mobject import Mobject
 from point_cloud_mobject import PMobject
 
-class ImageMobject(PMobject):
+class ImageMobject(Mobject):
     """
     Automatically filters out black pixels
     """
     CONFIG = {
         "filter_color" : "black",
         "invert" : False,
-        "use_cache" : True,
-        "stroke_width" : 1,
-        "scale_factorue": 1.0,
-        "should_center" : True,
+        # "use_cache" : True,
+        "height": 2.0,
+        "image_mode" : "RGBA",
+        "pixel_array_dtype" : "uint8",
     }
-    def __init__(self, image_file, **kwargs):
-        digest_locals(self)
-        Mobject.__init__(self, **kwargs)
-        self.name = to_cammel_case(
-            os.path.split(image_file)[-1].split(".")[0]
-        )
-        possible_paths = [
-            image_file,
-            os.path.join(IMAGE_DIR, image_file),
-            os.path.join(IMAGE_DIR, image_file + ".jpg"),
-            os.path.join(IMAGE_DIR, image_file + ".png"),
-            os.path.join(IMAGE_DIR, image_file + ".gif"),
-        ]
-        for path in possible_paths:
-            if os.path.exists(path):
-                self.generate_points_from_file(path)
-                self.scale(self.scale_factorue)
-                if self.should_center:
-                    self.center()
-                return
-        raise IOError("File not Found")
-                
-    def generate_points_from_file(self, path):
-        if self.use_cache and self.read_in_cached_attrs(path):
-            return
-        image = Image.open(path).convert('RGB')
-        if self.invert:
-            image = invert_image(image)
-        self.generate_points_from_image_array(np.array(image))
-        self.cache_attrs(path)
-
-    def get_cached_attr_files(self, path, attrs):
-        #Hash should be unique to (path, invert) pair
-        unique_hash = str(hash(path+str(self.invert)))
-        return [
-            os.path.join(IMAGE_MOBJECT_DIR, unique_hash)+"."+attr
-            for attr in attrs
-        ]
-
-    def read_in_cached_attrs(self, path, 
-                             attrs = ("points", "rgbs"), 
-                             dtype = "float64"):
-        cached_attr_files = self.get_cached_attr_files(path, attrs)
-        if all(map(os.path.exists, cached_attr_files)):
-            for attr, cache_file in zip(attrs, cached_attr_files):
-                arr = np.fromfile(cache_file, dtype = dtype)
-                arr = arr.reshape(arr.size/self.dim, self.dim)
-                setattr(self, attr, arr)
-            return True
-        return False
-
-    def cache_attrs(self, path, 
-                    attrs = ("points", "rgbs"),
-                    dtype = "float64"):
-        cached_attr_files = self.get_cached_attr_files(path, attrs)
-        for attr, cache_file in zip(attrs, cached_attr_files): 
-            getattr(self, attr).astype(dtype).tofile(cache_file)
-
-
-    def generate_points_from_image_array(self, image_array):
-        height, width = image_array.shape[:2]
-        #Flatten array, and find indices where rgb is not filter_rgb
-        array = image_array.reshape((height * width, 3))
-        filter_rgb = np.array(Color(self.filter_color).get_rgb())
-        filter_rgb = 255*filter_rgb.astype('uint8')
-        bools = array == filter_rgb
-        bools = bools[:,0]*bools[:,1]*bools[:,2]
-        indices = np.arange(height * width, dtype = 'int')[~bools]
-        rgbs = array[indices, :].astype('float') / 255.0
-
-        points = np.zeros((indices.size, 3), dtype = 'float64')
-        points[:,0] =  indices%width - width/2
-        points[:,1] = -indices/width + height/2
-
-        height, width = map(float, (height, width))
-        if height / width > float(DEFAULT_HEIGHT) / DEFAULT_WIDTH:
-            points *= 2 * SPACE_HEIGHT / height
+    def __init__(self, filename_or_array, **kwargs):
+        digest_config(self, kwargs)
+        if isinstance(filename_or_array, str):
+            path = get_full_raster_image_path(filename_or_array)
+            image = Image.open(path).convert(self.image_mode)
+            self.pixel_array = np.array(image)
         else:
-            points *= 2 * SPACE_WIDTH / width
-        self.add_points(points, rgbs = rgbs)
+            self.pixel_array = np.array(filename_or_array)
+        self.change_to_rgba_array()
+        Mobject.__init__(self, **kwargs)
+
+    def change_to_rgba_array(self):
+        pa = self.pixel_array
+        if len(pa.shape) == 2:
+            pa = pa.reshape(list(pa.shape) + [1])
+        if pa.shape[2] == 1:
+            pa = pa.repeat(3, axis = 2)
+        if pa.shape[2] == 3:
+            alphas = 255*np.ones(
+                list(pa.shape[:2])+[1], 
+                dtype = self.pixel_array_dtype
+            )
+            pa = np.append(pa, alphas, axis = 2)
+        self.pixel_array = pa
+
+    def highlight(self, color, alpha = None, family = True):
+        rgb = color_to_int_rgb(color)
+        self.pixel_array[:,:,:3] = rgb
+        if alpha is not None:
+            self.pixel_array[:,:,3] = int(255*alpha)
+        for submob in self.submobjects:
+            submob.highlight(color, alpha, family)
         return self
 
+    def init_points(self):
+        #Corresponding corners of image are fixed to these
+        #Three points
+        self.points = np.array([
+            UP+LEFT, 
+            UP+RIGHT,
+            DOWN+LEFT,
+        ])
+        self.center()
+        self.scale_to_fit_height(self.height)
+        h, w = self.pixel_array.shape[:2]
+        self.stretch_to_fit_width(self.height*w/h)
 
-class MobjectFromPixelArray(ImageMobject):
-    def __init__(self, image_array, **kwargs):
-        Mobject.__init__(self, **kwargs)
-        self.generate_points_from_image_array(image_array)
+    def set_opacity(self, alpha):
+        self.pixel_array[:,:,3] = int(255*alpha)
+        return self
 
+    def fade(self, darkness = 0.5):
+        self.set_opacity(1 - darkness)
+        return self
 
+    def interpolate_color(self, mobject1, mobject2, alpha):
+        assert(mobject1.pixel_array.shape == mobject2.pixel_array.shape)
+        self.pixel_array = interpolate(
+            mobject1.pixel_array, mobject2.pixel_array, alpha
+        ).astype(self.pixel_array_dtype)
+
+    def copy(self):
+        return self.deepcopy()
 
 

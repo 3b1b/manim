@@ -2,54 +2,52 @@
 from helpers import *
 
 from scene.scene import Scene
-from animation.simple_animations import Write, DrawBorderThenFill
-from animation.transform import FadeIn, ApplyMethod
+from animation import Animation
+from animation.simple_animations import Write, DrawBorderThenFill, LaggedStart
+from animation.transform import FadeIn, FadeOut, ApplyMethod
 from mobject.vectorized_mobject import VGroup
 from mobject.tex_mobject import TexMobject, TextMobject
-from topics.characters import Mortimer, Blink
+from topics.characters import Mortimer, Randolph, Blink
 from topics.objects import PatreonLogo
+from topics.geometry import Square, Rectangle, DashedLine
 
 
 class OpeningQuote(Scene):
     CONFIG = {
-        "quote" : [
-            """The art of doing mathematics is finding
-            that """, "special case", 
-            """that contains all the 
-            germs of generality."""
-        ],
-        "highlighted_quote_terms" : {
-            "special case" : BLUE
-        },
-        "author" : "David Hilbert",
+        "quote" : [],
+        "quote_arg_separator" : " ",
+        "highlighted_quote_terms" : {},
+        "author" : "",
         "fade_in_kwargs" : {
             "submobject_mode" : "lagged_start",
             "rate_func" : None,
-            "lag_factor" : 3,
+            "lag_factor" : 4,
             "run_time" : 5,
         },
     }
     def construct(self):
-        quote = self.get_quote()
-        author = self.get_author(quote)
+        self.quote = self.get_quote()
+        self.author = self.get_author(self.quote)
 
-        self.play(FadeIn(quote, **self.fade_in_kwargs))
-        self.dither(2)
-        self.play(Write(author, run_time = 3))
-        self.dither()
+        self.play(FadeIn(self.quote, **self.fade_in_kwargs))
+        self.wait(2)
+        self.play(Write(self.author, run_time = 3))
+        self.wait()
 
     def get_quote(self, max_width = 2*SPACE_WIDTH-1):
+        text_mobject_kwargs = {
+            "alignment" : "",
+            "arg_separator" : self.quote_arg_separator,
+        }
         if isinstance(self.quote, str):
-            quote = TextMobject(
-                "``%s''"%self.quote.strip(),
-                alignment = "",
-            )
+            quote = TextMobject("``%s''"%self.quote.strip(), **text_mobject_kwargs)
         else:
-            words = ["``"] + list(self.quote) + ["''"]
-            quote = TextMobject(*words, alignment = "")
+            words = ["\\Large ``"] + list(self.quote) + ["''"]
+            quote = TextMobject(*words, **text_mobject_kwargs)
             ##TODO, make less hacky
-            quote[0].shift(0.2*RIGHT)
-            quote[-1].shift(0.2*LEFT)
+            if self.quote_arg_separator == " ":
+                quote[0].shift(0.2*RIGHT)
+                quote[-1].shift(0.2*LEFT)
         for term, color in self.highlighted_quote_terms.items():
             quote.highlight_by_tex(term, color)
         quote.to_edge(UP)
@@ -58,110 +56,148 @@ class OpeningQuote(Scene):
         return quote
 
     def get_author(self, quote):
-        author = TextMobject("-" + self.author)
+        author = TextMobject("\\Large -" + self.author)
         author.next_to(quote, DOWN)
         author.highlight(YELLOW)
         return author
 
 class PatreonThanks(Scene):
     CONFIG = {
-        "specific_patrons" : [
-            "Ali Yahya",
-            "Meshal  Alshammari",
-            "CrypticSwarm    ",
-            "Justin Helps",
-            "Ankit Agarwal",
-            "Yu  Jun",
-            "Shelby  Doolittle",
-            "Dave    Nicponski",
-            "Damion  Kistler",
-            "Juan    Benet",
-            "Othman  Alikhan",
-            "Markus  Persson",
-            "Dan Buchoff",
-            "Derek Dai",
-            "Joseph  John Cox",
-            "Luc Ritchie",
-            "Nils Schneider",
-            "Mathew Bramson",
-            "Guido   Gambardella",
-            "Jerry   Ling",
-            "Mark    Govea",
-            "Vecht",
-            "Shimin Kuang",
-            "Rish    Kundalia",
-            "Achille Brighton",
-            "Kirk    Werklund",
-            "Ripta   Pasay",
-            "Felipe  Diniz",
-        ],
-        "max_patrons_height" : 2*SPACE_HEIGHT - 1,
+        "specific_patrons" : [],
+        "max_patron_group_size" : 20,
+        "patron_scale_val" : 0.8,
     }
     def construct(self):
         morty = Mortimer()
         morty.next_to(ORIGIN, DOWN)
 
-        n_patrons = len(self.specific_patrons)
-        special_thanks = TextMobject("Special thanks")
-        special_thanks.highlight(YELLOW)
-        special_thanks.to_edge(UP)
-
         patreon_logo = PatreonLogo()
-        patreon_logo.next_to(morty, UP, buff = MED_LARGE_BUFF)
+        patreon_logo.to_edge(UP)
 
-        left_patrons = VGroup(*map(TextMobject, 
-            self.specific_patrons[:n_patrons/2]
-        ))
-        right_patrons = VGroup(*map(TextMobject, 
-            self.specific_patrons[n_patrons/2:]
-        ))
-        for patrons in left_patrons, right_patrons:
-            patrons.arrange_submobjects(
-                DOWN, aligned_edge = LEFT,
-                buff = 1.5*MED_SMALL_BUFF
-            )
+        n_patrons = len(self.specific_patrons)
+        patrons = map(TextMobject, self.specific_patrons)
+        num_groups = float(len(patrons)) / self.max_patron_group_size
+        proportion_range = np.linspace(0, 1, num_groups + 1)
+        indices = (len(patrons)*proportion_range).astype('int')
+        patron_groups = [
+            VGroup(*patrons[i:j])
+            for i, j in zip(indices, indices[1:])
+        ]        
 
-        all_patrons = VGroup(left_patrons, right_patrons)
-        all_patrons.scale(0.7)
-        for patrons, vect in (left_patrons, LEFT), (right_patrons, RIGHT):
-            patrons.to_corner(UP+vect, buff = MED_SMALL_BUFF)
+        for i, group in enumerate(patron_groups):
+            left_group = VGroup(*group[:len(group)/2])
+            right_group = VGroup(*group[len(group)/2:])
+            for subgroup, vect in (left_group, LEFT), (right_group, RIGHT):
+                subgroup.arrange_submobjects(DOWN, aligned_edge = LEFT)
+                subgroup.scale(self.patron_scale_val)
+                subgroup.to_edge(vect)
 
-        shift_distance = max(
-            0, 1-SPACE_HEIGHT-all_patrons.get_bottom()[1]
-        )
-        velocity = shift_distance/9.0
-        def get_shift_anim():
-            return ApplyMethod(
-                all_patrons.shift, velocity*UP,
-                rate_func = None
-            )
-
-        self.play(
-            morty.change_mode, "gracious",
-            DrawBorderThenFill(patreon_logo),
-        )
-        self.play(Write(special_thanks, run_time = 1))
-        self.play(
-            Write(left_patrons),
-            morty.look_at, left_patrons
-        )
-        self.play(
-            Write(right_patrons),
-            morty.look_at, right_patrons
-        )
-        self.play(Blink(morty), get_shift_anim())
-        for patrons in left_patrons, right_patrons:
-            for index in 0, -1:
+        last_group = None
+        for i, group in enumerate(patron_groups):
+            anims = []
+            if last_group is not None:
                 self.play(
-                    morty.look_at, patrons[index],
-                    get_shift_anim()
+                    FadeOut(last_group),
+                    morty.look, UP+LEFT
                 )
-                self.play(get_shift_anim())
+            else:
+                anims += [
+                    DrawBorderThenFill(patreon_logo),
+                ]
+            self.play(
+                LaggedStart(
+                    FadeIn, group, 
+                    run_time = 2,
+                ),
+                morty.change, "gracious", group.get_corner(UP+LEFT),
+                *anims
+            )
+            self.play(morty.look_at, group.get_corner(DOWN+LEFT))
+            self.play(morty.look_at, group.get_corner(UP+RIGHT))
+            self.play(morty.look_at, group.get_corner(DOWN+RIGHT))
+            self.play(Blink(morty))
+            last_group = group
+
+class PatreonEndScreen(PatreonThanks):
+    CONFIG = {
+        "n_patron_columns" : 3,
+        "max_patron_width" : 3,
+        "run_time" : 20,
+    }
+    def construct(self):
+        self.add_title()
+        self.scroll_through_patrons()
+
+    def add_title(self):
+        title = TextMobject("Clicky Stuffs")
+        title.scale(1.5)
+        title.to_edge(UP, buff = MED_SMALL_BUFF)
+
+        randy, morty = Randolph(), Mortimer()
+        for pi, vect in (randy, LEFT), (morty, RIGHT):
+            pi.scale_to_fit_height(title.get_height())
+            pi.change_mode("thinking")
+            pi.look(DOWN)
+            pi.next_to(title, vect, buff = MED_LARGE_BUFF)
+        self.add_foreground_mobjects(title, randy, morty)
 
 
+    def scroll_through_patrons(self):
+        logo_box = Square(side_length = 2.5)
+        logo_box.to_corner(DOWN+LEFT, buff = MED_LARGE_BUFF)
+        total_width = SPACE_WIDTH - logo_box.get_right()[0]
 
+        black_rect = Rectangle(
+            fill_color = BLACK,
+            fill_opacity = 1,
+            stroke_width = 0,
+            width = 2*SPACE_WIDTH,
+            height = 1.1*SPACE_HEIGHT
+        )
+        black_rect.to_edge(UP, buff = 0)
+        line = DashedLine(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        line.move_to(black_rect, DOWN)
+        line.shift(SMALL_BUFF*SMALL_BUFF*DOWN)
+        self.add(line)
 
+        patrons = VGroup(*map(TextMobject, self.specific_patrons))
+        patrons.scale(self.patron_scale_val)
+        for patron in patrons:
+            if patron.get_width() > self.max_patron_width:
+                patron.scale_to_fit_width(self.max_patron_width)
+        columns = VGroup(*[
+            VGroup(
+                *patrons[i::self.n_patron_columns]
+            ).arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+            for i in range(self.n_patron_columns)
+        ])
+        columns.arrange_submobjects(
+            RIGHT, buff = LARGE_BUFF,
+            aligned_edge = UP,
+        )
+        columns.scale_to_fit_width(total_width - 1)
+        columns.next_to(black_rect, DOWN, LARGE_BUFF)
+        columns.to_edge(RIGHT)
 
+        self.play(
+            columns.next_to, SPACE_HEIGHT*DOWN, UP, LARGE_BUFF,
+            columns.to_edge, RIGHT, 
+            Animation(black_rect),
+            rate_func = None,
+            run_time = self.run_time,
+        )
+
+class ExternallyAnimatedScene(Scene):
+    def construct(self):
+        raise Exception("Don't actually run this class.")
+
+class TODOStub(Scene):
+    CONFIG = {
+        "message" : ""
+    }
+    def construct(self):
+        self.add(TextMobject("TODO: %s"%self.message))
+        self.wait()
 
 
 

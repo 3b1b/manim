@@ -14,7 +14,7 @@ from scene import Scene, SceneFromVideo
 from script_wrapper import command_line_create_scene
 
 MOVIE_PREFIX = "counting_in_binary/"
-BASE_HAND_FILE = os.path.join(MOVIE_DIR, MOVIE_PREFIX, "Base.mp4")
+BASE_HAND_FILE = os.path.join(ANIMATIONS_DIR, MOVIE_PREFIX, "Base.mp4")
 FORCED_FRAME_DURATION = 0.02
 TIME_RANGE = (0, 42)
 INITIAL_PADDING = 27
@@ -82,13 +82,13 @@ COUNT_TO_TIP_POS = {
 
 def finger_tip_power_of_2(finger_no):
     return TexMobject(str(2**finger_no)).shift(COUNT_TO_TIP_POS[finger_no])
-    
+
 class Hand(ImageMobject):
     STARTING_BOTTOM_RIGHT = [4.61111111e+00,  -3.98888889e+00, 9.80454690e-16]
     def __init__(self, num, small = False, **kwargs):
         Mobject2D.__init__(self, **kwargs)
         path = os.path.join(
-            MOVIE_DIR, MOVIE_PREFIX, "images", "Hand%d.png"%num
+            ANIMATIONS_DIR, MOVIE_PREFIX, "images", "Hand%d.png"%num
         )
         invert = False
         if not self.read_in_cached_attrs(path, invert):
@@ -115,7 +115,7 @@ class Hand(ImageMobject):
 
 def get_algorithm():
     return TextMobject(ALGORITHM_TEXT)
-    
+
 def get_finger_colors():
     return list(Color("yellow").range_to("red", 5))
 
@@ -133,7 +133,7 @@ class LeftHand(Hand):
     def __init__(self, num, **kwargs):
         Hand.__init__(
             self,
-            read_reversed_binary(five_char_binary(num)), 
+            read_reversed_binary(five_char_binary(num)),
             **kwargs
         )
         self.rotate(np.pi, UP)
@@ -145,7 +145,7 @@ def get_hand_map(which_hand = "right"):
     elif which_hand == "left":
         Class = LeftHand
     else:
-        print "Bad arg, bro"
+        print("Bad arg, bro")
         return
     return dict([
         (num, Class(num, small=True))
@@ -164,13 +164,13 @@ class SaveEachNumber(OverHand):
         OverHand.construct(self)
         for count in COUNT_TO_FRAME_NUM:
             path = os.path.join(
-                MOVIE_DIR, MOVIE_PREFIX, "images", 
+                ANIMATIONS_DIR, MOVIE_PREFIX, "images",
                 "Hand%d.png"%count
             )
             Image.fromarray(self.frames[COUNT_TO_FRAME_NUM[count]]).save(path)
 
     def write_to_movie(self, name = None):
-        print "Why bother writing to movie..."
+        print("Why bother writing to movie...")
 
 class ShowCounting(OverHand):
     def construct(self):
@@ -197,7 +197,7 @@ class ShowFrameNum(OverHand):
     def construct(self):
         OverHand.construct(self)
         for frame, count in zip(self.frames, it.count()):
-            print count, "of", len(self.frames)
+            print(count + "of" + len(self.frames))
             mob = Mobject(*[
                 TexMobject(char).shift(0.3*x*RIGHT)
                 for char, x, in zip(str(count), it.count())
@@ -234,14 +234,14 @@ class Introduction(Scene):
             mob.sort_points(lambda p : p[0])
 
         self.add(words)
-        self.dither()
+        self.wait()
         self.play(DelayByOrder(Transform(words, hand)))
-        self.dither()
+        self.wait()
 
 
 class ShowReadingRule(Scene):
     def construct(self):
-        sample_counts = [6, 17, 27, 31]        
+        sample_counts = [6, 17, 27, 31]
         question = TextMobject("""
             How do you recognize what number a given configuration represents?
         """, size = "\\Huge").scale(0.75).to_corner(UP+LEFT)
@@ -253,16 +253,16 @@ class ShowReadingRule(Scene):
         for count in sample_counts:
             hand = Hand(count, small = True)
             self.add(hand)
-            self.dither()
+            self.wait()
             self.remove(hand)
         self.add(hand)
-        self.dither()
+        self.wait()
         self.remove(question)
         self.add(answer[0])
         counts = map(finger_tip_power_of_2, range(5))
         for count in counts:
             self.play(SpinInFromNothing(count, run_time = 0.3))
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(answer[1]))
         for count in sample_counts:
             self.clear()
@@ -282,14 +282,14 @@ class ShowReadingRule(Scene):
             " + ".join([str(2**c) for c in counts]).split(" ") + ["=%d"%num]
         ).to_corner(UP+RIGHT).split()
         self.add(hand, *count_mobs)
-        self.dither()
+        self.wait()
         self.play(*[
-            Transform(count_mobs[n/2], sum_mobs[n]) 
+            Transform(count_mobs[n/2], sum_mobs[n])
             if n%2 == 0 and n/2 < len(counts)
             else FadeIn(sum_mobs[n])
             for n in range(len(sum_mobs))
         ])
-        self.dither(2.0)
+        self.wait(2.0)
 
 
 class ShowIncrementRule(Scene):
@@ -326,7 +326,7 @@ class ShowIncrementRule(Scene):
                 self.background = oh.frames[COUNT_TO_FRAME_NUM[start]]
                 self.add(phrase)
                 self.play(ShimmerIn(self.get_arrow_set(start)))
-                self.dither()
+                self.wait()
                 self.clear()
                 self.reset_background()
             self.frames += [
@@ -380,22 +380,22 @@ class MindFindsShortcuts(Scene):
         sum421 = TexMobject("4+2+1").shift(DOWN+2*RIGHT)
         seven = TexMobject("7").shift(DOWN+6*RIGHT)
         compound = Mobject(
-            Arrow(hand, sum421), 
+            Arrow(hand, sum421),
             sum421,
             Arrow(sum421, seven)
         )
         self.add(
             words1,
-            hand, 
+            hand,
             compound,
             seven
         )
-        self.dither()
+        self.wait()
         self.play(
             Transform(compound, Arrow(hand, seven).highlight("yellow")),
             ShimmerIn(TextMobject("Directly recognize").shift(1.5*DOWN+2*RIGHT))
         )
-        self.dither()
+        self.wait()
 
         self.clear()
         hands = dict([
@@ -412,23 +412,23 @@ class MindFindsShortcuts(Scene):
         equals23 = TexMobject("=23").shift(DOWN + 5.5*RIGHT)
 
         self.add(words2, hands[23])
-        self.dither()
+        self.wait()
         self.play(
             Transform(
-                deepcopy(hands[16]).highlight("black").center().shift(hands[23].get_center()), 
+                deepcopy(hands[16]).highlight("black").center().shift(hands[23].get_center()),
                 hands[16]
             ),
             Transform(
-                deepcopy(hands[7]).highlight("black").center().shift(hands[23].get_center()), 
+                deepcopy(hands[7]).highlight("black").center().shift(hands[23].get_center()),
                 hands[7]
             ),
             Animation(hands[23]),
             FadeIn(equals),
             FadeIn(plus)
         )
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(equals23))
-        self.dither()
+        self.wait()
 
 
 class CountingExampleSentence(ShowCounting):
@@ -451,9 +451,9 @@ class FinishCountingExampleSentence(Scene):
         eightteen.sort_points()
         comp = Mobject(sixteen, two)
         self.add(hand, comp, words)
-        self.dither()
+        self.wait()
         self.play(Transform(comp, eightteen))
-        self.dither()
+        self.wait()
 
 class Question(Scene):
     def construct(self):
@@ -473,21 +473,10 @@ class WithToes(Scene):
             "you could count to 1,048,575"
         ]).split()
         self.add(words[0])
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(words[1]))
-        self.dither()
+        self.wait()
 
 
 if __name__ == "__main__":
     command_line_create_scene(MOVIE_PREFIX)
-
-
-
-
-
-
-
-
-
-
-

@@ -16,10 +16,15 @@ def string_to_numbers(num_string):
 
 class SVGMobject(VMobject):
     CONFIG = {
-        "initial_scale_factor" : 1,
         "should_center" : True,
+        "height" : 2,
+        "width" : None,
         #Must be filled in in a subclass, or when called
         "file_name" : None, 
+        "stroke_width" : 0,
+        "fill_opacity" : 1,
+        # "fill_color" : LIGHT_GREY,
+        "propagate_style_to_family" : True,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs, locals())
@@ -32,8 +37,8 @@ class SVGMobject(VMobject):
             raise Exception("Must specify file for SVGMobject")
         possible_paths = [
             self.file_name,
-            os.path.join(IMAGE_DIR, self.file_name),
-            os.path.join(IMAGE_DIR, self.file_name + ".svg"),
+            os.path.join(SVG_IMAGE_DIR, self.file_name),
+            os.path.join(SVG_IMAGE_DIR, self.file_name + ".svg"),
         ]
         for path in possible_paths:
             if os.path.exists(path):
@@ -74,7 +79,8 @@ class SVGMobject(VMobject):
         elif element.tagName in ['polygon', 'polyline']:
             result.append(self.polygon_to_mobject(element))
         else:
-            warnings.warn("Unknown element type: " + element.tagName)
+            pass ##TODO
+            # warnings.warn("Unknown element type: " + element.tagName)
         result = filter(lambda m : m is not None, result)
         self.handle_transforms(element, VMobject(*result))
         return result
@@ -173,7 +179,11 @@ class SVGMobject(VMobject):
     def move_into_position(self):
         if self.should_center:
             self.center()
-        self.scale_in_place(self.initial_scale_factor)
+        if self.height is not None:
+            self.scale_to_fit_height(self.height)
+        if self.width is not None:
+            self.scale_to_fit_width(self.width)
+
 
 
 class VMobjectFromSVGPathstring(VMobject):
@@ -208,7 +218,7 @@ class VMobjectFromSVGPathstring(VMobject):
         for command, coord_string in pairs:
             self.handle_command(command, coord_string)
         #people treat y-coordinate differently
-        self.rotate(np.pi, RIGHT)
+        self.rotate(np.pi, RIGHT, about_point = ORIGIN)
 
     def handle_command(self, command, coord_string):
         isLower = command.islower()

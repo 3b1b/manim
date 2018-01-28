@@ -1,19 +1,22 @@
 #!/usr/bin/env python
 
 import sys
-import getopt
+# import getopt
+import argparse
 import imp
 import itertools as it
 import inspect
 import traceback
 import imp
+import os
+import subprocess as sp
 
 from helpers import *
 from scene import Scene
 from camera import Camera
 
 HELP_MESSAGE = """
-   Usage: 
+   Usage:
    python extract_scene.py <module> [<scene name>]
 
    -p preview in low quality
@@ -23,6 +26,8 @@ HELP_MESSAGE = """
    -m use medium quality
    -a run and save every scene in the script, or all args for the given scene
    -q don't print progress
+   -f when writing to a movie file, export the frames in png sequence
+   -t use transperency when exporting images
 """
 SCENE_NOT_FOUND_MESSAGE = """
    That scene is not in the script
@@ -39,75 +44,93 @@ NO_SCENE_MESSAGE = """
 """
 
 
-def get_configuration(sys_argv):
+def get_configuration():
    try:
-      opts, args = getopt.getopt(sys_argv[1:], 'hlmpwsqao:')
-   except getopt.GetoptError as err:
-      print str(err)
+      parser = argparse.ArgumentParser()
+      parser.add_argument(
+         "file", help = "path to file holding the python code for the scene"
+      )
+      parser.add_argument(
+         "scene_name", help = "Name of the Scene class you want to see"
+      )
+      optional_args = [
+         ("-p", "--preview"),
+         ("-w", "--write_to_movie"),
+         ("-s", "--show_last_frame"),
+         ("-l", "--low_quality"),
+         ("-m", "--medium_quality"),
+         ("-g", "--save_pngs"),
+         ("-f", "--show_file_in_finder"),
+         ("-t", "--transparent"),
+         ("-q", "--quiet"),
+         ("-a", "--write_all")
+      ]
+      for short_arg, long_arg in optional_args:
+         parser.add_argument(short_arg, long_arg, action = "store_true")
+      parser.add_argument("-o", "--output_name")
+      parser.add_argument("-n", "--skip_to_animation_number")
+      args = parser.parse_args()
+   except argparse.ArgumentError as err:
+      print(str(err))
       sys.exit(2)
    config = {
-      "file"           : None,
-      "scene_name"     : "",
-      "camera_config"  : PRODUCTION_QUALITY_CAMERA_CONFIG,
-      "frame_duration" : PRODUCTION_QUALITY_FRAME_DURATION,
-      "preview"        : False,
-      "write"          : False,
-      "save_image"     : False,
-      "quiet"          : False,
-      "write_all"      : False,
-      "output_name"    : None,
+      "file"            : args.file,
+      "scene_name"      : args.scene_name,
+      "open_video_upon_completion" : args.preview,
+      "show_file_in_finder" : args.show_file_in_finder,
+      #By default, write to file
+      "write_to_movie"  : args.write_to_movie or not args.show_last_frame,
+      "show_last_frame" : args.show_last_frame,
+      "save_pngs"       : args.save_pngs,
+      #If -t is passed in (for transparent), this will be RGBA
+      "saved_image_mode": "RGBA" if args.transparent else "RGB",
+      "quiet"           : args.quiet or args.write_all,
+      "write_all"       : args.write_all,
+      "output_name"     : args.output_name,
+      "skip_to_animation_number" : args.skip_to_animation_number,
    }
-   for opt, arg in opts:
-      if opt == '-h':
-         print HELP_MESSAGE
-         return
-      if opt in ['-l', '-p']:
-         config["camera_config"] = LOW_QUALITY_CAMERA_CONFIG
-         config["frame_duration"] = LOW_QUALITY_FRAME_DURATION
-      if opt == '-p':
-         config["preview"] = True
-      if opt == '-m':
-         config["camera_config"] = MEDIUM_QUALITY_CAMERA_CONFIG
-         config["frame_duration"] = MEDIUM_QUALITY_FRAME_DURATION
-      if opt == '-w':
-         config["write"] = True
-      if opt == '-s':
-         config["save_image"] = True
-      if opt in ['-q', '-a']:
-         config["quiet"] = True
-      if opt == '-a':
-         config["write_all"] = True
-      if opt == '-o':
-         config["output_name"] = arg
-   #By default, write to file
-   actions = ["write", "preview", "save_image"]
-   if not any([config[key] for key in actions]):
-      config["write"] = True   
-   config["skip_animations"] = config["save_image"] and not config["write"]
+   if args.low_quality:
+      config["camera_config"] = LOW_QUALITY_CAMERA_CONFIG
+      config["frame_duration"] = LOW_QUALITY_FRAME_DURATION
+   elif args.medium_quality:
+      config["camera_config"] = MEDIUM_QUALITY_CAMERA_CONFIG
+      config["frame_duration"] = MEDIUM_QUALITY_FRAME_DURATION
+   else:
+      config["camera_config"] = PRODUCTION_QUALITY_CAMERA_CONFIG
+      config["frame_duration"] = PRODUCTION_QUALITY_FRAME_DURATION
 
-   if len(args) == 0:
-      print HELP_MESSAGE
-      sys.exit()
-   config["file"] = args[0]
-   if len(args) > 1:
-      config["scene_name"] = args[1]
+   stan = config["skip_to_animation_number"]
+   if stan is not None:
+      config["skip_to_animation_number"] = int(stan)
+
+   config["skip_animations"] = any([
+      config["show_last_frame"] and not config["write_to_movie"],
+      config["skip_to_animation_number"],
+   ])
    return config
 
 def handle_scene(scene, **config):
-   output_name = config["output_name"] or str(scene)
    if config["quiet"]:
       curr_stdout = sys.stdout
       sys.stdout = open(os.devnull, "w")
-      
-   if config["preview"]:
-      scene.preview()
-   if config["save_image"]:
-      if not config["write_all"]:
-         scene.show_frame()
-      path = os.path.join(MOVIE_DIR, config["movie_prefix"])
-      scene.save_image(path, output_name)
-   if config["write"]:
-      scene.write_to_movie(os.path.join(config["movie_prefix"], output_name))
+
+   if config["show_last_frame"]:
+      scene.save_image(mode = config["saved_image_mode"])
+   open_file = any([
+      config["show_last_frame"],
+      config["open_video_upon_completion"],
+      config["show_file_in_finder"]
+   ])
+   if open_file:
+      commands = ["open"]
+      if config["show_file_in_finder"]:
+         commands.append("-R")
+      #
+      if config["show_last_frame"]:
+         commands.append(scene.get_image_file_path())
+      else:
+         commands.append(scene.get_movie_file_path())
+      sp.call(commands)
 
    if config["quiet"]:
       sys.stdout.close()
@@ -126,7 +149,7 @@ def prompt_user_for_choice(name_to_obj):
    num_to_name = {}
    names = sorted(name_to_obj.keys())
    for count, name in zip(it.count(1), names):
-      print "%d: %s"%(count, name)
+      print("%d: %s"%(count, name))
       num_to_name[count] = name
    try:
       user_input = raw_input(CHOOSE_NUMBER_MESSAGE)
@@ -135,58 +158,87 @@ def prompt_user_for_choice(name_to_obj):
          for num_str in user_input.split(",")
       ]
    except:
-      print INVALID_NUMBER_MESSAGE
+      print(INVALID_NUMBER_MESSAGE)
       sys.exit()
 
 def get_scene_classes(scene_names_to_classes, config):
    if len(scene_names_to_classes) == 0:
-      print NO_SCENE_MESSAGE
+      print(NO_SCENE_MESSAGE)
       return []
    if len(scene_names_to_classes) == 1:
       return scene_names_to_classes.values()
    if config["scene_name"] in scene_names_to_classes:
       return [scene_names_to_classes[config["scene_name"]] ]
    if config["scene_name"] != "":
-      print SCENE_NOT_FOUND_MESSAGE
+      print(SCENE_NOT_FOUND_MESSAGE)
       return []
    if config["write_all"]:
       return scene_names_to_classes.values()
    return prompt_user_for_choice(scene_names_to_classes)
 
-def get_module(file_name):
+def get_module_windows(file_name):
    module_name = file_name.replace(".py", "")
-   last_module = imp.load_module(".", *imp.find_module("."))
+   last_module = imp.load_module("__init__", *imp.find_module("__init__", ['.']))
    for part in module_name.split(os.sep):
-      load_args = imp.find_module(part, last_module.__path__)
+      load_args = imp.find_module(part, [os.path.dirname(last_module.__file__)])
       last_module = imp.load_module(part, *load_args)
    return last_module
 
+def get_module_posix(file_name):
+    module_name = file_name.replace(".py", "")
+    last_module = imp.load_module(".", *imp.find_module("."))
+    for part in module_name.split(os.sep):
+        load_args = imp.find_module(part, last_module.__path__)
+        last_module = imp.load_module(part, *load_args)
+    return last_module
+
+def get_module(file_name):
+    if os.name == 'nt':
+        return get_module_windows(file_name)
+    return get_module_posix(file_name)
+
+
 def main():
-   config = get_configuration(sys.argv)
+   config = get_configuration()
    module = get_module(config["file"])
    scene_names_to_classes = dict(
       inspect.getmembers(module, is_scene)
    )
-   config["movie_prefix"] = config["file"].replace(".py", "")
-   scene_kwargs = {
-      "camera_config" : config["camera_config"],
-      "frame_duration" : config["frame_duration"],
-      "skip_animations" : config["skip_animations"],
-   }
+
+   config["output_directory"] = os.path.join(
+      ANIMATIONS_DIR,
+      config["file"].replace(".py", "")
+   )
+
+   scene_kwargs = dict([
+      (key, config[key])
+      for key in [
+         "camera_config",
+         "frame_duration",
+         "skip_animations",
+         "write_to_movie",
+         "output_directory",
+         "save_pngs",
+         "skip_to_animation_number",
+      ]
+   ])
+   
+   scene_kwargs["name"] = config["output_name"]
+   if config["save_pngs"]:
+      print "We are going to save a PNG sequence as well..."
+      scene_kwargs["save_pngs"] = True
+      scene_kwargs["pngs_mode"] = config["saved_image_mode"]
+      
    for SceneClass in get_scene_classes(scene_names_to_classes, config):
       try:
          handle_scene(SceneClass(**scene_kwargs), **config)
          play_finish_sound()
       except:
-         print "\n\n"
+         print("\n\n")
          traceback.print_exc()
-         print "\n\n"
+         print("\n\n")
          play_error_sound()
 
 
 if __name__ == "__main__":
    main()
-
-
-
-

@@ -38,9 +38,9 @@ class OpeningQuote(Scene):
         author.next_to(words, DOWN, buff = 0.5)
 
         self.play(FadeIn(words))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(author, run_time = 3))
-        self.dither()
+        self.wait()
 
 class AnotherFootnote(TeacherStudentsScene):
     def construct(self):
@@ -69,7 +69,7 @@ class ColumnsRepresentBasisVectors(Scene):
 
         self.add(matrix)
         self.play(Write(question, run_time = 2))
-        self.dither()
+        self.wait()
         self.play(FadeOut(question))
         for i, words in enumerate([i_hat_words, j_hat_words]):
             arrow = Arrow(
@@ -85,7 +85,7 @@ class ColumnsRepresentBasisVectors(Scene):
                     for m in matrix.get_mob_matrix()[:,i]
                 ]
             )
-        self.dither(2)
+        self.wait(2)
         self.put_in_thought_bubble()
 
     def put_in_thought_bubble(self):
@@ -105,9 +105,9 @@ class ColumnsRepresentBasisVectors(Scene):
             randy.change_mode, "pondering"
         )
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(randy.change_mode, "surprised")
-        self.dither()
+        self.wait()
 
 class Symbolic2To3DTransform(Scene):
     def construct(self):
@@ -151,21 +151,21 @@ class Symbolic2To3DTransform(Scene):
             GrowFromCenter(output_brace),
             Write(output_words)
         )
-        self.dither()
+        self.wait()
 
 class PlaneStartState(LinearTransformationScene):
     def construct(self):
         self.add_title("Input space")
         labels = self.get_basis_vector_labels()
         self.play(*map(Write, labels))
-        self.dither()
+        self.wait()
 
 class OutputIn3dWords(Scene):
     def construct(self):
         words = TextMobject("Output in 3d")
         words.scale(1.5)
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
 class OutputIn3d(Scene):
     pass
@@ -199,14 +199,14 @@ class DescribeColumnsInSpecificTransformation(Scene):
             )
 
         self.play(Write(matrix.get_brackets()))
-        self.dither()
+        self.wait()
         for col in i_col, j_col:
             self.play(
                 Write(col),            
                 ShowCreation(col.arrow),
                 Write(col.words, run_time = 1)
             )
-            self.dither()
+            self.wait()
 
 class CountRowsAndColumns(Scene):
     def construct(self):
@@ -234,13 +234,13 @@ class CountRowsAndColumns(Scene):
             GrowFromCenter(cols_brace),
             Write(cols_words, run_time = 2)
         )
-        self.dither()
+        self.wait()
         self.play(
             rows_words[0].copy().move_to, title[0],
             cols_words[0].copy().move_to, title[2],
             Write(VMobject(title[1], title[3]))
         )
-        self.dither()
+        self.wait()
 
 class WriteColumnSpaceDefinition(Scene):
     def construct(self):
@@ -270,7 +270,7 @@ class WriteColumnSpaceDefinition(Scene):
             GrowFromCenter(brace),
             Write(words, run_time = 2)
         )
-        self.dither()
+        self.wait()
 
 class MatrixInTheWild(Scene):
     def construct(self):
@@ -297,10 +297,10 @@ class MatrixInTheWild(Scene):
             randy.change_mode, "pondering"
         )
         # self.play(matrix.highlight_columns, X_COLOR, Y_COLOR)
-        self.dither()
+        self.wait()
         for x in range(3):
             self.play(Blink(randy))
-            self.dither(2)
+            self.wait(2)
         new_matrix = Matrix([[3, 1, 4], [1, 5, 9]])
         new_matrix.move_to(matrix, aligned_edge = UP+LEFT)
         self.play(
@@ -312,9 +312,9 @@ class MatrixInTheWild(Scene):
         self.add(matrix)
         self.play(randy.look, DOWN+RIGHT, run_time = 0.5)
         self.play(randy.change_mode, "confused")
-        self.dither()
+        self.wait()
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
         top_brace = Brace(matrix, UP)
         top_words = top_brace.get_text("3 basis vectors")
@@ -337,7 +337,7 @@ class MatrixInTheWild(Scene):
             Write(side_words, run_time = 2)
         )
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class ThreeDToTwoDInput(Scene):
     pass
@@ -347,7 +347,7 @@ class ThreeDToTwoDInputWords(Scene):
         words = TextMobject("3d input")
         words.scale(2)
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
 class ThreeDToTwoDOutput(LinearTransformationScene):
     CONFIG = {
@@ -385,7 +385,7 @@ class ThreeDToTwoDOutput(LinearTransformationScene):
         for v, tex in pairs:
             self.label_vector(v, tex)
         self.play(Write(subwords))
-        self.dither()
+        self.wait()
 
 class ThreeDToTwoDSideBySide(Scene):
     pass
@@ -434,7 +434,7 @@ class Symbolic2To1DTransform(Scene):
             GrowFromCenter(output_brace),
             Write(output_words)
         )
-        self.dither()
+        self.wait()
 
 class TwoDTo1DTransform(LinearTransformationScene):
     CONFIG = {
@@ -456,19 +456,19 @@ class TwoDTo1DTransform(LinearTransformationScene):
 
 
         self.play(Write(plane_words))
-        self.dither()
+        self.wait()
         self.remove(plane_words)
         mobjects = self.get_mobjects()
         self.play(
             *map(FadeOut, mobjects) + [ShowCreation(line)]
         )
         self.play(Write(line_words))
-        self.dither()
+        self.wait()
         self.remove(line_words)
         self.play(*map(FadeIn, mobjects))
         self.apply_transposed_matrix(self.t_matrix)
         self.play(Write(VMobject(*line.get_number_mobjects())))
-        self.dither()
+        self.wait()
         self.show_matrix()
 
     def show_matrix(self):
@@ -491,9 +491,9 @@ class TwoDTo1DTransform(LinearTransformationScene):
         for i, vect in enumerate([self.i_hat, self.j_hat]):
             self.play(vect.rotate, np.pi/12, rate_func = wiggle)
             self.play(Write(vect.words))
-            self.dither()
+            self.wait()
             self.play(vect.words[1].copy().move_to, entries[i])
-            self.dither()
+            self.wait()
 
 class TwoDTo1DTransformWithDots(TwoDTo1DTransform):
     def construct(self):
@@ -526,7 +526,7 @@ class TwoDTo1DTransformWithDots(TwoDTo1DTransform):
             added_anims = [Transform(dots, new_dots)]
         )
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
 class NextVideo(Scene):
     def construct(self):
@@ -541,7 +541,7 @@ class NextVideo(Scene):
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.dither()     
+        self.wait()     
 
 class DotProductPreview(VectorScene):
     CONFIG = {
@@ -586,7 +586,7 @@ class DotProductPreview(VectorScene):
             Animation(self.v),
             rate_func = there_and_back
         )
-        self.dither()
+        self.wait()
 
     def project_w(self):
         dot_product = np.dot(self.v.get_end(), self.w.get_end())
@@ -606,7 +606,7 @@ class DotProductPreview(VectorScene):
         self.play(ShowCreation(projection_line))
         self.add(self.w.copy().fade())
         self.play(Transform(self.w, projected_w))
-        self.dither()
+        self.wait()
 
     def show_scaling(self):
         dot_product = np.dot(self.v.get_end(), self.w.get_end())
@@ -632,16 +632,16 @@ class DotProductPreview(VectorScene):
         new_w = self.w.copy().scale(self.v.get_length())
 
         self.play(Write(start_brace))
-        self.dither()
+        self.wait()
         self.play(
             Transform(start_brace, interim_brace),
             Transform(self.w, new_w)
         )
-        self.dither()
+        self.wait()
         self.play(
             Transform(start_brace, final_brace)
         )
-        self.dither()
+        self.wait()
 
 
 

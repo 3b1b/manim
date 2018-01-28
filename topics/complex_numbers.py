@@ -13,16 +13,8 @@ from scene import Scene
 
 class ComplexTransformationScene(Scene):
     CONFIG = {
-        "plane_config" : {
-            "x_line_frequency" : 1,
-            "y_line_frequency" : 1,
-            "secondary_line_ratio" : 1,
-        },
+        "plane_config" : {},
         "background_fade_factor" : 0.5,
-        "x_min" : -int(SPACE_WIDTH),
-        "x_max" : int(SPACE_WIDTH),
-        "y_min" : -SPACE_HEIGHT,
-        "y_max" : SPACE_HEIGHT,
         "use_multicolored_plane" : False,
         "vert_start_color" : BLUE, ##TODO
         "vert_end_color" : BLUE,
@@ -34,11 +26,14 @@ class ComplexTransformationScene(Scene):
             "run_time" : 5,
         },
         "background_label_scale_val" : 0.5,
+        "include_coordinate_labels" : True,
     }
     def setup(self):
         self.foreground_mobjects = []
         self.transformable_mobjects = []
         self.add_background_plane()
+        if self.include_coordinate_labels:
+            self.add_coordinate_labels()
 
     def add_foreground_mobject(self, mobject):
         self.add_foreground_mobjects(mobject)
@@ -62,49 +57,38 @@ class ComplexTransformationScene(Scene):
         )
 
     def add_background_plane(self):
-        background = NumberPlane(**self.plane_config).fade(
-            self.background_fade_factor
-        )
-        real_labels = VGroup(*[
-            TexMobject(str(x)).shift(
-                background.num_pair_to_point((x, 0))
-            )
-            for x in range(-int(background.x_radius), int(background.x_radius))
-        ])
-        imag_labels = VGroup(*[
-            TexMobject("%di"%y).shift(
-                background.num_pair_to_point((0, y))
-            )
-            for y in range(-int(background.y_radius), int(background.y_radius))
-            if y != 0
-        ])
-        for labels in real_labels, imag_labels:
-            for label in labels:
-                label.scale_in_place(self.background_label_scale_val)
-                label.next_to(label.get_center(), DOWN+LEFT, buff = SMALL_BUFF)
-                label.add_background_rectangle()
-            background.add(labels)
-        self.real_labels = real_labels
-        self.imag_labels = imag_labels
+        background = ComplexPlane(**self.plane_config)
+        background.fade(self.background_fade_factor)
         self.add(background)
         self.background = background
 
-    def add_transformable_plane(self, animate = False):
-        self.plane_config.update({
-            "x_radius" : (self.x_max - self.x_min)/2.,
-            "y_radius" : (self.y_max - self.y_min)/2.,
-        })
-        plane = NumberPlane(**self.plane_config)
-        plane.shift(
-            (self.x_max+self.x_min)*RIGHT/2.,
-            (self.y_max+self.y_min)*UP/2.,
-        )
-        self.paint_plane(plane)
-        if animate:
-            self.play(ShowCreation(plane, run_time = 2))
-        else:
-            self.add(plane)
-        self.plane = plane            
+    def add_coordinate_labels(self):
+        self.background.add_coordinates()
+        self.add(self.background)
+
+    def add_transformable_plane(self, **kwargs):
+        self.plane = self.get_transformable_plane()
+        self.add(self.plane)
+
+    def get_transformable_plane(self, x_range = None, y_range = None):
+        """
+        x_range and y_range would be tuples (min, max)
+        """
+        plane_config = dict(self.plane_config)
+        shift_val = ORIGIN
+        if x_range is not None:
+            x_min, x_max = x_range
+            plane_config["x_radius"] = x_max - x_min
+            shift_val += (x_max+x_min)*RIGHT/2.
+        if y_range is not None:
+            y_min, y_max = y_range
+            plane_config["y_radius"] = y_max - y_min
+            shift_val += (y_max+y_min)*UP/2.
+        plane = ComplexPlane(**plane_config)
+        plane.shift(shift_val)
+        if self.use_multicolored_plane:
+            self.paint_plane(plane)
+        return plane
 
     def prepare_for_transformation(self, mob):
         if hasattr(mob, "prepare_for_nonlinear_transform"):
@@ -114,22 +98,20 @@ class ComplexTransformationScene(Scene):
         #TODO...
 
     def paint_plane(self, plane):
-        if self.use_multicolored_plane:
-            for lines in plane.main_lines, plane.secondary_lines:
-                lines.gradient_highlight(
-                    self.vert_start_color,
-                    self.vert_end_color,
-                    self.horiz_start_color,
-                    self.horiz_end_color,
-                )
-            plane.axes.gradient_highlight(
+        for lines in plane.main_lines, plane.secondary_lines:
+            lines.gradient_highlight(
+                self.vert_start_color,
+                self.vert_end_color,
                 self.horiz_start_color,
-                self.vert_start_color
+                self.horiz_end_color,
             )
+        # plane.axes.gradient_highlight(
+        #     self.horiz_start_color,
+        #     self.vert_start_color
+        # )
 
     def z_to_point(self, z):
-        z = complex(z)
-        return self.background.num_pair_to_point((z.real, z.imag))
+        return self.background.number_to_point(z)
         
     def get_transformer(self, **kwargs):
         transform_kwargs = dict(self.default_apply_complex_function_kwargs)
@@ -145,7 +127,14 @@ class ComplexTransformationScene(Scene):
     def apply_complex_function(self, func, added_anims = [], **kwargs):
         transformer, transform_kwargs = self.get_transformer(**kwargs)
         transformer.generate_target()
+        #Rescale, apply function, scale back
+        transformer.target.shift(-self.background.get_center_point())
+        transformer.target.scale(1./self.background.unit_size)
         transformer.target.apply_complex_function(func)
+        transformer.target.scale(self.background.unit_size)
+        transformer.target.shift(self.background.get_center_point())
+        #
+
         for mob in transformer.target[0].family_members_with_points():
             mob.make_smooth()
         if self.post_transformation_stroke_width is not None:
@@ -159,7 +148,8 @@ class ComplexTransformationScene(Scene):
         transformer, transform_kwargs = self.get_transformer(**kwargs)
         def homotopy(x, y, z, t):
             output = complex_homotopy(complex(x, y), t)
-            return (output.real, output.imag, z)
+            rescaled_output = self.z_to_point(output)
+            return (rescaled_output.real, rescaled_output.imag, z)
 
         self.play(
             SmoothedVectorizedHomotopy(
@@ -176,49 +166,57 @@ def complex_string(complex_num):
 
 class ComplexPlane(NumberPlane):
     CONFIG = {
-        "color"                 : GREEN,
-        "unit_to_spatial_width" : 1,
-        "line_frequency"        : 1,
-        "faded_line_frequency"  : 0.5,
-        "number_at_center"      : complex(0),
+        "color" : BLUE,
+        "unit_size" : 1,
+        "line_frequency" : 1,
+        "faded_line_frequency" : 0.5,
+        "number_scale_factor" : 0.5,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
         kwargs.update({
-            "x_unit_to_spatial_width"  : self.unit_to_spatial_width,
-            "y_unit_to_spatial_height" : self.unit_to_spatial_width,
-            "x_line_frequency"         : self.line_frequency,
-            "x_faded_line_frequency"   : self.faded_line_frequency,
-            "y_line_frequency"         : self.line_frequency,
-            "y_faded_line_frequency"   : self.faded_line_frequency,
-            "num_pair_at_center"       : (self.number_at_center.real, 
-                                          self.number_at_center.imag),
+            "x_unit_size" : self.unit_size,
+            "y_unit_size" : self.unit_size,
+            "x_line_frequency" : self.line_frequency,
+            "x_faded_line_frequency" : self.faded_line_frequency,
+            "y_line_frequency" : self.line_frequency,
+            "y_faded_line_frequency" : self.faded_line_frequency,
         })
         NumberPlane.__init__(self, **kwargs)
 
     def number_to_point(self, number):
         number = complex(number)
-        return self.num_pair_to_point((number.real, number.imag))
+        return self.coords_to_point(number.real, number.imag)
+
+    def point_to_number(self, point):
+        x, y = self.point_to_coords(point)
+        return complex(x, y)
 
     def get_coordinate_labels(self, *numbers):
-        result = []
+        result = VGroup()
         nudge = 0.1*(DOWN+RIGHT)
         if len(numbers) == 0:
-            numbers = range(-int(self.x_radius), int(self.x_radius))
+            numbers = range(-int(self.x_radius), int(self.x_radius)+1)
             numbers += [
                 complex(0, y)
-                for y in range(-int(self.y_radius), int(self.y_radius))
+                for y in range(-int(self.y_radius), int(self.y_radius)+1)
             ]
         for number in numbers:
             point = self.number_to_point(number)
-            if number == 0:
+            num_str = str(number).replace("j", "i")
+            if num_str.startswith("0"):
                 num_str = "0"
+            elif num_str in ["1i", "-1i"]:
+                num_str = num_str.replace("1", "")
+            num_mob = TexMobject(num_str)
+            num_mob.add_background_rectangle()
+            num_mob.scale(self.number_scale_factor)
+            if complex(number).imag != 0:
+                vect = DOWN+RIGHT
             else:
-                num_str = str(number).replace("j", "i")
-            num = TexMobject(num_str)
-            num.scale(self.number_scale_factor)
-            num.shift(point-num.get_corner(UP+LEFT)+nudge)
-            result.append(num)
+                vect = DOWN+RIGHT
+            num_mob.next_to(point, vect, SMALL_BUFF)
+            result.add(num_mob)
         return result
 
     def add_coordinates(self, *numbers):
@@ -239,7 +237,6 @@ class ComplexPlane(NumberPlane):
             self.add(Line(ORIGIN, end_point, **config))
         return self
 
-
 class ComplexFunction(ApplyPointwiseFunction):
     def __init__(self, function, mobject = ComplexPlane, **kwargs):
         if "path_func" not in kwargs:
@@ -258,7 +255,8 @@ class ComplexHomotopy(Homotopy):
         """
         Complex Hootopy a function Cx[0, 1] to C
         """
-        def homotopy((x, y, z, t)):
+        def homotopy(event):
+            x, y, z, t = event
             c = complex_homotopy((complex(x, y), t))
             return (c.real, c.imag, z)
         Homotopy.__init__(self, homotopy, mobject, *args, **kwargs)

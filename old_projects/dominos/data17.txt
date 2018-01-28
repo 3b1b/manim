@@ -1,0 +1,33 @@
+framerate  5000
+domino thickness  7.5438
+domino spacing  43.2562
+friction  low
+2163    
+2563    
+2875    twist
+3137    
+3384    twist
+3708    
+4014    
+4257    
+4503    
+4763    
+5029    unclear
+X   offscreen
+X   offscreen
+X   offscreen
+X   offscreen
+X   offscreen
+X   offscreen
+X   offscreen
+7534    unclear
+7838    unclear
+8166    
+8404    twist
+8653    twist
+X   offscreen
+X   offscreen
+X   offscreen
+X   offscreen
+10188   twist
+10837   twist

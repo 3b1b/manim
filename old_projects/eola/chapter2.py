@@ -36,9 +36,9 @@ class OpeningQuote(Scene):
         author.next_to(words, DOWN, buff = 0.5)
 
         self.play(FadeIn(words))
-        self.dither(3)
+        self.wait(3)
         self.play(Write(author, run_time = 3))
-        self.dither()
+        self.wait()
 
 
 class CoordinatesWereFamiliar(TeacherStudentsScene):
@@ -48,7 +48,7 @@ class CoordinatesWereFamiliar(TeacherStudentsScene):
         self.random_blink()
         self.teacher_says("Ah, but there is a subtlety")
         self.random_blink()
-        self.dither()
+        self.wait()
 
 
 class CoordinatesAsScalars(VectorScene):
@@ -62,7 +62,7 @@ class CoordinatesAsScalars(VectorScene):
         vector = self.add_vector(self.vector_coords)
         array, x_line, y_line = self.vector_to_coords(vector)
         self.add(array)
-        self.dither()
+        self.wait()
         new_array = self.general_idea_of_scalars(array, vector)
         self.scale_basis_vectors(new_array)
         self.show_symbolic_sum(new_array, vector)
@@ -105,13 +105,13 @@ class CoordinatesAsScalars(VectorScene):
             Write(title),
         )
         self.play(FadeIn(i_hat), FadeIn(j_hat))
-        self.dither()
+        self.wait()
         self.play(
             Transform(i_hat, new_i_hat),
             Transform(j_hat, new_j_hat),
             run_time = 3
         )
-        self.dither()
+        self.wait()
         starting_mobjects.remove(array)
 
         new_x, new_y = new_array.get_mob_matrix().flatten()
@@ -142,7 +142,7 @@ class CoordinatesAsScalars(VectorScene):
             color = Y_COLOR, 
             label_scale_factor = 1
         )
-        self.dither()
+        self.wait()
 
         x, y = new_array.get_mob_matrix().flatten()
         for coord, v, label, factor, shift_right in [
@@ -162,13 +162,13 @@ class CoordinatesAsScalars(VectorScene):
                 Transform(v, scaled_v),
                 Transform(VMobject(coord_copy, label), scaled_label),
             )
-            self.dither()
+            self.wait()
             if shift_right:
                 group = VMobject(v, coord_copy, label)
                 self.play(ApplyMethod(
                     group.shift, self.vector_coords[0]*RIGHT
                 ))
-        self.dither()
+        self.wait()
 
 
     def show_symbolic_sum(self, new_array, vector):
@@ -184,7 +184,7 @@ class CoordinatesAsScalars(VectorScene):
         j_hat.highlight(Y_COLOR)
 
         self.play(Transform(new_array, new_mob))
-        self.dither()
+        self.wait()
         
 
 
@@ -210,7 +210,7 @@ class CoordinatesAsScalarsExample2(CoordinatesAsScalars):
         VMobject(*text.split()[:2]).highlight(X_COLOR)
         VMobject(*text.split()[5:7]).highlight(Y_COLOR)
         self.play(Write(text))
-        self.dither(2)
+        self.wait(2)
         self.remove(*basis_vectors + labels)
         CoordinatesAsScalars.construct(self)
 
@@ -221,7 +221,7 @@ class WhatIfWeChoseADifferentBasis(Scene):
             "What if we chose different basis vectors?",
             run_time = 2
         ))
-        self.dither(2)
+        self.wait(2)
 
 class ShowVaryingLinearCombinations(VectorScene):
     CONFIG = {
@@ -315,7 +315,7 @@ class ShowVaryingLinearCombinations(VectorScene):
         ]
         anims += label_anims + scalar_anims
         self.play(*anims, **{"run_time" : 2})
-        self.dither()
+        self.wait()
         self.last_scalar_pair = scalar_pair
 
     def show_sum(self, v1, v2, label_anims, scalar_anims):
@@ -326,7 +326,7 @@ class ShowVaryingLinearCombinations(VectorScene):
         self.sum_vector = self.add_vector(
             v2.get_end(), color = self.sum_color
         )
-        self.dither()
+        self.wait()
 
     def scale_with_sum(self, v1, v2, label_anims, scalar_anims):
         v2_anim, sum_anim = self.get_sum_animations(v1, v2)
@@ -345,7 +345,7 @@ class ShowVaryingLinearCombinations(VectorScene):
             self.play(*anims, **{"run_time" : 2})
             if self.leave_sum_vector_copies:
                 self.add(self.sum_vector.copy())
-            self.dither()
+            self.wait()
             self.last_scalar_pair = scalar_pair
 
     def get_sum_animations(self, v1, v2):
@@ -384,7 +384,7 @@ class ShowVaryingLinearCombinations(VectorScene):
         #     for a in label_anims
         # ]
         self.play(*anims + [Write(brackets)])
-        self.dither()
+        self.wait()
         self.remove(brackets, *alt_coords)
         self.add(array)
         self.play(
@@ -408,7 +408,7 @@ class ShowVaryingLinearCombinations(VectorScene):
             ApplyMethod(ij_array.next_to, neq),
             Write(neq)
         )
-        self.dither()
+        self.wait()
 
     def draw_lines(self, v1, v2, label_anims, scalar_anims):
         sum_anims = self.get_sum_animations(v1, v2)
@@ -429,7 +429,7 @@ class ShowVaryingLinearCombinations(VectorScene):
                     *aux_anims
                 )
                 self.add(line, v2)
-            self.dither()
+            self.wait()
 
 
 
@@ -486,7 +486,7 @@ class NameLinearCombinations(Scene):
             ShowCreation(VMobject(*arrows)),
             Write(scalars_word)
         )
-        self.dither(2)
+        self.wait(2)
 
 
 class LinearCombinationsDrawLines(ShowVaryingLinearCombinations):
@@ -587,7 +587,7 @@ class BothVectorsCouldBeZero(VectorScene):
         v2 = self.add_vector([3, -1], color = BLUE)
         self.play(Transform(v1, Dot(ORIGIN)))
         self.play(Transform(v2, Dot(ORIGIN)))
-        self.dither()
+        self.wait()
 
 
 class DefineSpan(Scene):
@@ -630,18 +630,18 @@ class DefineSpan(Scene):
 
         self.play(Write(definition))
         self.play(Write(equation))
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(vary_words),
             ShowCreation(VMobject(*arrows))
         )
-        self.dither()
+        self.wait()
 
 
 class VectorsVsPoints(Scene):
     def construct(self):
         self.play(Write("Vectors vs. Points"))
-        self.dither(2)
+        self.wait(2)
 
 
 class VectorsToDotsScene(VectorScene):
@@ -673,14 +673,14 @@ class VectorsToDotsScene(VectorScene):
         self.add(*vectors)
         def v_to_dot(vector):
             return Dot(vector.get_end(), fill_color = vector.get_stroke_color())
-        self.dither()
+        self.wait()
         vectors.remove(prototype_vector)
         self.play(*map(FadeOut, vectors)+[Animation(prototype_vector)])
         self.remove(vector_group)
         self.add(prototype_vector)
-        self.dither()
+        self.wait()
         self.play(Transform(prototype_vector, v_to_dot(prototype_vector)))
-        self.dither()
+        self.wait()
         self.play(*map(FadeIn, vectors) + [Animation(prototype_vector)])
         rate_functions = [
             squish_rate_func(smooth, float(x)/(len(vectors)+2), 1)
@@ -690,10 +690,10 @@ class VectorsToDotsScene(VectorScene):
             Transform(v, v_to_dot(v), rate_func = rf, run_time = 2) 
             for v, rf in zip(vectors, rate_functions)
         ])
-        self.dither()
+        self.wait()
         self.remove(prototype_vector)
         self.play_final_animation(vectors, rate_functions)
-        self.dither()
+        self.wait()
 
     def get_vectors(self):
         raise Exception("Not implemented")
@@ -760,7 +760,7 @@ class VectorsInThePlane(VectorsToDotsScene):
             ]
         )
         self.remove(*vectors)
-        self.dither()
+        self.wait()
 
 
 class HowToThinkVectorsVsPoint(Scene):
@@ -791,16 +791,16 @@ class HowToThinkVectorsVsPoint(Scene):
         )
         self.play(FadeIn(text1))
         self.play(ShowCreation(single_vector))
-        self.dither(3)
+        self.wait(3)
         self.play(
             Transform(text1, text2),
             Transform(single_vector, vector_group)
         )
         self.remove(single_vector)
         self.add(vector_group)
-        self.dither()
+        self.wait()
         self.play(Transform(vector_group, dots))
-        self.dither()
+        self.wait()
 
 
 class IntroduceThreeDSpan(Scene):
@@ -809,7 +809,7 @@ class IntroduceThreeDSpan(Scene):
 class AskAboutThreeDSpan(Scene):
     def construct(self):
         self.play(Write("What does the span of two 3d vectors look like?"))
-        self.dither(2)
+        self.wait(2)
 
 class ThreeDVectorSpan(Scene):
     pass
@@ -861,12 +861,12 @@ class LinearCombinationOfThreeVectorsText(Scene):
 
         self.play(Write(text))
         self.play(Write(equation))
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(arrows, submobject_mode = "one_at_a_time"),
             Write(span_comment)
         )
-        self.dither()
+        self.wait()
 
 
 class ThirdVectorOnSpanOfFirstTwo(Scene):
@@ -897,9 +897,9 @@ class SpanCasesWords(Scene):
         for words in words1, words2:
             words.scale_to_fit_width(2*SPACE_WIDTH - 1)
         self.play(Write(words1))
-        self.dither()
+        self.wait()
         self.play(Transform(words1, words2))
-        self.dither()
+        self.wait()
 
 
 
@@ -935,9 +935,9 @@ class LinearDependentWords(Scene):
             words.scale_to_fit_width(2*SPACE_WIDTH - 1)
 
         self.play(Write(words1))
-        self.dither()
+        self.wait()
         self.play(Transform(words1, words2))
-        self.dither()
+        self.wait()
 
 
 class LinearDependentEquations(Scene):
@@ -995,14 +995,14 @@ class LinearDependentEquations(Scene):
             ShowCreation(arrow),
             Write(low_words1)
         )
-        self.dither()
+        self.wait()
 
         self.play(
             Transform(equation1, equation2),
             Transform(low_words1, low_words2),
             Transform(arrow, arrows)
         )
-        self.dither(2)
+        self.wait(2)
 
         new_title = TextMobject("``Linearly independent'' ")
         new_title.highlight(GREEN)
@@ -1026,13 +1026,13 @@ class LinearDependentEquations(Scene):
             Transform(arrow, arrow_copy),
             Transform(low_words1, new_low_words1)
         )
-        self.dither()
+        self.wait()
         self.play(
             Transform(equation1, eq2_copy),
             Transform(arrow, arrows),
             Transform(low_words1, new_low_words2)
         )
-        self.dither()
+        self.wait()
 
 
 
@@ -1098,34 +1098,34 @@ class AlternateDefOfLinearlyDependent(Scene):
         for i, new_eq in enumerate(equations):
             if i == 0:
                 self.play(FadeIn(scalar_specification))
-                self.dither(2)
+                self.wait(2)
                 self.play(FadeOut(scalar_specification))
             elif i == 3:
                 self.play(
                     GrowFromCenter(brace),
                     Write(brace_words)
                 )
-                self.dither(3)
+                self.wait(3)
                 self.play(FadeOut(brace), FadeOut(brace_words))
             self.play(Transform(
                 equation, new_eq, 
                 path_arc = (np.pi/2 if i == 1 else 0)
             ))
-            self.dither(3)
+            self.wait(3)
         self.play(Write(added_words1))
-        self.dither(2)
+        self.wait(2)
         self.play(
             Transform(title1, title2),
             Write(subtitle),
             Transform(added_words1, added_words2),
         )
-        self.dither(3)
+        self.wait(3)
         everything = VMobject(*self.get_mobjects())
         self.play(ApplyFunction(
             lambda m : m.scale(0.5).to_corner(UP+LEFT),
             everything
         ))
-        self.dither()
+        self.wait()
 
 
     def get_equations(self):
@@ -1224,14 +1224,14 @@ class MathematiciansLikeToConfuse(TeacherStudentsScene):
             ApplyMethod(student.change_mode, mode)
             for student, mode in zip(self.get_students(), modes)
         ])
-        self.dither(2)
+        self.wait(2)
 
 class CheckYourUnderstanding(TeacherStudentsScene):
     def construct(self):
         self.setup()
         self.teacher_says("Quiz time!")
         self.random_blink()
-        self.dither()
+        self.wait()
         self.random_blink()
 
 
@@ -1256,7 +1256,7 @@ class TechnicalDefinitionOfBasis(Scene):
 
         self.add(title)
         self.play(Write(definition))
-        self.dither()
+        self.wait()
 
 class NextVideo(Scene):
     def construct(self):
@@ -1268,7 +1268,7 @@ class NextVideo(Scene):
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.dither() 
+        self.wait() 
 
 
 

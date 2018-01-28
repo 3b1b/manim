@@ -37,7 +37,6 @@ def play_chord(*nums):
 def play_error_sound():
     play_chord(11, 8, 6, 1)
 
-
 def play_finish_sound():
     play_chord(12, 9, 5, 2)
 
@@ -109,8 +108,13 @@ def diag_to_matrix(l_and_u, diag):
 def is_closed(points):
     return np.linalg.norm(points[0] - points[-1]) < CLOSED_THRESHOLD
 
+## Color
+
 def color_to_rgb(color):
     return np.array(Color(color).get_rgb())
+
+def color_to_rgba(color, alpha = 1):
+    return np.append(color_to_rgb(color), [alpha])
 
 def rgb_to_color(rgb):
     try:
@@ -118,8 +122,17 @@ def rgb_to_color(rgb):
     except:
         return Color(WHITE)
 
+def rgba_to_color(rgba):
+    return rgb_to_color(rgba[:3])
+
+def invert_color(color):
+    return rgb_to_color(1.0 - color_to_rgb(color))
+
 def color_to_int_rgb(color):
     return (255*color_to_rgb(color)).astype('uint8')
+
+def color_to_int_rgba(color, alpha = 255):
+    return np.append(color_to_int_rgb(color), alpha)
 
 def color_gradient(reference_colors, length_of_output):
     if length_of_output == 0:
@@ -136,6 +149,17 @@ def color_gradient(reference_colors, length_of_output):
         for i, alpha in zip(floors, alphas_mod1)
     ]
 
+def interpolate_color(color1, color2, alpha):
+    rgb = interpolate(color_to_rgb(color1), color_to_rgb(color2), alpha)
+    return rgb_to_color(rgb)
+
+def average_color(*colors):
+    rgbs = np.array(map(color_to_rgb, colors))
+    mean_rgb = np.apply_along_axis(np.mean, 0, rgbs)
+    return rgb_to_color(mean_rgb)
+
+###
+
 def compass_directions(n = 4, start_vect = RIGHT):
     angle = 2*np.pi/n
     return np.array([
@@ -146,7 +170,7 @@ def compass_directions(n = 4, start_vect = RIGHT):
 def partial_bezier_points(points, a, b):
     """
     Given an array of points which define 
-    a bezier curve, and two numbres 0<=a<b<=1,
+    a bezier curve, and two numbers 0<=a<b<=1,
     return an array of the same size, which 
     describes the portion of the original bezier
     curve on the interval [a, b].
@@ -158,7 +182,7 @@ def partial_bezier_points(points, a, b):
         for i in range(len(points))
     ])
     return np.array([
-        bezier(a_to_1[:i+1])(b)
+        bezier(a_to_1[:i+1])((b-a)/(1.-a))
         for i in range(len(points))
     ])
 
@@ -173,7 +197,13 @@ def remove_list_redundancies(l):
     """
     Used instead of list(set(l)) to maintain order
     """
-    return sorted(list(set(l)), lambda a, b : l.index(a) - l.index(b))
+    result = []
+    used = set()
+    for x in l:
+        if not x in used:
+            result.append(x)
+            used.add(x)
+    return result
 
 def list_update(l1, l2):
     """
@@ -188,11 +218,14 @@ def list_difference_update(l1, l2):
 def all_elements_are_instances(iterable, Class):
     return all(map(lambda e : isinstance(e, Class), iterable))
 
-def adjascent_pairs(objects):
+def adjacent_pairs(objects):
     return zip(objects, list(objects[1:])+[objects[0]])
 
 def complex_to_R3(complex_num):
     return np.array((complex_num.real, complex_num.imag, 0))
+
+def R3_to_complex(point):
+    return complex(*point[:2])
 
 def tuplify(obj):
     if isinstance(obj, str):
@@ -219,15 +252,14 @@ def get_all_descendent_classes(Class):
         result.append(Child)
     return result
 
-def filtered_locals(local_args):
-    result = local_args.copy()
+def filtered_locals(caller_locals):
+    result = caller_locals.copy()
     ignored_local_args = ["self", "kwargs"]
     for arg in ignored_local_args:
-        result.pop(arg, local_args)
+        result.pop(arg, caller_locals)
     return result
 
-
-def digest_config(obj, kwargs, local_args = {}):
+def digest_config(obj, kwargs, caller_locals = {}):
     """
     Sets init args and CONFIG values as local variables
 
@@ -236,28 +268,72 @@ def digest_config(obj, kwargs, local_args = {}):
     be easily passed into instantiation, and is attached
     as an attribute of the object.
     """
-    ### Assemble list of CONFIGs from all super classes
-    classes_in_heirarchy = [obj.__class__]
-    configs = []
-    while len(classes_in_heirarchy) > 0:
-        Class = classes_in_heirarchy.pop()
-        classes_in_heirarchy += Class.__bases__
+
+    # Assemble list of CONFIGs from all super classes
+    classes_in_hierarchy = [obj.__class__]
+    static_configs = []
+    while len(classes_in_hierarchy) > 0:
+        Class = classes_in_hierarchy.pop()
+        classes_in_hierarchy += Class.__bases__
         if hasattr(Class, "CONFIG"):
-            configs.append(Class.CONFIG)    
+            static_configs.append(Class.CONFIG)
 
     #Order matters a lot here, first dicts have higher priority
-    all_dicts = [kwargs, filtered_locals(local_args), obj.__dict__]
-    all_dicts += configs
-    item_lists = reversed([d.items() for d in all_dicts])
-    obj.__dict__ = dict(reduce(op.add, item_lists))
+    caller_locals = filtered_locals(caller_locals)
+    all_dicts = [kwargs, caller_locals, obj.__dict__]
+    all_dicts += static_configs
+    all_new_dicts = [kwargs, caller_locals] + static_configs
+    obj.__dict__ = merge_config(all_dicts)
+    #Keep track of the configuration of objects upon 
+    #instantiation
+    obj.initial_config = merge_config(all_new_dicts)
 
-def digest_locals(obj):
-    caller_locals = inspect.currentframe().f_back.f_locals
-    obj.__dict__.update(filtered_locals(caller_locals))
+def merge_config(all_dicts):
+    all_config = reduce(op.add, [d.items() for d in all_dicts])
+    config = dict()
+    for c in all_config:
+        key, value = c
+        if not key in config:
+            config[key] = value
+        else:
+            #When two dictionaries have the same key, they are merged.
+            if isinstance(value, dict) and isinstance(config[key], dict):
+                config[key] = merge_config([config[key], value])
+    return config
 
+def soft_dict_update(d1, d2):
+    """
+    Adds key values pairs of d2 to d1 only when d1 doesn't
+    already have that key
+    """
+    for key, value in d2.items():
+        if key not in d1:
+            d1[key] = value
+
+def digest_locals(obj, keys = None):
+    caller_locals = filtered_locals(
+        inspect.currentframe().f_back.f_locals
+    )
+    if keys is None:
+        keys = caller_locals.keys()
+    for key in keys:
+        setattr(obj, key, caller_locals[key])
 
 def interpolate(start, end, alpha):
     return (1-alpha)*start + alpha*end
+
+def mid(start, end):
+    return (start + end)/2.0
+
+def inverse_interpolate(start, end, value):
+    return np.true_divide(value - start, end - start)
+
+def clamp(lower, upper, val):
+    if val < lower:
+        return lower
+    elif val > upper:
+        return upper
+    return val
 
 def center_of_mass(points):
     points = [np.array(point).astype("float") for point in points]
@@ -321,7 +397,7 @@ def straight_path(start_points, end_points, alpha):
 def path_along_arc(arc_angle, axis = OUT):
     """
     If vect is vector from start to end, [vect[:,1], -vect[:,0]] is 
-    perpendicualr to vect in the left direction.
+    perpendicular to vect in the left direction.
     """
     if abs(arc_angle) < STRAIGHT_PATH_THRESHOLD:
         return straight_path
@@ -346,7 +422,7 @@ def counterclockwise_path():
 
 ################################################
 
-def to_cammel_case(name):
+def to_camel_case(name):
     return "".join([
         filter(
             lambda c : c not in string.punctuation + string.whitespace, part
@@ -360,10 +436,23 @@ def initials(name, sep_values = [" ", "_"]):
         for s in re.split("|".join(sep_values), name)
     ])
 
-def cammel_case_initials(name):
+def camel_case_initials(name):
     return filter(lambda c : c.isupper(), name)
 
 ################################################
+
+def get_full_raster_image_path(image_file_name):
+    possible_paths = [
+        image_file_name,
+        os.path.join(RASTER_IMAGE_DIR, image_file_name),
+        os.path.join(RASTER_IMAGE_DIR, image_file_name + ".jpg"),
+        os.path.join(RASTER_IMAGE_DIR, image_file_name + ".png"),
+        os.path.join(RASTER_IMAGE_DIR, image_file_name + ".gif"),
+    ]
+    for path in possible_paths:
+        if os.path.exists(path):
+            return path
+    raise IOError("File %s not Found"%image_file_name)
 
 def drag_pixels(frames):
     curr = frames[0]
@@ -378,7 +467,7 @@ def invert_image(image):
     arr = (255 * np.ones(arr.shape)).astype(arr.dtype) - arr
     return Image.fromarray(arr)
 
-def streth_array_to_length(nparray, length):
+def stretch_array_to_length(nparray, length):
     curr_len = len(nparray)
     if curr_len > length:
         raise Warning("Trying to stretch array to a length shorter than its own")
@@ -431,6 +520,14 @@ def there_and_back(t, inflection = 10.0):
     new_t = 2*t if t < 0.5 else 2*(1 - t)
     return smooth(new_t, inflection)
 
+def there_and_back_with_pause(t):
+    if t < 1./3:
+        return smooth(3*t)
+    elif t < 2./3:
+        return 1
+    else:
+        return smooth(3 - 3*t)
+
 def running_start(t, pull_factor = -0.5):
     return bezier([0, 0, pull_factor, pull_factor, 1, 1, 1])(t)
 
@@ -475,7 +572,7 @@ def thick_diagonal(dim, thickness = 2):
 
 def rotation_matrix(angle, axis):
     """
-    Rotation in R^3 about a specified axess of rotation.
+    Rotation in R^3 about a specified axis of rotation.
     """
     about_z = rotation_about_z(angle)
     z_to_axis = z_to_vector(axis)

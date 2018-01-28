@@ -84,7 +84,7 @@ class TOP(VMobject):
         "triangle_height_to_number_height" : 3,
         "offset_multiple" : 1.5,
         "radius" : 1.5,
-        "propogate_style_to_family" : False,
+        "propagate_style_to_family" : False,
     }
     def __init__(self, x = None, y = None, z = None, **kwargs):
         digest_config(self, kwargs, locals())
@@ -192,11 +192,11 @@ class IntroduceNotation(Scene):
         ]
 
         self.play(FadeIn(equation))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(top))
         for num in two, three, eight:
             self.play(ShowCreation(num), run_time=2)
-        self.dither()
+        self.wait()
 
 class ShowRule(Scene):
     args_list = [(0,), (1,), (2,)]
@@ -226,7 +226,7 @@ class ShowRule(Scene):
         
 
         self.add(equation, top)
-        self.dither()
+        self.wait()
         self.play(
             Transform(top, new_top),
             ShowCreation(equals)
@@ -235,14 +235,14 @@ class ShowRule(Scene):
         circle.shift(new_top.triangle.get_center_of_mass())
         new_circle = circle.copy()
         new_top.put_on_vertex(index, new_circle)
-        self.dither()
+        self.wait()
         self.play(ShowCreation(circle))
-        self.dither()
+        self.wait()
         self.play(
             Transform(circle, new_circle),
             ApplyMethod(new_top.values[index].highlight, circle.color)
         )
-        self.dither()
+        self.wait()
 
 
 class AllThree(Scene):
@@ -267,9 +267,9 @@ class AllThree(Scene):
 
         for top, eq in zip(tops, equations):
             self.play(FadeIn(top), FadeIn(eq))
-        self.dither(3)
+        self.wait(3)
         # self.play(Write(name))
-        self.dither()
+        self.wait()
 
 class SixDifferentInverses(Scene):
     def construct(self):
@@ -282,18 +282,18 @@ class SixDifferentInverses(Scene):
         general_idea = TexMobject("f(f^{-1}(a)) = a")
 
         self.play(Write(VMobject(*rules)))
-        self.dither()
+        self.wait()
         for s, color in (rules[:4], GREEN), (rules[4:], RED):
             mob = VMobject(*s)
             self.play(ApplyMethod(mob.highlight, color))
-            self.dither()
+            self.wait()
             self.play(ApplyMethod(mob.highlight, WHITE))
         self.play(
             ApplyMethod(VMobject(*rules[::2]).to_edge, LEFT),
             ApplyMethod(VMobject(*rules[1::2]).to_edge, RIGHT),
             GrowFromCenter(general_idea)
         )
-        self.dither()
+        self.wait()
 
         top_rules = get_top_inverse_rules()
         for rule, top_rule in zip(rules, top_rules):
@@ -303,7 +303,7 @@ class SixDifferentInverses(Scene):
         self.play(*map(FadeOut, rules))
         self.remove(*rules)
         self.play(*map(GrowFromCenter, top_rules))
-        self.dither()
+        self.wait()
         self.remove(general_idea)
         rules = get_inverse_rules()
         original = None
@@ -317,7 +317,7 @@ class SixDifferentInverses(Scene):
                 anims.append(FadeIn(original))
             original = top_rule.copy()
             self.play(*anims)
-            self.dither()
+            self.wait()
             self.animate_top_rule(top_rule)
             self.remove(rule)
 
@@ -350,7 +350,7 @@ class SixDifferentInverses(Scene):
             FadeOut(VMobject(*cancel_parts)),
             Transform(lil_symbol, new_symbol, rate_func = rush_from)
         )
-        self.dither()
+        self.wait()
         self.remove(lil_symbol, top_rule, VMobject(*cancel_parts))
 
 
@@ -378,8 +378,8 @@ class SixSixSix(Scene):
                 ApplyMethod(bubble.add_content, rule),
                 anim
             )
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
         words = speech_bubble.content
         equation = bubble.content
         speech_bubble.clear()
@@ -390,7 +390,7 @@ class SixSixSix(Scene):
             Transform(equation, words),
             FadeOut(VMobject(*sixes))
         )
-        self.dither()
+        self.wait()
 
 class AdditiveProperty(Scene):
     def construct(self):
@@ -411,7 +411,7 @@ class AdditiveProperty(Scene):
             ApplyMethod(exp_rule.highlight, GREEN),
             ApplyMethod(log_rule.highlight, RED),
         )
-        self.dither()
+        self.wait()
         all_tops = filter(
             lambda m : isinstance(m, TOP),
             t_exp_rule.split()+t_log_rule.split()
@@ -433,7 +433,7 @@ class AdditiveProperty(Scene):
         ]
         start_copy = start.copy()
         self.play(Write(start_copy))
-        self.dither()
+        self.wait()
         self.play(Transform(
             VMobject(a1, x1, a2, y1, eq1, a3, p1, x2, a3.copy(), y2),
             VMobject(a4, x3, a4.copy(), y3, eq2, a5, p2, x4, a6, y4)
@@ -441,7 +441,7 @@ class AdditiveProperty(Scene):
         self.play(Write(end))
         self.clear()
         self.add(start_copy, end)
-        self.dither()
+        self.wait()
         return start_copy, end
 
     def get_new_style_rules(self):
@@ -478,9 +478,9 @@ class AdditiveProperty(Scene):
                 Transform(top.copy().highlight(YELLOW), circle)
             )
         self.add(*[anim.mobject for anim in anims])
-        self.dither()
+        self.wait()
         self.play(*anims)
-        self.dither()
+        self.wait()
 
     def highlight_appropriate_parts(self, t_exp_rule, t_log_rule):
         #Horribly hacky
@@ -518,7 +518,7 @@ class AdditiveProperty(Scene):
                 copies.scale_in_place, 1.2,
                 rate_func = there_and_back
             ))
-            self.dither()
+            self.wait()
             self.remove(copies)
 
 
@@ -533,10 +533,10 @@ class DrawInsideTriangle(Scene):
         times.highlight(YELLOW)
 
         self.add(top)
-        self.dither()
+        self.wait()
         for mob in dot, plus, times:
             self.play(Write(mob, run_time = 1))
-            self.dither()
+            self.wait()
 
 class ConstantOnTop(Scene):
     def construct(self):
@@ -560,7 +560,7 @@ class ConstantOnTop(Scene):
             Write(x_cubed),
             run_time = 1
         )
-        self.dither()
+        self.wait()
         self.play(*[
             Transform(*pair, path_arc = np.pi)
             for pair in [
@@ -568,10 +568,10 @@ class ConstantOnTop(Scene):
                 (x_cubed, cube_root_x),
             ]
         ])
-        self.dither(2)
+        self.wait(2)
         for mob in dot, times1, times2:
             self.play(ShowCreation(mob))
-            self.dither()
+            self.wait()
 
 def get_const_top_TOP(*args):
         top = TOP(*args)
@@ -603,7 +603,7 @@ class MultiplyWithConstantTop(Scene):
         old_style_rad.highlight(RED)
 
         self.add(top_exp_equation, old_style_exp)
-        self.dither(3)
+        self.wait(3)
 
         old_tops = [top1, top2, top3]
         new_tops = []
@@ -620,7 +620,7 @@ class MultiplyWithConstantTop(Scene):
                 path_arc = np.pi/2
             )
         )
-        self.dither(3)
+        self.wait(3)
 
 class RightStaysConstantQ(Scene):
     def construct(self):
@@ -655,7 +655,7 @@ class RightStaysConstantQ(Scene):
 
         self.add(randy, bubble)
         self.play(ApplyMethod(randy.change_mode, "pondering"))
-        self.dither(3)
+        self.wait(3)
         triangle = bubble.content.triangle
         eight = bubble.content.values[2]
         bubble.clear()
@@ -672,7 +672,7 @@ class RightStaysConstantQ(Scene):
         )
         self.remove(triangle)
         self.add(equation)
-        self.dither(4)
+        self.wait(4)
         self.play(
             Transform(
                 symbols_at_top, symbols_at_lower_right, 
@@ -680,7 +680,7 @@ class RightStaysConstantQ(Scene):
             ),
             Transform(old_style_eq1, old_style_eq2)
         )
-        self.dither(2)
+        self.wait(2)
 
 
 class AOplusB(Scene):
@@ -688,7 +688,7 @@ class AOplusB(Scene):
         self.add(TexMobject(
             "a \\oplus b = \\dfrac{1}{\\frac{1}{a} + \\frac{1}{b}}"
         ).scale(2))
-        self.dither()
+        self.wait()
 
 
 class ConstantLowerRight(Scene):
@@ -705,7 +705,7 @@ class ConstantLowerRight(Scene):
         self.play(ShowCreation(eight))
         for mob in dot, oplus, times:
             self.play(ShowCreation(mob))
-            self.dither()
+            self.wait()
 
         top.add(eight)
         top.add(times, oplus, dot)
@@ -739,7 +739,7 @@ class ConstantLowerRight(Scene):
         self.remove(triple_top_copy)
         self.add(*tops)
         self.play(Write(old_style_eq))
-        self.dither(3)
+        self.wait(3)
 
         syms = VMobject(x, y, xy)
         new_syms = VMobject(*[
@@ -765,7 +765,7 @@ class ConstantLowerRight(Scene):
             Transform(syms, new_syms, path_arc = np.pi/2),
             Transform(big_oplus, big_times)
         )
-        self.dither(4)
+        self.wait(4)
 
 
 class TowerExponentFrame(Scene):
@@ -787,7 +787,7 @@ class TowerExponentFrame(Scene):
         top2.shift(3*RIGHT)
 
         self.add(words, top1, top2)
-        self.dither()        
+        self.wait()        
 
 
 class ExponentialGrowth(Scene):
@@ -812,7 +812,7 @@ class ExponentialGrowth(Scene):
 
         self.add(words, top, dot, sim)
         self.show_frame()
-        self.dither()
+        self.wait()
 
 
 
@@ -824,14 +824,14 @@ class GoExplore(Scene):
         by_the_way.shift(20*RIGHT)
 
         self.play(Write(explore))
-        self.dither(4)
+        self.wait(4)
         self.play(
             ApplyMethod(
                 VMobject(explore, by_the_way).shift,
                 20*LEFT
             )
         )
-        self.dither(3)
+        self.wait(3)
 
 
 

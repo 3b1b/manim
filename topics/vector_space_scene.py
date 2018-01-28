@@ -104,12 +104,12 @@ class VectorScene(Scene):
 
         angle = vector.get_angle()
         if not rotate:
-            label.rotate(-angle)
+            label.rotate(-angle, about_point = ORIGIN)
         if direction is "left":
             label.shift(-label.get_bottom() + 0.1*UP)
         else:
             label.shift(-label.get_top() + 0.1*DOWN)
-        label.rotate(angle)
+        label.rotate(angle, about_point = ORIGIN)
         label.shift((vector.get_end() - vector.get_start())/2)
         return label
 
@@ -142,7 +142,7 @@ class VectorScene(Scene):
         x_coord, y_coord = array.get_mob_matrix().flatten()
 
         self.play(Write(array, run_time = 1))
-        self.dither()
+        self.wait()
         self.play(ApplyFunction(
             lambda x : self.position_x_coordinate(x, x_line, vector),
             x_coord
@@ -158,7 +158,7 @@ class VectorScene(Scene):
         y_coord, brackets = self.get_mobjects_from_last_animation()
         self.play(ShowCreation(y_line))
         self.play(ShowCreation(arrow))
-        self.dither()
+        self.wait()
         if clean_up:
             self.clear()
             self.add(*starting_mobjects)
@@ -198,13 +198,13 @@ class VectorScene(Scene):
             Write(y_coord_start),
             run_time = 1
         )
-        self.dither()
+        self.wait()
         self.play(
             Transform(x_coord_start, x_coord, submobject_mode = "all_at_once"),
             Transform(y_coord_start, y_coord, submobject_mode = "all_at_once"),
             Write(brackets, run_time = 1),
         )
-        self.dither()
+        self.wait()
 
         self.remove(x_coord_start, y_coord_start, brackets)
         self.add(array)

@@ -23,17 +23,25 @@ from mobject.tex_mobject import *
 
 from mobject.vectorized_mobject import *
 
-## To watch one of these scenes, run the following:
-## python extract_scenes.py -p file_name <SceneName>
+# To watch one of these scenes, run the following:
+# python extract_scene.py file_name <SceneName> -p
+# 
+# Use the flat -l for a faster rendering at a lower 
+# quality, use -s to skip to the end and just show
+# the final frame, and use -n <number> to skip ahead
+# to the n'th animation of a scene.
+
 
 class SquareToCircle(Scene):
     def construct(self):
         circle = Circle()
+        # circle.flip(RIGHT)
+        # circle.rotate(3*TAU/8)
         square = Square()
-        square.rotate(np.pi/8)
+
         self.play(ShowCreation(square))
         self.play(Transform(square, circle))
-        self.dither()
+        self.play(FadeOut(square))
 
 class WarpSquare(Scene):
     def construct(self):
@@ -42,11 +50,21 @@ class WarpSquare(Scene):
             lambda (x, y, z) : complex_to_R3(np.exp(complex(x, y))),
             square
         ))
-        self.dither()
+        self.wait()
 
 
 class WriteStuff(Scene):
     def construct(self):
         self.play(Write(TextMobject("Stuff").scale(3)))
+
+
+
+
+
+
+
+
+
+
 
 

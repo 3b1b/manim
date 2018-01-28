@@ -28,70 +28,87 @@ class GraphScene(Scene):
         "y_axis_label" : "$y$",
         "axes_color" : GREY,
         "graph_origin" : 2.5*DOWN + 4*LEFT,
-        "y_axis_numbers_nudge" : 0.4*UP,
+        "exclude_zero_label" : True,
         "num_graph_anchor_points" : 25,
         "default_graph_colors" : [BLUE, GREEN, YELLOW],
         "default_derivative_color" : GREEN,
         "default_input_color" : YELLOW,
+        "default_riemann_start_color" : BLUE,
+        "default_riemann_end_color" : GREEN,
     }
+    def setup(self):
+        self.default_graph_colors_cycle = it.cycle(self.default_graph_colors)
+
     def setup_axes(self, animate = False):
+        ##TODO, once eoc is done, refactor this to be less redundant.
         x_num_range = float(self.x_max - self.x_min)
         self.space_unit_to_x = self.x_axis_width/x_num_range
-        self.x_labeled_nums = self.x_labeled_nums or []
+        if self.x_labeled_nums is None:
+            self.x_labeled_nums = []
+        if self.x_leftmost_tick is None:
+            self.x_leftmost_tick = self.x_min
         x_axis = NumberLine(
             x_min = self.x_min,
             x_max = self.x_max,
-            space_unit_to_num = self.space_unit_to_x,
+            unit_size = self.space_unit_to_x,
             tick_frequency = self.x_tick_frequency,
-            leftmost_tick = self.x_leftmost_tick or self.x_min,
+            leftmost_tick = self.x_leftmost_tick,
             numbers_with_elongated_ticks = self.x_labeled_nums,
             color = self.axes_color
         )
         x_axis.shift(self.graph_origin - x_axis.number_to_point(0))        
         if len(self.x_labeled_nums) > 0:
-            x_axis.add_numbers(*filter(
-                lambda x : x != 0,
-                self.x_labeled_nums
-            ))
-        x_label = TextMobject(self.x_axis_label)
-        x_label.next_to(
-            x_axis.get_tick_marks(), UP+RIGHT, 
-            buff = SMALL_BUFF
-        )
-        x_label.shift_onto_screen()
-        x_axis.add(x_label)
-        self.x_axis_label_mob = x_label
+            if self.exclude_zero_label:
+                self.x_labeled_nums = filter(
+                    lambda x : x != 0,
+                    self.x_labeled_nums
+                )
+            x_axis.add_numbers(*self.x_labeled_nums)
+        if self.x_axis_label:
+            x_label = TextMobject(self.x_axis_label)
+            x_label.next_to(
+                x_axis.get_tick_marks(), UP+RIGHT, 
+                buff = SMALL_BUFF
+            )
+            x_label.shift_onto_screen()
+            x_axis.add(x_label)
+            self.x_axis_label_mob = x_label
 
         y_num_range = float(self.y_max - self.y_min)
         self.space_unit_to_y = self.y_axis_height/y_num_range
-        self.y_labeled_nums = self.y_labeled_nums or []
+
+        if self.y_labeled_nums is None:
+            self.y_labeled_nums = []
+        if self.y_bottom_tick is None:
+            self.y_bottom_tick = self.y_min
         y_axis = NumberLine(
             x_min = self.y_min,
             x_max = self.y_max,
-            space_unit_to_num = self.space_unit_to_y,
+            unit_size = self.space_unit_to_y,
             tick_frequency = self.y_tick_frequency,
-            leftmost_tick = self.y_bottom_tick or self.y_min,
+            leftmost_tick = self.y_bottom_tick,
             numbers_with_elongated_ticks = self.y_labeled_nums,
-            color = self.axes_color
+            color = self.axes_color,
+            line_to_number_vect = LEFT,
         )
         y_axis.shift(self.graph_origin-y_axis.number_to_point(0))
         y_axis.rotate(np.pi/2, about_point = y_axis.number_to_point(0))
         if len(self.y_labeled_nums) > 0:
-            y_axis.add_numbers(*filter(
-                lambda y : y != 0,
-                self.y_labeled_nums
-            ))
-            for mob in y_axis.numbers:
-                mob.next_to(mob.get_center(), LEFT, MED_SMALL_BUFF)
-                mob.shift(self.y_axis_numbers_nudge)
-        y_label = TextMobject(self.y_axis_label)
-        y_label.next_to(
-            y_axis.get_tick_marks(), UP+RIGHT, 
-            buff = SMALL_BUFF
-        )
-        y_label.shift_onto_screen()
-        y_axis.add(y_label)
-        self.y_axis_label_mob = y_label
+            if self.exclude_zero_label:
+                self.y_labeled_nums = filter(
+                    lambda y : y != 0,
+                    self.y_labeled_nums
+                )
+            y_axis.add_numbers(*self.y_labeled_nums)
+        if self.y_axis_label:
+            y_label = TextMobject(self.y_axis_label)
+            y_label.next_to(
+                y_axis.get_tick_marks(), UP+RIGHT, 
+                buff = SMALL_BUFF
+            )
+            y_label.shift_onto_screen()
+            y_axis.add(y_label)
+            self.y_axis_label_mob = y_label
 
         if animate:
             self.play(Write(VGroup(x_axis, y_axis)))
@@ -106,6 +123,10 @@ class GraphScene(Scene):
         result += self.y_axis.number_to_point(y)[1]*UP
         return result
 
+    def point_to_coords(self, point):
+        return (self.x_axis.point_to_number(point), 
+                self.y_axis.point_to_number(point))
+
     def get_graph(
         self, func, 
         color = None,
@@ -113,7 +134,7 @@ class GraphScene(Scene):
         x_max = None,
         ):
         if color is None:
-            color = self.default_graph_colors.next()
+            color = self.default_graph_colors_cycle.next()
         if x_min is None:
             x_min = self.x_min
         if x_max is None:
@@ -184,24 +205,87 @@ class GraphScene(Scene):
         x_min = None, 
         x_max = None, 
         dx = 0.1, 
+        input_sample_type = "left",
         stroke_width = 1,
-        start_color = BLUE,
-        end_color = GREEN):
+        stroke_color = BLACK,
+        fill_opacity = 1,
+        start_color = None,
+        end_color = None,
+        show_signed_area = True,
+        width_scale_factor = 1.001
+        ):
         x_min = x_min if x_min is not None else self.x_min
         x_max = x_max if x_max is not None else self.x_max
+        if start_color is None:
+            start_color = self.default_riemann_start_color
+        if end_color is None:
+            end_color = self.default_riemann_end_color
         rectangles = VGroup()
-        for x in np.arange(x_min, x_max, dx):
+        x_range = np.arange(x_min, x_max, dx) 
+        colors = color_gradient([start_color, end_color], len(x_range))
+        for x, color in zip(x_range, colors):
+            if input_sample_type == "left":
+                sample_input = x
+            elif input_sample_type == "right":
+                sample_input = x+dx
+            else:
+                raise Exception("Invalid input sample type")
+            graph_point = self.input_to_graph_point(sample_input, graph)
             points = VGroup(*map(VectorizedPoint, [
                 self.coords_to_point(x, 0),
-                self.input_to_graph_point(x+dx, graph)
+                self.coords_to_point(x+width_scale_factor*dx, 0),
+                graph_point
             ]))
+
             rect = Rectangle()
             rect.replace(points, stretch = True)
-            rect.set_fill(opacity = 1)
+            if graph_point[1] < self.graph_origin[1] and show_signed_area:
+                fill_color = invert_color(color)
+            else:
+                fill_color = color
+            rect.set_fill(fill_color, opacity = fill_opacity)
+            rect.set_stroke(stroke_color, width = stroke_width)
             rectangles.add(rect)
-        rectangles.gradient_highlight(start_color, end_color)
-        rectangles.set_stroke(BLACK, width = stroke_width)
         return rectangles
+
+    def get_riemann_rectangles_list(
+        self, 
+        graph,
+        n_iterations,
+        max_dx = 0.5, 
+        power_base = 2,
+        stroke_width = 1,
+        **kwargs
+        ):
+        return [
+            self.get_riemann_rectangles(
+                graph = graph,
+                dx = float(max_dx)/(power_base**n),
+                stroke_width = float(stroke_width)/(power_base**n),
+                **kwargs
+            )
+            for n in range(n_iterations)
+        ]
+
+    def transform_between_riemann_rects(self, curr_rects, new_rects, **kwargs):
+        transform_kwargs = {
+            "run_time" : 2,
+            "submobject_mode" : "lagged_start"
+        }
+        added_anims = kwargs.get("added_anims", [])
+        transform_kwargs.update(kwargs)
+        curr_rects.align_submobjects(new_rects)
+        x_coords = set() #Keep track of new repetitions
+        for rect in curr_rects:
+            x = rect.get_center()[0]
+            if x in x_coords:
+                rect.set_fill(opacity = 0)
+            else:
+                x_coords.add(x)
+        self.play(
+            Transform(curr_rects, new_rects, **transform_kwargs),
+            *added_anims
+        )
 
     def get_vertical_line_to_graph(
         self,
@@ -237,7 +321,6 @@ class GraphScene(Scene):
         dx = None,
         dx_line_color = None,
         df_line_color = None,
-        slope_line_color = None,
         dx_label = None,
         df_label = None,
         include_secant_line = True,
@@ -252,6 +335,7 @@ class GraphScene(Scene):
             df_label, (if applicable)
             secant_line, (if applicable)
         )
+        with attributes of those names.
         """
         kwargs = locals()
         kwargs.pop("self")
@@ -296,13 +380,17 @@ class GraphScene(Scene):
 
         if dx_label is not None:
             group.dx_label.next_to(
-                group.dx_line, DOWN, buff = group.dx_label.get_height()/2
+                group.dx_line, 
+                np.sign(dx)*DOWN,
+                buff = group.dx_label.get_height()/2
             )
             group.dx_label.highlight(group.dx_line.get_color())
 
         if df_label is not None:
             group.df_label.next_to(
-                group.df_line, RIGHT, buff = group.df_label.get_height()/2
+                group.df_line, 
+                np.sign(dx)*RIGHT,
+                buff = group.df_label.get_height()/2
             )
             group.df_label.highlight(group.df_line.get_color())
 

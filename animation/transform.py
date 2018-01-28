@@ -7,7 +7,6 @@ import warnings
 from helpers import *
 
 from animation import Animation
-from simple_animations import DelayByOrder
 from mobject import Mobject, Point, VMobject, Group
 from topics.geometry import Dot
 
@@ -48,12 +47,20 @@ class Transform(Animation):
                 self.path_arc,
                 self.path_arc_axis,
             )
+            
     def get_all_mobjects(self):
         return self.mobject, self.starting_mobject, self.target_mobject
 
     def update_submobject(self, submob, start, end, alpha):
         submob.interpolate(start, end, alpha, self.path_func)
         return self
+
+    def clean_up(self, surrounding_scene = None):
+        Animation.clean_up(self, surrounding_scene)
+        if self.replace_mobject_with_target_in_scene and surrounding_scene is not None:
+            surrounding_scene.remove(self.mobject)
+            if not self.remover:
+                surrounding_scene.add(self.original_target_mobject)
 
 class ReplacementTransform(Transform):
     CONFIG = {
@@ -85,20 +92,28 @@ class CyclicReplace(Transform):
         start = Group(*mobjects)
         target = Group(*[
             m1.copy().move_to(m2)
-            for m1, m2 in adjascent_pairs(start)
+            for m1, m2 in adjacent_pairs(start)
         ])
         Transform.__init__(self, start, target, **kwargs)
 
 class Swap(CyclicReplace):
     pass #Renaming, more understandable for two entries
 
-class GrowFromCenter(Transform):
-    def __init__(self, mobject, **kwargs):
+class GrowFromPoint(Transform):
+    def __init__(self, mobject, point, **kwargs):
         target = mobject.copy()
-        point = Point(mobject.get_center())
-        mobject.replace(point)
-        mobject.highlight(point.get_color())
+        point_mob = Point(point)
+        mobject.replace(point_mob)
+        mobject.highlight(point_mob.get_color())
         Transform.__init__(self, mobject, target, **kwargs)
+
+class GrowFromCenter(GrowFromPoint):
+    def __init__(self, mobject, **kwargs):
+        GrowFromPoint.__init__(self, mobject, mobject.get_center(), **kwargs)
+
+class GrowArrow(GrowFromPoint):
+    def __init__(self, arrow, **kwargs):
+        GrowFromPoint.__init__(self, arrow, arrow.get_start(), **kwargs)
 
 class SpinInFromNothing(GrowFromCenter):
     CONFIG = {
@@ -108,9 +123,7 @@ class SpinInFromNothing(GrowFromCenter):
 class ShrinkToCenter(Transform):
     def __init__(self, mobject, **kwargs):
         Transform.__init__(
-            self, mobject,
-            Point(mobject.get_center()), 
-            **kwargs
+            self, mobject, mobject.get_point_mobject(), **kwargs
         )
 
 class ApplyMethod(Transform):
@@ -130,10 +143,16 @@ class ApplyMethod(Transform):
             "the method you want to animate"
         )
         assert(isinstance(method.im_self, Mobject))
-        method_kwargs = kwargs.get("method_kwargs", {})
-        target = copy.deepcopy(method)(*args, **method_kwargs)
+        args = list(args) #So that args.pop() works
+        if "method_kwargs" in kwargs:
+            method_kwargs = kwargs["method_kwargs"]
+        elif len(args) > 0 and isinstance(args[-1], dict):
+            method_kwargs = args.pop()
+        else:
+            method_kwargs = {}
+        target = method.im_self.copy()
+        method.im_func(target, *args, **method_kwargs)
         Transform.__init__(self, method.im_self, target, **kwargs)
-
 
 class FadeOut(Transform):
     CONFIG = {
@@ -147,7 +166,8 @@ class FadeOut(Transform):
             target.set_fill(opacity = 0)
         Transform.__init__(self, mobject, target, **kwargs)
 
-    def clean_up(self):
+    def clean_up(self, surrounding_scene = None):
+        Transform.clean_up(self, surrounding_scene)
         self.update(0)
 
 class FadeIn(Transform):
@@ -158,12 +178,6 @@ class FadeIn(Transform):
         if isinstance(self.starting_mobject, VMobject):
             self.starting_mobject.set_stroke(width = 0)
             self.starting_mobject.set_fill(opacity = 0)
-
-
-class ShimmerIn(DelayByOrder):
-    def __init__(self, mobject, **kwargs):
-        mobject.sort_points(lambda p : np.dot(p, DOWN+RIGHT))
-        DelayByOrder.__init__(self, FadeIn(mobject, **kwargs))
 
 class FocusOn(Transform):
     CONFIG = {
@@ -219,7 +233,6 @@ class Rotate(ApplyMethod):
             about_point = self.about_point,
         )
         Transform.__init__(self, mobject, target, **kwargs)
-
 
 class ApplyPointwiseFunction(ApplyMethod):
     CONFIG = {

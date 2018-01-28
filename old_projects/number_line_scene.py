@@ -1,3 +1,8 @@
+import numpy as np
+from animation.transform import Transform
+from point_cloud_mobject import Point
+from topics.number_line import NumberLine
+
 class NumberLineScene(Scene):
     def construct(self, **number_line_config):
         self.number_line = NumberLine(**number_line_config)

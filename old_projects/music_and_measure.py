@@ -173,7 +173,7 @@ class IntervalScene(NumberLineScene):
         shrink = not remove_as_you_go
         for fraction, count in zip(rationals(), range(num_fractions)):
             frac_mob, tick  = self.add_fraction(fraction, shrink)
-            self.dither(pause_time)
+            self.wait(pause_time)
             if remove_as_you_go:
                 self.remove(frac_mob, tick)
 
@@ -278,23 +278,23 @@ class TwoChallenges(Scene):
 
 
         self.add(two_challenges)
-        self.dither()
+        self.wait()
         self.add(one, notes)
-        self.dither()
+        self.wait()
         self.add(two, measure)
-        self.dither()
+        self.wait()
         self.play(ShowCreation(arrow_to_int))
         self.add(integration)
-        self.dither()
+        self.wait()
         self.play(ShowCreation(arrow_to_prob))
         self.add(probability)
-        self.dither()
+        self.wait()
 
 class MeasureTheoryToHarmony(IntervalScene):
     def construct(self):
         IntervalScene.construct(self)
         self.cover_fractions()
-        self.dither()
+        self.wait()
         all_mobs = Mobject(*self.mobjects)
         all_mobs.sort_points()
         self.clear()
@@ -305,7 +305,7 @@ class MeasureTheoryToHarmony(IntervalScene):
         self.play(Vibrate(rate_func = smooth))
         self.clear()
         self.add(line)
-        self.dither()
+        self.wait()
 
 
 class ChallengeOne(Scene):
@@ -334,7 +334,7 @@ class ChallengeOne(Scene):
         r_constraint = TexMobject("(1<r<2)", size = "\\large")
 
         self.add(title)
-        self.dither()
+        self.wait()
         self.vibrate(1)
         self.add(freq_220)
         self.vibrate(1)
@@ -408,7 +408,7 @@ class JustByAnalyzingTheNumber(Scene):
                 self.add(mob)
             else:
                 self.add(mob)
-            self.dither()
+            self.wait()
             last = mob
 
 class QuestionAndAnswer(Scene):
@@ -616,13 +616,13 @@ class CompareFractionComplexity(Scene):
         arrow4 = Arrow(indicates.get_top(), frac1[1])
 
         self.add(*frac0 + frac1)
-        self.dither()
+        self.wait()
         self.add(simple, complicated)
         self.play(*[
             ShowCreation(arrow)
             for arrow in arrow1, arrow2
         ])
-        self.dither()
+        self.wait()
         self.play(*[
             DelayByOrder(ApplyMethod(frac[1].highlight, "yellow"))
             for frac in frac0, frac1
@@ -632,7 +632,7 @@ class CompareFractionComplexity(Scene):
             ShowCreation(arrow3),
             ShowCreation(arrow4)
         )
-        self.dither()
+        self.wait()
         
 class IrrationalGang(Scene):
     def construct(self):
@@ -672,9 +672,9 @@ class ConstructPiano(Scene):
             key_copy.rotate(2*np.pi*random.random())
             anims.append(Transform(key_copy, key))
         self.play(*anims, run_time = 3.0)
-        self.dither()
+        self.wait()
         self.play(Transform(anims[-1].mobject, askew))
-        self.dither()
+        self.wait()
 
 
 class PianoTuning(Scene):
@@ -699,15 +699,15 @@ class PianoTuning(Scene):
         self.semicircles = semicircles.split()
 
         self.add(piano)
-        self.dither()
+        self.wait()
         self.play(ShowCreation(first_jump))
         self.play(
             ShowCreation(line),
             FadeIn(twelfth_root)
         )
-        self.dither()
+        self.wait()
         self.play(ShowCreation(semicircles, rate_func = None))
-        self.dither()
+        self.wait()
 
         self.show_interval(5, 7)
         self.show_interval(4, 5)
@@ -745,20 +745,20 @@ class PianoTuning(Scene):
             ApplyMethod(high.highlight, colors[interval]),
             Transform(Point(u_brace.get_left()), u_brace),
         )
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(should_be))
-        self.dither()
+        self.wait()
         self.remove(should_be)
         terms = product.split()
         for term, semicircle in zip(terms, semicircles):
             self.add(term, semicircle)
-            self.dither(0.25)
-        self.dither()
+            self.wait(0.25)
+        self.wait()
         product.sort_points(lambda p : p[1])
         self.play(DelayByOrder(Transform(product, ratio)))
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(approximate_form))
-        self.dither()
+        self.wait()
 
 class PowersOfTwelfthRoot(Scene):
     def construct(self):
@@ -830,7 +830,7 @@ class SupposeThereIsASavant(Scene):
         word_mobs[5].highlight()
         for word, word_mob in zip(words, word_mobs):
             self.add(word_mob)
-            self.dither(0.1*len(word))
+            self.wait(0.1*len(word))
 
 class AllValuesBetween1And2(NumberLineScene):
     def construct(self):
@@ -859,13 +859,13 @@ class AllValuesBetween1And2(NumberLineScene):
             ApplyMethod(mob.shift, RIGHT, **kwargs)
             for mob in r, top_arrow
         ])
-        self.dither() 
+        self.wait() 
         self.remove(r, top_arrow)
         self.play(
             ShimmerIn(irr_mob),
             ShowCreation(bot_arrow)
         )
-        self.dither()
+        self.wait()
         self.add(irr_mob, bot_arrow)
 
         frac_mob = Point(top_arrow.get_top())
@@ -880,7 +880,7 @@ class AllValuesBetween1And2(NumberLineScene):
                 Transform(frac_mob, mob),
                 run_time = 0.5
             )
-            self.dither(0.5)
+            self.wait(0.5)
             points = map(self.number_line.number_to_point, [approx, irrational])
             distance = np.linalg.norm(points[1]-points[0])
             if distance < 0.3*SPACE_WIDTH and num_zooms < max_num_zooms:
@@ -889,7 +889,7 @@ class AllValuesBetween1And2(NumberLineScene):
                 self.zoom_in_on(irrational, new_distance/distance)
                 for mob in irr_mob, bot_arrow:
                     mob.shift(mob.get_center()[0]*LEFT)
-            self.dither(0.5)
+            self.wait(0.5)
 
 
 class ChallengeTwo(Scene):
@@ -916,10 +916,10 @@ class CoveringSetsWithOpenIntervals(IntervalScene):
 
         self.add(dots)
         self.play(DelayByOrder(ApplyMethod(dots.shift, DOWN, run_time = 2)))
-        self.dither()
+        self.wait()
         for center in 0.225, 0.475, 0.625:
             self.add_open_interval(center, 0.1, run_time = 1.0)
-        self.dither()
+        self.wait()
         for x in range(2*len(theorems)):
             self.play(*[
                 ApplyMethod(th.shift, UP, rate_func = None)
@@ -938,10 +938,10 @@ class DefineOpenInterval(IntervalScene):
 
         self.play(*[ShimmerIn(mob) for mob in a, less_than1, x])
         self.play(ShowCreation(left_arrow))
-        self.dither()
+        self.wait()
         self.play(*[ShimmerIn(mob) for mob in less_than2, b])
         self.play(ShowCreation(right_arrow))
-        self.dither()
+        self.wait()
 
 
 class ShowAllFractions(IntervalScene):
@@ -952,13 +952,13 @@ class ShowAllFractions(IntervalScene):
             remove_as_you_go = False, 
             pause_time = 0.3
         )
-        self.dither()
+        self.wait()
         self.play(*[
             CounterclockwiseTransform(mob, Point(mob.get_center()))
             for mob in self.mobjects
             if isinstance(mob, ImageMobject)
         ])
-        self.dither()
+        self.wait()
 
 class NaiveFractionCover(IntervalScene):
     def construct(self):
@@ -990,15 +990,15 @@ class NaiveFractionCover(IntervalScene):
             anims = [ApplyMethod(open_interval.shift, DOWN, **kwargs)]
             last_interval = open_interval
             self.play(*anims)
-        self.dither()
+        self.wait()
 
 class CoverFractionsWithWholeInterval(IntervalScene):
     def construct(self):
         IntervalScene.construct(self)
         self.add_fraction_ticks()
-        self.dither()
+        self.wait()
         self.add_open_interval(0.5, 1, color = "red", run_time = 2.0)
-        self.dither()
+        self.wait()
 
 class SumOfIntervalsMustBeLessThan1(IntervalScene):
     def construct(self):
@@ -1022,13 +1022,13 @@ class SumOfIntervalsMustBeLessThan1(IntervalScene):
         words = TextMobject("Use infinitely many intervals")
         words.shift(UP)
 
-        self.dither()
+        self.wait()
         self.play(*anims)
         self.play(ShimmerIn(less_than1))
-        self.dither()
+        self.wait()
         self.play(Transform(anims[-1].mobject, dots))
         self.play(ShimmerIn(words))
-        self.dither()
+        self.wait()
 
 class RationalsAreDense(IntervalScene):
     def construct(self):
@@ -1041,19 +1041,19 @@ class RationalsAreDense(IntervalScene):
         self.add(words[0])
         self.play(ShimmerIn(words[1]))
         self.add(words[2])
-        self.dither()
+        self.wait()
         ticks = self.add_fraction_ticks(run_time = 5.0)
-        self.dither()
+        self.wait()
         for center, width in [(0.5, 0.1), (0.2, 0.05), (0.7, 0.01)]:
             oi, line = self.add_open_interval(center, width, run_time = 1)
             self.remove(line)
-        self.dither()
+        self.wait()
         for compound in oi, ticks:
             self.remove(compound)
             self.add(*compound.split())
         self.zoom_in_on(0.7, 100)
         self.play(ShowCreation(ticks, run_time = 2.0))
-        self.dither()
+        self.wait()
 
 
 class SurelyItsImpossible(Scene):
@@ -1092,17 +1092,17 @@ class HowCanYouNotCoverEntireInterval(IntervalScene):
             open_interval, line = self.add_open_interval(num, 0.1)
             self.remove(line)
             intervals.append(open_interval)
-        self.dither()
+        self.wait()
         self.remove(ticks)
         self.play(*[
             Transform(tick, full_line)
             for tick in ticks.split()
         ])
         self.play(ShimmerIn(big_words))
-        self.dither()
+        self.wait()
         # self.play(DelayByOrder(FadeToColor(full_line, "red")))
         self.play(ShimmerIn(small_words))
-        self.dither()
+        self.wait()
 
 class PauseNow(Scene):
     def construct(self):
@@ -1132,7 +1132,7 @@ class StepsToSolution(IntervalScene):
             step.shift(DOWN)
         for step, count in zip(steps, it.count()):
             self.add(step)
-            self.dither()
+            self.wait()
             if count == 0:
                 self.enumerate_rationals()
             elif count == 1:
@@ -1152,7 +1152,7 @@ class StepsToSolution(IntervalScene):
         denom_to_mobs = {}
         for frac, count in zip(rationals(), range(1,28)):
             mob, tick = self.add_fraction(frac, shrink = True)
-            self.dither(0.1)
+            self.wait(0.1)
             self.remove(tick)
             if frac.denominator not in denom_to_mobs:
                 denom_to_mobs[frac.denominator] = []
@@ -1171,13 +1171,13 @@ class StepsToSolution(IntervalScene):
             new_ticks.append(tick_copy)
         new_ticks = Mobject(*new_ticks)
         anims.append(DelayByOrder(Transform(ticks, new_ticks)))
-        self.dither()
+        self.wait()
         self.play(*anims)
-        self.dither()
+        self.wait()
         for denom in range(2, 10):
             for mob in denom_to_mobs[denom]:
                 mob.highlight("green")
-            self.dither()
+            self.wait()
             for mob in denom_to_mobs[denom]:
                 mob.to_original_color()
         self.ticks = ticks.split()[:20]
@@ -1191,14 +1191,14 @@ class StepsToSolution(IntervalScene):
             anims.append(Transform(squished, interval))
         self.play(*anims)
         self.show_frame()
-        self.dither()
+        self.wait()
         to_remove = [self.number_line] + self.number_mobs
         self.play(*[
             ApplyMethod(mob.shift, 2*SPACE_WIDTH*RIGHT)
             for mob in to_remove
         ])
         self.remove(*to_remove)
-        self.dither()
+        self.wait()
 
         self.intervals = [a.mobject for a in anims]
         kwargs = {
@@ -1209,7 +1209,7 @@ class StepsToSolution(IntervalScene):
             ApplyMethod(mob.scale_in_place, 0.5*random.random(), **kwargs)
             for mob in self.intervals
         ])
-        self.dither()
+        self.wait()
 
     def add_terms(self):
         self.ones = []
@@ -1230,13 +1230,13 @@ class StepsToSolution(IntervalScene):
             frac_bottom, one = compound.split()
             self.ones.append(one)
             self.add(frac_bottom, one, plus)
-            self.dither(0.2)
+            self.wait(0.2)
         dots = TexMobject("\\dots").scale(scale_factor).next_to(plus)
         arrow = Arrow(ORIGIN, RIGHT).next_to(dots)
         one = TexMobject("1").next_to(arrow)
         self.ones.append(one)
         self.play(*[ShowCreation(mob) for mob in dots, arrow, one])
-        self.dither()
+        self.wait()
 
     def multiply_by_epsilon(self):
         self.play(*[
@@ -1246,7 +1246,7 @@ class StepsToSolution(IntervalScene):
             )
             for one in self.ones
         ])
-        self.dither()
+        self.wait()
 
     def stretch_intervals(self):
         for interval, count in zip(self.intervals, it.count(1)):
@@ -1254,7 +1254,7 @@ class StepsToSolution(IntervalScene):
                 ApplyMethod(interval.scale_in_place, 1.0/(count**2)),
                 run_time = 1.0/count
             )
-        self.dither()
+        self.wait()
 
 
 class OurSumCanBeArbitrarilySmall(Scene):
@@ -1269,18 +1269,18 @@ class OurSumCanBeArbitrarilySmall(Scene):
             for i in range(1, len(parts)):
                 parts[i].next_to(parts[i-1], buff = 0.1, aligned_edge = DOWN)
             self.add(*parts)
-            self.dither(0.05)
+            self.wait(0.05)
             self.remove(*parts)
-        self.dither()
+        self.wait()
         self.clear()
         words = TextMobject([
             "Not only can the sum be $< 1$,\\\\",
             "it can be \\emph{arbitrarily small} !"
         ]).split()
         self.add(words[0])
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(words[1].highlight()))
-        self.dither()
+        self.wait()
 
 class ProofDoesNotEqualIntuition(Scene):
     def construct(self):
@@ -1300,7 +1300,7 @@ class StillFeelsCounterintuitive(IntervalScene):
         self.add(*ticks.split())
         self.zoom_in_on(np.sqrt(2)/2, 100)
         self.play(ShowCreation(ticks))
-        self.dither()
+        self.wait()
 
 class VisualIntuition(Scene):
     def construct(self):
@@ -1330,9 +1330,9 @@ class TroubleDrawingSmallInterval(IntervalScene):
                 mob, target,
                 run_time = 2.0
             ))
-            self.dither()
+            self.wait()
             self.play(Transform(mob, big))
-            self.dither()
+            self.wait()
             self.remove(mob)
         self.play(Transform(big, small))
         self.play(ShimmerIn(words), ShowCreation(arrow))
@@ -1341,7 +1341,7 @@ class TroubleDrawingSmallInterval(IntervalScene):
             run_time = 2.0,
             rate_func = there_and_back
         ))
-        self.dither()
+        self.wait()
 
 class WhatDoesItLookLikeToBeOutside(Scene):
     def construct(self):
@@ -1382,10 +1382,10 @@ class NotCoveredMeansCacophonous(Scene):
         implies.sort_points()
 
         self.add(statement1)
-        self.dither()
+        self.wait()
         self.play(ShowCreation(implies))
         self.play(ShimmerIn(statement2))
-        self.dither()
+        self.wait()
 
 class ShiftSetupByOne(IntervalScene):
     def construct(self):
@@ -1423,10 +1423,10 @@ class ShiftSetupByOne(IntervalScene):
             self.add(interval)
         for interval in intervals[10:50]:
             self.add(interval)
-            self.dither(0.1)
+            self.wait(0.1)
         for interval in intervals[50:]:
             self.add(interval)
-        self.dither()
+        self.wait()
         mobs_shifts = [
             (intervals, UP),
             ([self.number_line, new_interval], side_shift_val*LEFT),
@@ -1438,13 +1438,13 @@ class ShiftSetupByOne(IntervalScene):
                 for mob in mobs
             ])
         self.number_line = new_interval
-        self.dither()
+        self.wait()
         words = TextMobject(
             "Almost all the covered numbers are harmonious!",
             size = "\\small"
         ).shift(2*UP)
         self.play(ShimmerIn(words))
-        self.dither()
+        self.wait()
         for num in [7, 5]:
             point = self.number_line.number_to_point(2**(num/12.))
             arrow = Arrow(point+DOWN, point)
@@ -1452,7 +1452,7 @@ class ShiftSetupByOne(IntervalScene):
                 "2^{\\left(\\frac{%d}{12}\\right)}"%num
             ).next_to(arrow, DOWN)
             self.play(ShimmerIn(mob), ShowCreation(arrow))
-            self.dither()
+            self.wait()
             self.remove(mob, arrow)
         self.remove(words)
         words = TextMobject(
@@ -1470,12 +1470,12 @@ class ShiftSetupByOne(IntervalScene):
         answer1, answer2 = compound.split()
 
         self.add(words)
-        self.dither()
+        self.wait()
         self.remove(*intervals)
         self.add(answer1)
         self.play(ShowCreation(fraction_ticks, run_time = 5.0))
         self.add(answer2)
-        self.dither()
+        self.wait()
         self.remove(words, answer1, answer2)
         words = TextMobject([
             "To a", "savant,", "harmonious numbers could be ",
@@ -1489,7 +1489,7 @@ class ShiftSetupByOne(IntervalScene):
             Mobject(*intervals),
             run_time = 5.0
         ))
-        self.dither()
+        self.wait()
 
 class FinalEquivalence(IntervalScene):
     def construct(self):
@@ -1526,7 +1526,7 @@ class FinalEquivalence(IntervalScene):
         ))
         self.add(arrow)
         self.play(ShimmerIn(words))
-        self.dither()
+        self.wait()
 
 
 

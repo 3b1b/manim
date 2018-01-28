@@ -65,7 +65,7 @@ class SelfSimilarFractal(VMobject):
         "colors" : [RED, WHITE],
         "stroke_width" : 1,
         "fill_opacity" : 1,
-        "propogate_style_to_family" : True,
+        "propagate_style_to_family" : True,
     }
     def init_colors(self):
         VMobject.init_colors(self)
@@ -127,7 +127,7 @@ class DiamondFractal(SelfSimilarFractal):
         # VGroup(*subparts).rotate(np.pi/4)
         for part, vect in zip(subparts, compass_directions(start_vect = UP+RIGHT)):
             part.next_to(ORIGIN, vect, buff = 0)
-        VGroup(*subparts).rotate(np.pi/4)
+        VGroup(*subparts).rotate(np.pi/4, about_point = ORIGIN)
 
 
 class PentagonalFractal(SelfSimilarFractal):
@@ -142,7 +142,7 @@ class PentagonalFractal(SelfSimilarFractal):
     def arrange_subparts(self, *subparts):
         for x, part in enumerate(subparts):
             part.shift(0.95*part.get_height()*UP)
-            part.rotate(2*np.pi*x/5)
+            part.rotate(2*np.pi*x/5, about_point = ORIGIN)
 
 class PentagonalPiCreatureFractal(PentagonalFractal):
     def init_colors(self):
@@ -163,7 +163,7 @@ class PentagonalPiCreatureFractal(PentagonalFractal):
 
     def arrange_subparts(self, *subparts):
         for part in subparts:
-            part.rotate(2*np.pi/5)
+            part.rotate(2*np.pi/5, about_point = ORIGIN)
         PentagonalFractal.arrange_subparts(self, *subparts)
 
 
@@ -236,7 +236,7 @@ class WonkyHexagonFractal(SelfSimilarFractal):
 
     def arrange_subparts(self, *subparts):
         for i, piece in enumerate(subparts):
-            piece.rotate(i*np.pi/12)
+            piece.rotate(i*np.pi/12, about_point = ORIGIN)
         p1, p2, p3, p4, p5, p6, p7 = subparts
         center_row = VGroup(p1, p4, p7)
         center_row.arrange_submobjects(RIGHT, buff = 0)
@@ -265,7 +265,7 @@ class CircularFractal(SelfSimilarFractal):
                 ORIGIN, UP,
                 buff = self.height/(2*np.tan(theta))
             )
-            part.rotate(i*2*np.pi/self.num_subparts)
+            part.rotate(i*2*np.pi/self.num_subparts, about_point = ORIGIN)
         self.num_subparts -= 1
 
 
@@ -293,7 +293,7 @@ class FractalCurve(VMobject):
             4 : 2,
             5 : 1,
         },
-        "propogate_style_to_family" : True,
+        "propagate_style_to_family" : True,
     }
 
     def generate_points(self):
@@ -423,18 +423,39 @@ class HilbertCurve(SelfSimilarSpaceFillingCurve):
 
 class HilbertCurve3D(SelfSimilarSpaceFillingCurve):
     CONFIG = {
-        "offsets" : [ 
-           LEFT+DOWN+OUT,
-           LEFT+UP+OUT,
-           LEFT+UP+IN,
-           LEFT+DOWN+IN,
-           RIGHT+DOWN+IN,                                               
-           RIGHT+UP+IN,
-           RIGHT+UP+OUT,
-           RIGHT+DOWN+OUT,
+        "offsets" : [
+            RIGHT+DOWN+IN,
+            LEFT+DOWN+IN,
+            LEFT+DOWN+OUT,
+            RIGHT+DOWN+OUT,
+            RIGHT+UP+OUT,
+            LEFT+UP+OUT,
+            LEFT+UP+IN,
+            RIGHT+UP+IN,
         ],
-        "offset_to_rotation_axis" : {}#TODO
+        "offset_to_rotation_axis_and_angle" : {
+            str(RIGHT+DOWN+IN)  : (LEFT+UP+OUT  , 2*np.pi/3),
+            str(LEFT+DOWN+IN)   : (RIGHT+DOWN+IN, 2*np.pi/3),
+            str(LEFT+DOWN+OUT)  : (RIGHT+DOWN+IN, 2*np.pi/3),
+            str(RIGHT+DOWN+OUT) : (UP           , np.pi    ),
+            str(RIGHT+UP+OUT)   : (UP           , np.pi    ),
+            str(LEFT+UP+OUT)    : (LEFT+DOWN+OUT, 2*np.pi/3),
+            str(LEFT+UP+IN)     : (LEFT+DOWN+OUT, 2*np.pi/3),
+            str(RIGHT+UP+IN)    : (RIGHT+UP+IN  , 2*np.pi/3),
+        },
     }
+    # Rewrote transform method to include the rotation angle
+    def transform(self, points, offset):
+        copy = np.array(points)
+        copy = rotate(
+            copy, 
+            axis = self.offset_to_rotation_axis_and_angle[str(offset)][0],
+            angle = self.offset_to_rotation_axis_and_angle[str(offset)][1],
+        )
+        copy /= self.scale_factor,
+        copy += offset*self.radius*self.radius_scale_factor
+        return copy
+
 
 class PeanoCurve(SelfSimilarSpaceFillingCurve):
     CONFIG = {
@@ -512,7 +533,6 @@ class UtahFillingCurve(SelfSimilarSpaceFillingCurve):
         "radius_scale_factor" : 2/(3*np.sqrt(3)),
     }
 
-
 class FlowSnake(LindenmayerCurve):
     CONFIG = {
         "colors" : [YELLOW, GREEN],
@@ -528,7 +548,7 @@ class FlowSnake(LindenmayerCurve):
     }
     def __init__(self, **kwargs):
         LindenmayerCurve.__init__(self, **kwargs)
-        self.rotate(-self.order*np.pi/9)
+        self.rotate(-self.order*np.pi/9, about_point = ORIGIN)
 
 class SierpinskiCurve(LindenmayerCurve):
     CONFIG = {

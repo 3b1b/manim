@@ -62,13 +62,13 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
         self.add(*self.layers)
         continuous = self.get_continuous_background()
         self.add(continuous)
-        self.dither()
+        self.wait()
         self.play(ShowCreation(
             continuous,
             rate_func = lambda t : smooth(1-t)
         ))
         self.remove(continuous)
-        self.dither()
+        self.wait()
         
     def get_continuous_background(self):
         glass = FilledRectangle(
@@ -183,11 +183,11 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
                 photon_run,
                 run_time = time
             )
-        self.dither()
+        self.wait()
         for start_y, brace in zip(start_ys, braces):
             self.add(start_y)            
             self.play(GrowFromCenter(brace))
-        self.dither()
+        self.wait()
         quads = zip(v_equations, start_ys, end_ys, braces)
         self.equations = []
         for v_eq, start_y, end_y, brace in quads:
@@ -242,7 +242,7 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
                 run_time = 2
             ))
             self.play(*map(ShowCreation, figure_marks))
-            self.dither()
+            self.wait()
             equation_frame = little_square.copy()
             equation_frame.scale(0.5)
             equation_frame.shift(
@@ -281,12 +281,12 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
         ]
 
         self.add(start)
-        self.dither(2)
+        self.wait(2)
         self.play(Transform(
             start, end, 
             path_func = counterclockwise_path()
         ))
-        self.dither(2)
+        self.wait(2)
         self.remove(start, end)
 
     def show_main_equation(self):
@@ -299,7 +299,7 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
             (self.layer_tops[0]-self.equation.get_top())*UP
         )
         self.add(self.equation)
-        self.dither()
+        self.wait()
 
     def ask_continuous_question(self):
         continuous = self.get_continuous_background()
@@ -340,5 +340,5 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
                 theta.shift(point)
                 theta.shift(0.15*vect)
                 self.add(theta)
-            self.dither(self.frame_duration)
+            self.wait(self.frame_duration)
             self.remove(arc)
