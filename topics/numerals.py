@@ -12,7 +12,7 @@ class DecimalNumber(VMobject):
         "num_decimal_points" : 2,
         "digit_to_digit_buff" : 0.05,
         "show_ellipsis" : False,
-        "unit" : None,
+        "unit" : None, #Aligned to bottom unless it starts with "^"
         "include_background_rectangle" : False,
     }
     def __init__(self, number, **kwargs):
@@ -54,7 +54,7 @@ class DecimalNumber(VMobject):
         for i, c in enumerate(num_string):
             if c == "-" and len(num_string) > i+1:
                 self[i].align_to(self[i+1], alignment_vect = UP)
-        if self.unit == "\\circ":
+        if self.unit.startswith("^"):
             self[-1].align_to(self, UP)
         #
         if self.include_background_rectangle:
@@ -80,7 +80,7 @@ class ChangingDecimal(Animation):
         "num_decimal_points" : None,
         "show_ellipsis" : None,
         "position_update_func" : None,
-        "tracked_mobject" : None
+        "tracked_mobject" : None,
     }
     def __init__(self, decimal_number_mobject, number_update_func, **kwargs):
         digest_config(self, kwargs, locals())
