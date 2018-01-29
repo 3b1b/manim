@@ -128,7 +128,7 @@ class EquationSolver1d(GraphScene, ZoomedScene, ReconfigurableScene):
 
         downBrace, upBrace = yBraces = TexMobject("||")
         yBraces.stretch(2, 0)
-        yBraces.rotate(np.pi/2)
+        yBraces.rotate(TAU/4)
 
         lowerX = self.initial_lower_x
         lowerY = self.func(lowerX)
@@ -256,28 +256,567 @@ class EquationSolver1d(GraphScene, ZoomedScene, ReconfigurableScene):
         self.drawGraph()
         self.solveEquation()
 
-class FirstSqrtScene(EquationSolver1d):
+
+# TODO: Perhaps have bullets (pulses) fade out and in at ends of line, instead of jarringly
+# popping out and in?
+#
+# TODO: Perhaps have bullets change color corresponding to a function of their coordinates?
+# This could involve some merging of functoinality with PiWalker
+class LinePulser(ContinualAnimation):
+    def __init__(self, line, bullet_template, num_bullets, pulse_time, color_func = None, **kwargs):
+        self.line = line
+        self.num_bullets = num_bullets
+        self.pulse_time = pulse_time
+        self.bullets = [bullet_template.copy() for i in range(num_bullets)]
+        self.color_func = color_func
+        ContinualAnimation.__init__(self, VGroup(line, VGroup(*self.bullets)), **kwargs)
+
+    def update_mobject(self, dt):
+        alpha = self.external_time % self.pulse_time
+        start = self.line.get_start()
+        end = self.line.get_end()
+        for i in range(self.num_bullets):
+            position = interpolate(start, end, 
+                np.true_divide((i + alpha),(self.num_bullets)))
+            self.bullets[i].move_to(position)
+            if self.color_func:
+                self.bullets.set_color(self.color_func(position))
+
+
+def color_func(alpha):
+    alpha = alpha % 1
+    colors = ["#FF0000", ORANGE, YELLOW, "#00FF00", "#0000FF", "#FF00FF"]
+    num_colors = len(colors)
+    beta = (alpha % (1.0/num_colors)) * num_colors
+    start_index = int(np.floor(num_colors * alpha)) % num_colors
+    end_index = (start_index + 1) % num_colors
+
+    return interpolate_color(colors[start_index], colors[end_index], beta)
+
+class ArrowCircleTest(Scene):
+    def construct(self):
+        circle_radius = 3
+        circle = Circle(radius = circle_radius, color = WHITE)
+        self.add(circle)
+
+        base_arrow = Arrow(circle_radius * 0.7 * RIGHT, circle_radius * 1.3 * RIGHT)
+
+        def rev_rotate(x, revs):
+            x.rotate(revs * TAU)
+            x.set_color(color_func(revs))
+            return x
+
+        num_arrows = 8 * 3
+        arrows = [rev_rotate(base_arrow.copy(), (np.true_divide(i, num_arrows))) for i in range(num_arrows)]
+        arrows_vgroup = VGroup(*arrows)
+
+        self.play(ShowCreation(arrows_vgroup), run_time = 2.5, rate_func = None)
+
+        self.wait()
+
+class FuncRotater(Animation):
     CONFIG = {
-    "x_min" : 0,
-    "x_max" : 2.5,
-    "y_min" : 0,
-    "y_max" : 2.5**2,
-    "graph_origin" : 2*DOWN + 5 * LEFT,
-    "x_axis_width" : 12,
-    "zoom_factor" : 3,
-    "zoomed_canvas_center" : 2.25 * UP + 1.75 * LEFT,
-    "func" : lambda x : x**2,
-    "targetX" : np.sqrt(2),
-    "targetY" : 2,
-    "initial_lower_x" : 1,
-    "initial_upper_x" : 2,
-    "num_iterations" : 10,
-    "iteration_at_which_to_start_zoom" : 3,
-    "graph_label" : "y = x^2",
-    "show_target_line" : True,
+        "rotate_func" : lambda x : x # Func from alpha to revolutions
     }
 
+    # Perhaps abstract this out into an "Animation updating from original object" class
+    def update_submobject(self, submobject, starting_submobject, alpha):
+        submobject.points = np.array(starting_submobject.points)
+
+    def update_mobject(self, alpha):
+        Animation.update_mobject(self, alpha)
+        angle_revs = self.rotate_func(alpha)
+        # We do a clockwise rotation
+        self.mobject.rotate(
+            -angle_revs * TAU, 
+            about_point = ORIGIN
+        )
+        self.mobject.set_color(color_func(angle_revs))
+
+class TestRotater(Scene):
+    def construct(self):
+        test_line = Line(ORIGIN, RIGHT)
+        self.play(FuncRotater(
+            test_line,
+            rotate_func = lambda x : x % 0.25,
+            run_time = 10))
+
+# TODO: Be careful about clockwise vs. counterclockwise convention throughout!
+# Make sure this is correct everywhere in resulting video.
+class OdometerScene(Scene):
+    CONFIG = {
+        "rotate_func" : lambda x : np.sin(x * TAU),
+        "run_time" : 5,
+        "dashed_line_angle" : None,
+        "biased_display_start" : None
+    }
+
+    def construct(self):
+        radius = 1.3
+        circle = Circle(center = ORIGIN, radius = radius)
+        self.add(circle)
+
+        if self.dashed_line_angle:
+            dashed_line = DashedLine(ORIGIN, radius * RIGHT)
+            # Clockwise rotation
+            dashed_line.rotate(-self.dashed_line_angle * TAU, about_point = ORIGIN)
+            self.add(dashed_line)
+        
+        num_display = DecimalNumber(0)
+        num_display.move_to(2 * DOWN)
+
+        display_val_bias = 0
+        if self.biased_display_start != None:
+            display_val_bias = self.biased_display_start - self.rotate_func(0)
+        display_func = lambda alpha : self.rotate_func(alpha) + display_val_bias
+
+        base_arrow = Arrow(ORIGIN, RIGHT, buff = 0)
+
+        self.play(
+            FuncRotater(base_arrow, rotate_func = self.rotate_func),
+            ChangingDecimal(num_display, display_func),
+            run_time = self.run_time,
+            rate_func = None)
+
+def point_to_rev((x, y)):
+    # Warning: np.arctan2 would happily discontinuously returns the value 0 for (0, 0), due to 
+    # design choices in the underlying atan2 library call, but for our purposes, this is 
+    # illegitimate, and all winding number calculations must be set up to avoid this
+    if (x, y) == (0, 0):
+        print "Error! Angle of (0, 0) computed!"
+        return None
+    return np.true_divide(np.arctan2(y, x), TAU)
+
+# Returns the value with the same fractional component as x, closest to m
+def resit_near(x, m):
+    frac_diff = (x - m) % 1
+    if frac_diff > 0.5:
+        frac_diff -= 1
+    return m + frac_diff
+
+# TODO?: Perhaps use modulus of (uniform) continuity instead of num_checkpoints, calculating 
+# latter as needed from former?
+def make_alpha_winder(func, start, end, num_checkpoints):
+    check_points = [None for i in range(num_checkpoints)]
+    check_points[0] = func(start)
+    step_size = np.true_divide(end - start, num_checkpoints)
+    for i in range(num_checkpoints - 1):
+        check_points[i + 1] = \
+        resit_near(
+            func(start + (i + 1) * step_size),
+            check_points[i])
+    def return_func(alpha):
+        index = clamp(0, num_checkpoints - 1, int(alpha * num_checkpoints))
+        x = interpolate(start, end, alpha)
+        return resit_near(func(x), check_points[index])
+    return return_func
+
+def split_interval((a, b)):
+    mid = (a + b)/2.0
+    return ((a, mid), (mid, b))
+
+class RectangleData():
+    def __init__(self, x_interval, y_interval):
+        self.rect = (x_interval, y_interval)
+
+    def get_top_left(self):
+        return np.array((self.rect[0][0], self.rect[1][1]))
+
+    def get_top_right(self):
+        return np.array((self.rect[0][1], self.rect[1][1]))
+
+    def get_bottom_right(self):
+        return np.array((self.rect[0][1], self.rect[1][0]))
+
+    def get_bottom_left(self):
+        return np.array((self.rect[0][0], self.rect[1][0]))
+
+    def get_top(self):
+        return (self.get_top_left(), self.get_top_right())
+
+    def get_right(self):
+        return (self.get_top_right(), self.get_bottom_right())
+
+    def get_bottom(self):
+        return (self.get_bottom_right(), self.get_bottom_left())
+
+    def get_left(self):
+        return (self.get_bottom_left(), self.get_top_left())
+
+    def splits_on_dim(self, dim):
+        x_interval = self.rect[0]
+        y_interval = self.rect[1]
+
+        # TODO: Can refactor the following; will do later
+        if dim == 0:
+            return_data = [RectangleData(new_interval, y_interval) for new_interval in split_interval(x_interval)]
+        elif dim == 1:
+            return_data = [RectangleData(x_interval, new_interval) for new_interval in split_interval(y_interval)]        
+        else: 
+            print "RectangleData.splits_on_dim passed illegitimate dimension!"
+
+        return tuple(return_data)
+
+    def split_line_on_dim(self, dim):
+        x_interval = self.rect[0]
+        y_interval = self.rect[1]
+
+        if dim == 0:
+            sides = (self.get_top(), self.get_bottom())
+        elif dim == 1:
+            sides = (self.get_left(), self.get_right())
+        else:
+            print "RectangleData.split_line_on_dim passed illegitimate dimension!"
+
+        return tuple([mid(x, y) for (x, y) in sides])
+
+def complex_to_pair(c):
+    return (c.real, c.imag)
+
+def plane_poly_with_roots(*points):
+    def f((x, y)):
+        return complex_to_pair(np.prod([complex(x, y) - complex(a,b) for (a,b) in points]))
+    return f
+
+def plane_func_from_complex_func(f):
+    return lambda (x, y) : complex_to_pair(f(complex(x,y)))
+
+def point_func_from_complex_func(f):
+    return lambda (x, y, z): complex_to_R3(f(complex(x, y)))
+
+empty_animation = Animation(Mobject())
+def EmptyAnimation():
+    return empty_animation
+
+class WalkerAnimation(Animation):
+    CONFIG = {
+        "walk_func" : None, # Must be initialized to use
+        "remover" : True,
+        "rate_func" : None,
+        "coords_to_point" : None
+    }
+
+    def __init__(self, walk_func, rev_func, coords_to_point, **kwargs):
+        self.walk_func = walk_func
+        self.rev_func = rev_func
+        self.coords_to_point = coords_to_point
+        self.compound_walker = VGroup()
+        self.compound_walker.walker = PiCreature(color = RED)
+        self.compound_walker.walker.scale(0.35)
+        self.compound_walker.arrow = Arrow(ORIGIN, RIGHT) #, buff = 0)
+        self.compound_walker.digest_mobject_attrs()
+        Animation.__init__(self, self.compound_walker, **kwargs)
+
+    # Perhaps abstract this out into an "Animation updating from original object" class
+    def update_submobject(self, submobject, starting_submobject, alpha):
+        submobject.points = np.array(starting_submobject.points)
+
+    def update_mobject(self, alpha):
+        Animation.update_mobject(self, alpha)
+        cur_x, cur_y = cur_coords = self.walk_func(alpha)
+        self.mobject.walker.move_to(self.coords_to_point(cur_x, cur_y))
+        rev = self.rev_func(cur_coords)
+        self.mobject.walker.set_color(color_func(rev))
+        self.mobject.arrow.set_color(color_func(rev))
+        self.mobject.arrow.rotate(
+            rev * TAU, 
+            about_point = ORIGIN #self.mobject.arrow.get_start()
+        )
+
+def LinearWalker(start_coords, end_coords, coords_to_point, rev_func, **kwargs):
+    walk_func = lambda alpha : interpolate(start_coords, end_coords, alpha)
+    return WalkerAnimation(
+        walk_func = walk_func, 
+        coords_to_point = coords_to_point, 
+        rev_func = rev_func,
+        **kwargs)
+
+class PiWalker(Scene):
+    CONFIG = {
+        "func" : plane_func_from_complex_func(lambda c : c**2),
+        "walk_coords" : [],
+        "step_run_time" : 1
+    }
+
+    def construct(self):
+
+        rev_func = lambda p : point_to_rev(self.func(p))
+
+        num_plane = NumberPlane()
+        num_plane.fade()
+        self.add(num_plane)
+
+        walk_coords = self.walk_coords
+        for i in range(len(walk_coords)):
+            start_x, start_y = start_coords = walk_coords[i]
+            start_point = num_plane.coords_to_point(start_x, start_y)
+            end_x, end_y = end_coords = walk_coords[(i + 1) % len(walk_coords)]
+            end_point = num_plane.coords_to_point(end_x, end_y)
+            self.play(
+                LinearWalker(
+                    start_coords = start_coords, 
+                    end_coords = end_coords,
+                    coords_to_point = num_plane.coords_to_point,
+                    rev_func = rev_func,
+                    remover = (i < len(walk_coords) - 1)
+                ),
+                ShowCreation(Line(start_point, end_point)),
+                run_time = self.step_run_time)
+                
+
+        self.wait()
+
+class PiWalkerRect(PiWalker):
+    CONFIG = {
+        "start_x" : -1,
+        "start_y" : 1,
+        "walk_width" : 2,
+        "walk_height" : 2,
+    }
+
+    def setup(self):
+        TL = np.array((self.start_x, self.start_y))
+        TR = TL + (self.walk_width, 0)
+        BR = TR + (0, -self.walk_height)
+        BL = BR + (-self.walk_width, 0)
+        self.walk_coords = [TL, TR, BR, BL]
+        PiWalker.setup(self)
+
+class PiWalkerCircle(PiWalker):
+    CONFIG = {
+        "radius" : 1,
+        "num_steps" : 100,
+        "step_run_time" : 0.01
+    }
+
+    def setup(self):
+        r = self.radius
+        N = self.num_steps
+        self.walk_coords = [r * np.array((np.cos(i * TAU/N), np.sin(i * TAU/N))) for i in range(N)]
+        PiWalker.setup(self)
+
+# TODO: Perhaps restructure this to avoid using AnimationGroup, and instead 
+# use lists of animations or lists or other such data, to be merged and processed into parallel 
+# animations later
+class EquationSolver2d(Scene):
+    CONFIG = {
+        "func" : plane_poly_with_roots((1, 2), (-1, 3)),
+        "initial_lower_x" : -5.1,
+        "initial_upper_x" : 5.1,
+        "initial_lower_y" : -3.1,
+        "initial_upper_y" : 3.1,
+        "num_iterations" : 5,
+        "num_checkpoints" : 10,
+        # TODO: Consider adding a "find_all_roots" flag, which could be turned off 
+        # to only explore one of the two candidate subrectangles when both are viable
+    }
+
+    def construct(self):
+        num_plane = NumberPlane()
+        num_plane.fade()
+        self.add(num_plane)
+
+        rev_func = lambda p : point_to_rev(self.func(p))
+
+        def Animate2dSolver(cur_depth, rect, dim_to_split):
+            if cur_depth >= self.num_iterations:
+                return EmptyAnimation()
+
+            def draw_line_return_wind(start, end, start_wind):
+                alpha_winder = make_alpha_winder(rev_func, start, end, self.num_checkpoints)
+                a0 = alpha_winder(0)
+                rebased_winder = lambda alpha: alpha_winder(alpha) - a0 + start_wind
+                line = Line(num_plane.coords_to_point(*start), num_plane.coords_to_point(*end),
+                    stroke_width = 5,
+                    color = RED)
+                thin_line = line.copy()
+                thin_line.set_stroke(width = 1)
+                walker_anim = LinearWalker(
+                    start_coords = start, 
+                    end_coords = end,
+                    coords_to_point = num_plane.coords_to_point,
+                    rev_func = rev_func,
+                    remover = True
+                )
+                line_draw_anim = AnimationGroup(ShowCreation(line, rate_func = None), walker_anim, 
+                    run_time = 2)
+                anim = Succession(
+                    line_draw_anim, 
+                    Transform, line, thin_line
+                )
+                return (anim, rebased_winder(1))
+
+            wind_so_far = 0
+            anim = EmptyAnimation()
+            sides = [
+                rect.get_top(), 
+                rect.get_right(), 
+                rect.get_bottom(), 
+                rect.get_left()
+            ]
+            for (start, end) in sides:
+                (next_anim, wind_so_far) = draw_line_return_wind(start, end, wind_so_far)
+                anim = Succession(anim, next_anim)
+
+            total_wind = round(wind_so_far)
+
+            if total_wind == 0:
+                coords = [
+                    rect.get_top_left(), 
+                    rect.get_top_right(), 
+                    rect.get_bottom_right(), 
+                    rect.get_bottom_left()
+                ]
+                points = [num_plane.coords_to_point(x, y) for (x, y) in coords]
+                # TODO: Maybe use diagonal lines or something to fill in rectangles indicating
+                # their "Nothing here" status?
+                fill_rect = polygonObject = Polygon(*points, fill_opacity = 0.8, color = RED)
+                return Succession(anim, FadeIn(fill_rect))
+            else:
+                (sub_rect1, sub_rect2) = rect.splits_on_dim(dim_to_split)
+                sub_rects = [sub_rect1, sub_rect2]
+                sub_anims = [
+                    Animate2dSolver(
+                        cur_depth = cur_depth + 1,
+                        rect = sub_rect,
+                        dim_to_split = 1 - dim_to_split
+                    )
+                    for sub_rect in sub_rects
+                ]
+                mid_line_coords = rect.split_line_on_dim(dim_to_split)
+                mid_line_points = [num_plane.coords_to_point(x, y) for (x, y) in mid_line_coords]
+                mid_line = DashedLine(*mid_line_points)
+                return Succession(anim, 
+                    ShowCreation(mid_line), 
+                    # FadeOut(mid_line), # TODO: Can change timing so this fades out at just the time it would be overdrawn
+                    AnimationGroup(*sub_anims)
+                )
+
+        lower_x = self.initial_lower_x
+        upper_x = self.initial_upper_x
+        lower_y = self.initial_lower_y
+        upper_y = self.initial_upper_y
+
+        x_interval = (lower_x, upper_x)
+        y_interval = (lower_y, upper_y)
+
+        rect = RectangleData(x_interval, y_interval)
+
+        anim = Animate2dSolver(
+            cur_depth = 0, 
+            rect = rect,
+            dim_to_split = 0,
+        )
+
+        self.play(anim)
+
+        self.wait()
+
+#############
+# Above are mostly general tools; here, we list, in order, finished or near-finished scenes
+
+class FirstSqrtScene(EquationSolver1d):
+    CONFIG = {
+        "x_min" : 0,
+        "x_max" : 2.5,
+        "y_min" : 0,
+        "y_max" : 2.5**2,
+        "graph_origin" : 2*DOWN + 5 * LEFT,
+        "x_axis_width" : 12,
+        "zoom_factor" : 3,
+        "zoomed_canvas_center" : 2.25 * UP + 1.75 * LEFT,
+        "func" : lambda x : x**2,
+        "targetX" : np.sqrt(2),
+        "targetY" : 2,
+        "initial_lower_x" : 1,
+        "initial_upper_x" : 2,
+        "num_iterations" : 10,
+        "iteration_at_which_to_start_zoom" : 3,
+        "graph_label" : "y = x^2",
+        "show_target_line" : True,
+    }
+
+# TODO: Pi creatures intrigued
+
+class ComplexPlaneIs2d(Scene):
+    def construct(self):
+        com_plane = ComplexPlane()
+        self.add(com_plane)
+        # TODO: Add labels to axes, specific complex points
+        self.wait()
+
+class NumberLineScene(Scene):
+    def construct(self):
+        num_line = NumberLine()
+        self.add(num_line)
+        # TODO: Add labels, arrows, specific points
+        self.wait()
+
+        border_color = PURPLE_E
+        inner_color = RED
+        stroke_width = 10
+
+        left_point = num_line.number_to_point(-1)
+        right_point = num_line.number_to_point(1)
+        interval_1d = Line(left_point, right_point, 
+            stroke_color = inner_color, stroke_width = stroke_width)
+        left_dot = Dot(left_point, stroke_width = stroke_width, color = border_color)
+        right_dot = Dot(right_point, stroke_width = stroke_width, color = border_color)
+        endpoints_1d = VGroup(left_dot, right_dot)
+        full_1d = VGroup(interval_1d, endpoints_1d)
+        self.play(ShowCreation(full_1d))
+        self.wait()
+
+        num_plane = NumberPlane()
+
+        random_points = [UP + LEFT, UP + RIGHT, DOWN + RIGHT, DOWN + LEFT]
+
+        border_2d = Polygon(
+            *random_points,
+            stroke_color = border_color,
+            stroke_width = stroke_width)
+
+        filling_2d = Polygon(
+            *random_points,
+            fill_color = inner_color,
+            fill_opacity = 0.8,
+            stroke_width = stroke_width)
+        full_2d = VGroup(filling_2d, border_2d)
+
+        self.play(
+            FadeOut(num_line), 
+            FadeIn(num_plane),
+            ReplacementTransform(full_1d, full_2d))
+
+        self.wait()
+
+class Initial2dFuncScene(Scene):
+
+    def setup(self):
+        left_camera = Camera(**self.camera_config)
+        right_camera = MappingCamera(
+            mapping_func = point_func_from_complex_func(lambda c : np.exp(c)),
+            **self.camera_config)
+        split_screen_camera = SplitScreenCamera(left_camera, right_camera, **self.camera_config)
+        self.camera = split_screen_camera
+
+    def construct(self):
+        num_plane = NumberPlane()
+        num_plane.fade()
+        self.add(num_plane)
+        points = [LEFT + DOWN, RIGHT + DOWN, LEFT + UP, RIGHT + UP]
+        for i in range(len(points) - 1):
+            line = Line(points[i], points[i + 1], color = RED)
+            self.play(ShowCreation(line))
+
+# TODO: Illustrations for introducing domain coloring
+
+# TODO: Bunch of Pi walker scenes
+
+# TODO: An odometer scene when introducing winding numbers
+
 class SecondSqrtScene(FirstSqrtScene, ReconfigurableScene):
+# TODO: Don't bother with ReconfigurableScene; just use new config from start
 
     def setup(self):
         FirstSqrtScene.setup(self)
@@ -298,26 +837,6 @@ class SecondSqrtScene(FirstSqrtScene, ReconfigurableScene):
             graph_origin = newOrigin)
         self.solveEquation()
 
-# TODO: Perhaps have bullets (pulses) fade out and in at ends of line, instead of jarringly
-# popping out and in?
-#
-# TODO: Perhaps have bullets change color corresponding to a function of their coordinates?
-class LinePulser(ContinualAnimation):
-    def __init__(self, line, bullet_template, num_bullets, pulse_time, **kwargs):
-        self.line = line
-        self.num_bullets = num_bullets
-        self.pulse_time = pulse_time
-        self.bullets = [bullet_template.copy() for i in range(num_bullets)]
-        ContinualAnimation.__init__(self, VGroup(line, VGroup(*self.bullets)), **kwargs)
-
-    def update_mobject(self, dt):
-        alpha = self.external_time % self.pulse_time
-        start = self.line.get_start()
-        end = self.line.get_end()
-        for i in range(self.num_bullets):
-            self.bullets[i].move_to(interpolate(start, end, 
-                np.true_divide((i + alpha),(self.num_bullets))))
-
 class LoopSplitScene(Scene):
 
     def PulsedLine(self, start, end, bullet_template, num_bullets = 4, pulse_time = 1, **kwargs):
@@ -327,6 +846,8 @@ class LoopSplitScene(Scene):
 
     def construct(self):
         num_plane = NumberPlane(color = LIGHT_GREY, stroke_width = 1)
+
+        # We actually don't want to highlight
         num_plane.axes.set_stroke(color = WHITE, width = 2)
         num_plane.fade()
         self.add(num_plane)
@@ -427,6 +948,7 @@ class LoopSplitScene(Scene):
 
         self.wait()
 
+# Is there a way to abstract this into a general process to derive a new mapped scene from an old scene?
 class LoopSplitSceneMapped(LoopSplitScene):
 
     def setup(self):
@@ -437,318 +959,67 @@ class LoopSplitSceneMapped(LoopSplitScene):
         split_screen_camera = SplitScreenCamera(left_camera, right_camera, **self.camera_config)
         self.camera = split_screen_camera
 
-class NumberLineScene(Scene):
-    def construct(self):
-        num_line = NumberLine()
-        self.add(num_line)
-        self.wait()
-
-        interval_1d = Line(num_line.number_to_point(-1), num_line.number_to_point(1), 
-            stroke_color = RED, stroke_width = 10)
-        self.play(ShowCreation(interval_1d))
-        self.wait()
-
-        num_plane = NumberPlane()
-
-        random_points = [UP + LEFT, 2 * UP, RIGHT, DOWN, DOWN + RIGHT, LEFT]
-
-        interval_2d = Polygon(
-            *random_points,
-            stroke_color = RED,
-            stroke_width = 10)
-        # TODO: Turn this into a more complicated, curvy loop?
-        # TODO: Illustrate borders and filled interiors with a particular color
-        # on both 1d and 2d region?
-
-        self.play(
-            FadeOut(num_line), 
-            FadeIn(num_plane),
-            ReplacementTransform(interval_1d, interval_2d))
-
-        self.wait()        
-
-def color_func(alpha):
-    alpha = alpha % 1
-    colors = ["#FF0000", ORANGE, YELLOW, "#00FF00", "#0000FF", "#FF00FF"]
-    num_colors = len(colors)
-    beta = (alpha % (1.0/num_colors)) * num_colors
-    start_index = int(np.floor(num_colors * alpha)) % num_colors
-    end_index = (start_index + 1) % num_colors
-
-    return interpolate_color(colors[start_index], colors[end_index], beta)
-
-class ArrowCircleTest(Scene):
-    def construct(self):
-        circle_radius = 3
-        circle = Circle(radius = circle_radius, color = WHITE)
-        self.add(circle)
-
-        base_arrow = Arrow(circle_radius * 0.7 * RIGHT, circle_radius * 1.3 * RIGHT)
-
-        def rev_rotate(x, revs):
-            x.rotate(revs * 2 * np.pi)
-            x.set_color(color_func(revs))
-            return x
-
-        num_arrows = 8 * 3
-        arrows = [rev_rotate(base_arrow.copy(), (np.true_divide(i, num_arrows))) for i in range(num_arrows)]
-        arrows_vgroup = VGroup(*arrows)
-
-        self.play(ShowCreation(arrows_vgroup), run_time = 2.5, rate_func = None)
-
-        self.wait()
-
-class FuncRotater(Animation):
+# TODO: Perhaps do extra illustration of zooming out and winding around a large circle, 
+# to illustrate relation between degree and large-scale winding number
+class FundThmAlg(EquationSolver2d):
     CONFIG = {
-        "rotate_func" : lambda x : x # Func from alpha to revolutions
+        "func" : plane_poly_with_roots((1, 2), (-1, 3), (-1, 3)),
+        "num_iterations" : 1,
     }
 
-    # Perhaps abstract this out into an "Animation from base object" class
-    def update_submobject(self, submobject, starting_submobject, alpha):
-        submobject.points = np.array(starting_submobject.points)
+# TODO: Borsuk-Ulam visuals
+# Note: May want to do an ordinary square scene, then mapping func it into a circle
+# class BorsukUlamScene(PiWalker):
 
-    def update_mobject(self, alpha):
-        Animation.update_mobject(self, alpha)
-        angle_revs = self.rotate_func(alpha)
-        self.mobject.rotate(
-            angle_revs * 2 * np.pi, 
-        )
-        self.mobject.set_color(color_func(angle_revs))
+# 3-way scene of "Good enough"-illustrating odometers; to be composed in Premiere
+left_func = lambda x : x**2 - x + 1
+diff_func = lambda x : np.cos(1.4 * (x - 0.1) * (np.log(x + 0.1) - 0.3) * TAU)/2.1
 
-class TestRotater(Scene):
-    def construct(self):
-        test_line = Line(ORIGIN, RIGHT)
-        self.play(FuncRotater(
-            test_line,
-            rotate_func = lambda x : x % 0.25,
-            run_time = 10))
-
-class OdometerScene(Scene):
+class LeftOdometer(OdometerScene):
     CONFIG = {
-        "rotate_func" : lambda x : np.sin(x * 2 * np.pi),
-        "run_time" : 5
+        "rotate_func" : left_func,
+        "biased_display_start" : 0
     }
 
-    def construct(self):
-        base_arrow = Arrow(ORIGIN, RIGHT)
-        circle = Circle(center = ORIGIN, radius = 1.3)
-        self.add(circle)
-        num_display = DecimalNumber(0)
-        num_display.move_to(2 * DOWN)
-        self.play(
-            FuncRotater(base_arrow, rotate_func = self.rotate_func),
-            ChangingDecimal(num_display, self.rotate_func),
-            run_time = self.run_time,
-            rate_func = None)
-
-def point_to_rev((x, y)):
-    # Warning: np.arctan2 would happily discontinuously returns the value 0 for (0, 0), due to 
-    # design choices in the underlying atan2 library call, but for our purposes, this is 
-    # illegitimate, and all winding number calculations must be set up to avoid this
-    if (x, y) == (0, 0):
-        print "Error! Angle of (0, 0) computed!"
-        return None
-    return np.true_divide(np.arctan2(y, x), 2 * np.pi)
-
-# Returns the value with the same fractional component as x, closest to m
-def resit_near(x, m):
-    frac_diff = (x - m) % 1
-    if frac_diff > 0.5:
-        frac_diff -= 1
-    return m + frac_diff
-
-# TODO?: Perhaps use modulus of (uniform) continuity instead of num_checkpoints, calculating 
-# latter as needed from former?
-def make_alpha_winder(func, start, end, num_checkpoints):
-    check_points = [None for i in range(num_checkpoints)]
-    check_points[0] = func(start)
-    step_size = np.true_divide(end - start, num_checkpoints)
-    for i in range(num_checkpoints - 1):
-        check_points[i + 1] = \
-        resit_near(
-            func(start + (i + 1) * step_size),
-            check_points[i])
-    def return_func(alpha):
-        index = clamp(0, num_checkpoints - 1, int(alpha * num_checkpoints))
-        x = interpolate(start, end, alpha)
-        return resit_near(func(x), check_points[index])
-    return return_func
-
-def split_interval((a, b)):
-    mid = (a + b)/2.0
-    return ((a, mid), (mid, b))
-
-class RectangleData():
-    def __init__(self, x_interval, y_interval):
-        self.rect = (x_interval, y_interval)
-
-    def get_top_left(self):
-        return np.array((self.rect[0][0], self.rect[1][1]))
-
-    def get_top_right(self):
-        return np.array((self.rect[0][1], self.rect[1][1]))
-
-    def get_bottom_right(self):
-        return np.array((self.rect[0][1], self.rect[1][0]))
-
-    def get_bottom_left(self):
-        return np.array((self.rect[0][0], self.rect[1][0]))
-
-    def get_top(self):
-        return (self.get_top_left(), self.get_top_right())
-
-    def get_right(self):
-        return (self.get_top_right(), self.get_bottom_right())
-
-    def get_bottom(self):
-        return (self.get_bottom_right(), self.get_bottom_left())
-
-    def get_left(self):
-        return (self.get_bottom_left(), self.get_top_left())
-
-    def splits_on_dim(self, dim):
-        x_interval = self.rect[0]
-        y_interval = self.rect[1]
-
-        # TODO: Can refactor the following; will do later
-        if dim == 0:
-            return_data = [RectangleData(new_interval, y_interval) for new_interval in split_interval(x_interval)]
-        elif dim == 1:
-            return_data = [RectangleData(x_interval, new_interval) for new_interval in split_interval(y_interval)]        
-        else: 
-            print "RectangleData.splits_on_dim passed illegitimate dimension!"
-
-        return tuple(return_data)
-
-    def split_line_on_dim(self, dim):
-        x_interval = self.rect[0]
-        y_interval = self.rect[1]
-
-        if dim == 0:
-            sides = (self.get_top(), self.get_bottom())
-        elif dim == 1:
-            sides = (self.get_left(), self.get_right())
-
-        return tuple([mid(x, y) for (x, y) in sides])
-
-def complex_to_pair(c):
-    return (c.real, c.imag)
-
-def plane_poly_with_roots(*points):
-    def f((x, y)):
-        return complex_to_pair(np.prod([complex(x, y) - complex(a,b) for (a,b) in points]))
-    return f
-
-def plane_func_from_complex_func(f):
-    return lambda (x, y) : complex_to_pair(f(complex(x,y)))
-
-empty_animation = Animation(Mobject())
-def EmptyAnimation():
-    return empty_animation
-
-# TODO: Perhaps restructure this to avoid using AnimationGroup/UnsyncedParallels, and instead 
-# use lists of animations or lists or other such data, to be merged and processed into parallel 
-# animations later
-class EquationSolver2d(Scene):
+class RightOdometer(OdometerScene):
     CONFIG = {
-        "func" : plane_poly_with_roots((1, 2), (-1, 3)),
-        "initial_lower_x" : -5.1,
-        "initial_upper_x" : 5.1,
-        "initial_lower_y" : -3.1,
-        "initial_upper_y" : 3.1,
-        "num_iterations" : 5,
-        "num_checkpoints" : 10,
-        # TODO: Consider adding a "find_all_roots" flag, which could be turned off 
-        # to only explore one of the two candidate subrectangles when both are viable
+        "rotate_func" : lambda x : left_func(x) + diff_func(x),
+        "biased_display_start" : 0
     }
 
-    def construct(self):
-        num_plane = NumberPlane()
-        num_plane.fade()
-        self.add(num_plane)
+class DiffOdometer(OdometerScene):
+    CONFIG = {
+        "rotate_func" : diff_func,
+        "dashed_line_angle" : 0.5,
+        "biased_display_start" : 0
+    }
 
-        rev_func = lambda p : point_to_rev(self.func(p))
+# TODO: Brouwer's fixed point theorem visuals
 
-        def Animate2dSolver(cur_depth, rect, dim_to_split):
-            if cur_depth >= self.num_iterations:
-                return EmptyAnimation()
+# TODO: Pi creatures wide-eyed in amazement
 
-            def draw_line_return_wind(start, end, start_wind):
-                alpha_winder = make_alpha_winder(rev_func, start, end, self.num_checkpoints)
-                a0 = alpha_winder(0)
-                rebased_winder = lambda alpha: alpha_winder(alpha) - a0 + start_wind
-                line = Line(num_plane.coords_to_point(*start), num_plane.coords_to_point(*end),
-                    stroke_width = 5,
-                    color = RED)
-                thin_line = line.copy()
-                thin_line.set_stroke(width = 1)
-                anim = Succession(
-                    ShowCreation, line, 
-                    Transform, line, thin_line
-                )
-                return (anim, rebased_winder(1))
+#################
 
-            wind_so_far = 0
-            anim = EmptyAnimation()
-            sides = [
-                rect.get_top(), 
-                rect.get_right(), 
-                rect.get_bottom(), 
-                rect.get_left()
-            ]
-            for (start, end) in sides:
-                (next_anim, wind_so_far) = draw_line_return_wind(start, end, wind_so_far)
-                anim = Succession(anim, next_anim)
+# TODOs, from easiest to hardest:
 
-            total_wind = round(wind_so_far)
+# Minor fiddling with little things in each animation; placements, colors, timing
 
-            if total_wind == 0:
-                coords = [
-                    rect.get_top_left(), 
-                    rect.get_top_right(), 
-                    rect.get_bottom_right(), 
-                    rect.get_bottom_left()
-                ]
-                points = [num_plane.coords_to_point(x, y) for (x, y) in coords]
-                fill_rect = polygonObject = Polygon(*points, fill_opacity = 0.8, color = RED)
-                return Succession(anim, FadeIn(fill_rect))
-            else:
-                (sub_rect1, sub_rect2) = rect.splits_on_dim(dim_to_split)
-                sub_rects = [sub_rect1, sub_rect2]
-                sub_anims = [
-                    Animate2dSolver(
-                        cur_depth = cur_depth + 1,
-                        rect = sub_rect,
-                        dim_to_split = 1 - dim_to_split
-                    )
-                    for sub_rect in sub_rects
-                ]
-                mid_line_coords = rect.split_line_on_dim(dim_to_split)
-                mid_line_points = [num_plane.coords_to_point(x, y) for (x, y) in mid_line_coords]
-                mid_line = DashedLine(*mid_line_points)
-                return Succession(anim, 
-                    ShowCreation(mid_line), 
-                    FadeOut(mid_line), 
-                    UnsyncedParallel(*sub_anims)
-                )
+# Odometer/swinging arrows stuff
 
-        lower_x = self.initial_lower_x
-        upper_x = self.initial_upper_x
-        lower_y = self.initial_lower_y
-        upper_y = self.initial_upper_y
+# Writing new Pi creature walker scenes off of general template
 
-        x_interval = (lower_x, upper_x)
-        y_interval = (lower_y, upper_y)
+# Split screen illustration of 2d function (before domain coloring)
 
-        rect = RectangleData(x_interval, y_interval)
+# Generalizing Pi color walker stuff/making bullets on pulsing lines change colors dynamically according to function traced out
 
-        anim = Animate2dSolver(
-            cur_depth = 0, 
-            rect = rect,
-            dim_to_split = 0,
-        )
+# ----
 
-        self.play(anim)
+# Pi creature emotion stuff
 
-        self.wait()
+# BFT visuals
 
+# Borsuk-Ulam visuals
+
+# Domain coloring
+
+# FIN

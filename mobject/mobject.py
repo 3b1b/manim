@@ -454,14 +454,14 @@ class Mobject(object):
             **kwargs
         )
 
-    def match_width(self, mobject):
-        return self.match_dim(mobject, 0)
+    def match_width(self, mobject, **kwargs):
+        return self.match_dim(mobject, 0, **kwargs)
 
-    def match_height(self, mobject):
-        return self.match_dim(mobject, 1)
+    def match_height(self, mobject, **kwargs):
+        return self.match_dim(mobject, 1, **kwargs)
 
-    def match_depth(self, mobject):
-        return self.match_dim(mobject, 2)
+    def match_depth(self, mobject, **kwargs):
+        return self.match_dim(mobject, 2, **kwargs)
 
     ## Color functions
 

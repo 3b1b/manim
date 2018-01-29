@@ -200,14 +200,21 @@ class Axes(VGroup):
             self.y_axis.point_to_number(point),
         )
 
-    def get_graph(self, function, num_graph_points = None, **kwargs):
+    def get_graph(
+        self, function, num_graph_points = None, 
+        x_min = None,
+        x_max = None,
+        **kwargs
+        ):
         kwargs["fill_opacity"] = kwargs.get("fill_opacity", 0)
         kwargs["num_anchor_points"] = \
             num_graph_points or self.default_num_graph_points
+        x_min = x_min or self.x_min
+        x_max = x_max or self.x_max
         graph = ParametricFunction(
             lambda t : self.coords_to_point(t, function(t)),
-            t_min = self.x_min,
-            t_max = self.x_max,
+            t_min = x_min,
+            t_max = x_max,
             **kwargs
         )
         graph.underlying_function = function

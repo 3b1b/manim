@@ -97,9 +97,6 @@ class Arc(VMobject):
         return self
 
 
-
-
-
 class Circle(Arc):
     CONFIG = {
         "color" : RED,
@@ -356,6 +353,17 @@ class Line(VMobject):
         self.shift(new_start - self.get_start())
         return self
 
+    def insert_n_anchor_points(self, n):
+        if not self.path_arc:
+            n_anchors = self.get_num_anchor_points()
+            new_num_points = 3*(n_anchors + n)+1
+            self.points = np.array([
+                self.point_from_proportion(alpha)
+                for alpha in np.linspace(0, 1, new_num_points)
+            ])
+        else:
+            VMobject.insert_n_anchor_points(self, n)
+
 class DashedLine(Line):
     CONFIG = {
         "dashed_segment_length" : 0.05
@@ -531,6 +539,7 @@ class Arrow(Line):
         Line.put_start_and_end_on(self, *args, **kwargs)
         self.set_tip_points(self.tip, preserve_normal = False)
         self.set_rectangular_stem_points()
+        return self
 
     def scale(self, scale_factor, **kwargs):
         Line.scale(self, scale_factor, **kwargs)
@@ -539,6 +548,9 @@ class Arrow(Line):
         if self.use_rectangular_stem:
             self.set_rectangular_stem_points()
         return self
+
+    def copy(self):
+        return self.deepcopy()
 
 class Vector(Arrow):
     CONFIG = {

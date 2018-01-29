@@ -460,11 +460,3 @@ class AnimationGroup(Animation):
     def update_mobject(self, alpha):
         for anim in self.sub_anims:
             anim.update(alpha)
-
-# Parallel animations where shorter animations are not stretched out to match the longest
-class UnsyncedParallel(AnimationGroup):
-    def __init__(self, *sub_anims, **kwargs):
-        digest_config(self, kwargs, locals())
-        self.run_time = max([a.run_time for a in sub_anims])
-        everything = Mobject(*[a.mobject for a in sub_anims])
-        Animation.__init__(self, everything, **kwargs)

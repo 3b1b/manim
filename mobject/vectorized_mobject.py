@@ -100,12 +100,12 @@ class VMobject(Mobject):
         #match styles accordingly
         submobs1, submobs2 = self.submobjects, vmobject.submobjects
         if len(submobs1) == 0:
-            return
+            return self
         elif len(submobs2) == 0:
             submobs2 = [vmobject]
         for sm1, sm2 in zip(*make_even(submobs1, submobs2)):
             sm1.match_style(sm2)
-        return
+        return self
 
     def fade(self, darkness = 0.5):
         for submob in self.submobject_family():
@@ -353,7 +353,8 @@ class VMobject(Mobject):
         for index in range(num_curves):
             curr_bezier_points = self.points[3*index:3*index+4]
             num_inter_curves = sum(index_allocation == index)
-            alphas = np.arange(0, num_inter_curves+1)/float(num_inter_curves)
+            alphas = np.linspace(0, 1, num_inter_curves+1)
+            # alphas = np.arange(0, num_inter_curves+1)/float(num_inter_curves)
             for a, b in zip(alphas, alphas[1:]):
                 new_points = partial_bezier_points(
                     curr_bezier_points, a, b
