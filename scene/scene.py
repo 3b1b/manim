@@ -43,7 +43,7 @@ class Scene(Container):
     def __init__(self, **kwargs):
         Container.__init__(self, **kwargs) # Perhaps allow passing in a non-empty *mobjects parameter?
         self.camera = self.camera_class(**self.camera_config)
-        self.mobjects = [] #TODO: fiddle with this line... to match name used in Container
+        self.mobjects = []
         self.continual_animations = []
         self.foreground_mobjects = []
         self.num_plays = 0

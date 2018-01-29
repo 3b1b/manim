@@ -10,8 +10,6 @@ from animation import Animation
 from animation import sync_animation_run_times_and_rate_funcs
 from transform import Transform
 
-from traceback import *
-
 class Rotating(Animation):
     CONFIG = {
         "axis"       : OUT,
