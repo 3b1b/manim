@@ -12,7 +12,7 @@ class DecimalNumber(VMobject):
         "num_decimal_points" : 2,
         "digit_to_digit_buff" : 0.05,
         "show_ellipsis" : False,
-        "unit" : None,
+        "unit" : None, #Aligned to bottom unless it starts with "^"
         "include_background_rectangle" : False,
     }
     def __init__(self, number, **kwargs):
@@ -50,22 +50,34 @@ class DecimalNumber(VMobject):
             )
 
         if self.unit != None:
-            unit_sign = TexMobject(self.unit)
-            unit_sign.next_to(self.submobjects[-1],RIGHT,
-                    buff = self.digit_to_digit_buff)
-
-            if self.unit.startswith("^"):
-                unit_sign.align_to(self,UP)
-            else:
-                unit_sign.align_to(self,DOWN)
-            self.add(unit_sign)
+            self.unit_sign = TexMobject(self.unit)
+            self.add(self.unit_sign)
 
         self.arrange_submobjects(
             buff = self.digit_to_digit_buff,
             aligned_edge = DOWN
         )
 
+        #Handle alignment of parts that should be aligned
+        #to the bottom
+        for i, c in enumerate(num_string):
+            if c == "-" and len(num_string) > i+1:
+                self[i].align_to(self[i+1], alignment_vect = UP)
+        if self.unit and self.unit.startswith("^"):
+            self.unit_sign.align_to(self, UP)
+        #
+        if self.include_background_rectangle:
+            self.add_background_rectangle()
 
+    def add_background_rectangle(self):
+        #TODO, is this the best way to handle
+        #background rectangles?
+        self.background_rectangle = BackgroundRectangle(self)
+        self.submobjects = [
+            self.background_rectangle,
+            VGroup(*self.submobjects)
+        ]
+        return self
 
 class Integer(DecimalNumber):
     CONFIG = {
@@ -77,7 +89,7 @@ class ChangingDecimal(Animation):
         "num_decimal_points" : None,
         "show_ellipsis" : None,
         "position_update_func" : None,
-        "tracked_mobject" : None
+        "tracked_mobject" : None,
     }
     def __init__(self, decimal_number_mobject, number_update_func, **kwargs):
         digest_config(self, kwargs, locals())
