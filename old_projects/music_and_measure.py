@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import absolute_import
 import numpy as np
 import itertools as it
 from copy import deepcopy
@@ -11,7 +12,7 @@ from mobject import *
 from constants import *
 from mobject.region import  *
 from scene import Scene
-from inventing_math import Underbrace
+from .inventing_math import Underbrace
 
 from topics.number_line import NumberLineScene
 
@@ -218,7 +219,7 @@ class IntervalScene(NumberLineScene):
         all_rationals = rationals()
         count = 0
         while True:
-            fraction = all_rationals.next()
+            fraction = next(all_rationals)
             count += 1
             if num_intervals >= num_fractions:
                 break
@@ -320,7 +321,7 @@ class ChallengeOne(Scene):
         top_vibrations = [
             Vibrate(
                 num_periods = freq, run_time = 3.0,
-                center = 2*UP, color = colors.next()
+                center = 2*UP, color = next(colors)
             )
             for freq in [1, 2, 5.0/3, 4.0/3, 2]
         ]
@@ -587,7 +588,7 @@ class PatternInFrequencies(Scene):
         )
         anims = [
             ApplyMethod(mob.shift, setup_width*LEFT, **kwargs)
-            for mob in top_lines, bottom_lines
+            for mob in (top_lines, bottom_lines)
         ]
         anim_mobs = [anim.mobject for anim in anims]
         self.play(
@@ -620,12 +621,12 @@ class CompareFractionComplexity(Scene):
         self.add(simple, complicated)
         self.play(*[
             ShowCreation(arrow)
-            for arrow in arrow1, arrow2
+            for arrow in (arrow1, arrow2)
         ])
         self.wait()
         self.play(*[
             DelayByOrder(ApplyMethod(frac[1].highlight, "yellow"))
-            for frac in frac0, frac1
+            for frac in (frac0, frac1)
         ])
         self.play(
             FadeIn(indicates),
@@ -857,7 +858,7 @@ class AllValuesBetween1And2(NumberLineScene):
         }
         self.play(*[
             ApplyMethod(mob.shift, RIGHT, **kwargs)
-            for mob in r, top_arrow
+            for mob in (r, top_arrow)
         ])
         self.wait() 
         self.remove(r, top_arrow)
@@ -936,10 +937,10 @@ class DefineOpenInterval(IntervalScene):
         left_arrow = Arrow(a.get_corner(DOWN+LEFT), left)
         right_arrow = Arrow(b.get_corner(DOWN+RIGHT), right)
 
-        self.play(*[ShimmerIn(mob) for mob in a, less_than1, x])
+        self.play(*[ShimmerIn(mob) for mob in (a, less_than1, x)])
         self.play(ShowCreation(left_arrow))
         self.wait()
-        self.play(*[ShimmerIn(mob) for mob in less_than2, b])
+        self.play(*[ShimmerIn(mob) for mob in (less_than2, b)])
         self.play(ShowCreation(right_arrow))
         self.wait()
 
@@ -1235,7 +1236,7 @@ class StepsToSolution(IntervalScene):
         arrow = Arrow(ORIGIN, RIGHT).next_to(dots)
         one = TexMobject("1").next_to(arrow)
         self.ones.append(one)
-        self.play(*[ShowCreation(mob) for mob in dots, arrow, one])
+        self.play(*[ShowCreation(mob) for mob in (dots, arrow, one)])
         self.wait()
 
     def multiply_by_epsilon(self):

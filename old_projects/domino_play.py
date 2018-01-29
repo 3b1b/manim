@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 from helpers import *
 
 from mobject.tex_mobject import TexMobject
@@ -833,7 +834,7 @@ class ShowAllSteadyStateVelocities(SimpleVelocityGraph):
             )
             self.add(dot)
             self.add(label)
-            print index_str, self.velocities[-1], self.friction
+            print(index_str, self.velocities[-1], self.friction)
 
 class Test(Scene):
     def construct(self):
@@ -900,7 +901,7 @@ class Test(Scene):
             run_time = 3,
         ))
 
-        print arc1.angle, arc2.angle
+        print(arc1.angle, arc2.angle)
 
 
 

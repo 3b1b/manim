@@ -15,6 +15,7 @@ from constants import *
 from mobject.region import  *
 from scene import Scene, GraphScene, PascalsTriangleScene
 from script_wrapper import command_line_create_scene
+from functools import reduce
 
 RADIUS            = SPACE_HEIGHT - 0.1
 CIRCLE_DENSITY    = DEFAULT_POINT_DENSITY_1D*RADIUS
@@ -682,7 +683,7 @@ class GraphsAndEulersFormulaJoke(Scene):
             lambda t : (10*t, ((10*t)**3 - 10*t), 0),
             expected_measure = 40.0
         )
-        graph.filter_out(lambda (x, y, z) : abs(y) > SPACE_HEIGHT)
+        graph.filter_out(lambda x_y_z : abs(x_y_z[1]) > SPACE_HEIGHT)
         self.add(axes)
         self.play(ShowCreation(graph), run_time = 1.0)
         eulers = TexMobject("e^{\pi i} = -1").shift((0, 3, 0))
@@ -1573,7 +1574,7 @@ class ExplainNChoose2Formula(Scene):
         ])
         self.play(*[
             ApplyMethod(mob.shift, (0, 1, 0))
-            for mob in parens, a_mob, b_mob
+            for mob in (parens, a_mob, b_mob)
         ])
         parens_copy = deepcopy(parens).shift((0, -2, 0))
         a_center = a_mob.get_center()

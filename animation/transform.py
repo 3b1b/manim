@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import numpy as np
 import itertools as it
 import inspect
@@ -6,7 +7,7 @@ import warnings
 
 from helpers import *
 
-from animation import Animation
+from .animation import Animation
 from mobject import Mobject, Point, VMobject, Group
 from topics.geometry import Dot
 
@@ -142,7 +143,7 @@ class ApplyMethod(Transform):
             "Whoops, looks like you accidentally invoked " + \
             "the method you want to animate"
         )
-        assert(isinstance(method.im_self, Mobject))
+        assert(isinstance(method.__self__, Mobject))
         args = list(args) #So that args.pop() works
         if "method_kwargs" in kwargs:
             method_kwargs = kwargs["method_kwargs"]
@@ -150,9 +151,9 @@ class ApplyMethod(Transform):
             method_kwargs = args.pop()
         else:
             method_kwargs = {}
-        target = method.im_self.copy()
-        method.im_func(target, *args, **method_kwargs)
-        Transform.__init__(self, method.im_self, target, **kwargs)
+        target = method.__self__.copy()
+        method.__func__(target, *args, **method_kwargs)
+        Transform.__init__(self, method.__self__, target, **kwargs)
 
 class FadeOut(Transform):
     CONFIG = {

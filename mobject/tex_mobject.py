@@ -1,11 +1,14 @@
+from __future__ import print_function
+from __future__ import absolute_import
 from helpers import *
 
-from vectorized_mobject import VMobject, VGroup, VectorizedPoint
-from svg_mobject import SVGMobject, VMobjectFromSVGPathstring
+from .vectorized_mobject import VMobject, VGroup, VectorizedPoint
+from .svg_mobject import SVGMobject, VMobjectFromSVGPathstring
 from topics.geometry import BackgroundRectangle
 
 import collections
 import sys
+from functools import reduce
 
 TEX_MOB_SCALE_FACTOR = 0.05
 

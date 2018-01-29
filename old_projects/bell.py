@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from helpers import *
 
 from mobject.tex_mobject import TexMobject
@@ -29,7 +30,8 @@ from mobject.tex_mobject import *
 
 from tqdm import tqdm as ProgressDisplay
 
-from waves import *
+from .waves import *
+from functools import reduce
 
 #force_skipping
 #revert_to_original_skipping_status
@@ -130,7 +132,7 @@ class PhotonPassesCompletelyOrNotAtAll(DirectionOfPolarizationScene):
 class PhotonPassesCompletelyOrNotAtAllForWavesVideo(PhotonPassesCompletelyOrNotAtAll):
     CONFIG = {
         "show_M_vects" : False,
-    }    
+    }
 
 class DirectionOfPolarization(DirectionOfPolarizationScene):
     def construct(self):
@@ -220,13 +222,13 @@ class PhotonsThroughPerpendicularFilters(PhotonPassesCompletelyOrNotAtAll):
                 em_wave = self.em_wave.copy(),
                 run_time = 1,
             )
-            for x in -2, 2, 10
+            for x in (-2, 2, 10)
         ]
 
     def get_probability_text(self, prob = 0):
         prob_text = TexMobject(
-            "P(", "\\substack", "{\\text{photons that make it} \\\\ ", 
-            " \\text{here } ", "\\text{make it}", 
+            "P(", "\\substack", "{\\text{photons that make it} \\\\ ",
+            " \\text{here } ", "\\text{make it}",
             " \\text{ here} }", ")", "=", str(int(prob*100)), "\\%",
             arg_separator = ""
         )
@@ -244,7 +246,7 @@ class PhotonsThroughPerpendicularFilters(PhotonPassesCompletelyOrNotAtAll):
                 color = here.get_color(),
                 normal_vector = DOWN+OUT,
             )
-            for here, x in (here1, 0), (here2, 4)
+            for here, x in ((here1, 0), (here2, 4))
         ]
         prob_text.add(*arrows)
 
@@ -262,7 +264,7 @@ class MoreFiltersMoreLight(FilterScene):
         ],
         "ambient_rotation_rate" : 0,
         "arrow_rgb" : (0, 0, 0),
-        "background_rgb" : (245, 245, 245), 
+        "background_rgb" : (245, 245, 245),
     }
     def construct(self):
         self.remove(self.axes)
@@ -365,7 +367,7 @@ class MoreFiltersMoreLight(FilterScene):
 class MoreFiltersMoreLightBlackBackground(MoreFiltersMoreLight):
     CONFIG = {
         "arrow_rgb" : (255, 255, 255),
-        "background_rgb" : (0, 0, 0),    
+        "background_rgb" : (0, 0, 0),
     }
 
 class ConfusedPiCreature(Scene):
@@ -396,7 +398,7 @@ class ShowALittleMath(TeacherStudentsScene):
     def construct(self):
         exp1 = TexMobject(
             "|", "\\psi", "\\rangle = ",
-            "\\alpha", "|\\uparrow\\rangle", 
+            "\\alpha", "|\\uparrow\\rangle",
             "+", "\\beta", "|\\rightarrow\\rangle"
         )
         exp2 = TexMobject(
@@ -617,7 +619,7 @@ class ShowVariousFilterPairsWithPhotonsOverTime(PhotonsThroughPerpendicularFilte
         "filter_x_coordinates" : [-2, 2, 2, 2, 2],
         "pol_filter_configs" : [
             {"filter_angle" : angle}
-            for angle in 0, 0, np.pi/2, np.pi/4, np.pi/8
+            for angle in (0, 0, np.pi/2, np.pi/4, np.pi/8)
         ],
         "apply_filter" : False,
     }
@@ -700,11 +702,11 @@ class ShowVariousFilterPairsWithPhotonsOverTime(PhotonsThroughPerpendicularFilte
             self.play(
                 blocked_photon,
                 first_absorption,
-                photon, 
+                photon,
                 *added_anims
             )
         self.wait()
-        
+
     def change_to_new_filter(self, pol_filter, added_anims = None):
         if added_anims is None:
             added_anims = []
@@ -788,7 +790,7 @@ class ShowVariousFilterPairs(ShowVariousFilterPairsWithPhotonsOverTime):
         self.move_camera(
             0.9*np.pi/2, -0.6*np.pi,
             added_anims = [
-                pf.restore 
+                pf.restore
                 for pf in pair
             ]
         )
@@ -857,7 +859,7 @@ class ShowVariousFilterPairs(ShowVariousFilterPairsWithPhotonsOverTime):
     #####
 
     def get_lines(
-        self, filter1 = None, filter2 = None, 
+        self, filter1 = None, filter2 = None,
         ratio = 1.0,
         remove_from_bottom = False,
         ):
@@ -865,7 +867,7 @@ class ShowVariousFilterPairs(ShowVariousFilterPairsWithPhotonsOverTime):
         n = self.n_lines
         start, end = [
             (f.point_from_proportion(0.75) if f is not None else None)
-            for f in filter1, filter2
+            for f in (filter1, filter2)
         ]
         if start is None:
             start = end + self.line_start_length*LEFT
@@ -905,7 +907,7 @@ class ShowVariousFilterPairsFrom0To45(ShowVariousFilterPairs):
 
         cosines = VGroup(*[
             TexMobject("\\cos^2(%s^\\circ)"%str(x))
-            for x in 45, 22.5
+            for x in (45, 22.5)
         ])
         cosines.scale(0.8)
         # cosines.highlight(BLUE)
@@ -923,7 +925,7 @@ class ForgetPreviousActions(ShowVariousFilterPairs):
         "filter_x_coordinates" : [-6, -2, 2, 2, 2],
         "pol_filter_configs" : [
             {"filter_angle" : angle}
-            for angle in np.pi/4, 0, np.pi/4, np.pi/3, np.pi/6
+            for angle in (np.pi/4, 0, np.pi/4, np.pi/3, np.pi/6)
         ],
         "start_theta" : -0.6*np.pi,
         "EMWave_config" : {
@@ -996,7 +998,7 @@ class ForgetPreviousActions(ShowVariousFilterPairs):
         ignore_words.next_to(rect2, OUT)
 
         self.play(
-            ShowCreation(rect2), 
+            ShowCreation(rect2),
             Write(ignore_words, run_time = 1),
             FadeIn(front_filter),
             run_time = 1.5,
@@ -1075,7 +1077,7 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
 
     def reposition_camera(self):
         self.move_camera(
-            theta = self.target_theta, 
+            theta = self.target_theta,
             added_anims = list(it.chain(*[
                 [
                     pf.arrow_label.rotate, np.pi/2, OUT,
@@ -1290,7 +1292,7 @@ class IntroduceLabeledFilters(ShowVariousFilterPairs):
             FadeIn(randy)
         )
         self.play(Transform(
-            randy, blinked, 
+            randy, blinked,
             rate_func = squish_rate_func(there_and_back)
         ))
         self.wait(3)
@@ -1420,7 +1422,7 @@ class VennDiagramProofByContradiction(Scene):
                     "%s \\\\"%start,
                     "through", char + "$\\! \\uparrow$"
                 ).highlight_by_tex(char, circle.get_color())
-                for start in "Would pass", "Pass"
+                for start in ("Would pass", "Pass")
             ]
             for mob in label, alt_label:
                 mob[-1][-1].rotate_in_place(-angle)
@@ -1473,7 +1475,7 @@ class VennDiagramProofByContradiction(Scene):
     def show_100_photons(self):
         photon = FunctionGraph(
             lambda x : -np.cos(3*np.pi*x)*np.exp(-x*x),
-            x_min = -2, 
+            x_min = -2,
             x_max = 2,
             color = YELLOW,
             stroke_width = 2,
@@ -1529,7 +1531,7 @@ class VennDiagramProofByContradiction(Scene):
         })
         bubble = ThoughtBubble()
         bubble.add_content(answers)
-        bubble.resize_to_content() 
+        bubble.resize_to_content()
         answers.shift(SMALL_BUFF*(RIGHT+UP))
         bubble_group = VGroup(bubble, answers)
         bubble_group.scale(0.25)
@@ -1628,7 +1630,7 @@ class VennDiagramProofByContradiction(Scene):
         words1.scale(0.8)
         words1.next_to(A_group, LEFT, LARGE_BUFF).shift(UP)
         arrow1 = Arrow(
-            words1.get_right(), 
+            words1.get_right(),
             in_B.get_corner(UP+LEFT) + MED_LARGE_BUFF*(DOWN+RIGHT)
         )
         arrow1.highlight(GREEN)
@@ -1658,7 +1660,7 @@ class VennDiagramProofByContradiction(Scene):
         self.wait()
         self.play(ApplyMethod(
             VGroup(self.in_A_out_B, out_of_B).shift,
-            MED_LARGE_BUFF*UP, 
+            MED_LARGE_BUFF*UP,
             rate_func = wiggle,
             run_time = 1.5,
         ))
@@ -1768,7 +1770,7 @@ class VennDiagramProofByContradiction(Scene):
         regions = [self.in_A_out_C, self.in_A_in_B_out_C, self.in_A_out_B]
         self.play(*[
             ApplyMethod(
-                m.scale, 0.7, 
+                m.scale, 0.7,
                 method_kwargs = {
                     "about_point" : SPACE_HEIGHT*DOWN
                 }
@@ -1779,7 +1781,7 @@ class VennDiagramProofByContradiction(Scene):
         terms = VGroup(
             TexMobject("N(", "A", "\\checkmark", ",", "C", ")", "\\le"),
             TexMobject(
-                "N(", "A", "\\checkmark", ",", 
+                "N(", "A", "\\checkmark", ",",
                 "B", "\\checkmark", ",", "C", ")"
             ),
             TexMobject("+\\, N(", "A", "\\checkmark", ",", "B", ")"),
@@ -1988,7 +1990,7 @@ class VennDiagramProofByContradiction(Scene):
         )
         self.play(photon.eyes.blink_anim())
         self.play(
-            photon.restore, 
+            photon.restore,
             FadeOut(bubble)
         )
 
@@ -2003,7 +2005,7 @@ class VennDiagramProofByContradiction(Scene):
                 fill_opacity = 0.5,
                 fill_color = YELLOW,
             )
-            for s in "in_A_out_B", "in_A_in_B_out_C", "in_A_out_C", "in_A_in_B"
+            for s in ("in_A_out_B", "in_A_in_B_out_C", "in_A_out_C", "in_A_in_B")
         ])
 
         in_A_out_B.scale(2.59)
@@ -2269,7 +2271,7 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
         self.wait()
         self.play(FadeIn(groups[1]))
         self.play(
-            groups[1].restore, 
+            groups[1].restore,
             FadeIn(inequality[1]),
             FadeIn(self.in_B_out_C_words),
             FadeIn(big_plus),
@@ -2336,8 +2338,8 @@ class ReEmphasizeVennDiagram(VennDiagramProofByContradiction):
         words.to_edge(UP)
 
         footnote = TextMobject("""
-            *If you prefer, you can avoid the need for that 
-            assumption by swapping the roles of A and C here 
+            *If you prefer, you can avoid the need for that
+            assumption by swapping the roles of A and C here
             and writing a second inequality for added constraint.
         """)
         footnote.scale(0.5)
@@ -2410,7 +2412,7 @@ class NoFirstMeasurementPreferenceBasedOnDirection(ShowVariousFilterPairs):
         "filter_x_coordinates" : [0, 0, 0],
         "pol_filter_configs" : [
             {"filter_angle" : angle}
-            for angle in 0, np.pi/8, np.pi/4
+            for angle in (0, np.pi/8, np.pi/4)
         ],
         "lines_depth" : 1.2,
         "lines_shift_vect" : SMALL_BUFF*OUT,
@@ -2479,19 +2481,3 @@ class NoFirstMeasurementPreferenceBasedOnDirection(ShowVariousFilterPairs):
         )
         self.add_foreground_mobject(all_pre_lines)
         self.wait(7)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

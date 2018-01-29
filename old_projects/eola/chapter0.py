@@ -402,7 +402,7 @@ class LinAlgPyramid(Scene):
         self.wait()
         self.play(*[
             ApplyMethod(m.highlight, DARK_GREY)
-            for m in words[0], rects[0]
+            for m in (words[0], rects[0])
         ])
         self.wait()
         self.list_applications(rects[-1])
@@ -411,7 +411,7 @@ class LinAlgPyramid(Scene):
         height = 1
         rects = [
             Rectangle(height = height, width = width)
-            for width in 8, 5, 2
+            for width in (8, 5, 2)
         ]
         rects[0].shift(2*DOWN)
         for i in 1, 2:
@@ -928,7 +928,7 @@ class ResourceForTeachers(Scene):
         bubble.clear()
         randys = VMobject(*[
             Randolph(color = c)
-            for c in BLUE_D, BLUE_C, BLUE_E
+            for c in (BLUE_D, BLUE_C, BLUE_E)
         ])
         randys.arrange_submobjects(RIGHT)
         randys.scale(0.8)
@@ -958,7 +958,7 @@ class DifferingBackgrounds(Scene):
         ])
         students = VMobject(*[
             Randolph(color = c)
-            for c in BLUE_D, BLUE_C, BLUE_E
+            for c in (BLUE_D, BLUE_C, BLUE_E)
         ])
         modes = ["pondering", "speaking_looking_left", "sassy"]
         students.arrange_submobjects(RIGHT)

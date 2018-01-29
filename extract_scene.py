@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+from __future__ import absolute_import
 import sys
 # import getopt
 import argparse
@@ -11,9 +13,9 @@ import imp
 import os
 import subprocess as sp
 
-from helpers import *
-from scene import Scene
-from camera import Camera
+from .helpers import *
+from .scene import Scene
+from .camera import Camera
 
 HELP_MESSAGE = """
    Usage:
@@ -225,7 +227,7 @@ def main():
    
    scene_kwargs["name"] = config["output_name"]
    if config["save_pngs"]:
-      print "We are going to save a PNG sequence as well..."
+      print("We are going to save a PNG sequence as well...")
       scene_kwargs["save_pngs"] = True
       scene_kwargs["pngs_mode"] = config["saved_image_mode"]
       
