@@ -850,24 +850,24 @@ class SingleLighthouseScene(PiCreatureScene):
 
         # Lighthouse
 
-        lighthouse = LightHouse()
-        ambient_light = AmbientLight(
+        self.lighthouse = LightHouse()
+        self.ambient_light = AmbientLight(
             opacity_function = inverse_quadratic(AMBIENT_FULL,2,1),
             num_levels = NUM_LEVELS,
             radius = 10,
             brightness = 1,
         )
-        lighthouse.scale(2).next_to(source_point, DOWN, buff = 0)
-        ambient_light.move_to(source_point)
+        self.lighthouse.scale(2).next_to(source_point, DOWN, buff = 0)
+        self.ambient_light.move_to(source_point)
 
         # Pi Creature
 
         morty = self.get_primary_pi_creature()
         morty.scale(0.5)
         morty.move_to(observer_point)
-        self.add(lighthouse)
+        self.add(self.lighthouse)
         self.play(
-            SwitchOn(ambient_light)
+            SwitchOn(self.ambient_light)
         )
 
         # Screen
@@ -891,7 +891,7 @@ class SingleLighthouseScene(PiCreatureScene):
         # Animations
 
         self.play(
-            ApplyMethod(ambient_light.dimming,AMBIENT_DIMMED),
+            ApplyMethod(self.ambient_light.dimming,AMBIENT_DIMMED),
             FadeIn(self.spotlight)
         )
         self.add(self.spotlight.shadow)
@@ -905,9 +905,9 @@ class SingleLighthouseScene(PiCreatureScene):
 
         # Make spotlight follow the screen
 
-        screen_tracker = ScreenTracker(self.spotlight)
+        self.screen_tracker = ScreenTracker(self.spotlight)
 
-        self.add(screen_tracker)
+        self.add(self.screen_tracker)
         pointing_screen_at_source = Rotate(self.screen,TAU/6)
         self.play(pointing_screen_at_source)
 
@@ -941,6 +941,7 @@ class SingleLighthouseScene(PiCreatureScene):
 
     def rotate_screen(self):
 
+
         # rotating_screen_1 = Rotate(self.screen, 
         #     TAU/8, run_time=1.5)
         # #self.wait(2)
@@ -968,25 +969,26 @@ class SingleLighthouseScene(PiCreatureScene):
 ### but it doesn't work
 
 
-        # # morph into Earth scene
+        # morph into Earth scene
 
-        # earth = Circle(radius = 3)
-        # earth.move_to([2,0,0])
-        # sun_position = [-100,0,0]
-        # #self.add(screen_tracker)
-        # print "tuet"
-        # self.remove(screen_tracker)
-        # new_opacity_function = lambda r: 0.5
-        # self.play(
-        #     ApplyMethod(lighthouse.move_to,sun_position),
-        #     ApplyMethod(ambient_light.move_to,sun_position),
-        #     ApplyMethod(spotlight.move_source_to,sun_position),
 
-        # )
-        # self.play(
-        #     ApplyMethod(spotlight.change_opacity_function,new_opacity_function))
 
-        # self.add(screen_tracker)
+        earth = Circle(radius = 3)
+        earth.move_to([2,0,0])
+        sun_position = [-100,0,0]
+        self.remove(self.screen_tracker)
+        new_opacity_function = lambda r: 0.5
+        self.play(
+            FadeIn(earth),
+            self.lighthouse.move_to,sun_position,
+            self.ambient_light.move_to,sun_position,
+            self.spotlight.move_source_to,sun_position,
+        )
+        self.play(
+            ApplyMethod(self.spotlight.change_opacity_function,new_opacity_function)
+        )
+
+        self.add(self.screen_tracker)
 
 
 
@@ -1269,10 +1271,10 @@ class ScreenShapingScene(Scene):
         self.left_shift = (self.screen.get_center()[0] - self.spotlight.source_point[0])/2
 
         self.play(
-            ApplyMethod(self.screen.shift,[-self.left_shift,0,0]),
-            ApplyMethod(self.morty.shift,[-self.left_shift,0,0]),
-            #ApplyMethod(self.indicator.shift,[-self.left_shift,0,0]),
-            ApplyMethod(self.indicator.set_intensity,self.unit_indicator_intensity),
+            self.screen.shift,[-self.left_shift,0,0],
+            self.morty.shift,[-self.left_shift,0,0],
+            self.indicator.shift,[-self.left_shift,0,0],
+            self.indicator.set_intensity,self.unit_indicator_intensity,
         )
 
         self.remove(self.original_screen) # was still hiding behind the shadow
