@@ -324,7 +324,7 @@ class DrawCSquareWithAllTraingles(Scene):
             toggle_vector = [False]*4
         self.c_square = c_square().center()
         vertices = it.cycle(self.c_square.get_vertices())
-        last_vertex = vertices.next()
+        last_vertex = next(vertices)
         have_letters = False
         self.triangles = []
         for vertex, should_flip in zip(vertices, toggle_vector):
@@ -385,8 +385,8 @@ class ZoomInOnTroublePoint(Scene):
         circle = Circle(radius = 2.5, color = WHITE)
         angle1_arc = Circle(color = WHITE)
         angle2_arc = Circle(color = WHITE).scale(0.5)
-        angle1_arc.filter_out(lambda (x, y, z) : not (x > 0 and y > 0 and y < x/3))
-        angle2_arc.filter_out(lambda (x, y, z) : not (x < 0 and y > 0 and y < -3*x))
+        angle1_arc.filter_out(lambda x_y_z2 : not (x_y_z2[0] > 0 and x_y_z2[1] > 0 and x_y_z2[1] < x_y_z2[0]/3))
+        angle2_arc.filter_out(lambda x_y_z3 : not (x_y_z3[0] < 0 and x_y_z3[1] > 0 and x_y_z3[1] < -3*x_y_z3[0]))
 
         self.add_mobjects_among(locals().values())
         self.add_elbow()        
@@ -422,10 +422,10 @@ class DrawTriangleWithAngles(Scene):
         vertices = triangle.get_vertices()
         kwargs = {"color" : WHITE}
         angle1_arc = Circle(radius = 0.4, **kwargs).filter_out(
-            lambda (x, y, z) : not(x > 0 and y < 0 and y < -3*x)
+            lambda x_y_z : not(x_y_z[0] > 0 and x_y_z[1] < 0 and x_y_z[1] < -3*x_y_z[0])
         ).shift(vertices[1])
         angle2_arc = Circle(radius = 0.2, **kwargs).filter_out(
-            lambda (x, y, z) : not(x < 0 and y > 0 and y < -3*x)
+            lambda x_y_z1 : not(x_y_z1[0] < 0 and x_y_z1[1] > 0 and x_y_z1[1] < -3*x_y_z1[0])
         ).shift(vertices[2])
         alpha = TexMobject("\\alpha")
         beta = TexMobject("90-\\alpha")

@@ -1,3 +1,4 @@
+from __future__ import print_function
 from helpers import *
 
 from mobject.tex_mobject import TexMobject
@@ -85,7 +86,7 @@ class DualScene(Scene):
 class TestDual(DualScene):
     def construct(self):
         self.force_skipping()
-        self.apply_function(lambda (x, y, z) : complex_to_R3(complex(x,y)**2))
+        self.apply_function(lambda x_y_z1 : complex_to_R3(complex(x_y_z1[0],x_y_z1[1])**2))
         self.revert_to_original_skipping_status()
         self.path_draw(Line(LEFT + DOWN, RIGHT + DOWN))
         
@@ -378,12 +379,13 @@ class OdometerScene(Scene):
             run_time = self.run_time,
             rate_func = None)
 
-def point_to_rev((x, y)):
+def point_to_rev(xxx_todo_changeme3):
     # Warning: np.arctan2 would happily discontinuously returns the value 0 for (0, 0), due to 
     # design choices in the underlying atan2 library call, but for our purposes, this is 
     # illegitimate, and all winding number calculations must be set up to avoid this
+    (x, y) = xxx_todo_changeme3
     if (x, y) == (0, 0):
-        print "Error! Angle of (0, 0) computed!"
+        print("Error! Angle of (0, 0) computed!")
         return None
     return np.true_divide(np.arctan2(y, x), TAU)
 
@@ -411,7 +413,8 @@ def make_alpha_winder(func, start, end, num_checkpoints):
         return resit_near(func(x), check_points[index])
     return return_func
 
-def split_interval((a, b)):
+def split_interval(xxx_todo_changeme4):
+    (a, b) = xxx_todo_changeme4
     mid = (a + b)/2.0
     return ((a, mid), (mid, b))
 
@@ -453,7 +456,7 @@ class RectangleData():
         elif dim == 1:
             return_data = [RectangleData(x_interval, new_interval) for new_interval in split_interval(y_interval)]        
         else: 
-            print "RectangleData.splits_on_dim passed illegitimate dimension!"
+            print("RectangleData.splits_on_dim passed illegitimate dimension!")
 
         return tuple(return_data)
 
@@ -466,7 +469,7 @@ class RectangleData():
         elif dim == 1:
             sides = (self.get_left(), self.get_right())
         else:
-            print "RectangleData.split_line_on_dim passed illegitimate dimension!"
+            print("RectangleData.split_line_on_dim passed illegitimate dimension!")
 
         return tuple([mid(x, y) for (x, y) in sides])
 
@@ -474,15 +477,16 @@ def complex_to_pair(c):
     return (c.real, c.imag)
 
 def plane_poly_with_roots(*points):
-    def f((x, y)):
+    def f(xxx_todo_changeme):
+        (x, y) = xxx_todo_changeme
         return complex_to_pair(np.prod([complex(x, y) - complex(a,b) for (a,b) in points]))
     return f
 
 def plane_func_from_complex_func(f):
-    return lambda (x, y) : complex_to_pair(f(complex(x,y)))
+    return lambda x_y : complex_to_pair(f(complex(x_y[0],x_y[1])))
 
 def point_func_from_complex_func(f):
-    return lambda (x, y, z): complex_to_R3(f(complex(x, y)))
+    return lambda x_y_z2: complex_to_R3(f(complex(x_y_z2[0], x_y_z2[1])))
 
 empty_animation = Animation(Mobject())
 def EmptyAnimation():
@@ -954,7 +958,7 @@ class LoopSplitSceneMapped(LoopSplitScene):
     def setup(self):
         left_camera = Camera(**self.camera_config)
         right_camera = MappingCamera(
-            mapping_func = lambda (x, y, z) : complex_to_R3(((complex(x,y) + 3)**1.1) - 3), 
+            mapping_func = lambda x_y_z : complex_to_R3(((complex(x_y_z[0],x_y_z[1]) + 3)**1.1) - 3), 
             **self.camera_config)
         split_screen_camera = SplitScreenCamera(left_camera, right_camera, **self.camera_config)
         self.camera = split_screen_camera

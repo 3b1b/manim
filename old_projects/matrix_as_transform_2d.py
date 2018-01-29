@@ -96,9 +96,11 @@ class ExamplesOfOneDimensionalLinearTransforms(ShowMultiplication):
 
 class ExamplesOfNonlinearOneDimensionalTransforms(NumberLineScene):
     def construct(self):
-        def sinx_plux_x((x, y, z)):
+        def sinx_plux_x(xxx_todo_changeme):
+            (x, y, z) = xxx_todo_changeme
             return (np.sin(x) + 1.2*x, y, z)
-        def shift_zero((x, y, z)):
+        def shift_zero(xxx_todo_changeme2):
+            (x, y, z) = xxx_todo_changeme2
             return (2*x+4, y, z)
         self.nonlinear = TextMobject("Not a Linear Transform")
         self.nonlinear.highlight(LIGHT_RED).to_edge(UP, buff = 1.5)
@@ -190,10 +192,10 @@ class TransformScene2D(Scene):
         )
         self.add(self.x_arrow, self.y_arrow)
         self.number_plane.filter_out(
-            lambda (x, y, z) : (0 < x) and (x < 1) and (abs(y) < 0.1)
+            lambda x_y_z : (0 < x_y_z[0]) and (x_y_z[0] < 1) and (abs(x_y_z[1]) < 0.1)
         )
         self.number_plane.filter_out(
-            lambda (x, y, z) : (0 < y) and (y < 1) and (abs(x) < 0.1)
+            lambda x_y_z1 : (0 < x_y_z1[1]) and (x_y_z1[1] < 1) and (abs(x_y_z1[0]) < 0.1)
         )
         return self
 
@@ -296,9 +298,11 @@ class ExamplesOfTwoDimensionalLinearTransformations(ShowMatrixTransform):
 class ExamplesOfNonlinearTwoDimensionalTransformations(Scene):
     def construct(self):
         Scene.construct(self)
-        def squiggle((x, y, z)):
+        def squiggle(xxx_todo_changeme3):
+            (x, y, z) = xxx_todo_changeme3
             return (x+np.sin(y), y+np.cos(x), z)
-        def shift_zero((x, y, z)):
+        def shift_zero(xxx_todo_changeme4):
+            (x, y, z) = xxx_todo_changeme4
             return (2*x + 3*y + 4, -1*x+y+2, z)
         self.nonlinear = TextMobject("Nonlinear Transform")
         self.nonlinear.highlight(LIGHT_RED)
@@ -385,10 +389,12 @@ class TrickyExamplesOfNonlinearTwoDimensionalTransformations(Scene):
             UP*SPACE_HEIGHT+RIGHT*SPACE_WIDTH,
             density = 10*DEFAULT_POINT_DENSITY_1D
         )
-        def sunrise((x, y, z)):
+        def sunrise(xxx_todo_changeme5):
+            (x, y, z) = xxx_todo_changeme5
             return ((SPACE_HEIGHT+y)*x, y, z)
 
-        def squished((x, y, z)):
+        def squished(xxx_todo_changeme6):
+            (x, y, z) = xxx_todo_changeme6
             return (x + np.sin(x), y+np.sin(y), z)
 
         self.get_blackness()
@@ -537,7 +543,7 @@ class Show90DegreeRotation(TransformScene2D):
         self.wait()
         self.play(*[
             RotationAsTransform(mob, run_time = 2.0)
-            for mob in self.number_plane, self.x_arrow, self.y_arrow
+            for mob in (self.number_plane, self.x_arrow, self.y_arrow)
         ])
         self.wait()
 

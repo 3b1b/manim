@@ -56,7 +56,7 @@ class IntroducePutnam(Scene):
                 TextMobject("%s%d)"%(c, i))
                 for i in range(1, 7)
             ]).arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
-            for c in "A", "B"
+            for c in ("A", "B")
         ]).arrange_submobjects(RIGHT, buff = SPACE_WIDTH - MED_SMALL_BUFF)
         question_groups.to_edge(LEFT)
         question_groups.to_edge(DOWN, MED_LARGE_BUFF)

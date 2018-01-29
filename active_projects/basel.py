@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 from helpers import *
 
 from mobject.tex_mobject import TexMobject
@@ -52,7 +53,7 @@ ARC_TIP_LENGTH = 0.2
 
 def show_line_length(line):
     v = line.points[1] - line.points[0]
-    print v[0]**2 + v[1]**2
+    print(v[0]**2 + v[1]**2)
 
 
 class AngleUpdater(ContinualAnimation):

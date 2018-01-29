@@ -8,6 +8,7 @@ import aggdraw
 
 from helpers import *
 from mobject import Mobject, PMobject, VMobject, ImageMobject, Group
+from functools import reduce
 
 class Camera(object):
     CONFIG = {
@@ -34,7 +35,7 @@ class Camera(object):
 
     def resize_space_shape(self, fixed_dimension = 0):
         """
-        Changes space_shape to match the aspect ratio 
+        Changes space_shape to match the aspect ratio
         of pixel_shape, where fixed_dimension determines
         whether space_shape[0] (height) or space_shape[1] (width)
         remains fixed while the other changes accordingly.
@@ -52,7 +53,7 @@ class Camera(object):
             path = get_full_raster_image_path(self.background_image)
             image = Image.open(path).convert(self.image_mode)
             height, width = self.pixel_shape
-            #TODO, how to gracefully handle backgrounds 
+            #TODO, how to gracefully handle backgrounds
             #with different sizes?
             self.background = np.array(image)[:height, :width]
             self.background = self.background.astype(self.pixel_array_dtype)
@@ -100,7 +101,7 @@ class Camera(object):
         ))
 
     def get_mobjects_to_display(
-        self, mobjects, 
+        self, mobjects,
         include_submobjects = True,
         excluded_mobjects = None,
         ):
@@ -127,10 +128,10 @@ class Camera(object):
             elif len(vmobjects) > 0:
                 self.display_multiple_vectorized_mobjects(vmobjects)
                 vmobjects = []
-                
+
             if isinstance(mobject, PMobject):
                 self.display_point_cloud(
-                    mobject.points, mobject.rgbas, 
+                    mobject.points, mobject.rgbas,
                     self.adjusted_thickness(mobject.stroke_width)
                 )
             elif isinstance(mobject, ImageMobject):
@@ -190,10 +191,10 @@ class Camera(object):
         return vmobject.get_fill_color()
 
     def get_pathstring(self, vmobject):
-        result = ""        
+        result = ""
         for mob in [vmobject]+vmobject.get_subpath_mobjects():
             points = mob.points
-            # points = self.adjust_out_of_range_points(points)            
+            # points = self.adjust_out_of_range_points(points)
             if len(points) == 0:
                 continue
             points = self.align_points_to_camera(points)
@@ -227,8 +228,8 @@ class Camera(object):
         factor = target_len/len(rgbas)
         rgbas = np.array([rgbas]*factor).reshape((target_len, rgba_len))
 
-        on_screen_indices = self.on_screen_pixels(pixel_coords)        
-        pixel_coords = pixel_coords[on_screen_indices]        
+        on_screen_indices = self.on_screen_pixels(pixel_coords)
+        pixel_coords = pixel_coords[on_screen_indices]
         rgbas = rgbas[on_screen_indices]
 
         ph, pw = self.pixel_shape
@@ -237,7 +238,7 @@ class Camera(object):
         flattener = flattener.reshape((2, 1))
         indices = np.dot(pixel_coords, flattener)[:,0]
         indices = indices.astype('int')
-        
+
         new_pa = self.pixel_array.reshape((ph*pw, rgba_len))
         new_pa[indices] = rgbas
         self.pixel_array = new_pa.reshape((ph, pw, rgba_len))
@@ -263,7 +264,7 @@ class Camera(object):
             y_indices = np.arange(dv1, dtype = 'int')*ih/dv1
             stretched_impa = impa[y_indices][:,x_indices]
 
-            x0, x1 = ul_coords[0], ur_coords[0] 
+            x0, x1 = ul_coords[0], ur_coords[0]
             y0, y1 = ul_coords[1], dl_coords[1]
             if x0 >= ow or x1 < 0 or y0 >= oh or y1 < 0:
                 return
@@ -276,7 +277,7 @@ class Camera(object):
             image[y0:y1, x0:x1] = stretched_impa[siy0:siy1, six0:six1]
         else:
             # Alternate (slower) tactice if image is tilted
-            # List of all coordinates of pixels, given as (x, y), 
+            # List of all coordinates of pixels, given as (x, y),
             # which matches the return type of points_to_pixel_coords,
             # even though np.array indexing naturally happens as (y, x)
             all_pixel_coords = np.zeros((oh*ow, 2), dtype = 'int')
@@ -293,7 +294,7 @@ class Camera(object):
                         dim*np.dot(recentered_coords, vect),
                         np.dot(vect, vect),
                     )
-                    for vect, dim in (right_vect, iw), (down_vect, ih)
+                    for vect, dim in ((right_vect, iw), (down_vect, ih))
                 ]
             to_change = reduce(op.and_, [
                 ix_coords >= 0, ix_coords < iw,
@@ -312,7 +313,7 @@ class Camera(object):
     def overlay_rgba_array(self, arr):
         # """ Overlays arr onto self.pixel_array with relevant alphas"""
         bg, fg = self.pixel_array/255.0, arr/255.0
-        bga, fga = [arr[:,:,3:] for arr in bg, fg]
+        bga, fga = [arr[:,:,3:] for arr in (bg, fg)]
         alpha_sum = fga + (1-fga)*bga
         with np.errstate(divide = 'ignore', invalid='ignore'):
             bg[:,:,:3] = reduce(op.add, [
@@ -334,7 +335,7 @@ class Camera(object):
         violators = points[violator_indices,:]
         violator_norms = norms[violator_indices]
         reshaped_norms = np.repeat(
-            violator_norms.reshape((len(violator_norms), 1)), 
+            violator_norms.reshape((len(violator_norms), 1)),
             points.shape[1], 1
         )
         rescaled = self.max_allowable_norm * violators / reshaped_norms
@@ -346,7 +347,7 @@ class Camera(object):
         ph, pw = self.pixel_shape
         sh, sw = self.space_shape
         width_mult  = pw/sw/2
-        width_add   = pw/2        
+        width_add   = pw/2
         height_mult = ph/sh/2
         height_add  = ph/2
         #Flip on y-axis as you go
@@ -398,7 +399,7 @@ class MovingCamera(Camera):
 
     def capture_mobjects(self, *args, **kwargs):
         self.space_center = self.mobject.get_center()
-        self.realign_space_shape()        
+        self.realign_space_shape()
         Camera.capture_mobjects(self, *args, **kwargs)
 
     def realign_space_shape(self):
@@ -421,7 +422,7 @@ class MappingCamera(Camera):
 
     def points_to_pixel_coords(self, points):
         return Camera.points_to_pixel_coords(self, np.apply_along_axis(self.mapping_func, 1, points))
-    
+
     def capture_mobjects(self, mobjects, **kwargs):
         mobjects = self.get_mobjects_to_display(mobjects, **kwargs)
         if self.allow_object_intrusion:
@@ -433,7 +434,7 @@ class MappingCamera(Camera):
             0 < mobject.get_num_anchor_points() < self.min_anchor_points:
                 mobject.insert_n_anchor_points(self.min_anchor_points)
         Camera.capture_mobjects(
-            self, mobject_copies, 
+            self, mobject_copies,
             include_submobjects = False,
             excluded_mobjects = None,
         )
@@ -446,14 +447,14 @@ class DictAsObject(object):
 # Note: This allows layering of multiple cameras onto the same portion of the pixel array,
 # the later cameras overwriting the former
 #
-# TODO: Add optional separator borders between cameras (or perhaps peel this off into a 
+# TODO: Add optional separator borders between cameras (or perhaps peel this off into a
 # CameraPlusOverlay class)
 class MultiCamera(Camera):
     def __init__(self, *cameras_with_start_positions, **kwargs):
         self.shifted_cameras = [
             DictAsObject(
             {
-                "camera" : camera_with_start_positions[0], 
+                "camera" : camera_with_start_positions[0],
                 "start_x" : camera_with_start_positions[1][1],
                 "start_y" : camera_with_start_positions[1][0],
                 "end_x" : camera_with_start_positions[1][1] + camera_with_start_positions[0].pixel_shape[1],
@@ -466,9 +467,9 @@ class MultiCamera(Camera):
     def capture_mobjects(self, mobjects, **kwargs):
         for shifted_camera in self.shifted_cameras:
             shifted_camera.camera.capture_mobjects(mobjects, **kwargs)
-            
+
             self.pixel_array[
-                shifted_camera.start_y:shifted_camera.end_y, 
+                shifted_camera.start_y:shifted_camera.end_y,
                 shifted_camera.start_x:shifted_camera.end_x] \
             = shifted_camera.camera.pixel_array
 
@@ -476,7 +477,7 @@ class MultiCamera(Camera):
         for shifted_camera in self.shifted_cameras:
             shifted_camera.camera.set_background(
                 pixel_array[
-                    shifted_camera.start_y:shifted_camera.end_y, 
+                    shifted_camera.start_y:shifted_camera.end_y,
                     shifted_camera.start_x:shifted_camera.end_x])
 
     def set_pixel_array(self, pixel_array):
@@ -484,7 +485,7 @@ class MultiCamera(Camera):
         for shifted_camera in self.shifted_cameras:
             shifted_camera.camera.set_pixel_array(
                 pixel_array[
-                    shifted_camera.start_y:shifted_camera.end_y, 
+                    shifted_camera.start_y:shifted_camera.end_y,
                     shifted_camera.start_x:shifted_camera.end_x])
 
     def init_background(self):
@@ -499,7 +500,7 @@ class SplitScreenCamera(MultiCamera):
         digest_config(self, kwargs)
         self.left_camera = left_camera
         self.right_camera = right_camera
-        
+
         half_width = self.pixel_shape[1] / 2
         for camera in [self.left_camera, self.right_camera]:
             camera.pixel_shape = (self.pixel_shape[0], half_width) # TODO: Round up on one if width is odd

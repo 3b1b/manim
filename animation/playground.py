@@ -1,12 +1,14 @@
+from __future__ import absolute_import
 import numpy as np
 import operator as op
 
-from animation import Animation
-from transform import Transform
+from .animation import Animation
+from .transform import Transform
 from mobject import Mobject1D, Mobject
 from topics.geometry import Line
 
 from helpers import *
+from functools import reduce
 
 class Vibrate(Animation):
     CONFIG = {
@@ -42,7 +44,7 @@ class Vibrate(Animation):
         )
         for mob, start in zip(*families):
             mob.points = np.apply_along_axis(
-                lambda (x, y, z) : (x, y + self.wave_function(x, time), z),
+                lambda x_y_z : (x_y_z[0], x_y_z[1] + self.wave_function(x_y_z[0], time), x_y_z[2]),
                 1, start.points
             )
 

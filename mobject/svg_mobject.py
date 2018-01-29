@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 from xml.dom import minidom
 import warnings
 
-from vectorized_mobject import VMobject
+from .vectorized_mobject import VMobject
 from topics.geometry import Rectangle, Circle
 from helpers import *
 
@@ -118,7 +119,7 @@ class SVGMobject(VMobject):
             float(circle_element.getAttribute(key))
             if circle_element.hasAttribute(key)
             else 0.0
-            for key in "cx", "cy", "r"
+            for key in ("cx", "cy", "r")
         ]
         return Circle(radius = r).shift(x*RIGHT+y*DOWN)
 

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import numpy as np
 import itertools as it
 import operator as op
@@ -10,7 +11,8 @@ import re
 import os
 from scipy import linalg
 
-from constants import *
+from .constants import *
+from functools import reduce
 
 CLOSED_THRESHOLD = 0.01
 STRAIGHT_PATH_THRESHOLD = 0.01
@@ -26,7 +28,7 @@ def play_chord(*nums):
         "sin %-"+str(num)
         for num in nums
     ] + [
-        "fade h 0.5 1 0.5", 
+        "fade h 0.5 1 0.5",
         "> /dev/null"
     ]
     try:
@@ -43,13 +45,13 @@ def play_finish_sound():
 def get_smooth_handle_points(points):
     points = np.array(points)
     num_handles = len(points) - 1
-    dim = points.shape[1]    
+    dim = points.shape[1]
     if num_handles < 1:
         return np.zeros((0, dim)), np.zeros((0, dim))
     #Must solve 2*num_handles equations to get the handles.
     #l and u are the number of lower an upper diagonal rows
     #in the matrix to solve.
-    l, u = 2, 1    
+    l, u = 2, 1
     #diag is a representation of the matrix in diagonal form
     #See https://www.particleincell.com/2012/bezier-splines/
     #for how to arive at these equations
@@ -91,7 +93,7 @@ def get_smooth_handle_points(points):
 
 def diag_to_matrix(l_and_u, diag):
     """
-    Converts array whose rows represent diagonal 
+    Converts array whose rows represent diagonal
     entries of a matrix into the matrix itself.
     See scipy.linalg.solve_banded
     """
@@ -169,9 +171,9 @@ def compass_directions(n = 4, start_vect = RIGHT):
 
 def partial_bezier_points(points, a, b):
     """
-    Given an array of points which define 
+    Given an array of points which define
     a bezier curve, and two numbers 0<=a<b<=1,
-    return an array of the same size, which 
+    return an array of the same size, which
     describes the portion of the original bezier
     curve on the interval [a, b].
 
@@ -237,7 +239,7 @@ def tuplify(obj):
 
 def instantiate(obj):
     """
-    Useful so that classes or instance of those classes can be 
+    Useful so that classes or instance of those classes can be
     included in configuration, which can prevent defaults from
     getting created during compilation/importing
     """
@@ -263,8 +265,8 @@ def digest_config(obj, kwargs, caller_locals = {}):
     """
     Sets init args and CONFIG values as local variables
 
-    The purpose of this function is to ensure that all 
-    configuration of any object is inheritable, able to 
+    The purpose of this function is to ensure that all
+    configuration of any object is inheritable, able to
     be easily passed into instantiation, and is attached
     as an attribute of the object.
     """
@@ -284,7 +286,7 @@ def digest_config(obj, kwargs, caller_locals = {}):
     all_dicts += static_configs
     all_new_dicts = [kwargs, caller_locals] + static_configs
     obj.__dict__ = merge_config(all_dicts)
-    #Keep track of the configuration of objects upon 
+    #Keep track of the configuration of objects upon
     #instantiation
     obj.initial_config = merge_config(all_new_dicts)
 
@@ -372,7 +374,7 @@ def intersection(line1, line2):
     inv = np.linalg.inv(transform)
     new_p3 = np.dot(inv, p3.reshape((2, 1)))
     #Where does line connecting (0, 1) to new_p3 hit x axis
-    x_intercept = new_p3[0] / (1 - new_p3[1]) 
+    x_intercept = new_p3[0] / (1 - new_p3[1])
     result = np.dot(transform, [[x_intercept], [0]])
     result = result.reshape((2,)) + p0
     return result
@@ -396,7 +398,7 @@ def straight_path(start_points, end_points, alpha):
 
 def path_along_arc(arc_angle, axis = OUT):
     """
-    If vect is vector from start to end, [vect[:,1], -vect[:,0]] is 
+    If vect is vector from start to end, [vect[:,1], -vect[:,0]] is
     perpendicular to vect in the left direction.
     """
     if abs(arc_angle) < STRAIGHT_PATH_THRESHOLD:
@@ -432,7 +434,7 @@ def to_camel_case(name):
 
 def initials(name, sep_values = [" ", "_"]):
     return "".join([
-        (s[0] if s else "") 
+        (s[0] if s else "")
         for s in re.split("|".join(sep_values), name)
     ])
 
@@ -488,8 +490,8 @@ def make_even_by_cycling(iterable_1, iterable_2):
     cycle1 = it.cycle(iterable_1)
     cycle2 = it.cycle(iterable_2)
     return (
-        [cycle1.next() for x in range(length)],
-        [cycle2.next() for x in range(length)]
+        [next(cycle1) for x in range(length)],
+        [next(cycle2) for x in range(length)]
     )
 
 ### Rate Functions ###
@@ -556,7 +558,7 @@ def composition(func_list):
     func_list should contain elements of the form (f, args)
     """
     return reduce(
-        lambda (f1, args1), (f2, args2) : (lambda x : f1(f2(x, *args2), *args1)), 
+        lambda (f1, args1), (f2, args2) : (lambda x : f1(f2(x, *args2), *args1)),
         func_list,
         lambda x : x
     )
@@ -588,7 +590,7 @@ def rotation_about_z(angle):
 
 def z_to_vector(vector):
     """
-    Returns some matrix in SO(3) which takes the z-axis to the 
+    Returns some matrix in SO(3) which takes the z-axis to the
     (normalized) vector provided as an argument
     """
     norm = np.linalg.norm(vector)
@@ -616,7 +618,7 @@ def rotate_vector(vector, angle, axis = OUT):
 
 def angle_between(v1, v2):
     return np.arccos(np.dot(
-        v1 / np.linalg.norm(v1), 
+        v1 / np.linalg.norm(v1),
         v2 / np.linalg.norm(v2)
     ))
 
@@ -628,7 +630,3 @@ def angle_of_vector(vector):
     if z == 0:
         return 0
     return np.angle(complex(*vector[:2]))
-
-
-
-
