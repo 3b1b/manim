@@ -428,9 +428,6 @@ class Succession(Animation):
         for i in range(self.num_anims):
             self.scene_mobjects_at_time[i + 1] = self.scene_mobjects_at_time[i].copy()
             self.animations[i].clean_up(self.scene_mobjects_at_time[i + 1])
-        print "Here's scene_mobjects_at_time[]: "
-        for g in self.scene_mobjects_at_time:
-            print str(g.submobjects)
 
         self.current_alpha = 0
         self.current_anim_index = 0 #TODO: What if self.num_anims == 0?
@@ -443,7 +440,7 @@ class Succession(Animation):
         self.current_anim_index = index
         self.current_alpha = self.critical_alphas[index]
 
-        self.mobject.remove(*self.mobject.submobjects) # Should probably have a cleaner "remove_all" method…
+        self.mobject.remove(*self.mobject.submobjects) # Should probably have a cleaner "remove_all" method...
         self.mobject.add(self.animations[index].mobject)
         for m in self.scene_mobjects_at_time[index].submobjects:
             self.mobject.add(m)
