@@ -353,7 +353,8 @@ class VMobject(Mobject):
         for index in range(num_curves):
             curr_bezier_points = self.points[3*index:3*index+4]
             num_inter_curves = sum(index_allocation == index)
-            alphas = np.arange(0, num_inter_curves+1)/float(num_inter_curves)
+            alphas = np.linspace(0, 1, num_inter_curves+1)
+            # alphas = np.arange(0, num_inter_curves+1)/float(num_inter_curves)
             for a, b in zip(alphas, alphas[1:]):
                 new_points = partial_bezier_points(
                     curr_bezier_points, a, b

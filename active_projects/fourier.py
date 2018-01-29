@@ -4190,15 +4190,11 @@ class FourierEndScreen(PatreonEndScreen):
 class Thumbnail(Scene):
     def construct(self):
         title = TextMobject("Fourier\\\\", "Visualized")
-        title[1].highlight(YELLOW)
-        title[1].set_stroke(RED, 1)
         title.highlight(YELLOW)
-        title.set_stroke(RED, 1)
-
+        title.set_stroke(RED, 2)
         title.scale(2.5)
         title.add_background_rectangle()
-        # title.to_edge(UP)
-        # self.add(title)
+
         def func(t):
             return np.cos(2*TAU*t) + np.cos(3*TAU*t) + np.cos(5*t)
         fourier = get_fourier_transform(func, -5, 5)
@@ -4206,36 +4202,40 @@ class Thumbnail(Scene):
         graph = FunctionGraph(func, x_min = -5, x_max = 5)
         graph.highlight(BLUE)
         fourier_graph = FunctionGraph(fourier, x_min = 0, x_max = 6)
-        fourier_graph.highlight(RED_C)
+        fourier_graph.highlight(YELLOW)
         for g in graph, fourier_graph:
             g.stretch_to_fit_height(2)
             g.stretch_to_fit_width(10)
             g.set_stroke(width = 8)
-        arrow = Vector(
-            2.5*DOWN, 
-            rectangular_stem_width = 0.2,
-            tip_length = 0.5,
-            color = WHITE
-        )
-        q_mark = TextMobject("?").scale(2)
-        q_mark.highlight(YELLOW)
-        q_mark.set_stroke(RED, 1)
-        arrows = VGroup(*it.chain(*zip(
-            [q_mark.copy() for x in range(5)],
-            [arrow.copy() for x in range(5)]
-        )))
-        # arrows.submobjects.pop()
-        # arrows.arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
-        group = VGroup(graph, title, fourier_graph)
-        arrows = VGroup(*[arrow.copy() for x in range(2)])
-        arrows.arrange_submobjects(RIGHT, buff = 6*LARGE_BUFF)
-        # group = VGroup(graph, arrows, fourier_graph)
-        group.arrange_submobjects(DOWN)
-        # group.next_to(title, DOWN, MED_LARGE_BUFF)
-        arrows.move_to(title)
-        title.shift(MED_SMALL_BUFF*UP)
-        graph.shift(SMALL_BUFF*UP)
-        self.add(arrows, group)
+
+        pol_graphs = VGroup()
+        for f in np.linspace(1.98, 2.02, 7):
+            pol_graph = ParametricFunction(
+                lambda t : complex_to_R3(
+                    (2+np.cos(2*TAU*t)+np.cos(3*TAU*t))*np.exp(-complex(0, TAU*f*t))
+                ),
+                t_min = -5,
+                t_max = 5,
+                num_graph_points = 200,
+            )
+            pol_graph.match_color(graph)
+            pol_graph.scale_to_fit_height(2)
+            pol_graphs.add(pol_graph)
+        pol_graphs.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        pol_graphs.gradient_highlight(BLUE_C, YELLOW)
+        pol_graphs.match_width(graph)
+        pol_graphs.set_stroke(width = 2)
+
+
+        self.clear()
+        title.center().to_edge(UP)
+        pol_graphs.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        pol_graphs.center()
+        title.move_to(pol_graphs)
+        title.shift(SMALL_BUFF*LEFT)
+        graph.next_to(title, UP)
+        fourier_graph.next_to(title, DOWN)
+        self.add(pol_graphs, title, graph, fourier_graph)
 
 
 
