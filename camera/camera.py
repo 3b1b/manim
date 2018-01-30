@@ -82,7 +82,7 @@ class Camera(object):
         self.background = np.array(pixel_array)
 
     def reset(self):
-        self.set_pixel_array(np.array(self.background))
+        self.set_pixel_array(self.background)
 
     ####
 
@@ -382,6 +382,36 @@ class Camera(object):
         size = pixel_coords.size
         return pixel_coords.reshape((size/2, 2))
 
+    def get_points_of_all_pixels(self):
+        """
+        Returns an array a such that a[i, j] gives the spatial
+        coordsinates associated with the pixel self.pixel_array[i, j]
+        """
+        shape = self.pixel_array.shape
+        indices = np.indices(shape[:2], dtype = 'float64')
+        all_point_coords = np.zeros((shape[0], shape[1], 3))
+        for i, space_dim in enumerate([SPACE_WIDTH, SPACE_HEIGHT]):
+            all_point_coords[:,:,i] = \
+                indices[i,:,:]*2*space_dim/shape[i] - space_dim
+        return all_point_coords
+
+    def set_background_by_color_function(self, point_to_rgba_func):
+        """
+        point_to_rgba_func should take in a point in R^2, an array
+        of two floats, and output a four element array representing 
+        rgba values, all between 0 and 1.
+        """
+
+        # point_to_rgba = lambda p : [1, 1, 0, 0]
+        def float_rgba_to_int_rgba(rgba):
+            return (255*np.array(rgba)).astype(self.pixel_array_dtype)
+
+        points_of_all_pixels = self.get_points_of_all_pixels()
+        self.set_background(np.apply_along_axis(
+            lambda p : float_rgba_to_int_rgba(point_to_rgba_func(p)),
+            2, points_of_all_pixels
+        ))
+        self.reset()
 
 
 class MovingCamera(Camera):
@@ -503,3 +533,5 @@ class SplitScreenCamera(MultiCamera):
             camera.reset()
 
         MultiCamera.__init__(self, (left_camera, (0, 0)), (right_camera, (0, half_width)))
+
+
