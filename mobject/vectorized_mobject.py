@@ -414,6 +414,9 @@ class VMobject(Mobject):
             b_residue = (num_cubics*b)%1
             if b == 1:
                 b_residue = 1
+            elif lower_index == upper_index:
+                b_residue = (b_residue - a_residue)/(1-a_residue)
+
             points[:4] = partial_bezier_points(
                 points[:4], a_residue, 1
             )
@@ -424,8 +427,18 @@ class VMobject(Mobject):
         return self
 
 class VGroup(VMobject):
-    #Alternate name to improve readability during use
-    pass 
+    def __init__(self, *args, **kwargs):        
+        if len(args) == 1 and isinstance(args[0], (tuple, list)):
+            args = args[0]
+
+        packed_args = []
+        for arg in args:
+            if isinstance(arg, (tuple, list)):
+                packed_args.append(VGroup(arg))
+            else: packed_args.append(arg)
+
+        VMobject.__init__(self, *packed_args, **kwargs)
+
 
 class VectorizedPoint(VMobject):
     CONFIG = {
