@@ -403,12 +403,17 @@ class Succession(Animation):
         for anim in animations:
             anim.update(0)
 
+        animations = filter (lambda x : x.run_time != 0, animations)
+
         self.run_times = [anim.run_time for anim in animations]
         if "run_time" in kwargs:
             run_time = kwargs.pop("run_time")
         else:
             run_time = sum(self.run_times)
-        self.num_anims = len(animations) #TODO: If this is zero, some special handling below
+        self.num_anims = len(animations)
+        if self.num_anims == 0:
+            # TODO: Handle this; it should be easy enough, but requires some special cases below
+            print "Warning! Successions with zero animations are not currently handled!"
         self.animations = animations
         #Have to keep track of this run_time, because Scene.play
         #might very well mess with it.
@@ -429,10 +434,8 @@ class Succession(Animation):
 
         self.current_alpha = 0
         self.current_anim_index = 0 #TODO: What if self.num_anims == 0?
-
-        self.mobject = Group()
-        self.current_anim_index = 0
-        self.current_alpha = 0
+        self.mobject = self.scene_mobjects_at_time[0]
+        self.mobject.add(self.animations[0].mobject)
 
         Animation.__init__(self, self.mobject, run_time = run_time, **kwargs)
 
