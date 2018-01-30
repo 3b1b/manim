@@ -29,8 +29,6 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from topics.graph_scene import *
 
-import sys
-
 # TODO/WARNING: There's a lot of refactoring and cleanup to be done in this code,
 # (and it will be done, but first I'll figure out what I'm doing with all this...)
 # -SR
@@ -203,18 +201,28 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         self.solveEquation()
 
 
+def color_func(alpha):
+    alpha = alpha % 1
+    colors = ["#FF0000", ORANGE, YELLOW, "#00FF00", "#0000FF", "#FF00FF"]
+    num_colors = len(colors)
+    beta = (alpha % (1.0/num_colors)) * num_colors
+    start_index = int(np.floor(num_colors * alpha)) % num_colors
+    end_index = (start_index + 1) % num_colors
+
+    return interpolate_color(colors[start_index], colors[end_index], beta)
+
 # TODO: Perhaps have bullets (pulses) fade out and in at ends of line, instead of jarringly
 # popping out and in?
 #
 # TODO: Perhaps have bullets change color corresponding to a function of their coordinates?
 # This could involve some merging of functoinality with PiWalker
 class LinePulser(ContinualAnimation):
-    def __init__(self, line, bullet_template, num_bullets, pulse_time, color_func = None, **kwargs):
+    def __init__(self, line, bullet_template, num_bullets, pulse_time, output_func = None, **kwargs):
         self.line = line
         self.num_bullets = num_bullets
         self.pulse_time = pulse_time
         self.bullets = [bullet_template.copy() for i in range(num_bullets)]
-        self.color_func = color_func
+        self.output_func = output_func
         ContinualAnimation.__init__(self, VGroup(line, VGroup(*self.bullets)), **kwargs)
 
     def update_mobject(self, dt):
@@ -225,19 +233,11 @@ class LinePulser(ContinualAnimation):
             position = interpolate(start, end, 
                 np.true_divide((i + alpha),(self.num_bullets)))
             self.bullets[i].move_to(position)
-            if self.color_func:
-                self.bullets.set_color(self.color_func(position))
-
-
-def color_func(alpha):
-    alpha = alpha % 1
-    colors = ["#FF0000", ORANGE, YELLOW, "#00FF00", "#0000FF", "#FF00FF"]
-    num_colors = len(colors)
-    beta = (alpha % (1.0/num_colors)) * num_colors
-    start_index = int(np.floor(num_colors * alpha)) % num_colors
-    end_index = (start_index + 1) % num_colors
-
-    return interpolate_color(colors[start_index], colors[end_index], beta)
+            if self.output_func:
+                position_2d = (position[0], position[1])
+                rev = point_to_rev(self.output_func(position_2d))
+                color = color_func(rev)
+                self.bullets[i].set_color(color)
 
 class ArrowCircleTest(Scene):
     def construct(self):
@@ -548,7 +548,7 @@ class PiWalker(Scene):
                 ShowCreation(Line(start_point, end_point), rate_func = None),
                 run_time = self.step_run_time)
 
-        # TODO: Allow smooth paths instead of brekaing them up into lines, and 
+        # TODO: Allow smooth paths instead of breaking them up into lines, and 
         # use point_from_proportion to get points along the way
                 
 
@@ -605,16 +605,16 @@ class EquationSolver2d(Scene):
         self.add(num_plane)
 
         rev_func = lambda p : point_to_rev(self.func(p))
+        clockwise_rev_func = lambda p : -rev_func(p)
 
         def Animate2dSolver(cur_depth, rect, dim_to_split):
             print "Solver at depth: " + str(cur_depth)
-            sys.stdout.flush()
 
             if cur_depth >= self.num_iterations:
                 return EmptyAnimation()
 
             def draw_line_return_wind(start, end, start_wind):
-                alpha_winder = make_alpha_winder(rev_func, start, end, self.num_checkpoints)
+                alpha_winder = make_alpha_winder(clockwise_rev_func, start, end, self.num_checkpoints)
                 a0 = alpha_winder(0)
                 rebased_winder = lambda alpha: alpha_winder(alpha) - a0 + start_wind
                 thin_line = Line(num_plane.coords_to_point(*start), num_plane.coords_to_point(*end),
@@ -693,7 +693,6 @@ class EquationSolver2d(Scene):
         rect = RectangleData(x_interval, y_interval)
 
         print "Starting to compute anim"
-        sys.stdout.flush()
 
         anim = Animate2dSolver(
             cur_depth = 0, 
@@ -702,7 +701,6 @@ class EquationSolver2d(Scene):
         )
 
         print "Done computing anim"
-        sys.stdout.flush()
 
         self.play(anim)
 
@@ -902,10 +900,25 @@ class Initial2dFuncSceneWithoutMorphing(Scene):
 # creature from previous scene, then place it as a simultaneous inset with Premiere)
 
 class LoopSplitScene(Scene):
+    CONFIG = {
+        "output_func" : plane_poly_with_roots((1, 1))
+    }
 
-    def PulsedLine(self, start, end, bullet_template, num_bullets = 4, pulse_time = 1, **kwargs):
+    def PulsedLine(self, 
+        start, end, 
+        bullet_template, 
+        num_bullets = 4, 
+        pulse_time = 1, 
+        color_func = None, 
+        **kwargs):
         line = Line(start, end, **kwargs)
-        anim = LinePulser(line, bullet_template, num_bullets, pulse_time, **kwargs)
+        anim = LinePulser(
+            line = line, 
+            bullet_template = bullet_template, 
+            num_bullets = num_bullets, 
+            pulse_time = pulse_time, 
+            output_func = self.output_func,
+            **kwargs)
         return [VGroup(line, *anim.bullets), anim]
 
     def construct(self):
@@ -1027,8 +1040,8 @@ class LoopSplitSceneMapped(LoopSplitScene):
 # to illustrate relation between degree and large-scale winding number
 class FundThmAlg(EquationSolver2d):
     CONFIG = {
-        "func" : plane_poly_with_roots((1, 2), (-1, 2.5), (-1, 2.5)),
-        "num_iterations" : 2,
+        "func" : plane_poly_with_roots((1, 2), (-1, 1.5), (-1, 1.5)),
+        "num_iterations" : 10,
     }
 
 # TODO: Borsuk-Ulam visuals
@@ -1059,6 +1072,7 @@ class DiffOdometer(OdometerScene):
     }
 
 # TODO: Brouwer's fixed point theorem visuals
+# class BFTScene(Scene):
 
 # TODO: Pi creatures wide-eyed in amazement
 
