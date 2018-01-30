@@ -408,9 +408,8 @@ class Succession(Animation):
             run_time = kwargs.pop("run_time")
         else:
             run_time = sum(self.run_times)
-        self.num_anims = len(animations)
+        self.num_anims = len(animations) #TODO: If this is zero, some special handling below
         self.animations = animations
-        self.last_index = 0
         #Have to keep track of this run_time, because Scene.play
         #might very well mess with it.
         self.original_run_time = run_time
@@ -420,29 +419,52 @@ class Succession(Animation):
         critical_times = np.concatenate(([0], np.cumsum(self.run_times)))
         self.critical_alphas = map (lambda x : np.true_divide(x, run_time), critical_times)
 
-        mobject = Group(*[anim.mobject for anim in self.animations])
-        Animation.__init__(self, mobject, run_time = run_time, **kwargs)
+        # self.scene_mobjects_at_time[i] is the scene's mobjects at start of self.animations[i]
+        # self.scene_mobjects_at_time[i + 1] is the scene mobjects at end of self.animations[i]
+        self.scene_mobjects_at_time = [None for i in range(self.num_anims + 1)]
+        self.scene_mobjects_at_time[0] = Group()
+        for i in range(self.num_anims):
+            self.scene_mobjects_at_time[i + 1] = self.scene_mobjects_at_time[i].copy()
+            self.animations[i].clean_up(self.scene_mobjects_at_time[i + 1])
 
-    def rewind_to_start(self):
-        for anim in reversed(self.animations):
-            anim.update(0)
+        self.current_alpha = 0
+        self.current_anim_index = 0 #TODO: What if self.num_anims == 0?
+
+        self.mobject = Group()
+        self.jump_to_start_of_anim(0)
+        Animation.__init__(self, self.mobject, run_time = run_time, **kwargs)
+
+    def jump_to_start_of_anim(self, index):
+        self.current_anim_index = index
+        self.current_alpha = self.critical_alphas[index]
+
+        self.mobject.remove(*self.mobject.submobjects) # Should probably have a cleaner "remove_all" method...
+        self.mobject.add(self.animations[index].mobject)
+        for m in self.scene_mobjects_at_time[index].submobjects:
+            self.mobject.add(m)
+
+        self.animations[index].update(0)  
 
     def update_mobject(self, alpha):
-        self.rewind_to_start()
+        i = 0
+        while self.critical_alphas[i + 1] < alpha:
+            i = i + 1
+            # TODO: Special handling if alpha < 0 or alpha > 1, to use
+            # first or last sub-animation
 
-        for i in range(len(self.animations)):
-            sub_alpha = inverse_interpolate(
-                self.critical_alphas[i], 
-                self.critical_alphas[i + 1], 
-                alpha
-            )
-            if sub_alpha < 0:
-                return
+        # At this point, we should have self.critical_alphas[i] <= alpha <= self.critical_alphas[i +1]
 
-            sub_alpha = clamp(0, 1, sub_alpha) # Could possibly adopt a non-clamping convention here
-            self.animations[i].update(sub_alpha)
+        self.jump_to_start_of_anim(i)
+        sub_alpha = inverse_interpolate(
+            self.critical_alphas[i], 
+            self.critical_alphas[i + 1], 
+            alpha
+        )
+        self.animations[i].update(sub_alpha)
 
     def clean_up(self, *args, **kwargs):
+        # We clean up as though we've played ALL animations, even if
+        # clean_up is called in middle of things
         for anim in self.animations:
             anim.clean_up(*args, **kwargs)
 
@@ -460,3 +482,7 @@ class AnimationGroup(Animation):
     def update_mobject(self, alpha):
         for anim in self.sub_anims:
             anim.update(alpha)
+
+    def clean_up(self, *args, **kwargs):
+        for anim in self.sub_anims:
+            anim.clean_up(*args, **kwargs)

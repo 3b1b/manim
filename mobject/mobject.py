@@ -7,10 +7,11 @@ from colour import Color
 
 from helpers import *
 
+from container import *
 
 #TODO: Explain array_attrs
 
-class Mobject(object):
+class Mobject(Container):
     """
     Mathematical Object
     """
@@ -22,7 +23,7 @@ class Mobject(object):
         "target" : None,
     }
     def __init__(self, *submobjects, **kwargs):
-        digest_config(self, kwargs)
+        Container.__init__(self, *submobjects, **kwargs)
         if not all(map(lambda m : isinstance(m, Mobject), submobjects)):
             raise Exception("All submobjects must be of type Mobject")
         self.submobjects = list(submobjects)

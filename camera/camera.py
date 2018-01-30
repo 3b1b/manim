@@ -438,11 +438,6 @@ class MappingCamera(Camera):
             excluded_mobjects = None,
         )
 
-# TODO: Put this in different utility/helpers file? Convenient for me (Sridhar); I like it.
-class DictAsObject(object):
-    def __init__(self, dict):
-         self.__dict__ = dict
-
 # Note: This allows layering of multiple cameras onto the same portion of the pixel array,
 # the later cameras overwriting the former
 #

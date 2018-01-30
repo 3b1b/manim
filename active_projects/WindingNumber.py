@@ -32,64 +32,8 @@ from topics.graph_scene import *
 # TODO/WARNING: There's a lot of refactoring and cleanup to be done in this code,
 # (and it will be done, but first I'll figure out what I'm doing with all this...)
 # -SR
-
-class DualScene(Scene):
-    CONFIG = {
-    "num_needed_anchor_points" : 10
-    }
-
-    def setup(self):
-        split_line = DashedLine(SPACE_HEIGHT * UP, SPACE_HEIGHT * DOWN)
-        self.num_plane = NumberPlane(x_radius = SPACE_WIDTH/2)
-        self.num_plane.to_edge(LEFT, buff = 0)
-        self.num_plane.prepare_for_nonlinear_transform()
-        self.add(self.num_plane, split_line)
-
-    def apply_function(self, func, run_time = 3):
-        self.func = func
-        right_plane = self.num_plane.copy()
-        right_plane.center()
-        right_plane.prepare_for_nonlinear_transform()
-        right_plane.apply_function(func)
-        right_plane.shift(SPACE_WIDTH/2 * RIGHT)
-        self.right_plane = right_plane
-        crappy_cropper = FullScreenFadeRectangle(fill_opacity = 1)
-        crappy_cropper.stretch_to_fit_width(SPACE_WIDTH)
-        crappy_cropper.to_edge(LEFT, buff = 0)
-        self.play(
-            ReplacementTransform(self.num_plane.copy(), right_plane),
-            FadeIn(crappy_cropper), 
-            Animation(self.num_plane),
-            run_time = run_time
-        )
-
-    def squash_onto_left(self, object):
-        object.shift(SPACE_WIDTH/2 * LEFT)
-
-    def squash_onto_right(self, object):
-        object.shift(SPACE_WIDTH/2 * RIGHT)
-
-    def path_draw(self, input_object, run_time = 3):
-        output_object = input_object.copy()
-        if input_object.get_num_anchor_points() < self.num_needed_anchor_points:
-            input_object.insert_n_anchor_points(self.num_needed_anchor_points)
-        output_object.apply_function(self.func)
-        self.squash_onto_left(input_object)
-        self.squash_onto_right(output_object)
-        self.play(
-            ShowCreation(input_object), 
-            ShowCreation(output_object),
-            run_time = run_time
-            )
-
-class TestDual(DualScene):
-    def construct(self):
-        self.force_skipping()
-        self.apply_function(lambda (x, y, z) : complex_to_R3(complex(x,y)**2))
-        self.revert_to_original_skipping_status()
-        self.path_draw(Line(LEFT + DOWN, RIGHT + DOWN))
         
-class EquationSolver1d(GraphScene, ZoomedScene, ReconfigurableScene):
+class EquationSolver1d(GraphScene, ZoomedScene):
     CONFIG = {
     "func" : lambda x : x,
     "targetX" : 0,
@@ -302,7 +246,7 @@ class ArrowCircleTest(Scene):
         base_arrow = Arrow(circle_radius * 0.7 * RIGHT, circle_radius * 1.3 * RIGHT)
 
         def rev_rotate(x, revs):
-            x.rotate(revs * TAU)
+            x.rotate(revs * TAU, about_point = ORIGIN)
             x.set_color(color_func(revs))
             return x
 
@@ -560,8 +504,11 @@ class PiWalker(Scene):
                     rev_func = rev_func,
                     remover = (i < len(walk_coords) - 1)
                 ),
-                ShowCreation(Line(start_point, end_point)),
+                ShowCreation(Line(start_point, end_point), rate_func = None),
                 run_time = self.step_run_time)
+
+        # TODO: Allow smooth paths instead of brekaing them up into lines, and 
+        # use point_from_proportion to get points along the way
                 
 
         self.wait()
@@ -626,10 +573,10 @@ class EquationSolver2d(Scene):
                 alpha_winder = make_alpha_winder(rev_func, start, end, self.num_checkpoints)
                 a0 = alpha_winder(0)
                 rebased_winder = lambda alpha: alpha_winder(alpha) - a0 + start_wind
-                line = Line(num_plane.coords_to_point(*start), num_plane.coords_to_point(*end),
+                flashing_line = Line(num_plane.coords_to_point(*start), num_plane.coords_to_point(*end),
                     stroke_width = 5,
                     color = RED)
-                thin_line = line.copy()
+                thin_line = flashing_line.copy()
                 thin_line.set_stroke(width = 1)
                 walker_anim = LinearWalker(
                     start_coords = start, 
@@ -638,12 +585,12 @@ class EquationSolver2d(Scene):
                     rev_func = rev_func,
                     remover = True
                 )
-                line_draw_anim = AnimationGroup(ShowCreation(line, rate_func = None), walker_anim, 
-                    run_time = 2)
-                anim = Succession(
-                    line_draw_anim, 
-                    Transform, line, thin_line
-                )
+                line_draw_anim = AnimationGroup(
+                    ShowCreation(thin_line), 
+                    #ShowPassingFlash(flashing_line), 
+                    walker_anim,
+                    rate_func = None)
+                anim = line_draw_anim
                 return (anim, rebased_winder(1))
 
             wind_so_far = 0
@@ -736,6 +683,29 @@ class FirstSqrtScene(EquationSolver1d):
         "show_target_line" : True,
     }
 
+class SecondSqrtScene(FirstSqrtScene, ReconfigurableScene):
+# TODO: Don't bother with ReconfigurableScene; just use new config from start
+# (But can also use this as written, and just cut into middle in Premiere)
+
+    def setup(self):
+        FirstSqrtScene.setup(self)
+        ReconfigurableScene.setup(self)
+
+    def construct(self):
+        shiftVal = self.targetY
+
+        self.drawGraph()
+        newOrigin = self.coords_to_point(0, shiftVal)
+        self.transition_to_alt_config(
+            func = lambda x : x**2 - shiftVal,
+            targetY = 0,
+            graph_label = "y = x^2 - " + str(shiftVal),
+            y_min = self.y_min - shiftVal,
+            y_max = self.y_max - shiftVal,
+            show_target_line = False,
+            graph_origin = newOrigin)
+        self.solveEquation()
+
 # TODO: Pi creatures intrigued
 
 class ComplexPlaneIs2d(Scene):
@@ -758,14 +728,21 @@ class NumberLineScene(Scene):
 
         left_point = num_line.number_to_point(-1)
         right_point = num_line.number_to_point(1)
+        # TODO: Make this line a thin rectangle
         interval_1d = Line(left_point, right_point, 
             stroke_color = inner_color, stroke_width = stroke_width)
+        rect_1d = Rectangle(stroke_width = 0, fill_opacity = 1, fill_color = inner_color)
+        rect_1d.replace(interval_1d)
+        rect_1d.stretch_to_fit_height(SMALL_BUFF)
         left_dot = Dot(left_point, stroke_width = stroke_width, color = border_color)
         right_dot = Dot(right_point, stroke_width = stroke_width, color = border_color)
         endpoints_1d = VGroup(left_dot, right_dot)
-        full_1d = VGroup(interval_1d, endpoints_1d)
+        full_1d = VGroup(rect_1d, endpoints_1d)
         self.play(ShowCreation(full_1d))
         self.wait()
+
+        # TODO: Can polish the morphing above; have dots become left and right sides, and 
+        # only then fill in the top and bottom
 
         num_plane = NumberPlane()
 
@@ -790,20 +767,78 @@ class NumberLineScene(Scene):
 
         self.wait()
 
-class Initial2dFuncScene(Scene):
+initial_2d_func = point_func_from_complex_func(lambda c : np.exp(c))
+
+class Initial2dFuncSceneMorphing(Scene):
+    CONFIG = {
+        "num_needed_anchor_points" : 10,
+        "func" : initial_2d_func,
+    }
+
+    def setup(self):
+        split_line = DashedLine(SPACE_HEIGHT * UP, SPACE_HEIGHT * DOWN)
+        self.num_plane = NumberPlane(x_radius = SPACE_WIDTH/2)
+        self.num_plane.to_edge(LEFT, buff = 0)
+        self.num_plane.prepare_for_nonlinear_transform()
+        self.add(self.num_plane, split_line)
+
+    def squash_onto_left(self, object):
+        object.shift(SPACE_WIDTH/2 * LEFT)
+
+    def squash_onto_right(self, object):
+        object.shift(SPACE_WIDTH/2 * RIGHT)
+
+    def obj_draw(self, input_object):
+        output_object = input_object.copy()
+        if input_object.get_num_anchor_points() < self.num_needed_anchor_points:
+            input_object.insert_n_anchor_points(self.num_needed_anchor_points)
+        output_object.apply_function(self.func)
+        self.squash_onto_left(input_object)
+        self.squash_onto_right(output_object)
+        self.play(
+            ShowCreation(input_object), 
+            ShowCreation(output_object)
+            )
+
+    def construct(self):
+        right_plane = self.num_plane.copy()
+        right_plane.center()
+        right_plane.prepare_for_nonlinear_transform()
+        right_plane.apply_function(self.func)
+        right_plane.shift(SPACE_WIDTH/2 * RIGHT)
+        self.right_plane = right_plane
+        crappy_cropper = FullScreenFadeRectangle(fill_opacity = 1)
+        crappy_cropper.stretch_to_fit_width(SPACE_WIDTH)
+        crappy_cropper.to_edge(LEFT, buff = 0)
+        self.play(
+            ReplacementTransform(self.num_plane.copy(), right_plane),
+            FadeIn(crappy_cropper), 
+            Animation(self.num_plane),
+            run_time = 3
+        )
+
+        points = [LEFT + DOWN, RIGHT + DOWN, LEFT + UP, RIGHT + UP]
+        for i in range(len(points) - 1):
+            line = Line(points[i], points[i + 1], color = RED)
+            self.obj_draw(line)
+
+# Alternative to the above, using MappingCameras, but no morphing animation
+class Initial2dFuncSceneWithoutMorphing(Scene):
 
     def setup(self):
         left_camera = Camera(**self.camera_config)
         right_camera = MappingCamera(
-            mapping_func = point_func_from_complex_func(lambda c : np.exp(c)),
+            mapping_func = initial_2d_func,
             **self.camera_config)
         split_screen_camera = SplitScreenCamera(left_camera, right_camera, **self.camera_config)
         self.camera = split_screen_camera
 
     def construct(self):
         num_plane = NumberPlane()
-        num_plane.fade()
+        num_plane.prepare_for_nonlinear_transform()
+        #num_plane.fade()
         self.add(num_plane)
+        
         points = [LEFT + DOWN, RIGHT + DOWN, LEFT + UP, RIGHT + UP]
         for i in range(len(points) - 1):
             line = Line(points[i], points[i + 1], color = RED)
@@ -814,28 +849,8 @@ class Initial2dFuncScene(Scene):
 # TODO: Bunch of Pi walker scenes
 
 # TODO: An odometer scene when introducing winding numbers
-
-class SecondSqrtScene(FirstSqrtScene, ReconfigurableScene):
-# TODO: Don't bother with ReconfigurableScene; just use new config from start
-
-    def setup(self):
-        FirstSqrtScene.setup(self)
-        ReconfigurableScene.setup(self)
-
-    def construct(self):
-        shiftVal = self.targetY
-
-        self.drawGraph()
-        newOrigin = self.coords_to_point(0, shiftVal)
-        self.transition_to_alt_config(
-            func = lambda x : x**2 - shiftVal,
-            targetY = 0,
-            graph_label = "y = x^2 - " + str(shiftVal),
-            y_min = self.y_min - shiftVal,
-            y_max = self.y_max - shiftVal,
-            show_target_line = False,
-            graph_origin = newOrigin)
-        self.solveEquation()
+# (Just set up an OdometerScene with function matching the walking of the Pi
+# creature from previous scene, then place it as a simultaneous inset with Premiere)
 
 class LoopSplitScene(Scene):
 
@@ -963,12 +978,12 @@ class LoopSplitSceneMapped(LoopSplitScene):
 # to illustrate relation between degree and large-scale winding number
 class FundThmAlg(EquationSolver2d):
     CONFIG = {
-        "func" : plane_poly_with_roots((1, 2), (-1, 3), (-1, 3)),
+        "func" : plane_poly_with_roots((1, 2), (-1, 2.5), (-1, 2.5)),
         "num_iterations" : 1,
     }
 
 # TODO: Borsuk-Ulam visuals
-# Note: May want to do an ordinary square scene, then mapping func it into a circle
+# Note: May want to do an ordinary square scene, then MappingCamera it into a circle
 # class BorsukUlamScene(PiWalker):
 
 # 3-way scene of "Good enough"-illustrating odometers; to be composed in Premiere
@@ -1002,15 +1017,16 @@ class DiffOdometer(OdometerScene):
 
 # TODOs, from easiest to hardest:
 
-# Minor fiddling with little things in each animation; placements, colors, timing
+# Minor fiddling with little things in each animation; placements, colors, timing, text
 
-# Odometer/swinging arrows stuff
+# Initial odometer scene (simple once previous Pi walker scene is decided upon)
 
-# Writing new Pi creature walker scenes off of general template
+# Writing new Pi walker scenes by parametrizing general template
 
-# Split screen illustration of 2d function (before domain coloring)
+# Generalizing Pi walker stuff to make bullets on pulsing lines change colors dynamically according to 
+# function traced out
 
-# Generalizing Pi color walker stuff/making bullets on pulsing lines change colors dynamically according to function traced out
+# Debugging Pi walker stuff added to EquationSolver2d
 
 # ----
 
@@ -1021,5 +1037,7 @@ class DiffOdometer(OdometerScene):
 # Borsuk-Ulam visuals
 
 # Domain coloring
+
+# TODO: Ask about tracked mobject, which is probably very useful for our animations
 
 # FIN

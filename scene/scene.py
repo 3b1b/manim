@@ -20,8 +20,9 @@ from animation import Animation
 from animation.animation import sync_animation_run_times_and_rate_funcs
 from animation.transform import MoveToTarget
 from animation.continual_animation import ContinualAnimation
+from container import *
 
-class Scene(object):
+class Scene(Container):
     CONFIG = {
         "camera_class"     : Camera,
         "camera_config"    : {},
@@ -40,7 +41,7 @@ class Scene(object):
         "skip_to_animation_number" : None,
     }
     def __init__(self, **kwargs):
-        digest_config(self, kwargs)
+        Container.__init__(self, **kwargs) # Perhaps allow passing in a non-empty *mobjects parameter?
         self.camera = self.camera_class(**self.camera_config)
         self.mobjects = []
         self.continual_animations = []
