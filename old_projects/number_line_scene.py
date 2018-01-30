@@ -1,6 +1,10 @@
 import numpy as np
-from animation.transform import Transform
+from animation.transform import ApplyMethod, Transform
+from constants import RIGHT, SPACE_WIDTH, UP
+from helpers import counterclockwise_path, straight_path
 from point_cloud_mobject import Point
+from scene import Scene
+from topics.geometry import Line
 from topics.number_line import NumberLine
 
 class NumberLineScene(Scene):
@@ -23,7 +27,7 @@ class NumberLineScene(Scene):
             number_at_center = number
         )
         new_displayed_numbers = new_number_line.default_numbers_to_display()
-        new_number_mobs = new_number_line.get_number_mobjects(*new_displayed_numbers)        
+        new_number_mobs = new_number_line.get_number_mobjects(*new_displayed_numbers)
 
         transforms = []
         additional_mobjects = []
@@ -78,11 +82,3 @@ class NumberLineScene(Scene):
             ApplyMethod(mob.shift, (num-1)*mob.get_center()[0]*RIGHT, **kwargs)
             for mob in self.number_mobs
         ])
-
-
-
-
-
-
-
-

@@ -629,6 +629,12 @@ def angle_of_vector(vector):
         return 0
     return np.angle(complex(*vector[:2]))
 
+def concatenate_lists(*list_of_lists):
+    return [item for l in list_of_lists for item in l]
 
-
+# Occasionally convenient in order to write dict.x instead of more laborious 
+# (and less in keeping with all other attr accesses) dict["x"]
+class DictAsObject(object):
+    def __init__(self, dict):
+         self.__dict__ = dict
 

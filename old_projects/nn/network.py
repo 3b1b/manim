@@ -29,6 +29,12 @@ IMAGE_MAP_DATA_FILE = os.path.join(NN_DIRECTORY, "image_map")
 # DEFAULT_LAYER_SIZES = [28**2, 80, 10]
 DEFAULT_LAYER_SIZES = [28**2, 16, 16, 10]
 
+try:
+    xrange          # Python 2
+except NameError:
+    xrange = range  # Python 3
+
+
 class Network(object):
     def __init__(self, sizes, non_linearity = "sigmoid"):
         """The list ``sizes`` contains the number of neurons in the

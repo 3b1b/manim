@@ -125,6 +125,19 @@ class Dot(Circle):
         self.shift(point)
         self.init_colors()
 
+class Ellipse(VMobject):
+    CONFIG = {
+        "width" : 2,
+        "height" : 1
+    }
+
+    def generate_points(self):
+        circle = Circle(radius = 1)
+        circle = circle.stretch_to_fit_width(self.width)
+        circle = circle.stretch_to_fit_height(self.height)
+        self.points = circle.points
+
+
 class AnnularSector(VMobject):
     CONFIG = {
         "inner_radius" : 1,
@@ -174,6 +187,7 @@ class AnnularSector(VMobject):
         self.shift(v)
         return self
 
+
 class Sector(AnnularSector):
     CONFIG = {
         "outer_radius" : 1,
@@ -200,10 +214,12 @@ class Annulus(Circle):
     }
 
     def generate_points(self):
+        self.points = []
         self.radius = self.outer_radius
-        Circle.generate_points(self)
+        outer_circle = Circle(radius = self.outer_radius)
         inner_circle = Circle(radius=self.inner_radius)
         inner_circle.flip()
+        self.points = outer_circle.points
         self.add_subpath(inner_circle.points)
 
 class Line(VMobject):
@@ -227,6 +243,10 @@ class Line(VMobject):
                 for alpha in np.linspace(0, 1, self.n_arc_anchors)
             ])
         self.account_for_buff()
+
+    def set_path_arc(self,new_value):
+        self.path_arc = new_value
+        self.generate_points()
 
     def account_for_buff(self):
         length = self.get_arc_length()
@@ -332,6 +352,17 @@ class Line(VMobject):
         self.rotate(-angle_diff, normal)
         self.shift(new_start - self.get_start())
         return self
+
+    def insert_n_anchor_points(self, n):
+        if not self.path_arc:
+            n_anchors = self.get_num_anchor_points()
+            new_num_points = 3*(n_anchors + n)+1
+            self.points = np.array([
+                self.point_from_proportion(alpha)
+                for alpha in np.linspace(0, 1, new_num_points)
+            ])
+        else:
+            VMobject.insert_n_anchor_points(self, n)
 
 class DashedLine(Line):
     CONFIG = {

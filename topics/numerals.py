@@ -12,7 +12,7 @@ class DecimalNumber(VMobject):
         "num_decimal_points" : 2,
         "digit_to_digit_buff" : 0.05,
         "show_ellipsis" : False,
-        "unit" : None,
+        "unit" : None, #Aligned to bottom unless it starts with "^"
         "include_background_rectangle" : False,
     }
     def __init__(self, number, **kwargs):
@@ -41,8 +41,17 @@ class DecimalNumber(VMobject):
         if self.show_ellipsis:
             self.add(TexMobject("\\dots"))
 
-        if self.unit is not None:
-            self.add(TexMobject(self.unit))
+
+        if num_string.startswith("-"):
+            minus = self.submobjects[0]
+            minus.next_to(
+                self.submobjects[1], LEFT,
+                buff = self.digit_to_digit_buff
+            )
+
+        if self.unit != None:
+            self.unit_sign = TexMobject(self.unit)
+            self.add(self.unit_sign)
 
         self.arrange_submobjects(
             buff = self.digit_to_digit_buff,
@@ -54,8 +63,8 @@ class DecimalNumber(VMobject):
         for i, c in enumerate(num_string):
             if c == "-" and len(num_string) > i+1:
                 self[i].align_to(self[i+1], alignment_vect = UP)
-        if self.unit == "\\circ":
-            self[-1].align_to(self, UP)
+        if self.unit and self.unit.startswith("^"):
+            self.unit_sign.align_to(self, UP)
         #
         if self.include_background_rectangle:
             self.add_background_rectangle()
@@ -80,7 +89,7 @@ class ChangingDecimal(Animation):
         "num_decimal_points" : None,
         "show_ellipsis" : None,
         "position_update_func" : None,
-        "tracked_mobject" : None
+        "tracked_mobject" : None,
     }
     def __init__(self, decimal_number_mobject, number_update_func, **kwargs):
         digest_config(self, kwargs, locals())
