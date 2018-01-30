@@ -369,7 +369,7 @@ class ExampleThrees(PiCreatureScene):
         three_mob_copy = three_mob[1].copy()
         three_mob_copy.sort_submobjects(lambda p : np.dot(p, DOWN+RIGHT))
 
-        braces = VGroup(*[Brace(three_mob, v) for v in LEFT, UP])
+        braces = VGroup(*[Brace(three_mob, v) for v in (LEFT, UP)])
         brace_labels = VGroup(*[
             brace.get_text("28px")
             for brace in braces
@@ -1100,7 +1100,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
         neurons.space_out_submobjects(1.3)
         neurons.to_edge(DOWN)
 
-        braces = VGroup(*[Brace(neurons, vect) for vect in LEFT, UP])
+        braces = VGroup(*[Brace(neurons, vect) for vect in (LEFT, UP)])
         labels = VGroup(*[
             brace.get_tex("28", buff = SMALL_BUFF) 
             for brace in braces
@@ -1547,7 +1547,7 @@ class BreakUpMacroPatterns(IntroduceEachLayer):
         image_map = get_organized_images()
         two, three, five = mobs = [
             MNistMobject(image_map[n][0])
-            for n in 2, 3, 5
+            for n in (2, 3, 5)
         ]
         self.added_patterns = VGroup()
         for mob in mobs:
@@ -1876,7 +1876,7 @@ class BreakUpMicroPatterns(BreakUpMacroPatterns):
         image_map = get_organized_images()
         digits = VGroup(*[
             MNistMobject(image_map[n][1])
-            for n in 1, 4, 7
+            for n in (1, 4, 7)
         ])
         digits.arrange_submobjects(RIGHT)
         digits.next_to(randy, RIGHT)
@@ -1922,7 +1922,7 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
         layers = self.network_mob.layers
         nine_im, loop_im, line_im = images = [
             Image.open(get_full_raster_image_path("handwritten_%s"%s))
-            for s in "nine", "upper_loop", "right_line"
+            for s in ("nine", "upper_loop", "right_line")
         ]
         nine_array, loop_array, line_array = [
             np.array(im)[:,:,0]/255.0
@@ -1959,7 +1959,7 @@ class SecondLayerIsLittleEdgeLayer(IntroduceEachLayer):
 
         loop, line = [
             ImageMobject(layer_to_image_array(array.flatten()))
-            for array in loop_array, line_array
+            for array in (loop_array, line_array)
         ]
         for mob, color in (loop, YELLOW), (line, RED):
             make_transparent(mob)
@@ -2601,7 +2601,7 @@ class IntroduceWeights(IntroduceEachLayer):
                 self.negative_weights_color,
                 0.5
             )
-            for y in 6, 10
+            for y in (6, 10)
             for x in range(14-4, 14+4)
         ])
         self.wait(2)
@@ -2627,7 +2627,7 @@ class IntroduceWeights(IntroduceEachLayer):
         d = int(np.sqrt(len(pixels)))
         return VGroup(*it.chain(*[
             pixels[d*n + d/2 - 4 : d*n + d/2 + 4]
-            for n in 6, 10
+            for n in (6, 10)
         ]))
 
     def make_edges_weighted(self, edges, weights):
@@ -2667,7 +2667,7 @@ class MotivateSquishing(Scene):
                 weighted_sum.get_bottom(),
                 number_line.number_to_point(n),
             )
-            for n in -3, 3
+            for n in (-3, 3)
         ]
 
         self.play(Write(number_line))
@@ -2791,7 +2791,7 @@ class IntroduceSigmoid(GraphScene):
                 x_max = x_max,
                 color = color,
             ).set_stroke(width = 4)
-            for func in lambda x : 0, sigmoid
+            for func in (lambda x : 0, sigmoid)
         ]
 
         self.play(ShowCreation(line))
@@ -3572,7 +3572,7 @@ class IntroduceWeightMatrix(NetworkScene):
         self.wait()
         self.play(*[
             LaggedStart(Indicate, mob, rate_func = there_and_back)
-            for mob in a_labels, a_labels_in_sum
+            for mob in (a_labels, a_labels_in_sum)
         ])
         self.wait()
 
@@ -3603,7 +3603,7 @@ class IntroduceWeightMatrix(NetworkScene):
                 "\\cdots",
                 "w_{%s, n}"%i,
             ]))
-            for i in "1", "k"
+            for i in ("1", "k")
         ]
         dots_row = VGroup(*map(TexMobject, [
             "\\vdots", "\\vdots", "\\ddots", "\\vdots"
@@ -3708,7 +3708,7 @@ class IntroduceWeightMatrix(NetworkScene):
     def show_meaning_of_lower_rows(self, arrow, brace, row_rect, result_terms):
         n1, n2, nk = neurons = VGroup(*[
             self.network_mob.layers[1].neurons[i]
-            for i in 0, 1, -1
+            for i in (0, 1, -1)
         ])
         for n in neurons:
             n.save_state()
@@ -4104,7 +4104,7 @@ class NeuronIsFunction(MoreHonestMNistNetworkPreview):
                 run_time = 2, 
                 submobject_mode = "lagged_start"
             )
-            for mob in self.network_mob.layers, self.network_mob.edge_groups
+            for mob in (self.network_mob.layers, self.network_mob.edge_groups)
         ]
         anims += [
             FadeOut(self.neuron_arrow),

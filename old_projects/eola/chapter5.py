@@ -913,7 +913,7 @@ class TwoDDeterminantFormula(Scene):
         self.wait()
         self.play(*[
             Transform(m, m.zero)
-            for m in mb, mc, b, c
+            for m in (mb, mc, b, c)
         ])
         self.wait()
         for pair in (mb, b), (mc, c):
@@ -952,7 +952,7 @@ class TwoDDeterminantFormulaIntuition(LinearTransformationScene):
             [[1, 0], [float(b)/d, 1]],
             added_anims = [
                 ApplyMethod(m.shift, b*RIGHT)
-                for m in side_brace, height
+                for m in (side_brace, height)
             ]
         )
         self.wait()

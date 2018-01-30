@@ -25,6 +25,7 @@ from mobject.tex_mobject import *
 
 from topics.common_scenes import PatreonThanks
 from topics.graph_scene import GraphScene
+from functools import reduce
 
 class Jewel(VMobject):
     CONFIG = {
@@ -969,7 +970,7 @@ class WalkEquatorPostTransform(GraphScene):
                 curve.x_collision_points[i]
                 for curve in gerat_arc_images
             ]
-            for i in 0, 1
+            for i in (0, 1)
         ]))
         full_curve = VMobject(close_new_points = True)
         full_curve.set_points_smoothly(points + [points[0]])
@@ -1844,7 +1845,7 @@ class ChoicesInNecklaceCutting(ReconfigurableScene):
         for group in groups:
             group.target_points = [
                 group.get_center() + self.thief_box_offset*vect
-                for vect in UP, DOWN
+                for vect in (UP, DOWN)
             ]
 
         return groups
@@ -1861,7 +1862,7 @@ class ChoicesInNecklaceCutting(ReconfigurableScene):
 
         boxes = VGroup(*[
             box.copy().shift(self.thief_box_offset*vect)
-            for vect in UP, DOWN
+            for vect in (UP, DOWN)
         ])
         labels = VGroup(*[
             TextMobject(
@@ -2109,7 +2110,7 @@ class NecklaceDivisionSphereAssociation(ChoicesInNecklaceCutting):
                 TexMobject(
                     char, "=", sign, "\\sqrt{\\frac{1}{%d}}"%denom
                 )
-                for sign in "+", "-"
+                for sign in ("+", "-")
             ]
             for choice, color in zip(choices, [GREEN, RED]):
                 # choice[0].highlight(brace.label.get_color())
@@ -2242,7 +2243,7 @@ class TotalLengthOfEachJewelEquals(NecklaceDivisionSphereAssociation, ThreeDScen
                     lambda segment: segment.get_color() == color,
                     segment_group
                 ))
-                for segment_group in top_segments, bottom_segments
+                for segment_group in (top_segments, bottom_segments)
             ]
             labels = VGroup()
             for i, group in enumerate(monochrome_groups):
@@ -2330,7 +2331,7 @@ class ShowFunctionDiagram(TotalLengthOfEachJewelEquals, ReconfigurableScene):
                 skip_animations = True, 
                 thief_number = x
             )
-            for x in 1, 2
+            for x in (1, 2)
         ]
         t1_plane, t2_plane = planes = VGroup(*[
             VGroup(*plane_class.get_top_level_mobjects())

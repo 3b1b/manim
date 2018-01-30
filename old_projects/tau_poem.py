@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import absolute_import
 import numpy as np
 import itertools as it
 from copy import deepcopy
@@ -12,7 +13,7 @@ from constants import *
 from mobject.region import  *
 from scene import Scene
 from script_wrapper import command_line_create_scene
-from generate_logo import LogoGeneration
+from .generate_logo import LogoGeneration
 
 POEM_LINES = """Fixed poorly in notation with that two,
 you shine so loud that you deserve a name.
@@ -173,7 +174,7 @@ class TauPoem(Scene):
         self.play_over_time_range(2, 4,
             Transform(
                 self.number_word, self.new_digit,
-                rate_func = squish_rate_func(smooth)                
+                rate_func = squish_rate_func(smooth)
             )
         )
 
@@ -196,7 +197,7 @@ class TauPoem(Scene):
         tau.to_symbol()
         sphere = Mobject()
         sphere.interpolate(
-            two_pi, 
+            two_pi,
             Sphere().highlight("yellow"),
             0.8
         )
@@ -219,7 +220,7 @@ class TauPoem(Scene):
         tau = TauCreature()
         tau.make_sad()
         tau.mouth.points = np.array(sorted(
-            tau.mouth.points, 
+            tau.mouth.points,
             lambda p0, p1 : cmp(p0[0], p1[0])
         ))
         blinked = deepcopy(tau).blink()
@@ -270,7 +271,7 @@ class TauPoem(Scene):
 
     def line5(self):
         pi, bubble = self.pi_speaking("""
-            Great formulae cast \\\\ 
+            Great formulae cast \\\\
             truths transcending \\\\
             names.
         """)
@@ -318,12 +319,12 @@ class TauPoem(Scene):
         self.play(
             Transform(pi.left_leg, tau.leg),
             Transform(
-                pi.right_leg, 
+                pi.right_leg,
                 Point(pi.right_leg.points[0,:]).highlight("black")
             ),
             Transform(pi.mouth, tau.mouth),
             CounterclockwiseTransform(
-                two, 
+                two,
                 Dot(two.get_center()).highlight("black")
             )
         )
@@ -393,7 +394,7 @@ class TauPoem(Scene):
         grid.add(TexMobject("e^{ix}").shift(grid_center+UP+RIGHT))
         circle.highlight("white")
         tau_line = Line(
-            *[np.pi*interval_size*vect for vect in LEFT, RIGHT],
+            *[np.pi*interval_size*vect for vect in (LEFT, RIGHT)],
             density = 5*DEFAULT_POINT_DENSITY_1D
         )
         tau_line.highlight("red")
@@ -416,7 +417,7 @@ class TauPoem(Scene):
             FadeOut(axes),
             FadeOut(grid),
             FadeOut(sine),
-            FadeIn(tau),            
+            FadeIn(tau),
         )
         self.wait()
 
@@ -469,7 +470,7 @@ class TauPoem(Scene):
 
     def line17(self):
         circle = Dot(
-            radius = 1, 
+            radius = 1,
             density = 4*DEFAULT_POINT_DENSITY_1D
         )
         blue_rgb = np.array(Color("blue").get_rgb())
@@ -480,7 +481,8 @@ class TauPoem(Scene):
         ])
         for index in range(circle.points.shape[0]):
             circle.rgbas
-        def trianglify((x, y, z)):
+        def trianglify(x__y__z):
+            (x, y, z) = x__y__z
             norm = np.linalg.norm((x, y, z))
             comp = complex(x, y)*complex(0, 1)
             return (
@@ -575,16 +577,3 @@ class TauPoem(Scene):
 
 if __name__ == "__main__":
     command_line_create_scene(MOVIE_PREFIX)
-
-
-
-
-
-
-
-
-
-
-
-
-

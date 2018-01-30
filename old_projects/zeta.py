@@ -1,3 +1,4 @@
+from __future__ import print_function
 from helpers import *
 
 from mobject.tex_mobject import TexMobject
@@ -1824,7 +1825,7 @@ class ShowZetaOnHalfPlane(ZetaTransformationScene):
 
         line = Line(*map(self.z_to_point, [
             complex(np.euler_gamma, u*SPACE_HEIGHT)
-            for u in 1, -1
+            for u in (1, -1)
         ]))
         line.highlight(YELLOW)
         arrows = [
@@ -1850,9 +1851,9 @@ class ShowZetaOnHalfPlane(ZetaTransformationScene):
                     vert_vect+RIGHT,
                     vert_vect+(SPACE_WIDTH+1)*horiz_vect
                 )
-                for vert_vect in UP, DOWN
+                for vert_vect in (UP, DOWN)
             ])
-            for horiz_vect in RIGHT, LEFT
+            for horiz_vect in (RIGHT, LEFT)
         ]
         right_i_lines.highlight(YELLOW)
         left_i_lines.highlight(BLUE)
@@ -1937,7 +1938,7 @@ class ShowConditionalDefinition(Scene):
         something_else = TextMobject("Something else...")
         conditions = VGroup(*[
             TextMobject("if Re$(s) %s 1$"%s)
-            for s in ">", "\\le"
+            for s in (">", "\\le")
         ])
         definitions = VGroup(sigma, something_else)
         definitions.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)

@@ -24,11 +24,11 @@ from topics.vector_space_scene import *
 class OpeningQuote(Scene):
     def construct(self):
         words = TextMobject("""
-            Mathematics requires a small dose, not of genius, 
-            but of an imaginative freedom which, in a larger 
+            Mathematics requires a small dose, not of genius,
+            but of an imaginative freedom which, in a larger
             dose, would be insanity.
         """)
-        words.to_edge(UP)    
+        words.to_edge(UP)
         for mob in words.submobjects[49:49+18]:
             mob.highlight(GREEN)
         author = TextMobject("-Angus K. Rodgers")
@@ -81,11 +81,11 @@ class CoordinatesAsScalars(VectorScene):
 
         i_hat, j_hat = self.get_basis_vectors()
         new_i_hat = Vector(
-            self.vector_coords[0]*i_hat.get_end(), 
+            self.vector_coords[0]*i_hat.get_end(),
             color = X_COLOR
         )
         new_j_hat = Vector(
-            self.vector_coords[1]*j_hat.get_end(), 
+            self.vector_coords[1]*j_hat.get_end(),
             color = Y_COLOR
         )
         VMobject(i_hat, new_i_hat).shift(3*LEFT)
@@ -132,21 +132,21 @@ class CoordinatesAsScalars(VectorScene):
         i_hat, j_hat = self.get_basis_vectors()
         self.add_vector(i_hat)
         i_hat_label = self.label_vector(
-            i_hat, "\\hat{\\imath}", 
-            color = X_COLOR, 
+            i_hat, "\\hat{\\imath}",
+            color = X_COLOR,
             label_scale_factor = 1
         )
         self.add_vector(j_hat)
         j_hat_label = self.label_vector(
-            j_hat, "\\hat{\\jmath}", 
-            color = Y_COLOR, 
+            j_hat, "\\hat{\\jmath}",
+            color = Y_COLOR,
             label_scale_factor = 1
         )
         self.wait()
 
         x, y = new_array.get_mob_matrix().flatten()
         for coord, v, label, factor, shift_right in [
-            (x, i_hat, i_hat_label, self.vector_coords[0], False), 
+            (x, i_hat, i_hat_label, self.vector_coords[0], False),
             (y, j_hat, j_hat_label, self.vector_coords[1], True)
             ]:
             faded_v = v.copy().fade(0.7)
@@ -173,8 +173,8 @@ class CoordinatesAsScalars(VectorScene):
 
     def show_symbolic_sum(self, new_array, vector):
         new_mob = TexMobject([
-            "(%d)\\hat{\\imath}"%self.vector_coords[0], 
-            "+", 
+            "(%d)\\hat{\\imath}"%self.vector_coords[0],
+            "+",
             "(%d)\\hat{\\jmath}"%self.vector_coords[1]
         ])
         new_mob.move_to(new_array)
@@ -185,7 +185,7 @@ class CoordinatesAsScalars(VectorScene):
 
         self.play(Transform(new_array, new_mob))
         self.wait()
-        
+
 
 
 class CoordinatesAsScalarsExample2(CoordinatesAsScalars):
@@ -201,7 +201,7 @@ class CoordinatesAsScalarsExample2(CoordinatesAsScalars):
         self.add(*basis_vectors)
         self.add(*labels)
         text = TextMobject("""
-            $\\hat{\\imath}$ and $\\hat{\\jmath}$ 
+            $\\hat{\\imath}$ and $\\hat{\\jmath}$
             are the ``basis vectors'' \\\\
             of the $xy$ coordinate system
         """)
@@ -239,7 +239,7 @@ class ShowVaryingLinearCombinations(VectorScene):
             (1, -1.13),
             (1.25, 0.5),
             (-0.8, 1.3),
-        ], 
+        ],
         "leave_sum_vector_copies" : False,
         "start_with_non_sum_scaling" : True,
         "finish_with_standard_basis_comparison" : True,
@@ -250,16 +250,16 @@ class ShowVaryingLinearCombinations(VectorScene):
         v1 = self.add_vector(self.vector1, color = self.vector1_color)
         v2 = self.add_vector(self.vector2, color = self.vector2_color)
         v1_label = self.label_vector(
-            v1, self.vector1_label, color = self.vector1_color, 
+            v1, self.vector1_label, color = self.vector1_color,
             buff_factor = 3
         )
         v2_label = self.label_vector(
-            v2, self.vector2_label, color = self.vector2_color, 
+            v2, self.vector2_label, color = self.vector2_color,
             buff_factor = 3
         )
         label_anims = [
             MaintainPositionRelativeTo(label, v)
-            for v, label in (v1, v1_label), (v2, v2_label)
+            for v, label in ((v1, v1_label), (v2, v2_label))
         ]
         scalar_anims = self.get_scalar_anims(v1, v2, v1_label, v2_label)
         self.last_scalar_pair = (1, 1)
@@ -290,14 +290,14 @@ class ShowVaryingLinearCombinations(VectorScene):
                 scale_factor = 0.75,
                 value_function = get_val_func(v)
             )
-            for v, label in (v1, v1_label), (v2, v2_label)
+            for v, label in ((v1, v1_label), (v2, v2_label))
         ]
 
     def get_rate_func_pair(self):
         return [
-            squish_rate_func(smooth, a, b) 
-            for a, b in (0, 0.7), (0.3, 1)
-        ] 
+            squish_rate_func(smooth, a, b)
+            for a, b in ((0, 0.7), (0.3, 1))
+        ]
 
     def initial_scaling(self, v1, v2, label_anims, scalar_anims):
         scalar_pair = self.scalar_pairs.pop(0)
@@ -311,7 +311,7 @@ class ShowVaryingLinearCombinations(VectorScene):
         ]
         anims += [
             ApplyMethod(v.copy().fade, 0.7)
-            for v in v1, v2
+            for v in (v1, v2)
         ]
         anims += label_anims + scalar_anims
         self.play(*anims, **{"run_time" : 2})
@@ -335,8 +335,8 @@ class ShowVaryingLinearCombinations(VectorScene):
             anims = [
                 ApplyMethod(v.scale, s/s_old, rate_func = rf)
                 for v, s, s_old, rf in zip(
-                    [v1, v2], 
-                    scalar_pair, 
+                    [v1, v2],
+                    scalar_pair,
                     self.last_scalar_pair,
                     self.get_rate_func_pair()
                 )
@@ -353,7 +353,7 @@ class ShowVaryingLinearCombinations(VectorScene):
             v2, lambda m : m.shift(v1.get_end()-m.get_start())
         )
         sum_anim = UpdateFromFunc(
-            self.sum_vector, 
+            self.sum_vector,
             lambda v : v.put_start_and_end_on(v1.get_start(), v2.get_end())
         )
         return v2_anim, sum_anim
@@ -366,7 +366,7 @@ class ShowVaryingLinearCombinations(VectorScene):
         array = Matrix([
             mob.copy().highlight(color)
             for mob, color in zip(
-                alt_coords, 
+                alt_coords,
                 [self.vector1_color, self.vector2_color]
             )
         ])
@@ -388,7 +388,7 @@ class ShowVaryingLinearCombinations(VectorScene):
         self.remove(brackets, *alt_coords)
         self.add(array)
         self.play(
-            FadeOut(everything), 
+            FadeOut(everything),
             Animation(array),
         )
 
@@ -422,7 +422,7 @@ class ShowVaryingLinearCombinations(VectorScene):
                 curr_tip = self.sum_vector.get_end()
                 line = Line(ORIGIN, curr_tip)
                 self.play(
-                    ApplyMethod(w2.scale, num), 
+                    ApplyMethod(w2.scale, num),
                     UpdateFromFunc(
                         line, lambda l : l.put_start_and_end_on(curr_tip, self.sum_vector.get_end())
                     ),
@@ -442,7 +442,7 @@ class AltShowVaryingLinearCombinations(ShowVaryingLinearCombinations):
             (1, 1.13),
             (1.25, 0.5),
             (-0.8, 1.14),
-        ], 
+        ],
         "finish_with_standard_basis_comparison" : False
     }
 
@@ -477,7 +477,7 @@ class NameLinearCombinations(Scene):
         scalars_word.next_to(equation, DOWN, buff = 2)
         arrows = [
             Arrow(scalars_word, letter)
-            for letter in a, b
+            for letter in (a, b)
         ]
 
         self.add(equation)
@@ -495,7 +495,7 @@ class LinearCombinationsDrawLines(ShowVaryingLinearCombinations):
             (1.5, 0.6),
             (0.7, 1.3),
             (1, 1),
-        ], 
+        ],
         "start_with_non_sum_scaling" : False,
         "finish_with_standard_basis_comparison" : False,
         "finish_by_drawing_lines" : True,
@@ -513,7 +513,7 @@ class LinearCombinationsWithSumCopies(ShowVaryingLinearCombinations):
             (-0.8, 1.3),
             (-0.9, 1.4),
             (0.9, 2),
-        ], 
+        ],
         "leave_sum_vector_copies" : True,
         "start_with_non_sum_scaling" : False,
         "finish_with_standard_basis_comparison" : False,
@@ -539,7 +539,7 @@ class LinearDependentVectors(ShowVaryingLinearCombinations):
             (-0.8, 1.3),
             (-0.9, 1.4),
             (0.9, 2),
-        ], 
+        ],
         "leave_sum_vector_copies" : False,
         "start_with_non_sum_scaling" : False,
         "finish_with_standard_basis_comparison" : False,
@@ -547,7 +547,7 @@ class LinearDependentVectors(ShowVaryingLinearCombinations):
     }
 
     def get_sum_animations(self, v1, v2):
-        v2_anim, sum_anim = ShowVaryingLinearCombinations.get_sum_animations(self, v1, v2) 
+        v2_anim, sum_anim = ShowVaryingLinearCombinations.get_sum_animations(self, v1, v2)
         self.remove(self.sum_vector)
         return v2_anim, Animation(VMobject())
 
@@ -558,8 +558,8 @@ class WhenVectorsLineUp(LinearDependentVectors):
         "scalar_pairs" : [
             (1.5, 0.6),
             (0.7, 1.3),
-        ], 
-    }    
+        ],
+    }
 
 class AnimationUnderSpanDefinition(ShowVaryingLinearCombinations):
     CONFIG = {
@@ -571,7 +571,7 @@ class AnimationUnderSpanDefinition(ShowVaryingLinearCombinations):
             (0.8, 1.3),
             (0.93, -1.4),
             (-2, -0.5),
-        ], 
+        ],
         "leave_sum_vector_copies" : True,
         "start_with_non_sum_scaling" : False,
         "finish_with_standard_basis_comparison" : False,
@@ -596,7 +596,7 @@ class DefineSpan(Scene):
         w_color = BLUE
 
         definition = TextMobject("""
-            The ``span'' of $\\vec{\\textbf{v}}$ and 
+            The ``span'' of $\\vec{\\textbf{v}}$ and
             $\\vec{\\textbf{w}}$ is the \\\\ set of all their
             linear combinations.
         """)
@@ -625,7 +625,7 @@ class DefineSpan(Scene):
         vary_words.next_to(equation, DOWN, buff = 2)
         arrows = [
             Arrow(vary_words, letter)
-            for letter in a, b
+            for letter in (a, b)
         ]
 
         self.play(Write(definition))
@@ -664,7 +664,7 @@ class VectorsToDotsScene(VectorScene):
         vector_group = VMobject(*vectors)
         self.play(
             ShowCreation(
-                vector_group, 
+                vector_group,
                 submobject_mode = "one_at_a_time",
                 run_time = 3
             )
@@ -687,7 +687,7 @@ class VectorsToDotsScene(VectorScene):
             for x in range(len(vectors))
         ]
         self.play(*[
-            Transform(v, v_to_dot(v), rate_func = rf, run_time = 2) 
+            Transform(v, v_to_dot(v), rate_func = rf, run_time = 2)
             for v, rf in zip(vectors, rate_functions)
         ])
         self.wait()
@@ -755,7 +755,7 @@ class VectorsInThePlane(VectorsToDotsScene):
         self.play(
             ShowCreation(plane),
             *[
-                Transform(v, p, rate_func = rf) 
+                Transform(v, p, rate_func = rf)
                 for v, p, rf in zip(vectors, line_pairs, rate_functions)
             ]
         )
@@ -824,21 +824,21 @@ class VaryingLinearCombinationOfThreeVectors(Scene):
 class LinearCombinationOfThreeVectorsText(Scene):
     def construct(self):
         text = TextMobject("""
-            Linear combination of 
-            $\\vec{\\textbf{v}}$, 
+            Linear combination of
+            $\\vec{\\textbf{v}}$,
             $\\vec{\\textbf{w}}$, and
             $\\vec{\\textbf{u}}$:
         """)
         VMobject(*text.split()[-12:-10]).highlight(MAROON_C)
         VMobject(*text.split()[-9:-7]).highlight(BLUE)
         VMobject(*text.split()[-3:-1]).highlight(RED_C)
-        VMobject(*text.split()[:17]).highlight(GREEN)        
+        VMobject(*text.split()[:17]).highlight(GREEN)
         text.scale_to_fit_width(2*SPACE_WIDTH - 1)
         text.to_edge(UP)
 
         equation = TextMobject("""$
-            a\\vec{\\textbf{v}} + 
-            b\\vec{\\textbf{w}} + 
+            a\\vec{\\textbf{v}} +
+            b\\vec{\\textbf{w}} +
             c\\vec{\\textbf{u}}
         $""")
         VMobject(*equation.split()[-10:-8]).highlight(MAROON_C)
@@ -856,7 +856,7 @@ class LinearCombinationOfThreeVectorsText(Scene):
         VMobject(*span_comment.split()[3:7]).highlight(YELLOW)
         arrows = VMobject(*[
             Arrow(span_comment, var)
-            for var in a, b, c
+            for var in (a, b, c)
         ])
 
         self.play(Write(text))
@@ -906,7 +906,7 @@ class SpanCasesWords(Scene):
 class LinearDependentWords(Scene):
     def construct(self):
         words1 = TextMobject([
-            "$\\vec{\\textbf{v}}$", 
+            "$\\vec{\\textbf{v}}$",
             "and",
             "$\\vec{\\textbf{w}}$",
             "are",
@@ -918,7 +918,7 @@ class LinearDependentWords(Scene):
         rest.highlight(YELLOW)
 
         words2 = TextMobject([
-            "$\\vec{\\textbf{v}}$,", 
+            "$\\vec{\\textbf{v}}$,",
             "$\\vec{\\textbf{w}}$",
             "and",
             "$\\vec{\\textbf{u}}$",
@@ -987,7 +987,7 @@ class LinearDependentEquations(Scene):
         low_words2.to_edge(DOWN)
         arrows = VMobject(*[
             Arrow(low_words2, var)
-            for var in a, b
+            for var in (a, b)
         ])
 
         self.play(Write(equation1))
@@ -1084,7 +1084,7 @@ class AlternateDefOfLinearlyDependent(Scene):
         scalar_specification.shift(1.5*DOWN)
         scalar_specification.add(*[
             Arrow(scalar_specification, equations[0].split()[i])
-            for i in 2, 5
+            for i in (2, 5)
         ])
 
         brace = Brace(VMobject(*equations[2].split()[2:]))
@@ -1093,7 +1093,7 @@ class AlternateDefOfLinearlyDependent(Scene):
 
         equation = equations[0]
         for added_words in added_words1, added_words2:
-            added_words.next_to(title, DOWN, buff = 3.5, aligned_edge = LEFT) 
+            added_words.next_to(title, DOWN, buff = 3.5, aligned_edge = LEFT)
         self.play(Write(equation))
         for i, new_eq in enumerate(equations):
             if i == 0:
@@ -1108,7 +1108,7 @@ class AlternateDefOfLinearlyDependent(Scene):
                 self.wait(3)
                 self.play(FadeOut(brace), FadeOut(brace_words))
             self.play(Transform(
-                equation, new_eq, 
+                equation, new_eq,
                 path_arc = (np.pi/2 if i == 1 else 0)
             ))
             self.wait(3)
@@ -1216,7 +1216,7 @@ class MathematiciansLikeToConfuse(TeacherStudentsScene):
     def construct(self):
         self.setup()
         self.teacher_says("""
-            We wouldn't want things to \\\\ 
+            We wouldn't want things to \\\\
             be \\emph{understandable} would we?
         """)
         modes = "pondering", "sassy", "confused"
@@ -1268,19 +1268,4 @@ class NextVideo(Scene):
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.wait() 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        self.wait()

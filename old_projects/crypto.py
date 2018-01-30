@@ -138,7 +138,7 @@ class AskQuestion(Scene):
     }
     def construct(self):
         strings = [
-            "What", "does", "it", "mean   ", "to", 
+            "What", "does", "it", "mean   ", "to",
             "have    ", "a", "Bitcoin?"
         ]
         question = TextMobject(*strings)
@@ -168,7 +168,7 @@ class ListOfAttributes(Scene):
                 fill_opacity = 1,
                 stroke_width = 0,
             )
-            for word in "government", "bank"
+            for word in ("government", "bank")
         ]
         attributes = VGroup(digital, *buildings)
         attributes.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
@@ -275,7 +275,7 @@ class DisectQuestion(TeacherStudentsScene):
 class CryptocurrencyEquation(Scene):
     def construct(self):
         parts = TextMobject(
-            "Ledger", 
+            "Ledger",
             "- Trust",
             "+ Cryptography",
             "= Cryptocurrency"
@@ -310,9 +310,9 @@ class ListRecentCurrencies(Scene):
         logos.shift(LEFT)
         logos.to_edge(UP)
         names = map(
-            TextMobject, 
+            TextMobject,
             [
-                "Bitcoin", "Ethereum", "Ripple", 
+                "Bitcoin", "Ethereum", "Ripple",
                 "Litecoin", "Ethereum Classic"
             ],
         )
@@ -447,7 +447,7 @@ class LedgerScene(PiCreatureScene):
     def get_ledger(self):
         title = TextMobject("Ledger")
         rect = Rectangle(
-            width = self.ledger_width, 
+            width = self.ledger_width,
             height = self.ledger_height
         )
         title.next_to(rect.get_top(), DOWN)
@@ -480,8 +480,8 @@ class LedgerScene(PiCreatureScene):
             num.next_to(mob, LEFT, MED_SMALL_BUFF)
             mob.add_to_back(num)
         mob.next_to(
-            items[-1], DOWN, 
-            buff = MED_SMALL_BUFF, 
+            items[-1], DOWN,
+            buff = MED_SMALL_BUFF,
             aligned_edge = LEFT
         )
         if self.enumerate_lines and len(items) == 1:
@@ -496,7 +496,7 @@ class LedgerScene(PiCreatureScene):
         else:
             amount_str += " " + self.denomination
         line_tex_parts = [
-            from_name.capitalize(), 
+            from_name.capitalize(),
             "pays" if from_name.lower() != "you" else "pay",
             to_name.capitalize(),
             amount_str,
@@ -532,7 +532,7 @@ class LedgerScene(PiCreatureScene):
     def animate_payment_addition(self, *args, **kwargs):
         line = self.add_payment_line_to_ledger(*args, **kwargs)
         self.play(LaggedStart(
-            FadeIn, 
+            FadeIn,
             VGroup(*it.chain(*line)),
             run_time = 1
         ))
@@ -732,7 +732,7 @@ class UnderlyingSystemVsUserFacing(Scene):
         self.wait(2)
         self.play(DrawBorderThenFill(phone))
         self.wait(2)
-        
+
 class FromBankToDecentralizedSystemCopy(ExternallyAnimatedScene):
     pass
 
@@ -821,7 +821,7 @@ class IntroduceLedgerSystem(LedgerScene):
         tally_up.add_background_rectangle()
 
         self.play(
-            GrowFromCenter(brace), 
+            GrowFromCenter(brace),
             FadeIn(tally_up)
         )
         self.play(
@@ -837,7 +837,7 @@ class IntroduceLedgerSystem(LedgerScene):
         self.wait()
         debtor_cash, creditor_cash = [
             VGroup(*it.chain(*[pi.cash for pi in group]))
-            for group in debtors, creditors
+            for group in (debtors, creditors)
         ]
         self.play(FadeIn(debtor_cash))
         self.play(
@@ -898,7 +898,7 @@ class AddFraudulentLine(LedgerScene):
         words.to_corner(UP+RIGHT)
         words.highlight(YELLOW)
         arrow = Arrow(
-            words.get_left(), 
+            words.get_left(),
             self.ledger.content.get_center() + DOWN,
         )
 
@@ -1148,8 +1148,8 @@ class DescribeDigitalSignatures(LedgerScene):
         lines.add(ex, signature_line)
 
         rect = SurroundingRectangle(
-            lines, 
-            color = LIGHT_GREY, 
+            lines,
+            color = LIGHT_GREY,
             buff = MED_SMALL_BUFF
         )
         document = VGroup(rect, lines)
@@ -1276,7 +1276,7 @@ class DescribeDigitalSignatures(LedgerScene):
             FadeIn(part)
             for part in verify
             if part not in [
-                verify.message, verify.signature, 
+                verify.message, verify.signature,
                 verify.pk, verify[-1]
             ]
         ])
@@ -1300,7 +1300,7 @@ class DescribeDigitalSignatures(LedgerScene):
 class TryGuessingDigitalSignature(Scene):
     def construct(self):
         verify = TextMobject(
-            "Verify(", "Message", ", ", 
+            "Verify(", "Message", ", ",
             "256 bit Signature", ", ", "pk", ")",
             arg_separator = ""
         )
@@ -1366,7 +1366,7 @@ class FeelConfidentWithVerification(PiCreatureScene):
 
     def show_verification(self):
         verify = TextMobject(
-            "Verify(", "Message", ", ", 
+            "Verify(", "Message", ", ",
             "256 bit Signature", ", ", "pk", ")",
             arg_separator = ""
         )
@@ -1392,7 +1392,7 @@ class FeelConfidentWithVerification(PiCreatureScene):
         lock_box = SurroundingRectangle(sk_group, buff = SMALL_BUFF)
         lock_box.highlight(RED)
         lock = SVGMobject(
-            file_name = "lock", 
+            file_name = "lock",
             fill_color = LIGHT_GREY,
             height = 0.5,
         )
@@ -1575,7 +1575,7 @@ class CharlieRacksUpDebt(SignedLedgerScene):
         ])
 
         self.play(LaggedStart(
-            FadeIn, lines, 
+            FadeIn, lines,
             run_time = 3,
             lag_ratio = 0.25
         ))
@@ -1611,7 +1611,7 @@ class ThinkAboutSettlingUp(Scene):
         randy.to_corner(DOWN+LEFT)
 
         self.play(PiCreatureBubbleIntroduction(
-            randy, 
+            randy,
             "You don't \\emph{actually} \\\\" + \
             "need to settle up $\\dots$",
             bubble_class = ThoughtBubble,
@@ -1674,7 +1674,7 @@ class LedgerWithInitialBuyIn(SignedLedgerScene):
         lines = VGroup()
         for name in self.get_names():
             new_line = TextMobject(
-                name.capitalize(), 
+                name.capitalize(),
                 "get" if name == "you" else "gets",
                 "\\$100"
             )
@@ -1719,7 +1719,7 @@ class LedgerWithInitialBuyIn(SignedLedgerScene):
     def point_out_charlie_is_broke(self):
         charlie_lines = VGroup(*[
             VGroup(*self.ledger.content[i][1:5])
-            for i in 3, 5, 6, 7
+            for i in (3, 5, 6, 7)
         ])
         rects = VGroup(*[
             SurroundingRectangle(line)
@@ -1750,11 +1750,11 @@ class LedgerWithInitialBuyIn(SignedLedgerScene):
     def running_balance(self):
         charlie_lines = VGroup(*[
             VGroup(*self.ledger.content[i][1:5])
-            for i in 3, 5, 6, 7
+            for i in (3, 5, 6, 7)
         ])
         signatures = VGroup(*[
             self.ledger.content[i][5]
-            for i in 5, 6, 7
+            for i in (5, 6, 7)
         ])
         rect = Rectangle(color = WHITE)
         rect.set_fill(BLACK, 0.8)
@@ -1819,7 +1819,7 @@ class RemovedConnectionBetweenLedgerAndCash(TeacherStudentsScene):
             arrow.set_fill, None, 0
         )
         self.play(
-            ledger.shift, LEFT, 
+            ledger.shift, LEFT,
             cash.shift, RIGHT
         )
         self.change_student_modes(
@@ -2107,7 +2107,7 @@ class DistributedLedgerScene(LedgerScene):
 
     def add_large_network_and_distributed_ledger(self):
         self.add(self.get_large_network())
-        self.add(self.get_distributed_ledgers())        
+        self.add(self.get_distributed_ledgers())
 
 class TransitionToDistributedLedger(DistributedLedgerScene):
     CONFIG = {
@@ -2213,7 +2213,7 @@ class TransitionToDistributedLedger(DistributedLedgerScene):
         self.wait()
         self.play(
             ReplacementTransform(
-                VGroup(payment), payment_copies, 
+                VGroup(payment), payment_copies,
                 run_time = 3,
                 rate_func = squish_rate_func(smooth, 0.5, 1)
             ),
@@ -2344,7 +2344,7 @@ class YouListeningToBroadcasts(LedgerScene):
         self.remove(self.ledger)
         corners = [
             SPACE_WIDTH*RIGHT*u1 + SPACE_HEIGHT*UP*u2
-            for u1, u2 in (-1, 1), (1, 1), (-1, -1)
+            for u1, u2 in ((-1, 1), (1, 1), (-1, -1))
         ]
         you = self.you
         you.scale(2)
@@ -2796,9 +2796,9 @@ class IntroduceNonceOnTrasactions(LedgerScene):
         ))
         bit_iter = iter(digest)
         self.play(LaggedStart(
-            ReplacementTransform, 
+            ReplacementTransform,
             VGroup(*[point.copy() for x in range(256)]),
-            lambda m : (m, bit_iter.next()),
+            lambda m : (m, next(bit_iter)),
         ))
         self.remove(*self.get_mobjects_from_last_animation())
         self.add(digest)
@@ -2857,7 +2857,7 @@ class IntroduceNonceOnTrasactions(LedgerScene):
         self.wait()
         self.play(self.nonce.restore)
         self.play(
-            self.digest.restore, 
+            self.digest.restore,
             submobject_mode = "lagged_start",
             run_time = 2
         )
@@ -3009,7 +3009,7 @@ class IntroduceBlockChain(Scene):
         self.play(
             Write(blocks_word),
             LaggedStart(
-                ShowCreation, arrows, 
+                ShowCreation, arrows,
                 run_time = 1,
                 lag_factor = 0.6,
             )
@@ -3209,7 +3209,7 @@ class IntroduceBlockChain(Scene):
             Line(
                 rect.get_left(), rect.get_right()
             ).shift(0.3*rect.get_height()*vect)
-            for vect in UP, DOWN
+            for vect in (UP, DOWN)
         ]
 
         payments = VGroup()
@@ -3287,7 +3287,7 @@ class DistributedBlockChainScene(DistributedLedgerScene):
 
     def get_block_chain(self):
         blocks = VGroup(*[
-            self.get_block() 
+            self.get_block()
             for x in range(self.n_blocks)
         ])
         blocks.arrange_submobjects(RIGHT, buff = MED_SMALL_BUFF)
@@ -3410,7 +3410,7 @@ class FromBankToDecentralizedSystem(DistributedBlockChainScene):
     def set_aside_everything(self):
         digital_signature = self.digital_signature
         ledger = LedgerScene.get_ledger(self)
-        LedgerScene.add_payment_line_to_ledger(self, 
+        LedgerScene.add_payment_line_to_ledger(self,
             "Alice", "Bob", "40",
         )
         LedgerScene.add_payment_line_to_ledger(self,
@@ -3668,8 +3668,8 @@ class IntroduceBlockCreator(DistributedBlockChainScene):
         for old_chain, new_chain  in zip(old_chains, new_chains):
             for attr in "blocks", "arrows":
                 pairs = zip(
-                    getattr(old_chain, attr), 
-                    getattr(new_chain, attr), 
+                    getattr(old_chain, attr),
+                    getattr(new_chain, attr),
                 )
                 for m1, m2 in pairs:
                     anims.append(Transform(m1, m2))
@@ -3692,7 +3692,7 @@ class IntroduceBlockCreator(DistributedBlockChainScene):
             arrow_creations,
             [
                 ApplyMethod(
-                    pi.change, "hooray", 
+                    pi.change, "hooray",
                     pi.block_chain.get_right()
                 )
                 for pi in self.pi_creatures
@@ -3807,7 +3807,7 @@ class MiningIsALottery(IntroduceBlockCreator):
             winner.change, "hooray",
             *[
                 ApplyMethod(VGroup(
-                    self.blocks[i], self.arrows[i], 
+                    self.blocks[i], self.arrows[i],
                     nonces[i], digests[i]
                 ).fade, 0.7)
                 for i in range(len(self.blocks))
@@ -3884,7 +3884,7 @@ class TwoBlockChains(DistributedBlockChainScene):
                 ),
                 Broadcast(corner, run_time = 3),
                 ShowCreation(
-                    arrow, 
+                    arrow,
                     rate_func = squish_rate_func(smooth, 0.8, 1),
                     run_time = 3,
                 ),
@@ -3946,7 +3946,7 @@ class TwoBlockChains(DistributedBlockChainScene):
         self.wait()
 
         self.to_fade = VGroup(
-            conflicting, arrows, 
+            conflicting, arrows,
             longer_chain_rect, checkmark
         )
         self.block_chains = block_chains
@@ -4124,7 +4124,7 @@ class DoubleSpendingAttack(DistributedBlockChainScene):
         content = VGroup()
 
         tuples = [
-            ("Prev hash", UP, BLUE), 
+            ("Prev hash", UP, BLUE),
             ("Proof of work", DOWN, GREEN),
         ]
         for word, vect, color in tuples:
@@ -4226,7 +4226,7 @@ class AliceRacesOtherMiners(DoubleSpendingAttack):
             for mob, vect in (proof_of_work, DOWN), (prev_hash, UP):
                 mob.scale_to_fit_height(0.1*block.get_height())
                 mob.next_to(
-                    block.get_edge_center(vect), -vect, 
+                    block.get_edge_center(vect), -vect,
                     buff = 0.05*block.get_height()
                 )
                 block.add(mob)
@@ -4251,8 +4251,8 @@ class AliceRacesOtherMiners(DoubleSpendingAttack):
             self.alice.change, "hooray"
         )
         self.wait()
-    
-        block = fraud_block.copy()        
+
+        block = fraud_block.copy()
         block.generate_target()
         block.target.replace(chain.blocks[-1], stretch = True)
         arrow = chain.arrows[-1].copy()
@@ -4302,7 +4302,7 @@ class AliceRacesOtherMiners(DoubleSpendingAttack):
             Broadcast(block),
             *[
                 MoveToTarget(
-                    mover, run_time = 3, 
+                    mover, run_time = 3,
                     rate_func = squish_rate_func(smooth, 0.3, 0.8)
                 )
                 for mover in movers
@@ -4452,7 +4452,7 @@ class WhenToTrustANewBlock(DistributedBlockChainScene):
     def get_block(self):
         block = DistributedBlockChainScene.get_block(self)
         tuples = [
-            ("Prev hash", UP, BLUE), 
+            ("Prev hash", UP, BLUE),
             ("Proof of work", DOWN, GREEN),
         ]
         for word, vect, color in tuples:
@@ -4619,7 +4619,7 @@ class VariableProofOfWork(WhenToTrustANewBlock):
             0.5, about_point = miner.get_right()
         )
         copies = VGroup(*[
-            target.copy() 
+            target.copy()
             for x in range(self.n_miners - 1)
         ])
         everyone = VGroup(target, *copies)
@@ -4677,7 +4677,7 @@ class CompareBlockTimes(Scene):
             TextMobject("LTC: ", "2.5 Minutes"),
         )
         examples.arrange_submobjects(
-            DOWN, 
+            DOWN,
             buff = LARGE_BUFF,
             aligned_edge = LEFT,
         )
@@ -4702,7 +4702,7 @@ class CompareBlockTimes(Scene):
         self.wait()
         self.play(*[
             LaggedStart(FadeIn, VGroup(*group[1:]))
-            for group in examples, logos
+            for group in (examples, logos)
         ])
         self.wait(2)
 
@@ -4740,7 +4740,7 @@ class BlockRewards(Scene):
             TextMobject("Feb 2020$^*$ - Sep 2023$^*$:", "6.25", "BTC"),
         )
         rewards.arrange_submobjects(
-            DOWN, 
+            DOWN,
             buff = MED_LARGE_BUFF,
             aligned_edge = LEFT
         )
@@ -4768,8 +4768,8 @@ class ShowFirstFewBlocks(ExternallyAnimatedScene):
 class ShowGeometricSum(Scene):
     def construct(self):
         equation = TexMobject(
-            "210{,}000", "(", 
-            "50", "+", "25", "+", "12.5", "+", 
+            "210{,}000", "(",
+            "50", "+", "25", "+", "12.5", "+",
             "6.25", "+\\cdots", ")", "=", "21{,}000{,}000"
         )
         numbers = ["50", "25", "12.5", "6.25"]
@@ -4877,7 +4877,7 @@ class ShowBitcoinBlockSize(LedgerScene):
         block.add(payments_rect, payments)
 
         tuples = [
-            ("Prev hash", UP, BLUE_C), 
+            ("Prev hash", UP, BLUE_C),
             ("Proof of work", DOWN, GREEN),
         ]
         for word, vect, color in tuples:
@@ -4891,7 +4891,7 @@ class ShowBitcoinBlockSize(LedgerScene):
             block.add(mob, rect)
 
         title = VGroup(
-            BitcoinLogo(height = 0.75), 
+            BitcoinLogo(height = 0.75),
             TextMobject("Block").scale(1.5)
         )
         title.arrange_submobjects(RIGHT, SMALL_BUFF)
@@ -4899,7 +4899,7 @@ class ShowBitcoinBlockSize(LedgerScene):
 
         brace = Brace(payments_rect, RIGHT)
         limit = brace.get_text(
-            "Limited to\\\\", 
+            "Limited to\\\\",
             "$\\sim 2{,}400$", "transactions"
         )
         limit.highlight_by_tex("2{,}400", RED)
@@ -4943,7 +4943,7 @@ class CurrentAverageFees(Scene):
     def construct(self):
         fees = TextMobject(
             "Current average fees: ",
-            "$\\sim 0.0013$ BTC", 
+            "$\\sim 0.0013$ BTC",
             "$\\approx$", "\\$3.39"
         )
         fees.highlight_by_tex("BTC", YELLOW)
@@ -5045,7 +5045,7 @@ class ShowManyExchanges(Scene):
                 path_arc = np.pi,
                 buff = MED_LARGE_BUFF
             )
-            for p1, p2 in (LEFT, RIGHT), (RIGHT, LEFT)
+            for p1, p2 in ((LEFT, RIGHT), (RIGHT, LEFT))
         ]).highlight(WHITE)
         exchanges = VGroup(*[
             VGroup(*[
@@ -5271,30 +5271,3 @@ class Thumbnail(DistributedBlockChainScene):
         block_chain.scale_to_fit_width(2*SPACE_WIDTH-1)
         block_chain.set_stroke(width = 12)
         self.add(block_chain)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

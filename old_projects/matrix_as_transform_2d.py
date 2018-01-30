@@ -72,7 +72,7 @@ class ShowMultiplication(NumberLineScene):
         copied_num_mobs = deepcopy(self.number_mobs)
         self.play(
             ApplyFunction(
-                lambda m : m.shift(DOWN).highlight("lightgreen"), 
+                lambda m : m.shift(DOWN).highlight("lightgreen"),
                 copied_line
             ), *[
                 ApplyMethod(mob.shift, DOWN)
@@ -89,16 +89,18 @@ class ExamplesOfOneDimensionalLinearTransforms(ShowMultiplication):
 
     def construct(self):
         for num in [2, 0.5, -3]:
-            self.clear()            
+            self.clear()
             ShowMultiplication.construct(self, num, False)
 
 
 
 class ExamplesOfNonlinearOneDimensionalTransforms(NumberLineScene):
     def construct(self):
-        def sinx_plux_x((x, y, z)):
+        def sinx_plux_x(x__y__z):
+            (x, y, z) = x__y__z
             return (np.sin(x) + 1.2*x, y, z)
-        def shift_zero((x, y, z)):
+        def shift_zero(x__y__z):
+            (x, y, z) = x__y__z
             return (2*x+4, y, z)
         self.nonlinear = TextMobject("Not a Linear Transform")
         self.nonlinear.highlight(LIGHT_RED).to_edge(UP, buff = 1.5)
@@ -177,7 +179,7 @@ class TransformScene2D(Scene):
 
     def add_x_y_arrows(self):
         self.x_arrow = Arrow(
-            ORIGIN, 
+            ORIGIN,
             self.number_plane.num_pair_to_point((1, 0)),
             color = "lightgreen",
             **ARROW_CONFIG
@@ -190,10 +192,10 @@ class TransformScene2D(Scene):
         )
         self.add(self.x_arrow, self.y_arrow)
         self.number_plane.filter_out(
-            lambda (x, y, z) : (0 < x) and (x < 1) and (abs(y) < 0.1)
+            lambda x_y_z : (0 < x_y_z[0]) and (x_y_z[0] < 1) and (abs(x_y_z[1]) < 0.1)
         )
         self.number_plane.filter_out(
-            lambda (x, y, z) : (0 < y) and (y < 1) and (abs(x) < 0.1)
+            lambda x_y_z1 : (0 < x_y_z1[1]) and (x_y_z1[1] < 1) and (abs(x_y_z1[0]) < 0.1)
         )
         return self
 
@@ -281,7 +283,7 @@ class ExamplesOfTwoDimensionalLinearTransformations(ShowMatrixTransform):
 
     def construct(self):
         matrices = [
-            [[1, 0.5], 
+            [[1, 0.5],
              [0.5, 1]],
             [[0, -1],
              [2, 0]],
@@ -296,9 +298,11 @@ class ExamplesOfTwoDimensionalLinearTransformations(ShowMatrixTransform):
 class ExamplesOfNonlinearTwoDimensionalTransformations(Scene):
     def construct(self):
         Scene.construct(self)
-        def squiggle((x, y, z)):
+        def squiggle(x__y__z):
+            (x, y, z) = x__y__z
             return (x+np.sin(y), y+np.cos(x), z)
-        def shift_zero((x, y, z)):
+        def shift_zero(x__y__z):
+            (x, y, z) = x__y__z
             return (2*x + 3*y + 4, -1*x+y+2, z)
         self.nonlinear = TextMobject("Nonlinear Transform")
         self.nonlinear.highlight(LIGHT_RED)
@@ -385,10 +389,12 @@ class TrickyExamplesOfNonlinearTwoDimensionalTransformations(Scene):
             UP*SPACE_HEIGHT+RIGHT*SPACE_WIDTH,
             density = 10*DEFAULT_POINT_DENSITY_1D
         )
-        def sunrise((x, y, z)):
+        def sunrise(x__y__z):
+            (x, y, z) = x__y__z
             return ((SPACE_HEIGHT+y)*x, y, z)
 
-        def squished((x, y, z)):
+        def squished(x__y__z):
+            (x, y, z) = x__y__z
             return (x + np.sin(x), y+np.sin(y), z)
 
         self.get_blackness()
@@ -410,7 +416,7 @@ class TrickyExamplesOfNonlinearTwoDimensionalTransformations(Scene):
         self.wait()
         self.play(
             ApplyPointwiseFunction(function, number_plane, run_time = 2.0),
-            Animation(self.blackness),            
+            Animation(self.blackness),
             Animation(phrase),
         )
         self.wait(3)
@@ -504,7 +510,7 @@ class ShowMatrixTransformWithDot(TransformScene2D):
         self.play(ApplyMethod(x_arrow_copy.rotate, np.pi))
         self.play(ShowCreation(y_arrow_copy))
         self.wait(3)
-        self.remove(x_arrow_copy, y_arrow_copy)        
+        self.remove(x_arrow_copy, y_arrow_copy)
 
     def get_density_factor(self, matrix):
         max_norm = max([
@@ -537,7 +543,6 @@ class Show90DegreeRotation(TransformScene2D):
         self.wait()
         self.play(*[
             RotationAsTransform(mob, run_time = 2.0)
-            for mob in self.number_plane, self.x_arrow, self.y_arrow
+            for mob in (self.number_plane, self.x_arrow, self.y_arrow)
         ])
         self.wait()
-

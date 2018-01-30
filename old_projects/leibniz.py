@@ -27,6 +27,7 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 
 from topics.common_scenes import PatreonThanks
+from functools import reduce
 
 # revert_to_original_skipping_status
 
@@ -141,7 +142,7 @@ class LatticePointScene(Scene):
                 ),
             )
             for dot, a in zip(
-                points, 
+                points,
                 np.linspace(0, 0.75, len(points))
             )
         ])
@@ -320,14 +321,14 @@ class ShowSum(TeacherStudentsScene):
         sum_point = line.number_to_point(np.pi/4)
 
         numbers = [0] + [
-            ((-1)**n)/(2.0*n + 1) 
+            ((-1)**n)/(2.0*n + 1)
             for n in range(self.num_terms_to_add)
         ]
         partial_sums = np.cumsum(numbers)
         points = map(line.number_to_point, partial_sums)
         arrows = [
             Arrow(
-                p1, p2, 
+                p1, p2,
                 tip_length = 0.2*min(1, np.linalg.norm(p1-p2)),
                 buff = 0
             )
@@ -336,14 +337,14 @@ class ShowSum(TeacherStudentsScene):
         dot = Dot(points[0])
 
         sum_mob = TexMobject(
-            "1", "-\\frac{1}{3}", 
+            "1", "-\\frac{1}{3}",
             "+\\frac{1}{5}", "-\\frac{1}{7}",
             "+\\frac{1}{9}", "-\\frac{1}{11}",
             "+\\cdots"
         )
         sum_mob.to_corner(UP+RIGHT)
         lhs = TexMobject(
-            "\\frac{\\pi}{4}", "=", 
+            "\\frac{\\pi}{4}", "=",
         )
         lhs.next_to(sum_mob, LEFT)
         lhs.highlight_by_tex("pi", YELLOW)
@@ -376,7 +377,7 @@ class ShowSum(TeacherStudentsScene):
                     target_mode = "raise_right_hand"
                 )
             ]
-            
+
         )
         run_time = 1
         for term, arrow, last_arrow, fading_term, last_fading_term in zip(
@@ -444,7 +445,7 @@ class ShowCalculus(PiCreatureScene):
             frac_sum.get_right() + MED_SMALL_BUFF*RIGHT \
             -int1[0].get_left()
         )
-        
+
         self.add(frac_sum)
         modes = it.chain(["plain"], it.cycle(["confused"]))
         for rhs, mode in zip(rhs_group, modes):
@@ -544,7 +545,7 @@ class Outline(PiCreatureScene):
             step.highlight_by_tex("i", RED, substring = False)
             step.highlight_by_tex("4", GREEN, substring = False)
         steps.arrange_submobjects(
-            DOWN, 
+            DOWN,
             buff = MED_LARGE_BUFF,
             aligned_edge = LEFT
         )
@@ -595,7 +596,7 @@ class Outline(PiCreatureScene):
         circle.move_to(plane_center)
         lattice_points = VGroup(*[
             Dot(
-                plane.coords_to_point(a, b), 
+                plane.coords_to_point(a, b),
                 radius = 0.05,
                 color = PINK,
             )
@@ -622,7 +623,7 @@ class Outline(PiCreatureScene):
                     )
                 )
                 for dot, a in zip(
-                    lattice_points, 
+                    lattice_points,
                     np.linspace(0, 0.75, len(lattice_points))
                 )
             ]
@@ -669,7 +670,7 @@ class Outline(PiCreatureScene):
         self.play(FadeIn(self.steps[3]))
         self.play(*[
             FadeIn(
-                mob, 
+                mob,
                 run_time = 3,
                 submobject_mode = "lagged_start"
             )
@@ -689,7 +690,7 @@ class Outline(PiCreatureScene):
             "\\sum_{n = 1}^N",
             "\\sum_{d | n} \\chi(d)",
         )
-        pi = self.pi 
+        pi = self.pi
         self.add(pi.copy())
         pi.generate_target()
         pi.target.next_to(self.steps[3], RIGHT, MED_LARGE_BUFF)
@@ -868,7 +869,7 @@ class CountLatticePoints(LatticePointScene):
                     "\\approx \\pi", "(", R, ")^2"
                 )
             ).arrange_submobjects(RIGHT)
-            for R in "10", "1{,}000{,}000", "R"
+            for R in ("10", "1{,}000{,}000", "R")
         ])
         radius_10_eq, radius_million_eq, radius_R_eq = equations
         for eq in equations:
@@ -973,7 +974,7 @@ class CountThroughRings(LatticePointScene):
             for r in radii
         ])
         circles.set_stroke(width = 2)
-    
+
         self.add_foreground_mobject(self.lattice_points)
         self.play(FadeIn(circles))
         self.play(LaggedStart(
@@ -1136,7 +1137,7 @@ class CountThroughRings(LatticePointScene):
 
     def show_ring_count(
         self, radius_squared, target,
-        added_anims = None,        
+        added_anims = None,
         run_time = 1
         ):
         added_anims = added_anims or []
@@ -1181,7 +1182,7 @@ class CountThroughRings(LatticePointScene):
             Transform(self.radial_line, radial_line),
             Transform(self.root, root),
             DrawBorderThenFill(
-                points, 
+                points,
                 stroke_width = 4,
                 stroke_color = PINK,
             ),
@@ -1190,7 +1191,7 @@ class CountThroughRings(LatticePointScene):
         )
         self.wait(run_time)
         if len(points) > 0:
-            mover = points.copy()  
+            mover = points.copy()
         else:
             mover = VectorizedPoint(self.plane_center)
         self.play(ReplacementTransform(mover, target, run_time = run_time))
@@ -1235,7 +1236,7 @@ class LookAtExampleRing(LatticePointScene):
 
         sums_of_squares = [
             TexMobject(
-                special_str(x), "^2", "+", 
+                special_str(x), "^2", "+",
                 special_str(y), "^2", "= 25"
             )
             for x, y in coords_list
@@ -1255,9 +1256,9 @@ class LookAtExampleRing(LatticePointScene):
         self.play(
             ShowCreation(circle),
             Rotating(
-                radius, 
+                radius,
                 about_point = self.plane_center,
-                rate_func = smooth, 
+                rate_func = smooth,
             ),
             FadeIn(points, submobject_mode = "lagged_start"),
             run_time = 2,
@@ -1306,14 +1307,14 @@ class LookAtExampleRing(LatticePointScene):
         points.target.next_to(circle, RIGHT)
 
         self.play(MoveToTarget(
-            points, 
+            points,
             run_time = 2,
         ))
         self.wait()
         self.play(points.restore, run_time = 2)
         self.wait()
         self.play(*map(FadeOut, [
-            curr_label, curr_sum_of_squares, 
+            curr_label, curr_sum_of_squares,
             circle, points,
             radius, root_label
         ]))
@@ -1336,9 +1337,9 @@ class LookAtExampleRing(LatticePointScene):
         self.play(
             ShowCreation(circle),
             Rotating(
-                radius, 
+                radius,
                 about_point = self.plane_center,
-                rate_func = smooth, 
+                rate_func = smooth,
             ),
             run_time = 2,
         )
@@ -1472,7 +1473,7 @@ class IntroduceComplexConjugate(LatticePointScene):
         self.play(*map(Write, [imag_coords, ticks]))
         self.wait()
         self.play(*map(FadeOut, [
-            v_arrow, h_arrow, 
+            v_arrow, h_arrow,
             x_coord, imag_y_coord,
         ]))
 
@@ -1577,7 +1578,7 @@ class IntroduceComplexConjugate(LatticePointScene):
         )
         expansion.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
         expansion.next_to(
-            VGroup(*self.equation[-2:]), 
+            VGroup(*self.equation[-2:]),
             DOWN, LARGE_BUFF
         )
         alt_y_term = TexMobject("+", str(y), "^2")
@@ -1673,13 +1674,13 @@ class IntroduceComplexConjugate(LatticePointScene):
         top_dot, low_dot = dots
         for dot in dots:
             dot.line = Line(
-                self.plane_center, dot.get_center(), 
+                self.plane_center, dot.get_center(),
                 color = BLUE
             )
             dot.angle = dot.line.get_angle()
             dot.arc = Arc(
                 dot.angle,
-                radius = 0.75, 
+                radius = 0.75,
                 color = YELLOW
             )
             dot.arc.shift(self.plane_center)
@@ -1706,7 +1707,7 @@ class IntroduceComplexConjugate(LatticePointScene):
 
         self.play(ShowCreation(top_dot.line))
         mover = VGroup(
-            top_dot.line.copy().highlight(PINK), 
+            top_dot.line.copy().highlight(PINK),
             top_dot.copy()
         )
         self.play(FadeIn(
@@ -1726,7 +1727,7 @@ class IntroduceComplexConjugate(LatticePointScene):
         )
         self.play(
             Rotate(
-                mover, low_dot.angle, 
+                mover, low_dot.angle,
                 about_point = self.plane_center
             ),
             run_time = 2
@@ -1775,7 +1776,7 @@ class NameGaussianIntegers(LatticePointScene):
         integers.add_background_rectangle()
         arrows = VGroup(*[
             Arrow(integers.get_top(), mob, tip_length = 0.15)
-            for mob in a, b
+            for mob in (a, b)
         ])
         self.add_foreground_mobjects(label, integers, arrows)
 
@@ -1818,7 +1819,7 @@ class NameGaussianIntegers(LatticePointScene):
             FadeOut(self.lattice_points),
             ShowCreation(circle),
             Rotating(
-                radius, 
+                radius,
                 run_time = 1, rate_func = smooth,
                 about_point = self.plane_center
             ),
@@ -1837,7 +1838,7 @@ class NameGaussianIntegers(LatticePointScene):
             label = TexMobject(x_str, "+", y_str, "i")
             label.scale(0.8)
             label.next_to(
-                dot, 
+                dot,
                 dot.get_center()-self.plane_center + SMALL_BUFF*(UP+RIGHT),
                 buff = 0,
             )
@@ -1864,7 +1865,7 @@ class NameGaussianIntegers(LatticePointScene):
                     self.plane.coords_to_point(x, u*y),
                     color = PINK,
                 )
-                for u in 1, -1
+                for u in (1, -1)
             ])
             dot.conjugate_dot = self.circle_dots[-i]
 
@@ -1992,8 +1993,8 @@ class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
         dots = [
             Dot(self.plane.coords_to_point(*coords))
             for coords in [
-                (5, 0), 
-                (2, 1), (2, -1), 
+                (5, 0),
+                (2, 1), (2, -1),
                 (-1, 2), (-1, -2),
                 (-2, -1), (-2, 1),
             ]
@@ -2007,12 +2008,12 @@ class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
 
         labels = [
             TexMobject(tex).add_background_rectangle()
-            for tex in "5", "2+i", "2-i", "-1+2i", "-1-2i", "-2-i", "-2+i"
+            for tex in ("5", "2+i", "2-i", "-1+2i", "-1-2i", "-2-i", "-2+i")
         ]
         five_label, p1_label, p2_label, p3_label, p4_label, p5_label, p6_label = labels
         vects = [
-            DOWN, 
-            UP+RIGHT, DOWN+RIGHT, 
+            DOWN,
+            UP+RIGHT, DOWN+RIGHT,
             UP+LEFT, DOWN+LEFT,
             DOWN+LEFT, UP+LEFT,
         ]
@@ -2021,11 +2022,11 @@ class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
 
         arc_angle = 0.8*np.pi
         times_i_arc = Arrow(
-            p1_dot.get_top(), p3_dot.get_top(), 
+            p1_dot.get_top(), p3_dot.get_top(),
             path_arc = arc_angle
         )
         times_neg_i_arc = Arrow(
-            p2_dot.get_bottom(), p4_dot.get_bottom(), 
+            p2_dot.get_bottom(), p4_dot.get_bottom(),
             path_arc = -arc_angle
         )
         times_i = TexMobject("\\times i")
@@ -2073,7 +2074,7 @@ class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
 
         self.add(factorization)
         self.play(
-            DrawBorderThenFill(five_dot), 
+            DrawBorderThenFill(five_dot),
             FadeIn(five_label)
         )
         self.wait()
@@ -2097,7 +2098,7 @@ class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
         self.wait()
         self.play(RemovePiCreatureBubble(morty, target_mode = "pondering"))
 
-        #Show neg_alternate expression 
+        #Show neg_alternate expression
         movers = [p1_dot, p2_dot, p1_label, p2_label]
         for mover in movers:
             mover.save_state()
@@ -2193,7 +2194,7 @@ class FromIntegerFactorsToGaussianFactors(TeacherStudentsScene):
         ])
         self.wait(5)
         group = VGroup(
-            expression, 
+            expression,
             two.arrows, two.factors,
             five.arrows, five.factors,
         )
@@ -2277,7 +2278,7 @@ class FactorizationPattern(Scene):
             for mover in movers
         ])
         self.play(FadeIn(
-            factorizations, 
+            factorizations,
             run_time = 2,
             submobject_mode = "lagged_start"
         ))
@@ -2421,7 +2422,7 @@ class FactorTwo(LatticePointScene):
         two_dot.highlight(YELLOW)
         factor_dots = VGroup(*[
             Dot(self.plane.coords_to_point(1, u))
-            for u in 1, -1
+            for u in (1, -1)
         ])
         two_label = TexMobject("2").next_to(two_dot, DOWN)
         two_label.highlight(YELLOW)
@@ -2608,7 +2609,7 @@ class IntroduceRecipe(Scene):
         double_arrows = VGroup()
         for lf, rf in zip(left_factors.target, right_factors.target):
             arrow = DoubleArrow(
-                lf, rf, 
+                lf, rf,
                 buff = SMALL_BUFF,
                 tip_length = SMALL_BUFF,
                 color = GREEN
@@ -2673,7 +2674,7 @@ class IntroduceRecipe(Scene):
     def get_T_chart(self):
         T_chart = VGroup()
         h_lines = VGroup(*[
-            Line(ORIGIN, self.T_chart_width*RIGHT/2.0) 
+            Line(ORIGIN, self.T_chart_width*RIGHT/2.0)
             for x in range(2)
         ])
         h_lines.arrange_submobjects(RIGHT, buff = 0)
@@ -2773,7 +2774,7 @@ class IntroduceRecipe(Scene):
         final_step.scale(0.9)
         final_step.next_to(arrow.get_start(), DOWN, SMALL_BUFF)
         final_step.shift_onto_screen()
-        
+
         anims = [Write(final_step)]
         if arrow not in self.get_mobjects():
             # arrow = Arrow(
@@ -2812,7 +2813,7 @@ class ThreeOutputsAsLatticePoints(LatticePointScene):
         dots = VGroup(*[
             Dot(
                 self.plane.coords_to_point(*coords),
-                radius = self.dot_radius, 
+                radius = self.dot_radius,
                 color = self.colors[0],
             )
             for coords in self.coords_list
@@ -2838,7 +2839,7 @@ class ThreeOutputsAsLatticePoints(LatticePointScene):
             self.play(
                 FadeIn(label),
                 DrawBorderThenFill(
-                    dot, 
+                    dot,
                     stroke_color = PINK,
                     stroke_width = 4
                 )
@@ -2875,7 +2876,7 @@ class ShowAlternateFactorizationOfTwentyFive(IntroduceRecipe):
 
 class WriteAlternateLastStep(IntroduceRecipe):
     def construct(self):
-        self.force_skipping()        
+        self.force_skipping()
         self.add_title()
         self.show_ordinary_factorization()
         self.subfactor_ordinary_factorization()
@@ -2892,7 +2893,7 @@ class WriteAlternateLastStep(IntroduceRecipe):
         cross = TexMobject("\\times")
         cross.replace(output_words, stretch = True)
         cross.highlight(RED)
-        
+
         self.add(output_words, arrow)
         self.play(Write(cross))
         output_words.add(cross)
@@ -2916,7 +2917,7 @@ class ThreeOutputsAsLatticePointsContinued(ThreeOutputsAsLatticePoints):
             dot.add(line)
         words_group = VGroup(*[
             TextMobject("Multiply by $%s$"%s)
-            for s in "1", "i", "-1", "-i"
+            for s in ("1", "i", "-1", "-i")
         ])
         for words, color in zip(words_group, self.colors):
             words.add_background_rectangle()
@@ -2945,8 +2946,8 @@ class RecipeFor125(IntroduceRecipe):
         "N_string" : "125",
         "integer_factors" : [5, 5, 5],
         "gaussian_factors" : [
-            complex(2, -1), complex(2, 1), 
-            complex(2, -1), complex(2, 1), 
+            complex(2, -1), complex(2, 1),
+            complex(2, -1), complex(2, 1),
             complex(2, -1), complex(2, 1),
         ],
     }
@@ -2956,7 +2957,7 @@ class RecipeFor125(IntroduceRecipe):
         self.add_title()
         self.show_ordinary_factorization()
         self.subfactor_ordinary_factorization()
-        
+
         self.revert_to_original_skipping_status()
         self.organize_factors_into_columns()
         # self.take_product_of_columns()
@@ -2996,8 +2997,8 @@ class Show125Circle(ThreeOutputsAsLatticePointsContinued):
         self.add_foreground_mobject(root_label)
         self.play(
             Rotating(
-                radial_line, 
-                rate_func = smooth, 
+                radial_line,
+                rate_func = smooth,
                 about_point = self.plane_center
             ),
             ShowCreation(circle),
@@ -3013,7 +3014,7 @@ class RecipeFor375(IntroduceRecipe):
         "N_string" : "375",
         "integer_factors" : [3, 5, 5, 5],
         "gaussian_factors" : [
-            3, 
+            3,
             complex(2, 1), complex(2, -1),
             complex(2, 1), complex(2, -1),
             complex(2, 1), complex(2, -1),
@@ -3035,7 +3036,7 @@ class RecipeFor375(IntroduceRecipe):
 
         self.play(FadeIn(morty))
         self.play(
-            MoveToTarget(three), 
+            MoveToTarget(three),
             morty.change, "angry", three.target
         )
         self.play(Blink(morty))
@@ -3107,7 +3108,7 @@ class RecipeFor1125(IntroduceRecipe):
 
     def write_last_step(self):
         words = TextMobject(
-            "Multiply by \\\\ ", 
+            "Multiply by \\\\ ",
             "$1$, $i$, $-1$ or $-i$"
         )
         words.scale(0.7)
@@ -3204,8 +3205,8 @@ class SummarizeCountingRule(Show125Circle):
         )
         self.play(
             Rotating(
-                radial_line, 
-                rate_func = smooth, 
+                radial_line,
+                rate_func = smooth,
                 about_point = self.plane_center
             ),
             ShowCreation(circle),
@@ -3230,7 +3231,7 @@ class SummarizeCountingRule(Show125Circle):
 
     def talk_through_rules(self):
         factorization = TexMobject(
-            "N =", 
+            "N =",
             "3", "^4", "\\cdot",
             "5", "^3", "\\cdot",
             "13", "^2"
@@ -3240,7 +3241,7 @@ class SummarizeCountingRule(Show125Circle):
 
         three, five, thirteen = [
             factorization.get_part_by_tex(str(n), substring = False)
-            for n in 3, 5, 13
+            for n in (3, 5, 13)
         ]
         three_power = factorization.get_part_by_tex("^4")
         five_power = factorization.get_part_by_tex("^3")
@@ -3406,7 +3407,7 @@ class RecipeFor10(IntroduceRecipe):
         self.play(curr_product.to_edge, LEFT)
         self.swap_factors_at_index(0)
         new_arrow = Arrow(
-            self.result_surrounding_rect, curr_product, 
+            self.result_surrounding_rect, curr_product,
             buff = SMALL_BUFF
         )
         self.play(
@@ -3473,7 +3474,7 @@ class IntroduceChi(FactorizationPattern):
     CONFIG = {
         "numbers_list" : [
             range(i, 36, d)
-            for i, d in (1, 4), (3, 4), (2, 2)
+            for i, d in ((1, 4), (3, 4), (2, 2))
         ],
         "colors" : [GREEN, RED, YELLOW]
     }
@@ -3524,10 +3525,10 @@ class IntroduceChi(FactorizationPattern):
         self.wait()
         self.play(
             Write(VGroup(*[
-                part 
+                part
                 for part in chi_expression
                 if part not in chi_expression.inputs
-            ])), 
+            ])),
         *[
             ReplacementTransform(label.copy(), num_mob)
             for label, num_mob in zip(
@@ -3567,7 +3568,7 @@ class IntroduceChi(FactorizationPattern):
 
         self.play(*[
             FadeIn(
-                mob, 
+                mob,
                 run_time = 3,
                 submobject_mode = "lagged_start"
             )
@@ -3606,12 +3607,12 @@ class IntroduceChi(FactorizationPattern):
                 "\\chi(%d)"%x,
                 "\\cdot",
                 "\\chi(%d)"%y,
-                "=", 
+                "=",
                 "\\chi(%d)"%(x*y)
             )
             braces = [
-                Brace(expression[i], UP) 
-                for i in 0, 2, 4
+                Brace(expression[i], UP)
+                for i in (0, 2, 4)
             ]
             for brace, n in zip(braces, [x, y, x*y]):
                 output = chi_func(n)
@@ -3720,7 +3721,7 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
 
     def add_factorization_and_rule(self):
         factorization = TexMobject(
-            "N", "=", 
+            "N", "=",
             "2", "^2", "\\cdot",
             "3", "^4", "\\cdot",
             "5", "^3",
@@ -3942,7 +3943,7 @@ class ExpandCountWith45(SummarizeCountingRule):
             expression.add(factor)
         expression.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
         expression.next_to(
-            factorization[1], DOWN, 
+            factorization[1], DOWN,
             buff = LARGE_BUFF,
             aligned_edge = LEFT,
         )
@@ -4077,7 +4078,7 @@ class ExpandCountWith45(SummarizeCountingRule):
             Write(divisor_sum, run_time = 2)
         )
         self.play(LaggedStart(
-            MoveToTarget, prime_pairs, 
+            MoveToTarget, prime_pairs,
             run_time = 4,
             lag_ratio = 0.25,
         ))
@@ -4091,7 +4092,7 @@ class ExpandCountWith45(SummarizeCountingRule):
             rate_func = there_and_back
         ))
         self.play(FadeIn(
-            braces, 
+            braces,
             run_time = 2,
             submobject_mode = "lagged_start",
         ))
@@ -4334,14 +4335,14 @@ class AddUpGrid(Scene):
             radical.chi_sum = chi_sum
 
         self.play(LaggedStart(
-            Write, chi_sums, 
+            Write, chi_sums,
             run_time = 5,
             rate_func = lambda t : t,
         ))
         self.wait()
 
         digest_locals(self, [
-            "chi_sums", "chi_mobs", "plusses", 
+            "chi_sums", "chi_mobs", "plusses",
             "fours", "parens", "arrows",
         ])
 
@@ -4378,7 +4379,7 @@ class AddUpGrid(Scene):
                 rect.copy().move_to(self.radicals[N-1], LEFT)
                 for N in numbers
             ])
-            for numbers in [6, 12], [2, 3, 5, 7, 11]
+            for numbers in ([6, 12], [2, 3, 5, 7, 11])
         ]
         prime_rects.highlight(GREEN)
 
@@ -4546,7 +4547,7 @@ class AddUpGrid(Scene):
             R_movers.add(mover)
 
         self.play(*it.chain(
-            map(Write, [lp, rp, dots]), 
+            map(Write, [lp, rp, dots]),
             map(MoveToTarget, full_sum_parts),
         ), run_time = 2)
         self.remove(R_movers)
@@ -4564,7 +4565,7 @@ class AddUpGrid(Scene):
 
     def show_chi_sum_values(self):
         alt_rhs = TexMobject(
-            "\\approx", "4", "R^2", 
+            "\\approx", "4", "R^2",
             "\\left(1 - \\frac{1}{3} + \\frac{1}{5}" + \
             "-\\frac{1}{7} + \\frac{1}{9} - \\frac{1}{11}" + \
             "+ \\cdots \\right)",
@@ -4843,15 +4844,3 @@ class Thumbnail(Scene):
             ))
         self.add(prime_mobs)
         self.add(body_copy)
-
-
-
-
-
-
-
-
-
-
-
-

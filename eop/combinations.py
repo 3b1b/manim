@@ -206,7 +206,7 @@ class ExperienceProblemSolver(PiCreatureScene):
                     last_row.copy(), VGroup(*mobs),
                     remover = True
                 )
-                for mobs in curr_row[1:], curr_row[:-1]
+                for mobs in (curr_row[1:], curr_row[:-1])
             ])
             self.add(curr_row)
         self.wait(3)
@@ -1807,7 +1807,7 @@ class IntroducePascalsTriangle(Scene):
                     last_row.copy(), VGroup(*mobs),
                     remover = True
                 )
-                for mobs in curr_row[1:], curr_row[:-1]
+                for mobs in (curr_row[1:], curr_row[:-1])
             ])
             self.add(curr_row)
         self.wait()
@@ -2146,7 +2146,7 @@ class StacksApproachBellCurve(Scene):
 
             self.play(*[
                 MoveToTarget(mob, submobject_mode = "lagged_start")
-                for mob in bars_copy, numbers, numbers_copy
+                for mob in (bars_copy, numbers, numbers_copy)
             ])
             self.remove(numbers, numbers_copy)
             numbers = VGroup(numbers[0])
@@ -2438,7 +2438,7 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
             self.wait()
             word_arrow_groups.submobjects = [
                 word_arrow_groups[j]
-                for j in 1, 2, 0
+                for j in (1, 2, 0)
             ]
         self.play(*map(FadeOut, [line, odm_words]))
 
@@ -2488,7 +2488,7 @@ class ChooseThreeFromFive(InitialFiveChooseThreeExample, PiCreatureScene):
     def get_names(self, people):
         names = VGroup(*[
             TextMobject(name + ",")
-            for name in "Ali", "Ben", "Cam", "Denis", "Evan"
+            for name in ("Ali", "Ben", "Cam", "Denis", "Evan")
         ])
         for name, pi in zip(names, people):
             name[-1].set_fill(opacity = 0)
@@ -2699,7 +2699,7 @@ class StudentsGetConfused(PiCreatureScene):
     def create_pi_creatures(self):
         pis = VGroup(*[
             Randolph(color = color)
-            for color in BLUE_D, BLUE_B
+            for color in (BLUE_D, BLUE_B)
         ])
         pis[1].flip()
         pis.arrange_submobjects(RIGHT, buff = 5)

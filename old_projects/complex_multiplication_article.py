@@ -12,6 +12,7 @@ from constants import *
 from mobject.region import  *
 from scene import Scene
 from topics.complex_numbers import *
+from functools import reduce
 
 DEFAULT_PLANE_CONFIG = {
     "stroke_width" : 2*DEFAULT_POINT_THICKNESS

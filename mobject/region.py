@@ -1,9 +1,10 @@
+from __future__ import absolute_import
 import numpy as np
 import itertools as it
 from PIL import Image
 from copy import deepcopy
 
-from mobject import Mobject
+from .mobject import Mobject
 
 from helpers import *
 

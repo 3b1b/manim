@@ -1,30 +1,32 @@
 #!/usr/bin/env python
 
-from helpers import *
+from __future__ import print_function
+from __future__ import absolute_import
+from .helpers import *
 
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-from mobject.point_cloud_mobject import PointCloudDot
+from .mobject.tex_mobject import TexMobject
+from .mobject import Mobject
+from .mobject.image_mobject import ImageMobject
+from .mobject.vectorized_mobject import *
+from .mobject.point_cloud_mobject import PointCloudDot
 
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.continual_animation import *
-from animation.playground import *
+from .animation.animation import Animation
+from .animation.transform import *
+from .animation.simple_animations import *
+from .animation.continual_animation import *
+from .animation.playground import *
 
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.number_line import *
-from topics.combinatorics import *
-from scene import Scene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
+from .topics.geometry import *
+from .topics.characters import *
+from .topics.functions import *
+from .topics.number_line import *
+from .topics.combinatorics import *
+from .scene import Scene
+from .camera import Camera
+from .mobject.svg_mobject import *
+from .mobject.tex_mobject import *
 
-from mobject.vectorized_mobject import *
+from .mobject.vectorized_mobject import *
 
 ## To watch one of these scenes, run the following:
 ## python extract_scene.py -p file_name <SceneName>
@@ -146,7 +148,7 @@ class Spotlight(VMobject):
         if len(viewing_angles) != 0:
             lower_angle = np.min(viewing_angles)
             upper_angle = np.max(viewing_angles)
-            
+
         return lower_angle, upper_angle
 
     def move_source_to(self,point):
@@ -170,7 +172,7 @@ class Spotlight(VMobject):
                 submob.points = new_submob.points
 
     def update_shadow(self,point = ORIGIN):
-        print "updating shadow"
+        print("updating shadow")
         use_point = point #self.source_point
         self.shadow.points = self.screen.points
         ray1 = self.screen.points[0] - use_point
@@ -239,12 +241,12 @@ class ScreenTracker(ContinualAnimation):
             point = self.mobject.source_point,
             screen = self.mobject.screen)
         self.mobject.update_shadow(self.mobject.source_point)
-        
+
 
 
 class IntroScene(Scene):
     def construct(self):
-        
+
         screen = Line([2,-2,0],[1,2,0]).shift([1,0,0])
         self.add(screen)
 
@@ -271,18 +273,15 @@ class IntroScene(Scene):
         #self.play(SwitchOn(ambient_light))
         #self.play(ApplyMethod(ambient_light.move_source_to,[-3,1,0]))
         #self.play(SwitchOn(spotlight))
-        
+
         self.add(screen_updater)
         self.play(ApplyMethod(spotlight.screen.rotate,TAU/8))
         self.remove(screen_updater)
         self.play(ApplyMethod(spotlight.move_source_to,[-3,-1,0]))
         self.add(screen_updater)
         spotlight.source_point = [-3,-1,0]
-        
+
         self.play(ApplyMethod(spotlight.dimming,0.2))
         #self.play(ApplyMethod(spotlight.move_source_to,[-4,0,0]))
-        
+
         #self.wait()
-
-
-

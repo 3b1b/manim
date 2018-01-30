@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 from helpers import *
 
 from mobject.tex_mobject import TexMobject
@@ -276,7 +277,7 @@ class Spotlight(VMobject):
             if type(submob) == AnnularSector:
                 sectors.append(submob)
 
-        print self.num_levels, len(sectors)
+        print(self.num_levels, len(sectors))
         for (r,submob) in zip(np.arange(0,self.radius,dr),sectors):
             if type(submob) != AnnularSector:
                 # it's the shadow, don't dim it

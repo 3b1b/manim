@@ -161,7 +161,7 @@ class SecondDerivativeGraphically(GraphScene):
         second_deriv.highlight(self.second_deriv_color)
         points = [
             self.input_to_graph_point(x, self.graph)
-            for x in self.x2, self.x3
+            for x in (self.x2, self.x3)
         ]
         words = TextMobject("Change to \\\\ slope")
         words.next_to(
@@ -177,7 +177,7 @@ class SecondDerivativeGraphically(GraphScene):
         self.play(
             Write(words),
             ShowCreation(
-                arrows[0], 
+                arrows[0],
                 rate_func = squish_rate_func(smooth, 0.5, 1)
             ),
             run_time = 2
@@ -187,7 +187,7 @@ class SecondDerivativeGraphically(GraphScene):
             run_time = 3,
             added_anims = [
                 Transform(
-                    *arrows, 
+                    *arrows,
                     run_time = 3,
                     path_arc = 0.75*np.pi
                 ),
@@ -252,7 +252,7 @@ class SecondDerivativeGraphically(GraphScene):
         )
         self.wait(2)
         self.play(*map(FadeOut, [
-            self.graph, self.ss_group, 
+            self.graph, self.ss_group,
             negative_curve, self.second_deriv_words
         ]))
 
@@ -269,11 +269,11 @@ class SecondDerivativeGraphically(GraphScene):
         ]
         arg_rhs_list = [
             TexMobject("(", str(x0), ")", "=", str(rhs))
-            for rhs in 10, 0.4, 0
+            for rhs in (10, 0.4, 0)
         ]
         for graph, arg_rhs in zip(graphs, arg_rhs_list):
             graph.ss_group = self.get_secant_slope_group(
-                x0-1, graph, 
+                x0-1, graph,
                 dx = 0.001,
                 secant_line_color = YELLOW
             )
@@ -452,7 +452,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
         self.setup_axes()
         graph = self.get_graph(lambda x : x**2)
         graph_label = self.get_graph_label(
-            graph, "f(x)", 
+            graph, "f(x)",
             direction = LEFT,
             x_val = 3.3
         )
@@ -555,12 +555,12 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
         df_dx_groups = self.df_dx_groups.copy()
         df_dx_groups.generate_target()
         df_dx_groups.target.arrange_submobjects(
-            RIGHT, 
+            RIGHT,
             buff = MED_LARGE_BUFF,
             aligned_edge = DOWN
         )
         df_dx_groups.target.next_to(
-            self.df_dx_groups, RIGHT, 
+            self.df_dx_groups, RIGHT,
             buff = 3,
             aligned_edge = DOWN
         )
@@ -586,7 +586,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
         ddf_brace = Brace(h_lines, LEFT, buff = SMALL_BUFF)
         ddf = ddf_brace.get_tex("d(df)", buff = SMALL_BUFF)
         ddf.scale(
-            df_labels[0].get_height()/ddf.get_height(), 
+            df_labels[0].get_height()/ddf.get_height(),
             about_point = ddf.get_right()
         )
         ddf.highlight(MAROON_B)
@@ -656,11 +656,11 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
             Write(ddf_over_dx_squared.get_part_by_tex("over")),
             *[
                 ReplacementTransform(
-                    mob, 
+                    mob,
                     ddf_over_dx_squared.get_part_by_tex(tex),
-                    path_arc = -np.pi/2,                    
+                    path_arc = -np.pi/2,
                 )
-                for mob, tex in (self.ddf, "df"), (self.dx_squared, "dx")
+                for mob, tex in ((self.ddf, "df"), (self.dx_squared, "dx"))
             ]
         )
         self.wait(2)
@@ -676,10 +676,10 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
 class Footnote(Scene):
     def construct(self):
         self.add(TextMobject("""
-            Interestingly, there is a notion in math 
-            called the ``exterior derivative'' which 
-            treats this ``d'' as having a more independent 
-            meaning, though it's less related to the 
+            Interestingly, there is a notion in math
+            called the ``exterior derivative'' which
+            treats this ``d'' as having a more independent
+            meaning, though it's less related to the
             intuitions I've introduced in this series.
         """, alignment = ""))
 
@@ -750,19 +750,19 @@ class SecondDerivativeAsAcceleration(Scene):
             func = get_deriv(2),
             color = MAROON_B,
             y_axis_label = "a",
-            y_min = -2, 
+            y_min = -2,
             y_max = 2,
         )
         j_scene = TrajectoryGraphScene(
             func = get_deriv(3),
             color = PINK,
             y_axis_label = "j",
-            y_min = -2, 
+            y_min = -2,
             y_max = 2,
         )
         s_graph, v_graph, a_graph, j_graph = graphs = [
             VGroup(*scene.get_top_level_mobjects())
-            for scene in s_scene, v_scene, a_scene, j_scene
+            for scene in (s_scene, v_scene, a_scene, j_scene)
         ]
         for i, graph in enumerate(graphs):
             graph.scale_to_fit_height(SPACE_HEIGHT)
@@ -774,19 +774,19 @@ class SecondDerivativeAsAcceleration(Scene):
         )
         s_words.highlight_by_tex("s(t)", s_scene.graph.get_color())
         v_words = TexMobject(
-            "\\frac{ds}{dt}(t)", "\\Leftrightarrow", 
+            "\\frac{ds}{dt}(t)", "\\Leftrightarrow",
             "\\text{Velocity}"
         )
         v_words.highlight_by_tex("ds", v_scene.graph.get_color())
         j_words = TexMobject(
-            "\\frac{d^3 s}{dt^3}(t)", "\\Leftrightarrow", 
+            "\\frac{d^3 s}{dt^3}(t)", "\\Leftrightarrow",
             "\\text{Jerk}"
         )
         j_words.highlight_by_tex("d^3", j_scene.graph.get_color())
         self.a_words.generate_target()
         words_group = VGroup(s_words, v_words, self.a_words.target, j_words)
         words_group.arrange_submobjects(
-            DOWN, 
+            DOWN,
             buff = MED_LARGE_BUFF,
             aligned_edge = LEFT
         )
@@ -915,29 +915,3 @@ class Thumbnail(SecondDerivativeGraphically):
         tex.to_edge(UP)
 
         self.add(tex)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
