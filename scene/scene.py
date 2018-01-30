@@ -457,6 +457,17 @@ class Scene(Container):
 
         return self
 
+    def wait_to(self, time, assert_positive = True):
+        if self.ignore_waits: 
+            return
+        time -= self.current_scene_time
+        if assert_positive: 
+            assert(time >= 0)
+        elif time < 0: 
+            return
+
+        self.wait(time)
+
     def force_skipping(self):
         self.original_skipping_status = self.skip_animations
         self.skip_animations = True
@@ -554,11 +565,3 @@ class Scene(Container):
             shutil.move(*self.args_to_rename_file)
         else:
             os.rename(*self.args_to_rename_file)
-
-    def wait_to(self, time, assert_positive = True):
-        if self.ignore_waits: return
-        time -= self.current_scene_time
-        if assert_positive: assert(time >= 0)
-        elif time < 0: return
-
-        self.dither(time)
