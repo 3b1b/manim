@@ -1,3 +1,4 @@
+from __future__ import print_function
 from helpers import *
 
 from mobject.tex_mobject import TexMobject
@@ -32,7 +33,7 @@ from topics.graph_scene import *
 # TODO/WARNING: There's a lot of refactoring and cleanup to be done in this code,
 # (and it will be done, but first I'll figure out what I'm doing with all this...)
 # -SR
-        
+
 class EquationSolver1d(GraphScene, ZoomedScene):
     CONFIG = {
     "func" : lambda x : x,
@@ -52,12 +53,12 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         self.add(self.graph)
 
         if self.graph_label != None:
-            self.add(self.get_graph_label(self.graph, self.graph_label, 
+            self.add(self.get_graph_label(self.graph, self.graph_label,
                 x_val = 4, direction = RIGHT))
-        
+
         if self.show_target_line:
             target_line_object = DashedLine(
-                self.coords_to_point(self.x_min, self.targetY), 
+                self.coords_to_point(self.x_min, self.targetY),
                 self.coords_to_point(self.x_max, self.targetY),
                 dashed_segment_length = 0.1)
             self.add(target_line_object)
@@ -82,15 +83,15 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         leftBrace.move_to(self.coords_to_point(lowerX, 0))
         leftBraceLabel = DecimalNumber(lowerX)
         leftBraceLabel.next_to(leftBrace, DOWN + LEFT, buff = SMALL_BUFF)
-        leftBraceLabelAnimation = ContinualChangingDecimal(leftBraceLabel, 
+        leftBraceLabelAnimation = ContinualChangingDecimal(leftBraceLabel,
             lambda alpha : self.point_to_coords(leftBrace.get_center())[0],
             tracked_mobject = leftBrace)
         self.add(leftBraceLabelAnimation)
-        
+
         rightBrace.move_to(self.coords_to_point(upperX, 0))
         rightBraceLabel = DecimalNumber(upperX)
         rightBraceLabel.next_to(rightBrace, DOWN + RIGHT, buff = SMALL_BUFF)
-        rightBraceLabelAnimation = ContinualChangingDecimal(rightBraceLabel, 
+        rightBraceLabelAnimation = ContinualChangingDecimal(rightBraceLabel,
             lambda alpha : self.point_to_coords(rightBrace.get_center())[0],
             tracked_mobject = rightBrace)
         self.add(rightBraceLabelAnimation)
@@ -98,15 +99,15 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         downBrace.move_to(self.coords_to_point(0, lowerY))
         downBraceLabel = DecimalNumber(lowerY)
         downBraceLabel.next_to(downBrace, LEFT + DOWN, buff = SMALL_BUFF)
-        downBraceLabelAnimation = ContinualChangingDecimal(downBraceLabel, 
+        downBraceLabelAnimation = ContinualChangingDecimal(downBraceLabel,
             lambda alpha : self.point_to_coords(downBrace.get_center())[1],
             tracked_mobject = downBrace)
         self.add(downBraceLabelAnimation)
-        
+
         upBrace.move_to(self.coords_to_point(0, upperY))
         upBraceLabel = DecimalNumber(upperY)
         upBraceLabel.next_to(upBrace, LEFT + UP, buff = SMALL_BUFF)
-        upBraceLabelAnimation = ContinualChangingDecimal(upBraceLabel, 
+        upBraceLabelAnimation = ContinualChangingDecimal(upBraceLabel,
             lambda alpha : self.point_to_coords(upBrace.get_center())[1],
             tracked_mobject = upBrace)
         self.add(upBraceLabelAnimation)
@@ -144,7 +145,7 @@ class EquationSolver1d(GraphScene, ZoomedScene):
                     dot, xBrace, yBrace, xLine, yLine = group
                     newX = interpolate(xAtStart, midX, alpha)
                     newY = self.func(newX)
-                    graphPoint = self.input_to_graph_point(newX, 
+                    graphPoint = self.input_to_graph_point(newX,
                             self.graph)
                     dot.move_to(graphPoint)
                     xAxisPoint = self.coords_to_point(newX, 0)
@@ -168,7 +169,7 @@ class EquationSolver1d(GraphScene, ZoomedScene):
             midXLine = Line(self.coords_to_point(midX, 0), midCoords, color = midColor)
             self.play(ShowCreation(midXLine))
             midDot = Dot(midCoords, color = midColor)
-            if(self.iteration_at_which_to_start_zoom != None and 
+            if(self.iteration_at_which_to_start_zoom != None and
                 i >= self.iteration_at_which_to_start_zoom):
                 midDot.scale_in_place(inverseZoomFactor)
             self.add(midDot)
@@ -176,7 +177,7 @@ class EquationSolver1d(GraphScene, ZoomedScene):
             self.play(ShowCreation(midYLine))
 
             if midY < self.targetY:
-                movingGroup = Group(lowerDot, 
+                movingGroup = Group(lowerDot,
                     leftBrace, downBrace,
                     lowerXLine, lowerYLine)
                 self.play(
@@ -185,7 +186,7 @@ class EquationSolver1d(GraphScene, ZoomedScene):
                 lowerY = midY
 
             else:
-                movingGroup = Group(upperDot, 
+                movingGroup = Group(upperDot,
                     rightBrace, upBrace,
                     upperXLine, upperYLine)
                 self.play(
@@ -220,7 +221,7 @@ class LinePulser(ContinualAnimation):
         start = self.line.get_start()
         end = self.line.get_end()
         for i in range(self.num_bullets):
-            position = interpolate(start, end, 
+            position = interpolate(start, end,
                 np.true_divide((i + alpha),(self.num_bullets)))
             self.bullets[i].move_to(position)
             if self.color_func:
@@ -272,7 +273,7 @@ class FuncRotater(Animation):
         angle_revs = self.rotate_func(alpha)
         # We do a clockwise rotation
         self.mobject.rotate(
-            -angle_revs * TAU, 
+            -angle_revs * TAU,
             about_point = ORIGIN
         )
         self.mobject.set_color(color_func(angle_revs))
@@ -305,7 +306,7 @@ class OdometerScene(Scene):
             # Clockwise rotation
             dashed_line.rotate(-self.dashed_line_angle * TAU, about_point = ORIGIN)
             self.add(dashed_line)
-        
+
         num_display = DecimalNumber(0)
         num_display.move_to(2 * DOWN)
 
@@ -322,12 +323,13 @@ class OdometerScene(Scene):
             run_time = self.run_time,
             rate_func = None)
 
-def point_to_rev((x, y)):
-    # Warning: np.arctan2 would happily discontinuously returns the value 0 for (0, 0), due to 
-    # design choices in the underlying atan2 library call, but for our purposes, this is 
+def point_to_rev(x__y):
+    # Warning: np.arctan2 would happily discontinuously returns the value 0 for (0, 0), due to
+    # design choices in the underlying atan2 library call, but for our purposes, this is
     # illegitimate, and all winding number calculations must be set up to avoid this
+    (x, y) = x__y
     if (x, y) == (0, 0):
-        print "Error! Angle of (0, 0) computed!"
+        print("Error! Angle of (0, 0) computed!")
         return None
     return np.true_divide(np.arctan2(y, x), TAU)
 
@@ -338,7 +340,7 @@ def resit_near(x, m):
         frac_diff -= 1
     return m + frac_diff
 
-# TODO?: Perhaps use modulus of (uniform) continuity instead of num_checkpoints, calculating 
+# TODO?: Perhaps use modulus of (uniform) continuity instead of num_checkpoints, calculating
 # latter as needed from former?
 def make_alpha_winder(func, start, end, num_checkpoints):
     check_points = [None for i in range(num_checkpoints)]
@@ -355,7 +357,8 @@ def make_alpha_winder(func, start, end, num_checkpoints):
         return resit_near(func(x), check_points[index])
     return return_func
 
-def split_interval((a, b)):
+def split_interval(a__b):
+    (a, b) = a__b
     mid = (a + b)/2.0
     return ((a, mid), (mid, b))
 
@@ -395,9 +398,9 @@ class RectangleData():
         if dim == 0:
             return_data = [RectangleData(new_interval, y_interval) for new_interval in split_interval(x_interval)]
         elif dim == 1:
-            return_data = [RectangleData(x_interval, new_interval) for new_interval in split_interval(y_interval)]        
-        else: 
-            print "RectangleData.splits_on_dim passed illegitimate dimension!"
+            return_data = [RectangleData(x_interval, new_interval) for new_interval in split_interval(y_interval)]
+        else:
+            print("RectangleData.splits_on_dim passed illegitimate dimension!")
 
         return tuple(return_data)
 
@@ -410,7 +413,7 @@ class RectangleData():
         elif dim == 1:
             sides = (self.get_left(), self.get_right())
         else:
-            print "RectangleData.split_line_on_dim passed illegitimate dimension!"
+            print("RectangleData.split_line_on_dim passed illegitimate dimension!")
 
         return tuple([mid(x, y) for (x, y) in sides])
 
@@ -418,15 +421,16 @@ def complex_to_pair(c):
     return (c.real, c.imag)
 
 def plane_poly_with_roots(*points):
-    def f((x, y)):
+    def f(x__y):
+        (x, y) = x__y
         return complex_to_pair(np.prod([complex(x, y) - complex(a,b) for (a,b) in points]))
     return f
 
 def plane_func_from_complex_func(f):
-    return lambda (x, y) : complex_to_pair(f(complex(x,y)))
+    return lambda x_y : complex_to_pair(f(complex(x_y[0],x_y[1])))
 
 def point_func_from_complex_func(f):
-    return lambda (x, y, z): complex_to_R3(f(complex(x, y)))
+    return lambda x_y_z1: complex_to_R3(f(complex(x_y_z1[0], x_y_z1[1])))
 
 empty_animation = Animation(Mobject())
 def EmptyAnimation():
@@ -463,15 +467,15 @@ class WalkerAnimation(Animation):
         self.mobject.walker.set_color(color_func(rev))
         self.mobject.arrow.set_color(color_func(rev))
         self.mobject.arrow.rotate(
-            rev * TAU, 
+            rev * TAU,
             about_point = ORIGIN #self.mobject.arrow.get_start()
         )
 
 def LinearWalker(start_coords, end_coords, coords_to_point, rev_func, **kwargs):
     walk_func = lambda alpha : interpolate(start_coords, end_coords, alpha)
     return WalkerAnimation(
-        walk_func = walk_func, 
-        coords_to_point = coords_to_point, 
+        walk_func = walk_func,
+        coords_to_point = coords_to_point,
         rev_func = rev_func,
         **kwargs)
 
@@ -498,7 +502,7 @@ class PiWalker(Scene):
             end_point = num_plane.coords_to_point(end_x, end_y)
             self.play(
                 LinearWalker(
-                    start_coords = start_coords, 
+                    start_coords = start_coords,
                     end_coords = end_coords,
                     coords_to_point = num_plane.coords_to_point,
                     rev_func = rev_func,
@@ -507,9 +511,9 @@ class PiWalker(Scene):
                 ShowCreation(Line(start_point, end_point), rate_func = None),
                 run_time = self.step_run_time)
 
-        # TODO: Allow smooth paths instead of brekaing them up into lines, and 
+        # TODO: Allow smooth paths instead of brekaing them up into lines, and
         # use point_from_proportion to get points along the way
-                
+
 
         self.wait()
 
@@ -542,8 +546,8 @@ class PiWalkerCircle(PiWalker):
         self.walk_coords = [r * np.array((np.cos(i * TAU/N), np.sin(i * TAU/N))) for i in range(N)]
         PiWalker.setup(self)
 
-# TODO: Perhaps restructure this to avoid using AnimationGroup, and instead 
-# use lists of animations or lists or other such data, to be merged and processed into parallel 
+# TODO: Perhaps restructure this to avoid using AnimationGroup, and instead
+# use lists of animations or lists or other such data, to be merged and processed into parallel
 # animations later
 class EquationSolver2d(Scene):
     CONFIG = {
@@ -554,7 +558,7 @@ class EquationSolver2d(Scene):
         "initial_upper_y" : 3.1,
         "num_iterations" : 5,
         "num_checkpoints" : 10,
-        # TODO: Consider adding a "find_all_roots" flag, which could be turned off 
+        # TODO: Consider adding a "find_all_roots" flag, which could be turned off
         # to only explore one of the two candidate subrectangles when both are viable
     }
 
@@ -579,15 +583,15 @@ class EquationSolver2d(Scene):
                 thin_line = flashing_line.copy()
                 thin_line.set_stroke(width = 1)
                 walker_anim = LinearWalker(
-                    start_coords = start, 
+                    start_coords = start,
                     end_coords = end,
                     coords_to_point = num_plane.coords_to_point,
                     rev_func = rev_func,
                     remover = True
                 )
                 line_draw_anim = AnimationGroup(
-                    ShowCreation(thin_line), 
-                    #ShowPassingFlash(flashing_line), 
+                    ShowCreation(thin_line),
+                    #ShowPassingFlash(flashing_line),
                     walker_anim,
                     rate_func = None)
                 anim = line_draw_anim
@@ -596,9 +600,9 @@ class EquationSolver2d(Scene):
             wind_so_far = 0
             anim = EmptyAnimation()
             sides = [
-                rect.get_top(), 
-                rect.get_right(), 
-                rect.get_bottom(), 
+                rect.get_top(),
+                rect.get_right(),
+                rect.get_bottom(),
                 rect.get_left()
             ]
             for (start, end) in sides:
@@ -609,9 +613,9 @@ class EquationSolver2d(Scene):
 
             if total_wind == 0:
                 coords = [
-                    rect.get_top_left(), 
-                    rect.get_top_right(), 
-                    rect.get_bottom_right(), 
+                    rect.get_top_left(),
+                    rect.get_top_right(),
+                    rect.get_bottom_right(),
                     rect.get_bottom_left()
                 ]
                 points = [num_plane.coords_to_point(x, y) for (x, y) in coords]
@@ -633,8 +637,8 @@ class EquationSolver2d(Scene):
                 mid_line_coords = rect.split_line_on_dim(dim_to_split)
                 mid_line_points = [num_plane.coords_to_point(x, y) for (x, y) in mid_line_coords]
                 mid_line = DashedLine(*mid_line_points)
-                return Succession(anim, 
-                    ShowCreation(mid_line), 
+                return Succession(anim,
+                    ShowCreation(mid_line),
                     # FadeOut(mid_line), # TODO: Can change timing so this fades out at just the time it would be overdrawn
                     AnimationGroup(*sub_anims)
                 )
@@ -650,7 +654,7 @@ class EquationSolver2d(Scene):
         rect = RectangleData(x_interval, y_interval)
 
         anim = Animate2dSolver(
-            cur_depth = 0, 
+            cur_depth = 0,
             rect = rect,
             dim_to_split = 0,
         )
@@ -729,7 +733,7 @@ class NumberLineScene(Scene):
         left_point = num_line.number_to_point(-1)
         right_point = num_line.number_to_point(1)
         # TODO: Make this line a thin rectangle
-        interval_1d = Line(left_point, right_point, 
+        interval_1d = Line(left_point, right_point,
             stroke_color = inner_color, stroke_width = stroke_width)
         rect_1d = Rectangle(stroke_width = 0, fill_opacity = 1, fill_color = inner_color)
         rect_1d.replace(interval_1d)
@@ -741,7 +745,7 @@ class NumberLineScene(Scene):
         self.play(ShowCreation(full_1d))
         self.wait()
 
-        # TODO: Can polish the morphing above; have dots become left and right sides, and 
+        # TODO: Can polish the morphing above; have dots become left and right sides, and
         # only then fill in the top and bottom
 
         num_plane = NumberPlane()
@@ -761,7 +765,7 @@ class NumberLineScene(Scene):
         full_2d = VGroup(filling_2d, border_2d)
 
         self.play(
-            FadeOut(num_line), 
+            FadeOut(num_line),
             FadeIn(num_plane),
             ReplacementTransform(full_1d, full_2d))
 
@@ -796,7 +800,7 @@ class Initial2dFuncSceneMorphing(Scene):
         self.squash_onto_left(input_object)
         self.squash_onto_right(output_object)
         self.play(
-            ShowCreation(input_object), 
+            ShowCreation(input_object),
             ShowCreation(output_object)
             )
 
@@ -812,7 +816,7 @@ class Initial2dFuncSceneMorphing(Scene):
         crappy_cropper.to_edge(LEFT, buff = 0)
         self.play(
             ReplacementTransform(self.num_plane.copy(), right_plane),
-            FadeIn(crappy_cropper), 
+            FadeIn(crappy_cropper),
             Animation(self.num_plane),
             run_time = 3
         )
@@ -838,7 +842,7 @@ class Initial2dFuncSceneWithoutMorphing(Scene):
         num_plane.prepare_for_nonlinear_transform()
         #num_plane.fade()
         self.add(num_plane)
-        
+
         points = [LEFT + DOWN, RIGHT + DOWN, LEFT + UP, RIGHT + UP]
         for i in range(len(points) - 1):
             line = Line(points[i], points[i + 1], color = RED)
@@ -930,14 +934,14 @@ class LoopSplitScene(Scene):
         right_closed_loop = VGroup(right_open_loop, mid_line_right[0])
 
         # self.play(
-        #     ApplyMethod(left_closed_loop.shift, LEFT), 
+        #     ApplyMethod(left_closed_loop.shift, LEFT),
         #     ApplyMethod(right_closed_loop.shift, RIGHT)
         #     )
 
         self.wait()
 
         # self.play(
-        #     ApplyMethod(left_open_loop.shift, LEFT), 
+        #     ApplyMethod(left_open_loop.shift, LEFT),
         #     ApplyMethod(right_open_loop.shift, RIGHT)
         #     )
 
@@ -948,7 +952,7 @@ class LoopSplitScene(Scene):
         highlight_circle = Circle(color = YELLOW_E) # Perhaps make this a dashed circle?
         highlight_circle.surround(mid_lines)
         self.play(Indicate(mid_lines), ShowCreation(highlight_circle, run_time = 0.5))
-        
+
         self.wait()
 
         self.play(FadeOut(highlight_circle), FadeOut(mid_lines))
@@ -957,7 +961,7 @@ class LoopSplitScene(Scene):
 
         # Brings loop back together; keep in sync with motions which bring loop apart above
         # self.play(
-        #     ApplyMethod(left_open_loop.shift, 2 * RIGHT), 
+        #     ApplyMethod(left_open_loop.shift, 2 * RIGHT),
         #     ApplyMethod(right_open_loop.shift, 2 * LEFT)
         #     )
 
@@ -969,12 +973,12 @@ class LoopSplitSceneMapped(LoopSplitScene):
     def setup(self):
         left_camera = Camera(**self.camera_config)
         right_camera = MappingCamera(
-            mapping_func = lambda (x, y, z) : complex_to_R3(((complex(x,y) + 3)**1.1) - 3), 
+            mapping_func = lambda x_y_z : complex_to_R3(((complex(x_y_z[0],x_y_z[1]) + 3)**1.1) - 3),
             **self.camera_config)
         split_screen_camera = SplitScreenCamera(left_camera, right_camera, **self.camera_config)
         self.camera = split_screen_camera
 
-# TODO: Perhaps do extra illustration of zooming out and winding around a large circle, 
+# TODO: Perhaps do extra illustration of zooming out and winding around a large circle,
 # to illustrate relation between degree and large-scale winding number
 class FundThmAlg(EquationSolver2d):
     CONFIG = {
@@ -1023,7 +1027,7 @@ class DiffOdometer(OdometerScene):
 
 # Writing new Pi walker scenes by parametrizing general template
 
-# Generalizing Pi walker stuff to make bullets on pulsing lines change colors dynamically according to 
+# Generalizing Pi walker stuff to make bullets on pulsing lines change colors dynamically according to
 # function traced out
 
 # Debugging Pi walker stuff added to EquationSolver2d

@@ -41,7 +41,7 @@ class ThreeDCamera(CameraWithPerspective):
 
     def get_color(self, method):
         color = method()
-        vmobject = method.im_self
+        vmobject = method.__self__
         if should_shade_in_3d(vmobject):
             return Color(rgb = self.get_shaded_rgb(
                 color_to_rgb(color),

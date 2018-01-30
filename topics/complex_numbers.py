@@ -1,9 +1,10 @@
+from __future__ import absolute_import
 from helpers import *
 
 
 from mobject import VGroup
 from mobject.tex_mobject import TexMobject, TextMobject
-from number_line import NumberPlane
+from .number_line import NumberPlane
 from animation import Animation
 from animation.transform import ApplyPointwiseFunction, MoveToTarget
 from animation.simple_animations import Homotopy, ShowCreation, \
@@ -245,7 +246,7 @@ class ComplexFunction(ApplyPointwiseFunction):
             )
         ApplyPointwiseFunction.__init__(
             self,
-            lambda (x, y, z) : complex_to_R3(function(complex(x, y))),
+            lambda x_y_z : complex_to_R3(function(complex(x_y_z[0], x_y_z[1]))),
             instantiate(mobject),
             **kwargs
         )

@@ -19,6 +19,7 @@ from mobject.vectorized_mobject import *
 
 from topics.matrix import *
 from topics.vector_space_scene import *
+from functools import reduce
 
 class OpeningQuote(Scene):
     def construct(self):

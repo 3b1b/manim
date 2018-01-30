@@ -1,12 +1,14 @@
+from __future__ import absolute_import
 # from mobject import Mobject, Point, Mobject1D
 from mobject.vectorized_mobject import VMobject, VGroup, VectorizedPoint
 from scene import Scene
 from animation.transform import Transform
 from animation.simple_animations import ShowCreation
 from topics.geometry import Line, Polygon, RegularPolygon, Square, Circle
-from characters import PiCreature, Randolph, get_all_pi_creature_modes
+from .characters import PiCreature, Randolph, get_all_pi_creature_modes
 
 from helpers import *
+from functools import reduce
 
 def rotate(points, angle = np.pi, axis = OUT):
     if axis is None:

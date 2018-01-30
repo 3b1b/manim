@@ -25,8 +25,9 @@ from brachistochrone.curves import Cycloid
 class PhysicalIntuition(Scene):
     def construct(self):
         n_terms = 4
-        def func((x, y, ignore)):
-            z = complex(x, y)                                    
+        def func(x__y__ignore):
+            (x, y, ignore) = x__y__ignore
+            z = complex(x, y)
             if (np.abs(x%1 - 0.5)<0.01 and y < 0.01) or np.abs(z)<0.01:
                 return ORIGIN
             out_z = 1./(2*np.tan(np.pi*z)*(z**2))
@@ -70,12 +71,12 @@ class TimeLine(Scene):
     def construct(self):
         dated_events = [
             {
-                "date" : 1696, 
+                "date" : 1696,
                 "text": "Johann Bernoulli poses Brachistochrone problem",
                 "picture" : "Johann_Bernoulli2"
             },
             {
-                "date" : 1662, 
+                "date" : 1662,
                 "text" : "Fermat states his principle of least time",
                 "picture" : "Pierre_de_Fermat"
             }
@@ -104,8 +105,8 @@ class TimeLine(Scene):
         run_times = iter([3, 1])
         for point, event in zip(centers[1:], dated_events):
             self.play(ApplyMethod(
-                timeline.shift, -point.get_center(), 
-                run_time = run_times.next()
+                timeline.shift, -point.get_center(),
+                run_time = next(run_times)
             ))
             picture = ImageMobject(event["picture"], invert = False)
             picture.scale_to_fit_width(2)
@@ -141,7 +142,7 @@ class StayedUpAllNight(Scene):
         clock.to_corner(UP+RIGHT)
         hour_hand.get_center = lambda : clock.get_center()
         minute_hand.get_center = lambda : clock.get_center()
- 
+
         solution = ImageMobject(
             "Newton_brachistochrone_solution2",
             use_cache = False
@@ -228,7 +229,7 @@ class StayedUpAllNight(Scene):
             FadeOut(newton),
             GrowFromCenter(johann)
         )
-        self.remove(newton)        
+        self.remove(newton)
         self.wait()
         self.play(ShimmerIn(johann_quote))
         self.wait()
@@ -290,7 +291,7 @@ class SolutionsToTheBrachistochrone(Scene):
         lower_left = 2*DOWN+6*LEFT
         lines = Mobject(*[
             Line(
-                lower_left, 
+                lower_left,
                 lower_left+5*r*np.cos(np.arctan(r))*RIGHT+2*r*np.sin(np.arctan(r))*UP
             )
             for r in r_range
@@ -342,7 +343,7 @@ class VideoLayout(Scene):
             line.add_line(vect+0.2*DOWN, vect+0.2*UP)
         left_brace = Brace(
             Mobject(
-                Point(left), 
+                Point(left),
                 Point(interpolate(left, right, 2./3))
             ),
             DOWN
@@ -355,14 +356,14 @@ class VideoLayout(Scene):
             UP
         )
         left_brace.words = map(TextMobject, [
-            "Problem statement", 
+            "Problem statement",
             "History",
             "Johann Bernoulli's cleverness"
         ])
         curr = left_brace
         right_brace.words = map(TextMobject, [
             "Challenge",
-            "Mark Levi's cleverness",            
+            "Mark Levi's cleverness",
         ])
         for brace in left_brace, right_brace:
             curr = brace
@@ -432,7 +433,7 @@ class MathBetterThanTalking(Scene):
         self.play(ShimmerIn(bubble.content))
         self.wait()
         self.play(ApplyMethod(
-            mathy.blink, 
+            mathy.blink,
             rate_func = squish_rate_func(there_and_back, 0.4, 0.6)
         ))
 
@@ -476,7 +477,7 @@ class TalkedAboutSnellsLaw(Scene):
                 ShimmerIn(talker.bubble.content)
             )
             self.play(ApplyMethod(
-                talker.blink, 
+                talker.blink,
                 rate_func = squish_rate_func(there_and_back)
             ))
             self.wait()
@@ -494,19 +495,3 @@ class YetAnotherMarkLevi(Scene):
         self.add(levi)
         self.play(ShimmerIn(words))
         self.wait(2)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

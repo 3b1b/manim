@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import numpy as np
 import itertools as it
 import operator as op
@@ -10,7 +11,8 @@ import re
 import os
 from scipy import linalg
 
-from constants import *
+from .constants import *
+from functools import reduce
 
 CLOSED_THRESHOLD = 0.01
 STRAIGHT_PATH_THRESHOLD = 0.01
@@ -488,8 +490,8 @@ def make_even_by_cycling(iterable_1, iterable_2):
     cycle1 = it.cycle(iterable_1)
     cycle2 = it.cycle(iterable_2)
     return (
-        [cycle1.next() for x in range(length)],
-        [cycle2.next() for x in range(length)]
+        [next(cycle1) for x in range(length)],
+        [next(cycle2) for x in range(length)]
     )
 
 ### Rate Functions ###
