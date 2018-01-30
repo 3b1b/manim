@@ -1,7 +1,7 @@
 from xml.dom import minidom
 import warnings
 
-from vectorized_mobject import VMobject
+from vectorized_mobject import VMobject, VGroup
 from topics.geometry import Rectangle, Circle
 from helpers import *
 
@@ -21,6 +21,7 @@ class SVGMobject(VMobject):
         "width" : None,
         #Must be filled in in a subclass, or when called
         "file_name" : None, 
+        "unpack_groups" : True, # if False, creates a hierarchy of VGroups
         "stroke_width" : 0,
         "fill_opacity" : 1,
         # "fill_color" : LIGHT_GREY,
@@ -50,7 +51,9 @@ class SVGMobject(VMobject):
         doc = minidom.parse(self.file_path)
         self.ref_to_element = {}
         for svg in doc.getElementsByTagName("svg"):
-            self.add(*self.get_mobjects_from(svg))
+            mobjects = self.get_mobjects_from(svg)
+            if self.unpack_groups: self.add(*mobjects)
+            else: self.add(*mobjects[0].submobjects)
         doc.unlink()
 
     def get_mobjects_from(self, element):
@@ -76,6 +79,8 @@ class SVGMobject(VMobject):
             result.append(self.rect_to_mobject(element))
         elif element.tagName == 'circle':
             result.append(self.circle_to_mobject(element))
+        elif element.tagName == 'ellipse':
+            result.append(self.ellipse_to_mobject(element))
         elif element.tagName in ['polygon', 'polyline']:
             result.append(self.polygon_to_mobject(element))
         else:
@@ -83,6 +88,9 @@ class SVGMobject(VMobject):
             # warnings.warn("Unknown element type: " + element.tagName)
         result = filter(lambda m : m is not None, result)
         self.handle_transforms(element, VMobject(*result))
+        if len(result) > 1 and not self.unpack_groups:
+            result = [VGroup(*result)]
+
         return result
 
     def g_to_mobjects(self, g_element):
@@ -122,6 +130,15 @@ class SVGMobject(VMobject):
         ]
         return Circle(radius = r).shift(x*RIGHT+y*DOWN)
 
+    def ellipse_to_mobject(self, circle_element):
+        x, y, rx, ry = [
+            float(circle_element.getAttribute(key))
+            if circle_element.hasAttribute(key)
+            else 0.0
+            for key in "cx", "cy", "rx", "ry"
+        ]
+        return Circle().scale(rx*RIGHT + ry*UP).shift(x*RIGHT+y*DOWN)
+
     def rect_to_mobject(self, rect_element):
         if rect_element.hasAttribute("fill"):
             if Color(str(rect_element.getAttribute("fill"))) == Color(WHITE):
@@ -154,7 +171,7 @@ class SVGMobject(VMobject):
             transform = string_to_numbers(transform)
             transform = np.array(transform).reshape([3,2])
             x += transform[2][0]
-            y += transform[2][1]
+            y -= transform[2][1]
             matrix = np.identity(self.dim)
             matrix[:2,:2] = transform[:2,:]
             t_matrix = np.transpose(matrix)
@@ -227,16 +244,25 @@ class VMobjectFromSVGPathstring(VMobject):
         #list. This variable may get modified in the conditionals below.
         points = self.growing_path.points
         new_points = self.string_to_points(coord_string)
+
+        if command == "M": #moveto
+            if isLower and len(points) > 0:
+                new_points[0] += points[-1]
+            if len(points) > 0:
+                self.growing_path = self.add_subpath(new_points[:1])
+            else:
+                self.growing_path.start_at(new_points[0])
+
+            if len(new_points) <= 1: return
+
+            points = self.growing_path.points
+            new_points = new_points[1:]
+            command = "L"
+
         if isLower and len(points) > 0:
             new_points += points[-1]
-        if command == "M": #moveto
-            if len(points) > 0:
-                self.growing_path = self.add_subpath(new_points)
-            else:
-                if isLower: self.growing_path.start_at(np.sum(new_points, axis=0))
-                else: self.growing_path.start_at(new_points[-1])
-            return
-        elif command in ["L", "H", "V"]: #lineto
+
+        if command in ["L", "H", "V"]: #lineto
             if command == "H":
                 new_points[0,1] = points[-1,1]
             elif command == "V":
