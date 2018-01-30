@@ -29,6 +29,8 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from topics.graph_scene import *
 
+import sys
+
 # TODO/WARNING: There's a lot of refactoring and cleanup to be done in this code,
 # (and it will be done, but first I'll figure out what I'm doing with all this...)
 # -SR
@@ -306,7 +308,7 @@ class OdometerScene(Scene):
             dashed_line.rotate(-self.dashed_line_angle * TAU, about_point = ORIGIN)
             self.add(dashed_line)
         
-        num_display = DecimalNumber(0)
+        num_display = DecimalNumber(0, include_background_rectangle = True)
         num_display.move_to(2 * DOWN)
 
         display_val_bias = 0
@@ -428,7 +430,7 @@ def plane_func_from_complex_func(f):
 def point_func_from_complex_func(f):
     return lambda (x, y, z): complex_to_R3(f(complex(x, y)))
 
-empty_animation = Animation(Mobject())
+empty_animation = Animation(Mobject(), run_time = 0)
 def EmptyAnimation():
     return empty_animation
 
@@ -440,13 +442,13 @@ class WalkerAnimation(Animation):
         "coords_to_point" : None
     }
 
-    def __init__(self, walk_func, rev_func, coords_to_point, **kwargs):
+    def __init__(self, walk_func, rev_func, coords_to_point, scale_factor, **kwargs):
         self.walk_func = walk_func
         self.rev_func = rev_func
         self.coords_to_point = coords_to_point
         self.compound_walker = VGroup()
         self.compound_walker.walker = PiCreature(color = RED)
-        self.compound_walker.walker.scale(0.35)
+        self.compound_walker.walker.scale(scale_factor)
         self.compound_walker.arrow = Arrow(ORIGIN, RIGHT) #, buff = 0)
         self.compound_walker.digest_mobject_attrs()
         Animation.__init__(self, self.compound_walker, **kwargs)
@@ -458,7 +460,8 @@ class WalkerAnimation(Animation):
     def update_mobject(self, alpha):
         Animation.update_mobject(self, alpha)
         cur_x, cur_y = cur_coords = self.walk_func(alpha)
-        self.mobject.walker.move_to(self.coords_to_point(cur_x, cur_y))
+        cur_point = self.coords_to_point(cur_x, cur_y)
+        self.mobject.walker.move_to(cur_point)
         rev = self.rev_func(cur_coords)
         self.mobject.walker.set_color(color_func(rev))
         self.mobject.arrow.set_color(color_func(rev))
@@ -467,12 +470,50 @@ class WalkerAnimation(Animation):
             about_point = ORIGIN #self.mobject.arrow.get_start()
         )
 
-def LinearWalker(start_coords, end_coords, coords_to_point, rev_func, **kwargs):
+def walker_animation_with_display(
+    walk_func, 
+    rev_func, 
+    coords_to_point, 
+    number_update_func = None, 
+    scale_factor = 0.35,
+    **kwargs
+    ):
+    
+    walker_anim = WalkerAnimation(
+        walk_func = walk_func, 
+        rev_func = rev_func, 
+        coords_to_point = coords_to_point,
+        scale_factor = scale_factor,
+        **kwargs)
+    walker = walker_anim.compound_walker.walker
+
+    if number_update_func != None:
+        display = DecimalNumber(0, include_background_rectangle = True)
+        displaycement = scale_factor * DOWN # How about that pun, eh?
+        display.move_to(walker.get_center() + displaycement)
+        display_anim = ChangingDecimal(display, 
+            number_update_func, 
+            tracked_mobject = walker_anim.compound_walker.walker,
+            **kwargs)
+        anim_group = AnimationGroup(walker_anim, display_anim)
+        return anim_group
+    else:
+        return walker_anim
+
+def LinearWalker(
+    start_coords, 
+    end_coords, 
+    coords_to_point, 
+    rev_func, 
+    number_update_func = None, 
+    **kwargs
+    ):
     walk_func = lambda alpha : interpolate(start_coords, end_coords, alpha)
-    return WalkerAnimation(
+    return walker_animation_with_display(
         walk_func = walk_func, 
         coords_to_point = coords_to_point, 
         rev_func = rev_func,
+        number_update_func = number_update_func,
         **kwargs)
 
 class PiWalker(Scene):
@@ -566,6 +607,9 @@ class EquationSolver2d(Scene):
         rev_func = lambda p : point_to_rev(self.func(p))
 
         def Animate2dSolver(cur_depth, rect, dim_to_split):
+            print "Solver at depth: " + str(cur_depth)
+            sys.stdout.flush()
+
             if cur_depth >= self.num_iterations:
                 return EmptyAnimation()
 
@@ -573,21 +617,19 @@ class EquationSolver2d(Scene):
                 alpha_winder = make_alpha_winder(rev_func, start, end, self.num_checkpoints)
                 a0 = alpha_winder(0)
                 rebased_winder = lambda alpha: alpha_winder(alpha) - a0 + start_wind
-                flashing_line = Line(num_plane.coords_to_point(*start), num_plane.coords_to_point(*end),
-                    stroke_width = 5,
+                thin_line = Line(num_plane.coords_to_point(*start), num_plane.coords_to_point(*end),
+                    stroke_width = 2,
                     color = RED)
-                thin_line = flashing_line.copy()
-                thin_line.set_stroke(width = 1)
                 walker_anim = LinearWalker(
                     start_coords = start, 
                     end_coords = end,
                     coords_to_point = num_plane.coords_to_point,
                     rev_func = rev_func,
+                    number_update_func = rebased_winder,
                     remover = True
                 )
                 line_draw_anim = AnimationGroup(
                     ShowCreation(thin_line), 
-                    #ShowPassingFlash(flashing_line), 
                     walker_anim,
                     rate_func = None)
                 anim = line_draw_anim
@@ -636,6 +678,7 @@ class EquationSolver2d(Scene):
                 return Succession(anim, 
                     ShowCreation(mid_line), 
                     # FadeOut(mid_line), # TODO: Can change timing so this fades out at just the time it would be overdrawn
+                    # TODO: Investigate weirdness with changing z buffer order on mid_line vs. rectangle lines
                     AnimationGroup(*sub_anims)
                 )
 
@@ -649,11 +692,17 @@ class EquationSolver2d(Scene):
 
         rect = RectangleData(x_interval, y_interval)
 
+        print "Starting to compute anim"
+        sys.stdout.flush()
+
         anim = Animate2dSolver(
             cur_depth = 0, 
             rect = rect,
             dim_to_split = 0,
         )
+
+        print "Done computing anim"
+        sys.stdout.flush()
 
         self.play(anim)
 
@@ -979,7 +1028,7 @@ class LoopSplitSceneMapped(LoopSplitScene):
 class FundThmAlg(EquationSolver2d):
     CONFIG = {
         "func" : plane_poly_with_roots((1, 2), (-1, 2.5), (-1, 2.5)),
-        "num_iterations" : 1,
+        "num_iterations" : 2,
     }
 
 # TODO: Borsuk-Ulam visuals
@@ -1026,7 +1075,9 @@ class DiffOdometer(OdometerScene):
 # Generalizing Pi walker stuff to make bullets on pulsing lines change colors dynamically according to 
 # function traced out
 
-# Debugging Pi walker stuff added to EquationSolver2d
+# Ask about tracked mobject, which is probably very useful for our animations 
+# (let's add a ChangingDecimal outputting winding number calculations tracking Pi walkers, 
+# particularly in EquationSolver2d)
 
 # ----
 
@@ -1037,7 +1088,5 @@ class DiffOdometer(OdometerScene):
 # Borsuk-Ulam visuals
 
 # Domain coloring
-
-# TODO: Ask about tracked mobject, which is probably very useful for our animations
 
 # FIN
