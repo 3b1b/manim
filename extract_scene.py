@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 import sys
 # import getopt
@@ -85,6 +85,7 @@ def get_configuration():
       #If -t is passed in (for transparent), this will be RGBA
       "saved_image_mode": "RGBA" if args.transparent else "RGB",
       "quiet"           : args.quiet or args.write_all,
+      "ignore_waits"    : args.preview,
       "write_all"       : args.write_all,
       "output_name"     : args.output_name,
       "skip_to_animation_number" : args.skip_to_animation_number,

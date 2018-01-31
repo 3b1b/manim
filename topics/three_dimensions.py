@@ -27,10 +27,10 @@ class CameraWithPerspective(Camera):
 class ThreeDCamera(CameraWithPerspective):
     CONFIG = {
         "sun_vect" : 5*UP+LEFT,
-        "shading_factor" : 0.5,
+        "shading_factor" : 0.2,
         "distance" : 5,
         "phi" : 0, #Angle off z axis
-        "theta" : -np.pi/2, #Rotation about z axis
+        "theta" : -TAU/4, #Rotation about z axis
     }
     def __init__(self, *args, **kwargs):
         Camera.__init__(self, *args, **kwargs)
@@ -78,19 +78,26 @@ class ThreeDCamera(CameraWithPerspective):
         return normal/length
 
     def display_multiple_vectorized_mobjects(self, vmobjects):
+        camera_point = self.spherical_coords_to_point(
+            *self.get_spherical_coords()
+        )
         def z_cmp(*vmobs):
-            #Compare to three dimensional mobjects based on their
-            #z value, otherwise don't compare.
-            three_d_status = map(should_shade_in_3d, vmobs)
-            has_points = [vm.get_num_points() > 0 for vm in vmobs]
-            if all(three_d_status) and all(has_points):
-                cmp_vect = self.get_unit_normal_vect(vmobs[1])
-                return cmp(*[
-                    np.dot(vm.get_center(), cmp_vect)
-                    for vm in vmobs
-                ])
-            else:
-                return 0
+            #Compare to three dimensional mobjects based on 
+            #how close they are to the camera
+            return cmp(*[
+                -np.linalg.norm(vm.get_center()-camera_point)
+                for vm in vmobs
+            ])
+            # three_d_status = map(should_shade_in_3d, vmobs)
+            # has_points = [vm.get_num_points() > 0 for vm in vmobs]
+            # if all(three_d_status) and all(has_points):
+            #     cmp_vect = self.get_unit_normal_vect(vmobs[1])
+            #     return cmp(*[
+            #         np.dot(vm.get_center(), cmp_vect)
+            #         for vm in vmobs
+            #     ])
+            # else:
+            #     return 0
         Camera.display_multiple_vectorized_mobjects(
             self, sorted(vmobjects, cmp = z_cmp)
         )
@@ -176,9 +183,10 @@ class ThreeDScene(Scene):
             self.add(self.ambient_camera_rotation)
 
     def get_moving_mobjects(self, *animations):
-        if self.camera.rotation_mobject in moving:
-            return self.mobjects
-        return Scene.get_moving_mobjects(self, *animations)
+        moving_mobjects = Scene.get_moving_mobjects(self, *animations)
+        if self.camera.rotation_mobject in moving_mobjects:
+            return list_update(self.mobjects, moving_mobjects)
+        return moving_mobjects
 
 ##############
 

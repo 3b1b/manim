@@ -20,14 +20,16 @@ from animation import Animation
 from animation.animation import sync_animation_run_times_and_rate_funcs
 from animation.transform import MoveToTarget
 from animation.continual_animation import ContinualAnimation
+from container import *
 
-class Scene(object):
+class Scene(Container):
     CONFIG = {
         "camera_class"     : Camera,
         "camera_config"    : {},
         "frame_duration"   : LOW_QUALITY_FRAME_DURATION,
         "construct_args"   : [],
         "skip_animations"  : False,
+        "ignore_waits"     : False,
         "write_to_movie"   : False,
         "save_frames"      : False,
         "save_pngs"        : False,
@@ -40,7 +42,7 @@ class Scene(object):
         "skip_to_animation_number" : None,
     }
     def __init__(self, **kwargs):
-        digest_config(self, kwargs)
+        Container.__init__(self, **kwargs) # Perhaps allow passing in a non-empty *mobjects parameter?
         self.camera = self.camera_class(**self.camera_config)
         self.mobjects = []
         self.continual_animations = []
@@ -49,6 +51,7 @@ class Scene(object):
         self.saved_frames = []
         self.shared_locals = {}
         self.frame_num = 0
+        self.current_scene_time = 0
         if self.name is None:
             self.name = self.__class__.__name__
         if self.random_seed is not None:
@@ -454,6 +457,17 @@ class Scene(object):
 
         return self
 
+    def wait_to(self, time, assert_positive = True):
+        if self.ignore_waits: 
+            return
+        time -= self.current_scene_time
+        if assert_positive: 
+            assert(time >= 0)
+        elif time < 0: 
+            return
+
+        self.wait(time)
+
     def force_skipping(self):
         self.original_skipping_status = self.skip_animations
         self.skip_animations = True
@@ -465,6 +479,7 @@ class Scene(object):
         return self
 
     def add_frames(self, *frames):
+        self.current_scene_time += len(frames)*self.frame_duration
         if self.write_to_movie:
             for frame in frames:
                 if self.save_pngs:
@@ -550,7 +565,3 @@ class Scene(object):
             shutil.move(*self.args_to_rename_file)
         else:
             os.rename(*self.args_to_rename_file)
-
-
-
-
