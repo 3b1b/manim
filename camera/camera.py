@@ -385,12 +385,12 @@ class Camera(object):
     def get_points_of_all_pixels(self):
         """
         Returns an array a such that a[i, j] gives the spatial
-        coordsinates associated with the pixel self.pixel_array[i, j]
+        coordinates associated with the pixel self.pixel_array[i, j]
         """
         shape = self.pixel_array.shape
         indices = np.indices(shape[:2], dtype = 'float64')
         all_point_coords = np.zeros((shape[0], shape[1], 3))
-        for i, space_dim in enumerate([SPACE_WIDTH, SPACE_HEIGHT]):
+        for i, space_dim in enumerate([SPACE_HEIGHT, SPACE_WIDTH]):
             all_point_coords[:,:,i] = \
                 indices[i,:,:]*2*space_dim/shape[i] - space_dim
         return all_point_coords
@@ -411,7 +411,7 @@ class Camera(object):
             lambda p : float_rgba_to_int_rgba(point_to_rgba_func(p)),
             2, points_of_all_pixels
         ))
-        self.reset()
+        self.reset() # Perhaps this really belongs in set_background?
 
 
 class MovingCamera(Camera):
