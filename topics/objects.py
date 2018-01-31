@@ -410,8 +410,8 @@ class Bubble(SVGMobject):
         VGroup(self, self.content).shift(point - self.get_tip())
         return self
 
-    def flip(self):
-        Mobject.flip(self)        
+    def flip(self, axis = UP):
+        Mobject.flip(self, axis = axis)      
         self.direction = -np.array(self.direction)
         return self
 
