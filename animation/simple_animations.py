@@ -403,12 +403,17 @@ class Succession(Animation):
         for anim in animations:
             anim.update(0)
 
+        animations = filter (lambda x : x.run_time != 0, animations)
+
         self.run_times = [anim.run_time for anim in animations]
         if "run_time" in kwargs:
             run_time = kwargs.pop("run_time")
         else:
             run_time = sum(self.run_times)
-        self.num_anims = len(animations) #TODO: If this is zero, some special handling below
+        self.num_anims = len(animations)
+        if self.num_anims == 0:
+            # TODO: Handle this; it should be easy enough, but requires some special cases below
+            print "Warning! Successions with zero animations are not currently handled!"
         self.animations = animations
         #Have to keep track of this run_time, because Scene.play
         #might very well mess with it.
@@ -429,21 +434,24 @@ class Succession(Animation):
 
         self.current_alpha = 0
         self.current_anim_index = 0 #TODO: What if self.num_anims == 0?
+        self.mobject = self.scene_mobjects_at_time[0]
+        self.mobject.add(self.animations[0].mobject)
 
-        self.mobject = Group()
-        self.jump_to_start_of_anim(0)
         Animation.__init__(self, self.mobject, run_time = run_time, **kwargs)
 
+    # Beware: This does NOT take care of updating the subanimation to 0
+    # This was important to avoid a pernicious possibility in which subanimations were called
+    # with update(0) twice, which could in turn call a sub-Succession with update(0) four times,
+    # continuing exponentially
     def jump_to_start_of_anim(self, index):
+        if index != self.current_anim_index:
+            self.mobject.remove(*self.mobject.submobjects) # Should probably have a cleaner "remove_all" method...
+            self.mobject.add(self.animations[index].mobject)
+            for m in self.scene_mobjects_at_time[index].submobjects:
+                self.mobject.add(m)
+
         self.current_anim_index = index
         self.current_alpha = self.critical_alphas[index]
-
-        self.mobject.remove(*self.mobject.submobjects) # Should probably have a cleaner "remove_all" method...
-        self.mobject.add(self.animations[index].mobject)
-        for m in self.scene_mobjects_at_time[index].submobjects:
-            self.mobject.add(m)
-
-        self.animations[index].update(0)  
 
     def update_mobject(self, alpha):
         i = 0
