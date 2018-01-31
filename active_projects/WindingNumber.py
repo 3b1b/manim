@@ -201,7 +201,7 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         self.solveEquation()
 
 
-def color_func(alpha):
+def rev_to_color(alpha):
     alpha = alpha % 1
     colors = ["#FF0000", ORANGE, YELLOW, "#00FF00", "#0000FF", "#FF00FF"]
     num_colors = len(colors)
@@ -210,119 +210,6 @@ def color_func(alpha):
     end_index = (start_index + 1) % num_colors
 
     return interpolate_color(colors[start_index], colors[end_index], beta)
-
-# TODO: Perhaps have bullets (pulses) fade out and in at ends of line, instead of jarringly
-# popping out and in?
-#
-# TODO: Perhaps have bullets change color corresponding to a function of their coordinates?
-# This could involve some merging of functoinality with PiWalker
-class LinePulser(ContinualAnimation):
-    def __init__(self, line, bullet_template, num_bullets, pulse_time, output_func = None, **kwargs):
-        self.line = line
-        self.num_bullets = num_bullets
-        self.pulse_time = pulse_time
-        self.bullets = [bullet_template.copy() for i in range(num_bullets)]
-        self.output_func = output_func
-        ContinualAnimation.__init__(self, VGroup(line, VGroup(*self.bullets)), **kwargs)
-
-    def update_mobject(self, dt):
-        alpha = self.external_time % self.pulse_time
-        start = self.line.get_start()
-        end = self.line.get_end()
-        for i in range(self.num_bullets):
-            position = interpolate(start, end, 
-                np.true_divide((i + alpha),(self.num_bullets)))
-            self.bullets[i].move_to(position)
-            if self.output_func:
-                position_2d = (position[0], position[1])
-                rev = point_to_rev(self.output_func(position_2d))
-                color = color_func(rev)
-                self.bullets[i].set_color(color)
-
-class ArrowCircleTest(Scene):
-    def construct(self):
-        circle_radius = 3
-        circle = Circle(radius = circle_radius, color = WHITE)
-        self.add(circle)
-
-        base_arrow = Arrow(circle_radius * 0.7 * RIGHT, circle_radius * 1.3 * RIGHT)
-
-        def rev_rotate(x, revs):
-            x.rotate(revs * TAU, about_point = ORIGIN)
-            x.set_color(color_func(revs))
-            return x
-
-        num_arrows = 8 * 3
-        arrows = [rev_rotate(base_arrow.copy(), (np.true_divide(i, num_arrows))) for i in range(num_arrows)]
-        arrows_vgroup = VGroup(*arrows)
-
-        self.play(ShowCreation(arrows_vgroup), run_time = 2.5, rate_func = None)
-
-        self.wait()
-
-class FuncRotater(Animation):
-    CONFIG = {
-        "rotate_func" : lambda x : x # Func from alpha to revolutions
-    }
-
-    # Perhaps abstract this out into an "Animation updating from original object" class
-    def update_submobject(self, submobject, starting_submobject, alpha):
-        submobject.points = np.array(starting_submobject.points)
-
-    def update_mobject(self, alpha):
-        Animation.update_mobject(self, alpha)
-        angle_revs = self.rotate_func(alpha)
-        # We do a clockwise rotation
-        self.mobject.rotate(
-            -angle_revs * TAU, 
-            about_point = ORIGIN
-        )
-        self.mobject.set_color(color_func(angle_revs))
-
-class TestRotater(Scene):
-    def construct(self):
-        test_line = Line(ORIGIN, RIGHT)
-        self.play(FuncRotater(
-            test_line,
-            rotate_func = lambda x : x % 0.25,
-            run_time = 10))
-
-# TODO: Be careful about clockwise vs. counterclockwise convention throughout!
-# Make sure this is correct everywhere in resulting video.
-class OdometerScene(Scene):
-    CONFIG = {
-        "rotate_func" : lambda x : np.sin(x * TAU),
-        "run_time" : 5,
-        "dashed_line_angle" : None,
-        "biased_display_start" : None
-    }
-
-    def construct(self):
-        radius = 1.3
-        circle = Circle(center = ORIGIN, radius = radius)
-        self.add(circle)
-
-        if self.dashed_line_angle:
-            dashed_line = DashedLine(ORIGIN, radius * RIGHT)
-            # Clockwise rotation
-            dashed_line.rotate(-self.dashed_line_angle * TAU, about_point = ORIGIN)
-            self.add(dashed_line)
-        
-        num_display = DecimalNumber(0, include_background_rectangle = True)
-        num_display.move_to(2 * DOWN)
-
-        display_val_bias = 0
-        if self.biased_display_start != None:
-            display_val_bias = self.biased_display_start - self.rotate_func(0)
-        display_func = lambda alpha : self.rotate_func(alpha) + display_val_bias
-
-        base_arrow = Arrow(ORIGIN, RIGHT, buff = 0)
-
-        self.play(
-            FuncRotater(base_arrow, rotate_func = self.rotate_func),
-            ChangingDecimal(num_display, display_func),
-            run_time = self.run_time,
-            rate_func = None)
 
 def point_to_rev((x, y)):
     # Warning: np.arctan2 would happily discontinuously returns the value 0 for (0, 0), due to 
@@ -463,8 +350,8 @@ class WalkerAnimation(Animation):
         cur_point = self.coords_to_point(cur_x, cur_y)
         self.mobject.walker.move_to(cur_point)
         rev = self.rev_func(cur_coords)
-        self.mobject.walker.set_color(color_func(rev))
-        self.mobject.arrow.set_color(color_func(rev))
+        self.mobject.walker.set_color(rev_to_color(rev))
+        self.mobject.arrow.set_color(rev_to_color(rev))
         self.mobject.arrow.rotate(
             rev * TAU, 
             about_point = ORIGIN #self.mobject.arrow.get_start()
@@ -706,6 +593,119 @@ class EquationSolver2d(Scene):
 
         self.wait()
 
+# TODO: Perhaps have bullets (pulses) fade out and in at ends of line, instead of jarringly
+# popping out and in?
+#
+# TODO: Perhaps have bullets change color corresponding to a function of their coordinates?
+# This could involve some merging of functoinality with PiWalker
+class LinePulser(ContinualAnimation):
+    def __init__(self, line, bullet_template, num_bullets, pulse_time, output_func = None, **kwargs):
+        self.line = line
+        self.num_bullets = num_bullets
+        self.pulse_time = pulse_time
+        self.bullets = [bullet_template.copy() for i in range(num_bullets)]
+        self.output_func = output_func
+        ContinualAnimation.__init__(self, VGroup(line, VGroup(*self.bullets)), **kwargs)
+
+    def update_mobject(self, dt):
+        alpha = self.external_time % self.pulse_time
+        start = self.line.get_start()
+        end = self.line.get_end()
+        for i in range(self.num_bullets):
+            position = interpolate(start, end, 
+                np.true_divide((i + alpha),(self.num_bullets)))
+            self.bullets[i].move_to(position)
+            if self.output_func:
+                position_2d = (position[0], position[1])
+                rev = point_to_rev(self.output_func(position_2d))
+                color = rev_to_color(rev)
+                self.bullets[i].set_color(color)
+
+class ArrowCircleTest(Scene):
+    def construct(self):
+        circle_radius = 3
+        circle = Circle(radius = circle_radius, color = WHITE)
+        self.add(circle)
+
+        base_arrow = Arrow(circle_radius * 0.7 * RIGHT, circle_radius * 1.3 * RIGHT)
+
+        def rev_rotate(x, revs):
+            x.rotate(revs * TAU, about_point = ORIGIN)
+            x.set_color(rev_to_color(revs))
+            return x
+
+        num_arrows = 8 * 3
+        arrows = [rev_rotate(base_arrow.copy(), (np.true_divide(i, num_arrows))) for i in range(num_arrows)]
+        arrows_vgroup = VGroup(*arrows)
+
+        self.play(ShowCreation(arrows_vgroup), run_time = 2.5, rate_func = None)
+
+        self.wait()
+
+class FuncRotater(Animation):
+    CONFIG = {
+        "rotate_func" : lambda x : x # Func from alpha to revolutions
+    }
+
+    # Perhaps abstract this out into an "Animation updating from original object" class
+    def update_submobject(self, submobject, starting_submobject, alpha):
+        submobject.points = np.array(starting_submobject.points)
+
+    def update_mobject(self, alpha):
+        Animation.update_mobject(self, alpha)
+        angle_revs = self.rotate_func(alpha)
+        # We do a clockwise rotation
+        self.mobject.rotate(
+            -angle_revs * TAU, 
+            about_point = ORIGIN
+        )
+        self.mobject.set_color(rev_to_color(angle_revs))
+
+class TestRotater(Scene):
+    def construct(self):
+        test_line = Line(ORIGIN, RIGHT)
+        self.play(FuncRotater(
+            test_line,
+            rotate_func = lambda x : x % 0.25,
+            run_time = 10))
+
+# TODO: Be careful about clockwise vs. counterclockwise convention throughout!
+# Make sure this is correct everywhere in resulting video.
+class OdometerScene(Scene):
+    CONFIG = {
+        "rotate_func" : lambda x : np.sin(x * TAU),
+        "run_time" : 5,
+        "dashed_line_angle" : None,
+        "biased_display_start" : None
+    }
+
+    def construct(self):
+        radius = 1.3
+        circle = Circle(center = ORIGIN, radius = radius)
+        self.add(circle)
+
+        if self.dashed_line_angle:
+            dashed_line = DashedLine(ORIGIN, radius * RIGHT)
+            # Clockwise rotation
+            dashed_line.rotate(-self.dashed_line_angle * TAU, about_point = ORIGIN)
+            self.add(dashed_line)
+        
+        num_display = DecimalNumber(0, include_background_rectangle = True)
+        num_display.move_to(2 * DOWN)
+
+        display_val_bias = 0
+        if self.biased_display_start != None:
+            display_val_bias = self.biased_display_start - self.rotate_func(0)
+        display_func = lambda alpha : self.rotate_func(alpha) + display_val_bias
+
+        base_arrow = Arrow(ORIGIN, RIGHT, buff = 0)
+
+        self.play(
+            FuncRotater(base_arrow, rotate_func = self.rotate_func),
+            ChangingDecimal(num_display, display_func),
+            run_time = self.run_time,
+            rate_func = None)
+
 #############
 # Above are mostly general tools; here, we list, in order, finished or near-finished scenes
 
@@ -909,7 +909,6 @@ class LoopSplitScene(Scene):
         bullet_template, 
         num_bullets = 4, 
         pulse_time = 1, 
-        color_func = None, 
         **kwargs):
         line = Line(start, end, **kwargs)
         anim = LinePulser(
@@ -1086,13 +1085,6 @@ class DiffOdometer(OdometerScene):
 
 # Writing new Pi walker scenes by parametrizing general template
 
-# Generalizing Pi walker stuff to make bullets on pulsing lines change colors dynamically according to 
-# function traced out
-
-# Ask about tracked mobject, which is probably very useful for our animations 
-# (let's add a ChangingDecimal outputting winding number calculations tracking Pi walkers, 
-# particularly in EquationSolver2d)
-
 # ----
 
 # Pi creature emotion stuff
@@ -1102,5 +1094,8 @@ class DiffOdometer(OdometerScene):
 # Borsuk-Ulam visuals
 
 # Domain coloring
+
+# TODO: Add to camera an option for low-quality background than other rendering, helpful
+# for previews
 
 # FIN
