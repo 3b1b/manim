@@ -125,6 +125,9 @@ def rgb_to_color(rgb):
 def rgba_to_color(rgba):
     return rgb_to_color(rgba[:3])
 
+def rgb_to_hex(rgb):
+    return Color(rgb = rgb).get_hex_l()
+
 def invert_color(color):
     return rgb_to_color(1.0 - color_to_rgb(color))
 

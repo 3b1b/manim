@@ -28,7 +28,8 @@ class ThreeDCamera(CameraWithPerspective):
     CONFIG = {
         "sun_vect" : 5*UP+LEFT,
         "shading_factor" : 0.2,
-        "distance" : 5,
+        "distance" : 5.,
+        "default_distance" : 5.,
         "phi" : 0, #Angle off z axis
         "theta" : -TAU/4, #Rotation about z axis
     }
@@ -131,7 +132,7 @@ class ThreeDCamera(CameraWithPerspective):
         self.phi, self.theta, self.distance = point
 
     def get_view_transformation_matrix(self):
-        return np.dot(
+        return (self.default_distance / self.get_distance()) * np.dot(
             rotation_matrix(self.get_phi(), LEFT),
             rotation_about_z(-self.get_theta() - np.pi/2),
         )
