@@ -22,12 +22,13 @@ class Camera(object):
         "max_allowable_norm" : 2*SPACE_WIDTH,
         "image_mode" : "RGBA",
         "n_rgb_coords" : 4,
-        "background_alpha" : 0, #Out of 255
+        "background_alpha" : 0, #Out of color_max_val
         "pixel_array_dtype" : 'uint8'
     }
 
     def __init__(self, background = None, **kwargs):
         digest_config(self, kwargs, locals())
+        self.color_max_val = np.iinfo(self.pixel_array_dtype).max
         self.init_background()
         self.resize_space_shape()
         self.reset()
@@ -75,11 +76,39 @@ class Camera(object):
     def get_pixel_array(self):
         return self.pixel_array
 
-    def set_pixel_array(self, pixel_array):
-        self.pixel_array = np.array(pixel_array)
+    def convert_pixel_array(self, pixel_array, convert_from_floats = False):
+        retval = np.array(pixel_array)
+        if convert_from_floats:
+            retval = np.apply_along_axis(
+                lambda f : (f * self.color_max_val).astype(self.pixel_array_dtype),
+                2,
+                retval)
+        return retval
 
-    def set_background(self, pixel_array):
-        self.background = np.array(pixel_array)
+    def set_pixel_array(self, pixel_array, convert_from_floats = False):
+        self.pixel_array = self.convert_pixel_array(pixel_array, convert_from_floats)
+
+    def set_background(self, pixel_array, convert_from_floats = False):
+        self.background = self.convert_pixel_array(pixel_array, convert_from_floats)
+
+    def set_background_from_func(self, coords_to_colors_func):
+        """
+        Sets background by using coords_to_colors_func to determine each pixel's color. Each input 
+        to coords_to_colors_func is an (x, y) pair in space (in ordinary space coordinates; not 
+        pixel coordinates), and each output is expected to be an RGBA array of 4 floats.
+        """
+
+        print "Starting set_background_from_func"
+
+        coords = self.get_coords_of_all_pixels()
+        new_background = np.apply_along_axis(
+            coords_to_colors_func,
+            2,
+            coords
+        )
+        self.set_background(new_background, convert_from_floats = True)
+
+        print "Ending set_background_from_func"
 
     def reset(self):
         self.set_pixel_array(self.background)
@@ -173,7 +202,7 @@ class Camera(object):
         )
         fill = aggdraw.Brush(
             self.color_to_hex_l(self.get_fill_color(vmobject)),
-            opacity = int(255*vmobject.get_fill_opacity())
+            opacity = int(self.color_max_val*vmobject.get_fill_opacity())
         )
         return (pen, fill)
 
@@ -222,7 +251,7 @@ class Camera(object):
         )
         rgba_len = self.pixel_array.shape[2]
 
-        rgbas = (255*rgbas).astype('uint8')
+        rgbas = (self.color_max_val*rgbas).astype(self.pixel_array_dtype)
         target_len = len(pixel_coords)
         factor = target_len/len(rgbas)
         rgbas = np.array([rgbas]*factor).reshape((target_len, rgba_len))
@@ -311,7 +340,7 @@ class Camera(object):
 
     def overlay_rgba_array(self, arr):
         # """ Overlays arr onto self.pixel_array with relevant alphas"""
-        bg, fg = self.pixel_array/255.0, arr/255.0
+        bg, fg = fdiv(self.pixel_array, self.color_max_val), fdiv(arr, self.color_max_val)
         bga, fga = [arr[:,:,3:] for arr in bg, fg]
         alpha_sum = fga + (1-fga)*bga
         with np.errstate(divide = 'ignore', invalid='ignore'):
@@ -320,7 +349,7 @@ class Camera(object):
                 np.divide(bg[:,:,:3]*(1-fga)*bga, alpha_sum),
             ])
         bg[:,:,3:] = 1 - (1 - bga)*(1 - fga)
-        self.pixel_array = (255*bg).astype(self.pixel_array_dtype)
+        self.pixel_array = (self.color_max_val*bg).astype(self.pixel_array_dtype)
 
     def align_points_to_camera(self, points):
         ## This is where projection should live
@@ -382,36 +411,25 @@ class Camera(object):
         size = pixel_coords.size
         return pixel_coords.reshape((size/2, 2))
 
-    def get_points_of_all_pixels(self):
-        """
-        Returns an array a such that a[i, j] gives the spatial
-        coordinates associated with the pixel self.pixel_array[i, j]
-        """
-        shape = self.pixel_array.shape
-        indices = np.indices(shape[:2], dtype = 'float64')
-        all_point_coords = np.zeros((shape[0], shape[1], 3))
-        for i, space_dim in enumerate([SPACE_HEIGHT, SPACE_WIDTH]):
-            all_point_coords[:,:,i] = \
-                indices[i,:,:]*2*space_dim/shape[i] - space_dim
-        return all_point_coords
+    def get_coords_of_all_pixels(self):
+        uncentered_pixel_indices = np.indices(self.pixel_shape).transpose(1, 2, 0)
+        uncentered_space_indices = np.true_divide(
+            uncentered_pixel_indices * self.space_shape, 
+            self.pixel_shape)
+        # Could structure above line's computation slightly differently, but figured (without much 
+        # thought) multiplying by space_shape first, THEN dividing by pixel_shape, is probably 
+        # better than the other order, for avoiding underflow quantization in the division (whereas 
+        # overflow is unlikely to be a problem)
+        centered_space_indices = uncentered_space_indices - np.true_divide(self.space_shape, 2)
 
-    def set_background_by_color_function(self, point_to_rgba_func):
-        """
-        point_to_rgba_func should take in a point in R^2, an array
-        of two floats, and output a four element array representing 
-        rgba values, all between 0 and 1.
-        """
+        # Have to account for increasing y now going up instead of down, and also for swapping the 
+        # order of x and y
+        coords = np.apply_along_axis(
+            lambda (y, x) : (x, -y),
+            2,
+            centered_space_indices)
 
-        # point_to_rgba = lambda p : [1, 1, 0, 0]
-        def float_rgba_to_int_rgba(rgba):
-            return (255*np.array(rgba)).astype(self.pixel_array_dtype)
-
-        points_of_all_pixels = self.get_points_of_all_pixels()
-        self.set_background(np.apply_along_axis(
-            lambda p : float_rgba_to_int_rgba(point_to_rgba_func(p)),
-            2, points_of_all_pixels
-        ))
-        self.reset() # Perhaps this really belongs in set_background?
+        return coords
 
 
 class MovingCamera(Camera):
@@ -497,20 +515,24 @@ class MultiCamera(Camera):
                 shifted_camera.start_x:shifted_camera.end_x] \
             = shifted_camera.camera.pixel_array
 
-    def set_background(self, pixel_array):
+    def set_background(self, pixel_array, **kwargs):
         for shifted_camera in self.shifted_cameras:
             shifted_camera.camera.set_background(
                 pixel_array[
                     shifted_camera.start_y:shifted_camera.end_y, 
-                    shifted_camera.start_x:shifted_camera.end_x])
+                    shifted_camera.start_x:shifted_camera.end_x],
+                **kwargs
+            )
 
-    def set_pixel_array(self, pixel_array):
-        Camera.set_pixel_array(self, pixel_array)
+    def set_pixel_array(self, pixel_array, **kwargs):
+        Camera.set_pixel_array(self, pixel_array, **kwargs)
         for shifted_camera in self.shifted_cameras:
             shifted_camera.camera.set_pixel_array(
                 pixel_array[
                     shifted_camera.start_y:shifted_camera.end_y, 
-                    shifted_camera.start_x:shifted_camera.end_x])
+                    shifted_camera.start_x:shifted_camera.end_x],
+                **kwargs
+            )
 
     def init_background(self):
         Camera.init_background(self)

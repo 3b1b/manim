@@ -638,3 +638,6 @@ class DictAsObject(object):
     def __init__(self, dict):
          self.__dict__ = dict
 
+# Just to have a less heavyweight name for this extremely common operation
+def fdiv(a, b):
+    return np.true_divide(a,b)

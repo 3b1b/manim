@@ -211,14 +211,34 @@ def rev_to_color(alpha):
 
     return interpolate_color(colors[start_index], colors[end_index], beta)
 
-def point_to_rev((x, y)):
+colorslist = map(color_to_rgba, ["#FF0000", ORANGE, YELLOW, "#00FF00", "#0000FF", "#FF00FF"])
+
+def rev_to_rgba(alpha):
+    # TODO: Merge with above
+    alpha = alpha % 1
+    colors = colorslist
+    num_colors = len(colors)
+    beta = (alpha % (1.0/num_colors)) * num_colors
+    start_index = int(np.floor(num_colors * alpha)) % num_colors
+    end_index = (start_index + 1) % num_colors
+
+    return interpolate(colors[start_index], colors[end_index], beta)
+
+def point_to_rev((x, y), allow_origin = False):
     # Warning: np.arctan2 would happily discontinuously returns the value 0 for (0, 0), due to 
     # design choices in the underlying atan2 library call, but for our purposes, this is 
     # illegitimate, and all winding number calculations must be set up to avoid this
-    if (x, y) == (0, 0):
+    if not(allow_origin) and (x, y) == (0, 0):
         print "Error! Angle of (0, 0) computed!"
-        return None
-    return np.true_divide(np.arctan2(y, x), TAU)
+        return
+    return fdiv(np.arctan2(y, x), TAU)
+
+def point_to_rgba(point):
+    rev = point_to_rev(point, allow_origin = True)
+    rgba = rev_to_rgba(rev)
+    base_size = np.sqrt(point[0]**2 + point[1]**2)
+    rescaled_size = np.sqrt(base_size/(base_size + 1))
+    return rgba * rescaled_size
 
 # Returns the value with the same fractional component as x, closest to m
 def resit_near(x, m):
@@ -232,7 +252,7 @@ def resit_near(x, m):
 def make_alpha_winder(func, start, end, num_checkpoints):
     check_points = [None for i in range(num_checkpoints)]
     check_points[0] = func(start)
-    step_size = np.true_divide(end - start, num_checkpoints)
+    step_size = fdiv(end - start, num_checkpoints)
     for i in range(num_checkpoints - 1):
         check_points[i + 1] = \
         resit_near(
@@ -334,7 +354,9 @@ class WalkerAnimation(Animation):
         self.rev_func = rev_func
         self.coords_to_point = coords_to_point
         self.compound_walker = VGroup()
-        self.compound_walker.walker = PiCreature(color = RED)
+        dot = Dot()
+        dot.scale(5)
+        self.compound_walker.walker = dot #PiCreature()
         self.compound_walker.walker.scale(scale_factor)
         self.compound_walker.arrow = Arrow(ORIGIN, RIGHT) #, buff = 0)
         self.compound_walker.digest_mobject_attrs()
@@ -403,20 +425,34 @@ def LinearWalker(
         number_update_func = number_update_func,
         **kwargs)
 
-class PiWalker(Scene):
+class ColorMappedByFuncScene(Scene):
     CONFIG = {
-        "func" : plane_func_from_complex_func(lambda c : c**2),
+        "func" : lambda p : p
+    }
+
+    def construct(self):
+        self.num_plane = NumberPlane()
+        self.num_plane.fade()
+        self.add(self.num_plane)
+        self.camera.set_background_from_func(
+            lambda (x, y): point_to_rgba(
+                self.func(
+                    self.num_plane.point_to_coords(np.array([x, y, 0]))
+                )
+            )
+        )
+
+class PiWalker(ColorMappedByFuncScene):
+    CONFIG = {
         "walk_coords" : [],
         "step_run_time" : 1
     }
 
     def construct(self):
+        ColorMappedByFuncScene.construct(self)
+        num_plane = self.num_plane
 
         rev_func = lambda p : point_to_rev(self.func(p))
-
-        num_plane = NumberPlane()
-        num_plane.fade()
-        self.add(num_plane)
 
         walk_coords = self.walk_coords
         for i in range(len(walk_coords)):
@@ -425,6 +461,7 @@ class PiWalker(Scene):
             end_x, end_y = end_coords = walk_coords[(i + 1) % len(walk_coords)]
             end_point = num_plane.coords_to_point(end_x, end_y)
             self.play(
+                ShowCreation(Line(start_point, end_point), rate_func = None),
                 LinearWalker(
                     start_coords = start_coords, 
                     end_coords = end_coords,
@@ -432,7 +469,6 @@ class PiWalker(Scene):
                     rev_func = rev_func,
                     remover = (i < len(walk_coords) - 1)
                 ),
-                ShowCreation(Line(start_point, end_point), rate_func = None),
                 run_time = self.step_run_time)
 
         # TODO: Allow smooth paths instead of breaking them up into lines, and 
@@ -473,9 +509,8 @@ class PiWalkerCircle(PiWalker):
 # TODO: Perhaps restructure this to avoid using AnimationGroup, and instead 
 # use lists of animations or lists or other such data, to be merged and processed into parallel 
 # animations later
-class EquationSolver2d(Scene):
+class EquationSolver2d(ColorMappedByFuncScene):
     CONFIG = {
-        "func" : plane_poly_with_roots((1, 2), (-1, 3)),
         "initial_lower_x" : -5.1,
         "initial_upper_x" : 5.1,
         "initial_lower_y" : -3.1,
@@ -487,9 +522,8 @@ class EquationSolver2d(Scene):
     }
 
     def construct(self):
-        num_plane = NumberPlane()
-        num_plane.fade()
-        self.add(num_plane)
+        ColorMappedByFuncScene.construct(self)
+        num_plane = self.num_plane
 
         rev_func = lambda p : point_to_rev(self.func(p))
         clockwise_rev_func = lambda p : -rev_func(p)
@@ -613,7 +647,7 @@ class LinePulser(ContinualAnimation):
         end = self.line.get_end()
         for i in range(self.num_bullets):
             position = interpolate(start, end, 
-                np.true_divide((i + alpha),(self.num_bullets)))
+                fdiv((i + alpha),(self.num_bullets)))
             self.bullets[i].move_to(position)
             if self.output_func:
                 position_2d = (position[0], position[1])
@@ -635,7 +669,7 @@ class ArrowCircleTest(Scene):
             return x
 
         num_arrows = 8 * 3
-        arrows = [rev_rotate(base_arrow.copy(), (np.true_divide(i, num_arrows))) for i in range(num_arrows)]
+        arrows = [rev_rotate(base_arrow.copy(), (fdiv(i, num_arrows))) for i in range(num_arrows)]
         arrows_vgroup = VGroup(*arrows)
 
         self.play(ShowCreation(arrows_vgroup), run_time = 2.5, rate_func = None)
@@ -1097,5 +1131,16 @@ class DiffOdometer(OdometerScene):
 
 # TODO: Add to camera an option for low-quality background than other rendering, helpful
 # for previews
+
+####################
+
+class PureTest(Scene):
+    def construct(self):
+        point_list = [(1, 1), (2, 2), (3, 3), (4, 4), (5, 5)]
+        output_list = map(lambda p : (p, point_to_rgba(p)), point_list)
+
+        print output_list
+
+        self.wait()
 
 # FIN

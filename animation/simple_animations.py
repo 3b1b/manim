@@ -446,9 +446,9 @@ class Succession(Animation):
     def jump_to_start_of_anim(self, index):
         if index != self.current_anim_index:
             self.mobject.remove(*self.mobject.submobjects) # Should probably have a cleaner "remove_all" method...
-            self.mobject.add(self.animations[index].mobject)
             for m in self.scene_mobjects_at_time[index].submobjects:
                 self.mobject.add(m)
+            self.mobject.add(self.animations[index].mobject)
 
         self.current_anim_index = index
         self.current_alpha = self.critical_alphas[index]
