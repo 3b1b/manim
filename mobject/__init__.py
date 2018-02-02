@@ -6,5 +6,5 @@ __all__ = [
 
 from mobject import Mobject, Group
 from point_cloud_mobject import Point, Mobject1D, Mobject2D, PMobject
-from vectorized_mobject import VMobject, VGroup
+from vectorized_mobject import VMobject, VGroup, BackgroundColoredVMobject
 from image_mobject import ImageMobject

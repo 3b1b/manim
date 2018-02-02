@@ -7,7 +7,8 @@ from colour import Color
 import aggdraw
 
 from helpers import *
-from mobject import Mobject, PMobject, VMobject, ImageMobject, Group
+from mobject import Mobject, PMobject, VMobject, \
+    ImageMobject, Group, BackgroundColoredVMobject
 
 class Camera(object):
     CONFIG = {
@@ -160,13 +161,15 @@ class Camera(object):
         mobjects = self.get_mobjects_to_display(mobjects, **kwargs)
         vmobjects = []
         for mobject in mobjects:
-            if isinstance(mobject, VMobject):
+            if isinstance(mobject, VMobject) and not isinstance(mobject, BackgroundColoredVMobject):
                 vmobjects.append(mobject)
             elif len(vmobjects) > 0:
                 self.display_multiple_vectorized_mobjects(vmobjects)
                 vmobjects = []
                 
-            if isinstance(mobject, PMobject):
+            if isinstance(mobject, BackgroundColoredVMobject):
+                self.display_background_colored_vmobject(mobject)
+            elif isinstance(mobject, PMobject):
                 self.display_point_cloud(
                     mobject.points, mobject.rgbas, 
                     self.adjusted_thickness(mobject.stroke_width)
@@ -249,6 +252,29 @@ class Camera(object):
             end = "Z" if vmobject.mark_paths_closed else ""
             result += " ".join([start] + cubics + [end])
         return result
+
+    def display_background_colored_vmobject(self, cvmobject):
+        mob_array = np.zeros(
+            self.pixel_array.shape,
+            dtype = self.pixel_array_dtype
+        )
+        image = Image.fromarray(mob_array, mode = self.image_mode)
+        canvas = aggdraw.Draw(image)
+        self.display_vectorized(cvmobject, canvas)
+        canvas.flush()
+        cv_background = cvmobject.background_array
+        if not np.all(self.pixel_array.shape == cv_background):
+            cvmobject.resize_background_array_to_match(self.pixel_array)
+            cv_background = cvmobject.background_array
+        array = np.array(
+            (np.array(mob_array).astype('float')/255.)*\
+            np.array(cv_background),
+            dtype = self.pixel_array_dtype
+        )
+        self.pixel_array[:,:] = np.maximum(
+            self.pixel_array, array
+        )
+
 
     def display_point_cloud(self, points, rgbas, thickness):
         if len(points) == 0:
