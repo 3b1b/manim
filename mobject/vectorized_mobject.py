@@ -427,7 +427,7 @@ class VMobject(Mobject):
         return self
 
 class VGroup(VMobject):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):        
         if len(args) == 1 and isinstance(args[0], (tuple, list)):
             args = args[0]
 
@@ -438,6 +438,7 @@ class VGroup(VMobject):
             else: packed_args.append(arg)
 
         VMobject.__init__(self, *packed_args, **kwargs)
+
 
 class VectorizedPoint(VMobject):
     CONFIG = {
@@ -456,39 +457,6 @@ class VectorizedPoint(VMobject):
 
     def get_height(self):
         return self.artificial_height
-
-class BackgroundColoredVMobject(VMobject):
-    CONFIG = {
-        "background_image" : "color_background",
-        "stroke_color" : WHITE,
-        "fill_color" : WHITE,
-    }
-    def __init__(self, vmobject, **kwargs):
-        # Note: At the moment, this does nothing to mimic
-        # the full family of the vmobject passed in.
-        VMobject.__init__(self, **kwargs)
-
-        #Match properties of vmobject
-        self.points = np.array(vmobject.points)
-        self.set_stroke(WHITE, vmobject.get_stroke_width())
-        self.set_fill(WHITE, vmobject.get_fill_opacity())
-        for submob in vmobject.submobjects:
-            self.add(BackgroundColoredVMobject(submob, **kwargs))
-
-        #Initialize background array
-        path = get_full_raster_image_path(self.background_image)
-        image = Image.open(path)
-        self.background_array = np.array(image)
-
-    def resize_background_array(self, new_width, new_height, mode = "RGBA"):
-        image = Image.fromarray(self.background_array, mode = mode)
-        resized_image = image.resize((new_width, new_height))
-        self.background_array = np.array(resized_image)
-
-    def resize_background_array_to_match(self, pixel_array):
-        height, width = pixel_array.shape[:2]
-        mode = "RGBA" if pixel_array.shape[2] == 4 else "RGB"
-        self.resize_background_array(width, height, mode)
 
 
 
