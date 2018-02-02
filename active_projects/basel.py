@@ -30,12 +30,6 @@ from mobject.vectorized_mobject import *
 
 from scipy.spatial import ConvexHull
 
-## To watch one of these scenes, run the following:
-## python extract_scene.py -p file_name <SceneName>
-
-inverse_power_law = lambda maxint,scale,cutoff,exponent: \
-    (lambda r: maxint * (cutoff/(r/scale+cutoff))**exponent)
-inverse_quadratic = lambda maxint,scale,cutoff: inverse_power_law(maxint,scale,cutoff,2)
 
 LIGHT_COLOR = YELLOW
 INDICATOR_RADIUS = 0.7
@@ -59,6 +53,10 @@ SPOTLIGHT_DIMMED = 0.2
 LIGHT_COLOR = YELLOW
 DEGREES = TAU/360
 
+inverse_power_law = lambda maxint,scale,cutoff,exponent: \
+    (lambda r: maxint * (cutoff/(r/scale+cutoff))**exponent)
+inverse_quadratic = lambda maxint,scale,cutoff: inverse_power_law(maxint,scale,cutoff,2)
+
 
 class AngleUpdater(ContinualAnimation):
     def __init__(self, angle_arc, spotlight, **kwargs):
@@ -77,13 +75,6 @@ class AngleUpdater(ContinualAnimation):
         self.angle_arc.points = new_arc.points
         self.angle_arc.add_tip(tip_length = ARC_TIP_LENGTH,
             at_start = True, at_end = True)
-
-
-
-
-
-
-
 
 
 
@@ -181,6 +172,7 @@ class LightSource(VMobject):
         self.ambient_light.move_source_to(point)
         if self.has_screen():
             self.spotlight.move_source_to(point)
+        return self
 
     def set_radius(self,new_radius):
         self.radius = new_radius
@@ -278,6 +270,7 @@ class AmbientLight(VMobject):
         for submob in self.submobjects:
             if type(submob) == Annulus:
                 submob.shift(v)
+        return self
 
     def dimming(self,new_alpha):
         old_alpha = self.max_opacity
@@ -298,12 +291,21 @@ class Spotlight(VMobject):
         "num_levels" : 10,
         "radius" : 5.0,
         "screen" : None,
-        "shadow" : VMobject(fill_color = BLACK, stroke_width = 0, fill_opacity = 1.0),
-        "projection_direction": OUT
+        "shadow" : VMobject(fill_color = RED, stroke_width = 0, fill_opacity = 1.0),
+        "camera": None
     }
 
+    def projection_direction(self):
+        if self.camera == None:
+            return OUT
+        else:
+            v = self.camera.get_cartesian_coords()
+            return v/np.linalg.norm(v)
+
     def project(self,point):
-        return project_along_vector(point,self.projection_direction)
+        v = self.projection_direction()
+        w = project_along_vector(point,v)
+        return w
 
     def generate_points(self):
 
@@ -316,32 +318,35 @@ class Spotlight(VMobject):
             dr = self.radius / self.num_levels
             lower_ray, upper_ray = self.viewing_rays(self.screen)
 
-
             for r in np.arange(0, self.radius, dr):
-                alpha = self.max_opacity * self.opacity_function(r)
-                annular_sector = AnnularSector(
-                    inner_radius = r,
-                    outer_radius = r + dr,
-                    color = self.color,
-                    fill_opacity = alpha,
-                    start_angle = lower_angle,
-                    angle = upper_angle - lower_angle
-                )
-                # rotate (not project) it into the viewing plane
-                rotation_matrix = z_to_vector(self.projection_direction)
-                annular_sector.apply_matrix(rotation_matrix)
-                # now rotate it inside that plane
-                rotated_RIGHT = np.dot(RIGHT, rotation_matrix.T)
-                projected_RIGHT = self.project(RIGHT)
-                omega = angle_between_vectors(rotated_RIGHT,projected_RIGHT)
-                annular_sector.rotate(omega, axis = self.projection_direction)
-
-                annular_sector.move_arc_center_to(self.source_point)
-                self.add(annular_sector)
+                new_sector = self.new_sector(r,dr,lower_angle,upper_angle)
+                self.add(new_sector)
 
         self.update_shadow(point = self.source_point)
-        self.add(self.shadow)
+        self.add_to_back(self.shadow)
 
+    def new_sector(self,r,dr,lower_angle,upper_angle):
+
+        alpha = self.max_opacity * self.opacity_function(r)
+        annular_sector = AnnularSector(
+            inner_radius = r,
+            outer_radius = r + dr,
+            color = self.color,
+            fill_opacity = alpha,
+            start_angle = lower_angle,
+            angle = upper_angle - lower_angle
+        )
+        # rotate (not project) it into the viewing plane
+        rotation_matrix = z_to_vector(self.projection_direction())
+        annular_sector.apply_matrix(rotation_matrix)
+        # now rotate it inside that plane
+        rotated_RIGHT = np.dot(RIGHT, rotation_matrix.T)
+        projected_RIGHT = self.project(RIGHT)
+        omega = angle_between_vectors(rotated_RIGHT,projected_RIGHT)
+        annular_sector.rotate(omega, axis = self.projection_direction())
+        annular_sector.move_arc_center_to(self.source_point)
+
+        return annular_sector
 
     def viewing_angle_of_point(self,point):
         # as measured from the positive x-axis
@@ -351,7 +356,7 @@ class Spotlight(VMobject):
         # determine the angle's sign depending on their plane's
         # choice of orientation. That choice is set by the camera
         # position, i. e. projection direction
-        if np.dot(self.projection_direction,np.cross(v1, v2)) > 0:
+        if np.dot(self.projection_direction(),np.cross(v1, v2)) > 0:
             return absolute_angle
         else:
             return -absolute_angle
@@ -372,10 +377,12 @@ class Spotlight(VMobject):
         return lower_angle, upper_angle
 
     def viewing_rays(self,screen):
+
         lower_angle, upper_angle = self.viewing_angles(screen)
         projected_RIGHT = self.project(RIGHT)/np.linalg.norm(self.project(RIGHT))
-        lower_ray = rotate_vector(projected_RIGHT,lower_angle, axis = self.projection_direction)
-        upper_ray = rotate_vector(projected_RIGHT,upper_angle, axis = self.projection_direction)
+        lower_ray = rotate_vector(projected_RIGHT,lower_angle, axis = self.projection_direction())
+        upper_ray = rotate_vector(projected_RIGHT,upper_angle, axis = self.projection_direction())
+        
         return lower_ray, upper_ray
 
 
@@ -393,68 +400,85 @@ class Spotlight(VMobject):
 
     def move_source_to(self,point):
         self.source_point = np.array(point)
-        self.recalculate_sectors()
+        self.update_sectors()
         self.update_shadow(point = point)
+        return self
 
 
-    def recalculate_sectors(self):
+    def update_sectors(self):
         if self.screen == None:
             return
         for submob in self.submobject_family():
             if type(submob) == AnnularSector:
                 lower_angle, upper_angle = self.viewing_angles(self.screen)
-                new_submob = AnnularSector(
-                    start_angle = lower_angle,
-                    angle = upper_angle - lower_angle,
-                    inner_radius = submob.inner_radius,
-                    outer_radius = submob.outer_radius
-                )
-                new_submob.move_arc_center_to(self.source_point)
-                new_submob.project_along_vector(self.projection_direction)
+                dr = submob.outer_radius - submob.inner_radius
+                new_submob = self.new_sector(submob.inner_radius,dr,lower_angle,upper_angle)
                 submob.points = new_submob.points
+
+    def update(self):
+        self.update_sectors()
+        self.update_shadow(point = self.source_point)
 
     def update_shadow(self,point = ORIGIN):
         
-        # point_cloud_2d = self.screen.get_anchors()[:,:2]
-        # source_point_2d = self.source_point[:2]
-        # point_cloud_2d.append(source_point_2d)
-        # hull_2d = ConvexHull(point_cloud_2d) # guaranteed to run ccw
-        # hull_2d.remove(source_point_2d)
-        # hull = []
-        # for point in hull_2d:
-        #     point_3d = np.array([point[0], point[1], 0])
-        #     hull.append(point_3d)
+        projected_screen_points = []
+        for point in self.screen.get_anchors():
+            projected_screen_points.append(self.project(point))
 
-        # hull_mobject = VMobject()
-        # hull_mobject.set_points_as_corners(hull)
+        projected_source = project_along_vector(self.source_point,self.projection_direction())
+
+        projected_point_cloud_3d = np.append(projected_screen_points,
+            np.reshape(projected_source,(1,3)),axis = 0)
+        rotation_matrix = z_to_vector(self.projection_direction())
+        back_rotation_matrix = rotation_matrix.T # i. e. its inverse
+
+        rotated_point_cloud_3d = np.dot(projected_point_cloud_3d,back_rotation_matrix.T)
+        # these points now should all have z = 0
+        point_cloud_2d = rotated_point_cloud_3d[:,:2]
+        # now we can compute the convex hull
+        hull_2d = ConvexHull(point_cloud_2d) # guaranteed to run ccw
+        hull = []
+
+        # we also need the projected source point
+        source_point_2d = np.dot(self.project(self.source_point),back_rotation_matrix.T)[:2]
+        
+        index = 0
+        for point in point_cloud_2d[hull_2d.vertices]:
+            if np.all(point - source_point_2d < 1.0e-6):
+                source_index = index
+                continue
+            point_3d = np.array([point[0], point[1], 0])
+            hull.append(point_3d)
+            index += 1
+
+        index = source_index
+        
+        hull_mobject = VMobject()
+        hull_mobject.set_points_as_corners(hull)
+        hull_mobject.apply_matrix(rotation_matrix)
 
 
-        # projection = ProjectAlongVector(hull_mobject,self.projection_direction)
-        # projected_screen_hull = projection.target_mobject
-        # self.shadow.points = projected_screen_hull.points
-        # ray1 = projected_screen_hull.points[0] - self.source_point
-        # ray1 = ray1/np.linalg.norm(ray1) * 100
-        # ray2 = projected_screen_hull.points[-1] - self.source_point
-        # ray2 = ray2/np.linalg.norm(ray2) * 100
-        # outpoint1 = projected_screen_hull.points[0] + ray1
-        # outpoint2 = projected_screen_hull.points[-1] + ray2
-        # self.shadow.add_control_points([outpoint2,outpoint1,projected_screen_hull.points[0]])
-        # self.shadow.mark_paths_closed = True
+        anchors = hull_mobject.get_anchors()
+
+        # add two control points for the outer cone
 
 
-        pass
-        # use_point = point #self.source_point
-        # self.shadow.points = self.screen.points
-        # ray1 = self.screen.points[0] - use_point
-        # ray2 = self.screen.points[-1] - use_point
-        # ray1 = ray1/np.linalg.norm(ray1) * 100
-        # ray1 = rotate_vector(ray1,-TAU/100)
-        # ray2 = ray2/np.linalg.norm(ray2) * 100
-        # ray2 = rotate_vector(ray2,TAU/100)
-        # outpoint1 = self.screen.points[0] + ray1
-        # outpoint2 = self.screen.points[-1] + ray2
-        # self.shadow.add_control_points([outpoint2,outpoint1,self.screen.points[0]])
-        # self.shadow.mark_paths_closed = True
+        ray1 = anchors[index - 1] - projected_source
+        ray1 = ray1/np.linalg.norm(ray1) * 100
+        ray2 = anchors[index] - projected_source
+        ray2 = ray2/np.linalg.norm(ray2) * 100
+        outpoint1 = anchors[index - 1] + ray1
+        outpoint2 = anchors[index] + ray2
+
+        new_anchors = anchors[:index]
+        new_anchors = np.append(new_anchors,np.array([outpoint1, outpoint2]),axis = 0)
+        new_anchors = np.append(new_anchors,anchors[index:],axis = 0)
+        self.shadow.set_points_as_corners(new_anchors)
+
+        # shift it one unit closer to the camera so it is in front of the spotlight
+        #self.shadow.shift(-500*self.projection_direction())
+        self.shadow.mark_paths_closed = True
+
 
 
 
@@ -490,7 +514,7 @@ class Spotlight(VMobject):
 class ScreenTracker(ContinualAnimation):
 
     def update_mobject(self, dt):
-        self.mobject.recalculate_sectors()
+        self.mobject.update()
         
 
 
@@ -1610,11 +1634,6 @@ class BackToEulerSumScene(PiCreatureScene):
    
     def construct(self):
         self.remove(self.get_primary_pi_creature())
-        self.show_lighthouses_on_number_line()
-
-
-
-    def show_lighthouses_on_number_line(self):
 
         NUM_CONES = 7
         NUM_VISIBLE_CONES = 6
@@ -1654,133 +1673,166 @@ class BackToEulerSumScene(PiCreatureScene):
 
 
 
-        bubble = ThoughtBubble(direction = DOWN,
-                            width = 7, height = 2.5,
-                            file_name = "Bubbles_thought_stretched.svg")
-        #bubble.flip(axis = RIGHT)
+        bubble = ThoughtBubble(direction = RIGHT,
+                            width = 4, height = 3,
+                            file_name = "Bubbles_thought.svg")
         bubble.next_to(randy,DOWN+LEFT)
-        bubble.rotate(-TAU/4)
-        bubble.flip(axis = UP)
-        bubble.shift(2.5*RIGHT+DOWN)
-        bubble.set_fill(color=BLACK, opacity = 1)
+        bubble.set_fill(color = BLACK, opacity = 1)
         
         self.play(
             randy.change, "wave_2",
             ShowCreation(bubble),
         )
 
-        lighthouses = []
-        lighthouse_pos = []
-        ambient_lights = []
-        light_indicators = []
-        indicators_as_mob = VMobject()
-
 
         euler_sum = TexMobject("1", "+", "{1\over 4}", 
-            "+", "{1\over 9}", "+", "{1\over 16}", "+", "{1\over 25}", "+", "{1\over 36}",
-            "+", "{1\over 49}")
+            "+", "{1\over 9}", "+", "{1\over 16}", "+", "{1\over 25}", "+", "\cdots", " ")
+        # the last entry is a dummy element which makes looping easier
         # used just for putting the fractions into the light indicators
             
-        intensities = np.array([1./n**2 for n in range(1,NUM_CONES+1)])
+        intensities = np.array([1./(n+1)**2 for n in range(NUM_CONES)])
         opacities = intensities * OPACITY_FOR_UNIT_INTENSITY
 
+        # repeat:
 
-        for i in range(1,NUM_CONES+1):
-            lighthouse = Lighthouse()
+        # fade in lighthouse
+        # switch on / fade in ambient light
+        # show creation / write light indicator
+        # move indicator onto origin
+            # while morphing and dimming
+        # move indicator into thought bubble
+            # while indicators already inside shift to the back
+            # and while term appears in the series below
+
+        point = self.number_line.number_to_point(1)
+        v = point - self.number_line.number_to_point(0)
+        light_source = LightSource().move_source_to(point)
+
+        self.play(FadeIn(light_source.lighthouse))
+        self.play(SwitchOn(light_source.ambient_light))
+
+        for i in range(2,NUM_VISIBLE_CONES + 1):
+
+            new_light_source = light_source.deepcopy()
+            new_light_source.ambient_light.dimming(0.001)
+            self.add(new_light_source)
             point = self.number_line.number_to_point(i)
-            ambient_light = AmbientLight(
-                opacity_function = inverse_quadratic(1,2,1),
-                num_levels = NUM_LEVELS,
-                radius = 12.0)
-            
-            ambient_light.move_source_to(point)
-            lighthouse.next_to(point,DOWN,0)
-            lighthouses.append(lighthouse)
-            ambient_lights.append(ambient_light)
-            lighthouse_pos.append(point)
 
-        for i in range(1,NUM_VISIBLE_CONES+1):
-
-            # create light indicators
-            # but they contain fractions!
-            indicator = LightIndicator(color = LIGHT_COLOR,
-                radius = INDICATOR_RADIUS,
-                opacity_for_unit_intensity = OPACITY_FOR_UNIT_INTENSITY,
-                show_reading = False
-            )
-            indicator.set_intensity(intensities[i-1])
-            indicator_reading = euler_sum[-2+2*i]
-            indicator_reading.scale_to_fit_height(0.8*indicator.get_height())
-            indicator_reading.move_to(indicator.get_center())
-            indicator.add(indicator_reading)
-            indicator.foreground.set_fill(None,opacities[i-1])
-
-
-            if i == 1:
-                indicator.next_to(randy,DOWN,buff = 5)
-                indicator_reading.scale_to_fit_height(0.4*indicator.get_height())
-                # otherwise we get a huge 1
-            else:
-                indicator.next_to(light_indicators[i-2],DOWN, buff = 0.2)
-
-            light_indicators.append(indicator)
-            indicators_as_mob.add(indicator)
-
-
-        bubble.add_content(indicators_as_mob)
-        indicators_as_mob.shift(DOWN+0.5*LEFT)
-
-
-        for lh in lighthouses:
-            self.add_foreground_mobject(lh)
-
-
-        # slowly switch on visible light cones and increment indicator
-        for (i,ambient_light) in zip(range(NUM_VISIBLE_CONES),ambient_lights[:NUM_VISIBLE_CONES]):
-            indicator_start_time = 0.4 * (i+1) * SWITCH_ON_RUN_TIME/ambient_light.radius * self.number_line.unit_size
-            indicator_stop_time = indicator_start_time + INDICATOR_UPDATE_TIME
-            indicator_rate_func = squish_rate_func(
-                smooth,indicator_start_time,indicator_stop_time)
             self.play(
-                SwitchOn(ambient_light),
-                FadeIn(light_indicators[i])
+                new_light_source.shift,v,
+                new_light_source.ambient_light.dimming, OPACITY_FOR_UNIT_INTENSITY,
             )
 
-        # quickly switch on off-screen light cones and increment indicator
-        for (i,ambient_light) in zip(range(NUM_VISIBLE_CONES,NUM_CONES),ambient_lights[NUM_VISIBLE_CONES:NUM_CONES]):
-            indicator_start_time = 0.5 * (i+1) * FAST_SWITCH_ON_RUN_TIME/ambient_light.radius * self.number_line.unit_size
-            indicator_stop_time = indicator_start_time + FAST_INDICATOR_UPDATE_TIME
-            indicator_rate_func = squish_rate_func(#smooth, 0.8, 0.9)
-                smooth,indicator_start_time,indicator_stop_time)
-            self.play(
-                SwitchOn(ambient_light, run_time = FAST_SWITCH_ON_RUN_TIME),
-            )
+            new_light_source.move_source_to(point)
+            light_source = new_light_source
 
 
-        # show limit value in light indicator and an equals sign
-        sum_indicator = LightIndicator(color = LIGHT_COLOR,
-                radius = INDICATOR_RADIUS,
-                opacity_for_unit_intensity = OPACITY_FOR_UNIT_INTENSITY,
-                show_reading = False
-            )
-        sum_indicator.set_intensity(intensities[0] * np.pi**2/6)
-        sum_indicator_reading = TexMobject("{\pi^2 \over 6}")
-        sum_indicator_reading.scale_to_fit_height(0.8 * sum_indicator.get_height())
-        sum_indicator.add(sum_indicator_reading)
-
-        brace = Brace(indicators_as_mob, direction = RIGHT, buff = 0.5)
-        brace.shift(2*RIGHT)
-        sum_indicator.next_to(brace,RIGHT)
+        # switch on lights off-screen
+            # while writing an ellipsis in the series
+            # and fading out the stack of indicators
+            # and fading in pi^2/6 instead
+            # move a copy of pi^2/6 down to the series
+            # ans fade in an equals sign
 
 
-        self.play(
-            ShowCreation(brace),
-            ShowCreation(sum_indicator), # DrawBorderThenFill
-        )
+
+
+        # for i in range(1,NUM_CONES+1):
+        #     lighthouse = Lighthouse()
+        #     point = self.number_line.number_to_point(i)
+        #     ambient_light = AmbientLight(
+        #         opacity_function = inverse_quadratic(1,2,1),
+        #         num_levels = NUM_LEVELS,
+        #         radius = 12.0)
+            
+        #     ambient_light.move_source_to(point)
+        #     lighthouse.next_to(point,DOWN,0)
+        #     lighthouses.append(lighthouse)
+        #     ambient_lights.append(ambient_light)
+        #     lighthouse_pos.append(point)
+
+        # for i in range(1,NUM_VISIBLE_CONES+1):
+
+        #     # create light indicators
+        #     # but they contain fractions!
+        #     indicator = LightIndicator(color = LIGHT_COLOR,
+        #         radius = INDICATOR_RADIUS,
+        #         opacity_for_unit_intensity = OPACITY_FOR_UNIT_INTENSITY,
+        #         show_reading = False
+        #     )
+        #     indicator.set_intensity(intensities[i-1])
+        #     indicator_reading = euler_sum[-2+2*i]
+        #     indicator_reading.scale_to_fit_height(0.8*indicator.get_height())
+        #     indicator_reading.move_to(indicator.get_center())
+        #     indicator.add(indicator_reading)
+        #     indicator.foreground.set_fill(None,opacities[i-1])
+
+
+        #     if i == 1:
+        #         indicator.next_to(randy,DOWN,buff = 5)
+        #         indicator_reading.scale_to_fit_height(0.4*indicator.get_height())
+        #         # otherwise we get a huge 1
+        #     else:
+        #         indicator.next_to(light_indicators[i-2],DOWN, buff = 0.2)
+
+        #     light_indicators.append(indicator)
+        #     indicators_as_mob.add(indicator)
+
+
+        # bubble.add_content(indicators_as_mob)
+        # indicators_as_mob.shift(DOWN+0.5*LEFT)
+
+
+        # for lh in lighthouses:
+        #     self.add_foreground_mobject(lh)
+
+
+        # # slowly switch on visible light cones and increment indicator
+        # for (i,ambient_light) in zip(range(NUM_VISIBLE_CONES),ambient_lights[:NUM_VISIBLE_CONES]):
+        #     indicator_start_time = 0.4 * (i+1) * SWITCH_ON_RUN_TIME/ambient_light.radius * self.number_line.unit_size
+        #     indicator_stop_time = indicator_start_time + INDICATOR_UPDATE_TIME
+        #     indicator_rate_func = squish_rate_func(
+        #         smooth,indicator_start_time,indicator_stop_time)
+        #     self.play(
+        #         SwitchOn(ambient_light),
+        #         FadeIn(light_indicators[i])
+        #     )
+
+        # # quickly switch on off-screen light cones and increment indicator
+        # for (i,ambient_light) in zip(range(NUM_VISIBLE_CONES,NUM_CONES),ambient_lights[NUM_VISIBLE_CONES:NUM_CONES]):
+        #     indicator_start_time = 0.5 * (i+1) * FAST_SWITCH_ON_RUN_TIME/ambient_light.radius * self.number_line.unit_size
+        #     indicator_stop_time = indicator_start_time + FAST_INDICATOR_UPDATE_TIME
+        #     indicator_rate_func = squish_rate_func(#smooth, 0.8, 0.9)
+        #         smooth,indicator_start_time,indicator_stop_time)
+        #     self.play(
+        #         SwitchOn(ambient_light, run_time = FAST_SWITCH_ON_RUN_TIME),
+        #     )
+
+
+        # # show limit value in light indicator and an equals sign
+        # sum_indicator = LightIndicator(color = LIGHT_COLOR,
+        #         radius = INDICATOR_RADIUS,
+        #         opacity_for_unit_intensity = OPACITY_FOR_UNIT_INTENSITY,
+        #         show_reading = False
+        #     )
+        # sum_indicator.set_intensity(intensities[0] * np.pi**2/6)
+        # sum_indicator_reading = TexMobject("{\pi^2 \over 6}")
+        # sum_indicator_reading.scale_to_fit_height(0.8 * sum_indicator.get_height())
+        # sum_indicator.add(sum_indicator_reading)
+
+        # brace = Brace(indicators_as_mob, direction = RIGHT, buff = 0.5)
+        # brace.shift(2*RIGHT)
+        # sum_indicator.next_to(brace,RIGHT)
+
+
+        # self.play(
+        #     ShowCreation(brace),
+        #     ShowCreation(sum_indicator), # DrawBorderThenFill
+        # )
 
             
 
-        self.wait()
+        # self.wait()
 
 
 
