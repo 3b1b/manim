@@ -152,6 +152,9 @@ class Camera(object):
                 )
                 mobjects = list_difference_update(mobjects, all_excluded)
 
+        # Should perhaps think about what happens here when include_submobjects is False,
+        # (for now, the onus is then on the caller to ensure this is handled correctly by
+        # passing us an appropriately pre-flattened list of mobjects if need be)
         return sorted(mobjects, lambda a, b: cmp(z_buff_func(a), z_buff_func(b)))
 
     def capture_mobject(self, mobject, **kwargs):

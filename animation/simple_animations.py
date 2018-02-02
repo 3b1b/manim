@@ -439,10 +439,10 @@ class Succession(Animation):
 
         Animation.__init__(self, self.mobject, run_time = run_time, **kwargs)
 
-    # Beware: This does NOT take care of updating the subanimation to 0
+    # Beware: This does NOT take care of calling update(0) on the subanimation.
     # This was important to avoid a pernicious possibility in which subanimations were called
     # with update(0) twice, which could in turn call a sub-Succession with update(0) four times,
-    # continuing exponentially
+    # continuing exponentially.
     def jump_to_start_of_anim(self, index):
         if index != self.current_anim_index:
             self.mobject.remove(*self.mobject.submobjects) # Should probably have a cleaner "remove_all" method...
