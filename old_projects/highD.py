@@ -45,7 +45,7 @@ class Slider(NumberLine):
         "number_scale_val" : 0.75,
         "label_scale_val" : 1,
         "numbers_with_elongated_ticks" : [],
-        "line_to_number_vect" : LEFT,
+        "label_direction" : LEFT,
         "line_to_number_buff" : MED_LARGE_BUFF,
         "dial_radius" : 0.1,
         "dial_color" : YELLOW,

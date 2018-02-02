@@ -634,11 +634,13 @@ def angle_of_vector(vector):
 
 def angle_between_vectors(v1, v2):
     """
-    Returns the angle between two 3D vectors
+    Returns the angle between two 3D vectors.
+    This angle will always be btw 0 and TAU/2.
     """
     l1 = np.linalg.norm(v1)
     l2 = np.linalg.norm(v2)
     return np.arccos(np.dot(v1,v2)/(l1*l2))
+
 
 
 def concatenate_lists(*list_of_lists):
