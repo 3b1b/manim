@@ -641,6 +641,9 @@ def angle_between_vectors(v1, v2):
     l2 = np.linalg.norm(v2)
     return np.arccos(np.dot(v1,v2)/(l1*l2))
 
+def project_along_vector(point, vector):
+    matrix = np.eye(3) - np.outer(vector,vector)
+    return np.dot(point,matrix.T)
 
 
 def concatenate_lists(*list_of_lists):

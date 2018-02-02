@@ -198,6 +198,11 @@ class Mobject(Container):
         )
         return self
 
+    def project_along_vector(self, vector, **kwargs):
+        matrix = np.eye(3) - np.outer(vector,vector)
+        self.apply_matrix(matrix, **kwargs)
+        return self
+
     def apply_complex_function(self, function, **kwargs):
         return self.apply_function(
             lambda (x, y, z) : complex_to_R3(function(complex(x, y))),
