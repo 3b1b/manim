@@ -13,7 +13,14 @@ class Camera(object):
     CONFIG = {
         "background_image" : None,
         "pixel_shape" : (DEFAULT_HEIGHT, DEFAULT_WIDTH),
-        #this will be resized to match pixel_shape
+        # Note 1: space_shape will be resized to match pixel_shape
+        #
+        # Note 2: While pixel_shape indicates the actual full height
+        # and width of the pixel array, space_shape indicates only 
+        # half the height and half the width of space (extending from
+        # -space_height to +space_height vertically and from 
+        # -space_widtdh to +space_width horizontally)
+        # TODO: Rename these to SPACE_X_RADIUS, SPACE_Y_RADIUS
         "space_shape" : (SPACE_HEIGHT, SPACE_WIDTH),
         "space_center" : ORIGIN,
         "background_color" : BLACK,
@@ -132,6 +139,7 @@ class Camera(object):
         self, mobjects, 
         include_submobjects = True,
         excluded_mobjects = None,
+        z_buff_func = lambda m : m.get_center()[2]
         ):
         if include_submobjects:
             mobjects = self.extract_mobject_family_members(
@@ -142,7 +150,8 @@ class Camera(object):
                     excluded_mobjects
                 )
                 mobjects = list_difference_update(mobjects, all_excluded)
-        return mobjects
+
+        return sorted(mobjects, lambda a, b: cmp(z_buff_func(a), z_buff_func(b)))
 
     def capture_mobject(self, mobject, **kwargs):
         return self.capture_mobjects([mobject], **kwargs)
@@ -412,25 +421,28 @@ class Camera(object):
         return pixel_coords.reshape((size/2, 2))
 
     def get_coords_of_all_pixels(self):
-        uncentered_pixel_indices = np.indices(self.pixel_shape).transpose(1, 2, 0)
-        uncentered_space_indices = np.true_divide(
-            uncentered_pixel_indices * self.space_shape, 
-            self.pixel_shape)
+        # These are in x, y order, to help me keep things straight
+        full_space_dims = np.array(self.space_shape)[::-1] * 2
+        full_pixel_dims = np.array(self.pixel_shape)[::-1]
+
+        # These are addressed in the same y, x order as in pixel_array, but the values in them
+        # are listed in x, y order
+        uncentered_pixel_coords = np.indices(self.pixel_shape)[::-1].transpose(1, 2, 0)
+        uncentered_space_coords = fdiv(
+            uncentered_pixel_coords * full_space_dims, 
+            full_pixel_dims)
         # Could structure above line's computation slightly differently, but figured (without much 
         # thought) multiplying by space_shape first, THEN dividing by pixel_shape, is probably 
         # better than the other order, for avoiding underflow quantization in the division (whereas 
         # overflow is unlikely to be a problem)
-        centered_space_indices = uncentered_space_indices - np.true_divide(self.space_shape, 2)
 
-        # Have to account for increasing y now going up instead of down, and also for swapping the 
-        # order of x and y
-        coords = np.apply_along_axis(
-            lambda (y, x) : (x, -y),
-            2,
-            centered_space_indices)
+        centered_space_coords = (uncentered_space_coords - fdiv(full_space_dims, 2))
 
-        return coords
+        # Have to also flip the y coordinates to account for pixel array being listed in 
+        # top-to-bottom order, opposite of screen coordinate convention
+        centered_space_coords = centered_space_coords * (1, -1)
 
+        return centered_space_coords
 
 class MovingCamera(Camera):
     """
