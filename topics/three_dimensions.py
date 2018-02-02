@@ -36,8 +36,11 @@ class ThreeDCamera(CameraWithPerspective):
     def __init__(self, *args, **kwargs):
         Camera.__init__(self, *args, **kwargs)
         self.unit_sun_vect = self.sun_vect/np.linalg.norm(self.sun_vect)
-        ## Lives in the phi-theta-distance space
+        ## rotation_mobject lives in the phi-theta-distance space
         self.rotation_mobject = VectorizedPoint()
+        ## moving_center lives in the x-y-z space
+        ## It representes the center of rotation
+        self.moving_center = VectorizedPoint(self.space_center)
         self.set_position(self.phi, self.theta, self.distance)
 
     def get_color(self, method):
@@ -126,6 +129,16 @@ class ThreeDCamera(CameraWithPerspective):
             np.cos(phi)
         ])
 
+    def get_center_of_rotation(self, x = None, y = None, z = None):
+        curr_x, curr_y, curr_z = self.moving_center.points[0]
+        if x is None:
+            x = curr_x
+        if y is None:
+            y = curr_y
+        if z is None:
+            z = curr_z
+        return np.array([x, y, z])
+
     def set_position(self, phi = None, theta = None, distance = None):
         point = self.get_spherical_coords(phi, theta, distance)
         self.rotation_mobject.move_to(point)
@@ -140,6 +153,8 @@ class ThreeDCamera(CameraWithPerspective):
     def points_to_pixel_coords(self, points):
         matrix = self.get_view_transformation_matrix()
         new_points = np.dot(points, matrix.T)
+        self.space_center = self.moving_center.points[0]
+
         return Camera.points_to_pixel_coords(self, new_points)
 
 class ThreeDScene(Scene):
@@ -167,6 +182,7 @@ class ThreeDScene(Scene):
     def move_camera(
         self, 
         phi = None, theta = None, distance = None,
+        center_x = None, center_y = None, center_z = None, 
         added_anims = [],
         **kwargs
         ):
@@ -176,10 +192,17 @@ class ThreeDScene(Scene):
             target_point,
             **kwargs
         )
+        target_center = self.camera.get_center_of_rotation(center_x, center_y, center_z)
+        movement_center = ApplyMethod(
+            self.camera.moving_center.move_to,
+            target_center,
+            **kwargs
+        )
         is_camera_rotating = self.ambient_camera_rotation in self.continual_animations
         if is_camera_rotating:
             self.remove(self.ambient_camera_rotation)
-        self.play(movement, *added_anims)
+        self.play(movement, movement_center, *added_anims)
+        target_point = self.camera.get_spherical_coords(phi, theta, distance)
         if is_camera_rotating:
             self.add(self.ambient_camera_rotation)
 
