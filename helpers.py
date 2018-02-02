@@ -552,6 +552,13 @@ def squish_rate_func(func, a = 0.4, b = 0.6):
             return func((t-a)/(b-a))
     return result
 
+# Stylistically, should this take parameters (with default values)?
+# Ultimately, the functionality is entirely subsumed by squish_rate_func,
+# but it may be useful to have a nice name for with nice default params for 
+# "lingering", different from squish_rate_func's default params
+def lingering(t):
+    return squish_rate_func(lambda t: t, 0, 0.8)(t)
+
 ### Functional Functions ###
 
 def composition(func_list):
