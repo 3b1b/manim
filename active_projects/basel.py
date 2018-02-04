@@ -1633,12 +1633,12 @@ class BackToEulerSumScene(PiCreatureScene):
 
    
     def construct(self):
-        self.remove(self.get_primary_pi_creature())
+        #self.remove(self.get_primary_pi_creature())
 
         NUM_CONES = 7
         NUM_VISIBLE_CONES = 6
         INDICATOR_RADIUS = 0.5
-        OPACITY_FOR_UNIT_INTENSITY = 0.5
+        OPACITY_FOR_UNIT_INTENSITY = 1.0
 
         self.number_line = NumberLine(
             x_min = 0,
@@ -1670,6 +1670,8 @@ class BackToEulerSumScene(PiCreatureScene):
         right_pupil = randy.pupils[1]
         randy.next_to(origin_point, LEFT, buff = 0, submobject_to_align = right_pupil)
 
+        randy_copy = randy.copy()
+        randy_copy.target = randy.copy().shift(DOWN)
 
 
 
@@ -1679,10 +1681,10 @@ class BackToEulerSumScene(PiCreatureScene):
         bubble.next_to(randy,DOWN+LEFT)
         bubble.set_fill(color = BLACK, opacity = 1)
         
-        self.play(
-            randy.change, "wave_2",
-            ShowCreation(bubble),
-        )
+        # self.play(
+        #     randy.change, "wave_2",
+        #     ShowCreation(bubble),
+        # )
 
 
         euler_sum = TexMobject("1", "+", "{1\over 4}", 
@@ -1711,20 +1713,28 @@ class BackToEulerSumScene(PiCreatureScene):
         self.play(FadeIn(light_source.lighthouse))
         self.play(SwitchOn(light_source.ambient_light))
 
-        for i in range(2,NUM_VISIBLE_CONES + 1):
+        for i in range(2,3): #NUM_VISIBLE_CONES + 1):
 
-            new_light_source = light_source.deepcopy()
-            new_light_source.ambient_light.dimming(0.001)
-            self.add(new_light_source)
+            moving_light_source = light_source.copy()
+            moving_light_source.set_max_opacity_ambient(0.25)
+            self.add(moving_light_source)
+            target_light_source = moving_light_source.copy()
+            # target_light_source.ambient_light.dimming(OPACITY_FOR_UNIT_INTENSITY)
             point = self.number_line.number_to_point(i)
+            #target_light_source.move_to(point)
+            target_light_source.move_source_to(point)
+            #target_light_source.set_max_opacity_ambient(1.0)
+            #target_light_source.ambient_light.generate_points()
 
+            moving_light_source.lighthouse.target = target_light_source.lighthouse
+
+            #self.play(MoveToTarget(randy_copy))
             self.play(
-                new_light_source.shift,v,
-                new_light_source.ambient_light.dimming, OPACITY_FOR_UNIT_INTENSITY,
+                MoveToTarget(moving_light_source.lighthouse, run_time = 2),
+                #Transform(moving_light_source.ambient_light, target_light_source.ambient_light),
             )
 
-            new_light_source.move_source_to(point)
-            light_source = new_light_source
+            light_source = moving_light_source
 
 
         # switch on lights off-screen
@@ -1832,7 +1842,7 @@ class BackToEulerSumScene(PiCreatureScene):
 
             
 
-        # self.wait()
+        self.wait()
 
 
 
