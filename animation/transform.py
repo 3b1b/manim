@@ -280,6 +280,16 @@ class ApplyMatrix(ApplyPointwiseFunction):
         ApplyPointwiseFunction.__init__(self, func, mobject, **kwargs)
 
 
+class ProjectAlongVector(ApplyMatrix):
+
+    def __init__(self,mobject,vector,**kwargs):
+        target_mobject = mobject.copy()
+        projection_onto_matrix = np.outer(vector,vector)
+        projection_along_matrix = np.eye(3) - projection_onto_matrix
+
+        ApplyMatrix.__init__(self,projection_along_matrix,mobject,**kwargs)
+
+
 class TransformAnimations(Transform):
     CONFIG = {
         "rate_func" : squish_rate_func(smooth)

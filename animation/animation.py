@@ -12,6 +12,7 @@ from helpers import *
 from mobject import Mobject
 
 class Animation(object):
+    
     CONFIG = {
         "run_time" : DEFAULT_ANIMATION_RUN_TIME,
         "rate_func" : smooth,
@@ -23,6 +24,7 @@ class Animation(object):
         "submobject_mode" : "all_at_once",
         "lag_factor" : 2,
     }
+
     def __init__(self, mobject, **kwargs):
         mobject = instantiate(mobject)
         assert(isinstance(mobject, Mobject))

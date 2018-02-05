@@ -321,17 +321,6 @@ class NumberPlane(VMobject):
         y = new_point[1]/self.get_y_unit_size()
         return x, y
 
-    # Does not recompute center, unit_sizes for each call; useful for
-    # iterating over large lists of points, but does assume these 
-    # attributes are kept accurate. (Could alternatively have a method
-    # which returns a function dynamically created after a single 
-    # call to each of get_center(), get_x_unit_size(), etc.)
-    def point_to_coords_cheap(self, point):
-        new_point = point - self.center_point
-        x = new_point[0]/self.x_unit_size
-        y = new_point[1]/self.y_unit_size
-        return x, y
-
     def get_x_unit_size(self):
         return self.axes.get_width() / (2.0*self.x_radius)
 

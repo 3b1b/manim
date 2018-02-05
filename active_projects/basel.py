@@ -18,21 +18,15 @@ from topics.characters import *
 from topics.functions import *
 from topics.number_line import *
 from topics.numerals import *
-from topics.combinatorics import *
+#from topics.combinatorics import *
 from scene import Scene
 from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
+from topics.three_dimensions import *
 
+from topics.light import *
 
-from mobject.vectorized_mobject import *
-
-## To watch one of these scenes, run the following:
-## python extract_scene.py -p file_name <SceneName>
-
-inverse_power_law = lambda maxint,scale,cutoff,exponent: \
-    (lambda r: maxint * (cutoff/(r/scale+cutoff))**exponent)
-inverse_quadratic = lambda maxint,scale,cutoff: inverse_power_law(maxint,scale,cutoff,2)
 
 LIGHT_COLOR = YELLOW
 INDICATOR_RADIUS = 0.7
@@ -42,307 +36,54 @@ INDICATOR_TEXT_COLOR = WHITE
 INDICATOR_UPDATE_TIME = 0.2
 FAST_INDICATOR_UPDATE_TIME = 0.1
 OPACITY_FOR_UNIT_INTENSITY = 0.2
-SWITCH_ON_RUN_TIME = 2.5
+SWITCH_ON_RUN_TIME = 1.5
 FAST_SWITCH_ON_RUN_TIME = 0.1
 NUM_LEVELS = 30
-NUM_CONES = 50 # in first lighthouse scene
+NUM_CONES = 7 # in first lighthouse scene
 NUM_VISIBLE_CONES = 5 # ibidem
 ARC_TIP_LENGTH = 0.2
-AMBIENT_FULL = 1.0
+AMBIENT_FULL = 0.5
 AMBIENT_DIMMED = 0.2
+SPOTLIGHT_FULL = 0.9
+SPOTLIGHT_DIMMED = 0.2
+
 LIGHT_COLOR = YELLOW
 DEGREES = TAU/360
-SWITCH_ON_RUN_TIME = 1.5
+
+inverse_power_law = lambda maxint,scale,cutoff,exponent: \
+    (lambda r: maxint * (cutoff/(r/scale+cutoff))**exponent)
+inverse_quadratic = lambda maxint,scale,cutoff: inverse_power_law(maxint,scale,cutoff,2)
 
 
 class AngleUpdater(ContinualAnimation):
-    def __init__(self, angle_arc, lc, **kwargs):
+    def __init__(self, angle_arc, spotlight, **kwargs):
         self.angle_arc = angle_arc
         self.source_point = angle_arc.get_arc_center()
-        self.lc = lc
-        #self.angle_decimal = angle_decimal
+        self.spotlight = spotlight
         ContinualAnimation.__init__(self, self.angle_arc, **kwargs)
 
     def update_mobject(self, dt):
-    # angle arc
         new_arc = self.angle_arc.copy().set_bound_angles(
-            start = self.lc.start_angle(),
-            stop = self.lc.stop_angle()
+            start = self.spotlight.start_angle(),
+            stop = self.spotlight.stop_angle()
          )
         new_arc.generate_points()
         new_arc.move_arc_center_to(self.source_point)
         self.angle_arc.points = new_arc.points
-        self.angle_arc.add_tip(tip_length = ARC_TIP_LENGTH, at_start = True, at_end = True)
+        self.angle_arc.add_tip(tip_length = ARC_TIP_LENGTH,
+            at_start = True, at_end = True)
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-class AmbientLight(VMobject):
-
-    # Parameters are:
-    # * a source point
-    # * an opacity function
-    # * a light color
-    # * a max opacity
-    # * a radius (larger than the opacity's dropoff length)
-    # * the number of subdivisions (levels, annuli)
-
-    CONFIG = {
-        "source_point" : ORIGIN,
-        "opacity_function" : lambda r : 1.0/(r+1.0)**2,
-        "color" : LIGHT_COLOR,
-        "max_opacity" : 1.0,
-        "num_levels" : 10,
-        "radius" : 5.0
-    }
-
-    def generate_points(self):
-
-        # in theory, this method is only called once, right?
-        # so removing submobs shd not be necessary
-        for submob in self.submobjects:
-            self.remove(submob)
-
-        # create annuli
-        self.radius = float(self.radius)
-        dr = self.radius / self.num_levels
-        for r in np.arange(0, self.radius, dr):
-            alpha = self.max_opacity * self.opacity_function(r)
-            annulus = Annulus(
-                inner_radius = r,
-                outer_radius = r + dr,
-                color = self.color,
-                fill_opacity = alpha
-            )
-            annulus.move_arc_center_to(self.source_point)
-            self.add(annulus)
-
-
-
-    def move_source_to(self,point):
-        self.shift(point - self.source_point)
-        self.source_point = np.array(point)
-        # for submob in self.submobjects:
-        #      if type(submob) == Annulus:
-        #         submob.shift(self.source_point - submob.get_center())
-
-    def dimming(self,new_alpha):
-        old_alpha = self.max_opacity
-        self.max_opacity = new_alpha
-        for submob in self.submobjects:
-            old_submob_alpha = submob.fill_opacity
-            new_submob_alpha = old_submob_alpha * new_alpha/old_alpha
-            submob.set_fill(opacity = new_submob_alpha)
-
-
-class Spotlight(VMobject):
-
-    CONFIG = {
-        "source_point" : ORIGIN,
-        "opacity_function" : lambda r : 1.0/(r/2+1.0)**2,
-        "color" : LIGHT_COLOR,
-        "max_opacity" : 1.0,
-        "num_levels" : 10,
-        "radius" : 5.0,
-        "screen" : None,
-        "shadow" : VMobject(fill_color = BLACK, stroke_width = 0, fill_opacity = 1.0)
-    }
-
-    def track_screen(self):
-        self.generate_points()
-
-    def generate_points(self):
-
-        for submob in self.submobjects:
-            self.remove(submob)
-
-        if self.screen != None:
-            # look for the screen and create annular sectors
-            lower_angle, upper_angle = self.viewing_angles(self.screen)
-            self.radius = float(self.radius)
-            dr = self.radius / self.num_levels
-            for r in np.arange(0, self.radius, dr):
-                alpha = self.max_opacity * self.opacity_function(r)
-                annular_sector = AnnularSector(
-                    inner_radius = r,
-                    outer_radius = r + dr,
-                    color = self.color,
-                    fill_opacity = alpha,
-                    start_angle = lower_angle,
-                    angle = upper_angle - lower_angle
-                )
-                annular_sector.move_arc_center_to(self.source_point)
-                self.add(annular_sector)
-
-        self.update_shadow(point = self.source_point)
-        self.add(self.shadow)
-
-
-    def viewing_angle_of_point(self,point):
-        distance_vector = point - self.source_point
-        angle = angle_of_vector(distance_vector)
-        return angle
-
-    def viewing_angles(self,screen):
-
-        viewing_angles = np.array(map(self.viewing_angle_of_point,
-            screen.get_anchors()))
-        lower_angle = upper_angle = 0
-        if len(viewing_angles) != 0:
-            lower_angle = np.min(viewing_angles)
-            upper_angle = np.max(viewing_angles)
-            
-        return lower_angle, upper_angle
-
-    def opening_angle(self):
-        l,u = self.viewing_angles(self.screen)
-        return u - l
-
-    def start_angle(self):
-        l,u = self.viewing_angles(self.screen)
-        return l
-
-    def stop_angle(self):
-        l,u = self.viewing_angles(self.screen)
-        return u
-
-    def move_source_to(self,point):
-        self.source_point = np.array(point)
-        self.recalculate_sectors(point = point, screen = self.screen)
-        self.update_shadow(point = point)
-
-
-    def recalculate_sectors(self, point = ORIGIN, screen = None):
-        if screen == None:
-            return
-        for submob in self.submobject_family():
-            if type(submob) == AnnularSector:
-                lower_angle, upper_angle = self.viewing_angles(screen)
-                new_submob = AnnularSector(
-                    start_angle = lower_angle,
-                    angle = upper_angle - lower_angle,
-                    inner_radius = submob.inner_radius,
-                    outer_radius = submob.outer_radius
-                )
-                new_submob.move_arc_center_to(point)
-                submob.points = new_submob.points
-
-    def update_shadow(self,point = ORIGIN):
-        use_point = point #self.source_point
-        self.shadow.points = self.screen.points
-        ray1 = self.screen.points[0] - use_point
-        ray2 = self.screen.points[-1] - use_point
-        ray1 = ray1/np.linalg.norm(ray1) * 100
-        ray1 = rotate_vector(ray1,-TAU/100)
-        ray2 = ray2/np.linalg.norm(ray2) * 100
-        ray2 = rotate_vector(ray2,TAU/100)
-        outpoint1 = self.screen.points[0] + ray1
-        outpoint2 = self.screen.points[-1] + ray2
-        self.shadow.add_control_points([outpoint2,outpoint1,self.screen.points[0]])
-        self.shadow.mark_paths_closed = True
-
-
-    def dimming(self,new_alpha):
-        old_alpha = self.max_opacity
-        self.max_opacity = new_alpha
-        for submob in self.submobjects:
-            if type(submob) != AnnularSector:
-                # it's the shadow, don't dim it
-                continue
-            old_submob_alpha = submob.fill_opacity
-            new_submob_alpha = old_submob_alpha * new_alpha/old_alpha
-            submob.set_fill(opacity = new_submob_alpha)
-
-    def change_opacity_function(self,new_f):
-        self.radius = 120
-        self.opacity_function = new_f
-        dr = self.radius/self.num_levels
-
-        sectors = []
-        for submob in self.submobjects:
-            if type(submob) == AnnularSector:
-                sectors.append(submob)
-
-        print self.num_levels, len(sectors)
-        for (r,submob) in zip(np.arange(0,self.radius,dr),sectors):
-            if type(submob) != AnnularSector:
-                # it's the shadow, don't dim it
-                continue
-            alpha = self.opacity_function(r)
-            submob.set_fill(opacity = alpha)
-
-
-
-
-
-class SwitchOn(LaggedStart):
-    CONFIG = {
-        "lag_ratio": 0.2,
-        "run_time": SWITCH_ON_RUN_TIME
-    }
-
-    def __init__(self, light, **kwargs):
-        if not isinstance(light,AmbientLight) and not isinstance(light,Spotlight):
-            raise Exception("Only LightCones and Candles can be switched on")
-        LaggedStart.__init__(self,
-            FadeIn, light, **kwargs)
-
-
-class SwitchOff(LaggedStart):
-    CONFIG = {
-        "lag_ratio": 0.2,
-        "run_time": SWITCH_ON_RUN_TIME
-    }
-
-    def __init__(self, light, **kwargs):
-        if not isinstance(light,AmbientLight) and not isinstance(light,Spotlight):
-            raise Exception("Only LightCones and Candles can be switched on")
-        light.submobjects = light.submobjects[::-1]
-        LaggedStart.__init__(self,
-            FadeOut, light, **kwargs)
-        light.submobjects = light.submobjects[::-1]
-
-
-
-
-
-class ScreenTracker(ContinualAnimation):
-    def __init__(self, mobject, **kwargs):
-        ContinualAnimation.__init__(self, mobject, **kwargs)
-
-    def update_mobject(self, dt):
-        self.mobject.recalculate_sectors(
-            point = self.mobject.source_point,
-            screen = self.mobject.screen)
-        self.mobject.update_shadow(self.mobject.source_point)
-        
-
-
-class LightHouse(SVGMobject):
-    CONFIG = {
-        "file_name" : "lighthouse",
-        "height" : 0.5
-    }
 
 class LightIndicator(Mobject):
     CONFIG = {
         "radius": 0.5,
         "intensity": 0,
         "opacity_for_unit_intensity": 1,
-        "precision": 3
+        "precision": 3,
+        "show_reading": True
     }
 
     def generate_points(self):
@@ -355,13 +96,15 @@ class LightIndicator(Mobject):
         self.reading = DecimalNumber(self.intensity,num_decimal_points = self.precision)
         self.reading.set_fill(color=INDICATOR_TEXT_COLOR)
         self.reading.move_to(self.get_center())
-        self.add(self.reading)
+        if self.show_reading:
+            self.add(self.reading)
 
     def set_intensity(self, new_int):
         self.intensity = new_int
         new_opacity = min(1, new_int * self.opacity_for_unit_intensity)
         self.foreground.set_fill(opacity=new_opacity)
         ChangeDecimalToValue(self.reading, new_int).update(1)
+        return self
         
 
 
@@ -620,16 +363,22 @@ class IntroScene(PiCreatureScene):
 
         # Morty thinks of a circle
 
-        # q_circle = Circle(color=WHITE,radius=0.8)
-        # q_mark = TexMobject("?")
-        # q_mark.next_to(q_circle)
+        q_circle = Circle(
+            stroke_color = YELLOW,
+            fill_color = YELLOW,
+            fill_opacity = 0.5,
+            radius = 0.4, 
+            stroke_width = 10.0
+        )
+        q_mark = TexMobject("?")
+        q_mark.next_to(q_circle)
 
-        # thought = Group(q_circle, q_mark)
-        # q_mark.height *= 2
-        # self.pi_creature_thinks(thought,target_mode = "confused",
-        #     bubble_kwargs = { "height" : 1.5, "width" : 2 })
+        thought = Group(q_circle, q_mark)
+        q_mark.scale_to_fit_height(0.8 * q_circle.get_height())
+        self.pi_creature_thinks(thought,target_mode = "confused",
+            bubble_kwargs = { "height" : 2, "width" : 3 })
 
-        # self.wait()
+        self.wait()
 
 
 
@@ -707,9 +456,7 @@ class FirstLighthouseScene(PiCreatureScene):
             FadeIn(light_indicator)
         )
 
-        lighthouses = []
-        lighthouse_pos = []
-        ambient_lights = []
+        light_sources = []
 
 
         euler_sum_above = TexMobject("1", "+", "{1\over 4}", 
@@ -726,22 +473,18 @@ class FirstLighthouseScene(PiCreatureScene):
 
 
         for i in range(1,NUM_CONES+1):
-            lighthouse = LightHouse()
-            point = self.number_line.number_to_point(i)
-            ambient_light = AmbientLight(
+            light_source = LightSource(
                 opacity_function = inverse_quadratic(1,2,1),
                 num_levels = NUM_LEVELS,
-                radius = 12.0)
-            
-            ambient_light.move_source_to(point)
-            lighthouse.next_to(point,DOWN,0)
-            lighthouses.append(lighthouse)
-            ambient_lights.append(ambient_light)
-            lighthouse_pos.append(point)
+                radius = 12.0,
+            )
+            point = self.number_line.number_to_point(i)
+            light_source.move_source_to(point)
+            light_sources.append(light_source)
 
 
-        for lh in lighthouses:
-            self.add_foreground_mobject(lh)
+        for ls in light_sources:
+            self.add_foreground_mobject(ls.lighthouse)
 
         light_indicator.set_intensity(0)
 
@@ -752,17 +495,18 @@ class FirstLighthouseScene(PiCreatureScene):
 
 
         # slowly switch on visible light cones and increment indicator
-        for (i,ambient_light) in zip(range(NUM_VISIBLE_CONES),ambient_lights[:NUM_VISIBLE_CONES]):
-            indicator_start_time = 0.4 * (i+1) * SWITCH_ON_RUN_TIME/ambient_light.radius * self.number_line.unit_size
+        for (i,light_source) in zip(range(NUM_VISIBLE_CONES),light_sources[:NUM_VISIBLE_CONES]):
+            indicator_start_time = 0.4 * (i+1) * SWITCH_ON_RUN_TIME/light_source.radius * self.number_line.unit_size
             indicator_stop_time = indicator_start_time + INDICATOR_UPDATE_TIME
             indicator_rate_func = squish_rate_func(
                 smooth,indicator_start_time,indicator_stop_time)
             self.play(
-                SwitchOn(ambient_light),
+                SwitchOn(light_source.ambient_light),
                 FadeIn(euler_sum_above[2*i], run_time = SWITCH_ON_RUN_TIME,
                     rate_func = indicator_rate_func),
                 FadeIn(euler_sum_above[2*i - 1], run_time = SWITCH_ON_RUN_TIME,
                     rate_func = indicator_rate_func),
+                # this last line *technically* fades in the last term, but it is off-screen
                 ChangeDecimalToValue(light_indicator.reading,intensities[i],
                     rate_func = indicator_rate_func, run_time = SWITCH_ON_RUN_TIME),
                 ApplyMethod(light_indicator.foreground.set_fill,None,opacities[i])
@@ -778,16 +522,16 @@ class FirstLighthouseScene(PiCreatureScene):
                 )
 
         # quickly switch on off-screen light cones and increment indicator
-        for (i,ambient_light) in zip(range(NUM_VISIBLE_CONES,NUM_CONES),ambient_lights[NUM_VISIBLE_CONES:NUM_CONES]):
-            indicator_start_time = 0.5 * (i+1) * FAST_SWITCH_ON_RUN_TIME/ambient_light.radius * self.number_line.unit_size
+        for (i,light_source) in zip(range(NUM_VISIBLE_CONES,NUM_CONES),light_sources[NUM_VISIBLE_CONES:NUM_CONES]):
+            indicator_start_time = 0.5 * (i+1) * FAST_SWITCH_ON_RUN_TIME/light_source.radius * self.number_line.unit_size
             indicator_stop_time = indicator_start_time + FAST_INDICATOR_UPDATE_TIME
             indicator_rate_func = squish_rate_func(#smooth, 0.8, 0.9)
                 smooth,indicator_start_time,indicator_stop_time)
             self.play(
-                SwitchOn(ambient_light, run_time = FAST_SWITCH_ON_RUN_TIME),
-                ChangeDecimalToValue(light_indicator.reading,intensities[i],
+                SwitchOn(light_source.ambient_light, run_time = FAST_SWITCH_ON_RUN_TIME),
+                ChangeDecimalToValue(light_indicator.reading,intensities[i-1],
                     rate_func = indicator_rate_func, run_time = FAST_SWITCH_ON_RUN_TIME),
-                ApplyMethod(light_indicator.foreground.set_fill,None,opacities[i])
+                ApplyMethod(light_indicator.foreground.set_fill,None,opacities[i-1])
             )
 
 
@@ -835,66 +579,69 @@ class SingleLighthouseScene(PiCreatureScene):
 
     def construct(self):
 
+        self.force_skipping()
         self.setup_elements()
         self.setup_trackers() # spotlight and angle msmt change when screen rotates
         self.rotate_screen()
-
+        self.revert_to_original_skipping_status()
+        self.morph_lighthouse_into_sun()
 
 
     def setup_elements(self):
+
+        self.remove(self.get_primary_pi_creature())
 
         SCREEN_SIZE = 3.0
         DISTANCE_FROM_LIGHTHOUSE = 10.0
         source_point = [-DISTANCE_FROM_LIGHTHOUSE/2,0,0]
         observer_point = [DISTANCE_FROM_LIGHTHOUSE/2,0,0]
 
-        # Lighthouse
+        # Light source
 
-        lighthouse = LightHouse()
-        ambient_light = AmbientLight(
-            opacity_function = inverse_quadratic(AMBIENT_FULL,2,1),
+        self.light_source = LightSource(
+            opacity_function = inverse_quadratic(1,2,1),
             num_levels = NUM_LEVELS,
             radius = 10,
-            brightness = 1,
+            max_opacity_ambient = AMBIENT_FULL
         )
-        lighthouse.scale(2).next_to(source_point, DOWN, buff = 0)
-        ambient_light.move_to(source_point)
+
+        self.light_source.move_source_to(source_point)
+
 
         # Pi Creature
 
         morty = self.get_primary_pi_creature()
         morty.scale(0.5)
         morty.move_to(observer_point)
-        self.add(lighthouse)
+
+
+
+        self.add(self.light_source.lighthouse,morty)
         self.play(
-            SwitchOn(ambient_light)
+            SwitchOn(self.light_source.ambient_light)
         )
 
         # Screen
 
-        self.screen = Line([0,-1,0],[0,1,0])
-        self.screen.rotate(-TAU/6)
-        self.screen.next_to(morty, LEFT, buff = 1)
-
-        # Spotlight
-
-        self.spotlight = Spotlight(
-            opacity_function = inverse_quadratic(1,2,1),
-            num_levels = NUM_LEVELS,
-            radius = 10,
-            brightness = 5,
-            screen = self.screen
-        )
-        self.spotlight.move_source_to(source_point)
-
+        self.light_source.set_screen(Line([3,-1,0],[3,1,0]))
+        self.light_source.spotlight.screen.rotate(-TAU/6)
+        self.light_source.spotlight.screen.next_to(morty,LEFT)
 
         # Animations
 
+        self.play(FadeIn(self.light_source.spotlight.screen))
+        self.wait()
+
+
+        # just calling .dim_ambient via ApplyMethod does not work, why?
+        dimmed_ambient_light = self.light_source.ambient_light.copy()
+        dimmed_ambient_light.dimming(AMBIENT_DIMMED)
+
         self.play(
-            ApplyMethod(ambient_light.dimming,AMBIENT_DIMMED),
-            FadeIn(self.spotlight)
+            Transform(self.light_source.ambient_light,dimmed_ambient_light),
+            FadeIn(self.light_source.spotlight)
         )
-        self.add(self.spotlight.shadow)
+        self.add(self.light_source.spotlight.shadow)
 
         self.add_foreground_mobject(morty)
 
@@ -903,98 +650,120 @@ class SingleLighthouseScene(PiCreatureScene):
 
     def setup_trackers(self):
 
+        self.wait()
+
         # Make spotlight follow the screen
 
-        screen_tracker = ScreenTracker(self.spotlight)
+        #self.screen_tracker = MovingScreenTracker(self.screen, light_source = self.light_source)
+        #self.source_tracker = MovingSourceTracker(self.light_source)
 
-        self.add(screen_tracker)
-        pointing_screen_at_source = Rotate(self.screen,TAU/6)
+        #self.add(self.screen_tracker, self.source_tracker)
+        self.screen_tracker = ScreenTracker(self.light_source.spotlight)
+        self.add(self.screen_tracker)
+        
+        pointing_screen_at_source = Rotate(self.light_source.spotlight.screen,TAU/6)
         self.play(pointing_screen_at_source)
 
+        self.play(self.light_source.move_source_to,ORIGIN)
+
+        #self.play(self.spotlight.move_to,ORIGIN)
 
         # angle msmt (arc)
 
-        arc_angle = self.spotlight.opening_angle()
+        arc_angle = self.light_source.spotlight.opening_angle()
         # draw arc arrows to show the opening angle
-        angle_arc = Arc(radius = 5, start_angle = self.spotlight.start_angle(),
-            angle = self.spotlight.opening_angle(), tip_length = ARC_TIP_LENGTH)
+        self.angle_arc = Arc(radius = 5, start_angle = self.light_source.spotlight.start_angle(),
+            angle = self.light_source.spotlight.opening_angle(), tip_length = ARC_TIP_LENGTH)
         #angle_arc.add_tip(at_start = True, at_end = True)
-        angle_arc.move_arc_center_to(self.spotlight.source_point)
+        self.angle_arc.move_arc_center_to(self.light_source.source_point)
         
-        self.add(angle_arc)
 
         # angle msmt (decimal number)
 
-        angle_indicator = DecimalNumber(arc_angle/TAU*360,
+        self.angle_indicator = DecimalNumber(arc_angle / DEGREES,
             num_decimal_points = 0,
             unit = "^\\circ")
-        angle_indicator.next_to(angle_arc,RIGHT)
-        self.add_foreground_mobject(angle_indicator)
+        self.angle_indicator.next_to(self.angle_arc,RIGHT)
 
-        angle_update_func = lambda x: self.spotlight.opening_angle()/TAU * 360
-        ca1 = ContinualChangingDecimal(angle_indicator,angle_update_func)
+        angle_update_func = lambda x: self.light_source.spotlight.opening_angle() / DEGREES
+        ca1 = ContinualChangingDecimal(self.angle_indicator,angle_update_func)
         self.add(ca1)
 
-        ca2 = AngleUpdater(angle_arc, self.spotlight)
+        ca2 = AngleUpdater(self.angle_arc, self.light_source.spotlight)
         self.add(ca2)
 
+        self.play(
+            ShowCreation(self.angle_arc),
+            ShowCreation(self.angle_indicator)
+        )
+        #self.add_foreground_mobject(self.angle_indicator)
+        self.wait()
 
     def rotate_screen(self):
 
-        # rotating_screen_1 = Rotate(self.screen, 
-        #     TAU/8, run_time=1.5)
-        # #self.wait(2)
-        # rotating_screen_2 = Rotate(self.screen, 
-        #     -TAU/4, run_time=3)
-        # #self.wait(2)
-        # rotating_screen_3 = Rotate(self.screen, 
-        #     TAU/8, run_time=1.5)
 
-        # self.play(rotating_screen_1)
-        # self.play(rotating_screen_2)
-        # self.play(rotating_screen_3)
 
-        rotating_screen_1 = Rotate(self.screen, TAU/8, rate_func = there_and_back)
-        rotating_screen_2 = Rotate(self.screen, -TAU/8, rate_func = there_and_back)
-        self.play(rotating_screen_1)
-        self.play(rotating_screen_2)
+        self.play(Rotate(self.light_source.spotlight.screen, TAU/8))
+        self.play(Rotate(self.light_source.spotlight.screen, -TAU/4))
+        self.play(Rotate(self.light_source.spotlight.screen, TAU/8))
 
-        
+        self.wait()
 
-        #self.wait()
+        self.play(Rotate(self.light_source.spotlight.screen, -TAU/4))
 
+        self.wait()
+
+        self.play(Rotate(self.light_source.spotlight.screen, TAU/4))
 
 ### The following is supposed to morph the scene into the Earth scene,
 ### but it doesn't work
 
 
-        # # morph into Earth scene
-
-        # earth = Circle(radius = 3)
-        # earth.move_to([2,0,0])
-        # sun_position = [-100,0,0]
-        # #self.add(screen_tracker)
-        # print "tuet"
-        # self.remove(screen_tracker)
-        # new_opacity_function = lambda r: 0.5
-        # self.play(
-        #     ApplyMethod(lighthouse.move_to,sun_position),
-        #     ApplyMethod(ambient_light.move_to,sun_position),
-        #     ApplyMethod(spotlight.move_source_to,sun_position),
-
-        # )
-        # self.play(
-        #     ApplyMethod(spotlight.change_opacity_function,new_opacity_function))
-
-        # self.add(screen_tracker)
+    def morph_lighthouse_into_sun(self):
 
 
 
+        sun_position = [-100,0,0]
+
+
+        self.play(
+            FadeOut(self.angle_arc),
+            FadeOut(self.angle_indicator)
+        )
+
+        self.sun = LightSource(
+            opacity_function = inverse_quadratic(1,2,1),
+            num_levels = NUM_LEVELS,
+            radius = 150,
+            max_opacity_ambient = AMBIENT_FULL
+        )
+
+
+
+        self.sun.set_screen(self.light_source.spotlight.screen)
+        self.sun.spotlight.change_opacity_function(lambda r: 0.5)
+        #self.sun.set_radius(150)
+        self.sun.move_source_to(sun_position)
+
+        self.sun.spotlight.recalculate_sectors()
+
+        # temporarily remove the screen tracker while we move the source
+        self.remove(self.screen_tracker)
+
+        self.play(
+             ReplacementTransform(self.light_source.lighthouse, self.sun.lighthouse),
+             ReplacementTransform(self.light_source.ambient_light, self.sun.ambient_light),
+             ReplacementTransform(self.light_source.spotlight, self.sun.spotlight),
+        )
+
+        self.add(ScreenTracker(self.sun.spotlight))
+
+        self.wait()
 
 
 
 
-
+ 
 
 
 
@@ -1013,59 +782,98 @@ class EarthScene(Scene):
 
     def construct(self):
 
-        radius = 2.5
-        center_x = 3
-        theta0 = 70 * DEGREES
-        dtheta = 10 * DEGREES
-        theta1 = theta0 + dtheta
+        SCREEN_THICKNESS = 10
 
+        self.screen_height = 2.0
+        self.brightness_rect_height = 1.0
 
         # screen
-
-        screen = Line([center_x - radius * np.cos(theta0),radius * np.sin(theta0),0],
-            [center_x - radius * np.cos(theta1),radius * np.sin(theta1),0])
-        screen.set_stroke(color = RED, width = 5)
+        self.screen = VMobject(stroke_color = WHITE, stroke_width = SCREEN_THICKNESS)
+        self.screen.set_points_as_corners([
+            [3,-self.screen_height/2,0],
+            [3,self.screen_height/2,0]
+        ])
 
         # Earth
 
-        earth = Circle(radius = radius, stroke_width = 0)
-        earth.move_to([center_x,0,0])
-        foreground_earth = earth.copy() #  above the shadow
-        foreground_earth.radius -= 0.2
-        foreground_earth.set_stroke(color = WHITE, width = 1)
-        self.add_foreground_mobject(foreground_earth)
-        earth.add(screen)
+        earth_center_x = 2
+        earth_center = [earth_center_x,0,0]
+        earth_radius = 3
+        earth = Circle(radius = earth_radius)
+        earth.move_to(earth_center)
+        #self.remove(self.screen_tracker)
+
+        theta0 = 70 * DEGREES
+        dtheta = 10 * DEGREES
+        theta1 = theta0 + dtheta
+        theta = (theta0 + theta1)/2
+
+        earth.add(self.screen)
 
         # Morty
 
-        morty = Mortimer().scale(0.3).next_to(screen, RIGHT, buff = 0.5)
+        morty = Mortimer().scale(0.5).next_to(self.screen, RIGHT, buff = 1.5)
         self.add_foreground_mobject(morty)
 
 
         # Light source (far-away Sun)
 
-        sun = Spotlight(
+        sun_position = [-100,0,0]
+
+        self.sun = LightSource(
             opacity_function = lambda r : 0.5,
+            max_opacity_ambient = 0,
+            max_opacity_spotlight = 0.5,
             num_levels = NUM_LEVELS,
-            radius = 1100,
-            brightness = 5,
-            screen = screen
+            radius = 150,
+            screen = self.screen
         )
 
-        sun.move_source_to([-1000,0,0])
+        self.sun.move_source_to(sun_position)
+
 
         # Add elements to scene
 
-        self.add(earth,sun,screen)
-        screen_tracker = ScreenTracker(sun)
-        self.add(screen_tracker)
+        self.add(self.sun,self.screen)
+        self.bring_to_back(self.sun.spotlight.shadow)
+        screen_tracker = MovingScreenTracker(self.screen, light_source = self.sun)
+        sun_tracker = MovingSourceTracker(self.sun)
+
+        self.add(sun_tracker, screen_tracker)
         
+        self.wait()
+
+        self.play(FadeIn(earth))
+        self.bring_to_back(earth)
+
+        # move screen onto Earth
+        screen_on_earth = self.screen.copy()
+        screen_on_earth.rotate(-theta)
+        screen_on_earth.scale(0.3)
+        screen_on_earth.move_to(np.array([
+            earth_center_x - earth_radius * np.cos(theta),
+            earth_radius * np.sin(theta),
+            0]))
+
+        polar_morty = morty.copy().scale(0.5).next_to(screen_on_earth,DOWN,buff = 0.5)
+
+        self.play(
+            Transform(self.screen, screen_on_earth),
+            Transform(morty,polar_morty)
+        )
+
+        self.wait()
+
+
+        tropical_morty = polar_morty.copy()
+        tropical_morty.move_to(np.array([0,0,0]))
+        morty.target = tropical_morty
 
         # move screen to equator
 
         self.play(
-            Rotate(earth,theta0 + dtheta/2,run_time = 3),
-            ApplyMethod(morty.move_to,[1.5,0,0], run_time = 3),
+            Rotate(earth, theta0 + dtheta/2,run_time = 3),
+            MoveToTarget(morty, path_arc = 70*DEGREES, run_time = 3),
         )
 
 
@@ -1092,7 +900,10 @@ class EarthScene(Scene):
 
 
 
-class ScreenShapingScene(Scene):
+class ScreenShapingScene(ThreeDScene):
+
+
+    # TODO: Morph from Earth Scene into this scene
 
     def construct(self):
 
@@ -1105,10 +916,13 @@ class ScreenShapingScene(Scene):
         self.add_distance_arrow()
         self.right_shift_screen_while_showing_light_indicator_and_distance_arrow()
         self.left_shift_again()
-        self.morph_into_faux_3d()
+        
+        self.morph_into_3d()
 
 
     def setup_elements(self):
+
+        SCREEN_THICKNESS = 10
 
         self.screen_height = 1.0
         self.brightness_rect_height = 1.0
@@ -1117,39 +931,44 @@ class ScreenShapingScene(Scene):
         self.screen = Line([3,-self.screen_height/2,0],[3,self.screen_height/2,0],
             path_arc = 0, num_arc_anchors = 10)
 
-        # spotlight
-        self.spotlight = Spotlight(
+
+        # light source
+        self.light_source = LightSource(
             opacity_function = inverse_quadratic(1,5,1),
             num_levels = NUM_LEVELS,
             radius = 10,
-            brightness = 5,
             screen = self.screen
         )
+        self.light_source.move_source_to([-5,0,0])
 
-        self.spotlight.move_source_to([-5,0,0])
+        # abbreviations
+        self.ambient_light = self.light_source.ambient_light
+        self.spotlight = self.light_source.spotlight
+        self.lighthouse = self.light_source.lighthouse
+
         screen_tracker = ScreenTracker(self.spotlight)
-
-        # lighthouse
-        lighthouse = LightHouse()
-        lighthouse.scale(2).next_to(self.spotlight.source_point,DOWN,buff=0)
-
-        # ambient light
-        ambient_light = AmbientLight(
-            opacity_function = inverse_quadratic(AMBIENT_DIMMED,1,1),
-            num_levels = NUM_LEVELS,
-            radius = 10,
-            brightness = 1,
-        )
-        ambient_light.move_source_to(self.spotlight.source_point)
+        self.add(screen_tracker)
 
         # Morty
         self.morty = Mortimer().scale(0.3).next_to(self.screen, RIGHT, buff = 0.5)
 
         # Add everything to the scene
-        self.add(lighthouse, ambient_light,self.spotlight,self.screen)
+        self.add(self.ambient_light, self.lighthouse)
         self.add_foreground_mobject(self.morty)
-        self.add(screen_tracker)
+        
+        self.wait()
+        self.play(FadeIn(self.screen))
+        self.wait()
 
+        dimmed_ambient_light = self.ambient_light.copy()
+        dimmed_ambient_light.dimming(AMBIENT_DIMMED)
+
+        self.play(
+            FadeIn(self.spotlight), # this hides Morty for a moment, why?
+            Transform(self.ambient_light,dimmed_ambient_light)
+        )
+
+        self.wait()
 
 
 
@@ -1183,20 +1002,22 @@ class ScreenShapingScene(Scene):
             ReplacementTransform(brightness_rect0,self.brightness_rect)
         )
 
-        self.original_screen = self.screen.copy()
-        self.original_brightness_rect = self.brightness_rect.copy()
+        self.unslanted_screen = self.screen.copy()
+        self.unslanted_brightness_rect = self.brightness_rect.copy()
         # for unslanting the screen later
 
 
     def slant_screen(self):
 
+        SLANTING_AMOUNT = 0.1
+
         lower_screen_point, upper_screen_point = self.screen.get_start_and_end()
 
         lower_slanted_screen_point = interpolate(
-            lower_screen_point, self.spotlight.source_point, 0.2
+            lower_screen_point, self.spotlight.source_point, SLANTING_AMOUNT
         )
         upper_slanted_screen_point = interpolate(
-            upper_screen_point, self.spotlight.source_point, -0.2
+            upper_screen_point, self.spotlight.source_point, -SLANTING_AMOUNT
         )
 
         self.slanted_brightness_rect = self.brightness_rect.copy()
@@ -1209,42 +1030,33 @@ class ScreenShapingScene(Scene):
         self.slanted_brightness_rect.move_to(self.brightness_rect.get_center())
 
         self.play(
-             ReplacementTransform(self.screen,self.slanted_screen),
-             ReplacementTransform(self.brightness_rect,self.slanted_brightness_rect),
+             Transform(self.screen,self.slanted_screen),
+             Transform(self.brightness_rect,self.slanted_brightness_rect),
         )
 
 
 
     def unslant_screen(self):
 
-        self.wait()
-
-
-        self.remove(self.slanted_screen)
-        self.remove(self.slanted_brightness_rect)
-
-        
+        self.wait()        
         self.play(
-            ReplacementTransform(self.screen,self.original_screen),
-            ReplacementTransform(self.slanted_brightness_rect,self.original_brightness_rect),
+            Transform(self.screen,self.unslanted_screen),
+            Transform(self.brightness_rect,self.unslanted_brightness_rect),
         )
 
 
-        #self.remove(self.original_brightness_rect)
 
 
     def left_shift_screen_while_showing_light_indicator(self):
 
         # Scene 5: constant screen size, changing opening angle
 
+        OPACITY_FOR_UNIT_INTENSITY = 1
+
         # let's use an actual light indicator instead of just rects
 
         self.indicator_intensity = 0.25
         indicator_height = 1.25 * self.screen_height
-
-        # indicator0 = Ellipse(width = 0, height = screen_height).move_to(self.screen.get_center())
-        # indicator0.set_fill(opacity = 0)
-        # self.add_foreground_mobject(indicator0)
 
         self.indicator = LightIndicator(radius = indicator_height/2,
             opacity_for_unit_intensity = OPACITY_FOR_UNIT_INTENSITY,
@@ -1252,30 +1064,29 @@ class ScreenShapingScene(Scene):
             precision = 2)
         self.indicator.set_intensity(self.indicator_intensity)
 
-
-
-        self.indicator.move_to(self.original_brightness_rect.get_center())
-
+        self.indicator.move_to(self.brightness_rect.get_center())
 
         self.play(
-            FadeOut(self.original_brightness_rect),
+            FadeOut(self.brightness_rect),
             FadeIn(self.indicator)
         )
 
+        # Here some digits of the indicator disappear...
+
         self.add_foreground_mobject(self.indicator.reading)
 
-        self.unit_indicator_intensity = 1.0
+
+        self.unit_indicator_intensity = 1.0 # intensity at distance 1
+                                            # (where we are about to move to)
 
         self.left_shift = (self.screen.get_center()[0] - self.spotlight.source_point[0])/2
 
         self.play(
-            ApplyMethod(self.screen.shift,[-self.left_shift,0,0]),
-            ApplyMethod(self.morty.shift,[-self.left_shift,0,0]),
-            #ApplyMethod(self.indicator.shift,[-self.left_shift,0,0]),
-            ApplyMethod(self.indicator.set_intensity,self.unit_indicator_intensity),
+            self.screen.shift,[-self.left_shift,0,0],
+            self.morty.shift,[-self.left_shift,0,0],
+            self.indicator.shift,[-self.left_shift,0,0],
+            self.indicator.set_intensity,self.unit_indicator_intensity,
         )
-
-        self.remove(self.original_screen) # was still hiding behind the shadow
         
 
 
@@ -1336,36 +1147,359 @@ class ScreenShapingScene(Scene):
             ApplyMethod(self.morty.shift,[-self.distance_to_source,0,0]),
         )
 
-    def morph_into_faux_3d(self):
+    def morph_into_3d(self):
 
-        p0_lower, p0_upper = self.screen.get_start_and_end()
+        axes = ThreeDAxes()
+        self.add(axes)
 
-        p01 = p0_lower
-        p02 = p0_lower
-        p03 = p0_upper
-        p04 = p0_upper
+        phi0 = self.camera.get_phi() # default is 0 degs
+        theta0 = self.camera.get_theta() # default is -90 degs
+        distance0 = self.camera.get_distance()
 
-        screen3d0 = Polygon(p01,p02,p03,p04)
-        screen3d0.set_stroke(width = 1, color = WHITE)
+        self.play(FadeOut(self.ambient_light))
 
-        screen3d0_edge = VMobject()
-        screen3d0_edge.set_anchor_points([p03,p04,p01])
 
-        perspective_v = 0.5 * np.array([1,-1,0])
-        p1 = p01 + 0.5 * perspective_v
-        p2 = p02 - 0.5 * perspective_v
-        p3 = p03 - 0.5 * perspective_v
-        p4 = p04 + 0.5 * perspective_v
+        phi1 = 60 * DEGREES # angle from zenith (0 to 180)
+        theta1 = -135 * DEGREES # azimuth (0 to 360)
+        distance1 = distance0
+        target_point = self.camera.get_spherical_coords(phi1, theta1, distance1)
 
-        screen3d = Polygon(p1,p2,p3,p4)
-        screen3d.set_fill(color = WHITE, opacity = 0.5)
+        dphi = phi1 - phi0
+        dtheta = theta1 - theta0
 
-        screen3d_edge = VMobject()
-        screen3d_edge.set_anchor_points([p3,p4,p1])
+        print "moving camera from (", phi0/DEGREES, ", ", theta0/DEGREES, ") to (", phi1/DEGREES, ", ", theta1/DEGREES, ")" 
 
-        self.spotlight.screen = screen3d0_edge
+        # camera_tracker = MovingCameraTracker(self.camera.rotation_mobject,
+        #     light_source = self.spotlight.source_point,
+        #     screen = self.screen)
 
-        self.play(Transform(self.spotlight.screen,screen3d_edge))
+        camera_target_point = target_point # self.camera.get_spherical_coords(45 * DEGREES, -60 * DEGREES)
+        projection_direction = self.camera.spherical_coords_to_point(phi1,theta1, 1)
+
+        self.play(
+            ApplyMethod(self.camera.rotation_mobject.move_to, camera_target_point)
+        )
+
+        self.wait()
+
+
+
+
+
+
+class BackToEulerSumScene(PiCreatureScene):
+
+   
+    def construct(self):
+        #self.remove(self.get_primary_pi_creature())
+
+        NUM_CONES = 7
+        NUM_VISIBLE_CONES = 6
+        INDICATOR_RADIUS = 0.5
+        OPACITY_FOR_UNIT_INTENSITY = 1.0
+
+        self.number_line = NumberLine(
+            x_min = 0,
+            color = WHITE,
+            number_at_center = 1.6,
+            stroke_width = 1,
+            numbers_with_elongated_ticks = range(1,5),
+            numbers_to_show = range(1,5),
+            unit_size = 2,
+            tick_frequency = 0.2,
+            line_to_number_buff = LARGE_BUFF,
+            label_direction = UP,
+        )
+
+        self.number_line.label_direction = DOWN
+        self.number_line.shift(3*UP)
+
+        self.number_line_labels = self.number_line.get_number_mobjects()
+        self.add(self.number_line,self.number_line_labels)
+        self.wait()
+
+        origin_point = self.number_line.number_to_point(0)
+
+        self.default_pi_creature_class = Randolph
+        randy = self.get_primary_pi_creature()
+
+        randy.scale(0.5)
+        randy.flip()
+        right_pupil = randy.pupils[1]
+        randy.next_to(origin_point, LEFT, buff = 0, submobject_to_align = right_pupil)
+
+        randy_copy = randy.copy()
+        randy_copy.target = randy.copy().shift(DOWN)
+
+
+
+        bubble = ThoughtBubble(direction = RIGHT,
+                            width = 4, height = 3,
+                            file_name = "Bubbles_thought.svg")
+        bubble.next_to(randy,DOWN+LEFT)
+        bubble.set_fill(color = BLACK, opacity = 1)
+        
+        # self.play(
+        #     randy.change, "wave_2",
+        #     ShowCreation(bubble),
+        # )
+
+
+        euler_sum = TexMobject("1", "+", "{1\over 4}", 
+            "+", "{1\over 9}", "+", "{1\over 16}", "+", "{1\over 25}", "+", "\cdots", " ")
+        # the last entry is a dummy element which makes looping easier
+        # used just for putting the fractions into the light indicators
+            
+        intensities = np.array([1./(n+1)**2 for n in range(NUM_CONES)])
+        opacities = intensities * OPACITY_FOR_UNIT_INTENSITY
+
+        # repeat:
+
+        # fade in lighthouse
+        # switch on / fade in ambient light
+        # show creation / write light indicator
+        # move indicator onto origin
+            # while morphing and dimming
+        # move indicator into thought bubble
+            # while indicators already inside shift to the back
+            # and while term appears in the series below
+
+        point = self.number_line.number_to_point(1)
+        v = point - self.number_line.number_to_point(0)
+        light_source = LightSource()
+        light_source.move_source_to(point)
+        light_source.ambient_light.move_source_to(point)
+        light_source.lighthouse.move_to(point)
+
+        self.play(FadeIn(light_source.lighthouse))
+        self.play(SwitchOn(light_source.ambient_light))
+
+
+        for i in range(2,3): #NUM_VISIBLE_CONES + 1):
+
+            point = self.number_line.number_to_point(i)
+            
+            moving_light_source = light_source.copy()
+            moving_light_source.set_max_opacity_ambient(0.25)
+            self.add(moving_light_source.ambient_light)
+            target_light_source = moving_light_source.copy()
+            # # target_light_source.ambient_light.dimming(OPACITY_FOR_UNIT_INTENSITY)
+            # #target_light_source.move_to(point)
+            # target_light_source.move_source_to(point)
+            target_light_source.ambient_light.move_source_to(point)
+            # target_light_source.lighthouse.move_to(point)
+            # target_light_source.set_max_opacity_ambient(1.0)
+            # #target_light_source.ambient_light.generate_points()
+
+            moving_light_source.ambient_light.target = target_light_source.ambient_light
+
+            # #self.play(MoveToTarget(randy_copy))
+            self.play(
+                 #Transform(moving_light_source.lighthouse, target_light_source.lighthouse),
+                 MoveToTarget(moving_light_source.ambient_light),
+            )
+
+            # light_source = moving_light_source
+
+
+        # switch on lights off-screen
+            # while writing an ellipsis in the series
+            # and fading out the stack of indicators
+            # and fading in pi^2/6 instead
+            # move a copy of pi^2/6 down to the series
+            # ans fade in an equals sign
+
+
+
+
+        # for i in range(1,NUM_CONES+1):
+        #     lighthouse = Lighthouse()
+        #     point = self.number_line.number_to_point(i)
+        #     ambient_light = AmbientLight(
+        #         opacity_function = inverse_quadratic(1,2,1),
+        #         num_levels = NUM_LEVELS,
+        #         radius = 12.0)
+            
+        #     ambient_light.move_source_to(point)
+        #     lighthouse.next_to(point,DOWN,0)
+        #     lighthouses.append(lighthouse)
+        #     ambient_lights.append(ambient_light)
+        #     lighthouse_pos.append(point)
+
+        # for i in range(1,NUM_VISIBLE_CONES+1):
+
+        #     # create light indicators
+        #     # but they contain fractions!
+        #     indicator = LightIndicator(color = LIGHT_COLOR,
+        #         radius = INDICATOR_RADIUS,
+        #         opacity_for_unit_intensity = OPACITY_FOR_UNIT_INTENSITY,
+        #         show_reading = False
+        #     )
+        #     indicator.set_intensity(intensities[i-1])
+        #     indicator_reading = euler_sum[-2+2*i]
+        #     indicator_reading.scale_to_fit_height(0.8*indicator.get_height())
+        #     indicator_reading.move_to(indicator.get_center())
+        #     indicator.add(indicator_reading)
+        #     indicator.foreground.set_fill(None,opacities[i-1])
+
+
+        #     if i == 1:
+        #         indicator.next_to(randy,DOWN,buff = 5)
+        #         indicator_reading.scale_to_fit_height(0.4*indicator.get_height())
+        #         # otherwise we get a huge 1
+        #     else:
+        #         indicator.next_to(light_indicators[i-2],DOWN, buff = 0.2)
+
+        #     light_indicators.append(indicator)
+        #     indicators_as_mob.add(indicator)
+
+
+        # bubble.add_content(indicators_as_mob)
+        # indicators_as_mob.shift(DOWN+0.5*LEFT)
+
+
+        # for lh in lighthouses:
+        #     self.add_foreground_mobject(lh)
+
+
+        # # slowly switch on visible light cones and increment indicator
+        # for (i,ambient_light) in zip(range(NUM_VISIBLE_CONES),ambient_lights[:NUM_VISIBLE_CONES]):
+        #     indicator_start_time = 0.4 * (i+1) * SWITCH_ON_RUN_TIME/ambient_light.radius * self.number_line.unit_size
+        #     indicator_stop_time = indicator_start_time + INDICATOR_UPDATE_TIME
+        #     indicator_rate_func = squish_rate_func(
+        #         smooth,indicator_start_time,indicator_stop_time)
+        #     self.play(
+        #         SwitchOn(ambient_light),
+        #         FadeIn(light_indicators[i])
+        #     )
+
+        # # quickly switch on off-screen light cones and increment indicator
+        # for (i,ambient_light) in zip(range(NUM_VISIBLE_CONES,NUM_CONES),ambient_lights[NUM_VISIBLE_CONES:NUM_CONES]):
+        #     indicator_start_time = 0.5 * (i+1) * FAST_SWITCH_ON_RUN_TIME/ambient_light.radius * self.number_line.unit_size
+        #     indicator_stop_time = indicator_start_time + FAST_INDICATOR_UPDATE_TIME
+        #     indicator_rate_func = squish_rate_func(#smooth, 0.8, 0.9)
+        #         smooth,indicator_start_time,indicator_stop_time)
+        #     self.play(
+        #         SwitchOn(ambient_light, run_time = FAST_SWITCH_ON_RUN_TIME),
+        #     )
+
+
+        # # show limit value in light indicator and an equals sign
+        # sum_indicator = LightIndicator(color = LIGHT_COLOR,
+        #         radius = INDICATOR_RADIUS,
+        #         opacity_for_unit_intensity = OPACITY_FOR_UNIT_INTENSITY,
+        #         show_reading = False
+        #     )
+        # sum_indicator.set_intensity(intensities[0] * np.pi**2/6)
+        # sum_indicator_reading = TexMobject("{\pi^2 \over 6}")
+        # sum_indicator_reading.scale_to_fit_height(0.8 * sum_indicator.get_height())
+        # sum_indicator.add(sum_indicator_reading)
+
+        # brace = Brace(indicators_as_mob, direction = RIGHT, buff = 0.5)
+        # brace.shift(2*RIGHT)
+        # sum_indicator.next_to(brace,RIGHT)
+
+
+        # self.play(
+        #     ShowCreation(brace),
+        #     ShowCreation(sum_indicator), # DrawBorderThenFill
+        # )
+
+            
+
+        self.wait()
+
+
+
+
+
+class TwoLightSourcesScene(PiCreatureScene):
+
+    def construct(self):
+
+        MAX_OPACITY = 0.4
+        INDICATOR_RADIUS = 0.6
+        OPACITY_FOR_UNIT_INTENSITY = 0.5
+
+        A = np.array([5,-3,0])
+        B = np.array([-5,3,0])
+        C = np.array([-5,-3,0])
+
+        morty = self.get_primary_pi_creature()
+        morty.scale(0.3).flip().move_to(C)
+
+        horizontal = VMobject(stroke_width = 1)
+        horizontal.set_points_as_corners([C,A])
+        vertical = VMobject(stroke_width = 1)
+        vertical.set_points_as_corners([C,B])
+
+        self.play(
+            ShowCreation(horizontal),
+            ShowCreation(vertical)
+        )
+
+        indicator = LightIndicator(color = LIGHT_COLOR,
+                radius = INDICATOR_RADIUS,
+                opacity_for_unit_intensity = OPACITY_FOR_UNIT_INTENSITY,
+                show_reading = True,
+                precision = 2
+        )
+
+        indicator.next_to(morty,LEFT)
+
+        self.play(
+            Write(indicator)
+        )
+
+        ambient_light1 = AmbientLight(max_opacity = MAX_OPACITY)
+        ambient_light1.move_source_to(A)
+        ambient_light2 = AmbientLight(max_opacity = MAX_OPACITY)
+        ambient_light2.move_source_to(B)
+        lighthouse1 = Lighthouse()
+        lighthouse1.next_to(A,DOWN,buff = 0)
+        lighthouse2 = Lighthouse()
+        lighthouse2.next_to(B,DOWN,buff = 0)
+
+        self.play(
+            FadeIn(lighthouse1),
+            FadeIn(lighthouse2),
+            SwitchOn(ambient_light1),
+            SwitchOn(ambient_light2)
+        )
+
+        self.play(
+            UpdateLightIndicator(indicator,1.5)
+        )
+
+        self.wait()
+
+        new_indicator = indicator.copy()
+        self.add(new_indicator)
+        self.play(
+            indicator.shift, 2 * UP
+        )
+
+        ambient_light3 = AmbientLight(max_opacity = MAX_OPACITY)
+        lighthouse3 = Lighthouse()
+        lighthouse3.next_to(ambient_light3,DOWN,buff = 0)
+        ambient_light3.add(lighthouse3)
+        #moving_light.move_to(np.array([6,3.5,0]))
+
+        self.play(
+            FadeOut(ambient_light1),
+            FadeOut(lighthouse1),
+            FadeOut(ambient_light2),
+            FadeOut(lighthouse2),
+
+            FadeIn(ambient_light3),
+            UpdateLightIndicator(new_indicator,0.0)
+        )
+
+        self.wait()
+        self.play(
+            ambient_light3.shift,UP+RIGHT
+        )
+
 
 
 

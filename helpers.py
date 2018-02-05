@@ -552,13 +552,6 @@ def squish_rate_func(func, a = 0.4, b = 0.6):
             return func((t-a)/(b-a))
     return result
 
-# Stylistically, should this take parameters (with default values)?
-# Ultimately, the functionality is entirely subsumed by squish_rate_func,
-# but it may be useful to have a nice name for with nice default params for 
-# "lingering", different from squish_rate_func's default params
-def lingering(t):
-    return squish_rate_func(lambda t: t, 0, 0.8)(t)
-
 ### Functional Functions ###
 
 def composition(func_list):
@@ -639,6 +632,20 @@ def angle_of_vector(vector):
         return 0
     return np.angle(complex(*vector[:2]))
 
+def angle_between_vectors(v1, v2):
+    """
+    Returns the angle between two 3D vectors.
+    This angle will always be btw 0 and TAU/2.
+    """
+    l1 = np.linalg.norm(v1)
+    l2 = np.linalg.norm(v2)
+    return np.arccos(np.dot(v1,v2)/(l1*l2))
+
+def project_along_vector(point, vector):
+    matrix = np.eye(3) - np.outer(vector,vector)
+    return np.dot(point,matrix.T)
+
+
 def concatenate_lists(*list_of_lists):
     return [item for l in list_of_lists for item in l]
 
@@ -648,6 +655,3 @@ class DictAsObject(object):
     def __init__(self, dict):
          self.__dict__ = dict
 
-# Just to have a less heavyweight name for this extremely common operation
-def fdiv(a, b):
-    return np.true_divide(a,b)

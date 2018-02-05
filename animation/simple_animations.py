@@ -411,6 +411,9 @@ class Succession(Animation):
         else:
             run_time = sum(self.run_times)
         self.num_anims = len(animations)
+        if self.num_anims == 0:
+            # TODO: Handle this; it should be easy enough, but requires some special cases below
+            print "Warning! Successions with zero animations are not currently handled!"
         self.animations = animations
         #Have to keep track of this run_time, because Scene.play
         #might very well mess with it.
@@ -419,7 +422,7 @@ class Succession(Animation):
         # critical_alphas[i] is the start alpha of self.animations[i]
         # critical_alphas[i + 1] is the end alpha of self.animations[i]
         critical_times = np.concatenate(([0], np.cumsum(self.run_times)))
-        self.critical_alphas = map (lambda x : np.true_divide(x, run_time), critical_times) if self.num_anims > 0 else [0.0]
+        self.critical_alphas = map (lambda x : np.true_divide(x, run_time), critical_times)
 
         # self.scene_mobjects_at_time[i] is the scene's mobjects at start of self.animations[i]
         # self.scene_mobjects_at_time[i + 1] is the scene mobjects at end of self.animations[i]
@@ -430,12 +433,9 @@ class Succession(Animation):
             self.animations[i].clean_up(self.scene_mobjects_at_time[i + 1])
 
         self.current_alpha = 0
-        self.current_anim_index = 0 # If self.num_anims == 0, this is an invalid index, but so it goes
-        if self.num_anims > 0:
-            self.mobject = self.scene_mobjects_at_time[0]
-            self.mobject.add(self.animations[0].mobject)
-        else:
-            self.mobject = Group()
+        self.current_anim_index = 0 #TODO: What if self.num_anims == 0?
+        self.mobject = self.scene_mobjects_at_time[0]
+        self.mobject.add(self.animations[0].mobject)
 
         Animation.__init__(self, self.mobject, run_time = run_time, **kwargs)
 
@@ -446,17 +446,14 @@ class Succession(Animation):
     def jump_to_start_of_anim(self, index):
         if index != self.current_anim_index:
             self.mobject.remove(*self.mobject.submobjects) # Should probably have a cleaner "remove_all" method...
+            self.mobject.add(self.animations[index].mobject)
             for m in self.scene_mobjects_at_time[index].submobjects:
                 self.mobject.add(m)
-            self.mobject.add(self.animations[index].mobject)
 
         self.current_anim_index = index
         self.current_alpha = self.critical_alphas[index]
 
     def update_mobject(self, alpha):
-        if self.num_anims == 0:
-            return
-
         i = 0
         while self.critical_alphas[i + 1] < alpha:
             i = i + 1
