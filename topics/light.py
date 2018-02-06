@@ -19,9 +19,9 @@ from topics.three_dimensions import *
 
 from scipy.spatial import ConvexHull
 
-import traceback
 
 LIGHT_COLOR = YELLOW
+SHADOW_COLOR = BLACK
 SWITCH_ON_RUN_TIME = 1.5
 FAST_SWITCH_ON_RUN_TIME = 0.1
 NUM_LEVELS = 30
@@ -62,7 +62,6 @@ class LightSource(VMobject):
     }
 
     def generate_points(self):
-        print "LightSource.generate_points"
         self.lighthouse = Lighthouse()
         self.ambient_light = AmbientLight(
             source_point = self.source_point,
@@ -85,7 +84,7 @@ class LightSource(VMobject):
         else:
             self.spotlight = Spotlight()
 
-        self.shadow = VMobject(fill_color = "BLACK", fill_opacity = 1.0, stroke_color = BLACK)
+        self.shadow = VMobject(fill_color = SHADOW_COLOR, fill_opacity = 1.0, stroke_color = BLACK)
         self.lighthouse.next_to(self.source_point,DOWN,buff = 0)
         self.ambient_light.move_source_to(self.source_point)
 
@@ -134,15 +133,15 @@ class LightSource(VMobject):
 
 
     def move_source_to(self,point):
-        print "LightSource.move_source_to"
+
         apoint = np.array(point)
         v = apoint - self.source_point
         self.source_point = apoint
         self.lighthouse.next_to(apoint,DOWN,buff = 0)
         self.ambient_light.move_source_to(apoint)
-        #if self.has_screen():
-        #    self.spotlight.move_source_to(apoint)
-        #self.update()
+        if self.has_screen():
+            self.spotlight.move_source_to(apoint)
+        self.update()
         return self
 
 
@@ -157,19 +156,22 @@ class LightSource(VMobject):
         self.spotlight.radius = new_radius
 
     def update(self):
-        print "LightSource.update"
         self.spotlight.update_sectors()
         self.update_shadow()
 
 
     def update_shadow(self):
-        
+
         point = self.source_point
         projected_screen_points = []
         if not self.has_screen():
             return
         for point in self.screen.get_anchors():
             projected_screen_points.append(self.spotlight.project(point))
+
+        print "projected", self.screen.get_anchors(), "onto", projected_screen_points
+
+
 
         projected_source = project_along_vector(self.source_point,self.spotlight.projection_direction())
 
@@ -221,8 +223,8 @@ class LightSource(VMobject):
         new_anchors = np.append(new_anchors,anchors[index:],axis = 0)
         self.shadow.set_points_as_corners(new_anchors)
 
-        # shift it one unit closer to the camera so it is in front of the spotlight
-        #self.shadow.shift(-500*self.projection_direction())
+        # shift it closer to the camera so it is in front of the spotlight
+        self.shadow.shift(1e-5*self.spotlight.projection_direction())
         self.shadow.mark_paths_closed = True
 
 
@@ -287,7 +289,6 @@ class AmbientLight(VMobject):
     }
 
     def generate_points(self):
-        print "AmbientLight.generate_points"
         self.source_point = np.array(self.source_point)
 
         # in theory, this method is only called once, right?
@@ -313,13 +314,7 @@ class AmbientLight(VMobject):
 
     def move_source_to(self,point):
 
-
-        for line in traceback.format_stack():
-            print line.strip()
-
-        print "AmbientLight.move_source_to blablub"
         v = np.array(point) - self.source_point
-        print "test"
         self.source_point = np.array(point)
         self.shift(v)
         return self
@@ -379,8 +374,6 @@ class Spotlight(VMobject):
                 new_sector = self.new_sector(r,dr,lower_angle,upper_angle)
                 self.add(new_sector)
 
-        #self.update_shadow(point = self.source_point)
-        #self.add_to_back(self.shadow)
 
     def new_sector(self,r,dr,lower_angle,upper_angle):
 
@@ -426,6 +419,7 @@ class Spotlight(VMobject):
 
         viewing_angles = np.array(map(self.viewing_angle_of_point,
             projected_screen_points))
+
         lower_angle = upper_angle = 0
         if len(viewing_angles) != 0:
             lower_angle = np.min(viewing_angles)
