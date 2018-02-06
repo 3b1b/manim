@@ -199,14 +199,16 @@ def bezier(points):
 def remove_list_redundancies(l):
     """
     Used instead of list(set(l)) to maintain order
+    Keeps the last occurance of each element
     """
-    result = []
+    reversed_result = []
     used = set()
-    for x in l:
+    for x in reversed(l):
         if not x in used:
-            result.append(x)
+            reversed_result.append(x)
             used.add(x)
-    return result
+    reversed_result.reverse()
+    return reversed_result
 
 def list_update(l1, l2):
     """
@@ -642,6 +644,19 @@ def angle_of_vector(vector):
     if z == 0:
         return 0
     return np.angle(complex(*vector[:2]))
+
+def angle_between_vectors(v1, v2):
+    """
+    Returns the angle between two 3D vectors.
+    This angle will always be btw 0 and TAU/2.
+    """
+    l1 = np.linalg.norm(v1)
+    l2 = np.linalg.norm(v2)
+    return np.arccos(np.dot(v1,v2)/(l1*l2))
+
+def project_along_vector(point, vector):
+    matrix = np.identity(3) - np.outer(vector, vector)
+    return np.dot(point, matrix.T)
 
 def concatenate_lists(*list_of_lists):
     return [item for l in list_of_lists for item in l]

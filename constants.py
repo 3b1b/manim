@@ -60,6 +60,7 @@ LEFT_SIDE  = SPACE_WIDTH*LEFT
 RIGHT_SIDE = SPACE_WIDTH*RIGHT
 
 TAU = 2*np.pi
+DEGREES = TAU/360
 
 # Change this to point to where you want 
 # animation files to output

@@ -83,22 +83,22 @@ class ThreeDCamera(CameraWithPerspective):
             *self.get_spherical_coords()
         )
         def z_cmp(*vmobs):
-            #Compare to three dimensional mobjects based on 
-            #how close they are to the camera
-            return cmp(*[
-                -np.linalg.norm(vm.get_center()-camera_point)
-                for vm in vmobs
-            ])
-            # three_d_status = map(should_shade_in_3d, vmobs)
-            # has_points = [vm.get_num_points() > 0 for vm in vmobs]
-            # if all(three_d_status) and all(has_points):
-            #     cmp_vect = self.get_unit_normal_vect(vmobs[1])
-            #     return cmp(*[
-            #         np.dot(vm.get_center(), cmp_vect)
-            #         for vm in vmobs
-            #     ])
-            # else:
-            #     return 0
+            # Compare to three dimensional mobjects based on 
+            # how close they are to the camera
+            # return cmp(*[
+            #     -np.linalg.norm(vm.get_center()-camera_point)
+            #     for vm in vmobs
+            # ])
+            three_d_status = map(should_shade_in_3d, vmobs)
+            has_points = [vm.get_num_points() > 0 for vm in vmobs]
+            if all(three_d_status) and all(has_points):
+                cmp_vect = self.get_unit_normal_vect(vmobs[1])
+                return cmp(*[
+                    np.dot(vm.get_center(), cmp_vect)
+                    for vm in vmobs
+                ])
+            else:
+                return 0
         Camera.display_multiple_vectorized_mobjects(
             self, sorted(vmobjects, cmp = z_cmp)
         )
@@ -109,6 +109,13 @@ class ThreeDCamera(CameraWithPerspective):
         if theta is None: theta = curr_theta
         if distance is None: distance = curr_d
         return np.array([phi, theta, distance])
+
+    def get_cartesian_coords(self, phi = None, theta = None, distance = None):
+        spherical_coords_array = self.get_spherical_coords(phi,theta,distance)
+        phi2 = spherical_coords_array[0]
+        theta2 = spherical_coords_array[1]
+        d2 = spherical_coords_array[2]
+        return self.spherical_coords_to_point(phi2,theta2,d2)
 
     def get_phi(self):
         return self.get_spherical_coords()[0]
