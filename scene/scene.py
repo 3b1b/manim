@@ -367,7 +367,7 @@ class Scene(Container):
                 animations.pop()
                 #method should already have target then.
             else:
-                mobject.target = mobject.copy()
+                mobject.target = mobject.deepcopy()
             #
             if len(state["method_args"]) > 0 and isinstance(state["method_args"][-1], dict):
                 method_kwargs = state["method_args"].pop()

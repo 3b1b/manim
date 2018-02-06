@@ -639,6 +639,19 @@ def angle_of_vector(vector):
         return 0
     return np.angle(complex(*vector[:2]))
 
+def angle_between_vectors(v1, v2):
+    """
+    Returns the angle between two 3D vectors.
+    This angle will always be btw 0 and TAU/2.
+    """
+    l1 = np.linalg.norm(v1)
+    l2 = np.linalg.norm(v2)
+    return np.arccos(np.dot(v1,v2)/(l1*l2))
+
+def project_along_vector(point, vector):
+    matrix = np.eye(3) - np.outer(vector,vector)
+    return np.dot(point,matrix.T)
+
 def concatenate_lists(*list_of_lists):
     return [item for l in list_of_lists for item in l]
 

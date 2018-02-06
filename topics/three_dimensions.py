@@ -110,6 +110,13 @@ class ThreeDCamera(CameraWithPerspective):
         if distance is None: distance = curr_d
         return np.array([phi, theta, distance])
 
+    def get_cartesian_coords(self, phi = None, theta = None, distance = None):
+        spherical_coords_array = self.get_spherical_coords(phi,theta,distance)
+        phi2 = spherical_coords_array[0]
+        theta2 = spherical_coords_array[1]
+        d2 = spherical_coords_array[2]
+        return self.spherical_coords_to_point(phi2,theta2,d2)
+
     def get_phi(self):
         return self.get_spherical_coords()[0]
 
