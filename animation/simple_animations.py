@@ -403,7 +403,7 @@ class Succession(Animation):
         for anim in animations:
             anim.update(0)
 
-        animations = filter (lambda x : x.run_time != 0, animations)
+        animations = filter (lambda x : not(x.empty), animations)
 
         self.run_times = [anim.run_time for anim in animations]
         if "run_time" in kwargs:
@@ -411,6 +411,8 @@ class Succession(Animation):
         else:
             run_time = sum(self.run_times)
         self.num_anims = len(animations)
+        if self.num_anims == 0:
+            self.empty = True
         self.animations = animations
         #Have to keep track of this run_time, because Scene.play
         #might very well mess with it.
@@ -485,8 +487,14 @@ class AnimationGroup(Animation):
     }
     def __init__(self, *sub_anims, **kwargs):
         digest_config(self, kwargs, locals())
-        sync_animation_run_times_and_rate_funcs(*sub_anims, **kwargs)
-        self.run_time = max([a.run_time for a in sub_anims])
+        sub_anims = filter (lambda x : not(x.empty), sub_anims)
+        if len(sub_anims) == 0:
+            self.empty = True
+            self.run_time = 0
+        else:
+            # Should really make copies of animations, instead of messing with originals...
+            sync_animation_run_times_and_rate_funcs(*sub_anims, **kwargs)
+            self.run_time = max([a.run_time for a in sub_anims])
         everything = Mobject(*[a.mobject for a in sub_anims])
         Animation.__init__(self, everything, **kwargs)
 
@@ -497,3 +505,12 @@ class AnimationGroup(Animation):
     def clean_up(self, *args, **kwargs):
         for anim in self.sub_anims:
             anim.clean_up(*args, **kwargs)
+
+class EmptyAnimation(Animation):
+    CONFIG = {
+        "run_time" : 0,
+        "empty" : True
+    }
+
+    def __init__(self, *args, **kwargs):
+        return Animation.__init__(self, Group(), *args, **kwargs)
