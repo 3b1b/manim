@@ -140,7 +140,8 @@ class Camera(object):
         self, mobjects, 
         include_submobjects = True,
         excluded_mobjects = None,
-        z_buff_func = lambda m : m.get_center()[2]
+        #Round z coordinate to nearest hundredth when comparring
+        z_buff_func = lambda m : np.round(m.get_center()[2], 2)
         ):
         if include_submobjects:
             mobjects = self.extract_mobject_family_members(
