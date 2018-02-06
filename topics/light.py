@@ -42,14 +42,16 @@ inverse_quadratic = lambda maxint,scale,cutoff: inverse_power_law(maxint,scale,c
 
 
 
+# Note: Overall, this class seems perfectly reasonable to me, the main 
+# thing to be wary of is that calling self.add(submob) puts that submob
+# at the end of the submobjects list, and hence on top of everything else
+# which is why the shadow might sometimes end up behind the spotlight
 class LightSource(VMobject):
-
     # combines:
     # a lighthouse
     # an ambient light
     # a spotlight
     # and a shadow
-
     CONFIG = {
         "source_point": ORIGIN,
         "color": LIGHT_COLOR,
@@ -115,6 +117,8 @@ class LightSource(VMobject):
         if self.has_screen():
             self.spotlight.screen = new_screen
         else:
+            # Note: See below
+            # index = self.submobjects.index(self.spotlight)
             self.remove(self.spotlight)
             self.spotlight = Spotlight(
                 source_point = self.source_point,
@@ -124,6 +128,13 @@ class LightSource(VMobject):
                 screen = new_screen
             )
             self.spotlight.move_source_to(self.source_point)
+
+            # Note: This line will make spotlight show up at the end
+            # of the submojects list, which can make it show up on
+            # top of the shadow. To make it show up in the
+            # same spot, you could try the following line, 
+            # where "index" is what I defined above:
+            # self.submobjects.insert(index, self.spotlight)
             self.add(self.spotlight)
         
         # in any case
@@ -133,9 +144,12 @@ class LightSource(VMobject):
 
 
     def move_source_to(self,point):
-
         apoint = np.array(point)
         v = apoint - self.source_point
+        # Note: As discussed, things stand to behave better if source
+        # point is a submobject, so that it automatically interpolates
+        # during an animation, and other updates can be defined wrt 
+        # that source point's location
         self.source_point = apoint
         self.lighthouse.next_to(apoint,DOWN,buff = 0)
         self.ambient_light.move_source_to(apoint)
@@ -143,12 +157,6 @@ class LightSource(VMobject):
             self.spotlight.move_source_to(apoint)
         self.update()
         return self
-
-
-
-
-
-
         
     def set_radius(self,new_radius):
         self.radius = new_radius
@@ -169,14 +177,15 @@ class LightSource(VMobject):
         for point in self.screen.get_anchors():
             projected_screen_points.append(self.spotlight.project(point))
 
-        print "projected", self.screen.get_anchors(), "onto", projected_screen_points
-
-
+        # print "projected", self.screen.get_anchors(), "onto", projected_screen_points
 
         projected_source = project_along_vector(self.source_point,self.spotlight.projection_direction())
 
-        projected_point_cloud_3d = np.append(projected_screen_points,
-            np.reshape(projected_source,(1,3)),axis = 0)
+        projected_point_cloud_3d = np.append(
+            projected_screen_points,
+            np.reshape(projected_source,(1,3)),
+            axis = 0
+        )
         rotation_matrix = z_to_vector(self.spotlight.projection_direction())
         back_rotation_matrix = rotation_matrix.T # i. e. its inverse
 
@@ -223,6 +232,9 @@ class LightSource(VMobject):
         new_anchors = np.append(new_anchors,anchors[index:],axis = 0)
         self.shadow.set_points_as_corners(new_anchors)
 
+        # Note: Theoretically this should not be necessary as long as we make
+        # sure the shadow shows up after the spotlight in the submobjects list.
+        # 
         # shift it closer to the camera so it is in front of the spotlight
         self.shadow.shift(1e-5*self.spotlight.projection_direction())
         self.shadow.mark_paths_closed = True
@@ -293,6 +305,10 @@ class AmbientLight(VMobject):
 
         # in theory, this method is only called once, right?
         # so removing submobs shd not be necessary
+        # 
+        # Note: Usually, yes, it is only called within Mobject.__init__,
+        # but there is no strong guarantee of that, and you may want certain
+        # update functions to regenerate points here and there.
         for submob in self.submobjects:
             self.remove(submob)
 
@@ -313,7 +329,7 @@ class AmbientLight(VMobject):
 
 
     def move_source_to(self,point):
-
+        # Note: Best to rewrite in terms of VectorizedPoint source_point
         v = np.array(point) - self.source_point
         self.source_point = np.array(point)
         self.shift(v)
@@ -348,6 +364,10 @@ class Spotlight(VMobject):
     }
 
     def projection_direction(self):
+        # Note: This seems reasonable, though for it to work you'd
+        # need to be sure that any 3d scene including a spotlight 
+        # somewhere assigns that spotlights "camera" attribute 
+        # to be the camera associated with that scene.
         if self.camera == None:
             return OUT
         else:
@@ -376,6 +396,10 @@ class Spotlight(VMobject):
 
 
     def new_sector(self,r,dr,lower_angle,upper_angle):
+        # Note: I'm not looking _too_ closely at the implementation
+        # of these updates based on viewing angles and such. It seems to
+        # behave as intended, but let me know if you'd like more thorough
+        # scrutiny
 
         alpha = self.max_opacity * self.opacity_function(r)
         annular_sector = AnnularSector(
@@ -467,13 +491,12 @@ class Spotlight(VMobject):
 
 
 
-
-
-
     def dimming(self,new_alpha):
         old_alpha = self.max_opacity
         self.max_opacity = new_alpha
         for submob in self.submobjects:
+            # Note: Maybe it'd be best to have a Shadow class so that the
+            # type can be checked directly?
             if type(submob) != AnnularSector:
                 # it's the shadow, don't dim it
                 continue
@@ -498,6 +521,14 @@ class Spotlight(VMobject):
             submob.set_fill(opacity = alpha)
 
 
+# Note: Stylistically, I typically keep all of the implementation for an
+# update inside the relevant Animation or ContinualAnimation, rather than
+# in the mobject.  Things are fine the way you've done it, but sometimes
+# I personally like a nice conceptual divide between all the things that 
+# determine how the mobject is displayed in a single moment (implement in
+# the mobject's class itself) and all the things determining how that changes.
+# 
+# Up to you though.
 
 class ScreenTracker(ContinualAnimation):
 
