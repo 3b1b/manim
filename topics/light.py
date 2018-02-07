@@ -21,7 +21,7 @@ from scipy.spatial import ConvexHull
 
 
 LIGHT_COLOR = YELLOW
-SHADOW_COLOR = BLACK
+SHADOW_COLOR = RED
 SWITCH_ON_RUN_TIME = 1.5
 FAST_SWITCH_ON_RUN_TIME = 0.1
 NUM_LEVELS = 30
@@ -169,7 +169,6 @@ class LightSource(VMobject):
         for point in self.screen.get_anchors():
             projected_screen_points.append(self.spotlight.project(point))
 
-        print "projected", self.screen.get_anchors(), "onto", projected_screen_points
 
 
 
