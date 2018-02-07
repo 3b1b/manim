@@ -99,7 +99,7 @@ class Camera(object):
     def set_background(self, pixel_array, convert_from_floats = False):
         self.background = self.convert_pixel_array(pixel_array, convert_from_floats)
 
-    def set_background_from_func(self, coords_to_colors_func):
+    def make_background_from_func(self, coords_to_colors_func):
         """
         Sets background by using coords_to_colors_func to determine each pixel's color. Each input 
         to coords_to_colors_func is an (x, y) pair in space (in ordinary space coordinates; not 
@@ -114,9 +114,10 @@ class Camera(object):
             2,
             coords
         )
-        self.set_background(new_background, convert_from_floats = True)
+        return self.convert_pixel_array(new_background, convert_from_floats = True)
 
-        print "Ending set_background_from_func"
+    def set_background_from_func(self, coords_to_colors_func):
+        self.set_background(self.make_background_from_func(coords_to_colors_func))
 
     def reset(self):
         self.set_pixel_array(self.background)
@@ -140,7 +141,8 @@ class Camera(object):
         self, mobjects, 
         include_submobjects = True,
         excluded_mobjects = None,
-        z_buff_func = lambda m : m.get_center()[2]
+        #Round z coordinate to nearest hundredth when comparring
+        z_buff_func = lambda m : np.round(m.get_center()[2], 2)
         ):
         if include_submobjects:
             mobjects = self.extract_mobject_family_members(
@@ -152,6 +154,9 @@ class Camera(object):
                 )
                 mobjects = list_difference_update(mobjects, all_excluded)
 
+        # Should perhaps think about what happens here when include_submobjects is False,
+        # (for now, the onus is then on the caller to ensure this is handled correctly by
+        # passing us an appropriately pre-flattened list of mobjects if need be)
         return sorted(mobjects, lambda a, b: cmp(z_buff_func(a), z_buff_func(b)))
 
     def capture_mobject(self, mobject, **kwargs):
@@ -497,7 +502,8 @@ class MovingCamera(Camera):
             0 if self.aligned_dimension == "height" else 1
         )
 
-
+# TODO: Add an attribute to mobjects under which they can specify that they should just 
+# map their centers but remain otherwise undistorted (useful for labels, etc.)
 class MappingCamera(Camera):
     CONFIG = {
         "mapping_func" : lambda p : p,

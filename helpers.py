@@ -199,14 +199,16 @@ def bezier(points):
 def remove_list_redundancies(l):
     """
     Used instead of list(set(l)) to maintain order
+    Keeps the last occurance of each element
     """
-    result = []
+    reversed_result = []
     used = set()
-    for x in l:
+    for x in reversed(l):
         if not x in used:
-            result.append(x)
+            reversed_result.append(x)
             used.add(x)
-    return result
+    reversed_result.reverse()
+    return reversed_result
 
 def list_update(l1, l2):
     """
@@ -544,12 +546,16 @@ def wiggle(t, wiggles = 2):
 
 def squish_rate_func(func, a = 0.4, b = 0.6):
     def result(t):
+        if a == b:
+            return a
+
         if t < a:
             return func(0)
         elif t > b:
             return func(1)
         else:
             return func((t-a)/(b-a))
+            
     return result
 
 # Stylistically, should this take parameters (with default values)?
@@ -649,8 +655,8 @@ def angle_between_vectors(v1, v2):
     return np.arccos(np.dot(v1,v2)/(l1*l2))
 
 def project_along_vector(point, vector):
-    matrix = np.eye(3) - np.outer(vector,vector)
-    return np.dot(point,matrix.T)
+    matrix = np.identity(3) - np.outer(vector, vector)
+    return np.dot(point, matrix.T)
 
 def concatenate_lists(*list_of_lists):
     return [item for l in list_of_lists for item in l]

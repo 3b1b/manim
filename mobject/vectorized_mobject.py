@@ -459,7 +459,8 @@ class VectorizedPoint(VMobject):
 
 class BackgroundColoredVMobject(VMobject):
     CONFIG = {
-        "background_image" : "color_background",
+        # Can be set to None, using set_background_array to initialize instead
+        "background_image_file" : "color_background",
         "stroke_color" : WHITE,
         "fill_color" : WHITE,
     }
@@ -475,10 +476,14 @@ class BackgroundColoredVMobject(VMobject):
         for submob in vmobject.submobjects:
             self.add(BackgroundColoredVMobject(submob, **kwargs))
 
-        #Initialize background array
-        path = get_full_raster_image_path(self.background_image)
-        image = Image.open(path)
-        self.background_array = np.array(image)
+        if self.background_image_file != None:
+            #Initialize background array
+            path = get_full_raster_image_path(self.background_image_file)
+            image = Image.open(path)
+            self.set_background_array(np.array(image))
+
+    def set_background_array(self, background_array):
+        self.background_array = background_array
 
     def resize_background_array(self, new_width, new_height, mode = "RGBA"):
         image = Image.fromarray(self.background_array, mode = mode)

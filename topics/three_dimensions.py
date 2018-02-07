@@ -83,22 +83,22 @@ class ThreeDCamera(CameraWithPerspective):
             *self.get_spherical_coords()
         )
         def z_cmp(*vmobs):
-            #Compare to three dimensional mobjects based on 
-            #how close they are to the camera
-            return cmp(*[
-                -np.linalg.norm(vm.get_center()-camera_point)
-                for vm in vmobs
-            ])
-            # three_d_status = map(should_shade_in_3d, vmobs)
-            # has_points = [vm.get_num_points() > 0 for vm in vmobs]
-            # if all(three_d_status) and all(has_points):
-            #     cmp_vect = self.get_unit_normal_vect(vmobs[1])
-            #     return cmp(*[
-            #         np.dot(vm.get_center(), cmp_vect)
-            #         for vm in vmobs
-            #     ])
-            # else:
-            #     return 0
+            # Compare to three dimensional mobjects based on 
+            # how close they are to the camera
+            # return cmp(*[
+            #     -np.linalg.norm(vm.get_center()-camera_point)
+            #     for vm in vmobs
+            # ])
+            three_d_status = map(should_shade_in_3d, vmobs)
+            has_points = [vm.get_num_points() > 0 for vm in vmobs]
+            if all(three_d_status) and all(has_points):
+                cmp_vect = self.get_unit_normal_vect(vmobs[1])
+                return cmp(*[
+                    np.dot(vm.get_center(), cmp_vect)
+                    for vm in vmobs
+                ])
+            else:
+                return 0
         Camera.display_multiple_vectorized_mobjects(
             self, sorted(vmobjects, cmp = z_cmp)
         )
