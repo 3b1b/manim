@@ -1211,7 +1211,7 @@ class BackToEulerSumScene(PiCreatureScene):
 
    
     def construct(self):
-        #self.remove(self.get_primary_pi_creature())
+        self.remove(self.get_primary_pi_creature())
 
         NUM_CONES = 7
         NUM_VISIBLE_CONES = 6
@@ -1232,7 +1232,7 @@ class BackToEulerSumScene(PiCreatureScene):
         )
 
         self.number_line.label_direction = DOWN
-        self.number_line.shift(3*UP)
+        #self.number_line.shift(3*UP)
 
         self.number_line_labels = self.number_line.get_number_mobjects()
         self.add(self.number_line,self.number_line_labels)
@@ -1256,7 +1256,7 @@ class BackToEulerSumScene(PiCreatureScene):
         bubble = ThoughtBubble(direction = RIGHT,
                             width = 4, height = 3,
                             file_name = "Bubbles_thought.svg")
-        bubble.next_to(randy,LEFT)
+        bubble.next_to(randy,LEFT+UP)
         bubble.set_fill(color = BLACK, opacity = 1)
         
         self.play(
@@ -1295,58 +1295,57 @@ class BackToEulerSumScene(PiCreatureScene):
         self.play(SwitchOn(light_source.ambient_light))
 
 
-        # create an indicator and move a copy of it into the thought bubble
+        # create an indicator that will move along the number line
         indicator = LightIndicator(color = LIGHT_COLOR,
                 radius = INDICATOR_RADIUS,
                 opacity_for_unit_intensity = 0.2, #OPACITY_FOR_UNIT_INTENSITY,
                 show_reading = False
-            )
+        )
         indicator_reading = euler_sum[0]
         indicator_reading.scale_to_fit_height(0.5 * indicator.get_height())
         indicator_reading.move_to(indicator.get_center())
         indicator.add(indicator_reading)
+        indicator.tex_reading = indicator_reading
         indicator.foreground.set_fill(None,opacities[0])
 
         indicator.move_to(point)
         indicator.set_intensity(intensities[0])
 
-        self.play(FadeIn(indicator))
-        indicator_copy = indicator.deepcopy()
-        self.add_foreground_mobject(indicator_copy)
-        self.play(indicator_copy.move_to, bubble)
-
-        moving_light_source = light_source.deepcopy()
-
-
-        ls = []
-        ls.append(moving_light_source)
+        self.add_foreground_mobject(indicator)
         
+        collection_point = np.array([-5,2,0])
 
-        for i in range(2,NUM_VISIBLE_CONES + 1):
+
+
+        for i in range(2, NUM_VISIBLE_CONES + 1):
 
             previous_point = self.number_line.number_to_point(i - 1)
             point = self.number_line.number_to_point(i)
-            
-            indicator_copy = indicator.deepcopy()
-            indicator_copy.move_to(previous_point)
-            self.add_foreground_mobject(indicator_copy)
 
+            # Create and position the target indicator (next on number line).
             indicator_target = indicator.deepcopy()
             indicator_target.move_to(point)
 
-            ls[-1].set_max_opacity_ambient(0.0001)
-            self.add(ls[-1].ambient_light)
-            ls.append(ls[-1].deepcopy())
-
-            ls[-1].move_source_to(point)
-            ls[-1].set_max_opacity_ambient(0.5)
-
-            bubble_indicator = indicator_copy.deepcopy()
+            # Here we make a copy that will move into the thought bubble.
+            bubble_indicator = indicator.deepcopy()
+            # And its target
             bubble_indicator_target = bubble_indicator.deepcopy()
-            bubble_indicator_target.set_intensity(intensities[i-1])
-            bubble_indicator_target.reading = euler_sum[-2+2*i]
+            bubble_indicator_target.set_intensity(intensities[i - 2])
+
+            # give the target the appropriate reading
+            bubble_indicator_target.remove(bubble_indicator_target.tex_reading)
+            bubble_indicator_target.tex_reading = euler_sum[2*i-4]
+            bubble_indicator_target.add(bubble_indicator_target.tex_reading)
+            # center it in the indicator
+            bubble_indicator_target.tex_reading.move_to(
+                bubble_indicator_target.get_center())
+
             bubble_indicator_target.reading.scale_to_fit_height(0.8*indicator.get_height())
-            bubble_indicator_target.move_to(bubble)
+            
+            # position the target in the thought bubble
+            print "center:", bubble_indicator_target.get_center()
+            bubble_indicator_target.move_to(collection_point)
+            print "-center:", bubble_indicator_target.get_center()
 
             self.add_foreground_mobject(bubble_indicator)
 
@@ -1355,10 +1354,12 @@ class BackToEulerSumScene(PiCreatureScene):
             )
 
             self.play(
-                 Transform(ls[-2], ls[-1]),
-                 Transform(indicator_copy,indicator_target),
-
+                  Transform(indicator,indicator_target),
             )
+
+            new_light = light_source.deepcopy()
+            new_light.move_source_to(point)
+            self.play(SwitchOn(new_light.ambient_light))
 
 
             
