@@ -575,7 +575,7 @@ class EquationSolver2d(ColorMappedByFuncScene):
                     colored_line = BackgroundColoredVMobject(thick_line, background_image_file = None)
                     colored_line.set_background_array(background)
                 else:
-                    colored_line = thick_line.set_stroke_with(4)
+                    colored_line = thick_line.set_stroke(width = 4)
 
                 walker_anim = LinearWalker(
                     start_coords = start, 
@@ -622,11 +622,11 @@ class EquationSolver2d(ColorMappedByFuncScene):
                     rect.get_bottom_right(), 
                     rect.get_bottom_left()
                 ]
-                points = np.array([num_plane.coords_to_point(x, y) for (x, y) in coords]) + IN
+                points = np.array([num_plane.coords_to_point(x, y) for (x, y) in coords]) + 2 * IN
                 # TODO: Maybe use diagonal lines or something to fill in rectangles indicating
                 # their "Nothing here" status?
                 # Or draw a large X or something
-                fill_rect = polygonObject = Polygon(*points, fill_opacity = 0.8, color = GREY)
+                fill_rect = polygonObject = Polygon(*points, fill_opacity = 0.8, color = DARK_BROWN)
                 return Succession(anim, FadeIn(fill_rect))
             else:
                 (sub_rect1, sub_rect2) = rect.splits_on_dim(dim_to_split)
@@ -644,7 +644,7 @@ class EquationSolver2d(ColorMappedByFuncScene):
                     for (sub_rect, side_to_draw) in sub_rect_and_sides
                 ]
                 mid_line_coords = rect.split_line_on_dim(dim_to_split)
-                mid_line_points = [num_plane.coords_to_point(x, y) for (x, y) in mid_line_coords]
+                mid_line_points = [num_plane.coords_to_point(x, y)  + IN for (x, y) in mid_line_coords]
                 # TODO: Have this match rectangle line style, apart from dashes and thin-ness?
                 # Though there is also informational value in seeing the dashed line separately from rectangle lines
                 mid_line = DashedLine(*mid_line_points)
@@ -1129,7 +1129,8 @@ class FundThmAlg(EquationSolver2d):
     CONFIG = {
         "func" : plane_poly_with_roots((1, 2), (-1, 1.5), (-1, 1.5)),
         "num_iterations" : 5,
-        "display_in_parallel" : True
+        "display_in_parallel" : True,
+        "use_fancy_lines" : False
     }
 
 # TODO: Borsuk-Ulam visuals
