@@ -22,6 +22,9 @@ class Animation(object):
         #one_at_a_time, all_at_once
         "submobject_mode" : "all_at_once",
         "lag_factor" : 2,
+        # Used by EmptyAnimation to announce itself ignorable
+        # in Successions and AnimationGroups
+        "empty" : False
     }
     def __init__(self, mobject, **kwargs):
         mobject = instantiate(mobject)

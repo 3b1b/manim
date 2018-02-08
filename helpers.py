@@ -546,12 +546,16 @@ def wiggle(t, wiggles = 2):
 
 def squish_rate_func(func, a = 0.4, b = 0.6):
     def result(t):
+        if a == b:
+            return a
+
         if t < a:
             return func(0)
         elif t > b:
             return func(1)
         else:
             return func((t-a)/(b-a))
+            
     return result
 
 # Stylistically, should this take parameters (with default values)?
