@@ -58,7 +58,7 @@ inverse_quadratic = lambda maxint,scale,cutoff: inverse_power_law(maxint,scale,c
 class AngleUpdater(ContinualAnimation):
     def __init__(self, angle_arc, spotlight, **kwargs):
         self.angle_arc = angle_arc
-        self.source_point = angle_arc.get_arc_center()
+
         self.spotlight = spotlight
         ContinualAnimation.__init__(self, self.angle_arc, **kwargs)
 
@@ -66,9 +66,9 @@ class AngleUpdater(ContinualAnimation):
         new_arc = self.angle_arc.copy().set_bound_angles(
             start = self.spotlight.start_angle(),
             stop = self.spotlight.stop_angle()
-         )
+        )
         new_arc.generate_points()
-        new_arc.move_arc_center_to(self.source_point)
+        new_arc.move_arc_center_to(self.spotlight.get_source_point())
         self.angle_arc.points = new_arc.points
         self.angle_arc.add_tip(tip_length = ARC_TIP_LENGTH,
             at_start = True, at_end = True)
@@ -83,7 +83,9 @@ class LightIndicator(Mobject):
         "intensity": 0,
         "opacity_for_unit_intensity": 1,
         "precision": 3,
-        "show_reading": True
+        "show_reading": True,
+        "measurement_point": ORIGIN,
+        "light_source": None
     }
 
     def generate_points(self):
@@ -105,6 +107,25 @@ class LightIndicator(Mobject):
         self.foreground.set_fill(opacity=new_opacity)
         ChangeDecimalToValue(self.reading, new_int).update(1)
         return self
+
+    def get_measurement_point(self):
+        if self.measurement_point != None:
+            return self.measurement_point
+        else:
+            return self.get_center()
+
+
+    def measured_intensity(self):
+        distance = np.linalg.norm(self.get_measurement_point() - 
+            self.light_source.get_source_point())
+        intensity = self.light_source.opacity_function(distance) / self.opacity_for_unit_intensity
+        return intensity
+
+    def continual_update(self):
+        if self.light_source == None:
+            print "Indicator cannot update, reason: no light source found"
+        self.set_intensity(self.measured_intensity())
+
         
 
 
@@ -121,6 +142,12 @@ class UpdateLightIndicator(AnimationGroup):
         changing_decimal = ChangeDecimalToValue(indicator.reading, intensity)
         AnimationGroup.__init__(self, changing_decimal, change_opacity, **kwargs)
         self.mobject = indicator
+
+
+class ContinualLightIndicatorUpdate(ContinualAnimation):
+
+    def update_mobject(self,dt):
+        self.mobject.continual_update()
 
 
 
@@ -581,7 +608,7 @@ class SingleLighthouseScene(PiCreatureScene):
 
         self.setup_elements()
         self.setup_angle() # spotlight and angle msmt change when screen rotates
-        #self.rotate_screen()
+        self.rotate_screen()
         self.morph_lighthouse_into_sun()
 
 
@@ -679,7 +706,7 @@ class SingleLighthouseScene(PiCreatureScene):
         self.angle_arc = Arc(radius = 5, start_angle = self.light_source.spotlight.start_angle(),
             angle = self.light_source.spotlight.opening_angle(), tip_length = ARC_TIP_LENGTH)
         #angle_arc.add_tip(at_start = True, at_end = True)
-        self.angle_arc.move_arc_center_to(self.light_source.source_point)
+        self.angle_arc.move_arc_center_to(self.light_source.get_source_point())
         
 
         # angle msmt (decimal number)
@@ -727,37 +754,37 @@ class SingleLighthouseScene(PiCreatureScene):
 
 
 
-        sun_position = ORIGIN #[-100,0,0]
+        sun_position = [-100,0,0]
 
 
-        # self.play(
-        #     FadeOut(self.angle_arc),
-        #     FadeOut(self.angle_indicator)
-        # )
+        self.play(
+            FadeOut(self.angle_arc),
+            FadeOut(self.angle_indicator)
+        )
 
-        #self.sun = self.light_source.deepcopy()
+        self.sun = self.light_source.deepcopy()
 
-        #self.sun.ambient_light.opacity_function = inverse_quadratic(1,2,1)
         #self.sun.num_levels = NUM_LEVELS,
         #self.sun.set_radius(150)
         #self.sun.set_max_opacity_ambient(AMBIENT_FULL)
         
 
 
-#        self.sun.spotlight.change_opacity_function(lambda r: 0.5)
- #       self.sun.set_radius(150)
-        #self.sun.move_source_to(sun_position)
+        self.sun.spotlight.change_opacity_function(lambda r: 0.5)
+        self.sun.set_radius(150)
+        self.sun.move_source_to(sun_position)
 
  #       self.sun.update()
 
    #     self.add(self.sun)
         # temporarily remove the screen tracker while we move the source
-        self.remove(self.screen_tracker)
+        #self.remove(self.screen_tracker)
 
         #print self.sun.spotlight.source_point
 
         self.play(
-             self.light_source.spotlight.move_source_to,sun_position,
+             #self.light_source.spotlight.move_source_to,sun_position,
+             Transform(self.light_source,self.sun)
         )
 
         #self.add(ScreenTracker(self.sun))
@@ -1437,7 +1464,9 @@ class TwoLightSourcesScene(PiCreatureScene):
         C = np.array([-5.,-3.,0.])
 
         morty = self.get_primary_pi_creature()
-        morty.scale(0.3).flip().move_to(C)
+        morty.scale(0.3).flip()
+        right_pupil = morty.pupils[1]
+        morty.next_to(C, LEFT, buff = 0, submobject_to_align = right_pupil)
 
         horizontal = VMobject(stroke_width = 1)
         horizontal.set_points_as_corners([C,A])
@@ -1462,20 +1491,8 @@ class TwoLightSourcesScene(PiCreatureScene):
             Write(indicator)
         )
 
-        def intensity_for_location(loc,light_source = None):
-            intensity = 0.0
-            distance = np.linalg.norm(C - loc)
-            print "source:", light_source.get_source_point(), "loc:", loc
-            print "distance:", distance
-            intensity = light_source.opacity_function(distance) / OPACITY_FOR_UNIT_INTENSITY
-            print "intensity:", intensity
-            return intensity
 
-        def intensity_for_light_source(ls):
-            return intensity_for_location(ls.get_source_point(), light_source = ls)
-
-
-        ls1 = LightSource()
+        ls1 = LightSource(radius = 20)
         ls2 = LightSource().deepcopy()
         #print "==="
         #print ls1.get_source_point()
@@ -1493,8 +1510,10 @@ class TwoLightSourcesScene(PiCreatureScene):
             SwitchOn(ls2.ambient_light)
         )
 
-        intensity = intensity_for_light_source(ls1)
-        intensity += intensity_for_light_source(ls2)
+        distance1 = np.linalg.norm(C - ls1.get_source_point())
+        intensity = ls1.ambient_light.opacity_function(distance1) / indicator.opacity_for_unit_intensity
+        distance2 = np.linalg.norm(C - ls2.get_source_point())
+        intensity += ls2.ambient_light.opacity_function(distance2) / indicator.opacity_for_unit_intensity
 
         self.play(
             UpdateLightIndicator(indicator,intensity)
@@ -1502,38 +1521,71 @@ class TwoLightSourcesScene(PiCreatureScene):
 
         self.wait()
 
+        ls3 = LightSource().deepcopy()
+        ls3.move_to(np.array([6,3.5,0]))
+
         new_indicator = indicator.copy()
+        new_indicator.light_source = ls3
+        new_indicator.measurement_point = C
         self.add(new_indicator)
         self.play(
             indicator.shift, 2 * UP
         )
 
-        ls3 = LightSource().deepcopy()
-        ls3.move_to(np.array([6,3.5,0]))
 
-        intensity = intensity_for_light_source(ls3)
+
+        #intensity = intensity_for_light_source(ls3)
 
 
         self.play(
             SwitchOff(ls1.ambient_light),
-            FadeOut(ls1.lighthouse),
+            #FadeOut(ls1.lighthouse),
             SwitchOff(ls2.ambient_light),
-            FadeOut(ls2.lighthouse),
+            #FadeOut(ls2.lighthouse),
+            UpdateLightIndicator(new_indicator,0.0)
+        )
 
+        # create a *continual* animation for the replacement source
+        updater = ContinualLightIndicatorUpdate(new_indicator)
+        self.add(updater)
+
+        self.play(
             SwitchOn(ls3.ambient_light),
             FadeIn(ls3.lighthouse),
-            UpdateLightIndicator(new_indicator,intensity)
+            
         )
 
         self.wait()
 
-        new_location = np.array([-3,-2.,0.])
-        intensity = intensity_for_location(new_location, light_source = ls3)
-        self.play(
-            ls3.move_source_to,new_location,
-            UpdateLightIndicator(new_indicator,intensity)
-        )
+        # move the light source around
+        # TODO: moving along a path arc
 
+        location = np.array([-3,-2.,0.])
+        self.play(ls3.move_source_to,location)
+        location = np.array([6.,1.,0.])
+        self.play(ls3.move_source_to,location)
+        location = np.array([5.,2.,0.])
+        self.play(ls3.move_source_to,location)
+        closer_location = interpolate(location, C, 0.5)
+        self.play(ls3.move_source_to,closer_location)
+        self.play(ls3.move_source_to,location)
+
+        # maybe move in a circle around C using a loop?
+
+        # find the coords of the altitude point H
+        # as the solution of a certain LSE
+        xA = A[0]
+        yA = A[1]
+        xB = B[0]
+        yB = B[1]
+        xC = C[0]
+        yC = C[1]
+        matrix = np.array([[yA - yB, xB - xA], [xA - xB, yA - yB]]) # sic
+        vector = np.array([xB * yA - xA * yB, xC * (xA - xB) + yC * (yA - yB)])
+        H2 = np.linalg.solve(matrix,vector)
+        H = np.append(H2, 0.)
+
+        self.play(ls3.move_source_to,H)
 
 
 
