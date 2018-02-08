@@ -1310,7 +1310,7 @@ class BackToEulerSumScene(PiCreatureScene):
         indicator.move_to(point)
         indicator.set_intensity(intensities[0])
 
-
+        self.play(FadeIn(indicator))
         self.add_foreground_mobject(indicator)
         
         collection_point = np.array([-6.,2.,0.])
@@ -1351,7 +1351,6 @@ class BackToEulerSumScene(PiCreatureScene):
                 bubble_indicator.tex_reading.set_fill(color = WHITE)
 
             # position the target in the thought bubble
-            collection_point
             bubble_indicator_target.move_to(collection_point)
 
 
@@ -1375,8 +1374,10 @@ class BackToEulerSumScene(PiCreatureScene):
             self.add(new_light.lighthouse)
             self.play(
                   Transform(indicator,indicator_target),
-                  new_light.shift,v,
+                  new_light.lighthouse.shift,v,
             )
+            new_light.move_source_to(w + (i-1)*v)
+            new_light.lighthouse.move_to(w + (i-1)*v)
 
             self.play(SwitchOn(new_light.ambient_light),
             )
@@ -1406,6 +1407,7 @@ class BackToEulerSumScene(PiCreatureScene):
             )
         sum_indicator.set_intensity(intensities[0] * np.pi**2/6)
         sum_indicator_reading = TexMobject("{\pi^2 \over 6}")
+        sum_indicator_reading.set_fill(color = BLACK)
         sum_indicator_reading.scale_to_fit_height(0.8 * sum_indicator.get_height())
         sum_indicator.add(sum_indicator_reading)
         sum_indicator.move_to(collection_point)
