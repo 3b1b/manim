@@ -670,3 +670,10 @@ class DictAsObject(object):
 # Just to have a less heavyweight name for this extremely common operation
 def fdiv(a, b):
     return np.true_divide(a,b)
+
+# For debugging purposes
+
+def print_mobject_family(mob, n_tabs = 0):
+    print "\t"*n_tabs, mob, id(mob)
+    for submob in mob.submobjects:
+        print_mobject_family(submob, n_tabs + 1)
