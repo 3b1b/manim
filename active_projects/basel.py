@@ -1432,9 +1432,9 @@ class TwoLightSourcesScene(PiCreatureScene):
         INDICATOR_RADIUS = 0.6
         OPACITY_FOR_UNIT_INTENSITY = 0.5
 
-        A = np.array([5,-3,0])
-        B = np.array([-5,3,0])
-        C = np.array([-5,-3,0])
+        A = np.array([5.,-3.,0.])
+        B = np.array([-5.,3.,0.])
+        C = np.array([-5.,-3.,0.])
 
         morty = self.get_primary_pi_creature()
         morty.scale(0.3).flip().move_to(C)
@@ -1462,24 +1462,42 @@ class TwoLightSourcesScene(PiCreatureScene):
             Write(indicator)
         )
 
-        ambient_light1 = AmbientLight(max_opacity = MAX_OPACITY)
-        ambient_light1.move_source_to(A)
-        ambient_light2 = AmbientLight(max_opacity = MAX_OPACITY)
-        ambient_light2.move_source_to(B)
-        lighthouse1 = Lighthouse()
-        lighthouse1.next_to(A,DOWN,buff = 0)
-        lighthouse2 = Lighthouse()
-        lighthouse2.next_to(B,DOWN,buff = 0)
+        def intensity_for_location(loc,light_source = None):
+            intensity = 0.0
+            distance = np.linalg.norm(C - loc)
+            print "source:", light_source.get_source_point(), "loc:", loc
+            print "distance:", distance
+            intensity = light_source.opacity_function(distance) / OPACITY_FOR_UNIT_INTENSITY
+            print "intensity:", intensity
+            return intensity
+
+        def intensity_for_light_source(ls):
+            return intensity_for_location(ls.get_source_point(), light_source = ls)
+
+
+        ls1 = LightSource()
+        ls2 = LightSource().deepcopy()
+        #print "==="
+        #print ls1.get_source_point()
+        ls1.move_source_to(A)
+        #print ls1.get_source_point()
+        #print "==="
+        #print ls2.get_source_point()
+        ls2.move_source_to(B)
+        #print ls2.get_source_point()
 
         self.play(
-            FadeIn(lighthouse1),
-            FadeIn(lighthouse2),
-            SwitchOn(ambient_light1),
-            SwitchOn(ambient_light2)
+            FadeIn(ls1.lighthouse),
+            FadeIn(ls2.lighthouse),
+            SwitchOn(ls1.ambient_light),
+            SwitchOn(ls2.ambient_light)
         )
 
+        intensity = intensity_for_light_source(ls1)
+        intensity += intensity_for_light_source(ls2)
+
         self.play(
-            UpdateLightIndicator(indicator,1.5)
+            UpdateLightIndicator(indicator,intensity)
         )
 
         self.wait()
@@ -1490,25 +1508,30 @@ class TwoLightSourcesScene(PiCreatureScene):
             indicator.shift, 2 * UP
         )
 
-        ambient_light3 = AmbientLight(max_opacity = MAX_OPACITY)
-        lighthouse3 = Lighthouse()
-        lighthouse3.next_to(ambient_light3,DOWN,buff = 0)
-        ambient_light3.add(lighthouse3)
-        #moving_light.move_to(np.array([6,3.5,0]))
+        ls3 = LightSource().deepcopy()
+        ls3.move_to(np.array([6,3.5,0]))
+
+        intensity = intensity_for_light_source(ls3)
+
 
         self.play(
-            FadeOut(ambient_light1),
-            FadeOut(lighthouse1),
-            FadeOut(ambient_light2),
-            FadeOut(lighthouse2),
+            SwitchOff(ls1.ambient_light),
+            FadeOut(ls1.lighthouse),
+            SwitchOff(ls2.ambient_light),
+            FadeOut(ls2.lighthouse),
 
-            FadeIn(ambient_light3),
-            UpdateLightIndicator(new_indicator,0.0)
+            SwitchOn(ls3.ambient_light),
+            FadeIn(ls3.lighthouse),
+            UpdateLightIndicator(new_indicator,intensity)
         )
 
         self.wait()
+
+        new_location = np.array([-3,-2.,0.])
+        intensity = intensity_for_location(new_location, light_source = ls3)
         self.play(
-            ambient_light3.shift,UP+RIGHT
+            ls3.move_source_to,new_location,
+            UpdateLightIndicator(new_indicator,intensity)
         )
 
 
