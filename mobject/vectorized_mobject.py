@@ -42,7 +42,8 @@ class VMobject(Mobject):
                        stroke_width = None,
                        fill_color = None, 
                        fill_opacity = None,
-                       family = True):
+                       family = True
+                       ):
         if stroke_color is not None:
             self.stroke_rgb = color_to_rgb(stroke_color)
         if fill_color is not None:
