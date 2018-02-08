@@ -32,6 +32,7 @@ AMBIENT_FULL = 0.5
 AMBIENT_DIMMED = 0.2
 SPOTLIGHT_FULL = 0.9
 SPOTLIGHT_DIMMED = 0.2
+LIGHTHOUSE_HEIGHT = 0.8
 
 LIGHT_COLOR = YELLOW
 DEGREES = TAU/360
@@ -60,7 +61,8 @@ class LightSource(VMobject):
         "screen": None,
         "opacity_function": inverse_quadratic(1,2,1),
         "max_opacity_ambient": AMBIENT_FULL,
-        "max_opacity_spotlight": SPOTLIGHT_FULL
+        "max_opacity_spotlight": SPOTLIGHT_FULL,
+        "camera": None
     }
 
     def generate_points(self):
@@ -84,7 +86,8 @@ class LightSource(VMobject):
                 radius = self.radius,
                 screen = self.screen,
                 opacity_function = self.opacity_function,
-                max_opacity = self.max_opacity_spotlight
+                max_opacity = self.max_opacity_spotlight,
+                camera = self.camera
             )
         else:
             self.spotlight = Spotlight()
@@ -116,19 +119,26 @@ class LightSource(VMobject):
         self.max_opacity_spotlight = new_opacity
         self.spotlight.dimming(new_opacity)
 
+    def set_camera(self,new_cam):
+        self.camera = new_cam
+        self.spotlight.camera = new_cam
+
+
     def set_screen(self, new_screen):
         if self.has_screen():
             self.spotlight.screen = new_screen
         else:
             # Note: See below
             index = self.submobjects.index(self.spotlight)
+            camera = self.spotlight.camera
             self.remove(self.spotlight)
             self.spotlight = Spotlight(
                 source_point = VectorizedPoint(location = self.get_source_point()),
                 color = self.color,
                 num_levels = self.num_levels,
                 radius = self.radius,
-                screen = new_screen
+                screen = new_screen,
+                camera = self.camera
             )
             self.spotlight.move_source_to(self.get_source_point())
 
@@ -154,7 +164,10 @@ class LightSource(VMobject):
         # during an animation, and other updates can be defined wrt 
         # that source point's location
         self.source_point.set_location(apoint)
-        self.lighthouse.next_to(apoint,DOWN,buff = 0)
+        #self.lighthouse.next_to(apoint,DOWN,buff = 0)
+        #self.ambient_light.move_source_to(apoint)
+        self.lighthouse.shift(v)
+        #self.ambient_light.shift(v)
         self.ambient_light.move_source_to(apoint)
         if self.has_screen():
             self.spotlight.move_source_to(apoint)
@@ -278,7 +291,7 @@ class SwitchOff(LaggedStart):
 class Lighthouse(SVGMobject):
     CONFIG = {
         "file_name" : "lighthouse",
-        "height" : 0.5
+        "height" : LIGHTHOUSE_HEIGHT
     }
 
     def move_to(self,point):
@@ -327,15 +340,18 @@ class AmbientLight(VMobject):
                 color = self.color,
                 fill_opacity = alpha
             )
-            annulus.move_arc_center_to(self.get_source_point())
+            annulus.move_to(self.get_source_point())
             self.add(annulus)
 
 
 
     def move_source_to(self,point):
         # Note: Best to rewrite in terms of VectorizedPoint source_point
-        self.source_point.set_location(np.array(point))
-        self.move_to(point)
+        old_source_point = self.get_source_point()
+        #self.source_point.set_location(np.array(point))
+
+        self.shift(point - old_source_point)
+
         return self
 
 
@@ -358,6 +374,19 @@ class AmbientLight(VMobject):
             old_submob_alpha = submob.fill_opacity
             new_submob_alpha = old_submob_alpha * new_alpha / old_alpha
             submob.set_fill(opacity = new_submob_alpha)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class Spotlight(VMobject):
@@ -447,6 +476,7 @@ class Spotlight(VMobject):
         # determine the angle's sign depending on their plane's
         # choice of orientation. That choice is set by the camera
         # position, i. e. projection direction
+
         if np.dot(self.projection_direction(),np.cross(v1, v2)) > 0:
             return absolute_angle
         else:
