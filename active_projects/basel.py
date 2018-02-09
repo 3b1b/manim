@@ -1492,8 +1492,8 @@ class TwoLightSourcesScene(PiCreatureScene):
         )
 
 
-        ls1 = LightSource(radius = 20)
-        ls2 = LightSource().deepcopy()
+        ls1 = LightSource(radius = 20, num_levels = 50)
+        ls2 = ls1.deepcopy()
         #print "==="
         #print ls1.get_source_point()
         ls1.move_source_to(A)
@@ -1521,7 +1521,7 @@ class TwoLightSourcesScene(PiCreatureScene):
 
         self.wait()
 
-        ls3 = LightSource().deepcopy()
+        ls3 = ls1.deepcopy()
         ls3.move_to(np.array([6,3.5,0]))
 
         new_indicator = indicator.copy()
@@ -1586,6 +1586,70 @@ class TwoLightSourcesScene(PiCreatureScene):
         H = np.append(H2, 0.)
 
         self.play(ls3.move_source_to,H)
+
+
+
+        # draw lines to complete the geometric picture
+        # and label the lengths
+
+        line_a = VMobject()
+        line_a.set_points_as_corners([B,C])
+        line_b = VMobject()
+        line_b.set_points_as_corners([A,C])
+        line_c = VMobject()
+        line_c.set_points_as_corners([A,B])
+        line_h = VMobject()
+        line_h.set_points_as_corners([H,C])
+
+        label_a = TexMobject("a")
+        label_a.next_to(line_a, LEFT, buff = 0.5)
+        label_b = TexMobject("b")
+        label_b.next_to(line_b, DOWN, buff = 0.5)
+        label_h = TexMobject("h")
+        label_h.next_to(line_h.get_center(), RIGHT, buff = 0.5)
+
+        self.play(
+            ShowCreation(line_a),
+            Write(label_a)
+        )
+
+        self.play(
+            ShowCreation(line_b),
+            Write(label_b)
+        )
+
+        self.play(
+            ShowCreation(line_c),
+        )
+
+        self.play(
+            ShowCreation(line_h),
+            Write(label_h)
+        )
+
+
+        # state the IPT
+        theorem_location = np.array([3.,2.,0.])
+        theorem = TexMobject("{1\over a^2} + {1\over b^2} = {1\over h^2}")
+        theorem_name = TextMobject("Inverse Pythagorean Theorem")
+        buffer = 1.2
+        theorem_box = Rectangle(width = buffer*theorem.get_width(),
+            height = buffer*theorem.get_height())
+
+        theorem.move_to(theorem_location)
+        theorem_box.move_to(theorem_location)
+        theorem_name.next_to(theorem_box,UP)
+
+        self.play(
+            Write(theorem),
+        )
+
+        self.play(
+            ShowCreation(theorem_box),
+            Write(theorem_name),
+        )
+
+
 
 
 

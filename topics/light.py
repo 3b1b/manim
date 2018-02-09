@@ -346,11 +346,9 @@ class AmbientLight(VMobject):
 
 
     def move_source_to(self,point):
-        # Note: Best to rewrite in terms of VectorizedPoint source_point
-        old_source_point = self.get_source_point()
-        #self.source_point.set_location(np.array(point))
-
-        self.shift(point - old_source_point)
+        #old_source_point = self.get_source_point()
+        #self.shift(point - old_source_point)
+        self.move_to(point)
 
         return self
 
@@ -522,6 +520,8 @@ class Spotlight(VMobject):
 
     def move_source_to(self,point):
         self.source_point.set_location(np.array(point))
+        #self.source_point.move_to(np.array(point))
+        #self.move_to(point)
         self.update_sectors()
         return self
 
@@ -532,9 +532,12 @@ class Spotlight(VMobject):
         for submob in self.submobject_family():
             if type(submob) == AnnularSector:
                 lower_angle, upper_angle = self.viewing_angles(self.screen)
-                dr = submob.outer_radius - submob.inner_radius
+                #dr = submob.outer_radius - submob.inner_radius
+                dr = self.radius / self.num_levels
                 new_submob = self.new_sector(submob.inner_radius,dr,lower_angle,upper_angle)
                 submob.points = new_submob.points
+                submob.set_fill(opacity = 10 * self.opacity_function(submob.outer_radius))
+                print "new opacity:", self.opacity_function(submob.outer_radius)
 
 
 
