@@ -55,6 +55,26 @@ inverse_power_law = lambda maxint,scale,cutoff,exponent: \
 inverse_quadratic = lambda maxint,scale,cutoff: inverse_power_law(maxint,scale,cutoff,2)
 
 
+A = np.array([5.,-3.,0.])
+B = np.array([-5.,3.,0.])
+C = np.array([-5.,-3.,0.])
+xA = A[0]
+yA = A[1]
+xB = B[0]
+yB = B[1]
+xC = C[0]
+yC = C[1]
+
+# find the coords of the altitude point H
+# as the solution of a certain LSE
+prelim_matrix = np.array([[yA - yB, xB - xA], [xA - xB, yA - yB]]) # sic
+prelim_vector = np.array([xB * yA - xA * yB, xC * (xA - xB) + yC * (yA - yB)])
+H2 = np.linalg.solve(prelim_matrix,prelim_vector)
+H = np.append(H2, 0.)
+
+
+
+
 class AngleUpdater(ContinualAnimation):
     def __init__(self, angle_arc, spotlight, **kwargs):
         self.angle_arc = angle_arc
@@ -780,7 +800,7 @@ class SingleLighthouseScene(PiCreatureScene):
         # temporarily remove the screen tracker while we move the source
         #self.remove(self.screen_tracker)
 
-        #print self.sun.spotlight.source_point
+        #print self.sun.spotlight.get_source_point()
 
         self.play(
              #self.light_source.spotlight.move_source_to,sun_position,
@@ -1050,10 +1070,10 @@ class ScreenShapingScene(ThreeDScene):
         lower_screen_point, upper_screen_point = self.screen.get_start_and_end()
 
         lower_slanted_screen_point = interpolate(
-            lower_screen_point, self.spotlight.source_point, SLANTING_AMOUNT
+            lower_screen_point, self.spotlight.get_source_point(), SLANTING_AMOUNT
         )
         upper_slanted_screen_point = interpolate(
-            upper_screen_point, self.spotlight.source_point, -SLANTING_AMOUNT
+            upper_screen_point, self.spotlight.get_source_point(), -SLANTING_AMOUNT
         )
 
         self.slanted_brightness_rect = self.brightness_rect.copy()
@@ -1115,7 +1135,7 @@ class ScreenShapingScene(ThreeDScene):
         self.unit_indicator_intensity = 1.0 # intensity at distance 1
                                             # (where we are about to move to)
 
-        self.left_shift = (self.screen.get_center()[0] - self.spotlight.source_point[0])/2
+        self.left_shift = (self.screen.get_center()[0] - self.spotlight.get_source_point()[0])/2
 
         self.play(
             self.screen.shift,[-self.left_shift,0,0],
@@ -1129,7 +1149,7 @@ class ScreenShapingScene(ThreeDScene):
     def add_distance_arrow(self):
 
         # distance arrow (length 1)
-        left_x = self.spotlight.source_point[0]
+        left_x = self.spotlight.get_source_point()[0]
         right_x = self.screen.get_center()[0]
         arrow_y = -2
         arrow1 = Arrow([left_x,arrow_y,0],[right_x,arrow_y,0])
@@ -1459,10 +1479,6 @@ class TwoLightSourcesScene(PiCreatureScene):
         INDICATOR_RADIUS = 0.6
         OPACITY_FOR_UNIT_INTENSITY = 0.5
 
-        A = np.array([5.,-3.,0.])
-        B = np.array([-5.,3.,0.])
-        C = np.array([-5.,-3.,0.])
-
         morty = self.get_primary_pi_creature()
         morty.scale(0.3).flip()
         right_pupil = morty.pupils[1]
@@ -1494,14 +1510,8 @@ class TwoLightSourcesScene(PiCreatureScene):
 
         ls1 = LightSource(radius = 20, num_levels = 50)
         ls2 = ls1.deepcopy()
-        #print "==="
-        #print ls1.get_source_point()
         ls1.move_source_to(A)
-        #print ls1.get_source_point()
-        #print "==="
-        #print ls2.get_source_point()
         ls2.move_source_to(B)
-        #print ls2.get_source_point()
 
         self.play(
             FadeIn(ls1.lighthouse),
@@ -1572,18 +1582,7 @@ class TwoLightSourcesScene(PiCreatureScene):
 
         # maybe move in a circle around C using a loop?
 
-        # find the coords of the altitude point H
-        # as the solution of a certain LSE
-        xA = A[0]
-        yA = A[1]
-        xB = B[0]
-        yB = B[1]
-        xC = C[0]
-        yC = C[1]
-        matrix = np.array([[yA - yB, xB - xA], [xA - xB, yA - yB]]) # sic
-        vector = np.array([xB * yA - xA * yB, xC * (xA - xB) + yC * (yA - yB)])
-        H2 = np.linalg.solve(matrix,vector)
-        H = np.append(H2, 0.)
+
 
         self.play(ls3.move_source_to,H)
 
@@ -1648,6 +1647,153 @@ class TwoLightSourcesScene(PiCreatureScene):
             ShowCreation(theorem_box),
             Write(theorem_name),
         )
+
+
+
+class IPTScene1(PiCreatureScene):
+
+    def construct(self):
+
+        SCREEN_SCALE = 0.1
+
+        morty = self.get_primary_pi_creature()
+        morty.scale(0.3).flip()
+        right_pupil = morty.pupils[1]
+        morty.next_to(C, LEFT, buff = 0, submobject_to_align = right_pupil)
+
+        line_a = VMobject()
+        line_a.set_points_as_corners([B,C])
+        line_b = VMobject()
+        line_b.set_points_as_corners([A,C])
+        line_c = VMobject()
+        line_c.set_points_as_corners([A,B])
+        line_h = VMobject()
+        line_h.set_points_as_corners([C,H])
+
+        length_a = np.linalg.norm(B - C)
+        length_b = np.linalg.norm(A - C)
+        length_c = np.linalg.norm(A - B)
+        length_h = np.linalg.norm(C - H)
+
+        label_a = TexMobject("a")
+        label_a.next_to(line_a, LEFT, buff = 0.5)
+        label_b = TexMobject("b")
+        label_b.next_to(line_b, DOWN, buff = 0.5)
+        label_h = TexMobject("h")
+        label_h.next_to(line_h.get_center(), RIGHT, buff = 0.5)
+
+        self.add(line_a, line_b, line_c, label_a, label_b, line_h)
+        
+        ls1 = LightSource(radius = 10)
+        ls1.move_source_to(B)
+
+        self.add(ls1.lighthouse)
+
+        self.play(
+            SwitchOn(ls1.ambient_light)
+        )
+
+        self.wait()
+
+        # adding the first screen
+
+        screen_width_a = SCREEN_SCALE * length_a
+        screen_width_b = SCREEN_SCALE * length_b
+        screen_width_ap = screen_width_a * length_a / length_c
+        screen_width_bp = screen_width_b * length_b / length_c
+        screen_width_c = SCREEN_SCALE * length_c
+        
+        screen1 = Rectangle(width = screen_width_b, height = 0.2, stroke_width = 0, fill_opacity = 1.0)
+        screen1.next_to(C,RIGHT,buff = 0)
+        print screen1.points
+        
+        ls1.set_screen(screen1)
+        screen_tracker = ScreenTracker(ls1)
+        self.add(screen_tracker)
+
+        self.add_foreground_mobject(morty)
+
+        self.play(
+            FadeIn(screen1)
+        )
+
+        self.play(
+            SwitchOn(ls1.spotlight)
+        )
+
+        self.play(
+            FadeIn(ls1.shadow)
+        )
+
+        self.add_foreground_mobject(screen1)
+
+
+        # now move the light source to the height point
+        # while shifting scaling the screen
+        screen1p = screen1#.deepcopy()
+
+        self.add(screen1p)
+        angle = np.arccos(length_b / length_c)
+        vector = (H - C) * SCREEN_SCALE * 0.5
+
+        self.play(
+            ls1.move_source_to,H,
+
+            screen1p.stretch_to_fit_width,screen_width_bp,
+            screen1p.rotate,-angle,
+            screen1p.shift,vector,
+        )
+
+        # add and move the second light source and screen
+        ls2 = ls1.deepcopy()
+        ls2.move_source_to(A)
+        screen2 = Rectangle(width = screen_width_a, height = 0.2, stroke_width = 0, fill_opacity = 1)
+        screen2.rotate(-TAU/4)
+        screen2.next_to(C,UP,buff = 0)
+
+
+        # the same scene adding sequence as before
+        ls2.set_screen(screen2)
+        screen_tracker2 = ScreenTracker(ls2)
+        self.add(screen_tracker2)
+
+        self.play(
+            FadeIn(screen2)
+        )
+
+        self.play(
+            SwitchOn(ls2.spotlight)
+        )
+
+        self.play(
+            FadeIn(ls2.shadow)
+        )
+
+        self.add_foreground_mobject(screen2)
+
+
+        # now move the light source to the height point
+        # while shifting scaling the screen
+        screen2p = screen2#.deepcopy()
+        angle = np.arccos(length_a / length_c)
+
+        self.play(
+            ls2.move_source_to,H,
+
+            screen2p.stretch_to_fit_width,screen_width_ap,
+            screen2p.rotate,angle,
+            # we can reuse the translation vector
+            screen2p.shift,vector,
+        )
+
+
+
+
+
+
+
+
+
 
 
 
