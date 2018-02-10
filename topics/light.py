@@ -103,7 +103,12 @@ class LightSource(VMobject):
         self.add(self.ambient_light,self.spotlight,self.lighthouse, self.shadow)
 
     def has_screen(self):
-        return (self.screen != None)
+        if self.screen == None:
+            return False
+        elif np.size(self.screen.points) == 0:
+            return False
+        else:
+            return True
 
     def dim_ambient(self):
         self.set_max_opacity_ambient(AMBIENT_DIMMED)
@@ -218,14 +223,14 @@ class LightSource(VMobject):
         
         index = 0
         for point in point_cloud_2d[hull_2d.vertices]:
-            if np.all(point - source_point_2d < 1.0e-6):
+            if np.all(np.abs(point - source_point_2d) < 1.0e-6):
                 source_index = index
+                index += 1
                 continue
             point_3d = np.array([point[0], point[1], 0])
             hull.append(point_3d)
             index += 1
 
-        index = source_index
         
         hull_mobject = VMobject()
         hull_mobject.set_points_as_corners(hull)
@@ -235,25 +240,23 @@ class LightSource(VMobject):
         anchors = hull_mobject.get_anchors()
 
         # add two control points for the outer cone
+        if np.size(anchors) == 0: 
+            self.shadow.points = []
+            return
 
-
-        ray1 = anchors[index - 1] - projected_source
+        ray1 = anchors[source_index - 1] - projected_source
         ray1 = ray1/np.linalg.norm(ray1) * 100
-        ray2 = anchors[index] - projected_source
+        ray2 = anchors[source_index] - projected_source
         ray2 = ray2/np.linalg.norm(ray2) * 100
-        outpoint1 = anchors[index - 1] + ray1
-        outpoint2 = anchors[index] + ray2
+        outpoint1 = anchors[source_index - 1] + ray1
+        outpoint2 = anchors[source_index] + ray2
 
-        new_anchors = anchors[:index]
+        new_anchors = anchors[:source_index]
         new_anchors = np.append(new_anchors,np.array([outpoint1, outpoint2]),axis = 0)
-        new_anchors = np.append(new_anchors,anchors[index:],axis = 0)
+        new_anchors = np.append(new_anchors,anchors[source_index:],axis = 0)
         self.shadow.set_points_as_corners(new_anchors)
 
-        # Note: Theoretically this should not be necessary as long as we make
-        # sure the shadow shows up after the spotlight in the submobjects list.
-        # 
         # shift it closer to the camera so it is in front of the spotlight
-        self.shadow.shift(1e-5*self.spotlight.projection_direction())
         self.shadow.mark_paths_closed = True
 
 
