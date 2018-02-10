@@ -967,7 +967,7 @@ class ScreenShapingScene(ThreeDScene):
         self.right_shift_screen_while_showing_light_indicator_and_distance_arrow()
         self.left_shift_again()
         
-        #self.morph_into_3d()
+        self.morph_into_3d()
 
 
     def setup_elements(self):
@@ -1705,27 +1705,27 @@ class IPTScene1(PiCreatureScene):
         
         screen1 = Rectangle(width = screen_width_b, height = 0.2, stroke_width = 0, fill_opacity = 1.0)
         screen1.next_to(C,RIGHT,buff = 0)
-        print screen1.points
         
         ls1.set_screen(screen1)
         screen_tracker = ScreenTracker(ls1)
         self.add(screen_tracker)
+        self.remove(ls1.spotlight)
 
         self.add_foreground_mobject(morty)
 
         self.play(
             FadeIn(screen1)
         )
-
-        self.play(
-            SwitchOn(ls1.spotlight)
-        )
-
-        self.play(
-            FadeIn(ls1.shadow)
-        )
-
         self.add_foreground_mobject(screen1)
+        self.add_foreground_mobject(line_a)
+        self.add_foreground_mobject(line_b)
+
+        self.play(
+            SwitchOn(ls1.spotlight),
+            FadeIn(ls1.shadow),
+            ls1.dim_ambient,
+        )
+
 
 
         # now move the light source to the height point
@@ -1747,7 +1747,7 @@ class IPTScene1(PiCreatureScene):
         # add and move the second light source and screen
         ls2 = ls1.deepcopy()
         ls2.move_source_to(A)
-        screen2 = Rectangle(width = screen_width_a, height = 0.2, stroke_width = 0, fill_opacity = 1)
+        screen2 = Rectangle(width = screen_width_a, height = 0., stroke_width = 10, fill_opacity = 1)
         screen2.rotate(-TAU/4)
         screen2.next_to(C,UP,buff = 0)
 
@@ -1758,18 +1758,22 @@ class IPTScene1(PiCreatureScene):
         self.add(screen_tracker2)
 
         self.play(
+            SwitchOn(ls2.ambient_light)
+        )
+
+        self.play(
             FadeIn(screen2)
         )
-
-        self.play(
-            SwitchOn(ls2.spotlight)
-        )
-
-        self.play(
-            FadeIn(ls2.shadow)
-        )
-
         self.add_foreground_mobject(screen2)
+        self.add_foreground_mobject(line_a)
+        self.add_foreground_mobject(line_b)
+
+        self.play(
+            SwitchOn(ls2.spotlight),
+            FadeIn(ls2.shadow),
+            ls2.dim_ambient
+        )
+
 
 
         # now move the light source to the height point
@@ -1784,6 +1788,7 @@ class IPTScene1(PiCreatureScene):
             screen2p.rotate,angle,
             # we can reuse the translation vector
             screen2p.shift,vector,
+            SwitchOff(ls1.ambient_light)
         )
 
 
