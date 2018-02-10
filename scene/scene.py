@@ -69,7 +69,7 @@ class Scene(Container):
     def setup(self):
         """
         This is meant to be implement by any scenes which
-        are comonly subclassed, and have some common setup
+        are commonly subclassed, and have some common setup
         involved before the construct method is called.
         """
         pass
