@@ -327,7 +327,7 @@ class FourierTradeoff(Scene):
 
         #Draw items
         self.add(time_axes, frequency_axes)
-        self.play(ShowCreation(wave_packet))
+        self.play(ShowCreation(wave_packet, rate_func = double_smooth))
         self.play(
             ReplacementTransform(
                 wave_packet.copy(),
