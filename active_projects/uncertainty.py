@@ -32,6 +32,9 @@ from topics.graph_scene import *
 from active_projects.fourier import *
 
 
+FREQUENCY_COLOR = RED
+USE_ALMOST_FOURIER_BY_DEFAULT = False
+
 class GaussianDistributionWrapper(Line):
     """
     This is meant to encode a 2d normal distribution as
@@ -207,24 +210,173 @@ class MentionUncertaintyPrinciple(TeacherStudentsScene):
             self.get_student_changes(*3*["confused"]),
             run_time = 3,
         )
-        self.wait()
         #Back and forth
-        self.play(
-            dot_cloud.gaussian_distribution_wrapper.change_parameters,
-            {"sigma_x" : 2},
-            vector_cloud.gaussian_distribution_wrapper.change_parameters,
-            {"sigma_x" : 0.1},
-            run_time = 3,
+        for x in range(2):
+            self.play(
+                dot_cloud.gaussian_distribution_wrapper.change_parameters,
+                {"sigma_x" : 2},
+                vector_cloud.gaussian_distribution_wrapper.change_parameters,
+                {"sigma_x" : 0.1},
+                run_time = 3,
+            )
+            self.change_student_modes("thinking", "erm", "sassy")
+            self.play(
+                dot_cloud.gaussian_distribution_wrapper.change_parameters,
+                {"sigma_x" : 0.1},
+                vector_cloud.gaussian_distribution_wrapper.change_parameters,
+                {"sigma_x" : 1},
+                run_time = 3,
+            )
+            self.wait()
+
+class FourierTradeoff(Scene):
+    def construct(self):
+        #Setup axes
+        time_mean = 4
+        time_axes = Axes(
+            x_min = 0,
+            x_max = 2*time_mean,
+            x_axis_config = {"unit_size" : 1.5},
+            y_min = -2, 
+            y_max = 2,
+            y_axis_config = {"unit_size" : 0.5}
         )
-        self.change_student_modes("thinking", "erm", "sassy")
-        self.play(
-            dot_cloud.gaussian_distribution_wrapper.change_parameters,
-            {"sigma_x" : 0.1},
-            vector_cloud.gaussian_distribution_wrapper.change_parameters,
-            {"sigma_x" : 1},
-            run_time = 3,
+        time_label = TextMobject("Time")
+        time_label.next_to(
+            time_axes.x_axis.get_right(), UP,
+            buff = MED_SMALL_BUFF,
         )
-        self.wait(2)
+        time_axes.add(time_label)
+        time_axes.center().to_edge(UP)
+        time_axes.x_axis.add_numbers(*range(1, 2*time_mean))
+
+        frequency_axes = Axes(
+            x_min = 0,
+            x_max = 8,
+            x_axis_config = {"unit_size" : 1.5},
+            y_min = 0,
+            y_max = 15,
+            y_axis_config = {
+                "unit_size" : 0.15,
+                "tick_frequency" : 5,
+            },
+            color = TEAL,
+        )
+        frequency_label = TextMobject("Frequency")
+        frequency_label.next_to(
+            frequency_axes.x_axis.get_right(), UP,
+            buff = MED_SMALL_BUFF, 
+        )
+        frequency_label.highlight(FREQUENCY_COLOR)
+        frequency_axes.add(frequency_label)
+        frequency_axes.move_to(time_axes, LEFT)
+        frequency_axes.to_edge(DOWN, buff = LARGE_BUFF)
+        frequency_axes.x_axis.add_numbers()
+
+        # Graph information
+
+        #x-coordinate of this point determines width of wave_packet graph
+        width_tracker = VectorizedPoint(0.5*RIGHT)
+        def get_width():
+            return width_tracker.get_center()[0]
+
+        def get_wave_packet_function():
+            factor = 1./get_width()
+            return lambda t : np.sqrt(factor)*np.cos(4*TAU*t)*np.exp(-factor*(t-time_mean)**2)
+
+        def get_wave_packet():
+            graph = time_axes.get_graph(
+                get_wave_packet_function(),
+                num_graph_points = 200,
+            )
+            graph.highlight(YELLOW)
+            return graph
+
+        time_radius = 10
+        def get_wave_packet_fourier_transform():
+            return get_fourier_graph(
+                frequency_axes, get_wave_packet_function(),
+                t_min = time_mean - time_radius,
+                t_max = time_mean + time_radius,
+                n_samples = 2*time_radius*17,
+                complex_to_real_func = abs,
+                color = FREQUENCY_COLOR,
+            )
+
+        wave_packet = get_wave_packet()
+        wave_packet_update = UpdateFromFunc(
+            wave_packet, 
+            lambda g : Transform(g, get_wave_packet()).update(1)
+        )
+        fourier_graph = get_wave_packet_fourier_transform()
+        fourier_graph_update = UpdateFromFunc(
+            fourier_graph, 
+            lambda g : Transform(g, get_wave_packet_fourier_transform()).update(1)
+        )
+
+        arrow = Arrow(
+            wave_packet, frequency_axes.coords_to_point(4, 10),
+            color = FREQUENCY_COLOR,
+        )
+        fourier_words = TextMobject("Fourier Transform")
+        fourier_words.next_to(arrow, RIGHT, buff = MED_LARGE_BUFF)
+        sub_words = TextMobject("(To be explained shortly)")
+        sub_words.highlight(BLUE)
+        sub_words.scale(0.75)
+        sub_words.next_to(fourier_words, DOWN)
+
+        #Draw items
+        self.add(time_axes, frequency_axes)
+        self.play(ShowCreation(wave_packet))
+        self.play(
+            ReplacementTransform(
+                wave_packet.copy(),
+                fourier_graph,
+            ),
+            GrowArrow(arrow),
+            Write(fourier_words, run_time = 1)
+        )
+        # self.play(FadeOut(arrow))
+        self.wait()
+        for width in 6, 0.1, 1:
+            self.play(
+                width_tracker.move_to, width*RIGHT,
+                wave_packet_update,
+                fourier_graph_update,
+                run_time = 3
+            )
+            if sub_words not in self.mobjects:
+                self.play(FadeIn(sub_words))
+            else:
+                self.wait()
+        self.wait()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
