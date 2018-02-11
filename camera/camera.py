@@ -10,10 +10,6 @@ from helpers import *
 from mobject import Mobject, PMobject, VMobject, \
     ImageMobject, Group, BackgroundColoredVMobject
 
-# Set a @profile decorator over any method whose 
-# performance you'd like to analyze
-from profilehooks import profile
-
 class Camera(object):
     CONFIG = {
         "background_image" : None,
@@ -240,14 +236,22 @@ class Camera(object):
         canvas.symbol((0, 0), symbol, pen, fill)
 
     def get_pen_and_fill(self, vmobject):
-        pen = aggdraw.Pen(
-            self.color_to_hex_l(self.get_stroke_color(vmobject)),
-            max(vmobject.stroke_width, 0)
-        )
-        fill = aggdraw.Brush(
-            self.color_to_hex_l(self.get_fill_color(vmobject)),
-            opacity = int(self.color_max_val*vmobject.get_fill_opacity())
-        )
+        stroke_width = max(vmobject.get_stroke_width(), 0)
+        if stroke_width == 0:
+            pen = None
+        else:
+            stroke_rgb = self.get_stroke_rgb(vmobject)
+            stroke_hex = rgb_to_hex(stroke_rgb)
+            pen = aggdraw.Pen(stroke_hex, stroke_width)
+
+        fill_opacity = int(self.color_max_val*vmobject.get_fill_opacity())
+        if fill_opacity == 0:
+            fill = None
+        else:
+            fill_rgb = self.get_fill_rgb(vmobject)
+            fill_hex = rgb_to_hex(fill_rgb)
+            fill = aggdraw.Brush(fill_hex, fill_opacity)
+
         return (pen, fill)
 
     def color_to_hex_l(self, color):
@@ -256,33 +260,31 @@ class Camera(object):
         except:
             return Color(BLACK).get_hex_l()
 
-    def get_stroke_color(self, vmobject):
-        return vmobject.get_stroke_color()
+    def get_stroke_rgb(self, vmobject):
+        return vmobject.get_stroke_rgb()
 
-    def get_fill_color(self, vmobject):
-        return vmobject.get_fill_color()
+    def get_fill_rgb(self, vmobject):
+        return vmobject.get_fill_rgb()
 
     def get_pathstring(self, vmobject):
-        result = ""        
+        result = ""
         for mob in [vmobject]+vmobject.get_subpath_mobjects():
             points = mob.points
             # points = self.adjust_out_of_range_points(points)            
             if len(points) == 0:
                 continue
-            points = self.align_points_to_camera(points)
-            coords = self.points_to_pixel_coords(points)
-            start = "M%d %d"%tuple(coords[0])
-            #(handle1, handle2, anchor) tripletes
-            triplets = zip(*[
-                coords[i+1::3]
-                for i in range(3)
-            ])
-            cubics = [
-                "C" + " ".join(map(str, it.chain(*triplet)))
-                for triplet in triplets
-            ]
-            end = "Z" if vmobject.mark_paths_closed else ""
-            result += " ".join([start] + cubics + [end])
+            aligned_points = self.align_points_to_camera(points)
+            coords = self.points_to_pixel_coords(aligned_points)
+            coord_strings = coords.flatten().astype(str)
+            #Start new path string with M
+            coord_strings[0] = "M" + coord_strings[0]
+            #The C at the start of every 6th number communicates
+            #that the following 6 define a cubic Bezier
+            coord_strings[2::6] = map(lambda s : "C" + str(s), coord_strings[2::6])
+            #Possibly finish with "Z"
+            if vmobject.mark_paths_closed:
+                coord_strings[-1] = coord_strings[-1] + " Z"
+            result += " ".join(coord_strings)
         return result
 
     def display_background_colored_vmobject(self, cvmobject):
@@ -306,6 +308,8 @@ class Camera(object):
         self.pixel_array[:,:] = np.maximum(
             self.pixel_array, array
         )
+
+    ## Methods for other rendering
 
     def display_point_cloud(self, points, rgbas, thickness):
         if len(points) == 0:

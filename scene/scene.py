@@ -40,6 +40,7 @@ class Scene(Container):
         "always_continually_update" : False,
         "random_seed" : 0,
         "skip_to_animation_number" : None,
+        "end_after_animation_number" : None,
     }
     def __init__(self, **kwargs):
         Container.__init__(self, **kwargs) # Perhaps allow passing in a non-empty *mobjects parameter?
@@ -409,6 +410,10 @@ class Scene(Container):
         if self.skip_to_animation_number:
             if self.num_plays + 1 == self.skip_to_animation_number:
                 self.skip_animations = False
+        if self.end_after_animation_number:
+            if self.num_plays >= self.end_after_animation_number:
+                self.skip_animations = True
+                return self #Don't even both with the rest...
         if self.skip_animations:
             kwargs["run_time"] = 0
 
