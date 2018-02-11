@@ -458,6 +458,12 @@ class VectorizedPoint(VMobject):
     def get_height(self):
         return self.artificial_height
 
+    def get_location(self):
+        return self.get_anchors()[0]
+
+    def set_location(self,new_loc):
+        self.set_points(np.array([new_loc]))
+
 class BackgroundColoredVMobject(VMobject):
     CONFIG = {
         # Can be set to None, using set_background_array to initialize instead

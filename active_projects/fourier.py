@@ -30,18 +30,48 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from topics.graph_scene import *
 
+USE_ALMOST_FOURIER_BY_DEFAULT = True
+NUM_SAMPLES_FOR_FFT = 1000
+
+
+def get_fourier_graph(
+    axes, time_func, t_min, t_max,
+    n_samples = NUM_SAMPLES_FOR_FFT,
+    complex_to_real_func = lambda z : z.real,
+    color = RED,
+    ):
+    # N = n_samples
+    # T = time_range/n_samples
+    time_range = float(t_max - t_min)
+    time_step_size = time_range/n_samples
+    time_samples = time_func(np.linspace(t_min, t_max, n_samples))
+    fft_output = np.fft.fft(time_samples)
+    frequencies = np.linspace(0.0, n_samples/(2.0*time_range), n_samples//2)
+    #  #Cycles per second of fouier_samples[1]
+    # (1/time_range)*n_samples
+    # freq_step_size = 1./time_range
+    graph = VMobject()
+    graph.set_points_smoothly([
+        axes.coords_to_point(
+            x, 200.0*complex_to_real_func(y)/n_samples,
+        )
+        for x, y in zip(frequencies, fft_output[:n_samples//2])
+    ])
+    graph.highlight(color)
+    return graph
 
 def get_fourier_transform(
     func, t_min, t_max, 
-    real_part = True, 
-    use_almost_fourier = True,
+    complex_to_real_func = lambda z : z.real,
+    use_almost_fourier = USE_ALMOST_FOURIER_BY_DEFAULT,
     ):
-    # part = "real" if real_part else "imag"
-    trig = np.cos if real_part else np.sin
     scalar = 1./(t_max - t_min) if use_almost_fourier else 1.0
     def fourier_transform(f):
         return scalar*scipy.integrate.quad(
-            lambda t : func(t)*trig(-TAU*f*t),
+            lambda t : complex_to_real_func(
+                # f(t) e^{-TAU*i*f*t}
+                func(t)*np.exp(complex(0, -TAU*f*t))
+            ),
             t_min, t_max
         )[0]
     return fourier_transform
