@@ -10,6 +10,10 @@ from helpers import *
 from mobject import Mobject, PMobject, VMobject, \
     ImageMobject, Group, BackgroundColoredVMobject
 
+# Set a @profile decorator over any method whose 
+# performance you'd like to analyze
+from profilehooks import profile
+
 class Camera(object):
     CONFIG = {
         "background_image" : None,
@@ -31,7 +35,11 @@ class Camera(object):
         "image_mode" : "RGBA",
         "n_rgb_coords" : 4,
         "background_alpha" : 0, #Out of color_max_val
-        "pixel_array_dtype" : 'uint8'
+        "pixel_array_dtype" : 'uint8',
+        "use_z_coordinate_for_display_order" : False,
+        # z_buff_func is only used if the flag above is set to True.
+        # round z coordinate to nearest hundredth when comparring
+        "z_buff_func" : lambda m : np.round(m.get_center()[2], 2),
     }
 
     def __init__(self, background = None, **kwargs):
@@ -94,7 +102,12 @@ class Camera(object):
         return retval
 
     def set_pixel_array(self, pixel_array, convert_from_floats = False):
-        self.pixel_array = self.convert_pixel_array(pixel_array, convert_from_floats)
+        converted_array = self.convert_pixel_array(pixel_array, convert_from_floats)
+        if not hasattr(self, "pixel_array"): #TODO: And the shapes match?
+            self.pixel_array = converted_array
+        else:
+            #Set in place
+            self.pixel_array[:,:,:] = converted_array[:,:,:]
 
     def set_background(self, pixel_array, convert_from_floats = False):
         self.background = self.convert_pixel_array(pixel_array, convert_from_floats)
@@ -141,8 +154,6 @@ class Camera(object):
         self, mobjects, 
         include_submobjects = True,
         excluded_mobjects = None,
-        #Round z coordinate to nearest hundredth when comparring
-        z_buff_func = lambda m : np.round(m.get_center()[2], 2)
         ):
         if include_submobjects:
             mobjects = self.extract_mobject_family_members(
@@ -154,15 +165,22 @@ class Camera(object):
                 )
                 mobjects = list_difference_update(mobjects, all_excluded)
 
-        # Should perhaps think about what happens here when include_submobjects is False,
-        # (for now, the onus is then on the caller to ensure this is handled correctly by
-        # passing us an appropriately pre-flattened list of mobjects if need be)
-        return sorted(mobjects, lambda a, b: cmp(z_buff_func(a), z_buff_func(b)))
+        if self.use_z_coordinate_for_display_order:
+            # Should perhaps think about what happens here when include_submobjects is False,
+            # (for now, the onus is then on the caller to ensure this is handled correctly by
+            # passing us an appropriately pre-flattened list of mobjects if need be)
+            return sorted(
+                mobjects,
+                lambda a, b: cmp(self.z_buff_func(a), self.z_buff_func(b))
+            )
+        else:
+            return mobjects
 
     def capture_mobject(self, mobject, **kwargs):
         return self.capture_mobjects([mobject], **kwargs)
 
     def capture_mobjects(self, mobjects, **kwargs):
+        self.reset_aggdraw_canvas()
         mobjects = self.get_mobjects_to_display(mobjects, **kwargs)
         vmobjects = []
         for mobject in mobjects:
@@ -190,23 +208,32 @@ class Camera(object):
             #TODO, more?  Call out if it's unknown?
         self.display_multiple_vectorized_mobjects(vmobjects)
 
+    ## Methods associated with svg rendering
+
+    def get_aggdraw_canvas(self):
+        if not hasattr(self, "canvas"):
+            self.reset_aggdraw_canvas()
+        return self.canvas
+
+    def reset_aggdraw_canvas(self):
+        image = Image.fromarray(self.pixel_array, mode = self.image_mode)
+        self.canvas = aggdraw.Draw(image)
+
     def display_multiple_vectorized_mobjects(self, vmobjects):
         if len(vmobjects) == 0:
             return
         #More efficient to bundle together in one "canvas"
-        image = Image.fromarray(self.pixel_array, mode = self.image_mode)
-        canvas = aggdraw.Draw(image)
+        canvas = self.get_aggdraw_canvas()
         for vmobject in vmobjects:
             self.display_vectorized(vmobject, canvas)
         canvas.flush()
 
-        self.pixel_array[:,:] = image
-
-    def display_vectorized(self, vmobject, canvas):
+    def display_vectorized(self, vmobject, canvas = None):
         if vmobject.is_subpath:
             #Subpath vectorized mobjects are taken care
             #of by their parent
             return
+        canvas = canvas or self.get_aggdraw_canvas()
         pen, fill = self.get_pen_and_fill(vmobject)
         pathstring = self.get_pathstring(vmobject)
         symbol = aggdraw.Symbol(pathstring)
@@ -279,7 +306,6 @@ class Camera(object):
         self.pixel_array[:,:] = np.maximum(
             self.pixel_array, array
         )
-
 
     def display_point_cloud(self, points, rgbas, thickness):
         if len(points) == 0:
