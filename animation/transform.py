@@ -48,7 +48,7 @@ class Transform(Animation):
                 self.path_arc,
                 self.path_arc_axis,
             )
-            
+
     def get_all_mobjects(self):
         return self.mobject, self.starting_mobject, self.target_mobject
 

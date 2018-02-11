@@ -136,8 +136,6 @@ class NumberLine(VMobject):
         self.tip = tip
         self.add(tip)
 
-
-
 class UnitInterval(NumberLine):
     CONFIG = {
         "x_min" : 0,
