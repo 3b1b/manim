@@ -68,7 +68,7 @@ def get_configuration():
       for short_arg, long_arg in optional_args:
          parser.add_argument(short_arg, long_arg, action = "store_true")
       parser.add_argument("-o", "--output_name")
-      parser.add_argument("-n", "--skip_to_animation_number")
+      parser.add_argument("-n", "--start_at_animation_number")
       args = parser.parse_args()
    except argparse.ArgumentError as err:
       print(str(err))
@@ -88,8 +88,8 @@ def get_configuration():
       "ignore_waits"    : args.preview,
       "write_all"       : args.write_all,
       "output_name"     : args.output_name,
-      "skip_to_animation_number" : args.skip_to_animation_number,
-      "end_after_animation_number" : None,
+      "start_at_animation_number" : args.start_at_animation_number,
+      "end_at_animation_number" : None,
    }
    if args.low_quality:
       config["camera_config"] = LOW_QUALITY_CAMERA_CONFIG
@@ -101,18 +101,18 @@ def get_configuration():
       config["camera_config"] = PRODUCTION_QUALITY_CAMERA_CONFIG
       config["frame_duration"] = PRODUCTION_QUALITY_FRAME_DURATION
 
-   stan = config["skip_to_animation_number"]
+   stan = config["start_at_animation_number"]
    if stan is not None:
       if "," in stan:
          start, end = stan.split(",")
-         config["skip_to_animation_number"] = int(start)
-         config["end_after_animation_number"] = int(end)
+         config["start_at_animation_number"] = int(start)
+         config["end_at_animation_number"] = int(end)
       else:
-         config["skip_to_animation_number"] = int(stan)
+         config["start_at_animation_number"] = int(stan)
 
    config["skip_animations"] = any([
       config["show_last_frame"] and not config["write_to_movie"],
-      config["skip_to_animation_number"],
+      config["start_at_animation_number"],
    ])
    return config
 
@@ -226,8 +226,8 @@ def main():
          "write_to_movie",
          "output_directory",
          "save_pngs",
-         "skip_to_animation_number",
-         "end_after_animation_number",
+         "start_at_animation_number",
+         "end_at_animation_number",
       ]
    ])
    
