@@ -179,6 +179,7 @@ class Camera(object):
     def capture_mobject(self, mobject, **kwargs):
         return self.capture_mobjects([mobject], **kwargs)
 
+    @profile
     def capture_mobjects(self, mobjects, **kwargs):
         self.reset_aggdraw_canvas()
         mobjects = self.get_mobjects_to_display(mobjects, **kwargs)
@@ -269,20 +270,18 @@ class Camera(object):
             # points = self.adjust_out_of_range_points(points)            
             if len(points) == 0:
                 continue
-            points = self.align_points_to_camera(points)
-            coords = self.points_to_pixel_coords(points)
-            start = "M%d %d"%tuple(coords[0])
-            #(handle1, handle2, anchor) tripletes
-            triplets = zip(*[
-                coords[i+1::3]
-                for i in range(3)
-            ])
-            cubics = [
-                "C" + " ".join(map(str, it.chain(*triplet)))
-                for triplet in triplets
-            ]
-            end = "Z" if vmobject.mark_paths_closed else ""
-            result += " ".join([start] + cubics + [end])
+            aligned_points = self.align_points_to_camera(points)
+            coords = self.points_to_pixel_coords(aligned_points)
+            coord_strings = coords.flatten().astype("string")
+            #Start new path string with M
+            coord_strings[0] = "M" + coord_strings[0]
+            #The C at the start of every 6th number communicates
+            #that the following 6 define a cubic Bezier
+            coord_strings[2::6] = map(lambda s : "C" + str(s), coord_strings[2::6])
+            #Possibly finish with "Z"
+            if vmobject.mark_paths_closed:
+                coord_strings[-1] = coord_strings[-1] + " Z"
+            result += " ".join(coord_strings)
         return result
 
     def display_background_colored_vmobject(self, cvmobject):
@@ -306,6 +305,8 @@ class Camera(object):
         self.pixel_array[:,:] = np.maximum(
             self.pixel_array, array
         )
+
+    ## Methods for other rendering
 
     def display_point_cloud(self, points, rgbas, thickness):
         if len(points) == 0:
