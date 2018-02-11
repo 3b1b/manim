@@ -89,6 +89,7 @@ def get_configuration():
       "write_all"       : args.write_all,
       "output_name"     : args.output_name,
       "skip_to_animation_number" : args.skip_to_animation_number,
+      "end_after_animation_number" : None,
    }
    if args.low_quality:
       config["camera_config"] = LOW_QUALITY_CAMERA_CONFIG
@@ -102,7 +103,12 @@ def get_configuration():
 
    stan = config["skip_to_animation_number"]
    if stan is not None:
-      config["skip_to_animation_number"] = int(stan)
+      if "," in stan:
+         start, end = stan.split(",")
+         config["skip_to_animation_number"] = int(start)
+         config["end_after_animation_number"] = int(end)
+      else:
+         config["skip_to_animation_number"] = int(stan)
 
    config["skip_animations"] = any([
       config["show_last_frame"] and not config["write_to_movie"],
@@ -221,6 +227,7 @@ def main():
          "output_directory",
          "save_pngs",
          "skip_to_animation_number",
+         "end_after_animation_number",
       ]
    ])
    
