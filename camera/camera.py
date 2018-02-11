@@ -10,10 +10,6 @@ from helpers import *
 from mobject import Mobject, PMobject, VMobject, \
     ImageMobject, Group, BackgroundColoredVMobject
 
-# Set a @profile decorator over any method whose 
-# performance you'd like to analyze
-from profilehooks import profile
-
 class Camera(object):
     CONFIG = {
         "background_image" : None,
@@ -179,7 +175,6 @@ class Camera(object):
     def capture_mobject(self, mobject, **kwargs):
         return self.capture_mobjects([mobject], **kwargs)
 
-    @profile
     def capture_mobjects(self, mobjects, **kwargs):
         self.reset_aggdraw_canvas()
         mobjects = self.get_mobjects_to_display(mobjects, **kwargs)
@@ -256,7 +251,7 @@ class Camera(object):
             fill_rgb = self.get_fill_rgb(vmobject)
             fill_hex = rgb_to_hex(fill_rgb)
             fill = aggdraw.Brush(fill_hex, fill_opacity)
-            
+
         return (pen, fill)
 
     def color_to_hex_l(self, color):
@@ -280,7 +275,7 @@ class Camera(object):
                 continue
             aligned_points = self.align_points_to_camera(points)
             coords = self.points_to_pixel_coords(aligned_points)
-            coord_strings = coords.flatten().astype("string")
+            coord_strings = coords.flatten().astype(str)
             #Start new path string with M
             coord_strings[0] = "M" + coord_strings[0]
             #The C at the start of every 6th number communicates
