@@ -226,6 +226,24 @@ def all_elements_are_instances(iterable, Class):
 def adjacent_pairs(objects):
     return zip(objects, list(objects[1:])+[objects[0]])
 
+def batch_by_property(items, property_func):
+    batches = []
+    def add_batch(batch):
+        if len(batch) > 0:
+            batches.append(batch)
+    curr_batch = []
+    curr_prop = None
+    for item in items:
+        prop = property_func(item)
+        if prop != curr_prop:
+            add_batch(curr_batch)
+            curr_prop = prop
+            curr_batch = [item]
+        else:
+            curr_batch.append(item)
+    add_batch(curr_batch)
+    return batches
+
 def complex_to_R3(complex_num):
     return np.array((complex_num.real, complex_num.imag, 0))
 
