@@ -53,6 +53,9 @@ RIGHT  = np.array(( 1., 0., 0.))
 LEFT   = np.array((-1., 0., 0.))
 IN     = np.array(( 0., 0.,-1.))
 OUT    = np.array(( 0., 0., 1.))
+X_AXIS = np.array(( 1., 0., 0.))
+Y_AXIS = np.array(( 0., 1., 0.))
+Z_AXIS = np.array(( 0., 0., 1.))
 
 TOP        = SPACE_HEIGHT*UP
 BOTTOM     = SPACE_HEIGHT*DOWN
