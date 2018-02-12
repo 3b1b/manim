@@ -39,7 +39,8 @@ class Scene(Container):
         "name" : None,
         "always_continually_update" : False,
         "random_seed" : 0,
-        "skip_to_animation_number" : None,
+        "start_at_animation_number" : None,
+        "end_at_animation_number" : None,
     }
     def __init__(self, **kwargs):
         Container.__init__(self, **kwargs) # Perhaps allow passing in a non-empty *mobjects parameter?
@@ -406,14 +407,17 @@ class Scene(Container):
         if len(args) == 0:
             warnings.warn("Called Scene.play with no animations")
             return
-        if self.skip_to_animation_number:
-            if self.num_plays + 1 == self.skip_to_animation_number:
+        if self.start_at_animation_number:
+            if self.num_plays == self.start_at_animation_number:
                 self.skip_animations = False
+        if self.end_at_animation_number:
+            if self.num_plays >= self.end_at_animation_number:
+                self.skip_animations = True
+                return self #Don't even both with the rest...
         if self.skip_animations:
             kwargs["run_time"] = 0
 
         animations = self.compile_play_args_to_animation_list(*args)
-        self.num_plays += 1
 
         sync_animation_run_times_and_rate_funcs(*animations, **kwargs)
         moving_mobjects = self.get_moving_mobjects(*animations)
@@ -429,6 +433,7 @@ class Scene(Container):
         self.mobjects_from_last_animation = moving_mobjects
         self.clean_up_animations(*animations)
         self.continual_update(0)
+        self.num_plays += 1
         return self
 
     def clean_up_animations(self, *animations):
