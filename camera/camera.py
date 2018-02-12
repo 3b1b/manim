@@ -178,7 +178,7 @@ class Camera(object):
         return self.capture_mobjects([mobject], **kwargs)
 
     def capture_mobjects(self, mobjects, **kwargs):
-        self.reset_aggdraw_canvas()
+        # self.reset_aggdraw_canvas()
         mobjects = self.get_mobjects_to_display(mobjects, **kwargs)
         vmobjects = []
         for mobject in mobjects:
@@ -218,18 +218,21 @@ class Camera(object):
     def display_multiple_vectorized_mobjects(self, vmobjects):
         if len(vmobjects) == 0:
             return
-        #More efficient to bundle together in one "canvas"
+        batches = batch_by_property(
+            vmobjects, 
+            lambda vm : vm.get_background_image_file()
+        )
+        for batch in batches:
+            if batch[0].get_background_image_file():
+                self.display_multiple_background_colored_vmobject(batch)
+            else:
+                self.display_multiple_non_background_colored_vmobjects(batch)
+
+    def display_multiple_non_background_colored_vmobjects(self, vmobjects):
+        self.reset_aggdraw_canvas()
         canvas = self.get_aggdraw_canvas()
         for vmobject in vmobjects:
-            if vmobject.get_background_image_file():
-                canvas.flush()
-                self.display_background_colored_vmobject(vmobject)
-                #TODO: Resetting canvas every time here is inefficient
-                self.reset_aggdraw_canvas()
-                canvas = self.get_aggdraw_canvas()
-            else:
-                self.display_vectorized(vmobject, canvas)
-                # last_vmobject_had_background = False
+            self.display_vectorized(vmobject, canvas)
         canvas.flush()
 
     def display_vectorized(self, vmobject, canvas = None):
@@ -303,9 +306,9 @@ class Camera(object):
         return getattr(self, long_name)
 
     @profile
-    def display_background_colored_vmobject(self, cvmobject):
+    def display_multiple_background_colored_vmobject(self, cvmobjects):
         displayer = self.get_background_colored_vmobject_displayer()
-        cvmobject_pixel_array = displayer.display(cvmobject)
+        cvmobject_pixel_array = displayer.display(*cvmobjects)
         self.pixel_array[:,:] = np.maximum(
             self.pixel_array, cvmobject_pixel_array
         )
@@ -553,17 +556,27 @@ class BackgroundColoredVMobjectDisplayer(object):
         self.file_name_to_pixel_array_map[file_name] = array
         return array
 
-    def display(self, cvmobject):
-        background_array = self.get_background_array(cvmobject)
-        self.camera.display_vectorized(cvmobject, self.canvas)
-        self.canvas.flush()
-        array = np.array(
-            (background_array*self.pixel_array.astype('float')/255),
-            dtype = self.camera.pixel_array_dtype
+    def display(self, *cvmobjects):
+        batches = batch_by_property(
+            cvmobjects, lambda cv : cv.get_background_image_file()
         )
-        self.pixel_array[:,:] = 0
-        self.reset_canvas()
-        return array
+        curr_array = None
+        for batch in batches:
+            background_array = self.get_background_array(batch[0])
+            for cvmobject in batch:
+                self.camera.display_vectorized(cvmobject, self.canvas)
+            self.canvas.flush()
+            new_array = np.array(
+                (background_array*self.pixel_array.astype('float')/255),
+                dtype = self.camera.pixel_array_dtype
+            )
+            if curr_array is None:
+                curr_array = new_array
+            else:
+                curr_array = np.maximum(curr_array, new_array)
+            self.pixel_array[:,:] = 0
+            self.reset_canvas()
+        return curr_array
 
 
 class MovingCamera(Camera):
