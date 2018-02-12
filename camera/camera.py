@@ -8,7 +8,9 @@ import aggdraw
 
 from helpers import *
 from mobject import Mobject, PMobject, VMobject, \
-    ImageMobject, Group, BackgroundColoredVMobject
+    ImageMobject, Group
+
+from profilehooks import profile
 
 class Camera(object):
     CONFIG = {
@@ -180,15 +182,13 @@ class Camera(object):
         mobjects = self.get_mobjects_to_display(mobjects, **kwargs)
         vmobjects = []
         for mobject in mobjects:
-            if isinstance(mobject, VMobject) and not isinstance(mobject, BackgroundColoredVMobject):
-                vmobjects.append(mobject)
+            if isinstance(mobject, VMobject):
+                 vmobjects.append(mobject)
             elif len(vmobjects) > 0:
                 self.display_multiple_vectorized_mobjects(vmobjects)
                 vmobjects = []
                 
-            if isinstance(mobject, BackgroundColoredVMobject):
-                self.display_background_colored_vmobject(mobject)
-            elif isinstance(mobject, PMobject):
+            if isinstance(mobject, PMobject):
                 self.display_point_cloud(
                     mobject.points, mobject.rgbas, 
                     self.adjusted_thickness(mobject.stroke_width)
@@ -221,7 +221,15 @@ class Camera(object):
         #More efficient to bundle together in one "canvas"
         canvas = self.get_aggdraw_canvas()
         for vmobject in vmobjects:
-            self.display_vectorized(vmobject, canvas)
+            if vmobject.get_background_image_file():
+                canvas.flush()
+                self.display_background_colored_vmobject(vmobject)
+                #TODO: Resetting canvas every time here is inefficient
+                self.reset_aggdraw_canvas()
+                canvas = self.get_aggdraw_canvas()
+            else:
+                self.display_vectorized(vmobject, canvas)
+                # last_vmobject_had_background = False
         canvas.flush()
 
     def display_vectorized(self, vmobject, canvas = None):
@@ -287,27 +295,21 @@ class Camera(object):
             result += " ".join(coord_strings)
         return result
 
+    def get_background_colored_vmobject_displayer(self):
+        #Quite wordy to type out a bunch
+        long_name = "background_colored_vmobject_displayer"
+        if not hasattr(self, long_name):
+            setattr(self, long_name, BackgroundColoredVMobjectDisplayer(self))
+        return getattr(self, long_name)
+
+    @profile
     def display_background_colored_vmobject(self, cvmobject):
-        mob_array = np.zeros(
-            self.pixel_array.shape,
-            dtype = self.pixel_array_dtype
-        )
-        image = Image.fromarray(mob_array, mode = self.image_mode)
-        canvas = aggdraw.Draw(image)
-        self.display_vectorized(cvmobject, canvas)
-        canvas.flush()
-        cv_background = cvmobject.background_array
-        if not np.all(self.pixel_array.shape == cv_background):
-            cvmobject.resize_background_array_to_match(self.pixel_array)
-            cv_background = cvmobject.background_array
-        array = np.array(
-            (np.array(mob_array).astype('float')/255.)*\
-            np.array(cv_background),
-            dtype = self.pixel_array_dtype
-        )
+        displayer = self.get_background_colored_vmobject_displayer()
+        cvmobject_pixel_array = displayer.display(cvmobject)
         self.pixel_array[:,:] = np.maximum(
-            self.pixel_array, array
+            self.pixel_array, cvmobject_pixel_array
         )
+        return self
 
     ## Methods for other rendering
 
@@ -504,6 +506,65 @@ class Camera(object):
         centered_space_coords = centered_space_coords * (1, -1)
 
         return centered_space_coords
+
+class BackgroundColoredVMobjectDisplayer(object):
+    def __init__(self, camera):
+        self.camera = camera
+        self.file_name_to_pixel_array_map = {}
+        self.init_canvas()
+
+    def init_canvas(self):
+        self.pixel_array = np.zeros(
+            self.camera.pixel_array.shape,
+            dtype = self.camera.pixel_array_dtype,
+        )
+        self.reset_canvas()
+
+    def reset_canvas(self):
+        image = Image.fromarray(self.pixel_array, mode = self.camera.image_mode)
+        self.canvas = aggdraw.Draw(image)
+
+    def resize_background_array(
+        self, background_array, 
+        new_width, new_height, 
+        mode = "RGBA"
+        ):
+        image = Image.fromarray(background_array, mode = mode)
+        resized_image = image.resize((new_width, new_height))
+        return np.array(resized_image)
+
+    def resize_background_array_to_match(self, background_array, pixel_array):
+        height, width = pixel_array.shape[:2]
+        mode = "RGBA" if pixel_array.shape[2] == 4 else "RGB"
+        return self.resize_background_array(background_array, width, height, mode)
+
+    def get_background_array(self, cvmobject):
+        file_name = cvmobject.get_background_image_file()
+        if file_name in self.file_name_to_pixel_array_map:
+            return self.file_name_to_pixel_array_map[file_name]
+        full_path = get_full_raster_image_path(file_name)
+        image = Image.open(full_path)
+        array = np.array(image)
+
+        camera = self.camera
+        if not np.all(camera.pixel_array.shape == array.shape):
+            array = self.resize_background_array_to_match(array, camera.pixel_array)
+
+        self.file_name_to_pixel_array_map[file_name] = array
+        return array
+
+    def display(self, cvmobject):
+        background_array = self.get_background_array(cvmobject)
+        self.camera.display_vectorized(cvmobject, self.canvas)
+        self.canvas.flush()
+        array = np.array(
+            (background_array*self.pixel_array.astype('float')/255),
+            dtype = self.camera.pixel_array_dtype
+        )
+        self.pixel_array[:,:] = 0
+        self.reset_canvas()
+        return array
+
 
 class MovingCamera(Camera):
     """
