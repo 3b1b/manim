@@ -7,7 +7,7 @@ from mobject.tex_mobject import TextMobject, TexMobject
 
 from animation import Animation
 from animation.simple_animations import Rotating, LaggedStart
-from animation.transform import ApplyMethod
+from animation.transform import ApplyMethod, FadeIn, GrowFromCenter
 
 from topics.geometry import Circle, Line, Rectangle, Square, \
     Arc, Polygon, SurroundingRectangle

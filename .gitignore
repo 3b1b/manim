@@ -7,5 +7,9 @@ special_animations.py
 prettiness_hall_of_fame.py
 files/
 ben_playground.py
-
 ben_cairo_test.py
+.floo
+.flooignore
+*.xml
+*.iml
+

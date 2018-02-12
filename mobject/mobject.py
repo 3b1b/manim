@@ -103,7 +103,8 @@ class Mobject(Container):
     def copy(self):
         #TODO, either justify reason for shallow copy, or
         #remove this redundancy everywhere
-        # return self.deepcopy() 
+        return self.deepcopy()
+
         copy_mobject = copy.copy(self)
         copy_mobject.points = np.array(self.points)
         copy_mobject.submobjects = [
@@ -770,10 +771,10 @@ class Mobject(Container):
             self.null_point_align(mobject)
         self_count = len(self.submobjects)
         mob_count = len(mobject.submobjects)
-        diff = abs(self_count-mob_count)
-        if self_count < mob_count:
-            self.add_n_more_submobjects(diff)
-        elif mob_count < self_count:
+        diff = self_count-mob_count
+        if diff < 0:
+            self.add_n_more_submobjects(-diff)
+        elif diff > 0:
             mobject.add_n_more_submobjects(diff)
         return self
 

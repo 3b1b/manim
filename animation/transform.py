@@ -22,8 +22,9 @@ class Transform(Animation):
         #Copy target_mobject so as to not mess with caller
         self.original_target_mobject = target_mobject
         target_mobject = target_mobject.copy()
-        digest_config(self, kwargs, locals())
         mobject.align_data(target_mobject)
+        self.target_mobject = target_mobject
+        digest_config(self, kwargs)
         self.init_path_func()
 
         Animation.__init__(self, mobject, **kwargs)
@@ -40,14 +41,14 @@ class Transform(Animation):
     def init_path_func(self):
         if self.path_func is not None:
             return
-        if self.path_arc == 0:
+        elif self.path_arc == 0:
             self.path_func = straight_path
         else:
             self.path_func = path_along_arc(
                 self.path_arc,
                 self.path_arc_axis,
             )
-            
+
     def get_all_mobjects(self):
         return self.mobject, self.starting_mobject, self.target_mobject
 

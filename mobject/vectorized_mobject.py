@@ -17,6 +17,7 @@ class VMobject(Mobject):
         "propagate_style_to_family" : False,
         "pre_function_handle_to_anchor_scale_factor" : 0.01,
         "make_smooth_after_applying_functions" : False,
+        "background_image_file" : None,
     }
 
     def get_group_class(self):
@@ -42,7 +43,8 @@ class VMobject(Mobject):
                        stroke_width = None,
                        fill_color = None, 
                        fill_opacity = None,
-                       family = True):
+                       family = True
+                       ):
         if stroke_color is not None:
             self.stroke_rgb = color_to_rgb(stroke_color)
         if fill_color is not None:
@@ -119,6 +121,9 @@ class VMobject(Mobject):
             )
         return self
 
+    def get_fill_rgb(self):
+        return self.fill_rgb
+
     def get_fill_color(self):
         try:
             self.fill_rgb = np.clip(self.fill_rgb, 0.0, 1.0)
@@ -128,6 +133,9 @@ class VMobject(Mobject):
 
     def get_fill_opacity(self):
         return np.clip(self.fill_opacity, 0, 1)
+
+    def get_stroke_rgb(self):
+        return self.stroke_rgb
 
     def get_stroke_color(self):
         try:
@@ -143,6 +151,16 @@ class VMobject(Mobject):
         if self.fill_opacity == 0:
             return self.get_stroke_color()
         return self.get_fill_color()
+
+    def color_using_background_image(self, background_image_file):
+        self.background_image_file = background_image_file
+        self.highlight(WHITE)
+        for submob in self.submobjects:
+            submob.color_using_background_image(background_image_file)
+        return self
+
+    def get_background_image_file(self):
+        return self.background_image_file
 
     ## Drawing
     def start_at(self, point):
@@ -427,7 +445,7 @@ class VMobject(Mobject):
         return self
 
 class VGroup(VMobject):
-    def __init__(self, *args, **kwargs):        
+    def __init__(self, *args, **kwargs):
         if len(args) == 1 and isinstance(args[0], (tuple, list)):
             args = args[0]
 
@@ -438,7 +456,6 @@ class VGroup(VMobject):
             else: packed_args.append(arg)
 
         VMobject.__init__(self, *packed_args, **kwargs)
-
 
 class VectorizedPoint(VMobject):
     CONFIG = {
@@ -458,8 +475,10 @@ class VectorizedPoint(VMobject):
     def get_height(self):
         return self.artificial_height
 
+    def get_location(self):
+        return self.get_anchors()[0]
 
-
-
+    def set_location(self,new_loc):
+        self.set_points(np.array([new_loc]))
 
 

@@ -136,8 +136,6 @@ class NumberLine(VMobject):
         self.tip = tip
         self.add(tip)
 
-
-
 class UnitInterval(NumberLine):
     CONFIG = {
         "x_min" : 0,
@@ -319,6 +317,17 @@ class NumberPlane(VMobject):
         new_point = point - self.axes.get_center()
         x = new_point[0]/self.get_x_unit_size()
         y = new_point[1]/self.get_y_unit_size()
+        return x, y
+
+    # Does not recompute center, unit_sizes for each call; useful for
+    # iterating over large lists of points, but does assume these 
+    # attributes are kept accurate. (Could alternatively have a method
+    # which returns a function dynamically created after a single 
+    # call to each of get_center(), get_x_unit_size(), etc.)
+    def point_to_coords_cheap(self, point):
+        new_point = point - self.center_point
+        x = new_point[0]/self.x_unit_size
+        y = new_point[1]/self.y_unit_size
         return x, y
 
     def get_x_unit_size(self):

@@ -403,12 +403,16 @@ class Succession(Animation):
         for anim in animations:
             anim.update(0)
 
+        animations = filter (lambda x : not(x.empty), animations)
+
         self.run_times = [anim.run_time for anim in animations]
         if "run_time" in kwargs:
             run_time = kwargs.pop("run_time")
         else:
             run_time = sum(self.run_times)
-        self.num_anims = len(animations) #TODO: If this is zero, some special handling below
+        self.num_anims = len(animations)
+        if self.num_anims == 0:
+            self.empty = True
         self.animations = animations
         #Have to keep track of this run_time, because Scene.play
         #might very well mess with it.
@@ -417,7 +421,7 @@ class Succession(Animation):
         # critical_alphas[i] is the start alpha of self.animations[i]
         # critical_alphas[i + 1] is the end alpha of self.animations[i]
         critical_times = np.concatenate(([0], np.cumsum(self.run_times)))
-        self.critical_alphas = map (lambda x : np.true_divide(x, run_time), critical_times)
+        self.critical_alphas = map (lambda x : np.true_divide(x, run_time), critical_times) if self.num_anims > 0 else [0.0]
 
         # self.scene_mobjects_at_time[i] is the scene's mobjects at start of self.animations[i]
         # self.scene_mobjects_at_time[i + 1] is the scene mobjects at end of self.animations[i]
@@ -428,24 +432,33 @@ class Succession(Animation):
             self.animations[i].clean_up(self.scene_mobjects_at_time[i + 1])
 
         self.current_alpha = 0
-        self.current_anim_index = 0 #TODO: What if self.num_anims == 0?
+        self.current_anim_index = 0 # If self.num_anims == 0, this is an invalid index, but so it goes
+        if self.num_anims > 0:
+            self.mobject = self.scene_mobjects_at_time[0]
+            self.mobject.add(self.animations[0].mobject)
+        else:
+            self.mobject = Group()
 
-        self.mobject = Group()
-        self.jump_to_start_of_anim(0)
         Animation.__init__(self, self.mobject, run_time = run_time, **kwargs)
 
+    # Beware: This does NOT take care of calling update(0) on the subanimation.
+    # This was important to avoid a pernicious possibility in which subanimations were called
+    # with update(0) twice, which could in turn call a sub-Succession with update(0) four times,
+    # continuing exponentially.
     def jump_to_start_of_anim(self, index):
+        if index != self.current_anim_index:
+            self.mobject.remove(*self.mobject.submobjects) # Should probably have a cleaner "remove_all" method...
+            for m in self.scene_mobjects_at_time[index].submobjects:
+                self.mobject.add(m)
+            self.mobject.add(self.animations[index].mobject)
+
         self.current_anim_index = index
         self.current_alpha = self.critical_alphas[index]
 
-        self.mobject.remove(*self.mobject.submobjects) # Should probably have a cleaner "remove_all" method...
-        self.mobject.add(self.animations[index].mobject)
-        for m in self.scene_mobjects_at_time[index].submobjects:
-            self.mobject.add(m)
-
-        self.animations[index].update(0)  
-
     def update_mobject(self, alpha):
+        if self.num_anims == 0:
+            return
+
         i = 0
         while self.critical_alphas[i + 1] < alpha:
             i = i + 1
@@ -474,8 +487,14 @@ class AnimationGroup(Animation):
     }
     def __init__(self, *sub_anims, **kwargs):
         digest_config(self, kwargs, locals())
-        sync_animation_run_times_and_rate_funcs(*sub_anims, **kwargs)
-        self.run_time = max([a.run_time for a in sub_anims])
+        sub_anims = filter (lambda x : not(x.empty), sub_anims)
+        if len(sub_anims) == 0:
+            self.empty = True
+            self.run_time = 0
+        else:
+            # Should really make copies of animations, instead of messing with originals...
+            sync_animation_run_times_and_rate_funcs(*sub_anims, **kwargs)
+            self.run_time = max([a.run_time for a in sub_anims])
         everything = Mobject(*[a.mobject for a in sub_anims])
         Animation.__init__(self, everything, **kwargs)
 
@@ -486,3 +505,12 @@ class AnimationGroup(Animation):
     def clean_up(self, *args, **kwargs):
         for anim in self.sub_anims:
             anim.clean_up(*args, **kwargs)
+
+class EmptyAnimation(Animation):
+    CONFIG = {
+        "run_time" : 0,
+        "empty" : True
+    }
+
+    def __init__(self, *args, **kwargs):
+        return Animation.__init__(self, Group(), *args, **kwargs)

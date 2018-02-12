@@ -67,10 +67,14 @@ class EquationSolver1d(GraphScene, ZoomedScene):
             self.add(target_line_label)
 
     def solveEquation(self):
-        leftBrace, rightBrace = xBraces = TexMobject("||")
+        leftBrace = TexMobject("[")
+        rightBrace = TexMobject("]")
+        xBraces = Group(leftBrace, rightBrace)
         xBraces.stretch(2, 0)
 
-        downBrace, upBrace = yBraces = TexMobject("||")
+        downBrace = TexMobject("[")
+        upBrace = TexMobject("]")
+        yBraces = Group(downBrace, upBrace)
         yBraces.stretch(2, 0)
         yBraces.rotate(TAU/4)
 
@@ -79,7 +83,7 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         upperX = self.initial_upper_x
         upperY = self.func(upperX)
 
-        leftBrace.move_to(self.coords_to_point(lowerX, 0))
+        leftBrace.move_to(self.coords_to_point(lowerX, 0), aligned_edge = LEFT)
         leftBraceLabel = DecimalNumber(lowerX)
         leftBraceLabel.next_to(leftBrace, DOWN + LEFT, buff = SMALL_BUFF)
         leftBraceLabelAnimation = ContinualChangingDecimal(leftBraceLabel, 
@@ -87,7 +91,7 @@ class EquationSolver1d(GraphScene, ZoomedScene):
             tracked_mobject = leftBrace)
         self.add(leftBraceLabelAnimation)
         
-        rightBrace.move_to(self.coords_to_point(upperX, 0))
+        rightBrace.move_to(self.coords_to_point(upperX, 0), aligned_edge = RIGHT)
         rightBraceLabel = DecimalNumber(upperX)
         rightBraceLabel.next_to(rightBrace, DOWN + RIGHT, buff = SMALL_BUFF)
         rightBraceLabelAnimation = ContinualChangingDecimal(rightBraceLabel, 
@@ -95,7 +99,7 @@ class EquationSolver1d(GraphScene, ZoomedScene):
             tracked_mobject = rightBrace)
         self.add(rightBraceLabelAnimation)
 
-        downBrace.move_to(self.coords_to_point(0, lowerY))
+        downBrace.move_to(self.coords_to_point(0, lowerY), aligned_edge = DOWN)
         downBraceLabel = DecimalNumber(lowerY)
         downBraceLabel.next_to(downBrace, LEFT + DOWN, buff = SMALL_BUFF)
         downBraceLabelAnimation = ContinualChangingDecimal(downBraceLabel, 
@@ -103,7 +107,7 @@ class EquationSolver1d(GraphScene, ZoomedScene):
             tracked_mobject = downBrace)
         self.add(downBraceLabelAnimation)
         
-        upBrace.move_to(self.coords_to_point(0, upperY))
+        upBrace.move_to(self.coords_to_point(0, upperY), aligned_edge = UP)
         upBraceLabel = DecimalNumber(upperY)
         upBraceLabel.next_to(upBrace, LEFT + UP, buff = SMALL_BUFF)
         upBraceLabelAnimation = ContinualChangingDecimal(upBraceLabel, 
@@ -200,136 +204,36 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         self.drawGraph()
         self.solveEquation()
 
+colorslist = map(color_to_rgba, ["#FF0000", "#FFFF00", "#00FF00", "#0000FF"])
 
-# TODO: Perhaps have bullets (pulses) fade out and in at ends of line, instead of jarringly
-# popping out and in?
-#
-# TODO: Perhaps have bullets change color corresponding to a function of their coordinates?
-# This could involve some merging of functoinality with PiWalker
-class LinePulser(ContinualAnimation):
-    def __init__(self, line, bullet_template, num_bullets, pulse_time, color_func = None, **kwargs):
-        self.line = line
-        self.num_bullets = num_bullets
-        self.pulse_time = pulse_time
-        self.bullets = [bullet_template.copy() for i in range(num_bullets)]
-        self.color_func = color_func
-        ContinualAnimation.__init__(self, VGroup(line, VGroup(*self.bullets)), **kwargs)
-
-    def update_mobject(self, dt):
-        alpha = self.external_time % self.pulse_time
-        start = self.line.get_start()
-        end = self.line.get_end()
-        for i in range(self.num_bullets):
-            position = interpolate(start, end, 
-                np.true_divide((i + alpha),(self.num_bullets)))
-            self.bullets[i].move_to(position)
-            if self.color_func:
-                self.bullets.set_color(self.color_func(position))
-
-
-def color_func(alpha):
+def rev_to_rgba(alpha):
     alpha = alpha % 1
-    colors = ["#FF0000", ORANGE, YELLOW, "#00FF00", "#0000FF", "#FF00FF"]
+    colors = colorslist
     num_colors = len(colors)
     beta = (alpha % (1.0/num_colors)) * num_colors
     start_index = int(np.floor(num_colors * alpha)) % num_colors
     end_index = (start_index + 1) % num_colors
 
-    return interpolate_color(colors[start_index], colors[end_index], beta)
+    return interpolate(colors[start_index], colors[end_index], beta)
 
-class ArrowCircleTest(Scene):
-    def construct(self):
-        circle_radius = 3
-        circle = Circle(radius = circle_radius, color = WHITE)
-        self.add(circle)
+def rev_to_color(alpha):
+    return rgba_to_color(rev_to_rgba(alpha))
 
-        base_arrow = Arrow(circle_radius * 0.7 * RIGHT, circle_radius * 1.3 * RIGHT)
-
-        def rev_rotate(x, revs):
-            x.rotate(revs * TAU, about_point = ORIGIN)
-            x.set_color(color_func(revs))
-            return x
-
-        num_arrows = 8 * 3
-        arrows = [rev_rotate(base_arrow.copy(), (np.true_divide(i, num_arrows))) for i in range(num_arrows)]
-        arrows_vgroup = VGroup(*arrows)
-
-        self.play(ShowCreation(arrows_vgroup), run_time = 2.5, rate_func = None)
-
-        self.wait()
-
-class FuncRotater(Animation):
-    CONFIG = {
-        "rotate_func" : lambda x : x # Func from alpha to revolutions
-    }
-
-    # Perhaps abstract this out into an "Animation updating from original object" class
-    def update_submobject(self, submobject, starting_submobject, alpha):
-        submobject.points = np.array(starting_submobject.points)
-
-    def update_mobject(self, alpha):
-        Animation.update_mobject(self, alpha)
-        angle_revs = self.rotate_func(alpha)
-        # We do a clockwise rotation
-        self.mobject.rotate(
-            -angle_revs * TAU, 
-            about_point = ORIGIN
-        )
-        self.mobject.set_color(color_func(angle_revs))
-
-class TestRotater(Scene):
-    def construct(self):
-        test_line = Line(ORIGIN, RIGHT)
-        self.play(FuncRotater(
-            test_line,
-            rotate_func = lambda x : x % 0.25,
-            run_time = 10))
-
-# TODO: Be careful about clockwise vs. counterclockwise convention throughout!
-# Make sure this is correct everywhere in resulting video.
-class OdometerScene(Scene):
-    CONFIG = {
-        "rotate_func" : lambda x : np.sin(x * TAU),
-        "run_time" : 5,
-        "dashed_line_angle" : None,
-        "biased_display_start" : None
-    }
-
-    def construct(self):
-        radius = 1.3
-        circle = Circle(center = ORIGIN, radius = radius)
-        self.add(circle)
-
-        if self.dashed_line_angle:
-            dashed_line = DashedLine(ORIGIN, radius * RIGHT)
-            # Clockwise rotation
-            dashed_line.rotate(-self.dashed_line_angle * TAU, about_point = ORIGIN)
-            self.add(dashed_line)
-        
-        num_display = DecimalNumber(0)
-        num_display.move_to(2 * DOWN)
-
-        display_val_bias = 0
-        if self.biased_display_start != None:
-            display_val_bias = self.biased_display_start - self.rotate_func(0)
-        display_func = lambda alpha : self.rotate_func(alpha) + display_val_bias
-
-        base_arrow = Arrow(ORIGIN, RIGHT, buff = 0)
-
-        self.play(
-            FuncRotater(base_arrow, rotate_func = self.rotate_func),
-            ChangingDecimal(num_display, display_func),
-            run_time = self.run_time,
-            rate_func = None)
-
-def point_to_rev((x, y)):
+def point_to_rev((x, y), allow_origin = False):
     # Warning: np.arctan2 would happily discontinuously returns the value 0 for (0, 0), due to 
     # design choices in the underlying atan2 library call, but for our purposes, this is 
     # illegitimate, and all winding number calculations must be set up to avoid this
-    if (x, y) == (0, 0):
+    if not(allow_origin) and (x, y) == (0, 0):
         print "Error! Angle of (0, 0) computed!"
-        return None
-    return np.true_divide(np.arctan2(y, x), TAU)
+        return
+    return fdiv(np.arctan2(y, x), TAU)
+
+def point_to_rgba(point):
+    rev = point_to_rev(point, allow_origin = True)
+    rgba = rev_to_rgba(rev)
+    base_size = np.sqrt(point[0]**2 + point[1]**2)
+    rescaled_size = np.sqrt(base_size/(base_size + 1))
+    return rgba * rescaled_size
 
 # Returns the value with the same fractional component as x, closest to m
 def resit_near(x, m):
@@ -343,7 +247,7 @@ def resit_near(x, m):
 def make_alpha_winder(func, start, end, num_checkpoints):
     check_points = [None for i in range(num_checkpoints)]
     check_points[0] = func(start)
-    step_size = np.true_divide(end - start, num_checkpoints)
+    step_size = fdiv(end - start, num_checkpoints)
     for i in range(num_checkpoints - 1):
         check_points[i + 1] = \
         resit_near(
@@ -395,7 +299,7 @@ class RectangleData():
         if dim == 0:
             return_data = [RectangleData(new_interval, y_interval) for new_interval in split_interval(x_interval)]
         elif dim == 1:
-            return_data = [RectangleData(x_interval, new_interval) for new_interval in split_interval(y_interval)]        
+            return_data = [RectangleData(x_interval, new_interval) for new_interval in split_interval(y_interval)[::-1]]        
         else: 
             print "RectangleData.splits_on_dim passed illegitimate dimension!"
 
@@ -428,9 +332,9 @@ def plane_func_from_complex_func(f):
 def point_func_from_complex_func(f):
     return lambda (x, y, z): complex_to_R3(f(complex(x, y)))
 
-empty_animation = Animation(Mobject())
-def EmptyAnimation():
-    return empty_animation
+test_map_func = point_func_from_complex_func(lambda c: c**2)
+
+empty_animation = EmptyAnimation()
 
 class WalkerAnimation(Animation):
     CONFIG = {
@@ -440,14 +344,17 @@ class WalkerAnimation(Animation):
         "coords_to_point" : None
     }
 
-    def __init__(self, walk_func, rev_func, coords_to_point, **kwargs):
+    def __init__(self, walk_func, rev_func, coords_to_point, show_arrows = True, **kwargs):
         self.walk_func = walk_func
         self.rev_func = rev_func
         self.coords_to_point = coords_to_point
         self.compound_walker = VGroup()
-        self.compound_walker.walker = PiCreature(color = RED)
-        self.compound_walker.walker.scale(0.35)
-        self.compound_walker.arrow = Arrow(ORIGIN, RIGHT) #, buff = 0)
+        self.show_arrows = show_arrows
+
+        base_walker = Dot().scale(5) # PiCreature().scale(0.8) # 
+        self.compound_walker.walker = base_walker.scale(0.35).set_stroke(BLACK, 1.5) #PiCreature()
+        if show_arrows:
+            self.compound_walker.arrow = Arrow(ORIGIN, 0.5 * RIGHT, buff = 0).set_stroke(BLACK, 1.5)
         self.compound_walker.digest_mobject_attrs()
         Animation.__init__(self, self.compound_walker, **kwargs)
 
@@ -458,37 +365,119 @@ class WalkerAnimation(Animation):
     def update_mobject(self, alpha):
         Animation.update_mobject(self, alpha)
         cur_x, cur_y = cur_coords = self.walk_func(alpha)
-        self.mobject.walker.move_to(self.coords_to_point(cur_x, cur_y))
+        cur_point = self.coords_to_point(cur_x, cur_y)
+        self.mobject.shift(cur_point - self.mobject.walker.get_center())
         rev = self.rev_func(cur_coords)
-        self.mobject.walker.set_color(color_func(rev))
-        self.mobject.arrow.set_color(color_func(rev))
-        self.mobject.arrow.rotate(
-            rev * TAU, 
-            about_point = ORIGIN #self.mobject.arrow.get_start()
-        )
+        self.mobject.walker.set_fill(rev_to_color(rev))
+        if self.show_arrows:
+            self.mobject.arrow.set_fill(rev_to_color(rev))
+            self.mobject.arrow.rotate(
+                rev * TAU, 
+                about_point = self.mobject.arrow.get_start()
+            )
 
-def LinearWalker(start_coords, end_coords, coords_to_point, rev_func, **kwargs):
+def walker_animation_with_display(
+    walk_func, 
+    rev_func, 
+    coords_to_point, 
+    number_update_func = None,
+    show_arrows = True,
+    **kwargs
+    ):
+    
+    walker_anim = WalkerAnimation(
+        walk_func = walk_func, 
+        rev_func = rev_func, 
+        coords_to_point = coords_to_point,
+        show_arrows = show_arrows,
+        **kwargs)
+    walker = walker_anim.compound_walker.walker
+
+    if number_update_func != None:
+        display = DecimalNumber(0, 
+            num_decimal_points = 1, 
+            fill_color = WHITE,
+            include_background_rectangle = True)
+        display.background_rectangle.fill_opacity = 0.5
+        display.background_rectangle.fill_color = GREY
+        display.background_rectangle.scale(1.2)
+        displaycement = 0.5 * DOWN # How about that pun, eh?
+        display.move_to(walker.get_center() + displaycement)
+        display_anim = ChangingDecimal(display, 
+            number_update_func, 
+            tracked_mobject = walker_anim.compound_walker.walker,
+            **kwargs)
+        anim_group = AnimationGroup(walker_anim, display_anim)
+        return anim_group
+    else:
+        return walker_anim
+
+def LinearWalker(
+    start_coords, 
+    end_coords, 
+    coords_to_point, 
+    rev_func, 
+    number_update_func = None, 
+    show_arrows = True,
+    **kwargs
+    ):
     walk_func = lambda alpha : interpolate(start_coords, end_coords, alpha)
-    return WalkerAnimation(
+    return walker_animation_with_display(
         walk_func = walk_func, 
         coords_to_point = coords_to_point, 
         rev_func = rev_func,
+        number_update_func = number_update_func,
+        show_arrows = show_arrows,
         **kwargs)
 
-class PiWalker(Scene):
+class ColorMappedByFuncScene(Scene):
     CONFIG = {
-        "func" : plane_func_from_complex_func(lambda c : c**2),
+        "func" : lambda p : p,
+        "num_plane" : NumberPlane(),
+        "show_num_plane" : True,
+
+        "show_output" : False, # Not currently implemented; TODO
+    }
+
+    def setup(self):
+        if self.show_output:
+            self.pos_func = self.func
+        else:
+            self.pos_func = lambda p : p
+
+    def construct(self):
+        display_func = self.func if not self.show_output else lambda p : p
+
+        if self.show_num_plane:
+            self.num_plane.fade()
+            self.add(self.num_plane)
+        self.camera.set_background_from_func(
+            lambda (x, y): point_to_rgba(
+                display_func(
+                    # Should be self.num_plane.point_to_coords_cheap(np.array([x, y, 0])),
+                    # but for cheapness, we'll go with just (x, y), having never altered
+                    # any num_plane's from default settings so far
+                    (x, y)
+                )
+            )
+        )
+
+class ColorMappedByFuncStill(ColorMappedByFuncScene):
+    def construct(self):
+        ColorMappedByFuncScene.construct(self)
+        self.wait()
+
+class PiWalker(ColorMappedByFuncScene):
+    CONFIG = {
         "walk_coords" : [],
-        "step_run_time" : 1
+        "step_run_time" : 1,
     }
 
     def construct(self):
+        ColorMappedByFuncScene.construct(self)
+        num_plane = self.num_plane
 
         rev_func = lambda p : point_to_rev(self.func(p))
-
-        num_plane = NumberPlane()
-        num_plane.fade()
-        self.add(num_plane)
 
         walk_coords = self.walk_coords
         for i in range(len(walk_coords)):
@@ -497,19 +486,19 @@ class PiWalker(Scene):
             end_x, end_y = end_coords = walk_coords[(i + 1) % len(walk_coords)]
             end_point = num_plane.coords_to_point(end_x, end_y)
             self.play(
+                ShowCreation(Line(start_point, end_point), rate_func = None),
                 LinearWalker(
                     start_coords = start_coords, 
                     end_coords = end_coords,
                     coords_to_point = num_plane.coords_to_point,
                     rev_func = rev_func,
-                    remover = (i < len(walk_coords) - 1)
+                    remover = (i < len(walk_coords) - 1),
+                    show_arrows = not self.show_output
                 ),
-                ShowCreation(Line(start_point, end_point), rate_func = None),
                 run_time = self.step_run_time)
 
-        # TODO: Allow smooth paths instead of brekaing them up into lines, and 
+        # TODO: Allow smooth paths instead of breaking them up into lines, and 
         # use point_from_proportion to get points along the way
-                
 
         self.wait()
 
@@ -519,6 +508,7 @@ class PiWalkerRect(PiWalker):
         "start_y" : 1,
         "walk_width" : 2,
         "walk_height" : 2,
+        "func" : plane_func_from_complex_func(lambda c: c**2)
     }
 
     def setup(self):
@@ -542,67 +532,85 @@ class PiWalkerCircle(PiWalker):
         self.walk_coords = [r * np.array((np.cos(i * TAU/N), np.sin(i * TAU/N))) for i in range(N)]
         PiWalker.setup(self)
 
-# TODO: Perhaps restructure this to avoid using AnimationGroup, and instead 
-# use lists of animations or lists or other such data, to be merged and processed into parallel 
-# animations later
-class EquationSolver2d(Scene):
+# TODO: Give drawn lines a bit of buffer, so that the rectangle's corners are filled in
+class EquationSolver2d(ColorMappedByFuncScene):
     CONFIG = {
-        "func" : plane_poly_with_roots((1, 2), (-1, 3)),
         "initial_lower_x" : -5.1,
         "initial_upper_x" : 5.1,
         "initial_lower_y" : -3.1,
         "initial_upper_y" : 3.1,
         "num_iterations" : 5,
         "num_checkpoints" : 10,
+        "display_in_parallel" : True,
+        "use_fancy_lines" : True,
         # TODO: Consider adding a "find_all_roots" flag, which could be turned off 
         # to only explore one of the two candidate subrectangles when both are viable
     }
 
     def construct(self):
-        num_plane = NumberPlane()
-        num_plane.fade()
-        self.add(num_plane)
+        ColorMappedByFuncScene.construct(self)
+        num_plane = self.num_plane
+        self.remove(num_plane)
+
+        background = self.camera.background
+        self.camera.init_background() # Clearing background
 
         rev_func = lambda p : point_to_rev(self.func(p))
+        clockwise_rev_func = lambda p : -rev_func(p)
 
-        def Animate2dSolver(cur_depth, rect, dim_to_split):
+        def Animate2dSolver(cur_depth, rect, dim_to_split, sides_to_draw = [0, 1, 2, 3]):
+            print "Solver at depth: " + str(cur_depth)
+
             if cur_depth >= self.num_iterations:
-                return EmptyAnimation()
+                return empty_animation
 
-            def draw_line_return_wind(start, end, start_wind):
-                alpha_winder = make_alpha_winder(rev_func, start, end, self.num_checkpoints)
+            def draw_line_return_wind(start, end, start_wind, should_linger = False, draw_line = True):
+                alpha_winder = make_alpha_winder(clockwise_rev_func, start, end, self.num_checkpoints)
                 a0 = alpha_winder(0)
                 rebased_winder = lambda alpha: alpha_winder(alpha) - a0 + start_wind
-                flashing_line = Line(num_plane.coords_to_point(*start), num_plane.coords_to_point(*end),
-                    stroke_width = 5,
+                thick_line = Line(num_plane.coords_to_point(*start), num_plane.coords_to_point(*end),
+                    stroke_width = 10,
                     color = RED)
-                thin_line = flashing_line.copy()
-                thin_line.set_stroke(width = 1)
+                if self.use_fancy_lines:
+                    colored_line = BackgroundColoredVMobject(thick_line, background_image_file = None)
+                    colored_line.set_background_array(background)
+                else:
+                    colored_line = thick_line.set_stroke_with(4)
+
                 walker_anim = LinearWalker(
                     start_coords = start, 
                     end_coords = end,
                     coords_to_point = num_plane.coords_to_point,
                     rev_func = rev_func,
+                    number_update_func = rebased_winder,
                     remover = True
                 )
+
+                if should_linger: # Do we need an "and not self.display_in_parallel" here?
+                    rate_func = lingering
+                else:
+                    rate_func = None
+
+                opt_line_anim = ShowCreation(colored_line) if draw_line else empty_animation
+
                 line_draw_anim = AnimationGroup(
-                    ShowCreation(thin_line), 
-                    #ShowPassingFlash(flashing_line), 
+                    opt_line_anim, 
                     walker_anim,
-                    rate_func = None)
-                anim = line_draw_anim
-                return (anim, rebased_winder(1))
+                    rate_func = rate_func)
+                return (line_draw_anim, rebased_winder(1))
 
             wind_so_far = 0
-            anim = EmptyAnimation()
+            anim = empty_animation
             sides = [
                 rect.get_top(), 
                 rect.get_right(), 
                 rect.get_bottom(), 
                 rect.get_left()
             ]
-            for (start, end) in sides:
-                (next_anim, wind_so_far) = draw_line_return_wind(start, end, wind_so_far)
+            for (i, (start, end)) in enumerate(sides):
+                (next_anim, wind_so_far) = draw_line_return_wind(start, end, wind_so_far, 
+                    should_linger = i == len(sides) - 1,
+                    draw_line = i in sides_to_draw)
                 anim = Succession(anim, next_anim)
 
             total_wind = round(wind_so_far)
@@ -614,29 +622,39 @@ class EquationSolver2d(Scene):
                     rect.get_bottom_right(), 
                     rect.get_bottom_left()
                 ]
-                points = [num_plane.coords_to_point(x, y) for (x, y) in coords]
+                points = np.array([num_plane.coords_to_point(x, y) for (x, y) in coords]) + IN
                 # TODO: Maybe use diagonal lines or something to fill in rectangles indicating
                 # their "Nothing here" status?
-                fill_rect = polygonObject = Polygon(*points, fill_opacity = 0.8, color = RED)
+                # Or draw a large X or something
+                fill_rect = polygonObject = Polygon(*points, fill_opacity = 0.8, color = GREY)
                 return Succession(anim, FadeIn(fill_rect))
             else:
                 (sub_rect1, sub_rect2) = rect.splits_on_dim(dim_to_split)
-                sub_rects = [sub_rect1, sub_rect2]
+                if dim_to_split == 0:
+                    sub_rect_and_sides = [(sub_rect1, 1), (sub_rect2, 3)]
+                else:
+                    sub_rect_and_sides = [(sub_rect1, 2), (sub_rect2, 0)]
                 sub_anims = [
                     Animate2dSolver(
                         cur_depth = cur_depth + 1,
                         rect = sub_rect,
-                        dim_to_split = 1 - dim_to_split
+                        dim_to_split = 1 - dim_to_split,
+                        sides_to_draw = [side_to_draw]
                     )
-                    for sub_rect in sub_rects
+                    for (sub_rect, side_to_draw) in sub_rect_and_sides
                 ]
                 mid_line_coords = rect.split_line_on_dim(dim_to_split)
                 mid_line_points = [num_plane.coords_to_point(x, y) for (x, y) in mid_line_coords]
+                # TODO: Have this match rectangle line style, apart from dashes and thin-ness?
+                # Though there is also informational value in seeing the dashed line separately from rectangle lines
                 mid_line = DashedLine(*mid_line_points)
+                if self.display_in_parallel:
+                    recursive_anim = AnimationGroup(*sub_anims) 
+                else:
+                    recursive_anim = Succession(*sub_anims)
                 return Succession(anim, 
-                    ShowCreation(mid_line), 
-                    # FadeOut(mid_line), # TODO: Can change timing so this fades out at just the time it would be overdrawn
-                    AnimationGroup(*sub_anims)
+                    ShowCreation(mid_line),
+                    recursive_anim
                 )
 
         lower_x = self.initial_lower_x
@@ -649,15 +667,132 @@ class EquationSolver2d(Scene):
 
         rect = RectangleData(x_interval, y_interval)
 
+        print "Starting to compute anim"
+
         anim = Animate2dSolver(
             cur_depth = 0, 
             rect = rect,
             dim_to_split = 0,
         )
 
+        print "Done computing anim"
+
         self.play(anim)
 
         self.wait()
+
+# TODO: Perhaps have bullets (pulses) fade out and in at ends of line, instead of jarringly
+# popping out and in?
+#
+# TODO: Perhaps have bullets change color corresponding to a function of their coordinates?
+# This could involve some merging of functoinality with PiWalker
+class LinePulser(ContinualAnimation):
+    def __init__(self, line, bullet_template, num_bullets, pulse_time, output_func = None, **kwargs):
+        self.line = line
+        self.num_bullets = num_bullets
+        self.pulse_time = pulse_time
+        self.bullets = [bullet_template.copy() for i in range(num_bullets)]
+        self.output_func = output_func
+        ContinualAnimation.__init__(self, VGroup(line, VGroup(*self.bullets)), **kwargs)
+
+    def update_mobject(self, dt):
+        alpha = self.external_time % self.pulse_time
+        start = self.line.get_start()
+        end = self.line.get_end()
+        for i in range(self.num_bullets):
+            position = interpolate(start, end, 
+                fdiv((i + alpha),(self.num_bullets)))
+            self.bullets[i].move_to(position)
+            if self.output_func:
+                position_2d = (position[0], position[1])
+                rev = point_to_rev(self.output_func(position_2d))
+                color = rev_to_color(rev)
+                self.bullets[i].set_color(color)
+
+class ArrowCircleTest(Scene):
+    def construct(self):
+        circle_radius = 3
+        circle = Circle(radius = circle_radius, color = WHITE)
+        self.add(circle)
+
+        base_arrow = Arrow(circle_radius * 0.7 * RIGHT, circle_radius * 1.3 * RIGHT)
+
+        def rev_rotate(x, revs):
+            x.rotate(revs * TAU, about_point = ORIGIN)
+            x.set_color(rev_to_color(revs))
+            return x
+
+        num_arrows = 8 * 3
+        arrows = [rev_rotate(base_arrow.copy(), (fdiv(i, num_arrows))) for i in range(num_arrows)]
+        arrows_vgroup = VGroup(*arrows)
+
+        self.play(ShowCreation(arrows_vgroup), run_time = 2.5, rate_func = None)
+
+        self.wait()
+
+class FuncRotater(Animation):
+    CONFIG = {
+        "rotate_func" : lambda x : x # Func from alpha to revolutions
+    }
+
+    # Perhaps abstract this out into an "Animation updating from original object" class
+    def update_submobject(self, submobject, starting_submobject, alpha):
+        submobject.points = np.array(starting_submobject.points)
+
+    def update_mobject(self, alpha):
+        Animation.update_mobject(self, alpha)
+        angle_revs = self.rotate_func(alpha)
+        # We do a clockwise rotation
+        self.mobject.rotate(
+            -angle_revs * TAU, 
+            about_point = ORIGIN
+        )
+        self.mobject.set_color(rev_to_color(angle_revs))
+
+class TestRotater(Scene):
+    def construct(self):
+        test_line = Line(ORIGIN, RIGHT)
+        self.play(FuncRotater(
+            test_line,
+            rotate_func = lambda x : x % 0.25,
+            run_time = 10))
+
+# TODO: Be careful about clockwise vs. counterclockwise convention throughout!
+# Make sure this is correct everywhere in resulting video.
+class OdometerScene(Scene):
+    CONFIG = {
+        "rotate_func" : lambda x : np.sin(x * TAU),
+        "run_time" : 5,
+        "dashed_line_angle" : None,
+        "biased_display_start" : None
+    }
+
+    def construct(self):
+        radius = 1.3
+        circle = Circle(center = ORIGIN, radius = radius)
+        self.add(circle)
+
+        if self.dashed_line_angle:
+            dashed_line = DashedLine(ORIGIN, radius * RIGHT)
+            # Clockwise rotation
+            dashed_line.rotate(-self.dashed_line_angle * TAU, about_point = ORIGIN)
+            self.add(dashed_line)
+        
+        num_display = DecimalNumber(0, include_background_rectangle = False).set_stroke(1)
+        num_display.move_to(2 * DOWN)
+
+        display_val_bias = 0
+        if self.biased_display_start != None:
+            display_val_bias = self.biased_display_start - self.rotate_func(0)
+        display_func = lambda alpha : self.rotate_func(alpha) + display_val_bias
+
+        base_arrow = Arrow(ORIGIN, RIGHT, buff = 0)
+
+        self.play(
+            FuncRotater(base_arrow, rotate_func = self.rotate_func),
+            ChangingDecimal(num_display, display_func),
+            run_time = self.run_time,
+            rate_func = None)
 
 #############
 # Above are mostly general tools; here, we list, in order, finished or near-finished scenes
@@ -677,7 +812,7 @@ class FirstSqrtScene(EquationSolver1d):
         "targetY" : 2,
         "initial_lower_x" : 1,
         "initial_upper_x" : 2,
-        "num_iterations" : 10,
+        "num_iterations" : 3,
         "iteration_at_which_to_start_zoom" : 3,
         "graph_label" : "y = x^2",
         "show_target_line" : True,
@@ -853,10 +988,24 @@ class Initial2dFuncSceneWithoutMorphing(Scene):
 # creature from previous scene, then place it as a simultaneous inset with Premiere)
 
 class LoopSplitScene(Scene):
+    CONFIG = {
+        "output_func" : plane_poly_with_roots((1, 1))
+    }
 
-    def PulsedLine(self, start, end, bullet_template, num_bullets = 4, pulse_time = 1, **kwargs):
+    def PulsedLine(self, 
+        start, end, 
+        bullet_template, 
+        num_bullets = 4, 
+        pulse_time = 1, 
+        **kwargs):
         line = Line(start, end, **kwargs)
-        anim = LinePulser(line, bullet_template, num_bullets, pulse_time, **kwargs)
+        anim = LinePulser(
+            line = line, 
+            bullet_template = bullet_template, 
+            num_bullets = num_bullets, 
+            pulse_time = pulse_time, 
+            output_func = self.output_func,
+            **kwargs)
         return [VGroup(line, *anim.bullets), anim]
 
     def construct(self):
@@ -978,8 +1127,9 @@ class LoopSplitSceneMapped(LoopSplitScene):
 # to illustrate relation between degree and large-scale winding number
 class FundThmAlg(EquationSolver2d):
     CONFIG = {
-        "func" : plane_poly_with_roots((1, 2), (-1, 2.5), (-1, 2.5)),
-        "num_iterations" : 1,
+        "func" : plane_poly_with_roots((1, 2), (-1, 1.5), (-1, 1.5)),
+        "num_iterations" : 5,
+        "display_in_parallel" : True
     }
 
 # TODO: Borsuk-Ulam visuals
@@ -1010,6 +1160,7 @@ class DiffOdometer(OdometerScene):
     }
 
 # TODO: Brouwer's fixed point theorem visuals
+# class BFTScene(Scene):
 
 # TODO: Pi creatures wide-eyed in amazement
 
@@ -1023,10 +1174,9 @@ class DiffOdometer(OdometerScene):
 
 # Writing new Pi walker scenes by parametrizing general template
 
-# Generalizing Pi walker stuff to make bullets on pulsing lines change colors dynamically according to 
-# function traced out
+# Domain coloring scenes by parametrizing general template
 
-# Debugging Pi walker stuff added to EquationSolver2d
+# (All the above are basically trivial tinkering at this point)
 
 # ----
 
@@ -1036,8 +1186,28 @@ class DiffOdometer(OdometerScene):
 
 # Borsuk-Ulam visuals
 
-# Domain coloring
+# TODO: Add to camera an option for lower-quality (faster-rendered) background than pixel_array, 
+# helpful for previews
 
-# TODO: Ask about tracked mobject, which is probably very useful for our animations
+####################
+
+# Random test scenes and test functions go here:
+
+def rect_to_circle((x, y, z)):
+    size = np.sqrt(x**2 + y**2)
+    max_abs_size = max(abs(x), abs(y))
+    return fdiv(np.array((x, y, z)) * max_abs_size, size)
+
+class MapPiWalkerRect(PiWalkerRect):
+    CONFIG = {
+        "camera_class" : MappingCamera,
+        "camera_config" : {"mapping_func" : rect_to_circle},
+        "display_output_color_map" : True
+    }
+
+class ShowBack(PiWalkerRect):
+    CONFIG = {
+         "func" : plane_poly_with_roots((1, 2), (-1, 1.5), (-1, 1.5))
+    }
 
 # FIN

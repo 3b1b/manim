@@ -27,10 +27,11 @@ class CameraWithPerspective(Camera):
 class ThreeDCamera(CameraWithPerspective):
     CONFIG = {
         "sun_vect" : 5*UP+LEFT,
-        "shading_factor" : 0.5,
-        "distance" : 5,
+        "shading_factor" : 0.2,
+        "distance" : 5.,
+        "default_distance" : 5.,
         "phi" : 0, #Angle off z axis
-        "theta" : -np.pi/2, #Rotation about z axis
+        "theta" : -TAU/4, #Rotation about z axis
     }
     def __init__(self, *args, **kwargs):
         Camera.__init__(self, *args, **kwargs)
@@ -39,22 +40,17 @@ class ThreeDCamera(CameraWithPerspective):
         self.rotation_mobject = VectorizedPoint()
         self.set_position(self.phi, self.theta, self.distance)
 
-    def get_color(self, method):
-        color = method()
-        vmobject = method.im_self
+    def modified_rgb(self, vmobject, rgb):
         if should_shade_in_3d(vmobject):
-            return Color(rgb = self.get_shaded_rgb(
-                color_to_rgb(color),
-                normal_vect = self.get_unit_normal_vect(vmobject)
-            ))
+            return self.get_shaded_rgb(rgb, self.get_unit_normal_vect(vmobject))
         else:
             return color
 
-    def get_stroke_color(self, vmobject):
-        return self.get_color(vmobject.get_stroke_color)
+    def get_stroke_rgb(self, vmobject):
+        return self.modified_rgb(vmobject, vmobject.get_stroke_rgb())
 
-    def get_fill_color(self, vmobject):
-        return self.get_color(vmobject.get_fill_color)
+    def get_fill_rgb(self, vmobject):
+        return self.modified_rgb(vmobject, vmobject.get_fill_rgb())
 
     def get_shaded_rgb(self, rgb, normal_vect):
         brightness = np.dot(normal_vect, self.unit_sun_vect)**2
@@ -78,9 +74,16 @@ class ThreeDCamera(CameraWithPerspective):
         return normal/length
 
     def display_multiple_vectorized_mobjects(self, vmobjects):
+        camera_point = self.spherical_coords_to_point(
+            *self.get_spherical_coords()
+        )
         def z_cmp(*vmobs):
-            #Compare to three dimensional mobjects based on their
-            #z value, otherwise don't compare.
+            # Compare to three dimensional mobjects based on 
+            # how close they are to the camera
+            # return cmp(*[
+            #     -np.linalg.norm(vm.get_center()-camera_point)
+            #     for vm in vmobs
+            # ])
             three_d_status = map(should_shade_in_3d, vmobs)
             has_points = [vm.get_num_points() > 0 for vm in vmobs]
             if all(three_d_status) and all(has_points):
@@ -101,6 +104,13 @@ class ThreeDCamera(CameraWithPerspective):
         if theta is None: theta = curr_theta
         if distance is None: distance = curr_d
         return np.array([phi, theta, distance])
+
+    def get_cartesian_coords(self, phi = None, theta = None, distance = None):
+        spherical_coords_array = self.get_spherical_coords(phi,theta,distance)
+        phi2 = spherical_coords_array[0]
+        theta2 = spherical_coords_array[1]
+        d2 = spherical_coords_array[2]
+        return self.spherical_coords_to_point(phi2,theta2,d2)
 
     def get_phi(self):
         return self.get_spherical_coords()[0]
@@ -124,7 +134,7 @@ class ThreeDCamera(CameraWithPerspective):
         self.phi, self.theta, self.distance = point
 
     def get_view_transformation_matrix(self):
-        return np.dot(
+        return (self.default_distance / self.get_distance()) * np.dot(
             rotation_matrix(self.get_phi(), LEFT),
             rotation_about_z(-self.get_theta() - np.pi/2),
         )
@@ -176,9 +186,10 @@ class ThreeDScene(Scene):
             self.add(self.ambient_camera_rotation)
 
     def get_moving_mobjects(self, *animations):
-        if self.camera.rotation_mobject in moving:
-            return self.mobjects
-        return Scene.get_moving_mobjects(self, *animations)
+        moving_mobjects = Scene.get_moving_mobjects(self, *animations)
+        if self.camera.rotation_mobject in moving_mobjects:
+            return list_update(self.mobjects, moving_mobjects)
+        return moving_mobjects
 
 ##############
 

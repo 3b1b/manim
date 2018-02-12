@@ -7,13 +7,21 @@ from colour import Color
 import aggdraw
 
 from helpers import *
-from mobject import Mobject, PMobject, VMobject, ImageMobject, Group
+from mobject import Mobject, PMobject, VMobject, \
+    ImageMobject, Group
 
 class Camera(object):
     CONFIG = {
         "background_image" : None,
         "pixel_shape" : (DEFAULT_HEIGHT, DEFAULT_WIDTH),
-        #this will be resized to match pixel_shape
+        # Note 1: space_shape will be resized to match pixel_shape
+        #
+        # Note 2: While pixel_shape indicates the actual full height
+        # and width of the pixel array, space_shape indicates only 
+        # half the height and half the width of space (extending from
+        # -space_height to +space_height vertically and from 
+        # -space_widtdh to +space_width horizontally)
+        # TODO: Rename these to SPACE_X_RADIUS, SPACE_Y_RADIUS
         "space_shape" : (SPACE_HEIGHT, SPACE_WIDTH),
         "space_center" : ORIGIN,
         "background_color" : BLACK,
@@ -22,12 +30,17 @@ class Camera(object):
         "max_allowable_norm" : 2*SPACE_WIDTH,
         "image_mode" : "RGBA",
         "n_rgb_coords" : 4,
-        "background_alpha" : 0, #Out of 255
-        "pixel_array_dtype" : 'uint8'
+        "background_alpha" : 0, #Out of color_max_val
+        "pixel_array_dtype" : 'uint8',
+        "use_z_coordinate_for_display_order" : False,
+        # z_buff_func is only used if the flag above is set to True.
+        # round z coordinate to nearest hundredth when comparring
+        "z_buff_func" : lambda m : np.round(m.get_center()[2], 2),
     }
 
     def __init__(self, background = None, **kwargs):
         digest_config(self, kwargs, locals())
+        self.color_max_val = np.iinfo(self.pixel_array_dtype).max
         self.init_background()
         self.resize_space_shape()
         self.reset()
@@ -75,14 +88,48 @@ class Camera(object):
     def get_pixel_array(self):
         return self.pixel_array
 
-    def set_pixel_array(self, pixel_array):
-        self.pixel_array = np.array(pixel_array)
+    def convert_pixel_array(self, pixel_array, convert_from_floats = False):
+        retval = np.array(pixel_array)
+        if convert_from_floats:
+            retval = np.apply_along_axis(
+                lambda f : (f * self.color_max_val).astype(self.pixel_array_dtype),
+                2,
+                retval)
+        return retval
 
-    def set_background(self, pixel_array):
-        self.background = np.array(pixel_array)
+    def set_pixel_array(self, pixel_array, convert_from_floats = False):
+        converted_array = self.convert_pixel_array(pixel_array, convert_from_floats)
+        if not hasattr(self, "pixel_array"): #TODO: And the shapes match?
+            self.pixel_array = converted_array
+        else:
+            #Set in place
+            self.pixel_array[:,:,:] = converted_array[:,:,:]
+
+    def set_background(self, pixel_array, convert_from_floats = False):
+        self.background = self.convert_pixel_array(pixel_array, convert_from_floats)
+
+    def make_background_from_func(self, coords_to_colors_func):
+        """
+        Sets background by using coords_to_colors_func to determine each pixel's color. Each input 
+        to coords_to_colors_func is an (x, y) pair in space (in ordinary space coordinates; not 
+        pixel coordinates), and each output is expected to be an RGBA array of 4 floats.
+        """
+
+        print "Starting set_background_from_func"
+
+        coords = self.get_coords_of_all_pixels()
+        new_background = np.apply_along_axis(
+            coords_to_colors_func,
+            2,
+            coords
+        )
+        return self.convert_pixel_array(new_background, convert_from_floats = True)
+
+    def set_background_from_func(self, coords_to_colors_func):
+        self.set_background(self.make_background_from_func(coords_to_colors_func))
 
     def reset(self):
-        self.set_pixel_array(np.array(self.background))
+        self.set_pixel_array(self.background)
 
     ####
 
@@ -113,7 +160,17 @@ class Camera(object):
                     excluded_mobjects
                 )
                 mobjects = list_difference_update(mobjects, all_excluded)
-        return mobjects
+
+        if self.use_z_coordinate_for_display_order:
+            # Should perhaps think about what happens here when include_submobjects is False,
+            # (for now, the onus is then on the caller to ensure this is handled correctly by
+            # passing us an appropriately pre-flattened list of mobjects if need be)
+            return sorted(
+                mobjects,
+                lambda a, b: cmp(self.z_buff_func(a), self.z_buff_func(b))
+            )
+        else:
+            return mobjects
 
     def capture_mobject(self, mobject, **kwargs):
         return self.capture_mobjects([mobject], **kwargs)
@@ -123,7 +180,7 @@ class Camera(object):
         vmobjects = []
         for mobject in mobjects:
             if isinstance(mobject, VMobject):
-                vmobjects.append(mobject)
+                 vmobjects.append(mobject)
             elif len(vmobjects) > 0:
                 self.display_multiple_vectorized_mobjects(vmobjects)
                 vmobjects = []
@@ -144,37 +201,65 @@ class Camera(object):
             #TODO, more?  Call out if it's unknown?
         self.display_multiple_vectorized_mobjects(vmobjects)
 
+    ## Methods associated with svg rendering
+
+    def get_aggdraw_canvas(self):
+        if not hasattr(self, "canvas"):
+            self.reset_aggdraw_canvas()
+        return self.canvas
+
+    def reset_aggdraw_canvas(self):
+        image = Image.fromarray(self.pixel_array, mode = self.image_mode)
+        self.canvas = aggdraw.Draw(image)
+
     def display_multiple_vectorized_mobjects(self, vmobjects):
         if len(vmobjects) == 0:
             return
-        #More efficient to bundle together in one "canvas"
-        image = Image.fromarray(self.pixel_array, mode = self.image_mode)
-        canvas = aggdraw.Draw(image)
+        batches = batch_by_property(
+            vmobjects, 
+            lambda vm : vm.get_background_image_file()
+        )
+        for batch in batches:
+            if batch[0].get_background_image_file():
+                self.display_multiple_background_colored_vmobject(batch)
+            else:
+                self.display_multiple_non_background_colored_vmobjects(batch)
+
+    def display_multiple_non_background_colored_vmobjects(self, vmobjects):
+        self.reset_aggdraw_canvas()
+        canvas = self.get_aggdraw_canvas()
         for vmobject in vmobjects:
             self.display_vectorized(vmobject, canvas)
         canvas.flush()
 
-        self.pixel_array[:,:] = image
-
-    def display_vectorized(self, vmobject, canvas):
+    def display_vectorized(self, vmobject, canvas = None):
         if vmobject.is_subpath:
             #Subpath vectorized mobjects are taken care
             #of by their parent
             return
+        canvas = canvas or self.get_aggdraw_canvas()
         pen, fill = self.get_pen_and_fill(vmobject)
         pathstring = self.get_pathstring(vmobject)
         symbol = aggdraw.Symbol(pathstring)
         canvas.symbol((0, 0), symbol, pen, fill)
 
     def get_pen_and_fill(self, vmobject):
-        pen = aggdraw.Pen(
-            self.color_to_hex_l(self.get_stroke_color(vmobject)),
-            max(vmobject.stroke_width, 0)
-        )
-        fill = aggdraw.Brush(
-            self.color_to_hex_l(self.get_fill_color(vmobject)),
-            opacity = int(255*vmobject.get_fill_opacity())
-        )
+        stroke_width = max(vmobject.get_stroke_width(), 0)
+        if stroke_width == 0:
+            pen = None
+        else:
+            stroke_rgb = self.get_stroke_rgb(vmobject)
+            stroke_hex = rgb_to_hex(stroke_rgb)
+            pen = aggdraw.Pen(stroke_hex, stroke_width)
+
+        fill_opacity = int(self.color_max_val*vmobject.get_fill_opacity())
+        if fill_opacity == 0:
+            fill = None
+        else:
+            fill_rgb = self.get_fill_rgb(vmobject)
+            fill_hex = rgb_to_hex(fill_rgb)
+            fill = aggdraw.Brush(fill_hex, fill_opacity)
+
         return (pen, fill)
 
     def color_to_hex_l(self, color):
@@ -183,34 +268,49 @@ class Camera(object):
         except:
             return Color(BLACK).get_hex_l()
 
-    def get_stroke_color(self, vmobject):
-        return vmobject.get_stroke_color()
+    def get_stroke_rgb(self, vmobject):
+        return vmobject.get_stroke_rgb()
 
-    def get_fill_color(self, vmobject):
-        return vmobject.get_fill_color()
+    def get_fill_rgb(self, vmobject):
+        return vmobject.get_fill_rgb()
 
     def get_pathstring(self, vmobject):
-        result = ""        
+        result = ""
         for mob in [vmobject]+vmobject.get_subpath_mobjects():
             points = mob.points
             # points = self.adjust_out_of_range_points(points)            
             if len(points) == 0:
                 continue
-            points = self.align_points_to_camera(points)
-            coords = self.points_to_pixel_coords(points)
-            start = "M%d %d"%tuple(coords[0])
-            #(handle1, handle2, anchor) tripletes
-            triplets = zip(*[
-                coords[i+1::3]
-                for i in range(3)
-            ])
-            cubics = [
-                "C" + " ".join(map(str, it.chain(*triplet)))
-                for triplet in triplets
-            ]
-            end = "Z" if vmobject.mark_paths_closed else ""
-            result += " ".join([start] + cubics + [end])
+            aligned_points = self.align_points_to_camera(points)
+            coords = self.points_to_pixel_coords(aligned_points)
+            coord_strings = coords.flatten().astype(str)
+            #Start new path string with M
+            coord_strings[0] = "M" + coord_strings[0]
+            #The C at the start of every 6th number communicates
+            #that the following 6 define a cubic Bezier
+            coord_strings[2::6] = map(lambda s : "C" + str(s), coord_strings[2::6])
+            #Possibly finish with "Z"
+            if vmobject.mark_paths_closed:
+                coord_strings[-1] = coord_strings[-1] + " Z"
+            result += " ".join(coord_strings)
         return result
+
+    def get_background_colored_vmobject_displayer(self):
+        #Quite wordy to type out a bunch
+        long_name = "background_colored_vmobject_displayer"
+        if not hasattr(self, long_name):
+            setattr(self, long_name, BackgroundColoredVMobjectDisplayer(self))
+        return getattr(self, long_name)
+
+    def display_multiple_background_colored_vmobject(self, cvmobjects):
+        displayer = self.get_background_colored_vmobject_displayer()
+        cvmobject_pixel_array = displayer.display(*cvmobjects)
+        self.pixel_array[:,:] = np.maximum(
+            self.pixel_array, cvmobject_pixel_array
+        )
+        return self
+
+    ## Methods for other rendering
 
     def display_point_cloud(self, points, rgbas, thickness):
         if len(points) == 0:
@@ -222,7 +322,7 @@ class Camera(object):
         )
         rgba_len = self.pixel_array.shape[2]
 
-        rgbas = (255*rgbas).astype('uint8')
+        rgbas = (self.color_max_val*rgbas).astype(self.pixel_array_dtype)
         target_len = len(pixel_coords)
         factor = target_len/len(rgbas)
         rgbas = np.array([rgbas]*factor).reshape((target_len, rgba_len))
@@ -311,7 +411,7 @@ class Camera(object):
 
     def overlay_rgba_array(self, arr):
         # """ Overlays arr onto self.pixel_array with relevant alphas"""
-        bg, fg = self.pixel_array/255.0, arr/255.0
+        bg, fg = fdiv(self.pixel_array, self.color_max_val), fdiv(arr, self.color_max_val)
         bga, fga = [arr[:,:,3:] for arr in bg, fg]
         alpha_sum = fga + (1-fga)*bga
         with np.errstate(divide = 'ignore', invalid='ignore'):
@@ -320,7 +420,7 @@ class Camera(object):
                 np.divide(bg[:,:,:3]*(1-fga)*bga, alpha_sum),
             ])
         bg[:,:,3:] = 1 - (1 - bga)*(1 - fga)
-        self.pixel_array = (255*bg).astype(self.pixel_array_dtype)
+        self.pixel_array = (self.color_max_val*bg).astype(self.pixel_array_dtype)
 
     def align_points_to_camera(self, points):
         ## This is where projection should live
@@ -382,6 +482,97 @@ class Camera(object):
         size = pixel_coords.size
         return pixel_coords.reshape((size/2, 2))
 
+    def get_coords_of_all_pixels(self):
+        # These are in x, y order, to help me keep things straight
+        full_space_dims = np.array(self.space_shape)[::-1] * 2
+        full_pixel_dims = np.array(self.pixel_shape)[::-1]
+
+        # These are addressed in the same y, x order as in pixel_array, but the values in them
+        # are listed in x, y order
+        uncentered_pixel_coords = np.indices(self.pixel_shape)[::-1].transpose(1, 2, 0)
+        uncentered_space_coords = fdiv(
+            uncentered_pixel_coords * full_space_dims, 
+            full_pixel_dims)
+        # Could structure above line's computation slightly differently, but figured (without much 
+        # thought) multiplying by space_shape first, THEN dividing by pixel_shape, is probably 
+        # better than the other order, for avoiding underflow quantization in the division (whereas 
+        # overflow is unlikely to be a problem)
+
+        centered_space_coords = (uncentered_space_coords - fdiv(full_space_dims, 2))
+
+        # Have to also flip the y coordinates to account for pixel array being listed in 
+        # top-to-bottom order, opposite of screen coordinate convention
+        centered_space_coords = centered_space_coords * (1, -1)
+
+        return centered_space_coords
+
+class BackgroundColoredVMobjectDisplayer(object):
+    def __init__(self, camera):
+        self.camera = camera
+        self.file_name_to_pixel_array_map = {}
+        self.init_canvas()
+
+    def init_canvas(self):
+        self.pixel_array = np.zeros(
+            self.camera.pixel_array.shape,
+            dtype = self.camera.pixel_array_dtype,
+        )
+        self.reset_canvas()
+
+    def reset_canvas(self):
+        image = Image.fromarray(self.pixel_array, mode = self.camera.image_mode)
+        self.canvas = aggdraw.Draw(image)
+
+    def resize_background_array(
+        self, background_array, 
+        new_width, new_height, 
+        mode = "RGBA"
+        ):
+        image = Image.fromarray(background_array, mode = mode)
+        resized_image = image.resize((new_width, new_height))
+        return np.array(resized_image)
+
+    def resize_background_array_to_match(self, background_array, pixel_array):
+        height, width = pixel_array.shape[:2]
+        mode = "RGBA" if pixel_array.shape[2] == 4 else "RGB"
+        return self.resize_background_array(background_array, width, height, mode)
+
+    def get_background_array(self, cvmobject):
+        file_name = cvmobject.get_background_image_file()
+        if file_name in self.file_name_to_pixel_array_map:
+            return self.file_name_to_pixel_array_map[file_name]
+        full_path = get_full_raster_image_path(file_name)
+        image = Image.open(full_path)
+        array = np.array(image)
+
+        camera = self.camera
+        if not np.all(camera.pixel_array.shape == array.shape):
+            array = self.resize_background_array_to_match(array, camera.pixel_array)
+
+        self.file_name_to_pixel_array_map[file_name] = array
+        return array
+
+    def display(self, *cvmobjects):
+        batches = batch_by_property(
+            cvmobjects, lambda cv : cv.get_background_image_file()
+        )
+        curr_array = None
+        for batch in batches:
+            background_array = self.get_background_array(batch[0])
+            for cvmobject in batch:
+                self.camera.display_vectorized(cvmobject, self.canvas)
+            self.canvas.flush()
+            new_array = np.array(
+                (background_array*self.pixel_array.astype('float')/255),
+                dtype = self.camera.pixel_array_dtype
+            )
+            if curr_array is None:
+                curr_array = new_array
+            else:
+                curr_array = np.maximum(curr_array, new_array)
+            self.pixel_array[:,:] = 0
+            self.reset_canvas()
+        return curr_array
 
 
 class MovingCamera(Camera):
@@ -411,7 +602,8 @@ class MovingCamera(Camera):
             0 if self.aligned_dimension == "height" else 1
         )
 
-
+# TODO: Add an attribute to mobjects under which they can specify that they should just 
+# map their centers but remain otherwise undistorted (useful for labels, etc.)
 class MappingCamera(Camera):
     CONFIG = {
         "mapping_func" : lambda p : p,
@@ -467,20 +659,24 @@ class MultiCamera(Camera):
                 shifted_camera.start_x:shifted_camera.end_x] \
             = shifted_camera.camera.pixel_array
 
-    def set_background(self, pixel_array):
+    def set_background(self, pixel_array, **kwargs):
         for shifted_camera in self.shifted_cameras:
             shifted_camera.camera.set_background(
                 pixel_array[
                     shifted_camera.start_y:shifted_camera.end_y, 
-                    shifted_camera.start_x:shifted_camera.end_x])
+                    shifted_camera.start_x:shifted_camera.end_x],
+                **kwargs
+            )
 
-    def set_pixel_array(self, pixel_array):
-        Camera.set_pixel_array(self, pixel_array)
+    def set_pixel_array(self, pixel_array, **kwargs):
+        Camera.set_pixel_array(self, pixel_array, **kwargs)
         for shifted_camera in self.shifted_cameras:
             shifted_camera.camera.set_pixel_array(
                 pixel_array[
                     shifted_camera.start_y:shifted_camera.end_y, 
-                    shifted_camera.start_x:shifted_camera.end_x])
+                    shifted_camera.start_x:shifted_camera.end_x],
+                **kwargs
+            )
 
     def init_background(self):
         Camera.init_background(self)
@@ -503,3 +699,5 @@ class SplitScreenCamera(MultiCamera):
             camera.reset()
 
         MultiCamera.__init__(self, (left_camera, (0, 0)), (right_camera, (0, half_width)))
+
+
