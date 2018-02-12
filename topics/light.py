@@ -32,6 +32,7 @@ AMBIENT_FULL = 0.5
 AMBIENT_DIMMED = 0.2
 SPOTLIGHT_FULL = 0.9
 SPOTLIGHT_DIMMED = 0.2
+LIGHTHOUSE_HEIGHT = 0.8
 
 LIGHT_COLOR = YELLOW
 DEGREES = TAU/360
@@ -53,20 +54,24 @@ class LightSource(VMobject):
     # a spotlight
     # and a shadow
     CONFIG = {
-        "source_point": ORIGIN,
+        "source_point": VectorizedPoint(location = ORIGIN, stroke_width = 0, fill_opacity = 0),
         "color": LIGHT_COLOR,
         "num_levels": 10,
         "radius": 5,
         "screen": None,
         "opacity_function": inverse_quadratic(1,2,1),
         "max_opacity_ambient": AMBIENT_FULL,
-        "max_opacity_spotlight": SPOTLIGHT_FULL
+        "max_opacity_spotlight": SPOTLIGHT_FULL,
+        "camera": None
     }
 
     def generate_points(self):
+
+        self.add(self.source_point)
+
         self.lighthouse = Lighthouse()
         self.ambient_light = AmbientLight(
-            source_point = self.source_point,
+            source_point = VectorizedPoint(location = self.get_source_point()),
             color = self.color,
             num_levels = self.num_levels,
             radius = self.radius,
@@ -75,23 +80,24 @@ class LightSource(VMobject):
         )
         if self.has_screen():
             self.spotlight = Spotlight(
-                source_point = self.source_point,
+                source_point = VectorizedPoint(location = self.get_source_point()),
                 color = self.color,
                 num_levels = self.num_levels,
                 radius = self.radius,
                 screen = self.screen,
                 opacity_function = self.opacity_function,
-                max_opacity = self.max_opacity_spotlight
+                max_opacity = self.max_opacity_spotlight,
+                camera = self.camera
             )
         else:
             self.spotlight = Spotlight()
 
         self.shadow = VMobject(fill_color = SHADOW_COLOR, fill_opacity = 1.0, stroke_color = BLACK)
-        self.lighthouse.next_to(self.source_point,DOWN,buff = 0)
-        self.ambient_light.move_source_to(self.source_point)
+        self.lighthouse.next_to(self.get_source_point(),DOWN,buff = 0)
+        self.ambient_light.move_source_to(self.get_source_point())
 
         if self.has_screen():
-            self.spotlight.move_source_to(self.source_point)
+            self.spotlight.move_source_to(self.get_source_point())
             self.update_shadow()
 
         self.add(self.ambient_light,self.spotlight,self.lighthouse, self.shadow)
@@ -113,29 +119,36 @@ class LightSource(VMobject):
         self.max_opacity_spotlight = new_opacity
         self.spotlight.dimming(new_opacity)
 
+    def set_camera(self,new_cam):
+        self.camera = new_cam
+        self.spotlight.camera = new_cam
+
+
     def set_screen(self, new_screen):
         if self.has_screen():
             self.spotlight.screen = new_screen
         else:
             # Note: See below
-            # index = self.submobjects.index(self.spotlight)
+            index = self.submobjects.index(self.spotlight)
+            camera = self.spotlight.camera
             self.remove(self.spotlight)
             self.spotlight = Spotlight(
-                source_point = self.source_point,
+                source_point = VectorizedPoint(location = self.get_source_point()),
                 color = self.color,
                 num_levels = self.num_levels,
                 radius = self.radius,
-                screen = new_screen
+                screen = new_screen,
+                camera = self.camera
             )
-            self.spotlight.move_source_to(self.source_point)
+            self.spotlight.move_source_to(self.get_source_point())
 
             # Note: This line will make spotlight show up at the end
             # of the submojects list, which can make it show up on
             # top of the shadow. To make it show up in the
             # same spot, you could try the following line, 
             # where "index" is what I defined above:
-            # self.submobjects.insert(index, self.spotlight)
-            self.add(self.spotlight)
+            self.submobjects.insert(index, self.spotlight)
+            #self.add(self.spotlight)
         
         # in any case
         self.screen = new_screen
@@ -145,13 +158,16 @@ class LightSource(VMobject):
 
     def move_source_to(self,point):
         apoint = np.array(point)
-        v = apoint - self.source_point
+        v = apoint - self.get_source_point()
         # Note: As discussed, things stand to behave better if source
         # point is a submobject, so that it automatically interpolates
         # during an animation, and other updates can be defined wrt 
         # that source point's location
-        self.source_point = apoint
-        self.lighthouse.next_to(apoint,DOWN,buff = 0)
+        self.source_point.set_location(apoint)
+        #self.lighthouse.next_to(apoint,DOWN,buff = 0)
+        #self.ambient_light.move_source_to(apoint)
+        self.lighthouse.shift(v)
+        #self.ambient_light.shift(v)
         self.ambient_light.move_source_to(apoint)
         if self.has_screen():
             self.spotlight.move_source_to(apoint)
@@ -167,19 +183,20 @@ class LightSource(VMobject):
         self.spotlight.update_sectors()
         self.update_shadow()
 
+    def get_source_point(self):
+        return self.source_point.get_location()
 
     def update_shadow(self):
 
-        point = self.source_point
+        point = self.get_source_point()
         projected_screen_points = []
         if not self.has_screen():
             return
         for point in self.screen.get_anchors():
             projected_screen_points.append(self.spotlight.project(point))
 
-        # print "projected", self.screen.get_anchors(), "onto", projected_screen_points
 
-        projected_source = project_along_vector(self.source_point,self.spotlight.projection_direction())
+        projected_source = project_along_vector(self.get_source_point(),self.spotlight.projection_direction())
 
         projected_point_cloud_3d = np.append(
             projected_screen_points,
@@ -197,7 +214,7 @@ class LightSource(VMobject):
         hull = []
 
         # we also need the projected source point
-        source_point_2d = np.dot(self.spotlight.project(self.source_point),back_rotation_matrix.T)[:2]
+        source_point_2d = np.dot(self.spotlight.project(self.get_source_point()),back_rotation_matrix.T)[:2]
         
         index = 0
         for point in point_cloud_2d[hull_2d.vertices]:
@@ -274,7 +291,7 @@ class SwitchOff(LaggedStart):
 class Lighthouse(SVGMobject):
     CONFIG = {
         "file_name" : "lighthouse",
-        "height" : 0.5
+        "height" : LIGHTHOUSE_HEIGHT
     }
 
     def move_to(self,point):
@@ -292,7 +309,7 @@ class AmbientLight(VMobject):
     # * the number of subdivisions (levels, annuli)
 
     CONFIG = {
-        "source_point" : ORIGIN,
+        "source_point": VectorizedPoint(location = ORIGIN, stroke_width = 0, fill_opacity = 0),
         "opacity_function" : lambda r : 1.0/(r+1.0)**2,
         "color" : LIGHT_COLOR,
         "max_opacity" : 1.0,
@@ -301,8 +318,6 @@ class AmbientLight(VMobject):
     }
 
     def generate_points(self):
-        self.source_point = np.array(self.source_point)
-
         # in theory, this method is only called once, right?
         # so removing submobs shd not be necessary
         # 
@@ -311,6 +326,8 @@ class AmbientLight(VMobject):
         # update functions to regenerate points here and there.
         for submob in self.submobjects:
             self.remove(submob)
+
+        self.add(self.source_point)
 
         # create annuli
         self.radius = float(self.radius)
@@ -323,17 +340,24 @@ class AmbientLight(VMobject):
                 color = self.color,
                 fill_opacity = alpha
             )
-            annulus.move_arc_center_to(self.source_point)
+            annulus.move_to(self.get_source_point())
             self.add(annulus)
 
 
 
     def move_source_to(self,point):
-        # Note: Best to rewrite in terms of VectorizedPoint source_point
-        v = np.array(point) - self.source_point
-        self.source_point = np.array(point)
-        self.shift(v)
+        #old_source_point = self.get_source_point()
+        #self.shift(point - old_source_point)
+        self.move_to(point)
+
         return self
+
+
+
+
+
+    def get_source_point(self):
+        return self.source_point.get_location()
 
 
 
@@ -350,10 +374,23 @@ class AmbientLight(VMobject):
             submob.set_fill(opacity = new_submob_alpha)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 class Spotlight(VMobject):
 
     CONFIG = {
-        "source_point" : ORIGIN,
+        "source_point": VectorizedPoint(location = ORIGIN, stroke_width = 0, fill_opacity = 0),
         "opacity_function" : lambda r : 1.0/(r/2+1.0)**2,
         "color" : LIGHT_COLOR,
         "max_opacity" : 1.0,
@@ -379,9 +416,16 @@ class Spotlight(VMobject):
         w = project_along_vector(point,v)
         return w
 
+
+    def get_source_point(self):
+        return self.source_point.get_location()
+
+
     def generate_points(self):
 
         self.submobjects = []
+
+        self.add(self.source_point)
 
         if self.screen != None:
             # look for the screen and create annular sectors
@@ -418,18 +462,19 @@ class Spotlight(VMobject):
         projected_RIGHT = self.project(RIGHT)
         omega = angle_between_vectors(rotated_RIGHT,projected_RIGHT)
         annular_sector.rotate(omega, axis = self.projection_direction())
-        annular_sector.move_arc_center_to(self.source_point)
+        annular_sector.move_arc_center_to(self.get_source_point())
 
         return annular_sector
 
     def viewing_angle_of_point(self,point):
         # as measured from the positive x-axis
         v1 = self.project(RIGHT)
-        v2 = self.project(np.array(point) - self.source_point)
+        v2 = self.project(np.array(point) - self.get_source_point())
         absolute_angle = angle_between_vectors(v1, v2)
         # determine the angle's sign depending on their plane's
         # choice of orientation. That choice is set by the camera
         # position, i. e. projection direction
+
         if np.dot(self.projection_direction(),np.cross(v1, v2)) > 0:
             return absolute_angle
         else:
@@ -474,7 +519,9 @@ class Spotlight(VMobject):
         return u
 
     def move_source_to(self,point):
-        self.source_point = np.array(point)
+        self.source_point.set_location(np.array(point))
+        #self.source_point.move_to(np.array(point))
+        #self.move_to(point)
         self.update_sectors()
         return self
 
@@ -485,9 +532,12 @@ class Spotlight(VMobject):
         for submob in self.submobject_family():
             if type(submob) == AnnularSector:
                 lower_angle, upper_angle = self.viewing_angles(self.screen)
-                dr = submob.outer_radius - submob.inner_radius
+                #dr = submob.outer_radius - submob.inner_radius
+                dr = self.radius / self.num_levels
                 new_submob = self.new_sector(submob.inner_radius,dr,lower_angle,upper_angle)
                 submob.points = new_submob.points
+                submob.set_fill(opacity = 10 * self.opacity_function(submob.outer_radius))
+                print "new opacity:", self.opacity_function(submob.outer_radius)
 
 
 

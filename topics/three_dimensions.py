@@ -40,22 +40,17 @@ class ThreeDCamera(CameraWithPerspective):
         self.rotation_mobject = VectorizedPoint()
         self.set_position(self.phi, self.theta, self.distance)
 
-    def get_color(self, method):
-        color = method()
-        vmobject = method.im_self
+    def modified_rgb(self, vmobject, rgb):
         if should_shade_in_3d(vmobject):
-            return Color(rgb = self.get_shaded_rgb(
-                color_to_rgb(color),
-                normal_vect = self.get_unit_normal_vect(vmobject)
-            ))
+            return self.get_shaded_rgb(rgb, self.get_unit_normal_vect(vmobject))
         else:
             return color
 
-    def get_stroke_color(self, vmobject):
-        return self.get_color(vmobject.get_stroke_color)
+    def get_stroke_rgb(self, vmobject):
+        return self.modified_rgb(vmobject, vmobject.get_stroke_rgb())
 
-    def get_fill_color(self, vmobject):
-        return self.get_color(vmobject.get_fill_color)
+    def get_fill_rgb(self, vmobject):
+        return self.modified_rgb(vmobject, vmobject.get_fill_rgb())
 
     def get_shaded_rgb(self, rgb, normal_vect):
         brightness = np.dot(normal_vect, self.unit_sun_vect)**2

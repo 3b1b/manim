@@ -17,6 +17,7 @@ class VMobject(Mobject):
         "propagate_style_to_family" : False,
         "pre_function_handle_to_anchor_scale_factor" : 0.01,
         "make_smooth_after_applying_functions" : False,
+        "background_image_file" : None,
     }
 
     def get_group_class(self):
@@ -120,6 +121,9 @@ class VMobject(Mobject):
             )
         return self
 
+    def get_fill_rgb(self):
+        return self.fill_rgb
+
     def get_fill_color(self):
         try:
             self.fill_rgb = np.clip(self.fill_rgb, 0.0, 1.0)
@@ -129,6 +133,9 @@ class VMobject(Mobject):
 
     def get_fill_opacity(self):
         return np.clip(self.fill_opacity, 0, 1)
+
+    def get_stroke_rgb(self):
+        return self.stroke_rgb
 
     def get_stroke_color(self):
         try:
@@ -144,6 +151,16 @@ class VMobject(Mobject):
         if self.fill_opacity == 0:
             return self.get_stroke_color()
         return self.get_fill_color()
+
+    def color_using_background_image(self, background_image_file):
+        self.background_image_file = background_image_file
+        self.highlight(WHITE)
+        for submob in self.submobjects:
+            submob.color_using_background_image(background_image_file)
+        return self
+
+    def get_background_image_file(self):
+        return self.background_image_file
 
     ## Drawing
     def start_at(self, point):
@@ -458,46 +475,10 @@ class VectorizedPoint(VMobject):
     def get_height(self):
         return self.artificial_height
 
-class BackgroundColoredVMobject(VMobject):
-    CONFIG = {
-        # Can be set to None, using set_background_array to initialize instead
-        "background_image_file" : "color_background",
-        "stroke_color" : WHITE,
-        "fill_color" : WHITE,
-    }
-    def __init__(self, vmobject, **kwargs):
-        # Note: At the moment, this does nothing to mimic
-        # the full family of the vmobject passed in.
-        VMobject.__init__(self, **kwargs)
+    def get_location(self):
+        return self.get_anchors()[0]
 
-        #Match properties of vmobject
-        self.points = np.array(vmobject.points)
-        self.set_stroke(WHITE, vmobject.get_stroke_width())
-        self.set_fill(WHITE, vmobject.get_fill_opacity())
-        for submob in vmobject.submobjects:
-            self.add(BackgroundColoredVMobject(submob, **kwargs))
-
-        if self.background_image_file != None:
-            #Initialize background array
-            path = get_full_raster_image_path(self.background_image_file)
-            image = Image.open(path)
-            self.set_background_array(np.array(image))
-
-    def set_background_array(self, background_array):
-        self.background_array = background_array
-
-    def resize_background_array(self, new_width, new_height, mode = "RGBA"):
-        image = Image.fromarray(self.background_array, mode = mode)
-        resized_image = image.resize((new_width, new_height))
-        self.background_array = np.array(resized_image)
-
-    def resize_background_array_to_match(self, pixel_array):
-        height, width = pixel_array.shape[:2]
-        mode = "RGBA" if pixel_array.shape[2] == 4 else "RGB"
-        self.resize_background_array(width, height, mode)
-
-
-
-
+    def set_location(self,new_loc):
+        self.set_points(np.array([new_loc]))
 
 

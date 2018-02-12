@@ -58,7 +58,7 @@ inverse_quadratic = lambda maxint,scale,cutoff: inverse_power_law(maxint,scale,c
 class AngleUpdater(ContinualAnimation):
     def __init__(self, angle_arc, spotlight, **kwargs):
         self.angle_arc = angle_arc
-        self.source_point = angle_arc.get_arc_center()
+
         self.spotlight = spotlight
         ContinualAnimation.__init__(self, self.angle_arc, **kwargs)
 
@@ -66,9 +66,9 @@ class AngleUpdater(ContinualAnimation):
         new_arc = self.angle_arc.copy().set_bound_angles(
             start = self.spotlight.start_angle(),
             stop = self.spotlight.stop_angle()
-         )
+        )
         new_arc.generate_points()
-        new_arc.move_arc_center_to(self.source_point)
+        new_arc.move_arc_center_to(self.spotlight.get_source_point())
         self.angle_arc.points = new_arc.points
         self.angle_arc.add_tip(tip_length = ARC_TIP_LENGTH,
             at_start = True, at_end = True)
@@ -83,7 +83,9 @@ class LightIndicator(Mobject):
         "intensity": 0,
         "opacity_for_unit_intensity": 1,
         "precision": 3,
-        "show_reading": True
+        "show_reading": True,
+        "measurement_point": ORIGIN,
+        "light_source": None
     }
 
     def generate_points(self):
@@ -105,6 +107,25 @@ class LightIndicator(Mobject):
         self.foreground.set_fill(opacity=new_opacity)
         ChangeDecimalToValue(self.reading, new_int).update(1)
         return self
+
+    def get_measurement_point(self):
+        if self.measurement_point != None:
+            return self.measurement_point
+        else:
+            return self.get_center()
+
+
+    def measured_intensity(self):
+        distance = np.linalg.norm(self.get_measurement_point() - 
+            self.light_source.get_source_point())
+        intensity = self.light_source.opacity_function(distance) / self.opacity_for_unit_intensity
+        return intensity
+
+    def continual_update(self):
+        if self.light_source == None:
+            print "Indicator cannot update, reason: no light source found"
+        self.set_intensity(self.measured_intensity())
+
         
 
 
@@ -121,6 +142,12 @@ class UpdateLightIndicator(AnimationGroup):
         changing_decimal = ChangeDecimalToValue(indicator.reading, intensity)
         AnimationGroup.__init__(self, changing_decimal, change_opacity, **kwargs)
         self.mobject = indicator
+
+
+class ContinualLightIndicatorUpdate(ContinualAnimation):
+
+    def update_mobject(self,dt):
+        self.mobject.continual_update()
 
 
 
@@ -581,7 +608,7 @@ class SingleLighthouseScene(PiCreatureScene):
 
         self.setup_elements()
         self.setup_angle() # spotlight and angle msmt change when screen rotates
-        #self.rotate_screen()
+        self.rotate_screen()
         self.morph_lighthouse_into_sun()
 
 
@@ -643,8 +670,8 @@ class SingleLighthouseScene(PiCreatureScene):
         self.light_source.set_max_opacity_spotlight(0.001)
         self.add(self.light_source.spotlight)
 
-        updater = ScreenTracker(self.light_source)
-        self.add(updater)
+        self.screen_tracker = ScreenTracker(self.light_source)
+        self.add(self.screen_tracker)
 
         self.wait()
 
@@ -679,7 +706,7 @@ class SingleLighthouseScene(PiCreatureScene):
         self.angle_arc = Arc(radius = 5, start_angle = self.light_source.spotlight.start_angle(),
             angle = self.light_source.spotlight.opening_angle(), tip_length = ARC_TIP_LENGTH)
         #angle_arc.add_tip(at_start = True, at_end = True)
-        self.angle_arc.move_arc_center_to(self.light_source.source_point)
+        self.angle_arc.move_arc_center_to(self.light_source.get_source_point())
         
 
         # angle msmt (decimal number)
@@ -727,7 +754,7 @@ class SingleLighthouseScene(PiCreatureScene):
 
 
 
-        sun_position = ORIGIN #[-100,0,0]
+        sun_position = [-100,0,0]
 
 
         self.play(
@@ -737,16 +764,14 @@ class SingleLighthouseScene(PiCreatureScene):
 
         self.sun = self.light_source.deepcopy()
 
-        #self.sun.ambient_light.opacity_function = inverse_quadratic(1,2,1)
         #self.sun.num_levels = NUM_LEVELS,
         #self.sun.set_radius(150)
         #self.sun.set_max_opacity_ambient(AMBIENT_FULL)
         
 
 
-
-#        self.sun.spotlight.change_opacity_function(lambda r: 0.5)
- #       self.sun.set_radius(150)
+        self.sun.spotlight.change_opacity_function(lambda r: 0.5)
+        self.sun.set_radius(150)
         self.sun.move_source_to(sun_position)
 
  #       self.sun.update()
@@ -755,10 +780,11 @@ class SingleLighthouseScene(PiCreatureScene):
         # temporarily remove the screen tracker while we move the source
         #self.remove(self.screen_tracker)
 
-        print self.sun.spotlight.source_point
+        #print self.sun.spotlight.source_point
 
         self.play(
-             self.light_source.spotlight.move_source_to,sun_position,
+             #self.light_source.spotlight.move_source_to,sun_position,
+             Transform(self.light_source,self.sun)
         )
 
         #self.add(ScreenTracker(self.sun))
@@ -921,7 +947,7 @@ class ScreenShapingScene(ThreeDScene):
         self.right_shift_screen_while_showing_light_indicator_and_distance_arrow()
         self.left_shift_again()
         
-        self.morph_into_3d()
+        #self.morph_into_3d()
 
 
     def setup_elements(self):
@@ -952,16 +978,16 @@ class ScreenShapingScene(ThreeDScene):
         self.lighthouse = self.light_source.lighthouse
 
         screen_tracker = ScreenTracker(self.light_source)
-        self.add(screen_tracker)
+        self.add(screen_tracker,self.light_source.shadow)
 
-        self.add_foreground_mobject(self.light_source.shadow)
+        #self.add_foreground_mobject(self.light_source.shadow)
 
         # Morty
         self.morty = Mortimer().scale(0.3).next_to(self.screen, RIGHT, buff = 0.5)
 
         # Add everything to the scene
         self.add(self.ambient_light, self.lighthouse)
-        self.add_foreground_mobject(self.morty)
+        #self.add_foreground_mobject(self.morty)
         
         self.wait()
         self.play(FadeIn(self.screen))
@@ -971,13 +997,12 @@ class ScreenShapingScene(ThreeDScene):
 
         dimmed_ambient_light = self.ambient_light.copy()
         dimmed_ambient_light.dimming(AMBIENT_DIMMED)
-        self.light_source.set_max_opacity_spotlight(0.001)
-
+        #self.light_source.set_max_opacity_spotlight(0.001)
         self.play(
             self.light_source.set_max_opacity_spotlight,1.0, # this hides Morty for a moment, why?
+            Transform(self.ambient_light,dimmed_ambient_light),
             FadeIn(self.light_source.shadow),
-            Transform(self.ambient_light,dimmed_ambient_light)
-        )
+            )
 
         self.wait()
 
@@ -1180,9 +1205,6 @@ class ScreenShapingScene(ThreeDScene):
         dphi = phi1 - phi0
         dtheta = theta1 - theta0
 
-        print "moving camera from (", phi0/DEGREES, ", ", theta0/DEGREES, ") to (", phi1/DEGREES, ", ", theta1/DEGREES, ")" 
-
-
         camera_target_point = target_point # self.camera.get_spherical_coords(45 * DEGREES, -60 * DEGREES)
         projection_direction = self.camera.spherical_coords_to_point(phi1,theta1, 1)
 
@@ -1212,7 +1234,7 @@ class BackToEulerSumScene(PiCreatureScene):
 
    
     def construct(self):
-        #self.remove(self.get_primary_pi_creature())
+        self.remove(self.get_primary_pi_creature())
 
         NUM_CONES = 7
         NUM_VISIBLE_CONES = 6
@@ -1233,7 +1255,7 @@ class BackToEulerSumScene(PiCreatureScene):
         )
 
         self.number_line.label_direction = DOWN
-        self.number_line.shift(3*UP)
+        #self.number_line.shift(3*UP)
 
         self.number_line_labels = self.number_line.get_number_mobjects()
         self.add(self.number_line,self.number_line_labels)
@@ -1257,7 +1279,7 @@ class BackToEulerSumScene(PiCreatureScene):
         bubble = ThoughtBubble(direction = RIGHT,
                             width = 4, height = 3,
                             file_name = "Bubbles_thought.svg")
-        bubble.next_to(randy,LEFT)
+        bubble.next_to(randy,LEFT+UP)
         bubble.set_fill(color = BLACK, opacity = 1)
         
         self.play(
@@ -1289,171 +1311,137 @@ class BackToEulerSumScene(PiCreatureScene):
         v = point - self.number_line.number_to_point(0)
         light_source = LightSource()
         light_source.move_source_to(point)
-        light_source.ambient_light.move_source_to(point)
-        light_source.lighthouse.move_to(point)
+        #light_source.ambient_light.move_source_to(point)
+        #light_source.lighthouse.move_to(point)
 
         self.play(FadeIn(light_source.lighthouse))
         self.play(SwitchOn(light_source.ambient_light))
 
 
-        # create an indicator and move a copy of it into the thought bubble
+        # create an indicator that will move along the number line
         indicator = LightIndicator(color = LIGHT_COLOR,
                 radius = INDICATOR_RADIUS,
-                opacity_for_unit_intensity = 0.2, #OPACITY_FOR_UNIT_INTENSITY,
+                opacity_for_unit_intensity = OPACITY_FOR_UNIT_INTENSITY,
                 show_reading = False
-            )
+        )
         indicator_reading = euler_sum[0]
         indicator_reading.scale_to_fit_height(0.5 * indicator.get_height())
         indicator_reading.move_to(indicator.get_center())
         indicator.add(indicator_reading)
+        indicator.tex_reading = indicator_reading
+        # the TeX reading is too bright at full intensity
+        indicator.tex_reading.set_fill(color = BLACK)
         indicator.foreground.set_fill(None,opacities[0])
+
 
         indicator.move_to(point)
         indicator.set_intensity(intensities[0])
 
         self.play(FadeIn(indicator))
-        indicator_copy = indicator.deepcopy()
-        self.add(indicator_copy)
-        self.play(indicator_copy.move_to, bubble)
-
-        moving_light_source = light_source.deepcopy()
-
-
-        ls = []
-        ls.append(moving_light_source)
+        self.add_foreground_mobject(indicator)
         
+        collection_point = np.array([-6.,2.,0.])
+        left_shift = 0.2*LEFT
+        collected_indicators = Mobject()
 
-        for i in range(2,NUM_VISIBLE_CONES + 1):
+
+        for i in range(2, NUM_VISIBLE_CONES + 1):
 
             previous_point = self.number_line.number_to_point(i - 1)
             point = self.number_line.number_to_point(i)
-            
-            indicator_copy = indicator.deepcopy()
-            indicator_copy.move_to(previous_point)
-            self.add(indicator_copy)
 
+
+            v = point - previous_point
+            #print v
+            # Create and position the target indicator (next on number line).
             indicator_target = indicator.deepcopy()
-            indicator_target.move_to(point)
+            indicator_target.shift(v)
 
-            ls[-1].set_max_opacity_ambient(0.0001)
-            self.add(ls[-1].ambient_light)
-            ls.append(ls[-1].deepcopy())
 
-            ls[-1].move_source_to(point)
-            ls[-1].set_max_opacity_ambient(0.5)
-
-            bubble_indicator = indicator_copy.deepcopy()
+            # Here we make a copy that will move into the thought bubble.
+            bubble_indicator = indicator.deepcopy()
+            # And its target
             bubble_indicator_target = bubble_indicator.deepcopy()
-            bubble_indicator_target.set_intensity(intensities[i-1])
-            bubble_indicator_target.reading = euler_sum[-2+2*i]
-            bubble_indicator_target.reading.scale_to_fit_height(0.8*indicator.get_height())
-            bubble_indicator_target.move_to(bubble)
+            bubble_indicator_target.set_intensity(intensities[i - 2])
 
-            self.add(bubble_indicator)
+            # give the target the appropriate reading
+            euler_sum[2*i-4].move_to(bubble_indicator_target)
+            bubble_indicator_target.remove(bubble_indicator_target.tex_reading)
+            bubble_indicator_target.tex_reading = euler_sum[2*i-4].copy()
+            bubble_indicator_target.add(bubble_indicator_target.tex_reading)
+            # center it in the indicator
+
+            if bubble_indicator_target.tex_reading.get_tex_string() != "1":
+                bubble_indicator_target.tex_reading.scale_to_fit_height(0.8*indicator.get_height())
+            # the target is less bright, possibly switch to a white text color
+            if bubble_indicator_target.intensity < 0.7:
+                bubble_indicator.tex_reading.set_fill(color = WHITE)
+
+            # position the target in the thought bubble
+            bubble_indicator_target.move_to(collection_point)
+
+
+            self.add_foreground_mobject(bubble_indicator)
+
+
+            self.wait()
 
             self.play(
-                 Transform(bubble_indicator,bubble_indicator_target)
+                 Transform(bubble_indicator,bubble_indicator_target),
+                 collected_indicators.shift,left_shift,
             )
 
-            self.play(
-                 Transform(ls[-2], ls[-1]),
-                 Transform(indicator_copy,indicator_target),
+            collected_indicators.add(bubble_indicator)
 
+            new_light = light_source.deepcopy()
+            w = new_light.get_source_point()
+            new_light.move_source_to(w + (i-2)*v)
+            w2 = new_light.get_source_point()
+            
+            self.add(new_light.lighthouse)
+            self.play(
+                  Transform(indicator,indicator_target),
+                  new_light.lighthouse.shift,v,
+            )
+            new_light.move_source_to(w + (i-1)*v)
+            new_light.lighthouse.move_to(w + (i-1)*v)
+
+            self.play(SwitchOn(new_light.ambient_light),
             )
 
 
             
 
+        # quickly switch on off-screen light cones
+        for i in range(NUM_VISIBLE_CONES,NUM_CONES):
+            indicator_start_time = 0.5 * (i+1) * FAST_SWITCH_ON_RUN_TIME/light_source.ambient_light.radius * self.number_line.unit_size
+            indicator_stop_time = indicator_start_time + FAST_INDICATOR_UPDATE_TIME
+            indicator_rate_func = squish_rate_func(#smooth, 0.8, 0.9)
+                smooth,indicator_start_time,indicator_stop_time)
+            ls = LightSource()
+            point = point = self.number_line.number_to_point(i)
+            ls.move_source_to(point)
+            self.play(
+                SwitchOn(ls.ambient_light, run_time = FAST_SWITCH_ON_RUN_TIME),
+            )
 
-        # switch on lights off-screen
-            # while writing an ellipsis in the series
-            # and fading out the stack of indicators
-            # and fading in pi^2/6 instead
-            # move a copy of pi^2/6 down to the series
-            # ans fade in an equals sign
+        # and morph indicator stack into limit value
 
+        sum_indicator = LightIndicator(color = LIGHT_COLOR,
+                radius = INDICATOR_RADIUS,
+                opacity_for_unit_intensity = OPACITY_FOR_UNIT_INTENSITY,
+                show_reading = False
+            )
+        sum_indicator.set_intensity(intensities[0] * np.pi**2/6)
+        sum_indicator_reading = TexMobject("{\pi^2 \over 6}")
+        sum_indicator_reading.set_fill(color = BLACK)
+        sum_indicator_reading.scale_to_fit_height(0.8 * sum_indicator.get_height())
+        sum_indicator.add(sum_indicator_reading)
+        sum_indicator.move_to(collection_point)
 
-
-
-
-        # for i in range(1,NUM_VISIBLE_CONES+1):
-
-        #     # create light indicators
-        #     # but they contain fractions!
-        #     indicator = LightIndicator(color = LIGHT_COLOR,
-        #         radius = INDICATOR_RADIUS,
-        #         opacity_for_unit_intensity = OPACITY_FOR_UNIT_INTENSITY,
-        #         show_reading = False
-        #     )
-        #     indicator.set_intensity(intensities[i-1])
-        #     indicator_reading = euler_sum[-2+2*i]
-        #     indicator_reading.scale_to_fit_height(0.8*indicator.get_height())
-        #     indicator_reading.move_to(indicator.get_center())
-        #     indicator.add(indicator_reading)
-        #     indicator.foreground.set_fill(None,opacities[i-1])
-
-
-        #     if i == 1:
-        #         indicator.next_to(randy,DOWN,buff = 5)
-        #         indicator_reading.scale_to_fit_height(0.4*indicator.get_height())
-        #         # otherwise we get a huge 1
-        #     else:
-        #         indicator.next_to(light_indicators[i-2],DOWN, buff = 0.2)
-
-        #     light_indicators.append(indicator)
-        #     indicators_as_mob.add(indicator)
-
-
-        # bubble.add_content(indicators_as_mob)
-        # indicators_as_mob.shift(DOWN+0.5*LEFT)
-
-
-        # for lh in lighthouses:
-        #     self.add_foreground_mobject(lh)
-
-
-        # # slowly switch on visible light cones and increment indicator
-        # for (i,ambient_light) in zip(range(NUM_VISIBLE_CONES),ambient_lights[:NUM_VISIBLE_CONES]):
-        #     indicator_start_time = 0.4 * (i+1) * SWITCH_ON_RUN_TIME/ambient_light.radius * self.number_line.unit_size
-        #     indicator_stop_time = indicator_start_time + INDICATOR_UPDATE_TIME
-        #     indicator_rate_func = squish_rate_func(
-        #         smooth,indicator_start_time,indicator_stop_time)
-        #     self.play(
-        #         SwitchOn(ambient_light),
-        #         FadeIn(light_indicators[i])
-        #     )
-
-        # # quickly switch on off-screen light cones and increment indicator
-        # for (i,ambient_light) in zip(range(NUM_VISIBLE_CONES,NUM_CONES),ambient_lights[NUM_VISIBLE_CONES:NUM_CONES]):
-        #     indicator_start_time = 0.5 * (i+1) * FAST_SWITCH_ON_RUN_TIME/ambient_light.radius * self.number_line.unit_size
-        #     indicator_stop_time = indicator_start_time + FAST_INDICATOR_UPDATE_TIME
-        #     indicator_rate_func = squish_rate_func(#smooth, 0.8, 0.9)
-        #         smooth,indicator_start_time,indicator_stop_time)
-        #     self.play(
-        #         SwitchOn(ambient_light, run_time = FAST_SWITCH_ON_RUN_TIME),
-        #     )
-
-
-        # # show limit value in light indicator and an equals sign
-        # sum_indicator = LightIndicator(color = LIGHT_COLOR,
-        #         radius = INDICATOR_RADIUS,
-        #         opacity_for_unit_intensity = OPACITY_FOR_UNIT_INTENSITY,
-        #         show_reading = False
-        #     )
-        # sum_indicator.set_intensity(intensities[0] * np.pi**2/6)
-        # sum_indicator_reading = TexMobject("{\pi^2 \over 6}")
-        # sum_indicator_reading.scale_to_fit_height(0.8 * sum_indicator.get_height())
-        # sum_indicator.add(sum_indicator_reading)
-
-        # brace = Brace(indicators_as_mob, direction = RIGHT, buff = 0.5)
-        # brace.shift(2*RIGHT)
-        # sum_indicator.next_to(brace,RIGHT)
-
-
-        # self.play(
-        #     ShowCreation(brace),
-        #     ShowCreation(sum_indicator), # DrawBorderThenFill
-        # )
+        self.play(
+            Transform(collected_indicators,sum_indicator)
+        )
 
             
 
@@ -1471,12 +1459,14 @@ class TwoLightSourcesScene(PiCreatureScene):
         INDICATOR_RADIUS = 0.6
         OPACITY_FOR_UNIT_INTENSITY = 0.5
 
-        A = np.array([5,-3,0])
-        B = np.array([-5,3,0])
-        C = np.array([-5,-3,0])
+        A = np.array([5.,-3.,0.])
+        B = np.array([-5.,3.,0.])
+        C = np.array([-5.,-3.,0.])
 
         morty = self.get_primary_pi_creature()
-        morty.scale(0.3).flip().move_to(C)
+        morty.scale(0.3).flip()
+        right_pupil = morty.pupils[1]
+        morty.next_to(C, LEFT, buff = 0, submobject_to_align = right_pupil)
 
         horizontal = VMobject(stroke_width = 1)
         horizontal.set_points_as_corners([C,A])
@@ -1501,54 +1491,164 @@ class TwoLightSourcesScene(PiCreatureScene):
             Write(indicator)
         )
 
-        ambient_light1 = AmbientLight(max_opacity = MAX_OPACITY)
-        ambient_light1.move_source_to(A)
-        ambient_light2 = AmbientLight(max_opacity = MAX_OPACITY)
-        ambient_light2.move_source_to(B)
-        lighthouse1 = Lighthouse()
-        lighthouse1.next_to(A,DOWN,buff = 0)
-        lighthouse2 = Lighthouse()
-        lighthouse2.next_to(B,DOWN,buff = 0)
+
+        ls1 = LightSource(radius = 20, num_levels = 50)
+        ls2 = ls1.deepcopy()
+        #print "==="
+        #print ls1.get_source_point()
+        ls1.move_source_to(A)
+        #print ls1.get_source_point()
+        #print "==="
+        #print ls2.get_source_point()
+        ls2.move_source_to(B)
+        #print ls2.get_source_point()
 
         self.play(
-            FadeIn(lighthouse1),
-            FadeIn(lighthouse2),
-            SwitchOn(ambient_light1),
-            SwitchOn(ambient_light2)
+            FadeIn(ls1.lighthouse),
+            FadeIn(ls2.lighthouse),
+            SwitchOn(ls1.ambient_light),
+            SwitchOn(ls2.ambient_light)
         )
 
+        distance1 = np.linalg.norm(C - ls1.get_source_point())
+        intensity = ls1.ambient_light.opacity_function(distance1) / indicator.opacity_for_unit_intensity
+        distance2 = np.linalg.norm(C - ls2.get_source_point())
+        intensity += ls2.ambient_light.opacity_function(distance2) / indicator.opacity_for_unit_intensity
+
         self.play(
-            UpdateLightIndicator(indicator,1.5)
+            UpdateLightIndicator(indicator,intensity)
         )
 
         self.wait()
 
+        ls3 = ls1.deepcopy()
+        ls3.move_to(np.array([6,3.5,0]))
+
         new_indicator = indicator.copy()
+        new_indicator.light_source = ls3
+        new_indicator.measurement_point = C
         self.add(new_indicator)
         self.play(
             indicator.shift, 2 * UP
         )
 
-        ambient_light3 = AmbientLight(max_opacity = MAX_OPACITY)
-        lighthouse3 = Lighthouse()
-        lighthouse3.next_to(ambient_light3,DOWN,buff = 0)
-        ambient_light3.add(lighthouse3)
-        #moving_light.move_to(np.array([6,3.5,0]))
+
+
+        #intensity = intensity_for_light_source(ls3)
+
 
         self.play(
-            FadeOut(ambient_light1),
-            FadeOut(lighthouse1),
-            FadeOut(ambient_light2),
-            FadeOut(lighthouse2),
-
-            FadeIn(ambient_light3),
+            SwitchOff(ls1.ambient_light),
+            #FadeOut(ls1.lighthouse),
+            SwitchOff(ls2.ambient_light),
+            #FadeOut(ls2.lighthouse),
             UpdateLightIndicator(new_indicator,0.0)
         )
 
-        self.wait()
+        # create a *continual* animation for the replacement source
+        updater = ContinualLightIndicatorUpdate(new_indicator)
+        self.add(updater)
+
         self.play(
-            ambient_light3.shift,UP+RIGHT
+            SwitchOn(ls3.ambient_light),
+            FadeIn(ls3.lighthouse),
+            
         )
+
+        self.wait()
+
+        # move the light source around
+        # TODO: moving along a path arc
+
+        location = np.array([-3,-2.,0.])
+        self.play(ls3.move_source_to,location)
+        location = np.array([6.,1.,0.])
+        self.play(ls3.move_source_to,location)
+        location = np.array([5.,2.,0.])
+        self.play(ls3.move_source_to,location)
+        closer_location = interpolate(location, C, 0.5)
+        self.play(ls3.move_source_to,closer_location)
+        self.play(ls3.move_source_to,location)
+
+        # maybe move in a circle around C using a loop?
+
+        # find the coords of the altitude point H
+        # as the solution of a certain LSE
+        xA = A[0]
+        yA = A[1]
+        xB = B[0]
+        yB = B[1]
+        xC = C[0]
+        yC = C[1]
+        matrix = np.array([[yA - yB, xB - xA], [xA - xB, yA - yB]]) # sic
+        vector = np.array([xB * yA - xA * yB, xC * (xA - xB) + yC * (yA - yB)])
+        H2 = np.linalg.solve(matrix,vector)
+        H = np.append(H2, 0.)
+
+        self.play(ls3.move_source_to,H)
+
+
+
+        # draw lines to complete the geometric picture
+        # and label the lengths
+
+        line_a = VMobject()
+        line_a.set_points_as_corners([B,C])
+        line_b = VMobject()
+        line_b.set_points_as_corners([A,C])
+        line_c = VMobject()
+        line_c.set_points_as_corners([A,B])
+        line_h = VMobject()
+        line_h.set_points_as_corners([H,C])
+
+        label_a = TexMobject("a")
+        label_a.next_to(line_a, LEFT, buff = 0.5)
+        label_b = TexMobject("b")
+        label_b.next_to(line_b, DOWN, buff = 0.5)
+        label_h = TexMobject("h")
+        label_h.next_to(line_h.get_center(), RIGHT, buff = 0.5)
+
+        self.play(
+            ShowCreation(line_a),
+            Write(label_a)
+        )
+
+        self.play(
+            ShowCreation(line_b),
+            Write(label_b)
+        )
+
+        self.play(
+            ShowCreation(line_c),
+        )
+
+        self.play(
+            ShowCreation(line_h),
+            Write(label_h)
+        )
+
+
+        # state the IPT
+        theorem_location = np.array([3.,2.,0.])
+        theorem = TexMobject("{1\over a^2} + {1\over b^2} = {1\over h^2}")
+        theorem_name = TextMobject("Inverse Pythagorean Theorem")
+        buffer = 1.2
+        theorem_box = Rectangle(width = buffer*theorem.get_width(),
+            height = buffer*theorem.get_height())
+
+        theorem.move_to(theorem_location)
+        theorem_box.move_to(theorem_location)
+        theorem_name.next_to(theorem_box,UP)
+
+        self.play(
+            Write(theorem),
+        )
+
+        self.play(
+            ShowCreation(theorem_box),
+            Write(theorem_name),
+        )
+
 
 
 

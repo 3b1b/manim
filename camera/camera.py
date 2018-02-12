@@ -8,7 +8,7 @@ import aggdraw
 
 from helpers import *
 from mobject import Mobject, PMobject, VMobject, \
-    ImageMobject, Group, BackgroundColoredVMobject
+    ImageMobject, Group
 
 class Camera(object):
     CONFIG = {
@@ -31,7 +31,11 @@ class Camera(object):
         "image_mode" : "RGBA",
         "n_rgb_coords" : 4,
         "background_alpha" : 0, #Out of color_max_val
-        "pixel_array_dtype" : 'uint8'
+        "pixel_array_dtype" : 'uint8',
+        "use_z_coordinate_for_display_order" : False,
+        # z_buff_func is only used if the flag above is set to True.
+        # round z coordinate to nearest hundredth when comparring
+        "z_buff_func" : lambda m : np.round(m.get_center()[2], 2),
     }
 
     def __init__(self, background = None, **kwargs):
@@ -94,7 +98,12 @@ class Camera(object):
         return retval
 
     def set_pixel_array(self, pixel_array, convert_from_floats = False):
-        self.pixel_array = self.convert_pixel_array(pixel_array, convert_from_floats)
+        converted_array = self.convert_pixel_array(pixel_array, convert_from_floats)
+        if not hasattr(self, "pixel_array"): #TODO: And the shapes match?
+            self.pixel_array = converted_array
+        else:
+            #Set in place
+            self.pixel_array[:,:,:] = converted_array[:,:,:]
 
     def set_background(self, pixel_array, convert_from_floats = False):
         self.background = self.convert_pixel_array(pixel_array, convert_from_floats)
@@ -141,8 +150,6 @@ class Camera(object):
         self, mobjects, 
         include_submobjects = True,
         excluded_mobjects = None,
-        #Round z coordinate to nearest hundredth when comparring
-        z_buff_func = lambda m : np.round(m.get_center()[2], 2)
         ):
         if include_submobjects:
             mobjects = self.extract_mobject_family_members(
@@ -154,10 +161,16 @@ class Camera(object):
                 )
                 mobjects = list_difference_update(mobjects, all_excluded)
 
-        # Should perhaps think about what happens here when include_submobjects is False,
-        # (for now, the onus is then on the caller to ensure this is handled correctly by
-        # passing us an appropriately pre-flattened list of mobjects if need be)
-        return sorted(mobjects, lambda a, b: cmp(z_buff_func(a), z_buff_func(b)))
+        if self.use_z_coordinate_for_display_order:
+            # Should perhaps think about what happens here when include_submobjects is False,
+            # (for now, the onus is then on the caller to ensure this is handled correctly by
+            # passing us an appropriately pre-flattened list of mobjects if need be)
+            return sorted(
+                mobjects,
+                lambda a, b: cmp(self.z_buff_func(a), self.z_buff_func(b))
+            )
+        else:
+            return mobjects
 
     def capture_mobject(self, mobject, **kwargs):
         return self.capture_mobjects([mobject], **kwargs)
@@ -166,15 +179,13 @@ class Camera(object):
         mobjects = self.get_mobjects_to_display(mobjects, **kwargs)
         vmobjects = []
         for mobject in mobjects:
-            if isinstance(mobject, VMobject) and not isinstance(mobject, BackgroundColoredVMobject):
-                vmobjects.append(mobject)
+            if isinstance(mobject, VMobject):
+                 vmobjects.append(mobject)
             elif len(vmobjects) > 0:
                 self.display_multiple_vectorized_mobjects(vmobjects)
                 vmobjects = []
                 
-            if isinstance(mobject, BackgroundColoredVMobject):
-                self.display_background_colored_vmobject(mobject)
-            elif isinstance(mobject, PMobject):
+            if isinstance(mobject, PMobject):
                 self.display_point_cloud(
                     mobject.points, mobject.rgbas, 
                     self.adjusted_thickness(mobject.stroke_width)
@@ -190,37 +201,65 @@ class Camera(object):
             #TODO, more?  Call out if it's unknown?
         self.display_multiple_vectorized_mobjects(vmobjects)
 
+    ## Methods associated with svg rendering
+
+    def get_aggdraw_canvas(self):
+        if not hasattr(self, "canvas"):
+            self.reset_aggdraw_canvas()
+        return self.canvas
+
+    def reset_aggdraw_canvas(self):
+        image = Image.fromarray(self.pixel_array, mode = self.image_mode)
+        self.canvas = aggdraw.Draw(image)
+
     def display_multiple_vectorized_mobjects(self, vmobjects):
         if len(vmobjects) == 0:
             return
-        #More efficient to bundle together in one "canvas"
-        image = Image.fromarray(self.pixel_array, mode = self.image_mode)
-        canvas = aggdraw.Draw(image)
+        batches = batch_by_property(
+            vmobjects, 
+            lambda vm : vm.get_background_image_file()
+        )
+        for batch in batches:
+            if batch[0].get_background_image_file():
+                self.display_multiple_background_colored_vmobject(batch)
+            else:
+                self.display_multiple_non_background_colored_vmobjects(batch)
+
+    def display_multiple_non_background_colored_vmobjects(self, vmobjects):
+        self.reset_aggdraw_canvas()
+        canvas = self.get_aggdraw_canvas()
         for vmobject in vmobjects:
             self.display_vectorized(vmobject, canvas)
         canvas.flush()
 
-        self.pixel_array[:,:] = image
-
-    def display_vectorized(self, vmobject, canvas):
+    def display_vectorized(self, vmobject, canvas = None):
         if vmobject.is_subpath:
             #Subpath vectorized mobjects are taken care
             #of by their parent
             return
+        canvas = canvas or self.get_aggdraw_canvas()
         pen, fill = self.get_pen_and_fill(vmobject)
         pathstring = self.get_pathstring(vmobject)
         symbol = aggdraw.Symbol(pathstring)
         canvas.symbol((0, 0), symbol, pen, fill)
 
     def get_pen_and_fill(self, vmobject):
-        pen = aggdraw.Pen(
-            self.color_to_hex_l(self.get_stroke_color(vmobject)),
-            max(vmobject.stroke_width, 0)
-        )
-        fill = aggdraw.Brush(
-            self.color_to_hex_l(self.get_fill_color(vmobject)),
-            opacity = int(self.color_max_val*vmobject.get_fill_opacity())
-        )
+        stroke_width = max(vmobject.get_stroke_width(), 0)
+        if stroke_width == 0:
+            pen = None
+        else:
+            stroke_rgb = self.get_stroke_rgb(vmobject)
+            stroke_hex = rgb_to_hex(stroke_rgb)
+            pen = aggdraw.Pen(stroke_hex, stroke_width)
+
+        fill_opacity = int(self.color_max_val*vmobject.get_fill_opacity())
+        if fill_opacity == 0:
+            fill = None
+        else:
+            fill_rgb = self.get_fill_rgb(vmobject)
+            fill_hex = rgb_to_hex(fill_rgb)
+            fill = aggdraw.Brush(fill_hex, fill_opacity)
+
         return (pen, fill)
 
     def color_to_hex_l(self, color):
@@ -229,57 +268,49 @@ class Camera(object):
         except:
             return Color(BLACK).get_hex_l()
 
-    def get_stroke_color(self, vmobject):
-        return vmobject.get_stroke_color()
+    def get_stroke_rgb(self, vmobject):
+        return vmobject.get_stroke_rgb()
 
-    def get_fill_color(self, vmobject):
-        return vmobject.get_fill_color()
+    def get_fill_rgb(self, vmobject):
+        return vmobject.get_fill_rgb()
 
     def get_pathstring(self, vmobject):
-        result = ""        
+        result = ""
         for mob in [vmobject]+vmobject.get_subpath_mobjects():
             points = mob.points
             # points = self.adjust_out_of_range_points(points)            
             if len(points) == 0:
                 continue
-            points = self.align_points_to_camera(points)
-            coords = self.points_to_pixel_coords(points)
-            start = "M%d %d"%tuple(coords[0])
-            #(handle1, handle2, anchor) tripletes
-            triplets = zip(*[
-                coords[i+1::3]
-                for i in range(3)
-            ])
-            cubics = [
-                "C" + " ".join(map(str, it.chain(*triplet)))
-                for triplet in triplets
-            ]
-            end = "Z" if vmobject.mark_paths_closed else ""
-            result += " ".join([start] + cubics + [end])
+            aligned_points = self.align_points_to_camera(points)
+            coords = self.points_to_pixel_coords(aligned_points)
+            coord_strings = coords.flatten().astype(str)
+            #Start new path string with M
+            coord_strings[0] = "M" + coord_strings[0]
+            #The C at the start of every 6th number communicates
+            #that the following 6 define a cubic Bezier
+            coord_strings[2::6] = map(lambda s : "C" + str(s), coord_strings[2::6])
+            #Possibly finish with "Z"
+            if vmobject.mark_paths_closed:
+                coord_strings[-1] = coord_strings[-1] + " Z"
+            result += " ".join(coord_strings)
         return result
 
-    def display_background_colored_vmobject(self, cvmobject):
-        mob_array = np.zeros(
-            self.pixel_array.shape,
-            dtype = self.pixel_array_dtype
-        )
-        image = Image.fromarray(mob_array, mode = self.image_mode)
-        canvas = aggdraw.Draw(image)
-        self.display_vectorized(cvmobject, canvas)
-        canvas.flush()
-        cv_background = cvmobject.background_array
-        if not np.all(self.pixel_array.shape == cv_background):
-            cvmobject.resize_background_array_to_match(self.pixel_array)
-            cv_background = cvmobject.background_array
-        array = np.array(
-            (np.array(mob_array).astype('float')/255.)*\
-            np.array(cv_background),
-            dtype = self.pixel_array_dtype
-        )
-        self.pixel_array[:,:] = np.maximum(
-            self.pixel_array, array
-        )
+    def get_background_colored_vmobject_displayer(self):
+        #Quite wordy to type out a bunch
+        long_name = "background_colored_vmobject_displayer"
+        if not hasattr(self, long_name):
+            setattr(self, long_name, BackgroundColoredVMobjectDisplayer(self))
+        return getattr(self, long_name)
 
+    def display_multiple_background_colored_vmobject(self, cvmobjects):
+        displayer = self.get_background_colored_vmobject_displayer()
+        cvmobject_pixel_array = displayer.display(*cvmobjects)
+        self.pixel_array[:,:] = np.maximum(
+            self.pixel_array, cvmobject_pixel_array
+        )
+        return self
+
+    ## Methods for other rendering
 
     def display_point_cloud(self, points, rgbas, thickness):
         if len(points) == 0:
@@ -474,6 +505,75 @@ class Camera(object):
         centered_space_coords = centered_space_coords * (1, -1)
 
         return centered_space_coords
+
+class BackgroundColoredVMobjectDisplayer(object):
+    def __init__(self, camera):
+        self.camera = camera
+        self.file_name_to_pixel_array_map = {}
+        self.init_canvas()
+
+    def init_canvas(self):
+        self.pixel_array = np.zeros(
+            self.camera.pixel_array.shape,
+            dtype = self.camera.pixel_array_dtype,
+        )
+        self.reset_canvas()
+
+    def reset_canvas(self):
+        image = Image.fromarray(self.pixel_array, mode = self.camera.image_mode)
+        self.canvas = aggdraw.Draw(image)
+
+    def resize_background_array(
+        self, background_array, 
+        new_width, new_height, 
+        mode = "RGBA"
+        ):
+        image = Image.fromarray(background_array, mode = mode)
+        resized_image = image.resize((new_width, new_height))
+        return np.array(resized_image)
+
+    def resize_background_array_to_match(self, background_array, pixel_array):
+        height, width = pixel_array.shape[:2]
+        mode = "RGBA" if pixel_array.shape[2] == 4 else "RGB"
+        return self.resize_background_array(background_array, width, height, mode)
+
+    def get_background_array(self, cvmobject):
+        file_name = cvmobject.get_background_image_file()
+        if file_name in self.file_name_to_pixel_array_map:
+            return self.file_name_to_pixel_array_map[file_name]
+        full_path = get_full_raster_image_path(file_name)
+        image = Image.open(full_path)
+        array = np.array(image)
+
+        camera = self.camera
+        if not np.all(camera.pixel_array.shape == array.shape):
+            array = self.resize_background_array_to_match(array, camera.pixel_array)
+
+        self.file_name_to_pixel_array_map[file_name] = array
+        return array
+
+    def display(self, *cvmobjects):
+        batches = batch_by_property(
+            cvmobjects, lambda cv : cv.get_background_image_file()
+        )
+        curr_array = None
+        for batch in batches:
+            background_array = self.get_background_array(batch[0])
+            for cvmobject in batch:
+                self.camera.display_vectorized(cvmobject, self.canvas)
+            self.canvas.flush()
+            new_array = np.array(
+                (background_array*self.pixel_array.astype('float')/255),
+                dtype = self.camera.pixel_array_dtype
+            )
+            if curr_array is None:
+                curr_array = new_array
+            else:
+                curr_array = np.maximum(curr_array, new_array)
+            self.pixel_array[:,:] = 0
+            self.reset_canvas()
+        return curr_array
+
 
 class MovingCamera(Camera):
     """
