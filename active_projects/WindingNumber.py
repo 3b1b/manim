@@ -52,8 +52,10 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         self.add(self.graph)
 
         if self.graph_label != None:
-            self.add(self.get_graph_label(self.graph, self.graph_label, 
-                x_val = 4, direction = RIGHT))
+            curve_label = self.get_graph_label(self.graph, self.graph_label, 
+                x_val = 4, direction = LEFT)
+            curve_label.shift(LEFT)
+            self.add(curve_label)
         
         if self.show_target_line:
             target_line_object = DashedLine(
@@ -66,14 +68,20 @@ class EquationSolver1d(GraphScene, ZoomedScene):
             target_line_label.next_to(target_line_object.get_left(), UP + RIGHT)
             self.add(target_line_label)
 
+            self.wait() # Give us time to appreciate the graph
+            self.play(FadeOut(target_line_label)) # Reduce clutter
+
+        print "For reference, graphOrigin: ", self.coords_to_point(0, 0)
+        print "targetYPoint: ", self.coords_to_point(0, self.targetY)
+
     def solveEquation(self):
-        leftBrace = TexMobject("[")
-        rightBrace = TexMobject("]")
+        leftBrace = TexMobject("|") # Not using [ and ] because they end up crossing over
+        rightBrace = TexMobject("|")
         xBraces = Group(leftBrace, rightBrace)
         xBraces.stretch(2, 0)
 
-        downBrace = TexMobject("[")
-        upBrace = TexMobject("]")
+        downBrace = TexMobject("|")
+        upBrace = TexMobject("|")
         yBraces = Group(downBrace, upBrace)
         yBraces.stretch(2, 0)
         yBraces.rotate(TAU/4)
@@ -83,7 +91,7 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         upperX = self.initial_upper_x
         upperY = self.func(upperX)
 
-        leftBrace.move_to(self.coords_to_point(lowerX, 0), aligned_edge = LEFT)
+        leftBrace.move_to(self.coords_to_point(lowerX, 0)) #, aligned_edge = RIGHT)
         leftBraceLabel = DecimalNumber(lowerX)
         leftBraceLabel.next_to(leftBrace, DOWN + LEFT, buff = SMALL_BUFF)
         leftBraceLabelAnimation = ContinualChangingDecimal(leftBraceLabel, 
@@ -91,7 +99,7 @@ class EquationSolver1d(GraphScene, ZoomedScene):
             tracked_mobject = leftBrace)
         self.add(leftBraceLabelAnimation)
         
-        rightBrace.move_to(self.coords_to_point(upperX, 0), aligned_edge = RIGHT)
+        rightBrace.move_to(self.coords_to_point(upperX, 0)) #, aligned_edge = LEFT)
         rightBraceLabel = DecimalNumber(upperX)
         rightBraceLabel.next_to(rightBrace, DOWN + RIGHT, buff = SMALL_BUFF)
         rightBraceLabelAnimation = ContinualChangingDecimal(rightBraceLabel, 
@@ -99,7 +107,7 @@ class EquationSolver1d(GraphScene, ZoomedScene):
             tracked_mobject = rightBrace)
         self.add(rightBraceLabelAnimation)
 
-        downBrace.move_to(self.coords_to_point(0, lowerY), aligned_edge = DOWN)
+        downBrace.move_to(self.coords_to_point(0, lowerY)) #, aligned_edge = UP)
         downBraceLabel = DecimalNumber(lowerY)
         downBraceLabel.next_to(downBrace, LEFT + DOWN, buff = SMALL_BUFF)
         downBraceLabelAnimation = ContinualChangingDecimal(downBraceLabel, 
@@ -107,7 +115,7 @@ class EquationSolver1d(GraphScene, ZoomedScene):
             tracked_mobject = downBrace)
         self.add(downBraceLabelAnimation)
         
-        upBrace.move_to(self.coords_to_point(0, upperY), aligned_edge = UP)
+        upBrace.move_to(self.coords_to_point(0, upperY)) #, aligned_edge = DOWN)
         upBraceLabel = DecimalNumber(upperY)
         upBraceLabel.next_to(upBrace, LEFT + UP, buff = SMALL_BUFF)
         upBraceLabelAnimation = ContinualChangingDecimal(upBraceLabel, 
@@ -166,9 +174,24 @@ class EquationSolver1d(GraphScene, ZoomedScene):
             midCoords = self.coords_to_point(midX, midY)
             midColor = RED
             midXPoint = Dot(self.coords_to_point(midX, 0), color = midColor)
+
+            x_guess_label_caption = TextMobject("New guess: x = ", fill_color = midColor)
+            x_guess_label_num = DecimalNumber(midX, fill_color = midColor)
+            x_guess_label_num.move_to(0.9 * SPACE_HEIGHT * DOWN)
+            x_guess_label_caption.next_to(x_guess_label_num, LEFT)
+            x_guess_label = Group(x_guess_label_caption, x_guess_label_num)
+            y_guess_label_caption = TextMobject(", y = ", fill_color = midColor)
+            y_guess_label_num = DecimalNumber(midY, fill_color = midColor)
+            y_guess_label_caption.next_to(x_guess_label_num, RIGHT)
+            y_guess_label_num.next_to(y_guess_label_caption, RIGHT)
+            y_guess_label = Group(y_guess_label_caption, y_guess_label_num)
+            guess_labels = Group(x_guess_label, y_guess_label)
+
             self.play(
                 ReplacementTransform(leftBrace.copy(), midXPoint),
-                ReplacementTransform(rightBrace.copy(), midXPoint))
+                ReplacementTransform(rightBrace.copy(), midXPoint),
+                FadeIn(x_guess_label))
+
             midXLine = Line(self.coords_to_point(midX, 0), midCoords, color = midColor)
             self.play(ShowCreation(midXLine))
             midDot = Dot(midCoords, color = midColor)
@@ -177,14 +200,15 @@ class EquationSolver1d(GraphScene, ZoomedScene):
                 midDot.scale_in_place(inverseZoomFactor)
             self.add(midDot)
             midYLine = Line(midCoords, self.coords_to_point(0, midY), color = midColor)
-            self.play(ShowCreation(midYLine))
+            self.play(ShowCreation(midYLine), FadeIn(y_guess_label))
 
             if midY < self.targetY:
                 movingGroup = Group(lowerDot, 
                     leftBrace, downBrace,
                     lowerXLine, lowerYLine)
                 self.play(
-                    UpdateFromAlphaFunc(movingGroup, makeUpdater(lowerX)))
+                    UpdateFromAlphaFunc(movingGroup, makeUpdater(lowerX)),
+                    FadeOut(guess_labels))
                 lowerX = midX
                 lowerY = midY
 
@@ -193,7 +217,8 @@ class EquationSolver1d(GraphScene, ZoomedScene):
                     rightBrace, upBrace,
                     upperXLine, upperYLine)
                 self.play(
-                    UpdateFromAlphaFunc(movingGroup, makeUpdater(upperX)))
+                    UpdateFromAlphaFunc(movingGroup, makeUpdater(upperX)),
+                    FadeOut(guess_labels))
                 upperX = midX
                 upperY = midY
             self.remove(midXLine, midDot, midYLine)
@@ -319,7 +344,7 @@ class RectangleData():
         return tuple([mid(x, y) for (x, y) in sides])
 
 def complex_to_pair(c):
-    return (c.real, c.imag)
+    return np.array((c.real, c.imag))
 
 def plane_poly_with_roots(*points):
     def f((x, y)):
@@ -723,7 +748,9 @@ class ArrowCircleTest(Scene):
             return x
 
         num_arrows = 8 * 3
-        arrows = [rev_rotate(base_arrow.copy(), (fdiv(i, num_arrows))) for i in range(num_arrows)]
+
+        # 0.5 - fdiv below so as to get a clockwise rotation from left
+        arrows = [rev_rotate(base_arrow.copy(), 0.5 - (fdiv(i, num_arrows))) for i in range(num_arrows)]
         arrows_vgroup = VGroup(*arrows)
 
         self.play(ShowCreation(arrows_vgroup), run_time = 2.5, rate_func = None)
@@ -803,7 +830,7 @@ class FirstSqrtScene(EquationSolver1d):
         "x_max" : 2.5,
         "y_min" : 0,
         "y_max" : 2.5**2,
-        "graph_origin" : 2*DOWN + 5 * LEFT,
+        "graph_origin" : 2.5*DOWN + 5.5*LEFT,
         "x_axis_width" : 12,
         "zoom_factor" : 3,
         "zoomed_canvas_center" : 2.25 * UP + 1.75 * LEFT,
@@ -818,30 +845,109 @@ class FirstSqrtScene(EquationSolver1d):
         "show_target_line" : True,
     }
 
-class SecondSqrtScene(FirstSqrtScene, ReconfigurableScene):
-# TODO: Don't bother with ReconfigurableScene; just use new config from start
-# (But can also use this as written, and just cut into middle in Premiere)
+FirstSqrtSceneConfig = FirstSqrtScene.CONFIG
+shiftVal = FirstSqrtSceneConfig["targetY"]
 
-    def setup(self):
-        FirstSqrtScene.setup(self)
-        ReconfigurableScene.setup(self)
-
-    def construct(self):
-        shiftVal = self.targetY
-
-        self.drawGraph()
-        newOrigin = self.coords_to_point(0, shiftVal)
-        self.transition_to_alt_config(
-            func = lambda x : x**2 - shiftVal,
-            targetY = 0,
-            graph_label = "y = x^2 - " + str(shiftVal),
-            y_min = self.y_min - shiftVal,
-            y_max = self.y_max - shiftVal,
-            show_target_line = False,
-            graph_origin = newOrigin)
-        self.solveEquation()
+class SecondSqrtScene(FirstSqrtScene):
+        CONFIG = {
+            "func" : lambda x : FirstSqrtSceneConfig["func"](x) - shiftVal,
+            "targetY" : 0,
+            "graph_label" : FirstSqrtSceneConfig["graph_label"] + " - " + str(shiftVal),
+            "y_min" : FirstSqrtSceneConfig["y_min"] - shiftVal,
+            "y_max" : FirstSqrtSceneConfig["y_max"] - shiftVal,
+            "show_target_line" : False,
+            # 0.96 hacked in by checking calculations above
+            "graph_origin" : 0.96 * shiftVal * UP + FirstSqrtSceneConfig["graph_origin"],
+        }
 
 # TODO: Pi creatures intrigued
+
+class SignsExplanation(Scene):
+    def construct(self):
+        num_line = NumberLine(stroke_width = 1)
+        largest_num = 10
+        num_line.add_numbers(*range(-largest_num, largest_num + 1))
+        self.add(num_line)
+        self.wait()
+
+        pos_num = 3
+        neg_num = -pos_num
+
+        pos_arrow = Arrow(
+                num_line.number_to_point(0), 
+                num_line.number_to_point(pos_num),
+                buff = 0,
+                color = YELLOW)
+        neg_arrow = Arrow(
+                num_line.number_to_point(0), 
+                num_line.number_to_point(neg_num),
+                buff = 0,
+                color = RED)
+        
+        #num_line.add_numbers(pos_num)
+        self.play(ShowCreation(pos_arrow))
+
+        #num_line.add_numbers(neg_num)
+        self.play(ShowCreation(neg_arrow))
+
+class VectorField(Scene):
+    CONFIG = {
+        "func" : plane_func_from_complex_func(lambda p : p**2 + 2),
+        "granularity" : 10,
+        "arrow_scale_factor" : 0.1,
+        "normalized_arrow_scale_factor" : 5
+    }
+
+    def construct(self):
+        num_plane = NumberPlane()
+        self.add(num_plane)
+
+        x_min, y_min = num_plane.point_to_coords(SPACE_WIDTH * LEFT + SPACE_HEIGHT * UP)
+        x_max, y_max = num_plane.point_to_coords(SPACE_WIDTH * RIGHT + SPACE_HEIGHT * DOWN)
+
+        x_points = range_via_num_steps(x_min, x_max, self.granularity)
+        y_points = range_via_num_steps(y_min, y_max, self.granularity)
+        points = it.product(x_points, y_points)
+
+        sized_arrows = Group()
+        unsized_arrows = Group()
+        for (x, y) in points:
+            output = self.func((x, y))
+            output_size = np.sqrt(sum(output**2))
+            normalized_output = output * fdiv(self.normalized_arrow_scale_factor, output_size) # Assume output has nonzero size here
+            arrow = Vector(output * self.arrow_scale_factor)
+            normalized_arrow = Vector(normalized_output * self.arrow_scale_factor)
+            arrow.move_to(num_plane.coords_to_point(x, y))
+            normalized_arrow.move_to(arrow)
+            sized_arrows.add(arrow)
+            unsized_arrows.add(normalized_arrow)
+
+        self.add(sized_arrows)
+        self.wait()
+
+        self.play(ReplacementTransform(sized_arrows, unsized_arrows))
+        self.wait()
+
+class HasItsLimitations(Scene):
+    def construct(self):
+        num_line = NumberLine()
+        num_line.add_numbers()
+        self.add(num_line)
+
+        self.wait()
+
+        num_plane = NumberPlane()
+        num_plane.add_coordinates()
+
+        self.play(FadeOut(num_line), FadeIn(num_plane))
+
+        self.wait()
+
+        complex_plane = ComplexPlane()
+        complex_plane.add_coordinates()
+        
+        self.play(FadeOut(num_plane), FadeIn(complex_plane))
+        
 
 class ComplexPlaneIs2d(Scene):
     def construct(self):
