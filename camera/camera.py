@@ -10,8 +10,6 @@ from helpers import *
 from mobject import Mobject, PMobject, VMobject, \
     ImageMobject, Group
 
-from profilehooks import profile
-
 class Camera(object):
     CONFIG = {
         "background_image" : None,
@@ -178,7 +176,6 @@ class Camera(object):
         return self.capture_mobjects([mobject], **kwargs)
 
     def capture_mobjects(self, mobjects, **kwargs):
-        # self.reset_aggdraw_canvas()
         mobjects = self.get_mobjects_to_display(mobjects, **kwargs)
         vmobjects = []
         for mobject in mobjects:
@@ -305,7 +302,6 @@ class Camera(object):
             setattr(self, long_name, BackgroundColoredVMobjectDisplayer(self))
         return getattr(self, long_name)
 
-    @profile
     def display_multiple_background_colored_vmobject(self, cvmobjects):
         displayer = self.get_background_colored_vmobject_displayer()
         cvmobject_pixel_array = displayer.display(*cvmobjects)
