@@ -44,7 +44,7 @@ class ThreeDCamera(CameraWithPerspective):
         if should_shade_in_3d(vmobject):
             return self.get_shaded_rgb(rgb, self.get_unit_normal_vect(vmobject))
         else:
-            return color
+            return rgb
 
     def get_stroke_rgb(self, vmobject):
         return self.modified_rgb(vmobject, vmobject.get_stroke_rgb())
