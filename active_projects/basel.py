@@ -1730,18 +1730,20 @@ class IPTScene1(PiCreatureScene):
 
         # now move the light source to the height point
         # while shifting scaling the screen
-        screen1p = screen1#.deepcopy()
-
-        self.add(screen1p)
+        screen1p = screen1.deepcopy()
+        screen1pp = screen1.deepcopy()
+        #self.add(screen1p)
         angle = np.arccos(length_b / length_c)
         vector = (H - C) * SCREEN_SCALE * 0.5
 
+        screen1p.stretch_to_fit_width(screen_width_bp)
+        screen1p.rotate(-angle)
+        screen1p.shift(vector)
+
+
         self.play(
             ls1.move_source_to,H,
-
-            screen1p.stretch_to_fit_width,screen_width_bp,
-            screen1p.rotate,-angle,
-            screen1p.shift,vector,
+            Transform(screen1,screen1p)
         )
 
         # add and move the second light source and screen
@@ -1778,20 +1780,26 @@ class IPTScene1(PiCreatureScene):
 
         # now move the light source to the height point
         # while shifting scaling the screen
-        screen2p = screen2#.deepcopy()
+        screen2p = screen2.deepcopy()
+        screen2pp = screen2.deepcopy()
         angle = np.arccos(length_a / length_c)
+        screen2p.stretch_to_fit_width(screen_width_ap)
+        screen2p.rotate(angle)
+        # we can reuse the translation vector
+        screen2p.shift(vector)
 
         self.play(
             ls2.move_source_to,H,
-
-            screen2p.stretch_to_fit_width,screen_width_ap,
-            screen2p.rotate,angle,
-            # we can reuse the translation vector
-            screen2p.shift,vector,
-            SwitchOff(ls1.ambient_light)
+            SwitchOff(ls1.ambient_light),
+            Transform(screen2,screen2p)
         )
 
 
+        # now transform both screens back
+        self.play(
+            Transform(screen1, screen1pp),
+            Transform(screen2, screen2pp),
+        )
 
 
 
