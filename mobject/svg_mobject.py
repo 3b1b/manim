@@ -159,31 +159,52 @@ class SVGMobject(VMobject):
             x = float(element.getAttribute('x'))
             #Flip y
             y = -float(element.getAttribute('y'))
+            mobject.shift(x*RIGHT+y*UP)
         except:
             pass
 
-        try:
-            transform = element.getAttribute('transform')
+        transform = element.getAttribute('transform')
+
+        try: # transform matrix
             prefix = "matrix("
             suffix = ")"
             if not transform.startswith(prefix) or not transform.endswith(suffix): raise Exception()
             transform = transform[len(prefix):-len(suffix)]
             transform = string_to_numbers(transform)
             transform = np.array(transform).reshape([3,2])
-            x += transform[2][0]
-            y -= transform[2][1]
+            x = transform[2][0]
+            y = -transform[2][1]
             matrix = np.identity(self.dim)
             matrix[:2,:2] = transform[:2,:]
-            t_matrix = np.transpose(matrix)
+            matrix[1] *= -1
+            matrix[:,1] *= -1
 
             for mob in mobject.family_members_with_points():
-                mob.points = np.dot(mob.points, t_matrix)
-
+                mob.points = np.dot(mob.points, matrix)
+            mobject.shift(x*RIGHT+y*UP)
         except:
             pass
 
-        mobject.shift(x*RIGHT+y*UP)
-        #TODO, transforms
+        try: # transform scale
+            prefix = "scale("
+            suffix = ")"
+            if not transform.startswith(prefix) or not transform.endswith(suffix): raise Exception()
+            transform = transform[len(prefix):-len(suffix)]
+            scale_x, scale_y = string_to_numbers(transform)
+            mobject.scale(np.array([scale_x, scale_y, 1]))
+        except:
+            pass
+
+        try: # transform translate
+            prefix = "translate("
+            suffix = ")"
+            if not transform.startswith(prefix) or not transform.endswith(suffix): raise Exception()
+            transform = transform[len(prefix):-len(suffix)]
+            x, y = string_to_numbers(transform)
+            mobject.shift(x*RIGHT + y*DOWN)
+        except:
+            pass
+        #TODO, ...
 
     def update_ref_to_element(self, defs):
         new_refs = dict([
