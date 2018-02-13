@@ -96,7 +96,6 @@ class Arc(VMobject):
         
         return self
 
-
 class Circle(Arc):
     CONFIG = {
         "color" : RED,
@@ -136,7 +135,6 @@ class Ellipse(VMobject):
         circle = circle.stretch_to_fit_width(self.width)
         circle = circle.stretch_to_fit_height(self.height)
         self.points = circle.points
-
 
 class AnnularSector(VMobject):
     CONFIG = {
@@ -186,7 +184,6 @@ class AnnularSector(VMobject):
         v = point - self.get_arc_center()
         self.shift(v)
         return self
-
 
 class Sector(AnnularSector):
     CONFIG = {

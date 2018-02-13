@@ -142,6 +142,16 @@ class RadarDish(SVGMobject):
         "height" : 1,
     }
 
+class Plane(SVGMobject):
+    CONFIG = {
+        "file_name" : "plane",
+        "color" : GREY,
+        "height" : 1,
+    }
+    def __init__(self, **kwargs):
+        SVGMobject.__init__(self, **kwargs)
+        self.rotate(-TAU/8)
+
 class RadarPulseSingleton(ContinualAnimation):
     CONFIG = {
         "speed" : 3.0,
@@ -512,14 +522,10 @@ class ShowPlan(PiCreatureScene):
 
         radar_dish = RadarDish()
         radar_dish.next_to(word, DOWN, aligned_edge = LEFT)
-        target = Square(stroke_width = 0)
-        target.set_fill(LIGHT_GREY, 1)
-        target.match_height(radar_dish)
-        target.next_to(radar_dish, RIGHT, buff = 0)
-        target_fade = UpdateFromAlphaFunc(
-            target, lambda m, a : m.set_fill(opacity = a)
-        )
-        target_movement = AmbientMovement(target, direction = RIGHT, rate = 1.5)
+        target = Plane()
+        # target.match_height(radar_dish)
+        target.next_to(radar_dish, RIGHT, buff = LARGE_BUFF)
+        target_movement = AmbientMovement(target, direction = RIGHT, rate = 1.25)
 
         pulse = RadarPulse(radar_dish, target)
 
@@ -530,21 +536,26 @@ class ShowPlan(PiCreatureScene):
             to_fade.fade, 0.5,
             Write(word),
             DrawBorderThenFill(radar_dish),
-            target_fade,
+            UpdateFromAlphaFunc(
+                target, lambda m, a : m.set_fill(opacity = a)
+            ),
             morty.change, "pondering",
             run_time = 1
         )
+        self.wait()
         self.add(pulse)
-        while not pulse.is_finished():
+        count = it.count() #TODO, this is not a great hack...
+        while not pulse.is_finished() and count.next() < 15:
             self.play(
                 morty.look_at, pulse.mobject,
                 run_time = 0.5
             )
-        self.wait()
-        target_fade.rate_func = lambda a : smooth(1-a)
         self.play(
             Write(checkmark),
-            target_fade,
+            UpdateFromAlphaFunc(
+                target, lambda m, a : m.set_fill(opacity = 1-a)
+            ),
+            FadeOut(radar_dish),
             morty.change, "happy"
         )
         self.wait()
