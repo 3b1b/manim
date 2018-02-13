@@ -958,16 +958,16 @@ class ScreenShapingScene(ThreeDScene):
     def construct(self):
 
         self.setup_elements()
-        self.deform_screen()
-        self.create_brightness_rect()
-        self.slant_screen()
-        self.unslant_screen()
-        self.left_shift_screen_while_showing_light_indicator()
-        self.add_distance_arrow()
-        self.right_shift_screen_while_showing_light_indicator_and_distance_arrow()
-        self.left_shift_again()
+        # self.deform_screen()
+        # self.create_brightness_rect()
+        # self.slant_screen()
+        # self.unslant_screen()
+        # self.left_shift_screen_while_showing_light_indicator()
+        # self.add_distance_arrow()
+        # self.right_shift_screen_while_showing_light_indicator_and_distance_arrow()
+        # self.left_shift_again()
         
-        self.morph_into_3d()
+        # self.morph_into_3d()
 
 
     def setup_elements(self):
@@ -1804,7 +1804,189 @@ class IPTScene1(PiCreatureScene):
 
 
 
+class PondScene(ThreeDScene):
 
+    def construct(self):
+
+        BASELINE_YPOS = -1
+        OBSERVER_POINT = [0,BASELINE_YPOS,0]
+        POND0_RADIUS = 1.5
+        INDICATOR_RADIUS = 0.6
+        TICK_SIZE = 0.5
+        LIGHTHOUSE_HEIGHT = 0.2
+        SEA_COLOR = BLUE
+        SEA_OPACITY = 0.3
+        TEX_SCALE = 0.8
+
+        baseline = VMobject()
+        baseline.set_points_as_corners([[-8,BASELINE_YPOS,0],[8,BASELINE_YPOS,0]])
+
+        obs_dot = Dot(OBSERVER_POINT)
+        ls0_dot = Dot(OBSERVER_POINT + 2 * POND0_RADIUS * UP)
+
+
+        # pond
+        pond0 = Circle(radius = POND0_RADIUS,
+            stroke_width = 0,
+            fill_color = SEA_COLOR,
+            fill_opacity = SEA_OPACITY
+        )
+        pond0.move_to(OBSERVER_POINT + POND0_RADIUS * UP)
+
+        # Morty and indicator
+        morty = Mortimer().scale(0.3)
+        morty.next_to(OBSERVER_POINT,DOWN)
+        indicator = LightIndicator(precision = 2,
+            radius = INDICATOR_RADIUS,
+            show_reading  = False,
+            color = LIGHT_COLOR
+        )
+        indicator.next_to(morty,LEFT)
+
+        self.add(pond0,morty,indicator,obs_dot,ls0_dot)
+
+        self.wait()
+
+
+        # shore arcs
+        arc_left = Arc(-TAU/2,
+            radius = POND0_RADIUS,
+            start_angle = -TAU/4
+        )
+        arc_left.move_arc_center_to(OBSERVER_POINT + POND0_RADIUS * UP)
+
+        one_left = TexMobject("1")
+        one_left.next_to(arc_left,LEFT)
+        
+
+        arc_right = Arc(TAU/2,
+            radius = POND0_RADIUS,
+            start_angle = -TAU/4
+        )
+        arc_right.move_arc_center_to(OBSERVER_POINT + POND0_RADIUS * UP)
+
+        one_right = TexMobject("1").scale(TEX_SCALE)
+        one_right.next_to(arc_right,RIGHT)
+
+        self.play(
+            ShowCreation(arc_left),
+            Write(one_left),
+            ShowCreation(arc_right),
+            Write(one_right),
+        )
+
+        # first lighthouse
+        ls0 = LightSource()
+        ls0.move_source_to(OBSERVER_POINT + POND0_RADIUS * 2 * UP)
+
+        self.play(
+            SwitchOn(ls0.ambient_light),
+            FadeIn(ls0.lighthouse)
+        )
+        self.play(
+            indicator.set_intensity,0.5
+        )
+
+        # diameter
+        diameter = DoubleArrow(OBSERVER_POINT,
+            ls0.get_source_point(),
+            buff = 0,
+            color = WHITE,
+        )
+        diameter_text = TexMobject("d").scale(TEX_SCALE)
+        diameter_text.next_to(diameter,RIGHT)
+
+        self.play(
+            ShowCreation(diameter),
+            Write(diameter_text),
+            FadeOut(ls0_dot),
+            FadeOut(obs_dot)
+        )
+
+        indicator.reading = TexMobject("{1\over d^2}").scale(TEX_SCALE)
+        indicator.reading.move_to(indicator)
+
+        self.play(
+            FadeIn(indicator.reading)
+        )
+
+        # replace d with its value
+        new_diameter_text = TexMobject("{2\over \pi}").scale(TEX_SCALE)
+        new_diameter_text.move_to(diameter_text)
+        self.play(
+            Transform(diameter_text,new_diameter_text)
+        )
+
+        # insert into indicator reading
+        new_reading = TexMobject("{\pi^2 \over 4}").scale(TEX_SCALE)
+        new_reading.move_to(indicator)
+
+        self.play(
+            Transform(indicator.reading,new_reading)
+        )
+
+
+
+
+
+
+
+        # # # # # # # # # # # # # #
+        # first construction step #
+        # # # # # # # # # # # # # #
+
+        def tangent_direction(point):
+            # gives a unit vector perpendicular to
+            # the line from point to OBSERVER_POINT
+            v = np.array(point) - np.array(OBSERVER_POINT)
+            return np.array([-v[1], v[0], 0])/np.abs(v)
+
+
+        pond1_radius = 2 * POND0_RADIUS
+        pond1 = Circle(radius = pond1_radius,
+            stroke_width = 0,
+            fill_color = SEA_COLOR,
+            fill_opacity = SEA_OPACITY
+        )
+        pond1.move_to(ls0.get_center())
+
+        self.play(
+            FadeIn(pond1),
+            FadeOut(pond0),
+            FadeOut(one_left),
+            FadeOut(one_right)
+        )
+
+        ls0_loc = ls0.get_source_point()
+        ls11_loc = ls0_loc + pond1_radius * LEFT
+        ls12_loc = ls0_loc + pond1_radius * RIGHT
+        t11 = Line(ls0_loc, ls11_loc)
+        t12 = Line(ls0_loc, ls12_loc)
+
+        self.play(
+            ShowCreation(t11),
+            ShowCreation(t12),
+        )
+
+        hypot11 = Line(ls11_loc,OBSERVER_POINT)
+        hypot12 = Line(ls12_loc,OBSERVER_POINT)
+
+        self.play(
+            ShowCreation(hypot11),
+            ShowCreation(hypot12),
+        )
+
+
+        # place lighthouses at intersection points
+        ls11 = ls0
+        ls12 = ls0.copy()
+
+        self.add(ls12)
+        
+        self.play(
+            ls11.move_source_to,ls11_loc,
+            ls12.move_source_to,ls12_loc,
+        )
 
 
 
