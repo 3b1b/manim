@@ -54,7 +54,8 @@ class Scene(Container):
         self.frame_num = 0
         self.current_scene_time = 0
         if self.name is None:
-            self.name = self.__class__.__name__
+            quality = self.camera.pixel_shape[0]
+            self.name = self.__class__.__name__ + str(quality)
         if self.random_seed is not None:
             random.seed(self.random_seed)
             np.random.seed(self.random_seed)
