@@ -32,9 +32,17 @@ from topics.graph_scene import *
 # TODO/WARNING: There's a lot of refactoring and cleanup to be done in this code,
 # (and it will be done, but first I'll figure out what I'm doing with all this...)
 # -SR
+
+positive_color = GREEN
+negative_color = RED
+neutral_color = YELLOW
         
 class EquationSolver1d(GraphScene, ZoomedScene):
     CONFIG = {
+    "camera_config" : 
+        {
+            #"use_z_coordinate_for_display_order": True,
+        },
     "func" : lambda x : x,
     "targetX" : 0,
     "targetY" : 0,
@@ -74,14 +82,20 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         print "For reference, graphOrigin: ", self.coords_to_point(0, 0)
         print "targetYPoint: ", self.coords_to_point(0, self.targetY)
 
+    # This is a mess right now (first major animation coded), 
+    # but it works; can be refactored later or never
     def solveEquation(self):
         leftBrace = TexMobject("|") # Not using [ and ] because they end up crossing over
+        leftBrace.set_color(negative_color)
         rightBrace = TexMobject("|")
+        rightBrace.set_color(positive_color)
         xBraces = Group(leftBrace, rightBrace)
         xBraces.stretch(2, 0)
 
         downBrace = TexMobject("|")
+        downBrace.set_color(negative_color)
         upBrace = TexMobject("|")
+        upBrace.set_color(positive_color)
         yBraces = Group(downBrace, upBrace)
         yBraces.stretch(2, 0)
         yBraces.rotate(TAU/4)
@@ -126,19 +140,35 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         lowerDotPoint = self.input_to_graph_point(lowerX, self.graph)
         lowerDotXPoint = self.coords_to_point(lowerX, 0)
         lowerDotYPoint = self.coords_to_point(0, self.func(lowerX))
-        lowerDot = Dot(lowerDotPoint)
+        lowerDot = Dot(lowerDotPoint, color = negative_color)
         upperDotPoint = self.input_to_graph_point(upperX, self.graph)
-        upperDot = Dot(upperDotPoint)
+        upperDot = Dot(upperDotPoint, color = positive_color)
         upperDotXPoint = self.coords_to_point(upperX, 0)
         upperDotYPoint = self.coords_to_point(0, self.func(upperX))
 
-        lowerXLine = Line(lowerDotXPoint, lowerDotPoint, stroke_width = 1, color = YELLOW)
-        upperXLine = Line(upperDotXPoint, upperDotPoint, stroke_width = 1, color = YELLOW)
-        lowerYLine = Line(lowerDotYPoint, lowerDotPoint, stroke_width = 1, color = YELLOW)
-        upperYLine = Line(upperDotYPoint, upperDotPoint, stroke_width = 1, color = YELLOW)
+        lowerXLine = Line(lowerDotXPoint, lowerDotPoint, color = negative_color)
+        upperXLine = Line(upperDotXPoint, upperDotPoint, color = positive_color)
+        lowerYLine = Line(lowerDotYPoint, lowerDotPoint, color = negative_color)
+        upperYLine = Line(upperDotYPoint, upperDotPoint, color = positive_color)
         self.add(lowerXLine, upperXLine, lowerYLine, upperYLine)
 
         self.add(xBraces, yBraces, lowerDot, upperDot)
+
+        lowerGroup = Group(
+            lowerDot, 
+            leftBrace, downBrace,
+            lowerXLine, lowerYLine)
+        
+        upperGroup = Group(
+            upperDot, 
+            rightBrace, upBrace,
+            upperXLine, upperYLine)
+
+        initialLowerXDot = Dot(lowerDotXPoint, color = negative_color)
+        initialUpperXDot = Dot(upperDotXPoint, color = positive_color)
+        initialLowerYDot = Dot(lowerDotYPoint, color = negative_color)
+        initialUpperYDot = Dot(upperDotYPoint, color = positive_color)
+        self.add(initialLowerXDot, initialUpperXDot, initialLowerYDot, initialUpperYDot)
 
         for i in range(self.num_iterations):
             if i == self.iteration_at_which_to_start_zoom:
@@ -172,7 +202,7 @@ class EquationSolver1d(GraphScene, ZoomedScene):
             midY = self.func(midX)
 
             midCoords = self.coords_to_point(midX, midY)
-            midColor = RED
+            midColor = neutral_color
             midXPoint = Dot(self.coords_to_point(midX, 0), color = midColor)
 
             x_guess_label_caption = TextMobject("New guess: x = ", fill_color = midColor)
@@ -200,27 +230,30 @@ class EquationSolver1d(GraphScene, ZoomedScene):
                 midDot.scale_in_place(inverseZoomFactor)
             self.add(midDot)
             midYLine = Line(midCoords, self.coords_to_point(0, midY), color = midColor)
-            self.play(ShowCreation(midYLine), FadeIn(y_guess_label))
+            self.play(
+                ShowCreation(midYLine), 
+                FadeIn(y_guess_label))
+            midYPoint = Dot(self.coords_to_point(0, midY), color = midColor)
+            self.add(midYPoint)
 
             if midY < self.targetY:
-                movingGroup = Group(lowerDot, 
-                    leftBrace, downBrace,
-                    lowerXLine, lowerYLine)
                 self.play(
-                    UpdateFromAlphaFunc(movingGroup, makeUpdater(lowerX)),
-                    FadeOut(guess_labels))
+                    UpdateFromAlphaFunc(lowerGroup, makeUpdater(lowerX)),
+                    FadeOut(guess_labels),
+                    ApplyMethod(midXPoint.set_color, negative_color),
+                    ApplyMethod(midYPoint.set_color, negative_color))
                 lowerX = midX
                 lowerY = midY
 
             else:
-                movingGroup = Group(upperDot, 
-                    rightBrace, upBrace,
-                    upperXLine, upperYLine)
                 self.play(
-                    UpdateFromAlphaFunc(movingGroup, makeUpdater(upperX)),
-                    FadeOut(guess_labels))
+                    UpdateFromAlphaFunc(upperGroup, makeUpdater(upperX)),
+                    FadeOut(guess_labels),
+                    ApplyMethod(midXPoint.set_color, positive_color),
+                    ApplyMethod(midYPoint.set_color, positive_color))
                 upperX = midX
                 upperY = midY
+            #mid_group = Group(midXLine, midDot, midYLine) Removing groups doesn't flatten as expected?
             self.remove(midXLine, midDot, midYLine)
 
         self.wait()
@@ -560,6 +593,7 @@ class PiWalkerCircle(PiWalker):
 # TODO: Give drawn lines a bit of buffer, so that the rectangle's corners are filled in
 class EquationSolver2d(ColorMappedByFuncScene):
     CONFIG = {
+        "camera_config" : {"use_z_coordinate_for_display_order": True},
         "initial_lower_x" : -5.1,
         "initial_upper_x" : 5.1,
         "initial_lower_y" : -3.1,
@@ -597,8 +631,8 @@ class EquationSolver2d(ColorMappedByFuncScene):
                     stroke_width = 10,
                     color = RED)
                 if self.use_fancy_lines:
-                    colored_line = BackgroundColoredVMobject(thick_line, background_image_file = None)
-                    colored_line.set_background_array(background)
+                    colored_line = thick_line.color_using_background_image("color_background")
+                    # colored_line.set_background_array(background)
                 else:
                     colored_line = thick_line.set_stroke(width = 4)
 
