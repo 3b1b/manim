@@ -486,6 +486,104 @@ class ThoughtBubble(Bubble):
         self.submobjects[-1].set_fill(GREEN_SCREEN, opacity = 1)
         return self
 
+class Car(SVGMobject):
+    CONFIG = {
+        "file_name" : "Car", 
+        "height" : 1,
+        "color" : LIGHT_GREY,
+        "light_colors" : [BLACK, BLACK],
+    }
+    def __init__(self, **kwargs):
+        SVGMobject.__init__(self, **kwargs)
+        self.scale_to_fit_height(self.height)
+        self.set_stroke(color = WHITE, width = 0)
+        self.set_fill(self.color, opacity = 1)
+
+        from topics.characters import Randolph
+        randy = Randolph(mode = "happy")
+        randy.scale_to_fit_height(0.6*self.get_height())
+        randy.stretch(0.8, 0)
+        randy.look(RIGHT)
+        randy.move_to(self)
+        randy.shift(0.07*self.height*(RIGHT+UP))
+        self.randy = self.pi_creature = randy
+        self.add_to_back(randy)
+
+        orientation_line = Line(self.get_left(), self.get_right())
+        orientation_line.set_stroke(width = 0)
+        self.add(orientation_line)
+        self.orientation_line = orientation_line
+
+        for light, color in zip(self.get_lights(), self.light_colors):
+            light.set_fill(color, 1)
+            light.is_subpath = False
+
+        self.add_treds_to_tires()
+
+    def move_to(self, point_or_mobject):
+        vect = rotate_vector(
+            UP+LEFT, self.orientation_line.get_angle()
+        )
+        self.next_to(point_or_mobject, vect, buff = 0)
+        return self
+
+    def get_front_line(self):
+        return DashedLine(
+            self.get_corner(UP+RIGHT), 
+            self.get_corner(DOWN+RIGHT),
+            color = DISTANCE_COLOR,
+            dashed_segment_length = 0.05,
+        )
+
+    def add_treds_to_tires(self):
+        for tire in self.get_tires():
+            radius = tire.get_width()/2
+            center = tire.get_center()
+            tred = Line(
+                0.9*radius*RIGHT, 1.4*radius*RIGHT,
+                stroke_width = 2,
+                color = BLACK
+            )
+            tred.rotate_in_place(np.pi/4)
+            for theta in np.arange(0, 2*np.pi, np.pi/4):
+                new_tred = tred.copy()
+                new_tred.rotate(theta, about_point = ORIGIN)
+                new_tred.shift(center)
+                tire.add(new_tred)
+        return self
+
+    def get_tires(self):
+        return VGroup(self[1][1], self[1][3])
+
+    def get_lights(self):
+        return VGroup(self.get_front_light(), self.get_rear_light())
+
+    def get_front_light(self):
+        return self[1][5]
+
+    def get_rear_light(self):
+        return self[1][8]
+
+class MoveCar(ApplyMethod):
+    CONFIG = {
+        "moving_forward" : True,
+    }
+    def __init__(self, car, target_point, **kwargs):
+        ApplyMethod.__init__(self, car.move_to, target_point, **kwargs)
+        displacement = self.target_mobject.get_right()-self.starting_mobject.get_right()
+        distance = np.linalg.norm(displacement)
+        if not self.moving_forward:
+            distance *= -1
+        tire_radius = car.get_tires()[0].get_width()/2
+        self.total_tire_radians = -distance/tire_radius
+
+    def update_mobject(self, alpha):
+        ApplyMethod.update_mobject(self, alpha)
+        if alpha == 0:
+            return
+        radians = alpha*self.total_tire_radians
+        for tire in self.mobject.get_tires():
+            tire.rotate_in_place(radians)
 
 #TODO: Where should this live?
 class Broadcast(LaggedStart):
