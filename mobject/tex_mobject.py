@@ -141,9 +141,15 @@ class TexMobject(SVGMobject):
         self.submobjects = new_submobjects
         return self
 
-    def get_parts_by_tex(self, tex, substring = True):
+    def get_parts_by_tex(self, tex, substring = True, case_sensitive = True):
         def test(tex1, tex2):
-            return tex1 == tex2 or (substring and tex1 in tex2)
+            if not case_sensitive:
+                tex1 = tex1.lower()
+                tex2 = tex2.lower()
+            if substring:
+                return tex1 in tex2
+            else:
+                return tex1 == tex2
 
         tex_submobjects = filter(
             lambda m : isinstance(m, TexMobject),
