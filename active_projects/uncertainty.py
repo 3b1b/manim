@@ -28,6 +28,7 @@ from mobject.vectorized_mobject import *
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from topics.graph_scene import *
+from topics.light import *
 
 from active_projects.fourier import *
 
@@ -238,6 +239,82 @@ class RadarPulse(ContinualAnimation):
     def is_finished(self):
         return all([ps.is_finished() for ps in self.pulse_singletons])
 
+class Flash(AnimationGroup):
+    CONFIG = {
+        "line_length" : 0.2,
+        "num_lines" : 12,
+        "flash_radius" : 0.3,
+        "line_stroke_width" : 3,
+    }
+    def __init__(self, mobject, color = YELLOW, **kwargs):
+        digest_config(self, kwargs)
+        original_color = mobject.get_color()
+        on_and_off = UpdateFromAlphaFunc(
+            mobject.copy(), lambda m, a : m.highlight(
+                color if a < 0.5 else original_color
+            ),
+            remover = True
+        )
+        lines = VGroup()
+        for angle in np.arange(0, TAU, TAU/self.num_lines):
+            line = Line(ORIGIN, self.line_length*RIGHT)
+            line.shift((self.flash_radius - self.line_length)*RIGHT)
+            line.rotate(angle, about_point = ORIGIN)
+            lines.add(line)
+        lines.move_to(mobject)
+        lines.highlight(color)
+        line_anims = [
+            ShowCreationThenDestruction(
+                line, rate_func = squish_rate_func(smooth, 0, 0.5)
+            )
+            for line in lines
+        ]
+        fade_anims = [
+            UpdateFromAlphaFunc(
+                line, lambda m, a : m.set_stroke(
+                    width = self.line_stroke_width*(1-a)
+                ),
+                rate_func = squish_rate_func(smooth, 0, 0.75)
+            )
+            for line in lines
+        ]
+        
+        AnimationGroup.__init__(
+            self, on_and_off, *line_anims+fade_anims, **kwargs
+        )
+
+class MultipleFlashes(Succession):
+    CONFIG = {
+        "run_time_per_flash" : 1.0,
+        "num_flashes" : 3,
+    }
+    def __init__(self, *args, **kwargs):
+        digest_config(self, kwargs)
+        kwargs["run_time"] = self.run_time_per_flash
+        Succession.__init__(self, *[
+            Flash(*args, **kwargs)
+            for x in range(self.num_flashes)
+        ])
+
+class TrafficLight(SVGMobject):
+    CONFIG = {
+        "file_name" : "traffic_light",
+        "height" : 0.7,
+        "post_height" : 2,
+        "post_width" : 0.05,
+    }
+    def __init__(self, **kwargs):
+        SVGMobject.__init__(self, **kwargs)
+        post = Rectangle(
+            height = self.post_height,
+            width = self.post_width,
+            stroke_width = 0,
+            fill_color = WHITE,
+            fill_opacity = 1,
+        )
+        self.move_to(post.get_top(), DOWN)
+        self.add_to_back(post)
+
 ###################
 
 class MentionUncertaintyPrinciple(TeacherStudentsScene):
@@ -339,8 +416,9 @@ class FourierTradeoff(Scene):
             y_axis_config = {"unit_size" : 0.5}
         )
         time_label = TextMobject("Time")
+        time_label.scale(1.5)
         time_label.next_to(
-            time_axes.x_axis.get_right(), UP,
+            time_axes.x_axis.get_right(), UP+LEFT,
             buff = MED_SMALL_BUFF,
         )
         time_axes.add(time_label)
@@ -360,8 +438,9 @@ class FourierTradeoff(Scene):
             color = TEAL,
         )
         frequency_label = TextMobject("Frequency")
+        frequency_label.scale(1.5)
         frequency_label.next_to(
-            frequency_axes.x_axis.get_right(), UP,
+            frequency_axes.x_axis.get_right(), UP+LEFT,
             buff = MED_SMALL_BUFF, 
         )
         frequency_label.highlight(FREQUENCY_COLOR)
@@ -397,7 +476,7 @@ class FourierTradeoff(Scene):
                 t_max = time_mean + time_radius,
                 n_samples = 2*time_radius*17,
                 # complex_to_real_func = abs,
-                complex_to_real_func = lambda z : z.real,
+                complex_to_real_func = abs,
                 color = FREQUENCY_COLOR,
             )
 
@@ -416,8 +495,8 @@ class FourierTradeoff(Scene):
             wave_packet, frequency_axes.coords_to_point(4, 10),
             color = FREQUENCY_COLOR,
         )
-        fourier_words = TextMobject("Fourier Transform")
-        fourier_words.next_to(arrow, RIGHT, buff = MED_LARGE_BUFF)
+        fourier_words = TextMobject("$|$Fourier Transform$|$")
+        fourier_words.next_to(arrow, LEFT, buff = MED_LARGE_BUFF)
         sub_words = TextMobject("(To be explained shortly)")
         sub_words.highlight(BLUE)
         sub_words.scale(0.75)
@@ -454,8 +533,8 @@ class ShowPlan(PiCreatureScene):
         self.add_title()
         words = self.get_words()
         self.play_sound_anims(words[0])
-        self.play_doppler_anims(words[1], words[0])
-        self.play_quantum_anims(words[2], words[1])
+        self.play_doppler_anims(words[1])
+        self.play_quantum_anims(words[2])
 
     def add_title(self):
         title = TextMobject("The plan")
@@ -466,14 +545,19 @@ class ShowPlan(PiCreatureScene):
         self.add(title, h_line)
 
     def get_words(self):
-        colors = [YELLOW, GREEN, BLUE]
-        topics = ["sound waves", "Doppler radar", "quantum particles"]
+        trips = [
+            ("sound waves", "(time vs. frequency)", YELLOW),
+            ("Doppler radar", "(distance vs. velocity)", GREEN),
+            ("quantum particles", "(position vs. momentum)", BLUE),
+        ]
         words = VGroup()
-        for topic, color in zip(topics, colors):
-            word = TextMobject("Uncertainty for", topic)
-            word[1].highlight(color)
+        for topic, tradeoff, color in trips:
+            word = TextMobject("Uncertainty for", topic, tradeoff)
+            word[1:].highlight(color)
+            word[2].scale(0.75)
+            word[2].next_to(word[1], DOWN, buff = 1.5*SMALL_BUFF)
             words.add(word)
-        words.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = LARGE_BUFF)
+        words.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_LARGE_BUFF)
         words.to_edge(LEFT)
 
         return words
@@ -517,7 +601,7 @@ class ShowPlan(PiCreatureScene):
         self.add(word)
         self.wait()
 
-    def play_doppler_anims(self, word, to_fade):
+    def play_doppler_anims(self, word):
         morty = self.pi_creature
 
         radar_dish = RadarDish()
@@ -533,7 +617,6 @@ class ShowPlan(PiCreatureScene):
 
         self.add(target_movement)
         self.play(
-            to_fade.fade, 0.5,
             Write(word),
             DrawBorderThenFill(radar_dish),
             UpdateFromAlphaFunc(
@@ -542,7 +625,6 @@ class ShowPlan(PiCreatureScene):
             morty.change, "pondering",
             run_time = 1
         )
-        self.wait()
         self.add(pulse)
         count = it.count() #TODO, this is not a great hack...
         while not pulse.is_finished() and count.next() < 15:
@@ -560,25 +642,236 @@ class ShowPlan(PiCreatureScene):
         )
         self.wait()
 
+    def play_quantum_anims(self, word):
+        morty = self.pi_creature
+        dot_cloud = ProbabalisticDotCloud()
+        gdw = dot_cloud.gaussian_distribution_wrapper
+        gdw.next_to(word, DOWN, MED_LARGE_BUFF)
+        gdw.rotate(5*DEGREES)
+        gdw.save_state()
+        gdw.scale(0)
 
 
+        checkmark = self.get_checkmark(word)
+        ish = TextMobject("$\\dots$ish")
+        ish.next_to(checkmark, RIGHT, -SMALL_BUFF, DOWN)
 
-    def play_quantum_anims(self, word, to_fade):
-        pass
+        self.add(dot_cloud)
+        self.play(
+            Write(word),
+            FadeIn(dot_cloud.mobject),
+            morty.change, "confused",
+        )
+        self.play(gdw.restore, run_time = 2)
+        self.play(Write(checkmark))
+        self.wait()
+        self.play(
+            Write(ish), 
+            morty.change, 'maybe'
+        )
+        self.wait(6)
+
 
     ##
 
     def get_checkmark(self, word):
         checkmark = TexMobject("\\checkmark")
         checkmark.highlight(GREEN)
-        checkmark.scale(1.5)
-        checkmark.next_to(word, UP+RIGHT, buff = 0)
+        checkmark.scale(1.25)
+        checkmark.next_to(word[1], UP+RIGHT, buff = 0)
         return checkmark
 
+class StartWithIntuition(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "You already \\\\ have this \\\\ intuition",
+            bubble_kwargs = {
+                "height" : 3.5,
+                "width" : 3,
+            },
+        )
+        self.change_student_modes("pondering", "erm", "maybe")
+        self.look_at(VectorizedPoint(4*LEFT + 2*UP))
+        self.wait(5)
+
+class TwoCarsAtRedLight(Scene):
+    def construct(self):
+        self.pull_up_behind()
+        self.flash_in_sync_short_time()
+        self.show_low_confidence()
+        self.flash_in_sync_long_time()
+        self.mention_uncertainty_principle()
+
+    def pull_up_behind(self):
+        #Setup Traffic light
+        traffic_light = TrafficLight()
+        traffic_light.move_to(6*RIGHT + 2*DOWN, DOWN)
+        source_point = VectorizedPoint(
+            traffic_light[6].get_right()
+        )
+        screen = Line(ORIGIN, UP)
+        screen.next_to(source_point, RIGHT, LARGE_BUFF)
+        red_light = Spotlight(
+            color = RED,
+            source_point = source_point,
+            radius = 0.5,
+            screen = screen,
+            num_levels = 20,
+            opacity_function = lambda r : 1/(10*r**2+1)
+        )
+        red_light.fade(0.5)
+        red_light.rotate(TAU/2, about_edge = LEFT)
+        self.add(red_light, traffic_light)
+
+        #Setup cars
+        car1, car2 = cars = self.cars = VGroup(*[
+            Car() for x in range(2)
+        ])
+        cars.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        cars.next_to(
+            traffic_light, LEFT, 
+            buff = LARGE_BUFF, aligned_edge = DOWN
+        )
+        car2.pi_creature.highlight(GREY_BROWN)
+        car1.start_point = car1.get_corner(DOWN+RIGHT)
+        car1.shift(SPACE_WIDTH*LEFT)
+
+        #Pull up car
+        self.add(cars)
+        self.play(
+            SwitchOn(
+                red_light, 
+                rate_func = squish_rate_func(smooth, 0, 0.3),
+            ),
+            Animation(traffic_light),
+            self.get_flashes(car2, num_flashes = 3),
+            MoveCar(
+                car1, car1.start_point,
+                run_time = 3,
+                rate_func = rush_from,
+            )
+        )
+
+    def flash_in_sync_short_time(self):
+        car1, car2 = cars = self.cars
+
+        #Setup axes
+        axes = Axes(
+            x_min = 0,
+            x_max = 5,
+            y_min = 0, 
+            y_max = 2,
+            y_axis_config = {
+                "tick_frequency" : 0.5,
+            },
+        )
+        time_label = TextMobject("Time")
+        time_label.scale(0.75)
+        time_label.next_to(
+            axes.x_axis.get_right(),
+            DOWN + LEFT
+        )
+        y_title = TextMobject("Signal")
+        y_title.scale(0.75)
+        y_title.next_to(axes.y_axis, UP, SMALL_BUFF)
+        axes.add(time_label, y_title)
+        axes.to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
+        graph = axes.get_graph(
+            lambda x : sum([
+                1.25*np.exp(-100*(x-m)**2)
+                for m in range(1, 4)
+            ]),
+            x_min = 0.8,
+            x_max = 3.8,
+        )
+        graph.highlight(YELLOW)
+
+        #Label short duration
+        brace = Brace(Line(
+            axes.input_to_graph_point(1, graph),
+            axes.input_to_graph_point(3, graph),
+        ), UP)
+        text = TextMobject("Short duration observation")
+        text.scale(0.75)
+        text.next_to(brace, UP, SMALL_BUFF)
+        text.align_to(
+            axes.coords_to_point(0.25, 0), LEFT
+        )
+
+
+        self.play(
+            self.get_flashes(car1, num_flashes = 2),
+            self.get_flashes(car2, num_flashes = 2),
+            LaggedStart(FadeIn, VGroup(
+                axes, time_label, y_title,
+            ))
+        )
+        self.play(
+            self.get_flashes(car1, num_flashes = 3),
+            self.get_flashes(car2, num_flashes = 3),
+            ShowCreation(graph, rate_func = None, run_time = 3)
+        )
+        self.play(
+            self.get_flashes(car1, num_flashes = 10),
+            self.get_flashes(car2, num_flashes = 10, run_time_per_flash = 0.98),
+            GrowFromCenter(brace),
+            Write(text),
+        )
+
+        self.time_axes = axes
+        self.time_graph = graph
+        self.time_graph_label = VGroup(
+            brace, text
+        )
+
+    def show_low_confidence(self):
+        car1, car2 = cars = self.cars
+        time_axes = self.time_axes
+
+        frequency_axes = Axes(
+            x_min = 0,
+            x_max = 3.5,
+            y_min = 0,
+            y_max = 1.5,
+            y_axis_config = {
+                "tick_frequency" : 0.5,
+            }
+        )
+        frequency_axes.next_to(time_axes, DOWN, LARGE_BUFF, LEFT)
+        frequency_axes.highlight(LIGHT_GREY)
+        frequency_label = TextMobject("Frequency")
+        frequency_label.scale(0.75)
+        frequency_label.next_to(
+            frequency_axes.x_axis.get_right(), 
+            DOWN
+        )
+        frequency_axes.add(frequency_label)
+        frequency_axes.x_axis.add_numbers(1, 2)
+        fourier_graph = get_fourier_graph(
+            frequency_axes, 
+            self.time_graph.underlying_function,
+            t_min = 0,
+            t_max = 4,
+        )
+
+        self.add(frequency_axes, fourier_graph)
 
 
 
+    def flash_in_sync_long_time(self):
+        pass
 
+    def mention_uncertainty_principle(self):
+        pass
+
+
+    ###
+
+    def get_flashes(self, car, colors = [YELLOW, RED], num_flashes = 1, **kwargs):
+        return AnimationGroup(*[
+            MultipleFlashes(light, color, num_flashes = num_flashes, **kwargs)
+            for light, color in zip(car.get_lights(), colors)
+        ])
 
 
 
