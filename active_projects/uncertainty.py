@@ -695,19 +695,22 @@ class StartWithIntuition(TeacherStudentsScene):
         self.wait(5)
 
 class TwoCarsAtRedLight(Scene):
+    CONFIG = {
+        "text_scale_val" : 0.75,
+    }
     def construct(self):
         self.pull_up_behind()
-        self.flash_in_sync_short_time()
-        self.show_low_confidence()
-        self.flash_in_sync_long_time()
-        self.mention_uncertainty_principle()
+        # self.flash_in_sync_short_time()
+        # self.show_low_confidence()
+        # self.flash_in_sync_long_time()
+        # self.show_high_confidence()
 
     def pull_up_behind(self):
         #Setup Traffic light
         traffic_light = TrafficLight()
-        traffic_light.move_to(6*RIGHT + 2*DOWN, DOWN)
+        traffic_light.move_to(6*RIGHT + 2.5*DOWN, DOWN)
         source_point = VectorizedPoint(
-            traffic_light[6].get_right()
+            traffic_light[2].get_right()
         )
         screen = Line(ORIGIN, UP)
         screen.next_to(source_point, RIGHT, LARGE_BUFF)
@@ -765,22 +768,17 @@ class TwoCarsAtRedLight(Scene):
                 "tick_frequency" : 0.5,
             },
         )
+        axes.x_axis.add_numbers(1, 2, 3)
         time_label = TextMobject("Time")
-        time_label.scale(0.75)
-        time_label.next_to(
-            axes.x_axis.get_right(),
-            DOWN + LEFT
-        )
+        time_label.scale(self.text_scale_val)
+        time_label.next_to(axes.x_axis.get_right(), DOWN)
         y_title = TextMobject("Signal")
-        y_title.scale(0.75)
+        y_title.scale(self.text_scale_val)
         y_title.next_to(axes.y_axis, UP, SMALL_BUFF)
         axes.add(time_label, y_title)
         axes.to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
         graph = axes.get_graph(
-            lambda x : sum([
-                1.25*np.exp(-100*(x-m)**2)
-                for m in range(1, 4)
-            ]),
+            self.get_multispike_function(range(1, 4)),
             x_min = 0.8,
             x_max = 3.8,
         )
@@ -792,7 +790,7 @@ class TwoCarsAtRedLight(Scene):
             axes.input_to_graph_point(3, graph),
         ), UP)
         text = TextMobject("Short duration observation")
-        text.scale(0.75)
+        text.scale(self.text_scale_val)
         text.next_to(brace, UP, SMALL_BUFF)
         text.align_to(
             axes.coords_to_point(0.25, 0), LEFT
@@ -828,42 +826,161 @@ class TwoCarsAtRedLight(Scene):
         car1, car2 = cars = self.cars
         time_axes = self.time_axes
 
+        #Setup axes
         frequency_axes = Axes(
             x_min = 0,
-            x_max = 3.5,
+            x_max = 3,
             y_min = 0,
             y_max = 1.5,
             y_axis_config = {
                 "tick_frequency" : 0.5,
             }
         )
-        frequency_axes.next_to(time_axes, DOWN, LARGE_BUFF, LEFT)
+        frequency_axes.next_to(time_axes, DOWN, LARGE_BUFF)
         frequency_axes.highlight(LIGHT_GREY)
         frequency_label = TextMobject("Frequency")
-        frequency_label.scale(0.75)
-        frequency_label.next_to(
-            frequency_axes.x_axis.get_right(), 
-            DOWN
+        frequency_label.scale(self.text_scale_val)
+        frequency_label.next_to(frequency_axes.x_axis.get_right(), DOWN)
+        frequency_axes.add(
+            frequency_label,
+            VectorizedPoint(frequency_axes.y_axis.get_top())
         )
-        frequency_axes.add(frequency_label)
         frequency_axes.x_axis.add_numbers(1, 2)
-        fourier_graph = get_fourier_graph(
-            frequency_axes, 
-            self.time_graph.underlying_function,
-            t_min = 0,
-            t_max = 4,
+        frequency_graph = frequency_axes.get_graph(
+            lambda x : np.exp(-4*(x-1)**2),
+            x_min = 0,
+            x_max = 2,
+        )
+        frequency_graph.highlight(RED)
+        peak_point = frequency_axes.input_to_graph_point(
+            1, frequency_graph
         )
 
-        self.add(frequency_axes, fourier_graph)
+        #Setup label
+        label = TextMobject("Low confidence")
+        label.scale(self.text_scale_val)
+        label.move_to(peak_point + UP+RIGHT, DOWN)
+        label.match_color(frequency_graph)
+        arrow = Arrow(label.get_bottom(), peak_point, buff = 2*SMALL_BUFF)
+        arrow.match_color(frequency_graph)
 
+        self.play(
+            ReplacementTransform(
+                self.time_axes.copy(), frequency_axes
+            ),
+            ReplacementTransform(
+                self.time_graph.copy(), frequency_graph
+            ),
+        )
+        self.play(
+            Write(label), 
+            GrowArrow(arrow)
+        )
+        self.wait()
 
+        self.frequency_axes = frequency_axes
+        self.frequency_graph = frequency_graph
+        self.frequency_graph_label = VGroup(
+            label, arrow
+        )
 
     def flash_in_sync_long_time(self):
-        pass
+        time_graph = self.time_graph
+        time_axes = self.time_axes
+        frequency_graph = self.frequency_graph
+        frequency_axes = self.frequency_axes
 
-    def mention_uncertainty_principle(self):
-        pass
+        n_spikes = 12
+        new_time_graph = time_axes.get_graph(
+            self.get_multispike_function(range(1, n_spikes+1)),
+            x_min = 0.8,
+            x_max = n_spikes + 0.8,
+        )
+        new_time_graph.match_color(time_graph)
 
+        new_frequency_graph = frequency_axes.get_graph(
+            lambda x : np.exp(-500*(x-1)**2),
+            x_min = 0,
+            x_max = 2,
+            num_anchors = 500,
+        )
+        new_frequency_graph.match_color(self.frequency_graph)
+
+        def pin_freq_graph_end_points(freq_graph):
+            freq_graph.points[0] = frequency_axes.coords_to_point(0, 0)
+            freq_graph.points[-1] = frequency_axes.coords_to_point(2, 0)
+
+        self.play(LaggedStart(
+            FadeOut, VGroup(
+                self.time_graph_label,
+                self.frequency_graph_label,
+                self.time_graph,
+            )
+        ))
+        self.play(
+            ApplyMethod(
+                self.time_axes.x_axis.main_line.stretch, 2.5, 0,
+                {"about_edge" : LEFT},
+                run_time = 4,
+                rate_func = squish_rate_func(smooth, 0.3, 0.6),
+            ),
+            UpdateFromFunc(
+                self.time_axes.x_axis.tip,
+                lambda m : m.move_to(
+                    self.time_axes.x_axis.main_line.get_right(), 
+                    LEFT
+                )
+            ),
+            ShowCreation(
+                new_time_graph,
+                run_time = n_spikes,
+                rate_func = None,
+            ),
+            ApplyMethod(
+                frequency_graph.stretch, 0.1, 0,
+                run_time = n_spikes,
+            ),
+            UpdateFromFunc(frequency_graph, pin_freq_graph_end_points),
+            *[
+                self.get_flashes(car, num_flashes = n_spikes)
+                for car in self.cars
+            ]
+        )
+
+        self.new_time_graph = new_time_graph
+        self.new_frequency_graph = new_frequency_graph
+
+    def show_high_confidence(self):
+        #Frequency stuff
+        arrow = self.frequency_graph_label[1]
+        label = TextMobject("High confidence")
+        label.scale(self.text_scale_val)
+        label.next_to(arrow.get_start(), UP, SMALL_BUFF)
+        label.match_color(arrow)
+
+        frequency_axes = self.frequency_axes
+
+        #Time stuff
+        new_time_graph = self.new_time_graph
+        brace = Brace(new_time_graph, UP, buff = SMALL_BUFF)
+        text = TextMobject("Long duration observation")
+        text.scale(self.text_scale_val)
+        text.next_to(brace, UP, buff = SMALL_BUFF)
+
+        self.play(
+            FadeIn(label),
+            GrowArrow(arrow),
+            *map(self.get_flashes, self.cars)
+        )
+        self.play(
+            GrowFromCenter(brace),
+            Write(text, run_time = 1),
+            *map(self.get_flashes, self.cars)
+        )
+        self.play(*[
+            self.get_flashes(car, num_flashes = 10)
+            for car in self.cars
+        ])
 
     ###
 
@@ -873,9 +990,135 @@ class TwoCarsAtRedLight(Scene):
             for light, color in zip(car.get_lights(), colors)
         ])
 
+    def get_multispike_function(self, spike_times):
+        return lambda x : sum([
+            1.25*np.exp(-100*(x-m)**2)
+            for m in spike_times
+        ])
+
+class VariousMusicalNotes(Scene):
+    def construct(self):
+        freq = 20
+        # x-coordinate of this point represents log(a)
+        # where the bell curve component of the signal
+        # is exp(-a*(x**2))
+        graph_width_tracker = VectorizedPoint()
+        graph_width_tracker.move_to(np.log(2)*RIGHT)
+        def get_graph():
+            a = np.exp(graph_width_tracker.get_center()[0])
+            return FunctionGraph(
+                lambda x : np.exp(-a*x**2)*np.sin(freq*x)-0.5,
+                num_anchor_points = 500,
+            )
+        graph = get_graph()
+        def graph_update(graph):
+            graph.points = get_graph().points
+        graph_update_anim = UpdateFromFunc(graph, graph_update)
+        def change_width_anim(width, **kwargs):
+            a = 2.0/(width**2)
+            return AnimationGroup(
+                ApplyMethod(
+                    graph_width_tracker.move_to,
+                    np.log(a)*RIGHT
+                ),
+                graph_update_anim,
+                **kwargs
+            )
+
+        phrases = [
+            TextMobject(*words.split(" "))
+            for words in [
+                "Less clear frequency",
+                "Extremely unclear frequency",
+                "Very clear frequency",
+            ]
+        ]
 
 
+        #Show graphs and phrases
+        widths = [1, 0.2, SPACE_WIDTH]
+        for width, phrase in zip(widths, phrases):
+            brace = Brace(Line(LEFT, RIGHT), UP)
+            brace.stretch(width, 0)
+            brace.next_to(graph.get_center(), UP, buff = 1.2)
+            phrase.next_to(brace, UP)
 
+            if width is widths[0]:
+                self.play(ShowCreation(graph, rate_func = None)),
+                self.play(
+                    GrowFromCenter(brace),
+                    Write(phrase, run_time = 1)
+                )
+            else:
+                self.play(
+                    change_width_anim(width),
+                    ReplacementTransform(
+                        VGroup(last_phrase, last_brace),
+                        VGroup(phrase, brace),
+                        rate_func = squish_rate_func(smooth, 0.5, 1),
+                    ),
+                    run_time = 2
+                )
+            self.wait()
+            # self.play(*map(FadeOut, [graph, brace, phrase]))
+            last_phrase = phrase
+            last_brace = brace
+
+        #Talk about correlations
+        short_signal_words = TextMobject(
+            "Short", "signal", "correlates",
+            "with", "wide range", "of frequencies"
+        )
+        long_signal_words = TextMobject(
+            "Only", "wide", "signals", "correlate",
+            "with a", "short range", "of frequencies"
+        )
+        phrases = VGroup(short_signal_words, long_signal_words)
+        for phrase in phrases:
+            phrase.scale(0.8)
+            phrase.highlight_by_tex_to_color_map({
+                "short" : RED,
+                "long" : GREEN,
+                "wide" : GREEN,
+            }, case_sensitive = False)
+        phrases.arrange_submobjects(DOWN)
+        phrases.to_edge(UP)
+
+        long_graph = FunctionGraph(
+            lambda x : 0.5*np.sin(freq*x),
+            x_min = -2*SPACE_WIDTH,
+            x_max = 2*SPACE_WIDTH,
+            num_anchor_points = 1000
+        )
+        long_graph.highlight(BLUE)
+        long_graph.next_to(graph, UP, MED_LARGE_BUFF)
+
+        self.play(
+            ShowCreation(long_graph),
+            *map(FadeOut, [last_brace, last_phrase])
+        )
+        self.play(
+            Write(short_signal_words),
+            change_width_anim(widths[1])
+        )
+        self.play(
+            long_graph.stretch, 0.4, 0,
+            long_graph.highlight, GREEN,
+            run_time = 5,
+            rate_func = wiggle
+        )
+        self.wait()
+        self.play(
+            Write(long_signal_words),
+            change_width_anim(widths[2]),
+        )
+        self.play(
+            long_graph.stretch, 0.95, 0,
+            long_graph.highlight, average_color(GREEN, BLUE),
+            run_time = 4,
+            rate_func = wiggle
+        )
+        self.wait()
 
 
 
