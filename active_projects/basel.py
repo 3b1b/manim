@@ -1804,34 +1804,37 @@ class IPTScene1(PiCreatureScene):
 
 
 
-class PondScene(ThreeDScene):
+class PondScene(Scene):
 
     def construct(self):
 
-        BASELINE_YPOS = -1
+        BASELINE_YPOS = -2.5
         OBSERVER_POINT = [0,BASELINE_YPOS,0]
-        POND0_RADIUS = 1.5
+        LAKE0_RADIUS = 1.5
         INDICATOR_RADIUS = 0.6
         TICK_SIZE = 0.5
         LIGHTHOUSE_HEIGHT = 0.2
-        SEA_COLOR = BLUE
-        SEA_OPACITY = 0.3
+        LAKE_COLOR = BLUE
+        LAKE_OPACITY = 0.3
+        LAKE_STROKE_WIDTH = 5.0
+        LAKE_STROKE_COLOR = BLUE
         TEX_SCALE = 0.8
+        DOT_COLOR = BLUE
 
         baseline = VMobject()
         baseline.set_points_as_corners([[-8,BASELINE_YPOS,0],[8,BASELINE_YPOS,0]])
 
-        obs_dot = Dot(OBSERVER_POINT)
-        ls0_dot = Dot(OBSERVER_POINT + 2 * POND0_RADIUS * UP)
+        obs_dot = Dot(OBSERVER_POINT, fill_color = DOT_COLOR)
+        ls0_dot = Dot(OBSERVER_POINT + 2 * LAKE0_RADIUS * UP, fill_color = DOT_COLOR)
 
 
-        # pond
-        pond0 = Circle(radius = POND0_RADIUS,
+        # lake
+        lake0 = Circle(radius = LAKE0_RADIUS,
             stroke_width = 0,
-            fill_color = SEA_COLOR,
-            fill_opacity = SEA_OPACITY
+            fill_color = LAKE_COLOR,
+            fill_opacity = LAKE_OPACITY
         )
-        pond0.move_to(OBSERVER_POINT + POND0_RADIUS * UP)
+        lake0.move_to(OBSERVER_POINT + LAKE0_RADIUS * UP)
 
         # Morty and indicator
         morty = Mortimer().scale(0.3)
@@ -1843,27 +1846,35 @@ class PondScene(ThreeDScene):
         )
         indicator.next_to(morty,LEFT)
 
-        self.add(pond0,morty,indicator,obs_dot,ls0_dot)
+        # first lighthouse
+        ls0 = LightSource()
+        ls0.move_source_to(OBSERVER_POINT + LAKE0_RADIUS * 2 * UP)
+
+        self.add(lake0,morty,indicator,obs_dot,ls0_dot, ls0.lighthouse)
 
         self.wait()
 
 
         # shore arcs
         arc_left = Arc(-TAU/2,
-            radius = POND0_RADIUS,
-            start_angle = -TAU/4
+            radius = LAKE0_RADIUS,
+            start_angle = -TAU/4,
+            stroke_width = LAKE_STROKE_WIDTH,
+            stroke_color = LAKE_STROKE_COLOR
         )
-        arc_left.move_arc_center_to(OBSERVER_POINT + POND0_RADIUS * UP)
+        arc_left.move_arc_center_to(OBSERVER_POINT + LAKE0_RADIUS * UP)
 
         one_left = TexMobject("1")
         one_left.next_to(arc_left,LEFT)
         
 
         arc_right = Arc(TAU/2,
-            radius = POND0_RADIUS,
-            start_angle = -TAU/4
+            radius = LAKE0_RADIUS,
+            start_angle = -TAU/4,
+            stroke_width = LAKE_STROKE_WIDTH,
+            stroke_color = LAKE_STROKE_COLOR
         )
-        arc_right.move_arc_center_to(OBSERVER_POINT + POND0_RADIUS * UP)
+        arc_right.move_arc_center_to(OBSERVER_POINT + LAKE0_RADIUS * UP)
 
         one_right = TexMobject("1").scale(TEX_SCALE)
         one_right.next_to(arc_right,RIGHT)
@@ -1875,13 +1886,9 @@ class PondScene(ThreeDScene):
             Write(one_right),
         )
 
-        # first lighthouse
-        ls0 = LightSource()
-        ls0.move_source_to(OBSERVER_POINT + POND0_RADIUS * 2 * UP)
 
         self.play(
             SwitchOn(ls0.ambient_light),
-            FadeIn(ls0.lighthouse)
         )
         self.play(
             indicator.set_intensity,0.5
@@ -1899,8 +1906,8 @@ class PondScene(ThreeDScene):
         self.play(
             ShowCreation(diameter),
             Write(diameter_text),
-            FadeOut(ls0_dot),
-            FadeOut(obs_dot)
+            FadeOut(obs_dot),
+            FadeOut(ls0_dot)
         )
 
         indicator.reading = TexMobject("{1\over d^2}").scale(TEX_SCALE)
@@ -1942,24 +1949,25 @@ class PondScene(ThreeDScene):
             return np.array([-v[1], v[0], 0])/np.abs(v)
 
 
-        pond1_radius = 2 * POND0_RADIUS
-        pond1 = Circle(radius = pond1_radius,
-            stroke_width = 0,
-            fill_color = SEA_COLOR,
-            fill_opacity = SEA_OPACITY
+        lake1_radius = 2 * LAKE0_RADIUS
+        lake1 = Circle(radius = lake1_radius,
+            stroke_width = LAKE_STROKE_WIDTH,
+            fill_color = LAKE_COLOR,
+            fill_opacity = LAKE_OPACITY,
+            stroke_color = LAKE_STROKE_COLOR
         )
-        pond1.move_to(ls0.get_center())
+        lake1.move_to(ls0.get_center())
 
         self.play(
-            FadeIn(pond1),
-            FadeOut(pond0),
+            FadeIn(lake1),
+            lake0.set_fill,{"opacity" : 0},
             FadeOut(one_left),
             FadeOut(one_right)
         )
 
-        ls0_loc = ls0.get_source_point()
-        ls11_loc = ls0_loc + pond1_radius * LEFT
-        ls12_loc = ls0_loc + pond1_radius * RIGHT
+        lake_center = ls0_loc = ls0.get_source_point()
+        ls11_loc = ls0_loc + lake1_radius * LEFT
+        ls12_loc = ls0_loc + lake1_radius * RIGHT
         t11 = Line(ls0_loc, ls11_loc)
         t12 = Line(ls0_loc, ls12_loc)
 
@@ -1968,12 +1976,12 @@ class PondScene(ThreeDScene):
             ShowCreation(t12),
         )
 
-        hypot11 = Line(ls11_loc,OBSERVER_POINT)
-        hypot12 = Line(ls12_loc,OBSERVER_POINT)
+        leg11 = Line(OBSERVER_POINT,ls11_loc)
+        leg12 = Line(OBSERVER_POINT,ls12_loc)
 
         self.play(
-            ShowCreation(hypot11),
-            ShowCreation(hypot12),
+            ShowCreation(leg11),
+            ShowCreation(leg12),
         )
 
 
@@ -1982,12 +1990,321 @@ class PondScene(ThreeDScene):
         ls12 = ls0.copy()
 
         self.add(ls12)
-        
         self.play(
             ls11.move_source_to,ls11_loc,
             ls12.move_source_to,ls12_loc,
+            FadeIn(ls0_dot)
         )
 
+        INDICATOR_WIGGLE_FACTOR = 1.3
+
+        self.play(
+            ScaleInPlace(indicator, INDICATOR_WIGGLE_FACTOR, rate_func = wiggle),
+            ScaleInPlace(indicator.reading, INDICATOR_WIGGLE_FACTOR, rate_func = wiggle)
+        )
+
+        self.play(
+            FadeOut(diameter),
+            FadeOut(diameter_text)
+        )
+
+        def scale_construction_down():
+            scaling_args = []
+            non_scaling_mobs = [indicator, indicator.reading, morty]
+            for mob in self.mobjects:
+                if type(mob) == AmbientLight or type(mob) == Lighthouse or mob in non_scaling_mobs:
+                    continue
+                scaling_args.append(mob.scale_about_point)
+                scaling_args.append(0.5)
+                scaling_args.append(OBSERVER_POINT)
+
+            self.play(*scaling_args)
+
+
+
+        scale_construction_down()
+
+        # # # # # # # # # # # # # # # 
+        # second  construction step #
+        # # # # # # # # # # # # # # #
+
+        def ls_location_for_angle(angle):
+            return lake_center + lake1_radius * np.array([np.cos(angle),np.sin(angle),0])
+
+        self.play(FadeIn(ls0_dot))
+
+        lake2_radius = lake1_radius # not * 2 bc we have rescaled!
+        lake2 = Circle(radius = lake2_radius,
+            stroke_width = LAKE_STROKE_WIDTH,
+            fill_color = LAKE_COLOR,
+            fill_opacity = LAKE_OPACITY,
+            stroke_color = LAKE_STROKE_COLOR
+        )
+        lake2.move_to(lake_center)
+
+        self.play(
+            FadeIn(lake2),
+            FadeOut(lake0),
+            FadeOut(ls0_dot),
+            lake1.set_fill,{"opacity": 0},
+            FadeOut(arc_left),
+            FadeOut(arc_right),
+            FadeOut(t11),
+            FadeOut(t12),
+        )
+
+        ls0_dot.move_to(lake_center)
+        self.play(FadeIn(ls0_dot))
+
+        ls21_loc = ls_location_for_angle(-3*TAU/8)
+        ls22_loc = ls_location_for_angle(TAU/8)
+        ls23_loc = ls_location_for_angle(3*TAU/8)
+        ls24_loc = ls_location_for_angle(-TAU/8)
+        t21 = Line(lake_center, ls21_loc)
+        t22 = Line(lake_center, ls22_loc)
+        t23 = Line(lake_center, ls23_loc)
+        t24 = Line(lake_center, ls24_loc)
+        leg21 = Line(OBSERVER_POINT,ls21_loc)
+        leg22 = Line(OBSERVER_POINT,ls22_loc)
+        leg23 = Line(OBSERVER_POINT,ls23_loc)
+        leg24 = Line(OBSERVER_POINT,ls24_loc)
+
+        self.play(
+            ShowCreation(t21),
+            ShowCreation(t22),
+        )
+
+
+        # place lighthouses at intersection points
+        ls21 = ls11
+        ls22 = ls11.copy()
+        ls23 = ls12
+        ls24 = ls12.copy()
+
+
+        self.play(
+            ShowCreation(leg21),
+            ShowCreation(leg22),
+        )
+
+
+        self.add(ls21, ls22)
+        self.play(
+            ls21.move_source_to,ls21_loc,
+            ls22.move_source_to,ls22_loc,
+        )
+
+
+
+        self.play(
+            ShowCreation(t23),
+            ShowCreation(t24),
+        )
+
+
+        
+
+        self.play(
+            ShowCreation(leg23),
+            ShowCreation(leg24),
+        )
+
+
+        self.add(ls23, ls24)
+        self.play(
+            ls23.move_source_to,ls23_loc,
+            ls24.move_source_to,ls24_loc,
+        )
+
+
+
+        self.play(
+            ScaleInPlace(indicator, INDICATOR_WIGGLE_FACTOR, rate_func = wiggle),
+            ScaleInPlace(indicator.reading, INDICATOR_WIGGLE_FACTOR, rate_func = wiggle)
+        )
+
+        self.play(
+            FadeOut(lake1),
+            FadeOut(leg11),
+            FadeOut(leg12),
+        )
+
+        self.play(
+            FadeOut(ls0_dot)
+        )
+
+        ls0_dot.move_to(lake_center)
+
+        self.play(
+            FadeIn(ls0_dot)
+        )
+
+        # again scale everything down
+        scale_construction_down()
+
+
+
+
+
+
+
+        # # # # # # # # # # # # # #
+        # third construction step #
+        # # # # # # # # # # # # # #
+
+
+        lake3_radius = lake2_radius # not * 2 bc we have rescaled!
+        lake3 = Circle(radius = lake3_radius,
+            stroke_width = LAKE_STROKE_WIDTH,
+            fill_color = LAKE_COLOR,
+            fill_opacity = LAKE_OPACITY,
+            stroke_color = LAKE_STROKE_COLOR
+        )
+        lake3.move_to(lake_center)
+
+        self.play(
+            FadeIn(lake3),
+            FadeOut(lake1),
+            FadeOut(ls0_dot),
+            lake2.set_fill,{"opacity": 0},
+            FadeOut(t21),
+            FadeOut(t22),
+            FadeOut(t23),
+            FadeOut(t24),
+        )
+
+        ls0_dot.move_to(lake_center)
+        self.play(FadeIn(ls0_dot))
+
+        ls31_loc = ls_location_for_angle(-3*TAU/16)
+        ls32_loc = ls_location_for_angle(5*TAU/16)
+        ls33_loc = ls_location_for_angle(-TAU/16)
+        ls34_loc = ls_location_for_angle(7*TAU/16)
+        ls35_loc = ls_location_for_angle(TAU/16)
+        ls36_loc = ls_location_for_angle(9*TAU/16)
+        ls37_loc = ls_location_for_angle(3*TAU/16)
+        ls38_loc = ls_location_for_angle(-5*TAU/16)
+
+        t31 = Line(lake_center, ls31_loc)
+        t32 = Line(lake_center, ls32_loc)
+        t33 = Line(lake_center, ls33_loc)
+        t34 = Line(lake_center, ls34_loc)
+        t35 = Line(lake_center, ls35_loc)
+        t36 = Line(lake_center, ls36_loc)
+        t37 = Line(lake_center, ls37_loc)
+        t38 = Line(lake_center, ls38_loc)
+        
+
+        leg31 = Line(OBSERVER_POINT,ls31_loc)
+        leg32 = Line(OBSERVER_POINT,ls32_loc)
+        leg33 = Line(OBSERVER_POINT,ls33_loc)
+        leg34 = Line(OBSERVER_POINT,ls34_loc)
+        leg35 = Line(OBSERVER_POINT,ls35_loc)
+        leg36 = Line(OBSERVER_POINT,ls36_loc)
+        leg37 = Line(OBSERVER_POINT,ls37_loc)
+        leg38 = Line(OBSERVER_POINT,ls38_loc)
+
+
+        # place lighthouses at intersection points
+        ls31 = ls24
+        ls32 = ls24.copy()
+        ls33 = ls22
+        ls34 = ls22.copy()
+        ls35 = ls23
+        ls36 = ls23.copy()
+        ls37 = ls21
+        ls38 = ls21.copy()
+
+        #
+
+        self.play(
+            ShowCreation(t31),
+            ShowCreation(t32),
+        )
+
+        self.play(
+            ShowCreation(leg31),
+            ShowCreation(leg32),
+        )
+
+        self.add(ls31, ls32)
+        self.play(
+            ls31.move_source_to,ls31_loc,
+            ls32.move_source_to,ls32_loc,
+        )
+
+        #
+
+        self.play(
+            ShowCreation(t33),
+            ShowCreation(t34),
+        )
+
+        self.play(
+            ShowCreation(leg33),
+            ShowCreation(leg34),
+        )
+
+        self.add(ls33, ls34)
+        self.play(
+            ls33.move_source_to,ls33_loc,
+            ls34.move_source_to,ls34_loc,
+        )
+
+        #
+
+        self.play(
+            ShowCreation(t35),
+            ShowCreation(t36),
+        )
+
+        self.play(
+            ShowCreation(leg35),
+            ShowCreation(leg36),
+        )
+
+        self.add(ls35, ls36)
+        self.play(
+            ls35.move_source_to,ls35_loc,
+            ls36.move_source_to,ls36_loc,
+        )
+
+        #
+
+        self.play(
+            ShowCreation(t37),
+            ShowCreation(t38),
+        )
+
+        self.play(
+            ShowCreation(leg37),
+            ShowCreation(leg38),
+        )
+
+        self.add(ls37, ls38)
+        self.play(
+            ls37.move_source_to,ls37_loc,
+            ls38.move_source_to,ls38_loc,
+        )
+
+
+
+
+
+
+
+
+
+
+
+        self.play(
+            FadeOut(lake1),
+        )
+
+        self.play(
+            ScaleInPlace(indicator, INDICATOR_WIGGLE_FACTOR, rate_func = wiggle),
+            ScaleInPlace(indicator.reading, INDICATOR_WIGGLE_FACTOR, rate_func = wiggle)
+        )
 
 
 
