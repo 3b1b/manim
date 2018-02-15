@@ -1892,7 +1892,7 @@ class PondScene(Scene):
         ls0 = LightSource()
         ls0.move_source_to(OBSERVER_POINT + LAKE0_RADIUS * 2 * UP)
 
-        self.add(lake0,morty,indicator,obs_dot,ls0_dot, ls0.lighthouse)
+        self.add(lake0,morty,obs_dot,ls0_dot, ls0.lighthouse)
 
         self.wait()
 
@@ -1933,6 +1933,9 @@ class PondScene(Scene):
             SwitchOn(ls0.ambient_light),
             lake0.set_stroke,{"color": LAKE_STROKE_COLOR, "width" : LAKE_STROKE_WIDTH},
         )
+
+        self.play(FadeIn(indicator))
+
         self.play(
             indicator.set_intensity,0.5
         )
@@ -1949,7 +1952,7 @@ class PondScene(Scene):
         self.play(
             ShowCreation(diameter),
             Write(diameter_text),
-            FadeOut(obs_dot),
+            #FadeOut(obs_dot),
             FadeOut(ls0_dot)
         )
 
@@ -2017,7 +2020,7 @@ class PondScene(Scene):
             ls_new_loc1 = position_for_index(i,step + 1)
             ls_new_loc2 = position_for_index(i + 2**step,step + 1)
 
-            hyp = Mobject()
+            hyp = VMobject()
             hyp1 = Line(self.lake_center,ls_new_loc1)
             hyp2 = Line(self.lake_center,ls_new_loc2)
             hyp.add(hyp2,hyp1)
@@ -2078,6 +2081,10 @@ class PondScene(Scene):
                     FadeOut(self.altitudes),
                     FadeOut(self.inner_lake)
                 )
+            else:
+                self.play(
+                    FadeOut(self.inner_lake)
+                )
 
             # create a new, outer lake
 
@@ -2118,13 +2125,13 @@ class PondScene(Scene):
             # collect the newly created mobs (in arrays)
             # into the appropriate Mobject containers
 
-            self.legs = Mobject()
+            self.legs = VMobject()
             for leg in self.new_legs_1:
                 self.legs.add(leg)
             for leg in self.new_legs_2:
                 self.legs.add(leg)
 
-            self.hypotenuses = Mobject()
+            self.hypotenuses = VMobject()
             for hyp in self.new_hypotenuses:
                 self.hypotenuses.add(hyp)
 
@@ -2187,14 +2194,14 @@ class PondScene(Scene):
 
         self.lake_center = ls0_loc = ls0.get_source_point()
 
-        self.inner_lake = Mobject()
+        self.inner_lake = VMobject()
         self.outer_lake = lake0
-        self.legs = Mobject()
+        self.legs = VMobject()
         self.legs.add(Line(OBSERVER_POINT,self.lake_center))
-        self.altitudes = Mobject()
-        self.hypotenuses = Mobject()
+        self.altitudes = VMobject()
+        self.hypotenuses = VMobject()
         self.light_sources_array = [ls0]
-        self.light_sources = Mobject()
+        self.light_sources = VMobject()
         self.light_sources.add(ls0)
 
         self.lake_radius = 2 * LAKE0_RADIUS # don't ask...
@@ -2222,7 +2229,7 @@ class PondScene(Scene):
             FadeOut(self.legs)
             )
 
-        for i in range(3,6):
+        for i in range(3,10):
             construction_step(i, scale_down = False, show_steps = False, run_time = 1.0/2**i,
                 simultaneous_splitting = True)
 
