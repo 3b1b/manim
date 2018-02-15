@@ -689,6 +689,10 @@ class DictAsObject(object):
 def fdiv(a, b):
     return np.true_divide(a,b)
 
+def range_via_num_steps(start, end, num_steps, include_end = True):
+    num_points = num_steps + (1 if include_end else 0)
+    return [interpolate(start, end, fdiv(i, num_steps)) for i in range(num_points)]
+
 # For debugging purposes
 
 def print_mobject_family(mob, n_tabs = 0):

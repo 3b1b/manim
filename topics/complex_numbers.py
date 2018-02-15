@@ -193,6 +193,8 @@ class ComplexPlane(NumberPlane):
         return complex(x, y)
 
     def get_coordinate_labels(self, *numbers):
+        # TODO: Should merge this with the code from NumberPlane.get_coordinate_labels
+
         result = VGroup()
         nudge = 0.1*(DOWN+RIGHT)
         if len(numbers) == 0:
@@ -211,10 +213,7 @@ class ComplexPlane(NumberPlane):
             num_mob = TexMobject(num_str)
             num_mob.add_background_rectangle()
             num_mob.scale(self.number_scale_factor)
-            if complex(number).imag != 0:
-                vect = DOWN+RIGHT
-            else:
-                vect = DOWN+RIGHT
+            vect = DOWN + LEFT
             num_mob.next_to(point, vect, SMALL_BUFF)
             result.add(num_mob)
         return result
@@ -224,6 +223,8 @@ class ComplexPlane(NumberPlane):
         return self
 
     def add_spider_web(self, circle_freq = 1, angle_freq = np.pi/6):
+        # This code no longer works because it has this reference to self.fade_factor
+        # which is never initialized. Shall we delete this little-used function entirely?
         self.fade(self.fade_factor)
         config = {
             "color" : self.color,

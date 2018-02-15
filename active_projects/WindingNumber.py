@@ -32,189 +32,32 @@ from topics.graph_scene import *
 # TODO/WARNING: There's a lot of refactoring and cleanup to be done in this code,
 # (and it will be done, but first I'll figure out what I'm doing with all this...)
 # -SR
-        
-class EquationSolver1d(GraphScene, ZoomedScene):
-    CONFIG = {
-    "func" : lambda x : x,
-    "targetX" : 0,
-    "targetY" : 0,
-    "initial_lower_x" : 0,
-    "initial_upper_x" : 10,
-    "num_iterations" : 10,
-    "iteration_at_which_to_start_zoom" : None,
-    "graph_label" : None,
-    "show_target_line" : True
-    }
-
-    def drawGraph(self):
-        self.setup_axes()
-        self.graph = self.get_graph(self.func)
-        self.add(self.graph)
-
-        if self.graph_label != None:
-            self.add(self.get_graph_label(self.graph, self.graph_label, 
-                x_val = 4, direction = RIGHT))
-        
-        if self.show_target_line:
-            target_line_object = DashedLine(
-                self.coords_to_point(self.x_min, self.targetY), 
-                self.coords_to_point(self.x_max, self.targetY),
-                dashed_segment_length = 0.1)
-            self.add(target_line_object)
-
-            target_line_label = TexMobject("y = " + str(self.targetY))
-            target_line_label.next_to(target_line_object.get_left(), UP + RIGHT)
-            self.add(target_line_label)
-
-    def solveEquation(self):
-        leftBrace = TexMobject("[")
-        rightBrace = TexMobject("]")
-        xBraces = Group(leftBrace, rightBrace)
-        xBraces.stretch(2, 0)
-
-        downBrace = TexMobject("[")
-        upBrace = TexMobject("]")
-        yBraces = Group(downBrace, upBrace)
-        yBraces.stretch(2, 0)
-        yBraces.rotate(TAU/4)
-
-        lowerX = self.initial_lower_x
-        lowerY = self.func(lowerX)
-        upperX = self.initial_upper_x
-        upperY = self.func(upperX)
-
-        leftBrace.move_to(self.coords_to_point(lowerX, 0), aligned_edge = LEFT)
-        leftBraceLabel = DecimalNumber(lowerX)
-        leftBraceLabel.next_to(leftBrace, DOWN + LEFT, buff = SMALL_BUFF)
-        leftBraceLabelAnimation = ContinualChangingDecimal(leftBraceLabel, 
-            lambda alpha : self.point_to_coords(leftBrace.get_center())[0],
-            tracked_mobject = leftBrace)
-        self.add(leftBraceLabelAnimation)
-        
-        rightBrace.move_to(self.coords_to_point(upperX, 0), aligned_edge = RIGHT)
-        rightBraceLabel = DecimalNumber(upperX)
-        rightBraceLabel.next_to(rightBrace, DOWN + RIGHT, buff = SMALL_BUFF)
-        rightBraceLabelAnimation = ContinualChangingDecimal(rightBraceLabel, 
-            lambda alpha : self.point_to_coords(rightBrace.get_center())[0],
-            tracked_mobject = rightBrace)
-        self.add(rightBraceLabelAnimation)
-
-        downBrace.move_to(self.coords_to_point(0, lowerY), aligned_edge = DOWN)
-        downBraceLabel = DecimalNumber(lowerY)
-        downBraceLabel.next_to(downBrace, LEFT + DOWN, buff = SMALL_BUFF)
-        downBraceLabelAnimation = ContinualChangingDecimal(downBraceLabel, 
-            lambda alpha : self.point_to_coords(downBrace.get_center())[1],
-            tracked_mobject = downBrace)
-        self.add(downBraceLabelAnimation)
-        
-        upBrace.move_to(self.coords_to_point(0, upperY), aligned_edge = UP)
-        upBraceLabel = DecimalNumber(upperY)
-        upBraceLabel.next_to(upBrace, LEFT + UP, buff = SMALL_BUFF)
-        upBraceLabelAnimation = ContinualChangingDecimal(upBraceLabel, 
-            lambda alpha : self.point_to_coords(upBrace.get_center())[1],
-            tracked_mobject = upBrace)
-        self.add(upBraceLabelAnimation)
-
-        lowerDotPoint = self.input_to_graph_point(lowerX, self.graph)
-        lowerDotXPoint = self.coords_to_point(lowerX, 0)
-        lowerDotYPoint = self.coords_to_point(0, self.func(lowerX))
-        lowerDot = Dot(lowerDotPoint)
-        upperDotPoint = self.input_to_graph_point(upperX, self.graph)
-        upperDot = Dot(upperDotPoint)
-        upperDotXPoint = self.coords_to_point(upperX, 0)
-        upperDotYPoint = self.coords_to_point(0, self.func(upperX))
-
-        lowerXLine = Line(lowerDotXPoint, lowerDotPoint, stroke_width = 1, color = YELLOW)
-        upperXLine = Line(upperDotXPoint, upperDotPoint, stroke_width = 1, color = YELLOW)
-        lowerYLine = Line(lowerDotYPoint, lowerDotPoint, stroke_width = 1, color = YELLOW)
-        upperYLine = Line(upperDotYPoint, upperDotPoint, stroke_width = 1, color = YELLOW)
-        self.add(lowerXLine, upperXLine, lowerYLine, upperYLine)
-
-        self.add(xBraces, yBraces, lowerDot, upperDot)
-
-        for i in range(self.num_iterations):
-            if i == self.iteration_at_which_to_start_zoom:
-                self.activate_zooming()
-                self.little_rectangle.move_to(
-                    self.coords_to_point(self.targetX, self.targetY))
-                inverseZoomFactor = 1/float(self.zoom_factor)
-                self.play(
-                    lowerDot.scale_in_place, inverseZoomFactor,
-                    upperDot.scale_in_place, inverseZoomFactor)
-
-
-            def makeUpdater(xAtStart):
-                def updater(group, alpha):
-                    dot, xBrace, yBrace, xLine, yLine = group
-                    newX = interpolate(xAtStart, midX, alpha)
-                    newY = self.func(newX)
-                    graphPoint = self.input_to_graph_point(newX, 
-                            self.graph)
-                    dot.move_to(graphPoint)
-                    xAxisPoint = self.coords_to_point(newX, 0)
-                    xBrace.move_to(xAxisPoint)
-                    yAxisPoint = self.coords_to_point(0, newY)
-                    yBrace.move_to(yAxisPoint)
-                    xLine.put_start_and_end_on(xAxisPoint, graphPoint)
-                    yLine.put_start_and_end_on(yAxisPoint, graphPoint)
-                    return group
-                return updater
-
-            midX = (lowerX + upperX)/float(2)
-            midY = self.func(midX)
-
-            midCoords = self.coords_to_point(midX, midY)
-            midColor = RED
-            midXPoint = Dot(self.coords_to_point(midX, 0), color = midColor)
-            self.play(
-                ReplacementTransform(leftBrace.copy(), midXPoint),
-                ReplacementTransform(rightBrace.copy(), midXPoint))
-            midXLine = Line(self.coords_to_point(midX, 0), midCoords, color = midColor)
-            self.play(ShowCreation(midXLine))
-            midDot = Dot(midCoords, color = midColor)
-            if(self.iteration_at_which_to_start_zoom != None and 
-                i >= self.iteration_at_which_to_start_zoom):
-                midDot.scale_in_place(inverseZoomFactor)
-            self.add(midDot)
-            midYLine = Line(midCoords, self.coords_to_point(0, midY), color = midColor)
-            self.play(ShowCreation(midYLine))
-
-            if midY < self.targetY:
-                movingGroup = Group(lowerDot, 
-                    leftBrace, downBrace,
-                    lowerXLine, lowerYLine)
-                self.play(
-                    UpdateFromAlphaFunc(movingGroup, makeUpdater(lowerX)))
-                lowerX = midX
-                lowerY = midY
-
-            else:
-                movingGroup = Group(upperDot, 
-                    rightBrace, upBrace,
-                    upperXLine, upperYLine)
-                self.play(
-                    UpdateFromAlphaFunc(movingGroup, makeUpdater(upperX)))
-                upperX = midX
-                upperY = midY
-            self.remove(midXLine, midDot, midYLine)
-
-        self.wait()
-
-    def construct(self):
-        self.drawGraph()
-        self.solveEquation()
-
-colorslist = map(color_to_rgba, ["#FF0000", "#FFFF00", "#00FF00", "#0000FF"])
 
 def rev_to_rgba(alpha):
-    alpha = alpha % 1
-    colors = colorslist
-    num_colors = len(colors)
-    beta = (alpha % (1.0/num_colors)) * num_colors
-    start_index = int(np.floor(num_colors * alpha)) % num_colors
-    end_index = (start_index + 1) % num_colors
+    alpha = (0.5 - alpha) % 1 # For convenience, to go CW from red on left instead of CCW from right
+    # 0 is red, 1/6 is yellow, 1/3 is green, 2/3 is blue
+    hue_list = [0, 0.5/6.0, 1/6.0, 1.1/6.0, 2/6.0, 3/6.0, 4/6.0, 5/6.0]
+    num_hues = len(hue_list)
+    start_index = int(np.floor(num_hues * alpha)) % num_hues
+    end_index = (start_index + 1) % num_hues
+    beta = (alpha % (1.0/num_hues)) * num_hues
 
-    return interpolate(colors[start_index], colors[end_index], beta)
+    start_hue = hue_list[start_index]
+    end_hue = hue_list[end_index]
+    if end_hue < start_hue:
+        end_hue = end_hue + 1
+    hue = interpolate(start_hue, end_hue, beta)
+
+    return color_to_rgba(Color(hue = hue, saturation = 1, luminance = 0.5))
+
+    # alpha = alpha % 1
+    # colors = colorslist
+    # num_colors = len(colors)
+    # beta = (alpha % (1.0/num_colors)) * num_colors
+    # start_index = int(np.floor(num_colors * alpha)) % num_colors
+    # end_index = (start_index + 1) % num_colors
+
+    # return interpolate(colors[start_index], colors[end_index], beta)
 
 def rev_to_color(alpha):
     return rgba_to_color(rev_to_rgba(alpha))
@@ -234,6 +77,255 @@ def point_to_rgba(point):
     base_size = np.sqrt(point[0]**2 + point[1]**2)
     rescaled_size = np.sqrt(base_size/(base_size + 1))
     return rgba * rescaled_size
+
+positive_color = rev_to_color(0)
+negative_color = rev_to_color(0.5)
+neutral_color = rev_to_color(0.25)
+        
+class EquationSolver1d(GraphScene, ZoomedScene):
+    CONFIG = {
+    "camera_config" : 
+        {
+            "use_z_coordinate_for_display_order": True,
+        },
+    "func" : lambda x : x,
+    "targetX" : 0,
+    "targetY" : 0,
+    "initial_lower_x" : 0,
+    "initial_upper_x" : 10,
+    "num_iterations" : 10,
+    "iteration_at_which_to_start_zoom" : None,
+    "graph_label" : None,
+    "show_target_line" : True
+    }
+
+    def drawGraph(self):
+        self.setup_axes()
+        self.graph = self.get_graph(self.func)
+        self.add(self.graph)
+
+        if self.graph_label != None:
+            curve_label = self.get_graph_label(self.graph, self.graph_label, 
+                x_val = 4, direction = LEFT)
+            curve_label.shift(LEFT)
+            self.add(curve_label)
+        
+        if self.show_target_line:
+            target_line_object = DashedLine(
+                self.coords_to_point(self.x_min, self.targetY), 
+                self.coords_to_point(self.x_max, self.targetY),
+                dashed_segment_length = 0.1)
+            self.add(target_line_object)
+
+            target_line_label = TexMobject("y = " + str(self.targetY))
+            target_line_label.next_to(target_line_object.get_left(), UP + RIGHT)
+            self.add(target_line_label)
+
+            self.wait() # Give us time to appreciate the graph
+            self.play(FadeOut(target_line_label)) # Reduce clutter
+
+        print "For reference, graphOrigin: ", self.coords_to_point(0, 0)
+        print "targetYPoint: ", self.coords_to_point(0, self.targetY)
+
+    # This is a mess right now (first major animation coded), 
+    # but it works; can be refactored later or never
+    def solveEquation(self):
+        leftBrace = TexMobject("|") # Not using [ and ] because they end up crossing over
+        leftBrace.set_color(negative_color)
+        rightBrace = TexMobject("|")
+        rightBrace.set_color(positive_color)
+        xBraces = Group(leftBrace, rightBrace)
+        xBraces.stretch(2, 0)
+
+        downBrace = TexMobject("|")
+        downBrace.set_color(negative_color)
+        upBrace = TexMobject("|")
+        upBrace.set_color(positive_color)
+        yBraces = Group(downBrace, upBrace)
+        yBraces.stretch(2, 0)
+        yBraces.rotate(TAU/4)
+
+        lowerX = self.initial_lower_x
+        lowerY = self.func(lowerX)
+        upperX = self.initial_upper_x
+        upperY = self.func(upperX)
+
+        leftBrace.move_to(self.coords_to_point(lowerX, 0)) #, aligned_edge = RIGHT)
+        leftBraceLabel = DecimalNumber(lowerX)
+        leftBraceLabel.next_to(leftBrace, DOWN + LEFT, buff = SMALL_BUFF)
+        leftBraceLabelAnimation = ContinualChangingDecimal(leftBraceLabel, 
+            lambda alpha : self.point_to_coords(leftBrace.get_center())[0],
+            tracked_mobject = leftBrace)
+        self.add(leftBraceLabelAnimation)
+        
+        rightBrace.move_to(self.coords_to_point(upperX, 0)) #, aligned_edge = LEFT)
+        rightBraceLabel = DecimalNumber(upperX)
+        rightBraceLabel.next_to(rightBrace, DOWN + RIGHT, buff = SMALL_BUFF)
+        rightBraceLabelAnimation = ContinualChangingDecimal(rightBraceLabel, 
+            lambda alpha : self.point_to_coords(rightBrace.get_center())[0],
+            tracked_mobject = rightBrace)
+        self.add(rightBraceLabelAnimation)
+
+        downBrace.move_to(self.coords_to_point(0, lowerY)) #, aligned_edge = UP)
+        downBraceLabel = DecimalNumber(lowerY)
+        downBraceLabel.next_to(downBrace, LEFT + DOWN, buff = SMALL_BUFF)
+        downBraceLabelAnimation = ContinualChangingDecimal(downBraceLabel, 
+            lambda alpha : self.point_to_coords(downBrace.get_center())[1],
+            tracked_mobject = downBrace)
+        self.add(downBraceLabelAnimation)
+        
+        upBrace.move_to(self.coords_to_point(0, upperY)) #, aligned_edge = DOWN)
+        upBraceLabel = DecimalNumber(upperY)
+        upBraceLabel.next_to(upBrace, LEFT + UP, buff = SMALL_BUFF)
+        upBraceLabelAnimation = ContinualChangingDecimal(upBraceLabel, 
+            lambda alpha : self.point_to_coords(upBrace.get_center())[1],
+            tracked_mobject = upBrace)
+        self.add(upBraceLabelAnimation)
+
+        lowerDotPoint = self.input_to_graph_point(lowerX, self.graph)
+        lowerDotXPoint = self.coords_to_point(lowerX, 0)
+        lowerDotYPoint = self.coords_to_point(0, self.func(lowerX))
+        lowerDot = Dot(lowerDotPoint + OUT, color = negative_color)
+        upperDotPoint = self.input_to_graph_point(upperX, self.graph)
+        upperDot = Dot(upperDotPoint + OUT, color = positive_color)
+        upperDotXPoint = self.coords_to_point(upperX, 0)
+        upperDotYPoint = self.coords_to_point(0, self.func(upperX))
+
+        lowerXLine = Line(lowerDotXPoint, lowerDotPoint, color = negative_color)
+        upperXLine = Line(upperDotXPoint, upperDotPoint, color = positive_color)
+        lowerYLine = Line(lowerDotYPoint, lowerDotPoint, color = negative_color)
+        upperYLine = Line(upperDotYPoint, upperDotPoint, color = positive_color)
+        self.add(lowerXLine, upperXLine, lowerYLine, upperYLine)
+
+        self.add(xBraces, yBraces, lowerDot, upperDot)
+
+        x_guess_line = Line(lowerDotXPoint, upperDotXPoint, color = neutral_color)
+        self.add(x_guess_line)
+
+        lowerGroup = Group(
+            lowerDot, 
+            leftBrace, downBrace,
+            lowerXLine, lowerYLine,
+            x_guess_line
+        )
+        
+        upperGroup = Group(
+            upperDot, 
+            rightBrace, upBrace,
+            upperXLine, upperYLine,
+            x_guess_line
+        )
+
+        initialLowerXDot = Dot(lowerDotXPoint, color = negative_color)
+        initialUpperXDot = Dot(upperDotXPoint, color = positive_color)
+        initialLowerYDot = Dot(lowerDotYPoint, color = negative_color)
+        initialUpperYDot = Dot(upperDotYPoint, color = positive_color)
+        self.add(initialLowerXDot, initialUpperXDot, initialLowerYDot, initialUpperYDot)
+
+        for i in range(self.num_iterations):
+            if i == self.iteration_at_which_to_start_zoom:
+                self.activate_zooming()
+                self.little_rectangle.move_to(
+                    self.coords_to_point(self.targetX, self.targetY))
+                inverseZoomFactor = 1/float(self.zoom_factor)
+                self.play(
+                    lowerDot.scale_in_place, inverseZoomFactor,
+                    upperDot.scale_in_place, inverseZoomFactor)
+
+
+            def makeUpdater(xAtStart, fixed_guess_x):
+                def updater(group, alpha):
+                    dot, xBrace, yBrace, xLine, yLine, guess_line = group
+                    newX = interpolate(xAtStart, midX, alpha)
+                    newY = self.func(newX)
+                    graphPoint = self.input_to_graph_point(newX, 
+                            self.graph)
+                    dot.move_to(graphPoint)
+                    xAxisPoint = self.coords_to_point(newX, 0)
+                    xBrace.move_to(xAxisPoint)
+                    yAxisPoint = self.coords_to_point(0, newY)
+                    yBrace.move_to(yAxisPoint)
+                    xLine.put_start_and_end_on(xAxisPoint, graphPoint)
+                    yLine.put_start_and_end_on(yAxisPoint, graphPoint)
+                    fixed_guess_point = self.coords_to_point(fixed_guess_x, 0)
+                    guess_line.put_start_and_end_on(xAxisPoint, fixed_guess_point)
+                    return group
+                return updater
+
+            midX = (lowerX + upperX)/float(2)
+            midY = self.func(midX)
+            in_negative_branch = midY < self.targetY
+            sign_color = negative_color if in_negative_branch else positive_color
+
+            midCoords = self.coords_to_point(midX, midY)
+            midColor = neutral_color
+            # Hm... even the z buffer isn't helping keep this above x_guess_line
+            midXPoint = Dot(self.coords_to_point(midX, 0) + OUT, color = midColor)
+
+            x_guess_label_caption = TextMobject("New guess: x = ", fill_color = midColor)
+            x_guess_label_num = DecimalNumber(midX, fill_color = midColor)
+            x_guess_label_num.move_to(0.9 * SPACE_HEIGHT * DOWN)
+            x_guess_label_caption.next_to(x_guess_label_num, LEFT)
+            x_guess_label = Group(x_guess_label_caption, x_guess_label_num)
+            y_guess_label_caption = TextMobject(", y = ", fill_color = midColor)
+            y_guess_label_num = DecimalNumber(midY, fill_color = sign_color)
+            y_guess_label_caption.next_to(x_guess_label_num, RIGHT)
+            y_guess_label_num.next_to(y_guess_label_caption, RIGHT)
+            y_guess_label = Group(y_guess_label_caption, y_guess_label_num)
+            guess_labels = Group(x_guess_label, y_guess_label)
+
+            self.play(
+                ReplacementTransform(leftBrace.copy(), midXPoint),
+                ReplacementTransform(rightBrace.copy(), midXPoint),
+                FadeIn(x_guess_label))
+
+            midXLine = DashedLine(self.coords_to_point(midX, 0), midCoords, color = midColor)
+            self.play(ShowCreation(midXLine))
+            midDot = Dot(midCoords, color = sign_color)
+            if(self.iteration_at_which_to_start_zoom != None and 
+                i >= self.iteration_at_which_to_start_zoom):
+                midDot.scale_in_place(inverseZoomFactor)
+            self.add(midDot)
+            midYLine = DashedLine(midCoords, self.coords_to_point(0, midY), color = sign_color)
+            self.play(
+                ShowCreation(midYLine), 
+                FadeIn(y_guess_label),
+                ApplyMethod(midXPoint.set_color, sign_color),
+                ApplyMethod(midXLine.set_color, sign_color))
+            midYPoint = Dot(self.coords_to_point(0, midY), color = sign_color)
+            self.add(midYPoint)
+
+            if in_negative_branch:
+                self.play(
+                    UpdateFromAlphaFunc(lowerGroup, 
+                        makeUpdater(lowerX, 
+                            fixed_guess_x = upperX
+                        )
+                    ),
+                    FadeOut(guess_labels),
+                )
+                lowerX = midX
+                lowerY = midY
+
+            else:
+                self.play(
+                    UpdateFromAlphaFunc(upperGroup, 
+                        makeUpdater(upperX, 
+                            fixed_guess_x = lowerX
+                        )
+                    ),
+                    FadeOut(guess_labels),
+                )
+                upperX = midX
+                upperY = midY
+            #mid_group = Group(midXLine, midDot, midYLine) Removing groups doesn't flatten as expected?
+            self.remove(midXLine, midDot, midYLine)
+
+        self.wait()
+
+    def construct(self):
+        self.drawGraph()
+        self.solveEquation()
 
 # Returns the value with the same fractional component as x, closest to m
 def resit_near(x, m):
@@ -319,7 +411,7 @@ class RectangleData():
         return tuple([mid(x, y) for (x, y) in sides])
 
 def complex_to_pair(c):
-    return (c.real, c.imag)
+    return np.array((c.real, c.imag))
 
 def plane_poly_with_roots(*points):
     def f((x, y)):
@@ -441,26 +533,63 @@ class ColorMappedByFuncScene(Scene):
 
     def setup(self):
         if self.show_output:
-            self.pos_func = self.func
+            self.input_to_pos_func = self.func
+            self.pos_to_color_func = lambda p : p
         else:
-            self.pos_func = lambda p : p
+            self.input_to_pos_func = lambda p : p
+            self.pos_to_color_func = self.func
+
+        # func_hash hashes the function at some random points
+        func_hash_points = [(-0.93, 1), (1, -2.7), (20, 4)]
+        to_hash = tuple((self.func(p)[0], self.func(p)[1]) for p in func_hash_points)
+        func_hash = hash(to_hash)
+        full_hash = hash((func_hash, self.camera.pixel_shape))
+        self.background_image_file = "color_mapped_background_" + str(full_hash)
+        try:
+            file_path = get_full_raster_image_path(self.background_image_file)
+            # If we succeed in finding the file:
+            self.in_background_pass = False
+        except IOError:
+            file_path = os.path.join(RASTER_IMAGE_DIR, self.background_image_file + ".png")
+            self.in_background_pass = True
+
+        print "Background file: " + file_path
+        if self.in_background_pass:
+            print "The background file does not exist yet; this will be the background creation pass"
+            print "If not already doing so, please re-run this render with the flags -s -n 0,1 -o \"%s\""%file_path
+            self.show_num_plane = False
+        else:
+            print "The background file already exists; this will be the video pass as usual"
 
     def construct(self):
-        display_func = self.func if not self.show_output else lambda p : p
-
         if self.show_num_plane:
             self.num_plane.fade()
             self.add(self.num_plane)
-        self.camera.set_background_from_func(
-            lambda (x, y): point_to_rgba(
-                display_func(
-                    # Should be self.num_plane.point_to_coords_cheap(np.array([x, y, 0])),
-                    # but for cheapness, we'll go with just (x, y), having never altered
-                    # any num_plane's from default settings so far
-                    (x, y)
+
+        if self.in_background_pass:
+            self.camera.set_background_from_func(
+                lambda (x, y): point_to_rgba(
+                    self.pos_to_color_func(
+                        # Should be self.num_plane.point_to_coords_cheap(np.array([x, y, 0])),
+                        # but for cheapness, we'll go with just (x, y), having never altered
+                        # any num_plane's from default settings so far
+                        (x, y)
+                    )
                 )
             )
-        )
+
+            # The one scene to be rendered by the desired -s -n 0, 1 invocation:
+            self.play(EmptyAnimation())
+            self.wait()
+
+        else:
+            self.camera.background_image = self.background_image_file
+            self.camera.init_background()
+
+class PureColorMap(ColorMappedByFuncScene):
+    CONFIG = {
+        "show_num_plane" : False
+    }
 
 class ColorMappedByFuncStill(ColorMappedByFuncScene):
     def construct(self):
@@ -535,6 +664,7 @@ class PiWalkerCircle(PiWalker):
 # TODO: Give drawn lines a bit of buffer, so that the rectangle's corners are filled in
 class EquationSolver2d(ColorMappedByFuncScene):
     CONFIG = {
+        "camera_config" : {"use_z_coordinate_for_display_order": True},
         "initial_lower_x" : -5.1,
         "initial_upper_x" : 5.1,
         "initial_lower_y" : -3.1,
@@ -572,10 +702,10 @@ class EquationSolver2d(ColorMappedByFuncScene):
                     stroke_width = 10,
                     color = RED)
                 if self.use_fancy_lines:
-                    colored_line = BackgroundColoredVMobject(thick_line, background_image_file = None)
-                    colored_line.set_background_array(background)
+                    colored_line = thick_line.color_using_background_image(self.background_image_file)
+                    # colored_line.set_background_array(background)
                 else:
-                    colored_line = thick_line.set_stroke_with(4)
+                    colored_line = thick_line.set_stroke(width = 4)
 
                 walker_anim = LinearWalker(
                     start_coords = start, 
@@ -622,11 +752,11 @@ class EquationSolver2d(ColorMappedByFuncScene):
                     rect.get_bottom_right(), 
                     rect.get_bottom_left()
                 ]
-                points = np.array([num_plane.coords_to_point(x, y) for (x, y) in coords]) + IN
+                points = np.array([num_plane.coords_to_point(x, y) for (x, y) in coords]) + 2 * IN
                 # TODO: Maybe use diagonal lines or something to fill in rectangles indicating
                 # their "Nothing here" status?
                 # Or draw a large X or something
-                fill_rect = polygonObject = Polygon(*points, fill_opacity = 0.8, color = GREY)
+                fill_rect = polygonObject = Polygon(*points, fill_opacity = 0.8, color = DARK_BROWN)
                 return Succession(anim, FadeIn(fill_rect))
             else:
                 (sub_rect1, sub_rect2) = rect.splits_on_dim(dim_to_split)
@@ -644,7 +774,7 @@ class EquationSolver2d(ColorMappedByFuncScene):
                     for (sub_rect, side_to_draw) in sub_rect_and_sides
                 ]
                 mid_line_coords = rect.split_line_on_dim(dim_to_split)
-                mid_line_points = [num_plane.coords_to_point(x, y) for (x, y) in mid_line_coords]
+                mid_line_points = [num_plane.coords_to_point(x, y)  + IN for (x, y) in mid_line_coords]
                 # TODO: Have this match rectangle line style, apart from dashes and thin-ness?
                 # Though there is also informational value in seeing the dashed line separately from rectangle lines
                 mid_line = DashedLine(*mid_line_points)
@@ -723,7 +853,9 @@ class ArrowCircleTest(Scene):
             return x
 
         num_arrows = 8 * 3
-        arrows = [rev_rotate(base_arrow.copy(), (fdiv(i, num_arrows))) for i in range(num_arrows)]
+
+        # 0.5 - fdiv below so as to get a clockwise rotation from left
+        arrows = [rev_rotate(base_arrow.copy(), 0.5 - (fdiv(i, num_arrows))) for i in range(num_arrows)]
         arrows_vgroup = VGroup(*arrows)
 
         self.play(ShowCreation(arrows_vgroup), run_time = 2.5, rate_func = None)
@@ -803,7 +935,7 @@ class FirstSqrtScene(EquationSolver1d):
         "x_max" : 2.5,
         "y_min" : 0,
         "y_max" : 2.5**2,
-        "graph_origin" : 2*DOWN + 5 * LEFT,
+        "graph_origin" : 2.5*DOWN + 5.5*LEFT,
         "x_axis_width" : 12,
         "zoom_factor" : 3,
         "zoomed_canvas_center" : 2.25 * UP + 1.75 * LEFT,
@@ -818,30 +950,140 @@ class FirstSqrtScene(EquationSolver1d):
         "show_target_line" : True,
     }
 
-class SecondSqrtScene(FirstSqrtScene, ReconfigurableScene):
-# TODO: Don't bother with ReconfigurableScene; just use new config from start
-# (But can also use this as written, and just cut into middle in Premiere)
+FirstSqrtSceneConfig = FirstSqrtScene.CONFIG
+shiftVal = FirstSqrtSceneConfig["targetY"]
 
-    def setup(self):
-        FirstSqrtScene.setup(self)
-        ReconfigurableScene.setup(self)
-
-    def construct(self):
-        shiftVal = self.targetY
-
-        self.drawGraph()
-        newOrigin = self.coords_to_point(0, shiftVal)
-        self.transition_to_alt_config(
-            func = lambda x : x**2 - shiftVal,
-            targetY = 0,
-            graph_label = "y = x^2 - " + str(shiftVal),
-            y_min = self.y_min - shiftVal,
-            y_max = self.y_max - shiftVal,
-            show_target_line = False,
-            graph_origin = newOrigin)
-        self.solveEquation()
+class SecondSqrtScene(FirstSqrtScene):
+        CONFIG = {
+            "func" : lambda x : FirstSqrtSceneConfig["func"](x) - shiftVal,
+            "targetY" : 0,
+            "graph_label" : FirstSqrtSceneConfig["graph_label"] + " - " + str(shiftVal),
+            "y_min" : FirstSqrtSceneConfig["y_min"] - shiftVal,
+            "y_max" : FirstSqrtSceneConfig["y_max"] - shiftVal,
+            "show_target_line" : False,
+            # 0.96 hacked in by checking calculations above
+            "graph_origin" : 0.96 * shiftVal * UP + FirstSqrtSceneConfig["graph_origin"],
+        }
 
 # TODO: Pi creatures intrigued
+
+class RewriteEquation(Scene):
+    def construct(self):
+        # Can maybe fitz around with smoothening the transform, so just = goes to - and new stuff
+        # is added at the right end, while things re-center
+        f_old = TexMobject("f(x)")
+        f_new = f_old.copy()
+        equals_old = TexMobject("=")
+        equals_old_2 = equals_old.copy()
+        equals_new = equals_old.copy()
+        g_old = TexMobject("g(x)")
+        g_new = g_old.copy()
+        minus_new = TexMobject("-")
+        zero_new = TexMobject("0")
+        f_old.next_to(equals_old, LEFT)
+        g_old.next_to(equals_old, RIGHT)
+        minus_new.next_to(g_new, LEFT)
+        f_new.next_to(minus_new, LEFT)
+        equals_new.next_to(g_new, RIGHT)
+        zero_new.next_to(equals_new, RIGHT)
+        
+        self.add(f_old, equals_old, equals_old_2, g_old)
+        self.wait()
+        self.play(
+            ReplacementTransform(f_old, f_new),
+            ReplacementTransform(equals_old, equals_new), 
+            ReplacementTransform(g_old, g_new), 
+            ReplacementTransform(equals_old_2, minus_new),
+            ShowCreation(zero_new),
+        )
+        self.wait()
+
+class SignsExplanation(Scene):
+    def construct(self):
+        num_line = NumberLine(stroke_width = 1)
+        largest_num = 10
+        num_line.add_numbers(*range(-largest_num, largest_num + 1))
+        self.add(num_line)
+        self.wait()
+
+        pos_num = 3
+        neg_num = -pos_num
+
+        pos_arrow = Arrow(
+                num_line.number_to_point(0), 
+                num_line.number_to_point(pos_num),
+                buff = 0,
+                color = positive_color)
+        neg_arrow = Arrow(
+                num_line.number_to_point(0), 
+                num_line.number_to_point(neg_num),
+                buff = 0,
+                color = negative_color)
+        
+        #num_line.add_numbers(pos_num)
+        self.play(ShowCreation(pos_arrow))
+
+        #num_line.add_numbers(neg_num)
+        self.play(ShowCreation(neg_arrow))
+
+class VectorField(Scene):
+    CONFIG = {
+        "func" : plane_func_from_complex_func(lambda p : p**2 + 2),
+        "granularity" : 10,
+        "arrow_scale_factor" : 0.1,
+        "normalized_arrow_scale_factor" : 5
+    }
+
+    def construct(self):
+        num_plane = NumberPlane()
+        self.add(num_plane)
+
+        x_min, y_min = num_plane.point_to_coords(SPACE_WIDTH * LEFT + SPACE_HEIGHT * UP)
+        x_max, y_max = num_plane.point_to_coords(SPACE_WIDTH * RIGHT + SPACE_HEIGHT * DOWN)
+
+        x_points = range_via_num_steps(x_min, x_max, self.granularity)
+        y_points = range_via_num_steps(y_min, y_max, self.granularity)
+        points = it.product(x_points, y_points)
+
+        sized_arrows = Group()
+        unsized_arrows = Group()
+        for (x, y) in points:
+            output = self.func((x, y))
+            output_size = np.sqrt(sum(output**2))
+            normalized_output = output * fdiv(self.normalized_arrow_scale_factor, output_size) # Assume output has nonzero size here
+            arrow = Vector(output * self.arrow_scale_factor)
+            normalized_arrow = Vector(normalized_output * self.arrow_scale_factor)
+            arrow.move_to(num_plane.coords_to_point(x, y))
+            normalized_arrow.move_to(arrow)
+            sized_arrows.add(arrow)
+            unsized_arrows.add(normalized_arrow)
+
+        self.add(sized_arrows)
+        self.wait()
+
+        self.play(ReplacementTransform(sized_arrows, unsized_arrows))
+        self.wait()
+
+class HasItsLimitations(Scene):
+    def construct(self):
+        num_line = NumberLine()
+        num_line.add_numbers()
+        self.add(num_line)
+
+        self.wait()
+
+        num_plane = NumberPlane()
+        num_plane.add_coordinates()
+
+        self.play(FadeOut(num_line), FadeIn(num_plane))
+
+        self.wait()
+
+        complex_plane = ComplexPlane()
+        complex_plane.add_coordinates()
+        
+        self.play(FadeOut(num_plane), FadeIn(complex_plane))
+        
 
 class ComplexPlaneIs2d(Scene):
     def construct(self):
@@ -1129,7 +1371,8 @@ class FundThmAlg(EquationSolver2d):
     CONFIG = {
         "func" : plane_poly_with_roots((1, 2), (-1, 1.5), (-1, 1.5)),
         "num_iterations" : 5,
-        "display_in_parallel" : True
+        "display_in_parallel" : True,
+        "use_fancy_lines" : False
     }
 
 # TODO: Borsuk-Ulam visuals
@@ -1158,6 +1401,96 @@ class DiffOdometer(OdometerScene):
         "dashed_line_angle" : 0.5,
         "biased_display_start" : 0
     }
+
+class CombineInterval(Scene):
+    def construct(self):
+        plus_sign = TexMobject("+", fill_color = positive_color)
+        minus_sign = TexMobject("-", fill_color = negative_color)
+
+        left_point = Dot(LEFT, color = positive_color)
+        right_point = Dot(RIGHT, color = negative_color)
+        line1 = Line(LEFT, RIGHT)
+        interval1 = Group(line1, left_point, right_point)
+
+        plus_sign.next_to(left_point, UP)
+        minus_sign.next_to(right_point, UP)
+
+        self.add(interval1, plus_sign, minus_sign)
+        self.wait()
+        self.play(
+            CircleIndicate(plus_sign),
+            CircleIndicate(minus_sign),
+        )
+        self.wait()
+
+        mid_point = Dot(ORIGIN, color = GREY)
+
+        question_mark = TexMobject("?", fill_color = GREY)
+        plus_sign_copy = plus_sign.copy()
+        minus_sign_copy = minus_sign.copy()
+        new_signs = Group(question_mark, plus_sign_copy, minus_sign_copy)
+        for sign in new_signs: sign.next_to(mid_point, UP)
+
+        self.play(FadeIn(mid_point), FadeIn(question_mark))
+        self.wait()
+
+        self.play(
+            ApplyMethod(mid_point.set_color, positive_color),
+            ReplacementTransform(question_mark, plus_sign_copy),
+        )
+        self.play(
+            CircleIndicate(plus_sign_copy),
+            CircleIndicate(minus_sign),
+        )
+
+        self.wait()
+
+        self.play(
+            ApplyMethod(mid_point.set_color, negative_color),
+            ReplacementTransform(plus_sign_copy, minus_sign_copy),
+        )
+        self.play(
+            CircleIndicate(minus_sign_copy),
+            CircleIndicate(plus_sign),
+        )
+
+        self.wait()
+
+class CombineInterval2(Scene):
+    def construct(self):
+        plus_sign = TexMobject("+", fill_color = positive_color)
+
+        def make_interval(a, b):
+            line = Line(a, b)
+            start_dot = Dot(a, color = positive_color)
+            end_dot = Dot(b, color = positive_color)
+            start_sign = plus_sign.copy().next_to(start_dot, UP)
+            end_sign = plus_sign.copy().next_to(end_dot, UP)
+            return Group(start_sign, end_sign, line, start_dot, end_dot)
+
+        def pair_indicate(a, b):
+            self.play(
+                CircleIndicate(a),
+                CircleIndicate(b)
+            )
+
+        left_interval = make_interval(2 * LEFT, LEFT)
+        right_interval = make_interval(RIGHT, 2 * RIGHT)
+
+        self.play(FadeIn(left_interval), FadeIn(right_interval))
+
+        pair_indicate(left_interval[0], left_interval[1])
+
+        pair_indicate(right_interval[0], right_interval[1])
+
+        self.play(
+            ApplyMethod(left_interval.shift, RIGHT),
+            ApplyMethod(right_interval.shift, LEFT),
+        )
+
+        pair_indicate(left_interval[0], right_interval[1])
+
+        self.wait()
 
 # TODO: Brouwer's fixed point theorem visuals
 # class BFTScene(Scene):
@@ -1209,5 +1542,11 @@ class ShowBack(PiWalkerRect):
     CONFIG = {
          "func" : plane_poly_with_roots((1, 2), (-1, 1.5), (-1, 1.5))
     }
+
+class Diagnostic(Scene):
+    def construct(self):
+        testList = map( (lambda n : (n, rev_to_rgba(n))), [0, 0.25, 0.5, 0.9])
+        print "rev_to_rgbas", testList
+        self.wait()
 
 # FIN

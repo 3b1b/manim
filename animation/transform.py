@@ -8,7 +8,7 @@ from helpers import *
 
 from animation import Animation
 from mobject import Mobject, Point, VMobject, Group
-from topics.geometry import Dot
+from topics.geometry import Dot, Circle
 
 class Transform(Animation):
     CONFIG = {
@@ -213,6 +213,17 @@ class Indicate(Transform):
         target.scale_in_place(self.scale_factor)
         target.highlight(self.color)
         Transform.__init__(self, mobject, target, **kwargs)
+
+class CircleIndicate(Indicate):
+    CONFIG = {
+        "rate_func" : squish_rate_func(there_and_back, 0, 0.8),
+        "remover" : True
+    }
+    def __init__(self, mobject, **kwargs):
+        digest_config(self, kwargs)
+        circle = Circle(color = self.color, **kwargs)
+        circle.surround(mobject)
+        Indicate.__init__(self, circle, **kwargs)
 
 class Rotate(ApplyMethod):
     CONFIG = {
