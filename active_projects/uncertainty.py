@@ -39,55 +39,46 @@ class GaussianDistributionWrapper(Line):
     """
     This is meant to encode a 2d normal distribution as
     a mobject (so as to be able to have it be interpolated
-    during animations).  It is a line whose start_point coordinates
-    encode the coordinates of mu, and whose end_point - start_point
-    encodes the coordinates of sigma.
+    during animations).  It is a line whose center is the mean
+    mu of a distribution, and whose radial vector (center to end)
+    is the distribution's standard deviation
     """
     CONFIG = {
         "stroke_width" : 0,
-        "mu_x" : 0,
-        "sigma_x" : 1,
-        "mu_y" : 0,
-        "sigma_y" : 0,
+        "mu" : ORIGIN,
+        "sigma" : RIGHT,
     }
     def __init__(self, **kwargs):
         Line.__init__(self, ORIGIN, RIGHT, **kwargs)
-        self.change_parameters(self.mu_x, self.mu_y, self.sigma_x, self.sigma_y)
+        self.change_parameters(self.mu, self.sigma)
 
-    def change_parameters(self, mu_x = None, mu_y = None, sigma_x = None, sigma_y = None):
-        curr_parameters = self.get_parameteters()
-        args = [mu_x, mu_y, sigma_x, sigma_y]
-        new_parameters = [
-            arg or curr
-            for curr, arg in zip(curr_parameters, args)
-        ]
-        mu_x, mu_y, sigma_x, sigma_y = new_parameters
-        mu_point = mu_x*RIGHT + mu_y*UP
-        sigma_vect = sigma_x*RIGHT + sigma_y*UP
-        self.put_start_and_end_on(mu_point, mu_point + sigma_vect)
+    def change_parameters(self, mu = None, sigma = None):
+        curr_mu, curr_sigma = self.get_parameters()
+        mu = mu if mu is not None else curr_mu
+        sigma = sigma if sigma is not None else curr_sigma
+        self.put_start_and_end_on(mu - sigma, mu + sigma)
         return self
 
-    def get_parameteters(self):
+    def get_parameters(self):
         """ Return mu_x, mu_y, sigma_x, sigma_y"""
-        start, end = self.get_start_and_end()
-        return tuple(it.chain(start[:2], (end - start)[:2]))
+        center, end = self.get_center(), self.get_end()
+        return center, end-center
 
     def get_random_points(self, size = 1):
-        mu_x, mu_y, sigma_x, sigma_y = self.get_parameteters()
-        x_vals = np.random.normal(mu_x, sigma_x, size)
-        y_vals = np.random.normal(mu_y, sigma_y, size)
+        mu, sigma = self.get_parameters()
         return np.array([
-            x*RIGHT + y*UP
-            for x, y in zip(x_vals, y_vals)
+            np.array([
+                np.random.normal(mu_coord, sigma_coord)
+                for mu_coord, sigma_coord in zip(mu, sigma)
+            ])
+            for x in range(size)
         ])
 
 class ProbabalisticMobjectCloud(ContinualAnimation):
     CONFIG = {
         "fill_opacity" : 0.25,
         "n_copies" : 100,
-        "gaussian_distribution_wrapper_config" : {
-            "sigma_x" : 1,
-        }
+        "gaussian_distribution_wrapper_config" : {}
     }
     def __init__(self, prototype, **kwargs):
         digest_config(self, kwargs)
@@ -142,6 +133,111 @@ class ProbabalisticVectorCloud(ProbabalisticMobjectCloud):
             point
         )
 
+class RadarDish(SVGMobject):
+    CONFIG = {
+        "file_name" : "radar_dish",
+        "fill_color" : LIGHT_GREY,
+        "stroke_color" : WHITE,
+        "stroke_width" : 1,
+        "height" : 1,
+    }
+
+class Plane(SVGMobject):
+    CONFIG = {
+        "file_name" : "plane",
+        "color" : GREY,
+        "height" : 1,
+    }
+    def __init__(self, **kwargs):
+        SVGMobject.__init__(self, **kwargs)
+        self.rotate(-TAU/8)
+
+class RadarPulseSingleton(ContinualAnimation):
+    CONFIG = {
+        "speed" : 3.0,
+        "direction" : RIGHT,
+        "start_up_time" : 0,
+        "fade_in_time" : 0.5,
+        "color" : WHITE,
+        "stroke_width" : 3,
+    }
+    def __init__(self, radar_dish, target, **kwargs):
+        digest_config(self, kwargs)
+        self.direction = self.direction/np.linalg.norm(self.direction)
+        self.radar_dish = radar_dish
+        self.target = target
+        self.reflection_distance = None
+        self.arc = Arc(
+            start_angle = -30*DEGREES,
+            angle = 60*DEGREES,
+        )
+        self.arc.scale_to_fit_height(0.75*radar_dish.get_height())
+        self.arc.move_to(radar_dish, UP+RIGHT)
+        self.start_points = np.array(self.arc.points)
+        self.start_center = self.arc.get_center()
+        self.finished = False
+
+        ContinualAnimation.__init__(self, self.arc, **kwargs)
+        
+    def update_mobject(self, dt):
+        arc = self.arc
+        total_distance = self.speed*self.internal_time
+        arc.points = np.array(self.start_points)
+        arc.shift(total_distance*self.direction)
+
+        if self.internal_time < self.fade_in_time:
+            alpha = np.clip(self.internal_time/self.fade_in_time, 0, 1)
+            arc.set_stroke(self.color, alpha*self.stroke_width)
+
+        if self.reflection_distance is None:
+            #Check if reflection is happening
+            arc_point = arc.get_edge_center(self.direction)
+            target_point = self.target.get_edge_center(-self.direction)
+            arc_distance = np.dot(arc_point, self.direction)
+            target_distance = np.dot(target_point, self.direction)
+            if arc_distance > target_distance:
+                self.reflection_distance = target_distance
+        #Don't use elif in case the above code creates reflection_distance
+        if self.reflection_distance is not None:
+            delta_distance = total_distance - self.reflection_distance
+            point_distances = np.dot(self.direction, arc.points.T)
+            diffs = point_distances - self.reflection_distance
+            shift_vals = np.outer(-2*np.maximum(diffs, 0), self.direction)
+            arc.points += shift_vals
+
+            #Check if done
+            arc_point = arc.get_edge_center(-self.direction)
+            if np.dot(arc_point, self.direction) < np.dot(self.start_center, self.direction):
+                self.finished = True
+                self.arc.fade(1)
+
+    def is_finished(self):
+        return self.finished
+
+class RadarPulse(ContinualAnimation):
+    CONFIG = {
+        "n_pulse_singletons" : 8,
+        "frequency" : 0.05,
+        "colors" : [BLUE, YELLOW]
+    }
+    def __init__(self, *args, **kwargs):
+        digest_config(self, kwargs)
+        colors = color_gradient(self.colors, self.n_pulse_singletons)
+        self.pulse_singletons = [
+            RadarPulseSingleton(*args, color = color, **kwargs)
+            for color in colors
+        ]
+        pluse_mobjects = VGroup(*[ps.mobject for ps in self.pulse_singletons])
+        ContinualAnimation.__init__(self, pluse_mobjects, **kwargs)
+        
+    def update_mobject(self, dt):
+        for i, ps in enumerate(self.pulse_singletons):
+            ps.internal_time = self.internal_time - i*self.frequency
+            ps.update_mobject(dt)
+
+    def is_finished(self):
+        return all([ps.is_finished() for ps in self.pulse_singletons])
+
 ###################
 
 class MentionUncertaintyPrinciple(TeacherStudentsScene):
@@ -152,32 +248,33 @@ class MentionUncertaintyPrinciple(TeacherStudentsScene):
         dot_cloud = ProbabalisticDotCloud()
         vector_cloud = ProbabalisticVectorCloud(
             gaussian_distribution_wrapper_config = {"sigma_x" : 0.2},
-            center_func = dot_cloud.gaussian_distribution_wrapper.get_start,
+            center_func = lambda : dot_cloud.gaussian_distribution_wrapper.get_parameters()[0],
         )
         for cloud in dot_cloud, vector_cloud:
-            gdw = cloud.gaussian_distribution_wrapper
-            gdw.move_to(title.get_center(), LEFT)
-            gdw.shift(2*DOWN)
+            cloud.gaussian_distribution_wrapper.next_to(
+                title, DOWN, 2*LARGE_BUFF
+            )
         vector_cloud.gaussian_distribution_wrapper.shift(3*RIGHT)
 
-        def get_brace_text_group_update(gdw, vect, text):
+        def get_brace_text_group_update(gdw, vect, text, color):
             brace = Brace(gdw, vect)
-            text = brace.get_tex("\\sigma_{\\text{%s}}"%text, buff = SMALL_BUFF)
+            text = brace.get_tex("2\\sigma_{\\text{%s}}"%text, buff = SMALL_BUFF)
             group = VGroup(brace, text)
             def update_group(group):
                 brace, text = group
                 brace.match_width(gdw, stretch = True)
                 brace.next_to(gdw, vect)
                 text.next_to(brace, vect, buff = SMALL_BUFF)
+            group.highlight(color)
             return ContinualUpdateFromFunc(group, update_group)
 
         dot_brace_anim = get_brace_text_group_update(
             dot_cloud.gaussian_distribution_wrapper,
-            DOWN, "position",
+            DOWN, "position", dot_cloud.color
         )
         vector_brace_anim = get_brace_text_group_update(
             vector_cloud.gaussian_distribution_wrapper,
-            UP, "momentum",
+            UP, "momentum", vector_cloud.color
         )
 
         self.add(title)
@@ -195,7 +292,7 @@ class MentionUncertaintyPrinciple(TeacherStudentsScene):
         # self.wait(2)
         self.play(
             dot_cloud.gaussian_distribution_wrapper.change_parameters, 
-            {"sigma_x" : 0.1},
+            {"sigma" : 0.1*RIGHT},
             run_time = 2,
         )
         self.wait()
@@ -206,7 +303,7 @@ class MentionUncertaintyPrinciple(TeacherStudentsScene):
         self.add(vector_brace_anim)
         self.play(
             vector_cloud.gaussian_distribution_wrapper.change_parameters,
-            {"sigma_x" : 1},
+            {"sigma" : RIGHT},
             self.get_student_changes(*3*["confused"]),
             run_time = 3,
         )
@@ -214,17 +311,17 @@ class MentionUncertaintyPrinciple(TeacherStudentsScene):
         for x in range(2):
             self.play(
                 dot_cloud.gaussian_distribution_wrapper.change_parameters,
-                {"sigma_x" : 2},
+                {"sigma" : 2*RIGHT},
                 vector_cloud.gaussian_distribution_wrapper.change_parameters,
-                {"sigma_x" : 0.1},
+                {"sigma" : 0.1*RIGHT},
                 run_time = 3,
             )
             self.change_student_modes("thinking", "erm", "sassy")
             self.play(
                 dot_cloud.gaussian_distribution_wrapper.change_parameters,
-                {"sigma_x" : 0.1},
+                {"sigma" : 0.1*RIGHT},
                 vector_cloud.gaussian_distribution_wrapper.change_parameters,
-                {"sigma_x" : 1},
+                {"sigma" : 1*RIGHT},
                 run_time = 3,
             )
             self.wait()
@@ -299,7 +396,8 @@ class FourierTradeoff(Scene):
                 t_min = time_mean - time_radius,
                 t_max = time_mean + time_radius,
                 n_samples = 2*time_radius*17,
-                complex_to_real_func = abs,
+                # complex_to_real_func = abs,
+                complex_to_real_func = lambda z : z.real,
                 color = FREQUENCY_COLOR,
             )
 
@@ -327,7 +425,7 @@ class FourierTradeoff(Scene):
 
         #Draw items
         self.add(time_axes, frequency_axes)
-        self.play(ShowCreation(wave_packet))
+        self.play(ShowCreation(wave_packet, rate_func = double_smooth))
         self.play(
             ReplacementTransform(
                 wave_packet.copy(),
@@ -351,8 +449,131 @@ class FourierTradeoff(Scene):
                 self.wait()
         self.wait()
 
+class ShowPlan(PiCreatureScene):
+    def construct(self):
+        self.add_title()
+        words = self.get_words()
+        self.play_sound_anims(words[0])
+        self.play_doppler_anims(words[1], words[0])
+        self.play_quantum_anims(words[2], words[1])
+
+    def add_title(self):
+        title = TextMobject("The plan")
+        title.scale(1.5)
+        title.to_edge(UP)
+        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line.next_to(title, DOWN)
+        self.add(title, h_line)
+
+    def get_words(self):
+        colors = [YELLOW, GREEN, BLUE]
+        topics = ["sound waves", "Doppler radar", "quantum particles"]
+        words = VGroup()
+        for topic, color in zip(topics, colors):
+            word = TextMobject("Uncertainty for", topic)
+            word[1].highlight(color)
+            words.add(word)
+        words.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = LARGE_BUFF)
+        words.to_edge(LEFT)
+
+        return words
+
+    def play_sound_anims(self, word):
+        morty = self.pi_creature
+        wave = FunctionGraph(
+            lambda x : 0.3*np.sin(15*x)*np.sin(0.5*x),
+            x_min = 0, x_max = 30,
+            num_anchor_points = 500,
+        )
+        wave.next_to(word, RIGHT)
+        rect = BackgroundRectangle(wave, fill_opacity = 1)
+        rect.stretch(2, 1)
+        rect.next_to(wave, LEFT, buff = 0)
+        wave_shift = AmbientMovement(
+            wave, direction = LEFT, rate = 5
+        )
+        wave_fader = UpdateFromAlphaFunc(
+            wave, 
+            lambda w, a : w.set_stroke(width = 3*a)
+        )
+        checkmark = self.get_checkmark(word)
+
+        self.add(wave_shift)
+        self.add_foreground_mobjects(rect, word)
+        self.play(
+            Animation(word),
+            wave_fader,
+            morty.change, "raise_right_hand", word
+        )
+        self.wait(2)
+        wave_fader.rate_func = lambda a : 1-smooth(a)
+        self.add_foreground_mobjects(checkmark)
+        self.play(
+            Write(checkmark),
+            morty.change, "happy",
+            wave_fader, 
+        )
+        self.remove_foreground_mobjects(rect, word)
+        self.add(word)
+        self.wait()
+
+    def play_doppler_anims(self, word, to_fade):
+        morty = self.pi_creature
+
+        radar_dish = RadarDish()
+        radar_dish.next_to(word, DOWN, aligned_edge = LEFT)
+        target = Plane()
+        # target.match_height(radar_dish)
+        target.next_to(radar_dish, RIGHT, buff = LARGE_BUFF)
+        target_movement = AmbientMovement(target, direction = RIGHT, rate = 1.25)
+
+        pulse = RadarPulse(radar_dish, target)
+
+        checkmark = self.get_checkmark(word)
+
+        self.add(target_movement)
+        self.play(
+            to_fade.fade, 0.5,
+            Write(word),
+            DrawBorderThenFill(radar_dish),
+            UpdateFromAlphaFunc(
+                target, lambda m, a : m.set_fill(opacity = a)
+            ),
+            morty.change, "pondering",
+            run_time = 1
+        )
+        self.wait()
+        self.add(pulse)
+        count = it.count() #TODO, this is not a great hack...
+        while not pulse.is_finished() and count.next() < 15:
+            self.play(
+                morty.look_at, pulse.mobject,
+                run_time = 0.5
+            )
+        self.play(
+            Write(checkmark),
+            UpdateFromAlphaFunc(
+                target, lambda m, a : m.set_fill(opacity = 1-a)
+            ),
+            FadeOut(radar_dish),
+            morty.change, "happy"
+        )
+        self.wait()
 
 
+
+
+    def play_quantum_anims(self, word, to_fade):
+        pass
+
+    ##
+
+    def get_checkmark(self, word):
+        checkmark = TexMobject("\\checkmark")
+        checkmark.highlight(GREEN)
+        checkmark.scale(1.5)
+        checkmark.next_to(word, UP+RIGHT, buff = 0)
+        return checkmark
 
 
 

@@ -41,6 +41,7 @@ class Scene(Container):
         "random_seed" : 0,
         "start_at_animation_number" : None,
         "end_at_animation_number" : None,
+        "include_render_quality_in_name" : False, #TODO, nothing uses this right now
     }
     def __init__(self, **kwargs):
         Container.__init__(self, **kwargs) # Perhaps allow passing in a non-empty *mobjects parameter?
@@ -55,6 +56,8 @@ class Scene(Container):
         self.current_scene_time = 0
         if self.name is None:
             self.name = self.__class__.__name__
+            if self.include_render_quality_in_name:
+                self.name += str(self.camera.pixel_shape[0])
         if self.random_seed is not None:
             random.seed(self.random_seed)
             np.random.seed(self.random_seed)
