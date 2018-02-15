@@ -214,7 +214,7 @@ class Indicate(Transform):
         target.highlight(self.color)
         Transform.__init__(self, mobject, target, **kwargs)
 
-class HighlightCircle(Indicate):
+class CircleIndicate(Indicate):
     CONFIG = {
         "rate_func" : squish_rate_func(there_and_back, 0, 0.8),
         "remover" : True
