@@ -533,26 +533,58 @@ class ColorMappedByFuncScene(Scene):
 
     def setup(self):
         if self.show_output:
-            self.pos_func = self.func
+            self.input_to_pos_func = self.func
+            self.pos_to_color_func = lambda p : p
         else:
-            self.pos_func = lambda p : p
+            self.input_to_pos_func = lambda p : p
+            self.pos_to_color_func = self.func
+
+        # func_hash hashes the function at some random points
+        func_hash_points = [(-0.93, 1), (1, -2.7), (20, 4)]
+        to_hash = tuple((self.func(p)[0], self.func(p)[1]) for p in func_hash_points)
+        func_hash = hash(to_hash)
+        full_hash = hash((func_hash, self.camera.pixel_shape))
+        self.background_image_file = "color_mapped_background_" + str(full_hash)
+        try:
+            file_path = get_full_raster_image_path(self.background_image_file)
+            # If we succeed in finding the file:
+            self.in_background_pass = False
+        except IOError:
+            file_path = os.path.join(RASTER_IMAGE_DIR, self.background_image_file + ".png")
+            self.in_background_pass = True
+
+        print "Background file: " + file_path
+        if self.in_background_pass:
+            print "The background file does not exist yet; this will be the background creation pass"
+            print "If not already doing so, please re-run this render with the flags -s -n 0,1 -o \"%s\""%file_path
+            self.show_num_plane = False
+        else:
+            print "The background file already exists; this will be the video pass as usual"
 
     def construct(self):
-        display_func = self.func if not self.show_output else lambda p : p
-
         if self.show_num_plane:
             self.num_plane.fade()
             self.add(self.num_plane)
-        self.camera.set_background_from_func(
-            lambda (x, y): point_to_rgba(
-                display_func(
-                    # Should be self.num_plane.point_to_coords_cheap(np.array([x, y, 0])),
-                    # but for cheapness, we'll go with just (x, y), having never altered
-                    # any num_plane's from default settings so far
-                    (x, y)
+
+        if self.in_background_pass:
+            self.camera.set_background_from_func(
+                lambda (x, y): point_to_rgba(
+                    self.pos_to_color_func(
+                        # Should be self.num_plane.point_to_coords_cheap(np.array([x, y, 0])),
+                        # but for cheapness, we'll go with just (x, y), having never altered
+                        # any num_plane's from default settings so far
+                        (x, y)
+                    )
                 )
             )
-        )
+
+            # The one scene to be rendered by the desired -s -n 0, 1 invocation:
+            self.play(EmptyAnimation())
+            self.wait()
+
+        else:
+            self.camera.background_image = self.background_image_file
+            self.camera.init_background()
 
 class PureColorMap(ColorMappedByFuncScene):
     CONFIG = {
@@ -670,7 +702,7 @@ class EquationSolver2d(ColorMappedByFuncScene):
                     stroke_width = 10,
                     color = RED)
                 if self.use_fancy_lines:
-                    colored_line = thick_line.color_using_background_image("color_background")
+                    colored_line = thick_line.color_using_background_image(self.background_image_file)
                     # colored_line.set_background_array(background)
                 else:
                     colored_line = thick_line.set_stroke(width = 4)
@@ -1385,6 +1417,11 @@ class CombineInterval(Scene):
 
         self.add(interval1, plus_sign, minus_sign)
         self.wait()
+        self.play(
+            CircleIndicate(plus_sign),
+            CircleIndicate(minus_sign),
+        )
+        self.wait()
 
         mid_point = Dot(ORIGIN, color = GREY)
 
@@ -1394,7 +1431,7 @@ class CombineInterval(Scene):
         new_signs = Group(question_mark, plus_sign_copy, minus_sign_copy)
         for sign in new_signs: sign.next_to(mid_point, UP)
 
-        self.play(ShowCreation(mid_point), ShowCreation(question_mark))
+        self.play(FadeIn(mid_point), FadeIn(question_mark))
         self.wait()
 
         self.play(
@@ -1402,8 +1439,8 @@ class CombineInterval(Scene):
             ReplacementTransform(question_mark, plus_sign_copy),
         )
         self.play(
-            HighlightCircle(plus_sign_copy),
-            HighlightCircle(minus_sign),
+            CircleIndicate(plus_sign_copy),
+            CircleIndicate(minus_sign),
         )
 
         self.wait()
@@ -1413,9 +1450,45 @@ class CombineInterval(Scene):
             ReplacementTransform(plus_sign_copy, minus_sign_copy),
         )
         self.play(
-            HighlightCircle(minus_sign_copy),
-            HighlightCircle(plus_sign),
+            CircleIndicate(minus_sign_copy),
+            CircleIndicate(plus_sign),
         )
+
+        self.wait()
+
+class CombineInterval2(Scene):
+    def construct(self):
+        plus_sign = TexMobject("+", fill_color = positive_color)
+
+        def make_interval(a, b):
+            line = Line(a, b)
+            start_dot = Dot(a, color = positive_color)
+            end_dot = Dot(b, color = positive_color)
+            start_sign = plus_sign.copy().next_to(start_dot, UP)
+            end_sign = plus_sign.copy().next_to(end_dot, UP)
+            return Group(start_sign, end_sign, line, start_dot, end_dot)
+
+        def pair_indicate(a, b):
+            self.play(
+                CircleIndicate(a),
+                CircleIndicate(b)
+            )
+
+        left_interval = make_interval(2 * LEFT, LEFT)
+        right_interval = make_interval(RIGHT, 2 * RIGHT)
+
+        self.play(FadeIn(left_interval), FadeIn(right_interval))
+
+        pair_indicate(left_interval[0], left_interval[1])
+
+        pair_indicate(right_interval[0], right_interval[1])
+
+        self.play(
+            ApplyMethod(left_interval.shift, RIGHT),
+            ApplyMethod(right_interval.shift, LEFT),
+        )
+
+        pair_indicate(left_interval[0], right_interval[1])
 
         self.wait()
 
