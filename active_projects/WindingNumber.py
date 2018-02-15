@@ -33,15 +33,60 @@ from topics.graph_scene import *
 # (and it will be done, but first I'll figure out what I'm doing with all this...)
 # -SR
 
-positive_color = GREEN
-negative_color = RED
-neutral_color = YELLOW
+def rev_to_rgba(alpha):
+    alpha = (0.5 - alpha) % 1 # For convenience, to go CW from red on left instead of CCW from right
+    # 0 is red, 1/6 is yellow, 1/3 is green, 2/3 is blue
+    hue_list = [0, 0.5/6.0, 1/6.0, 1.1/6.0, 2/6.0, 3/6.0, 4/6.0, 5/6.0]
+    num_hues = len(hue_list)
+    start_index = int(np.floor(num_hues * alpha)) % num_hues
+    end_index = (start_index + 1) % num_hues
+    beta = (alpha % (1.0/num_hues)) * num_hues
+
+    start_hue = hue_list[start_index]
+    end_hue = hue_list[end_index]
+    if end_hue < start_hue:
+        end_hue = end_hue + 1
+    hue = interpolate(start_hue, end_hue, beta)
+
+    return color_to_rgba(Color(hue = hue, saturation = 1, luminance = 0.5))
+
+    # alpha = alpha % 1
+    # colors = colorslist
+    # num_colors = len(colors)
+    # beta = (alpha % (1.0/num_colors)) * num_colors
+    # start_index = int(np.floor(num_colors * alpha)) % num_colors
+    # end_index = (start_index + 1) % num_colors
+
+    # return interpolate(colors[start_index], colors[end_index], beta)
+
+def rev_to_color(alpha):
+    return rgba_to_color(rev_to_rgba(alpha))
+
+def point_to_rev((x, y), allow_origin = False):
+    # Warning: np.arctan2 would happily discontinuously returns the value 0 for (0, 0), due to 
+    # design choices in the underlying atan2 library call, but for our purposes, this is 
+    # illegitimate, and all winding number calculations must be set up to avoid this
+    if not(allow_origin) and (x, y) == (0, 0):
+        print "Error! Angle of (0, 0) computed!"
+        return
+    return fdiv(np.arctan2(y, x), TAU)
+
+def point_to_rgba(point):
+    rev = point_to_rev(point, allow_origin = True)
+    rgba = rev_to_rgba(rev)
+    base_size = np.sqrt(point[0]**2 + point[1]**2)
+    rescaled_size = np.sqrt(base_size/(base_size + 1))
+    return rgba * rescaled_size
+
+positive_color = rev_to_color(0)
+negative_color = rev_to_color(0.5)
+neutral_color = rev_to_color(0.25)
         
 class EquationSolver1d(GraphScene, ZoomedScene):
     CONFIG = {
     "camera_config" : 
         {
-            #"use_z_coordinate_for_display_order": True,
+            "use_z_coordinate_for_display_order": True,
         },
     "func" : lambda x : x,
     "targetX" : 0,
@@ -140,9 +185,9 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         lowerDotPoint = self.input_to_graph_point(lowerX, self.graph)
         lowerDotXPoint = self.coords_to_point(lowerX, 0)
         lowerDotYPoint = self.coords_to_point(0, self.func(lowerX))
-        lowerDot = Dot(lowerDotPoint, color = negative_color)
+        lowerDot = Dot(lowerDotPoint + OUT, color = negative_color)
         upperDotPoint = self.input_to_graph_point(upperX, self.graph)
-        upperDot = Dot(upperDotPoint, color = positive_color)
+        upperDot = Dot(upperDotPoint + OUT, color = positive_color)
         upperDotXPoint = self.coords_to_point(upperX, 0)
         upperDotYPoint = self.coords_to_point(0, self.func(upperX))
 
@@ -154,15 +199,22 @@ class EquationSolver1d(GraphScene, ZoomedScene):
 
         self.add(xBraces, yBraces, lowerDot, upperDot)
 
+        x_guess_line = Line(lowerDotXPoint, upperDotXPoint, color = neutral_color)
+        self.add(x_guess_line)
+
         lowerGroup = Group(
             lowerDot, 
             leftBrace, downBrace,
-            lowerXLine, lowerYLine)
+            lowerXLine, lowerYLine,
+            x_guess_line
+        )
         
         upperGroup = Group(
             upperDot, 
             rightBrace, upBrace,
-            upperXLine, upperYLine)
+            upperXLine, upperYLine,
+            x_guess_line
+        )
 
         initialLowerXDot = Dot(lowerDotXPoint, color = negative_color)
         initialUpperXDot = Dot(upperDotXPoint, color = positive_color)
@@ -181,9 +233,9 @@ class EquationSolver1d(GraphScene, ZoomedScene):
                     upperDot.scale_in_place, inverseZoomFactor)
 
 
-            def makeUpdater(xAtStart):
+            def makeUpdater(xAtStart, fixed_guess_x):
                 def updater(group, alpha):
-                    dot, xBrace, yBrace, xLine, yLine = group
+                    dot, xBrace, yBrace, xLine, yLine, guess_line = group
                     newX = interpolate(xAtStart, midX, alpha)
                     newY = self.func(newX)
                     graphPoint = self.input_to_graph_point(newX, 
@@ -195,15 +247,20 @@ class EquationSolver1d(GraphScene, ZoomedScene):
                     yBrace.move_to(yAxisPoint)
                     xLine.put_start_and_end_on(xAxisPoint, graphPoint)
                     yLine.put_start_and_end_on(yAxisPoint, graphPoint)
+                    fixed_guess_point = self.coords_to_point(fixed_guess_x, 0)
+                    guess_line.put_start_and_end_on(xAxisPoint, fixed_guess_point)
                     return group
                 return updater
 
             midX = (lowerX + upperX)/float(2)
             midY = self.func(midX)
+            in_negative_branch = midY < self.targetY
+            sign_color = negative_color if in_negative_branch else positive_color
 
             midCoords = self.coords_to_point(midX, midY)
             midColor = neutral_color
-            midXPoint = Dot(self.coords_to_point(midX, 0), color = midColor)
+            # Hm... even the z buffer isn't helping keep this above x_guess_line
+            midXPoint = Dot(self.coords_to_point(midX, 0) + OUT, color = midColor)
 
             x_guess_label_caption = TextMobject("New guess: x = ", fill_color = midColor)
             x_guess_label_num = DecimalNumber(midX, fill_color = midColor)
@@ -211,7 +268,7 @@ class EquationSolver1d(GraphScene, ZoomedScene):
             x_guess_label_caption.next_to(x_guess_label_num, LEFT)
             x_guess_label = Group(x_guess_label_caption, x_guess_label_num)
             y_guess_label_caption = TextMobject(", y = ", fill_color = midColor)
-            y_guess_label_num = DecimalNumber(midY, fill_color = midColor)
+            y_guess_label_num = DecimalNumber(midY, fill_color = sign_color)
             y_guess_label_caption.next_to(x_guess_label_num, RIGHT)
             y_guess_label_num.next_to(y_guess_label_caption, RIGHT)
             y_guess_label = Group(y_guess_label_caption, y_guess_label_num)
@@ -222,35 +279,43 @@ class EquationSolver1d(GraphScene, ZoomedScene):
                 ReplacementTransform(rightBrace.copy(), midXPoint),
                 FadeIn(x_guess_label))
 
-            midXLine = Line(self.coords_to_point(midX, 0), midCoords, color = midColor)
+            midXLine = DashedLine(self.coords_to_point(midX, 0), midCoords, color = midColor)
             self.play(ShowCreation(midXLine))
-            midDot = Dot(midCoords, color = midColor)
+            midDot = Dot(midCoords, color = sign_color)
             if(self.iteration_at_which_to_start_zoom != None and 
                 i >= self.iteration_at_which_to_start_zoom):
                 midDot.scale_in_place(inverseZoomFactor)
             self.add(midDot)
-            midYLine = Line(midCoords, self.coords_to_point(0, midY), color = midColor)
+            midYLine = DashedLine(midCoords, self.coords_to_point(0, midY), color = sign_color)
             self.play(
                 ShowCreation(midYLine), 
-                FadeIn(y_guess_label))
-            midYPoint = Dot(self.coords_to_point(0, midY), color = midColor)
+                FadeIn(y_guess_label),
+                ApplyMethod(midXPoint.set_color, sign_color),
+                ApplyMethod(midXLine.set_color, sign_color))
+            midYPoint = Dot(self.coords_to_point(0, midY), color = sign_color)
             self.add(midYPoint)
 
-            if midY < self.targetY:
+            if in_negative_branch:
                 self.play(
-                    UpdateFromAlphaFunc(lowerGroup, makeUpdater(lowerX)),
+                    UpdateFromAlphaFunc(lowerGroup, 
+                        makeUpdater(lowerX, 
+                            fixed_guess_x = upperX
+                        )
+                    ),
                     FadeOut(guess_labels),
-                    ApplyMethod(midXPoint.set_color, negative_color),
-                    ApplyMethod(midYPoint.set_color, negative_color))
+                )
                 lowerX = midX
                 lowerY = midY
 
             else:
                 self.play(
-                    UpdateFromAlphaFunc(upperGroup, makeUpdater(upperX)),
+                    UpdateFromAlphaFunc(upperGroup, 
+                        makeUpdater(upperX, 
+                            fixed_guess_x = lowerX
+                        )
+                    ),
                     FadeOut(guess_labels),
-                    ApplyMethod(midXPoint.set_color, positive_color),
-                    ApplyMethod(midYPoint.set_color, positive_color))
+                )
                 upperX = midX
                 upperY = midY
             #mid_group = Group(midXLine, midDot, midYLine) Removing groups doesn't flatten as expected?
@@ -261,37 +326,6 @@ class EquationSolver1d(GraphScene, ZoomedScene):
     def construct(self):
         self.drawGraph()
         self.solveEquation()
-
-colorslist = map(color_to_rgba, ["#FF0000", "#FFFF00", "#00FF00", "#0000FF"])
-
-def rev_to_rgba(alpha):
-    alpha = alpha % 1
-    colors = colorslist
-    num_colors = len(colors)
-    beta = (alpha % (1.0/num_colors)) * num_colors
-    start_index = int(np.floor(num_colors * alpha)) % num_colors
-    end_index = (start_index + 1) % num_colors
-
-    return interpolate(colors[start_index], colors[end_index], beta)
-
-def rev_to_color(alpha):
-    return rgba_to_color(rev_to_rgba(alpha))
-
-def point_to_rev((x, y), allow_origin = False):
-    # Warning: np.arctan2 would happily discontinuously returns the value 0 for (0, 0), due to 
-    # design choices in the underlying atan2 library call, but for our purposes, this is 
-    # illegitimate, and all winding number calculations must be set up to avoid this
-    if not(allow_origin) and (x, y) == (0, 0):
-        print "Error! Angle of (0, 0) computed!"
-        return
-    return fdiv(np.arctan2(y, x), TAU)
-
-def point_to_rgba(point):
-    rev = point_to_rev(point, allow_origin = True)
-    rgba = rev_to_rgba(rev)
-    base_size = np.sqrt(point[0]**2 + point[1]**2)
-    rescaled_size = np.sqrt(base_size/(base_size + 1))
-    return rgba * rescaled_size
 
 # Returns the value with the same fractional component as x, closest to m
 def resit_near(x, m):
@@ -519,6 +553,11 @@ class ColorMappedByFuncScene(Scene):
                 )
             )
         )
+
+class PureColorMap(ColorMappedByFuncScene):
+    CONFIG = {
+        "show_num_plane" : False
+    }
 
 class ColorMappedByFuncStill(ColorMappedByFuncScene):
     def construct(self):
@@ -896,6 +935,37 @@ class SecondSqrtScene(FirstSqrtScene):
 
 # TODO: Pi creatures intrigued
 
+class RewriteEquation(Scene):
+    def construct(self):
+        # Can maybe fitz around with smoothening the transform, so just = goes to - and new stuff
+        # is added at the right end, while things re-center
+        f_old = TexMobject("f(x)")
+        f_new = f_old.copy()
+        equals_old = TexMobject("=")
+        equals_old_2 = equals_old.copy()
+        equals_new = equals_old.copy()
+        g_old = TexMobject("g(x)")
+        g_new = g_old.copy()
+        minus_new = TexMobject("-")
+        zero_new = TexMobject("0")
+        f_old.next_to(equals_old, LEFT)
+        g_old.next_to(equals_old, RIGHT)
+        minus_new.next_to(g_new, LEFT)
+        f_new.next_to(minus_new, LEFT)
+        equals_new.next_to(g_new, RIGHT)
+        zero_new.next_to(equals_new, RIGHT)
+        
+        self.add(f_old, equals_old, equals_old_2, g_old)
+        self.wait()
+        self.play(
+            ReplacementTransform(f_old, f_new),
+            ReplacementTransform(equals_old, equals_new), 
+            ReplacementTransform(g_old, g_new), 
+            ReplacementTransform(equals_old_2, minus_new),
+            ShowCreation(zero_new),
+        )
+        self.wait()
+
 class SignsExplanation(Scene):
     def construct(self):
         num_line = NumberLine(stroke_width = 1)
@@ -911,12 +981,12 @@ class SignsExplanation(Scene):
                 num_line.number_to_point(0), 
                 num_line.number_to_point(pos_num),
                 buff = 0,
-                color = YELLOW)
+                color = positive_color)
         neg_arrow = Arrow(
                 num_line.number_to_point(0), 
                 num_line.number_to_point(neg_num),
                 buff = 0,
-                color = RED)
+                color = negative_color)
         
         #num_line.add_numbers(pos_num)
         self.play(ShowCreation(pos_arrow))
@@ -1300,6 +1370,55 @@ class DiffOdometer(OdometerScene):
         "biased_display_start" : 0
     }
 
+class CombineInterval(Scene):
+    def construct(self):
+        plus_sign = TexMobject("+", fill_color = positive_color)
+        minus_sign = TexMobject("-", fill_color = negative_color)
+
+        left_point = Dot(LEFT, color = positive_color)
+        right_point = Dot(RIGHT, color = negative_color)
+        line1 = Line(LEFT, RIGHT)
+        interval1 = Group(line1, left_point, right_point)
+
+        plus_sign.next_to(left_point, UP)
+        minus_sign.next_to(right_point, UP)
+
+        self.add(interval1, plus_sign, minus_sign)
+        self.wait()
+
+        mid_point = Dot(ORIGIN, color = GREY)
+
+        question_mark = TexMobject("?", fill_color = GREY)
+        plus_sign_copy = plus_sign.copy()
+        minus_sign_copy = minus_sign.copy()
+        new_signs = Group(question_mark, plus_sign_copy, minus_sign_copy)
+        for sign in new_signs: sign.next_to(mid_point, UP)
+
+        self.play(ShowCreation(mid_point), ShowCreation(question_mark))
+        self.wait()
+
+        self.play(
+            ApplyMethod(mid_point.set_color, positive_color),
+            ReplacementTransform(question_mark, plus_sign_copy),
+        )
+        self.play(
+            HighlightCircle(plus_sign_copy),
+            HighlightCircle(minus_sign),
+        )
+
+        self.wait()
+
+        self.play(
+            ApplyMethod(mid_point.set_color, negative_color),
+            ReplacementTransform(plus_sign_copy, minus_sign_copy),
+        )
+        self.play(
+            HighlightCircle(minus_sign_copy),
+            HighlightCircle(plus_sign),
+        )
+
+        self.wait()
+
 # TODO: Brouwer's fixed point theorem visuals
 # class BFTScene(Scene):
 
@@ -1350,5 +1469,11 @@ class ShowBack(PiWalkerRect):
     CONFIG = {
          "func" : plane_poly_with_roots((1, 2), (-1, 1.5), (-1, 1.5))
     }
+
+class Diagnostic(Scene):
+    def construct(self):
+        testList = map( (lambda n : (n, rev_to_rgba(n))), [0, 0.25, 0.5, 0.9])
+        print "rev_to_rgbas", testList
+        self.wait()
 
 # FIN
