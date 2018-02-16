@@ -1744,23 +1744,31 @@ class IPTScene1(PiCreatureScene):
         screen_width_ap = screen_width_a * length_a / length_c
         screen_width_bp = screen_width_b * length_b / length_c
         screen_width_c = SCREEN_SCALE * length_c
-        
-        screen1 = Rectangle(width = screen_width_b, height = 0.2, stroke_width = 0, fill_opacity = 1.0)
-        screen1.next_to(C,RIGHT,buff = 0)
-        
-        ls1.set_screen(screen1)
-        screen_tracker = ScreenTracker(ls1)
-        self.add(screen_tracker)
-        self.remove(ls1.spotlight)
 
+        screen_thickness_after = 0.2
+        screen_thickness_a = screen_thickness_after * length_c/length_a
+        screen_thickness_b = screen_thickness_after * length_c/length_b
+
+        screen1 = Rectangle(width = screen_width_b,
+            height = screen_thickness_b, 
+            stroke_width = 0, 
+            fill_opacity = 1.0)
+        screen1.next_to(C,RIGHT+DOWN,buff = 0)
+        
         self.add_foreground_mobject(morty)
 
         self.play(
             FadeIn(screen1)
         )
+
         self.add_foreground_mobject(screen1)
         self.add_foreground_mobject(line_a)
         self.add_foreground_mobject(line_b)
+
+        ls1.set_screen(screen1)
+        screen_tracker = ScreenTracker(ls1)
+        self.remove(ls1.spotlight)
+        self.add(screen_tracker)
 
         self.play(
             SwitchOn(ls1.spotlight),
@@ -1790,8 +1798,8 @@ class IPTScene1(PiCreatureScene):
 
         # add and move the second light source and screen
         ls2 = ls1.deepcopy()
-        ls2.move_source_to(A)
-        screen2 = Rectangle(width = screen_width_a, height = 0., stroke_width = 10, fill_opacity = 1)
+#        ls2.move_source_to(A)
+        screen2 = Rectangle(width = screen_width_a, height = 0.2, stroke_width = 0, fill_opacity = 1)
         screen2.rotate(-TAU/4)
         screen2.next_to(C,UP,buff = 0)
 
@@ -1825,7 +1833,7 @@ class IPTScene1(PiCreatureScene):
         screen2p = screen2.deepcopy()
         screen2pp = screen2.deepcopy()
         angle = np.arccos(length_a / length_c)
-        screen2p.stretch_to_fit_width(screen_width_ap)
+        screen2p.stretch_to_fit_height(screen_width_ap)
         screen2p.rotate(angle)
         # we can reuse the translation vector
         screen2p.shift(vector)
@@ -1836,12 +1844,11 @@ class IPTScene1(PiCreatureScene):
             Transform(screen2,screen2p)
         )
 
-
-        # now transform both screens back
-        self.play(
-            Transform(screen1, screen1pp),
-            Transform(screen2, screen2pp),
-        )
+        # # now transform both screens back
+        # self.play(
+        #     Transform(screen1, screen1pp),
+        #     Transform(screen2, screen2pp),
+        # )
 
 
 
