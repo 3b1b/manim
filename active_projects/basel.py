@@ -664,6 +664,8 @@ class FirstLighthouseScene(PiCreatureScene):
 
 
 
+
+
 class SingleLighthouseScene(PiCreatureScene):
 
     def construct(self):
@@ -999,17 +1001,19 @@ class ScreenShapingScene(ThreeDScene):
 
     def construct(self):
 
+        self.force_skipping()
         self.setup_elements()
-        # self.deform_screen()
-        # self.create_brightness_rect()
-        # self.slant_screen()
-        # self.unslant_screen()
-        # self.left_shift_screen_while_showing_light_indicator()
-        # self.add_distance_arrow()
-        # self.right_shift_screen_while_showing_light_indicator_and_distance_arrow()
-        # self.left_shift_again()
-        
-        # self.morph_into_3d()
+        self.deform_screen()
+        self.create_brightness_rect()
+        self.slant_screen()
+        self.unslant_screen()
+        self.left_shift_screen_while_showing_light_indicator()
+        self.add_distance_arrow()
+        self.right_shift_screen_while_showing_light_indicator_and_distance_arrow()
+        self.left_shift_again()
+        self.revert_to_original_skipping_status()
+
+        self.morph_into_3d()
 
 
     def setup_elements(self):
@@ -1247,8 +1251,8 @@ class ScreenShapingScene(ThreeDScene):
 
     def morph_into_3d(self):
 
-        #axes = ThreeDAxes()
-        #self.add(axes)
+        axes = ThreeDAxes()
+        self.add(axes)
 
         phi0 = self.camera.get_phi() # default is 0 degs
         theta0 = self.camera.get_theta() # default is -90 degs
@@ -1271,18 +1275,20 @@ class ScreenShapingScene(ThreeDScene):
         projection_direction = self.camera.spherical_coords_to_point(phi1,theta1, 1)
 
         new_screen0 = Rectangle(height = self.screen_height,
-            width = 0.5, stroke_color = RED)
+            width = 3, stroke_color = RED)
         new_screen0.rotate(TAU/4,axis = DOWN)
         new_screen0.move_to(self.screen.get_center())
         self.add(new_screen0)
         self.remove(self.screen)
         self.light_source.set_screen(new_screen0)
-        # # new_screen = new_screen0.deepcopy()
-        # # new_screen.width = new_screen.height
+        new_screen = new_screen0.deepcopy()
+        new_screen.width = new_screen.height
+
+        self.play(Transform(new_screen0,new_screen))
 
         self.play(
              ApplyMethod(self.camera.rotation_mobject.move_to, camera_target_point),
-        #     #Transform(new_screen0,new_screen)
+             
         )
 
         self.wait()
@@ -1697,14 +1703,31 @@ class IPTScene1(PiCreatureScene):
 
     def construct(self):
 
+        show_detail = True
+
         SCREEN_SCALE = 0.1
         SCREEN_THICKNESS = 0.2
 
+
+        # use the following for the zoomed inset
+        if show_detail:
+            self.camera.space_shape = (0.02 * SPACE_HEIGHT, 0.02 * SPACE_WIDTH)
+            self.camera.space_center = C
+            SCREEN_SCALE = 0.01
+            SCREEN_THICKNESS = 0.02
+
+
+
+
+
         morty = self.get_primary_pi_creature()
+        self.remove(morty)
         morty.scale(0.3).flip()
         right_pupil = morty.pupils[1]
         morty.next_to(C, LEFT, buff = 0, submobject_to_align = right_pupil)
-        self.add_foreground_mobject(morty)
+        
+        if not show_detail:
+            self.add_foreground_mobject(morty)
 
         stroke_width = 6
         line_a = Line(B,C,stroke_width = stroke_width)
@@ -1732,16 +1755,18 @@ class IPTScene1(PiCreatureScene):
         self.add_foreground_mobject(label_b)
         self.add_foreground_mobject(label_h)
         
-        self.add_foreground_mobject(morty)
+        if not show_detail:
+            self.add_foreground_mobject(morty)
 
         ls1 = LightSource(radius = 10)
         ls1.move_source_to(B)
 
         self.add(ls1.lighthouse)
 
-        self.play(
-            SwitchOn(ls1.ambient_light)
-        )
+        if not show_detail:
+            self.play(
+                SwitchOn(ls1.ambient_light)
+            )
 
         self.wait()
 
@@ -1762,7 +1787,8 @@ class IPTScene1(PiCreatureScene):
             fill_opacity = 1.0)
         screen1.move_to(C + screen_width_b/2 * RIGHT + screen_thickness_b/2 * DOWN)
         
-        self.add_foreground_mobject(morty)
+        if not show_detail:
+            self.add_foreground_mobject(morty)
 
         self.play(
             FadeIn(screen1)
@@ -1773,6 +1799,11 @@ class IPTScene1(PiCreatureScene):
         screen_tracker = ScreenTracker(ls1)
         self.add(screen_tracker)
         #self.add(ls1.shadow)
+
+        if not show_detail:
+            self.play(
+                SwitchOn(ls1.ambient_light)
+            )
 
         self.play(
             SwitchOn(ls1.spotlight),
@@ -1787,12 +1818,11 @@ class IPTScene1(PiCreatureScene):
         screen1pp = screen1.deepcopy()
         #self.add(screen1p)
         angle = np.arccos(length_b / length_c)
-        vector = (H - C) * SCREEN_SCALE * 0.5
-
+        
         screen1p.stretch_to_fit_width(screen_width_bp)
-        screen1p.rotate(-angle)
-        screen1p.shift(vector)
-
+        screen1p.move_to(C + (screen_width_b - screen_width_bp/2) * RIGHT + SCREEN_THICKNESS/2 * DOWN)
+        screen1p.rotate(-angle, about_point = C + screen_width_b * RIGHT)
+        
 
         self.play(
             ls1.move_source_to,H,
@@ -1813,17 +1843,21 @@ class IPTScene1(PiCreatureScene):
             FadeIn(screen2)
         )
         self.add_foreground_mobject(screen2)
-        self.add_foreground_mobject(morty)
+
+        if not show_detail:
+            self.add_foreground_mobject(morty)
 
         # the same scene adding sequence as before
         ls2.set_screen(screen2)
         screen_tracker2 = ScreenTracker(ls2)
         self.add(screen_tracker2)
 
-        self.play(
-            SwitchOn(ls2.ambient_light)
-        )
+        if not show_detail:
+            self.play(
+                SwitchOn(ls2.ambient_light)
+            )
 
+        self.wait()
 
         self.play(
             SwitchOn(ls2.spotlight),
@@ -1838,9 +1872,10 @@ class IPTScene1(PiCreatureScene):
         screen2pp = screen2.deepcopy()
         angle = np.arccos(length_a / length_c)
         screen2p.stretch_to_fit_height(screen_width_ap)
-        screen2p.rotate(angle, about_point = C + screen_width_ap * UP)
+        screen2p.move_to(C + (screen_width_a - screen_width_ap/2) * UP + screen_thickness_a/2 * LEFT)
+        screen2p.rotate(angle, about_point = C + screen_width_a * UP)
         # we can reuse the translation vector
-        screen2p.shift(vector)
+        # screen2p.shift(vector)
 
         self.play(
             ls2.move_source_to,H,
@@ -1853,6 +1888,7 @@ class IPTScene1(PiCreatureScene):
             Transform(screen1, screen1pp),
             Transform(screen2, screen2pp),
         )
+
 
 
 class IPTScene2(Scene):
