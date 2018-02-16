@@ -1001,7 +1001,6 @@ class ScreenShapingScene(ThreeDScene):
 
     def construct(self):
 
-        self.force_skipping()
         self.setup_elements()
         self.deform_screen()
         self.create_brightness_rect()
@@ -1011,8 +1010,7 @@ class ScreenShapingScene(ThreeDScene):
         self.add_distance_arrow()
         self.right_shift_screen_while_showing_light_indicator_and_distance_arrow()
         self.left_shift_again()
-        self.revert_to_original_skipping_status()
-
+        
         self.morph_into_3d()
 
 
@@ -1026,11 +1024,10 @@ class ScreenShapingScene(ThreeDScene):
         # screen
         self.screen = Line([3,-self.screen_height/2,0],[3,self.screen_height/2,0],
             path_arc = 0, num_arc_anchors = 10)
-
-
+        
         # light source
         self.light_source = LightSource(
-            opacity_function = inverse_quadratic(1,5,1),
+            opacity_function = inverse_quadratic(1,2,1),
             num_levels = NUM_LEVELS,
             radius = 10,
             #screen = self.screen
@@ -1043,32 +1040,32 @@ class ScreenShapingScene(ThreeDScene):
         self.spotlight = self.light_source.spotlight
         self.lighthouse = self.light_source.lighthouse
 
-        screen_tracker = ScreenTracker(self.light_source)
-        self.add(screen_tracker,self.light_source.shadow)
-
+        
         #self.add_foreground_mobject(self.light_source.shadow)
 
         # Morty
         self.morty = Mortimer().scale(0.3).next_to(self.screen, RIGHT, buff = 0.5)
 
         # Add everything to the scene
-        self.add(self.ambient_light, self.lighthouse)
-        #self.add_foreground_mobject(self.morty)
+        self.add(self.lighthouse)
         
         self.wait()
         self.play(FadeIn(self.screen))
         self.wait()
 
         self.add_foreground_mobject(self.screen)
+        self.add_foreground_mobject(self.morty)
 
-        dimmed_ambient_light = self.ambient_light.copy()
-        dimmed_ambient_light.dimming(AMBIENT_DIMMED)
-        #self.light_source.set_max_opacity_spotlight(0.001)
+        self.play(SwitchOn(self.ambient_light))
+
         self.play(
-            self.light_source.set_max_opacity_spotlight,1.0, # this hides Morty for a moment, why?
-            Transform(self.ambient_light,dimmed_ambient_light),
-            FadeIn(self.light_source.shadow),
-            )
+            SwitchOn(self.spotlight),
+            self.light_source.dim_ambient
+        )
+
+        screen_tracker = ScreenTracker(self.light_source)
+        self.add(screen_tracker)
+
 
         self.wait()
 
@@ -1227,7 +1224,7 @@ class ScreenShapingScene(ThreeDScene):
         self.play(
             ReplacementTransform(self.arrow,self.new_arrow),
             ApplyMethod(self.screen.shift,[self.distance_to_source,0,0]),
-            #ApplyMethod(self.indicator.shift,[self.left_shift,0,0]),
+            ApplyMethod(self.indicator.shift,[self.left_shift,0,0]),
             
             ApplyMethod(self.indicator.set_intensity,self.indicator_intensity),
             # this should trigger ChangingDecimal, but it doesn't
@@ -1275,21 +1272,26 @@ class ScreenShapingScene(ThreeDScene):
         projection_direction = self.camera.spherical_coords_to_point(phi1,theta1, 1)
 
         new_screen0 = Rectangle(height = self.screen_height,
-            width = 3, stroke_color = RED)
+            width = 0.1, stroke_color = RED)
         new_screen0.rotate(TAU/4,axis = DOWN)
         new_screen0.move_to(self.screen.get_center())
         self.add(new_screen0)
         self.remove(self.screen)
         self.light_source.set_screen(new_screen0)
+
+        self.light_source.set_camera(self.camera)
+
+
         new_screen = new_screen0.deepcopy()
         new_screen.width = new_screen.height
 
-        self.play(Transform(new_screen0,new_screen))
 
         self.play(
              ApplyMethod(self.camera.rotation_mobject.move_to, camera_target_point),
              
         )
+
+        #self.play(Transform(new_screen0,new_screen))
 
         self.wait()
 
