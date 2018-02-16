@@ -32,6 +32,7 @@ from topics.graph_scene import *
 
 USE_ALMOST_FOURIER_BY_DEFAULT = True
 NUM_SAMPLES_FOR_FFT = 1000
+DEFAULT_COMPLEX_TO_REAL_FUNC = lambda z : z.real
 
 
 def get_fourier_graph(
@@ -53,7 +54,7 @@ def get_fourier_graph(
     graph = VMobject()
     graph.set_points_smoothly([
         axes.coords_to_point(
-            x, 200.0*complex_to_real_func(y)/n_samples,
+            x, complex_to_real_func(y)/n_samples,
         )
         for x, y in zip(frequencies, fft_output[:n_samples//2])
     ])
@@ -62,18 +63,16 @@ def get_fourier_graph(
 
 def get_fourier_transform(
     func, t_min, t_max, 
-    complex_to_real_func = lambda z : z.real,
+    complex_to_real_func = DEFAULT_COMPLEX_TO_REAL_FUNC,
     use_almost_fourier = USE_ALMOST_FOURIER_BY_DEFAULT,
     ):
     scalar = 1./(t_max - t_min) if use_almost_fourier else 1.0
     def fourier_transform(f):
-        return scalar*scipy.integrate.quad(
-            lambda t : complex_to_real_func(
-                # f(t) e^{-TAU*i*f*t}
-                func(t)*np.exp(complex(0, -TAU*f*t))
-            ),
+        z = scalar*scipy.integrate.quad(
+            lambda t : func(t)*np.exp(complex(0, -TAU*f*t)),
             t_min, t_max
         )[0]
+        return complex_to_real_func(z)
     return fourier_transform
 
 ##
@@ -939,11 +938,28 @@ class FourierMachineScene(Scene):
         if not hasattr(self, "frequency_axes"):
             self.get_frequency_axes()
         func = time_graph.underlying_function
-        t_min = self.time_axes.x_min
-        t_max = self.time_axes.x_max
+        t_axis = self.time_axes.x_axis
+        t_min = t_axis.point_to_number(time_graph.points[0])
+        t_max = t_axis.point_to_number(time_graph.points[-1])
+        f_max = self.frequency_axes.x_max
+        # result = get_fourier_graph(
+        #     self.frequency_axes, func, t_min, t_max,
+        #     **kwargs
+        # )
+        # too_far_right_point_indices = [
+        #     i
+        #     for i, point in enumerate(result.points)
+        #     if self.frequency_axes.x_axis.point_to_number(point) > f_max
+        # ]
+        # if too_far_right_point_indices:
+        #     i = min(too_far_right_point_indices)
+        #     prop = float(i)/len(result.points)
+        #     result.pointwise_become_partial(result, 0, prop)
+        # return result
         return self.frequency_axes.get_graph(
             get_fourier_transform(func, t_min, t_max, **kwargs),
             color = self.center_of_mass_color,
+            **kwargs
         )
 
     def get_polarized_mobject(self, mobject, freq = 1.0):
@@ -999,7 +1015,8 @@ class FourierMachineScene(Scene):
         vector = Vector(UP, color = WHITE)
         graph_copy = graph.copy()
         x_axis = self.time_axes.x_axis
-        x_min, x_max = x_axis.x_min, x_axis.x_max
+        x_min = x_axis.point_to_number(graph.points[0])
+        x_max = x_axis.point_to_number(graph.points[-1])
         def update_vector(vector, alpha):
             x = interpolate(x_min, x_max, alpha)
             vector.put_start_and_end_on(
@@ -1016,7 +1033,13 @@ class FourierMachineScene(Scene):
         origin = self.circle_plane.coords_to_point(0, 0)
         graph_copy = polarized_graph.copy()
         def update_vector(vector, alpha):
-            point = graph_copy.point_from_proportion(alpha)
+            # Not sure why this is needed, but without smoothing 
+            # out the alpha like this, the vector would occasionally
+            # jump around
+            point = center_of_mass([
+                graph_copy.point_from_proportion(alpha+d)
+                for d in np.linspace(-0.001, 0.001, 5)
+            ])
             vector.put_start_and_end_on_with_projection(origin, point)
             return vector
         return UpdateFromAlphaFunc(vector, update_vector, **config)
@@ -1299,6 +1322,7 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
     CONFIG = {
         "initial_winding_frequency" : 3.0,
         "center_of_mass_color" : RED,
+        "center_of_mass_multiple" : 1,
     }
     def construct(self):
         self.remove(self.pi_creature)
@@ -1581,10 +1605,11 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
 
     def get_pol_graph_center_of_mass(self):
         pg = self.graph.polarized_mobject
-        result = center_of_mass([
-            pg.point_from_proportion(alpha)
-            for alpha in np.linspace(0, 1, 1000)
-        ])
+        result = center_of_mass(pg.get_anchors())
+        if self.center_of_mass_multiple != 1:
+            mult = self.center_of_mass_multiple
+            origin = self.circle_plane.coords_to_point(0, 0)
+            result = mult*(result - origin) + origin
         return result
 
     def generate_fourier_dot_transform(self, fourier_graph):
@@ -1626,7 +1651,7 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
 
     def change_frequency(self, new_freq, **kwargs):
         kwargs["run_time"] = kwargs.get("run_time", 3)
-        kwargs["rate_func"] = kwargs.get(
+        rate_func = kwargs.pop(
             "rate_func", bezier([0, 0, 1, 1])
         )
         added_anims = kwargs.get("added_anims", [])
@@ -1645,6 +1670,8 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
             anims.append(self.fourier_graph_dot_anim)
         if hasattr(self, "fourier_graph_drawing_update_anim"):
             anims.append(self.fourier_graph_drawing_update_anim)
+        for anim in anims:
+            anim.rate_func = rate_func
         anims += added_anims
         self.play(*anims, **kwargs)
 
