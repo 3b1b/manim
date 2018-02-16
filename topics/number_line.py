@@ -219,7 +219,29 @@ class Axes(VGroup):
         return graph
 
     def input_to_graph_point(self, x, graph):
-        return self.coords_to_point(x, graph.underlying_function(x))
+        if hasattr(graph, "underlying_function"):
+            return self.coords_to_point(x, graph.underlying_function(x))
+        else:
+            #binary search
+            lh, rh = 0, 1
+            while abs(lh - rh) > 0.001:
+                mh = np.mean([lh, rh])
+                hands = [lh, mh, rh]
+                points = map(graph.point_from_proportion, hands)
+                lx, mx, rx = map(self.x_axis.point_to_number, points)
+                if lx <= x and rx >= x:
+                    if mx > x:
+                        rh = mh
+                    else:
+                        lh = mh
+                elif lx <= x and rx <= x:
+                    return points[2]
+                elif lx >= x and rx >= x:
+                    return points[0]
+                elif lx > x and rx < x:
+                    lh, rh = rh, lh
+            return points[1]
+
 
 class ThreeDAxes(Axes):
     CONFIG = {
