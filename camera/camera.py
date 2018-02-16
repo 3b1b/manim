@@ -30,7 +30,7 @@ class Camera(object):
         "max_allowable_norm" : 2*SPACE_WIDTH,
         "image_mode" : "RGBA",
         "n_rgb_coords" : 4,
-        "background_alpha" : 0, #Out of color_max_val
+        "background_alpha" : 0, #Out of rgb_max_val
         "pixel_array_dtype" : 'uint8',
         "use_z_coordinate_for_display_order" : False,
         # z_buff_func is only used if the flag above is set to True.
@@ -40,7 +40,7 @@ class Camera(object):
 
     def __init__(self, background = None, **kwargs):
         digest_config(self, kwargs, locals())
-        self.color_max_val = np.iinfo(self.pixel_array_dtype).max
+        self.rgb_max_val = np.iinfo(self.pixel_array_dtype).max
         self.init_background()
         self.resize_space_shape()
         self.reset()
@@ -92,7 +92,7 @@ class Camera(object):
         retval = np.array(pixel_array)
         if convert_from_floats:
             retval = np.apply_along_axis(
-                lambda f : (f * self.color_max_val).astype(self.pixel_array_dtype),
+                lambda f : (f * self.rgb_max_val).astype(self.pixel_array_dtype),
                 2,
                 retval)
         return retval
@@ -253,7 +253,7 @@ class Camera(object):
             stroke_hex = rgb_to_hex(stroke_rgb)
             pen = aggdraw.Pen(stroke_hex, stroke_width)
 
-        fill_opacity = int(self.color_max_val*vmobject.get_fill_opacity())
+        fill_opacity = int(self.rgb_max_val*vmobject.get_fill_opacity())
         if fill_opacity == 0:
             fill = None
         else:
@@ -306,9 +306,7 @@ class Camera(object):
     def display_multiple_background_colored_vmobject(self, cvmobjects):
         displayer = self.get_background_colored_vmobject_displayer()
         cvmobject_pixel_array = displayer.display(*cvmobjects)
-        self.pixel_array[:,:] = np.maximum(
-            self.pixel_array, cvmobject_pixel_array
-        )
+        self.overlay_rgba_array(cvmobject_pixel_array)
         return self
 
     ## Methods for other rendering
@@ -331,7 +329,7 @@ class Camera(object):
         )
         rgba_len = self.pixel_array.shape[2]
 
-        rgbas = (self.color_max_val*rgbas).astype(self.pixel_array_dtype)
+        rgbas = (self.rgb_max_val*rgbas).astype(self.pixel_array_dtype)
         target_len = len(pixel_coords)
         factor = target_len/len(rgbas)
         rgbas = np.array([rgbas]*factor).reshape((target_len, rgba_len))
@@ -423,17 +421,23 @@ class Camera(object):
         self.overlay_rgba_array(image)
 
     def overlay_rgba_array(self, arr):
-        # """ Overlays arr onto self.pixel_array with relevant alphas"""
-        bg, fg = fdiv(self.pixel_array, self.color_max_val), fdiv(arr, self.color_max_val)
-        bga, fga = [arr[:,:,3:] for arr in bg, fg]
-        alpha_sum = fga + (1-fga)*bga
-        with np.errstate(divide = 'ignore', invalid='ignore'):
-            bg[:,:,:3] = reduce(op.add, [
-                np.divide(fg[:,:,:3]*fga, alpha_sum),
-                np.divide(bg[:,:,:3]*(1-fga)*bga, alpha_sum),
-            ])
-        bg[:,:,3:] = 1 - (1 - bga)*(1 - fga)
-        self.pixel_array = (self.color_max_val*bg).astype(self.pixel_array_dtype)
+        fg = arr
+        bg = self.pixel_array
+        # rgba_max_val = self.rgb_max_val
+        src_rgb, src_a, dst_rgb, dst_a = [
+            a.astype(np.float32)/self.rgb_max_val
+            for a in fg[...,:3], fg[...,3], bg[...,:3], bg[...,3]
+        ]
+
+        out_a = src_a + dst_a*(1.0-src_a)
+        out_rgb = fdiv(
+            src_rgb*src_a[..., None] + \
+            dst_rgb*dst_a[..., None]*(1.0-src_a[..., None]),
+            out_a[..., None]
+        )
+
+        self.pixel_array[..., :3] = out_rgb*self.rgb_max_val
+        self.pixel_array[..., 3] = out_a*self.rgb_max_val
 
     def align_points_to_camera(self, points):
         ## This is where projection should live
