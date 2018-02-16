@@ -73,7 +73,7 @@ def get_configuration():
       if args.output_name != None:
          output_name_root, output_name_ext = os.path.splitext(args.output_name)
          expected_ext = '.png' if args.show_last_frame else '.mp4'
-         if not output_name_ext in ['', expected_ext]
+         if not output_name_ext in ['', expected_ext]:
             print "WARNING: The output will be to (doubly-dotted) %s%s"%output_name_root%expected_ext
             output_name = args.output_name
          else:

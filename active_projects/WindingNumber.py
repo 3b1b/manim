@@ -1041,8 +1041,8 @@ class VectorField(Scene):
         x_min, y_min = num_plane.point_to_coords(SPACE_WIDTH * LEFT + SPACE_HEIGHT * UP)
         x_max, y_max = num_plane.point_to_coords(SPACE_WIDTH * RIGHT + SPACE_HEIGHT * DOWN)
 
-        x_points = range_via_num_steps(x_min, x_max, self.granularity)
-        y_points = range_via_num_steps(y_min, y_max, self.granularity)
+        x_points = np.linspace(x_min, x_max, self.granularity)
+        y_points = np.linspace(y_min, y_max, self.granularity)
         points = it.product(x_points, y_points)
 
         sized_arrows = Group()
