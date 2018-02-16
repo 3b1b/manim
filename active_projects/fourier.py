@@ -65,6 +65,7 @@ def get_fourier_transform(
     func, t_min, t_max, 
     complex_to_real_func = DEFAULT_COMPLEX_TO_REAL_FUNC,
     use_almost_fourier = USE_ALMOST_FOURIER_BY_DEFAULT,
+    **kwargs ##Just eats these
     ):
     scalar = 1./(t_max - t_min) if use_almost_fourier else 1.0
     def fourier_transform(f):

@@ -404,6 +404,10 @@ class MentionUncertaintyPrinciple(TeacherStudentsScene):
             self.wait()
 
 class FourierTradeoff(Scene):
+    CONFIG = {
+        "show_text" : True,
+        "complex_to_real_func" : abs,
+    }
     def construct(self):
         #Setup axes
         time_mean = 4
@@ -476,8 +480,7 @@ class FourierTradeoff(Scene):
                 t_min = time_mean - time_radius,
                 t_max = time_mean + time_radius,
                 n_samples = 2*time_radius*17,
-                # complex_to_real_func = abs,
-                complex_to_real_func = abs,
+                complex_to_real_func = self.complex_to_real_func,
                 color = FREQUENCY_COLOR,
             )
 
@@ -508,24 +511,25 @@ class FourierTradeoff(Scene):
         #Draw items
         self.add(time_axes, frequency_axes)
         self.play(ShowCreation(wave_packet, rate_func = double_smooth))
-        self.play(
-            ReplacementTransform(
-                wave_packet.copy(),
-                fourier_graph,
-            ),
-            GrowArrow(arrow),
-            Write(fourier_words, run_time = 1)
-        )
+        anims = [ReplacementTransform(
+            wave_packet.copy(), fourier_graph
+        )]
+        if self.show_text:
+            anims += [
+                GrowArrow(arrow),
+                Write(fourier_words, run_time = 1)
+            ]
+        self.play(*anims)
         # self.play(FadeOut(arrow))
         self.wait()
-        for width in 6, 0.1, 1:
+        for width in 6, 0.02, 1:
             self.play(
                 width_tracker.move_to, width*RIGHT,
                 wave_packet_update,
                 fourier_graph_update,
                 run_time = 3
             )
-            if sub_words not in self.mobjects:
+            if sub_words not in self.mobjects and self.show_text:
                 self.play(FadeIn(sub_words))
             else:
                 self.wait()
@@ -1479,6 +1483,9 @@ class AskAboutLongVsShort(TeacherStudentsScene):
         self.wait(5)
 
 class LongAndShortSignalsInWindingMachine(FourierRecapScene):
+    CONFIG = {
+        "num_fourier_graph_points" : 1000,
+    }
     def construct(self):
         self.setup_axes()
         self.extend_for_long_time()
@@ -1489,19 +1496,169 @@ class LongAndShortSignalsInWindingMachine(FourierRecapScene):
     def setup_axes(self):
         FourierRecapScene.setup_axes(self)
         self.add(self.circle_plane)
-        self.add(self.frequency_graph)
+        self.add(self.frequency_axes)
+        self.time_graph = self.graph = self.get_time_graph(width = 2)
+        self.add(self.time_graph)
+
+        self.force_skipping()
+        self.wrap_signal_around_circle()
+
+        fourier_graph = self.get_fourier_transform_graph(self.time_graph)
+        self.fourier_graph = fourier_graph
+        self.add(fourier_graph)
+        self.change_frequency(5)
+
+        self.revert_to_original_skipping_status()
 
     def extend_for_long_time(self):
-        pass
+        short_time_graph = self.time_graph
+        long_time_graph = self.get_time_graph(
+            width = 10,
+            num_graph_points = 500,
+        )
+        long_time_graph.set_stroke(width = 2)
+        new_freq = 5.1
+        long_pol_graph = self.get_polarized_mobject(
+            long_time_graph,
+            freq = new_freq
+        )
+        fourier_graph = self.fourier_graph
+
+        self.change_frequency(new_freq)
+        self.play(
+            FadeOut(self.graph),
+            FadeOut(self.graph.polarized_mobject),
+            FadeOut(fourier_graph)
+        )
+        self.play(
+            ShowCreation(long_time_graph, rate_func = None),
+            ShowCreation(long_pol_graph, rate_func = None),
+            run_time = 5
+        )
+        self.wait()
+
+        self.time_graph = self.graph = long_time_graph
 
     def note_sharp_fourier_peak(self):
-        pass
+        fourier_graph = self.get_fourier_transform_graph(
+            self.time_graph, 
+            num_graph_points = self.num_fourier_graph_points
+        )
+        self.fourier_graph = fourier_graph
+        self.note_fourier_peak(fourier_graph, 5, 5.1)
 
     def very_short_signal(self):
-        pass
+        time_graph = self.time_graph
+        fourier_graph = self.fourier_graph
+        short_time_graph = self.get_time_graph(width = 0.6)
+        new_freq = 5.1
+        short_pol_graph = self.get_polarized_mobject(
+            short_time_graph,
+            freq = new_freq
+        )
+
+        self.play(
+            FadeOut(fourier_graph),
+            FadeOut(time_graph),
+            FadeOut(time_graph.polarized_mobject),
+        )
+        self.play(
+            ShowCreation(short_time_graph),
+            ShowCreation(short_time_graph.polarized_mobject),
+        )
+        self.graph = self.time_graph = short_time_graph
+        self.change_frequency(6.66, run_time = 5)
 
     def note_wide_fourier_peak(self):
-        pass
+        fourier_graph = self.get_fourier_transform_graph(
+            self.graph, 
+            num_graph_points = self.num_fourier_graph_points
+        )
+        self.fourier_graph = fourier_graph
+        self.note_fourier_peak(fourier_graph, 5, 6.66)
+
+
+    ###
+
+    def note_fourier_peak(self, fourier_graph, freq1, freq2):
+        fourier_graph = self.fourier_graph
+        dots = self.get_fourier_graph_dots(fourier_graph, freq1, freq2)
+        self.get_center_of_mass_dot()
+        self.generate_center_of_mass_dot_update_anim()
+        self.generate_fourier_dot_transform(fourier_graph)
+        dot = self.fourier_graph_dot
+        arrow = Arrow(UP, ORIGIN, buff = SMALL_BUFF)
+        arrow.next_to(dot, UP, buff = SMALL_BUFF)
+
+        self.play(ShowCreation(fourier_graph))
+        self.change_frequency(freq1,
+            added_anims = [
+                MaintainPositionRelativeTo(arrow, dot),
+                UpdateFromAlphaFunc(
+                    arrow,
+                    lambda m, a : m.set_fill(opacity = a)
+                ),
+            ],
+            run_time = 3,
+        )
+        self.wait()
+        self.change_frequency(freq2,
+            added_anims = [
+                MaintainPositionRelativeTo(arrow, dot)
+            ],
+            run_time = 3
+        )
+        self.wait()
+        self.play(*map(FadeOut, [
+            dot, arrow, self.center_of_mass_dot
+        ]))
+        #This is not great...
+        for attr in "center_of_mass_dot", "fourier_graph_dot":
+            self.__dict__.pop(attr)
+
+
+    def get_fourier_graph_dots(self, fourier_graph, *freqs):
+        axis_point = self.frequency_axes.coords_to_point(4.5, -0.25)
+        dots = VGroup()
+        for freq in freqs:
+            point = self.frequency_axes.input_to_graph_point(freq, fourier_graph)
+            dot = Dot(point)
+            dot.scale(0.5)
+            dots.add(dot)
+            vect = point - axis_point
+            vect *= 1.3/np.linalg.norm(vect)
+            arrow = Arrow(vect, ORIGIN, buff = SMALL_BUFF)
+            arrow.highlight(YELLOW)
+            arrow.shift(point)
+            dot.arrow = arrow
+        return dots
+
+class CleanerFourierTradeoff(FourierTradeoff):
+    CONFIG = {
+        "show_text" : False,
+        "complex_to_real_func" : lambda z : z.real,
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
