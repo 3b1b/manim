@@ -3,10 +3,10 @@ from helpers import *
 from mobject import Mobject
 from mobject.vectorized_mobject import VGroup, VMobject, VectorizedPoint
 from mobject.svg_mobject import SVGMobject
-from mobject.tex_mobject import TextMobject, TexMobject
+from mobject.tex_mobject import TextMobject, TexMobject, Brace
 
 from animation import Animation
-from animation.simple_animations import Rotating, LaggedStart
+from animation.simple_animations import Rotating, LaggedStart, AnimationGroup
 from animation.transform import ApplyMethod, FadeIn, GrowFromCenter
 
 from topics.geometry import Circle, Line, Rectangle, Square, \
