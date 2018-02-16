@@ -1502,7 +1502,8 @@ class BackToEulerSumScene(PiCreatureScene):
         sum_indicator.move_to(collection_point)
 
         self.play(
-            Transform(collected_indicators,sum_indicator)
+            FadeOut(collected_indicators),
+            FadeIn(sum_indicator)
         )
 
             
@@ -1697,25 +1698,24 @@ class IPTScene1(PiCreatureScene):
     def construct(self):
 
         SCREEN_SCALE = 0.1
+        SCREEN_THICKNESS = 0.2
 
         morty = self.get_primary_pi_creature()
         morty.scale(0.3).flip()
         right_pupil = morty.pupils[1]
         morty.next_to(C, LEFT, buff = 0, submobject_to_align = right_pupil)
+        self.add_foreground_mobject(morty)
 
-        line_a = VMobject()
-        line_a.set_points_as_corners([B,C])
-        line_b = VMobject()
-        line_b.set_points_as_corners([A,C])
-        line_c = VMobject()
-        line_c.set_points_as_corners([A,B])
-        line_h = VMobject()
-        line_h.set_points_as_corners([C,H])
+        stroke_width = 6
+        line_a = Line(B,C,stroke_width = stroke_width)
+        line_b = Line(A,C,stroke_width = stroke_width)
+        line_c = Line(A,B,stroke_width = stroke_width)
+        line_h = Line(C,H,stroke_width = stroke_width)
 
-        length_a = np.linalg.norm(B - C)
-        length_b = np.linalg.norm(A - C)
-        length_c = np.linalg.norm(A - B)
-        length_h = np.linalg.norm(C - H)
+        length_a = line_a.get_length()
+        length_b = line_b.get_length()
+        length_c = line_c.get_length()
+        length_h = line_h.get_length()
 
         label_a = TexMobject("a")
         label_a.next_to(line_a, LEFT, buff = 0.5)
@@ -1724,8 +1724,16 @@ class IPTScene1(PiCreatureScene):
         label_h = TexMobject("h")
         label_h.next_to(line_h.get_center(), RIGHT, buff = 0.5)
 
-        self.add(line_a, line_b, line_c, label_a, label_b, line_h)
+        self.add_foreground_mobject(line_a)
+        self.add_foreground_mobject(line_b)
+        self.add_foreground_mobject(line_c)
+        self.add_foreground_mobject(line_h)
+        self.add_foreground_mobject(label_a)
+        self.add_foreground_mobject(label_b)
+        self.add_foreground_mobject(label_h)
         
+        self.add_foreground_mobject(morty)
+
         ls1 = LightSource(radius = 10)
         ls1.move_source_to(B)
 
@@ -1745,35 +1753,30 @@ class IPTScene1(PiCreatureScene):
         screen_width_bp = screen_width_b * length_b / length_c
         screen_width_c = SCREEN_SCALE * length_c
 
-        screen_thickness_after = 0.2
-        screen_thickness_a = screen_thickness_after * length_c/length_a
-        screen_thickness_b = screen_thickness_after * length_c/length_b
+        screen_thickness_a = SCREEN_THICKNESS
+        screen_thickness_b = SCREEN_THICKNESS
 
         screen1 = Rectangle(width = screen_width_b,
             height = screen_thickness_b, 
             stroke_width = 0, 
             fill_opacity = 1.0)
-        screen1.next_to(C,RIGHT+DOWN,buff = 0)
+        screen1.move_to(C + screen_width_b/2 * RIGHT + screen_thickness_b/2 * DOWN)
         
         self.add_foreground_mobject(morty)
 
         self.play(
             FadeIn(screen1)
         )
-
         self.add_foreground_mobject(screen1)
-        self.add_foreground_mobject(line_a)
-        self.add_foreground_mobject(line_b)
 
         ls1.set_screen(screen1)
         screen_tracker = ScreenTracker(ls1)
-        self.remove(ls1.spotlight)
         self.add(screen_tracker)
+        #self.add(ls1.shadow)
 
         self.play(
             SwitchOn(ls1.spotlight),
-            FadeIn(ls1.shadow),
-            ls1.dim_ambient,
+            SwitchOff(ls1.ambient_light)
         )
 
 
@@ -1798,11 +1801,19 @@ class IPTScene1(PiCreatureScene):
 
         # add and move the second light source and screen
         ls2 = ls1.deepcopy()
-#        ls2.move_source_to(A)
-        screen2 = Rectangle(width = screen_width_a, height = 0.2, stroke_width = 0, fill_opacity = 1)
+        ls2.move_source_to(A)
+        screen2 = Rectangle(width = screen_width_a,
+            height = screen_thickness_a, 
+            stroke_width = 0, 
+            fill_opacity = 1.0)
         screen2.rotate(-TAU/4)
-        screen2.next_to(C,UP,buff = 0)
+        screen2.move_to(C + screen_width_a/2 * UP + screen_thickness_a/2 * LEFT)
 
+        self.play(
+            FadeIn(screen2)
+        )
+        self.add_foreground_mobject(screen2)
+        self.add_foreground_mobject(morty)
 
         # the same scene adding sequence as before
         ls2.set_screen(screen2)
@@ -1813,17 +1824,10 @@ class IPTScene1(PiCreatureScene):
             SwitchOn(ls2.ambient_light)
         )
 
-        self.play(
-            FadeIn(screen2)
-        )
-        self.add_foreground_mobject(screen2)
-        self.add_foreground_mobject(line_a)
-        self.add_foreground_mobject(line_b)
 
         self.play(
             SwitchOn(ls2.spotlight),
-            FadeIn(ls2.shadow),
-            ls2.dim_ambient
+            SwitchOff(ls2.ambient_light)
         )
 
 
@@ -1834,7 +1838,7 @@ class IPTScene1(PiCreatureScene):
         screen2pp = screen2.deepcopy()
         angle = np.arccos(length_a / length_c)
         screen2p.stretch_to_fit_height(screen_width_ap)
-        screen2p.rotate(angle)
+        screen2p.rotate(angle, about_point = C + screen_width_ap * UP)
         # we can reuse the translation vector
         screen2p.shift(vector)
 
@@ -1844,13 +1848,63 @@ class IPTScene1(PiCreatureScene):
             Transform(screen2,screen2p)
         )
 
-        # # now transform both screens back
-        # self.play(
-        #     Transform(screen1, screen1pp),
-        #     Transform(screen2, screen2pp),
-        # )
+        # now transform both screens back
+        self.play(
+            Transform(screen1, screen1pp),
+            Transform(screen2, screen2pp),
+        )
 
 
+class IPTScene2(Scene):
+
+    def construct(self):
+
+        intensity1 = 0.3
+        intensity2 = 0.2
+        formula_scale = 01.2
+        indy_radius = 1
+
+        indy1 = LightIndicator(color = LIGHT_COLOR, show_reading = False, radius = indy_radius)
+        indy1.set_intensity(intensity1)
+        reading1 = TexMobject("{1\over a^2}").scale(formula_scale).move_to(indy1)
+        indy1.add(reading1)
+
+        indy2 = LightIndicator(color = LIGHT_COLOR, show_reading = False, radius = indy_radius)
+        indy2.set_intensity(intensity2)
+        reading2 = TexMobject("{1\over b^2}").scale(formula_scale).move_to(indy2)
+        indy2.add(reading2)
+
+        indy3 = LightIndicator(color = LIGHT_COLOR, show_reading = False, radius = indy_radius)
+        indy3.set_intensity(intensity1 + intensity2)
+        reading3 = TexMobject("{1\over h^2}").scale(formula_scale).move_to(indy3)
+        indy3.add(reading3)
+
+        plus_sign = TexMobject("+").scale(formula_scale)
+        equals_sign = TexMobject("=").scale(formula_scale)
+
+        plus_sign.next_to(indy1, RIGHT)
+        indy2.next_to(plus_sign, RIGHT)
+        equals_sign.next_to(indy2, RIGHT)
+        indy3.next_to(equals_sign, RIGHT)
+        
+
+        formula = VGroup(
+            indy1, plus_sign, indy2, equals_sign, indy3
+        )
+
+        formula.move_to(ORIGIN)
+
+        self.play(FadeIn(indy1))
+        self.play(FadeIn(plus_sign), FadeIn(indy2))
+        self.play(FadeIn(equals_sign), FadeIn(indy3))
+
+        buffer = 1.5
+        box = Rectangle(width = formula.get_width() * buffer,
+            height = formula.get_height() * buffer)
+        box.move_to(formula)
+        text = TextMobject("Inverse Pythagorean Theorem").scale(formula_scale)
+        text.next_to(box,UP)
+        self.play(ShowCreation(box),Write(text))
 
 
 class PondScene(Scene):
