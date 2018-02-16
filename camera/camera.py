@@ -193,13 +193,13 @@ class Camera(object):
             raise Exception(
                 "Trying to display something which is not of type Mobject"
             )
-        batches = batch_by_property(mobjects, get_mobject_type)
+        batch_type_pairs = batch_by_property(mobjects, get_mobject_type)
 
         #Display in these batches
-        for batch in batches:
+        for batch, batch_type in batch_type_pairs:
             #check what the type is, and call the appropriate function
             for mobject_type, func in type_func_pairs:
-                if isinstance(batch[0], mobject_type):
+                if batch_type == mobject_type:
                     func(batch)
 
     ## Methods associated with svg rendering
@@ -216,12 +216,12 @@ class Camera(object):
     def display_multiple_vectorized_mobjects(self, vmobjects):
         if len(vmobjects) == 0:
             return
-        batches = batch_by_property(
+        batch_file_pairs = batch_by_property(
             vmobjects, 
             lambda vm : vm.get_background_image_file()
         )
-        for batch in batches:
-            if batch[0].get_background_image_file():
+        for batch, file_name in batch_file_pairs:
+            if file_name:
                 self.display_multiple_background_colored_vmobject(batch)
             else:
                 self.display_multiple_non_background_colored_vmobjects(batch)
@@ -550,8 +550,7 @@ class BackgroundColoredVMobjectDisplayer(object):
         mode = "RGBA" if pixel_array.shape[2] == 4 else "RGB"
         return self.resize_background_array(background_array, width, height, mode)
 
-    def get_background_array(self, cvmobject):
-        file_name = cvmobject.get_background_image_file()
+    def get_background_array(self, file_name):
         if file_name in self.file_name_to_pixel_array_map:
             return self.file_name_to_pixel_array_map[file_name]
         full_path = get_full_raster_image_path(file_name)
@@ -566,12 +565,12 @@ class BackgroundColoredVMobjectDisplayer(object):
         return array
 
     def display(self, *cvmobjects):
-        batches = batch_by_property(
+        batch_image_file_pairs = batch_by_property(
             cvmobjects, lambda cv : cv.get_background_image_file()
         )
         curr_array = None
-        for batch in batches:
-            background_array = self.get_background_array(batch[0])
+        for batch, image_file in batch_image_file_pairs:
+            background_array = self.get_background_array(image_file)
             for cvmobject in batch:
                 self.camera.display_vectorized(cvmobject, self.canvas)
             self.canvas.flush()
