@@ -1639,7 +1639,47 @@ class CleanerFourierTradeoff(FourierTradeoff):
         "complex_to_real_func" : lambda z : z.real,
     }
 
+class MentionDopplerRadar(TeacherStudentsScene):
+    def construct(self):
+        words = TextMobject("Doppler Radar")
+        words.next_to(self.teacher, UP)
+        words.save_state()
+        words.shift(DOWN).fade(1)
+        dish = RadarDish()
+        dish.next_to(self.students, UP, buff = 2, aligned_edge = LEFT)
+        plane = Plane()
+        plane.to_edge(RIGHT)
+        plane.align_to(dish)
+        plane_flight = AmbientMovement(
+            plane, 
+            direction = LEFT,
+            rate = 1,
+        )
+        plane.flip()
+        pulse = RadarPulse(dish, plane)
+        look_at_anims = [
+            ContinualUpdateFromFunc(
+                pi, lambda pi : pi.look_at(pulse.mobject)
+            )
+            for pi in self.get_pi_creatures()
+        ]
 
+        self.add(dish, plane_flight, pulse, *look_at_anims)
+        self.play(
+            self.teacher.change, "hooray",
+            words.restore
+        )
+        self.change_student_modes("pondering", "erm", "sassy")
+        self.wait(4)
+        self.play(
+            self.teacher.change, "happy",
+            self.get_student_changes(*["thinking"]*3)
+        )
+        dish.set_stroke(width = 0)
+        self.play(UpdateFromAlphaFunc(
+            VGroup(plane, dish),
+            lambda m, a : m.set_fill(opacity = 1 - a)
+        ))
 
 
 
