@@ -1670,22 +1670,131 @@ class MentionDopplerRadar(TeacherStudentsScene):
             words.restore
         )
         self.change_student_modes("pondering", "erm", "sassy")
-        self.wait(4)
+        self.wait(2)
         self.play(
             self.teacher.change, "happy",
             self.get_student_changes(*["thinking"]*3)
         )
+        self.wait()
         dish.set_stroke(width = 0)
         self.play(UpdateFromAlphaFunc(
             VGroup(plane, dish),
             lambda m, a : m.set_fill(opacity = 1 - a)
         ))
 
+class IntroduceDopplerRadar(Scene):
+    def construct(self):
+        self.setup_axes()
+        self.measure_distance_with_time()
+        self.measure_velocity_with_frequency()
+
+    def setup_axes(self):
+        self.dish = RadarDish()
+        self.dish.to_corner(UP+LEFT)
+        axes = Axes(
+            x_min = 0,
+            x_max = 10,
+            y_min = -2,
+            y_max = 2
+        )
+        axes.move_to(DOWN)
+        time_label = TextMobject("Time")
+        time_label.next_to(axes.x_axis.get_right(), UP)
+        axes.time_label = time_label
+        axes.add(time_label)
+        self.axes = axes
+
+        self.add(self.dish)
+        self.add(axes)
+
+    def measure_distance_with_time(self):
+        dish = self.dish
+        axes = self.axes
+        distance = 5
+        time_diff = 5
+        speed = (2*distance)/time_diff
+        randy = Randolph().flip()
+        randy.match_height(dish)
+        randy.move_to(dish.get_right(), LEFT)
+        randy.shift(distance*RIGHT)
+
+        pulse_graph = self.get_single_pulse_graph(1, color = BLUE)
+        echo_graph = self.get_single_pulse_graph(1+time_diff, color = YELLOW)
+        sum_graph = axes.get_graph(
+            lambda x : sum([
+                pulse_graph.underlying_function(x),
+                echo_graph.underlying_function(x),
+            ]),
+            color = WHITE
+        )
+        sum_graph.background_image_file = "blue_yellow_gradient"
+        words = ["Original signal", "Echo"]
+        for graph, word in zip([pulse_graph, echo_graph], words):
+            arrow = Vector(DOWN+LEFT)
+            arrow.next_to(graph.peak_point, UP+RIGHT, SMALL_BUFF)
+            arrow.match_color(graph)
+            graph.arrow = arrow
+            label = TextMobject(word)
+            label.next_to(arrow.get_start(), UP, SMALL_BUFF)
+            label.match_color(graph)
+            graph.label = label
+
+        #v_line anim?
+
+        pulse = RadarPulseSingleton(dish, randy, speed = speed)
+        graph_draw = NormalAnimationAsContinualAnimation(
+            ShowCreation(
+                sum_graph, 
+                rate_func = None, 
+                run_time = axes.x_max
+            )
+        )
+        randy_look_at = ContinualUpdateFromFunc(
+            randy, lambda pi : pi.look_at(pulse.mobject)
+        )
+
+        self.add(randy_look_at, ContinualAnimation(axes), graph_draw)
+        self.wait()
+        self.add(pulse)
+        self.play(
+            Write(pulse_graph.label),
+            GrowArrow(pulse_graph.arrow),
+            run_time = 1,
+        )
+        self.play(randy.change, "pondering")
+        self.wait(time_diff - 2)
+        self.play(
+            Write(echo_graph.label),
+            GrowArrow(echo_graph.arrow),
+            run_time = 1
+        )
+        self.wait(3)
+        graph_draw.update(10)
+        self.add(sum_graph)
+        self.wait()
 
 
 
+    def measure_velocity_with_frequency(self):
+        pass
 
 
+    ###
+
+    def get_single_pulse_graph(self, x, **kwargs):
+        graph = self.axes.get_graph(
+            self.get_single_pulse_function(x),
+            **kwargs
+        )
+        graph.peak_point = self.get_peak_point(graph)
+        return graph
+
+    def get_single_pulse_function(self, x):
+        return lambda t : -2*np.sin(10*(t-x))*np.exp(-100*(t-x)**2)
+
+    def get_peak_point(self, graph):
+        anchors = graph.get_anchors()
+        return anchors[np.argmax([p[1] for p in anchors])]
 
 
 
