@@ -1685,8 +1685,10 @@ class MentionDopplerRadar(TeacherStudentsScene):
 class IntroduceDopplerRadar(Scene):
     def construct(self):
         self.setup_axes()
-        self.measure_distance_with_time()
-        self.measure_velocity_with_frequency()
+        # self.measure_distance_with_time()
+        self.show_frequency_shift()
+        self.shift_time_graph()
+        self.show_frequency_shift_in_fourier()
 
     def setup_axes(self):
         self.dish = RadarDish()
@@ -1694,8 +1696,8 @@ class IntroduceDopplerRadar(Scene):
         axes = Axes(
             x_min = 0,
             x_max = 10,
-            y_min = -2,
-            y_max = 2
+            y_min = -1.5,
+            y_max = 1.5
         )
         axes.move_to(DOWN)
         time_label = TextMobject("Time")
@@ -1718,20 +1720,15 @@ class IntroduceDopplerRadar(Scene):
         randy.move_to(dish.get_right(), LEFT)
         randy.shift(distance*RIGHT)
 
-        pulse_graph = self.get_single_pulse_graph(1, color = BLUE)
-        echo_graph = self.get_single_pulse_graph(1+time_diff, color = YELLOW)
-        sum_graph = axes.get_graph(
-            lambda x : sum([
-                pulse_graph.underlying_function(x),
-                echo_graph.underlying_function(x),
-            ]),
-            color = WHITE
-        )
-        sum_graph.background_image_file = "blue_yellow_gradient"
+        pulse_graph, echo_graph, sum_graph = \
+            self.get_pulse_and_echo_graphs(
+                self.get_single_pulse_graph,
+                (1,), (1+time_diff,)
+            )
         words = ["Original signal", "Echo"]
         for graph, word in zip([pulse_graph, echo_graph], words):
-            arrow = Vector(DOWN+LEFT)
-            arrow.next_to(graph.peak_point, UP+RIGHT, SMALL_BUFF)
+            arrow = Vector(DOWN)
+            arrow.next_to(graph.peak_point, UP, SMALL_BUFF)
             arrow.match_color(graph)
             graph.arrow = arrow
             label = TextMobject(word)
@@ -1739,14 +1736,26 @@ class IntroduceDopplerRadar(Scene):
             label.match_color(graph)
             graph.label = label
 
+        double_arrow = DoubleArrow(
+            pulse_graph.peak_point,
+            echo_graph.peak_point,
+            color = WHITE
+        )
+        distance_text = TextMobject("$2 \\times$ distance/(signal speed)")
+        distance_text.scale_to_fit_width(0.9*double_arrow.get_width())
+        distance_text.next_to(double_arrow, UP, SMALL_BUFF)
+
         #v_line anim?
 
-        pulse = RadarPulseSingleton(dish, randy, speed = speed)
+        pulse = RadarPulseSingleton(
+            dish, randy, 
+            speed = 0.97*speed, #Just needs slightly better alignment
+        )
         graph_draw = NormalAnimationAsContinualAnimation(
             ShowCreation(
                 sum_graph, 
                 rate_func = None, 
-                run_time = axes.x_max
+                run_time = 0.97*axes.x_max
             )
         )
         randy_look_at = ContinualUpdateFromFunc(
@@ -1754,7 +1763,7 @@ class IntroduceDopplerRadar(Scene):
         )
 
         self.add(randy_look_at, ContinualAnimation(axes), graph_draw)
-        self.wait()
+        self.wait(0.5)
         self.add(pulse)
         self.play(
             Write(pulse_graph.label),
@@ -1768,35 +1777,143 @@ class IntroduceDopplerRadar(Scene):
             GrowArrow(echo_graph.arrow),
             run_time = 1
         )
-        self.wait(3)
-        graph_draw.update(10)
-        self.add(sum_graph)
+        self.wait()
+        self.play(
+            GrowFromCenter(double_arrow),
+            FadeIn(distance_text)
+        )
         self.wait()
 
+        self.remove(graph_draw, pulse, randy_look_at)
+        self.play(LaggedStart(FadeOut, VGroup(
+            sum_graph, randy,
+            pulse_graph.arrow, pulse_graph.label,
+            echo_graph.arrow, echo_graph.label,
+            double_arrow, distance_text
+        )))
 
+    def show_frequency_shift(self):
+        axes = self.axes
+        dish = self.dish
+        plane = Plane()
+        plane.flip()
+        plane.move_to(dish)
+        plane.to_edge(RIGHT)
 
-    def measure_velocity_with_frequency(self):
+        time_diff = 6
+
+        pulse_graph, echo_graph, sum_graph = graphs = \
+            self.get_pulse_and_echo_graphs(
+                self.get_frequency_pulse_graph,
+                (1,25), (1+time_diff,50)
+            )
+        for graph in graphs:
+            graph.set_stroke(width = 3)
+        signal_graph = self.get_frequency_pulse_graph(1)
+
+        pulse_brace = Brace(Line(ORIGIN, RIGHT), UP)
+        pulse_brace.move_to(axes.coords_to_point(1, 1.2))
+        echo_brace = pulse_brace.copy()
+        echo_brace.stretch(0.6, 0)
+        echo_brace.move_to(axes.coords_to_point(7, 1.2))
+        pulse_text = pulse_brace.get_text("Original signal")
+        pulse_text.add_background_rectangle()
+        echo_text = echo_brace.get_text("Echo")
+        echo_subtext = TextMobject("(Higher frequency)")
+        echo_subtext.next_to(echo_text, RIGHT)
+        echo_subtext.match_color(echo_graph)
+
+        graph_draw = NormalAnimationAsContinualAnimation(
+            ShowCreation(sum_graph, run_time = 8, rate_func = None)
+        )
+        pulse = RadarPulse(dish, plane, n_pulse_singletons = 12)
+        plane_flight = AmbientMovement(
+            plane, direction = LEFT, rate = 1.5
+        )
+
+        self.add(graph_draw, pulse, plane_flight)
+        self.play(UpdateFromAlphaFunc(
+            plane, lambda m, a : m.set_fill(opacity = a)
+        ))
+        self.play(
+            GrowFromCenter(pulse_brace),
+            FadeIn(pulse_text),
+        )
+        self.wait(3)
+        self.play(
+            GrowFromCenter(echo_brace),
+            GrowFromCenter(echo_text),
+        )
+        self.play(UpdateFromAlphaFunc(
+            plane, lambda m, a : m.set_fill(opacity = 1-a)
+        ))
+        #Only for when -s is run
+        graph_draw.update(10) 
+        self.wait(0.1)
+        self.play(Write(echo_subtext, run_time = 1))
+        self.wait()
+        self.remove(graph_draw, pulse, plane_flight)
+
+        self.time_graph_group = VGroup(
+            axes, pulse_brace, pulse_text,
+            echo_brace, echo_text, echo_subtext,
+            sum_graph
+        )
+        self.pulse_echo_graph = sum_graph
+
+    def shift_time_graph(self):
+        self.play(
+            self.time_graph_group.to_edge, UP,
+            ApplyMethod(
+                self.dish.shift, 2*UP, 
+                remover = True
+            )
+        )
+        self.wait()
+
+    def show_frequency_shift_in_fourier(self):
         pass
-
 
     ###
 
-    def get_single_pulse_graph(self, x, **kwargs):
-        graph = self.axes.get_graph(
-            self.get_single_pulse_function(x),
-            **kwargs
-        )
+    def get_graph(self, func, **kwargs):
+        graph = self.axes.get_graph(func, **kwargs)
         graph.peak_point = self.get_peak_point(graph)
         return graph
 
+    def get_single_pulse_graph(self, x, **kwargs):
+        return self.get_graph(self.get_single_pulse_function(x), **kwargs)
+
     def get_single_pulse_function(self, x):
         return lambda t : -2*np.sin(10*(t-x))*np.exp(-100*(t-x)**2)
+
+    def get_frequency_pulse_graph(self, x, freq = 50, **kwargs):
+        return self.get_graph(
+            self.get_frequency_pulse_function(x, freq), 
+            num_graph_points = 700,
+            **kwargs
+        )
+
+    def get_frequency_pulse_function(self, x, freq):
+        return lambda t : 2*np.cos(2*freq*(t-x))*min(np.exp(-(freq**2/100)*(t-x)**2), 0.5)
 
     def get_peak_point(self, graph):
         anchors = graph.get_anchors()
         return anchors[np.argmax([p[1] for p in anchors])]
 
-
+    def get_pulse_and_echo_graphs(self, func, args1, args2):
+        pulse_graph = func(*args1, color = BLUE)
+        echo_graph = func(*args2, color = YELLOW)
+        sum_graph = self.axes.get_graph(
+            lambda x : sum([
+                pulse_graph.underlying_function(x),
+                echo_graph.underlying_function(x),
+            ]),
+            num_graph_points = echo_graph.get_num_anchor_points(),
+            color = WHITE
+        )
+        sum_graph.background_image_file = "blue_yellow_gradient"
+        return pulse_graph, echo_graph, sum_graph
 
 
 
