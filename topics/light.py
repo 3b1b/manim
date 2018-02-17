@@ -185,8 +185,14 @@ class LightSource(VMobject):
         self.spotlight.radius = new_radius
 
     def update(self):
+
+        M = z_to_vector(self.spotlight.projection_direction())
+        R = np.array([[0,-1,0],[1,0,0],[0,0,1]])
+        self.rotation_matrix = np.dot(M,R)
+
         self.spotlight.update_sectors()
         self.update_shadow()
+        self.update_lighthouse()
 
     def get_source_point(self):
         return self.source_point.get_location()
@@ -208,8 +214,10 @@ class LightSource(VMobject):
             np.reshape(projected_source,(1,3)),
             axis = 0
         )
-        rotation_matrix = z_to_vector(self.spotlight.projection_direction())
-        back_rotation_matrix = rotation_matrix.T # i. e. its inverse
+        rotation_matrix_here = z_to_vector(self.spotlight.projection_direction())
+        # self.rotation matrix contains an extra 90 degree rotation
+        # (this is apparently necessary to orient the lighthouse)
+        back_rotation_matrix = rotation_matrix_here.T # i. e. its inverse
 
         rotated_point_cloud_3d = np.dot(projected_point_cloud_3d,back_rotation_matrix.T)
         # these points now should all have z = 0
@@ -234,7 +242,7 @@ class LightSource(VMobject):
         
         hull_mobject = VMobject()
         hull_mobject.set_points_as_corners(hull)
-        hull_mobject.apply_matrix(rotation_matrix)
+        hull_mobject.apply_matrix(rotation_matrix_here)
 
 
         anchors = hull_mobject.get_anchors()
@@ -259,6 +267,13 @@ class LightSource(VMobject):
         # shift it closer to the camera so it is in front of the spotlight
         self.shadow.mark_paths_closed = True
 
+
+    def update_lighthouse(self):
+
+        new_lh = Lighthouse().move_to(ORIGIN)
+        new_lh.apply_matrix(self.rotation_matrix)
+        new_lh.shift(self.get_source_point())
+        self.lighthouse.submobjects = new_lh.submobjects
 
 
 class SwitchOn(LaggedStart):
@@ -299,6 +314,7 @@ class Lighthouse(SVGMobject):
 
     def move_to(self,point):
         self.next_to(point, DOWN, buff = 0)
+        return self
 
 
 class AmbientLight(VMobject):
@@ -393,14 +409,14 @@ class AmbientLight(VMobject):
 class Spotlight(VMobject):
 
     CONFIG = {
-        "source_point": VectorizedPoint(location = ORIGIN, stroke_width = 0, fill_opacity = 0),
+        "source_point" : VectorizedPoint(location = ORIGIN, stroke_width = 0, fill_opacity = 0),
         "opacity_function" : lambda r : 1.0/(r/2+1.0)**2,
         "color" : LIGHT_COLOR,
         "max_opacity" : 1.0,
         "num_levels" : 10,
         "radius" : 5.0,
         "screen" : None,
-        "camera": None
+        "camera" : None
     }
 
     def projection_direction(self):
