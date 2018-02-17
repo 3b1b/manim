@@ -190,6 +190,7 @@ class LightSource(VMobject):
         R = np.array([[0,-1,0],[1,0,0],[0,0,1]])
         self.rotation_matrix = np.dot(M,R)
 
+        self.update_ambient_light()
         self.spotlight.update_sectors()
         self.update_shadow()
         self.update_lighthouse()
@@ -274,6 +275,22 @@ class LightSource(VMobject):
         new_lh.apply_matrix(self.rotation_matrix)
         new_lh.shift(self.get_source_point())
         self.lighthouse.submobjects = new_lh.submobjects
+
+
+    def update_ambient_light(self):
+
+        new_ambient_light = AmbientLight(
+            source_point = VectorizedPoint(location = ORIGIN),
+            color = self.color,
+            num_levels = self.num_levels,
+            radius = self.radius,
+            opacity_function = self.opacity_function,
+            max_opacity = self.max_opacity_ambient
+        )
+        new_ambient_light.apply_matrix(self.rotation_matrix)
+        new_ambient_light.move_source_to(self.get_source_point())
+        self.ambient_light.submobjects = new_ambient_light.submobjects
+
 
 
 class SwitchOn(LaggedStart):
