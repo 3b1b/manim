@@ -227,22 +227,30 @@ def adjacent_pairs(objects):
     return zip(objects, list(objects[1:])+[objects[0]])
 
 def batch_by_property(items, property_func):
-    batches = []
-    def add_batch(batch):
+    """
+    Takes in a list, and returns a list of tuples, (batch, prop)
+    such that all items in a batch have the same output when
+    put into property_func, and such that chaining all these
+    batches together would give the original list.
+    """
+    batch_prop_pairs = []
+    def add_batch_prop_pair(batch):
         if len(batch) > 0:
-            batches.append(batch)
+            batch_prop_pairs.append(
+                (batch, property_func(batch[0]))
+            )
     curr_batch = []
     curr_prop = None
     for item in items:
         prop = property_func(item)
         if prop != curr_prop:
-            add_batch(curr_batch)
+            add_batch_prop_pair(curr_batch)
             curr_prop = prop
             curr_batch = [item]
         else:
             curr_batch.append(item)
-    add_batch(curr_batch)
-    return batches
+    add_batch_prop_pair(curr_batch)
+    return batch_prop_pairs
 
 def complex_to_R3(complex_num):
     return np.array((complex_num.real, complex_num.imag, 0))
