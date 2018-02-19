@@ -1001,6 +1001,7 @@ class ScreenShapingScene(ThreeDScene):
 
     def construct(self):
 
+        #self.force_skipping()
         self.setup_elements()
         self.deform_screen()
         self.create_brightness_rect()
@@ -1010,8 +1011,10 @@ class ScreenShapingScene(ThreeDScene):
         self.add_distance_arrow()
         self.right_shift_screen_while_showing_light_indicator_and_distance_arrow()
         self.left_shift_again()
+        #self.revert_to_original_skipping_status()
         
         self.morph_into_3d()
+        self.prove_inverse_square_law()
 
 
     def setup_elements(self):
@@ -1248,17 +1251,14 @@ class ScreenShapingScene(ThreeDScene):
 
     def morph_into_3d(self):
 
+        self.play(FadeOut(self.morty))
+
         axes = ThreeDAxes()
         self.add(axes)
 
         phi0 = self.camera.get_phi() # default is 0 degs
         theta0 = self.camera.get_theta() # default is -90 degs
         distance0 = self.camera.get_distance()
-
-        # this is an ugly hack bc remove, FadeOut and SwitchOff don't work
-        self.play(
-            self.light_source.set_max_opacity_ambient,0.001
-        )
 
         phi1 = 60 * DEGREES # angle from zenith (0 to 180)
         theta1 = -135 * DEGREES # azimuth (0 to 360)
@@ -1272,7 +1272,7 @@ class ScreenShapingScene(ThreeDScene):
         projection_direction = self.camera.spherical_coords_to_point(phi1,theta1, 1)
 
         new_screen0 = Rectangle(height = self.screen_height,
-            width = 0.1, stroke_color = RED)
+            width = 0.1, stroke_color = RED, fill_color = RED, fill_opacity = 1)
         new_screen0.rotate(TAU/4,axis = DOWN)
         new_screen0.move_to(self.screen.get_center())
         self.add(new_screen0)
@@ -1282,19 +1282,36 @@ class ScreenShapingScene(ThreeDScene):
         self.light_source.set_camera(self.camera)
 
 
-        new_screen = new_screen0.deepcopy()
-        new_screen.width = new_screen.height
+        new_screen = Rectangle(height = self.screen_height,
+            width = self.screen_height, stroke_color = RED, fill_color = RED, fill_opacity = 1)
+        new_screen.rotate(TAU/4,axis = DOWN)
+        new_screen.move_to(self.screen.get_center())
 
+        self.add_foreground_mobject(self.ambient_light)
+        self.add_foreground_mobject(self.spotlight)
 
         self.play(
              ApplyMethod(self.camera.rotation_mobject.move_to, camera_target_point),
              
         )
 
-        #self.play(Transform(new_screen0,new_screen))
+        self.play(Transform(new_screen0,new_screen))
 
         self.wait()
 
+        self.unit_screen = new_screen0 # better name
+
+
+
+
+    def prove_inverse_square_law(self):
+
+        unit_screen_copy = self.unit_screen.copy()
+        fourfold_screen = self.unit_screen.copy()
+        fourfold_screen.scale(2,about_point = self.light_source.get_source_point())
+        self.play(
+            Transform(self.unit_screen, fourfold_screen)
+        )
 
 
 
