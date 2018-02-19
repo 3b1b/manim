@@ -30,7 +30,7 @@ class Camera(object):
         "max_allowable_norm" : 2*SPACE_WIDTH,
         "image_mode" : "RGBA",
         "n_rgb_coords" : 4,
-        "background_alpha" : 0, #Out of color_max_val
+        "background_alpha" : 0, #Out of rgb_max_val
         "pixel_array_dtype" : 'uint8',
         "use_z_coordinate_for_display_order" : False,
         # z_buff_func is only used if the flag above is set to True.
@@ -40,7 +40,7 @@ class Camera(object):
 
     def __init__(self, background = None, **kwargs):
         digest_config(self, kwargs, locals())
-        self.color_max_val = np.iinfo(self.pixel_array_dtype).max
+        self.rgb_max_val = np.iinfo(self.pixel_array_dtype).max
         self.init_background()
         self.resize_space_shape()
         self.reset()
@@ -92,7 +92,7 @@ class Camera(object):
         retval = np.array(pixel_array)
         if convert_from_floats:
             retval = np.apply_along_axis(
-                lambda f : (f * self.color_max_val).astype(self.pixel_array_dtype),
+                lambda f : (f * self.rgb_max_val).astype(self.pixel_array_dtype),
                 2,
                 retval)
         return retval
@@ -177,29 +177,30 @@ class Camera(object):
 
     def capture_mobjects(self, mobjects, **kwargs):
         mobjects = self.get_mobjects_to_display(mobjects, **kwargs)
-        vmobjects = []
-        for mobject in mobjects:
-            if isinstance(mobject, VMobject):
-                 vmobjects.append(mobject)
-            elif len(vmobjects) > 0:
-                self.display_multiple_vectorized_mobjects(vmobjects)
-                vmobjects = []
-                
-            if isinstance(mobject, PMobject):
-                self.display_point_cloud(
-                    mobject.points, mobject.rgbas, 
-                    self.adjusted_thickness(mobject.stroke_width)
-                )
-            elif isinstance(mobject, ImageMobject):
-                self.display_image_mobject(mobject)
-            elif isinstance(mobject, Mobject):
-                pass #Remainder of loop will handle submobjects
-            else:
-                raise Exception(
-                    "Unknown mobject type: " + mobject.__class__.__name__
-                )
-            #TODO, more?  Call out if it's unknown?
-        self.display_multiple_vectorized_mobjects(vmobjects)
+
+        # Organize this list into batches of the same type, and 
+        # apply corresponding function to those batches
+        type_func_pairs = [
+            (VMobject, self.display_multiple_vectorized_mobjects),
+            (PMobject,  self.display_multiple_point_cloud_mobjects),
+            (ImageMobject,  self.display_multiple_image_mobjects),
+            (Mobject, lambda batch : batch), #Do nothing
+        ]
+        def get_mobject_type(mobject):
+            for mobject_type, func in type_func_pairs:
+                if isinstance(mobject, mobject_type):
+                    return mobject_type
+            raise Exception(
+                "Trying to display something which is not of type Mobject"
+            )
+        batch_type_pairs = batch_by_property(mobjects, get_mobject_type)
+
+        #Display in these batches
+        for batch, batch_type in batch_type_pairs:
+            #check what the type is, and call the appropriate function
+            for mobject_type, func in type_func_pairs:
+                if batch_type == mobject_type:
+                    func(batch)
 
     ## Methods associated with svg rendering
 
@@ -215,12 +216,12 @@ class Camera(object):
     def display_multiple_vectorized_mobjects(self, vmobjects):
         if len(vmobjects) == 0:
             return
-        batches = batch_by_property(
+        batch_file_pairs = batch_by_property(
             vmobjects, 
             lambda vm : vm.get_background_image_file()
         )
-        for batch in batches:
-            if batch[0].get_background_image_file():
+        for batch, file_name in batch_file_pairs:
+            if file_name:
                 self.display_multiple_background_colored_vmobject(batch)
             else:
                 self.display_multiple_non_background_colored_vmobjects(batch)
@@ -252,7 +253,7 @@ class Camera(object):
             stroke_hex = rgb_to_hex(stroke_rgb)
             pen = aggdraw.Pen(stroke_hex, stroke_width)
 
-        fill_opacity = int(self.color_max_val*vmobject.get_fill_opacity())
+        fill_opacity = int(self.rgb_max_val*vmobject.get_fill_opacity())
         if fill_opacity == 0:
             fill = None
         else:
@@ -305,12 +306,18 @@ class Camera(object):
     def display_multiple_background_colored_vmobject(self, cvmobjects):
         displayer = self.get_background_colored_vmobject_displayer()
         cvmobject_pixel_array = displayer.display(*cvmobjects)
-        self.pixel_array[:,:] = np.maximum(
-            self.pixel_array, cvmobject_pixel_array
-        )
+        self.overlay_rgba_array(cvmobject_pixel_array)
         return self
 
     ## Methods for other rendering
+
+    def display_multiple_point_cloud_mobjects(self, pmobjects):
+        for pmobject in pmobjects:
+            self.display_point_cloud(
+                pmobject.points,
+                pmobject.rgbas,
+                self.adjusted_thickness(pmobject.stroke_width)
+            )
 
     def display_point_cloud(self, points, rgbas, thickness):
         if len(points) == 0:
@@ -322,7 +329,7 @@ class Camera(object):
         )
         rgba_len = self.pixel_array.shape[2]
 
-        rgbas = (self.color_max_val*rgbas).astype(self.pixel_array_dtype)
+        rgbas = (self.rgb_max_val*rgbas).astype(self.pixel_array_dtype)
         target_len = len(pixel_coords)
         factor = target_len/len(rgbas)
         rgbas = np.array([rgbas]*factor).reshape((target_len, rgba_len))
@@ -341,6 +348,10 @@ class Camera(object):
         new_pa = self.pixel_array.reshape((ph*pw, rgba_len))
         new_pa[indices] = rgbas
         self.pixel_array = new_pa.reshape((ph, pw, rgba_len))
+
+    def display_multiple_image_mobjects(self, image_mobjects):
+        for image_mobject in image_mobjects:
+            self.display_image_mobject(image_mobject)
 
     def display_image_mobject(self, image_mobject):
         corner_coords = self.points_to_pixel_coords(image_mobject.points)
@@ -410,17 +421,23 @@ class Camera(object):
         self.overlay_rgba_array(image)
 
     def overlay_rgba_array(self, arr):
-        # """ Overlays arr onto self.pixel_array with relevant alphas"""
-        bg, fg = fdiv(self.pixel_array, self.color_max_val), fdiv(arr, self.color_max_val)
-        bga, fga = [arr[:,:,3:] for arr in bg, fg]
-        alpha_sum = fga + (1-fga)*bga
-        with np.errstate(divide = 'ignore', invalid='ignore'):
-            bg[:,:,:3] = reduce(op.add, [
-                np.divide(fg[:,:,:3]*fga, alpha_sum),
-                np.divide(bg[:,:,:3]*(1-fga)*bga, alpha_sum),
-            ])
-        bg[:,:,3:] = 1 - (1 - bga)*(1 - fga)
-        self.pixel_array = (self.color_max_val*bg).astype(self.pixel_array_dtype)
+        fg = arr
+        bg = self.pixel_array
+        # rgba_max_val = self.rgb_max_val
+        src_rgb, src_a, dst_rgb, dst_a = [
+            a.astype(np.float32)/self.rgb_max_val
+            for a in fg[...,:3], fg[...,3], bg[...,:3], bg[...,3]
+        ]
+
+        out_a = src_a + dst_a*(1.0-src_a)
+        out_rgb = fdiv(
+            src_rgb*src_a[..., None] + \
+            dst_rgb*dst_a[..., None]*(1.0-src_a[..., None]),
+            out_a[..., None]
+        )
+
+        self.pixel_array[..., :3] = out_rgb*self.rgb_max_val
+        self.pixel_array[..., 3] = out_a*self.rgb_max_val
 
     def align_points_to_camera(self, points):
         ## This is where projection should live
@@ -537,8 +554,7 @@ class BackgroundColoredVMobjectDisplayer(object):
         mode = "RGBA" if pixel_array.shape[2] == 4 else "RGB"
         return self.resize_background_array(background_array, width, height, mode)
 
-    def get_background_array(self, cvmobject):
-        file_name = cvmobject.get_background_image_file()
+    def get_background_array(self, file_name):
         if file_name in self.file_name_to_pixel_array_map:
             return self.file_name_to_pixel_array_map[file_name]
         full_path = get_full_raster_image_path(file_name)
@@ -553,12 +569,12 @@ class BackgroundColoredVMobjectDisplayer(object):
         return array
 
     def display(self, *cvmobjects):
-        batches = batch_by_property(
+        batch_image_file_pairs = batch_by_property(
             cvmobjects, lambda cv : cv.get_background_image_file()
         )
         curr_array = None
-        for batch in batches:
-            background_array = self.get_background_array(batch[0])
+        for batch, image_file in batch_image_file_pairs:
+            background_array = self.get_background_array(image_file)
             for cvmobject in batch:
                 self.camera.display_vectorized(cvmobject, self.canvas)
             self.canvas.flush()
