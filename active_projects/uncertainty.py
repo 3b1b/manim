@@ -1685,9 +1685,8 @@ class MentionDopplerRadar(TeacherStudentsScene):
 class IntroduceDopplerRadar(Scene):
     def construct(self):
         self.setup_axes()
-        # self.measure_distance_with_time()
+        self.measure_distance_with_time()
         self.show_frequency_shift()
-        self.shift_time_graph()
         self.show_frequency_shift_in_fourier()
 
     def setup_axes(self):
@@ -1761,8 +1760,9 @@ class IntroduceDopplerRadar(Scene):
         randy_look_at = ContinualUpdateFromFunc(
             randy, lambda pi : pi.look_at(pulse.mobject)
         )
+        axes_anim = ContinualAnimation(axes)
 
-        self.add(randy_look_at, ContinualAnimation(axes), graph_draw)
+        self.add(randy_look_at, axes_anim, graph_draw)
         self.wait(0.5)
         self.add(pulse)
         self.play(
@@ -1784,7 +1784,8 @@ class IntroduceDopplerRadar(Scene):
         )
         self.wait()
 
-        self.remove(graph_draw, pulse, randy_look_at)
+        self.remove(graph_draw, pulse, randy_look_at, axes_anim)
+        self.add(axes)
         self.play(LaggedStart(FadeOut, VGroup(
             sum_graph, randy,
             pulse_graph.arrow, pulse_graph.label,
@@ -1854,25 +1855,144 @@ class IntroduceDopplerRadar(Scene):
         self.wait()
         self.remove(graph_draw, pulse, plane_flight)
 
+        pulse_graph.set_stroke(width = 0)
+        echo_graph.set_stroke(width = 0)
         self.time_graph_group = VGroup(
             axes, pulse_brace, pulse_text,
             echo_brace, echo_text, echo_subtext,
-            sum_graph
+            pulse_graph, echo_graph, sum_graph,
         )
-        self.pulse_echo_graph = sum_graph
+        self.set_variables_as_attrs(*self.time_graph_group)
 
-    def shift_time_graph(self):
+    def show_frequency_shift_in_fourier(self):
+        sum_graph = self.sum_graph
+        pulse_graph = self.pulse_graph
+        pulse_label = VGroup(self.pulse_brace, self.pulse_text)
+        echo_graph = self.echo_graph
+        echo_label = VGroup(
+            self.echo_brace, self.echo_text, self.echo_subtext
+        )
+
+        #Setup all fourier graph stuff
+        f_max = 0.02
+        frequency_axes = Axes(
+            x_min = 0, x_max = 20,
+            x_axis_config = {"unit_size" : 0.5},
+            y_min = -f_max, y_max = f_max,
+            y_axis_config = {
+                "unit_size" : 50,
+                "tick_frequency" : 0.01,
+            },
+        )
+        frequency_axes.move_to(self.axes, LEFT)
+        frequency_axes.to_edge(DOWN)
+        frequency_label = TextMobject("Frequency")
+        frequency_label.next_to(
+            frequency_axes.x_axis.get_right(), UP,
+        )
+        frequency_label.to_edge(RIGHT)
+        frequency_axes.add(frequency_label)
+
+        for graph in pulse_graph, echo_graph, sum_graph:
+            graph.fourier_transform = get_fourier_graph(
+                frequency_axes, graph.underlying_function,
+                frequency_axes.x_min, 25,
+                complex_to_real_func = abs,
+            )
+
+        #Braces labeling F.T.
+        original_fourier_brace = Brace(
+            Line(
+                frequency_axes.coords_to_point(7, 0.9*f_max),
+                frequency_axes.coords_to_point(9, 0.9*f_max),
+            ),
+            UP,
+        ).highlight(BLUE)
+        echo_fourier_brace = Brace(
+            Line(
+                frequency_axes.coords_to_point(14, 0.4*f_max),
+                frequency_axes.coords_to_point(18, 0.4*f_max),
+            ),
+            UP,
+        ).highlight(YELLOW)
+        # braces = [original_fourier_brace, echo_fourier_brace]
+        # words = ["original signal", "echo"]
+        # for brace, word in zip(braces, words):
+        #     brace.add(brace.get_text("F.T. of \\\\ %s"%word))
+        fourier_label = TexMobject("||\\text{Fourier transform}||")
+        # fourier_label.next_to(sum_graph.fourier_transform, UP, MED_LARGE_BUFF)
+        fourier_label.next_to(frequency_axes.y_axis, UP, buff = SMALL_BUFF)
+        fourier_label.shift_onto_screen()
+        fourier_label.highlight(RED)
+
+
+        #v_lines
+        v_line = DashedLine(
+            frequency_axes.coords_to_point(8, 0),
+            frequency_axes.coords_to_point(8, 1.2*f_max),
+            color = YELLOW,
+            dashed_segment_length = 0.025,
+        )
+        v_line_pair = VGroup(*[
+            v_line.copy().shift(u*0.6*RIGHT)
+            for u in -1, 1
+        ])
+        v_line = VGroup(v_line)
+
+        double_arrow = DoubleArrow(
+            frequency_axes.coords_to_point(8, 0.007),
+            frequency_axes.coords_to_point(16, 0.007),
+            buff = 0,
+            color = WHITE
+        )
+
         self.play(
             self.time_graph_group.to_edge, UP,
             ApplyMethod(
                 self.dish.shift, 2*UP, 
                 remover = True
-            )
+            ),
+            FadeIn(frequency_axes)
         )
         self.wait()
+        self.play(
+            FadeOut(sum_graph),
+            FadeOut(echo_label),
+            pulse_graph.set_stroke, {"width" : 3},
+        )
+        self.play(
+            ReplacementTransform(
+                pulse_label[0].copy(),
+                original_fourier_brace
+            ),
+            ShowCreation(pulse_graph.fourier_transform)
+        )
+        self.play(Write(fourier_label))
+        self.wait()
+        self.play(ShowCreation(v_line))
+        self.wait()
+        self.play(ReplacementTransform(v_line, v_line_pair))
+        self.wait()
+        self.play(FadeOut(v_line_pair))
+        self.wait()
 
-    def show_frequency_shift_in_fourier(self):
-        pass
+        self.play(
+            FadeOut(pulse_graph),
+            FadeIn(sum_graph),
+            ReplacementTransform(
+                pulse_graph.fourier_transform,
+                sum_graph.fourier_transform
+            )
+        )
+        self.play(FadeIn(echo_label))
+        self.play(ReplacementTransform(
+            echo_label[0].copy(),
+            echo_fourier_brace,
+        ))
+        self.wait(2)
+        self.play(GrowFromCenter(double_arrow))
+        self.wait()
+
 
     ###
 
