@@ -689,6 +689,13 @@ class DictAsObject(object):
 def fdiv(a, b):
     return np.true_divide(a,b)
 
+def add_extension_if_not_present(file_name, extension):
+    # This could conceivably be smarter about handling existing differing extensions
+    if(file_name[-len(extension):] != extension):
+        return file_name + extension
+    else:
+        return file_name
+
 # For debugging purposes
 
 def print_mobject_family(mob, n_tabs = 0):
