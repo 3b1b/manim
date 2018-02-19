@@ -452,11 +452,18 @@ class Succession(Animation):
                 self.mobject.add(m)
             self.mobject.add(self.animations[index].mobject)
 
+        for i in range(index):
+            self.animations[i].update(1)
+
         self.current_anim_index = index
         self.current_alpha = self.critical_alphas[index]
 
     def update_mobject(self, alpha):
+        if alpha == self.current_alpha:
+            return
+
         if self.num_anims == 0:
+            self.current_alpha = alpha
             return
 
         i = 0
@@ -474,6 +481,7 @@ class Succession(Animation):
             alpha
         )
         self.animations[i].update(sub_alpha)
+        self.current_alpha = alpha
 
     def clean_up(self, *args, **kwargs):
         # We clean up as though we've played ALL animations, even if
@@ -514,3 +522,4 @@ class EmptyAnimation(Animation):
 
     def __init__(self, *args, **kwargs):
         return Animation.__init__(self, Group(), *args, **kwargs)
+
