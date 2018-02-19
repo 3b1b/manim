@@ -18,6 +18,7 @@ from mobject.svg_mobject import *
 from topics.three_dimensions import *
 
 from scipy.spatial import ConvexHull
+from traceback import *
 
 
 LIGHT_COLOR = YELLOW
@@ -79,16 +80,7 @@ class LightSource(VMobject):
             max_opacity = self.max_opacity_ambient
         )
         if self.has_screen():
-            self.spotlight = Spotlight(
-                source_point = VectorizedPoint(location = self.get_source_point()),
-                color = self.color,
-                num_levels = self.num_levels,
-                radius = self.radius,
-                screen = self.screen,
-                opacity_function = self.opacity_function,
-                max_opacity = self.max_opacity_spotlight,
-                camera = self.camera
-            )
+            self.create_spotlight()
         else:
             self.spotlight = Spotlight()
 
@@ -110,6 +102,18 @@ class LightSource(VMobject):
         else:
             return True
 
+    def create_spotlight(self):
+        self.spotlight = Spotlight(
+                source_point = VectorizedPoint(location = self.get_source_point()),
+                color = self.color,
+                num_levels = self.num_levels,
+                radius = self.radius,
+                screen = self.screen,
+                opacity_function = self.opacity_function,
+                max_opacity = self.max_opacity_spotlight,
+                camera = self.camera
+            )
+
     def dim_ambient(self):
         self.set_max_opacity_ambient(AMBIENT_DIMMED)
 
@@ -130,21 +134,15 @@ class LightSource(VMobject):
 
 
     def set_screen(self, new_screen):
+        print "setting screen"
+        print_stack()
         if self.has_screen():
             self.spotlight.screen = new_screen
         else:
             # Note: See below
             index = self.submobjects.index(self.spotlight)
-            camera = self.spotlight.camera
             self.remove(self.spotlight)
-            self.spotlight = Spotlight(
-                source_point = VectorizedPoint(location = self.get_source_point()),
-                color = self.color,
-                num_levels = self.num_levels,
-                radius = self.radius,
-                screen = new_screen,
-                camera = self.camera
-            )
+            self.create_spotlight()
             self.spotlight.move_source_to(self.get_source_point())
 
             # Note: This line will make spotlight show up at the end
