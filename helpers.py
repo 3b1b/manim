@@ -694,8 +694,19 @@ class DictAsObject(object):
          self.__dict__ = dict
 
 # Just to have a less heavyweight name for this extremely common operation
-def fdiv(a, b):
-    return np.true_divide(a,b)
+#
+# We may wish to have more fine-grained control over division by zero behavior
+# in future (separate specifiable default values for 0/0 and x/0 with x != 0),
+# but for now, we just allow the option to handle 0/0.
+def fdiv(a, b, zero_over_zero_value = None):
+    if zero_over_zero_value != None:
+        out = np.full_like(a, zero_over_zero_value)
+        where = np.logical_or (a != 0, b != 0)
+    else:
+        out = None
+        where = True
+
+    return np.true_divide(a, b, out = out, where = where)
 
 def add_extension_if_not_present(file_name, extension):
     # This could conceivably be smarter about handling existing differing extensions

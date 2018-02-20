@@ -430,10 +430,15 @@ class Camera(object):
         ]
 
         out_a = src_a + dst_a*(1.0-src_a)
+
+        # When the output alpha is 0 for full transparency, 
+        # we have a choice over what RGB value to use in our
+        # output representation. We choose 0.0 here.
         out_rgb = fdiv(
             src_rgb*src_a[..., None] + \
             dst_rgb*dst_a[..., None]*(1.0-src_a[..., None]),
-            out_a[..., None]
+            out_a[..., None],
+            zero_over_zero_value = 0.0
         )
 
         self.pixel_array[..., :3] = out_rgb*self.rgb_max_val
