@@ -443,13 +443,12 @@ class Succession(Animation):
 
     # Beware: This does NOT take care of calling update(0) on the subanimation.
     # This was important to avoid a pernicious possibility in which subanimations were called
-    # with update(0) twice, which could in turn call a sub-Succession with update(0) four times,
+    # with update twice, which could in turn call a sub-Succession with update four times,
     # continuing exponentially.
     def jump_to_start_of_anim(self, index):
         if index != self.current_anim_index:
             self.mobject.remove(*self.mobject.submobjects) # Should probably have a cleaner "remove_all" method...
-            for m in self.scene_mobjects_at_time[index].submobjects:
-                self.mobject.add(m)
+            self.mobject.add(*self.scene_mobjects_at_time[index].submobjects)
             self.mobject.add(self.animations[index].mobject)
 
         for i in range(index):
@@ -459,10 +458,9 @@ class Succession(Animation):
         self.current_alpha = self.critical_alphas[index]
 
     def update_mobject(self, alpha):
-        if alpha == self.current_alpha:
-            return
-
         if self.num_anims == 0:
+            # This probably doesn't matter for anything, but just in case,
+            # we want it in the future, we set current_alpha even in this case
             self.current_alpha = alpha
             return
 
