@@ -1030,11 +1030,14 @@ class ScreenShapingScene(ThreeDScene):
         
         # light source
         self.light_source = LightSource(
-            opacity_function = inverse_quadratic(1,2,1),
+            opacity_function = inverse_quadratic(1,5,1),
             num_levels = NUM_LEVELS,
             radius = 10,
+            max_opacity = 0.2
             #screen = self.screen
         )
+        self.light_source.set_max_opacity_spotlight(0.2)
+
         self.light_source.set_screen(self.screen)
         self.light_source.move_source_to([-5,0,0])
 
@@ -1251,6 +1254,7 @@ class ScreenShapingScene(ThreeDScene):
 
     def morph_into_3d(self):
 
+
         self.play(FadeOut(self.morty))
 
         axes = ThreeDAxes()
@@ -1289,11 +1293,13 @@ class ScreenShapingScene(ThreeDScene):
 
         self.add_foreground_mobject(self.ambient_light)
         self.add_foreground_mobject(self.spotlight)
+        self.add_foreground_mobject(self.light_source.shadow)
 
         self.play(
              ApplyMethod(self.camera.rotation_mobject.move_to, camera_target_point),
              
         )
+        self.remove(self.spotlight)
 
         self.play(Transform(new_screen0,new_screen))
 
@@ -1303,15 +1309,175 @@ class ScreenShapingScene(ThreeDScene):
 
 
 
-
     def prove_inverse_square_law(self):
+
+        def orientate(mob):
+            mob.move_to(self.unit_screen)
+            mob.rotate(TAU/4, axis = LEFT)
+            mob.rotate(TAU/4, axis = OUT)
+            mob.rotate(TAU/2, axis = LEFT)
+            return mob
 
         unit_screen_copy = self.unit_screen.copy()
         fourfold_screen = self.unit_screen.copy()
         fourfold_screen.scale(2,about_point = self.light_source.get_source_point())
+
+        self.remove(self.spotlight)
+
+
+        reading1 = TexMobject("1")
+        orientate(reading1)
+
+        self.play(FadeIn(reading1))
+        self.wait()
+        self.play(FadeOut(reading1))
+        
+
         self.play(
             Transform(self.unit_screen, fourfold_screen)
         )
+
+        reading21 = TexMobject("{1\over 4}").scale(0.8)
+        orientate(reading21)
+        reading22 = reading21.deepcopy()
+        reading23 = reading21.deepcopy()
+        reading24 = reading21.deepcopy()
+        reading21.shift(0.5*OUT + 0.5*UP)
+        reading22.shift(0.5*OUT + 0.5*DOWN)
+        reading23.shift(0.5*IN + 0.5*UP)
+        reading24.shift(0.5*IN + 0.5*DOWN)
+
+
+        corners = fourfold_screen.get_anchors()
+        midpoint1 = (corners[0] + corners[1])/2
+        midpoint2 = (corners[1] + corners[2])/2
+        midpoint3 = (corners[2] + corners[3])/2
+        midpoint4 = (corners[3] + corners[0])/2
+        midline1 = Line(midpoint1, midpoint3)
+        midline2 = Line(midpoint2, midpoint4)
+
+        self.play(
+            ShowCreation(midline1),
+            ShowCreation(midline2)
+        )
+
+        self.play(
+            FadeIn(reading21),
+            FadeIn(reading22),
+            FadeIn(reading23),
+            FadeIn(reading24),
+        )
+
+        self.wait()
+
+        self.play(
+            FadeOut(reading21),
+            FadeOut(reading22),
+            FadeOut(reading23),
+            FadeOut(reading24),
+            FadeOut(midline1),
+            FadeOut(midline2)
+        )
+
+        ninefold_screen = unit_screen_copy.copy()
+        ninefold_screen.scale(3,about_point = self.light_source.get_source_point())
+
+        self.play(
+            Transform(self.unit_screen, ninefold_screen)
+        )
+
+        reading31 = TexMobject("{1\over 9}").scale(0.8)
+        orientate(reading31)
+        reading32 = reading31.deepcopy()
+        reading33 = reading31.deepcopy()
+        reading34 = reading31.deepcopy()
+        reading35 = reading31.deepcopy()
+        reading36 = reading31.deepcopy()
+        reading37 = reading31.deepcopy()
+        reading38 = reading31.deepcopy()
+        reading39 = reading31.deepcopy()
+        reading31.shift(IN + UP)
+        reading32.shift(IN)
+        reading33.shift(IN + DOWN)
+        reading34.shift(UP)
+        reading35.shift(ORIGIN)
+        reading36.shift(DOWN)
+        reading37.shift(OUT + UP)
+        reading38.shift(OUT)
+        reading39.shift(OUT + DOWN)
+
+        corners = ninefold_screen.get_anchors()
+        midpoint11 = (2*corners[0] + corners[1])/3
+        midpoint12 = (corners[0] + 2*corners[1])/3
+        midpoint21 = (2*corners[1] + corners[2])/3
+        midpoint22 = (corners[1] + 2*corners[2])/3
+        midpoint31 = (2*corners[2] + corners[3])/3
+        midpoint32 = (corners[2] + 2*corners[3])/3
+        midpoint41 = (2*corners[3] + corners[0])/3
+        midpoint42 = (corners[3] + 2*corners[0])/3
+        midline11 = Line(midpoint11, midpoint32)
+        midline12 = Line(midpoint12, midpoint31)
+        midline21 = Line(midpoint21, midpoint42)
+        midline22 = Line(midpoint22, midpoint41)
+
+        self.play(
+            ShowCreation(midline11),
+            ShowCreation(midline12),
+            ShowCreation(midline21),
+            ShowCreation(midline22),
+        )
+
+        self.play(
+            FadeIn(reading31),
+            FadeIn(reading32),
+            FadeIn(reading33),
+            FadeIn(reading34),
+            FadeIn(reading35),
+            FadeIn(reading36),
+            FadeIn(reading37),
+            FadeIn(reading38),
+            FadeIn(reading39),
+        )
+
+
+
+class IndicatorScalingScene(Scene):
+
+    def construct(self):
+
+        unit_intensity = 0.6
+
+        indicator1 = LightIndicator(show_reading = False, color = LIGHT_COLOR)
+        indicator1.set_intensity(unit_intensity)
+        reading1 = TexMobject("1")
+        reading1.move_to(indicator1)
+        
+
+        indicator2 = LightIndicator(show_reading = False, color = LIGHT_COLOR)
+        indicator2.shift(2*RIGHT)
+        indicator2.set_intensity(unit_intensity/4)
+        reading2 = TexMobject("{1\over 4}").scale(0.8)
+        reading2.move_to(indicator2)
+
+        indicator3 = LightIndicator(show_reading = False, color = LIGHT_COLOR)
+        indicator3.shift(4*RIGHT)
+        indicator3.set_intensity(unit_intensity/9)
+        reading3 = TexMobject("{1\over 9}").scale(0.8)
+        reading3.move_to(indicator3)
+
+        
+        self.play(FadeIn(indicator1))
+        self.play(FadeIn(reading1))
+        self.wait()
+        self.play(FadeOut(reading1))
+        self.play(Transform(indicator1, indicator2))
+        self.play(FadeIn(reading2))
+        self.wait()
+        self.play(FadeOut(reading2))
+        self.play(Transform(indicator1, indicator3))
+        self.play(FadeIn(reading3))
+        self.wait()
+
 
 
 

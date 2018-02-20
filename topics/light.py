@@ -18,9 +18,10 @@ from mobject.svg_mobject import *
 from topics.three_dimensions import *
 
 from scipy.spatial import ConvexHull
+from traceback import *
 
 
-LIGHT_COLOR = YELLOW
+LIGHT_COLOR = GREEN
 SHADOW_COLOR = BLACK
 SWITCH_ON_RUN_TIME = 1.5
 FAST_SWITCH_ON_RUN_TIME = 0.1
@@ -34,7 +35,6 @@ SPOTLIGHT_FULL = 0.9
 SPOTLIGHT_DIMMED = 0.2
 LIGHTHOUSE_HEIGHT = 0.8
 
-LIGHT_COLOR = YELLOW
 DEGREES = TAU/360
 
 inverse_power_law = lambda maxint,scale,cutoff,exponent: \
@@ -162,6 +162,7 @@ class LightSource(VMobject):
 
 
     def move_source_to(self,point):
+        print_stack()
         apoint = np.array(point)
         v = apoint - self.get_source_point()
         # Note: As discussed, things stand to behave better if source
@@ -369,11 +370,13 @@ class AmbientLight(VMobject):
 
 
     def dimming(self,new_alpha):
+        print "dimming"
         old_alpha = self.max_opacity
         self.max_opacity = new_alpha
         for submob in self.submobjects:
             old_submob_alpha = submob.fill_opacity
             new_submob_alpha = old_submob_alpha * new_alpha / old_alpha
+            print old_submob_alpha, new_submob_alpha
             submob.set_fill(opacity = new_submob_alpha)
 
 
@@ -395,7 +398,7 @@ class Spotlight(VMobject):
     CONFIG = {
         "source_point": VectorizedPoint(location = ORIGIN, stroke_width = 0, fill_opacity = 0),
         "opacity_function" : lambda r : 1.0/(r/2+1.0)**2,
-        "color" : LIGHT_COLOR,
+        "color" : GREEN, # LIGHT_COLOR,
         "max_opacity" : 1.0,
         "num_levels" : 10,
         "radius" : 5.0,
