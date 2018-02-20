@@ -2329,10 +2329,21 @@ class PondScene(Scene):
             self.add(ls2)
             self.additional_light_sources.append(ls2)
 
-            self.play(
-                ApplyMethod(ls1.move_source_to,ls_new_loc1, run_time = run_time),
-                ApplyMethod(ls2.move_source_to,ls_new_loc2, run_time = run_time),
-            )
+            # check if the light sources are on screen
+            ls_old_loc = np.array(ls1.get_source_point())
+            onscreen_old = np.all(np.abs(ls_old_loc) < 10)
+            onscreen_1 = np.all(np.abs(ls_new_loc1) < 10)
+            onscreen_2 = np.all(np.abs(ls_new_loc2) < 10)
+            show_animation = (onscreen_old or onscreen_1 or onscreen_2)
+
+            if show_animation:
+                self.play(
+                    ApplyMethod(ls1.move_source_to,ls_new_loc1, run_time = run_time),
+                    ApplyMethod(ls2.move_source_to,ls_new_loc2, run_time = run_time),
+                )
+            else:
+                ls1.move_source_to(ls_new_loc1)
+                ls2.move_source_to(ls_new_loc1)
 
 
 
@@ -2511,18 +2522,70 @@ class PondScene(Scene):
             FadeOut(self.legs)
             )
 
-        for i in range(3,10):
+        for i in range(3,5):
             construction_step(i, scale_down = False, show_steps = False, run_time = 1.0/2**i,
                 simultaneous_splitting = True)
 
 
 
 
+        # Now create a straight number line and transform into it
+        MAX_N = 17
+
+        self.number_line = NumberLine(
+            x_min = -MAX_N,
+            x_max = MAX_N + 1,
+            color = WHITE,
+            number_at_center = 0,
+            stroke_width = LAKE_STROKE_WIDTH,
+            stroke_color = LAKE_STROKE_COLOR,
+            numbers_with_elongated_ticks = range(-MAX_N,MAX_N + 1),
+            numbers_to_show = range(-MAX_N,MAX_N + 1),
+            unit_size = LAKE0_RADIUS * TAU/4 / 4,
+            tick_frequency = 1,
+            line_to_number_buff = LARGE_BUFF,
+            label_direction = UP,
+        ).shift(2.5 * DOWN)
+
+        self.number_line.label_direction = DOWN
+
+        self.number_line_labels = self.number_line.get_number_mobjects()
+        self.wait()
+
+        origin_point = self.number_line.number_to_point(0)
+        nl_sources = VMobject()
+        pond_sources = VMobject()
+
+        for i in range(-MAX_N,MAX_N+1):
+            anchor = self.number_line.number_to_point(2*i + 1)
+            ls = self.light_sources_array[i].copy()
+            ls.move_source_to(anchor)
+            nl_sources.add(ls)
+            pond_sources.add(self.light_sources_array[i].copy())
+
+        self.add(pond_sources)
+        self.remove(self.light_sources)
+
+        self.outer_lake.rotate(TAU/8)
+
+        # open sea
+        open_sea = Rectangle(
+            width = 20,
+            height = 10,
+            stroke_width = LAKE_STROKE_WIDTH,
+            stroke_color = LAKE_STROKE_COLOR,
+            fill_color = LAKE_COLOR,
+            fill_opacity = LAKE_OPACITY,
+        ).flip().next_to(origin_point,UP,buff = 0)
 
 
 
-
-
+        self.play(
+            Transform(pond_sources,nl_sources),
+            Transform(self.outer_lake,open_sea),
+            FadeOut(self.inner_lake)
+        )
+        self.play(FadeIn(self.number_line))
 
 
 
