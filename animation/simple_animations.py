@@ -7,7 +7,6 @@ from mobject import Mobject, Group
 from mobject.vectorized_mobject import VMobject
 from mobject.tex_mobject import TextMobject
 from animation import Animation
-from animation import sync_animation_run_times_and_rate_funcs
 from transform import Transform
 
 class Rotating(Animation):
@@ -452,11 +451,18 @@ class Succession(Animation):
                 self.mobject.add(m)
             self.mobject.add(self.animations[index].mobject)
 
+        for i in range(index):
+            self.animations[i].update(1)
+
         self.current_anim_index = index
         self.current_alpha = self.critical_alphas[index]
 
     def update_mobject(self, alpha):
+        if alpha == self.current_alpha:
+            return
+
         if self.num_anims == 0:
+            self.current_alpha = alpha
             return
 
         i = 0
@@ -474,6 +480,7 @@ class Succession(Animation):
             alpha
         )
         self.animations[i].update(sub_alpha)
+        self.current_alpha = alpha
 
     def clean_up(self, *args, **kwargs):
         # We clean up as though we've played ALL animations, even if
@@ -492,15 +499,17 @@ class AnimationGroup(Animation):
             self.empty = True
             self.run_time = 0
         else:
-            # Should really make copies of animations, instead of messing with originals...
-            sync_animation_run_times_and_rate_funcs(*sub_anims, **kwargs)
+            for anim in sub_anims:
+                # If AnimationGroup is called with any configuration,
+                # it is propagated to the sub_animations
+                anim.update_config(**kwargs)
             self.run_time = max([a.run_time for a in sub_anims])
         everything = Mobject(*[a.mobject for a in sub_anims])
         Animation.__init__(self, everything, **kwargs)
 
-    def update_mobject(self, alpha):
+    def update(self, alpha):
         for anim in self.sub_anims:
-            anim.update(alpha)
+            anim.update(alpha * self.run_time / anim.run_time)
 
     def clean_up(self, *args, **kwargs):
         for anim in self.sub_anims:
@@ -514,3 +523,4 @@ class EmptyAnimation(Animation):
 
     def __init__(self, *args, **kwargs):
         return Animation.__init__(self, Group(), *args, **kwargs)
+

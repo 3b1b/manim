@@ -129,19 +129,6 @@ class Animation(object):
         return self
 
 
-def sync_animation_run_times_and_rate_funcs(*animations, **kwargs):
-    for animation in animations:
-        animation.update_config(**kwargs)
-    max_run_time = max([a.run_time for a in animations])
-    for animation in animations:
-        if animation.run_time != max_run_time:
-            new_rate_func = squish_rate_func(
-                animation.get_rate_func(),
-                0, float(animation.run_time)/max_run_time
-            )
-            animation.set_rate_func(new_rate_func)
-            animation.set_run_time(max_run_time)
-
 
 
 

@@ -544,28 +544,19 @@ class ColorMappedByFuncScene(Scene):
         to_hash = tuple((self.func(p)[0], self.func(p)[1]) for p in func_hash_points)
         func_hash = hash(to_hash)
         full_hash = hash((func_hash, self.camera.pixel_shape))
-        self.background_image_file = "color_mapped_background_" + str(full_hash)
-        try:
-            file_path = get_full_raster_image_path(self.background_image_file)
-            # If we succeed in finding the file:
-            self.in_background_pass = False
-        except IOError:
-            file_path = os.path.join(RASTER_IMAGE_DIR, self.background_image_file + ".png")
-            self.in_background_pass = True
+        self.background_image_file = os.path.join(
+            self.output_directory, "images", 
+            "color_mapped_background_" + str(full_hash) + ".png"
+        )
+        self.in_background_pass = not os.path.exists(self.background_image_file)
 
-        print "Background file: " + file_path
+        print "Background file: " + self.background_image_file
         if self.in_background_pass:
-            print "The background file does not exist yet; this will be the background creation pass"
-            print "If not already doing so, please re-run this render with the flags -s -n 0,1 -o \"%s\""%file_path
-            self.show_num_plane = False
+            print "The background file does not exist yet; this will be a background creation + video pass"
         else:
-            print "The background file already exists; this will be the video pass as usual"
+            print "The background file already exists; this will only be a video pass"
 
     def construct(self):
-        if self.show_num_plane:
-            self.num_plane.fade()
-            self.add(self.num_plane)
-
         if self.in_background_pass:
             self.camera.set_background_from_func(
                 lambda (x, y): point_to_rgba(
@@ -578,13 +569,14 @@ class ColorMappedByFuncScene(Scene):
                 )
             )
 
-            # The one scene to be rendered by the desired -s -n 0, 1 invocation:
-            self.play(EmptyAnimation())
-            self.wait()
+            self.save_image(self.background_image_file, mode = "RGBA")
 
-        else:
-            self.camera.background_image = self.background_image_file
-            self.camera.init_background()
+        self.camera.background_image = self.background_image_file
+        self.camera.init_background()
+
+        if self.show_num_plane:
+            self.num_plane.fade()
+            self.add(self.num_plane)
 
 class PureColorMap(ColorMappedByFuncScene):
     CONFIG = {
@@ -669,7 +661,7 @@ class EquationSolver2d(ColorMappedByFuncScene):
         "initial_upper_x" : 5.1,
         "initial_lower_y" : -3.1,
         "initial_upper_y" : 3.1,
-        "num_iterations" : 5,
+        "num_iterations" : 1,
         "num_checkpoints" : 10,
         "display_in_parallel" : True,
         "use_fancy_lines" : True,
@@ -682,8 +674,9 @@ class EquationSolver2d(ColorMappedByFuncScene):
         num_plane = self.num_plane
         self.remove(num_plane)
 
-        background = self.camera.background
-        self.camera.init_background() # Clearing background
+        # Clearing background
+        self.camera.background_image = None
+        self.camera.init_background()
 
         rev_func = lambda p : point_to_rev(self.func(p))
         clockwise_rev_func = lambda p : -rev_func(p)
@@ -703,7 +696,6 @@ class EquationSolver2d(ColorMappedByFuncScene):
                     color = RED)
                 if self.use_fancy_lines:
                     colored_line = thick_line.color_using_background_image(self.background_image_file)
-                    # colored_line.set_background_array(background)
                 else:
                     colored_line = thick_line.set_stroke(width = 4)
 
@@ -1372,7 +1364,7 @@ class FundThmAlg(EquationSolver2d):
         "func" : plane_poly_with_roots((1, 2), (-1, 1.5), (-1, 1.5)),
         "num_iterations" : 5,
         "display_in_parallel" : True,
-        "use_fancy_lines" : False
+        "use_fancy_lines" : False,
     }
 
 # TODO: Borsuk-Ulam visuals
