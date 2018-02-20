@@ -45,7 +45,7 @@ def get_fourier_graph(
     # T = time_range/n_samples
     time_range = float(t_max - t_min)
     time_step_size = time_range/n_samples
-    time_samples = time_func(np.linspace(t_min, t_max, n_samples))
+    time_samples = np.vectorize(time_func)(np.linspace(t_min, t_max, n_samples))
     fft_output = np.fft.fft(time_samples)
     frequencies = np.linspace(0.0, n_samples/(2.0*time_range), n_samples//2)
     #  #Cycles per second of fouier_samples[1]
