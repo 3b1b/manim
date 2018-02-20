@@ -64,7 +64,10 @@ class Scene(Container):
         self.setup()
         if self.write_to_movie:
             self.open_movie_pipe()
-        self.construct(*self.construct_args)
+        try:
+            self.construct(*self.construct_args)
+        except EndSceneEarlyException:
+            pass
         if self.write_to_movie:
             self.close_movie_pipe()
         print("Played a total of %d animations"%self.num_plays)
@@ -137,7 +140,10 @@ class Scene(Container):
         mobjects = None, 
         background = None, 
         include_submobjects = True,
+        dont_update_when_skipping = True,
         **kwargs):
+        if self.skip_animations and dont_update_when_skipping:
+            return
         if mobjects is None:
             mobjects = list_update(
                 self.mobjects,
@@ -330,7 +336,11 @@ class Scene(Container):
         return moving_mobjects
 
     def get_time_progression(self, run_time):
-        times = np.arange(0, run_time, self.frame_duration)
+        if self.skip_animations:
+            times = [run_time]
+        else:
+            step = self.frame_duration
+            times = np.arange(0, run_time + step, step)
         time_progression = ProgressDisplay(times)
         return time_progression
 
@@ -405,27 +415,29 @@ class Scene(Container):
         compile_method(state)
         return animations
 
+    def handle_animation_skipping(self):
+        if self.start_at_animation_number:
+            if self.num_plays == self.start_at_animation_number:
+                self.skip_animations = self.original_skipping_status
+        if self.end_at_animation_number:
+            if self.num_plays >= self.end_at_animation_number:
+                self.skip_animations = True
+                raise EndSceneEarlyException()
+
     def play(self, *args, **kwargs):
         if len(args) == 0:
             warnings.warn("Called Scene.play with no animations")
             return
-        if self.start_at_animation_number:
-            if self.num_plays == self.start_at_animation_number:
-                self.skip_animations = False
-        if self.end_at_animation_number:
-            if self.num_plays >= self.end_at_animation_number:
-                self.skip_animations = True
-                return self #Don't even both with the rest...
-        if self.skip_animations:
-            kwargs["run_time"] = 0
-
+        self.handle_animation_skipping()
         animations = self.compile_play_args_to_animation_list(*args)
-
         for animation in animations:
             # This is where kwargs to play like run_time and rate_func
             # get applied to all animations
             animation.update_config(**kwargs)
         moving_mobjects = self.get_moving_mobjects(*animations)
+
+        # Paint all non-moving objects onto the screen, so they don't
+        # have to be rendered every frame
         self.update_frame(excluded_mobjects = moving_mobjects)
         static_image = self.get_frame()
         for t in self.get_animation_time_progression(animations):
@@ -437,7 +449,12 @@ class Scene(Container):
         self.add(*moving_mobjects)
         self.mobjects_from_last_animation = moving_mobjects
         self.clean_up_animations(*animations)
-        self.continual_update(0)
+        if self.skip_animations:
+            # Todo, not great that this uses a variable from
+            # a previous loop...
+            self.continual_update(t)
+        else:
+            self.continual_update(0)
         self.num_plays += 1
         return self
 
@@ -453,17 +470,17 @@ class Scene(Container):
         return []
 
     def wait(self, duration = DEFAULT_WAIT_TIME):
-        if self.skip_animations:
-            return self
-
         if self.should_continually_update():
             for t in self.get_time_progression(duration):
                 self.continual_update()
                 self.update_frame()
                 self.add_frames(self.get_frame())
-        else:
+        elif not self.skip_animations:
             self.update_frame()
             self.add_frames(*[self.get_frame()]*int(duration / self.frame_duration))
+        else:
+            #If self.skip_animations is set, do nothing
+            pass
 
         return self
 
@@ -502,7 +519,7 @@ class Scene(Container):
     #Display methods
 
     def show_frame(self):
-        self.update_frame()
+        self.update_frame(dont_update_when_skipping = False)
         self.get_image().show()
 
     def preview(self):
@@ -522,7 +539,7 @@ class Scene(Container):
         if not os.path.exists(directory_path):
             os.makedirs(directory_path)
         if not dont_update:
-            self.update_frame()
+            self.update_frame(dont_update_when_skipping = False)
         image = self.get_image()
         image = image.convert(mode)
         image.save(path)
@@ -575,3 +592,17 @@ class Scene(Container):
             shutil.move(*self.args_to_rename_file)
         else:
             os.rename(*self.args_to_rename_file)
+
+class EndSceneEarlyException(Exception):
+    pass
+        
+
+
+
+
+
+
+
+
+
+
