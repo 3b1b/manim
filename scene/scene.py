@@ -530,7 +530,7 @@ class Scene(Container):
         if dont_update:
             folder = str(self)
         path = os.path.join(self.output_directory, folder)
-        file_name = (name or str(self)) + ".png"
+        file_name = add_extension_if_not_present(name or str(self), ".png")
         return os.path.join(path, file_name)
 
     def save_image(self, name = None, mode = "RGB", dont_update = False):
