@@ -537,7 +537,7 @@ class Spotlight(VMobject):
                 new_submob = self.new_sector(submob.inner_radius,dr,lower_angle,upper_angle)
                 submob.points = new_submob.points
                 submob.set_fill(opacity = 10 * self.opacity_function(submob.outer_radius))
-                print "new opacity:", self.opacity_function(submob.outer_radius)
+                # print "new opacity:", self.opacity_function(submob.outer_radius)
 
 
 
