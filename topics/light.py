@@ -21,7 +21,7 @@ from scipy.spatial import ConvexHull
 from traceback import *
 
 
-LIGHT_COLOR = GREEN
+LIGHT_COLOR = YELLOW
 SHADOW_COLOR = BLACK
 SWITCH_ON_RUN_TIME = 1.5
 FAST_SWITCH_ON_RUN_TIME = 0.1
@@ -62,7 +62,7 @@ class LightSource(VMobject):
         "opacity_function": inverse_quadratic(1,2,1),
         "max_opacity_ambient": AMBIENT_FULL,
         "max_opacity_spotlight": SPOTLIGHT_FULL,
-        "camera": None
+        "camera_mob": None
     }
 
     def generate_points(self):
@@ -87,7 +87,7 @@ class LightSource(VMobject):
                 screen = self.screen,
                 opacity_function = self.opacity_function,
                 max_opacity = self.max_opacity_spotlight,
-                camera = self.camera
+                camera_mob = self.camera_mob
             )
         else:
             self.spotlight = Spotlight()
@@ -124,9 +124,9 @@ class LightSource(VMobject):
         self.max_opacity_spotlight = new_opacity
         self.spotlight.dimming(new_opacity)
 
-    def set_camera(self,new_cam):
-        self.camera = new_cam
-        self.spotlight.camera = new_cam
+    def set_camera_mob(self,new_cam_mob):
+        self.camera_mob = new_cam_mob
+        self.spotlight.camera_mob = new_cam_mob
 
 
     def set_screen(self, new_screen):
@@ -135,7 +135,7 @@ class LightSource(VMobject):
         else:
             # Note: See below
             index = self.submobjects.index(self.spotlight)
-            camera = self.spotlight.camera
+            camera_mob = self.spotlight.camera_mob
             self.remove(self.spotlight)
             self.spotlight = Spotlight(
                 source_point = VectorizedPoint(location = self.get_source_point()),
@@ -143,7 +143,7 @@ class LightSource(VMobject):
                 num_levels = self.num_levels,
                 radius = self.radius,
                 screen = new_screen,
-                camera = self.camera
+                camera_mob = self.camera_mob
             )
             self.spotlight.move_source_to(self.get_source_point())
 
@@ -162,7 +162,6 @@ class LightSource(VMobject):
 
 
     def move_source_to(self,point):
-        print_stack()
         apoint = np.array(point)
         v = apoint - self.get_source_point()
         # Note: As discussed, things stand to behave better if source
@@ -186,11 +185,63 @@ class LightSource(VMobject):
         self.spotlight.radius = new_radius
 
     def update(self):
+        self.update_lighthouse()
+        self.update_ambient()
         self.spotlight.update_sectors()
         self.update_shadow()
 
+
+    def update_lighthouse(self):
+        new_lh = Lighthouse()
+        new_lh.move_to(ORIGIN)
+        new_lh.apply_matrix(self.rotation_matrix())
+        new_lh.shift(self.get_source_point())
+        self.lighthouse.submobjects = new_lh.submobjects
+
+
+    def update_ambient(self):
+        new_ambient_light = AmbientLight(
+            source_point = VectorizedPoint(location = ORIGIN),
+            color = self.color,
+            num_levels = self.num_levels,
+            radius = self.radius,
+            opacity_function = self.opacity_function,
+            max_opacity = self.max_opacity_ambient
+        )
+        new_ambient_light.apply_matrix(self.rotation_matrix())
+        new_ambient_light.move_source_to(self.get_source_point())
+        self.ambient_light.submobjects = new_ambient_light.submobjects
+
+
+
     def get_source_point(self):
         return self.source_point.get_location()
+
+
+    def rotation_matrix(self):
+
+        if self.camera_mob == None:
+            return np.eye(3)
+
+        phi = self.camera_mob.get_center()[0]
+        theta = self.camera_mob.get_center()[1]
+
+
+        R1 = np.array([
+            [1, 0, 0],
+            [0, np.cos(phi), -np.sin(phi)],
+            [0, np.sin(phi), np.cos(phi)]
+        ])
+
+        R2 = np.array([
+            [np.cos(theta + TAU/4), -np.sin(theta + TAU/4), 0],
+            [np.sin(theta + TAU/4), np.cos(theta + TAU/4), 0],
+            [0, 0, 1]
+        ])
+
+        R = np.dot(R2, R1)
+        return R
+
 
     def update_shadow(self):
 
@@ -209,11 +260,12 @@ class LightSource(VMobject):
             np.reshape(projected_source,(1,3)),
             axis = 0
         )
-        rotation_matrix = z_to_vector(self.spotlight.projection_direction())
+        rotation_matrix = self.rotation_matrix() # z_to_vector(self.spotlight.projection_direction())
         back_rotation_matrix = rotation_matrix.T # i. e. its inverse
 
         rotated_point_cloud_3d = np.dot(projected_point_cloud_3d,back_rotation_matrix.T)
         # these points now should all have z = 0
+
         point_cloud_2d = rotated_point_cloud_3d[:,:2]
         # now we can compute the convex hull
         hull_2d = ConvexHull(point_cloud_2d) # guaranteed to run ccw
@@ -247,6 +299,7 @@ class LightSource(VMobject):
 
         ray1 = anchors[source_index - 1] - projected_source
         ray1 = ray1/np.linalg.norm(ray1) * 100
+
         ray2 = anchors[source_index] - projected_source
         ray2 = ray2/np.linalg.norm(ray2) * 100
         outpoint1 = anchors[source_index - 1] + ray1
@@ -370,13 +423,11 @@ class AmbientLight(VMobject):
 
 
     def dimming(self,new_alpha):
-        print "dimming"
         old_alpha = self.max_opacity
         self.max_opacity = new_alpha
         for submob in self.submobjects:
             old_submob_alpha = submob.fill_opacity
             new_submob_alpha = old_submob_alpha * new_alpha / old_alpha
-            print old_submob_alpha, new_submob_alpha
             submob.set_fill(opacity = new_submob_alpha)
 
 
@@ -403,7 +454,7 @@ class Spotlight(VMobject):
         "num_levels" : 10,
         "radius" : 5.0,
         "screen" : None,
-        "camera": None
+        "camera_mob": None
     }
 
     def projection_direction(self):
@@ -411,11 +462,12 @@ class Spotlight(VMobject):
         # need to be sure that any 3d scene including a spotlight 
         # somewhere assigns that spotlights "camera" attribute 
         # to be the camera associated with that scene.
-        if self.camera == None:
+        if self.camera_mob == None:
             return OUT
         else:
-            v = self.camera.get_cartesian_coords()
-            return v/np.linalg.norm(v)
+            [phi, theta, r] = self.camera_mob.get_center()
+            v = np.array([np.sin(phi)*np.cos(theta), np.sin(phi)*np.sin(theta), np.cos(phi)])
+            return v #/np.linalg.norm(v)
 
     def project(self,point):
         v = self.projection_direction()
@@ -578,14 +630,6 @@ class Spotlight(VMobject):
             submob.set_fill(opacity = alpha)
 
 
-# Note: Stylistically, I typically keep all of the implementation for an
-# update inside the relevant Animation or ContinualAnimation, rather than
-# in the mobject.  Things are fine the way you've done it, but sometimes
-# I personally like a nice conceptual divide between all the things that 
-# determine how the mobject is displayed in a single moment (implement in
-# the mobject's class itself) and all the things determining how that changes.
-# 
-# Up to you though.
 
 class ScreenTracker(ContinualAnimation):
 
