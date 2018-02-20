@@ -17,7 +17,6 @@ from camera import Camera
 from tk_scene import TkSceneRoot
 from mobject import Mobject, VMobject
 from animation import Animation
-from animation.animation import sync_animation_run_times_and_rate_funcs
 from animation.transform import MoveToTarget
 from animation.continual_animation import ContinualAnimation
 from container import *
@@ -336,7 +335,7 @@ class Scene(Container):
         return time_progression
 
     def get_animation_time_progression(self, animations):
-        run_time = animations[0].run_time
+        run_time = np.max([animation.run_time for animation in animations])
         time_progression = self.get_time_progression(run_time)
         time_progression.set_description("".join([
             "Animation %d: "%self.num_plays,
@@ -422,7 +421,10 @@ class Scene(Container):
 
         animations = self.compile_play_args_to_animation_list(*args)
 
-        sync_animation_run_times_and_rate_funcs(*animations, **kwargs)
+        for animation in animations:
+            # This is where kwargs to play like run_time and rate_func
+            # get applied to all animations
+            animation.update_config(**kwargs)
         moving_mobjects = self.get_moving_mobjects(*animations)
         self.update_frame(excluded_mobjects = moving_mobjects)
         static_image = self.get_frame()

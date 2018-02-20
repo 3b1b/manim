@@ -7,7 +7,6 @@ from mobject import Mobject, Group
 from mobject.vectorized_mobject import VMobject
 from mobject.tex_mobject import TextMobject
 from animation import Animation
-from animation import sync_animation_run_times_and_rate_funcs
 from transform import Transform
 
 class Rotating(Animation):
@@ -492,15 +491,17 @@ class AnimationGroup(Animation):
             self.empty = True
             self.run_time = 0
         else:
-            # Should really make copies of animations, instead of messing with originals...
-            sync_animation_run_times_and_rate_funcs(*sub_anims, **kwargs)
+            for anim in sub_anims:
+                # If AnimationGroup is called with any configuration,
+                # it is propagated to the sub_animations
+                anim.update_config(**kwargs)
             self.run_time = max([a.run_time for a in sub_anims])
         everything = Mobject(*[a.mobject for a in sub_anims])
         Animation.__init__(self, everything, **kwargs)
 
-    def update_mobject(self, alpha):
+    def update(self, alpha):
         for anim in self.sub_anims:
-            anim.update(alpha)
+            anim.update(alpha * self.run_time / anim.run_time)
 
     def clean_up(self, *args, **kwargs):
         for anim in self.sub_anims:
