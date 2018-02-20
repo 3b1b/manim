@@ -95,6 +95,7 @@ def get_configuration():
       "save_pngs"       : args.save_pngs,
       #If -t is passed in (for transparent), this will be RGBA
       "saved_image_mode": "RGBA" if args.transparent else "RGB",
+      "movie_file_extension" : ".mov" if args.transparent else ".mp4",
       "quiet"           : args.quiet or args.write_all,
       "ignore_waits"    : args.preview,
       "write_all"       : args.write_all,
@@ -237,6 +238,7 @@ def main():
          "write_to_movie",
          "output_directory",
          "save_pngs",
+         "movie_file_extension",
          "start_at_animation_number",
          "end_at_animation_number",
       ]

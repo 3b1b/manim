@@ -570,18 +570,23 @@ class Scene(Container):
             FFMPEG_BIN,
             '-y', # overwrite output file if it exists
             '-f', 'rawvideo',
-            '-vcodec','rawvideo',
             '-s', '%dx%d'%(width, height), # size of one frame
             '-pix_fmt', 'rgba',
             '-r', str(fps), # frames per second
             '-i', '-', # The imput comes from a pipe
             '-an', # Tells FFMPEG not to expect any audio
-            '-vcodec', 'mpeg',
-            '-c:v', 'libx264',
-            '-pix_fmt', 'yuv420p',
             '-loglevel', 'error',
-            temp_file_path,
         ]
+        if self.movie_file_extension == ".mov":
+            # This is if the background of the exported video
+            # should be transparent.
+            command += ['-vcodec', 'png'] 
+        else:
+            command += [
+                '-c:v', 'libx264',
+                '-pix_fmt', 'yuv420p',
+            ]
+        command += [temp_file_path]
         # self.writing_process = sp.Popen(command, stdin=sp.PIPE, shell=True)
         self.writing_process = sp.Popen(command, stdin=sp.PIPE)
 
