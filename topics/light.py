@@ -600,6 +600,7 @@ class Spotlight(VMobject):
 
 
 
+
     def dimming(self,new_alpha):
         old_alpha = self.max_opacity
         self.max_opacity = new_alpha
