@@ -197,13 +197,16 @@ class ScaleLightSources(Transform):
                 new_sp.scale(factor,about_point = about_point)
                 submob.move_source_to(new_sp.get_location())
 
-                ambient_of = copy_func(submob.ambient_light.opacity_function)
-                new_of = lambda r: ambient_of(r/factor)
-                submob.ambient_light.opacity_function = new_of
+                #ambient_of = copy_func(submob.ambient_light.opacity_function)
+                #new_of = lambda r: ambient_of(r/factor)
+                #submob.ambient_light.opacity_function = new_of
 
-                spotlight_of = copy_func(submob.ambient_light.opacity_function)
-                new_of = lambda r: spotlight_of(r/factor)
-                submob.spotlight.change_opacity_function(new_of)
+                #spotlight_of = copy_func(submob.ambient_light.opacity_function)
+                #new_of = lambda r: spotlight_of(r/factor)
+                #submob.spotlight.change_opacity_function(new_of)
+
+                new_r = factor * submob.radius
+                submob.set_radius(new_r)
 
                 new_r = factor * submob.ambient_light.radius
                 submob.ambient_light.radius = new_r
@@ -2298,7 +2301,7 @@ class PondScene(Scene):
                 return position
 
 
-        def split_light_source(i, step, show_steps = True, run_time = 1, ls_size = 1):
+        def split_light_source(i, step, show_steps = True, run_time = 1, ls_radius = 1):
 
             ls_new_loc1 = position_for_index(i,step + 1)
             ls_new_loc2 = position_for_index(i + 2**step,step + 1)
@@ -2351,7 +2354,7 @@ class PondScene(Scene):
 
 
         def construction_step(n, scale_down = True, show_steps = True, run_time = 1,
-            simultaneous_splitting = False, ls_size = 1):
+            simultaneous_splitting = False, ls_radius = 1):
 
             # we assume that the scene contains:
             # an inner lake, self.inner_lake
@@ -2416,7 +2419,7 @@ class PondScene(Scene):
                     step = n,
                     show_steps = show_steps,
                     run_time = run_time,
-                    ls_size = ls_size
+                    ls_radius = ls_radius
                 )
 
 
@@ -2479,6 +2482,12 @@ class PondScene(Scene):
                         self.outer_lake.scale_about_point,0.5,OBSERVER_POINT,
                     )
 
+                # update the radii bc they haven't done so themselves
+                # bc reasons...
+                for ls in self.light_sources_array:
+                    r = ls.radius
+                    ls.set_radius(r*0.5)
+
             else:
                 # update the lake center and the radius
                 self.lake_center = ls0_loc = self.outer_lake.get_center() + self.lake_radius * UP
@@ -2519,8 +2528,12 @@ class PondScene(Scene):
         self.new_legs_2 = []
         self.new_hypotenuses = []
 
+        ls_radius = 25.0
+
         for i in range(3):
-            construction_step(i, scale_down = True)
+            construction_step(i, scale_down = True, ls_radius = ls_radius/2**i)
+
+        return
 
         self.play(
             FadeOut(self.altitudes),
@@ -2530,7 +2543,7 @@ class PondScene(Scene):
 
         for i in range(3,5):
             construction_step(i, scale_down = False, show_steps = False, run_time = 1.0/2**i,
-                simultaneous_splitting = True)
+                simultaneous_splitting = True, ls_radius = ls_radius/2**3)
 
 
 
