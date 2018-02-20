@@ -1441,6 +1441,7 @@ class ScreenShapingScene(ThreeDScene):
 
 
 
+
 class IndicatorScalingScene(Scene):
 
     def construct(self):
@@ -2297,7 +2298,7 @@ class PondScene(Scene):
                 return position
 
 
-        def split_light_source(i, step, show_steps = True, run_time = 1):
+        def split_light_source(i, step, show_steps = True, run_time = 1, ls_size = 1):
 
             ls_new_loc1 = position_for_index(i,step + 1)
             ls_new_loc2 = position_for_index(i + 2**step,step + 1)
@@ -2350,7 +2351,7 @@ class PondScene(Scene):
 
 
         def construction_step(n, scale_down = True, show_steps = True, run_time = 1,
-            simultaneous_splitting = False):
+            simultaneous_splitting = False, ls_size = 1):
 
             # we assume that the scene contains:
             # an inner lake, self.inner_lake
@@ -2411,7 +2412,12 @@ class PondScene(Scene):
             self.new_hypotenuses = []
 
             for i in range(2**n):
-                split_light_source(i, step = n, show_steps = show_steps, run_time = run_time)
+                split_light_source(i,
+                    step = n,
+                    show_steps = show_steps,
+                    run_time = run_time,
+                    ls_size = ls_size
+                )
 
 
 
@@ -2589,6 +2595,74 @@ class PondScene(Scene):
 
 
 
+class LabeledArc(Arc):
+    CONFIG = {
+        "length" : 1
+    }
+
+    def __init__(self, angle, **kwargs):
+
+        BUFFER = 1.3
+
+        Arc.__init__(self,angle,**kwargs)
+
+        label = DecimalNumber(self.length, num_decimal_points = 0)
+        r = BUFFER * self.radius
+        theta = self.start_angle + self.angle/2
+        label_pos = r * np.array([np.cos(theta), np.sin(theta), 0])
+
+        label.move_to(label_pos)
+        self.add(label)
+
+
+
+
+class ArcHighlightOverlayScene(Scene):
+
+    def construct(self):
+
+        BASELINE_YPOS = -2.5
+        OBSERVER_POINT = [0,BASELINE_YPOS,0]
+        LAKE0_RADIUS = 1.5
+        INDICATOR_RADIUS = 0.6
+        TICK_SIZE = 0.5
+        LIGHTHOUSE_HEIGHT = 0.2
+        LAKE_COLOR = BLUE
+        LAKE_OPACITY = 0.15
+        LAKE_STROKE_WIDTH = 5.0
+        LAKE_STROKE_COLOR = BLUE
+        TEX_SCALE = 0.8
+        DOT_COLOR = BLUE
+
+        FLASH_TIME = 0.25
+
+        def flash_arcs(n):
+
+            angle = TAU/2**n
+            arcs = []
+            arcs.append(LabeledArc(angle/2, start_angle = -TAU/4, radius = LAKE0_RADIUS, length = 1))
+
+            for i in range(1,2**n):
+                arcs.append(LabeledArc(angle, start_angle = -TAU/4 + (i-0.5)*angle, radius = LAKE0_RADIUS, length = 2))
+        
+            arcs.append(LabeledArc(angle/2, start_angle = -TAU/4 - angle/2, radius = LAKE0_RADIUS, length = 1))
+
+            self.play(
+                FadeIn(arcs[0], run_time = FLASH_TIME)
+            )
+
+            for i in range(1,2**n + 1):
+                self.play(
+                    FadeOut(arcs[i-1], run_time = FLASH_TIME),
+                    FadeIn(arcs[i], run_time = FLASH_TIME)
+                )
+
+            self.play(
+                FadeOut(arcs[2**n], run_time = FLASH_TIME),
+            )
+
+
+        flash_arcs(3)
 
 
 
