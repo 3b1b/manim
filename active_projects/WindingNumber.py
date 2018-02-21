@@ -540,7 +540,7 @@ class ColorMappedByFuncScene(Scene):
             self.pos_to_color_func = self.func
 
         # func_hash hashes the function at some random points
-        func_hash_points = [(-0.93, 1), (1, -2.7), (20, 4)]
+        func_hash_points = [(-0.93, 1), (1.3, -2.7), (20.5, 4)]
         to_hash = tuple((self.func(p)[0], self.func(p)[1]) for p in func_hash_points)
         func_hash = hash(to_hash)
         full_hash = hash((func_hash, self.camera.pixel_shape))
@@ -681,6 +681,14 @@ class EquationSolver2d(ColorMappedByFuncScene):
         rev_func = lambda p : point_to_rev(self.func(p))
         clockwise_rev_func = lambda p : -rev_func(p)
 
+        base_line = Line(UP, RIGHT, stroke_width = 10 if self.use_fancy_lines else 4, color = RED)
+
+        run_time_base = 1
+        run_time_with_lingering = run_time_base + 0.2
+        base_rate = lambda t : t
+        linger_rate = squish_rate_func(lambda t : t, 0, 
+                        fdiv(run_time_base, run_time_with_lingering))
+
         def Animate2dSolver(cur_depth, rect, dim_to_split, sides_to_draw = [0, 1, 2, 3]):
             print "Solver at depth: " + str(cur_depth)
 
@@ -691,13 +699,10 @@ class EquationSolver2d(ColorMappedByFuncScene):
                 alpha_winder = make_alpha_winder(clockwise_rev_func, start, end, self.num_checkpoints)
                 a0 = alpha_winder(0)
                 rebased_winder = lambda alpha: alpha_winder(alpha) - a0 + start_wind
-                thick_line = Line(num_plane.coords_to_point(*start), num_plane.coords_to_point(*end),
-                    stroke_width = 10,
-                    color = RED)
+                colored_line = Line(num_plane.coords_to_point(*start), num_plane.coords_to_point(*end))
+                colored_line.match_style(base_line)
                 if self.use_fancy_lines:
-                    colored_line = thick_line.color_using_background_image(self.background_image_file)
-                else:
-                    colored_line = thick_line.set_stroke(width = 4)
+                    colored_line.color_using_background_image(self.background_image_file)
 
                 walker_anim = LinearWalker(
                     start_coords = start, 
@@ -707,17 +712,20 @@ class EquationSolver2d(ColorMappedByFuncScene):
                     number_update_func = rebased_winder,
                     remover = True
                 )
-
+                
                 if should_linger: # Do we need an "and not self.display_in_parallel" here?
-                    rate_func = lingering
+                    run_time = run_time_with_lingering
+                    rate_func = linger_rate
                 else:
-                    rate_func = None
+                    run_time = run_time_base
+                    rate_func = base_rate
 
                 opt_line_anim = ShowCreation(colored_line) if draw_line else empty_animation
 
                 line_draw_anim = AnimationGroup(
                     opt_line_anim, 
                     walker_anim,
+                    run_time = run_time,
                     rate_func = rate_func)
                 return (line_draw_anim, rebased_winder(1))
 
@@ -795,11 +803,41 @@ class EquationSolver2d(ColorMappedByFuncScene):
             cur_depth = 0, 
             rect = rect,
             dim_to_split = 0,
+            sides_to_draw = []
         )
 
         print "Done computing anim"
 
-        self.play(anim)
+        # Keep timing details here in sync with details above
+        rect_points = [
+            rect.get_top_left(), 
+            rect.get_top_right(), 
+            rect.get_bottom_right(), 
+            rect.get_bottom_left(),
+        ]
+        border = Polygon(*map(lambda x : num_plane.coords_to_point(*x), rect_points))
+        border.match_style(base_line)
+        if self.use_fancy_lines:
+            border.color_using_background_image(self.background_image_file)
+
+        rect_time_without_linger = 4 * run_time_base
+        rect_time_with_linger = 3 * run_time_base + run_time_with_lingering
+        def rect_rate(alpha):
+            time_in = alpha * rect_time_with_linger
+            if time_in < 3 * run_time_base:
+                return fdiv(time_in, 4 * run_time_base)
+            else:
+                time_in_last_leg = time_in - 3 * run_time_base
+                alpha_in_last_leg = fdiv(time_in_last_leg, run_time_with_lingering)
+                return interpolate(0.75, 1, linger_rate(alpha_in_last_leg))
+
+        border_anim = ShowCreation(
+            border, 
+            run_time = rect_time_with_linger, 
+            rate_func = rect_rate
+        )
+
+        self.play(anim, border_anim)
 
         self.wait()
 
@@ -1011,12 +1049,18 @@ class SignsExplanation(Scene):
                 num_line.number_to_point(neg_num),
                 buff = 0,
                 color = negative_color)
+
+        plus_sign = TexMobject("+", fill_color = positive_color)
+        minus_sign = TexMobject("-", fill_color = negative_color)
+
+        plus_sign.next_to(pos_arrow, UP)
+        minus_sign.next_to(neg_arrow, UP)
         
         #num_line.add_numbers(pos_num)
-        self.play(ShowCreation(pos_arrow))
+        self.play(ShowCreation(pos_arrow), FadeIn(plus_sign))
 
         #num_line.add_numbers(neg_num)
-        self.play(ShowCreation(neg_arrow))
+        self.play(ShowCreation(neg_arrow), FadeIn(minus_sign))
 
 class VectorField(Scene):
     CONFIG = {
@@ -1362,9 +1406,9 @@ class LoopSplitSceneMapped(LoopSplitScene):
 class FundThmAlg(EquationSolver2d):
     CONFIG = {
         "func" : plane_poly_with_roots((1, 2), (-1, 1.5), (-1, 1.5)),
-        "num_iterations" : 5,
+        "num_iterations" : 1,
         "display_in_parallel" : True,
-        "use_fancy_lines" : False,
+        "use_fancy_lines" : True,
     }
 
 # TODO: Borsuk-Ulam visuals
