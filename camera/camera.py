@@ -5,6 +5,7 @@ import os
 from PIL import Image
 from colour import Color
 import aggdraw
+import copy
 
 from helpers import *
 from mobject import Mobject, PMobject, VMobject, \
@@ -44,6 +45,13 @@ class Camera(object):
         self.init_background()
         self.resize_space_shape()
         self.reset()
+
+    def __deepcopy__(self, memo):
+        # This is to address a strange bug where deepcopying
+        # will result in a segfault, which is somehow related
+        # to the aggdraw library
+        self.canvas = None 
+        return copy.copy(self)
 
     def resize_space_shape(self, fixed_dimension = 0):
         """
@@ -205,7 +213,7 @@ class Camera(object):
     ## Methods associated with svg rendering
 
     def get_aggdraw_canvas(self):
-        if not hasattr(self, "canvas"):
+        if not hasattr(self, "canvas") or not self.canvas:
             self.reset_aggdraw_canvas()
         return self.canvas
 

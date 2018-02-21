@@ -1727,7 +1727,7 @@ class IntroduceDopplerRadar(Scene):
         words = ["Original signal", "Echo"]
         for graph, word in zip([pulse_graph, echo_graph], words):
             arrow = Vector(DOWN)
-            arrow.next_to(graph.peak_point, UP, SMALL_BUFF)
+            arrow.next_to(graph.peak_point, UP, MED_SMALL_BUFF)
             arrow.match_color(graph)
             graph.arrow = arrow
             label = TextMobject(word)
@@ -2035,7 +2035,9 @@ class IntroduceDopplerRadar(Scene):
         sum_graph.background_image_file = "blue_yellow_gradient"
         return pulse_graph, echo_graph, sum_graph
 
-
+class MentionPRFNuance(TeacherStudentsScene):
+    def construct(self):
+        pass
 
 
 

@@ -54,10 +54,14 @@ class VMobject(Mobject):
         if fill_opacity is not None:
             self.fill_opacity = fill_opacity
         if family:
-            kwargs = locals()
-            kwargs.pop("self")
             for mob in self.submobjects:
-                mob.set_style_data(**kwargs)
+                mob.set_style_data(
+                    stroke_color = stroke_color,
+                    stroke_width  = stroke_width,
+                    fill_color = fill_color,
+                    fill_opacity  = fill_opacity,
+                    family = family
+                )
         return self
 
     def set_fill(self, color = None, opacity = None, family = True):
