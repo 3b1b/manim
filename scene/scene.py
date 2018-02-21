@@ -68,6 +68,12 @@ class Scene(Container):
             self.construct(*self.construct_args)
         except EndSceneEarlyException:
             pass
+
+        # Always tack on one last frame, so that scenes
+        # with no play calls still display something
+        self.skip_animations = False
+        self.wait(self.frame_duration)
+
         if self.write_to_movie:
             self.close_movie_pipe()
         print("Played a total of %d animations"%self.num_plays)
@@ -340,7 +346,7 @@ class Scene(Container):
             times = [run_time]
         else:
             step = self.frame_duration
-            times = np.arange(0, run_time + step, step)
+            times = np.arange(0, run_time, step)
         time_progression = ProgressDisplay(times)
         return time_progression
 
@@ -475,13 +481,12 @@ class Scene(Container):
                 self.continual_update()
                 self.update_frame()
                 self.add_frames(self.get_frame())
-        elif not self.skip_animations:
+        elif self.skip_animations:
+            #Do nothing
+            return self
+        else:
             self.update_frame()
             self.add_frames(*[self.get_frame()]*int(duration / self.frame_duration))
-        else:
-            #If self.skip_animations is set, do nothing
-            pass
-
         return self
 
     def wait_to(self, time, assert_positive = True):
@@ -602,7 +607,6 @@ class Scene(Container):
 
 class EndSceneEarlyException(Exception):
     pass
-        
 
 
 
