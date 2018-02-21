@@ -153,7 +153,7 @@ class Plane(SVGMobject):
     }
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, **kwargs)
-        self.rotate(-TAU/8)
+        self.rotate(-TAU/4)
 
 class FalconHeavy(SVGMobject):
     CONFIG = {
@@ -2339,7 +2339,6 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
             ),
             SVGMobject(
                 file_name = "biplane", 
-                # color = average_color(DARK_GREY, RED),
                 color = RED_D,
                 height = 0.5,
             ),
@@ -2350,7 +2349,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
             ).rotate(-TAU/24),
             FalconHeavy(),
         )
-        y_shifts = [0.25, 0, 0.5, 0.25, -0.25]
+        y_shifts = [0.25, 0, 0.5, 0.25, -0.5]
         for x, y, obj in zip(self.object_x_coords, y_shifts, objects):
             obj.move_to(self.axes.coords_to_point(x, 0))
             obj.align_to(self.dish)
@@ -2600,7 +2599,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         objects.save_state()
         object_velocities = self.object_velocities
 
-        movements = [
+        movements = self.object_movements = [
             AmbientMovement(
                 obj, 
                 direction = v/np.linalg.norm(v),
@@ -2680,7 +2679,29 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         self.overlapping_frequenies_of_various_objects()
 
     def concentrated_fourier_requires_long_time(self):
-        pass
+        objects = self.objects
+        objects.restore()
+        object_movements = self.object_movements
+        self.n_pulse_singletons = 32
+        pulses = self.get_pulses()
+        randy = self.pi_creature
+
+        continual_anims = object_movements+pulses
+        self.play(FadeIn(randy))
+        self.add(*continual_anims)
+        self.play(randy.change, "angry", *[
+            UpdateFromAlphaFunc(obj, lambda m, a : m.set_fill(opacity = a))
+            for obj in objects
+        ])
+        self.play(Blink(randy))
+        self.wait(2)
+        self.play(Blink(randy))
+        self.wait()
+        self.play(randy.change, "plain", *[
+            UpdateFromAlphaFunc(obj, lambda m, a : m.set_fill(opacity = 1-a))
+            for obj in objects
+        ])
+        self.wait()
 
 
     ###
@@ -2733,17 +2754,14 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
     def get_sum_graph(self, axes, graphs):
         def get_func(graph):
             return graph.underlying_function
-            # t_min = axes.x_axis.point_to_number(graph.points[0])
-            # t_max = axes.x_axis.point_to_number(graph.points[-1])
-            # return lambda t : axes.y_axis.point_to_number(
-            #     graph.point_from_proportion((t-t_min)/(t_max - t_min))
-            # )
         funcs = map(get_func, graphs)
         return axes.get_graph(
             lambda t : sum([func(t) for func in funcs]),
         )
 
-
+class SummarizeFourierTradeoffForDoppler(Scene):
+    def construct(self):
+        pass
 
 
 
