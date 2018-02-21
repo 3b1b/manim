@@ -580,10 +580,12 @@ class Scene(Container):
         if self.movie_file_extension == ".mov":
             # This is if the background of the exported video
             # should be transparent.
-            command += ['-vcodec', 'png'] 
+            command += [
+                '-vcodec', 'png',
+            ] 
         else:
             command += [
-                '-c:v', 'libx264',
+                '-vcodec', 'libx264',
                 '-pix_fmt', 'yuv420p',
             ]
         command += [temp_file_path]
