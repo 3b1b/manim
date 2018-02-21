@@ -53,6 +53,7 @@ class Scene(Container):
         self.shared_locals = {}
         self.frame_num = 0
         self.current_scene_time = 0
+        self.original_skipping_status = self.skip_animations
         if self.name is None:
             self.name = self.__class__.__name__
             if self.include_render_quality_in_name:
@@ -68,6 +69,12 @@ class Scene(Container):
             self.construct(*self.construct_args)
         except EndSceneEarlyException:
             pass
+
+        # Always tack on one last frame, so that scenes
+        # with no play calls still display something
+        self.skip_animations = False
+        self.wait(self.frame_duration)
+
         if self.write_to_movie:
             self.close_movie_pipe()
         print("Played a total of %d animations"%self.num_plays)
@@ -340,7 +347,7 @@ class Scene(Container):
             times = [run_time]
         else:
             step = self.frame_duration
-            times = np.arange(0, run_time + step, step)
+            times = np.arange(0, run_time, step)
         time_progression = ProgressDisplay(times)
         return time_progression
 
@@ -418,7 +425,7 @@ class Scene(Container):
     def handle_animation_skipping(self):
         if self.start_at_animation_number:
             if self.num_plays == self.start_at_animation_number:
-                self.skip_animations = self.original_skipping_status
+                self.skip_animations = False
         if self.end_at_animation_number:
             if self.num_plays >= self.end_at_animation_number:
                 self.skip_animations = True
@@ -475,13 +482,12 @@ class Scene(Container):
                 self.continual_update()
                 self.update_frame()
                 self.add_frames(self.get_frame())
-        elif not self.skip_animations:
+        elif self.skip_animations:
+            #Do nothing
+            return self
+        else:
             self.update_frame()
             self.add_frames(*[self.get_frame()]*int(duration / self.frame_duration))
-        else:
-            #If self.skip_animations is set, do nothing
-            pass
-
         return self
 
     def wait_to(self, time, assert_positive = True):
@@ -506,6 +512,8 @@ class Scene(Container):
         return self
 
     def add_frames(self, *frames):
+        if self.skip_animations:
+            return
         self.current_scene_time += len(frames)*self.frame_duration
         if self.write_to_movie:
             for frame in frames:
@@ -582,6 +590,18 @@ class Scene(Container):
             '-loglevel', 'error',
             temp_file_path,
         ]
+        if self.movie_file_extension == ".mov":
+            # This is if the background of the exported video
+            # should be transparent.
+            command += [
+                '-vcodec', 'png',
+            ] 
+        else:
+            command += [
+                '-vcodec', 'libx264',
+                '-pix_fmt', 'yuv420p',
+            ]
+        command += [temp_file_path]
         # self.writing_process = sp.Popen(command, stdin=sp.PIPE, shell=True)
         self.writing_process = sp.Popen(command, stdin=sp.PIPE)
 
@@ -595,7 +615,6 @@ class Scene(Container):
 
 class EndSceneEarlyException(Exception):
     pass
-        
 
 
 
