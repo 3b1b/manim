@@ -197,13 +197,16 @@ class ScaleLightSources(Transform):
                 new_sp.scale(factor,about_point = about_point)
                 submob.move_source_to(new_sp.get_location())
 
-                ambient_of = copy_func(submob.ambient_light.opacity_function)
-                new_of = lambda r: ambient_of(r/factor)
-                submob.ambient_light.opacity_function = new_of
+                # ambient_of = copy_func(submob.ambient_light.opacity_function)
+                # new_of = lambda r: ambient_of(r / factor)
+                # submob.ambient_light.change_opacity_function(new_of)
 
-                spotlight_of = copy_func(submob.ambient_light.opacity_function)
-                new_of = lambda r: spotlight_of(r/factor)
-                submob.spotlight.change_opacity_function(new_of)
+                # spotlight_of = copy_func(submob.ambient_light.opacity_function)
+                # new_of = lambda r: spotlight_of(r / factor)
+                # submob.spotlight.change_opacity_function(new_of)
+
+                new_r = factor * submob.radius
+                submob.set_radius(new_r)
 
                 new_r = factor * submob.ambient_light.radius
                 submob.ambient_light.radius = new_r
@@ -1001,6 +1004,7 @@ class ScreenShapingScene(ThreeDScene):
 
     def construct(self):
 
+        #self.force_skipping()
         self.setup_elements()
         self.deform_screen()
         self.create_brightness_rect()
@@ -1010,8 +1014,10 @@ class ScreenShapingScene(ThreeDScene):
         self.add_distance_arrow()
         self.right_shift_screen_while_showing_light_indicator_and_distance_arrow()
         self.left_shift_again()
+        #self.revert_to_original_skipping_status()
         
         self.morph_into_3d()
+        self.prove_inverse_square_law()
 
 
     def setup_elements(self):
@@ -1027,11 +1033,14 @@ class ScreenShapingScene(ThreeDScene):
         
         # light source
         self.light_source = LightSource(
-            opacity_function = inverse_quadratic(1,2,1),
+            opacity_function = inverse_quadratic(1,5,1),
             num_levels = NUM_LEVELS,
             radius = 10,
+            max_opacity = 0.2
             #screen = self.screen
         )
+        self.light_source.set_max_opacity_spotlight(0.2)
+
         self.light_source.set_screen(self.screen)
         self.light_source.move_source_to([-5,0,0])
 
@@ -1248,17 +1257,15 @@ class ScreenShapingScene(ThreeDScene):
 
     def morph_into_3d(self):
 
+
+        self.play(FadeOut(self.morty))
+
         axes = ThreeDAxes()
         self.add(axes)
 
         phi0 = self.camera.get_phi() # default is 0 degs
         theta0 = self.camera.get_theta() # default is -90 degs
         distance0 = self.camera.get_distance()
-
-        # this is an ugly hack bc remove, FadeOut and SwitchOff don't work
-        self.play(
-            self.light_source.set_max_opacity_ambient,0.001
-        )
 
         phi1 = 60 * DEGREES # angle from zenith (0 to 180)
         theta1 = -135 * DEGREES # azimuth (0 to 360)
@@ -1272,7 +1279,7 @@ class ScreenShapingScene(ThreeDScene):
         projection_direction = self.camera.spherical_coords_to_point(phi1,theta1, 1)
 
         new_screen0 = Rectangle(height = self.screen_height,
-            width = 0.1, stroke_color = RED)
+            width = 0.1, stroke_color = RED, fill_color = RED, fill_opacity = 1)
         new_screen0.rotate(TAU/4,axis = DOWN)
         new_screen0.move_to(self.screen.get_center())
         self.add(new_screen0)
@@ -1282,17 +1289,197 @@ class ScreenShapingScene(ThreeDScene):
         self.light_source.set_camera(self.camera)
 
 
-        new_screen = new_screen0.deepcopy()
-        new_screen.width = new_screen.height
+        new_screen = Rectangle(height = self.screen_height,
+            width = self.screen_height, stroke_color = RED, fill_color = RED, fill_opacity = 1)
+        new_screen.rotate(TAU/4,axis = DOWN)
+        new_screen.move_to(self.screen.get_center())
 
+        self.add_foreground_mobject(self.ambient_light)
+        self.add_foreground_mobject(self.spotlight)
+        self.add_foreground_mobject(self.light_source.shadow)
 
         self.play(
              ApplyMethod(self.camera.rotation_mobject.move_to, camera_target_point),
              
         )
+        self.remove(self.spotlight)
 
-        #self.play(Transform(new_screen0,new_screen))
+        self.play(Transform(new_screen0,new_screen))
 
+        self.wait()
+
+        self.unit_screen = new_screen0 # better name
+
+
+
+    def prove_inverse_square_law(self):
+
+        def orientate(mob):
+            mob.move_to(self.unit_screen)
+            mob.rotate(TAU/4, axis = LEFT)
+            mob.rotate(TAU/4, axis = OUT)
+            mob.rotate(TAU/2, axis = LEFT)
+            return mob
+
+        unit_screen_copy = self.unit_screen.copy()
+        fourfold_screen = self.unit_screen.copy()
+        fourfold_screen.scale(2,about_point = self.light_source.get_source_point())
+
+        self.remove(self.spotlight)
+
+
+        reading1 = TexMobject("1")
+        orientate(reading1)
+
+        self.play(FadeIn(reading1))
+        self.wait()
+        self.play(FadeOut(reading1))
+        
+
+        self.play(
+            Transform(self.unit_screen, fourfold_screen)
+        )
+
+        reading21 = TexMobject("{1\over 4}").scale(0.8)
+        orientate(reading21)
+        reading22 = reading21.deepcopy()
+        reading23 = reading21.deepcopy()
+        reading24 = reading21.deepcopy()
+        reading21.shift(0.5*OUT + 0.5*UP)
+        reading22.shift(0.5*OUT + 0.5*DOWN)
+        reading23.shift(0.5*IN + 0.5*UP)
+        reading24.shift(0.5*IN + 0.5*DOWN)
+
+
+        corners = fourfold_screen.get_anchors()
+        midpoint1 = (corners[0] + corners[1])/2
+        midpoint2 = (corners[1] + corners[2])/2
+        midpoint3 = (corners[2] + corners[3])/2
+        midpoint4 = (corners[3] + corners[0])/2
+        midline1 = Line(midpoint1, midpoint3)
+        midline2 = Line(midpoint2, midpoint4)
+
+        self.play(
+            ShowCreation(midline1),
+            ShowCreation(midline2)
+        )
+
+        self.play(
+            FadeIn(reading21),
+            FadeIn(reading22),
+            FadeIn(reading23),
+            FadeIn(reading24),
+        )
+
+        self.wait()
+
+        self.play(
+            FadeOut(reading21),
+            FadeOut(reading22),
+            FadeOut(reading23),
+            FadeOut(reading24),
+            FadeOut(midline1),
+            FadeOut(midline2)
+        )
+
+        ninefold_screen = unit_screen_copy.copy()
+        ninefold_screen.scale(3,about_point = self.light_source.get_source_point())
+
+        self.play(
+            Transform(self.unit_screen, ninefold_screen)
+        )
+
+        reading31 = TexMobject("{1\over 9}").scale(0.8)
+        orientate(reading31)
+        reading32 = reading31.deepcopy()
+        reading33 = reading31.deepcopy()
+        reading34 = reading31.deepcopy()
+        reading35 = reading31.deepcopy()
+        reading36 = reading31.deepcopy()
+        reading37 = reading31.deepcopy()
+        reading38 = reading31.deepcopy()
+        reading39 = reading31.deepcopy()
+        reading31.shift(IN + UP)
+        reading32.shift(IN)
+        reading33.shift(IN + DOWN)
+        reading34.shift(UP)
+        reading35.shift(ORIGIN)
+        reading36.shift(DOWN)
+        reading37.shift(OUT + UP)
+        reading38.shift(OUT)
+        reading39.shift(OUT + DOWN)
+
+        corners = ninefold_screen.get_anchors()
+        midpoint11 = (2*corners[0] + corners[1])/3
+        midpoint12 = (corners[0] + 2*corners[1])/3
+        midpoint21 = (2*corners[1] + corners[2])/3
+        midpoint22 = (corners[1] + 2*corners[2])/3
+        midpoint31 = (2*corners[2] + corners[3])/3
+        midpoint32 = (corners[2] + 2*corners[3])/3
+        midpoint41 = (2*corners[3] + corners[0])/3
+        midpoint42 = (corners[3] + 2*corners[0])/3
+        midline11 = Line(midpoint11, midpoint32)
+        midline12 = Line(midpoint12, midpoint31)
+        midline21 = Line(midpoint21, midpoint42)
+        midline22 = Line(midpoint22, midpoint41)
+
+        self.play(
+            ShowCreation(midline11),
+            ShowCreation(midline12),
+            ShowCreation(midline21),
+            ShowCreation(midline22),
+        )
+
+        self.play(
+            FadeIn(reading31),
+            FadeIn(reading32),
+            FadeIn(reading33),
+            FadeIn(reading34),
+            FadeIn(reading35),
+            FadeIn(reading36),
+            FadeIn(reading37),
+            FadeIn(reading38),
+            FadeIn(reading39),
+        )
+
+
+
+
+class IndicatorScalingScene(Scene):
+
+    def construct(self):
+
+        unit_intensity = 0.6
+
+        indicator1 = LightIndicator(show_reading = False, color = LIGHT_COLOR)
+        indicator1.set_intensity(unit_intensity)
+        reading1 = TexMobject("1")
+        reading1.move_to(indicator1)
+        
+
+        indicator2 = LightIndicator(show_reading = False, color = LIGHT_COLOR)
+        indicator2.shift(2*RIGHT)
+        indicator2.set_intensity(unit_intensity/4)
+        reading2 = TexMobject("{1\over 4}").scale(0.8)
+        reading2.move_to(indicator2)
+
+        indicator3 = LightIndicator(show_reading = False, color = LIGHT_COLOR)
+        indicator3.shift(4*RIGHT)
+        indicator3.set_intensity(unit_intensity/9)
+        reading3 = TexMobject("{1\over 9}").scale(0.8)
+        reading3.move_to(indicator3)
+
+        
+        self.play(FadeIn(indicator1))
+        self.play(FadeIn(reading1))
+        self.wait()
+        self.play(FadeOut(reading1))
+        self.play(Transform(indicator1, indicator2))
+        self.play(FadeIn(reading2))
+        self.wait()
+        self.play(FadeOut(reading2))
+        self.play(Transform(indicator1, indicator3))
+        self.play(FadeIn(reading3))
         self.wait()
 
 
@@ -1962,6 +2149,10 @@ class PondScene(Scene):
         TEX_SCALE = 0.8
         DOT_COLOR = BLUE
 
+        LIGHT_MAX_INT = 1
+        LIGHT_SCALE = 5
+        LIGHT_CUTOFF = 1
+
         baseline = VMobject()
         baseline.set_points_as_corners([[-8,BASELINE_YPOS,0],[8,BASELINE_YPOS,0]])
 
@@ -1988,7 +2179,8 @@ class PondScene(Scene):
         indicator.next_to(morty,LEFT)
 
         # first lighthouse
-        ls0 = LightSource()
+        original_op_func = inverse_quadratic(LIGHT_MAX_INT,LIGHT_SCALE,LIGHT_CUTOFF)
+        ls0 = LightSource(opacity_function = original_op_func)
         ls0.move_source_to(OBSERVER_POINT + LAKE0_RADIUS * 2 * UP)
 
         self.add(lake0,morty,obs_dot,ls0_dot, ls0.lighthouse)
@@ -2055,11 +2247,11 @@ class PondScene(Scene):
             FadeOut(ls0_dot)
         )
 
-        indicator.reading = TexMobject("{1\over d^2}").scale(TEX_SCALE)
-        indicator.reading.move_to(indicator)
+        indicator_reading = TexMobject("{1\over d^2}").scale(TEX_SCALE)
+        indicator_reading.move_to(indicator)
 
         self.play(
-            FadeIn(indicator.reading)
+            FadeIn(indicator_reading)
         )
 
         # replace d with its value
@@ -2075,7 +2267,7 @@ class PondScene(Scene):
         new_reading.move_to(indicator)
 
         self.play(
-            Transform(indicator.reading,new_reading)
+            Transform(indicator_reading,new_reading)
         )
 
         self.play(
@@ -2094,7 +2286,7 @@ class PondScene(Scene):
 
             self.play(
                 ScaleInPlace(indicator, INDICATOR_WIGGLE_FACTOR, rate_func = wiggle),
-                ScaleInPlace(indicator.reading, INDICATOR_WIGGLE_FACTOR, rate_func = wiggle)
+                ScaleInPlace(indicator_reading, INDICATOR_WIGGLE_FACTOR, rate_func = wiggle)
             )
 
 
@@ -2114,7 +2306,7 @@ class PondScene(Scene):
                 return position
 
 
-        def split_light_source(i, step, show_steps = True, run_time = 1):
+        def split_light_source(i, step, show_steps = True, run_time = 1, scale_down = True):
 
             ls_new_loc1 = position_for_index(i,step + 1)
             ls_new_loc2 = position_for_index(i + 2**step,step + 1)
@@ -2142,14 +2334,43 @@ class PondScene(Scene):
                 )
 
             ls1 = self.light_sources_array[i]
+
+            if scale_down:
+               #  print "scaling down"
+               # #new_of = lambda x: original_op_func(x/0.5**step)
+               # #new_of = inverse_quadratic(LIGHT_MAX_INT, LIGHT_SCALE * 10**(step+1), LIGHT_CUTOFF)
+               #  print "=============="
+               #  for t in np.arange(0.0,5.0,1.0):
+               #      print ls1.ambient_light.opacity_function(t)
+
+               #  print "=============="
+
+                new_of = lambda x: np.sin(10*x)
+                ls1.ambient_light.change_opacity_function(lambda x: np.sin(100*x))
+                # for t in np.arange(0.0,5.0,1.0):
+                #     print ls1.ambient_light.opacity_function(t)
+
+                ls1.spotlight.change_opacity_function(new_of)
+
             ls2 = ls1.copy()
             self.add(ls2)
             self.additional_light_sources.append(ls2)
 
-            self.play(
-                ApplyMethod(ls1.move_source_to,ls_new_loc1, run_time = run_time),
-                ApplyMethod(ls2.move_source_to,ls_new_loc2, run_time = run_time),
-            )
+            # check if the light sources are on screen
+            ls_old_loc = np.array(ls1.get_source_point())
+            onscreen_old = np.all(np.abs(ls_old_loc) < 10)
+            onscreen_1 = np.all(np.abs(ls_new_loc1) < 10)
+            onscreen_2 = np.all(np.abs(ls_new_loc2) < 10)
+            show_animation = (onscreen_old or onscreen_1 or onscreen_2)
+
+            if show_animation:
+                self.play(
+                    ApplyMethod(ls1.move_source_to,ls_new_loc1, run_time = run_time),
+                    ApplyMethod(ls2.move_source_to,ls_new_loc2, run_time = run_time),
+                )
+            else:
+                ls1.move_source_to(ls_new_loc1)
+                ls2.move_source_to(ls_new_loc1)
 
 
 
@@ -2217,7 +2438,12 @@ class PondScene(Scene):
             self.new_hypotenuses = []
 
             for i in range(2**n):
-                split_light_source(i, step = n, show_steps = show_steps, run_time = run_time)
+                split_light_source(i,
+                    step = n,
+                    show_steps = show_steps,
+                    run_time = run_time,
+                    scale_down = scale_down
+                )
 
 
 
@@ -2279,6 +2505,12 @@ class PondScene(Scene):
                         self.outer_lake.scale_about_point,0.5,OBSERVER_POINT,
                     )
 
+                # update the radii bc they haven't done so themselves
+                # bc reasons...
+                for ls in self.light_sources_array:
+                    r = ls.radius
+                    ls.set_radius(r*0.5)
+
             else:
                 # update the lake center and the radius
                 self.lake_center = ls0_loc = self.outer_lake.get_center() + self.lake_radius * UP
@@ -2319,8 +2551,12 @@ class PondScene(Scene):
         self.new_legs_2 = []
         self.new_hypotenuses = []
 
+        ls_radius = 25.0
+
         for i in range(3):
             construction_step(i, scale_down = True)
+
+
 
         self.play(
             FadeOut(self.altitudes),
@@ -2328,21 +2564,218 @@ class PondScene(Scene):
             FadeOut(self.legs)
             )
 
-        for i in range(3,10):
+        for i in range(3,5):
             construction_step(i, scale_down = False, show_steps = False, run_time = 1.0/2**i,
                 simultaneous_splitting = True)
 
 
 
 
+        # Now create a straight number line and transform into it
+        MAX_N = 17
+
+        self.number_line = NumberLine(
+            x_min = -MAX_N,
+            x_max = MAX_N + 1,
+            color = WHITE,
+            number_at_center = 0,
+            stroke_width = LAKE_STROKE_WIDTH,
+            stroke_color = LAKE_STROKE_COLOR,
+            #numbers_with_elongated_ticks = range(-MAX_N,MAX_N + 1),
+            numbers_to_show = range(-MAX_N,MAX_N + 1,2),
+            unit_size = LAKE0_RADIUS * TAU/4 / 4,
+            tick_frequency = 1,
+            line_to_number_buff = LARGE_BUFF,
+            label_direction = UP,
+        ).shift(2.5 * DOWN)
+
+        self.number_line.label_direction = DOWN
+
+        self.number_line_labels = self.number_line.get_number_mobjects()
+        self.wait()
+
+        origin_point = self.number_line.number_to_point(0)
+        nl_sources = VMobject()
+        pond_sources = VMobject()
+
+        for i in range(-MAX_N,MAX_N+1):
+            anchor = self.number_line.number_to_point(2*i + 1)
+            ls = self.light_sources_array[i].copy()
+            ls.move_source_to(anchor)
+            nl_sources.add(ls)
+            pond_sources.add(self.light_sources_array[i].copy())
+
+        self.add(pond_sources)
+        self.remove(self.light_sources)
+
+        self.outer_lake.rotate(TAU/8)
+
+        # open sea
+        open_sea = Rectangle(
+            width = 20,
+            height = 10,
+            stroke_width = LAKE_STROKE_WIDTH,
+            stroke_color = LAKE_STROKE_COLOR,
+            fill_color = LAKE_COLOR,
+            fill_opacity = LAKE_OPACITY,
+        ).flip().next_to(origin_point,UP,buff = 0)
+
+
+
+        self.play(
+            ReplacementTransform(pond_sources,nl_sources),
+            ReplacementTransform(self.outer_lake,open_sea),
+            FadeOut(self.inner_lake)
+        )
+        self.play(FadeIn(self.number_line))
+
+
+        self.wait()
+
+        v = 5*UP
+        self.play(
+            nl_sources.shift,v,
+            morty.shift,v,
+            self.number_line.shift,v,
+            indicator.shift,v,
+            indicator_reading.shift,v,
+            open_sea.shift,v,
+        )
+        self.number_line_labels.shift(v)
+
+        origin_point = self.number_line.number_to_point(0)
+        self.remove(obs_dot)
+        self.play(
+            indicator.move_to, origin_point + UP,
+            indicator_reading.move_to, origin_point + UP,
+            FadeOut(open_sea),
+            FadeOut(morty),
+            FadeIn(self.number_line_labels)
+        )
+
+        two_sided_sum = TexMobject("\dots", "+", "{1\over (-11)^2}",\
+         "+", "{1\over (-9)^2}", " + ", "{1\over (-7)^2}", " + ", "{1\over (-5)^2}", " + ", \
+         "{1\over (-3)^2}", " + ", "{1\over (-1)^2}", " + ", "{1\over 1^2}", " + ", \
+         "{1\over 3^2}", " + ", "{1\over 5^2}", " + ", "{1\over 7^2}", " + ", \
+         "{1\over 9^2}", " + ", "{1\over 11^2}", " + ", "\dots")
+
+        nb_symbols = len(two_sided_sum.submobjects)
+
+        two_sided_sum.scale(0.8)
+        
+        for (i,submob) in zip(range(nb_symbols),two_sided_sum.submobjects):
+            submob.next_to(self.number_line.number_to_point(i - 13),DOWN, buff = 2)
+            if (i == 0 or i % 2 == 1 or i == nb_symbols - 1): # non-fractions
+                submob.shift(0.2 * DOWN)
+
+        self.play(Write(two_sided_sum))
+
+        covering_rectangle = Rectangle(
+            width = SPACE_WIDTH,
+            height = 2 * SPACE_HEIGHT,
+            stroke_width = 0,
+            fill_color = BLACK,
+            fill_opacity = 1,
+        )
+        covering_rectangle.next_to(ORIGIN,LEFT,buff = 0)
+        for i in range(10):
+            self.add_foreground_mobject(self.light_sources_array[i])
+
+        self.add_foreground_mobject(indicator)
+        self.add_foreground_mobject(indicator.reading)
+
+        half_indicator = indicator.copy()
+        half_indicator.show_reading = False
+        half_indicator.set_intensity(indicator.intensity / 2)
+        half_indicator_reading = TexMobject("{\pi^2 \over 8}").scale(TEX_SCALE)
+        half_indicator_reading.move_to(half_indicator)
+        half_indicator.remove(indicator_reading)
+        half_indicator.add(half_indicator_reading)
+
+        half_indicator_copy = half_indicator.deepcopy()
+        half_indicator_reading_copy = half_indicator_reading.deepcopy()
+
+        self.play(
+            FadeIn(covering_rectangle),
+            FadeIn(half_indicator),
+        )
+
+        p = 2*LEFT
+        self.play(
+            half_indicator_copy.move_to,p,
+            half_indicator_reading_copy.move_to,p
+        )
+
+
+
+class LabeledArc(Arc):
+    CONFIG = {
+        "length" : 1
+    }
+
+    def __init__(self, angle, **kwargs):
+
+        BUFFER = 1.3
+
+        Arc.__init__(self,angle,**kwargs)
+
+        label = DecimalNumber(self.length, num_decimal_points = 0)
+        r = BUFFER * self.radius
+        theta = self.start_angle + self.angle/2
+        label_pos = r * np.array([np.cos(theta), np.sin(theta), 0])
+
+        label.move_to(label_pos)
+        self.add(label)
 
 
 
 
+class ArcHighlightOverlayScene(Scene):
+
+    def construct(self):
+
+        BASELINE_YPOS = -2.5
+        OBSERVER_POINT = [0,BASELINE_YPOS,0]
+        LAKE0_RADIUS = 1.5
+        INDICATOR_RADIUS = 0.6
+        TICK_SIZE = 0.5
+        LIGHTHOUSE_HEIGHT = 0.2
+        LAKE_COLOR = BLUE
+        LAKE_OPACITY = 0.15
+        LAKE_STROKE_WIDTH = 5.0
+        LAKE_STROKE_COLOR = BLUE
+        TEX_SCALE = 0.8
+        DOT_COLOR = BLUE
+
+        FLASH_TIME = 0.25
+
+        def flash_arcs(n):
+
+            angle = TAU/2**n
+            arcs = []
+            arcs.append(LabeledArc(angle/2, start_angle = -TAU/4, radius = LAKE0_RADIUS, length = 1))
+
+            for i in range(1,2**n):
+                arcs.append(LabeledArc(angle, start_angle = -TAU/4 + (i-0.5)*angle, radius = LAKE0_RADIUS, length = 2))
+        
+            arcs.append(LabeledArc(angle/2, start_angle = -TAU/4 - angle/2, radius = LAKE0_RADIUS, length = 1))
+
+            self.play(
+                FadeIn(arcs[0], run_time = FLASH_TIME)
+            )
+
+            for i in range(1,2**n + 1):
+                self.play(
+                    FadeOut(arcs[i-1], run_time = FLASH_TIME),
+                    FadeIn(arcs[i], run_time = FLASH_TIME)
+                )
+
+            self.play(
+                FadeOut(arcs[2**n], run_time = FLASH_TIME),
+            )
 
 
-
-
+        flash_arcs(3)
 
 
 
