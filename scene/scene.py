@@ -53,6 +53,7 @@ class Scene(Container):
         self.shared_locals = {}
         self.frame_num = 0
         self.current_scene_time = 0
+        self.original_skipping_status = self.skip_animations
         if self.name is None:
             self.name = self.__class__.__name__
             if self.include_render_quality_in_name:
@@ -424,7 +425,7 @@ class Scene(Container):
     def handle_animation_skipping(self):
         if self.start_at_animation_number:
             if self.num_plays == self.start_at_animation_number:
-                self.skip_animations = self.original_skipping_status
+                self.skip_animations = False
         if self.end_at_animation_number:
             if self.num_plays >= self.end_at_animation_number:
                 self.skip_animations = True
@@ -511,6 +512,8 @@ class Scene(Container):
         return self
 
     def add_frames(self, *frames):
+        if self.skip_animations:
+            return
         self.current_scene_time += len(frames)*self.frame_duration
         if self.write_to_movie:
             for frame in frames:
