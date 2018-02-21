@@ -2314,7 +2314,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
     def setup_axes(self):
         axes = self.axes = Axes(
             x_min = 0, x_max = 10,
-            y_min = -2, y_max = 2,
+            y_min = -1.5, y_max = 1.5,
         )
         time_label = TextMobject("Time")
         time_label.next_to(axes.x_axis.get_right(), UP)
@@ -2501,23 +2501,49 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         )
         self.wait()
 
-        self.add(sum_graph)
+        self.curr_graph = sum_graph
+        self.first_echo_graph = graphs[0]
+        self.first_echo_graph.highlight(YELLOW)
 
     def transition_to_frequency_view(self):
-        pass
+        frequency_axes = self.axes.copy()
+        frequency_label = TextMobject("Frequency")
+        frequency_label.replace(frequency_axes[-1], dim_to_match = 1)
+        frequency_axes.submobjects[-1] = frequency_label
+
+        self.play(
+            ApplyMethod(
+                VGroup(self.axes, self.first_echo_graph).to_edge, UP,
+                rate_func = squish_rate_func(smooth, 0.5, 1)
+            ),
+            LaggedStart(FadeOut, self.objects),
+            LaggedStart(FadeOut, VGroup(
+                self.curr_graph, self.dish, self.pi_creature
+            )),
+            run_time = 2
+        )
+
+        #
+        frequency_axes.next_to(self.axes, DOWN, aligned_edge = LEFT)
+        
+
+        self.play(Write(frequency_axes))
+
+
+
 
     def fourier_transform_of_one_pulse(self):
         pass
-        
+
     def overlapping_frequenies_of_various_objects(self):
         pass
-        
+
     def echos_of_long_pure_signal_in_frequency_space(self):
         pass
-        
+
     def concentrated_fourier_requires_long_time(self):
         pass
-        
+
 
     ###
 
