@@ -84,6 +84,8 @@ class ProbabalisticMobjectCloud(ContinualAnimation):
     def __init__(self, prototype, **kwargs):
         digest_config(self, kwargs)
         fill_opacity = self.fill_opacity or prototype.get_fill_opacity()
+        if "mu" not in self.gaussian_distribution_wrapper_config:
+            self.gaussian_distribution_wrapper_config["mu"] = prototype.get_center()
         self.gaussian_distribution_wrapper = GaussianDistributionWrapper(
             **self.gaussian_distribution_wrapper_config
         )
@@ -146,12 +148,24 @@ class RadarDish(SVGMobject):
 class Plane(SVGMobject):
     CONFIG = {
         "file_name" : "plane",
-        "color" : GREY,
+        "color" : LIGHT_GREY,
         "height" : 1,
     }
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, **kwargs)
         self.rotate(-TAU/8)
+
+class FalconHeavy(SVGMobject):
+    CONFIG = {
+        "file_name" : "falcon_heavy",
+        "color" : WHITE,
+        "logo_color" : BLUE_E,
+        "height" : 1.5,
+    }
+    def __init__(self, **kwargs):
+        SVGMobject.__init__(self, **kwargs)
+        self.logo = self[-9:]
+        self.logo.highlight(self.logo_color)
 
 class RadarPulseSingleton(ContinualAnimation):
     CONFIG = {
@@ -1683,6 +1697,9 @@ class MentionDopplerRadar(TeacherStudentsScene):
         ))
 
 class IntroduceDopplerRadar(Scene):
+    CONFIG = {
+        "frequency_spread_factor" : 100,
+    }
     def construct(self):
         self.setup_axes()
         self.measure_distance_with_time()
@@ -2015,7 +2032,11 @@ class IntroduceDopplerRadar(Scene):
         )
 
     def get_frequency_pulse_function(self, x, freq):
-        return lambda t : 2*np.cos(2*freq*(t-x))*min(np.exp(-(freq**2/100)*(t-x)**2), 0.5)
+        factor = self.frequency_spread_factor
+        return lambda t : op.mul(
+            2*np.cos(2*freq*(t-x)),
+            min(np.exp(-(freq**2/factor)*(t-x)**2), 0.5)
+        )
 
     def get_peak_point(self, graph):
         anchors = graph.get_anchors()
@@ -2037,19 +2058,497 @@ class IntroduceDopplerRadar(Scene):
 
 class MentionPRFNuance(TeacherStudentsScene):
     def construct(self):
+        title = TextMobject(
+            "Speed of light", "$\\gg$", "Speed of a plane"
+        )
+        title.to_edge(UP)
+        self.add(title)
+
+        axes = self.axes = Axes(
+            x_min = 0, x_max = 10,
+            y_min = 0, y_max = 2,
+        )
+        axes.next_to(title, DOWN, buff = MED_LARGE_BUFF)
+        frequency_label = TextMobject("Frequency")
+        frequency_label.scale(0.7)
+        frequency_label.next_to(axes.x_axis.get_right(), UP)
+        axes.add(frequency_label)
+        self.add(axes)
+
+        pulse_x, shift_x = 4, 6
+        pulse_graph = self.get_spike_graph(pulse_x)
+        shift_graph = self.get_spike_graph(shift_x)
+        shift_graph.set_stroke(YELLOW, 2)
+        peak_points = VGroup(pulse_graph.peak_point, shift_graph.peak_point)
+        self.add(pulse_graph)
+
+        brace = Brace(peak_points, UP, buff = SMALL_BUFF)
+        displayed_doppler_shift = TextMobject("How I'm showing the \\\\", "Doppler shift")
+        actual_doppler_shift = TextMobject("Actual\\\\", "Doppler shift")
+        doppler_shift_words = VGroup(displayed_doppler_shift, actual_doppler_shift)
+        doppler_shift_words.highlight(YELLOW)
+        doppler_shift_words.scale(0.75)
+        displayed_doppler_shift.next_to(brace, UP, buff = SMALL_BUFF)
+        actual_doppler_shift.move_to(pulse_graph.peak_point)
+        actual_doppler_shift.align_to(displayed_doppler_shift)
+
+        self.play(
+            Animation(pulse_graph),
+            self.teacher.change, "raise_right_hand", 
+            run_time = 1
+        )
+        self.play(
+            ShowCreation(shift_graph),
+            FadeIn(brace),
+            Write(displayed_doppler_shift, run_time = 1),
+            self.get_student_changes(*3*["sassy"]),
+        )
+        self.play(
+            UpdateFromAlphaFunc(
+                shift_graph, 
+                lambda g, a : Transform(
+                    g, self.get_spike_graph(
+                        interpolate(shift_x, pulse_x+0.01, a),
+                    ).match_style(shift_graph)
+                ).update(1),
+            ),
+            UpdateFromFunc(
+                brace,
+                lambda b : b.match_width(
+                    peak_points, stretch = True
+                ).next_to(peak_points, UP, SMALL_BUFF)
+            ),
+            Transform(
+                displayed_doppler_shift, actual_doppler_shift,
+                rate_func = squish_rate_func(smooth, 0.3, 0.6)
+            ),
+            run_time = 3
+        )
+        self.wait(2)
+
+        everything = VGroup(
+            title,
+            axes, pulse_graph, shift_graph,
+            brace, displayed_doppler_shift
+        )
+        rect = SurroundingRectangle(everything, color = WHITE)
+        everything.add(rect)
+
+        self.teacher_says(
+            "I'll ignore certain \\\\ nuances for now.",
+            target_mode = "shruggie",
+            added_anims = [
+                everything.scale, 0.4,
+                everything.to_corner, UP+LEFT,
+                UpdateFromAlphaFunc(
+                    rect, lambda m, a : m.set_stroke(width = 2*a)
+                )
+            ],
+        )
+        self.change_student_modes(*3*["hesitant"])
+        self.wait(2)
+
+
+
+
+    def get_spike_graph(self, x, color = RED, **kwargs):
+        graph = self.axes.get_graph(
+            lambda t : np.exp(-10*(t-x)**2)*np.cos(10*(t-x)),
+            color = color,
+            **kwargs
+        )
+        graph.peak_point = VectorizedPoint(self.axes.input_to_graph_point(x, graph))
+        graph.add(graph.peak_point)
+        return graph
+
+class TimeAndFrequencyGivePositionAndVelocity(IntroduceDopplerRadar):
+    def construct(self):
+        x = 7
+        freq = 25
+
+        axes = self.axes = Axes(
+            x_min = 0, x_max = 10,
+            y_min = -2, y_max = 2,
+        )
+        axes.center()
+        title = TextMobject("Echo signal")
+        title.next_to(axes.y_axis, UP)
+        axes.add(title)
+        axes.to_edge(UP)
+        graph = self.get_frequency_pulse_graph(x = x, freq = freq)
+        graph.background_image_file = "blue_yellow_gradient"
+
+        arrow = Arrow(
+            axes.coords_to_point(0, -1.5),
+            axes.coords_to_point(x, -1.5),
+            color = WHITE,
+            buff = SMALL_BUFF,
+        )
+        time = TextMobject("Time")
+        time.next_to(arrow, DOWN, SMALL_BUFF)
+
+        delta_x = 0.7
+        brace = Brace(
+            Line(
+                axes.coords_to_point(x-delta_x, 1), 
+                axes.coords_to_point(x+delta_x, 1)
+            ),
+            UP
+        )
+        frequency = TextMobject("Frequency")
+        frequency.highlight(YELLOW)
+        frequency.next_to(brace, UP, SMALL_BUFF)
+
+        time_updown_arrow = TexMobject("\\Updownarrow")
+        time_updown_arrow.next_to(time, DOWN, SMALL_BUFF)
+        freq_updown_arrow = time_updown_arrow.copy()
+        freq_updown_arrow.next_to(frequency, UP, SMALL_BUFF)
+        distance = TextMobject("Distance")
+        distance.next_to(time_updown_arrow, DOWN, SMALL_BUFF)
+        velocity = TextMobject("Velocity")
+        velocity.next_to(freq_updown_arrow, UP, SMALL_BUFF)
+        VGroup(freq_updown_arrow, velocity).match_style(frequency)
+
+        self.add(axes)
+        self.play(ShowCreation(graph))
+        self.play(
+            GrowArrow(arrow),
+            LaggedStart(FadeIn, time, run_time = 1)
+        )
+        self.play(
+            GrowFromCenter(brace),
+            LaggedStart(FadeIn, frequency, run_time = 1)
+        )
+        self.wait()
+        self.play(
+            GrowFromPoint(time_updown_arrow, time_updown_arrow.get_top()),
+            ReplacementTransform(
+                time.copy().fade(1), 
+                distance
+            )
+        )
+        self.play(
+            GrowFromPoint(freq_updown_arrow, freq_updown_arrow.get_top()),
+            ReplacementTransform(
+                frequency.copy().fade(1), 
+                velocity
+            )
+        )
+        self.wait()
+
+class RadarOperatorUncertainty(Scene):
+    def construct(self):
+        dish = RadarDish()
+        dish.scale(3)
+        dish.move_to(4*RIGHT + 2*DOWN)
+        dish_words = TextMobject("3b1b industrial \\\\ enterprises")
+        dish_words.scale(0.25)
+        dish_words.set_stroke(BLACK, 0.5)
+        dish_words.highlight(BLACK)
+        dish_words.move_to(dish, DOWN)
+        dish_words.shift(SMALL_BUFF*(UP+2*LEFT))
+        dish.add(dish_words)
+        randy = Randolph()
+        randy.next_to(dish, LEFT, aligned_edge = DOWN)
+        bubble = randy.get_bubble(
+            width = 7,
+            height = 4,
+        )
+
+        echo_object = Square()
+        echo_object.move_to(dish)
+        echo_object.shift(SPACE_WIDTH*RIGHT)
+        pulse = RadarPulse(dish, echo_object, speed = 6)
+
+        plane = Plane().scale(0.5)
+        plane.move_to(bubble.get_bubble_center()+LEFT)
+        plane_cloud = ProbabalisticMobjectCloud(
+            plane, 
+            fill_opacity = 0.3,
+            n_copies = 10,
+        )
+        plane_gdw = plane_cloud.gaussian_distribution_wrapper
+
+        vector_cloud = ProbabalisticVectorCloud(
+            center_func = plane_gdw.get_center,
+        )
+        vector_gdw = vector_cloud.gaussian_distribution_wrapper
+        vector_gdw.scale(0.05)
+        vector_gdw.move_to(plane_gdw)
+        vector_gdw.shift(2*RIGHT)
+
+
+        self.add(randy, dish, bubble, plane_cloud, pulse)
+        self.play(randy.change, "confused")
+        self.wait(3)
+        self.add(vector_cloud)
+        for i in range(3):
+            for plane_factor, vector_factor, freq in (0.05, 10, 0.01), (20, 0.1, 0.1):
+                pulse.internal_time = 0
+                pulse.frequency = freq
+                self.play(
+                    randy.change, "pondering", plane,
+                    plane_gdw.scale, plane_factor,
+                    vector_gdw.scale, vector_factor,
+                )
+                self.wait(2)
+
+class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
+    CONFIG = {
+        "object_x_coords" : [7, 4, 6, 9, 8],
+        "frequency_spread_factor" : 200,
+        "n_pulse_singletons" : 16,
+        "pulse_frequency" : 0.025,
+    }
+    def construct(self):
+        self.setup_axes()
+        self.send_long_pulse_single_echo()
+        self.introduce_multiple_objects()
+        self.use_short_pulse()
+        self.transition_to_frequency_view()
+        self.fourier_transform_of_one_pulse()
+        self.overlapping_frequenies_of_various_objects()
+        self.echos_of_long_pure_signal_in_frequency_space()
+        self.concentrated_fourier_requires_long_time()
+
+    def setup_axes(self):
+        axes = self.axes = Axes(
+            x_min = 0, x_max = 10,
+            y_min = -2, y_max = 2,
+        )
+        time_label = TextMobject("Time")
+        time_label.next_to(axes.x_axis.get_right(), UP)
+        axes.add(time_label)
+        axes.center()
+        axes.shift(DOWN)
+        self.add(axes)
+
+        dish = self.dish = RadarDish()
+        dish.move_to(axes, LEFT)
+        dish.to_edge(UP, buff = LARGE_BUFF)
+        self.add(dish)
+
+        objects = self.objects = VGroup(
+            Plane().flip(),
+            SVGMobject(
+                file_name = "blimp", 
+                color = BLUE_C,
+                height = 0.5,
+            ),
+            SVGMobject(
+                file_name = "biplane", 
+                color = average_color(DARK_GREY, RED),
+                height = 0.5,
+            ),
+            SVGMobject(
+                file_name = "helicopter", 
+                color = LIGHT_GREY,
+                height = 0.5,
+            ).rotate(-TAU/24),
+            FalconHeavy(),
+        )
+        y_shifts = [0.25, 0, 0.5, 0.25, -0.25]
+        for x, y, obj in zip(self.object_x_coords, y_shifts, objects):
+            obj.move_to(self.axes.coords_to_point(x, 0))
+            obj.align_to(self.dish)
+            obj.shift(y*UP)
+
+    def send_long_pulse_single_echo(self):
+        x = self.object_x_coords[0]
+        plane = self.objects[0]
+        self.add(plane)
+        randy = self.pi_creature
+        self.remove(randy)
+
+        pulse_graph = self.get_frequency_pulse_graph(x)
+        pulse_graph.background_image_file = "blue_yellow_gradient"
+
+        pulse = self.get_pulse(self.dish, plane)
+
+        brace = Brace(
+            Line(
+                self.axes.coords_to_point(x-1, 1),
+                self.axes.coords_to_point(x+1, 1),
+            ), UP
+        )
+        words = brace.get_text("Spread over time")
+
+        self.add(pulse)
+        self.wait()
+        squished_rate_func = squish_rate_func(smooth, 0.6, 0.9)
+        self.play(
+            ShowCreation(pulse_graph, rate_func = None),
+            GrowFromCenter(brace, rate_func = squished_rate_func),
+            Write(words, rate_func = squished_rate_func),
+            run_time = 3,
+        )
+        self.remove(pulse)
+        self.play(FadeIn(randy))
+        self.play(PiCreatureBubbleIntroduction(
+            randy, "Who cares?",
+            bubble_class = ThoughtBubble,
+            bubble_kwargs = {
+                "direction" : LEFT,
+                "width" : 2,
+                "height": 1.5,
+            },
+            target_mode = "maybe",
+            look_at_arg = brace,
+        ))
+        self.play(Blink(randy))
+        self.play(LaggedStart(
+            FadeOut, VGroup(
+                randy.bubble, randy.bubble.content, 
+                brace, words,
+            )
+        ))
+
+        self.curr_graph = pulse_graph
+
+    def introduce_multiple_objects(self):
+        objects = self.objects
+        x_coords = self.object_x_coords
+        curr_graph = self.curr_graph
+        randy = self.pi_creature
+
+        graphs = VGroup(*[
+            self.get_frequency_pulse_graph(x)
+            for x in x_coords
+        ])
+        graphs.gradient_highlight(BLUE, YELLOW)
+        sum_graph = self.axes.get_graph(
+            lambda t : sum([
+                graph.underlying_function(t)
+                for graph in graphs
+            ]),
+            num_graph_points = 1000
+        )
+
+        noise_function = lambda t : np.sum([
+            0.5*np.sin(f*t)/f 
+            for f in 2, 3, 5, 7, 11, 13
+        ])
+        noisy_graph = self.axes.get_graph(
+            lambda t : sum_graph.underlying_function(t)*(1+noise_function(t)),
+            num_graph_points = 1000
+        )
+        for graph in sum_graph, noisy_graph:
+            graph.background_image_file = "blue_yellow_gradient"
+
+        pulses = self.get_pulses()
+
+        self.play(
+            LaggedStart(GrowFromCenter, objects[1:]),
+            FadeOut(curr_graph),
+            randy.change, "pondering"
+        )
+        self.add(*pulses)
+        self.wait(0.5)
+        self.play(
+            ShowCreation(
+                sum_graph,
+                rate_func = None,
+                run_time = 3.5,
+            ),
+            randy.change, "confused"
+        )
+        self.remove(*pulses)
+        self.play(randy.change, "pondering")
+        self.play(Transform(
+            sum_graph, noisy_graph,
+            rate_func = lambda t : wiggle(t, 4),
+            run_time = 3
+        ))
+        self.wait(2)
+
+        self.curr_graph = sum_graph
+
+    def use_short_pulse(self):
+        curr_graph = self.curr_graph
+        objects = self.objects
+        x_coords = self.object_x_coords
+        randy = self.pi_creature
+
+        self.frequency_spread_factor = 10
+        self.n_pulse_singletons = 4
+        self.pulse_frequency = 0.015
+
+        graphs = VGroup(*[
+            self.get_frequency_pulse_graph(x)
+            for x in x_coords
+        ])
+        sum_graph = self.axes.get_graph(
+            lambda t : sum([
+                graph.underlying_function(t)
+                for graph in graphs
+            ]),
+            num_graph_points = 1000
+        )
+        sum_graph.background_image_file = "blue_yellow_gradient"
+
+        pulses = self.get_pulses()
+
+        self.play(FadeOut(curr_graph))
+        self.add(*pulses)
+        self.wait(0.5)
+        self.play(
+            ShowCreation(
+                sum_graph,
+                rate_func = None,
+                run_time = 3.5,
+            ),
+            randy.change, "happy"
+        )
+        self.wait()
+
+        self.add(sum_graph)
+
+    def transition_to_frequency_view(self):
         pass
 
+    def fourier_transform_of_one_pulse(self):
+        pass
+        
+    def overlapping_frequenies_of_various_objects(self):
+        pass
+        
+    def echos_of_long_pure_signal_in_frequency_space(self):
+        pass
+        
+    def concentrated_fourier_requires_long_time(self):
+        pass
+        
 
+    ###
 
+    def get_frequency_pulse_graph(self, x, freq = 25, **kwargs):
+        graph = IntroduceDopplerRadar.get_frequency_pulse_graph(
+            self, x, freq, **kwargs
+        )
+        return graph
 
+    def get_pulse(self, dish, echo_object):
+        return RadarPulse(
+            dish, echo_object, 
+            n_pulse_singletons = self.n_pulse_singletons,
+            frequency = 0.025,
+            speed = 5.0,
+        )
 
+    def get_pulses(self):
+        return [
+            self.get_pulse(
+                self.dish.copy(),#.align_to(obj), 
+                obj
+            )
+            for obj in self.objects
+        ]
 
-
-
-
-
-
-
+    def create_pi_creature(self):
+        randy = Randolph()
+        randy.scale(0.5).flip()
+        randy.to_edge(RIGHT, buff = 1.7).shift(0.5*UP)
+        return randy
 
 
 
