@@ -59,6 +59,13 @@ def get_fourier_graph(
         for x, y in zip(frequencies, fft_output[:n_samples//2])
     ])
     graph.highlight(color)
+    f_min, f_max = [
+        axes.x_axis.point_to_number(graph.points[i])
+        for i in 0, -1
+    ]
+    graph.underlying_function = lambda f : axes.y_axis.point_to_number(
+        graph.point_from_proportion((f - f_min)/(f_max - f_min))
+    )
     return graph
 
 def get_fourier_transform(

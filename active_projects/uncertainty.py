@@ -153,7 +153,7 @@ class Plane(SVGMobject):
     }
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, **kwargs)
-        self.rotate(-TAU/8)
+        self.rotate(-TAU/4)
 
 class FalconHeavy(SVGMobject):
     CONFIG = {
@@ -2301,11 +2301,12 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
     }
     def construct(self):
         self.setup_axes()
+        self.setup_objects()
         self.send_long_pulse_single_echo()
         self.introduce_multiple_objects()
         self.use_short_pulse()
-        self.transition_to_frequency_view()
         self.fourier_transform_of_one_pulse()
+        self.show_echos_of_moving_objects()
         self.overlapping_frequenies_of_various_objects()
         self.echos_of_long_pure_signal_in_frequency_space()
         self.concentrated_fourier_requires_long_time()
@@ -2313,7 +2314,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
     def setup_axes(self):
         axes = self.axes = Axes(
             x_min = 0, x_max = 10,
-            y_min = -2, y_max = 2,
+            y_min = -1.5, y_max = 1.5,
         )
         time_label = TextMobject("Time")
         time_label.next_to(axes.x_axis.get_right(), UP)
@@ -2327,6 +2328,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         dish.to_edge(UP, buff = LARGE_BUFF)
         self.add(dish)
 
+    def setup_objects(self):
         objects = self.objects = VGroup(
             Plane().flip(),
             SVGMobject(
@@ -2336,7 +2338,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
             ),
             SVGMobject(
                 file_name = "biplane", 
-                color = average_color(DARK_GREY, RED),
+                color = RED_D,
                 height = 0.5,
             ),
             SVGMobject(
@@ -2346,11 +2348,19 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
             ).rotate(-TAU/24),
             FalconHeavy(),
         )
-        y_shifts = [0.25, 0, 0.5, 0.25, -0.25]
+        y_shifts = [0.25, 0, 0.5, 0.25, -0.5]
         for x, y, obj in zip(self.object_x_coords, y_shifts, objects):
             obj.move_to(self.axes.coords_to_point(x, 0))
             obj.align_to(self.dish)
             obj.shift(y*UP)
+
+        self.object_velocities = [
+            0.7*LEFT,
+            0.1*RIGHT,
+            0.4*LEFT,
+            0.4*RIGHT,
+            0.5*UP,
+        ]
 
     def send_long_pulse_single_echo(self):
         x = self.object_x_coords[0]
@@ -2500,23 +2510,198 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         )
         self.wait()
 
-        self.add(sum_graph)
-
-    def transition_to_frequency_view(self):
-        pass
+        self.curr_graph = sum_graph
+        self.first_echo_graph = graphs[0]
+        self.first_echo_graph.highlight(YELLOW)
 
     def fourier_transform_of_one_pulse(self):
-        pass
+        frequency_axes = Axes(
+            x_min = 0, x_max = 20,
+            x_axis_config = {
+                "unit_size" : 0.5, 
+                "tick_frequency" : 2, 
+            },
+            y_min = -.01, y_max = .01,
+            y_axis_config = {
+                "unit_size" : 110,
+                "tick_frequency" : 0.006
+            }
+        )
+        frequency_label = TextMobject("Frequency")
+        frequency_label.next_to(frequency_axes.x_axis.get_right(), UP)
+        frequency_axes.add(frequency_label)
+        first_echo_graph = self.first_echo_graph
+
+        self.play(
+            ApplyMethod(
+                VGroup(self.axes, first_echo_graph).to_edge, UP,
+                {"buff" : SMALL_BUFF},
+                rate_func = squish_rate_func(smooth, 0.5, 1)
+            ),
+            LaggedStart(FadeOut, self.objects),
+            LaggedStart(FadeOut, VGroup(
+                self.curr_graph, self.dish, self.pi_creature
+            )),
+            run_time = 2
+        )
+
+        #
+        frequency_axes.next_to(self.axes, DOWN, LARGE_BUFF, LEFT)
+        fourier_graph = get_fourier_graph(
+            frequency_axes, first_echo_graph.underlying_function,
+            t_min = 0, t_max = 25,
+            complex_to_real_func = np.abs,
+        )
+        fourier_graph.save_state()
+        fourier_graph.move_to(first_echo_graph)
+        h_vect = 4*RIGHT
+        fourier_graph.shift(h_vect)
+        fourier_graph.fade(1)
+
+        f = 8
+        v_line = DashedLine(
+            frequency_axes.coords_to_point(f, 0),
+            frequency_axes.coords_to_point(f, frequency_axes.y_max),
+        )
+        v_lines = VGroup(
+            v_line.copy().shift(2*LEFT),
+            v_line.copy().shift(2*RIGHT),
+        )
+        rect = Rectangle(stroke_width = 0, fill_color = YELLOW, fill_opacity = 0.25)
+        rect.replace(v_lines, stretch = True)
+        rect.save_state()
+        rect.stretch(0, 0)
+
+        self.play(Write(frequency_axes, run_time = 1))
+        self.play(
+            ApplyFunction(
+                lambda m : m.move_to(fourier_graph.saved_state).shift(-h_vect).fade(1),
+                first_echo_graph.copy(),
+                remover = True,
+            ),
+            fourier_graph.restore
+        )
+        self.wait()
+        self.play(ShowCreation(v_line))
+        self.play(
+            ReplacementTransform(VGroup(v_line), v_lines),
+            rect.restore
+        )
+        self.wait()
+        self.play(FadeOut(v_lines), FadeOut(rect))
+
+        self.frequency_axes = frequency_axes
+        self.fourier_graph = fourier_graph
+
+    def show_echos_of_moving_objects(self):
+        objects = self.objects
+        objects.save_state()
+        object_velocities = self.object_velocities
+
+        movements = self.object_movements = [
+            AmbientMovement(
+                obj, 
+                direction = v/np.linalg.norm(v),
+                rate = np.linalg.norm(v)
+            )
+            for v, obj in zip(object_velocities, objects)
+        ]
+        pulses = self.get_pulses()
+        continual_anims = pulses+movements
         
+        self.play(
+            FadeOut(self.axes),
+            FadeOut(self.first_echo_graph),
+            LaggedStart(FadeIn, objects),
+            FadeIn(self.dish)
+        )
+        self.add(*continual_anims)
+        self.wait(4)
+        self.play(*[
+            UpdateFromAlphaFunc(
+                obj, 
+                lambda m, a : m.set_fill(opacity = 1-a),
+            )
+            for obj in objects
+        ])
+        self.remove(*continual_anims)
+        self.wait()
+
     def overlapping_frequenies_of_various_objects(self):
-        pass
-        
+        frequency_axes = self.frequency_axes
+        fourier_graph = self.fourier_graph
+        shifted_graphs = self.get_shifted_frequency_graphs(fourier_graph)
+        color = fourier_graph.get_color()
+        shifted_graphs.gradient_highlight(
+            average_color(color, WHITE), 
+            color,
+            average_color(color, BLACK),
+        )
+        sum_graph = self.get_sum_graph(frequency_axes, shifted_graphs)
+        sum_graph.match_style(fourier_graph)
+
+        shifted_graphs.save_state()
+
+        self.play(ReplacementTransform(
+            VGroup(fourier_graph), shifted_graphs,
+            submobject_mode = "lagged_start",
+            run_time = 2
+        ))
+        self.wait()
+        self.play(
+            shifted_graphs.arrange_submobjects, DOWN,
+            shifted_graphs.move_to, fourier_graph, DOWN,
+        )
+        self.wait()
+        self.play(shifted_graphs.restore),
+        self.play(ReplacementTransform(
+            shifted_graphs, VGroup(sum_graph),
+        ))
+        self.wait()
+
+        self.curr_fourier_graph = sum_graph
+
     def echos_of_long_pure_signal_in_frequency_space(self):
-        pass
-        
+        curr_fourier_graph = self.curr_fourier_graph
+        f_max = self.frequency_axes.y_max
+        new_fourier_graph = self.frequency_axes.get_graph(
+            lambda x : f_max * np.exp(-100*(x-8)**2),
+            num_graph_points = 1000,
+        )
+        new_fourier_graph.highlight(PINK)
+
+        self.play(
+            FadeOut(curr_fourier_graph),
+            FadeIn(new_fourier_graph),
+        )
+        self.fourier_graph = new_fourier_graph
+        self.overlapping_frequenies_of_various_objects()
+
     def concentrated_fourier_requires_long_time(self):
-        pass
-        
+        objects = self.objects
+        objects.restore()
+        object_movements = self.object_movements
+        self.n_pulse_singletons = 32
+        pulses = self.get_pulses()
+        randy = self.pi_creature
+
+        continual_anims = object_movements+pulses
+        self.play(FadeIn(randy))
+        self.add(*continual_anims)
+        self.play(randy.change, "angry", *[
+            UpdateFromAlphaFunc(obj, lambda m, a : m.set_fill(opacity = a))
+            for obj in objects
+        ])
+        self.play(Blink(randy))
+        self.wait(2)
+        self.play(Blink(randy))
+        self.wait()
+        self.play(randy.change, "plain", *[
+            UpdateFromAlphaFunc(obj, lambda m, a : m.set_fill(opacity = 1-a))
+            for obj in objects
+        ])
+        self.wait()
+
 
     ###
 
@@ -2537,7 +2722,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
     def get_pulses(self):
         return [
             self.get_pulse(
-                self.dish.copy(),#.align_to(obj), 
+                self.dish.copy().shift(0.01*obj.get_center()[0]),
                 obj
             )
             for obj in self.objects
@@ -2549,9 +2734,33 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         randy.to_edge(RIGHT, buff = 1.7).shift(0.5*UP)
         return randy
 
+    def get_shifted_frequency_graphs(self, fourier_graph):
+        frequency_axes = self.frequency_axes
+        def get_func(v):
+            return lambda f : fourier_graph.underlying_function(np.clip(
+                f-5*v[0], 
+                frequency_axes.x_min,
+                frequency_axes.x_max,
+            ))
+        def get_graph(func):
+            return frequency_axes.get_graph(func)
+        shifted_graphs = VGroup(*map(
+            get_graph, map(get_func, self.object_velocities)
+        ))
+        shifted_graphs.match_style(fourier_graph)
+        return shifted_graphs
 
+    def get_sum_graph(self, axes, graphs):
+        def get_func(graph):
+            return graph.underlying_function
+        funcs = map(get_func, graphs)
+        return axes.get_graph(
+            lambda t : sum([func(t) for func in funcs]),
+        )
 
-
+class SummarizeFourierTradeoffForDoppler(Scene):
+    def construct(self):
+        pass
 
 
 
