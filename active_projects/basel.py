@@ -2132,7 +2132,10 @@ class IPTScene2(Scene):
         self.play(ShowCreation(box),Write(text))
 
 
-class PondScene(Scene):
+class PondScene(ThreeDScene):
+
+
+
 
     def construct(self):
 
@@ -2153,12 +2156,44 @@ class PondScene(Scene):
         LIGHT_SCALE = 5
         LIGHT_CUTOFF = 1
 
+        self.cumulated_zoom_factor = 1
+
+
+        def zoom_out_scene(factor):
+            phi0 = self.camera.get_phi() # default is 0 degs
+            theta0 = self.camera.get_theta() # default is -90 degs
+            distance0 = self.camera.get_distance()
+
+            distance1 = 2 * distance0
+            camera_target_point = self.camera.get_spherical_coords(phi0, theta0, distance1)
+
+            self.play(
+                ApplyMethod(self.camera.rotation_mobject.move_to, camera_target_point),
+                self.unzoomable_mobs.scale,2,{"about_point" : ORIGIN},
+            )
+
+            self.cumulated_zoom_factor *= factor
+
+
+        def shift_scene(v):
+            self.play(
+                self.zoomable_mobs.shift,v,
+                self.unzoomable_mobs.shift,v
+            )
+
+
+        self.zoomable_mobs = VMobject()
+        self.unzoomable_mobs = VMobject()
+
+
         baseline = VMobject()
         baseline.set_points_as_corners([[-8,BASELINE_YPOS,0],[8,BASELINE_YPOS,0]])
+        baseline.set_fill(opacity = 0) # in case it gets accidentally added to the scene
+        self.zoomable_mobs.add(baseline) # prob not necessary
 
         obs_dot = Dot(OBSERVER_POINT, fill_color = DOT_COLOR)
         ls0_dot = Dot(OBSERVER_POINT + 2 * LAKE0_RADIUS * UP, fill_color = WHITE)
-
+        self.zoomable_mobs.add(obs_dot, ls0_dot)
 
         # lake
         lake0 = Circle(radius = LAKE0_RADIUS,
@@ -2167,6 +2202,7 @@ class PondScene(Scene):
             fill_opacity = LAKE_OPACITY
         )
         lake0.move_to(OBSERVER_POINT + LAKE0_RADIUS * UP)
+        self.zoomable_mobs.add(lake0)
 
         # Morty and indicator
         morty = Mortimer().scale(0.3)
@@ -2177,11 +2213,13 @@ class PondScene(Scene):
             color = LIGHT_COLOR
         )
         indicator.next_to(morty,LEFT)
+        self.unzoomable_mobs.add(morty, indicator)
 
         # first lighthouse
         original_op_func = inverse_quadratic(LIGHT_MAX_INT,LIGHT_SCALE,LIGHT_CUTOFF)
         ls0 = LightSource(opacity_function = original_op_func)
         ls0.move_source_to(OBSERVER_POINT + LAKE0_RADIUS * 2 * UP)
+        self.zoomable_mobs.add(ls0, ls0.lighthouse, ls0.ambient_light)
 
         self.add(lake0,morty,obs_dot,ls0_dot, ls0.lighthouse)
 
@@ -2249,6 +2287,7 @@ class PondScene(Scene):
 
         indicator_reading = TexMobject("{1\over d^2}").scale(TEX_SCALE)
         indicator_reading.move_to(indicator)
+        self.unzoomable_mobs.add(indicator_reading)
 
         self.play(
             FadeIn(indicator_reading)
@@ -2306,7 +2345,7 @@ class PondScene(Scene):
                 return position
 
 
-        def split_light_source(i, step, show_steps = True, run_time = 1, scale_down = True):
+        def split_light_source(i, step, show_steps = True, run_time = 1):
 
             ls_new_loc1 = position_for_index(i,step + 1)
             ls_new_loc2 = position_for_index(i + 2**step,step + 1)
@@ -2335,22 +2374,6 @@ class PondScene(Scene):
 
             ls1 = self.light_sources_array[i]
 
-            if scale_down:
-               #  print "scaling down"
-               # #new_of = lambda x: original_op_func(x/0.5**step)
-               # #new_of = inverse_quadratic(LIGHT_MAX_INT, LIGHT_SCALE * 10**(step+1), LIGHT_CUTOFF)
-               #  print "=============="
-               #  for t in np.arange(0.0,5.0,1.0):
-               #      print ls1.ambient_light.opacity_function(t)
-
-               #  print "=============="
-
-                new_of = lambda x: np.sin(10*x)
-                ls1.ambient_light.change_opacity_function(lambda x: np.sin(100*x))
-                # for t in np.arange(0.0,5.0,1.0):
-                #     print ls1.ambient_light.opacity_function(t)
-
-                ls1.spotlight.change_opacity_function(new_of)
 
             ls2 = ls1.copy()
             self.add(ls2)
@@ -2376,7 +2399,7 @@ class PondScene(Scene):
 
 
 
-        def construction_step(n, scale_down = True, show_steps = True, run_time = 1,
+        def construction_step(n, show_steps = True, run_time = 1,
             simultaneous_splitting = False):
 
             # we assume that the scene contains:
@@ -2441,8 +2464,7 @@ class PondScene(Scene):
                 split_light_source(i,
                     step = n,
                     show_steps = show_steps,
-                    run_time = run_time,
-                    scale_down = scale_down
+                    run_time = run_time
                 )
 
 
@@ -2484,37 +2506,8 @@ class PondScene(Scene):
             if show_steps == True:
                 self.play(FadeOut(ls0_dot))
 
-            # scale down
-            if scale_down:
-
-                indicator_wiggle()
-                
-                if show_steps == True:
-                    self.play(
-                        ScaleLightSources(self.light_sources,0.5,about_point = OBSERVER_POINT),
-                        self.inner_lake.scale_about_point,0.5,OBSERVER_POINT,
-                        self.outer_lake.scale_about_point,0.5,OBSERVER_POINT,
-                        self.legs.scale_about_point,0.5,OBSERVER_POINT,
-                        self.hypotenuses.scale_about_point,0.5,OBSERVER_POINT,
-                        self.altitudes.scale_about_point,0.5,OBSERVER_POINT,
-                    )
-                else:
-                    self.play(
-                        ScaleLightSources(self.light_sources,0.5,about_point = OBSERVER_POINT),
-                        self.inner_lake.scale_about_point,0.5,OBSERVER_POINT,
-                        self.outer_lake.scale_about_point,0.5,OBSERVER_POINT,
-                    )
-
-                # update the radii bc they haven't done so themselves
-                # bc reasons...
-                for ls in self.light_sources_array:
-                    r = ls.radius
-                    ls.set_radius(r*0.5)
-
-            else:
-                # update the lake center and the radius
-                self.lake_center = ls0_loc = self.outer_lake.get_center() + self.lake_radius * UP
-                self.lake_radius *= 2
+            self.lake_center = ls0_loc = self.outer_lake.get_center() + self.lake_radius * UP
+            self.lake_radius *= 2
 
 
 
@@ -2537,6 +2530,8 @@ class PondScene(Scene):
 
         self.lake_radius = 2 * LAKE0_RADIUS # don't ask...
 
+        self.zoomable_mobs.add(self.inner_lake, self.outer_lake, self.altitudes, self.light_sources)
+
         self.add(self.inner_lake,
             self.outer_lake,
             self.legs,
@@ -2551,10 +2546,12 @@ class PondScene(Scene):
         self.new_legs_2 = []
         self.new_hypotenuses = []
 
-        ls_radius = 25.0
+
 
         for i in range(3):
-            construction_step(i, scale_down = True)
+            construction_step(i)
+            indicator_wiggle()
+            zoom_out_scene(2)
 
 
 
@@ -2565,11 +2562,10 @@ class PondScene(Scene):
             )
 
         for i in range(3,5):
-            construction_step(i, scale_down = False, show_steps = False, run_time = 1.0/2**i,
-                simultaneous_splitting = True)
+            construction_step(i, show_steps = False, run_time = 1.0/2**i)
 
 
-
+        return
 
         # Now create a straight number line and transform into it
         MAX_N = 17
