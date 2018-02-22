@@ -33,6 +33,9 @@ from topics.graph_scene import *
 # (and it will be done, but first I'll figure out what I'm doing with all this...)
 # -SR
 
+# This turns counterclockwise revs into their color. Beware, we use CCW angles 
+# in all display code, but generally think in this video's script in terms of 
+# CW angles
 def rev_to_rgba(alpha):
     alpha = (0.5 - alpha) % 1 # For convenience, to go CW from red on left instead of CCW from right
     # 0 is red, 1/6 is yellow, 1/3 is green, 2/3 is blue
@@ -76,7 +79,7 @@ def point_to_rgba(point):
     rgba = rev_to_rgba(rev)
     base_size = np.sqrt(point[0]**2 + point[1]**2)
     rescaled_size = np.sqrt(base_size/(base_size + 1))
-    return rgba * rescaled_size
+    return rgba * [rescaled_size, rescaled_size, rescaled_size, 1] # Preserve alpha
 
 positive_color = rev_to_color(0)
 negative_color = rev_to_color(0.5)
@@ -541,8 +544,16 @@ class ColorMappedByFuncScene(Scene):
             self.pos_to_color_func = self.func
 
         # func_hash hashes the function at some random points
-        func_hash_points = [(-0.93, 1), (1.3, -2.7), (20.5, 4)]
-        to_hash = tuple((self.func(p)[0], self.func(p)[1]) for p in func_hash_points)
+        jitter_val = 0.1
+        line_coords = np.linspace(-10, 10) + jitter_val
+        func_hash_points = it.product(line_coords, line_coords)
+        def mini_hasher(p):
+            func_val = self.func(p)
+            color_func_val = point_to_rgba(p)
+            if color_func_val[3] != 1.0:
+                print "Warning! point_to_rgba assigns fractional alpha", color_func_val[3]
+            return tuple(func_val), tuple(color_func_val)
+        to_hash = tuple(mini_hasher(p) for p in func_hash_points)
         func_hash = hash(to_hash)
         full_hash = hash((func_hash, self.camera.pixel_shape))
         self.background_image_file = os.path.join(
@@ -584,10 +595,22 @@ class PureColorMap(ColorMappedByFuncScene):
         "show_num_plane" : False
     }
 
-class ColorMappedByFuncStill(ColorMappedByFuncScene):
     def construct(self):
         ColorMappedByFuncScene.construct(self)
         self.wait()
+
+# This sets self.background_image_file, but does not display it as the background
+class ColorMappedObjectsScene(ColorMappedByFuncScene):
+    CONFIG = {
+        "show_num_plane" : False
+    }
+
+    def construct(self):
+        ColorMappedByFuncScene.construct(self)
+
+        # Clearing background
+        self.camera.background_image = None
+        self.camera.init_background()
 
 class PiWalker(ColorMappedByFuncScene):
     CONFIG = {
@@ -655,7 +678,7 @@ class PiWalkerCircle(PiWalker):
         PiWalker.setup(self)
 
 # TODO: Give drawn lines a bit of buffer, so that the rectangle's corners are filled in
-class EquationSolver2d(ColorMappedByFuncScene):
+class EquationSolver2d(ColorMappedObjectsScene):
     CONFIG = {
         "camera_config" : {"use_z_coordinate_for_display_order": True},
         "initial_lower_x" : -5.1,
@@ -671,15 +694,8 @@ class EquationSolver2d(ColorMappedByFuncScene):
     }
 
     def construct(self):
-        print "Z order enabled?", self.camera.use_z_coordinate_for_display_order
-
-        ColorMappedByFuncScene.construct(self)
+        ColorMappedObjectsScene.construct(self)
         num_plane = self.num_plane
-        self.remove(num_plane)
-
-        # Clearing background
-        self.camera.background_image = None
-        self.camera.init_background()
 
         rev_func = lambda p : point_to_rev(self.func(p))
         clockwise_rev_func = lambda p : -rev_func(p)
@@ -906,10 +922,9 @@ class FuncRotater(Animation):
 
     def update_mobject(self, alpha):
         Animation.update_mobject(self, alpha)
-        angle_revs = self.rotate_func(alpha)
-        # We do a clockwise rotation
+        angle_revs = -self.rotate_func(alpha) # Negated so we interpret this clockwise
         self.mobject.rotate(
-            -angle_revs * TAU, 
+            angle_revs * TAU, 
             about_point = ORIGIN
         )
         self.mobject.set_color(rev_to_color(angle_revs))
@@ -924,8 +939,9 @@ class TestRotater(Scene):
 
 # TODO: Be careful about clockwise vs. counterclockwise convention throughout!
 # Make sure this is correct everywhere in resulting video.
-class OdometerScene(Scene):
+class OdometerScene(ColorMappedObjectsScene):
     CONFIG = {
+        # "func" : lambda p : 100 * p # Full coloring, essentially
         "rotate_func" : lambda x : np.sin(x * TAU),
         "run_time" : 5,
         "dashed_line_angle" : None,
@@ -933,8 +949,11 @@ class OdometerScene(Scene):
     }
 
     def construct(self):
+        ColorMappedObjectsScene.construct(self)
+
         radius = 1.3
         circle = Circle(center = ORIGIN, radius = radius)
+        circle.color_using_background_image(self.background_image_file)
         self.add(circle)
 
         if self.dashed_line_angle:
@@ -943,8 +962,12 @@ class OdometerScene(Scene):
             dashed_line.rotate(-self.dashed_line_angle * TAU, about_point = ORIGIN)
             self.add(dashed_line)
         
-        num_display = DecimalNumber(0, include_background_rectangle = False).set_stroke(1)
+        num_display = DecimalNumber(0, include_background_rectangle = False)
         num_display.move_to(2 * DOWN)
+
+        caption = TextMobject("turns clockwise")
+        caption.next_to(num_display, DOWN)
+        self.add(caption)
 
         display_val_bias = 0
         if self.biased_display_start != None:
@@ -1139,6 +1162,7 @@ class HasItsLimitations(Scene):
         curved_arrow.generate_points()
         curved_arrow.add_tip()
         curved_arrow.move_arc_center_to(base_point + RIGHT)
+        # Could do something smoother, with arrowhead moving along partial arc?
         self.play(ShowCreation(curved_arrow))
 
         output_dot = Dot(base_point + 2 * RIGHT, color = dot_color)
@@ -1325,6 +1349,33 @@ class Initial2dFuncSceneWithoutMorphing(Scene):
         for i in range(len(points) - 1):
             line = Line(points[i], points[i + 1], color = RED)
             self.play(ShowCreation(line))
+
+class DemonstrateColorMapping(ColorMappedObjectsScene):
+    CONFIG = {
+        "show_num_plane" : False
+    }
+
+    def construct(self):
+        ColorMappedObjectsScene.construct(self)
+
+        circle = Circle()
+        circle.color_using_background_image(self.background_image_file)
+
+        ray = Line(ORIGIN, 10 * RIGHT)
+        ray.color_using_background_image(self.background_image_file)
+
+        self.play(ShowCreation(circle))
+
+        self.play(ShowCreation(ray))
+
+        scale_factor = 5
+        self.play(ApplyMethod(circle.scale, scale_factor))
+
+        self.play(ApplyMethod(circle.scale, fdiv(1, scale_factor**2)))
+
+        self.play(ApplyMethod(circle.scale, scale_factor))
+
+        self.play(Rotating(ray, about_point = ORIGIN))
 
 # TODO: Illustrations for introducing domain coloring
 
