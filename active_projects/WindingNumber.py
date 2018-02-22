@@ -444,9 +444,10 @@ class WalkerAnimation(Animation):
         self.show_arrows = show_arrows
 
         base_walker = Dot().scale(5) # PiCreature().scale(0.8) # 
-        self.compound_walker.walker = base_walker.scale(0.35).set_stroke(BLACK, 1.5) #PiCreature()
+        self.compound_walker.walker = base_walker.scale(0.35).set_stroke(WHITE, 3) #PiCreature()
         if show_arrows:
-            self.compound_walker.arrow = Arrow(ORIGIN, 0.5 * RIGHT, buff = 0).set_stroke(BLACK, 1.5)
+            self.compound_walker.arrow = Arrow(ORIGIN, 0.5 * RIGHT, buff = 0)
+            self.compound_walker.arrow.match_style(self.compound_walker.walker)
         self.compound_walker.digest_mobject_attrs()
         Animation.__init__(self, self.compound_walker, **kwargs)
 
@@ -670,6 +671,8 @@ class EquationSolver2d(ColorMappedByFuncScene):
     }
 
     def construct(self):
+        print "Z order enabled?", self.camera.use_z_coordinate_for_display_order
+
         ColorMappedByFuncScene.construct(self)
         num_plane = self.num_plane
         self.remove(num_plane)
@@ -699,7 +702,7 @@ class EquationSolver2d(ColorMappedByFuncScene):
                 alpha_winder = make_alpha_winder(clockwise_rev_func, start, end, self.num_checkpoints)
                 a0 = alpha_winder(0)
                 rebased_winder = lambda alpha: alpha_winder(alpha) - a0 + start_wind
-                colored_line = Line(num_plane.coords_to_point(*start), num_plane.coords_to_point(*end))
+                colored_line = Line(num_plane.coords_to_point(*start) + IN, num_plane.coords_to_point(*end) + IN)
                 colored_line.match_style(base_line)
                 if self.use_fancy_lines:
                     colored_line.color_using_background_image(self.background_image_file)
@@ -752,7 +755,7 @@ class EquationSolver2d(ColorMappedByFuncScene):
                     rect.get_bottom_right(), 
                     rect.get_bottom_left()
                 ]
-                points = np.array([num_plane.coords_to_point(x, y) for (x, y) in coords]) + 2 * IN
+                points = np.array([num_plane.coords_to_point(x, y) for (x, y) in coords]) + 3 * IN
                 # TODO: Maybe use diagonal lines or something to fill in rectangles indicating
                 # their "Nothing here" status?
                 # Or draw a large X or something
@@ -774,7 +777,7 @@ class EquationSolver2d(ColorMappedByFuncScene):
                     for (sub_rect, side_to_draw) in sub_rect_and_sides
                 ]
                 mid_line_coords = rect.split_line_on_dim(dim_to_split)
-                mid_line_points = [num_plane.coords_to_point(x, y)  + IN for (x, y) in mid_line_coords]
+                mid_line_points = [num_plane.coords_to_point(x, y)  + 2 * IN for (x, y) in mid_line_coords]
                 # TODO: Have this match rectangle line style, apart from dashes and thin-ness?
                 # Though there is also informational value in seeing the dashed line separately from rectangle lines
                 mid_line = DashedLine(*mid_line_points)
@@ -815,7 +818,7 @@ class EquationSolver2d(ColorMappedByFuncScene):
             rect.get_bottom_right(), 
             rect.get_bottom_left(),
         ]
-        border = Polygon(*map(lambda x : num_plane.coords_to_point(*x), rect_points))
+        border = Polygon(*map(lambda x : num_plane.coords_to_point(*x) + IN, rect_points))
         border.match_style(base_line)
         if self.use_fancy_lines:
             border.color_using_background_image(self.background_image_file)
@@ -999,8 +1002,8 @@ class SecondSqrtScene(FirstSqrtScene):
 
 class RewriteEquation(Scene):
     def construct(self):
-        # Can maybe fitz around with smoothening the transform, so just = goes to - and new stuff
-        # is added at the right end, while things re-center
+        # Can maybe use get_center() to perfectly center Groups before and after transform
+
         f_old = TexMobject("f(x)")
         f_new = f_old.copy()
         equals_old = TexMobject("=")
@@ -1016,8 +1019,18 @@ class RewriteEquation(Scene):
         f_new.next_to(minus_new, LEFT)
         equals_new.next_to(g_new, RIGHT)
         zero_new.next_to(equals_new, RIGHT)
+
+        # where_old = TextMobject("Where does ")
+        # where_old.next_to(f_old, LEFT)
+        # where_new = where_old.copy()
+        # where_new.next_to(f_new, LEFT)
         
-        self.add(f_old, equals_old, equals_old_2, g_old)
+        # qmark_old = TextMobject("?")
+        # qmark_old.next_to(g_old, RIGHT)
+        # qmark_new = qmark_old.copy()
+        # qmark_new.next_to(zero_new, RIGHT)
+        
+        self.add(f_old, equals_old, equals_old_2, g_old) #, where_old, qmark_old)
         self.wait()
         self.play(
             ReplacementTransform(f_old, f_new),
@@ -1025,6 +1038,8 @@ class RewriteEquation(Scene):
             ReplacementTransform(g_old, g_new), 
             ReplacementTransform(equals_old_2, minus_new),
             ShowCreation(zero_new),
+            # ReplacementTransform(where_old, where_new),
+            # ReplacementTransform(qmark_old, qmark_new),
         )
         self.wait()
 
@@ -1101,6 +1116,7 @@ class VectorField(Scene):
         self.wait()
 
 class HasItsLimitations(Scene):
+
     def construct(self):
         num_line = NumberLine()
         num_line.add_numbers()
@@ -1108,17 +1124,70 @@ class HasItsLimitations(Scene):
 
         self.wait()
 
+        base_point = num_line.number_to_point(3) + OUT
+
+        dot_color = ORANGE
+        
+        input_dot = Dot(base_point, color = dot_color)
+        input_label = TexMobject("Input", fill_color = dot_color)
+        input_label.next_to(input_dot, UP + LEFT)
+        input_label.add_background_rectangle()
+        self.add(input_dot, input_label)
+
+        curved_arrow = Arc(0, color = MAROON_E)
+        curved_arrow.set_bound_angles(np.pi, 0)
+        curved_arrow.generate_points()
+        curved_arrow.add_tip()
+        curved_arrow.move_arc_center_to(base_point + RIGHT)
+        self.play(ShowCreation(curved_arrow))
+
+        output_dot = Dot(base_point + 2 * RIGHT, color = dot_color)
+        output_label = TexMobject("Output", fill_color = dot_color)
+        output_label.next_to(output_dot, UP + RIGHT)
+        output_label.add_background_rectangle()
+
+        self.add(output_dot, output_label)
+        self.wait()
+
         num_plane = NumberPlane()
         num_plane.add_coordinates()
 
-        self.play(FadeOut(num_line), FadeIn(num_plane))
+        new_base_point = base_point + 2 * UP
+        new_input_dot = input_dot.copy().move_to(new_base_point)
+        new_input_label = input_label.copy().next_to(new_input_dot, UP + LEFT)
+        
+        new_curved_arrow = Arc(0).match_style(curved_arrow)
+        new_curved_arrow.set_bound_angles(np.pi * 3/4, 0)
+        new_curved_arrow.generate_points()
+        new_curved_arrow.add_tip()
+
+        input_diff = input_dot.get_center() - curved_arrow.points[0]
+        output_diff = output_dot.get_center() - curved_arrow.points[-1]
+
+        new_curved_arrow.shift((new_input_dot.get_center() - new_curved_arrow.points[0]) - input_diff)
+
+        new_output_dot = output_dot.copy().move_to(new_curved_arrow.points[-1] + output_diff)
+        new_output_label = output_label.copy().next_to(new_output_dot, UP + RIGHT)
+
+        dot_objects = Group(input_dot, input_label, output_dot, output_label, curved_arrow)
+        new_dot_objects = Group(new_input_dot, new_input_label, new_output_dot, new_output_label, new_curved_arrow)
+
+        self.play(
+            FadeOut(num_line), FadeIn(num_plane), 
+            ReplacementTransform(dot_objects, new_dot_objects),
+        )
 
         self.wait()
+
+        self.add_foreground_mobject(new_dot_objects)
 
         complex_plane = ComplexPlane()
         complex_plane.add_coordinates()
         
+        # This looks a little wonky and we may wish to do a crossfade in Premiere instead
         self.play(FadeOut(num_plane), FadeIn(complex_plane))
+
+        self.wait()
         
 
 class ComplexPlaneIs2d(Scene):
@@ -1406,7 +1475,7 @@ class LoopSplitSceneMapped(LoopSplitScene):
 class FundThmAlg(EquationSolver2d):
     CONFIG = {
         "func" : plane_poly_with_roots((1, 2), (-1, 1.5), (-1, 1.5)),
-        "num_iterations" : 1,
+        "num_iterations" : 2,
         "display_in_parallel" : True,
         "use_fancy_lines" : True,
     }
