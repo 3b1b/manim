@@ -2133,22 +2133,7 @@ class IPTScene2(Scene):
 
 
 
-BASELINE_YPOS = -2.5
-OBSERVER_POINT = [0,BASELINE_YPOS,0]
-LAKE0_RADIUS = 1.5
-INDICATOR_RADIUS = 0.6
-TICK_SIZE = 0.5
-LIGHTHOUSE_HEIGHT = 0.2
-LAKE_COLOR = BLUE
-LAKE_OPACITY = 0.15
-LAKE_STROKE_WIDTH = 5.0
-LAKE_STROKE_COLOR = BLUE
-TEX_SCALE = 0.8
-DOT_COLOR = BLUE
 
-LIGHT_MAX_INT = 1
-LIGHT_SCALE = 5
-LIGHT_CUTOFF = 1
 
 
 
@@ -2160,10 +2145,26 @@ class PondScene(ThreeDScene):
 
     def construct(self):
 
+        BASELINE_YPOS = -2.5
+        OBSERVER_POINT = [0,BASELINE_YPOS,0]
+        LAKE0_RADIUS = 1.5
+        INDICATOR_RADIUS = 0.6
+        TICK_SIZE = 0.5
+        LIGHTHOUSE_HEIGHT = 0.2
+        LAKE_COLOR = BLUE
+        LAKE_OPACITY = 0.15
+        LAKE_STROKE_WIDTH = 5.0
+        LAKE_STROKE_COLOR = BLUE
+        TEX_SCALE = 0.8
+        DOT_COLOR = BLUE
+
+        LIGHT_MAX_INT = 1
+        LIGHT_SCALE = 5
+        LIGHT_CUTOFF = 1
 
         self.cumulated_zoom_factor = 1
 
-        self.force_skipping()
+        #self.force_skipping()
 
 
         def zoom_out_scene(factor):
@@ -2600,7 +2601,7 @@ class PondScene(ThreeDScene):
         for i in range(3,max_it + 1):
             construction_step(i, show_steps = False, run_time = 4.0/2**i)
 
-        self.revert_to_original_skipping_status()
+        #self.revert_to_original_skipping_status()
 
         # Now create a straight number line and transform into it
         MAX_N = 17
@@ -2718,7 +2719,7 @@ class PondScene(ThreeDScene):
         self.add_foreground_mobject(indicator_reading)
 
         half_indicator_reading = TexMobject("{\pi^2 \over 8}").scale(TEX_SCALE)
-        half_indicator_reading.move_to(half_indicator)
+        half_indicator_reading.move_to(indicator)
 
         central_plus_sign = two_sided_sum[13]
 
@@ -2756,42 +2757,159 @@ class WaitScene(TeacherStudentsScene):
         full_sum.next_to(student_q,RIGHT)
         student_q.add(full_sum)
 
-        self.student_says(student_q)
+
+        self.student_says(student_q, target_mode = "angry")
 
 
 class FinalSumManipulationScene(PiCreatureScene):
 
     def construct(self):
 
-        odd_range = range(1,11,2)
-        even_range = range(2,12,2)
-        full_range = range(1,12,1)
+        LAKE_COLOR = BLUE
+        LAKE_OPACITY = 0.15
+        LAKE_STROKE_WIDTH = 5.0
+        LAKE_STROKE_COLOR = BLUE
+        TEX_SCALE = 0.8
 
-        self.number_line = NumberLine(
+        unit_length = 1.5
+        vertical_spacing = 1.8 * DOWN
+        switch_on_time = 0.2
+
+        randy = self.get_primary_pi_creature()
+        randy.scale(0.7).to_edge(DOWN + RIGHT)
+
+        ls_template = LightSource(
+            radius = 2,
+            max_opacity_ambient = 0.5,
+            opacity_function = inverse_quadratic(1,0.5,1)
+        )
+
+
+        odd_range = np.arange(1,13,2)
+        even_range = np.arange(2,28,2)
+        full_range = np.arange(1,14,1)
+
+        self.number_line1 = NumberLine(
             x_min = 0,
-            x_max = 10,
+            x_max = 11,
             color = LAKE_STROKE_COLOR,
             number_at_center = 0,
             stroke_width = LAKE_STROKE_WIDTH,
             stroke_color = LAKE_STROKE_COLOR,
             numbers_to_show = odd_range,
-            unit_size = 1,
+            unit_size = unit_length,
             tick_frequency = 1,
-            line_to_number_buff = LARGE_BUFF,
-            label_direction = UP,
+            line_to_number_buff = MED_LARGE_BUFF,
+            include_tip = True
         )
+
+        self.number_line1.next_to(3 * UP + 3 * LEFT, RIGHT, buff = 0)
 
         odd_lights = VMobject()
 
         for i in odd_range:
-
-            pos = self.number_line.number_to_point(i)
-            ls = LightSource()
+            pos = self.number_line1.number_to_point(i)
+            ls = ls_template.copy()
             ls.move_source_to(pos)
             odd_lights.add(ls)
 
-        self.play(ShowCreation(self.number_line))
-        self.play(FadeIn(odd_lights))
+        labels1 = self.number_line1.get_labels()
+        self.play(
+            ShowCreation(self.number_line1),
+            ShowCreation(labels1)
+        )
+
+        for ls in odd_lights.submobjects:
+            self.play(SwitchOn(ls.ambient_light), run_time = switch_on_time)
+
+        result1 = TexMobject("{\pi^2\over 8} =")
+        result1.next_to(self.number_line1, LEFT, buff = 2)
+        self.play(Write(result1))
+
+        self.number_line2 = self.number_line1.copy()
+        self.number_line2.numbers_to_show = full_range
+        self.number_line2.shift(2 * vertical_spacing)
+        labels2 = self.number_line2.get_labels()
+
+        full_lights = VMobject()
+
+        for i in full_range:
+            pos = self.number_line2.number_to_point(i)
+            ls = ls_template.copy()
+            ls.move_source_to(pos)
+            full_lights.add(ls)
+
+        self.play(
+            ShowCreation(self.number_line2),
+            ShowCreation(labels2)
+        )
+
+        for ls in full_lights.submobjects:
+            self.play(SwitchOn(ls.ambient_light, run_time = 0.1 * switch_on_time))
+
+
+        self.number_line3 = self.number_line1.copy()
+        self.number_line3.numbers_to_show = even_range
+        self.number_line3.shift(vertical_spacing)
+        labels3 = self.number_line3.get_labels()
+
+        missing_text = TextMobject("missing:")
+        missing_text.next_to(self.number_line3, LEFT, buff = 2)
+
+        even_lights = VMobject()
+
+        for i in even_range:
+            pos = self.number_line3.number_to_point(i)
+            ls = ls_template.copy()
+            ls.move_source_to(pos)
+            even_lights.add(ls)
+
+        self.play(Write(missing_text))
+
+        self.play(
+            ShowCreation(self.number_line3),
+            ShowCreation(labels3),
+        )
+
+        for ls in even_lights.submobjects:
+            self.play(SwitchOn(ls.ambient_light), run_time = switch_on_time)
+
+
+        # now morph the even lights into the full lights
+        even_lights_line = VMobject()
+        even_lights_line.add(even_lights, self.number_line2)
+        even_lights_line_copy = even_lights_line.copy()
+
+        full_lights_line = VMobject()
+        number_line2p = self.number_line2
+        number_line2p.tick_frequency = 0.5
+        full_lights_line.add(full_lights.copy(), number_line2p)
+
+        self.play(
+            Transform(even_lights_line,full_lights_line)
+        )
+
+        self.play(
+            Transform(even_lights_line,even_lights_line_copy)
+        )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2822,6 +2940,9 @@ class LabeledArc(Arc):
 
         label.move_to(label_pos)
         self.add(label)
+
+
+
 
 
 
