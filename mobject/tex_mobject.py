@@ -41,6 +41,10 @@ class TexMobject(SVGMobject):
     }
     def __init__(self, *args, **kwargs):
         digest_config(self, kwargs, locals())
+        
+        if "color" in kwargs.keys() and not "fill_color" in kwargs.keys():
+            self.fill_color = kwargs["color"]
+
         ##TODO, Eventually remove this
         if len(args) == 1 and isinstance(args[0], list):
             self.args = args[0]
