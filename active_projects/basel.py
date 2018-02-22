@@ -2132,6 +2132,27 @@ class IPTScene2(Scene):
         self.play(ShowCreation(box),Write(text))
 
 
+
+BASELINE_YPOS = -2.5
+OBSERVER_POINT = [0,BASELINE_YPOS,0]
+LAKE0_RADIUS = 1.5
+INDICATOR_RADIUS = 0.6
+TICK_SIZE = 0.5
+LIGHTHOUSE_HEIGHT = 0.2
+LAKE_COLOR = BLUE
+LAKE_OPACITY = 0.15
+LAKE_STROKE_WIDTH = 5.0
+LAKE_STROKE_COLOR = BLUE
+TEX_SCALE = 0.8
+DOT_COLOR = BLUE
+
+LIGHT_MAX_INT = 1
+LIGHT_SCALE = 5
+LIGHT_CUTOFF = 1
+
+
+
+
 class PondScene(ThreeDScene):
 
 
@@ -2139,27 +2160,14 @@ class PondScene(ThreeDScene):
 
     def construct(self):
 
-        BASELINE_YPOS = -2.5
-        OBSERVER_POINT = [0,BASELINE_YPOS,0]
-        LAKE0_RADIUS = 1.5
-        INDICATOR_RADIUS = 0.6
-        TICK_SIZE = 0.5
-        LIGHTHOUSE_HEIGHT = 0.2
-        LAKE_COLOR = BLUE
-        LAKE_OPACITY = 0.15
-        LAKE_STROKE_WIDTH = 5.0
-        LAKE_STROKE_COLOR = BLUE
-        TEX_SCALE = 0.8
-        DOT_COLOR = BLUE
-
-        LIGHT_MAX_INT = 1
-        LIGHT_SCALE = 5
-        LIGHT_CUTOFF = 1
 
         self.cumulated_zoom_factor = 1
 
+        self.force_skipping()
+
 
         def zoom_out_scene(factor):
+
             phi0 = self.camera.get_phi() # default is 0 degs
             theta0 = self.camera.get_theta() # default is -90 degs
             distance0 = self.camera.get_distance()
@@ -2169,6 +2177,7 @@ class PondScene(ThreeDScene):
 
             self.play(
                 ApplyMethod(self.camera.rotation_mobject.move_to, camera_target_point),
+                self.zoomable_mobs.shift, self.obs_dot.get_center(),
                 self.unzoomable_mobs.scale,2,{"about_point" : ORIGIN},
             )
 
@@ -2188,12 +2197,12 @@ class PondScene(ThreeDScene):
 
         baseline = VMobject()
         baseline.set_points_as_corners([[-8,BASELINE_YPOS,0],[8,BASELINE_YPOS,0]])
-        baseline.set_fill(opacity = 0) # in case it gets accidentally added to the scene
+        baseline.set_stroke(width = 0) # in case it gets accidentally added to the scene
         self.zoomable_mobs.add(baseline) # prob not necessary
 
-        obs_dot = Dot(OBSERVER_POINT, fill_color = DOT_COLOR)
+        self.obs_dot = Dot(OBSERVER_POINT, fill_color = DOT_COLOR)
         ls0_dot = Dot(OBSERVER_POINT + 2 * LAKE0_RADIUS * UP, fill_color = WHITE)
-        self.zoomable_mobs.add(obs_dot, ls0_dot)
+        self.unzoomable_mobs.add(self.obs_dot, ls0_dot)
 
         # lake
         lake0 = Circle(radius = LAKE0_RADIUS,
@@ -2221,7 +2230,7 @@ class PondScene(ThreeDScene):
         ls0.move_source_to(OBSERVER_POINT + LAKE0_RADIUS * 2 * UP)
         self.zoomable_mobs.add(ls0, ls0.lighthouse, ls0.ambient_light)
 
-        self.add(lake0,morty,obs_dot,ls0_dot, ls0.lighthouse)
+        self.add(lake0,morty,self.obs_dot,ls0_dot, ls0.lighthouse)
 
         self.wait()
 
@@ -2281,7 +2290,7 @@ class PondScene(ThreeDScene):
         self.play(
             ShowCreation(diameter),
             Write(diameter_text),
-            #FadeOut(obs_dot),
+            #FadeOut(self.obs_dot),
             FadeOut(ls0_dot)
         )
 
@@ -2340,7 +2349,7 @@ class PondScene(ThreeDScene):
             position = self.lake_center + self.lake_radius * radial_vector
 
             if scaled_down:
-                return position.scale_about_point(OBSERVER_POINT,0.5)
+                return position.scale_about_point(self.obs_dot.get_center(),0.5)
             else:
                 return position
 
@@ -2361,8 +2370,8 @@ class PondScene(ThreeDScene):
                     ShowCreation(hyp, run_time = run_time)
                 )
 
-            leg1 = Line(OBSERVER_POINT,ls_new_loc1)
-            leg2 = Line(OBSERVER_POINT,ls_new_loc2)
+            leg1 = Line(self.obs_dot.get_center(),ls_new_loc1)
+            leg2 = Line(self.obs_dot.get_center(),ls_new_loc2)
             self.new_legs_1.append(leg1)
             self.new_legs_2.append(leg2)
 
@@ -2381,9 +2390,9 @@ class PondScene(ThreeDScene):
 
             # check if the light sources are on screen
             ls_old_loc = np.array(ls1.get_source_point())
-            onscreen_old = np.all(np.abs(ls_old_loc) < 10)
-            onscreen_1 = np.all(np.abs(ls_new_loc1) < 10)
-            onscreen_2 = np.all(np.abs(ls_new_loc2) < 10)
+            onscreen_old = np.any(np.abs(ls_old_loc) < 10)
+            onscreen_1 = np.any(np.abs(ls_new_loc1) < 10)
+            onscreen_2 = np.any(np.abs(ls_new_loc2) < 10)
             show_animation = (onscreen_old or onscreen_1 or onscreen_2)
 
             if show_animation:
@@ -2418,18 +2427,22 @@ class PondScene(ThreeDScene):
 
 
             # first, fade out all of the hypotenuses and altitudes
+
             if show_steps == True:
+                self.zoomable_mobs.remove(self.hypotenuses, self.altitudes, self.inner_lake)
                 self.play(
                     FadeOut(self.hypotenuses),
                     FadeOut(self.altitudes),
                     FadeOut(self.inner_lake)
                 )
             else:
+                self.zoomable_mobs.remove(self.inner_lake)
                 self.play(
                     FadeOut(self.inner_lake)
                 )
 
             # create a new, outer lake
+            self.lake_center = self.obs_dot.get_center() + self.lake_radius * UP
 
             new_outer_lake = Circle(radius = self.lake_radius,
                 stroke_width = LAKE_STROKE_WIDTH,
@@ -2454,11 +2467,12 @@ class PondScene(ThreeDScene):
             self.inner_lake = self.outer_lake
             self.outer_lake = new_outer_lake
             self.altitudes = self.legs
+            #self.lake_center = self.outer_lake.get_center()
 
             self.additional_light_sources = []
             self.new_legs_1 = []
             self.new_legs_2 = []
-            self.new_hypotenuses = []
+            self.new_hypotenuses = [] 
 
             for i in range(2**n):
                 split_light_source(i,
@@ -2475,16 +2489,23 @@ class PondScene(ThreeDScene):
             self.legs = VMobject()
             for leg in self.new_legs_1:
                 self.legs.add(leg)
+                self.zoomable_mobs.add(leg)
             for leg in self.new_legs_2:
                 self.legs.add(leg)
+                self.zoomable_mobs.add(leg)
+
+            for hyp in self.hypotenuses.submobjects:
+                self.zoomable_mobs.remove(hyp)
 
             self.hypotenuses = VMobject()
             for hyp in self.new_hypotenuses:
                 self.hypotenuses.add(hyp)
+                self.zoomable_mobs.add(hyp)
 
             for ls in self.additional_light_sources:
                 self.light_sources.add(ls)
                 self.light_sources_array.append(ls)
+                self.zoomable_mobs.add(ls)
 
             # update scene
             self.add(
@@ -2492,6 +2513,7 @@ class PondScene(ThreeDScene):
                 self.inner_lake,
                 self.outer_lake,
             )
+            self.zoomable_mobs.add(self.light_sources, self.inner_lake, self.outer_lake)
 
             if show_steps == True:
                 self.add(
@@ -2499,6 +2521,7 @@ class PondScene(ThreeDScene):
                     self.hypotenuses,
                     self.altitudes,
                 )
+                self.zoomable_mobs.add(self.legs, self.hypotenuses, self.altitudes)
 
 
             self.wait()
@@ -2506,7 +2529,7 @@ class PondScene(ThreeDScene):
             if show_steps == True:
                 self.play(FadeOut(ls0_dot))
 
-            self.lake_center = ls0_loc = self.outer_lake.get_center() + self.lake_radius * UP
+            #self.lake_center = ls0_loc = self.obs_dot.get_center() + self.lake_radius * UP
             self.lake_radius *= 2
 
 
@@ -2547,11 +2570,20 @@ class PondScene(ThreeDScene):
         self.new_hypotenuses = []
 
 
+        construction_step(0)
+        indicator_wiggle()
+        self.play(FadeOut(ls0_dot))
+        zoom_out_scene(2)
 
-        for i in range(3):
-            construction_step(i)
-            indicator_wiggle()
-            zoom_out_scene(2)
+        construction_step(1)
+        indicator_wiggle()
+        self.play(FadeOut(ls0_dot))
+        zoom_out_scene(2)
+
+        construction_step(2)
+        indicator_wiggle()
+        self.play(FadeOut(ls0_dot))
+
 
 
 
@@ -2559,16 +2591,21 @@ class PondScene(ThreeDScene):
             FadeOut(self.altitudes),
             FadeOut(self.hypotenuses),
             FadeOut(self.legs)
-            )
+        )
 
-        for i in range(3,5):
-            construction_step(i, show_steps = False, run_time = 1.0/2**i)
+        max_it = 6
+        scale = 2**(max_it - 4)
+        TEX_SCALE *= scale
 
+        for i in range(3,max_it + 1):
+            construction_step(i, show_steps = False, run_time = 4.0/2**i)
 
-        return
+        self.revert_to_original_skipping_status()
 
         # Now create a straight number line and transform into it
         MAX_N = 17
+
+        origin_point = self.obs_dot.get_center()
 
         self.number_line = NumberLine(
             x_min = -MAX_N,
@@ -2579,11 +2616,11 @@ class PondScene(ThreeDScene):
             stroke_color = LAKE_STROKE_COLOR,
             #numbers_with_elongated_ticks = range(-MAX_N,MAX_N + 1),
             numbers_to_show = range(-MAX_N,MAX_N + 1,2),
-            unit_size = LAKE0_RADIUS * TAU/4 / 4,
+            unit_size = LAKE0_RADIUS * TAU/4 / 2 * scale,
             tick_frequency = 1,
             line_to_number_buff = LARGE_BUFF,
             label_direction = UP,
-        ).shift(2.5 * DOWN)
+        ).shift(scale * 2.5 * DOWN)
 
         self.number_line.label_direction = DOWN
 
@@ -2608,8 +2645,8 @@ class PondScene(ThreeDScene):
 
         # open sea
         open_sea = Rectangle(
-            width = 20,
-            height = 10,
+            width = 20 * scale,
+            height = 10 * scale,
             stroke_width = LAKE_STROKE_WIDTH,
             stroke_color = LAKE_STROKE_COLOR,
             fill_color = LAKE_COLOR,
@@ -2628,7 +2665,7 @@ class PondScene(ThreeDScene):
 
         self.wait()
 
-        v = 5*UP
+        v = 5 * scale * UP
         self.play(
             nl_sources.shift,v,
             morty.shift,v,
@@ -2640,10 +2677,10 @@ class PondScene(ThreeDScene):
         self.number_line_labels.shift(v)
 
         origin_point = self.number_line.number_to_point(0)
-        self.remove(obs_dot)
+        #self.remove(self.obs_dot)
         self.play(
-            indicator.move_to, origin_point + UP,
-            indicator_reading.move_to, origin_point + UP,
+            indicator.move_to, origin_point + scale * UP,
+            indicator_reading.move_to, origin_point + scale * UP,
             FadeOut(open_sea),
             FadeOut(morty),
             FadeIn(self.number_line_labels)
@@ -2657,50 +2694,113 @@ class PondScene(ThreeDScene):
 
         nb_symbols = len(two_sided_sum.submobjects)
 
-        two_sided_sum.scale(0.8)
+        two_sided_sum.scale(TEX_SCALE)
         
         for (i,submob) in zip(range(nb_symbols),two_sided_sum.submobjects):
-            submob.next_to(self.number_line.number_to_point(i - 13),DOWN, buff = 2)
+            submob.next_to(self.number_line.number_to_point(i - 13),DOWN, buff = 2*scale)
             if (i == 0 or i % 2 == 1 or i == nb_symbols - 1): # non-fractions
-                submob.shift(0.2 * DOWN)
+                submob.shift(0.2 * scale * DOWN)
 
         self.play(Write(two_sided_sum))
 
         covering_rectangle = Rectangle(
-            width = SPACE_WIDTH,
-            height = 2 * SPACE_HEIGHT,
+            width = SPACE_WIDTH * scale,
+            height = 2 * SPACE_HEIGHT * scale,
             stroke_width = 0,
             fill_color = BLACK,
             fill_opacity = 1,
         )
         covering_rectangle.next_to(ORIGIN,LEFT,buff = 0)
         for i in range(10):
-            self.add_foreground_mobject(self.light_sources_array[i])
+            self.add_foreground_mobject(nl_sources.submobjects[i])
 
         self.add_foreground_mobject(indicator)
-        self.add_foreground_mobject(indicator.reading)
+        self.add_foreground_mobject(indicator_reading)
 
-        half_indicator = indicator.copy()
-        half_indicator.show_reading = False
-        half_indicator.set_intensity(indicator.intensity / 2)
         half_indicator_reading = TexMobject("{\pi^2 \over 8}").scale(TEX_SCALE)
         half_indicator_reading.move_to(half_indicator)
-        half_indicator.remove(indicator_reading)
-        half_indicator.add(half_indicator_reading)
 
-        half_indicator_copy = half_indicator.deepcopy()
-        half_indicator_reading_copy = half_indicator_reading.deepcopy()
+        central_plus_sign = two_sided_sum[13]
 
         self.play(
             FadeIn(covering_rectangle),
-            FadeIn(half_indicator),
+            ReplacementTransform(indicator_reading, half_indicator_reading),
+            FadeOut(central_plus_sign)
         )
 
-        p = 2*LEFT
+        equals_sign = TexMobject("=").scale(TEX_SCALE)
+        equals_sign.move_to(central_plus_sign)
+        p = 2 * scale * LEFT
+
         self.play(
-            half_indicator_copy.move_to,p,
-            half_indicator_reading_copy.move_to,p
+            indicator.move_to,p,
+            half_indicator_reading.move_to,p,
+            FadeIn(equals_sign)
         )
+
+        # show Randy admiring the result
+        randy = Randolph().scale(scale).move_to(2*scale*DOWN+5*scale*LEFT)
+        self.play(FadeIn(randy))
+        self.play(randy.change,"happy")
+
+
+
+class WaitScene(TeacherStudentsScene):
+
+    def construct(self):
+
+        self.teacher_says(TexMobject("{1\over 1^2}+{1\over 3^2}+{1\over 5^2}+{1\over 7^2}+\dots = {\pi^2 \over 8}!"))
+
+        student_q = TextMobject("What about")
+        full_sum = TexMobject("{1\over 1^2}+{1\over 2^2}+{1\over 3^2}+{1\over 4^2}+\dots?")
+        full_sum.next_to(student_q,RIGHT)
+        student_q.add(full_sum)
+
+        self.student_says(student_q)
+
+
+class FinalSumManipulationScene(PiCreatureScene):
+
+    def construct(self):
+
+        odd_range = range(1,11,2)
+        even_range = range(2,12,2)
+        full_range = range(1,12,1)
+
+        self.number_line = NumberLine(
+            x_min = 0,
+            x_max = 10,
+            color = LAKE_STROKE_COLOR,
+            number_at_center = 0,
+            stroke_width = LAKE_STROKE_WIDTH,
+            stroke_color = LAKE_STROKE_COLOR,
+            numbers_to_show = odd_range,
+            unit_size = 1,
+            tick_frequency = 1,
+            line_to_number_buff = LARGE_BUFF,
+            label_direction = UP,
+        )
+
+        odd_lights = VMobject()
+
+        for i in odd_range:
+
+            pos = self.number_line.number_to_point(i)
+            ls = LightSource()
+            ls.move_source_to(pos)
+            odd_lights.add(ls)
+
+        self.play(ShowCreation(self.number_line))
+        self.play(FadeIn(odd_lights))
+
+
+
+
+
+
+
+
+
 
 
 
