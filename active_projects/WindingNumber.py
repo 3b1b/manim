@@ -427,6 +427,12 @@ def plane_func_from_complex_func(f):
 def point_func_from_complex_func(f):
     return lambda (x, y, z): complex_to_R3(f(complex(x, y)))
 
+def point_func_from_plane_func(f):
+    def g((x, y, z)):
+        f_val = f((x, y))
+        return np.array((f_val[0], f_val[1], 0))
+    return g
+
 test_map_func = point_func_from_complex_func(lambda c: c**2)
 
 empty_animation = EmptyAnimation()
@@ -532,10 +538,14 @@ class ColorMappedByFuncScene(Scene):
         "num_plane" : NumberPlane(),
         "show_num_plane" : True,
 
-        "show_output" : False, # Not currently implemented; TODO
+        "show_output" : False
     }
 
     def setup(self):
+        # The composition of input_to_pos and pos_to_color 
+        # is to be equal to func (which turns inputs into colors)
+        # However, depending on whether we are showing input or output (via a MappingCamera),
+        # we color the background using either func or the identity map
         if self.show_output:
             self.input_to_pos_func = self.func
             self.pos_to_color_func = lambda p : p
@@ -543,18 +553,19 @@ class ColorMappedByFuncScene(Scene):
             self.input_to_pos_func = lambda p : p
             self.pos_to_color_func = self.func
 
-        # func_hash hashes the function at some random points
         jitter_val = 0.1
         line_coords = np.linspace(-10, 10) + jitter_val
         func_hash_points = it.product(line_coords, line_coords)
         def mini_hasher(p):
-            func_val = self.func(p)
-            color_func_val = point_to_rgba(p)
-            if color_func_val[3] != 1.0:
-                print "Warning! point_to_rgba assigns fractional alpha", color_func_val[3]
-            return tuple(func_val), tuple(color_func_val)
+            rgba = point_to_rgba(self.pos_to_color_func(p))
+            if rgba[3] != 1.0:
+                print "Warning! point_to_rgba assigns fractional alpha", rgba[3]
+            return tuple(rgba)
         to_hash = tuple(mini_hasher(p) for p in func_hash_points)
         func_hash = hash(to_hash)
+        # We hash just based on output image
+        # Thus, multiple scenes with same output image can re-use it
+        # without recomputation
         full_hash = hash((func_hash, self.camera.pixel_shape))
         self.background_image_file = os.path.join(
             self.output_directory, "images", 
@@ -1648,6 +1659,30 @@ class CombineInterval2(Scene):
 
         self.wait()
 
+tiny_loop_func = plane_poly_with_roots((-1, -2), (1, 1), (1, 1))
+class TinyLoopInInputPlane(ColorMappedByFuncScene):
+    CONFIG = {
+        "func" : tiny_loop_func
+    }
+
+    def construct(self):
+        ColorMappedByFuncScene.construct(self)
+        self.wait()
+
+        circle = Circle(color = WHITE)
+        circle.scale(0.5)
+        circle.move_to(UP + RIGHT)
+
+        self.play(ShowCreation(circle))
+
+class TinyLoopInOutputPlane(TinyLoopInInputPlane):
+    CONFIG = {
+        "camera_class" : MappingCamera,
+        "camera_config" : {"mapping_func" : point_func_from_plane_func(tiny_loop_func)},
+        "show_output" : True,
+        "show_num_plane" : False,
+    }
+
 # TODO: Brouwer's fixed point theorem visuals
 # class BFTScene(Scene):
 
@@ -1691,7 +1726,7 @@ class MapPiWalkerRect(PiWalkerRect):
     CONFIG = {
         "camera_class" : MappingCamera,
         "camera_config" : {"mapping_func" : rect_to_circle},
-        "display_output_color_map" : True
+        "show_output" : True
     }
 
 class ShowBack(PiWalkerRect):
