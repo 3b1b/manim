@@ -241,8 +241,8 @@ class IntroScene(PiCreatureScene):
 
     CONFIG = {
         "rect_height" : 0.2,
-        "duration" : 1.0,
-        "eq_spacing" : 3 * MED_LARGE_BUFF
+        "duration" : 0.5,
+        "eq_spacing" : 6 * MED_LARGE_BUFF
     }
 
     def construct(self):
@@ -328,6 +328,8 @@ class IntroScene(PiCreatureScene):
             ReplacementTransform(self.partial_sum_decimal, self.q_marks)
         )
 
+        self.wait()
+
 
 
     def build_up_sum_on_number_line(self):
@@ -342,21 +344,25 @@ class IntroScene(PiCreatureScene):
             unit_size = 5,
             tick_frequency = 0.2,
             line_to_number_buff = MED_LARGE_BUFF
-        )
+        ).shift(LEFT)
 
         self.number_line_labels = self.number_line.get_number_mobjects()
-        self.add(self.number_line,self.number_line_labels)
+        self.play(
+            FadeIn(self.number_line),
+            FadeIn(self.number_line_labels)
+        )
         self.wait()
 
         # create slabs for series terms
 
-        max_n = 10
+        max_n1 = 10
+        max_n2 = 100
 
-        terms = [0] + [1./(n**2) for n in range(1, max_n + 1)]
+        terms = [0] + [1./(n**2) for n in range(1, max_n2 + 1)]
         series_terms = np.cumsum(terms)
         lines = VGroup()
         self.rects = VGroup()
-        slab_colors = [YELLOW, BLUE] * (max_n / 2)
+        slab_colors = [YELLOW, BLUE] * (max_n2 / 2)
 
         for t1, t2, color in zip(series_terms, series_terms[1:], slab_colors):
             line = Line(*map(self.number_line.number_to_point, [t1, t2]))
@@ -375,26 +381,73 @@ class IntroScene(PiCreatureScene):
 
         #self.rects.radial_gradient_highlight(ORIGIN, 5, YELLOW, BLUE)
         
+        self.little_euler_terms = VGroup()
+        for i in range(1,7):
+            if i == 1:
+                term = TexMobject("1", fill_color = slab_colors[i-1])
+            else:
+                term = TexMobject("{1\over " + str(i**2) + "}", fill_color = slab_colors[i-1])
+            term.scale(0.4)
+            self.little_euler_terms.add(term)
+
+
         for i in range(5):
             self.play(
                 GrowFromPoint(self.rects[i], self.euler_sum[2*i].get_center(),
-                    run_time = self.duration)
+                    run_time = 1)
             )
+            term = self.little_euler_terms.submobjects[i]
+            term.next_to(self.rects[i], UP)
+            self.play(FadeIn(term))
 
-        for i in range(5, max_n):
+        self.ellipsis = TexMobject("\cdots")
+        self.ellipsis.scale(0.4)
+
+        for i in range(5, max_n1):
+            
+            if i == 5:
+                self.ellipsis.next_to(self.rects[i+3], UP)
+                self.play(
+                    FadeIn(self.ellipsis),
+                    GrowFromPoint(self.rects[i], self.euler_sum[10].get_center(),
+                    run_time = 0.5)
+                )
+            else:
+                self.play(
+                    GrowFromPoint(self.rects[i], self.euler_sum[10].get_center(),
+                    run_time = 0.5)
+                )
+
+        for i in range(max_n1, max_n2):
             self.play(
-                GrowFromPoint(self.rects[i], self.euler_sum[10].get_center(),
-                    run_time = self.duration)
-            )
+                    GrowFromPoint(self.rects[i], self.euler_sum[10].get_center(),
+                    run_time = 0.01)
+                )
+
+        self.wait()
+
+        PI = TAU/2
+        P = self.q_marks.get_center() + 0.5 * DOWN + 0.5 * LEFT
+        Q = self.rects[-1].get_center() + 0.2 * UP
+        self.arrow = CurvedArrow(P, Q,
+            angle = TAU/12,
+            color = YELLOW
+        )
+
+        self.play(FadeIn(self.arrow))
+
+        self.wait()
 
 
     def show_pi_answer(self):
 
         self.pi_answer = TexMobject("{\\pi^2 \\over 6}").highlight(YELLOW)
         self.pi_answer.move_to(self.partial_sum_decimal)
-        self.pi_answer.next_to(self.euler_sum[-1], RIGHT,
+        self.pi_answer.next_to(self.euler_sum[-1], RIGHT, buff = 1,
             submobject_to_align = self.pi_answer[-2])
         self.play(ReplacementTransform(self.q_marks, self.pi_answer))
+
+        self.wait()
 
 
     def other_pi_formulas(self):
@@ -402,25 +455,28 @@ class IntroScene(PiCreatureScene):
         self.play(
             FadeOut(self.rects),
             FadeOut(self.number_line_labels),
-            FadeOut(self.number_line)
+            FadeOut(self.number_line),
+            FadeOut(self.little_euler_terms),
+            FadeOut(self.ellipsis),
+            FadeOut(self.arrow)
         )
 
         self.leibniz_sum = TexMobject(
             "1-{1\\over 3}+{1\\over 5}-{1\\over 7}+{1\\over 9}-\\cdots",
-            "=", "{\\pi \\over 4}")
+            "=", "\quad\,\,{\\pi \\over 4}", arg_separator = " \\, ")
 
         self.wallis_product = TexMobject(
             "{2\\over 1} \\cdot {2\\over 3} \\cdot {4\\over 3} \\cdot {4\\over 5}" +
              "\\cdot {6\\over 5} \\cdot {6\\over 7} \\cdots",
-             "=", "{\\pi \\over 2}")
+             "=", "\quad\,\, {\\pi \\over 2}", arg_separator = " \\, ")
 
         self.leibniz_sum.next_to(self.euler_sum.get_part_by_tex("="), DOWN,
-            buff = self.eq_spacing,
+            buff = 2,
             submobject_to_align = self.leibniz_sum.get_part_by_tex("=")
         )
 
         self.wallis_product.next_to(self.leibniz_sum.get_part_by_tex("="), DOWN,
-            buff = self.eq_spacing,
+            buff = 2,
             submobject_to_align = self.wallis_product.get_part_by_tex("=")
         )
 
@@ -448,7 +504,11 @@ class IntroScene(PiCreatureScene):
         # focus on pi squared
         pi_squared = self.euler_sum.get_part_by_tex("\\pi")[-3]
         self.play(
-            ScaleInPlace(pi_squared,2,rate_func = wiggle)
+            WiggleOutThenIn(pi_squared,
+                scale_value = 4,
+                angle = 0.003 * TAU,
+                run_time = 2
+            )
         )
 
 
@@ -458,17 +518,20 @@ class IntroScene(PiCreatureScene):
         q_circle = Circle(
             stroke_color = YELLOW,
             fill_color = YELLOW,
-            fill_opacity = 0.5,
-            radius = 0.4, 
-            stroke_width = 10.0
+            fill_opacity = 0.25,
+            radius = 0.5, 
+            stroke_width = 3.0
         )
         q_mark = TexMobject("?")
         q_mark.next_to(q_circle)
 
         thought = Group(q_circle, q_mark)
-        q_mark.scale_to_fit_height(0.8 * q_circle.get_height())
+        q_mark.scale_to_fit_height(0.6 * q_circle.get_height())
+
+        self.look_at(pi_squared)
         self.pi_creature_thinks(thought,target_mode = "confused",
-            bubble_kwargs = { "height" : 2, "width" : 3 })
+            bubble_kwargs = { "height" : 2.5, "width" : 5 })
+        self.look_at(pi_squared)
 
         self.wait()
 
