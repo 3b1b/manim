@@ -2771,12 +2771,17 @@ class FinalSumManipulationScene(PiCreatureScene):
         LAKE_STROKE_COLOR = BLUE
         TEX_SCALE = 0.8
 
+        LIGHT_COLOR2 = RED
+        LIGHT_COLOR3 = BLUE
+
         unit_length = 1.5
-        vertical_spacing = 1.8 * DOWN
+        vertical_spacing = 2.5 * DOWN
         switch_on_time = 0.2
 
+        sum_vertical_spacing = 1.5
+
         randy = self.get_primary_pi_creature()
-        randy.scale(0.7).to_edge(DOWN + RIGHT)
+        randy.scale(0.7).flip().to_edge(DOWN + LEFT)
 
         ls_template = LightSource(
             radius = 2,
@@ -2785,9 +2790,9 @@ class FinalSumManipulationScene(PiCreatureScene):
         )
 
 
-        odd_range = np.arange(1,13,2)
-        even_range = np.arange(2,28,2)
-        full_range = np.arange(1,14,1)
+        odd_range = np.arange(1,9,2)
+        even_range = np.arange(2,16,2)
+        full_range = np.arange(1,8,1)
 
         self.number_line1 = NumberLine(
             x_min = 0,
@@ -2803,107 +2808,220 @@ class FinalSumManipulationScene(PiCreatureScene):
             include_tip = True
         )
 
-        self.number_line1.next_to(3 * UP + 3 * LEFT, RIGHT, buff = 0)
+        self.number_line1.next_to(2.5 * UP + 3 * LEFT, RIGHT, buff = 0)
 
         odd_lights = VMobject()
-
         for i in odd_range:
             pos = self.number_line1.number_to_point(i)
             ls = ls_template.copy()
             ls.move_source_to(pos)
             odd_lights.add(ls)
 
-        labels1 = self.number_line1.get_labels()
         self.play(
             ShowCreation(self.number_line1),
-            ShowCreation(labels1)
         )
 
-        for ls in odd_lights.submobjects:
-            self.play(SwitchOn(ls.ambient_light), run_time = switch_on_time)
+        odd_terms = VMobject()
+        for i in odd_range:
+            if i == 1:
+                term = TexMobject("\phantom{+\,}{1\over " + str(i) + "^2}", fill_color = LIGHT_COLOR)
+            else:
+                term = TexMobject("+\, {1\over " + str(i) + "^2}", fill_color = LIGHT_COLOR)
 
-        result1 = TexMobject("{\pi^2\over 8} =")
-        result1.next_to(self.number_line1, LEFT, buff = 2)
+            term.next_to(self.number_line1.number_to_point(i), DOWN, buff = 1.5)
+            odd_terms.add(term)
+
+
+        for (ls, term) in zip(odd_lights.submobjects, odd_terms.submobjects):
+            self.play(
+                FadeIn(ls.lighthouse, run_time = switch_on_time),
+                SwitchOn(ls.ambient_light, run_time = switch_on_time),
+                Write(term, run_time = switch_on_time)
+            )
+
+        result1 = TexMobject("{\pi^2\over 8} =", fill_color = LIGHT_COLOR)
+        result1.next_to(self.number_line1, LEFT, buff = 0.5)
         self.play(Write(result1))
+
+
+
 
         self.number_line2 = self.number_line1.copy()
         self.number_line2.numbers_to_show = full_range
         self.number_line2.shift(2 * vertical_spacing)
-        labels2 = self.number_line2.get_labels()
 
         full_lights = VMobject()
 
         for i in full_range:
             pos = self.number_line2.number_to_point(i)
             ls = ls_template.copy()
+            ls.color = LIGHT_COLOR3
             ls.move_source_to(pos)
             full_lights.add(ls)
 
         self.play(
             ShowCreation(self.number_line2),
-            ShowCreation(labels2)
         )
 
+
+
         for ls in full_lights.submobjects:
-            self.play(SwitchOn(ls.ambient_light, run_time = 0.1 * switch_on_time))
+            self.play(
+                FadeIn(ls.lighthouse, run_time = 0.1),#5 * switch_on_time),
+                SwitchOn(ls.ambient_light, run_time = 0.1)#5 * switch_on_time),
+            )
 
 
-        self.number_line3 = self.number_line1.copy()
-        self.number_line3.numbers_to_show = even_range
-        self.number_line3.shift(vertical_spacing)
-        labels3 = self.number_line3.get_labels()
 
-        missing_text = TextMobject("missing:")
-        missing_text.next_to(self.number_line3, LEFT, buff = 2)
+        even_terms = VMobject()
+        for i in even_range:
+            term = TexMobject("+\, {1\over " + str(i) + "^2}", fill_color = LIGHT_COLOR2)
+            term.next_to(self.number_line1.number_to_point(i), DOWN, buff = sum_vertical_spacing)
+            even_terms.add(term)
+
 
         even_lights = VMobject()
 
         for i in even_range:
-            pos = self.number_line3.number_to_point(i)
+            pos = self.number_line1.number_to_point(i)
             ls = ls_template.copy()
+            ls.color = LIGHT_COLOR2
             ls.move_source_to(pos)
             even_lights.add(ls)
 
-        self.play(Write(missing_text))
+        for (ls, term) in zip(even_lights.submobjects, even_terms.submobjects):
+            self.play(
+                SwitchOn(ls.ambient_light, run_time = switch_on_time),
+                Write(term)
+            )
 
-        self.play(
-            ShowCreation(self.number_line3),
-            ShowCreation(labels3),
-        )
-
-        for ls in even_lights.submobjects:
-            self.play(SwitchOn(ls.ambient_light), run_time = switch_on_time)
 
 
         # now morph the even lights into the full lights
-        even_lights_line = VMobject()
-        even_lights_line.add(even_lights, self.number_line2)
-        even_lights_line_copy = even_lights_line.copy()
+        full_lights_copy = full_lights.copy()
+        even_lights_copy = even_lights.copy()
 
-        full_lights_line = VMobject()
-        number_line2p = self.number_line2
-        number_line2p.tick_frequency = 0.5
-        full_lights_line.add(full_lights.copy(), number_line2p)
 
         self.play(
-            Transform(even_lights_line,full_lights_line)
+            Transform(even_lights,full_lights)
+        )
+
+        # draw arrows
+        P1 = self.number_line2.number_to_point(1)
+        P2 = even_terms.submobjects[0].get_center()
+        Q1 = interpolate(P1, P2, 0.2)
+        Q2 = interpolate(P1, P2, 0.8)
+        quarter_arrow = Arrow(Q1, Q2,
+            color = LIGHT_COLOR2)
+        quarter_label = TexMobject("\\times {1\over 4}", fill_color = LIGHT_COLOR2)
+        quarter_label.scale(0.7)
+        quarter_label.next_to(quarter_arrow.get_center(), RIGHT)
+
+        self.play(
+            ShowCreation(quarter_arrow),
+            Write(quarter_label),
+            Transform(even_lights,even_lights_copy)
+        )
+
+        P3 = odd_terms.submobjects[0].get_center()
+        R1 = interpolate(P1, P3, 0.2)
+        R2 = interpolate(P1, P3, 0.8)
+        three_quarters_arrow = Arrow(R1, R2,
+            color = LIGHT_COLOR)
+        three_quarters_label = TexMobject("\\times {3\over 4}", fill_color = LIGHT_COLOR)
+        three_quarters_label.scale(0.7)
+        three_quarters_label.next_to(three_quarters_arrow.get_center(), LEFT)
+
+        self.play(
+            ShowCreation(three_quarters_arrow),
+            Write(three_quarters_label)
+        )
+
+        four_thirds_arrow = Arrow(R2, R1, color = LIGHT_COLOR)
+        four_thirds_label = TexMobject("\\times {4\over 3}", fill_color = LIGHT_COLOR)
+        four_thirds_label.scale(0.7)
+        four_thirds_label.next_to(four_thirds_arrow.get_center(), LEFT)
+
+        self.play(
+            ReplacementTransform(three_quarters_arrow, four_thirds_arrow),
+            ReplacementTransform(three_quarters_label, four_thirds_label)
         )
 
         self.play(
-            Transform(even_lights_line,even_lights_line_copy)
+            FadeOut(quarter_label),
+            FadeOut(quarter_arrow),
+            FadeOut(even_lights),
+            FadeOut(even_terms)
+
         )
 
 
+        full_terms = VMobject()
+        for i in full_range:
+            if i == 1:
+                term = TexMobject("\phantom{+\,}{1\over " + str(i) + "^2}", fill_color = LIGHT_COLOR3)
+            else:
+                term = TexMobject("+\, {1\over " + str(i) + "^2}", fill_color = LIGHT_COLOR3)
 
+            term.move_to(self.number_line2.number_to_point(i))
+            full_terms.add(term)
 
+        self.play(
+            FadeOut(self.number_line1),
+            FadeOut(odd_lights),
+            FadeOut(self.number_line2),
+            FadeOut(full_lights),
+            FadeIn(full_terms)
+        )
 
+        v = (sum_vertical_spacing + 0.5) * UP
+        self.play(
+            odd_terms.shift, v,
+            four_thirds_arrow.shift, v,
+            four_thirds_label.shift, v,
+            odd_terms.shift, v,
+            full_terms.shift, v
+        )
 
+        arrow_copy = four_thirds_arrow.copy()
+        label_copy = four_thirds_label.copy()
+        arrow_copy.shift(2.5 * LEFT)
+        label_copy.shift(2.5 * LEFT)
 
+        self.play(
+            FadeIn(arrow_copy),
+            FadeIn(label_copy)
+        )
 
+        final_result = TexMobject("{\pi^2 \over 6}=", fill_color = LIGHT_COLOR3)
+        final_result.next_to(arrow_copy, DOWN)
 
+        self.play(
+            Write(final_result),
+            randy.change_mode,"hooray"
+        )
 
+        equation = VMobject()
+        equation.add(final_result)
+        equation.add(full_terms)
 
+        buffer = 2
+        result_box = Rectangle(width = 15,
+            height = buffer*equation.get_height(), color = LIGHT_COLOR3)
+        result_box.move_to(equation)
+        equation.add(result_box)
 
+        self.play(
+            FadeOut(result1),
+            FadeOut(odd_terms),
+            FadeOut(arrow_copy),
+            FadeOut(label_copy),
+            FadeOut(four_thirds_arrow),
+            FadeOut(four_thirds_label),
+            ShowCreation(result_box)
+        )
+
+        self.play(equation.shift, -equation.get_center()[1] * UP + UP)
 
 
 
