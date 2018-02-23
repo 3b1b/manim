@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from helpers import *
 import scipy
 
@@ -21,6 +23,7 @@ from topics.common_scenes import *
 from scene import Scene
 from scene.reconfigurable_scene import ReconfigurableScene
 from scene.zoomed_scene import *
+from scene.moving_camera_scene import *
 from camera import Camera
 from mobject import *
 from mobject.image_mobject import *
@@ -2761,7 +2764,925 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
 
 class SummarizeFourierTradeoffForDoppler(Scene):
     def construct(self):
-        pass
+        time_axes = Axes(
+            x_min = 0, x_max = 12,
+            y_min = -0.5, y_max = 1,
+        )
+        time_axes.center().to_edge(UP, buff = LARGE_BUFF)
+        frequency_axes = time_axes.copy()
+        frequency_axes.next_to(time_axes, DOWN, buff = 2)
+        time_label = TextMobject("Time")
+        frequency_label = TextMobject("Frequency")
+        for label, axes in (time_label, time_axes), (frequency_label, frequency_axes):
+            label.next_to(axes.get_right(), UP, SMALL_BUFF)
+            axes.add(label)
+        frequency_label.shift_onto_screen()
+        title = TextMobject("Fourier Trade-off")
+        title.next_to(time_axes, DOWN)
+        self.add(title)
+
+
+        #Position determines log of scale value for exponentials
+        a_mob = VectorizedPoint()
+        x_values = [3, 5, 6, 7, 8]
+        v_values = [5, 5.5, 5.75, 6.5, 7]
+        def get_top_graphs():
+            a = np.exp(a_mob.get_center()[0])
+            graphs = VGroup(*[
+                time_axes.get_graph(lambda t : np.exp(-5*a*(t-x)**2))
+                for x in x_values
+            ])
+            graphs.highlight(WHITE)
+            graphs.color_using_background_image("blue_yellow_gradient")
+            return graphs
+        def get_bottom_graphs():
+            a = np.exp(a_mob.get_center()[0])
+            graphs = VGroup(*[
+                frequency_axes.get_graph(lambda t : np.exp(-(5./a)*(t-v)**2))
+                for v in v_values
+            ])
+            graphs.highlight(RED)
+            return graphs
+
+        top_graphs = get_top_graphs()
+        bottom_graphs = get_bottom_graphs()
+        update_top_graphs = ContinualUpdateFromFunc(
+            top_graphs, 
+            lambda g : Transform(g, get_top_graphs()).update(1)
+        )
+        update_bottom_graphs = ContinualUpdateFromFunc(
+            bottom_graphs, 
+            lambda g : Transform(g, get_bottom_graphs()).update(1)
+        )
+
+        self.add(time_axes, frequency_axes)
+        self.add(update_top_graphs, update_bottom_graphs)
+
+        shift_vect = 2*RIGHT
+        for s in 1, -2, 1:
+            self.play(a_mob.shift, s*shift_vect, run_time = 3)
+
+class MentionUncertaintyPrincipleCopy(MentionUncertaintyPrinciple):
+    pass
+
+class IntroduceDeBroglie(Scene):
+    CONFIG = {
+        "default_wave_frequency" : 1,
+        "wave_colors" : [BLUE_D, YELLOW],
+        "dispersion_factor" : 1,
+        "amplitude" : 1,
+    }
+    def construct(self):
+        text_scale_val = 0.8,
+
+        #Overlay real tower in video editor
+        eiffel_tower = Line(3*DOWN, 3*UP, stroke_width = 0)
+        picture = ImageMobject("de_Broglie")
+        picture.scale_to_fit_height(4)
+        picture.to_corner(UP+LEFT)
+        name = TextMobject("Louis de Broglie")
+        name.next_to(picture, DOWN)
+
+        picture.save_state()
+        picture.scale(0)
+        picture.move_to(eiffel_tower.get_top())
+
+
+        broadcasts = [
+            Broadcast(
+                eiffel_tower.get_top(),
+                big_radius = 10,
+                n_circles = 10,
+                lag_ratio = 0.9,
+                run_time = 7,
+                rate_func = squish_rate_func(smooth, a, a+0.3),
+                color = WHITE,
+            )
+            for a in np.linspace(0, 0.7, 3)
+        ]
+
+        self.play(*broadcasts)
+        self.play(picture.restore)
+        self.play(Write(name))
+        self.wait()
+
+        #Time line
+        time_line = NumberLine(
+            x_min = 1900,
+            x_max = 1935,
+            tick_frequency = 1,
+            numbers_with_elongated_ticks = range(1900, 1941, 10),
+            color = BLUE_D
+        )
+        time_line.stretch_to_fit_width(2*SPACE_WIDTH - picture.get_width() - 2)
+        time_line.add_numbers(*time_line.numbers_with_elongated_ticks)
+        time_line.next_to(picture, RIGHT, MED_LARGE_BUFF, DOWN)
+
+        year_to_words = {
+            1914 : "Wold War I begins",
+            1915 : "Einstein field equations",
+            1916 : "Lewis dot formulas",
+            1917 : "Not a lot of physics...because war",
+            1918 : "S'more Rutherford badassery",
+            1919 : "Eddington confirms general relativity predictions",
+            1920 : "World is generally stoked on general relativity",
+            1921 : "Einstein gets long overdue Nobel prize",
+            1922 : "Stern-Gerlach Experiment",
+            1923 : "Compton scattering observed",
+            1924 : "de Broglie's thesis"
+        }
+        arrow = Vector(DOWN, color = WHITE)
+        arrow.next_to(time_line.number_to_point(1914), UP)
+        words = TextMobject(year_to_words[1914])
+        words.scale(text_scale_val)
+        date = Integer(1914)
+        date.next_to(arrow, UP, LARGE_BUFF)
+
+        def get_year(alpha = 0):
+            return int(time_line.point_to_number(arrow.get_end()))
+
+        def update_words(words):
+            text = year_to_words.get(get_year(), "Hi there")
+            if text not in words.get_tex_string():
+                words.__init__(text)
+                words.scale(text_scale_val)
+            words.move_to(interpolate(
+                arrow.get_top(), date.get_bottom(), 0.5
+            ))
+        update_words(words)
+        self.play(
+            FadeIn(time_line),
+            GrowArrow(arrow),
+            Write(words),
+            Write(date),
+            run_time = 1
+        )
+        self.wait()
+        self.play(
+            arrow.next_to, time_line.number_to_point(1924), UP,
+            ChangingDecimal(
+                date, get_year,
+                position_update_func = lambda m : m.next_to(arrow, UP, LARGE_BUFF)
+            ),
+            UpdateFromFunc(words, update_words),
+            run_time = 3,
+        )
+        self.wait()
+
+        #Transform time_line
+        line = time_line.main_line
+        self.play(
+            FadeOut(time_line.numbers),
+            VGroup(arrow, words, date).shift, MED_LARGE_BUFF*UP,
+            *[
+                ApplyFunction(
+                    lambda m : m.rotate(TAU/4).set_stroke(width = 0),
+                    mob,
+                    remover = True
+                )
+                for mob in time_line.tick_marks
+            ]
+        )
+
+        #Wave function
+        particle = VectorizedPoint()
+        axes = Axes(x_min = -1, x_max = 10)
+        axes.match_width(line)
+        axes.shift(line.get_center() - axes.x_axis.get_center())
+        im_line = line.copy()
+        im_line.highlight(YELLOW)
+        wave_update_animation = self.get_wave_update_animation(
+            axes, particle, line, im_line
+        )
+
+        for x in range(3):
+            particle.move_to(axes.coords_to_point(-10, 0))
+            self.play(
+                ApplyMethod(
+                    particle.move_to, axes.coords_to_point(22, 0),
+                    rate_func = None
+                ),
+                wave_update_animation,
+                run_time = 3
+            )
+            self.wait()
+
+    ###
+    def get_wave_update_animation(self, axes, particle, re_line = None, im_line = None):
+        line = Line(
+            axes.x_axis.get_left(),
+            axes.x_axis.get_right(),
+        )
+        if re_line is None:
+            re_line = line.copy()
+            re_line.highlight(self.wave_colors[0])
+        if im_line is None:
+            im_line = line.copy()
+            im_line.highlight(self.wave_colors[1])
+        lines = VGroup(im_line, re_line)
+        def update_lines(lines):
+            waves = self.get_wave_pair(axes, particle)
+            for line, wave in zip(lines, waves):
+                wave.match_style(line)
+                Transform(line, wave).update(1)
+        return UpdateFromFunc(lines, update_lines)
+
+    def get_wave(
+        self, axes, particle, 
+        complex_to_real_func = lambda z : z.real,
+        freq = None, 
+        **kwargs):
+        freq = freq or self.default_wave_frequency
+        k0 = 1./freq
+        t0 = axes.x_axis.point_to_number(particle.get_center())
+        def func(x):
+            dispersion = fdiv(1., self.dispersion_factor)*(np.sqrt(1./(1+t0**2)))
+            wave_part = complex_to_real_func(np.exp(
+                complex(0, TAU*freq*(x-dispersion))
+            ))
+            bell_part = np.exp(-dispersion*(x-t0)**2)
+            amplitude = self.amplitude
+            return amplitude*wave_part*bell_part
+        graph = axes.get_graph(func)
+        return graph
+
+    def get_wave_pair(self, axes, particle, colors = None, **kwargs):
+        if colors is None and "color" not in kwargs:
+            colors = self.wave_colors
+        return VGroup(*[
+            self.get_wave(
+                axes, particle, 
+                C_to_R, color = color, 
+                **kwargs
+            )
+            for C_to_R, color in zip(
+                [lambda z : z.imag, lambda z : z.real], 
+                colors
+            )
+        ])
+
+class ShowMomentumFormula(IntroduceDeBroglie, TeacherStudentsScene):
+    CONFIG = {
+        "default_wave_frequency" : 2,
+        "dispersion_factor" : 0.25,
+        "p_color" : BLUE,
+        "xi_color" : YELLOW,
+        "amplitude" : 0.5,
+    }
+    def construct(self):
+        self.introduce_formula()
+        self.react_to_claim()
+
+    def introduce_formula(self):
+        formula = p, eq, h, xi = TexMobject("p", "=", "h", "\\xi")
+        formula.move_to(ORIGIN)
+        formula.scale(1.5)
+
+        momentum = TextMobject("Momentum")
+        momentum.next_to(p, UP, LARGE_BUFF).shift(LEFT)
+        momentum_arrow = Arrow(momentum, p, buff = SMALL_BUFF)
+        VGroup(p, momentum, momentum_arrow).highlight(self.p_color)
+
+        xi_words = TextMobject("Spatial frequency")
+        added_xi_words = TextMobject("(cycles per unit \\emph{distance})")
+        xi_words.next_to(xi, UP, LARGE_BUFF).shift(RIGHT)
+        xi_words.align_to(momentum)
+        xi_arrow = Arrow(
+            xi_words.get_bottom(), xi.get_corner(UP+RIGHT), 
+            buff = SMALL_BUFF
+        )
+        added_xi_words.move_to(xi_words)
+        added_xi_words.to_edge(RIGHT)
+        VGroup(xi, xi_words, added_xi_words, xi_arrow).highlight(self.xi_color)
+
+        axes = Axes(
+            x_min = 0, x_max = 2*SPACE_WIDTH,
+            y_min = -1, y_max = 1,
+        )
+        axes.center().to_edge(UP, buff = -0.5)
+        # axes.next_to(formula, RIGHT)
+        particle = VectorizedPoint()
+        wave_update_animation = self.get_wave_update_animation(axes, particle)
+        wave = wave_update_animation.mobject
+        wave[0].set_stroke(width = 0)
+        particle.next_to(wave, LEFT, buff = 2)
+        wave_propagation = AnimationGroup(
+            ApplyMethod(particle.move_to, axes.coords_to_point(30, 0)),
+            wave_update_animation,
+            run_time = 4,
+            rate_func = None,
+        )
+        stopped_wave_propagation = AnimationGroup(
+            ApplyMethod(particle.move_to, xi_words),
+            wave_update_animation,
+            run_time = 3,
+            rate_func = None,
+        )
+        n_v_lines = 10
+        v_lines = VGroup(*[
+            DashedLine(UP, DOWN)
+            for x in range(n_v_lines)
+        ])
+        v_lines.match_color(xi)
+        v_lines.arrange_submobjects(
+            RIGHT,
+            buff = float(axes.x_axis.unit_size)/self.default_wave_frequency
+        )
+        v_lines.move_to(stopped_wave_propagation.sub_anims[0].target_mobject)
+        v_lines.align_to(wave)
+        v_lines.shift(0.125*RIGHT)
+        
+        self.add(formula, wave)
+        self.play(
+            self.teacher.change, "raise_right_hand", 
+            Write(momentum),
+            GrowArrow(momentum_arrow),
+            wave_propagation
+        )
+        self.play(
+            Write(xi_words),
+            GrowArrow(xi_arrow),
+            self.get_student_changes("confused", "erm", "sassy"),
+            stopped_wave_propagation
+        )
+        self.show_frame()
+        self.play(
+            FadeIn(added_xi_words),
+            VGroup(
+                formula, momentum, momentum_arrow,
+                xi_words, xi_arrow
+            ).next_to, 
+            added_xi_words, LEFT, {"submobject_to_align" : xi_words},
+        )
+        self.play(
+            LaggedStart(ShowCreation, v_lines),
+            self.get_student_changes(*["pondering"]*3)
+        )
+        self.play(LaggedStart(FadeOut, v_lines))
+        self.wait()
+
+        self.formula_labels = VGroup(
+            momentum, momentum_arrow,
+            xi_words, xi_arrow, added_xi_words, 
+        )        
+        self.set_variables_as_attrs(wave, wave_propagation, formula)
+
+    def react_to_claim(self):
+        formula_labels = self.formula_labels
+        full_formula = VGroup(self.formula, formula_labels)
+        full_formula.save_state()
+        wave_propagation = self.wave_propagation
+
+
+        student = self.students[2]
+        self.student_says(
+            "Hang on...",
+            bubble_kwargs = {"height" : 2, "width" : 2, "direction" : LEFT},
+            target_mode = "sassy",
+            student_index = 2,
+            added_anims = [self.teacher.change, "plain"]
+        )
+        self.wait()
+        kwargs = {
+            "path_arc" : TAU/8,
+            "submobject_mode" : "lagged_start",
+            "lag_ratio" : 0.7,
+            "run_time" : 1.5,
+        }
+        self.play(
+            full_formula.scale, 0,
+            full_formula.move_to, student.eyes.get_bottom()+SMALL_BUFF*DOWN,
+            **kwargs
+        )
+        self.play(full_formula.restore, **kwargs)
+        self.play(
+            wave_propagation, 
+            rate_func = lambda a : interpolate(0.35, 1, a)
+        )
+        wave_propagation.update_config(rate_func = lambda t : t)
+        self.student_says(
+            "Physics is \\\\ just weird",
+            bubble_kwargs = {"height" : 2.5, "width" : 2.5},
+            target_mode = "shruggie",
+            student_index = 0,
+            added_anims = [
+                ApplyMethod(full_formula.shift, 4*RIGHT+0.5*UP),
+                UpdateFromAlphaFunc(
+                    formula_labels[-1],
+                    lambda m, a : m.set_fill(opacity = 1-a),
+                    remover = True
+                )
+            ]
+        )
+        self.wait()
+        self.play(
+            wave_propagation,
+            FadeOut(self.students[0].bubble),
+            FadeOut(self.students[0].bubble.content),
+            self.get_student_changes(*3*["pondering"]),
+            self.teacher.change, "pondering",
+        )
+        self.play(wave_propagation)
+
+class AskPhysicists(PiCreatureScene):
+    def construct(self):
+        morty, physy1, physy2, physy3 = self.pi_creatures
+        formula = TexMobject("p", "=", "h", "\\xi")
+        formula.highlight_by_tex_to_color_map({
+            "p" : BLUE,
+            "\\xi" : YELLOW,
+        })
+        formula.scale(1.5)
+
+        formula.to_edge(UP)
+        formula.save_state()
+        formula.shift(DOWN)
+        formula.fade(1)
+        self.play(formula.restore)
+        self.pi_creature_says(
+            morty, "So...why?",
+            target_mode = "maybe"
+        )
+        self.wait(2)
+        self.play(
+            RemovePiCreatureBubble(morty),
+            PiCreatureSays(
+                physy2,
+                "Take the Schrödinger equation \\\\ with $H = \\frac{p^2}{2m}+V(x)$",
+                bubble_kwargs = {"fill_opacity" : 0.9},
+            ),
+        )
+        self.play(
+            PiCreatureSays(
+                physy1,
+                "Even classically position and \\\\ momentum are conjugate",
+                target_mode = "surprised",
+                bubble_kwargs = {"fill_opacity" : 0.9},
+            ),
+        )
+        self.play(
+            PiCreatureSays(
+                physy3,
+                "Consider special relativity \\\\ together with $E = hf$",
+                target_mode = "hooray",
+                bubble_kwargs = {"fill_opacity" : 0.9},
+            ),
+            morty.change, "guilty"
+        )
+        self.wait(2)
+
+
+
+    ###
+
+    def create_pi_creatures(self):
+        scale_factor = 0.85
+        morty = Mortimer().flip()
+        morty.scale(scale_factor)
+        morty.to_corner(DOWN+LEFT)
+
+        physies = VGroup(*[
+            PiCreature(color = c).flip()
+            for c in GREY, LIGHT_GREY, DARK_GREY
+        ])
+        physies.arrange_submobjects(RIGHT, buff = MED_SMALL_BUFF)
+        physies.scale(scale_factor)
+        physies.to_corner(DOWN+RIGHT)
+
+        self.add(physies)
+        return VGroup(morty, *physies)
+
+class SortOfDopplerEffect(PiCreatureScene):
+    CONFIG = {
+        "omega" : np.pi,
+        "arrow_spacing" : 0.25,
+    }
+    def setup(self):
+        PiCreatureScene.setup(self)
+        rect = self.screen_rect = ScreenRectangle(height = 2*SPACE_HEIGHT)
+        rect.set_stroke(width = 0)
+        self.camera = MovingCamera(
+            rect, **self.camera_config
+        )
+
+    def construct(self):
+        screen_rect = self.screen_rect
+
+        #x-coordinate gives time
+        t_tracker = VectorizedPoint()
+        #x-coordinate gives wave number
+        k_tracker = VectorizedPoint(2*RIGHT)
+        tk_movement = AmbientMovement(t_tracker, direction = RIGHT, rate = 1)
+        def get_wave():
+            t = t_tracker.get_center()[0]
+            k = k_tracker.get_center()[0]
+            omega = self.omega
+            color = interpolate_color(
+                BLUE, RED, (k-2)/2.0
+            )
+            func = lambda x : 0.5*np.cos(omega*t - k*x)
+            graph = FunctionGraph(
+                func,
+                x_min = -5*SPACE_WIDTH,
+                x_max = SPACE_WIDTH,
+                color = color,
+            )
+            return VGroup(graph, *[
+                Arrow(
+                    x*RIGHT, x*RIGHT + func(x)*UP, 
+                    color = color
+                )
+                for x in np.arange(
+                    -4*SPACE_WIDTH, SPACE_WIDTH, 
+                    self.arrow_spacing
+                )
+            ])
+            return 
+        wave = get_wave()
+        wave_update = ContinualUpdateFromFunc(
+            wave, lambda w : Transform(w, get_wave()).update(1)
+        )
+
+        rect = ScreenRectangle(height = 2)
+        rect.to_edge(RIGHT)
+        rect_movement = AmbientMovement(rect, direction = LEFT, rate = 1)
+
+        randy = self.pi_creature
+        randy_look_at = ContinualUpdateFromFunc(
+            randy, lambda r : r.look_at(rect)
+        )
+
+        ref_frame1 = TextMobject("Reference frame 1")
+        # ref_frame1.next_to(randy, UP, aligned_edge = LEFT)
+        ref_frame1.to_edge(UP)
+        ref_frame2 = TextMobject("Reference frame 2")
+        ref_frame2.next_to(rect, UP)
+        # ref_frame2.set_fill(opacity = 0)
+        ref_frame2_follow = ContinualUpdateFromFunc(
+            ref_frame2, lambda m : m.next_to(rect, UP)
+        )
+        ref_frame_1_continual_anim = ContinualAnimation(ref_frame1)
+
+        self.add(
+            tk_movement, wave_update, rect_movement, randy_look_at,
+            ref_frame2_follow, ref_frame_1_continual_anim
+        )
+        self.add(ref_frame1)
+        self.play(randy.change, "pondering")
+        self.wait(4)
+        start_height = screen_rect.get_height()
+        start_center = screen_rect.get_center()
+        self.play(
+            UpdateFromAlphaFunc(
+                screen_rect,
+                lambda m, a : m.move_to(
+                    interpolate(start_center, rect.get_center(), a)
+                )
+            ),
+            k_tracker.shift, 2*RIGHT,
+        )
+        self.play(
+            MaintainPositionRelativeTo(
+                screen_rect, rect,
+                run_time = 5
+            ),
+        )
+        self.play(
+            screen_rect.move_to, rect.get_right()+SPACE_WIDTH*LEFT,
+            k_tracker.shift, 2*LEFT,
+        )
+        self.wait(3)
+
+        #Frequency words
+        temporal_frequency = TextMobject("Temporal", "frequency")
+        spatial_frequency = TextMobject("Spatial", "frequency")
+        temporal_frequency.move_to(screen_rect).to_edge(UP)
+        spatial_frequency.next_to(temporal_frequency, DOWN)
+        cross = Cross(temporal_frequency[0])
+
+        time = TextMobject("Time")
+        space = TextMobject("Space")
+        time.next_to(temporal_frequency, RIGHT, buff = 2)
+        space.next_to(time, DOWN)
+        space.align_to(spatial_frequency)
+
+        self.play(FadeIn(temporal_frequency))
+        self.play(ShowCreation(cross))
+        self.play(Write(spatial_frequency))
+        self.wait()
+        self.play(FadeIn(time), FadeIn(space))
+        self.play(
+            Transform(time, space),
+            Transform(space, time),
+            submobject_mode = "lagged_start",
+            run_time = 1,
+        )
+        self.play(FadeOut(time), FadeOut(space))
+        self.wait(3)
+
+    ###
+
+    def create_pi_creature(self):
+        return Randolph().scale(0.5).to_corner(DOWN+LEFT)
+
+class HangingWeightsScene(MovingCameraScene):
+    CONFIG = {
+        "frequency" : 0.5,
+        "ceiling_radius" : 3*SPACE_WIDTH,
+        "n_springs" : 72,
+        "amplitude" : 0.6,
+        "spring_radius" : 0.15,
+    }
+    def construct(self):
+        self.setup_springs()
+        self.setup_weights()
+        self.introduce()
+        self.show_analogy_with_electron()
+        self.metaphor_for_something()
+        self.moving_reference_frame()
+
+    def setup_springs(self):
+        ceiling = self.ceiling = Line(LEFT, RIGHT)
+        ceiling.scale(self.ceiling_radius)
+        ceiling.to_edge(UP, buff = LARGE_BUFF)
+        self.add(ceiling)
+
+        def get_spring(alpha, height = 2):
+            t_max = 6.5
+            r = self.spring_radius
+            s = (height - r)/(t_max**2)
+            spring = ParametricFunction(
+                lambda t : op.add(
+                    r*(np.sin(TAU*t)*RIGHT+np.cos(TAU*t)*UP),
+                    s*(t**2)*DOWN,
+                ),
+                t_min = 0, t_max = t_max,
+                color = WHITE,
+                stroke_width = 2,
+            )
+            spring.alpha = alpha
+            spring.move_to(ceiling.point_from_proportion(alpha), UP)
+            spring.color_using_background_image("grey_gradient")
+            return spring
+        alphas = np.linspace(0, 1, self.n_springs)
+        bezier([0, 1, 0, 1])
+        springs = self.springs = VGroup(*map(get_spring, alphas))
+
+        k_tracker = self.k_tracker = VectorizedPoint()
+        t_tracker = self.t_tracker = VectorizedPoint()
+        self.t_tracker_walk = AmbientMovement(t_tracker, direction = RIGHT, rate = 1)
+        equilibrium_height = springs.get_height()
+        def update_springs(springs):
+            for spring in springs:
+                k = k_tracker.get_center()[0]
+                t = t_tracker.get_center()[0]
+                f = self.frequency
+                x = spring.get_top()[0]
+                A = self.amplitude
+                d_height = A*np.cos(TAU*f*t - k*x)
+                new_spring = get_spring(spring.alpha, 2+d_height)
+                Transform(spring, new_spring).update(1)
+        spring_update_anim = ContinualUpdateFromFunc(springs, update_springs)
+        self.spring_update_anim = spring_update_anim
+        spring_update_anim.update(0)
+
+        self.play(
+            ShowCreation(ceiling),
+            LaggedStart(ShowCreation, springs)
+        )
+
+    def setup_weights(self):
+        weights = self.weights = VGroup()
+        weight_anims = weight_anims = []
+        for spring in self.springs:
+            x = spring.get_top()[0]
+            mass = np.exp(-0.1*x**2)
+            weight = Circle(radius = 0.15)
+            weight.start_radius = 0.15
+            weight.target_radius = 0.25*mass #For future update
+            weight.spring = spring
+            weight_anim = ContinualUpdateFromFunc(
+                weight, lambda w : w.move_to(w.spring.get_bottom())
+            )
+            weight_anim.update(0)
+            weight_anims.append(weight_anim)
+            weights.add(weight)
+        weights.set_fill(opacity = 1)
+        weights.gradient_highlight(BLUE_D, BLUE_E, BLUE_D)
+        weights.set_stroke(WHITE, 1)
+
+        self.play(LaggedStart(GrowFromCenter, weights))
+        self.add(self.t_tracker_walk)
+        self.add(self.spring_update_anim)
+        self.add(*weight_anims)
+
+    def introduce(self):
+        arrow = Arrow(4*LEFT, LEFT)
+        arrows = VGroup(arrow, arrow.copy().flip(about_point = ORIGIN))
+        arrows.highlight(WHITE)
+
+        self.wait(3)
+        self.play(*map(GrowArrow, arrows))
+        self.play(*[
+            UpdateFromAlphaFunc(
+                weight, lambda w, a : w.scale_to_fit_width(
+                    2*interpolate(w.start_radius, w.target_radius, a)
+                ),
+                run_time = 2
+            )
+            for weight in self.weights
+        ])
+        self.play(FadeOut(arrows))
+        self.wait(3)
+
+    def show_analogy_with_electron(self):
+        words = TextMobject(
+            "Analogous to the energy of a particle \\\\",
+            "(in the sense of $E=mc^2$)"
+        )
+        words.move_to(DOWN)
+
+        self.play(Write(words))
+        self.wait(3)
+        self.play(FadeOut(words))
+
+    def metaphor_for_something(self):
+        de_broglie = ImageMobject("de_Broglie")
+        de_broglie.scale_to_fit_height(3.5)
+        de_broglie.to_corner(DOWN+RIGHT)
+        words = TextMobject("""
+            If a photon's energy is carried as a wave \\\\
+            is this true for any particle?
+        """)
+        words.next_to(de_broglie, LEFT)
+
+        einstein = ImageMobject("Einstein")
+        einstein.match_height(de_broglie)
+        einstein.to_corner(DOWN+LEFT)
+
+        for picture in de_broglie, einstein:
+            picture.backdrop = Rectangle()
+            picture.backdrop.replace(picture, stretch = True)
+            picture.backdrop.set_fill(BLACK, 1)
+            picture.backdrop.set_stroke(BLACK, 0)
+
+        self.play(
+            Animation(de_broglie.backdrop, remover = True),
+            FadeIn(de_broglie)
+        )
+        self.play(Write(words))
+        self.wait(7)
+        self.play(
+            FadeOut(words),
+            Animation(einstein.backdrop, remover = True),
+            FadeIn(einstein)
+        )
+        self.wait(2)
+
+        self.de_broglie = de_broglie
+        self.einstein = einstein
+
+    def moving_reference_frame(self):
+        rect = ScreenRectangle(height = 2.1*SPACE_HEIGHT)
+        rect_movement = AmbientMovement(rect, direction = LEFT, rate = 2)
+        camera_frame = self.camera_frame
+
+        self.add(rect)
+        self.play( 
+            Animation(self.de_broglie.backdrop, remover = True),
+            FadeOut(self.de_broglie),
+            Animation(self.einstein.backdrop, remover = True),
+            FadeOut(self.einstein),
+        )
+        self.play(camera_frame.scale, 3, {"about_point" : 2*UP})
+        self.play(rect.shift, 2*SPACE_WIDTH*RIGHT, path_arc = -TAU/2)
+        self.add(rect_movement)
+        self.wait(3)
+
+        def zoom_into_reference_frame():
+            original_height = camera_frame.get_height()
+            original_center = camera_frame.get_center()
+            self.play(
+                UpdateFromAlphaFunc(
+                    camera_frame, lambda c, a : c.scale_to_fit_height(
+                        interpolate(original_height, 0.95*rect.get_height(), a)
+                    ).move_to(
+                        interpolate(original_center, rect.get_center(), a)
+                    )
+                ),
+                ApplyMethod(
+                    self.k_tracker.shift, RIGHT,
+                    rate_func = squish_rate_func(smooth, 0.5, 1)
+                )
+            )
+            self.play(MaintainPositionRelativeTo(
+                camera_frame, rect,
+                run_time = 6
+            ))
+            self.play(
+                camera_frame.scale_to_fit_height, original_height,
+                camera_frame.move_to, original_center,
+                ApplyMethod(self.k_tracker.shift, LEFT)
+            )
+
+        zoom_into_reference_frame()
+        self.wait()
+        self.play(
+            UpdateFromAlphaFunc(rect, lambda m, a : m.set_stroke(width = 2*(1-a)))
+        )
+
+        index = int(0.5*len(self.springs))
+        weights = VGroup(self.weights[index], self.weights[index+4])
+        flashes = map(self.get_peak_flash_anim, weights)
+        weights.save_state()
+        weights.set_fill(RED)
+        self.add(*flashes)
+        self.wait(5)
+
+        rect.align_to(camera_frame, RIGHT)
+        self.play(UpdateFromAlphaFunc(rect, lambda m, a : m.set_stroke(width = 2*a)))
+        self.wait(2)
+        zoom_into_reference_frame()
+        self.wait(8)
+
+    ###
+
+    def get_peak_flash_anim(self, weight):
+        mobject = Mobject() #Dummy
+        mobject.last_y = 0
+        mobject.last_dy = 0
+        mobject.curr_anim = None
+        mobject.curr_anim_time = 0
+        mobject.time_since_last_flash = 0
+        def update(mob, dt):
+            mob.time_since_last_flash += dt
+            point = weight.get_center()
+            y = point[1]
+            mob.dy = y - mob.last_y
+            different_dy = np.sign(mob.dy) != np.sign(mob.last_dy)
+            if different_dy and mob.time_since_last_flash > 0.5:
+                mob.curr_anim = Flash(
+                    VectorizedPoint(point),
+                    flash_radius = 0.5,
+                    line_length = 0.3,
+                    run_time = 0.2,
+                )
+                mob.submobjects = [mob.curr_anim.mobject]
+                mob.time_since_last_flash = 0
+            mob.last_y = float(y)
+            mob.last_dy = float(mob.dy)
+            ##
+            if mob.curr_anim:
+                mob.curr_anim_time += dt
+                if mob.curr_anim_time > mob.curr_anim.run_time:
+                    mob.curr_anim = None
+                    mob.submobjects = []
+                    mob.curr_anim_time = 0
+                    return
+                mob.curr_anim.update(mob.curr_anim_time/mob.curr_anim.run_time)
+
+        return ContinualUpdateFromTimeFunc(mobject, update)
+
+class MinutPhysicsWrapper(Scene):
+    def construct(self):
+        logo = ImageMobject("minute_physics_logo", invert = True)
+        logo.to_corner(UP+LEFT)
+        self.add(logo)
+
+        title = TextMobject("Minute Physics on special relativity")
+        title.to_edge(UP).shift(MED_LARGE_BUFF*RIGHT)
+
+        screen_rect = ScreenRectangle()
+        screen_rect.scale_to_fit_width(title.get_width() + LARGE_BUFF)
+        screen_rect.next_to(title, DOWN)
+
+        self.play(ShowCreation(screen_rect))
+        self.play(Write(title))
+        self.wait(2)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
