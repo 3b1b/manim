@@ -102,19 +102,22 @@ class ArcBetweenPoints(Arc):
 
     def __init__(self, start_point, end_point, angle = TAU/4, **kwargs):
         if angle == 0:
-            raise Exception("Arc with zero curve angle. Use Line instead.")
+            raise Exception("Arc with zero curve angle: use Line instead.")
 
         midpoint = 0.5 * (start_point + end_point)
         distance_vector = end_point - start_point
         normal_vector = np.array([-distance_vector[1], distance_vector[0],0])
         distance = np.linalg.norm(normal_vector)
         normal_vector /= distance
-        radius = distance/2 / np.sin(0.5 * angle)
-        l = distance/2 / np.tan(0.5 * angle)
+        if angle < 0:
+            normal_vector *= -1
+
+        radius = distance/2 / np.sin(0.5 * np.abs(angle))
+        l = distance/2 / np.tan(0.5 * np.abs(angle))
         arc_center = midpoint + l * normal_vector
         w = start_point - arc_center
         if w[0] != 0:
-            start_angle = np.arctan(w[1]/w[0])
+            start_angle = np.arctan2(w[1],w[0])
         else:
             start_angle = np.pi/2
 
@@ -122,18 +125,25 @@ class ArcBetweenPoints(Arc):
             radius = radius,
             start_angle = start_angle,
             **kwargs)
+        
         self.move_arc_center_to(arc_center)
 
 class CurvedArrow(ArcBetweenPoints):
 
     def __init__(self, start_point, end_point, angle = TAU/4, **kwargs):
-        ArcBetweenPoints.__init__(self, start_point, end_point, angle = TAU/4, **kwargs)
-        self.add_tip()
+        # I know this is in reverse, but it works
+        if angle >= 0:
+            ArcBetweenPoints.__init__(self, start_point, end_point, angle = angle, **kwargs)
+            self.add_tip(at_start = True, at_end = False)
+        else:
+            ArcBetweenPoints.__init__(self, end_point, start_point, angle = -angle, **kwargs)
+            self.add_tip(at_start = False, at_end = True)
+        
 
 class CurvedDoubleArrow(ArcBetweenPoints):
 
     def __init__(self, start_point, end_point, angle = TAU/4, **kwargs):
-        ArcBetweenPoints.__init__(self, start_point, end_point, angle = TAU/4, **kwargs)
+        ArcBetweenPoints.__init__(self, start_point, end_point, angle = angle, **kwargs)
         self.add_tip(at_start = True, at_end = True)
 
 
