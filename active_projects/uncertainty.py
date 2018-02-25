@@ -39,6 +39,40 @@ from active_projects.fourier import *
 FREQUENCY_COLOR = RED
 USE_ALMOST_FOURIER_BY_DEFAULT = False
 
+class ValueTracker(VectorizedPoint):
+    """
+    Note meant to be displayed.  Instead the position encodes some 
+    number, often one which another animation or continual_animation
+    uses for its update function, and by treating it as a mobject it can
+    still be animated and manipulated just like anything else.
+    """
+    def __init__(self, value = 0, **kwargs):
+        VectorizedPoint.__init__(self, **kwargs)
+        self.set_value(value)
+
+    def get_value(self):
+        return self.get_center()[0]
+
+    def set_value(self, value):
+        self.move_to(value*RIGHT)
+        return self
+
+    def increment_value(self, d_value):
+        self.set_value(self.get_value() + d_value)
+
+class ExponentialValueTracker(ValueTracker):
+    """
+    Operates just like ValueTracker, except it encodes the value as the
+    exponential of a position coordinate, which changes how interpolation 
+    behaves
+    """
+    def get_value(self):
+        return np.exp(self.get_center()[0])
+
+    def set_value(self, value):
+        self.move_to(np.log(value)*RIGHT)
+        return self
+
 class GaussianDistributionWrapper(Line):
     """
     This is meant to encode a 2d normal distribution as
@@ -82,7 +116,9 @@ class ProbabalisticMobjectCloud(ContinualAnimation):
     CONFIG = {
         "fill_opacity" : 0.25,
         "n_copies" : 100,
-        "gaussian_distribution_wrapper_config" : {}
+        "gaussian_distribution_wrapper_config" : {},
+        "time_per_change" : 1./60,
+        "start_up_time" : 0,
     }
     def __init__(self, prototype, **kwargs):
         digest_config(self, kwargs)
@@ -92,13 +128,20 @@ class ProbabalisticMobjectCloud(ContinualAnimation):
         self.gaussian_distribution_wrapper = GaussianDistributionWrapper(
             **self.gaussian_distribution_wrapper_config
         )
+        self.time_since_last_change = np.inf
         group = VGroup(*[
             prototype.copy().set_fill(opacity = fill_opacity)
             for x in range(self.n_copies)
         ])
         ContinualAnimation.__init__(self, group, **kwargs)
+        self.update_mobject(0)
 
     def update_mobject(self, dt):
+        self.time_since_last_change += dt
+        if self.time_since_last_change < self.time_per_change:
+            return
+        self.time_since_last_change = 0
+
         group = self.mobject
         points = self.gaussian_distribution_wrapper.get_random_points(len(group))
         for mob, point in zip(group, points):
@@ -423,7 +466,8 @@ class MentionUncertaintyPrinciple(TeacherStudentsScene):
 class FourierTradeoff(Scene):
     CONFIG = {
         "show_text" : True,
-        "complex_to_real_func" : abs,
+        "complex_to_real_func" : lambda z : z.real,
+        "widths" : [6, 0.02, 1],
     }
     def construct(self):
         #Setup axes
@@ -450,8 +494,8 @@ class FourierTradeoff(Scene):
             x_min = 0,
             x_max = 8,
             x_axis_config = {"unit_size" : 1.5},
-            y_min = 0,
-            y_max = 0.1,
+            y_min = -0.025,
+            y_max = 0.075,
             y_axis_config = {
                 "unit_size" : 30,
                 "tick_frequency" : 0.025,
@@ -473,13 +517,12 @@ class FourierTradeoff(Scene):
         # Graph information
 
         #x-coordinate of this point determines width of wave_packet graph
-        width_tracker = VectorizedPoint(0.5*RIGHT)
-        def get_width():
-            return width_tracker.get_center()[0]
+        width_tracker = ExponentialValueTracker(0.5)
+        get_width = width_tracker.get_value
 
         def get_wave_packet_function():
             factor = 1./get_width()
-            return lambda t : np.sqrt(factor)*np.cos(4*TAU*t)*np.exp(-factor*(t-time_mean)**2)
+            return lambda t : (factor**0.25)*np.cos(4*TAU*t)*np.exp(-factor*(t-time_mean)**2)
 
         def get_wave_packet():
             graph = time_axes.get_graph(
@@ -518,7 +561,7 @@ class FourierTradeoff(Scene):
             ),
             color = FREQUENCY_COLOR,
         )
-        fourier_words = TextMobject("$|$Fourier Transform$|$")
+        fourier_words = TextMobject("Fourier Transform")
         fourier_words.next_to(arrow, LEFT, buff = MED_LARGE_BUFF)
         sub_words = TextMobject("(To be explained shortly)")
         sub_words.highlight(BLUE)
@@ -539,9 +582,9 @@ class FourierTradeoff(Scene):
         self.play(*anims)
         # self.play(FadeOut(arrow))
         self.wait()
-        for width in 6, 0.02, 1:
+        for width in self.widths:
             self.play(
-                width_tracker.move_to, width*RIGHT,
+                width_tracker.set_value, width,
                 wave_packet_update,
                 fourier_graph_update,
                 run_time = 3
@@ -1026,10 +1069,9 @@ class VariousMusicalNotes(Scene):
         # x-coordinate of this point represents log(a)
         # where the bell curve component of the signal
         # is exp(-a*(x**2))
-        graph_width_tracker = VectorizedPoint()
-        graph_width_tracker.move_to(np.log(2)*RIGHT)
+        graph_width_tracker = ExponentialValueTracker(1)
         def get_graph():
-            a = np.exp(graph_width_tracker.get_center()[0])
+            a = graph_width_tracker.get_value()
             return FunctionGraph(
                 lambda x : np.exp(-a*x**2)*np.sin(freq*x)-0.5,
                 num_anchor_points = 500,
@@ -1041,26 +1083,25 @@ class VariousMusicalNotes(Scene):
         def change_width_anim(width, **kwargs):
             a = 2.0/(width**2)
             return AnimationGroup(
-                ApplyMethod(
-                    graph_width_tracker.move_to,
-                    np.log(a)*RIGHT
-                ),
+                ApplyMethod(graph_width_tracker.set_value, a),
                 graph_update_anim,
                 **kwargs
             )
+        change_width_anim(SPACE_WIDTH).update(1)
+        graph_update_anim.update(0)
 
         phrases = [
             TextMobject(*words.split(" "))
             for words in [
+                "Very clear frequency",
                 "Less clear frequency",
                 "Extremely unclear frequency",
-                "Very clear frequency",
             ]
         ]
 
 
         #Show graphs and phrases
-        widths = [1, 0.2, SPACE_WIDTH]
+        widths = [SPACE_WIDTH, 1, 0.2]
         for width, phrase in zip(widths, phrases):
             brace = Brace(Line(LEFT, RIGHT), UP)
             brace.stretch(width, 0)
@@ -1123,7 +1164,7 @@ class VariousMusicalNotes(Scene):
         )
         self.play(
             Write(short_signal_words),
-            change_width_anim(widths[1])
+            change_width_anim(widths[2])
         )
         self.play(
             long_graph.stretch, 0.35, 0,
@@ -1134,7 +1175,7 @@ class VariousMusicalNotes(Scene):
         self.wait()
         self.play(
             Write(long_signal_words),
-            change_width_anim(widths[2]),
+            change_width_anim(widths[0]),
         )
         self.play(
             long_graph.stretch, 0.95, 0,
@@ -1143,6 +1184,27 @@ class VariousMusicalNotes(Scene):
             rate_func = wiggle
         )
         self.wait()
+
+class CrossOutDefinitenessAndCertainty(TeacherStudentsScene):
+    def construct(self):
+        words = VGroup(
+            TextMobject("Definiteness"),
+            TextMobject("Certainty"),
+        )
+        words.arrange_submobjects(DOWN)
+        words.next_to(self.teacher, UP+LEFT)
+        crosses = VGroup(*map(Cross, words))
+
+        self.add(words)
+        self.play(
+            self.teacher.change, "sassy",
+            ShowCreation(crosses[0])
+        )
+        self.play(
+            self.get_student_changes(*3*["erm"]),
+            ShowCreation(crosses[1])
+        )
+        self.wait(2)
 
 class BringInFourierTranform(TeacherStudentsScene):
     def construct(self):
@@ -1300,8 +1362,7 @@ class FourierRecapScene(DrawFrequencyPlot):
                 self.time_graph,
                 draw_polarized_graph = False
             ),
-            rate_func = lambda t : 0.3*t,
-            run_time = 5
+            run_time = 10
         )
         self.wait()
 
@@ -1394,6 +1455,14 @@ class FourierRecapScene(DrawFrequencyPlot):
         )
         graph.highlight(YELLOW)
         return graph
+
+class RealPartOfInsert(Scene):
+    def construct(self):
+        words = TextMobject("(Real part of the)")
+        words.highlight(RED)
+        self.add(words)
+        self.play(Write(words))
+        self.wait(5)
 
 class CenterOfMassDescription(FourierRecapScene):
     def construct(self):
@@ -1650,10 +1719,36 @@ class LongAndShortSignalsInWindingMachine(FourierRecapScene):
             dot.arrow = arrow
         return dots
 
+class FocusRectangleInsert(FourierRecapScene):
+    CONFIG = {
+        "target_width" : 0.5
+    }
+    def construct(self):
+        self.setup_axes()
+        self.clear()
+        point = self.frequency_axes.coords_to_point(5, 0.25)
+        rect = ScreenRectangle(height = 2.1*SPACE_HEIGHT)
+        rect.set_stroke(YELLOW, 2)
+        self.add(rect)
+        self.wait()
+        self.play(
+            rect.stretch_to_fit_width, self.target_width,
+            rect.stretch_to_fit_height, 1.5,
+            rect.move_to, point,
+            run_time = 2
+        )
+        self.wait(3)
+
+class BroadPeakFocusRectangleInsert(FocusRectangleInsert):
+    CONFIG = {
+        "target_width" : 1.5,
+    }
+
 class CleanerFourierTradeoff(FourierTradeoff):
     CONFIG = {
         "show_text" : False,
         "complex_to_real_func" : lambda z : z.real,
+        "widths" : [0.02, 6, 1],
     }
 
 class MentionDopplerRadar(TeacherStudentsScene):
@@ -2058,6 +2153,31 @@ class IntroduceDopplerRadar(Scene):
         )
         sum_graph.background_image_file = "blue_yellow_gradient"
         return pulse_graph, echo_graph, sum_graph
+
+class DopplerFormulaInsert(Scene):
+    def construct(self):
+        formula = TexMobject(
+            "f_{\\text{echo}", "=",
+            "\\left(1 + \\frac{v}{c}\\right)",
+            "f_{\\text{pulse}}"
+        )
+        formula[0].highlight(BLUE)
+        formula[3].highlight(YELLOW)
+
+        randy = Randolph(color = BLUE_C)
+        formula.scale(1.5)
+        formula.next_to(randy, UP+LEFT)
+        formula.shift_onto_screen()
+
+        self.add(randy)
+        self.play(
+            LaggedStart(FadeIn, formula),
+            randy.change, "pondering", randy.get_bottom(),
+        )
+        self.play(Blink(randy))
+        self.wait(2)
+        self.play(Blink(randy))
+        self.wait()
 
 class MentionPRFNuance(TeacherStudentsScene):
     def construct(self):
@@ -3038,21 +3158,27 @@ class ShowMomentumFormula(IntroduceDeBroglie, TeacherStudentsScene):
         formula.move_to(ORIGIN)
         formula.scale(1.5)
 
-        momentum = TextMobject("Momentum")
-        momentum.next_to(p, UP, LARGE_BUFF).shift(LEFT)
-        momentum_arrow = Arrow(momentum, p, buff = SMALL_BUFF)
-        VGroup(p, momentum, momentum_arrow).highlight(self.p_color)
+        word_shift_val = 1.75
+        p_words = TextMobject("Momentum")
+        p_words.next_to(p, UP, LARGE_BUFF).shift(word_shift_val*LEFT)
+        p_arrow = Arrow(
+            p_words.get_bottom(), p.get_corner(UP+LEFT),
+            buff = SMALL_BUFF
+        )
+        added_p_words = TextMobject("(Classically $m \\times v$)")
+        added_p_words.move_to(p_words, DOWN)
+        VGroup(p, p_words, added_p_words, p_arrow).highlight(self.p_color)
 
         xi_words = TextMobject("Spatial frequency")
         added_xi_words = TextMobject("(cycles per unit \\emph{distance})")
-        xi_words.next_to(xi, UP, LARGE_BUFF).shift(RIGHT)
-        xi_words.align_to(momentum)
+        xi_words.next_to(xi, UP, LARGE_BUFF).shift(word_shift_val*RIGHT)
+        xi_words.align_to(p_words)
         xi_arrow = Arrow(
             xi_words.get_bottom(), xi.get_corner(UP+RIGHT), 
             buff = SMALL_BUFF
         )
-        added_xi_words.move_to(xi_words)
-        added_xi_words.to_edge(RIGHT)
+        added_xi_words.move_to(xi_words, DOWN)
+        added_xi_words.align_to(added_p_words, DOWN)
         VGroup(xi, xi_words, added_xi_words, xi_arrow).highlight(self.xi_color)
 
         axes = Axes(
@@ -3095,8 +3221,16 @@ class ShowMomentumFormula(IntroduceDeBroglie, TeacherStudentsScene):
         self.add(formula, wave)
         self.play(
             self.teacher.change, "raise_right_hand", 
-            Write(momentum),
-            GrowArrow(momentum_arrow),
+            GrowArrow(p_arrow),
+            Succession(
+                Write, p_words,
+                ApplyMethod, p_words.next_to, added_p_words, UP,
+            ),
+            FadeIn(
+                added_p_words,
+                rate_func = squish_rate_func(smooth, 0.5, 1),
+                run_time = 2,
+            ),
             wave_propagation
         )
         self.play(
@@ -3105,14 +3239,9 @@ class ShowMomentumFormula(IntroduceDeBroglie, TeacherStudentsScene):
             self.get_student_changes("confused", "erm", "sassy"),
             stopped_wave_propagation
         )
-        self.show_frame()
         self.play(
             FadeIn(added_xi_words),
-            VGroup(
-                formula, momentum, momentum_arrow,
-                xi_words, xi_arrow
-            ).next_to, 
-            added_xi_words, LEFT, {"submobject_to_align" : xi_words},
+            xi_words.next_to, added_xi_words, UP,
         )
         self.play(
             LaggedStart(ShowCreation, v_lines),
@@ -3122,7 +3251,7 @@ class ShowMomentumFormula(IntroduceDeBroglie, TeacherStudentsScene):
         self.wait()
 
         self.formula_labels = VGroup(
-            momentum, momentum_arrow,
+            p_words, p_arrow, added_p_words,
             xi_words, xi_arrow, added_xi_words, 
         )        
         self.set_variables_as_attrs(wave, wave_propagation, formula)
@@ -3133,7 +3262,6 @@ class ShowMomentumFormula(IntroduceDeBroglie, TeacherStudentsScene):
         full_formula.save_state()
         wave_propagation = self.wave_propagation
 
-
         student = self.students[2]
         self.student_says(
             "Hang on...",
@@ -3142,9 +3270,10 @@ class ShowMomentumFormula(IntroduceDeBroglie, TeacherStudentsScene):
             student_index = 2,
             added_anims = [self.teacher.change, "plain"]
         )
+        student.bubble.add(student.bubble.content)
         self.wait()
         kwargs = {
-            "path_arc" : TAU/8,
+            "path_arc" : TAU/4,
             "submobject_mode" : "lagged_start",
             "lag_ratio" : 0.7,
             "run_time" : 1.5,
@@ -3152,31 +3281,29 @@ class ShowMomentumFormula(IntroduceDeBroglie, TeacherStudentsScene):
         self.play(
             full_formula.scale, 0,
             full_formula.move_to, student.eyes.get_bottom()+SMALL_BUFF*DOWN,
+            Animation(student.bubble),
             **kwargs
         )
-        self.play(full_formula.restore, **kwargs)
+        self.play(full_formula.restore, Animation(student.bubble), **kwargs)
+        wave_propagation.update_config(
+            rate_func = lambda a : interpolate(0.35, 1, a)
+        )
         self.play(
             wave_propagation, 
-            rate_func = lambda a : interpolate(0.35, 1, a)
+            RemovePiCreatureBubble(student, target_mode = "confused"),
         )
         wave_propagation.update_config(rate_func = lambda t : t)
         self.student_says(
             "Physics is \\\\ just weird",
-            bubble_kwargs = {"height" : 2.5, "width" : 2.5},
+            bubble_kwargs = {"height" : 2.5, "width" : 3},
             target_mode = "shruggie",
             student_index = 0,
-            added_anims = [
-                ApplyMethod(full_formula.shift, 4*RIGHT+0.5*UP),
-                UpdateFromAlphaFunc(
-                    formula_labels[-1],
-                    lambda m, a : m.set_fill(opacity = 1-a),
-                    remover = True
-                )
-            ]
+            added_anims = [ApplyMethod(full_formula.shift, UP)]
         )
         self.wait()
         self.play(
             wave_propagation,
+            ApplyMethod(full_formula.shift, DOWN),
             FadeOut(self.students[0].bubble),
             FadeOut(self.students[0].bubble.content),
             self.get_student_changes(*3*["pondering"]),
@@ -3344,14 +3471,13 @@ class SortOfDopplerEffect(PiCreatureScene):
         self.play(
             MaintainPositionRelativeTo(
                 screen_rect, rect,
-                run_time = 5
+                run_time = 4
             ),
         )
         self.play(
             screen_rect.move_to, rect.get_right()+SPACE_WIDTH*LEFT,
             k_tracker.shift, 2*LEFT,
         )
-        self.wait(3)
 
         #Frequency words
         temporal_frequency = TextMobject("Temporal", "frequency")
@@ -3414,7 +3540,7 @@ class HangingWeightsScene(MovingCameraScene):
             spring = ParametricFunction(
                 lambda t : op.add(
                     r*(np.sin(TAU*t)*RIGHT+np.cos(TAU*t)*UP),
-                    s*(t**2)*DOWN,
+                    s*((t_max - t)**2)*DOWN,
                 ),
                 t_min = 0, t_max = t_max,
                 color = WHITE,
@@ -3570,10 +3696,7 @@ class HangingWeightsScene(MovingCameraScene):
                         interpolate(original_center, rect.get_center(), a)
                     )
                 ),
-                ApplyMethod(
-                    self.k_tracker.shift, RIGHT,
-                    rate_func = squish_rate_func(smooth, 0.5, 1)
-                )
+                ApplyMethod(self.k_tracker.shift, RIGHT)
             )
             self.play(MaintainPositionRelativeTo(
                 camera_frame, rect,
@@ -3601,7 +3724,22 @@ class HangingWeightsScene(MovingCameraScene):
 
         rect.align_to(camera_frame, RIGHT)
         self.play(UpdateFromAlphaFunc(rect, lambda m, a : m.set_stroke(width = 2*a)))
+
+        randy = Randolph(mode = "pondering")
+        randy.look(UP+RIGHT)
+        de_broglie = ImageMobject("de_Broglie")
+        de_broglie.scale_to_fit_height(6)
+        de_broglie.next_to(4*DOWN, DOWN)
+        self.add(
+            ContinualUpdateFromFunc(
+                randy, lambda m : m.next_to(
+                    rect.get_corner(DOWN+LEFT), UP+RIGHT, MED_LARGE_BUFF,
+                ).look_at(weights)
+            ),
+            de_broglie
+        )
         self.wait(2)
+
         zoom_into_reference_frame()
         self.wait(8)
 
@@ -3660,25 +3798,1041 @@ class MinutPhysicsWrapper(Scene):
         self.play(Write(title))
         self.wait(2)
 
+class WhatDoesTheFourierTradeoffTellUs(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "So! What does \\\\ the Fourier trade-off \\\\ tell us?",
+            target_mode = "surprised",
+            bubble_kwargs = {"width" : 4, "height" : 3}
+        )
+        self.change_student_modes(*["thinking"]*3)
+        self.wait(4)
+
+class FourierTransformOfWaveFunction(Scene):
+    CONFIG = {
+        "wave_stroke_width" : 3,
+        "wave_color" : BLUE,
+    }
+    def construct(self):
+        self.show_wave_packet()
+        self.take_fourier_transform()
+        self.show_correlations_with_pure_frequencies()
+        self.this_is_momentum()
+        self.show_tradeoff()
+
+    def setup(self):
+        self.x0_tracker = ValueTracker(-3)
+        self.k_tracker = ValueTracker(1)
+        self.a_tracker = ExponentialValueTracker(0.5)
+
+    def show_wave_packet(self):
+        axes = Axes(
+            x_min = 0, x_max = 12,
+            y_min = -1, y_max = 1,
+            y_axis_config = {
+                "tick_frequency" : 0.5
+            }
+        )
+        position_label = TextMobject("Position")
+        position_label.next_to(axes.x_axis.get_right(), UP)
+        axes.add(position_label)
+        axes.center().to_edge(UP, buff = LARGE_BUFF)
+
+        wave = self.get_wave(axes)
+        wave_update_animation = UpdateFromFunc(
+            wave, lambda w : Transform(w, self.get_wave(axes)).update(1)
+        )
+
+        self.add(axes, wave)
+        self.play(
+            self.x0_tracker.set_value, 5,
+            wave_update_animation,
+            run_time = 3,
+        )
+        self.wait()
+
+        self.wave_function = wave.underlying_function
+        self.wave_update_animation = wave_update_animation
+        self.wave = wave
+        self.axes = axes
+
+    def take_fourier_transform(self):
+        wave = self.wave
+        wave_update_animation = self.wave_update_animation
+        frequency_axes = Axes(
+            x_min = 0, x_max = 3,
+            x_axis_config = {
+                "unit_size" : 4,
+                "tick_frequency" : 0.25,
+                "numbers_with_elongated_ticks" : [1, 2]
+            },
+            y_min = -0.15,
+            y_max = 0.15,
+            y_axis_config = {
+                "unit_size" : 7.5,
+                "tick_frequency" : 0.05,
+            }
+        )
+        label = self.frequency_x_axis_label = TextMobject("Spatial frequency")
+        label.next_to(frequency_axes.x_axis.get_right(), UP)
+        frequency_axes.add(label)
+        frequency_axes.move_to(self.axes, LEFT)
+        frequency_axes.to_edge(DOWN, buff = LARGE_BUFF)
+        label.shift_onto_screen()
+
+        def get_wave_function_fourier_graph():
+            return get_fourier_graph(
+                frequency_axes, self.get_wave_func(),
+                t_min = 0, t_max = 15,
+            )
+        fourier_graph = get_wave_function_fourier_graph()
+        self.fourier_graph_update_animation = UpdateFromFunc(
+            fourier_graph, lambda m : Transform(
+                m, get_wave_function_fourier_graph()
+            ).update(1)
+        )
+
+        wave_copy = wave.copy()
+        wave_copy.generate_target()
+        wave_copy.target.move_to(fourier_graph, LEFT)
+        wave_copy.target.fade(1)
+        fourier_graph.save_state()
+        fourier_graph.move_to(wave, LEFT)
+        fourier_graph.fade(1)
+
+        arrow = Arrow(
+            self.axes.coords_to_point(5, -1),
+            frequency_axes.coords_to_point(1, 0.1),
+            color = YELLOW,
+        )
+        fourier_label = TextMobject("Fourier Transform")
+        fourier_label.next_to(arrow.get_center(), RIGHT)
+
+        self.play(ReplacementTransform(
+            self.axes.copy(), frequency_axes
+        ))
+        self.play(
+            MoveToTarget(wave_copy, remover = True),
+            fourier_graph.restore,
+            GrowArrow(arrow),
+            Write(fourier_label, run_time = 1),
+        )
+        self.wait()
+
+        self.frequency_axes = frequency_axes
+        self.fourier_graph = fourier_graph
+        self.fourier_label = VGroup(arrow, fourier_label)
+
+    def show_correlations_with_pure_frequencies(self):
+        frequency_axes = self.frequency_axes
+        axes = self.axes
+
+        sinusoid = axes.get_graph(
+            lambda x : 0.5*np.cos(TAU*x),
+            x_min = -SPACE_WIDTH, x_max = 3*SPACE_WIDTH,
+        )
+        sinusoid.to_edge(UP, buff = SMALL_BUFF)
+
+        v_line = DashedLine(1.5*UP, ORIGIN, color = YELLOW)
+        v_line.move_to(frequency_axes.coords_to_point(1, 0), DOWN)
+
+        f_equals = TexMobject("f = ")
+        freq_decimal = DecimalNumber(1)
+        freq_decimal.next_to(f_equals, RIGHT, buff = SMALL_BUFF)
+        freq_label = VGroup(f_equals, freq_decimal)
+        freq_label.next_to(
+            v_line, UP, SMALL_BUFF, 
+            submobject_to_align = f_equals[0]
+        )
+
+        self.play(
+            ShowCreation(sinusoid),
+            ShowCreation(v_line),
+            Write(freq_label, run_time = 1),
+            FadeOut(self.fourier_label)
+        )
+        last_f = 1
+        for f in 1.4, 0.7, 1:
+            self.play(
+                sinusoid.stretch,f/last_f, 0, 
+                    {"about_point" : axes.coords_to_point(0, 0)},
+                v_line.move_to, frequency_axes.coords_to_point(f, 0), DOWN,
+                MaintainPositionRelativeTo(freq_label, v_line),
+                ChangeDecimalToValue(freq_decimal, f),
+                run_time = 3,
+            )
+            last_f = f
+        self.play(*map(FadeOut, [
+            sinusoid, v_line,  freq_label
+        ]))
+
+    def this_is_momentum(self):
+        formula = TexMobject("p", "=", "h", "\\xi")
+        formula.highlight_by_tex_to_color_map({
+            "p" : BLUE,
+            "xi" : YELLOW,
+        })
+        formula.next_to(
+            self.frequency_x_axis_label, UP
+        )
+
+        f_max = 0.12
+        brace = Brace(Line(2*LEFT, 2*RIGHT), UP)
+        brace.move_to(self.frequency_axes.coords_to_point(1, f_max), DOWN)
+        words = TextMobject("This wave \\\\ describes momentum")
+        words.next_to(brace, UP)
+
+        self.play(Write(formula))
+        self.wait()
+        self.play(
+            GrowFromCenter(brace),
+            Write(words)
+        )
+        brace.add(words)
+        for k in 2, 0.5, 1:
+            self.play(
+                self.k_tracker.set_value, k,
+                self.wave_update_animation,
+                self.fourier_graph_update_animation,
+                UpdateFromFunc(
+                    brace, lambda b : b.move_to(
+                        self.frequency_axes.coords_to_point(
+                            self.k_tracker.get_value(),
+                            f_max,
+                        ),
+                        DOWN
+                    )
+                ),
+                run_time = 2
+            )
+        self.wait()
+        self.play(*map(FadeOut, [brace, words, formula]))
+
+    def show_tradeoff(self):
+        for a in 5, 0.1, 0.01, 10, 0.5:
+            self.play(
+                ApplyMethod(
+                    self.a_tracker.set_value, a,
+                    run_time = 2
+                ),
+                self.wave_update_animation,
+                self.fourier_graph_update_animation
+            )
+            self.wait()
+
+    ##
+
+    def get_wave_func(self):
+        x0 = self.x0_tracker.get_value()
+        k = self.k_tracker.get_value()
+        a = self.a_tracker.get_value()
+        A = a**(0.25)
+        return lambda x : A*np.cos(TAU*k*x)*np.exp(-a*(x - x0)**2)
+
+    def get_wave(self, axes):
+        return axes.get_graph(
+            self.get_wave_func(), 
+            color = self.wave_color,
+            stroke_width = self.wave_stroke_width
+        )
+
+class DopplerComparisonTodos(TODOStub):
+    CONFIG = {
+        "message" : """
+            Insert some Doppler footage, 
+            insert some hanging spring scene,
+            insert position-momentum Fourier trade-off
+        """
+    }
+
+class MusicalNote(AddingPureFrequencies):
+    def construct(self):
+        speaker = self.speaker = SVGMobject(file_name = "speaker")
+        speaker.move_to(2*DOWN)
+        randy = self.pi_creature
+
+        axes = Axes(
+            x_min = 0, x_max = 10,
+            y_min = -1.5, y_max = 1.5
+        )
+        axes.center().to_edge(UP)
+        time_label = TextMobject("Time")
+        time_label.next_to(axes.x_axis.get_right(), UP)
+        axes.add(time_label)
+
+        graph = axes.get_graph(
+            lambda x : op.mul(
+                np.exp(-0.2*(x-4)**2),
+                0.3*(np.cos(2*TAU*x) + np.cos(3*TAU*x) + np.cos(5*TAU*x)),
+            ),
+        )
+        graph.highlight(BLUE)
+        v_line = DashedLine(ORIGIN, 0.5*UP)
+        v_line_update = UpdateFromFunc(
+            v_line, lambda l : l.put_start_and_end_on_with_projection(
+                graph.points[-1],
+                axes.x_axis.number_to_point(
+                    axes.x_axis.point_to_number(graph.points[-1])
+                )
+            )
+        )
+
+        self.add(speaker, axes)
+        self.play(
+            randy.change, "pondering",
+            self.get_broadcast_animation(n_circles = 6, run_time  = 5),
+            self.get_broadcast_animation(n_circles = 12, run_time = 5),
+            ShowCreation(graph, run_time = 5, rate_func = None),
+            v_line_update
+        )
+        self.wait(2)
+
+class AskAboutUncertainty(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "What does this have \\\\ to do with ``certainty''",
+            bubble_kwargs = {"direction" : LEFT},
+            student_index = 2
+        )
+        self.play(PiCreatureSays(
+            self.students[0], 
+            "What even are \\\\ these waves?",
+            target_mode = "confused"
+        ))
+        self.wait(2)
+
+class ProbabalisticDetection(FourierTransformOfWaveFunction):
+    CONFIG = {
+        "wave_stroke_width" : 2,
+    }
+    def construct(self):
+        self.setup_wave()
+        self.detect_only_single_points()
+        self.show_probability_distribution()
+        self.show_concentration_of_the_wave()
+
+    def setup_wave(self):
+        axes = Axes(
+            x_min = 0, x_max = 10,
+            y_min = -0.5, y_max = 1.5,
+            y_axis_config = {
+                "unit_size" : 1.5,
+                "tick_frequency" : 0.25,
+            }
+        )
+        axes.set_stroke(width = 2)
+        axes.center()
+        self.x0_tracker.set_value(5)
+        self.k_tracker.set_value(1)
+        self.a_tracker.set_value(0.2)
+        wave = self.get_wave(axes)
+        self.wave_update_animation = UpdateFromFunc(
+            wave, lambda w : Transform(w, self.get_wave(axes)).update(1)
+        )
+
+        self.k_tracker.save_state()
+        self.k_tracker.set_value(0)
+        bell_curve = self.get_wave(axes)
+        self.k_tracker.restore()
+        bell_curve.set_stroke(width = 0)
+        bell_curve.set_fill(BLUE, opacity = 0.5)
+        squared_bell_curve = axes.get_graph(
+            lambda x : bell_curve.underlying_function(x)**2
+        ).match_style(bell_curve)
+
+        self.set_variables_as_attrs(
+            axes, wave, bell_curve, squared_bell_curve
+        )
+
+    def detect_only_single_points(self):
+        particle = ProbabalisticDotCloud(
+            n_copies = 100, 
+            fill_opacity = 0.05, 
+            time_per_change = 0.05,
+        )
+        particle.mobject[0].set_fill(BLUE, opacity = 1)
+        gdw = particle.gaussian_distribution_wrapper
+
+        rect = Rectangle(
+            stroke_width = 0,
+            height = 0.5,
+            width = 2,
+        )
+        rect.set_fill(YELLOW, 0.3)
+        rect.move_to(self.axes.coords_to_point(self.x0_tracker.get_value(), 0))
+        brace = Brace(rect, UP, buff = 0)
+        question = TextMobject("Do we detect the particle \\\\ in this region?")
+        question.next_to(brace, UP)
+        question.add_background_rectangle()
+        rect.save_state()
+        rect.stretch(0, 0)
+
+        gdw_anim = ContinualUpdateFromFunc(
+            gdw, lambda m : m.scale_to_fit_width(
+                2.0/(self.a_tracker.get_value()**(0.5))
+            ).move_to(rect)
+        )
+
+        self.add(rect, brace, question)
+
+        yes = TextMobject("Yes").highlight(GREEN)
+        no = TextMobject("No").highlight(RED)
+        for word in yes, no:
+            word.next_to(rect, DOWN)
+            # word.add_background_rectangle()
+        answer = VGroup()
+        def update_answer(answer):
+            px = particle.mobject[0].get_center()[0]
+            lx = rect.get_left()[0]
+            rx = rect.get_right()[0]
+            if lx < px < rx:
+                answer.submobjects = [yes]
+            else:
+                answer.submobjects = [no]
+        answer_anim = ContinualUpdateFromFunc(answer, update_answer)
+
+        self.add(gdw_anim, particle)
+        self.play(
+            GrowFromCenter(brace),
+            rect.restore,
+            Write(question)
+        )
+        self.wait()
+        self.add(answer_anim)
+        self.wait(4)
+        self.add_foreground_mobjects(answer, particle.mobject)
+
+        self.question_group = VGroup(question, brace)
+        self.particle = particle
+        self.rect = rect
+
+    def show_probability_distribution(self):
+        axes = self.axes
+        wave = self.wave
+        bell_curve = self.bell_curve
+        question_group = self.question_group
+        gdw = self.particle.gaussian_distribution_wrapper
+        rect = self.rect
+
+        v_lines = VGroup(*[
+            DashedLine(ORIGIN, 3*UP).move_to(point, DOWN)
+            for point in rect.get_left(), rect.get_right()
+        ])
+        
+        self.play(
+            FadeIn(VGroup(axes, wave)),
+            question_group.next_to, v_lines, UP, {"buff" : 0},
+            *map(ShowCreation, v_lines)
+        )
+        self.wait(10)
+
+    def show_concentration_of_the_wave(self):
+        self.play(
+            self.a_tracker.set_value, 5,
+            self.wave_update_animation,
+        )
+        self.wait(10)
+
+class HeisenbergCommentTodos(TODOStub):
+    CONFIG = {
+        "message" : "Insert position-momentum trade-off"
+    }
+
+class HeisenbergPetPeeve(PiCreatureScene):
+    def construct(self):
+        morty, other = self.pi_creatures
+        particle = ProbabalisticDotCloud()
+        gdw = particle.gaussian_distribution_wrapper
+        gdw.to_edge(UP, buff = LARGE_BUFF)
+        gdw.stretch_to_fit_width(3)
+        gdw.rotate(3*DEGREES)
+
+        self.add(particle)
+        self.wait()
+        self.play(PiCreatureSays(
+            other, """
+            According to the H.U.P., the \\\\
+            universe is unknowable!
+            """,
+            target_mode = "speaking"
+        ))
+        self.play(morty.change, "angry")
+        self.wait(3)
+        self.play(
+            PiCreatureSays(
+                morty, "Well, yes and no",
+                target_mode = "sassy",
+            ),
+            RemovePiCreatureBubble(
+                other, target_mode = "erm"
+            )
+        )
+        self.wait(4)
+
+    ###
+    def create_pi_creatures(self):
+        morty = Mortimer()
+        morty.to_corner(DOWN+RIGHT)
+        other = PiCreature(color = MAROON_E)
+        other.to_edge(DOWN).shift(3*LEFT)
+        return VGroup(morty, other)
+
+class OneLevelDeeper(Scene):
+    def construct(self):
+        heisenberg = ImageMobject("Heisenberg")
+        heisenberg.to_corner(UP+LEFT)
+        self.add(heisenberg)
+
+        hup_words = TextMobject("Heisenberg's uncertainty principle")
+        wave_words = TextMobject("Interpretation of the wave function")
+        arrow = Vector(UP)
+        group = VGroup(hup_words, arrow, wave_words)
+        group.arrange_submobjects(DOWN)
+
+        randomness = ProbabalisticMobjectCloud(
+            TextMobject("Randomness"),
+            n_copies = 5,
+            time_per_change = 0.05
+        )
+        gdw = randomness.gaussian_distribution_wrapper
+        gdw.rotate(TAU/4)
+        gdw.scale_to_fit_height(1)
+        # gdw.scale_to_fit_width(4)
+        gdw.next_to(hup_words, UP, MED_LARGE_BUFF)
+
+        self.add(hup_words, randomness)
+        self.wait(4)
+        self.play(
+            FadeIn(wave_words),
+            GrowArrow(arrow),
+            ApplyMethod(
+                gdw.next_to, wave_words, DOWN, MED_LARGE_BUFF,
+                path_arc = TAU/2,
+            )
+        )
+        self.wait(6)
+
+class BetterTranslation(TeacherStudentsScene):
+    def construct(self):
+        english_term = TextMobject("Uncertainty principle")
+        german_word = TextMobject("Unschärferelation")
+        translation = TextMobject("Unsharpness relation")
+
+        to_german_words = TextMobject("In German")
+        to_german_words.scale(0.5)
+        to_german_arrow = Vector(DOWN, color = WHITE, buff = SMALL_BUFF)
+        to_german_words.next_to(to_german_arrow, RIGHT, SMALL_BUFF)
+        to_german_words.highlight(YELLOW)
+        to_german_group = VGroup(to_german_arrow, to_german_words)
+
+        translation_words = TextMobject("Literal translation")
+        translation_words.scale(0.5)
+        translation_arrow = Vector(DOWN, color = WHITE, buff = SMALL_BUFF)
+        translation_words.next_to(translation_arrow, LEFT, SMALL_BUFF)
+        translation_words.highlight(YELLOW)
+        translation_group = VGroup(translation_arrow, translation_words)
+
+        english_term.next_to(self.teacher, UP+LEFT)
+        english_term.save_state()
+        english_term.shift(DOWN)
+        english_term.fade(1)
+        self.play(
+            english_term.restore,
+            self.get_student_changes(*["pondering"]*3)
+        )
+        self.wait()
+
+        german_word.move_to(english_term)
+        to_german_group.next_to(
+            german_word, UP,
+            submobject_to_align = to_german_arrow
+        )
+        self.play(
+            self.teacher.change, "raise_right_hand", 
+            english_term.next_to, to_german_arrow, UP
+        )
+        self.play(
+            GrowArrow(to_german_arrow),
+            FadeIn(to_german_words),
+            ReplacementTransform(
+                english_term.copy().fade(1),
+                german_word
+            )
+        )
+        self.wait(2)
+
+        group = VGroup(english_term, to_german_group, german_word)
+        translation.move_to(german_word)
+        translation_group.next_to(
+            german_word, UP,
+            submobject_to_align = translation_arrow
+        )
+        self.play(
+            group.next_to, translation_arrow, UP,
+        )
+        self.play(
+            GrowArrow(translation_arrow),
+            FadeIn(translation_words),
+            ReplacementTransform(
+                german_word.copy().fade(1),
+                translation
+            )
+        )
+        self.change_student_modes(*["happy"]*3)
+        self.wait(2)
+
+class ThinkOfHeisenbergUncertainty(PiCreatureScene):
+    def construct(self):
+        morty = self.pi_creature
+        morty.center().to_edge(DOWN).shift(LEFT)
+
+        dot_cloud = ProbabalisticDotCloud()
+        dot_gdw = dot_cloud.gaussian_distribution_wrapper
+        dot_gdw.scale_to_fit_width(1)
+        dot_gdw.rotate(TAU/8)
+        dot_gdw.move_to(SPACE_WIDTH*RIGHT/2),
+
+        vector_cloud = ProbabalisticVectorCloud(
+            center_func = dot_gdw.get_center
+        )
+        vector_gdw = vector_cloud.gaussian_distribution_wrapper
+        vector_gdw.scale_to_fit_width(0.1)
+        vector_gdw.rotate(TAU/8)
+        vector_gdw.next_to(dot_gdw, UP+LEFT, LARGE_BUFF)
+
+        time_tracker = ValueTracker(0)
+        self.add()
+        freq = 1
+        continual_anims = [
+            AmbientMovement(time_tracker, direction = RIGHT, rate = 1),
+            ContinualUpdateFromFunc(
+                dot_gdw,
+                lambda d : d.scale_to_fit_width(
+                    (np.cos(freq*time_tracker.get_value()) + 1.1)/2
+                )
+            ),
+            ContinualUpdateFromFunc(
+                vector_gdw,
+                lambda d : d.scale_to_fit_width(
+                    (-np.cos(freq*time_tracker.get_value()) + 1.1)/2
+                )
+            ),
+            dot_cloud, vector_cloud
+        ]
+        self.add(*continual_anims)
+
+        position, momentum, time, frequency = map(TextMobject, [
+            "Position", "Momentum", "Time", "Frequency"
+        ])
+        VGroup(position, time).highlight(BLUE)
+        VGroup(momentum, frequency).highlight(YELLOW)
+        groups = VGroup()
+        for m1, m2 in (position, momentum), (time, frequency):
+            arrow = TexMobject("\\updownarrow").scale(1.5)
+            group = VGroup(m1, arrow, m2)
+            group.arrange_submobjects(DOWN)
+            lp, rp = parens = TexMobject("\\big(\\big)")
+            parens.stretch(1.5, 1)
+            parens.match_height(group)
+            lp.next_to(group, LEFT, buff = SMALL_BUFF)
+            rp.next_to(group, RIGHT, buff = SMALL_BUFF)
+            group.add(parens)
+            groups.add(group)
+        arrow = TexMobject("\\Leftrightarrow").scale(2)
+        groups.submobjects.insert(1, arrow)
+        groups.arrange_submobjects(RIGHT)
+        groups.next_to(morty, UP+RIGHT, LARGE_BUFF)
+        groups.shift_onto_screen()
+
+
+        self.play(PiCreatureBubbleIntroduction(
+            morty, "Heisenberg \\\\ uncertainty \\\\ principle",
+            bubble_class = ThoughtBubble,
+            bubble_kwargs = {"height" : 4, "width" : 4, "direction" : RIGHT},
+            target_mode = "pondering"
+        ))
+        self.wait()
+        self.play(morty.change, "confused", dot_gdw)
+        self.wait(10)
+        self.play(
+            ApplyMethod(
+                VGroup(dot_gdw, vector_gdw ).shift, 
+                SPACE_WIDTH*RIGHT,
+                rate_func = running_start
+            )
+        )
+        self.remove(*continual_anims)
+        self.play(
+            morty.change, "raise_left_hand", groups,
+            FadeIn(
+                groups, 
+                submobject_mode = "lagged_start",
+                run_time = 3,
+            )
+        )
+        self.wait(2)
+
+# End things
+
+class PatreonMention(PatreonThanks):
+    def construct(self):
+        morty = Mortimer()
+        morty.next_to(ORIGIN, DOWN)
+
+        patreon_logo = PatreonLogo()
+        patreon_logo.to_edge(UP)
+
+        thank_you = TextMobject("Thank you.")
+        thank_you.next_to(patreon_logo, DOWN)
+
+        self.play(
+            DrawBorderThenFill(patreon_logo),
+            morty.change, "gracious"
+        )
+        self.play(Write(thank_you))
+        self.wait(3)
+
+class Promotion(PiCreatureScene):
+    CONFIG = {
+        "camera_class" : ThreeDCamera,
+        "seconds_to_blink" : 5,
+    }
+    def construct(self):
+        aops_logo = AoPSLogo()
+        aops_logo.next_to(self.pi_creature, UP+LEFT)
+        url = TextMobject(
+            "AoPS.com/", "3b1b",
+            arg_separator = ""
+        )
+        url.to_corner(UP+LEFT)
+        url_rect = Rectangle(color = BLUE)
+        url_rect.replace(
+            url.get_part_by_tex("3b1b"),
+            stretch = True
+        )
+
+        url_rect.stretch_in_place(1.1, dim = 1)
+
+        rect = Rectangle(height = 9, width = 16)
+        rect.scale_to_fit_height(4.5)
+        rect.next_to(url, DOWN)
+        rect.to_edge(LEFT)
+        rect.set_stroke(width = 0)
+        mathy = Mathematician()
+        mathy.flip()
+        mathy.to_corner(DOWN+RIGHT)
+        morty = self.pi_creature
+        morty.save_state()
+        book = ImageMobject("AoPS_volume_2")
+        book.scale_to_fit_height(2)
+        book.next_to(mathy, UP+LEFT).shift(MED_LARGE_BUFF*LEFT)
+        mathy.get_center = mathy.get_top
+
+        words = TextMobject("""
+            Interested in working for \\\\ 
+            one of my favorite math\\\\ 
+            education companies?
+        """, alignment = "")
+        words.to_edge(UP)
+
+        arrow = Arrow(
+            aops_logo.get_top(),
+            morty.get_top(),
+            path_arc = -0.4*TAU,
+            use_rectangular_stem = False,
+            stroke_width = 5,
+            tip_length = 0.5,
+        )
+        arrow.tip.shift(SMALL_BUFF*DOWN)
+
+        self.add(words)
+        self.play(
+            self.pi_creature.change_mode, "raise_right_hand",
+            *[
+                DrawBorderThenFill(
+                    submob,
+                    run_time = 2,
+                    rate_func = squish_rate_func(double_smooth, a, a+0.5)
+                )
+                for submob, a in zip(aops_logo, np.linspace(0, 0.5, len(aops_logo)))
+            ]
+        )
+        self.play(
+            words.scale, 0.75,
+            words.next_to, url, DOWN, LARGE_BUFF,
+            words.shift_onto_screen,
+            Write(url),
+        )
+        self.wait(2)
+        self.play(
+            LaggedStart(
+                ApplyFunction, aops_logo,
+                lambda mob : (lambda m : m.shift(0.2*UP).highlight(YELLOW), mob),
+                rate_func = there_and_back, 
+                run_time = 1,
+            ),
+            morty.change, "thinking"
+        )
+        self.wait()
+        self.play(ShowCreation(arrow))
+        self.play(FadeOut(arrow))
+        self.wait()
+
+        # To teacher
+        self.play(
+            morty.change_mode, "plain",
+            morty.flip,
+            morty.scale, 0.7,
+            morty.next_to, mathy, LEFT, LARGE_BUFF,
+            morty.to_edge, DOWN,
+            FadeIn(mathy),
+        )
+        self.play(
+            PiCreatureSays(
+                mathy, "",
+                bubble_kwargs = {"width" : 5},
+                look_at_arg = morty.eyes,
+            ),
+            morty.change, "happy",
+            aops_logo.shift, 1.5*UP + 0.5*RIGHT
+        )
+        self.play(Blink(mathy))
+        self.wait()
+        self.play(
+            RemovePiCreatureBubble(
+                mathy, target_mode = "raise_right_hand"
+            ),
+            aops_logo.to_corner, UP+RIGHT,
+            aops_logo.shift, MED_SMALL_BUFF*DOWN,
+            GrowFromPoint(book, mathy.get_corner(UP+LEFT)),
+        )
+        self.play(morty.change, "pondering", book)
+        self.wait(3)
+        self.play(Blink(mathy))
+        self.wait()
+        self.play(
+            Animation(
+                BackgroundRectangle(book, fill_opacity = 1),
+                remover = True
+            ),
+            FadeOut(book),
+        )
+        print self.num_plays
+        self.play(
+            FadeOut(words),
+            ShowCreation(rect),
+            morty.restore,
+            morty.change, "happy", rect,
+            FadeOut(mathy),
+        )
+        self.wait(10)
+        self.play(ShowCreation(url_rect))
+        self.play(
+            FadeOut(url_rect),
+            url.get_part_by_tex("3b1b").highlight, BLUE,
+        )
+        self.wait(15)
+
+class PuzzleStatement(Scene):
+    def construct(self):
+        aops_logo = AoPSLogo()
+        url = TextMobject("AoPS.com/3b1b")
+        url.next_to(aops_logo, UP)
+        group = VGroup(aops_logo, url)
+        group.to_edge(UP)
+        self.add(group)
+
+        words = TextMobject("""
+            AoPS must choose one of 20 people to send to a 
+            tug-of-war tournament.  We don't care who we send, 
+            as long as we don't send our weakest person. \\\\ \\\\
+
+            Each person has a different strength, but we don't know 
+            those strengths.  We get 10 intramural 10-on-10 matches 
+            to determine who we send.  Can we make sure we don't send
+             the weakest person?
+        """, alignment = "")
+        words.scale_to_fit_width(2*SPACE_WIDTH - 2)
+        words.next_to(group, DOWN, LARGE_BUFF)
+        self.play(LaggedStart(FadeIn, words, run_time = 5, lag_ratio = 0.2))
+        self.wait(2)
+
+class UncertaintyEndScreen(PatreonEndScreen):
+    CONFIG = {
+        "specific_patrons" : [
+            "CrypticSwarm",
+            "Ali Yahya",
+            "Juan Benet",
+            "Markus Persson",
+            "Damion Kistler",
+            "Burt Humburg",
+            "Yu Jun",
+            "Dave Nicponski",
+            "Kaustuv DeBiswas",
+            "Joseph John Cox",
+            "Luc Ritchie",
+            "Achille Brighton",
+            "Rish Kundalia",
+            "Yana Chernobilsky",
+            "Shìmín Kuang",
+            "Mathew Bramson",
+            "Jerry Ling",
+            "Mustafa Mahdi",
+            "Meshal Alshammari",
+            "Mayank M. Mehrotra",
+            "Lukas Biewald",
+            "Robert Teed",
+            "Samantha D. Suplee",
+            "Mark Govea",
+            "John Haley",
+            "Julian Pulgarin",
+            "Jeff Linse",
+            "Cooper Jones",
+            "Desmos  ",
+            "Boris Veselinovich",
+            "Ryan Dahl",
+            "Ripta Pasay",
+            "Eric Lavault",
+            "Randall Hunt",
+            "Andrew Busey",
+            "Mads Elvheim",
+            "Tianyu Ge",
+            "Awoo",
+            "Dr. David G. Stork",
+            "Linh Tran",
+            "Jason Hise",
+            "Bernd Sing",
+            "James   H. Park",
+            "Ankalagon   ",
+            "Mathias Jansson",
+            "David Clark",
+            "Ted Suzman",
+            "Eric Chow",
+            "Michael Gardner",
+            "David Kedmey",
+            "Jonathan Eppele",
+            "Clark Gaebel",
+            "Jordan Scales",
+            "Ryan Atallah",
+            "supershabam ",
+            "1stViewMaths",
+            "Jacob Magnuson",
+            "Chloe Zhou",
+            "Ross Garber",
+            "Thomas Tarler",
+            "Isak Hietala",
+            "Egor Gumenuk",
+            "Waleed Hamied",
+            "Oliver Steele",
+            "Yaw Etse",
+            "David B",
+            "Delton Ding",
+            "James Thornton",
+            "Felix Tripier",
+            "Arthur Zey",
+            "George Chiesa",
+            "Norton Wang",
+            "Kevin Le",
+            "Alexander Feldman",
+            "David MacCumber",
+            "Jacob Kohl",
+            "Frank Secilia",
+            "George John",
+            "Akash Kumar",
+            "Britt Selvitelle",
+            "Jonathan Wilson",
+            "Michael Kunze",
+            "Giovanni Filippi",
+            "Eric Younge",
+            "Prasant Jagannath",
+            "Andrejs olins",
+            "Cody Brocious",
+        ],
+    }
+
+class Thumbnail(Scene):
+    def construct(self):
+        uncertainty_principle = TextMobject("Uncertainty \\\\", "principle")
+        uncertainty_principle[1].shift(SMALL_BUFF*UP)
+        quantum = TextMobject("Quantum")
+        VGroup(uncertainty_principle, quantum).scale(2.5)
+        uncertainty_principle.to_edge(UP, MED_LARGE_BUFF)
+        quantum.to_edge(DOWN, MED_LARGE_BUFF)
+
+        arrow = TexMobject("\\Downarrow")
+        arrow.scale(4)
+        arrow.move_to(Line(
+            uncertainty_principle.get_bottom(),
+            quantum.get_top(),
+        ))
+
+        cross = Cross(arrow)
+        cross.set_stroke(RED, 20)
+
+        is_word, not_word = is_not = TextMobject("is", "\\emph{NOT}")
+        is_not.scale(3)
+        is_word.move_to(arrow)
+        # is_word.shift(0.6*UP)
+        not_word.highlight(RED)
+        not_word.set_stroke(RED, 3)
+        not_word.rotate(10*DEGREES, about_edge = DOWN+LEFT)
+        not_word.next_to(is_word, DOWN, 0.1*SMALL_BUFF)
+
+        dot_cloud = ProbabalisticDotCloud(
+            n_copies = 1000,
+        )
+        dot_gdw = dot_cloud.gaussian_distribution_wrapper
+        # dot_gdw.rotate(3*DEGREES)
+        dot_gdw.rotate(25*DEGREES)
+        # dot_gdw.scale(2)
+        dot_gdw.scale(2)
+        # dot_gdw.move_to(quantum.get_bottom()+SMALL_BUFF*DOWN)
+        dot_gdw.move_to(quantum)
 
 
 
+        def get_func(a):
+            return lambda t : 0.5*np.exp(-a*t**2)*np.cos(TAU*t)
+        axes = Axes(
+            x_min = -6, x_max = 6,
+            x_axis_config = {"unit_size" : 0.25}
+        )
+        graphs = VGroup(*[
+            axes.get_graph(get_func(a))
+            for a in 10, 3, 1, 0.3, 0.1,
+        ])
+        graphs.arrange_submobjects(DOWN, buff = 0.6)
+        graphs.to_corner(UP+LEFT)
+        graphs.gradient_highlight(BLUE_B, BLUE_D)
+
+        frequency_axes = Axes(
+            x_min = 0, x_max = 2,
+            x_axis_config = {"unit_size" : 1}
+        )
+        fourier_graphs = VGroup(*[
+            get_fourier_graph(
+                frequency_axes, graph.underlying_function,
+                t_min = -10, t_max = 10,
+            )
+            for graph in graphs
+        ])
+        for graph, fourier_graph in zip(graphs, fourier_graphs):
+            fourier_graph.pointwise_become_partial(fourier_graph, 0.02, 0.06)
+            fourier_graph.scale(3)
+            fourier_graph.stretch(3, 1)
+            fourier_graph.move_to(graph)
+            fourier_graph.to_edge(RIGHT)
+
+        self.add(graphs, fourier_graphs)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        self.add(dot_cloud)
+        self.add(
+            uncertainty_principle, quantum,
+        )
+        self.add(arrow, cross)
+        # self.add(is_word)
+        # self.add(is_not)
 
 
 
