@@ -749,7 +749,7 @@ class SingleLighthouseScene(PiCreatureScene):
         self.setup_elements()
         self.setup_angle() # spotlight and angle msmt change when screen rotates
         self.rotate_screen()
-        self.morph_lighthouse_into_sun()
+        #self.morph_lighthouse_into_sun()
 
 
     def setup_elements(self):
@@ -908,46 +908,102 @@ class SingleLighthouseScene(PiCreatureScene):
 ### but it doesn't work
 
 
-    def morph_lighthouse_into_sun(self):
+class MorphIntoSunScene(PiCreatureScene):
+
+    def construct(self):
+
+        self.setup_elements()
+        self.morph_lighthouse_into_sun()
 
 
+    def setup_elements(self):
 
-        sun_position = [-100,0,0]
+        self.remove(self.get_primary_pi_creature())
 
+        SCREEN_SIZE = 3.0
+        DISTANCE_FROM_LIGHTHOUSE = 10.0
+        source_point = [-DISTANCE_FROM_LIGHTHOUSE/2,0,0]
+        observer_point = [DISTANCE_FROM_LIGHTHOUSE/2,0,0]
 
-        self.play(
-            FadeOut(self.angle_arc),
-            FadeOut(self.angle_indicator)
+        # Light source
+
+        self.light_source = LightSource(
+            opacity_function = inverse_quadratic(1,SPOTLIGHT_SCALE,1),
+            num_levels = NUM_LEVELS,
+            radius = 10,
+            max_opacity_ambient = AMBIENT_FULL,
+            max_opacity_spotlight = SPOTLIGHT_FULL,
+
         )
-        self.wait()
 
-        self.sun = self.light_source.deepcopy()
+        self.light_source.move_source_to(source_point)
 
-        #self.sun.num_levels = NUM_LEVELS,
-        #self.sun.set_radius(150)
-        #self.sun.set_max_opacity_ambient(AMBIENT_FULL)
+
+        # Pi Creature
+
+        morty = self.get_primary_pi_creature()
+        morty.scale(0.5)
+        morty.move_to(observer_point)
+        morty.shift(2*OUT)
+        self.add_foreground_mobject(morty)
+
+        self.add(self.light_source.lighthouse,self.light_source.ambient_light)
         
 
+        # Screen
 
-        self.sun.spotlight.change_opacity_function(lambda r: 0.5)
-        self.sun.set_radius(150)
-        self.sun.move_source_to(sun_position)
-
-        #self.sun.update()
-
-        #self.add(self.sun)
-        self.wait()
-        # temporarily remove the screen tracker while we move the source
-        #self.remove(self.screen_tracker)
-
-        #print self.sun.spotlight.get_source_point()
-
-        self.play(
-             #self.light_source.spotlight.move_source_to,sun_position,
-             Transform(self.light_source,self.sun)
+        self.screen = Rectangle(
+            width = 0.06,
+            height = 2,
+            mark_paths_closed = True,
+            fill_color = WHITE,
+            fill_opacity = 1.0,
+            stroke_width = 0.0
         )
 
-        #self.add(ScreenTracker(self.sun))
+        self.screen.next_to(morty,LEFT)
+
+        self.light_source.set_screen(self.screen)
+        self.add(self.screen,self.light_source.shadow)
+        
+        self.add_foreground_mobject(self.light_source.shadow)
+        self.add_foreground_mobject(morty)
+
+        self.light_source.dim_ambient
+        self.add(self.light_source.spotlight)
+
+        self.screen_tracker = ScreenTracker(self.light_source)
+        self.add(self.screen_tracker)
+
+        self.wait()
+
+
+    def morph_lighthouse_into_sun(self):
+
+        sun_position = np.array([-100,0,0])
+
+
+
+
+        # Why does none of this change the opacity function???
+
+        self.sun = self.light_source.copy()
+
+        self.sun.change_spotlight_opacity_function(lambda r: 0.1)
+        # self.sun.spotlight.opacity_function = lambda r: 0.1
+        # for submob in self.sun.spotlight.submobjects:
+        #     submob.set_fill(opacity = 0.1)
+
+        #self.sun.move_source_to(sun_position)
+        #self.sun.set_radius(120)
+
+        self.sun.spotlight.generate_points()
+
+        self.wait()
+
+        self.play(
+             Transform(self.light_source,self.sun)
+        )
 
         self.wait()
 

@@ -180,6 +180,9 @@ class LightSource(VMobject):
             self.spotlight.move_source_to(apoint)
         self.update()
         return self
+
+    def change_spotlight_opacity_function(self, new_of):
+        self.spotlight.change_opacity_function(new_of)
         
     def set_radius(self,new_radius):
         self.radius = new_radius
