@@ -122,6 +122,7 @@ class ZoomedScene(Scene):
             self.zoomed_camera.capture_mobjects(
                 mobjects, **kwargs
             )
+            
     def get_moving_mobjects(self, *animations):
         moving_mobjects = Scene.get_moving_mobjects(self, *animations)
         if self.zoom_activated and self.little_rectangle in moving_mobjects:

@@ -3,6 +3,7 @@ import itertools as it
 
 from helpers import *
 
+import warnings
 from mobject import Mobject, Group
 from mobject.vectorized_mobject import VMobject
 from mobject.tex_mobject import TextMobject
@@ -407,8 +408,8 @@ class Succession(Animation):
         self.run_times = [anim.run_time for anim in animations]
         if "run_time" in kwargs:
             run_time = kwargs.pop("run_time")
-        else:
-            run_time = sum(self.run_times)
+            warnings.warn("Succession doesn't currently support explicit run_time.")
+        run_time = sum(self.run_times)
         self.num_anims = len(animations)
         if self.num_anims == 0:
             self.empty = True
@@ -465,11 +466,21 @@ class Succession(Animation):
             self.current_alpha = alpha
             return
 
-        i = 0
-        while self.critical_alphas[i + 1] < alpha:
-            i = i + 1
-            # TODO: Special handling if alpha < 0 or alpha > 1, to use
-            # first or last sub-animation
+        gt_alpha_list = filter(
+            lambda i : self.critical_alphas[i+1] >= alpha, 
+            range(len(self.critical_alphas)-1)
+        )
+        if gt_alpha_list:
+            i = gt_alpha_list[0]
+        else:
+            if not abs(alpha - 1) < 0.001:
+                warnings.warn(
+                    "Rounding error not near alpha=1 in Succession.update_mobject," + \
+                    "instead alpha = %f"%alpha
+                )
+                print self.critical_alphas, alpha
+            i = len(self.critical_alphas) - 2
+        #
 
         # At this point, we should have self.critical_alphas[i] <= alpha <= self.critical_alphas[i +1]
 

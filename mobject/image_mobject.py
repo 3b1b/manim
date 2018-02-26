@@ -29,6 +29,8 @@ class ImageMobject(Mobject):
         else:
             self.pixel_array = np.array(filename_or_array)
         self.change_to_rgba_array()
+        if self.invert:
+            self.pixel_array[:,:,:3] = 255-self.pixel_array[:,:,:3]
         Mobject.__init__(self, **kwargs)
 
     def change_to_rgba_array(self):
