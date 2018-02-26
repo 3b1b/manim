@@ -394,7 +394,7 @@ class Camera(object):
             y0 = max(y0, 0)
             image[y0:y1, x0:x1] = stretched_impa[siy0:siy1, six0:six1]
         else:
-            # Alternate (slower) tactice if image is tilted
+            # Alternate (slower) tactic if image is tilted
             # List of all coordinates of pixels, given as (x, y), 
             # which matches the return type of points_to_pixel_coords,
             # even though np.array indexing naturally happens as (y, x)
@@ -613,7 +613,7 @@ class MovingCamera(Camera):
 
     def capture_mobjects(self, *args, **kwargs):
         self.space_center = self.mobject.get_center()
-        self.realign_space_shape()        
+        self.realign_space_shape()
         Camera.capture_mobjects(self, *args, **kwargs)
 
     def realign_space_shape(self):
