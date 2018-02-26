@@ -95,10 +95,6 @@ class AngleUpdater(ContinualAnimation):
         self.angle_arc.add_tip(tip_length = ARC_TIP_LENGTH,
             at_start = True, at_end = True)
 
-
-
-
-
 class LightIndicator(Mobject):
     CONFIG = {
         "radius": 0.5,
@@ -148,9 +144,6 @@ class LightIndicator(Mobject):
             print "Indicator cannot update, reason: no light source found"
         self.set_intensity(self.measured_intensity())
 
-        
-
-
 class UpdateLightIndicator(AnimationGroup):
 
     def __init__(self, indicator, intensity, **kwargs):
@@ -165,12 +158,10 @@ class UpdateLightIndicator(AnimationGroup):
         AnimationGroup.__init__(self, changing_decimal, change_opacity, **kwargs)
         self.mobject = indicator
 
-
 class ContinualLightIndicatorUpdate(ContinualAnimation):
 
     def update_mobject(self,dt):
         self.mobject.continual_update()
-
 
 def copy_func(f):
     """Based on http://stackoverflow.com/a/6528148/190597 (Glenn Maynard)"""
@@ -221,21 +212,7 @@ class ScaleLightSources(Transform):
         Transform.__init__(self,light_sources_mob,ls_target,**kwargs)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+###
 
 class IntroScene(PiCreatureScene):
 
@@ -472,25 +449,6 @@ class IntroScene(PiCreatureScene):
 
         self.wait()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 class FirstLighthouseScene(PiCreatureScene):
 
     def construct(self):
@@ -646,28 +604,6 @@ class FirstLighthouseScene(PiCreatureScene):
             
 
         self.wait()
-
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 class SingleLighthouseScene(PiCreatureScene):
 
@@ -858,24 +794,6 @@ class SingleLighthouseScene(PiCreatureScene):
 
         self.wait()
 
-
-
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 class EarthScene(Scene):
 
     def construct(self):
@@ -972,30 +890,6 @@ class EarthScene(Scene):
             Rotate(earth, theta0 + dtheta/2,run_time = 3),
             MoveToTarget(morty, path_arc = 70*DEGREES, run_time = 3),
         )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 class ScreenShapingScene(ThreeDScene):
 
@@ -1442,9 +1336,6 @@ class ScreenShapingScene(ThreeDScene):
             FadeIn(reading39),
         )
 
-
-
-
 class IndicatorScalingScene(Scene):
 
     def construct(self):
@@ -1481,11 +1372,6 @@ class IndicatorScalingScene(Scene):
         self.play(Transform(indicator1, indicator3))
         self.play(FadeIn(reading3))
         self.wait()
-
-
-
-
-
 
 class BackToEulerSumScene(PiCreatureScene):
 
@@ -1705,10 +1591,6 @@ class BackToEulerSumScene(PiCreatureScene):
 
         self.wait()
 
-
-
-
-
 class TwoLightSourcesScene(PiCreatureScene):
 
     def construct(self):
@@ -1885,8 +1767,6 @@ class TwoLightSourcesScene(PiCreatureScene):
             ShowCreation(theorem_box),
             Write(theorem_name),
         )
-
-
 
 class IPTScene1(PiCreatureScene):
 
@@ -2078,8 +1958,6 @@ class IPTScene1(PiCreatureScene):
             Transform(screen2, screen2pp),
         )
 
-
-
 class IPTScene2(Scene):
 
     def construct(self):
@@ -2130,7 +2008,6 @@ class IPTScene2(Scene):
         text = TextMobject("Inverse Pythagorean Theorem").scale(formula_scale)
         text.next_to(box,UP)
         self.play(ShowCreation(box),Write(text))
-
 
 class PondScene(Scene):
 
@@ -2606,8 +2483,6 @@ class PondScene(Scene):
         )
         self.play(FadeIn(self.number_line))
 
-
-
 class LabeledArc(Arc):
     CONFIG = {
         "length" : 1
@@ -2626,9 +2501,6 @@ class LabeledArc(Arc):
 
         label.move_to(label_pos)
         self.add(label)
-
-
-
 
 class ArcHighlightOverlayScene(Scene):
 
@@ -2676,6 +2548,35 @@ class ArcHighlightOverlayScene(Scene):
 
 
         flash_arcs(3)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
