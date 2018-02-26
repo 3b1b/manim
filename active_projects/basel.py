@@ -214,6 +214,36 @@ class ScaleLightSources(Transform):
 
 ###
 
+class ThinkAboutPondScene(PiCreatureScene):
+    CONFIG = {
+        "default_pi_creature_class" : Randolph,
+    }
+    def construct(self):
+        randy = self.pi_creature
+        randy.to_corner(DOWN+LEFT)
+        bubble = ThoughtBubble(
+            width = 9,
+            height = 5,
+        )
+        circles = bubble[:3]
+        angle = -15*DEGREES
+        circles.rotate(angle, about_point = bubble.get_bubble_center())
+        circles.shift(LARGE_BUFF*LEFT)
+        for circle in circles:
+            circle.rotate(-angle)
+        bubble.pin_to(randy)
+        bubble.shift_onto_screen()
+
+        self.play(
+            randy.change, "thinking",
+            ShowCreation(bubble)
+        )
+        self.wait(2)
+        self.play(randy.change, "happy", bubble)
+        self.wait(2)
+        self.play(randy.change, "hooray", bubble)
+        self.wait(2)
+
 class IntroScene(PiCreatureScene):
 
     CONFIG = {
@@ -223,23 +253,17 @@ class IntroScene(PiCreatureScene):
     }
 
     def construct(self):
-
         randy = self.get_primary_pi_creature()
         randy.scale(0.7).to_corner(DOWN+RIGHT)
 
         self.build_up_euler_sum()
-        self.build_up_sum_on_number_line()
         self.show_pi_answer()
         self.other_pi_formulas()
         self.refocus_on_euler_sum()
 
 
-
-
-
     def build_up_euler_sum(self):
-
-        self.euler_sum = TexMobject(
+        euler_sum = self.euler_sum = TexMobject(
            "1", "+", 
            "{1 \\over 4}", "+",
            "{1 \\over 9}", "+",
@@ -248,16 +272,15 @@ class IntroScene(PiCreatureScene):
            "\\cdots", "=",
             arg_separator = " \\, "
         )
+        equals_sign = euler_sum.get_part_by_tex("=")
 
         self.euler_sum.to_edge(UP)
         self.euler_sum.shift(2*LEFT)
        
-        terms = [1./n**2 for n in range(1,6)]
+        terms = [1./n**2 for n in range(1,100)]
         partial_results_values = np.cumsum(terms)
 
-        self.play(
-               FadeIn(self.euler_sum[0], run_time = self.duration)
-        )
+        self.play(FadeIn(euler_sum[0]))
 
         equals_sign = self.euler_sum.get_part_by_tex("=")
 
@@ -265,49 +288,7 @@ class IntroScene(PiCreatureScene):
                 num_decimal_points = 2)
         self.partial_sum_decimal.next_to(equals_sign, RIGHT)
 
-
-
-        for i in range(4):
-
-            FadeIn(self.partial_sum_decimal, run_time = self.duration)
-
-            if i == 0:
-
-                self.play(
-                    FadeIn(self.euler_sum[1], run_time = self.duration),
-                    FadeIn(self.euler_sum[2], run_time = self.duration),
-                    FadeIn(equals_sign, run_time = self.duration),
-                    FadeIn(self.partial_sum_decimal, run_time = self.duration)
-                )
-
-            else:
-                self.play(
-                    FadeIn(self.euler_sum[2*i+1], run_time = self.duration),
-                    FadeIn(self.euler_sum[2*i+2], run_time = self.duration),
-                    ChangeDecimalToValue(
-                        self.partial_sum_decimal,
-                        partial_results_values[i+1], 
-                        run_time = self.duration,
-                        num_decimal_points = 6,
-                        show_ellipsis = True,
-                        position_update_func = lambda m: m.next_to(equals_sign, RIGHT)
-                    )
-                )
-                
-            self.wait()
-
-        self.q_marks = TextMobject("???").highlight(LIGHT_COLOR)
-        self.q_marks.move_to(self.partial_sum_decimal)
-
-        self.play(
-            FadeIn(self.euler_sum[-3], run_time = self.duration), # +
-            FadeIn(self.euler_sum[-2], run_time = self.duration), # ...
-            ReplacementTransform(self.partial_sum_decimal, self.q_marks)
-        )
-
-
-
-    def build_up_sum_on_number_line(self):
+        ## Number line
 
         self.number_line = NumberLine(
             x_min = 0,
@@ -365,6 +346,47 @@ class IntroScene(PiCreatureScene):
             )
 
 
+        ##
+
+
+        for i in range(4):
+
+            FadeIn(self.partial_sum_decimal, run_time = self.duration)
+
+            if i == 0:
+
+                self.play(
+                    FadeIn(self.euler_sum[1], run_time = self.duration),
+                    FadeIn(self.euler_sum[2], run_time = self.duration),
+                    FadeIn(equals_sign, run_time = self.duration),
+                    FadeIn(self.partial_sum_decimal, run_time = self.duration)
+                )
+
+            else:
+                self.play(
+                    FadeIn(self.euler_sum[2*i+1], run_time = self.duration),
+                    FadeIn(self.euler_sum[2*i+2], run_time = self.duration),
+                    ChangeDecimalToValue(
+                        self.partial_sum_decimal,
+                        partial_results_values[i+1], 
+                        run_time = self.duration,
+                        num_decimal_points = 6,
+                        show_ellipsis = True,
+                        position_update_func = lambda m: m.next_to(equals_sign, RIGHT)
+                    )
+                )
+                
+            self.wait()
+
+        self.q_marks = TextMobject("???").highlight(LIGHT_COLOR)
+        self.q_marks.move_to(self.partial_sum_decimal)
+
+        self.play(
+            FadeIn(self.euler_sum[-3], run_time = self.duration), # +
+            FadeIn(self.euler_sum[-2], run_time = self.duration), # ...
+            ReplacementTransform(self.partial_sum_decimal, self.q_marks)
+        )
+
     def show_pi_answer(self):
 
         self.pi_answer = TexMobject("{\\pi^2 \\over 6}").highlight(YELLOW)
@@ -372,7 +394,6 @@ class IntroScene(PiCreatureScene):
         self.pi_answer.next_to(self.euler_sum[-1], RIGHT,
             submobject_to_align = self.pi_answer[-2])
         self.play(ReplacementTransform(self.q_marks, self.pi_answer))
-
 
     def other_pi_formulas(self):
 
@@ -408,8 +429,6 @@ class IntroScene(PiCreatureScene):
         self.play(
             Write(self.wallis_product)
         )
-
-
 
     def refocus_on_euler_sum(self):
 
