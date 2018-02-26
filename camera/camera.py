@@ -107,7 +107,7 @@ class Camera(object):
 
     def set_pixel_array(self, pixel_array, convert_from_floats = False):
         converted_array = self.convert_pixel_array(pixel_array, convert_from_floats)
-        if not hasattr(self, "pixel_array"): #TODO: And the shapes match?
+        if not (hasattr(self, "pixel_array") and self.pixel_array.shape == converted_array.shape): 
             self.pixel_array = converted_array
         else:
             #Set in place
