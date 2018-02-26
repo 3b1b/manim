@@ -29,10 +29,10 @@ NUM_LEVELS = 30
 NUM_CONES = 7 # in first lighthouse scene
 NUM_VISIBLE_CONES = 5 # ibidem
 ARC_TIP_LENGTH = 0.2
-AMBIENT_FULL = 0.5
-AMBIENT_DIMMED = 0.2
-SPOTLIGHT_FULL = 0.9
-SPOTLIGHT_DIMMED = 0.2
+AMBIENT_FULL = 0.8
+AMBIENT_DIMMED = 0.5
+SPOTLIGHT_FULL = 0.8
+SPOTLIGHT_DIMMED = 0.5
 LIGHTHOUSE_HEIGHT = 0.8
 
 DEGREES = TAU/360
@@ -57,7 +57,7 @@ class LightSource(VMobject):
         "source_point": VectorizedPoint(location = ORIGIN, stroke_width = 0, fill_opacity = 0),
         "color": LIGHT_COLOR,
         "num_levels": 10,
-        "radius": 5,
+        "radius": 10.0,
         "screen": None,
         "opacity_function": inverse_quadratic(1,2,1),
         "max_opacity_ambient": AMBIENT_FULL,
@@ -143,7 +143,9 @@ class LightSource(VMobject):
                 num_levels = self.num_levels,
                 radius = self.radius,
                 screen = new_screen,
-                camera_mob = self.camera_mob
+                camera_mob = self.camera_mob,
+                opacity_function = self.opacity_function,
+                max_opacity = self.max_opacity_spotlight,
             )
             self.spotlight.move_source_to(self.get_source_point())
 
@@ -371,7 +373,7 @@ class AmbientLight(VMobject):
         "color" : LIGHT_COLOR,
         "max_opacity" : 1.0,
         "num_levels" : 10,
-        "radius" : 5.0
+        "radius" : 10.0
     }
 
     def generate_points(self):
@@ -452,7 +454,7 @@ class Spotlight(VMobject):
         "color" : GREEN, # LIGHT_COLOR,
         "max_opacity" : 1.0,
         "num_levels" : 10,
-        "radius" : 5.0,
+        "radius" : 10.0,
         "screen" : None,
         "camera_mob": None
     }

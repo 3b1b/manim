@@ -18,7 +18,6 @@ from topics.characters import *
 from topics.functions import *
 from topics.number_line import *
 from topics.numerals import *
-#from topics.combinatorics import *
 from scene import Scene
 from camera import Camera
 from mobject.svg_mobject import *
@@ -40,14 +39,19 @@ FAST_INDICATOR_UPDATE_TIME = 0.1
 OPACITY_FOR_UNIT_INTENSITY = 0.2
 SWITCH_ON_RUN_TIME = 1.5
 FAST_SWITCH_ON_RUN_TIME = 0.1
-NUM_LEVELS = 30
 NUM_CONES = 7 # in first lighthouse scene
 NUM_VISIBLE_CONES = 5 # ibidem
 ARC_TIP_LENGTH = 0.2
-AMBIENT_FULL = 0.5
-AMBIENT_DIMMED = 0.2
-SPOTLIGHT_FULL = 0.9
+
+NUM_LEVELS = 20
+AMBIENT_FULL = 0.8
+AMBIENT_DIMMED = 0.5
+AMBIENT_SCALE = 1.0
+AMBIENT_RADIUS = 20.0
+SPOTLIGHT_FULL = 0.8
 SPOTLIGHT_DIMMED = 0.2
+SPOTLIGHT_SCALE = 1.0
+SPOTLIGHT_RADIUS = 20.0
 
 LIGHT_COLOR = YELLOW
 DEGREES = TAU/360
@@ -197,13 +201,13 @@ class ScaleLightSources(Transform):
                 new_sp.scale(factor,about_point = about_point)
                 submob.move_source_to(new_sp.get_location())
 
-                #ambient_of = copy_func(submob.ambient_light.opacity_function)
-                #new_of = lambda r: ambient_of(r/factor)
-                #submob.ambient_light.opacity_function = new_of
+                # ambient_of = copy_func(submob.ambient_light.opacity_function)
+                # new_of = lambda r: ambient_of(r / factor)
+                # submob.ambient_light.change_opacity_function(new_of)
 
-                #spotlight_of = copy_func(submob.ambient_light.opacity_function)
-                #new_of = lambda r: spotlight_of(r/factor)
-                #submob.spotlight.change_opacity_function(new_of)
+                # spotlight_of = copy_func(submob.ambient_light.opacity_function)
+                # new_of = lambda r: spotlight_of(r / factor)
+                # submob.spotlight.change_opacity_function(new_of)
 
                 new_r = factor * submob.radius
                 submob.set_radius(new_r)
@@ -241,8 +245,8 @@ class IntroScene(PiCreatureScene):
 
     CONFIG = {
         "rect_height" : 0.2,
-        "duration" : 1.0,
-        "eq_spacing" : 3 * MED_LARGE_BUFF
+        "duration" : 0.5,
+        "eq_spacing" : 6 * MED_LARGE_BUFF
     }
 
     def construct(self):
@@ -328,6 +332,8 @@ class IntroScene(PiCreatureScene):
             ReplacementTransform(self.partial_sum_decimal, self.q_marks)
         )
 
+        self.wait()
+
 
 
     def build_up_sum_on_number_line(self):
@@ -342,21 +348,25 @@ class IntroScene(PiCreatureScene):
             unit_size = 5,
             tick_frequency = 0.2,
             line_to_number_buff = MED_LARGE_BUFF
-        )
+        ).shift(LEFT)
 
         self.number_line_labels = self.number_line.get_number_mobjects()
-        self.add(self.number_line,self.number_line_labels)
+        self.play(
+            FadeIn(self.number_line),
+            FadeIn(self.number_line_labels)
+        )
         self.wait()
 
         # create slabs for series terms
 
-        max_n = 10
+        max_n1 = 10
+        max_n2 = 100
 
-        terms = [0] + [1./(n**2) for n in range(1, max_n + 1)]
+        terms = [0] + [1./(n**2) for n in range(1, max_n2 + 1)]
         series_terms = np.cumsum(terms)
         lines = VGroup()
         self.rects = VGroup()
-        slab_colors = [YELLOW, BLUE] * (max_n / 2)
+        slab_colors = [YELLOW, BLUE] * (max_n2 / 2)
 
         for t1, t2, color in zip(series_terms, series_terms[1:], slab_colors):
             line = Line(*map(self.number_line.number_to_point, [t1, t2]))
@@ -367,7 +377,7 @@ class IntroScene(PiCreatureScene):
             rect.stretch_to_fit_height(
                 self.rect_height,
             )
-            rect.stretch_to_fit_width(line.get_width())
+            rect.stretch_to_fit_width(0.5 * line.get_width())
             rect.move_to(line)
 
             self.rects.add(rect)
@@ -375,26 +385,73 @@ class IntroScene(PiCreatureScene):
 
         #self.rects.radial_gradient_highlight(ORIGIN, 5, YELLOW, BLUE)
         
+        self.little_euler_terms = VGroup()
+        for i in range(1,7):
+            if i == 1:
+                term = TexMobject("1", fill_color = slab_colors[i-1])
+            else:
+                term = TexMobject("{1\over " + str(i**2) + "}", fill_color = slab_colors[i-1])
+            term.scale(0.4)
+            self.little_euler_terms.add(term)
+
+
         for i in range(5):
             self.play(
                 GrowFromPoint(self.rects[i], self.euler_sum[2*i].get_center(),
-                    run_time = self.duration)
+                    run_time = 1)
             )
+            term = self.little_euler_terms.submobjects[i]
+            term.next_to(self.rects[i], UP)
+            self.play(FadeIn(term))
 
-        for i in range(5, max_n):
+        self.ellipsis = TexMobject("\cdots")
+        self.ellipsis.scale(0.4)
+
+        for i in range(5, max_n1):
+            
+            if i == 5:
+                self.ellipsis.next_to(self.rects[i+3], UP)
+                self.play(
+                    FadeIn(self.ellipsis),
+                    GrowFromPoint(self.rects[i], self.euler_sum[10].get_center(),
+                    run_time = 0.5)
+                )
+            else:
+                self.play(
+                    GrowFromPoint(self.rects[i], self.euler_sum[10].get_center(),
+                    run_time = 0.5)
+                )
+
+        for i in range(max_n1, max_n2):
             self.play(
-                GrowFromPoint(self.rects[i], self.euler_sum[10].get_center(),
-                    run_time = self.duration)
-            )
+                    GrowFromPoint(self.rects[i], self.euler_sum[10].get_center(),
+                    run_time = 0.01)
+                )
+
+        self.wait()
+
+        PI = TAU/2
+        P = self.q_marks.get_center() + 0.5 * DOWN + 0.5 * LEFT
+        Q = self.rects[-1].get_center() + 0.2 * UP
+        self.arrow = CurvedArrow(P, Q,
+            angle = TAU/12,
+            color = YELLOW
+        )
+
+        self.play(FadeIn(self.arrow))
+
+        self.wait()
 
 
     def show_pi_answer(self):
 
         self.pi_answer = TexMobject("{\\pi^2 \\over 6}").highlight(YELLOW)
         self.pi_answer.move_to(self.partial_sum_decimal)
-        self.pi_answer.next_to(self.euler_sum[-1], RIGHT,
+        self.pi_answer.next_to(self.euler_sum[-1], RIGHT, buff = 1,
             submobject_to_align = self.pi_answer[-2])
         self.play(ReplacementTransform(self.q_marks, self.pi_answer))
+
+        self.wait()
 
 
     def other_pi_formulas(self):
@@ -402,25 +459,28 @@ class IntroScene(PiCreatureScene):
         self.play(
             FadeOut(self.rects),
             FadeOut(self.number_line_labels),
-            FadeOut(self.number_line)
+            FadeOut(self.number_line),
+            FadeOut(self.little_euler_terms),
+            FadeOut(self.ellipsis),
+            FadeOut(self.arrow)
         )
 
         self.leibniz_sum = TexMobject(
             "1-{1\\over 3}+{1\\over 5}-{1\\over 7}+{1\\over 9}-\\cdots",
-            "=", "{\\pi \\over 4}")
+            "=", "\quad\,\,{\\pi \\over 4}", arg_separator = " \\, ")
 
         self.wallis_product = TexMobject(
             "{2\\over 1} \\cdot {2\\over 3} \\cdot {4\\over 3} \\cdot {4\\over 5}" +
              "\\cdot {6\\over 5} \\cdot {6\\over 7} \\cdots",
-             "=", "{\\pi \\over 2}")
+             "=", "\quad\,\, {\\pi \\over 2}", arg_separator = " \\, ")
 
         self.leibniz_sum.next_to(self.euler_sum.get_part_by_tex("="), DOWN,
-            buff = self.eq_spacing,
+            buff = 2,
             submobject_to_align = self.leibniz_sum.get_part_by_tex("=")
         )
 
         self.wallis_product.next_to(self.leibniz_sum.get_part_by_tex("="), DOWN,
-            buff = self.eq_spacing,
+            buff = 2,
             submobject_to_align = self.wallis_product.get_part_by_tex("=")
         )
 
@@ -448,7 +508,11 @@ class IntroScene(PiCreatureScene):
         # focus on pi squared
         pi_squared = self.euler_sum.get_part_by_tex("\\pi")[-3]
         self.play(
-            ScaleInPlace(pi_squared,2,rate_func = wiggle)
+            WiggleOutThenIn(pi_squared,
+                scale_value = 4,
+                angle = 0.003 * TAU,
+                run_time = 2
+            )
         )
 
 
@@ -458,17 +522,20 @@ class IntroScene(PiCreatureScene):
         q_circle = Circle(
             stroke_color = YELLOW,
             fill_color = YELLOW,
-            fill_opacity = 0.5,
-            radius = 0.4, 
-            stroke_width = 10.0
+            fill_opacity = 0.25,
+            radius = 0.5, 
+            stroke_width = 3.0
         )
         q_mark = TexMobject("?")
         q_mark.next_to(q_circle)
 
         thought = Group(q_circle, q_mark)
-        q_mark.scale_to_fit_height(0.8 * q_circle.get_height())
+        q_mark.scale_to_fit_height(0.6 * q_circle.get_height())
+
+        self.look_at(pi_squared)
         self.pi_creature_thinks(thought,target_mode = "confused",
-            bubble_kwargs = { "height" : 2, "width" : 3 })
+            bubble_kwargs = { "height" : 2.5, "width" : 5 })
+        self.look_at(pi_squared)
 
         self.wait()
 
@@ -541,7 +608,7 @@ class FirstLighthouseScene(PiCreatureScene):
                             width = 2.5, height = 3.5)
         bubble.next_to(randy,LEFT+UP)
         bubble.add_content(light_indicator)
-
+        self.wait()
         self.play(
             randy.change, "wave_2",
             ShowCreation(bubble),
@@ -566,15 +633,15 @@ class FirstLighthouseScene(PiCreatureScene):
 
         for i in range(1,NUM_CONES+1):
             light_source = LightSource(
-                opacity_function = inverse_quadratic(1,2,1),
+                opacity_function = inverse_quadratic(1,AMBIENT_SCALE,1),
                 num_levels = NUM_LEVELS,
-                radius = 12.0,
+                radius = AMBIENT_RADIUS,
             )
             point = self.number_line.number_to_point(i)
             light_source.move_source_to(point)
             light_sources.append(light_source)
 
-
+        self.wait()
         for ls in light_sources:
             self.add_foreground_mobject(ls.lighthouse)
 
@@ -588,7 +655,7 @@ class FirstLighthouseScene(PiCreatureScene):
 
         # slowly switch on visible light cones and increment indicator
         for (i,light_source) in zip(range(NUM_VISIBLE_CONES),light_sources[:NUM_VISIBLE_CONES]):
-            indicator_start_time = 0.4 * (i+1) * SWITCH_ON_RUN_TIME/light_source.radius * self.number_line.unit_size
+            indicator_start_time = 1.0 * (i+1) * SWITCH_ON_RUN_TIME/light_source.radius * self.number_line.unit_size
             indicator_stop_time = indicator_start_time + INDICATOR_UPDATE_TIME
             indicator_rate_func = squish_rate_func(
                 smooth,indicator_start_time,indicator_stop_time)
@@ -601,10 +668,12 @@ class FirstLighthouseScene(PiCreatureScene):
                 # this last line *technically* fades in the last term, but it is off-screen
                 ChangeDecimalToValue(light_indicator.reading,intensities[i],
                     rate_func = indicator_rate_func, run_time = SWITCH_ON_RUN_TIME),
-                ApplyMethod(light_indicator.foreground.set_fill,None,opacities[i])
+                ApplyMethod(light_indicator.foreground.set_fill,None,opacities[i],
+                    rate_func = indicator_rate_func, run_time = SWITCH_ON_RUN_TIME)
             )
 
             if i == 0:
+                self.wait()
                 # move a copy out of the thought bubble for comparison
                 light_indicator_copy = light_indicator.copy()
                 old_y = light_indicator_copy.get_center()[1]
@@ -612,6 +681,10 @@ class FirstLighthouseScene(PiCreatureScene):
                 self.play(
                     light_indicator_copy.shift,[0, new_y - old_y,0]
                 )
+
+            self.wait()
+
+        self.wait()
 
         # quickly switch on off-screen light cones and increment indicator
         for (i,light_source) in zip(range(NUM_VISIBLE_CONES,NUM_CONES),light_sources[NUM_VISIBLE_CONES:NUM_CONES]):
@@ -691,10 +764,12 @@ class SingleLighthouseScene(PiCreatureScene):
         # Light source
 
         self.light_source = LightSource(
-            opacity_function = inverse_quadratic(1,2,1),
+            opacity_function = inverse_quadratic(1,SPOTLIGHT_SCALE,1),
             num_levels = NUM_LEVELS,
             radius = 10,
-            max_opacity_ambient = AMBIENT_FULL
+            max_opacity_ambient = AMBIENT_FULL,
+            max_opacity_spotlight = SPOTLIGHT_FULL,
+
         )
 
         self.light_source.move_source_to(source_point)
@@ -717,7 +792,7 @@ class SingleLighthouseScene(PiCreatureScene):
         # Screen
 
         self.screen = Rectangle(
-            width = 0.1,
+            width = 0.06,
             height = 2,
             mark_paths_closed = True,
             fill_color = WHITE,
@@ -734,26 +809,39 @@ class SingleLighthouseScene(PiCreatureScene):
 
         self.play(FadeIn(self.screen))
 
-        self.light_source.set_max_opacity_spotlight(0.001)
-        self.add(self.light_source.spotlight)
+        #self.light_source.set_max_opacity_spotlight(0.001)
+        #self.play(SwitchOn(self.light_source.spotlight))
 
-        self.screen_tracker = ScreenTracker(self.light_source)
-        self.add(self.screen_tracker)
 
         self.wait()
+
+
 
 
         # just calling .dim_ambient via ApplyMethod does not work, why?
         dimmed_ambient_light = self.light_source.ambient_light.deepcopy()
         dimmed_ambient_light.dimming(AMBIENT_DIMMED)
+        self.light_source.update_shadow()
 
         self.play(
-            Transform(self.light_source.ambient_light,dimmed_ambient_light),
-            self.light_source.set_max_opacity_spotlight,1.0,
-            FadeIn(self.light_source.shadow)
+            FadeIn(self.light_source.shadow),
+        )
+        self.add_foreground_mobject(self.light_source.shadow)
+        self.add_foreground_mobject(morty)
+
+        self.play(
+            self.light_source.dim_ambient,
+            #Transform(self.light_source.ambient_light,dimmed_ambient_light),
+            #self.light_source.set_max_opacity_spotlight,1.0,
+        )
+        self.play(
+            FadeIn(self.light_source.spotlight)
         )
 
-        self.add_foreground_mobject(morty)
+        self.screen_tracker = ScreenTracker(self.light_source)
+        self.add(self.screen_tracker)
+
+        self.wait()
 
 
 
@@ -780,7 +868,9 @@ class SingleLighthouseScene(PiCreatureScene):
 
         self.angle_indicator = DecimalNumber(arc_angle / DEGREES,
             num_decimal_points = 0,
-            unit = "^\\circ")
+            unit = "^\\circ",
+            fill_opacity = 1.0,
+            fill_color = WHITE)
         self.angle_indicator.next_to(self.angle_arc,RIGHT)
 
         angle_update_func = lambda x: self.light_source.spotlight.opening_angle() / DEGREES
@@ -803,6 +893,7 @@ class SingleLighthouseScene(PiCreatureScene):
 
         self.play(Rotate(self.light_source.spotlight.screen, TAU/8))
         self.play(Rotate(self.light_source.spotlight.screen, -TAU/4))
+
         self.play(Rotate(self.light_source.spotlight.screen, TAU/8))
 
         self.wait()
@@ -828,6 +919,7 @@ class SingleLighthouseScene(PiCreatureScene):
             FadeOut(self.angle_arc),
             FadeOut(self.angle_indicator)
         )
+        self.wait()
 
         self.sun = self.light_source.deepcopy()
 
@@ -841,9 +933,10 @@ class SingleLighthouseScene(PiCreatureScene):
         self.sun.set_radius(150)
         self.sun.move_source_to(sun_position)
 
- #       self.sun.update()
+        #self.sun.update()
 
-   #     self.add(self.sun)
+        #self.add(self.sun)
+        self.wait()
         # temporarily remove the screen tracker while we move the source
         #self.remove(self.screen_tracker)
 
@@ -888,8 +981,8 @@ class EarthScene(Scene):
         # screen
         self.screen = VMobject(stroke_color = WHITE, stroke_width = SCREEN_THICKNESS)
         self.screen.set_points_as_corners([
-            [3,-self.screen_height/2,0],
-            [3,self.screen_height/2,0]
+            [0,-self.screen_height/2,0],
+            [0,self.screen_height/2,0]
         ])
 
         # Earth
@@ -898,6 +991,7 @@ class EarthScene(Scene):
         earth_center = [earth_center_x,0,0]
         earth_radius = 3
         earth = Circle(radius = earth_radius)
+        earth.add(self.screen)
         earth.move_to(earth_center)
         #self.remove(self.screen_tracker)
 
@@ -906,8 +1000,15 @@ class EarthScene(Scene):
         theta1 = theta0 + dtheta
         theta = (theta0 + theta1)/2
 
-        earth.add(self.screen)
+        self.add_foreground_mobject(self.screen)
 
+        # background Earth
+        background_earth = SVGMobject(
+            file_name = "earth",
+            width = 2 * earth_radius,
+            fill_color = BLUE,
+        )
+        background_earth.move_to(earth_center)
         # Morty
 
         morty = Mortimer().scale(0.5).next_to(self.screen, RIGHT, buff = 1.5)
@@ -940,8 +1041,13 @@ class EarthScene(Scene):
         
         self.wait()
 
-        self.play(FadeIn(earth))
-        self.bring_to_back(earth)
+        self.play(
+            FadeIn(earth),
+            FadeIn(background_earth)
+        )
+        self.add_foreground_mobject(earth)
+        self.add_foreground_mobject(self.screen)
+
 
         # move screen onto Earth
         screen_on_earth = self.screen.deepcopy()
@@ -953,6 +1059,7 @@ class EarthScene(Scene):
             0]))
 
         polar_morty = morty.copy().scale(0.5).next_to(screen_on_earth,DOWN,buff = 0.5)
+        polar_morty.highlight(BLUE_C)
 
         self.play(
             Transform(self.screen, screen_on_earth),
@@ -964,6 +1071,8 @@ class EarthScene(Scene):
 
         tropical_morty = polar_morty.copy()
         tropical_morty.move_to(np.array([0,0,0]))
+        tropical_morty.highlight(RED)
+
         morty.target = tropical_morty
 
         # move screen to equator
@@ -2132,7 +2241,16 @@ class IPTScene2(Scene):
         self.play(ShowCreation(box),Write(text))
 
 
-class PondScene(Scene):
+
+
+
+
+
+
+class PondScene(ThreeDScene):
+
+
+
 
     def construct(self):
 
@@ -2149,12 +2267,52 @@ class PondScene(Scene):
         TEX_SCALE = 0.8
         DOT_COLOR = BLUE
 
+        LIGHT_MAX_INT = 1
+        LIGHT_SCALE = 5
+        LIGHT_CUTOFF = 1
+
+        self.cumulated_zoom_factor = 1
+
+        #self.force_skipping()
+
+
+        def zoom_out_scene(factor):
+
+            phi0 = self.camera.get_phi() # default is 0 degs
+            theta0 = self.camera.get_theta() # default is -90 degs
+            distance0 = self.camera.get_distance()
+
+            distance1 = 2 * distance0
+            camera_target_point = self.camera.get_spherical_coords(phi0, theta0, distance1)
+
+            self.play(
+                ApplyMethod(self.camera.rotation_mobject.move_to, camera_target_point),
+                self.zoomable_mobs.shift, self.obs_dot.get_center(),
+                self.unzoomable_mobs.scale,2,{"about_point" : ORIGIN},
+            )
+
+            self.cumulated_zoom_factor *= factor
+
+
+        def shift_scene(v):
+            self.play(
+                self.zoomable_mobs.shift,v,
+                self.unzoomable_mobs.shift,v
+            )
+
+
+        self.zoomable_mobs = VMobject()
+        self.unzoomable_mobs = VMobject()
+
+
         baseline = VMobject()
         baseline.set_points_as_corners([[-8,BASELINE_YPOS,0],[8,BASELINE_YPOS,0]])
+        baseline.set_stroke(width = 0) # in case it gets accidentally added to the scene
+        self.zoomable_mobs.add(baseline) # prob not necessary
 
-        obs_dot = Dot(OBSERVER_POINT, fill_color = DOT_COLOR)
+        self.obs_dot = Dot(OBSERVER_POINT, fill_color = DOT_COLOR)
         ls0_dot = Dot(OBSERVER_POINT + 2 * LAKE0_RADIUS * UP, fill_color = WHITE)
-
+        self.unzoomable_mobs.add(self.obs_dot, ls0_dot)
 
         # lake
         lake0 = Circle(radius = LAKE0_RADIUS,
@@ -2163,6 +2321,7 @@ class PondScene(Scene):
             fill_opacity = LAKE_OPACITY
         )
         lake0.move_to(OBSERVER_POINT + LAKE0_RADIUS * UP)
+        self.zoomable_mobs.add(lake0)
 
         # Morty and indicator
         morty = Mortimer().scale(0.3)
@@ -2173,12 +2332,15 @@ class PondScene(Scene):
             color = LIGHT_COLOR
         )
         indicator.next_to(morty,LEFT)
+        self.unzoomable_mobs.add(morty, indicator)
 
         # first lighthouse
-        ls0 = LightSource()
+        original_op_func = inverse_quadratic(LIGHT_MAX_INT,LIGHT_SCALE,LIGHT_CUTOFF)
+        ls0 = LightSource(opacity_function = original_op_func)
         ls0.move_source_to(OBSERVER_POINT + LAKE0_RADIUS * 2 * UP)
+        self.zoomable_mobs.add(ls0, ls0.lighthouse, ls0.ambient_light)
 
-        self.add(lake0,morty,obs_dot,ls0_dot, ls0.lighthouse)
+        self.add(lake0,morty,self.obs_dot,ls0_dot, ls0.lighthouse)
 
         self.wait()
 
@@ -2238,15 +2400,16 @@ class PondScene(Scene):
         self.play(
             ShowCreation(diameter),
             Write(diameter_text),
-            #FadeOut(obs_dot),
+            #FadeOut(self.obs_dot),
             FadeOut(ls0_dot)
         )
 
-        indicator.reading = TexMobject("{1\over d^2}").scale(TEX_SCALE)
-        indicator.reading.move_to(indicator)
+        indicator_reading = TexMobject("{1\over d^2}").scale(TEX_SCALE)
+        indicator_reading.move_to(indicator)
+        self.unzoomable_mobs.add(indicator_reading)
 
         self.play(
-            FadeIn(indicator.reading)
+            FadeIn(indicator_reading)
         )
 
         # replace d with its value
@@ -2262,7 +2425,7 @@ class PondScene(Scene):
         new_reading.move_to(indicator)
 
         self.play(
-            Transform(indicator.reading,new_reading)
+            Transform(indicator_reading,new_reading)
         )
 
         self.play(
@@ -2281,7 +2444,7 @@ class PondScene(Scene):
 
             self.play(
                 ScaleInPlace(indicator, INDICATOR_WIGGLE_FACTOR, rate_func = wiggle),
-                ScaleInPlace(indicator.reading, INDICATOR_WIGGLE_FACTOR, rate_func = wiggle)
+                ScaleInPlace(indicator_reading, INDICATOR_WIGGLE_FACTOR, rate_func = wiggle)
             )
 
 
@@ -2296,12 +2459,12 @@ class PondScene(Scene):
             position = self.lake_center + self.lake_radius * radial_vector
 
             if scaled_down:
-                return position.scale_about_point(OBSERVER_POINT,0.5)
+                return position.scale_about_point(self.obs_dot.get_center(),0.5)
             else:
                 return position
 
 
-        def split_light_source(i, step, show_steps = True, run_time = 1, ls_radius = 1):
+        def split_light_source(i, step, show_steps = True, run_time = 1):
 
             ls_new_loc1 = position_for_index(i,step + 1)
             ls_new_loc2 = position_for_index(i + 2**step,step + 1)
@@ -2317,8 +2480,8 @@ class PondScene(Scene):
                     ShowCreation(hyp, run_time = run_time)
                 )
 
-            leg1 = Line(OBSERVER_POINT,ls_new_loc1)
-            leg2 = Line(OBSERVER_POINT,ls_new_loc2)
+            leg1 = Line(self.obs_dot.get_center(),ls_new_loc1)
+            leg2 = Line(self.obs_dot.get_center(),ls_new_loc2)
             self.new_legs_1.append(leg1)
             self.new_legs_2.append(leg2)
 
@@ -2329,15 +2492,17 @@ class PondScene(Scene):
                 )
 
             ls1 = self.light_sources_array[i]
+
+
             ls2 = ls1.copy()
             self.add(ls2)
             self.additional_light_sources.append(ls2)
 
             # check if the light sources are on screen
             ls_old_loc = np.array(ls1.get_source_point())
-            onscreen_old = np.all(np.abs(ls_old_loc) < 10)
-            onscreen_1 = np.all(np.abs(ls_new_loc1) < 10)
-            onscreen_2 = np.all(np.abs(ls_new_loc2) < 10)
+            onscreen_old = np.any(np.abs(ls_old_loc) < 10)
+            onscreen_1 = np.any(np.abs(ls_new_loc1) < 10)
+            onscreen_2 = np.any(np.abs(ls_new_loc2) < 10)
             show_animation = (onscreen_old or onscreen_1 or onscreen_2)
 
             if show_animation:
@@ -2353,8 +2518,8 @@ class PondScene(Scene):
 
 
 
-        def construction_step(n, scale_down = True, show_steps = True, run_time = 1,
-            simultaneous_splitting = False, ls_radius = 1):
+        def construction_step(n, show_steps = True, run_time = 1,
+            simultaneous_splitting = False):
 
             # we assume that the scene contains:
             # an inner lake, self.inner_lake
@@ -2372,18 +2537,22 @@ class PondScene(Scene):
 
 
             # first, fade out all of the hypotenuses and altitudes
+
             if show_steps == True:
+                self.zoomable_mobs.remove(self.hypotenuses, self.altitudes, self.inner_lake)
                 self.play(
                     FadeOut(self.hypotenuses),
                     FadeOut(self.altitudes),
                     FadeOut(self.inner_lake)
                 )
             else:
+                self.zoomable_mobs.remove(self.inner_lake)
                 self.play(
                     FadeOut(self.inner_lake)
                 )
 
             # create a new, outer lake
+            self.lake_center = self.obs_dot.get_center() + self.lake_radius * UP
 
             new_outer_lake = Circle(radius = self.lake_radius,
                 stroke_width = LAKE_STROKE_WIDTH,
@@ -2408,18 +2577,18 @@ class PondScene(Scene):
             self.inner_lake = self.outer_lake
             self.outer_lake = new_outer_lake
             self.altitudes = self.legs
+            #self.lake_center = self.outer_lake.get_center()
 
             self.additional_light_sources = []
             self.new_legs_1 = []
             self.new_legs_2 = []
-            self.new_hypotenuses = []
+            self.new_hypotenuses = [] 
 
             for i in range(2**n):
                 split_light_source(i,
                     step = n,
                     show_steps = show_steps,
-                    run_time = run_time,
-                    ls_radius = ls_radius
+                    run_time = run_time
                 )
 
 
@@ -2430,16 +2599,23 @@ class PondScene(Scene):
             self.legs = VMobject()
             for leg in self.new_legs_1:
                 self.legs.add(leg)
+                self.zoomable_mobs.add(leg)
             for leg in self.new_legs_2:
                 self.legs.add(leg)
+                self.zoomable_mobs.add(leg)
+
+            for hyp in self.hypotenuses.submobjects:
+                self.zoomable_mobs.remove(hyp)
 
             self.hypotenuses = VMobject()
             for hyp in self.new_hypotenuses:
                 self.hypotenuses.add(hyp)
+                self.zoomable_mobs.add(hyp)
 
             for ls in self.additional_light_sources:
                 self.light_sources.add(ls)
                 self.light_sources_array.append(ls)
+                self.zoomable_mobs.add(ls)
 
             # update scene
             self.add(
@@ -2447,6 +2623,7 @@ class PondScene(Scene):
                 self.inner_lake,
                 self.outer_lake,
             )
+            self.zoomable_mobs.add(self.light_sources, self.inner_lake, self.outer_lake)
 
             if show_steps == True:
                 self.add(
@@ -2454,6 +2631,7 @@ class PondScene(Scene):
                     self.hypotenuses,
                     self.altitudes,
                 )
+                self.zoomable_mobs.add(self.legs, self.hypotenuses, self.altitudes)
 
 
             self.wait()
@@ -2461,37 +2639,8 @@ class PondScene(Scene):
             if show_steps == True:
                 self.play(FadeOut(ls0_dot))
 
-            # scale down
-            if scale_down:
-
-                indicator_wiggle()
-                
-                if show_steps == True:
-                    self.play(
-                        ScaleLightSources(self.light_sources,0.5,about_point = OBSERVER_POINT),
-                        self.inner_lake.scale_about_point,0.5,OBSERVER_POINT,
-                        self.outer_lake.scale_about_point,0.5,OBSERVER_POINT,
-                        self.legs.scale_about_point,0.5,OBSERVER_POINT,
-                        self.hypotenuses.scale_about_point,0.5,OBSERVER_POINT,
-                        self.altitudes.scale_about_point,0.5,OBSERVER_POINT,
-                    )
-                else:
-                    self.play(
-                        ScaleLightSources(self.light_sources,0.5,about_point = OBSERVER_POINT),
-                        self.inner_lake.scale_about_point,0.5,OBSERVER_POINT,
-                        self.outer_lake.scale_about_point,0.5,OBSERVER_POINT,
-                    )
-
-                # update the radii bc they haven't done so themselves
-                # bc reasons...
-                for ls in self.light_sources_array:
-                    r = ls.radius
-                    ls.set_radius(r*0.5)
-
-            else:
-                # update the lake center and the radius
-                self.lake_center = ls0_loc = self.outer_lake.get_center() + self.lake_radius * UP
-                self.lake_radius *= 2
+            #self.lake_center = ls0_loc = self.obs_dot.get_center() + self.lake_radius * UP
+            self.lake_radius *= 2
 
 
 
@@ -2514,6 +2663,8 @@ class PondScene(Scene):
 
         self.lake_radius = 2 * LAKE0_RADIUS # don't ask...
 
+        self.zoomable_mobs.add(self.inner_lake, self.outer_lake, self.altitudes, self.light_sources)
+
         self.add(self.inner_lake,
             self.outer_lake,
             self.legs,
@@ -2528,28 +2679,43 @@ class PondScene(Scene):
         self.new_legs_2 = []
         self.new_hypotenuses = []
 
-        ls_radius = 25.0
 
-        for i in range(3):
-            construction_step(i, scale_down = True, ls_radius = ls_radius/2**i)
+        construction_step(0)
+        indicator_wiggle()
+        self.play(FadeOut(ls0_dot))
+        zoom_out_scene(2)
 
-        return
+        construction_step(1)
+        indicator_wiggle()
+        self.play(FadeOut(ls0_dot))
+        zoom_out_scene(2)
+
+        construction_step(2)
+        indicator_wiggle()
+        self.play(FadeOut(ls0_dot))
+
+
+
 
         self.play(
             FadeOut(self.altitudes),
             FadeOut(self.hypotenuses),
             FadeOut(self.legs)
-            )
+        )
 
-        for i in range(3,5):
-            construction_step(i, scale_down = False, show_steps = False, run_time = 1.0/2**i,
-                simultaneous_splitting = True, ls_radius = ls_radius/2**3)
+        max_it = 6
+        scale = 2**(max_it - 4)
+        TEX_SCALE *= scale
 
+        for i in range(3,max_it + 1):
+            construction_step(i, show_steps = False, run_time = 4.0/2**i)
 
-
+        #self.revert_to_original_skipping_status()
 
         # Now create a straight number line and transform into it
         MAX_N = 17
+
+        origin_point = self.obs_dot.get_center()
 
         self.number_line = NumberLine(
             x_min = -MAX_N,
@@ -2558,13 +2724,13 @@ class PondScene(Scene):
             number_at_center = 0,
             stroke_width = LAKE_STROKE_WIDTH,
             stroke_color = LAKE_STROKE_COLOR,
-            numbers_with_elongated_ticks = range(-MAX_N,MAX_N + 1),
-            numbers_to_show = range(-MAX_N,MAX_N + 1),
-            unit_size = LAKE0_RADIUS * TAU/4 / 4,
+            #numbers_with_elongated_ticks = range(-MAX_N,MAX_N + 1),
+            numbers_to_show = range(-MAX_N,MAX_N + 1,2),
+            unit_size = LAKE0_RADIUS * TAU/4 / 2 * scale,
             tick_frequency = 1,
             line_to_number_buff = LARGE_BUFF,
             label_direction = UP,
-        ).shift(2.5 * DOWN)
+        ).shift(scale * 2.5 * DOWN)
 
         self.number_line.label_direction = DOWN
 
@@ -2589,8 +2755,8 @@ class PondScene(Scene):
 
         # open sea
         open_sea = Rectangle(
-            width = 20,
-            height = 10,
+            width = 20 * scale,
+            height = 10 * scale,
             stroke_width = LAKE_STROKE_WIDTH,
             stroke_color = LAKE_STROKE_COLOR,
             fill_color = LAKE_COLOR,
@@ -2600,11 +2766,386 @@ class PondScene(Scene):
 
 
         self.play(
-            Transform(pond_sources,nl_sources),
-            Transform(self.outer_lake,open_sea),
+            ReplacementTransform(pond_sources,nl_sources),
+            ReplacementTransform(self.outer_lake,open_sea),
             FadeOut(self.inner_lake)
         )
         self.play(FadeIn(self.number_line))
+
+
+        self.wait()
+
+        v = 5 * scale * UP
+        self.play(
+            nl_sources.shift,v,
+            morty.shift,v,
+            self.number_line.shift,v,
+            indicator.shift,v,
+            indicator_reading.shift,v,
+            open_sea.shift,v,
+        )
+        self.number_line_labels.shift(v)
+
+        origin_point = self.number_line.number_to_point(0)
+        #self.remove(self.obs_dot)
+        self.play(
+            indicator.move_to, origin_point + scale * UP,
+            indicator_reading.move_to, origin_point + scale * UP,
+            FadeOut(open_sea),
+            FadeOut(morty),
+            FadeIn(self.number_line_labels)
+        )
+
+        two_sided_sum = TexMobject("\dots", "+", "{1\over (-11)^2}",\
+         "+", "{1\over (-9)^2}", " + ", "{1\over (-7)^2}", " + ", "{1\over (-5)^2}", " + ", \
+         "{1\over (-3)^2}", " + ", "{1\over (-1)^2}", " + ", "{1\over 1^2}", " + ", \
+         "{1\over 3^2}", " + ", "{1\over 5^2}", " + ", "{1\over 7^2}", " + ", \
+         "{1\over 9^2}", " + ", "{1\over 11^2}", " + ", "\dots")
+
+        nb_symbols = len(two_sided_sum.submobjects)
+
+        two_sided_sum.scale(TEX_SCALE)
+        
+        for (i,submob) in zip(range(nb_symbols),two_sided_sum.submobjects):
+            submob.next_to(self.number_line.number_to_point(i - 13),DOWN, buff = 2*scale)
+            if (i == 0 or i % 2 == 1 or i == nb_symbols - 1): # non-fractions
+                submob.shift(0.2 * scale * DOWN)
+
+        self.play(Write(two_sided_sum))
+
+        covering_rectangle = Rectangle(
+            width = SPACE_WIDTH * scale,
+            height = 2 * SPACE_HEIGHT * scale,
+            stroke_width = 0,
+            fill_color = BLACK,
+            fill_opacity = 1,
+        )
+        covering_rectangle.next_to(ORIGIN,LEFT,buff = 0)
+        for i in range(10):
+            self.add_foreground_mobject(nl_sources.submobjects[i])
+
+        self.add_foreground_mobject(indicator)
+        self.add_foreground_mobject(indicator_reading)
+
+        half_indicator_reading = TexMobject("{\pi^2 \over 8}").scale(TEX_SCALE)
+        half_indicator_reading.move_to(indicator)
+
+        central_plus_sign = two_sided_sum[13]
+
+        self.play(
+            FadeIn(covering_rectangle),
+            ReplacementTransform(indicator_reading, half_indicator_reading),
+            FadeOut(central_plus_sign)
+        )
+
+        equals_sign = TexMobject("=").scale(TEX_SCALE)
+        equals_sign.move_to(central_plus_sign)
+        p = 2 * scale * LEFT
+
+        self.play(
+            indicator.move_to,p,
+            half_indicator_reading.move_to,p,
+            FadeIn(equals_sign)
+        )
+
+        # show Randy admiring the result
+        randy = Randolph().scale(scale).move_to(2*scale*DOWN+5*scale*LEFT)
+        self.play(FadeIn(randy))
+        self.play(randy.change,"happy")
+
+
+
+class WaitScene(TeacherStudentsScene):
+
+    def construct(self):
+
+        self.teacher_says(TexMobject("{1\over 1^2}+{1\over 3^2}+{1\over 5^2}+{1\over 7^2}+\dots = {\pi^2 \over 8}!"))
+
+        student_q = TextMobject("What about")
+        full_sum = TexMobject("{1\over 1^2}+{1\over 2^2}+{1\over 3^2}+{1\over 4^2}+\dots?")
+        full_sum.next_to(student_q,RIGHT)
+        student_q.add(full_sum)
+
+
+        self.student_says(student_q, target_mode = "angry")
+
+
+class FinalSumManipulationScene(PiCreatureScene):
+
+    def construct(self):
+
+        LAKE_COLOR = BLUE
+        LAKE_OPACITY = 0.15
+        LAKE_STROKE_WIDTH = 5.0
+        LAKE_STROKE_COLOR = BLUE
+        TEX_SCALE = 0.8
+
+        LIGHT_COLOR2 = RED
+        LIGHT_COLOR3 = BLUE
+
+        unit_length = 1.5
+        vertical_spacing = 2.5 * DOWN
+        switch_on_time = 0.2
+
+        sum_vertical_spacing = 1.5
+
+        randy = self.get_primary_pi_creature()
+        randy.scale(0.7).flip().to_edge(DOWN + LEFT)
+
+        ls_template = LightSource(
+            radius = 2,
+            max_opacity_ambient = 0.5,
+            opacity_function = inverse_quadratic(1,0.5,1)
+        )
+
+
+        odd_range = np.arange(1,9,2)
+        even_range = np.arange(2,16,2)
+        full_range = np.arange(1,8,1)
+
+        self.number_line1 = NumberLine(
+            x_min = 0,
+            x_max = 11,
+            color = LAKE_STROKE_COLOR,
+            number_at_center = 0,
+            stroke_width = LAKE_STROKE_WIDTH,
+            stroke_color = LAKE_STROKE_COLOR,
+            numbers_to_show = odd_range,
+            unit_size = unit_length,
+            tick_frequency = 1,
+            line_to_number_buff = MED_LARGE_BUFF,
+            include_tip = True
+        )
+
+        self.number_line1.next_to(2.5 * UP + 3 * LEFT, RIGHT, buff = 0)
+
+        odd_lights = VMobject()
+        for i in odd_range:
+            pos = self.number_line1.number_to_point(i)
+            ls = ls_template.copy()
+            ls.move_source_to(pos)
+            odd_lights.add(ls)
+
+        self.play(
+            ShowCreation(self.number_line1),
+        )
+
+        odd_terms = VMobject()
+        for i in odd_range:
+            if i == 1:
+                term = TexMobject("\phantom{+\,}{1\over " + str(i) + "^2}", fill_color = LIGHT_COLOR)
+            else:
+                term = TexMobject("+\, {1\over " + str(i) + "^2}", fill_color = LIGHT_COLOR)
+
+            term.next_to(self.number_line1.number_to_point(i), DOWN, buff = 1.5)
+            odd_terms.add(term)
+
+
+        for (ls, term) in zip(odd_lights.submobjects, odd_terms.submobjects):
+            self.play(
+                FadeIn(ls.lighthouse, run_time = switch_on_time),
+                SwitchOn(ls.ambient_light, run_time = switch_on_time),
+                Write(term, run_time = switch_on_time)
+            )
+
+        result1 = TexMobject("{\pi^2\over 8} =", fill_color = LIGHT_COLOR)
+        result1.next_to(self.number_line1, LEFT, buff = 0.5)
+        self.play(Write(result1))
+
+
+
+
+        self.number_line2 = self.number_line1.copy()
+        self.number_line2.numbers_to_show = full_range
+        self.number_line2.shift(2 * vertical_spacing)
+
+        full_lights = VMobject()
+
+        for i in full_range:
+            pos = self.number_line2.number_to_point(i)
+            ls = ls_template.copy()
+            ls.color = LIGHT_COLOR3
+            ls.move_source_to(pos)
+            full_lights.add(ls)
+
+        self.play(
+            ShowCreation(self.number_line2),
+        )
+
+
+
+        for ls in full_lights.submobjects:
+            self.play(
+                FadeIn(ls.lighthouse, run_time = 0.1),#5 * switch_on_time),
+                SwitchOn(ls.ambient_light, run_time = 0.1)#5 * switch_on_time),
+            )
+
+
+
+        even_terms = VMobject()
+        for i in even_range:
+            term = TexMobject("+\, {1\over " + str(i) + "^2}", fill_color = LIGHT_COLOR2)
+            term.next_to(self.number_line1.number_to_point(i), DOWN, buff = sum_vertical_spacing)
+            even_terms.add(term)
+
+
+        even_lights = VMobject()
+
+        for i in even_range:
+            pos = self.number_line1.number_to_point(i)
+            ls = ls_template.copy()
+            ls.color = LIGHT_COLOR2
+            ls.move_source_to(pos)
+            even_lights.add(ls)
+
+        for (ls, term) in zip(even_lights.submobjects, even_terms.submobjects):
+            self.play(
+                SwitchOn(ls.ambient_light, run_time = switch_on_time),
+                Write(term)
+            )
+
+
+
+        # now morph the even lights into the full lights
+        full_lights_copy = full_lights.copy()
+        even_lights_copy = even_lights.copy()
+
+
+        self.play(
+            Transform(even_lights,full_lights)
+        )
+
+        # draw arrows
+        P1 = self.number_line2.number_to_point(1)
+        P2 = even_terms.submobjects[0].get_center()
+        Q1 = interpolate(P1, P2, 0.2)
+        Q2 = interpolate(P1, P2, 0.8)
+        quarter_arrow = Arrow(Q1, Q2,
+            color = LIGHT_COLOR2)
+        quarter_label = TexMobject("\\times {1\over 4}", fill_color = LIGHT_COLOR2)
+        quarter_label.scale(0.7)
+        quarter_label.next_to(quarter_arrow.get_center(), RIGHT)
+
+        self.play(
+            ShowCreation(quarter_arrow),
+            Write(quarter_label),
+            Transform(even_lights,even_lights_copy)
+        )
+
+        P3 = odd_terms.submobjects[0].get_center()
+        R1 = interpolate(P1, P3, 0.2)
+        R2 = interpolate(P1, P3, 0.8)
+        three_quarters_arrow = Arrow(R1, R2,
+            color = LIGHT_COLOR)
+        three_quarters_label = TexMobject("\\times {3\over 4}", fill_color = LIGHT_COLOR)
+        three_quarters_label.scale(0.7)
+        three_quarters_label.next_to(three_quarters_arrow.get_center(), LEFT)
+
+        self.play(
+            ShowCreation(three_quarters_arrow),
+            Write(three_quarters_label)
+        )
+
+        four_thirds_arrow = Arrow(R2, R1, color = LIGHT_COLOR)
+        four_thirds_label = TexMobject("\\times {4\over 3}", fill_color = LIGHT_COLOR)
+        four_thirds_label.scale(0.7)
+        four_thirds_label.next_to(four_thirds_arrow.get_center(), LEFT)
+
+        self.play(
+            ReplacementTransform(three_quarters_arrow, four_thirds_arrow),
+            ReplacementTransform(three_quarters_label, four_thirds_label)
+        )
+
+        self.play(
+            FadeOut(quarter_label),
+            FadeOut(quarter_arrow),
+            FadeOut(even_lights),
+            FadeOut(even_terms)
+
+        )
+
+
+        full_terms = VMobject()
+        for i in full_range:
+            if i == 1:
+                term = TexMobject("\phantom{+\,}{1\over " + str(i) + "^2}", fill_color = LIGHT_COLOR3)
+            else:
+                term = TexMobject("+\, {1\over " + str(i) + "^2}", fill_color = LIGHT_COLOR3)
+
+            term.move_to(self.number_line2.number_to_point(i))
+            full_terms.add(term)
+
+        self.play(
+            FadeOut(self.number_line1),
+            FadeOut(odd_lights),
+            FadeOut(self.number_line2),
+            FadeOut(full_lights),
+            FadeIn(full_terms)
+        )
+
+        v = (sum_vertical_spacing + 0.5) * UP
+        self.play(
+            odd_terms.shift, v,
+            four_thirds_arrow.shift, v,
+            four_thirds_label.shift, v,
+            odd_terms.shift, v,
+            full_terms.shift, v
+        )
+
+        arrow_copy = four_thirds_arrow.copy()
+        label_copy = four_thirds_label.copy()
+        arrow_copy.shift(2.5 * LEFT)
+        label_copy.shift(2.5 * LEFT)
+
+        self.play(
+            FadeIn(arrow_copy),
+            FadeIn(label_copy)
+        )
+
+        final_result = TexMobject("{\pi^2 \over 6}=", fill_color = LIGHT_COLOR3)
+        final_result.next_to(arrow_copy, DOWN)
+
+        self.play(
+            Write(final_result),
+            randy.change_mode,"hooray"
+        )
+
+        equation = VMobject()
+        equation.add(final_result)
+        equation.add(full_terms)
+
+        buffer = 2
+        result_box = Rectangle(width = 15,
+            height = buffer*equation.get_height(), color = LIGHT_COLOR3)
+        result_box.move_to(equation)
+        equation.add(result_box)
+
+        self.play(
+            FadeOut(result1),
+            FadeOut(odd_terms),
+            FadeOut(arrow_copy),
+            FadeOut(label_copy),
+            FadeOut(four_thirds_arrow),
+            FadeOut(four_thirds_label),
+            ShowCreation(result_box)
+        )
+
+        self.play(equation.shift, -equation.get_center()[1] * UP + UP)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2626,6 +3167,9 @@ class LabeledArc(Arc):
 
         label.move_to(label_pos)
         self.add(label)
+
+
+
 
 
 
