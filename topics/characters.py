@@ -575,6 +575,7 @@ class PiCreatureScene(Scene):
             time_to_blink = self.total_wait_time%self.seconds_to_blink == 0
             if blink and self.any_pi_creatures_on_screen() and time_to_blink:
                 self.blink()
+                self.num_plays -= 1 #This shouldn't count as an animation
             else:
                 self.non_blink_wait()
             time -= 1
