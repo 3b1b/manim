@@ -314,8 +314,9 @@ class SwitchOn(LaggedStart):
     def __init__(self, light, **kwargs):
         if (not isinstance(light,AmbientLight) and not isinstance(light,Spotlight)):
             raise Exception("Only AmbientLights and Spotlights can be switched on")
-        LaggedStart.__init__(self,
-            FadeIn, light, **kwargs)
+        LaggedStart.__init__(
+            self, FadeIn, light, **kwargs
+        )
 
 
 class SwitchOff(LaggedStart):
@@ -333,8 +334,6 @@ class SwitchOff(LaggedStart):
         light.submobjects = light.submobjects[::-1]
 
 
-
-
 class Lighthouse(SVGMobject):
     CONFIG = {
         "file_name" : "lighthouse",
@@ -343,7 +342,6 @@ class Lighthouse(SVGMobject):
 
     def move_to(self,point):
         self.next_to(point, DOWN, buff = 0)
-
 
 class AmbientLight(VMobject):
 
@@ -419,19 +417,6 @@ class AmbientLight(VMobject):
             old_submob_alpha = submob.fill_opacity
             new_submob_alpha = old_submob_alpha * new_alpha / old_alpha
             submob.set_fill(opacity = new_submob_alpha)
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 class Spotlight(VMobject):
@@ -590,7 +575,6 @@ class Spotlight(VMobject):
 
 
 
-
     def dimming(self,new_alpha):
         old_alpha = self.max_opacity
         self.max_opacity = new_alpha
@@ -623,7 +607,27 @@ class Spotlight(VMobject):
 
 
 class ScreenTracker(ContinualAnimation):
+    def __init__(self, light_source, **kwargs):
+        self.light_source = light_source
+        dummy_mob = Mobject()
+        ContinualAnimation.__init__(self, dummy_mob, **kwargs)
 
     def update_mobject(self, dt):
-        self.mobject.update()
+        self.light_source.update()
         
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
