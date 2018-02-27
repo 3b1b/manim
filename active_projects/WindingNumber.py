@@ -33,6 +33,9 @@ from topics.graph_scene import *
 # (and it will be done, but first I'll figure out what I'm doing with all this...)
 # -SR
 
+# This turns counterclockwise revs into their color. Beware, we use CCW angles 
+# in all display code, but generally think in this video's script in terms of 
+# CW angles
 def rev_to_rgba(alpha):
     alpha = (0.5 - alpha) % 1 # For convenience, to go CW from red on left instead of CCW from right
     # 0 is red, 1/6 is yellow, 1/3 is green, 2/3 is blue
@@ -76,7 +79,7 @@ def point_to_rgba(point):
     rgba = rev_to_rgba(rev)
     base_size = np.sqrt(point[0]**2 + point[1]**2)
     rescaled_size = np.sqrt(base_size/(base_size + 1))
-    return rgba * rescaled_size
+    return rgba * [rescaled_size, rescaled_size, rescaled_size, 1] # Preserve alpha
 
 positive_color = rev_to_color(0)
 negative_color = rev_to_color(0.5)
@@ -424,6 +427,12 @@ def plane_func_from_complex_func(f):
 def point_func_from_complex_func(f):
     return lambda (x, y, z): complex_to_R3(f(complex(x, y)))
 
+def point_func_from_plane_func(f):
+    def g((x, y, z)):
+        f_val = f((x, y))
+        return np.array((f_val[0], f_val[1], 0))
+    return g
+
 test_map_func = point_func_from_complex_func(lambda c: c**2)
 
 empty_animation = EmptyAnimation()
@@ -444,9 +453,10 @@ class WalkerAnimation(Animation):
         self.show_arrows = show_arrows
 
         base_walker = Dot().scale(5) # PiCreature().scale(0.8) # 
-        self.compound_walker.walker = base_walker.scale(0.35).set_stroke(BLACK, 1.5) #PiCreature()
+        self.compound_walker.walker = base_walker.scale(0.35).set_stroke(WHITE, 3) #PiCreature()
         if show_arrows:
-            self.compound_walker.arrow = Arrow(ORIGIN, 0.5 * RIGHT, buff = 0).set_stroke(BLACK, 1.5)
+            self.compound_walker.arrow = Arrow(ORIGIN, 0.5 * RIGHT, buff = 0)
+            self.compound_walker.arrow.match_style(self.compound_walker.walker)
         self.compound_walker.digest_mobject_attrs()
         Animation.__init__(self, self.compound_walker, **kwargs)
 
@@ -528,10 +538,14 @@ class ColorMappedByFuncScene(Scene):
         "num_plane" : NumberPlane(),
         "show_num_plane" : True,
 
-        "show_output" : False, # Not currently implemented; TODO
+        "show_output" : False
     }
 
     def setup(self):
+        # The composition of input_to_pos and pos_to_color 
+        # is to be equal to func (which turns inputs into colors)
+        # However, depending on whether we are showing input or output (via a MappingCamera),
+        # we color the background using either func or the identity map
         if self.show_output:
             self.input_to_pos_func = self.func
             self.pos_to_color_func = lambda p : p
@@ -539,10 +553,19 @@ class ColorMappedByFuncScene(Scene):
             self.input_to_pos_func = lambda p : p
             self.pos_to_color_func = self.func
 
-        # func_hash hashes the function at some random points
-        func_hash_points = [(-0.93, 1), (1, -2.7), (20, 4)]
-        to_hash = tuple((self.func(p)[0], self.func(p)[1]) for p in func_hash_points)
+        jitter_val = 0.1
+        line_coords = np.linspace(-10, 10) + jitter_val
+        func_hash_points = it.product(line_coords, line_coords)
+        def mini_hasher(p):
+            rgba = point_to_rgba(self.pos_to_color_func(p))
+            if rgba[3] != 1.0:
+                print "Warning! point_to_rgba assigns fractional alpha", rgba[3]
+            return tuple(rgba)
+        to_hash = tuple(mini_hasher(p) for p in func_hash_points)
         func_hash = hash(to_hash)
+        # We hash just based on output image
+        # Thus, multiple scenes with same output image can re-use it
+        # without recomputation
         full_hash = hash((func_hash, self.camera.pixel_shape))
         self.background_image_file = os.path.join(
             self.output_directory, "images", 
@@ -583,10 +606,22 @@ class PureColorMap(ColorMappedByFuncScene):
         "show_num_plane" : False
     }
 
-class ColorMappedByFuncStill(ColorMappedByFuncScene):
     def construct(self):
         ColorMappedByFuncScene.construct(self)
         self.wait()
+
+# This sets self.background_image_file, but does not display it as the background
+class ColorMappedObjectsScene(ColorMappedByFuncScene):
+    CONFIG = {
+        "show_num_plane" : False
+    }
+
+    def construct(self):
+        ColorMappedByFuncScene.construct(self)
+
+        # Clearing background
+        self.camera.background_image = None
+        self.camera.init_background()
 
 class PiWalker(ColorMappedByFuncScene):
     CONFIG = {
@@ -654,7 +689,7 @@ class PiWalkerCircle(PiWalker):
         PiWalker.setup(self)
 
 # TODO: Give drawn lines a bit of buffer, so that the rectangle's corners are filled in
-class EquationSolver2d(ColorMappedByFuncScene):
+class EquationSolver2d(ColorMappedObjectsScene):
     CONFIG = {
         "camera_config" : {"use_z_coordinate_for_display_order": True},
         "initial_lower_x" : -5.1,
@@ -670,16 +705,19 @@ class EquationSolver2d(ColorMappedByFuncScene):
     }
 
     def construct(self):
-        ColorMappedByFuncScene.construct(self)
+        ColorMappedObjectsScene.construct(self)
         num_plane = self.num_plane
-        self.remove(num_plane)
-
-        # Clearing background
-        self.camera.background_image = None
-        self.camera.init_background()
 
         rev_func = lambda p : point_to_rev(self.func(p))
         clockwise_rev_func = lambda p : -rev_func(p)
+
+        base_line = Line(UP, RIGHT, stroke_width = 10 if self.use_fancy_lines else 4, color = RED)
+
+        run_time_base = 1
+        run_time_with_lingering = run_time_base + 0.2
+        base_rate = lambda t : t
+        linger_rate = squish_rate_func(lambda t : t, 0, 
+                        fdiv(run_time_base, run_time_with_lingering))
 
         def Animate2dSolver(cur_depth, rect, dim_to_split, sides_to_draw = [0, 1, 2, 3]):
             print "Solver at depth: " + str(cur_depth)
@@ -691,13 +729,10 @@ class EquationSolver2d(ColorMappedByFuncScene):
                 alpha_winder = make_alpha_winder(clockwise_rev_func, start, end, self.num_checkpoints)
                 a0 = alpha_winder(0)
                 rebased_winder = lambda alpha: alpha_winder(alpha) - a0 + start_wind
-                thick_line = Line(num_plane.coords_to_point(*start), num_plane.coords_to_point(*end),
-                    stroke_width = 10,
-                    color = RED)
+                colored_line = Line(num_plane.coords_to_point(*start) + IN, num_plane.coords_to_point(*end) + IN)
+                colored_line.match_style(base_line)
                 if self.use_fancy_lines:
-                    colored_line = thick_line.color_using_background_image(self.background_image_file)
-                else:
-                    colored_line = thick_line.set_stroke(width = 4)
+                    colored_line.color_using_background_image(self.background_image_file)
 
                 walker_anim = LinearWalker(
                     start_coords = start, 
@@ -707,17 +742,20 @@ class EquationSolver2d(ColorMappedByFuncScene):
                     number_update_func = rebased_winder,
                     remover = True
                 )
-
+                
                 if should_linger: # Do we need an "and not self.display_in_parallel" here?
-                    rate_func = lingering
+                    run_time = run_time_with_lingering
+                    rate_func = linger_rate
                 else:
-                    rate_func = None
+                    run_time = run_time_base
+                    rate_func = base_rate
 
                 opt_line_anim = ShowCreation(colored_line) if draw_line else empty_animation
 
                 line_draw_anim = AnimationGroup(
                     opt_line_anim, 
                     walker_anim,
+                    run_time = run_time,
                     rate_func = rate_func)
                 return (line_draw_anim, rebased_winder(1))
 
@@ -744,7 +782,7 @@ class EquationSolver2d(ColorMappedByFuncScene):
                     rect.get_bottom_right(), 
                     rect.get_bottom_left()
                 ]
-                points = np.array([num_plane.coords_to_point(x, y) for (x, y) in coords]) + 2 * IN
+                points = np.array([num_plane.coords_to_point(x, y) for (x, y) in coords]) + 3 * IN
                 # TODO: Maybe use diagonal lines or something to fill in rectangles indicating
                 # their "Nothing here" status?
                 # Or draw a large X or something
@@ -766,7 +804,7 @@ class EquationSolver2d(ColorMappedByFuncScene):
                     for (sub_rect, side_to_draw) in sub_rect_and_sides
                 ]
                 mid_line_coords = rect.split_line_on_dim(dim_to_split)
-                mid_line_points = [num_plane.coords_to_point(x, y)  + IN for (x, y) in mid_line_coords]
+                mid_line_points = [num_plane.coords_to_point(x, y)  + 2 * IN for (x, y) in mid_line_coords]
                 # TODO: Have this match rectangle line style, apart from dashes and thin-ness?
                 # Though there is also informational value in seeing the dashed line separately from rectangle lines
                 mid_line = DashedLine(*mid_line_points)
@@ -795,11 +833,41 @@ class EquationSolver2d(ColorMappedByFuncScene):
             cur_depth = 0, 
             rect = rect,
             dim_to_split = 0,
+            sides_to_draw = []
         )
 
         print "Done computing anim"
 
-        self.play(anim)
+        # Keep timing details here in sync with details above
+        rect_points = [
+            rect.get_top_left(), 
+            rect.get_top_right(), 
+            rect.get_bottom_right(), 
+            rect.get_bottom_left(),
+        ]
+        border = Polygon(*map(lambda x : num_plane.coords_to_point(*x) + IN, rect_points))
+        border.match_style(base_line)
+        if self.use_fancy_lines:
+            border.color_using_background_image(self.background_image_file)
+
+        rect_time_without_linger = 4 * run_time_base
+        rect_time_with_linger = 3 * run_time_base + run_time_with_lingering
+        def rect_rate(alpha):
+            time_in = alpha * rect_time_with_linger
+            if time_in < 3 * run_time_base:
+                return fdiv(time_in, 4 * run_time_base)
+            else:
+                time_in_last_leg = time_in - 3 * run_time_base
+                alpha_in_last_leg = fdiv(time_in_last_leg, run_time_with_lingering)
+                return interpolate(0.75, 1, linger_rate(alpha_in_last_leg))
+
+        border_anim = ShowCreation(
+            border, 
+            run_time = rect_time_with_linger, 
+            rate_func = rect_rate
+        )
+
+        self.play(anim, border_anim)
 
         self.wait()
 
@@ -865,10 +933,9 @@ class FuncRotater(Animation):
 
     def update_mobject(self, alpha):
         Animation.update_mobject(self, alpha)
-        angle_revs = self.rotate_func(alpha)
-        # We do a clockwise rotation
+        angle_revs = -self.rotate_func(alpha) # Negated so we interpret this clockwise
         self.mobject.rotate(
-            -angle_revs * TAU, 
+            angle_revs * TAU, 
             about_point = ORIGIN
         )
         self.mobject.set_color(rev_to_color(angle_revs))
@@ -883,8 +950,9 @@ class TestRotater(Scene):
 
 # TODO: Be careful about clockwise vs. counterclockwise convention throughout!
 # Make sure this is correct everywhere in resulting video.
-class OdometerScene(Scene):
+class OdometerScene(ColorMappedObjectsScene):
     CONFIG = {
+        # "func" : lambda p : 100 * p # Full coloring, essentially
         "rotate_func" : lambda x : np.sin(x * TAU),
         "run_time" : 5,
         "dashed_line_angle" : None,
@@ -892,8 +960,11 @@ class OdometerScene(Scene):
     }
 
     def construct(self):
+        ColorMappedObjectsScene.construct(self)
+
         radius = 1.3
         circle = Circle(center = ORIGIN, radius = radius)
+        circle.color_using_background_image(self.background_image_file)
         self.add(circle)
 
         if self.dashed_line_angle:
@@ -902,8 +973,12 @@ class OdometerScene(Scene):
             dashed_line.rotate(-self.dashed_line_angle * TAU, about_point = ORIGIN)
             self.add(dashed_line)
         
-        num_display = DecimalNumber(0, include_background_rectangle = False).set_stroke(1)
+        num_display = DecimalNumber(0, include_background_rectangle = False)
         num_display.move_to(2 * DOWN)
+
+        caption = TextMobject("turns clockwise")
+        caption.next_to(num_display, DOWN)
+        self.add(caption)
 
         display_val_bias = 0
         if self.biased_display_start != None:
@@ -961,8 +1036,8 @@ class SecondSqrtScene(FirstSqrtScene):
 
 class RewriteEquation(Scene):
     def construct(self):
-        # Can maybe fitz around with smoothening the transform, so just = goes to - and new stuff
-        # is added at the right end, while things re-center
+        # Can maybe use get_center() to perfectly center Groups before and after transform
+
         f_old = TexMobject("f(x)")
         f_new = f_old.copy()
         equals_old = TexMobject("=")
@@ -978,8 +1053,18 @@ class RewriteEquation(Scene):
         f_new.next_to(minus_new, LEFT)
         equals_new.next_to(g_new, RIGHT)
         zero_new.next_to(equals_new, RIGHT)
+
+        # where_old = TextMobject("Where does ")
+        # where_old.next_to(f_old, LEFT)
+        # where_new = where_old.copy()
+        # where_new.next_to(f_new, LEFT)
         
-        self.add(f_old, equals_old, equals_old_2, g_old)
+        # qmark_old = TextMobject("?")
+        # qmark_old.next_to(g_old, RIGHT)
+        # qmark_new = qmark_old.copy()
+        # qmark_new.next_to(zero_new, RIGHT)
+        
+        self.add(f_old, equals_old, equals_old_2, g_old) #, where_old, qmark_old)
         self.wait()
         self.play(
             ReplacementTransform(f_old, f_new),
@@ -987,6 +1072,8 @@ class RewriteEquation(Scene):
             ReplacementTransform(g_old, g_new), 
             ReplacementTransform(equals_old_2, minus_new),
             ShowCreation(zero_new),
+            # ReplacementTransform(where_old, where_new),
+            # ReplacementTransform(qmark_old, qmark_new),
         )
         self.wait()
 
@@ -1011,12 +1098,18 @@ class SignsExplanation(Scene):
                 num_line.number_to_point(neg_num),
                 buff = 0,
                 color = negative_color)
+
+        plus_sign = TexMobject("+", fill_color = positive_color)
+        minus_sign = TexMobject("-", fill_color = negative_color)
+
+        plus_sign.next_to(pos_arrow, UP)
+        minus_sign.next_to(neg_arrow, UP)
         
         #num_line.add_numbers(pos_num)
-        self.play(ShowCreation(pos_arrow))
+        self.play(ShowCreation(pos_arrow), FadeIn(plus_sign))
 
         #num_line.add_numbers(neg_num)
-        self.play(ShowCreation(neg_arrow))
+        self.play(ShowCreation(neg_arrow), FadeIn(minus_sign))
 
 class VectorField(Scene):
     CONFIG = {
@@ -1057,6 +1150,7 @@ class VectorField(Scene):
         self.wait()
 
 class HasItsLimitations(Scene):
+
     def construct(self):
         num_line = NumberLine()
         num_line.add_numbers()
@@ -1064,17 +1158,71 @@ class HasItsLimitations(Scene):
 
         self.wait()
 
+        base_point = num_line.number_to_point(3) + OUT
+
+        dot_color = ORANGE
+        
+        input_dot = Dot(base_point, color = dot_color)
+        input_label = TexMobject("Input", fill_color = dot_color)
+        input_label.next_to(input_dot, UP + LEFT)
+        input_label.add_background_rectangle()
+        self.add(input_dot, input_label)
+
+        curved_arrow = Arc(0, color = MAROON_E)
+        curved_arrow.set_bound_angles(np.pi, 0)
+        curved_arrow.generate_points()
+        curved_arrow.add_tip()
+        curved_arrow.move_arc_center_to(base_point + RIGHT)
+        # Could do something smoother, with arrowhead moving along partial arc?
+        self.play(ShowCreation(curved_arrow))
+
+        output_dot = Dot(base_point + 2 * RIGHT, color = dot_color)
+        output_label = TexMobject("Output", fill_color = dot_color)
+        output_label.next_to(output_dot, UP + RIGHT)
+        output_label.add_background_rectangle()
+
+        self.add(output_dot, output_label)
+        self.wait()
+
         num_plane = NumberPlane()
         num_plane.add_coordinates()
 
-        self.play(FadeOut(num_line), FadeIn(num_plane))
+        new_base_point = base_point + 2 * UP
+        new_input_dot = input_dot.copy().move_to(new_base_point)
+        new_input_label = input_label.copy().next_to(new_input_dot, UP + LEFT)
+        
+        new_curved_arrow = Arc(0).match_style(curved_arrow)
+        new_curved_arrow.set_bound_angles(np.pi * 3/4, 0)
+        new_curved_arrow.generate_points()
+        new_curved_arrow.add_tip()
+
+        input_diff = input_dot.get_center() - curved_arrow.points[0]
+        output_diff = output_dot.get_center() - curved_arrow.points[-1]
+
+        new_curved_arrow.shift((new_input_dot.get_center() - new_curved_arrow.points[0]) - input_diff)
+
+        new_output_dot = output_dot.copy().move_to(new_curved_arrow.points[-1] + output_diff)
+        new_output_label = output_label.copy().next_to(new_output_dot, UP + RIGHT)
+
+        dot_objects = Group(input_dot, input_label, output_dot, output_label, curved_arrow)
+        new_dot_objects = Group(new_input_dot, new_input_label, new_output_dot, new_output_label, new_curved_arrow)
+
+        self.play(
+            FadeOut(num_line), FadeIn(num_plane), 
+            ReplacementTransform(dot_objects, new_dot_objects),
+        )
 
         self.wait()
+
+        self.add_foreground_mobject(new_dot_objects)
 
         complex_plane = ComplexPlane()
         complex_plane.add_coordinates()
         
+        # This looks a little wonky and we may wish to do a crossfade in Premiere instead
         self.play(FadeOut(num_plane), FadeIn(complex_plane))
+
+        self.wait()
         
 
 class ComplexPlaneIs2d(Scene):
@@ -1212,6 +1360,33 @@ class Initial2dFuncSceneWithoutMorphing(Scene):
         for i in range(len(points) - 1):
             line = Line(points[i], points[i + 1], color = RED)
             self.play(ShowCreation(line))
+
+class DemonstrateColorMapping(ColorMappedObjectsScene):
+    CONFIG = {
+        "show_num_plane" : False
+    }
+
+    def construct(self):
+        ColorMappedObjectsScene.construct(self)
+
+        circle = Circle()
+        circle.color_using_background_image(self.background_image_file)
+
+        ray = Line(ORIGIN, 10 * RIGHT)
+        ray.color_using_background_image(self.background_image_file)
+
+        self.play(ShowCreation(circle))
+
+        self.play(ShowCreation(ray))
+
+        scale_factor = 5
+        self.play(ApplyMethod(circle.scale, scale_factor))
+
+        self.play(ApplyMethod(circle.scale, fdiv(1, scale_factor**2)))
+
+        self.play(ApplyMethod(circle.scale, scale_factor))
+
+        self.play(Rotating(ray, about_point = ORIGIN))
 
 # TODO: Illustrations for introducing domain coloring
 
@@ -1362,9 +1537,9 @@ class LoopSplitSceneMapped(LoopSplitScene):
 class FundThmAlg(EquationSolver2d):
     CONFIG = {
         "func" : plane_poly_with_roots((1, 2), (-1, 1.5), (-1, 1.5)),
-        "num_iterations" : 5,
+        "num_iterations" : 2,
         "display_in_parallel" : True,
-        "use_fancy_lines" : False,
+        "use_fancy_lines" : True,
     }
 
 # TODO: Borsuk-Ulam visuals
@@ -1484,6 +1659,30 @@ class CombineInterval2(Scene):
 
         self.wait()
 
+tiny_loop_func = plane_poly_with_roots((-1, -2), (1, 1), (1, 1))
+class TinyLoopInInputPlane(ColorMappedByFuncScene):
+    CONFIG = {
+        "func" : tiny_loop_func
+    }
+
+    def construct(self):
+        ColorMappedByFuncScene.construct(self)
+        self.wait()
+
+        circle = Circle(color = WHITE)
+        circle.scale(0.5)
+        circle.move_to(UP + RIGHT)
+
+        self.play(ShowCreation(circle))
+
+class TinyLoopInOutputPlane(TinyLoopInInputPlane):
+    CONFIG = {
+        "camera_class" : MappingCamera,
+        "camera_config" : {"mapping_func" : point_func_from_plane_func(tiny_loop_func)},
+        "show_output" : True,
+        "show_num_plane" : False,
+    }
+
 # TODO: Brouwer's fixed point theorem visuals
 # class BFTScene(Scene):
 
@@ -1527,7 +1726,7 @@ class MapPiWalkerRect(PiWalkerRect):
     CONFIG = {
         "camera_class" : MappingCamera,
         "camera_config" : {"mapping_func" : rect_to_circle},
-        "display_output_color_map" : True
+        "show_output" : True
     }
 
 class ShowBack(PiWalkerRect):

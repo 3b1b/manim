@@ -696,8 +696,8 @@ class DictAsObject(object):
 # Just to have a less heavyweight name for this extremely common operation
 #
 # We may wish to have more fine-grained control over division by zero behavior
-# in future (separate specifiable default values for 0/0 and x/0 with x != 0),
-# but for now, we just allow the option to handle 0/0.
+# in the future (separate specifiable values for 0/0 and x/0 with x != 0),
+# but for now, we just allow the option to handle indeterminate 0/0.
 def fdiv(a, b, zero_over_zero_value = None):
     if zero_over_zero_value != None:
         out = np.full_like(a, zero_over_zero_value)

@@ -464,21 +464,22 @@ class Succession(Animation):
             self.current_alpha = alpha
             return
 
-        gt_alpha_list = filter(
+        gt_alpha_iter = it.ifilter(
             lambda i : self.critical_alphas[i+1] >= alpha, 
-            range(len(self.critical_alphas)-1)
+            range(self.num_anims)
         )
-        if gt_alpha_list:
-            i = gt_alpha_list[0]
-        else:
+        i = next(gt_alpha_iter, None)
+        if i == None:
+            # In this case, we assume what is happening is that alpha is 1.0, 
+            # but that rounding error is causing us to overshoot the end of
+            # self.critical_alphas (which is also 1.0)
             if not abs(alpha - 1) < 0.001:
                 warnings.warn(
                     "Rounding error not near alpha=1 in Succession.update_mobject," + \
                     "instead alpha = %f"%alpha
                 )
                 print self.critical_alphas, alpha
-            i = len(self.critical_alphas) - 2
-        #
+            i = self.num_anims - 1
 
         # At this point, we should have self.critical_alphas[i] <= alpha <= self.critical_alphas[i +1]
 
