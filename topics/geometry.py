@@ -45,7 +45,7 @@ class Arc(VMobject):
         #TODO, do this a better way
         p1 = p2 = p3 = p4 = None
         start_arrow = end_arrow = None
-        if at_start:
+        if at_end:
             p1, p2 = self.points[-3:-1]
             # self.points[-2:] did overshoot
             start_arrow = Arrow(
@@ -55,7 +55,7 @@ class Arc(VMobject):
             )
             self.add(start_arrow.split()[-1]) # just the tip
 
-        if at_end:
+        if at_start:
             p4, p3 = self.points[1:3]
             # self.points[:2] did overshoot
             end_arrow = Arrow(
