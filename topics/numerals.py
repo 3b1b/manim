@@ -144,7 +144,6 @@ class ContinualChangingDecimal(ContinualAnimation):
 
     def update_mobject(self, dt):
         self.anim.update(self.internal_time)
-        
 
 
         
