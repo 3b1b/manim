@@ -234,7 +234,6 @@ class LightSource(VMobject):
         return R
 
     def update_shadow(self):
-
         point = self.get_source_point()
         projected_screen_points = []
         if not self.has_screen():
@@ -304,7 +303,6 @@ class LightSource(VMobject):
         self.shadow.mark_paths_closed = True
 
 
-
 class SwitchOn(LaggedStart):
     CONFIG = {
         "lag_ratio": 0.2,
@@ -317,7 +315,6 @@ class SwitchOn(LaggedStart):
         LaggedStart.__init__(
             self, FadeIn, light, **kwargs
         )
-
 
 class SwitchOff(LaggedStart):
     CONFIG = {
@@ -332,7 +329,6 @@ class SwitchOff(LaggedStart):
         LaggedStart.__init__(self,
             FadeOut, light, **kwargs)
         light.submobjects = light.submobjects[::-1]
-
 
 class Lighthouse(SVGMobject):
     CONFIG = {
@@ -473,11 +469,6 @@ class Spotlight(VMobject):
 
 
     def new_sector(self,r,dr,lower_angle,upper_angle):
-        # Note: I'm not looking _too_ closely at the implementation
-        # of these updates based on viewing angles and such. It seems to
-        # behave as intended, but let me know if you'd like more thorough
-        # scrutiny
-
         alpha = self.max_opacity * self.opacity_function(r)
         annular_sector = AnnularSector(
             inner_radius = r,
@@ -564,15 +555,17 @@ class Spotlight(VMobject):
     def update_sectors(self):
         if self.screen == None:
             return
-        for submob in self.submobject_family():
+        for submob in self.submobjects:
             if type(submob) == AnnularSector:
                 lower_angle, upper_angle = self.viewing_angles(self.screen)
                 #dr = submob.outer_radius - submob.inner_radius
                 dr = self.radius / self.num_levels
-                new_submob = self.new_sector(submob.inner_radius,dr,lower_angle,upper_angle)
-                submob.points = new_submob.points
-                submob.set_fill(opacity = 10 * self.opacity_function(submob.outer_radius))
-
+                new_submob = self.new_sector(
+                    submob.inner_radius, dr, lower_angle, upper_angle
+                )
+                # submob.points = new_submob.points
+                # submob.set_fill(opacity = 10 * self.opacity_function(submob.outer_radius))
+                Transform(submob, new_submob).update(1)
 
 
     def dimming(self,new_alpha):
