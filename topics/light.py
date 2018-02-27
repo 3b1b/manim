@@ -353,7 +353,9 @@ class SwitchOff(LaggedStart):
 class Lighthouse(SVGMobject):
     CONFIG = {
         "file_name" : "lighthouse",
-        "height" : LIGHTHOUSE_HEIGHT
+        "height" : LIGHTHOUSE_HEIGHT,
+        "fill_color" : WHITE,
+        "fill_opacity" : 1.0,
     }
 
     def move_to(self,point):
