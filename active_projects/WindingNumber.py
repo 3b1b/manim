@@ -133,19 +133,20 @@ class EquationSolver1d(GraphScene, ZoomedScene):
     # This is a mess right now (first major animation coded), 
     # but it works; can be refactored later or never
     def solveEquation(self):
-        leftBrace = TexMobject("|") # Not using [ and ] because they end up crossing over
-        leftBrace.set_color(negative_color)
-        rightBrace = TexMobject("|")
-        rightBrace.set_color(positive_color)
-        xBraces = Group(leftBrace, rightBrace)
-        xBraces.stretch(2, 0)
+        startBrace = Dot() #TexMobject("[") # Not using [ and ] because they end up crossing over 
+        startBrace.set_color(negative_color)
+        endBrace = Dot()
+        endBrace.set_color(positive_color)
+        genericBraces = Group(startBrace, endBrace)
+        #genericBraces.scale(1.5)
 
-        downBrace = TexMobject("|")
-        downBrace.set_color(negative_color)
-        upBrace = TexMobject("|")
-        upBrace.set_color(positive_color)
+        leftBrace = startBrace.copy()
+        rightBrace = endBrace.copy()
+        xBraces = Group(leftBrace, rightBrace)
+
+        downBrace = startBrace.copy()
+        upBrace = endBrace.copy()
         yBraces = Group(downBrace, upBrace)
-        yBraces.stretch(2, 0)
         yBraces.rotate(TAU/4)
 
         lowerX = self.initial_lower_x
@@ -569,7 +570,7 @@ class ColorMappedByFuncScene(Scene):
         full_hash = hash((func_hash, self.camera.pixel_shape))
         self.background_image_file = os.path.join(
             self.output_directory, "images", 
-            "color_mapped_background_" + str(full_hash) + ".png"
+            "color_mapped_bg_hash_" + str(full_hash) + ".png"
         )
         self.in_background_pass = not os.path.exists(self.background_image_file)
 
@@ -1284,12 +1285,55 @@ class NumberLineScene(Scene):
 
         self.wait()
 
-initial_2d_func = point_func_from_complex_func(lambda c : np.exp(c))
+class Initial2dFuncSceneBase(Scene):
+    CONFIG = {
+        "func" : point_func_from_complex_func(lambda c : np.exp(c))
+    }
 
-class Initial2dFuncSceneMorphing(Scene):
+    def show_planes(self):
+        print "Error! Unimplemented (pure virtual) show_planes"
+
+    def shared_construct(self):
+        points = [LEFT + DOWN, RIGHT + DOWN, LEFT + UP, RIGHT + UP]
+        for i in range(len(points) - 1):
+            line = Line(points[i], points[i + 1], color = RED)
+            self.obj_draw(line)
+
+        # def wiggle_around(point):
+        #     radius = 0.2
+        #     small_circle = Circle(radius = radius)
+        #     small_
+
+        # wiggle_around(points[-1])
+
+    def obj_draw(self, input_object):
+        self.play(ShowCreation(input_object))
+
+    def construct(self):
+        self.show_planes()
+        self.shared_construct()
+
+# Alternative to the below, using MappingCameras, but no morphing animation
+class Initial2dFuncSceneWithoutMorphing(Initial2dFuncSceneBase):
+
+    def setup(self):
+        left_camera = Camera(**self.camera_config)
+        right_camera = MappingCamera(
+            mapping_func = self.func,
+            **self.camera_config)
+        split_screen_camera = SplitScreenCamera(left_camera, right_camera, **self.camera_config)
+        self.camera = split_screen_camera
+
+    def show_planes(self):
+        self.num_plane = NumberPlane()
+        self.num_plane.prepare_for_nonlinear_transform()
+        #num_plane.fade()
+        self.add(self.num_plane)
+
+# Alternative to the above, manually implementing split screen with a morphing animation
+class Initial2dFuncSceneMorphing(Initial2dFuncSceneBase):
     CONFIG = {
         "num_needed_anchor_points" : 10,
-        "func" : initial_2d_func,
     }
 
     def setup(self):
@@ -1317,7 +1361,7 @@ class Initial2dFuncSceneMorphing(Scene):
             ShowCreation(output_object)
             )
 
-    def construct(self):
+    def show_planes(self):
         right_plane = self.num_plane.copy()
         right_plane.center()
         right_plane.prepare_for_nonlinear_transform()
@@ -1333,33 +1377,6 @@ class Initial2dFuncSceneMorphing(Scene):
             Animation(self.num_plane),
             run_time = 3
         )
-
-        points = [LEFT + DOWN, RIGHT + DOWN, LEFT + UP, RIGHT + UP]
-        for i in range(len(points) - 1):
-            line = Line(points[i], points[i + 1], color = RED)
-            self.obj_draw(line)
-
-# Alternative to the above, using MappingCameras, but no morphing animation
-class Initial2dFuncSceneWithoutMorphing(Scene):
-
-    def setup(self):
-        left_camera = Camera(**self.camera_config)
-        right_camera = MappingCamera(
-            mapping_func = initial_2d_func,
-            **self.camera_config)
-        split_screen_camera = SplitScreenCamera(left_camera, right_camera, **self.camera_config)
-        self.camera = split_screen_camera
-
-    def construct(self):
-        num_plane = NumberPlane()
-        num_plane.prepare_for_nonlinear_transform()
-        #num_plane.fade()
-        self.add(num_plane)
-        
-        points = [LEFT + DOWN, RIGHT + DOWN, LEFT + UP, RIGHT + UP]
-        for i in range(len(points) - 1):
-            line = Line(points[i], points[i + 1], color = RED)
-            self.play(ShowCreation(line))
 
 class DemonstrateColorMapping(ColorMappedObjectsScene):
     CONFIG = {
@@ -1662,7 +1679,8 @@ class CombineInterval2(Scene):
 tiny_loop_func = plane_poly_with_roots((-1, -2), (1, 1), (1, 1))
 class TinyLoopInInputPlane(ColorMappedByFuncScene):
     CONFIG = {
-        "func" : tiny_loop_func
+        "func" : tiny_loop_func,
+        "show_num_plane" : False,
     }
 
     def construct(self):
