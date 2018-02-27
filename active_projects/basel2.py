@@ -245,9 +245,8 @@ class ThinkAboutPondScene(PiCreatureScene):
         self.wait(2)
 
 class IntroScene(PiCreatureScene):
-
     CONFIG = {
-        "rect_height" : 0.1,
+        "rect_height" : 0.075,
         "duration" : 1.0,
         "eq_spacing" : 3 * MED_LARGE_BUFF,
         "n_rects_to_show" : 30,
@@ -334,11 +333,11 @@ class IntroScene(PiCreatureScene):
                     rect_label = TexMobject("1")
                 else:
                     rect_label = TexMobject("\\frac{1}{%d}"%(i**2))
-                rect_label.scale(0.75)
+                    rect_label.scale(0.75)
                 max_width = 0.7*rect.get_width()
                 if rect_label.get_width() > max_width:
                     rect_label.scale_to_fit_width(max_width)
-                rect_label.next_to(rect, UP, MED_SMALL_BUFF/(i+1))
+                rect_label.next_to(rect, UP, buff = MED_LARGE_BUFF/(i+1))
 
                 term_mobject = term_mobjects[i-1]
                 rect_anim = GrowFromPoint(rect, term_mobject.get_center())
@@ -746,14 +745,115 @@ class MathematicalWebOfConnections(PiCreatureScene):
         self.play(
             MoveToTarget(to_shift_down),
             basel_sum.scale, 1.5,
-            basel_sum.move_to, 2*DOWN,
+            basel_sum.move_to, 1.5*DOWN,
         )
 
+        self.basel_sum = basel_sum
+
     def show_web_of_connections(self):
-        pass
+        self.remove(self.pi_creatures)
+        title = TextMobject("Interconnected web of mathematics")
+        title.to_edge(UP)
+        basel_sum = self.basel_sum
+
+        dots = VGroup(*[
+            Dot(radius = 0.1).move_to(
+                (j - 0.5*(i%2))*RIGHT + \
+                (np.sqrt(3)/2.0)* i*DOWN + \
+                0.5*(random.random()*RIGHT + random.random()*UP),
+            )
+            for i in range(4)
+            for j in range(7+(i%2))
+        ])
+        dots.scale_to_fit_height(3)
+        dots.next_to(title, DOWN, MED_LARGE_BUFF)
+        edges = VGroup()
+        for x in range(100):
+            d1, d2 = random.sample(dots, 2)
+            edge = Line(d1.get_center(), d2.get_center())
+            edge.set_stroke(YELLOW, 0.5)
+            edges.add(edge)
+
+        ## Choose special path
+        path_dots = VGroup(
+            dots[-7],
+            dots[-14],
+            dots[9],
+            dots[19],
+            dots[14],
+        )
+        path_edges = VGroup(*[
+            Line(
+                d1.get_center(), d2.get_center(),
+                color = RED
+            )
+            for d1, d2 in zip(path_dots, path_dots[1:])
+        ])
+
+        circle = Circle(color = YELLOW, radius = 1)
+        radius = Line(circle.get_center(), circle.get_right())
+        radius.highlight(BLUE)
+        VGroup(circle, radius).next_to(path_dots[-1], RIGHT)
+
+        self.play(
+            Write(title),
+            LaggedStart(ShowCreation, edges, run_time = 3),
+            LaggedStart(GrowFromCenter, dots, run_time = 3)
+        )
+        self.play(path_dots[0].highlight, RED)
+        for dot, edge in zip(path_dots[1:], path_edges):
+            self.play(
+                ShowCreation(edge),
+                dot.highlight, RED
+            )
+        self.play(ShowCreation(radius))
+        radius.set_points_as_corners(radius.get_anchors())
+        self.play(
+            ShowCreation(circle),
+            Rotate(radius, angle = 0.999*TAU, about_point = radius.get_start()),
+            run_time = 2
+        )
+        self.wait()
+
+        graph = VGroup(dots, edges, path_edges, title)
+        circle.add(radius)
+        basel_sum.generate_target()
+        basel_sum.target.to_edge(UP)
+
+        arrow = Arrow(
+            UP, DOWN, 
+            rectangular_stem_width = 0.1,
+            tip_length = 0.45,
+            color = RED,
+        )
+        arrow.next_to(basel_sum.target, DOWN, buff = MED_LARGE_BUFF)
+
+        self.play(
+            MoveToTarget(basel_sum),
+            graph.next_to, basel_sum.target, UP, LARGE_BUFF,
+            circle.next_to, arrow, DOWN, MED_LARGE_BUFF,
+        )
+        self.play(GrowArrow(arrow))
+        self.wait()
+
+        self.arrow = arrow
+        self.circle = circle
 
     def show_light(self):
-        pass
+        light = AmbientLight(
+            num_levels = 500, radius = 13,
+            opacity_function = lambda r : 1.0/(r+1),
+        )
+        pi = self.basel_sum[-1][0]
+        pi.set_stroke(BLACK, 0.5)
+        light.move_to(pi)
+        self.play(
+            SwitchOn(light, run_time = 3),
+            Animation(self.arrow),
+            Animation(self.circle),
+            Animation(self.basel_sum),
+        )
+        self.wait()
 
     ###
 
@@ -764,9 +864,6 @@ class MathematicalWebOfConnections(PiCreatureScene):
         randy.move_to(0.5*SPACE_WIDTH*RIGHT).to_edge(DOWN)
 
         return VGroup(jerk, randy)
-
-
-
 
 
 class FirstLighthouseScene(PiCreatureScene):
