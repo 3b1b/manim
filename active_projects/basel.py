@@ -43,10 +43,10 @@ NUM_CONES = 7 # in first lighthouse scene
 NUM_VISIBLE_CONES = 5 # ibidem
 ARC_TIP_LENGTH = 0.2
 
-NUM_LEVELS = 20
+NUM_LEVELS = 150
 AMBIENT_FULL = 0.8
 AMBIENT_DIMMED = 0.5
-AMBIENT_SCALE = 1.0
+AMBIENT_SCALE = 2.0
 AMBIENT_RADIUS = 20.0
 SPOTLIGHT_FULL = 0.8
 SPOTLIGHT_DIMMED = 0.2
@@ -2315,7 +2315,7 @@ class InscribedAngleScene(ThreeDScene):
         LAKE0_RADIUS = 1.5
         INDICATOR_RADIUS = 0.6
         TICK_SIZE = 0.5
-        LIGHTHOUSE_HEIGHT = 0.2
+        LIGHTHOUSE_HEIGHT = 0.3
         LAKE_COLOR = BLUE
         LAKE_OPACITY = 0.15
         LAKE_STROKE_WIDTH = 5.0
@@ -2329,13 +2329,9 @@ class InscribedAngleScene(ThreeDScene):
 
         self.cumulated_zoom_factor = 1
 
-        self.force_skipping()
-
 
         def zoom_out_scene(factor):
 
-            if self.mobjects.contains(self.ls0_dot):
-                self.play(FadeOut(self.ls0_dot))
 
             phi0 = self.camera.get_phi() # default is 0 degs
             theta0 = self.camera.get_theta() # default is -90 degs
@@ -2351,9 +2347,6 @@ class InscribedAngleScene(ThreeDScene):
             )
 
             self.cumulated_zoom_factor *= factor
-
-            if not self.mobjects.contains(self.ls0_dot):
-                self.play(FadeIn(self.ls0_dot))
 
 
         def shift_scene(v):
@@ -2373,8 +2366,8 @@ class InscribedAngleScene(ThreeDScene):
         self.zoomable_mobs.add(baseline) # prob not necessary
 
         self.obs_dot = Dot(OBSERVER_POINT, fill_color = DOT_COLOR)
-        ls0_dot = Dot(OBSERVER_POINT + 2 * LAKE0_RADIUS * UP, fill_color = WHITE)
-        self.unzoomable_mobs.add(self.obs_dot) #, ls0_dot)
+        self.ls0_dot = Dot(OBSERVER_POINT + 2 * LAKE0_RADIUS * UP, fill_color = WHITE)
+        self.unzoomable_mobs.add(self.obs_dot) #, self.ls0_dot)
 
         # lake
         lake0 = Circle(radius = LAKE0_RADIUS,
@@ -2397,12 +2390,12 @@ class InscribedAngleScene(ThreeDScene):
         self.unzoomable_mobs.add(morty, indicator)
 
         # first lighthouse
-        original_op_func = inverse_quadratic(LIGHT_MAX_INT,LIGHT_SCALE,LIGHT_CUTOFF)
-        ls0 = LightSource(opacity_function = original_op_func)
+        original_op_func = inverse_quadratic(LIGHT_MAX_INT,AMBIENT_SCALE,LIGHT_CUTOFF)
+        ls0 = LightSource(opacity_function = original_op_func, num_levels = 150)
         ls0.move_source_to(OBSERVER_POINT + LAKE0_RADIUS * 2 * UP)
         self.zoomable_mobs.add(ls0, ls0.lighthouse, ls0.ambient_light)
 
-        self.add(lake0,morty,self.obs_dot,ls0_dot, ls0.lighthouse)
+        self.add(lake0,morty,self.obs_dot,self.ls0_dot, ls0.lighthouse)
 
         self.wait()
 
@@ -2463,7 +2456,7 @@ class InscribedAngleScene(ThreeDScene):
             ShowCreation(diameter),
             Write(diameter_text),
             #FadeOut(self.obs_dot),
-            FadeOut(ls0_dot)
+            FadeOut(self.ls0_dot)
         )
 
         indicator_reading = TexMobject("{1\over d^2}").scale(TEX_SCALE)
@@ -2627,7 +2620,7 @@ class InscribedAngleScene(ThreeDScene):
             if show_steps == True: 
                 self.play(
                     FadeIn(new_outer_lake, run_time = run_time),
-                    FadeIn(ls0_dot)
+                    FadeIn(self.ls0_dot)
                 )
             else:
                 self.play(
@@ -2699,7 +2692,7 @@ class InscribedAngleScene(ThreeDScene):
             self.wait()
 
             if show_steps == True:
-                self.play(FadeOut(ls0_dot))
+                self.play(FadeOut(self.ls0_dot))
 
             #self.lake_center = ls0_loc = self.obs_dot.get_center() + self.lake_radius * UP
             self.lake_radius *= 2
@@ -2744,25 +2737,27 @@ class InscribedAngleScene(ThreeDScene):
 
         construction_step(0)
         indicator_wiggle()
-        self.play(FadeOut(ls0_dot))
+        self.play(FadeOut(self.ls0_dot))
         zoom_out_scene(2)
+
+        return
 
         construction_step(1)
         indicator_wiggle()
-        self.play(FadeOut(ls0_dot))
+        self.play(FadeOut(self.ls0_dot))
         zoom_out_scene(2)
 
         construction_step(2)
         indicator_wiggle()
-        self.play(FadeOut(ls0_dot))
+        self.play(FadeOut(self.ls0_dot))
 
 
 
         self.revert_to_original_skipping_status()
 
 
-        ANGLE_COLOR1 = RED
-        ANGLE_COLOR2 = GREEN
+        ANGLE_COLOR1 = BLUE_C
+        ANGLE_COLOR2 = GREEN_D
 
         
         for mob in self.mobjects:
@@ -3037,7 +3032,7 @@ class PondScene(ThreeDScene):
         LAKE0_RADIUS = 1.5
         INDICATOR_RADIUS = 0.6
         TICK_SIZE = 0.5
-        LIGHTHOUSE_HEIGHT = 0.2
+        LIGHTHOUSE_HEIGHT = 0.5
         LAKE_COLOR = BLUE
         LAKE_OPACITY = 0.15
         LAKE_STROKE_WIDTH = 5.0
@@ -3046,7 +3041,7 @@ class PondScene(ThreeDScene):
         DOT_COLOR = BLUE
 
         LIGHT_MAX_INT = 1
-        LIGHT_SCALE = 5
+        LIGHT_SCALE = 2.5
         LIGHT_CUTOFF = 1
 
         RIGHT_ANGLE_SIZE = 0.3
@@ -3054,15 +3049,14 @@ class PondScene(ThreeDScene):
 
         self.cumulated_zoom_factor = 1
 
-        #self.force_skipping()
 
 
-        def right_angle(pointA, pointB, pointC):
+        def right_angle(pointA, pointB, pointC, size = 1):
 
             v1 = pointA - pointB
-            v1 = RIGHT_ANGLE_SIZE * v1/np.linalg.norm(v1)
+            v1 = size * v1/np.linalg.norm(v1)
             v2 = pointC - pointB
-            v2 = RIGHT_ANGLE_SIZE * v2/np.linalg.norm(v2)
+            v2 = size * v2/np.linalg.norm(v2)
             
             P = pointB
             Q = pointB + v1
@@ -3088,6 +3082,9 @@ class PondScene(ThreeDScene):
 
         def zoom_out_scene(factor):
 
+            self.remove_foreground_mobject(self.ls0_dot)
+            self.remove(self.ls0_dot)
+
             phi0 = self.camera.get_phi() # default is 0 degs
             theta0 = self.camera.get_theta() # default is -90 degs
             distance0 = self.camera.get_distance()
@@ -3102,6 +3099,17 @@ class PondScene(ThreeDScene):
             )
 
             self.cumulated_zoom_factor *= factor
+
+            # place ls0_dot by hand
+            #old_radius = self.ls0_dot.radius
+            #self.ls0_dot.radius = 2 * old_radius
+
+            #v = self.ls0_dot.get_center() - self.obs_dot.get_center()
+            #self.ls0_dot.shift(v)
+            #self.ls0_dot.move_to(self.outer_lake.get_center())
+            self.ls0_dot.scale(2, about_point = ORIGIN)
+                
+            #self.add_foreground_mobject(self.ls0_dot)
 
 
         def shift_scene(v):
@@ -3121,8 +3129,8 @@ class PondScene(ThreeDScene):
         self.zoomable_mobs.add(baseline) # prob not necessary
 
         self.obs_dot = Dot(OBSERVER_POINT, fill_color = DOT_COLOR)
-        ls0_dot = Dot(OBSERVER_POINT + 2 * LAKE0_RADIUS * UP, fill_color = WHITE)
-        self.unzoomable_mobs.add(self.obs_dot, ls0_dot)
+        self.ls0_dot = Dot(OBSERVER_POINT + 2 * LAKE0_RADIUS * UP, fill_color = WHITE)
+        self.unzoomable_mobs.add(self.obs_dot)#, self.ls0_dot)
 
         # lake
         lake0 = Circle(radius = LAKE0_RADIUS,
@@ -3134,7 +3142,7 @@ class PondScene(ThreeDScene):
         self.zoomable_mobs.add(lake0)
 
         # Morty and indicator
-        morty = Mortimer().scale(0.3)
+        morty = Randolph().scale(0.3)
         morty.next_to(OBSERVER_POINT,DOWN)
         indicator = LightIndicator(precision = 2,
             radius = INDICATOR_RADIUS,
@@ -3146,14 +3154,16 @@ class PondScene(ThreeDScene):
 
         # first lighthouse
         original_op_func = inverse_quadratic(LIGHT_MAX_INT,LIGHT_SCALE,LIGHT_CUTOFF)
-        ls0 = LightSource(opacity_function = original_op_func)
+        ls0 = LightSource(opacity_function = original_op_func, radius = 15.0, num_levels = 150)
+        ls0.lighthouse.scale_to_fit_height(LIGHTHOUSE_HEIGHT)
+        ls0.lighthouse.height = LIGHTHOUSE_HEIGHT
         ls0.move_source_to(OBSERVER_POINT + LAKE0_RADIUS * 2 * UP)
         self.zoomable_mobs.add(ls0, ls0.lighthouse, ls0.ambient_light)
 
-        self.add(lake0,morty,self.obs_dot,ls0_dot, ls0.lighthouse)
+        self.add(lake0,morty,self.obs_dot,self.ls0_dot, ls0.lighthouse)
         self.add_foreground_mobject(morty)
         self.add_foreground_mobject(self.obs_dot)
-        self.add_foreground_mobject(ls0_dot)
+        self.add_foreground_mobject(self.ls0_dot)
         self.wait()
 
 
@@ -3201,8 +3211,8 @@ class PondScene(ThreeDScene):
             indicator.set_intensity,0.5
         )
 
-        diameter_start = interpolate(OBSERVER_POINT,ls0.get_source_point(),0.05)
-        diameter_stop = interpolate(OBSERVER_POINT,ls0.get_source_point(),0.95)
+        diameter_start = interpolate(OBSERVER_POINT,ls0.get_source_point(),0.02)
+        diameter_stop = interpolate(OBSERVER_POINT,ls0.get_source_point(),0.98)
 
         # diameter
         diameter = DoubleArrow(diameter_start,
@@ -3217,7 +3227,7 @@ class PondScene(ThreeDScene):
             ShowCreation(diameter),
             Write(diameter_text),
             #FadeOut(self.obs_dot),
-            FadeOut(ls0_dot)
+            FadeOut(self.ls0_dot)
         )
 
         indicator_reading = TexMobject("{1\over d^2}").scale(TEX_SCALE)
@@ -3384,7 +3394,7 @@ class PondScene(ThreeDScene):
             if show_steps == True: 
                 self.play(
                     FadeIn(new_outer_lake, run_time = run_time),
-                    FadeIn(ls0_dot)
+                    FadeIn(self.ls0_dot)
                 )
             else:
                 self.play(
@@ -3421,7 +3431,7 @@ class PondScene(ThreeDScene):
                         A, C, B
                     )
                     right_angle1 = right_angle(
-                        A, C, B
+                        A, C, B, size = 2 * RIGHT_ANGLE_SIZE
                     )
 
                     self.play(
@@ -3439,12 +3449,13 @@ class PondScene(ThreeDScene):
                     self.wait()
 
                     H = self.inner_lake.get_center() + self.lake_radius/2 * RIGHT
+                    L = self.outer_lake.get_center()
                     triangle2 = triangle(
-                        B, H, C
+                        L, H, C
                     )
 
                     right_angle2 = right_angle(
-                        B, H, C
+                        L, H, C, size = 2 * RIGHT_ANGLE_SIZE
                     )
 
                     self.play(
@@ -3506,7 +3517,7 @@ class PondScene(ThreeDScene):
             self.wait()
 
             if show_steps == True:
-                self.play(FadeOut(ls0_dot))
+                self.play(FadeOut(self.ls0_dot))
 
             #self.lake_center = ls0_loc = self.obs_dot.get_center() + self.lake_radius * UP
             self.lake_radius *= 2
@@ -3561,7 +3572,8 @@ class PondScene(ThreeDScene):
             self.light_sources[0].get_source_point(),
             OBSERVER_POINT,
             self.light_sources[1].get_source_point(),
-            )
+            size = RIGHT_ANGLE_SIZE
+        )
 
         self.play(
             FadeIn(angle_sign1),
@@ -3572,7 +3584,8 @@ class PondScene(ThreeDScene):
             self.light_sources[1].get_source_point(),
             self.lake_center,
             OBSERVER_POINT,
-            )
+            size = RIGHT_ANGLE_SIZE
+        )
 
         self.play(
             FadeIn(angle_sign2)
@@ -3587,19 +3600,19 @@ class PondScene(ThreeDScene):
         )
 
         indicator_wiggle()
-        self.play(FadeOut(ls0_dot))
+        self.remove(self.ls0_dot)
         zoom_out_scene(2)
-        self.play(FadeIn(ls0_dot))
+
         
         construction_step(1)
         indicator_wiggle()
-        #self.play(FadeOut(ls0_dot))
+        #self.play(FadeOut(self.ls0_dot))
         zoom_out_scene(2)
 
 
         construction_step(2)
         indicator_wiggle()
-        self.play(FadeOut(ls0_dot))
+        self.play(FadeOut(self.ls0_dot))
 
 
 
@@ -3682,7 +3695,7 @@ class PondScene(ThreeDScene):
 
         self.wait()
 
-        v = 5 * scale * UP
+        v = 4 * scale * UP
         self.play(
             nl_sources.shift,v,
             morty.shift,v,
@@ -3717,16 +3730,17 @@ class PondScene(ThreeDScene):
         for (i,submob) in zip(range(nb_symbols),two_sided_sum.submobjects):
             submob.next_to(self.number_line.number_to_point(i - 13),DOWN, buff = 2*scale)
             if (i == 0 or i % 2 == 1 or i == nb_symbols - 1): # non-fractions
-                submob.shift(0.2 * scale * DOWN)
+                submob.shift(0.3 * scale * DOWN)
 
         self.play(Write(two_sided_sum))
 
-        for i in range(0, MAX_N):
-            self.play(SwitchOff(nl_sources.submobjects[i].ambient_light)
-        )
-        for i in range(MAX_N, 2 * MAX_N - 1):
-            self.play(SwitchOn(nl_sources.submobjects[i].ambient_light)
-        )
+        for i in range(MAX_N - 5, MAX_N):
+            self.remove(nl_sources.submobjects[i].ambient_light)
+        
+        for i in range(MAX_N, MAX_N + 5):
+            self.add_foreground_mobject(nl_sources.submobjects[i].ambient_light)
+
+        self.wait()        
 
         covering_rectangle = Rectangle(
             width = SPACE_WIDTH * scale,
@@ -3757,7 +3771,7 @@ class PondScene(ThreeDScene):
 
         equals_sign = TexMobject("=").scale(TEX_SCALE)
         equals_sign.move_to(central_plus_sign)
-        p = 2 * scale * LEFT + 0.3 * UP
+        p = 2 * scale * LEFT + central_plus_sign.get_center()[1] * UP
 
         self.play(
             indicator.move_to,p,
@@ -3765,10 +3779,13 @@ class PondScene(ThreeDScene):
             FadeIn(equals_sign),
         )
 
+        self.revert_to_original_skipping_status()
+
         # show Randy admiring the result
-        randy = Randolph().scale(scale).move_to(2*scale*DOWN+5*scale*LEFT)
+        randy = Randolph(color = MAROON_E).scale(scale).move_to(2*scale*DOWN+5*scale*LEFT)
         self.play(FadeIn(randy))
         self.play(randy.change,"happy")
+        self.play(randy.change,"hooray")
 
 
 
@@ -3780,6 +3797,7 @@ class PondScene(ThreeDScene):
 class WaitScene(TeacherStudentsScene):
 
     def construct(self):
+
 
         self.teacher_says(TexMobject("{1\over 1^2}+{1\over 3^2}+{1\over 5^2}+{1\over 7^2}+\dots = {\pi^2 \over 8}!"))
 
@@ -3812,12 +3830,16 @@ class FinalSumManipulationScene(PiCreatureScene):
         sum_vertical_spacing = 1.5
 
         randy = self.get_primary_pi_creature()
+        randy.highlight(MAROON_E)
+        randy.color = MAROON_E
         randy.scale(0.7).flip().to_edge(DOWN + LEFT)
+        self.wait()
 
         ls_template = LightSource(
-            radius = 2,
+            radius = 4,
+            num_levels = 40,
             max_opacity_ambient = 0.5,
-            opacity_function = inverse_quadratic(1,0.5,1)
+            opacity_function = inverse_quadratic(1,0.75,1)
         )
 
 
@@ -3839,7 +3861,7 @@ class FinalSumManipulationScene(PiCreatureScene):
             include_tip = True
         )
 
-        self.number_line1.next_to(2.5 * UP + 3 * LEFT, RIGHT, buff = 0)
+        self.number_line1.next_to(2.5 * UP + 3 * LEFT, RIGHT, buff = 0.3)
 
         odd_lights = VMobject()
         for i in odd_range:
@@ -3851,13 +3873,17 @@ class FinalSumManipulationScene(PiCreatureScene):
         self.play(
             ShowCreation(self.number_line1),
         )
+        self.wait()
+
 
         odd_terms = VMobject()
         for i in odd_range:
             if i == 1:
-                term = TexMobject("\phantom{+\,}{1\over " + str(i) + "^2}", fill_color = LIGHT_COLOR)
+                term = TexMobject("\phantom{+\,\,\,}{1\over " + str(i) + "^2}",
+                    fill_color = LIGHT_COLOR, stroke_color = LIGHT_COLOR)
             else:
-                term = TexMobject("+\, {1\over " + str(i) + "^2}", fill_color = LIGHT_COLOR)
+                term = TexMobject("+\,\,\, {1\over " + str(i) + "^2}",
+                    fill_color = LIGHT_COLOR, stroke_color = LIGHT_COLOR)
 
             term.next_to(self.number_line1.number_to_point(i), DOWN, buff = 1.5)
             odd_terms.add(term)
@@ -3870,7 +3896,8 @@ class FinalSumManipulationScene(PiCreatureScene):
                 Write(term, run_time = switch_on_time)
             )
 
-        result1 = TexMobject("{\pi^2\over 8} =", fill_color = LIGHT_COLOR)
+        result1 = TexMobject("{\pi^2\over 8} =", fill_color = LIGHT_COLOR,
+            stroke_color = LIGHT_COLOR)
         result1.next_to(self.number_line1, LEFT, buff = 0.5)
         self.play(Write(result1))
 
@@ -3893,6 +3920,8 @@ class FinalSumManipulationScene(PiCreatureScene):
         self.play(
             ShowCreation(self.number_line2),
         )
+        self.wait()
+
 
 
 
@@ -3906,7 +3935,7 @@ class FinalSumManipulationScene(PiCreatureScene):
 
         even_terms = VMobject()
         for i in even_range:
-            term = TexMobject("+\, {1\over " + str(i) + "^2}", fill_color = LIGHT_COLOR2)
+            term = TexMobject("+\,\,\, {1\over " + str(i) + "^2}", fill_color = LIGHT_COLOR2, stroke_color = LIGHT_COLOR)
             term.next_to(self.number_line1.number_to_point(i), DOWN, buff = sum_vertical_spacing)
             even_terms.add(term)
 
@@ -3925,6 +3954,7 @@ class FinalSumManipulationScene(PiCreatureScene):
                 SwitchOn(ls.ambient_light, run_time = switch_on_time),
                 Write(term)
             )
+        self.wait()
 
 
 
@@ -3937,6 +3967,15 @@ class FinalSumManipulationScene(PiCreatureScene):
             Transform(even_lights,full_lights)
         )
 
+
+        self.wait()
+
+        for i in range(5):
+            self.play(
+                Transform(even_lights[i], even_lights_copy[i])
+            )
+            self.wait()
+
         # draw arrows
         P1 = self.number_line2.number_to_point(1)
         P2 = even_terms.submobjects[0].get_center()
@@ -3944,22 +3983,22 @@ class FinalSumManipulationScene(PiCreatureScene):
         Q2 = interpolate(P1, P2, 0.8)
         quarter_arrow = Arrow(Q1, Q2,
             color = LIGHT_COLOR2)
-        quarter_label = TexMobject("\\times {1\over 4}", fill_color = LIGHT_COLOR2)
+        quarter_label = TexMobject("\\times {1\over 4}", fill_color = LIGHT_COLOR2, stroke_color = LIGHT_COLOR2)
         quarter_label.scale(0.7)
         quarter_label.next_to(quarter_arrow.get_center(), RIGHT)
 
         self.play(
             ShowCreation(quarter_arrow),
             Write(quarter_label),
-            Transform(even_lights,even_lights_copy)
         )
+        self.wait()
 
         P3 = odd_terms.submobjects[0].get_center()
         R1 = interpolate(P1, P3, 0.2)
         R2 = interpolate(P1, P3, 0.8)
         three_quarters_arrow = Arrow(R1, R2,
             color = LIGHT_COLOR)
-        three_quarters_label = TexMobject("\\times {3\over 4}", fill_color = LIGHT_COLOR)
+        three_quarters_label = TexMobject("\\times {3\over 4}", fill_color = LIGHT_COLOR, stroke_color = LIGHT_COLOR)
         three_quarters_label.scale(0.7)
         three_quarters_label.next_to(three_quarters_arrow.get_center(), LEFT)
 
@@ -3967,9 +4006,10 @@ class FinalSumManipulationScene(PiCreatureScene):
             ShowCreation(three_quarters_arrow),
             Write(three_quarters_label)
         )
+        self.wait()
 
         four_thirds_arrow = Arrow(R2, R1, color = LIGHT_COLOR)
-        four_thirds_label = TexMobject("\\times {4\over 3}", fill_color = LIGHT_COLOR)
+        four_thirds_label = TexMobject("\\times {4\over 3}", fill_color = LIGHT_COLOR, stroke_color = LIGHT_COLOR)
         four_thirds_label.scale(0.7)
         four_thirds_label.next_to(four_thirds_arrow.get_center(), LEFT)
 
@@ -3977,6 +4017,7 @@ class FinalSumManipulationScene(PiCreatureScene):
             ReplacementTransform(three_quarters_arrow, four_thirds_arrow),
             ReplacementTransform(three_quarters_label, four_thirds_label)
         )
+        self.wait()
 
         self.play(
             FadeOut(quarter_label),
@@ -3985,14 +4026,17 @@ class FinalSumManipulationScene(PiCreatureScene):
             FadeOut(even_terms)
 
         )
+        self.wait()
 
 
         full_terms = VMobject()
-        for i in full_range:
+        for i in range(1,8): #full_range:
             if i == 1:
-                term = TexMobject("\phantom{+\,}{1\over " + str(i) + "^2}", fill_color = LIGHT_COLOR3)
+                term = TexMobject("\phantom{+\,\,\,}{1\over " + str(i) + "^2}", fill_color = LIGHT_COLOR3, stroke_color = LIGHT_COLOR3)
+            elif i == 7:
+                term = TexMobject("+\,\,\,\dots", fill_color = LIGHT_COLOR3, stroke_color = LIGHT_COLOR3)
             else:
-                term = TexMobject("+\, {1\over " + str(i) + "^2}", fill_color = LIGHT_COLOR3)
+                term = TexMobject("+\,\,\, {1\over " + str(i) + "^2}", fill_color = LIGHT_COLOR3, stroke_color = LIGHT_COLOR3)
 
             term.move_to(self.number_line2.number_to_point(i))
             full_terms.add(term)
@@ -4004,6 +4048,7 @@ class FinalSumManipulationScene(PiCreatureScene):
             FadeOut(full_lights),
             FadeIn(full_terms)
         )
+        self.wait()
 
         v = (sum_vertical_spacing + 0.5) * UP
         self.play(
@@ -4023,24 +4068,21 @@ class FinalSumManipulationScene(PiCreatureScene):
             FadeIn(arrow_copy),
             FadeIn(label_copy)
         )
+        self.wait()
 
-        final_result = TexMobject("{\pi^2 \over 6}=", fill_color = LIGHT_COLOR3)
+        final_result = TexMobject("{\pi^2 \over 6}=", fill_color = LIGHT_COLOR3, stroke_color = LIGHT_COLOR3)
         final_result.next_to(arrow_copy, DOWN)
 
         self.play(
             Write(final_result),
             randy.change_mode,"hooray"
         )
+        self.wait()
 
         equation = VMobject()
         equation.add(final_result)
         equation.add(full_terms)
 
-        buffer = 2
-        result_box = Rectangle(width = 15,
-            height = buffer*equation.get_height(), color = LIGHT_COLOR3)
-        result_box.move_to(equation)
-        equation.add(result_box)
 
         self.play(
             FadeOut(result1),
@@ -4049,11 +4091,21 @@ class FinalSumManipulationScene(PiCreatureScene):
             FadeOut(label_copy),
             FadeOut(four_thirds_arrow),
             FadeOut(four_thirds_label),
+            full_terms.shift,LEFT,
+        )
+        self.wait()
+
+        self.play(equation.shift, -equation.get_center()[1] * UP + UP + 1.5 * LEFT)
+
+        result_box = Rectangle(width = 1.1 * equation.get_width(),
+            height = 2 * equation.get_height(), color = LIGHT_COLOR3)
+        result_box.move_to(equation)
+
+
+        self.play(
             ShowCreation(result_box)
         )
-
-        self.play(equation.shift, -equation.get_center()[1] * UP + UP)
-
+        self.wait()
 
 
 
