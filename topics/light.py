@@ -128,7 +128,6 @@ class LightSource(VMobject):
         self.camera_mob = new_cam_mob
         self.spotlight.camera_mob = new_cam_mob
 
-
     def set_screen(self, new_screen):
         if self.has_screen():
             self.spotlight.screen = new_screen
@@ -157,9 +156,6 @@ class LightSource(VMobject):
         
         # in any case
         self.screen = new_screen
-
-
-
 
     def move_source_to(self,point):
         apoint = np.array(point)
@@ -190,14 +186,12 @@ class LightSource(VMobject):
         self.spotlight.update_sectors()
         self.update_shadow()
 
-
     def update_lighthouse(self):
         new_lh = Lighthouse()
         new_lh.move_to(ORIGIN)
         new_lh.apply_matrix(self.rotation_matrix())
         new_lh.shift(self.get_source_point())
         self.lighthouse.submobjects = new_lh.submobjects
-
 
     def update_ambient(self):
         new_ambient_light = AmbientLight(
@@ -212,11 +206,8 @@ class LightSource(VMobject):
         new_ambient_light.move_source_to(self.get_source_point())
         self.ambient_light.submobjects = new_ambient_light.submobjects
 
-
-
     def get_source_point(self):
         return self.source_point.get_location()
-
 
     def rotation_matrix(self):
 
@@ -241,7 +232,6 @@ class LightSource(VMobject):
 
         R = np.dot(R2, R1)
         return R
-
 
     def update_shadow(self):
 
@@ -370,7 +360,7 @@ class AmbientLight(VMobject):
         "opacity_function" : lambda r : 1.0/(r+1.0)**2,
         "color" : LIGHT_COLOR,
         "max_opacity" : 1.0,
-        "num_levels" : 10,
+        "num_levels" : NUM_LEVELS,
         "radius" : 5.0
     }
 

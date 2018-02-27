@@ -865,161 +865,259 @@ class MathematicalWebOfConnections(PiCreatureScene):
 
         return VGroup(jerk, randy)
 
-
 class FirstLighthouseScene(PiCreatureScene):
-
+    CONFIG = {
+        "num_levels" : 100,
+        "opacity_function" : inverse_quadratic(1,2,1),
+    }
     def construct(self):
-        self.remove(self.get_primary_pi_creature())
+        self.remove(self.pi_creature)
         self.show_lighthouses_on_number_line()
-
-
+        self.describe_brightness_of_each()
+        self.ask_about_rearrangements()
 
     def show_lighthouses_on_number_line(self):
-
-        self.number_line = NumberLine(
+        number_line = self.number_line = NumberLine(
             x_min = 0,
             color = WHITE,
             number_at_center = 1.6,
             stroke_width = 1,
-            numbers_with_elongated_ticks = range(1,5),
-            numbers_to_show = range(1,5),
+            numbers_with_elongated_ticks = range(1,6),
+            numbers_to_show = range(1,6),
             unit_size = 2,
             tick_frequency = 0.2,
             line_to_number_buff = LARGE_BUFF,
-            label_direction = UP,
+            label_direction = DOWN,
         )
 
-        self.number_line.label_direction = DOWN
+        number_line.add_numbers()
+        self.add(number_line)
 
-        self.number_line_labels = self.number_line.get_number_mobjects()
-        self.add(self.number_line,self.number_line_labels)
-        self.wait()
+        origin_point = number_line.number_to_point(0)
 
-        origin_point = self.number_line.number_to_point(0)
-
-        self.default_pi_creature_class = Randolph
-        randy = self.get_primary_pi_creature()
-
-        randy.scale(0.5)
-        randy.flip()
-        right_pupil = randy.pupils[1]
-        randy.next_to(origin_point, LEFT, buff = 0, submobject_to_align = right_pupil)
+        morty = self.pi_creature
+        morty.scale(0.75)
+        morty.flip()
+        right_pupil = morty.eyes[1]
+        morty.next_to(origin_point, LEFT, buff = 0, submobject_to_align = right_pupil)
 
 
+        light_sources = VGroup()
+        for i in range(1,NUM_CONES+1):
+            light_source = LightSource(
+                opacity_function = self.opacity_function,
+                num_levels = self.num_levels,
+                radius = 12.0,
+            )
+            point = number_line.number_to_point(i)
+            light_source.move_source_to(point)
+            light_sources.add(light_source)
 
-        light_indicator = LightIndicator(radius = INDICATOR_RADIUS,
+        lighthouses = self.lighthouses = VGroup(*[
+            ls.lighthouse
+            for ls in light_sources[:NUM_VISIBLE_CONES+1]
+        ])
+
+        morty.save_state()
+        morty.scale(3)
+        morty.fade(1)
+        morty.center()
+        self.play(morty.restore)
+        self.play(
+            morty.change, "pondering",
+            LaggedStart(
+                FadeIn, lighthouses,
+                run_time = 1
+            )
+        )
+        self.play(LaggedStart(
+            SwitchOn, VGroup(*[
+                ls.ambient_light
+                for ls in light_sources
+            ]),
+            run_time = 5,
+            lag_ratio = 0.1,
+            rate_func = rush_into,
+        ), Animation(lighthouses))
+
+        self.light_sources = light_sources
+
+    def describe_brightness_of_each(self):
+        number_line = self.number_line
+        morty = self.pi_creature
+        light_sources = self.light_sources
+        lighthouses = self.lighthouses
+
+        light_indicator = LightIndicator(
+            radius = INDICATOR_RADIUS,
             opacity_for_unit_intensity = OPACITY_FOR_UNIT_INTENSITY,
-            color = LIGHT_COLOR)
+            color = LIGHT_COLOR
+        )
         light_indicator.reading.scale(0.8)
+        light_indicator.set_intensity(0)
+        intensities = np.cumsum(np.array([1./n**2 for n in range(1,NUM_CONES+1)]))
+        opacities = intensities * light_indicator.opacity_for_unit_intensity
 
-        bubble = ThoughtBubble(direction = RIGHT,
-                            width = 2.5, height = 3.5)
-        bubble.next_to(randy,LEFT+UP)
+        bubble = ThoughtBubble(
+            direction = RIGHT,
+            width = 2.5, height = 3.5
+        )
+        bubble.pin_to(morty)
         bubble.add_content(light_indicator)
 
-        self.play(
-            randy.change, "wave_2",
-            ShowCreation(bubble),
-            FadeIn(light_indicator)
+        euler_sum_above = TexMobject(
+            "1", "+", 
+            "{1\over 4}", "+", 
+            "{1\over 9}", "+", 
+            "{1\over 16}", "+", 
+            "{1\over 25}", "+", 
+            "{1\over 36}"
         )
+        euler_sum_terms = euler_sum_above[::2]
+        plusses = euler_sum_above[1::2]
 
-        light_sources = []
-
-
-        euler_sum_above = TexMobject("1", "+", "{1\over 4}", 
-            "+", "{1\over 9}", "+", "{1\over 16}", "+", "{1\over 25}", "+", "{1\over 36}")
-
-        for (i,term) in zip(range(len(euler_sum_above)),euler_sum_above):
+        for i, term in enumerate(euler_sum_above):
             #horizontal alignment with tick marks
-            term.next_to(self.number_line.number_to_point(0.5*i+1),UP,buff = 2)
+            term.next_to(number_line.number_to_point(0.5*i+1), UP , buff = 2)
             # vertical alignment with light indicator
             old_y = term.get_center()[1]
             new_y = light_indicator.get_center()[1]
             term.shift([0,new_y - old_y,0])
-            
-
-
-        for i in range(1,NUM_CONES+1):
-            light_source = LightSource(
-                opacity_function = inverse_quadratic(1,2,1),
-                num_levels = NUM_LEVELS,
-                radius = 12.0,
-            )
-            point = self.number_line.number_to_point(i)
-            light_source.move_source_to(point)
-            light_sources.append(light_source)
-
-
-        for ls in light_sources:
-            self.add_foreground_mobject(ls.lighthouse)
-
-        light_indicator.set_intensity(0)
-
-        intensities = np.cumsum(np.array([1./n**2 for n in range(1,NUM_CONES+1)]))
-        opacities = intensities * light_indicator.opacity_for_unit_intensity
-
-        self.remove_foreground_mobjects(light_indicator)
-
-
-        # slowly switch on visible light cones and increment indicator
-        for (i,light_source) in zip(range(NUM_VISIBLE_CONES),light_sources[:NUM_VISIBLE_CONES]):
-            indicator_start_time = 0.4 * (i+1) * SWITCH_ON_RUN_TIME/light_source.radius * self.number_line.unit_size
-            indicator_stop_time = indicator_start_time + INDICATOR_UPDATE_TIME
-            indicator_rate_func = squish_rate_func(
-                smooth,indicator_start_time,indicator_stop_time)
-            self.play(
-                SwitchOn(light_source.ambient_light),
-                FadeIn(euler_sum_above[2*i], run_time = SWITCH_ON_RUN_TIME,
-                    rate_func = indicator_rate_func),
-                FadeIn(euler_sum_above[2*i - 1], run_time = SWITCH_ON_RUN_TIME,
-                    rate_func = indicator_rate_func),
-                # this last line *technically* fades in the last term, but it is off-screen
-                ChangeDecimalToValue(light_indicator.reading,intensities[i],
-                    rate_func = indicator_rate_func, run_time = SWITCH_ON_RUN_TIME),
-                ApplyMethod(light_indicator.foreground.set_fill,None,opacities[i])
-            )
-
-            if i == 0:
-                # move a copy out of the thought bubble for comparison
-                light_indicator_copy = light_indicator.copy()
-                old_y = light_indicator_copy.get_center()[1]
-                new_y = self.number_line.get_center()[1]
-                self.play(
-                    light_indicator_copy.shift,[0, new_y - old_y,0]
-                )
-
-        # quickly switch on off-screen light cones and increment indicator
-        for (i,light_source) in zip(range(NUM_VISIBLE_CONES,NUM_CONES),light_sources[NUM_VISIBLE_CONES:NUM_CONES]):
-            indicator_start_time = 0.5 * (i+1) * FAST_SWITCH_ON_RUN_TIME/light_source.radius * self.number_line.unit_size
-            indicator_stop_time = indicator_start_time + FAST_INDICATOR_UPDATE_TIME
-            indicator_rate_func = squish_rate_func(#smooth, 0.8, 0.9)
-                smooth,indicator_start_time,indicator_stop_time)
-            self.play(
-                SwitchOn(light_source.ambient_light, run_time = FAST_SWITCH_ON_RUN_TIME),
-                ChangeDecimalToValue(light_indicator.reading,intensities[i-1],
-                    rate_func = indicator_rate_func, run_time = FAST_SWITCH_ON_RUN_TIME),
-                ApplyMethod(light_indicator.foreground.set_fill,None,opacities[i-1])
-            )
-
 
         # show limit value in light indicator and an equals sign
         limit_reading = TexMobject("{\pi^2 \over 6}")
         limit_reading.move_to(light_indicator.reading)
 
         equals_sign = TexMobject("=")
-        equals_sign.next_to(randy, UP)
+        equals_sign.next_to(morty, UP)
         old_y = equals_sign.get_center()[1]
         new_y = euler_sum_above.get_center()[1]
         equals_sign.shift([0,new_y - old_y,0])
 
+        #Triangle of light to morty's eye
+        ls0 = light_sources[0]
+        ls0.save_state()
+        eye = morty.eyes[1]
+        triangle = Polygon(
+            number_line.number_to_point(1),
+            eye.get_top(), eye.get_bottom(),
+            stroke_width = 0,
+            fill_color = YELLOW,
+            fill_opacity = 1,
+        )
+        triangle_anim = GrowFromPoint(
+            triangle, triangle.get_right(), 
+            point_color = YELLOW
+        )
+
+        # First lighthouse has apparent reading
+        self.play(LaggedStart(FadeOut, light_sources[1:]))
+        self.wait()
+        self.play(
+            triangle_anim,
+            # Animation(eye)
+        )
+        for x in range(4):
+            triangle_copy = triangle.copy()
+            self.play(
+                FadeOut(triangle.copy()),
+                triangle_anim,
+            )
+        self.play(
+            FadeOut(triangle),
+            ShowCreation(bubble),
+            FadeIn(light_indicator),
+        )
+        self.play(
+            UpdateLightIndicator(light_indicator, 1),
+            FadeIn(euler_sum_terms[0])
+        )
+        self.wait(2)
+
+        # Second lighthouse is 1/4, third is 1/9, etc.
+        for i in range(1, 5):
+            self.play(
+                ApplyMethod(
+                    ls0.move_to, light_sources[i],
+                    run_time = 3
+                ),
+                UpdateLightIndicator(light_indicator, 1./(i+1)**2, run_time = 3),
+                FadeIn(
+                    euler_sum_terms[i],
+                    run_time = 3,
+                    rate_func = squish_rate_func(smooth, 0.5, 1)
+                ),
+            )
+            self.wait()
+        self.play(
+            ApplyMethod(ls0.restore),
+            UpdateLightIndicator(light_indicator, 1)
+        )
+
+        #Switch them all on
+        self.play(
+            LaggedStart(FadeIn, lighthouses[1:]),
+            morty.change, "hooray",
+        )
+        self.play(
+            LaggedStart(
+                SwitchOn, VGroup(*[
+                    ls.ambient_light
+                    for ls in light_sources[1:]
+                ]),
+                run_time = 5,
+                rate_func = rush_into,
+            ),
+            Animation(lighthouses),
+            Animation(euler_sum_above),
+            Write(plusses),
+            UpdateLightIndicator(light_indicator, np.pi**2/6, run_time = 5),
+            morty.change, "happy",
+        )
+        self.wait()
         self.play(
             FadeOut(light_indicator.reading),
             FadeIn(limit_reading),
-            FadeIn(equals_sign),
+            morty.change, "confused",
+        )
+        self.play(Write(equals_sign))
+        self.wait()
+
+    def ask_about_rearrangements(self):
+        light_sources = self.light_sources
+        origin = self.number_line.number_to_point(0)
+        morty = self.pi_creature
+
+        self.play(
+            LaggedStart(
+                Rotate, light_sources,
+                lambda m : (m, (2*random.random()-1)*90*DEGREES),
+                about_point = origin, 
+                rate_func = lambda t : wiggle(t, 4),
+                run_time = 10,
+                lag_ratio = 0.9,
+            ), 
+            morty.change, "pondering",
         )
 
-            
+class RearrangeWords(Scene):
+    def construct(self):
+        words = TextMobject("Rearrange without changing \\\\ the apparent brightness")
+        self.play(Write(words))
+        self.wait(5)
 
+class ThatJustSeemsUseless(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "How would \\\\ that help?",
+            target_mode = "sassy",
+            student_index = 2,
+            bubble_kwargs = {"direction" : LEFT},
+        )
+        self.play(
+            self.teacher.change, "guilty",
+            self.get_student_changes(*3*['sassy'])
+        )
         self.wait()
 
 class SingleLighthouseScene(PiCreatureScene):
