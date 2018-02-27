@@ -100,8 +100,10 @@ class AngleUpdater(ContinualAnimation):
 class LightIndicator(Mobject):
     CONFIG = {
         "radius": 0.5,
+        "reading_height" : 0.25,
         "intensity": 0,
         "opacity_for_unit_intensity": 1,
+        "fill_color" : YELLOW,
         "precision": 3,
         "show_reading": True,
         "measurement_point": ORIGIN,
@@ -110,13 +112,18 @@ class LightIndicator(Mobject):
 
     def generate_points(self):
         self.background = Circle(color=BLACK, radius = self.radius)
-        self.background.set_fill(opacity=1.0)
+        self.background.set_fill(opacity = 1.0)
         self.foreground = Circle(color=self.color, radius = self.radius)
-        self.foreground.set_stroke(color=INDICATOR_STROKE_COLOR,width=INDICATOR_STROKE_WIDTH)
+        self.foreground.set_stroke(
+            color=INDICATOR_STROKE_COLOR,
+            width=INDICATOR_STROKE_WIDTH
+        )
+        self.foreground.set_fill(color = self.fill_color)
 
         self.add(self.background, self.foreground)
         self.reading = DecimalNumber(self.intensity,num_decimal_points = self.precision)
         self.reading.set_fill(color=INDICATOR_TEXT_COLOR)
+        self.reading.scale_to_fit_height(self.reading_height)
         self.reading.move_to(self.get_center())
         if self.show_reading:
             self.add(self.reading)
@@ -126,6 +133,10 @@ class LightIndicator(Mobject):
         new_opacity = min(1, new_int * self.opacity_for_unit_intensity)
         self.foreground.set_fill(opacity=new_opacity)
         ChangeDecimalToValue(self.reading, new_int).update(1)
+        if new_int > 1.1:
+            self.reading.set_fill(color = BLACK)
+        else:
+            self.reading.set_fill(color = WHITE)
         return self
 
     def get_measurement_point(self):
@@ -134,10 +145,11 @@ class LightIndicator(Mobject):
         else:
             return self.get_center()
 
-
     def measured_intensity(self):
-        distance = np.linalg.norm(self.get_measurement_point() - 
-            self.light_source.get_source_point())
+        distance = np.linalg.norm(
+            self.get_measurement_point() - 
+            self.light_source.get_source_point()
+        )
         intensity = self.light_source.opacity_function(distance) / self.opacity_for_unit_intensity
         return intensity
 
@@ -157,11 +169,11 @@ class UpdateLightIndicator(AnimationGroup):
             indicator.foreground, target_foreground
         )
         changing_decimal = ChangeDecimalToValue(indicator.reading, intensity)
+
         AnimationGroup.__init__(self, changing_decimal, change_opacity, **kwargs)
         self.mobject = indicator
 
 class ContinualLightIndicatorUpdate(ContinualAnimation):
-
     def update_mobject(self,dt):
         self.mobject.continual_update()
 
@@ -1266,7 +1278,7 @@ class IntroduceScreen(Scene):
         self.add(angle_tracker)
 
         arc_tracker = AngleUpdater(
-            self.angle_arc, 
+            self.angle_arc,
             self.light_source.spotlight
         )
         self.add(arc_tracker)
@@ -1285,18 +1297,24 @@ class IntroduceScreen(Scene):
                 lambda m : m.update()
             ),
         )
+        self.add(
+            ContinualUpdateFromFunc(
+                self.angle_indicator,
+                lambda m : m.set_stroke(width = 0).set_fill(opacity = 1)
+            )
+        )
+        self.remove(self.light_source.ambient_light)
         def rotate_screen(angle):
             self.play(
                 Rotate(self.light_source.spotlight.screen, angle),
-                Animation(self.angle_indicator),
                 Animation(self.angle_arc),
                 run_time = 2,
             )
-        for angle in TAU/8, -TAU/4, TAU/8, TAU/6:
+        for angle in TAU/8, -TAU/4, TAU/8, -TAU/6:
             rotate_screen(angle)
             self.wait()
         self.shoot_rays()
-        rotate_screen(-TAU/6)
+        rotate_screen(TAU/6)
 
     ##
 
@@ -1437,7 +1455,7 @@ class EarthScene(IntroduceScreen):
         )
         self.add_foreground_mobjects(equator_words, equator_arrow)
         self.shoot_rays(show_creation_kwargs = {
-            "rate_func" : lambda r : interpolate(0.98, 1, smooth(t))
+            "rate_func" : lambda t : interpolate(0.98, 1, smooth(t))
         })
         self.wait()
         # Point to patch
@@ -1452,454 +1470,287 @@ class EarthScene(IntroduceScreen):
             run_time = 3,
         )
         self.shoot_rays(show_creation_kwargs = {
-            "rate_func" : lambda r : interpolate(0.98, 1, smooth(t))
+            "rate_func" : lambda t : interpolate(0.98, 1, smooth(t))
         })
         self.wait()
 
-class ScreenShapingScene(ThreeDScene):
-
-
-    # TODO: Morph from Earth Scene into this scene
-
+class InverseSquareLaw(ThreeDScene):
+    CONFIG = {
+        "screen_height" : 1.0,
+        "source_point" : 5*LEFT,
+        "unit_distance" : 4,
+        "num_levels" : 100,
+    }
     def construct(self):
-
-        #self.force_skipping()
-        self.setup_elements()
-        self.deform_screen()
-        self.create_brightness_rect()
-        self.slant_screen()
-        self.unslant_screen()
-        self.left_shift_screen_while_showing_light_indicator()
-        self.add_distance_arrow()
-        self.right_shift_screen_while_showing_light_indicator_and_distance_arrow()
-        self.left_shift_again()
-        #self.revert_to_original_skipping_status()
-        
+        self.move_screen_farther_away()
         self.morph_into_3d()
-        self.prove_inverse_square_law()
 
-
-    def setup_elements(self):
-
-        SCREEN_THICKNESS = 10
-
-        self.screen_height = 1.0
-        self.brightness_rect_height = 1.0
+    def move_screen_farther_away(self):
+        source_point = self.source_point
+        unit_distance = self.unit_distance
 
         # screen
-        self.screen = Line([3,-self.screen_height/2,0],[3,self.screen_height/2,0],
-            path_arc = 0, num_arc_anchors = 10)
+        screen = self.screen = Line(self.screen_height*UP, ORIGIN)
+        screen.get_reference_point = screen.get_center
+        screen.shift(
+            source_point + unit_distance*RIGHT -\
+            screen.get_reference_point()
+        )
         
         # light source
-        self.light_source = LightSource(
-            opacity_function = inverse_quadratic(1,5,1),
-            num_levels = NUM_LEVELS,
+        light_source = self.light_source = LightSource(
+            # opacity_function = inverse_quadratic(1,5,1),
+            opacity_function = lambda r : 1./(r+1),
+            num_levels = self.num_levels,
             radius = 10,
             max_opacity = 0.2
-            #screen = self.screen
         )
-        self.light_source.set_max_opacity_spotlight(0.2)
+        light_source.set_max_opacity_spotlight(0.2)
 
-        self.light_source.set_screen(self.screen)
-        self.light_source.move_source_to([-5,0,0])
+        light_source.set_screen(screen)
+        light_source.move_source_to(source_point)
 
         # abbreviations
-        self.ambient_light = self.light_source.ambient_light
-        self.spotlight = self.light_source.spotlight
-        self.lighthouse = self.light_source.lighthouse
-
-        
-        #self.add_foreground_mobject(self.light_source.shadow)
+        ambient_light = light_source.ambient_light
+        spotlight = light_source.spotlight
+        lighthouse = light_source.lighthouse
+        shadow = light_source.shadow
 
         # Morty
-        self.morty = Mortimer().scale(0.3).next_to(self.screen, RIGHT, buff = 0.5)
+        morty = self.morty = Mortimer().scale(0.3)
+        morty.next_to(screen, RIGHT, buff = MED_LARGE_BUFF)
 
-        # Add everything to the scene
-        self.add(self.lighthouse)
-        
+        #Screen tracker
+        def update_spotlight(spotlight):
+            spotlight.update_sectors()
+
+        spotlight_update = ContinualUpdateFromFunc(spotlight, update_spotlight)
+        shadow_update = ContinualUpdateFromFunc(
+            shadow, lambda m : light_source.update_shadow()
+        )
+
+        # Light indicator
+        light_indicator = self.light_indicator = LightIndicator(
+            opacity_for_unit_intensity = 0.5,
+        )
+        def update_light_indicator(light_indicator):
+            distance = np.linalg.norm(screen.get_reference_point() - source_point)
+            light_indicator.set_intensity(1.0/(distance/unit_distance)**2)
+            light_indicator.next_to(morty, UP, MED_LARGE_BUFF)
+        light_indicator_update = ContinualUpdateFromFunc(
+            light_indicator, update_light_indicator
+        )
+        light_indicator_update.update(0)
+
+        continual_updates = self.continual_updates = [
+            spotlight_update, light_indicator_update, shadow_update
+        ]
+
+        # Distance indicators
+
+        one_arrow = DoubleArrow(ORIGIN, unit_distance*RIGHT, buff = 0)
+        two_arrow = DoubleArrow(ORIGIN, 2*unit_distance*RIGHT, buff = 0)
+        arrows = VGroup(one_arrow, two_arrow)
+        arrows.highlight(WHITE)
+        one_arrow.move_to(source_point + DOWN, LEFT)
+        two_arrow.move_to(source_point + 1.75*DOWN, LEFT)
+        one = Integer(1).next_to(one_arrow, UP, SMALL_BUFF)
+        two = Integer(2).next_to(two_arrow, DOWN, SMALL_BUFF)
+        arrow_group = VGroup(one_arrow, one, two_arrow, two)
+
+        # Animations
+
+        self.add_foreground_mobjects(lighthouse, screen, morty)
+        self.add(shadow_update)
+
+        self.play(
+            SwitchOn(ambient_light),
+            morty.change, "pondering"
+        )
+        self.play(
+            SwitchOn(spotlight),
+            FadeIn(light_indicator)
+        )
+        # self.remove(spotlight)
+        self.add(*continual_updates)
         self.wait()
-        self.play(FadeIn(self.screen))
+        for distance in -0.5, 0.5:
+            self.shift_by_distance(distance)
+            self.wait()
+        self.add_foreground_mobjects(one_arrow, one)
+        self.play(GrowFromCenter(one_arrow), Write(one))
         self.wait()
-
-        self.add_foreground_mobject(self.screen)
-        self.add_foreground_mobject(self.morty)
-
-        self.play(SwitchOn(self.ambient_light))
-
-        self.play(
-            SwitchOn(self.spotlight),
-            self.light_source.dim_ambient
+        self.add_foreground_mobjects(two_arrow, two)
+        self.shift_by_distance(1,
+            GrowFromPoint(two_arrow, two_arrow.get_left()),
+            Write(two, rate_func = squish_rate_func(smooth, 0.5, 1))
         )
-
-        screen_tracker = ScreenTracker(self.light_source)
-        self.add(screen_tracker)
-
-
-        self.wait()
-
-
-
-    def deform_screen(self):
-
-        self.wait()
-
-        self.play(ApplyMethod(self.screen.set_path_arc, 45 * DEGREES))
-        self.play(ApplyMethod(self.screen.set_path_arc, -90 * DEGREES))
-        self.play(ApplyMethod(self.screen.set_path_arc, 0))
-
-
-
-
-    def create_brightness_rect(self):
-
-        # in preparation for the slanting, create a rectangle that shows the brightness
-
-        # a rect a zero width overlaying the screen
-        # so we can morph it into the brightness rect above
-        brightness_rect0 = Rectangle(width = 0,
-            height = self.screen_height).move_to(self.screen.get_center())
-        self.add_foreground_mobject(brightness_rect0)
-
-        self.brightness_rect = Rectangle(width = self.brightness_rect_height,
-            height = self.brightness_rect_height, fill_color = YELLOW, fill_opacity = 0.5)
-
-        self.brightness_rect.next_to(self.screen, UP, buff = 1)
-
-        self.play(
-            ReplacementTransform(brightness_rect0,self.brightness_rect)
-        )
-
-        self.unslanted_screen = self.screen.deepcopy()
-        self.unslanted_brightness_rect = self.brightness_rect.copy()
-        # for unslanting the screen later
-
-
-    def slant_screen(self):
-
-        SLANTING_AMOUNT = 0.1
-
-        lower_screen_point, upper_screen_point = self.screen.get_start_and_end()
-
-        lower_slanted_screen_point = interpolate(
-            lower_screen_point, self.spotlight.get_source_point(), SLANTING_AMOUNT
-        )
-        upper_slanted_screen_point = interpolate(
-            upper_screen_point, self.spotlight.get_source_point(), -SLANTING_AMOUNT
-        )
-
-        self.slanted_brightness_rect = self.brightness_rect.copy()
-        self.slanted_brightness_rect.width *= 2
-        self.slanted_brightness_rect.generate_points()
-        self.slanted_brightness_rect.set_fill(opacity = 0.25)
-
-        self.slanted_screen = Line(lower_slanted_screen_point,upper_slanted_screen_point,
-            path_arc = 0, num_arc_anchors = 10)
-        self.slanted_brightness_rect.move_to(self.brightness_rect.get_center())
-
-        self.play(
-             Transform(self.screen,self.slanted_screen),
-             Transform(self.brightness_rect,self.slanted_brightness_rect),
-        )
-
-
-
-    def unslant_screen(self):
-
-        self.wait()        
-        self.play(
-            Transform(self.screen,self.unslanted_screen),
-            Transform(self.brightness_rect,self.unslanted_brightness_rect),
-        )
-
-
-
-
-    def left_shift_screen_while_showing_light_indicator(self):
-
-        # Scene 5: constant screen size, changing opening angle
-
-        OPACITY_FOR_UNIT_INTENSITY = 1
-
-        # let's use an actual light indicator instead of just rects
-
-        self.indicator_intensity = 0.25
-        indicator_height = 1.25 * self.screen_height
-
-        self.indicator = LightIndicator(radius = indicator_height/2,
-            opacity_for_unit_intensity = OPACITY_FOR_UNIT_INTENSITY,
-            color = LIGHT_COLOR,
-            precision = 2)
-        self.indicator.set_intensity(self.indicator_intensity)
-
-        self.indicator.move_to(self.brightness_rect.get_center())
-
-        self.play(
-            FadeOut(self.brightness_rect),
-            FadeIn(self.indicator)
-        )
-
-        # Here some digits of the indicator disappear...
-
-        self.add_foreground_mobject(self.indicator.reading)
-
-
-        self.unit_indicator_intensity = 1.0 # intensity at distance 1
-                                            # (where we are about to move to)
-
-        self.left_shift = (self.screen.get_center()[0] - self.spotlight.get_source_point()[0])/2
-
-        self.play(
-            self.screen.shift,[-self.left_shift,0,0],
-            self.morty.shift,[-self.left_shift,0,0],
-            self.indicator.shift,[-self.left_shift,0,0],
-            self.indicator.set_intensity,self.unit_indicator_intensity,
-        )
-        
-
-
-    def add_distance_arrow(self):
-
-        # distance arrow (length 1)
-        left_x = self.spotlight.get_source_point()[0]
-        right_x = self.screen.get_center()[0]
-        arrow_y = -2
-        arrow1 = Arrow([left_x,arrow_y,0],[right_x,arrow_y,0])
-        arrow2 = Arrow([right_x,arrow_y,0],[left_x,arrow_y,0])
-        arrow1.set_fill(color = WHITE)
-        arrow2.set_fill(color = WHITE)
-        distance_decimal = Integer(1).next_to(arrow1,DOWN)
-        self.arrow = VGroup(arrow1, arrow2,distance_decimal)
-        self.add(self.arrow)
-
-
-        # distance arrow (length 2)
-        # will be morphed into
-        self.distance_to_source = right_x - left_x
-        new_right_x = left_x + 2 * self.distance_to_source
-        new_arrow1 = Arrow([left_x,arrow_y,0],[new_right_x,arrow_y,0])
-        new_arrow2 = Arrow([new_right_x,arrow_y,0],[left_x,arrow_y,0])
-        new_arrow1.set_fill(color = WHITE)
-        new_arrow2.set_fill(color = WHITE)
-        new_distance_decimal = Integer(2).next_to(new_arrow1,DOWN)
-        self.new_arrow = VGroup(new_arrow1, new_arrow2, new_distance_decimal)
-        # don't add it yet
-
-
-    def right_shift_screen_while_showing_light_indicator_and_distance_arrow(self):
-
         self.wait()
 
+        q_marks = TextMobject("???")
+        q_marks.next_to(light_indicator, UP)
         self.play(
-            ReplacementTransform(self.arrow,self.new_arrow),
-            ApplyMethod(self.screen.shift,[self.distance_to_source,0,0]),
-            ApplyMethod(self.indicator.shift,[self.left_shift,0,0]),
-            
-            ApplyMethod(self.indicator.set_intensity,self.indicator_intensity),
-            # this should trigger ChangingDecimal, but it doesn't
-            # maybe bc it's an anim within an anim?
-
-            ApplyMethod(self.morty.shift,[self.distance_to_source,0,0]),
+            Write(q_marks),
+            morty.change, "confused", q_marks
         )
-
-
-    def left_shift_again(self):
-
+        self.play(Blink(morty))
+        self.play(FadeOut(q_marks), morty.change, "pondering")
         self.wait()
+        self.shift_by_distance(-1, arrow_group.shift, DOWN)
 
-        self.play(
-            ReplacementTransform(self.new_arrow,self.arrow),
-            ApplyMethod(self.screen.shift,[-self.distance_to_source,0,0]),
-            #ApplyMethod(self.indicator.shift,[-self.left_shift,0,0]),
-            ApplyMethod(self.indicator.set_intensity,self.unit_indicator_intensity),
-            ApplyMethod(self.morty.shift,[-self.distance_to_source,0,0]),
+        self.set_variables_as_attrs(
+            ambient_light, spotlight, shadow, lighthouse,
+            morty, arrow_group,
+            *continual_updates
         )
 
     def morph_into_3d(self):
+        # axes = ThreeDAxes()
+        old_screen = self.screen
+        spotlight = self.spotlight
+        source_point = self.source_point
+        ambient_light = self.ambient_light
+        unit_distance = self.unit_distance
+        light_indicator = self.light_indicator
+        morty = self.morty
+        dr = ambient_light.radius/ambient_light.num_levels
 
-
-        self.play(FadeOut(self.morty))
-
-        axes = ThreeDAxes()
-        self.add(axes)
-
-        phi0 = self.camera.get_phi() # default is 0 degs
-        theta0 = self.camera.get_theta() # default is -90 degs
-        distance0 = self.camera.get_distance()
-
-        phi1 = 60 * DEGREES # angle from zenith (0 to 180)
-        theta1 = -135 * DEGREES # azimuth (0 to 360)
-        distance1 = distance0
-        target_point = self.camera.get_spherical_coords(phi1, theta1, distance1)
-
-        dphi = phi1 - phi0
-        dtheta = theta1 - theta0
-
-        camera_target_point = target_point # self.camera.get_spherical_coords(45 * DEGREES, -60 * DEGREES)
-        projection_direction = self.camera.spherical_coords_to_point(phi1,theta1, 1)
-
-        new_screen0 = Rectangle(height = self.screen_height,
-            width = 0.1, stroke_color = RED, fill_color = RED, fill_opacity = 1)
-        new_screen0.rotate(TAU/4,axis = DOWN)
-        new_screen0.move_to(self.screen.get_center())
-        self.add(new_screen0)
-        self.remove(self.screen)
-        self.light_source.set_screen(new_screen0)
-
-        self.light_source.set_camera(self.camera)
-
-
-        new_screen = Rectangle(height = self.screen_height,
-            width = self.screen_height, stroke_color = RED, fill_color = RED, fill_opacity = 1)
-        new_screen.rotate(TAU/4,axis = DOWN)
-        new_screen.move_to(self.screen.get_center())
-
-        self.add_foreground_mobject(self.ambient_light)
-        self.add_foreground_mobject(self.spotlight)
-        self.add_foreground_mobject(self.light_source.shadow)
-
-        self.play(
-             ApplyMethod(self.camera.rotation_mobject.move_to, camera_target_point),
-             
+        new_screen = Square(
+            side_length = self.screen_height,
+            stroke_color = WHITE,
+            stroke_width = 1,
+            fill_color = WHITE,
+            fill_opacity = 0.5
         )
-        self.remove(self.spotlight)
+        new_screen.rotate(TAU/4, UP)
+        new_screen.move_to(old_screen, IN)
+        old_screen.fade(1)
+        screen_group = VGroup(old_screen, new_screen)
 
-        self.play(Transform(new_screen0,new_screen))
+        cone = VGroup(*[VGroup() for x in range(4)])
+        cone.set_stroke(width = 0)
+        cone.set_fill(YELLOW, opacity = 0.5)
+        corner_directions = [OUT+UP, OUT+DOWN, IN+DOWN, IN+UP]
+        def update_cone(cone):
+            corners = map(new_screen.get_corner, corner_directions)
+            distance = np.linalg.norm(old_screen.get_reference_point() - self.source_point)
+            n_parts = np.ceil(distance/dr)
+            alphas = np.linspace(0, 1, n_parts+1)
+            for face, (c1, c2) in zip(cone, adjacent_pairs(corners)):
+                face.submobjects = []
+                for a1, a2 in zip(alphas, alphas[1:]):
+                    face.add(Polygon(
+                        interpolate(source_point, c1, a1),
+                        interpolate(source_point, c1, a2),
+                        interpolate(source_point, c2, a2),
+                        interpolate(source_point, c2, a1),
+                        fill_color = YELLOW,
+                        fill_opacity = ambient_light.opacity_function(a1*distance),
+                        stroke_width = 0
+                    ))
+        cone_update_anim = ContinualUpdateFromFunc(cone, update_cone)
+        cone_update_anim.update(0)
 
+        self.remove(self.spotlight_update, self.light_indicator_update)
+        self.add(
+            ContinualAnimation(new_screen),
+            cone_update_anim
+        )
+        self.remove(spotlight)
+        self.move_camera(
+            phi = 60*DEGREES,
+            theta = -145*DEGREES,
+            added_anims = [
+                # ApplyMethod(
+                #     old_screen.scale, 1.8, {"about_edge" : DOWN},
+                #     run_time = 2,
+                # ),
+                ApplyFunction(
+                    lambda m : m.fade(1).shift(1.5*DOWN),
+                    light_indicator,
+                    remover = True
+                ),
+                FadeOut(morty)
+            ],
+            run_time = 2,
+        )
+        self.wait()
+        self.screen = screen_group
+        self.shift_by_distance(1)
+        self.shift_by_distance(-1)
         self.wait()
 
-        self.unit_screen = new_screen0 # better name
+        ## Create screen copies
+        screen_copy = new_screen.copy()
+        four_copies = VGroup(*[new_screen.copy() for x in range(4)])
+        nine_copies = VGroup(*[new_screen.copy() for x in range(9)])
+        def update_four_copies(four_copies):
+            for mob, corner_direction in zip(four_copies, corner_directions):
+                mob.move_to(new_screen, corner_direction)
+        four_copies_update_anim = UpdateFromFunc(four_copies, update_four_copies)
+        edge_directions = [
+            UP, UP+OUT, OUT, DOWN+OUT, DOWN, DOWN+IN, IN, UP+IN, ORIGIN
+        ]
+        def update_nine_copies(nine_copies):
+            for mob, corner_direction in zip(nine_copies, edge_directions):
+                mob.move_to(new_screen, corner_direction)
+        nine_copies_update_anim = UpdateFromFunc(nine_copies, update_nine_copies)
 
+        three_arrow = DoubleArrow(
+            source_point + 4*DOWN,
+            source_point + 4*DOWN + 3*unit_distance*RIGHT,
+            buff = 0,
+            color = WHITE
+        )
+        three = Integer(3)
+        three.next_to(three_arrow, DOWN)
 
-
-    def prove_inverse_square_law(self):
-
-        def orientate(mob):
-            mob.move_to(self.unit_screen)
-            mob.rotate(TAU/4, axis = LEFT)
-            mob.rotate(TAU/4, axis = OUT)
-            mob.rotate(TAU/2, axis = LEFT)
-            return mob
-
-        unit_screen_copy = self.unit_screen.copy()
-        fourfold_screen = self.unit_screen.copy()
-        fourfold_screen.scale(2,about_point = self.light_source.get_source_point())
-
-        self.remove(self.spotlight)
-
-
-        reading1 = TexMobject("1")
-        orientate(reading1)
-
-        self.play(FadeIn(reading1))
+        new_screen.fade(1)
+        self.add(
+            ContinualAnimation(screen_copy),
+            ContinualAnimation(four_copies),
+        )
+        self.play(
+            screen_group.scale, 2, {"about_edge" : IN + DOWN},
+            screen_group.shift, unit_distance*RIGHT,
+            four_copies_update_anim,
+            screen_copy.shift, 0.25*OUT, #WHY?
+            run_time = 2,
+        )
         self.wait()
-        self.play(FadeOut(reading1))
-        
-
-        self.play(
-            Transform(self.unit_screen, fourfold_screen)
+        self.move_camera(
+            phi = 75*DEGREES,
+            theta = -155*DEGREES,
+            distance = 7,
         )
-
-        reading21 = TexMobject("{1\over 4}").scale(0.8)
-        orientate(reading21)
-        reading22 = reading21.deepcopy()
-        reading23 = reading21.deepcopy()
-        reading24 = reading21.deepcopy()
-        reading21.shift(0.5*OUT + 0.5*UP)
-        reading22.shift(0.5*OUT + 0.5*DOWN)
-        reading23.shift(0.5*IN + 0.5*UP)
-        reading24.shift(0.5*IN + 0.5*DOWN)
-
-
-        corners = fourfold_screen.get_anchors()
-        midpoint1 = (corners[0] + corners[1])/2
-        midpoint2 = (corners[1] + corners[2])/2
-        midpoint3 = (corners[2] + corners[3])/2
-        midpoint4 = (corners[3] + corners[0])/2
-        midline1 = Line(midpoint1, midpoint3)
-        midline2 = Line(midpoint2, midpoint4)
-
+        self.begin_ambient_camera_rotation(rate = -0.01)
+        self.add(ContinualAnimation(nine_copies))
         self.play(
-            ShowCreation(midline1),
-            ShowCreation(midline2)
+            screen_group.scale, 3./2, {"about_edge" : IN + DOWN},
+            screen_group.shift, unit_distance*RIGHT,
+            nine_copies_update_anim,
+            UpdateFromAlphaFunc(
+                nine_copies, 
+                lambda nc, a : nc.set_stroke(width = a).set_fill(opacity = 0.5*a)
+            ),
+            GrowFromPoint(three_arrow, three_arrow.get_left()),
+            Write(three, rate_func = squish_rate_func(smooth, 0.5, 1)),
+            run_time = 2,
         )
-
-        self.play(
-            FadeIn(reading21),
-            FadeIn(reading22),
-            FadeIn(reading23),
-            FadeIn(reading24),
-        )
-
         self.wait()
 
-        self.play(
-            FadeOut(reading21),
-            FadeOut(reading22),
-            FadeOut(reading23),
-            FadeOut(reading24),
-            FadeOut(midline1),
-            FadeOut(midline2)
-        )
 
-        ninefold_screen = unit_screen_copy.copy()
-        ninefold_screen.scale(3,about_point = self.light_source.get_source_point())
+    ###
 
-        self.play(
-            Transform(self.unit_screen, ninefold_screen)
-        )
+    def shift_by_distance(self, distance, *added_anims):
+        anims = [
+            self.screen.shift, self.unit_distance*distance*RIGHT,
+        ]
+        if self.morty in self.mobjects:
+            anims.append(MaintainPositionRelativeTo(self.morty, self.screen))
+        anims += added_anims
+        self.play(*anims, run_time = 2)
 
-        reading31 = TexMobject("{1\over 9}").scale(0.8)
-        orientate(reading31)
-        reading32 = reading31.deepcopy()
-        reading33 = reading31.deepcopy()
-        reading34 = reading31.deepcopy()
-        reading35 = reading31.deepcopy()
-        reading36 = reading31.deepcopy()
-        reading37 = reading31.deepcopy()
-        reading38 = reading31.deepcopy()
-        reading39 = reading31.deepcopy()
-        reading31.shift(IN + UP)
-        reading32.shift(IN)
-        reading33.shift(IN + DOWN)
-        reading34.shift(UP)
-        reading35.shift(ORIGIN)
-        reading36.shift(DOWN)
-        reading37.shift(OUT + UP)
-        reading38.shift(OUT)
-        reading39.shift(OUT + DOWN)
-
-        corners = ninefold_screen.get_anchors()
-        midpoint11 = (2*corners[0] + corners[1])/3
-        midpoint12 = (corners[0] + 2*corners[1])/3
-        midpoint21 = (2*corners[1] + corners[2])/3
-        midpoint22 = (corners[1] + 2*corners[2])/3
-        midpoint31 = (2*corners[2] + corners[3])/3
-        midpoint32 = (corners[2] + 2*corners[3])/3
-        midpoint41 = (2*corners[3] + corners[0])/3
-        midpoint42 = (corners[3] + 2*corners[0])/3
-        midline11 = Line(midpoint11, midpoint32)
-        midline12 = Line(midpoint12, midpoint31)
-        midline21 = Line(midpoint21, midpoint42)
-        midline22 = Line(midpoint22, midpoint41)
-
-        self.play(
-            ShowCreation(midline11),
-            ShowCreation(midline12),
-            ShowCreation(midline21),
-            ShowCreation(midline22),
-        )
-
-        self.play(
-            FadeIn(reading31),
-            FadeIn(reading32),
-            FadeIn(reading33),
-            FadeIn(reading34),
-            FadeIn(reading35),
-            FadeIn(reading36),
-            FadeIn(reading37),
-            FadeIn(reading38),
-            FadeIn(reading39),
-        )
 
 class IndicatorScalingScene(Scene):
 
