@@ -92,8 +92,10 @@ class AngleUpdater(ContinualAnimation):
         new_arc.generate_points()
         new_arc.move_arc_center_to(self.spotlight.get_source_point())
         self.angle_arc.points = new_arc.points
-        self.angle_arc.add_tip(tip_length = ARC_TIP_LENGTH,
-            at_start = True, at_end = True)
+        self.angle_arc.add_tip(
+            tip_length = ARC_TIP_LENGTH,
+            at_start = True, at_end = True
+        )
 
 class LightIndicator(Mobject):
     CONFIG = {
@@ -939,6 +941,7 @@ class FirstLighthouseScene(PiCreatureScene):
             lag_ratio = 0.1,
             rate_func = rush_into,
         ), Animation(lighthouses))
+        self.wait()
 
         self.light_sources = light_sources
 
@@ -1120,55 +1123,47 @@ class ThatJustSeemsUseless(TeacherStudentsScene):
         )
         self.wait()
 
-class SingleLighthouseScene(PiCreatureScene):
-
+class AskAboutBrightness(TeacherStudentsScene):
     def construct(self):
+        self.student_says(
+            "What do you mean \\\\ by ``brightness''?"
+        )
+        self.play(self.teacher.change, "happy")
+        self.wait(3)
 
+class IntroduceScreen(Scene):
+    CONFIG = {
+        "num_levels" : 100,
+        "radius" : 10,
+        "num_rays" : 250,
+        "min_ray_angle" : 0,
+        "max_ray_angle" : TAU,
+    }
+    def construct(self):
         self.setup_elements()
         self.setup_angle() # spotlight and angle msmt change when screen rotates
         self.rotate_screen()
-        self.morph_lighthouse_into_sun()
-
+        # self.morph_lighthouse_into_sun()
 
     def setup_elements(self):
-
-        self.remove(self.get_primary_pi_creature())
-
         SCREEN_SIZE = 3.0
-        DISTANCE_FROM_LIGHTHOUSE = 10.0
-        source_point = [-DISTANCE_FROM_LIGHTHOUSE/2,0,0]
-        observer_point = [DISTANCE_FROM_LIGHTHOUSE/2,0,0]
-
+        source_point = self.source_point = 2.5*LEFT
+        observer_point = 3.5*RIGHT
         # Light source
 
-        self.light_source = LightSource(
+        light_source = self.light_source = LightSource(
             opacity_function = inverse_quadratic(1,2,1),
-            num_levels = NUM_LEVELS,
-            radius = 10,
-            max_opacity_ambient = AMBIENT_FULL
+            num_levels = self.num_levels,
+            radius = self.radius,
+            max_opacity_ambient = AMBIENT_FULL,
         )
 
-        self.light_source.move_source_to(source_point)
-
-
-        # Pi Creature
-
-        morty = self.get_primary_pi_creature()
-        morty.scale(0.5)
-        morty.move_to(observer_point)
-        morty.shift(2*OUT)
-        self.add_foreground_mobject(morty)
-
-        self.add(self.light_source.lighthouse)
-
-        self.play(
-            SwitchOn(self.light_source.ambient_light)
-        )
+        light_source.move_source_to(source_point)
 
         # Screen
 
-        self.screen = Rectangle(
-            width = 0.1,
+        screen = self.screen = Rectangle(
+            width = 0.05,
             height = 2,
             mark_paths_closed = True,
             fill_color = WHITE,
@@ -1176,70 +1171,105 @@ class SingleLighthouseScene(PiCreatureScene):
             stroke_width = 0.0
         )
 
-        self.screen.rotate(-TAU/6)
-        self.screen.next_to(morty,LEFT)
+        screen.next_to(observer_point, LEFT)
 
-        self.light_source.set_screen(self.screen)
-
-        # Animations
-
-        self.play(FadeIn(self.screen))
-
-        self.light_source.set_max_opacity_spotlight(0.001)
-        self.add(self.light_source.spotlight)
-
-        self.screen_tracker = ScreenTracker(self.light_source)
-        self.add(self.screen_tracker)
-
-        self.wait()
-
-
-        # just calling .dim_ambient via ApplyMethod does not work, why?
-        dimmed_ambient_light = self.light_source.ambient_light.deepcopy()
-        dimmed_ambient_light.dimming(AMBIENT_DIMMED)
-
-        self.play(
-            Transform(self.light_source.ambient_light,dimmed_ambient_light),
-            self.light_source.set_max_opacity_spotlight,1.0,
-            FadeIn(self.light_source.shadow)
+        screen_label = TextMobject("Screen")
+        screen_label.next_to(screen, UP+LEFT)
+        screen_arrow = Arrow(
+            screen_label.get_bottom(),
+            screen.get_center(),
         )
 
-        self.add_foreground_mobject(morty)
+        # Pi creature
+        morty = Mortimer()
+        morty.shift(screen.get_center() - morty.eyes.get_left())
+        morty.look_at(source_point)
 
+        # Camera
+        camera = SVGMobject(file_name = "camera")
+        camera.rotate(TAU/4)
+        camera.scale_to_fit_height(1.5)
+        camera.move_to(morty.eyes, LEFT)
 
+        # Animations
+        light_source.set_max_opacity_spotlight(0.001)
+        screen_tracker = self.screen_tracker = ScreenTracker(light_source)
 
+        self.add(light_source.lighthouse)
+        self.play(SwitchOn(light_source.ambient_light))
+        self.play(
+            Write(screen_label),
+            GrowArrow(screen_arrow),
+            FadeIn(screen)
+        )
+        self.wait()
+        self.play(*map(FadeOut, [screen_label, screen_arrow]))
+        screen.save_state()
+        self.play(
+            FadeIn(morty),
+            screen.match_height, morty.eyes,
+            screen.next_to, morty.eyes, LEFT, SMALL_BUFF
+        )
+        self.play(Blink(morty))
+        self.play(
+            FadeOut(morty),
+            FadeIn(camera),
+            screen.scale, 2, {"about_edge" : UP},
+        )
+        self.wait()
+        self.play(
+            FadeOut(camera),
+            screen.restore,
+        )
+
+        light_source.set_screen(screen)
+        light_source.spotlight.opacity_function = lambda r : 0.2/(r+1)
+        screen_tracker.update(0)
+
+        ## Ask about proportion
+        self.add_foreground_mobjects(light_source.shadow, screen)
+        self.shoot_rays()
+
+        ##
+        self.play(SwitchOn(light_source.spotlight))
 
     def setup_angle(self):
 
         self.wait()
 
-        
-        pointing_screen_at_source = Rotate(self.screen,TAU/6)
-        self.play(pointing_screen_at_source)
-
         # angle msmt (arc)
-
         arc_angle = self.light_source.spotlight.opening_angle()
         # draw arc arrows to show the opening angle
-        self.angle_arc = Arc(radius = 5, start_angle = self.light_source.spotlight.start_angle(),
-            angle = self.light_source.spotlight.opening_angle(), tip_length = ARC_TIP_LENGTH)
+        self.angle_arc = Arc(
+            radius = 3, 
+            start_angle = self.light_source.spotlight.start_angle(),
+            angle = self.light_source.spotlight.opening_angle(),
+            tip_length = ARC_TIP_LENGTH
+        )
         #angle_arc.add_tip(at_start = True, at_end = True)
         self.angle_arc.move_arc_center_to(self.light_source.get_source_point())
         
 
         # angle msmt (decimal number)
 
-        self.angle_indicator = DecimalNumber(arc_angle / DEGREES,
+        self.angle_indicator = DecimalNumber(
+            arc_angle / DEGREES,
             num_decimal_points = 0,
-            unit = "^\\circ")
-        self.angle_indicator.next_to(self.angle_arc,RIGHT)
+            unit = "^\\circ"
+        )
+        self.angle_indicator.next_to(self.angle_arc, RIGHT)
 
         angle_update_func = lambda x: self.light_source.spotlight.opening_angle() / DEGREES
-        ca1 = ContinualChangingDecimal(self.angle_indicator,angle_update_func)
-        self.add(ca1)
+        angle_tracker = ContinualChangingDecimal(
+            self.angle_indicator, angle_update_func
+        )
+        self.add(angle_tracker)
 
-        ca2 = AngleUpdater(self.angle_arc, self.light_source.spotlight)
-        self.add(ca2)
+        arc_tracker = AngleUpdater(
+            self.angle_arc, 
+            self.light_source.spotlight
+        )
+        self.add(arc_tracker)
 
         self.play(
             ShowCreation(self.angle_arc),
@@ -1249,162 +1279,182 @@ class SingleLighthouseScene(PiCreatureScene):
         self.wait()
 
     def rotate_screen(self):
-
-
-
-        self.play(Rotate(self.light_source.spotlight.screen, TAU/8))
-        self.play(Rotate(self.light_source.spotlight.screen, -TAU/4))
-        self.play(Rotate(self.light_source.spotlight.screen, TAU/8))
-
-        self.wait()
-
-        self.play(Rotate(self.light_source.spotlight.screen, -TAU/4))
-
-        self.wait()
-
-        self.play(Rotate(self.light_source.spotlight.screen, TAU/4))
-
-### The following is supposed to morph the scene into the Earth scene,
-### but it doesn't work
-
-
-    def morph_lighthouse_into_sun(self):
-
-
-
-        sun_position = [-100,0,0]
-
-
-        self.play(
-            FadeOut(self.angle_arc),
-            FadeOut(self.angle_indicator)
+        self.add(
+            ContinualUpdateFromFunc(
+                self.light_source,
+                lambda m : m.update()
+            ),
         )
+        def rotate_screen(angle):
+            self.play(
+                Rotate(self.light_source.spotlight.screen, angle),
+                Animation(self.angle_indicator),
+                Animation(self.angle_arc),
+                run_time = 2,
+            )
+        for angle in TAU/8, -TAU/4, TAU/8, TAU/6:
+            rotate_screen(angle)
+            self.wait()
+        self.shoot_rays()
+        rotate_screen(-TAU/6)
 
-        self.sun = self.light_source.deepcopy()
+    ##
 
-        #self.sun.num_levels = NUM_LEVELS,
-        #self.sun.set_radius(150)
-        #self.sun.set_max_opacity_ambient(AMBIENT_FULL)
-        
+    def shoot_rays(self, show_creation_kwargs = None):
+        if show_creation_kwargs is None:
+            show_creation_kwargs = {}
+        source_point = self.source_point
+        screen = self.screen
 
+        # Rays 
+        step_size = (self.max_ray_angle - self.min_ray_angle)/self.num_rays
+        rays = VGroup(*[
+            Line(ORIGIN, self.radius*rotate_vector(RIGHT, angle))
+            for angle in np.arange(
+                self.min_ray_angle,
+                self.max_ray_angle,
+                step_size
+            )
+        ])
+        rays.shift(source_point)
+        rays.set_stroke(YELLOW, 1)
+        max_angle = np.max([
+            angle_of_vector(point - source_point)
+            for point in screen.points
+        ])
+        min_angle = np.min([
+            angle_of_vector(point - source_point)
+            for point in screen.points
+        ])
+        for ray in rays:
+            if min_angle <= ray.get_angle() <= max_angle:
+                ray.target_color = GREEN
+            else:
+                ray.target_color = RED
 
-        self.sun.spotlight.change_opacity_function(lambda r: 0.5)
-        self.sun.set_radius(150)
-        self.sun.move_source_to(sun_position)
-
- #       self.sun.update()
-
-   #     self.add(self.sun)
-        # temporarily remove the screen tracker while we move the source
-        #self.remove(self.screen_tracker)
-
-        #print self.sun.spotlight.get_source_point()
-
-        self.play(
-             #self.light_source.spotlight.move_source_to,sun_position,
-             Transform(self.light_source,self.sun)
-        )
-
-        #self.add(ScreenTracker(self.sun))
-
+        self.play(*[
+            ShowCreation(ray, run_time = 3, **show_creation_kwargs)
+            for ray in rays
+        ])
+        self.play(*[
+            ApplyMethod(ray.highlight, ray.target_color)
+            for ray in rays
+        ])
         self.wait()
+        self.play(FadeOut(rays))
 
-class EarthScene(Scene):
-
+class EarthScene(IntroduceScreen):
+    CONFIG = {
+        "screen_height" : 0.5,
+        "screen_thickness" : 0,
+        "radius" : 100 + SPACE_WIDTH,
+        "source_point" : 100*LEFT,
+        "min_ray_angle" : -1.65*DEGREES,
+        "max_ray_angle" : 1.65*DEGREES,
+        "num_rays" : 100,
+    }
     def construct(self):
+        # Earth
+        earth_radius = 3
+        earth = ImageMobject("earth")
+        earth_circle = Circle(radius = earth_radius)
+        earth_circle.to_edge(RIGHT)
+        earth.replace(earth_circle)
 
-        SCREEN_THICKNESS = 10
+        black_rect = Rectangle(
+            height = 2*SPACE_HEIGHT,
+            width = earth_radius + LARGE_BUFF,
+            stroke_width = 0,
+            fill_color = BLACK,
+            fill_opacity = 1
+        )
+        black_rect.move_to(earth.get_center(), LEFT)
 
-        self.screen_height = 2.0
-        self.brightness_rect_height = 1.0
+        self.add_foreground_mobjects(black_rect, earth)
 
         # screen
-        self.screen = VMobject(stroke_color = WHITE, stroke_width = SCREEN_THICKNESS)
-        self.screen.set_points_as_corners([
-            [3,-self.screen_height/2,0],
-            [3,self.screen_height/2,0]
-        ])
+        screen = self.screen = Line(
+            self.screen_height*UP, ORIGIN,
+            stroke_color = WHITE, 
+            stroke_width = self.screen_thickness,
+        )
+        screen.move_to(earth.get_left())
+        screen.generate_target()
+        screen.target.rotate(
+            -60*DEGREES, about_point = earth_circle.get_center()
+        )
 
-        # Earth
-
-        earth_center_x = 2
-        earth_center = [earth_center_x,0,0]
-        earth_radius = 3
-        earth = Circle(radius = earth_radius)
-        earth.move_to(earth_center)
-        #self.remove(self.screen_tracker)
-
-        theta0 = 70 * DEGREES
-        dtheta = 10 * DEGREES
-        theta1 = theta0 + dtheta
-        theta = (theta0 + theta1)/2
-
-        earth.add(self.screen)
-
-        # Morty
-
-        morty = Mortimer().scale(0.5).next_to(self.screen, RIGHT, buff = 1.5)
-        self.add_foreground_mobject(morty)
+        equator_arrow = Vector(
+            DOWN+2*RIGHT, color = WHITE,
+            use_rectangular_stem = False,
+        )
+        equator_arrow.next_to(screen.get_center(), UP+LEFT, SMALL_BUFF)
+        pole_arrow = Vector(
+            UP+3*RIGHT, 
+            color = WHITE,
+            use_rectangular_stem = False,
+            path_arc = -60*DEGREES,
+        )
+        pole_arrow.shift(
+            screen.target.get_center()+SMALL_BUFF*LEFT - \
+            pole_arrow.get_end()
+        )
+        for arrow in equator_arrow, pole_arrow:
+            arrow.pointwise_become_partial(arrow, 0, 0.95)
+        equator_words = TextMobject("Some", "unit of area")
+        pole_words = TextMobject("The same\\\\", "unit of area")
+        pole_words.next_to(pole_arrow.get_start(), DOWN)
+        equator_words.next_to(equator_arrow.get_start(), UP)
 
 
         # Light source (far-away Sun)
 
-        sun_position = [-100,0,0]
-
-        self.sun = LightSource(
+        sun = sun = LightSource(
             opacity_function = lambda r : 0.5,
             max_opacity_ambient = 0,
             max_opacity_spotlight = 0.5,
-            num_levels = NUM_LEVELS,
-            radius = 150,
-            screen = self.screen
+            num_levels = 5,
+            radius = self.radius,
+            screen = screen
         )
+        sun.move_source_to(self.source_point)
+        sunlight = sun.spotlight
+        sunlight.opacity_function = lambda r : 5./(r+1)
 
-        self.sun.move_source_to(sun_position)
-
+        screen_tracker = ScreenTracker(sun)
 
         # Add elements to scene
 
-        self.add(self.sun,self.screen)
-        self.bring_to_back(self.sun.shadow)
-        screen_tracker = ScreenTracker(self.sun)
-
+        self.add(screen)
+        self.play(SwitchOn(
+            sunlight, 
+            rate_func = squish_rate_func(smooth, 0.7, 0.8),
+        ))
         self.add(screen_tracker)
-        
-        self.wait()
-
-        self.play(FadeIn(earth))
-        self.bring_to_back(earth)
-
-        # move screen onto Earth
-        screen_on_earth = self.screen.deepcopy()
-        screen_on_earth.rotate(-theta)
-        screen_on_earth.scale(0.3)
-        screen_on_earth.move_to(np.array([
-            earth_center_x - earth_radius * np.cos(theta),
-            earth_radius * np.sin(theta),
-            0]))
-
-        polar_morty = morty.copy().scale(0.5).next_to(screen_on_earth,DOWN,buff = 0.5)
-
         self.play(
-            Transform(self.screen, screen_on_earth),
-            Transform(morty,polar_morty)
+            Write(equator_words),
+            GrowArrow(equator_arrow)
         )
-
+        self.add_foreground_mobjects(equator_words, equator_arrow)
+        self.shoot_rays(show_creation_kwargs = {
+            "rate_func" : lambda r : interpolate(0.98, 1, smooth(t))
+        })
         self.wait()
-
-
-        tropical_morty = polar_morty.copy()
-        tropical_morty.move_to(np.array([0,0,0]))
-        morty.target = tropical_morty
-
-        # move screen to equator
-
+        # Point to patch
         self.play(
-            Rotate(earth, theta0 + dtheta/2,run_time = 3),
-            MoveToTarget(morty, path_arc = 70*DEGREES, run_time = 3),
+            MoveToTarget(screen),
+            Transform(equator_arrow, pole_arrow),
+            Transform(
+                equator_words, pole_words, 
+                rate_func = squish_rate_func(smooth, 0.6, 1),
+            ),
+            Animation(sunlight),
+            run_time = 3,
         )
+        self.shoot_rays(show_creation_kwargs = {
+            "rate_func" : lambda r : interpolate(0.98, 1, smooth(t))
+        })
+        self.wait()
 
 class ScreenShapingScene(ThreeDScene):
 
