@@ -3596,7 +3596,6 @@ class PondScene(ThreeDScene):
         #self.play(FadeOut(ls0_dot))
         zoom_out_scene(2)
 
-        return
 
         construction_step(2)
         indicator_wiggle()
