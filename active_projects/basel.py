@@ -43,7 +43,7 @@ NUM_CONES = 7 # in first lighthouse scene
 NUM_VISIBLE_CONES = 5 # ibidem
 ARC_TIP_LENGTH = 0.2
 
-NUM_LEVELS = 150
+NUM_LEVELS = 15
 AMBIENT_FULL = 0.8
 AMBIENT_DIMMED = 0.5
 AMBIENT_SCALE = 2.0
@@ -55,6 +55,26 @@ SPOTLIGHT_RADIUS = 20.0
 
 LIGHT_COLOR = YELLOW
 DEGREES = TAU/360
+
+
+BASELINE_YPOS = -2.5
+OBSERVER_POINT = np.array([0,BASELINE_YPOS,0])
+LAKE0_RADIUS = 1.5
+INDICATOR_RADIUS = 0.6
+TICK_SIZE = 0.5
+LIGHTHOUSE_HEIGHT = 0.5
+LAKE_COLOR = BLUE
+LAKE_OPACITY = 0.15
+LAKE_STROKE_WIDTH = 5.0
+LAKE_STROKE_COLOR = BLUE
+TEX_SCALE = 0.8
+DOT_COLOR = BLUE
+
+LIGHT_MAX_INT = 1
+LIGHT_SCALE = 2.5
+LIGHT_CUTOFF = 1
+
+RIGHT_ANGLE_SIZE = 0.3
 
 inverse_power_law = lambda maxint,scale,cutoff,exponent: \
     (lambda r: maxint * (cutoff/(r/scale+cutoff))**exponent)
@@ -2355,6 +2375,7 @@ class InscribedAngleScene(ThreeDScene):
                 self.unzoomable_mobs.shift,v
             )
 
+        self.force_skipping()
 
         self.zoomable_mobs = VMobject()
         self.unzoomable_mobs = VMobject()
@@ -2391,7 +2412,7 @@ class InscribedAngleScene(ThreeDScene):
 
         # first lighthouse
         original_op_func = inverse_quadratic(LIGHT_MAX_INT,AMBIENT_SCALE,LIGHT_CUTOFF)
-        ls0 = LightSource(opacity_function = original_op_func, num_levels = 150)
+        ls0 = LightSource(opacity_function = original_op_func, num_levels = NUM_LEVELS)
         ls0.move_source_to(OBSERVER_POINT + LAKE0_RADIUS * 2 * UP)
         self.zoomable_mobs.add(ls0, ls0.lighthouse, ls0.ambient_light)
 
@@ -2734,6 +2755,7 @@ class InscribedAngleScene(ThreeDScene):
         self.new_legs_2 = []
         self.new_hypotenuses = []
 
+        self.revert_to_original_skipping_status()
 
         construction_step(0)
         indicator_wiggle()
@@ -3046,7 +3068,6 @@ class PondScene(ThreeDScene):
 
         RIGHT_ANGLE_SIZE = 0.3
 
-
         self.cumulated_zoom_factor = 1
 
 
@@ -3293,7 +3314,7 @@ class PondScene(ThreeDScene):
                 return position
 
 
-        def split_light_source(i, step, show_steps = True, run_time = 1):
+        def split_light_source(i, step, show_steps = True, animate = True, run_time = 1):
 
             ls_new_loc1 = position_for_index(i,step + 1)
             ls_new_loc2 = position_for_index(i + 2**step,step + 1)
@@ -3324,7 +3345,9 @@ class PondScene(ThreeDScene):
 
 
             ls2 = ls1.copy()
-            self.add(ls2)
+            if animate == True:
+                self.add(ls2)
+
             self.additional_light_sources.append(ls2)
 
             # check if the light sources are on screen
@@ -3334,7 +3357,7 @@ class PondScene(ThreeDScene):
             onscreen_2 = np.any(np.abs(ls_new_loc2) < 10)
             show_animation = (onscreen_old or onscreen_1 or onscreen_2)
 
-            if show_animation:
+            if show_animation or animate:
                 self.play(
                     ApplyMethod(ls1.move_source_to,ls_new_loc1, run_time = run_time),
                     ApplyMethod(ls2.move_source_to,ls_new_loc2, run_time = run_time),
@@ -3411,66 +3434,94 @@ class PondScene(ThreeDScene):
             self.additional_light_sources = []
             self.new_legs_1 = []
             self.new_legs_2 = []
-            self.new_hypotenuses = [] 
+            self.new_hypotenuses = []
 
-            for i in range(2**n):
-                
-                split_light_source(i,
-                    step = n,
-                    show_steps = show_steps,
-                    run_time = run_time
+            if simultaneous_splitting == False:
+
+                for i in range(2**n):
+                    
+                    split_light_source(i,
+                        step = n,
+                        show_steps = show_steps,
+                        run_time = run_time
+                    )
+
+                    if n == 1 and i == 0:
+                        # show again where the right angles are
+                        A = self.light_sources[0].get_center()
+                        B = self.additional_light_sources[0].get_center()
+                        C = self.obs_dot.get_center()
+
+                        triangle1 = triangle(
+                            A, C, B
+                        )
+                        right_angle1 = right_angle(
+                            A, C, B, size = 2 * RIGHT_ANGLE_SIZE
+                        )
+
+                        self.play(
+                            FadeIn(triangle1),
+                            FadeIn(right_angle1)
+                        )
+
+                        self.wait()
+
+                        self.play(
+                            FadeOut(triangle1),
+                            FadeOut(right_angle1)
+                        )
+
+                        self.wait()
+
+                        H = self.inner_lake.get_center() + self.lake_radius/2 * RIGHT
+                        L = self.outer_lake.get_center()
+                        triangle2 = triangle(
+                            L, H, C
+                        )
+
+                        right_angle2 = right_angle(
+                            L, H, C, size = 2 * RIGHT_ANGLE_SIZE
+                        )
+
+                        self.play(
+                            FadeIn(triangle2),
+                            FadeIn(right_angle2)
+                        )
+
+                        self.wait()
+
+                        self.play(
+                            FadeOut(triangle2),
+                            FadeOut(right_angle2)
+                        )
+
+                        self.wait()
+
+            else: # simultaneous splitting
+
+                old_lake = self.outer_lake.copy()
+                old_ls = self.light_sources.copy()
+                old_ls2 = old_ls.copy()
+                for submob in old_ls2.submobjects:
+                    old_ls.add(submob)
+
+                self.remove(self.outer_lake, self.light_sources)
+                self.add(old_lake, old_ls)
+
+                for i in range(2**n):
+                    split_light_source(i,
+                        step = n,
+                        show_steps = show_steps,
+                        run_time = run_time,
+                        animate = False
+                    )
+
+                self.play(
+                    ReplacementTransform(old_ls, self.light_sources, run_time = run_time),
+                    ReplacementTransform(old_lake, self.outer_lake, run_time = run_time),
                 )
 
-                if n == 1 and i == 0:
-                    # show again where the right angles are
-                    A = self.light_sources[0].get_center()
-                    B = self.additional_light_sources[0].get_center()
-                    C = self.obs_dot.get_center()
 
-                    triangle1 = triangle(
-                        A, C, B
-                    )
-                    right_angle1 = right_angle(
-                        A, C, B, size = 2 * RIGHT_ANGLE_SIZE
-                    )
-
-                    self.play(
-                        FadeIn(triangle1),
-                        FadeIn(right_angle1)
-                    )
-
-                    self.wait()
-
-                    self.play(
-                        FadeOut(triangle1),
-                        FadeOut(right_angle1)
-                    )
-
-                    self.wait()
-
-                    H = self.inner_lake.get_center() + self.lake_radius/2 * RIGHT
-                    L = self.outer_lake.get_center()
-                    triangle2 = triangle(
-                        L, H, C
-                    )
-
-                    right_angle2 = right_angle(
-                        L, H, C, size = 2 * RIGHT_ANGLE_SIZE
-                    )
-
-                    self.play(
-                        FadeIn(triangle2),
-                        FadeIn(right_angle2)
-                    )
-
-                    self.wait()
-
-                    self.play(
-                        FadeOut(triangle2),
-                        FadeOut(right_angle2)
-                    )
-
-                    self.wait()
 
 
             # collect the newly created mobs (in arrays)
@@ -3627,8 +3678,44 @@ class PondScene(ThreeDScene):
         scale = 2**(max_it - 4)
         TEX_SCALE *= scale
 
-        for i in range(3,max_it + 1):
-            construction_step(i, show_steps = False, run_time = 4.0/2**i)
+
+
+        # for i in range(3,max_it + 1):
+        #     construction_step(i, show_steps = False, run_time = 4.0/2**i,
+        #         simultaneous_splitting = True)
+
+
+
+        # simultaneous expansion of light sources from now on
+        self.play(FadeOut(self.inner_lake))
+
+        for n in range(3,max_it + 1):
+
+            new_lake = self.outer_lake.copy().scale(2,about_point = self.obs_dot.get_center())
+            for ls in self.light_sources_array:
+                lsp = ls.copy()
+                self.light_sources.add(lsp)
+                self.add(lsp)
+                self.light_sources_array.append(lsp)
+
+            new_lake_center = new_lake.get_center()
+            new_lake_radius = 0.5 * new_lake.get_width()
+
+            shift_list = (Transform(self.outer_lake,new_lake),)
+
+
+            for i in range(2**n):
+                theta = -TAU/4 + (i + 0.5) * TAU / 2**n
+                v = np.array([np.cos(theta), np.sin(theta),0])
+                pos1 = new_lake_center + new_lake_radius * v
+                pos2 = new_lake_center - new_lake_radius * v
+                shift_list += (self.light_sources.submobjects[i].move_source_to,pos1)
+                shift_list += (self.light_sources.submobjects[i+2**n].move_source_to,pos2)
+
+            self.play(*shift_list)
+
+
+        return
 
         #self.revert_to_original_skipping_status()
 
@@ -3836,8 +3923,8 @@ class FinalSumManipulationScene(PiCreatureScene):
         self.wait()
 
         ls_template = LightSource(
-            radius = 4,
-            num_levels = 40,
+            radius = 1,
+            num_levels = 10,
             max_opacity_ambient = 0.5,
             opacity_function = inverse_quadratic(1,0.75,1)
         )
@@ -3854,14 +3941,18 @@ class FinalSumManipulationScene(PiCreatureScene):
             number_at_center = 0,
             stroke_width = LAKE_STROKE_WIDTH,
             stroke_color = LAKE_STROKE_COLOR,
-            numbers_to_show = odd_range,
+            #numbers_to_show = full_range,
+            number_scale_val = 0.5,
+            numbers_with_elongated_ticks = [],
             unit_size = unit_length,
             tick_frequency = 1,
-            line_to_number_buff = MED_LARGE_BUFF,
-            include_tip = True
+            line_to_number_buff = MED_SMALL_BUFF,
+            include_tip = True,
+            label_direction = UP,
         )
 
         self.number_line1.next_to(2.5 * UP + 3 * LEFT, RIGHT, buff = 0.3)
+        self.number_line1.add_numbers()
 
         odd_lights = VMobject()
         for i in odd_range:
@@ -3871,7 +3962,7 @@ class FinalSumManipulationScene(PiCreatureScene):
             odd_lights.add(ls)
 
         self.play(
-            ShowCreation(self.number_line1),
+            ShowCreation(self.number_line1, run_time = 5),
         )
         self.wait()
 
@@ -3899,6 +3990,7 @@ class FinalSumManipulationScene(PiCreatureScene):
         result1 = TexMobject("{\pi^2\over 8} =", fill_color = LIGHT_COLOR,
             stroke_color = LIGHT_COLOR)
         result1.next_to(self.number_line1, LEFT, buff = 0.5)
+        result1.shift(0.87 * vertical_spacing)
         self.play(Write(result1))
 
 
@@ -3907,6 +3999,7 @@ class FinalSumManipulationScene(PiCreatureScene):
         self.number_line2 = self.number_line1.copy()
         self.number_line2.numbers_to_show = full_range
         self.number_line2.shift(2 * vertical_spacing)
+        self.number_line2.add_numbers()
 
         full_lights = VMobject()
 
@@ -3918,18 +4011,30 @@ class FinalSumManipulationScene(PiCreatureScene):
             full_lights.add(ls)
 
         self.play(
-            ShowCreation(self.number_line2),
+            ShowCreation(self.number_line2, run_time = 5),
         )
         self.wait()
 
 
+        full_lighthouses = VMobject()
+        full_ambient_lights = VMobject()
+        for ls in full_lights:
+            full_lighthouses.add(ls.lighthouse)
+            full_ambient_lights.add(ls.ambient_light)
 
+        self.play(
+            LaggedStart(FadeIn, full_lighthouses, lag_ratio = 0.2, run_time = 3),
+        )
 
-        for ls in full_lights.submobjects:
-            self.play(
-                FadeIn(ls.lighthouse, run_time = 0.1),#5 * switch_on_time),
-                SwitchOn(ls.ambient_light, run_time = 0.1)#5 * switch_on_time),
-            )
+        self.play(
+            LaggedStart(SwitchOn, full_ambient_lights, lag_ratio = 0.2, run_time = 3)
+        )
+
+        # for ls in full_lights.submobjects:
+        #     self.play(
+        #         FadeIn(ls.lighthouse, run_time = 0.1),#5 * switch_on_time),
+        #         SwitchOn(ls.ambient_light, run_time = 0.1)#5 * switch_on_time),
+        #     )
 
 
 
@@ -3964,13 +4069,13 @@ class FinalSumManipulationScene(PiCreatureScene):
 
 
         self.play(
-            Transform(even_lights,full_lights)
+            Transform(even_lights,full_lights, run_time = 2)
         )
 
 
         self.wait()
 
-        for i in range(5):
+        for i in range(6):
             self.play(
                 Transform(even_lights[i], even_lights_copy[i])
             )
@@ -4013,11 +4118,6 @@ class FinalSumManipulationScene(PiCreatureScene):
         four_thirds_label.scale(0.7)
         four_thirds_label.next_to(four_thirds_arrow.get_center(), LEFT)
 
-        self.play(
-            ReplacementTransform(three_quarters_arrow, four_thirds_arrow),
-            ReplacementTransform(three_quarters_label, four_thirds_label)
-        )
-        self.wait()
 
         self.play(
             FadeOut(quarter_label),
@@ -4028,6 +4128,11 @@ class FinalSumManipulationScene(PiCreatureScene):
         )
         self.wait()
 
+        self.play(
+            ReplacementTransform(three_quarters_arrow, four_thirds_arrow),
+            ReplacementTransform(three_quarters_label, four_thirds_label)
+        )
+        self.wait()
 
         full_terms = VMobject()
         for i in range(1,8): #full_range:
@@ -4041,6 +4146,8 @@ class FinalSumManipulationScene(PiCreatureScene):
             term.move_to(self.number_line2.number_to_point(i))
             full_terms.add(term)
 
+        #return
+
         self.play(
             FadeOut(self.number_line1),
             FadeOut(odd_lights),
@@ -4053,6 +4160,7 @@ class FinalSumManipulationScene(PiCreatureScene):
         v = (sum_vertical_spacing + 0.5) * UP
         self.play(
             odd_terms.shift, v,
+            result1.shift, v,
             four_thirds_arrow.shift, v,
             four_thirds_label.shift, v,
             odd_terms.shift, v,
@@ -4197,6 +4305,47 @@ class ArcHighlightOverlayScene(Scene):
 
 
 
+
+class ThumbnailScene(Scene):
+
+    def construct(self):
+
+        equation = TexMobject("1+{1\over 4}+{1\over 9}+{1\over 16}+{1\over 25}+\dots")
+        equation.scale(2.)
+        equation.to_edge(UP)
+        q_mark = TexMobject("?").scale(5)
+        q_mark.next_to(equation)
+
+        lake_radius = 2
+        lake_center = DOWN
+        op_scale = 0.5
+
+        lake = Circle(
+            fill_color = LAKE_COLOR, 
+            fill_opacity = LAKE_OPACITY, 
+            radius = lake_radius,
+            stroke_color = LAKE_STROKE_COLOR, 
+            stroke_width = LAKE_STROKE_WIDTH,
+        )
+        lake.move_to(lake_center)
+
+        for i in range(8):
+            theta = -TAU/4 + (i + 0.5) * TAU/8
+            pos = lake_center + lake_radius * np.array([np.cos(theta), np.sin(theta), 0])
+            ls = LightSource(
+                radius = 5.0, 
+                num_levels = 100,
+                max_opacity_ambient = 0.8,
+                opacity_function = inverse_quadratic(1,op_scale,1)
+            )
+            ls.move_source_to(pos)
+            lake.add(ls.ambient_light, ls.lighthouse)
+
+        self.add(lake)
+
+        self.add(equation) #, q_mark)
+
+        self.wait()
 
 
 
