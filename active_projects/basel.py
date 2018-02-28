@@ -3070,6 +3070,7 @@ class PondScene(ThreeDScene):
 
         self.cumulated_zoom_factor = 1
 
+        #self.force_skipping()
 
 
         def right_angle(pointA, pointB, pointC, size = 1):
@@ -3163,7 +3164,7 @@ class PondScene(ThreeDScene):
         self.zoomable_mobs.add(lake0)
 
         # Morty and indicator
-        morty = Randolph().scale(0.3)
+        morty = Randolph(color = MAROON_D).scale(0.3)
         morty.next_to(OBSERVER_POINT,DOWN)
         indicator = LightIndicator(precision = 2,
             radius = INDICATOR_RADIUS,
@@ -3436,6 +3437,7 @@ class PondScene(ThreeDScene):
             self.new_legs_2 = []
             self.new_hypotenuses = []
 
+            # WE ALWAYS USE THIS CASE BRANCH
             if simultaneous_splitting == False:
 
                 for i in range(2**n):
@@ -3497,6 +3499,9 @@ class PondScene(ThreeDScene):
 
                         self.wait()
 
+
+
+            # WE DON'T USE THIS CASE BRANCH ANYMORE
             else: # simultaneous splitting
 
                 old_lake = self.outer_lake.copy()
@@ -3685,14 +3690,16 @@ class PondScene(ThreeDScene):
         #         simultaneous_splitting = True)
 
 
+        #print "starting simultaneous expansion"
 
         # simultaneous expansion of light sources from now on
         self.play(FadeOut(self.inner_lake))
 
         for n in range(3,max_it + 1):
-
+            print "working on n = ", n, "..."
             new_lake = self.outer_lake.copy().scale(2,about_point = self.obs_dot.get_center())
-            for ls in self.light_sources_array:
+            for (i,ls) in enumerate(self.light_sources_array[:2**n]):
+                #print i
                 lsp = ls.copy()
                 self.light_sources.add(lsp)
                 self.add(lsp)
@@ -3701,26 +3708,32 @@ class PondScene(ThreeDScene):
             new_lake_center = new_lake.get_center()
             new_lake_radius = 0.5 * new_lake.get_width()
 
-            shift_list = (Transform(self.outer_lake,new_lake),)
-
+            shift_list = [Transform(self.outer_lake,new_lake)]
+            #print shift_list
 
             for i in range(2**n):
-                theta = -TAU/4 + (i + 0.5) * TAU / 2**n
+                #print "==========="
+                #print i
+                theta = -TAU/4 + (i + 0.5) * TAU / 2**(n+1)
                 v = np.array([np.cos(theta), np.sin(theta),0])
                 pos1 = new_lake_center + new_lake_radius * v
                 pos2 = new_lake_center - new_lake_radius * v
-                shift_list += (self.light_sources.submobjects[i].move_source_to,pos1)
-                shift_list += (self.light_sources.submobjects[i+2**n].move_source_to,pos2)
+                ls1 = self.light_sources.submobjects[i]
+                ls2 = self.light_sources.submobjects[i+2**n]
+                shift_list.append(ls1.move_source_to)
+                shift_list.append(pos1)
+                shift_list.append(ls2.move_source_to)
+                shift_list.append(pos2)
+                #print shift_list
 
             self.play(*shift_list)
+            print "...done"
 
-
-        return
 
         #self.revert_to_original_skipping_status()
 
         # Now create a straight number line and transform into it
-        MAX_N = 17
+        MAX_N = 7
 
         origin_point = self.obs_dot.get_center()
 
@@ -3731,16 +3744,17 @@ class PondScene(ThreeDScene):
             number_at_center = 0,
             stroke_width = LAKE_STROKE_WIDTH,
             stroke_color = LAKE_STROKE_COLOR,
-            #numbers_with_elongated_ticks = range(-MAX_N,MAX_N + 1),
-            numbers_to_show = range(-MAX_N,MAX_N + 1,2),
+            numbers_with_elongated_ticks = [],
+            numbers_to_show = range(-MAX_N,MAX_N + 1),#,2),
             unit_size = LAKE0_RADIUS * TAU/4 / 2 * scale,
             tick_frequency = 1,
+            tick_size = LAKE_STROKE_WIDTH,
+            number_scale_val = 3,
             line_to_number_buff = LARGE_BUFF,
             label_direction = UP,
         ).shift(scale * 2.5 * DOWN)
 
-        self.number_line.label_direction = DOWN
-
+        self.number_line.tick_marks.fade(1)
         self.number_line_labels = self.number_line.get_number_mobjects()
         self.wait()
 
@@ -3757,25 +3771,29 @@ class PondScene(ThreeDScene):
 
         self.add(pond_sources)
         self.remove(self.light_sources)
+        for ls in self.light_sources_array:
+            self.remove(ls)
 
         self.outer_lake.rotate(TAU/8)
 
         # open sea
         open_sea = Rectangle(
-            width = 20 * scale,
-            height = 10 * scale,
+            width = 200 * scale,
+            height = 100 * scale,
             stroke_width = LAKE_STROKE_WIDTH,
             stroke_color = LAKE_STROKE_COLOR,
             fill_color = LAKE_COLOR,
             fill_opacity = LAKE_OPACITY,
         ).flip().next_to(origin_point,UP,buff = 0)
 
-
+        self.revert_to_original_skipping_status()
 
         self.play(
             ReplacementTransform(pond_sources,nl_sources),
+            #FadeOut(pond_sources),
+            #FadeIn(nl_sources),
             ReplacementTransform(self.outer_lake,open_sea),
-            FadeOut(self.inner_lake)
+            #FadeOut(self.inner_lake)
         )
         self.play(FadeIn(self.number_line))
 
@@ -3797,11 +3815,12 @@ class PondScene(ThreeDScene):
         origin_point = self.number_line.number_to_point(0)
         #self.remove(self.obs_dot)
         self.play(
-            indicator.move_to, origin_point + scale * UP,
-            indicator_reading.move_to, origin_point + scale * UP,
+            indicator.move_to, origin_point + scale * UP + 2 * UP,
+            indicator_reading.move_to, origin_point + scale * UP + 2 * UP,
             FadeOut(open_sea),
             FadeOut(morty),
-            FadeIn(self.number_line_labels)
+            FadeIn(self.number_line_labels),
+            FadeIn(self.number_line.tick_marks),
         )
 
         two_sided_sum = TexMobject("\dots", "+", "{1\over (-11)^2}",\
@@ -3821,13 +3840,20 @@ class PondScene(ThreeDScene):
 
         self.play(Write(two_sided_sum))
 
-        for i in range(MAX_N - 5, MAX_N):
-            self.remove(nl_sources.submobjects[i].ambient_light)
-        
-        for i in range(MAX_N, MAX_N + 5):
-            self.add_foreground_mobject(nl_sources.submobjects[i].ambient_light)
+        self.wait()
 
-        self.wait()        
+        for ls in nl_sources.submobjects:
+            if ls.get_source_point()[0] < 0:
+                self.remove_foreground_mobject(ls.ambient_light)
+                self.remove(ls.ambient_light)
+            else:
+                self.add_foreground_mobject(ls.ambient_light)
+
+        for label in self.number_line_labels.submobjects:
+            if label.get_center()[0] <= 0:
+                self.remove(label)
+
+
 
         covering_rectangle = Rectangle(
             width = SPACE_WIDTH * scale,
@@ -3837,8 +3863,8 @@ class PondScene(ThreeDScene):
             fill_opacity = 1,
         )
         covering_rectangle.next_to(ORIGIN,LEFT,buff = 0)
-        for i in range(10):
-            self.add_foreground_mobject(nl_sources.submobjects[i])
+        #for i in range(10):
+        #    self.add_foreground_mobject(nl_sources.submobjects[i])
 
         self.add_foreground_mobject(indicator)
         self.add_foreground_mobject(indicator_reading)
@@ -3869,7 +3895,7 @@ class PondScene(ThreeDScene):
         self.revert_to_original_skipping_status()
 
         # show Randy admiring the result
-        randy = Randolph(color = MAROON_E).scale(scale).move_to(2*scale*DOWN+5*scale*LEFT)
+        randy = Randolph(color = MAROON_D).scale(scale).move_to(2*scale*DOWN+5*scale*LEFT)
         self.play(FadeIn(randy))
         self.play(randy.change,"happy")
         self.play(randy.change,"hooray")
@@ -3917,8 +3943,8 @@ class FinalSumManipulationScene(PiCreatureScene):
         sum_vertical_spacing = 1.5
 
         randy = self.get_primary_pi_creature()
-        randy.highlight(MAROON_E)
-        randy.color = MAROON_E
+        randy.highlight(MAROON_D)
+        randy.color = MAROON_D
         randy.scale(0.7).flip().to_edge(DOWN + LEFT)
         self.wait()
 
@@ -4311,14 +4337,17 @@ class ThumbnailScene(Scene):
     def construct(self):
 
         equation = TexMobject("1+{1\over 4}+{1\over 9}+{1\over 16}+{1\over 25}+\dots")
-        equation.scale(2.)
-        equation.to_edge(UP)
-        q_mark = TexMobject("?").scale(5)
-        q_mark.next_to(equation)
+        equation.scale(1.5)
+        equation.move_to(1.5 * UP)
+        q_mark = TexMobject("=?", color = LIGHT_COLOR).scale(5)
+        q_mark.next_to(equation, DOWN, buff = 1.5)
+        #equation.move_to(2 * UP)
+        #q_mark = TexMobject("={\pi^2\over 6}", color = LIGHT_COLOR).scale(3)
+        #q_mark.next_to(equation, DOWN, buff = 1)
 
-        lake_radius = 2
-        lake_center = DOWN
-        op_scale = 0.5
+        lake_radius = 6
+        lake_center = ORIGIN
+        op_scale = 0.4
 
         lake = Circle(
             fill_color = LAKE_COLOR, 
@@ -4329,13 +4358,13 @@ class ThumbnailScene(Scene):
         )
         lake.move_to(lake_center)
 
-        for i in range(8):
-            theta = -TAU/4 + (i + 0.5) * TAU/8
+        for i in range(16):
+            theta = -TAU/4 + (i + 0.5) * TAU/16
             pos = lake_center + lake_radius * np.array([np.cos(theta), np.sin(theta), 0])
             ls = LightSource(
-                radius = 5.0, 
-                num_levels = 100,
-                max_opacity_ambient = 0.8,
+                radius = 15.0, 
+                num_levels = 150,
+                max_opacity_ambient = 1.0,
                 opacity_function = inverse_quadratic(1,op_scale,1)
             )
             ls.move_source_to(pos)
@@ -4343,9 +4372,100 @@ class ThumbnailScene(Scene):
 
         self.add(lake)
 
-        self.add(equation) #, q_mark)
+        self.add(equation, q_mark)
 
         self.wait()
+
+
+
+
+class InfiniteCircleScene(PiCreatureScene):
+
+    def construct(self):
+
+        morty = self.get_primary_pi_creature()
+        morty.highlight(MAROON_D).flip()
+        morty.color = MAROON_D
+        morty.scale(0.5).move_to(ORIGIN)
+
+        arrow = Arrow(ORIGIN, 2.4 * RIGHT)
+        dot = Dot(color = BLUE).next_to(arrow)
+        ellipsis = TexMobject("\dots")
+
+        infsum = VGroup()
+        infsum.add(ellipsis.copy())
+
+        for i in range(3):
+            infsum.add(arrow.copy().next_to(infsum.submobjects[-1]))
+            infsum.add(dot.copy().next_to(infsum.submobjects[-1]))
+
+        infsum.add(arrow.copy().next_to(infsum.submobjects[-1]))
+        infsum.add(ellipsis.copy().next_to(infsum.submobjects[-1]))
+
+        infsum.next_to(morty,DOWN, buff = 1)
+
+        self.wait()
+        self.play(
+            LaggedStart(FadeIn,infsum,lag_ratio = 0.2)
+        )
+        self.wait()
+
+        A = infsum.submobjects[-1].get_center() + 0.5 * RIGHT
+        B = A + RIGHT + 1.3 * UP + 0.025 * LEFT
+        right_arc = DashedLine(TAU/4*UP, ORIGIN, stroke_color = YELLOW,
+            stroke_width = 8).apply_complex_function(np.exp)
+        right_arc.rotate(-TAU/4).next_to(infsum, RIGHT).shift(0.5 * UP)
+        right_tip_line = Arrow(B - UP, B, color = WHITE)
+        right_tip_line.add_tip()
+        right_tip = right_tip_line.get_tip()
+        right_tip.set_fill(color = YELLOW)
+        right_arc.add(right_tip)
+        
+
+        C = B + 3.2 * UP
+        right_line = DashedLine(B + 0.2 * DOWN,C + 0.2 * UP, stroke_color = YELLOW,
+            stroke_width = 8)
+
+        ru_arc = right_arc.copy().rotate(angle = TAU/4)
+        ru_arc.remove(ru_arc.submobjects[-1])
+        ru_arc.to_edge(UP+RIGHT, buff = 0.15)
+
+        D = np.array([5.85, 3.85,0])
+        E = np.array([-D[0],D[1],0])
+        up_line = DashedLine(D, E, stroke_color = YELLOW,
+            stroke_width = 8)
+
+        lu_arc = ru_arc.copy().flip().to_edge(LEFT + UP, buff = 0.15)
+        left_line = right_line.copy().flip(axis = RIGHT).to_edge(LEFT, buff = 0.15)
+
+        left_arc = right_arc.copy().rotate(-TAU/4)
+        left_arc.next_to(infsum, LEFT).shift(0.5 * UP + 0.1 * LEFT)
+
+        right_arc.shift(0.2 * RIGHT)
+        right_line.shift(0.2 * RIGHT)
+
+        self.play(FadeIn(right_arc))
+        self.play(ShowCreation(right_line))
+        self.play(FadeIn(ru_arc))
+        self.play(ShowCreation(up_line))
+        self.play(FadeIn(lu_arc))
+        self.play(ShowCreation(left_line))
+        self.play(FadeIn(left_arc))
+
+
+
+        self.wait()
+
+
+
+
+
+
+
+
+
+
+
 
 
 
