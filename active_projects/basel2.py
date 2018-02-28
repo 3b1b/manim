@@ -2483,6 +2483,17 @@ class IPTScene(TwoLightSourcesScene, ZoomedScene):
             self.wait()
 
         # Show spotlight a key point
+        def show_beaming_light(spotlight):
+            triangle = get_spotlight_triangle(spotlight)
+            for x in range(3):
+                anims = []
+                if x > 0:
+                    anims.append(FadeOut(triangle.copy()))
+                anims.append(GrowFromPoint(triangle, triangle.points[0]))
+                self.play(*anims)
+            self.play(FadeOut(triangle))
+            pass
+
         def show_key_point(spotlight, new_point):
             screen = spotlight.screen
             update_spotlight_anim = UpdateFromFunc(spotlight, update_spotlight)
@@ -2490,14 +2501,7 @@ class IPTScene(TwoLightSourcesScene, ZoomedScene):
                 Transform(screen, screen.alt_version),
                 update_spotlight_anim,
             )
-            triangle = get_spotlight_triangle(spotlight)
-            for x in range(3):
-                anims = []
-                if x > 0:
-                    anims.append(FadeOut(triangle.copy()))
-                anims.append(GrowFromPoint(triangle, H))
-                self.play(*anims)
-            self.play(FadeOut(triangle))
+            show_beaming_light(spotlight)
             self.play(screen.restore, update_spotlight_anim)
             self.wait()
             self.play(
@@ -2506,6 +2510,7 @@ class IPTScene(TwoLightSourcesScene, ZoomedScene):
                 update_spotlight_anim,
                 run_time = 2
             )
+            show_beaming_light(spotlight)
             self.wait()
             self.play(
                 lsC.move_source_to, H,
