@@ -56,22 +56,22 @@ inverse_power_law = lambda maxint,scale,cutoff,exponent: \
     (lambda r: maxint * (cutoff/(r/scale+cutoff))**exponent)
 inverse_quadratic = lambda maxint,scale,cutoff: inverse_power_law(maxint,scale,cutoff,2)
 
-A = np.array([5.,-3.,0.])
-B = np.array([-5.,3.,0.])
-C = np.array([-5.,-3.,0.])
-xA = A[0]
-yA = A[1]
-xB = B[0]
-yB = B[1]
-xC = C[0]
-yC = C[1]
+# A = np.array([5.,-3.,0.])
+# B = np.array([-5.,3.,0.])
+# C = np.array([-5.,-3.,0.])
+# xA = A[0]
+# yA = A[1]
+# xB = B[0]
+# yB = B[1]
+# xC = C[0]
+# yC = C[1]
 
 # find the coords of the altitude point H
 # as the solution of a certain LSE
-prelim_matrix = np.array([[yA - yB, xB - xA], [xA - xB, yA - yB]]) # sic
-prelim_vector = np.array([xB * yA - xA * yB, xC * (xA - xB) + yC * (yA - yB)])
-H2 = np.linalg.solve(prelim_matrix,prelim_vector)
-H = np.append(H2, 0.)
+# prelim_matrix = np.array([[yA - yB, xB - xA], [xA - xB, yA - yB]]) # sic
+# prelim_vector = np.array([xB * yA - xA * yB, xC * (xA - xB) + yC * (yA - yB)])
+# H2 = np.linalg.solve(prelim_matrix,prelim_vector)
+# H = np.append(H2, 0.)
 
 class AngleUpdater(ContinualAnimation):
     def __init__(self, angle_arc, spotlight, **kwargs):
@@ -136,7 +136,7 @@ class LightIndicator(Mobject):
         return self
 
     def get_measurement_point(self):
-        if self.measurement_point != None:
+        if self.measurement_point is not None:
             return self.measurement_point
         else:
             return self.get_center()
@@ -1765,15 +1765,13 @@ class ManipulateLightsourceSetups(PiCreatureScene):
     CONFIG = {
         "num_levels" : 100,
         "radius" : 10,
+        "pi_creature_point" : 2*LEFT + 2*DOWN,
     }
     def construct(self):
         unit_distance = 3
 
         # Morty
         morty = self.pi_creature
-        morty.flip()
-        morty.scale(0.5)
-        morty.move_to(2*LEFT + SPACE_HEIGHT*DOWN/2)
         observer_point = morty.eyes[1].get_center()
 
         bubble = ThoughtBubble(height = 3, width = 4, direction = RIGHT)
@@ -1866,182 +1864,287 @@ class ManipulateLightsourceSetups(PiCreatureScene):
         self.play(morty.change, "hooray")
         self.wait(2)
 
-class TwoLightSourcesScene(PiCreatureScene):
+    ##
 
+    def create_pi_creature(self):
+        morty = Mortimer()
+        morty.flip()
+        morty.scale(0.5)
+        morty.move_to(self.pi_creature_point)
+        return morty
+
+class TwoLightSourcesScene(ManipulateLightsourceSetups):
+    CONFIG = {
+        "num_levels" : 200,
+        "radius" : 15,
+        "a" : 9,
+        "b" : 5,
+    }
     def construct(self):
-
         MAX_OPACITY = 0.4
         INDICATOR_RADIUS = 0.6
         OPACITY_FOR_UNIT_INTENSITY = 0.5
+        origin_point = 5*LEFT + 2.5*DOWN
 
-        morty = self.get_primary_pi_creature()
-        morty.scale(0.3).flip()
-        right_pupil = morty.pupils[1]
-        morty.next_to(C, LEFT, buff = 0, submobject_to_align = right_pupil)
 
-        horizontal = VMobject(stroke_width = 1)
-        horizontal.set_points_as_corners([C,A])
-        vertical = VMobject(stroke_width = 1)
-        vertical.set_points_as_corners([C,B])
-
-        self.play(
-            ShowCreation(horizontal),
-            ShowCreation(vertical)
+        #Morty
+        morty = self.pi_creature
+        morty.change("hooray") # From last scen
+        morty.generate_target()
+        morty.target.change("plain")
+        morty.target.scale(0.6)
+        morty.target.next_to(
+            origin_point, LEFT, buff = 0, 
+            submobject_to_align = morty.target.eyes[1]
         )
 
-        indicator = LightIndicator(color = LIGHT_COLOR,
-                radius = INDICATOR_RADIUS,
-                opacity_for_unit_intensity = OPACITY_FOR_UNIT_INTENSITY,
-                show_reading = True,
-                precision = 2
+        #Axes
+        axes = Axes(
+            x_min = -1, x_max = 10.5,
+            y_min = -1, y_max = 6.5,
         )
+        axes.shift(origin_point)
 
-        indicator.next_to(morty,LEFT)
-
-        self.play(
-            Write(indicator)
+        #Important reference points
+        A = axes.coords_to_point(self.a, 0)
+        B = axes.coords_to_point(0, self.b)
+        C = axes.coords_to_point(0, 0)
+        xA = A[0]
+        yA = A[1]
+        xB = B[0]
+        yB = B[1]
+        xC = C[0]
+        yC = C[1]
+        # find the coords of the altitude point H
+        # as the solution of a certain LSE
+        prelim_matrix = np.array([
+            [yA - yB, xB - xA], 
+            [xA - xB, yA - yB]
+        ]) # sic
+        prelim_vector = np.array(
+            [xB * yA - xA * yB, xC * (xA - xB) + yC * (yA - yB)]
         )
+        H2 = np.linalg.solve(prelim_matrix, prelim_vector)
+        H = np.append(H2, 0.)
 
-
-        ls1 = LightSource(radius = 20, num_levels = 50)
-        ls2 = ls1.deepcopy()
-        ls1.move_source_to(A)
-        ls2.move_source_to(B)
-
-        self.play(
-            FadeIn(ls1.lighthouse),
-            FadeIn(ls2.lighthouse),
-            SwitchOn(ls1.ambient_light),
-            SwitchOn(ls2.ambient_light)
+        #Lightsources
+        lsA = LightSource(
+            radius = self.radius, 
+            num_levels = self.num_levels,
+            opacity_function = inverse_power_law(2, 1, 1, 1.5),
         )
+        lsB = lsA.deepcopy()
+        lsA.move_source_to(A)
+        lsB.move_source_to(B)
+        lsC = lsA.deepcopy()
+        lsC.move_source_to(H)
 
-        distance1 = np.linalg.norm(C - ls1.get_source_point())
-        intensity = ls1.ambient_light.opacity_function(distance1) / indicator.opacity_for_unit_intensity
-        distance2 = np.linalg.norm(C - ls2.get_source_point())
-        intensity += ls2.ambient_light.opacity_function(distance2) / indicator.opacity_for_unit_intensity
+        #Lighthouse labels
+        A_label = TextMobject("A")
+        A_label.next_to(lsA.lighthouse, RIGHT)
+        B_label = TextMobject("B")
+        B_label.next_to(lsB.lighthouse, LEFT)
 
-        self.play(
-            UpdateLightIndicator(indicator,intensity)
-        )
+        #Identical lighthouse labels
+        identical_lighthouses_words = TextMobject("All identical \\\\ lighthouses")
+        identical_lighthouses_words.to_corner(UP+RIGHT)
+        identical_lighthouses_words.shift(LEFT)
+        identical_lighthouses_arrows = VGroup(*[
+            Arrow(
+                identical_lighthouses_words.get_bottom(),
+                ls.get_source_point(), 
+                buff = SMALL_BUFF,
+                color = WHITE,
+            )
+            for ls in lsA, lsB, lsC
+        ])
 
-        self.wait()
-
-        ls3 = ls1.deepcopy()
-        ls3.move_to(np.array([6,3.5,0]))
-
-        new_indicator = indicator.copy()
-        new_indicator.light_source = ls3
-        new_indicator.measurement_point = C
-        self.add(new_indicator)
-        self.play(
-            indicator.shift, 2 * UP
-        )
-
-
-
-        #intensity = intensity_for_light_source(ls3)
-
-
-        self.play(
-            SwitchOff(ls1.ambient_light),
-            #FadeOut(ls1.lighthouse),
-            SwitchOff(ls2.ambient_light),
-            #FadeOut(ls2.lighthouse),
-            UpdateLightIndicator(new_indicator,0.0)
-        )
-
-        # create a *continual* animation for the replacement source
-        updater = ContinualLightIndicatorUpdate(new_indicator)
-        self.add(updater)
-
-        self.play(
-            SwitchOn(ls3.ambient_light),
-            FadeIn(ls3.lighthouse),
-            
-        )
-
-        self.wait()
-
-        # move the light source around
-        # TODO: moving along a path arc
-
-        location = np.array([-3,-2.,0.])
-        self.play(ls3.move_source_to,location)
-        location = np.array([6.,1.,0.])
-        self.play(ls3.move_source_to,location)
-        location = np.array([5.,2.,0.])
-        self.play(ls3.move_source_to,location)
-        closer_location = interpolate(location, C, 0.5)
-        self.play(ls3.move_source_to,closer_location)
-        self.play(ls3.move_source_to,location)
-
-        # maybe move in a circle around C using a loop?
-
-
-
-        self.play(ls3.move_source_to,H)
-
-
-
-        # draw lines to complete the geometric picture
-        # and label the lengths
-
-        line_a = VMobject()
-        line_a.set_points_as_corners([B,C])
-        line_b = VMobject()
-        line_b.set_points_as_corners([A,C])
-        line_c = VMobject()
-        line_c.set_points_as_corners([A,B])
-        line_h = VMobject()
-        line_h.set_points_as_corners([H,C])
+        #Lines
+        line_a = Line(C, A)
+        line_a.highlight(BLUE)
+        line_b = Line(C, B)
+        line_b.highlight(RED)
+        line_c = Line(A, B)
+        line_h = Line(H, C)
+        line_h.highlight(GREEN)
 
         label_a = TexMobject("a")
-        label_a.next_to(line_a, LEFT, buff = 0.5)
+        label_a.match_color(line_a)
+        label_a.next_to(line_a, DOWN, buff = SMALL_BUFF)
         label_b = TexMobject("b")
-        label_b.next_to(line_b, DOWN, buff = 0.5)
+        label_b.match_color(line_b)
+        label_b.next_to(line_b, LEFT, buff = SMALL_BUFF)
         label_h = TexMobject("h")
-        label_h.next_to(line_h.get_center(), RIGHT, buff = 0.5)
+        label_h.match_color(line_h)
+        label_h.next_to(line_h.get_center(), RIGHT, buff = SMALL_BUFF)
 
+        perp_mark = VMobject().set_points_as_corners([
+            RIGHT, RIGHT+DOWN, DOWN
+        ])
+        perp_mark.scale(0.25, about_point = ORIGIN)
+        perp_mark.rotate(line_c.get_angle() + TAU/4, about_point = ORIGIN)
+        perp_mark.shift(H)
+        # perp_mark.highlight(BLACK)
+
+        #Indicators
+        indicator = LightIndicator(
+            color = LIGHT_COLOR,
+            radius = INDICATOR_RADIUS,
+            opacity_for_unit_intensity = OPACITY_FOR_UNIT_INTENSITY,
+            show_reading = True,
+            precision = 2,
+        )
+        indicator.next_to(origin_point, UP+LEFT)
+        def update_indicator(indicator):
+            intensity = 0
+            for ls in lsA, lsB, lsC:
+                if ls in self.mobjects:
+                    distance = np.linalg.norm(ls.get_source_point() - origin_point)
+                    d_indensity = fdiv(
+                        3./(distance**2),
+                        indicator.opacity_for_unit_intensity
+                    )
+                    d_indensity *= ls.ambient_light.submobjects[1].get_fill_opacity()
+                    intensity += d_indensity
+            indicator.set_intensity(intensity)
+        indicator_update_anim = ContinualUpdateFromFunc(indicator, update_indicator)
+
+        new_indicator = indicator.copy()
+        new_indicator.light_source = lsC
+        new_indicator.measurement_point = C
+
+        #Note sure what this is...
+        distance1 = np.linalg.norm(origin_point - lsA.get_source_point())
+        intensity = lsA.ambient_light.opacity_function(distance1) / indicator.opacity_for_unit_intensity
+        distance2 = np.linalg.norm(origin_point - lsB.get_source_point())
+        intensity += lsB.ambient_light.opacity_function(distance2) / indicator.opacity_for_unit_intensity
+
+        # IPT Theorem
+        theorem = TexMobject(
+            "{1 \over ", "a^2}", "+", 
+            "{1 \over", "b^2}", "=", "{1 \over","h^2}"
+        )
+        theorem.highlight_by_tex_to_color_map({
+            "a" : line_a.get_color(),
+            "b" : line_b.get_color(),
+            "h" : line_h.get_color(),
+        })
+        theorem_name = TextMobject("Inverse Pythagorean Theorem")
+        theorem_name.to_corner(UP+RIGHT)
+        theorem.next_to(theorem_name, DOWN, buff = MED_LARGE_BUFF)
+        theorem_box = SurroundingRectangle(theorem, color = WHITE)
+
+        #Transition from last_scene
         self.play(
-            ShowCreation(line_a),
-            Write(label_a)
+            ShowCreation(axes, run_time = 2),
+            MoveToTarget(morty),
+            FadeIn(indicator),
         )
 
+        #Move lsC around
+        self.add(lsC)
+        indicator_update_anim.update(0)
+        intensity = indicator.reading.number
         self.play(
-            ShowCreation(line_b),
-            Write(label_b)
+            SwitchOn(lsC.ambient_light),
+            FadeIn(lsC.lighthouse),
+            UpdateFromAlphaFunc(
+                indicator, lambda i, a : i.set_intensity(a*intensity)
+            )
         )
+        self.add(indicator_update_anim)
+        for point in axes.coords_to_point(5, 2), H:
+            self.play(
+                lsC.move_source_to, point,
+                path_arc = TAU/4,
+                run_time = 1.5,
+            )
+        self.wait()
 
-        self.play(
-            ShowCreation(line_c),
-        )
-
+        # Draw line
         self.play(
             ShowCreation(line_h),
-            Write(label_h)
+            morty.change, "pondering"
         )
-
-
-        # state the IPT
-        theorem_location = np.array([3.,2.,0.])
-        theorem = TexMobject("{1\over a^2} + {1\over b^2} = {1\over h^2}")
-        theorem_name = TextMobject("Inverse Pythagorean Theorem")
-        buffer = 1.2
-        theorem_box = Rectangle(width = buffer*theorem.get_width(),
-            height = buffer*theorem.get_height())
-
-        theorem.move_to(theorem_location)
-        theorem_box.move_to(theorem_location)
-        theorem_name.next_to(theorem_box,UP)
-
+        self.wait()
         self.play(
-            Write(theorem),
+            ShowCreation(line_c),
+            ShowCreation(perp_mark)
         )
+        self.wait()
+        self.add_foreground_mobjects(line_c, line_h)
 
+        #Add alternate light_sources
+        for ls in lsA, lsB:
+            ls.save_state()
+            ls.move_to(lsC)
+            ls.fade(1)
+            self.add(ls)
+            self.play(
+                ls.restore, 
+                run_time = 2
+            )
+        self.wait()
+        A_label.save_state()
+        A_label.center().fade(1)
+        self.play(A_label.restore)
+        self.wait()
+        self.play(ReplacementTransform(
+            A_label.copy().fade(1), B_label
+        ))
+        self.wait(2)
+
+        #Compare combined of laA + lsB with lsC
+        rect = SurroundingRectangle(indicator, color = RED)
         self.play(
-            ShowCreation(theorem_box),
+            FadeOut(lsA),
+            FadeOut(lsB),
+        )
+        self.play(ShowCreation(rect))
+        self.play(FadeOut(rect))
+        self.play(FadeOut(lsC))
+        self.add(lsA, lsB)
+        self.play(
+            FadeIn(lsA),
+            FadeIn(lsB),
+        )
+        self.play(ShowCreation(rect))
+        self.play(FadeOut(rect))
+        self.wait(2)
+
+        # All standard lighthouses
+        self.add(lsC)
+        self.play(FadeIn(lsC))
+        self.play(
+            Write(identical_lighthouses_words),
+            LaggedStart(GrowArrow, identical_lighthouses_arrows)
+        )
+        self.wait()
+        self.play(*map(FadeOut, [
+            identical_lighthouses_words,
+            identical_lighthouses_arrows,
+        ]))
+
+        #Show labels of lengths
+        self.play(ShowCreation(line_a), Write(label_a))
+        self.wait()
+        self.play(ShowCreation(line_b), Write(label_b))
+        self.wait()
+        self.play(Write(label_h))
+        self.wait()
+
+        #Write IPT
+        self.play(Write(theorem))
+        self.wait()
+        self.play(
             Write(theorem_name),
+            ShowCreation(theorem_box)
         )
+        self.play(morty.change, "confused")
+        self.wait(2)
+
+
+
 
 class IPTScene1(PiCreatureScene):
 
