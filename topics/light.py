@@ -187,11 +187,12 @@ class LightSource(VMobject):
         self.update_shadow()
 
     def update_lighthouse(self):
-        new_lh = Lighthouse()
-        new_lh.move_to(ORIGIN)
-        new_lh.apply_matrix(self.rotation_matrix())
-        new_lh.shift(self.get_source_point())
-        self.lighthouse.submobjects = new_lh.submobjects
+        self.lighthouse.move_to(self.get_source_point())
+        # new_lh = Lighthouse()
+        # new_lh.move_to(ORIGIN)
+        # new_lh.apply_matrix(self.rotation_matrix())
+        # new_lh.shift(self.get_source_point())
+        # self.lighthouse.submobjects = new_lh.submobjects
 
     def update_ambient(self):
         new_ambient_light = AmbientLight(
@@ -416,7 +417,6 @@ class AmbientLight(VMobject):
 
 
 class Spotlight(VMobject):
-
     CONFIG = {
         "source_point": VectorizedPoint(location = ORIGIN, stroke_width = 0, fill_opacity = 0),
         "opacity_function" : lambda r : 1.0/(r/2+1.0)**2,
@@ -445,13 +445,10 @@ class Spotlight(VMobject):
         w = project_along_vector(point,v)
         return w
 
-
     def get_source_point(self):
         return self.source_point.get_location()
 
-
     def generate_points(self):
-
         self.submobjects = []
 
         self.add(self.source_point)
@@ -466,7 +463,6 @@ class Spotlight(VMobject):
             for r in np.arange(0, self.radius, dr):
                 new_sector = self.new_sector(r,dr,lower_angle,upper_angle)
                 self.add(new_sector)
-
 
     def new_sector(self,r,dr,lower_angle,upper_angle):
         alpha = self.max_opacity * self.opacity_function(r)
@@ -504,7 +500,6 @@ class Spotlight(VMobject):
         else:
             return -absolute_angle
 
-
     def viewing_angles(self,screen):
 
         screen_points = screen.get_anchors()
@@ -531,7 +526,6 @@ class Spotlight(VMobject):
         
         return lower_ray, upper_ray
 
-
     def opening_angle(self):
         l,u = self.viewing_angles(self.screen)
         return u - l
@@ -551,7 +545,6 @@ class Spotlight(VMobject):
         self.update_sectors()
         return self
 
-
     def update_sectors(self):
         if self.screen == None:
             return
@@ -566,7 +559,6 @@ class Spotlight(VMobject):
                 # submob.points = new_submob.points
                 # submob.set_fill(opacity = 10 * self.opacity_function(submob.outer_radius))
                 Transform(submob, new_submob).update(1)
-
 
     def dimming(self,new_alpha):
         old_alpha = self.max_opacity
