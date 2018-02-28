@@ -20,6 +20,7 @@ from topics.number_line import *
 from topics.numerals import *
 #from topics.combinatorics import *
 from scene import Scene
+from scene.zoomed_scene import *
 from camera import Camera
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
@@ -1879,13 +1880,13 @@ class TwoLightSourcesScene(ManipulateLightsourceSetups):
         "radius" : 15,
         "a" : 9,
         "b" : 5,
+        "origin_point" : 5*LEFT + 2.5*DOWN
     }
     def construct(self):
         MAX_OPACITY = 0.4
         INDICATOR_RADIUS = 0.6
         OPACITY_FOR_UNIT_INTENSITY = 0.5
-        origin_point = 5*LEFT + 2.5*DOWN
-
+        origin_point = self.origin_point
 
         #Morty
         morty = self.pi_creature
@@ -1951,7 +1952,7 @@ class TwoLightSourcesScene(ManipulateLightsourceSetups):
         identical_lighthouses_words.shift(LEFT)
         identical_lighthouses_arrows = VGroup(*[
             Arrow(
-                identical_lighthouses_words.get_bottom(),
+                identical_lighthouses_words.get_corner(DOWN+LEFT),
                 ls.get_source_point(), 
                 buff = SMALL_BUFF,
                 color = WHITE,
@@ -2053,6 +2054,7 @@ class TwoLightSourcesScene(ManipulateLightsourceSetups):
             )
         )
         self.add(indicator_update_anim)
+        self.play(Animation(lsC), run_time = 0) #Why is this needed?
         for point in axes.coords_to_point(5, 2), H:
             self.play(
                 lsC.move_source_to, point,
@@ -2143,11 +2145,393 @@ class TwoLightSourcesScene(ManipulateLightsourceSetups):
         self.play(morty.change, "confused")
         self.wait(2)
 
+class MathologerVideoWrapper(Scene):
+    def construct(self):
+        title = TextMobject("""
+            Mathologer's excellent video on \\\\
+            the many Pythagorean theorem cousins
+        """)
+        # title.scale(0.7)
+        title.to_edge(UP)
+        logo = ImageMobject("mathologer_logo")
+        logo.scale_to_fit_height(1)
+        logo.to_corner(UP+LEFT)
+        logo.shift(2*SPACE_WIDTH*RIGHT)
+        screen = ScreenRectangle(height = 5.5)
+        screen.next_to(title, DOWN)
+
+        self.play(
+            logo.shift, 2*SPACE_WIDTH*LEFT,
+            LaggedStart(FadeIn, title),
+            run_time = 2
+        )
+        self.play(ShowCreation(screen))
+        self.wait(5)
+
+class SimpleIPTProof(Scene):
+    def construct(self):
+        A = 5*RIGHT
+        B = 3*UP
+        C = ORIGIN
+        #Dumb and inefficient
+        alphas = np.linspace(0, 1, 500)
+        i = np.argmin(map(
+            lambda a : np.linalg.norm(interpolate(A, B, a)),
+            alphas
+        ))
+        H = interpolate(A, B, alphas[i])
+        triangle = VGroup(
+            Line(C, A, color = BLUE),
+            Line(C, B, color = RED),
+            Line(A, B, color = WHITE),
+            Line(C, H, color = GREEN)
+        )
+        for line, char in zip(triangle, ["a", "b", "c", "h"]):
+            label = TexMobject(char)
+            label.match_color(line)
+            vect = line.get_center() - triangle.get_center()
+            vect /= np.linalg.norm(vect)
+            label.next_to(line.get_center(), vect)
+            triangle.add(label)
+            if char == "h":
+                label.next_to(line.get_center(), UP+LEFT, SMALL_BUFF)
+
+        triangle.to_corner(UP+LEFT)
+        self.add(triangle)
+
+        argument_lines = VGroup(
+            TexMobject(
+                "\\text{Area} = ", 
+                "{1 \\over 2}", "a", "b", "=",
+                "{1 \\over 2}", "c", "h"
+            ),
+            TexMobject("\\Downarrow"),
+            TexMobject("a^2", "b^2", "=", "c^2", "h^2"),
+            TexMobject("\\Downarrow"),
+            TexMobject(
+                "a^2", "b^2", "=", 
+                "(",  "a^2", "+", "b^2", ")", "h^2"
+            ),
+            TexMobject("\\Downarrow"),
+            TexMobject(
+                "{1 \\over ", "h^2}", "=", 
+                "{1 \\over ", "b^2}", "+", 
+                "{1 \\over ", "a^2}",
+            ),
+        )
+        argument_lines.arrange_submobjects(DOWN)
+        for line in argument_lines:
+            line.highlight_by_tex_to_color_map({
+                "a" : BLUE,
+                "b" : RED,
+                "h" : GREEN,
+                "Area" : WHITE,
+                "Downarrow" : WHITE,
+            })
+            all_equals = line.get_parts_by_tex("=")
+            if all_equals:
+                line.alignment_mob = all_equals[-1]
+            else:
+                line.alignment_mob = line[0]
+            line.shift(-line.alignment_mob.get_center()[0]*RIGHT)
+        argument_lines.next_to(triangle, RIGHT)
+        argument_lines.to_edge(UP)
+
+        prev_line = argument_lines[0]
+        self.play(FadeIn(prev_line))
+        for arrow, line in zip(argument_lines[1::2], argument_lines[2::2]):
+            line.save_state()
+            line.shift(
+                prev_line.alignment_mob.get_center() - \
+                line.alignment_mob.get_center() 
+            )
+            line.fade(1)
+            self.play(
+                line.restore,
+                GrowFromPoint(arrow, arrow.get_top())
+            )
+            self.wait()
+            prev_line = line
+
+class WeCanHaveMoreFunThanThat(TeacherStudentsScene):
+    def construct(self):
+        point = VectorizedPoint(SPACE_WIDTH*LEFT/2 + SPACE_HEIGHT*UP/2)
+        self.teacher_says(
+            "We can have \\\\ more fun than that!",
+            target_mode = "hooray"
+        )
+        self.change_student_modes(*3*["erm"], look_at_arg = point)
+        self.wait()
+        self.play(
+            RemovePiCreatureBubble(
+                self.teacher, 
+                target_mode = "raise_right_hand",
+                look_at_arg = point,
+            ),
+            self.get_student_changes(*3*["pondering"], look_at_arg = point)
+        )
+        self.wait(3)
+
+class IPTScene(TwoLightSourcesScene, ZoomedScene):
+    CONFIG = {
+        "max_opacity_ambient" : 0.2,
+        "num_levels" : 200,
+    }
+    def construct(self):
+        #Copy pasting from TwoLightSourcesScene....Very bad...
+        origin_point = self.origin_point
+        self.remove(self.pi_creature)
+
+        #Axes
+        axes = Axes(
+            x_min = -1, x_max = 10.5,
+            y_min = -1, y_max = 6.5,
+        )
+        axes.shift(origin_point)
+
+        #Important reference points
+        A = axes.coords_to_point(self.a, 0)
+        B = axes.coords_to_point(0, self.b)
+        C = axes.coords_to_point(0, 0)
+        xA = A[0]
+        yA = A[1]
+        xB = B[0]
+        yB = B[1]
+        xC = C[0]
+        yC = C[1]
+        # find the coords of the altitude point H
+        # as the solution of a certain LSE
+        prelim_matrix = np.array([
+            [yA - yB, xB - xA], 
+            [xA - xB, yA - yB]
+        ]) # sic
+        prelim_vector = np.array(
+            [xB * yA - xA * yB, xC * (xA - xB) + yC * (yA - yB)]
+        )
+        H2 = np.linalg.solve(prelim_matrix, prelim_vector)
+        H = np.append(H2, 0.)
+
+        #Lightsources
+        lsA = LightSource(
+            radius = self.radius, 
+            num_levels = self.num_levels,
+            opacity_function = inverse_power_law(2, 1, 1, 1.5),
+            max_opacity_ambient = self.max_opacity_ambient,
+        )
+        lsA.lighthouse.scale(0.5, about_edge = UP)
+        lsB = lsA.deepcopy()
+        lsA.move_source_to(A)
+        lsB.move_source_to(B)
+        lsC = lsA.deepcopy()
+        lsC.move_source_to(H)
+
+        #Lighthouse labels
+        A_label = TextMobject("A")
+        A_label.next_to(lsA.lighthouse, RIGHT)
+        B_label = TextMobject("B")
+        B_label.next_to(lsB.lighthouse, LEFT)
+
+        #Lines
+        line_a = Line(C, A)
+        line_a.highlight(BLUE)
+        line_b = Line(C, B)
+        line_b.highlight(RED)
+        line_c = Line(A, B)
+        line_h = Line(H, C)
+        line_h.highlight(GREEN)
+
+        label_a = TexMobject("a")
+        label_a.match_color(line_a)
+        label_a.next_to(line_a, DOWN, buff = SMALL_BUFF)
+        label_b = TexMobject("b")
+        label_b.match_color(line_b)
+        label_b.next_to(line_b, LEFT, buff = SMALL_BUFF)
+        label_h = TexMobject("h")
+        label_h.match_color(line_h)
+        label_h.next_to(line_h.get_center(), RIGHT, buff = SMALL_BUFF)
+
+        perp_mark = VMobject().set_points_as_corners([
+            RIGHT, RIGHT+DOWN, DOWN
+        ])
+        perp_mark.scale(0.25, about_point = ORIGIN)
+        perp_mark.rotate(line_c.get_angle() + TAU/4, about_point = ORIGIN)
+        perp_mark.shift(H)
+
+        # Mini triangle
+        m_hyp_a = Line(H, A)
+        m_a = line_a.copy()
+        m_hyp_b = Line(H, B)
+        m_b = line_b.copy()
+        mini_triangle = VGroup(m_a, m_hyp_a, m_b, m_hyp_b)
+        mini_triangle.set_stroke(width = 5)
+
+        mini_triangle.generate_target()
+        mini_triangle.target.scale(0.1, about_point = origin_point)
+        for part, part_target in zip(mini_triangle, mini_triangle.target):
+            part.target = part_target
+
+        # Screen label
+        screen_word = TextMobject("Screen")
+        screen_word.next_to(mini_triangle.target, UP+RIGHT, LARGE_BUFF)
+        screen_arrow = Arrow(
+            screen_word.get_bottom(),
+            mini_triangle.target.get_center(),
+            color = WHITE,
+        )
+
+        # Setup spotlights
+        spotlight_a = VGroup()
+        spotlight_a.screen = m_hyp_a
+        spotlight_b = VGroup()
+        spotlight_b.screen = m_hyp_b
+        for spotlight in spotlight_a, spotlight_b:
+            spotlight.get_source_point = lsC.get_source_point
+        dr = lsC.ambient_light.radius/lsC.ambient_light.num_levels
+        def update_spotlight(spotlight):
+            spotlight.submobjects = []
+            source_point = spotlight.get_source_point()
+            c1, c2 = spotlight.screen.get_start(), spotlight.screen.get_end()
+            distance = max(
+                np.linalg.norm(c1 - source_point),
+                np.linalg.norm(c2 - source_point),
+            )
+            n_parts = np.ceil(distance/dr)
+            alphas = np.linspace(0, 1, n_parts+1)
+            for a1, a2 in zip(alphas, alphas[1:]):
+                spotlight.add(Polygon(
+                    interpolate(source_point, c1, a1),
+                    interpolate(source_point, c1, a2),
+                    interpolate(source_point, c2, a2),
+                    interpolate(source_point, c2, a1),
+                    fill_color = YELLOW,
+                    fill_opacity = 2*lsC.ambient_light.opacity_function(a1*distance),
+                    stroke_width = 0
+                ))
+
+        def update_spotlights(spotlights):
+            for spotlight in spotlights:
+                update_spotlight(spotlight)
+
+        def get_spotlight_triangle(spotlight):
+            sp = spotlight.get_source_point()
+            c1 = spotlight.screen.get_start()
+            c2 = spotlight.screen.get_end()
+            return Polygon(
+                sp, c1, c2,
+                stroke_width = 0,
+                fill_color = YELLOW,
+                fill_opacity = 0.5,
+            )
+
+        spotlights = VGroup(spotlight_a, spotlight_b)
+        spotlights_update_anim = ContinualUpdateFromFunc(
+            spotlights, update_spotlights
+        )
+
+        # Add components
+        self.add(
+            axes,
+            lsA.ambient_light,
+            lsB.ambient_light,
+            lsC.ambient_light,
+            line_c,
+        )
+        self.add_foreground_mobjects(
+            lsA.lighthouse, A_label,
+            lsB.lighthouse, B_label,
+            lsC.lighthouse,  line_h,
+        )
+
+        # Show miniature triangle
+        self.play(ShowCreation(mini_triangle, submobject_mode = "all_at_once"))
+        self.play(
+            MoveToTarget(mini_triangle),
+            run_time = 2,
+        )
+        self.add_foreground_mobject(mini_triangle)
+
+        # Show beams of light
+        self.play(
+            Write(screen_word),
+            GrowArrow(screen_arrow),
+        )
+        self.wait()
+        spotlights_update_anim.update(0)
+        self.play(
+            LaggedStart(FadeIn, spotlight_a),
+            LaggedStart(FadeIn, spotlight_b),
+            Animation(screen_arrow),
+        )
+        self.add(spotlights_update_anim)
+        self.play(*map(FadeOut, [screen_word, screen_arrow]))
+        self.wait()
+
+        # Reshape screen
+        m_hyps = [m_hyp_a, m_hyp_b]
+        for hyp, line in (m_hyp_a, m_a), (m_hyp_b, m_b):
+            hyp.save_state()
+            hyp.alt_version = line.copy()
+            hyp.alt_version.highlight(WHITE)
+
+        for x in range(2):
+            self.play(*[
+                Transform(m, m.alt_version)
+                for m in m_hyps
+            ])
+            self.wait()
+            self.play(*[m.restore for m in m_hyps])
+            self.wait()
+
+        # Show spotlight a key point
+        def show_key_point(spotlight, new_point):
+            screen = spotlight.screen
+            update_spotlight_anim = UpdateFromFunc(spotlight, update_spotlight)
+            self.play(
+                Transform(screen, screen.alt_version),
+                update_spotlight_anim,
+            )
+            triangle = get_spotlight_triangle(spotlight)
+            for x in range(3):
+                anims = []
+                if x > 0:
+                    anims.append(FadeOut(triangle.copy()))
+                anims.append(GrowFromPoint(triangle, H))
+                self.play(*anims)
+            self.play(FadeOut(triangle))
+            self.play(screen.restore, update_spotlight_anim)
+            self.wait()
+            self.play(
+                lsC.move_source_to, new_point,
+                Transform(screen, screen.alt_version),
+                update_spotlight_anim,
+                run_time = 2
+            )
+            self.wait()
+            self.play(
+                lsC.move_source_to, H,
+                screen.restore,
+                update_spotlight_anim,
+                run_time = 2
+            )
+            self.wait()
+
+        self.remove(spotlights_update_anim)
+        self.add(spotlight_b)
+        self.play(*map(FadeOut, [
+            spotlight_a, lsA.ambient_light, lsB.ambient_light
+        ]))
+        show_key_point(spotlight_b, A)
+        self.play(
+            FadeOut(spotlight_b),
+            FadeIn(spotlight_a),
+        )
+        show_key_point(spotlight_a, B)
+        self.wait()
 
 
 
-class IPTScene1(PiCreatureScene):
 
+class IPTScene1(Scene):
     def construct(self):
 
         show_detail = True
