@@ -2576,12 +2576,13 @@ class InscribedAngleScene(ThreeDScene):
 
             # check if the light sources are on screen
             ls_old_loc = np.array(ls1.get_source_point())
-            onscreen_old = np.any(np.abs(ls_old_loc) < 10)
-            onscreen_1 = np.any(np.abs(ls_new_loc1) < 10)
-            onscreen_2 = np.any(np.abs(ls_new_loc2) < 10)
+            onscreen_old = np.all(np.abs(ls_old_loc[:2]) < 10 ** 2**step)
+            onscreen_1 = np.all(np.abs(ls_new_loc1[:2][:2]) < 10 ** 2**step)
+            onscreen_2 = np.all(np.abs(ls_new_loc2[:2]) < 10 ** 2**step)
             show_animation = (onscreen_old or onscreen_1 or onscreen_2)
 
             if show_animation:
+                print "animating (", i, ",", step, ")"
                 self.play(
                     ApplyMethod(ls1.move_source_to,ls_new_loc1, run_time = run_time),
                     ApplyMethod(ls2.move_source_to,ls_new_loc2, run_time = run_time),
@@ -3070,6 +3071,9 @@ class PondScene(ThreeDScene):
 
         self.cumulated_zoom_factor = 1
 
+        STEP_RUN_TIME = 0.5
+
+
         #self.force_skipping()
 
 
@@ -3176,7 +3180,7 @@ class PondScene(ThreeDScene):
 
         # first lighthouse
         original_op_func = inverse_quadratic(LIGHT_MAX_INT,LIGHT_SCALE,LIGHT_CUTOFF)
-        ls0 = LightSource(opacity_function = original_op_func, radius = 15.0, num_levels = 150)
+        ls0 = LightSource(opacity_function = original_op_func, radius = 15.0, num_levels = 15)
         ls0.lighthouse.scale_to_fit_height(LIGHTHOUSE_HEIGHT)
         ls0.lighthouse.height = LIGHTHOUSE_HEIGHT
         ls0.move_source_to(OBSERVER_POINT + LAKE0_RADIUS * 2 * UP)
@@ -3353,12 +3357,13 @@ class PondScene(ThreeDScene):
 
             # check if the light sources are on screen
             ls_old_loc = np.array(ls1.get_source_point())
-            onscreen_old = np.any(np.abs(ls_old_loc) < 10)
-            onscreen_1 = np.any(np.abs(ls_new_loc1) < 10)
-            onscreen_2 = np.any(np.abs(ls_new_loc2) < 10)
+            onscreen_old = np.all(np.abs(ls_old_loc[:2]) < 10 * 2**3)
+            onscreen_1 = np.all(np.abs(ls_new_loc1[:2]) < 10 * 2**3)
+            onscreen_2 = np.all(np.abs(ls_new_loc2[:2]) < 10 * 2**3)
             show_animation = (onscreen_old or onscreen_1 or onscreen_2)
 
             if show_animation or animate:
+                print "animating (", i, ",", step, ")"
                 self.play(
                     ApplyMethod(ls1.move_source_to,ls_new_loc1, run_time = run_time),
                     ApplyMethod(ls2.move_source_to,ls_new_loc2, run_time = run_time),
@@ -3616,7 +3621,7 @@ class PondScene(ThreeDScene):
         self.new_hypotenuses = []
 
 
-        construction_step(0)
+        construction_step(0, run_time = STEP_RUN_TIME)
 
         my_triangle = triangle(
             self.light_sources[0].get_source_point(),
@@ -3660,13 +3665,13 @@ class PondScene(ThreeDScene):
         zoom_out_scene(2)
 
         
-        construction_step(1)
+        construction_step(1, run_time = STEP_RUN_TIME)
         indicator_wiggle()
         #self.play(FadeOut(self.ls0_dot))
         zoom_out_scene(2)
 
 
-        construction_step(2)
+        construction_step(2, run_time = STEP_RUN_TIME)
         indicator_wiggle()
         self.play(FadeOut(self.ls0_dot))
 
@@ -3679,8 +3684,8 @@ class PondScene(ThreeDScene):
             FadeOut(self.legs)
         )
 
-        max_it = 6
-        scale = 2**(max_it - 4)
+        max_it = 10
+        scale = 2**(max_it - 5)
         TEX_SCALE *= scale
 
 
@@ -3708,8 +3713,8 @@ class PondScene(ThreeDScene):
             new_lake_center = new_lake.get_center()
             new_lake_radius = 0.5 * new_lake.get_width()
 
-            shift_list = [Transform(self.outer_lake,new_lake)]
-            #print shift_list
+            self.play(Transform(self.outer_lake,new_lake))
+            shift_list = []
 
             for i in range(2**n):
                 #print "==========="
@@ -3720,10 +3725,26 @@ class PondScene(ThreeDScene):
                 pos2 = new_lake_center - new_lake_radius * v
                 ls1 = self.light_sources.submobjects[i]
                 ls2 = self.light_sources.submobjects[i+2**n]
-                shift_list.append(ls1.move_source_to)
-                shift_list.append(pos1)
-                shift_list.append(ls2.move_source_to)
-                shift_list.append(pos2)
+
+                ls_old_loc = np.array(ls1.get_source_point())
+                onscreen_old = np.all(np.abs(ls_old_loc[:2]) < 10 * 2**2)
+                onscreen_1 = np.all(np.abs(pos1[:2]) < 10 * 2**2)
+                onscreen_2 = np.all(np.abs(pos2[:2]) < 10 * 2**2)
+                
+                if onscreen_old or onscreen_1:
+                    print "anim1 for step", n, "part", i
+                    print "------------------ moving from", ls_old_loc[:2], "to", pos1[:2]
+                    shift_list.append(ApplyMethod(ls1.move_source_to, pos1, run_time = STEP_RUN_TIME))
+                else:
+                    ls1.move_source_to(pos1)
+                if onscreen_old or onscreen_2:
+                    print "anim2 for step", n, "part", i
+                    print "------------------ moving from", ls_old_loc[:2], "to", pos2[:2]
+                    shift_list.append(ApplyMethod(ls2.move_source_to, pos2, run_time = STEP_RUN_TIME))
+                else:
+                    ls2.move_source_to(pos2)
+                
+
                 #print shift_list
 
             self.play(*shift_list)
@@ -3752,7 +3773,11 @@ class PondScene(ThreeDScene):
             number_scale_val = 3,
             line_to_number_buff = LARGE_BUFF,
             label_direction = UP,
-        ).shift(scale * 2.5 * DOWN)
+        ).shift(origin_point - self.number_line.number_to_point(0)) # .shift(scale * 2.5 * DOWN)
+
+        print "scale ", scale
+        print "number line at", self.number_line.get_center()
+        print "should be at", origin_point, "or", OBSERVER_POINT
 
         self.number_line.tick_marks.fade(1)
         self.number_line_labels = self.number_line.get_number_mobjects()
@@ -3784,7 +3809,7 @@ class PondScene(ThreeDScene):
             stroke_color = LAKE_STROKE_COLOR,
             fill_color = LAKE_COLOR,
             fill_opacity = LAKE_OPACITY,
-        ).flip().next_to(origin_point,UP,buff = 0)
+        ).flip().next_to(self.obs_dot.get_center(),UP,buff = 0)
 
         self.revert_to_original_skipping_status()
 
@@ -3796,7 +3821,6 @@ class PondScene(ThreeDScene):
             #FadeOut(self.inner_lake)
         )
         self.play(FadeIn(self.number_line))
-
 
         self.wait()
 
@@ -3862,7 +3886,7 @@ class PondScene(ThreeDScene):
             fill_color = BLACK,
             fill_opacity = 1,
         )
-        covering_rectangle.next_to(ORIGIN,LEFT,buff = 0)
+        covering_rectangle.next_to(ORIGIN, LEFT, buff = 0)
         #for i in range(10):
         #    self.add_foreground_mobject(nl_sources.submobjects[i])
 
@@ -4459,8 +4483,67 @@ class InfiniteCircleScene(PiCreatureScene):
 
 
 
+class RightAnglesOverlay(Scene):
+
+    def construct(self):
+
+        BASELINE_YPOS = -2.5
+        OBSERVER_POINT = [0,BASELINE_YPOS,0]
+        LAKE0_RADIUS = 1.5 * 2
+        INDICATOR_RADIUS = 0.6
+        TICK_SIZE = 0.5
+        LIGHTHOUSE_HEIGHT = 0.2
+        LAKE_COLOR = BLUE
+        LAKE_OPACITY = 0.15
+        LAKE_STROKE_WIDTH = 5.0
+        LAKE_STROKE_COLOR = BLUE
+        TEX_SCALE = 0.8
+        DOT_COLOR = BLUE
+
+        RIGHT_ANGLE_SIZE = 0.3
 
 
+        def right_angle(pointA, pointB, pointC, size = 1):
+
+            v1 = pointA - pointB
+            v1 = size * v1/np.linalg.norm(v1)
+            v2 = pointC - pointB
+            v2 = size * v2/np.linalg.norm(v2)
+            
+            P = pointB
+            Q = pointB + v1
+            R = Q + v2
+            S = R - v1
+            angle_sign = VMobject()
+            angle_sign.set_points_as_corners([P,Q,R,S,P])
+            angle_sign.mark_paths_closed = True
+            angle_sign.set_fill(color = WHITE, opacity = 1)
+            angle_sign.set_stroke(width = 0)
+            return angle_sign
+
+
+        lake_center = OBSERVER_POINT + LAKE0_RADIUS * UP
+        points = []
+        lines = VGroup()
+        for i in range(4):
+            theta = -TAU/4 + (i+0.5)*TAU/4
+            v = np.array([np.cos(theta), np.sin(theta), 0])
+            P = lake_center + LAKE0_RADIUS * v
+            points.append(P)
+            lines.add(Line(lake_center, P, stroke_width = 8))
+
+        self.play(FadeIn(lines))
+
+        self.wait()
+
+        for i in range(4):
+            sign = right_angle(points[i-1], lake_center, points[i],RIGHT_ANGLE_SIZE)
+            self.play(FadeIn(sign))
+            self.play(FadeOut(sign))
+
+        self.wait()
+
+        self.play(FadeOut(lines))
 
 
 
