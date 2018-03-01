@@ -162,9 +162,6 @@ class FadeOut(Transform):
     def __init__(self, mobject, **kwargs):
         target = mobject.copy()
         target.fade(1)
-        if isinstance(mobject, VMobject):
-            target.set_stroke(width = 0)
-            target.set_fill(opacity = 0)
         Transform.__init__(self, mobject, target, **kwargs)
 
     def clean_up(self, surrounding_scene = None):

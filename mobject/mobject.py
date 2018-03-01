@@ -524,16 +524,34 @@ class Mobject(Container):
         self.highlight(self.color)
         return self
 
-    def fade_to(self, color, alpha):
-        for mob in self.family_members_with_points():
-            start = color_to_rgb(mob.get_color())
+    # Some objects (e.g., VMobjects) have special fading
+    # behavior. We let every object handle its individual
+    # fading via fade_no_recurse (notionally a purely internal method), 
+    # and then have fade() itself call this recursively on each submobject
+    #
+    # Similarly for fade_to_no_recurse and fade_to, the underlying functions
+    # used by default for fade()ing
+
+    def fade_to_no_recurse(self, color, alpha):
+        if self.get_num_points() > 0:
+            start = color_to_rgb(self.get_color())
             end = color_to_rgb(color)
             new_rgb = interpolate(start, end, alpha)
-            mob.highlight(Color(rgb = new_rgb), family = False)
+            self.highlight(Color(rgb = new_rgb), family = False)
+        return self
+
+    def fade_to(self, color, alpha):
+        for mob in self.subobject_family():
+            mob.fade_to_no_recurse(self, color, alpha)
+        return self
+
+    def fade_no_recurse(self, darkness):
+        self.fade_to_no_recurse(BLACK, darkness)
         return self
 
     def fade(self, darkness = 0.5):
-        self.fade_to(BLACK, darkness)
+        for submob in self.submobject_family():
+            submob.fade_no_recurse(darkness)
         return self
 
     def get_color(self):

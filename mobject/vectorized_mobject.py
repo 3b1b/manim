@@ -113,16 +113,15 @@ class VMobject(Mobject):
             sm1.match_style(sm2)
         return self
 
-    def fade(self, darkness = 0.5):
-        for submob in self.submobject_family():
-            submob.set_stroke(
-                width = (1-darkness)*submob.get_stroke_width(),
-                family = False
-            )
-            submob.set_fill(
-                opacity = (1-darkness)*submob.get_fill_opacity(),
-                family = False
-            )
+    def fade_no_recurse(self, darkness):
+        self.set_stroke(
+            width = (1-darkness)*self.get_stroke_width(),
+            family = False
+        )
+        self.set_fill(
+            opacity = (1-darkness)*self.get_fill_opacity(),
+            family = False
+        )
         return self
 
     def get_fill_rgb(self):
