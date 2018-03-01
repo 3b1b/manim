@@ -176,7 +176,7 @@ class PatreonEndScreen(PatreonThanks):
             aligned_edge = UP,
         )
         columns.scale_to_fit_width(total_width - 1)
-        columns.next_to(black_rect, DOWN, LARGE_BUFF)
+        columns.next_to(black_rect, DOWN, 3*LARGE_BUFF)
         columns.to_edge(RIGHT)
 
         self.play(
