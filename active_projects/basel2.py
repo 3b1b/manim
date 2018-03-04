@@ -224,6 +224,45 @@ class ScaleLightSources(Transform):
 
         Transform.__init__(self,light_sources_mob,ls_target,**kwargs)
 
+class ThreeDSpotlight(VGroup):
+    CONFIG = { 
+        "fill_color" : YELLOW,
+    }
+    def __init__(self, screen, ambient_light, source_point_func, **kwargs):
+        self.screen = screen
+        self.ambient_light = ambient_light
+        self.source_point_func = source_point_func
+        self.dr = ambient_light.radius/ambient_light.num_levels
+        VGroup.__init__(self, **kwargs)
+
+    def update(self):
+        screen = self.screen
+        source_point = self.source_point_func()
+        dr = self.dr
+        corners = screen.get_anchors()
+        self.submobjects = [VGroup() for a in screen.get_anchors()]
+
+        distance = np.linalg.norm(
+            screen.get_center() - source_point
+        )
+        n_parts = np.ceil(distance/dr)
+        alphas = np.linspace(0, 1, n_parts+1)
+        for face, (c1, c2) in zip(self, adjacent_pairs(corners)):
+            face.submobjects = []
+            for a1, a2 in zip(alphas, alphas[1:]):
+                face.add(Polygon(
+                    interpolate(source_point, c1, a1),
+                    interpolate(source_point, c1, a2),
+                    interpolate(source_point, c2, a2),
+                    interpolate(source_point, c2, a1),
+                    fill_color = self.fill_color,
+                    fill_opacity = self.ambient_light.opacity_function(a1*distance),
+                    stroke_width = 0
+                ))
+        
+class ContinualThreeDLightConeUpdate(ContinualAnimation):
+    def update(self, dt):
+        self.mobject.update()
 
 ###
 
@@ -236,7 +275,7 @@ class ThinkAboutPondScene(PiCreatureScene):
         randy.to_corner(DOWN+LEFT)
         bubble = ThoughtBubble(
             width = 11,
-            height = 7,
+            height = 8,
         )
         circles = bubble[:3]
         angle = -15*DEGREES
@@ -245,6 +284,12 @@ class ThinkAboutPondScene(PiCreatureScene):
         for circle in circles:
             circle.rotate(-angle)
         bubble.pin_to(randy)
+        bubble.shift(DOWN)
+        bubble[:3].rotate(np.pi, axis = UP+2*RIGHT, about_edge = UP+LEFT)
+        bubble[:3].scale(0.7, about_edge = DOWN+RIGHT)
+        bubble[:3].shift(1.5*DOWN)
+        for oval in bubble[:3]:
+            oval.rotate(TAU/3)
 
         self.play(
             randy.change, "thinking",
@@ -252,7 +297,7 @@ class ThinkAboutPondScene(PiCreatureScene):
         )
         self.wait(2)
         self.play(randy.change, "happy", bubble)
-        self.wait(2)
+        self.wait(4)
         self.play(randy.change, "hooray", bubble)
         self.wait(2)
 
@@ -615,7 +660,7 @@ class MathematicalWebOfConnections(PiCreatureScene):
         jerk, randy = self.pi_creatures
 
         words = self.words = TextMobject(
-            "$\\pi$ is not",
+            "I am not",
             "fundamentally \\\\", 
             "about circles"
         )
@@ -657,9 +702,8 @@ class MathematicalWebOfConnections(PiCreatureScene):
             formula_equals_x = formula.get_part_by_tex("=").get_center()[0]
             formula.shift((basel_equals_x - formula_equals_x)*RIGHT)
 
-        formulas.move_to(randy)
-        formulas.to_edge(UP)
-        formulas.shift_onto_screen()
+        formulas.to_corner(UP+RIGHT)
+        formulas.shift(2*LEFT)
         self.formulas = formulas
 
         self.play(
@@ -1165,6 +1209,9 @@ class IntroduceScreen(Scene):
         "num_rays" : 250,
         "min_ray_angle" : 0,
         "max_ray_angle" : TAU,
+        "source_point" : 2.5*LEFT,
+        "observer_point" : 3.5*RIGHT,
+        "screen_height" : 2,
     }
     def construct(self):
         self.setup_elements()
@@ -1174,24 +1221,17 @@ class IntroduceScreen(Scene):
 
     def setup_elements(self):
         SCREEN_SIZE = 3.0
-        source_point = self.source_point = 2.5*LEFT
-        observer_point = 3.5*RIGHT
+        source_point = self.source_point
+        observer_point = self.observer_point,
+
         # Light source
-
-        light_source = self.light_source = LightSource(
-            opacity_function = inverse_quadratic(1,2,1),
-            num_levels = self.num_levels,
-            radius = self.radius,
-            max_opacity_ambient = AMBIENT_FULL,
-        )
-
-        light_source.move_source_to(source_point)
+        light_source = self.light_source = self.get_light_source()
 
         # Screen
 
         screen = self.screen = Rectangle(
             width = 0.05,
-            height = 2,
+            height = self.screen_height,
             mark_paths_closed = True,
             fill_color = WHITE,
             fill_opacity = 1.0,
@@ -1332,6 +1372,16 @@ class IntroduceScreen(Scene):
         rotate_screen(TAU/6)
 
     ##
+
+    def get_light_source(self):
+        light_source = LightSource(
+            opacity_function = inverse_quadratic(1,2,1),
+            num_levels = self.num_levels,
+            radius = self.radius,
+            max_opacity_ambient = AMBIENT_FULL,
+        )
+        light_source.move_source_to(self.source_point)
+        return light_source
 
     def shoot_rays(self, show_creation_kwargs = None):
         if show_creation_kwargs is None:
@@ -1489,6 +1539,73 @@ class EarthScene(IntroduceScreen):
         })
         self.wait()
 
+class ShowLightInThreeDimensions(IntroduceScreen, ThreeDScene):
+    CONFIG = {
+        "num_levels" : 200,
+    }
+    def construct(self):
+        light_source = self.get_light_source()
+        screens = VGroup(
+            Square(),
+            RegularPolygon(8),
+            Circle().insert_n_anchor_points(25),
+        )
+        for screen in screens:
+            screen.scale_to_fit_height(self.screen_height)
+        screens.rotate(TAU/4, UP)
+        screens.next_to(self.observer_point, LEFT)
+        screens.set_stroke(WHITE, 2)
+        screens.set_fill(WHITE, 0.5)
+        screen = screens[0]
+
+        cone = ThreeDSpotlight(
+            screen, light_source.ambient_light,
+            light_source.get_source_point
+        )
+        cone_update_anim = ContinualThreeDLightConeUpdate(cone)
+
+        self.add(light_source, screen, cone)
+        self.add(cone_update_anim)
+        self.move_camera(
+            phi = 60*DEGREES,
+            theta = -155*DEGREES,
+            run_time = 3,
+        )
+        self.begin_ambient_camera_rotation()
+        kwargs = {"run_time" : 2}
+        self.play(screen.stretch, 0.5, 1, **kwargs)
+        self.play(screen.stretch, 2, 2, **kwargs)
+        self.play(Rotate(
+            screen, TAU/4, 
+            axis = UP+OUT, 
+            rate_func = there_and_back, 
+            run_time = 3,
+        ))
+        self.play(Transform(screen, screens[1], **kwargs))
+        self.play(screen.stretch, 0.5, 2, **kwargs)
+        self.play(Transform(screen, screens[2], **kwargs))
+        self.wait(2)
+        self.play(
+            screen.stretch, 0.5, 1, 
+            screen.stretch, 2, 2, 
+            **kwargs
+        )
+        self.play(
+            screen.stretch, 3, 1, 
+            screen.stretch, 0.7, 2, 
+            **kwargs
+        )
+        self.wait(2)
+
+class LightInThreeDimensionsOverlay(Scene):
+    def construct(self):
+        words = TextMobject("""
+            ``Solid angle'' \\\\
+            (measured in ``steradians'')
+        """)
+        self.play(Write(words))
+        self.wait()
+
 class InverseSquareLaw(ThreeDScene):
     CONFIG = {
         "screen_height" : 1.0,
@@ -1628,7 +1745,6 @@ class InverseSquareLaw(ThreeDScene):
         unit_distance = self.unit_distance
         light_indicator = self.light_indicator
         morty = self.morty
-        dr = ambient_light.radius/ambient_light.num_levels
 
         new_screen = Square(
             side_length = self.screen_height,
@@ -1640,31 +1756,13 @@ class InverseSquareLaw(ThreeDScene):
         new_screen.rotate(TAU/4, UP)
         new_screen.move_to(old_screen, IN)
         old_screen.fade(1)
-        screen_group = VGroup(old_screen, new_screen)
 
-        cone = VGroup(*[VGroup() for x in range(4)])
-        cone.set_stroke(width = 0)
-        cone.set_fill(YELLOW, opacity = 0.5)
-        corner_directions = [OUT+UP, OUT+DOWN, IN+DOWN, IN+UP]
-        def update_cone(cone):
-            corners = map(new_screen.get_corner, corner_directions)
-            distance = np.linalg.norm(old_screen.get_reference_point() - self.source_point)
-            n_parts = np.ceil(distance/dr)
-            alphas = np.linspace(0, 1, n_parts+1)
-            for face, (c1, c2) in zip(cone, adjacent_pairs(corners)):
-                face.submobjects = []
-                for a1, a2 in zip(alphas, alphas[1:]):
-                    face.add(Polygon(
-                        interpolate(source_point, c1, a1),
-                        interpolate(source_point, c1, a2),
-                        interpolate(source_point, c2, a2),
-                        interpolate(source_point, c2, a1),
-                        fill_color = YELLOW,
-                        fill_opacity = ambient_light.opacity_function(a1*distance),
-                        stroke_width = 0
-                    ))
-        cone_update_anim = ContinualUpdateFromFunc(cone, update_cone)
-        cone_update_anim.update(0)
+        cone = ThreeDSpotlight(
+            new_screen, ambient_light,
+            source_point_func = lambda : source_point
+        )
+        cone_update_anim = ContinualThreeDLightConeUpdate(cone)
+
 
         self.remove(self.spotlight_update, self.light_indicator_update)
         self.add(
@@ -1690,26 +1788,41 @@ class InverseSquareLaw(ThreeDScene):
             run_time = 2,
         )
         self.wait()
-        self.screen = screen_group
-        self.shift_by_distance(1)
-        self.shift_by_distance(-1)
-        self.wait()
 
         ## Create screen copies
-        screen_copy = new_screen.copy()
-        four_copies = VGroup(*[new_screen.copy() for x in range(4)])
-        nine_copies = VGroup(*[new_screen.copy() for x in range(9)])
-        def update_four_copies(four_copies):
-            for mob, corner_direction in zip(four_copies, corner_directions):
-                mob.move_to(new_screen, corner_direction)
-        four_copies_update_anim = UpdateFromFunc(four_copies, update_four_copies)
-        edge_directions = [
-            UP, UP+OUT, OUT, DOWN+OUT, DOWN, DOWN+IN, IN, UP+IN, ORIGIN
-        ]
-        def update_nine_copies(nine_copies):
-            for mob, corner_direction in zip(nine_copies, edge_directions):
-                mob.move_to(new_screen, corner_direction)
-        nine_copies_update_anim = UpdateFromFunc(nine_copies, update_nine_copies)
+        def get_screen_copy_group(distance):
+            n = int(distance)**2
+            copies = VGroup(*[new_screen.copy() for x in range(n)])
+            copies.rotate(-TAU/4, axis = UP)
+            copies.arrange_submobjects_in_grid(buff = 0)
+            copies.rotate(TAU/4, axis = UP)
+            copies.move_to(source_point, IN)
+            copies.shift(distance*RIGHT*unit_distance)
+            return copies
+        screen_copy_groups = map(get_screen_copy_group, range(1, 8))
+        def get_screen_copy_group_anim(n):
+            group = screen_copy_groups[n]
+            prev_group = screen_copy_groups[n-1]
+            group.save_state()
+            group.fade(1)
+            group.replace(prev_group, dim_to_match = 1)
+            return ApplyMethod(group.restore)
+
+        # corner_directions = [UP+OUT, DOWN+OUT, DOWN+IN, UP+IN]
+        # edge_directions = [
+        #     UP, UP+OUT, OUT, DOWN+OUT, DOWN, DOWN+IN, IN, UP+IN, ORIGIN
+        # ]
+
+        # four_copies = VGroup(*[new_screen.copy() for x in range(4)])
+        # nine_copies = VGroup(*[new_screen.copy() for x in range(9)])
+        # def update_four_copies(four_copies):
+        #     for mob, corner_direction in zip(four_copies, corner_directions):
+        #         mob.move_to(new_screen, corner_direction)
+        # four_copies_update_anim = UpdateFromFunc(four_copies, update_four_copies)
+        # def update_nine_copies(nine_copies):
+        #     for mob, corner_direction in zip(nine_copies, edge_directions):
+        #         mob.move_to(new_screen, corner_direction)
+        # nine_copies_update_anim = UpdateFromFunc(nine_copies, update_nine_copies)
 
         three_arrow = DoubleArrow(
             source_point + 4*DOWN,
@@ -1721,19 +1834,17 @@ class InverseSquareLaw(ThreeDScene):
         three.next_to(three_arrow, DOWN)
 
         new_screen.fade(1)
-        self.add(
-            ContinualAnimation(screen_copy),
-            ContinualAnimation(four_copies),
-        )
+        # self.add(
+        #     ContinualAnimation(screen_copy),
+        #     ContinualAnimation(four_copies),
+        # )
+
+        self.add(ContinualAnimation(screen_copy_groups[0]))
+        self.add(ContinualAnimation(screen_copy_groups[1]))
         self.play(
-            screen_group.scale, 2, {"about_edge" : IN + DOWN},
-            screen_group.shift, unit_distance*RIGHT,
-            UpdateFromAlphaFunc(
-                four_copies, 
-                lambda nc, a : nc.set_stroke(width = a).set_fill(opacity = 0.5*a)
-            ),
-            four_copies_update_anim,
-            screen_copy.shift, 0.25*OUT, #WHY?
+            new_screen.scale, 2, {"about_edge" : IN},
+            new_screen.shift, unit_distance*RIGHT,
+            get_screen_copy_group_anim(1),
             run_time = 2,
         )
         self.wait()
@@ -1744,20 +1855,40 @@ class InverseSquareLaw(ThreeDScene):
             run_time = 10,
         )
         self.begin_ambient_camera_rotation(rate = -0.01)
-        self.add(ContinualAnimation(nine_copies))
+        self.add(ContinualAnimation(screen_copy_groups[2]))
         self.play(
-            screen_group.scale, 3./2, {"about_edge" : IN + DOWN},
-            screen_group.shift, unit_distance*RIGHT,
-            nine_copies_update_anim,
-            UpdateFromAlphaFunc(
-                nine_copies, 
-                lambda nc, a : nc.set_stroke(width = a).set_fill(opacity = 0.5*a)
-            ),
+            new_screen.scale, 3./2, {"about_edge" : IN},
+            new_screen.shift, unit_distance*RIGHT,
+            get_screen_copy_group_anim(2),
             GrowFromPoint(three_arrow, three_arrow.get_left()),
             Write(three, rate_func = squish_rate_func(smooth, 0.5, 1)),
             run_time = 2,
         )
-        self.wait(10)
+        self.begin_ambient_camera_rotation(rate = -0.01)
+        self.play(LaggedStart(
+            ApplyMethod, screen_copy_groups[2],
+            lambda m : (m.highlight, RED),
+            run_time = 5,
+            rate_func = there_and_back,
+        ))
+        self.wait(2)
+        self.move_camera(distance = 18)
+        self.play(*[
+            ApplyMethod(mob.fade, 1)
+            for mob in screen_copy_groups[:2]
+        ])
+        last_group = screen_copy_groups[2]
+        for n in range(4, len(screen_copy_groups)+1):
+            group = screen_copy_groups[n-1]
+            self.add(ContinualAnimation(group))
+            self.play(
+                new_screen.scale, float(n)/(n-1), {"about_edge" : IN},
+                new_screen.shift, unit_distance*RIGHT,
+                get_screen_copy_group_anim(n-1),
+                last_group.fade, 1,
+            )
+            last_group = group
+            self.wait()
 
     ###
 
@@ -2189,7 +2320,25 @@ class TwoLightSourcesScene(ManipulateLightsourceSetups):
         self.wait()
 
         #Write IPT
-        self.play(Write(theorem))
+        a_part = theorem[:2]
+        b_part = theorem[2:5]
+        h_part = theorem[5:]
+        for part in a_part, b_part, h_part:
+            part.save_state()
+            part.scale(3)
+            part.fade(1)
+        a_part.move_to(lsA)
+        b_part.move_to(lsB)
+        h_part.move_to(lsC)
+
+        self.play(*map(FadeOut, [lsA, lsB, lsC, indicator]))
+        for ls, part in (lsA, a_part), (lsB, b_part), (lsC, h_part):
+            self.add(ls)
+            self.play(
+                SwitchOn(ls.ambient_light, run_time = 2),
+                FadeIn(ls.lighthouse),
+                part.restore
+            )
         self.wait()
         self.play(
             Write(theorem_name),
@@ -2874,7 +3023,7 @@ class PondScene(ThreeDScene):
         self.zoomable_mobs.add(lake0)
 
         # Morty and indicator
-        morty = Randolph().scale(0.3)
+        morty = Mortimer().flip().scale(0.3)
         morty.next_to(OBSERVER_POINT,DOWN)
         indicator = LightIndicator(precision = 2,
             radius = INDICATOR_RADIUS,
@@ -3622,6 +3771,42 @@ class PondScene(ThreeDScene):
         self.play(randy.change,"happy")
         self.play(randy.change,"hooray")
 
+class CircumferenceText(Scene):
+    CONFIG = {"n" : 16}
+    def construct(self):
+        words = TextMobject("Circumference %d"%self.n)
+        words.scale(1.25)
+        words.to_corner(UP+LEFT)
+        self.add(words)
+
+class CenterOfLargerCircleOverlayText(Scene):
+    def construct(self):
+        words = TextMobject("Center of \\\\ larger circle")
+        arrow = Vector(DOWN+LEFT, color = WHITE)
+        arrow.shift(words.get_bottom() + SMALL_BUFF*DOWN - arrow.get_start())
+        group = VGroup(words, arrow)
+        group.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        group.to_edge(UP)
+        self.add(group)
+
+class DiameterWordOverlay(Scene):
+    def construct(self):
+        word = TextMobject("Diameter")
+        word.scale_to_fit_width(SPACE_WIDTH)
+        word.rotate(-45*DEGREES)
+        self.play(Write(word))
+        self.wait()
+
+class YayIPTApplies(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Heyo!  The Inverse \\\\ Pythagorean Theorem \\\\ applies!",
+            bubble_kwargs = {"width" : 5},
+            target_mode = "surprised"
+        )
+        self.change_student_modes(*3*["hooray"])
+        self.wait(2)
+
 class WalkThroughOneMoreStep(TeacherStudentsScene):
     def construct(self):
         self.student_says("""
@@ -3630,6 +3815,113 @@ class WalkThroughOneMoreStep(TeacherStudentsScene):
         """)
         self.play(self.teacher.change, "happy")
         self.wait(4)
+
+class ThinkBackToHowAmazingThisIs(ThreeDScene):
+    CONFIG = {
+        "x_radius" : 100,
+        "max_shown_n" : 20,
+    }
+    def construct(self):
+        self.show_sum()
+        self.show_giant_circle()
+
+    def show_sum(self):
+        number_line = NumberLine(
+            x_min = -self.x_radius, 
+            x_max = self.x_radius,
+            numbers_to_show = range(-self.max_shown_n, self.max_shown_n),
+        )
+        number_line.add_numbers()
+        number_line.shift(2*DOWN)
+
+        positive_dots, negative_dots = [
+            VGroup(*[
+                Dot(number_line.number_to_point(u*x))
+                for x in range(1, int(self.x_radius), 2)
+            ])
+            for u in 1, -1
+        ]
+        dot_pairs = it.starmap(VGroup, zip(positive_dots, negative_dots))
+
+        # Decimal
+        decimal = DecimalNumber(0, num_decimal_points = 6)
+        decimal.to_edge(UP)
+        terms = [2./(n**2) for n in range(1, 100, 2)]
+        partial_sums = np.cumsum(terms)
+
+        # pi^2/4 label
+        brace = Brace(decimal, DOWN)
+        pi_term = TexMobject("\pi^2 \over 4")
+        pi_term.next_to(brace, DOWN)
+
+        term_mobjects = VGroup()
+        for n in range(1, self.max_shown_n, 2):
+            p_term = TexMobject("\\left(\\frac{1}{%d}\\right)^2"%n)
+            n_term = TexMobject("\\left(\\frac{-1}{%d}\\right)^2"%n)
+            group = VGroup(p_term, n_term)
+            group.scale(0.7)
+            p_term.next_to(number_line.number_to_point(n), UP, LARGE_BUFF)
+            n_term.next_to(number_line.number_to_point(-n), UP, LARGE_BUFF)
+            term_mobjects.add(group)
+        term_mobjects.gradient_highlight(BLUE, YELLOW)
+        plusses = VGroup(*[
+            VGroup(*[
+                TexMobject("+").next_to(
+                    number_line.number_to_point(u*n), UP, buff = 1.25,
+                )
+                for u in -1, 1
+            ])
+            for n in range(0, self.max_shown_n, 2)
+        ])
+
+        zoom_out = AmbientMovement(
+            self.camera.rotation_mobject,
+            direction = OUT, rate = 0.4
+        )
+        def update_decimal(decimal):
+            z = self.camera.rotation_mobject.get_center()[2]
+            decimal.scale_to_fit_height(0.07*z)
+            decimal.move_to(0.7*z*UP)
+        scale_decimal = ContinualUpdateFromFunc(decimal, update_decimal)
+
+
+        self.add(number_line, *dot_pairs)
+        self.add(zoom_out, scale_decimal)
+
+        tuples = zip(term_mobjects, plusses, partial_sums)
+        run_time = 1
+        for term_mobs, plus_pair, partial_sum in tuples:
+            self.play(
+                FadeIn(term_mobs),
+                Write(plus_pair, run_time = 1),
+                ChangeDecimalToValue(decimal, partial_sum),
+                run_time = run_time
+            )
+            self.wait(run_time)
+            run_time *= 0.9
+        self.play(ChangeDecimalToValue(decimal, np.pi**2/4, run_time = 5))
+        zoom_out.begin_wind_down()
+        self.wait()
+        self.remove(zoom_out, scale_decimal)
+        self.play(*map(FadeOut, it.chain(
+            term_mobjects, plusses, 
+            number_line.numbers, [decimal]
+        )))
+
+        self.number_line = number_line
+
+    def show_giant_circle(self):
+        self.number_line.main_line.insert_n_anchor_points(10000)
+        everything = VGroup(*self.mobjects)
+        circle = everything.copy()
+        circle.move_to(ORIGIN)
+        circle.apply_function(
+            lambda (x, y, z) : complex_to_R3(7*np.exp(complex(0, 0.0315*x)))
+        )
+        circle.rotate(-TAU/4, about_point = ORIGIN)
+        circle.center()
+
+        self.play(Transform(everything, circle, run_time = 6))
 
 class ButWait(TeacherStudentsScene):
     def construct(self):
@@ -4044,50 +4336,6 @@ class ArcHighlightOverlaySceneCircumferenceSixteen(ArcHighlightOverlaySceneCircu
         "n" : 3,
     }
 
-class ThumbnailScene(Scene):
-
-    def construct(self):
-
-        equation = TexMobject("1+{1\over 4}+{1\over 9}+{1\over 16}+{1\over 25}+\dots")
-        equation.scale(1.5)
-        equation.move_to(1.5 * UP)
-        q_mark = TexMobject("=?", color = LIGHT_COLOR).scale(5)
-        q_mark.next_to(equation, DOWN, buff = 1.5)
-        #equation.move_to(2 * UP)
-        #q_mark = TexMobject("={\pi^2\over 6}", color = LIGHT_COLOR).scale(3)
-        #q_mark.next_to(equation, DOWN, buff = 1)
-
-        lake_radius = 6
-        lake_center = ORIGIN
-        op_scale = 0.4
-
-        lake = Circle(
-            fill_color = LAKE_COLOR, 
-            fill_opacity = LAKE_OPACITY, 
-            radius = lake_radius,
-            stroke_color = LAKE_STROKE_COLOR, 
-            stroke_width = LAKE_STROKE_WIDTH,
-        )
-        lake.move_to(lake_center)
-
-        for i in range(16):
-            theta = -TAU/4 + (i + 0.5) * TAU/16
-            pos = lake_center + lake_radius * np.array([np.cos(theta), np.sin(theta), 0])
-            ls = LightSource(
-                radius = 15.0, 
-                num_levels = 150,
-                max_opacity_ambient = 1.0,
-                opacity_function = inverse_quadratic(1,op_scale,1)
-            )
-            ls.move_source_to(pos)
-            lake.add(ls.ambient_light, ls.lighthouse)
-
-        self.add(lake)
-
-        self.add(equation, q_mark)
-
-        self.wait()
-
 class InfiniteCircleScene(PiCreatureScene):
 
     def construct(self):
@@ -4165,6 +4413,73 @@ class InfiniteCircleScene(PiCreatureScene):
 
         self.wait()
 
+class Credits(Scene):
+    def construct(self):
+        credits = VGroup(*[
+            VGroup(*map(TextMobject, pair))
+            for pair in [
+                ("Primary writer and animator:", "Ben Hambrecht"),
+                ("Editing, advising, narrating:", "Grant Sanderson"),
+                ("Based on a paper originally by:", "Johan Wästlund"),
+            ]
+        ])
+        for credit, color in zip(credits, [MAROON_D, BLUE_D, WHITE]):
+            credit[1].highlight(color)
+            credit.arrange_submobjects(DOWN, buff = SMALL_BUFF)
+
+        credits.arrange_submobjects(DOWN, buff = LARGE_BUFF)
+
+        credits.center()
+        patreon_logo = PatreonLogo()
+        patreon_logo.to_edge(UP)
+
+        for credit in credits:
+            self.play(LaggedStart(FadeIn, credit[0]))
+            self.play(FadeIn(credit[1]))
+        self.wait()
+        self.play(
+            credits.next_to, patreon_logo.get_bottom(), DOWN, MED_LARGE_BUFF,
+            DrawBorderThenFill(patreon_logo)
+        )
+        self.wait()
+
+class Promotion(PiCreatureScene):
+    CONFIG = {
+        "seconds_to_blink" : 5,
+    }
+    def construct(self):
+        url = TextMobject("https://brilliant.org/3b1b/")
+        url.to_corner(UP+LEFT)
+
+        rect = Rectangle(height = 9, width = 16)
+        rect.scale_to_fit_height(5.5)
+        rect.next_to(url, DOWN)
+        rect.to_edge(LEFT)
+
+        self.play(
+            Write(url),
+            self.pi_creature.change, "raise_right_hand"
+        )
+        self.play(ShowCreation(rect))
+        self.wait(2)
+        self.change_mode("thinking")
+        self.wait()
+        self.look_at(url)
+        self.wait(10)
+        self.change_mode("happy")
+        self.wait(10)
+        self.change_mode("raise_right_hand")
+        self.wait(10)
+
+        self.remove(rect)
+        self.play(
+            url.next_to, self.pi_creature, UP+LEFT
+        )
+        url_rect = SurroundingRectangle(url)
+        self.play(ShowCreation(url_rect))
+        self.play(FadeOut(url_rect))
+        self.wait(3)
+
 class BaselPatreonThanks(PatreonEndScreen):
     CONFIG = {
         "specific_patrons" : [
@@ -4182,7 +4497,7 @@ class BaselPatreonThanks(PatreonEndScreen):
             "Achille Brighton",
             "Rish Kundalia",
             "Yana Chernobilsky",
-            "Shìmín kuāng",
+            "Shìmín Ku$\\overline{\\text{a}}$ng",
             "Mathew Bramson",
             "Jerry Ling",
             "Mustafa Mahdi",
@@ -4272,8 +4587,6 @@ class BaselPatreonThanks(PatreonEndScreen):
         self.add_foreground_mobject(next_video)
         PatreonEndScreen.construct(self)
 
-
-
 class Thumbnail(Scene):
     CONFIG = {
         "light_source_config" : {
@@ -4291,7 +4604,7 @@ class Thumbnail(Scene):
         )
         equation.scale(1.8)
         equation.move_to(2*UP)
-        equation.set_stroke(BLACK, 1)
+        equation.set_stroke(RED, 1)
         answer = TexMobject("= \\frac{\\pi^2}{6}", color = LIGHT_COLOR)
         answer.scale(3)
         answer.set_stroke(RED, 1)
@@ -4324,10 +4637,6 @@ class Thumbnail(Scene):
         self.add(lake)
         self.add(equation, answer)
         self.wait()
-
-
-
-
 
 
 
