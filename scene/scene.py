@@ -366,7 +366,6 @@ class Scene(Container):
         Each arg can either be an animation, or a mobject method
         followed by that methods arguments (and potentially follow
         by a dict of kwargs for that method).
-
         This animation list is built by going through the args list,
         and each animation is simply added, but when a mobject method
         s hit, a MoveToTarget animation is built using the args that
@@ -610,7 +609,6 @@ class Scene(Container):
 
 class EndSceneEarlyException(Exception):
     pass
-
 
 
 

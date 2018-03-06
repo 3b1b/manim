@@ -123,8 +123,11 @@ class PatreonEndScreen(PatreonThanks):
         "n_patron_columns" : 3,
         "max_patron_width" : 3,
         "run_time" : 20,
+        "randomize_order" : True,
     }
     def construct(self):
+        if self.randomize_order:
+            random.shuffle(self.specific_patrons)
         self.add_title()
         self.scroll_through_patrons()
 
@@ -140,7 +143,6 @@ class PatreonEndScreen(PatreonThanks):
             pi.look(DOWN)
             pi.next_to(title, vect, buff = MED_LARGE_BUFF)
         self.add_foreground_mobjects(title, randy, morty)
-
 
     def scroll_through_patrons(self):
         logo_box = Square(side_length = 2.5)
@@ -176,7 +178,7 @@ class PatreonEndScreen(PatreonThanks):
             aligned_edge = UP,
         )
         columns.scale_to_fit_width(total_width - 1)
-        columns.next_to(black_rect, DOWN, LARGE_BUFF)
+        columns.next_to(black_rect, DOWN, 3*LARGE_BUFF)
         columns.to_edge(RIGHT)
 
         self.play(

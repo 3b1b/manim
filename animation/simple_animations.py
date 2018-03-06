@@ -358,7 +358,6 @@ class Succession(Animation):
         Each arg will either be an animation, or an animation class 
         followed by its arguments (and potentially a dict for 
         configuration).
-
         For example, 
         Succession(
             ShowCreation(circle),
@@ -539,4 +538,3 @@ class EmptyAnimation(Animation):
 
     def __init__(self, *args, **kwargs):
         return Animation.__init__(self, Group(), *args, **kwargs)
-
