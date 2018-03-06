@@ -674,6 +674,12 @@ class ColorMappedByFuncScene(Scene):
         "hide_background" : False #Background used for color mapped objects, not as background
     }
 
+    def short_path_to_long_path(self, filename_with_ext):
+        return os.path.join(
+            self.output_directory, "images", 
+            filename_with_ext
+        )
+
     def setup(self):
         # The composition of input_to_pos and pos_to_color 
         # is to be equal to func (which turns inputs into colors)
@@ -700,8 +706,7 @@ class ColorMappedByFuncScene(Scene):
         # Thus, multiple scenes with same output image can re-use it
         # without recomputation
         full_hash = hash((func_hash, self.camera.pixel_shape))
-        self.background_image_file = os.path.join(
-            self.output_directory, "images", 
+        self.background_image_file = self.short_path_to_long_path(
             "color_mapped_bg_hash_" + str(full_hash) + ".png"
         )
         self.in_background_pass = not os.path.exists(self.background_image_file)
@@ -724,7 +729,6 @@ class ColorMappedByFuncScene(Scene):
                     )
                 )
             )
-
             self.save_image(self.background_image_file, mode = "RGBA")
 
         if self.hide_background:
@@ -872,10 +876,10 @@ class PiWalkerCircle(PiWalker):
 class EquationSolver2d(ColorMappedObjectsScene):
     CONFIG = {
         "camera_config" : {"use_z_coordinate_for_display_order": True},
-        "initial_lower_x" : -5.1,
-        "initial_upper_x" : 5.1,
-        "initial_lower_y" : -3.1,
-        "initial_upper_y" : 3.1,
+        "initial_lower_x" : -5,
+        "initial_upper_x" : 5,
+        "initial_lower_y" : -3,
+        "initial_upper_y" : 3,
         "num_iterations" : 1,
         "num_checkpoints" : 10,
         "display_in_parallel" : True,
@@ -893,7 +897,9 @@ class EquationSolver2d(ColorMappedObjectsScene):
         #
         # replacement_background_image_file has to be manually configured
         "show_winding_numbers" : True,
-        "replacement_background_image_file" : None,
+
+        # Used for UhOhScene; 
+        "manual_wind_override" : None
     }
 
     def construct(self):
@@ -904,13 +910,35 @@ class EquationSolver2d(ColorMappedObjectsScene):
 
         base_line = Line(UP, RIGHT, stroke_width = border_stroke_width, color = WHITE)
 
+        if self.use_fancy_lines:
+            base_line.color_using_background_image(self.background_image_file)
+
+        def match_style_with_bg(obj1, obj2):
+            obj1.match_style(obj2)
+            bg = obj2.get_background_image_file()
+            if bg != None:
+                obj1.color_using_background_image(bg)
+
         run_time_base = 1
         run_time_with_lingering = run_time_base + 0.2
         base_rate = lambda t : t
         linger_rate = squish_rate_func(lambda t : t, 0, 
                         fdiv(run_time_base, run_time_with_lingering))
 
-        def Animate2dSolver(cur_depth, rect, dim_to_split, sides_to_draw = [0, 1, 2, 3]):
+        # Helper functions for manual_wind_override
+        def head(m):
+            if m == None:
+                return None
+            return m[0]
+
+        def child(m, i):
+            if m == None or m == 0:
+                return None
+            return m[i + 1]
+
+        def Animate2dSolver(cur_depth, rect, dim_to_split, 
+            sides_to_draw = [0, 1, 2, 3], 
+            manual_wind_override = None):
             print "Solver at depth: " + str(cur_depth)
 
             if cur_depth >= self.num_iterations:
@@ -921,15 +949,13 @@ class EquationSolver2d(ColorMappedObjectsScene):
                 a0 = alpha_winder(0)
                 rebased_winder = lambda alpha: alpha_winder(alpha) - a0 + start_wind
                 colored_line = Line(num_plane.coords_to_point(*start) + IN, num_plane.coords_to_point(*end) + IN)
-                colored_line.match_style(base_line)
-                if self.use_fancy_lines:
-                    colored_line.color_using_background_image(self.replacement_background_image_file or self.background_image_file)
+                match_style_with_bg(colored_line, base_line)
 
                 walker_anim = LinearWalker(
                     start_coords = start, 
                     end_coords = end,
                     coords_to_point = num_plane.coords_to_point,
-                    val_func = self.func,
+                    val_func = self.func, # Note: This is the image func, and not logic_func
                     number_update_func = rebased_winder if self.show_winding_numbers else None,
                     remover = True,
                     walker_stroke_color = WALKER_LIGHT_COLOR,
@@ -968,7 +994,7 @@ class EquationSolver2d(ColorMappedObjectsScene):
                     draw_line = i in sides_to_draw)
                 anim = Succession(anim, next_anim)
 
-            total_wind = round(wind_so_far)
+            total_wind = head(manual_wind_override) or round(wind_so_far)
 
             if total_wind == 0:
                 coords = [
@@ -994,9 +1020,10 @@ class EquationSolver2d(ColorMappedObjectsScene):
                         cur_depth = cur_depth + 1,
                         rect = sub_rect,
                         dim_to_split = 1 - dim_to_split,
-                        sides_to_draw = [side_to_draw]
+                        sides_to_draw = [side_to_draw],
+                        manual_wind_override = child(manual_wind_override, index)
                     )
-                    for (sub_rect, side_to_draw) in sub_rect_and_sides
+                    for (index, (sub_rect, side_to_draw)) in enumerate(sub_rect_and_sides)
                 ]
                 mid_line_coords = rect.split_line_on_dim(dim_to_split)
                 mid_line_points = [num_plane.coords_to_point(x, y)  + 2 * IN for (x, y) in mid_line_coords]
@@ -1026,7 +1053,8 @@ class EquationSolver2d(ColorMappedObjectsScene):
             cur_depth = 0, 
             rect = rect,
             dim_to_split = 0,
-            sides_to_draw = []
+            sides_to_draw = [],
+            manual_wind_override = self.manual_wind_override
         )
 
         print "Done computing anim"
@@ -1039,9 +1067,7 @@ class EquationSolver2d(ColorMappedObjectsScene):
             rect.get_bottom_left(),
         ]
         border = Polygon(*map(lambda x : num_plane.coords_to_point(*x) + IN, rect_points))
-        border.match_style(base_line)
-        if self.use_fancy_lines:
-            border.color_using_background_image(self.background_image_file)
+        match_style_with_bg(border, base_line)
 
         rect_time_without_linger = 4 * run_time_base
         rect_time_with_linger = 3 * run_time_base + run_time_with_lingering
@@ -2058,11 +2084,75 @@ class TinyLoopOfBasicallySameColor(PureColorMap):
         self.play(ShowCreation(circle))
         self.wait()
 
+def uhOhFunc((x, y)):
+    x = np.clip(x, -5, 5)/5
+    y = np.clip(y, -3, 3)/3
+
+    alpha = 0.5 # Most things will return green
+
+    # These next three things should really be abstracted into some "Interpolated triangle" function
+
+    if x >= 0 and y >= x and y <= 1:
+        alpha = interpolate(0.5, 1, y - x)
+
+    if x < 0 and y >= -2 * x and y <= 1:
+        alpha = interpolate(0.5, 1, y + 2 * x)
+
+    if x >= -1 and y >= 2 * (x + 1) and y <= 1:
+        alpha = interpolate(0.5, 0, y - 2 * (x + 1))
+
+    return complex_to_pair(100 * np.exp(complex(0, TAU * (0.5 - alpha))))
+
+class UhOhFuncTest(PureColorMap):
+    CONFIG = {
+        "func" : uhOhFunc
+    }
+
+
 class UhOhScene(EquationSolver2d):
     CONFIG = {
+        "func" : uhOhFunc,
+        "display_in_parallel" : True,
+        "manual_wind_override" : (1, (1, (1, None, None), None), None), # Tailored to UhOhFunc above
         "show_winding_numbers" : False,
-        "replacement_background_image_file" : None
+        "num_iterations" : 5,
     }
+
+class UhOhSalientStill(ColorMappedObjectsScene):
+    CONFIG = {
+        "func" : uhOhFunc
+    }
+
+    def construct(self):
+        ColorMappedObjectsScene.construct(self)
+        
+        new_up = 3 * UP
+        new_left = 5 * LEFT
+
+        thin_line = Line(UP, RIGHT, color = WHITE)
+
+        main_points = [new_left + new_up, new_up, ORIGIN, new_left]
+        polygon = Polygon(*main_points, stroke_width = border_stroke_width)
+        thin_polygon = polygon.copy().match_style(thin_line)
+        polygon.color_using_background_image(self.background_image_file)
+
+        midline = Line(new_up + 0.5 * new_left, 0.5 * new_left, stroke_width = border_stroke_width)
+        thin_midline = midline.copy().match_style(thin_line)
+        midline.color_using_background_image(self.background_image_file)
+
+        self.add(polygon, midline)
+
+        self.wait()
+
+        everything_filler = FullScreenFadeRectangle(fill_opacity = 1)
+        everything_filler.color_using_background_image(self.background_image_file)
+
+        thin_white_copy = Group(thin_polygon, thin_midline)
+
+        self.play(FadeIn(everything_filler), FadeIn(thin_white_copy))
+
+        self.wait()
+
 
 # TODO: Brouwer's fixed point theorem visuals
 # class BFTScene(Scene):
