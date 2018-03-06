@@ -54,10 +54,14 @@ class VMobject(Mobject):
         if fill_opacity is not None:
             self.fill_opacity = fill_opacity
         if family:
-            kwargs = locals()
-            kwargs.pop("self")
             for mob in self.submobjects:
-                mob.set_style_data(**kwargs)
+                mob.set_style_data(
+                    stroke_color = stroke_color,
+                    stroke_width  = stroke_width,
+                    fill_color = fill_color,
+                    fill_opacity  = fill_opacity,
+                    family = family
+                )
         return self
 
     def set_fill(self, color = None, opacity = None, family = True):
@@ -244,7 +248,6 @@ class VMobject(Mobject):
         a single "path", in the svg sense of the word.
         However, one such path may really consist of separate
         continuous components if there is a move_to command.
-
         These other portions of the path will be treated as submobjects,
         but will be tracked in a separate special list for when
         it comes time to display.
@@ -287,7 +290,6 @@ class VMobject(Mobject):
         If the distance between a given handle point H and its associated
         anchor point A is d, then it changes H to be a distances factor*d
         away from A, but so that the line from A to H doesn't change.
-
         This is mostly useful in the context of applying a (differentiable) 
         function, to preserve tangency properties.  One would pull all the 
         handles closer to their anchors, apply the function then push them out
@@ -480,5 +482,4 @@ class VectorizedPoint(VMobject):
 
     def set_location(self,new_loc):
         self.set_points(np.array([new_loc]))
-
 
