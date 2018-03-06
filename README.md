@@ -24,7 +24,7 @@ pip install -r requirements.txt
 ```
 
 Note: pip will install the python module `aggdraw` from
-https://github.com/scottopell/aggdraw-64bits/ and it might requires additional
+https://github.com/scottopell/aggdraw-64bits/ and it might have additional
 dependencies.
 
 This doesn't install freetype, but I don't think it's required for this project
