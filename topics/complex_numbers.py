@@ -170,7 +170,6 @@ class ComplexPlane(NumberPlane):
         "unit_size" : 1,
         "line_frequency" : 1,
         "faded_line_frequency" : 0.5,
-        "number_scale_factor" : 0.5,
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
@@ -204,6 +203,8 @@ class ComplexPlane(NumberPlane):
                 for y in range(-int(self.y_radius), int(self.y_radius)+1)
             ]
         for number in numbers:
+            if number == complex(0, 0):
+                continue
             point = self.number_to_point(number)
             num_str = str(number).replace("j", "i")
             if num_str.startswith("0"):
@@ -212,9 +213,8 @@ class ComplexPlane(NumberPlane):
                 num_str = num_str.replace("1", "")
             num_mob = TexMobject(num_str)
             num_mob.add_background_rectangle()
-            num_mob.scale(self.number_scale_factor)
-            vect = DOWN + LEFT
-            num_mob.next_to(point, vect, SMALL_BUFF)
+            num_mob.scale_to_fit_height(self.written_coordinate_height)
+            num_mob.next_to(point, DOWN+LEFT, SMALL_BUFF)
             result.add(num_mob)
         return result
 

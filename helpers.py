@@ -359,6 +359,11 @@ def mid(start, end):
 def inverse_interpolate(start, end, value):
     return np.true_divide(value - start, end - start)
 
+def match_interpolate(new_start, new_end, old_start, old_end, old_value):
+    return interpolate(
+        new_start, new_end, 
+        inverse_interpolate(old_start, old_end, old_value))
+
 def clamp(lower, upper, val):
     if val < lower:
         return lower
