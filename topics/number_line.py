@@ -120,6 +120,9 @@ class NumberLine(VMobject):
             result.add(mob)
         return result
 
+    def get_labels(self):
+        return self.get_number_mobjects()
+
     def add_numbers(self, *numbers, **kwargs):
         self.numbers = self.get_number_mobjects(
             *numbers, **kwargs
@@ -241,7 +244,7 @@ class Axes(VGroup):
                 elif lx > x and rx < x:
                     lh, rh = rh, lh
             return points[1]
-
+        return self.coords_to_point(x, graph.underlying_function(x))
 
 class ThreeDAxes(Axes):
     CONFIG = {

@@ -18,7 +18,6 @@ from camera import Camera
 HELP_MESSAGE = """
    Usage:
    python extract_scene.py <module> [<scene name>]
-
    -p preview in low quality
    -s show and save picture of last frame
    -w write result to file [this is default if nothing else is stated]
@@ -35,7 +34,6 @@ SCENE_NOT_FOUND_MESSAGE = """
 CHOOSE_NUMBER_MESSAGE = """
 Choose number corresponding to desired scene/arguments.
 (Use comma separated list for multiple entries)
-
 Choice(s): """
 INVALID_NUMBER_MESSAGE = "Fine then, if you don't want to give a valid number I'll just quit"
 
