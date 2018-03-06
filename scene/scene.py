@@ -40,7 +40,7 @@ class Scene(Container):
         "random_seed" : 0,
         "start_at_animation_number" : None,
         "end_at_animation_number" : None,
-        "include_render_quality_in_name" : False, #TODO, nothing uses this right now
+        "include_render_quality_in_output_directory" : True,
     }
     def __init__(self, **kwargs):
         Container.__init__(self, **kwargs) # Perhaps allow passing in a non-empty *mobjects parameter?
@@ -56,8 +56,6 @@ class Scene(Container):
         self.original_skipping_status = self.skip_animations
         if self.name is None:
             self.name = self.__class__.__name__
-            if self.include_render_quality_in_name:
-                self.name += str(self.camera.pixel_shape[0])
         if self.random_seed is not None:
             random.seed(self.random_seed)
             np.random.seed(self.random_seed)
@@ -552,15 +550,22 @@ class Scene(Container):
         image.save(path)
 
     def get_movie_file_path(self, name = None, extension = None):
+        directory = self.output_directory
+        if self.include_render_quality_in_output_directory:
+            directory += "_%dp%d"%(
+                self.camera.pixel_shape[0],
+                int(1.0/self.frame_duration)
+            )
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
         if extension is None:
             extension = self.movie_file_extension
         if name is None:
             name = self.name
-        file_path = os.path.join(self.output_directory, name)
+        file_path = os.path.join(directory, name)
         if not file_path.endswith(extension):
             file_path += extension
-        if not os.path.exists(self.output_directory):
-            os.makedirs(self.output_directory)
         return file_path
 
     def open_movie_pipe(self):
