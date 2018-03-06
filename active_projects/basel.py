@@ -406,7 +406,6 @@ class IntroScene(PiCreatureScene):
 
         self.ellipsis = TexMobject("\cdots")
         self.ellipsis.scale(0.4)
-
         for i in range(5, max_n1):
             
             if i == 5:
@@ -421,7 +420,6 @@ class IntroScene(PiCreatureScene):
                     GrowFromPoint(self.rects[i], self.euler_sum[10].get_center(),
                     run_time = 0.5)
                 )
-
         for i in range(max_n1, max_n2):
             self.play(
                     GrowFromPoint(self.rects[i], self.euler_sum[10].get_center(),
@@ -935,6 +933,7 @@ class MorphIntoSunScene(PiCreatureScene):
             max_opacity_spotlight = SPOTLIGHT_FULL,
 
         )
+        self.wait()
 
         self.light_source.move_source_to(source_point)
 
@@ -960,7 +959,6 @@ class MorphIntoSunScene(PiCreatureScene):
             fill_opacity = 1.0,
             stroke_width = 0.0
         )
-
         self.screen.next_to(morty,LEFT)
 
         self.light_source.set_screen(self.screen)
