@@ -42,6 +42,9 @@ border_stroke_width = 10
 # Used for clockwise circling in some scenes
 cw_circle = Circle(color = WHITE).stretch(-1, 0)
 
+# Used when walker animations are on black backgrounds, in EquationSolver2d and PiWalker
+WALKER_LIGHT_COLOR = DARK_GREY
+
 # TODO/WARNING: There's a lot of refactoring and cleanup to be done in this code,
 # (and it will be done, but first I'll figure out what I'm doing with all this...)
 # -SR
@@ -108,6 +111,7 @@ positive_color = rev_to_color(0)
 negative_color = rev_to_color(0.5)
 neutral_color = rev_to_color(0.25)
         
+# This, the first animation I made, has the messiest code, full of cruft, but so it goes
 class EquationSolver1d(GraphScene, ZoomedScene):
     CONFIG = {
     "camera_config" : 
@@ -122,7 +126,9 @@ class EquationSolver1d(GraphScene, ZoomedScene):
     "num_iterations" : 10,
     "iteration_at_which_to_start_zoom" : None,
     "graph_label" : None,
-    "show_target_line" : True
+    "show_target_line" : True,
+    "base_line_y" : 0, # The y coordinate at which to draw our x guesses
+    "show_y_as_deviation" : False, # Displays y-values as deviations from target
     }
 
     def drawGraph(self):
@@ -143,11 +149,14 @@ class EquationSolver1d(GraphScene, ZoomedScene):
                 dashed_segment_length = 0.1)
             self.add(target_line_object)
 
-            target_line_label = TexMobject("y = " + str(self.targetY))
+            target_label_num = 0 if self.show_y_as_deviation else self.targetY
+            target_line_label = TexMobject("y = " + str(target_label_num))
             target_line_label.next_to(target_line_object.get_left(), UP + RIGHT)
             self.add(target_line_label)
 
-            self.wait() # Give us time to appreciate the graph
+        self.wait() # Give us time to appreciate the graph
+
+        if self.show_target_line:
             self.play(FadeOut(target_line_label)) # Reduce clutter
 
         print "For reference, graphOrigin: ", self.coords_to_point(0, 0)
@@ -156,10 +165,30 @@ class EquationSolver1d(GraphScene, ZoomedScene):
     # This is a mess right now (first major animation coded), 
     # but it works; can be refactored later or never
     def solveEquation(self):
-        startBrace = Dot() #TexMobject("[") # Not using [ and ] because they end up crossing over 
-        startBrace.set_color(negative_color)
-        endBrace = Dot()
-        endBrace.set_color(positive_color)
+        # Under special conditions, used in GuaranteedZeroScene, we let the 
+        # "lower" guesses actually be too high, or vice versa, and color 
+        # everything accordingly
+
+        def color_by_comparison(val, ref):
+            if val > ref:
+                return positive_color
+            elif val < ref:
+                return negative_color
+            else:
+                return neutral_color
+
+        lower_color = color_by_comparison(self.func(self.initial_lower_x), self.targetY)
+        upper_color = color_by_comparison(self.func(self.initial_upper_x), self.targetY)
+
+        if self.show_y_as_deviation:
+            y_bias = -self.targetY
+        else:
+            y_bias = 0
+
+        startBrace = TexMobject("|", stroke_width = 10) #TexMobject("[") # Not using [ and ] because they end up crossing over 
+        startBrace.set_color(lower_color)
+        endBrace = startBrace.copy().stretch(-1, 0)
+        endBrace.set_color(upper_color)
         genericBraces = Group(startBrace, endBrace)
         #genericBraces.scale(1.5)
 
@@ -177,7 +206,7 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         upperX = self.initial_upper_x
         upperY = self.func(upperX)
 
-        leftBrace.move_to(self.coords_to_point(lowerX, 0)) #, aligned_edge = RIGHT)
+        leftBrace.move_to(self.coords_to_point(lowerX, self.base_line_y)) #, aligned_edge = RIGHT)
         leftBraceLabel = DecimalNumber(lowerX)
         leftBraceLabel.next_to(leftBrace, DOWN + LEFT, buff = SMALL_BUFF)
         leftBraceLabelAnimation = ContinualChangingDecimal(leftBraceLabel, 
@@ -185,7 +214,7 @@ class EquationSolver1d(GraphScene, ZoomedScene):
             tracked_mobject = leftBrace)
         self.add(leftBraceLabelAnimation)
         
-        rightBrace.move_to(self.coords_to_point(upperX, 0)) #, aligned_edge = LEFT)
+        rightBrace.move_to(self.coords_to_point(upperX, self.base_line_y)) #, aligned_edge = LEFT)
         rightBraceLabel = DecimalNumber(upperX)
         rightBraceLabel.next_to(rightBrace, DOWN + RIGHT, buff = SMALL_BUFF)
         rightBraceLabelAnimation = ContinualChangingDecimal(rightBraceLabel, 
@@ -197,7 +226,7 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         downBraceLabel = DecimalNumber(lowerY)
         downBraceLabel.next_to(downBrace, LEFT + DOWN, buff = SMALL_BUFF)
         downBraceLabelAnimation = ContinualChangingDecimal(downBraceLabel, 
-            lambda alpha : self.point_to_coords(downBrace.get_center())[1],
+            lambda alpha : self.point_to_coords(downBrace.get_center())[1] + y_bias,
             tracked_mobject = downBrace)
         self.add(downBraceLabelAnimation)
         
@@ -205,28 +234,28 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         upBraceLabel = DecimalNumber(upperY)
         upBraceLabel.next_to(upBrace, LEFT + UP, buff = SMALL_BUFF)
         upBraceLabelAnimation = ContinualChangingDecimal(upBraceLabel, 
-            lambda alpha : self.point_to_coords(upBrace.get_center())[1],
+            lambda alpha : self.point_to_coords(upBrace.get_center())[1] + y_bias,
             tracked_mobject = upBrace)
         self.add(upBraceLabelAnimation)
 
         lowerDotPoint = self.input_to_graph_point(lowerX, self.graph)
-        lowerDotXPoint = self.coords_to_point(lowerX, 0)
+        lowerDotXPoint = self.coords_to_point(lowerX, self.base_line_y)
         lowerDotYPoint = self.coords_to_point(0, self.func(lowerX))
-        lowerDot = Dot(lowerDotPoint + OUT, color = negative_color)
+        lowerDot = Dot(lowerDotPoint + OUT, color = lower_color)
         upperDotPoint = self.input_to_graph_point(upperX, self.graph)
-        upperDot = Dot(upperDotPoint + OUT, color = positive_color)
-        upperDotXPoint = self.coords_to_point(upperX, 0)
+        upperDot = Dot(upperDotPoint + OUT, color = upper_color)
+        upperDotXPoint = self.coords_to_point(upperX, self.base_line_y)
         upperDotYPoint = self.coords_to_point(0, self.func(upperX))
 
-        lowerXLine = Line(lowerDotXPoint, lowerDotPoint, color = negative_color)
-        upperXLine = Line(upperDotXPoint, upperDotPoint, color = positive_color)
-        lowerYLine = Line(lowerDotYPoint, lowerDotPoint, color = negative_color)
-        upperYLine = Line(upperDotYPoint, upperDotPoint, color = positive_color)
+        lowerXLine = Line(lowerDotXPoint, lowerDotPoint, color = lower_color)
+        upperXLine = Line(upperDotXPoint, upperDotPoint, color = upper_color)
+        lowerYLine = Line(lowerDotYPoint, lowerDotPoint, color = lower_color)
+        upperYLine = Line(upperDotYPoint, upperDotPoint, color = upper_color)
         self.add(lowerXLine, upperXLine, lowerYLine, upperYLine)
 
-        self.add(xBraces, yBraces, lowerDot, upperDot)
+        self.add_foreground_mobjects(xBraces, yBraces, lowerDot, upperDot)
 
-        x_guess_line = Line(lowerDotXPoint, upperDotXPoint, color = neutral_color)
+        x_guess_line = Line(lowerDotXPoint, upperDotXPoint, color = WHITE, stroke_width = 10)
         self.add(x_guess_line)
 
         lowerGroup = Group(
@@ -243,11 +272,11 @@ class EquationSolver1d(GraphScene, ZoomedScene):
             x_guess_line
         )
 
-        initialLowerXDot = Dot(lowerDotXPoint, color = negative_color)
-        initialUpperXDot = Dot(upperDotXPoint, color = positive_color)
-        initialLowerYDot = Dot(lowerDotYPoint, color = negative_color)
-        initialUpperYDot = Dot(upperDotYPoint, color = positive_color)
-        self.add(initialLowerXDot, initialUpperXDot, initialLowerYDot, initialUpperYDot)
+        initialLowerXDot = Dot(lowerDotXPoint + OUT, color = lower_color)
+        initialUpperXDot = Dot(upperDotXPoint + OUT, color = upper_color)
+        initialLowerYDot = Dot(lowerDotYPoint + OUT, color = lower_color)
+        initialUpperYDot = Dot(upperDotYPoint + OUT, color = upper_color)
+        self.add_foreground_mobjects(initialLowerXDot, initialUpperXDot, initialLowerYDot, initialUpperYDot)
 
         for i in range(self.num_iterations):
             if i == self.iteration_at_which_to_start_zoom:
@@ -268,26 +297,36 @@ class EquationSolver1d(GraphScene, ZoomedScene):
                     graphPoint = self.input_to_graph_point(newX, 
                             self.graph)
                     dot.move_to(graphPoint)
-                    xAxisPoint = self.coords_to_point(newX, 0)
+                    xAxisPoint = self.coords_to_point(newX, self.base_line_y)
                     xBrace.move_to(xAxisPoint)
                     yAxisPoint = self.coords_to_point(0, newY)
                     yBrace.move_to(yAxisPoint)
                     xLine.put_start_and_end_on(xAxisPoint, graphPoint)
                     yLine.put_start_and_end_on(yAxisPoint, graphPoint)
-                    fixed_guess_point = self.coords_to_point(fixed_guess_x, 0)
+                    fixed_guess_point = self.coords_to_point(fixed_guess_x, self.base_line_y)
                     guess_line.put_start_and_end_on(xAxisPoint, fixed_guess_point)
                     return group
                 return updater
 
             midX = (lowerX + upperX)/float(2)
             midY = self.func(midX)
+
+            # If we run with an interval whose endpoints start off with same sign,
+            # then nothing after this branching can be trusted to do anything reasonable
+            # in terms of picking branches or assigning colors
             in_negative_branch = midY < self.targetY
             sign_color = negative_color if in_negative_branch else positive_color
 
             midCoords = self.coords_to_point(midX, midY)
             midColor = neutral_color
             # Hm... even the z buffer isn't helping keep this above x_guess_line
-            midXPoint = Dot(self.coords_to_point(midX, 0) + OUT, color = midColor)
+
+            midXBrace = startBrace.copy() # Had start and endBrace been asymmetric, we'd do something different here
+            midXBrace.set_color(midColor)
+            midXBrace.move_to(self.coords_to_point(midX, self.base_line_y) + OUT)
+
+            # We only actually add this much later
+            midXPoint = Dot(self.coords_to_point(midX, self.base_line_y) + OUT, color = sign_color)
 
             x_guess_label_caption = TextMobject("New guess: x = ", fill_color = midColor)
             x_guess_label_num = DecimalNumber(midX, fill_color = midColor)
@@ -302,11 +341,17 @@ class EquationSolver1d(GraphScene, ZoomedScene):
             guess_labels = Group(x_guess_label, y_guess_label)
 
             self.play(
-                ReplacementTransform(leftBrace.copy(), midXPoint),
-                ReplacementTransform(rightBrace.copy(), midXPoint),
+                ReplacementTransform(leftBrace.copy(), midXBrace),
+                ReplacementTransform(rightBrace.copy(), midXBrace),
                 FadeIn(x_guess_label))
 
-            midXLine = DashedLine(self.coords_to_point(midX, 0), midCoords, color = midColor)
+            self.add_foreground_mobject(midXBrace)
+
+            midXLine = DashedLine(
+                self.coords_to_point(midX, self.base_line_y), 
+                midCoords, 
+                color = midColor
+            )
             self.play(ShowCreation(midXLine))
             midDot = Dot(midCoords, color = sign_color)
             if(self.iteration_at_which_to_start_zoom != None and 
@@ -317,10 +362,12 @@ class EquationSolver1d(GraphScene, ZoomedScene):
             self.play(
                 ShowCreation(midYLine), 
                 FadeIn(y_guess_label),
-                ApplyMethod(midXPoint.set_color, sign_color),
-                ApplyMethod(midXLine.set_color, sign_color))
+                ApplyMethod(midXBrace.set_color, sign_color),
+                ApplyMethod(midXLine.set_color, sign_color),
+                run_time = 0.25
+            )
             midYPoint = Dot(self.coords_to_point(0, midY), color = sign_color)
-            self.add(midYPoint)
+            self.add(midXPoint, midYPoint)
 
             if in_negative_branch:
                 self.play(
@@ -346,7 +393,7 @@ class EquationSolver1d(GraphScene, ZoomedScene):
                 upperX = midX
                 upperY = midY
             #mid_group = Group(midXLine, midDot, midYLine) Removing groups doesn't flatten as expected?
-            self.remove(midXLine, midDot, midYLine)
+            self.remove(midXLine, midDot, midYLine, midXBrace)
 
         self.wait()
 
@@ -464,6 +511,9 @@ def point3d_func_from_plane_func(f):
         return np.array((f_val[0], f_val[1], 0))
     return g
 
+def point3d_func_from_complex_func(f):
+    return point3d_func_from_plane_func(plane_func_from_complex_func(f))
+
 # Returns a function from 2-ples to 2-ples
 # This function is specified by a list of (x, y, z) tuples, 
 # and has winding number z (or total of all specified z) around each (x, y)
@@ -493,7 +543,7 @@ def plane_func_by_wind_spec(*specs):
     return plane_func_from_complex_func(complex_func)
 
 # Used in Initial2dFunc scenes, VectorField scene, and ExamplePlaneFunc
-example_plane_func_spec = [(1.1, 1, 1), (-3, -1.3, 2), (2.8, -2, -1)]
+example_plane_func_spec = [(-3, -1.3, 2), (0.1, 0.2, 1), (2.8, -2, -1)]
 example_plane_func = plane_func_by_wind_spec(*example_plane_func_spec)
 
 empty_animation = EmptyAnimation()
@@ -619,7 +669,9 @@ class ColorMappedByFuncScene(Scene):
         "num_plane" : NumberPlane(),
         "show_num_plane" : True,
 
-        "show_output" : False
+        "show_output" : False,
+
+        "hide_background" : False #Background used for color mapped objects, not as background
     }
 
     def setup(self):
@@ -675,7 +727,12 @@ class ColorMappedByFuncScene(Scene):
 
             self.save_image(self.background_image_file, mode = "RGBA")
 
-        self.camera.background_image = self.background_image_file
+        if self.hide_background:
+            # Clearing background
+            self.camera.background_image = None
+        else:
+            # Even if we just computed the background, we switch to the file now
+            self.camera.background_image = self.background_image_file
         self.camera.init_background()
 
         if self.show_num_plane:
@@ -694,15 +751,9 @@ class PureColorMap(ColorMappedByFuncScene):
 # This sets self.background_image_file, but does not display it as the background
 class ColorMappedObjectsScene(ColorMappedByFuncScene):
     CONFIG = {
-        "show_num_plane" : False
+        "show_num_plane" : False,
+        "hide_background" : True,
     }
-
-    def construct(self):
-        ColorMappedByFuncScene.construct(self)
-
-        # Clearing background
-        self.camera.background_image = None
-        self.camera.init_background()
 
 class PiWalker(ColorMappedByFuncScene):
     CONFIG = {
@@ -759,7 +810,7 @@ class PiWalker(ColorMappedByFuncScene):
                 scale_arrows = self.scale_arrows,
                 number_update_func = number_update_func,
                 run_time = self.step_run_time,
-                walker_stroke_color = DARK_GREY if self.color_foreground_not_background else BLACK
+                walker_stroke_color = WALKER_LIGHT_COLOR if self.color_foreground_not_background else BLACK
             )
 
             if self.display_odometer:
@@ -851,7 +902,7 @@ class EquationSolver2d(ColorMappedObjectsScene):
 
         clockwise_val_func = lambda p : -point_to_rev(self.func(p))
 
-        base_line = Line(UP, RIGHT, stroke_width = border_stroke_width, color = RED)
+        base_line = Line(UP, RIGHT, stroke_width = border_stroke_width, color = WHITE)
 
         run_time_base = 1
         run_time_with_lingering = run_time_base + 0.2
@@ -881,7 +932,7 @@ class EquationSolver2d(ColorMappedObjectsScene):
                     val_func = self.func,
                     number_update_func = rebased_winder if self.show_winding_numbers else None,
                     remover = True,
-                    walker_stroke_color = WHITE,
+                    walker_stroke_color = WALKER_LIGHT_COLOR,
 
                     show_arrows = self.show_arrows,
                     scale_arrows = self.scale_arrows,
@@ -1153,10 +1204,15 @@ class FirstSqrtScene(EquationSolver1d):
         "targetY" : 2,
         "initial_lower_x" : 1,
         "initial_upper_x" : 2,
-        "num_iterations" : 3,
+        "num_iterations" : 5,
         "iteration_at_which_to_start_zoom" : 3,
         "graph_label" : "y = x^2",
         "show_target_line" : True,
+    }
+
+class TestFirstSqrtScene(FirstSqrtScene):
+    CONFIG = {
+        "num_iterations" : 1,
     }
 
 FirstSqrtSceneConfig = FirstSqrtScene.CONFIG
@@ -1164,15 +1220,26 @@ shiftVal = FirstSqrtSceneConfig["targetY"]
 
 class SecondSqrtScene(FirstSqrtScene):
         CONFIG = {
-            "func" : lambda x : FirstSqrtSceneConfig["func"](x) - shiftVal,
-            "targetY" : 0,
             "graph_label" : FirstSqrtSceneConfig["graph_label"] + " - " + str(shiftVal),
-            "y_min" : FirstSqrtSceneConfig["y_min"] - shiftVal,
-            "y_max" : FirstSqrtSceneConfig["y_max"] - shiftVal,
-            "show_target_line" : False,
-            # 0.96 hacked in by checking calculations above
-            "graph_origin" : 0.96 * shiftVal * UP + FirstSqrtSceneConfig["graph_origin"],
+            "show_y_as_deviation" : True,
         }
+
+class TestSecondSqrtScene(SecondSqrtScene):
+    CONFIG = {
+        "num_iterations" : 1
+    }
+
+class GuaranteedZeroScene(SecondSqrtScene):
+     CONFIG = {
+        # Manual config values, not automatically synced to anything above
+        "initial_lower_x" : 1.75,
+        "initial_upper_x" : 2
+     }
+
+class TestGuaranteedZeroScene(GuaranteedZeroScene):
+    CONFIG = {
+        "num_iterations" : 1
+    }
 
 # TODO: Pi creatures intrigued
 
@@ -1292,6 +1359,9 @@ class VectorField(Scene):
         self.wait()
 
 class HasItsLimitations(Scene):
+    CONFIG = {
+        "camera_config" : {"use_z_coordinate_for_display_order": True},
+    }
 
     def construct(self):
         num_line = NumberLine()
@@ -1304,12 +1374,20 @@ class HasItsLimitations(Scene):
         base_point = num_line.number_to_point(2) + OUT
 
         dot_color = ORANGE
+
+        DOT_Z = OUT
+        # Note: This z-buffer value is needed for our static scenes, but is
+        # not sufficient for everything, in that we still need to use 
+        # the foreground_mobjects trick during animations.
+        # At some point, we should figure out how to have animations
+        # play well with z coordinates.
         
-        input_dot = Dot(base_point, color = dot_color)
+        input_dot = Dot(base_point + DOT_Z, color = dot_color)
         input_label = TexMobject("Input", fill_color = dot_color)
         input_label.next_to(input_dot, UP + LEFT)
         input_label.add_background_rectangle()
-        self.add(input_dot, input_label)
+        self.add_foreground_mobject(input_dot)
+        self.add(input_label)
 
         curved_arrow = Arc(0, color = MAROON_E)
         curved_arrow.set_bound_angles(np.pi, 0)
@@ -1319,12 +1397,13 @@ class HasItsLimitations(Scene):
         # Could do something smoother, with arrowhead moving along partial arc?
         self.play(ShowCreation(curved_arrow))
 
-        output_dot = Dot(base_point + 2 * RIGHT, color = dot_color)
+        output_dot = Dot(base_point + 2 * RIGHT + DOT_Z, color = dot_color)
         output_label = TexMobject("Output", fill_color = dot_color)
         output_label.next_to(output_dot, UP + RIGHT)
         output_label.add_background_rectangle()
 
-        self.add(output_dot, output_label)
+        self.add_foreground_mobject(output_dot)
+        self.add(output_label)
         self.wait()
 
         num_plane = NumberPlane()
@@ -1429,7 +1508,11 @@ class NumberLineScene(Scene):
 
 class Initial2dFuncSceneBase(Scene):
     CONFIG = {
-        "func" : point3d_func_from_plane_func(example_plane_func)
+        "func" : point3d_func_from_complex_func(lambda c : c**2 - c**3/5 + 1)
+        # We don't use example_plane_func because, unfortunately, the sort of examples
+        # which are good for demonstrating our color mapping haven't turned out to be
+        # good for visualizing in this manner; the gridlines run over themselves multiple 
+        # times in too confusing a fashion
     }
 
     def show_planes(self):
@@ -1441,12 +1524,15 @@ class Initial2dFuncSceneBase(Scene):
             line = Line(points[i], points[i + 1], color = RED)
             self.obj_draw(line)
 
-        # def wiggle_around(point):
-        #     radius = 0.2
-        #     small_circle = Circle(radius = radius)
-        #     small_
+        def wiggle_around(point):
+             radius = 0.2
+             small_circle = cw_circle.copy()
+             small_circle.scale(radius)
+             small_circle.move_to(point + radius * RIGHT)
+             small_circle.set_color(RED)
+             self.obj_draw(small_circle)
 
-        # wiggle_around(points[-1])
+        wiggle_around(points[-1])
 
     def obj_draw(self, input_object):
         self.play(ShowCreation(input_object))
@@ -1556,10 +1642,11 @@ class DemonstrateColorMapping(ColorMappedObjectsScene):
 # (Just set up an OdometerScene with function matching the walking of the Pi
 # creature from previous scene, then place it as a simultaneous inset with Premiere)
 
-class LoopSplitScene(Scene):
+class LoopSplitScene(ColorMappedObjectsScene):
     CONFIG = {
         # TODO: Change this to something more colorful down the midline
-        "output_func" : plane_func_by_wind_spec((1.1, 1.1, 1), (-3.1, -1.3, 2), (2.8, -2.1, -1))
+        "func" : plane_func_by_wind_spec((0.1/2, 1.1/2, 1), (-4.1/2, -1.3/2, 2), (1.8/2, -2.1/2, -1)),
+        "use_fancy_lines" : True,
     }
 
     def PulsedLine(self, 
@@ -1569,16 +1656,20 @@ class LoopSplitScene(Scene):
         pulse_time = 1, 
         **kwargs):
         line = Line(start, end, **kwargs)
+        if self.use_fancy_lines:
+            line.color_using_background_image(self.background_image_file)
         anim = LinePulser(
             line = line, 
             bullet_template = bullet_template, 
             num_bullets = num_bullets, 
             pulse_time = pulse_time, 
-            output_func = self.output_func,
+            output_func = self.func,
             **kwargs)
         return [VGroup(line, *anim.bullets), anim]
 
     def construct(self):
+        ColorMappedObjectsScene.construct(self)
+
         scale_factor = 2
         shift_term = 0
 
@@ -1594,7 +1685,7 @@ class LoopSplitScene(Scene):
         bl = scale_factor * (DOWN + LEFT) + shift_term
         lm = scale_factor * LEFT + shift_term
 
-        loop_color = BLUE
+        loop_color = WHITE
 
         default_bullet = PiCreature(color = RED)
         default_bullet.scale(0.15)
@@ -1605,10 +1696,10 @@ class LoopSplitScene(Scene):
         def SGroup(*args):
             return VGroup(*[arg[0] for arg in args])
 
-        top_line = self.PulsedLine(tl, tr, default_bullet, color = BLUE)
-        right_line = self.PulsedLine(tr, br, modified_bullet, color = BLUE)
-        bottom_line = self.PulsedLine(br, bl, default_bullet, color = BLUE)
-        left_line = self.PulsedLine(bl, tl, default_bullet, color = BLUE)
+        top_line = self.PulsedLine(tl, tr, default_bullet, color = loop_color)
+        right_line = self.PulsedLine(tr, br, modified_bullet, color = loop_color)
+        bottom_line = self.PulsedLine(br, bl, default_bullet, color = loop_color)
+        left_line = self.PulsedLine(bl, tl, default_bullet, color = loop_color)
         line_list = [top_line, right_line, bottom_line, left_line]
         loop = SGroup(*line_list)
         for line in line_list:
@@ -1616,7 +1707,11 @@ class LoopSplitScene(Scene):
         self.wait()
 
         # Splits in middle
-        split_line = DashedLine(interpolate(tl, tr, 0.5), interpolate(bl, br, 0.5))
+        if self.use_fancy_lines:
+            split_line = Line(tm, bm)
+            split_line.color_using_background_image(self.background_image_file)
+        else:
+            split_line = DashedLine(tm, bm)
         self.play(ShowCreation(split_line))
 
         self.remove(*split_line)
@@ -1893,20 +1988,25 @@ class ExamplePlaneFunc(ColorMappedByFuncScene):
 
         radius = 0.5
 
+        def circle_point(point):
+            circle = cw_circle.copy().scale(radius).move_to(point)
+            self.play(ShowCreation(circle))
+            return circle
+
+        def circle_spec(spec):
+            point = spec[0] * RIGHT + spec[1] * UP
+            return circle_point(point)
+
         nonzero_point = ORIGIN # Manually chosen, not auto-synced with example_plane_func
-        nonzero_point_circle = cw_circle.copy().scale(radius).move_to(nonzero_point)
-        self.play(ShowCreation(red_point_circle))
+        nonzero_point_circle = circle_point(nonzero_point)
         self.wait()
-        self.play(FadeOut(red_point_circle))
+        self.play(FadeOut(nonzero_point_circle))
         self.wait()
 
         zero_circles = Group()
-        for spec in example_plane_func_spec:
-            point = spec[0] * RIGHT + spec[1] * UP
 
-            circle = cw_circle.copy().scale(radius).move_to(point)
-            self.play(ShowCreation(circle))
-            zero_circles.add(circle)
+        for spec in example_plane_func_spec:
+            zero_circles.add(circle_spec(spec))
 
         self.wait()
 
@@ -1916,7 +2016,20 @@ class ExamplePlaneFunc(ColorMappedByFuncScene):
         # solely through Fade.
         #
         # But for now, I'll just take care of this stuff myself here.
-        self.play(*[FadeOut(zero_circle) for zero_circle in zero_circles])
+        # self.play(*[FadeOut(zero_circle) for zero_circle in zero_circles])
+        self.play(FadeOut(zero_circles))
+        self.wait()
+
+        # We can reuse our nonzero point from before for "Output doesn't go through ever color"
+        # Do re-use in Premiere
+
+        # We can also re-use the first of our zero-circles for "Output does go through every color",
+        # but just in case it would be useful, here's another one, all on its own
+
+        specific_spec_index = 0
+        temp_circle = circle_spec(example_plane_func_spec[specific_spec_index])
+        self.play(FadeOut(temp_circle))
+
         self.wait()
 
 class PiWalkerExamplePlaneFunc(PiWalkerRect):
@@ -1944,6 +2057,12 @@ class TinyLoopOfBasicallySameColor(PureColorMap):
         circle = cw_circle.copy().scale(radius).move_to(UP + RIGHT)
         self.play(ShowCreation(circle))
         self.wait()
+
+class UhOhScene(EquationSolver2d):
+    CONFIG = {
+        "show_winding_numbers" : False,
+        "replacement_background_image_file" : None
+    }
 
 # TODO: Brouwer's fixed point theorem visuals
 # class BFTScene(Scene):
