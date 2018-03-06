@@ -128,7 +128,6 @@ class LightSource(VMobject):
         self.camera_mob = new_cam_mob
         self.spotlight.camera_mob = new_cam_mob
 
-
     def set_screen(self, new_screen):
         if self.has_screen():
             self.spotlight.screen = new_screen
@@ -159,9 +158,6 @@ class LightSource(VMobject):
         
         # in any case
         self.screen = new_screen
-
-
-
 
     def move_source_to(self,point):
         apoint = np.array(point)
@@ -195,14 +191,13 @@ class LightSource(VMobject):
         self.spotlight.update_sectors()
         self.update_shadow()
 
-
     def update_lighthouse(self):
-        new_lh = Lighthouse()
-        new_lh.move_to(ORIGIN)
-        new_lh.apply_matrix(self.rotation_matrix())
-        new_lh.shift(self.get_source_point())
-        self.lighthouse.submobjects = new_lh.submobjects
-
+        self.lighthouse.move_to(self.get_source_point())
+        # new_lh = Lighthouse()
+        # new_lh.move_to(ORIGIN)
+        # new_lh.apply_matrix(self.rotation_matrix())
+        # new_lh.shift(self.get_source_point())
+        # self.lighthouse.submobjects = new_lh.submobjects
 
     def update_ambient(self):
         new_ambient_light = AmbientLight(
@@ -217,11 +212,8 @@ class LightSource(VMobject):
         new_ambient_light.move_source_to(self.get_source_point())
         self.ambient_light.submobjects = new_ambient_light.submobjects
 
-
-
     def get_source_point(self):
         return self.source_point.get_location()
-
 
     def rotation_matrix(self):
 
@@ -247,9 +239,7 @@ class LightSource(VMobject):
         R = np.dot(R2, R1)
         return R
 
-
     def update_shadow(self):
-
         point = self.get_source_point()
         projected_screen_points = []
         if not self.has_screen():
@@ -319,7 +309,6 @@ class LightSource(VMobject):
         self.shadow.mark_paths_closed = True
 
 
-
 class SwitchOn(LaggedStart):
     CONFIG = {
         "lag_ratio": 0.2,
@@ -329,9 +318,9 @@ class SwitchOn(LaggedStart):
     def __init__(self, light, **kwargs):
         if (not isinstance(light,AmbientLight) and not isinstance(light,Spotlight)):
             raise Exception("Only AmbientLights and Spotlights can be switched on")
-        LaggedStart.__init__(self,
-            FadeIn, light, **kwargs)
-
+        LaggedStart.__init__(
+            self, FadeIn, light, **kwargs
+        )
 
 class SwitchOff(LaggedStart):
     CONFIG = {
@@ -347,9 +336,6 @@ class SwitchOff(LaggedStart):
             FadeOut, light, **kwargs)
         light.submobjects = light.submobjects[::-1]
 
-
-
-
 class Lighthouse(SVGMobject):
     CONFIG = {
         "file_name" : "lighthouse",
@@ -360,7 +346,6 @@ class Lighthouse(SVGMobject):
 
     def move_to(self,point):
         self.next_to(point, DOWN, buff = 0)
-
 
 class AmbientLight(VMobject):
 
@@ -377,8 +362,8 @@ class AmbientLight(VMobject):
         "opacity_function" : lambda r : 1.0/(r+1.0)**2,
         "color" : LIGHT_COLOR,
         "max_opacity" : 1.0,
-        "num_levels" : 10,
-        "radius" : 10.0
+        "num_levels" : NUM_LEVELS,
+        "radius" : 5.0
     }
 
     def generate_points(self):
@@ -438,21 +423,7 @@ class AmbientLight(VMobject):
             submob.set_fill(opacity = new_submob_alpha)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 class Spotlight(VMobject):
-
     CONFIG = {
         "source_point": VectorizedPoint(location = ORIGIN, stroke_width = 0, fill_opacity = 0),
         "opacity_function" : lambda r : 1.0/(r/2+1.0)**2,
@@ -481,13 +452,10 @@ class Spotlight(VMobject):
         w = project_along_vector(point,v)
         return w
 
-
     def get_source_point(self):
         return self.source_point.get_location()
 
-
     def generate_points(self):
-
         self.submobjects = []
 
         self.add(self.source_point)
@@ -503,13 +471,7 @@ class Spotlight(VMobject):
                 new_sector = self.new_sector(r,dr,lower_angle,upper_angle)
                 self.add(new_sector)
 
-
     def new_sector(self,r,dr,lower_angle,upper_angle):
-        # Note: I'm not looking _too_ closely at the implementation
-        # of these updates based on viewing angles and such. It seems to
-        # behave as intended, but let me know if you'd like more thorough
-        # scrutiny
-
         alpha = self.max_opacity * self.opacity_function(r)
         annular_sector = AnnularSector(
             inner_radius = r,
@@ -545,7 +507,6 @@ class Spotlight(VMobject):
         else:
             return -absolute_angle
 
-
     def viewing_angles(self,screen):
 
         screen_points = screen.get_anchors()
@@ -572,7 +533,6 @@ class Spotlight(VMobject):
         
         return lower_ray, upper_ray
 
-
     def opening_angle(self):
         l,u = self.viewing_angles(self.screen)
         return u - l
@@ -592,21 +552,20 @@ class Spotlight(VMobject):
         self.update_sectors()
         return self
 
-
     def update_sectors(self):
         if self.screen == None:
             return
-        for submob in self.submobject_family():
+        for submob in self.submobjects:
             if type(submob) == AnnularSector:
                 lower_angle, upper_angle = self.viewing_angles(self.screen)
                 #dr = submob.outer_radius - submob.inner_radius
                 dr = self.radius / self.num_levels
-                new_submob = self.new_sector(submob.inner_radius,dr,lower_angle,upper_angle)
-                submob.points = new_submob.points
-                submob.set_fill(opacity = 10 * self.opacity_function(submob.outer_radius))
-
-
-
+                new_submob = self.new_sector(
+                    submob.inner_radius, dr, lower_angle, upper_angle
+                )
+                # submob.points = new_submob.points
+                # submob.set_fill(opacity = 10 * self.opacity_function(submob.outer_radius))
+                Transform(submob, new_submob).update(1)
 
     def dimming(self,new_alpha):
         old_alpha = self.max_opacity
@@ -640,7 +599,27 @@ class Spotlight(VMobject):
 
 
 class ScreenTracker(ContinualAnimation):
+    def __init__(self, light_source, **kwargs):
+        self.light_source = light_source
+        dummy_mob = Mobject()
+        ContinualAnimation.__init__(self, dummy_mob, **kwargs)
 
     def update_mobject(self, dt):
-        self.mobject.update()
+        self.light_source.update()
         
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

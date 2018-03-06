@@ -426,7 +426,6 @@ class IntroScene(PiCreatureScene):
 
         self.ellipsis = TexMobject("\cdots")
         self.ellipsis.scale(0.4)
-
         for i in range(5, max_n1):
             
             if i == 5:
@@ -441,7 +440,6 @@ class IntroScene(PiCreatureScene):
                     GrowFromPoint(self.rects[i], self.euler_sum[10].get_center(),
                     run_time = 0.5)
                 )
-
         for i in range(max_n1, max_n2):
             self.play(
                     GrowFromPoint(self.rects[i], self.euler_sum[10].get_center(),
@@ -929,15 +927,11 @@ class SingleLighthouseScene(PiCreatureScene):
 
 
 class MorphIntoSunScene(PiCreatureScene):
-
     def construct(self):
-
         self.setup_elements()
         self.morph_lighthouse_into_sun()
 
-
     def setup_elements(self):
-
         self.remove(self.get_primary_pi_creature())
 
         SCREEN_SIZE = 3.0
@@ -988,10 +982,8 @@ class MorphIntoSunScene(PiCreatureScene):
         
         self.add_foreground_mobject(self.light_source.shadow)
         self.add_foreground_mobject(morty)
-
         self.light_source.dim_ambient
         self.add(self.light_source.spotlight)
-
         self.screen_tracker = ScreenTracker(self.light_source)
         self.add(self.screen_tracker)
 
@@ -4351,10 +4343,6 @@ class ArcHighlightOverlayScene(Scene):
             )
 
 
-        flash_arcs(3)
-
-
-
 
 class ThumbnailScene(Scene):
 
@@ -4545,14 +4533,4 @@ class RightAnglesOverlay(Scene):
 
         self.play(FadeOut(lines))
 
-
-
-
-
-
-
-
-
-
-
-
+        flash_arcs(3)

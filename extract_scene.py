@@ -18,7 +18,6 @@ from camera import Camera
 HELP_MESSAGE = """
    Usage:
    python extract_scene.py <module> [<scene name>]
-
    -p preview in low quality
    -s show and save picture of last frame
    -w write result to file [this is default if nothing else is stated]
@@ -35,7 +34,6 @@ SCENE_NOT_FOUND_MESSAGE = """
 CHOOSE_NUMBER_MESSAGE = """
 Choose number corresponding to desired scene/arguments.
 (Use comma separated list for multiple entries)
-
 Choice(s): """
 INVALID_NUMBER_MESSAGE = "Fine then, if you don't want to give a valid number I'll just quit"
 
@@ -95,6 +93,7 @@ def get_configuration():
       "save_pngs"       : args.save_pngs,
       #If -t is passed in (for transparent), this will be RGBA
       "saved_image_mode": "RGBA" if args.transparent else "RGB",
+      "movie_file_extension" : ".mov" if args.transparent else ".mp4",
       "quiet"           : args.quiet or args.write_all,
       "ignore_waits"    : args.preview,
       "write_all"       : args.write_all,
@@ -237,6 +236,7 @@ def main():
          "write_to_movie",
          "output_directory",
          "save_pngs",
+         "movie_file_extension",
          "start_at_animation_number",
          "end_at_animation_number",
       ]

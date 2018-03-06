@@ -82,7 +82,7 @@ class Scene(Container):
     def setup(self):
         """
         This is meant to be implement by any scenes which
-        are commonly subclassed, and have some common setup
+        are comonly subclassed, and have some common setup
         involved before the construct method is called.
         """
         pass
@@ -366,7 +366,6 @@ class Scene(Container):
         Each arg can either be an animation, or a mobject method
         followed by that methods arguments (and potentially follow
         by a dict of kwargs for that method).
-
         This animation list is built by going through the args list,
         and each animation is simply added, but when a mobject method
         s hit, a MoveToTarget animation is built using the args that
@@ -387,7 +386,7 @@ class Scene(Container):
                 animations.pop()
                 #method should already have target then.
             else:
-                mobject.target = mobject.deepcopy()
+                mobject.generate_target()
             #
             if len(state["method_args"]) > 0 and isinstance(state["method_args"][-1], dict):
                 method_kwargs = state["method_args"].pop()
@@ -578,17 +577,12 @@ class Scene(Container):
             FFMPEG_BIN,
             '-y', # overwrite output file if it exists
             '-f', 'rawvideo',
-            '-vcodec','rawvideo',
             '-s', '%dx%d'%(width, height), # size of one frame
             '-pix_fmt', 'rgba',
             '-r', str(fps), # frames per second
             '-i', '-', # The imput comes from a pipe
             '-an', # Tells FFMPEG not to expect any audio
-            '-vcodec', 'mpeg',
-            '-c:v', 'libx264',
-            '-pix_fmt', 'yuv420p',
             '-loglevel', 'error',
-            temp_file_path,
         ]
         if self.movie_file_extension == ".mov":
             # This is if the background of the exported video
@@ -615,7 +609,6 @@ class Scene(Container):
 
 class EndSceneEarlyException(Exception):
     pass
-
 
 
 

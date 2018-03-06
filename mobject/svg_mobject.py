@@ -37,9 +37,9 @@ class SVGMobject(VMobject):
         if self.file_name is None:
             raise Exception("Must specify file for SVGMobject")
         possible_paths = [
-            self.file_name,
             os.path.join(SVG_IMAGE_DIR, self.file_name),
             os.path.join(SVG_IMAGE_DIR, self.file_name + ".svg"),
+            self.file_name,
         ]
         for path in possible_paths:
             if os.path.exists(path):
