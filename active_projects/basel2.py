@@ -4593,7 +4593,7 @@ class Thumbnail(Scene):
             "num_levels" : 250,
             "radius" : 10.0, 
             "max_opacity_ambient" : 1.0,
-            "opacity_function" : inverse_quadratic(1,0.5,1)
+            "opacity_function" : inverse_quadratic(1,0.25,1)
         }
     }
     def construct(self):
