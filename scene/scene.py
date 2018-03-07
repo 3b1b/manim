@@ -552,10 +552,11 @@ class Scene(Container):
     def get_movie_file_path(self, name = None, extension = None):
         directory = self.output_directory
         if self.include_render_quality_in_output_directory:
-            directory += "_%dp%d"%(
+            sub_dir = "%dp%d"%(
                 self.camera.pixel_shape[0],
                 int(1.0/self.frame_duration)
             )
+            directory = os.path.join(directory, sub_dir)
         if not os.path.exists(directory):
             os.makedirs(directory)
 
