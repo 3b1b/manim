@@ -2125,7 +2125,7 @@ class UhOhSalientStill(ColorMappedObjectsScene):
 
     def construct(self):
         ColorMappedObjectsScene.construct(self)
-        
+
         new_up = 3 * UP
         new_left = 5 * LEFT
 
@@ -2168,8 +2168,6 @@ class UhOhSalientStill(ColorMappedObjectsScene):
 # Initial odometer scene (simple once previous Pi walker scene is decided upon)
 
 # Writing new Pi walker scenes by parametrizing general template
-
-# Domain coloring scenes by parametrizing general template
 
 # (All the above are basically trivial tinkering at this point)
 
