@@ -6,6 +6,7 @@ from mobject.vectorized_mobject import VMobject, VGroup
 from mobject.tex_mobject import TextMobject, TexMobject
 
 from topics.objects import Bubble, ThoughtBubble, SpeechBubble
+from topics.geometry import ScreenRectangle
 
 from animation import Animation
 from animation.transform import *
@@ -604,7 +605,14 @@ class TeacherStudentsScene(PiCreatureScene):
         "student_colors" : [BLUE_D, BLUE_E, BLUE_C],
         "student_scale_factor" : 0.8,
         "seconds_to_blink" : 2,
+        "screen_height" : 3,
     }
+    def setup(self):
+        PiCreatureScene.setup(self)
+        self.screen = ScreenRectangle(height = self.screen_height)
+        self.screen.to_corner(UP+LEFT)
+        self.hold_up_spot = self.teacher.get_corner(UP+LEFT) + MED_LARGE_BUFF*UP
+
     def create_pi_creatures(self):
         self.teacher = Mortimer()
         self.teacher.to_corner(DOWN + RIGHT)
@@ -693,7 +701,16 @@ class TeacherStudentsScene(PiCreatureScene):
             for mob in self.get_mobjects()
         ])
 
-
+    def teacher_holds_up(self, mobject, target_mode = "raise_right_hand", **kwargs):
+        mobject.move_to(self.hold_up_spot, DOWN)
+        mobject.shift_onto_screen()
+        mobject_copy = mobject.copy()
+        mobject_copy.shift(DOWN)
+        mobject_copy.fade(1)
+        self.play(
+            ReplacementTransform(mobject_copy, mobject),
+            self.teacher.change, target_mode,
+        )
 
 
 

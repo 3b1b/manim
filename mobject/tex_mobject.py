@@ -199,9 +199,16 @@ class TexMobject(SVGMobject):
         return self.index_of_part(part)
 
     def organize_submobjects_left_to_right(self):
-        self.submobjects.sort(
-            lambda m1, m2 : int((m1.get_left()-m2.get_left())[0])
-        )
+        self.sort_submobjects(lambda p : p[0])
+        return self
+
+    def sort_submobjects_alphabetically(self):
+        def alphabetical_cmp(m1, m2):
+            if not all([isinstance(m, TexMobject) for m in m1, m2]):
+                return 0
+            return cmp(m1.get_tex_string(), m2.get_tex_string())
+        self.submobjects.sort(alphabetical_cmp)
+        return self
 
     def add_background_rectangle(self, color = BLACK, opacity = 0.75):
         self.background_rectangle = BackgroundRectangle(
