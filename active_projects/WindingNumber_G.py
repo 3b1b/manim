@@ -114,8 +114,16 @@ class RewriteEquationWithTeacher(AltTeacherStudentScene):
         dot.fade(1)
         dot.center()
 
+        question = TextMobject(
+            "Wait...what would \\\\", "+", "and", "\\textminus", " \\, be in 2d?",
+        )
+        question.highlight_by_tex_to_color_map({
+            "+" : "green", 
+            "textminus" : "red"
+        })
+
         self.student_says(
-            "Wait...what would \\\\ + and \\textminus \\, be in 2d?",
+            question,
             target_mode = "sassy",
             student_index = 2,
             added_anims = [
@@ -123,6 +131,7 @@ class RewriteEquationWithTeacher(AltTeacherStudentScene):
                 self.teacher.change, "plain",
             ],
             bubble_kwargs = {"direction" : LEFT},
+            run_time = 1,
         )
         self.play(
             Write(plane, run_time = 1),
@@ -135,10 +144,180 @@ class RewriteEquationWithTeacher(AltTeacherStudentScene):
             self.play(dot.move_to, plane.coords_to_point(*coords))
         self.wait()
 
+class DotsHoppingToColor(Scene):
+    CONFIG = {
+        "dot_radius" : 0.05,
+        "plane_width" : 6,
+        "plane_height" : 6,
+        "x_shift" : SPACE_WIDTH/2,
+        "y_shift" : MED_LARGE_BUFF,
+        "output_scalar" : 10,
+    }
+    def construct(self):
+        input_coloring, output_coloring = self.get_colorings()
+        input_plane, output_plane = self.get_planes()
+
+        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        v_line.set_stroke(WHITE, 5)
+
+        dots = self.get_dots(input_plane, output_plane)
+
+        right_half_block = Rectangle(
+            height = 2*SPACE_HEIGHT,
+            width = SPACE_WIDTH - SMALL_BUFF,
+            stroke_width = 0,
+            fill_color = BLACK,
+            fill_opacity = 0.8,
+        )
+        right_half_block.to_edge(RIGHT, buff = 0)
+
+        #Introduce parts
+        self.add(input_plane, output_plane, v_line)
+        self.play(
+            FadeIn(output_coloring), 
+            Animation(output_plane),
+            output_plane.white_parts.highlight, BLACK,
+            output_plane.lines_to_fade.set_stroke, {"width" : 0},
+        )
+        self.wait()
+        self.play(LaggedStart(GrowFromCenter, dots, run_time = 3))
+        self.wait()
+
+        #Hop over and back
+        self.play(LaggedStart(
+            MoveToTarget, dots, 
+            path_arc = -TAU/4,
+            run_time = 3,
+        ))
+        self.wait()
+        self.play(LaggedStart(
+            ApplyMethod, dots,
+            lambda d : (d.set_fill, d.target_color),
+        ))
+        self.wait()
+        self.play(LaggedStart(
+            ApplyMethod, dots,
+            lambda d : (d.move_to, d.original_position),
+            path_arc = TAU/4,
+            run_time = 3,
+        ))
+        self.wait()
+        self.play(
+            FadeIn(input_coloring),
+            Animation(input_plane),
+            input_plane.white_parts.highlight, BLACK,
+            input_plane.lines_to_fade.set_stroke, {"width" : 0},
+            LaggedStart(
+                ApplyFunction, dots,
+                lambda dot : (lambda d : d.set_stroke(width = 0).scale(0.25), dot)
+            ),
+        )
+        self.wait()
+
+        #Cover output half
+        right_half_block.save_state()
+        right_half_block.next_to(SPACE_WIDTH*RIGHT, RIGHT)
+        self.play(right_half_block.restore)
+        self.wait()
+        self.play(LaggedStart(
+            ApplyMethod, dots,
+            lambda d : (d.shift, SMALL_BUFF*UP),
+            rate_func = wiggle,
+        ))
+        self.wait()
+
+    ###
+
+    def func(self, coord_pair):
+        out_coords = np.array(example_plane_func(coord_pair))
+        out_norm = np.linalg.norm(out_coords)
+        if out_norm > 0.5:
+            angle = angle_of_vector(out_coords)
+            factor = 0.5-0.1*np.cos(4*angle)
+            target_norm = factor*np.log(out_norm)
+            out_coords *= target_norm / out_norm
+        return tuple(out_coords)
+
+    def get_colorings(self):
+        in_cmos = ColorMappedObjectsScene(
+            func = lambda p : self.func(
+                (p[0]+self.x_shift, p[1]+self.y_shift)
+            )
+        )
+        scalar = self.output_scalar
+        out_cmos = ColorMappedObjectsScene(
+            func = lambda p : (
+                scalar*(p[0]-self.x_shift), scalar*(p[1]+self.y_shift)
+            )
+        )
+
+        input_coloring = Rectangle(
+            height = self.plane_height,
+            width = self.plane_width,
+            stroke_width = 0,
+            fill_color = WHITE,
+            fill_opacity = 1,
+        )
+        output_coloring = input_coloring.copy()
+        colorings = [input_coloring, output_coloring]
+        vects = [LEFT, RIGHT]
+        cmos_pair = [in_cmos, out_cmos]
+        for coloring, vect, cmos in zip(colorings, vects, cmos_pair):
+            coloring.move_to(self.x_shift*vect + self.y_shift*DOWN)
+            coloring.color_using_background_image(cmos.background_image_file)
+        return colorings
+
+    def get_planes(self):
+        input_plane = NumberPlane(
+            x_radius = self.plane_width/2.0,
+            y_radius = self.plane_height/2.0,
+        )
+        output_plane = input_plane.copy()
+        planes = [input_plane, output_plane]
+        vects = [LEFT, RIGHT]
+        label_texts = ["Input", "Output"]
+        label_colors = [GREEN, RED]
+        for plane, vect, text, color in zip(planes, vects, label_texts, label_colors):
+            plane.stretch_to_fit_width(self.plane_width)
+            plane.add_coordinates(x_vals = range(-2, 3), y_vals = range(-2, 3))
+            plane.white_parts = VGroup(plane.axes, plane.coordinate_labels)
+            plane.lines_to_fade = VGroup(plane.main_lines, plane.secondary_lines)
+            plane.move_to(vect*SPACE_WIDTH/2 + self.y_shift*DOWN)
+            label = TextMobject(text)
+            label.scale(1.5)
+            label.add_background_rectangle()
+            label.move_to(plane)
+            label.to_edge(UP, buff = MED_SMALL_BUFF)
+            plane.add(label)
+            plane.label = label
+            for submob in plane.submobject_family():
+                if isinstance(submob, TexMobject) and hasattr(submob, "background_rectangle"):
+                    submob.remove(submob.background_rectangle)
 
 
+        return planes
 
-
+    def get_dots(self, input_plane, output_plane):
+        step = 0.25
+        x_min = -3.0
+        x_max = 3.0
+        y_min = -3.0
+        y_max = 3.0
+        dots = VGroup()
+        for x in np.arange(x_min, x_max + step, step):
+            for y in np.arange(y_min, y_max + step, step):
+                out_coords = self.func((x, y))
+                dot = Dot(radius = self.dot_radius)
+                dot.set_stroke(BLACK, 1)
+                dot.move_to(input_plane.coords_to_point(x, y))
+                dot.original_position = dot.get_center()
+                dot.generate_target()
+                dot.target.move_to(output_plane.coords_to_point(*out_coords))
+                dot.target_color = rgba_to_color(point_to_rgba(
+                    tuple(self.output_scalar*np.array(out_coords))
+                ))
+                dots.add(dot)
+        return dots
 
 
 
