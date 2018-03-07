@@ -152,6 +152,11 @@ class DotsHoppingToColor(Scene):
         "x_shift" : SPACE_WIDTH/2,
         "y_shift" : MED_LARGE_BUFF,
         "output_scalar" : 10,
+        "non_renormalized_func" : plane_func_by_wind_spec(
+            (-2, -1, 2), 
+            (1, 2, 1), 
+            (2, -2, 1),
+        ),
     }
     def construct(self):
         input_coloring, output_coloring = self.get_colorings()
@@ -226,10 +231,99 @@ class DotsHoppingToColor(Scene):
         ))
         self.wait()
 
+        # Show red points
+        inspector = DashedLine(
+            ORIGIN, TAU*UP,
+            dashed_segment_length = TAU/12,
+            fill_opacity = 0,
+            stroke_width = 3,
+            stroke_color = WHITE,
+        )
+        inspector.add(*inspector.copy().highlight(BLACK).shift((TAU/12)*UP))
+        inspector.apply_complex_function(np.exp)
+        inspector.show()
+        inspector.scale(0.1)
+
+        inspector_image = inspector.copy()
+        def point_function(point):
+            in_coords = input_plane.point_to_coords(point)
+            out_coords = self.func(in_coords)
+            return output_plane.coords_to_point(*out_coords)
+
+        def update_inspector_image(inspector_image):
+            inspector_image.move_to(point_function(inspector.get_center()))
+            # inspector_image.points = inspector.points
+            # inspector_image.apply_function(point_function)
+
+        inspector_image_update_anim = UpdateFromFunc(
+            inspector_image, update_inspector_image
+        )
+        red_points_label = TextMobject("Red points")
+        red_points_label.highlight(BLACK)
+
+        self.play(
+            inspector.move_to, input_plane.coords_to_point(-2.5, 1.5),
+            inspector.set_stroke, {"width" : 2},
+        )
+        red_points_label.next_to(inspector, UP, aligned_edge = LEFT)
+        self.play(
+            Rotating(
+                inspector, about_point = inspector.get_corner(DOWN+RIGHT),
+                rate_func = smooth,
+                run_time = 2,
+            ),
+            Write(red_points_label)
+        )
+        self.wait()
+        self.play(right_half_block.next_to, SPACE_WIDTH*RIGHT, RIGHT)
+        inspector_image_update_anim.update(0)
+        self.play(ReplacementTransform(
+            inspector.copy(), inspector_image,
+            path_arc = -TAU/4,
+        ))
+        self.play(
+            ApplyMethod(
+                inspector.move_to, 
+                input_plane.coords_to_point(-1.8, -0.5),
+                path_arc = -TAU/8,
+                run_time = 3,
+            ),
+            inspector_image_update_anim
+        )
+        self.play(
+            ApplyMethod(
+                inspector.move_to, 
+                input_plane.coords_to_point(-2.7, 1.7),
+                path_arc = TAU/8,
+                run_time = 3,
+            ),
+            inspector_image_update_anim
+        )
+        self.play(FadeOut(red_points_label))
+
+        # Show black zero
+        zeros = tuple(it.starmap(input_plane.coords_to_point, [
+            (-2, -1), (1, 2), (2, -2),
+        ]))
+        for x in range(2):
+            for zero in zeros:
+                self.play(
+                    ApplyMethod(
+                        inspector.move_to, zero,
+                        run_time = 2,
+                    ),
+                    inspector_image_update_anim,
+                )
+                self.wait()
+
+
+
+
+
     ###
 
     def func(self, coord_pair):
-        out_coords = np.array(example_plane_func(coord_pair))
+        out_coords = np.array(self.non_renormalized_func(coord_pair))
         out_norm = np.linalg.norm(out_coords)
         if out_norm > 0.5:
             angle = angle_of_vector(out_coords)
@@ -240,7 +334,7 @@ class DotsHoppingToColor(Scene):
 
     def get_colorings(self):
         in_cmos = ColorMappedObjectsScene(
-            func = lambda p : self.func(
+            func = lambda p : self.non_renormalized_func(
                 (p[0]+self.x_shift, p[1]+self.y_shift)
             )
         )
@@ -305,7 +399,7 @@ class DotsHoppingToColor(Scene):
         y_max = 3.0
         dots = VGroup()
         for x in np.arange(x_min, x_max + step, step):
-            for y in np.arange(y_min, y_max + step, step):
+            for y in np.arange(y_max, y_min - step, -step):
                 out_coords = self.func((x, y))
                 dot = Dot(radius = self.dot_radius)
                 dot.set_stroke(BLACK, 1)
