@@ -12,6 +12,7 @@ from mobject.vectorized_mobject import *
 from animation.animation import Animation
 from animation.transform import *
 from animation.simple_animations import *
+from animation.compositions import *
 from animation.playground import *
 from animation.continual_animation import *
 from topics.geometry import *
