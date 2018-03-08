@@ -8,6 +8,7 @@ from mobject.vectorized_mobject import *
 from animation.animation import Animation
 from animation.transform import *
 from animation.simple_animations import *
+from animation.compositions import *
 from animation.playground import *
 from animation.continual_animation import *
 from topics.geometry import *
@@ -31,7 +32,7 @@ from topics.graph_scene import *
 
 from active_projects.WindingNumber import *
 
-class AltTeacherStudentScene(TeacherStudentsScene):
+class AltTeacherStudentsScene(TeacherStudentsScene):
     def setup(self):
         TeacherStudentsScene.setup(self)
         self.teacher.set_color(YELLOW_E)
@@ -39,24 +40,34 @@ class AltTeacherStudentScene(TeacherStudentsScene):
 ###############
 
 
-class TestColorMap(ColorMappedObjectsScene):
+class IntroSceneWrapper(PiCreatureScene):
     CONFIG = {
-        "func" : example_plane_func,
+        "default_pi_creature_kwargs" : {
+            "color" : YELLOW_E,
+            "flip_at_start" : False,
+            "height" : 2,
+        },
+        "default_pi_creature_start_corner" : DOWN+LEFT,
+        # "default_pi_creature_height" : 1,
     }
     def construct(self):
-        ColorMappedObjectsScene.construct(self)
-        circle = Circle(color = WHITE)
-        circle.color_using_background_image(self.background_image_file)
+        morty = self.pi_creature
+        rect = ScreenRectangle(height = 5)
+        rect.to_corner(UP+RIGHT)
+        self.add(rect)
 
-        self.play(ShowCreation(circle))
-        self.play(circle.scale, 2)
-        self.wait()
-        self.play(circle.set_fill, {"opacity" : 0.2})
-        for corner in standard_rect:
-            self.play(circle.to_corner, corner, run_time = 2)
+        main_topic, meta_topic = toipcs = VGroup(
+            TextMobject("Main topic"),
+            TextMobject("Meta topic"),
+        )
+        topics.arrange_submobjects(DOWN, aligned_edge = LEFT)
 
 
-class PiCreaturesAreIntrigued(AltTeacherStudentScene):
+
+
+
+
+class PiCreaturesAreIntrigued(AltTeacherStudentsScene):
     def construct(self):
         self.teacher_says(
             "You can extend \\\\ this to 2d",
@@ -66,7 +77,7 @@ class PiCreaturesAreIntrigued(AltTeacherStudentScene):
         self.look_at(self.screen)
         self.wait(3)
 
-class RewriteEquationWithTeacher(AltTeacherStudentScene):
+class RewriteEquationWithTeacher(AltTeacherStudentsScene):
     def construct(self):
         equations = VGroup(
             TexMobject(
@@ -157,6 +168,7 @@ class DotsHoppingToColor(Scene):
             (1, 2, 1), 
             (2, -2, 1),
         ),
+        "dot_density" : 0.25,
     }
     def construct(self):
         input_coloring, output_coloring = self.get_colorings()
@@ -212,10 +224,7 @@ class DotsHoppingToColor(Scene):
             Animation(input_plane),
             input_plane.white_parts.highlight, BLACK,
             input_plane.lines_to_fade.set_stroke, {"width" : 0},
-            LaggedStart(
-                ApplyFunction, dots,
-                lambda dot : (lambda d : d.set_stroke(width = 0).scale(0.25), dot)
-            ),
+            FadeOut(dots),
         )
         self.wait()
 
@@ -224,25 +233,18 @@ class DotsHoppingToColor(Scene):
         right_half_block.next_to(SPACE_WIDTH*RIGHT, RIGHT)
         self.play(right_half_block.restore)
         self.wait()
-        self.play(LaggedStart(
-            ApplyMethod, dots,
-            lambda d : (d.shift, SMALL_BUFF*UP),
-            rate_func = wiggle,
-        ))
-        self.wait()
 
-        # Show red points
+        # Show yellow points
         inspector = DashedLine(
             ORIGIN, TAU*UP,
-            dashed_segment_length = TAU/12,
+            dashed_segment_length = TAU/24,
             fill_opacity = 0,
             stroke_width = 3,
             stroke_color = WHITE,
         )
-        inspector.add(*inspector.copy().highlight(BLACK).shift((TAU/12)*UP))
+        inspector.add(*inspector.copy().highlight(BLACK).shift((TAU/24)*UP))
         inspector.apply_complex_function(np.exp)
-        inspector.show()
-        inspector.scale(0.1)
+        inspector.scale(0.15)
 
         inspector_image = inspector.copy()
         def point_function(point):
@@ -252,27 +254,26 @@ class DotsHoppingToColor(Scene):
 
         def update_inspector_image(inspector_image):
             inspector_image.move_to(point_function(inspector.get_center()))
-            # inspector_image.points = inspector.points
-            # inspector_image.apply_function(point_function)
 
         inspector_image_update_anim = UpdateFromFunc(
             inspector_image, update_inspector_image
         )
-        red_points_label = TextMobject("Red points")
-        red_points_label.highlight(BLACK)
+        yellow_points_label = TextMobject("Yellow points")
+        yellow_points_label.scale(0.7)
+        yellow_points_label.highlight(BLACK)
 
         self.play(
-            inspector.move_to, input_plane.coords_to_point(-2.5, 1.5),
+            inspector.move_to, input_plane.coords_to_point(1.5, 0),
             inspector.set_stroke, {"width" : 2},
         )
-        red_points_label.next_to(inspector, UP, aligned_edge = LEFT)
+        yellow_points_label.next_to(inspector, UP)
         self.play(
             Rotating(
-                inspector, about_point = inspector.get_corner(DOWN+RIGHT),
+                inspector, about_point = inspector.get_corner(UP+LEFT),
                 rate_func = smooth,
                 run_time = 2,
             ),
-            Write(red_points_label)
+            Write(yellow_points_label)
         )
         self.wait()
         self.play(right_half_block.next_to, SPACE_WIDTH*RIGHT, RIGHT)
@@ -284,7 +285,7 @@ class DotsHoppingToColor(Scene):
         self.play(
             ApplyMethod(
                 inspector.move_to, 
-                input_plane.coords_to_point(-1.8, -0.5),
+                input_plane.coords_to_point(0, 2),
                 path_arc = -TAU/8,
                 run_time = 3,
             ),
@@ -293,13 +294,13 @@ class DotsHoppingToColor(Scene):
         self.play(
             ApplyMethod(
                 inspector.move_to, 
-                input_plane.coords_to_point(-2.7, 1.7),
-                path_arc = TAU/8,
+                input_plane.coords_to_point(2, 0),
+                path_arc = TAU/4,
                 run_time = 3,
             ),
             inspector_image_update_anim
         )
-        self.play(FadeOut(red_points_label))
+        self.play(FadeOut(yellow_points_label))
 
         # Show black zero
         zeros = tuple(it.starmap(input_plane.coords_to_point, [
@@ -310,13 +311,54 @@ class DotsHoppingToColor(Scene):
                 self.play(
                     ApplyMethod(
                         inspector.move_to, zero,
+                        path_arc = -TAU/8,
                         run_time = 2,
                     ),
                     inspector_image_update_anim,
                 )
                 self.wait()
+        self.play(FadeOut(VGroup(inspector, inspector_image)))
 
+        # Show all dots and slowly fade them out
+        for dot in dots:
+            dot.scale(1.5)
+        self.play(
+            FadeOut(input_coloring),
+            input_plane.white_parts.highlight, WHITE,
+            LaggedStart(GrowFromCenter, dots)
+        )
+        self.wait()
+        random.shuffle(dots.submobjects)
+        self.play(LaggedStart(
+            FadeOut, dots,
+            lag_ratio = 0.05,
+            run_time = 10,
+        ))
 
+        # Ask about whether a region contains a zero
+        question = TextMobject("Does this region \\\\ contain a zero?")
+        question.add_background_rectangle(opacity = 1)
+        question.next_to(input_plane.label, DOWN)
+        square = Square()
+        square.match_background_image_file(input_coloring)
+        square.move_to(input_plane)
+
+        self.play(ShowCreation(square), Write(question))
+        self.wait()
+        quads = [
+            (0, 0.5, 6, 6.25),
+            (1, 1, 0.5, 2),
+            (-1, -1, 3, 4.5),
+            (0, 1.25, 5, 1.7),
+            (-2, -1, 1, 1),
+        ]
+        for x, y, width, height in quads:
+            self.play(
+                square.stretch_to_fit_width, width,
+                square.stretch_to_fit_height, height,
+                square.move_to, input_plane.coords_to_point(x, y)
+            )
+            self.wait()
 
 
 
@@ -392,7 +434,7 @@ class DotsHoppingToColor(Scene):
         return planes
 
     def get_dots(self, input_plane, output_plane):
-        step = 0.25
+        step = self.dot_density
         x_min = -3.0
         x_max = 3.0
         y_min = -3.0
@@ -413,7 +455,41 @@ class DotsHoppingToColor(Scene):
                 dots.add(dot)
         return dots
 
+class SoWeFoundTheZeros(AltTeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Aha! So we \\\\ found the solutions!",
+            target_mode = "hooray",
+            student_index = 2,
+            bubble_kwargs = {"direction" : LEFT},
+        )
+        self.wait()
+        self.teacher_says(
+            "Er...only \\\\ kind of",
+            target_mode = "hesitant"
+        )
+        self.wait(3)
 
+class PiCreatureAsksWhatWentWrong(PiCreatureScene):
+    def construct(self):
+        randy = self.pi_creature
+        randy.set_color(YELLOW_E)
+        randy.flip()
+        randy.to_corner(DOWN+LEFT)
+        question = TextMobject("What went wrong?")
+        question.next_to(randy, UP)
+        question.shift_onto_screen()
+        question.save_state()
+        question.shift(DOWN).fade(1)
+
+        self.play(randy.change, "erm")
+        self.wait(2)
+        self.play(
+            Animation(VectorizedPoint(ORIGIN)),
+            question.restore,
+            randy.change, "confused",
+        )
+        self.wait(5)
 
 
 

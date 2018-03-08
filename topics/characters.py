@@ -10,7 +10,8 @@ from topics.geometry import ScreenRectangle
 
 from animation import Animation
 from animation.transform import *
-from animation.simple_animations import Write, ShowCreation, AnimationGroup
+from animation.simple_animations import Write, ShowCreation
+from animation.compositions import AnimationGroup
 from scene import Scene
 
 

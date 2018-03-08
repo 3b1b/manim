@@ -9,6 +9,7 @@ from mobject.point_cloud_mobject import Mobject1D
 from animation.animation import Animation
 from animation.transform import *
 from animation.simple_animations import *
+from animation.compositions import *
 from animation.playground import *
 from topics.geometry import *
 from topics.characters import *

@@ -11,7 +11,8 @@ from topics.three_dimensions import Stars
 
 from animation import Animation
 from animation.transform import *
-from animation.simple_animations import * 
+from animation.simple_animations import *
+from animation.compositions import * 
 from animation.playground import TurnInsideOut, Vibrate
 from topics.geometry import *
 from topics.characters import Randolph, Mathematician
