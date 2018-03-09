@@ -6,7 +6,8 @@ from mobject.svg_mobject import SVGMobject
 from mobject.tex_mobject import TextMobject, TexMobject, Brace
 
 from animation import Animation
-from animation.simple_animations import Rotating, LaggedStart, AnimationGroup
+from animation.simple_animations import Rotating
+from animation.compositions import LaggedStart, AnimationGroup
 from animation.transform import ApplyMethod, FadeIn, GrowFromCenter
 
 from topics.geometry import Circle, Line, Rectangle, Square, \

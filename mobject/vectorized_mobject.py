@@ -165,6 +165,10 @@ class VMobject(Mobject):
     def get_background_image_file(self):
         return self.background_image_file
 
+    def match_background_image_file(self, vmobject):
+        self.color_using_background_image(vmobject.get_background_image_file())
+        return self
+
     ## Drawing
     def start_at(self, point):
         if len(self.points) == 0:

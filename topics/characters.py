@@ -10,7 +10,8 @@ from topics.geometry import ScreenRectangle
 
 from animation import Animation
 from animation.transform import *
-from animation.simple_animations import Write, ShowCreation, AnimationGroup
+from animation.simple_animations import Write, ShowCreation
+from animation.compositions import AnimationGroup
 from scene import Scene
 
 
@@ -389,25 +390,28 @@ class PiCreatureScene(Scene):
         "total_wait_time" : 0,
         "seconds_to_blink" : 3,
         "pi_creatures_start_on_screen" : True,
-        "default_pi_creature_kwargs" : {},
-        "default_pi_creature_class" : Mortimer,
+        "default_pi_creature_kwargs" : {
+            "color" : GREY_BROWN,
+            "flip_at_start" : True,
+        },
+        "default_pi_creature_start_corner" : DOWN+LEFT,
     }
     def setup(self):
-        self.pi_creatures = VGroup(
-            *self.create_pi_creatures(**self.default_pi_creature_kwargs)
-        )
+        self.pi_creatures = self.create_pi_creatures()
         self.pi_creature = self.get_primary_pi_creature()
         if self.pi_creatures_start_on_screen:
             self.add(*self.pi_creatures)
 
     def create_pi_creatures(self):
         """ 
-        Likely updated for subclasses 
+        Likely updated for subclasses
         """
-        return VGroup(self.create_pi_creature(**self.default_pi_creature_kwargs))
+        return VGroup(self.create_pi_creature())
 
     def create_pi_creature(self):
-        return self.default_pi_creature_class(**self.default_pi_creature_kwargs).to_corner(DOWN+RIGHT)
+        pi_creature = PiCreature(**self.default_pi_creature_kwargs)
+        pi_creature.to_corner(self.default_pi_creature_start_corner)
+        return pi_creature
 
     def get_pi_creatures(self):
         return self.pi_creatures
