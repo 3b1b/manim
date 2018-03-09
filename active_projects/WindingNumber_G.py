@@ -260,6 +260,132 @@ class RewriteEquationWithTeacher(AltTeacherStudentsScene):
             self.play(dot.move_to, plane.coords_to_point(*coords))
         self.wait()
 
+class InputOutputScene(Scene):
+    CONFIG = {
+        "plane_width" : 6,
+        "plane_height" : 6,
+        "x_shift" : SPACE_WIDTH/2,
+        "y_shift" : MED_LARGE_BUFF,
+        "output_scalar" : 10,
+        "non_renormalized_func" : plane_func_by_wind_spec(
+            (-2, -1, 2), 
+            (1, 1, 1), 
+            (2, -2, -1),
+        ),
+    }
+    def construct(self):
+        input_coloring, output_coloring = self.get_colorings()
+        input_plane, output_plane = self.get_planes()
+        v_line = self.get_v_line()
+        self.add(input_coloring, output_coloring, input_plane, output_plane)
+
+
+        # Draw both planes, with curved arrow in between
+        # 
+
+    ###
+
+    def func(self, coord_pair):
+        out_coords = np.array(self.non_renormalized_func(coord_pair))
+        out_norm = np.linalg.norm(out_coords)
+        if out_norm > 0.01:
+            angle = angle_of_vector(out_coords)
+            factor = 0.5-0.1*np.cos(4*angle)
+            target_norm = factor*np.log(out_norm)
+            out_coords *= target_norm / out_norm
+        return tuple(out_coords)
+
+    def point_function(self, point):
+        in_coords = self.input_plane.point_to_coords(point)
+        out_coords = self.func(in_coords)
+        return self.output_plane.coords_to_point(*out_coords)
+
+    def get_colorings(self):
+        in_cmos = ColorMappedObjectsScene(
+            func = lambda p : self.non_renormalized_func(
+                (p[0]+self.x_shift, p[1]+self.y_shift)
+            )
+        )
+        scalar = self.output_scalar
+        out_cmos = ColorMappedObjectsScene(
+            func = lambda p : (
+                scalar*(p[0]-self.x_shift), scalar*(p[1]+self.y_shift)
+            )
+        )
+
+        input_coloring = Rectangle(
+            height = self.plane_height,
+            width = self.plane_width,
+            stroke_width = 0,
+            fill_color = WHITE,
+            fill_opacity = 1,
+        )
+        output_coloring = input_coloring.copy()
+        colorings = [input_coloring, output_coloring]
+        vects = [LEFT, RIGHT]
+        cmos_pair = [in_cmos, out_cmos]
+        for coloring, vect, cmos in zip(colorings, vects, cmos_pair):
+            coloring.move_to(self.x_shift*vect + self.y_shift*DOWN)
+            coloring.color_using_background_image(cmos.background_image_file)
+        return colorings
+
+    def get_planes(self):
+        input_plane = self.input_plane = NumberPlane(
+            x_radius = self.plane_width/2.0,
+            y_radius = self.plane_height/2.0,
+        )
+        output_plane = self.output_plane = input_plane.copy()
+        planes = [input_plane, output_plane]
+        vects = [LEFT, RIGHT]
+        label_texts = ["Input", "Output"]
+        label_colors = [GREEN, RED]
+        for plane, vect, text, color in zip(planes, vects, label_texts, label_colors):
+            plane.stretch_to_fit_width(self.plane_width)
+            plane.add_coordinates(x_vals = range(-2, 3), y_vals = range(-2, 3))
+            plane.white_parts = VGroup(plane.axes, plane.coordinate_labels)
+            plane.lines_to_fade = VGroup(plane.main_lines, plane.secondary_lines)
+            plane.move_to(vect*SPACE_WIDTH/2 + self.y_shift*DOWN)
+            label = TextMobject(text)
+            label.scale(1.5)
+            label.add_background_rectangle()
+            label.move_to(plane)
+            label.to_edge(UP, buff = MED_SMALL_BUFF)
+            plane.add(label)
+            plane.label = label
+            for submob in plane.submobject_family():
+                if isinstance(submob, TexMobject) and hasattr(submob, "background_rectangle"):
+                    submob.remove(submob.background_rectangle)
+
+        return planes
+
+    def get_v_line(self):
+        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        v_line.set_stroke(WHITE, 5)
+        return v_line
+
+    def get_dots(self, input_plane, output_plane):
+        step = self.dot_density
+        x_min = -3.0
+        x_max = 3.0
+        y_min = -3.0
+        y_max = 3.0
+        dots = VGroup()
+        for x in np.arange(x_min, x_max + step, step):
+            for y in np.arange(y_max, y_min - step, -step):
+                out_coords = self.func((x, y))
+                dot = Dot(radius = self.dot_radius)
+                dot.set_stroke(BLACK, 1)
+                dot.move_to(input_plane.coords_to_point(x, y))
+                dot.original_position = dot.get_center()
+                dot.generate_target()
+                dot.target.move_to(output_plane.coords_to_point(*out_coords))
+                dot.target_color = rgba_to_color(point_to_rgba(
+                    tuple(self.output_scalar*np.array(out_coords))
+                ))
+                dots.add(dot)
+        return dots
+
+
 class TwoDScreenInOurThreeDWorld(AltTeacherStudentsScene, ThreeDScene):
     def construct(self):
         self.ask_about_2d_functions()
@@ -347,27 +473,15 @@ class TwoDScreenInOurThreeDWorld(AltTeacherStudentsScene, ThreeDScene):
         self.add(AmbientRotation(everything, axis = UP, rate = 3*DEGREES))
         self.wait(10)
 
-class DotsHoppingToColor(Scene):
+class DotsHoppingToColor(InputOutputScene):
     CONFIG = {
         "dot_radius" : 0.05,
-        "plane_width" : 6,
-        "plane_height" : 6,
-        "x_shift" : SPACE_WIDTH/2,
-        "y_shift" : MED_LARGE_BUFF,
-        "output_scalar" : 10,
-        "non_renormalized_func" : plane_func_by_wind_spec(
-            (-2, -1, 2), 
-            (1, 2, 1), 
-            (2, -2, 1),
-        ),
         "dot_density" : 0.25,
     }
     def construct(self):
         input_coloring, output_coloring = self.get_colorings()
         input_plane, output_plane = self.get_planes()
-
-        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
-        v_line.set_stroke(WHITE, 5)
+        v_line = self.get_v_line()
 
         dots = self.get_dots(input_plane, output_plane)
 
@@ -445,22 +559,22 @@ class DotsHoppingToColor(Scene):
         inspector_image_update_anim = UpdateFromFunc(
             inspector_image, update_inspector_image
         )
-        yellow_points_label = TextMobject("Yellow points")
-        yellow_points_label.scale(0.7)
-        yellow_points_label.highlight(BLACK)
+        pink_points_label = TextMobject("Pink points")
+        pink_points_label.scale(0.7)
+        pink_points_label.highlight(BLACK)
 
         self.play(
-            inspector.move_to, input_plane.coords_to_point(1.5, 0),
+            inspector.move_to, input_plane.coords_to_point(-2.75, 2.75),
             inspector.set_stroke, {"width" : 2},
         )
-        yellow_points_label.next_to(inspector, UP)
+        pink_points_label.next_to(inspector, RIGHT)
         self.play(
             Rotating(
-                inspector, about_point = inspector.get_corner(UP+LEFT),
+                inspector, about_point = inspector.get_center(),
                 rate_func = smooth,
                 run_time = 2,
             ),
-            Write(yellow_points_label)
+            Write(pink_points_label)
         )
         self.wait()
         self.play(right_half_block.next_to, SPACE_WIDTH*RIGHT, RIGHT)
@@ -472,7 +586,7 @@ class DotsHoppingToColor(Scene):
         self.play(
             ApplyMethod(
                 inspector.move_to, 
-                input_plane.coords_to_point(0, 2),
+                input_plane.coords_to_point(-2, 0),
                 path_arc = -TAU/8,
                 run_time = 3,
             ),
@@ -481,13 +595,13 @@ class DotsHoppingToColor(Scene):
         self.play(
             ApplyMethod(
                 inspector.move_to, 
-                input_plane.coords_to_point(2, 0),
-                path_arc = TAU/4,
+                input_plane.coords_to_point(-2.75, 2.75),
+                path_arc = TAU/8,
                 run_time = 3,
             ),
             inspector_image_update_anim
         )
-        self.play(FadeOut(yellow_points_label))
+        self.play(FadeOut(pink_points_label))
 
         # Show black zero
         zeros = tuple(it.starmap(input_plane.coords_to_point, [
@@ -547,104 +661,6 @@ class DotsHoppingToColor(Scene):
             )
             self.wait()
 
-
-    ###
-
-    def func(self, coord_pair):
-        out_coords = np.array(self.non_renormalized_func(coord_pair))
-        out_norm = np.linalg.norm(out_coords)
-        if out_norm > 0.01:
-            angle = angle_of_vector(out_coords)
-            factor = 0.5-0.1*np.cos(4*angle)
-            target_norm = factor*np.log(out_norm)
-            out_coords *= target_norm / out_norm
-        return tuple(out_coords)
-
-    def point_function(self, point):
-        in_coords = self.input_plane.point_to_coords(point)
-        out_coords = self.func(in_coords)
-        return self.output_plane.coords_to_point(*out_coords)
-
-    def get_colorings(self):
-        in_cmos = ColorMappedObjectsScene(
-            func = lambda p : self.non_renormalized_func(
-                (p[0]+self.x_shift, p[1]+self.y_shift)
-            )
-        )
-        scalar = self.output_scalar
-        out_cmos = ColorMappedObjectsScene(
-            func = lambda p : (
-                scalar*(p[0]-self.x_shift), scalar*(p[1]+self.y_shift)
-            )
-        )
-
-        input_coloring = Rectangle(
-            height = self.plane_height,
-            width = self.plane_width,
-            stroke_width = 0,
-            fill_color = WHITE,
-            fill_opacity = 1,
-        )
-        output_coloring = input_coloring.copy()
-        colorings = [input_coloring, output_coloring]
-        vects = [LEFT, RIGHT]
-        cmos_pair = [in_cmos, out_cmos]
-        for coloring, vect, cmos in zip(colorings, vects, cmos_pair):
-            coloring.move_to(self.x_shift*vect + self.y_shift*DOWN)
-            coloring.color_using_background_image(cmos.background_image_file)
-        return colorings
-
-    def get_planes(self):
-        input_plane = self.input_plane = NumberPlane(
-            x_radius = self.plane_width/2.0,
-            y_radius = self.plane_height/2.0,
-        )
-        output_plane = self.output_plane = input_plane.copy()
-        planes = [input_plane, output_plane]
-        vects = [LEFT, RIGHT]
-        label_texts = ["Input", "Output"]
-        label_colors = [GREEN, RED]
-        for plane, vect, text, color in zip(planes, vects, label_texts, label_colors):
-            plane.stretch_to_fit_width(self.plane_width)
-            plane.add_coordinates(x_vals = range(-2, 3), y_vals = range(-2, 3))
-            plane.white_parts = VGroup(plane.axes, plane.coordinate_labels)
-            plane.lines_to_fade = VGroup(plane.main_lines, plane.secondary_lines)
-            plane.move_to(vect*SPACE_WIDTH/2 + self.y_shift*DOWN)
-            label = TextMobject(text)
-            label.scale(1.5)
-            label.add_background_rectangle()
-            label.move_to(plane)
-            label.to_edge(UP, buff = MED_SMALL_BUFF)
-            plane.add(label)
-            plane.label = label
-            for submob in plane.submobject_family():
-                if isinstance(submob, TexMobject) and hasattr(submob, "background_rectangle"):
-                    submob.remove(submob.background_rectangle)
-
-        return planes
-
-    def get_dots(self, input_plane, output_plane):
-        step = self.dot_density
-        x_min = -3.0
-        x_max = 3.0
-        y_min = -3.0
-        y_max = 3.0
-        dots = VGroup()
-        for x in np.arange(x_min, x_max + step, step):
-            for y in np.arange(y_max, y_min - step, -step):
-                out_coords = self.func((x, y))
-                dot = Dot(radius = self.dot_radius)
-                dot.set_stroke(BLACK, 1)
-                dot.move_to(input_plane.coords_to_point(x, y))
-                dot.original_position = dot.get_center()
-                dot.generate_target()
-                dot.target.move_to(output_plane.coords_to_point(*out_coords))
-                dot.target_color = rgba_to_color(point_to_rgba(
-                    tuple(self.output_scalar*np.array(out_coords))
-                ))
-                dots.add(dot)
-        return dots
-
 class SoWeFoundTheZeros(AltTeacherStudentsScene):
     def construct(self):
         self.student_says(
@@ -681,14 +697,7 @@ class PiCreatureAsksWhatWentWrong(PiCreatureScene):
         )
         self.wait(5)
 
-class ForeverNarrowingLoop(DotsHoppingToColor):
-    CONFIG = {
-        "non_renormalized_func" : plane_func_by_wind_spec(
-            (-2, -1, 2), 
-            (1, 1, 1), 
-            (2, -2, -1),
-        ),
-    }
+class ForeverNarrowingLoop(InputOutputScene):
     def construct(self):
         input_coloring, output_coloring = colorings = VGroup(*self.get_colorings())
         input_plane, output_plane = planes = VGroup(*self.get_planes())
@@ -835,7 +844,7 @@ class FailureOfComposition(ColorMappedObjectsScene):
             Write(yes_answers),
             Write(yes_answers_in_equation),
         )
-        self.play(LaggedStart(FadeIn, q_marks, run_time = 1))
+        self.play(LaggedStart(FadeIn, q_marks, run_time = 1, lag_ratio = 0.8))
         self.wait(2)
         self.play(
             small_squares.restore,
