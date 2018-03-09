@@ -11,6 +11,8 @@ from helpers import *
 from mobject import Mobject, PMobject, VMobject, \
     ImageMobject, Group
 
+import time
+
 class Camera(object):
     CONFIG = {
         "background_image" : None,
@@ -123,14 +125,15 @@ class Camera(object):
         pixel coordinates), and each output is expected to be an RGBA array of 4 floats.
         """
 
-        print "Starting set_background_from_func"
-
+        print "Starting set_background; for reference, the current time is ", time.strftime("%H:%M:%S")
         coords = self.get_coords_of_all_pixels()
         new_background = np.apply_along_axis(
             coords_to_colors_func,
             2,
             coords
         )
+        print "Ending set_background; for reference, the current time is ", time.strftime("%H:%M:%S")
+
         return self.convert_pixel_array(new_background, convert_from_floats = True)
 
     def set_background_from_func(self, coords_to_colors_func):

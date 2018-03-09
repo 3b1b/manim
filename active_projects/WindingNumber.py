@@ -29,6 +29,9 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from topics.graph_scene import *
 
+import mpmath
+mpmath.mp.dps = 7
+
 # Useful constants to play around with
 UL = UP + LEFT
 UR = UP + RIGHT
@@ -514,6 +517,13 @@ def point3d_func_from_plane_func(f):
 def point3d_func_from_complex_func(f):
     return point3d_func_from_plane_func(plane_func_from_complex_func(f))
 
+def plane_zeta((x, y)):
+    answer = mpmath.zeta(complex(x, y))
+    CLAMP_SIZE = 1000
+    if abs(answer) > CLAMP_SIZE:
+        answer = answer/abs(answer) * CLAMP_SIZE
+    return (float(answer.real), float(answer.imag))
+
 # Returns a function from 2-ples to 2-ples
 # This function is specified by a list of (x, y, z) tuples, 
 # and has winding number z (or total of all specified z) around each (x, y)
@@ -692,11 +702,15 @@ class ColorMappedByFuncScene(Scene):
             self.input_to_pos_func = lambda p : p
             self.pos_to_color_func = self.func
 
+        self.pixel_pos_to_color_func = lambda (x, y) : self.pos_to_color_func(
+            self.num_plane.point_to_coords_cheap(np.array([x, y, 0]))
+        )
+
         jitter_val = 0.1
         line_coords = np.linspace(-10, 10) + jitter_val
         func_hash_points = it.product(line_coords, line_coords)
         def mini_hasher(p):
-            rgba = point_to_rgba(self.pos_to_color_func(p))
+            rgba = point_to_rgba(self.pixel_pos_to_color_func(p))
             if rgba[3] != 1.0:
                 print "Warning! point_to_rgba assigns fractional alpha", rgba[3]
             return tuple(rgba)
@@ -721,10 +735,7 @@ class ColorMappedByFuncScene(Scene):
         if self.in_background_pass:
             self.camera.set_background_from_func(
                 lambda (x, y): point_to_rgba(
-                    self.pos_to_color_func(
-                        # Should be self.num_plane.point_to_coords_cheap(np.array([x, y, 0])),
-                        # but for cheapness, we'll go with just (x, y), having never altered
-                        # any num_plane's from default settings so far
+                    self.pixel_pos_to_color_func(
                         (x, y)
                     )
                 )
@@ -882,7 +893,7 @@ class EquationSolver2d(ColorMappedObjectsScene):
         "initial_upper_y" : 3,
         "num_iterations" : 1,
         "num_checkpoints" : 10,
-        "display_in_parallel" : True,
+        "display_in_parallel" : False,
         "use_fancy_lines" : True,
         # TODO: Consider adding a "find_all_roots" flag, which could be turned off 
         # to only explore one of the two candidate subrectangles when both are viable
@@ -1409,7 +1420,7 @@ class HasItsLimitations(Scene):
         # play well with z coordinates.
         
         input_dot = Dot(base_point + DOT_Z, color = dot_color)
-        input_label = TexMobject("Input", fill_color = dot_color)
+        input_label = TextMobject("Input", fill_color = dot_color)
         input_label.next_to(input_dot, UP + LEFT)
         input_label.add_background_rectangle()
         self.add_foreground_mobject(input_dot)
@@ -1424,7 +1435,7 @@ class HasItsLimitations(Scene):
         self.play(ShowCreation(curved_arrow))
 
         output_dot = Dot(base_point + 2 * RIGHT + DOT_Z, color = dot_color)
-        output_label = TexMobject("Output", fill_color = dot_color)
+        output_label = TextMobject("Output", fill_color = dot_color)
         output_label.next_to(output_dot, UP + RIGHT)
         output_label.add_background_rectangle()
 
@@ -1816,7 +1827,6 @@ class FundThmAlg(EquationSolver2d):
     CONFIG = {
         "func" : plane_func_by_wind_spec((1, 2), (-1, 1.5), (-1, 1.5)),
         "num_iterations" : 2,
-        "display_in_parallel" : True,
         "use_fancy_lines" : True,
     }
 
@@ -2085,8 +2095,8 @@ class TinyLoopOfBasicallySameColor(PureColorMap):
         self.wait()
 
 def uhOhFunc((x, y)):
-    x = np.clip(x, -5, 5)/5
-    y = np.clip(y, -3, 3)/3
+    x = -np.clip(x, -5, 5)/5
+    y = -np.clip(y, -3, 3)/3
 
     alpha = 0.5 # Most things will return green
 
@@ -2112,8 +2122,7 @@ class UhOhFuncTest(PureColorMap):
 class UhOhScene(EquationSolver2d):
     CONFIG = {
         "func" : uhOhFunc,
-        "display_in_parallel" : True,
-        "manual_wind_override" : (1, (1, (1, None, None), None), None), # Tailored to UhOhFunc above
+        "manual_wind_override" : (1, None, (1, None, (1, None, None))), # Tailored to UhOhFunc above
         "show_winding_numbers" : False,
         "num_iterations" : 5,
     }
@@ -2220,5 +2229,23 @@ class PiWalkerOdometerTest(PiWalkerExamplePlaneFunc):
 class PiWalkerFancyLineTest(PiWalkerExamplePlaneFunc):
     CONFIG = {
         "color_foreground_not_background" : True
+    }
+
+class NotFoundScene(Scene):
+    def construct(self):
+        self.add(TextMobject("SCENE NOT FOUND!"))
+        self.wait()
+
+criticalStripYScale = 100
+criticalStrip = Axes(x_min = -0.5, x_max = 1.5, x_axis_config = {"unit_size" : SPACE_WIDTH, 
+    "number_at_center" : 0.5}, 
+    y_min = -criticalStripYScale, y_max = criticalStripYScale, 
+    y_axis_config = {"unit_size" : fdiv(SPACE_HEIGHT, criticalStripYScale)})
+
+class ZetaViz(PureColorMap):
+    CONFIG = {
+        "func" : plane_zeta,
+        #"num_plane" : criticalStrip,
+        "show_num_plane" : True
     }
 # FIN
