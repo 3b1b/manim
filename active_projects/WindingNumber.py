@@ -216,7 +216,6 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         leftBraceLabelAnimation = ContinualChangingDecimal(leftBraceLabel, 
             lambda alpha : self.point_to_coords(leftBrace.get_center())[0],
             tracked_mobject = leftBrace)
-        self.add(leftBraceLabelAnimation)
         
         rightBrace.move_to(self.coords_to_point(upperX, self.base_line_y)) #, aligned_edge = LEFT)
         rightBraceLabel = DecimalNumber(upperX)
@@ -224,7 +223,6 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         rightBraceLabelAnimation = ContinualChangingDecimal(rightBraceLabel, 
             lambda alpha : self.point_to_coords(rightBrace.get_center())[0],
             tracked_mobject = rightBrace)
-        self.add(rightBraceLabelAnimation)
 
         downBrace.move_to(self.coords_to_point(0, lowerY)) #, aligned_edge = UP)
         downBraceLabel = DecimalNumber(lowerY)
@@ -232,7 +230,6 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         downBraceLabelAnimation = ContinualChangingDecimal(downBraceLabel, 
             lambda alpha : self.point_to_coords(downBrace.get_center())[1] + y_bias,
             tracked_mobject = downBrace)
-        self.add(downBraceLabelAnimation)
         
         upBrace.move_to(self.coords_to_point(0, upperY)) #, aligned_edge = DOWN)
         upBraceLabel = DecimalNumber(upperY)
@@ -240,7 +237,6 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         upBraceLabelAnimation = ContinualChangingDecimal(upBraceLabel, 
             lambda alpha : self.point_to_coords(upBrace.get_center())[1] + y_bias,
             tracked_mobject = upBrace)
-        self.add(upBraceLabelAnimation)
 
         lowerDotPoint = self.input_to_graph_point(lowerX, self.graph)
         lowerDotXPoint = self.coords_to_point(lowerX, self.base_line_y)
@@ -253,14 +249,11 @@ class EquationSolver1d(GraphScene, ZoomedScene):
 
         lowerXLine = Line(lowerDotXPoint, lowerDotPoint, color = lower_color)
         upperXLine = Line(upperDotXPoint, upperDotPoint, color = upper_color)
-        lowerYLine = Line(lowerDotYPoint, lowerDotPoint, color = lower_color)
-        upperYLine = Line(upperDotYPoint, upperDotPoint, color = upper_color)
-        self.add(lowerXLine, upperXLine, lowerYLine, upperYLine)
-
-        self.add_foreground_mobjects(xBraces, yBraces, lowerDot, upperDot)
+        lowerYLine = Line(lowerDotPoint, lowerDotYPoint, color = lower_color)
+        upperYLine = Line(upperDotPoint, upperDotYPoint, color = upper_color)
 
         x_guess_line = Line(lowerDotXPoint, upperDotXPoint, color = WHITE, stroke_width = 10)
-        self.add(x_guess_line)
+        
 
         lowerGroup = Group(
             lowerDot, 
@@ -280,7 +273,35 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         initialUpperXDot = Dot(upperDotXPoint + OUT, color = upper_color)
         initialLowerYDot = Dot(lowerDotYPoint + OUT, color = lower_color)
         initialUpperYDot = Dot(upperDotYPoint + OUT, color = upper_color)
-        self.add_foreground_mobjects(initialLowerXDot, initialUpperXDot, initialLowerYDot, initialUpperYDot)
+
+        # All the initial adds and ShowCreations are here now:
+        self.play(FadeIn(initialLowerXDot), FadeIn(leftBrace), FadeIn(leftBraceLabel))
+        self.add_foreground_mobjects(initialLowerXDot, leftBrace)
+        self.add(leftBraceLabelAnimation)
+        self.play(ShowCreation(lowerXLine))
+        self.add_foreground_mobject(lowerDot)
+        self.play(ShowCreation(lowerYLine))
+        self.play(FadeIn(initialLowerYDot), FadeIn(downBrace), FadeIn(downBraceLabel))
+        self.add_foreground_mobjects(initialLowerYDot, downBrace)
+        self.add(downBraceLabelAnimation)
+
+        self.wait()
+
+        self.play(FadeIn(initialUpperXDot), FadeIn(rightBrace), FadeIn(rightBraceLabel))
+        self.add_foreground_mobjects(initialUpperXDot, rightBrace)
+        self.add(rightBraceLabelAnimation)
+        self.play(ShowCreation(upperXLine))
+        self.add_foreground_mobject(upperDot)
+        self.play(ShowCreation(upperYLine))
+        self.play(FadeIn(initialUpperYDot), FadeIn(upBrace), FadeIn(upBraceLabel))
+        self.add_foreground_mobjects(initialUpperYDot, upBrace)
+        self.add(upBraceLabelAnimation)
+
+        self.wait()
+
+        self.play(FadeIn(x_guess_line))
+
+        self.wait()
 
         for i in range(self.num_iterations):
             if i == self.iteration_at_which_to_start_zoom:
@@ -1246,6 +1267,7 @@ class FirstSqrtScene(EquationSolver1d):
         "iteration_at_which_to_start_zoom" : 3,
         "graph_label" : "y = x^2",
         "show_target_line" : True,
+        "x_tick_frequency" : 0.25
     }
 
 class TestFirstSqrtScene(FirstSqrtScene):
@@ -2079,6 +2101,28 @@ class PiWalkerExamplePlaneFunc(PiWalkerRect):
         "start_y" : 3,
         "walk_width" : 8,
         "walk_height" : 6,
+    }
+
+class NoticeHowOnThisLoop(PiWalkerRect):
+    CONFIG = {
+        "show_num_plane" : False,
+        "func" : example_plane_func,
+        # These are just manually entered, not 
+        # automatically kept in sync with example_plane_func:
+        "start_x" : 0.5,
+        "start_y" : -0.5,
+        "walk_width" : -1, # We trace from bottom-right clockwise on this one, to start at a red point
+        "walk_height" : -1,
+    }
+
+class ButOnThisLoopOverHere(NoticeHowOnThisLoop):
+    CONFIG = {
+        # These are just manually entered, not 
+        # automatically kept in sync with example_plane_func:
+        "start_x" : -1,
+        "start_y" : 0,
+        "walk_width" : 1,
+        "walk_height" : 1,
     }
 
 class PiWalkerExamplePlaneFuncWithScaling(PiWalkerExamplePlaneFunc):
