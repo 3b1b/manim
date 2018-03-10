@@ -25,6 +25,7 @@ from topics.complex_numbers import *
 from scene import Scene
 from scene.reconfigurable_scene import ReconfigurableScene
 from scene.zoomed_scene import *
+from scene.moving_camera_scene import *
 from camera import *
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
@@ -172,6 +173,314 @@ class IntroSceneWrapper(PiCreatureScene):
         self.play(morty.change, "happy")
         self.wait(3)
 
+class Introduce1DFunctionCase(Scene):
+    CONFIG = {
+        "search_range_rect_height" : 0.15,
+        "arrow_opacity" : 1,
+        "show_dotted_line_to_f" : True,
+        "arrow_config": {
+            "max_stem_width_to_tip_width_ratio" : 0.5,
+            "max_tip_length_to_length_ratio" : 0.5,
+        },
+    }
+    def construct(self):
+        self.show_axes_one_at_a_time()
+        self.show_two_graphs()
+        self.transition_to_sqrt_2_case()
+        self.show_example_binary_search()
+
+    def show_axes_one_at_a_time(self):
+        axes = Axes(
+            x_min = -1, x_max = 3.2,
+            x_axis_config = {
+                "unit_size" : 3,
+                "tick_frequency" : 0.25,
+                "numbers_with_elongated_ticks" : range(-1, 4)
+            },
+            y_min = -2, y_max = 4.5,
+        )
+        axes.to_corner(DOWN+LEFT)
+        axes.x_axis.add_numbers(*range(-1, 4))
+        axes.y_axis.label_direction = LEFT
+        axes.y_axis.add_numbers(-1, *range(1, 5))
+
+        inputs = TextMobject("Inputs")
+        inputs.next_to(axes.x_axis, UP, aligned_edge = RIGHT)
+
+        outputs = TextMobject("Outputs")
+        outputs.next_to(axes.y_axis, UP, SMALL_BUFF)
+
+        self.play(
+            ShowCreation(axes.x_axis),
+            Write(inputs)
+        )
+        self.wait()
+        self.play(
+            ShowCreation(axes.y_axis),
+            FadeOut(axes.x_axis.numbers[1], rate_func = squish_rate_func(smooth, 0, 0.2)),
+            Write(outputs)
+        )
+        self.wait()
+
+        self.axes = axes
+        self.inputs_label = inputs
+        self.outputs_label = outputs
+
+    def show_two_graphs(self):
+        axes = self.axes
+        f_graph = axes.get_graph(
+            lambda x : 2*x*(x - 0.75)*(x - 1.5) + 1,
+            color = BLUE
+        )
+        g_graph = axes.get_graph(
+            lambda x : 1.8*np.cos(TAU*x/2),
+            color = YELLOW
+        )
+
+        label_x_corod = 2
+        f_label = TexMobject("f(x)")
+        f_label.match_color(f_graph)
+        f_label.next_to(axes.input_to_graph_point(label_x_corod, f_graph), LEFT)
+
+        g_label = TexMobject("g(x)")
+        g_label.match_color(g_graph)
+        g_label.next_to(
+            axes.input_to_graph_point(label_x_corod, g_graph), UP, SMALL_BUFF
+        )
+
+        solution = 0.24
+        cross_point = axes.input_to_graph_point(solution, f_graph)
+        l_v_line, r_v_line, v_line = [
+            DashedLine(
+                axes.coords_to_point(x, 0),
+                axes.coords_to_point(x, f_graph.underlying_function(solution)),
+            )
+            for x in axes.x_min, axes.x_max, solution
+        ]
+
+        equation = TexMobject("f(x)", "=", "g(x)")
+        equation[0].match_color(f_label)
+        equation[2].match_color(g_label)
+        equation.next_to(cross_point, UP, buff = 1.5, aligned_edge = LEFT)
+        equation_arrow = Arrow(
+            equation.get_bottom(), cross_point,
+            buff = SMALL_BUFF,
+            color = WHITE
+        )
+        equation.target = TexMobject("x^2", "=", "2")
+        equation.target.match_style(equation)
+        equation.target.to_edge(UP)
+
+        for graph, label in (f_graph, f_label), (g_graph, g_label):
+            self.play(
+                ShowCreation(graph),
+                Write(label, rate_func = squish_rate_func(smooth, 0.5, 1)),
+                run_time = 2
+            )
+        self.wait()
+        self.play(
+            ReplacementTransform(r_v_line.copy().fade(1), v_line),
+            ReplacementTransform(l_v_line.copy().fade(1), v_line),
+            run_time = 2
+        )
+        self.play(
+            ReplacementTransform(f_label.copy(), equation[0]),
+            ReplacementTransform(g_label.copy(), equation[2]),
+            Write(equation[1]),
+            GrowArrow(equation_arrow),
+        )
+        for x in range(4):
+            self.play(
+                FadeOut(v_line.copy()),
+                ShowCreation(v_line, rate_func = squish_rate_func(smooth, 0.5, 1)),
+                run_time = 1.5
+            )
+        self.wait()
+        self.play(
+            MoveToTarget(equation, replace_mobject_with_target_in_scene = True),
+            *map(FadeOut, [equation_arrow, v_line])
+        )
+
+        self.set_variables_as_attrs(
+            f_graph, f_label, g_graph, g_label,
+            equation = equation.target
+        )
+
+    def transition_to_sqrt_2_case(self):
+        f_graph = self.f_graph
+        f_label = VGroup(self.f_label)
+        g_graph = self.g_graph
+        g_label = VGroup(self.g_label)
+        axes = self.axes
+        for label in f_label, g_label:
+            for x in range(2):
+                label.add(VectorizedPoint(label.get_center()))
+        for number in axes.y_axis.numbers:
+            number.add_background_rectangle()
+
+        squared_graph = axes.get_graph(lambda x : x**2)
+        squared_graph.match_style(f_graph)
+        two_graph = axes.get_graph(lambda x : 2)
+        two_graph.match_style(g_graph)
+
+        squared_label = TexMobject("f(x)", "=", "x^2")
+        squared_label.next_to(
+            axes.input_to_graph_point(2, squared_graph), RIGHT
+        )
+        squared_label.match_color(squared_graph)
+        two_label = TexMobject("g(x)", "=", "2")
+        two_label.next_to(
+            axes.input_to_graph_point(3, two_graph), UP,
+        )
+        two_label.match_color(two_graph)
+
+        find_sqrt_2 = self.find_sqrt_2 = TextMobject("(Find $\\sqrt{2}$)")
+        find_sqrt_2.next_to(self.equation, DOWN)
+
+        self.play(
+            ReplacementTransform(f_graph, squared_graph),
+            ReplacementTransform(f_label, squared_label),
+        )
+        self.play(
+            ReplacementTransform(g_graph, two_graph),
+            ReplacementTransform(g_label, two_label),
+            Animation(axes.y_axis.numbers)
+        )
+        self.wait()
+        self.play(Write(find_sqrt_2))
+        self.wait()
+
+        self.set_variables_as_attrs(
+            squared_graph, two_graph,
+            squared_label, two_label,
+        )
+
+    def show_example_binary_search(self):
+        self.binary_search(
+            self.squared_graph, self.two_graph,
+            x0 = 1, x1 = 2,
+            n_iterations = 8
+        )
+
+    ##
+
+    def binary_search(
+        self, 
+        f_graph, g_graph, 
+        x0, x1, 
+        n_iterations,
+        n_iterations_with_sign_mention = 0,
+        zoom = False,
+        ):
+
+        axes = self.axes
+        rect = Rectangle()
+        rect.set_stroke(width = 0)
+        rect.set_fill(YELLOW, 0.5)
+        rect.replace(Line(
+            axes.coords_to_point(x0, 0),
+            axes.coords_to_point(x1, 0),
+        ), dim_to_match = 0)
+        rect.stretch_to_fit_height(self.search_range_rect_height)
+
+        #Show first left and right
+        mention_signs = n_iterations_with_sign_mention > 0
+        kwargs = {"mention_signs" : mention_signs}
+        leftovers0 = self.compare_graphs_at_x(f_graph, g_graph, x0, **kwargs)
+        self.wait()
+        leftovers1 = self.compare_graphs_at_x(f_graph, g_graph, x1, **kwargs)
+        self.wait()
+        self.play(GrowFromCenter(rect))
+        self.wait()
+
+        all_leftovers = VGroup(leftovers0, leftovers1)
+        end_points = [x0, x1]
+        if mention_signs:
+            sign_word0 = leftovers0.sign_word
+            sign_word1 = leftovers1.sign_word
+
+        #Restrict to by a half each time
+        kwargs = {"mention_signs" : False} 
+        for x in range(n_iterations - 1):
+            x_mid = np.mean(end_points)
+            leftovers_mid = self.compare_graphs_at_x(f_graph, g_graph, x_mid, **kwargs)
+            if leftovers_mid.too_high == all_leftovers[0].too_high:
+                index_to_fade = 0
+            else:
+                index_to_fade = 1
+            edge = [RIGHT, LEFT][index_to_fade]
+            to_fade = all_leftovers[index_to_fade]
+            all_leftovers.submobjects[index_to_fade] = leftovers_mid
+            end_points[index_to_fade] = x_mid
+
+            added_anims = []
+            if mention_signs:
+                word = [leftovers0, leftovers1][index_to_fade].sign_word
+                if x < n_iterations_with_sign_mention:
+                    added_anims = [word.next_to, leftovers_mid[0].get_end(), -edge]
+                elif word in self.camera.extract_mobject_family_members(self.mobjects):
+                    added_anims = [FadeOut(word)]
+
+            rect.generate_target()
+            rect.target.stretch(0.5, 0, about_edge = edge)
+            rect.target.stretch_to_fit_height(self.search_range_rect_height)
+            self.play(
+                MoveToTarget(rect),
+                FadeOut(to_fade),
+                *added_anims
+            )
+            if zoom:
+                everything = VGroup(*self.mobjects)
+                factor = 2.0/rect.get_width()
+                if factor > 1:
+                    self.play(
+                        everything.scale, factor, 
+                        {"about_point" : rect.get_center()}
+                    )
+            else:
+                self.wait()
+
+    def compare_graphs_at_x(self, f_graph, g_graph, x, mention_signs = False):
+        axes = self.axes
+        f_point = axes.input_to_graph_point(x, f_graph)
+        g_point = axes.input_to_graph_point(x, g_graph)
+        arrow = Arrow(
+            g_point, f_point, buff = 0,
+            **self.arrow_config
+        )
+        too_high = f_point[1] > g_point[1]
+        if too_high:
+            arrow.set_fill(GREEN, opacity = self.arrow_opacity)
+        else:
+            arrow.set_fill(RED, opacity = self.arrow_opacity)
+
+        leftovers = VGroup(arrow)
+        leftovers.too_high = too_high
+
+        if self.show_dotted_line_to_f:
+            v_line = DashedLine(axes.coords_to_point(x, 0), f_point)
+            self.play(ShowCreation(v_line))
+            leftovers.add(v_line)
+
+        added_anims = []
+        if mention_signs:
+            if too_high:
+                sign_word = TextMobject("Positive")
+                sign_word.highlight(GREEN)
+                sign_word.scale(0.7)
+                sign_word.next_to(arrow.get_end(), RIGHT)
+            else:
+                sign_word = TextMobject("Negative")
+                sign_word.highlight(RED)
+                sign_word.scale(0.7)
+                sign_word.next_to(arrow.get_end(), LEFT)
+            sign_word.add_background_rectangle()
+            added_anims += [FadeIn(sign_word)]
+            leftovers.sign_word = sign_word
+        self.play(GrowArrow(arrow), *added_anims)
+
+        return leftovers
+
 class PiCreaturesAreIntrigued(AltTeacherStudentsScene):
     def construct(self):
         self.teacher_says(
@@ -181,6 +490,91 @@ class PiCreaturesAreIntrigued(AltTeacherStudentsScene):
         self.change_student_modes("pondering", "confused", "erm")
         self.look_at(self.screen)
         self.wait(3)
+
+class TransitionFromEquationSolverToZeroFinder(Introduce1DFunctionCase):
+    CONFIG = {
+        "show_dotted_line_to_f" : False,
+        "arrow_config" : {},
+    }
+    def construct(self):
+        #Just run through these without animating.
+        self.force_skipping()
+        self.show_axes_one_at_a_time()
+        self.show_two_graphs()
+        self.transition_to_sqrt_2_case()
+        self.revert_to_original_skipping_status()
+        ##
+
+        self.transition_to_difference_graph()
+        self.show_binary_search_with_signs()
+
+    def transition_to_difference_graph(self):
+        axes = self.axes
+        equation = x_squared, equals, two = self.equation
+        for s in "-", "0":
+            tex_mob = TexMobject(s)
+            tex_mob.scale(0.01)
+            tex_mob.fade(1)
+            tex_mob.move_to(equation.get_right())
+            equation.add(tex_mob)
+        find_sqrt_2 = self.find_sqrt_2
+
+        f_graph = self.squared_graph
+        g_graph = self.two_graph
+        new_graph = axes.get_graph(
+            lambda x : f_graph.underlying_function(x) - g_graph.underlying_function(x),
+            color = GREEN
+        )
+        zero_graph = axes.get_graph(lambda x : 0)
+        zero_graph.set_stroke(BLACK, 0)
+
+        f_label = self.squared_label
+        g_label = self.two_label
+        new_label = TexMobject("f(x)", "-", "g(x)")
+        new_label[0].match_color(f_label)
+        new_label[2].match_color(g_label)
+        new_label.next_to(
+            axes.input_to_graph_point(2, new_graph),
+            LEFT
+        )
+
+        new_equation = TexMobject("x^2", "-", "2", "=", "0")
+        new_equation[0].match_style(equation[0])
+        new_equation[2].match_style(equation[2])
+        new_equation.move_to(equation, RIGHT)
+        for tex in equation, new_equation:
+            tex.sort_submobjects_alphabetically()
+
+        self.play(
+            ReplacementTransform(equation, new_equation, path_arc = np.pi),
+            find_sqrt_2.next_to, new_equation, DOWN,
+        )
+        self.play(
+            ReplacementTransform(f_graph, new_graph),
+            ReplacementTransform(g_graph, zero_graph),
+        )
+        self.play(
+            ReplacementTransform(f_label[0], new_label[0]),
+            ReplacementTransform(g_label[0], new_label[2]),
+            FadeOut(f_label[1:]),
+            FadeOut(g_label[1:]),
+            Write(new_label[1]),
+        )
+        self.wait()
+
+        self.set_variables_as_attrs(new_graph, zero_graph)
+
+    def show_binary_search_with_signs(self):
+        self.binary_search(
+            self.new_graph, self.zero_graph,
+            1, 2,
+            n_iterations = 8,
+            n_iterations_with_sign_mention = 2,
+            zoom = True,
+        )
+
+
+
 
 class RewriteEquationWithTeacher(AltTeacherStudentsScene):
     def construct(self):
@@ -231,12 +625,12 @@ class RewriteEquationWithTeacher(AltTeacherStudentsScene):
         dot.center()
 
         question = TextMobject(
-            "Wait...what would \\\\", "+", "and", "\\textminus", " \\, be in 2d?",
+            "Wait...what would \\\\ positive and negative \\\\ be in 2d?",
         )
-        question.highlight_by_tex_to_color_map({
-            "+" : "green", 
-            "textminus" : "red"
-        })
+        # question.highlight_by_tex_to_color_map({
+        #     "+" : "green", 
+        #     "textminus" : "red"
+        # })
 
         self.student_says(
             question,
@@ -273,15 +667,6 @@ class InputOutputScene(Scene):
             (2, -2, -1),
         ),
     }
-    def construct(self):
-        input_coloring, output_coloring = self.get_colorings()
-        input_plane, output_plane = self.get_planes()
-        v_line = self.get_v_line()
-        self.add(input_coloring, output_coloring, input_plane, output_plane)
-
-
-        # Draw both planes, with curved arrow in between
-        # 
 
     ###
 
@@ -385,6 +770,240 @@ class InputOutputScene(Scene):
                 dots.add(dot)
         return dots
 
+class IntroduceInputOutputScene(InputOutputScene):
+    CONFIG = {
+        "dot_radius" : 0.05,
+        "dot_density" : 0.25,
+    }
+    def construct(self):
+        self.setup_planes()
+        self.map_single_point_to_point()
+
+    def setup_planes(self):
+        self.input_plane, self.output_plane = self.get_planes()
+        self.v_line = self.get_v_line()
+        self.add(self.input_plane, self.output_plane, self.v_line)
+
+    def map_single_point_to_point(self):
+        input_plane = self.input_plane
+        output_plane = self.output_plane
+
+        #Dots
+        dots = self.get_dots()
+
+        in_dot = dots[int(0.55*len(dots))].copy()
+        out_dot = in_dot.target
+        for mob in in_dot, out_dot:
+            mob.scale(1.5)
+        in_dot.highlight(YELLOW)
+        out_dot.highlight(PINK)
+
+        input_label_arrow = Vector(DOWN+RIGHT)
+        input_label_arrow.next_to(in_dot, UP+LEFT, SMALL_BUFF)
+        input_label = TextMobject("Input point")
+        input_label.next_to(input_label_arrow.get_start(), UP, SMALL_BUFF)
+        for mob in input_label, input_label_arrow:
+            mob.match_color(in_dot)
+        input_label.add_background_rectangle()
+        
+        output_label_arrow = Vector(DOWN+LEFT)
+        output_label_arrow.next_to(out_dot, UP+RIGHT, SMALL_BUFF)
+        output_label = TextMobject("Output point")
+        output_label.next_to(output_label_arrow.get_start(), UP, SMALL_BUFF)
+        for mob in output_label, output_label_arrow:
+            mob.match_color(out_dot)
+        output_label.add_background_rectangle()
+
+        path_arc = -TAU/4
+        curved_arrow = Arrow(
+            in_dot, out_dot,
+            buff = SMALL_BUFF,
+            path_arc = path_arc,
+            use_rectangular_stem = False,
+            color = WHITE,
+        )
+        curved_arrow.pointwise_become_partial(curved_arrow, 0, 0.95)
+        function_label = TexMobject("f(", "\\text{2d input}", ")")
+        function_label.next_to(curved_arrow, UP)
+        function_label.add_background_rectangle()
+
+
+        self.play(LaggedStart(GrowFromCenter, dots))
+        self.play(LaggedStart(
+            MoveToTarget, dots,
+            path_arc = path_arc
+        ))
+        self.wait()
+        self.play(FadeOut(dots))
+        self.play(
+            GrowFromCenter(in_dot),
+            GrowArrow(input_label_arrow),
+            FadeIn(input_label)
+        )
+        self.wait()
+        self.play(
+            ShowCreation(curved_arrow),
+            ReplacementTransform(
+                in_dot.copy(), out_dot,
+                path_arc = path_arc
+            ),
+            FadeIn(function_label),
+        )
+        self.play(
+            GrowArrow(output_label_arrow),
+            FadeIn(output_label)
+        )
+        self.wait()
+        self.play(*map(FadeOut, [
+            input_label_arrow, input_label,
+            output_label_arrow, output_label,
+            curved_arrow, function_label,
+        ]))
+
+        #General movements and wiggles
+        out_dot_continual_update = self.get_output_dot_continual_update(in_dot, out_dot)
+        self.add(out_dot_continual_update)
+
+        for vect in UP, RIGHT:
+            self.play(
+                in_dot.shift, 0.25*vect,
+                rate_func = lambda t : wiggle(t, 8),
+                run_time = 2
+            )
+        for vect in compass_directions(4, UP+RIGHT):
+            self.play(Rotating(
+                in_dot, about_point = in_dot.get_corner(vect),
+                radians = TAU,
+                run_time = 1
+            ))
+        self.wait()
+        for coords in (-2, 2), (-2, -2), (2, -2), (1.5, 1.5):
+            self.play(
+                in_dot.move_to, input_plane.coords_to_point(*coords),
+                path_arc = -TAU/4,
+                run_time = 2
+            )
+        self.wait()
+
+    ###
+
+    def get_dots(self):
+        input_plane = self.input_plane
+        dots = VGroup()
+        step = self.dot_density
+        x_max = input_plane.x_radius
+        x_min = -x_max
+        y_max = input_plane.y_radius
+        y_min = -y_max
+
+        reverse = False
+        for x in np.arange(x_min+step, x_max, step):
+            y_range = list(np.arange(x_min+step, x_max, step))
+            if reverse:
+                y_range.reverse()
+            reverse = not reverse
+            for y in y_range:
+                dot = Dot(radius = self.dot_radius)
+                dot.move_to(input_plane.coords_to_point(x, y))
+                dot.generate_target()
+                dot.target.move_to(self.point_function(dot.get_center()))
+                dots.add(dot)
+        return dots
+
+    def get_output_dot_continual_update(self, input_dot, output_dot):
+        return ContinualUpdateFromFunc(
+            output_dot, 
+            lambda od : od.move_to(self.point_function(input_dot.get_center()))
+        )
+
+class IntroduceVectorField(IntroduceInputOutputScene):
+    CONFIG = {
+        "dot_density" : 0.5,
+    }
+    def construct(self):
+        self.setup_planes()
+        input_plane, output_plane = self.input_plane, self.output_plane
+        dots = self.get_dots()
+
+        in_dot = dots[0].copy()
+        in_dot.move_to(input_plane.coords_to_point(1.5, 1.5))
+        out_dot = in_dot.copy()
+        out_dot_continual_update = self.get_output_dot_continual_update(in_dot, out_dot)
+        for mob in in_dot, out_dot:
+            mob.scale(1.5)
+        in_dot.highlight(YELLOW)
+        out_dot.highlight(PINK)
+
+        out_vector = Arrow(
+            LEFT, RIGHT, 
+            color = out_dot.get_color(),
+        )
+        out_vector.set_stroke(BLACK, 1)
+        continual_out_vector_update = ContinualUpdateFromFunc(
+            out_vector, lambda ov : ov.put_start_and_end_on(
+                output_plane.coords_to_point(0, 0),
+                out_dot.get_center(),
+            )
+        )
+
+        in_vector = out_vector.copy()
+        def update_in_vector(in_vector):
+            Transform(in_vector, out_vector).update(1)
+            in_vector.scale(0.5)
+            in_vector.shift(in_dot.get_center() - in_vector.get_start())
+        continual_in_vector_update = ContinualUpdateFromFunc(
+            in_vector, update_in_vector
+        )
+        continual_updates = [
+            out_dot_continual_update,
+            continual_out_vector_update, 
+            continual_in_vector_update
+        ]
+
+        self.add(in_dot, out_dot)
+        self.play(GrowArrow(out_vector, run_time = 2))
+        self.wait()
+        self.add_foreground_mobjects(in_dot)
+        self.play(ReplacementTransform(out_vector.copy(), in_vector))
+        self.wait()
+        self.add(*continual_updates)
+        path = Square().rotate(-90*DEGREES)
+        path.replace(Line(
+            input_plane.coords_to_point(-1.5, -1.5),
+            input_plane.coords_to_point(1.5, 1.5),
+        ), stretch = True)
+        in_vectors = VGroup()
+        self.add(in_vectors)
+        for a in np.linspace(0, 1, 25):
+            self.play(
+                in_dot.move_to, path.point_from_proportion(a),
+                run_time = 0.2,
+                rate_func = None,
+            )
+            in_vectors.add(in_vector.copy())
+
+        # Full vector field
+        newer_in_vectors = VGroup()
+        self.add(newer_in_vectors)
+        for dot in dots:
+            self.play(in_dot.move_to, dot, run_time = 1./15)
+            newer_in_vectors.add(in_vector.copy())
+        self.remove(*continual_updates)
+        self.remove()
+        self.play(*map(FadeOut, [
+            out_dot, out_vector, in_vectors, in_dot, in_vector
+        ]))
+        self.wait()
+        target_length = 0.4
+        for vector in newer_in_vectors:
+            vector.generate_target()
+            if vector.get_length() == 0:
+                continue
+            factor = target_length / vector.get_length()
+            vector.target.scale(factor, about_point = vector.get_start())
+
+        self.play(LaggedStart(MoveToTarget, newer_in_vectors))
+        self.wait()
 
 class TwoDScreenInOurThreeDWorld(AltTeacherStudentsScene, ThreeDScene):
     def construct(self):
@@ -405,8 +1024,13 @@ class TwoDScreenInOurThreeDWorld(AltTeacherStudentsScene, ThreeDScene):
         in_plane.add(in_text)
         out_plane.add(out_text)
 
-        arrow = CurvedArrow(RIGHT, LEFT, angle = TAU/4)
-        arrow.pointwise_become_partial(arrow, 0.05, 1.0)
+        arrow = Arrow(
+            LEFT, RIGHT, 
+            path_arc = -TAU/4,
+            use_rectangular_stem = False,
+            color = WHITE
+        )
+        arrow.pointwise_become_partial(arrow, 0.0, 0.97)
         group = VGroup(in_plane, arrow, out_plane)
         group.arrange_submobjects(RIGHT)
         arrow.shift(UP)
@@ -675,6 +1299,33 @@ class SoWeFoundTheZeros(AltTeacherStudentsScene):
             target_mode = "hesitant"
         )
         self.wait(3)
+
+class HypothesisAboutFullyColoredBoundary(ColorMappedObjectsScene):
+    CONFIG = {
+        "func" : plane_func_from_complex_func(lambda z : z**3),
+    }
+    def construct(self):
+        ColorMappedObjectsScene.construct(self)
+        square = Square(side_length = 4)
+        square.color_using_background_image(self.background_image_file)
+
+        hypothesis = TextMobject(
+           "Working Hypothesis: \\\\",
+           "If the boundary of a region goes through \\\\ all colors,", 
+           "that region contains a zero."
+        )
+        hypothesis[0].highlight(YELLOW)
+        hypothesis.to_edge(UP)
+        square.next_to(hypothesis, DOWN)
+
+        self.add(hypothesis[0])
+        self.play(
+            LaggedStart(FadeIn, hypothesis[1]),
+            ShowCreation(square, run_time = 4)
+        )
+        self.play(LaggedStart(FadeIn, hypothesis[2]))
+        self.play(square.set_fill, {"opacity" : 1}, run_time = 2)
+        self.wait()
 
 class PiCreatureAsksWhatWentWrong(PiCreatureScene):
     def construct(self):
