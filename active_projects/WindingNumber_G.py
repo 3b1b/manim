@@ -109,13 +109,21 @@ class IntroSceneWrapper(PiCreatureScene):
         rainbow_solver2.gradient_highlight(*reversed(colors))
 
 
-        xy_equation = TexMobject(
-            "y", "e", "^x", "=\\sin(|", "x", "y", "|)"
-        )
-        xy_equation.highlight_by_tex_to_color_map({
-            "x" : BLUE,
-            "y" : YELLOW
-        })
+        xy_equation = TexMobject("""
+            \\left[\\begin{array}{c}
+                ye^x \\\\
+                \\sin(|xy|)
+            \\end{array}\\right] = 
+            \\left[\\begin{array}{c}
+                y^2 \\\\
+                3y
+            \\end{array}\\right]
+        """)
+        # xy_equation.highlight_by_tex_to_color_map({
+        #     "x" : BLUE,
+        #     "y" : YELLOW
+        # })
+        xy_equation.scale(0.8)
         xy_equation.next_to(solver, DOWN, MED_LARGE_BUFF)
 
         z_equation = TexMobject("z", "^5", "+", "z", "+", "1", "=", "0")
@@ -426,6 +434,7 @@ class Introduce1DFunctionCase(Scene):
             rect.target.stretch_to_fit_height(self.search_range_rect_height)
             self.play(
                 MoveToTarget(rect),
+                Animation(all_leftovers),
                 FadeOut(to_fade),
                 *added_anims
             )
@@ -518,6 +527,8 @@ class TransitionFromEquationSolverToZeroFinder(Introduce1DFunctionCase):
             tex_mob.move_to(equation.get_right())
             equation.add(tex_mob)
         find_sqrt_2 = self.find_sqrt_2
+        rect = SurroundingRectangle(VGroup(equation, find_sqrt_2))
+        rect.highlight(WHITE)
 
         f_graph = self.squared_graph
         g_graph = self.two_graph
@@ -538,6 +549,11 @@ class TransitionFromEquationSolverToZeroFinder(Introduce1DFunctionCase):
             LEFT
         )
 
+        fg_labels = VGroup(f_label, g_label)
+        fg_labels.generate_target()
+        fg_labels.target.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        fg_labels.target.to_corner(UP+RIGHT)
+
         new_equation = TexMobject("x^2", "-", "2", "=", "0")
         new_equation[0].match_style(equation[0])
         new_equation[2].match_style(equation[2])
@@ -545,19 +561,20 @@ class TransitionFromEquationSolverToZeroFinder(Introduce1DFunctionCase):
         for tex in equation, new_equation:
             tex.sort_submobjects_alphabetically()
 
+        self.play(ShowCreation(rect))
+        self.play(FadeOut(rect))
         self.play(
-            ReplacementTransform(equation, new_equation, path_arc = np.pi),
+            ReplacementTransform(equation, new_equation, path_arc = TAU/4),
             find_sqrt_2.next_to, new_equation, DOWN,
         )
+        self.play(MoveToTarget(fg_labels))
         self.play(
             ReplacementTransform(f_graph, new_graph),
             ReplacementTransform(g_graph, zero_graph),
         )
         self.play(
-            ReplacementTransform(f_label[0], new_label[0]),
-            ReplacementTransform(g_label[0], new_label[2]),
-            FadeOut(f_label[1:]),
-            FadeOut(g_label[1:]),
+            ReplacementTransform(f_label[0].copy(), new_label[0]),
+            ReplacementTransform(g_label[0].copy(), new_label[2]),
             Write(new_label[1]),
         )
         self.wait()
@@ -565,94 +582,89 @@ class TransitionFromEquationSolverToZeroFinder(Introduce1DFunctionCase):
         self.set_variables_as_attrs(new_graph, zero_graph)
 
     def show_binary_search_with_signs(self):
+        self.play(FadeOut(self.axes.x_axis.numbers[2]))
         self.binary_search(
             self.new_graph, self.zero_graph,
             1, 2,
-            n_iterations = 8,
+            n_iterations = 9,
             n_iterations_with_sign_mention = 2,
             zoom = True,
         )
 
-
-
-
 class RewriteEquationWithTeacher(AltTeacherStudentsScene):
     def construct(self):
-        equations = VGroup(
-            TexMobject(
-                "f(\\text{2d input})", "", "=", 
-                "g(\\text{2d input})", ""
-            ),
-            TexMobject(
-                "f(\\text{2d input})", "-", 
-                "g(\\text{2d input})", "=", "0"
-            ),
-        )
-        specific_equations = VGroup(
+        root_two_equations = VGroup(
             TexMobject("x^2", "", "=", "2", ""),
             TexMobject("x^2", "-", "2", "=", "0"),
         )
-        for equation in it.chain(equations, specific_equations):
+        for equation in root_two_equations:
             equation.sort_submobjects_alphabetically()
             for part in equation.get_parts_by_tex("text"):
                 part[2:-1].highlight(YELLOW)
                 part[2:-1].scale(0.9)
             equation.move_to(self.hold_up_spot, DOWN)
 
-        self.teacher_holds_up(specific_equations[0])
-        self.play(Transform(*specific_equations, path_arc = TAU/4))
+        brace = Brace(root_two_equations[1], UP)
+        f_equals_0 = brace.get_tex("f(x) = 0")
+
+        self.teacher_holds_up(root_two_equations[0])
+        self.wait()
+        self.play(Transform(
+            *root_two_equations, 
+            run_time = 1.5,
+            path_arc = TAU/2
+        ))
         self.play(self.get_student_changes(*["pondering"]*3))
-        self.play(FadeOut(specific_equations[0]), FadeIn(equations[0]))
-        self.wait()
-        self.play(Transform(*equations, path_arc = TAU/4))
-        self.change_student_modes(*["happy"]*3)
-
-        # 2d plane
-        plane = NumberPlane(x_radius = 2.5, y_radius = 2.5)
-        plane.scale(0.8)
-        plane.to_corner(UP+LEFT)
-        plane.add_coordinates()
-
-        dot = Dot(color = YELLOW)
-        label = TextMobject("Sign?")
-        label.add_background_rectangle()
-        label.scale(0.5)
-        label.next_to(dot, UP, SMALL_BUFF)
-        dot.add(label)
-        dot.move_to(plane.coords_to_point(1, 1))
-        dot.save_state()
-        dot.fade(1)
-        dot.center()
-
-        question = TextMobject(
-            "Wait...what would \\\\ positive and negative \\\\ be in 2d?",
-        )
-        # question.highlight_by_tex_to_color_map({
-        #     "+" : "green", 
-        #     "textminus" : "red"
-        # })
-
-        self.student_says(
-            question,
-            target_mode = "sassy",
-            student_index = 2,
-            added_anims = [
-                equations[0].to_corner, UP+RIGHT,
-                self.teacher.change, "plain",
-            ],
-            bubble_kwargs = {"direction" : LEFT},
-            run_time = 1,
-        )
         self.play(
-            Write(plane, run_time = 1),
-            self.students[0].change, "confused",
-            self.students[1].change, "confused",
+            GrowFromCenter(brace),
+            self.teacher.change, "happy"
         )
-        self.play(dot.restore)
-        for coords in (-1, 1), (1, -1), (0, -2), (-2, 1):
-            self.wait(0.5)
-            self.play(dot.move_to, plane.coords_to_point(*coords))
+        self.play(Write(f_equals_0))
+        self.change_student_modes(*["happy"]*3)
         self.wait()
+
+        #
+        to_remove = VGroup(root_two_equations[0], brace, f_equals_0)
+        two_d_equation = TexMobject("""
+            \\left[\\begin{array}{c}
+                ye^x \\\\
+                \\sin(xy)
+            \\end{array}\\right] = 
+            \\left[\\begin{array}{c}
+                y^2 + x^3 \\\\
+                3y - x
+            \\end{array}\\right]
+        """)
+        complex_equation = TexMobject("z", "^5 + ", "z", " + 1 = 0")
+        z_def = TextMobject(
+            "(", "$z$", " is complex, ", "$a + bi$", ")",
+            arg_separator = ""
+        )
+        complex_group = VGroup(complex_equation, z_def)
+        complex_group.arrange_submobjects(DOWN)
+        for tex in complex_group:
+            tex.highlight_by_tex("z", GREEN)
+        complex_group.move_to(self.hold_up_spot, DOWN)
+
+        self.play(
+            ApplyMethod(
+                to_remove.next_to, SPACE_WIDTH*RIGHT, RIGHT,
+                remover = True,
+                rate_func = running_start,
+                path_arc = -TAU/4,
+            ),
+            self.teacher.change, "hesitant",
+            self.get_student_changes(*["erm"]*3)
+        )
+        self.teacher_holds_up(two_d_equation)
+        self.change_all_student_modes("horrified")
+        self.wait()
+        self.play(
+            FadeOut(two_d_equation),
+            FadeInFromDown(complex_group),
+        )
+        self.change_all_student_modes("confused")
+        self.wait(3)
 
 class InputOutputScene(Scene):
     CONFIG = {
@@ -673,11 +685,13 @@ class InputOutputScene(Scene):
     def func(self, coord_pair):
         out_coords = np.array(self.non_renormalized_func(coord_pair))
         out_norm = np.linalg.norm(out_coords)
-        if out_norm > 0.01:
+        if out_norm > 1:
             angle = angle_of_vector(out_coords)
             factor = 0.5-0.1*np.cos(4*angle)
             target_norm = factor*np.log(out_norm)
             out_coords *= target_norm / out_norm
+        else:
+            out_coords = (0, 0)
         return tuple(out_coords)
 
     def point_function(self, point):
@@ -1229,16 +1243,20 @@ class DotsHoppingToColor(InputOutputScene):
 
         # Show black zero
         zeros = tuple(it.starmap(input_plane.coords_to_point, [
-            (-2, -1), (1, 2), (2, -2),
+            (-2., -1), (1, 1), (2, -2),
         ]))
         for x in range(2):
             for zero in zeros:
+                path = ParametricFunction(
+                    bezier([
+                        inspector.get_center(), 
+                        input_plane.coords_to_point(0, 0),
+                        zero
+                    ]),
+                    t_min = 0, t_max = 1
+                )
                 self.play(
-                    ApplyMethod(
-                        inspector.move_to, zero,
-                        path_arc = -TAU/8,
-                        run_time = 2,
-                    ),
+                    MoveAlongPath(inspector, path, run_time = 2),
                     inspector_image_update_anim,
                 )
                 self.wait()
@@ -1299,6 +1317,54 @@ class SoWeFoundTheZeros(AltTeacherStudentsScene):
             target_mode = "hesitant"
         )
         self.wait(3)
+
+class AskAboutHowToGeneralizeSigns(AltTeacherStudentsScene):
+    def construct(self):
+        # 2d plane
+        plane = NumberPlane(x_radius = 2.5, y_radius = 2.5)
+        plane.scale(0.8)
+        plane.to_corner(UP+LEFT)
+        plane.add_coordinates()
+
+        dot = Dot(color = YELLOW)
+        label = TextMobject("Sign?")
+        label.add_background_rectangle()
+        label.scale(0.5)
+        label.next_to(dot, UP, SMALL_BUFF)
+        dot.add(label)
+        dot.move_to(plane.coords_to_point(1, 1))
+        dot.save_state()
+        dot.fade(1)
+        dot.center()
+
+        question = TextMobject(
+            "Wait...what would \\\\ positive and negative \\\\ be in 2d?",
+        )
+        # question.highlight_by_tex_to_color_map({
+        #     "+" : "green", 
+        #     "textminus" : "red"
+        # })
+
+        self.student_says(
+            question,
+            target_mode = "sassy",
+            student_index = 2,
+            added_anims = [
+                self.teacher.change, "plain",
+            ],
+            bubble_kwargs = {"direction" : LEFT},
+            run_time = 1,
+        )
+        self.play(
+            Write(plane, run_time = 1),
+            self.students[0].change, "confused",
+            self.students[1].change, "confused",
+        )
+        self.play(dot.restore)
+        for coords in (-1, 1), (1, -1), (0, -2), (-2, 1):
+            self.wait(0.5)
+            self.play(dot.move_to, plane.coords_to_point(*coords))
+        self.wait()
 
 class HypothesisAboutFullyColoredBoundary(ColorMappedObjectsScene):
     CONFIG = {
@@ -1396,23 +1462,8 @@ class ForeverNarrowingLoop(InputOutputScene):
             run_time = 3,
             rate_func = bezier([0, 0, 1, 1])
         )
-        # self.play(
-        #     ReplacementTransform(
-        #         circle.copy(), 
-        #         circle_image.copy().match_background_image_file(
-        #             input_coloring
-        #         ).set_stroke(width = 0)
-        #     ),
-        #     ReplacementTransform(
-        #         circle.copy().match_background_image_file(
-        #             output_coloring
-        #         ).set_stroke(width = 0), 
-        #         circle_image
-        #     ),
-        #     run_time = 2
-        # )
         self.play(
-            circle.scale, 0.015,
+            circle.scale, 0,
             circle.move_to, input_plane.coords_to_point(1, 1),
             circle_image_update_anim,
             run_time = 20,
