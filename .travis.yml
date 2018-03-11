@@ -1,0 +1,21 @@
+matrix:
+  include:
+    - os: osx
+  fast_finish: true
+
+install:
+  - brew install sox
+  - brew install ffmpeg
+  - brew cask install mactex
+  - pip2 install -r requirements.txt
+
+script:
+  # just run a simple demo scenario to test that we don't crash
+  # TODO: this should be replaced by tests in future
+  - python2 extract_scene.py example_scenes.py SquareToCircle -p
+
+# timeout uploading cache after 6 minutes (360 seconds)
+cache:
+  timeout: 360
+  directories:
+    - $HOME/Library/Caches/Homebrew
