@@ -30,6 +30,9 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from topics.graph_scene import *
 
+import mpmath
+mpmath.mp.dps = 7
+
 # Useful constants to play around with
 UL = UP + LEFT
 UR = UP + RIGHT
@@ -213,7 +216,6 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         leftBraceLabelAnimation = ContinualChangingDecimal(leftBraceLabel, 
             lambda alpha : self.point_to_coords(leftBrace.get_center())[0],
             tracked_mobject = leftBrace)
-        self.add(leftBraceLabelAnimation)
         
         rightBrace.move_to(self.coords_to_point(upperX, self.base_line_y)) #, aligned_edge = LEFT)
         rightBraceLabel = DecimalNumber(upperX)
@@ -221,7 +223,6 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         rightBraceLabelAnimation = ContinualChangingDecimal(rightBraceLabel, 
             lambda alpha : self.point_to_coords(rightBrace.get_center())[0],
             tracked_mobject = rightBrace)
-        self.add(rightBraceLabelAnimation)
 
         downBrace.move_to(self.coords_to_point(0, lowerY)) #, aligned_edge = UP)
         downBraceLabel = DecimalNumber(lowerY)
@@ -229,7 +230,6 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         downBraceLabelAnimation = ContinualChangingDecimal(downBraceLabel, 
             lambda alpha : self.point_to_coords(downBrace.get_center())[1] + y_bias,
             tracked_mobject = downBrace)
-        self.add(downBraceLabelAnimation)
         
         upBrace.move_to(self.coords_to_point(0, upperY)) #, aligned_edge = DOWN)
         upBraceLabel = DecimalNumber(upperY)
@@ -237,7 +237,6 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         upBraceLabelAnimation = ContinualChangingDecimal(upBraceLabel, 
             lambda alpha : self.point_to_coords(upBrace.get_center())[1] + y_bias,
             tracked_mobject = upBrace)
-        self.add(upBraceLabelAnimation)
 
         lowerDotPoint = self.input_to_graph_point(lowerX, self.graph)
         lowerDotXPoint = self.coords_to_point(lowerX, self.base_line_y)
@@ -250,14 +249,11 @@ class EquationSolver1d(GraphScene, ZoomedScene):
 
         lowerXLine = Line(lowerDotXPoint, lowerDotPoint, color = lower_color)
         upperXLine = Line(upperDotXPoint, upperDotPoint, color = upper_color)
-        lowerYLine = Line(lowerDotYPoint, lowerDotPoint, color = lower_color)
-        upperYLine = Line(upperDotYPoint, upperDotPoint, color = upper_color)
-        self.add(lowerXLine, upperXLine, lowerYLine, upperYLine)
-
-        self.add_foreground_mobjects(xBraces, yBraces, lowerDot, upperDot)
+        lowerYLine = Line(lowerDotPoint, lowerDotYPoint, color = lower_color)
+        upperYLine = Line(upperDotPoint, upperDotYPoint, color = upper_color)
 
         x_guess_line = Line(lowerDotXPoint, upperDotXPoint, color = WHITE, stroke_width = 10)
-        self.add(x_guess_line)
+        
 
         lowerGroup = Group(
             lowerDot, 
@@ -277,7 +273,35 @@ class EquationSolver1d(GraphScene, ZoomedScene):
         initialUpperXDot = Dot(upperDotXPoint + OUT, color = upper_color)
         initialLowerYDot = Dot(lowerDotYPoint + OUT, color = lower_color)
         initialUpperYDot = Dot(upperDotYPoint + OUT, color = upper_color)
-        self.add_foreground_mobjects(initialLowerXDot, initialUpperXDot, initialLowerYDot, initialUpperYDot)
+
+        # All the initial adds and ShowCreations are here now:
+        self.play(FadeIn(initialLowerXDot), FadeIn(leftBrace), FadeIn(leftBraceLabel))
+        self.add_foreground_mobjects(initialLowerXDot, leftBrace)
+        self.add(leftBraceLabelAnimation)
+        self.play(ShowCreation(lowerXLine))
+        self.add_foreground_mobject(lowerDot)
+        self.play(ShowCreation(lowerYLine))
+        self.play(FadeIn(initialLowerYDot), FadeIn(downBrace), FadeIn(downBraceLabel))
+        self.add_foreground_mobjects(initialLowerYDot, downBrace)
+        self.add(downBraceLabelAnimation)
+
+        self.wait()
+
+        self.play(FadeIn(initialUpperXDot), FadeIn(rightBrace), FadeIn(rightBraceLabel))
+        self.add_foreground_mobjects(initialUpperXDot, rightBrace)
+        self.add(rightBraceLabelAnimation)
+        self.play(ShowCreation(upperXLine))
+        self.add_foreground_mobject(upperDot)
+        self.play(ShowCreation(upperYLine))
+        self.play(FadeIn(initialUpperYDot), FadeIn(upBrace), FadeIn(upBraceLabel))
+        self.add_foreground_mobjects(initialUpperYDot, upBrace)
+        self.add(upBraceLabelAnimation)
+
+        self.wait()
+
+        self.play(FadeIn(x_guess_line))
+
+        self.wait()
 
         for i in range(self.num_iterations):
             if i == self.iteration_at_which_to_start_zoom:
@@ -515,6 +539,13 @@ def point3d_func_from_plane_func(f):
 def point3d_func_from_complex_func(f):
     return point3d_func_from_plane_func(plane_func_from_complex_func(f))
 
+def plane_zeta((x, y)):
+    answer = mpmath.zeta(complex(x, y))
+    CLAMP_SIZE = 1000
+    if abs(answer) > CLAMP_SIZE:
+        answer = answer/abs(answer) * CLAMP_SIZE
+    return (float(answer.real), float(answer.imag))
+
 # Returns a function from 2-ples to 2-ples
 # This function is specified by a list of (x, y, z) tuples, 
 # and has winding number z (or total of all specified z) around each (x, y)
@@ -693,11 +724,15 @@ class ColorMappedByFuncScene(Scene):
             self.input_to_pos_func = lambda p : p
             self.pos_to_color_func = self.func
 
+        self.pixel_pos_to_color_func = lambda (x, y) : self.pos_to_color_func(
+            self.num_plane.point_to_coords_cheap(np.array([x, y, 0]))
+        )
+
         jitter_val = 0.1
         line_coords = np.linspace(-10, 10) + jitter_val
         func_hash_points = it.product(line_coords, line_coords)
         def mini_hasher(p):
-            rgba = point_to_rgba(self.pos_to_color_func(p))
+            rgba = point_to_rgba(self.pixel_pos_to_color_func(p))
             if rgba[3] != 1.0:
                 print "Warning! point_to_rgba assigns fractional alpha", rgba[3]
             return tuple(rgba)
@@ -722,10 +757,7 @@ class ColorMappedByFuncScene(Scene):
         if self.in_background_pass:
             self.camera.set_background_from_func(
                 lambda (x, y): point_to_rgba(
-                    self.pos_to_color_func(
-                        # Should be self.num_plane.point_to_coords_cheap(np.array([x, y, 0])),
-                        # but for cheapness, we'll go with just (x, y), having never altered
-                        # any num_plane's from default settings so far
+                    self.pixel_pos_to_color_func(
                         (x, y)
                     )
                 )
@@ -883,7 +915,7 @@ class EquationSolver2d(ColorMappedObjectsScene):
         "initial_upper_y" : 3,
         "num_iterations" : 1,
         "num_checkpoints" : 10,
-        "display_in_parallel" : True,
+        "display_in_parallel" : False,
         "use_fancy_lines" : True,
         # TODO: Consider adding a "find_all_roots" flag, which could be turned off 
         # to only explore one of the two candidate subrectangles when both are viable
@@ -1235,6 +1267,7 @@ class FirstSqrtScene(EquationSolver1d):
         "iteration_at_which_to_start_zoom" : 3,
         "graph_label" : "y = x^2",
         "show_target_line" : True,
+        "x_tick_frequency" : 0.25
     }
 
 class TestFirstSqrtScene(FirstSqrtScene):
@@ -1410,7 +1443,7 @@ class HasItsLimitations(Scene):
         # play well with z coordinates.
         
         input_dot = Dot(base_point + DOT_Z, color = dot_color)
-        input_label = TexMobject("Input", fill_color = dot_color)
+        input_label = TextMobject("Input", fill_color = dot_color)
         input_label.next_to(input_dot, UP + LEFT)
         input_label.add_background_rectangle()
         self.add_foreground_mobject(input_dot)
@@ -1425,7 +1458,7 @@ class HasItsLimitations(Scene):
         self.play(ShowCreation(curved_arrow))
 
         output_dot = Dot(base_point + 2 * RIGHT + DOT_Z, color = dot_color)
-        output_label = TexMobject("Output", fill_color = dot_color)
+        output_label = TextMobject("Output", fill_color = dot_color)
         output_label.next_to(output_dot, UP + RIGHT)
         output_label.add_background_rectangle()
 
@@ -1817,7 +1850,6 @@ class FundThmAlg(EquationSolver2d):
     CONFIG = {
         "func" : plane_func_by_wind_spec((1, 2), (-1, 1.5), (-1, 1.5)),
         "num_iterations" : 2,
-        "display_in_parallel" : True,
         "use_fancy_lines" : True,
     }
 
@@ -2071,6 +2103,28 @@ class PiWalkerExamplePlaneFunc(PiWalkerRect):
         "walk_height" : 6,
     }
 
+class NoticeHowOnThisLoop(PiWalkerRect):
+    CONFIG = {
+        "show_num_plane" : False,
+        "func" : example_plane_func,
+        # These are just manually entered, not 
+        # automatically kept in sync with example_plane_func:
+        "start_x" : 0.5,
+        "start_y" : -0.5,
+        "walk_width" : -1, # We trace from bottom-right clockwise on this one, to start at a red point
+        "walk_height" : -1,
+    }
+
+class ButOnThisLoopOverHere(NoticeHowOnThisLoop):
+    CONFIG = {
+        # These are just manually entered, not 
+        # automatically kept in sync with example_plane_func:
+        "start_x" : -1,
+        "start_y" : 0,
+        "walk_width" : 1,
+        "walk_height" : 1,
+    }
+
 class PiWalkerExamplePlaneFuncWithScaling(PiWalkerExamplePlaneFunc):
     CONFIG = {
         "scale_arrows" : True,
@@ -2086,8 +2140,8 @@ class TinyLoopOfBasicallySameColor(PureColorMap):
         self.wait()
 
 def uhOhFunc((x, y)):
-    x = np.clip(x, -5, 5)/5
-    y = np.clip(y, -3, 3)/3
+    x = -np.clip(x, -5, 5)/5
+    y = -np.clip(y, -3, 3)/3
 
     alpha = 0.5 # Most things will return green
 
@@ -2113,8 +2167,7 @@ class UhOhFuncTest(PureColorMap):
 class UhOhScene(EquationSolver2d):
     CONFIG = {
         "func" : uhOhFunc,
-        "display_in_parallel" : True,
-        "manual_wind_override" : (1, (1, (1, None, None), None), None), # Tailored to UhOhFunc above
+        "manual_wind_override" : (1, None, (1, None, (1, None, None))), # Tailored to UhOhFunc above
         "show_winding_numbers" : False,
         "num_iterations" : 5,
     }
@@ -2221,5 +2274,23 @@ class PiWalkerOdometerTest(PiWalkerExamplePlaneFunc):
 class PiWalkerFancyLineTest(PiWalkerExamplePlaneFunc):
     CONFIG = {
         "color_foreground_not_background" : True
+    }
+
+class NotFoundScene(Scene):
+    def construct(self):
+        self.add(TextMobject("SCENE NOT FOUND!"))
+        self.wait()
+
+criticalStripYScale = 100
+criticalStrip = Axes(x_min = -0.5, x_max = 1.5, x_axis_config = {"unit_size" : SPACE_WIDTH, 
+    "number_at_center" : 0.5}, 
+    y_min = -criticalStripYScale, y_max = criticalStripYScale, 
+    y_axis_config = {"unit_size" : fdiv(SPACE_HEIGHT, criticalStripYScale)})
+
+class ZetaViz(PureColorMap):
+    CONFIG = {
+        "func" : plane_zeta,
+        #"num_plane" : criticalStrip,
+        "show_num_plane" : True
     }
 # FIN

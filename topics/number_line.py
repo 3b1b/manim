@@ -261,6 +261,7 @@ class NumberPlane(VMobject):
         "secondary_color" : BLUE_E,
         "axes_color" : WHITE,
         "secondary_stroke_width" : 1,
+        # TODO: Allow coordinate center of NumberPlane to not be at (0, 0)
         "x_radius": None,
         "y_radius": None,
         "x_unit_size" : 1,
