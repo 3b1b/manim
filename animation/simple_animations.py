@@ -310,3 +310,24 @@ class ApplyToCenters(Animation):
                 center_mob.get_center()-mobject.get_center()
             )
 
+class FadeInAndShiftFromDirection(Transform):
+    CONFIG = {
+        "direction" : DOWN,
+    }
+    def __init__(self, mobject, **kwargs):
+        digest_config(self, kwargs)
+        target = mobject.copy()
+        mobject.shift(self.direction)
+        mobject.fade(1)
+        Transform.__init__(self, mobject, target, **kwargs)
+
+# Essentially just a more convenient name for the above animation
+class FadeInFromDown(FadeInAndShiftFromDirection):
+    CONFIG = {
+        "direction" : DOWN,
+    }
+
+
+
+
+
