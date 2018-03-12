@@ -667,7 +667,7 @@ class TeacherStudentsScene(PiCreatureScene):
         return self.pi_creature_thinks(student, *content, **kwargs)
 
     def change_all_student_modes(self, mode, **kwargs):
-        self.change_student_modes(*[mode]*len(self.students))
+        self.change_student_modes(*[mode]*len(self.students), **kwargs)
 
     def change_student_modes(self, *modes, **kwargs):
         added_anims = kwargs.pop("added_anims", [])
