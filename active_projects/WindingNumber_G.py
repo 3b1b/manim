@@ -1111,6 +1111,47 @@ class TwoDScreenInOurThreeDWorld(AltTeacherStudentsScene, ThreeDScene):
         self.add(AmbientRotation(everything, axis = UP, rate = 3*DEGREES))
         self.wait(10)
 
+class EveryOutputPointHasAColor(ColorMappedObjectsScene):
+    CONFIG = {
+        "func" : lambda p : p,
+        "dot_spacing" : 0.1,
+        "dot_radius" : 0.01,
+    }
+    def construct(self):
+        full_rect = FullScreenRectangle()
+        full_rect.set_fill(WHITE, 1)
+        full_rect.set_stroke(WHITE, 0)
+        full_rect.color_using_background_image(self.background_image_file)
+
+        title = TextMobject("Output Space")
+        title.scale(1.5)
+        title.to_edge(UP, buff = MED_SMALL_BUFF)
+        title.set_stroke(BLACK, 1)
+        self.add_foreground_mobjects(title)
+
+        plane = NumberPlane()
+        plane.fade(0.5)
+        plane.axes.set_stroke(WHITE, 3)
+        plane.add(BackgroundRectangle(title))
+        self.add(plane)
+
+
+        dots = VGroup()
+        step = self.dot_spacing
+        for x in np.arange(-SPACE_WIDTH, SPACE_WIDTH+step, step):
+            for y in np.arange(-SPACE_HEIGHT, SPACE_HEIGHT+step, step):
+                dot = Dot(color = WHITE)
+                dot.color_using_background_image(self.background_image_file)
+                dot.move_to(x*RIGHT + y*UP)
+                dots.add(dot)
+        random.shuffle(dots.submobjects)
+
+        self.play(LaggedStart(
+            GrowFromCenter, dots, 
+            run_time = 8,
+            lag_ratio = 0.05,
+        ))
+
 class DotsHoppingToColor(InputOutputScene):
     CONFIG = {
         "dot_radius" : 0.05,
@@ -1318,6 +1359,88 @@ class SoWeFoundTheZeros(AltTeacherStudentsScene):
         )
         self.wait(3)
 
+class Rearrange2DEquation(AltTeacherStudentsScene):
+    def construct(self):
+        f_tex, g_tex, h_tex = [
+            "%s(\\text{2d point})"%char
+            for char in "f", "g", "h" 
+        ]
+        zero_tex = "\\vec{\\textbf{0}}"
+        equations = VGroup(
+            TexMobject(g_tex, "", "=", h_tex, ""),
+            TexMobject(g_tex, "-", h_tex, "=", zero_tex),
+        )
+        equations.move_to(self.hold_up_spot, DOWN)
+        equations.shift_onto_screen()
+
+        brace = Brace(equations[1], UP)
+        zero_eq = brace.get_tex("%s = %s"%(f_tex, zero_tex))
+
+        for equation in equations:
+            equation.highlight_by_tex(g_tex, BLUE)
+            equation.highlight_by_tex(h_tex, YELLOW)
+            equation.sort_submobjects_alphabetically()
+
+
+        self.teacher_holds_up(equations[0])
+        self.change_all_student_modes("pondering")
+        self.play(Transform(
+            *equations,
+            run_time = 1.5,
+            path_arc = TAU/2
+        ))
+        self.play(
+            Succession(
+                GrowFromCenter(brace),
+                Write(zero_eq, run_time = 1)
+            ),
+            self.get_student_changes(*["happy"]*3)
+        )
+        self.play(*[
+            ApplyMethod(pi.change, "thinking", self.screen)
+            for pi in self.pi_creatures
+        ])
+        self.wait(3)
+
+class SearchForZerosInInputSpace(ColorMappedObjectsScene):
+    CONFIG = {
+        "func" : example_plane_func,
+    }
+    def construct(self):
+        title = TextMobject("Input space")
+        title.scale(2)
+        title.to_edge(UP)
+        title.set_stroke(BLACK, 1)
+        title.add_background_rectangle()
+
+        plane = NumberPlane()
+        plane.fade(0.5)
+        plane.axes.set_stroke(WHITE, 3)
+
+        self.add(plane, title)
+
+        looking_glass = Circle()
+        looking_glass.set_stroke(WHITE, 3)
+        looking_glass.set_fill(WHITE, 0.6)
+        looking_glass.color_using_background_image(self.background_image_file)
+        question = TextMobject("Which points", "go to 0?")
+        question.next_to(looking_glass, DOWN)
+        for part in question:
+            part.add_background_rectangle()
+
+        mover = VGroup(looking_glass, question)
+        mover.move_to(4*LEFT + UP)
+
+        self.play(FadeIn(mover))
+        points = [4*RIGHT+UP, 2*RIGHT+2*DOWN, 2*LEFT+2*DOWN, 3*RIGHT+2.5*DOWN]
+        for point in points:
+            self.play(mover.move_to, point, run_time = 1.5)
+            self.wait()
+
+
+
+
+
 class AskAboutHowToGeneralizeSigns(AltTeacherStudentsScene):
     def construct(self):
         # 2d plane
@@ -1344,6 +1467,7 @@ class AskAboutHowToGeneralizeSigns(AltTeacherStudentsScene):
         #     "+" : "green", 
         #     "textminus" : "red"
         # })
+
 
         self.student_says(
             question,
