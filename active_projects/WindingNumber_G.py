@@ -190,6 +190,7 @@ class Introduce1DFunctionCase(Scene):
             "max_stem_width_to_tip_width_ratio" : 0.5,
             "max_tip_length_to_length_ratio" : 0.5,
         },
+        "show_midpoint_value" : True,
     }
     def construct(self):
         self.show_axes_one_at_a_time()
@@ -407,6 +408,27 @@ class Introduce1DFunctionCase(Scene):
             sign_word0 = leftovers0.sign_word
             sign_word1 = leftovers1.sign_word
 
+        midpoint_line = Line(MED_SMALL_BUFF*UP, ORIGIN, color = YELLOW)
+        midpoint_line_update = UpdateFromFunc(
+            midpoint_line, lambda l : l.move_to(rect)
+        )
+        decimal = DecimalNumber(
+            0,
+            num_decimal_points = 3,
+            show_ellipsis = True,
+        )
+        decimal.scale(0.7)
+        decimal_update = ChangingDecimal(
+            decimal, lambda a : axes.x_axis.point_to_number(rect.get_center()),
+            position_update_func = lambda m : m.next_to(
+                midpoint_line, DOWN, SMALL_BUFF,
+                submobject_to_align = decimal[:-1],
+            ),
+        )
+        if not self.show_midpoint_value:
+            decimal.set_fill(opacity = 0)
+            midpoint_line.set_stroke(width = 0)
+
         #Restrict to by a half each time
         kwargs = {"mention_signs" : False} 
         for x in range(n_iterations - 1):
@@ -434,6 +456,8 @@ class Introduce1DFunctionCase(Scene):
             rect.target.stretch_to_fit_height(self.search_range_rect_height)
             self.play(
                 MoveToTarget(rect),
+                midpoint_line_update,
+                decimal_update,
                 Animation(all_leftovers),
                 FadeOut(to_fade),
                 *added_anims
@@ -449,7 +473,11 @@ class Introduce1DFunctionCase(Scene):
             else:
                 self.wait()
 
-    def compare_graphs_at_x(self, f_graph, g_graph, x, mention_signs = False):
+    def compare_graphs_at_x(
+        self, f_graph, g_graph, x, 
+        mention_signs = False,
+        show_decimal = False,
+        ):
         axes = self.axes
         f_point = axes.input_to_graph_point(x, f_graph)
         g_point = axes.input_to_graph_point(x, g_graph)
@@ -486,6 +514,7 @@ class Introduce1DFunctionCase(Scene):
             sign_word.add_background_rectangle()
             added_anims += [FadeIn(sign_word)]
             leftovers.sign_word = sign_word
+
         self.play(GrowArrow(arrow), *added_anims)
 
         return leftovers
@@ -504,6 +533,7 @@ class TransitionFromEquationSolverToZeroFinder(Introduce1DFunctionCase):
     CONFIG = {
         "show_dotted_line_to_f" : False,
         "arrow_config" : {},
+        "show_midpoint_value" : False,
     }
     def construct(self):
         #Just run through these without animating.
@@ -720,7 +750,7 @@ class InputOutputScene(Scene):
             fill_opacity = 1,
         )
         output_coloring = input_coloring.copy()
-        colorings = [input_coloring, output_coloring]
+        colorings = VGroup(input_coloring, output_coloring)
         vects = [LEFT, RIGHT]
         cmos_pair = [in_cmos, out_cmos]
         for coloring, vect, cmos in zip(colorings, vects, cmos_pair):
@@ -734,7 +764,7 @@ class InputOutputScene(Scene):
             y_radius = self.plane_height/2.0,
         )
         output_plane = self.output_plane = input_plane.copy()
-        planes = [input_plane, output_plane]
+        planes = VGroup(input_plane, output_plane)
         vects = [LEFT, RIGHT]
         label_texts = ["Input", "Output"]
         label_colors = [GREEN, RED]
@@ -1146,10 +1176,17 @@ class EveryOutputPointHasAColor(ColorMappedObjectsScene):
                 dots.add(dot)
         random.shuffle(dots.submobjects)
 
+        m = 3 #exponential factor        
+        n = 1
+        dot_groups = VGroup()
+        while n <= len(dots):
+            dot_groups.add(dots[n-1:m*n-1])
+            n *= m
         self.play(LaggedStart(
-            GrowFromCenter, dots, 
+            LaggedStart, dot_groups,
+            lambda dg : (GrowFromCenter,  dg),
             run_time = 8,
-            lag_ratio = 0.05,
+            lag_ratio = 0.2,
         ))
 
 class DotsHoppingToColor(InputOutputScene):
@@ -1423,10 +1460,9 @@ class SearchForZerosInInputSpace(ColorMappedObjectsScene):
         looking_glass.set_stroke(WHITE, 3)
         looking_glass.set_fill(WHITE, 0.6)
         looking_glass.color_using_background_image(self.background_image_file)
-        question = TextMobject("Which points", "go to 0?")
+        question = TextMobject("Which points go to 0?")
         question.next_to(looking_glass, DOWN)
-        for part in question:
-            part.add_background_rectangle()
+        question.add_background_rectangle()
 
         mover = VGroup(looking_glass, question)
         mover.move_to(4*LEFT + UP)
@@ -1437,9 +1473,194 @@ class SearchForZerosInInputSpace(ColorMappedObjectsScene):
             self.play(mover.move_to, point, run_time = 1.5)
             self.wait()
 
+class OneDRegionBoundary(Scene):
+    CONFIG = {
+        "graph_color" : BLUE,
+        "region_rect_height" : 0.1,
+    }
+    def construct(self):
+        x0 = self.x0 = 3 
+        x1 = self.x1 = 6
+        fx0 = self.fx0 = -2
+        fx1 = self.fx1 = 2
+
+        axes = self.axes = Axes(
+            x_min = -1, x_max = 10,
+            y_min = -3, y_max = 3,
+        )
+        axes.center()
+        axes.set_stroke(width = 2)
+
+        input_word = TextMobject("Input")
+        input_word.next_to(axes.x_axis, UP, SMALL_BUFF, RIGHT)
+        output_word = TextMobject("Output")
+        output_word.next_to(axes.y_axis, UP)
+        axes.add(input_word, output_word)
+        self.add(axes)
+
+        graph = self.get_graph_part(1, 1)
+        alt_graphs = [
+            self.get_graph_part(*points)
+            for points in [
+                (-1, -2),
+                (-1, -1, -1),
+                (1, 1, 1),
+                (-0.75, 0, 1.75),
+                (-3, -2, -1),
+            ]
+        ]
+
+        #Region and boundary
+        line = Line(axes.coords_to_point(x0, 0), axes.coords_to_point(x1, 0))
+        region = Rectangle(
+            stroke_width = 0,
+            fill_color = YELLOW,
+            fill_opacity = 0.5,
+            height = self.region_rect_height
+        )
+        region.match_width(line, stretch = True)
+        region.move_to(line)
+
+        region_words = TextMobject("Input region")
+        region_words.scale_to_fit_width(0.8*region.get_width())
+        region_words.next_to(region, UP)
+
+        x0_arrow, x1_arrow = arrows = VGroup(*[
+            Arrow(
+                axes.coords_to_point(x, 0),
+                axes.coords_to_point(x, fx),
+                color = color,
+                buff = 0
+            )
+            for x, fx, color in (x0, fx0, RED), (x1, fx1, GREEN)
+        ])
+        minus = TexMobject("-")
+        minus.match_color(x0_arrow)
+        minus.next_to(x0_arrow, UP)
+        plus = TexMobject("+")
+        plus.match_color(x1_arrow)
+        plus.next_to(x1_arrow, DOWN)
+        signs = VGroup(plus, minus)
 
 
+        self.play(
+            GrowFromCenter(region),
+            FadeIn(region_words)
+        )
+        self.wait()
+        self.play(*it.chain(
+            map(GrowArrow, arrows),
+            map(Write, signs)
+        ))
+        self.wait()
+        self.play(
+            ShowCreation(graph), 
+            FadeOut(region_words),
+        )
+        self.wait()
+        for alt_graph in alt_graphs + alt_graphs:
+            self.play(Transform(graph, alt_graph, path_arc = 0.1*TAU))
+        self.wait()
 
+
+    ###
+
+    def get_graph_part(self, *interim_values):
+        result = VMobject()
+        result.set_stroke(self.graph_color, 3)
+        result.set_fill(opacity = 0)
+        values = [self.fx0] + list(interim_values) + [self.fx1]
+        result.set_points_smoothly([
+            self.axes.coords_to_point(x, fx)
+            for x, fx in zip(
+                np.linspace(self.x0, self.x1, len(values)),
+                values
+            )
+        ])
+        return result
+
+class DirectionOfA2DFunctionAlongABoundary(InputOutputScene):
+    def construct(self):
+        colorings = self.get_colorings()
+        colorings.set_fill(opacity = 0.25)
+        input_plane, output_plane = planes = self.get_planes()
+        for plane in planes:
+            plane.lines_to_fade.set_stroke(width = 0)
+        v_line = self.get_v_line()
+
+        rect = Rectangle()
+        rect.set_stroke(WHITE, 5)
+        rect.set_fill(WHITE, 0)
+        line = Line(
+            input_plane.coords_to_point(-0.75, 2.5),
+            input_plane.coords_to_point(2.5, -1.5),
+        )
+        rect.replace(line, stretch = True)
+        rect.insert_n_anchor_points(50)
+        rect.match_background_image_file(colorings[0])
+
+        rect_image = rect.copy()
+        rect_image.match_background_image_file(colorings[1])
+        def update_rect_image(rect_image):
+            rect_image.points = np.array(rect.points)
+            rect_image.apply_function(self.point_function)
+        rect_image_update_anim = UpdateFromFunc(rect_image, update_rect_image)
+
+
+        def get_input_point():
+            return rect.points[-1]
+
+        def get_output_coords():
+            in_coords = input_plane.point_to_coords(get_input_point())
+            return self.func(in_coords)
+
+        def get_angle():
+            return angle_of_vector(get_output_coords())
+
+        def get_color():
+            return rev_to_color(get_angle()/TAU) #Negative?
+
+
+        out_vect = Vector(RIGHT, color = WHITE)
+        out_vect_update_anim = UpdateFromFunc(
+            out_vect,
+            lambda ov : ov.put_start_and_end_on(
+                output_plane.coords_to_point(0, 0),
+                rect_image.points[-1]
+            ).highlight(get_color())
+        )
+
+        dot = Dot()
+        dot.set_stroke(BLACK, 1)
+        dot_update_anim = UpdateFromFunc(
+            dot, lambda d : d.move_to(get_input_point()).set_fill(get_color())
+        )
+
+        in_vect = Vector(RIGHT)
+        def update_in_vect(in_vect):
+            in_vect.put_start_and_end_on(ORIGIN, 0.5*RIGHT)
+            in_vect.rotate(get_angle())
+            in_vect.highlight(get_color())
+            in_vect.shift(get_input_point() - in_vect.get_start())
+            return in_vect
+        in_vect_update_anim = UpdateFromFunc(in_vect, update_in_vect)
+
+        self.add(colorings, planes, v_line)
+
+        self.play(
+            GrowArrow(out_vect),
+            GrowArrow(in_vect),
+            Animation(dot),
+        )
+        self.play(
+            ShowCreation(rect),
+            ShowCreation(rect_image),
+            out_vect_update_anim,
+            in_vect_update_anim,
+            dot_update_anim,
+            rate_func = bezier([0, 0, 1, 1]),
+            run_time = 10,
+        )
 
 class AskAboutHowToGeneralizeSigns(AltTeacherStudentsScene):
     def construct(self):
@@ -1498,20 +1719,29 @@ class HypothesisAboutFullyColoredBoundary(ColorMappedObjectsScene):
         ColorMappedObjectsScene.construct(self)
         square = Square(side_length = 4)
         square.color_using_background_image(self.background_image_file)
-
         hypothesis = TextMobject(
            "Working Hypothesis: \\\\",
-           "If the boundary of a region goes through \\\\ all colors,", 
-           "that region contains a zero."
+           "If a 2d function hits outputs of all possible colors \\\\" + 
+           "on the boundary of a 2d region,", 
+           "that region \\\\ contains a zero.",
+           alignment = "",
         )
+        hypothesis[0].next_to(hypothesis[1:], UP)
         hypothesis[0].highlight(YELLOW)
+        s = hypothesis[1].get_tex_string()
+        s = filter(lambda c : c not in string.whitespace, s)
+        n = s.index("colors")
+        hypothesis[1][n:n+len("colors")].gradient_highlight(
+            # RED, GOLD_E, YELLOW, GREEN, BLUE, PINK,
+            BLUE, PINK, YELLOW,
+        )
         hypothesis.to_edge(UP)
-        square.next_to(hypothesis, DOWN)
+        square.next_to(hypothesis, DOWN, MED_LARGE_BUFF)
 
         self.add(hypothesis[0])
         self.play(
             LaggedStart(FadeIn, hypothesis[1]),
-            ShowCreation(square, run_time = 4)
+            ShowCreation(square, run_time = 8)
         )
         self.play(LaggedStart(FadeIn, hypothesis[2]))
         self.play(square.set_fill, {"opacity" : 1}, run_time = 2)
@@ -1539,6 +1769,11 @@ class PiCreatureAsksWhatWentWrong(PiCreatureScene):
         self.wait(5)
 
 class ForeverNarrowingLoop(InputOutputScene):
+    CONFIG = {
+        "target_coords" : (1, 1),
+        "input_plane_corner" : UP+RIGHT,
+        "shrink_time" : 20,
+    }
     def construct(self):
         input_coloring, output_coloring = colorings = VGroup(*self.get_colorings())
         input_plane, output_plane = planes = VGroup(*self.get_planes())
@@ -1565,7 +1800,11 @@ class ForeverNarrowingLoop(InputOutputScene):
         circle = Circle(color = WHITE, radius = 2.25)
         circle.flip(axis = RIGHT)
         circle.insert_n_anchor_points(50)
-        circle.next_to(input_coloring.get_corner(UP+RIGHT), DOWN+LEFT, SMALL_BUFF)
+        circle.next_to(
+            input_coloring.get_corner(self.input_plane_corner), 
+            -self.input_plane_corner, 
+            SMALL_BUFF
+        )
         circle.set_stroke(width = 5)
         circle_image = circle.copy()
         circle.match_background_image_file(input_coloring)
@@ -1588,11 +1827,18 @@ class ForeverNarrowingLoop(InputOutputScene):
         )
         self.play(
             circle.scale, 0,
-            circle.move_to, input_plane.coords_to_point(1, 1),
+            circle.move_to, input_plane.coords_to_point(*self.target_coords),
             circle_image_update_anim,
-            run_time = 20,
+            run_time = self.shrink_time,
             rate_func = bezier([0, 0, 1, 1])
         )
+
+class AltForeverNarrowingLoop(ForeverNarrowingLoop):
+    CONFIG = {
+        "target_coords" : (-2, -1),
+        "input_plane_corner" : DOWN+LEFT,
+        "shrink_time" : 3,
+    }
 
 class FailureOfComposition(ColorMappedObjectsScene):
     CONFIG = {
