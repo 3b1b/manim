@@ -260,6 +260,11 @@ class TauCreature(PiCreature):
         "file_name_prefix" : "TauCreatures"
     }
 
+class ThreeLeggedPiCreature(PiCreature):
+    CONFIG = {
+        "file_name_prefix" : "ThreeLeggedPiCreatures"
+    }
+
 
 class Blink(ApplyMethod):
     CONFIG = {
