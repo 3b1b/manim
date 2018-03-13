@@ -202,20 +202,22 @@ class ManyFormulas(Scene):
         radius.highlight(WHITE)
 
         angle_groups = VGroup()
-        for denom in 8, 4, 3:
+        for denom in 5, 4, 3, 2:
             radius_copy = radius.copy()
             radius_copy.rotate(TAU/denom, about_point = circle.get_center())
-            arc = circle.copy()
-            arc.set_stroke(RED, width = 4)
-            arc.pointwise_become_partial(circle, 0, 1./denom)
+            arc = Arc(
+                angle = TAU/denom,
+                stroke_color = RED,
+                stroke_width = 4,
+                radius = circle.radius,
+            )
+            arc.shift(circle.get_center())
             mini_arc = arc.copy()
             mini_arc.set_stroke(WHITE, 2)
-            mini_arc.scale(0.2, about_point = circle.get_center())
+            mini_arc.scale(0.15, about_point = circle.get_center())
             tau_tex = TexMobject("\\tau/%d"%denom)
-            tau_tex.next_to(
-                mini_arc, 
-                mini_arc.point_from_proportion(0.5) - circle.get_center()
-            )
+            point = mini_arc.point_from_proportion(0.5)
+            tau_tex.next_to(point, direction = point - circle.get_center())
             angle_group = VGroup(radius_copy, mini_arc, tau_tex, arc)
             angle_groups.add(angle_group)
 
@@ -223,8 +225,8 @@ class ManyFormulas(Scene):
         angle_group = angle_groups[0]
         self.play(*map(FadeIn, [circle, radius]))
         self.play(
+            circle.set_stroke, {"width" : 1,},
             FadeIn(angle_group),
-            circle.fade, 0.25,
         )
         self.wait()
         for group in angle_groups[1:]:
