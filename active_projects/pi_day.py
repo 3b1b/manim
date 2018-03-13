@@ -33,7 +33,55 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from topics.graph_scene import *
 
-RESOURCE_DIR = os.path.join(MEDIA_DIR, "3b1b_videos", "π Day 2018")
+RESOURCE_DIR = os.path.join(MEDIA_DIR, "3b1b_videos", "π Day 2018", "images")
+def get_image(name):
+    return ImageMobject(os.path.join(RESOURCE_DIR, name))
+
+def get_circle_drawing_terms(radius = 1, positioning_func = lambda m : m.center()):
+    circle = Circle(color = YELLOW, radius = 1.25)
+    positioning_func(circle)
+    radius = Line(circle.get_center(), circle.points[0])
+    radius.highlight(WHITE)
+    one = TexMobject("1")
+    one.scale(0.75)
+    one_update = UpdateFromFunc(
+        one, lambda m : m.move_to(
+            radius.get_center() + \
+            0.25*rotate_vector(radius.get_vector(), TAU/4)
+        ),
+    )
+    decimal = DecimalNumber(0, num_decimal_points = 4, show_ellipsis = True)
+    decimal.scale(0.75)
+    def reposition_decimal(decimal):
+        vect = radius.get_vector()
+        unit_vect = vect/np.linalg.norm(vect)
+        angle = radius.get_angle()
+        alpha = (-np.cos(2*angle) + 1)/2
+        interp_length = interpolate(decimal.get_width(), decimal.get_height(), alpha)
+        buff = interp_length/2 + MED_SMALL_BUFF
+        decimal.move_to(radius.get_end() + buff*unit_vect)
+        decimal.shift(UP*decimal.get_height()/2)
+        return decimal
+
+    kwargs = {"run_time" : 3, "rate_func" : bezier([0, 0, 1, 1])} 
+    changing_decimal = ChangingDecimal(
+        decimal, lambda a : a*TAU,
+        position_update_func = reposition_decimal,
+        **kwargs
+    )
+
+    terms = VGroup(circle, radius, one, decimal)
+    generate_anims1 = lambda : [ShowCreation(radius), Write(one)]
+    generate_anims2 = lambda : [
+        ShowCreation(circle, **kwargs),
+        Rotating(radius, about_point = radius.get_start(), **kwargs),
+        changing_decimal,
+        one_update,
+    ]
+
+    return terms, generate_anims1, generate_anims2
+
+##
 
 class PiTauDebate(PiCreatureScene):
     def construct(self):
@@ -44,7 +92,6 @@ class PiTauDebate(PiCreatureScene):
         pi_value.highlight(BLUE)
         tau_value = TextMobject("6.2831...!")
         tau_value.highlight(GREEN)
-
 
         self.play(PiCreatureSays(
             pi, pi_value,
@@ -61,44 +108,21 @@ class PiTauDebate(PiCreatureScene):
         self.wait()
 
         # Show tau
-        circle = Circle(color = YELLOW, radius = 1.25)
-        circle.next_to(tau, UP, MED_LARGE_BUFF)
-        circle.to_edge(RIGHT, buff = 2)
-        circle.to_edge(UP)
-        radius = Line(circle.get_center(), circle.get_right())
-        radius.highlight(WHITE)
-        one = TexMobject("1")
-        kwargs = {"run_time" : 3, "rate_func" : bezier([0, 0, 1, 1])} 
-        one_update = UpdateFromFunc(
-            one, lambda m : m.move_to(
-                radius.get_center() + \
-                0.25*rotate_vector(radius.get_vector(), TAU/4)
-            ),
-            **kwargs
+        terms, generate_anims1, generate_anims2 = get_circle_drawing_terms(
+            radius = 1.25,
+            positioning_func = lambda m : m.to_edge(RIGHT, buff = 2).to_edge(UP, buff = 1)
         )
-        decimal = DecimalNumber(0, num_decimal_points = 4, show_ellipsis = True)
-        decimal.scale(0.75)
-        changing_decimal = ChangingDecimal(
-            decimal, lambda a : a*TAU,
-            position_update_func = lambda m : m.next_to(
-                radius.get_end(), RIGHT,
-                aligned_edge = DOWN,
-            ),
-            **kwargs
-        )
+        circle, radius, one, decimal = terms
 
         self.play(
-            ShowCreation(radius), Write(one),
             RemovePiCreatureBubble(pi),
             RemovePiCreatureBubble(tau),
+            *generate_anims1()
         )
         self.play(
             tau.change, "hooray",
             pi.change, "sassy",
-            Rotating(radius, about_point = radius.get_start(), **kwargs),
-            ShowCreation(circle, **kwargs),
-            changing_decimal,
-            one_update,
+            *generate_anims2()
         )
         self.wait()
 
@@ -181,6 +205,11 @@ class HartlAndPalais(Scene):
         self.play(FadeIn(three_legged_creature))
         self.play(three_legged_creature.change_mode, "wave")
         self.play(Blink(three_legged_creature))
+        self.play(Homotopy(
+            lambda x, y, z, t : (x + 0.1*np.sin(2*TAU*t)*np.exp(-10*(t-0.5 - 0.5*(y-1.85))**2), y, z),
+            three_legged_creature,
+            run_time = 2,
+        ))
         self.wait()
 
 class ManyFormulas(Scene):
@@ -233,14 +262,158 @@ class ManyFormulas(Scene):
             self.play(Transform(angle_group, group, path_arc = TAU/8))
             self.wait()
 
+class HistoryOfOurPeople(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Today: The history \\\\ of our people.",
+            bubble_kwargs = {"width" : 4, "height" : 3}
+        )
+        self.change_all_student_modes("hooray")
+        self.wait()
+        self.play(*[
+            ApplyMethod(pi.change, "happy", self.screen)
+            for pi in self.pi_creatures
+        ])
+        self.wait(4)
 
+class TauFalls(Scene):
+    def construct(self):
+        tau = TauCreature()
+        bottom = np.min(tau.body.points[:,1])*UP
+        angle = -0.15*TAU
+        tau.generate_target()
+        tau.target.change("angry")
+        tau.target.rotate(angle, about_point = bottom)
+        self.play(Rotate(tau, angle, rate_func = rush_into, path_arc = angle, about_point = bottom))
+        # self.play(MoveToTarget(tau, rate_func = rush_into, path_arc = angle))
+        self.play(MoveToTarget(tau))
+        self.wait()
 
+class EulerWrites628(Scene):
+    CONFIG = {
+        "camera_config" : {
+            "background_alpha" : 255,
+        }
+    }
+    def construct(self):
+        image = ImageMobject(os.path.join(RESOURCE_DIR, "dalembert_zoom"))
+        image.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        image.to_edge(UP, buff = MED_SMALL_BUFF)
+        image.fade(0.15)
+        rect = Rectangle(
+            width = 12, 
+            height = 0.5,
+            stroke_width = 0,
+            fill_opacity = 0.3,
+            fill_color = GREEN,
+        )
+        rect.insert_n_anchor_points(20)
+        rect.apply_function(lambda p : np.array([p[0], p[1] - 0.005*p[0]**2, p[2]]))
+        rect.rotate(0.012*TAU)
+        rect.move_to(image)
+        rect.shift(0.15*DOWN)
 
+        words = TextMobject(
+            "``Let", "$\\pi$", "be the", "circumference", 
+            "of a circle whose", "radius = 1''",
+        )
+        words.highlight_by_tex_to_color_map({
+            "circumference" : YELLOW,
+            "radius" : GREEN,
+        })
+        words.next_to(image, DOWN)
+        pi = words.get_part_by_tex("\\pi").copy()
 
+        terms, generate_anims1, generate_anims2 = get_circle_drawing_terms(
+            radius = 1, 
+            positioning_func = lambda circ : circ.next_to(words, DOWN, buff = 1.25)
+        )
+        circle, radius, one, decimal = terms
 
+        unwrapped_perimeter = Line(ORIGIN, TAU*RIGHT)
+        unwrapped_perimeter.match_style(circle)
+        unwrapped_perimeter.next_to(circle, DOWN)
+        brace = Brace(unwrapped_perimeter, UP, buff = SMALL_BUFF)
 
+        perimeter = TexMobject(
+            "\\pi\\epsilon\\rho\\iota\\mu\\epsilon\\tau\\rho\\text{o}\\varsigma",
+            "\\text{ (perimeter)}",
+            "="
+        )
+        perimeter.next_to(brace, UP, submobject_to_align = perimeter[1], buff = SMALL_BUFF)
+        perimeter[0][0].highlight(GREEN)
 
+        self.play(FadeInFromDown(image))
+        self.play(
+            Write(words), 
+            GrowFromPoint(rect, rect.point_from_proportion(0.9))
+        )
+        self.wait()
+        self.play(*generate_anims1())
+        self.play(*generate_anims2())
+        self.play(terms.shift, UP)
+        self.play(
+            pi.scale, 2,
+            pi.shift, DOWN, 
+            pi.highlight, GREEN
+        )
+        self.wait()
+        self.play(
+            GrowFromCenter(brace),
+            circle.set_stroke, YELLOW, 1,
+            ReplacementTransform(circle.copy(), unwrapped_perimeter),
+            decimal.scale, 1.25,
+            decimal.next_to, perimeter[-1].get_right(), RIGHT,
+            ReplacementTransform(pi, perimeter[0][0]),
+            Write(perimeter),
+        )
+        self.wait()
 
+class HeroAndVillain(Scene):
+    CONFIG = {
+        "camera_config" : {
+            "background_alpha" : 255,
+        } 
+    }
+    def construct(self):
+        good_euler = get_image("Leonhard_Euler_by_Handmann")
+        bad_euler_pixelated = get_image("Leonard_Euler_pixelated")
+        bad_euler = get_image("Leonard_Euler_revealed")
+        pictures = good_euler, bad_euler_pixelated, bad_euler
+        for mob in pictures:
+            mob.scale_to_fit_height(5)
+
+        good_euler.move_to(SPACE_WIDTH*LEFT/2)
+        bad_euler.move_to(SPACE_WIDTH*RIGHT/2)
+        bad_euler_pixelated.move_to(bad_euler)
+
+        good_euler_label = TextMobject("Leonhard Euler")
+        good_euler_label.next_to(good_euler, DOWN)
+        tau_words = TextMobject("Used 6.2831...")
+        tau_words.next_to(good_euler, UP)
+        tau_words.highlight(GREEN)
+
+        bad_euler_label = TextMobject("Also Euler...")
+        bad_euler_label.next_to(bad_euler, DOWN)
+        pi_words = TextMobject("Used 3.1415...")
+        pi_words.highlight(RED)
+        pi_words.next_to(bad_euler, UP)
+
+        self.play(
+            FadeInFromDown(good_euler),
+            Write(good_euler_label)
+        )
+        self.play(LaggedStart(FadeIn, tau_words))
+        self.wait()
+        self.play(FadeInFromDown(bad_euler_pixelated))
+        self.play(LaggedStart(FadeIn, pi_words))
+        self.wait(2)
+        self.play(
+            FadeIn(bad_euler),
+            Write(bad_euler_label),
+        )
+        self.remove(bad_euler_pixelated)
+        self.wait(2)
 
 
 
