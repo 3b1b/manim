@@ -1193,12 +1193,12 @@ class EveryOutputPointHasAColor(ColorMappedObjectsScene):
         title.scale(1.5)
         title.to_edge(UP, buff = MED_SMALL_BUFF)
         title.set_stroke(BLACK, 1)
-        self.add_foreground_mobjects(title)
+        # self.add_foreground_mobjects(title)
 
         plane = NumberPlane()
         plane.fade(0.5)
         plane.axes.set_stroke(WHITE, 3)
-        plane.add(BackgroundRectangle(title))
+        # plane.add(BackgroundRectangle(title))
         self.add(plane)
 
 
