@@ -4,6 +4,7 @@ from mobject.vectorized_mobject import *
 from animation.animation import Animation
 from animation.transform import *
 from animation.simple_animations import *
+from animation.compositions import *
 from topics.geometry import *
 from scene import Scene
 from camera import *
@@ -16,6 +17,8 @@ RADIUS_BUFF_VER = 0.5
 RADIUS_COLOR = BLUE
 CIRCUM_COLOR = YELLOW
 DECIMAL_WIDTH = 0.5
+
+HIGHLIGHT_COLOR = YELLOW
 
 
 class ArcLengthChange(Animation):
@@ -144,10 +147,70 @@ class CircleConstants(Scene):
         self.wait(2)
 
 
+class AnalysisQuote(Scene):
+
+    def construct(self):
+
+        text = TextMobject('``We therefore set the radius of \\\\'\
+         'the circle\dots to be = 1, and \dots\\\\'\
+         'through approximations the \\\\'\
+         'semicircumference of said circle  \\\\'\
+         'has been found to be $= 3.14159\dots$,\\\\'\
+         'for which number, for the sake of \\\\'\
+         'brevity, I will write $\pi$\dots"',
+         alignment = '')
+        for char in text.submobjects[12:24]:
+            char.set_fill(HIGHLIGHT_COLOR)
+        for char in text.submobjects[42:44]:
+            char.set_fill(HIGHLIGHT_COLOR)
+        for char in text.submobjects[75:92]:
+            char.set_fill(HIGHLIGHT_COLOR)
+        for char in text.submobjects[120:131]:
+            char.set_fill(HIGHLIGHT_COLOR)
+        text.submobjects[-5].set_fill(HIGHLIGHT_COLOR)
+
+        text.to_edge(LEFT, buff = 1)
+
+        self.play(LaggedStart(FadeIn,text), run_time = 5)
+        self.wait()
+        self.play(FadeOut(text))
+        self.wait()
 
 
+class BernoulliQuote(Scene):
+
+    def construct(self):
+
+        text = TextMobject('``Your most profound investigation of the series \\\\'\
+         '$1+{1\over 4}+{1\over 9}+{1\over 16} + $ etc., which I had found to be \\\\'\
+          'one sixth of the square of $\pi$ itself\dots, not only\\\\'\
+        ' gave me the greatest pleasure, but also renown \\\\'\
+        'among the whole Academy of St.\ Petersburg."')
+        text.submobjects[88].set_fill(HIGHLIGHT_COLOR)
+        for char in text.submobjects[41:60]:
+            char.set_fill(HIGHLIGHT_COLOR)
+        for char in text.submobjects[79:107]:
+            char.set_fill(HIGHLIGHT_COLOR)
+        for char in text.submobjects[127:143]:
+            char.set_fill(HIGHLIGHT_COLOR)
+        for char in text.submobjects[151:157]:
+            char.set_fill(HIGHLIGHT_COLOR)
+
+        self.play(LaggedStart(FadeIn,text), run_time = 5)
+        self.wait()
+        self.play(FadeOut(text))
+        self.wait
 
 
+class EulerSignature(Scene):
+
+    def construct(self):
+
+        sig = SVGMobject(file_name = "euler-signature")
+
+        self.play(
+            Write(sig, run_time = 5)
+        )
 
 
 
