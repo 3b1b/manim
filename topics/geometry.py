@@ -707,15 +707,6 @@ class BackgroundRectangle(SurroundingRectangle):
     def get_fill_color(self):
         return Color(self.color)
 
-class FullScreenFadeRectangle(Rectangle):
-    CONFIG = {
-        "height" : 2*SPACE_HEIGHT,
-        "width" : 2*SPACE_WIDTH,
-        "stroke_width" : 0,
-        "fill_color" : BLACK,
-        "fill_opacity" : 0.7,
-    }
-
 class ScreenRectangle(Rectangle):
     CONFIG = {
         "width_to_height_ratio" : 16.0/9.0,
@@ -724,6 +715,18 @@ class ScreenRectangle(Rectangle):
     def generate_points(self):
         self.width = self.width_to_height_ratio * self.height
         Rectangle.generate_points(self)
+
+class FullScreenRectangle(ScreenRectangle):
+    CONFIG = {
+        "height" : 2*SPACE_HEIGHT,
+    }
+
+class FullScreenFadeRectangle(FullScreenRectangle):
+    CONFIG = {
+        "stroke_width" : 0,
+        "fill_color" : BLACK,
+        "fill_opacity" : 0.7,
+    }
 
 class PictureInPictureFrame(Rectangle):
     CONFIG = {
