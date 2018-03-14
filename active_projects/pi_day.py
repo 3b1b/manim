@@ -32,6 +32,7 @@ from camera import *
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from topics.graph_scene import *
+from topics.common_scenes import *
 
 RESOURCE_DIR = os.path.join(MEDIA_DIR, "3b1b_videos", "π Day 2018", "images")
 def get_image(name):
@@ -414,6 +415,488 @@ class HeroAndVillain(Scene):
         )
         self.remove(bad_euler_pixelated)
         self.wait(2)
+
+class AnalysisQuote(Scene):
+    def construct(self):
+        analysis = get_image("Analysis_page_showing_pi")
+        analysis.scale_to_fit_height(2*SPACE_HEIGHT)
+        analysis.to_edge(LEFT, buff = 0)
+
+        text = TextMobject(
+            "``\\dots set the radius of",
+            "the circle\\dots to be = 1, \\dots \\\\",
+            "through approximations the",
+            "semicircumference \\\\", "of said circle",
+            "has been found to be", "$= 3.14159\\dots$,\\\\",
+            "for which number, for the sake of",
+            "brevity, \\\\ I will write", "$\pi$\\dots''",
+            alignment = ''
+        )
+        pi_formula = TexMobject(
+            "\\pi", "=", "{ \\text{semicircumference}", "\\over", "\\text{radius}}"
+        )
+        text.scale_to_fit_width(SPACE_WIDTH)
+        text.next_to(analysis, RIGHT, LARGE_BUFF)
+        text.to_edge(UP)
+
+        HIGHLIGHT_COLOR= GREEN
+        for mob in text, pi_formula:
+            mob.highlight_by_tex_to_color_map({
+                "semicircumference" : HIGHLIGHT_COLOR,
+                "3.14" : HIGHLIGHT_COLOR,
+                "\pi" : HIGHLIGHT_COLOR
+            })
+
+        terms, generate_anims1, generate_anims2 = get_circle_drawing_terms(
+            radius = 1,
+            positioning_func = lambda circ : circ.next_to(text, DOWN, LARGE_BUFF)
+        )
+        terms[0].highlight(HIGHLIGHT_COLOR)
+        terms[-1].highlight(HIGHLIGHT_COLOR)
+
+        pi_formula.next_to(terms, DOWN, buff = 0)
+        pi_formula.align_to(text, alignment_vect = RIGHT)
+        pi_formula[0].scale(2, about_edge = RIGHT)
+
+        self.add(analysis)
+        self.play(*generate_anims2(), rate_func = lambda t : 0.5*smooth(t))
+        self.play(LaggedStart(FadeIn,text), run_time = 5)
+        self.play(FadeIn(pi_formula))
+        self.wait()
+
+class QuarterTurn(Scene):
+    def construct(self):
+        terms, generate_anims1, generate_anims2 = get_circle_drawing_terms(
+            radius = 2,
+            positioning_func = lambda circ : circ.move_to(4*RIGHT)
+        )
+        circle, radius, one, decimal = terms
+        circle_ghost = circle.copy().set_stroke(YELLOW_E, 1)
+        radius_ghost = radius.copy().set_stroke(WHITE, 1)
+
+        self.add(circle_ghost, radius_ghost)
+        self.play(
+            *generate_anims2(),
+            rate_func = lambda t : 0.25*smooth(t)
+        )
+        self.wait()
+
+        pi_halves = TexMobject("\\pi", "/2")
+        pi_halves[0].highlight(RED)
+        tau_fourths = TexMobject("\\tau", "/4")
+        tau_fourths[0].highlight(GREEN)
+        for mob in pi_halves, tau_fourths:
+            mob.next_to(decimal, UP)
+
+        self.play(FadeInFromDown(pi_halves))
+        self.wait()
+        self.play(
+            pi_halves.shift, 0.75*UP,
+            FadeInFromDown(tau_fourths)
+        )
+        self.wait()
+
+class UsingTheta(Scene):
+    def construct(self):
+        plane = NumberPlane(x_unit_size = 3, y_unit_size = 3)
+        # plane.main_lines.fade(0.5)
+        # plane.secondary_lines.fade(0.5)
+        plane.fade(0.5)
+        self.add(plane)
+
+        circle = Circle(radius = 3)
+        circle.set_stroke(YELLOW, 2)
+        self.add(circle)
+
+        radius = Line(ORIGIN, circle.get_right())
+        arc = Arc(radius = 0.5, angle = TAU, num_anchors = 200)
+        arc.highlight(GREEN)
+        start_arc = arc.copy()
+
+        theta = TexMobject("\\theta", "=")
+        theta[0].match_color(arc)
+        theta.add_background_rectangle()
+        update_theta = ContinualUpdateFromFunc(
+            theta, lambda m : m.shift(
+                rotate_vector(0.9*RIGHT, radius.get_angle()/2) \
+                - m[1][0].get_center()
+            )
+        )
+
+        angle = Integer(0, unit = "^\\circ")
+        update_angle = ContinualChangingDecimal(
+            angle, lambda a : radius.get_angle()*(360/TAU),
+            position_update_func = lambda a : a.next_to(theta, RIGHT, SMALL_BUFF)
+        )
+
+        self.add(update_theta, update_angle)
+        last_frac = 0
+        for frac in 1./4, 1./12, 3./8, 1./6, 5./6:
+            self.play(
+                Rotate(radius, angle = (frac-last_frac)*TAU, about_point = ORIGIN),
+                UpdateFromAlphaFunc(
+                    arc,
+                    lambda m, a : m.pointwise_become_partial(
+                        start_arc, 0, interpolate(last_frac, frac, a)
+                    )
+                ),
+                run_time = 3
+            )
+            last_frac = frac
+            self.wait()
+
+class ThingsNamedAfterEuler(Scene):
+    def construct(self):
+        group = VGroup(*map(TextMobject, [
+            "Euler's formula (Complex analysis)",
+            "Euler's formula (Graph theory)",
+            "Euler's formula (Mechanical engineering)",
+            "Euler's formula (Analytical number theory)",
+            "Euler's formula (Continued fractions)",
+            "Euler-Lagrance equations (mechanics)",
+            "Euler number (topology)",
+            "Euler equations (fluid dynamics)",
+            "Euler angles (rigid-body mechanics)",
+            "Euler totient function (number theory)",
+        ]))
+        group.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        group.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+
+        self.play(LaggedStart(FadeIn, group, lag_ratio = 0.2, run_time = 12))
+        self.wait()
+
+class EulerThinking(Scene):
+    def construct(self):
+        image = get_image("Leonhard_Euler_by_Handmann")
+        image.scale_to_fit_height(4)
+        image.to_edge(DOWN)
+        image.shift(4*LEFT)
+        bubble = ThoughtBubble(height = 4.5)
+        bubble.next_to(image, RIGHT)
+        bubble.to_edge(UP, buff = SMALL_BUFF)
+        bubble.shift(0.8*LEFT)
+        bubble.set_fill(BLACK, 0.3)
+
+        pi_vs_tau = TextMobject(
+            "Should $\\pi$ represent \\\\", "3.1415...", 
+            "or", "6.2831...", "?"
+        )
+        pi_vs_tau.highlight_by_tex_to_color_map({
+            "3.14" : GREEN,    
+            "6.28" : RED,
+        })
+        pi_vs_tau.move_to(bubble.get_bubble_center())
+
+        question = TexMobject(
+            "\\frac{1}{1} + \\frac{1}{4} + \\frac{1}{9} + \\frac{1}{16} + \\cdots = ",
+            "\\;???"
+        )
+        question[0].gradient_highlight(BLUE_C, BLUE_B)
+        question.move_to(bubble.get_bubble_center())
+        question.shift(2*SMALL_BUFF*UP)
+
+        cross = Cross(pi_vs_tau)
+        cross.set_stroke(RED, 8)
+
+        self.add(image)
+        self.play(
+            ShowCreation(bubble),
+            Write(pi_vs_tau)
+        )
+        self.play(ShowCreation(cross))
+        self.wait()
+        self.play(
+            FadeOut(VGroup(pi_vs_tau, cross)),
+            FadeIn(question),
+        )
+        self.wait()
+
+
+class WhatIsRight(PiCreatureScene):
+    CONFIG = {
+        "default_pi_creature_kwargs" : {
+            "color" : BLUE_D,
+            "filp_at_start" : False,
+        },
+        "default_pi_creature_start_corner" : DOWN,
+    }
+    def construct(self):
+        randy = self.pi_creature
+        randy.scale(0.75, about_edge = DOWN)
+        title = TextMobject("Which is ``right''?")
+        title.scale(1.5)
+        title.to_edge(UP)
+        self.add(title)
+
+        sum_over_N_converges = TexMobject("1+2+3+\\cdots = -\\frac{1}{12}")
+        sum_over_N_diverges = TexMobject("1+2+3+\\cdots \\text{ Diverges}")
+
+        literal_derivative = TexMobject(
+            "f'(x) = \\frac{f(x+dx) - f(x)}{dx}"
+        )
+        limit_derivative = TexMobject(
+            "f'(x) = \\lim_{h \\to 0}\\frac{f(x+h) - f(x)}{h}"
+        )
+
+        divide_by_zero_definable = TexMobject(
+            "\\frac{1}{0}", "\\text{ has meaning}"
+        )
+        divide_by_zero_undefinable = TexMobject(
+            "\\frac{1}{0}", "\\text{ is undefined}"
+        )
+
+        left_mobs = VGroup(
+            sum_over_N_converges, literal_derivative,
+            divide_by_zero_definable
+        )
+        right_mobs = VGroup(
+            sum_over_N_diverges, limit_derivative,
+            divide_by_zero_undefinable
+        )
+
+        for mob in left_mobs:
+            mob.next_to(randy, UP)
+            mob.shift(3.5*LEFT)
+        for mob in right_mobs:
+            mob.next_to(randy, UP)
+            mob.shift(3.5*RIGHT)
+
+        left_mobs.gradient_highlight(YELLOW_C, YELLOW_D)
+        right_mobs.gradient_highlight(GREEN_C, GREEN_D)
+
+        self.play(randy.change, "pondering", title)
+        self.wait()
+        self.play(randy.change, "sassy", title)
+        self.wait()
+
+        last_terms = VGroup()
+        for left, right in zip(left_mobs, right_mobs)[:-1]:
+            right.align_to(left)
+            self.play(
+                randy.change, "raise_right_hand",
+                FadeInFromDown(left),
+                last_terms.shift, 1.75*UP
+            )
+            self.wait()
+            self.play(
+                randy.change, "raise_left_hand",
+                FadeInFromDown(right)
+            )
+            self.play(randy.change, "plain", right)
+            last_terms.add(left, right, title)
+        self.play(
+            randy.change, "shruggie",
+            FadeInFromDown(left_mobs[-1]),
+            FadeInFromDown(right_mobs[-1]),
+            last_terms.shift, 1.75*UP,
+        )
+        self.wait(4)
+
+class AskPuzzle(TeacherStudentsScene):
+    def construct(self):
+        series = TexMobject(
+            "\\frac{1}{1} + \\frac{1}{4} + \\frac{1}{9} + \\cdots + " +\
+            "\\frac{1}{n^2} + \\cdots = ", "\\,???"
+        )
+        series[0].gradient_highlight(BLUE_C, BLUE_B)
+        series[1].highlight(YELLOW)
+
+        question = TextMobject(
+            "How should we think about\\\\",
+            "$\\displaystyle \\sum_{n=1}^\\infty \\frac{1}{n^s}$",
+            "for arbitrary $s$?"
+        )
+        question[1].highlight(BLUE)
+        question[0].shift(SMALL_BUFF*UP)
+
+        response = TextMobject(
+            "What do you mean by ", 
+            "$\\displaystyle \\sum_{n = 1}^{\\infty}$", 
+            "?"
+        )
+        response[1].highlight(BLUE)
+
+        self.teacher_says(series)
+        self.change_all_student_modes("pondering", look_at_arg = series)
+        self.wait(3)
+        self.play(
+            FadeOut(self.teacher.bubble),
+            self.teacher.change, "happy",
+            series.scale, 0.5,
+            series.to_corner, UP+LEFT,
+            PiCreatureSays(
+                self.students[0], question,
+                target_mode = "raise_left_hand"
+            )
+        )
+        self.change_student_modes(
+            None, "confused", "confused",
+            added_anims = [self.students[0].look_at, question]
+        )
+        self.wait(2)
+
+        self.students[0].bubble.content = VGroup()
+        self.play(
+            RemovePiCreatureBubble(self.students[0]),
+            question.scale, 0.5,
+            question.next_to, series, DOWN, MED_LARGE_BUFF, LEFT,
+            PiCreatureSays(self.teacher, response)
+        )
+        self.change_all_student_modes("erm")
+        self.wait(3)
+
+class ChangeTopic(PiCreatureScene):
+    def construct(self):
+        pi, tau = self.pi_creatures
+        title = TextMobject("Happy $\\pi$ day!")
+        title.scale(1.5)
+        title.to_edge(UP, buff = MED_SMALL_BUFF)
+        self.add(title)
+
+        question = TextMobject(
+            "Have you ever seen why \\\\",
+            "$\\displaystyle \\frac{2}{1} \\cdot \\frac{2}{3} \\cdots"+ \
+            "\\frac{4}{3} \\cdot \\frac{4}{5} \\cdot" + \
+            "\\frac{6}{5} \\cdot \\frac{6}{7} \\cdots = \\frac{\\pi}{2}$", "?"
+        )
+        question[0].shift(MED_SMALL_BUFF*UP)
+        question[1].gradient_highlight(YELLOW, GREEN)
+
+        self.play(
+            PiCreatureSays(
+                tau, "We should \\emph{really} celebrate \\\\ on 6/28!",
+                target_mode = "angry",
+            ),
+            pi.change, "guilty",
+        )
+        self.wait(2)
+        self.play(
+            PiCreatureSays(pi, question),
+            RemovePiCreatureBubble(
+                tau, target_mode = "pondering", look_at_arg = question,
+            )
+        )
+        self.play(pi.change, "pondering", question)
+        self.wait(4)
+
+
+    def create_pi_creatures(self):
+        tau = TauCreature(color = GREEN_E)
+        pi = Randolph().flip()
+        VGroup(pi, tau).scale(0.75)
+        tau.to_edge(DOWN).shift(3*LEFT)
+        pi.to_edge(DOWN).shift(3*RIGHT)
+        return pi, tau
+
+class SpecialThanks(Scene):
+    def construct(self):
+        title = TextMobject("Special thanks to:")
+        title.to_edge(UP, LARGE_BUFF)
+        title.scale(1.5)
+        title.highlight(BLUE)
+        h_line = Line(LEFT, RIGHT).scale(4)
+        h_line.next_to(title, DOWN)
+        h_line.set_stroke(WHITE, 1)
+
+        people = VGroup(*map(TextMobject, [
+            "Ben Hambrecht",
+            "University Library Basel",
+            "Martin Mattmüller",
+            "Library of the Institut de France",
+        ]))
+        people.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = MED_LARGE_BUFF)
+        people.next_to(h_line, DOWN)
+
+        self.add(title, h_line, people)
+
+class EndScene(PatreonEndScreen):
+    CONFIG = {
+        "camera_config" : {
+            "background_alpha" : 255,
+        }
+    }
+    def construct(self):
+        self.add_title()
+        title = self.title
+        basel_screen = ScreenRectangle(height = 2.35)
+        basel_screen.next_to(title, DOWN)
+        watch_basel = TextMobject(
+            "One such actual piece of math", "(quite pretty!)",
+        )
+        watch_basel[0].highlight(YELLOW)
+        watch_basel.next_to(basel_screen, DOWN, submobject_to_align = watch_basel[0])
+
+        self.add(watch_basel)
+        # self.add(basel_screen)
+
+        line = DashedLine(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        line.next_to(watch_basel, DOWN)
+        self.add(line)
+
+        plushie_square = Square(side_length = 2)
+        plushie_square.to_corner(DOWN+LEFT, buff = MED_LARGE_BUFF)
+        plushie_square.shift(UP)
+
+        plushie_words = TextMobject(
+            "Plushie pi \\\\ creatures \\\\ now available.",
+            alignment = ""
+        )
+        plushie_words.next_to(plushie_square, RIGHT)
+
+        self.add(plushie_words)
+        # self.add(plushie_square)
+
+        instagram_line = TextMobject(
+            "randy\\_the\\_pi"
+        )
+        instagram_logo = ImageMobject("instagram_logo")
+        instagram_logo.match_height(instagram_line)
+        instagram_logo.next_to(instagram_line, LEFT, SMALL_BUFF)
+        instagram = Group(instagram_logo, instagram_line)
+        instagram.next_to(line, DOWN)
+        instagram.shift(SPACE_WIDTH*RIGHT/2)
+        self.add(instagram)
+
+
+        pictures = Group(*[
+            ImageMobject("randy/randy_%s"%name)
+            for name in [
+                "science",
+                "cooking",
+                "in_a_can",
+                "sandwhich",
+                "lab",
+                "fractal",
+                "flowers",
+                "group",
+                "labcoat",
+                "tennis",
+            ]
+        ])
+        for i, picture in enumerate(pictures):
+            picture.scale_to_fit_height(2)
+            picture.next_to(instagram, DOWN, aligned_edge = RIGHT)
+            if i%3 != 0:
+                picture.next_to(last_picture, LEFT, buff = 0)
+            self.play(FadeIn(picture, run_time = 2))
+            last_picture = picture
+
+class Thumbnail(Scene):
+    def construct(self):
+        pi, eq, num = formula = TexMobject(
+            "\\pi", "=", "6.283185\\dots"
+        )
+        formula.scale(2)
+        pi.scale(1.5, about_edge = RIGHT)
+        formula.set_stroke(BLUE, 1)
+        formula.scale_to_fit_width(2*SPACE_WIDTH - 2)
+        # formula.shift(0.5*RIGHT)
+        self.add(formula)
+
+        words = TextMobject("...according to Euler.")
+        words.scale(1.5)
+        words.next_to(formula, DOWN, MED_LARGE_BUFF)
+        self.add(words)
 
 
 
