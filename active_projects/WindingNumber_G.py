@@ -2127,6 +2127,21 @@ class PathContainingZero(InputOutputScene, PiCreatureScene):
         self.play(morty.change, "hooray")
         self.wait(3)
 
+class BackToEquationSolving(AltTeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Back to solving \\\\ equations"
+        )
+        self.change_all_student_modes("hooray")
+        self.play(*[
+            ApplyMethod(pi.look_at, self.screen)
+            for pi in self.pi_creatures
+        ])
+        self.wait(3)
+
+class SearchSpacePerimeterVsArea(Scene):
+    def construct(self):
+        pass
 
 class EndingCredits(Scene):
     def construct(self):
