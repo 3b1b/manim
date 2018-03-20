@@ -33,6 +33,7 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from topics.graph_scene import *
 
+from old_projects.uncertainty import Flash
 from active_projects.WindingNumber import *
 
 class AltTeacherStudentsScene(TeacherStudentsScene):
@@ -2006,6 +2007,126 @@ class FailureOfComposition(ColorMappedObjectsScene):
         )
         self.play(ShowPassingFlash(ghost))
         self.wait()
+
+class PathContainingZero(InputOutputScene, PiCreatureScene):
+    CONFIG = {
+        "default_pi_creature_kwargs" : {
+            "flip_at_start" : False,
+            "height" : 1.5,
+        },
+        "default_pi_creature_start_corner" : DOWN+LEFT,
+    }
+    def construct(self):
+        self.setup_planes()
+        self.draw_path_hitting_zero()
+        self.comment_on_zero()
+
+    def setup_planes(self):
+        colorings = VGroup(*self.get_colorings())
+        self.input_coloring, self.output_coloring = colorings
+        colorings.set_fill(opacity = 0.3)
+
+        planes = VGroup(*self.get_planes())
+        self.input_plane, self.output_plane = planes
+        for plane in planes:
+            # plane.white_parts.highlight(BLACK)
+            plane.lines_to_fade.set_stroke(width = 0)
+
+        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        v_line.set_stroke(WHITE, 5)
+
+        self.add(colorings, planes)
+        self.add(v_line)
+
+    def draw_path_hitting_zero(self):
+        morty = self.pi_creature
+
+        path = self.path = VMobject(
+            stroke_width = 5,
+            stroke_color = WHITE,
+            fill_opacity = 0,
+        )
+        path.match_background_image_file(self.input_coloring)
+        path.set_points_smoothly(list(it.starmap(
+            self.input_plane.coords_to_point, 
+            [(1, 2.5), (2.5, 2.5), (2, 0.5), (1, 1), (0.5, 1), (0.5, 2), (1, 2.5)]
+        )))
+
+        out_path = self.out_path = path.copy()
+        out_path.apply_function(self.point_function)
+        out_path.match_background_image_file(self.output_coloring)
+        out_path.make_smooth()
+
+        self.play(
+            Flash(
+                VectorizedPoint(self.output_plane.coords_to_point(0, 0)),
+                color = WHITE,
+                flash_radius = 0.3,
+                line_length = 0.2,
+                num_lines = 13,
+                rate_func = squish_rate_func(smooth, 0.5, 0.6),
+            ),
+            morty.change, "pondering",
+            *[
+                ShowCreation(mob, rate_func = bezier([0, 0, 1, 1]))
+                for mob in path, out_path
+            ],
+            run_time = 5
+        )
+
+    def comment_on_zero(self):
+        morty = self.pi_creature
+
+        words = TextMobject(
+            "Output is zero \\\\",
+            "which has no direction"
+        )
+        origin = self.output_plane.coords_to_point(0, 0)
+        words.to_edge(DOWN, buff = LARGE_BUFF)
+        background_rect = BackgroundRectangle(
+            words, buff = SMALL_BUFF,
+            opacity = 1.0
+        )
+        background_rect.stretch_to_fit_width(0.1)
+
+        arrow = Arrow(words.get_top(), origin)
+
+        circles = VGroup()
+        for point in self.input_plane.coords_to_point(1, 1), origin:
+            circle = Circle(color = BLACK, radius = 0.5, stroke_width = 0)
+            circle.move_to(point)
+            circle.generate_target()
+            circle.target.scale(0)
+            circle.target.set_stroke(width = 4)
+            circles.add(circle)
+        in_circle, out_circle = circles
+
+        new_words = TextMobject(
+            "But we want $\\vec{\\textbf{x}}$ \\\\",
+            "where $f(\\vec{\\textbf{x}}) = 0$",
+        )
+        new_words.move_to(words)
+
+        self.play(
+            FadeIn(background_rect),
+            Write(words[0]),
+            GrowArrow(arrow),
+        )
+        self.play(
+            Write(words[1]),
+            morty.change, "pleading",
+            MoveToTarget(out_circle, run_time = 2)
+        )
+        self.wait()
+        self.play(FadeOut(words))
+        self.play(
+            FadeIn(new_words),
+            morty.change, "happy"
+        )
+        self.play(MoveToTarget(in_circle, run_time = 2))
+        self.play(morty.change, "hooray")
+        self.wait(3)
+
 
 class EndingCredits(Scene):
     def construct(self):
