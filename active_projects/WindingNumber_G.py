@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from helpers import *
 
 from mobject.tex_mobject import TexMobject
@@ -2005,9 +2007,148 @@ class FailureOfComposition(ColorMappedObjectsScene):
         self.play(ShowPassingFlash(ghost))
         self.wait()
 
+class EndingCredits(Scene):
+    def construct(self):
+        text = TextMobject(
+            "Written and animated by: \\\\",
+            "Sridhar Ramesh \\\\",
+            "Grant Sanderson"
+        )
+        text[0].shift(MED_SMALL_BUFF*UP)
+        self.play(LaggedStart(FadeIn, text))
+        self.wait()
 
+class MentionQAndA(TeacherStudentsScene):
+    def construct(self):
+        pass
 
+class PatreonScroll(Scene):
+    CONFIG = {
+        "specific_patrons" : [
+            "Juan Benet",
+            "Chloe Zhou",
+            "Ross Garber",
+            "Randall Hunt",
+            "Desmos",
+            "Burt Humburg",
+            "CrypticSwarm",
+            "Sergei",
+            "Devin Scott",
+            "George John",
+            "Akash Kumar",
+            "Felix Tripier",
+            "Arthur Zey",
+            "David Kedmey",
+            "Ali Yahya",
+            "Mayank M. Mehrotra",
+            "Lukas Biewald",
+            "Yana Chernobilsky",
+            "Kaustuv DeBiswas",
+            "Yu Jun",
+            "Dave Nicponski",
+            "Damion Kistler",
+            "Patrick Mézard",
+            "Jordan Scales",
+            "Markus Persson",
+            "Britt Selvitelle",
+            "Jonathan Wilson",
+            "Ryan Atallah",
+            "Joseph John Cox",
+            "Luc Ritchie",
+            "Steven Tomlinson",
+            "Mèngzi Yì",
+            "Jameel Syed",
+            "Bong Choung",
+            "Ignacio Freiberg",
+            "Zhilong Yang",
+            "Karl Niu",
+            "Dan Esposito (Guardion)",
+            "Michael Kunze",
+            "Giovanni Filippi",
+            "Eric Younge",
+            "Prasant Jagannath",
+            "Cody Brocious",
+            "Jacob Kohl",
+            "James H. Park",
+            "Norton Wang",
+            "Kevin Le",
+            "Alexander Feldman",
+            "Tianyu Ge",
+            "David MacCumber",
+            "Oliver Steele",
+            "Yaw Etse",
+            "David B",
+            "Waleed Hamied",
+            "George Chiesa",
+            "Supershabam",
+            "Samantha D. Suplee",
+            "Delton Ding",
+            "Thomas Tarler",
+            "Jonathan Eppele",
+            "Isak Hietala",
+            "1stViewMaths",
+            "Jacob Magnuson",
+            "Mark Govea",
+            "Clark Gaebel",
+            "Mathias Jansson",
+            "David Clark",
+            "Michael Gardner",
+            "Mads Elvheim",
+            "Awoo",
+            "Dr David G. Stork",
+            "Ted Suzman",
+            "Linh Tran",
+            "Andrew Busey",
+            "John Haley",
+            "Ankalagon",
+            "Eric Lavault",
+            "Boris Veselinovich",
+            "Julian Pulgarin",
+            "Jeff Linse",
+            "Cooper Jones",
+            "Ryan Dahl",
+            "Robert Teed",
+            "Jason Hise",
+            "Meshal Alshammari",
+            "Bernd Sing",
+            "James Thornton",
+            "Mustafa Mahdi",
+            "Mathew Bramson",
+            "Jerry Ling",
+            "Shìmín Ku$\\overline{\\text{a}}$ng",
+            "Rish Kundalia",
+            "Achille Brighton",
+            "Ripta Pasay",
+        ],
+        "random_seed" : 3,
+    }
+    def construct(self):
+        patreon_logo = PatreonLogo()
+        patreon_logo.to_corner(UP+RIGHT)
+        patreon_logo.shift(SMALL_BUFF*LEFT)
+        self.add(patreon_logo)
 
+        patrons = VGroup(*map(TextMobject, self.specific_patrons))
+        patrons.scale(0.75)
+        random.shuffle(patrons.submobjects)
+        patrons.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        patrons.next_to(ORIGIN, DOWN)
+        patrons.to_edge(RIGHT)
+
+        # patorons = patrons[:10] ##TO remove
+
+        scroll = AmbientMovement(patrons, direction = UP, rate = 1)
+        def patrons_opacity_update(patrons):
+            for patron in patrons:
+                y = patron.get_center()[1]
+                if y > 3.5:
+                    patrons.remove(patron)
+                alpha = smooth(np.clip(2.5 - y, 0, 1))
+                patron.set_fill(opacity = alpha)
+        opacity_update = ContinualUpdateFromFunc(patrons, patrons_opacity_update)
+
+        self.add(scroll, opacity_update)
+        self.wait(55)
 
 
 
