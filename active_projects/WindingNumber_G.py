@@ -1809,6 +1809,12 @@ class ForeverNarrowingLoop(InputOutputScene):
         "target_coords" : (1, 1),
         "input_plane_corner" : UP+RIGHT,
         "shrink_time" : 20,
+        "circle_start_radius" : 2.25,
+        "start_around_target" : False,
+
+        # Added as a flag to not mess up one clip already used and fine-timed
+        # but to make it more convenient to do the other TinyLoop edits
+        "add_convenient_waits" : False
     }
     def construct(self):
         input_coloring, output_coloring = colorings = VGroup(*self.get_colorings())
@@ -1833,14 +1839,17 @@ class ForeverNarrowingLoop(InputOutputScene):
         ), run_time = 2)
 
         # circle
-        circle = Circle(color = WHITE, radius = 2.25)
+        circle = Circle(color = WHITE, radius = self.circle_start_radius)
         circle.flip(axis = RIGHT)
         circle.insert_n_anchor_points(50)
-        circle.next_to(
-            input_coloring.get_corner(self.input_plane_corner), 
-            -self.input_plane_corner, 
-            SMALL_BUFF
-        )
+        if self.start_around_target:
+            circle.move_to(input_plane.coords_to_point(*self.target_coords))
+        else:
+            circle.next_to(
+                input_coloring.get_corner(self.input_plane_corner), 
+                -self.input_plane_corner, 
+                SMALL_BUFF
+            )
         circle.set_stroke(width = 5)
         circle_image = circle.copy()
         circle.match_background_image_file(input_coloring)
@@ -1855,12 +1864,18 @@ class ForeverNarrowingLoop(InputOutputScene):
             circle_image, update_circle_image
         )
 
+        def optional_wait():
+            if self.add_convenient_waits:
+                self.wait()
+
+        optional_wait()
         self.play(
             ShowCreation(circle),
             ShowCreation(circle_image),
             run_time = 3,
             rate_func = bezier([0, 0, 1, 1])
         )
+        optional_wait()
         self.play(
             circle.scale, 0,
             circle.move_to, input_plane.coords_to_point(*self.target_coords),
@@ -1874,6 +1889,39 @@ class AltForeverNarrowingLoop(ForeverNarrowingLoop):
         "target_coords" : (-2, -1),
         "input_plane_corner" : DOWN+LEFT,
         "shrink_time" : 3,
+    }
+
+class TinyLoop(ForeverNarrowingLoop):
+    CONFIG = {
+        "circle_start_radius" : 0.5,
+        "start_around_target" : True,
+        "shrink_time" : 1,
+        "add_convenient_waits" : True,
+    }
+
+class TinyLoopAroundZero(TinyLoop):
+    CONFIG = {
+        "target_coords" : (1, 1),
+    }
+
+class TinyLoopAroundBlue(TinyLoop):
+    CONFIG = {
+        "target_coords" : (2.4, 0),
+    }
+
+class TinyLoopAroundYellow(TinyLoop):
+    CONFIG = {
+        "target_coords" : (0, -1.3),
+    }
+
+class TinyLoopAroundOrange(TinyLoop):
+    CONFIG = {
+        "target_coords" : (0, -0.5),
+    }
+
+class TinyLoopAroundRed(TinyLoop):
+    CONFIG = {
+        "target_coords" : (-1, 1),
     }
 
 class FailureOfComposition(ColorMappedObjectsScene):
