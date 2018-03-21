@@ -383,7 +383,7 @@ class Introduce1DFunctionCase(Scene):
         ):
 
         axes = self.axes
-        rect = Rectangle()
+        rect = self.rect = Rectangle()
         rect.set_stroke(width = 0)
         rect.set_fill(YELLOW, 0.5)
         rect.replace(Line(
@@ -430,7 +430,10 @@ class Introduce1DFunctionCase(Scene):
             midpoint_line.set_stroke(width = 0)
 
         #Restrict to by a half each time
-        kwargs = {"mention_signs" : False} 
+        kwargs = {
+            "mention_signs" : False,
+            "show_decimal" : zoom,
+        } 
         for x in range(n_iterations - 1):
             x_mid = np.mean(end_points)
             leftovers_mid = self.compare_graphs_at_x(f_graph, g_graph, x_mid, **kwargs)
@@ -463,8 +466,14 @@ class Introduce1DFunctionCase(Scene):
                 *added_anims
             )
             if zoom:
-                everything = VGroup(*self.mobjects)
                 factor = 2.0/rect.get_width()
+                everything = VGroup(*self.mobjects)
+                decimal_index = everything.submobjects.index(decimal)
+                midpoint_line_index = everything.submobjects.index(midpoint_line)
+                everything.generate_target()
+                everything.target.scale(factor, about_point = rect.get_center())
+                everything.target[decimal_index].scale(1./factor, about_edge = UP)
+                everything.target[midpoint_line_index].scale(1./factor)
                 if factor > 1:
                     self.play(
                         everything.scale, factor, 
@@ -500,6 +509,33 @@ class Introduce1DFunctionCase(Scene):
             leftovers.add(v_line)
 
         added_anims = []
+        if show_decimal:
+            decimal = DecimalNumber(
+                axes.x_axis.point_to_number(arrow.get_start()),
+                num_decimal_points = 3,
+                # show_ellipsis = True,
+            )
+            height = self.rect.get_height()
+            decimal.scale_to_fit_height(height)
+            next_to_kwargs = {
+                "buff" : height,
+            }
+            if too_high:
+                decimal.next_to(arrow, DOWN, **next_to_kwargs)
+                if hasattr(self, "last_up_arrow_decimal"):
+                    added_anims += [FadeOut(self.last_up_arrow_decimal)]
+                self.last_up_arrow_decimal = decimal
+            else:
+                decimal.next_to(arrow, UP, **next_to_kwargs)
+                if hasattr(self, "last_down_arrow_decimal"):
+                    added_anims += [FadeOut(self.last_down_arrow_decimal)]
+                self.last_down_arrow_decimal = decimal
+            line = Line(decimal, arrow, buff = 0)
+            # line.match_color(arrow)
+            line.set_stroke(WHITE, 1)
+            decimal.add(line)
+            added_anims += [FadeIn(decimal)]
+
         if mention_signs:
             if too_high:
                 sign_word = TextMobject("Positive")
@@ -1157,12 +1193,12 @@ class EveryOutputPointHasAColor(ColorMappedObjectsScene):
         title.scale(1.5)
         title.to_edge(UP, buff = MED_SMALL_BUFF)
         title.set_stroke(BLACK, 1)
-        self.add_foreground_mobjects(title)
+        # self.add_foreground_mobjects(title)
 
         plane = NumberPlane()
         plane.fade(0.5)
         plane.axes.set_stroke(WHITE, 3)
-        plane.add(BackgroundRectangle(title))
+        # plane.add(BackgroundRectangle(title))
         self.add(plane)
 
 
