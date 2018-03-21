@@ -927,14 +927,34 @@ class EquationSolver2dNode(object):
         self.first_anim = first_anim
         self.children = children
 
+    def depth(self):
+        if len(self.children) == 0:
+            return 0
+
+        return 1 + max(map(lambda n : n.depth(), self.children))
+
+    def nodes_at_depth(self, n):
+        if n == 0:
+            return [self]
+
+        return sum(map(lambda c : c.nodes_at_depth(n - 1), self.children), [])
+
+    # This is definitely NOT the efficient way to do BFS, but I'm just trying to write something
+    # quick without thinking that gets the job done on small instances for now
+    def hacky_bfs(self):
+        depth = self.depth()
+
+        return sum(map(lambda i : self.nodes_at_depth(i), range(depth + 1)), [])
+
     def display_in_series(self):
-        return Succession(self.first_anim, *map(EquationSolver2dNode.display_in_series, self.children))
+        return Succession(self.first_anim, *map(lambda n : n.display_in_series(), self.children))
 
     def display_in_parallel(self):
-        return Succession(self.first_anim, AnimationGroup(*map(EquationSolver2dNode.display_in_parallel, self.children)))
+        return Succession(self.first_anim, AnimationGroup(*map(lambda n : n.display_in_parallel(), self.children)))
 
     def display_in_bfs(self):
-        print "Error! Not yet implemented bfs display!"
+        bfs_nodes = self.hacky_bfs()
+        return Succession(*map(lambda n : n.first_anim, bfs_nodes))
 
 class EquationSolver2d(ColorMappedObjectsScene):
     CONFIG = {
@@ -1960,6 +1980,7 @@ class QuickPreview(PreviewClip):
     CONFIG = {
         "num_iterations" : 2,
         "display_in_parallel" : False,
+        "display_in_bfs" : True
     }
 
 # TODO: Borsuk-Ulam visuals
