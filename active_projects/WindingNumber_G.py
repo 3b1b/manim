@@ -2127,6 +2127,188 @@ class PathContainingZero(InputOutputScene, PiCreatureScene):
         self.play(morty.change, "hooray")
         self.wait(3)
 
+class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
+    CONFIG = {
+        "func" : plane_func_by_wind_spec(
+            (-2, 0, 2), (2, 0, 1)
+        )
+    }
+    def construct(self):
+        ColorMappedObjectsScene.construct(self)
+
+        #Setup paths
+        squares, joint_rect = self.get_squares_and_joint_rect()
+        left_square, right_square = squares
+
+        path1, path2 = paths = VGroup(*[
+            Line(square.get_corner(UP+LEFT), square.get_corner(UP+RIGHT))
+            for square in squares
+        ])
+        joint_path = Line(path1.get_start(), path2.get_end())
+
+        for mob in it.chain(paths, [joint_path]):
+            mob.set_stroke(WHITE, 4)
+            mob.color_using_background_image(self.background_image_file)
+
+        dot = self.get_dot_and_add_continual_animations()
+
+        #Setup path braces
+        for mob, tex in (path1, "x"), (path2, "y"), (joint_path, "x+y"):
+            mob.brace = Brace(mob, DOWN)
+            label = TextMobject("Winding =", "$%s$"%tex)
+            label.next_to(mob.brace, DOWN)
+            mob.brace.add(label)
+
+        #Setup region labels
+
+        for square, tex in (left_square, "x"), (right_square, "y"), (joint_rect, "x+y \\, ?"):
+            square.label = TextMobject("Winding = ", "$%s$"%tex)
+            square.label.move_to(square)
+
+        #Add paths
+        self.position_dot(path1.get_start())
+        for path in path1, path2:
+            self.position_dot(path.get_start())
+            self.play(
+                MoveAlongPath(dot, path.copy()),
+                ShowCreation(path),
+                run_time = 2
+            )
+            self.play(GrowFromCenter(path.brace))
+        self.wait()
+        self.position_dot(joint_path.get_start())
+        self.play(
+            MoveAlongPath(dot, joint_path, run_time = 3),
+            FadeOut(VGroup(path1.brace, path2.brace)),
+            FadeIn(joint_path.brace),
+        )
+        self.wait()
+
+        #Add regions
+        self.play(
+            FadeOut(paths),
+            FadeOut(joint_path.brace), 
+            dot.move_to, path1.get_start()
+        )
+        for square in squares:
+            self.position_dot(square.points[0])
+            kwargs = {
+                "run_time" : 4,
+                "rate_func" : bezier([0, 0, 1, 1]),
+            }
+            self.play(
+                MoveAlongPath(dot, square.copy(), **kwargs),
+                ShowCreation(square, **kwargs),
+                Write(square.label, run_time = 2),
+            )
+            self.wait()
+        self.play(
+            dot.move_to, joint_rect.points[0],
+            FadeOut(squares),
+            FadeIn(joint_rect),
+        )
+        self.position_dot(joint_rect.points[0])
+        self.play(
+            Transform(left_square.label[0], joint_rect.label[0]),
+            Transform(
+                left_square.label[1], joint_rect.label[1][0],
+                path_arc = TAU/6
+            ),
+            FadeIn(joint_rect.label[1][1]),
+            FadeIn(joint_rect.label[1][3]),
+            FadeOut(right_square.label[0]),
+            Transform(
+                right_square.label[1], joint_rect.label[1][2],
+                path_arc = TAU/6
+            ),
+            MoveAlongPath(
+                dot, joint_rect,
+                run_time = 6,
+                rate_func = bezier([0, 0, 1, 1])
+            )
+        )
+        self.wait()
+
+    ###
+
+    def get_squares_and_joint_rect(self):
+        squares = VGroup(*[
+            Square(side_length = 4).next_to(ORIGIN, vect, buff = 0)
+            for vect in LEFT, RIGHT
+        ])
+        joint_rect = SurroundingRectangle(squares, buff = 0)
+        for mob in it.chain(squares, [joint_rect]):
+            mob.set_stroke(WHITE, 4)
+            mob.color_using_background_image(self.background_image_file)
+        return squares, joint_rect
+
+    def get_dot_and_add_continual_animations(self):
+        #Define important functions for updates
+        get_output = lambda : self.func(tuple(dot.get_center()[:2]))
+        get_output_color = lambda : rgba_to_color(point_to_rgba(get_output()))
+        get_output_rev = lambda : -point_to_rev(get_output())
+        self.get_output_rev = get_output_rev
+
+        self.start_rev = 0
+        self.curr_winding = 0
+        def get_total_winding(dt = 0):
+            rev = (get_output_rev() - self.start_rev)%1
+            possible_windings = [
+                np.floor(self.curr_winding)+k+rev
+                for k in -1, 0, 1
+            ]
+            i = np.argmin([abs(pw - self.curr_winding) for pw in possible_windings])
+            self.curr_winding = possible_windings[i]
+            return self.curr_winding
+
+
+        #Setup dot, arrow and label
+        dot = self.dot = Dot(radius = 0.1)
+        dot.set_stroke(WHITE, 1)
+        update_dot_color = ContinualUpdateFromFunc(
+            dot, lambda d : d.set_fill(get_output_color())
+        )
+
+        label = DecimalNumber(0, num_decimal_points = 1)
+        label_upadte = ContinualChangingDecimal(
+            label, get_total_winding,
+            position_update_func = lambda l : l.next_to(dot, UP+LEFT, SMALL_BUFF)
+        )
+
+        arrow_length = 0.75
+        arrow = Vector(arrow_length*RIGHT)
+        arrow.set_stroke(WHITE, 1)
+        def arrow_update_func(arrow):
+            arrow.set_fill(get_output_color(), 1)
+            arrow.rotate(-TAU*get_output_rev() - arrow.get_angle())
+            arrow.scale(arrow_length/arrow.get_length())
+            arrow.shift(dot.get_center() - arrow.get_start())
+            return arrow
+        update_arrow = ContinualUpdateFromFunc(arrow, arrow_update_func)
+
+        self.add(update_arrow, update_dot_color, label_upadte)
+        return dot
+
+    def position_dot(self, point):
+        self.dot.move_to(point)
+        self.start_rev = self.get_output_rev()
+        self.curr_winding = 0
+
+class BreakDownLoopWithNonzeroWinding(TransitionFromPathsToBoundaries):
+    def construct(self):
+        zero_point = 2*LEFT
+
+        squares, joint_rect = self.get_squares_and_joint_rect()
+        left_square, right_square = squares
+        VGroup(squares, joint_rect).shift(SMALL_BUFF*UP)
+
+        dot = self.get_dot_and_add_continual_animations()
+
+        for rect in (left_square, "x"), (right_square, "y"), (joint_rect, "3"):
+            pass
+
+
+
 class BackToEquationSolving(AltTeacherStudentsScene):
     def construct(self):
         self.teacher_says(
@@ -2138,6 +2320,218 @@ class BackToEquationSolving(AltTeacherStudentsScene):
             for pi in self.pi_creatures
         ])
         self.wait(3)
+
+class MonomialTerm(PathContainingZero):
+    CONFIG = {
+        "non_renormalized_func" : plane_func_from_complex_func(lambda z : z**5),
+        "full_func_label" : "f(x) = x^5",
+        "func_label" : "x^5",
+        "loop_radius" : 1.1,
+        "label_buff" : 0.3,
+        "label_move_to_corner" : ORIGIN,
+        "should_end_with_rescaling" : True,
+    }
+    def construct(self):
+        self.setup_planes()
+        self.relabel_planes()
+        self.add_function_label()
+        self.show_winding()
+        if self.should_end_with_rescaling:
+            self.rescale_output_plane()
+
+    def relabel_planes(self):
+        for plane in self.input_plane, self.output_plane:
+            for mob in plane:
+                if isinstance(mob, TexMobject):
+                    plane.remove(mob)
+
+            if hasattr(plane, "numbers_to_show"):
+                _range = plane.numbers_to_show
+            else:
+                _range = range(-2, 3)
+            for x in _range:
+                if x == 0:
+                    continue
+                label = TexMobject(str(x))
+                label.scale(0.5)
+                point = plane.coords_to_point(x, 0)
+                label.next_to(point, DOWN, MED_SMALL_BUFF)
+                plane.add(label)
+                self.add_foreground_mobject(label)
+                tick = Line(SMALL_BUFF*DOWN, SMALL_BUFF*UP)
+                tick.move_to(point)
+                plane.add(tick)
+            for y in _range:
+                if y == 0:
+                    continue
+                label = TexMobject("%di"%y)
+                label.scale(0.5)
+                point = plane.coords_to_point(0, y)
+                label.next_to(point, LEFT, MED_SMALL_BUFF)
+                plane.add(label)
+                self.add_foreground_mobject(label)
+                tick = Line(SMALL_BUFF*LEFT, SMALL_BUFF*RIGHT)
+                tick.move_to(point)
+                plane.add(tick)
+        self.add(self.input_plane, self.output_plane)
+
+    def add_function_label(self):
+        label = TexMobject(self.full_func_label)
+        label.add_background_rectangle(opacity = 1, buff = SMALL_BUFF)
+        arrow = Arrow(
+            2*LEFT, 2*RIGHT, path_arc = -TAU/3,
+            use_rectangular_stem = False
+        )
+        arrow.pointwise_become_partial(arrow, 0, 0.95)
+        label.next_to(arrow, UP)
+        VGroup(arrow, label).to_edge(UP)
+        self.add(label, arrow)
+
+    def show_winding(self):
+        loop = Arc(color = WHITE, angle = 1.02*TAU, num_anchors = 42)
+        loop.scale(self.loop_radius)
+        loop.match_background_image_file(self.input_coloring)
+        loop.move_to(self.input_plane.coords_to_point(0, 0))
+
+        out_loop = loop.copy()
+        out_loop.apply_function(self.point_function)
+        out_loop.match_background_image_file(self.output_coloring)
+
+        get_in_point = lambda : loop.points[-1]
+        get_out_point = lambda : out_loop.points[-1]
+        in_origin = self.input_plane.coords_to_point(0, 0)
+        out_origin = self.output_plane.coords_to_point(0, 0)
+
+        dot = Dot()
+        update_dot = UpdateFromFunc(dot, lambda d : d.move_to(get_in_point()))
+
+        out_dot = Dot()
+        update_out_dot = UpdateFromFunc(out_dot, lambda d : d.move_to(get_out_point()))
+
+        buff = self.label_buff
+        def generate_label_update(label, point_func, origin):
+            return UpdateFromFunc(
+                label, lambda m : m.move_to(
+                    (1+buff)*point_func() - buff*origin,
+                    self.label_move_to_corner
+                )
+            )
+        x = TexMobject("x")
+        fx = TexMobject(self.func_label)
+        update_x = generate_label_update(x, get_in_point, in_origin)
+        update_fx = generate_label_update(fx, get_out_point, out_origin)
+
+        morty = self.pi_creature
+
+        kwargs = {
+            "run_time" : 15,
+            "rate_func" : None,
+        }
+        self.play(
+            ShowCreation(loop, **kwargs),
+            ShowCreation(out_loop, **kwargs),
+            update_dot,
+            update_out_dot,
+            update_x,
+            update_fx,
+            ApplyMethod(morty.change, "pondering", out_dot),
+        )
+        self.play(
+            FadeOut(VGroup(dot, out_dot, x, fx))
+        )
+        self.loop = loop
+        self.out_loop = out_loop
+
+    def rescale_output_plane(self):
+        output_stuff = VGroup(self.output_plane, self.output_coloring)
+        self.play(*map(FadeOut, [self.loop, self.out_loop]))
+        self.play(
+            output_stuff.scale, 3.0/50, run_time = 2
+        )
+        self.wait()
+
+    ###
+
+    def func(self, coords):
+        return self.non_renormalized_func(coords)
+
+class PolynomialTerms(MonomialTerm):
+    CONFIG = {
+        "non_renormalized_func" : plane_func_from_complex_func(lambda z : z**5 - z - 1),
+        "full_func_label" : "f(x) = x^5 - x - 1",
+        "func_label" : "x^5 + \\cdots",
+        "loop_radius" : 2.0,
+        "label_buff" : 0.15,
+        "label_move_to_corner" : DOWN+LEFT,
+        "should_end_with_rescaling" : False,
+    }
+    def construct(self):
+        self.pi_creature.change("pondering", VectorizedPoint(ORIGIN))
+        MonomialTerm.construct(self)
+        self.cinch_loop()
+        # self.sweep_through_loop_interior()
+
+    def relabel_planes(self):
+        self.output_plane.x_radius = 50
+        self.output_plane.y_radius = 50
+        self.output_plane.numbers_to_show = range(-45, 50, 15)
+        MonomialTerm.relabel_planes(self)
+
+    def sweep_through_loop_interior(self):
+        loop = self.loop
+        morty = self.pi_creature
+
+        line, line_target = [
+            Line(
+                loop.get_left(), loop.get_right(),
+                path_arc = u*TAU/2,
+                n_arc_anchors = 40,
+                background_image_file = self.input_coloring.background_image_file ,
+                stroke_width = 4,
+            )
+            for u in -1, 1
+        ]
+        out_line = line.copy()
+        update_out_line = UpdateFromFunc(
+            out_line, 
+            lambda m : m.set_points(line.points).apply_function(self.point_function),
+        )
+
+        self.play(
+            Transform(
+                line, line_target,
+                run_time = 10,
+                rate_func = there_and_back
+            ),
+            update_out_line,
+            morty.change, "hooray"
+        )
+        self.wait()
+
+    def cinch_loop(self):
+        loop = self.loop
+        out_loop = self.out_loop
+        morty = self.pi_creature
+
+        update_out_loop = UpdateFromFunc(
+            out_loop,
+            lambda m : m.set_points(loop.points).apply_function(self.point_function)
+        )
+
+        self.add(
+            loop.copy().set_stroke(width = 1),
+            out_loop.copy().set_stroke(width = 1),
+        )
+        self.play(
+            ApplyMethod(
+                loop.scale, 0, {"about_point" : self.input_plane.coords_to_point(0.2, 1)},
+                run_time = 12,
+                rate_func = bezier([0, 0, 1, 1])
+            ),
+            update_out_loop,
+            morty.change, "hooray"
+        )
+        self.wait()
 
 class SearchSpacePerimeterVsArea(EquationSolver2d):
     CONFIG = {
@@ -2205,139 +2599,6 @@ class SearchSpacePerimeterVsArea(EquationSolver2d):
         self.wait()
         self.play(FadeOut(full_rect))
         self.wait()
-
-class MonomialTerm(PathContainingZero):
-    CONFIG = {
-        "non_renormalized_func" : plane_func_from_complex_func(lambda z : z**5),
-        "func_label" : "x^5",
-        "loop_radius" : 1.1,
-        "label_buff" : 0.3,
-    }
-    def construct(self):
-        self.setup_planes()
-        self.relabel_planes()
-        self.add_function_label()
-        self.show_winding()
-
-    def relabel_planes(self):
-        for plane in self.input_plane, self.output_plane:
-            for mob in plane:
-                if isinstance(mob, TexMobject):
-                    plane.remove(mob)
-
-            if hasattr(plane, "numbers_to_show"):
-                _range = plane.numbers_to_show
-            else:
-                _range = range(-2, 3)
-            for x in _range:
-                if x == 0:
-                    continue
-                label = TexMobject(str(x))
-                label.scale(0.5)
-                point = plane.coords_to_point(x, 0)
-                label.next_to(point, DOWN, MED_SMALL_BUFF)
-                plane.add(label)
-                tick = Line(SMALL_BUFF*DOWN, SMALL_BUFF*UP)
-                tick.move_to(point)
-                plane.add(tick)
-            for y in _range:
-                if y == 0:
-                    continue
-                label = TexMobject("%di"%y)
-                label.scale(0.5)
-                point = plane.coords_to_point(0, y)
-                label.next_to(point, LEFT, MED_SMALL_BUFF)
-                plane.add(label)
-                tick = Line(SMALL_BUFF*LEFT, SMALL_BUFF*RIGHT)
-                tick.move_to(point)
-                plane.add(tick)
-
-    def add_function_label(self):
-        label = TexMobject("f(x) = %s"%self.func_label)
-        label.add_background_rectangle(opacity = 1)
-        arrow = Arrow(
-            2*LEFT, 2*RIGHT, path_arc = -TAU/3,
-            use_rectangular_stem = False
-        )
-        arrow.pointwise_become_partial(arrow, 0, 0.95)
-        label.next_to(arrow, UP)
-        VGroup(arrow, label).to_edge(UP)
-        self.add(label, arrow)
-
-    def show_winding(self):
-        loop = Arc(color = WHITE, angle = 1.02*TAU, num_anchors = 42)
-        loop.scale(self.loop_radius)
-        loop.match_background_image_file(self.input_coloring)
-        loop.move_to(self.input_plane.coords_to_point(0, 0))
-
-        out_loop = loop.copy()
-        out_loop.apply_function(self.point_function)
-        out_loop.match_background_image_file(self.output_coloring)
-
-        get_in_point = lambda : loop.points[-1]
-        get_out_point = lambda : out_loop.points[-1]
-        in_origin = self.input_plane.coords_to_point(0, 0)
-        out_origin = self.output_plane.coords_to_point(0, 0)
-
-        dot = Dot()
-        update_dot = UpdateFromFunc(dot, lambda d : d.move_to(get_in_point()))
-
-        out_dot = Dot()
-        update_out_dot = UpdateFromFunc(out_dot, lambda d : d.move_to(get_out_point()))
-
-        buff = self.label_buff
-        def generate_label_update(label, point_func, origin):
-            return UpdateFromFunc(
-                label, lambda m : m.move_to(
-                    (1+buff)*point_func() - buff*origin,
-                )
-            )
-        x = TexMobject("x")
-        fx = TexMobject(self.func_label)
-        update_x = generate_label_update(x, get_in_point, in_origin)
-        update_fx = generate_label_update(fx, get_out_point, out_origin)
-
-        morty = self.pi_creature
-
-        kwargs = {
-            "run_time" : 15,
-            "rate_func" : None,
-        }
-        self.play(
-            ShowCreation(loop, **kwargs),
-            ShowCreation(out_loop, **kwargs),
-            update_dot,
-            update_out_dot,
-            update_x,
-            update_fx,
-            Succession(
-                morty.change, "pondering",
-                Blink(morty),
-                Animation(morty, run_time = 4),
-                Blink(morty),
-                Animation(morty, run_time = 4),
-                Blink(morty),
-            )
-        )
-
-    ###
-
-    def func(self, coords):
-        return self.non_renormalized_func(coords)
-
-class PolynomialTerms(MonomialTerm):
-    CONFIG = {
-        "non_renormalized_func" : plane_func_from_complex_func(lambda z : z**5 - z - 1),
-        "func_label" : "x^5 - x - 1",
-        "loop_radius" : 2.0,
-        "label_buff" : 0.3,
-    }
-
-    def relabel_planes(self):
-        self.output_plane.x_radius = 50
-        self.output_plane.y_radius = 50
-        self.output_plane.numbers_to_show = range(-45, 50, 10)
-        MonomialTerm.relabel_planes(self)
 
 class EndingCredits(Scene):
     def construct(self):
