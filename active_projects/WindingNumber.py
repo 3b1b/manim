@@ -922,6 +922,20 @@ class PiWalkerCircle(PiWalker):
         self.walk_coords = [r * np.array((np.cos(i * TAU/N), np.sin(i * TAU/N))) for i in range(N)]
         PiWalker.setup(self)
 
+class EquationSolver2dNode(object):
+    def __init__(self, first_anim, children = []):
+        self.first_anim = first_anim
+        self.children = children
+
+    def display_in_series(self):
+        return Succession(self.first_anim, *map(EquationSolver2dNode.display_in_series, self.children))
+
+    def display_in_parallel(self):
+        return Succession(self.first_anim, AnimationGroup(*map(EquationSolver2dNode.display_in_parallel, self.children)))
+
+    def display_in_bfs(self):
+        print "Error! Not yet implemented bfs display!"
+
 class EquationSolver2d(ColorMappedObjectsScene):
     CONFIG = {
         "camera_config" : {"use_z_coordinate_for_display_order": True},
@@ -931,7 +945,11 @@ class EquationSolver2d(ColorMappedObjectsScene):
         "initial_upper_y" : 3,
         "num_iterations" : 1,
         "num_checkpoints" : 10,
+
+        # Should really merge this into one enum-style variable
         "display_in_parallel" : False,
+        "display_in_bfs" : False,
+
         "use_fancy_lines" : True,
         # TODO: Consider adding a "find_all_roots" flag, which could be turned off 
         # to only explore one of the two candidate subrectangles when both are viable
@@ -991,7 +1009,7 @@ class EquationSolver2d(ColorMappedObjectsScene):
             print "Solver at depth: " + str(cur_depth)
 
             if cur_depth >= self.num_iterations:
-                return empty_animation
+                return EquationSolver2dNode(empty_animation)
 
             def draw_line_return_wind(start, end, start_wind, should_linger = False, draw_line = True):
                 alpha_winder = make_alpha_winder(clockwise_val_func, start, end, self.num_checkpoints)
@@ -1057,14 +1075,14 @@ class EquationSolver2d(ColorMappedObjectsScene):
                 # their "Nothing here" status?
                 # Or draw a large X or something
                 fill_rect = polygonObject = Polygon(*points, fill_opacity = 0.8, color = DARK_GREY)
-                return Succession(anim, FadeIn(fill_rect))
+                return EquationSolver2dNode(Succession(anim, FadeIn(fill_rect)))
             else:
                 (sub_rect1, sub_rect2) = rect.splits_on_dim(dim_to_split)
                 if dim_to_split == 0:
                     sub_rect_and_sides = [(sub_rect1, 1), (sub_rect2, 3)]
                 else:
                     sub_rect_and_sides = [(sub_rect1, 2), (sub_rect2, 0)]
-                sub_anims = [
+                children = [
                     Animate2dSolver(
                         cur_depth = cur_depth + 1,
                         rect = sub_rect,
@@ -1077,14 +1095,8 @@ class EquationSolver2d(ColorMappedObjectsScene):
                 mid_line_coords = rect.split_line_on_dim(dim_to_split)
                 mid_line_points = [num_plane.coords_to_point(x, y)  + 2 * IN for (x, y) in mid_line_coords]
                 mid_line = DashedLine(*mid_line_points)
-                if self.display_in_parallel:
-                    recursive_anim = AnimationGroup(*sub_anims) 
-                else:
-                    recursive_anim = Succession(*sub_anims)
-                return Succession(anim, 
-                    ShowCreation(mid_line),
-                    recursive_anim
-                )
+
+                return EquationSolver2dNode(Succession(anim, ShowCreation(mid_line)), children)
 
         lower_x = self.initial_lower_x
         upper_x = self.initial_upper_x
@@ -1098,7 +1110,7 @@ class EquationSolver2d(ColorMappedObjectsScene):
 
         print "Starting to compute anim"
 
-        anim = Animate2dSolver(
+        node = Animate2dSolver(
             cur_depth = 0, 
             rect = rect,
             dim_to_split = 0,
@@ -1107,6 +1119,13 @@ class EquationSolver2d(ColorMappedObjectsScene):
         )
 
         print "Done computing anim"
+
+        if self.display_in_parallel:
+            anim = node.display_in_parallel()
+        elif self.display_in_bfs:
+            anim = node.display_in_bfs()
+        else:
+            anim = node.display_in_series()
 
         # Keep timing details here in sync with details above
         rect_points = [
@@ -1935,6 +1954,12 @@ class PreviewClip(EquationSolver2d):
         "num_iterations" : 5,
         "display_in_parallel" : True,
         "use_fancy_lines" : True,
+    }
+
+class QuickPreview(PreviewClip):
+    CONFIG = {
+        "num_iterations" : 2,
+        "display_in_parallel" : False,
     }
 
 # TODO: Borsuk-Ulam visuals
