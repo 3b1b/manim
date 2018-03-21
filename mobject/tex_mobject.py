@@ -210,10 +210,11 @@ class TexMobject(SVGMobject):
         self.submobjects.sort(alphabetical_cmp)
         return self
 
-    def add_background_rectangle(self, color = BLACK, opacity = 0.75):
+    def add_background_rectangle(self, color = BLACK, opacity = 0.75, **kwargs):
         self.background_rectangle = BackgroundRectangle(
             self, color = color,
-            fill_opacity = opacity
+            fill_opacity = opacity,
+            **kwargs
         )
         letters = VMobject(*self.submobjects)
         self.submobjects = [self.background_rectangle, letters]
