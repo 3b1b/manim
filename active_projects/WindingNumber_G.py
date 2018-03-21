@@ -2139,9 +2139,205 @@ class BackToEquationSolving(AltTeacherStudentsScene):
         ])
         self.wait(3)
 
-class SearchSpacePerimeterVsArea(Scene):
+class SearchSpacePerimeterVsArea(EquationSolver2d):
+    CONFIG = {
+        "func" : plane_func_by_wind_spec(
+            (-3, -1.3, 2), (0.1, 0.2, 1), (2.8, -2, 1)
+        ),
+        "num_iterations" : 15,
+        "display_in_parallel" : False,
+        "use_fancy_lines" : True,
+    }
     def construct(self):
-        pass
+        self.force_skipping()
+        EquationSolver2d.construct(self)
+        self.revert_to_original_skipping_status()
+
+        all_parts = VGroup(*self.get_mobjects())
+        path_parts = VGroup()
+        non_path_parts = VGroup()
+        for part in all_parts:
+            if part.get_background_image_file() is not None:
+                path_parts.add(part)
+            else:
+                non_path_parts.add(part)
+        path_parts.save_state()
+        path_parts.generate_target()
+        for path_target in path_parts.target:
+            if isinstance(path_target, Line):
+                path_target.rotate(-path_target.get_angle())
+        path_parts.target.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+        alt_path_parts = path_parts.copy()
+        size = lambda m : m.get_height() + m.get_width()
+        alt_path_parts.submobjects.sort(
+            lambda m1, m2 : -cmp(size(m1), size(m2))
+        )
+
+        full_rect = SurroundingRectangle(
+            path_parts,
+            stroke_width = 0,
+            fill_color = WHITE,
+            fill_opacity = 1,
+            background_image_file = path_parts[0].background_image_file
+        )
+        full_rect.save_state()
+        full_rect.stretch(0, 1, about_edge = UP)
+
+        self.play(
+            FadeOut(non_path_parts),
+            path_parts.set_stroke, {"width" : 1},
+        )
+        self.remove(all_parts)
+        for x in range(2):
+            alt_path_parts.save_state()
+            self.play(LaggedStart(
+                FadeIn, alt_path_parts,
+                rate_func = there_and_back,
+                lag_ratio = 0.3,
+                run_time = 3,
+                remover = True
+            ))
+            alt_path_parts.restore()
+        self.play(
+            full_rect.restore,
+            run_time = 2,
+        )
+        self.wait()
+        self.play(FadeOut(full_rect))
+        self.wait()
+
+class MonomialTerm(PathContainingZero):
+    CONFIG = {
+        "non_renormalized_func" : plane_func_from_complex_func(lambda z : z**5),
+        "func_label" : "x^5",
+        "loop_radius" : 1.1,
+        "label_buff" : 0.3,
+    }
+    def construct(self):
+        self.setup_planes()
+        self.relabel_planes()
+        self.add_function_label()
+        self.show_winding()
+
+    def relabel_planes(self):
+        for plane in self.input_plane, self.output_plane:
+            for mob in plane:
+                if isinstance(mob, TexMobject):
+                    plane.remove(mob)
+
+            if hasattr(plane, "numbers_to_show"):
+                _range = plane.numbers_to_show
+            else:
+                _range = range(-2, 3)
+            for x in _range:
+                if x == 0:
+                    continue
+                label = TexMobject(str(x))
+                label.scale(0.5)
+                point = plane.coords_to_point(x, 0)
+                label.next_to(point, DOWN, MED_SMALL_BUFF)
+                plane.add(label)
+                tick = Line(SMALL_BUFF*DOWN, SMALL_BUFF*UP)
+                tick.move_to(point)
+                plane.add(tick)
+            for y in _range:
+                if y == 0:
+                    continue
+                label = TexMobject("%di"%y)
+                label.scale(0.5)
+                point = plane.coords_to_point(0, y)
+                label.next_to(point, LEFT, MED_SMALL_BUFF)
+                plane.add(label)
+                tick = Line(SMALL_BUFF*LEFT, SMALL_BUFF*RIGHT)
+                tick.move_to(point)
+                plane.add(tick)
+
+    def add_function_label(self):
+        label = TexMobject("f(x) = %s"%self.func_label)
+        label.add_background_rectangle(opacity = 1)
+        arrow = Arrow(
+            2*LEFT, 2*RIGHT, path_arc = -TAU/3,
+            use_rectangular_stem = False
+        )
+        arrow.pointwise_become_partial(arrow, 0, 0.95)
+        label.next_to(arrow, UP)
+        VGroup(arrow, label).to_edge(UP)
+        self.add(label, arrow)
+
+    def show_winding(self):
+        loop = Arc(color = WHITE, angle = 1.02*TAU, num_anchors = 42)
+        loop.scale(self.loop_radius)
+        loop.match_background_image_file(self.input_coloring)
+        loop.move_to(self.input_plane.coords_to_point(0, 0))
+
+        out_loop = loop.copy()
+        out_loop.apply_function(self.point_function)
+        out_loop.match_background_image_file(self.output_coloring)
+
+        get_in_point = lambda : loop.points[-1]
+        get_out_point = lambda : out_loop.points[-1]
+        in_origin = self.input_plane.coords_to_point(0, 0)
+        out_origin = self.output_plane.coords_to_point(0, 0)
+
+        dot = Dot()
+        update_dot = UpdateFromFunc(dot, lambda d : d.move_to(get_in_point()))
+
+        out_dot = Dot()
+        update_out_dot = UpdateFromFunc(out_dot, lambda d : d.move_to(get_out_point()))
+
+        buff = self.label_buff
+        def generate_label_update(label, point_func, origin):
+            return UpdateFromFunc(
+                label, lambda m : m.move_to(
+                    (1+buff)*point_func() - buff*origin,
+                )
+            )
+        x = TexMobject("x")
+        fx = TexMobject(self.func_label)
+        update_x = generate_label_update(x, get_in_point, in_origin)
+        update_fx = generate_label_update(fx, get_out_point, out_origin)
+
+        morty = self.pi_creature
+
+        kwargs = {
+            "run_time" : 15,
+            "rate_func" : None,
+        }
+        self.play(
+            ShowCreation(loop, **kwargs),
+            ShowCreation(out_loop, **kwargs),
+            update_dot,
+            update_out_dot,
+            update_x,
+            update_fx,
+            Succession(
+                morty.change, "pondering",
+                Blink(morty),
+                Animation(morty, run_time = 4),
+                Blink(morty),
+                Animation(morty, run_time = 4),
+                Blink(morty),
+            )
+        )
+
+    ###
+
+    def func(self, coords):
+        return self.non_renormalized_func(coords)
+
+class PolynomialTerms(MonomialTerm):
+    CONFIG = {
+        "non_renormalized_func" : plane_func_from_complex_func(lambda z : z**5 - z - 1),
+        "func_label" : "x^5 - x - 1",
+        "loop_radius" : 2.0,
+        "label_buff" : 0.3,
+    }
+
+    def relabel_planes(self):
+        self.output_plane.x_radius = 50
+        self.output_plane.y_radius = 50
+        self.output_plane.numbers_to_show = range(-45, 50, 10)
+        MonomialTerm.relabel_planes(self)
 
 class EndingCredits(Scene):
     def construct(self):
