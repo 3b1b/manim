@@ -1089,7 +1089,7 @@ class EquationSolver2d(ColorMappedObjectsScene):
 
         print "Starting to compute anim"
 
-        anim = Animate2dSolver(
+        anim = self.anim = Animate2dSolver(
             cur_depth = 0, 
             rect = rect,
             dim_to_split = 0,
