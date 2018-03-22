@@ -1017,6 +1017,8 @@ class EquationSolver2d(ColorMappedObjectsScene):
         "manual_wind_override" : None,
 
         "show_cursor" : False,
+
+        "linger_parameter" : 0.2,
     }
 
     def construct(self):
@@ -1037,7 +1039,7 @@ class EquationSolver2d(ColorMappedObjectsScene):
                 obj1.color_using_background_image(bg)
 
         run_time_base = 1
-        run_time_with_lingering = run_time_base + 0.2
+        run_time_with_lingering = run_time_base + self.linger_parameter
         base_rate = lambda t : t
         linger_rate = squish_rate_func(lambda t : t, 0, 
                         fdiv(run_time_base, run_time_with_lingering))
@@ -1229,8 +1231,8 @@ class EquationSolver2d(ColorMappedObjectsScene):
 
         self.wait()
 
-        # In case we wish to reference these earlier, as had been done in the SearchByPerimeterNotArea
-        # scene at one point
+        # In case we wish to reference these later, as had been done in the 
+        # WindingNumber_G/SearchSpacePerimeterVsArea scene at one point
         self.node = node
         self.anim = anim
 
@@ -1851,10 +1853,12 @@ class DemonstrateColorMapping(ColorMappedObjectsScene):
             self.play(ReplacementTransform(background, bright_background))
             self.wait()
 
+# Everything in this is manually kept in sync with WindingNumber_G/TransitionFromPathsToBoundaries
 class LoopSplitScene(ColorMappedObjectsScene):
     CONFIG = {
-        # TODO: Change this to something more colorful down the midline
-        "func" : plane_func_by_wind_spec((0.1/2, 1.1/2, 1), (-3.1/2, -1.3/2, 2), (1.8/2, -2.1/2, -1)),
+        "func" : plane_func_by_wind_spec(
+            (-2, 0, 2), (2, 0, 1)
+        ),
         "use_fancy_lines" : True,
     }
 
@@ -1864,7 +1868,7 @@ class LoopSplitScene(ColorMappedObjectsScene):
         num_bullets = 4, 
         pulse_time = 1, 
         **kwargs):
-        line = Line(start, end, color = WHITE, **kwargs)
+        line = Line(start, end, color = WHITE, stroke_width = 4, **kwargs)
         if self.use_fancy_lines:
             line.color_using_background_image(self.background_image_file)
         anim = LinePulser(
@@ -1902,19 +1906,6 @@ class LoopSplitScene(ColorMappedObjectsScene):
 
         def pl(a, b):
             return self.PulsedLine(a, b, default_bullet)
-
-        faded = 0.3
-
-        # Workaround for FadeOut/FadeIn not playing well with ContinualAnimations due to 
-        # Transforms making copies no longer identified with the ContinualAnimation's tracked mobject
-        def fader_bullet(start, end, mob):
-            return UpdateFromAlphaFunc(mob, lambda m, a : m.set_fill(opacity = interpolate(start, end, a)))
-
-        def fader_blist(start, end, blist):
-            return map(lambda b : fader_bullet(start, end, b), blist)
-
-        def fader_widthmob(start, end, mob):
-            return UpdateFromAlphaFunc(mob, lambda m, a : m.set_stroke(width = interpolate(start, end, a) * stroke_width))
 
         def indicate_circle(x, double_horizontal_stretch = False):
             circle = Circle(color = WHITE, radius = 2 * np.sqrt(2))
@@ -1959,39 +1950,62 @@ class LoopSplitScene(ColorMappedObjectsScene):
         left_line = left_line_trip[0]
         right_line = right_line_trip[0]
 
-        # Hm... still some slight bug with this.
         for b in left_square_bullets + right_square_bullets:
             b.set_fill(opacity = 0)
 
-        def play_fade_left(a, b):
-            self.play(fader_widthmob(a, b, left_square_lines_vmobject), *fader_blist(a, b, left_square_bullets))
+        faded = 0.3
 
-        def play_fade_right(a, b):
-            self.play(fader_widthmob(a, b, right_square_lines_vmobject), *fader_blist(a, b, right_square_bullets))
+        # Workaround for FadeOut/FadeIn not playing well with ContinualAnimations due to 
+        # Transforms making copies no longer identified with the ContinualAnimation's tracked mobject
+        def bullet_fade(start, end, mob):
+            return UpdateFromAlphaFunc(mob, lambda m, a : m.set_fill(opacity = interpolate(start, end, a)))
 
-        def play_fade_mid(a, b):
-            self.play(fader_widthmob(a, b, midline_lines_vmobject), *fader_blist(a, b, midline_bullets))
+        def bullet_list_fade(start, end, bullet_list):
+            return map(lambda b : bullet_fade(start, end, b), bullet_list)
+
+        def line_fade(start, end, mob):
+            return UpdateFromAlphaFunc(mob, lambda m, a : m.set_stroke(width = interpolate(start, end, a) * stroke_width))
+
+        def play_combined_fade(start, end, lines_vmobject, bullets):
+            self.play(
+                line_fade(start, end, lines_vmobject), 
+                *bullet_list_fade(start, end, bullets)
+            )
+
+        def play_fade_left(start, end):
+            play_combined_fade(start, end, left_square_lines_vmobject, left_square_bullets)
+
+        def play_fade_right(start, end):
+            play_combined_fade(start, end, right_square_lines_vmobject, right_square_bullets)
+
+        def play_fade_mid(start, end):
+            play_combined_fade(start, end, midline_lines_vmobject, midline_bullets)
 
         def flash_circles(circles):
-            # self.play(*map(FadeIn, circles))
             self.play(LaggedStart(FadeIn, VGroup(circles)))
             self.play(*map(FadeOut, circles))
 
+        self.add(left_square_lines_vmobject, right_square_lines_vmobject)
+        self.remove(*midline_lines)
+        self.wait()
+        self.play(ShowCreation(midline_lines[0]))
+        self.add(midline_lines_vmobject)
+        self.wait()
+
         self.add(*left_square_anims)
-        VGroup(left_square_bullets).set_fill(opacity = 0)
-        play_fade_left(0, 1)
+        self.play(line_fade(1, faded, right_square_lines_vmobject), *bullet_list_fade(0, 1, left_square_bullets))
+        self.wait()
+        flash_circles([indicate_circle(l) for l in left_square_lines])
+        self.play(line_fade(faded, 1, right_square_lines_vmobject), *bullet_list_fade(1, 0, left_square_bullets))
 
         self.add(*right_square_anims)
-        VGroup(right_square_bullets).set_fill(opacity = 0)
-        play_fade_right(0, 1)
-        
-        play_fade_right(1, faded)
-        flash_circles([indicate_circle(l) for l in left_square_lines])
-        play_fade_right(faded, 1)
-
-        play_fade_left(1, faded)
+        self.play(line_fade(1, faded, left_square_lines_vmobject), *bullet_list_fade(0, 1, right_square_bullets))
+        self.wait()
         flash_circles([indicate_circle(l) for l in right_square_lines])
-        play_fade_left(faded, 1)
+        self.play(line_fade(faded, 1, left_square_lines_vmobject), *bullet_list_fade(1, 0, right_square_bullets))
+        
+        self.wait()
+        self.play(*bullet_list_fade(0, 1, left_square_bullets + right_square_bullets))
 
         outside_circlers = [
             indicate_circle(left_line), 
@@ -2003,30 +2017,9 @@ class LoopSplitScene(ColorMappedObjectsScene):
 
         inner_circle = indicate_circle(midline_lines[0])
         self.play(FadeIn(inner_circle))
-        self.play(FadeOut(inner_circle), fader_widthmob(1, 0, midline_lines_vmobject), *fader_blist(1, 0, midline_bullets))
+        self.play(FadeOut(inner_circle), line_fade(1, 0, midline_lines_vmobject), *bullet_list_fade(1, 0, midline_bullets))
 
-        self.wait()
-
-        return
-
-        highlight_circle = Circle(color = WHITE) # Perhaps make this a dashed circle?
-        highlight_circle.surround(mid_lines)
-        highlight_circle.stretch(0.3, 0)
-        self.play(Indicate(mid_lines), ShowCreation(highlight_circle, run_time = 0.5))
-        
-        self.wait()
-
-        self.play(FadeOut(highlight_circle), FadeOut(mid_lines))
-        # Because FadeOut didn't remove the continual pulsers, we remove them manually
-        self.remove(mid_line_left[1], mid_line_right[1])
-
-        # Brings loop back together; keep in sync with motions which bring loop apart above
-        # self.play(
-        #     ApplyMethod(left_open_loop.shift, 2 * RIGHT), 
-        #     ApplyMethod(right_open_loop.shift, 2 * LEFT)
-        #     )
-
-        self.wait()
+        self.wait(3)
 
 # Is there a way to abstract this into a general process to derive a new mapped scene from an old scene?
 class LoopSplitSceneMapped(LoopSplitScene):
@@ -2079,6 +2072,15 @@ class QuickPreview(PreviewClip):
         "display_in_parallel" : False,
         "display_in_bfs" : True,
         "show_cursor" : True
+    }
+
+class LongEquationSolver(EquationSolver2d):
+    CONFIG = {
+        "func" : example_plane_func,
+        "num_iterations" : 10,
+        "display_in_bfs" : True,
+        "linger_parameter" : 0.4,
+        "show_cursor" : True,
     }
 
 # TODO: Borsuk-Ulam visuals
