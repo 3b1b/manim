@@ -531,11 +531,18 @@ def point3d_func_from_complex_func(f):
     return point3d_func_from_plane_func(plane_func_from_complex_func(f))
 
 def plane_zeta((x, y)):
-    answer = mpmath.zeta(complex(x, y))
     CLAMP_SIZE = 1000
+    z = complex(x, y)
+    try:
+        answer = mpmath.zeta(z)
+    except ValueError:
+        return (CLAMP_SIZE, 0)
     if abs(answer) > CLAMP_SIZE:
         answer = answer/abs(answer) * CLAMP_SIZE
     return (float(answer.real), float(answer.imag))
+
+def rescaled_plane_zeta((x, y)):
+    return plane_zeta((x/SPACE_WIDTH, 8*y))
 
 # Returns a function from 2-ples to 2-ples
 # This function is specified by a list of (x, y, z) tuples, 
@@ -1098,7 +1105,7 @@ class EquationSolver2d(ColorMappedObjectsScene):
 
         print "Starting to compute anim"
 
-        anim = Animate2dSolver(
+        anim = self.anim = Animate2dSolver(
             cur_depth = 0, 
             rect = rect,
             dim_to_split = 0,

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from helpers import *
 
 from mobject.tex_mobject import TexMobject
@@ -30,7 +32,9 @@ from camera import *
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from topics.graph_scene import *
+from topics.common_scenes import *
 
+from old_projects.uncertainty import Flash
 from active_projects.WindingNumber import *
 
 class AltTeacherStudentsScene(TeacherStudentsScene):
@@ -2053,12 +2057,947 @@ class FailureOfComposition(ColorMappedObjectsScene):
         self.play(ShowPassingFlash(ghost))
         self.wait()
 
+class PathContainingZero(InputOutputScene, PiCreatureScene):
+    CONFIG = {
+        "default_pi_creature_kwargs" : {
+            "flip_at_start" : False,
+            "height" : 1.5,
+        },
+        "default_pi_creature_start_corner" : DOWN+LEFT,
+    }
+    def construct(self):
+        self.setup_planes()
+        self.draw_path_hitting_zero()
+        self.comment_on_zero()
+
+    def setup_planes(self):
+        colorings = VGroup(*self.get_colorings())
+        self.input_coloring, self.output_coloring = colorings
+        colorings.set_fill(opacity = 0.3)
+
+        planes = VGroup(*self.get_planes())
+        self.input_plane, self.output_plane = planes
+        for plane in planes:
+            # plane.white_parts.highlight(BLACK)
+            plane.lines_to_fade.set_stroke(width = 0)
+
+        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        v_line.set_stroke(WHITE, 5)
+
+        self.add(colorings, planes)
+        self.add(v_line)
+
+    def draw_path_hitting_zero(self):
+        morty = self.pi_creature
+
+        path = self.path = VMobject(
+            stroke_width = 5,
+            stroke_color = WHITE,
+            fill_opacity = 0,
+        )
+        path.match_background_image_file(self.input_coloring)
+        path.set_points_smoothly(list(it.starmap(
+            self.input_plane.coords_to_point, 
+            [(1, 2.5), (2.5, 2.5), (2, 0.5), (1, 1), (0.5, 1), (0.5, 2), (1, 2.5)]
+        )))
+
+        out_path = self.out_path = path.copy()
+        out_path.apply_function(self.point_function)
+        out_path.match_background_image_file(self.output_coloring)
+        out_path.make_smooth()
+
+        self.play(
+            Flash(
+                VectorizedPoint(self.output_plane.coords_to_point(0, 0)),
+                color = WHITE,
+                flash_radius = 0.3,
+                line_length = 0.2,
+                num_lines = 13,
+                rate_func = squish_rate_func(smooth, 0.5, 0.6),
+            ),
+            morty.change, "pondering",
+            *[
+                ShowCreation(mob, rate_func = bezier([0, 0, 1, 1]))
+                for mob in path, out_path
+            ],
+            run_time = 5
+        )
+
+    def comment_on_zero(self):
+        morty = self.pi_creature
+
+        words = TextMobject(
+            "Output is zero \\\\",
+            "which has no direction"
+        )
+        origin = self.output_plane.coords_to_point(0, 0)
+        words.to_edge(DOWN, buff = LARGE_BUFF)
+        background_rect = BackgroundRectangle(
+            words, buff = SMALL_BUFF,
+            opacity = 1.0
+        )
+        background_rect.stretch_to_fit_width(0.1)
+
+        arrow = Arrow(words.get_top(), origin)
+
+        circles = VGroup()
+        for point in self.input_plane.coords_to_point(1, 1), origin:
+            circle = Circle(color = BLACK, radius = 0.5, stroke_width = 0)
+            circle.move_to(point)
+            circle.generate_target()
+            circle.target.scale(0)
+            circle.target.set_stroke(width = 4)
+            circles.add(circle)
+        in_circle, out_circle = circles
+
+        new_words = TextMobject(
+            "But we want $\\vec{\\textbf{x}}$ \\\\",
+            "where $f(\\vec{\\textbf{x}}) = 0$",
+        )
+        new_words.move_to(words)
+
+        self.play(
+            FadeIn(background_rect),
+            Write(words[0]),
+            GrowArrow(arrow),
+        )
+        self.play(
+            Write(words[1]),
+            morty.change, "pleading",
+            MoveToTarget(out_circle, run_time = 2)
+        )
+        self.wait()
+        self.play(FadeOut(words))
+        self.play(
+            FadeIn(new_words),
+            morty.change, "happy"
+        )
+        self.play(MoveToTarget(in_circle, run_time = 2))
+        self.play(morty.change, "hooray")
+        self.wait(3)
+
+class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
+    CONFIG = {
+        "func" : plane_func_by_wind_spec(
+            (-2, 0, 2), (2, 0, 1)
+        )
+    }
+    def construct(self):
+        ColorMappedObjectsScene.construct(self)
+
+        #Setup paths
+        squares, joint_rect = self.get_squares_and_joint_rect()
+        left_square, right_square = squares
+
+        path1, path2 = paths = VGroup(*[
+            Line(square.get_corner(UP+LEFT), square.get_corner(UP+RIGHT))
+            for square in squares
+        ])
+        joint_path = Line(path1.get_start(), path2.get_end())
+
+        for mob in it.chain(paths, [joint_path]):
+            mob.set_stroke(WHITE, 4)
+            mob.color_using_background_image(self.background_image_file)
+
+        dot = self.get_dot_and_add_continual_animations()
+
+        #Setup path braces
+        for mob, tex in (path1, "x"), (path2, "y"), (joint_path, "x+y"):
+            mob.brace = Brace(mob, DOWN)
+            label = TextMobject("Winding =", "$%s$"%tex)
+            label.next_to(mob.brace, DOWN)
+            mob.brace.add(label)
+
+        #Setup region labels
+
+        for square, tex in (left_square, "x"), (right_square, "y"), (joint_rect, "x+y \\, ?"):
+            square.label = TextMobject("Winding = ", "$%s$"%tex)
+            square.label.move_to(square)
+
+        #Add paths
+        self.position_dot(path1.get_start())
+        for path in path1, path2:
+            self.position_dot(path.get_start())
+            self.play(
+                MoveAlongPath(dot, path.copy()),
+                ShowCreation(path),
+                run_time = 2
+            )
+            self.play(GrowFromCenter(path.brace))
+        self.wait()
+        self.position_dot(joint_path.get_start())
+        self.play(
+            MoveAlongPath(dot, joint_path, run_time = 3),
+            FadeOut(VGroup(path1.brace, path2.brace)),
+            FadeIn(joint_path.brace),
+        )
+        self.wait()
+
+        #Add regions
+        self.play(
+            FadeOut(paths),
+            FadeOut(joint_path.brace), 
+            dot.move_to, path1.get_start()
+        )
+        for square in squares:
+            self.position_dot(square.points[0])
+            kwargs = {
+                "run_time" : 4,
+                "rate_func" : bezier([0, 0, 1, 1]),
+            }
+            self.play(
+                MoveAlongPath(dot, square.copy(), **kwargs),
+                ShowCreation(square, **kwargs),
+                Write(square.label, run_time = 2),
+            )
+            self.wait()
+        self.play(
+            dot.move_to, joint_rect.points[0],
+            FadeOut(squares),
+            FadeIn(joint_rect),
+        )
+        self.position_dot(joint_rect.points[0])
+        self.play(
+            Transform(left_square.label[0], joint_rect.label[0]),
+            Transform(
+                left_square.label[1], joint_rect.label[1][0],
+                path_arc = TAU/6
+            ),
+            FadeIn(joint_rect.label[1][1]),
+            FadeIn(joint_rect.label[1][3]),
+            FadeOut(right_square.label[0]),
+            Transform(
+                right_square.label[1], joint_rect.label[1][2],
+                path_arc = TAU/6
+            ),
+            MoveAlongPath(
+                dot, joint_rect,
+                run_time = 6,
+                rate_func = bezier([0, 0, 1, 1])
+            )
+        )
+        self.wait()
+
+    ###
+
+    def get_squares_and_joint_rect(self):
+        squares = VGroup(*[
+            Square(side_length = 4).next_to(ORIGIN, vect, buff = 0)
+            for vect in LEFT, RIGHT
+        ])
+        joint_rect = SurroundingRectangle(squares, buff = 0)
+        for mob in it.chain(squares, [joint_rect]):
+            mob.set_stroke(WHITE, 4)
+            mob.color_using_background_image(self.background_image_file)
+        return squares, joint_rect
+
+    def get_dot_and_add_continual_animations(self):
+        #Define important functions for updates
+        get_output = lambda : self.func(tuple(dot.get_center()[:2]))
+        get_output_color = lambda : rgba_to_color(point_to_rgba(get_output()))
+        get_output_rev = lambda : -point_to_rev(get_output())
+        self.get_output_rev = get_output_rev
+
+        self.start_rev = 0
+        self.curr_winding = 0
+        def get_total_winding(dt = 0):
+            rev = (get_output_rev() - self.start_rev)%1
+            possible_windings = [
+                np.floor(self.curr_winding)+k+rev
+                for k in -1, 0, 1
+            ]
+            i = np.argmin([abs(pw - self.curr_winding) for pw in possible_windings])
+            self.curr_winding = possible_windings[i]
+            return self.curr_winding
 
 
+        #Setup dot, arrow and label
+        dot = self.dot = Dot(radius = 0.1)
+        dot.set_stroke(WHITE, 1)
+        update_dot_color = ContinualUpdateFromFunc(
+            dot, lambda d : d.set_fill(get_output_color())
+        )
 
+        label = DecimalNumber(0, num_decimal_points = 1)
+        label_upadte = ContinualChangingDecimal(
+            label, get_total_winding,
+            position_update_func = lambda l : l.next_to(dot, UP+LEFT, SMALL_BUFF)
+        )
 
+        arrow_length = 0.75
+        arrow = Vector(arrow_length*RIGHT)
+        arrow.set_stroke(WHITE, 1)
+        def arrow_update_func(arrow):
+            arrow.set_fill(get_output_color(), 1)
+            arrow.rotate(-TAU*get_output_rev() - arrow.get_angle())
+            arrow.scale(arrow_length/arrow.get_length())
+            arrow.shift(dot.get_center() - arrow.get_start())
+            return arrow
+        update_arrow = ContinualUpdateFromFunc(arrow, arrow_update_func)
 
+        self.add(update_arrow, update_dot_color, label_upadte)
+        return dot
 
+    def position_dot(self, point):
+        self.dot.move_to(point)
+        self.start_rev = self.get_output_rev()
+        self.curr_winding = 0
+
+class BreakDownLoopWithNonzeroWinding(TransitionFromPathsToBoundaries):
+    def construct(self):
+        zero_point = 2*LEFT
+
+        squares, joint_rect = self.get_squares_and_joint_rect()
+        left_square, right_square = squares
+        VGroup(squares, joint_rect).shift(MED_LARGE_BUFF*DOWN)
+
+        dot = self.get_dot_and_add_continual_animations()
+
+        for rect, tex in (left_square, "x"), (right_square, "y"), (joint_rect, "3"):
+            rect.label = TextMobject("Winding = ", "$%s$"%tex)
+            rect.label.move_to(rect)
+        sum_label = TexMobject("x", "+", "y", "=", "3")
+        x, plus, y, equals, three = sum_label
+        sum_label.next_to(joint_rect, UP)
+
+        both_cannot_be_zero = TextMobject("These cannot both be 0")
+        both_cannot_be_zero.move_to(plus)
+        both_cannot_be_zero.to_edge(UP)
+        arrows = VGroup(*[
+            Arrow(both_cannot_be_zero.get_bottom(), var.get_top(), buff = SMALL_BUFF)
+            for var in x, y
+        ])
+
+        self.position_dot(joint_rect.points[0])
+        self.add(joint_rect)
+        self.play(
+            MoveAlongPath(dot, joint_rect, rate_func = bezier([0, 0, 1, 1])),
+            Write(joint_rect.label, rate_func = squish_rate_func(smooth, 0.7, 1)),
+            run_time = 4
+        )
+        self.wait()
+        self.play(
+            ReplacementTransform(joint_rect.label, left_square.label),
+            ReplacementTransform(joint_rect.label.copy(), right_square.label),
+            ReplacementTransform(joint_rect.label[1].copy(), three),
+            FadeIn(left_square),
+            FadeIn(right_square),
+        )
+        self.play(
+            ReplacementTransform(left_square.label[1].copy(), x),
+            ReplacementTransform(right_square.label[1].copy(), y),
+            FadeIn(plus),
+            FadeIn(equals),
+        )
+        self.play(
+            FadeIn(both_cannot_be_zero),
+            *map(GrowArrow, arrows)
+        )
+        self.wait()
+
+class BackToEquationSolving(AltTeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Back to solving \\\\ equations"
+        )
+        self.change_all_student_modes("hooray")
+        self.play(*[
+            ApplyMethod(pi.look_at, self.screen)
+            for pi in self.pi_creatures
+        ])
+        self.wait(3)
+
+class MonomialTerm(PathContainingZero):
+    CONFIG = {
+        "non_renormalized_func" : plane_func_from_complex_func(lambda z : z**5),
+        "full_func_label" : "f(x) = x^5",
+        "func_label" : "x^5",
+        "loop_radius" : 1.1,
+        "label_buff" : 0.3,
+        "label_move_to_corner" : ORIGIN,
+        "should_end_with_rescaling" : True,
+    }
+    def construct(self):
+        self.setup_planes()
+        self.relabel_planes()
+        self.add_function_label()
+        self.show_winding()
+        if self.should_end_with_rescaling:
+            self.rescale_output_plane()
+
+    def relabel_planes(self):
+        for plane in self.input_plane, self.output_plane:
+            for mob in plane:
+                if isinstance(mob, TexMobject):
+                    plane.remove(mob)
+
+            if hasattr(plane, "numbers_to_show"):
+                _range = plane.numbers_to_show
+            else:
+                _range = range(-2, 3)
+            for x in _range:
+                if x == 0:
+                    continue
+                label = TexMobject(str(x))
+                label.scale(0.5)
+                point = plane.coords_to_point(x, 0)
+                label.next_to(point, DOWN, MED_SMALL_BUFF)
+                plane.add(label)
+                self.add_foreground_mobject(label)
+                tick = Line(SMALL_BUFF*DOWN, SMALL_BUFF*UP)
+                tick.move_to(point)
+                plane.add(tick)
+            for y in _range:
+                if y == 0:
+                    continue
+                label = TexMobject("%di"%y)
+                label.scale(0.5)
+                point = plane.coords_to_point(0, y)
+                label.next_to(point, LEFT, MED_SMALL_BUFF)
+                plane.add(label)
+                self.add_foreground_mobject(label)
+                tick = Line(SMALL_BUFF*LEFT, SMALL_BUFF*RIGHT)
+                tick.move_to(point)
+                plane.add(tick)
+        self.add(self.input_plane, self.output_plane)
+
+    def add_function_label(self):
+        label = TexMobject(self.full_func_label)
+        label.add_background_rectangle(opacity = 1, buff = SMALL_BUFF)
+        arrow = Arrow(
+            2*LEFT, 2*RIGHT, path_arc = -TAU/3,
+            use_rectangular_stem = False
+        )
+        arrow.pointwise_become_partial(arrow, 0, 0.95)
+        label.next_to(arrow, UP)
+        VGroup(arrow, label).to_edge(UP)
+        self.add(label, arrow)
+
+    def show_winding(self):
+        loop = Arc(color = WHITE, angle = 1.02*TAU, num_anchors = 42)
+        loop.scale(self.loop_radius)
+        loop.match_background_image_file(self.input_coloring)
+        loop.move_to(self.input_plane.coords_to_point(0, 0))
+
+        out_loop = loop.copy()
+        out_loop.apply_function(self.point_function)
+        out_loop.match_background_image_file(self.output_coloring)
+
+        get_in_point = lambda : loop.points[-1]
+        get_out_point = lambda : out_loop.points[-1]
+        in_origin = self.input_plane.coords_to_point(0, 0)
+        out_origin = self.output_plane.coords_to_point(0, 0)
+
+        dot = Dot()
+        update_dot = UpdateFromFunc(dot, lambda d : d.move_to(get_in_point()))
+
+        out_dot = Dot()
+        update_out_dot = UpdateFromFunc(out_dot, lambda d : d.move_to(get_out_point()))
+
+        buff = self.label_buff
+        def generate_label_update(label, point_func, origin):
+            return UpdateFromFunc(
+                label, lambda m : m.move_to(
+                    (1+buff)*point_func() - buff*origin,
+                    self.label_move_to_corner
+                )
+            )
+        x = TexMobject("x")
+        fx = TexMobject(self.func_label)
+        update_x = generate_label_update(x, get_in_point, in_origin)
+        update_fx = generate_label_update(fx, get_out_point, out_origin)
+
+        morty = self.pi_creature
+
+        kwargs = {
+            "run_time" : 15,
+            "rate_func" : None,
+        }
+        self.play(
+            ShowCreation(loop, **kwargs),
+            ShowCreation(out_loop, **kwargs),
+            update_dot,
+            update_out_dot,
+            update_x,
+            update_fx,
+            ApplyMethod(morty.change, "pondering", out_dot),
+        )
+        self.play(
+            FadeOut(VGroup(dot, out_dot, x, fx))
+        )
+        self.loop = loop
+        self.out_loop = out_loop
+
+    def rescale_output_plane(self):
+        output_stuff = VGroup(self.output_plane, self.output_coloring)
+        self.play(*map(FadeOut, [self.loop, self.out_loop]))
+        self.play(
+            output_stuff.scale, 3.0/50, run_time = 2
+        )
+        self.wait()
+
+    ###
+
+    def func(self, coords):
+        return self.non_renormalized_func(coords)
+
+class PolynomialTerms(MonomialTerm):
+    CONFIG = {
+        "non_renormalized_func" : plane_func_from_complex_func(lambda z : z**5 - z - 1),
+        "full_func_label" : "f(x) = x^5 - x - 1",
+        "func_label" : "x^5 + \\cdots",
+        "loop_radius" : 2.0,
+        "label_buff" : 0.15,
+        "label_move_to_corner" : DOWN+LEFT,
+        "should_end_with_rescaling" : False,
+    }
+    def construct(self):
+        self.pi_creature.change("pondering", VectorizedPoint(ORIGIN))
+        MonomialTerm.construct(self)
+        self.cinch_loop()
+        # self.sweep_through_loop_interior()
+
+    def relabel_planes(self):
+        self.output_plane.x_radius = 50
+        self.output_plane.y_radius = 50
+        self.output_plane.numbers_to_show = range(-45, 50, 15)
+        MonomialTerm.relabel_planes(self)
+
+    def sweep_through_loop_interior(self):
+        loop = self.loop
+        morty = self.pi_creature
+
+        line, line_target = [
+            Line(
+                loop.get_left(), loop.get_right(),
+                path_arc = u*TAU/2,
+                n_arc_anchors = 40,
+                background_image_file = self.input_coloring.background_image_file ,
+                stroke_width = 4,
+            )
+            for u in -1, 1
+        ]
+        out_line = line.copy()
+        update_out_line = UpdateFromFunc(
+            out_line, 
+            lambda m : m.set_points(line.points).apply_function(self.point_function),
+        )
+
+        self.play(
+            Transform(
+                line, line_target,
+                run_time = 10,
+                rate_func = there_and_back
+            ),
+            update_out_line,
+            morty.change, "hooray"
+        )
+        self.wait()
+
+    def cinch_loop(self):
+        loop = self.loop
+        out_loop = self.out_loop
+        morty = self.pi_creature
+
+        update_out_loop = UpdateFromFunc(
+            out_loop,
+            lambda m : m.set_points(loop.points).apply_function(self.point_function)
+        )
+
+        self.add(
+            loop.copy().set_stroke(width = 1),
+            out_loop.copy().set_stroke(width = 1),
+        )
+        self.play(
+            ApplyMethod(
+                loop.scale, 0, {"about_point" : self.input_plane.coords_to_point(0.2, 1)},
+                run_time = 12,
+                rate_func = bezier([0, 0, 1, 1])
+            ),
+            update_out_loop,
+            morty.change, "hooray"
+        )
+        self.wait()
+
+class SearchSpacePerimeterVsArea(EquationSolver2d):
+    CONFIG = {
+        "func" : plane_func_by_wind_spec(
+            (-3, -1.3, 2), (0.1, 0.2, 1), (2.8, -2, 1)
+        ),
+        "num_iterations" : 15,
+        "display_in_parallel" : False,
+        "use_fancy_lines" : True,
+    }
+    def construct(self):
+        self.force_skipping()
+        EquationSolver2d.construct(self)
+        self.revert_to_original_skipping_status()
+
+        all_parts = VGroup(*self.get_mobjects())
+        path_parts = VGroup()
+        non_path_parts = VGroup()
+        for part in all_parts:
+            if part.get_background_image_file() is not None:
+                path_parts.add(part)
+            else:
+                non_path_parts.add(part)
+        path_parts.save_state()
+        path_parts.generate_target()
+        for path_target in path_parts.target:
+            if isinstance(path_target, Line):
+                path_target.rotate(-path_target.get_angle())
+        path_parts.target.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
+        alt_path_parts = path_parts.copy()
+        size = lambda m : m.get_height() + m.get_width()
+        alt_path_parts.submobjects.sort(
+            lambda m1, m2 : -cmp(size(m1), size(m2))
+        )
+
+        full_rect = SurroundingRectangle(
+            path_parts,
+            stroke_width = 0,
+            fill_color = WHITE,
+            fill_opacity = 1,
+            background_image_file = path_parts[0].background_image_file
+        )
+        full_rect.save_state()
+        full_rect.stretch(0, 1, about_edge = UP)
+
+        self.play(
+            FadeOut(non_path_parts),
+            path_parts.set_stroke, {"width" : 1},
+        )
+        self.remove(all_parts)
+        for x in range(2):
+            alt_path_parts.save_state()
+            self.play(LaggedStart(
+                FadeIn, alt_path_parts,
+                rate_func = there_and_back,
+                lag_ratio = 0.3,
+                run_time = 3,
+                remover = True
+            ))
+            alt_path_parts.restore()
+        self.play(
+            full_rect.restore,
+            run_time = 2,
+        )
+        self.wait()
+        self.play(FadeOut(full_rect))
+        self.wait()
+
+class EndingCredits(Scene):
+    def construct(self):
+        text = TextMobject(
+            "Written and animated by: \\\\",
+            "Sridhar Ramesh \\\\",
+            "Grant Sanderson"
+        )
+        text[0].shift(MED_SMALL_BUFF*UP)
+        text.to_edge(UP)
+
+        pi = PiCreature(color = YELLOW_E, height = 2)
+        pi.to_edge(DOWN)
+        pi.change_mode("happy")
+        self.add(pi)
+
+        self.play(LaggedStart(FadeIn, text), pi.look_at, text)
+        self.play(pi.change, "wave_1", text)
+        self.play(Blink(pi))
+        self.play(pi.change, "happy")
+        self.wait()
+
+class MentionQAndA(Scene):
+    def construct(self):
+        title = TextMobject("Q\\&A with ", "Ben", "and", "Sridhar\\\\", "at", "Patreon")
+        title.highlight_by_tex_to_color_map({
+            "Ben" : MAROON,
+            "Sridhar" : YELLOW,
+        })
+        patreon_logo = VGroup(*PatreonLogo().family_members_with_points())
+        patreon_logo.sort_submobjects()
+        patreon_logo.replace(title.get_parts_by_tex("Patreon"))
+        patreon_logo.scale(1.3, about_edge = LEFT)
+        patreon_logo.shift(0.5*SMALL_BUFF*DOWN)
+        title.submobjects[-1] = patreon_logo
+
+        title.to_edge(UP)
+        self.add(title)
+
+        questions = VGroup(*map(TextMobject, [
+            "If you think of the current videos as short stories, \\\\ what is the novel that you want to write?",
+            "How did you get into mathematics?",
+            "What motivated you to join 3b1b?",
+            "$\\vdots$",
+        ]))
+        questions.arrange_submobjects(DOWN, buff = 0.75)
+        questions.next_to(title, DOWN, LARGE_BUFF)
+
+        self.play(LaggedStart(FadeIn, questions, run_time = 3))
+        self.wait(2)
+        self.play(FadeOut(questions))
+        self.wait()
+
+class TickingClock(Scene):
+    CONFIG = {
+        "run_time" : 90,
+    }
+    def construct(self):
+        clock = Clock()
+        clock.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        clock.to_edge(LEFT)
+        lines = [clock.hour_hand, clock.minute_hand]
+        def update_line(line):
+            rev = line.get_angle()/TAU
+            line.highlight(rev_to_color(rev))
+
+        for line in lines:
+            self.add(ContinualUpdateFromFunc(line, update_line))
+
+        run_time = self.run_time
+        self.play(ClockPassesTime(
+            clock, 
+            run_time = run_time,
+            hours_passed = 0.1*run_time
+        ))
+
+class InfiniteListOfTopics(Scene):
+    def construct(self):
+        rect = Rectangle(width = 5, height = 7)
+        rect.to_edge(RIGHT)
+        title = TextMobject("Infinite list \\\\ of topics")
+        title.next_to(rect.get_top(), DOWN)
+        lines = VGroup(*[
+            TextMobject(words).scale(0.5)
+            for words in [
+                "Winding number",
+                "Laplace transform",
+                "Wallis product",
+                "Quantum information",
+                "Elliptic curve cryptography",
+                "Strange attractors",
+                "Convolutional neural networks",
+                "Fixed points",
+            ]
+        ] + [TexMobject("\\vdots")])
+        lines.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT)
+        lines.next_to(title, DOWN, MED_LARGE_BUFF)
+        lines[-1].next_to(lines[-2], DOWN)
+
+        self.add(rect, title)
+        self.play(LaggedStart(FadeIn, lines, run_time = 5))
+        self.wait()
+
+class ManyIterations(Scene):
+    def construct(self):
+        words = VGroup(*[
+            TextMobject(word, alignment = "")
+            for word in [
+                "Winding numbers, v1",
+                "Winding numbers, v2 \\\\ (center on domain coloring)",
+                "Winding numbers, v3 \\\\ (clarify visuals of 2d functions)",
+                "Winding numbers, v4 \\\\ (postpone topology examples for part 2)",
+                "Winding numbers, v5 \\\\ (start down wrong path)",
+            ]
+        ])
+        words.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
+        words.scale(0.75)
+        words.to_edge(RIGHT)
+
+        self.add(words[0])
+        for last_word, word in zip(words, words[1:]):
+            cross = Cross(last_word)
+            self.play(ShowCreation(cross))
+            self.play(FadeIn(word))
+        self.wait()
+
+class MentionFree(PiCreatureScene):
+    CONFIG = {
+        "default_pi_creature_kwargs" : {
+            "flip_at_start" : False,
+        },
+        "default_pi_creature_start_corner" : DOWN,
+    }
+    def construct(self):
+        morty = self.pi_creature
+        morty.shift(RIGHT)
+
+        items = VGroup(
+            TextMobject("Movie:", "$>\\$10.00$"),
+            TextMobject("College course:", "$>\\$1{,}000.00$"),
+            TextMobject("YouTube video:", "$=\\$0.00$"),
+        )
+        # items.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        items.next_to(morty, UP, LARGE_BUFF)
+        right_x = morty.get_right()[0]
+        for item in items:
+            item[1].highlight(GREEN)
+            item.shift((right_x - item[0].get_right()[0])*RIGHT)
+
+        self.play(
+            morty.change, "raise_right_hand",
+            FadeInFromDown(items[0])
+        )
+        self.wait()
+        self.play(
+            FadeInFromDown(items[1]),
+            items[0].shift, UP,
+        )
+        self.wait()
+        self.play(
+            items[:2].shift, UP,
+            FadeInFromDown(items[2]),
+            morty.change, "surprised"
+        )
+        self.wait(4)
+        self.play(
+            morty.change, "raise_left_hand", VectorizedPoint(3*LEFT)
+        )
+        self.wait(4)
+        self.play(morty.change, "gracious", OUT)
+        self.wait(4)
+
+class PatreonScroll(Scene):
+    CONFIG = {
+        "specific_patrons" : [
+            "Juan Benet",
+            "Chloe Zhou",
+            "Ross Garber",
+            "Desmos",
+            "Burt Humburg",
+            "CrypticSwarm",
+            "Sergei",
+            "Devin Scott",
+            "George John",
+            "Akash Kumar",
+            "Felix Tripier",
+            "Arthur Zey",
+            "David Kedmey",
+            "Ali Yahya",
+            "Mayank M. Mehrotra",
+            "Lukas Biewald",
+            "Yana Chernobilsky",
+            "Kaustuv DeBiswas",
+            "Yu Jun",
+            "Dave Nicponski",
+            "Damion Kistler",
+            "Patrick Mézard",
+            "Jordan Scales",
+            "Markus Persson",
+            "Britt Selvitelle",
+            "Jonathan Wilson",
+            "Ryan Atallah",
+            "Joseph John Cox",
+            "Luc Ritchie",
+            "Steven Tomlinson",
+            "Shìmín Ku$\\overline{\\text{a}}$ng",
+            "Jameel Syed",
+            "Bong Choung",
+            "Ignacio Freiberg",
+            "Zhilong Yang",
+            "Karl Niu",
+            "Dan Esposito (Guardion)",
+            "Giovanni Filippi",
+            "Eric Younge",
+            "Prasant Jagannath",
+            "Cody Brocious",
+            "Jacob Kohl",
+            "James H. Park",
+            "Norton Wang",
+            "Kevin Le",
+            "Alexander Feldman",
+            "Tianyu Ge",
+            "David MacCumber",
+            "Oliver Steele",
+            "Yaw Etse",
+            "David B",
+            "Waleed Hamied",
+            "George Chiesa",
+            "supershabam",
+            "Delton Ding",
+            "Thomas Tarler",
+            "Jonathan Eppele",
+            "Isak Hietala",
+            "1stViewMaths",
+            "Jacob Magnuson",
+            "Mark Govea",
+            "Clark Gaebel",
+            "Mathias Jansson",
+            "David Clark",
+            "Michael Gardner",
+            "Mads Elvheim",
+            "Awoo",
+            "Dr. David G. Stork",
+            "Ted Suzman",
+            "Linh Tran",
+            "Andrew Busey",
+            "John Haley",
+            "Ankalagon",
+            "Eric Lavault",
+            "Boris Veselinovich",
+            "Julian Pulgarin",
+            "Jeff Linse",
+            "Cooper Jones",
+            "Ryan Dahl",
+            "Robert Teed",
+            "Jason Hise",
+            "Meshal Alshammari",
+            "Bernd Sing",
+            "James Thornton",
+            "Mustafa Mahdi",
+            "Mathew Bramson",
+            "Jerry Ling",
+            "Mèngzi Yì",
+            "Rish Kundalia",
+            "Achille Brighton",
+            "Ripta Pasay",
+        ],
+        "random_seed" : 1,
+    }
+    def construct(self):
+        patreon_logo = PatreonLogo()
+        patreon_logo.to_corner(UP+RIGHT)
+        patreon_logo.shift(SMALL_BUFF*LEFT)
+        self.add(patreon_logo)
+
+        patrons = VGroup(*map(TextMobject, self.specific_patrons))
+        patrons.scale(0.75)
+        random.shuffle(patrons.submobjects)
+        patrons.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        patrons.next_to(ORIGIN, DOWN)
+        patrons.to_edge(RIGHT)
+
+        # patorons = patrons[:10] ##TO remove
+
+        scroll = AmbientMovement(patrons, direction = UP, rate = 1)
+        def patrons_opacity_update(patrons):
+            for patron in patrons:
+                y = patron.get_center()[1]
+                if y > 3.5:
+                    patrons.remove(patron)
+                alpha = smooth(np.clip(2.5 - y, 0, 1))
+                patron.set_fill(opacity = alpha)
+        opacity_update = ContinualUpdateFromFunc(patrons, patrons_opacity_update)
+
+        self.add(scroll, opacity_update)
+        self.wait(55)
+
+class EndScreen(PatreonEndScreen, PiCreatureScene):
+    CONFIG = {
+        "run_time" : 0,
+    }
+    def construct(self):
+        self.remove(self.pi_creature)
+        PatreonEndScreen.construct(self)
+        randy, morty = self.pi_creatures
+        randy.change("plain")
+        morty.change("plain")
+
+        for mode in "thinking", "confused", "pondering", "hooray":
+            self.play(randy.change, mode)
+            self.wait()
+            self.play(morty.change, mode)
+            self.wait(2)
 
 
 
