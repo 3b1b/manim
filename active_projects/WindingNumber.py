@@ -452,66 +452,6 @@ def make_alpha_winder(func, start, end, num_checkpoints):
         return resit_near(func(x), check_points[index])
     return return_func
 
-def split_interval((a, b)):
-    mid = (a + b)/2.0
-    return ((a, mid), (mid, b))
-
-# I am surely reinventing some wheel here, but what's done is done...
-class RectangleData():
-    def __init__(self, x_interval, y_interval):
-        self.rect = (x_interval, y_interval)
-
-    def get_top_left(self):
-        return np.array((self.rect[0][0], self.rect[1][1]))
-
-    def get_top_right(self):
-        return np.array((self.rect[0][1], self.rect[1][1]))
-
-    def get_bottom_right(self):
-        return np.array((self.rect[0][1], self.rect[1][0]))
-
-    def get_bottom_left(self):
-        return np.array((self.rect[0][0], self.rect[1][0]))
-
-    def get_top(self):
-        return (self.get_top_left(), self.get_top_right())
-
-    def get_right(self):
-        return (self.get_top_right(), self.get_bottom_right())
-
-    def get_bottom(self):
-        return (self.get_bottom_right(), self.get_bottom_left())
-
-    def get_left(self):
-        return (self.get_bottom_left(), self.get_top_left())
-
-    def splits_on_dim(self, dim):
-        x_interval = self.rect[0]
-        y_interval = self.rect[1]
-
-        # TODO: Can refactor the following; will do later
-        if dim == 0:
-            return_data = [RectangleData(new_interval, y_interval) for new_interval in split_interval(x_interval)]
-        elif dim == 1:
-            return_data = [RectangleData(x_interval, new_interval) for new_interval in split_interval(y_interval)[::-1]]        
-        else: 
-            print "RectangleData.splits_on_dim passed illegitimate dimension!"
-
-        return tuple(return_data)
-
-    def split_line_on_dim(self, dim):
-        x_interval = self.rect[0]
-        y_interval = self.rect[1]
-
-        if dim == 0:
-            sides = (self.get_top(), self.get_bottom())
-        elif dim == 1:
-            sides = (self.get_left(), self.get_right())
-        else:
-            print "RectangleData.split_line_on_dim passed illegitimate dimension!"
-
-        return tuple([mid(x, y) for (x, y) in sides])
-
 # The various inconsistent choices of what datatype to use where are a bit of a mess,
 # but I'm more keen to rush this video out now than to sort this out.
 
@@ -638,6 +578,7 @@ def walker_animation_with_display(
     number_update_func = None,
     show_arrows = True,
     scale_arrows = False,
+    num_decimal_points = 1,
     **kwargs
     ):
     
@@ -652,7 +593,7 @@ def walker_animation_with_display(
 
     if number_update_func != None:
         display = DecimalNumber(0, 
-            num_decimal_points = 1, 
+            num_decimal_points = num_decimal_points, 
             fill_color = WHITE,
             include_background_rectangle = True)
         display.background_rectangle.fill_opacity = 0.5
@@ -792,12 +733,14 @@ class PiWalker(ColorMappedByFuncScene):
         "step_run_time" : 1,
         "scale_arrows" : False,
         "display_wind" : True,
+        "wind_reset_indices" : [],
         "display_size" : False,
         "display_odometer" : False,
         "color_foreground_not_background" : False,
         "show_num_plane" : False,
         "draw_lines" : True,
         "num_checkpoints" : 10,
+        "num_decimal_points" : 1
     }
 
     def construct(self):
@@ -833,7 +776,7 @@ class PiWalker(ColorMappedByFuncScene):
                 clockwise_val_func = lambda p : -point_to_rev(self.func(p))
                 alpha_winder = make_alpha_winder(clockwise_val_func, start_coords, end_coords, self.num_checkpoints)
                 number_update_func = lambda alpha, alpha_winder = alpha_winder, start_wind = start_wind: alpha_winder(alpha) - alpha_winder(0) + start_wind
-                start_wind = number_update_func(1)
+                start_wind = 0 if i + 1 in self.wind_reset_indices else number_update_func(1)
             elif self.display_size:
                 # We need to do this roundabout default argument thing to get the closure we want,
                 # so the next iteration changing val_alpha_func doesn't change this closure
@@ -851,7 +794,8 @@ class PiWalker(ColorMappedByFuncScene):
                 scale_arrows = self.scale_arrows,
                 number_update_func = number_update_func,
                 run_time = self.step_run_time,
-                walker_stroke_color = WALKER_LIGHT_COLOR if self.color_foreground_not_background else BLACK
+                walker_stroke_color = WALKER_LIGHT_COLOR if self.color_foreground_not_background else BLACK,
+                num_decimal_points = self.num_decimal_points,
             )
 
             if self.display_odometer:
@@ -897,6 +841,9 @@ class PiWalkerRect(PiWalker):
         "walk_height" : 2,
         "func" : plane_func_from_complex_func(lambda c: c**2),
         "double_up" : False,
+
+        # New default for the scenes using this:
+        "display_wind" : True
     }
 
     def setup(self):
@@ -922,6 +869,76 @@ class PiWalkerCircle(PiWalker):
         self.walk_coords = [r * np.array((np.cos(i * TAU/N), np.sin(i * TAU/N))) for i in range(N)]
         PiWalker.setup(self)
 
+def split_interval((a, b)):
+    mid = (a + b)/2.0
+    return ((a, mid), (mid, b))
+
+# I am surely reinventing some wheel here, but what's done is done...
+class RectangleData():
+    def __init__(self, x_interval, y_interval):
+        self.rect = (x_interval, y_interval)
+
+    def get_top_left(self):
+        return np.array((self.rect[0][0], self.rect[1][1]))
+
+    def get_top_right(self):
+        return np.array((self.rect[0][1], self.rect[1][1]))
+
+    def get_bottom_right(self):
+        return np.array((self.rect[0][1], self.rect[1][0]))
+
+    def get_bottom_left(self):
+        return np.array((self.rect[0][0], self.rect[1][0]))
+
+    def get_top(self):
+        return (self.get_top_left(), self.get_top_right())
+
+    def get_right(self):
+        return (self.get_top_right(), self.get_bottom_right())
+
+    def get_bottom(self):
+        return (self.get_bottom_right(), self.get_bottom_left())
+
+    def get_left(self):
+        return (self.get_bottom_left(), self.get_top_left())
+
+    def get_center(self):
+        return interpolate(self.get_top_left(), self.get_bottom_right(), 0.5)
+
+    def get_width(self):
+        return self.rect[0][1] - self.rect[0][0]
+
+    def get_height(self):
+        return self.rect[1][1] - self.rect[1][0]
+
+    def splits_on_dim(self, dim):
+        x_interval = self.rect[0]
+        y_interval = self.rect[1]
+
+        # TODO: Can refactor the following; will do later
+        if dim == 0:
+            return_data = [RectangleData(new_interval, y_interval) for new_interval in split_interval(x_interval)]
+        elif dim == 1:
+            return_data = [RectangleData(x_interval, new_interval) for new_interval in split_interval(y_interval)[::-1]]        
+        else: 
+            print "RectangleData.splits_on_dim passed illegitimate dimension!"
+
+        return tuple(return_data)
+
+    def split_line_on_dim(self, dim):
+        x_interval = self.rect[0]
+        y_interval = self.rect[1]
+
+        if dim == 0:
+            sides = (self.get_top(), self.get_bottom())
+        elif dim == 1:
+            sides = (self.get_left(), self.get_right())
+        else:
+            print "RectangleData.split_line_on_dim passed illegitimate dimension!"
+
+        return tuple([mid(x, y) for (x, y) in sides])
+
+
 class EquationSolver2dNode(object):
     def __init__(self, first_anim, children = []):
         self.first_anim = first_anim
@@ -937,6 +954,8 @@ class EquationSolver2dNode(object):
         if n == 0:
             return [self]
 
+        # Not the efficient way to flatten lists, because Python + is linear in list size,
+        # but we have at most two children, so no big deal here
         return sum(map(lambda c : c.nodes_at_depth(n - 1), self.children), [])
 
     # This is definitely NOT the efficient way to do BFS, but I'm just trying to write something
@@ -944,6 +963,8 @@ class EquationSolver2dNode(object):
     def hacky_bfs(self):
         depth = self.depth()
 
+        # Not the efficient way to flatten lists, because Python + is linear in list size,
+        # but this IS hacky_bfs...
         return sum(map(lambda i : self.nodes_at_depth(i), range(depth + 1)), [])
 
     def display_in_series(self):
@@ -986,7 +1007,9 @@ class EquationSolver2d(ColorMappedObjectsScene):
         "show_winding_numbers" : True,
 
         # Used for UhOhScene; 
-        "manual_wind_override" : None
+        "manual_wind_override" : None,
+
+        "show_cursor" : False,
     }
 
     def construct(self):
@@ -1011,6 +1034,9 @@ class EquationSolver2d(ColorMappedObjectsScene):
         base_rate = lambda t : t
         linger_rate = squish_rate_func(lambda t : t, 0, 
                         fdiv(run_time_base, run_time_with_lingering))
+
+        cursor_base = TextMobject("?")
+        cursor_base.scale(2)
 
         # Helper functions for manual_wind_override
         def head(m):
@@ -1080,6 +1106,24 @@ class EquationSolver2d(ColorMappedObjectsScene):
                     should_linger = i == len(sides) - 1,
                     draw_line = i in sides_to_draw)
                 anim = Succession(anim, next_anim)
+
+            if self.show_cursor:
+                cursor = cursor_base.copy()
+                center_x, center_y = rect.get_center()
+                width = rect.get_width()
+                height = rect.get_height()
+                
+                cursor.move_to(num_plane.coords_to_point(center_x, center_y))
+                cursor.scale(min(width, height))
+
+                # Do a quick FadeIn, wait, and quick FadeOut on the cursor, matching rectangle-drawing time
+                cursor_anim = Succession(
+                    FadeIn(cursor, run_time = 0.1),
+                    Animation(cursor, run_time = 3.8), 
+                    FadeOut(cursor, run_time = 0.1)
+                )
+
+                anim = AnimationGroup(anim, cursor_anim)
 
             total_wind = head(manual_wind_override) or round(wind_so_far)
 
@@ -1860,22 +1904,24 @@ class LoopSplitScene(ColorMappedObjectsScene):
         def fader_widthmob(start, end, mob):
             return UpdateFromAlphaFunc(mob, lambda m, a : m.set_stroke(width = interpolate(start, end, a) * stroke_width))
 
-        def indicate_circle(x):
-            circle = Circle(color = WHITE)
-            circle.surround(x)
-            # if x.get_slope == 0:
-            #     circle.stretch(0, 0.3)
-            # else:
-            #     circle.stretch(0.3, 0)
-            circle.stretch(0.3, 0.3)
+        def indicate_circle(x, double_horizontal_stretch = False):
+            circle = Circle(color = WHITE, radius = 2 * np.sqrt(2))
+            circle.move_to(x.get_center())
+
+            if x.get_slope() == 0:
+                circle.stretch(0.2, 1)
+                if double_horizontal_stretch:
+                    circle.stretch(2, 0)
+            else:
+                circle.stretch(0.2, 0)
             return circle
 
         tl_line_trip = pl(tl, tm)
-        left_mid_trip = pl(tm, bm)
+        midline_left_trip = pl(tm, bm)
         bl_line_trip = pl(bm, bl)
         left_line_trip = pl(bl, tl)
 
-        left_square_trips = [tl_line_trip, left_mid_trip, bl_line_trip, left_line_trip]
+        left_square_trips = [tl_line_trip, midline_left_trip, bl_line_trip, left_line_trip]
         left_square_lines = [x[0] for x in left_square_trips]
         left_square_lines_vmobject = VMobject(*left_square_lines)
         left_square_bullets = [x[1] for x in left_square_trips]
@@ -1884,31 +1930,68 @@ class LoopSplitScene(ColorMappedObjectsScene):
         tr_line_trip = pl(tm, tr)
         right_line_trip = pl(tr, br)
         br_line_trip = pl(br, bm)
-        right_midline_trip = pl(bm, tm)
+        midline_right_trip = pl(bm, tm)
 
-        right_square_trips = [tr_line_trip, right_line_trip, br_line_trip, right_midline_trip]
+        right_square_trips = [tr_line_trip, right_line_trip, br_line_trip, midline_right_trip]
         right_square_lines = [x[0] for x in right_square_trips]
         right_square_lines_vmobject = VMobject(*right_square_lines)
         right_square_bullets = [x[1] for x in right_square_trips]
         right_square_anims = [x[2] for x in right_square_trips]
 
+        midline_trips = [midline_left_trip, midline_right_trip]
+        midline_lines = [x[0] for x in midline_trips]
+        midline_lines_vmobject = VMobject(*midline_lines)
+        midline_bullets = [x[1] for x in midline_trips]
+        midline_anims = [x[1] for x in midline_trips]
+
+        left_line = left_line_trip[0]
+        right_line = right_line_trip[0]
+
         # Hm... still some slight bug with this.
         for b in left_square_bullets + right_square_bullets:
             b.set_fill(opacity = 0)
 
+        def play_fade_left(a, b):
+            self.play(fader_widthmob(a, b, left_square_lines_vmobject), *fader_blist(a, b, left_square_bullets))
+
+        def play_fade_right(a, b):
+            self.play(fader_widthmob(a, b, right_square_lines_vmobject), *fader_blist(a, b, right_square_bullets))
+
+        def play_fade_mid(a, b):
+            self.play(fader_widthmob(a, b, midline_lines_vmobject), *fader_blist(a, b, midline_bullets))
+
+        def flash_circles(circles):
+            # self.play(*map(FadeIn, circles))
+            self.play(LaggedStart(FadeIn, VGroup(circles)))
+            self.play(*map(FadeOut, circles))
+
         self.add(*left_square_anims)
-        self.play(fader_widthmob(0, 1, left_square_lines_vmobject), *fader_blist(0, 1, left_square_bullets))
+        VGroup(left_square_bullets).set_fill(opacity = 0)
+        play_fade_left(0, 1)
 
         self.add(*right_square_anims)
-        self.play(fader_widthmob(0, 1, right_square_lines_vmobject), *fader_blist(0, 1, right_square_bullets))
+        VGroup(right_square_bullets).set_fill(opacity = 0)
+        play_fade_right(0, 1)
         
-        self.play(fader_widthmob(1, faded, right_square_lines_vmobject), *fader_blist(1, faded, right_square_bullets))
+        play_fade_right(1, faded)
+        flash_circles([indicate_circle(l) for l in left_square_lines])
+        play_fade_right(faded, 1)
 
-        # left_circlers = [indicate_circle(l) for l in left_square_lines]
-        # self.play(*map(FadeIn, left_circlers))
-        # self.play(*map(FadeOut, left_circlers))
+        play_fade_left(1, faded)
+        flash_circles([indicate_circle(l) for l in right_square_lines])
+        play_fade_left(faded, 1)
 
-        self.play(ShowCreation(indicate_circle(left_square_lines[1])))
+        outside_circlers = [
+            indicate_circle(left_line), 
+            indicate_circle(right_line), 
+            indicate_circle(top_line, double_horizontal_stretch = True), 
+            indicate_circle(bottom_line, double_horizontal_stretch = True)
+        ]
+        flash_circles(outside_circlers)
+
+        inner_circle = indicate_circle(midline_lines[0])
+        self.play(FadeIn(inner_circle))
+        self.play(FadeOut(inner_circle), fader_widthmob(1, 0, midline_lines_vmobject), *fader_blist(1, 0, midline_bullets))
 
         self.wait()
 
@@ -1960,12 +2043,14 @@ class SolveX5MinusXMinus1(EquationSolver2d):
         "use_fancy_lines" : True,
     }
 
-class SolveX5MinusXMinus1Parallel(EquationSolver2d):
+class SolveX5MinusXMinus1Parallel(SolveX5MinusXMinus1):
     CONFIG = {
-        "func" : plane_func_from_complex_func(lambda c : c**5 - c - 1),
-        "num_iterations" : 5,
-        "use_fancy_lines" : True,
         "display_in_parallel" : True
+    }
+
+class SolveX5MinusXMinus1BFS(SolveX5MinusXMinus1):
+    CONFIG = {
+        "display_in_bfs" : True
     }
 
 class PreviewClip(EquationSolver2d):
@@ -1978,9 +2063,10 @@ class PreviewClip(EquationSolver2d):
 
 class QuickPreview(PreviewClip):
     CONFIG = {
-        "num_iterations" : 2,
+        "num_iterations" : 3,
         "display_in_parallel" : False,
-        "display_in_bfs" : True
+        "display_in_bfs" : True,
+        "show_cursor" : True
     }
 
 # TODO: Borsuk-Ulam visuals
@@ -2507,6 +2593,12 @@ class OneFifthTwoFifthWinder(SpecifiedWinder):
         "step_size" : 0.01,
         "show_num_plane" : False,
         "step_run_time" : 6,
+        "num_decimal_points" : 2,
+    }
+
+class OneFifthOneFifthWinderWithReset(OneFifthTwoFifthWinder):
+    CONFIG = {
+        "wind_reset_indices" : [1]
     }
 
 class OneFifthTwoFifthWinderOdometer(OneFifthTwoFifthWinder):
@@ -2539,6 +2631,8 @@ class CWColorWalk(PiWalkerRect):
         "walk_width" : 2,
         "walk_height" : 2,
         "draw_lines" : False,
+        "display_wind" : False,
+        "step_run_time" : 2
     }
 
 class CWColorWalkOdometer(CWColorWalk):
@@ -2560,7 +2654,8 @@ class CCWColorWalkOdometer(CCWColorWalk):
 class ThreeTurnWalker(PiWalkerRect):
     CONFIG = {
         "func" : plane_func_from_complex_func(lambda c: c**3 * complex(1, 1)**3),
-        "double_up" : True
+        "double_up" : True,
+        "wind_reset_indices" : [4]
     }
 
 class ThreeTurnWalkerOdometer(ThreeTurnWalker):
@@ -2600,6 +2695,7 @@ class ZeroTurnWalkerOdometer(ZeroTurnWalker):
 
 class NegOneTurnWalker(PiWalkerRect):
     CONFIG = {
+        "step_run_time" : 2,
         "func" : plane_func_by_wind_spec((0, 0, -1))
     }
 
