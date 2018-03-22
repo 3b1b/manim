@@ -471,11 +471,18 @@ def point3d_func_from_complex_func(f):
     return point3d_func_from_plane_func(plane_func_from_complex_func(f))
 
 def plane_zeta((x, y)):
-    answer = mpmath.zeta(complex(x, y))
     CLAMP_SIZE = 1000
+    z = complex(x, y)
+    try:
+        answer = mpmath.zeta(z)
+    except ValueError:
+        return (CLAMP_SIZE, 0)
     if abs(answer) > CLAMP_SIZE:
         answer = answer/abs(answer) * CLAMP_SIZE
     return (float(answer.real), float(answer.imag))
+
+def rescaled_plane_zeta((x, y)):
+    return plane_zeta((x/SPACE_WIDTH, 8*y))
 
 # Returns a function from 2-ples to 2-ples
 # This function is specified by a list of (x, y, z) tuples, 
@@ -1221,6 +1228,11 @@ class EquationSolver2d(ColorMappedObjectsScene):
         self.play(anim, border_anim)
 
         self.wait()
+
+        # In case we wish to reference these earlier, as had been done in the SearchByPerimeterNotArea
+        # scene at one point
+        self.node = node
+        self.anim = anim
 
 # TODO: Perhaps have option for bullets (pulses) to fade out and in at ends of line, instead of 
 # jarringly popping out and in?

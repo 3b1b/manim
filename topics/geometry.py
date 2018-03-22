@@ -454,7 +454,6 @@ class DashedLine(Line):
 
 class Arrow(Line):
     CONFIG = {
-        "color"      : YELLOW_C,
         "tip_length" : 0.25,
         "tip_width_to_length_ratio"  : 1,
         "max_tip_length_to_length_ratio" : 0.35,

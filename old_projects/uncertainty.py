@@ -34,7 +34,7 @@ from mobject.tex_mobject import *
 from topics.graph_scene import *
 from topics.light import *
 
-from active_projects.fourier import *
+from old_projects.fourier import *
 
 
 FREQUENCY_COLOR = RED
