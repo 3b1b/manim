@@ -137,7 +137,7 @@ class PatreonEndScreen(PatreonThanks):
         title.scale(1.5)
         title.to_edge(UP, buff = MED_SMALL_BUFF)
 
-        randy, morty = Randolph(), Mortimer()
+        randy, morty = self.pi_creatures = VGroup(Randolph(), Mortimer())
         for pi, vect in (randy, LEFT), (morty, RIGHT):
             pi.scale_to_fit_height(title.get_height())
             pi.change_mode("thinking")
