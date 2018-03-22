@@ -32,6 +32,7 @@ from camera import *
 from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from topics.graph_scene import *
+from topics.common_scenes import *
 
 from old_projects.uncertainty import Flash
 from active_projects.WindingNumber import *
@@ -2300,14 +2301,51 @@ class BreakDownLoopWithNonzeroWinding(TransitionFromPathsToBoundaries):
 
         squares, joint_rect = self.get_squares_and_joint_rect()
         left_square, right_square = squares
-        VGroup(squares, joint_rect).shift(SMALL_BUFF*UP)
+        VGroup(squares, joint_rect).shift(MED_LARGE_BUFF*DOWN)
 
         dot = self.get_dot_and_add_continual_animations()
 
-        for rect in (left_square, "x"), (right_square, "y"), (joint_rect, "3"):
-            pass
+        for rect, tex in (left_square, "x"), (right_square, "y"), (joint_rect, "3"):
+            rect.label = TextMobject("Winding = ", "$%s$"%tex)
+            rect.label.move_to(rect)
+        sum_label = TexMobject("x", "+", "y", "=", "3")
+        x, plus, y, equals, three = sum_label
+        sum_label.next_to(joint_rect, UP)
 
+        both_cannot_be_zero = TextMobject("These cannot both be 0")
+        both_cannot_be_zero.move_to(plus)
+        both_cannot_be_zero.to_edge(UP)
+        arrows = VGroup(*[
+            Arrow(both_cannot_be_zero.get_bottom(), var.get_top(), buff = SMALL_BUFF)
+            for var in x, y
+        ])
 
+        self.position_dot(joint_rect.points[0])
+        self.add(joint_rect)
+        self.play(
+            MoveAlongPath(dot, joint_rect, rate_func = bezier([0, 0, 1, 1])),
+            Write(joint_rect.label, rate_func = squish_rate_func(smooth, 0.7, 1)),
+            run_time = 4
+        )
+        self.wait()
+        self.play(
+            ReplacementTransform(joint_rect.label, left_square.label),
+            ReplacementTransform(joint_rect.label.copy(), right_square.label),
+            ReplacementTransform(joint_rect.label[1].copy(), three),
+            FadeIn(left_square),
+            FadeIn(right_square),
+        )
+        self.play(
+            ReplacementTransform(left_square.label[1].copy(), x),
+            ReplacementTransform(right_square.label[1].copy(), y),
+            FadeIn(plus),
+            FadeIn(equals),
+        )
+        self.play(
+            FadeIn(both_cannot_be_zero),
+            *map(GrowArrow, arrows)
+        )
+        self.wait()
 
 class BackToEquationSolving(AltTeacherStudentsScene):
     def construct(self):
@@ -2608,12 +2646,168 @@ class EndingCredits(Scene):
             "Grant Sanderson"
         )
         text[0].shift(MED_SMALL_BUFF*UP)
-        self.play(LaggedStart(FadeIn, text))
+        text.to_edge(UP)
+
+        pi = PiCreature(color = YELLOW_E, height = 2)
+        pi.to_edge(DOWN)
+        pi.change_mode("happy")
+        self.add(pi)
+
+        self.play(LaggedStart(FadeIn, text), pi.look_at, text)
+        self.play(pi.change, "wave_1", text)
+        self.play(Blink(pi))
+        self.play(pi.change, "happy")
         self.wait()
 
-class MentionQAndA(TeacherStudentsScene):
+class MentionQAndA(Scene):
     def construct(self):
-        pass
+        title = TextMobject("Q\\&A with ", "Ben", "and", "Sridhar\\\\", "at", "Patreon")
+        title.highlight_by_tex_to_color_map({
+            "Ben" : MAROON,
+            "Sridhar" : YELLOW,
+        })
+        patreon_logo = VGroup(*PatreonLogo().family_members_with_points())
+        patreon_logo.sort_submobjects()
+        patreon_logo.replace(title.get_parts_by_tex("Patreon"))
+        patreon_logo.scale(1.3, about_edge = LEFT)
+        patreon_logo.shift(0.5*SMALL_BUFF*DOWN)
+        title.submobjects[-1] = patreon_logo
+
+        title.to_edge(UP)
+        self.add(title)
+
+        questions = VGroup(*map(TextMobject, [
+            "If you think of the current videos as short stories, \\\\ what is the novel that you want to write?",
+            "How did you get into mathematics?",
+            "What motivated you to join 3b1b?",
+            "$\\vdots$",
+        ]))
+        questions.arrange_submobjects(DOWN, buff = 0.75)
+        questions.next_to(title, DOWN, LARGE_BUFF)
+
+        self.play(LaggedStart(FadeIn, questions, run_time = 3))
+        self.wait(2)
+        self.play(FadeOut(questions))
+        self.wait()
+
+class TickingClock(Scene):
+    CONFIG = {
+        "run_time" : 90,
+    }
+    def construct(self):
+        clock = Clock()
+        clock.scale_to_fit_height(2*SPACE_HEIGHT - 1)
+        clock.to_edge(LEFT)
+        lines = [clock.hour_hand, clock.minute_hand]
+        def update_line(line):
+            rev = line.get_angle()/TAU
+            line.highlight(rev_to_color(rev))
+
+        for line in lines:
+            self.add(ContinualUpdateFromFunc(line, update_line))
+
+        run_time = self.run_time
+        self.play(ClockPassesTime(
+            clock, 
+            run_time = run_time,
+            hours_passed = 0.1*run_time
+        ))
+
+class InfiniteListOfTopics(Scene):
+    def construct(self):
+        rect = Rectangle(width = 5, height = 7)
+        rect.to_edge(RIGHT)
+        title = TextMobject("Infinite list \\\\ of topics")
+        title.next_to(rect.get_top(), DOWN)
+        lines = VGroup(*[
+            TextMobject(words).scale(0.5)
+            for words in [
+                "Winding number",
+                "Laplace transform",
+                "Wallis product",
+                "Quantum information",
+                "Elliptic curve cryptography",
+                "Strange attractors",
+                "Convolutional neural networks",
+                "Fixed points",
+            ]
+        ] + [TexMobject("\\vdots")])
+        lines.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT)
+        lines.next_to(title, DOWN, MED_LARGE_BUFF)
+        lines[-1].next_to(lines[-2], DOWN)
+
+        self.add(rect, title)
+        self.play(LaggedStart(FadeIn, lines, run_time = 5))
+        self.wait()
+
+class ManyIterations(Scene):
+    def construct(self):
+        words = VGroup(*[
+            TextMobject(word, alignment = "")
+            for word in [
+                "Winding numbers, v1",
+                "Winding numbers, v2 \\\\ (center on domain coloring)",
+                "Winding numbers, v3 \\\\ (clarify visuals of 2d functions)",
+                "Winding numbers, v4 \\\\ (postpone topology examples for part 2)",
+                "Winding numbers, v5 \\\\ (start down wrong path)",
+            ]
+        ])
+        words.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
+        words.scale(0.75)
+        words.to_edge(RIGHT)
+
+        self.add(words[0])
+        for last_word, word in zip(words, words[1:]):
+            cross = Cross(last_word)
+            self.play(ShowCreation(cross))
+            self.play(FadeIn(word))
+        self.wait()
+
+class MentionFree(PiCreatureScene):
+    CONFIG = {
+        "default_pi_creature_kwargs" : {
+            "flip_at_start" : False,
+        },
+        "default_pi_creature_start_corner" : DOWN,
+    }
+    def construct(self):
+        morty = self.pi_creature
+        morty.shift(RIGHT)
+
+        items = VGroup(
+            TextMobject("Movie:", "$>\\$10.00$"),
+            TextMobject("College course:", "$>\\$1{,}000.00$"),
+            TextMobject("YouTube video:", "$=\\$0.00$"),
+        )
+        # items.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
+        items.next_to(morty, UP, LARGE_BUFF)
+        right_x = morty.get_right()[0]
+        for item in items:
+            item[1].highlight(GREEN)
+            item.shift((right_x - item[0].get_right()[0])*RIGHT)
+
+        self.play(
+            morty.change, "raise_right_hand",
+            FadeInFromDown(items[0])
+        )
+        self.wait()
+        self.play(
+            FadeInFromDown(items[1]),
+            items[0].shift, UP,
+        )
+        self.wait()
+        self.play(
+            items[:2].shift, UP,
+            FadeInFromDown(items[2]),
+            morty.change, "surprised"
+        )
+        self.wait(4)
+        self.play(
+            morty.change, "raise_left_hand", VectorizedPoint(3*LEFT)
+        )
+        self.wait(4)
+        self.play(morty.change, "gracious", OUT)
+        self.wait(4)
 
 class PatreonScroll(Scene):
     CONFIG = {
@@ -2621,7 +2815,6 @@ class PatreonScroll(Scene):
             "Juan Benet",
             "Chloe Zhou",
             "Ross Garber",
-            "Randall Hunt",
             "Desmos",
             "Burt Humburg",
             "CrypticSwarm",
@@ -2649,14 +2842,13 @@ class PatreonScroll(Scene):
             "Joseph John Cox",
             "Luc Ritchie",
             "Steven Tomlinson",
-            "Mèngzi Yì",
+            "Shìmín Ku$\\overline{\\text{a}}$ng",
             "Jameel Syed",
             "Bong Choung",
             "Ignacio Freiberg",
             "Zhilong Yang",
             "Karl Niu",
             "Dan Esposito (Guardion)",
-            "Michael Kunze",
             "Giovanni Filippi",
             "Eric Younge",
             "Prasant Jagannath",
@@ -2673,8 +2865,7 @@ class PatreonScroll(Scene):
             "David B",
             "Waleed Hamied",
             "George Chiesa",
-            "Supershabam",
-            "Samantha D. Suplee",
+            "supershabam",
             "Delton Ding",
             "Thomas Tarler",
             "Jonathan Eppele",
@@ -2688,7 +2879,7 @@ class PatreonScroll(Scene):
             "Michael Gardner",
             "Mads Elvheim",
             "Awoo",
-            "Dr David G. Stork",
+            "Dr. David G. Stork",
             "Ted Suzman",
             "Linh Tran",
             "Andrew Busey",
@@ -2708,12 +2899,12 @@ class PatreonScroll(Scene):
             "Mustafa Mahdi",
             "Mathew Bramson",
             "Jerry Ling",
-            "Shìmín Ku$\\overline{\\text{a}}$ng",
+            "Mèngzi Yì",
             "Rish Kundalia",
             "Achille Brighton",
             "Ripta Pasay",
         ],
-        "random_seed" : 3,
+        "random_seed" : 1,
     }
     def construct(self):
         patreon_logo = PatreonLogo()
@@ -2743,8 +2934,22 @@ class PatreonScroll(Scene):
         self.add(scroll, opacity_update)
         self.wait(55)
 
+class EndScreen(PatreonEndScreen, PiCreatureScene):
+    CONFIG = {
+        "run_time" : 0,
+    }
+    def construct(self):
+        self.remove(self.pi_creature)
+        PatreonEndScreen.construct(self)
+        randy, morty = self.pi_creatures
+        randy.change("plain")
+        morty.change("plain")
 
-
+        for mode in "thinking", "confused", "pondering", "hooray":
+            self.play(randy.change, mode)
+            self.wait()
+            self.play(morty.change, mode)
+            self.wait(2)
 
 
 
