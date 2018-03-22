@@ -159,7 +159,11 @@ class Circle(Arc):
     def surround(self, mobject, dim_to_match = 0, stretch = False, buffer_factor = 1.2):
         # Ignores dim_to_match and stretch; result will always be a circle
         # TODO: Perhaps create an ellipse class to handle singele-dimension stretching
+
+        # Something goes wrong here when surrounding lines?
+        # TODO: Figure out and fix
         self.replace(mobject, dim_to_match, stretch)
+
         self.scale_to_fit_width(np.sqrt(mobject.get_width()**2 + mobject.get_height()**2))
         self.scale(buffer_factor)
 
