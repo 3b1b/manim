@@ -2686,6 +2686,78 @@ class SearchSpacePerimeterVsArea(EquationSolver2d):
         self.play(FadeOut(full_rect))
         self.wait()
 
+class PiCreatureInAwe(Scene):
+    def construct(self):
+        randy = Randolph()
+
+
+        self.play(randy.change, "awe")
+        self.play(Blink(randy))
+        self.play(randy.look, UP, run_time = 2)
+        self.play(
+            randy.look, RIGHT, 
+            run_time = 4, 
+            rate_func = there_and_back,
+            path_arc = -TAU/4
+        )
+        self.wait()
+
+class ShowComplexFunction(Scene):
+    def construct(self):
+        plane = ComplexPlane()
+        plane.add_coordinates()
+
+        title = TextMobject("Complex Plane")
+        title.to_edge(UP, buff = MED_SMALL_BUFF)
+        rect = BackgroundRectangle(title, fill_opacity = 1, buff = MED_SMALL_BUFF)
+
+        x = complex(1, 0.4)
+        f = lambda x : x**5 - x - 1
+
+        x_point = plane.number_to_point(x)
+        fx_point = plane.number_to_point(f(x))
+
+        x_dot = Dot(x_point)
+        fx_dot = Dot(fx_point, color = YELLOW)
+        arrow = Arrow(
+            x_point, fx_point,
+            use_rectangular_stem = False,
+            path_arc = TAU/3,
+            color = YELLOW
+        )
+        arrow.pointwise_become_partial(arrow, 0, 0.95)
+
+        x_label = TexMobject("x = %d+%.1fi"%(x.real, x.imag))
+        x_label.next_to(x_dot, RIGHT)
+        x_label.add_background_rectangle()
+
+        fx_label = TexMobject("f(x) = x^5 - x - 1")
+        fx_label.next_to(fx_dot, DOWN, SMALL_BUFF)
+        fx_label.highlight(YELLOW)
+        fx_label.add_background_rectangle()
+        fx_label.generate_target()
+        fx_label.target.move_to(title)
+        fx_label.target[1].highlight(WHITE)
+
+        self.play(
+            Write(plane),
+            FadeIn(rect),
+            LaggedStart(FadeIn, title)
+        )
+        self.play(*map(FadeIn, [x_dot, x_label]))
+        self.wait()
+        self.play(
+            ReplacementTransform(x_dot.copy(), fx_dot, path_arc = arrow.path_arc),
+            ShowCreation(arrow, rate_func = squish_rate_func(smooth, 0.2, 1))
+        )
+        self.play(FadeIn(fx_label))
+        self.wait(2)
+        self.play(
+            MoveToTarget(fx_label),
+            *map(FadeOut, [title, x_dot, x_label, arrow, fx_dot])
+        )
+        self.wait()
+
 class EndingCredits(Scene):
     def construct(self):
         text = TextMobject(
