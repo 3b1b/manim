@@ -984,6 +984,12 @@ class EquationSolver2dNode(object):
         bfs_nodes = self.hacky_bfs()
         return Succession(*map(lambda n : n.first_anim, bfs_nodes))
 
+    def play_in_bfs(self, scene):
+        bfs_nodes = self.hacky_bfs()
+        print "Number of nodes: ", len(bfs_nodes)
+        for node in bfs_nodes:
+            scene.play(node.first_anim)
+
 class EquationSolver2d(ColorMappedObjectsScene):
     CONFIG = {
         "camera_config" : {"use_z_coordinate_for_display_order": True},
@@ -991,7 +997,7 @@ class EquationSolver2d(ColorMappedObjectsScene):
         "initial_upper_x" : 5,
         "initial_lower_y" : -3,
         "initial_upper_y" : 3,
-        "num_iterations" : 1,
+        "num_iterations" : 0,
         "num_checkpoints" : 10,
 
         # Should really merge this into one enum-style variable
@@ -1016,12 +1022,18 @@ class EquationSolver2d(ColorMappedObjectsScene):
         # Used for UhOhScene; 
         "manual_wind_override" : None,
 
-        "show_cursor" : False,
+        "show_cursor" : True,
 
-        "linger_parameter" : 0.2,
+        "linger_parameter" : 0.4,
+
+        "diagnostic_branch" : False
     }
 
     def construct(self):
+        if self.num_iterations == 0:
+            print "You probably meant to subclass something other than EquationSolver2d directly!"
+            return
+
         ColorMappedObjectsScene.construct(self)
         num_plane = self.num_plane
 
@@ -1227,14 +1239,13 @@ class EquationSolver2d(ColorMappedObjectsScene):
             rate_func = rect_rate
         )
 
+        if self.diagnostic_branch:
+            node.play_in_bfs(self)
+            return
+
         self.play(anim, border_anim)
 
         self.wait()
-
-        # In case we wish to reference these later, as had been done in the 
-        # WindingNumber_G/SearchSpacePerimeterVsArea scene at one point
-        self.node = node
-        self.anim = anim
 
 # TODO: Perhaps have option for bullets (pulses) to fade out and in at ends of line, instead of 
 # jarringly popping out and in?
@@ -1248,7 +1259,7 @@ class LinePulser(ContinualAnimation):
         self.pulse_time = pulse_time
         self.bullets = [bullet_template.copy() for i in range(num_bullets)]
         self.output_func = output_func
-        ContinualAnimation.__init__(self, VGroup(line, VGroup(*self.bullets)), **kwargs)
+        ContinualAnimation.__init__(self, VGroup(*self.bullets), **kwargs)
 
     def update_mobject(self, dt):
         alpha = self.external_time % self.pulse_time
@@ -1983,7 +1994,9 @@ class LoopSplitScene(ColorMappedObjectsScene):
 
         def flash_circles(circles):
             self.play(LaggedStart(FadeIn, VGroup(circles)))
-            self.play(*map(FadeOut, circles))
+            self.wait()
+            self.play(FadeOut(VGroup(circles)))
+            self.wait()
 
         self.add(left_square_lines_vmobject, right_square_lines_vmobject)
         self.remove(*midline_lines)
@@ -1997,15 +2010,17 @@ class LoopSplitScene(ColorMappedObjectsScene):
         self.wait()
         flash_circles([indicate_circle(l) for l in left_square_lines])
         self.play(line_fade(faded, 1, right_square_lines_vmobject), *bullet_list_fade(1, 0, left_square_bullets))
+        self.wait()
 
         self.add(*right_square_anims)
         self.play(line_fade(1, faded, left_square_lines_vmobject), *bullet_list_fade(0, 1, right_square_bullets))
         self.wait()
         flash_circles([indicate_circle(l) for l in right_square_lines])
         self.play(line_fade(faded, 1, left_square_lines_vmobject), *bullet_list_fade(1, 0, right_square_bullets))
-        
         self.wait()
+        
         self.play(*bullet_list_fade(0, 1, left_square_bullets + right_square_bullets))
+        self.wait()
 
         outside_circlers = [
             indicate_circle(left_line), 
@@ -2017,20 +2032,15 @@ class LoopSplitScene(ColorMappedObjectsScene):
 
         inner_circle = indicate_circle(midline_lines[0])
         self.play(FadeIn(inner_circle))
+        self.wait()
         self.play(FadeOut(inner_circle), line_fade(1, 0, midline_lines_vmobject), *bullet_list_fade(1, 0, midline_bullets))
-
-        self.wait(3)
-
-# Is there a way to abstract this into a general process to derive a new mapped scene from an old scene?
-class LoopSplitSceneMapped(LoopSplitScene):
-
-    def setup(self):
-        left_camera = Camera(**self.camera_config)
-        right_camera = MappingCamera(
-            mapping_func = lambda (x, y, z) : complex_to_R3(((complex(x,y) + 3)**1.1) - 3), 
-            **self.camera_config)
-        split_screen_camera = SplitScreenCamera(left_camera, right_camera, **self.camera_config)
-        self.camera = split_screen_camera
+        self.wait()
+        
+        # Repeat for effect, goes well with narration
+        self.play(FadeIn(inner_circle), line_fade(0, 1, midline_lines_vmobject), *bullet_list_fade(0, 1, midline_bullets))
+        self.wait()
+        self.play(FadeOut(inner_circle), line_fade(1, 0, midline_lines_vmobject), *bullet_list_fade(1, 0, midline_bullets))
+        self.wait()
 
 # TODO: Perhaps do extra illustration of zooming out and winding around a large circle, 
 # to illustrate relation between degree and large-scale winding number
@@ -2038,14 +2048,29 @@ class FundThmAlg(EquationSolver2d):
     CONFIG = {
         "func" : plane_func_by_wind_spec((1, 2), (-1, 1.5), (-1, 1.5)),
         "num_iterations" : 2,
-        "use_fancy_lines" : True,
     }
 
 class SolveX5MinusXMinus1(EquationSolver2d):
     CONFIG = {
         "func" : plane_func_from_complex_func(lambda c : c**5 - c - 1),
+        "num_iterations" : 10,
+        "show_cursor" : True,
+        "display_in_bfs" : True,
+    }
+
+class SolveX5MinusXMinus1_5Iterations(EquationSolver2d):
+    CONFIG = {
+        "func" : plane_func_from_complex_func(lambda c : c**5 - c - 1),
         "num_iterations" : 5,
-        "use_fancy_lines" : True,
+        "show_cursor" : True,
+        "display_in_bfs" : True,
+    }
+
+class DiagnosticE2d(SolveX5MinusXMinus1_5Iterations):
+    CONFIG = {
+        "diagnostic_branch" : True,
+        "show_winding_numbers" : False,
+        "use_fancy_lines" : False,
     }
 
 class SolveX5MinusXMinus1Parallel(SolveX5MinusXMinus1):
@@ -2066,6 +2091,35 @@ class PreviewClip(EquationSolver2d):
         "use_fancy_lines" : True,
     }
 
+class ParallelClip(EquationSolver2d):
+    CONFIG = {
+        "func" : example_plane_func,
+        "num_iterations" : 5,
+        "display_in_parallel" : True,
+    }
+
+class EquationSolver2dMatchBreakdown(EquationSolver2d):
+    CONFIG = {
+        "func" : plane_func_by_wind_spec(
+            (-2, 0.3, 2), (2, -0.2, 1) # Not an exact match, because our breakdown function has a zero along midlines...
+        ),
+        "num_iterations" : 5,
+        "display_in_parallel" : True,
+        "show_cursor" : True
+    }
+
+class EquationSolver2dMatchBreakdown_parallel(EquationSolver2dMatchBreakdown):
+    CONFIG = {
+        "display_in_parallel" : True,
+        "display_in_bfs" : False,
+    }
+
+class EquationSolver2dMatchBreakdown_bfs(EquationSolver2dMatchBreakdown):
+    CONFIG = {
+        "display_in_parallel" : False,
+        "display_in_bfs" : True,
+    }
+
 class QuickPreview(PreviewClip):
     CONFIG = {
         "num_iterations" : 3,
@@ -2081,6 +2135,11 @@ class LongEquationSolver(EquationSolver2d):
         "display_in_bfs" : True,
         "linger_parameter" : 0.4,
         "show_cursor" : True,
+    }
+
+class QuickPreviewUnfancy(LongEquationSolver):
+    CONFIG = {
+        # "use_fancy_lines" : False,
     }
 
 # TODO: Borsuk-Ulam visuals
