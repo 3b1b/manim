@@ -30,6 +30,8 @@ from mobject.svg_mobject import *
 from mobject.tex_mobject import *
 from topics.graph_scene import *
 
+import time
+
 import mpmath
 mpmath.mp.dps = 7
 
@@ -586,6 +588,7 @@ def walker_animation_with_display(
     show_arrows = True,
     scale_arrows = False,
     num_decimal_points = 1,
+    include_background_rectangle = True,
     **kwargs
     ):
     
@@ -601,11 +604,12 @@ def walker_animation_with_display(
     if number_update_func != None:
         display = DecimalNumber(0, 
             num_decimal_points = num_decimal_points, 
-            fill_color = WHITE,
-            include_background_rectangle = True)
-        display.background_rectangle.fill_opacity = 0.5
-        display.background_rectangle.fill_color = GREY
-        display.background_rectangle.scale(1.2)
+            fill_color = WHITE if include_background_rectangle else BLACK,
+            include_background_rectangle = include_background_rectangle)
+        if include_background_rectangle:
+            display.background_rectangle.fill_opacity = 0.5
+            display.background_rectangle.fill_color = GREY
+            display.background_rectangle.scale(1.2)
         displaycement = 0.5 * DOWN # How about that pun, eh?
         display.move_to(walker.get_center() + displaycement)
         display_anim = ChangingDecimal(display, 
@@ -625,6 +629,7 @@ def LinearWalker(
     number_update_func = None, 
     show_arrows = True,
     scale_arrows = False,
+    include_background_rectangle = True,
     **kwargs
     ):
     walk_func = lambda alpha : interpolate(start_coords, end_coords, alpha)
@@ -635,6 +640,7 @@ def LinearWalker(
         number_update_func = number_update_func,
         show_arrows = show_arrows,
         scale_arrows = scale_arrows,
+        include_background_rectangle = include_background_rectangle,
         **kwargs)
 
 class ColorMappedByFuncScene(Scene):
@@ -747,7 +753,8 @@ class PiWalker(ColorMappedByFuncScene):
         "show_num_plane" : False,
         "draw_lines" : True,
         "num_checkpoints" : 10,
-        "num_decimal_points" : 1
+        "num_decimal_points" : 1,
+        "include_background_rectangle" : False,
     }
 
     def construct(self):
@@ -803,6 +810,7 @@ class PiWalker(ColorMappedByFuncScene):
                 run_time = self.step_run_time,
                 walker_stroke_color = WALKER_LIGHT_COLOR if self.color_foreground_not_background else BLACK,
                 num_decimal_points = self.num_decimal_points,
+                include_background_rectangle = self.include_background_rectangle,
             )
 
             if self.display_odometer:
@@ -1024,14 +1032,14 @@ class EquationSolver2d(ColorMappedObjectsScene):
 
         "show_cursor" : True,
 
-        "linger_parameter" : 0.4,
+        "linger_parameter" : 0.5,
 
         "diagnostic_branch" : False
     }
 
     def construct(self):
         if self.num_iterations == 0:
-            print "You probably meant to subclass something other than EquationSolver2d directly!"
+            print "You forgot to set num_iterations (maybe you meant to subclass something other than EquationSolver2d directly?)"
             return
 
         ColorMappedObjectsScene.construct(self)
@@ -1134,7 +1142,7 @@ class EquationSolver2d(ColorMappedObjectsScene):
                 width = rect.get_width()
                 height = rect.get_height()
                 
-                cursor.move_to(num_plane.coords_to_point(center_x, center_y))
+                cursor.move_to(num_plane.coords_to_point(center_x, center_y) + 10 * IN)
                 cursor.scale(min(width, height))
 
                 # Do a quick FadeIn, wait, and quick FadeOut on the cursor, matching rectangle-drawing time
@@ -1146,7 +1154,11 @@ class EquationSolver2d(ColorMappedObjectsScene):
 
                 anim = AnimationGroup(anim, cursor_anim)
 
-            total_wind = head(manual_wind_override) or round(wind_so_far)
+            override_wind = head(manual_wind_override)
+            if override_wind != None:
+                total_wind = override_wind
+            else:
+                total_wind = round(wind_so_far)
 
             if total_wind == 0:
                 coords = [
@@ -1239,11 +1251,15 @@ class EquationSolver2d(ColorMappedObjectsScene):
             rate_func = rect_rate
         )
 
+        print "About to do the big Play; for reference, the current time is ", time.strftime("%H:%M:%S")
+
         if self.diagnostic_branch:
             node.play_in_bfs(self)
             return
 
         self.play(anim, border_anim)
+
+        print "All done; for reference, the current time is ", time.strftime("%H:%M:%S")
 
         self.wait()
 
@@ -2058,6 +2074,17 @@ class SolveX5MinusXMinus1(EquationSolver2d):
         "display_in_bfs" : True,
     }
 
+class PureColorMapOfX5Thing(PureColorMap):
+    CONFIG = {
+        "func" : plane_func_from_complex_func(lambda c : c**5 - c - 1),
+    }
+
+class X5ThingWithRightHalfGreyed(SolveX5MinusXMinus1):
+    CONFIG = {
+        "num_iterations" : 3,
+        "manual_wind_override" : (1, None, (1, (0, None, None), (0, None, None)))
+    }
+
 class SolveX5MinusXMinus1_5Iterations(EquationSolver2d):
     CONFIG = {
         "func" : plane_func_from_complex_func(lambda c : c**5 - c - 1),
@@ -2066,11 +2093,21 @@ class SolveX5MinusXMinus1_5Iterations(EquationSolver2d):
         "display_in_bfs" : True,
     }
 
+class SolveX5MinusXMinus1_3Iterations(EquationSolver2d):
+    CONFIG = {
+        "func" : plane_func_from_complex_func(lambda c : c**5 - c - 1),
+        "num_iterations" : 3,
+        "show_cursor" : True,
+        "display_in_bfs" : True,
+    }
+
 class DiagnosticE2d(SolveX5MinusXMinus1_5Iterations):
     CONFIG = {
+        "func" : plane_func_from_complex_func(lambda c : (2 * c)**5 - (2 * c) - 1),
         "diagnostic_branch" : True,
         "show_winding_numbers" : False,
-        "use_fancy_lines" : False,
+        "use_fancy_lines" : False, 
+        "camera_config" : {"use_z_coordinate_for_display_order": False}
     }
 
 class SolveX5MinusXMinus1Parallel(SolveX5MinusXMinus1):
