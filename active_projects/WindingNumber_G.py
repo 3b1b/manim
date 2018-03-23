@@ -2180,7 +2180,11 @@ class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
     CONFIG = {
         "func" : plane_func_by_wind_spec(
             (-2, 0, 2), (2, 0, 1)
-        )
+        ),
+        "dot_fill_opacity" : 1,
+        "dot_stroke_width" : 1,
+        "include_walkers" : True,
+        "include_question_mark" : True,
     }
     def construct(self):
         ColorMappedObjectsScene.construct(self)
@@ -2210,7 +2214,10 @@ class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
 
         #Setup region labels
 
-        for square, tex in (left_square, "x"), (right_square, "y"), (joint_rect, "x+y \\, ?"):
+        sum_tex = "x+y"
+        if self.include_question_mark:
+            sum_tex += "\\, ?"
+        for square, tex in (left_square, "x"), (right_square, "y"), (joint_rect, sum_tex):
             square.label = TextMobject("Winding = ", "$%s$"%tex)
             square.label.move_to(square)
 
@@ -2264,7 +2271,7 @@ class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
                 path_arc = TAU/6
             ),
             FadeIn(joint_rect.label[1][1]),
-            FadeIn(joint_rect.label[1][3]),
+            FadeIn(joint_rect.label[1][3:]),
             FadeOut(right_square.label[0]),
             Transform(
                 right_square.label[1], joint_rect.label[1][2],
@@ -2313,9 +2320,12 @@ class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
 
         #Setup dot, arrow and label
         dot = self.dot = Dot(radius = 0.1)
-        dot.set_stroke(WHITE, 1)
+        dot.set_stroke(WHITE, self.dot_stroke_width)
         update_dot_color = ContinualUpdateFromFunc(
-            dot, lambda d : d.set_fill(get_output_color())
+            dot, lambda d : d.set_fill(
+                get_output_color(),
+                self.dot_fill_opacity
+            )
         )
 
         label = DecimalNumber(0, num_decimal_points = 1)
@@ -2326,7 +2336,7 @@ class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
 
         arrow_length = 0.75
         arrow = Vector(arrow_length*RIGHT)
-        arrow.set_stroke(WHITE, 1)
+        arrow.set_stroke(WHITE, self.dot_stroke_width)
         def arrow_update_func(arrow):
             arrow.set_fill(get_output_color(), 1)
             arrow.rotate(-TAU*get_output_rev() - arrow.get_angle())
@@ -2335,13 +2345,26 @@ class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
             return arrow
         update_arrow = ContinualUpdateFromFunc(arrow, arrow_update_func)
 
-        self.add(update_arrow, update_dot_color, label_upadte)
+        if self.include_walkers:
+            self.add(update_arrow, update_dot_color, label_upadte)
         return dot
 
     def position_dot(self, point):
         self.dot.move_to(point)
         self.start_rev = self.get_output_rev()
         self.curr_winding = 0
+
+
+class TransitionFromPathsToBoundariesArrowless(TransitionFromPathsToBoundaries):
+    CONFIG = {
+        "func" : plane_func_by_wind_spec(
+            (-2, 0, 2), (2, 0, 1)
+        ),
+        "dot_fill_opacity" : 0,
+        "dot_stroke_width" : 0,
+        "include_walkers" : False,
+        "include_question_mark" : False,
+    }
 
 class BreakDownLoopWithNonzeroWinding(TransitionFromPathsToBoundaries):
     def construct(self):
@@ -2706,6 +2729,8 @@ class ShowComplexFunction(Scene):
     def construct(self):
         plane = ComplexPlane()
         plane.add_coordinates()
+        plane.remove(plane.coordinate_labels[-1])
+        plane.show()
 
         title = TextMobject("Complex Plane")
         title.to_edge(UP, buff = MED_SMALL_BUFF)
@@ -2756,6 +2781,98 @@ class ShowComplexFunction(Scene):
             MoveToTarget(fx_label),
             *map(FadeOut, [title, x_dot, x_label, arrow, fx_dot])
         )
+        self.play(FadeOut(plane.coordinate_labels))
+        self.wait()
+
+class WindingNumbersInInputOutputContext(PathContainingZero):
+    CONFIG = {
+        "in_loop_center_coords" : (-2, -1),
+        "run_time" : 10,
+    }
+    def construct(self):
+        self.remove(self.pi_creature)
+        self.setup_planes()
+
+        in_loop = Circle()
+        in_loop.flip(RIGHT)
+        # in_loop = Square(side_length = 2)
+        in_loop.insert_n_anchor_points(100)
+        in_loop.move_to(self.input_plane.coords_to_point(
+            *self.in_loop_center_coords
+        ))
+        in_loop.match_background_image_file(self.input_coloring)
+
+        out_loop = in_loop.copy()
+        out_loop.match_background_image_file(self.output_coloring)
+        update_out_loop = ContinualUpdateFromFunc(
+            out_loop,
+            lambda m : m.set_points(in_loop.points).apply_function(self.point_function)
+        )
+        # self.add(update_out_loop)
+
+        in_dot = Dot(radius = 0.04)
+        update_in_dot = ContinualUpdateFromFunc(
+            in_dot, lambda d : d.move_to(in_loop.point_from_proportion(1))
+        )
+        self.add(update_in_dot)
+
+        out_arrow = Arrow(LEFT, RIGHT)
+        update_out_arrow = ContinualUpdateFromFunc(
+            out_arrow, 
+            lambda a : a.put_start_and_end_on(
+                self.output_plane.coords_to_point(0, 0),
+                out_loop.point_from_proportion(1)
+            )
+        )
+        update_out_arrow_color = ContinualUpdateFromFunc(
+            out_arrow,
+            lambda a : a.highlight(rev_to_color(a.get_angle()/TAU))
+        )
+        self.add(update_out_arrow, update_out_arrow_color)
+
+        words = TextMobject(
+            "How many times does \\\\ the output wind around?"
+        )
+        label = self.output_plane.label
+        words.move_to(label, UP)
+        self.output_plane.remove(label)
+        self.add(words)
+
+        decimal = DecimalNumber(0)
+        decimal.next_to(self.output_plane.get_corner(UP+RIGHT), DOWN+LEFT)
+
+
+        self.play(
+            ShowCreation(in_loop),
+            ShowCreation(out_loop),
+            ChangeDecimalToValue(decimal, 2),
+            Animation(in_dot),
+            run_time = self.run_time,
+            rate_func = bezier([0, 0, 1, 1])
+        )
+
+class AllOfTheVideos(Scene):
+    CONFIG = {
+        "camera_config" : {
+            "background_alpha" : 255,
+        }
+    }
+    def construct(self):
+        thumbnail_dir = os.path.join(MEDIA_DIR, "3b1b_videos/Winding/OldThumbnails")
+        n = 4
+        images = Group(*[
+            ImageMobject(os.path.join(thumbnail_dir, file))
+            for file in os.listdir(thumbnail_dir)[:n**2]
+        ])
+        for image in images:
+            rect = SurroundingRectangle(image, buff = 0)
+            rect.set_stroke(WHITE, 1)
+            image.add(rect)
+        images.arrange_submobjects_in_grid(n, n, buff = 0)
+        images.scale_to_fit_height(2*SPACE_HEIGHT)
+        random.shuffle(images.submobjects)
+
+        self.play(LaggedStart(FadeIn, images, run_time = 4))
         self.wait()
 
 class EndingCredits(Scene):
