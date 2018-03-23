@@ -159,7 +159,11 @@ class Circle(Arc):
     def surround(self, mobject, dim_to_match = 0, stretch = False, buffer_factor = 1.2):
         # Ignores dim_to_match and stretch; result will always be a circle
         # TODO: Perhaps create an ellipse class to handle singele-dimension stretching
+
+        # Something goes wrong here when surrounding lines?
+        # TODO: Figure out and fix
         self.replace(mobject, dim_to_match, stretch)
+
         self.scale_to_fit_width(np.sqrt(mobject.get_width()**2 + mobject.get_height()**2))
         self.scale(buffer_factor)
 
@@ -450,7 +454,6 @@ class DashedLine(Line):
 
 class Arrow(Line):
     CONFIG = {
-        "color"      : YELLOW_C,
         "tip_length" : 0.25,
         "tip_width_to_length_ratio"  : 1,
         "max_tip_length_to_length_ratio" : 0.35,
@@ -707,15 +710,6 @@ class BackgroundRectangle(SurroundingRectangle):
     def get_fill_color(self):
         return Color(self.color)
 
-class FullScreenFadeRectangle(Rectangle):
-    CONFIG = {
-        "height" : 2*SPACE_HEIGHT,
-        "width" : 2*SPACE_WIDTH,
-        "stroke_width" : 0,
-        "fill_color" : BLACK,
-        "fill_opacity" : 0.7,
-    }
-
 class ScreenRectangle(Rectangle):
     CONFIG = {
         "width_to_height_ratio" : 16.0/9.0,
@@ -724,6 +718,18 @@ class ScreenRectangle(Rectangle):
     def generate_points(self):
         self.width = self.width_to_height_ratio * self.height
         Rectangle.generate_points(self)
+
+class FullScreenRectangle(ScreenRectangle):
+    CONFIG = {
+        "height" : 2*SPACE_HEIGHT,
+    }
+
+class FullScreenFadeRectangle(FullScreenRectangle):
+    CONFIG = {
+        "stroke_width" : 0,
+        "fill_color" : BLACK,
+        "fill_opacity" : 0.7,
+    }
 
 class PictureInPictureFrame(Rectangle):
     CONFIG = {

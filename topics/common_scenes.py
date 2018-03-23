@@ -3,7 +3,8 @@ from helpers import *
 
 from scene.scene import Scene
 from animation import Animation
-from animation.simple_animations import Write, DrawBorderThenFill, LaggedStart
+from animation.simple_animations import Write, DrawBorderThenFill
+from animation.compositions import LaggedStart
 from animation.transform import FadeIn, FadeOut, ApplyMethod
 from mobject.vectorized_mobject import VGroup
 from mobject.tex_mobject import TexMobject, TextMobject
@@ -132,11 +133,11 @@ class PatreonEndScreen(PatreonThanks):
         self.scroll_through_patrons()
 
     def add_title(self):
-        title = TextMobject("Clicky Stuffs")
+        title = self.title = TextMobject("Clicky Stuffs")
         title.scale(1.5)
         title.to_edge(UP, buff = MED_SMALL_BUFF)
 
-        randy, morty = Randolph(), Mortimer()
+        randy, morty = self.pi_creatures = VGroup(Randolph(), Mortimer())
         for pi, vect in (randy, LEFT), (morty, RIGHT):
             pi.scale_to_fit_height(title.get_height())
             pi.change_mode("thinking")

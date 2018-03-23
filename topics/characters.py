@@ -29,6 +29,7 @@ MOUTH_INDEX       = 5
 class PiCreature(SVGMobject):
     CONFIG = {
         "color" : BLUE_E,
+        "file_name_prefix" : "PiCreatures",
         "stroke_width" : 0,
         "stroke_color" : BLACK,
         "fill_opacity" : 1.0,
@@ -43,18 +44,19 @@ class PiCreature(SVGMobject):
         "left_arm_range" : [.34, .462],
     }
     def __init__(self, mode = "plain", **kwargs):
+        digest_config(self, kwargs)
         self.parts_named = False
         try:
             svg_file = os.path.join(
                 PI_CREATURE_DIR, 
-                "PiCreatures_%s.svg"%mode
+                "%s_%s.svg"%(self.file_name_prefix, mode)
             )
             SVGMobject.__init__(self, file_name = svg_file, **kwargs)
         except:
-            warnings.warn("No PiCreature design with mode %s"%mode)
+            warnings.warn("No %s design with mode %s"%(self.file_name_prefix, mode))
             svg_file = os.path.join(
                 FILE_DIR, 
-                "PiCreatures_plain.svg"
+                "PiCreatures_plain.svg",
             )
             SVGMobject.__init__(self, file_name = svg_file, **kwargs)
 
@@ -210,7 +212,7 @@ class PiCreature(SVGMobject):
             
 def get_all_pi_creature_modes():
     result = []
-    prefix = "PiCreatures_"
+    prefix = "%s_"%PiCreature.CONFIG["file_name_prefix"]
     suffix = ".svg"
     for file in os.listdir(PI_CREATURE_DIR):
         if file.startswith(prefix) and file.endswith(suffix):
@@ -252,6 +254,17 @@ class BabyPiCreature(PiCreature):
         for pupil in self.pupils:
             pupil.scale_in_place(self.pupil_scale_factor)
         self.look(looking_direction)
+
+class TauCreature(PiCreature):
+    CONFIG = {
+        "file_name_prefix" : "TauCreatures"
+    }
+
+class ThreeLeggedPiCreature(PiCreature):
+    CONFIG = {
+        "file_name_prefix" : "ThreeLeggedPiCreatures"
+    }
+
 
 class Blink(ApplyMethod):
     CONFIG = {
@@ -665,6 +678,9 @@ class TeacherStudentsScene(PiCreatureScene):
     def student_thinks(self, *content, **kwargs):
         student = self.get_students()[kwargs.get("student_index", 1)]
         return self.pi_creature_thinks(student, *content, **kwargs)
+
+    def change_all_student_modes(self, mode, **kwargs):
+        self.change_student_modes(*[mode]*len(self.students), **kwargs)
 
     def change_student_modes(self, *modes, **kwargs):
         added_anims = kwargs.pop("added_anims", [])

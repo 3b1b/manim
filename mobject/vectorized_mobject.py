@@ -65,13 +65,6 @@ class VMobject(Mobject):
         return self
 
     def set_fill(self, color = None, opacity = None, family = True):
-        probably_meant_to_change_opacity = reduce(op.and_, [
-            color is not None,
-            opacity is None,
-            self.fill_opacity == 0
-        ])
-        if probably_meant_to_change_opacity:
-            opacity = 1
         return self.set_style_data(
             fill_color = color, 
             fill_opacity = opacity, 
