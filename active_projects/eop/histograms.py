@@ -108,20 +108,19 @@ class Histogram(VMobject):
 
 class FlashThroughHistogram(Animation):
 	CONFIG = {
-		"cell_height" : 1.0,
 		"cell_color" : WHITE,
 		"cell_opacity" : 0.8,
 		"hist_opacity" : 0.2
 	}
 
-	def __init__(self, mobject, mode = "random", **kwargs):
+	def __init__(self, mobject, direction = "horizontal", mode = "random", **kwargs):
 
-		digest_config(self,kwargs)
+		digest_config(self, kwargs)
 
-		self.cell_height_scaled = mobject.y_scale * self.cell_height
+		self.cell_height = mobject.y_scale
 		self.prototype_cell = Rectangle(
 			width = 1,
-			height = self.cell_height_scaled,
+			height = self.cell_height,
 			fill_color = self.cell_color,
 			fill_opacity = self.cell_opacity,
 			stroke_width = 0,
@@ -131,6 +130,7 @@ class FlashThroughHistogram(Animation):
 		y_values = mobject.y_values
 
 		self.mode = mode
+		self.direction = direction
 
 		self.generate_cell_indices(x_values,y_values)
 		Animation.__init__(self,mobject,**kwargs)
@@ -142,7 +142,7 @@ class FlashThroughHistogram(Animation):
 		self.cell_indices = []
 		for (i,x) in enumerate(x_values):
 
-			nb_cells = int(y_values[i])
+			nb_cells = y_values[i]
 			for j in range(nb_cells):
 				self.cell_indices.append((i, j))
 
@@ -151,11 +151,25 @@ class FlashThroughHistogram(Animation):
 			shuffle(self.reordered_cell_indices)
 
 
-	def cell_center_for_index(self,i,j):
-		x = self.mobject.x_values_scaled[i] - self.mobject.x_min_scaled
-		y = (j + 0.5) * self.cell_height_scaled
-		center = self.mobject.get_lower_left_point() + x * RIGHT + y * UP
-		return center
+	def cell_for_index(self,i,j):
+
+		if self.direction == "vertical":
+			width = self.mobject.x_scale
+			height = self.mobject.y_scale
+			x = (i + 0.5) * self.mobject.x_scale
+			y = (j + 0.5) * self.mobject.y_scale
+			center = self.mobject.get_lower_left_point() + x * RIGHT + y * UP
+		
+		elif self.direction == "horizontal":
+			width = self.mobject.x_scale / self.mobject.y_values[i]
+			height = self.mobject.y_scale * self.mobject.y_values[i]
+			x = i * self.mobject.x_scale + (j + 0.5) * width
+			y = height / 2
+			center = self.mobject.get_lower_left_point() + x * RIGHT + y * UP
+
+		cell = Rectangle(width = width, height = height)
+		cell.move_to(center)
+		return cell
 
 
 	def update_mobject(self,t):
@@ -163,15 +177,16 @@ class FlashThroughHistogram(Animation):
 		if t == 0:
 			self.mobject.add(self.prototype_cell)
 
-		flash_nb = int(t * (len(self.cell_indices) - 1))
+		flash_nb = int(t * (len(self.cell_indices))) - 1
 		(i,j) = self.reordered_cell_indices[flash_nb]
-		cell_center = self.cell_center_for_index(i,j)
-		self.prototype_cell.width = self.mobject.x_widths_scaled[i]
+		cell = self.cell_for_index(i,j)
+		self.prototype_cell.width = cell.get_width()
+		self.prototype_cell.height = cell.get_height()
 		self.prototype_cell.generate_points()
-		self.prototype_cell.move_to(cell_center)
+		self.prototype_cell.move_to(cell.get_center())
 
-		if t == 1:
-			self.mobject.remove(self.prototype_cell)
+		#if t == 1:
+		#	self.mobject.remove(self.prototype_cell)
 
 
 
@@ -194,13 +209,13 @@ class SampleScene(Scene):
 	def construct(self):
 
 		x_values = np.array([1,2,3,4,5])
-		y_values = np.array([15,10,6,3,10])
+		y_values = np.array([4,3,5,2,3])
 
 		hist1 = Histogram(
 			x_values = x_values,
 			y_values = y_values,
 			x_scale = 0.5,
-			y_scale = 0.2,
+			y_scale = 0.5,
 		).shift(1*DOWN)
 		self.add(hist1)
 		self.wait()
@@ -210,8 +225,8 @@ class SampleScene(Scene):
 		hist2 = Histogram(
 			x_values = x_values,
 			y_values = y_values2,
-			x_scale = 0.2,
-			y_scale = 0.2,
+			x_scale = 0.5,
+			y_scale = 0.5,
 		)
 
 		v1 = hist1.get_lower_left_point()
@@ -225,8 +240,9 @@ class SampleScene(Scene):
 		self.play(
 			FlashThroughHistogram(
 				hist1,
-				mode = "linear_horizontal",
-				run_time = 3,
+				direction = "horizontal",
+				mode = "linear",
+				run_time = 10,
 				rate_func = None,
 			)
 		)
