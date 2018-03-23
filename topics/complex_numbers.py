@@ -216,6 +216,7 @@ class ComplexPlane(NumberPlane):
             num_mob.scale_to_fit_height(self.written_coordinate_height)
             num_mob.next_to(point, DOWN+LEFT, SMALL_BUFF)
             result.add(num_mob)
+        self.coordinate_labels = result
         return result
 
     def add_coordinates(self, *numbers):
