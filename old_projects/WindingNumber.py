@@ -619,7 +619,8 @@ def walker_animation_with_display(
             display.background_rectangle.fill_color = GREY
             display.background_rectangle.scale(1.2)
         displaycement = 0.5 * DOWN # How about that pun, eh?
-        display.move_to(walker.get_center() + displaycement)
+        # display.move_to(walker.get_center() + displaycement)
+        display.next_to(walker, DOWN+RIGHT, SMALL_BUFF)
         display_anim = ChangingDecimal(display, 
             number_update_func, 
             tracked_mobject = walker_anim.compound_walker.walker,
