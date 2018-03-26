@@ -602,12 +602,15 @@ def walker_animation_with_display(
         display = DecimalNumber(0, 
             num_decimal_points = num_decimal_points, 
             fill_color = WHITE,
-            include_background_rectangle = True)
-        display.background_rectangle.fill_opacity = 0.5
-        display.background_rectangle.fill_color = GREY
-        display.background_rectangle.scale(1.2)
+            # include_background_rectangle = True
+            include_background_rectangle = False
+        )
+        # display.background_rectangle.fill_opacity = 0.5
+        # display.background_rectangle.fill_color = GREY
+        # display.background_rectangle.scale(1.2)
         displaycement = 0.5 * DOWN # How about that pun, eh?
-        display.move_to(walker.get_center() + displaycement)
+        # display.move_to(walker.get_center() + displaycement)
+        display.next_to(walker, DOWN+RIGHT, SMALL_BUFF)
         display_anim = ChangingDecimal(display, 
             number_update_func, 
             tracked_mobject = walker_anim.compound_walker.walker,
@@ -2044,8 +2047,10 @@ class FundThmAlg(EquationSolver2d):
 class SolveX5MinusXMinus1(EquationSolver2d):
     CONFIG = {
         "func" : plane_func_from_complex_func(lambda c : c**5 - c - 1),
-        "num_iterations" : 5,
+        "num_iterations" : 10,
         "use_fancy_lines" : True,
+        "linger_parameter" : 0.5,
+        "show_cursor" : True,
     }
 
 class SolveX5MinusXMinus1Parallel(SolveX5MinusXMinus1):

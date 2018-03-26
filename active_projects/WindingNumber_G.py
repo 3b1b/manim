@@ -1928,6 +1928,20 @@ class TinyLoopAroundRed(TinyLoop):
         "target_coords" : (-1, 1),
     }
 
+class ConfusedPiCreature(PiCreatureScene):
+    def construct(self):
+        morty = self.pi_creature
+        morty.set_color(YELLOW_E)
+        morty.flip()
+        morty.center()
+
+        self.play(morty.change, "awe", DOWN+3*RIGHT)
+        self.wait(2)
+        self.play(morty.change, "confused")
+        self.wait(2)
+        self.play(morty.change, "pondering")
+        self.wait(2)
+
 class FailureOfComposition(ColorMappedObjectsScene):
     CONFIG = {
         "func" : lambda p : (
@@ -2354,7 +2368,6 @@ class TransitionFromPathsToBoundaries(ColorMappedObjectsScene):
         self.start_rev = self.get_output_rev()
         self.curr_winding = 0
 
-
 class TransitionFromPathsToBoundariesArrowless(TransitionFromPathsToBoundaries):
     CONFIG = {
         "func" : plane_func_by_wind_spec(
@@ -2644,9 +2657,7 @@ class PolynomialTerms(MonomialTerm):
 
 class SearchSpacePerimeterVsArea(EquationSolver2d):
     CONFIG = {
-        "func" : plane_func_by_wind_spec(
-            (-3, -1.3, 2), (0.1, 0.2, 1), (2.8, -2, 1)
-        ),
+        "func" : example_plane_func,
         "num_iterations" : 15,
         "display_in_parallel" : False,
         "use_fancy_lines" : True,
@@ -2709,6 +2720,15 @@ class SearchSpacePerimeterVsArea(EquationSolver2d):
         self.play(FadeOut(full_rect))
         self.wait()
 
+class ShowPolynomialFinalState(SolveX5MinusXMinus1):
+    CONFIG = {
+        "num_iterations" : 15,
+    }
+    def construct(self):
+        self.force_skipping()
+        SolveX5MinusXMinus1.construct(self)
+        self.revert_to_original_skipping_status()
+
 class PiCreatureInAwe(Scene):
     def construct(self):
         randy = Randolph()
@@ -2729,8 +2749,9 @@ class ShowComplexFunction(Scene):
     def construct(self):
         plane = ComplexPlane()
         plane.add_coordinates()
-        plane.remove(plane.coordinate_labels[-1])
-        plane.show()
+        four_i = plane.coordinate_labels[-1]
+        plane.coordinate_labels.remove(four_i)
+        plane.remove(four_i)
 
         title = TextMobject("Complex Plane")
         title.to_edge(UP, buff = MED_SMALL_BUFF)
@@ -2850,6 +2871,47 @@ class WindingNumbersInInputOutputContext(PathContainingZero):
             run_time = self.run_time,
             rate_func = bezier([0, 0, 1, 1])
         )
+
+class SolveX5SkipToEnd(SolveX5MinusXMinus1):
+    CONFIG = {
+        "num_iterations" : 4,
+    }
+    def construct(self):
+        self.force_skipping()
+        SolveX5MinusXMinus1.construct(self)
+        self.revert_to_original_skipping_status()
+
+        mobjects = VGroup(*self.get_mobjects())
+        lines = VGroup()
+        rects = VGroup()
+        for mob in mobjects:
+            if mob.background_image_file is not None:
+                mob.set_stroke(width = 2)
+                lines.add(mob)
+            elif isinstance(mob, Polygon):
+                rects.add(mob)
+            else:
+                self.remove(mob)
+
+        self.clear()
+        self.add(lines, rects)
+
+class ZeroFoundOnBoundary(Scene):
+    def construct(self):
+        arrow = Vector(DOWN+LEFT, color = WHITE)
+        words = TextMobject("Found zero on boundary!")
+        words.next_to(arrow.get_start(), UP)
+        words.shift(1.5*RIGHT)
+
+        point = VectorizedPoint()
+        point.next_to(arrow, DOWN+LEFT)
+
+        self.play(Flash(point))
+        self.play(
+            GrowArrow(arrow),
+            Write(words),
+        )
+        self.wait()
 
 class AllOfTheVideos(Scene):
     CONFIG = {
@@ -3188,8 +3250,33 @@ class EndScreen(PatreonEndScreen, PiCreatureScene):
             self.play(morty.change, mode)
             self.wait(2)
 
+class Thumbnail(SearchSpacePerimeterVsArea):
+    CONFIG = {
+        "num_iterations" : 18,
+        "func" : plane_func_by_wind_spec(
+            (-3, -1.3, 2), (0.1, 0.2, 1), (2.8, -2, 1)
+        ),
+    }
+    def construct(self):
+        self.force_skipping()
+        EquationSolver2d.construct(self)
+        self.revert_to_original_skipping_status()
 
+        mobjects = VGroup(*self.get_mobjects())
+        lines = VGroup()
+        rects = VGroup()
+        get_length = lambda mob : max(mob.get_width(), mob.get_height())
+        for mob in mobjects:
+            if mob.background_image_file is not None:
+                mob.set_stroke(width = 4*np.sqrt(get_length(mob)))
+                lines.add(mob)
+            elif isinstance(mob, Polygon):
+                rects.add(mob)
+            else:
+                self.remove(mob)
 
+        self.clear()
+        self.add(lines)
 
 
 
