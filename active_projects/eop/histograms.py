@@ -14,6 +14,13 @@ from topics.characters import *
 from topics.numerals import *
 from random import *
 
+def text_range(start,stop,step):
+	numbers = np.arange(start,stop,step)
+	labels = []
+	for x in numbers:
+		labels.append(str(x))
+	return labels
+
 
 class Histogram(VMobject):
 
@@ -51,6 +58,7 @@ class Histogram(VMobject):
 		self.y_values_scaled = self.y_scale * self.y_values
 
 		VMobject.__init__(self, **kwargs)
+		digest_config(self, kwargs)
 		
 
 	def generate_points(self):
@@ -58,7 +66,7 @@ class Histogram(VMobject):
 		previous_bar = ORIGIN
 		self.bars = []
 		outline_points = []
-
+		self.x_labels = text_range(self.x_values[0], self.x_max, self.x_steps[0])
 
 		for (i,x) in enumerate(self.x_values):
 
@@ -78,6 +86,10 @@ class Histogram(VMobject):
 			
 			self.add(bar)
 			self.bars.append(bar)
+
+			label = TextMobject(self.x_labels[i])
+			label.next_to(bar,DOWN)
+			self.add(label)
 
 			if i == 0:
 				# start with the lower left
@@ -227,6 +239,7 @@ class SampleScene(Scene):
 			y_values = y_values2,
 			x_scale = 0.5,
 			y_scale = 0.5,
+			x_labels = text_range(1,6,1),
 		)
 
 		v1 = hist1.get_lower_left_point()
