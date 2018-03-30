@@ -759,7 +759,7 @@ class DeclareFunction(ClosedLoopScene):
         xyz_brace = Brace(tex[-1], RIGHT)
         ab_brace.add(ab_brace.get_text("Pair of points on the loop"))
         xyz_brace.add(xyz_brace.get_text("Point in 3d space"))
-        ab_brace.gradient_highlight(MAROON_B, PURPLE_B)
+        ab_brace.set_color_by_gradient(MAROON_B, PURPLE_B)
         xyz_brace.set_color(BLUE)
 
         self.add(tex)
@@ -1036,7 +1036,7 @@ class DeformToInterval(ClosedLoopScene):
         self.play(FadeIn(self.loop))
         self.add(original_loop)
         self.add_dots_at_alphas(*np.linspace(0, 1, 20))
-        self.dots.gradient_highlight(BLUE, MAROON_C, BLUE)
+        self.dots.set_color_by_gradient(BLUE, MAROON_C, BLUE)
         dot_at_1 = self.dots[-1]
         dot_at_1.generate_target()
         dot_at_1.target.move_to(interval.get_right())
@@ -1106,7 +1106,7 @@ class RepresentPairInUnitSquare(ClosedLoopScene):
         self.loop.scale(0.7)
         self.loop.to_edge(UP)
         self.add_dots_at_alphas(*dot_coords)
-        self.dots.gradient_highlight(GREEN, RED)
+        self.dots.set_color_by_gradient(GREEN, RED)
 
         self.play(
             Write(self.dots),
@@ -1256,7 +1256,7 @@ class EdgesOfSquare(Scene):
             for vect in LEFT, RIGHT            
         ]
         for group in dot_groups:
-            group.gradient_highlight(YELLOW, PURPLE_B)
+            group.set_color_by_gradient(YELLOW, PURPLE_B)
         label_groups = [
             VGroup(*[
                 TexMobject("(%s, %s)"%(a, b)).scale(0.7)
@@ -1337,7 +1337,7 @@ class TorusPlaneAnalogy(ClosedLoopScene):
         self.loop.next_to(top_arrow, RIGHT)
         self.loop.shift_onto_screen()
         self.add_dots_at_alphas(0.3, 0.5)
-        self.dots.gradient_highlight(GREEN, RED)
+        self.dots.set_color_by_gradient(GREEN, RED)
 
         plane = NumberPlane()
         plane.scale(0.3).next_to(low_arrow, LEFT)
@@ -1367,7 +1367,7 @@ class WigglingPairOfPoints(ClosedLoopScene):
         ]
         self.add_dots_at_alphas(*alpha_pairs[-1])
         self.add_connecting_lines()
-        self.dots.gradient_highlight(GREEN, RED)
+        self.dots.set_color_by_gradient(GREEN, RED)
         self.connecting_lines.set_color(YELLOW)
         for x, pair in zip(range(20), it.cycle(alpha_pairs)):
             self.move_dots_to_alphas(pair, run_time = 0.3)
@@ -1389,7 +1389,7 @@ class TrivialPairCollision(ClosedLoopScene):
     def construct(self):
         self.loop.to_edge(RIGHT)
         self.add_dots_at_alphas(0.35, 0.55)
-        self.dots.gradient_highlight(BLUE, YELLOW)
+        self.dots.set_color_by_gradient(BLUE, YELLOW)
         a, b = self.dots
         a_label = TexMobject("a").next_to(a, RIGHT)
         a_label.set_color(a.get_color())
@@ -2127,7 +2127,7 @@ class ThumbnailImage(ClosedLoopScene):
         title = TextMobject("Unsolved")
         title.scale(2.5)
         title.to_edge(UP)
-        title.gradient_highlight(YELLOW, MAROON_B)
+        title.set_color_by_gradient(YELLOW, MAROON_B)
         self.add(title)
         self.loop.next_to(title, DOWN, buff = MED_SMALL_BUFF)
         self.loop.shift(2*LEFT)

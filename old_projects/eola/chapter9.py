@@ -837,7 +837,7 @@ class TranslateFromJenny(JenniferScene):
         )
         self.jenny.coords = Matrix(self.coords)
         self.you.coords = Matrix(["?", "?"])
-        self.you.coords.get_entries().gradient_highlight(X_COLOR, Y_COLOR)
+        self.you.coords.get_entries().set_color_by_gradient(X_COLOR, Y_COLOR)
         for pi in self.jenny, self.you:
             pi.bubble = get_small_bubble(pi)
             pi.bubble.set_fill(BLACK, opacity = 0.8)
@@ -1556,7 +1556,7 @@ class JennyWatchesRotation(JenniferScene):
             self.add_vector(vect)
 
         matrix = Matrix([["?", "?"], ["?", "?"]])
-        matrix.get_entries().gradient_highlight(X_COLOR, Y_COLOR)
+        matrix.get_entries().set_color_by_gradient(X_COLOR, Y_COLOR)
         jenny.bubble = get_small_bubble(jenny)
         jenny.bubble.add_content(matrix)
         matrix.scale_in_place(0.8)
@@ -1640,10 +1640,10 @@ class HowToTranslateAMatrix(Scene):
             submobs.sort(lambda m1, m2: cmp(m1.get_center()[0], m2.get_center()[0]))
             array.submobjects = submobs
         her_vector.set_color(MAROON_B)
-        cob_matrix.gradient_highlight(BLUE, MAROON_B)
+        cob_matrix.set_color_by_gradient(BLUE, MAROON_B)
         transform.set_color_columns(X_COLOR, Y_COLOR)
         transform.get_brackets().set_color(BLUE)
-        inv_cob.gradient_highlight(MAROON_B, BLUE)
+        inv_cob.set_color_by_gradient(MAROON_B, BLUE)
         result.set_color_columns(X_COLOR, Y_COLOR)
         result.get_brackets().set_color(MAROON_B)
 

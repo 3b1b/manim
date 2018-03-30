@@ -3006,7 +3006,7 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
             for n0 in range(n, n-k, -1)
         ])
         choice_counts.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
-        choice_counts.gradient_highlight(*self.line_colors)
+        choice_counts.set_color_by_gradient(*self.line_colors)
         choice_counts.next_to(people_braces, DOWN)
         return choice_counts
 
@@ -3038,7 +3038,7 @@ class HowToComputeNChooseK(ChooseThreeFromFive):
             )
         ])
         for mob in place_words, lines:
-            mob.gradient_highlight(*self.line_colors)
+            mob.set_color_by_gradient(*self.line_colors)
         for word, line in zip(place_words, lines):
             word.next_to(line, DOWN, SMALL_BUFF)
 
@@ -3068,7 +3068,7 @@ class NineChooseFourExample(HowToComputeNChooseK):
             chr(ord('A') + i )
             for i in range(self.n)
         ]))
-        self.people.gradient_highlight(BLUE, YELLOW)
+        self.people.set_color_by_gradient(BLUE, YELLOW)
         self.names = self.people
         self.people.to_edge(UP, buff = LARGE_BUFF + MED_SMALL_BUFF)
         lb, rb = braces = TextMobject("\\{\\}")
@@ -3212,7 +3212,7 @@ class WeirdKindOfCancelation(TeacherStudentsScene):
         )
         top_numbers, ordered, triplets, frac_line, bottom_numbers, orderings = fraction
         for mob in top_numbers, bottom_numbers:
-            mob.gradient_highlight(GREEN, YELLOW)
+            mob.set_color_by_gradient(GREEN, YELLOW)
         fraction.next_to(self.teacher, UP+LEFT)
 
         names = VGroup(*map(TextMobject, [
@@ -3512,7 +3512,7 @@ class AskWhyTheyAreCalledBinomial(TeacherStudentsScene):
         pascals = PascalsTraingle(n_rows = 6)
         pascals.scale_to_fit_height(3)
         pascals.to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
-        pascals.gradient_highlight(BLUE, YELLOW)
+        pascals.set_color_by_gradient(BLUE, YELLOW)
 
         binomial_word = TextMobject(
             "Bi", "nomials",

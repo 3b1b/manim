@@ -63,7 +63,7 @@ class Announcements(PiCreatureScene):
             aligned_edge = LEFT,
         )
         announcements.next_to(underline, DOWN, LARGE_BUFF, aligned_edge = LEFT)
-        announcements.gradient_highlight(GREEN, YELLOW)
+        announcements.set_color_by_gradient(GREEN, YELLOW)
 
         self.play(
             Write(title),
@@ -143,7 +143,7 @@ class PowersOfTwo(Scene):
         curr_po2_outline = curr_po2[-1].copy()
         curr_po2_outline.set_fill(opacity = 0)
         curr_po2_outline.set_stroke(width = 2)
-        curr_po2_outline.gradient_highlight(
+        curr_po2_outline.set_color_by_gradient(
             YELLOW, RED, PINK, PURPLE, BLUE, GREEN
         )
 
@@ -202,7 +202,7 @@ class Thumbnail(Scene):
         equation.to_edge(DOWN, buff = LARGE_BUFF)
 
         q_and_a = TextMobject("Q\\&A \\\\ Round 2")
-        q_and_a.gradient_highlight(BLUE, YELLOW)
+        q_and_a.set_color_by_gradient(BLUE, YELLOW)
         q_and_a.scale_to_fit_width(FRAME_X_RADIUS)
         q_and_a.to_edge(UP, buff = LARGE_BUFF)
 

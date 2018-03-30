@@ -1945,7 +1945,7 @@ class ShowTrueDistribution(PiCreatureScene):
         for arrow in arrows[1:3]:
             arrow.rotate_in_place(np.pi)
             arrow.set_color(RED)
-        arrows.gradient_highlight(BLUE, YELLOW)
+        arrows.set_color_by_gradient(BLUE, YELLOW)
 
         self.add(chart)
         self.play(*map(MoveToTarget, it.chain(bars, old_bars)))
@@ -2825,14 +2825,14 @@ class GeneralBinomialDistributionValues(Scene):
             ten_choose_k.stretch(0.8, 0)
             ten_choose_k.next_to(mob, DOWN)
             ten_choose_ks.add(ten_choose_k)
-        ten_choose_ks.gradient_highlight(BLUE, YELLOW)
+        ten_choose_ks.set_color_by_gradient(BLUE, YELLOW)
 
         self.play(
             LaggedStart(FadeIn, triangle),
             FadeOut(self.shown_prob)
         )
         self.play(
-            last_row.gradient_highlight, BLUE, YELLOW,
+            last_row.set_color_by_gradient, BLUE, YELLOW,
             Write(ten_choose_ks, run_time = 2)
         )
         self.wait()

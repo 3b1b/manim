@@ -841,7 +841,7 @@ class CountLatticePoints(LatticePointScene):
             square.copy().move_to(point)
             for point in self.lattice_points
         ])
-        squares.gradient_highlight(BLUE_E, GREEN_E)
+        squares.set_color_by_gradient(BLUE_E, GREEN_E)
         squares.set_stroke(WHITE, 1)
         point_copies = self.lattice_points.copy()
 
@@ -4156,7 +4156,7 @@ class CountLatticePointsInBigCircle(LatticePointScene):
             self.get_circle(radius = np.sqrt(N))
             for N in N_range
         ])
-        rings.gradient_highlight(TEAL, GREEN)
+        rings.set_color_by_gradient(TEAL, GREEN)
         rings.set_stroke(width = 2)
         dot_groups = VGroup(*[
             self.get_lattice_points_on_r_squared_circle(N)
@@ -4777,7 +4777,7 @@ class Sponsorship(PiCreatureScene):
         logo.center()
         logo.set_stroke(width = 0)
         logo.set_fill(BLUE_D, 1)
-        VGroup(*logo[6:]).gradient_highlight(BLUE_B, BLUE_E)
+        VGroup(*logo[6:]).set_color_by_gradient(BLUE_B, BLUE_E)
         logo.next_to(morty.get_corner(UP+LEFT), UP)
 
         url = TextMobject("www.remix.com")

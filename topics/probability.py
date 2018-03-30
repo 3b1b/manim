@@ -342,7 +342,7 @@ class BarChart(VGroup):
             )
             bar.move_to((2*i+1)*buff*RIGHT, DOWN+LEFT)
             bars.add(bar)
-        bars.gradient_highlight(*self.bar_colors)
+        bars.set_color_by_gradient(*self.bar_colors)
 
         bar_labels = VGroup()
         for bar, name in zip(bars, self.bar_names):

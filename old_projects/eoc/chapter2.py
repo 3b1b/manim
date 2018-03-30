@@ -171,7 +171,7 @@ class Introduction(TeacherStudentsScene):
             )
         self.play(FadeIn(clock))
         self.play(
-            change.gradient_highlight, BLUE, YELLOW,
+            change.set_color_by_gradient, BLUE, YELLOW,
             GrowFromCenter(change_brace),
             Write(change_description),
             get_clock_anim()
@@ -2595,7 +2595,7 @@ class Thumbnail(SecantLineToTangentLine):
         title.scale_to_fit_width(FRAME_WIDTH-1)
         title.to_edge(UP)
         title.add_background_rectangle()
-        title.gradient_highlight(GREEN, YELLOW)
+        title.set_color_by_gradient(GREEN, YELLOW)
 
         randy = Randolph(mode = "confused")
         randy.scale(1.7)

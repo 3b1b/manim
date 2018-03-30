@@ -40,7 +40,7 @@ def get_google_logo():
         "#4885ed", "#db3236", "#f4c20d", "#3cba54"
     ]
     colors = [red, yellow, blue, green, red, blue]
-    result.gradient_highlight(*colors)
+    result.set_color_by_gradient(*colors)
     return result
 
 class LastVideo(Scene):
@@ -291,7 +291,7 @@ class MainBreakdown(Scene):
             ])
             paths.add(path)
         paths.set_stroke(width = 3)
-        paths.gradient_highlight(BLUE, GREEN)
+        paths.set_color_by_gradient(BLUE, GREEN)
         def get_passing_flash():
             return ShowPassingFlash(
                 paths,
@@ -745,7 +745,7 @@ class StateOfBitcoin(TeacherStudentsScene):
             fill_color = WHITE,
         )
         random.shuffle(circuit.submobjects)
-        circuit.gradient_highlight(WHITE, GREY)
+        circuit.set_color_by_gradient(WHITE, GREY)
         circuit.next_to(asic, RIGHT)
         asic_rate = TextMobject("Trillion hashes/sec")
         asic_rate.next_to(asic, DOWN, MED_LARGE_BUFF)

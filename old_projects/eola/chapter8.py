@@ -899,7 +899,7 @@ class Define2dCrossProduct(LinearTransformationScene):
         self.wait()
 
         pm = VGroup(*map(TexMobject, ["+", "-"]))
-        pm.gradient_highlight(GREEN, RED)
+        pm.set_color_by_gradient(GREEN, RED)
         pm.arrange_submobjects(DOWN, buff = SMALL_BUFF)
         pm.add_to_back(BackgroundRectangle(pm))
         pm.next_to(area_words[0], LEFT, aligned_edge = DOWN)
@@ -1649,7 +1649,7 @@ class ThereIsAReason(TeacherStudentsScene):
 class RememberDuality(TeacherStudentsScene):
     def construct(self):
         words = TextMobject("Remember ", "duality", "?", arg_separator = "")
-        words[1].gradient_highlight(BLUE, YELLOW)
+        words[1].set_color_by_gradient(BLUE, YELLOW)
         self.teacher_says(words, target_mode = "sassy")
         self.random_blink(2)
 

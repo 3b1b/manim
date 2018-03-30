@@ -93,7 +93,7 @@ class Slider(NumberLine):
             for u in [-1, 1]
         ])
         self.real_estate_ticks.set_stroke(width = 3)
-        self.real_estate_ticks.gradient_highlight(*colors)
+        self.real_estate_ticks.set_color_by_gradient(*colors)
         self.add(self.real_estate_ticks)
         self.add(self.dial)
         return self.real_estate_ticks

@@ -109,8 +109,8 @@ class IntroSceneWrapper(PiCreatureScene):
         rainbow_solver1 = solver.copy()
         rainbow_solver2 = solver.copy()
         colors = ["RED", "ORANGE", "YELLOW", "GREEN", BLUE, "PURPLE", PINK]
-        rainbow_solver1.gradient_highlight(*colors)
-        rainbow_solver2.gradient_highlight(*reversed(colors))
+        rainbow_solver1.set_color_by_gradient(*colors)
+        rainbow_solver2.set_color_by_gradient(*reversed(colors))
 
 
         xy_equation = TexMobject("""
@@ -1133,8 +1133,8 @@ class TwoDScreenInOurThreeDWorld(AltTeacherStudentsScene, ThreeDScene):
                 ))
                 dots.add(dot)
                 dots_target.add(dot.target)
-        dots.gradient_highlight(YELLOW, RED)
-        dots_target.gradient_highlight(YELLOW, RED)
+        dots.set_color_by_gradient(YELLOW, RED)
+        dots_target.set_color_by_gradient(YELLOW, RED)
 
         self.play(
             self.teacher.change, "raise_right_hand",
@@ -1771,7 +1771,7 @@ class HypothesisAboutFullyColoredBoundary(ColorMappedObjectsScene):
         s = hypothesis[1].get_tex_string()
         s = filter(lambda c : c not in string.whitespace, s)
         n = s.index("colors")
-        hypothesis[1][n:n+len("colors")].gradient_highlight(
+        hypothesis[1][n:n+len("colors")].set_color_by_gradient(
             # RED, GOLD_E, YELLOW, GREEN, BLUE, PINK,
             BLUE, PINK, YELLOW,
         )

@@ -99,13 +99,13 @@ class ComplexTransformationScene(Scene):
 
     def paint_plane(self, plane):
         for lines in plane.main_lines, plane.secondary_lines:
-            lines.gradient_highlight(
+            lines.set_color_by_gradient(
                 self.vert_start_color,
                 self.vert_end_color,
                 self.horiz_start_color,
                 self.horiz_end_color,
             )
-        # plane.axes.gradient_highlight(
+        # plane.axes.set_color_by_gradient(
         #     self.horiz_start_color,
         #     self.vert_start_color
         # )

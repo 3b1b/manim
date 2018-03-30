@@ -3864,7 +3864,7 @@ class ThinkBackToHowAmazingThisIs(ThreeDScene):
             p_term.next_to(number_line.number_to_point(n), UP, LARGE_BUFF)
             n_term.next_to(number_line.number_to_point(-n), UP, LARGE_BUFF)
             term_mobjects.add(group)
-        term_mobjects.gradient_highlight(BLUE, YELLOW)
+        term_mobjects.set_color_by_gradient(BLUE, YELLOW)
         plusses = VGroup(*[
             VGroup(*[
                 TexMobject("+").next_to(

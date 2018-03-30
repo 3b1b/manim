@@ -1839,7 +1839,7 @@ class VisualizeZSquared(Scene):
             secondary_line_ratio = 0,
             stroke_width = 2,
         )
-        color_grid.main_lines.gradient_highlight(
+        color_grid.main_lines.set_color_by_gradient(
             *[GREEN, RED, MAROON_B, TEAL]*2
         )
         color_grid.remove(color_grid.axes[0])

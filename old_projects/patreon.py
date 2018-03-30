@@ -163,7 +163,7 @@ class GrowingToDoList(Scene):
         ]))
         lines.scale(0.65)
         lines.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT)
-        lines.gradient_highlight(BLUE_C, YELLOW)
+        lines.set_color_by_gradient(BLUE_C, YELLOW)
         lines.next_to(title, DOWN, buff = LARGE_BUFF/2.)
         lines.to_edge(RIGHT)
 
@@ -409,7 +409,7 @@ class GrowRonaksSierpinski(Scene):
         ronaks_sierpinski = VGroup()
         for n in range(n_layers):
             ronaks_sierpinski.add(self.get_lines_at_layer(n))
-        ronaks_sierpinski.gradient_highlight(*self.colors)
+        ronaks_sierpinski.set_color_by_gradient(*self.colors)
         ronaks_sierpinski.set_stroke(width = 0)##TODO
         return ronaks_sierpinski
 

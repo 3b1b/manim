@@ -108,7 +108,7 @@ class ZetaTransformationScene(ComplexTransformationScene):
             for x in x_range
             if abs(x-1) > epsilon
         ])
-        vert_lines.gradient_highlight(
+        vert_lines.set_color_by_gradient(
             self.vert_start_color, self.vert_end_color
         )
         horiz_lines = VGroup(*[
@@ -119,7 +119,7 @@ class ZetaTransformationScene(ComplexTransformationScene):
             for y in y_range
             if abs(y) > epsilon
         ])
-        horiz_lines.gradient_highlight(
+        horiz_lines.set_color_by_gradient(
             self.horiz_start_color, self.horiz_end_color
         )
         dense_grid = VGroup(horiz_lines, vert_lines)
@@ -238,7 +238,7 @@ class WhyPeopleMayKnowIt(TeacherStudentsScene):
         self.add(title, func_mob)
 
         mercenary_thought = VGroup(
-            TexMobject("\\$1{,}000{,}000").gradient_highlight(GREEN_B, GREEN_D),
+            TexMobject("\\$1{,}000{,}000").set_color_by_gradient(GREEN_B, GREEN_D),
             TexMobject("\\zeta(s) = 0")
         )
         mercenary_thought.arrange_submobjects(DOWN)
@@ -247,7 +247,7 @@ class WhyPeopleMayKnowIt(TeacherStudentsScene):
             TexMobject("\\zeta(-1) = -\\frac{1}{12}")
         )
         divergent_sum.arrange_submobjects(DOWN)
-        divergent_sum[0].gradient_highlight(YELLOW, MAROON_B)
+        divergent_sum[0].set_color_by_gradient(YELLOW, MAROON_B)
         divergent_sum[1].set_color(BLACK)
 
         #Thoughts
@@ -656,8 +656,8 @@ class DefineForRealS(PiCreatureScene):
             for s1, s2 in zip(power_sums, power_sums[1:])
         ])
         lines.set_stroke(width = line_thickness)
-        # VGroup(*lines[:4]).gradient_highlight(RED, GREEN_B)
-        # VGroup(*lines[4:]).gradient_highlight(GREEN_B, MAROON_B)
+        # VGroup(*lines[:4]).set_color_by_gradient(RED, GREEN_B)
+        # VGroup(*lines[4:]).set_color_by_gradient(GREEN_B, MAROON_B)
         VGroup(*lines[::2]).set_color(MAROON_B)
         VGroup(*lines[1::2]).set_color(RED)
 
@@ -2975,7 +2975,7 @@ class DiscussZeros(ZetaTransformationScene):
             ParametricFunction(func, t_min = t0, t_max = t0+1)
             for t0 in range(100)
         ])
-        full_line.gradient_highlight(
+        full_line.set_color_by_gradient(
             YELLOW, BLUE, GREEN, RED, YELLOW, BLUE, GREEN, RED,
         )
         self.play(ShowCreation(full_line, run_time = 20, rate_func = None))

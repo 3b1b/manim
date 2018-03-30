@@ -78,7 +78,7 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
         )
         glass.sort_points(lambda p : -p[1])
         glass.shift((self.top-glass.get_top()[1])*UP)
-        glass.gradient_highlight(self.top_color, self.bottom_color)
+        glass.set_color_by_gradient(self.top_color, self.bottom_color)
         return glass
 
     def generate_layer_info(self):

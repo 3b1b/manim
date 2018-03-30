@@ -201,7 +201,7 @@ class Prerequisites(Scene):
 class DualityReview(TeacherStudentsScene):
     def construct(self):
         words = TextMobject("Quick", "duality", "review")
-        words[1].gradient_highlight(BLUE, YELLOW)
+        words[1].set_color_by_gradient(BLUE, YELLOW)
         self.teacher_says(words, target_mode = "surprised")
         self.change_student_modes("pondering")
         self.random_blink(2)
@@ -219,7 +219,7 @@ class DotProductToTransformSymbol(Scene):
         matrix.set_color_columns(X_COLOR, Y_COLOR)
         vector.set_color_columns(YELLOW)
         _input = Matrix(["x", "y"])
-        _input.get_entries().gradient_highlight(X_COLOR, Y_COLOR)
+        _input.get_entries().set_color_by_gradient(X_COLOR, Y_COLOR)
         left_input, right_input = [_input.copy() for x in range(2)]
         dot, equals = map(TexMobject, ["\\cdot", "="])
         equation = VGroup(
@@ -284,7 +284,7 @@ class MathematicalWild(Scene):
         vector = Vector([1, 2])
         vector.move_to(randy.get_corner(UP+LEFT), aligned_edge = DOWN+LEFT)
         dual_words = TextMobject("Dual vector")
-        dual_words.gradient_highlight(BLUE, YELLOW)
+        dual_words.set_color_by_gradient(BLUE, YELLOW)
         dual_words.next_to(vector, LEFT)
 
         self.add(randy)
@@ -331,7 +331,7 @@ class ThreeStepPlan(Scene):
         linear, transformation = steps[0][1:1+2]
         steps[0].set_color_by_tex(v_text, V_COLOR)
         steps[0].set_color_by_tex(w_text, W_COLOR)
-        steps[1][1].gradient_highlight(BLUE, YELLOW)
+        steps[1][1].set_color_by_gradient(BLUE, YELLOW)
         steps[2].set_color_by_tex(cross_text, P_COLOR)
         VGroup(*steps).arrange_submobjects(
             DOWN, aligned_edge = LEFT, buff = LARGE_BUFF
@@ -563,7 +563,7 @@ class DefineDualTransform(Scene):
         colors = [X_COLOR, Y_COLOR, Z_COLOR]
         q_marks = VGroup(*map(TextMobject, "???"))
         q_marks.scale(2)
-        q_marks.gradient_highlight(*colors)
+        q_marks.set_color_by_gradient(*colors)
 
         title = VGroup(TextMobject("This function is linear"))
         title.set_color(GREEN)

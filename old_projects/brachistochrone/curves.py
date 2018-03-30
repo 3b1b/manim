@@ -126,7 +126,7 @@ class SlideWordDownCycloid(Animation):
 class BrachistochroneWordSliding(Scene):
     def construct(self):
         anim = SlideWordDownCycloid("Brachistochrone")
-        anim.path.gradient_highlight(WHITE, BLUE_E)
+        anim.path.set_color_by_gradient(WHITE, BLUE_E)
         self.play(ShowCreation(anim.path))
         self.play(anim)
         self.wait()
@@ -332,7 +332,7 @@ class NotTheCircle(PathSlidingScene):
         end   = self.point_b.get_center()
         angle = 2*np.pi/3
         path = Arc(angle, radius = 3)
-        path.gradient_highlight(RED_D, WHITE)
+        path.set_color_by_gradient(RED_D, WHITE)
         radius = Line(ORIGIN, path.points[0])
         randy = Randolph()
         randy.scale(RANDY_SCALE_FACTOR)

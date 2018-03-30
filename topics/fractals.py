@@ -69,7 +69,7 @@ class SelfSimilarFractal(VMobject):
     }
     def init_colors(self):
         VMobject.init_colors(self)
-        self.gradient_highlight(*self.colors)
+        self.set_color_by_gradient(*self.colors)
 
     def generate_points(self):
         order_n_self = self.get_order_n_self(self.order)
@@ -224,7 +224,7 @@ class PiCreatureFractal(VMobject):
 
     # def init_colors(self):
     #     VMobject.init_colors(self)
-    #     self.gradient_highlight(*self.colors)
+    #     self.set_color_by_gradient(*self.colors)
 
 
 class WonkyHexagonFractal(SelfSimilarFractal):
@@ -311,7 +311,7 @@ class FractalCurve(VMobject):
 
     def init_colors(self):
         VMobject.init_colors(self)
-        self.gradient_highlight(*self.colors)
+        self.set_color_by_gradient(*self.colors)
         for order in sorted(self.order_to_stroke_width_map.keys()):
             if self.order >= order:
                 self.set_stroke(width = self.order_to_stroke_width_map[order])

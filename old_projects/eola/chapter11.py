@@ -175,7 +175,7 @@ class WhatIsA2DVector(LinearTransformationScene):
             group.scale_to_fit_height(coords.get_height())
             group.next_to(student.arrow, RIGHT)
             student.q_marks = TexMobject("???")
-            student.q_marks.gradient_highlight(BLUE, YELLOW)
+            student.q_marks.set_color_by_gradient(BLUE, YELLOW)
             student.q_marks.next_to(student.arrow, LEFT)
             anims += [
                 Write(student.q_marks),
@@ -286,7 +286,7 @@ class HyperCube(VMobject):
                 continue
             self.add(Line(project(a1), project(a2)))
         self.pose_at_angle()
-        self.gradient_highlight(self.color, self.color2)
+        self.set_color_by_gradient(self.color, self.color2)
 
 class AskAbout4DPhysicsStudent(Scene):
     def construct(self):
@@ -527,7 +527,7 @@ class DeterminantAndEigenvectorDontCare(LinearTransformationScene):
                 for x in range(7, 0, -1)
                 for u in -1, 1
             ])
-            vectors.gradient_highlight(MAROON_A, MAROON_C)
+            vectors.set_color_by_gradient(MAROON_A, MAROON_C)
             result += list(vectors)
         return result
 
@@ -844,7 +844,7 @@ class ScaleVectorByCoordinates(Scene):
     def construct(self):
         two, dot, equals = TexMobject("2 \\cdot =")
         v1 = Matrix(list("xyz"))
-        v1.get_entries().gradient_highlight(X_COLOR, Y_COLOR, Z_COLOR)
+        v1.get_entries().set_color_by_gradient(X_COLOR, Y_COLOR, Z_COLOR)
         v2 = v1.copy()
         two_targets = VGroup(*[
             two.copy().next_to(entry, LEFT)
@@ -942,7 +942,7 @@ class FromVectorsToFunctions(VectorScene):
                 "Eigen-everything",
             ]
         ])
-        words.gradient_highlight(BLUE_B, BLUE_D)
+        words.set_color_by_gradient(BLUE_B, BLUE_D)
         words.arrange_submobjects(DOWN, aligned_edge = LEFT)
         words.to_corner(UP+LEFT)
         self.play(FadeIn(
@@ -1442,7 +1442,7 @@ class PolynomialsHaveArbitrarilyLargeDegree(Scene):
             "3x^{\\left(10^{100}\\right)}",
             "\\vdots"
         ]))
-        polys.gradient_highlight(BLUE_B, BLUE_D)
+        polys.set_color_by_gradient(BLUE_B, BLUE_D)
         polys.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
         polys.scale(1.3)
 
@@ -1548,7 +1548,7 @@ class IntroducePolynomialSpace(Scene):
             TexMobject("x^{1{,}000{,}000{,}000}+1"),
             TexMobject("\\vdots"),
         )
-        polys.gradient_highlight(BLUE_B, BLUE_D)
+        polys.set_color_by_gradient(BLUE_B, BLUE_D)
         polys.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
         polys.next_to(cloud.get_top(), DOWN, buff = MED_LARGE_BUFF)
 
@@ -1962,7 +1962,7 @@ class CompareTermsInLinearAlgebraToFunction(Scene):
             concepts.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT)
             concepts.next_to(h_line, DOWN, buff = LARGE_BUFF)
             concepts.shift(vect*FRAME_X_RADIUS/2)
-            concepts.gradient_highlight(YELLOW_B, YELLOW_C)
+            concepts.set_color_by_gradient(YELLOW_B, YELLOW_C)
 
             for concept in concepts:
                 self.play(Write(concept, run_time = 1))
@@ -2083,7 +2083,7 @@ class ShowVectorSpaces(Scene):
                 np.linspace(0, 6, n_vectors)
             )
         ])
-        vectors.gradient_highlight(YELLOW, MAROON_B)
+        vectors.set_color_by_gradient(YELLOW, MAROON_B)
         return vectors
 
     def get_arrays(self):
@@ -2098,7 +2098,7 @@ class ShowVectorSpaces(Scene):
             subgroup.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
         arrays.arrange_submobjects(RIGHT)
         arrays.scale(0.7)
-        arrays.gradient_highlight(YELLOW, MAROON_B)
+        arrays.set_color_by_gradient(YELLOW, MAROON_B)
         return arrays
 
     def get_functions(self):
@@ -2114,7 +2114,7 @@ class ShowVectorSpaces(Scene):
         ])
         functions.stretch_to_fit_width(FRAME_X_RADIUS/2.)
         functions.stretch_to_fit_height(6)
-        functions.gradient_highlight(YELLOW, MAROON_B)
+        functions.set_color_by_gradient(YELLOW, MAROON_B)
         functions.center()
         return VGroup(axes, functions)
 
@@ -2513,7 +2513,7 @@ class WhatIsThree(Scene):
                 pass
             elif isinstance(group[0], Vector):
                 group.arrange_submobjects(RIGHT)
-                group.gradient_highlight(YELLOW, MAROON_B)
+                group.set_color_by_gradient(YELLOW, MAROON_B)
             else:
                 m1, m2, m3 = group
                 m2.next_to(m1, buff = MED_SMALL_BUFF)

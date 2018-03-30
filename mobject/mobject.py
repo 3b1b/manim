@@ -485,7 +485,7 @@ class Mobject(Container):
         self.color = color
         return self
 
-    def gradient_highlight(self, *colors):
+    def set_color_by_gradient(self, *colors):
         self.submobject_gradient_highlight(*colors)
         return self
 

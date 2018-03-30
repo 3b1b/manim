@@ -332,7 +332,7 @@ class AllXAxisVectorsAreEigenvectors(ExampleTranformationScene):
             for x in reversed(range(1, int(FRAME_X_RADIUS)+1))
             for u in -1, 1
         ])
-        vectors.gradient_highlight(YELLOW, X_COLOR)
+        vectors.set_color_by_gradient(YELLOW, X_COLOR)
         self.play(ShowCreation(vectors))
         self.wait()
         self.apply_transposed_matrix(self.t_matrix, path_arc = 0)
@@ -383,7 +383,7 @@ class FullSneakyEigenspace(ExampleTranformationScene):
             for x in reversed(np.arange(0.5, 5, 0.5))
             for u in -1, 1
         ])
-        vectors.gradient_highlight(MAROON_B, YELLOW)
+        vectors.set_color_by_gradient(MAROON_B, YELLOW)
         words = TextMobject("Stretch by 2")
         words.add_background_rectangle()
         words.next_to(ORIGIN, DOWN+LEFT, buff = MED_SMALL_BUFF)
@@ -414,14 +414,14 @@ class NameEigenvectorsAndEigenvalues(ExampleTranformationScene):
             for x in range(int(FRAME_X_RADIUS)+1, 0, -1)
             for u in -1, 1
         ])
-        x_vectors.gradient_highlight(YELLOW, X_COLOR)
+        x_vectors.set_color_by_gradient(YELLOW, X_COLOR)
         self.remove(x_vectors)
         sneak_vectors = VGroup(*[
             self.add_vector(u*x*(LEFT+UP), animate = False)
             for x in np.arange(int(FRAME_Y_RADIUS), 0, -0.5)
             for u in -1, 1
         ])
-        sneak_vectors.gradient_highlight(MAROON_B, YELLOW)
+        sneak_vectors.set_color_by_gradient(MAROON_B, YELLOW)
         self.remove(sneak_vectors)
 
         x_words = TextMobject("Stretched by 3")
@@ -807,7 +807,7 @@ class SymbolicEigenvectors(Scene):
             TexMobject("?").replace(entry)
             for entry in matrix.get_entries()
         ])
-        q_marks.gradient_highlight(X_COLOR, Y_COLOR, Z_COLOR)
+        q_marks.set_color_by_gradient(X_COLOR, Y_COLOR, Z_COLOR)
         diag_entries = VGroup(*[
             matrix.get_mob_matrix()[i,i]
             for i in range(3)
@@ -1465,7 +1465,7 @@ class RevisitExampleTransformation(ExampleTranformationScene):
             for x in range(4, 0, -1)
             for u in -1, 1
         ])
-        vectors.gradient_highlight(MAROON_B, YELLOW)
+        vectors.set_color_by_gradient(MAROON_B, YELLOW)
         vectors.save_state()
         self.play(
             ShowCreation(
@@ -1658,7 +1658,7 @@ class ShearExample(RevisitExampleTransformation):
             for x in range(int(FRAME_X_RADIUS)+1, 0, -1)
             for u in -1, 1
         ])
-        vectors.gradient_highlight(YELLOW, X_COLOR)
+        vectors.set_color_by_gradient(YELLOW, X_COLOR)
         words = VGroup(
             TextMobject("Eigenvectors"),
             TextMobject("with eigenvalue", "1")
@@ -2135,8 +2135,8 @@ class ChangeToEigenBasis(ExampleTranformationScene):
             ])
             for vect, num in (RIGHT, 7), (UP+LEFT, 4)
         ]
-        x_vectors.gradient_highlight(YELLOW, X_COLOR)
-        v_vectors.gradient_highlight(MAROON_B, YELLOW)
+        x_vectors.set_color_by_gradient(YELLOW, X_COLOR)
+        v_vectors.set_color_by_gradient(MAROON_B, YELLOW)
         self.remove(x_vectors, v_vectors)
         self.play(ShowCreation(x_vectors, run_time = 2))
         self.play(ShowCreation(v_vectors, run_time = 2))

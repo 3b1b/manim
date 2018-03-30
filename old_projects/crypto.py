@@ -303,7 +303,7 @@ class ListRecentCurrencies(Scene):
             EthereumLogo(),
             ImageMobject("ripple_logo"),
             LitecoinLogo(),
-            EthereumLogo().gradient_highlight(GREEN_B, GREEN_D),
+            EthereumLogo().set_color_by_gradient(GREEN_B, GREEN_D),
         )
         for logo in logos:
             logo.scale_to_fit_height(0.75)
@@ -4714,7 +4714,7 @@ class CompareBlockTimes(Scene):
     #     )
     #     logo.set_fill(GREEN, 1)
     #     logo.set_stroke(WHITE, 3)
-    #     logo.gradient_highlight(GREEN_B, GREEN_D)
+    #     logo.set_color_by_gradient(GREEN_B, GREEN_D)
     #     logo.scale_to_fit_width(1)
     #     logo.center()
     #     self.add(SurroundingRectangle(logo))
@@ -5268,7 +5268,7 @@ class Thumbnail(DistributedBlockChainScene):
 
         block_chain = self.get_block_chain()
         block_chain.arrows.set_color(RED)
-        block_chain.blocks.gradient_highlight(BLUE, GREEN)
+        block_chain.blocks.set_color_by_gradient(BLUE, GREEN)
         block_chain.scale_to_fit_width(FRAME_WIDTH-1)
         block_chain.set_stroke(width = 12)
         self.add(block_chain)

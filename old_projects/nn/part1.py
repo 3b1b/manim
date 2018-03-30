@@ -1334,7 +1334,7 @@ class IntroduceEachLayer(PreviewMNistNetwork):
                 q_mark.scale_to_fit_height(0.8*neuron.get_height())
                 q_mark.move_to(neuron)
                 q_marks.add(q_mark)
-        q_marks.gradient_highlight(BLUE, YELLOW)
+        q_marks.set_color_by_gradient(BLUE, YELLOW)
         q_mark = TextMobject("?").scale(4)
         q_mark.move_to(hidden_layers)
         q_mark.set_color(YELLOW)

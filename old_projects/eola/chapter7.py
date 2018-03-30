@@ -686,7 +686,7 @@ class LurkingQuestion(TeacherStudentsScene):
             answer comes from""",
             "duality"
         )
-        answer[-1].gradient_highlight(BLUE, YELLOW)
+        answer[-1].set_color_by_gradient(BLUE, YELLOW)
         self.teacher_says(answer)
         self.random_blink(2)
         self.teacher_thinks("")
@@ -1115,7 +1115,7 @@ class FollowVectorViaCoordinates(TwoDToOneDScene):
     def construct(self):
         v = Vector(self.v_coords)
         array = Matrix(self.v_coords if self.concrete else self.written_v_coords)
-        array.get_entries().gradient_highlight(X_COLOR, Y_COLOR)
+        array.get_entries().set_color_by_gradient(X_COLOR, Y_COLOR)
         array.add_to_back(BackgroundRectangle(array))
         v_label = TexMobject("\\vec{\\textbf{v}}", "=")
         v_label[0].set_color(YELLOW)
@@ -1524,7 +1524,7 @@ class ProjectOntoUnitVectorNumberline(VectorScene):
             Vector(x*RIGHT + y*UP)
             for x, y in zip(x_vals, y_vals)
         ])
-        vectors.gradient_highlight(PINK, MAROON_B)
+        vectors.set_color_by_gradient(PINK, MAROON_B)
         return vectors
 
     def get_dots(self, vectors):
@@ -2133,7 +2133,7 @@ class IsntThisBeautiful(TeacherStudentsScene):
         duality_words = TextMobject(
             "It's called", "duality"
         )
-        duality_words[1].gradient_highlight(BLUE, YELLOW)
+        duality_words[1].set_color_by_gradient(BLUE, YELLOW)
         self.teacher_says(duality_words)
         self.random_blink()
 
@@ -2151,10 +2151,10 @@ class RememberGraphDuality(Scene):
 class LooseDualityDescription(Scene):
     def construct(self):
         duality = TextMobject("Duality")
-        duality.gradient_highlight(BLUE, YELLOW)
+        duality.set_color_by_gradient(BLUE, YELLOW)
         arrow = TexMobject("\\Leftrightarrow")
         words = TextMobject("Natural-but-surprising", "correspondence")
-        words[1].gradient_highlight(BLUE, YELLOW)
+        words[1].set_color_by_gradient(BLUE, YELLOW)
         VGroup(duality, arrow, words).arrange_submobjects(buff = MED_SMALL_BUFF)
 
         self.add(duality)

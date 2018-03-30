@@ -590,7 +590,7 @@ class FunctionMinmization(GraphScene):
             Dot().move_to(self.input_to_graph_point(x, graph))
             for x in range(10)
         ])
-        dots.gradient_highlight(YELLOW, RED)
+        dots.set_color_by_gradient(YELLOW, RED)
 
         def update_dot(dot, dt):
             x = self.x_axis.point_to_number(dot.get_center())
@@ -1785,7 +1785,7 @@ class SingleVariableCostFunction(GraphScene):
                 ContinualUpdateFromFunc(point, update_point),
                 ContinualUpdateFromFunc(new_ball, update_ball)
             ]
-        balls.gradient_highlight(BLUE, GREEN)
+        balls.set_color_by_gradient(BLUE, GREEN)
 
         self.play(ReplacementTransform(ball, balls))
         self.add(*updates)
@@ -3337,7 +3337,7 @@ class SomethingToImproveUpon(PiCreatureScene, TestPerformance):
             Dot(line.point_from_proportion(a))
             for a in np.linspace(0, 1, 5)
         ])
-        dots.gradient_highlight(BLUE, YELLOW)
+        dots.set_color_by_gradient(BLUE, YELLOW)
         path = VGroup(line, dots)
         words = TextMobject("This series")
         words.next_to(line, DOWN)

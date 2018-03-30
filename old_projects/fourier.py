@@ -639,7 +639,7 @@ class BreakApartSum(Scene):
             )
             for freq in self.frequencies
         ])
-        pure_graphs.gradient_highlight(BLUE, RED)
+        pure_graphs.set_color_by_gradient(BLUE, RED)
         pure_graphs.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
         h_line = DashedLine(6*LEFT, 6*RIGHT)
 
@@ -4288,7 +4288,7 @@ class Thumbnail(Scene):
             pol_graph.scale_to_fit_height(2)
             pol_graphs.add(pol_graph)
         pol_graphs.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
-        pol_graphs.gradient_highlight(BLUE_C, YELLOW)
+        pol_graphs.set_color_by_gradient(BLUE_C, YELLOW)
         pol_graphs.match_width(graph)
         pol_graphs.set_stroke(width = 2)
 

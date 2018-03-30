@@ -1000,7 +1000,7 @@ class DecimalCountingAtHundredsScale(CountingScene):
         added_zeros = TexMobject("00")
         added_zeros.scale(self.num_scale_factor)
         added_zeros.next_to(self.number_mob, RIGHT, SMALL_BUFF, aligned_edge = DOWN)
-        added_zeros.gradient_highlight(MAROON_B, YELLOW)
+        added_zeros.set_color_by_gradient(MAROON_B, YELLOW)
         self.add(added_zeros)
         self.increment(run_time_per_anim = 0)
 
@@ -1450,7 +1450,7 @@ class RecursionTime(Scene):
         self.play(
             morty.change_mode, "hooray",
             Transform(keith, keith_hooray),
-            bubble.content.gradient_highlight, BLUE_A, BLUE_E
+            bubble.content.set_color_by_gradient, BLUE_A, BLUE_E
         )
         self.play(Blink(morty))
         self.wait()
@@ -2281,7 +2281,7 @@ class SolveConstrainedByCounting(ConstrainedTowersOfHanoiScene):
         for num in range(3**self.num_disks):
             ternary_mob = get_ternary_tex_mob(num, self.num_disks)
             ternary_mob.scale(self.ternary_mob_scale_factor)
-            ternary_mob.gradient_highlight(*self.disk_start_and_end_colors)
+            ternary_mob.set_color_by_gradient(*self.disk_start_and_end_colors)
             ternary_mobs.add(ternary_mob)
         ternary_mobs.next_to(self.peg_labels, DOWN)
         self.ternary_mob_iter = it.cycle(ternary_mobs)
@@ -2323,14 +2323,14 @@ class CompareNumberSystems(Scene):
         zero_one.next_to(binary, DOWN, buff = LARGE_BUFF)
         zero_one_two = TextMobject("0, 1, 2")
         zero_one_two.next_to(ternary, DOWN, buff = LARGE_BUFF)
-        zero_one_two.gradient_highlight(BLUE, GREEN)
+        zero_one_two.set_color_by_gradient(BLUE, GREEN)
 
         symbols = [zero_to_nine, zero_one, zero_one_two]
         names = ["Digits", "Bits", "Trits?"]
         for mob, text in zip(symbols, names):
             mob.brace = Brace(mob)
             mob.name = mob.brace.get_text(text)
-        zero_one_two.name.gradient_highlight(BLUE, GREEN)
+        zero_one_two.name.set_color_by_gradient(BLUE, GREEN)
         dots = TexMobject("\\dots")
         dots.next_to(zero_one.name, RIGHT, aligned_edge = DOWN, buff = SMALL_BUFF)
 
@@ -2516,7 +2516,7 @@ class SolveConstrainedWithTernaryCounting(ConstrainedTowersOfHanoiScene):
 
         for trits in ternary_mobs:
             trits.align_data(ternary_mobs[0])
-            trits.gradient_highlight(*self.disk_start_and_end_colors)
+            trits.set_color_by_gradient(*self.disk_start_and_end_colors)
         self.ternary_mob_iter = it.cycle(ternary_mobs)            
         self.curr_ternary_mob = self.ternary_mob_iter.next().copy()            
         self.disk_index_iter = it.cycle(
@@ -2833,7 +2833,7 @@ class ShowSomeGraph(Scene):
 
         self.play(Write(title))
         for mob in nodes, edges:
-            mob.gradient_highlight(YELLOW, MAROON_B)
+            mob.set_color_by_gradient(YELLOW, MAROON_B)
             self.play(ShowCreation(
                 mob, 
                 submobject_mode = "lagged_start",
@@ -2868,7 +2868,7 @@ class SierpinskiGraphScene(Scene):
 
     def initialize_nodes(self):
         circles = self.get_node_circles(self.num_disks)
-        circles.gradient_highlight(self.start_color, self.end_color)
+        circles.set_color_by_gradient(self.start_color, self.end_color)
         circles.set_fill(BLACK, opacity = 0.7)
         circles.set_stroke(width = self.graph_stroke_width)
 
@@ -3338,7 +3338,7 @@ class ShowSierpinskiCurvesOfIncreasingOrder(Scene):
                 n3.get_center(),
             ])
             path.add(segment)
-        path.gradient_highlight(
+        path.set_color_by_gradient(
             graph_scene.start_color,
             graph_scene.end_color,
         )
@@ -3378,7 +3378,7 @@ class Part1Thumbnail(Scene):
         binary = TexMobject("01011")
         binary.set_color_by_tex("0", GREEN)
         binary.set_color_by_tex("1", BLUE)
-        binary.gradient_highlight(GREEN, RED)
+        binary.set_color_by_gradient(GREEN, RED)
         binary.add_background_rectangle()
         binary.background_rectangle.set_fill(opacity = 0.5)
         # binary.set_fill(opacity = 0.5)

@@ -38,8 +38,8 @@ class PMobject(Mobject):
         self.color = color
         return self
 
-    # def gradient_highlight(self, start_color, end_color):
-    def gradient_highlight(self, *colors):
+    # def set_color_by_gradient(self, start_color, end_color):
+    def set_color_by_gradient(self, *colors):
         self.rgbas = np.array(map(
             color_to_rgba, 
             color_gradient(colors, len(self.points))

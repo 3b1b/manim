@@ -2548,7 +2548,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
             self.get_frequency_pulse_graph(x)
             for x in x_coords
         ])
-        graphs.gradient_highlight(BLUE, YELLOW)
+        graphs.set_color_by_gradient(BLUE, YELLOW)
         sum_graph = self.axes.get_graph(
             lambda t : sum([
                 graph.underlying_function(t)
@@ -2756,7 +2756,7 @@ class AmbiguityInLongEchos(IntroduceDopplerRadar, PiCreatureScene):
         fourier_graph = self.fourier_graph
         shifted_graphs = self.get_shifted_frequency_graphs(fourier_graph)
         color = fourier_graph.get_color()
-        shifted_graphs.gradient_highlight(
+        shifted_graphs.set_color_by_gradient(
             average_color(color, WHITE), 
             color,
             average_color(color, BLACK),
@@ -3594,7 +3594,7 @@ class HangingWeightsScene(MovingCameraScene):
             weight_anims.append(weight_anim)
             weights.add(weight)
         weights.set_fill(opacity = 1)
-        weights.gradient_highlight(BLUE_D, BLUE_E, BLUE_D)
+        weights.set_color_by_gradient(BLUE_D, BLUE_E, BLUE_D)
         weights.set_stroke(WHITE, 1)
 
         self.play(LaggedStart(GrowFromCenter, weights))
@@ -4803,7 +4803,7 @@ class Thumbnail(Scene):
         ])
         graphs.arrange_submobjects(DOWN, buff = 0.6)
         graphs.to_corner(UP+LEFT)
-        graphs.gradient_highlight(BLUE_B, BLUE_D)
+        graphs.set_color_by_gradient(BLUE_B, BLUE_D)
 
         frequency_axes = Axes(
             x_min = 0, x_max = 2,

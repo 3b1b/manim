@@ -798,7 +798,7 @@ class EulerThinking(Scene):
             "\\frac{1}{1} + \\frac{1}{4} + \\frac{1}{9} + \\frac{1}{16} + \\cdots = ",
             "\\;???"
         )
-        question[0].gradient_highlight(BLUE_C, BLUE_B)
+        question[0].set_color_by_gradient(BLUE_C, BLUE_B)
         question.move_to(bubble.get_bubble_center())
         question.shift(2*SMALL_BUFF*UP)
 
@@ -868,8 +868,8 @@ class WhatIsRight(PiCreatureScene):
             mob.next_to(randy, UP)
             mob.shift(3.5*RIGHT)
 
-        left_mobs.gradient_highlight(YELLOW_C, YELLOW_D)
-        right_mobs.gradient_highlight(GREEN_C, GREEN_D)
+        left_mobs.set_color_by_gradient(YELLOW_C, YELLOW_D)
+        right_mobs.set_color_by_gradient(GREEN_C, GREEN_D)
 
         self.play(randy.change, "pondering", title)
         self.wait()
@@ -905,7 +905,7 @@ class AskPuzzle(TeacherStudentsScene):
             "\\frac{1}{1} + \\frac{1}{4} + \\frac{1}{9} + \\cdots + " +\
             "\\frac{1}{n^2} + \\cdots = ", "\\,???"
         )
-        series[0].gradient_highlight(BLUE_C, BLUE_B)
+        series[0].set_color_by_gradient(BLUE_C, BLUE_B)
         series[1].set_color(YELLOW)
 
         question = TextMobject(
@@ -967,7 +967,7 @@ class ChangeTopic(PiCreatureScene):
             "\\frac{6}{5} \\cdot \\frac{6}{7} \\cdots = \\frac{\\pi}{2}$", "?"
         )
         question[0].shift(MED_SMALL_BUFF*UP)
-        question[1].gradient_highlight(YELLOW, GREEN)
+        question[1].set_color_by_gradient(YELLOW, GREEN)
 
         self.play(
             PiCreatureSays(

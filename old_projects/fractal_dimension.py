@@ -220,7 +220,7 @@ class IntroduceVonKochCurve(Scene):
                 (np.sqrt(3)/6)*width*UP, DOWN
             )
             curve.rotate(-index*2*np.pi/3)
-        curves.gradient_highlight(BLUE, WHITE, BLUE)
+        curves.set_color_by_gradient(BLUE, WHITE, BLUE)
 
         return curves
 
@@ -244,7 +244,7 @@ class IntroduceVonKochCurve(Scene):
         )
         larger_curve.replace(curve)
         larger_curve.scale(3, about_point = curve.get_corner(DOWN+LEFT))
-        larger_curve.gradient_highlight(
+        larger_curve.set_color_by_gradient(
             curve[0].get_color(),
             curve[-1].get_color(),
         )
@@ -504,7 +504,7 @@ class ShowIdealizations(Scene):
         koch_snowflake.next_to(arrow, UP)
         koch_snowflake.to_edge(RIGHT)
 
-        VGroup(smooth_britain, britain, koch_snowflake).gradient_highlight(
+        VGroup(smooth_britain, britain, koch_snowflake).set_color_by_gradient(
             BLUE_B, BLUE_D
         )
 
@@ -809,7 +809,7 @@ class ImagineShapesAsMetal(FourSelfSimilarShapes):
         for shape in shapes:
             shape.generate_target()
             shape.target.set_color(LIGHT_GREY)
-        shapes[-1].target.gradient_highlight(GREY, WHITE)
+        shapes[-1].target.set_color_by_gradient(GREY, WHITE)
         for shape, title in zip(shapes, titles):
             self.play(
                 MoveToTarget(title),
@@ -1627,7 +1627,7 @@ class ShowDiskScaling(Scene):
             shape.scale_to_fit_width(1.5)
             shape.set_stroke(width = 0)
             shape.set_fill(opacity = 1)
-        shapes.gradient_highlight(BLUE_B, BLUE_E)
+        shapes.set_color_by_gradient(BLUE_B, BLUE_E)
         shapes.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
         shapes.next_to(title, DOWN)
         for shape in shapes:

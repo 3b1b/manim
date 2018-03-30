@@ -79,7 +79,7 @@ class MultilayeredScene(Scene):
             height = self.total_glass_height,
         )
         result.sort_points(lambda p : -p[1])
-        result.gradient_highlight(self.top_color, self.bottom_color)
+        result.set_color_by_gradient(self.top_color, self.bottom_color)
         result.shift(self.top-result.get_top())
         return result
 

@@ -395,7 +395,7 @@ class AverageOfFiniteSet(Scene):
             for length in lengths
         ])
         colors = Color(BLUE).range_to(RED, len(lengths))
-        lines.gradient_highlight(*colors)
+        lines.set_color_by_gradient(*colors)
         lines.arrange_submobjects(RIGHT)
         lines.generate_target()
         lines.target.arrange_submobjects(RIGHT, buff = 0)
@@ -965,7 +965,7 @@ class IntegralOfSine(FiniteSample):
         area_over_width = TexMobject(
             "{\\text{Area}", "\\over\\,", "\\text{Width}}", "="
         )
-        area_over_width.get_part_by_tex("Area").gradient_highlight(
+        area_over_width.get_part_by_tex("Area").set_color_by_gradient(
             BLUE, GREEN
         )
         area_over_width.next_to(self.integral_over_pi[1][0], LEFT)

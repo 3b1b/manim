@@ -1318,7 +1318,7 @@ class NameDerivative(IntroduceTinyChangeInArea):
             fracs.add(frac)
         fracs.add(TexMobject("\\cdots \\rightarrow"))
         fracs.add(TexMobject("???"))
-        fracs[-1].gradient_highlight(self.dR_color, self.outer_ring.get_color())
+        fracs[-1].set_color_by_gradient(self.dR_color, self.outer_ring.get_color())
         fracs.arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
         fracs.to_corner(DOWN+LEFT)
 
@@ -1709,7 +1709,7 @@ class IntroduceConcentricRings(CircleScene):
             self.get_ring(r, self.dR)
             for r in np.arange(0, self.radius, self.dR)
         ])
-        rings.gradient_highlight(BLUE_E, GREEN_E)
+        rings.set_color_by_gradient(BLUE_E, GREEN_E)
         rings.set_stroke(BLACK, width = 1)
         outermost_ring = rings[-1]
         dr_line = Line(
@@ -2022,7 +2022,7 @@ class IntroduceConcentricRings(CircleScene):
         )
         self.wait(2)
         self.play(
-            self.integral_expression.gradient_highlight, BLUE, GREEN,
+            self.integral_expression.set_color_by_gradient, BLUE, GREEN,
             GrowFromCenter(int_brace),
             Write(integral_word)
         )
@@ -2382,7 +2382,7 @@ class FundamentalTheorem(CircleScene):
             self.get_ring(radius = r, dR = self.dR)
             for r in np.arange(0, self.radius, self.dR)
         ])
-        rings.gradient_highlight(BLUE_E, GREEN_E)
+        rings.set_color_by_gradient(BLUE_E, GREEN_E)
         rings.save_state()
         integrand = self.integral_terms[1][1]
         for ring in rings:
@@ -2471,7 +2471,7 @@ class CalculusInANutshell(CircleScene):
         for ring in rings:
             ring.add(ring.copy().rotate(np.pi))
         for mob in calculus, rings:
-            mob.gradient_highlight(BLUE, GREEN)
+            mob.set_color_by_gradient(BLUE, GREEN)
         rings.set_stroke(width = 0) 
 
         self.play(Write(calculus))

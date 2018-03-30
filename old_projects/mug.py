@@ -856,7 +856,7 @@ class IntroduceRegions(UtilitiesPuzzleScene):
         front_regions = VGroup(*regions[1:])
 
         back_region.set_color(BLUE_E)
-        front_regions.gradient_highlight(GREEN_E, MAROON_E)
+        front_regions.set_color_by_gradient(GREEN_E, MAROON_E)
 
         return flat_lines, line_groups, regions
 
@@ -1551,7 +1551,7 @@ class FiveRegionsFourEdgesEachGraph(Scene):
         squares.scale(0.5)
         squares.set_stroke(width = 0)
         squares.set_fill(opacity = 1)
-        squares.gradient_highlight(*self.f_colors)
+        squares.set_color_by_gradient(*self.f_colors)
         squares.arrange_submobjects(RIGHT, buff = MED_LARGE_BUFF)
         squares.next_to(words, DOWN, LARGE_BUFF)
         all_edges = VGroup()
@@ -1612,7 +1612,7 @@ class FiveRegionsFourEdgesEachGraph(Scene):
         ])
         regions.set_stroke(width = 0)
         regions.set_fill(opacity = 1)
-        regions.gradient_highlight(*self.f_colors)
+        regions.set_color_by_gradient(*self.f_colors)
 
         all_edges = VGroup()
         all_movers = VGroup()
@@ -1806,7 +1806,7 @@ class EulersFormulaForGeneralPlanarGraph(LightUpNodes, ThreeDScene):
         regions = self.get_cube_faces(points)
         regions.set_stroke(width = 0)
         regions.set_fill(opacity = 1)
-        regions.gradient_highlight(GREEN, RED, BLUE_E)
+        regions.set_color_by_gradient(GREEN, RED, BLUE_E)
         regions[-1].set_fill(opacity = 0)
 
         pairs = [

@@ -51,7 +51,7 @@ def get_time_line():
         numbers_with_elongated_ticks = range(1700, 2100, 100)
     )
     time_line.sort_points(lambda p : p[0])        
-    time_line.gradient_highlight(
+    time_line.set_color_by_gradient(
         PeanoCurve.CONFIG["start_color"], 
         PeanoCurve.CONFIG["end_color"]
     )
@@ -177,7 +177,7 @@ class NotPixelatedSpace(Scene):
         space_mobject = MobjectFromRegion(space_region, DARK_GREY)
         curve = PeanoCurve(order = 5).replace(space_mobject)
         line = Line(5*LEFT, 5*RIGHT)
-        line.gradient_highlight(curve.start_color, curve.end_color)
+        line.set_color_by_gradient(curve.start_color, curve.end_color)
         for mob in grid, space_mobject:
             mob.sort_points(np.linalg.norm)
         infinitely = TextMobject("Infinitely")
@@ -235,7 +235,7 @@ class HistoryOfDiscover(Scene):
             point = time_line.number_to_point(year)
             point[1] = 0.2
             arrow = Arrow(point+2*vect, point, buff = 0.1)
-            arrow.gradient_highlight(curve.start_color, curve.end_color)
+            arrow.set_color_by_gradient(curve.start_color, curve.end_color)
             year_mob = TexMobject(str(year))
             year_mob.next_to(arrow, vect)
             words = TextMobject(text)

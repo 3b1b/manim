@@ -744,7 +744,7 @@ class TwoDCase(Scene):
             )
             arc.shift(self.center)
             all_arcs.add(arc)
-        all_arcs.gradient_highlight(RED, MAROON_B, PINK, BLUE)
+        all_arcs.set_color_by_gradient(RED, MAROON_B, PINK, BLUE)
         self.all_arcs = all_arcs
         return all_arcs
 

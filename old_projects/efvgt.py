@@ -793,7 +793,7 @@ class GroupOfCubeSymmetries(ThreeDScene):
 
     def get_cube(self):
         cube = Cube(fill_opacity = self.cube_opacity)
-        cube.gradient_highlight(*self.cube_colors)
+        cube.set_color_by_gradient(*self.cube_colors)
         if self.put_randy_on_cube:
             randy = Randolph(mode = "pondering")
             # randy.pupils.shift(0.01*OUT)

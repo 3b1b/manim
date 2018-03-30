@@ -4010,7 +4010,7 @@ class GeneralFormulas(SimplestNetworkExample):
             SurroundingRectangle(term, buff = 0.5*SMALL_BUFF)
             for term in terms
         ])
-        rects.gradient_highlight(GREEN, WHITE, RED)
+        rects.set_color_by_gradient(GREEN, WHITE, RED)
 
         self.play(Transform(
             self.z_formula, self.compact_z_formula

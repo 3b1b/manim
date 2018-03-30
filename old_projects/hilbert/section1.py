@@ -422,7 +422,7 @@ class ListenToAllPixels(Scene):
         freq_line = get_freq_line()
         freq_line.sort_points(lambda p : p[0])
         red, blue = Color(RED), Color(BLUE)
-        freq_line.gradient_highlight(red, blue)
+        freq_line.set_color_by_gradient(red, blue)
 
         colors = [
             Color(rgb = interpolate(
@@ -452,7 +452,7 @@ class ListenToAllPixels(Scene):
         self.add(grid)
         self.wait()
         self.play(DelayByOrder(ApplyMethod(
-            grid.gradient_highlight, red, blue
+            grid.set_color_by_gradient, red, blue
         )))
         self.play(Transform(grid, freq_line))
         self.wait()
@@ -611,7 +611,7 @@ class WeaveLineThroughPixels(Scene):
         curve = HilbertCurve(order = order)
         line = Line(5*LEFT, 5*RIGHT)
         for mob in curve, line:
-            mob.gradient_highlight(start_color, end_color)
+            mob.set_color_by_gradient(start_color, end_color)
         freq_line = get_freq_line()
         freq_line.replace(line, stretch = True)
 
@@ -794,7 +794,7 @@ class Order2PseudoHilbertCurve(Scene):
             naive_curve.add(line, mini_curve)
             last_curve = mini_curve
         naive_curve.ingest_submobjects()
-        naive_curve.gradient_highlight(RED, GREEN)
+        naive_curve.set_color_by_gradient(RED, GREEN)
         order_2_curve = HilbertCurve(order = 2)
 
         self.add(words, grid2)

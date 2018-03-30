@@ -172,9 +172,9 @@ class PartyHat(SVGMobject):
         self.cone = self[self.NUM_FRILLS]
         self.dots = VGroup(*self[self.NUM_FRILLS+1:])
 
-        self.frills.gradient_highlight(*self.frills_colors)
+        self.frills.set_color_by_gradient(*self.frills_colors)
         self.cone.set_color(self.cone_color)
-        self.dots.gradient_highlight(*self.dots_colors)
+        self.dots.set_color_by_gradient(*self.dots_colors)
 
 class Laptop(VGroup):
     CONFIG = {
@@ -287,7 +287,7 @@ class VideoSeries(VGroup):
         VGroup.__init__(self, *videos, **kwargs)
         self.arrange_submobjects()
         self.scale_to_fit_width(FRAME_WIDTH-MED_LARGE_BUFF)
-        self.gradient_highlight(*self.gradient_colors)
+        self.set_color_by_gradient(*self.gradient_colors)
 
 class Headphones(SVGMobject):
     CONFIG = {
